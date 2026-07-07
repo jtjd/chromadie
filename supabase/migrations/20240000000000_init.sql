@@ -41,6 +41,10 @@ CREATE TABLE IF NOT EXISTS shop_items (
     css_value TEXT
 );
 
+-- FIX: Add the missing unique constraint to prevent double-rolls
+ALTER TABLE scores DROP CONSTRAINT IF EXISTS unique_daily_roll;
+ALTER TABLE scores ADD CONSTRAINT unique_daily_roll UNIQUE (user_id, roll_date);
+
 -- ==========================================
 -- 2. ROW LEVEL SECURITY (RLS)
 -- ==========================================
@@ -52,24 +56,39 @@ ALTER TABLE shop_items ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON profiles;
 DROP POLICY IF EXISTS "Users can insert their own profile." ON profiles;
-DROP POLICY IF EXISTS "Users can update own profile." ON profiles;
+-- FIX: Removed the "Users can update own profile" policy to prevent RPC bypasses
 DROP POLICY IF EXISTS "Scores are viewable by everyone." ON scores;
 DROP POLICY IF EXISTS "Users can view own inventory." ON inventory;
 DROP POLICY IF EXISTS "Shop items are viewable by everyone." ON shop_items;
 
 CREATE POLICY "Public profiles are viewable by everyone." ON profiles FOR SELECT USING (true);
 CREATE POLICY "Users can insert their own profile." ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "Users can update own profile." ON profiles FOR UPDATE USING (auth.uid() = id);
 
 CREATE POLICY "Scores are viewable by everyone." ON scores FOR SELECT USING (true);
-
 CREATE POLICY "Users can view own inventory." ON inventory FOR SELECT USING (auth.uid() = user_id);
-
 CREATE POLICY "Shop items are viewable by everyone." ON shop_items FOR SELECT USING (true);
 
 -- ==========================================
--- 3. TRIGGERS
+-- 3. TRIGGERS (Profile Creation)
 -- ==========================================
+
+-- FIX: Add the trigger that creates a profile when a new auth user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$ BEGIN
+  INSERT INTO public.profiles (id, username, email)
+  VALUES (new.id, new.raw_user_meta_data->>'username', new.email);
+  RETURN new;
+END;
+ $function$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 CREATE OR REPLACE FUNCTION public.update_lifetime_ep()
 RETURNS TRIGGER
@@ -154,17 +173,7 @@ begin
 end;
  $function$;
 
-CREATE OR REPLACE FUNCTION public.get_email_by_username(username_input text)
-RETURNS text
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $function$ DECLARE
-    user_email TEXT;
-BEGIN
-    SELECT email INTO user_email FROM profiles WHERE username = username_input;
-    RETURN user_email;
-END;
- $function$;
+-- FIX: Removed the get_email_by_username RPC to eliminate the PII harvesting oracle.
 
 CREATE OR REPLACE FUNCTION public.purchase_item(p_item_key text)
 RETURNS json

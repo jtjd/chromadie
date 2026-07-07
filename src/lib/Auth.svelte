@@ -20,7 +20,6 @@
       }
     }, 200);
 
-    // Cleanup interval if component unmounts before turnstile loads
     return () => clearInterval(checkTurnstile);
   });
 
@@ -88,31 +87,23 @@
         }
       }
     } else {
-      let emailToUse = email;
+      // FIX: Removed the username lookup RPC. Enforce email login.
       if (!email.includes('@')) {
-        const { data: rpcData, error: rpcError } = await supabase
-          .rpc('get_email_by_username', { username_input: email });
-
-        if (rpcError || !rpcData) {
-          error = "Invalid username or password.";
-          resetCaptcha();
-          loading = false;
-          return;
-        }
-        emailToUse = rpcData;
+        error = "Please log in using your email address.";
+        loading = false;
+        return;
       }
 
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: emailToUse,
+        email: email,
         password,
         options: { captchaToken }
       });
 
       if (signInError) {
-        error = "Invalid username or password.";
+        error = "Invalid email or password.";
         resetCaptcha();
       }
-      // If successful, App.svelte reacts to $session and closes the modal
     }
     loading = false;
   }
@@ -130,8 +121,7 @@
     {#if tab === 'signup'}
       <input type="text" class="input-field" bind:value={username} placeholder="Username" required />
     {/if}
-    <!-- FIX: Dynamic placeholder based on tab -->
-    <input type="text" class="input-field" bind:value={email} placeholder={tab === 'login' ? 'Email or Username' : 'Email'} required />
+    <input type="email" class="input-field" bind:value={email} placeholder="Email" required />
     <input type="password" class="input-field" bind:value={password} placeholder="Password" required />
 
     <div id="turnstile-container"></div>
