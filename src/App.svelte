@@ -18,8 +18,13 @@
   function handleLogout() {
     localStorage.removeItem('chromadie-roll');
     supabase.auth.signOut();
-    view = 'game';
+    handleNavClick('game');
+  }
+
+  // FIX: Clear selectedUserId whenever navigating via the header
+  function handleNavClick(newView) {
     selectedUserId.set(null);
+    view = newView;
   }
 
   function handleNavigation(event) {
@@ -40,7 +45,6 @@
 <Toast />
 
 {#if showAuthModal}
-  <!-- FIX: Added role and tabindex for a11y -->
   <div class="auth-modal-overlay" role="button" tabindex="0" on:click|self={() => showAuthModal = false} on:keydown|self={(e) => e.key === 'Escape' && (showAuthModal = false)}>
     <div class="auth-modal-content">
       <Auth />
@@ -52,10 +56,10 @@
   <header class="site-header">
     <a href="/" class="logo">🎲 ChromaDie</a>
     <nav class="nav-links">
-      <button class="nav-link" class:active={view === 'game'} on:click={() => view = 'game'}>Game</button>
-      <button class="nav-link" class:active={view === 'shop'} on:click={() => view = 'shop'}>Shop</button>
-      <button class="nav-link" class:active={view === 'leaderboard'} on:click={() => view = 'leaderboard'}>Leaderboard</button>
-      <button class="nav-link" class:active={view === 'profile'} on:click={() => view = 'profile'}>Profile</button>
+      <button class="nav-link" class:active={view === 'game'} on:click={() => handleNavClick('game')}>Game</button>
+      <button class="nav-link" class:active={view === 'shop'} on:click={() => handleNavClick('shop')}>Shop</button>
+      <button class="nav-link" class:active={view === 'leaderboard'} on:click={() => handleNavClick('leaderboard')}>Leaderboard</button>
+      <button class="nav-link" class:active={view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
 
       {#if $session}
         <div class="user-chip {frameEff.cls}" style="{frameEff.style}">

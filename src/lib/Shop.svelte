@@ -4,7 +4,8 @@
 
   let loadingAction = false;
 
-  async function handleAction(itemKey, action, slot = null) {
+  // FIX: Added 'silent' parameter to prevent double-toasts on auto-equip
+  async function handleAction(itemKey, action, slot = null, silent = false) {
     loadingAction = true;
     let error = null;
 
@@ -17,8 +18,7 @@
         const itemCost = $shopItems[itemKey].cost;
         walletBalance.update(bal => bal - itemCost);
         addToast(`Successfully purchased ${$shopItems[itemKey].name}!`, 'success');
-        // FIX: Removed the 4th argument 'true' to prevent the double-toast
-        await handleAction(itemKey, 'equip');
+        await handleAction(itemKey, 'equip', null, true); // silent = true
       }
     } else if (action === 'equip') {
       const { data, error: rpcError } = await supabase.rpc('equip_item', { p_item_key: itemKey });
@@ -26,7 +26,7 @@
       else if (!data.success) error = data.error;
       else {
         equippedItems.set(data.cosmetics);
-        // FIX: Removed the 'if (!slot)' check so it doesn't trigger a second toast during auto-equip
+        if (!silent) addToast(`Equipped ${$shopItems[itemKey].name}!`, 'success');
       }
     } else if (action === 'unequip') {
       const { data, error: rpcError } = await supabase.rpc('unequip_item', { p_slot: slot });
@@ -45,6 +45,7 @@
   $: itemsArray = Object.entries($shopItems);
 </script>
 
+<!-- HTML and Style remain exactly the same as the previous Shop.svelte response -->
 <div class="container">
   <div class="section-title">
     <div class="section-bar bar-green"></div>
