@@ -1,5 +1,5 @@
 <script>
-  import { session, profile, equippedItems, shopItems } from './lib/stores';
+  import { session, profile, equippedItems, shopItems, selectedUserId } from './lib/stores';
   import { supabase } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import Game from './lib/Game.svelte';
@@ -18,17 +18,20 @@
   function handleLogout() {
     localStorage.removeItem('chromadie-roll');
     supabase.auth.signOut();
-    view = 'game'; // Reset to game view on logout
+    view = 'game';
+    selectedUserId.set(null);
   }
 
-  // Reactive cosmetics for header
+  function handleNavigation(event) {
+    view = event.detail;
+  }
+
   $: userCosmetics = $equippedItems;
   $: nameEff = getNameEffect(userCosmetics);
   $: frameEff = getFrameEffect(userCosmetics);
   $: titleTxt = getTitleText(userCosmetics);
   $: username = $profile?.username || 'Guest';
 
-  // Auto-close modal when session is established
   $: if ($session && showAuthModal) {
     showAuthModal = false;
   }
@@ -37,7 +40,8 @@
 <Toast />
 
 {#if showAuthModal}
-  <div class="auth-modal-overlay" on:click|self={() => showAuthModal = false}>
+  <!-- FIX: Added role and tabindex for a11y -->
+  <div class="auth-modal-overlay" role="button" tabindex="0" on:click|self={() => showAuthModal = false} on:keydown|self={(e) => e.key === 'Escape' && (showAuthModal = false)}>
     <div class="auth-modal-content">
       <Auth />
     </div>
@@ -72,13 +76,13 @@
 
 {#if $session}
   {#if view === 'game'}
-    <Game />
+    <Game on:promptlogin={() => showAuthModal = true} />
   {:else if view === 'shop'}
     <Shop />
   {:else if view === 'leaderboard'}
-    <Leaderboard />
+    <Leaderboard on:navigate={handleNavigation} />
   {:else if view === 'profile'}
-    <Profile />
+    <Profile userId={$selectedUserId} />
   {/if}
 {:else}
   {#if view === 'game'}
@@ -90,21 +94,13 @@
 
 <style>
   .auth-modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(8px);
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    z-index: 1000; display: flex; align-items: center; justify-content: center;
     padding: 1rem;
   }
   .auth-modal-content {
-    width: 100%;
-    max-width: 450px;
-    position: relative;
-    z-index: 1;
+    width: 100%; max-width: 450px; position: relative; z-index: 1;
   }
 </style>

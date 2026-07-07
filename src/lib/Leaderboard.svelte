@@ -1,9 +1,11 @@
 <script>
   import { supabase } from './supabase';
-  import { shopItems } from './stores';
+  import { shopItems, selectedUserId } from './stores';
   import { escapeHtml, getTodayString } from './utils';
   import { getNameEffect, getTitleText } from './cosmetics';
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
 
   let leaderboard = [];
   let loading = true;
@@ -22,6 +24,11 @@
     }
     loading = false;
   });
+
+  function viewProfile(userId) {
+    selectedUserId.set(userId);
+    dispatch('navigate', 'profile');
+  }
 </script>
 
 <div class="container">
@@ -45,9 +52,12 @@
             {#if titleTxt}
               <span class="title-chip">[{titleTxt}]</span>
             {/if}
-            <a href="/profile?id={row.user_id}" class="lb-username {nameEff.cls}" style="{nameEff.style}" data-text={row.username}>
-              {escapeHtml(row.username)}
-            </a>
+            <!-- FIX: Use button instead of anchor to avoid full page reload -->
+            <button class="lb-username-button" on:click={() => viewProfile(row.user_id)}>
+              <span class="lb-username {nameEff.cls}" style="{nameEff.style}" data-text={row.username}>
+                {escapeHtml(row.username)}
+              </span>
+            </button>
             {#if row.current_streak > 0}
               <span class="streak-chip">🔥 {row.current_streak}</span>
             {/if}
@@ -60,3 +70,9 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .lb-username-button {
+    background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; align-items: center;
+  }
+</style>

@@ -20,15 +20,12 @@
   let displayScore = 0;
   let scanProgress = 0;
 
-  // Percentile State
   let percentileDisplay = null;
-
-  // Share & Countdown State
   let copied = false;
   let countdownString = '24:00:00';
   let countdownInterval;
 
-  // Helper: Map 0-100 percentile to text/color tiers
+  // FIX: Corrected color assignments
   function getPercentileTier(p, total) {
       let text = '';
       let color = '#8a8a9a';
@@ -43,21 +40,19 @@
       else if (rank <= 5) { text = "⭐ Top 5% today"; color = "#ffeb3b"; }
       else if (rank <= 10) { text = "🚀 Top 10% today"; color = "#10b981"; }
       else if (rank <= 25) { text = "👍 Top 25% today"; color = "#6ee787"; }
-      else if (rank <= 50) { text = "📊 Above average today"; color: "#e0e0e0"; }
-      else if (rank <= 75) { text = "⚪ Around average today"; color: "#8a8a9a"; }
-      else if (rank <= 90) { text = "⚠️ Bottom 25% today"; color: "#ff9800"; }
-      else if (rank <= 95) { text = "🔻 Bottom 10% today"; color: "#ef4444"; }
-      else { text = "💀 Bottom 5% today"; color: "#b91c1c"; }
+      else if (rank <= 50) { text = "📊 Above average today"; color = "#e0e0e0"; }
+      else if (rank <= 75) { text = "⚪ Around average today"; color = "#8a8a9a"; }
+      else if (rank <= 90) { text = "⚠️ Bottom 25% today"; color = "#ff9800"; }
+      else if (rank <= 95) { text = "🔻 Bottom 10% today"; color = "#ef4444"; }
+      else { text = "💀 Bottom 5% today"; color = "#b91c1c"; }
 
       return { text, color, total };
   }
 
-  // Helper: Sort badges highest to lowest points
   function sortBadgesDescending(arr) {
       return (arr || []).slice().sort((a, b) => b.points - a.points);
   }
 
-  // Countdown Logic
   function getTomorrowMidnightUTC() {
       const now = new Date();
       return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
@@ -76,7 +71,6 @@
       countdownString = `${h}:${m}:${s}`;
   }
 
-  // Share Logic
   async function shareResults() {
       let badgeText = badges.length > 0 ? badges.map(b => b.name).join(', ') : 'None';
       let shareString = `🎲 ChromaDie Daily Roll\nHex: ${displayColor}\nScore: ${score.toLocaleString()} pts\nRarity: ${rarity}\nConditions: ${badgeText}\n\nCan you beat my color? Roll yours here: ${window.location.origin}`;
@@ -145,7 +139,6 @@
     score = data.score;
     rarity = data.rarity;
 
-    // Fetch Percentile
     const { data: percData, error: percError } = await supabase.rpc('get_score_percentile', { p_score: data.score });
     if (!percError && percData) {
         percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
@@ -178,7 +171,6 @@
   }
 
   onMount(async () => {
-    // Start countdown timer immediately
     tickCountdown();
     countdownInterval = setInterval(tickCountdown, 1000);
 
@@ -225,6 +217,7 @@
   onDestroy(() => clearInterval(countdownInterval));
 </script>
 
+<!-- The HTML and Style remain exactly the same as the previous Game.svelte response -->
 <div class="container">
   {#if error}
     <p class="auth-error">{error}</p>
@@ -264,7 +257,6 @@
 
   {:else if phase === 'results'}
     <div class="card">
-      <!-- Tightened header to pull percentile closer to actions -->
       <div class="results-header results-header-tight">
         <div class="rarity-tag rarity-{rarity}">{rarity}</div>
         <div class="final-color-display rarity-{rarity}" style="background-color: {displayColor};"></div>
@@ -282,7 +274,6 @@
         {/if}
       </div>
 
-      <!-- Action Row: Pulled closer to score -->
       <div class="post-score-actions">
         <div class="countdown-inline">
           Next roll in: <span style="color: #fff; font-weight: 600;">{countdownString}</span>
@@ -292,7 +283,6 @@
         </button>
       </div>
 
-      <!-- Guest Promo moved back up to be seen immediately -->
       {#if !$session}
         <div class="brand-promo guest-promo-middle">
           <div class="brand-promo-header">Guest Mode</div>
@@ -304,7 +294,6 @@
         </div>
       {/if}
 
-      <!-- Badges remain at the bottom -->
       <div class="badges-container badges-container-tight">
         <div class="badges-title">Conditions Met</div>
         {#if badges.length === 0}
@@ -331,9 +320,8 @@
 </div>
 
 <style>
-  /* Scoped styles for layout tightening */
   .results-header-tight {
-    margin-bottom: 5px !important; /* Significantly reduced from 30px to pull actions closer */
+    margin-bottom: 5px !important;
   }
 
   .post-score-actions {
@@ -341,7 +329,7 @@
     justify-content: center;
     align-items: center;
     gap: 15px;
-    margin: 0 0 20px 0; /* 0 top margin to close the gap, space before guest card/badges */
+    margin: 0 0 20px 0;
     flex-wrap: wrap;
   }
 
@@ -355,7 +343,6 @@
     border: 1px solid var(--card-border);
   }
 
-  /* Animated Spectrum Border Button */
   .chroma-btn {
     position: relative;
     isolation: isolate;

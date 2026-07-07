@@ -11,6 +11,9 @@ export const userInventory = writable([])
 export const equippedItems = writable({})
 export const walletBalance = writable(0)
 
+// --- UI State ---
+export const selectedUserId = writable(null) // For viewing other profiles
+
 // --- Toast Notifications ---
 export const toasts = writable([])
 export function addToast(message, type = 'error') {
@@ -47,7 +50,6 @@ export async function fetchWalletBalance() {
     const { data, error } = await supabase.rpc('get_wallet_balance')
     if (error) {
         console.error("Error fetching wallet balance:", error.message);
-        addToast("Failed to load wallet balance.", "error");
     } else if (data !== null) {
         walletBalance.set(data)
     }
