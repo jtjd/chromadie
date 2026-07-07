@@ -17,7 +17,8 @@
         const itemCost = $shopItems[itemKey].cost;
         walletBalance.update(bal => bal - itemCost);
         addToast(`Successfully purchased ${$shopItems[itemKey].name}!`, 'success');
-        await handleAction(itemKey, 'equip', null, true);
+        // FIX: Removed the 4th argument 'true' to prevent the double-toast
+        await handleAction(itemKey, 'equip');
       }
     } else if (action === 'equip') {
       const { data, error: rpcError } = await supabase.rpc('equip_item', { p_item_key: itemKey });
@@ -25,7 +26,7 @@
       else if (!data.success) error = data.error;
       else {
         equippedItems.set(data.cosmetics);
-        if (!slot) addToast(`Equipped ${$shopItems[itemKey].name}!`, 'success');
+        // FIX: Removed the 'if (!slot)' check so it doesn't trigger a second toast during auto-equip
       }
     } else if (action === 'unequip') {
       const { data, error: rpcError } = await supabase.rpc('unequip_item', { p_slot: slot });
