@@ -99,32 +99,27 @@ CREATE POLICY "Shop items are viewable by everyone." ON shop_items FOR SELECT US
 CREATE POLICY "Achievements are viewable by everyone." ON achievements FOR SELECT USING (true);
 CREATE POLICY "Users can view own unlocked achievements." ON user_achievements FOR SELECT USING (auth.uid() = user_id);
 
--- 3. VIEWS
+-- 3. VIEWS (Security Invoker enabled to respect RLS)
 DROP VIEW IF EXISTS leaderboard_view;
-CREATE VIEW leaderboard_view AS
+CREATE VIEW leaderboard_view WITH (security_invoker = true) AS
 SELECT s.user_id, s.hex_code, s.score, s.rarity, s.roll_date, p.username, p.current_streak, p.equipped_cosmetics, p.equipped_badges
 FROM scores s JOIN profiles p ON s.user_id = p.id;
 
 DROP VIEW IF EXISTS all_time_leaderboard_view;
-CREATE VIEW all_time_leaderboard_view AS
+CREATE VIEW all_time_leaderboard_view WITH (security_invoker = true) AS
 SELECT p.id as user_id, p.username, p.current_streak, p.equipped_cosmetics, p.equipped_badges, p.best_roll_score as score, p.best_roll_hex as hex_code, p.best_roll_rarity as rarity, p.lifetime_ep
 FROM profiles p WHERE p.best_roll_score IS NOT NULL;
 
 DROP VIEW IF EXISTS active_seasonal_achievements;
-CREATE VIEW active_seasonal_achievements AS
+CREATE VIEW active_seasonal_achievements WITH (security_invoker = true) AS
 SELECT id, name, description, icon, ep_reward, rarity, season_id
 FROM achievements
 WHERE season_id IS NOT NULL AND season_start <= CURRENT_DATE AND season_end >= CURRENT_DATE;
 
 -- 4. TRIGGERS
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $function$ BEGIN
-  INSERT INTO public.profiles (id, username)
-  VALUES (new.id, new.raw_user_meta_data->>'username');
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ BEGIN
+  INSERT INTO public.profiles (id, username) VALUES (new.id, new.raw_user_meta_data->>'username');
   RETURN new;
 END;
  $$;
@@ -200,7 +195,7 @@ CREATE OR REPLACE FUNCTION public.unequip_item(p_slot text)
 RETURNS json LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ DECLARE v_user_id uuid := auth.uid(); v_current_cosmetics jsonb;
 BEGIN
     if v_user_id is null then return json_build_object('success', false, 'error', 'Not authenticated'); end if;
-    if p_slot not in ('name_effect', 'frame', 'profile_bg', 'roll_effect', 'lb_theme') then return json_build_object('success', false, 'error', 'Invalid slot'); end if;
+    if p_slot not in ('name_effect', 'frame', 'profile_bg', 'roll_effect', 'lb_theme', 'title') then return json_build_object('success', false, 'error', 'Invalid slot'); end if;
     select equipped_cosmetics into v_current_cosmetics from profiles where id = v_user_id;
     if v_current_cosmetics is null then v_current_cosmetics := '{}'::jsonb; end if;
     v_current_cosmetics := v_current_cosmetics - p_slot;
@@ -213,6 +208,7 @@ CREATE OR REPLACE FUNCTION public.equip_badges(p_badge_ids JSONB)
 RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ DECLARE v_user_id UUID := auth.uid(); v_badge TEXT; v_invalid_badge BOOLEAN := FALSE;
 BEGIN
     IF v_user_id IS NULL THEN RETURN json_build_object('success', false, 'error', 'Not authenticated'); END IF;
+    IF jsonb_array_length(p_badge_ids) > 3 THEN RETURN json_build_object('success', false, 'error', 'You can only pin 3 achievements.'); END IF;
     FOR v_badge IN SELECT * FROM jsonb_array_elements_text(p_badge_ids) LOOP
         IF NOT EXISTS (SELECT 1 FROM user_achievements WHERE user_id = v_user_id AND achievement_id = v_badge) THEN v_invalid_badge := TRUE; END IF;
     END LOOP;
@@ -240,19 +236,31 @@ END;
  $$;
 
 CREATE OR REPLACE FUNCTION public.purchase_item(p_item_key text)
-RETURNS json LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ DECLARE v_user_id uuid := auth.uid(); item_cost bigint; user_ep_spent bigint; user_lifetime_ep bigint; user_balance bigint; already_owned boolean;
+RETURNS json LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ DECLARE
+    v_user_id uuid := auth.uid(); v_item_slot text; item_cost bigint; user_ep_spent bigint; user_lifetime_ep bigint; user_balance bigint;
 BEGIN
     if v_user_id is null then return json_build_object('success', false, 'error', 'Not authenticated'); end if;
-    select cost into item_cost from shop_items where item_key = p_item_key;
+    select cost, slot into item_cost, v_item_slot from shop_items where item_key = p_item_key;
     if item_cost is null then return json_build_object('success', false, 'error', 'Invalid item'); end if;
-    select exists(select 1 from inventory where user_id = v_user_id and item_key = p_item_key) into already_owned;
-    if already_owned then return json_build_object('success', false, 'error', 'Already owned'); end if;
     select ep_spent into user_ep_spent from profiles where id = v_user_id;
     select coalesce(lifetime_ep, 0) into user_lifetime_ep from profiles where id = v_user_id;
     user_balance := user_lifetime_ep - user_ep_spent;
     if user_balance < item_cost then return json_build_object('success', false, 'error', 'Not enough EP'); end if;
+
+    IF v_item_slot = 'consumable' THEN
+        IF p_item_key = 'streak_freeze' THEN
+            INSERT INTO inventory (user_id, item_key) VALUES (v_user_id, p_item_key);
+        ELSEIF p_item_key = 'reroll_shard' THEN
+            UPDATE profiles SET reroll_shards = COALESCE(reroll_shards, 0) + 1 WHERE id = v_user_id;
+        END IF;
+    ELSE
+        IF EXISTS (SELECT 1 FROM inventory WHERE user_id = v_user_id AND item_key = p_item_key) THEN
+            return json_build_object('success', false, 'error', 'Already owned');
+        END IF;
+        INSERT INTO inventory (user_id, item_key) VALUES (v_user_id, p_item_key);
+    END IF;
+
     update profiles set ep_spent = ep_spent + item_cost where id = v_user_id;
-    insert into inventory (user_id, item_key) values (v_user_id, p_item_key);
     return json_build_object('success', true);
 END;
  $$;
@@ -415,8 +423,7 @@ BEGIN
         ('web_safe', v_r IN (0,51,102,153,204,255) AND v_g IN (0,51,102,153,204,255) AND v_b IN (0,51,102,153,204,255)),
         ('perfect_triplets', substr(v_hex_no_hash, 1, 2) = substr(v_hex_no_hash, 3, 2) AND substr(v_hex_no_hash, 3, 2) = substr(v_hex_no_hash, 5, 2)),
         ('greyscale', v_r = v_g AND v_g = v_b), ('roll_purple', v_r=145 AND v_g=70 AND v_b=255),
-        ('roll_green', v_r=30 AND v_g=215 AND v_b=96), ('roll_red', v_r=244 AND v_g=0 AND v_b=9),
-        ('pure_red', v_r=255 AND v_g=0 AND v_b=0), ('pure_green', v_r=0 AND v_g=255 AND v_b=0),
+        ('pure_green', v_r=30 AND v_g=215 AND v_b=96), ('pure_red', v_r=244 AND v_g=0 AND v_b=9),
         ('pure_blue', v_r=0 AND v_g=0 AND v_b=255),
         ('hex_letters', v_hex_upper LIKE '%A%' AND v_hex_upper LIKE '%B%' AND v_hex_upper LIKE '%C%' AND v_hex_upper LIKE '%D%' AND v_hex_upper LIKE '%E%' AND v_hex_upper LIKE '%F%');
 
@@ -467,6 +474,7 @@ BEGIN
     RETURN jsonb_build_object('success', true, 'already_rolled', false, 'is_anon', false, 'hex', v_hex_upper, 'r', v_r, 'g', v_g, 'b', v_b, 'score', v_total_score, 'rarity', v_rarity, 'badges', v_badges, 'percentile', v_percentile, 'total_rollers', v_total_count, 'new_achievements', v_new_achievements);
 END;
  $function$;
+
 -- 8. SEED DATA (Shop & Achievements)
 
 -- ACHIEVEMENTS (50)
