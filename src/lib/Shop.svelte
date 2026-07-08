@@ -1,5 +1,5 @@
 <script>
-  import { shopItems, userInventory, equippedItems, walletBalance, addToast } from './stores';
+  import { shopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards } from './stores';
   import { supabase } from './supabase';
 
   let loadingAction = false;
@@ -13,11 +13,22 @@
       if (rpcError) error = rpcError.message;
       else if (!data.success) error = data.error;
       else {
-        userInventory.update(inv => [...inv, itemKey]);
         const itemCost = $shopItems[itemKey].cost;
         walletBalance.update(bal => bal - itemCost);
-        addToast(`Successfully purchased ${$shopItems[itemKey].name}!`, 'success');
-        await handleAction(itemKey, 'equip', null, true);
+
+        // Handle UI updates based on item type
+        if ($shopItems[itemKey].slot === 'consumable') {
+            if (itemKey === 'reroll_shard') {
+                rerollShards.update(s => s + 1);
+            } else if (itemKey === 'streak_freeze') {
+                userInventory.update(inv => [...inv, itemKey]);
+            }
+            addToast(`Successfully purchased ${$shopItems[itemKey].name}!`, 'success');
+        } else {
+            userInventory.update(inv => [...inv, itemKey]);
+            addToast(`Successfully purchased ${$shopItems[itemKey].name}!`, 'success');
+            await handleAction(itemKey, 'equip', null, true);
+        }
       }
     } else if (action === 'equip') {
       const { data, error: rpcError } = await supabase.rpc('equip_item', { p_item_key: itemKey });
@@ -64,6 +75,7 @@
         {@const owned = $userInventory.includes(key)}
         {@const equipped = $equippedItems[item.slot] === key}
         {@const affordable = $walletBalance >= item.cost}
+        {@const isConsumable = item.slot === 'consumable'}
 
         <div class="shop-item shop-rarity-{item.rarity || 'Common'}">
           <div class="shop-preview-area">
@@ -72,7 +84,6 @@
             {:else if item.slot === 'roll_effect'}
               <div class="preview-roll-orb {item.css_type === 'class' ? item.css_value : ''}"></div>
             {:else if item.slot === 'lb_theme'}
-              <!-- Removed inline styles so theme classes can control text color -->
               <div class="preview-lb-row {item.css_type === 'class' ? item.css_value : ''}">
                 <span class="preview-lb-text">#1 YourName</span>
               </div>
@@ -90,7 +101,7 @@
                   {:else}
                     <span style="{item.css_value}" data-text="Username">Username</span>
                   {/if}
-                {:else if item.slot === 'consumable'}
+                {:else if isConsumable}
                   <span style="color: var(--accent-purple); font-size: 1.2rem;">❄️</span>
                 {/if}
               </div>
@@ -107,19 +118,19 @@
             <button class="shop-btn equipped" on:click={() => handleAction(key, 'unequip', item.slot)} disabled={loadingAction}>
               Unequip
             </button>
-          {:else if owned}
-            {#if item.slot === 'consumable'}
-              <button class="shop-btn owned" disabled>
-                Owned
-              </button>
-            {:else}
-              <button class="shop-btn owned" on:click={() => handleAction(key, 'equip')} disabled={loadingAction}>
-                Equip
-              </button>
-            {/if}
+          {:else if owned && !isConsumable}
+            <button class="shop-btn owned" on:click={() => handleAction(key, 'equip')} disabled={loadingAction}>
+              Equip
+            </button>
           {:else if affordable}
             <button class="shop-btn" on:click={() => handleAction(key, 'buy')} disabled={loadingAction}>
-              Buy
+              {#if isConsumable && key === 'reroll_shard' && $rerollShards > 0}
+                Buy (Owned: {$rerollShards})
+              {:else if isConsumable && owned}
+                Buy Another
+              {:else}
+                Buy
+              {/if}
             </button>
           {:else}
             <button class="shop-btn disabled" disabled>
@@ -194,7 +205,6 @@
   }
 
   /* EXPLICIT PREVIEW OVERRIDES FOR LB THEMES */
-  /* This ensures they render vibrantly in the small box */
   .preview-lb-row.lb-glow-theme {
     background: rgba(59, 130, 246, 0.25) !important;
     border: 2px solid #3b82f6 !important;

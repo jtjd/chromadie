@@ -17,6 +17,7 @@
   let bioInput = '';
   let moodColorInput = '';
 
+  // Derived state for pinned achievements to display on the card
   $: pinnedAchievements = targetProfile?.equipped_badges
     ? targetProfile.equipped_badges.map(id => allAchievements.find(a => a.id === id)).filter(Boolean)
     : [];
@@ -159,7 +160,7 @@
             <textarea class="bio-input" bind:value={bioInput} placeholder="Write a short bio (max 140 chars)..." maxlength="140"></textarea>
 
             <div class="mood-picker">
-              <label>Mood Color (Recent 30):</label>
+              <span class="mood-label">Mood Color (Recent 30):</span>
               <div class="mood-options-scroll">
                 <button class="mood-clear" on:click={() => moodColorInput = ''}>Clear</button>
                 {#each targetScores as score}
@@ -270,6 +271,9 @@
             class="achievement-box {isUnlocked ? 'unlocked' : 'locked'}"
             class:selected={isSelected}
             on:click={() => isUnlocked && toggleBadge(ach.id)}
+            on:keydown={(e) => e.key === 'Enter' && isUnlocked && toggleBadge(ach.id)}
+            role="button"
+            tabindex="0"
             style="cursor: {isUnlocked && isOwnProfile ? 'pointer' : 'default'}; border-color: {isSelected ? 'var(--accent-purple)' : ''};"
           >
             <div class="ach-icon">{isUnlocked ? ach.icon : '🔒'}</div>
@@ -292,13 +296,9 @@
     overflow: hidden;
     transition: background-image 0.5s ease;
   }
-  /* FIX: Use inset: 0 to force the background layer to stretch perfectly */
   .profile-bg-layer {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     z-index: 0;
     opacity: 0.6;
   }
@@ -361,7 +361,7 @@
   .bio-input:focus { border-color: var(--accent-purple); }
 
   .mood-picker { margin-top: 15px; text-align: left; }
-  .mood-picker label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 8px; }
+  .mood-label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 8px; }
   .mood-options-scroll {
     display: flex;
     gap: 8px;

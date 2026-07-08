@@ -39,7 +39,7 @@ export function clearUserState() {
 export async function loadShopItems() {
     const { data, error } = await supabase
     .from('shop_items')
-    .select('item_key, name, slot, cost, css_type, css_value, rarity, description') // Added description
+    .select('item_key, name, slot, cost, css_type, css_value, rarity, description')
     .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
     .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
 
@@ -65,7 +65,6 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
     if (currentSession) {
         await loadShopItems();
 
-        // FIX: Wrap profile fetch in try/catch to prevent auth pipeline crashes
         try {
             const { data: prof, error: profError } = await supabase
             .from('profiles')
@@ -94,8 +93,6 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
             if (inv) userInventory.set(inv.map(i => i.item_key))
         } catch (e) {
             console.error("Critical error during auth state change:", e);
-            // We don't block the session, just log the error.
-            // The user can still play as a guest or refresh to retry the fetch.
         }
     } else {
         clearUserState()
