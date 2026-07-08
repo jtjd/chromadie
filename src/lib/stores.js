@@ -66,11 +66,23 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
         await loadShopItems();
 
         try {
-            const { data: prof, error: profError } = await supabase
-            .from('profiles')
-            .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, reroll_shards, equipped_badges, bio, mood_color')
-            .eq('id', currentSession.user.id)
-            .single()
+            // FIX: Batch the independent fetches into a single concurrent network wave
+            const [profileRes, inventoryRes, walletRes] = await Promise.all([
+                supabase
+                .from('profiles')
+                .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, reroll_shards, equipped_badges, bio, mood_color')
+                .eq('id', currentSession.user.id)
+                .single(),
+                                                                            supabase
+                                                                            .from('inventory')
+                                                                            .select('item_key')
+                                                                            .eq('user_id', currentSession.user.id),
+                                                                            supabase.rpc('get_wallet_balance')
+            ]);
+
+            const { data: prof, error: profError } = profileRes;
+            const { data: inv } = inventoryRes;
+            const { data: wallet, error: walletError } = walletRes;
 
             if (profError) {
                 console.warn("Profile fetch delayed or missing:", profError.message);
@@ -83,14 +95,12 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
                 equippedBadges.set(prof.equipped_badges || [])
             }
 
-            await fetchWalletBalance();
-
-            const { data: inv } = await supabase
-            .from('inventory')
-            .select('item_key')
-            .eq('user_id', currentSession.user.id)
-
             if (inv) userInventory.set(inv.map(i => i.item_key))
+
+                if (!walletError && wallet !== null) {
+                    walletBalance.set(wallet)
+                }
+
         } catch (e) {
             console.error("Critical error during auth state change:", e);
         }

@@ -1,7 +1,7 @@
 <script>
   import { supabase } from './supabase';
   import { shopItems, selectedUserId } from './stores';
-  import { escapeHtml, getTodayString } from './utils';
+  import { getTodayString } from './utils';
   import { getNameEffect, getTitleText, getLbTheme } from './cosmetics';
   import { onMount, createEventDispatcher } from 'svelte';
 
@@ -83,7 +83,6 @@
         {@const titleTxt = getTitleText(row.equipped_cosmetics)}
         {@const lbTheme = getLbTheme(row.equipped_cosmetics)}
 
-        <!-- FIX: Applied lbTheme class and style to the row -->
         <div class="leaderboard-row {lbTheme.cls}" style="{lbTheme.style}">
           <span class="lb-rank">#{index + 1}</span>
           <span class="lb-info">
@@ -91,8 +90,9 @@
               <span class="title-chip">[{titleTxt}]</span>
             {/if}
             <button class="lb-username-button" on:click={() => viewProfile(row.user_id)}>
+              <!-- FIX: Removed redundant escapeHtml wrapper -->
               <span class="lb-username {nameEff.cls}" style="{nameEff.style}" data-text={row.username}>
-                {escapeHtml(row.username)}
+                {row.username}
               </span>
             </button>
             {#if row.current_streak > 0}

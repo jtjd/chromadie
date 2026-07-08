@@ -153,9 +153,9 @@
     score = data.score;
     rarity = data.rarity;
 
-    const { data: percData, error: percError } = await supabase.rpc('get_score_percentile', { p_score: data.score });
-    if (!percError && percData) {
-        percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
+    // FIX: Use percentile data directly from roll_die response to save a network request
+    if (data.percentile !== undefined && data.total_rollers !== undefined) {
+        percentileDisplay = getPercentileTier(data.percentile, data.total_rollers);
     }
 
     let targetScore = data.score;
@@ -205,6 +205,7 @@
         badges = sortBadgesDescending(dbRoll.badges || []);
         displayColor = dbRoll.hex_code;
 
+        // FIX: Only fetch percentile separately if loading an existing roll (not after a fresh roll)
         const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: dbRoll.score });
         if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
       }

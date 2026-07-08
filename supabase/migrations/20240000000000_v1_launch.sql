@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     username TEXT UNIQUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    email TEXT,
     current_streak INTEGER DEFAULT 0,
     longest_streak INTEGER DEFAULT 0,
     ep_spent BIGINT DEFAULT 0,
@@ -119,8 +118,13 @@ WHERE season_id IS NOT NULL AND season_start <= CURRENT_DATE AND season_end >= C
 
 -- 4. TRIGGERS
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ BEGIN
-  INSERT INTO public.profiles (id, username, email) VALUES (new.id, new.raw_user_meta_data->>'username', new.email);
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$ BEGIN
+  INSERT INTO public.profiles (id, username)
+  VALUES (new.id, new.raw_user_meta_data->>'username');
   RETURN new;
 END;
  $$;
