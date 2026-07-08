@@ -1,5 +1,5 @@
 <script>
-  import { session, profile, equippedItems, shopItems, selectedUserId } from './lib/stores';
+  import { session, profile, equippedItems, selectedUserId } from './lib/stores';
   import { supabase } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import Game from './lib/Game.svelte';
@@ -21,7 +21,6 @@
     handleNavClick('game');
   }
 
-  // FIX: Clear selectedUserId whenever navigating via the header
   function handleNavClick(newView) {
     selectedUserId.set(null);
     view = newView;

@@ -1,6 +1,6 @@
 <script>
   import { supabase } from './supabase';
-  import { shopItems, selectedUserId } from './stores';
+  import { selectedUserId } from './stores';
   import { getTodayString } from './utils';
   import { getNameEffect, getTitleText, getLbTheme } from './cosmetics';
   import { onMount, createEventDispatcher } from 'svelte';
@@ -78,7 +78,7 @@
     <div class="card"><p>No scores yet. Roll to claim #1!</p></div>
   {:else}
     <div class="leaderboard-list">
-      {#each leaderboard as row, index}
+      {#each leaderboard as row, index (row.user_id)}
         {@const nameEff = getNameEffect(row.equipped_cosmetics)}
         {@const titleTxt = getTitleText(row.equipped_cosmetics)}
         {@const lbTheme = getLbTheme(row.equipped_cosmetics)}
@@ -90,7 +90,6 @@
               <span class="title-chip">[{titleTxt}]</span>
             {/if}
             <button class="lb-username-button" on:click={() => viewProfile(row.user_id)}>
-              <!-- FIX: Removed redundant escapeHtml wrapper -->
               <span class="lb-username {nameEff.cls}" style="{nameEff.style}" data-text={row.username}>
                 {row.username}
               </span>

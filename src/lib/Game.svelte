@@ -13,7 +13,6 @@
 
   let displayHex = '#000000';
   let displayColor = '#222';
-  let lockedDigits = 0;
 
   let score = 0;
   let rarity = '';
@@ -21,28 +20,23 @@
   let displayScore = 0;
   let scanProgress = 0;
 
-  // Percentile State
   let percentileDisplay = null;
-
-  // Share & Countdown State
   let copied = false;
   let countdownString = '24:00:00';
   let countdownInterval;
 
-  // Reactive arrays to separate standard badges from achievements
   $: rollBadges = badges.filter(b => !b.is_achievement);
   $: earnedAchievements = badges.filter(b => b.is_achievement);
 
-  // Fetch roll effect from profile cosmetics
   $: cosmetics = $profile?.equipped_cosmetics || {};
   $: rollEff = getRollEffect(cosmetics);
 
   function getPercentileTier(p, total) {
+      if (total <= 1) return { text: "🏆 First roll of the day!", color: "#f1c40f", total };
+
+      let rank = 100 - p;
       let text = '';
       let color = '#8a8a9a';
-
-      if (total <= 1) return { text: "🏆 First roll of the day!", color: "#f1c40f", total };
-      let rank = 100 - p;
 
       if (rank <= 1) { text = "🔥 Top 1% today"; color = "#f1c40f"; }
       else if (rank <= 5) { text = "⭐ Top 5% today"; color = "#ffeb3b"; }
@@ -92,8 +86,8 @@
           await navigator.clipboard.writeText(shareString);
           copied = true;
           setTimeout(() => copied = false, 2000);
-      } catch (e) {
-          console.error("Clipboard copy failed", e);
+      } catch {
+          console.error("Clipboard copy failed");
       }
   }
 
@@ -101,7 +95,6 @@
     loading = true;
     error = null;
     phase = 'rolling';
-    lockedDigits = 0;
     badges = [];
     displayScore = 0;
     scanProgress = 0;
@@ -129,7 +122,6 @@
 
     const hexChars = data.hex.split('');
     for (let i = 0; i < 7; i++) {
-      lockedDigits = i;
       let currentText = hexChars.map((c, idx) => idx <= i ? c : '-').join('');
       displayHex = currentText;
       await sleep(500);
@@ -138,8 +130,6 @@
     await sleep(400);
     displayColor = data.hex;
 
-    // FIX: data.badges already contains the achievements (with is_achievement: true) from the RPC.
-    // We don't need to combine them with data.new_achievements, which causes a double display.
     const sortedBadgesForAnim = (data.badges || []).slice().sort((a, b) => a.points - b.points);
 
     for (const badge of sortedBadgesForAnim) {
@@ -155,7 +145,6 @@
     score = data.score;
     rarity = data.rarity;
 
-    // FIX: Use percentile data directly from roll_die response to save a network request
     if (data.percentile !== undefined && data.total_rollers !== undefined) {
         percentileDisplay = getPercentileTier(data.percentile, data.total_rollers);
     }
@@ -207,7 +196,6 @@
         badges = sortBadgesDescending(dbRoll.badges || []);
         displayColor = dbRoll.hex_code;
 
-        // FIX: Only fetch percentile separately if loading an existing roll (not after a fresh roll)
         const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: dbRoll.score });
         if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
       }
@@ -226,7 +214,7 @@
             const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: rollData.score });
             if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
           }
-        } catch (e) {
+        } catch {
           localStorage.removeItem('chromadie-roll');
         }
       }
@@ -260,7 +248,7 @@
         <div class="scan-bar" style="width: {scanProgress}%"></div>
       </div>
       <div class="rolling-badges-container">
-        {#each badges as badge}
+        {#each badges as badge (badge.name)}
           <div class="badge-pop rarity-{badge.rarity || 'Common'}">
             <span class="badge-symbol">{badge.symbol || '✨'}</span>
             <div class="badge-text">
@@ -278,7 +266,6 @@
       <div class="results-header results-header-tight">
         <div class="rarity-tag rarity-{rarity}">{rarity}</div>
 
-        <!-- Wrapped color orb in roll-effect-wrapper -->
         <div class="roll-effect-wrapper {rollEff.cls}" style="{rollEff.style}">
           <div class="final-color-display rarity-{rarity}" style="background-color: {displayColor};"></div>
         </div>
@@ -332,7 +319,7 @@
             </div>
           </div>
         {:else}
-          {#each rollBadges as badge}
+          {#each rollBadges as badge (badge.name)}
             <div class="badge-result rarity-{badge.rarity || 'Common'}">
               <span class="badge-symbol">{badge.symbol || '✨'}</span>
               <div class="badge-text">
@@ -349,7 +336,7 @@
         <div class="badges-container badges-container-tight" style="margin-top: 20px;">
           <div class="badges-title">Achievements Unlocked</div>
           <div class="badges-subtitle">Rewards add to your spendable EP balance, not your leaderboard score.</div>
-          {#each earnedAchievements as badge}
+          {#each earnedAchievements as badge (badge.name)}
             <div class="badge-result rarity-Mythic">
               <span class="badge-symbol">{badge.symbol || '🏆'}</span>
               <div class="badge-text">
@@ -373,11 +360,9 @@
   .chroma-btn::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; z-index: -1; background: var(--spectrum); background-size: 300% 100%; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spectrumFlow 5s linear infinite; }
   .chroma-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 124, 246, 0.25); }
   .chroma-btn:active { transform: translateY(1px); }
-
   .reroll-btn { background: rgba(139, 124, 246, 0.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 600; transition: all 0.2s; }
   .reroll-btn:hover { background: rgba(139, 124, 246, 0.3); }
   .reroll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
   .badges-container-tight { margin-bottom: 0 !important; margin-top: 20px; }
   .guest-promo-middle { margin-bottom: 20px !important; text-align: center; border-left: none !important; }
   .badges-subtitle { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 10px; text-align: left; opacity: 0.8; }

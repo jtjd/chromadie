@@ -51,10 +51,8 @@ export async function loadShopItems() {
 }
 
 export async function fetchWalletBalance() {
-    const { data, error } = await supabase.rpc('get_wallet_balance')
-    if (error) {
-        console.error("Error fetching wallet balance:", error.message);
-    } else if (data !== null) {
+    const { data } = await supabase.rpc('get_wallet_balance')
+    if (data !== null) {
         walletBalance.set(data)
     }
 }

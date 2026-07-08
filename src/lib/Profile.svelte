@@ -1,8 +1,7 @@
 <script>
   import { supabase } from './supabase';
-  import { profile, walletBalance, equippedItems, session, equippedBadges, addToast } from './stores';
+  import { session, equippedBadges, addToast } from './stores';
   import { getNameEffect, getFrameEffect, getTitleText, getProfileBg } from './cosmetics';
-  import { getTodayString } from './utils';
 
   export let userId = null;
 
@@ -17,7 +16,6 @@
   let bioInput = '';
   let moodColorInput = '';
 
-  // Derived state for pinned achievements to display on the card
   $: pinnedAchievements = targetProfile?.equipped_badges
     ? targetProfile.equipped_badges.map(id => allAchievements.find(a => a.id === id)).filter(Boolean)
     : [];
@@ -90,8 +88,8 @@
     if (prof) {
       targetProfile = prof;
 
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // FIX: Calculate date string directly to avoid Svelte 5 Date reactivity warning
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const { data: scores } = await supabase
         .from('scores')
         .select('hex_code, score, rarity, roll_date, badges')
@@ -163,7 +161,7 @@
               <span class="mood-label">Mood Color (Recent 30):</span>
               <div class="mood-options-scroll">
                 <button class="mood-clear" on:click={() => moodColorInput = ''}>Clear</button>
-                {#each targetScores as score}
+                {#each targetScores as score (score.roll_date)}
                   <button
                     class="mood-swatch {moodColorInput === score.hex_code ? 'selected' : ''}"
                     style="background-color: {score.hex_code};"
@@ -187,7 +185,7 @@
           <div class="pinned-achievements-section">
             <div class="pinned-title">Pinned Achievements</div>
             <div class="pinned-list">
-              {#each pinnedAchievements as ach}
+              {#each pinnedAchievements as ach (ach.id)}
                 <div class="pinned-item">
                   <span class="pinned-icon">{ach.icon}</span>
                   <div class="pinned-info">
@@ -235,7 +233,7 @@
         <div class="best-box">
           <div class="badges-title">Roll History (30d)</div>
           <div style="display: flex; flex-direction: column; gap: 10px;">
-            {#each targetScores.slice(0, 5) as score}
+            {#each targetScores.slice(0, 5) as score (score.roll_date)}
               <div class="history-row">
                 <div class="history-color" style="background-color: {score.hex_code};"></div>
                 <div style="flex: 1; text-align: left;">
@@ -264,7 +262,7 @@
       {/if}
 
       <div class="achievements-grid">
-        {#each allAchievements as ach}
+        {#each allAchievements as ach (ach.id)}
           {@const isUnlocked = unlockedAchievements.includes(ach.id)}
           {@const isSelected = selectedBadges.includes(ach.id)}
           <div
@@ -291,143 +289,35 @@
 </div>
 
 <style>
-  .mood-card {
-    position: relative;
-    overflow: hidden;
-    transition: background-image 0.5s ease;
-  }
-  .profile-bg-layer {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 0;
-    opacity: 0.6;
-  }
-  .profile-content-layer {
-    position: relative;
-    z-index: 1;
-  }
-
-  .profile-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    gap: 15px;
-  }
-  .profile-identity {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .edit-btn {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--card-border);
-    color: var(--text-muted);
-    padding: 5px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
+  .mood-card { position: relative; overflow: hidden; transition: background-image 0.5s ease; }
+  .profile-bg-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; opacity: 0.6; }
+  .profile-content-layer { position: relative; z-index: 1; }
+  .profile-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
+  .profile-identity { display: flex; flex-direction: column; gap: 5px; }
+  .edit-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; white-space: nowrap; }
   .edit-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-
-  .bio-section {
-    min-height: 60px;
-    margin-bottom: 20px;
-    text-align: left;
-  }
-  .bio-text {
-    font-size: 0.9rem;
-    color: var(--text-main);
-    line-height: 1.4;
-    opacity: 0.9;
-  }
-  .bio-input {
-    width: 100%;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    padding: 10px;
-    color: #fff;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
-    resize: vertical;
-    min-height: 60px;
-    box-sizing: border-box;
-    outline: none;
-    transition: border 0.2s;
-  }
+  .bio-section { min-height: 60px; margin-bottom: 20px; text-align: left; }
+  .bio-text { font-size: 0.9rem; color: var(--text-main); line-height: 1.4; opacity: 0.9; }
+  .bio-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Inter', sans-serif; font-size: 0.9rem; resize: vertical; min-height: 60px; box-sizing: border-box; outline: none; transition: border 0.2s; }
   .bio-input:focus { border-color: var(--accent-purple); }
-
   .mood-picker { margin-top: 15px; text-align: left; }
   .mood-label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 8px; }
-  .mood-options-scroll {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-    max-height: 80px;
-    overflow-y: auto;
-    padding: 5px;
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    background: rgba(0,0,0,0.2);
-  }
-  .mood-clear {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--card-border);
-    color: var(--text-muted);
-    padding: 4px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    flex-shrink: 0;
-  }
-  .mood-swatch {
-    width: 24px; height: 24px; border-radius: 50%;
-    border: 2px solid transparent; cursor: pointer;
-    transition: transform 0.1s, border 0.2s;
-    flex-shrink: 0;
-  }
+  .mood-options-scroll { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-height: 80px; overflow-y: auto; padding: 5px; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2); }
+  .mood-clear { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; flex-shrink: 0; }
+  .mood-swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.1s, border 0.2s; flex-shrink: 0; }
   .mood-swatch:hover { transform: scale(1.1); }
   .mood-swatch.selected { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
-
-  .pinned-achievements-section {
-    margin-bottom: 20px;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    padding: 15px;
-    text-align: left;
-  }
-  .pinned-title {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
+  .pinned-achievements-section { margin-bottom: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; text-align: left; }
+  .pinned-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 10px; }
   .pinned-list { display: flex; flex-direction: column; gap: 10px; }
   .pinned-item { display: flex; align-items: center; gap: 12px; }
   .pinned-icon { font-size: 1.4rem; width: 36px; text-align: center; flex-shrink: 0; }
   .pinned-info { display: flex; flex-direction: column; gap: 2px; }
   .pinned-name { font-weight: 600; font-size: 0.9rem; color: #fff; }
   .pinned-desc { font-size: 0.75rem; color: var(--text-muted); }
-
   .edit-actions { display: flex; gap: 10px; margin-top: 15px; }
-  .save-btn {
-    background: var(--accent-purple); color: #fff; border: none;
-    padding: 8px 16px; border-radius: 6px; cursor: pointer;
-    font-weight: 600; width: 100%; transition: background 0.2s;
-  }
+  .save-btn { background: var(--accent-purple); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; transition: background 0.2s; }
   .save-btn:hover { background: #7c3aed; }
-  .cancel-btn {
-    background: rgba(255,255,255,0.05); color: var(--text-muted);
-    border: 1px solid var(--card-border); padding: 8px 16px;
-    border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%;
-  }
-
+  .cancel-btn { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--card-border); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%; }
   .achievement-box.selected { box-shadow: 0 0 12px rgba(139, 124, 246, 0.4); }
 </style>

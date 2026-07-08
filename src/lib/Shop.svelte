@@ -71,12 +71,11 @@
     <div class="card"><p>Loading shop...</p></div>
   {:else}
     <div class="shop-grid">
-      {#each itemsArray as [key, item]}
+      {#each itemsArray as [key, item] (key)}
         {@const owned = $userInventory.includes(key)}
         {@const equipped = $equippedItems[item.slot] === key}
         {@const affordable = $walletBalance >= item.cost}
         {@const isConsumable = item.slot === 'consumable'}
-
         <div class="shop-item shop-rarity-{item.rarity || 'Common'}">
           <div class="shop-preview-area">
             {#if item.slot === 'profile_bg'}
