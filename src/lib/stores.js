@@ -43,7 +43,9 @@ export async function loadShopItems() {
     .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
     .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
 
-    if (data) {
+    if (error) {
+        console.error("Error fetching shop items:", error.message);
+    } else if (data) {
         const cache = {}
         data.forEach(item => { cache[item.item_key] = item })
         shopItems.set(cache)
@@ -64,7 +66,7 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
         await loadShopItems();
 
         try {
-            // FIX: Batch the independent fetches into a single concurrent network wave
+            // Batch the independent fetches into a single concurrent network wave
             const [profileRes, inventoryRes, walletRes] = await Promise.all([
                 supabase
                 .from('profiles')
@@ -80,7 +82,7 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
 
             const { data: prof, error: profError } = profileRes;
             const { data: inv } = inventoryRes;
-            const { data: wallet, error: walletError } = walletRes;
+            const { data: wallet } = walletRes;
 
             if (profError) {
                 console.warn("Profile fetch delayed or missing:", profError.message);
@@ -95,7 +97,7 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
 
             if (inv) userInventory.set(inv.map(i => i.item_key))
 
-                if (!walletError && wallet !== null) {
+                if (wallet !== null) {
                     walletBalance.set(wallet)
                 }
 
