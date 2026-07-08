@@ -35,20 +35,17 @@
       if (total <= 1) return { text: "🏆 First roll of the day!", color: "#f1c40f", total };
 
       let rank = 100 - p;
-      let text = '';
-      let color = '#8a8a9a';
 
-      if (rank <= 1) { text = "🔥 Top 1% today"; color = "#f1c40f"; }
-      else if (rank <= 5) { text = "⭐ Top 5% today"; color = "#ffeb3b"; }
-      else if (rank <= 10) { text = "🚀 Top 10% today"; color = "#10b981"; }
-      else if (rank <= 25) { text = "👍 Top 25% today"; color = "#6ee787"; }
-      else if (rank <= 50) { text = "📊 Above average today"; color = "#e0e0e0"; }
-      else if (rank <= 75) { text = "⚪ Around average today"; color = "#8a8a9a"; }
-      else if (rank <= 90) { text = "⚠️ Bottom 25% today"; color = "#ff9800"; }
-      else if (rank <= 95) { text = "🔻 Bottom 10% today"; color = "#ef4444"; }
-      else { text = "💀 Bottom 5% today"; color = "#b91c1c"; }
+      if (rank <= 1) return { text: "🔥 Top 1% today", color: "#f1c40f", total };
+      if (rank <= 5) return { text: "⭐ Top 5% today", color: "#ffeb3b", total };
+      if (rank <= 10) return { text: "🚀 Top 10% today", color: "#10b981", total };
+      if (rank <= 25) return { text: "👍 Top 25% today", color: "#6ee787", total };
+      if (rank <= 50) return { text: "📊 Above average today", color: "#e0e0e0", total };
+      if (rank <= 75) return { text: "⚪ Around average today", color: "#8a8a9a", total };
+      if (rank <= 90) return { text: "⚠️ Bottom 25% today", color: "#ff9800", total };
+      if (rank <= 95) return { text: "🔻 Bottom 10% today", color: "#ef4444", total };
 
-      return { text, color, total };
+      return { text: "💀 Bottom 5% today", color: "#b91c1c", total };
   }
 
   function sortBadgesDescending(arr) {
