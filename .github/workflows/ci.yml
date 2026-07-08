@@ -18,6 +18,8 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
+      - name: Lint project
+        run: npx eslint src/
       - name: Build project
         run: npm run build
         env:
