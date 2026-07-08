@@ -33,7 +33,7 @@
   $: rollBadges = badges.filter(b => !b.is_achievement);
   $: earnedAchievements = badges.filter(b => b.is_achievement);
 
-  // FIX: Fetch roll effect from profile cosmetics
+  // Fetch roll effect from profile cosmetics
   $: cosmetics = $profile?.equipped_cosmetics || {};
   $: rollEff = getRollEffect(cosmetics);
 
@@ -135,26 +135,12 @@
       await sleep(500);
     }
 
-      await sleep(400);
+    await sleep(400);
     displayColor = data.hex;
 
-    // 1. Combine standard badges and new achievements into one array
-    let combinedBadges = (data.badges || []).slice();
-    if (data.new_achievements && data.new_achievements.length > 0) {
-        for (const ach of data.new_achievements) {
-            combinedBadges.push({
-                name: `Achievement: ${ach.name}`,
-                points: ach.ep_reward,
-                symbol: ach.icon,
-                desc: 'Achievement Unlocked!',
-                rarity: 'Mythic',
-                is_achievement: true
-            });
-        }
-    }
-
-    // 2. Sort lowest to highest for the animation (so highest ends up at top)
-    const sortedBadgesForAnim = combinedBadges.slice().sort((a, b) => a.points - b.points);
+    // FIX: data.badges already contains the achievements (with is_achievement: true) from the RPC.
+    // We don't need to combine them with data.new_achievements, which causes a double display.
+    const sortedBadgesForAnim = (data.badges || []).slice().sort((a, b) => a.points - b.points);
 
     for (const badge of sortedBadgesForAnim) {
       await sleep(700);
@@ -292,7 +278,7 @@
       <div class="results-header results-header-tight">
         <div class="rarity-tag rarity-{rarity}">{rarity}</div>
 
-        <!-- FIX: Wrapped color orb in roll-effect-wrapper -->
+        <!-- Wrapped color orb in roll-effect-wrapper -->
         <div class="roll-effect-wrapper {rollEff.cls}" style="{rollEff.style}">
           <div class="final-color-display rarity-{rarity}" style="background-color: {displayColor};"></div>
         </div>
