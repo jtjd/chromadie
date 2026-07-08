@@ -1,8 +1,9 @@
 <script>
   import { supabase } from './supabase';
-  import { session } from './stores';
+  import { session, fetchWalletBalance, rerollShards, profile } from './stores';
   import { sleep, getTodayString } from './utils';
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { getRollEffect } from './cosmetics';
 
   const dispatch = createEventDispatcher();
 
@@ -20,20 +21,27 @@
   let displayScore = 0;
   let scanProgress = 0;
 
+  // Percentile State
   let percentileDisplay = null;
+
+  // Share & Countdown State
   let copied = false;
   let countdownString = '24:00:00';
   let countdownInterval;
 
-  // FIX: Corrected color assignments
+  // Reactive arrays to separate standard badges from achievements
+  $: rollBadges = badges.filter(b => !b.is_achievement);
+  $: earnedAchievements = badges.filter(b => b.is_achievement);
+
+  // FIX: Fetch roll effect from profile cosmetics
+  $: cosmetics = $profile?.equipped_cosmetics || {};
+  $: rollEff = getRollEffect(cosmetics);
+
   function getPercentileTier(p, total) {
       let text = '';
       let color = '#8a8a9a';
 
-      if (total <= 1) {
-          return { text: "🏆 First roll of the day!", color: "#f1c40f", total };
-      }
-
+      if (total <= 1) return { text: "🏆 First roll of the day!", color: "#f1c40f", total };
       let rank = 100 - p;
 
       if (rank <= 1) { text = "🔥 Top 1% today"; color = "#f1c40f"; }
@@ -62,7 +70,11 @@
       const diff = getTomorrowMidnightUTC() - new Date();
       if (diff <= 0) {
           clearInterval(countdownInterval);
-          location.reload();
+          phase = 'preroll';
+          badges = [];
+          displayScore = 0;
+          scanProgress = 0;
+          percentileDisplay = null;
           return;
       }
       const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
@@ -72,8 +84,9 @@
   }
 
   async function shareResults() {
-      let badgeText = badges.length > 0 ? badges.map(b => b.name).join(', ') : 'None';
-      let shareString = `🎲 ChromaDie Daily Roll\nHex: ${displayColor}\nScore: ${score.toLocaleString()} pts\nRarity: ${rarity}\nConditions: ${badgeText}\n\nCan you beat my color? Roll yours here: ${window.location.origin}`;
+      let badgeText = rollBadges.length > 0 ? rollBadges.map(b => b.name).join(', ') : 'None';
+      let achText = earnedAchievements.length > 0 ? earnedAchievements.map(b => b.name).join(', ') : 'None';
+      let shareString = `🎲 ChromaDie Daily Roll\nHex: ${displayColor}\nScore: ${score.toLocaleString()} pts\nRarity: ${rarity}\nConditions: ${badgeText}\nAchievements: ${achText}\n\nCan you beat my color? Roll yours here: ${window.location.origin}`;
 
       try {
           await navigator.clipboard.writeText(shareString);
@@ -84,7 +97,7 @@
       }
   }
 
-  async function initiateRoll() {
+  async function initiateRoll(isReroll = false) {
     loading = true;
     error = null;
     phase = 'rolling';
@@ -94,10 +107,10 @@
     scanProgress = 0;
     percentileDisplay = null;
 
-    const { data, error: rpcError } = await supabase.rpc('roll_die');
+    const { data, error: rpcError } = await supabase.rpc('roll_die', { p_is_reroll: isReroll });
 
     if (rpcError || !data || !data.success) {
-      error = "An error occurred while rolling. Please try again.";
+      error = rpcError?.message || "An error occurred while rolling. Please try again.";
       phase = 'preroll';
       loading = false;
       return;
@@ -126,6 +139,7 @@
     displayColor = data.hex;
 
     const sortedBadgesForAnim = (data.badges || []).slice().sort((a, b) => a.points - b.points);
+
     for (const badge of sortedBadgesForAnim) {
       await sleep(700);
       badges = [badge, ...badges];
@@ -165,6 +179,8 @@
 
     if (!$session) {
       localStorage.setItem('chromadie-roll', JSON.stringify(rollData));
+    } else {
+      fetchWalletBalance();
     }
 
     loading = false;
@@ -217,8 +233,7 @@
   onDestroy(() => clearInterval(countdownInterval));
 </script>
 
-<!-- The HTML and Style remain exactly the same as the previous Game.svelte response -->
-<div class="container">
+<div class="container game-container">
   {#if error}
     <p class="auth-error">{error}</p>
   {/if}
@@ -227,7 +242,7 @@
     <div class="card">
       <h1>Daily Roll</h1>
       <p class="info-text">You get one roll every 24 hours. Roll to receive a random 24-bit color and earn Entropy Points (EP).</p>
-      <button class="roll-btn" on:click={initiateRoll} disabled={loading}>
+      <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading}>
         {loading ? 'Rolling...' : 'Roll the Die'}
       </button>
     </div>
@@ -259,9 +274,14 @@
     <div class="card">
       <div class="results-header results-header-tight">
         <div class="rarity-tag rarity-{rarity}">{rarity}</div>
-        <div class="final-color-display rarity-{rarity}" style="background-color: {displayColor};"></div>
+
+        <!-- FIX: Wrapped color orb in roll-effect-wrapper -->
+        <div class="roll-effect-wrapper {rollEff.cls}" style="{rollEff.style}">
+          <div class="final-color-display rarity-{rarity}" style="background-color: {displayColor};"></div>
+        </div>
+
         <div class="hex-code">{displayColor}</div>
-        <div class="score-label">Entropy Points</div>
+        <div class="score-label">Leaderboard Score</div>
         <div class="score-display">{displayScore.toLocaleString()}</div>
 
         {#if percentileDisplay}
@@ -281,6 +301,12 @@
         <button class="chroma-btn" on:click={shareResults}>
           {copied ? '✅ Copied!' : '📋 Share Roll'}
         </button>
+
+        {#if $session && $rerollShards > 0}
+          <button class="reroll-btn" on:click={() => initiateRoll(true)} disabled={loading}>
+            🎲 Use Reroll Shard ({$rerollShards} left)
+          </button>
+        {/if}
       </div>
 
       {#if !$session}
@@ -296,14 +322,14 @@
 
       <div class="badges-container badges-container-tight">
         <div class="badges-title">Conditions Met</div>
-        {#if badges.length === 0}
+        {#if rollBadges.length === 0}
           <div class="badge-result">
             <div class="badge-text">
               <span class="badge-title">No special conditions met</span>
             </div>
           </div>
         {:else}
-          {#each badges as badge}
+          {#each rollBadges as badge}
             <div class="badge-result rarity-{badge.rarity || 'Common'}">
               <span class="badge-symbol">{badge.symbol || '✨'}</span>
               <div class="badge-text">
@@ -315,82 +341,41 @@
           {/each}
         {/if}
       </div>
+
+      {#if earnedAchievements.length > 0}
+        <div class="badges-container badges-container-tight" style="margin-top: 20px;">
+          <div class="badges-title">Achievements Unlocked</div>
+          <div class="badges-subtitle">Rewards add to your spendable EP balance, not your leaderboard score.</div>
+          {#each earnedAchievements as badge}
+            <div class="badge-result rarity-Mythic">
+              <span class="badge-symbol">{badge.symbol || '🏆'}</span>
+              <div class="badge-text">
+                <span class="badge-title">{badge.name}</span>
+                <span class="badge-desc">{badge.desc}</span>
+              </div>
+              <span class="badge-points" style="color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.3);">+{badge.points.toLocaleString()} EP</span>
+            </div>
+          {/each}
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
 
 <style>
-  .results-header-tight {
-    margin-bottom: 5px !important;
-  }
+  .results-header-tight { margin-bottom: 5px !important; }
+  .post-score-actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 20px 0; flex-wrap: wrap; }
+  .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--card-border); }
+  .chroma-btn { position: relative; isolation: isolate; background: #16171f; color: #fff; border: 1px solid transparent; padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 600; transition: transform 0.15s ease, box-shadow 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: inline-flex; align-items: center; gap: 5px; }
+  .chroma-btn::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; z-index: -1; background: var(--spectrum); background-size: 300% 100%; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spectrumFlow 5s linear infinite; }
+  .chroma-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 124, 246, 0.25); }
+  .chroma-btn:active { transform: translateY(1px); }
 
-  .post-score-actions {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    margin: 0 0 20px 0;
-    flex-wrap: wrap;
-  }
+  .reroll-btn { background: rgba(139, 124, 246, 0.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 600; transition: all 0.2s; }
+  .reroll-btn:hover { background: rgba(139, 124, 246, 0.3); }
+  .reroll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .countdown-inline {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    font-family: 'JetBrains Mono', monospace;
-    background: rgba(255,255,255,0.03);
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: 1px solid var(--card-border);
-  }
-
-  .chroma-btn {
-    position: relative;
-    isolation: isolate;
-    background: #16171f;
-    color: #fff;
-    border: 1px solid transparent;
-    padding: 7px 18px;
-    font-size: 0.85rem;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 600;
-    transition: transform 0.15s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .chroma-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1.5px;
-    z-index: -1;
-    background: var(--spectrum);
-    background-size: 300% 100%;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: spectrumFlow 5s linear infinite;
-  }
-  .chroma-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(139, 124, 246, 0.25);
-  }
-  .chroma-btn:active {
-    transform: translateY(1px);
-  }
-
-  .badges-container-tight {
-    margin-bottom: 0 !important;
-    margin-top: 20px;
-  }
-
-  .guest-promo-middle {
-    margin-bottom: 20px !important;
-    text-align: center;
-    border-left: none !important;
-  }
+  .badges-container-tight { margin-bottom: 0 !important; margin-top: 20px; }
+  .guest-promo-middle { margin-bottom: 20px !important; text-align: center; border-left: none !important; }
+  .badges-subtitle { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 10px; text-align: left; opacity: 0.8; }
 </style>

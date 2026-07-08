@@ -11,11 +11,14 @@ export const userInventory = writable([])
 export const equippedItems = writable({})
 export const walletBalance = writable(0)
 
-// --- UI State ---
-export const selectedUserId = writable(null) // For viewing other profiles
+// --- Progression State ---
+export const rerollShards = writable(0)
+export const equippedBadges = writable([])
 
-// --- Toast Notifications ---
+// --- UI State ---
+export const selectedUserId = writable(null)
 export const toasts = writable([])
+
 export function addToast(message, type = 'error') {
     const id = Math.random().toString(36).substring(7)
     toasts.update(t => [...t, { id, message, type }])
@@ -24,19 +27,21 @@ export function addToast(message, type = 'error') {
     }, 4000)
 }
 
-// Helper to clear all user-specific state on logout
 export function clearUserState() {
     profile.set(null)
     userInventory.set([])
     equippedItems.set({})
     walletBalance.set(0)
+    rerollShards.set(0)
+    equippedBadges.set([])
 }
 
-// Fetch and cache shop items
 export async function loadShopItems() {
     const { data, error } = await supabase
     .from('shop_items')
-    .select('item_key, name, slot, cost, css_type, css_value')
+    .select('item_key, name, slot, cost, css_type, css_value, rarity, description') // Added description
+    .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
+    .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
 
     if (data) {
         const cache = {}
@@ -45,7 +50,6 @@ export async function loadShopItems() {
     }
 }
 
-// Fetch wallet balance using the secure RPC
 export async function fetchWalletBalance() {
     const { data, error } = await supabase.rpc('get_wallet_balance')
     if (error) {
@@ -55,33 +59,44 @@ export async function fetchWalletBalance() {
     }
 }
 
-// Initialize auth state listener
 supabase.auth.onAuthStateChange(async (event, currentSession) => {
     session.set(currentSession)
 
     if (currentSession) {
         await loadShopItems();
 
-        const { data: prof, error: profError } = await supabase
-        .from('profiles')
-        .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics')
-        .eq('id', currentSession.user.id)
-        .single()
+        // FIX: Wrap profile fetch in try/catch to prevent auth pipeline crashes
+        try {
+            const { data: prof, error: profError } = await supabase
+            .from('profiles')
+            .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, reroll_shards, equipped_badges, bio, mood_color')
+            .eq('id', currentSession.user.id)
+            .single()
 
-        if (profError) console.error("Error fetching profile:", profError.message);
-        if (prof) {
-            profile.set(prof)
-            equippedItems.set(prof.equipped_cosmetics || {})
+            if (profError) {
+                console.warn("Profile fetch delayed or missing:", profError.message);
+            }
+
+            if (prof) {
+                profile.set(prof)
+                equippedItems.set(prof.equipped_cosmetics || {})
+                rerollShards.set(prof.reroll_shards || 0)
+                equippedBadges.set(prof.equipped_badges || [])
+            }
+
+            await fetchWalletBalance();
+
+            const { data: inv } = await supabase
+            .from('inventory')
+            .select('item_key')
+            .eq('user_id', currentSession.user.id)
+
+            if (inv) userInventory.set(inv.map(i => i.item_key))
+        } catch (e) {
+            console.error("Critical error during auth state change:", e);
+            // We don't block the session, just log the error.
+            // The user can still play as a guest or refresh to retry the fetch.
         }
-
-        await fetchWalletBalance();
-
-        const { data: inv } = await supabase
-        .from('inventory')
-        .select('item_key')
-        .eq('user_id', currentSession.user.id)
-
-        if (inv) userInventory.set(inv.map(i => i.item_key))
     } else {
         clearUserState()
     }

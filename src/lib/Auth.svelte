@@ -19,7 +19,6 @@
         renderTurnstile();
       }
     }, 200);
-
     return () => clearInterval(checkTurnstile);
   });
 
@@ -81,13 +80,13 @@
         resetCaptcha();
       } else {
         if (data.session) {
-          // Logged in immediately - App.svelte will close the modal automatically
+          // onAuthStateChange will handle the modal close
         } else {
           error = "Success! Check your email to verify your account.";
         }
       }
     } else {
-      // FIX: Removed the username lookup RPC. Enforce email login.
+      // Login Flow
       if (!email.includes('@')) {
         error = "Please log in using your email address.";
         loading = false;
@@ -96,7 +95,7 @@
 
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email,
-        password,
+        password: password,
         options: { captchaToken }
       });
 
@@ -104,6 +103,7 @@
         error = "Invalid email or password.";
         resetCaptcha();
       }
+      // If successful, onAuthStateChange fires, $session updates, App.svelte closes modal.
     }
     loading = false;
   }
