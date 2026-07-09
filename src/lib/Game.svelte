@@ -1,13 +1,13 @@
 <script>
   import { supabase } from './supabase';
-  import { session, fetchWalletBalance, rerollShards, profile } from './stores';
+  import { session, authInitialized, fetchWalletBalance, rerollShards, profile, isAuthenticated } from './stores';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
+  import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
   import { getRollEffect, getOrbShape } from './cosmetics';
   import { getBadgeMeta } from './badgeData';
 
   const dispatch = createEventDispatcher();
-
   let phase = 'preroll';
   let loading = false;
   let error = null;
@@ -31,6 +31,12 @@
   let imagePreviewUrl = '';
   let imageCopied = false;
   let canvas;
+  let imageDialog = null;
+  let imageOpener = null;
+  let guestProgressRestored = false;
+  let rerollRequestInFlight = false;
+  let initialStateKey = null;
+  let initialStateRequestId = 0;
 
   let cotwColor = null;
   let cotwHit = false;
@@ -126,6 +132,152 @@
     }
   }
 
+  function getRerollLockKey() {
+    return `chromadie-reroll-lock:${getTodayString()}`;
+  }
+
+  function getRerollLockExpiry() {
+    return Date.now() + 10000;
+  }
+
+  function setRerollLock() {
+    try {
+      localStorage.setItem(getRerollLockKey(), String(getRerollLockExpiry()));
+    } catch {
+      // Ignore storage failures.
+    }
+  }
+
+  function clearRerollLock() {
+    try {
+      localStorage.removeItem(getRerollLockKey());
+    } catch {
+      // Ignore storage failures.
+    }
+  }
+
+  function hasActiveRerollLock() {
+    try {
+      const expiry = Number(localStorage.getItem(getRerollLockKey()));
+      if (!Number.isFinite(expiry)) return false;
+      if (expiry <= Date.now()) {
+        localStorage.removeItem(getRerollLockKey());
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function resetRollPresentation() {
+    phase = 'preroll';
+    loading = false;
+    error = null;
+    badges = [];
+    displayHex = '#000000';
+    displayColor = '#222';
+    score = 0;
+    rarity = '';
+    displayScore = 0;
+    scanProgress = 0;
+    percentileDisplay = null;
+    milestoneGranted = '';
+    cotwHit = false;
+    guestProgressRestored = false;
+  }
+
+  async function loadAuthenticatedRollState(userId, requestId) {
+    loading = true;
+
+    const { data: dbRoll } = await supabase
+      .from('scores')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('roll_date', getTodayString())
+      .single();
+
+    if (requestId !== initialStateRequestId) return;
+
+    if (dbRoll) {
+      phase = 'results';
+      score = dbRoll.score;
+      displayScore = dbRoll.score;
+      rarity = dbRoll.rarity;
+      badges = sortBadgesDescending(dbRoll.badges || []);
+      displayColor = dbRoll.hex_code;
+
+      if (dbRoll.badges && dbRoll.badges.includes('cotw_hit')) {
+          cotwHit = true;
+      }
+
+      const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: dbRoll.score });
+      if (requestId !== initialStateRequestId) return;
+      if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
+    } else {
+      phase = 'preroll';
+      guestProgressRestored = false;
+    }
+
+    loading = false;
+  }
+
+  async function loadGuestRollState(requestId) {
+    const savedRoll = getSavedGuestRoll();
+
+    if (requestId !== initialStateRequestId) return;
+
+    if (savedRoll) {
+      try {
+        const rollData = JSON.parse(savedRoll);
+        if (rollData.date === getTodayString()) {
+          guestProgressRestored = true;
+          phase = 'results';
+          score = rollData.score; displayScore = rollData.score;
+          rarity = rollData.rarity;
+          badges = sortBadgesDescending(rollData.badges || []);
+          displayColor = rollData.hex;
+
+          if (rollData.badges && rollData.badges.includes('cotw_hit')) {
+              cotwHit = true;
+          }
+
+          const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: rollData.score });
+          if (requestId !== initialStateRequestId) return;
+          if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
+          loading = false;
+          return;
+        }
+      } catch {
+        clearGuestRoll();
+      }
+    }
+
+    guestProgressRestored = false;
+    phase = 'preroll';
+    loading = false;
+  }
+
+  async function syncInitialState() {
+    if (!$authInitialized) return;
+
+    const nextKey = $session?.user.id || 'guest';
+    if (nextKey === initialStateKey) return;
+
+    initialStateKey = nextKey;
+    const requestId = ++initialStateRequestId;
+    rerollRequestInFlight = false;
+    error = null;
+    resetRollPresentation();
+    loading = true;
+
+    if ($session?.user?.id) {
+      await loadAuthenticatedRollState($session.user.id, requestId);
+    } else {
+      await loadGuestRollState(requestId);
+    }
+  }
+
   async function generateShareImage() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -189,6 +341,9 @@
     imagePreviewUrl = canvas.toDataURL('image/png');
     imageCopied = false;
     showImageModal = true;
+    imageOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    await tick();
+    focusFirstElement(imageDialog) || imageDialog?.focus();
   }
 
   async function copyImageToClipboard() {
@@ -213,8 +368,35 @@
     }, 'image/png');
   }
 
+  async function closeImageModal() {
+    if (!showImageModal) return;
+    showImageModal = false;
+    await tick();
+    restoreFocus(imageOpener);
+    imageOpener = null;
+  }
+
+  function handleImageModalKeydown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      void closeImageModal();
+      return;
+    }
+
+    trapFocus(event, imageDialog);
+  }
+
   async function initiateRoll(isReroll = false) {
+    if (!$authInitialized) {
+      return;
+    }
+
+    if (isReroll && (loading || rerollRequestInFlight || !$session?.user?.id || $rerollShards <= 0 || hasActiveRerollLock())) {
+      return;
+    }
+
     loading = true;
+    rerollRequestInFlight = isReroll;
     error = null;
     phase = 'rolling';
     badges = [];
@@ -224,12 +406,20 @@
     milestoneGranted = '';
     cotwHit = false;
 
+    if (isReroll) {
+      setRerollLock();
+    }
+
     const { data, error: rpcError } = await supabase.rpc('roll_die', { p_is_reroll: isReroll });
 
     if (rpcError || !data || !data.success) {
       error = rpcError?.message || "An error occurred while rolling. Please try again.";
       phase = 'preroll';
       loading = false;
+      rerollRequestInFlight = false;
+      if (isReroll) {
+        clearRerollLock();
+      }
       return;
     }
 
@@ -298,12 +488,17 @@
       badges: sortBadgesDescending(data.badges || [])
     };
 
-    if (!$session) {
+    if (!$session?.user?.id) {
       saveGuestRoll(rollData);
+      guestProgressRestored = true;
     } else {
       fetchWalletBalance();
     }
 
+    rerollRequestInFlight = false;
+    if (isReroll) {
+      clearRerollLock();
+    }
     loading = false;
   }
 
@@ -316,56 +511,23 @@
         const [r, g, b] = cotwData.value.split(',');
         cotwColor = `rgb(${r}, ${g}, ${b})`;
     }
-
-    if ($session) {
-      const { data: dbRoll } = await supabase
-        .from('scores')
-        .select('*')
-        .eq('user_id', $session.user.id)
-        .eq('roll_date', getTodayString())
-        .single();
-
-      if (dbRoll) {
-        phase = 'results';
-        score = dbRoll.score; displayScore = dbRoll.score;
-        rarity = dbRoll.rarity;
-        badges = sortBadgesDescending(dbRoll.badges || []);
-        displayColor = dbRoll.hex_code;
-
-        if (dbRoll.badges && dbRoll.badges.includes('cotw_hit')) {
-            cotwHit = true;
-        }
-
-        const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: dbRoll.score });
-        if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
-      }
-    } else {
-      const savedRoll = getSavedGuestRoll();
-      if (savedRoll) {
-        try {
-          const rollData = JSON.parse(savedRoll);
-          if (rollData.date === getTodayString()) {
-            phase = 'results';
-            score = rollData.score; displayScore = rollData.score;
-            rarity = rollData.rarity;
-            badges = sortBadgesDescending(rollData.badges || []);
-            displayColor = rollData.hex;
-
-            if (rollData.badges && rollData.badges.includes('cotw_hit')) {
-                cotwHit = true;
-            }
-
-            const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: rollData.score });
-            if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
-          }
-        } catch {
-          clearGuestRoll();
-        }
-      }
-    }
   });
 
+  $: if ($authInitialized || $session) {
+    void syncInitialState();
+  }
+
   onDestroy(() => clearInterval(countdownInterval));
+
+  $: if (typeof document !== 'undefined') {
+    document.body.style.overflow = showImageModal ? 'hidden' : '';
+  }
+
+  onDestroy(() => {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  });
 </script>
 
 <!-- Hidden Canvas for Image Generation -->
@@ -373,15 +535,23 @@
 
 <!-- Image Preview Modal -->
 {#if showImageModal}
-  <div class="image-modal-overlay" on:click|self={() => showImageModal = false} on:keydown|self={(e) => e.key === 'Escape' && (showImageModal = false)} role="button" tabindex="0">
-    <div class="image-modal-content">
-      <h3>Share Image</h3>
+  <div class="image-modal-overlay" role="presentation" on:click|self={closeImageModal}>
+    <div
+      class="image-modal-content"
+      bind:this={imageDialog}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="share-image-title"
+      tabindex="-1"
+      on:keydown={handleImageModalKeydown}
+    >
+      <h3 id="share-image-title">Share Image</h3>
       <img src={imagePreviewUrl} alt="ChromaDie Share Card" class="preview-img" />
       <div class="modal-actions">
-        <button class="download-btn" on:click={copyImageToClipboard}>
+        <button type="button" class="download-btn" on:click={copyImageToClipboard}>
           {#if imageCopied}✅ Copied!{:else}📋 Copy Image{/if}
         </button>
-        <button class="close-btn" on:click={() => showImageModal = false}>Close</button>
+        <button type="button" class="close-btn" on:click={closeImageModal}>Close</button>
       </div>
     </div>
   </div>
@@ -396,7 +566,7 @@
     <div class="card">
       <h1>Daily Roll</h1>
       <p class="info-text">You get one roll every 24 hours. Roll to receive a random 24-bit color and earn Entropy Points (EP).</p>
-      <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading}>
+      <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
         {loading ? 'Rolling...' : 'Roll the Die'}
       </button>
 
@@ -476,8 +646,8 @@
           🖼️ Share Image
         </button>
 
-        {#if $session && $rerollShards > 0}
-          <button class="reroll-btn" on:click={() => initiateRoll(true)} disabled={loading}>
+        {#if $isAuthenticated && $rerollShards > 0}
+          <button class="reroll-btn" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || hasActiveRerollLock() || !$authInitialized}>
             🎲 Use Reroll Shard ({$rerollShards} left)
           </button>
         {/if}
@@ -489,12 +659,18 @@
         </div>
       {/if}
 
-      {#if !$session}
+      {#if !$isAuthenticated && guestProgressRestored}
+        <div class="local-progress-banner" role="status" aria-live="polite">
+          Local-only progress restored. Create an account to save rolls to your profile.
+        </div>
+      {/if}
+
+      {#if !$isAuthenticated}
         <div class="guest-prompt">
           <div class="guest-prompt-header">Guest Mode</div>
           <div class="guest-prompt-title">Save Your Progress</div>
           <div class="guest-prompt-copy">Create an account to compete on the leaderboard, earn EP, and unlock customizations.</div>
-          <button class="roll-btn" style="margin-top: 15px; display: inline-block;" on:click={() => dispatch('promptlogin')}>
+          <button type="button" class="roll-btn" style="margin-top: 15px; display: inline-block;" on:click={() => dispatch('promptlogin')}>
             Create Account
           </button>
         </div>
@@ -521,7 +697,7 @@
         </div>
       {/if}
 
-      <div class="badges-container badges-container-tight">
+      <div class="badges-container badges-container-tight conditions-section">
         <div class="badges-title">Conditions Met</div>
         {#if rollBadges.length === 0}
           <div class="badge-result">
@@ -530,6 +706,7 @@
             </div>
           </div>
         {:else}
+          <div class="conditions-grid">
           {#each rollBadges as badgeId (badgeId)}
             {@const badge = getBadgeMeta(badgeId)}
             <div class="badge-result rarity-{badge.rarity || 'Common'}">
@@ -541,6 +718,7 @@
               <span class="badge-points">+{badge.points.toLocaleString()}</span>
             </div>
           {/each}
+          </div>
         {/if}
       </div>
 
@@ -578,6 +756,51 @@
   .reroll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .badges-container-tight { margin-bottom: 0 !important; margin-top: 20px; }
+  .conditions-section {
+    align-items: stretch;
+  }
+  .conditions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+  .conditions-grid .badge-result {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+    min-height: 72px;
+    margin-bottom: 0;
+  }
+  .conditions-grid .badge-symbol {
+    margin-top: 0;
+  }
+  .conditions-grid .badge-text {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .conditions-grid .badge-desc {
+    line-height: 1.35;
+  }
+  .conditions-grid .badge-points {
+    margin-left: 0;
+    padding-left: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .local-progress-banner {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    color: #cfe8ff;
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    text-align: left;
+  }
   .guest-prompt {
     margin-bottom: 20px !important;
     text-align: center;
@@ -653,4 +876,120 @@
   .download-btn { background: var(--accent-purple); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
   .download-btn:hover { background: #7c3aed; }
   .close-btn { background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; }
+
+  @media (max-width: 600px) {
+    .results-header {
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .results-header-tight {
+      margin-bottom: 0 !important;
+    }
+    .final-color-display {
+      width: 116px;
+      height: 116px;
+    }
+    .roll-effect-wrapper {
+      width: 116px;
+      height: 116px;
+    }
+    .rolling-hex {
+      font-size: 1.35rem;
+      letter-spacing: 2px;
+      word-break: break-word;
+    }
+    .score-display {
+      font-size: 2.4rem;
+    }
+    .hex-code {
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      padding: 7px 12px;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+    .post-score-actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .countdown-inline,
+    .chroma-btn,
+    .reroll-btn {
+      width: 100%;
+      justify-content: center;
+    }
+    .guest-prompt {
+      padding: 16px 14px;
+    }
+    .guest-prompt-title {
+      font-size: 1.05rem;
+    }
+    .guest-prompt-copy {
+      font-size: 0.88rem;
+    }
+    .badges-container {
+      gap: 6px;
+    }
+    .badge-pop,
+    .badge-result {
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px 12px;
+    }
+    .badge-text {
+      min-width: 0;
+    }
+    .badge-points {
+      padding-left: 0;
+      margin-left: 0;
+      width: 100%;
+      text-align: right;
+    }
+    .conditions-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .conditions-grid .badge-result {
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      grid-template-areas: "icon text points";
+      column-gap: 10px;
+      row-gap: 0;
+      align-items: start;
+      padding: 11px 12px;
+      min-height: unset;
+    }
+    .conditions-grid .badge-symbol {
+      grid-area: icon;
+    }
+    .conditions-grid .badge-text {
+      grid-area: text;
+    }
+    .conditions-grid .badge-points {
+      grid-area: points;
+      justify-self: end;
+      align-self: start;
+      width: auto;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .cotw-widget {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .cotw-swatch {
+      align-self: flex-start;
+    }
+    .image-modal-content {
+      padding: 18px 16px;
+      border-radius: 14px;
+    }
+    .modal-actions {
+      flex-direction: column;
+    }
+    .download-btn,
+    .close-btn {
+      width: 100%;
+    }
+  }
 </style>

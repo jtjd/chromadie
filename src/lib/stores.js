@@ -1,9 +1,31 @@
-import { writable } from 'svelte/store'
+import { derived, writable } from 'svelte/store'
 import { supabase } from './supabase'
 
 // --- Auth & Profile State ---
 export const session = writable(null)
 export const profile = writable(null)
+export const authUser = derived(session, $session => $session?.user ?? null)
+export const isGuest = derived(session, $session => !$session)
+export const authInitialized = writable(false)
+export const authEvent = writable('INITIAL_SESSION')
+export const profileReady = writable(false)
+export const profileLoadFailed = writable(false)
+export const profileLoading = derived(
+    [authInitialized, session, profileReady, profileLoadFailed],
+    ([$authInitialized, $session, $profileReady, $profileLoadFailed]) => Boolean(
+        $authInitialized
+        && $session
+        && !$profileReady
+        && !$profileLoadFailed
+    )
+)
+export const profileError = derived(profileLoadFailed, $profileLoadFailed => $profileLoadFailed)
+export const isAuthenticated = derived(
+    [session, profile, profileLoadFailed],
+    ([$session, $profile, $profileLoadFailed]) => Boolean(
+        $session && !$profileLoadFailed && $profile && $profile.id === $session.user.id
+    )
+)
 
 // --- Shop & Inventory State ---
 export const shopItems = writable({})
@@ -114,35 +136,40 @@ export async function toggleFollow(targetId) {
 }
 
 // Initialize auth state listener
-supabase.auth.onAuthStateChange(async (event, currentSession) => {
+let authEventId = 0
+supabase.auth.onAuthStateChange(async (eventName, currentSession) => {
+    const nextAuthEventId = ++authEventId
+    authEvent.set(eventName)
+    authInitialized.set(true)
     session.set(currentSession)
+    profileReady.set(false)
+    profileLoadFailed.set(false)
 
     if (currentSession) {
-        await loadShopItems();
-
+        clearUserState()
         try {
+            await loadShopItems();
+
+            if (nextAuthEventId !== authEventId) return;
+
             const [profileRes, inventoryRes, walletRes] = await Promise.all([
+                supabase.rpc('get_my_profile'),
                 supabase
-                .from('profiles')
-                .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, reroll_shards, equipped_badges, mood_color')
-                .eq('id', currentSession.user.id)
-                .single(),
-                                                                            supabase
-                                                                            .from('inventory')
-                                                                            .select('item_key')
-                                                                            .eq('user_id', currentSession.user.id),
-                                                                            supabase.rpc('get_wallet_balance')
+                    .from('inventory')
+                    .select('item_key')
+                    .eq('user_id', currentSession.user.id),
+                supabase.rpc('get_wallet_balance')
             ]);
 
             const { data: prof, error: profError } = profileRes;
             const { data: inv } = inventoryRes;
             const { data: wallet } = walletRes;
 
-            if (profError) {
-                console.warn("Profile fetch delayed or missing:", profError.message);
-            }
+            if (nextAuthEventId !== authEventId) return;
 
-            if (prof) {
+            if (profError || !prof || prof.success === false) {
+                profileLoadFailed.set(true)
+            } else {
                 profile.set(prof)
                 equippedItems.set(prof.equipped_cosmetics || {})
                 rerollShards.set(prof.reroll_shards || 0)
@@ -159,12 +186,21 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
                 .from('user_follows')
                 .select('followee_id')
                 .eq('follower_id', currentSession.user.id);
-            if (follows) followedUsers.set(follows.map(f => f.followee_id));
+                if (nextAuthEventId !== authEventId) return;
+                if (follows) followedUsers.set(follows.map(f => f.followee_id));
 
         } catch (e) {
+            if (nextAuthEventId !== authEventId) return;
             console.error("Critical error during auth state change:", e);
+        } finally {
+            if (nextAuthEventId === authEventId) {
+                profileReady.set(true);
+            }
         }
     } else {
         clearUserState()
+        authEvent.set(eventName)
+        profileLoadFailed.set(false)
+        profileReady.set(true)
     }
 })

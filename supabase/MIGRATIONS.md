@@ -12,6 +12,9 @@ Active forward fix:
 - `migrations/20260709002000_auth_bootstrap_and_hardening.sql`
 - `migrations/20260709003000_fix_streamer_purple_achievement.sql`
 - `migrations/20260709010000_username_hardening_and_cron.sql`
+- `migrations/20260709040000_lockdown_client_writes.sql`
+- `migrations/20260709050000_atomic_gameplay_transactions.sql`
+- `migrations/20260709060000_profile_read_lockdown.sql`
 
 Archived migrations:
 
@@ -25,7 +28,7 @@ Do not use the archived files for schema review, security review, or new databas
 
 Known gap:
 
-- This repo still needs canonical seed data for static gameplay tables if you want full scratch-environment reproducibility.
+- Canonical seed data now lives in `supabase/seed.sql` for fresh reset reproducibility.
 
 Version-controlled cron schedule:
 

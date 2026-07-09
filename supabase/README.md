@@ -8,7 +8,13 @@ The previous migration files drifted away from the live database and were causin
 
 Important limitation
 
-The live dump available in this repo is schema-only. It does not include canonical seed data for gameplay tables like `achievements`, `shop_items`, or `meta`. If you need reproducible fresh environments, add a separate `seed.sql` or equivalent seed workflow from the live project before relying on scratch rebuilds.
+The repo now includes canonical seed data in `supabase/seed.sql` for the static gameplay tables the app needs on first boot:
+
+- `achievements`
+- `shop_items`
+- `meta`
+
+Fresh Supabase resets should be playable without any manual dashboard inserts.
 
 Recommended development loop
 

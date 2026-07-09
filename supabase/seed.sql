@@ -1,13 +1,115 @@
--- Canonical seed data placeholder
+-- Canonical seed data for fresh Supabase resets.
 --
--- This project still needs a committed seed source for stable gameplay tables,
--- especially:
---   - public.achievements
---   - public.shop_items
---   - public.meta
---
--- The current re-baseline migration is schema-only because the baseline was
--- generated from a schema-only live dump.
---
--- Populate this file from the live project before depending on scratch
--- environment rebuilds.
+-- This keeps a new database playable without any manual dashboard setup.
+
+INSERT INTO public.achievements (id, name, description, icon, ep_reward, rarity) VALUES
+('first_roll', 'First Steps', 'Roll the die for the first time.', '🎲', 1000, 'Common'),
+('roll_10', 'Dedicated', 'Roll the die 10 times.', '🧡', 10000, 'Common'),
+('roll_50', 'Veteran', 'Roll the die 50 times.', '💜', 100000, 'Rare'),
+('roll_100', 'Centurion', 'Roll the die 100 times.', '💯', 250000, 'Epic'),
+('roll_365', 'Annual', 'Roll the die 365 times.', '📅', 1000000, 'Mythic'),
+('streak_7', 'Week Warrior', 'Maintain a 7-day streak.', '🔥', 50000, 'Uncommon'),
+('streak_14', 'Fortnight', 'Maintain a 14-day streak.', '🔥', 100000, 'Rare'),
+('streak_30', 'Monthly Grinder', 'Maintain a 30-day streak.', '📅', 500000, 'Rare'),
+('streak_100', 'Iron Will', 'Maintain a 100-day streak.', '🔥', 2000000, 'Mythic'),
+('score_10k', 'Five Digits', 'Score over 10,000 EP in a single roll.', '💰', 10000, 'Common'),
+('score_50k', 'High Roller', 'Score over 50,000 EP in a single roll.', '💰', 50000, 'Uncommon'),
+('score_100k', 'Six Digits', 'Score over 100,000 EP in a single roll.', '💰', 100000, 'Rare'),
+('score_1m', 'Millionaire', 'Score over 1,000,000 EP in a single roll.', '💰', 250000, 'Epic'),
+('score_5m', 'Tycoon', 'Score over 5,000,000 EP in a single roll.', '💰', 1000000, 'Mythic'),
+('rarity_rare', 'Uncommonly Rare', 'Roll a Rare rarity color.', '🔵', 25000, 'Uncommon'),
+('rarity_epic', 'Epic Encounter', 'Roll an Epic rarity color.', '🟣', 100000, 'Rare'),
+('rarity_anomaly', 'Anomaly Detected', 'Roll an Anomaly rarity color.', '🟠', 500000, 'Epic'),
+('mythic_roll', 'Mythic Touch', 'Roll a Mythic rarity color.', '🌟', 1000000, 'Mythic'),
+('roll_even_sum', 'Even Steven', 'Roll a color with an even R+G+B sum.', '⚖️', 5000, 'Common'),
+('roll_odd_sum', 'Oddball', 'Roll a color with an odd R+G+B sum.', '🎲', 5000, 'Common'),
+('roll_div3_sum', 'Rule of Three', 'Roll a color where R+G+B is divisible by 3.', '3️⃣', 15000, 'Uncommon'),
+('roll_42_sum', 'Meaning of Life', 'Roll a color where R+G+B is exactly 42.', '🧬', 42000, 'Rare'),
+('roll_balanced_sum', 'Balanced', 'Roll a color where R+G+B is between 300 and 499.', '🧘', 10000, 'Common'),
+('roll_prime', 'Prime Number', 'Roll a color with a prime R+G+B sum.', '🔢', 100000, 'Rare'),
+('all_even_rgb', 'All Even', 'Roll a color where R, G, and B are all even numbers.', '2️⃣', 15000, 'Uncommon'),
+('all_odd_rgb', 'All Odd', 'Roll a color where R, G, and B are all odd numbers.', '1️⃣', 15000, 'Uncommon'),
+('mult_3_rgb', 'Triple Threat', 'Roll a color where R, G, and B are all multiples of 3.', '🔢', 25000, 'Uncommon'),
+('high_contrast', 'High Contrast', 'Roll a color with an extreme RGB range (>200).', '🌓', 25000, 'Uncommon'),
+('low_contrast', 'Low Contrast', 'Roll a color with a muddy/muted RGB range (<50).', '🌫️', 10000, 'Common'),
+('mod_contrast', 'Moderate Contrast', 'Roll a color with an RGB range between 50 and 150.', '🛤️', 15000, 'Uncommon'),
+('pastel_soft', 'Pastel Soft', 'Roll a soft pastel hue.', '🌸', 200000, 'Epic'),
+('neon_bright', 'Neon Bright', 'Roll a vivid neon glow.', '💡', 200000, 'Epic'),
+('web_safe', 'Web Safe', 'Roll a 1990s web safe color.', '🕸️', 30000, 'Uncommon'),
+('roll_palindrome', 'Mirror', 'Roll a hex palindrome (reads same backwards).', '🪞', 100000, 'Rare'),
+('perfect_triplets', 'Perfect Triplets', 'Roll a hex that is XXYYZZ.', '🟰', 150000, 'Rare'),
+('greyscale', 'Greyscale', 'Roll a pure greyscale color.', '⚫', 30000, 'Uncommon'),
+('hex_letters', 'Alphabet Soup', 'Roll a hex containing all 6 letters (A-F).', '🔤', 500000, 'Epic'),
+('contains_a', 'A is for Apple', 'Roll a hex containing A.', '🅰️', 5000, 'Common'),
+('contains_b', 'B is for Bee', 'Roll a hex containing B.', '🅱️', 5000, 'Common'),
+('contains_c', 'C is for Sea', 'Roll a hex containing C.', '©️', 5000, 'Common'),
+('contains_d', 'D is for Dog', 'Roll a hex containing D.', '🇩', 5000, 'Common'),
+('contains_e', 'E is for Elephant', 'Roll a hex containing E.', '📧', 5000, 'Common'),
+('contains_f', 'F is for Fox', 'Roll a hex containing F.', '🇫', 5000, 'Common'),
+('contains_0', 'Zero Hero', 'Roll a hex containing 0.', '⭕', 5000, 'Common'),
+('roll_black', 'The Void', 'Roll Pure Black (#000000).', '🌑', 5000000, 'Mythic'),
+('roll_white', 'The Light', 'Roll Pure White (#FFFFFF).', '☀️', 5000000, 'Mythic'),
+('roll_gold', 'Midas', 'Roll Pure Gold.', '🥇', 2000000, 'Epic'),
+('pure_red', 'Maximum Red', 'Roll Pure Red (255,0,0).', '🟥', 500000, 'Epic'),
+('pure_green', 'Maximum Green', 'Roll Pure Green (0,255,0).', '🟩', 500000, 'Epic'),
+('pure_blue', 'Maximum Blue', 'Roll Pure Blue (0,0,255).', '🟦', 500000, 'Epic'),
+('streamer_purple', 'Streamer Purple', 'Roll the exact Streamer Purple.', '🟣', 2000000, 'Mythic'),
+('audio_stream_green', 'Audio Stream Green', 'Roll Audio Stream Green.', '🟢', 2000000, 'Mythic'),
+('classic_cola_red', 'Classic Cola Red', 'Roll Classic Cola Red.', '🥤', 2000000, 'Mythic'),
+('roll_beef', 'Where is the Beef?', 'Roll a hex containing BEEF.', '🥩', 50000, 'Uncommon'),
+('roll_cafe', 'Coffee Break', 'Roll a hex containing CAFE.', '☕', 50000, 'Uncommon'),
+('roll_dead', 'Dead Man Walking', 'Roll a hex containing DEAD.', '💀', 50000, 'Uncommon'),
+('roll_face', 'Face Value', 'Roll a hex containing FACE.', '😎', 50000, 'Uncommon'),
+('launch_adopter', 'Launch Day Adopter', 'Roll the die during the official launch window.', '🚀', 100000, 'Mythic')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, rarity, description) VALUES
+('streak_freeze', 'Streak Freeze', 'consumable', 100000, 'text', 'Protects your streak if you miss a day.', 'Rare', 'Protects your streak if you miss a day.'),
+('reroll_shard', 'Reroll Shard', 'consumable', 200000, 'text', 'Allows you to reroll your daily color.', 'Rare', 'Grants 1 Reroll Shard, usable on the results screen.'),
+('frame_30_day', 'Monthly Grinder Frame', 'frame', 0, 'style', 'border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);', 'Mythic', 'Unlocked at a 30-day streak.'),
+('frame_100_day', 'Iron Will Frame', 'frame', 0, 'style', 'border: 2px solid #f1c40f; box-shadow: 0 0 15px rgba(241, 196, 15, 0.5);', 'Mythic', 'Unlocked at a 100-day streak.'),
+('frame_365_day', 'Annual Frame', 'frame', 0, 'style', 'border: 2px solid #a15cff; box-shadow: 0 0 15px rgba(161, 92, 255, 0.5);', 'Mythic', 'Unlocked at a 365-day streak.'),
+('frame_thin_white', 'Hairline Frame', 'frame', 40000, 'style', 'border: 1px solid rgba(255,255,255,0.35);', 'Uncommon', 'Applies a custom border to your profile header.'),
+('frame_neon_cyan', 'Cyan Frame', 'frame', 150000, 'style', 'border: 1px solid #22d3ee; box-shadow: 0 0 12px rgba(34,211,238,0.5);', 'Rare', 'Applies a custom border to your profile header.'),
+('frame_neon_pink', 'Pink Frame', 'frame', 150000, 'style', 'border: 1px solid #ff4fd8; box-shadow: 0 0 12px rgba(255,79,216,0.5);', 'Rare', 'Applies a custom border to your profile header.'),
+('frame_gold_ring', 'Gold Ring', 'frame', 600000, 'style', 'border: 1px solid #f1c40f; box-shadow: 0 0 16px rgba(241,196,15,0.45);', 'Epic', 'Applies a custom border to your profile header.'),
+('frame_spectrum', 'Spectrum Frame', 'frame', 4000000, 'class', 'frame-spectrum-anim', 'Epic', 'Applies a custom border to your profile header.'),
+('frame_diamond', 'Diamond Frame', 'frame', 12000000, 'class', 'frame-diamond-anim', 'Mythic', 'Applies a custom border to your profile header.'),
+('bg_aurora', 'Aurora Background', 'profile_bg', 1500000, 'style', 'background-image: linear-gradient(135deg, #00c6ff, #0072ff); background-size: cover;', 'Epic', 'Applies a custom background to your profile card.'),
+('bg_sunset', 'Sunset Background', 'profile_bg', 1500000, 'style', 'background-image: linear-gradient(135deg, #ff9a9e, #fad0c4); background-size: cover;', 'Epic', 'Applies a custom background to your profile card.'),
+('bg_matrix', 'Matrix Background', 'profile_bg', 3000000, 'style', 'background-color: #001100; background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 0, .1) 25%, rgba(0, 255, 0, .1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 0, .1) 75%, rgba(0, 255, 0, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 0, .1) 25%, rgba(0, 255, 0, .1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 0, .1) 75%, rgba(0, 255, 0, .1) 76%, transparent 77%, transparent); background-size: 50px 50px;', 'Epic', 'Applies a custom background to your profile card.'),
+('bg_void', 'Void Background', 'profile_bg', 5000000, 'style', 'background-image: radial-gradient(circle, #1a1a1a, #000000); background-size: cover;', 'Mythic', 'Applies a custom background to your profile card.'),
+('name_italic', 'Italic Font', 'name_effect', 50000, 'style', 'font-style: italic; color: #fff;', 'Uncommon', 'Applies a custom visual effect to your username.'),
+('name_drop_shadow', 'Drop Shadow', 'name_effect', 50000, 'style', 'text-shadow: 2px 2px 4px #000; color: #fff;', 'Uncommon', 'Applies a custom visual effect to your username.'),
+('name_smallcaps', 'Small Caps', 'name_effect', 75000, 'style', 'font-variant: small-caps; color: #fff; letter-spacing: 1px;', 'Uncommon', 'Applies a custom visual effect to your username.'),
+('name_glow_blue', 'Blue Glow', 'name_effect', 100000, 'style', 'text-shadow: 0 0 10px #3498db; color: #fff;', 'Rare', 'Applies a custom visual effect to your username.'),
+('name_glow_green', 'Green Glow', 'name_effect', 100000, 'style', 'text-shadow: 0 0 10px #2ecc71; color: #fff;', 'Rare', 'Applies a custom visual effect to your username.'),
+('name_glow_purple', 'Purple Glow', 'name_effect', 100000, 'style', 'text-shadow: 0 0 10px #9b59b6; color: #fff;', 'Rare', 'Applies a custom visual effect to your username.'),
+('name_glow_red', 'Red Glow', 'name_effect', 100000, 'style', 'text-shadow: 0 0 10px #ff4c4c; color: #fff;', 'Rare', 'Applies a custom visual effect to your username.'),
+('name_glow_pink_neon', 'Neon Pink Glow', 'name_effect', 250000, 'style', 'text-shadow: 0 0 5px #ff00de, 0 0 10px #ff00de; color: #fff;', 'Rare', 'Applies a custom visual effect to your username.'),
+('name_gradient_purple', 'Purple Gradient', 'name_effect', 500000, 'style', 'background: linear-gradient(45deg, #8E2DE2, #4A00E0); -webkit-background-clip: text; background-clip: text; color: transparent;', 'Epic', 'Applies a custom visual effect to your username.'),
+('name_glow_gold', 'Gold Glow', 'name_effect', 500000, 'style', 'text-shadow: 0 0 15px #f1c40f; color: #fff;', 'Epic', 'Applies a custom visual effect to your username.'),
+('name_gradient_fire', 'Fire Gradient', 'name_effect', 750000, 'style', 'background: linear-gradient(45deg, #f12711, #f5af19); -webkit-background-clip: text; background-clip: text; color: transparent;', 'Epic', 'Applies a custom visual effect to your username.'),
+('name_rainbow', 'Rainbow Shift', 'name_effect', 2000000, 'class', 'rainbow-text-anim', 'Epic', 'Applies a custom visual effect to your username.'),
+('name_flicker_neon', 'Flickering Neon', 'name_effect', 2000000, 'class', 'flicker-neon-anim', 'Epic', 'Applies a custom visual effect to your username.'),
+('name_shining_gold', 'Shining Gold Name', 'name_effect', 3000000, 'class', 'shining-gold-anim', 'Epic', 'Applies a custom visual effect to your username.'),
+('name_pulsing_glow', 'Pulsing Aura', 'name_effect', 3000000, 'class', 'pulsing-glow-anim', 'Epic', 'Applies a custom visual effect to your username.'),
+('name_matrix_rain', 'Matrix Rain', 'name_effect', 5000000, 'class', 'matrix-rain-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
+('name_diamond_shimmer', 'Diamond Shimmer', 'name_effect', 7500000, 'class', 'diamond-shimmer-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
+('name_glitch_effect', 'Glitch Effect', 'name_effect', 10000000, 'class', 'glitch-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
+('name_ocean_wave', 'Ocean Wave', 'name_effect', 12000000, 'class', 'ocean-wave-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
+('name_sunset_blur', 'Sunset Blur', 'name_effect', 15000000, 'class', 'sunset-blur-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
+('name_inferno', 'Inferno Name', 'name_effect', 15000000, 'class', 'inferno-name-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
+('name_spectrum', 'Spectrum Name', 'name_effect', 25000000, 'class', 'spectrum-name-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
+('roll_sparkles', 'Sparkle Aura', 'roll_effect', 500000, 'class', 'roll-sparkles-anim', 'Epic', 'Applies a visual aura to your color orb on the results screen.'),
+('roll_inferno', 'Inferno Aura', 'roll_effect', 5000000, 'class', 'roll-inferno-anim', 'Mythic', 'Applies a visual aura to your color orb on the results screen.'),
+('roll_spectrum', 'Spectrum Aura', 'roll_effect', 12000000, 'class', 'roll-spectrum-anim', 'Mythic', 'Applies a visual aura to your color orb on the results screen.'),
+('lb_glow', 'Glowing Row', 'lb_theme', 250000, 'class', 'lb-glow-theme', 'Rare', 'Applies a custom background and border to your row on the global leaderboard.'),
+('lb_spectrum', 'Spectrum Row', 'lb_theme', 25000000, 'class', 'lb-spectrum-theme', 'Mythic', 'Applies a custom background and border to your row on the global leaderboard.'),
+('lb_gold', 'Golden Row', 'lb_theme', 8000000, 'class', 'lb-gold-theme', 'Mythic', 'Applies a custom background and border to your row on the global leaderboard.')
+ON CONFLICT (item_key) DO NOTHING;
+
+INSERT INTO public.meta (key, value) VALUES
+('shop_version', '2026-07-09T00:00:00Z'),
+('cotw_target', '73,114,201')
+ON CONFLICT (key) DO NOTHING;

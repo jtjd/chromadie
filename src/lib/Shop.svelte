@@ -52,10 +52,10 @@
     loadingAction = false;
   }
 
-  $: itemsArray = Object.entries($shopItems)
-    .filter(([, item]) => item.slot !== 'consumable')
-    .sort((a, b) => a[1].cost - b[1].cost)
-    .filter(([, item]) => activeTab === 'all' || item.slot === activeTab);
+  $: itemsArray = Object.values($shopItems)
+    .filter(item => item.slot !== 'consumable')
+    .sort((a, b) => a.cost - b.cost)
+    .filter(item => activeTab === 'all' || item.slot === activeTab);
 </script>
 
 <div class="container shop-container">
@@ -84,9 +84,9 @@
     <div class="card"><p>No items in this category yet.</p></div>
   {:else}
     <div class="shop-grid">
-      {#each itemsArray as [key, item] (key)}
-        {@const owned = $userInventory.includes(key)}
-        {@const equipped = $equippedItems[item.slot] === key}
+      {#each itemsArray as item (item.item_key)}
+        {@const owned = $userInventory.includes(item.item_key)}
+        {@const equipped = $equippedItems[item.slot] === item.item_key}
         {@const affordable = $walletBalance >= item.cost}
         {@const isConsumable = item.slot === 'consumable'}
 
@@ -133,15 +133,15 @@
           {/if}
 
           {#if equipped}
-            <button class="shop-btn equipped" on:click={() => handleAction(key, 'unequip', item.slot)} disabled={loadingAction}>
+            <button class="shop-btn equipped" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={loadingAction}>
               Unequip
             </button>
           {:else if owned && !isConsumable}
-            <button class="shop-btn owned" on:click={() => handleAction(key, 'equip')} disabled={loadingAction}>
+            <button class="shop-btn owned" on:click={() => handleAction(item.item_key, 'equip')} disabled={loadingAction}>
               Equip
             </button>
           {:else if item.cost > 0 && affordable}
-            <button class="shop-btn" on:click={() => handleAction(key, 'buy')} disabled={loadingAction}>
+            <button class="shop-btn" on:click={() => handleAction(item.item_key, 'buy')} disabled={loadingAction}>
               Buy
             </button>
           {:else if item.cost <= 0}
@@ -160,26 +160,76 @@
 </div>
 
 <style>
-  .shop-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; border-bottom: 1px solid var(--card-border); padding-bottom: 15px; }
-  .shop-tab { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; transition: all 0.2s; }
+  .shop-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 15px;
+  }
+  .shop-tab {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    min-height: 40px;
+    white-space: nowrap;
+  }
   .shop-tab:hover { background: rgba(255,255,255,0.08); color: #fff; }
   .shop-tab.active { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); }
 
-  .shop-preview-area { height: 40px; margin-bottom: 20px; width: 100%; display: flex; align-items: center; justify-content: center; }
+  .shop-preview-area { height: 40px; margin-bottom: 20px; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; }
   .preview-bg { width: 100%; height: 40px; border-radius: 8px; border: 1px solid var(--card-border); background-color: #111; flex-shrink: 0; box-sizing: border-box; }
   .preview-roll-orb { width: 30px; height: 30px; border-radius: 50%; background: #333; border: 1px solid var(--card-border); position: relative; }
   .preview-lb-row { width: 100%; height: 30px; border-radius: 8px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; overflow: hidden; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); }
-  .preview-lb-text { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+  .preview-lb-text { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .preview-orb-shape { width: 30px; height: 30px; background: #333; border: 1px solid var(--card-border); }
 
   .preview-border { width: 60px; height: 40px; background: #111; border-radius: 8px; border: 2px solid transparent; }
 
   .item-collection { font-size: 0.7rem; color: var(--accent-purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 600; }
   .item-cost { color: var(--accent-green); font-family: 'JetBrains Mono'; font-size: 0.85rem; margin-bottom: 4px; }
-  .item-desc { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 20px; line-height: 1.3; min-height: 30px; }
+  .item-desc { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 20px; line-height: 1.4; min-height: 30px; overflow-wrap: anywhere; }
 
   .preview-lb-row.lb-glow-theme { background: rgba(59, 130, 246, 0.25) !important; border: 2px solid #3b82f6 !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), inset 0 0 8px rgba(59, 130, 246, 0.3) !important; }
   .preview-lb-row.lb-gold-theme { background: linear-gradient(90deg, #bf953f, #fcf6ba, #b38728, #fbf5b7) !important; border: 2px solid #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5) !important; }
   .preview-lb-row.lb-gold-theme .preview-lb-text { color: #1a1a1a !important; text-shadow: 0 1px 1px rgba(255,255,255,0.4); }
+  .preview-lb-row.lb-spectrum-theme,
   .preview-lb-row.lb-chroma-theme { border: 2px solid transparent !important; background-image: linear-gradient(rgba(10, 10, 13, 0.85), rgba(10, 10, 13, 0.85)), var(--spectrum) !important; background-origin: border-box !important; background-clip: padding-box, border-box !important; background-size: 100% 100%, 300% 100% !important; animation: spectrumFlow 3s linear infinite !important; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5) !important; }
+
+  @media (max-width: 600px) {
+    .shop-tabs {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+    }
+    .shop-tabs::-webkit-scrollbar {
+      display: none;
+    }
+    .shop-tab {
+      flex: 0 0 auto;
+    }
+    .shop-item {
+      padding: 16px 14px;
+      border-radius: 18px;
+    }
+    .shop-item h3 {
+      font-size: 0.95rem;
+    }
+    .item-desc {
+      font-size: 0.72rem;
+      margin-bottom: 16px;
+    }
+    .shop-preview-area {
+      margin-bottom: 16px;
+    }
+  }
 </style>

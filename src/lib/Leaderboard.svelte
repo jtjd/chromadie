@@ -1,6 +1,6 @@
 <script>
   import { supabase } from './supabase';
-  import { session, followedUsers, toggleFollow } from './stores';
+  import { session, followedUsers, toggleFollow, isAuthenticated } from './stores';
   import { getTodayString } from './utils';
   import { getNameEffect, getTitleText, getLbTheme } from './cosmetics';
   import { onMount, createEventDispatcher } from 'svelte';
@@ -76,7 +76,7 @@
   }
 
   async function checkMyRank() {
-    if (!$session) return;
+    if (!$isAuthenticated) return;
     if (activeTab === 'roll' || activeTab === 'rivals') {
       return;
     }
@@ -178,7 +178,7 @@
 
           <span class="lb-actions">
             <span class="lb-score">{row.score.toLocaleString()}</span>
-            {#if $session && row.user_id !== $session.user.id}
+            {#if $isAuthenticated && row.user_id !== $session.user.id}
               {#if $followedUsers.includes(row.user_id)}
                 <button
                   type="button"
