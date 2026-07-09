@@ -14,6 +14,7 @@ export const walletBalance = writable(0)
 // --- Progression State ---
 export const rerollShards = writable(0)
 export const equippedBadges = writable([])
+export const followedUsers = writable([])
 
 // --- UI State ---
 export const selectedUserId = writable(null)
@@ -34,21 +35,35 @@ export function clearUserState() {
     walletBalance.set(0)
     rerollShards.set(0)
     equippedBadges.set([])
+    followedUsers.set([])
 }
 
 export async function loadShopItems() {
+    const { data: meta } = await supabase
+    .from('meta')
+    .select('value')
+    .eq('key', 'shop_version')
+    .single();
+
+    const latestVersion = meta?.value;
+
+    const cached = JSON.parse(localStorage.getItem('shop_cache') || '{}');
+    if (cached.version === latestVersion && cached.items) {
+        shopItems.set(cached.items);
+        return;
+    }
+
     const { data, error } = await supabase
     .from('shop_items')
-    .select('item_key, name, slot, cost, css_type, css_value, rarity, description')
+    .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection')
     .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
     .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
 
-    if (error) {
-        console.error("Error fetching shop items:", error.message);
-    } else if (data) {
+    if (data) {
         const cache = {}
         data.forEach(item => { cache[item.item_key] = item })
         shopItems.set(cache)
+        localStorage.setItem('shop_cache', JSON.stringify({ version: latestVersion, items: cache }));
     }
 }
 
@@ -59,6 +74,28 @@ export async function fetchWalletBalance() {
     }
 }
 
+// NEW: Global Toggle Follow function
+export async function toggleFollow(targetId) {
+    const { data, error } = await supabase.rpc('toggle_follow', { p_target_id: targetId });
+    if (error) {
+        addToast("Error updating rivals.", "error");
+        return { success: false };
+    }
+    if (data.success) {
+        if (data.action === 'followed') {
+            followedUsers.update(f => [...f, targetId]);
+            addToast("Added to Rivals!", "success");
+        } else {
+            followedUsers.update(f => f.filter(id => id !== targetId));
+            addToast("Removed from Rivals.", "success");
+        }
+    } else {
+        addToast(data.error, "error");
+    }
+    return data;
+}
+
+// Initialize auth state listener
 supabase.auth.onAuthStateChange(async (event, currentSession) => {
     session.set(currentSession)
 
@@ -66,11 +103,10 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
         await loadShopItems();
 
         try {
-            // Batch the independent fetches into a single concurrent network wave
             const [profileRes, inventoryRes, walletRes] = await Promise.all([
                 supabase
                 .from('profiles')
-                .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, reroll_shards, equipped_badges, bio, mood_color')
+                .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, reroll_shards, equipped_badges, bio, mood_color, is_admin')
                 .eq('id', currentSession.user.id)
                 .single(),
                                                                             supabase
@@ -100,6 +136,12 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
                 if (wallet !== null) {
                     walletBalance.set(wallet)
                 }
+
+                const { data: follows } = await supabase
+                .from('user_follows')
+                .select('followee_id')
+                .eq('follower_id', currentSession.user.id);
+            if (follows) followedUsers.set(follows.map(f => f.followee_id));
 
         } catch (e) {
             console.error("Critical error during auth state change:", e);

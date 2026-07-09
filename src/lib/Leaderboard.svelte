@@ -1,6 +1,6 @@
 <script>
   import { supabase } from './supabase';
-  import { selectedUserId } from './stores';
+  import { selectedUserId, session, followedUsers, toggleFollow } from './stores';
   import { getTodayString } from './utils';
   import { getNameEffect, getTitleText, getLbTheme } from './cosmetics';
   import { onMount, createEventDispatcher } from 'svelte';
@@ -10,9 +10,25 @@
   let activeTab = 'today';
   let leaderboard = [];
   let loading = true;
+  let myRank = null;
+  let myScore = null;
+
+  function getStartOfWeek() {
+    const d = new Date();
+    const day = d.getDay(); // 0 = Sun, 1 = Mon
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+    return new Date(d.setDate(diff)).toISOString().split('T')[0];
+  }
+
+  function getStartOfMonth() {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+  }
 
   async function fetchLeaderboard() {
     loading = true;
+    myRank = null;
+    myScore = null;
     let query;
 
     if (activeTab === 'today') {
@@ -23,27 +39,81 @@
         .eq('roll_date', today)
         .order('score', { ascending: false })
         .limit(10);
+    } else if (activeTab === 'rivals') {
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_rivals_scores');
+      if (!rpcError && rpcData) {
+        leaderboard = rpcData;
+      } else {
+        leaderboard = [];
+      }
+      loading = false;
+      return;
+    } else if (activeTab === 'weekly') {
+      const startWeek = getStartOfWeek();
+      query = supabase
+        .from('leaderboard_view')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
+        .gte('roll_date', startWeek)
+        .order('score', { ascending: false })
+        .limit(10);
+    } else if (activeTab === 'monthly') {
+      const startMonth = getStartOfMonth();
+      query = supabase
+        .from('leaderboard_view')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
+        .gte('roll_date', startMonth)
+        .order('score', { ascending: false })
+        .limit(10);
     } else if (activeTab === 'roll') {
       query = supabase
         .from('all_time_leaderboard_view')
         .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
         .order('score', { ascending: false })
         .limit(10);
-    } else if (activeTab === 'ep') {
-      query = supabase
-        .from('all_time_leaderboard_view')
-        .select('user_id, username, current_streak, equipped_cosmetics, lifetime_ep')
-        .order('lifetime_ep', { ascending: false })
-        .limit(10);
     }
 
     const { data, error } = await query;
     if (!error && data) {
       leaderboard = data;
+      await checkMyRank();
     } else {
       leaderboard = [];
     }
     loading = false;
+  }
+
+  async function checkMyRank() {
+    if (!$session) return;
+    if (activeTab === 'roll' || activeTab === 'rivals') {
+      return;
+    }
+
+    let dateFilter;
+    if (activeTab === 'today') dateFilter = getTodayString();
+    else if (activeTab === 'weekly') dateFilter = getStartOfWeek();
+    else if (activeTab === 'monthly') dateFilter = getStartOfMonth();
+
+    const { data: myData } = await supabase
+      .from('scores')
+      .select('score')
+      .eq('user_id', $session.user.id)
+      .gte('roll_date', dateFilter)
+      .order('score', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (myData) {
+      myScore = myData.score;
+      const isInTop10 = leaderboard.some(row => row.user_id === $session.user.id);
+      if (!isInTop10) {
+        const { count } = await supabase
+          .from('scores')
+          .select('*', { count: 'exact', head: true })
+          .gt('score', myScore)
+          .gte('roll_date', dateFilter);
+        myRank = count + 1;
+      }
+    }
   }
 
   function switchTab(tab) {
@@ -68,8 +138,10 @@
 
   <div class="lb-tabs">
     <button class="auth-tab" class:active={activeTab === 'today'} on:click={() => switchTab('today')}>Today</button>
+    <button class="auth-tab" class:active={activeTab === 'rivals'} on:click={() => switchTab('rivals')}>Rivals</button>
+    <button class="auth-tab" class:active={activeTab === 'weekly'} on:click={() => switchTab('weekly')}>Weekly</button>
+    <button class="auth-tab" class:active={activeTab === 'monthly'} on:click={() => switchTab('monthly')}>Monthly</button>
     <button class="auth-tab" class:active={activeTab === 'roll'} on:click={() => switchTab('roll')}>All-Time Roll</button>
-    <button class="auth-tab" class:active={activeTab === 'ep'} on:click={() => switchTab('ep')}>All-Time EP</button>
   </div>
 
   {#if loading}
@@ -98,25 +170,46 @@
               <span class="streak-chip">🔥 {row.current_streak}</span>
             {/if}
 
-            {#if activeTab !== 'ep'}
-              <br>
-              <span class="lb-sub" style="color:#666; font-size:0.75rem;">{row.hex_code} • {row.rarity}</span>
-            {/if}
+            <br>
+            <span class="lb-sub" style="color:#666; font-size:0.75rem;">{row.hex_code} • {row.rarity}</span>
           </span>
 
-          {#if activeTab === 'ep'}
-            <span class="lb-score">{row.lifetime_ep.toLocaleString()} EP</span>
-          {:else}
+          <span class="lb-actions">
             <span class="lb-score">{row.score.toLocaleString()}</span>
-          {/if}
+            {#if $session && row.user_id !== $session.user.id}
+              {#if $followedUsers.includes(row.user_id)}
+                <button class="rival-btn unfollow" on:click={() => toggleFollow(row.user_id)} title="Unfollow">✖</button>
+              {:else if $followedUsers.length < 5}
+                <button class="rival-btn" on:click={() => toggleFollow(row.user_id)} title="Add Rival">+</button>
+              {/if}
+            {/if}
+          </span>
         </div>
       {/each}
+
+      {#if myRank}
+        <div class="my-rank-row">
+          <span class="lb-rank">#{myRank}</span>
+          <span class="lb-info">
+            <button class="lb-username-button">
+              <span class="lb-username">You</span>
+            </button>
+            <br>
+            <span class="lb-sub" style="color:#666; font-size:0.75rem;">Your best roll this period</span>
+          </span>
+          <span class="lb-score">{myScore.toLocaleString()}</span>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
 
 <style>
-  .lb-username-button {
-    background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; align-items: center;
-  }
+  .lb-username-button { background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; align-items: center; }
+  .my-rank-row { display: flex; align-items: center; justify-content: space-between; background: rgba(139, 124, 246, 0.1); border: 1px dashed rgba(139, 124, 246, 0.5); padding: 12px 15px; border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-top: 10px; }
+  .lb-actions { display: flex; align-items: center; gap: 10px; }
+  .rival-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; transition: all 0.2s; line-height: 1; padding: 0; }
+  .rival-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .rival-btn.unfollow { background: rgba(255, 255, 255, 0.05); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
+  .rival-btn.unfollow:hover { background: rgba(239, 68, 68, 0.2); }
 </style>

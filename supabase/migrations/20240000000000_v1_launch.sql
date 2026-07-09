@@ -2,7 +2,15 @@
 -- CHROMADIE V1.0 - FINAL SCHEMA & RPCs
 -- ==========================================
 
--- 1. TABLES
+-- 1. EXTENSIONS
+CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
+
+-- 2. TABLES
+CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
+
 CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     username TEXT UNIQUE,
@@ -19,7 +27,9 @@ CREATE TABLE IF NOT EXISTS profiles (
     mood_color TEXT,
     best_roll_score BIGINT,
     best_roll_hex TEXT,
-    best_roll_rarity TEXT
+    best_roll_rarity TEXT,
+    is_admin BOOLEAN DEFAULT FALSE,
+    force_cotw_next_roll BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS scores (
@@ -34,6 +44,7 @@ CREATE TABLE IF NOT EXISTS scores (
 );
 ALTER TABLE scores DROP CONSTRAINT IF EXISTS unique_daily_roll;
 ALTER TABLE scores ADD CONSTRAINT unique_daily_roll UNIQUE (user_id, roll_date);
+CREATE INDEX IF NOT EXISTS idx_scores_roll_date_score ON scores(roll_date, score DESC);
 
 CREATE TABLE IF NOT EXISTS inventory (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -55,6 +66,8 @@ CREATE TABLE IF NOT EXISTS shop_items (
     rarity TEXT DEFAULT 'Common',
     description TEXT
 );
+ALTER TABLE shop_items DROP CONSTRAINT IF EXISTS shop_items_cost_check;
+ALTER TABLE shop_items ADD CONSTRAINT shop_items_cost_check CHECK (cost >= 0);
 
 CREATE TABLE IF NOT EXISTS achievements (
     id TEXT PRIMARY KEY,
@@ -72,17 +85,28 @@ CREATE TABLE IF NOT EXISTS user_achievements (
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     achievement_id TEXT REFERENCES achievements(id) ON DELETE CASCADE,
     unlocked_at TIMESTAMPTZ DEFAULT NOW(),
+    count INT DEFAULT 1,
     PRIMARY KEY (user_id, achievement_id)
 );
 
--- 2. ROW LEVEL SECURITY (RLS)
+CREATE TABLE IF NOT EXISTS user_follows (
+    follower_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    followee_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (follower_id, followee_id)
+);
+
+-- 3. ROW LEVEL SECURITY (RLS)
+ALTER TABLE meta ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inventory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shop_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_follows ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Meta is viewable by everyone." ON meta;
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON profiles;
 DROP POLICY IF EXISTS "Users can insert their own profile." ON profiles;
 DROP POLICY IF EXISTS "Scores are viewable by everyone." ON scores;
@@ -90,7 +114,11 @@ DROP POLICY IF EXISTS "Users can view own inventory." ON inventory;
 DROP POLICY IF EXISTS "Shop items are viewable by everyone." ON shop_items;
 DROP POLICY IF EXISTS "Achievements are viewable by everyone." ON achievements;
 DROP POLICY IF EXISTS "Users can view own unlocked achievements." ON user_achievements;
+DROP POLICY IF EXISTS "Users can view follows" ON user_follows;
+DROP POLICY IF EXISTS "Users can insert follows" ON user_follows;
+DROP POLICY IF EXISTS "Users can delete follows" ON user_follows;
 
+CREATE POLICY "Meta is viewable by everyone." ON meta FOR SELECT USING (true);
 CREATE POLICY "Public profiles are viewable by everyone." ON profiles FOR SELECT USING (true);
 CREATE POLICY "Users can insert their own profile." ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Scores are viewable by everyone." ON scores FOR SELECT USING (true);
@@ -98,8 +126,11 @@ CREATE POLICY "Users can view own inventory." ON inventory FOR SELECT USING (aut
 CREATE POLICY "Shop items are viewable by everyone." ON shop_items FOR SELECT USING (true);
 CREATE POLICY "Achievements are viewable by everyone." ON achievements FOR SELECT USING (true);
 CREATE POLICY "Users can view own unlocked achievements." ON user_achievements FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can view follows" ON user_follows FOR SELECT USING (auth.uid() = follower_id OR auth.uid() = followee_id);
+CREATE POLICY "Users can insert follows" ON user_follows FOR INSERT WITH CHECK (auth.uid() = follower_id);
+CREATE POLICY "Users can delete follows" ON user_follows FOR DELETE USING (auth.uid() = follower_id);
 
--- 3. VIEWS (Security Invoker enabled to respect RLS)
+-- 4. VIEWS (Security Invoker enabled to respect RLS)
 DROP VIEW IF EXISTS leaderboard_view;
 CREATE VIEW leaderboard_view WITH (security_invoker = true) AS
 SELECT s.user_id, s.hex_code, s.score, s.rarity, s.roll_date, p.username, p.current_streak, p.equipped_cosmetics, p.equipped_badges
@@ -116,7 +147,7 @@ SELECT id, name, description, icon, ep_reward, rarity, season_id
 FROM achievements
 WHERE season_id IS NOT NULL AND season_start <= CURRENT_DATE AND season_end >= CURRENT_DATE;
 
--- 4. TRIGGERS
+-- 5. TRIGGERS
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ BEGIN
   INSERT INTO public.profiles (id, username) VALUES (new.id, new.raw_user_meta_data->>'username');
@@ -137,7 +168,7 @@ END;
 DROP TRIGGER IF EXISTS on_score_insert ON scores;
 CREATE TRIGGER on_score_insert AFTER INSERT ON scores FOR EACH ROW EXECUTE FUNCTION public.update_lifetime_ep();
 
--- 5. HELPER FUNCTIONS
+-- 6. HELPER FUNCTIONS
 CREATE OR REPLACE FUNCTION public.is_prime(n INT)
 RETURNS BOOLEAN LANGUAGE plpgsql IMMUTABLE AS $$ DECLARE i INT;
 BEGIN
@@ -153,7 +184,24 @@ BEGIN
 END;
  $$;
 
--- 6. SECURE RPCs
+CREATE OR REPLACE FUNCTION public.update_cotw()
+RETURNS VOID LANGUAGE plpgsql AS $$ DECLARE
+    v_r INT; v_g INT; v_b INT; v_cotw_str TEXT;
+BEGIN
+    v_r := floor(random() * 256);
+    v_g := floor(random() * 256);
+    v_b := floor(random() * 256);
+    v_cotw_str := v_r || ',' || v_g || ',' || v_b;
+    INSERT INTO meta (key, value) VALUES ('cotw_target', v_cotw_str)
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+END;
+ $$;
+
+-- Schedule COTW to run every Monday at 00:00 UTC
+SELECT cron.schedule('cron_update_cotw', '0 0 * * 1', 'SELECT public.update_cotw()');
+SELECT public.update_cotw(); -- Run once to populate initial value
+
+-- 7. SECURE RPCs
 CREATE OR REPLACE FUNCTION public.get_wallet_balance()
 RETURNS BIGINT LANGUAGE plpgsql SECURITY DEFINER AS $$ DECLARE p_user_id UUID := auth.uid(); v_lifetime_ep BIGINT; v_spent_ep BIGINT;
 BEGIN
@@ -265,7 +313,79 @@ BEGIN
 END;
  $$;
 
--- 7. CORE GAME RPC: roll_die
+CREATE OR REPLACE FUNCTION public.toggle_follow(p_target_id UUID)
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ DECLARE
+    v_user_id UUID := auth.uid();
+    v_is_following BOOLEAN;
+    v_follow_count INT;
+BEGIN
+    IF v_user_id IS NULL THEN RETURN json_build_object('success', false, 'error', 'Not authenticated'); END IF;
+    IF v_user_id = p_target_id THEN RETURN json_build_object('success', false, 'error', 'Cannot follow yourself'); END IF;
+
+    SELECT EXISTS(SELECT 1 FROM user_follows WHERE follower_id = v_user_id AND followee_id = p_target_id) INTO v_is_following;
+
+    IF v_is_following THEN
+        DELETE FROM user_follows WHERE follower_id = v_user_id AND followee_id = p_target_id;
+        RETURN json_build_object('success', true, 'action', 'unfollowed');
+    ELSE
+        SELECT count(*) INTO v_follow_count FROM user_follows WHERE follower_id = v_user_id;
+        IF v_follow_count >= 5 THEN
+            RETURN json_build_object('success', false, 'error', 'Maximum of 5 rivals reached.');
+        END IF;
+        INSERT INTO user_follows (follower_id, followee_id) VALUES (v_user_id, p_target_id);
+        RETURN json_build_object('success', true, 'action', 'followed');
+    END IF;
+END;
+ $$;
+
+CREATE OR REPLACE FUNCTION public.get_rivals_scores()
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ DECLARE v_user_id UUID := auth.uid();
+BEGIN
+    IF v_user_id IS NULL THEN RETURN '[]'::json; END IF;
+    RETURN json_agg(
+        json_build_object(
+            'user_id', s.user_id, 'hex_code', s.hex_code, 'score', s.score, 'rarity', s.rarity,
+            'username', p.username, 'current_streak', p.current_streak, 'equipped_cosmetics', p.equipped_cosmetics
+        )
+    )
+    FROM scores s JOIN profiles p ON s.user_id = p.id
+    WHERE s.roll_date = CURRENT_DATE AND s.user_id IN (SELECT followee_id FROM user_follows WHERE follower_id = v_user_id)
+    ORDER BY s.score DESC;
+END;
+ $$;
+
+-- Admin RPCs
+CREATE OR REPLACE FUNCTION public.admin_bump_shop_version()
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ DECLARE v_user_id UUID := auth.uid(); v_is_admin BOOLEAN;
+BEGIN
+    SELECT is_admin INTO v_is_admin FROM profiles WHERE id = v_user_id;
+    IF NOT COALESCE(v_is_admin, false) THEN RETURN json_build_object('success', false, 'error', 'Unauthorized'); END IF;
+    UPDATE meta SET value = NOW()::text WHERE key = 'shop_version';
+    RETURN json_build_object('success', true);
+END;
+ $$;
+
+CREATE OR REPLACE FUNCTION public.admin_randomize_cotw()
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ DECLARE v_user_id UUID := auth.uid(); v_is_admin BOOLEAN;
+BEGIN
+    SELECT is_admin INTO v_is_admin FROM profiles WHERE id = v_user_id;
+    IF NOT COALESCE(v_is_admin, false) THEN RETURN json_build_object('success', false, 'error', 'Unauthorized'); END IF;
+    PERFORM public.update_cotw();
+    RETURN json_build_object('success', true);
+END;
+ $$;
+
+CREATE OR REPLACE FUNCTION public.admin_trigger_cotw_test()
+RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$ DECLARE v_user_id UUID := auth.uid(); v_is_admin BOOLEAN;
+BEGIN
+    SELECT is_admin INTO v_is_admin FROM profiles WHERE id = v_user_id;
+    IF NOT COALESCE(v_is_admin, false) THEN RETURN json_build_object('success', false, 'error', 'Unauthorized'); END IF;
+    UPDATE profiles SET force_cotw_next_roll = TRUE WHERE id = v_user_id;
+    RETURN json_build_object('success', true, 'message', 'COTW test armed. Your next roll will hit.');
+END;
+ $$;
+
+-- 8. CORE GAME RPC: roll_die (Consolidated Version)
 CREATE OR REPLACE FUNCTION public.roll_die(p_is_reroll BOOLEAN DEFAULT FALSE)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -285,14 +405,20 @@ DECLARE
     v_achievement_ep BIGINT := 0;
     v_owns_freeze BOOLEAN;
     v_shard_count INT;
+    v_milestone_granted TEXT := '';
+    v_best_roll_score BIGINT;
+
+    v_cotw_str TEXT; v_cotw_r INT; v_cotw_g INT; v_cotw_b INT; v_dist FLOAT; v_force_cotw BOOLEAN; v_is_admin BOOLEAN;
 BEGIN
-    IF NOT p_is_reroll THEN
+    SELECT is_admin INTO v_is_admin FROM profiles WHERE id = v_user_id;
+
+    IF NOT p_is_reroll AND COALESCE(v_is_admin, false) = FALSE THEN
         SELECT * INTO v_existing_roll FROM scores WHERE user_id = v_user_id AND roll_date = CURRENT_DATE;
         IF FOUND THEN
             SELECT count(*) INTO v_total_count FROM scores WHERE roll_date = CURRENT_DATE;
             SELECT count(*) INTO v_higher_count FROM scores WHERE roll_date = CURRENT_DATE AND score > v_existing_roll.score;
             v_percentile := CASE WHEN v_total_count > 0 THEN round(((1.0 - (v_higher_count::FLOAT / v_total_count)) * 100)::numeric, 2) ELSE 100.0 END;
-            RETURN jsonb_build_object('success', true, 'already_rolled', true, 'is_anon', false, 'hex', v_existing_roll.hex_code, 'score', v_existing_roll.score, 'rarity', v_existing_roll.rarity, 'badges', v_existing_roll.badges, 'percentile', v_percentile, 'total_rollers', v_total_count, 'new_achievements', '[]'::jsonb);
+            RETURN jsonb_build_object('success', true, 'already_rolled', true, 'is_anon', false, 'hex', v_existing_roll.hex_code, 'score', v_existing_roll.score, 'rarity', v_existing_roll.rarity, 'badges', v_existing_roll.badges, 'percentile', v_percentile, 'total_rollers', v_total_count, 'new_achievements', '[]'::jsonb, 'milestone_granted', '');
         END IF;
     END IF;
 
@@ -304,60 +430,75 @@ BEGIN
         UPDATE profiles SET reroll_shards = reroll_shards - 1 WHERE id = v_user_id;
     END IF;
 
-    v_r := floor(random() * 256); v_g := floor(random() * 256); v_b := floor(random() * 256);
+    SELECT best_roll_score, force_cotw_next_roll INTO v_best_roll_score, v_force_cotw FROM profiles WHERE id = v_user_id;
+
+    IF COALESCE(v_force_cotw, false) THEN
+        SELECT value INTO v_cotw_str FROM meta WHERE key = 'cotw_target';
+        IF v_cotw_str IS NOT NULL THEN
+            v_r := split_part(v_cotw_str, ',', 1)::int;
+            v_g := split_part(v_cotw_str, ',', 2)::int;
+            v_b := split_part(v_cotw_str, ',', 3)::int;
+            UPDATE profiles SET force_cotw_next_roll = FALSE WHERE id = v_user_id;
+        ELSE
+            v_r := floor(random() * 256); v_g := floor(random() * 256); v_b := floor(random() * 256);
+        END IF;
+    ELSE
+        v_r := floor(random() * 256); v_g := floor(random() * 256); v_b := floor(random() * 256);
+    END IF;
+
     v_hex := '#' || lpad(to_hex(v_r), 2, '0') || lpad(to_hex(v_g), 2, '0') || lpad(to_hex(v_b), 2, '0');
     v_hex_upper := upper(v_hex); v_hex_no_hash := substr(v_hex_upper, 2);
     v_sum := v_r + v_g + v_b; v_max := greatest(v_r,v_g,v_b); v_min := least(v_r,v_g,v_b); v_range := v_max - v_min;
 
-    -- BADGE CHECKS (100 total)
-    IF true THEN v_total_score := v_total_score + 1337; v_badges := v_badges || jsonb_build_object('name', 'Base Spectrum', 'points', 1337, 'symbol', '🎨', 'desc', 'Part of the spectrum', 'rarity', 'Common'); END IF;
-    IF v_sum % 2 = 0 THEN v_total_score := v_total_score + 2024; v_badges := v_badges || jsonb_build_object('name', 'Sum is Even', 'points', 2024, 'symbol', '⚖️', 'desc', 'R+G+B is even', 'rarity', 'Common'); END IF;
-    IF v_sum % 2 != 0 THEN v_total_score := v_total_score + 2023; v_badges := v_badges || jsonb_build_object('name', 'Sum is Odd', 'points', 2023, 'symbol', '🎲', 'desc', 'R+G+B is odd', 'rarity', 'Common'); END IF;
-    IF v_sum % 3 = 0 THEN v_total_score := v_total_score + 15000; v_badges := v_badges || jsonb_build_object('name', 'Divisible by 3', 'points', 15000, 'symbol', '3️⃣', 'desc', 'Sum is multiple of 3', 'rarity', 'Uncommon'); END IF;
-    IF v_sum = 42 THEN v_total_score := v_total_score + 42000; v_badges := v_badges || jsonb_build_object('name', 'Meaning of Life', 'points', 42000, 'symbol', '🧬', 'desc', 'Sum is exactly 42', 'rarity', 'Rare'); END IF;
-    IF v_sum > 300 AND v_sum < 500 THEN v_total_score := v_total_score + 5500; v_badges := v_badges || jsonb_build_object('name', 'Balanced Sum', 'points', 5500, 'symbol', '🧘', 'desc', 'Sum is 300-499', 'rarity', 'Common'); END IF;
-    IF v_r%2=0 AND v_g%2=0 AND v_b%2=0 THEN v_total_score := v_total_score + 2222; v_badges := v_badges || jsonb_build_object('name', 'All Even', 'points', 2222, 'symbol', '2️⃣', 'desc', 'RGB all even', 'rarity', 'Common'); END IF;
-    IF v_r%2!=0 AND v_g%2!=0 AND v_b%2!=0 THEN v_total_score := v_total_score + 3333; v_badges := v_badges || jsonb_build_object('name', 'All Odd', 'points', 3333, 'symbol', '1️⃣', 'desc', 'RGB all odd', 'rarity', 'Common'); END IF;
-    IF v_r%3=0 AND v_g%3=0 AND v_b%3=0 THEN v_total_score := v_total_score + 4444; v_badges := v_badges || jsonb_build_object('name', 'Multiples of 3', 'points', 4444, 'symbol', '🔢', 'desc', 'RGB divisible by 3', 'rarity', 'Common'); END IF;
-    IF v_range > 200 THEN v_total_score := v_total_score + 8080; v_badges := v_badges || jsonb_build_object('name', 'High Contrast', 'points', 8080, 'symbol', '🌓', 'desc', 'Extreme color range', 'rarity', 'Uncommon'); END IF;
-    IF v_range < 50 THEN v_total_score := v_total_score + 1111; v_badges := v_badges || jsonb_build_object('name', 'Low Contrast', 'points', 1111, 'symbol', '🌫️', 'desc', 'Muddy/muted tone', 'rarity', 'Common'); END IF;
-    IF v_range > 50 AND v_range < 150 THEN v_total_score := v_total_score + 3300; v_badges := v_badges || jsonb_build_object('name', 'Moderate Contrast', 'points', 3300, 'symbol', '🛤️', 'desc', 'Range is 50-150', 'rarity', 'Common'); END IF;
-    IF v_max > 200 AND v_min > 100 AND v_range < 80 THEN v_total_score := v_total_score + 250000; v_badges := v_badges || jsonb_build_object('name', 'Pastel Soft', 'points', 250000, 'symbol', '🌸', 'desc', 'Soft pastel hue', 'rarity', 'Epic'); END IF;
-    IF v_max > 200 AND v_min < 50 THEN v_total_score := v_total_score + 250000; v_badges := v_badges || jsonb_build_object('name', 'Neon Bright', 'points', 250000, 'symbol', '💡', 'desc', 'Vivid neon glow', 'rarity', 'Epic'); END IF;
-    IF v_r > 128 THEN v_total_score := v_total_score + 4400; v_badges := v_badges || jsonb_build_object('name', 'Bright Red', 'points', 4400, 'symbol', '🔴', 'desc', 'Red > 128', 'rarity', 'Common'); END IF;
-    IF v_r < 128 THEN v_total_score := v_total_score + 2200; v_badges := v_badges || jsonb_build_object('name', 'Dark Red', 'points', 2200, 'symbol', '🔴', 'desc', 'Red < 128', 'rarity', 'Common'); END IF;
-    IF v_g > 128 THEN v_total_score := v_total_score + 4400; v_badges := v_badges || jsonb_build_object('name', 'Bright Green', 'points', 4400, 'symbol', '🟢', 'desc', 'Green > 128', 'rarity', 'Common'); END IF;
-    IF v_g < 128 THEN v_total_score := v_total_score + 2200; v_badges := v_badges || jsonb_build_object('name', 'Dark Green', 'points', 2200, 'symbol', '🟢', 'desc', 'Green < 128', 'rarity', 'Common'); END IF;
-    IF v_b > 128 THEN v_total_score := v_total_score + 4400; v_badges := v_badges || jsonb_build_object('name', 'Bright Blue', 'points', 4400, 'symbol', '🔵', 'desc', 'Blue > 128', 'rarity', 'Common'); END IF;
-    IF v_b < 128 THEN v_total_score := v_total_score + 2200; v_badges := v_badges || jsonb_build_object('name', 'Dark Blue', 'points', 2200, 'symbol', '🔵', 'desc', 'Blue < 128', 'rarity', 'Common'); END IF;
-    IF v_r IN (0,51,102,153,204,255) AND v_g IN (0,51,102,153,204,255) AND v_b IN (0,51,102,153,204,255) THEN v_total_score := v_total_score + 15151; v_badges := v_badges || jsonb_build_object('name', 'Web Safe', 'points', 15151, 'symbol', '🕸️', 'desc', '1990s web safe', 'rarity', 'Uncommon'); END IF;
-    IF substr(v_hex_no_hash, 1, 2) = substr(v_hex_no_hash, 3, 2) AND substr(v_hex_no_hash, 3, 2) = substr(v_hex_no_hash, 5, 2) THEN v_total_score := v_total_score + 150000; v_badges := v_badges || jsonb_build_object('name', 'Perfect Triplets', 'points', 150000, 'symbol', '🟰', 'desc', 'Hex is XXYYZZ', 'rarity', 'Rare'); END IF;
-    IF v_r = v_g AND v_g = v_b THEN v_total_score := v_total_score + 25525; v_badges := v_badges || jsonb_build_object('name', 'Greyscale', 'points', 25525, 'symbol', '⚫', 'desc', 'Pure greyscale', 'rarity', 'Uncommon'); END IF;
-    IF v_hex_no_hash = reverse(v_hex_no_hash) THEN v_total_score := v_total_score + 50005; v_badges := v_badges || jsonb_build_object('name', 'Palindrome', 'points', 50005, 'symbol', '🪞', 'desc', 'Reads same backwards', 'rarity', 'Rare'); END IF;
-    IF is_prime(v_sum) THEN v_total_score := v_total_score + 100000; v_badges := v_badges || jsonb_build_object('name', 'Prime Sum', 'points', 100000, 'symbol', '🔢', 'desc', 'R+G+B is prime', 'rarity', 'Rare'); END IF;
-    IF v_hex_upper LIKE '%A%' THEN v_total_score := v_total_score + 4111; v_badges := v_badges || jsonb_build_object('name', 'Contains A', 'points', 4111, 'symbol', '🅰️', 'desc', 'Hex has A', 'rarity', 'Common'); END IF;
-    IF v_hex_upper LIKE '%B%' THEN v_total_score := v_total_score + 4222; v_badges := v_badges || jsonb_build_object('name', 'Contains B', 'points', 4222, 'symbol', '🅱️', 'desc', 'Hex has B', 'rarity', 'Common'); END IF;
-    IF v_hex_upper LIKE '%C%' THEN v_total_score := v_total_score + 4333; v_badges := v_badges || jsonb_build_object('name', 'Contains C', 'points', 4333, 'symbol', '©️', 'desc', 'Hex has C', 'rarity', 'Common'); END IF;
-    IF v_hex_upper LIKE '%D%' THEN v_total_score := v_total_score + 4444; v_badges := v_badges || jsonb_build_object('name', 'Contains D', 'points', 4444, 'symbol', '🇩', 'desc', 'Hex has D', 'rarity', 'Common'); END IF;
-    IF v_hex_upper LIKE '%E%' THEN v_total_score := v_total_score + 4555; v_badges := v_badges || jsonb_build_object('name', 'Contains E', 'points', 4555, 'symbol', '📧', 'desc', 'Hex has E', 'rarity', 'Common'); END IF;
-    IF v_hex_upper LIKE '%F%' THEN v_total_score := v_total_score + 4666; v_badges := v_badges || jsonb_build_object('name', 'Contains F', 'points', 4666, 'symbol', '🇫', 'desc', 'Hex has F', 'rarity', 'Common'); END IF;
-    IF v_hex_upper LIKE '%0%' THEN v_total_score := v_total_score + 4000; v_badges := v_badges || jsonb_build_object('name', 'Contains 0', 'points', 4000, 'symbol', '⭕', 'desc', 'Hex has 0', 'rarity', 'Common'); END IF;
-    IF abs(v_r - v_g) < 30 THEN v_total_score := v_total_score + 6600; v_badges := v_badges || jsonb_build_object('name', 'Similar RG', 'points', 6600, 'symbol', '🤝', 'desc', 'Red & Green close', 'rarity', 'Common'); END IF;
-    IF abs(v_g - v_b) < 30 THEN v_total_score := v_total_score + 6600; v_badges := v_badges || jsonb_build_object('name', 'Similar GB', 'points', 6600, 'symbol', '🤝', 'desc', 'Green & Blue close', 'rarity', 'Common'); END IF;
-    IF abs(v_r - v_b) < 30 THEN v_total_score := v_total_score + 6600; v_badges := v_badges || jsonb_build_object('name', 'Similar RB', 'points', 6600, 'symbol', '🤝', 'desc', 'Red & Blue close', 'rarity', 'Common'); END IF;
-    IF v_r=255 AND v_g=0 AND v_b=0 THEN v_total_score := v_total_score + 666666; v_badges := v_badges || jsonb_build_object('name', 'Pure Red', 'points', 666666, 'symbol', '🟥', 'desc', 'Maximum Red', 'rarity', 'Epic'); END IF;
-    IF v_r=0 AND v_g=255 AND v_b=0 THEN v_total_score := v_total_score + 999999; v_badges := v_badges || jsonb_build_object('name', 'Pure Green', 'points', 999999, 'symbol', '🟩', 'desc', 'Maximum Green', 'rarity', 'Epic'); END IF;
-    IF v_r=0 AND v_g=0 AND v_b=255 THEN v_total_score := v_total_score + 420420; v_badges := v_badges || jsonb_build_object('name', 'Pure Blue', 'points', 420420, 'symbol', '🟦', 'desc', 'Maximum Blue', 'rarity', 'Epic'); END IF;
-    IF v_r=255 AND v_g=215 AND v_b=0 THEN v_total_score := v_total_score + 5005005; v_badges := v_badges || jsonb_build_object('name', 'Gold', 'points', 5005005, 'symbol', '🥇', 'desc', 'Pure Gold', 'rarity', 'Mythic'); END IF;
-    IF v_r=145 AND v_g=70 AND v_b=255 THEN v_total_score := v_total_score + 2940294; v_badges := v_badges || jsonb_build_object('name', 'Twitch Purple', 'points', 2940294, 'symbol', '🟣', 'desc', 'Brand Match', 'rarity', 'Mythic'); END IF;
-    IF v_r=30 AND v_g=215 AND v_b=96 THEN v_total_score := v_total_score + 1991991; v_badges := v_badges || jsonb_build_object('name', 'Spotify Green', 'points', 1991991, 'symbol', '🟢', 'desc', 'Brand Match', 'rarity', 'Mythic'); END IF;
-    IF v_r=244 AND v_g=0 AND v_b=9 THEN v_total_score := v_total_score + 1865186; v_badges := v_badges || jsonb_build_object('name', 'Coca-Cola Red', 'points', 1865186, 'symbol', '🥤', 'desc', 'Brand Match', 'rarity', 'Mythic'); END IF;
-    IF v_hex_upper LIKE '%DEAD%' THEN v_total_score := v_total_score + 73217; v_badges := v_badges || jsonb_build_object('name', 'DEAD', 'points', 73217, 'symbol', '💀', 'desc', 'Hex contains DEAD', 'rarity', 'Rare'); END IF;
-    IF v_hex_upper LIKE '%BEEF%' THEN v_total_score := v_total_score + 83388; v_badges := v_badges || jsonb_build_object('name', 'BEEF', 'points', 83388, 'symbol', '🥩', 'desc', 'Hex contains BEEF', 'rarity', 'Rare'); END IF;
-    IF v_hex_upper LIKE '%CAFE%' THEN v_total_score := v_total_score + 74237; v_badges := v_badges || jsonb_build_object('name', 'CAFE', 'points', 74237, 'symbol', '☕', 'desc', 'Hex contains CAFE', 'rarity', 'Rare'); END IF;
-    IF v_hex_upper LIKE '%FACE%' THEN v_total_score := v_total_score + 42069; v_badges := v_badges || jsonb_build_object('name', 'FACE', 'points', 42069, 'symbol', '😎', 'desc', 'Hex contains FACE', 'rarity', 'Rare'); END IF;
-    IF v_r=255 AND v_g=255 AND v_b=255 THEN v_total_score := v_total_score + 5252525; v_badges := v_badges || jsonb_build_object('name', 'The Light', 'points', 5252525, 'symbol', '☀️', 'desc', 'Pure White', 'rarity', 'Mythic'); END IF;
-    IF v_r=0 AND v_g=0 AND v_b=0 THEN v_total_score := v_total_score + 16777216; v_badges := v_badges || jsonb_build_object('name', 'The Void', 'points', 16777216, 'symbol', '🌑', 'desc', 'Pure Black', 'rarity', 'Mythic'); END IF;
+    -- BADGE CHECKS
+    IF true THEN v_total_score := v_total_score + 1337; v_badges := v_badges || to_jsonb('base_spectrum'::text); END IF;
+    IF v_sum % 2 = 0 THEN v_total_score := v_total_score + 2024; v_badges := v_badges || to_jsonb('sum_even'::text); END IF;
+    IF v_sum % 2 != 0 THEN v_total_score := v_total_score + 2023; v_badges := v_badges || to_jsonb('sum_odd'::text); END IF;
+    IF v_sum % 3 = 0 THEN v_total_score := v_total_score + 15000; v_badges := v_badges || to_jsonb('sum_div3'::text); END IF;
+    IF v_sum = 42 THEN v_total_score := v_total_score + 42000; v_badges := v_badges || to_jsonb('sum_42'::text); END IF;
+    IF v_sum > 300 AND v_sum < 500 THEN v_total_score := v_total_score + 5500; v_badges := v_badges || to_jsonb('sum_balanced'::text); END IF;
+    IF v_r%2=0 AND v_g%2=0 AND v_b%2=0 THEN v_total_score := v_total_score + 2222; v_badges := v_badges || to_jsonb('all_even'::text); END IF;
+    IF v_r%2!=0 AND v_g%2!=0 AND v_b%2!=0 THEN v_total_score := v_total_score + 3333; v_badges := v_badges || to_jsonb('all_odd'::text); END IF;
+    IF v_r%3=0 AND v_g%3=0 AND v_b%3=0 THEN v_total_score := v_total_score + 4444; v_badges := v_badges || to_jsonb('mult_3'::text); END IF;
+    IF v_range > 200 THEN v_total_score := v_total_score + 8080; v_badges := v_badges || to_jsonb('high_contrast'::text); END IF;
+    IF v_range < 50 THEN v_total_score := v_total_score + 1111; v_badges := v_badges || to_jsonb('low_contrast'::text); END IF;
+    IF v_range > 50 AND v_range < 150 THEN v_total_score := v_total_score + 3300; v_badges := v_badges || to_jsonb('mod_contrast'::text); END IF;
+    IF v_max > 200 AND v_min > 100 AND v_range < 80 THEN v_total_score := v_total_score + 250000; v_badges := v_badges || to_jsonb('pastel_soft'::text); END IF;
+    IF v_max > 200 AND v_min < 50 THEN v_total_score := v_total_score + 250000; v_badges := v_badges || to_jsonb('neon_bright'::text); END IF;
+    IF v_r > 128 THEN v_total_score := v_total_score + 4400; v_badges := v_badges || to_jsonb('bright_red'::text); END IF;
+    IF v_r < 128 THEN v_total_score := v_total_score + 2200; v_badges := v_badges || to_jsonb('dark_red'::text); END IF;
+    IF v_g > 128 THEN v_total_score := v_total_score + 4400; v_badges := v_badges || to_jsonb('bright_green'::text); END IF;
+    IF v_g < 128 THEN v_total_score := v_total_score + 2200; v_badges := v_badges || to_jsonb('dark_green'::text); END IF;
+    IF v_b > 128 THEN v_total_score := v_total_score + 4400; v_badges := v_badges || to_jsonb('bright_blue'::text); END IF;
+    IF v_b < 128 THEN v_total_score := v_total_score + 2200; v_badges := v_badges || to_jsonb('dark_blue'::text); END IF;
+    IF v_r IN (0,51,102,153,204,255) AND v_g IN (0,51,102,153,204,255) AND v_b IN (0,51,102,153,204,255) THEN v_total_score := v_total_score + 15151; v_badges := v_badges || to_jsonb('web_safe'::text); END IF;
+    IF substr(v_hex_no_hash, 1, 2) = substr(v_hex_no_hash, 3, 2) AND substr(v_hex_no_hash, 3, 2) = substr(v_hex_no_hash, 5, 2) THEN v_total_score := v_total_score + 150000; v_badges := v_badges || to_jsonb('perfect_triplets'::text); END IF;
+    IF v_r = v_g AND v_g = v_b THEN v_total_score := v_total_score + 25525; v_badges := v_badges || to_jsonb('greyscale'::text); END IF;
+    IF v_hex_no_hash = reverse(v_hex_no_hash) THEN v_total_score := v_total_score + 50005; v_badges := v_badges || to_jsonb('palindrome'::text); END IF;
+    IF is_prime(v_sum) THEN v_total_score := v_total_score + 100000; v_badges := v_badges || to_jsonb('prime_sum'::text); END IF;
+    IF v_hex_upper LIKE '%A%' THEN v_total_score := v_total_score + 4111; v_badges := v_badges || to_jsonb('contains_a'::text); END IF;
+    IF v_hex_upper LIKE '%B%' THEN v_total_score := v_total_score + 4222; v_badges := v_badges || to_jsonb('contains_b'::text); END IF;
+    IF v_hex_upper LIKE '%C%' THEN v_total_score := v_total_score + 4333; v_badges := v_badges || to_jsonb('contains_c'::text); END IF;
+    IF v_hex_upper LIKE '%D%' THEN v_total_score := v_total_score + 4444; v_badges := v_badges || to_jsonb('contains_d'::text); END IF;
+    IF v_hex_upper LIKE '%E%' THEN v_total_score := v_total_score + 4555; v_badges := v_badges || to_jsonb('contains_e'::text); END IF;
+    IF v_hex_upper LIKE '%F%' THEN v_total_score := v_total_score + 4666; v_badges := v_badges || to_jsonb('contains_f'::text); END IF;
+    IF v_hex_upper LIKE '%0%' THEN v_total_score := v_total_score + 4000; v_badges := v_badges || to_jsonb('contains_0'::text); END IF;
+    IF abs(v_r - v_g) < 30 THEN v_total_score := v_total_score + 6600; v_badges := v_badges || to_jsonb('similar_rg'::text); END IF;
+    IF abs(v_g - v_b) < 30 THEN v_total_score := v_total_score + 6600; v_badges := v_badges || to_jsonb('similar_gb'::text); END IF;
+    IF abs(v_r - v_b) < 30 THEN v_total_score := v_total_score + 6600; v_badges := v_badges || to_jsonb('similar_rb'::text); END IF;
+    IF v_r=255 AND v_g=0 AND v_b=0 THEN v_total_score := v_total_score + 666666; v_badges := v_badges || to_jsonb('pure_red'::text); END IF;
+    IF v_r=0 AND v_g=255 AND v_b=0 THEN v_total_score := v_total_score + 999999; v_badges := v_badges || to_jsonb('pure_green'::text); END IF;
+    IF v_r=0 AND v_g=0 AND v_b=255 THEN v_total_score := v_total_score + 420420; v_badges := v_badges || to_jsonb('pure_blue'::text); END IF;
+    IF v_r=255 AND v_g=215 AND v_b=0 THEN v_total_score := v_total_score + 5005005; v_badges := v_badges || to_jsonb('gold'::text); END IF;
+    IF v_r=145 AND v_g=70 AND v_b=255 THEN v_total_score := v_total_score + 2940294; v_badges := v_badges || to_jsonb('streamer_purple'::text); END IF;
+    IF v_r=30 AND v_g=215 AND v_b=96 THEN v_total_score := v_total_score + 1991991; v_badges := v_badges || to_jsonb('audio_stream_green'::text); END IF;
+    IF v_r=244 AND v_g=0 AND v_b=9 THEN v_total_score := v_total_score + 1865186; v_badges := v_badges || to_jsonb('classic_cola_red'::text); END IF;
+    IF v_hex_upper LIKE '%DEAD%' THEN v_total_score := v_total_score + 73217; v_badges := v_badges || to_jsonb('dead'::text); END IF;
+    IF v_hex_upper LIKE '%BEEF%' THEN v_total_score := v_total_score + 83388; v_badges := v_badges || to_jsonb('beef'::text); END IF;
+    IF v_hex_upper LIKE '%CAFE%' THEN v_total_score := v_total_score + 74237; v_badges := v_badges || to_jsonb('cafe'::text); END IF;
+    IF v_hex_upper LIKE '%FACE%' THEN v_total_score := v_total_score + 42069; v_badges := v_badges || to_jsonb('face'::text); END IF;
+    IF v_r=255 AND v_g=255 AND v_b=255 THEN v_total_score := v_total_score + 5252525; v_badges := v_badges || to_jsonb('the_light'::text); END IF;
+    IF v_r=0 AND v_g=0 AND v_b=0 THEN v_total_score := v_total_score + 16777216; v_badges := v_badges || to_jsonb('the_void'::text); END IF;
 
     IF v_total_score >= 5000000 THEN v_rarity := 'Mythic';
     ELSIF v_total_score >= 1000000 THEN v_rarity := 'Anomaly';
@@ -368,12 +509,36 @@ BEGIN
     ELSE v_rarity := 'Trash';
     END IF;
 
+    IF v_user_id IS NOT NULL AND v_total_score > COALESCE(v_best_roll_score, 0) THEN
+        v_achievement_ep := v_achievement_ep + 50000;
+        v_badges := v_badges || to_jsonb('beat_your_best'::text);
+    END IF;
+
+    IF v_user_id IS NOT NULL AND NOT COALESCE(v_force_cotw, false) THEN
+        SELECT value INTO v_cotw_str FROM meta WHERE key = 'cotw_target';
+        IF v_cotw_str IS NOT NULL THEN
+            v_cotw_r := split_part(v_cotw_str, ',', 1)::int;
+            v_cotw_g := split_part(v_cotw_str, ',', 2)::int;
+            v_cotw_b := split_part(v_cotw_str, ',', 3)::int;
+            v_dist := sqrt(power(v_r - v_cotw_r, 2) + power(v_g - v_cotw_g, 2) + power(v_b - v_cotw_b, 2));
+            IF v_dist <= 50 THEN
+                v_achievement_ep := v_achievement_ep + 50000;
+                v_badges := v_badges || to_jsonb('cotw_hit'::text);
+            END IF;
+        END IF;
+    ELSIF v_user_id IS NOT NULL AND COALESCE(v_force_cotw, false) THEN
+        v_achievement_ep := v_achievement_ep + 50000;
+        v_badges := v_badges || to_jsonb('cotw_hit'::text);
+    END IF;
+
     IF v_user_id IS NULL THEN
         RETURN jsonb_build_object('success', true, 'already_rolled', false, 'is_anon', true, 'hex', v_hex_upper, 'r', v_r, 'g', v_g, 'b', v_b, 'score', v_total_score, 'rarity', v_rarity, 'badges', v_badges);
     END IF;
 
     SELECT last_roll_date, current_streak INTO v_last_roll, v_current_streak FROM profiles WHERE id = v_user_id;
     IF p_is_reroll THEN
+        v_current_streak := COALESCE(v_current_streak, 1);
+    ELSIF v_last_roll = CURRENT_DATE THEN
         v_current_streak := COALESCE(v_current_streak, 1);
     ELSIF v_last_roll = CURRENT_DATE - 1 THEN
         v_current_streak := COALESCE(v_current_streak, 0) + 1;
@@ -389,12 +554,26 @@ BEGIN
         v_current_streak := 1;
     END IF;
 
-    IF v_current_streak % 7 = 0 AND NOT p_is_reroll THEN
+    IF v_current_streak % 7 = 0 AND NOT p_is_reroll AND v_last_roll != CURRENT_DATE THEN
         v_streak_bonus := 50000;
         v_total_score := v_total_score + v_streak_bonus;
-        v_badges := v_badges || jsonb_build_object('name', '7-Day Streak Bonus', 'points', v_streak_bonus, 'symbol', '🔥', 'desc', '7 days in a row!', 'rarity', 'Epic');
+        v_badges := v_badges || to_jsonb('streak_bonus_7'::text);
         UPDATE profiles SET reroll_shards = COALESCE(reroll_shards, 0) + 1 WHERE id = v_user_id;
-        v_badges := v_badges || jsonb_build_object('name', 'Reroll Shard Earned', 'points', 0, 'symbol', '🎲', 'desc', 'Can be used to reroll a bad daily score!', 'rarity', 'Epic', 'is_achievement', false);
+        v_badges := v_badges || to_jsonb('reroll_shard_earned'::text);
+    END IF;
+
+    IF v_current_streak = 30 AND NOT EXISTS (SELECT 1 FROM inventory WHERE user_id = v_user_id AND item_key = 'frame_30_day') THEN
+        INSERT INTO inventory (user_id, item_key) VALUES (v_user_id, 'frame_30_day');
+        v_milestone_granted := 'Monthly Grinder Frame';
+        v_badges := v_badges || to_jsonb('milestone_30'::text);
+    ELSIF v_current_streak = 100 AND NOT EXISTS (SELECT 1 FROM inventory WHERE user_id = v_user_id AND item_key = 'frame_100_day') THEN
+        INSERT INTO inventory (user_id, item_key) VALUES (v_user_id, 'frame_100_day');
+        v_milestone_granted := 'Iron Will Frame';
+        v_badges := v_badges || to_jsonb('milestone_100'::text);
+    ELSIF v_current_streak = 365 AND NOT EXISTS (SELECT 1 FROM inventory WHERE user_id = v_user_id AND item_key = 'frame_365_day') THEN
+        INSERT INTO inventory (user_id, item_key) VALUES (v_user_id, 'frame_365_day');
+        v_milestone_granted := 'Annual Frame';
+        v_badges := v_badges || to_jsonb('milestone_365'::text);
     END IF;
 
     SELECT count(*) + 1 INTO v_total_rolls FROM scores WHERE user_id = v_user_id;
@@ -422,8 +601,9 @@ BEGIN
         ('pastel_soft', v_max > 200 AND v_min > 100 AND v_range < 80), ('neon_bright', v_max > 200 AND v_min < 50),
         ('web_safe', v_r IN (0,51,102,153,204,255) AND v_g IN (0,51,102,153,204,255) AND v_b IN (0,51,102,153,204,255)),
         ('perfect_triplets', substr(v_hex_no_hash, 1, 2) = substr(v_hex_no_hash, 3, 2) AND substr(v_hex_no_hash, 3, 2) = substr(v_hex_no_hash, 5, 2)),
-        ('greyscale', v_r = v_g AND v_g = v_b), ('roll_purple', v_r=145 AND v_g=70 AND v_b=255),
-        ('pure_green', v_r=30 AND v_g=215 AND v_b=96), ('pure_red', v_r=244 AND v_g=0 AND v_b=9),
+        ('greyscale', v_r = v_g AND v_g = v_b), ('streamer_purple', v_r=145 AND v_g=70 AND v_b=255),
+        ('audio_stream_green', v_r=30 AND v_g=215 AND v_b=96), ('classic_cola_red', v_r=244 AND v_g=0 AND v_b=9),
+        ('pure_red', v_r=255 AND v_g=0 AND v_b=0), ('pure_green', v_r=0 AND v_g=255 AND v_b=0),
         ('pure_blue', v_r=0 AND v_g=0 AND v_b=255),
         ('hex_letters', v_hex_upper LIKE '%A%' AND v_hex_upper LIKE '%B%' AND v_hex_upper LIKE '%C%' AND v_hex_upper LIKE '%D%' AND v_hex_upper LIKE '%E%' AND v_hex_upper LIKE '%F%');
 
@@ -433,10 +613,10 @@ BEGIN
         JOIN temp_ach_checks t ON a.id = t.id AND t.condition_met = TRUE
         WHERE a.season_id IS NULL AND NOT EXISTS (SELECT 1 FROM user_achievements ua WHERE ua.user_id = v_user_id AND ua.achievement_id = a.id)
     LOOP
-        INSERT INTO user_achievements (user_id, achievement_id) VALUES (v_user_id, v_ach_record.id) ON CONFLICT DO NOTHING;
+        INSERT INTO user_achievements (user_id, achievement_id, count) VALUES (v_user_id, v_ach_record.id, 1) ON CONFLICT DO NOTHING;
         v_achievement_ep := v_achievement_ep + v_ach_record.ep_reward;
         v_new_achievements := v_new_achievements || jsonb_build_object('id', v_ach_record.id, 'name', v_ach_record.name, 'icon', v_ach_record.icon, 'ep_reward', v_ach_record.ep_reward);
-        v_badges := v_badges || jsonb_build_object('name', 'Achievement: ' || v_ach_record.name, 'points', v_ach_record.ep_reward, 'symbol', v_ach_record.icon, 'desc', v_ach_record.description, 'rarity', 'Mythic', 'is_achievement', true);
+        v_badges := v_badges || to_jsonb('ach_' || v_ach_record.id);
     END LOOP;
 
     FOR v_ach_record IN
@@ -445,11 +625,23 @@ BEGIN
         JOIN temp_ach_checks t ON a.id = t.id AND t.condition_met = TRUE
         WHERE NOT EXISTS (SELECT 1 FROM user_achievements ua WHERE ua.user_id = v_user_id AND ua.achievement_id = a.id)
     LOOP
-        INSERT INTO user_achievements (user_id, achievement_id) VALUES (v_user_id, v_ach_record.id) ON CONFLICT DO NOTHING;
+        INSERT INTO user_achievements (user_id, achievement_id, count) VALUES (v_user_id, v_ach_record.id, 1) ON CONFLICT DO NOTHING;
         v_achievement_ep := v_achievement_ep + v_ach_record.ep_reward;
         v_new_achievements := v_new_achievements || jsonb_build_object('id', v_ach_record.id, 'name', v_ach_record.name, 'icon', v_ach_record.icon, 'ep_reward', v_ach_record.ep_reward);
-        v_badges := v_badges || jsonb_build_object('name', 'Achievement: ' || v_ach_record.name, 'points', v_ach_record.ep_reward, 'symbol', v_ach_record.icon, 'desc', v_ach_record.description, 'rarity', 'Mythic', 'is_achievement', true);
+        v_badges := v_badges || to_jsonb('ach_' || v_ach_record.id);
     END LOOP;
+
+    FOR v_ach_record IN
+        SELECT a.id FROM achievements a
+        JOIN temp_ach_checks t ON a.id = t.id AND t.condition_met = TRUE
+        WHERE EXISTS (SELECT 1 FROM user_achievements ua WHERE ua.user_id = v_user_id AND ua.achievement_id = a.id)
+    LOOP
+        UPDATE user_achievements SET count = count + 1 WHERE user_id = v_user_id AND achievement_id = v_ach_record.id;
+    END LOOP;
+
+    IF COALESCE(v_is_admin, false) AND NOT p_is_reroll THEN
+        DELETE FROM scores WHERE user_id = v_user_id AND roll_date = CURRENT_DATE;
+    END IF;
 
     IF p_is_reroll THEN
         UPDATE scores SET hex_code = v_hex_upper, score = v_total_score, rarity = v_rarity, badges = v_badges WHERE user_id = v_user_id AND roll_date = CURRENT_DATE;
@@ -459,7 +651,7 @@ BEGIN
             VALUES (v_user_id, v_hex_upper, v_total_score, v_rarity, CURRENT_DATE, v_badges);
         EXCEPTION WHEN unique_violation THEN
             SELECT * INTO v_existing_roll FROM scores WHERE user_id = v_user_id AND roll_date = CURRENT_DATE;
-            RETURN jsonb_build_object('success', true, 'already_rolled', true, 'is_anon', false, 'hex', v_existing_roll.hex_code, 'score', v_existing_roll.score, 'rarity', v_existing_roll.rarity, 'badges', v_existing_roll.badges, 'new_achievements', '[]'::jsonb);
+            RETURN jsonb_build_object('success', true, 'already_rolled', true, 'is_anon', false, 'hex', v_existing_roll.hex_code, 'score', v_existing_roll.score, 'rarity', v_existing_roll.rarity, 'badges', v_existing_roll.badges, 'new_achievements', '[]'::jsonb, 'milestone_granted', '');
         END;
     END IF;
 
@@ -471,11 +663,11 @@ BEGIN
     SELECT count(*) INTO v_higher_count FROM scores WHERE roll_date = CURRENT_DATE AND score > v_total_score;
     v_percentile := CASE WHEN v_total_count > 0 THEN round(((1.0 - (v_higher_count::FLOAT / v_total_count)) * 100)::numeric, 2) ELSE 100.0 END;
 
-    RETURN jsonb_build_object('success', true, 'already_rolled', false, 'is_anon', false, 'hex', v_hex_upper, 'r', v_r, 'g', v_g, 'b', v_b, 'score', v_total_score, 'rarity', v_rarity, 'badges', v_badges, 'percentile', v_percentile, 'total_rollers', v_total_count, 'new_achievements', v_new_achievements);
+    RETURN jsonb_build_object('success', true, 'already_rolled', false, 'is_anon', false, 'hex', v_hex_upper, 'r', v_r, 'g', v_g, 'b', v_b, 'score', v_total_score, 'rarity', v_rarity, 'badges', v_badges, 'percentile', v_percentile, 'total_rollers', v_total_count, 'new_achievements', v_new_achievements, 'milestone_granted', v_milestone_granted);
 END;
  $function$;
 
--- 8. SEED DATA (Shop & Achievements)
+-- 9. SEED DATA (Shop & Achievements)
 
 -- ACHIEVEMENTS (50)
 INSERT INTO achievements (id, name, description, icon, ep_reward, rarity) VALUES
@@ -529,7 +721,7 @@ INSERT INTO achievements (id, name, description, icon, ep_reward, rarity) VALUES
 ('pure_red', 'Maximum Red', 'Roll Pure Red (255,0,0).', '🟥', 500000, 'Epic'),
 ('pure_green', 'Maximum Green', 'Roll Pure Green (0,255,0).', '🟩', 500000, 'Epic'),
 ('pure_blue', 'Maximum Blue', 'Roll Pure Blue (0,0,255).', '🟦', 500000, 'Epic'),
-('roll_purple', 'Twitch Purple', 'Roll the exact Twitch Purple.', '🟣', 2000000, 'Mythic'),
+('streamer_purple', 'Streamer Purple', 'Roll the exact Streamer Purple.', '🟣', 2000000, 'Mythic'),
 ('roll_beef', 'Where is the Beef?', 'Roll a hex containing BEEF.', '🥩', 50000, 'Uncommon'),
 ('roll_cafe', 'Coffee Break', 'Roll a hex containing CAFE.', '☕', 50000, 'Uncommon'),
 ('roll_dead', 'Dead Man Walking', 'Roll a hex containing DEAD.', '💀', 50000, 'Uncommon'),
@@ -541,7 +733,10 @@ INSERT INTO shop_items (item_key, name, slot, cost, css_type, css_value, rarity,
 -- Consumables
 ('streak_freeze', 'Streak Freeze', 'consumable', 100000, 'text', 'Protects your streak if you miss a day.', 'Rare', 'Protects your streak if you miss a day.'),
 ('reroll_shard', 'Reroll Shard', 'consumable', 200000, 'text', 'Allows you to reroll your daily color.', 'Rare', 'Grants 1 Reroll Shard, usable on the results screen.'),
-
+-- Milestone Frames
+('frame_30_day', 'Monthly Grinder Frame', 'frame', 0, 'style', 'border: 2px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);', 'Mythic', 'Unlocked at a 30-day streak.'),
+('frame_100_day', 'Iron Will Frame', 'frame', 0, 'style', 'border: 2px solid #f1c40f; box-shadow: 0 0 15px rgba(241, 196, 15, 0.5);', 'Mythic', 'Unlocked at a 100-day streak.'),
+('frame_365_day', 'Annual Frame', 'frame', 0, 'style', 'border: 2px solid #a15cff; box-shadow: 0 0 15px rgba(161, 92, 255, 0.5);', 'Mythic', 'Unlocked at a 365-day streak.'),
 -- Frames
 ('frame_thin_white', 'Hairline Frame', 'frame', 40000, 'style', 'border: 1px solid rgba(255,255,255,0.35);', 'Uncommon', 'Applies a custom border to your profile header.'),
 ('frame_neon_cyan', 'Cyan Frame', 'frame', 150000, 'style', 'border: 1px solid #22d3ee; box-shadow: 0 0 12px rgba(34,211,238,0.5);', 'Rare', 'Applies a custom border to your profile header.'),
@@ -549,13 +744,11 @@ INSERT INTO shop_items (item_key, name, slot, cost, css_type, css_value, rarity,
 ('frame_gold_ring', 'Gold Ring', 'frame', 600000, 'style', 'border: 1px solid #f1c40f; box-shadow: 0 0 16px rgba(241,196,15,0.45);', 'Epic', 'Applies a custom border to your profile header.'),
 ('frame_spectrum', 'Spectrum Frame', 'frame', 4000000, 'class', 'frame-spectrum-anim', 'Epic', 'Applies a custom border to your profile header.'),
 ('frame_diamond', 'Diamond Frame', 'frame', 12000000, 'class', 'frame-diamond-anim', 'Mythic', 'Applies a custom border to your profile header.'),
-
 -- Profile Backgrounds
 ('bg_aurora', 'Aurora Background', 'profile_bg', 1500000, 'style', 'background-image: linear-gradient(135deg, #00c6ff, #0072ff); background-size: cover;', 'Epic', 'Applies a custom background to your profile card.'),
 ('bg_sunset', 'Sunset Background', 'profile_bg', 1500000, 'style', 'background-image: linear-gradient(135deg, #ff9a9e, #fad0c4); background-size: cover;', 'Epic', 'Applies a custom background to your profile card.'),
 ('bg_matrix', 'Matrix Background', 'profile_bg', 3000000, 'style', 'background-color: #001100; background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 0, .1) 25%, rgba(0, 255, 0, .1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 0, .1) 75%, rgba(0, 255, 0, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 0, .1) 25%, rgba(0, 255, 0, .1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 0, .1) 75%, rgba(0, 255, 0, .1) 76%, transparent 77%, transparent); background-size: 50px 50px;', 'Epic', 'Applies a custom background to your profile card.'),
 ('bg_void', 'Void Background', 'profile_bg', 5000000, 'style', 'background-image: radial-gradient(circle, #1a1a1a, #000000); background-size: cover;', 'Mythic', 'Applies a custom background to your profile card.'),
-
 -- Name Effects (Styles)
 ('name_italic', 'Italic Font', 'name_effect', 50000, 'style', 'font-style: italic; color: #fff;', 'Uncommon', 'Applies a custom visual effect to your username.'),
 ('name_drop_shadow', 'Drop Shadow', 'name_effect', 50000, 'style', 'text-shadow: 2px 2px 4px #000; color: #fff;', 'Uncommon', 'Applies a custom visual effect to your username.'),
@@ -568,7 +761,6 @@ INSERT INTO shop_items (item_key, name, slot, cost, css_type, css_value, rarity,
 ('name_gradient_purple', 'Purple Gradient', 'name_effect', 500000, 'style', 'background: linear-gradient(45deg, #8E2DE2, #4A00E0); -webkit-background-clip: text; background-clip: text; color: transparent;', 'Epic', 'Applies a custom visual effect to your username.'),
 ('name_glow_gold', 'Gold Glow', 'name_effect', 500000, 'style', 'text-shadow: 0 0 15px #f1c40f; color: #fff;', 'Epic', 'Applies a custom visual effect to your username.'),
 ('name_gradient_fire', 'Fire Gradient', 'name_effect', 750000, 'style', 'background: linear-gradient(45deg, #f12711, #f5af19); -webkit-background-clip: text; background-clip: text; color: transparent;', 'Epic', 'Applies a custom visual effect to your username.'),
-
 -- Name Effects (Classes/Animations)
 ('name_rainbow', 'Rainbow Shift', 'name_effect', 2000000, 'class', 'rainbow-text-anim', 'Epic', 'Applies a custom visual effect to your username.'),
 ('name_flicker_neon', 'Flickering Neon', 'name_effect', 2000000, 'class', 'flicker-neon-anim', 'Epic', 'Applies a custom visual effect to your username.'),
@@ -579,18 +771,19 @@ INSERT INTO shop_items (item_key, name, slot, cost, css_type, css_value, rarity,
 ('name_glitch_effect', 'Glitch Effect', 'name_effect', 10000000, 'class', 'glitch-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
 ('name_ocean_wave', 'Ocean Wave', 'name_effect', 12000000, 'class', 'ocean-wave-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
 ('name_sunset_blur', 'Sunset Blur', 'name_effect', 15000000, 'class', 'sunset-blur-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
-
 -- Prestige Name Effects
 ('name_inferno', 'Inferno Name', 'name_effect', 15000000, 'class', 'inferno-name-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
 ('name_spectrum', 'Spectrum Name', 'name_effect', 25000000, 'class', 'spectrum-name-anim', 'Mythic', 'Applies a custom visual effect to your username.'),
-
 -- Roll Particle Effects
 ('roll_sparkles', 'Sparkle Aura', 'roll_effect', 500000, 'class', 'roll-sparkles-anim', 'Epic', 'Applies a visual aura to your color orb on the results screen.'),
 ('roll_inferno', 'Inferno Aura', 'roll_effect', 5000000, 'class', 'roll-inferno-anim', 'Mythic', 'Applies a visual aura to your color orb on the results screen.'),
 ('roll_spectrum', 'Spectrum Aura', 'roll_effect', 12000000, 'class', 'roll-spectrum-anim', 'Mythic', 'Applies a visual aura to your color orb on the results screen.'),
-
 -- Leaderboard Row Themes
 ('lb_glow', 'Glowing Row', 'lb_theme', 250000, 'class', 'lb-glow-theme', 'Rare', 'Applies a custom background and border to your row on the global leaderboard.'),
 ('lb_spectrum', 'Spectrum Row', 'lb_theme', 25000000, 'class', 'lb-spectrum-theme', 'Mythic', 'Applies a custom background and border to your row on the global leaderboard.'),
 ('lb_gold', 'Golden Row', 'lb_theme', 8000000, 'class', 'lb-gold-theme', 'Mythic', 'Applies a custom background and border to your row on the global leaderboard.')
 ON CONFLICT (item_key) DO NOTHING;
+
+-- 10. META INITIALIZATION
+INSERT INTO meta (key, value) VALUES ('shop_version', '2024-01-01T00:00:00Z')
+ON CONFLICT (key) DO NOTHING;
