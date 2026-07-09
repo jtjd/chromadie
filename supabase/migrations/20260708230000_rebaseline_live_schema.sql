@@ -566,11 +566,9 @@ DECLARE
     v_milestone_granted TEXT := '';
     v_best_roll_score BIGINT;
     
-    v_cotw_str TEXT; v_cotw_r INT; v_cotw_g INT; v_cotw_b INT; v_dist FLOAT; v_force_cotw BOOLEAN; v_is_admin BOOLEAN;
+    v_cotw_str TEXT; v_cotw_r INT; v_cotw_g INT; v_cotw_b INT; v_dist FLOAT; v_force_cotw BOOLEAN;
 BEGIN
-    SELECT is_admin INTO v_is_admin FROM profiles WHERE id = v_user_id;
-
-    IF NOT p_is_reroll AND COALESCE(v_is_admin, false) = FALSE THEN
+    IF NOT p_is_reroll THEN
         SELECT * INTO v_existing_roll FROM scores WHERE user_id = v_user_id AND roll_date = CURRENT_DATE;
         IF FOUND THEN
             SELECT count(*) INTO v_total_count FROM scores WHERE roll_date = CURRENT_DATE;
@@ -896,10 +894,6 @@ BEGIN
     LOOP
         UPDATE user_achievements SET count = count + 1 WHERE user_id = v_user_id AND achievement_id = v_ach_record.id;
     END LOOP;
-
-    IF COALESCE(v_is_admin, false) AND NOT p_is_reroll THEN
-        DELETE FROM scores WHERE user_id = v_user_id AND roll_date = CURRENT_DATE;
-    END IF;
 
     IF p_is_reroll THEN
         UPDATE profiles 
@@ -1718,7 +1712,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
-
 
 
 

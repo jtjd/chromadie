@@ -10,6 +10,17 @@ export function getTodayString() {
 // Sleep helper for animations
 export const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+const HEX_COLOR_RE = /^[0-9A-Fa-f]{6}$/;
+
+export function isValidHexColor(value) {
+    return HEX_COLOR_RE.test(String(value || ''));
+}
+
+export function normalizeHexColor(value, fallback = '#000000') {
+    const normalized = String(value || '').trim().replace(/^#/, '');
+    return isValidHexColor(normalized) ? `#${normalized.toUpperCase()}` : fallback;
+}
+
 // NEW: Format large numbers (e.g., 1250 -> 1.2K)
 export function formatCount(n) {
     if (n < 1000) return n.toString();

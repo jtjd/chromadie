@@ -1,6 +1,6 @@
 <script>
   import { session, profile, equippedItems, selectedUserId } from './lib/stores';
-  import { supabase } from './lib/supabase';
+  import { supabase, supabaseError } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import Game from './lib/Game.svelte';
   import Shop from './lib/Shop.svelte';
@@ -9,6 +9,7 @@
   import Toast from './lib/Toast.svelte';
   import GuestLock from './lib/GuestLock.svelte';
   import { getNameEffect, getFrameEffect, getTitleText } from './lib/cosmetics';
+  import { normalizeHexColor } from './lib/utils';
   import { onMount, onDestroy } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
@@ -28,14 +29,15 @@
     const routeProfileId = params.get('profile');
     const cScore = params.get('challenge');
     const cHex = params.get('hex');
+    const isValidChallengeHex = /^[0-9A-Fa-f]{6}$/.test(cHex || '');
 
     view = VALID_VIEWS.has(routeView) ? routeView : 'game';
     leaderboardTab = VALID_LEADERBOARD_TABS.has(routeTab) ? routeTab : 'today';
     selectedUserId.set(routeProfileId || null);
 
-    if (cScore && cHex) {
+    if (cScore && isValidChallengeHex) {
       const parsedScore = Number.parseInt(cScore, 10);
-      challengeData = Number.isFinite(parsedScore) ? { score: parsedScore, hex: `#${cHex}` } : null;
+      challengeData = Number.isFinite(parsedScore) ? { score: parsedScore, hex: normalizeHexColor(cHex) } : null;
     } else {
       challengeData = null;
     }
@@ -123,6 +125,7 @@
   $: frameEff = getFrameEffect(userCosmetics);
   $: titleTxt = getTitleText(userCosmetics);
   $: username = $profile?.username || 'Guest';
+  $: errorState = supabaseError;
 
   $: if ($session && showAuthModal) {
     showAuthModal = false;
@@ -131,87 +134,149 @@
 
 <Toast />
 
-{#if showAuthModal}
-  <div class="auth-modal-overlay" role="button" tabindex="0" on:click|self={() => showAuthModal = false} on:keydown|self={(e) => e.key === 'Escape' && (showAuthModal = false)}>
-    <div class="auth-modal-content">
-      <Auth />
-    </div>
-  </div>
-{/if}
-
-{#if challengeData && view === 'game'}
-  <div class="challenge-banner">
-    <div class="challenge-info">
-      <span class="challenge-text">Player challenges you to beat:</span>
-      <div class="challenge-stat">
-        <span class="challenge-color" style="background-color: {challengeData.hex};"></span>
-        <span class="challenge-score">{challengeData.score.toLocaleString()} pts</span>
+{#if errorState}
+  <main class="bootstrap-error-shell">
+    <section class="bootstrap-error-card glass-panel" role="alert" aria-live="polite">
+      <p class="bootstrap-error-kicker">Configuration error</p>
+      <h1>{errorState.title}</h1>
+      <p class="bootstrap-error-message">{errorState.message}</p>
+      {#if errorState.details}
+        <p class="bootstrap-error-details">{errorState.details}</p>
+      {/if}
+      <p class="bootstrap-error-help">
+        Set the required Supabase environment variables, rebuild, and redeploy. In development, check the console for the exact missing setting.
+      </p>
+    </section>
+  </main>
+{:else}
+  {#if showAuthModal}
+    <div class="auth-modal-overlay" role="button" tabindex="0" on:click|self={() => showAuthModal = false} on:keydown|self={(e) => e.key === 'Escape' && (showAuthModal = false)}>
+      <div class="auth-modal-content">
+        <Auth />
       </div>
     </div>
-    <button
-      type="button"
-      class="challenge-close"
-      aria-label="Dismiss challenge banner"
-      on:click={() => challengeData = null}
-    >
-      ✖
-    </button>
-  </div>
-{/if}
-
-<div id="header-mount">
-  <header class="site-header">
-    <a href="/" class="logo">🎲 ChromaDie</a>
-    <nav class="nav-links">
-      <button class="nav-link" class:active={view === 'game'} on:click={() => handleNavClick('game')}>Game</button>
-      <button class="nav-link" class:active={view === 'shop'} on:click={() => handleNavClick('shop')}>Shop</button>
-      <button class="nav-link" class:active={view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
-      <button class="nav-link" class:active={view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
-
-      {#if $session}
-        <div class="user-chip {frameEff.cls}" style="{frameEff.style}">
-          {#if titleTxt}
-            <span class="title-chip">[{titleTxt}]</span>
-          {/if}
-          <span class="user-name {nameEff.cls}" style="{nameEff.style}" data-text={username}>
-            {username}
-          </span>
-          <button class="logout-btn" on:click={handleLogout}>Log Out</button>
-        </div>
-      {:else}
-        <button class="login-btn-header" on:click={() => showAuthModal = true}>Log In / Sign Up</button>
-      {/if}
-    </nav>
-  </header>
-</div>
-
-{#if $session}
-  {#if view === 'game'}
-    <Game on:promptlogin={() => showAuthModal = true} />
-  {:else if view === 'shop'}
-    <Shop />
-  {:else if view === 'leaderboard'}
-    {#key `leaderboard:${leaderboardTab}`}
-      <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
-    {/key}
-  {:else if view === 'profile'}
-    <Profile userId={$selectedUserId} on:navigate={handleNavigation} />
   {/if}
-{:else}
-  {#if view === 'game'}
-    <Game on:promptlogin={() => showAuthModal = true} />
-  {:else if view === 'leaderboard'}
-    {#key `leaderboard:${leaderboardTab}`}
-      <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
-    {/key}
-  {:else if view === 'profile' && $selectedUserId}
-    <Profile userId={$selectedUserId} on:navigate={handleNavigation} />
+
+  {#if challengeData && view === 'game'}
+    <div class="challenge-banner">
+      <div class="challenge-info">
+        <span class="challenge-text">Player challenges you to beat:</span>
+        <div class="challenge-stat">
+          <span class="challenge-color" style="background-color: {challengeData.hex};"></span>
+          <span class="challenge-score">{challengeData.score.toLocaleString()} pts</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="challenge-close"
+        aria-label="Dismiss challenge banner"
+        on:click={() => challengeData = null}
+      >
+        ✖
+      </button>
+    </div>
+  {/if}
+
+  <div id="header-mount">
+    <header class="site-header">
+      <a href="/" class="logo">🎲 ChromaDie</a>
+      <nav class="nav-links">
+        <button class="nav-link" class:active={view === 'game'} on:click={() => handleNavClick('game')}>Game</button>
+        <button class="nav-link" class:active={view === 'shop'} on:click={() => handleNavClick('shop')}>Shop</button>
+        <button class="nav-link" class:active={view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
+        <button class="nav-link" class:active={view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
+
+        {#if $session}
+          <div class="user-chip {frameEff.cls}" style="{frameEff.style}">
+            {#if titleTxt}
+              <span class="title-chip">[{titleTxt}]</span>
+            {/if}
+            <span class="user-name {nameEff.cls}" style="{nameEff.style}" data-text={username}>
+              {username}
+            </span>
+            <button class="logout-btn" on:click={handleLogout}>Log Out</button>
+          </div>
+        {:else}
+          <button class="login-btn-header" on:click={() => showAuthModal = true}>Log In / Sign Up</button>
+        {/if}
+      </nav>
+    </header>
+  </div>
+
+  {#if $session}
+    {#if view === 'game'}
+      <Game on:promptlogin={() => showAuthModal = true} />
+    {:else if view === 'shop'}
+      <Shop />
+    {:else if view === 'leaderboard'}
+      {#key `leaderboard:${leaderboardTab}`}
+        <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
+      {/key}
+    {:else if view === 'profile'}
+      <Profile userId={$selectedUserId} on:navigate={handleNavigation} />
+    {/if}
   {:else}
-    <GuestLock view={view} on:login={() => showAuthModal = true} />
+    {#if view === 'game'}
+      <Game on:promptlogin={() => showAuthModal = true} />
+    {:else if view === 'leaderboard'}
+      {#key `leaderboard:${leaderboardTab}`}
+        <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
+      {/key}
+    {:else if view === 'profile' && $selectedUserId}
+      <Profile userId={$selectedUserId} on:navigate={handleNavigation} />
+    {:else}
+      <GuestLock view={view} on:login={() => showAuthModal = true} />
+    {/if}
   {/if}
 {/if}
 
 <style>
+  .bootstrap-error-shell {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+  }
+
+  .bootstrap-error-card {
+    width: min(720px, 100%);
+    padding: 2rem;
+    text-align: left;
+    border-color: rgba(249, 115, 22, 0.35);
+    background:
+      radial-gradient(circle at top right, rgba(249, 115, 22, 0.16), transparent 45%),
+      rgba(10, 10, 14, 0.9);
+  }
+
+  .bootstrap-error-kicker {
+    margin: 0 0 0.65rem 0;
+    color: var(--accent-purple);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .bootstrap-error-card h1 {
+    margin: 0 0 0.85rem 0;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: #fff;
+  }
+
+  .bootstrap-error-message,
+  .bootstrap-error-details,
+  .bootstrap-error-help {
+    margin: 0.6rem 0 0 0;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .bootstrap-error-details {
+    font-family: 'JetBrains Mono', monospace;
+    color: #f9a8d4;
+  }
+
   .auth-modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
