@@ -53,9 +53,9 @@
   }
 
   $: itemsArray = Object.entries($shopItems)
-    .filter(([key, item]) => item.slot !== 'consumable')
+    .filter(([, item]) => item.slot !== 'consumable')
     .sort((a, b) => a[1].cost - b[1].cost)
-    .filter(([key, item]) => activeTab === 'all' || item.slot === activeTab);
+    .filter(([, item]) => activeTab === 'all' || item.slot === activeTab);
 </script>
 
 <div class="container shop-container">

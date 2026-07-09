@@ -13,7 +13,7 @@ function createUnavailableQuery(message) {
       if (prop === 'then') {
         return result.then.bind(result)
       }
-      return (..._args) => query
+      return () => query
     }
   })
 

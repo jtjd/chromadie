@@ -125,7 +125,7 @@
   $: frameEff = getFrameEffect(userCosmetics);
   $: titleTxt = getTitleText(userCosmetics);
   $: username = $profile?.username || 'Guest';
-  $: errorState = supabaseError;
+  const errorState = supabaseError;
 
   $: if ($session && showAuthModal) {
     showAuthModal = false;
