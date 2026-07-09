@@ -38,6 +38,22 @@ export function clearUserState() {
     followedUsers.set([])
 }
 
+function getShopCache() {
+    try {
+        return JSON.parse(localStorage.getItem('shop_cache') || '{}');
+    } catch {
+        return {};
+    }
+}
+
+function setShopCache(cache) {
+    try {
+        localStorage.setItem('shop_cache', JSON.stringify(cache));
+    } catch {
+        // Ignore storage failures in hardened/private browsing modes.
+    }
+}
+
 export async function loadShopItems() {
     const { data: meta } = await supabase
     .from('meta')
@@ -46,14 +62,16 @@ export async function loadShopItems() {
     .single();
 
     const latestVersion = meta?.value;
+    const cached = getShopCache();
+    const cacheAgeMs = Date.now() - (cached.savedAt || 0);
+    const cacheIsFresh = cacheAgeMs < 24 * 60 * 60 * 1000;
 
-    const cached = JSON.parse(localStorage.getItem('shop_cache') || '{}');
-    if (cached.version === latestVersion && cached.items) {
+    if (cached.version === latestVersion && cached.items && cacheIsFresh) {
         shopItems.set(cached.items);
         return;
     }
 
-    const { data, error } = await supabase
+    const { data } = await supabase
     .from('shop_items')
     .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection')
     .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
@@ -63,7 +81,7 @@ export async function loadShopItems() {
         const cache = {}
         data.forEach(item => { cache[item.item_key] = item })
         shopItems.set(cache)
-        localStorage.setItem('shop_cache', JSON.stringify({ version: latestVersion, items: cache }));
+        setShopCache({ version: latestVersion, savedAt: Date.now(), items: cache });
     }
 }
 
@@ -106,7 +124,7 @@ supabase.auth.onAuthStateChange(async (event, currentSession) => {
             const [profileRes, inventoryRes, walletRes] = await Promise.all([
                 supabase
                 .from('profiles')
-                .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, reroll_shards, equipped_badges, bio, mood_color, is_admin')
+                .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, reroll_shards, equipped_badges, mood_color')
                 .eq('id', currentSession.user.id)
                 .single(),
                                                                             supabase

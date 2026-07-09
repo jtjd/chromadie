@@ -101,6 +101,30 @@
       }
   }
 
+  function getSavedGuestRoll() {
+    try {
+      return localStorage.getItem('chromadie-roll');
+    } catch {
+      return null;
+    }
+  }
+
+  function saveGuestRoll(rollData) {
+    try {
+      localStorage.setItem('chromadie-roll', JSON.stringify(rollData));
+    } catch {
+      // Ignore storage failures in private browsing or hardened browser modes.
+    }
+  }
+
+  function clearGuestRoll() {
+    try {
+      localStorage.removeItem('chromadie-roll');
+    } catch {
+      // Ignore storage failures.
+    }
+  }
+
   async function generateShareImage() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -274,7 +298,7 @@
     };
 
     if (!$session) {
-      localStorage.setItem('chromadie-roll', JSON.stringify(rollData));
+      saveGuestRoll(rollData);
     } else {
       fetchWalletBalance();
     }
@@ -315,7 +339,7 @@
         if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
       }
     } else {
-      const savedRoll = localStorage.getItem('chromadie-roll');
+      const savedRoll = getSavedGuestRoll();
       if (savedRoll) {
         try {
           const rollData = JSON.parse(savedRoll);
@@ -334,7 +358,7 @@
             if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
           }
         } catch {
-          localStorage.removeItem('chromadie-roll');
+          clearGuestRoll();
         }
       }
     }
@@ -456,12 +480,6 @@
             🎲 Use Reroll Shard ({$rerollShards} left)
           </button>
         {/if}
-
-        {#if $session && $profile?.is_admin}
-          <button class="admin-roll-btn" on:click={() => initiateRoll(false)} disabled={loading}>
-            🛠️ Admin Force Roll
-          </button>
-        {/if}
       </div>
 
       {#if milestoneGranted}
@@ -474,7 +492,7 @@
         <div class="guest-prompt">
           <div class="guest-prompt-header">Guest Mode</div>
           <div class="guest-prompt-title">Save Your Progress</div>
-          <div class="guest-prompt-copy">Your roll is saved locally. Create an account to compete on the leaderboard, earn EP, and buy cosmetics.</div>
+          <div class="guest-prompt-copy">Create an account to compete on the leaderboard, earn EP, and unlock customizations.</div>
           <button class="roll-btn" style="margin-top: 15px; display: inline-block;" on:click={() => dispatch('promptlogin')}>
             Create Account
           </button>
@@ -558,23 +576,39 @@
   .reroll-btn:hover { background: rgba(139, 124, 246, 0.3); }
   .reroll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .admin-roll-btn {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--accent-green);
-    border: 1px solid var(--accent-green);
-    padding: 7px 18px;
-    font-size: 0.85rem;
-    border-radius: 8px;
-    cursor: pointer;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-  .admin-roll-btn:hover { background: rgba(16, 185, 129, 0.3); }
-  .admin-roll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
   .badges-container-tight { margin-bottom: 0 !important; margin-top: 20px; }
-  .guest-prompt { margin-bottom: 20px !important; text-align: center; border-left: none !important; }
+  .guest-prompt {
+    margin-bottom: 20px !important;
+    text-align: center;
+    border-left: none !important;
+    padding: 18px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+  }
+  .guest-prompt-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--accent-purple);
+    margin-bottom: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .guest-prompt-title {
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .guest-prompt-copy {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    max-width: 34rem;
+    margin: 0 auto;
+  }
   .badges-subtitle { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 10px; text-align: left; opacity: 0.8; }
 
   .milestone-banner {

@@ -1,5 +1,5 @@
 <script>
-  import { session, profile, equippedItems, selectedUserId, followedUsers } from './lib/stores';
+  import { session, profile, equippedItems, selectedUserId } from './lib/stores';
   import { supabase } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import Game from './lib/Game.svelte';
@@ -8,38 +8,114 @@
   import Profile from './lib/Profile.svelte';
   import Toast from './lib/Toast.svelte';
   import GuestLock from './lib/GuestLock.svelte';
-  import Admin from './lib/Admin.svelte';
   import { getNameEffect, getFrameEffect, getTitleText } from './lib/cosmetics';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
+  import { SvelteURLSearchParams } from 'svelte/reactivity';
 
+  const VALID_VIEWS = new Set(['game', 'shop', 'leaderboard', 'profile']);
+  const VALID_LEADERBOARD_TABS = new Set(['today', 'rivals', 'weekly', 'monthly', 'roll']);
   let view = 'game';
+  let leaderboardTab = 'today';
   let showAuthModal = false;
   let challengeData = null;
 
   supabase.auth.getSession().then(({ data }) => session.set(data.session));
 
-  onMount(() => {
-    const params = new URLSearchParams(window.location.search);
+  function parseRoute() {
+    const params = new SvelteURLSearchParams(window.location.search);
+    const routeView = params.get('view');
+    const routeTab = params.get('tab');
+    const routeProfileId = params.get('profile');
     const cScore = params.get('challenge');
     const cHex = params.get('hex');
+
+    view = VALID_VIEWS.has(routeView) ? routeView : 'game';
+    leaderboardTab = VALID_LEADERBOARD_TABS.has(routeTab) ? routeTab : 'today';
+    selectedUserId.set(routeProfileId || null);
+
     if (cScore && cHex) {
-      challengeData = { score: parseInt(cScore), hex: `#${cHex}` };
+      const parsedScore = Number.parseInt(cScore, 10);
+      challengeData = Number.isFinite(parsedScore) ? { score: parsedScore, hex: `#${cHex}` } : null;
+    } else {
+      challengeData = null;
     }
+  }
+
+  function syncRoute() {
+    if (typeof window === 'undefined') return;
+
+    const params = new SvelteURLSearchParams();
+    if (view !== 'game') params.set('view', view);
+    if (view === 'leaderboard' && leaderboardTab !== 'today') {
+      params.set('tab', leaderboardTab);
+    }
+    if (view === 'profile' && $selectedUserId) {
+      params.set('profile', $selectedUserId);
+    }
+    if (challengeData?.score != null && challengeData?.hex) {
+      params.set('challenge', String(challengeData.score));
+      params.set('hex', challengeData.hex.replace('#', ''));
+    }
+
+    const nextSearch = params.toString();
+    const nextUrl = nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (nextUrl !== currentUrl) {
+      window.history.pushState({}, '', nextUrl);
+    }
+  }
+
+  function setRoute(nextView, options = {}) {
+    if (!VALID_VIEWS.has(nextView)) return;
+
+    view = nextView;
+    if (nextView !== 'leaderboard') {
+      leaderboardTab = options.tab && VALID_LEADERBOARD_TABS.has(options.tab) ? options.tab : leaderboardTab;
+    } else if (options.tab && VALID_LEADERBOARD_TABS.has(options.tab)) {
+      leaderboardTab = options.tab;
+    }
+
+    if (nextView === 'profile') {
+      selectedUserId.set(options.userId || null);
+    } else {
+      selectedUserId.set(null);
+    }
+
+    syncRoute();
+  }
+
+  function handlePopState() {
+    parseRoute();
+  }
+
+  onMount(() => {
+    parseRoute();
+    window.addEventListener('popstate', handlePopState);
+  });
+
+  onDestroy(() => {
+    window.removeEventListener('popstate', handlePopState);
   });
 
   function handleLogout() {
-    localStorage.removeItem('chromadie-roll');
+    try {
+      localStorage.removeItem('chromadie-roll');
+    } catch {
+      // Ignore storage failures on hardened/private browsing setups.
+    }
     supabase.auth.signOut();
-    handleNavClick('game');
+    setRoute('game');
   }
 
   function handleNavClick(newView) {
-    selectedUserId.set(null);
-    view = newView;
+    setRoute(newView);
   }
 
   function handleNavigation(event) {
-    view = event.detail;
+    const { view: nextView, userId = null, tab = null } = event.detail || {};
+    if (nextView) {
+      setRoute(nextView, { userId, tab });
+    }
   }
 
   $: userCosmetics = $equippedItems;
@@ -72,7 +148,14 @@
         <span class="challenge-score">{challengeData.score.toLocaleString()} pts</span>
       </div>
     </div>
-    <button class="challenge-close" on:click={() => challengeData = null}>✖</button>
+    <button
+      type="button"
+      class="challenge-close"
+      aria-label="Dismiss challenge banner"
+      on:click={() => challengeData = null}
+    >
+      ✖
+    </button>
   </div>
 {/if}
 
@@ -82,12 +165,8 @@
     <nav class="nav-links">
       <button class="nav-link" class:active={view === 'game'} on:click={() => handleNavClick('game')}>Game</button>
       <button class="nav-link" class:active={view === 'shop'} on:click={() => handleNavClick('shop')}>Shop</button>
-      <button class="nav-link" class:active={view === 'leaderboard'} on:click={() => handleNavClick('leaderboard')}>Leaderboard</button>
+      <button class="nav-link" class:active={view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
       <button class="nav-link" class:active={view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
-
-      {#if $profile?.is_admin}
-        <button class="nav-link admin-link" class:active={view === 'admin'} on:click={() => handleNavClick('admin')}>Admin</button>
-      {/if}
 
       {#if $session}
         <div class="user-chip {frameEff.cls}" style="{frameEff.style}">
@@ -112,15 +191,21 @@
   {:else if view === 'shop'}
     <Shop />
   {:else if view === 'leaderboard'}
-    <Leaderboard on:navigate={handleNavigation} />
+    {#key `leaderboard:${leaderboardTab}`}
+      <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
+    {/key}
   {:else if view === 'profile'}
-    <Profile userId={$selectedUserId} />
-  {:else if view === 'admin' && $profile?.is_admin}
-    <Admin />
+    <Profile userId={$selectedUserId} on:navigate={handleNavigation} />
   {/if}
 {:else}
   {#if view === 'game'}
     <Game on:promptlogin={() => showAuthModal = true} />
+  {:else if view === 'leaderboard'}
+    {#key `leaderboard:${leaderboardTab}`}
+      <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
+    {/key}
+  {:else if view === 'profile' && $selectedUserId}
+    <Profile userId={$selectedUserId} on:navigate={handleNavigation} />
   {:else}
     <GuestLock view={view} on:login={() => showAuthModal = true} />
   {/if}
@@ -163,6 +248,4 @@
     from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
-  .admin-link { color: var(--accent-green) !important; }
 </style>

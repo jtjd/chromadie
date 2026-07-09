@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:pull": "supabase db pull",
+    "db:diff": "supabase db diff --linked",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "check:badge-drift": "node scripts/check-badge-drift.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -14,6 +19,7 @@
     "eslint": "^10.6.0",
     "eslint-plugin-svelte": "^3.20.0",
     "globals": "^17.7.0",
+    "supabase": "^2.109.1",
     "svelte": "^5.56.4",
     "vite": "^8.1.1"
   },

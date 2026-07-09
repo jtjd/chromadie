@@ -131,16 +131,37 @@
 .profile-badges-container { display: flex; flex-wrap: wrap; gap: 5px; margin-left: auto; }
 .profile-badge { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); color: #ccc; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-family: 'JetBrains Mono'; }
 
-.achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 15px; }
-.achievement-box { display: flex; align-items: flex-start; gap: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; transition: transform 0.2s, border 0.2s; }
+.achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
+.achievement-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    transition: transform 0.2s, border 0.2s;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    font: inherit;
+}
 .achievement-box:hover { transform: translateY(-2px); border-color: var(--card-border-hover); }
+.achievement-box:focus-visible {
+    outline: 2px solid var(--accent-purple);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(139, 124, 246, 0.18);
+}
 .achievement-box.unlocked { border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); }
 .achievement-box.locked { opacity: 0.5; filter: grayscale(100%); }
-.ach-icon { font-size: 1.4rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 8px; flex-shrink: 0; position: relative; }
-.ach-info { flex-grow: 1; }
-.ach-name { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: #fff; }
-.ach-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; }
-.mastery-count { position: absolute; top: -5px; right: -5px; background: var(--accent-purple); color: #fff; font-size: 0.6rem; font-weight: 700; padding: 2px 5px; border-radius: 8px; border: 1px solid var(--card-border); }
+.achievement-box:disabled { cursor: default; }
+.ach-icon { font-size: 1.2rem; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 10px; flex-shrink: 0; position: relative; }
+.ach-info { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ach-name { font-weight: 700; font-size: 0.8rem; line-height: 1.15; color: #fff; }
+.ach-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.3; }
+.mastery-count { position: absolute; top: -6px; right: -6px; background: var(--accent-purple); color: #fff; font-size: 0.58rem; font-weight: 700; padding: 2px 5px; border-radius: 8px; border: 1px solid var(--card-border); }
 
 /* =========================================
  *  SHOP & AUTH

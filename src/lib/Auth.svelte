@@ -13,6 +13,11 @@
   const siteKey = import.meta.env.VITE_CLOUDFLARE_SITE_KEY;
 
   onMount(() => {
+    if (!siteKey) {
+      error = "Authentication is not configured.";
+      return;
+    }
+
     const checkTurnstile = setInterval(() => {
       if (window.turnstile) {
         clearInterval(checkTurnstile);
@@ -23,7 +28,7 @@
   });
 
   function renderTurnstile() {
-    if (window.turnstile && document.getElementById('turnstile-container')) {
+    if (window.turnstile && document.getElementById('turnstile-container') && siteKey) {
       turnstileWidgetId = window.turnstile.render('#turnstile-container', {
         sitekey: siteKey
       });
@@ -46,6 +51,12 @@
   async function handleAuth() {
     loading = true;
     error = '';
+
+    if (!siteKey) {
+      error = "Authentication is not configured.";
+      loading = false;
+      return;
+    }
 
     const captchaToken = getCaptchaToken();
     if (!captchaToken) {

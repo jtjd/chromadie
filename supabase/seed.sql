@@ -1,0 +1,13 @@
+-- Canonical seed data placeholder
+--
+-- This project still needs a committed seed source for stable gameplay tables,
+-- especially:
+--   - public.achievements
+--   - public.shop_items
+--   - public.meta
+--
+-- The current re-baseline migration is schema-only because the baseline was
+-- generated from a schema-only live dump.
+--
+-- Populate this file from the live project before depending on scratch
+-- environment rebuilds.

@@ -3,10 +3,13 @@
   import { session, equippedBadges, addToast, followedUsers, toggleFollow } from './stores';
   import { getNameEffect, getFrameEffect, getTitleText, getProfileBg, getProfileBorder } from './cosmetics';
   import { getRank } from './ranks';
-  import { formatCount } from './utils';
-  import { onMount } from 'svelte';
+  import { formatCount, getTodayString } from './utils';
+  import ProfileAchievementCard from './ProfileAchievementCard.svelte';
+  import { afterUpdate, createEventDispatcher } from 'svelte';
+  import { SvelteDate } from 'svelte/reactivity';
 
   export let userId = null;
+  const dispatch = createEventDispatcher();
 
   let targetProfile = null;
   let targetScores = [];
@@ -18,8 +21,10 @@
 
   let selectedBadges = [];
   let editMode = false;
-  let bioInput = '';
   let moodColorInput = '';
+  let loadRequestId = 0;
+  let activeProfileId = null;
+  let followedSignature = '';
 
   $: pinnedAchievements = targetProfile?.equipped_badges
     ? targetProfile.equipped_badges.map(id => allAchievements.find(a => a.id === id)).filter(Boolean)
@@ -27,7 +32,6 @@
 
   $: if (targetProfile) {
     selectedBadges = targetProfile.equipped_badges ? [...targetProfile.equipped_badges] : [];
-    bioInput = targetProfile.bio || '';
     moodColorInput = targetProfile.mood_color || '';
   }
 
@@ -48,7 +52,12 @@
     else if (data.success) {
       addToast("Pinned badges updated!", "success");
       equippedBadges.set(data.badges);
-      if (targetProfile) targetProfile.equipped_badges = data.badges;
+      if (targetProfile) {
+        targetProfile = {
+          ...targetProfile,
+          equipped_badges: data.badges
+        };
+      }
     } else {
       addToast(data.error, "error");
     }
@@ -56,10 +65,8 @@
 
   async function saveMeta() {
     const colorToSave = moodColorInput === '' ? null : moodColorInput;
-    const bioToSave = bioInput === '' ? null : bioInput;
 
     const { data, error } = await supabase.rpc('update_profile_meta', {
-      p_bio: bioToSave,
       p_mood_color: colorToSave
     });
 
@@ -68,8 +75,10 @@
     } else if (data.success) {
       addToast("Profile updated!", "success");
       if (targetProfile) {
-        targetProfile.bio = data.bio;
-        targetProfile.mood_color = data.mood_color;
+        targetProfile = {
+          ...targetProfile,
+          mood_color: data.mood_color
+        };
       }
       editMode = false;
     } else {
@@ -77,29 +86,83 @@
     }
   }
 
-  $: if (userId || $session) {
-    loadProfileData(userId || $session.user.id);
+  function resetProfileState() {
+    targetProfile = null;
+    targetScores = [];
+    allAchievements = [];
+    unlockedAchievements = {};
+    totalRolls = 0;
+    rivalsData = [];
+    selectedBadges = [];
+    editMode = false;
+    moodColorInput = '';
+    loading = false;
   }
 
-  // FIX: Reactive fetch whenever followed users list changes
-  $: if (isOwnProfile && $followedUsers !== undefined) {
-    fetchRivals();
+  function syncProfileData() {
+    const nextProfileId = userId || $session?.user.id || null;
+
+    if (nextProfileId !== activeProfileId) {
+      activeProfileId = nextProfileId;
+
+      if (!nextProfileId) {
+        resetProfileState();
+        return;
+      }
+
+      resetProfileState();
+      void loadProfileData(nextProfileId);
+      return;
+    }
+
+    if (!nextProfileId) {
+      resetProfileState();
+      return;
+    }
+
+    if (!isOwnProfile) {
+      followedSignature = '';
+      rivalsData = [];
+      return;
+    }
+
+    const nextFollowedSignature = ($followedUsers || []).join('|');
+    if (nextFollowedSignature !== followedSignature) {
+      followedSignature = nextFollowedSignature;
+      void fetchRivals($followedUsers);
+    }
   }
 
-  async function fetchRivals() {
-    if (!isOwnProfile) return;
-    const { data: rpcData } = await supabase.rpc('get_rivals_scores');
-    rivalsData = rpcData || [];
+  afterUpdate(syncProfileData);
+
+  async function fetchRivals(followedIds) {
+    if (!isOwnProfile || followedIds.length === 0) {
+        rivalsData = [];
+        return;
+    }
+    const today = getTodayString();
+    const { data, error } = await supabase
+        .from('leaderboard_view')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
+        .eq('roll_date', today)
+        .in('user_id', followedIds)
+        .order('score', { ascending: false });
+
+    if (error) console.error('Error fetching rivals:', error);
+    rivalsData = data || [];
   }
 
   async function loadProfileData(id) {
+    const requestId = ++loadRequestId;
     loading = true;
 
     const { data: prof } = await supabase
       .from('profiles')
-      .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, equipped_badges, bio, mood_color')
+      .select('username, current_streak, longest_streak, ep_spent, lifetime_ep, equipped_cosmetics, equipped_badges, mood_color')
       .eq('id', id)
       .single();
+
+    if (requestId !== loadRequestId) return;
 
     if (prof) {
       targetProfile = prof;
@@ -108,6 +171,7 @@
         .from('scores')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', id);
+      if (requestId !== loadRequestId) return;
       totalRolls = count || 0;
 
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -117,18 +181,21 @@
         .eq('user_id', id)
         .gte('roll_date', thirtyDaysAgo.toISOString().split('T')[0])
         .order('roll_date', { ascending: false });
+      if (requestId !== loadRequestId) return;
 
       if (scores) targetScores = scores;
-
-      if (isOwnProfile) {
-        await fetchRivals();
-      }
+    } else {
+      targetProfile = null;
+      targetScores = [];
+      totalRolls = 0;
     }
 
     const { data: ach } = await supabase.from('achievements').select('*');
+    if (requestId !== loadRequestId) return;
     if (ach) allAchievements = ach;
 
     const { data: unlocked } = await supabase.from('user_achievements').select('achievement_id, count').eq('user_id', id);
+    if (requestId !== loadRequestId) return;
     if (unlocked) {
       const map = {};
       unlocked.forEach(u => map[u.achievement_id] = u);
@@ -154,6 +221,10 @@
     ? `background-image: radial-gradient(circle at top right, ${targetProfile.mood_color}33, transparent 60%);`
     : '';
 
+  function viewProfile(targetId) {
+    dispatch('navigate', { view: 'profile', userId: targetId });
+  }
+
   function getProgress(achId) {
     if (/^roll_\d+$/.test(achId)) {
       const target = parseInt(achId.replace('roll_', ''));
@@ -172,9 +243,9 @@
 
   $: heatmapData = (() => {
     const days = [];
-    const today = new Date();
+    const today = new SvelteDate();
     for (let i = 29; i >= 0; i--) {
-      const d = new Date(today);
+      const d = new SvelteDate(today);
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       const roll = targetScores.find(s => s.roll_date === dateStr);
@@ -212,10 +283,12 @@
       <div class="profile-content-layer">
         <div class="profile-header-row">
           <div class="profile-identity">
-            <div class="name-row">
-              {#if titleTxt}
+            {#if titleTxt}
+              <div class="title-row">
                 <span class="title-chip">[{titleTxt}]</span>
-              {/if}
+              </div>
+            {/if}
+            <div class="name-row">
               <span class="profile-name-frame {frameEff.cls}" style="{frameEff.style}">
                 <span class="profile-username-large {nameEff.cls}" style="{nameEff.style}" data-text={username}>{username}</span>
               </span>
@@ -227,26 +300,30 @@
 
           <div class="header-actions">
             {#if isOwnProfile && !editMode}
-              <button class="edit-btn" on:click={() => editMode = true}>✏️ Edit</button>
+              <button type="button" class="edit-btn" on:click={() => editMode = true}>🎨 Edit Mood</button>
             {/if}
             {#if !isOwnProfile && $session}
-              <button class="rival-action-btn {isFollowed ? 'unfollow' : 'follow'}" on:click={() => toggleFollow(userId)}>
+              <button
+                type="button"
+                class="rival-action-btn {isFollowed ? 'unfollow' : 'follow'}"
+                aria-label={isFollowed ? `Remove ${username} from rivals` : `Add ${username} as a rival`}
+                on:click={() => toggleFollow(userId)}
+              >
                 {#if isFollowed}✖ Unfollow{:else}+ Add Rival{/if}
               </button>
             {/if}
           </div>
         </div>
 
-        <div class="bio-section">
-          {#if editMode}
-            <textarea class="bio-input" bind:value={bioInput} placeholder="Write a short bio (max 140 chars)..." maxlength="140"></textarea>
-
+        {#if editMode}
+          <div class="profile-meta-section">
             <div class="mood-picker">
               <span class="mood-label">Mood Color (Recent 30):</span>
               <div class="mood-options-scroll">
-                <button class="mood-clear" on:click={() => moodColorInput = ''}>Clear</button>
+                <button type="button" class="mood-clear" on:click={() => moodColorInput = ''}>Clear</button>
                 {#each targetScores as score (score.roll_date)}
                   <button
+                    type="button"
                     class="mood-swatch {moodColorInput === score.hex_code ? 'selected' : ''}"
                     style="background-color: {score.hex_code};"
                     on:click={() => moodColorInput = score.hex_code}
@@ -257,13 +334,11 @@
             </div>
 
             <div class="edit-actions">
-              <button class="save-btn" on:click={saveMeta}>Save</button>
-              <button class="cancel-btn" on:click={() => { editMode = false; bioInput = targetProfile?.bio || ''; moodColorInput = targetProfile?.mood_color || ''; }}>Cancel</button>
+              <button type="button" class="save-btn" on:click={saveMeta}>Save</button>
+              <button type="button" class="cancel-btn" on:click={() => { editMode = false; moodColorInput = targetProfile?.mood_color || ''; }}>Cancel</button>
             </div>
-          {:else}
-            <p class="bio-text">{targetProfile.bio || (isOwnProfile ? 'No bio set. Click edit to add one!' : 'This player has no bio.')}</p>
-          {/if}
-        </div>
+          </div>
+        {/if}
 
         {#if pinnedAchievements.length > 0}
           <div class="pinned-achievements-section">
@@ -337,7 +412,9 @@
           <div class="rivals-list">
             {#each rivalsData as rival (rival.user_id)}
               <div class="rival-row">
-                <a href="/profile?id={rival.user_id}" class="lb-username">{rival.username}</a>
+                <button type="button" class="rival-profile-btn lb-username" on:click={() => viewProfile(rival.user_id)}>
+                  {rival.username}
+                </button>
                 <span class="lb-score">{rival.score.toLocaleString()}</span>
               </div>
             {/each}
@@ -359,7 +436,7 @@
 
       {#if isOwnProfile}
         <div style="margin-bottom: 15px; text-align: left;">
-          <button class="save-btn" style="width: auto; padding: 6px 16px;" on:click={saveBadges}>
+          <button type="button" class="save-btn" style="width: auto; padding: 6px 16px;" on:click={saveBadges}>
             Save Pinned Badges ({selectedBadges.length}/3)
           </button>
         </div>
@@ -371,34 +448,16 @@
           {@const achCount = isUnlocked ? unlockedAchievements[ach.id].count : 0}
           {@const isSelected = selectedBadges.includes(ach.id)}
           {@const progress = !isUnlocked ? getProgress(ach.id) : null}
-
-          <div
-            class="achievement-box {isUnlocked ? 'unlocked' : 'locked'}"
-            class:selected={isSelected}
-            on:click={() => isUnlocked && toggleBadge(ach.id)}
-            on:keydown={(e) => e.key === 'Enter' && isUnlocked && toggleBadge(ach.id)}
-            role="button"
-            tabindex="0"
-            style="cursor: {isUnlocked && isOwnProfile ? 'pointer' : 'default'}; border-color: {isSelected ? 'var(--accent-purple)' : ''};"
-          >
-            <div class="ach-icon">
-              {isUnlocked ? ach.icon : '🔒'}
-              {#if isUnlocked && achCount > 1}
-                <span class="mastery-count">x{formatCount(achCount)}</span>
-              {/if}
-            </div>
-            <div class="ach-info">
-              <div class="ach-name">{ach.name}</div>
-              <div class="ach-desc">{ach.description}</div>
-
-              {#if !isUnlocked && progress}
-                <div class="progress-bar-container">
-                  <div class="progress-bar-fill" style="width: {Math.min(100, (progress.current / progress.target) * 100)}%"></div>
-                </div>
-                <div class="progress-text">{progress.current.toLocaleString()} / {progress.target.toLocaleString()}</div>
-              {/if}
-            </div>
-          </div>
+          <ProfileAchievementCard
+            ach={ach}
+            isUnlocked={isUnlocked}
+            achCount={achCount}
+            isSelected={isSelected}
+            isOwnProfile={isOwnProfile}
+            progress={progress}
+            formatCount={formatCount}
+            onToggle={toggleBadge}
+          />
         {/each}
       </div>
     </div>
@@ -411,10 +470,15 @@
   .mood-card { position: relative; overflow: hidden; transition: background-image 0.5s ease; }
   .profile-bg-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; opacity: 0.6; }
   .profile-content-layer { position: relative; z-index: 1; }
-  .profile-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; gap: 15px; }
-  .profile-identity { display: flex; flex-direction: column; gap: 8px; }
-  .name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .header-actions { display: flex; gap: 10px; }
+  .profile-header-row { display: flex; justify-content: flex-start; align-items: flex-start; margin-bottom: 18px; gap: 18px; }
+  .profile-identity { display: flex; flex: 0 1 auto; min-width: 0; flex-direction: column; gap: 6px; align-items: center; text-align: center; }
+  .title-row { display: flex; align-items: center; justify-content: center; min-height: 18px; width: 100%; }
+  .name-row { display: flex; align-items: center; justify-content: center; width: 100%; }
+  .profile-name-frame { display: inline-flex; align-items: center; line-height: 1; }
+  .profile-username-large { line-height: 1; }
+  .title-chip { margin-right: 0; }
+  .rank-chip { margin-top: 1px; align-self: center; }
+  .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-top: 2px; flex: 0 0 auto; margin-left: auto; }
 
   .rank-chip {
     font-size: 0.75rem;
@@ -447,11 +511,19 @@
   .rival-action-btn:hover { background: #7c3aed; }
   .rival-action-btn.unfollow { background: rgba(255, 255, 255, 0.05); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
   .rival-action-btn.unfollow:hover { background: rgba(239, 68, 68, 0.2); }
+  .edit-btn:focus-visible,
+  .rival-action-btn:focus-visible,
+  .mood-clear:focus-visible,
+  .mood-swatch:focus-visible,
+  .save-btn:focus-visible,
+  .cancel-btn:focus-visible,
+  .rival-profile-btn:focus-visible {
+    outline: 2px solid var(--accent-purple);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(139, 124, 246, 0.18);
+  }
 
-  .bio-section { min-height: 60px; margin-bottom: 20px; text-align: left; }
-  .bio-text { font-size: 0.9rem; color: var(--text-main); line-height: 1.4; opacity: 0.9; }
-  .bio-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Inter', sans-serif; font-size: 0.9rem; resize: vertical; min-height: 60px; box-sizing: border-box; outline: none; transition: border 0.2s; }
-  .bio-input:focus { border-color: var(--accent-purple); }
+  .profile-meta-section { margin-bottom: 20px; text-align: left; }
   .mood-picker { margin-top: 15px; text-align: left; }
   .mood-label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 8px; }
   .mood-options-scroll { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-height: 80px; overflow-y: auto; padding: 5px; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2); }
@@ -492,33 +564,33 @@
 
   .progress-bar-container {
     width: 100%;
-    height: 6px;
+    height: 5px;
     background: rgba(255,255,255,0.1);
-    border-radius: 3px;
-    margin-top: 8px;
+    border-radius: 999px;
+    margin-top: 6px;
     overflow: hidden;
   }
   .progress-bar-fill {
     height: 100%;
     background: var(--accent-purple);
-    border-radius: 3px;
+    border-radius: 999px;
     transition: width 0.3s ease;
   }
   .progress-text {
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     color: var(--text-muted);
-    margin-top: 2px;
+    margin-top: 4px;
     font-family: 'JetBrains Mono', monospace;
   }
 
-  .ach-icon { position: relative; font-size: 1.4rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 8px; flex-shrink: 0; }
+  .ach-icon { position: relative; font-size: 1.2rem; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 10px; flex-shrink: 0; }
   .mastery-count {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: -6px;
+    right: -6px;
     background: var(--accent-purple);
     color: #fff;
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     font-weight: 700;
     padding: 2px 5px;
     border-radius: 8px;
@@ -527,9 +599,16 @@
 
   .rivals-list { display: flex; flex-direction: column; gap: 8px; }
   .rival-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--card-border); }
+  .rival-profile-btn { background: none; border: none; padding: 0; cursor: pointer; }
 
   /* NEW: Empty Rivals State */
   .empty-rivals { text-align: center; padding: 15px; color: var(--text-muted); }
   .empty-rivals p { margin-bottom: 5px; }
   .empty-rivals .subtext { font-size: 0.8rem; opacity: 0.8; }
+
+  @media (max-width: 600px) {
+    .profile-header-row { flex-direction: column; align-items: stretch; gap: 12px; }
+    .header-actions { align-items: flex-start; padding-top: 0; }
+    .profile-identity { align-items: center; text-align: center; }
+  }
 </style>

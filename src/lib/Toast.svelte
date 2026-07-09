@@ -8,6 +8,8 @@
   {#each $toasts as toast (toast.id)}
     <div 
       class="toast {toast.type}" 
+      role={toast.type === 'error' ? 'alert' : 'status'}
+      aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
       in:fly={{ y: 20, duration: 300 }}
       out:fly={{ y: -20, duration: 300 }}
       animate:flip={{ duration: 300 }}

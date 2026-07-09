@@ -37,8 +37,6 @@
 .login-btn-header { background: #fff; color: #000; border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; }
 .login-btn-header:hover { background: #ddd; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
 
-.admin-link { color: var(--accent-green) !important; }
-
 /* =========================================
  *  MAIN LAYOUT & CARDS (Glassmorphism)
  * ========================================= */

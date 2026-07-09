@@ -1,11 +1,12 @@
 <script>
   import { supabase } from './supabase';
-  import { selectedUserId, session, followedUsers, toggleFollow } from './stores';
+  import { session, followedUsers, toggleFollow } from './stores';
   import { getTodayString } from './utils';
   import { getNameEffect, getTitleText, getLbTheme } from './cosmetics';
   import { onMount, createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
+  export let initialTab = 'today';
 
   let activeTab = 'today';
   let leaderboard = [];
@@ -13,16 +14,12 @@
   let myRank = null;
   let myScore = null;
 
-  function getStartOfWeek() {
-    const d = new Date();
-    const day = d.getDay(); // 0 = Sun, 1 = Mon
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
-    return new Date(d.setDate(diff)).toISOString().split('T')[0];
-  }
-
-  function getStartOfMonth() {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+  function getSourceName(tab) {
+    if (tab === 'today') return 'leaderboard_view';
+    if (tab === 'weekly') return 'weekly_best_leaderboard_view';
+    if (tab === 'monthly') return 'monthly_best_leaderboard_view';
+    if (tab === 'roll') return 'all_time_leaderboard_view';
+    return 'leaderboard_view';
   }
 
   async function fetchLeaderboard() {
@@ -49,19 +46,15 @@
       loading = false;
       return;
     } else if (activeTab === 'weekly') {
-      const startWeek = getStartOfWeek();
       query = supabase
-        .from('leaderboard_view')
+        .from('weekly_best_leaderboard_view')
         .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
-        .gte('roll_date', startWeek)
         .order('score', { ascending: false })
         .limit(10);
     } else if (activeTab === 'monthly') {
-      const startMonth = getStartOfMonth();
       query = supabase
-        .from('leaderboard_view')
+        .from('monthly_best_leaderboard_view')
         .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
-        .gte('roll_date', startMonth)
         .order('score', { ascending: false })
         .limit(10);
     } else if (activeTab === 'roll') {
@@ -88,29 +81,30 @@
       return;
     }
 
-    let dateFilter;
-    if (activeTab === 'today') dateFilter = getTodayString();
-    else if (activeTab === 'weekly') dateFilter = getStartOfWeek();
-    else if (activeTab === 'monthly') dateFilter = getStartOfMonth();
-
-    const { data: myData } = await supabase
-      .from('scores')
+    const sourceName = getSourceName(activeTab);
+    let myDataQuery = supabase
+      .from(sourceName)
       .select('score')
-      .eq('user_id', $session.user.id)
-      .gte('roll_date', dateFilter)
-      .order('score', { ascending: false })
-      .limit(1)
-      .single();
+      .eq('user_id', $session.user.id);
+
+    if (activeTab === 'today') {
+      myDataQuery = myDataQuery.eq('roll_date', getTodayString());
+    }
+
+    const { data: myData } = await myDataQuery.single();
 
     if (myData) {
       myScore = myData.score;
       const isInTop10 = leaderboard.some(row => row.user_id === $session.user.id);
       if (!isInTop10) {
-        const { count } = await supabase
-          .from('scores')
+        let rankQuery = supabase
+          .from(sourceName)
           .select('*', { count: 'exact', head: true })
-          .gt('score', myScore)
-          .gte('roll_date', dateFilter);
+          .gt('score', myScore);
+        if (activeTab === 'today') {
+          rankQuery = rankQuery.eq('roll_date', getTodayString());
+        }
+        const { count } = await rankQuery;
         myRank = count + 1;
       }
     }
@@ -119,15 +113,18 @@
   function switchTab(tab) {
     if (tab === activeTab) return;
     activeTab = tab;
+    dispatch('navigate', { view: 'leaderboard', tab });
     fetchLeaderboard();
   }
 
   function viewProfile(userId) {
-    selectedUserId.set(userId);
-    dispatch('navigate', 'profile');
+    dispatch('navigate', { view: 'profile', userId });
   }
 
-  onMount(fetchLeaderboard);
+  onMount(() => {
+    activeTab = initialTab;
+    fetchLeaderboard();
+  });
 </script>
 
 <div class="container">
@@ -161,7 +158,12 @@
             {#if titleTxt}
               <span class="title-chip">[{titleTxt}]</span>
             {/if}
-            <button class="lb-username-button" on:click={() => viewProfile(row.user_id)}>
+            <button
+              type="button"
+              class="lb-username-button"
+              aria-label={`View profile for ${row.username}`}
+              on:click={() => viewProfile(row.user_id)}
+            >
               <span class="lb-username {nameEff.cls}" style="{nameEff.style}" data-text={row.username}>
                 {row.username}
               </span>
@@ -178,9 +180,25 @@
             <span class="lb-score">{row.score.toLocaleString()}</span>
             {#if $session && row.user_id !== $session.user.id}
               {#if $followedUsers.includes(row.user_id)}
-                <button class="rival-btn unfollow" on:click={() => toggleFollow(row.user_id)} title="Unfollow">✖</button>
+                <button
+                  type="button"
+                  class="rival-btn unfollow"
+                  aria-label={`Remove ${row.username} from rivals`}
+                  on:click={() => toggleFollow(row.user_id)}
+                  title="Unfollow"
+                >
+                  ✖
+                </button>
               {:else if $followedUsers.length < 5}
-                <button class="rival-btn" on:click={() => toggleFollow(row.user_id)} title="Add Rival">+</button>
+                <button
+                  type="button"
+                  class="rival-btn"
+                  aria-label={`Add ${row.username} as a rival`}
+                  on:click={() => toggleFollow(row.user_id)}
+                  title="Add Rival"
+                >
+                  +
+                </button>
               {/if}
             {/if}
           </span>
@@ -191,9 +209,9 @@
         <div class="my-rank-row">
           <span class="lb-rank">#{myRank}</span>
           <span class="lb-info">
-            <button class="lb-username-button">
+            <span class="lb-username-button" aria-hidden="true">
               <span class="lb-username">You</span>
-            </button>
+            </span>
             <br>
             <span class="lb-sub" style="color:#666; font-size:0.75rem;">Your best roll this period</span>
           </span>
