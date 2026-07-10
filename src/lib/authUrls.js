@@ -8,9 +8,20 @@ function normalizeOrigin(value) {
   }
 }
 
+function isLocalOrigin(value) {
+  return value === LOCAL_ORIGIN || value.startsWith('http://localhost') || value.startsWith('http://127.0.0.1')
+}
+
 export function getAppOrigin() {
   const configured = import.meta.env.VITE_SITE_URL?.trim()
   const normalizedConfigured = configured ? normalizeOrigin(configured) : null
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    const currentOrigin = window.location.origin
+    if (normalizedConfigured && isLocalOrigin(normalizedConfigured) && !isLocalOrigin(currentOrigin)) {
+      return currentOrigin
+    }
+  }
 
   if (normalizedConfigured) {
     return normalizedConfigured
