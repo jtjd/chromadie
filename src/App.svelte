@@ -123,6 +123,16 @@
     parseRoute();
   }
 
+  function clearChallengeState() {
+    if (typeof window === 'undefined') return;
+
+    challengeData = null;
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.delete('challenge');
+    nextUrl.searchParams.delete('hex');
+    window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+  }
+
   function handlePopState() {
     parseRoute();
   }
@@ -148,6 +158,9 @@
   }
 
   function handleNavClick(newView) {
+    if (routeMode === 'app' && view === 'game' && challengeData && newView !== 'game') {
+      clearChallengeState();
+    }
     setRoute(newView);
   }
 
@@ -159,6 +172,9 @@
   function handleNavigation(event) {
     const { view: nextView, userId = null, tab = null } = event.detail || {};
     if (nextView) {
+      if (routeMode === 'app' && view === 'game' && challengeData && nextView !== 'game') {
+        clearChallengeState();
+      }
       setRoute(nextView, { userId, tab });
     }
   }
@@ -220,6 +236,10 @@
 
   function closeMobileMenu() {
     mobileMenuOpen = false;
+  }
+
+  $: if (challengeData && routeMode === 'app' && view !== 'game') {
+    clearChallengeState();
   }
 
   $: userCosmetics = $equippedItems;
@@ -298,26 +318,6 @@
       >
         <Auth onClose={closeAuthModal} />
       </div>
-    </div>
-  {/if}
-
-  {#if challengeData && view === 'game'}
-    <div class="challenge-banner">
-      <div class="challenge-info">
-        <span class="challenge-text">Player challenges you to beat:</span>
-        <div class="challenge-stat">
-          <span class="challenge-color" style="background-color: {challengeData.hex};"></span>
-          <span class="challenge-score">{challengeData.score.toLocaleString()} pts</span>
-        </div>
-      </div>
-      <button
-        type="button"
-        class="challenge-close"
-        aria-label="Dismiss challenge banner"
-        on:click={() => challengeData = null}
-      >
-        ✖
-      </button>
     </div>
   {/if}
 
@@ -434,6 +434,35 @@
       </div>
     </div>
   </div>
+
+  {#if challengeData && view === 'game'}
+    <section class="challenge-banner" aria-label="Challenge prompt">
+      <div class="challenge-copy">
+        <p class="challenge-kicker">Challenge</p>
+        <h2>Beat this roll</h2>
+        <p class="challenge-text">
+          A rival shared a target color. Roll closer to it for a stronger result.
+        </p>
+      </div>
+      <div class="challenge-meta">
+        <div class="challenge-stat" aria-label={`Target score ${challengeData.score.toLocaleString()} points`}>
+          <span class="challenge-color" style="background-color: {challengeData.hex};"></span>
+          <div>
+            <p class="challenge-score">{challengeData.score.toLocaleString()} pts</p>
+            <p class="challenge-subtext">Target score</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="challenge-close"
+          aria-label="Dismiss challenge"
+          on:click={clearChallengeState}
+        >
+          Dismiss
+        </button>
+      </div>
+    </section>
+  {/if}
 
   {#if $profileLoading}
     <div class="auth-loading-banner" role="status" aria-live="polite">
@@ -649,25 +678,98 @@
   }
 
   .challenge-banner {
-    max-width: 650px;
-    margin: 20px auto 0;
-    padding: 15px 20px;
-    background: rgba(139, 124, 246, 0.1);
-    border: 1px solid rgba(139, 124, 246, 0.4);
-    border-radius: 12px;
+    width: min(980px, calc(100% - 2rem));
+    margin: 0 auto 12px;
+    padding: 1rem 1.1rem;
+    background:
+      radial-gradient(circle at top right, rgba(161, 92, 255, 0.16), transparent 32%),
+      rgba(255,255,255,0.03);
+    border: 1px solid rgba(161, 92, 255, 0.22);
+    border-radius: 18px;
+    box-shadow: 0 16px 34px rgba(0,0,0,0.25);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    animation: slideDown 0.4s ease-out;
+    gap: 1rem;
   }
-  .challenge-info { display: flex; flex-direction: column; gap: 5px; }
-  .challenge-text { font-size: 0.8rem; color: var(--text-muted); }
-  .challenge-stat { display: flex; align-items: center; gap: 10px; }
-  .challenge-color { width: 24px; height: 24px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); }
-  .challenge-score { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-purple); font-size: 1.1rem; }
-  .challenge-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
-  .challenge-close:hover { color: #fff; }
+  .challenge-copy {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+  .challenge-kicker {
+    margin: 0;
+    color: var(--accent-purple);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+  .challenge-banner h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: #fff;
+  }
+  .challenge-text {
+    margin: 0;
+    color: var(--text-muted);
+    line-height: 1.5;
+    font-size: 0.92rem;
+  }
+  .challenge-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .challenge-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: 14px;
+    background: rgba(0,0,0,0.18);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .challenge-color {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.22);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.12) inset;
+    flex-shrink: 0;
+  }
+  .challenge-score {
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1.1;
+  }
+  .challenge-subtext {
+    margin: 0.15rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+  .challenge-close {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.72rem 0.95rem;
+    border-radius: 12px;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  }
+  .challenge-close:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.14);
+    transform: translateY(-1px);
+  }
 
   .site-footer {
     width: 100%;
@@ -836,11 +938,13 @@
     .challenge-banner {
       flex-direction: column;
       align-items: stretch;
-      padding: 14px 16px;
-      margin-top: 12px;
+      width: calc(100% - 1rem);
+      padding: 0.9rem;
+      margin: 0 auto 12px;
+      gap: 0.85rem;
     }
     .challenge-close {
-      align-self: flex-end;
+      width: 100%;
     }
     .button-row {
       flex-direction: column;
