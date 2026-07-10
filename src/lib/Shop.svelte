@@ -1,6 +1,6 @@
 <script>
   import RollPreview from './RollPreview.svelte';
-  import { shopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards, profile, session, fetchInventoryState, refreshProfileState, fetchWalletBalance } from './stores';
+  import { shopItems, shopItemsLoading, shopItemsError, loadShopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards, profile, session, fetchInventoryState, refreshProfileState, fetchWalletBalance } from './stores';
   import { supabase } from './supabase';
   import { onMount } from 'svelte';
 
@@ -153,7 +153,18 @@
     }
     if (equipped) return 'Equipped';
     if (owned) return 'Owned';
+    if (item.cost > 0 && $walletBalance < item.cost) return 'Not enough EP';
     return 'Available';
+  }
+
+  function getStateClass(item) {
+    const state = getStateLabel(item).toLowerCase();
+    if (state === 'equipped') return 'equipped';
+    if (state.includes('owned')) return 'owned';
+    if (state === 'available') return 'available';
+    if (state === 'not enough ep') return 'unaffordable';
+    if (state === 'milestone reward') return 'milestone';
+    return 'utility';
   }
 
   async function handleAction(itemKey, action, slot = null, silent = false) {
@@ -277,22 +288,22 @@
   $: sortedUtilityItems = sortItems(utilityItems, sortMode);
   $: featuredItems = (() => {
     const picked = [];
-    const seen = new Set();
+    const seen = [];
 
     for (const itemKey of featuredItemKeys) {
       const item = $shopItems[itemKey];
-      if (item && !seen.has(item.item_key)) {
+      if (item && !seen.includes(item.item_key)) {
         picked.push(item);
-        seen.add(item.item_key);
+        seen.push(item.item_key);
       }
     }
 
     if (picked.length < 3) {
       for (const item of Object.values($shopItems).filter(entry => entry.slot !== 'consumable').sort((a, b) => featuredScore(b) - featuredScore(a))) {
         if (picked.length >= 3) break;
-        if (!seen.has(item.item_key)) {
+        if (!seen.includes(item.item_key)) {
           picked.push(item);
-          seen.add(item.item_key);
+          seen.push(item.item_key);
         }
       }
     }
@@ -365,10 +376,10 @@
   <div class="shop-masthead">
     <div class="shop-masthead-copy">
       <p class="shop-intro">
-        Browse a focused catalog of visual upgrades, compare what each item changes, and pick up the pieces that fit your style.
+        Build your look with profile cosmetics, roll effects, and leaderboard styles. Preview every item before you spend EP.
       </p>
       <div class="shop-hero-pills">
-        <span class="hero-pill">Preview before you buy</span>
+        <span class="hero-pill">Permanent unlocks</span>
         <span class="hero-pill">Utility items below</span>
       </div>
     </div>
@@ -379,7 +390,21 @@
     </div>
   </div>
 
-  {#if featuredItems.length}
+  {#if $shopItemsLoading}
+    <div class="shop-status-panel" role="status" aria-live="polite">
+      <span class="shop-status-eyebrow">Cosmetic catalog</span>
+      <strong>Loading the shop...</strong>
+      <span>Preparing previews and item details.</span>
+    </div>
+  {:else if $shopItemsError}
+    <div class="shop-status-panel shop-status-error" role="alert">
+      <span class="shop-status-eyebrow">Shop unavailable</span>
+      <strong>{$shopItemsError}</strong>
+      <button class="shop-btn secondary shop-retry-btn" type="button" on:click={() => loadShopItems()}>Try again</button>
+    </div>
+  {:else}
+
+  {#if featuredItems.length && activeTab === 'all'}
     <div class="featured-section">
       <div class="shop-section-header featured-header">
         <div>
@@ -397,7 +422,7 @@
           {@const loadingEquip = isLoading('equip', item.item_key)}
           {@const loadingUnequip = isLoading('unequip', item.item_key)}
 
-          <div class="shop-item featured-item rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
+          <div class="shop-item featured-item shop-rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
             <div class="shop-item-meta">
               <span class="state-pill slot">Featured</span>
               <span class="state-pill rarity">{item.rarity || 'Common'}</span>
@@ -454,7 +479,7 @@
             <p class="item-summary">{getItemSummary(item)}</p>
             <div class="item-footnote">
               <span class="item-cost">{item.cost.toLocaleString()} EP</span>
-              <span class="state-pill muted">{getStateLabel(item)}</span>
+              <span class="state-pill status-{getStateClass(item)}">{getStateLabel(item)}</span>
             </div>
 
             <div class="shop-actions">
@@ -487,7 +512,7 @@
   {/if}
 
   <div class="shop-toolbar">
-    <div class="shop-tabs" aria-label="Shop categories">
+    <div class="shop-tabs" role="group" aria-label="Shop categories">
       <button class="shop-tab" class:active={activeTab === 'all'} type="button" on:click={() => activeTab = 'all'}>All</button>
       <button class="shop-tab" class:active={activeTab === 'owned'} type="button" on:click={() => activeTab = 'owned'}>Owned</button>
       <button class="shop-tab" class:active={activeTab === 'frame'} type="button" on:click={() => activeTab = 'frame'}>Frames</button>
@@ -501,7 +526,7 @@
 
     <div class="shop-sort">
       <span>Sort</span>
-      <div class="sort-pills" role="tablist" aria-label="Sort shop items">
+      <div class="sort-pills" role="group" aria-label="Sort shop items">
         {#each Object.entries(sortLabels) as [value, label] (value)}
           <button
             class="sort-pill"
@@ -562,7 +587,7 @@
                 {@const loadingEquip = isLoading('equip', item.item_key)}
                 {@const loadingUnequip = isLoading('unequip', item.item_key)}
 
-                <div class="shop-item rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} is-owned">
+                <div class="shop-item shop-rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} is-owned">
                   <div class="shop-item-meta">
                     <span class="state-pill slot">{getSlotLabel(item.slot)}</span>
                     <span class="state-pill rarity">{item.rarity || 'Common'}</span>
@@ -626,7 +651,7 @@
 
                   <div class="item-footnote">
                     <span class="item-cost">{item.cost.toLocaleString()} EP</span>
-                    <span class="state-pill muted">{getStateLabel(item)}</span>
+                    <span class="state-pill status-{getStateClass(item)}">{getStateLabel(item)}</span>
                   </div>
 
                   <div class="shop-actions">
@@ -664,7 +689,7 @@
           {@const loadingEquip = isLoading('equip', item.item_key)}
           {@const loadingUnequip = isLoading('unequip', item.item_key)}
 
-          <div class="shop-item rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
+          <div class="shop-item shop-rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
             <div class="shop-item-meta">
               <span class="state-pill slot">{getSlotLabel(item.slot)}</span>
               <span class="state-pill rarity">{item.rarity || 'Common'}</span>
@@ -728,7 +753,7 @@
 
             <div class="item-footnote">
               <span class="item-cost">{item.cost.toLocaleString()} EP</span>
-              <span class="state-pill muted">{getStateLabel(item)}</span>
+              <span class="state-pill status-{getStateClass(item)}">{getStateLabel(item)}</span>
             </div>
 
             <div class="shop-actions">
@@ -775,7 +800,7 @@
         {@const loadingBuy = isLoading('buy', item.item_key)}
         {@const count = item.item_key === 'reroll_shard' ? $rerollShards : getInventoryCount(item.item_key)}
 
-        <div class="shop-item utility-item rarity-{item.rarity || 'Common'}">
+        <div class="shop-item utility-item shop-rarity-{item.rarity || 'Common'}">
           <div class="shop-item-meta">
             <span class="state-pill slot">Utility</span>
             <span class="state-pill rarity">{item.rarity || 'Common'}</span>
@@ -805,7 +830,7 @@
 
           <div class="item-footnote">
             <span class="item-cost">{item.cost.toLocaleString()} EP</span>
-            <span class="state-pill muted">{getStateLabel(item)}</span>
+            <span class="state-pill status-{getStateClass(item)}">{getStateLabel(item)}</span>
           </div>
 
           <div class="shop-actions">
@@ -826,6 +851,7 @@
         </div>
       {/each}
     </div>
+  {/if}
   {/if}
 </div>
 
@@ -883,7 +909,7 @@
     color: #e2e8ff;
     line-height: 1.6;
     font-size: 0.95rem;
-    max-width: 760px;
+    max-width: 560px;
   }
 
   .shop-masthead {
@@ -891,11 +917,25 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    margin: 4px 0 18px;
-    padding: 16px 18px;
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 18px;
-    background: rgba(255,255,255,0.02);
+    margin: 4px 0 22px;
+    padding: 22px 24px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(139, 124, 246, 0.16), transparent 42%),
+      linear-gradient(135deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012));
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.16);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shop-masthead::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--spectrum);
+    opacity: 0.8;
   }
 
   .shop-masthead-copy {
@@ -908,6 +948,52 @@
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 12px;
+  }
+
+  .shop-status-panel {
+    display: grid;
+    gap: 6px;
+    margin: 18px 0 24px;
+    padding: 24px;
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at top right, rgba(139, 92, 246, 0.12), transparent 38%),
+      rgba(255,255,255,0.025);
+    text-align: left;
+  }
+
+  .shop-status-panel strong {
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+  }
+
+  .shop-status-panel > span:last-child {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .shop-status-eyebrow {
+    color: var(--accent-purple);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .shop-status-error {
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+
+  .shop-status-error .shop-status-eyebrow {
+    color: #fca5a5;
+  }
+
+  .shop-retry-btn {
+    justify-self: start;
+    width: auto;
+    margin-top: 8px;
   }
 
   .hero-pill {
@@ -932,7 +1018,7 @@
     justify-content: center;
     gap: 4px;
     flex-shrink: 0;
-    min-width: 170px;
+    min-width: 184px;
     border: 1px solid var(--card-border);
     border-radius: 16px;
     background:
@@ -960,8 +1046,12 @@
   .shop-toolbar {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px 18px 14px;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.02);
   }
 
   .shop-tabs {
@@ -969,7 +1059,9 @@
     gap: 10px;
     flex-wrap: wrap;
     border-bottom: 1px solid rgba(255,255,255,0.06);
-    padding: 2px 2px 14px;
+    padding: 0 0 14px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 85, 247, 0.55) transparent;
   }
 
   .shop-tab,
@@ -1002,12 +1094,21 @@
     box-shadow: 0 8px 18px rgba(139, 92, 246, 0.18);
   }
 
+  .shop-tab:focus-visible,
+  .sort-pill:focus-visible,
+  .owned-control:focus-visible,
+  .owned-group-header:focus-visible,
+  .shop-btn:focus-visible {
+    outline: 2px solid #c4b5fd;
+    outline-offset: 3px;
+  }
+
   .shop-sort {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 12px;
-    padding: 2px 0 2px;
+    padding: 0;
   }
 
   .shop-sort > span {
@@ -1167,6 +1268,33 @@
     margin-bottom: 22px;
   }
 
+  .featured-section {
+    margin-bottom: 26px;
+    padding: 4px 16px 16px;
+    border: 1px solid rgba(168, 85, 247, 0.18);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.11), transparent 48%),
+      rgba(255,255,255,0.018);
+  }
+
+  .featured-section .featured-header {
+    justify-content: center;
+    margin: 0 0 16px;
+    padding: 18px 12px 12px;
+    background: transparent;
+    border: 0;
+    text-align: center;
+  }
+
+  .featured-section .featured-header > div {
+    max-width: 42rem;
+  }
+
+  .featured-section .featured-header h3 {
+    font-size: 1.25rem;
+  }
+
   .shop-item {
     background:
       linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
@@ -1179,6 +1307,8 @@
     min-width: 0;
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
     transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    min-height: 430px;
+    text-align: left;
   }
 
   .shop-item:hover {
@@ -1189,6 +1319,7 @@
 
   .featured-item {
     padding: 15px;
+    min-height: 420px;
   }
 
   .shop-item.is-equipped {
@@ -1206,6 +1337,7 @@
     justify-content: space-between;
     gap: 10px;
     margin-bottom: 14px;
+    width: 100%;
   }
 
   .state-pill {
@@ -1241,6 +1373,32 @@
     border-color: rgba(255,255,255,0.08);
   }
 
+  .state-pill.status-available {
+    background: rgba(168, 85, 247, 0.12);
+    color: #ddd6fe;
+    border-color: rgba(168, 85, 247, 0.24);
+  }
+
+  .state-pill.status-owned {
+    background: rgba(59, 130, 246, 0.14);
+    color: #bfdbfe;
+    border-color: rgba(59, 130, 246, 0.24);
+  }
+
+  .state-pill.status-equipped {
+    background: rgba(34, 197, 94, 0.14);
+    color: #bbf7d0;
+    border-color: rgba(34, 197, 94, 0.24);
+  }
+
+  .state-pill.status-unaffordable,
+  .state-pill.status-milestone,
+  .state-pill.status-utility {
+    background: rgba(255,255,255,0.045);
+    color: var(--text-muted);
+    border-color: rgba(255,255,255,0.1);
+  }
+
   .state-pill.equipped {
     background: rgba(34, 197, 94, 0.14);
     color: #86efac;
@@ -1254,17 +1412,18 @@
   }
 
   .shop-preview-area {
-    height: 52px;
+    height: 96px;
     margin-bottom: 16px;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     min-width: 0;
+    align-self: stretch;
   }
 
   .shop-preview-area-tall {
-    height: 78px;
+    height: 104px;
   }
 
   .shop-preview-area-roll-effect {
@@ -1383,7 +1542,7 @@
 
   .shop-preview-text {
     width: 100%;
-    min-height: 52px;
+    min-height: 76px;
     margin-bottom: 14px;
     display: flex;
     align-items: center;
@@ -1437,6 +1596,7 @@
     font-size: 0.97rem;
     color: #fff;
     line-height: 1.2;
+    min-height: 1.2em;
   }
 
   .item-collection {
@@ -1454,6 +1614,11 @@
     font-size: 0.8rem;
     line-height: 1.45;
     margin: 6px 0 8px;
+    min-height: 2.9em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .featured-summary {
@@ -1470,6 +1635,11 @@
     line-height: 1.45;
     margin: 0 0 14px 0;
     overflow-wrap: anywhere;
+    min-height: 2.9em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .item-footnote {
@@ -1485,11 +1655,13 @@
     color: var(--accent-green);
     font-family: 'JetBrains Mono';
     font-size: 0.85rem;
+    white-space: nowrap;
   }
 
   .shop-actions {
     display: flex;
     gap: 10px;
+    margin-top: auto;
   }
 
   .shop-btn {
@@ -1540,7 +1712,7 @@
   }
 
   .utility-header {
-    margin-top: 4px;
+    margin-top: 12px;
   }
 
   .utility-grid {
@@ -1662,6 +1834,10 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .shop-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .purchase-stats {
       grid-template-columns: 1fr;
     }
@@ -1671,6 +1847,15 @@
     .shop-masthead {
       padding: 14px;
       gap: 12px;
+    }
+
+    .featured-section {
+      padding: 2px 10px 10px;
+      border-radius: 20px;
+    }
+
+    .featured-section .featured-header {
+      padding: 16px 8px 10px;
     }
 
     .shop-intro {
@@ -1697,6 +1882,11 @@
       align-items: flex-start;
     }
 
+    .shop-toolbar {
+      padding: 12px 12px 10px;
+      border-radius: 18px;
+    }
+
     .shop-section-header {
       align-items: flex-start;
       flex-direction: column;
@@ -1714,6 +1904,7 @@
     .shop-item {
       padding: 15px 14px;
       border-radius: 18px;
+      min-height: 0;
     }
 
     .shop-item-meta {
@@ -1721,15 +1912,15 @@
     }
 
     .shop-preview-area {
-      height: 48px;
+      height: 82px;
     }
 
     .shop-preview-area-tall {
-      height: 70px;
+      height: 94px;
     }
 
     .shop-preview-area-roll-effect {
-      height: 112px;
+      height: 124px;
     }
 
     .wallet-display p {

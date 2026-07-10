@@ -29,6 +29,8 @@ export const isAuthenticated = derived(
 
 // --- Shop & Inventory State ---
 export const shopItems = writable({})
+export const shopItemsLoading = writable(true)
+export const shopItemsError = writable(null)
 export const userInventory = writable([])
 export const equippedItems = writable({})
 export const walletBalance = writable(0)
@@ -98,33 +100,44 @@ function setShopCache(cache) {
 }
 
 export async function loadShopItems() {
-    const { data: meta } = await supabase
-    .from('meta')
-    .select('value')
-    .eq('key', 'shop_version')
-    .single();
+    shopItemsLoading.set(true)
+    shopItemsError.set(null)
 
-    const latestVersion = meta?.value;
-    const cached = getShopCache();
-    const cacheAgeMs = Date.now() - (cached.savedAt || 0);
-    const cacheIsFresh = cacheAgeMs < 24 * 60 * 60 * 1000;
+    try {
+        const { data: meta, error: metaError } = await supabase
+            .from('meta')
+            .select('value')
+            .eq('key', 'shop_version')
+            .single();
 
-    if (cached.version === latestVersion && cached.items && cacheIsFresh) {
-        shopItems.set(cached.items);
-        return;
-    }
+        if (metaError) throw metaError
 
-    const { data } = await supabase
-    .from('shop_items')
-    .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection, stackable')
-    .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
-    .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
+        const latestVersion = meta?.value;
+        const cached = getShopCache();
+        const cacheAgeMs = Date.now() - (cached.savedAt || 0);
+        const cacheIsFresh = cacheAgeMs < 24 * 60 * 60 * 1000;
 
-    if (data) {
+        if (cached.version === latestVersion && cached.items && cacheIsFresh) {
+            shopItems.set(cached.items);
+            return;
+        }
+
+        const { data, error: itemsError } = await supabase
+            .from('shop_items')
+            .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection, stackable')
+            .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
+            .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
+
+        if (itemsError) throw itemsError
+
         const cache = {}
-        data.forEach(item => { cache[item.item_key] = item })
+        data?.forEach(item => { cache[item.item_key] = item })
         shopItems.set(cache)
         setShopCache({ version: latestVersion, savedAt: Date.now(), items: cache });
+    } catch {
+        shopItemsError.set('The shop could not be loaded. Please refresh and try again.')
+    } finally {
+        shopItemsLoading.set(false)
     }
 }
 
