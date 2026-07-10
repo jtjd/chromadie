@@ -17,6 +17,32 @@
   let captchaToken = '';
   const siteKey = import.meta.env.VITE_CLOUDFLARE_SITE_KEY;
   const RESERVED_USERNAMES = new Set(['guest', 'anon', 'anonymous']);
+  const MODE_COPY = {
+    login: {
+      kicker: 'Welcome back',
+      title: 'Sign in',
+      description: 'Pick up where you left off. Your rolls, leaderboard history, and cosmetics stay tied to your account.',
+      highlights: ['Daily roll history', 'Leaderboard progress', 'Unlocked cosmetics'],
+      primary: 'Sign In',
+      helper: 'Use the email address tied to your account.'
+    },
+    signup: {
+      kicker: 'New account',
+      title: 'Create your account',
+      description: 'Save your progress across devices, receive confirmation emails, and unlock the full account experience.',
+      highlights: ['Email confirmation', 'Password recovery', 'Cross-device progress'],
+      primary: 'Create Account',
+      helper: 'Usernames are public and can contain letters, numbers, and underscores.'
+    },
+    forgot: {
+      kicker: 'Account recovery',
+      title: 'Reset your password',
+      description: 'We will send a reset link to your inbox if the account exists.',
+      highlights: ['Safe reset link', 'Keeps your account', 'Returns you to sign in'],
+      primary: 'Send Reset Link',
+      helper: 'Use the email address on the account you want to recover.'
+    }
+  };
 
   function normalizeUsername(value) {
     return value.trim().toLowerCase();
@@ -32,10 +58,10 @@
     const message = authError?.message || '';
     const lowerMessage = message.toLowerCase();
 
-    if (lowerMessage.includes('captcha')) return 'Please complete the CAPTCHA.';
-    if (lowerMessage.includes('already registered')) return 'That email is already registered.';
-    if (lowerMessage.includes('email not confirmed')) return 'Check your email to confirm your account before signing in.';
-    if (lowerMessage.includes('invalid login credentials')) return 'Invalid email or password.';
+    if (lowerMessage.includes('captcha')) return 'Please complete the security check.';
+    if (lowerMessage.includes('already registered')) return 'That email is already registered. Try signing in instead.';
+    if (lowerMessage.includes('email not confirmed')) return 'Check your inbox to confirm your account before signing in.';
+    if (lowerMessage.includes('invalid login credentials')) return 'Invalid email or password. Double-check both and try again.';
     if (lowerMessage.includes('rate limit')) return 'Too many attempts. Please wait a moment and try again.';
     if (lowerMessage.includes('password')) return message || fallback;
     if (message) return message;
@@ -106,17 +132,17 @@
 
     if (tab === 'signup') {
       if (!username || !email || !password) {
-        error = "Please fill out all fields.";
+        error = "Please fill out the username, email, and password.";
         loading = false;
         return;
       }
       if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-        error = "Username must be 3-20 characters (letters, numbers, underscores only).";
+        error = "Username must be 3-20 characters and use only letters, numbers, or underscores.";
         loading = false;
         return;
       }
       if (RESERVED_USERNAMES.has(normalizeUsername(username))) {
-        error = "That username is reserved. Please choose a different one.";
+        error = "That username is reserved. Please choose another one.";
         loading = false;
         return;
       }
@@ -138,12 +164,12 @@
         if (data.session) {
           // onAuthStateChange will handle the modal close
         } else {
-          notice = "Check your email to confirm your account before signing in.";
+          notice = "Check your email for a confirmation link, then come back to sign in.";
         }
       }
     } else if (tab === 'forgot') {
       if (!email) {
-        error = "Please enter your email address.";
+        error = "Please enter the email address on your account.";
         loading = false;
         return;
       }
@@ -157,12 +183,12 @@
         error = getFriendlyAuthError(resetError, 'Could not send the reset email.');
         resetCaptcha();
       } else {
-        notice = "If an account exists for that email, a reset link has been sent.";
+        notice = "If that account exists, we sent a reset link to your inbox.";
       }
     } else {
       // Login Flow
       if (!email.includes('@')) {
-        error = "Please log in using your email address.";
+        error = "Use the email address tied to your account.";
         loading = false;
         return;
       }
@@ -181,14 +207,18 @@
     }
     loading = false;
   }
+
+  $: mode = MODE_COPY[tab] || MODE_COPY.login;
 </script>
 
 <div class="auth-container glass-panel">
   <div class="auth-header">
-    <div>
-      <h1 id="auth-dialog-title">ChromaDie</h1>
+    <div class="auth-heading-group">
+      <p class="auth-brand">ChromaDie</p>
+      <p class="auth-kicker">{mode.kicker}</p>
+      <h1 id="auth-dialog-title">{mode.title}</h1>
       <p id="auth-dialog-desc" class="auth-description">
-        Sign in to save progress, keep your leaderboard runs, and unlock cosmetics. Guests can still play immediately.
+        {mode.description}
       </p>
     </div>
     <button type="button" class="close-auth-btn" aria-label="Close authentication dialog" on:click={onClose}>
@@ -201,14 +231,32 @@
     <button type="button" class={tab === 'signup' ? 'active' : ''} on:click={() => setMode('signup')}>Sign Up</button>
   </div>
 
+  <div class="auth-highlights" aria-label="What this account unlocks">
+    {#each mode.highlights as item}
+      <span class="auth-highlight">{item}</span>
+    {/each}
+  </div>
+
   <form on:submit|preventDefault={handleAuth}>
     {#if tab === 'signup'}
-      <input type="text" class="input-field" bind:value={username} placeholder="Username" required />
+      <label class="field-group" for="username-input">
+        <span class="field-label">Username</span>
+        <input id="username-input" type="text" class="input-field" bind:value={username} placeholder="Your username" autocomplete="username" spellcheck="false" minlength="3" maxlength="20" required />
+        <span class="field-hint">{mode.helper}</span>
+      </label>
     {/if}
-    <input type="email" class="input-field" bind:value={email} placeholder="Email" required />
+    <label class="field-group" for="email-input">
+      <span class="field-label">Email</span>
+      <input id="email-input" type="email" class="input-field" bind:value={email} placeholder="you@example.com" autocomplete="email" required />
+      <span class="field-hint">{tab === 'forgot' ? mode.helper : 'We use this for sign in, confirmations, and password resets.'}</span>
+    </label>
 
     {#if tab !== 'forgot'}
-      <input type="password" class="input-field" bind:value={password} placeholder="Password" required />
+      <label class="field-group" for="password-input">
+        <span class="field-label">Password</span>
+        <input id="password-input" type="password" class="input-field" bind:value={password} placeholder="Your password" autocomplete={tab === 'login' ? 'current-password' : 'new-password'} minlength="8" required />
+        <span class="field-hint">{tab === 'signup' ? 'Use at least 8 characters.' : 'Enter the password tied to your account.'}</span>
+      </label>
     {/if}
 
     <div id="turnstile-container"></div>
@@ -232,8 +280,18 @@
     {/if}
 
     <button type="submit" class="btn btn-primary" disabled={loading}>
-      {loading ? 'Loading...' : (tab === 'login' ? 'Sign In' : tab === 'signup' ? 'Create Account' : 'Send Reset Link')}
+      {loading ? 'Working...' : mode.primary}
     </button>
+
+    <p class="auth-footnote">
+      {#if tab === 'signup'}
+        A confirmation email will be sent before your account is fully active.
+      {:else if tab === 'forgot'}
+        Reset links expire, so use the newest email you receive.
+      {:else}
+        Guests can still play immediately if you want to come back later.
+      {/if}
+    </p>
   </form>
 </div>
 
@@ -250,6 +308,27 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
   }
+  .auth-heading-group {
+    min-width: 0;
+  }
+  .auth-kicker {
+    margin: 0 0 0.35rem 0;
+    color: var(--accent-purple);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .auth-brand {
+    margin: 0 0 0.2rem 0;
+    color: rgba(255,255,255,0.78);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+  }
   h1 {
     margin: 0;
     font-size: 2.5rem;
@@ -264,6 +343,39 @@
     color: var(--text-muted);
     line-height: 1.5;
     font-size: 0.95rem;
+  }
+  .auth-highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .auth-highlight {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(139, 124, 246, 0.22);
+    background: rgba(139, 124, 246, 0.08);
+    color: #e8e4ff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+  }
+  .field-label {
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'Space Grotesk', sans-serif;
   }
   .close-auth-btn {
     flex-shrink: 0;
@@ -303,8 +415,13 @@
     color: #fff;
     background: rgba(255,255,255,0.1);
   }
+  .field-hint {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
   .input-field {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
   }
   button[type="submit"] {
     width: 100%;
@@ -342,6 +459,13 @@
     margin-bottom: 1rem;
     min-height: 65px;
   }
+  .auth-footnote {
+    margin: 0.9rem 0 0 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    text-align: center;
+  }
 
   @media (max-width: 600px) {
     .auth-container {
@@ -354,6 +478,15 @@
     h1 {
       font-size: 2rem;
     }
+    .auth-highlights {
+      gap: 6px;
+      margin-bottom: 0.9rem;
+    }
+    .auth-highlight {
+      font-size: 0.72rem;
+      min-height: 30px;
+      padding: 0 10px;
+    }
     .auth-description {
       font-size: 0.92rem;
     }
@@ -364,10 +497,17 @@
       min-height: 42px;
     }
     .input-field {
-      margin-bottom: 0.85rem;
+      min-height: 46px;
     }
     .link-btn {
       min-height: 40px;
+    }
+    .field-label {
+      font-size: 0.75rem;
+    }
+    .field-hint,
+    .auth-footnote {
+      font-size: 0.76rem;
     }
   }
 </style>

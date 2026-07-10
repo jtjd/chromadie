@@ -41,7 +41,7 @@
     timeoutId = setTimeout(() => {
       if (!redirected && !$session) {
         status = 'error';
-        message = 'This confirmation link is invalid or expired. Return to the app and sign in again.';
+        message = 'This confirmation link is invalid or expired. Go back to the app and request a new one if needed.';
       }
     }, 12000);
 
@@ -64,10 +64,10 @@
 <main class="bootstrap-error-shell">
   <section class="bootstrap-error-card glass-panel" role="status" aria-live="polite">
     <p class="bootstrap-error-kicker">Authentication</p>
-    <h1>{status === 'success' ? 'Confirmed' : status === 'error' ? 'Could not confirm' : 'Working'}</h1>
+    <h1>{status === 'success' ? 'Email confirmed' : status === 'error' ? 'Could not confirm' : 'Confirming your account'}</h1>
     <p class="bootstrap-error-message">{message}</p>
     {#if status === 'error'}
-      <p class="bootstrap-error-help">Return to the app and sign in again, or request a new confirmation email.</p>
+      <p class="bootstrap-error-help">Return to the app and sign in again, or request a fresh confirmation email.</p>
     {/if}
   </section>
 </main>

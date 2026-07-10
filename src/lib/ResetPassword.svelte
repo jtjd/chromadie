@@ -44,7 +44,7 @@
 
     timeoutId = setTimeout(() => {
       if (!ready && !success) {
-        error = error || 'This reset link is invalid or expired. Return to the app and request a new one.';
+        error = error || 'This reset link is invalid or expired. Go back to the app and request a new one.';
       }
     }, 12000);
 
@@ -110,8 +110,8 @@
       <p class="bootstrap-error-message">{error}</p>
       <p class="bootstrap-error-help">Return to the app and request a new reset link from the login form.</p>
     {:else if ready}
-      <h1>Choose a new password</h1>
-      <p class="bootstrap-error-message">Enter and confirm your new password below.</p>
+      <h1>Create a new password</h1>
+      <p class="bootstrap-error-message">Enter the new password you want to use for ChromaDie.</p>
       <form class="reset-form" on:submit|preventDefault={handleReset}>
         <input class="input-field" type="password" bind:value={newPassword} placeholder="New password" minlength="8" required />
         <input class="input-field" type="password" bind:value={confirmPassword} placeholder="Confirm new password" minlength="8" required />
