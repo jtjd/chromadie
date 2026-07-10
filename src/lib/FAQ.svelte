@@ -128,7 +128,7 @@
     </p>
 
     <div class="quick-links" aria-label="Jump to key pages">
-      {#each quickLinks as link}
+      {#each quickLinks as link (link.label)}
         <a class="quick-link" href={link.href}>{link.label}</a>
       {/each}
     </div>
@@ -165,7 +165,7 @@
     </div>
 
     <div class="roll-flow" role="list" aria-label="Roll steps">
-      {#each rollSteps as step, index}
+      {#each rollSteps as step, index (step.title)}
       <article class="flow-card" role="listitem">
         <div class="flow-top">
           <span class="flow-index">{index + 1}</span>
@@ -189,7 +189,7 @@
     </p>
 
     <div class="rarity-grid">
-      {#each rarityTiers as tier}
+      {#each rarityTiers as tier (tier.name)}
         <article class="rarity-card">
           <div class="rarity-swatch" style="background: {tier.color};"></div>
           <div class="rarity-copy">
@@ -215,7 +215,7 @@
     </p>
 
     <div class="condition-grid">
-      {#each conditionExamples as condition}
+      {#each conditionExamples as condition (condition.title)}
         <article class="condition-card">
           <div class="condition-icon" aria-hidden="true">{condition.icon}</div>
           <h3>{condition.title}</h3>
@@ -260,7 +260,7 @@
     </p>
 
     <div class="cosmetic-grid">
-      {#each cosmeticSections as item}
+      {#each cosmeticSections as item (item)}
         <div class="cosmetic-pill">{item}</div>
       {/each}
     </div>
