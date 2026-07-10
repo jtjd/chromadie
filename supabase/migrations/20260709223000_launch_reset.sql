@@ -11,7 +11,7 @@ TRUNCATE TABLE public.user_follows,
   public.profiles
 RESTART IDENTITY CASCADE;
 
-TRUNCATE TABLE auth.users RESTART IDENTITY CASCADE;
+DELETE FROM auth.users;
 
 UPDATE public.meta
 SET value = NOW()::text
