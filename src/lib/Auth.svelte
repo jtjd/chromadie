@@ -233,13 +233,13 @@
     {#if tab === 'signup'}
       <label class="field-group" for="username-input">
         <span class="field-label">Username</span>
-        <input id="username-input" type="text" class="input-field" bind:value={username} placeholder="Your username" autocomplete="username" spellcheck="false" minlength="3" maxlength="20" required />
+        <input id="username-input" type="text" class="input-field" bind:value={username} placeholder="Your username" autocomplete="nickname" spellcheck="false" minlength="3" maxlength="20" required />
         <span class="field-hint">{mode.helper}</span>
       </label>
     {/if}
     <label class="field-group" for="email-input">
       <span class="field-label">Email</span>
-      <input id="email-input" type="email" class="input-field" bind:value={email} placeholder="you@example.com" autocomplete="email" required />
+      <input id="email-input" type="email" class="input-field" bind:value={email} placeholder="you@example.com" autocomplete="username" required />
       <span class="field-hint">{tab === 'forgot' ? mode.helper : 'We use this for sign in, confirmations, and password resets.'}</span>
     </label>
 
@@ -302,7 +302,9 @@
     max-width: 480px;
     padding: clamp(1.6rem, 4vw, 2.75rem);
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
     border-color: rgba(255, 255, 255, 0.1);
     background:
       radial-gradient(circle at top left, rgba(139, 124, 246, 0.18), transparent 36%),
@@ -311,11 +313,23 @@
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
   }
   .auth-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 1rem;
     margin-bottom: 1.35rem;
+    padding: 0.9rem 0.95rem 0.85rem;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.016)),
+      rgba(255,255,255,0.012);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
   .auth-heading-group {
     min-width: 0;
@@ -376,10 +390,13 @@
   .tabs {
     display: flex;
     margin-bottom: 1rem;
-    background: rgba(255,255,255,0.04);
-    border-radius: 14px;
-    padding: 4px;
-    border: 1px solid rgba(255,255,255,0.06);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018)),
+      rgba(255,255,255,0.012);
+    border-radius: 18px;
+    padding: 0.2rem;
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
   }
   .tabs button {
     flex: 1;
@@ -388,7 +405,7 @@
     color: var(--text-muted);
     padding: 0.7rem 0.9rem;
     cursor: pointer;
-    border-radius: 11px;
+    border-radius: 14px;
     font-weight: 600;
     font-size: 0.92rem;
     transition: all 0.2s;
@@ -396,8 +413,10 @@
   }
   .tabs button.active {
     color: #fff;
-    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.07));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      0 8px 20px rgba(0,0,0,0.14);
   }
   .field-hint {
     color: var(--text-muted);
@@ -535,20 +554,44 @@
 
   @media (max-width: 600px) {
     .auth-container {
-      padding: 1.25rem;
+      padding: 1.1rem;
+      max-height: 100%;
     }
     .auth-header {
+      position: static;
       gap: 0.75rem;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1rem;
+      top: auto;
+      padding: 0.8rem 0.85rem 0.75rem;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012)),
+        rgba(255,255,255,0.01);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .auth-brand {
+      font-size: 0.64rem;
+      letter-spacing: 0.16em;
+      margin-bottom: 0.3rem;
+    }
+    .auth-kicker {
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      margin-bottom: 0.25rem;
     }
     .auth-description {
       font-size: 0.92rem;
+      max-width: none;
     }
     .tabs {
       margin-bottom: 1.25rem;
+      border-radius: 16px;
     }
     .tabs button {
       min-height: 42px;
+      border-radius: 12px;
     }
     .input-field {
       min-height: 46px;

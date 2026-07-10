@@ -238,6 +238,8 @@
     ? 'Privacy Policy | ChromaDie'
     : routeMode === 'how-to-play'
       ? 'How to Play | ChromaDie'
+      : routeMode === 'app' && view === 'game'
+        ? 'Roll | ChromaDie'
       : 'ChromaDie';
   const errorState = supabaseError;
 
@@ -374,7 +376,7 @@
       </button>
 
       <nav class="nav-links desktop-nav">
-        <button class="nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => handleNavClick('game')}>Game</button>
+        <button class="nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => handleNavClick('game')}>Roll</button>
         <button class="nav-link" class:active={routeMode === 'app' && view === 'shop'} on:click={() => handleNavClick('shop')}>Shop</button>
         <button class="nav-link" class:active={routeMode === 'app' && view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
         <button class="nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
@@ -407,7 +409,7 @@
 
     <div id="mobile-navigation" class="mobile-nav-panel" class:open={mobileMenuOpen}>
       <div class="mobile-nav-section">
-        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => setRoute('game')}>Game</button>
+        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => setRoute('game')}>Roll</button>
         <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'shop'} on:click={() => setRoute('shop')}>Shop</button>
         <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
         <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => setRoute('profile')}>Profile</button>
@@ -463,7 +465,7 @@
       <div class="container">
         <div class="card">
           <h1>Loading account</h1>
-          <p class="info-text">Preparing your account features. Guest play stays available in Game.</p>
+          <p class="info-text">Preparing your account features. Guest play stays available in Roll.</p>
         </div>
       </div>
     {:else if $authInitialized && $session && $profileError && (view === 'shop' || view === 'profile')}
@@ -497,7 +499,7 @@
       <nav aria-label="Footer">
         <a href="/privacy" on:click|preventDefault={() => navigateToPath('/privacy')}>Privacy Policy</a>
         <a href="/how-to-play" on:click|preventDefault={() => navigateToPath('/how-to-play')}>How to Play</a>
-        <a href="/" on:click|preventDefault={() => navigateToPath('/')}>Game</a>
+        <a href="/" on:click|preventDefault={() => navigateToPath('/')}>Roll</a>
       </nav>
     </div>
   </footer>
@@ -567,15 +569,27 @@
   }
 
   .auth-modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    position: fixed;
+    inset: 0;
     background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    z-index: 1000; display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 1rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .auth-modal-content {
-    width: 100%; max-width: 450px; position: relative; z-index: 1;
+    width: 100%;
+    max-width: 450px;
+    max-height: calc(100dvh - 2rem);
+    position: relative;
+    z-index: 1;
     outline: none;
+    display: flex;
+    min-height: 0;
   }
 
   .loading-chip {
@@ -747,6 +761,18 @@
   }
 
   @media (max-width: 600px) {
+    .auth-modal-overlay {
+      align-items: flex-start;
+      padding:
+        calc(0.75rem + env(safe-area-inset-top))
+        0.75rem
+        calc(0.75rem + env(safe-area-inset-bottom));
+    }
+    .auth-modal-content {
+      max-height: calc(100dvh - 1.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      width: 100%;
+      align-self: flex-start;
+    }
     .auth-loading-banner {
       margin-left: 0;
       margin-right: 0;
