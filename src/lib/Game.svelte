@@ -591,18 +591,21 @@
       <div class="scan-container">
         <div class="scan-bar" style="width: {scanProgress}%"></div>
       </div>
-      <div class="rolling-badges-container">
-        {#each badges as badgeId (badgeId)}
-          {@const badge = getBadgeMeta(badgeId)}
-          <div class="badge-pop rarity-{badge.rarity || 'Common'}">
-            <span class="badge-symbol">{badge.symbol || '✨'}</span>
-            <div class="badge-text">
-              <span class="badge-title">{badge.name}</span>
-              <span class="badge-desc">{badge.desc || ''}</span>
+      <div class="badges-container badges-container-tight conditions-section">
+        <div class="badges-title">Conditions Met</div>
+        <div class="conditions-grid">
+          {#each badges as badgeId (badgeId)}
+            {@const badge = getBadgeMeta(badgeId)}
+            <div class="badge-result rarity-{badge.rarity || 'Common'}">
+              <span class="badge-symbol">{badge.symbol || '✨'}</span>
+              <div class="badge-text">
+                <span class="badge-title">{badge.name}</span>
+                <span class="badge-desc">{badge.desc || ''}</span>
+              </div>
+              <span class="badge-points">+{badge.points.toLocaleString()}</span>
             </div>
-            <span class="badge-points">+{badge.points.toLocaleString()}</span>
-          </div>
-        {/each}
+          {/each}
+        </div>
       </div>
     </div>
 
