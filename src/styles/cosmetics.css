@@ -30,6 +30,10 @@
     isolation: isolate;
 }
 .roll-effect-wrapper > .final-color-display { z-index: 1; }
+.roll-preview-wrapper {
+    transform: scale(0.76);
+    transform-origin: center;
+}
 .preview-roll-orb { position: relative; width: 30px; height: 30px; background: #333; border: 1px solid var(--card-border); }
 
 .roll-sparkles-anim::before, .roll-sparkles-anim::after,

@@ -1,4 +1,5 @@
 <script>
+  import RollPreview from './RollPreview.svelte';
   import { supabase } from './supabase';
   import { session, profile, authUser, authInitialized, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
   import { createChallengeLink } from './challenges';
@@ -681,10 +682,7 @@
   {:else if phase === 'rolling'}
     <div class="card">
       <div class="results-header results-header-tight">
-        <!-- FIX: Applied orbEff.cls to the rolling orb -->
-        <div class="roll-effect-wrapper {rollEff.cls}" style="{rollEff.style}">
-          <div class="final-color-display rarity-{rarity} {orbEff.cls}" style="background-color: {displayColor};"></div>
-        </div>
+        <RollPreview effectCls={rollEff.cls} effectStyle={rollEff.style} orbCls={orbEff.cls} displayColor={displayColor} rarity={rarity} />
         <div class="rolling-hex">{displayHex}</div>
       </div>
       <div class="scan-container">
@@ -713,9 +711,7 @@
       <div class="results-header results-header-tight">
         <div class="rarity-tag rarity-{rarity}">{rarity}</div>
 
-        <div class="roll-effect-wrapper {rollEff.cls}" style="{rollEff.style}">
-          <div class="final-color-display rarity-{rarity} {orbEff.cls}" style="background-color: {displayColor};"></div>
-        </div>
+        <RollPreview effectCls={rollEff.cls} effectStyle={rollEff.style} orbCls={orbEff.cls} displayColor={displayColor} rarity={rarity} />
 
         <div class="hex-code">{displayColor}</div>
         <div class="score-label">Leaderboard Score</div>

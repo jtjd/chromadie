@@ -1,4 +1,5 @@
 <script>
+  import RollPreview from './RollPreview.svelte';
   import { shopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards, profile, session, fetchInventoryState, refreshProfileState, fetchWalletBalance } from './stores';
   import { supabase } from './supabase';
   import { onMount } from 'svelte';
@@ -406,10 +407,7 @@
               {#if item.slot === 'profile_bg'}
                 <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
               {:else if item.slot === 'roll_effect'}
-                <div class="preview-roll-stage {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                  <div class="preview-roll-backdrop"></div>
-                  <div class="preview-roll-core"></div>
-                </div>
+                <RollPreview effectCls={item.css_type === 'class' ? item.css_value : ''} effectStyle={item.css_type === 'style' ? item.css_value : ''} size="shop" />
               {:else if item.slot === 'lb_theme'}
                 <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
                   <span class="lb-rank preview-lb-rank">#1</span>
@@ -574,10 +572,7 @@
                     {#if item.slot === 'profile_bg'}
                       <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
                     {:else if item.slot === 'roll_effect'}
-                      <div class="preview-roll-stage {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                        <div class="preview-roll-backdrop"></div>
-                        <div class="preview-roll-core"></div>
-                      </div>
+                      <RollPreview effectCls={item.css_type === 'class' ? item.css_value : ''} effectStyle={item.css_type === 'style' ? item.css_value : ''} size="shop" />
                     {:else if item.slot === 'lb_theme'}
                       <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
                         <span class="lb-rank preview-lb-rank">#1</span>
@@ -679,10 +674,7 @@
               {#if item.slot === 'profile_bg'}
                 <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
               {:else if item.slot === 'roll_effect'}
-                <div class="preview-roll-stage {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                  <div class="preview-roll-backdrop"></div>
-                  <div class="preview-roll-core"></div>
-                </div>
+                <RollPreview effectCls={item.css_type === 'class' ? item.css_value : ''} effectStyle={item.css_type === 'style' ? item.css_value : ''} size="shop" />
               {:else if item.slot === 'lb_theme'}
                 <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
                   <span class="lb-rank preview-lb-rank">#1</span>
@@ -1289,42 +1281,6 @@
     box-sizing: border-box;
   }
 
-  .preview-roll-stage {
-    position: relative;
-    width: 100%;
-    max-width: 220px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: visible;
-    isolation: isolate;
-  }
-
-  .preview-roll-backdrop {
-    position: absolute;
-    inset: 10px 14px;
-    border-radius: 999px;
-    background:
-      radial-gradient(circle at center, rgba(255,255,255,0.12), rgba(255,255,255,0.02) 34%, transparent 68%),
-      linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
-    filter: blur(1px);
-    opacity: 0.9;
-  }
-
-  .preview-roll-core {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: #333;
-    border: 1px solid var(--card-border);
-    position: relative;
-    z-index: 1;
-    box-shadow:
-      0 0 0 6px rgba(255,255,255,0.02),
-      0 0 24px rgba(255,255,255,0.08);
-  }
-
   .preview-lb-row {
     width: 100%;
     min-height: 58px;
@@ -1774,19 +1730,6 @@
 
     .shop-preview-area-roll-effect {
       height: 112px;
-    }
-
-    .preview-roll-stage {
-      max-width: 190px;
-    }
-
-    .preview-roll-backdrop {
-      inset: 12px 20px;
-    }
-
-    .preview-roll-core {
-      width: 36px;
-      height: 36px;
     }
 
     .wallet-display p {
