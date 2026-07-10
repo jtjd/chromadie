@@ -50,6 +50,11 @@ function createUnavailableSupabaseClient(message) {
   const auth = createUnavailableAuthClient(message)
   return {
     auth,
+    functions: {
+      invoke() {
+        return Promise.resolve({ data: null, error: new Error(message) })
+      }
+    },
     from() {
       return createUnavailableQuery(message)
     },

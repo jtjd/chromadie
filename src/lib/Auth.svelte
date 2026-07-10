@@ -251,6 +251,12 @@
       </label>
     {/if}
 
+    {#if tab === 'signup'}
+      <p class="privacy-link-note">
+        Read the <a href="/privacy">Privacy Policy</a> before creating an account.
+      </p>
+    {/if}
+
     <div class="security-check">
       <span class="field-label">Security check</span>
       <div id="turnstile-container"></div>
@@ -436,6 +442,17 @@
     flex-direction: column;
     gap: 0.45rem;
     margin: 0.35rem 0 1rem;
+  }
+  .privacy-link-note {
+    margin: 0.15rem 0 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+  .privacy-link-note a {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
   #turnstile-container {
     min-height: 92px;

@@ -1,5 +1,5 @@
 <script>
-  import { session, authUser, profile, authInitialized, authEvent, profileLoading, profileError, equippedItems, selectedUserId, loadShopItems, isAuthenticated } from './lib/stores';
+  import { session, authUser, profile, authInitialized, authEvent, profileLoading, profileError, equippedItems, selectedUserId, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
   import { supabase, supabaseError } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import AuthCallback from './lib/AuthCallback.svelte';
@@ -7,6 +7,8 @@
   import Shop from './lib/Shop.svelte';
   import Leaderboard from './lib/Leaderboard.svelte';
   import Profile from './lib/Profile.svelte';
+  import PrivacyPolicy from './lib/PrivacyPolicy.svelte';
+  import FAQ from './lib/FAQ.svelte';
   import ResetPassword from './lib/ResetPassword.svelte';
   import Toast from './lib/Toast.svelte';
   import GuestLock from './lib/GuestLock.svelte';
@@ -18,7 +20,7 @@
 
   const VALID_VIEWS = new Set(['game', 'shop', 'leaderboard', 'profile']);
   const VALID_LEADERBOARD_TABS = new Set(['today', 'rivals', 'weekly', 'monthly', 'roll']);
-  const VALID_APP_ROUTES = new Set(['app', 'auth-callback', 'reset-password']);
+  const VALID_APP_ROUTES = new Set(['app', 'privacy', 'how-to-play', 'auth-callback', 'reset-password']);
   let view = 'game';
   let leaderboardTab = 'today';
   let routeMode = 'app';
@@ -44,13 +46,17 @@
       routeMode = 'auth-callback';
     } else if (rawPath === '/reset-password') {
       routeMode = 'reset-password';
+    } else if (rawPath === '/privacy') {
+      routeMode = 'privacy';
+    } else if (rawPath === '/how-to-play') {
+      routeMode = 'how-to-play';
     } else {
       routeMode = 'app';
     }
 
     view = VALID_VIEWS.has(routeView) ? routeView : 'game';
     leaderboardTab = VALID_LEADERBOARD_TABS.has(routeTab) ? routeTab : 'today';
-    selectedUserId.set(routeProfileId || null);
+    selectedUserId.set(routeMode === 'app' ? routeProfileId || null : null);
 
     if (cScore && isValidChallengeHex) {
       const parsedScore = Number.parseInt(cScore, 10);
@@ -88,6 +94,10 @@
   function setRoute(nextView, options = {}) {
     if (!VALID_VIEWS.has(nextView)) return;
 
+    routeMode = 'app';
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.history.pushState({}, '', '/');
+    }
     view = nextView;
     mobileMenuOpen = false;
     if (nextView !== 'leaderboard') {
@@ -105,6 +115,14 @@
     syncRoute();
   }
 
+  function navigateToPath(pathname) {
+    if (typeof window === 'undefined') return;
+    const normalized = pathname || '/';
+    const nextUrl = new URL(normalized, window.location.origin);
+    window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}`);
+    parseRoute();
+  }
+
   function handlePopState() {
     parseRoute();
   }
@@ -120,13 +138,12 @@
   });
 
   function handleLogout() {
-    try {
-      localStorage.removeItem('chromadie-roll');
-    } catch {
-      // Ignore storage failures on hardened/private browsing setups.
-    }
+    clearLocalAccountCache();
+    clearUserState();
+    session.set(null);
+    selectedUserId.set(null);
     closeMobileMenu();
-    supabase.auth.signOut();
+    void supabase.auth.signOut();
     setRoute('game');
   }
 
@@ -144,6 +161,31 @@
     if (nextView) {
       setRoute(nextView, { userId, tab });
     }
+  }
+
+  async function handleAccountDeleted(event) {
+    const { alreadyDeleted = false, message = 'Account deleted.', cleanup = null } = event.detail || {};
+    clearLocalAccountCache({ clearShopCache: true });
+    clearUserState();
+    session.set(null);
+    selectedUserId.set(null);
+    mobileMenuOpen = false;
+    showAuthModal = false;
+    challengeData = null;
+    routeMode = 'app';
+    setRoute('game');
+
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Sign-out failure should not block local cleanup after deletion.
+    }
+
+    const toastMessage = cleanup?.missing_profile && !alreadyDeleted
+      ? 'Account deleted. Some account rows were already missing.'
+      : (alreadyDeleted ? 'Account already removed.' : message);
+
+    addToast(toastMessage, 'success');
   }
 
   async function openAuthModal() {
@@ -192,6 +234,11 @@
       ? 'Loading profile'
       : ($authInitialized && $session && $profileError ? 'Account issue' : 'Guest Mode');
   $: mobileStatusActionable = !$isAuthenticated && !$profileLoading && !($authInitialized && $session && $profileError);
+  $: pageTitle = routeMode === 'privacy'
+    ? 'Privacy Policy | ChromaDie'
+    : routeMode === 'how-to-play'
+      ? 'How to Play | ChromaDie'
+      : 'ChromaDie';
   const errorState = supabaseError;
 
   $: if (($authEvent === 'SIGNED_IN' || $authEvent === 'USER_UPDATED') && showAuthModal) {
@@ -200,6 +247,10 @@
 
   $: if (typeof document !== 'undefined') {
     document.body.style.overflow = (showAuthModal || mobileMenuOpen) ? 'hidden' : '';
+  }
+
+  $: if (typeof document !== 'undefined') {
+    document.title = pageTitle;
   }
 
   onDestroy(() => {
@@ -230,6 +281,7 @@
   {:else if routeMode === 'reset-password'}
     <ResetPassword />
   {:else}
+  <div class="app-shell">
   {#if showAuthModal}
     <div class="auth-modal-overlay" role="presentation" on:click|self={closeAuthModal}>
       <div
@@ -277,7 +329,17 @@
       ></button>
     {/if}
     <header class="site-header">
-      <a href="/" class="logo" on:click={handleLogoClick}>🎲 ChromaDie</a>
+      <div class="header-brand">
+        <a href="/" class="logo" on:click={handleLogoClick}>🎲 ChromaDie</a>
+        <a
+          href="/how-to-play"
+          class="header-guide-link"
+          aria-label="Open How to Play"
+          on:click|preventDefault={() => navigateToPath('/how-to-play')}
+        >
+          How to Play
+        </a>
+      </div>
       {#if $authUser}
         <div class="mobile-user-chip {frameEff.cls}" style="{frameEff.style}">
           {#if titleTxt}
@@ -312,10 +374,10 @@
       </button>
 
       <nav class="nav-links desktop-nav">
-        <button class="nav-link" class:active={view === 'game'} on:click={() => handleNavClick('game')}>Game</button>
-        <button class="nav-link" class:active={view === 'shop'} on:click={() => handleNavClick('shop')}>Shop</button>
-        <button class="nav-link" class:active={view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
-        <button class="nav-link" class:active={view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
+        <button class="nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => handleNavClick('game')}>Game</button>
+        <button class="nav-link" class:active={routeMode === 'app' && view === 'shop'} on:click={() => handleNavClick('shop')}>Shop</button>
+        <button class="nav-link" class:active={routeMode === 'app' && view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
+        <button class="nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
 
         {#if $authUser}
           <div class="user-chip {frameEff.cls}" style="{frameEff.style}">
@@ -345,10 +407,10 @@
 
     <div id="mobile-navigation" class="mobile-nav-panel" class:open={mobileMenuOpen}>
       <div class="mobile-nav-section">
-        <button class="nav-link mobile-nav-link" class:active={view === 'game'} on:click={() => setRoute('game')}>Game</button>
-        <button class="nav-link mobile-nav-link" class:active={view === 'shop'} on:click={() => setRoute('shop')}>Shop</button>
-        <button class="nav-link mobile-nav-link" class:active={view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
-        <button class="nav-link mobile-nav-link" class:active={view === 'profile'} on:click={() => setRoute('profile')}>Profile</button>
+        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => setRoute('game')}>Game</button>
+        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'shop'} on:click={() => setRoute('shop')}>Shop</button>
+        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
+        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => setRoute('profile')}>Profile</button>
       </div>
 
       <div class="mobile-nav-section mobile-auth-section">
@@ -385,41 +447,61 @@
     </div>
   {/if}
 
-  {#if view === 'game'}
-    <Game on:promptlogin={openAuthModal} />
-  {:else if view === 'leaderboard'}
-    {#key `leaderboard:${leaderboardTab}`}
-      <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
-    {/key}
-  {:else if $profileLoading && (view === 'shop' || view === 'profile')}
-    <div class="container">
-      <div class="card">
-        <h1>Loading account</h1>
-        <p class="info-text">Preparing your account features. Guest play stays available in Game.</p>
-      </div>
-    </div>
-  {:else if $authInitialized && $session && $profileError && (view === 'shop' || view === 'profile')}
-    <div class="container">
-      <div class="card">
-        <h1>Account unavailable</h1>
-        <p class="info-text">We could not load your account data. Retry or sign out, then sign in again.</p>
-        <div class="button-row">
-          <button type="button" class="roll-btn" on:click={() => window.location.reload()}>Retry</button>
-          <button type="button" class="roll-btn" on:click={handleLogout}>Log Out</button>
+  <div class="app-main">
+  {#if routeMode === 'privacy'}
+    <PrivacyPolicy />
+  {:else if routeMode === 'how-to-play'}
+    <FAQ />
+  {:else}
+    {#if view === 'game'}
+      <Game on:promptlogin={openAuthModal} />
+    {:else if view === 'leaderboard'}
+      {#key `leaderboard:${leaderboardTab}`}
+        <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
+      {/key}
+    {:else if $profileLoading && (view === 'shop' || view === 'profile')}
+      <div class="container">
+        <div class="card">
+          <h1>Loading account</h1>
+          <p class="info-text">Preparing your account features. Guest play stays available in Game.</p>
         </div>
       </div>
-    </div>
-  {:else if view === 'profile' && ($isAuthenticated || $selectedUserId)}
-    <Profile userId={$selectedUserId} on:navigate={handleNavigation} />
-  {:else if $isAuthenticated}
-    {#if view === 'shop'}
-      <Shop />
-    {/if}
-  {:else}
-    {#if view === 'shop' || view === 'profile'}
-      <GuestLock view={view} on:login={openAuthModal} />
+    {:else if $authInitialized && $session && $profileError && (view === 'shop' || view === 'profile')}
+      <div class="container">
+        <div class="card">
+          <h1>Account unavailable</h1>
+          <p class="info-text">We could not load your account data. Retry or sign out, then sign in again.</p>
+          <div class="button-row">
+            <button type="button" class="roll-btn" on:click={() => window.location.reload()}>Retry</button>
+            <button type="button" class="roll-btn" on:click={handleLogout}>Log Out</button>
+          </div>
+        </div>
+      </div>
+    {:else if view === 'profile' && ($isAuthenticated || $selectedUserId)}
+      <Profile userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
+    {:else if $isAuthenticated}
+      {#if view === 'shop'}
+        <Shop />
+      {/if}
+    {:else}
+      {#if view === 'shop' || view === 'profile'}
+        <GuestLock view={view} on:login={openAuthModal} />
+      {/if}
     {/if}
   {/if}
+  </div>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <p>ChromaDie</p>
+      <nav aria-label="Footer">
+        <a href="/privacy" on:click|preventDefault={() => navigateToPath('/privacy')}>Privacy Policy</a>
+        <a href="/how-to-play" on:click|preventDefault={() => navigateToPath('/how-to-play')}>How to Play</a>
+        <a href="/" on:click|preventDefault={() => navigateToPath('/')}>Game</a>
+      </nav>
+    </div>
+  </footer>
+  </div>
 {/if}
 
 <style>
@@ -428,6 +510,21 @@
     display: grid;
     place-items: center;
     padding: 2rem 1rem;
+  }
+
+  .app-shell {
+    min-height: 100dvh;
+    width: 100%;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-main {
+    flex: 1 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   .bootstrap-error-card {
@@ -558,6 +655,85 @@
   .challenge-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
   .challenge-close:hover { color: #fff; }
 
+  .site-footer {
+    width: 100%;
+    margin-top: auto;
+    padding: 0 0 28px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: var(--text-muted);
+    font-size: 0.84rem;
+  }
+
+  .site-footer-inner {
+    width: 100%;
+    max-width: none;
+    margin: 0 auto;
+    padding: 0.9rem 40px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .site-footer p {
+    margin: 0;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .site-footer nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem 1rem;
+  }
+
+  .site-footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .site-footer a:hover {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  .header-guide-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.78rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.86rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  }
+
+  .header-guide-link:hover,
+  .header-guide-link:focus-visible {
+    color: #fff;
+    border-color: rgba(161, 92, 255, 0.38);
+    background: rgba(161, 92, 255, 0.12);
+    transform: translateY(-1px);
+  }
+
   .mobile-nav-backdrop {
     display: none;
   }
@@ -583,10 +759,20 @@
       flex-wrap: nowrap;
       align-items: center;
     }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
     .site-header .logo {
       font-size: 1rem;
       letter-spacing: -0.2px;
       flex: 0 0 auto;
+    }
+    .header-guide-link {
+      display: none;
     }
     .mobile-user-chip {
       display: inline-flex;
@@ -635,6 +821,20 @@
     }
     .button-row > button {
       width: 100%;
+    }
+    .site-footer {
+      padding-bottom: 14px;
+    }
+    .site-footer-inner {
+      width: calc(100% - 1rem);
+      max-width: none;
+      padding: 0.8rem 0.25rem 0;
+      justify-content: center;
+      text-align: center;
+    }
+    .site-footer nav {
+      justify-content: center;
+      gap: 0.55rem 0.8rem;
     }
     .mobile-nav-panel {
       display: flex;

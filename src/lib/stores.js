@@ -60,6 +60,27 @@ export function clearUserState() {
     followedUsers.set([])
 }
 
+export function clearLocalAccountCache({ clearShopCache = false } = {}) {
+    const keysToRemove = ['chromadie-roll']
+
+    try {
+        for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+            const key = localStorage.key(i)
+            if (key && key.startsWith('chromadie-reroll-lock:')) {
+                keysToRemove.push(key)
+            }
+        }
+
+        if (clearShopCache) {
+            keysToRemove.push('shop_cache')
+        }
+
+        keysToRemove.forEach(key => localStorage.removeItem(key))
+    } catch {
+        // Ignore storage failures in hardened/private browsing modes.
+    }
+}
+
 function getShopCache() {
     try {
         return JSON.parse(localStorage.getItem('shop_cache') || '{}');

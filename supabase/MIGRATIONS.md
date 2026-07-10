@@ -15,6 +15,7 @@ Active forward fix:
 - `migrations/20260709040000_lockdown_client_writes.sql`
 - `migrations/20260709050000_atomic_gameplay_transactions.sql`
 - `migrations/20260709060000_profile_read_lockdown.sql`
+- `migrations/20260710010000_account_deletion_cleanup.sql`
 
 Archived migrations:
 
