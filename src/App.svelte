@@ -14,6 +14,7 @@
   import GuestLock from './lib/GuestLock.svelte';
   import { loadChallengeLink } from './lib/challenges';
   import { getNameEffect, getFrameEffect, getTitleText } from './lib/cosmetics';
+  import { getRankState } from './lib/ranks';
   import { normalizeHexColor } from './lib/utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './lib/a11y';
   import { onMount, onDestroy, tick } from 'svelte';
@@ -354,6 +355,7 @@
   $: nameEff = getNameEffect(userCosmetics);
   $: frameEff = getFrameEffect(userCosmetics);
   $: titleTxt = getTitleText(userCosmetics);
+  $: headerRank = $profile ? getRankState($profile.lifetime_ep || 0) : null;
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
   $: username = $session ? ($profile?.username || 'Loading your account...') : 'Guest Mode';
   $: mobileStatusText = $isAuthenticated
@@ -466,6 +468,15 @@
           {#if titleTxt}
             <span class="title-chip">[{titleTxt}]</span>
           {/if}
+          {#if headerRank}
+            <span
+              class="rank-pill"
+              style={`color: ${headerRank.current.color}; border-color: ${headerRank.current.color === 'var(--spectrum)' ? '#a15cff' : headerRank.current.color};`}
+              aria-label={`${headerRank.current.name} rank`}
+            >
+              {headerRank.current.name}
+            </span>
+          {/if}
           <span class="user-name {nameEff.cls}" style="{nameEff.style}" data-text={headerUsername}>
             {headerUsername}
           </span>
@@ -504,6 +515,15 @@
           <div class="user-chip {frameEff.cls}" style="{frameEff.style}">
             {#if titleTxt}
               <span class="title-chip">[{titleTxt}]</span>
+            {/if}
+            {#if headerRank}
+              <span
+                class="rank-pill"
+                style={`color: ${headerRank.current.color}; border-color: ${headerRank.current.color === 'var(--spectrum)' ? '#a15cff' : headerRank.current.color};`}
+                aria-label={`${headerRank.current.name} rank`}
+              >
+                {headerRank.current.name}
+              </span>
             {/if}
             <span class="user-name {nameEff.cls}" style="{nameEff.style}" data-text={headerUsername}>
               {headerUsername}
@@ -983,6 +1003,23 @@
     color: #fff;
     text-decoration: underline;
     text-underline-offset: 2px;
+  }
+
+  .rank-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.28rem 0.55rem;
+    border: 1px solid;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.15) inset;
   }
 
   .header-brand {

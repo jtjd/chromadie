@@ -107,8 +107,13 @@
     min-width: 0;
     max-width: 100%;
 }
-.user-name, .user-name:visited { color: #fff !important; -webkit-text-fill-color: #fff; font-weight: 500; font-size: 0.85rem; text-decoration: none; display: inline-block; }
-.user-name[style*="background"] { -webkit-text-fill-color: transparent !important; }
+.user-name, .user-name:visited {
+    color: #fff;
+    font-weight: 500;
+    font-size: 0.85rem;
+    text-decoration: none;
+    display: inline-block;
+}
 .user-name:hover { text-decoration: underline; }
 .logout-btn {
     background: rgba(255, 255, 255, 0.1);

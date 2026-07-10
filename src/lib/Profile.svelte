@@ -2,7 +2,7 @@
   import { supabase } from './supabase';
   import { session, profile, authUser, equippedBadges, addToast, followedUsers, toggleFollow, isAuthenticated } from './stores';
   import { getNameEffect, getFrameEffect, getTitleText, getProfileBg, getProfileBorder, getLbTheme } from './cosmetics';
-  import { getRank } from './ranks';
+  import { getRank, getRankState } from './ranks';
   import { formatCount, getTodayString } from './utils';
   import { deleteAccount } from './accountDeletion';
   import ProfileAchievementCard from './ProfileAchievementCard.svelte';
@@ -282,6 +282,7 @@
   }
 
   $: rank = isOwnProfile ? getRank(targetProfile?.lifetime_ep || 0) : null;
+  $: rankState = isOwnProfile ? getRankState(targetProfile?.lifetime_ep || 0) : null;
   $: cosmetics = targetProfile?.equipped_cosmetics || {};
   $: nameEff = getNameEffect(cosmetics);
   $: frameEff = getFrameEffect(cosmetics);
@@ -372,6 +373,28 @@
             {#if rank}
               <div class="rank-chip" style="color: {rank.color}; border-color: {rank.color === 'var(--spectrum)' ? '#a15cff' : rank.color};">
                 {rank.name} Rank
+              </div>
+              <div class="rank-explainer">
+                <div class="rank-explainer-row">
+                  <span>Lifetime EP</span>
+                  <span>{rankState?.lifetimeEp?.toLocaleString() || 0} EP</span>
+                </div>
+                <div class="progress-bar-container" aria-hidden="true">
+                  <div
+                    class="progress-bar-fill"
+                    style={`width: ${Math.round((rankState?.progress || 0) * 100)}%; background: ${rank.color};`}
+                  ></div>
+                </div>
+                <p class="progress-text">
+                  {#if rankState?.next}
+                    {rankState.next.name} at {rankState.next.min.toLocaleString()} EP
+                  {:else}
+                    Highest rank reached
+                  {/if}
+                </p>
+                <p class="rank-help">
+                  Rank is based on lifetime EP earned, not EP spent in the shop.
+                </p>
               </div>
             {/if}
           </div>
@@ -630,6 +653,38 @@
     border-radius: 4px;
     width: fit-content;
     background: rgba(0,0,0,0.3);
+  }
+
+  .rank-explainer {
+    display: grid;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.22);
+    max-width: 320px;
+  }
+
+  .rank-explainer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .rank-explainer-row span:last-child {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .rank-help {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    line-height: 1.45;
   }
 
   .edit-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; white-space: nowrap; }

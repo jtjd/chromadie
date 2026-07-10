@@ -1,11 +1,15 @@
 <script>
   import { shopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards, profile, session, fetchInventoryState, refreshProfileState, fetchWalletBalance } from './stores';
   import { supabase } from './supabase';
+  import { onMount } from 'svelte';
 
   let loadingAction = null;
   let activeTab = 'all';
   let sortMode = 'featured';
   let purchaseTarget = null;
+  let ownedCollapsed = {};
+  let ownedLayoutMode = 'desktop';
+  let ownedStateMode = 'desktop';
 
   const rarityRank = {
     Trash: 0,
@@ -19,13 +23,14 @@
 
   const slotLabels = {
     all: 'All',
+    owned: 'Owned Cosmetics',
     name_effect: 'Names',
     frame: 'Frames',
     profile_border: 'Borders',
     profile_bg: 'Backgrounds',
-    orb_shape: 'Orb Shapes',
-    roll_effect: 'Roll Effects',
-    lb_theme: 'LB Themes',
+    orb_shape: 'Orbs',
+    roll_effect: 'Roll',
+    lb_theme: 'LB',
     consumable: 'Utility'
   };
 
@@ -36,7 +41,16 @@
     rarity: 'Rarity'
   };
 
-  const featuredItemKeys = ['frame_spectrum', 'border_void', 'lb_spectrum', 'name_spectrum'];
+  const featuredItemKeys = ['frame_spectrum', 'border_void', 'lb_spectrum'];
+  const cosmeticSlotOrder = [
+    'name_effect',
+    'frame',
+    'profile_border',
+    'profile_bg',
+    'orb_shape',
+    'roll_effect',
+    'lb_theme'
+  ];
 
   function getSlotLabel(slot) {
     return slotLabels[slot] || slot;
@@ -236,17 +250,109 @@
   $: utilityItems = Object.values($shopItems)
     .filter(item => item.slot === 'consumable');
 
+  $: ownedCosmeticItems = cosmeticItems.filter(item => $userInventory.includes(item.item_key));
+  $: ownedCosmeticSections = cosmeticSlotOrder
+    .map(slot => ({
+      slot,
+      label: getSlotLabel(slot),
+      items: sortItems(ownedCosmeticItems.filter(item => item.slot === slot), sortMode)
+    }))
+    .filter(section => section.items.length > 0);
+
+  $: if (activeTab === 'owned' && ownedCosmeticSections.length) {
+    const sectionKeysMatch = Object.keys(ownedCollapsed).length === ownedCosmeticSections.length
+      && !Object.keys(ownedCollapsed).some(slot => !ownedCosmeticSections.some(section => section.slot === slot));
+
+    if (ownedStateMode !== ownedLayoutMode || !sectionKeysMatch) {
+      applyOwnedDefaultState(ownedLayoutMode === 'mobile');
+    }
+  }
+
   $: filteredCosmetics = sortItems(
     cosmeticItems.filter(item => activeTab === 'all' || item.slot === activeTab),
     sortMode
   );
 
   $: sortedUtilityItems = sortItems(utilityItems, sortMode);
-  $: featuredItems = featuredItemKeys
-    .map(itemKey => $shopItems[itemKey])
-    .filter(Boolean);
+  $: featuredItems = (() => {
+    const picked = [];
+    const seen = new Set();
+
+    for (const itemKey of featuredItemKeys) {
+      const item = $shopItems[itemKey];
+      if (item && !seen.has(item.item_key)) {
+        picked.push(item);
+        seen.add(item.item_key);
+      }
+    }
+
+    if (picked.length < 3) {
+      for (const item of Object.values($shopItems).filter(entry => entry.slot !== 'consumable').sort((a, b) => featuredScore(b) - featuredScore(a))) {
+        if (picked.length >= 3) break;
+        if (!seen.has(item.item_key)) {
+          picked.push(item);
+          seen.add(item.item_key);
+        }
+      }
+    }
+
+    return picked.slice(0, 3);
+  })();
   $: activeCategoryLabel = getSlotLabel(activeTab);
   $: selectedItemPreview = purchaseTarget ? getItemSummary(purchaseTarget) : '';
+
+  function toggleOwnedSection(slot) {
+    ownedCollapsed = {
+      ...ownedCollapsed,
+      [slot]: !ownedCollapsed[slot]
+    };
+  }
+
+  function expandOwnedSections() {
+    ownedCollapsed = Object.fromEntries(ownedCosmeticSections.map(section => [section.slot, false]));
+  }
+
+  function collapseOwnedSections() {
+    ownedCollapsed = Object.fromEntries(ownedCosmeticSections.map(section => [section.slot, true]));
+  }
+
+  function applyOwnedDefaultState(isMobile) {
+    ownedLayoutMode = isMobile ? 'mobile' : 'desktop';
+    ownedStateMode = ownedLayoutMode;
+    ownedCollapsed = Object.fromEntries(
+      ownedCosmeticSections.map(section => [section.slot, isMobile])
+    );
+  }
+
+  onMount(() => {
+    const media = window.matchMedia('(max-width: 600px)');
+    applyOwnedDefaultState(media.matches);
+
+    const handleChange = event => {
+      if (activeTab === 'owned') {
+        applyOwnedDefaultState(event.matches);
+      } else {
+        ownedLayoutMode = event.matches ? 'mobile' : 'desktop';
+      }
+    };
+
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', handleChange);
+      return () => media.removeEventListener('change', handleChange);
+    }
+
+    media.addListener(handleChange);
+    return () => media.removeListener(handleChange);
+  });
+
+  $: if (activeTab === 'owned' && ownedCosmeticSections.length) {
+    const sectionKeysMatch = Object.keys(ownedCollapsed).length === ownedCosmeticSections.length
+      && !Object.keys(ownedCollapsed).some(slot => !ownedCosmeticSections.some(section => section.slot === slot));
+
+    if (ownedStateMode !== ownedLayoutMode || !sectionKeysMatch) {
+      applyOwnedDefaultState(ownedLayoutMode === 'mobile');
+    }
+  }
 </script>
 
 <div class="container shop-container">
@@ -255,13 +361,21 @@
     <h2>Cosmetic Shop</h2>
   </div>
 
-  <p class="shop-intro">
-    Browse cosmetics, preview what they change, and buy with confidence. Utility items are kept separate so the catalog stays easy to scan.
-  </p>
+  <div class="shop-masthead">
+    <div class="shop-masthead-copy">
+      <p class="shop-intro">
+        Browse a focused catalog of visual upgrades, compare what each item changes, and pick up the pieces that fit your style.
+      </p>
+      <div class="shop-hero-pills">
+        <span class="hero-pill">Preview before you buy</span>
+        <span class="hero-pill">Utility items below</span>
+      </div>
+    </div>
 
-  <div class="wallet-display">
-    <h3>Wallet Balance</h3>
-    <span>{$walletBalance.toLocaleString()} EP</span>
+    <div class="wallet-display">
+      <span class="wallet-label">Wallet</span>
+      <strong>{$walletBalance.toLocaleString()} EP</strong>
+    </div>
   </div>
 
   {#if featuredItems.length}
@@ -269,9 +383,8 @@
       <div class="shop-section-header featured-header">
         <div>
           <h3>Featured Picks</h3>
-          <p>A small spotlight of items that show off the strongest visuals in the catalog.</p>
+          <p>A small spotlight of items with the most noticeable visual impact.</p>
         </div>
-        <span class="section-count">Curated</span>
       </div>
 
       <div class="featured-grid">
@@ -289,11 +402,14 @@
               <span class="state-pill rarity">{item.rarity || 'Common'}</span>
             </div>
 
-            <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''}">
+            <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
               {#if item.slot === 'profile_bg'}
                 <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
               {:else if item.slot === 'roll_effect'}
-                <div class="preview-roll-orb {item.css_type === 'class' ? item.css_value : ''}"></div>
+                <div class="preview-roll-stage {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                  <div class="preview-roll-backdrop"></div>
+                  <div class="preview-roll-core"></div>
+                </div>
               {:else if item.slot === 'lb_theme'}
                 <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
                   <span class="lb-rank preview-lb-rank">#1</span>
@@ -373,15 +489,16 @@
   {/if}
 
   <div class="shop-toolbar">
-    <div class="shop-tabs">
+    <div class="shop-tabs" aria-label="Shop categories">
       <button class="shop-tab" class:active={activeTab === 'all'} type="button" on:click={() => activeTab = 'all'}>All</button>
-      <button class="shop-tab" class:active={activeTab === 'name_effect'} type="button" on:click={() => activeTab = 'name_effect'}>Names</button>
+      <button class="shop-tab" class:active={activeTab === 'owned'} type="button" on:click={() => activeTab = 'owned'}>Owned</button>
       <button class="shop-tab" class:active={activeTab === 'frame'} type="button" on:click={() => activeTab = 'frame'}>Frames</button>
+      <button class="shop-tab" class:active={activeTab === 'name_effect'} type="button" on:click={() => activeTab = 'name_effect'}>Names</button>
       <button class="shop-tab" class:active={activeTab === 'profile_border'} type="button" on:click={() => activeTab = 'profile_border'}>Borders</button>
       <button class="shop-tab" class:active={activeTab === 'profile_bg'} type="button" on:click={() => activeTab = 'profile_bg'}>Backgrounds</button>
-      <button class="shop-tab" class:active={activeTab === 'orb_shape'} type="button" on:click={() => activeTab = 'orb_shape'}>Orb Shapes</button>
-      <button class="shop-tab" class:active={activeTab === 'roll_effect'} type="button" on:click={() => activeTab = 'roll_effect'}>Roll Effects</button>
-      <button class="shop-tab" class:active={activeTab === 'lb_theme'} type="button" on:click={() => activeTab = 'lb_theme'}>LB Themes</button>
+      <button class="shop-tab" class:active={activeTab === 'orb_shape'} type="button" on:click={() => activeTab = 'orb_shape'}>Orbs</button>
+      <button class="shop-tab" class:active={activeTab === 'roll_effect'} type="button" on:click={() => activeTab = 'roll_effect'}>Roll</button>
+      <button class="shop-tab" class:active={activeTab === 'lb_theme'} type="button" on:click={() => activeTab = 'lb_theme'}>LB</button>
     </div>
 
     <div class="shop-sort">
@@ -404,126 +521,258 @@
   <div class="shop-section-header">
     <div>
       <h3>{activeCategoryLabel}</h3>
-      <p>Permanent cosmetics only. Utility items live below so they do not compete with visual rewards.</p>
+      {#if activeTab === 'owned'}
+        <p>Your collected cosmetics, grouped by type so they are easy to scan, equip, and compare.</p>
+      {:else}
+        <p>Permanent cosmetics only. Utility items live below so they do not compete with visual rewards.</p>
+      {/if}
     </div>
-    <span class="section-count">{filteredCosmetics.length} item{filteredCosmetics.length === 1 ? '' : 's'}</span>
+    <span class="section-count">{activeTab === 'owned' ? ownedCosmeticItems.length : filteredCosmetics.length} item{(activeTab === 'owned' ? ownedCosmeticItems.length : filteredCosmetics.length) === 1 ? '' : 's'}</span>
   </div>
 
-  {#if filteredCosmetics.length === 0}
-    <div class="shop-empty">
-      <p>No items in this category yet.</p>
-      <span>Try a different category or view All cosmetics.</span>
-    </div>
+  {#if activeTab === 'owned'}
+    {#if ownedCosmeticItems.length === 0}
+      <div class="shop-empty">
+        <p>You do not own any cosmetics yet.</p>
+        <span>Buy or earn a cosmetic first, then it will appear here.</span>
+      </div>
+    {:else}
+      <div class="owned-controls" aria-label="Owned cosmetic controls">
+        <button type="button" class="owned-control" on:click={expandOwnedSections}>Expand all</button>
+        <button type="button" class="owned-control" on:click={collapseOwnedSections}>Collapse all</button>
+      </div>
+      <div class="owned-groups">
+        {#each ownedCosmeticSections as section (section.slot)}
+          <section class="owned-group">
+            <button
+              type="button"
+              class="owned-group-header"
+              aria-expanded={!ownedCollapsed[section.slot]}
+              on:click={() => toggleOwnedSection(section.slot)}
+            >
+              <div>
+                <h3>{section.label}</h3>
+                <p>{section.items.length} item{section.items.length === 1 ? '' : 's'}</p>
+              </div>
+              <span class="owned-group-chevron" aria-hidden="true">{ownedCollapsed[section.slot] ? '▸' : '▾'}</span>
+            </button>
+
+            {#if !ownedCollapsed[section.slot]}
+              <div class="shop-grid owned-grid">
+                {#each section.items as item (item.item_key)}
+                {@const equipped = $equippedItems[item.slot] === item.item_key}
+                {@const loadingEquip = isLoading('equip', item.item_key)}
+                {@const loadingUnequip = isLoading('unequip', item.item_key)}
+
+                <div class="shop-item rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} is-owned">
+                  <div class="shop-item-meta">
+                    <span class="state-pill slot">{getSlotLabel(item.slot)}</span>
+                    <span class="state-pill rarity">{item.rarity || 'Common'}</span>
+                  </div>
+
+                  <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
+                    {#if item.slot === 'profile_bg'}
+                      <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
+                    {:else if item.slot === 'roll_effect'}
+                      <div class="preview-roll-stage {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                        <div class="preview-roll-backdrop"></div>
+                        <div class="preview-roll-core"></div>
+                      </div>
+                    {:else if item.slot === 'lb_theme'}
+                      <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                        <span class="lb-rank preview-lb-rank">#1</span>
+                        <div class="lb-info preview-lb-info">
+                          <span class="lb-username preview-lb-name">YourName</span>
+                          <span class="preview-lb-sub">#7B5CFF • Mythic</span>
+                        </div>
+                        <span class="lb-score preview-lb-score">9.8M</span>
+                      </div>
+                    {:else if item.slot === 'orb_shape'}
+                      <div class="preview-orb-shape {item.css_type === 'class' ? item.css_value : ''}"></div>
+                    {:else if item.slot === 'profile_border'}
+                      <div class="preview-profile-card {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                        <div class="preview-profile-topline">
+                          <span class="preview-profile-badge">Featured</span>
+                          <span class="preview-profile-dot"></span>
+                        </div>
+                        <span class="preview-profile-name">YourName</span>
+                        <div class="preview-profile-meta">
+                          <span>Rank</span>
+                          <span>30d</span>
+                        </div>
+                      </div>
+                    {:else}
+                      <div class="shop-preview-text">
+                        {#if item.css_type === 'class'}
+                          {#if item.slot === 'frame'}
+                            <span class="profile-name-frame {item.css_value}">Username</span>
+                          {:else}
+                            <span class="{item.css_value}" data-text="Username">Username</span>
+                          {/if}
+                        {:else if item.css_type === 'style'}
+                          {#if item.slot === 'frame'}
+                            <span class="profile-name-frame" style="{item.css_value}">Username</span>
+                          {:else}
+                            <span style="{item.css_value}" data-text="Username">Username</span>
+                          {/if}
+                        {/if}
+                      </div>
+                    {/if}
+                  </div>
+
+                  <h3>{item.name}</h3>
+                  {#if item.collection}
+                    <p class="item-collection">{item.collection}</p>
+                  {/if}
+                  <p class="item-summary">{getItemSummary(item)}</p>
+                  {#if item.description && item.description !== getItemSummary(item)}
+                    <p class="item-desc">{item.description}</p>
+                  {/if}
+
+                  <div class="item-footnote">
+                    <span class="item-cost">{item.cost.toLocaleString()} EP</span>
+                    <span class="state-pill muted">{getStateLabel(item)}</span>
+                  </div>
+
+                  <div class="shop-actions">
+                    {#if equipped}
+                      <button class="shop-btn equipped" type="button" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={!!loadingAction}>
+                        {loadingUnequip ? 'Unequipping...' : 'Unequip'}
+                      </button>
+                    {:else}
+                      <button class="shop-btn owned" type="button" on:click={() => handleAction(item.item_key, 'equip')} disabled={!!loadingAction}>
+                        {loadingEquip ? 'Equipping...' : 'Equip'}
+                      </button>
+                    {/if}
+                  </div>
+                </div>
+                {/each}
+              </div>
+            {/if}
+          </section>
+        {/each}
+      </div>
+    {/if}
   {:else}
-    <div class="shop-grid">
-      {#each filteredCosmetics as item (item.item_key)}
-        {@const owned = $userInventory.includes(item.item_key)}
-        {@const equipped = $equippedItems[item.slot] === item.item_key}
-        {@const affordable = $walletBalance >= item.cost}
-        {@const loadingBuy = isLoading('buy', item.item_key)}
-        {@const loadingEquip = isLoading('equip', item.item_key)}
-        {@const loadingUnequip = isLoading('unequip', item.item_key)}
+    {#if filteredCosmetics.length === 0}
+      <div class="shop-empty">
+        <p>No items in this category yet.</p>
+        <span>Try a different category or switch back to All cosmetics.</span>
+      </div>
+    {:else}
+      <div class="shop-grid">
+        {#each filteredCosmetics as item (item.item_key)}
+          {@const owned = $userInventory.includes(item.item_key)}
+          {@const equipped = $equippedItems[item.slot] === item.item_key}
+          {@const affordable = $walletBalance >= item.cost}
+          {@const loadingBuy = isLoading('buy', item.item_key)}
+          {@const loadingEquip = isLoading('equip', item.item_key)}
+          {@const loadingUnequip = isLoading('unequip', item.item_key)}
 
-        <div class="shop-item rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
-          <div class="shop-item-meta">
-            <span class="state-pill slot">{getSlotLabel(item.slot)}</span>
-            <span class="state-pill rarity">{item.rarity || 'Common'}</span>
-          </div>
+          <div class="shop-item rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
+            <div class="shop-item-meta">
+              <span class="state-pill slot">{getSlotLabel(item.slot)}</span>
+              <span class="state-pill rarity">{item.rarity || 'Common'}</span>
+            </div>
 
-          <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''}">
-            {#if item.slot === 'profile_bg'}
-              <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
-            {:else if item.slot === 'roll_effect'}
-              <div class="preview-roll-orb {item.css_type === 'class' ? item.css_value : ''}"></div>
-            {:else if item.slot === 'lb_theme'}
-              <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                <span class="lb-rank preview-lb-rank">#1</span>
-                <div class="lb-info preview-lb-info">
-                  <span class="lb-username preview-lb-name">YourName</span>
-                  <span class="preview-lb-sub">#7B5CFF • Mythic</span>
+            <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
+              {#if item.slot === 'profile_bg'}
+                <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
+              {:else if item.slot === 'roll_effect'}
+                <div class="preview-roll-stage {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                  <div class="preview-roll-backdrop"></div>
+                  <div class="preview-roll-core"></div>
                 </div>
-                <span class="lb-score preview-lb-score">9.8M</span>
-              </div>
-            {:else if item.slot === 'orb_shape'}
-              <div class="preview-orb-shape {item.css_type === 'class' ? item.css_value : ''}"></div>
-            {:else if item.slot === 'profile_border'}
-              <div class="preview-profile-card {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                <div class="preview-profile-topline">
-                  <span class="preview-profile-badge">Featured</span>
-                  <span class="preview-profile-dot"></span>
+              {:else if item.slot === 'lb_theme'}
+                <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                  <span class="lb-rank preview-lb-rank">#1</span>
+                  <div class="lb-info preview-lb-info">
+                    <span class="lb-username preview-lb-name">YourName</span>
+                    <span class="preview-lb-sub">#7B5CFF • Mythic</span>
+                  </div>
+                  <span class="lb-score preview-lb-score">9.8M</span>
                 </div>
-                <span class="preview-profile-name">YourName</span>
-                <div class="preview-profile-meta">
-                  <span>Rank</span>
-                  <span>30d</span>
+              {:else if item.slot === 'orb_shape'}
+                <div class="preview-orb-shape {item.css_type === 'class' ? item.css_value : ''}"></div>
+              {:else if item.slot === 'profile_border'}
+                <div class="preview-profile-card {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                  <div class="preview-profile-topline">
+                    <span class="preview-profile-badge">Featured</span>
+                    <span class="preview-profile-dot"></span>
+                  </div>
+                  <span class="preview-profile-name">YourName</span>
+                  <div class="preview-profile-meta">
+                    <span>Rank</span>
+                    <span>30d</span>
+                  </div>
                 </div>
-              </div>
-            {:else}
-              <div class="shop-preview-text">
-                {#if item.css_type === 'class'}
-                  {#if item.slot === 'frame'}
-                    <span class="profile-name-frame {item.css_value}">Username</span>
-                  {:else}
-                    <span class="{item.css_value}" data-text="Username">Username</span>
+              {:else}
+                <div class="shop-preview-text">
+                  {#if item.css_type === 'class'}
+                    {#if item.slot === 'frame'}
+                      <span class="profile-name-frame {item.css_value}">Username</span>
+                    {:else}
+                      <span class="{item.css_value}" data-text="Username">Username</span>
+                    {/if}
+                  {:else if item.css_type === 'style'}
+                    {#if item.slot === 'frame'}
+                      <span class="profile-name-frame" style="{item.css_value}">Username</span>
+                    {:else}
+                      <span style="{item.css_value}" data-text="Username">Username</span>
+                    {/if}
                   {/if}
-                {:else if item.css_type === 'style'}
-                  {#if item.slot === 'frame'}
-                    <span class="profile-name-frame" style="{item.css_value}">Username</span>
-                  {:else}
-                    <span style="{item.css_value}" data-text="Username">Username</span>
-                  {/if}
-                {/if}
-              </div>
+                </div>
+              {/if}
+            </div>
+
+            <h3>{item.name}</h3>
+            {#if item.collection}
+              <p class="item-collection">{item.collection}</p>
             {/if}
-          </div>
-
-          <h3>{item.name}</h3>
-          {#if item.collection}
-            <p class="item-collection">{item.collection}</p>
-          {/if}
-          <p class="item-summary">{getItemSummary(item)}</p>
-          {#if item.description && item.description !== getItemSummary(item)}
-            <p class="item-desc">{item.description}</p>
-          {/if}
-
-          <div class="item-footnote">
-            <span class="item-cost">{item.cost.toLocaleString()} EP</span>
-            <span class="state-pill muted">{getStateLabel(item)}</span>
-          </div>
-
-          <div class="shop-actions">
-            {#if equipped}
-              <button class="shop-btn equipped" type="button" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={!!loadingAction}>
-                {loadingUnequip ? 'Unequipping...' : 'Unequip'}
-              </button>
-            {:else if owned && item.slot !== 'consumable'}
-              <button class="shop-btn owned" type="button" on:click={() => handleAction(item.item_key, 'equip')} disabled={!!loadingAction}>
-                {loadingEquip ? 'Equipping...' : 'Equip'}
-              </button>
-            {:else if item.cost > 0 && affordable}
-              <button class="shop-btn" type="button" on:click={() => requestPurchase(item)} disabled={!!loadingAction}>
-                {loadingBuy ? 'Buying...' : 'Buy'}
-              </button>
-            {:else if item.cost <= 0}
-              <button class="shop-btn disabled" type="button" disabled>
-                🔒 Milestone Reward
-              </button>
-            {:else}
-              <button class="shop-btn disabled" type="button" disabled>
-                Not Enough EP
-              </button>
+            <p class="item-summary featured-summary">{getItemSummary(item)}</p>
+            {#if item.description && item.description !== getItemSummary(item)}
+              <p class="item-desc">{item.description}</p>
             {/if}
+
+            <div class="item-footnote">
+              <span class="item-cost">{item.cost.toLocaleString()} EP</span>
+              <span class="state-pill muted">{getStateLabel(item)}</span>
+            </div>
+
+            <div class="shop-actions">
+              {#if equipped}
+                <button class="shop-btn equipped" type="button" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={!!loadingAction}>
+                  {loadingUnequip ? 'Unequipping...' : 'Unequip'}
+                </button>
+              {:else if owned && item.slot !== 'consumable'}
+                <button class="shop-btn owned" type="button" on:click={() => handleAction(item.item_key, 'equip')} disabled={!!loadingAction}>
+                  {loadingEquip ? 'Equipping...' : 'Equip'}
+                </button>
+              {:else if item.cost > 0 && affordable}
+                <button class="shop-btn" type="button" on:click={() => requestPurchase(item)} disabled={!!loadingAction}>
+                  {loadingBuy ? 'Buying...' : 'Buy'}
+                </button>
+              {:else if item.cost <= 0}
+                <button class="shop-btn disabled" type="button" disabled>
+                  🔒 Milestone Reward
+                </button>
+              {:else}
+                <button class="shop-btn disabled" type="button" disabled>
+                  Not Enough EP
+                </button>
+              {/if}
+            </div>
           </div>
-        </div>
-      {/each}
-    </div>
+        {/each}
+      </div>
+    {/if}
   {/if}
 
   {#if utilityItems.length}
     <div class="shop-section-header utility-header">
       <div>
         <h3>Utility</h3>
-        <p>Consumables that affect streaks or rerolls. They are separated from cosmetics to keep the main catalog focused.</p>
+        <p>Consumables that affect streaks or rerolls. They stay in their own section so the cosmetic catalog remains clean.</p>
       </div>
       <span class="section-count">{utilityItems.length} item{utilityItems.length === 1 ? '' : 's'}</span>
     </div>
@@ -638,10 +887,82 @@
 
 <style>
   .shop-intro {
-    margin: -10px 0 18px 0;
-    color: var(--text-muted);
-    line-height: 1.5;
+    margin: 0;
+    color: #e2e8ff;
+    line-height: 1.6;
+    font-size: 0.95rem;
     max-width: 760px;
+  }
+
+  .shop-masthead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 4px 0 18px;
+    padding: 16px 18px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 18px;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .shop-masthead-copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .shop-hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .wallet-display {
+    padding: 12px 14px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    flex-shrink: 0;
+    min-width: 170px;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at top right, rgba(168, 85, 247, 0.12), transparent 42%),
+      rgba(255,255,255,0.02);
+  }
+
+  .wallet-label {
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .wallet-display strong {
+    color: #fff;
+    font-size: clamp(1.35rem, 2vw, 1.75rem);
+    font-weight: 700;
+    line-height: 1;
+    font-family: 'Space Grotesk', sans-serif;
   }
 
   .shop-toolbar {
@@ -655,13 +976,13 @@
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-    border-bottom: 1px solid var(--card-border);
-    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 2px 2px 14px;
   }
 
   .shop-tab,
   .sort-pill {
-    background: rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.04);
     border: 1px solid var(--card-border);
     color: var(--text-muted);
     padding: 8px 12px;
@@ -678,20 +999,23 @@
   .sort-pill:hover {
     background: rgba(255,255,255,0.08);
     color: #fff;
+    border-color: var(--card-border-hover);
   }
 
   .shop-tab.active,
   .sort-pill.active {
-    background: var(--accent-purple);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.92), rgba(168, 85, 247, 0.82));
     color: #fff;
-    border-color: var(--accent-purple);
+    border-color: rgba(168, 85, 247, 0.55);
+    box-shadow: 0 8px 18px rgba(139, 92, 246, 0.18);
   }
 
   .shop-sort {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    padding: 2px 0 2px;
   }
 
   .shop-sort > span {
@@ -712,7 +1036,11 @@
     align-items: flex-end;
     justify-content: space-between;
     gap: 16px;
-    margin: 10px 0 18px;
+    margin: 16px 0 18px;
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 18px;
   }
 
   .shop-section-header h3 {
@@ -755,6 +1083,84 @@
     font-size: 0.85rem;
   }
 
+  .owned-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .owned-control {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--card-border);
+    color: var(--text-muted);
+    padding: 8px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    min-height: 40px;
+  }
+
+  .owned-control:hover,
+  .owned-control:focus-visible {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
+
+  .owned-groups {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .owned-group {
+    background:
+      radial-gradient(circle at top right, rgba(168, 85, 247, 0.08), transparent 32%),
+      rgba(255,255,255,0.02);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  }
+
+  .owned-group-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 2px 2px 12px;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .owned-group-header h3 {
+    margin: 0 0 4px 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.05rem;
+  }
+
+  .owned-group-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .owned-group-chevron {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .owned-grid {
+    margin-bottom: 0;
+  }
+
   .shop-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -764,13 +1170,15 @@
 
   .featured-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
     margin-bottom: 22px;
   }
 
   .shop-item {
-    background: rgba(19, 20, 26, 0.95);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
+      rgba(19, 20, 26, 0.95);
     border: 1px solid var(--card-border);
     border-radius: 20px;
     padding: 18px;
@@ -778,10 +1186,17 @@
     flex-direction: column;
     min-width: 0;
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .shop-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--card-border-hover);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.24);
   }
 
   .featured-item {
-    padding: 16px;
+    padding: 15px;
   }
 
   .shop-item.is-equipped {
@@ -847,8 +1262,8 @@
   }
 
   .shop-preview-area {
-    height: 46px;
-    margin-bottom: 18px;
+    height: 52px;
+    margin-bottom: 16px;
     width: 100%;
     display: flex;
     align-items: center;
@@ -857,7 +1272,11 @@
   }
 
   .shop-preview-area-tall {
-    height: 72px;
+    height: 78px;
+  }
+
+  .shop-preview-area-roll-effect {
+    height: 132px;
   }
 
   .preview-bg {
@@ -870,13 +1289,40 @@
     box-sizing: border-box;
   }
 
-  .preview-roll-orb {
-    width: 32px;
-    height: 32px;
+  .preview-roll-stage {
+    position: relative;
+    width: 100%;
+    max-width: 220px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    isolation: isolate;
+  }
+
+  .preview-roll-backdrop {
+    position: absolute;
+    inset: 10px 14px;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at center, rgba(255,255,255,0.12), rgba(255,255,255,0.02) 34%, transparent 68%),
+      linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    filter: blur(1px);
+    opacity: 0.9;
+  }
+
+  .preview-roll-core {
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     background: #333;
     border: 1px solid var(--card-border);
     position: relative;
+    z-index: 1;
+    box-shadow:
+      0 0 0 6px rgba(255,255,255,0.02),
+      0 0 24px rgba(255,255,255,0.08);
   }
 
   .preview-lb-row {
@@ -979,6 +1425,18 @@
     font-weight: 700;
   }
 
+  .shop-preview-text {
+    width: 100%;
+    min-height: 52px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
   .utility-preview {
     width: 100%;
     min-height: 68px;
@@ -1020,8 +1478,9 @@
   .shop-item h3 {
     margin: 0;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 1rem;
+    font-size: 0.97rem;
     color: #fff;
+    line-height: 1.2;
   }
 
   .item-collection {
@@ -1036,9 +1495,17 @@
 
   .item-summary {
     color: #dbe4ff;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     line-height: 1.45;
-    margin: 8px 0 6px;
+    margin: 6px 0 8px;
+  }
+
+  .featured-summary {
+    min-height: 3.1em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .item-desc {
@@ -1071,20 +1538,22 @@
 
   .shop-btn {
     flex: 1;
-    border: 0;
+    border: 1px solid transparent;
     border-radius: 12px;
     padding: 12px 14px;
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 700;
     cursor: pointer;
-    background: var(--accent-purple);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.92), rgba(168, 85, 247, 0.86));
     color: #fff;
-    transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
+    transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease, border-color 0.2s ease;
     min-height: 44px;
+    box-shadow: 0 10px 18px rgba(139, 92, 246, 0.15);
   }
 
   .shop-btn:hover:not(:disabled) {
     transform: translateY(-1px);
+    border-color: rgba(255,255,255,0.12);
   }
 
   .shop-btn:disabled {
@@ -1094,7 +1563,7 @@
   }
 
   .shop-btn.owned {
-    background: rgba(59, 130, 246, 0.16);
+    background: rgba(59, 130, 246, 0.14);
     color: #bfdbfe;
   }
 
@@ -1136,7 +1605,9 @@
 
   .purchase-modal-content {
     width: min(560px, 100%);
-    background: #16171f;
+    background:
+      radial-gradient(circle at top right, rgba(168, 85, 247, 0.12), transparent 42%),
+      linear-gradient(180deg, rgba(22, 23, 31, 0.98), rgba(17, 18, 25, 0.98));
     border: 1px solid var(--card-border);
     border-radius: 20px;
     padding: 24px;
@@ -1221,12 +1692,35 @@
   }
 
   @media (max-width: 900px) {
+    .shop-masthead {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .wallet-display {
+      align-items: flex-start;
+      min-width: 0;
+    }
+
+    .featured-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .purchase-stats {
       grid-template-columns: 1fr;
     }
   }
 
   @media (max-width: 600px) {
+    .shop-masthead {
+      padding: 14px;
+      gap: 12px;
+    }
+
+    .shop-intro {
+      font-size: 0.9rem;
+    }
+
     .shop-tabs {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
@@ -1243,9 +1737,14 @@
       flex: 0 0 auto;
     }
 
+    .shop-sort {
+      align-items: flex-start;
+    }
+
     .shop-section-header {
       align-items: flex-start;
       flex-direction: column;
+      padding: 14px 14px 15px;
     }
 
     .shop-grid {
@@ -1257,8 +1756,42 @@
     }
 
     .shop-item {
-      padding: 16px 14px;
+      padding: 15px 14px;
       border-radius: 18px;
+    }
+
+    .shop-item-meta {
+      margin-bottom: 12px;
+    }
+
+    .shop-preview-area {
+      height: 48px;
+    }
+
+    .shop-preview-area-tall {
+      height: 70px;
+    }
+
+    .shop-preview-area-roll-effect {
+      height: 112px;
+    }
+
+    .preview-roll-stage {
+      max-width: 190px;
+    }
+
+    .preview-roll-backdrop {
+      inset: 12px 20px;
+    }
+
+    .preview-roll-core {
+      width: 36px;
+      height: 36px;
+    }
+
+    .wallet-display p {
+      text-align: left;
+      max-width: none;
     }
 
     .shop-item h3 {

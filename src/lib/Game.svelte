@@ -682,7 +682,9 @@
     <div class="card">
       <div class="results-header results-header-tight">
         <!-- FIX: Applied orbEff.cls to the rolling orb -->
-        <div class="final-color-display {orbEff.cls}" style="background-color: {displayColor};"></div>
+        <div class="roll-effect-wrapper {rollEff.cls}" style="{rollEff.style}">
+          <div class="final-color-display rarity-{rarity} {orbEff.cls}" style="background-color: {displayColor};"></div>
+        </div>
         <div class="rolling-hex">{displayHex}</div>
       </div>
       <div class="scan-container">

@@ -1,4 +1,6 @@
 <script>
+  import { RANKS } from './ranks';
+
   const rollSteps = [
     {
       icon: '🎲',
@@ -110,6 +112,15 @@
     { href: '/?view=shop', label: 'Browse Shop' },
     { href: '/?view=leaderboard&tab=today', label: 'View Leaderboard' }
   ];
+
+  const rankNotes = {
+    Bronze: 'Starting rank. A new account begins here.',
+    Silver: 'A steady starter who has built a solid EP base.',
+    Gold: 'A strong midgame rank with visible momentum.',
+    Platinum: 'A high-EP account with consistent progress.',
+    Diamond: 'A very high lifetime-EP account.',
+    Chroma: 'The top tier. You have reached the current cap.'
+  };
 </script>
 
 <svelte:head>
@@ -245,6 +256,48 @@
         <p class="panel-value">Unlock, equip, and express your style.</p>
         <p class="panel-copy">The shop is built around customization and presentation.</p>
       </div>
+    </div>
+  </section>
+
+  <section class="card guide-section">
+    <div class="section-head">
+      <p class="section-kicker">Ranks</p>
+      <h2>Lifetime EP ladder</h2>
+    </div>
+    <div class="info-split">
+      <div>
+        <p class="section-note">
+          Ranks are based on lifetime EP earned across your account. Spending EP in the shop does
+          not lower your rank.
+        </p>
+        <p class="section-note section-note-tight">
+          If your profile says Diamond, that means your account has crossed the Diamond threshold
+          for total lifetime EP.
+        </p>
+      </div>
+      <div class="info-panel">
+        <p class="panel-label">How to read it</p>
+        <p class="panel-value">More lifetime EP means a higher rank.</p>
+        <p class="panel-copy">Your current rank and progress to the next one appear on your profile.</p>
+      </div>
+    </div>
+
+    <div class="rank-grid">
+      {#each RANKS as rank, index (rank.name)}
+        <article class="rank-card">
+          <div class="rank-swatch" style="background: {rank.color};"></div>
+          <div class="rank-copy">
+            <div class="rank-header">
+              <h3>{rank.name}</h3>
+              <span>{rank.min.toLocaleString()}+ EP</span>
+            </div>
+            <p>{rankNotes[rank.name]}</p>
+            {#if index === RANKS.length - 1}
+              <div class="rank-cap-pill">Current cap</div>
+            {/if}
+          </div>
+        </article>
+      {/each}
     </div>
   </section>
 
@@ -501,6 +554,12 @@
     gap: 0.85rem;
   }
 
+  .rank-grid {
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 0.9rem;
+  }
+
   .rarity-card {
     display: grid;
     grid-template-columns: 86px minmax(0, 1fr);
@@ -508,12 +567,31 @@
     overflow: hidden;
   }
 
+  .rank-card {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    align-items: stretch;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
   .rarity-swatch {
     min-height: 100%;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
   }
 
+  .rank-swatch {
+    min-height: 100%;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  }
+
   .rarity-copy {
+    padding: 0.95rem 1rem;
+  }
+
+  .rank-copy {
     padding: 0.95rem 1rem;
   }
 
@@ -530,6 +608,48 @@
     font-size: 0.85rem;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
+  }
+
+  .rank-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .rank-header span {
+    color: var(--accent-purple);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  .rank-header h3 {
+    margin: 0;
+  }
+
+  .rank-copy p {
+    margin: 0;
+  }
+
+  .rank-copy p + .rank-cap-pill {
+    margin-top: 0.65rem;
+  }
+
+  .rank-cap-pill {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(161, 92, 255, 0.14);
+    color: #d9c9ff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .info-split,
@@ -617,7 +737,15 @@
       grid-template-columns: 1fr;
     }
 
+    .rank-card {
+      grid-template-columns: 1fr;
+    }
+
     .rarity-swatch {
+      min-height: 26px;
+    }
+
+    .rank-swatch {
       min-height: 26px;
     }
   }
