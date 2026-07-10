@@ -560,22 +560,25 @@
         <p class="challenge-kicker">Challenge</p>
         <h2>
           {#if challengeData.loading}
-            Loading challenge...
+            Opening challenge
           {:else if challengeData.error}
             Challenge unavailable
           {:else}
             Beat this roll
           {/if}
         </h2>
+        {#if challengeData.fromUsername && !challengeData.loading}
+          <p class="challenge-source">From {challengeData.fromUsername}</p>
+        {/if}
         <p class="challenge-text">
           {#if challengeData.loading}
             Checking the shared link.
           {:else if challengeData.error}
-            This challenge may have expired or been removed.
+            This link may have expired or been removed.
           {:else if challengeData.fromUsername}
-            Shared by {challengeData.fromUsername}. Roll closer to the target color for a stronger result.
+            Roll as close as you can to the target color.
           {:else}
-            A rival shared a target color. Roll closer to it for a stronger result.
+            Roll as close as you can to the target color.
           {/if}
         </p>
       </div>
@@ -583,7 +586,7 @@
         {#if challengeData.loading}
           <div class="challenge-stat challenge-stat-loading">
             <div>
-              <p class="challenge-score">Loading...</p>
+              <p class="challenge-score">Loading</p>
               <p class="challenge-subtext">Challenge link</p>
             </div>
           </div>
@@ -609,7 +612,7 @@
           aria-label="Dismiss challenge"
           on:click={clearChallengeState}
         >
-          Dismiss
+          Close
         </button>
       </div>
     </section>
@@ -862,6 +865,14 @@
     font-size: 1.05rem;
     color: #fff;
   }
+  .challenge-source {
+    margin: 0;
+    color: #fff;
+    font-size: 0.84rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    opacity: 0.95;
+  }
   .challenge-text {
     margin: 0;
     color: var(--text-muted);
@@ -883,6 +894,11 @@
     border-radius: 14px;
     background: rgba(0,0,0,0.18);
     border: 1px solid rgba(255,255,255,0.07);
+  }
+  .challenge-stat-loading,
+  .challenge-stat-error {
+    min-width: 220px;
+    justify-content: flex-start;
   }
   .challenge-color {
     width: 40px;
@@ -1093,6 +1109,15 @@
       padding: 0.9rem;
       margin: 0 auto 12px;
       gap: 0.85rem;
+    }
+    .challenge-meta {
+      justify-content: stretch;
+    }
+    .challenge-stat,
+    .challenge-stat-loading,
+    .challenge-stat-error {
+      width: 100%;
+      justify-content: flex-start;
     }
     .challenge-close {
       width: 100%;

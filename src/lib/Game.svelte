@@ -92,8 +92,6 @@
   }
 
   async function shareResultsText() {
-      let badgeText = rollBadges.length > 0 ? rollBadges.map(b => getBadgeMeta(b).name).join(', ') : 'None';
-      let achText = earnedAchievements.length > 0 ? earnedAchievements.map(b => getBadgeMeta(b).name).join(', ') : 'None';
       const shareHex = normalizeHexColor(displayColor);
       const hexNoHash = shareHex.substring(1);
       const senderUsername = $profile?.username || $authUser?.user_metadata?.username || null;
@@ -112,7 +110,7 @@
           shareUrl = `${window.location.origin}?challenge=${score}&hex=${hexNoHash}&from=${encodeURIComponent(senderUsername)}`;
       }
 
-      let shareString = `🎲 ChromaDie Daily Roll\nHex: ${shareHex}\nScore: ${score.toLocaleString()} pts\nRarity: ${rarity}\nConditions: ${badgeText}\nAchievements: ${achText}\n\nCan you beat my color? Roll yours here: ${shareUrl}`;
+      let shareString = `🎲 ChromaDie Daily Roll\n${shareHex} • ${score.toLocaleString()} pts • ${rarity}\nChallenge me: ${shareUrl}`;
 
       try {
           await navigator.clipboard.writeText(shareString);
