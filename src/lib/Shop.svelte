@@ -1,5 +1,5 @@
 <script>
-  import { shopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards, profile } from './stores';
+  import { shopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards, profile, session, fetchInventoryState, refreshProfileState, fetchWalletBalance } from './stores';
   import { supabase } from './supabase';
 
   let loadingAction = null;
@@ -64,7 +64,7 @@
         return 'Styles your leaderboard row for everyone to see.';
       case 'consumable':
         if (item.item_key === 'streak_freeze') {
-          return 'Protects your streak if you miss a day.';
+          return 'Auto-applies if you miss one day and protects that streak.';
         }
         if (item.item_key === 'reroll_shard') {
           return 'Gives you one reroll for a daily color result.';
@@ -164,9 +164,23 @@
             } else {
               userInventory.update(inv => [...inv, itemKey]);
             }
+            if ($session?.user?.id) {
+              await Promise.all([
+                refreshProfileState(),
+                fetchInventoryState($session.user.id),
+                fetchWalletBalance()
+              ]);
+            }
             addToast(`Purchased ${item.name}.`, 'success');
           } else {
             userInventory.update(inv => [...inv, itemKey]);
+            if ($session?.user?.id) {
+              await Promise.all([
+                refreshProfileState(),
+                fetchInventoryState($session.user.id),
+                fetchWalletBalance()
+              ]);
+            }
             addToast(`Purchased ${item.name} and equipped it.`, 'success');
             await handleAction(itemKey, 'equip', null, true);
           }
@@ -532,8 +546,9 @@
                 <span>+1 reroll</span>
                 <strong>{count} owned</strong>
               {:else if item.item_key === 'streak_freeze'}
-                <span>Protect a streak</span>
+                <span>Auto-protects a streak</span>
                 <strong>{count} owned</strong>
+                <span class="utility-note">No button needed. It is used automatically if you miss one day and come back on the next roll.</span>
               {:else}
                 <span>Utility item</span>
                 <strong>{count} owned</strong>
@@ -966,7 +981,9 @@
 
   .utility-preview {
     width: 100%;
-    height: 46px;
+    min-height: 68px;
+    height: auto;
+    padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid var(--card-border);
     background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
@@ -983,6 +1000,15 @@
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+  }
+
+  .utility-note {
+    color: var(--text-muted);
+    font-size: 0.64rem;
+    line-height: 1.25;
+    text-transform: none !important;
+    letter-spacing: 0;
+    max-width: 24ch;
   }
 
   .utility-preview strong {

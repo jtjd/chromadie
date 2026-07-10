@@ -95,7 +95,7 @@ export async function loadShopItems() {
 
     const { data } = await supabase
     .from('shop_items')
-    .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection')
+    .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection, stackable')
     .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
     .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
 
