@@ -1,6 +1,6 @@
 <script>
   import { supabase } from './supabase';
-  import { session, authInitialized, fetchWalletBalance, rerollShards, equippedItems, isAuthenticated } from './stores';
+  import { session, authInitialized, fetchWalletBalance, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
@@ -30,7 +30,6 @@
   let showImageModal = false;
   let imagePreviewUrl = '';
   let imageCopied = false;
-  let canvas;
   let imageDialog = null;
   let imageOpener = null;
   let guestProgressRestored = false;
@@ -278,67 +277,139 @@
     }
   }
 
-  async function generateShareImage() {
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const W = 600;
-    const H = 315;
+  async function buildShareCardCanvas() {
+    if (typeof document === 'undefined') return null;
 
+    if (document.fonts?.ready) {
+      try {
+        await document.fonts.ready;
+      } catch {
+        // Font loading failure should not block image generation.
+      }
+    }
+
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = 1200;
+    exportCanvas.height = 630;
+    const ctx = exportCanvas.getContext('2d');
+    if (!ctx) return null;
+
+    const W = exportCanvas.width;
+    const H = exportCanvas.height;
+    const scoreText = Number(score || 0).toLocaleString();
+    const cardColor = normalizeHexColor(displayColor || '#222222');
+
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#0a0a0d';
     ctx.fillRect(0, 0, W, H);
 
-    const gradient = ctx.createLinearGradient(0, 0, W, 0);
-    gradient.addColorStop(0, '#ff4d4d');
-    gradient.addColorStop(0.2, '#ffab2e');
-    gradient.addColorStop(0.4, '#ffe14d');
-    gradient.addColorStop(0.6, '#6ee787');
-    gradient.addColorStop(0.8, '#4d7dff');
-    gradient.addColorStop(1, '#a15cff');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, W, 4);
+    const backdrop = ctx.createLinearGradient(0, 0, W, H);
+    backdrop.addColorStop(0, 'rgba(139, 124, 246, 0.18)');
+    backdrop.addColorStop(0.55, 'rgba(10, 10, 13, 0.15)');
+    backdrop.addColorStop(1, 'rgba(46, 211, 201, 0.10)');
+    ctx.fillStyle = backdrop;
+    ctx.fillRect(0, 0, W, H);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 28px "Space Grotesk", sans-serif';
-    ctx.fillText('🎲 ChromaDie', 20, 50);
+    const accent = ctx.createLinearGradient(0, 0, W, 0);
+    accent.addColorStop(0, '#ff4d4d');
+    accent.addColorStop(0.2, '#ffab2e');
+    accent.addColorStop(0.4, '#ffe14d');
+    accent.addColorStop(0.6, '#6ee787');
+    accent.addColorStop(0.8, '#4d7dff');
+    accent.addColorStop(1, '#a15cff');
+    ctx.fillStyle = accent;
+    ctx.fillRect(0, 0, W, 10);
 
-    ctx.shadowColor = displayColor;
-    ctx.shadowBlur = 30;
-    ctx.fillStyle = displayColor;
+    const cardX = 56;
+    const cardY = 56;
+    const cardW = 1088;
+    const cardH = 518;
+    const radius = 34;
+
     ctx.beginPath();
-    ctx.arc(150, 160, 70, 0, Math.PI * 2);
+    ctx.moveTo(cardX + radius, cardY);
+    ctx.arcTo(cardX + cardW, cardY, cardX + cardW, cardY + cardH, radius);
+    ctx.arcTo(cardX + cardW, cardY + cardH, cardX, cardY + cardH, radius);
+    ctx.arcTo(cardX, cardY + cardH, cardX, cardY, radius);
+    ctx.arcTo(cardX, cardY, cardX + cardW, cardY, radius);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(15, 16, 22, 0.92)';
     ctx.fill();
-    ctx.shadowBlur = 0;
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
     ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.stroke();
 
-    ctx.fillStyle = '#e0e0e0';
-    ctx.font = 'bold 24px "JetBrains Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(displayColor, 150, 270);
-
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px "Space Grotesk", sans-serif';
+    ctx.font = '700 44px "Space Grotesk", sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(score.toLocaleString(), 280, 160);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('ChromaDie', 96, 132);
 
     ctx.fillStyle = '#767b8c';
-    ctx.font = '16px "Inter", sans-serif';
-    ctx.fillText('Entropy Points', 280, 185);
+    ctx.font = '600 20px "Inter", sans-serif';
+    ctx.fillText('Daily Roll', 96, 164);
 
-    const rarityColors = { 'Mythic': '#f1c40f', 'Epic': '#a15cff', 'Rare': '#3b82f6', 'Uncommon': '#10b981', 'Common': '#fff', 'Trash': '#767b8c' };
-    ctx.fillStyle = rarityColors[rarity] || '#fff';
-    ctx.font = 'bold 20px "Space Grotesk", sans-serif';
-    ctx.fillText(rarity.toUpperCase(), 280, 220);
+    ctx.shadowColor = cardColor;
+    ctx.shadowBlur = 38;
+    ctx.fillStyle = cardColor;
+    ctx.beginPath();
+    ctx.arc(262, 326, 118, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(255,255,255,0.24)';
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#e0e0e0';
+    ctx.font = '700 28px "JetBrains Mono", monospace';
+    ctx.fillText(cardColor.toUpperCase(), 262, 482);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 92px "Space Grotesk", sans-serif';
+    ctx.fillText(scoreText, 460, 320);
 
     ctx.fillStyle = '#767b8c';
-    ctx.font = '14px "Inter", sans-serif';
-    ctx.fillText('Can you beat my color?', 280, 270);
+    ctx.font = '500 24px "Inter", sans-serif';
+    ctx.fillText('Entropy Points', 460, 368);
+
+    const rarityColors = {
+      Mythic: '#f1c40f',
+      Epic: '#a15cff',
+      Rare: '#3b82f6',
+      Uncommon: '#10b981',
+      Common: '#ffffff',
+      Trash: '#767b8c'
+    };
+    ctx.fillStyle = rarityColors[rarity] || '#ffffff';
+    ctx.font = '700 30px "Space Grotesk", sans-serif';
+    ctx.fillText((rarity || 'Common').toUpperCase(), 460, 420);
+
+    ctx.fillStyle = '#767b8c';
+    ctx.font = '500 22px "Inter", sans-serif';
+    ctx.fillText('Can you beat my color?', 460, 476);
+
     ctx.fillStyle = '#8b7cf6';
-    ctx.fillText('chromadie.pages.dev', 280, 295);
+    ctx.font = '600 18px "Inter", sans-serif';
+    ctx.fillText('chromadie.pages.dev', 460, 514);
 
-    imagePreviewUrl = canvas.toDataURL('image/png');
+    ctx.restore();
+    return exportCanvas;
+  }
+
+  async function canvasToBlob(canvasEl) {
+    return await new Promise(resolve => {
+      canvasEl.toBlob(blob => resolve(blob), 'image/png');
+    });
+  }
+
+  async function generateShareImage() {
+    const exportCanvas = await buildShareCardCanvas();
+    if (!exportCanvas) return;
+
+    imagePreviewUrl = exportCanvas.toDataURL('image/png');
     imageCopied = false;
     showImageModal = true;
     imageOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -347,25 +418,28 @@
   }
 
   async function copyImageToClipboard() {
-    if (!canvas) return;
+    const exportCanvas = await buildShareCardCanvas();
+    if (!exportCanvas) return;
 
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
+    const blob = await canvasToBlob(exportCanvas);
+    if (!blob) return;
 
-      try {
-        if (navigator.clipboard && window.ClipboardItem) {
-          const item = new ClipboardItem({ 'image/png': blob });
-          await navigator.clipboard.write([item]);
-          imageCopied = true;
-          setTimeout(() => imageCopied = false, 2000);
-        } else {
-          throw new Error('Clipboard API not supported');
-        }
-      } catch (err) {
-        console.error('Clipboard write failed', err);
-        imageCopied = false;
+    try {
+      if (navigator.clipboard?.write && window.ClipboardItem) {
+        const item = new ClipboardItem({ 'image/png': blob });
+        await navigator.clipboard.write([item]);
+        imageCopied = true;
+        addToast('Image copied to clipboard.', 'success');
+        setTimeout(() => imageCopied = false, 2000);
+        return;
       }
-    }, 'image/png');
+
+      throw new Error('Image clipboard is not supported in this browser.');
+    } catch (err) {
+      console.error('Clipboard write failed', err);
+      addToast('Could not copy the share image in this browser.', 'error');
+      imageCopied = false;
+    }
   }
 
   async function closeImageModal() {
@@ -529,9 +603,6 @@
     }
   });
 </script>
-
-<!-- Hidden Canvas for Image Generation -->
-<canvas bind:this={canvas} width="600" height="315" style="display: none;"></canvas>
 
 <!-- Image Preview Modal -->
 {#if showImageModal}
