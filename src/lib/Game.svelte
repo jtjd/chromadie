@@ -1,6 +1,6 @@
 <script>
   import { supabase } from './supabase';
-  import { session, authInitialized, fetchWalletBalance, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
+  import { session, authInitialized, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
@@ -566,7 +566,11 @@
       saveGuestRoll(rollData);
       guestProgressRestored = true;
     } else {
-      fetchWalletBalance();
+      await Promise.all([
+        refreshProfileState(),
+        fetchInventoryState($session.user.id),
+        fetchWalletBalance()
+      ]);
     }
 
     rerollRequestInFlight = false;

@@ -107,11 +107,48 @@ export async function loadShopItems() {
     }
 }
 
+function expandInventoryRows(rows) {
+    const items = []
+    for (const row of rows || []) {
+        const quantity = Math.max(1, Number(row?.quantity) || 1)
+        for (let i = 0; i < quantity; i += 1) {
+            items.push(row.item_key)
+        }
+    }
+    return items
+}
+
 export async function fetchWalletBalance() {
     const { data } = await supabase.rpc('get_wallet_balance')
     if (data !== null) {
         walletBalance.set(data)
     }
+}
+
+export async function fetchInventoryState(userId) {
+    if (!userId) return []
+
+    const { data } = await supabase
+        .from('inventory')
+        .select('item_key, quantity')
+        .eq('user_id', userId)
+
+    const items = expandInventoryRows(data)
+    userInventory.set(items)
+    return items
+}
+
+export async function refreshProfileState() {
+    const { data, error } = await supabase.rpc('get_my_profile')
+    if (error || !data || data.success === false) {
+        return null
+    }
+
+    profile.set(data)
+    equippedItems.set(data.equipped_cosmetics || {})
+    rerollShards.set(data.reroll_shards || 0)
+    equippedBadges.set(data.equipped_badges || [])
+    return data
 }
 
 // NEW: Global Toggle Follow function
@@ -156,7 +193,7 @@ supabase.auth.onAuthStateChange(async (eventName, currentSession) => {
                 supabase.rpc('get_my_profile'),
                 supabase
                     .from('inventory')
-                    .select('item_key')
+                    .select('item_key, quantity')
                     .eq('user_id', currentSession.user.id),
                 supabase.rpc('get_wallet_balance')
             ]);
@@ -176,7 +213,7 @@ supabase.auth.onAuthStateChange(async (eventName, currentSession) => {
                 equippedBadges.set(prof.equipped_badges || [])
             }
 
-            if (inv) userInventory.set(inv.map(i => i.item_key))
+            if (inv) userInventory.set(expandInventoryRows(inv))
 
                 if (wallet !== null) {
                     walletBalance.set(wallet)
