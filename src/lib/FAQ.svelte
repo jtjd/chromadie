@@ -108,8 +108,7 @@
   const quickLinks = [
     { href: '/?view=game', label: 'Start Rolling' },
     { href: '/?view=shop', label: 'Browse Shop' },
-    { href: '/?view=leaderboard&tab=today', label: 'View Leaderboard' },
-    { href: '/?view=profile', label: 'Open Profile' }
+    { href: '/?view=leaderboard&tab=today', label: 'View Leaderboard' }
   ];
 </script>
 

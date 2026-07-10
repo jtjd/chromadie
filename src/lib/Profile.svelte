@@ -1,6 +1,6 @@
 <script>
   import { supabase } from './supabase';
-  import { session, equippedBadges, addToast, followedUsers, toggleFollow, isAuthenticated } from './stores';
+  import { session, profile, authUser, equippedBadges, addToast, followedUsers, toggleFollow, isAuthenticated } from './stores';
   import { getNameEffect, getFrameEffect, getTitleText, getProfileBg, getProfileBorder, getLbTheme } from './cosmetics';
   import { getRank } from './ranks';
   import { formatCount, getTodayString } from './utils';
@@ -9,6 +9,7 @@
   import { afterUpdate, createEventDispatcher } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
 
+  export let profileUsername = null;
   export let userId = null;
   const dispatch = createEventDispatcher();
 
@@ -28,7 +29,7 @@
   let deleteError = '';
   let deleteNotice = '';
   let loadRequestId = 0;
-  let activeProfileId = null;
+  let activeProfileKey = null;
   let followedSignature = '';
 
   $: pinnedAchievements = targetProfile?.equipped_badges
@@ -144,22 +145,29 @@
   }
 
   function syncProfileData() {
-    const nextProfileId = userId || $session?.user.id || null;
+    const currentUsername = $profile?.username || $authUser?.user_metadata?.username || '';
+    const nextProfileKey = profileUsername
+      ? `username:${profileUsername}:${currentUsername}`
+      : userId
+        ? `id:${userId}`
+        : $isAuthenticated
+          ? `self:${$session?.user.id}:${currentUsername}`
+          : null;
 
-    if (nextProfileId !== activeProfileId) {
-      activeProfileId = nextProfileId;
+    if (nextProfileKey !== activeProfileKey) {
+      activeProfileKey = nextProfileKey;
 
-      if (!nextProfileId) {
+      if (!nextProfileKey) {
         resetProfileState();
         return;
       }
 
       resetProfileState();
-      void loadProfileData(nextProfileId);
+      void loadProfileData();
       return;
     }
 
-    if (!nextProfileId) {
+    if (!nextProfileKey) {
       resetProfileState();
       return;
     }
@@ -196,24 +204,31 @@
     rivalsData = data || [];
   }
 
-  async function loadProfileData(id) {
+  async function loadProfileData() {
     const requestId = ++loadRequestId;
     loading = true;
-    const viewingOwnProfile = $isAuthenticated && id === $session?.user.id;
+    const lookupUsername = profileUsername?.trim() || '';
+    const lookupId = userId || null;
+    const currentUsername = $profile?.username || $authUser?.user_metadata?.username || '';
+    const viewingOwnProfile = $isAuthenticated && (
+      (!lookupUsername && (!lookupId || lookupId === $session?.user.id)) ||
+      (lookupUsername && currentUsername && lookupUsername === currentUsername)
+    );
+    let profileId = lookupId;
 
     const { data: prof, error: profError } = viewingOwnProfile
       ? await supabase.rpc('get_my_profile')
       : await supabase
           .from('profiles')
           .select('id, username, current_streak, longest_streak, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity')
-          .eq('id', id)
-          .single();
+          .eq(lookupUsername ? 'username' : 'id', lookupUsername || lookupId)
+          .maybeSingle();
 
     if (requestId !== loadRequestId) return;
 
     if (prof && prof.success !== false) {
       targetProfile = prof;
-      const profileId = prof.id || id;
+      profileId = prof.id || lookupId;
 
       if (viewingOwnProfile) {
         const { count } = await supabase
@@ -252,7 +267,7 @@
     if (ach) allAchievements = ach;
 
     if (viewingOwnProfile) {
-      const { data: unlocked } = await supabase.from('user_achievements').select('achievement_id, count').eq('user_id', id);
+      const { data: unlocked } = await supabase.from('user_achievements').select('achievement_id, count').eq('user_id', profileId);
       if (requestId !== loadRequestId) return;
       if (unlocked) {
         const map = {};
@@ -274,16 +289,16 @@
   $: bgEff = getProfileBg(cosmetics);
   $: borderEff = getProfileBorder(cosmetics);
   $: username = targetProfile?.username || 'Unknown Player';
-  $: isOwnProfile = $isAuthenticated && (!userId || userId === $session?.user.id);
+  $: isOwnProfile = $isAuthenticated && targetProfile?.id === $session?.user.id;
   $: bestRoll = targetScores.length > 0 ? targetScores.reduce((max, s) => s.score > max.score ? s : max, targetScores[0]) : null;
-  $: isFollowed = $followedUsers.includes(userId);
+  $: isFollowed = $followedUsers.includes(targetProfile?.id);
 
   $: moodStyle = targetProfile?.mood_color
     ? `background-image: radial-gradient(circle at top right, ${targetProfile.mood_color}33, transparent 60%);`
     : '';
 
-  function viewProfile(targetId) {
-    dispatch('navigate', { view: 'profile', userId: targetId });
+  function viewProfile(targetUsername, targetId = null) {
+    dispatch('navigate', { view: 'profile', username: targetUsername, userId: targetId });
   }
 
   function getProgress(achId) {
@@ -370,7 +385,7 @@
                 type="button"
                 class="rival-action-btn {isFollowed ? 'unfollow' : 'follow'}"
                 aria-label={isFollowed ? `Remove ${username} from rivals` : `Add ${username} as a rival`}
-                on:click={() => toggleFollow(userId)}
+                on:click={() => toggleFollow(targetProfile?.id)}
               >
                 {#if isFollowed}✖ Unfollow{:else}+ Add Rival{/if}
               </button>
@@ -481,7 +496,7 @@
               {@const rivalLbTheme = getLbTheme(rival.equipped_cosmetics)}
 
               <div class="rival-row {rivalLbTheme.cls}" style="{rivalLbTheme.style}">
-                <button type="button" class="rival-profile-btn lb-username" on:click={() => viewProfile(rival.user_id)}>
+                <button type="button" class="rival-profile-btn lb-username" on:click={() => viewProfile(rival.username, rival.user_id)}>
                   {#if rivalTitleTxt}
                     <span class="title-chip">[{rivalTitleTxt}]</span>
                   {/if}

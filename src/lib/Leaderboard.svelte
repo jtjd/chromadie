@@ -117,8 +117,8 @@
     fetchLeaderboard();
   }
 
-  function viewProfile(userId) {
-    dispatch('navigate', { view: 'profile', userId });
+  function viewProfile(username, userId = null) {
+    dispatch('navigate', { view: 'profile', username, userId });
   }
 
   onMount(() => {
@@ -162,7 +162,7 @@
               type="button"
               class="lb-username-button"
               aria-label={`View profile for ${row.username}`}
-              on:click={() => viewProfile(row.user_id)}
+              on:click={() => viewProfile(row.username, row.user_id)}
             >
               <span class="lb-username {nameEff.cls}" style="{nameEff.style}" data-text={row.username}>
                 {row.username}

@@ -29,6 +29,7 @@
   let authDialog = null;
   let authOpener = null;
   let mobileMenuOpen = false;
+  let selectedProfileUsername = null;
 
   supabase.auth.getSession().then(({ data }) => session.set(data.session));
 
@@ -41,6 +42,14 @@
     const cScore = params.get('challenge');
     const cHex = params.get('hex');
     const isValidChallengeHex = /^[0-9A-Fa-f]{6}$/.test(cHex || '');
+    const profileMatch = rawPath.match(/^\/u\/([^/]+)$/);
+    const decodePathSegment = value => {
+      try {
+        return decodeURIComponent(value);
+      } catch {
+        return value;
+      }
+    };
 
     if (rawPath === '/auth/callback') {
       routeMode = 'auth-callback';
@@ -54,9 +63,16 @@
       routeMode = 'app';
     }
 
-    view = VALID_VIEWS.has(routeView) ? routeView : 'game';
+    if (profileMatch) {
+      view = 'profile';
+      selectedProfileUsername = decodePathSegment(profileMatch[1]);
+      selectedUserId.set(null);
+    } else {
+      view = VALID_VIEWS.has(routeView) ? routeView : 'game';
+      selectedProfileUsername = null;
+      selectedUserId.set(routeMode === 'app' ? routeProfileId || null : null);
+    }
     leaderboardTab = VALID_LEADERBOARD_TABS.has(routeTab) ? routeTab : 'today';
-    selectedUserId.set(routeMode === 'app' ? routeProfileId || null : null);
 
     if (cScore && isValidChallengeHex) {
       const parsedScore = Number.parseInt(cScore, 10);
@@ -69,6 +85,21 @@
   function syncRoute() {
     if (typeof window === 'undefined') return;
     if (!VALID_APP_ROUTES.has(routeMode) || routeMode !== 'app') return;
+
+    const currentProfileUsername = $profile?.username || $authUser?.user_metadata?.username || null;
+    if (view === 'profile') {
+      const routeUsername = selectedProfileUsername
+        || ($selectedUserId && $session?.user?.id && $selectedUserId === $session.user.id ? currentProfileUsername : null)
+        || (!$selectedUserId ? currentProfileUsername : null);
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+      if (routeUsername) {
+        const nextUrl = `/u/${encodeURIComponent(routeUsername)}`;
+        if (nextUrl !== currentUrl) {
+          window.history.pushState({}, '', nextUrl);
+        }
+        return;
+      }
+    }
 
     const params = new SvelteURLSearchParams();
     if (view !== 'game') params.set('view', view);
@@ -107,8 +138,10 @@
     }
 
     if (nextView === 'profile') {
+      selectedProfileUsername = options.username || options.profileUsername || $profile?.username || $authUser?.user_metadata?.username || null;
       selectedUserId.set(options.userId || null);
     } else {
+      selectedProfileUsername = null;
       selectedUserId.set(null);
     }
 
@@ -152,6 +185,7 @@
     clearUserState();
     session.set(null);
     selectedUserId.set(null);
+    selectedProfileUsername = null;
     closeMobileMenu();
     void supabase.auth.signOut();
     setRoute('game');
@@ -161,7 +195,11 @@
     if (routeMode === 'app' && view === 'game' && challengeData && newView !== 'game') {
       clearChallengeState();
     }
-    setRoute(newView);
+    if (newView === 'profile') {
+      setRoute(newView, { username: $profile?.username || $authUser?.user_metadata?.username || null });
+    } else {
+      setRoute(newView);
+    }
   }
 
   function handleLogoClick(event) {
@@ -170,12 +208,12 @@
   }
 
   function handleNavigation(event) {
-    const { view: nextView, userId = null, tab = null } = event.detail || {};
+    const { view: nextView, userId = null, username = null, tab = null } = event.detail || {};
     if (nextView) {
       if (routeMode === 'app' && view === 'game' && challengeData && nextView !== 'game') {
         clearChallengeState();
       }
-      setRoute(nextView, { userId, tab });
+      setRoute(nextView, { userId, username, tab });
     }
   }
 
@@ -185,6 +223,7 @@
     clearUserState();
     session.set(null);
     selectedUserId.set(null);
+    selectedProfileUsername = null;
     mobileMenuOpen = false;
     showAuthModal = false;
     challengeData = null;
@@ -254,11 +293,14 @@
       ? 'Loading profile'
       : ($authInitialized && $session && $profileError ? 'Account issue' : 'Guest Mode');
   $: mobileStatusActionable = !$isAuthenticated && !$profileLoading && !($authInitialized && $session && $profileError);
+  $: profileTitle = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || 'Profile';
   $: pageTitle = routeMode === 'privacy'
     ? 'Privacy Policy | ChromaDie'
     : routeMode === 'how-to-play'
       ? 'How to Play | ChromaDie'
-      : routeMode === 'app' && view === 'game'
+      : routeMode === 'app' && view === 'profile'
+        ? `${profileTitle} | ChromaDie`
+        : routeMode === 'app' && view === 'game'
         ? 'Roll | ChromaDie'
       : 'ChromaDie';
   const errorState = supabaseError;
@@ -273,6 +315,10 @@
 
   $: if (typeof document !== 'undefined') {
     document.title = pageTitle;
+  }
+
+  $: if (routeMode === 'app') {
+    syncRoute();
   }
 
   onDestroy(() => {
@@ -508,8 +554,8 @@
           </div>
         </div>
       </div>
-    {:else if view === 'profile' && ($isAuthenticated || $selectedUserId)}
-      <Profile userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
+    {:else if view === 'profile' && ($isAuthenticated || selectedProfileUsername || $selectedUserId)}
+      <Profile profileUsername={selectedProfileUsername} userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
     {:else if $isAuthenticated}
       {#if view === 'shop'}
         <Shop />
