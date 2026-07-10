@@ -14,6 +14,7 @@
   let loading = false;
 
   let turnstileWidgetId = null;
+  let captchaToken = '';
   const siteKey = import.meta.env.VITE_CLOUDFLARE_SITE_KEY;
   const RESERVED_USERNAMES = new Set(['guest', 'anon', 'anonymous']);
 
@@ -58,23 +59,31 @@
 
   function renderTurnstile() {
     if (window.turnstile && document.getElementById('turnstile-container') && siteKey) {
+      captchaToken = '';
       turnstileWidgetId = window.turnstile.render('#turnstile-container', {
-        sitekey: siteKey
+        sitekey: siteKey,
+        callback(token) {
+          captchaToken = token || '';
+        },
+        'expired-callback'() {
+          captchaToken = '';
+        },
+        'error-callback'() {
+          captchaToken = '';
+        }
       });
     }
   }
 
   function getCaptchaToken() {
-    if (turnstileWidgetId !== null && window.turnstile) {
-      return window.turnstile.getResponse(turnstileWidgetId);
-    }
-    return null;
+    return captchaToken || null;
   }
 
   function resetCaptcha() {
     if (turnstileWidgetId !== null && window.turnstile) {
       window.turnstile.reset(turnstileWidgetId);
     }
+    captchaToken = '';
   }
 
   async function handleAuth() {
