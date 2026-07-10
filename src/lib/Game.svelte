@@ -350,13 +350,21 @@
     ctx.font = '600 20px "Inter", sans-serif';
     ctx.fillText('Daily Roll', 96, 164);
 
-    ctx.shadowColor = cardColor;
-    ctx.shadowBlur = 38;
+    const orbGlow = ctx.createRadialGradient(262, 326, 18, 262, 326, 150);
+    orbGlow.addColorStop(0, cardColor);
+    orbGlow.addColorStop(0.58, `${cardColor}CC`);
+    orbGlow.addColorStop(0.82, `${cardColor}66`);
+    orbGlow.addColorStop(1, `${cardColor}00`);
+    ctx.fillStyle = orbGlow;
+    ctx.beginPath();
+    ctx.arc(262, 326, 150, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.fillStyle = cardColor;
     ctx.beginPath();
     ctx.arc(262, 326, 118, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
+
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(255,255,255,0.24)';
     ctx.stroke();
