@@ -22,19 +22,17 @@ function getBearerToken(request: Request) {
   return match?.[1]?.trim() || null
 }
 
-function normalizeUsername(value: unknown) {
-  const trimmed = String(value || '').trim()
-  return /^[A-Za-z0-9_]{3,20}$/.test(trimmed) ? trimmed : null
-}
-
 function normalizeHex(value: unknown) {
   const trimmed = String(value || '').trim().replace(/^#/, '').toUpperCase()
   return /^[0-9A-F]{6}$/.test(trimmed) ? `#${trimmed}` : null
 }
 
 function normalizeScore(value: unknown) {
-  const parsed = Number.parseInt(String(value || ''), 10)
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+  const normalized = String(value ?? '').trim()
+  if (!/^\d+$/.test(normalized)) return null
+
+  const parsed = Number(normalized)
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null
 }
 
 Deno.serve(async request => {
@@ -66,53 +64,45 @@ Deno.serve(async request => {
       return jsonResponse({ success: false, error: 'Invalid challenge data' }, 400)
     }
 
-    let senderUserId: string | null = null
-    let senderUsername: string | null = normalizeUsername(body.sender_username)
     const token = getBearerToken(request)
+    if (!token) {
+      return jsonResponse({ success: false, error: 'Authentication required to create a challenge' }, 401)
+    }
 
-    if (token) {
-      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      })
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    })
+    const { data: userData } = await userClient.auth.getUser()
+    const senderUserId = userData?.user?.id || null
+    if (!senderUserId) {
+      return jsonResponse({ success: false, error: 'Not authenticated' }, 401)
+    }
 
-      const { data: userData } = await userClient.auth.getUser()
-      if (userData?.user?.id) {
-        senderUserId = userData.user.id
+    const { data, error } = await serviceClient.rpc('create_challenge', {
+      p_sender_user_id: senderUserId,
+      p_target_score: targetScore,
+      p_target_hex: targetHex
+    })
 
-        const { data: profileData } = await serviceClient
-          .from('profiles')
-          .select('username')
-          .eq('id', senderUserId)
-          .maybeSingle()
-
-        senderUsername = normalizeUsername(profileData?.username) || senderUsername
+    if (error || !data?.success || !data.challenge) {
+      const rpcMessage = typeof data?.error === 'string' ? data.error : ''
+      if (rpcMessage.includes('limit reached')) {
+        return jsonResponse({ success: false, error: rpcMessage }, 429)
       }
+
+      if (rpcMessage === 'Profile unavailable') {
+        return jsonResponse({ success: false, error: rpcMessage }, 409)
+      }
+
+      return jsonResponse({ success: false, error: 'Could not create challenge' }, error ? 500 : 400)
     }
 
-    const { data, error } = await serviceClient
-      .from('challenges')
-      .insert({
-        sender_user_id: senderUserId,
-        sender_username: senderUsername,
-        target_score: targetScore,
-        target_hex: targetHex
-      })
-      .select('id, sender_username, target_score, target_hex, created_at, expires_at')
-      .single()
-
-    if (error || !data) {
-      return jsonResponse({ success: false, error: error?.message || 'Could not create challenge' }, 500)
-    }
-
-    const fromQuery = data.sender_username ? `?from=${encodeURIComponent(data.sender_username)}` : ''
+    const challenge = data.challenge
+    const fromQuery = challenge.sender_username ? `?from=${encodeURIComponent(challenge.sender_username)}` : ''
     return jsonResponse({
       success: true,
-      challenge: data,
-      share_url: `/c/${data.id}${fromQuery}`
+      challenge,
+      share_url: `/c/${challenge.id}${fromQuery}`
     })
   }
 

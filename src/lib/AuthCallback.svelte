@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { session, authEvent } from './stores';
-  import { getAppOrigin } from './authUrls';
+  import { getAppOrigin, getSafeNextUrl } from './authUrls';
 
   let status = 'loading';
   let message = 'Completing sign-in...';
@@ -14,11 +14,7 @@
     const params = new URLSearchParams(window.location.search);
     const next = params.get('next');
 
-    if (next && next.startsWith('/')) {
-      return new URL(next, getAppOrigin()).toString();
-    }
-
-    return getAppOrigin();
+    return getSafeNextUrl(next);
   }
 
   function clearUrl() {

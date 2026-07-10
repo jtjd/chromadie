@@ -99,11 +99,13 @@
       const fallbackUrl = `${window.location.origin}?challenge=${score}&hex=${hexNoHash}`;
       let shareUrl = fallbackUrl;
 
-      const challengeLink = await createChallengeLink(supabase, {
-          score,
-          hex: shareHex,
-          senderUsername
-      });
+      const challengeLink = $isAuthenticated
+        ? await createChallengeLink(supabase, {
+            score,
+            hex: shareHex,
+            senderUsername
+          })
+        : { success: false };
 
       if (challengeLink.success && challengeLink.shareUrl) {
           shareUrl = `${window.location.origin}${challengeLink.shareUrl}`;

@@ -90,7 +90,7 @@ Deno.serve(async request => {
     return jsonResponse(
       {
         success: false,
-        error: normalizeMessage(cleanupError || cleanupData?.error),
+        error: 'Could not delete the account right now. Please try again later.',
         code: 'cleanup_failed'
       },
       500
@@ -102,7 +102,7 @@ Deno.serve(async request => {
     return jsonResponse(
       {
         success: false,
-        error: normalizeMessage(deleteUserError),
+        error: 'Account data was prepared for deletion, but the account could not be fully removed. Please try again.',
         code: 'auth_delete_failed',
         cleanup: cleanupData
       },

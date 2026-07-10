@@ -21,10 +21,21 @@ export function normalizeHexColor(value, fallback = '#000000') {
     return isValidHexColor(normalized) ? `#${normalized.toUpperCase()}` : fallback;
 }
 
-// NEW: Format large numbers (e.g., 1250 -> 1.2K)
 export function formatCount(n) {
-    if (n < 1000) return n.toString();
-    if (n < 10000) return (n / 1000).toFixed(1) + 'K';
-    if (n < 1000000) return Math.floor(n / 1000) + 'K';
-    return (n / 1000000).toFixed(1) + 'M';
+    const value = Number(n);
+    if (!Number.isFinite(value)) return '0';
+
+    const absolute = Math.abs(value);
+    const units = [
+        { threshold: 1e12, suffix: 'T' },
+        { threshold: 1e9, suffix: 'B' },
+        { threshold: 1e6, suffix: 'M' },
+        { threshold: 1e3, suffix: 'K' }
+    ];
+    const unit = units.find(entry => absolute >= entry.threshold);
+    if (!unit) return Math.trunc(value).toLocaleString();
+
+    const scaled = value / unit.threshold;
+    const digits = Math.abs(scaled) >= 100 ? 0 : 1;
+    return `${scaled.toFixed(digits).replace(/\.0$/, '')}${unit.suffix}`;
 }

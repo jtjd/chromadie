@@ -33,7 +33,9 @@
       <div class="progress-bar-container">
         <div class="progress-bar-fill" style="width: {Math.min(100, (progress.current / progress.target) * 100)}%"></div>
       </div>
-      <div class="progress-text">{progress.current.toLocaleString()} / {progress.target.toLocaleString()}</div>
+      <div class="progress-text" title={`${progress.current.toLocaleString()} / ${progress.target.toLocaleString()}`}>
+        {formatCount(progress.current)} / {formatCount(progress.target)}
+      </div>
     {/if}
   </div>
 </button>

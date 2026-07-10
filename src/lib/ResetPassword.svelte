@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { supabase } from './supabase';
   import { session, authEvent } from './stores';
-  import { getAppOrigin } from './authUrls';
+  import { getAppOrigin, getSafeNextUrl } from './authUrls';
 
   let newPassword = '';
   let confirmPassword = '';
@@ -19,10 +19,7 @@
 
     const params = new URLSearchParams(window.location.search);
     const next = params.get('next');
-    if (next && next.startsWith('/')) {
-      return new URL(next, getAppOrigin()).toString();
-    }
-    return getAppOrigin();
+    return getSafeNextUrl(next);
   }
 
   function clearUrl() {

@@ -53,3 +53,17 @@ export function getAuthCallbackUrl(next) {
 export function getResetPasswordUrl(next) {
   return buildAppUrl('/reset-password', next ? { next } : {})
 }
+
+export function getSafeNextUrl(value) {
+  const fallback = getAppOrigin()
+  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) {
+    return fallback
+  }
+
+  try {
+    const candidate = new URL(value, fallback)
+    return candidate.origin === new URL(fallback).origin ? candidate.toString() : fallback
+  } catch {
+    return fallback
+  }
+}

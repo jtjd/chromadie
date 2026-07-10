@@ -16,6 +16,13 @@ Active forward fix:
 - `migrations/20260709050000_atomic_gameplay_transactions.sql`
 - `migrations/20260709060000_profile_read_lockdown.sql`
 - `migrations/20260710010000_account_deletion_cleanup.sql`
+- `migrations/20260710030000_challenge_links.sql`
+- `migrations/20260710143000_fix_all_time_leaderboard.sql`
+- `migrations/20260710144500_fix_all_time_leaderboard_permissions.sql`
+- `migrations/20260710153000_refresh_nova_bloom_roll_effect.sql`
+- `migrations/20260710160000_bump_shop_version_for_nova_bloom.sql`
+- `migrations/20260710170000_public_profile_progression.sql`
+- `migrations/20260710180000_security_hardening.sql`
 
 Archived migrations:
 

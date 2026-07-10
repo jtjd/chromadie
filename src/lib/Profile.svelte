@@ -220,7 +220,7 @@
       ? await supabase.rpc('get_my_profile')
       : await supabase
           .from('profiles')
-          .select('id, username, current_streak, longest_streak, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity')
+          .select('id, username, current_streak, longest_streak, lifetime_ep, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity')
           .eq(lookupUsername ? 'username' : 'id', lookupUsername || lookupId)
           .maybeSingle();
 
@@ -230,28 +230,23 @@
       targetProfile = prof;
       profileId = prof.id || lookupId;
 
-      if (viewingOwnProfile) {
-        const { count } = await supabase
-          .from('scores')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', profileId);
-        if (requestId !== loadRequestId) return;
-        totalRolls = count || 0;
+      const { count } = await supabase
+        .from('scores')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', profileId);
+      if (requestId !== loadRequestId) return;
+      totalRolls = count || 0;
 
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const { data: scores } = await supabase
-          .from('scores')
-          .select('hex_code, score, rarity, roll_date, badges')
-          .eq('user_id', profileId)
-          .gte('roll_date', thirtyDaysAgo.toISOString().split('T')[0])
-          .order('roll_date', { ascending: false });
-        if (requestId !== loadRequestId) return;
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const { data: scores } = await supabase
+        .from('scores')
+        .select('hex_code, score, rarity, roll_date, badges')
+        .eq('user_id', profileId)
+        .gte('roll_date', thirtyDaysAgo.toISOString().split('T')[0])
+        .order('roll_date', { ascending: false });
+      if (requestId !== loadRequestId) return;
 
-        if (scores) targetScores = scores;
-      } else {
-        totalRolls = 0;
-        targetScores = [];
-      }
+      targetScores = scores || [];
     } else {
       targetProfile = null;
       targetScores = [];
@@ -281,8 +276,8 @@
     loading = false;
   }
 
-  $: rank = isOwnProfile ? getRank(targetProfile?.lifetime_ep || 0) : null;
-  $: rankState = isOwnProfile ? getRankState(targetProfile?.lifetime_ep || 0) : null;
+  $: rank = targetProfile ? getRank(targetProfile.lifetime_ep || 0) : null;
+  $: rankState = targetProfile ? getRankState(targetProfile.lifetime_ep || 0) : null;
   $: cosmetics = targetProfile?.equipped_cosmetics || {};
   $: nameEff = getNameEffect(cosmetics);
   $: frameEff = getFrameEffect(cosmetics);
@@ -292,6 +287,15 @@
   $: username = targetProfile?.username || 'Unknown Player';
   $: isOwnProfile = $isAuthenticated && targetProfile?.id === $session?.user.id;
   $: bestRoll = targetScores.length > 0 ? targetScores.reduce((max, s) => s.score > max.score ? s : max, targetScores[0]) : null;
+  $: profileBestRoll = targetProfile?.best_roll_score
+    ? {
+        score: targetProfile.best_roll_score,
+        hex_code: targetProfile.best_roll_hex,
+        rarity: targetProfile.best_roll_rarity
+      }
+    : null;
+  $: displayBestRoll = profileBestRoll || bestRoll;
+  $: recentRollCount = targetScores.length;
   $: isFollowed = $followedUsers.includes(targetProfile?.id);
 
   $: moodStyle = targetProfile?.mood_color
@@ -318,6 +322,14 @@
     return null;
   }
 
+  function formatStat(value) {
+    return formatCount(Number(value) || 0);
+  }
+
+  function formatFullValue(value) {
+    return (Number(value) || 0).toLocaleString();
+  }
+
   $: heatmapData = (() => {
     const days = [];
     const today = new SvelteDate();
@@ -337,7 +349,7 @@
         else intensity = 1;
       }
 
-      days.push({ date: dateStr, score: roll?.score || 0, intensity });
+      days.push({ date: dateStr, score: roll?.score || 0, hex: roll?.hex_code || '', intensity });
     }
     return days;
   })();
@@ -377,7 +389,7 @@
               <div class="rank-explainer">
                 <div class="rank-explainer-row">
                   <span>Lifetime EP</span>
-                  <span>{rankState?.lifetimeEp?.toLocaleString() || 0} EP</span>
+                  <span title={formatFullValue(rankState?.lifetimeEp)}>{formatStat(rankState?.lifetimeEp)} EP</span>
                 </div>
                 <div class="progress-bar-container" aria-hidden="true">
                   <div
@@ -387,7 +399,7 @@
                 </div>
                 <p class="progress-text">
                   {#if rankState?.next}
-                    {rankState.next.name} at {rankState.next.min.toLocaleString()} EP
+                    {rankState.next.name} at {formatStat(rankState.next.min)} EP
                   {:else}
                     Highest rank reached
                   {/if}
@@ -460,20 +472,20 @@
 
         <div class="stats-grid">
           <div class="stat-box">
-            <span class="stat-value">🔥 {targetProfile.current_streak || 0}</span>
+            <span class="stat-value" title={formatFullValue(targetProfile.current_streak)}>🔥 {formatStat(targetProfile.current_streak)}</span>
             <span class="stat-label">Current Streak</span>
           </div>
           <div class="stat-box">
-            <span class="stat-value">🏆 {targetProfile.longest_streak || 0}</span>
+            <span class="stat-value" title={formatFullValue(targetProfile.longest_streak)}>🏆 {formatStat(targetProfile.longest_streak)}</span>
             <span class="stat-label">Longest Streak</span>
+          </div>
+          <div class="stat-box stat-box-primary">
+            <span class="stat-value" title={formatFullValue(targetProfile.lifetime_ep)}>💎 {formatStat(targetProfile.lifetime_ep)}</span>
+            <span class="stat-label">Lifetime EP</span>
           </div>
           {#if isOwnProfile}
             <div class="stat-box">
-              <span class="stat-value">💎 {targetProfile.lifetime_ep?.toLocaleString() || 0}</span>
-              <span class="stat-label">Lifetime EP</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-value">💸 {targetProfile.ep_spent?.toLocaleString() || 0}</span>
+              <span class="stat-value" title={formatFullValue(targetProfile.ep_spent)}>💸 {formatStat(targetProfile.ep_spent)}</span>
               <span class="stat-label">EP Spent</span>
             </div>
           {/if}
@@ -481,14 +493,17 @@
       </div>
     </div>
 
-    {#if targetScores.length > 0 || isOwnProfile}
+    {#if displayBestRoll || targetProfile}
       <div class="best-row-container" style="margin-top: 20px;">
         <div class="best-box">
-          <div class="badges-title">Best Roll (30d)</div>
-          {#if bestRoll}
-            <div class="best-color-display" style="background-color: {bestRoll.hex_code};"></div>
-            <p style="margin-top: 10px; color: var(--accent-green); font-weight: bold;">{bestRoll.score.toLocaleString()} EP</p>
-            <p style="font-size: 0.8rem; color: var(--text-muted);">{bestRoll.rarity}</p>
+          <div class="badges-title">Best Roll</div>
+          {#if displayBestRoll}
+            <div class="best-roll-visual">
+              <div class="best-color-display" style="background-color: {displayBestRoll.hex_code || '#222'};" title={displayBestRoll.hex_code || 'Color unavailable'}></div>
+              <span class="best-roll-hex">{displayBestRoll.hex_code || 'Unknown color'}</span>
+            </div>
+            <p class="best-roll-score" title={formatFullValue(displayBestRoll.score)}>{formatStat(displayBestRoll.score)} EP</p>
+            <p class="best-roll-rarity">{displayBestRoll.rarity || 'Unranked'}</p>
           {:else}
             <p style="font-size: 0.8rem; color: var(--text-muted);">No rolls yet.</p>
           {/if}
@@ -496,9 +511,21 @@
 
         <div class="best-box">
           <div class="badges-title">Activity (30d)</div>
+          <p class="activity-summary">
+            {recentRollCount} roll{recentRollCount === 1 ? '' : 's'} in the last 30 days
+            {#if targetProfile.current_streak}
+              <span>• {formatStat(targetProfile.current_streak)} day streak</span>
+            {/if}
+          </p>
           <div class="heatmap-grid">
             {#each heatmapData as day (day.date)}
-              <div class="heatmap-cell intensity-{day.intensity}" title="{day.date}: {day.score.toLocaleString()} EP"></div>
+              <div
+                class="heatmap-cell intensity-{day.intensity} {day.hex ? 'has-roll' : ''}"
+                style={day.hex ? `background-color: ${day.hex};` : ''}
+                title={day.hex ? `${day.date}: ${day.hex} • ${formatFullValue(day.score)} EP` : `${day.date}: No roll`}
+                aria-label={day.hex ? `${day.date}, ${day.hex}, ${formatFullValue(day.score)} EP` : `${day.date}, no roll`}
+                role="img"
+              ></div>
             {/each}
           </div>
         </div>
@@ -527,7 +554,7 @@
                     {rival.username}
                   </span>
                 </button>
-                <span class="rival-score">{rival.score.toLocaleString()}</span>
+                <span class="rival-score" title={formatFullValue(rival.score)}>{formatStat(rival.score)}</span>
               </div>
             {/each}
           </div>
@@ -643,6 +670,36 @@
   .rank-chip { margin-top: 1px; align-self: center; }
   .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-top: 2px; flex: 0 0 auto; margin-left: auto; }
 
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    align-items: stretch;
+  }
+
+  .stat-box {
+    min-width: 0;
+    min-height: 86px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .stat-box-primary {
+    border-color: rgba(139, 124, 246, 0.4);
+    background: linear-gradient(145deg, rgba(139, 124, 246, 0.13), rgba(255,255,255,0.03));
+  }
+
+  .stat-value {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+
   .rank-chip {
     font-size: 0.75rem;
     font-weight: 700;
@@ -678,6 +735,11 @@
   .rank-explainer-row span:last-child {
     color: #fff;
     font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
   }
 
   .rank-help {
@@ -742,20 +804,66 @@
   .heatmap-grid {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
-    gap: 4px;
+    gap: 5px;
     margin-top: 10px;
+    width: 100%;
   }
   .heatmap-cell {
     aspect-ratio: 1;
+    min-width: 0;
     border-radius: 2px;
     background-color: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.05);
+    transition: transform 0.15s ease, border-color 0.15s ease;
   }
+  .heatmap-cell.has-roll { border-color: rgba(255,255,255,0.28); box-shadow: 0 0 8px rgba(255,255,255,0.12); }
+  .heatmap-cell:hover { transform: scale(1.14); border-color: rgba(255,255,255,0.75); }
   .heatmap-cell.intensity-1 { background-color: rgba(16, 185, 129, 0.2); }
   .heatmap-cell.intensity-2 { background-color: rgba(16, 185, 129, 0.4); }
   .heatmap-cell.intensity-3 { background-color: rgba(59, 130, 246, 0.5); }
   .heatmap-cell.intensity-4 { background-color: rgba(168, 85, 247, 0.6); }
   .heatmap-cell.intensity-5 { background-color: rgba(241, 196, 15, 0.8); }
+
+  .activity-summary {
+    min-height: 2.4em;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .activity-summary span { color: #dbe4ff; }
+
+  .best-row-container {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .best-box {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .best-roll-visual { display: grid; justify-items: center; gap: 8px; }
+
+  .best-color-display {
+    width: clamp(64px, 10vw, 88px);
+    height: clamp(64px, 10vw, 88px);
+    box-shadow: 0 0 26px rgba(255,255,255,0.12), inset 0 0 16px rgba(0,0,0,0.35);
+  }
+
+  .best-roll-hex {
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+  }
+
+  .best-roll-score { margin: 10px 0 0; color: var(--accent-green); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .best-roll-rarity { margin: 4px 0 0; color: var(--text-muted); font-size: 0.8rem; }
 
   .progress-bar-container {
     width: 100%;
