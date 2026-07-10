@@ -370,7 +370,7 @@
     <div class="shop-sort">
       <span>Sort</span>
       <div class="sort-pills" role="tablist" aria-label="Sort shop items">
-        {#each Object.entries(sortLabels) as [value, label]}
+        {#each Object.entries(sortLabels) as [value, label] (value)}
           <button
             class="sort-pill"
             class:active={sortMode === value}
