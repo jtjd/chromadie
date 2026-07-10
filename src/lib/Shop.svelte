@@ -2,60 +2,234 @@
   import { shopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards } from './stores';
   import { supabase } from './supabase';
 
-  let loadingAction = false;
+  let loadingAction = null;
   let activeTab = 'all';
+  let sortMode = 'featured';
+  let purchaseTarget = null;
 
-  async function handleAction(itemKey, action, slot = null, silent = false) {
-    loadingAction = true;
-    let error = null;
+  const rarityRank = {
+    Trash: 0,
+    Common: 1,
+    Uncommon: 2,
+    Rare: 3,
+    Epic: 4,
+    Anomaly: 5,
+    Mythic: 6
+  };
 
-    if (action === 'buy') {
-      const { data, error: rpcError } = await supabase.rpc('purchase_item', { p_item_key: itemKey });
-      if (rpcError) error = rpcError.message;
-      else if (!data.success) error = data.error;
-      else {
-        const itemCost = $shopItems[itemKey].cost;
-        walletBalance.update(bal => bal - itemCost);
+  const slotLabels = {
+    all: 'All',
+    name_effect: 'Names',
+    frame: 'Frames',
+    profile_border: 'Borders',
+    profile_bg: 'Backgrounds',
+    orb_shape: 'Orb Shapes',
+    roll_effect: 'Roll Effects',
+    lb_theme: 'LB Themes',
+    consumable: 'Utility'
+  };
 
-        if ($shopItems[itemKey].slot === 'consumable') {
-            if (itemKey === 'reroll_shard') {
-                rerollShards.update(s => s + 1);
-            } else if (itemKey === 'streak_freeze') {
-                userInventory.update(inv => [...inv, itemKey]);
-            }
-            addToast(`Successfully purchased ${$shopItems[itemKey].name}!`, 'success');
-        } else {
-            userInventory.update(inv => [...inv, itemKey]);
-            addToast(`Successfully purchased ${$shopItems[itemKey].name}!`, 'success');
-            await handleAction(itemKey, 'equip', null, true);
-        }
-      }
-    } else if (action === 'equip') {
-      const { data, error: rpcError } = await supabase.rpc('equip_item', { p_item_key: itemKey });
-      if (rpcError) error = rpcError.message;
-      else if (!data.success) error = data.error;
-      else {
-        equippedItems.set(data.cosmetics);
-        if (!silent) addToast(`Equipped ${$shopItems[itemKey].name}!`, 'success');
-      }
-    } else if (action === 'unequip') {
-      const { data, error: rpcError } = await supabase.rpc('unequip_item', { p_slot: slot });
-      if (rpcError) error = rpcError.message;
-      else if (!data.success) error = data.error;
-      else {
-        equippedItems.set(data.cosmetics);
-        addToast(`Unequipped item.`, 'success');
-      }
-    }
+  const sortLabels = {
+    featured: 'Featured',
+    price_asc: 'Price: Low',
+    price_desc: 'Price: High',
+    rarity: 'Rarity'
+  };
 
-    if (error) addToast(`Error: ${error}`);
-    loadingAction = false;
+  const featuredItemKeys = ['frame_spectrum', 'border_void', 'lb_spectrum', 'name_spectrum'];
+
+  function getSlotLabel(slot) {
+    return slotLabels[slot] || slot;
   }
 
-  $: itemsArray = Object.values($shopItems)
-    .filter(item => item.slot !== 'consumable')
-    .sort((a, b) => a.cost - b.cost)
-    .filter(item => activeTab === 'all' || item.slot === activeTab);
+  function getItemSummary(item) {
+    if (item.description) {
+      return item.description;
+    }
+
+    switch (item.slot) {
+      case 'name_effect':
+        return 'Styles your username on profile and leaderboard views.';
+      case 'frame':
+        return 'Adds a custom frame around your profile header.';
+      case 'profile_border':
+        return 'Changes the border treatment of your profile card.';
+      case 'profile_bg':
+        return 'Swaps in a new background for your profile card.';
+      case 'orb_shape':
+        return 'Changes the silhouette of your roll orb.';
+      case 'roll_effect':
+        return 'Adds an aura effect to your roll result.';
+      case 'lb_theme':
+        return 'Styles your leaderboard row for everyone to see.';
+      case 'consumable':
+        if (item.item_key === 'streak_freeze') {
+          return 'Protects your streak if you miss a day.';
+        }
+        if (item.item_key === 'reroll_shard') {
+          return 'Gives you one reroll for a daily color result.';
+        }
+        return 'Utility item.';
+      default:
+        return item.description || 'Cosmetic item.';
+    }
+  }
+
+  function getPurchaseReason(item) {
+    if (item.slot === 'consumable') {
+      return 'Utility items are consumed on use, so confirm before buying.';
+    }
+    if (item.cost >= 1000000) {
+      return 'This is a premium cosmetic. Confirm before spending that much EP.';
+    }
+    if (item.cost >= 100000) {
+      return 'This purchase is above the quick-buy threshold.';
+    }
+    return 'Confirm this purchase before spending EP.';
+  }
+
+  function getInventoryCount(itemKey) {
+    return $userInventory.filter(key => key === itemKey).length;
+  }
+
+  function isLoading(action, itemKey) {
+    return loadingAction === `${action}:${itemKey}`;
+  }
+
+  function shouldConfirmPurchase(item) {
+    return item.slot === 'consumable' || item.cost >= 100000;
+  }
+
+  function featuredScore(item) {
+    const rarityScore = rarityRank[item.rarity] || 0;
+    const collectionScore = item.collection ? 1 : 0;
+    return (rarityScore * 100000000) + (collectionScore * 1000000) + item.cost;
+  }
+
+  function sortItems(items, mode = sortMode) {
+    const list = items.slice();
+
+    if (mode === 'price_asc') {
+      return list.sort((a, b) => a.cost - b.cost || (a.name || '').localeCompare(b.name || ''));
+    }
+
+    if (mode === 'price_desc') {
+      return list.sort((a, b) => b.cost - a.cost || (a.name || '').localeCompare(b.name || ''));
+    }
+
+    if (mode === 'rarity') {
+      return list.sort((a, b) => (rarityRank[b.rarity] || 0) - (rarityRank[a.rarity] || 0) || b.cost - a.cost || (a.name || '').localeCompare(b.name || ''));
+    }
+
+    return list.sort((a, b) => featuredScore(b) - featuredScore(a) || (a.name || '').localeCompare(b.name || ''));
+  }
+
+  function getStateLabel(item) {
+    const owned = $userInventory.includes(item.item_key);
+    const equipped = $equippedItems[item.slot] === item.item_key;
+
+    if (item.cost <= 0) return 'Milestone reward';
+    if (item.slot === 'consumable') {
+      if (item.item_key === 'reroll_shard') {
+        return $rerollShards > 0 ? `${$rerollShards} owned` : 'Utility';
+      }
+      const count = getInventoryCount(item.item_key);
+      return count > 0 ? `${count} owned` : 'Utility';
+    }
+    if (equipped) return 'Equipped';
+    if (owned) return 'Owned';
+    return 'Available';
+  }
+
+  async function handleAction(itemKey, action, slot = null, silent = false) {
+    loadingAction = `${action}:${itemKey}`;
+    let error = null;
+
+    try {
+      if (action === 'buy') {
+        const { data, error: rpcError } = await supabase.rpc('purchase_item', { p_item_key: itemKey });
+        if (rpcError) error = rpcError.message;
+        else if (!data.success) error = data.error;
+        else {
+          const item = $shopItems[itemKey];
+          const itemCost = item.cost;
+          walletBalance.update(bal => bal - itemCost);
+
+          if (item.slot === 'consumable') {
+            if (itemKey === 'reroll_shard') {
+              rerollShards.update(s => s + 1);
+            } else if (itemKey === 'streak_freeze') {
+              userInventory.update(inv => [...inv, itemKey]);
+            } else {
+              userInventory.update(inv => [...inv, itemKey]);
+            }
+            addToast(`Purchased ${item.name}.`, 'success');
+          } else {
+            userInventory.update(inv => [...inv, itemKey]);
+            addToast(`Purchased ${item.name} and equipped it.`, 'success');
+            await handleAction(itemKey, 'equip', null, true);
+          }
+        }
+      } else if (action === 'equip') {
+        const { data, error: rpcError } = await supabase.rpc('equip_item', { p_item_key: itemKey });
+        if (rpcError) error = rpcError.message;
+        else if (!data.success) error = data.error;
+        else {
+          equippedItems.set(data.cosmetics);
+          if (!silent) addToast(`Equipped ${$shopItems[itemKey].name}.`, 'success');
+        }
+      } else if (action === 'unequip') {
+        const { data, error: rpcError } = await supabase.rpc('unequip_item', { p_slot: slot });
+        if (rpcError) error = rpcError.message;
+        else if (!data.success) error = data.error;
+        else {
+          equippedItems.set(data.cosmetics);
+          addToast('Unequipped item.', 'success');
+        }
+      }
+    } finally {
+      if (error) addToast(`Error: ${error}`);
+      loadingAction = null;
+    }
+  }
+
+  function requestPurchase(item) {
+    if (shouldConfirmPurchase(item)) {
+      purchaseTarget = item;
+      return;
+    }
+
+    handleAction(item.item_key, 'buy');
+  }
+
+  function confirmPurchase() {
+    if (!purchaseTarget) return;
+    const item = purchaseTarget;
+    purchaseTarget = null;
+    handleAction(item.item_key, 'buy');
+  }
+
+  function cancelPurchase() {
+    purchaseTarget = null;
+  }
+
+  $: cosmeticItems = Object.values($shopItems)
+    .filter(item => item.slot !== 'consumable');
+
+  $: utilityItems = Object.values($shopItems)
+    .filter(item => item.slot === 'consumable');
+
+  $: filteredCosmetics = sortItems(
+    cosmeticItems.filter(item => activeTab === 'all' || item.slot === activeTab),
+    sortMode
+  );
+
+  $: sortedUtilityItems = sortItems(utilityItems, sortMode);
+  $: featuredItems = featuredItemKeys
+    .map(itemKey => $shopItems[itemKey])
+    .filter(Boolean);
+  $: activeCategoryLabel = getSlotLabel(activeTab);
+  $: selectedItemPreview = purchaseTarget ? getItemSummary(purchaseTarget) : '';
 </script>
 
 <div class="container shop-container">
@@ -64,46 +238,209 @@
     <h2>Cosmetic Shop</h2>
   </div>
 
+  <p class="shop-intro">
+    Browse cosmetics, preview what they change, and buy with confidence. Utility items are kept separate so the catalog stays easy to scan.
+  </p>
+
   <div class="wallet-display">
     <h3>Wallet Balance</h3>
     <span>{$walletBalance.toLocaleString()} EP</span>
   </div>
 
-  <div class="shop-tabs">
-    <button class="shop-tab" class:active={activeTab === 'all'} on:click={() => activeTab = 'all'}>All</button>
-    <button class="shop-tab" class:active={activeTab === 'name_effect'} on:click={() => activeTab = 'name_effect'}>Names</button>
-    <button class="shop-tab" class:active={activeTab === 'frame'} on:click={() => activeTab = 'frame'}>Frames</button>
-    <button class="shop-tab" class:active={activeTab === 'profile_border'} on:click={() => activeTab = 'profile_border'}>Borders</button>
-    <button class="shop-tab" class:active={activeTab === 'profile_bg'} on:click={() => activeTab = 'profile_bg'}>Backgrounds</button>
-    <button class="shop-tab" class:active={activeTab === 'orb_shape'} on:click={() => activeTab = 'orb_shape'}>Orb Shapes</button>
-    <button class="shop-tab" class:active={activeTab === 'roll_effect'} on:click={() => activeTab = 'roll_effect'}>Roll Effects</button>
-    <button class="shop-tab" class:active={activeTab === 'lb_theme'} on:click={() => activeTab = 'lb_theme'}>LB Themes</button>
+  {#if featuredItems.length}
+    <div class="featured-section">
+      <div class="shop-section-header featured-header">
+        <div>
+          <h3>Featured Picks</h3>
+          <p>A small spotlight of items that show off the strongest visuals in the catalog.</p>
+        </div>
+        <span class="section-count">Curated</span>
+      </div>
+
+      <div class="featured-grid">
+        {#each featuredItems as item (item.item_key)}
+          {@const owned = $userInventory.includes(item.item_key)}
+          {@const equipped = $equippedItems[item.slot] === item.item_key}
+          {@const affordable = $walletBalance >= item.cost}
+          {@const loadingBuy = isLoading('buy', item.item_key)}
+          {@const loadingEquip = isLoading('equip', item.item_key)}
+          {@const loadingUnequip = isLoading('unequip', item.item_key)}
+
+          <div class="shop-item featured-item rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
+            <div class="shop-item-meta">
+              <span class="state-pill slot">Featured</span>
+              <span class="state-pill rarity">{item.rarity || 'Common'}</span>
+            </div>
+
+            <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''}">
+              {#if item.slot === 'profile_bg'}
+                <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
+              {:else if item.slot === 'roll_effect'}
+                <div class="preview-roll-orb {item.css_type === 'class' ? item.css_value : ''}"></div>
+              {:else if item.slot === 'lb_theme'}
+                <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                  <span class="lb-rank preview-lb-rank">#1</span>
+                  <div class="lb-info preview-lb-info">
+                    <span class="lb-username preview-lb-name">YourName</span>
+                    <span class="preview-lb-sub">#7B5CFF • Mythic</span>
+                  </div>
+                  <span class="lb-score preview-lb-score">9.8M</span>
+                </div>
+              {:else if item.slot === 'orb_shape'}
+                <div class="preview-orb-shape {item.css_type === 'class' ? item.css_value : ''}"></div>
+              {:else if item.slot === 'profile_border'}
+                <div class="preview-profile-card {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                  <div class="preview-profile-topline">
+                    <span class="preview-profile-badge">Featured</span>
+                    <span class="preview-profile-dot"></span>
+                  </div>
+                  <span class="preview-profile-name">YourName</span>
+                  <div class="preview-profile-meta">
+                    <span>Rank</span>
+                    <span>30d</span>
+                  </div>
+                </div>
+              {:else}
+                <div class="shop-preview-text">
+                  {#if item.css_type === 'class'}
+                    {#if item.slot === 'frame'}
+                      <span class="profile-name-frame {item.css_value}">Username</span>
+                    {:else}
+                      <span class="{item.css_value}" data-text="Username">Username</span>
+                    {/if}
+                  {:else if item.css_type === 'style'}
+                    {#if item.slot === 'frame'}
+                      <span class="profile-name-frame" style="{item.css_value}">Username</span>
+                    {:else}
+                      <span style="{item.css_value}" data-text="Username">Username</span>
+                    {/if}
+                  {/if}
+                </div>
+              {/if}
+            </div>
+
+            <h3>{item.name}</h3>
+            <p class="item-summary">{getItemSummary(item)}</p>
+            <div class="item-footnote">
+              <span class="item-cost">{item.cost.toLocaleString()} EP</span>
+              <span class="state-pill muted">{getStateLabel(item)}</span>
+            </div>
+
+            <div class="shop-actions">
+              {#if equipped}
+                <button class="shop-btn equipped" type="button" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={!!loadingAction}>
+                  {loadingUnequip ? 'Unequipping...' : 'Unequip'}
+                </button>
+              {:else if owned && item.slot !== 'consumable'}
+                <button class="shop-btn owned" type="button" on:click={() => handleAction(item.item_key, 'equip')} disabled={!!loadingAction}>
+                  {loadingEquip ? 'Equipping...' : 'Equip'}
+                </button>
+              {:else if item.cost > 0 && affordable}
+                <button class="shop-btn" type="button" on:click={() => requestPurchase(item)} disabled={!!loadingAction}>
+                  {loadingBuy ? 'Buying...' : 'Buy'}
+                </button>
+              {:else if item.cost <= 0}
+                <button class="shop-btn disabled" type="button" disabled>
+                  🔒 Milestone Reward
+                </button>
+              {:else}
+                <button class="shop-btn disabled" type="button" disabled>
+                  Not Enough EP
+                </button>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
+
+  <div class="shop-toolbar">
+    <div class="shop-tabs">
+      <button class="shop-tab" class:active={activeTab === 'all'} type="button" on:click={() => activeTab = 'all'}>All</button>
+      <button class="shop-tab" class:active={activeTab === 'name_effect'} type="button" on:click={() => activeTab = 'name_effect'}>Names</button>
+      <button class="shop-tab" class:active={activeTab === 'frame'} type="button" on:click={() => activeTab = 'frame'}>Frames</button>
+      <button class="shop-tab" class:active={activeTab === 'profile_border'} type="button" on:click={() => activeTab = 'profile_border'}>Borders</button>
+      <button class="shop-tab" class:active={activeTab === 'profile_bg'} type="button" on:click={() => activeTab = 'profile_bg'}>Backgrounds</button>
+      <button class="shop-tab" class:active={activeTab === 'orb_shape'} type="button" on:click={() => activeTab = 'orb_shape'}>Orb Shapes</button>
+      <button class="shop-tab" class:active={activeTab === 'roll_effect'} type="button" on:click={() => activeTab = 'roll_effect'}>Roll Effects</button>
+      <button class="shop-tab" class:active={activeTab === 'lb_theme'} type="button" on:click={() => activeTab = 'lb_theme'}>LB Themes</button>
+    </div>
+
+    <div class="shop-sort">
+      <span>Sort</span>
+      <div class="sort-pills" role="tablist" aria-label="Sort shop items">
+        {#each Object.entries(sortLabels) as [value, label]}
+          <button
+            class="sort-pill"
+            class:active={sortMode === value}
+            type="button"
+            on:click={() => sortMode = value}
+          >
+            {label}
+          </button>
+        {/each}
+      </div>
+    </div>
   </div>
 
-  {#if itemsArray.length === 0}
-    <div class="card"><p>No items in this category yet.</p></div>
+  <div class="shop-section-header">
+    <div>
+      <h3>{activeCategoryLabel}</h3>
+      <p>Permanent cosmetics only. Utility items live below so they do not compete with visual rewards.</p>
+    </div>
+    <span class="section-count">{filteredCosmetics.length} item{filteredCosmetics.length === 1 ? '' : 's'}</span>
+  </div>
+
+  {#if filteredCosmetics.length === 0}
+    <div class="shop-empty">
+      <p>No items in this category yet.</p>
+      <span>Try a different category or view All cosmetics.</span>
+    </div>
   {:else}
     <div class="shop-grid">
-      {#each itemsArray as item (item.item_key)}
+      {#each filteredCosmetics as item (item.item_key)}
         {@const owned = $userInventory.includes(item.item_key)}
         {@const equipped = $equippedItems[item.slot] === item.item_key}
         {@const affordable = $walletBalance >= item.cost}
-        {@const isConsumable = item.slot === 'consumable'}
+        {@const loadingBuy = isLoading('buy', item.item_key)}
+        {@const loadingEquip = isLoading('equip', item.item_key)}
+        {@const loadingUnequip = isLoading('unequip', item.item_key)}
 
-        <div class="shop-item shop-rarity-{item.rarity || 'Common'}">
-          <div class="shop-preview-area">
+        <div class="shop-item rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
+          <div class="shop-item-meta">
+            <span class="state-pill slot">{getSlotLabel(item.slot)}</span>
+            <span class="state-pill rarity">{item.rarity || 'Common'}</span>
+          </div>
+
+          <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''}">
             {#if item.slot === 'profile_bg'}
               <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
             {:else if item.slot === 'roll_effect'}
               <div class="preview-roll-orb {item.css_type === 'class' ? item.css_value : ''}"></div>
             {:else if item.slot === 'lb_theme'}
-              <div class="preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                <span class="preview-lb-text">#1 YourName</span>
+              <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                <span class="lb-rank preview-lb-rank">#1</span>
+                <div class="lb-info preview-lb-info">
+                  <span class="lb-username preview-lb-name">YourName</span>
+                  <span class="preview-lb-sub">#7B5CFF • Mythic</span>
+                </div>
+                <span class="lb-score preview-lb-score">9.8M</span>
               </div>
             {:else if item.slot === 'orb_shape'}
               <div class="preview-orb-shape {item.css_type === 'class' ? item.css_value : ''}"></div>
             {:else if item.slot === 'profile_border'}
-              <div class="preview-border {item.css_type === 'class' ? item.css_value : ''}"></div>
+              <div class="preview-profile-card {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
+                <div class="preview-profile-topline">
+                  <span class="preview-profile-badge">Featured</span>
+                  <span class="preview-profile-dot"></span>
+                </div>
+                <span class="preview-profile-name">YourName</span>
+                <div class="preview-profile-meta">
+                  <span>Rank</span>
+                  <span>30d</span>
+                </div>
+              </div>
             {:else}
               <div class="shop-preview-text">
                 {#if item.css_type === 'class'}
@@ -127,53 +464,190 @@
           {#if item.collection}
             <p class="item-collection">{item.collection}</p>
           {/if}
-          <p class="item-cost">{item.cost.toLocaleString()} EP</p>
-          {#if item.description}
+          <p class="item-summary">{getItemSummary(item)}</p>
+          {#if item.description && item.description !== getItemSummary(item)}
             <p class="item-desc">{item.description}</p>
           {/if}
 
-          {#if equipped}
-            <button class="shop-btn equipped" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={loadingAction}>
-              Unequip
-            </button>
-          {:else if owned && !isConsumable}
-            <button class="shop-btn owned" on:click={() => handleAction(item.item_key, 'equip')} disabled={loadingAction}>
-              Equip
-            </button>
-          {:else if item.cost > 0 && affordable}
-            <button class="shop-btn" on:click={() => handleAction(item.item_key, 'buy')} disabled={loadingAction}>
-              Buy
-            </button>
-          {:else if item.cost <= 0}
-            <button class="shop-btn disabled" disabled>
-              🔒 Milestone Reward
-            </button>
-          {:else}
-            <button class="shop-btn disabled" disabled>
-              Not Enough EP
-            </button>
+          <div class="item-footnote">
+            <span class="item-cost">{item.cost.toLocaleString()} EP</span>
+            <span class="state-pill muted">{getStateLabel(item)}</span>
+          </div>
+
+          <div class="shop-actions">
+            {#if equipped}
+              <button class="shop-btn equipped" type="button" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={!!loadingAction}>
+                {loadingUnequip ? 'Unequipping...' : 'Unequip'}
+              </button>
+            {:else if owned && item.slot !== 'consumable'}
+              <button class="shop-btn owned" type="button" on:click={() => handleAction(item.item_key, 'equip')} disabled={!!loadingAction}>
+                {loadingEquip ? 'Equipping...' : 'Equip'}
+              </button>
+            {:else if item.cost > 0 && affordable}
+              <button class="shop-btn" type="button" on:click={() => requestPurchase(item)} disabled={!!loadingAction}>
+                {loadingBuy ? 'Buying...' : 'Buy'}
+              </button>
+            {:else if item.cost <= 0}
+              <button class="shop-btn disabled" type="button" disabled>
+                🔒 Milestone Reward
+              </button>
+            {:else}
+              <button class="shop-btn disabled" type="button" disabled>
+                Not Enough EP
+              </button>
+            {/if}
+          </div>
+        </div>
+      {/each}
+    </div>
+  {/if}
+
+  {#if utilityItems.length}
+    <div class="shop-section-header utility-header">
+      <div>
+        <h3>Utility</h3>
+        <p>Consumables that affect streaks or rerolls. They are separated from cosmetics to keep the main catalog focused.</p>
+      </div>
+      <span class="section-count">{utilityItems.length} item{utilityItems.length === 1 ? '' : 's'}</span>
+    </div>
+
+    <div class="shop-grid utility-grid">
+      {#each sortedUtilityItems as item (item.item_key)}
+        {@const affordable = $walletBalance >= item.cost}
+        {@const loadingBuy = isLoading('buy', item.item_key)}
+        {@const count = item.item_key === 'reroll_shard' ? $rerollShards : getInventoryCount(item.item_key)}
+
+        <div class="shop-item utility-item rarity-{item.rarity || 'Common'}">
+          <div class="shop-item-meta">
+            <span class="state-pill slot">Utility</span>
+            <span class="state-pill rarity">{item.rarity || 'Common'}</span>
+          </div>
+
+          <div class="shop-preview-area">
+            <div class="utility-preview">
+              {#if item.item_key === 'reroll_shard'}
+                <span>+1 reroll</span>
+                <strong>{count} owned</strong>
+              {:else if item.item_key === 'streak_freeze'}
+                <span>Protect a streak</span>
+                <strong>{count} owned</strong>
+              {:else}
+                <span>Utility item</span>
+                <strong>{count} owned</strong>
+              {/if}
+            </div>
+          </div>
+
+          <h3>{item.name}</h3>
+          <p class="item-summary">{getItemSummary(item)}</p>
+          {#if item.description && item.description !== getItemSummary(item)}
+            <p class="item-desc">{item.description}</p>
           {/if}
+
+          <div class="item-footnote">
+            <span class="item-cost">{item.cost.toLocaleString()} EP</span>
+            <span class="state-pill muted">{getStateLabel(item)}</span>
+          </div>
+
+          <div class="shop-actions">
+            {#if item.cost > 0 && affordable}
+              <button class="shop-btn" type="button" on:click={() => requestPurchase(item)} disabled={!!loadingAction}>
+                {loadingBuy ? 'Buying...' : 'Buy'}
+              </button>
+            {:else if item.cost <= 0}
+              <button class="shop-btn disabled" type="button" disabled>
+                🔒 Milestone Reward
+              </button>
+            {:else}
+              <button class="shop-btn disabled" type="button" disabled>
+                Not Enough EP
+              </button>
+            {/if}
+          </div>
         </div>
       {/each}
     </div>
   {/if}
 </div>
 
+{#if purchaseTarget}
+  <div class="purchase-modal-overlay" role="presentation" on:click|self={cancelPurchase}>
+    <div
+      class="purchase-modal-content"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="purchase-modal-title"
+    >
+      <div class="purchase-modal-head">
+        <div>
+          <p class="purchase-kicker">Confirm purchase</p>
+          <h3 id="purchase-modal-title">{purchaseTarget.name}</h3>
+        </div>
+        <span class="state-pill rarity">{purchaseTarget.rarity || 'Common'}</span>
+      </div>
+
+      <p class="purchase-summary">{selectedItemPreview}</p>
+      <p class="purchase-desc">{purchaseTarget.description}</p>
+
+      <div class="purchase-stats">
+        <div>
+          <span>Cost</span>
+          <strong>{purchaseTarget.cost.toLocaleString()} EP</strong>
+        </div>
+        <div>
+          <span>Your balance</span>
+          <strong>{$walletBalance.toLocaleString()} EP</strong>
+        </div>
+        <div>
+          <span>After purchase</span>
+          <strong>{Math.max(0, $walletBalance - purchaseTarget.cost).toLocaleString()} EP</strong>
+        </div>
+      </div>
+
+      <p class="purchase-reason">{getPurchaseReason(purchaseTarget)}</p>
+
+      <div class="purchase-actions">
+        <button class="shop-btn secondary" type="button" on:click={cancelPurchase} disabled={!!loadingAction}>
+          Cancel
+        </button>
+        <button class="shop-btn" type="button" on:click={confirmPurchase} disabled={!!loadingAction}>
+          Confirm Purchase
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <style>
+  .shop-intro {
+    margin: -10px 0 18px 0;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 760px;
+  }
+
+  .shop-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
   .shop-tabs {
     display: flex;
     gap: 10px;
-    margin-bottom: 25px;
     flex-wrap: wrap;
     border-bottom: 1px solid var(--card-border);
     padding-bottom: 15px;
   }
-  .shop-tab {
+
+  .shop-tab,
+  .sort-pill {
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--card-border);
     color: var(--text-muted);
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 8px 12px;
+    border-radius: 999px;
     cursor: pointer;
     font-family: 'Space Grotesk', sans-serif;
     font-size: 0.8rem;
@@ -181,27 +655,547 @@
     min-height: 40px;
     white-space: nowrap;
   }
-  .shop-tab:hover { background: rgba(255,255,255,0.08); color: #fff; }
-  .shop-tab.active { background: var(--accent-purple); color: #fff; border-color: var(--accent-purple); }
 
-  .shop-preview-area { height: 40px; margin-bottom: 20px; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; }
-  .preview-bg { width: 100%; height: 40px; border-radius: 8px; border: 1px solid var(--card-border); background-color: #111; flex-shrink: 0; box-sizing: border-box; }
-  .preview-roll-orb { width: 30px; height: 30px; border-radius: 50%; background: #333; border: 1px solid var(--card-border); position: relative; }
-  .preview-lb-row { width: 100%; height: 30px; border-radius: 8px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; overflow: hidden; background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); }
-  .preview-lb-text { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .preview-orb-shape { width: 30px; height: 30px; background: #333; border: 1px solid var(--card-border); }
+  .shop-tab:hover,
+  .sort-pill:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
 
-  .preview-border { width: 60px; height: 40px; background: #111; border-radius: 8px; border: 2px solid transparent; }
+  .shop-tab.active,
+  .sort-pill.active {
+    background: var(--accent-purple);
+    color: #fff;
+    border-color: var(--accent-purple);
+  }
 
-  .item-collection { font-size: 0.7rem; color: var(--accent-purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; font-weight: 600; }
-  .item-cost { color: var(--accent-green); font-family: 'JetBrains Mono'; font-size: 0.85rem; margin-bottom: 4px; }
-  .item-desc { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 20px; line-height: 1.4; min-height: 30px; overflow-wrap: anywhere; }
+  .shop-sort {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
 
-  .preview-lb-row.lb-glow-theme { background: rgba(59, 130, 246, 0.25) !important; border: 2px solid #3b82f6 !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), inset 0 0 8px rgba(59, 130, 246, 0.3) !important; }
-  .preview-lb-row.lb-gold-theme { background: linear-gradient(90deg, #bf953f, #fcf6ba, #b38728, #fbf5b7) !important; border: 2px solid #ffd700 !important; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5) !important; }
-  .preview-lb-row.lb-gold-theme .preview-lb-text { color: #1a1a1a !important; text-shadow: 0 1px 1px rgba(255,255,255,0.4); }
-  .preview-lb-row.lb-spectrum-theme,
-  .preview-lb-row.lb-chroma-theme { border: 2px solid transparent !important; background-image: linear-gradient(rgba(10, 10, 13, 0.85), rgba(10, 10, 13, 0.85)), var(--spectrum) !important; background-origin: border-box !important; background-clip: padding-box, border-box !important; background-size: 100% 100%, 300% 100% !important; animation: spectrumFlow 3s linear infinite !important; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5) !important; }
+  .shop-sort > span {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .sort-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .shop-section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 10px 0 18px;
+  }
+
+  .shop-section-header h3 {
+    margin: 0 0 6px 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.15rem;
+  }
+
+  .shop-section-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .section-count {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .shop-empty {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 18px;
+  }
+
+  .shop-empty p {
+    margin: 0 0 6px 0;
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .shop-empty span {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+
+  .featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .shop-item {
+    background: rgba(19, 20, 26, 0.95);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+  }
+
+  .featured-item {
+    padding: 16px;
+  }
+
+  .shop-item.is-equipped {
+    border-color: rgba(168, 85, 247, 0.8);
+    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.25), 0 16px 32px rgba(0, 0, 0, 0.18);
+  }
+
+  .shop-item.is-owned:not(.is-equipped) {
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  .shop-item-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .state-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .state-pill.slot {
+    background: rgba(168, 85, 247, 0.1);
+    color: #d8b4fe;
+    border-color: rgba(168, 85, 247, 0.18);
+  }
+
+  .state-pill.rarity {
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    border-color: rgba(255,255,255,0.12);
+  }
+
+  .state-pill.muted {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+    border-color: rgba(255,255,255,0.08);
+  }
+
+  .state-pill.equipped {
+    background: rgba(34, 197, 94, 0.14);
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.18);
+  }
+
+  .state-pill.owned {
+    background: rgba(59, 130, 246, 0.14);
+    color: #93c5fd;
+    border-color: rgba(59, 130, 246, 0.18);
+  }
+
+  .shop-preview-area {
+    height: 46px;
+    margin-bottom: 18px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .shop-preview-area-tall {
+    height: 72px;
+  }
+
+  .preview-bg {
+    width: 100%;
+    height: 46px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border);
+    background-color: #111;
+    flex-shrink: 0;
+    box-sizing: border-box;
+  }
+
+  .preview-roll-orb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #333;
+    border: 1px solid var(--card-border);
+    position: relative;
+  }
+
+  .preview-lb-row {
+    width: 100%;
+    min-height: 58px;
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    overflow: hidden;
+    margin: 0;
+    gap: 10px;
+  }
+
+  .preview-lb-rank {
+    width: auto;
+    min-width: 22px;
+    font-size: 0.72rem;
+  }
+
+  .preview-lb-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-left: 0;
+  }
+
+  .preview-lb-name {
+    font-size: 0.76rem;
+    line-height: 1.1;
+  }
+
+  .preview-lb-sub {
+    color: var(--text-muted);
+    font-size: 0.62rem;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .preview-lb-score {
+    font-size: 0.74rem;
+  }
+
+  .preview-lb-row.lb-gold-theme .preview-lb-rank,
+  .preview-lb-row.lb-gold-theme .preview-lb-sub {
+    color: rgba(26, 26, 26, 0.72);
+  }
+
+  .preview-orb-shape {
+    width: 32px;
+    height: 32px;
+    background: #333;
+    border: 1px solid var(--card-border);
+  }
+
+  .preview-profile-card {
+    width: 100%;
+    min-height: 72px;
+    background:
+      radial-gradient(circle at top right, rgba(123, 92, 255, 0.18), transparent 42%),
+      linear-gradient(180deg, rgba(15, 15, 21, 0.98), rgba(9, 9, 14, 0.96));
+    border-radius: 16px;
+    border: 2px solid transparent;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+
+  .preview-profile-topline,
+  .preview-profile-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .preview-profile-badge,
+  .preview-profile-meta span {
+    color: var(--text-muted);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .preview-profile-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.3);
+    box-shadow: 0 0 12px rgba(255,255,255,0.18);
+    flex-shrink: 0;
+  }
+
+  .preview-profile-name {
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .utility-preview {
+    width: 100%;
+    height: 46px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    text-align: center;
+  }
+
+  .utility-preview span {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .utility-preview strong {
+    color: #fff;
+    font-size: 0.9rem;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .shop-item h3 {
+    margin: 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    color: #fff;
+  }
+
+  .item-collection {
+    font-size: 0.7rem;
+    color: var(--accent-purple);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
+
+  .item-summary {
+    color: #dbe4ff;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin: 8px 0 6px;
+  }
+
+  .item-desc {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1.45;
+    margin: 0 0 14px 0;
+    overflow-wrap: anywhere;
+  }
+
+  .item-footnote {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+    margin-bottom: 14px;
+  }
+
+  .item-cost {
+    color: var(--accent-green);
+    font-family: 'JetBrains Mono';
+    font-size: 0.85rem;
+  }
+
+  .shop-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .shop-btn {
+    flex: 1;
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--accent-purple);
+    color: #fff;
+    transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
+    min-height: 44px;
+  }
+
+  .shop-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .shop-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+  }
+
+  .shop-btn.owned {
+    background: rgba(59, 130, 246, 0.16);
+    color: #bfdbfe;
+  }
+
+  .shop-btn.equipped {
+    background: rgba(34, 197, 94, 0.18);
+    color: #bbf7d0;
+  }
+
+  .shop-btn.secondary {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--card-border);
+    color: #fff;
+  }
+
+  .shop-btn.disabled {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-muted);
+  }
+
+  .utility-header {
+    margin-top: 4px;
+  }
+
+  .utility-grid {
+    margin-bottom: 12px;
+  }
+
+  .purchase-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.72);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 80;
+  }
+
+  .purchase-modal-content {
+    width: min(560px, 100%);
+    background: #16171f;
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  }
+
+  .purchase-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .purchase-kicker {
+    margin: 0 0 6px 0;
+    color: var(--accent-purple);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+  }
+
+  .purchase-modal-content h3 {
+    margin: 0;
+    font-family: 'Space Grotesk', sans-serif;
+    color: #fff;
+  }
+
+  .purchase-summary {
+    margin: 0 0 8px 0;
+    color: #dbe4ff;
+    line-height: 1.5;
+  }
+
+  .purchase-desc {
+    margin: 0 0 18px 0;
+    color: var(--text-muted);
+    line-height: 1.5;
+    font-size: 0.9rem;
+  }
+
+  .purchase-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .purchase-stats div {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .purchase-stats span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+
+  .purchase-stats strong {
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .purchase-reason {
+    margin: 0 0 18px 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .purchase-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 900px) {
+    .purchase-stats {
+      grid-template-columns: 1fr;
+    }
+  }
 
   @media (max-width: 600px) {
     .shop-tabs {
@@ -211,25 +1205,62 @@
       flex-wrap: nowrap;
       justify-content: flex-start;
     }
+
     .shop-tabs::-webkit-scrollbar {
       display: none;
     }
+
     .shop-tab {
       flex: 0 0 auto;
     }
+
+    .shop-section-header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .shop-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .featured-grid {
+      grid-template-columns: 1fr;
+    }
+
     .shop-item {
       padding: 16px 14px;
       border-radius: 18px;
     }
+
     .shop-item h3 {
-      font-size: 0.95rem;
+      font-size: 0.96rem;
     }
+
+    .item-summary,
     .item-desc {
-      font-size: 0.72rem;
-      margin-bottom: 16px;
+      font-size: 0.74rem;
     }
+
     .shop-preview-area {
       margin-bottom: 16px;
+    }
+
+    .purchase-modal-overlay {
+      align-items: flex-end;
+      padding: 12px;
+    }
+
+    .purchase-modal-content {
+      border-radius: 18px 18px 12px 12px;
+      padding: 18px;
+    }
+
+    .purchase-actions {
+      flex-direction: column;
+    }
+
+    .shop-btn {
+      width: 100%;
     }
   }
 </style>
