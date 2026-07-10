@@ -855,9 +855,9 @@
     border: 1px solid rgba(139, 124, 246, 0.2); border-radius: 12px;
     display: flex; align-items: center; justify-content: space-between; gap: 15px;
   }
-  .cotw-info { text-align: left; display: flex; flex-direction: column; gap: 4px; }
+  .cotw-info { text-align: left; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .cotw-title { font-size: 0.9rem; font-weight: 700; color: var(--accent-purple); font-family: 'Space Grotesk', sans-serif; }
-  .cotw-desc { font-size: 0.75rem; color: var(--text-muted); }
+  .cotw-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.35; }
   .cotw-swatch { width: 48px; height: 48px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 0 15px rgba(0,0,0,0.3); flex-shrink: 0; }
 
   .cotw-success-banner {
@@ -977,11 +977,22 @@
       white-space: nowrap;
     }
     .cotw-widget {
-      flex-direction: column;
-      align-items: stretch;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 13px;
+    }
+    .cotw-info {
+      gap: 3px;
+    }
+    .cotw-desc {
+      font-size: 0.72rem;
     }
     .cotw-swatch {
-      align-self: flex-start;
+      align-self: center;
+      width: 44px;
+      height: 44px;
     }
     .image-modal-content {
       padding: 18px 16px;
