@@ -1,6 +1,6 @@
 <script>
   import { supabase } from './supabase';
-  import { session, authInitialized, fetchWalletBalance, rerollShards, profile, isAuthenticated } from './stores';
+  import { session, authInitialized, fetchWalletBalance, rerollShards, equippedItems, isAuthenticated } from './stores';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
@@ -47,7 +47,7 @@
   $: rollBadges = badges.filter(b => !b.startsWith('ach_') && !SYSTEM_BADGE_IDS.includes(b));
   $: earnedAchievements = badges.filter(b => b.startsWith('ach_'));
 
-  $: cosmetics = $profile?.equipped_cosmetics || {};
+  $: cosmetics = $equippedItems || {};
   $: rollEff = getRollEffect(cosmetics);
   $: orbEff = getOrbShape(cosmetics);
 

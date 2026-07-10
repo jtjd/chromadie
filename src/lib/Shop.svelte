@@ -1,5 +1,5 @@
 <script>
-  import { shopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards } from './stores';
+  import { shopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards, profile } from './stores';
   import { supabase } from './supabase';
 
   let loadingAction = null;
@@ -158,6 +158,7 @@
           if (item.slot === 'consumable') {
             if (itemKey === 'reroll_shard') {
               rerollShards.update(s => s + 1);
+              profile.update(p => p ? { ...p, reroll_shards: (p.reroll_shards || 0) + 1 } : p);
             } else if (itemKey === 'streak_freeze') {
               userInventory.update(inv => [...inv, itemKey]);
             } else {
@@ -176,6 +177,7 @@
         else if (!data.success) error = data.error;
         else {
           equippedItems.set(data.cosmetics);
+          profile.update(p => p ? { ...p, equipped_cosmetics: data.cosmetics } : p);
           if (!silent) addToast(`Equipped ${$shopItems[itemKey].name}.`, 'success');
         }
       } else if (action === 'unequip') {
@@ -184,6 +186,7 @@
         else if (!data.success) error = data.error;
         else {
           equippedItems.set(data.cosmetics);
+          profile.update(p => p ? { ...p, equipped_cosmetics: data.cosmetics } : p);
           addToast('Unequipped item.', 'success');
         }
       }
