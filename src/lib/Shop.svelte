@@ -546,9 +546,9 @@
                 <span>+1 reroll</span>
                 <strong>{count} owned</strong>
               {:else if item.item_key === 'streak_freeze'}
-                <span>Auto-protects a streak</span>
+                <span>Protects your streak</span>
                 <strong>{count} owned</strong>
-                <span class="utility-note">No button needed. It is used automatically if you miss one day and come back on the next roll.</span>
+                <span class="utility-note">Automatically applied if needed.</span>
               {:else}
                 <span>Utility item</span>
                 <strong>{count} owned</strong>
