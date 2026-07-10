@@ -12,6 +12,7 @@
   import ResetPassword from './lib/ResetPassword.svelte';
   import Toast from './lib/Toast.svelte';
   import GuestLock from './lib/GuestLock.svelte';
+  import { loadChallengeLink } from './lib/challenges';
   import { getNameEffect, getFrameEffect, getTitleText } from './lib/cosmetics';
   import { normalizeHexColor } from './lib/utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './lib/a11y';
@@ -26,6 +27,7 @@
   let routeMode = 'app';
   let showAuthModal = false;
   let challengeData = null;
+  let challengeLoadRequestId = 0;
   let authDialog = null;
   let authOpener = null;
   let mobileMenuOpen = false;
@@ -34,14 +36,17 @@
   supabase.auth.getSession().then(({ data }) => session.set(data.session));
 
   function parseRoute() {
+    challengeLoadRequestId += 1;
     const params = new SvelteURLSearchParams(window.location.search);
     const rawPath = window.location.pathname.replace(/\/+$/, '') || '/';
     const routeView = params.get('view');
     const routeTab = params.get('tab');
     const routeProfileId = params.get('profile');
+    const routeChallengeFrom = params.get('from');
     const cScore = params.get('challenge');
     const cHex = params.get('hex');
     const isValidChallengeHex = /^[0-9A-Fa-f]{6}$/.test(cHex || '');
+    const challengeMatch = rawPath.match(/^\/c\/([^/]+)$/);
     const profileMatch = rawPath.match(/^\/u\/([^/]+)$/);
     const decodePathSegment = value => {
       try {
@@ -64,22 +69,42 @@
     }
 
     if (profileMatch) {
+      challengeData = null;
       view = 'profile';
       selectedProfileUsername = decodePathSegment(profileMatch[1]);
       selectedUserId.set(null);
+    } else if (challengeMatch) {
+      view = 'game';
+      selectedProfileUsername = null;
+      selectedUserId.set(null);
+      challengeData = {
+        id: decodePathSegment(challengeMatch[1]),
+        fromUsername: routeChallengeFrom || null,
+        loading: true,
+        error: null
+      };
+      void loadChallengeById(challengeData.id, routeChallengeFrom || null);
     } else {
       view = VALID_VIEWS.has(routeView) ? routeView : 'game';
       selectedProfileUsername = null;
       selectedUserId.set(routeMode === 'app' ? routeProfileId || null : null);
+      if (cScore && isValidChallengeHex) {
+        const parsedScore = Number.parseInt(cScore, 10);
+        challengeData = Number.isFinite(parsedScore)
+          ? {
+              id: null,
+              score: parsedScore,
+              hex: normalizeHexColor(cHex),
+              fromUsername: routeChallengeFrom || null,
+              loading: false,
+              error: null
+            }
+          : null;
+      } else {
+        challengeData = null;
+      }
     }
     leaderboardTab = VALID_LEADERBOARD_TABS.has(routeTab) ? routeTab : 'today';
-
-    if (cScore && isValidChallengeHex) {
-      const parsedScore = Number.parseInt(cScore, 10);
-      challengeData = Number.isFinite(parsedScore) ? { score: parsedScore, hex: normalizeHexColor(cHex) } : null;
-    } else {
-      challengeData = null;
-    }
   }
 
   function syncRoute() {
@@ -87,6 +112,10 @@
     if (!VALID_APP_ROUTES.has(routeMode) || routeMode !== 'app') return;
 
     const currentProfileUsername = $profile?.username || $authUser?.user_metadata?.username || null;
+    if (view === 'game' && challengeData) {
+      return;
+    }
+
     if (view === 'profile') {
       const routeUsername = selectedProfileUsername
         || ($selectedUserId && $session?.user?.id && $selectedUserId === $session.user.id ? currentProfileUsername : null)
@@ -122,6 +151,32 @@
     }
   }
 
+  async function loadChallengeById(challengeId, fallbackFrom = null) {
+    const requestId = ++challengeLoadRequestId;
+    const result = await loadChallengeLink(supabase, challengeId);
+
+    if (requestId !== challengeLoadRequestId) return;
+
+    if (!result.success || !result.challenge) {
+      challengeData = {
+        id: challengeId,
+        fromUsername: fallbackFrom || null,
+        loading: false,
+        error: result.error?.message || 'Challenge not found.'
+      };
+      return;
+    }
+
+    challengeData = {
+      id: result.challenge.id,
+      score: result.challenge.target_score,
+      hex: result.challenge.target_hex,
+      fromUsername: result.challenge.sender_username || fallbackFrom || null,
+      loading: false,
+      error: null
+    };
+  }
+
   function setRoute(nextView, options = {}) {
     if (!VALID_VIEWS.has(nextView)) return;
 
@@ -152,6 +207,9 @@
     if (typeof window === 'undefined') return;
     const normalized = pathname || '/';
     const nextUrl = new URL(normalized, window.location.origin);
+    if (routeMode === 'app' && view === 'game' && challengeData && !nextUrl.pathname.startsWith('/c/')) {
+      clearChallengeState();
+    }
     window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}`);
     parseRoute();
   }
@@ -159,10 +217,18 @@
   function clearChallengeState() {
     if (typeof window === 'undefined') return;
 
+    challengeLoadRequestId += 1;
     challengeData = null;
     const nextUrl = new URL(window.location.href);
     nextUrl.searchParams.delete('challenge');
     nextUrl.searchParams.delete('hex');
+    nextUrl.searchParams.delete('from');
+
+    if (nextUrl.pathname.startsWith('/c/')) {
+      window.history.replaceState({}, '', '/');
+      return;
+    }
+
     window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
   }
 
@@ -186,6 +252,7 @@
     session.set(null);
     selectedUserId.set(null);
     selectedProfileUsername = null;
+    challengeData = null;
     closeMobileMenu();
     void supabase.auth.signOut();
     setRoute('game');
@@ -204,6 +271,7 @@
 
   function handleLogoClick(event) {
     event.preventDefault();
+    clearChallengeState();
     setRoute('game');
   }
 
@@ -224,6 +292,7 @@
     session.set(null);
     selectedUserId.set(null);
     selectedProfileUsername = null;
+    challengeData = null;
     mobileMenuOpen = false;
     showAuthModal = false;
     challengeData = null;
@@ -300,6 +369,10 @@
       ? 'How to Play | ChromaDie'
       : routeMode === 'app' && view === 'profile'
         ? `${profileTitle} | ChromaDie`
+        : routeMode === 'app' && view === 'game' && challengeData
+          ? challengeData.error
+            ? 'Challenge Unavailable | ChromaDie'
+            : 'Challenge | ChromaDie'
         : routeMode === 'app' && view === 'game'
         ? 'Roll | ChromaDie'
       : 'ChromaDie';
@@ -485,19 +558,51 @@
     <section class="challenge-banner" aria-label="Challenge prompt">
       <div class="challenge-copy">
         <p class="challenge-kicker">Challenge</p>
-        <h2>Beat this roll</h2>
+        <h2>
+          {#if challengeData.loading}
+            Loading challenge...
+          {:else if challengeData.error}
+            Challenge unavailable
+          {:else}
+            Beat this roll
+          {/if}
+        </h2>
         <p class="challenge-text">
-          A rival shared a target color. Roll closer to it for a stronger result.
+          {#if challengeData.loading}
+            Checking the shared link.
+          {:else if challengeData.error}
+            This challenge may have expired or been removed.
+          {:else if challengeData.fromUsername}
+            Shared by {challengeData.fromUsername}. Roll closer to the target color for a stronger result.
+          {:else}
+            A rival shared a target color. Roll closer to it for a stronger result.
+          {/if}
         </p>
       </div>
       <div class="challenge-meta">
-        <div class="challenge-stat" aria-label={`Target score ${challengeData.score.toLocaleString()} points`}>
-          <span class="challenge-color" style="background-color: {challengeData.hex};"></span>
-          <div>
-            <p class="challenge-score">{challengeData.score.toLocaleString()} pts</p>
-            <p class="challenge-subtext">Target score</p>
+        {#if challengeData.loading}
+          <div class="challenge-stat challenge-stat-loading">
+            <div>
+              <p class="challenge-score">Loading...</p>
+              <p class="challenge-subtext">Challenge link</p>
+            </div>
           </div>
-        </div>
+        {:else if challengeData.error}
+          <div class="challenge-stat challenge-stat-error">
+            <div>
+              <p class="challenge-score">Unavailable</p>
+              <p class="challenge-subtext">Try a newer link</p>
+            </div>
+          </div>
+        {:else}
+          <div class="challenge-stat" aria-label={`Target score ${challengeData.score.toLocaleString()} points`}>
+            <span class="challenge-color" style="background-color: {challengeData.hex};"></span>
+            <div>
+              <p class="challenge-score">{challengeData.score.toLocaleString()} pts</p>
+              <p class="challenge-subtext">Target score</p>
+            </div>
+          </div>
+        {/if}
         <button
           type="button"
           class="challenge-close"

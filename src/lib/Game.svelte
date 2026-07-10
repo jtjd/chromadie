@@ -1,6 +1,7 @@
 <script>
   import { supabase } from './supabase';
-  import { session, authInitialized, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
+  import { session, profile, authUser, authInitialized, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
+  import { createChallengeLink } from './challenges';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
@@ -95,7 +96,22 @@
       let achText = earnedAchievements.length > 0 ? earnedAchievements.map(b => getBadgeMeta(b).name).join(', ') : 'None';
       const shareHex = normalizeHexColor(displayColor);
       const hexNoHash = shareHex.substring(1);
-      const shareUrl = `${window.location.origin}?challenge=${score}&hex=${hexNoHash}`;
+      const senderUsername = $profile?.username || $authUser?.user_metadata?.username || null;
+      const fallbackUrl = `${window.location.origin}?challenge=${score}&hex=${hexNoHash}`;
+      let shareUrl = fallbackUrl;
+
+      const challengeLink = await createChallengeLink(supabase, {
+          score,
+          hex: shareHex,
+          senderUsername
+      });
+
+      if (challengeLink.success && challengeLink.shareUrl) {
+          shareUrl = `${window.location.origin}${challengeLink.shareUrl}`;
+      } else if (senderUsername) {
+          shareUrl = `${window.location.origin}?challenge=${score}&hex=${hexNoHash}&from=${encodeURIComponent(senderUsername)}`;
+      }
+
       let shareString = `🎲 ChromaDie Daily Roll\nHex: ${shareHex}\nScore: ${score.toLocaleString()} pts\nRarity: ${rarity}\nConditions: ${badgeText}\nAchievements: ${achText}\n\nCan you beat my color? Roll yours here: ${shareUrl}`;
 
       try {
