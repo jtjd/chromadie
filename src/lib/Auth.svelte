@@ -21,26 +21,26 @@
     login: {
       kicker: 'Welcome back',
       title: 'Sign in',
-      description: 'Pick up where you left off. Your rolls, leaderboard history, and cosmetics stay tied to your account.',
-      highlights: ['Daily roll history', 'Leaderboard progress', 'Unlocked cosmetics'],
-      primary: 'Sign In',
-      helper: 'Use the email address tied to your account.'
+      description: 'Keep your rolls, leaderboard history, and cosmetics synced across devices.',
+      highlights: ['Keeps your progress', 'Tracks leaderboard runs', 'Unlocks cosmetics'],
+      primary: 'Sign in',
+      helper: 'Use the email address linked to your account.'
     },
     signup: {
       kicker: 'New account',
       title: 'Create your account',
-      description: 'Save your progress across devices, receive confirmation emails, and unlock the full account experience.',
+      description: 'Save your progress, recover your account later, and unlock the full ChromaDie experience.',
       highlights: ['Email confirmation', 'Password recovery', 'Cross-device progress'],
-      primary: 'Create Account',
-      helper: 'Usernames are public and can contain letters, numbers, and underscores.'
+      primary: 'Create account',
+      helper: 'Usernames are public and can use letters, numbers, and underscores.'
     },
     forgot: {
       kicker: 'Account recovery',
       title: 'Reset your password',
-      description: 'We will send a reset link to your inbox if the account exists.',
-      highlights: ['Safe reset link', 'Keeps your account', 'Returns you to sign in'],
-      primary: 'Send Reset Link',
-      helper: 'Use the email address on the account you want to recover.'
+      description: 'We’ll send a reset link if the account exists.',
+      highlights: ['Secure reset link', 'No data lost', 'Returns you to sign in'],
+      primary: 'Send reset link',
+      helper: 'Use the email address tied to the account you want to recover.'
     }
   };
 
@@ -70,7 +70,7 @@
 
   onMount(() => {
     if (!siteKey) {
-      error = "Authentication is not configured.";
+      error = 'Authentication is not configured.';
       return;
     }
 
@@ -118,31 +118,31 @@
     notice = '';
 
     if (!siteKey) {
-      error = "Authentication is not configured.";
+      error = 'Authentication is not configured.';
       loading = false;
       return;
     }
 
     const captchaToken = getCaptchaToken();
     if (!captchaToken) {
-      error = "Please complete the CAPTCHA.";
+      error = 'Please complete the security check.';
       loading = false;
       return;
     }
 
     if (tab === 'signup') {
       if (!username || !email || !password) {
-        error = "Please fill out the username, email, and password.";
+        error = 'Please fill out the username, email, and password.';
         loading = false;
         return;
       }
       if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-        error = "Username must be 3-20 characters and use only letters, numbers, or underscores.";
+        error = 'Username must be 3-20 characters and use only letters, numbers, or underscores.';
         loading = false;
         return;
       }
       if (RESERVED_USERNAMES.has(normalizeUsername(username))) {
-        error = "That username is reserved. Please choose another one.";
+        error = 'That username is reserved. Please choose another one.';
         loading = false;
         return;
       }
@@ -164,12 +164,12 @@
         if (data.session) {
           // onAuthStateChange will handle the modal close
         } else {
-          notice = "Check your email for a confirmation link, then come back to sign in.";
+          notice = 'Check your email for a confirmation link, then come back to sign in.';
         }
       }
     } else if (tab === 'forgot') {
       if (!email) {
-        error = "Please enter the email address on your account.";
+        error = 'Please enter the email address on your account.';
         loading = false;
         return;
       }
@@ -183,12 +183,11 @@
         error = getFriendlyAuthError(resetError, 'Could not send the reset email.');
         resetCaptcha();
       } else {
-        notice = "If that account exists, we sent a reset link to your inbox.";
+        notice = 'If that account exists, we sent a reset link to your inbox.';
       }
     } else {
-      // Login Flow
       if (!email.includes('@')) {
-        error = "Use the email address tied to your account.";
+        error = 'Use the email address linked to your account.';
         loading = false;
         return;
       }
@@ -216,7 +215,6 @@
     <div class="auth-heading-group">
       <p class="auth-brand">ChromaDie</p>
       <p class="auth-kicker">{mode.kicker}</p>
-      <h1 id="auth-dialog-title">{mode.title}</h1>
       <p id="auth-dialog-desc" class="auth-description">
         {mode.description}
       </p>
@@ -227,14 +225,8 @@
   </div>
 
   <div class="tabs">
-    <button type="button" class={tab === 'login' ? 'active' : ''} on:click={() => setMode('login')}>Login</button>
-    <button type="button" class={tab === 'signup' ? 'active' : ''} on:click={() => setMode('signup')}>Sign Up</button>
-  </div>
-
-  <div class="auth-highlights" aria-label="What this account unlocks">
-    {#each mode.highlights as item}
-      <span class="auth-highlight">{item}</span>
-    {/each}
+    <button type="button" class={tab === 'login' ? 'active' : ''} on:click={() => setMode('login')}>Sign in</button>
+    <button type="button" class={tab === 'signup' ? 'active' : ''} on:click={() => setMode('signup')}>Create account</button>
   </div>
 
   <form on:submit|preventDefault={handleAuth}>
@@ -259,7 +251,10 @@
       </label>
     {/if}
 
-    <div id="turnstile-container"></div>
+    <div class="security-check">
+      <span class="field-label">Security check</span>
+      <div id="turnstile-container"></div>
+    </div>
 
     {#if notice}
       <p class="notice" role="status" aria-live="polite">{notice}</p>
@@ -275,11 +270,11 @@
       </button>
     {:else if tab === 'forgot'}
       <button type="button" class="link-btn" on:click={() => setMode('login')}>
-        Back to login
+        Back to sign in
       </button>
     {/if}
 
-    <button type="submit" class="btn btn-primary" disabled={loading}>
+    <button type="submit" class="btn btn-primary auth-submit" disabled={loading}>
       {loading ? 'Working...' : mode.primary}
     </button>
 
@@ -298,15 +293,23 @@
 <style>
   .auth-container {
     width: 100%;
-    max-width: 420px;
-    padding: clamp(1.5rem, 4vw, 2.5rem);
+    max-width: 480px;
+    padding: clamp(1.6rem, 4vw, 2.75rem);
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(255, 255, 255, 0.1);
+    background:
+      radial-gradient(circle at top left, rgba(139, 124, 246, 0.18), transparent 36%),
+      radial-gradient(circle at bottom right, rgba(46, 211, 201, 0.08), transparent 34%),
+      rgba(12, 13, 18, 0.88);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
   }
   .auth-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.35rem;
   }
   .auth-heading-group {
     min-width: 0;
@@ -318,64 +321,33 @@
     letter-spacing: 0.16em;
     font-size: 0.72rem;
     font-weight: 700;
-    font-family: 'Space Grotesk', sans-serif;
   }
   .auth-brand {
-    margin: 0 0 0.2rem 0;
-    color: rgba(255,255,255,0.78);
+    margin: 0 0 0.45rem 0;
+    color: rgba(255,255,255,0.68);
     text-transform: uppercase;
     letter-spacing: 0.2em;
     font-size: 0.68rem;
     font-weight: 700;
-    font-family: 'Space Grotesk', sans-serif;
-  }
-  h1 {
-    margin: 0;
-    font-size: 2.5rem;
-    background: var(--spectrum);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
   }
   .auth-description {
-    margin: 0.45rem 0 0 0;
+    margin: 0.15rem 0 0 0;
     color: var(--text-muted);
-    line-height: 1.5;
-    font-size: 0.95rem;
-  }
-  .auth-highlights {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 1rem;
-  }
-  .auth-highlight {
-    display: inline-flex;
-    align-items: center;
-    min-height: 32px;
-    padding: 0 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(139, 124, 246, 0.22);
-    background: rgba(139, 124, 246, 0.08);
-    color: #e8e4ff;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.2px;
+    line-height: 1.55;
+    font-size: 0.96rem;
+    max-width: 34ch;
   }
   .field-group {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    margin-bottom: 1rem;
+    gap: 0.4rem;
+    margin-bottom: 0.95rem;
   }
   .field-label {
-    color: #fff;
+    color: rgba(255,255,255,0.86);
     font-size: 0.8rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: 0.02em;
   }
   .close-auth-btn {
     flex-shrink: 0;
@@ -388,76 +360,153 @@
     cursor: pointer;
     font-size: 1rem;
     line-height: 1;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
   }
   .close-auth-btn:hover {
-    background: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.1);
+    border-color: var(--card-border-hover);
+    transform: translateY(-1px);
   }
   .tabs {
     display: flex;
-    margin-bottom: 1.5rem;
-    background: rgba(0,0,0,0.3);
-    border-radius: 8px;
+    margin-bottom: 1rem;
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
     padding: 4px;
+    border: 1px solid rgba(255,255,255,0.06);
   }
   .tabs button {
     flex: 1;
     background: none;
     border: none;
     color: var(--text-muted);
-    padding: 0.5rem;
+    padding: 0.7rem 0.9rem;
     cursor: pointer;
-    border-radius: 6px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 500;
+    border-radius: 11px;
+    font-weight: 600;
+    font-size: 0.92rem;
     transition: all 0.2s;
+    min-height: 42px;
   }
   .tabs button.active {
     color: #fff;
-    background: rgba(255,255,255,0.1);
+    background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
   }
   .field-hint {
     color: var(--text-muted);
-    font-size: 0.78rem;
+    font-size: 0.79rem;
     line-height: 1.45;
   }
   .input-field {
-    margin-bottom: 0;
-  }
-  button[type="submit"] {
     width: 100%;
+    min-height: 48px;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-main);
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    outline: none;
+    margin-bottom: 0;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .input-field::placeholder {
+    color: rgba(118, 123, 140, 0.8);
+  }
+  .input-field:focus {
+    border-color: rgba(139, 124, 246, 0.6);
+    box-shadow: 0 0 0 4px rgba(139, 124, 246, 0.14);
+    background: rgba(255,255,255,0.06);
+  }
+  .input-field:-webkit-autofill,
+  .input-field:-webkit-autofill:hover,
+  .input-field:-webkit-autofill:focus,
+  .input-field:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text-main);
+    caret-color: var(--text-main);
+    box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.04) inset;
+    border: 1px solid rgba(255,255,255,0.08);
+    background-color: rgba(255,255,255,0.04);
+    transition: background-color 9999s ease-out, color 9999s ease-out;
+  }
+  .security-check {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin: 0.35rem 0 1rem;
+  }
+  #turnstile-container {
+    min-height: 92px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 0.75rem;
-    font-size: 1.1rem;
-    margin-top: 1rem;
-    min-height: 46px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    overflow: hidden;
+  }
+  .auth-submit {
+    width: 100%;
+    margin-top: 0.5rem;
+    min-height: 50px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(233,233,240,0.92));
+    color: #0d0e12;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.28);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  }
+  .auth-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 40px rgba(139, 124, 246, 0.22);
+    filter: brightness(1.02);
+  }
+  .auth-submit:disabled {
+    opacity: 0.6;
+    cursor: wait;
   }
   .error {
-    color: #ff4444;
+    color: #fecaca;
     font-size: 0.9rem;
-    margin: 0 0 1rem 0;
-    text-align: center;
+    margin: 0.75rem 0 0.25rem 0;
+    text-align: left;
+    line-height: 1.5;
+    padding: 0.75rem 0.9rem;
+    border-radius: 12px;
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    background: rgba(248, 113, 113, 0.08);
   }
   .notice {
-    color: #6ee787;
+    color: #d1fae5;
     font-size: 0.92rem;
-    margin: 0 0 1rem 0;
-    text-align: center;
+    margin: 0.75rem 0 0.25rem 0;
+    text-align: left;
     line-height: 1.5;
+    padding: 0.75rem 0.9rem;
+    border-radius: 12px;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.08);
   }
   .link-btn {
     width: 100%;
-    margin: 0.25rem 0 0.75rem;
+    margin: 0.25rem 0 0.7rem;
     padding: 0;
     border: none;
     background: transparent;
-    color: var(--accent-purple);
+    color: #d7d2ff;
     cursor: pointer;
     font-size: 0.92rem;
+    font-weight: 600;
     text-decoration: underline;
     text-underline-offset: 0.2em;
-  }
-  #turnstile-container {
-    margin-bottom: 1rem;
-    min-height: 65px;
+    text-align: center;
   }
   .auth-footnote {
     margin: 0.9rem 0 0 0;
@@ -474,18 +523,6 @@
     .auth-header {
       gap: 0.75rem;
       margin-bottom: 1.25rem;
-    }
-    h1 {
-      font-size: 2rem;
-    }
-    .auth-highlights {
-      gap: 6px;
-      margin-bottom: 0.9rem;
-    }
-    .auth-highlight {
-      font-size: 0.72rem;
-      min-height: 30px;
-      padding: 0 10px;
     }
     .auth-description {
       font-size: 0.92rem;
@@ -508,6 +545,9 @@
     .field-hint,
     .auth-footnote {
       font-size: 0.76rem;
+    }
+    .auth-submit {
+      min-height: 48px;
     }
   }
 </style>
