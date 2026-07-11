@@ -646,14 +646,14 @@
       saveGuestRoll(rollData);
       guestProgressRestored = true;
     } else {
-      const hadFounderTitle = $userInventory.includes('title_founder');
+      const hadLaunchBadge = $profile?.equipped_badges?.includes('launch_edition');
       await Promise.all([
         refreshProfileState(),
         fetchInventoryState($session.user.id),
         fetchWalletBalance()
       ]);
-      if (!hadFounderTitle && $userInventory.includes('title_founder')) {
-        addToast('Founder title unlocked: ✦ FOUNDER ✦', 'success');
+      if (!hadLaunchBadge && $profile?.equipped_badges?.includes('launch_edition')) {
+        addToast('Launch Edition badge unlocked!', 'success');
       }
     }
 

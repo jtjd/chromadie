@@ -94,11 +94,11 @@ simulation results together. Historical scores and lifetime EP are not recalcula
 
 ## Launch Reward Window
 
-The permanent `title_founder` cosmetic is granted by the database after an authenticated roll
-inside the configured launch window. The provisional UTC window is stored in `public.meta`:
+The permanent `launch_edition` profile badge is granted by the database after an authenticated
+roll inside the configured launch window. The UTC window is stored in `public.meta`:
 
 - `official_launch_at`: `2026-07-11T00:00:00Z`
-- `founder_window_ends_at`: `2026-08-11T00:00:00Z` (exclusive)
+- `founder_window_ends_at`: `2026-08-11T00:00:00Z` (exclusive; retained for compatibility)
 
-Changing these values affects future grants immediately. Existing Founder ownership is permanent
+Changing these values affects future grants immediately. Existing Launch Edition badges are permanent
 and is never removed when the window changes or expires.

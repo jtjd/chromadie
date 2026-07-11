@@ -127,7 +127,7 @@ INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, 
 ('roll_smoke', 'Nebula Veil', 'roll_effect', '500000', 'class', 'roll-smoke-anim', NULL, NULL, 'Epic', 'Layered cyan-violet nebula clouds drift around your roll orb.', 'Elemental'),
 ('roll_sparkles', 'Starlight Aura', 'roll_effect', '1000000', 'class', 'roll-sparkles-anim', NULL, NULL, 'Epic', 'A crisp orbit of varied stars twinkles around your roll orb.', NULL),
 ('streak_freeze', 'Streak Freeze', 'consumable', '100000', 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL),
-('title_founder', 'Founder Title', 'title', '0', 'text', '✦ FOUNDER ✦', NULL, NULL, 'Mythic', 'Awarded permanently for an authenticated roll during the first launch month.', 'Launch Legacy')
+('title_founder', 'Founder Title', 'title', '0', 'text', '✦ FOUNDER ✦', NULL, NULL, 'Mythic', 'Reserved for people whose early contributions helped shape ChromaDie.', 'Project Legacy')
 ON CONFLICT (item_key) DO NOTHING;
 
 UPDATE public.shop_items

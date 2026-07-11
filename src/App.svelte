@@ -386,8 +386,8 @@
   $: titleTxt = getTitleText(userCosmetics);
   $: headerRank = $profile ? getRankState($profile.lifetime_ep || 0) : null;
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
-  $: founderTitleOwned = $userInventory.includes('title_founder');
-  $: founderAnnouncementVisible = founderLaunchWindowActive && !founderTitleOwned && (!$authUser || !$profileLoading);
+  $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
+  $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && (!$authUser || !$profileLoading);
   $: username = $session ? ($profile?.username || 'Loading your account...') : 'Guest Mode';
   $: mobileStatusText = $isAuthenticated
     ? username
@@ -584,10 +584,10 @@
           <p class="founder-banner-title">Thanks for playing.</p>
           <p class="founder-banner-text">
             {#if $authUser}
-              During the first month after launch, authenticated rolls permanently grant the <strong>Founder Title</strong>.
+              During the first month after launch, authenticated rolls permanently grant the <strong>Launch Edition badge</strong>.
             {:else}
               <button type="button" class="founder-inline-link" on:click={openAuthModal}>Sign in</button>
-              before you roll during the first month after launch to permanently earn the <strong>Founder Title</strong>.
+              before you roll during the first month after launch to permanently earn the <strong>Launch Edition badge</strong>.
             {/if}
           </p>
         </div>

@@ -32,7 +32,7 @@
       const today = getTodayString();
       query = supabase
         .from('leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges')
         .eq('roll_date', today)
         .order('score', { ascending: false })
         .limit(10);
@@ -48,19 +48,19 @@
     } else if (activeTab === 'weekly') {
       query = supabase
         .from('weekly_best_leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges')
         .order('score', { ascending: false })
         .limit(10);
     } else if (activeTab === 'monthly') {
       query = supabase
         .from('monthly_best_leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges')
         .order('score', { ascending: false })
         .limit(10);
     } else if (activeTab === 'roll') {
       query = supabase
         .from('all_time_leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges')
         .order('score', { ascending: false })
         .limit(10);
     }
@@ -168,6 +168,9 @@
                 {row.username}
               </span>
             </button>
+            {#if row.equipped_badges?.includes('launch_edition')}
+              <span class="launch-edition-badge" title="Played during ChromaDie's launch month" aria-label="Launch Edition player">LE</span>
+            {/if}
             {#if row.current_streak > 0}
               <span class="streak-chip">🔥 {row.current_streak}</span>
             {/if}
@@ -224,6 +227,7 @@
 
 <style>
   .lb-username-button { background: none; border: none; padding: 0; cursor: pointer; display: inline-flex; align-items: center; }
+  .launch-edition-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.45rem; height: 1.05rem; padding: 0 0.25rem; border: 1px solid rgba(161, 92, 255, 0.55); border-radius: 999px; background: linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(161, 92, 255, 0.2)); color: #d8c7ff; font: 700 0.58rem/1 'JetBrains Mono', monospace; letter-spacing: 0.05em; vertical-align: middle; }
   .my-rank-row { display: flex; align-items: center; justify-content: space-between; background: rgba(139, 124, 246, 0.1); border: 1px dashed rgba(139, 124, 246, 0.5); padding: 12px 15px; border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-top: 10px; }
   .lb-actions { display: flex; align-items: center; gap: 10px; }
   .rival-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; transition: all 0.2s; line-height: 1; padding: 0; }

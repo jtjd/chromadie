@@ -195,7 +195,7 @@
     const today = getTodayString();
     const { data, error } = await supabase
         .from('leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges')
         .eq('roll_date', today)
         .in('user_id', followedIds)
         .order('score', { ascending: false });
@@ -381,6 +381,9 @@
               <span class="profile-name-frame {frameEff.cls}" style="{frameEff.style}">
                 <span class="profile-username-large {nameEff.cls}" style="{nameEff.style}" data-text={username}>{username}</span>
               </span>
+              {#if targetProfile.equipped_badges?.includes('launch_edition')}
+                <span class="launch-edition-badge" title="Played during ChromaDie's launch month">Launch Edition</span>
+              {/if}
             </div>
             {#if rank}
               <div class="rank-chip" style="color: {rank.color}; border-color: {rank.color === 'var(--spectrum)' ? '#a15cff' : rank.color};">
@@ -679,6 +682,8 @@
   .name-row { display: flex; align-items: center; justify-content: center; width: 100%; }
   .profile-name-frame { display: inline-flex; align-items: center; line-height: 1; }
   .profile-username-large { line-height: 1; }
+  .name-row { display: flex; align-items: center; justify-content: center; gap: 0.65rem; flex-wrap: wrap; }
+  .launch-edition-badge { display: inline-flex; align-items: center; min-height: 1.4rem; padding: 0.15rem 0.5rem; border: 1px solid rgba(161, 92, 255, 0.55); border-radius: 999px; background: linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(161, 92, 255, 0.2)); color: #d8c7ff; font: 700 0.65rem/1 'JetBrains Mono', monospace; letter-spacing: 0.04em; text-transform: uppercase; }
   .title-chip { margin-right: 0; }
   .rank-chip { margin-top: 1px; align-self: center; }
   .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-top: 2px; flex: 0 0 auto; margin-left: auto; }
