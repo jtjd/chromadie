@@ -928,13 +928,16 @@
     color: #fff;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.85rem;
   }
 
   .founder-banner-copy {
     display: grid;
     gap: 0.3rem;
+    align-items: center;
     min-width: 0;
+    text-align: center;
   }
 
   .founder-banner-kicker {
