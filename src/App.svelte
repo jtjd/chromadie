@@ -942,6 +942,7 @@
 
   .founder-banner-kicker {
     margin: 0;
+    justify-self: center;
     width: fit-content;
     padding: 0.28rem 0.55rem;
     border-radius: 999px;
