@@ -24,10 +24,10 @@ test('active launch rarity boundaries remain explicit', () => {
     [0, 'Trash'],
     [24999, 'Trash'],
     [25000, 'Common'],
-    [34999, 'Common'],
-    [35000, 'Uncommon'],
-    [49999, 'Uncommon'],
-    [50000, 'Rare'],
+    [34499, 'Common'],
+    [34500, 'Uncommon'],
+    [49499, 'Uncommon'],
+    [49500, 'Rare'],
     [84999, 'Rare'],
     [85000, 'Epic'],
     [199999, 'Epic'],
@@ -45,8 +45,8 @@ test('active launch rarity boundaries remain explicit', () => {
       ['Mythic', 1500000],
       ['Anomaly', 200000],
       ['Epic', 85000],
-      ['Rare', 50000],
-      ['Uncommon', 35000],
+      ['Rare', 49500],
+      ['Uncommon', 34500],
       ['Common', 25000],
       ['Trash', 0]
     ]
@@ -136,7 +136,7 @@ test('seeded distribution remains measurable before balance changes', () => {
 
 test('candidate balance distribution is locked before server rollout', () => {
   const report = simulateBalance({ rolls: 100000, seed: 0x4348524f, candidate: true });
-  assert.equal(report.averageScore, 45755.0275);
+  assert.equal(report.averageScore, 45752.29765);
   assert.equal(report.averageConditions, 4.37618);
   assert.equal(report.averageContributors, 4.37618);
   assert.deepEqual(

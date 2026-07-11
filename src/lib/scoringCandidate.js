@@ -8,16 +8,16 @@ import { isPrime } from './scoring.js';
 const FIBONACCI_SUMS = new Set([0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610]);
 const WEB_SAFE_CHANNELS = new Set([0, 51, 102, 153, 204, 255]);
 const MEME_PATTERNS = Object.freeze([
-  ['dead', 'DEAD', 300000],
-  ['beef', 'BEEF', 300000],
-  ['cafe', 'CAFE', 250000],
-  ['face', 'FACE', 250000],
-  ['fade', 'FADE', 225000],
-  ['feed', 'FEED', 250000],
-  ['food', 'F00D', 225000],
-  ['leet', '1337', 250000],
-  ['james_bond', '007', 100000],
-  ['blaze_it', '420', 75000]
+  ['dead', 'DEAD', 307005],
+  ['beef', 'BEEF', 298879],
+  ['cafe', 'CAFE', 251966],
+  ['face', 'FACE', 264206],
+  ['fade', 'FADE', 224222],
+  ['feed', 'FEED', 265261],
+  ['food', 'F00D', 226453],
+  ['leet', '1337', 251337],
+  ['james_bond', '007', 100007],
+  ['blaze_it', '420', 75420]
 ]);
 
 function hslFromRgb(red, green, blue) {
@@ -99,70 +99,70 @@ export function scoreCandidateColor(red, green, blue) {
     if (triggered) conditions.push({ id, name, category, points, ...options });
   };
 
-  add(isPrime(sum), 'prime_sum', 'Prime Energy', 'mathematical', 15000);
-  add(FIBONACCI_SUMS.has(sum), 'fibonacci_sum', 'Fibonacci Energy', 'mathematical', 25000);
-  add(sum === 42, 'sum_42', 'Meaning of Life', 'rare_event', 150000, { fullValue: true });
-  add(sum === 100, 'sum_100', 'Perfect Century', 'rare_event', 100000, { fullValue: true });
-  add(sum === 255, 'sum_255', 'Max Byte', 'rare_event', 75000, { fullValue: true });
-  add(sum === 666, 'sum_666', 'Sinister Shade', 'rare_event', 250000, { fullValue: true });
+  add(isPrime(sum), 'prime_sum', 'Prime Energy', 'mathematical', 15013);
+  add(FIBONACCI_SUMS.has(sum), 'fibonacci_sum', 'Fibonacci Energy', 'mathematical', 25021);
+  add(sum === 42, 'sum_42', 'Meaning of Life', 'rare_event', 150042, { fullValue: true });
+  add(sum === 100, 'sum_100', 'Perfect Century', 'rare_event', 100100, { fullValue: true });
+  add(sum === 255, 'sum_255', 'Max Byte', 'rare_event', 75255, { fullValue: true });
+  add(sum === 666, 'sum_666', 'Sinister Shade', 'rare_event', 250666, { fullValue: true });
 
-  add(range >= 205, 'high_contrast', 'Polarized Channels', 'color_relationship', 18000);
-  add(range <= 20, 'low_contrast', 'Close Harmony', 'color_relationship', 12000);
-  add(range > 20 && range < 80, 'gentle_contrast', 'Gentle Contrast', 'color_relationship', 3000);
-  add(range >= 80 && range < 205, 'layered_contrast', 'Layered Contrast', 'color_relationship', 6000);
-  add(maximum > 210 && minimum > 120 && range < 75, 'pastel', 'Pastel Bloom', 'color_relationship', 25000);
-  add(maximum > 220 && minimum < 45, 'neon', 'Neon Voltage', 'color_relationship', 30000);
-  add(hsl.lightness >= 90 && hsl.saturation <= 20, 'luminous_core', 'Luminous Core', 'color_relationship', 40000);
+  add(range >= 205, 'high_contrast', 'Polarized Channels', 'color_relationship', 18205);
+  add(range <= 20, 'low_contrast', 'Close Harmony', 'color_relationship', 12020);
+  add(range > 20 && range < 80, 'gentle_contrast', 'Gentle Contrast', 'color_relationship', 3021);
+  add(range >= 80 && range < 205, 'layered_contrast', 'Layered Contrast', 'color_relationship', 6080);
+  add(maximum > 210 && minimum > 120 && range < 75, 'pastel', 'Pastel Bloom', 'color_relationship', 25210);
+  add(maximum > 220 && minimum < 45, 'neon', 'Neon Voltage', 'color_relationship', 30220);
+  add(hsl.lightness >= 90 && hsl.saturation <= 20, 'luminous_core', 'Luminous Core', 'color_relationship', 40090);
   const sorted = [...channels].sort((a, b) => a - b);
   add(
     sorted[0] <= 10 && sorted[1] >= 110 && sorted[1] <= 145 && sorted[2] >= 245,
     'triple_crown',
     'Triple Crown',
     'rare_event',
-    175000,
+    175003,
     { fullValue: true }
   );
-  add(hsl.saturation >= 95, 'saturation_spike', 'Saturation Spike', 'saturation', 20000);
-  add(hsl.saturation >= 70 && hsl.saturation < 95, 'vivid_saturation', 'Vivid Saturation', 'saturation', 12000);
-  add(hsl.saturation >= 40 && hsl.saturation < 70, 'rich_saturation', 'Rich Saturation', 'saturation', 7000);
-  add(hsl.saturation >= 15 && hsl.saturation < 40, 'muted_saturation', 'Muted Saturation', 'saturation', 3000);
-  add(hsl.saturation < 15, 'soft_saturation', 'Soft Saturation', 'saturation', 1000);
-  add(hsl.lightness < 15, 'shadow_tone', 'Shadow Tone', 'tone', 15000);
-  add(hsl.lightness >= 15 && hsl.lightness < 35, 'deep_tone', 'Deep Tone', 'tone', 7000);
-  add(hsl.lightness >= 35 && hsl.lightness < 65, 'balanced_tone', 'Balanced Tone', 'tone', 3000);
-  add(hsl.lightness >= 65 && hsl.lightness < 85, 'bright_tone', 'Bright Tone', 'tone', 7000);
-  add(hsl.lightness >= 85, 'luminous_tone', 'Luminous Tone', 'tone', 15000);
+  add(hsl.saturation >= 95, 'saturation_spike', 'Saturation Spike', 'saturation', 20095);
+  add(hsl.saturation >= 70 && hsl.saturation < 95, 'vivid_saturation', 'Vivid Saturation', 'saturation', 12070);
+  add(hsl.saturation >= 40 && hsl.saturation < 70, 'rich_saturation', 'Rich Saturation', 'saturation', 7040);
+  add(hsl.saturation >= 15 && hsl.saturation < 40, 'muted_saturation', 'Muted Saturation', 'saturation', 3015);
+  add(hsl.saturation < 15, 'soft_saturation', 'Soft Saturation', 'saturation', 1008);
+  add(hsl.lightness < 15, 'shadow_tone', 'Shadow Tone', 'tone', 15015);
+  add(hsl.lightness >= 15 && hsl.lightness < 35, 'deep_tone', 'Deep Tone', 'tone', 7035);
+  add(hsl.lightness >= 35 && hsl.lightness < 65, 'balanced_tone', 'Balanced Tone', 'tone', 3050);
+  add(hsl.lightness >= 65 && hsl.lightness < 85, 'bright_tone', 'Bright Tone', 'tone', 7065);
+  add(hsl.lightness >= 85, 'luminous_tone', 'Luminous Tone', 'tone', 15085);
   const dominantIndex = channels.indexOf(maximum);
   const uniqueMaximum = channels.filter(value => value === maximum).length === 1;
-  add(uniqueMaximum && range >= 30 && dominantIndex === 0, 'red_dominant', 'Red Dominant', 'composition', 5000);
-  add(uniqueMaximum && range >= 30 && dominantIndex === 1, 'green_dominant', 'Green Dominant', 'composition', 5000);
-  add(uniqueMaximum && range >= 30 && dominantIndex === 2, 'blue_dominant', 'Blue Dominant', 'composition', 5000);
-  add(!uniqueMaximum || range < 30, 'balanced_channels', 'Balanced Channels', 'composition', 3000);
-  add(red === green && green === blue, 'greyscale', 'Perfect Greyscale', 'structure', 75000);
-  add(channels.every(value => WEB_SAFE_CHANNELS.has(value)), 'web_safe', 'Web Safe', 'structure', 50000);
-  add(hexValue === [...hexValue].reverse().join(''), 'palindrome', 'Hex Palindrome', 'hex_pattern', 175000);
+  add(uniqueMaximum && range >= 30 && dominantIndex === 0, 'red_dominant', 'Red Dominant', 'composition', 4777);
+  add(uniqueMaximum && range >= 30 && dominantIndex === 1, 'green_dominant', 'Green Dominant', 'composition', 4777);
+  add(uniqueMaximum && range >= 30 && dominantIndex === 2, 'blue_dominant', 'Blue Dominant', 'composition', 4777);
+  add(!uniqueMaximum || range < 30, 'balanced_channels', 'Balanced Channels', 'composition', 2888);
+  add(red === green && green === blue, 'greyscale', 'Perfect Greyscale', 'structure', 75256);
+  add(channels.every(value => WEB_SAFE_CHANNELS.has(value)), 'web_safe', 'Web Safe', 'structure', 50216);
+  add(hexValue === [...hexValue].reverse().join(''), 'palindrome', 'Hex Palindrome', 'hex_pattern', 175571);
   add(
     hexValue.slice(0, 2) === hexValue.slice(2, 4) && hexValue.slice(2, 4) === hexValue.slice(4, 6),
     'repeated_pair',
     'Repeated Pair',
     'hex_pattern',
-    150000
+    150222
   );
-  add(/(.)\1\1/.test(hexValue), 'triple_hex', 'Triple Hex', 'hex_pattern', 90000);
-  add(hexValue.includes('F1'), 'f1', 'F1', 'hex_pattern', 75000);
+  add(/(.)\1\1/.test(hexValue), 'triple_hex', 'Triple Hex', 'hex_pattern', 90333);
+  add(hexValue.includes('F1'), 'f1', 'F1', 'hex_pattern', 75001);
   for (const [id, pattern, points] of MEME_PATTERNS) {
     add(hexValue.includes(pattern), id, pattern, 'rare_event', points, { fullValue: true });
   }
 
-  add(red === 0 && green === 0 && blue === 0, 'pure_black', 'The Void', 'special_event', 1750000, { fullValue: true });
-  add(red === 255 && green === 255 && blue === 255, 'pure_white', 'The Light', 'special_event', 1750000, { fullValue: true });
-  add(red === 255 && green === 0 && blue === 0, 'pure_red', 'Maximum Red', 'special_event', 750000, { fullValue: true });
-  add(red === 0 && green === 255 && blue === 0, 'pure_green', 'Maximum Green', 'special_event', 750000, { fullValue: true });
-  add(red === 0 && green === 0 && blue === 255, 'pure_blue', 'Maximum Blue', 'special_event', 750000, { fullValue: true });
-  add(red === 255 && green === 215 && blue === 0, 'pure_gold', 'Midas', 'special_event', 1500000, { fullValue: true });
-  add(red === 145 && green === 70 && blue === 255, 'streamer_purple', 'Streamer Purple', 'special_event', 1000000, { fullValue: true });
-  add(red === 30 && green === 215 && blue === 96, 'audio_stream_green', 'Audio Stream Green', 'special_event', 1000000, { fullValue: true });
-  add(red === 244 && green === 0 && blue === 9, 'classic_cola_red', 'Classic Cola Red', 'special_event', 1000000, { fullValue: true });
+  add(red === 0 && green === 0 && blue === 0, 'pure_black', 'The Void', 'special_event', 1677721, { fullValue: true });
+  add(red === 255 && green === 255 && blue === 255, 'pure_white', 'The Light', 'special_event', 1677721, { fullValue: true });
+  add(red === 255 && green === 0 && blue === 0, 'pure_red', 'Maximum Red', 'special_event', 750255, { fullValue: true });
+  add(red === 0 && green === 255 && blue === 0, 'pure_green', 'Maximum Green', 'special_event', 750255, { fullValue: true });
+  add(red === 0 && green === 0 && blue === 255, 'pure_blue', 'Maximum Blue', 'special_event', 750255, { fullValue: true });
+  add(red === 255 && green === 215 && blue === 0, 'pure_gold', 'Midas', 'special_event', 1500079, { fullValue: true });
+  add(red === 145 && green === 70 && blue === 255, 'streamer_purple', 'Streamer Purple', 'special_event', 1014570, { fullValue: true });
+  add(red === 30 && green === 215 && blue === 96, 'audio_stream_green', 'Audio Stream Green', 'special_event', 1030215, { fullValue: true });
+  add(red === 244 && green === 0 && blue === 9, 'classic_cola_red', 'Classic Cola Red', 'special_event', 1024409, { fullValue: true });
 
   let score = BASE_ROLL_SCORE;
   const contributors = [];

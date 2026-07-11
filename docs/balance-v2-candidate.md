@@ -6,18 +6,23 @@ remote data by itself.
 ## Scoring baseline
 
 - Exhaustive RGB colors tested: 16,777,216
-- Average roll score: 45,727.95 EP
+- Original exhaustive average roll score: 45,727.95 EP
 - Average scoring contributors: 4.378
 - Descriptive traits per roll: 5
 - Category multipliers: 100%, 35%, 10%
-- F1 reward: 75,000 EP
+- F1 reward: 75,001 EP
+
+The pre-launch thematic-score pass replaces round condition awards with nearby memorable values.
+A seeded one-million-roll regression averages 45,722.30 EP (a -0.012% change from the exhaustive
+launch baseline) while preserving the locked rarity counts. The calibrated lower boundaries below
+keep the launch distribution stable.
 
 | Rarity | Minimum score | Exact RGB frequency |
 | --- | ---: | ---: |
 | Trash | 0 | 6.479% |
 | Common | 25,000 | 25.574% |
-| Uncommon | 35,000 | 40.535% |
-| Rare | 50,000 | 22.682% |
+| Uncommon | 34,500 | 40.535% |
+| Rare | 49,500 | 22.682% |
 | Epic | 85,000 | 4.470% |
 | Anomaly | 200,000 | 0.260% |
 | Mythic | 1,500,000 | 3 colors |

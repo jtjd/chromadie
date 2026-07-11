@@ -2,8 +2,8 @@ export const RARITY_THRESHOLDS = Object.freeze([
   Object.freeze({ name: 'Mythic', min: 1500000 }),
   Object.freeze({ name: 'Anomaly', min: 200000 }),
   Object.freeze({ name: 'Epic', min: 85000 }),
-  Object.freeze({ name: 'Rare', min: 50000 }),
-  Object.freeze({ name: 'Uncommon', min: 35000 }),
+  Object.freeze({ name: 'Rare', min: 49500 }),
+  Object.freeze({ name: 'Uncommon', min: 34500 }),
   Object.freeze({ name: 'Common', min: 25000 }),
   Object.freeze({ name: 'Trash', min: 0 })
 ]);
