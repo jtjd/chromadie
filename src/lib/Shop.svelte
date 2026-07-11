@@ -1427,7 +1427,11 @@
   }
 
   .shop-preview-area-roll-effect {
-    height: 132px;
+    height: 164px;
+    border: 1px solid rgba(139, 124, 246, 0.14);
+    border-radius: 18px;
+    background: radial-gradient(circle at center, rgba(123, 92, 255, 0.12), rgba(6, 7, 12, 0.7) 62%, rgba(3, 4, 8, 0.9));
+    overflow: hidden;
   }
 
   .preview-bg {

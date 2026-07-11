@@ -77,9 +77,9 @@ INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, 
 ('roll_chromatic', 'Cyber Pulse', 'roll_effect', '4000000', 'class', 'roll-cyber-pulse-anim', NULL, NULL, 'Mythic', 'A pulsing ring of cyan and magenta.', 'Spectrum'),
 ('roll_inferno', 'Inferno Aura', 'roll_effect', '4500000', 'class', 'roll-inferno-anim', NULL, NULL, 'Mythic', 'A hot orange-red aura around your roll orb.', NULL),
 ('roll_neon_rings', 'Neon Rings', 'roll_effect', '2000000', 'class', 'roll-neon-rings-anim', NULL, NULL, 'Epic', 'Pulsing neon rings around your orb.', 'Digital Landscape'),
-('roll_pixelate', 'Nova Bloom', 'roll_effect', '8000000', 'class', 'roll-pixelate-anim', NULL, NULL, 'Mythic', 'A radiant stellar burst that blooms around your roll orb.', 'Digital Landscape'),
-('roll_smoke', 'Smoke Trail', 'roll_effect', '500000', 'class', 'roll-smoke-anim', NULL, NULL, 'Epic', 'A trail of smoke behind your orb.', 'Elemental'),
-('roll_sparkles', 'Sparkle Aura', 'roll_effect', '1000000', 'class', 'roll-sparkles-anim', NULL, NULL, 'Epic', 'A soft sparkle aura around your roll orb.', NULL),
+('roll_pixelate', 'Nova Bloom', 'roll_effect', '8000000', 'class', 'roll-pixelate-anim', NULL, NULL, 'Mythic', 'A brilliant stellar core erupts into a repeating shockwave.', 'Digital Landscape'),
+('roll_smoke', 'Nebula Veil', 'roll_effect', '500000', 'class', 'roll-smoke-anim', NULL, NULL, 'Epic', 'Layered cyan-violet nebula clouds drift around your roll orb.', 'Elemental'),
+('roll_sparkles', 'Starlight Aura', 'roll_effect', '1000000', 'class', 'roll-sparkles-anim', NULL, NULL, 'Epic', 'A crisp orbit of varied stars twinkles around your roll orb.', NULL),
 ('streak_freeze', 'Streak Freeze', 'consumable', '100000', 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL)
 ON CONFLICT (item_key) DO UPDATE
 SET name = EXCLUDED.name,

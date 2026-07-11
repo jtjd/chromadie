@@ -2,8 +2,8 @@
   export let effectCls = '';
   export let effectStyle = '';
   export let orbCls = '';
-  export let displayColor = '#333333';
-  export let rarity = 'Common';
+  export let displayColor = '#7B5CFF';
+  export let rarity = 'Epic';
   export let size = 'game';
 </script>
 
