@@ -80,7 +80,8 @@ INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, 
 ('roll_pixelate', 'Nova Bloom', 'roll_effect', '8000000', 'class', 'roll-pixelate-anim', NULL, NULL, 'Mythic', 'A brilliant stellar core erupts into a repeating shockwave.', 'Digital Landscape'),
 ('roll_smoke', 'Nebula Veil', 'roll_effect', '500000', 'class', 'roll-smoke-anim', NULL, NULL, 'Epic', 'Layered cyan-violet nebula clouds drift around your roll orb.', 'Elemental'),
 ('roll_sparkles', 'Starlight Aura', 'roll_effect', '1000000', 'class', 'roll-sparkles-anim', NULL, NULL, 'Epic', 'A crisp orbit of varied stars twinkles around your roll orb.', NULL),
-('streak_freeze', 'Streak Freeze', 'consumable', '100000', 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL)
+('streak_freeze', 'Streak Freeze', 'consumable', '100000', 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL),
+('title_founder', 'Founder Title', 'title', '0', 'text', '✦ FOUNDER ✦', NULL, NULL, 'Mythic', 'Awarded permanently for an authenticated roll during the first launch month.', 'Launch Legacy')
 ON CONFLICT (item_key) DO UPDATE
 SET name = EXCLUDED.name,
     slot = EXCLUDED.slot,
@@ -183,6 +184,7 @@ SET cost = CASE item_key
   WHEN 'roll_smoke' THEN 85000
   WHEN 'roll_sparkles' THEN 190000
   WHEN 'streak_freeze' THEN 50000
+  WHEN 'title_founder' THEN 0
 END;
 
 INSERT INTO public.meta (key, value)

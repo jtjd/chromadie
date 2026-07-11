@@ -92,4 +92,5 @@ SET cost = CASE item_key
   WHEN 'roll_smoke' THEN 85000
   WHEN 'roll_sparkles' THEN 190000
   WHEN 'streak_freeze' THEN 50000
+  WHEN 'title_founder' THEN 0
 END;

@@ -1,7 +1,7 @@
 <script>
   import RollPreview from './RollPreview.svelte';
   import { supabase } from './supabase';
-  import { session, profile, authUser, authInitialized, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
+  import { session, profile, authUser, authInitialized, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, equippedItems, userInventory, isAuthenticated, addToast } from './stores';
   import { createChallengeLink } from './challenges';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
@@ -646,11 +646,15 @@
       saveGuestRoll(rollData);
       guestProgressRestored = true;
     } else {
+      const hadFounderTitle = $userInventory.includes('title_founder');
       await Promise.all([
         refreshProfileState(),
         fetchInventoryState($session.user.id),
         fetchWalletBalance()
       ]);
+      if (!hadFounderTitle && $userInventory.includes('title_founder')) {
+        addToast('Founder title unlocked: ✦ FOUNDER ✦', 'success');
+      }
     }
 
     rerollRequestInFlight = false;
