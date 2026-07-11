@@ -1,5 +1,5 @@
 <script>
-  import { session, authUser, profile, authInitialized, authEvent, profileLoading, profileError, equippedItems, selectedUserId, userInventory, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
+  import { session, authUser, profile, authInitialized, authEvent, profileLoading, profileError, equippedItems, selectedUserId, userInventory, walletBalance, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
   import { supabase, supabaseError } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import AuthCallback from './lib/AuthCallback.svelte';
@@ -386,6 +386,7 @@
   $: titleTxt = getTitleText(userCosmetics);
   $: headerRank = $profile ? getRankState($profile.lifetime_ep || 0) : null;
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
+  $: headerWalletBalance = $profileLoading ? '—' : (Number($walletBalance) || 0).toLocaleString();
   $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
   $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && (!$authUser || !$profileLoading);
   $: username = $session ? ($profile?.username || 'Loading your account...') : 'Guest Mode';
@@ -543,6 +544,10 @@
         <button class="nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
 
         {#if $authUser}
+          <button type="button" class="wallet-pill desktop-wallet-pill" on:click={() => handleNavClick('shop')} aria-label={`${headerWalletBalance} EP. Open shop.`}>
+            <span class="wallet-pill-label">Balance</span>
+            <span class="wallet-pill-value">{headerWalletBalance} EP</span>
+          </button>
           <div class="user-chip {frameEff.cls}" style="{frameEff.style}">
             {#if titleTxt}
               <span class="title-chip">[{titleTxt}]</span>
@@ -603,6 +608,10 @@
 
       <div class="mobile-nav-section mobile-auth-section">
         {#if $authUser}
+          <button type="button" class="mobile-wallet-card" on:click={() => handleNavClick('shop')}>
+            <span class="mobile-wallet-label">Wallet balance</span>
+            <span class="mobile-wallet-value">{headerWalletBalance} EP</span>
+          </button>
           <button type="button" class="logout-btn mobile-auth-btn" on:click={handleLogout}>Log Out</button>
         {:else if $profileLoading}
           <div class="mobile-auth-summary loading-chip mobile-loading-summary">
@@ -1145,6 +1154,45 @@
     box-shadow: 0 0 0 1px rgba(0,0,0,0.15) inset;
   }
 
+  .wallet-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 34px;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid rgba(94, 234, 212, 0.24);
+    border-radius: 999px;
+    background: rgba(94, 234, 212, 0.07);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .wallet-pill:hover,
+  .wallet-pill:focus-visible {
+    border-color: rgba(94, 234, 212, 0.5);
+    background: rgba(94, 234, 212, 0.12);
+  }
+
+  .wallet-pill-label {
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .wallet-pill-value {
+    color: #8ff7df;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .mobile-wallet-card {
+    display: none;
+  }
+
   .header-brand {
     display: flex;
     align-items: center;
@@ -1353,6 +1401,31 @@
     .mobile-auth-section {
       flex-direction: column;
       align-items: stretch;
+    }
+    .mobile-wallet-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      width: 100%;
+      min-height: 48px;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid rgba(94, 234, 212, 0.24);
+      border-radius: 12px;
+      background: rgba(94, 234, 212, 0.07);
+      color: #fff;
+      cursor: pointer;
+    }
+    .mobile-wallet-label {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .mobile-wallet-value {
+      color: #8ff7df;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
     }
     .mobile-auth-btn {
       width: 100%;
