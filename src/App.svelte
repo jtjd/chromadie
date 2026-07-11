@@ -33,6 +33,7 @@
   let authOpener = null;
   let mobileMenuOpen = false;
   let selectedProfileUsername = null;
+  let founderAnnouncementVisible = false;
 
   supabase.auth.getSession().then(({ data }) => session.set(data.session));
 
@@ -178,6 +179,33 @@
     };
   }
 
+  async function loadFounderAnnouncementState() {
+    const fallbackLaunchAt = new Date('2026-07-11T00:00:00Z');
+    const fallbackWindowEndsAt = new Date('2026-08-11T00:00:00Z');
+
+    try {
+      const { data, error } = await supabase
+        .from('meta')
+        .select('key, value')
+        .in('key', ['official_launch_at', 'founder_window_ends_at']);
+
+      if (error) throw error;
+
+      const meta = new Map((data || []).map(entry => [entry.key, entry.value]));
+      const launchAt = new Date(meta.get('official_launch_at') || fallbackLaunchAt);
+      const windowEndsAt = new Date(meta.get('founder_window_ends_at') || fallbackWindowEndsAt);
+      const now = new Date();
+
+      founderAnnouncementVisible = Number.isFinite(launchAt.getTime())
+        && Number.isFinite(windowEndsAt.getTime())
+        && now >= launchAt
+        && now < windowEndsAt;
+    } catch {
+      const now = new Date();
+      founderAnnouncementVisible = now >= fallbackLaunchAt && now < fallbackWindowEndsAt;
+    }
+  }
+
   function setRoute(nextView, options = {}) {
     if (!VALID_VIEWS.has(nextView)) return;
 
@@ -239,6 +267,7 @@
 
   onMount(() => {
     void loadShopItems();
+    void loadFounderAnnouncementState();
     parseRoute();
     window.addEventListener('popstate', handlePopState);
   });
@@ -545,6 +574,19 @@
         {/if}
       </nav>
     </header>
+
+    {#if founderAnnouncementVisible}
+      <section class="founder-banner" aria-label="Launch announcement" role="status" aria-live="polite">
+        <p class="founder-banner-kicker">Launch month</p>
+        <div class="founder-banner-copy">
+          <p class="founder-banner-title">Thanks for playing.</p>
+          <p class="founder-banner-text">
+            During the first month after launch, an authenticated roll permanently grants the <strong>Founder Title</strong>.
+            Sign in before you roll to claim it.
+          </p>
+        </div>
+      </section>
+    {/if}
 
     <div id="mobile-navigation" class="mobile-nav-panel" class:open={mobileMenuOpen}>
       <div class="mobile-nav-section">
@@ -866,6 +908,63 @@
     align-items: center;
     gap: 1rem;
   }
+
+  .founder-banner {
+    width: min(980px, calc(100% - 2rem));
+    margin: 0 auto 12px;
+    padding: 0.95rem 1.1rem;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 198, 87, 0.28);
+    background:
+      radial-gradient(circle at top right, rgba(255, 198, 87, 0.18), transparent 34%),
+      linear-gradient(135deg, rgba(41, 26, 10, 0.96), rgba(18, 17, 32, 0.96));
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.25);
+    color: #fff;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.95rem;
+  }
+
+  .founder-banner-kicker {
+    margin: 0;
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(255, 198, 87, 0.14);
+    border: 1px solid rgba(255, 198, 87, 0.32);
+    color: #ffd77d;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.68rem;
+    font-weight: 800;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .founder-banner-copy {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .founder-banner-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    letter-spacing: -0.01em;
+  }
+
+  .founder-banner-text {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  .founder-banner-text strong {
+    color: #fff;
+    font-weight: 700;
+  }
+
   .challenge-copy {
     display: grid;
     gap: 0.35rem;
@@ -1146,6 +1245,14 @@
       padding: 0.9rem;
       margin: 0 auto 12px;
       gap: 0.85rem;
+    }
+    .founder-banner {
+      flex-direction: column;
+      align-items: stretch;
+      width: calc(100% - 1rem);
+      padding: 0.9rem;
+      margin: 0 auto 12px;
+      gap: 0.65rem;
     }
     .challenge-meta {
       justify-content: stretch;
