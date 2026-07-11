@@ -8,7 +8,8 @@ Chromadie is a Svelte/SvelteKit-style SPA built with Vite, Supabase, and Cloudfl
 - Real auth uses Supabase session state plus profile hydration.
 - Gameplay mutations are intended to be server-authoritative through Supabase RPCs.
 - The remote Supabase staging project is the authoritative live test target right now.
-- Cloudflare Pages is the future hosting target, but the project is not deployed there yet.
+- Cloudflare Pages deploys production automatically from the GitHub `main` branch.
+- The production site is `https://chromadie.pages.dev`.
 
 ## Key Commands
 
@@ -34,6 +35,18 @@ Use `.env` or the deployment environment:
 - `VITE_SITE_URL`
 
 Do not commit secrets.
+
+## Production Deployment
+
+- Cloudflare Pages source: GitHub `main`
+- Build command: `npm run build`
+- Build output directory: `dist`
+- SPA routing and production security headers are defined in `public/_redirects` and
+  `public/_headers`.
+- Configure all four `VITE_` variables above in the Cloudflare Pages production environment.
+
+After pushing to `main`, verify the deployed asset bundle changed and smoke-test `/`,
+`/auth/callback`, `/reset-password`, `/shop`, `/leaderboard`, and `/profile`.
 
 ## Auth Flows
 
