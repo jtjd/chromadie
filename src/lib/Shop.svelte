@@ -1486,10 +1486,11 @@
   }
 
   .preview-orb-shape {
-    width: 32px;
-    height: 32px;
-    background: #333;
-    border: 1px solid var(--card-border);
+    width: 72px;
+    height: 72px;
+    flex: 0 0 auto;
+    background-color: #7b5cff;
+    box-shadow: 0 0 0 12px rgba(123, 92, 255, 0.06);
   }
 
   .preview-profile-card {
