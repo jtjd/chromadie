@@ -51,6 +51,10 @@
   $: systemBadges = badges.filter(b => SYSTEM_BADGE_IDS.includes(b));
   $: earnedAchievements = badges.filter(b => b.startsWith('ach_'));
 
+  function isEpReward(badgeId) {
+    return badgeId.startsWith('ach_') || SYSTEM_BADGE_IDS.includes(badgeId);
+  }
+
   $: cosmetics = $equippedItems || {};
   $: rollEff = getRollEffect(cosmetics);
   $: orbEff = getOrbShape(cosmetics);
@@ -724,7 +728,7 @@
   {#if phase === 'preroll'}
     <div class="card">
       <h1>Daily Roll</h1>
-      <p class="info-text">You get one roll every 24 hours. Roll to receive a random 24-bit color and earn Entropy Points (EP).</p>
+      <p class="info-text">You get one roll every 24 hours. Your roll score counts on the leaderboard and is also added to your spendable EP. Achievements and bonuses can add extra EP.</p>
       <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
         {loading ? 'Rolling...' : 'Roll the Die'}
       </button>
@@ -733,7 +737,7 @@
         <div class="cotw-widget">
             <div class="cotw-info">
                 <span class="cotw-title">🎯 Color of the Week</span>
-                <span class="cotw-desc">Roll close to this color for <strong>+50,000 EP</strong>!</span>
+                <span class="cotw-desc">Roll close to this color for <strong>+50,000 spendable EP</strong>. It will not change your leaderboard score.</span>
             </div>
             <div class="cotw-swatch" style="background-color: {cotwColor};" title="Target Color"></div>
         </div>
@@ -750,7 +754,8 @@
         <div class="scan-bar" style="width: {scanProgress}%"></div>
       </div>
       <div class="badges-container badges-container-tight conditions-section">
-        <div class="badges-title">Conditions Met</div>
+        <div class="badges-title">Calculating your roll</div>
+        <div class="badges-subtitle">Roll score counts on the leaderboard and earns the same amount of spendable EP. Bonus EP goes only to your wallet.</div>
         <div class="conditions-grid">
           {#each badges as badgeId (badgeId)}
             {@const badge = getBadgeMeta(badgeId)}
@@ -760,7 +765,13 @@
                 <span class="badge-title">{badge.name}</span>
                 <span class="badge-desc">{badge.desc || ''}</span>
               </div>
-              <span class="badge-points">+{badge.points.toLocaleString()}</span>
+              {#if badge.points > 0}
+                <span class="badge-points" class:ep-points={isEpReward(badgeId)}>
+                  +{badge.points.toLocaleString()} {isEpReward(badgeId) ? 'bonus EP' : 'score + EP'}
+                </span>
+              {:else}
+                <span class="badge-points ep-points">Unlocked</span>
+              {/if}
             </div>
           {/each}
         </div>
@@ -780,6 +791,7 @@
         {/if}
         <div class="score-label">Leaderboard Score</div>
         <div class="score-display">{displayScore.toLocaleString()}</div>
+        <div class="score-help">This sets your leaderboard position, and the same amount is added to your spendable EP. Bonus EP does not increase this score.</div>
 
         {#if percentileDisplay}
           <div class="rank-display" style="color: {percentileDisplay.color}; margin-top: 5px; font-weight: 700;">
@@ -793,7 +805,7 @@
 
       {#if cotwHit}
         <div class="cotw-success-banner">
-          🎉 Color of the Week Hit! +50,000 EP!
+          🎉 Color of the Week hit: +50,000 EP added to your wallet. Your leaderboard score is unchanged.
         </div>
       {/if}
 
@@ -848,7 +860,8 @@
 
       {#if systemBadges.length > 0}
         <div class="badges-container badges-container-tight" style="margin-top: 0; margin-bottom: 20px;">
-          <div class="badges-title">Bonuses & Milestones</div>
+          <div class="badges-title">EP Bonuses & Milestones</div>
+          <div class="badges-subtitle">These rewards go to your wallet for Shop purchases. They do not change your leaderboard score.</div>
           {#each systemBadges as badgeId (badgeId)}
             {@const badge = getBadgeMeta(badgeId)}
             <div class="badge-result rarity-Mythic">
@@ -869,6 +882,7 @@
 
       <div class="badges-container badges-container-tight conditions-section">
         <div class="badges-title">Score Contributors</div>
+        <div class="badges-subtitle">These points make up your leaderboard score and add the same amount to your spendable EP.</div>
         {#if rollContributors.length === 0}
           <div class="badge-result">
             <div class="badge-text">
@@ -891,7 +905,7 @@
                   {/if}
                 </span>
               </div>
-              <span class="badge-points">+{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()}</span>
+              <span class="badge-points">+{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()} score + EP</span>
             </div>
           {/each}
           </div>
@@ -913,6 +927,18 @@
               <span class="badge-points" style="color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.3);">+{badge.points.toLocaleString()} EP</span>
             </div>
           {/each}
+        </div>
+      {/if}
+
+      {#if $isAuthenticated}
+        <div class="shop-onboarding">
+          <div>
+            <div class="shop-onboarding-title">Put your EP to use</div>
+            <div class="shop-onboarding-copy">Spend EP in the Shop to customize your name, profile, rolls, and leaderboard row.</div>
+          </div>
+          <button type="button" class="chroma-btn shop-onboarding-btn" on:click={() => dispatch('navigate', { view: 'shop' })}>
+            Open Shop
+          </button>
         </div>
       {/if}
     </div>
@@ -937,6 +963,13 @@
     font-size: 0.92rem;
     font-weight: 700;
     letter-spacing: 0;
+  }
+  .score-help {
+    max-width: 32rem;
+    margin: 4px auto 0;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1.45;
   }
   .trait-strip {
     display: flex;
@@ -1041,6 +1074,34 @@
   }
   .badges-subtitle { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 10px; text-align: left; opacity: 0.8; }
 
+  .shop-onboarding {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 20px;
+    padding: 16px 18px;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(139, 92, 246, 0.08));
+    text-align: left;
+  }
+  .shop-onboarding-title {
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .shop-onboarding-copy {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+  .shop-onboarding-btn {
+    flex: 0 0 auto;
+  }
+
   .milestone-banner {
     background: rgba(241, 196, 15, 0.1);
     border: 1px solid rgba(241, 196, 15, 0.4);
@@ -1133,6 +1194,15 @@
     }
     .guest-prompt-copy {
       font-size: 0.88rem;
+    }
+    .shop-onboarding {
+      align-items: stretch;
+      flex-direction: column;
+      padding: 15px;
+    }
+    .shop-onboarding-btn {
+      width: 100%;
+      justify-content: center;
     }
     .badges-container {
       gap: 6px;

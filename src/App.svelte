@@ -715,7 +715,7 @@
     <FAQ />
   {:else}
     {#if view === 'game'}
-      <Game on:promptlogin={openAuthModal} />
+      <Game on:promptlogin={openAuthModal} on:navigate={handleNavigation} />
     {:else if view === 'leaderboard'}
       {#key `leaderboard:${leaderboardTab}`}
         <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
