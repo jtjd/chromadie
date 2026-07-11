@@ -658,7 +658,20 @@
 
 <style>
   .mood-card { position: relative; overflow: hidden; transition: background-image 0.5s ease; }
-  .profile-bg-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; opacity: 0.6; }
+  .profile-bg-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background-color: #0f1118;
+  }
+  .profile-bg-layer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, rgba(2, 4, 10, 0.2), rgba(2, 4, 10, 0.38));
+    pointer-events: none;
+  }
   .profile-content-layer { position: relative; z-index: 1; }
   .profile-header-row { display: flex; justify-content: flex-start; align-items: flex-start; margin-bottom: 18px; gap: 18px; }
   .profile-identity { display: flex; flex: 0 1 auto; min-width: 0; flex-direction: column; gap: 6px; align-items: center; text-align: center; }
