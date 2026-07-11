@@ -339,9 +339,26 @@
 .border-void-anim { border: 2px solid rgba(172,136,255,0.48); background-image: radial-gradient(ellipse at center, rgba(11,7,20,0.18), rgba(0,0,0,0.82)); box-shadow: 0 0 2px rgba(230,240,255,0.82), 0 0 14px rgba(123,72,218,0.48), 0 0 34px rgba(0,0,0,1), inset 0 0 32px rgba(0,0,0,0.98); animation: pulseVoid 3.4s infinite ease-in-out; }
 @keyframes pulseVoid { 0%, 100% { border-color: rgba(142,100,236,0.42); box-shadow: 0 0 2px rgba(230,240,255,0.65), 0 0 12px rgba(123,72,218,0.35), 0 0 32px rgba(0,0,0,1), inset 0 0 28px rgba(0,0,0,0.94); } 50% { border-color: rgba(214,196,255,0.76); box-shadow: 0 0 3px rgba(255,255,255,0.95), 0 0 22px rgba(123,72,218,0.72), 0 0 46px rgba(0,0,0,1), inset 0 0 42px rgba(0,0,0,1); } }
 
-.border-neon-anim { border: 2px solid #9146FF; box-shadow: 0 0 15px rgba(145, 70, 255, 0.4), inset 0 0 10px rgba(145, 70, 255, 0.1); }
-.border-gold-anim { border: 2px solid #ffd700; background-image: linear-gradient(110deg, transparent 30%, rgba(255,248,194,0.1) 48%, transparent 66%); background-size: 240% 100%; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.1); animation: goldBorderSweep 4.6s ease-in-out infinite; }
-@keyframes goldBorderSweep { 0%, 20% { background-position: 140% 0; } 70%, 100% { background-position: -120% 0; } }
+.border-neon-anim {
+    border: 2px solid #00fff9;
+    box-shadow: -5px 0 18px rgba(0,255,249,0.62), 5px 0 18px rgba(255,0,193,0.58), inset -4px 0 12px rgba(0,255,249,0.16), inset 4px 0 12px rgba(255,0,193,0.14);
+    animation: neonBorderCurrent 3.6s ease-in-out infinite;
+}
+@keyframes neonBorderCurrent {
+    0%, 100% { border-color: #00fff9; box-shadow: -7px 0 22px rgba(0,255,249,0.68), 7px 0 18px rgba(255,0,193,0.46), inset -4px 0 12px rgba(0,255,249,0.18), inset 4px 0 12px rgba(255,0,193,0.12); }
+    50% { border-color: #ff4fda; box-shadow: 7px 0 22px rgba(255,0,193,0.68), -7px 0 18px rgba(0,255,249,0.46), inset 4px 0 12px rgba(255,0,193,0.18), inset -4px 0 12px rgba(0,255,249,0.12); }
+}
+.border-gold-anim {
+    border: 2px solid #f6c945;
+    box-shadow: 0 0 3px rgba(255,251,214,0.95), 0 0 18px rgba(255,193,32,0.58), 0 0 36px rgba(132,72,0,0.34), inset 0 0 14px rgba(255,215,92,0.2);
+    animation: goldBorderSweep 4.8s ease-in-out infinite;
+}
+@keyframes goldBorderSweep {
+    0%, 100% { border-color: #9f6808; box-shadow: 0 0 2px rgba(255,236,167,0.72), 0 0 13px rgba(201,132,13,0.42), 0 0 26px rgba(105,54,0,0.28), inset 0 0 10px rgba(255,199,62,0.12); }
+    35% { border-color: #f1b928; box-shadow: 0 0 3px rgba(255,248,203,0.9), 0 0 20px rgba(255,182,24,0.62), 0 0 34px rgba(151,82,0,0.36), inset 0 0 16px rgba(255,217,109,0.2); }
+    48% { border-color: #fff3a6; box-shadow: 0 0 5px rgba(255,255,238,1), 0 0 28px rgba(255,211,72,0.84), 0 0 46px rgba(177,96,0,0.46), inset 0 0 22px rgba(255,237,166,0.3); }
+    62% { border-color: #d9910d; box-shadow: 0 0 3px rgba(255,238,178,0.82), 0 0 18px rgba(232,152,18,0.54), 0 0 32px rgba(125,65,0,0.34), inset 0 0 13px rgba(255,205,79,0.17); }
+}
 
 .border-crystal-anim {
     border: 2px solid #b9f2ff;
@@ -365,7 +382,16 @@
     83% { border-color: rgba(151,108,255,0.74); box-shadow: 1px 0 10px rgba(255,0,193,0.3), -1px 0 10px rgba(0,255,249,0.3); transform: translate(0); }
 }
 
-.border-prism-anim { border: 2px solid transparent; background-image: linear-gradient(rgba(14,14,20,0.9), rgba(14,14,20,0.9)), linear-gradient(100deg, #fad0c4, #c2e9fb, #d8b4fe, #fff1ba, #fad0c4); background-origin: border-box; background-clip: padding-box, border-box; background-size: 100% 100%, 260% 100%; box-shadow: 0 0 15px rgba(194,233,251,0.24); animation: slideFrame 5s linear infinite; }
+.border-prism-anim {
+    border: 2px solid #9ff4ff;
+    box-shadow: -8px -3px 20px rgba(87,220,255,0.44), 8px 3px 20px rgba(255,91,207,0.4), 0 0 3px rgba(255,255,255,0.9), inset 0 0 16px rgba(190,166,255,0.14);
+    animation: prismBorderRefraction 5.4s ease-in-out infinite;
+}
+@keyframes prismBorderRefraction {
+    0%, 100% { border-color: #8cecff; box-shadow: -9px -4px 22px rgba(70,214,255,0.5), 9px 4px 20px rgba(255,84,201,0.38), 0 0 3px rgba(255,255,255,0.88), inset 0 0 14px rgba(125,224,255,0.13); }
+    33% { border-color: #ff9ee9; box-shadow: 8px -5px 22px rgba(255,83,194,0.5), -8px 5px 20px rgba(139,105,255,0.42), 0 0 4px rgba(255,238,252,0.94), inset 0 0 17px rgba(255,119,213,0.14); }
+    66% { border-color: #fff0a8; box-shadow: 0 8px 24px rgba(255,220,94,0.46), 0 -8px 20px rgba(92,238,255,0.42), 0 0 4px rgba(255,255,236,0.96), inset 0 0 17px rgba(255,231,131,0.14); }
+}
 
 .border-celestial-anim {
     border: 2px solid #a1c4fd;
