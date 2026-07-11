@@ -42,6 +42,18 @@
     rarity: 'Rarity'
   };
 
+  const categoryDescriptions = {
+    all: 'Change how your name, profile, rolls, and leaderboard entry look.',
+    owned: 'See everything you own and choose what to equip.',
+    name_effect: 'Change the color, type style, or animation of your username.',
+    frame: 'Add a decorative frame around your name on your profile.',
+    profile_border: 'Change the border around your full profile card.',
+    profile_bg: 'Change the artwork and atmosphere behind your profile.',
+    orb_shape: 'Change the shape of the colored orb shown after you roll.',
+    roll_effect: 'Add light, motion, or an aura around your roll result.',
+    lb_theme: 'Change the background and border of your leaderboard row.'
+  };
+
   const featuredItemKeys = ['frame_spectrum', 'border_void', 'lb_spectrum'];
   const cosmeticSlotOrder = [
     'name_effect',
@@ -55,6 +67,10 @@
 
   function getSlotLabel(slot) {
     return slotLabels[slot] || slot;
+  }
+
+  function getCategoryDescription(slot) {
+    return categoryDescriptions[slot] || categoryDescriptions.all;
   }
 
   function getItemSummary(item) {
@@ -544,11 +560,7 @@
   <div class="shop-section-header">
     <div>
       <h3>{activeCategoryLabel}</h3>
-      {#if activeTab === 'owned'}
-        <p>Your collected cosmetics, grouped by type so they are easy to scan, equip, and compare.</p>
-      {:else}
-        <p>Permanent cosmetics only. Utility items live below so they do not compete with visual rewards.</p>
-      {/if}
+      <p>{getCategoryDescription(activeTab)}</p>
     </div>
     <span class="section-count">{activeTab === 'owned' ? ownedCosmeticItems.length : filteredCosmetics.length} item{(activeTab === 'owned' ? ownedCosmeticItems.length : filteredCosmetics.length) === 1 ? '' : 's'}</span>
   </div>
@@ -789,7 +801,7 @@
     <div class="shop-section-header utility-header">
       <div>
         <h3>Utility</h3>
-        <p>Consumables that affect streaks or rerolls. They stay in their own section so the cosmetic catalog remains clean.</p>
+        <p>Protect your daily streak or get another chance at your daily roll.</p>
       </div>
       <span class="section-count">{utilityItems.length} item{utilityItems.length === 1 ? '' : 's'}</span>
     </div>
