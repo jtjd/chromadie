@@ -1,5 +1,5 @@
 <script>
-  import { session, authUser, profile, authInitialized, authEvent, profileLoading, profileError, equippedItems, selectedUserId, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
+  import { session, authUser, profile, authInitialized, authEvent, profileLoading, profileError, equippedItems, selectedUserId, userInventory, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
   import { supabase, supabaseError } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import AuthCallback from './lib/AuthCallback.svelte';
@@ -33,7 +33,7 @@
   let authOpener = null;
   let mobileMenuOpen = false;
   let selectedProfileUsername = null;
-  let founderAnnouncementVisible = false;
+  let founderLaunchWindowActive = false;
 
   supabase.auth.getSession().then(({ data }) => session.set(data.session));
 
@@ -196,13 +196,13 @@
       const windowEndsAt = new Date(meta.get('founder_window_ends_at') || fallbackWindowEndsAt);
       const now = new Date();
 
-      founderAnnouncementVisible = Number.isFinite(launchAt.getTime())
+      founderLaunchWindowActive = Number.isFinite(launchAt.getTime())
         && Number.isFinite(windowEndsAt.getTime())
         && now >= launchAt
         && now < windowEndsAt;
     } catch {
       const now = new Date();
-      founderAnnouncementVisible = now >= fallbackLaunchAt && now < fallbackWindowEndsAt;
+      founderLaunchWindowActive = now >= fallbackLaunchAt && now < fallbackWindowEndsAt;
     }
   }
 
@@ -386,6 +386,8 @@
   $: titleTxt = getTitleText(userCosmetics);
   $: headerRank = $profile ? getRankState($profile.lifetime_ep || 0) : null;
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
+  $: founderTitleOwned = $userInventory.includes('title_founder');
+  $: founderAnnouncementVisible = founderLaunchWindowActive && !founderTitleOwned && (!$authUser || !$profileLoading);
   $: username = $session ? ($profile?.username || 'Loading your account...') : 'Guest Mode';
   $: mobileStatusText = $isAuthenticated
     ? username
@@ -577,12 +579,16 @@
 
     {#if founderAnnouncementVisible}
       <section class="founder-banner" aria-label="Launch announcement" role="status" aria-live="polite">
-        <p class="founder-banner-kicker">Launch month</p>
         <div class="founder-banner-copy">
+          <p class="founder-banner-kicker">Launch month</p>
           <p class="founder-banner-title">Thanks for playing.</p>
           <p class="founder-banner-text">
-            During the first month after launch, an authenticated roll permanently grants the <strong>Founder Title</strong>.
-            Sign in before you roll to claim it.
+            {#if $authUser}
+              During the first month after launch, authenticated rolls permanently grant the <strong>Founder Title</strong>.
+            {:else}
+              <button type="button" class="founder-inline-link" on:click={openAuthModal}>Sign in</button>
+              before you roll during the first month after launch to permanently earn the <strong>Founder Title</strong>.
+            {/if}
           </p>
         </div>
       </section>
@@ -912,7 +918,7 @@
   .founder-banner {
     width: min(980px, calc(100% - 2rem));
     margin: 0 auto 12px;
-    padding: 0.95rem 1.1rem;
+    padding: 0.9rem 1rem;
     border-radius: 18px;
     border: 1px solid rgba(255, 198, 87, 0.28);
     background:
@@ -921,29 +927,30 @@
     box-shadow: 0 16px 34px rgba(0, 0, 0, 0.25);
     color: #fff;
     display: flex;
-    align-items: flex-start;
-    gap: 0.95rem;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .founder-banner-copy {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 0;
   }
 
   .founder-banner-kicker {
     margin: 0;
-    padding: 0.35rem 0.6rem;
+    width: fit-content;
+    padding: 0.28rem 0.55rem;
     border-radius: 999px;
     background: rgba(255, 198, 87, 0.14);
     border: 1px solid rgba(255, 198, 87, 0.32);
     color: #ffd77d;
     text-transform: uppercase;
     letter-spacing: 0.16em;
-    font-size: 0.68rem;
+    font-size: 0.67rem;
     font-weight: 800;
     white-space: nowrap;
     line-height: 1;
-  }
-
-  .founder-banner-copy {
-    display: grid;
-    gap: 0.25rem;
-    min-width: 0;
   }
 
   .founder-banner-title {
@@ -963,6 +970,25 @@
   .founder-banner-text strong {
     color: #fff;
     font-weight: 700;
+  }
+
+  .founder-inline-link {
+    display: inline;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: #ffd77d;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+
+  .founder-inline-link:hover,
+  .founder-inline-link:focus-visible {
+    color: #fff;
   }
 
   .challenge-copy {
@@ -1252,7 +1278,7 @@
       width: calc(100% - 1rem);
       padding: 0.9rem;
       margin: 0 auto 12px;
-      gap: 0.65rem;
+      gap: 0.55rem;
     }
     .challenge-meta {
       justify-content: stretch;
