@@ -580,14 +580,13 @@
     {#if founderAnnouncementVisible}
       <section class="founder-banner" aria-label="Launch announcement" role="status" aria-live="polite">
         <div class="founder-banner-copy">
-          <p class="founder-banner-kicker">Launch month</p>
-          <p class="founder-banner-title">Thanks for playing.</p>
+          <p class="founder-banner-kicker">Launch exclusive</p>
+          <p class="founder-banner-title">Earn the Launch Edition badge.</p>
           <p class="founder-banner-text">
             {#if $authUser}
-              During the first month after launch, authenticated rolls permanently grant the <strong>Launch Edition badge</strong>.
+              Roll during the first month to claim yours.
             {:else}
-              <button type="button" class="founder-inline-link" on:click={openAuthModal}>Sign in</button>
-              before you roll during the first month after launch to permanently earn the <strong>Launch Edition badge</strong>.
+              <button type="button" class="founder-inline-link" on:click={openAuthModal}>Sign in</button> and roll during the first month to claim yours.
             {/if}
           </p>
         </div>
@@ -969,11 +968,6 @@
     color: var(--text-muted);
     font-size: 0.92rem;
     line-height: 1.5;
-  }
-
-  .founder-banner-text strong {
-    color: #fff;
-    font-weight: 700;
   }
 
   .founder-inline-link {
