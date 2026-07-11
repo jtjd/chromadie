@@ -273,7 +273,7 @@
   }
 
   $: cosmeticItems = Object.values($shopItems)
-    .filter(item => item.slot !== 'consumable');
+    .filter(item => item.slot !== 'consumable' && item.item_key !== 'title_founder');
 
   $: utilityItems = Object.values($shopItems)
     .filter(item => item.slot === 'consumable');
@@ -1317,10 +1317,13 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
     transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-    min-height: 430px;
+    min-height: 0;
     text-align: left;
+    overflow: hidden;
   }
 
   .shop-item:hover {
@@ -1331,7 +1334,7 @@
 
   .featured-item {
     padding: 15px;
-    min-height: 420px;
+    min-height: 0;
   }
 
   .shop-item.is-equipped {
@@ -1424,32 +1427,38 @@
   }
 
   .shop-preview-area {
-    height: 96px;
-    margin-bottom: 16px;
+    height: 112px;
+    margin-bottom: 14px;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     min-width: 0;
     align-self: stretch;
+    padding: 12px;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.075);
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at 50% 42%, rgba(123, 92, 255, 0.1), transparent 58%),
+      rgba(5, 6, 10, 0.58);
+    overflow: hidden;
   }
 
   .shop-preview-area-tall {
-    height: 104px;
+    height: 112px;
   }
 
   .shop-preview-area-roll-effect {
-    height: 164px;
-    border: 1px solid rgba(139, 124, 246, 0.14);
-    border-radius: 18px;
+    height: 140px;
+    border-color: rgba(139, 124, 246, 0.16);
     background: radial-gradient(circle at center, rgba(123, 92, 255, 0.12), rgba(6, 7, 12, 0.7) 62%, rgba(3, 4, 8, 0.9));
-    overflow: hidden;
   }
 
   .preview-bg {
     width: 100%;
-    height: 46px;
-    border-radius: 10px;
+    height: 100%;
+    border-radius: 12px;
     border: 1px solid var(--card-border);
     background-color: #111;
     flex-shrink: 0;
@@ -1559,8 +1568,8 @@
 
   .shop-preview-text {
     width: 100%;
-    min-height: 76px;
-    margin-bottom: 14px;
+    min-height: 0;
+    margin-bottom: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1665,7 +1674,9 @@
     align-items: center;
     gap: 10px;
     margin-top: auto;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.07);
   }
 
   .item-cost {
@@ -1929,15 +1940,16 @@
     }
 
     .shop-preview-area {
-      height: 82px;
+      height: 104px;
+      padding: 10px;
     }
 
     .shop-preview-area-tall {
-      height: 94px;
+      height: 104px;
     }
 
     .shop-preview-area-roll-effect {
-      height: 124px;
+      height: 128px;
     }
 
     .wallet-display p {

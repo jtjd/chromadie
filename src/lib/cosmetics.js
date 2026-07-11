@@ -21,6 +21,9 @@ export function getFrameEffect(cosmetics) {
 
 export function getTitleText(cosmetics) {
   if (!cosmetics || !cosmetics.title) return '';
+  // Reserved titles are not loaded into the public shop catalog, but still need
+  // to render when an administrator grants and equips one.
+  if (cosmetics.title === 'title_founder') return '✦ FOUNDER ✦';
   const item = get(shopItems)[cosmetics.title];
   if (!item || item.css_type !== 'text') return '';
   return item.css_value;

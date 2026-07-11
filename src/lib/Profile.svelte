@@ -12,6 +12,7 @@
   export let profileUsername = null;
   export let userId = null;
   const dispatch = createEventDispatcher();
+  const NON_PINNABLE_BADGE_IDS = new Set(['launch_edition']);
 
   let targetProfile = null;
   let targetScores = [];
@@ -37,7 +38,9 @@
     : [];
 
   $: if (targetProfile) {
-    selectedBadges = targetProfile.equipped_badges ? [...targetProfile.equipped_badges] : [];
+    selectedBadges = targetProfile.equipped_badges
+      ? targetProfile.equipped_badges.filter(id => !NON_PINNABLE_BADGE_IDS.has(id))
+      : [];
     moodColorInput = targetProfile.mood_color || '';
   }
 
