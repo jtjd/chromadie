@@ -49,8 +49,8 @@
     frame: 'Add a decorative frame around your name on your profile.',
     profile_border: 'Change the border around your full profile card.',
     profile_bg: 'Change the artwork and atmosphere behind your profile.',
-    orb_shape: 'Change the shape of the colored orb shown after you roll.',
-    roll_effect: 'Add light, motion, or an aura around your roll result.',
+    orb_shape: 'Change the shape of your color while it rolls and when your result appears.',
+    roll_effect: 'Add light, motion, or an aura throughout the roll and its result.',
     lb_theme: 'Change the background and border of your leaderboard row.'
   };
 
