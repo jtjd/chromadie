@@ -23,6 +23,7 @@ Active forward fix:
 - `migrations/20260710160000_bump_shop_version_for_nova_bloom.sql`
 - `migrations/20260710170000_public_profile_progression.sql`
 - `migrations/20260710180000_security_hardening.sql`
+- `migrations/20260710190000_snapshot_live_shop_catalog.sql`
 
 Archived migrations:
 
@@ -34,9 +35,12 @@ Current source of truth:
 
 Do not use the archived files for schema review, security review, or new database changes.
 
-Known gap:
+Catalog source of truth:
 
-- Canonical seed data now lives in `supabase/seed.sql` for fresh reset reproducibility.
+- `migrations/20260710190000_snapshot_live_shop_catalog.sql` is the versioned live snapshot.
+- `seed.sql` mirrors that snapshot for fresh reset reproducibility.
+- `npm run check:catalog-drift` detects snapshot/seed drift and checks the remote catalog when
+  Supabase credentials are available.
 
 Version-controlled cron schedule:
 

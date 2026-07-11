@@ -8,6 +8,7 @@
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
   import { getRollEffect, getOrbShape } from './cosmetics';
   import { getBadgeMeta } from './badgeData';
+  import { scoreCandidateColor } from './scoringCandidate';
 
   const dispatch = createEventDispatcher();
   let phase = 'preroll';
@@ -20,6 +21,9 @@
   let score = 0;
   let rarity = '';
   let badges = [];
+  let traits = [];
+  let identity = '';
+  let rollContributors = [];
   let displayScore = 0;
   let scanProgress = 0;
 
@@ -45,7 +49,6 @@
   const SYSTEM_BADGE_IDS = ['beat_your_best', 'cotw_hit', 'streak_bonus_7', 'reroll_shard_earned', 'milestone_30', 'milestone_100', 'milestone_365'];
 
   $: systemBadges = badges.filter(b => SYSTEM_BADGE_IDS.includes(b));
-  $: rollBadges = badges.filter(b => !b.startsWith('ach_') && !SYSTEM_BADGE_IDS.includes(b));
   $: earnedAchievements = badges.filter(b => b.startsWith('ach_'));
 
   $: cosmetics = $equippedItems || {};
@@ -70,6 +73,41 @@
       return (arr || []).slice().sort((a, b) => getBadgeMeta(b).points - getBadgeMeta(a).points);
   }
 
+  function parseHexChannels(hex) {
+      const normalized = normalizeHexColor(hex || '', '');
+      const match = /^#([0-9a-f]{6})$/i.exec(normalized);
+      if (!match) return null;
+      return {
+          red: Number.parseInt(match[1].slice(0, 2), 16),
+          green: Number.parseInt(match[1].slice(2, 4), 16),
+          blue: Number.parseInt(match[1].slice(4, 6), 16)
+      };
+  }
+
+  function getCandidateDetailsFromHex(hex) {
+      const channels = parseHexChannels(hex);
+      if (!channels) return { traits: [], identity: '', contributors: [], conditionIds: [] };
+      const details = scoreCandidateColor(channels.red, channels.green, channels.blue);
+      return {
+          traits: details.traits || [],
+          identity: details.identity || '',
+          contributors: details.contributors || [],
+          conditionIds: (details.contributors || []).map(contributor => contributor.id)
+      };
+  }
+
+  function setRollPresentationFromData(data) {
+      const derived = getCandidateDetailsFromHex(data.hex || data.hex_code);
+      const eventAndAchievementBadges = (data.badges || []).filter(
+          badgeId => badgeId.startsWith('ach_') || SYSTEM_BADGE_IDS.includes(badgeId)
+      );
+
+      traits = data.traits?.length ? data.traits : derived.traits;
+      identity = data.identity || derived.identity;
+      rollContributors = data.contributors?.length ? data.contributors : derived.contributors;
+      badges = sortBadgesDescending([...derived.conditionIds, ...eventAndAchievementBadges]);
+  }
+
   function getTomorrowMidnightUTC() {
       const now = new Date();
       return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
@@ -81,6 +119,9 @@
           clearInterval(countdownInterval);
           phase = 'preroll';
           badges = [];
+          traits = [];
+          identity = '';
+          rollContributors = [];
           displayScore = 0;
           scanProgress = 0;
           percentileDisplay = null;
@@ -191,6 +232,9 @@
     loading = false;
     error = null;
     badges = [];
+    traits = [];
+    identity = '';
+    rollContributors = [];
     displayHex = '#000000';
     displayColor = '#222';
     score = 0;
@@ -208,7 +252,7 @@
 
     const { data: dbRoll } = await supabase
       .from('scores')
-      .select('*')
+      .select('hex_code, score, rarity, badges, score_version')
       .eq('user_id', userId)
       .eq('roll_date', getTodayString())
       .single();
@@ -220,8 +264,8 @@
       score = dbRoll.score;
       displayScore = dbRoll.score;
       rarity = dbRoll.rarity;
-      badges = sortBadgesDescending(dbRoll.badges || []);
       displayColor = dbRoll.hex_code;
+      setRollPresentationFromData({ ...dbRoll, hex: dbRoll.hex_code });
 
       if (dbRoll.badges && dbRoll.badges.includes('cotw_hit')) {
           cotwHit = true;
@@ -251,8 +295,8 @@
           phase = 'results';
           score = rollData.score; displayScore = rollData.score;
           rarity = rollData.rarity;
-          badges = sortBadgesDescending(rollData.badges || []);
           displayColor = rollData.hex;
+          setRollPresentationFromData(rollData);
 
           if (rollData.badges && rollData.badges.includes('cotw_hit')) {
               cotwHit = true;
@@ -543,7 +587,18 @@
     await sleep(400);
     displayColor = data.hex;
 
-    const sortedBadgesForAnim = (data.badges || []).slice().sort((a, b) => getBadgeMeta(a).points - getBadgeMeta(b).points);
+    const derived = getCandidateDetailsFromHex(data.hex);
+    const eventAndAchievementBadges = (data.badges || []).filter(
+      badgeId => badgeId.startsWith('ach_') || SYSTEM_BADGE_IDS.includes(badgeId)
+    );
+    traits = data.traits?.length ? data.traits : derived.traits;
+    identity = data.identity || derived.identity;
+    rollContributors = data.contributors?.length ? data.contributors : derived.contributors;
+    const finalBadges = sortBadgesDescending([
+      ...rollContributors.map(contributor => contributor.id),
+      ...eventAndAchievementBadges
+    ]);
+    const sortedBadgesForAnim = finalBadges.slice().sort((a, b) => getBadgeMeta(a).points - getBadgeMeta(b).points);
 
     for (const badgeId of sortedBadgesForAnim) {
       await sleep(700);
@@ -584,7 +639,7 @@
       hex: data.hex,
       score: data.score,
       rarity: data.rarity,
-      badges: sortBadgesDescending(data.badges || [])
+      badges: finalBadges
     };
 
     if (!$session?.user?.id) {
@@ -716,6 +771,9 @@
         <RollPreview effectCls={rollEff.cls} effectStyle={rollEff.style} orbCls={orbEff.cls} displayColor={displayColor} rarity={rarity} />
 
         <div class="hex-code">{displayColor}</div>
+        {#if identity}
+          <div class="identity-label">{identity}</div>
+        {/if}
         <div class="score-label">Leaderboard Score</div>
         <div class="score-display">{displayScore.toLocaleString()}</div>
 
@@ -776,6 +834,14 @@
         </div>
       {/if}
 
+      {#if traits.length > 0}
+        <div class="trait-strip" aria-label="Color traits">
+          {#each traits as trait (trait.id)}
+            <span class="trait-pill">{trait.label}</span>
+          {/each}
+        </div>
+      {/if}
+
       {#if systemBadges.length > 0}
         <div class="badges-container badges-container-tight" style="margin-top: 0; margin-bottom: 20px;">
           <div class="badges-title">Bonuses & Milestones</div>
@@ -798,24 +864,30 @@
       {/if}
 
       <div class="badges-container badges-container-tight conditions-section">
-        <div class="badges-title">Conditions Met</div>
-        {#if rollBadges.length === 0}
+        <div class="badges-title">Score Contributors</div>
+        {#if rollContributors.length === 0}
           <div class="badge-result">
             <div class="badge-text">
-              <span class="badge-title">No special conditions met</span>
+              <span class="badge-title">Base roll score</span>
+              <span class="badge-desc">No scoring conditions contributed beyond the base roll.</span>
             </div>
           </div>
         {:else}
           <div class="conditions-grid">
-          {#each rollBadges as badgeId (badgeId)}
-            {@const badge = getBadgeMeta(badgeId)}
+          {#each rollContributors as contributor (contributor.id)}
+            {@const badge = getBadgeMeta(contributor.id)}
             <div class="badge-result rarity-{badge.rarity || 'Common'}">
               <span class="badge-symbol">{badge.symbol || '✨'}</span>
               <div class="badge-text">
-                <span class="badge-title">{badge.name}</span>
-                <span class="badge-desc">{badge.desc || 'Special condition met'}</span>
+                <span class="badge-title">{contributor.name || badge.name}</span>
+                <span class="badge-desc">
+                  {badge.desc || 'Special condition met'}
+                  {#if contributor.multiplier && contributor.multiplier < 1}
+                    <span class="contributor-multiplier"> {Math.round(contributor.multiplier * 100)}% category value</span>
+                  {/if}
+                </span>
               </div>
-              <span class="badge-points">+{badge.points.toLocaleString()}</span>
+              <span class="badge-points">+{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()}</span>
             </div>
           {/each}
           </div>
@@ -855,6 +927,36 @@
   .reroll-btn:hover { background: rgba(139, 124, 246, 0.3); }
   .reroll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  .identity-label {
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  .trait-strip {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 0 20px;
+  }
+  .trait-pill {
+    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.045);
+    color: var(--text-muted);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .contributor-multiplier {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
   .badges-container-tight { margin-bottom: 0 !important; margin-top: 20px; }
   .conditions-section {
     align-items: stretch;

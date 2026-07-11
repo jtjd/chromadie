@@ -7,11 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "node --test",
     "db:pull": "supabase db pull",
     "db:diff": "supabase db diff --linked",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
-    "check:badge-drift": "node scripts/check-badge-drift.mjs"
+    "check:badge-drift": "node scripts/check-badge-drift.mjs",
+    "check:balance-drift": "node scripts/check-badge-drift.mjs",
+    "check:catalog-drift": "node scripts/check-catalog-drift.mjs",
+    "simulate:balance": "node scripts/simulate-balance.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

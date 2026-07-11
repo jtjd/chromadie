@@ -20,6 +20,15 @@ jobs:
         run: npm ci
       - name: Lint project
         run: npx eslint src/
+      - name: Test balance boundaries
+        run: npm test
+      - name: Check balance drift
+        run: npm run check:balance-drift
+      - name: Check catalog drift
+        run: npm run check:catalog-drift
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
       - name: Build project
         run: npm run build
         env:

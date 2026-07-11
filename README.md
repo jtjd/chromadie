@@ -16,6 +16,10 @@ Chromadie is a Svelte/SvelteKit-style SPA built with Vite, Supabase, and Cloudfl
 npm run dev
 npm run build
 npx eslint src/
+npm test
+npm run check:balance-drift
+npm run check:catalog-drift
+npm run simulate:balance
 npm run db:push
 npm run db:reset
 ```
@@ -57,4 +61,20 @@ If you are auditing the project, start with:
 - The migration chain is the source of truth for schema history.
 - Fresh resets should be playable using `supabase/seed.sql`.
 - The app depends on RLS, RPCs, and restricted public reads for security.
+- `npm run check:catalog-drift` always compares the catalog snapshot with the seed. When
+  `SUPABASE_URL` and `SUPABASE_ANON_KEY` (or their `VITE_` equivalents) are set, it also
+  verifies the live catalog.
 
+## Balance Safety Checks
+
+- `src/lib/balanceConfig.js` contains the current rarity and rank thresholds.
+- `src/lib/scoring.js` is a deterministic mirror of the server-authoritative score formula for
+  tests and simulations; gameplay continues to use the Supabase `roll_die` RPC.
+- `npm test` locks current score examples, boundary behavior, rewards, and a seeded distribution.
+- `npm run check:balance-drift` catches SQL/registry reward and rarity mismatches.
+- `npm run simulate:balance` runs the standard seeded one-million-roll report. Use
+  `-- --rolls=10000 --json` for a smaller machine-readable run. Add `--candidate` for the
+  pre-launch rebalance model and `--exhaustive` to evaluate all 16,777,216 RGB colors.
+
+Balance changes must update the server formula, deterministic model, tests, and expected
+simulation results together. Historical scores and lifetime EP are not recalculated.

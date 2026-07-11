@@ -1,52 +1,6 @@
--- Canonical seed data for fresh Supabase resets.
---
--- This keeps a new database playable without any manual dashboard setup.
-
-INSERT INTO public.achievements (id, name, description, icon, ep_reward, rarity) VALUES
-('first_roll', 'First Steps', 'Roll the die for the first time.', '🎲', 5000, 'Common'),
-('roll_10', 'Dedicated', 'Roll the die 10 times.', '🧡', 25000, 'Common'),
-('roll_50', 'Veteran', 'Roll the die 50 times.', '💜', 100000, 'Rare'),
-('roll_100', 'Centurion', 'Roll the die 100 times.', '💯', 250000, 'Epic'),
-('roll_365', 'Annual', 'Roll the die 365 times.', '📅', 1000000, 'Mythic'),
-('streak_7', 'Week Warrior', 'Maintain a 7-day streak.', '🔥', 50000, 'Common'),
-('streak_14', 'Fortnight', 'Maintain a 14-day streak.', '🔥', 100000, 'Rare'),
-('streak_30', 'Monthly Grinder', 'Maintain a 30-day streak.', '📅', 250000, 'Epic'),
-('streak_100', 'Iron Will', 'Maintain a 100-day streak.', '🔥', 750000, 'Mythic'),
-('rarity_rare', 'Uncommonly Rare', 'Roll a Rare color.', '🔵', 25000, 'Common'),
-('rarity_epic', 'Epic Encounter', 'Roll an Epic rarity color.', '🟣', 100000, 'Rare'),
-('rarity_anomaly', 'Anomaly Detected', 'Roll an Anomaly rarity color.', '🟠', 250000, 'Epic'),
-('mythic_roll', 'Mythic Touch', 'Roll a Mythic rarity color.', '🌟', 500000, 'Mythic'),
-('score_50k', 'High Roller', 'Score at least 50,000 EP in a single roll.', '💰', 25000, 'Common'),
-('score_100k', 'Six Digits', 'Score at least 100,000 EP in a single roll.', '💰', 100000, 'Rare'),
-('score_200k', 'Anomaly Hunter', 'Score at least 200,000 EP in a single roll.', '💰', 250000, 'Epic'),
-('score_1_5m', 'Once in a Spectrum', 'Score at least 1,500,000 EP in a single roll.', '🌈', 500000, 'Mythic'),
-('roll_prime', 'Prime Number', 'Roll a color with a prime R+G+B sum.', '🔢', 25000, 'Common'),
-('high_contrast', 'Polarized Channels', 'Roll a color with an extreme RGB range.', '🌓', 25000, 'Common'),
-('low_contrast', 'Close Harmony', 'Roll a color with very close RGB channels.', '🌫️', 15000, 'Common'),
-('greyscale', 'Perfect Greyscale', 'Roll a pure greyscale color.', '⚫', 50000, 'Rare'),
-('web_safe', 'Web Safe', 'Roll a classic web-safe color.', '🕸️', 50000, 'Rare'),
-('roll_42_sum', 'Meaning of Life', 'Roll a color where R+G+B is exactly 42.', '🧬', 100000, 'Rare'),
-('roll_beef', 'Where is the Beef?', 'Roll a hex containing BEEF.', '🥩', 100000, 'Rare'),
-('roll_cafe', 'Coffee Break', 'Roll a hex containing CAFE.', '☕', 100000, 'Rare'),
-('roll_dead', 'Dead Man Walking', 'Roll a hex containing DEAD.', '💀', 100000, 'Rare'),
-('roll_face', 'Face Value', 'Roll a hex containing FACE.', '😎', 100000, 'Rare'),
-('roll_palindrome', 'Mirror', 'Roll a hex palindrome.', '🪞', 150000, 'Epic'),
-('repeated_pair', 'Repeated Pair', 'Roll a hex that repeats the same byte three times.', '🟰', 125000, 'Epic'),
-('saturation_spike', 'Saturation Spike', 'Roll an extremely saturated color.', '🎨', 50000, 'Rare'),
-('triple_crown', 'Triple Crown', 'Roll one low, one middle, and one maximum channel.', '👑', 150000, 'Epic'),
-('pastel_soft', 'Pastel Bloom', 'Roll a bright, soft pastel color.', '🌸', 50000, 'Rare'),
-('neon_bright', 'Neon Voltage', 'Roll a vivid high-contrast color.', '💡', 50000, 'Rare'),
-('roll_black', 'The Void', 'Roll Pure Black (#000000).', '🌑', 500000, 'Mythic'),
-('roll_white', 'The Light', 'Roll Pure White (#FFFFFF).', '☀️', 500000, 'Mythic'),
-('roll_gold', 'Midas', 'Roll Pure Gold (#FFD700).', '🥇', 500000, 'Mythic'),
-('pure_red', 'Maximum Red', 'Roll Pure Red (#FF0000).', '🟥', 250000, 'Epic'),
-('pure_green', 'Maximum Green', 'Roll Pure Green (#00FF00).', '🟩', 250000, 'Epic'),
-('pure_blue', 'Maximum Blue', 'Roll Pure Blue (#0000FF).', '🟦', 250000, 'Epic'),
-('streamer_purple', 'Streamer Purple', 'Roll Streamer Purple.', '🟣', 350000, 'Mythic'),
-('audio_stream_green', 'Audio Stream Green', 'Roll Audio Stream Green.', '🟢', 350000, 'Mythic'),
-('classic_cola_red', 'Classic Cola Red', 'Roll Classic Cola Red.', '🥤', 350000, 'Mythic')
-ON CONFLICT (id) DO NOTHING;
-
+-- Production catalog snapshot.
+-- This migration intentionally upserts the live catalog and never deletes keys,
+-- because inventory rows may reference older or retired cosmetics.
 INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, available_from, available_until, rarity, description, collection) VALUES
 ('bg_aurora', 'Aurora Background', 'profile_bg', '1500000', 'style', 'background-image: linear-gradient(135deg, #00c6ff, #0072ff); background-size: cover;', NULL, NULL, 'Epic', 'A blue aurora gradient for your profile card.', NULL),
 ('bg_blood_void', 'Blood Void', 'profile_bg', '3000000', 'style', 'background-image: radial-gradient(circle, #2a0000, #000000);', NULL, NULL, 'Epic', 'A void filled with dark red.', 'Voidwalker'),
@@ -127,7 +81,26 @@ INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, 
 ('roll_smoke', 'Smoke Trail', 'roll_effect', '500000', 'class', 'roll-smoke-anim', NULL, NULL, 'Epic', 'A trail of smoke behind your orb.', 'Elemental'),
 ('roll_sparkles', 'Sparkle Aura', 'roll_effect', '1000000', 'class', 'roll-sparkles-anim', NULL, NULL, 'Epic', 'A soft sparkle aura around your roll orb.', NULL),
 ('streak_freeze', 'Streak Freeze', 'consumable', '100000', 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL)
-ON CONFLICT (item_key) DO NOTHING;
+ON CONFLICT (item_key) DO UPDATE
+SET name = EXCLUDED.name,
+    slot = EXCLUDED.slot,
+    cost = EXCLUDED.cost,
+    css_type = EXCLUDED.css_type,
+    css_value = EXCLUDED.css_value,
+    available_from = EXCLUDED.available_from,
+    available_until = EXCLUDED.available_until,
+    rarity = EXCLUDED.rarity,
+    description = EXCLUDED.description,
+    collection = EXCLUDED.collection;
+
+DELETE FROM public.shop_items
+WHERE item_key IN (
+  'frame_spectrum',
+  'lb_spectrum',
+  'name_spectrum',
+  'reroll_shard',
+  'roll_spectrum'
+);
 
 UPDATE public.shop_items
 SET cost = CASE item_key
@@ -212,7 +185,6 @@ SET cost = CASE item_key
   WHEN 'streak_freeze' THEN 50000
 END;
 
-INSERT INTO public.meta (key, value) VALUES
-('shop_version', '2026-07-09T22:00:00Z'),
-('cotw_target', '73,114,201')
-ON CONFLICT (key) DO NOTHING;
+INSERT INTO public.meta (key, value)
+VALUES ('shop_catalog_snapshot', '2026-07-10-live-79-items')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
