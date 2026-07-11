@@ -26,6 +26,7 @@
   let rollContributors = [];
   let displayScore = 0;
   let scanProgress = 0;
+  let scoreCountUpInterval = null;
 
   let percentileDisplay = null;
   let copied = false;
@@ -42,6 +43,7 @@
   let rerollRequestInFlight = false;
   let initialStateKey = null;
   let initialStateRequestId = 0;
+  let rollRequestId = 0;
 
   let cotwColor = null;
   let cotwHit = false;
@@ -232,6 +234,10 @@
   }
 
   function resetRollPresentation() {
+    if (scoreCountUpInterval) {
+      clearInterval(scoreCountUpInterval);
+      scoreCountUpInterval = null;
+    }
     phase = 'preroll';
     loading = false;
     error = null;
@@ -329,6 +335,7 @@
     if (nextKey === initialStateKey) return;
 
     initialStateKey = nextKey;
+    rollRequestId += 1;
     const requestId = ++initialStateRequestId;
     rerollRequestInFlight = false;
     error = null;
@@ -543,6 +550,8 @@
     }
 
     loading = true;
+    const requestId = ++rollRequestId;
+    const requestUserId = $session?.user?.id || null;
     rerollRequestInFlight = isReroll;
     error = null;
     phase = 'rolling';
@@ -557,7 +566,18 @@
       setRerollLock();
     }
 
+    const requestIsCurrent = () => requestId === rollRequestId
+      && requestUserId === ($session?.user?.id || null);
+    const abandonStaleRequest = () => {
+      if (isReroll) clearRerollLock();
+    };
+
     const { data, error: rpcError } = await supabase.rpc('roll_die', { p_is_reroll: isReroll });
+
+    if (!requestIsCurrent()) {
+      abandonStaleRequest();
+      return;
+    }
 
     if (rpcError || !data || !data.success) {
       error = rpcError?.message || "An error occurred while rolling. Please try again.";
@@ -578,6 +598,11 @@
     }, 60);
 
     await sleep(2000);
+    if (!requestIsCurrent()) {
+      clearInterval(scrambleInterval);
+      abandonStaleRequest();
+      return;
+    }
     clearInterval(scrambleInterval);
     displayColor = '#222';
 
@@ -586,9 +611,17 @@
       let currentText = hexChars.map((c, idx) => idx <= i ? c : '-').join('');
       displayHex = currentText;
       await sleep(500);
+      if (!requestIsCurrent()) {
+        abandonStaleRequest();
+        return;
+      }
     }
 
     await sleep(400);
+    if (!requestIsCurrent()) {
+      abandonStaleRequest();
+      return;
+    }
     displayColor = data.hex;
 
     const derived = getCandidateDetailsFromHex(data.hex);
@@ -606,6 +639,10 @@
 
     for (const badgeId of sortedBadgesForAnim) {
       await sleep(700);
+      if (!requestIsCurrent()) {
+        abandonStaleRequest();
+        return;
+      }
       badges = [badgeId, ...badges];
       const badgeMeta = getBadgeMeta(badgeId);
       if (badgeMeta.points >= 1000000) {
@@ -629,11 +666,18 @@
 
     let targetScore = data.score;
     let currentScore = 0;
-    let countUpInterval = setInterval(() => {
+    if (scoreCountUpInterval) clearInterval(scoreCountUpInterval);
+    scoreCountUpInterval = setInterval(() => {
+      if (!requestIsCurrent()) {
+        clearInterval(scoreCountUpInterval);
+        scoreCountUpInterval = null;
+        return;
+      }
       currentScore += targetScore / 60;
       if (currentScore >= targetScore) {
         currentScore = targetScore;
-        clearInterval(countUpInterval);
+        clearInterval(scoreCountUpInterval);
+        scoreCountUpInterval = null;
       }
       displayScore = Math.floor(currentScore);
     }, 33);
@@ -646,16 +690,25 @@
       badges: finalBadges
     };
 
+    if (!requestIsCurrent()) {
+      abandonStaleRequest();
+      return;
+    }
+
     if (!$session?.user?.id) {
       saveGuestRoll(rollData);
       guestProgressRestored = true;
     } else {
       const hadLaunchBadge = $profile?.equipped_badges?.includes('launch_edition');
       await Promise.all([
-        refreshProfileState(),
-        fetchInventoryState($session.user.id),
-        fetchWalletBalance()
+        refreshProfileState(requestUserId),
+        fetchInventoryState(requestUserId),
+        fetchWalletBalance(requestUserId)
       ]);
+      if (!requestIsCurrent()) {
+        abandonStaleRequest();
+        return;
+      }
       if (!hadLaunchBadge && $profile?.equipped_badges?.includes('launch_edition')) {
         addToast('Launch Edition badge unlocked!', 'success');
       }
@@ -683,7 +736,11 @@
     void syncInitialState();
   }
 
-  onDestroy(() => clearInterval(countdownInterval));
+  onDestroy(() => {
+    rollRequestId += 1;
+    if (scoreCountUpInterval) clearInterval(scoreCountUpInterval);
+    clearInterval(countdownInterval);
+  });
 
   $: if (typeof document !== 'undefined') {
     document.body.style.overflow = showImageModal ? 'hidden' : '';

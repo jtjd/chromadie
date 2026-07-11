@@ -1,4 +1,4 @@
-import { derived, writable } from 'svelte/store'
+import { derived, writable, get } from 'svelte/store'
 import { supabase } from './supabase'
 
 // --- Auth & Profile State ---
@@ -152,14 +152,14 @@ function expandInventoryRows(rows) {
     return items
 }
 
-export async function fetchWalletBalance() {
+export async function fetchWalletBalance(expectedUserId = null) {
     const { data } = await supabase.rpc('get_wallet_balance')
-    if (data !== null) {
+    if (data !== null && (!expectedUserId || get(session)?.user?.id === expectedUserId)) {
         walletBalance.set(data)
     }
 }
 
-export async function fetchInventoryState(userId) {
+export async function fetchInventoryState(userId, expectedUserId = userId) {
     if (!userId) return []
 
     const { data } = await supabase
@@ -168,13 +168,19 @@ export async function fetchInventoryState(userId) {
         .eq('user_id', userId)
 
     const items = expandInventoryRows(data)
-    userInventory.set(items)
+    if (!expectedUserId || get(session)?.user?.id === expectedUserId) {
+        userInventory.set(items)
+    }
     return items
 }
 
-export async function refreshProfileState() {
+export async function refreshProfileState(expectedUserId = null) {
     const { data, error } = await supabase.rpc('get_my_profile')
     if (error || !data || data.success === false) {
+        return null
+    }
+
+    if (expectedUserId && get(session)?.user?.id !== expectedUserId) {
         return null
     }
 
