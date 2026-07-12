@@ -1,0 +1,10 @@
+import { renderPublicPage } from './_publicPage.js';
+
+export function onRequestGet({ request }) {
+  return renderPublicPage(request, {
+    title: 'How to Play | ChromaDie',
+    description: 'Learn how ChromaDie works: roll a color every day, discover rarity and traits, earn EP, and compete on the leaderboard.',
+    canonicalPath: '/how-to-play',
+    fallback: 'Learn how ChromaDie works: roll once each day, discover color rarity and bonus traits, earn EP, unlock cosmetics, and compare your results.'
+  });
+}

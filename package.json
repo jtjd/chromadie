@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test",
+    "check:links": "node scripts/check-internal-links.mjs",
     "db:pull": "supabase db pull",
     "db:diff": "supabase db diff --linked",
     "db:push": "supabase db push",

@@ -21,7 +21,8 @@
     background: var(--spectrum); background-size: 300% 100%; opacity: 0.55;
     animation: spectrumFlow 10s linear infinite;
 }
-.site-header .logo { font-family: var(--font-display); color: #fff; text-decoration: none; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px; flex: 0 0 auto; }
+.site-header .logo { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-display); color: #fff; text-decoration: none; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px; flex: 0 0 auto; }
+.site-header .logo-mark { width: 34px; height: 34px; object-fit: contain; flex: 0 0 auto; }
 .mobile-status-pill {
     display: none;
     align-items: center;
@@ -239,6 +240,10 @@ h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; }
     .site-header .logo {
         font-size: 1.05rem;
         grid-column: 1;
+    }
+    .site-header .logo-mark {
+        width: 30px;
+        height: 30px;
     }
     .mobile-status-pill {
         display: inline-flex;

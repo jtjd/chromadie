@@ -9,7 +9,8 @@ Chromadie is a Svelte/SvelteKit-style SPA built with Vite, Supabase, and Cloudfl
 - Gameplay mutations are intended to be server-authoritative through Supabase RPCs.
 - The remote Supabase staging project is the authoritative live test target right now.
 - Cloudflare Pages deploys production automatically from the GitHub `main` branch.
-- The production site is `https://chromadie.pages.dev`.
+- The canonical production site is `https://chromadie.com`.
+- Cloudflare Pages may remain the hosting provider, but public links, metadata, and share cards should use `https://chromadie.com`.
 
 ## Key Commands
 

@@ -9,6 +9,7 @@
   import { getRollEffect, getOrbShape } from './cosmetics';
   import { getBadgeMeta } from './badgeData';
   import { scoreCandidateColor } from './scoringCandidate';
+  import { getAppOrigin } from './authUrls';
 
   const dispatch = createEventDispatcher();
   let phase = 'preroll';
@@ -473,7 +474,7 @@
 
     ctx.fillStyle = '#8b7cf6';
     ctx.font = '600 18px "Inter", sans-serif';
-    ctx.fillText('chromadie.pages.dev', 460, 514);
+    ctx.fillText(getAppOrigin().replace(/^https?:\/\//, ''), 460, 514);
 
     ctx.restore();
     return exportCanvas;

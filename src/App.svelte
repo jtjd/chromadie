@@ -23,6 +23,7 @@
   const VALID_VIEWS = new Set(['game', 'shop', 'leaderboard', 'profile']);
   const VALID_LEADERBOARD_TABS = new Set(['today', 'rivals', 'weekly', 'monthly', 'roll']);
   const VALID_APP_ROUTES = new Set(['app', 'privacy', 'how-to-play', 'auth-callback', 'reset-password']);
+  const CLEAN_APP_PATHS = new Set(['/', '/shop', '/leaderboard', '/profile']);
   let view = 'game';
   let leaderboardTab = 'today';
   let routeMode = 'app';
@@ -66,8 +67,10 @@
       routeMode = 'privacy';
     } else if (rawPath === '/how-to-play') {
       routeMode = 'how-to-play';
-    } else {
+    } else if (CLEAN_APP_PATHS.has(rawPath)) {
       routeMode = 'app';
+    } else {
+      routeMode = 'not-found';
     }
 
     if (profileMatch) {
@@ -87,7 +90,14 @@
       };
       void loadChallengeById(challengeData.id, routeChallengeFrom || null);
     } else {
-      view = VALID_VIEWS.has(routeView) ? routeView : 'game';
+      const cleanPathView = rawPath === '/shop'
+        ? 'shop'
+        : rawPath === '/leaderboard'
+          ? 'leaderboard'
+          : rawPath === '/profile'
+            ? 'profile'
+            : null;
+      view = cleanPathView || (VALID_VIEWS.has(routeView) ? routeView : 'game');
       selectedProfileUsername = null;
       selectedUserId.set(routeMode === 'app' ? routeProfileId || null : null);
       if (cScore && isValidChallengeHex) {
@@ -407,9 +417,40 @@
           ? challengeData.error
             ? 'Challenge Unavailable | ChromaDie'
             : 'Challenge | ChromaDie'
-        : routeMode === 'app' && view === 'game'
+      : routeMode === 'app' && view === 'game'
         ? 'Roll | ChromaDie'
-      : 'ChromaDie';
+      : routeMode === 'not-found'
+        ? 'Page Not Found | ChromaDie'
+        : 'ChromaDie';
+  $: pageDescription = routeMode === 'not-found'
+    ? 'The ChromaDie page you requested could not be found.'
+    : routeMode === 'privacy'
+    ? 'Read the ChromaDie privacy policy and learn how account and gameplay data is handled.'
+    : routeMode === 'how-to-play'
+      ? 'Learn how ChromaDie works: roll a color every day, discover rarity and traits, earn EP, and compete on the leaderboard.'
+      : routeMode === 'app' && view === 'profile'
+        ? `View ${profileTitle}'s public ChromaDie profile, progress, achievements, and recent rolls.`
+        : routeMode === 'app' && view === 'leaderboard'
+          ? 'Compare ChromaDie players, scores, and daily color-roll results on the leaderboard.'
+          : 'Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score.';
+  $: canonicalPath = routeMode === 'not-found'
+    ? '/'
+    : routeMode === 'privacy'
+    ? '/privacy'
+    : routeMode === 'how-to-play'
+      ? '/how-to-play'
+      : routeMode === 'app' && view === 'leaderboard'
+        ? '/leaderboard'
+        : routeMode === 'app' && view === 'profile' && selectedProfileUsername
+          ? `/u/${encodeURIComponent(selectedProfileUsername)}`
+          : '/';
+  $: pageRobots = routeMode === 'not-found'
+    ? 'noindex,follow'
+    : routeMode === 'app' && (view === 'game' && challengeData || view === 'shop' || view === 'profile' && !selectedProfileUsername)
+    ? 'noindex,follow'
+    : routeMode === 'auth-callback' || routeMode === 'reset-password'
+      ? 'noindex,nofollow'
+      : 'index,follow';
   const errorState = supabaseError;
 
   $: if (($authEvent === 'SIGNED_IN' || $authEvent === 'USER_UPDATED') && showAuthModal) {
@@ -422,6 +463,20 @@
 
   $: if (typeof document !== 'undefined') {
     document.title = pageTitle;
+    const origin = import.meta.env.VITE_SITE_URL?.trim() || window.location.origin;
+    const canonical = new URL(canonicalPath, origin).toString();
+    const setMeta = (selector, attribute, value) => {
+      const element = document.querySelector(selector);
+      if (element) element.setAttribute(attribute, value);
+    };
+    setMeta('meta[name="description"]', 'content', pageDescription);
+    setMeta('meta[name="robots"]', 'content', pageRobots);
+    setMeta('link[rel="canonical"]', 'href', canonical);
+    setMeta('meta[property="og:title"]', 'content', pageTitle);
+    setMeta('meta[property="og:description"]', 'content', pageDescription);
+    setMeta('meta[property="og:url"]', 'content', canonical);
+    setMeta('meta[name="twitter:title"]', 'content', pageTitle);
+    setMeta('meta[name="twitter:description"]', 'content', pageDescription);
   }
 
   $: if (routeMode === 'app') {
@@ -485,7 +540,10 @@
     {/if}
     <header class="site-header">
       <div class="header-brand">
-        <a href="/" class="logo" on:click={handleLogoClick}>🎲 ChromaDie</a>
+        <a href="/" class="logo" on:click={handleLogoClick} aria-label="ChromaDie home">
+          <img class="logo-mark" src="/FAVICON.png" alt="" width="34" height="34" />
+          <span>ChromaDie</span>
+        </a>
         <a
           href="/how-to-play"
           class="header-guide-link"
@@ -709,7 +767,16 @@
   {/if}
 
   <div class="app-main">
-  {#if routeMode === 'privacy'}
+  {#if routeMode === 'not-found'}
+    <main class="container" aria-labelledby="not-found-title">
+      <section class="card bootstrap-error-card">
+        <p class="bootstrap-error-kicker">404</p>
+        <h1 id="not-found-title">Page not found</h1>
+        <p class="info-text">That ChromaDie page does not exist or may have moved.</p>
+        <a class="roll-btn" href="/" on:click|preventDefault={() => navigateToPath('/')}>Back to Roll</a>
+      </section>
+    </main>
+  {:else if routeMode === 'privacy'}
     <PrivacyPolicy />
   {:else if routeMode === 'how-to-play'}
     <FAQ />
