@@ -73,6 +73,10 @@
       routeMode = 'not-found';
     }
 
+    if (profileMatch || challengeMatch) {
+      routeMode = 'app';
+    }
+
     if (profileMatch) {
       challengeData = null;
       view = 'profile';
