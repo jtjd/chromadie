@@ -1,0 +1,18 @@
+# ChromaDie
+
+ChromaDie is a daily color-rolling game. Players roll a new color, discover its rarity and traits, earn EP, unlock cosmetics, and compare results on public leaderboards.
+
+## Public pages
+
+- [Play ChromaDie](https://chromadie.com/)
+- [How to Play](https://chromadie.com/how-to-play)
+- [Leaderboard](https://chromadie.com/leaderboard)
+- [Privacy Policy](https://chromadie.com/privacy)
+
+## Public profile pages
+
+Public player profiles are available at `https://chromadie.com/u/{username}` when a player has a public profile and meaningful activity.
+
+## Sharing
+
+Challenge links are available at `https://chromadie.com/c/{challenge-id}` and may expire.

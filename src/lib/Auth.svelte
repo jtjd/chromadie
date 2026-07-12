@@ -210,6 +210,10 @@
   $: mode = MODE_COPY[tab] || MODE_COPY.login;
 </script>
 
+<svelte:head>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</svelte:head>
+
 <div class="auth-container glass-panel">
   <div class="auth-header">
     <div class="auth-heading-group">
