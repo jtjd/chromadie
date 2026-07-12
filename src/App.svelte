@@ -718,9 +718,9 @@
           {:else if challengeData.error}
             This link may have expired or been removed.
           {:else if challengeData.fromUsername}
-            Roll as close as you can to the target color.
+            Beat the target score with your next daily roll.
           {:else}
-            Roll as close as you can to the target color.
+            Beat the target score with your next daily roll.
           {/if}
         </p>
       </div>

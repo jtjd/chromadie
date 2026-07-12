@@ -19,7 +19,7 @@ export async function onRequestGet({ request, env }) {
   <text x="92" y="160" fill="#f1f2f5" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700">ChromaDie</text>
   <text x="92" y="248" fill="#c7c9d1" font-family="Inter,Arial,sans-serif" font-size="30">${sender} challenged you</text>
   <text x="92" y="365" fill="#f1f2f5" font-family="Space Grotesk,Arial,sans-serif" font-size="92" font-weight="700">${escapeXml(score)} EP</text>
-  <text x="92" y="430" fill="#9b9eaa" font-family="Inter,Arial,sans-serif" font-size="26">Beat this color roll · ${escapeXml(hex.toUpperCase())}</text>
+  <text x="92" y="430" fill="#9b9eaa" font-family="Inter,Arial,sans-serif" font-size="26">Beat this score · ${escapeXml(hex.toUpperCase())}</text>
   <text x="92" y="535" fill="#7c6cf2" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="600">DAILY COLOR GAME</text>
 </svg>`;
   return new Response(svg, { headers: { 'Content-Type': 'image/svg+xml; charset=UTF-8', 'Cache-Control': 'public, max-age=300, s-maxage=900' } });
