@@ -77,7 +77,9 @@ export async function onRequestGet({ request, params, env }) {
     .replace(/<meta name="twitter:title"[^>]*>/i, `<meta name="twitter:title" content="${escapeHtml(title)}" />`)
     .replace(/<meta name="twitter:description"[^>]*>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`)
     .replace(/<meta name="twitter:image"[^>]*>/i, `<meta name="twitter:image" content="${escapeHtml(ogImage)}" />`)
-    .replace('<div id="app"></div>', `<div id="app">${summary}</div>`);
+    // Keep the crawler-readable profile summary available when JavaScript is
+    // disabled without leaving it in the live app DOM after Svelte mounts.
+    .replace('<div id="app"></div>', `<div id="app"><noscript>${summary}</noscript></div>`);
 
   return new Response(html, {
     status: profile ? 200 : 404,
