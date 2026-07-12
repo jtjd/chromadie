@@ -1,5 +1,5 @@
 <script>
-  import { session, authUser, profile, authInitialized, authEvent, profileLoading, profileError, equippedItems, selectedUserId, userInventory, walletBalance, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
+  import { session, authUser, profile, authInitialized, authEvent, profileLoading, profileError, equippedItems, selectedUserId, walletBalance, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
   import { supabase, supabaseError } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import AuthCallback from './lib/AuthCallback.svelte';

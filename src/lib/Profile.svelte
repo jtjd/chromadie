@@ -219,13 +219,16 @@
     );
     let profileId = lookupId;
 
+    let profileQuery = supabase
+      .from('profiles')
+      .select('id, username, current_streak, longest_streak, lifetime_ep, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff');
+    profileQuery = lookupUsername
+      ? profileQuery.ilike('username', lookupUsername)
+      : profileQuery.eq('id', lookupId);
+
     const { data: prof, error: profError } = viewingOwnProfile
       ? await supabase.rpc('get_my_profile')
-      : await supabase
-          .from('profiles')
-          .select('id, username, current_streak, longest_streak, lifetime_ep, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff')
-          [lookupUsername ? 'ilike' : 'eq'](lookupUsername ? 'username' : 'id', lookupUsername || lookupId)
-          .maybeSingle();
+      : await profileQuery.maybeSingle();
 
     if (requestId !== loadRequestId) return;
 
