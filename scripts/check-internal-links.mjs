@@ -4,7 +4,7 @@ import path from 'node:path';
 const roots = ['src', 'index.html'];
 const allowedPaths = new Set([
   '/', '/privacy', '/how-to-play', '/shop', '/leaderboard', '/profile',
-  '/auth/callback', '/reset-password', '/favicon-32.png', '/apple-touch-icon.png',
+  '/auth/callback', '/reset-password', '/favicon-32.png', '/favicon-96.png', '/apple-touch-icon.png',
   '/site.webmanifest', '/icon-192.png', '/icon-512.png'
 ]);
 const linkPattern = /href\s*=\s*["'](\/[A-Za-z0-9_./-]+)(?:[?#][^"']*)?["']/g;
