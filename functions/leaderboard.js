@@ -1,7 +1,7 @@
 import { renderPublicPage } from './_publicPage.js';
 
-export function onRequestGet({ request }) {
-  return renderPublicPage(request, {
+export function onRequestGet({ request, env }) {
+  return renderPublicPage(request, env, {
     title: 'Leaderboard | ChromaDie',
     description: 'Compare ChromaDie players, scores, and daily color-roll results on the leaderboard.',
     canonicalPath: '/leaderboard',

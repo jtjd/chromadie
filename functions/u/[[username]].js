@@ -57,7 +57,8 @@ export async function onRequestGet({ request, params, env }) {
     }
   } : null;
 
-  const shellResponse = await fetch(new URL('/index.html', request.url));
+  const { fetchAppShell } = await import('../_publicPage.js');
+  const shellResponse = await fetchAppShell(request, env);
   if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502 });
   let html = await shellResponse.text();
   if (profileSchema) {

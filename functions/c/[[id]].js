@@ -27,7 +27,8 @@ export async function onRequestGet({ request, params, env }) {
   const ogImage = challenge
     ? `${origin}/og/challenge.svg?score=${encodeURIComponent(challenge.target_score)}&hex=${encodeURIComponent(challenge.target_hex)}&from=${encodeURIComponent(challenge.sender_username || '')}`
     : `${origin}/og-default.png`;
-  const shellResponse = await fetch(new URL('/index.html', request.url));
+  const { fetchAppShell } = await import('../_publicPage.js');
+  const shellResponse = await fetchAppShell(request, env);
   if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502 });
   let html = await shellResponse.text();
   html = html

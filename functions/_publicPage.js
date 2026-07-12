@@ -7,8 +7,15 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-export async function renderPublicPage(request, { title, description, canonicalPath, fallback }) {
-  const shellResponse = await fetch(new URL('/index.html', request.url));
+export async function fetchAppShell(request, env) {
+  if (env?.ASSETS) {
+    return env.ASSETS.fetch(new URL('/', request.url));
+  }
+  return fetch(new URL('/index.html', request.url));
+}
+
+export async function renderPublicPage(request, env, { title, description, canonicalPath, fallback }) {
+  const shellResponse = await fetchAppShell(request, env);
   if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502 });
 
   const origin = new URL(request.url).origin;
