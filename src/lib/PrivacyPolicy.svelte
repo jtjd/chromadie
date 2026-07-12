@@ -5,85 +5,86 @@
 <main class="container legal-page" aria-labelledby="privacy-title">
   <section class="card legal-hero">
     <p class="legal-kicker">Privacy policy</p>
-    <h1 id="privacy-title">How ChromaDie handles data</h1>
+    <h1 id="privacy-title">ChromaDie Privacy Policy</h1>
     <p class="legal-updated">Last updated: July 2026</p>
     <p class="info-text">
-      ChromaDie operates this service and keeps data collection focused on the game itself. We only use the information needed to run accounts, save progress, and keep the service secure.
+      This policy explains what information ChromaDie collects, how we use it, and the choices available to you. We limit collection to the information needed to provide, maintain, and protect the game.
     </p>
   </section>
 
   <section class="card legal-section">
-    <h2>What we collect</h2>
+    <h2>Information we collect</h2>
     <ul>
-      <li>Account email, used for sign-in, email confirmation, and account recovery. Account deletion is authorized by your current signed-in session.</li>
-      <li>Profile details such as your username and cosmetic choices, which may appear on your profile or leaderboard row.</li>
-      <li>Gameplay data including rolls, scores, EP, inventory, achievements, pinned achievements, and rivals.</li>
-      <li>Guest progress and shop cache stored locally in your browser when you play without an account.</li>
-      <li>Security data needed to protect the site from abuse and keep sign-in working reliably.</li>
+      <li><strong>Account information:</strong> your email address, which is used for sign-in, email confirmation, and account recovery.</li>
+      <li><strong>Profile information:</strong> your username and cosmetic selections. This information may be visible on your profile and the leaderboard.</li>
+      <li><strong>Gameplay information:</strong> rolls, scores, EP, inventory, achievements, pinned achievements, rivals, and other information associated with your progress.</li>
+      <li><strong>Guest data:</strong> game progress and shop data stored locally in your browser when you play without an account.</li>
+      <li><strong>Security and technical information:</strong> information used to maintain reliable sign-in, protect the service, and prevent abuse.</li>
     </ul>
   </section>
 
   <section class="card legal-section">
-    <h2>How we use it</h2>
+    <h2>How we use information</h2>
     <ul>
-      <li>To create and secure accounts.</li>
-      <li>To save your progress, cosmetics, and achievements.</li>
-      <li>To show profile and leaderboard information where the game makes it visible.</li>
-      <li>To keep guest mode and local browser storage working on the device you use.</li>
-      <li>To reduce spam, fraud, and other abusive activity.</li>
+      <li>Provide, maintain, and secure your account.</li>
+      <li>Save your game progress, cosmetics, and achievements.</li>
+      <li>Display profile and leaderboard information to other players.</li>
+      <li>Support guest mode and save guest progress on your device.</li>
+      <li>Monitor site performance and understand basic usage.</li>
+      <li>Detect and prevent spam, fraud, and other abusive activity.</li>
     </ul>
   </section>
 
   <section class="card legal-section">
-    <h2>Sharing and access</h2>
+    <h2>How information is shared</h2>
     <ul>
-      <li>We do not sell personal data.</li>
-      <li>We do not use advertising or advertising cookies.</li>
-      <li>We use privacy-conscious Cloudflare Web Analytics to understand page performance and basic site usage. It is not used for advertising or marketing profiles.</li>
-      <li>Supabase processes account and game data, and Cloudflare provides site delivery, abuse protection, Turnstile, and privacy-conscious web analytics.</li>
-      <li>Some profile and leaderboard information is visible to other players in the app.</li>
+      <li>We do not sell your personal information.</li>
+      <li>We do not display advertising or use advertising cookies.</li>
+      <li>Supabase processes account and gameplay information on our behalf.</li>
+      <li>Cloudflare provides site delivery, abuse protection, Turnstile verification, and privacy-focused web analytics. Analytics are used to understand site performance and basic usage, not to build advertising or marketing profiles.</li>
+      <li>Your username, cosmetic selections, and certain gameplay information may be visible to other players through profiles and leaderboards.</li>
     </ul>
   </section>
 
   <section class="card legal-section">
     <h2>Data retention</h2>
     <ul>
-      <li>Detailed score rows are retained for roughly 30 days. Durable account totals, achievements, inventory, and best-roll records remain while your account is active.</li>
-      <li>Challenge links expire after 30 days and are removed by scheduled cleanup.</li>
-      <li>Guest progress remains in the browser until you clear site data or the app removes it.</li>
-      <li>Some security and operational records may be kept for a limited time to protect the service and investigate misuse.</li>
+      <li>Detailed score records are generally retained for 30 days. Account totals, achievements, inventory, and best-roll records are retained while your account remains active.</li>
+      <li>Challenge links expire after 30 days and are subsequently deleted.</li>
+      <li>Guest data remains in your browser until you clear the site's data or ChromaDie removes it.</li>
+      <li>Security and operational records may be retained for a limited period when needed to protect the service or investigate misuse.</li>
     </ul>
   </section>
 
   <section class="card legal-section">
     <h2>Account deletion</h2>
     <p>
-      You can permanently delete your account from profile settings while signed in. The operation removes the Supabase Auth user and app-owned profile, score, inventory, achievement, rival, and challenge records. It is retry-safe if a provider request is interrupted, signs this browser out when complete, and cannot be undone.
+      You can permanently delete your account from your profile settings while signed in. Deletion removes your authentication account and associated profile, score, inventory, achievement, rival, and challenge records. When deletion is complete, you will be signed out on that browser. Account deletion cannot be undone.
     </p>
   </section>
 
   <section class="card legal-section">
     <h2>Your choices</h2>
     <ul>
-      <li>You can update your profile information in the app.</li>
-      <li>You can delete your account from profile settings.</li>
-      <li>You can clear guest progress by removing browser data for the site.</li>
-      <li>You can avoid account sign-in and play in guest mode instead.</li>
+      <li>Update your profile information in the game.</li>
+      <li>Permanently delete your account from your profile settings.</li>
+      <li>Clear guest progress by removing ChromaDie's site data from your browser.</li>
+      <li>Play in guest mode without creating or signing in to an account.</li>
     </ul>
   </section>
 
   <section class="card legal-section">
     <h2>Contact</h2>
     <p>
-      For account, support, or privacy questions, email <a href="mailto:support@chromadie.com">support@chromadie.com</a>.
-      For business inquiries, email <a href="mailto:business@chromadie.com">business@chromadie.com</a>.
+      For questions about this policy, your account, or ChromaDie's privacy practices, contact us at <a href="mailto:support@chromadie.com">support@chromadie.com</a>.
+      For business inquiries, contact <a href="mailto:business@chromadie.com">business@chromadie.com</a>.
     </p>
   </section>
 
   <section class="card legal-section">
     <h2>Changes to this policy</h2>
     <p>
-      If the way the game handles data changes, we will update this page so the policy stays aligned with the product.
+      We may update this policy to reflect changes to ChromaDie or its data practices. When we do, we will post the revised policy on this page and update the date shown above.
     </p>
   </section>
 </main>
@@ -127,6 +128,21 @@
   .legal-section li {
     color: var(--text-muted);
     line-height: 1.65;
+  }
+
+  .legal-section a {
+    color: var(--accent-purple);
+    font-weight: 600;
+    text-decoration-color: color-mix(in srgb, var(--accent-purple) 55%, transparent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  }
+
+  .legal-section a:hover,
+  .legal-section a:focus-visible {
+    color: #d8c7ff;
+    text-decoration-color: currentColor;
   }
 
   .legal-section ul {
