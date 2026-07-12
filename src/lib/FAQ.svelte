@@ -5,7 +5,7 @@
     {
       icon: '🎲',
       title: 'Roll once a day',
-      copy: 'Start with a fresh roll each UTC day and see what color the day gives you.'
+      copy: 'Roll once a day and see what color the day gives you.'
     },
     {
       icon: '🎨',
@@ -187,7 +187,7 @@
       {/each}
     </div>
     <p class="section-note">
-      The daily reset happens at midnight UTC. Signed-in players can spend a reroll shard after rolling; each shard permanently replaces today&apos;s color, score, and EP contribution. Guests cannot reroll.
+      You can roll once a day. Signed-in players can spend a reroll shard after rolling; each shard permanently replaces today&apos;s color, score, and EP contribution. Guests cannot reroll.
     </p>
   </section>
 
@@ -363,7 +363,7 @@
       </article>
       <article class="guest-card">
         <h3>Local progress</h3>
-        <p>The current guest roll stays in this browser for the UTC day. It is not written to an account, wallet, leaderboard, achievement, shop, or rivals record.</p>
+        <p>The current guest roll stays in this browser for the day. It is not written to an account, wallet, leaderboard, achievement, shop, or rivals record.</p>
       </article>
       <article class="guest-card">
         <h3>Why create an account</h3>

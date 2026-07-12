@@ -765,9 +765,9 @@
     <div class="card">
       <h1>Daily Roll</h1>
       {#if $isAuthenticated}
-        <p class="info-text">You get one roll per UTC calendar day, resetting at midnight UTC. Your score counts on the leaderboard and adds to spendable EP; achievements and bonuses can add extra EP.</p>
+        <p class="info-text">You can roll once a day. Your score counts on the leaderboard and adds to spendable EP; achievements and bonuses can add extra EP.</p>
       {:else}
-        <p class="info-text">You get one local guest roll per UTC calendar day, resetting at midnight UTC. Guest rolls stay on this device and do not earn account EP or enter leaderboards.</p>
+        <p class="info-text">You can roll once a day in guest mode. Guest rolls stay on this device and do not earn account EP or enter leaderboards.</p>
       {/if}
       <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
         {loading ? 'Rolling...' : 'Roll the Die'}
