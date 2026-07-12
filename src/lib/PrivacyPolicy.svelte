@@ -8,7 +8,7 @@
     <h1 id="privacy-title">How ChromaDie handles data</h1>
     <p class="legal-updated">Last updated: July 2026</p>
     <p class="info-text">
-      ChromaDie keeps data collection focused on the game itself. We only use the information needed to run accounts, save progress, and keep the service secure.
+      ChromaDie operates this service and keeps data collection focused on the game itself. We only use the information needed to run accounts, save progress, and keep the service secure.
     </p>
   </section>
 
