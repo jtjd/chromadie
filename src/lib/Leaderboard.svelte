@@ -17,7 +17,6 @@
   let loadError = '';
 
   const leaderboardColumns = 'user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff, rank, identity, contributors, traits, condition_ids';
-  const legacyLeaderboardColumns = 'user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff';
 
   $: featuredRoll = activeTab === 'today' && leaderboard.length > 0 ? leaderboard[0] : null;
   $: featuredDetails = featuredRoll ? getRollDetails(featuredRoll) : null;
@@ -45,9 +44,9 @@
     return 'leaderboard_view';
   }
 
-  function buildLeaderboardQuery(columns) {
+  function buildLeaderboardQuery() {
     const sourceName = getSourceName(activeTab);
-    let query = supabase.from(sourceName).select(columns);
+    let query = supabase.from(sourceName).select(leaderboardColumns);
 
     if (activeTab === 'today') {
       query = query.eq('roll_date', getTodayString());
@@ -57,22 +56,6 @@
       .order('score', { ascending: false })
       .order('user_id', { ascending: true })
       .limit(10);
-  }
-
-  function isLeaderboardSchemaMismatch(error) {
-    return error?.code === '42703' || error?.code === '42809' || error?.code === 'PGRST204';
-  }
-
-  function addLegacyRanks(rows) {
-    let previousScore = null;
-    let previousRank = 0;
-
-    return rows.map((row, index) => {
-      const score = Number(row.score);
-      if (previousScore === null || score !== previousScore) previousRank = index + 1;
-      previousScore = score;
-      return { ...row, rank: previousRank };
-    });
   }
 
   async function fetchLeaderboard() {
@@ -92,21 +75,11 @@
       return;
     }
 
-    let usedLegacySchema = false;
-    let { data, error } = await buildLeaderboardQuery(leaderboardColumns);
-
-    if (isLeaderboardSchemaMismatch(error)) {
-      usedLegacySchema = true;
-      if (import.meta.env.DEV) {
-        console.warn('Leaderboard database views are behind the frontend schema; using the legacy projection until migrations are deployed.', error);
-      }
-      ({ data, error } = await buildLeaderboardQuery(legacyLeaderboardColumns));
-      if (!error && data) data = addLegacyRanks(data);
-    }
+    const { data, error } = await buildLeaderboardQuery();
 
     if (!error && data) {
       leaderboard = data;
-      await checkMyRank(usedLegacySchema);
+      await checkMyRank();
     } else {
       leaderboard = [];
       console.error('Leaderboard load failed.', error);
@@ -115,15 +88,9 @@
     loading = false;
   }
 
-  async function checkMyRank(legacySchema = false) {
+  async function checkMyRank() {
     if (!$isAuthenticated) return;
     if (activeTab === 'rivals') {
-      return;
-    }
-
-    if (legacySchema) {
-      const ownTopTenRow = leaderboard.find(row => row.user_id === $session.user.id);
-      if (ownTopTenRow) myScore = ownTopTenRow.score;
       return;
     }
 
