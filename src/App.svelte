@@ -833,7 +833,6 @@
       <nav aria-label="Footer">
         <a href="/privacy" on:click|preventDefault={() => navigateToPath('/privacy')}>Privacy Policy</a>
         <a href="/how-to-play" on:click|preventDefault={() => navigateToPath('/how-to-play')}>How to Play</a>
-        <a href="/" on:click|preventDefault={() => navigateToPath('/')}>Roll</a>
       </nav>
     </div>
   </footer>
