@@ -46,5 +46,5 @@ export async function onRequestGet({ request, params, env }) {
   // Always serve the app shell here. The client-side challenge loader provides
   // the definitive expired/missing state after hydration; a metadata lookup
   // failure should not prevent the game route from booting.
-  return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8', 'Cache-Control': challenge ? 'public, max-age=300, s-maxage=900' : 'no-store' } });
+  return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8', 'Cache-Control': 'no-cache, must-revalidate' } });
 }

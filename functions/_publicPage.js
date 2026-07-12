@@ -38,7 +38,7 @@ export async function renderPublicPage(request, env, { title, description, canon
   return new Response(html, {
     headers: {
       'Content-Type': 'text/html; charset=UTF-8',
-      'Cache-Control': 'public, max-age=300, s-maxage=900'
+      'Cache-Control': 'no-cache, must-revalidate'
     }
   });
 }

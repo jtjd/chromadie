@@ -83,7 +83,7 @@ export async function onRequestGet({ request, params, env }) {
     status: profile ? 200 : 404,
     headers: {
       'Content-Type': 'text/html; charset=UTF-8',
-      'Cache-Control': profile ? 'public, max-age=300, s-maxage=900' : 'no-store'
+      'Cache-Control': 'no-cache, must-revalidate'
     }
   });
 }
