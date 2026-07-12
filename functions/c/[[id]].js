@@ -43,5 +43,8 @@ export async function onRequestGet({ request, params, env }) {
     .replace(/<meta name="twitter:title"[^>]*>/i, `<meta name="twitter:title" content="${escapeHtml(title)}" />`)
     .replace(/<meta name="twitter:description"[^>]*>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`)
     .replace(/<meta name="twitter:image"[^>]*>/i, `<meta name="twitter:image" content="${escapeHtml(ogImage)}" />`);
-  return new Response(html, { status: challenge ? 200 : 404, headers: { 'Content-Type': 'text/html; charset=UTF-8', 'Cache-Control': challenge ? 'public, max-age=300, s-maxage=900' : 'no-store' } });
+  // Always serve the app shell here. The client-side challenge loader provides
+  // the definitive expired/missing state after hydration; a metadata lookup
+  // failure should not prevent the game route from booting.
+  return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8', 'Cache-Control': challenge ? 'public, max-age=300, s-maxage=900' : 'no-store' } });
 }
