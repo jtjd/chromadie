@@ -18,7 +18,7 @@ export async function renderPublicPage(request, env, { title, description, canon
   const shellResponse = await fetchAppShell(request, env);
   if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502 });
 
-  const origin = new URL(request.url).origin;
+  const origin = env?.VITE_SITE_URL?.trim()?.replace(/\/$/, '') || new URL(request.url).origin;
   const canonical = `${origin}${canonicalPath}`;
   let html = await shellResponse.text();
   const fallbackMarkup = `<noscript><main><h1>${escapeHtml(title.replace(' | ChromaDie', ''))}</h1><p>${escapeHtml(fallback)}</p></main></noscript>`;

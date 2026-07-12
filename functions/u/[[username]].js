@@ -32,7 +32,7 @@ async function loadProfile(username, env) {
 export async function onRequestGet({ request, params, env }) {
   const username = params.username;
   const profile = await loadProfile(username, env);
-  const origin = new URL(request.url).origin;
+  const origin = env?.VITE_SITE_URL?.trim()?.replace(/\/$/, '') || new URL(request.url).origin;
   const profilePath = `/u/${encodeURIComponent(username)}`;
   const canonical = `${origin}${profilePath}`;
   const title = profile ? `${profile.username} | ChromaDie` : 'Profile Not Found | ChromaDie';

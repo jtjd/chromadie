@@ -18,7 +18,7 @@ async function loadChallenge(id, env) {
 export async function onRequestGet({ request, params, env }) {
   const id = params.id;
   const challenge = await loadChallenge(id, env);
-  const origin = new URL(request.url).origin;
+  const origin = env?.VITE_SITE_URL?.trim()?.replace(/\/$/, '') || new URL(request.url).origin;
   const canonical = `${origin}/c/${encodeURIComponent(id)}`;
   const title = challenge ? 'Challenge | ChromaDie' : 'Challenge Unavailable | ChromaDie';
   const description = challenge
