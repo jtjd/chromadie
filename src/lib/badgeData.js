@@ -318,5 +318,27 @@ export function getBadgeMeta(id) {
         const achievementId = id.replace('ach_', '');
         return CANDIDATE_ACHIEVEMENTS[achievementId] || ACHIEVEMENTS[achievementId] || { name: id, points: 0, symbol: '❓', desc: 'Unknown Achievement', rarity: 'Common' };
     }
+    if (id.startsWith('hue_family_')) {
+        const family = id.replace('hue_family_', '');
+        return { name: `${family.charAt(0).toUpperCase()}${family.slice(1)} Hue`, points: 199, symbol: '🌈', desc: 'Your color belongs to this hue family.', rarity: 'Common' };
+    }
+    if (id === 'sum_even' || id === 'sum_odd') return { name: id === 'sum_even' ? 'Even Pulse' : 'Odd Pulse', points: id === 'sum_even' ? 401 : 403, symbol: '🔢', desc: 'The RGB channel sum has this parity.', rarity: 'Common' };
+    if (id === 'even_channel_harmony' || id === 'odd_channel_rhythm' || id === 'mixed_channel_rhythm') return { name: id === 'even_channel_harmony' ? 'Even Channel Harmony' : id === 'odd_channel_rhythm' ? 'Odd Channel Rhythm' : 'Mixed Channel Rhythm', points: 101, symbol: '🎛️', desc: 'The channel values create this parity rhythm.', rarity: 'Common' };
+    if (id === 'balanced_sum_band') return { name: 'Balanced Sum', points: 0, symbol: '⚖️', desc: 'The RGB sum sits in a balanced range.', rarity: 'Common' };
+    if (id === 'vivid_contrast') return { name: 'Vivid Contrast', points: 10000, symbol: '🌈', desc: 'A vivid color with a broad channel span.', rarity: 'Uncommon' };
+    if (id === 'edge_luminance') return { name: 'Edge Luminance', points: 7000, symbol: '☀️', desc: 'The color sits near a light or dark boundary.', rarity: 'Common' };
+    if (id === 'channel_span') return { name: 'Wide Channel Span', points: 8000, symbol: '↔️', desc: 'The channels stretch across a wide range.', rarity: 'Common' };
+    if (id === 'hex_letter_rich') return { name: 'Letter-Rich Hex', points: 2200, symbol: '🔤', desc: 'The hex code contains several A–F characters.', rarity: 'Common' };
+    if (id === 'channel_edge') return { name: 'Edge Channel', points: 3500, symbol: '📐', desc: 'At least one channel approaches an RGB edge.', rarity: 'Common' };
+    if (id === 'extreme_span') return { name: 'Extreme Span', points: 9000, symbol: '⚡', desc: 'The channel range is exceptionally wide.', rarity: 'Uncommon' };
+    if (id === 'mirror_channels') return { name: 'Mirror Channels', points: 9000, symbol: '🪞', desc: 'Red and blue channels mirror each other.', rarity: 'Uncommon' };
+    if (id === 'hex_echo') return { name: 'Hex Echo', points: 7000, symbol: '🔁', desc: 'The hex code repeats a neighboring character.', rarity: 'Common' };
+    if (id.startsWith('temperature_')) {
+        const temperature = id.replace('temperature_', '');
+        return { name: `${temperature.charAt(0).toUpperCase()}${temperature.slice(1)} Temperature`, points: 197, symbol: '🌡️', desc: 'Your channels create this color temperature.', rarity: 'Common' };
+    }
+    if (id === 'condition_cascade') return { name: 'Condition Cascade', points: 20021, symbol: '⛓️', desc: 'A dense stack of scoring conditions aligned.', rarity: 'Rare' };
+    if (id === 'condition_storm') return { name: 'Condition Storm', points: 210069, symbol: '🌪️', desc: 'An unusually dense condition stack.', rarity: 'Epic' };
+    if (id === 'condition_supernova') return { name: 'Condition Supernova', points: 600013, symbol: '💥', desc: 'An extraordinary convergence of conditions.', rarity: 'Mythic' };
     return CANDIDATE_BADGES[id] || BADGES[id] || { name: id, points: 0, symbol: '❓', desc: 'Unknown Badge', rarity: 'Common' };
 }

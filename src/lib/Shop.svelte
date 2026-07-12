@@ -1463,7 +1463,10 @@
     background-color: #111;
     flex-shrink: 0;
     box-sizing: border-box;
+    will-change: transform, opacity, filter;
   }
+  .preview-bg[style*="godRaysTurn"] { animation-duration: 5.5s !important; }
+  .preview-bg[style*="deepSpaceTwinkle"] { animation-duration: 6.2s !important; }
 
   .preview-lb-row {
     width: 100%;

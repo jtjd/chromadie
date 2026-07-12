@@ -16,7 +16,7 @@ export async function onRequestGet({ request, env }) {
   if (supabaseUrl && supabaseKey && username) {
     const query = new URL('/rest/v1/profiles', supabaseUrl);
     query.searchParams.set('select', 'username,best_roll_score,best_roll_hex');
-    query.searchParams.set('username', `eq.${username}`);
+    query.searchParams.set('username', `ilike.${username}`);
     query.searchParams.set('limit', '1');
     const response = await fetch(query, {
       headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }

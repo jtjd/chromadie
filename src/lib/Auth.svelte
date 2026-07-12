@@ -163,6 +163,16 @@
         return;
       }
 
+      const { data: usernameAvailable, error: availabilityError } = await supabase.rpc('is_username_available', {
+        p_username: username
+      });
+      if (availabilityError || usernameAvailable === false) {
+        error = 'That username is already taken.';
+        loading = false;
+        resetCaptcha();
+        return;
+      }
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,

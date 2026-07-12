@@ -14,7 +14,7 @@ async function loadProfile(username, env) {
 
   const query = new URL('/rest/v1/profiles', supabaseUrl);
   query.searchParams.set('select', 'username,lifetime_ep,best_roll_score');
-  query.searchParams.set('username', `eq.${username}`);
+  query.searchParams.set('username', `ilike.${username}`);
   query.searchParams.set('limit', '1');
 
   const response = await fetch(query, {

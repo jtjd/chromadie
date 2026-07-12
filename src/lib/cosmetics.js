@@ -29,6 +29,10 @@ export function getTitleText(cosmetics) {
   return item.css_value;
 }
 
+export function getStaffTitleText(isStaff) {
+  return isStaff ? 'Staff' : '';
+}
+
 export function getProfileBg(cosmetics) {
   if (!cosmetics || !cosmetics.profile_bg) return { cls: '', style: '' };
   const item = get(shopItems)[cosmetics.profile_bg];

@@ -1,7 +1,7 @@
 <script>
   import { supabase } from './supabase';
   import { session, profile, authUser, equippedBadges, addToast, followedUsers, toggleFollow, isAuthenticated } from './stores';
-  import { getNameEffect, getFrameEffect, getTitleText, getProfileBg, getProfileBorder, getLbTheme } from './cosmetics';
+  import { getNameEffect, getFrameEffect, getTitleText, getStaffTitleText, getProfileBg, getProfileBorder, getLbTheme } from './cosmetics';
   import { getRank, getRankState } from './ranks';
   import { formatCount, getTodayString } from './utils';
   import { deleteAccount } from './accountDeletion';
@@ -198,7 +198,7 @@
     const today = getTodayString();
     const { data, error } = await supabase
         .from('leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff')
         .eq('roll_date', today)
         .in('user_id', followedIds)
         .order('score', { ascending: false });
@@ -215,7 +215,7 @@
     const currentUsername = $profile?.username || $authUser?.user_metadata?.username || '';
     const viewingOwnProfile = $isAuthenticated && (
       (!lookupUsername && (!lookupId || lookupId === $session?.user.id)) ||
-      (lookupUsername && currentUsername && lookupUsername === currentUsername)
+      (lookupUsername && currentUsername && lookupUsername.toLowerCase() === currentUsername.toLowerCase())
     );
     let profileId = lookupId;
 
@@ -223,8 +223,8 @@
       ? await supabase.rpc('get_my_profile')
       : await supabase
           .from('profiles')
-          .select('id, username, current_streak, longest_streak, lifetime_ep, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity')
-          .eq(lookupUsername ? 'username' : 'id', lookupUsername || lookupId)
+          .select('id, username, current_streak, longest_streak, lifetime_ep, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff')
+          [lookupUsername ? 'ilike' : 'eq'](lookupUsername ? 'username' : 'id', lookupUsername || lookupId)
           .maybeSingle();
 
     if (requestId !== loadRequestId) return;
@@ -285,6 +285,7 @@
   $: nameEff = getNameEffect(cosmetics);
   $: frameEff = getFrameEffect(cosmetics);
   $: titleTxt = getTitleText(cosmetics);
+  $: staffTitleTxt = getStaffTitleText(targetProfile?.is_staff);
   $: bgEff = getProfileBg(cosmetics);
   $: borderEff = getProfileBorder(cosmetics);
   $: username = targetProfile?.username || 'Unknown Player';
@@ -367,9 +368,12 @@
   {#if loading}
     <div class="card"><p>Loading profile...</p></div>
   {:else if targetProfile}
-    <div class="card mood-card {borderEff.cls}" style="{moodStyle}">
+    <div class="card mood-card {borderEff.cls}">
       {#if bgEff.style}
         <div class="profile-bg-layer" style="{bgEff.style}"></div>
+      {/if}
+      {#if targetProfile.mood_color}
+        <div class="profile-mood-layer" style="{moodStyle}"></div>
       {/if}
 
       <div class="profile-content-layer">
@@ -384,6 +388,9 @@
               <span class="profile-name-frame {frameEff.cls}" style="{frameEff.style}">
                 <span class="profile-username-large {nameEff.cls}" style="{nameEff.style}" data-text={username}>{username}</span>
               </span>
+              {#if staffTitleTxt}
+                <span class="title-chip staff-title">[{staffTitleTxt}]</span>
+              {/if}
               {#if targetProfile.equipped_badges?.includes('launch_edition')}
                 <span class="launch-edition-badge" title="Played during ChromaDie's launch month">Launch Edition</span>
               {/if}
@@ -549,12 +556,16 @@
             {#each rivalsData as rival (rival.user_id)}
               {@const rivalNameEff = getNameEffect(rival.equipped_cosmetics)}
               {@const rivalTitleTxt = getTitleText(rival.equipped_cosmetics)}
+              {@const rivalStaffTitleTxt = getStaffTitleText(rival.is_staff)}
               {@const rivalLbTheme = getLbTheme(rival.equipped_cosmetics)}
 
               <div class="rival-row {rivalLbTheme.cls}" style="{rivalLbTheme.style}">
                 <button type="button" class="rival-profile-btn lb-username" on:click={() => viewProfile(rival.username, rival.user_id)}>
                   {#if rivalTitleTxt}
                     <span class="title-chip">[{rivalTitleTxt}]</span>
+                  {/if}
+                  {#if rivalStaffTitleTxt}
+                    <span class="title-chip staff-title">[{rivalStaffTitleTxt}]</span>
                   {/if}
                   <span class="lb-username {rivalNameEff.cls}" style="{rivalNameEff.style}" data-text={rival.username}>
                     {rival.username}
@@ -670,7 +681,10 @@
     z-index: 0;
     overflow: hidden;
     background-color: #0f1118;
+    will-change: transform, opacity, filter;
   }
+  .profile-bg-layer[style*="godRaysTurn"] { animation-duration: 5.5s !important; }
+  .profile-bg-layer[style*="deepSpaceTwinkle"] { animation-duration: 6.2s !important; }
   .profile-bg-layer::after {
     content: '';
     position: absolute;
@@ -678,7 +692,8 @@
     background: linear-gradient(115deg, rgba(2, 4, 10, 0.2), rgba(2, 4, 10, 0.38));
     pointer-events: none;
   }
-  .profile-content-layer { position: relative; z-index: 1; }
+  .profile-mood-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen; opacity: 0.9; }
+  .profile-content-layer { position: relative; z-index: 2; }
   .profile-header-row { display: flex; justify-content: flex-start; align-items: flex-start; margin-bottom: 18px; gap: 18px; }
   .profile-identity { display: flex; flex: 0 1 auto; min-width: 0; flex-direction: column; gap: 6px; align-items: center; text-align: center; }
   .title-row { display: flex; align-items: center; justify-content: center; min-height: 18px; width: 100%; }

@@ -7,9 +7,11 @@ remote data by itself.
 
 - Exhaustive RGB colors tested: 16,777,216
 - Original exhaustive average roll score: 45,727.95 EP
-- Average scoring contributors: 4.378
+- Richer-model seeded average roll score: approximately 54,178 EP
+- Average scoring contributors: approximately 10.67
 - Descriptive traits per roll: 5
 - Category multipliers: 100%, 35%, 10%
+- Common rolls now surface 8–12 conditions; dense 15+ condition stacks receive cascade bonuses.
 - F1 reward: 75,001 EP
 
 The pre-launch thematic-score pass replaces round condition awards with nearby memorable values.
@@ -19,12 +21,13 @@ keep the launch distribution stable.
 
 | Rarity | Minimum score | Exact RGB frequency |
 | --- | ---: | ---: |
-| Trash | 0 | 6.479% |
-| Common | 25,000 | 25.574% |
-| Uncommon | 34,500 | 40.535% |
-| Rare | 49,500 | 22.682% |
-| Epic | 85,000 | 4.470% |
-| Anomaly | 200,000 | 0.260% |
+| Trash | 0 | 25.023% |
+| Common | 25,000 | 14.852% |
+| Uncommon | 34,500 | 29.243% |
+| Rare | 49,500 | 17.073% |
+| Epic | 85,000 | 13.654% |
+| Anomaly | 500,000 | 0.087% |
+| Mythic | 1,000,000 | 0.068% |
 | Mythic | 1,500,000 | 3 colors |
 
 ## Rank pacing

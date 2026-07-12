@@ -134,14 +134,14 @@ test('seeded distribution remains measurable before balance changes', () => {
   );
 });
 
-test('candidate balance distribution is locked before server rollout', () => {
+test('richer candidate balance distribution is locked', () => {
   const report = simulateBalance({ rolls: 100000, seed: 0x4348524f, candidate: true });
-  assert.equal(report.averageScore, 45752.29765);
-  assert.equal(report.averageConditions, 4.37618);
-  assert.equal(report.averageContributors, 4.37618);
+  assert.equal(report.averageScore, 54177.69084);
+  assert.equal(report.averageConditions, 10.67035);
+  assert.equal(report.averageContributors, 10.67035);
   assert.deepEqual(
     Object.fromEntries(Object.entries(report.rarities).map(([rarity, result]) => [rarity, result.count])),
-    { Trash: 6490, Common: 25617, Uncommon: 40690, Rare: 22467, Epic: 4423, Anomaly: 313, Mythic: 0 }
+    { Trash: 25023, Common: 14852, Uncommon: 29243, Rare: 17073, Epic: 13654, Anomaly: 87, Mythic: 68 }
   );
 });
 

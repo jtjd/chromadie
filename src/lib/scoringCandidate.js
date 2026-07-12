@@ -99,12 +99,23 @@ export function scoreCandidateColor(red, green, blue) {
     if (triggered) conditions.push({ id, name, category, points, ...options });
   };
 
+  // Broad identity conditions make ordinary rolls feel authored and varied.
+  // Their values are intentionally modest; the rare-event families still own
+  // the upper tail of the score distribution.
+  add(sum % 2 === 0, 'sum_even', 'Even Pulse', 'number_pattern', 401);
+  add(sum % 2 !== 0, 'sum_odd', 'Odd Pulse', 'number_pattern', 403);
+  add(true, `hue_family_${family.toLowerCase()}`, `${family} Hue`, 'color_identity', 199);
+  add(true, `temperature_${red === green && green === blue ? 'neutral' : red >= blue ? 'warm' : 'cool'}`, `${red === green && green === blue ? 'Neutral' : red >= blue ? 'Warm' : 'Cool'} Temperature`, 'color_identity', 197);
+  const evenChannels = channels.filter(value => value % 2 === 0).length;
+  add(true, evenChannels === 3 ? 'even_channel_harmony' : evenChannels === 0 ? 'odd_channel_rhythm' : 'mixed_channel_rhythm', evenChannels === 3 ? 'Even Channel Harmony' : evenChannels === 0 ? 'Odd Channel Rhythm' : 'Mixed Channel Rhythm', 'channel_identity', 101);
+
   add(isPrime(sum), 'prime_sum', 'Prime Energy', 'mathematical', 15013);
   add(FIBONACCI_SUMS.has(sum), 'fibonacci_sum', 'Fibonacci Energy', 'mathematical', 25021);
   add(sum === 42, 'sum_42', 'Meaning of Life', 'rare_event', 150042, { fullValue: true });
   add(sum === 100, 'sum_100', 'Perfect Century', 'rare_event', 100100, { fullValue: true });
   add(sum === 255, 'sum_255', 'Max Byte', 'rare_event', 75255, { fullValue: true });
   add(sum === 666, 'sum_666', 'Sinister Shade', 'rare_event', 250666, { fullValue: true });
+  add(sum >= 300 && sum <= 465, 'balanced_sum_band', 'Balanced Sum', 'sum_shape', 0);
 
   add(range >= 205, 'high_contrast', 'Polarized Channels', 'color_relationship', 18205);
   add(range <= 20, 'low_contrast', 'Close Harmony', 'color_relationship', 12020);
@@ -113,6 +124,14 @@ export function scoreCandidateColor(red, green, blue) {
   add(maximum > 210 && minimum > 120 && range < 75, 'pastel', 'Pastel Bloom', 'color_relationship', 25210);
   add(maximum > 220 && minimum < 45, 'neon', 'Neon Voltage', 'color_relationship', 30220);
   add(hsl.lightness >= 90 && hsl.saturation <= 20, 'luminous_core', 'Luminous Core', 'color_relationship', 40090);
+  add(hsl.saturation >= 70 && range >= 120, 'vivid_contrast', 'Vivid Contrast', 'color_signature', 10013);
+  add(hsl.lightness < 20 || hsl.lightness >= 80, 'edge_luminance', 'Edge Luminance', 'color_signature', 7011);
+  add(range >= 170, 'channel_span', 'Wide Channel Span', 'color_signature', 8008);
+  add(hexValue.match(/[A-F]/g)?.length >= 3, 'hex_letter_rich', 'Letter-Rich Hex', 'hex_signature', 2203);
+  add(channels.some(value => value <= 8 || value >= 247), 'channel_edge', 'Edge Channel', 'edge_behavior', 3503);
+  add(range >= 230, 'extreme_span', 'Extreme Span', 'edge_behavior', 9009);
+  add(red === blue, 'mirror_channels', 'Mirror Channels', 'symmetry', 9009);
+  add(/(.)\1/.test(hexValue), 'hex_echo', 'Hex Echo', 'hex_signature', 7007);
   const sorted = [...channels].sort((a, b) => a - b);
   add(
     sorted[0] <= 10 && sorted[1] >= 110 && sorted[1] <= 145 && sorted[2] >= 245,
@@ -153,6 +172,13 @@ export function scoreCandidateColor(red, green, blue) {
   for (const [id, pattern, points] of MEME_PATTERNS) {
     add(hexValue.includes(pattern), id, pattern, 'rare_event', points, { fullValue: true });
   }
+
+  // Condition cascades are the main source of the wider upper tail. They
+  // reward genuinely dense rolls without making routine conditions expensive.
+  const scoredConditionCount = conditions.length;
+  add(scoredConditionCount >= 13, 'condition_cascade', 'Condition Cascade', 'cascade', 20021, { fullValue: true });
+  add(scoredConditionCount >= 15, 'condition_storm', 'Condition Storm', 'cascade', 210069, { fullValue: true });
+  add(scoredConditionCount >= 17, 'condition_supernova', 'Condition Supernova', 'cascade', 600013, { fullValue: true });
 
   add(red === 0 && green === 0 && blue === 0, 'pure_black', 'The Void', 'special_event', 1677721, { fullValue: true });
   add(red === 255 && green === 255 && blue === 255, 'pure_white', 'The Light', 'special_event', 1677721, { fullValue: true });

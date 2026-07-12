@@ -1,6 +1,6 @@
 export const CANDIDATE_RARITY_THRESHOLDS = Object.freeze([
-  Object.freeze({ name: 'Mythic', min: 1500000 }),
-  Object.freeze({ name: 'Anomaly', min: 200000 }),
+  Object.freeze({ name: 'Mythic', min: 1000000 }),
+  Object.freeze({ name: 'Anomaly', min: 500000 }),
   Object.freeze({ name: 'Epic', min: 85000 }),
   Object.freeze({ name: 'Rare', min: 49500 }),
   Object.freeze({ name: 'Uncommon', min: 34500 }),
@@ -9,7 +9,7 @@ export const CANDIDATE_RARITY_THRESHOLDS = Object.freeze([
 ]);
 
 export const CATEGORY_MULTIPLIERS = Object.freeze([1, 0.35, 0.1]);
-export const BASE_ROLL_SCORE = 10000;
+export const BASE_ROLL_SCORE = 0;
 
 export const CANDIDATE_RANKS = Object.freeze([
   Object.freeze({ name: 'Bronze', min: 0, color: '#cd7f32' }),
