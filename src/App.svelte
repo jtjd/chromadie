@@ -413,6 +413,10 @@
       ? 'How to Play | ChromaDie'
       : routeMode === 'app' && view === 'profile'
         ? `${profileTitle} | ChromaDie`
+        : routeMode === 'app' && view === 'leaderboard'
+          ? 'Leaderboard | ChromaDie'
+        : routeMode === 'app' && view === 'shop'
+          ? 'Cosmetic Shop | ChromaDie'
         : routeMode === 'app' && view === 'game' && challengeData
           ? challengeData.error
             ? 'Challenge Unavailable | ChromaDie'
