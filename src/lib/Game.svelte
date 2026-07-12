@@ -956,12 +956,7 @@
               <span class="badge-symbol">{badge.symbol || '✨'}</span>
               <div class="badge-text">
                 <span class="badge-title">{contributor.name || badge.name}</span>
-                <span class="badge-desc">
-                  {badge.desc || 'Special condition met'}
-                  {#if contributor.multiplier && contributor.multiplier < 1}
-                    <span class="contributor-multiplier"> {Math.round(contributor.multiplier * 100)}% category value</span>
-                  {/if}
-                </span>
+                <span class="badge-desc">{badge.desc || 'Special condition met'}</span>
               </div>
               <span class="badge-points">+{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()} score + EP</span>
             </div>
@@ -1045,11 +1040,6 @@
     font-size: 0.78rem;
     font-weight: 700;
     line-height: 1;
-    white-space: nowrap;
-  }
-  .contributor-multiplier {
-    color: var(--text-muted);
-    font-size: 0.72rem;
     white-space: nowrap;
   }
   .badges-container-tight { margin-bottom: 0 !important; margin-top: 20px; }
