@@ -1,3 +1,5 @@
+import { baseSecurityHeaders } from '../_publicPage.js';
+
 function escapeXml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -13,15 +15,19 @@ export async function onRequestGet({ request, env }) {
   const supabaseKey = env.VITE_SUPABASE_KEY || env.SUPABASE_ANON_KEY;
   let profile = null;
 
-  if (supabaseUrl && supabaseKey && username) {
-    const query = new URL('/rest/v1/profiles', supabaseUrl);
-    query.searchParams.set('select', 'username,best_roll_score,best_roll_hex');
-    query.searchParams.set('username', `ilike.${username}`);
-    query.searchParams.set('limit', '1');
-    const response = await fetch(query, {
-      headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
-    });
-    if (response.ok) profile = (await response.json())[0] || null;
+  if (supabaseUrl && supabaseKey && /^[A-Za-z0-9_]{3,20}$/.test(username)) {
+    try {
+      const query = new URL('/rest/v1/profiles', supabaseUrl);
+      query.searchParams.set('select', 'username,best_roll_score,best_roll_hex');
+      query.searchParams.set('username', `ilike.${username}`);
+      query.searchParams.set('limit', '1');
+      const response = await fetch(query, {
+        headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
+      });
+      if (response.ok) profile = (await response.json())[0] || null;
+    } catch {
+      profile = null;
+    }
   }
 
   const safeUsername = escapeXml(profile?.username || username || 'ChromaDie Player');
@@ -43,6 +49,7 @@ export async function onRequestGet({ request, env }) {
 
   return new Response(svg, {
     headers: {
+      ...baseSecurityHeaders,
       'Content-Type': 'image/svg+xml; charset=UTF-8',
       'Cache-Control': 'public, max-age=300, s-maxage=900'
     }

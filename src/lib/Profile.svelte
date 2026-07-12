@@ -13,6 +13,12 @@
   export let userId = null;
   const dispatch = createEventDispatcher();
   const NON_PINNABLE_BADGE_IDS = new Set(['launch_edition']);
+  const SCORE_ACHIEVEMENT_TARGETS = Object.freeze({
+    score_50k: 50_000,
+    score_100k: 100_000,
+    score_200k: 200_000,
+    score_1_5m: 1_500_000
+  });
 
   let targetProfile = null;
   let targetScores = [];
@@ -21,6 +27,8 @@
   let loading = true;
   let totalRolls = 0;
   let rivalsData = [];
+  let loadError = '';
+  let dataWarning = '';
 
   let selectedBadges = [];
   let editMode = false;
@@ -110,6 +118,8 @@
     deleteError = '';
     deleteNotice = '';
     loading = false;
+    loadError = '';
+    dataWarning = '';
   }
 
   async function handleDeleteAccount() {
@@ -198,10 +208,11 @@
     const today = getTodayString();
     const { data, error } = await supabase
         .from('leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff')
+        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff, rank')
         .eq('roll_date', today)
         .in('user_id', followedIds)
-        .order('score', { ascending: false });
+        .order('score', { ascending: false })
+        .order('user_id', { ascending: true });
 
     if (error) console.error('Error fetching rivals:', error);
     rivalsData = data || [];
@@ -210,8 +221,16 @@
   async function loadProfileData() {
     const requestId = ++loadRequestId;
     loading = true;
+    loadError = '';
+    dataWarning = '';
     const lookupUsername = profileUsername?.trim() || '';
     const lookupId = userId || null;
+    if (lookupUsername && !/^[A-Za-z0-9_]{3,20}$/.test(lookupUsername)) {
+      resetProfileState();
+      loadError = 'That profile address is invalid.';
+      loading = false;
+      return;
+    }
     const currentUsername = $profile?.username || $authUser?.user_metadata?.username || '';
     const viewingOwnProfile = $isAuthenticated && (
       (!lookupUsername && (!lookupId || lookupId === $session?.user.id)) ||
@@ -221,7 +240,7 @@
 
     let profileQuery = supabase
       .from('profiles')
-      .select('id, username, current_streak, longest_streak, lifetime_ep, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff');
+      .select('id, username, current_streak, longest_streak, lifetime_ep, total_rolls, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff');
     profileQuery = lookupUsername
       ? profileQuery.ilike('username', lookupUsername)
       : profileQuery.eq('id', lookupId);
@@ -236,45 +255,40 @@
       targetProfile = prof;
       profileId = prof.id || lookupId;
 
-      const { count } = await supabase
-        .from('scores')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', profileId);
-      if (requestId !== loadRequestId) return;
-      totalRolls = count || 0;
+      totalRolls = Number(prof.total_rolls) || 0;
 
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const { data: scores } = await supabase
-        .from('scores')
-        .select('hex_code, score, rarity, roll_date, badges')
-        .eq('user_id', profileId)
-        .gte('roll_date', thirtyDaysAgo.toISOString().split('T')[0])
-        .order('roll_date', { ascending: false });
+      const { data: scores, error: scoresError } = await supabase.rpc('get_public_profile_scores', {
+        p_user_id: profileId
+      });
       if (requestId !== loadRequestId) return;
 
       targetScores = scores || [];
+      if (scoresError) dataWarning = 'Recent roll history is temporarily unavailable.';
     } else {
       targetProfile = null;
       targetScores = [];
       totalRolls = 0;
+      if (profError) loadError = 'The profile could not be loaded. Please check your connection and retry.';
     }
 
     if (profError && !viewingOwnProfile) {
       console.error('Error loading public profile:', profError);
     }
 
-    const { data: ach } = await supabase.from('achievements').select('*');
+    const { data: ach, error: achievementError } = await supabase.from('achievements').select('*');
     if (requestId !== loadRequestId) return;
     if (ach) allAchievements = ach;
+    if (achievementError) dataWarning = 'Achievement details are temporarily unavailable.';
 
     if (viewingOwnProfile) {
-      const { data: unlocked } = await supabase.from('user_achievements').select('achievement_id, count').eq('user_id', profileId);
+      const { data: unlocked, error: unlockedError } = await supabase.from('user_achievements').select('achievement_id, count').eq('user_id', profileId);
       if (requestId !== loadRequestId) return;
       if (unlocked) {
         const map = {};
         unlocked.forEach(u => map[u.achievement_id] = u);
         unlockedAchievements = map;
       }
+      if (unlockedError) dataWarning = 'Achievement progress is temporarily unavailable.';
     } else {
       unlockedAchievements = {};
     }
@@ -322,9 +336,11 @@
       const target = parseInt(achId.replace('streak_', ''));
       return { current: targetProfile?.longest_streak || 0, target: target };
     }
-    if (/^score_\d+[km]$/.test(achId)) {
-      const target = parseInt(achId.replace('score_', '').replace('k', '000').replace('m', '000000'));
-      return { current: bestRoll?.score || 0, target: target };
+    if (SCORE_ACHIEVEMENT_TARGETS[achId]) {
+      return {
+        current: Number(displayBestRoll?.score) || 0,
+        target: SCORE_ACHIEVEMENT_TARGETS[achId]
+      };
     }
     return null;
   }
@@ -371,6 +387,7 @@
   {#if loading}
     <div class="card"><p>Loading profile...</p></div>
   {:else if targetProfile}
+    {#if dataWarning}<p class="auth-error" role="status">{dataWarning}</p>{/if}
     <div class="card mood-card {borderEff.cls}">
       {#if bgEff.style}
         <div class="profile-bg-layer" style="{bgEff.style}"></div>
@@ -455,6 +472,8 @@
                     type="button"
                     class="mood-swatch {moodColorInput === score.hex_code ? 'selected' : ''}"
                     style="background-color: {score.hex_code};"
+                    aria-label={`Use ${score.hex_code} as mood color`}
+                    aria-pressed={moodColorInput === score.hex_code}
                     on:click={() => moodColorInput = score.hex_code}
                     title={score.hex_code}
                   ></button>
@@ -578,6 +597,11 @@
               </div>
             {/each}
           </div>
+        {:else if $followedUsers.length > 0}
+          <div class="empty-rivals">
+            <p>Your rivals have not rolled today.</p>
+            <p class="subtext">Their scores will appear here after their next daily roll.</p>
+          </div>
         {:else}
           <div class="empty-rivals">
             <p>You haven't added any rivals yet.</p>
@@ -672,7 +696,12 @@
       </div>
     {/if}
   {:else}
-    <div class="card"><p>Player not found.</p></div>
+    <div class="card" role={loadError ? 'alert' : undefined}>
+      <p>{loadError || 'Player not found.'}</p>
+      {#if loadError}
+        <button type="button" class="save-btn" on:click={loadProfileData}>Retry</button>
+      {/if}
+    </div>
   {/if}
 </div>
 
@@ -823,8 +852,8 @@
   .mood-picker { margin-top: 15px; text-align: left; }
   .mood-label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 8px; }
   .mood-options-scroll { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-height: 80px; overflow-y: auto; padding: 5px; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2); }
-  .mood-clear { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; flex-shrink: 0; }
-  .mood-swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.1s, border 0.2s; flex-shrink: 0; }
+  .mood-clear { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); min-height: 44px; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; flex-shrink: 0; }
+  .mood-swatch { width: 44px; height: 44px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.1s, border 0.2s; flex-shrink: 0; }
   .mood-swatch:hover { transform: scale(1.1); }
   .mood-swatch.selected { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.3); }
   .pinned-achievements-section { margin-bottom: 20px; background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; text-align: left; }

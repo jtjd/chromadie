@@ -3,6 +3,9 @@ import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 
 export default [
+  {
+    ignores: ['dist/**', 'node_modules/**', 'supabase/.temp/**', 'supabase/.branches/**']
+  },
   js.configs.recommended,
   ...svelte.configs['flat/recommended'],
   {

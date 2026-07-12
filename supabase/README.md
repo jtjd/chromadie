@@ -16,6 +16,11 @@ The repo now includes canonical seed data in `supabase/seed.sql` for the static 
 
 Fresh Supabase resets should be playable without any manual dashboard inserts.
 
+Hosted setup also requires the non-database steps in the root README: deploy both Edge Functions,
+configure exact Auth redirect URLs, install the versioned email templates, enable Turnstile with a
+server-side secret, and verify the three `cron.job` entries have successful runs. These steps cannot
+be created by SQL migrations on a hosted project.
+
 Recommended development loop
 
 1. Make schema changes in a migration, not directly in the app code or Supabase dashboard.

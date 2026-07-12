@@ -15,7 +15,7 @@
   <section class="card legal-section">
     <h2>What we collect</h2>
     <ul>
-      <li>Account email, used for sign-in, account recovery, and account deletion verification.</li>
+      <li>Account email, used for sign-in, email confirmation, and account recovery. Account deletion is authorized by your current signed-in session.</li>
       <li>Profile details such as your username and cosmetic choices, which may appear on your profile or leaderboard row.</li>
       <li>Gameplay data including rolls, scores, EP, inventory, achievements, pinned achievements, and rivals.</li>
       <li>Guest progress and shop cache stored locally in your browser when you play without an account.</li>
@@ -40,7 +40,7 @@
       <li>We do not sell personal data.</li>
       <li>We do not use advertising or advertising cookies.</li>
       <li>We use privacy-conscious Cloudflare Web Analytics to understand page performance and basic site usage. It is not used for advertising or marketing profiles.</li>
-      <li>We may allow trusted infrastructure and security systems to process data only as needed to operate the game.</li>
+      <li>Supabase processes account and game data, and Cloudflare provides site delivery, abuse protection, Turnstile, and privacy-conscious web analytics.</li>
       <li>Some profile and leaderboard information is visible to other players in the app.</li>
     </ul>
   </section>
@@ -48,7 +48,8 @@
   <section class="card legal-section">
     <h2>Data retention</h2>
     <ul>
-      <li>Account and gameplay data stay in place while your account is active.</li>
+      <li>Detailed score rows are retained for roughly 30 days. Durable account totals, achievements, inventory, and best-roll records remain while your account is active.</li>
+      <li>Challenge links expire after 30 days and are removed by scheduled cleanup.</li>
       <li>Guest progress remains in the browser until you clear site data or the app removes it.</li>
       <li>Some security and operational records may be kept for a limited time to protect the service and investigate misuse.</li>
     </ul>
@@ -57,7 +58,7 @@
   <section class="card legal-section">
     <h2>Account deletion</h2>
     <p>
-      You can permanently delete your account from profile settings. Deletion signs you out, clears app-owned account data, and cannot be undone.
+      You can permanently delete your account from profile settings while signed in. The operation removes the Supabase Auth user and app-owned profile, score, inventory, achievement, rival, and challenge records. It is retry-safe if a provider request is interrupted, signs this browser out when complete, and cannot be undone.
     </p>
   </section>
 

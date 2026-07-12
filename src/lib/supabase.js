@@ -42,6 +42,12 @@ function createUnavailableAuthClient(message) {
     },
     async signInWithPassword() {
       return { data: null, error: authError }
+    },
+    async resetPasswordForEmail() {
+      return { data: null, error: authError }
+    },
+    async updateUser() {
+      return { data: null, error: authError }
     }
   }
 }
@@ -68,6 +74,7 @@ if (!supabaseUrl) missingVars.push('VITE_SUPABASE_URL')
 if (!supabaseKey) missingVars.push('VITE_SUPABASE_KEY')
 
 let supabaseError = null
+/** @type {any} */
 let supabaseClient = null
 
 if (missingVars.length > 0) {
@@ -79,8 +86,9 @@ if (missingVars.length > 0) {
 } else {
   try {
     const parsedUrl = new URL(supabaseUrl)
-    if (parsedUrl.protocol !== 'https:') {
-      throw new Error('Supabase URL must use https:')
+    const isLoopback = ['localhost', '127.0.0.1', '::1'].includes(parsedUrl.hostname)
+    if (parsedUrl.protocol !== 'https:' && !(import.meta.env.DEV && parsedUrl.protocol === 'http:' && isLoopback)) {
+      throw new Error('Supabase URL must use https (except loopback URLs in development)')
     }
 
     supabaseClient = createClient(supabaseUrl, supabaseKey)

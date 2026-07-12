@@ -11,6 +11,10 @@ function normalizeError(error, fallbackMessage = 'Unable to process the challeng
   }
 }
 
+/**
+ * @param {any} supabase
+ * @param {{score?: number, hex?: string, senderUsername?: string | null}} options
+ */
 export async function createChallengeLink(supabase, { score, hex, senderUsername = null } = {}) {
   const { data, error } = await supabase.functions.invoke(CHALLENGE_FUNCTION, {
     body: {

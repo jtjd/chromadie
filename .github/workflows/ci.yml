@@ -19,9 +19,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Lint project
-        run: npx eslint src/
+        run: npx eslint .
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+      - name: Check Svelte and JavaScript types
+        run: npm run check
       - name: Test balance boundaries
         run: npm test
+      - name: Check internal links
+        run: npm run check:links
       - name: Check balance drift
         run: npm run check:balance-drift
       - name: Check catalog drift
@@ -35,3 +41,27 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
           VITE_CLOUDFLARE_SITE_KEY: ${{ secrets.VITE_CLOUDFLARE_SITE_KEY }}
+      - name: Check built CSP hashes
+        run: npm run check:csp
+
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Start local Supabase
+        run: npx supabase start
+      - name: Replay migrations and seed
+        run: npm run db:reset
+      - name: Lint database
+        run: npx supabase db lint --local --level warning --fail-on warning
+      - name: Run database security checks
+        run: npm run check:db-security
+      - name: Check SQL and JavaScript scoring parity
+        run: npm run check:scoring-parity

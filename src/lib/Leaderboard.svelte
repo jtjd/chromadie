@@ -3,7 +3,6 @@
   import { session, followedUsers, toggleFollow, isAuthenticated } from './stores';
   import { getTodayString } from './utils';
   import { getNameEffect, getTitleText, getStaffTitleText, getLbTheme, getRollEffect, getOrbShape, getProfileBorder } from './cosmetics';
-  import { scoreCandidateColor } from './scoringCandidate';
   import { getBadgeMeta } from './badgeData';
   import { onMount, createEventDispatcher } from 'svelte';
 
@@ -15,9 +14,13 @@
   let loading = true;
   let myRank = null;
   let myScore = null;
+  let loadError = '';
+
+  const leaderboardColumns = 'user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff, rank, identity, contributors, traits, condition_ids';
+  const legacyLeaderboardColumns = 'user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff';
 
   $: featuredRoll = activeTab === 'today' && leaderboard.length > 0 ? leaderboard[0] : null;
-  $: featuredDetails = featuredRoll ? getRollDetails(featuredRoll.hex_code) : null;
+  $: featuredDetails = featuredRoll ? getRollDetails(featuredRoll) : null;
   $: featuredNameEffect = featuredRoll ? getNameEffect(featuredRoll.equipped_cosmetics) : { cls: '', style: '' };
   $: featuredTitle = featuredRoll ? getTitleText(featuredRoll.equipped_cosmetics) : '';
   $: featuredStaffTitle = featuredRoll ? getStaffTitleText(featuredRoll.is_staff) : '';
@@ -26,16 +29,11 @@
   $: featuredOrbShape = featuredRoll ? getOrbShape(featuredRoll.equipped_cosmetics) : { cls: '', style: '' };
   $: featuredBorder = featuredRoll ? getProfileBorder(featuredRoll.equipped_cosmetics) : { cls: '', style: '' };
 
-  function getRollDetails(hex) {
-    const match = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''));
-    if (!match) return { identity: '', contributors: [], traits: [] };
-    const value = match[1];
-    const channels = [0, 2, 4].map(index => Number.parseInt(value.slice(index, index + 2), 16));
-    const details = scoreCandidateColor(...channels);
+  function getRollDetails(row) {
     return {
-      identity: details.identity || '',
-      contributors: details.contributors || [],
-      traits: details.traits || []
+      identity: row?.identity || '',
+      contributors: row?.contributors || [],
+      traits: row?.traits || []
     };
   }
 
@@ -47,69 +45,92 @@
     return 'leaderboard_view';
   }
 
-  async function fetchLeaderboard() {
-    loading = true;
-    myRank = null;
-    myScore = null;
-    let query;
+  function buildLeaderboardQuery(columns) {
+    const sourceName = getSourceName(activeTab);
+    let query = supabase.from(sourceName).select(columns);
 
     if (activeTab === 'today') {
-      const today = getTodayString();
-      query = supabase
-        .from('leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff')
-        .eq('roll_date', today)
-        .order('score', { ascending: false })
-        .limit(10);
-    } else if (activeTab === 'rivals') {
+      query = query.eq('roll_date', getTodayString());
+    }
+
+    return query
+      .order('score', { ascending: false })
+      .order('user_id', { ascending: true })
+      .limit(10);
+  }
+
+  function isLeaderboardSchemaMismatch(error) {
+    return error?.code === '42703' || error?.code === '42809' || error?.code === 'PGRST204';
+  }
+
+  function addLegacyRanks(rows) {
+    let previousScore = null;
+    let previousRank = 0;
+
+    return rows.map((row, index) => {
+      const score = Number(row.score);
+      if (previousScore === null || score !== previousScore) previousRank = index + 1;
+      previousScore = score;
+      return { ...row, rank: previousRank };
+    });
+  }
+
+  async function fetchLeaderboard() {
+    loading = true;
+    loadError = '';
+    myRank = null;
+    myScore = null;
+    if (activeTab === 'rivals') {
       const { data: rpcData, error: rpcError } = await supabase.rpc('get_rivals_scores');
       if (!rpcError && rpcData) {
         leaderboard = rpcData;
       } else {
         leaderboard = [];
+        loadError = 'The rivals leaderboard could not be loaded. Please retry.';
       }
       loading = false;
       return;
-    } else if (activeTab === 'weekly') {
-      query = supabase
-        .from('weekly_best_leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff')
-        .order('score', { ascending: false })
-        .limit(10);
-    } else if (activeTab === 'monthly') {
-      query = supabase
-        .from('monthly_best_leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff')
-        .order('score', { ascending: false })
-        .limit(10);
-    } else if (activeTab === 'roll') {
-      query = supabase
-        .from('all_time_leaderboard_view')
-        .select('user_id, hex_code, score, rarity, username, current_streak, equipped_cosmetics, equipped_badges, is_staff')
-        .order('score', { ascending: false })
-        .limit(10);
     }
 
-    const { data, error } = await query;
+    let usedLegacySchema = false;
+    let { data, error } = await buildLeaderboardQuery(leaderboardColumns);
+
+    if (isLeaderboardSchemaMismatch(error)) {
+      usedLegacySchema = true;
+      if (import.meta.env.DEV) {
+        console.warn('Leaderboard database views are behind the frontend schema; using the legacy projection until migrations are deployed.', error);
+      }
+      ({ data, error } = await buildLeaderboardQuery(legacyLeaderboardColumns));
+      if (!error && data) data = addLegacyRanks(data);
+    }
+
     if (!error && data) {
       leaderboard = data;
-      await checkMyRank();
+      await checkMyRank(usedLegacySchema);
     } else {
       leaderboard = [];
+      console.error('Leaderboard load failed.', error);
+      loadError = 'The leaderboard could not be loaded. Please retry.';
     }
     loading = false;
   }
 
-  async function checkMyRank() {
+  async function checkMyRank(legacySchema = false) {
     if (!$isAuthenticated) return;
-    if (activeTab === 'roll' || activeTab === 'rivals') {
+    if (activeTab === 'rivals') {
+      return;
+    }
+
+    if (legacySchema) {
+      const ownTopTenRow = leaderboard.find(row => row.user_id === $session.user.id);
+      if (ownTopTenRow) myScore = ownTopTenRow.score;
       return;
     }
 
     const sourceName = getSourceName(activeTab);
     let myDataQuery = supabase
       .from(sourceName)
-      .select('score')
+      .select('score, rank')
       .eq('user_id', $session.user.id);
 
     if (activeTab === 'today') {
@@ -121,17 +142,7 @@
     if (myData) {
       myScore = myData.score;
       const isInTop10 = leaderboard.some(row => row.user_id === $session.user.id);
-      if (!isInTop10) {
-        let rankQuery = supabase
-          .from(sourceName)
-          .select('*', { count: 'exact', head: true })
-          .gt('score', myScore);
-        if (activeTab === 'today') {
-          rankQuery = rankQuery.eq('roll_date', getTodayString());
-        }
-        const { count } = await rankQuery;
-        myRank = count + 1;
-      }
+      if (!isInTop10) myRank = Number(myData.rank) || null;
     }
   }
 
@@ -158,12 +169,12 @@
     <h2>Leaderboard</h2>
   </div>
 
-  <div class="lb-tabs">
-    <button class="auth-tab" class:active={activeTab === 'today'} on:click={() => switchTab('today')}>Today</button>
-    <button class="auth-tab" class:active={activeTab === 'rivals'} on:click={() => switchTab('rivals')}>Rivals</button>
-    <button class="auth-tab" class:active={activeTab === 'weekly'} on:click={() => switchTab('weekly')}>Weekly</button>
-    <button class="auth-tab" class:active={activeTab === 'monthly'} on:click={() => switchTab('monthly')}>Monthly</button>
-    <button class="auth-tab" class:active={activeTab === 'roll'} on:click={() => switchTab('roll')}>All-Time Roll</button>
+  <div class="lb-tabs" role="group" aria-label="Leaderboard period">
+    <button aria-pressed={activeTab === 'today'} class="auth-tab" class:active={activeTab === 'today'} on:click={() => switchTab('today')}>Today</button>
+    <button aria-pressed={activeTab === 'rivals'} class="auth-tab" class:active={activeTab === 'rivals'} on:click={() => switchTab('rivals')}>Rivals</button>
+    <button aria-pressed={activeTab === 'weekly'} class="auth-tab" class:active={activeTab === 'weekly'} on:click={() => switchTab('weekly')}>Weekly</button>
+    <button aria-pressed={activeTab === 'monthly'} class="auth-tab" class:active={activeTab === 'monthly'} on:click={() => switchTab('monthly')}>Monthly</button>
+    <button aria-pressed={activeTab === 'roll'} class="auth-tab" class:active={activeTab === 'roll'} on:click={() => switchTab('roll')}>All-Time Roll</button>
   </div>
 
   {#if !loading && featuredRoll && featuredDetails}
@@ -221,6 +232,11 @@
 
   {#if loading}
     <div class="card"><p>Loading top rollers...</p></div>
+  {:else if loadError}
+    <div class="card" role="alert">
+      <p>{loadError}</p>
+      <button type="button" class="auth-tab" on:click={fetchLeaderboard}>Retry</button>
+    </div>
   {:else if leaderboard.length === 0}
     <div class="card"><p>No scores yet. Roll to claim #1!</p></div>
   {:else}
@@ -232,7 +248,7 @@
         {@const lbTheme = getLbTheme(row.equipped_cosmetics)}
 
         <div class="leaderboard-row {lbTheme.cls}" style="{lbTheme.style}">
-          <span class="lb-rank">#{index + 1}</span>
+          <span class="lb-rank">#{row.rank || index + 1}</span>
           <span class="lb-info">
             {#if titleTxt}
               <span class="title-chip">[{titleTxt}]</span>
@@ -258,7 +274,7 @@
             {/if}
 
             <br>
-            <span class="lb-sub" style="color:#666; font-size:0.75rem;">{row.hex_code} • {row.rarity}</span>
+            <span class="lb-sub" style="color:var(--text-muted); font-size:0.75rem;">{row.hex_code} • {row.rarity}</span>
           </span>
 
           <span class="lb-actions">
@@ -298,7 +314,7 @@
               <span class="lb-username">You</span>
             </span>
             <br>
-            <span class="lb-sub" style="color:#666; font-size:0.75rem;">Your best roll this period</span>
+            <span class="lb-sub" style="color:var(--text-muted); font-size:0.75rem;">Your best roll this period</span>
           </span>
           <span class="lb-score">{myScore.toLocaleString()}</span>
         </div>
@@ -343,7 +359,7 @@
   .launch-edition-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.45rem; height: 1.05rem; padding: 0 0.25rem; border: 1px solid rgba(161, 92, 255, 0.55); border-radius: 999px; background: linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(161, 92, 255, 0.2)); color: #d8c7ff; font: 700 0.58rem/1 'JetBrains Mono', monospace; letter-spacing: 0.05em; vertical-align: middle; }
   .my-rank-row { display: flex; align-items: center; justify-content: space-between; background: rgba(139, 124, 246, 0.1); border: 1px dashed rgba(139, 124, 246, 0.5); padding: 12px 15px; border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-top: 10px; }
   .lb-actions { display: flex; align-items: center; gap: 10px; }
-  .rival-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; transition: all 0.2s; line-height: 1; padding: 0; }
+  .rival-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--text-muted); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; transition: all 0.2s; line-height: 1; padding: 0; }
   .rival-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
   .rival-btn.unfollow { background: rgba(255, 255, 255, 0.05); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
   .rival-btn.unfollow:hover { background: rgba(239, 68, 68, 0.2); }

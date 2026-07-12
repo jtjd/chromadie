@@ -35,7 +35,7 @@
       const params = new URLSearchParams(window.location.search);
       const errorDescription = params.get('error_description') || params.get('error') || '';
       if (errorDescription) {
-        error = decodeURIComponent(errorDescription.replace(/\+/g, ' '));
+        error = errorDescription.slice(0, 300);
       }
     }
 
@@ -110,8 +110,10 @@
       <h1>Create a new password</h1>
       <p class="bootstrap-error-message">Enter the new password you want to use for ChromaDie.</p>
       <form class="reset-form" on:submit|preventDefault={handleReset}>
-        <input class="input-field" type="password" bind:value={newPassword} placeholder="New password" minlength="8" required />
-        <input class="input-field" type="password" bind:value={confirmPassword} placeholder="Confirm new password" minlength="8" required />
+        <label for="reset-new-password">New password</label>
+        <input id="reset-new-password" class="input-field" type="password" bind:value={newPassword} placeholder="New password" autocomplete="new-password" minlength="8" required />
+        <label for="reset-confirm-password">Confirm new password</label>
+        <input id="reset-confirm-password" class="input-field" type="password" bind:value={confirmPassword} placeholder="Confirm new password" autocomplete="new-password" minlength="8" required />
         {#if error}
           <p class="bootstrap-error-details">{error}</p>
         {/if}

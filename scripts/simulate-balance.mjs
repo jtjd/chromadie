@@ -28,12 +28,12 @@ function createRandom(seed) {
 export function simulateBalance({
   rolls = DEFAULT_ROLLS,
   seed = DEFAULT_SEED,
-  candidate = false,
+  legacy = false,
   exhaustive = false
 } = {}) {
   if (exhaustive) rolls = 256 ** 3;
   const random = createRandom(seed);
-  const scorer = candidate ? scoreCandidateColor : scoreColor;
+  const scorer = legacy ? scoreColor : scoreCandidateColor;
   const rarities = Object.fromEntries(rarityOrder.map(rarity => [rarity, 0]));
   let totalScore = 0;
   let totalConditions = 0;
@@ -50,16 +50,16 @@ export function simulateBalance({
         );
     rarities[result.rarity] += 1;
     totalScore += result.score;
-    const conditionIds = candidate ? result.conditions.map(condition => condition.id) : result.badges;
+    const conditionIds = legacy ? result.badges : result.conditions.map(condition => condition.id);
     totalConditions += conditionIds.length;
-    totalContributors += candidate ? result.contributors.length : result.badges.length;
+    totalContributors += legacy ? result.badges.length : result.contributors.length;
     if (conditionIds.includes('f1')) f1Rolls += 1;
   }
 
   return {
     rolls,
     seed,
-    model: candidate ? 'candidate' : 'current',
+    model: legacy ? 'legacy' : 'current',
     exhaustive,
     averageScore: totalScore / rolls,
     averageConditions: totalConditions / rolls,
@@ -97,7 +97,7 @@ if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).
   const report = simulateBalance({
     rolls: readIntegerFlag('rolls', DEFAULT_ROLLS),
     seed: readIntegerFlag('seed', DEFAULT_SEED),
-    candidate: process.argv.includes('--candidate'),
+    legacy: process.argv.includes('--legacy'),
     exhaustive: process.argv.includes('--exhaustive')
   });
   if (process.argv.includes('--json')) console.log(JSON.stringify(report, null, 2));

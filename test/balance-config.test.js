@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { getRarity, RANKS, RARITY_THRESHOLDS } from '../src/lib/balanceConfig.js';
 import { getRank, getRankState } from '../src/lib/ranks.js';
 import { scoreColor } from '../src/lib/scoring.js';
+import { scoreCandidateColor } from '../src/lib/scoringCandidate.js';
 import { ACHIEVEMENTS } from '../src/lib/badgeData.js';
 import { simulateBalance } from '../scripts/simulate-balance.mjs';
 import {
@@ -30,10 +31,10 @@ test('active launch rarity boundaries remain explicit', () => {
     [49500, 'Rare'],
     [84999, 'Rare'],
     [85000, 'Epic'],
-    [199999, 'Epic'],
-    [200000, 'Anomaly'],
-    [1499999, 'Anomaly'],
-    [1500000, 'Mythic']
+    [499999, 'Epic'],
+    [500000, 'Anomaly'],
+    [999999, 'Anomaly'],
+    [1000000, 'Mythic']
   ];
 
   for (const [score, expected] of boundaries) {
@@ -42,8 +43,8 @@ test('active launch rarity boundaries remain explicit', () => {
   assert.deepEqual(
     RARITY_THRESHOLDS.map(({ name, min }) => [name, min]),
     [
-      ['Mythic', 1500000],
-      ['Anomaly', 200000],
+      ['Mythic', 1000000],
+      ['Anomaly', 500000],
       ['Epic', 85000],
       ['Rare', 49500],
       ['Uncommon', 34500],
@@ -123,8 +124,8 @@ test('score model rejects impossible channels', () => {
   assert.throws(() => scoreColor(1.5, 0, 0), RangeError);
 });
 
-test('seeded distribution remains measurable before balance changes', () => {
-  const report = simulateBalance({ rolls: 100000, seed: 0x4348524f });
+test('legacy distribution remains available only when explicitly requested', () => {
+  const report = simulateBalance({ rolls: 100000, seed: 0x4348524f, legacy: true });
   assert.equal(report.averageScore, 167057.43291);
   assert.equal(report.averageConditions, 13.60182);
   assert.equal(report.f1Frequency, 0.01926);
@@ -134,15 +135,28 @@ test('seeded distribution remains measurable before balance changes', () => {
   );
 });
 
-test('richer candidate balance distribution is locked', () => {
-  const report = simulateBalance({ rolls: 100000, seed: 0x4348524f, candidate: true });
-  assert.equal(report.averageScore, 54177.69084);
-  assert.equal(report.averageConditions, 10.67035);
-  assert.equal(report.averageContributors, 10.67035);
+test('current richer balance distribution is locked', () => {
+  const report = simulateBalance({ rolls: 100000, seed: 0x4348524f });
+  assert.equal(report.averageScore, 54181.94179);
+  assert.equal(report.averageConditions, 10.67043);
+  assert.equal(report.averageContributors, 10.67043);
   assert.deepEqual(
     Object.fromEntries(Object.entries(report.rarities).map(([rarity, result]) => [rarity, result.count])),
-    { Trash: 25023, Common: 14852, Uncommon: 29243, Rare: 17073, Epic: 13654, Anomaly: 87, Mythic: 68 }
+    { Trash: 25021, Common: 14847, Uncommon: 29242, Rare: 17080, Epic: 13655, Anomaly: 87, Mythic: 68 }
   );
+});
+
+test('known SQL numeric boundary colors retain authoritative classifications', () => {
+  const cases = [
+    [187, 51, 33, 58782, 'Rare', 'Balanced Vivid Crimson'],
+    [160, 136, 234, 38540, 'Uncommon', 'Bright Vivid Blue']
+  ];
+  for (const [red, green, blue, score, rarity, identity] of cases) {
+    const result = scoreCandidateColor(red, green, blue);
+    assert.equal(result.score, score);
+    assert.equal(result.rarity, rarity);
+    assert.equal(result.identity, identity);
+  }
 });
 
 test('candidate economy pacing remains explicit', () => {

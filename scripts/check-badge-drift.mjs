@@ -6,7 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
 
-const scoringSqlPath = path.join(repoRoot, 'supabase/migrations/20260710200000_candidate_score_model.sql');
+const baseScoringSqlPath = path.join(repoRoot, 'supabase/migrations/20260710200000_candidate_score_model.sql');
+const finalScoringSqlPath = path.join(repoRoot, 'supabase/migrations/20260712180000_richer_roll_conditions.sql');
 const rollSqlPath = path.join(repoRoot, 'supabase/migrations/20260710202000_roll_v2_transaction.sql');
 const badgeDataPath = path.join(repoRoot, 'src/lib/badgeData.js');
 const balanceConfigPath = path.join(repoRoot, 'src/lib/balanceConfig.js');
@@ -14,7 +15,9 @@ const seedPath = path.join(repoRoot, 'supabase/seed.sql');
 
 const badgeModule = await import(pathToFileURL(badgeDataPath).href);
 const balanceConfig = await import(pathToFileURL(balanceConfigPath).href);
-const scoringSql = await readFile(scoringSqlPath, 'utf8');
+const baseScoringSql = await readFile(baseScoringSqlPath, 'utf8');
+const finalScoringSql = await readFile(finalScoringSqlPath, 'utf8');
+const scoringSql = `${baseScoringSql}\n${finalScoringSql}`;
 const rollSql = await readFile(rollSqlPath, 'utf8');
 const seed = await readFile(seedPath, 'utf8');
 
@@ -27,18 +30,27 @@ const knownAchievementIds = new Set([
   ...Object.keys(badgeModule.CANDIDATE_ACHIEVEMENTS || {})
 ]);
 
-const scoringEntries = [...scoringSql.matchAll(
-  /jsonb_build_object\('id','([a-z0-9_]+)'[\s\S]*?'points',(\d+)/g
-)].map(([, id, points]) => ({ id, points: Number(points) }));
+const scoringEntryMap = new Map(
+  [...scoringSql.matchAll(
+    /jsonb_build_object\(\s*'id'\s*,\s*'([a-z0-9_]+)'[\s\S]{0,350}?'points'\s*,\s*(\d+)/g
+  )].map(([, id, points]) => [id, Number(points)])
+);
+const scoringEntries = [...scoringEntryMap]
+  .filter(([id]) => id !== 'structure_')
+  .map(([id, points]) => ({ id, points }));
 
 if (scoringEntries.length === 0) {
-  console.error(`Could not find v2 scoring condition entries in ${path.relative(repoRoot, scoringSqlPath)}.`);
+  console.error(`Could not find v2 scoring condition entries in ${path.relative(repoRoot, finalScoringSqlPath)}.`);
   process.exit(1);
 }
 
 const missingScoreIds = scoringEntries
   .map(({ id }) => id)
-  .filter(id => !knownBadgeIds.has(id))
+  .filter(id => {
+    if (knownBadgeIds.has(id)) return false;
+    const meta = badgeModule.getBadgeMeta?.(id);
+    return !meta || meta.name === id;
+  })
   .sort();
 
 if (missingScoreIds.length > 0) {
@@ -48,22 +60,22 @@ if (missingScoreIds.length > 0) {
 }
 
 const pointMismatches = scoringEntries.filter(({ id, points }) => {
-  const badge = badgeModule.CANDIDATE_BADGES?.[id] || badgeModule.BADGES?.[id];
+  const badge = badgeModule.CANDIDATE_BADGES?.[id] || badgeModule.BADGES?.[id] || badgeModule.getBadgeMeta?.(id);
   return !badge || badge.points !== points;
 });
 
 if (pointMismatches.length > 0) {
   console.error('Score drift detected between calculate_roll_v2 and badgeData.js:');
   for (const { id, points } of pointMismatches) {
-    const badge = badgeModule.CANDIDATE_BADGES?.[id] || badgeModule.BADGES?.[id];
+    const badge = badgeModule.CANDIDATE_BADGES?.[id] || badgeModule.BADGES?.[id] || badgeModule.getBadgeMeta?.(id);
     console.error(`  - ${id}: SQL=${points}, registry=${badge?.points ?? 'missing'}`);
   }
   process.exit(1);
 }
 
-const rarityCaseMatch = scoringSql.match(/v_rarity := CASE\s+([\s\S]*?)\s+END;/);
+const rarityCaseMatch = finalScoringSql.match(/v_rarity := CASE\s+([\s\S]*?)\s+END;/);
 if (!rarityCaseMatch) {
-  console.error(`Could not find v2 rarity CASE in ${path.relative(repoRoot, scoringSqlPath)}.`);
+  console.error(`Could not find v2 rarity CASE in ${path.relative(repoRoot, finalScoringSqlPath)}.`);
   process.exit(1);
 }
 

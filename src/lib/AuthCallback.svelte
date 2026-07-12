@@ -7,6 +7,7 @@
   let message = 'Completing sign-in...';
   let timeoutId;
   let redirected = false;
+  let nextUrl = getAppOrigin();
 
   function getNextUrl() {
     if (typeof window === 'undefined') return getAppOrigin();
@@ -20,17 +21,20 @@
   function clearUrl() {
     if (typeof window === 'undefined') return;
 
-    const nextUrl = new URL(getNextUrl());
-    window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}`);
+    const target = new URL(nextUrl);
+    window.history.replaceState({}, '', `${target.pathname}${target.search}`);
   }
 
   onMount(() => {
+    nextUrl = getNextUrl();
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const errorDescription = params.get('error_description') || params.get('error') || '';
       if (errorDescription) {
         status = 'error';
-        message = decodeURIComponent(errorDescription.replace(/\+/g, ' '));
+        // URLSearchParams already decodes query values. Avoid a second decode,
+        // which can throw on a literal percent sign in a provider error.
+        message = errorDescription.slice(0, 300);
       }
     }
 
@@ -51,7 +55,7 @@
     clearUrl();
     setTimeout(() => {
       if (typeof window !== 'undefined') {
-        window.location.replace(getNextUrl());
+        window.location.replace(nextUrl);
       }
     }, 900);
   }

@@ -1,23 +1,28 @@
 import { shopItems } from './stores';
 import { get } from 'svelte/store';
+import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety';
 
-export function getNameEffect(cosmetics) {
-  if (!cosmetics || !cosmetics.name_effect) return { cls: '', style: '' };
-  const item = get(shopItems)[cosmetics.name_effect];
+export { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety';
+
+export function getCosmeticEffect(cosmetics, slot) {
+  const itemKey = cosmetics?.[slot];
+  if (!itemKey) return { cls: '', style: '' };
+  const item = get(shopItems)[itemKey];
   if (!item) return { cls: '', style: '' };
-  if (item.css_type === 'class') return { cls: item.css_value, style: '' };
-  if (item.css_type === 'style') return { cls: '', style: item.css_value };
+  if (item.css_type === 'class') {
+    return { cls: sanitizeCosmeticClass(item.css_value), style: '' };
+  }
+  if (item.css_type === 'style') return { cls: '', style: sanitizeCosmeticStyle(item.css_value) };
   return { cls: '', style: '' };
 }
 
-export function getFrameEffect(cosmetics) {
-  if (!cosmetics || !cosmetics.frame) return { cls: '', style: '' };
-  const item = get(shopItems)[cosmetics.frame];
-  if (!item) return { cls: '', style: '' };
-  if (item.css_type === 'class') return { cls: item.css_value, style: '' };
-  if (item.css_type === 'style') return { cls: '', style: item.css_value };
-  return { cls: '', style: '' };
-}
+export const getNameEffect = cosmetics => getCosmeticEffect(cosmetics, 'name_effect');
+export const getFrameEffect = cosmetics => getCosmeticEffect(cosmetics, 'frame');
+export const getProfileBg = cosmetics => getCosmeticEffect(cosmetics, 'profile_bg');
+export const getRollEffect = cosmetics => getCosmeticEffect(cosmetics, 'roll_effect');
+export const getLbTheme = cosmetics => getCosmeticEffect(cosmetics, 'lb_theme');
+export const getOrbShape = cosmetics => getCosmeticEffect(cosmetics, 'orb_shape');
+export const getProfileBorder = cosmetics => getCosmeticEffect(cosmetics, 'profile_border');
 
 export function getTitleText(cosmetics) {
   if (!cosmetics || !cosmetics.title) return '';
@@ -26,55 +31,13 @@ export function getTitleText(cosmetics) {
   if (cosmetics.title === 'title_founder') return '✦ FOUNDER ✦';
   const item = get(shopItems)[cosmetics.title];
   if (!item || item.css_type !== 'text') return '';
-  return item.css_value;
+  return typeof item.css_value === 'string'
+    && item.css_value.length <= 80
+    && ![...item.css_value].some(character => character.codePointAt(0) < 32)
+    ? item.css_value
+    : '';
 }
 
 export function getStaffTitleText(isStaff) {
   return isStaff ? 'Staff' : '';
-}
-
-export function getProfileBg(cosmetics) {
-  if (!cosmetics || !cosmetics.profile_bg) return { cls: '', style: '' };
-  const item = get(shopItems)[cosmetics.profile_bg];
-  if (!item) return { cls: '', style: '' };
-  if (item.css_type === 'class') return { cls: item.css_value, style: '' };
-  if (item.css_type === 'style') return { cls: '', style: item.css_value };
-  return { cls: '', style: '' };
-}
-
-export function getRollEffect(cosmetics) {
-  if (!cosmetics || !cosmetics.roll_effect) return { cls: '', style: '' };
-  const item = get(shopItems)[cosmetics.roll_effect];
-  if (!item) return { cls: '', style: '' };
-  if (item.css_type === 'class') return { cls: item.css_value, style: '' };
-  if (item.css_type === 'style') return { cls: '', style: item.css_value };
-  return { cls: '', style: '' };
-}
-
-export function getLbTheme(cosmetics) {
-  if (!cosmetics || !cosmetics.lb_theme) return { cls: '', style: '' };
-  const item = get(shopItems)[cosmetics.lb_theme];
-  if (!item) return { cls: '', style: '' };
-  if (item.css_type === 'class') return { cls: item.css_value, style: '' };
-  if (item.css_type === 'style') return { cls: '', style: item.css_value };
-  return { cls: '', style: '' };
-}
-
-export function getOrbShape(cosmetics) {
-  if (!cosmetics || !cosmetics.orb_shape) return { cls: '', style: '' };
-  const item = get(shopItems)[cosmetics.orb_shape];
-  if (!item) return { cls: '', style: '' };
-  if (item.css_type === 'class') return { cls: item.css_value, style: '' };
-  if (item.css_type === 'style') return { cls: '', style: item.css_value };
-  return { cls: '', style: '' };
-}
-
-// NEW: Profile Border Helper
-export function getProfileBorder(cosmetics) {
-  if (!cosmetics || !cosmetics.profile_border) return { cls: '', style: '' };
-  const item = get(shopItems)[cosmetics.profile_border];
-  if (!item) return { cls: '', style: '' };
-  if (item.css_type === 'class') return { cls: item.css_value, style: '' };
-  if (item.css_type === 'style') return { cls: '', style: item.css_value };
-  return { cls: '', style: '' };
 }

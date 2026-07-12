@@ -1,6 +1,7 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from '../src/lib/cosmeticSafety.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -177,6 +178,26 @@ async function readRemoteCatalog(columns, url, key) {
 const snapshot = await readLocalCatalog(snapshotPath);
 const seed = await readLocalCatalog(seedPath);
 compareCatalogs(snapshot, seed, 'supabase/seed.sql');
+
+const srcRoot = path.join(repoRoot, 'src');
+const styleFiles = (await readdir(srcRoot, { recursive: true }))
+  .filter(file => file.endsWith('.css') || file.endsWith('.svelte'));
+const cosmeticCss = (await Promise.all(styleFiles.map(file => readFile(path.join(srcRoot, file), 'utf8')))).join('\n');
+const validSlots = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'orb_shape', 'profile_bg', 'profile_border', 'roll_effect', 'title']);
+for (const item of snapshot.catalog.values()) {
+  if (!validSlots.has(item.slot)) fail(`${item.item_key} has unknown slot ${item.slot}`);
+  if (!Number.isSafeInteger(Number(item.cost)) || Number(item.cost) < 0) fail(`${item.item_key} has invalid cost ${item.cost}`);
+  if (item.css_type === 'style' && sanitizeCosmeticStyle(item.css_value) !== item.css_value.trim()) {
+    fail(`${item.item_key} contains a rejected inline style`);
+  }
+  if (item.css_type === 'class') {
+    if (sanitizeCosmeticClass(item.css_value) !== item.css_value) fail(`${item.item_key} contains an invalid CSS class value`);
+    for (const className of item.css_value.split(/\s+/)) {
+      if (!cosmeticCss.includes(`.${className}`)) fail(`${item.item_key} references missing CSS class ${className}`);
+    }
+  }
+  if (!['style', 'class', 'text'].includes(item.css_type)) fail(`${item.item_key} has unknown css_type ${item.css_type}`);
+}
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_KEY;

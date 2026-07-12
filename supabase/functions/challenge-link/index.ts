@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createClient } from 'npm:@supabase/supabase-js@2.110.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -90,7 +90,7 @@ Deno.serve(async request => {
         return jsonResponse({ success: false, error: rpcMessage }, 429)
       }
 
-      if (rpcMessage === 'Profile unavailable') {
+      if (rpcMessage.includes('No authoritative daily roll')) {
         return jsonResponse({ success: false, error: rpcMessage }, 409)
       }
 
@@ -108,7 +108,7 @@ Deno.serve(async request => {
 
   if (action === 'get') {
     const id = String(body.id || '').trim()
-    if (!id) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
       return jsonResponse({ success: false, error: 'Missing challenge id' }, 400)
     }
 

@@ -1,13 +1,16 @@
 <script>
-  import RollPreview from './RollPreview.svelte';
+  import ShopItemPreview from './ShopItemPreview.svelte';
   import { shopItems, shopItemsLoading, shopItemsError, loadShopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards, profile, session, fetchInventoryState, refreshProfileState, fetchWalletBalance } from './stores';
   import { supabase } from './supabase';
-  import { onMount } from 'svelte';
+  import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
+  import { onMount, onDestroy, tick } from 'svelte';
 
   let loadingAction = null;
   let activeTab = 'all';
   let sortMode = 'featured';
   let purchaseTarget = null;
+  let purchaseDialog = null;
+  let purchaseOpener = null;
   let ownedCollapsed = {};
   let ownedLayoutMode = 'desktop';
   let ownedStateMode = 'desktop';
@@ -223,7 +226,7 @@
                 fetchWalletBalance()
               ]);
             }
-            addToast(`Purchased ${item.name} and equipped it.`, 'success');
+            addToast(`Purchased ${item.name}.`, 'success');
             await handleAction(itemKey, 'equip', null, true);
           }
         }
@@ -246,30 +249,53 @@
           addToast('Unequipped item.', 'success');
         }
       }
+    } catch (actionError) {
+      error = actionError instanceof Error ? actionError.message : 'The shop request failed.';
     } finally {
       if (error) addToast(`Error: ${error}`);
       loadingAction = null;
     }
   }
 
-  function requestPurchase(item) {
+  async function requestPurchase(item) {
     if (shouldConfirmPurchase(item)) {
+      purchaseOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       purchaseTarget = item;
+      document.body.style.overflow = 'hidden';
+      await tick();
+      focusFirstElement(purchaseDialog) || purchaseDialog?.focus();
       return;
     }
 
     handleAction(item.item_key, 'buy');
   }
 
-  function confirmPurchase() {
+  async function confirmPurchase() {
     if (!purchaseTarget) return;
     const item = purchaseTarget;
-    purchaseTarget = null;
+    await closePurchaseDialog();
     handleAction(item.item_key, 'buy');
   }
 
-  function cancelPurchase() {
+  async function closePurchaseDialog() {
     purchaseTarget = null;
+    document.body.style.overflow = '';
+    await tick();
+    restoreFocus(purchaseOpener);
+    purchaseOpener = null;
+  }
+
+  function cancelPurchase() {
+    void closePurchaseDialog();
+  }
+
+  function handlePurchaseDialogKeydown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      cancelPurchase();
+      return;
+    }
+    trapFocus(event, purchaseDialog);
   }
 
   $: cosmeticItems = Object.values($shopItems)
@@ -373,6 +399,12 @@
     return () => media.removeListener(handleChange);
   });
 
+  onDestroy(() => {
+    if (purchaseTarget && typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  });
+
   $: if (activeTab === 'owned' && ownedCosmeticSections.length) {
     const sectionKeysMatch = Object.keys(ownedCollapsed).length === ownedCosmeticSections.length
       && !Object.keys(ownedCollapsed).some(slot => !ownedCosmeticSections.some(section => section.slot === slot));
@@ -444,52 +476,7 @@
               <span class="state-pill rarity">{item.rarity || 'Common'}</span>
             </div>
 
-            <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
-              {#if item.slot === 'profile_bg'}
-                <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
-              {:else if item.slot === 'roll_effect'}
-                <RollPreview effectCls={item.css_type === 'class' ? item.css_value : ''} effectStyle={item.css_type === 'style' ? item.css_value : ''} size="shop" />
-              {:else if item.slot === 'lb_theme'}
-                <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                  <span class="lb-rank preview-lb-rank">#1</span>
-                  <div class="lb-info preview-lb-info">
-                    <span class="lb-username preview-lb-name">YourName</span>
-                    <span class="preview-lb-sub">#7B5CFF • Mythic</span>
-                  </div>
-                  <span class="lb-score preview-lb-score">9.8M</span>
-                </div>
-              {:else if item.slot === 'orb_shape'}
-                <div class="preview-orb-shape {item.css_type === 'class' ? item.css_value : ''}"></div>
-              {:else if item.slot === 'profile_border'}
-                <div class="preview-profile-card {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                  <div class="preview-profile-topline">
-                    <span class="preview-profile-badge">Featured</span>
-                    <span class="preview-profile-dot"></span>
-                  </div>
-                  <span class="preview-profile-name">YourName</span>
-                  <div class="preview-profile-meta">
-                    <span>Rank</span>
-                    <span>30d</span>
-                  </div>
-                </div>
-              {:else}
-                <div class="shop-preview-text">
-                  {#if item.css_type === 'class'}
-                    {#if item.slot === 'frame'}
-                      <span class="profile-name-frame {item.css_value}">Username</span>
-                    {:else}
-                      <span class="{item.css_value}" data-text="Username">Username</span>
-                    {/if}
-                  {:else if item.css_type === 'style'}
-                    {#if item.slot === 'frame'}
-                      <span class="profile-name-frame" style="{item.css_value}">Username</span>
-                    {:else}
-                      <span style="{item.css_value}" data-text="Username">Username</span>
-                    {/if}
-                  {/if}
-                </div>
-              {/if}
-            </div>
+            <ShopItemPreview {item} />
 
             <h3>{item.name}</h3>
             <p class="item-summary">{getItemSummary(item)}</p>
@@ -605,52 +592,7 @@
                     <span class="state-pill rarity">{item.rarity || 'Common'}</span>
                   </div>
 
-                  <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
-                    {#if item.slot === 'profile_bg'}
-                      <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
-                    {:else if item.slot === 'roll_effect'}
-                      <RollPreview effectCls={item.css_type === 'class' ? item.css_value : ''} effectStyle={item.css_type === 'style' ? item.css_value : ''} size="shop" />
-                    {:else if item.slot === 'lb_theme'}
-                      <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                        <span class="lb-rank preview-lb-rank">#1</span>
-                        <div class="lb-info preview-lb-info">
-                          <span class="lb-username preview-lb-name">YourName</span>
-                          <span class="preview-lb-sub">#7B5CFF • Mythic</span>
-                        </div>
-                        <span class="lb-score preview-lb-score">9.8M</span>
-                      </div>
-                    {:else if item.slot === 'orb_shape'}
-                      <div class="preview-orb-shape {item.css_type === 'class' ? item.css_value : ''}"></div>
-                    {:else if item.slot === 'profile_border'}
-                      <div class="preview-profile-card {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                        <div class="preview-profile-topline">
-                          <span class="preview-profile-badge">Featured</span>
-                          <span class="preview-profile-dot"></span>
-                        </div>
-                        <span class="preview-profile-name">YourName</span>
-                        <div class="preview-profile-meta">
-                          <span>Rank</span>
-                          <span>30d</span>
-                        </div>
-                      </div>
-                    {:else}
-                      <div class="shop-preview-text">
-                        {#if item.css_type === 'class'}
-                          {#if item.slot === 'frame'}
-                            <span class="profile-name-frame {item.css_value}">Username</span>
-                          {:else}
-                            <span class="{item.css_value}" data-text="Username">Username</span>
-                          {/if}
-                        {:else if item.css_type === 'style'}
-                          {#if item.slot === 'frame'}
-                            <span class="profile-name-frame" style="{item.css_value}">Username</span>
-                          {:else}
-                            <span style="{item.css_value}" data-text="Username">Username</span>
-                          {/if}
-                        {/if}
-                      </div>
-                    {/if}
-                  </div>
+                  <ShopItemPreview {item} />
 
                   <h3>{item.name}</h3>
                   {#if item.collection}
@@ -707,52 +649,7 @@
               <span class="state-pill rarity">{item.rarity || 'Common'}</span>
             </div>
 
-            <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
-              {#if item.slot === 'profile_bg'}
-                <div class="preview-bg" style="{item.css_type === 'style' ? item.css_value : ''}"></div>
-              {:else if item.slot === 'roll_effect'}
-                <RollPreview effectCls={item.css_type === 'class' ? item.css_value : ''} effectStyle={item.css_type === 'style' ? item.css_value : ''} size="shop" />
-              {:else if item.slot === 'lb_theme'}
-                <div class="leaderboard-row preview-lb-row {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                  <span class="lb-rank preview-lb-rank">#1</span>
-                  <div class="lb-info preview-lb-info">
-                    <span class="lb-username preview-lb-name">YourName</span>
-                    <span class="preview-lb-sub">#7B5CFF • Mythic</span>
-                  </div>
-                  <span class="lb-score preview-lb-score">9.8M</span>
-                </div>
-              {:else if item.slot === 'orb_shape'}
-                <div class="preview-orb-shape {item.css_type === 'class' ? item.css_value : ''}"></div>
-              {:else if item.slot === 'profile_border'}
-                <div class="preview-profile-card {item.css_type === 'class' ? item.css_value : ''}" style="{item.css_type === 'style' ? item.css_value : ''}">
-                  <div class="preview-profile-topline">
-                    <span class="preview-profile-badge">Featured</span>
-                    <span class="preview-profile-dot"></span>
-                  </div>
-                  <span class="preview-profile-name">YourName</span>
-                  <div class="preview-profile-meta">
-                    <span>Rank</span>
-                    <span>30d</span>
-                  </div>
-                </div>
-              {:else}
-                <div class="shop-preview-text">
-                  {#if item.css_type === 'class'}
-                    {#if item.slot === 'frame'}
-                      <span class="profile-name-frame {item.css_value}">Username</span>
-                    {:else}
-                      <span class="{item.css_value}" data-text="Username">Username</span>
-                    {/if}
-                  {:else if item.css_type === 'style'}
-                    {#if item.slot === 'frame'}
-                      <span class="profile-name-frame" style="{item.css_value}">Username</span>
-                    {:else}
-                      <span style="{item.css_value}" data-text="Username">Username</span>
-                    {/if}
-                  {/if}
-                </div>
-              {/if}
-            </div>
+            <ShopItemPreview {item} />
 
             <h3>{item.name}</h3>
             {#if item.collection}
@@ -818,7 +715,7 @@
             <span class="state-pill rarity">{item.rarity || 'Common'}</span>
           </div>
 
-          <div class="shop-preview-area">
+          <div class="utility-preview-area">
             <div class="utility-preview">
               {#if item.item_key === 'reroll_shard'}
                 <span>+1 reroll</span>
@@ -871,9 +768,12 @@
   <div class="purchase-modal-overlay" role="presentation" on:click|self={cancelPurchase}>
     <div
       class="purchase-modal-content"
+      bind:this={purchaseDialog}
       role="dialog"
       aria-modal="true"
       aria-labelledby="purchase-modal-title"
+      tabindex="-1"
+      on:keydown={handlePurchaseDialogKeydown}
     >
       <div class="purchase-modal-head">
         <div>
@@ -1426,159 +1326,18 @@
     border-color: rgba(59, 130, 246, 0.18);
   }
 
-  .shop-preview-area {
-    height: 112px;
+  .utility-preview-area {
+    min-height: 112px;
     margin-bottom: 14px;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 0;
-    align-self: stretch;
     padding: 12px;
     box-sizing: border-box;
     border: 1px solid rgba(255,255,255,0.075);
     border-radius: 16px;
-    background:
-      radial-gradient(circle at 50% 42%, rgba(123, 92, 255, 0.1), transparent 58%),
-      rgba(5, 6, 10, 0.58);
-    overflow: hidden;
-  }
-
-  .shop-preview-area-tall {
-    height: 112px;
-  }
-
-  .shop-preview-area-roll-effect {
-    height: 140px;
-    border-color: rgba(139, 124, 246, 0.16);
-    background: radial-gradient(circle at center, rgba(123, 92, 255, 0.12), rgba(6, 7, 12, 0.7) 62%, rgba(3, 4, 8, 0.9));
-  }
-
-  .preview-bg {
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
-    background-color: #111;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    will-change: transform, opacity, filter;
-  }
-  .preview-bg[style*="godRaysTurn"] { animation-duration: 5.5s !important; }
-  .preview-bg[style*="deepSpaceTwinkle"] { animation-duration: 6.2s !important; }
-
-  .preview-lb-row {
-    width: 100%;
-    min-height: 58px;
-    border-radius: 14px;
-    padding: 10px 12px;
-    box-sizing: border-box;
-    overflow: hidden;
-    margin: 0;
-    gap: 10px;
-  }
-
-  .preview-lb-rank {
-    width: auto;
-    min-width: 22px;
-    font-size: 0.72rem;
-  }
-
-  .preview-lb-info {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    margin-left: 0;
-  }
-
-  .preview-lb-name {
-    font-size: 0.76rem;
-    line-height: 1.1;
-  }
-
-  .preview-lb-sub {
-    color: var(--text-muted);
-    font-size: 0.62rem;
-    line-height: 1.1;
-    white-space: nowrap;
-  }
-
-  .preview-lb-score {
-    font-size: 0.74rem;
-  }
-
-  .preview-lb-row.lb-gold-theme .preview-lb-rank,
-  .preview-lb-row.lb-gold-theme .preview-lb-sub {
-    color: rgba(26, 26, 26, 0.72);
-  }
-
-  .preview-orb-shape {
-    width: 72px;
-    height: 72px;
-    flex: 0 0 auto;
-    background-color: #7b5cff;
-    box-shadow: 0 0 0 12px rgba(123, 92, 255, 0.06);
-  }
-
-  .preview-profile-card {
-    width: 100%;
-    min-height: 72px;
-    background:
-      radial-gradient(circle at top right, rgba(123, 92, 255, 0.18), transparent 42%),
-      linear-gradient(180deg, rgba(15, 15, 21, 0.98), rgba(9, 9, 14, 0.96));
-    border-radius: 16px;
-    border: 2px solid transparent;
-    padding: 10px 12px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    overflow: hidden;
-  }
-
-  .preview-profile-topline,
-  .preview-profile-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .preview-profile-badge,
-  .preview-profile-meta span {
-    color: var(--text-muted);
-    font-size: 0.58rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .preview-profile-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.3);
-    box-shadow: 0 0 12px rgba(255,255,255,0.18);
-    flex-shrink: 0;
-  }
-
-  .preview-profile-name {
-    color: #fff;
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    font-weight: 700;
-  }
-
-  .shop-preview-text {
-    width: 100%;
-    min-height: 0;
-    margin-bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 8px;
-    text-align: center;
-    box-sizing: border-box;
+    background: rgba(5,6,10,0.58);
   }
 
   .utility-preview {
@@ -1646,6 +1405,7 @@
     min-height: 2.9em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -1654,6 +1414,7 @@
     min-height: 3.1em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -1667,6 +1428,7 @@
     min-height: 2.9em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -1764,6 +1526,8 @@
 
   .purchase-modal-content {
     width: min(560px, 100%);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
     background:
       radial-gradient(circle at top right, rgba(168, 85, 247, 0.12), transparent 42%),
       linear-gradient(180deg, rgba(22, 23, 31, 0.98), rgba(17, 18, 25, 0.98));
@@ -1942,17 +1706,9 @@
       margin-bottom: 12px;
     }
 
-    .shop-preview-area {
+    .utility-preview-area {
       height: 104px;
       padding: 10px;
-    }
-
-    .shop-preview-area-tall {
-      height: 104px;
-    }
-
-    .shop-preview-area-roll-effect {
-      height: 128px;
     }
 
     .wallet-display p {
@@ -1969,7 +1725,7 @@
       font-size: 0.74rem;
     }
 
-    .shop-preview-area {
+    .utility-preview-area {
       margin-bottom: 16px;
     }
 
@@ -1981,6 +1737,7 @@
     .purchase-modal-content {
       border-radius: 18px 18px 12px 12px;
       padding: 18px;
+      max-height: calc(100dvh - 24px);
     }
 
     .purchase-actions {

@@ -5,7 +5,7 @@
     {
       icon: '🎲',
       title: 'Roll once a day',
-      copy: 'Start with a fresh roll and see what color the day gives you.'
+      copy: 'Start with a fresh roll each UTC day and see what color the day gives you.'
     },
     {
       icon: '🎨',
@@ -15,7 +15,7 @@
     {
       icon: '✨',
       title: 'Earn EP and badges',
-      copy: 'Better rolls can award more EP, achievements, and milestone rewards.'
+      copy: 'When signed in, better rolls can award more EP, achievements, and milestone rewards.'
     },
     {
       icon: '📈',
@@ -86,9 +86,9 @@
       copy: 'The hex color reads the same forward and backward.'
     },
     {
-      icon: '3️⃣',
-      title: 'Rule of Three',
-      copy: 'The roll hits a pattern tied to multiples of three.'
+      icon: '🔢',
+      title: 'Prime Energy',
+      copy: 'The three RGB channels add up to a prime number.'
     },
     {
       icon: '🧬',
@@ -186,6 +186,9 @@
       </article>
       {/each}
     </div>
+    <p class="section-note">
+      The daily reset happens at midnight UTC. Signed-in players can spend a reroll shard after rolling; each shard permanently replaces today&apos;s color, score, and EP contribution. Guests cannot reroll.
+    </p>
   </section>
 
   <section class="card guide-section">
@@ -360,11 +363,11 @@
       </article>
       <article class="guest-card">
         <h3>Local progress</h3>
-        <p>Guest progress stays on the current browser and device.</p>
+        <p>The current guest roll stays in this browser for the UTC day. It is not written to an account, wallet, leaderboard, achievement, shop, or rivals record.</p>
       </article>
       <article class="guest-card">
         <h3>Why create an account</h3>
-        <p>Sign in to keep progress across devices and use features tied to a permanent account.</p>
+        <p>Create an account for server-saved EP, achievements, cosmetics, leaderboards, and rivals. Existing guest rolls are not imported into the account.</p>
       </article>
     </div>
   </section>

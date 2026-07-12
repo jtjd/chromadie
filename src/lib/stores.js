@@ -1,11 +1,14 @@
 import { derived, writable, get } from 'svelte/store'
 import { supabase } from './supabase'
+import { resolveAccountState } from './authState'
+import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety'
 
 // --- Auth & Profile State ---
 export const session = writable(null)
 export const profile = writable(null)
 export const authUser = derived(session, $session => $session?.user ?? null)
 export const isGuest = derived(session, $session => !$session)
+export const guestProgressActive = writable(false)
 export const authInitialized = writable(false)
 export const authEvent = writable('INITIAL_SESSION')
 export const profileReady = writable(false)
@@ -20,6 +23,16 @@ export const profileLoading = derived(
     )
 )
 export const profileError = derived(profileLoadFailed, $profileLoadFailed => $profileLoadFailed)
+export const accountState = derived(
+    [authInitialized, session, profile, profileReady, profileLoadFailed],
+    ([$initialized, $session, $profile, $profileReady, $profileLoadFailed]) => resolveAccountState({
+        initialized: $initialized,
+        session: $session,
+        profile: $profile,
+        profileReady: $profileReady,
+        profileLoadFailed: $profileLoadFailed
+    })
+)
 export const isAuthenticated = derived(
     [session, profile, profileLoadFailed],
     ([$session, $profile, $profileLoadFailed]) => Boolean(
@@ -64,6 +77,7 @@ export function clearUserState() {
 
 export function clearLocalAccountCache({ clearShopCache = false } = {}) {
     const keysToRemove = ['chromadie-roll']
+    guestProgressActive.set(false)
 
     try {
         for (let i = localStorage.length - 1; i >= 0; i -= 1) {
@@ -83,9 +97,35 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
     }
 }
 
+const SHOP_SLOTS = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'orb_shape', 'profile_bg', 'profile_border', 'roll_effect', 'title'])
+
+function normalizeShopItem(item) {
+    if (!item || typeof item !== 'object' || !/^[a-z0-9_]{1,80}$/.test(item.item_key || '')) return null
+    if (!SHOP_SLOTS.has(item.slot) || !['class', 'style', 'text'].includes(item.css_type)) return null
+    const cost = Number(item.cost)
+    if (!Number.isSafeInteger(cost) || cost < 0) return null
+    if (item.css_type === 'class' && sanitizeCosmeticClass(item.css_value) !== item.css_value) return null
+    if (item.css_type === 'style' && sanitizeCosmeticStyle(item.css_value) !== String(item.css_value || '').trim()) return null
+    return { ...item, cost }
+}
+
+function normalizeShopItems(items) {
+    if (!items || typeof items !== 'object' || Array.isArray(items)) return null
+    if (Object.keys(items).length === 0) return null
+    const normalized = {}
+    for (const [key, value] of Object.entries(items)) {
+        const item = normalizeShopItem(value)
+        if (!item || item.item_key !== key) return null
+        normalized[key] = item
+    }
+    return normalized
+}
+
 function getShopCache() {
     try {
-        return JSON.parse(localStorage.getItem('shop_cache') || '{}');
+        const parsed = JSON.parse(localStorage.getItem('shop_cache') || '{}')
+        const items = normalizeShopItems(parsed.items)
+        return items ? { ...parsed, items } : {}
     } catch {
         return {};
     }
@@ -99,7 +139,18 @@ function setShopCache(cache) {
     }
 }
 
-export async function loadShopItems() {
+let shopLoadPromise = null
+
+export function loadShopItems() {
+    if (!shopLoadPromise) {
+        shopLoadPromise = loadShopItemsOnce().finally(() => {
+            shopLoadPromise = null
+        })
+    }
+    return shopLoadPromise
+}
+
+async function loadShopItemsOnce() {
     shopItemsLoading.set(true)
     shopItemsError.set(null)
 
@@ -129,9 +180,18 @@ export async function loadShopItems() {
             .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
 
         if (itemsError) throw itemsError
+        if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('The shop catalog is empty.')
+        }
 
         const cache = {}
-        data?.forEach(item => { cache[item.item_key] = item })
+        data?.forEach(rawItem => {
+            const item = normalizeShopItem(rawItem)
+            if (item) cache[item.item_key] = item
+        })
+        if (Object.keys(cache).length !== (data || []).length) {
+            throw new Error('The shop catalog contained an invalid item.')
+        }
         shopItems.set(cache)
         setShopCache({ version: latestVersion, savedAt: Date.now(), items: cache });
     } catch {
@@ -144,7 +204,8 @@ export async function loadShopItems() {
 function expandInventoryRows(rows) {
     const items = []
     for (const row of rows || []) {
-        const quantity = Math.max(1, Number(row?.quantity) || 1)
+        if (!/^[a-z0-9_]{1,80}$/.test(row?.item_key || '')) continue
+        const quantity = Math.min(1000, Math.max(1, Number(row?.quantity) || 1))
         for (let i = 0; i < quantity; i += 1) {
             items.push(row.item_key)
         }
@@ -212,72 +273,77 @@ export async function toggleFollow(targetId) {
     return data;
 }
 
-// Initialize auth state listener
+// Supabase warns against awaiting client work from inside onAuthStateChange.
+// Keep the callback synchronous and hydrate account data in a separate task so
+// token refresh and sign-out events cannot deadlock behind the auth lock.
 let authEventId = 0
-supabase.auth.onAuthStateChange(async (eventName, currentSession) => {
+
+async function hydrateAuthenticatedUser(currentSession, expectedEventId) {
+    try {
+        await loadShopItems()
+        if (expectedEventId !== authEventId) return
+
+        const [profileRes, inventoryRes, walletRes, followsRes] = await Promise.all([
+            supabase.rpc('get_my_profile'),
+            supabase
+                .from('inventory')
+                .select('item_key, quantity')
+                .eq('user_id', currentSession.user.id),
+            supabase.rpc('get_wallet_balance'),
+            supabase
+                .from('user_follows')
+                .select('followee_id')
+                .eq('follower_id', currentSession.user.id)
+        ])
+
+        if (expectedEventId !== authEventId) return
+
+        const { data: prof, error: profError } = profileRes
+        if (profError || !prof || prof.success === false) {
+            profileLoadFailed.set(true)
+            return
+        }
+
+        profile.set(prof)
+        equippedItems.set(prof.equipped_cosmetics || {})
+        rerollShards.set(prof.reroll_shards || 0)
+        equippedBadges.set(prof.equipped_badges || [])
+
+        if (!inventoryRes.error) {
+            userInventory.set(expandInventoryRows(inventoryRes.data))
+        }
+        if (!walletRes.error && walletRes.data !== null) {
+            walletBalance.set(walletRes.data)
+        }
+        if (!followsRes.error) {
+            followedUsers.set((followsRes.data || []).map(follow => follow.followee_id))
+        }
+    } catch (error) {
+        if (expectedEventId !== authEventId) return
+        profileLoadFailed.set(true)
+        console.error('Critical error while hydrating the authenticated account:', error)
+    } finally {
+        if (expectedEventId === authEventId) {
+            profileReady.set(true)
+        }
+    }
+}
+
+supabase.auth.onAuthStateChange((eventName, currentSession) => {
     const nextAuthEventId = ++authEventId
     authEvent.set(eventName)
     authInitialized.set(true)
     session.set(currentSession)
-    profileReady.set(false)
+    clearUserState()
     profileLoadFailed.set(false)
 
-    if (currentSession) {
-        clearUserState()
-        try {
-            await loadShopItems();
-
-            if (nextAuthEventId !== authEventId) return;
-
-            const [profileRes, inventoryRes, walletRes] = await Promise.all([
-                supabase.rpc('get_my_profile'),
-                supabase
-                    .from('inventory')
-                    .select('item_key, quantity')
-                    .eq('user_id', currentSession.user.id),
-                supabase.rpc('get_wallet_balance')
-            ]);
-
-            const { data: prof, error: profError } = profileRes;
-            const { data: inv } = inventoryRes;
-            const { data: wallet } = walletRes;
-
-            if (nextAuthEventId !== authEventId) return;
-
-            if (profError || !prof || prof.success === false) {
-                profileLoadFailed.set(true)
-            } else {
-                profile.set(prof)
-                equippedItems.set(prof.equipped_cosmetics || {})
-                rerollShards.set(prof.reroll_shards || 0)
-                equippedBadges.set(prof.equipped_badges || [])
-            }
-
-            if (inv) userInventory.set(expandInventoryRows(inv))
-
-                if (wallet !== null) {
-                    walletBalance.set(wallet)
-                }
-
-                const { data: follows } = await supabase
-                .from('user_follows')
-                .select('followee_id')
-                .eq('follower_id', currentSession.user.id);
-                if (nextAuthEventId !== authEventId) return;
-                if (follows) followedUsers.set(follows.map(f => f.followee_id));
-
-        } catch (e) {
-            if (nextAuthEventId !== authEventId) return;
-            console.error("Critical error during auth state change:", e);
-        } finally {
-            if (nextAuthEventId === authEventId) {
-                profileReady.set(true);
-            }
-        }
-    } else {
-        clearUserState()
-        authEvent.set(eventName)
-        profileLoadFailed.set(false)
+    if (!currentSession) {
         profileReady.set(true)
+        return
     }
+
+    profileReady.set(false)
+    queueMicrotask(() => {
+        void hydrateAuthenticatedUser(currentSession, nextAuthEventId)
+    })
 })

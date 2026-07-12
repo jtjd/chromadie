@@ -1,14 +1,14 @@
 <script>
   import RollPreview from './RollPreview.svelte';
   import { supabase } from './supabase';
-  import { session, profile, authUser, authInitialized, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
+  import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
   import { createChallengeLink } from './challenges';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
   import { getRollEffect, getOrbShape } from './cosmetics';
   import { getBadgeMeta } from './badgeData';
-  import { scoreCandidateColor } from './scoringCandidate';
+  import { getAuthoritativeBadgeIds } from './rollPresentation';
   import { getAppOrigin } from './authUrls';
 
   const dispatch = createEventDispatcher();
@@ -80,39 +80,11 @@
       return (arr || []).slice().sort((a, b) => getBadgeMeta(b).points - getBadgeMeta(a).points);
   }
 
-  function parseHexChannels(hex) {
-      const normalized = normalizeHexColor(hex || '', '');
-      const match = /^#([0-9a-f]{6})$/i.exec(normalized);
-      if (!match) return null;
-      return {
-          red: Number.parseInt(match[1].slice(0, 2), 16),
-          green: Number.parseInt(match[1].slice(2, 4), 16),
-          blue: Number.parseInt(match[1].slice(4, 6), 16)
-      };
-  }
-
-  function getCandidateDetailsFromHex(hex) {
-      const channels = parseHexChannels(hex);
-      if (!channels) return { traits: [], identity: '', contributors: [], conditionIds: [] };
-      const details = scoreCandidateColor(channels.red, channels.green, channels.blue);
-      return {
-          traits: details.traits || [],
-          identity: details.identity || '',
-          contributors: details.contributors || [],
-          conditionIds: (details.contributors || []).map(contributor => contributor.id)
-      };
-  }
-
   function setRollPresentationFromData(data) {
-      const derived = getCandidateDetailsFromHex(data.hex || data.hex_code);
-      const eventAndAchievementBadges = (data.badges || []).filter(
-          badgeId => badgeId.startsWith('ach_') || SYSTEM_BADGE_IDS.includes(badgeId)
-      );
-
-      traits = data.traits?.length ? data.traits : derived.traits;
-      identity = data.identity || derived.identity;
-      rollContributors = data.contributors?.length ? data.contributors : derived.contributors;
-      badges = sortBadgesDescending([...derived.conditionIds, ...eventAndAchievementBadges]);
+      traits = Array.isArray(data?.traits) ? data.traits.slice(0, 12) : [];
+      identity = typeof data?.identity === 'string' ? data.identity.slice(0, 120) : '';
+      rollContributors = Array.isArray(data?.contributors) ? data.contributors.slice(0, 64) : [];
+      badges = sortBadgesDescending(getAuthoritativeBadgeIds(data));
   }
 
   function getTomorrowMidnightUTC() {
@@ -121,7 +93,7 @@
   }
 
   function tickCountdown() {
-      const diff = getTomorrowMidnightUTC() - new Date();
+      const diff = getTomorrowMidnightUTC().getTime() - Date.now();
       if (diff <= 0) {
           clearInterval(countdownInterval);
           phase = 'preroll';
@@ -142,10 +114,8 @@
 
   async function shareResultsText() {
       const shareHex = normalizeHexColor(displayColor);
-      const hexNoHash = shareHex.substring(1);
       const senderUsername = $profile?.username || $authUser?.user_metadata?.username || null;
-      const fallbackUrl = `${window.location.origin}?challenge=${score}&hex=${hexNoHash}`;
-      let shareUrl = fallbackUrl;
+      let shareUrl = window.location.origin;
 
       const challengeLink = $isAuthenticated
         ? await createChallengeLink(supabase, {
@@ -157,11 +127,12 @@
 
       if (challengeLink.success && challengeLink.shareUrl) {
           shareUrl = `${window.location.origin}${challengeLink.shareUrl}`;
-      } else if (senderUsername) {
-          shareUrl = `${window.location.origin}?challenge=${score}&hex=${hexNoHash}&from=${encodeURIComponent(senderUsername)}`;
+      } else if ($isAuthenticated) {
+          addToast('The result was copied without a challenge link because the server could not create one.', 'error');
       }
 
-      let shareString = `🎲 ChromaDie Daily Roll\n${shareHex} • ${score.toLocaleString()} pts • ${rarity}\nChallenge me: ${shareUrl}`;
+      const callToAction = challengeLink.success ? `Challenge me: ${shareUrl}` : `Play ChromaDie: ${shareUrl}`;
+      let shareString = `🎲 ChromaDie Daily Roll\n${shareHex} • ${score.toLocaleString()} pts • ${rarity}\n${callToAction}`;
 
       try {
           await navigator.clipboard.writeText(shareString);
@@ -261,12 +232,7 @@
   async function loadAuthenticatedRollState(userId, requestId) {
     loading = true;
 
-    const { data: dbRoll } = await supabase
-      .from('scores')
-      .select('hex_code, score, rarity, badges, score_version')
-      .eq('user_id', userId)
-      .eq('roll_date', getTodayString())
-      .single();
+    const { data: dbRoll } = await supabase.rpc('get_my_daily_roll');
 
     if (requestId !== initialStateRequestId) return;
 
@@ -301,8 +267,12 @@
     if (savedRoll) {
       try {
         const rollData = JSON.parse(savedRoll);
-        if (rollData.date === getTodayString()) {
+        const validHex = normalizeHexColor(rollData?.hex, '');
+        const validScore = Number.isSafeInteger(rollData?.score) && rollData.score >= 0 && rollData.score <= 10000000;
+        const validRarity = ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic'].includes(rollData?.rarity);
+        if (rollData.date === getTodayString() && validHex && validScore && validRarity) {
           guestProgressRestored = true;
+          guestProgressActive.set(true);
           phase = 'results';
           score = rollData.score; displayScore = rollData.score;
           rarity = rollData.rarity;
@@ -319,12 +289,14 @@
           loading = false;
           return;
         }
+        clearGuestRoll();
       } catch {
         clearGuestRoll();
       }
     }
 
     guestProgressRestored = false;
+    guestProgressActive.set(false);
     phase = 'preroll';
     loading = false;
   }
@@ -344,10 +316,17 @@
     loading = true;
 
     if ($session?.user?.id) {
+      guestProgressActive.set(false);
       await loadAuthenticatedRollState($session.user.id, requestId);
     } else {
       await loadGuestRollState(requestId);
     }
+  }
+
+  function handleGuestStorageChange(event) {
+    if (event.key !== 'chromadie-roll' || $session?.user?.id) return;
+    initialStateKey = null;
+    void syncInitialState();
   }
 
   async function buildShareCardCanvas() {
@@ -625,17 +604,10 @@
     }
     displayColor = data.hex;
 
-    const derived = getCandidateDetailsFromHex(data.hex);
-    const eventAndAchievementBadges = (data.badges || []).filter(
-      badgeId => badgeId.startsWith('ach_') || SYSTEM_BADGE_IDS.includes(badgeId)
-    );
-    traits = data.traits?.length ? data.traits : derived.traits;
-    identity = data.identity || derived.identity;
-    rollContributors = data.contributors?.length ? data.contributors : derived.contributors;
-    const finalBadges = sortBadgesDescending([
-      ...rollContributors.map(contributor => contributor.id),
-      ...eventAndAchievementBadges
-    ]);
+    traits = Array.isArray(data.traits) ? data.traits.slice(0, 12) : [];
+    identity = typeof data.identity === 'string' ? data.identity.slice(0, 120) : '';
+    rollContributors = Array.isArray(data.contributors) ? data.contributors.slice(0, 64) : [];
+    const finalBadges = sortBadgesDescending(getAuthoritativeBadgeIds(data));
     const sortedBadgesForAnim = finalBadges.slice().sort((a, b) => getBadgeMeta(a).points - getBadgeMeta(b).points);
 
     for (const badgeId of sortedBadgesForAnim) {
@@ -688,7 +660,10 @@
       hex: data.hex,
       score: data.score,
       rarity: data.rarity,
-      badges: finalBadges
+      badges: finalBadges,
+      traits: Array.isArray(data.traits) ? data.traits.slice(0, 12) : [],
+      contributors: Array.isArray(data.contributors) ? data.contributors.slice(0, 64) : [],
+      identity: typeof data.identity === 'string' ? data.identity.slice(0, 120) : ''
     };
 
     if (!requestIsCurrent()) {
@@ -699,6 +674,7 @@
     if (!$session?.user?.id) {
       saveGuestRoll(rollData);
       guestProgressRestored = true;
+      guestProgressActive.set(true);
     } else {
       const hadLaunchBadge = $profile?.equipped_badges?.includes('launch_edition');
       await Promise.all([
@@ -725,6 +701,7 @@
   onMount(async () => {
     tickCountdown();
     countdownInterval = setInterval(tickCountdown, 1000);
+    window.addEventListener('storage', handleGuestStorageChange);
 
     const { data: cotwData } = await supabase.from('meta').select('value').eq('key', 'cotw_target').single();
     if (cotwData?.value) {
@@ -741,6 +718,7 @@
     rollRequestId += 1;
     if (scoreCountUpInterval) clearInterval(scoreCountUpInterval);
     clearInterval(countdownInterval);
+    window.removeEventListener('storage', handleGuestStorageChange);
   });
 
   $: if (typeof document !== 'undefined') {
@@ -786,7 +764,11 @@
   {#if phase === 'preroll'}
     <div class="card">
       <h1>Daily Roll</h1>
-      <p class="info-text">You get one roll every 24 hours. Your roll score counts on the leaderboard and is also added to your spendable EP. Achievements and bonuses can add extra EP.</p>
+      {#if $isAuthenticated}
+        <p class="info-text">You get one roll per UTC calendar day, resetting at midnight UTC. Your score counts on the leaderboard and adds to spendable EP; achievements and bonuses can add extra EP.</p>
+      {:else}
+        <p class="info-text">You get one local guest roll per UTC calendar day, resetting at midnight UTC. Guest rolls stay on this device and do not earn account EP or enter leaderboards.</p>
+      {/if}
       <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
         {loading ? 'Rolling...' : 'Roll the Die'}
       </button>
@@ -795,7 +777,13 @@
         <div class="cotw-widget">
             <div class="cotw-info">
                 <span class="cotw-title">🎯 Color of the Week</span>
-                <span class="cotw-desc">Roll close to this color for <strong>+50,000 spendable EP</strong>. It will not change your leaderboard score.</span>
+                <span class="cotw-desc">
+                  {#if $isAuthenticated}
+                    Roll close to this color for <strong>+50,000 spendable EP</strong>. It will not change your leaderboard score.
+                  {:else}
+                    Signed-in players can earn <strong>+50,000 spendable EP</strong> for a close match. Guest rolls remain local-only.
+                  {/if}
+                </span>
             </div>
             <div class="cotw-swatch" style="background-color: {cotwColor};" title="Target Color"></div>
         </div>
@@ -813,7 +801,11 @@
       </div>
       <div class="badges-container badges-container-tight conditions-section">
         <div class="badges-title">Calculating your roll</div>
-        <div class="badges-subtitle">Roll score counts on the leaderboard and earns the same amount of spendable EP. Bonus EP goes only to your wallet.</div>
+        <div class="badges-subtitle">
+          {$isAuthenticated
+            ? 'Roll score counts on the leaderboard and earns the same amount of spendable EP. Bonus EP goes only to your wallet.'
+            : 'This score and its conditions are being calculated for your local-only guest result.'}
+        </div>
         <div class="conditions-grid">
           {#each badges as badgeId (badgeId)}
             {@const badge = getBadgeMeta(badgeId)}
@@ -825,7 +817,7 @@
               </div>
               {#if badge.points > 0}
                 <span class="badge-points" class:ep-points={isEpReward(badgeId)}>
-                  +{badge.points.toLocaleString()} {isEpReward(badgeId) ? 'bonus EP' : 'score + EP'}
+                  +{badge.points.toLocaleString()} {$isAuthenticated ? (isEpReward(badgeId) ? 'bonus EP' : 'score + EP') : 'score'}
                 </span>
               {:else}
                 <span class="badge-points ep-points">Unlocked</span>
@@ -847,9 +839,13 @@
         {#if identity}
           <div class="identity-label">{identity}</div>
         {/if}
-        <div class="score-label">Leaderboard Score</div>
+        <div class="score-label">{$isAuthenticated ? 'Leaderboard Score' : 'Local Guest Score'}</div>
         <div class="score-display">{displayScore.toLocaleString()}</div>
-        <div class="score-help">This sets your leaderboard position, and the same amount is added to your spendable EP. Bonus EP does not increase this score.</div>
+        <div class="score-help">
+          {$isAuthenticated
+            ? 'This sets your leaderboard position, and the same amount is added to your spendable EP. Bonus EP does not increase this score.'
+            : 'This result is saved only in this browser for today. It does not enter a leaderboard or add EP to an account.'}
+        </div>
 
         {#if percentileDisplay}
           <div class="rank-display" style="color: {percentileDisplay.color}; margin-top: 5px; font-weight: 700;">
@@ -902,7 +898,7 @@
           <div class="guest-prompt-header">Guest Mode</div>
           <div class="guest-prompt-title">Save Your Progress</div>
           <div class="guest-prompt-copy">Create an account to compete on the leaderboard, earn EP, and unlock customizations.</div>
-          <button type="button" class="roll-btn" style="margin-top: 15px; display: inline-block;" on:click={() => dispatch('promptlogin')}>
+          <button type="button" class="roll-btn" style="margin-top: 15px; display: inline-block;" on:click={() => dispatch('promptlogin', { mode: 'signup' })}>
             Create Account
           </button>
         </div>
@@ -940,7 +936,11 @@
 
       <div class="badges-container badges-container-tight conditions-section">
         <div class="badges-title">Score Contributors</div>
-        <div class="badges-subtitle">These points make up your leaderboard score and add the same amount to your spendable EP.</div>
+        <div class="badges-subtitle">
+          {$isAuthenticated
+            ? 'These points make up your leaderboard score and add the same amount to your spendable EP.'
+            : 'These points make up your local guest score and are not added to an account wallet.'}
+        </div>
         {#if rollContributors.length === 0}
           <div class="badge-result">
             <div class="badge-text">
@@ -960,7 +960,7 @@
               </div>
               <span class="badge-points contributor-reward">
                 <span>+{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()} score</span>
-                <span class="contributor-ep">+ EP</span>
+                {#if $isAuthenticated}<span class="contributor-ep">+ EP</span>{/if}
               </span>
             </div>
           {/each}
@@ -1006,7 +1006,7 @@
   .post-score-actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 20px 0; flex-wrap: wrap; }
   .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--card-border); }
   .chroma-btn { position: relative; isolation: isolate; background: #16171f; color: #fff; border: 1px solid transparent; padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 600; transition: transform 0.15s ease, box-shadow 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: inline-flex; align-items: center; gap: 5px; }
-  .chroma-btn::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; z-index: -1; background: var(--spectrum); background-size: 300% 100%; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spectrumFlow 5s linear infinite; }
+  .chroma-btn::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; z-index: -1; background: var(--spectrum); background-size: 300% 100%; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spectrumFlow 5s linear infinite; }
   .chroma-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 124, 246, 0.25); }
   .chroma-btn:active { transform: translateY(1px); }
   .reroll-btn { background: rgba(139, 124, 246, 0.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 600; transition: all 0.2s; }
@@ -1196,9 +1196,9 @@
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;
   }
-  .image-modal-content { background: #16171f; border: 1px solid var(--card-border); border-radius: 16px; padding: 25px; max-width: 650px; width: 100%; text-align: center; }
+  .image-modal-content { background: #16171f; border: 1px solid var(--card-border); border-radius: 16px; padding: 25px; max-width: 650px; width: 100%; max-height: calc(100dvh - 2rem); overflow-y: auto; text-align: center; }
   .image-modal-content h3 { margin: 0 0 20px 0; font-family: 'Space Grotesk', sans-serif; color: #fff; }
-  .preview-img { width: 100%; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 20px; }
+  .preview-img { width: 100%; max-height: min(63vw, calc(100dvh - 10rem)); object-fit: contain; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 20px; }
   .modal-actions { display: flex; gap: 15px; justify-content: center; }
   .download-btn { background: var(--accent-purple); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
   .download-btn:hover { background: #7c3aed; }

@@ -24,6 +24,9 @@ Active forward fix:
 - `migrations/20260710170000_public_profile_progression.sql`
 - `migrations/20260710180000_security_hardening.sql`
 - `migrations/20260710190000_snapshot_live_shop_catalog.sql`
+- `migrations/20260710200000_candidate_score_model.sql` through
+  `migrations/20260712180000_richer_roll_conditions.sql`
+- `migrations/20260712200000_launch_audit_remediation.sql`
 
 Archived migrations:
 
@@ -34,6 +37,12 @@ Current source of truth:
 - active schema history begins at `20260708230000_rebaseline_live_schema.sql`
 
 Do not use the archived files for schema review, security review, or new database changes.
+
+`20260709223000_launch_reset.sql` is a historical destructive launch reset and is already recorded
+in the linked production migration history. Never repair or bootstrap migration history on a
+populated project by replaying the chain blindly: run `supabase migration list --linked` first and
+stop if that migration is not marked remote-applied. Fresh projects are safe because no user data
+exists when it runs.
 
 Catalog source of truth:
 
@@ -46,3 +55,9 @@ Version-controlled cron schedule:
 
 - `update_cotw()` runs every Monday at `00:00 UTC`.
 - `cleanup_old_scores()` runs daily at `03:15 UTC`.
+- `chromadie_cleanup_expired_challenges()` runs daily at `03:30 UTC`.
+
+The launch-audit remediation adds durable roll totals, bounded best-roll candidates,
+authoritative presentation fields, safe score projections, service-only staff operations,
+idempotent deletion, and authoritative challenge provenance. Run both
+`npm run check:db-security` and `npm run check:scoring-parity` after every database reset.

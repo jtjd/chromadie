@@ -2,7 +2,8 @@ const LOCAL_ORIGIN = 'http://localhost:5173'
 
 function normalizeOrigin(value) {
   try {
-    return new URL(value).origin
+    const url = new URL(value)
+    return ['http:', 'https:'].includes(url.protocol) ? url.origin : null
   } catch {
     return null
   }
@@ -13,7 +14,7 @@ function isLocalOrigin(value) {
 }
 
 export function getAppOrigin() {
-  const configured = import.meta.env.VITE_SITE_URL?.trim()
+  const configured = import.meta.env?.VITE_SITE_URL?.trim()
   const normalizedConfigured = configured ? normalizeOrigin(configured) : null
 
   if (typeof window !== 'undefined' && window.location?.origin) {

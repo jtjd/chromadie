@@ -1,34 +1,31 @@
-# Pre-launch Balance Candidate
+# Launch Balance v2
 
-This document describes the candidate launch economy. It does not change the live scoring RPC or
-remote data by itself.
+This document describes the active launch economy. The server-authoritative implementation is the
+final `calculate_roll_v2` function, and `src/lib/scoringCandidate.js` is its parity-tested local
+model. Historical “candidate” names remain in a few modules to avoid a risky pre-launch rename.
 
 ## Scoring baseline
 
 - Exhaustive RGB colors tested: 16,777,216
-- Original exhaustive average roll score: 45,727.95 EP
-- Richer-model seeded average roll score: approximately 54,178 EP
+- Current seeded average roll score: approximately 54,182 EP
 - Average scoring contributors: approximately 10.67
 - Descriptive traits per roll: 5
 - Category multipliers: 100%, 35%, 10%
 - Common rolls now surface 8–12 conditions; dense 15+ condition stacks receive cascade bonuses.
 - F1 reward: 75,001 EP
 
-The pre-launch thematic-score pass replaces round condition awards with nearby memorable values.
-A seeded one-million-roll regression averages 45,722.30 EP (a -0.012% change from the exhaustive
-launch baseline) while preserving the locked rarity counts. The calibrated lower boundaries below
-keep the launch distribution stable.
+The thematic-score pass replaces round condition awards with nearby memorable values. The
+calibrated boundaries below are locked by tests and the SQL/JavaScript parity check.
 
-| Rarity | Minimum score | Exact RGB frequency |
+| Rarity | Minimum score | Seeded frequency |
 | --- | ---: | ---: |
-| Trash | 0 | 25.023% |
-| Common | 25,000 | 14.852% |
-| Uncommon | 34,500 | 29.243% |
-| Rare | 49,500 | 17.073% |
-| Epic | 85,000 | 13.654% |
+| Trash | 0 | ~25.0% |
+| Common | 25,000 | ~14.8% |
+| Uncommon | 34,500 | ~29.2% |
+| Rare | 49,500 | ~17.1% |
+| Epic | 85,000 | ~13.7% |
 | Anomaly | 500,000 | 0.087% |
 | Mythic | 1,000,000 | 0.068% |
-| Mythic | 1,500,000 | 3 colors |
 
 ## Rank pacing
 
@@ -58,7 +55,7 @@ into these bands with stepped pricing.
 - Streak Freeze: 50,000 EP
 - Three prestige cosmetics: 1,250,000 EP each
 - Paid canonical items: 76
-- Candidate catalog total: approximately 22.1M EP
+- Catalog total: approximately 22.1M EP
 - Full collection time before achievement rewards: approximately 484 days (1.3 years)
 - Rank and streak milestone frames remain zero-cost unlocks.
 
@@ -67,7 +64,7 @@ The launch reset removes retired catalog keys `frame_spectrum`, `lb_spectrum`, `
 
 ## Achievements
 
-The candidate retains 42 focused achievements with 8.82M EP in total one-time rewards. Routine
+The active model retains 42 focused achievements with 8.82M EP in total one-time rewards. Routine
 parity, per-character, divisibility, and obsolete score achievements are retired. New score
 milestones align with the launch distribution at 50k, 100k, 200k, and 1.5M.
 

@@ -1,5 +1,7 @@
 <script>
-  import { session, authUser, profile, authInitialized, authEvent, profileLoading, profileError, equippedItems, selectedUserId, walletBalance, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
+  import { session, authUser, profile, authInitialized, authEvent, accountState, guestProgressActive, profileLoading, profileError, equippedItems, selectedUserId, walletBalance, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
+  import { ACCOUNT_STATES } from './lib/authState';
+  import { signOutCurrentBrowser } from './lib/authSession';
   import { supabase, supabaseError } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import AuthCallback from './lib/AuthCallback.svelte';
@@ -13,9 +15,9 @@
   import Toast from './lib/Toast.svelte';
   import GuestLock from './lib/GuestLock.svelte';
   import { loadChallengeLink } from './lib/challenges';
+  import { getAppOrigin } from './lib/authUrls';
   import { getNameEffect, getFrameEffect, getTitleText } from './lib/cosmetics';
   import { getRankState } from './lib/ranks';
-  import { normalizeHexColor } from './lib/utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './lib/a11y';
   import { onMount, onDestroy, tick } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
@@ -28,15 +30,17 @@
   let leaderboardTab = 'today';
   let routeMode = 'app';
   let showAuthModal = false;
+  let authInitialTab = 'login';
+  let logoutInProgress = false;
   let challengeData = null;
   let challengeLoadRequestId = 0;
   let authDialog = null;
   let authOpener = null;
   let mobileMenuOpen = false;
+  let mobileNavPanel = null;
+  let mobileMenuOpener = null;
   let selectedProfileUsername = null;
   let founderLaunchWindowActive = false;
-
-  supabase.auth.getSession().then(({ data }) => session.set(data.session));
 
   function parseRoute() {
     challengeLoadRequestId += 1;
@@ -46,9 +50,6 @@
     const routeTab = params.get('tab');
     const routeProfileId = params.get('profile');
     const routeChallengeFrom = params.get('from');
-    const cScore = params.get('challenge');
-    const cHex = params.get('hex');
-    const isValidChallengeHex = /^[0-9A-Fa-f]{6}$/.test(cHex || '');
     const challengeMatch = rawPath.match(/^\/c\/([^/]+)$/);
     const profileMatch = rawPath.match(/^\/u\/([^/]+)$/);
     const decodePathSegment = value => {
@@ -104,21 +105,9 @@
       view = cleanPathView || (VALID_VIEWS.has(routeView) ? routeView : 'game');
       selectedProfileUsername = null;
       selectedUserId.set(routeMode === 'app' ? routeProfileId || null : null);
-      if (cScore && isValidChallengeHex) {
-        const parsedScore = Number.parseInt(cScore, 10);
-        challengeData = Number.isFinite(parsedScore)
-          ? {
-              id: null,
-              score: parsedScore,
-              hex: normalizeHexColor(cHex),
-              fromUsername: routeChallengeFrom || null,
-              loading: false,
-              error: null
-            }
-          : null;
-      } else {
-        challengeData = null;
-      }
+      // Challenge values are accepted only from an authoritative /c/<id>
+      // lookup. Legacy query-string score/hex inputs are intentionally ignored.
+      challengeData = null;
     }
     leaderboardTab = VALID_LEADERBOARD_TABS.has(routeTab) ? routeTab : 'today';
   }
@@ -154,11 +143,6 @@
     if (view === 'profile' && $selectedUserId) {
       params.set('profile', $selectedUserId);
     }
-    if (challengeData?.score != null && challengeData?.hex) {
-      params.set('challenge', String(challengeData.score));
-      params.set('hex', challengeData.hex.replace('#', ''));
-    }
-
     const nextSearch = params.toString();
     const nextUrl = nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
@@ -290,7 +274,17 @@
     window.removeEventListener('popstate', handlePopState);
   });
 
-  function handleLogout() {
+  async function handleLogout() {
+    if (logoutInProgress) return;
+    logoutInProgress = true;
+
+    const { error } = await signOutCurrentBrowser(supabase.auth);
+    if (error) {
+      addToast('Could not securely sign out. Check your connection and try again.', 'error');
+      logoutInProgress = false;
+      return;
+    }
+
     clearLocalAccountCache();
     clearUserState();
     session.set(null);
@@ -298,8 +292,8 @@
     selectedProfileUsername = null;
     challengeData = null;
     closeMobileMenu();
-    void supabase.auth.signOut();
     setRoute('game');
+    logoutInProgress = false;
   }
 
   function handleNavClick(newView) {
@@ -339,26 +333,35 @@
     challengeData = null;
     mobileMenuOpen = false;
     showAuthModal = false;
-    challengeData = null;
     routeMode = 'app';
     setRoute('game');
 
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // Sign-out failure should not block local cleanup after deletion.
-    }
+    const signOutResult = await signOutCurrentBrowser(supabase.auth);
 
     const toastMessage = cleanup?.missing_profile && !alreadyDeleted
       ? 'Account deleted. Some account rows were already missing.'
       : (alreadyDeleted ? 'Account already removed.' : message);
 
     addToast(toastMessage, 'success');
+    if (signOutResult.error) {
+      addToast('The account was deleted, but this browser could not clear its cached session. Clear site data before using a shared device.', 'error');
+    }
   }
 
-  async function openAuthModal() {
-    authOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    mobileMenuOpen = false;
+  /** @param {string | MouseEvent | CustomEvent<{mode?: string}>} modeOrEvent */
+  async function openAuthModal(modeOrEvent = 'login') {
+    const requestedMode = typeof modeOrEvent === 'string'
+      ? modeOrEvent
+      : modeOrEvent instanceof CustomEvent
+        ? modeOrEvent.detail?.mode
+        : 'login';
+    authInitialTab = requestedMode === 'signup' ? 'signup' : 'login';
+    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    authOpener = mobileMenuOpen ? (mobileMenuOpener || activeElement) : activeElement;
+    if (mobileMenuOpen) {
+      mobileMenuOpen = false;
+      mobileMenuOpener = null;
+    }
     showAuthModal = true;
     await tick();
     focusFirstElement(authDialog) || authDialog?.focus();
@@ -382,12 +385,43 @@
     trapFocus(event, authDialog);
   }
 
-  function toggleMobileMenu() {
-    mobileMenuOpen = !mobileMenuOpen;
+  async function toggleMobileMenu() {
+    if (mobileMenuOpen) {
+      await closeMobileMenu();
+      return;
+    }
+    mobileMenuOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    mobileMenuOpen = true;
+    await tick();
+    focusFirstElement(mobileNavPanel) || mobileNavPanel?.focus();
   }
 
-  function closeMobileMenu() {
+  async function closeMobileMenu() {
+    if (!mobileMenuOpen) return;
     mobileMenuOpen = false;
+    await tick();
+    restoreFocus(mobileMenuOpener);
+    mobileMenuOpener = null;
+  }
+
+  function handleMobileMenuKeydown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      void closeMobileMenu();
+      return;
+    }
+    trapFocus(event, mobileNavPanel);
+  }
+
+  async function handleMobileNavClick(nextView, options = {}) {
+    await closeMobileMenu();
+    if (nextView === 'profile') {
+      handleNavClick('profile');
+    } else if (Object.keys(options).length > 0) {
+      setRoute(nextView, options);
+    } else {
+      handleNavClick(nextView);
+    }
   }
 
   $: if (challengeData && routeMode === 'app' && view !== 'game') {
@@ -404,12 +438,16 @@
   $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
   $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && (!$authUser || !$profileLoading);
   $: username = $session ? ($profile?.username || 'Loading your account...') : 'Guest Mode';
-  $: mobileStatusText = $isAuthenticated
+  $: mobileStatusText = $accountState === ACCOUNT_STATES.AUTHENTICATED
     ? username
-    : $profileLoading
-      ? 'Loading profile'
-      : ($authInitialized && $session && $profileError ? 'Account issue' : 'Guest Mode');
-  $: mobileStatusActionable = !$isAuthenticated && !$profileLoading && !($authInitialized && $session && $profileError);
+    : $accountState === ACCOUNT_STATES.BOOTING
+      ? 'Loading account'
+      : $accountState === ACCOUNT_STATES.PROFILE_LOADING
+        ? 'Loading profile'
+        : $accountState === ACCOUNT_STATES.PROFILE_ERROR
+          ? 'Account issue'
+          : ($guestProgressActive ? 'Guest Mode' : 'Signed out');
+  $: mobileStatusActionable = $accountState === ACCOUNT_STATES.SIGNED_OUT;
   $: profileTitle = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || 'Profile';
   $: pageTitle = routeMode === 'privacy'
     ? 'Privacy Policy | ChromaDie'
@@ -471,7 +509,7 @@
 
   $: if (typeof document !== 'undefined') {
     document.title = pageTitle;
-    const origin = import.meta.env.VITE_SITE_URL?.trim() || window.location.origin;
+    const origin = getAppOrigin();
     const canonical = new URL(canonicalPath, origin).toString();
     const setMeta = (selector, attribute, value) => {
       const element = document.querySelector(selector);
@@ -532,7 +570,7 @@
         tabindex="-1"
         on:keydown={handleAuthModalKeydown}
       >
-        <Auth onClose={closeAuthModal} />
+        <Auth onClose={closeAuthModal} initialTab={authInitialTab} />
       </div>
     </div>
   {/if}
@@ -561,7 +599,11 @@
           How to Play
         </a>
       </div>
-      {#if $authUser}
+      {#if $accountState === ACCOUNT_STATES.PROFILE_LOADING}
+        <span class="mobile-status-pill">Loading profile</span>
+      {:else if $accountState === ACCOUNT_STATES.PROFILE_ERROR}
+        <span class="mobile-status-pill">Account issue</span>
+      {:else if $isAuthenticated}
         <div class="mobile-user-chip {frameEff.cls}" style="{frameEff.style}">
           {#if titleTxt}
             <span class="title-chip">[{titleTxt}]</span>
@@ -609,7 +651,19 @@
         <button class="nav-link" class:active={routeMode === 'app' && view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
         <button class="nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
 
-        {#if $authUser}
+        {#if $accountState === ACCOUNT_STATES.BOOTING}
+          <div class="user-chip loading-chip"><span class="user-name">Loading account...</span></div>
+        {:else if $accountState === ACCOUNT_STATES.PROFILE_LOADING}
+          <div class="user-chip loading-chip">
+            <span class="user-name">Loading account...</span>
+          </div>
+        {:else if $accountState === ACCOUNT_STATES.PROFILE_ERROR}
+          <div class="user-chip loading-chip profile-error-chip">
+            <span class="user-name">Account unavailable</span>
+            <button type="button" class="logout-btn" on:click={() => window.location.reload()}>Retry</button>
+            <button type="button" class="logout-btn" on:click={handleLogout} disabled={logoutInProgress}>{logoutInProgress ? 'Logging out…' : 'Log Out'}</button>
+          </div>
+        {:else if $isAuthenticated}
           <button type="button" class="wallet-pill desktop-wallet-pill" on:click={() => handleNavClick('shop')} aria-label={`${headerWalletBalance} EP. Open shop.`}>
             <span class="wallet-pill-label">Balance</span>
             <span class="wallet-pill-value">{headerWalletBalance} EP</span>
@@ -630,17 +684,7 @@
             <span class="user-name {nameEff.cls}" style="{nameEff.style}" data-text={headerUsername}>
               {headerUsername}
             </span>
-            <button class="logout-btn" on:click={handleLogout}>Log Out</button>
-          </div>
-        {:else if $profileLoading}
-          <div class="user-chip loading-chip">
-            <span class="user-name">Loading account...</span>
-          </div>
-        {:else if $authInitialized && $session && $profileError}
-          <div class="user-chip loading-chip profile-error-chip">
-            <span class="user-name">Account unavailable</span>
-            <button type="button" class="logout-btn" on:click={() => window.location.reload()}>Retry</button>
-            <button type="button" class="logout-btn" on:click={handleLogout}>Log Out</button>
+            <button class="logout-btn" on:click={handleLogout} disabled={logoutInProgress}>{logoutInProgress ? 'Logging out…' : 'Log Out'}</button>
           </div>
         {:else}
           <button type="button" class="login-btn-header" on:click={openAuthModal}>Sign In / Sign Up</button>
@@ -654,7 +698,7 @@
           <p class="founder-banner-kicker">Launch exclusive</p>
           <p class="founder-banner-title">Earn the Launch Edition badge.</p>
           <p class="founder-banner-text">
-            {#if $authUser}
+            {#if $isAuthenticated}
               Roll during the first month to claim yours.
             {:else}
               <button type="button" class="founder-inline-link" on:click={openAuthModal}>Sign in</button> and roll during the first month to claim yours.
@@ -664,31 +708,47 @@
       </section>
     {/if}
 
-    <div id="mobile-navigation" class="mobile-nav-panel" class:open={mobileMenuOpen}>
+    <div
+      id="mobile-navigation"
+      class="mobile-nav-panel"
+      class:open={mobileMenuOpen}
+      bind:this={mobileNavPanel}
+      role="dialog"
+      aria-modal={mobileMenuOpen ? 'true' : undefined}
+      aria-hidden={!mobileMenuOpen}
+      inert={!mobileMenuOpen}
+      aria-label="Navigation menu"
+      tabindex="-1"
+      on:keydown={handleMobileMenuKeydown}
+    >
       <div class="mobile-nav-section">
-        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => setRoute('game')}>Roll</button>
-        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'shop'} on:click={() => setRoute('shop')}>Shop</button>
-        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
-        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => setRoute('profile')}>Profile</button>
+        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => handleMobileNavClick('game')}>Roll</button>
+        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'shop'} on:click={() => handleMobileNavClick('shop')}>Shop</button>
+        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'leaderboard'} on:click={() => handleMobileNavClick('leaderboard', { tab: 'today' })}>Leaderboard</button>
+        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => handleMobileNavClick('profile')}>Profile</button>
       </div>
 
       <div class="mobile-nav-section mobile-auth-section">
-        {#if $authUser}
-          <button type="button" class="mobile-wallet-card" on:click={() => handleNavClick('shop')}>
-            <span class="mobile-wallet-label">Wallet balance</span>
-            <span class="mobile-wallet-value">{headerWalletBalance} EP</span>
-          </button>
-          <button type="button" class="logout-btn mobile-auth-btn" on:click={handleLogout}>Log Out</button>
-        {:else if $profileLoading}
+        {#if $accountState === ACCOUNT_STATES.BOOTING}
           <div class="mobile-auth-summary loading-chip mobile-loading-summary">
             <span class="user-name">Loading account...</span>
           </div>
-        {:else if $authInitialized && $session && $profileError}
+        {:else if $accountState === ACCOUNT_STATES.PROFILE_LOADING}
+          <div class="mobile-auth-summary loading-chip mobile-loading-summary">
+            <span class="user-name">Loading account...</span>
+          </div>
+        {:else if $accountState === ACCOUNT_STATES.PROFILE_ERROR}
           <div class="mobile-auth-summary loading-chip profile-error-chip">
             <span class="user-name">Account unavailable</span>
           </div>
           <button type="button" class="logout-btn mobile-auth-btn" on:click={() => window.location.reload()}>Retry</button>
-          <button type="button" class="logout-btn mobile-auth-btn" on:click={handleLogout}>Log Out</button>
+          <button type="button" class="logout-btn mobile-auth-btn" on:click={handleLogout} disabled={logoutInProgress}>{logoutInProgress ? 'Logging out…' : 'Log Out'}</button>
+        {:else if $isAuthenticated}
+          <button type="button" class="mobile-wallet-card" on:click={() => handleMobileNavClick('shop')}>
+            <span class="mobile-wallet-label">Wallet balance</span>
+            <span class="mobile-wallet-value">{headerWalletBalance} EP</span>
+          </button>
+          <button type="button" class="logout-btn mobile-auth-btn" on:click={handleLogout} disabled={logoutInProgress}>{logoutInProgress ? 'Logging out…' : 'Log Out'}</button>
         {:else}
           <button type="button" class="login-btn-header mobile-auth-btn" on:click={openAuthModal}>Sign In / Sign Up</button>
         {/if}
@@ -821,7 +881,7 @@
       {/if}
     {:else}
       {#if view === 'shop' || view === 'profile'}
-        <GuestLock view={view} on:login={openAuthModal} />
+        <GuestLock view={view} guestActive={$guestProgressActive} on:login={openAuthModal} />
       {/if}
     {/if}
   {/if}

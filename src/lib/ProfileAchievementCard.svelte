@@ -4,9 +4,12 @@
   export let achCount = 0;
   export let isSelected = false;
   export let isOwnProfile = false;
+  /** @type {{current: number, target: number} | null} */
   export let progress = null;
+  /** @type {(id: string) => void} */
   export let onToggle = () => {};
-  export let formatCount = (n) => String(n);
+  /** @type {(value: number) => string} */
+  export let formatCount = (value) => String(value);
 </script>
 
 <button

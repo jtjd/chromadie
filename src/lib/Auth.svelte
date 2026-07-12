@@ -4,8 +4,9 @@
   import { onMount } from 'svelte';
 
   export let onClose = () => {};
+  export let initialTab = 'login';
 
-  let tab = 'login'; // 'login', 'signup', or 'forgot'
+  let tab = initialTab === 'signup' ? 'signup' : 'login'; // 'login', 'signup', or 'forgot'
   let email = '';
   let password = '';
   let username = '';
@@ -15,6 +16,7 @@
 
   let turnstileWidgetId = null;
   let captchaToken = '';
+  let turnstileState = 'loading';
   const siteKey = import.meta.env.VITE_CLOUDFLARE_SITE_KEY;
   const RESERVED_USERNAMES = new Set(['guest', 'anon', 'anonymous']);
   const MODE_COPY = {
@@ -80,10 +82,16 @@
       return;
     }
 
+    let attempts = 0;
     const checkTurnstile = setInterval(() => {
+      attempts += 1;
       if (window.turnstile) {
         clearInterval(checkTurnstile);
         renderTurnstile();
+      } else if (attempts >= 50) {
+        clearInterval(checkTurnstile);
+        turnstileState = 'error';
+        error = 'The security check could not load. Check your connection or content blocker, then retry.';
       }
     }, 200);
     return () => clearInterval(checkTurnstile);
@@ -96,15 +104,33 @@
         sitekey: siteKey,
         callback(token) {
           captchaToken = token || '';
+          turnstileState = 'ready';
         },
         'expired-callback'() {
           captchaToken = '';
         },
         'error-callback'() {
           captchaToken = '';
+          turnstileState = 'error';
+          error = 'The security check failed to load. Please retry.';
         }
       });
+      turnstileState = 'ready';
     }
+  }
+
+  function retryTurnstile() {
+    error = '';
+    turnstileState = 'loading';
+    if (!window.turnstile) {
+      window.location.reload();
+      return;
+    }
+    if (turnstileWidgetId !== null) {
+      window.turnstile.remove(turnstileWidgetId);
+      turnstileWidgetId = null;
+    }
+    renderTurnstile();
   }
 
   function getCaptchaToken() {
@@ -290,6 +316,11 @@
     <div class="security-check">
       <span class="field-label">Security check</span>
       <div id="turnstile-container"></div>
+      {#if turnstileState === 'loading'}
+        <span class="field-hint" role="status">Loading security check…</span>
+      {:else if turnstileState === 'error'}
+        <button type="button" class="link-btn" on:click={retryTurnstile}>Retry security check</button>
+      {/if}
     </div>
 
     {#if notice}

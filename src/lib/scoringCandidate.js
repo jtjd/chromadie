@@ -37,7 +37,15 @@ function hslFromRgb(red, green, blue) {
   }
   if (hue < 0) hue += 360;
   const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
-  return { hue, saturation: saturation * 100, lightness: lightness * 100 };
+  // PostgreSQL evaluates the authoritative HSL boundaries with exact numeric
+  // arithmetic. Snap floating-point noise at those rational boundaries so a
+  // value such as 69.99999999999999 is classified as the exact 70 it represents.
+  const snap = value => Number(value.toFixed(12));
+  return {
+    hue: snap(hue),
+    saturation: snap(saturation * 100),
+    lightness: snap(lightness * 100)
+  };
 }
 
 function hueFamily(hue, saturation) {
@@ -170,7 +178,7 @@ export function scoreCandidateColor(red, green, blue) {
   add(/(.)\1\1/.test(hexValue), 'triple_hex', 'Triple Hex', 'hex_pattern', 90333);
   add(hexValue.includes('F1'), 'f1', 'F1', 'hex_pattern', 75001);
   for (const [id, pattern, points] of MEME_PATTERNS) {
-    add(hexValue.includes(pattern), id, pattern, 'rare_event', points, { fullValue: true });
+    add(hexValue.includes(String(pattern)), String(id), String(pattern), 'rare_event', Number(points), { fullValue: true });
   }
 
   // Condition cascades are the main source of the wider upper tail. They

@@ -1,35 +1,24 @@
+import { loadAuthoritativeChallenge } from '../_challenge.js';
+
 function escapeHtml(value) {
   return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
 
-async function loadChallenge(id, env) {
-  const supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
-  const supabaseKey = env.VITE_SUPABASE_KEY || env.SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseKey) return null;
-  const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/challenge-link`, {
-    method: 'POST', headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'get', id })
-  });
-  if (!response.ok) return null;
-  const data = await response.json();
-  return data.success ? data.challenge : null;
-}
-
 export async function onRequestGet({ request, params, env }) {
   const id = params.id;
-  const challenge = await loadChallenge(id, env);
-  const origin = env?.VITE_SITE_URL?.trim()?.replace(/\/$/, '') || new URL(request.url).origin;
+  const challenge = await loadAuthoritativeChallenge(id, env);
+  const { fetchAppShell, createHtmlHeaders, baseSecurityHeaders, getSiteOrigin } = await import('../_publicPage.js');
+  const origin = getSiteOrigin(request, env);
   const canonical = `${origin}/c/${encodeURIComponent(id)}`;
   const title = challenge ? 'Challenge | ChromaDie' : 'Challenge Unavailable | ChromaDie';
   const description = challenge
     ? `${challenge.sender_username || 'A ChromaDie player'} challenged you to beat a ${Number(challenge.target_score).toLocaleString()} EP color roll.`
     : 'This ChromaDie challenge is unavailable or has expired.';
   const ogImage = challenge
-    ? `${origin}/og/challenge.svg?score=${encodeURIComponent(challenge.target_score)}&hex=${encodeURIComponent(challenge.target_hex)}&from=${encodeURIComponent(challenge.sender_username || '')}`
+    ? `${origin}/og/challenge.svg?id=${encodeURIComponent(challenge.id)}`
     : `${origin}/og-default.png`;
-  const { fetchAppShell } = await import('../_publicPage.js');
   const shellResponse = await fetchAppShell(request, env);
-  if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502 });
+  if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502, headers: baseSecurityHeaders });
   let html = await shellResponse.text();
   html = html
     .replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`)
@@ -46,5 +35,5 @@ export async function onRequestGet({ request, params, env }) {
   // Always serve the app shell here. The client-side challenge loader provides
   // the definitive expired/missing state after hydration; a metadata lookup
   // failure should not prevent the game route from booting.
-  return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=UTF-8', 'Cache-Control': 'no-cache, must-revalidate' } });
+  return new Response(html, { status: 200, headers: await createHtmlHeaders(html) });
 }

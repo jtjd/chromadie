@@ -14,25 +14,33 @@ async function loadProfile(username, env) {
 
   const query = new URL('/rest/v1/profiles', supabaseUrl);
   query.searchParams.set('select', 'username,lifetime_ep,best_roll_score');
+  if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) return null;
+  // Validation excludes PostgREST wildcard/filter syntax and mirrors the
+  // database username contract.
   query.searchParams.set('username', `ilike.${username}`);
   query.searchParams.set('limit', '1');
 
-  const response = await fetch(query, {
-    headers: {
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`
-    }
-  });
+  try {
+    const response = await fetch(query, {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`
+      }
+    });
 
-  if (!response.ok) return null;
-  const profiles = await response.json();
-  return profiles[0] || null;
+    if (!response.ok) return null;
+    const profiles = await response.json();
+    return profiles[0] || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function onRequestGet({ request, params, env }) {
   const username = params.username;
   const profile = await loadProfile(username, env);
-  const origin = env?.VITE_SITE_URL?.trim()?.replace(/\/$/, '') || new URL(request.url).origin;
+  const { fetchAppShell, createHtmlHeaders, baseSecurityHeaders, getSiteOrigin } = await import('../_publicPage.js');
+  const origin = getSiteOrigin(request, env);
   const profilePath = `/u/${encodeURIComponent(username)}`;
   const canonical = `${origin}${profilePath}`;
   const title = profile ? `${profile.username} | ChromaDie` : 'Profile Not Found | ChromaDie';
@@ -57,9 +65,8 @@ export async function onRequestGet({ request, params, env }) {
     }
   } : null;
 
-  const { fetchAppShell } = await import('../_publicPage.js');
   const shellResponse = await fetchAppShell(request, env);
-  if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502 });
+  if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502, headers: baseSecurityHeaders });
   let html = await shellResponse.text();
   if (profileSchema) {
     const schemaTag = `<script type="application/ld+json">${JSON.stringify(profileSchema).replaceAll('<', '\\u003c')}</script>`;
@@ -83,9 +90,6 @@ export async function onRequestGet({ request, params, env }) {
 
   return new Response(html, {
     status: profile ? 200 : 404,
-    headers: {
-      'Content-Type': 'text/html; charset=UTF-8',
-      'Cache-Control': 'no-cache, must-revalidate'
-    }
+    headers: await createHtmlHeaders(html)
   });
 }
