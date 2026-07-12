@@ -1285,10 +1285,12 @@
       gap: 10px;
     }
     .conditions-grid .badge-result {
-      grid-template-columns: 28px minmax(0, 1fr) auto;
-      grid-template-areas: "icon text points";
+      grid-template-columns: 28px minmax(0, 1fr);
+      grid-template-areas:
+        "icon text"
+        "icon points";
       column-gap: 10px;
-      row-gap: 0;
+      row-gap: 7px;
       align-items: start;
       padding: 11px 12px;
       min-height: unset;
@@ -1301,10 +1303,16 @@
     }
     .conditions-grid .badge-points {
       grid-area: points;
-      justify-self: end;
+      justify-self: start;
       align-self: start;
       width: auto;
-      text-align: right;
+      padding: 4px 7px;
+      border: 1px solid currentColor;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.035);
+      font-size: 0.68rem;
+      line-height: 1;
+      text-align: left;
       white-space: nowrap;
     }
     .cotw-widget {
