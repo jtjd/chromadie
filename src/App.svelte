@@ -545,7 +545,7 @@
     <header class="site-header">
       <div class="header-brand">
         <a href="/" class="logo" on:click={handleLogoClick} aria-label="ChromaDie home">
-          <img class="logo-mark" src="/FAVICON.png" alt="" width="34" height="34" />
+          <img class="logo-mark" src="/favicon-32.png" alt="" width="34" height="34" />
           <span>ChromaDie</span>
         </a>
         <a
@@ -770,7 +770,7 @@
     </div>
   {/if}
 
-  <div class="app-main">
+  <div class="app-main" role={routeMode === 'app' ? 'main' : undefined}>
   {#if routeMode === 'not-found'}
     <main class="container" aria-labelledby="not-found-title">
       <section class="card bootstrap-error-card">
