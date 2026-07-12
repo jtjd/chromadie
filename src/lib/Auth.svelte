@@ -55,9 +55,15 @@
   }
 
   function getFriendlyAuthError(authError, fallback) {
-    const message = authError?.message || '';
+    const message = typeof authError === 'string'
+      ? authError
+      : authError?.message || authError?.error_description || authError?.error || '';
     const lowerMessage = message.toLowerCase();
 
+    if (!message || message === '{}') return fallback;
+    if (lowerMessage.includes('username') && (lowerMessage.includes('available') || lowerMessage.includes('moderation'))) {
+      return 'That username is not available. Please choose another one.';
+    }
     if (lowerMessage.includes('captcha')) return 'Please complete the security check.';
     if (lowerMessage.includes('already registered')) return 'That email is already registered. Try signing in instead.';
     if (lowerMessage.includes('email not confirmed')) return 'Check your inbox to confirm your account before signing in.';
@@ -147,12 +153,22 @@
         return;
       }
 
+      const { data: usernameAllowed, error: moderationError } = await supabase.rpc('is_username_allowed', {
+        p_username: username
+      });
+      if (!moderationError && usernameAllowed === false) {
+        error = 'That username is not available. Please choose another one.';
+        loading = false;
+        resetCaptcha();
+        return;
+      }
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: getAuthCallbackUrl(),
-          data: { username },
+          data: { username, display_name: username },
           captchaToken
         }
       });
