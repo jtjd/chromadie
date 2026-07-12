@@ -73,6 +73,14 @@
   </section>
 
   <section class="card legal-section">
+    <h2>Contact</h2>
+    <p>
+      For account, support, or privacy questions, email <a href="mailto:support@chromadie.com">support@chromadie.com</a>.
+      For business inquiries, email <a href="mailto:business@chromadie.com">business@chromadie.com</a>.
+    </p>
+  </section>
+
+  <section class="card legal-section">
     <h2>Changes to this policy</h2>
     <p>
       If the way the game handles data changes, we will update this page so the policy stays aligned with the product.
