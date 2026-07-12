@@ -39,7 +39,7 @@
     <ul>
       <li>We do not sell personal data.</li>
       <li>We do not use advertising or advertising cookies.</li>
-      <li>We do not currently use analytics for marketing or ad targeting.</li>
+      <li>We use privacy-conscious Cloudflare Web Analytics to understand page performance and basic site usage. It is not used for advertising or marketing profiles.</li>
       <li>We may allow trusted infrastructure and security systems to process data only as needed to operate the game.</li>
       <li>Some profile and leaderboard information is visible to other players in the app.</li>
     </ul>
