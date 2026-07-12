@@ -958,7 +958,10 @@
                 <span class="badge-title">{contributor.name || badge.name}</span>
                 <span class="badge-desc">{badge.desc || 'Special condition met'}</span>
               </div>
-              <span class="badge-points">+{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()} score + EP</span>
+              <span class="badge-points contributor-reward">
+                <span>+{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()} score</span>
+                <span class="contributor-ep">+ EP</span>
+              </span>
             </div>
           {/each}
           </div>
@@ -1076,6 +1079,15 @@
     padding-left: 0;
     text-align: right;
     white-space: nowrap;
+  }
+  .contributor-reward {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .contributor-ep {
+    color: #f1c40f;
+    text-shadow: 0 0 8px rgba(241, 196, 15, 0.3);
   }
   .local-progress-banner {
     background: rgba(59, 130, 246, 0.1);
