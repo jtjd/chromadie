@@ -2,9 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" sizes="any" href="/logo-mark.svg" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16-v2.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32-v2.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v2.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#050505" />
@@ -16,11 +17,11 @@
     <meta property="og:title" content="ChromaDie — Daily Color Game" />
     <meta property="og:description" content="Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score." />
     <meta property="og:url" content="https://chromadie.com/" />
-    <meta property="og:image" content="https://chromadie.com/og-default.png" />
+    <meta property="og:image" content="https://chromadie.com/og-default-v4.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://chromadie.com/og-default.png" />
+    <meta name="twitter:image" content="https://chromadie.com/og-default-v4.png" />
     <meta name="twitter:title" content="ChromaDie — Daily Color Game" />
     <meta name="twitter:description" content="Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score." />
     <title>ChromaDie — Daily Color Game</title>
@@ -29,19 +30,62 @@
         "@context": "https://schema.org",
         "@graph": [
           {
-            "@type": "WebSite",
+            "@type": "Organization",
+            "@id": "https://chromadie.com/#organization",
             "name": "ChromaDie",
             "url": "https://chromadie.com/",
-            "description": "Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score."
+            "description": "ChromaDie is a daily color-rolling game.",
+            "logo": { "@id": "https://chromadie.com/#logo" }
+          },
+          {
+            "@type": "ImageObject",
+            "@id": "https://chromadie.com/#logo",
+            "url": "https://chromadie.com/icon-512-v2.png",
+            "contentUrl": "https://chromadie.com/icon-512-v2.png",
+            "width": 512,
+            "height": 512,
+            "caption": "ChromaDie logo"
+          },
+          {
+            "@type": "ImageObject",
+            "@id": "https://chromadie.com/#primaryimage",
+            "url": "https://chromadie.com/og-default-v4.png",
+            "contentUrl": "https://chromadie.com/og-default-v4.png",
+            "width": 1200,
+            "height": 630,
+            "caption": "ChromaDie — Roll a new color every day"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://chromadie.com/#website",
+            "name": "ChromaDie",
+            "url": "https://chromadie.com/",
+            "description": "Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score.",
+            "publisher": { "@id": "https://chromadie.com/#organization" },
+            "image": { "@id": "https://chromadie.com/#primaryimage" }
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://chromadie.com/#webpage",
+            "url": "https://chromadie.com/",
+            "name": "ChromaDie — Daily Color Game",
+            "description": "Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score.",
+            "isPartOf": { "@id": "https://chromadie.com/#website" },
+            "about": { "@id": "https://chromadie.com/#game" },
+            "primaryImageOfPage": { "@id": "https://chromadie.com/#primaryimage" }
           },
           {
             "@type": "VideoGame",
+            "@id": "https://chromadie.com/#game",
             "name": "ChromaDie",
             "url": "https://chromadie.com/",
             "description": "A daily color game where players roll a new color, discover its rarity and traits, earn EP, and compete for high scores.",
             "genre": ["Casual game", "Color game"],
             "gamePlatform": "Web browser",
-            "applicationCategory": "Game"
+            "applicationCategory": "Game",
+            "publisher": { "@id": "https://chromadie.com/#organization" },
+            "mainEntityOfPage": { "@id": "https://chromadie.com/#webpage" },
+            "image": { "@id": "https://chromadie.com/#primaryimage" }
           }
         ]
       }

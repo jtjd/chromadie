@@ -30,7 +30,10 @@ test('profile route rejects PostgREST wildcard/filter input without an API reque
   });
   assert.equal(response.status, 404);
   assert.equal(response.headers.get('x-frame-options'), 'DENY');
-  assert.match(await response.text(), /Profile Not Found/);
+  const html = await response.text();
+  assert.match(html, /Profile Not Found/);
+  assert.match(html, /https:\/\/chromadie\.com\/og-default-v4\.png/);
+  assert.doesNotMatch(html, /og-default\.png/);
 });
 
 test('challenge route rejects invalid identifiers and still serves a protected shell', async () => {
@@ -41,5 +44,8 @@ test('challenge route rejects invalid identifiers and still serves a protected s
   });
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
-  assert.match(await response.text(), /Challenge Unavailable/);
+  const html = await response.text();
+  assert.match(html, /Challenge Unavailable/);
+  assert.match(html, /https:\/\/chromadie\.com\/og-default-v4\.png/);
+  assert.doesNotMatch(html, /og-default\.png/);
 });

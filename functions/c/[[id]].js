@@ -16,7 +16,7 @@ export async function onRequestGet({ request, params, env }) {
     : 'This ChromaDie challenge is unavailable or has expired.';
   const ogImage = challenge
     ? `${origin}/og/challenge.svg?id=${encodeURIComponent(challenge.id)}`
-    : `${origin}/og-default.png`;
+    : `${origin}/og-default-v4.png`;
   const shellResponse = await fetchAppShell(request, env);
   if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502, headers: baseSecurityHeaders });
   let html = await shellResponse.text();

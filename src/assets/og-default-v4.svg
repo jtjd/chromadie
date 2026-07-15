@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">ChromaDie</title>
+  <desc id="description">Roll a new color every day.</desc>
+  <defs>
+    <radialGradient id="background" cx="0" cy="0" r="1" gradientTransform="translate(600 36) rotate(90) scale(650 900)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#151620" />
+      <stop offset="0.58" stop-color="#0d0d12" />
+      <stop offset="1" stop-color="#0a0a0d" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#background)" />
+
+  <g aria-label="ChromaDie — Roll a new color every day">
+    <text x="500" y="300" fill="#f2f3f5" font-family="Space Grotesk, sans-serif" font-size="96" font-weight="700" letter-spacing="-2">ChromaDie</text>
+    <text x="504" y="356" fill="#8b90a0" font-family="Inter, sans-serif" font-size="28" font-weight="500" letter-spacing="-0.3">Roll a new color every day</text>
+  </g>
+
+  <g id="logo-slot" data-source="../../public/logo-mark.svg" data-x="225" data-y="177" data-width="240" data-height="240" />
+</svg>

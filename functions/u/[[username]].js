@@ -48,7 +48,7 @@ export async function onRequestGet({ request, params, env }) {
     ? `View ${profile.username}'s public ChromaDie profile, progress, achievements, and recent rolls.`
     : 'This ChromaDie profile could not be found.';
   const robots = profile ? 'index,follow' : 'noindex,follow';
-  const ogImage = profile ? `${origin}/og/profile.svg?username=${encodeURIComponent(profile.username)}` : `${origin}/og-default.png`;
+  const ogImage = profile ? `${origin}/og/profile.svg?username=${encodeURIComponent(profile.username)}` : `${origin}/og-default-v4.png`;
   const summary = profile
     ? `<section><h1>${escapeHtml(profile.username)} | ChromaDie</h1><p>Public player profile with ${Number(profile.lifetime_ep || 0).toLocaleString()} lifetime EP${profile.best_roll_score ? ` and a best roll of ${Number(profile.best_roll_score).toLocaleString()} EP` : ''}.</p></section>`
     : '<section><h1>Profile not found</h1><p>This player profile is unavailable.</p></section>';

@@ -589,7 +589,7 @@
     <header class="site-header">
       <div class="header-brand">
         <a href="/" class="logo" on:click={handleLogoClick} aria-label="ChromaDie home">
-          <img class="logo-mark" src="/favicon-96.png" alt="" width="34" height="34" />
+          <img class="logo-mark" src="/logo-mark.svg" alt="" width="34" height="34" />
           <span>ChromaDie</span>
         </a>
         <a

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title description">
+  <title id="title">ChromaDie logo</title>
+  <desc id="description">A dark die face with coral, gold, and cyan pips.</desc>
+  <g id="logo-mark">
+    <rect x="4" y="4" width="56" height="56" rx="14" fill="#171820" stroke="#767b8c" stroke-width="2.25" />
+    <circle cx="18.5" cy="18.5" r="4.75" fill="#ff6257" />
+    <circle cx="32" cy="32" r="4.75" fill="#ffe14d" />
+    <circle cx="45.5" cy="45.5" r="4.75" fill="#2ed3c9" />
+  </g>
+</svg>
