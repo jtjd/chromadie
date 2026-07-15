@@ -41,6 +41,7 @@
   let mobileMenuOpener = null;
   let selectedProfileUsername = null;
   let founderLaunchWindowActive = false;
+  let routeInitialized = false;
 
   function parseRoute() {
     challengeLoadRequestId += 1;
@@ -110,6 +111,7 @@
       challengeData = null;
     }
     leaderboardTab = VALID_LEADERBOARD_TABS.has(routeTab) ? routeTab : 'today';
+    routeInitialized = true;
   }
 
   function syncRoute() {
@@ -525,7 +527,7 @@
     setMeta('meta[name="twitter:description"]', 'content', pageDescription);
   }
 
-  $: if (routeMode === 'app') {
+  $: if (routeMode === 'app' && routeInitialized) {
     syncRoute();
   }
 

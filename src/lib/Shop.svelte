@@ -1,64 +1,43 @@
 <script>
+  import { onDestroy, onMount, tick } from 'svelte';
   import ShopItemPreview from './ShopItemPreview.svelte';
-  import { shopItems, shopItemsLoading, shopItemsError, loadShopItems, userInventory, equippedItems, walletBalance, addToast, rerollShards, profile, session, fetchInventoryState, refreshProfileState, fetchWalletBalance } from './stores';
+  import ShopStudioPreview from './ShopStudioPreview.svelte';
+  import {
+    shopItems,
+    shopItemsLoading,
+    shopItemsError,
+    loadShopItems,
+    userInventory,
+    equippedItems,
+    walletBalance,
+    rerollShards,
+    profile,
+    authUser,
+    session,
+    addToast,
+    fetchInventoryState,
+    fetchWalletBalance,
+    refreshProfileState
+  } from './stores';
   import { supabase } from './supabase';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
-  import { onMount, onDestroy, tick } from 'svelte';
+  import {
+    SHOP_RARITIES,
+    SHOP_SECTIONS,
+    SHOP_SLOT_LABELS,
+    SHOP_SORTS,
+    SHOP_SUBSECTIONS,
+    clearShopSlot,
+    createFittingRoom,
+    filterShopItems,
+    getCollectionItems,
+    getShopContextForSlot,
+    isShopCosmetic,
+    requiresPurchaseConfirmation,
+    tryOnShopItem
+  } from './shopCatalog';
 
-  let loadingAction = null;
-  let activeTab = 'all';
-  let sortMode = 'featured';
-  let purchaseTarget = null;
-  let purchaseDialog = null;
-  let purchaseOpener = null;
-  let ownedCollapsed = {};
-  let ownedLayoutMode = 'desktop';
-  let ownedStateMode = 'desktop';
-
-  const rarityRank = {
-    Trash: 0,
-    Common: 1,
-    Uncommon: 2,
-    Rare: 3,
-    Epic: 4,
-    Anomaly: 5,
-    Mythic: 6
-  };
-
-  const slotLabels = {
-    all: 'All',
-    owned: 'Owned Cosmetics',
-    name_effect: 'Names',
-    frame: 'Frames',
-    profile_border: 'Borders',
-    profile_bg: 'Backgrounds',
-    orb_shape: 'Orbs',
-    roll_effect: 'Roll',
-    lb_theme: 'LB',
-    consumable: 'Utility'
-  };
-
-  const sortLabels = {
-    featured: 'Featured',
-    price_asc: 'Price: Low',
-    price_desc: 'Price: High',
-    rarity: 'Rarity'
-  };
-
-  const categoryDescriptions = {
-    all: 'Change how your name, profile, rolls, and leaderboard entry look.',
-    owned: 'See everything you own and choose what to equip.',
-    name_effect: 'Change the color, type style, or animation of your username.',
-    frame: 'Add a decorative frame around your name on your profile.',
-    profile_border: 'Change the border around your full profile card.',
-    profile_bg: 'Change the artwork and atmosphere behind your profile.',
-    orb_shape: 'Change the shape of your color while it rolls and when your result appears.',
-    roll_effect: 'Add light, motion, or an aura throughout the roll and its result.',
-    lb_theme: 'Change the background and border of your leaderboard row.'
-  };
-
-  const featuredItemKeys = ['frame_spectrum', 'border_void', 'lb_spectrum'];
-  const cosmeticSlotOrder = [
+  const LOADOUT_SLOTS = [
     'name_effect',
     'frame',
     'profile_border',
@@ -68,1684 +47,1176 @@
     'lb_theme'
   ];
 
-  function getSlotLabel(slot) {
-    return slotLabels[slot] || slot;
+  const SECTION_COPY = {
+    overview: ['Curated cosmetics', 'Start with a collection or browse the strongest pieces across every surface.'],
+    profile: ['Profile studio', 'Shape the identity people see when they visit your profile.'],
+    roll: ['Roll studio', 'Change the silhouette, atmosphere, and reveal of your daily color.'],
+    leaderboard: ['Leaderboard presence', 'Make every ranked appearance unmistakably yours.'],
+    utility: ['Utility shelf', 'Protect progress with practical items that stack in your inventory.'],
+    owned: ['Your collection', 'Revisit everything you own and assemble a new look without spending EP.']
+  };
+
+  let fittingRoomInitialized = false;
+  let fittingRoom = createFittingRoom();
+  let activeContext = 'profile';
+  let previewedItem = null;
+  let selectedItem = null;
+  let selectedSection = 'overview';
+  let selectedSubslot = 'all';
+  let searchQuery = '';
+  let selectedRarity = 'all';
+  let affordableOnly = false;
+  let sortMode = 'curated';
+  let shopNotice = 'Shop ready. Trying on cosmetics does not change your equipped items.';
+  let loadingAction = null;
+  let purchaseArmedKey = null;
+  let searchInput = null;
+  let detailDialog = null;
+  let detailOpener = null;
+  let loadoutDialog = null;
+  let loadoutOpener = null;
+  let loadoutSheetOpen = false;
+
+  function cloneFittingRoom(source) {
+    return {
+      ...source,
+      inventoryCounts: { ...(source.inventoryCounts || {}) },
+      loadout: { ...(source.loadout || {}) }
+    };
   }
 
-  function getCategoryDescription(slot) {
-    return categoryDescriptions[slot] || categoryDescriptions.all;
+  function initializeFittingRoom() {
+    if (fittingRoomInitialized) return;
+    const created = createFittingRoom({
+      walletBalance: $walletBalance,
+      userInventory: $userInventory,
+      equippedItems: $equippedItems,
+      rerollShards: $rerollShards
+    });
+    fittingRoom = cloneFittingRoom(created);
+    fittingRoomInitialized = true;
   }
 
-  function getItemSummary(item) {
-    if (item.description) {
-      return item.description;
+  function syncFittingRoomFromAccount() {
+    const created = createFittingRoom({
+      walletBalance: $walletBalance,
+      userInventory: $userInventory,
+      equippedItems: $equippedItems,
+      rerollShards: $rerollShards
+    });
+    fittingRoom = cloneFittingRoom(created);
+    fittingRoomInitialized = true;
+  }
+
+  onMount(initializeFittingRoom);
+  $: username = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Chromanaut';
+  $: displayColor = $profile?.mood_color || '#7B5CFF';
+  $: catalogItems = Object.values($shopItems).filter(item => item.item_key !== 'title_founder' && item.slot !== 'title');
+  $: filteredItems = filterShopItems(catalogItems, {
+    section: selectedSection,
+    subslot: selectedSubslot,
+    query: searchQuery,
+    rarity: selectedRarity,
+    affordableOnly,
+    sortMode
+  }, fittingRoom);
+  $: sectionSubsections = SHOP_SUBSECTIONS[selectedSection] || [];
+  $: sectionCopy = SECTION_COPY[selectedSection] || SECTION_COPY.overview;
+  $: voidwalkerItems = getCollectionItems(catalogItems, 'Voidwalker');
+  $: selectedState = selectedItem
+    ? getDisplayItemState(selectedItem, $equippedItems, fittingRoom)
+    : null;
+  $: relatedItems = selectedItem ? getCollectionItems(catalogItems, selectedItem.collection, selectedItem.item_key).slice(0, 4) : [];
+  $: selectedOwnedCount = selectedItem ? (fittingRoom.inventoryCounts[selectedItem.item_key] || 0) : 0;
+  $: selectedActuallyEquipped = Boolean(selectedItem && $equippedItems[selectedItem.slot] === selectedItem.item_key);
+  $: selectedCanPurchase = Boolean(selectedItem && selectedItem.cost > 0 && fittingRoom.balance >= selectedItem.cost && (selectedItem.slot === 'consumable' || selectedOwnedCount === 0));
+  $: loadoutEntries = LOADOUT_SLOTS.map(slot => ({ slot, item: $shopItems[fittingRoom.loadout[slot]] || null }));
+  $: equippedSlotCount = loadoutEntries.filter(entry => entry.item).length;
+
+  function setSection(section) {
+    selectedSection = section;
+    selectedSubslot = 'all';
+  }
+
+  function getDisplayItemState(item, accountEquippedSnapshot, fittingRoomSnapshot) {
+    const ownedCount = fittingRoomSnapshot.inventoryCounts?.[item?.item_key] || 0;
+    const actuallyEquipped = Boolean(item && accountEquippedSnapshot[item.slot] === item.item_key);
+    const previewing = Boolean(item && fittingRoomSnapshot.loadout[item.slot] === item.item_key);
+    const cost = Number(item?.cost) || 0;
+
+    if (actuallyEquipped) return { label: 'Equipped', tone: 'equipped', ownedCount };
+    if (previewing) return { label: 'Previewing', tone: 'previewing', ownedCount };
+    if (ownedCount > 0) {
+      return {
+        label: item?.slot === 'consumable' ? `${ownedCount} owned` : 'Owned',
+        tone: 'owned',
+        ownedCount
+      };
     }
-
-    switch (item.slot) {
-      case 'name_effect':
-        return 'Styles your username on profile and leaderboard views.';
-      case 'frame':
-        return 'Adds a custom frame around your profile header.';
-      case 'profile_border':
-        return 'Changes the border treatment of your profile card.';
-      case 'profile_bg':
-        return 'Swaps in a new background for your profile card.';
-      case 'orb_shape':
-        return 'Changes the silhouette of your roll orb.';
-      case 'roll_effect':
-        return 'Adds an aura effect to your roll result.';
-      case 'lb_theme':
-        return 'Styles your leaderboard row for everyone to see.';
-      case 'consumable':
-        if (item.item_key === 'streak_freeze') {
-          return 'Auto-applies if you miss one day and protects that streak.';
-        }
-        if (item.item_key === 'reroll_shard') {
-          return 'Gives you one reroll for a daily color result.';
-        }
-        return 'Utility item.';
-      default:
-        return item.description || 'Cosmetic item.';
-    }
+    if (cost <= 0) return { label: 'Milestone reward', tone: 'milestone', ownedCount };
+    if (fittingRoomSnapshot.balance < cost) return { label: 'Not enough EP', tone: 'unaffordable', ownedCount };
+    return { label: 'Available', tone: 'available', ownedCount };
   }
 
-  function getPurchaseReason(item) {
-    if (item.slot === 'consumable') {
-      return 'Utility items are consumed on use, so confirm before buying.';
-    }
-    if (item.cost >= 1000000) {
-      return 'This is a premium cosmetic. Confirm before spending that much EP.';
-    }
-    if (item.cost >= 100000) {
-      return 'This purchase is above the quick-buy threshold.';
-    }
-    return 'Confirm this purchase before spending EP.';
+  function tryOnItem(item, message = null) {
+    if (!isShopCosmetic(item)) return;
+    fittingRoom = { ...fittingRoom, loadout: tryOnShopItem(fittingRoom.loadout, item) };
+    activeContext = getShopContextForSlot(item.slot) || activeContext;
+    previewedItem = item;
+    shopNotice = message || `${item.name} is now previewing in your ${SHOP_SLOT_LABELS[item.slot].toLowerCase()} slot.`;
   }
 
-  function getInventoryCount(itemKey) {
-    return $userInventory.filter(key => key === itemKey).length;
+  function clearSlot(slot) {
+    const previousItem = $shopItems[fittingRoom.loadout[slot]];
+    fittingRoom = { ...fittingRoom, loadout: clearShopSlot(fittingRoom.loadout, slot) };
+    if (previousItem?.item_key === previewedItem?.item_key) previewedItem = null;
+    shopNotice = `${SHOP_SLOT_LABELS[slot]} cleared from the fitting room.`;
   }
 
-  function isLoading(action, itemKey) {
-    return loadingAction === `${action}:${itemKey}`;
+  function resetFittingRoom() {
+    syncFittingRoomFromAccount();
+    previewedItem = null;
+    activeContext = 'profile';
+    shopNotice = 'Fitting room reset to your currently equipped cosmetics.';
   }
 
-  function shouldConfirmPurchase(item) {
-    return item.slot === 'consumable' || item.cost >= 100000;
+  async function refreshLiveAccountState() {
+    const userId = $session?.user?.id;
+    if (!userId) throw new Error('Your signed-in session is no longer available.');
+    await Promise.all([
+      refreshProfileState(userId),
+      fetchInventoryState(userId),
+      fetchWalletBalance(userId)
+    ]);
+    syncFittingRoomFromAccount();
   }
 
-  function featuredScore(item) {
-    const rarityScore = rarityRank[item.rarity] || 0;
-    const collectionScore = item.collection ? 1 : 0;
-    return (rarityScore * 100000000) + (collectionScore * 1000000) + item.cost;
-  }
-
-  function sortItems(items, mode = sortMode) {
-    const list = items.slice();
-
-    if (mode === 'price_asc') {
-      return list.sort((a, b) => a.cost - b.cost || (a.name || '').localeCompare(b.name || ''));
-    }
-
-    if (mode === 'price_desc') {
-      return list.sort((a, b) => b.cost - a.cost || (a.name || '').localeCompare(b.name || ''));
-    }
-
-    if (mode === 'rarity') {
-      return list.sort((a, b) => (rarityRank[b.rarity] || 0) - (rarityRank[a.rarity] || 0) || b.cost - a.cost || (a.name || '').localeCompare(b.name || ''));
-    }
-
-    return list.sort((a, b) => featuredScore(b) - featuredScore(a) || (a.name || '').localeCompare(b.name || ''));
-  }
-
-  function getStateLabel(item) {
-    const owned = $userInventory.includes(item.item_key);
-    const equipped = $equippedItems[item.slot] === item.item_key;
-
-    if (item.cost <= 0) return 'Milestone reward';
-    if (item.slot === 'consumable') {
-      if (item.item_key === 'reroll_shard') {
-        return $rerollShards > 0 ? `${$rerollShards} owned` : 'Utility';
-      }
-      const count = getInventoryCount(item.item_key);
-      return count > 0 ? `${count} owned` : 'Utility';
-    }
-    if (equipped) return 'Equipped';
-    if (owned) return 'Owned';
-    if (item.cost > 0 && $walletBalance < item.cost) return 'Not enough EP';
-    return 'Available';
-  }
-
-  function getStateClass(item) {
-    const state = getStateLabel(item).toLowerCase();
-    if (state === 'equipped') return 'equipped';
-    if (state.includes('owned')) return 'owned';
-    if (state === 'available') return 'available';
-    if (state === 'not enough ep') return 'unaffordable';
-    if (state === 'milestone reward') return 'milestone';
-    return 'utility';
-  }
-
-  async function handleAction(itemKey, action, slot = null, silent = false) {
-    loadingAction = `${action}:${itemKey}`;
-    let error = null;
+  async function runLiveAction(item, action) {
+    if (loadingAction) return;
+    loadingAction = `${action}:${item.item_key}`;
+    purchaseArmedKey = null;
 
     try {
       if (action === 'buy') {
-        const { data, error: rpcError } = await supabase.rpc('purchase_item', { p_item_key: itemKey });
-        if (rpcError) error = rpcError.message;
-        else if (!data.success) error = data.error;
-        else {
-          const item = $shopItems[itemKey];
-          const itemCost = item.cost;
-          walletBalance.update(bal => bal - itemCost);
+        const { data, error } = await supabase.rpc('purchase_item', { p_item_key: item.item_key });
+        if (error) throw new Error(error.message);
+        if (!data?.success) throw new Error(data?.error || 'The purchase could not be completed.');
 
-          if (item.slot === 'consumable') {
-            if (itemKey === 'reroll_shard') {
-              rerollShards.update(s => s + 1);
-              profile.update(p => p ? { ...p, reroll_shards: (p.reroll_shards || 0) + 1 } : p);
-            } else if (itemKey === 'streak_freeze') {
-              userInventory.update(inv => [...inv, itemKey]);
-            } else {
-              userInventory.update(inv => [...inv, itemKey]);
-            }
-            if ($session?.user?.id) {
-              await Promise.all([
-                refreshProfileState(),
-                fetchInventoryState($session.user.id),
-                fetchWalletBalance()
-              ]);
-            }
-            addToast(`Purchased ${item.name}.`, 'success');
-          } else {
-            userInventory.update(inv => [...inv, itemKey]);
-            if ($session?.user?.id) {
-              await Promise.all([
-                refreshProfileState(),
-                fetchInventoryState($session.user.id),
-                fetchWalletBalance()
-              ]);
-            }
-            addToast(`Purchased ${item.name}.`, 'success');
-            await handleAction(itemKey, 'equip', null, true);
+        let equipWarning = null;
+        if (isShopCosmetic(item)) {
+          const { data: equipData, error: equipError } = await supabase.rpc('equip_item', { p_item_key: item.item_key });
+          if (equipError || !equipData?.success) {
+            equipWarning = equipError?.message || equipData?.error || 'The item could not be equipped automatically.';
           }
         }
+
+        await refreshLiveAccountState();
+        if (equipWarning && isShopCosmetic(item)) {
+          fittingRoom = { ...fittingRoom, loadout: tryOnShopItem(fittingRoom.loadout, item) };
+        }
+        previewedItem = isShopCosmetic(item) ? item : previewedItem;
+        activeContext = getShopContextForSlot(item.slot) || activeContext;
+        shopNotice = isShopCosmetic(item)
+          ? `${item.name} purchased${equipWarning ? '' : ' and equipped'}.`
+          : `${item.name} purchased. You now own ${fittingRoom.inventoryCounts[item.item_key] || 0}.`;
+        addToast(`${item.name} purchased.`, 'success');
+        if (equipWarning) addToast(`Purchased, but not equipped: ${equipWarning}`, 'error');
       } else if (action === 'equip') {
-        const { data, error: rpcError } = await supabase.rpc('equip_item', { p_item_key: itemKey });
-        if (rpcError) error = rpcError.message;
-        else if (!data.success) error = data.error;
-        else {
-          equippedItems.set(data.cosmetics);
-          profile.update(p => p ? { ...p, equipped_cosmetics: data.cosmetics } : p);
-          if (!silent) addToast(`Equipped ${$shopItems[itemKey].name}.`, 'success');
-        }
+        const { data, error } = await supabase.rpc('equip_item', { p_item_key: item.item_key });
+        if (error) throw new Error(error.message);
+        if (!data?.success) throw new Error(data?.error || 'The item could not be equipped.');
+        await refreshLiveAccountState();
+        previewedItem = item;
+        activeContext = getShopContextForSlot(item.slot) || activeContext;
+        shopNotice = `${item.name} equipped to your account.`;
+        addToast(`${item.name} equipped.`, 'success');
       } else if (action === 'unequip') {
-        const { data, error: rpcError } = await supabase.rpc('unequip_item', { p_slot: slot });
-        if (rpcError) error = rpcError.message;
-        else if (!data.success) error = data.error;
-        else {
-          equippedItems.set(data.cosmetics);
-          profile.update(p => p ? { ...p, equipped_cosmetics: data.cosmetics } : p);
-          addToast('Unequipped item.', 'success');
-        }
+        const { data, error } = await supabase.rpc('unequip_item', { p_slot: item.slot });
+        if (error) throw new Error(error.message);
+        if (!data?.success) throw new Error(data?.error || 'The item could not be unequipped.');
+        await refreshLiveAccountState();
+        previewedItem = null;
+        shopNotice = `${item.name} unequipped from your account.`;
+        addToast(`${item.name} unequipped.`, 'success');
       }
-    } catch (actionError) {
-      error = actionError instanceof Error ? actionError.message : 'The shop request failed.';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'The shop request failed.';
+      shopNotice = message;
+      addToast(`Shop error: ${message}`, 'error');
     } finally {
-      if (error) addToast(`Error: ${error}`);
       loadingAction = null;
     }
   }
 
-  async function requestPurchase(item) {
-    if (shouldConfirmPurchase(item)) {
-      purchaseOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      purchaseTarget = item;
-      document.body.style.overflow = 'hidden';
-      await tick();
-      focusFirstElement(purchaseDialog) || purchaseDialog?.focus();
+  function requestPurchase(item) {
+    if (requiresPurchaseConfirmation(item) && purchaseArmedKey !== item.item_key) {
+      purchaseArmedKey = item.item_key;
+      shopNotice = `Review the ${item.cost.toLocaleString()} EP purchase, then confirm once more.`;
       return;
     }
 
-    handleAction(item.item_key, 'buy');
+    void runLiveAction(item, 'buy');
   }
 
-  async function confirmPurchase() {
-    if (!purchaseTarget) return;
-    const item = purchaseTarget;
-    await closePurchaseDialog();
-    handleAction(item.item_key, 'buy');
+  function tryVoidwalkerCollection() {
+    let nextLoadout = { ...fittingRoom.loadout };
+    for (const item of voidwalkerItems) {
+      nextLoadout = tryOnShopItem(nextLoadout, item);
+    }
+    fittingRoom = { ...fittingRoom, loadout: nextLoadout };
+    previewedItem = voidwalkerItems.find(item => item.item_key === 'bg_void') || voidwalkerItems[0] || null;
+    activeContext = 'profile';
+    shopNotice = 'The full Voidwalker collection is previewing across your available slots.';
   }
 
-  async function closePurchaseDialog() {
-    purchaseTarget = null;
-    document.body.style.overflow = '';
+  async function exploreVoidwalker() {
+    selectedSection = 'overview';
+    selectedSubslot = 'all';
+    searchQuery = 'Voidwalker';
     await tick();
-    restoreFocus(purchaseOpener);
-    purchaseOpener = null;
+    searchInput?.focus();
+    searchInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  function cancelPurchase() {
-    void closePurchaseDialog();
+  function selectRelatedItem(item) {
+    selectedItem = item;
+    purchaseArmedKey = null;
   }
 
-  function handlePurchaseDialogKeydown(event) {
+  async function openItemDetails(item) {
+    detailOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    selectedItem = item;
+    purchaseArmedKey = null;
+    document.body.style.overflow = 'hidden';
+    await tick();
+    focusFirstElement(detailDialog) || detailDialog?.focus();
+  }
+
+  async function closeItemDetails() {
+    if (!selectedItem) return;
+    selectedItem = null;
+    purchaseArmedKey = null;
+    if (!loadoutSheetOpen) document.body.style.overflow = '';
+    await tick();
+    restoreFocus(detailOpener);
+    detailOpener = null;
+  }
+
+  function handleDetailKeydown(event) {
     if (event.key === 'Escape') {
       event.preventDefault();
-      cancelPurchase();
+      void closeItemDetails();
       return;
     }
-    trapFocus(event, purchaseDialog);
+    trapFocus(event, detailDialog);
   }
 
-  $: cosmeticItems = Object.values($shopItems)
-    .filter(item => item.slot !== 'consumable' && item.item_key !== 'title_founder');
+  async function openLoadoutSheet() {
+    loadoutOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    loadoutSheetOpen = true;
+    document.body.style.overflow = 'hidden';
+    await tick();
+    focusFirstElement(loadoutDialog) || loadoutDialog?.focus();
+  }
 
-  $: utilityItems = Object.values($shopItems)
-    .filter(item => item.slot === 'consumable');
+  async function closeLoadoutSheet() {
+    if (!loadoutSheetOpen) return;
+    loadoutSheetOpen = false;
+    if (!selectedItem) document.body.style.overflow = '';
+    await tick();
+    restoreFocus(loadoutOpener);
+    loadoutOpener = null;
+  }
 
-  $: ownedCosmeticItems = cosmeticItems.filter(item => $userInventory.includes(item.item_key));
-  $: ownedCosmeticSections = cosmeticSlotOrder
-    .map(slot => ({
-      slot,
-      label: getSlotLabel(slot),
-      items: sortItems(ownedCosmeticItems.filter(item => item.slot === slot), sortMode)
-    }))
-    .filter(section => section.items.length > 0);
-
-  $: if (activeTab === 'owned' && ownedCosmeticSections.length) {
-    const sectionKeysMatch = Object.keys(ownedCollapsed).length === ownedCosmeticSections.length
-      && !Object.keys(ownedCollapsed).some(slot => !ownedCosmeticSections.some(section => section.slot === slot));
-
-    if (ownedStateMode !== ownedLayoutMode || !sectionKeysMatch) {
-      applyOwnedDefaultState(ownedLayoutMode === 'mobile');
+  function handleLoadoutKeydown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      void closeLoadoutSheet();
+      return;
     }
+    trapFocus(event, loadoutDialog);
   }
 
-  $: filteredCosmetics = sortItems(
-    cosmeticItems.filter(item => activeTab === 'all' || item.slot === activeTab),
-    sortMode
-  );
-
-  $: sortedUtilityItems = sortItems(utilityItems, sortMode);
-  $: featuredItems = (() => {
-    const picked = [];
-    const seen = [];
-
-    for (const itemKey of featuredItemKeys) {
-      const item = $shopItems[itemKey];
-      if (item && !seen.includes(item.item_key)) {
-        picked.push(item);
-        seen.push(item.item_key);
-      }
-    }
-
-    if (picked.length < 3) {
-      for (const item of Object.values($shopItems).filter(entry => entry.slot !== 'consumable').sort((a, b) => featuredScore(b) - featuredScore(a))) {
-        if (picked.length >= 3) break;
-        if (!seen.includes(item.item_key)) {
-          picked.push(item);
-          seen.push(item.item_key);
-        }
-      }
-    }
-
-    return picked.slice(0, 3);
-  })();
-  $: activeCategoryLabel = getSlotLabel(activeTab);
-  $: selectedItemPreview = purchaseTarget ? getItemSummary(purchaseTarget) : '';
-
-  function toggleOwnedSection(slot) {
-    ownedCollapsed = {
-      ...ownedCollapsed,
-      [slot]: !ownedCollapsed[slot]
-    };
+  function getPriceLabel(item) {
+    return item.cost > 0 ? `${item.cost.toLocaleString()} EP` : 'Earned';
   }
-
-  function expandOwnedSections() {
-    ownedCollapsed = Object.fromEntries(ownedCosmeticSections.map(section => [section.slot, false]));
-  }
-
-  function collapseOwnedSections() {
-    ownedCollapsed = Object.fromEntries(ownedCosmeticSections.map(section => [section.slot, true]));
-  }
-
-  function applyOwnedDefaultState(isMobile) {
-    ownedLayoutMode = isMobile ? 'mobile' : 'desktop';
-    ownedStateMode = ownedLayoutMode;
-    ownedCollapsed = Object.fromEntries(
-      ownedCosmeticSections.map(section => [section.slot, isMobile])
-    );
-  }
-
-  onMount(() => {
-    const media = window.matchMedia('(max-width: 600px)');
-    applyOwnedDefaultState(media.matches);
-
-    const handleChange = event => {
-      if (activeTab === 'owned') {
-        applyOwnedDefaultState(event.matches);
-      } else {
-        ownedLayoutMode = event.matches ? 'mobile' : 'desktop';
-      }
-    };
-
-    if (typeof media.addEventListener === 'function') {
-      media.addEventListener('change', handleChange);
-      return () => media.removeEventListener('change', handleChange);
-    }
-
-    media.addListener(handleChange);
-    return () => media.removeListener(handleChange);
-  });
 
   onDestroy(() => {
-    if (purchaseTarget && typeof document !== 'undefined') {
-      document.body.style.overflow = '';
-    }
+    if (typeof document !== 'undefined') document.body.style.overflow = '';
   });
-
-  $: if (activeTab === 'owned' && ownedCosmeticSections.length) {
-    const sectionKeysMatch = Object.keys(ownedCollapsed).length === ownedCosmeticSections.length
-      && !Object.keys(ownedCollapsed).some(slot => !ownedCosmeticSections.some(section => section.slot === slot));
-
-    if (ownedStateMode !== ownedLayoutMode || !sectionKeysMatch) {
-      applyOwnedDefaultState(ownedLayoutMode === 'mobile');
-    }
-  }
 </script>
 
-<div class="container shop-container">
-  <div class="section-title">
-    <div class="section-bar bar-green"></div>
-    <h2>Cosmetic Shop</h2>
+<div class="shop-page">
+  <div class="shop-info-banner" role="note">
+    <span class="shop-info-dot" aria-hidden="true"></span>
+    <div>
+      <strong>Permanent unlocks</strong>
+      <span>Try on any cosmetic before spending EP. Purchases and equipped choices save instantly.</span>
+    </div>
+    <a href="/how-to-play">How EP works</a>
   </div>
 
-  <div class="shop-masthead">
-    <div class="shop-masthead-copy">
-      <p class="shop-intro">
-        Build your look with profile cosmetics, roll effects, and leaderboard styles. Preview every item before you spend EP.
-      </p>
-      <div class="shop-hero-pills">
-        <span class="hero-pill">Permanent unlocks</span>
-        <span class="hero-pill">Utility items below</span>
-      </div>
+  <header class="shop-header">
+    <div class="shop-heading">
+      <span class="shop-kicker">Cosmetic shop · Fitting room</span>
+      <h1>Build a look,<br /><em>not a cart.</em></h1>
+      <p>Try every cosmetic where it actually appears. Mix freely, then decide what deserves your EP.</p>
     </div>
-
-    <div class="wallet-display">
-      <span class="wallet-label">Wallet</span>
-      <strong>{$walletBalance.toLocaleString()} EP</strong>
+    <div class="shop-wallet" aria-label={`Wallet balance: ${fittingRoom.balance.toLocaleString()} EP`}>
+      <span>Your wallet</span>
+      <strong>{fittingRoom.balance.toLocaleString()}</strong>
+      <small>EP available</small>
     </div>
-  </div>
+  </header>
 
   {#if $shopItemsLoading}
-    <div class="shop-status-panel" role="status" aria-live="polite">
-      <span class="shop-status-eyebrow">Cosmetic catalog</span>
-      <strong>Loading the shop...</strong>
-      <span>Preparing previews and item details.</span>
+    <div class="shop-status" role="status" aria-live="polite">
+      <span>Preparing the atelier</span>
+      <strong>Loading cosmetics and live previews…</strong>
     </div>
   {:else if $shopItemsError}
-    <div class="shop-status-panel shop-status-error" role="alert">
-      <span class="shop-status-eyebrow">Shop unavailable</span>
+    <div class="shop-status error" role="alert">
+      <span>Catalog unavailable</span>
       <strong>{$shopItemsError}</strong>
-      <button class="shop-btn secondary shop-retry-btn" type="button" on:click={() => loadShopItems()}>Try again</button>
+      <button type="button" on:click={() => loadShopItems()}>Try again</button>
     </div>
   {:else}
+    <div class="atelier-layout">
+      <aside class="studio-column">
+        <div class="studio-sticky">
+          <ShopStudioPreview
+            bind:activeContext
+            loadout={fittingRoom.loadout}
+            {username}
+            {displayColor}
+            selectedItem={previewedItem}
+          />
 
-  {#if featuredItems.length && activeTab === 'all'}
-    <div class="featured-section">
-      <div class="shop-section-header featured-header">
-        <div>
-          <h3>Featured Picks</h3>
-          <p>A small spotlight of items with the most noticeable visual impact.</p>
-        </div>
-      </div>
-
-      <div class="featured-grid">
-        {#each featuredItems as item (item.item_key)}
-          {@const owned = $userInventory.includes(item.item_key)}
-          {@const equipped = $equippedItems[item.slot] === item.item_key}
-          {@const affordable = $walletBalance >= item.cost}
-          {@const loadingBuy = isLoading('buy', item.item_key)}
-          {@const loadingEquip = isLoading('equip', item.item_key)}
-          {@const loadingUnequip = isLoading('unequip', item.item_key)}
-
-          <div class="shop-item featured-item shop-rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
-            <div class="shop-item-meta">
-              <span class="state-pill slot">Featured</span>
-              <span class="state-pill rarity">{item.rarity || 'Common'}</span>
+          <div class="loadout-panel">
+            <div class="loadout-panel-head">
+              <div>
+                <span>Fitting room</span>
+                <strong>{equippedSlotCount} of {LOADOUT_SLOTS.length} slots</strong>
+              </div>
+              <button type="button" on:click={resetFittingRoom}>Reset fitting</button>
             </div>
-
-            <ShopItemPreview {item} />
-
-            <h3>{item.name}</h3>
-            <p class="item-summary">{getItemSummary(item)}</p>
-            <div class="item-footnote">
-              <span class="item-cost">{item.cost.toLocaleString()} EP</span>
-              <span class="state-pill status-{getStateClass(item)}">{getStateLabel(item)}</span>
-            </div>
-
-            <div class="shop-actions">
-              {#if equipped}
-                <button class="shop-btn equipped" type="button" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={!!loadingAction}>
-                  {loadingUnequip ? 'Unequipping...' : 'Unequip'}
-                </button>
-              {:else if owned && item.slot !== 'consumable'}
-                <button class="shop-btn owned" type="button" on:click={() => handleAction(item.item_key, 'equip')} disabled={!!loadingAction}>
-                  {loadingEquip ? 'Equipping...' : 'Equip'}
-                </button>
-              {:else if item.cost > 0 && affordable}
-                <button class="shop-btn" type="button" on:click={() => requestPurchase(item)} disabled={!!loadingAction}>
-                  {loadingBuy ? 'Buying...' : 'Buy'}
-                </button>
-              {:else if item.cost <= 0}
-                <button class="shop-btn disabled" type="button" disabled>
-                  🔒 Milestone Reward
-                </button>
-              {:else}
-                <button class="shop-btn disabled" type="button" disabled>
-                  Not Enough EP
-                </button>
-              {/if}
+            <div class="loadout-list">
+              {#each loadoutEntries as entry (entry.slot)}
+                <div class:filled={entry.item}>
+                  <span>{SHOP_SLOT_LABELS[entry.slot]}</span>
+                  <strong>{entry.item?.name || 'Empty slot'}</strong>
+                  {#if entry.item}
+                    <button type="button" aria-label={`Clear ${SHOP_SLOT_LABELS[entry.slot]} slot`} on:click={() => clearSlot(entry.slot)}>×</button>
+                  {/if}
+                </div>
+              {/each}
             </div>
           </div>
-        {/each}
-      </div>
-    </div>
-  {/if}
+        </div>
+      </aside>
 
-  <div class="shop-toolbar">
-    <div class="shop-tabs" role="group" aria-label="Shop categories">
-      <button class="shop-tab" class:active={activeTab === 'all'} type="button" on:click={() => activeTab = 'all'}>All</button>
-      <button class="shop-tab" class:active={activeTab === 'owned'} type="button" on:click={() => activeTab = 'owned'}>Owned</button>
-      <button class="shop-tab" class:active={activeTab === 'frame'} type="button" on:click={() => activeTab = 'frame'}>Frames</button>
-      <button class="shop-tab" class:active={activeTab === 'name_effect'} type="button" on:click={() => activeTab = 'name_effect'}>Names</button>
-      <button class="shop-tab" class:active={activeTab === 'profile_border'} type="button" on:click={() => activeTab = 'profile_border'}>Borders</button>
-      <button class="shop-tab" class:active={activeTab === 'profile_bg'} type="button" on:click={() => activeTab = 'profile_bg'}>Backgrounds</button>
-      <button class="shop-tab" class:active={activeTab === 'orb_shape'} type="button" on:click={() => activeTab = 'orb_shape'}>Orbs</button>
-      <button class="shop-tab" class:active={activeTab === 'roll_effect'} type="button" on:click={() => activeTab = 'roll_effect'}>Roll</button>
-      <button class="shop-tab" class:active={activeTab === 'lb_theme'} type="button" on:click={() => activeTab = 'lb_theme'}>LB</button>
-    </div>
+      <main class="catalog-column">
+        {#if selectedSection === 'overview' && !searchQuery}
+          <section class="collection-hero" aria-labelledby="voidwalker-title">
+            <div class="collection-glow" aria-hidden="true"></div>
+            <div class="collection-copy">
+              <span class="collection-number">Collection 01 · Voidwalker</span>
+              <h2 id="voidwalker-title">Bend the light.</h2>
+              <p>A complete identity system cut from cold violet horizons, black cores, and impossible gravity.</p>
+              <div class="collection-actions">
+                <button type="button" class="primary-action" on:click={tryVoidwalkerCollection}>Try the full look</button>
+                <button type="button" class="quiet-action" on:click={exploreVoidwalker}>Explore {voidwalkerItems.length} pieces</button>
+              </div>
+            </div>
+            <div class="collection-orbit" aria-hidden="true">
+              <span class="orbit orbit-one"></span>
+              <span class="orbit orbit-two"></span>
+              <span class="orbit-core"></span>
+            </div>
+          </section>
+        {/if}
 
-    <div class="shop-sort">
-      <span>Sort</span>
-      <div class="sort-pills" role="group" aria-label="Sort shop items">
-        {#each Object.entries(sortLabels) as [value, label] (value)}
-          <button
-            class="sort-pill"
-            class:active={sortMode === value}
-            type="button"
-            on:click={() => sortMode = value}
-          >
-            {label}
-          </button>
-        {/each}
-      </div>
-    </div>
-  </div>
-
-  <div class="shop-section-header">
-    <div>
-      <h3>{activeCategoryLabel}</h3>
-      <p>{getCategoryDescription(activeTab)}</p>
-    </div>
-    <span class="section-count">{activeTab === 'owned' ? ownedCosmeticItems.length : filteredCosmetics.length} item{(activeTab === 'owned' ? ownedCosmeticItems.length : filteredCosmetics.length) === 1 ? '' : 's'}</span>
-  </div>
-
-  {#if activeTab === 'owned'}
-    {#if ownedCosmeticItems.length === 0}
-      <div class="shop-empty">
-        <p>You do not own any cosmetics yet.</p>
-        <span>Buy or earn a cosmetic first, then it will appear here.</span>
-      </div>
-    {:else}
-      <div class="owned-controls" aria-label="Owned cosmetic controls">
-        <button type="button" class="owned-control" on:click={expandOwnedSections}>Expand all</button>
-        <button type="button" class="owned-control" on:click={collapseOwnedSections}>Collapse all</button>
-      </div>
-      <div class="owned-groups">
-        {#each ownedCosmeticSections as section (section.slot)}
-          <section class="owned-group">
+        <nav class="section-rail" aria-label="Shop departments">
+          {#each SHOP_SECTIONS as section (section.id)}
             <button
               type="button"
-              class="owned-group-header"
-              aria-expanded={!ownedCollapsed[section.slot]}
-              on:click={() => toggleOwnedSection(section.slot)}
+              class:active={selectedSection === section.id}
+              aria-pressed={selectedSection === section.id}
+              on:click={() => setSection(section.id)}
             >
-              <div>
-                <h3>{section.label}</h3>
-                <p>{section.items.length} item{section.items.length === 1 ? '' : 's'}</p>
-              </div>
-              <span class="owned-group-chevron" aria-hidden="true">{ownedCollapsed[section.slot] ? '▸' : '▾'}</span>
+              {section.label}
+              {#if section.id === 'owned'}<span>{Object.values(fittingRoom.inventoryCounts).filter(count => count > 0).length}</span>{/if}
             </button>
+          {/each}
+        </nav>
 
-            {#if !ownedCollapsed[section.slot]}
-              <div class="shop-grid owned-grid">
-                {#each section.items as item (item.item_key)}
-                {@const equipped = $equippedItems[item.slot] === item.item_key}
-                {@const loadingEquip = isLoading('equip', item.item_key)}
-                {@const loadingUnequip = isLoading('unequip', item.item_key)}
+        {#if sectionSubsections.length}
+          <div class="subsection-rail" role="group" aria-label={`${selectedSection} cosmetic types`}>
+            {#each sectionSubsections as subsection (subsection.id)}
+              <button
+                type="button"
+                class:active={selectedSubslot === subsection.id}
+                aria-pressed={selectedSubslot === subsection.id}
+                on:click={() => selectedSubslot = subsection.id}
+              >{subsection.label}</button>
+            {/each}
+          </div>
+        {/if}
 
-                <div class="shop-item shop-rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} is-owned">
-                  <div class="shop-item-meta">
-                    <span class="state-pill slot">{getSlotLabel(item.slot)}</span>
-                    <span class="state-pill rarity">{item.rarity || 'Common'}</span>
-                  </div>
-
-                  <ShopItemPreview {item} />
-
-                  <h3>{item.name}</h3>
-                  {#if item.collection}
-                    <p class="item-collection">{item.collection}</p>
-                  {/if}
-                  <p class="item-summary">{getItemSummary(item)}</p>
-                  {#if item.description && item.description !== getItemSummary(item)}
-                    <p class="item-desc">{item.description}</p>
-                  {/if}
-
-                  <div class="item-footnote">
-                    <span class="item-cost">{item.cost.toLocaleString()} EP</span>
-                    <span class="state-pill status-{getStateClass(item)}">{getStateLabel(item)}</span>
-                  </div>
-
-                  <div class="shop-actions">
-                    {#if equipped}
-                      <button class="shop-btn equipped" type="button" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={!!loadingAction}>
-                        {loadingUnequip ? 'Unequipping...' : 'Unequip'}
-                      </button>
-                    {:else}
-                      <button class="shop-btn owned" type="button" on:click={() => handleAction(item.item_key, 'equip')} disabled={!!loadingAction}>
-                        {loadingEquip ? 'Equipping...' : 'Equip'}
-                      </button>
-                    {/if}
-                  </div>
-                </div>
-                {/each}
-              </div>
+        <section class="catalog-controls" aria-label="Catalog filters">
+          <label class="search-field">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <span class="visually-hidden">Search cosmetics</span>
+            <input bind:this={searchInput} bind:value={searchQuery} type="search" placeholder="Search cosmetics or collections" />
+            {#if searchQuery}
+              <button type="button" aria-label="Clear search" on:click={() => searchQuery = ''}>×</button>
             {/if}
-          </section>
-        {/each}
-      </div>
-    {/if}
-  {:else}
-    {#if filteredCosmetics.length === 0}
-      <div class="shop-empty">
-        <p>No items in this category yet.</p>
-        <span>Try a different category or switch back to All cosmetics.</span>
-      </div>
-    {:else}
-      <div class="shop-grid">
-        {#each filteredCosmetics as item (item.item_key)}
-          {@const owned = $userInventory.includes(item.item_key)}
-          {@const equipped = $equippedItems[item.slot] === item.item_key}
-          {@const affordable = $walletBalance >= item.cost}
-          {@const loadingBuy = isLoading('buy', item.item_key)}
-          {@const loadingEquip = isLoading('equip', item.item_key)}
-          {@const loadingUnequip = isLoading('unequip', item.item_key)}
+          </label>
 
-          <div class="shop-item shop-rarity-{item.rarity || 'Common'} {equipped ? 'is-equipped' : ''} {owned ? 'is-owned' : ''}">
-            <div class="shop-item-meta">
-              <span class="state-pill slot">{getSlotLabel(item.slot)}</span>
-              <span class="state-pill rarity">{item.rarity || 'Common'}</span>
-            </div>
-
-            <ShopItemPreview {item} />
-
-            <h3>{item.name}</h3>
-            {#if item.collection}
-              <p class="item-collection">{item.collection}</p>
-            {/if}
-            <p class="item-summary featured-summary">{getItemSummary(item)}</p>
-            {#if item.description && item.description !== getItemSummary(item)}
-              <p class="item-desc">{item.description}</p>
-            {/if}
-
-            <div class="item-footnote">
-              <span class="item-cost">{item.cost.toLocaleString()} EP</span>
-              <span class="state-pill status-{getStateClass(item)}">{getStateLabel(item)}</span>
-            </div>
-
-            <div class="shop-actions">
-              {#if equipped}
-                <button class="shop-btn equipped" type="button" on:click={() => handleAction(item.item_key, 'unequip', item.slot)} disabled={!!loadingAction}>
-                  {loadingUnequip ? 'Unequipping...' : 'Unequip'}
-                </button>
-              {:else if owned && item.slot !== 'consumable'}
-                <button class="shop-btn owned" type="button" on:click={() => handleAction(item.item_key, 'equip')} disabled={!!loadingAction}>
-                  {loadingEquip ? 'Equipping...' : 'Equip'}
-                </button>
-              {:else if item.cost > 0 && affordable}
-                <button class="shop-btn" type="button" on:click={() => requestPurchase(item)} disabled={!!loadingAction}>
-                  {loadingBuy ? 'Buying...' : 'Buy'}
-                </button>
-              {:else if item.cost <= 0}
-                <button class="shop-btn disabled" type="button" disabled>
-                  🔒 Milestone Reward
-                </button>
-              {:else}
-                <button class="shop-btn disabled" type="button" disabled>
-                  Not Enough EP
-                </button>
-              {/if}
-            </div>
+          <div class="select-row">
+            <label>
+              <span>Rarity</span>
+              <select bind:value={selectedRarity}>
+                <option value="all">All rarities</option>
+                {#each SHOP_RARITIES as rarity (rarity)}<option value={rarity}>{rarity}</option>{/each}
+              </select>
+            </label>
+            <label>
+              <span>Sort</span>
+              <select bind:value={sortMode}>
+                {#each SHOP_SORTS as sort (sort.id)}<option value={sort.id}>{sort.label}</option>{/each}
+              </select>
+            </label>
+            <label class="affordable-toggle">
+              <input type="checkbox" bind:checked={affordableOnly} />
+              <span>Affordable now</span>
+            </label>
           </div>
-        {/each}
-      </div>
-    {/if}
-  {/if}
+        </section>
 
-  {#if utilityItems.length}
-    <div class="shop-section-header utility-header">
-      <div>
-        <h3>Utility</h3>
-        <p>Protect your daily streak or get another chance at your daily roll.</p>
-      </div>
-      <span class="section-count">{utilityItems.length} item{utilityItems.length === 1 ? '' : 's'}</span>
-    </div>
-
-    <div class="shop-grid utility-grid">
-      {#each sortedUtilityItems as item (item.item_key)}
-        {@const affordable = $walletBalance >= item.cost}
-        {@const loadingBuy = isLoading('buy', item.item_key)}
-        {@const count = item.item_key === 'reroll_shard' ? $rerollShards : getInventoryCount(item.item_key)}
-
-        <div class="shop-item utility-item shop-rarity-{item.rarity || 'Common'}">
-          <div class="shop-item-meta">
-            <span class="state-pill slot">Utility</span>
-            <span class="state-pill rarity">{item.rarity || 'Common'}</span>
+        <div class="results-heading">
+          <div>
+            <span>{sectionCopy[0]}</span>
+            <h2>{searchQuery ? `Results for “${searchQuery}”` : sectionCopy[1]}</h2>
           </div>
-
-          <div class="utility-preview-area">
-            <div class="utility-preview">
-              {#if item.item_key === 'reroll_shard'}
-                <span>+1 reroll</span>
-                <strong>{count} owned</strong>
-              {:else if item.item_key === 'streak_freeze'}
-                <span>Protects your streak</span>
-                <strong>{count} owned</strong>
-                <span class="utility-note">Automatically applied if needed.</span>
-              {:else}
-                <span>Utility item</span>
-                <strong>{count} owned</strong>
-              {/if}
-            </div>
-          </div>
-
-          <h3>{item.name}</h3>
-          <p class="item-summary">{getItemSummary(item)}</p>
-          {#if item.description && item.description !== getItemSummary(item)}
-            <p class="item-desc">{item.description}</p>
-          {/if}
-
-          <div class="item-footnote">
-            <span class="item-cost">{item.cost.toLocaleString()} EP</span>
-            <span class="state-pill status-{getStateClass(item)}">{getStateLabel(item)}</span>
-          </div>
-
-          <div class="shop-actions">
-            {#if item.cost > 0 && affordable}
-              <button class="shop-btn" type="button" on:click={() => requestPurchase(item)} disabled={!!loadingAction}>
-                {loadingBuy ? 'Buying...' : 'Buy'}
-              </button>
-            {:else if item.cost <= 0}
-              <button class="shop-btn disabled" type="button" disabled>
-                🔒 Milestone Reward
-              </button>
-            {:else}
-              <button class="shop-btn disabled" type="button" disabled>
-                Not Enough EP
-              </button>
-            {/if}
-          </div>
+          <strong>{filteredItems.length} item{filteredItems.length === 1 ? '' : 's'}</strong>
         </div>
-      {/each}
+
+        {#if filteredItems.length === 0}
+          <div class="shop-empty">
+            <span aria-hidden="true">◇</span>
+            <h3>No pieces match this edit.</h3>
+            <p>Clear the search or loosen a filter to bring more cosmetics back into view.</p>
+            <button type="button" on:click={() => { searchQuery = ''; selectedRarity = 'all'; affordableOnly = false; }}>Reset filters</button>
+          </div>
+        {:else}
+          <div class="shop-grid">
+            {#each filteredItems as item (item.item_key)}
+              {@const state = getDisplayItemState(item, $equippedItems, fittingRoom)}
+              {@const isWearing = fittingRoom.loadout[item.slot] === item.item_key}
+              <article class="shop-item rarity-{item.rarity || 'Common'}" class:is-wearing={isWearing}>
+                <div class="item-topline">
+                  <span>{SHOP_SLOT_LABELS[item.slot] || item.slot}</span>
+                  <span class="item-state tone-{state.tone}">{state.label}</span>
+                </div>
+
+                <button class="item-preview-button" type="button" aria-label={`View details for ${item.name}`} on:click={() => openItemDetails(item)}>
+                  <ShopItemPreview {item} />
+                  <span class="preview-cue">View details <i aria-hidden="true">↗</i></span>
+                </button>
+
+                <div class="item-copy">
+                  <div>
+                    <h3>{item.name}</h3>
+                    <span>{item.collection || item.rarity || 'Core collection'}</span>
+                  </div>
+                  <strong>{getPriceLabel(item)}</strong>
+                </div>
+                <p>{item.description}</p>
+
+                <div class="item-actions">
+                  {#if isShopCosmetic(item)}
+                    <button type="button" class="try-button" class:active={isWearing} on:click={() => tryOnItem(item)}>
+                      {state.tone === 'equipped' ? 'Equipped' : state.tone === 'previewing' ? 'Previewing' : 'Try on'}
+                    </button>
+                  {:else}
+                    <button type="button" class="try-button" on:click={() => openItemDetails(item)}>View utility</button>
+                  {/if}
+                  <button type="button" class="detail-button" aria-label={`Open ${item.name} details`} on:click={() => openItemDetails(item)}>•••</button>
+                </div>
+              </article>
+            {/each}
+          </div>
+        {/if}
+      </main>
     </div>
   {/if}
-  {/if}
+
+  <div class="shop-live-region visually-hidden" role="status" aria-live="polite">{shopNotice}</div>
+
+  <button type="button" class="mobile-look-tray" on:click={openLoadoutSheet}>
+    <span><i aria-hidden="true"></i> Your look</span>
+    <strong>{equippedSlotCount}/{LOADOUT_SLOTS.length} slots</strong>
+    <span aria-hidden="true">↑</span>
+  </button>
 </div>
 
-{#if purchaseTarget}
-  <div class="purchase-modal-overlay" role="presentation" on:click|self={cancelPurchase}>
+{#if selectedItem}
+  <div class="shop-overlay detail-overlay" role="presentation" on:click|self={closeItemDetails}>
     <div
-      class="purchase-modal-content"
-      bind:this={purchaseDialog}
+      class="detail-drawer"
+      bind:this={detailDialog}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="purchase-modal-title"
+      aria-labelledby="shop-detail-title"
       tabindex="-1"
-      on:keydown={handlePurchaseDialogKeydown}
+      on:keydown={handleDetailKeydown}
     >
-      <div class="purchase-modal-head">
-        <div>
-          <p class="purchase-kicker">Confirm purchase</p>
-          <h3 id="purchase-modal-title">{purchaseTarget.name}</h3>
-        </div>
-        <span class="state-pill rarity">{purchaseTarget.rarity || 'Common'}</span>
+      <div class="drawer-head">
+        <span>Atelier fitting</span>
+        <button type="button" aria-label="Close item details" on:click={closeItemDetails}>×</button>
       </div>
 
-      <p class="purchase-summary">{selectedItemPreview}</p>
-      <p class="purchase-desc">{purchaseTarget.description}</p>
+      <div class="drawer-preview"><ShopItemPreview item={selectedItem} /></div>
 
-      <div class="purchase-stats">
+      <div class="drawer-title-row">
         <div>
-          <span>Cost</span>
-          <strong>{purchaseTarget.cost.toLocaleString()} EP</strong>
+          <span>{selectedItem.collection || `${selectedItem.rarity} cosmetic`}</span>
+          <h2 id="shop-detail-title">{selectedItem.name}</h2>
         </div>
-        <div>
-          <span>Your balance</span>
-          <strong>{$walletBalance.toLocaleString()} EP</strong>
-        </div>
-        <div>
-          <span>After purchase</span>
-          <strong>{Math.max(0, $walletBalance - purchaseTarget.cost).toLocaleString()} EP</strong>
-        </div>
+        <span class="drawer-rarity">{selectedItem.rarity || 'Common'}</span>
+      </div>
+      <p class="drawer-description">{selectedItem.description}</p>
+
+      <div class="drawer-stats">
+        <div><span>Price</span><strong>{getPriceLabel(selectedItem)}</strong></div>
+        <div><span>Your balance</span><strong>{fittingRoom.balance.toLocaleString()} EP</strong></div>
+        <div><span>Status</span><strong>{selectedState?.label}</strong></div>
       </div>
 
-      <p class="purchase-reason">{getPurchaseReason(purchaseTarget)}</p>
+      {#if relatedItems.length}
+        <div class="related-section">
+          <div class="related-head"><span>Complete the collection</span><strong>{selectedItem.collection}</strong></div>
+          <div class="related-list">
+            {#each relatedItems as related (related.item_key)}
+              <button type="button" on:click={() => selectRelatedItem(related)}>
+                <span>{SHOP_SLOT_LABELS[related.slot]}</span>
+                <strong>{related.name}</strong>
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
 
-      <div class="purchase-actions">
-        <button class="shop-btn secondary" type="button" on:click={cancelPurchase} disabled={!!loadingAction}>
-          Cancel
-        </button>
-        <button class="shop-btn" type="button" on:click={confirmPurchase} disabled={!!loadingAction}>
-          Confirm Purchase
-        </button>
+      <div class="drawer-actions">
+        {#if isShopCosmetic(selectedItem)}
+          <button type="button" class="drawer-try" on:click={() => tryOnItem(selectedItem)}>Try on this piece</button>
+        {/if}
+
+        {#if isShopCosmetic(selectedItem) && selectedOwnedCount > 0}
+          <button
+            type="button"
+            class="drawer-buy"
+            disabled={!!loadingAction}
+            on:click={() => runLiveAction(selectedItem, selectedActuallyEquipped ? 'unequip' : 'equip')}
+          >
+            {loadingAction
+              ? (selectedActuallyEquipped ? 'Unequipping…' : 'Equipping…')
+              : (selectedActuallyEquipped ? 'Unequip from account' : 'Equip to account')}
+          </button>
+        {:else if selectedItem.cost <= 0}
+          <button type="button" class="drawer-buy" disabled>Milestone reward · Preview only</button>
+        {:else}
+          <button type="button" class="drawer-buy" disabled={!selectedCanPurchase || !!loadingAction} on:click={() => requestPurchase(selectedItem)}>
+            {loadingAction
+              ? 'Completing purchase…'
+              : selectedCanPurchase
+                ? purchaseArmedKey === selectedItem.item_key
+                  ? `Confirm purchase · ${selectedItem.cost.toLocaleString()} EP`
+                  : `Buy now · ${selectedItem.cost.toLocaleString()} EP`
+              : `Need ${(selectedItem.cost - fittingRoom.balance).toLocaleString()} more EP`}
+          </button>
+        {/if}
       </div>
+      {#if purchaseArmedKey === selectedItem.item_key}
+        <div class="purchase-confirmation" role="status">
+          <span>Balance after purchase</span>
+          <strong>{Math.max(0, fittingRoom.balance - selectedItem.cost).toLocaleString()} EP</strong>
+        </div>
+      {/if}
+      <p class="drawer-safety">Trying on is temporary until you equip or purchase an item.</p>
+    </div>
+  </div>
+{/if}
+
+{#if loadoutSheetOpen}
+  <div class="shop-overlay loadout-overlay" role="presentation" on:click|self={closeLoadoutSheet}>
+    <div
+      class="loadout-sheet"
+      bind:this={loadoutDialog}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Your fitting room"
+      tabindex="-1"
+      on:keydown={handleLoadoutKeydown}
+    >
+      <div class="drawer-head">
+        <span>Your fitting room</span>
+        <button type="button" aria-label="Close your look" on:click={closeLoadoutSheet}>×</button>
+      </div>
+      <ShopStudioPreview bind:activeContext loadout={fittingRoom.loadout} {username} {displayColor} selectedItem={previewedItem} />
+      <div class="sheet-slots">
+        {#each loadoutEntries as entry (entry.slot)}
+          <div>
+            <span>{SHOP_SLOT_LABELS[entry.slot]}</span>
+            <strong>{entry.item?.name || 'Empty'}</strong>
+            {#if entry.item}<button type="button" aria-label={`Clear ${SHOP_SLOT_LABELS[entry.slot]}`} on:click={() => clearSlot(entry.slot)}>Clear</button>{/if}
+          </div>
+        {/each}
+      </div>
+      <button type="button" class="sheet-reset" on:click={resetFittingRoom}>Reset to equipped items</button>
     </div>
   </div>
 {/if}
 
 <style>
-  .shop-intro {
-    margin: 0;
-    color: #e2e8ff;
-    line-height: 1.6;
-    font-size: 0.95rem;
-    max-width: 560px;
+  .shop-page {
+    width: min(1440px, calc(100% - 32px));
+    margin: clamp(28px, 5vw, 64px) auto 80px;
+    color: #f4f3f8;
+    --shop-line: rgba(255,255,255,0.085);
+    --shop-muted: #888a99;
+    --shop-panel: #101116;
+    --shop-purple: #8b7cf6;
   }
 
-  .shop-masthead {
+  .shop-info-banner {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    margin: 4px 0 22px;
-    padding: 22px 24px;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 22px;
-    background:
-      radial-gradient(circle at 100% 0%, rgba(139, 124, 246, 0.16), transparent 42%),
-      linear-gradient(135deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012));
-    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.16);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .shop-masthead::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: var(--spectrum);
-    opacity: 0.8;
-  }
-
-  .shop-masthead-copy {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .shop-hero-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .shop-status-panel {
-    display: grid;
-    gap: 6px;
-    margin: 18px 0 24px;
-    padding: 24px;
-    border: 1px solid var(--card-border);
-    border-radius: 18px;
-    background:
-      radial-gradient(circle at top right, rgba(139, 92, 246, 0.12), transparent 38%),
-      rgba(255,255,255,0.025);
-    text-align: left;
-  }
-
-  .shop-status-panel strong {
-    color: #fff;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1rem;
-  }
-
-  .shop-status-panel > span:last-child {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-  }
-
-  .shop-status-eyebrow {
-    color: var(--accent-purple);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .shop-status-error {
-    border-color: rgba(239, 68, 68, 0.35);
-  }
-
-  .shop-status-error .shop-status-eyebrow {
-    color: #fca5a5;
-  }
-
-  .shop-retry-btn {
-    justify-self: start;
-    width: auto;
-    margin-top: 8px;
-  }
-
-  .hero-pill {
-    display: inline-flex;
     align-items: center;
-    min-height: 32px;
-    padding: 0 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.03);
-    color: var(--text-muted);
-    font-size: 0.75rem;
+    gap: 12px;
+    min-height: 58px;
+    padding: 10px 14px;
+    border: 1px solid rgba(167,151,255,0.18);
+    border-radius: 16px;
+    background: linear-gradient(90deg, rgba(116,91,255,0.1), rgba(255,255,255,0.025));
+  }
+
+  .shop-info-dot {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #a899ff;
+    box-shadow: 0 0 18px rgba(168,153,255,0.9);
+  }
+
+  .shop-info-banner div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .shop-info-banner strong { font: 700 0.76rem var(--font-display); }
+  .shop-info-banner div span { color: #9495a3; font-size: 0.72rem; }
+  .shop-info-banner a {
+    margin-left: auto;
+    color: #d9d3ff;
+    font-size: 0.74rem;
+    font-weight: 650;
+    text-decoration: none;
     white-space: nowrap;
   }
 
-  .wallet-display {
-    padding: 12px 14px;
-    text-align: left;
+  .shop-header {
     display: flex;
-    flex-direction: column;
     align-items: flex-end;
-    justify-content: center;
-    gap: 4px;
-    flex-shrink: 0;
-    min-width: 184px;
-    border: 1px solid var(--card-border);
-    border-radius: 16px;
-    background:
-      radial-gradient(circle at top right, rgba(168, 85, 247, 0.12), transparent 42%),
-      rgba(255,255,255,0.02);
+    justify-content: space-between;
+    gap: 32px;
+    padding: clamp(44px, 7vw, 88px) clamp(4px, 2vw, 20px) clamp(34px, 5vw, 64px);
   }
 
-  .wallet-label {
-    color: var(--text-muted);
-    font-size: 0.68rem;
+  .shop-kicker,
+  .collection-number,
+  .results-heading > div > span {
+    color: #9b96af;
+    font: 700 0.66rem/1 'JetBrains Mono', monospace;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin: 0;
-    flex-shrink: 0;
   }
 
-  .wallet-display strong {
-    color: #fff;
-    font-size: clamp(1.35rem, 2vw, 1.75rem);
-    font-weight: 700;
-    line-height: 1;
-    font-family: 'Space Grotesk', sans-serif;
+  .shop-heading h1 {
+    max-width: 760px;
+    margin: 14px 0 18px;
+    font: 720 clamp(2.85rem, 7vw, 6.2rem)/0.88 var(--font-display);
+    letter-spacing: -0.075em;
   }
+  .shop-heading h1 em {
+    color: transparent;
+    font-style: normal;
+    background: linear-gradient(90deg, #e9e4ff, #9c8cff 44%, #6de1d0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .shop-heading p { max-width: 610px; margin: 0; color: #8d8f9e; font-size: 1rem; line-height: 1.65; }
 
-  .shop-toolbar {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 24px;
-    padding: 16px 18px 14px;
-    border: 1px solid rgba(255,255,255,0.07);
+  .shop-wallet {
+    min-width: 210px;
+    padding: 17px 18px;
+    border: 1px solid var(--shop-line);
     border-radius: 20px;
-    background: rgba(255,255,255,0.02);
+    background: radial-gradient(circle at 100% 0%, rgba(140,116,255,0.18), transparent 45%), rgba(255,255,255,0.025);
+    text-align: right;
   }
+  .shop-wallet span,
+  .shop-wallet small { display: block; color: #858797; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; }
+  .shop-wallet strong { display: block; margin: 5px 0 3px; font: 700 1.8rem/1 var(--font-display); }
 
-  .shop-tabs {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    padding: 0 0 14px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(168, 85, 247, 0.55) transparent;
-  }
-
-  .shop-tab,
-  .sort-pill {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--card-border);
-    color: var(--text-muted);
-    padding: 8px 12px;
-    border-radius: 999px;
-    cursor: pointer;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-    min-height: 40px;
-    white-space: nowrap;
-  }
-
-  .shop-tab:hover,
-  .sort-pill:hover {
-    background: rgba(255,255,255,0.08);
-    color: #fff;
-    border-color: var(--card-border-hover);
-  }
-
-  .shop-tab.active,
-  .sort-pill.active {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.92), rgba(168, 85, 247, 0.82));
-    color: #fff;
-    border-color: rgba(168, 85, 247, 0.55);
-    box-shadow: 0 8px 18px rgba(139, 92, 246, 0.18);
-  }
-
-  .shop-tab:focus-visible,
-  .sort-pill:focus-visible,
-  .owned-control:focus-visible,
-  .owned-group-header:focus-visible,
-  .shop-btn:focus-visible {
-    outline: 2px solid #c4b5fd;
-    outline-offset: 3px;
-  }
-
-  .shop-sort {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-    padding: 0;
-  }
-
-  .shop-sort > span {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .sort-pills {
-    display: flex;
-    flex-wrap: wrap;
+  .shop-status {
+    display: grid;
     gap: 8px;
-  }
-
-  .shop-section-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 16px;
-    margin: 16px 0 18px;
-    padding: 16px 18px;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 18px;
-  }
-
-  .shop-section-header h3 {
-    margin: 0 0 6px 0;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.15rem;
-  }
-
-  .shop-section-header p {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    line-height: 1.45;
-  }
-
-  .section-count {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .shop-empty {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--card-border);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 18px;
-  }
-
-  .shop-empty p {
-    margin: 0 0 6px 0;
-    color: #fff;
-    font-family: 'Space Grotesk', sans-serif;
-  }
-
-  .shop-empty span {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-  }
-
-  .owned-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .owned-control {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--card-border);
-    color: var(--text-muted);
-    padding: 8px 12px;
-    border-radius: 999px;
-    cursor: pointer;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-    min-height: 40px;
-  }
-
-  .owned-control:hover,
-  .owned-control:focus-visible {
-    background: rgba(255,255,255,0.08);
-    color: #fff;
-  }
-
-  .owned-groups {
-    display: grid;
-    gap: 14px;
-    margin-bottom: 28px;
-  }
-
-  .owned-group {
-    background:
-      radial-gradient(circle at top right, rgba(168, 85, 247, 0.08), transparent 32%),
-      rgba(255,255,255,0.02);
-    border: 1px solid var(--card-border);
-    border-radius: 18px;
-    padding: 14px;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
-  }
-
-  .owned-group-header {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    background: none;
-    border: none;
-    color: inherit;
-    padding: 2px 2px 12px;
-    cursor: pointer;
-    text-align: left;
-  }
-
-  .owned-group-header h3 {
-    margin: 0 0 4px 0;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.05rem;
-  }
-
-  .owned-group-header p {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-  }
-
-  .owned-group-chevron {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    flex-shrink: 0;
-  }
-
-  .owned-grid {
-    margin-bottom: 0;
-  }
-
-  .shop-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 18px;
-    margin-bottom: 28px;
-  }
-
-  .featured-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    margin-bottom: 22px;
-  }
-
-  .featured-section {
-    margin-bottom: 26px;
-    padding: 4px 16px 16px;
-    border: 1px solid rgba(168, 85, 247, 0.18);
+    padding: 36px;
+    border: 1px solid var(--shop-line);
     border-radius: 24px;
-    background:
-      radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.11), transparent 48%),
-      rgba(255,255,255,0.018);
+    background: rgba(255,255,255,0.025);
+  }
+  .shop-status span { color: var(--shop-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; }
+  .shop-status strong { font: 700 1.15rem var(--font-display); }
+  .shop-status button { justify-self: start; min-height: 42px; padding: 0 16px; border: 0; border-radius: 12px; cursor: pointer; }
+  .shop-status.error { border-color: rgba(239,68,68,0.3); }
+
+  .atelier-layout {
+    display: grid;
+    grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
+    gap: clamp(24px, 3vw, 42px);
+    align-items: start;
   }
 
-  .featured-section .featured-header {
-    justify-content: center;
-    margin: 0 0 16px;
-    padding: 18px 12px 12px;
-    background: transparent;
-    border: 0;
-    text-align: center;
+  .studio-sticky { position: sticky; top: 92px; display: grid; gap: 14px; }
+
+  .loadout-panel {
+    padding: 16px;
+    border: 1px solid var(--shop-line);
+    border-radius: 22px;
+    background: rgba(14,15,20,0.88);
+  }
+  .loadout-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+  .loadout-panel-head div { display: flex; flex-direction: column; gap: 3px; }
+  .loadout-panel-head span { color: #77798a; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .loadout-panel-head strong { font: 650 0.82rem var(--font-display); }
+  .loadout-panel-head button,
+  .sheet-reset {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--shop-line);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.035);
+    color: #d2d0dc;
+    cursor: pointer;
+    font-size: 0.7rem;
   }
 
-  .featured-section .featured-header > div {
-    max-width: 42rem;
-  }
-
-  .featured-section .featured-header h3 {
-    font-size: 1.25rem;
-  }
-
-  .shop-item {
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
-      rgba(19, 20, 26, 0.95);
-    border: 1px solid var(--card-border);
-    border-radius: 20px;
-    padding: 18px;
-    display: flex;
-    flex-direction: column;
+  .loadout-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
+  .loadout-list > div {
+    position: relative;
     min-width: 0;
-    width: 100%;
-    box-sizing: border-box;
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
-    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-    min-height: 0;
-    text-align: left;
-    overflow: hidden;
+    min-height: 53px;
+    padding: 9px 42px 9px 10px;
+    border: 1px dashed rgba(255,255,255,0.075);
+    border-radius: 11px;
+    background: rgba(0,0,0,0.13);
+  }
+  .loadout-list > div.filled { border-style: solid; border-color: rgba(153,133,255,0.16); background: rgba(135,111,255,0.045); }
+  .loadout-list span,
+  .loadout-list strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .loadout-list span { color: #737585; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .loadout-list strong { margin-top: 4px; color: #d8d6e0; font-size: 0.68rem; }
+  .loadout-list button {
+    position: absolute;
+    top: 50%; right: 3px;
+    width: 36px; height: 36px;
+    transform: translateY(-50%);
+    border: 0; border-radius: 7px;
+    background: rgba(255,255,255,0.05); color: #8e909f; cursor: pointer;
   }
 
-  .shop-item:hover {
-    transform: translateY(-2px);
-    border-color: var(--card-border-hover);
-    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.24);
-  }
+  .catalog-column { min-width: 0; }
 
-  .featured-item {
-    padding: 15px;
-    min-height: 0;
-  }
-
-  .shop-item.is-equipped {
-    border-color: rgba(168, 85, 247, 0.8);
-    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.25), 0 16px 32px rgba(0, 0, 0, 0.18);
-  }
-
-  .shop-item.is-owned:not(.is-equipped) {
-    border-color: rgba(59, 130, 246, 0.3);
-  }
-
-  .shop-item-meta {
+  .collection-hero {
+    position: relative;
+    min-height: 330px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 14px;
-    width: 100%;
+    overflow: hidden;
+    padding: clamp(28px, 5vw, 56px);
+    border: 1px solid rgba(174,153,255,0.16);
+    border-radius: 30px;
+    background:
+      radial-gradient(circle at 78% 44%, rgba(87,48,159,0.38), transparent 25%),
+      linear-gradient(135deg, #0c0911, #11101a 55%, #090a0f);
+    box-shadow: 0 28px 80px rgba(0,0,0,0.28);
   }
+  .collection-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 72% 50%, rgba(166,119,255,0.12), transparent 42%);
+    pointer-events: none;
+  }
+  .collection-copy { position: relative; z-index: 2; width: min(62%, 560px); }
+  .collection-copy h2 { margin: 13px 0 12px; font: 720 clamp(2rem, 4vw, 3.8rem)/0.95 var(--font-display); letter-spacing: -0.055em; }
+  .collection-copy p { max-width: 500px; margin: 0; color: #9b99a9; font-size: 0.9rem; line-height: 1.6; }
+  .collection-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+  .collection-actions button {
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .primary-action { border: 0; background: #f1eefb; color: #111117; }
+  .quiet-action { border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #e2dff0; }
 
-  .state-pill {
+  .collection-orbit { position: absolute; right: clamp(20px, 7vw, 82px); top: 50%; width: 220px; height: 220px; transform: translateY(-50%); }
+  .orbit,
+  .orbit-core { position: absolute; inset: 50%; border-radius: 50%; transform: translate(-50%,-50%); }
+  .orbit { border: 1px solid rgba(186,159,255,0.24); box-shadow: 0 0 36px rgba(113,61,194,0.13); }
+  .orbit-one { width: 210px; height: 95px; transform: translate(-50%,-50%) rotate(18deg); }
+  .orbit-two { width: 90px; height: 210px; transform: translate(-50%,-50%) rotate(36deg); }
+  .orbit-core {
+    width: 92px; height: 92px;
+    background: radial-gradient(circle at 40% 35%, #1e122c 0 12%, #030207 38%, #7c41bd 43%, #0a0611 52%, #000 72%);
+    box-shadow: 0 0 46px rgba(132,75,206,0.38), inset 0 0 22px #000;
+    animation: shopVoidPulse 5s ease-in-out infinite;
+  }
+  @keyframes shopVoidPulse { 50% { transform: translate(-50%,-50%) scale(1.07); filter: brightness(1.18); } }
+
+  .section-rail {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    margin: 22px 0 10px;
+    padding: 5px;
+    border: 1px solid var(--shop-line);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.018);
+    scrollbar-width: none;
+  }
+  .section-rail::-webkit-scrollbar { display: none; }
+  .section-rail button {
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 24px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    border: 1px solid transparent;
+    gap: 7px;
+    flex: 1 0 auto;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: #7f8190;
+    cursor: pointer;
+    font: 650 0.76rem var(--font-display);
     white-space: nowrap;
   }
+  .section-rail button:hover { color: #fff; }
+  .section-rail button.active { color: #fff; background: rgba(255,255,255,0.075); }
+  .section-rail button span { min-width: 20px; padding: 2px 5px; border-radius: 999px; background: rgba(143,119,255,0.13); color: #c7bcff; font-size: 0.58rem; }
 
-  .state-pill.slot {
-    background: rgba(168, 85, 247, 0.1);
-    color: #d8b4fe;
-    border-color: rgba(168, 85, 247, 0.18);
+  .subsection-rail { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+  .subsection-rail button {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--shop-line);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.02);
+    color: #858797;
+    cursor: pointer;
+    font-size: 0.7rem;
   }
+  .subsection-rail button.active { border-color: rgba(154,134,255,0.3); background: rgba(130,105,255,0.1); color: #ded8ff; }
 
-  .state-pill.rarity {
-    background: rgba(255,255,255,0.04);
-    color: #fff;
-    border-color: rgba(255,255,255,0.12);
+  .catalog-controls {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--shop-line);
+    border-radius: 19px;
+    background: rgba(255,255,255,0.018);
   }
-
-  .state-pill.muted {
-    background: rgba(255,255,255,0.04);
-    color: var(--text-muted);
-    border-color: rgba(255,255,255,0.08);
-  }
-
-  .state-pill.status-available {
-    background: rgba(168, 85, 247, 0.12);
-    color: #ddd6fe;
-    border-color: rgba(168, 85, 247, 0.24);
-  }
-
-  .state-pill.status-owned {
-    background: rgba(59, 130, 246, 0.14);
-    color: #bfdbfe;
-    border-color: rgba(59, 130, 246, 0.24);
-  }
-
-  .state-pill.status-equipped {
-    background: rgba(34, 197, 94, 0.14);
-    color: #bbf7d0;
-    border-color: rgba(34, 197, 94, 0.24);
-  }
-
-  .state-pill.status-unaffordable,
-  .state-pill.status-milestone,
-  .state-pill.status-utility {
-    background: rgba(255,255,255,0.045);
-    color: var(--text-muted);
-    border-color: rgba(255,255,255,0.1);
-  }
-
-  .state-pill.equipped {
-    background: rgba(34, 197, 94, 0.14);
-    color: #86efac;
-    border-color: rgba(34, 197, 94, 0.18);
-  }
-
-  .state-pill.owned {
-    background: rgba(59, 130, 246, 0.14);
-    color: #93c5fd;
-    border-color: rgba(59, 130, 246, 0.18);
-  }
-
-  .utility-preview-area {
-    min-height: 112px;
-    margin-bottom: 14px;
+  .search-field { position: relative; display: flex; align-items: center; }
+  .search-field input {
     width: 100%;
+    min-height: 48px;
+    padding: 0 44px 0 42px;
+    border: 1px solid rgba(255,255,255,0.085);
+    border-radius: 13px;
+    background: rgba(5,6,9,0.72);
+    color: #fff;
+    outline: none;
+  }
+  .search-field input:focus { border-color: rgba(158,140,255,0.55); box-shadow: 0 0 0 3px rgba(139,124,246,0.1); }
+  .search-field input::placeholder { color: #656776; }
+  .search-icon { position: absolute; left: 15px; z-index: 1; color: #858797; font-size: 1.1rem; }
+  .search-field button { position: absolute; right: 9px; width: 32px; height: 32px; border: 0; border-radius: 9px; background: rgba(255,255,255,0.05); color: #999baa; cursor: pointer; }
+
+  .select-row { display: flex; align-items: flex-end; gap: 9px; flex-wrap: wrap; }
+  .select-row > label:not(.affordable-toggle) { display: flex; flex-direction: column; gap: 5px; flex: 1 1 150px; }
+  .select-row > label > span { color: #747685; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.09em; }
+  .select-row select {
+    min-height: 44px;
+    padding: 0 34px 0 11px;
+    border: 1px solid var(--shop-line);
+    border-radius: 11px;
+    background: #101116;
+    color: #d7d5df;
+  }
+  .affordable-toggle {
+    min-height: 44px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 12px;
-    box-sizing: border-box;
-    border: 1px solid rgba(255,255,255,0.075);
-    border-radius: 16px;
-    background: rgba(5,6,10,0.58);
+    gap: 8px;
+    flex: 1 1 150px;
+    padding: 0 11px;
+    border: 1px solid var(--shop-line);
+    border-radius: 11px;
+    cursor: pointer;
   }
+  .affordable-toggle input { accent-color: var(--shop-purple); }
+  .affordable-toggle span { color: #b9b8c3 !important; text-transform: none !important; letter-spacing: 0 !important; font-size: 0.7rem !important; }
 
-  .utility-preview {
-    width: 100%;
-    min-height: 68px;
-    height: auto;
-    padding: 10px 12px;
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
-    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  .results-heading { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; margin: 30px 2px 14px; }
+  .results-heading > div { min-width: 0; }
+  .results-heading h2 { max-width: 680px; margin: 7px 0 0; color: #aaaab5; font: 500 0.85rem/1.5 var(--font-display); }
+  .results-heading > strong { color: #747685; font: 600 0.68rem 'JetBrains Mono', monospace; white-space: nowrap; }
+
+  .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 13px; }
+  .shop-item {
+    min-width: 0;
     display: flex;
     flex-direction: column;
+    padding: 13px;
+    border: 1px solid var(--shop-line);
+    border-radius: 19px;
+    background: linear-gradient(180deg, rgba(20,21,27,0.95), rgba(13,14,18,0.97));
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .shop-item:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.16); box-shadow: 0 18px 42px rgba(0,0,0,0.23); }
+  .shop-item.is-wearing { border-color: rgba(142,121,255,0.52); box-shadow: inset 0 0 0 1px rgba(142,121,255,0.08); }
+  .shop-item.rarity-Mythic { background: radial-gradient(circle at 100% 0%, rgba(150,112,255,0.08), transparent 34%), linear-gradient(180deg, rgba(20,21,27,0.96), rgba(13,14,18,0.98)); }
+
+  .item-topline { display: flex; justify-content: space-between; gap: 8px; align-items: center; min-height: 25px; margin-bottom: 9px; }
+  .item-topline > span:first-child { color: #77798a; font-size: 0.57rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .item-state { max-width: 58%; overflow: hidden; padding: 4px 7px; border: 1px solid rgba(255,255,255,0.07); border-radius: 999px; color: #9496a5; font-size: 0.55rem; text-overflow: ellipsis; white-space: nowrap; }
+  .item-state.tone-equipped { border-color: rgba(157,136,255,0.22); background: rgba(137,112,255,0.09); color: #d4cbff; }
+  .item-state.tone-previewing { border-color: rgba(109,225,208,0.2); background: rgba(73,196,180,0.08); color: #a7eee4; }
+  .item-state.tone-owned { border-color: rgba(77,159,255,0.18); color: #abd2ff; }
+  .item-state.tone-available { border-color: rgba(74,222,170,0.17); color: #9de5ca; }
+
+  .item-preview-button { position: relative; width: 100%; padding: 0; border: 0; border-radius: 16px; background: transparent; color: inherit; cursor: pointer; text-align: inherit; }
+  .item-preview-button :global(.shop-preview-area) { margin-bottom: 0; }
+  .preview-cue {
+    position: absolute;
+    right: 8px; bottom: 8px;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 2px;
-    text-align: center;
+    gap: 5px;
+    min-height: 28px;
+    padding: 0 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: rgba(4,5,8,0.78);
+    color: #b8b7c1;
+    font-size: 0.56rem;
+    opacity: 0;
+    transform: translateY(3px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .item-preview-button:hover .preview-cue,
+  .item-preview-button:focus-visible .preview-cue { opacity: 1; transform: translateY(0); }
+  .preview-cue i { font-style: normal; }
+
+  .item-copy { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-top: 13px; }
+  .item-copy > div { min-width: 0; }
+  .item-copy h3 { overflow: hidden; margin: 0; color: #f3f2f7; font: 680 0.88rem/1.2 var(--font-display); text-overflow: ellipsis; white-space: nowrap; }
+  .item-copy div span { display: block; overflow: hidden; margin-top: 4px; color: #767887; font-size: 0.58rem; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+  .item-copy > strong { color: #d8d4e5; font: 650 0.67rem 'JetBrains Mono', monospace; white-space: nowrap; }
+  .shop-item > p { min-height: 2.8em; display: -webkit-box; overflow: hidden; margin: 10px 0 13px; color: #858795; font-size: 0.68rem; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+
+  .item-actions { display: grid; grid-template-columns: minmax(0,1fr) 40px; gap: 7px; margin-top: auto; }
+  .item-actions button { min-height: 44px; border-radius: 11px; cursor: pointer; font: 700 0.68rem var(--font-display); }
+  .try-button { border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); color: #e5e3ec; }
+  .try-button:hover { background: rgba(255,255,255,0.1); }
+  .try-button.active { border-color: rgba(148,126,255,0.28); background: rgba(132,107,255,0.13); color: #dcd4ff; }
+  .detail-button { border: 1px solid var(--shop-line); background: transparent; color: #7c7e8d; letter-spacing: 0.08em; }
+
+  .shop-empty { display: flex; flex-direction: column; align-items: center; padding: 56px 20px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 22px; text-align: center; }
+  .shop-empty > span { color: #8c7cff; font-size: 1.8rem; }
+  .shop-empty h3 { margin: 12px 0 7px; font: 700 1rem var(--font-display); }
+  .shop-empty p { max-width: 440px; margin: 0; color: #858797; font-size: 0.78rem; line-height: 1.5; }
+  .shop-empty button { min-height: 44px; margin-top: 16px; padding: 0 14px; border: 1px solid var(--shop-line); border-radius: 11px; background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; }
+
+  .mobile-look-tray { display: none; }
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px !important; height: 1px !important;
+    padding: 0 !important; margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0,0,0,0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
   }
 
-  .utility-preview span {
-    color: var(--text-muted);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .utility-note {
-    color: var(--text-muted);
-    font-size: 0.64rem;
-    line-height: 1.25;
-    text-transform: none !important;
-    letter-spacing: 0;
-    max-width: 24ch;
-  }
-
-  .utility-preview strong {
-    color: #fff;
-    font-size: 0.9rem;
-    font-family: 'Space Grotesk', sans-serif;
-  }
-
-  .shop-item h3 {
-    margin: 0;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.97rem;
-    color: #fff;
-    line-height: 1.2;
-    min-height: 1.2em;
-  }
-
-  .item-collection {
-    font-size: 0.7rem;
-    color: var(--accent-purple);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 4px;
-    margin-bottom: 2px;
-    font-weight: 600;
-  }
-
-  .item-summary {
-    color: #dbe4ff;
-    font-size: 0.8rem;
-    line-height: 1.45;
-    margin: 6px 0 8px;
-    min-height: 2.9em;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .featured-summary {
-    min-height: 3.1em;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .item-desc {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    line-height: 1.45;
-    margin: 0 0 14px 0;
-    overflow-wrap: anywhere;
-    min-height: 2.9em;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .item-footnote {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-top: auto;
-    margin-bottom: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255,255,255,0.07);
-  }
-
-  .item-cost {
-    color: var(--accent-green);
-    font-family: 'JetBrains Mono';
-    font-size: 0.85rem;
-    white-space: nowrap;
-  }
-
-  .shop-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: auto;
-  }
-
-  .shop-btn {
-    flex: 1;
-    border: 1px solid transparent;
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
-    cursor: pointer;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.92), rgba(168, 85, 247, 0.86));
-    color: #fff;
-    transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease, border-color 0.2s ease;
-    min-height: 44px;
-    box-shadow: 0 10px 18px rgba(139, 92, 246, 0.15);
-  }
-
-  .shop-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-    border-color: rgba(255,255,255,0.12);
-  }
-
-  .shop-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-    transform: none;
-  }
-
-  .shop-btn.owned {
-    background: rgba(59, 130, 246, 0.14);
-    color: #bfdbfe;
-  }
-
-  .shop-btn.equipped {
-    background: rgba(34, 197, 94, 0.18);
-    color: #bbf7d0;
-  }
-
-  .shop-btn.secondary {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--card-border);
-    color: #fff;
-  }
-
-  .shop-btn.disabled {
-    background: rgba(255,255,255,0.05);
-    color: var(--text-muted);
-  }
-
-  .utility-header {
-    margin-top: 12px;
-  }
-
-  .utility-grid {
-    margin-bottom: 12px;
-  }
-
-  .purchase-modal-overlay {
+  .shop-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(3, 7, 18, 0.72);
-    backdrop-filter: blur(8px);
+    z-index: 1200;
+    display: flex;
+    background: rgba(3,4,8,0.74);
+    backdrop-filter: blur(9px);
+  }
+  .detail-overlay { justify-content: flex-end; }
+  .detail-drawer {
+    width: min(520px, 100%);
+    height: 100dvh;
+    overflow-y: auto;
+    padding: 22px;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    background: radial-gradient(circle at 100% 0%, rgba(132,104,255,0.12), transparent 34%), #101116;
+    box-shadow: -28px 0 80px rgba(0,0,0,0.38);
+  }
+  .drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .drawer-head > span { color: #888a99; font: 700 0.63rem 'JetBrains Mono', monospace; letter-spacing: 0.11em; text-transform: uppercase; }
+  .drawer-head > button { width: 44px; height: 44px; border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; background: rgba(255,255,255,0.04); color: #d5d3df; cursor: pointer; font-size: 1.25rem; }
+  .drawer-preview { padding: 14px; border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; background: rgba(4,5,8,0.5); }
+  .drawer-preview :global(.shop-preview-area) { height: 220px; margin: 0; }
+  .drawer-preview :global(.shop-preview-area-roll-effect) { height: 260px; }
+
+  .drawer-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-top: 22px; }
+  .drawer-title-row > div > span { color: #8d87a5; font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .drawer-title-row h2 { margin: 6px 0 0; font: 720 1.75rem/1 var(--font-display); letter-spacing: -0.035em; }
+  .drawer-rarity { padding: 6px 9px; border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; color: #ccc8dc; font-size: 0.6rem; text-transform: uppercase; }
+  .drawer-description { margin: 15px 0 18px; color: #9697a5; font-size: 0.85rem; line-height: 1.6; }
+
+  .drawer-stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+  .drawer-stats > div { min-width: 0; padding: 11px; border: 1px solid rgba(255,255,255,0.075); border-radius: 13px; background: rgba(255,255,255,0.025); }
+  .drawer-stats span,
+  .drawer-stats strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .drawer-stats span { color: #747685; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .drawer-stats strong { margin-top: 5px; color: #e2e0e8; font-size: 0.68rem; }
+
+  .related-section { margin-top: 20px; padding: 15px; border: 1px solid rgba(255,255,255,0.075); border-radius: 16px; }
+  .related-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .related-head span { color: #777989; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.07em; }
+  .related-head strong { color: #c9c2e8; font-size: 0.68rem; }
+  .related-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
+  .related-list button { min-width: 0; padding: 9px; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; background: rgba(255,255,255,0.025); color: inherit; cursor: pointer; text-align: left; }
+  .related-list span,
+  .related-list strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .related-list span { color: #6f7180; font-size: 0.52rem; text-transform: uppercase; }
+  .related-list strong { margin-top: 4px; color: #d8d6e0; font-size: 0.66rem; }
+
+  .drawer-actions { display: grid; gap: 8px; margin-top: 22px; }
+  .drawer-actions button { min-height: 48px; border-radius: 13px; cursor: pointer; font-weight: 750; }
+  .drawer-try { border: 0; background: #f1eef9; color: #101116; }
+  .drawer-buy { border: 1px solid rgba(153,130,255,0.25); background: rgba(132,108,255,0.12); color: #dbd3ff; }
+  .drawer-buy:disabled { border-color: rgba(255,255,255,0.07); background: rgba(255,255,255,0.035); color: #717381; cursor: not-allowed; }
+  .purchase-confirmation {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 80;
-  }
-
-  .purchase-modal-content {
-    width: min(560px, 100%);
-    max-height: calc(100dvh - 40px);
-    overflow-y: auto;
-    background:
-      radial-gradient(circle at top right, rgba(168, 85, 247, 0.12), transparent 42%),
-      linear-gradient(180deg, rgba(22, 23, 31, 0.98), rgba(17, 18, 25, 0.98));
-    border: 1px solid var(--card-border);
-    border-radius: 20px;
-    padding: 24px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
-  }
-
-  .purchase-modal-head {
-    display: flex;
-    align-items: flex-start;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 14px;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 11px 13px;
+    border: 1px solid rgba(153,130,255,0.2);
+    border-radius: 12px;
+    background: rgba(132,108,255,0.07);
+  }
+  .purchase-confirmation span { color: #8f90a0; font-size: 0.65rem; }
+  .purchase-confirmation strong { color: #ded8ff; font: 700 0.78rem 'JetBrains Mono', monospace; }
+  .drawer-safety { margin: 12px 10px 2px; color: #686a78; font-size: 0.64rem; line-height: 1.45; text-align: center; }
+
+  .loadout-overlay { display: none; align-items: flex-end; }
+  .loadout-sheet {
+    width: 100%;
+    max-height: calc(100dvh - 18px);
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 22px 22px 0 0;
+    background: #0e0f14;
+  }
+  .sheet-slots { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin-top: 12px; }
+  .sheet-slots > div { position: relative; min-width: 0; padding: 10px; border: 1px solid rgba(255,255,255,0.07); border-radius: 11px; }
+  .sheet-slots span,
+  .sheet-slots strong { display: block; overflow: hidden; padding-right: 34px; text-overflow: ellipsis; white-space: nowrap; }
+  .sheet-slots span { color: #737585; font-size: 0.54rem; text-transform: uppercase; }
+  .sheet-slots strong { margin-top: 4px; color: #d6d4df; font-size: 0.67rem; }
+  .sheet-slots button { position: absolute; right: 2px; top: 50%; min-width: 44px; min-height: 44px; transform: translateY(-50%); border: 0; background: none; color: #918ba9; cursor: pointer; font-size: 0.58rem; }
+  .sheet-reset { width: 100%; min-height: 44px; margin-top: 10px; }
+
+  @media (max-width: 1080px) {
+    .atelier-layout { grid-template-columns: 1fr; }
+    .studio-sticky { position: static; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); align-items: start; }
+    .loadout-panel { align-self: stretch; }
+    .collection-hero { min-height: 300px; }
   }
 
-  .purchase-kicker {
-    margin: 0 0 6px 0;
-    color: var(--accent-purple);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-weight: 700;
-  }
-
-  .purchase-modal-content h3 {
-    margin: 0;
-    font-family: 'Space Grotesk', sans-serif;
-    color: #fff;
-  }
-
-  .purchase-summary {
-    margin: 0 0 8px 0;
-    color: #dbe4ff;
-    line-height: 1.5;
-  }
-
-  .purchase-desc {
-    margin: 0 0 18px 0;
-    color: var(--text-muted);
-    line-height: 1.5;
-    font-size: 0.9rem;
-  }
-
-  .purchase-stats {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-
-  .purchase-stats div {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--card-border);
-    border-radius: 14px;
-    padding: 12px;
-  }
-
-  .purchase-stats span {
-    display: block;
-    color: var(--text-muted);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 6px;
-  }
-
-  .purchase-stats strong {
-    color: #fff;
-    font-family: 'Space Grotesk', sans-serif;
-  }
-
-  .purchase-reason {
-    margin: 0 0 18px 0;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    line-height: 1.5;
-  }
-
-  .purchase-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-  }
-
-  @media (max-width: 900px) {
-    .shop-masthead {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .wallet-display {
-      align-items: flex-start;
-      min-width: 0;
-    }
-
-    .featured-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .shop-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .purchase-stats {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .shop-masthead {
-      padding: 14px;
+  @media (max-width: 720px) {
+    .shop-page { width: min(100% - 20px, 680px); margin-top: 14px; padding-bottom: 70px; }
+    .shop-info-banner { align-items: flex-start; padding: 11px; }
+    .shop-info-banner div span { line-height: 1.35; }
+    .shop-info-banner a { display: none; }
+    .shop-header { align-items: stretch; flex-direction: column; gap: 20px; padding: 38px 4px 30px; }
+    .shop-heading h1 { font-size: clamp(2.8rem, 15vw, 4.4rem); }
+    .shop-heading p { font-size: 0.88rem; }
+    .shop-wallet { min-width: 0; text-align: left; }
+    .studio-sticky { display: block; }
+    .loadout-panel { display: none; }
+    .collection-hero { min-height: 390px; align-items: flex-start; padding: 28px 22px; }
+    .collection-copy { width: 100%; }
+    .collection-copy p { max-width: 90%; }
+    .collection-orbit { right: 50%; top: auto; bottom: -68px; width: 210px; height: 210px; transform: translateX(50%); opacity: 0.82; }
+    .section-rail { margin-top: 16px; }
+    .section-rail button { flex: 0 0 auto; }
+    .subsection-rail { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; scrollbar-width: none; }
+    .select-row > label:not(.affordable-toggle),
+    .affordable-toggle { flex-basis: calc(50% - 5px); }
+    .affordable-toggle { flex-basis: 100%; }
+    .results-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+    .shop-grid { grid-template-columns: 1fr; }
+    .shop-item { padding: 12px; }
+    .preview-cue { opacity: 1; transform: none; }
+    .mobile-look-tray {
+      position: fixed;
+      left: 50%; bottom: 12px;
+      z-index: 38;
+      width: min(calc(100% - 24px), 500px);
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
       gap: 12px;
-    }
-
-    .featured-section {
-      padding: 2px 10px 10px;
-      border-radius: 20px;
-    }
-
-    .featured-section .featured-header {
-      padding: 16px 8px 10px;
-    }
-
-    .shop-intro {
-      font-size: 0.9rem;
-    }
-
-    .shop-tabs {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      flex-wrap: nowrap;
-      justify-content: flex-start;
-    }
-
-    .shop-tabs::-webkit-scrollbar {
-      display: none;
-    }
-
-    .shop-tab {
-      flex: 0 0 auto;
-    }
-
-    .shop-sort {
-      align-items: flex-start;
-    }
-
-    .shop-toolbar {
-      padding: 12px 12px 10px;
-      border-radius: 18px;
-    }
-
-    .shop-section-header {
-      align-items: flex-start;
-      flex-direction: column;
-      padding: 14px 14px 15px;
-    }
-
-    .shop-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .featured-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .shop-item {
-      padding: 15px 14px;
-      border-radius: 18px;
-      min-height: 0;
-    }
-
-    .shop-item-meta {
-      margin-bottom: 12px;
-    }
-
-    .utility-preview-area {
-      height: 104px;
-      padding: 10px;
-    }
-
-    .wallet-display p {
+      transform: translateX(-50%);
+      padding: 0 15px;
+      border: 1px solid rgba(171,152,255,0.24);
+      border-radius: 16px;
+      background: rgba(17,18,25,0.94);
+      backdrop-filter: blur(16px);
+      color: #f0edf8;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.48);
+      cursor: pointer;
       text-align: left;
-      max-width: none;
     }
+    .mobile-look-tray span:first-child { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+    .mobile-look-tray i { width: 8px; height: 8px; border-radius: 50%; background: #9c89ff; box-shadow: 0 0 12px rgba(156,137,255,0.8); }
+    .mobile-look-tray strong { color: #898b9a; font-size: 0.67rem; font-weight: 600; text-align: right; }
+    .loadout-overlay { display: flex; }
+    .detail-overlay { align-items: flex-end; }
+    .detail-drawer { width: 100%; height: auto; max-height: calc(100dvh - 18px); border-left: 0; border-top: 1px solid rgba(255,255,255,0.1); border-radius: 22px 22px 0 0; padding: 16px; }
+    .drawer-preview :global(.shop-preview-area) { height: 170px; }
+    .drawer-preview :global(.shop-preview-area-roll-effect) { height: 210px; }
+    .drawer-stats { grid-template-columns: 1fr; }
+  }
 
-    .shop-item h3 {
-      font-size: 0.96rem;
-    }
-
-    .item-summary,
-    .item-desc {
-      font-size: 0.74rem;
-    }
-
-    .utility-preview-area {
-      margin-bottom: 16px;
-    }
-
-    .purchase-modal-overlay {
-      align-items: flex-end;
-      padding: 12px;
-    }
-
-    .purchase-modal-content {
-      border-radius: 18px 18px 12px 12px;
-      padding: 18px;
-      max-height: calc(100dvh - 24px);
-    }
-
-    .purchase-actions {
-      flex-direction: column;
-    }
-
-    .shop-btn {
-      width: 100%;
-    }
+  @media (max-width: 420px) {
+    .shop-heading h1 { letter-spacing: -0.065em; }
+    .collection-actions { display: grid; }
+    .collection-actions button { width: 100%; }
+    .related-list { grid-template-columns: 1fr; }
+    .drawer-title-row h2 { font-size: 1.45rem; }
   }
 </style>
