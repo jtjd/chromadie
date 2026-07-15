@@ -358,9 +358,9 @@
 
   <header class="shop-header">
     <div class="shop-heading">
-      <span class="shop-kicker">Cosmetic shop · Fitting room</span>
-      <h1>Build a look,<br /><em>not a cart.</em></h1>
-      <p>Try every cosmetic where it actually appears. Mix freely, then decide what deserves your EP.</p>
+      <span class="shop-kicker">ChromaDie</span>
+      <h1>Cosmetic Shop</h1>
+      <p>Preview cosmetics, unlock favorites with EP, and equip them to your account.</p>
     </div>
     <div class="shop-wallet" aria-label={`Wallet balance: ${fittingRoom.balance.toLocaleString()} EP`}>
       <span>Your wallet</span>
@@ -514,6 +514,10 @@
             {#each filteredItems as item (item.item_key)}
               {@const state = getDisplayItemState(item, $equippedItems, fittingRoom)}
               {@const isWearing = fittingRoom.loadout[item.slot] === item.item_key}
+              {@const ownedCount = fittingRoom.inventoryCounts[item.item_key] || 0}
+              {@const actuallyEquipped = $equippedItems[item.slot] === item.item_key}
+              {@const canPurchase = item.cost > 0 && fittingRoom.balance >= item.cost && (item.slot === 'consumable' || ownedCount === 0)}
+              {@const itemBusy = Boolean(loadingAction?.endsWith(`:${item.item_key}`))}
               <article class="shop-item rarity-{item.rarity || 'Common'}" class:is-wearing={isWearing}>
                 <div class="item-topline">
                   <span>{SHOP_SLOT_LABELS[item.slot] || item.slot}</span>
@@ -536,13 +540,40 @@
 
                 <div class="item-actions">
                   {#if isShopCosmetic(item)}
-                    <button type="button" class="try-button" class:active={isWearing} on:click={() => tryOnItem(item)}>
-                      {state.tone === 'equipped' ? 'Equipped' : state.tone === 'previewing' ? 'Previewing' : 'Try on'}
+                    <button type="button" class="try-button" class:active={isWearing} disabled={!!loadingAction} on:click={() => tryOnItem(item)}>
+                      {isWearing ? (actuallyEquipped ? 'Equipped' : 'Previewing') : 'Try on'}
                     </button>
-                  {:else}
-                    <button type="button" class="try-button" on:click={() => openItemDetails(item)}>View utility</button>
                   {/if}
-                  <button type="button" class="detail-button" aria-label={`Open ${item.name} details`} on:click={() => openItemDetails(item)}>•••</button>
+
+                  {#if isShopCosmetic(item) && ownedCount > 0}
+                    <button
+                      type="button"
+                      class="primary-item-action"
+                      disabled={!!loadingAction}
+                      on:click={() => runLiveAction(item, actuallyEquipped ? 'unequip' : 'equip')}
+                    >
+                      {itemBusy ? (actuallyEquipped ? 'Unequipping…' : 'Equipping…') : (actuallyEquipped ? 'Unequip' : 'Equip')}
+                    </button>
+                  {:else if item.cost <= 0}
+                    <button type="button" class="primary-item-action" disabled>Milestone reward</button>
+                  {:else}
+                    <button
+                      type="button"
+                      class="primary-item-action"
+                      disabled={!canPurchase || !!loadingAction}
+                      on:click={() => requestPurchase(item)}
+                    >
+                      {itemBusy
+                        ? 'Purchasing…'
+                        : canPurchase
+                          ? purchaseArmedKey === item.item_key
+                            ? `Confirm · ${item.cost.toLocaleString()} EP`
+                            : `${ownedCount > 0 ? 'Buy another' : 'Buy'} · ${item.cost.toLocaleString()} EP`
+                          : `Need ${(item.cost - fittingRoom.balance).toLocaleString()} more EP`}
+                    </button>
+                  {/if}
+
+                  <button type="button" class="detail-button" aria-label={`Open ${item.name} details`} on:click={() => openItemDetails(item)}>Details</button>
                 </div>
               </article>
             {/each}
@@ -744,13 +775,6 @@
     margin: 14px 0 18px;
     font: 720 clamp(2.85rem, 7vw, 6.2rem)/0.88 var(--font-display);
     letter-spacing: -0.075em;
-  }
-  .shop-heading h1 em {
-    color: transparent;
-    font-style: normal;
-    background: linear-gradient(90deg, #e9e4ff, #9c8cff 44%, #6de1d0 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
   }
   .shop-heading p { max-width: 610px; margin: 0; color: #8d8f9e; font-size: 1rem; line-height: 1.65; }
 
@@ -1036,12 +1060,17 @@
   .item-copy > strong { color: #d8d4e5; font: 650 0.67rem 'JetBrains Mono', monospace; white-space: nowrap; }
   .shop-item > p { min-height: 2.8em; display: -webkit-box; overflow: hidden; margin: 10px 0 13px; color: #858795; font-size: 0.68rem; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 
-  .item-actions { display: grid; grid-template-columns: minmax(0,1fr) 40px; gap: 7px; margin-top: auto; }
-  .item-actions button { min-height: 44px; border-radius: 11px; cursor: pointer; font: 700 0.68rem var(--font-display); }
+  .item-actions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; margin-top: auto; }
+  .item-actions button { min-width: 0; min-height: 44px; padding: 0 9px; border-radius: 11px; cursor: pointer; font: 700 0.65rem var(--font-display); }
+  .item-actions button:disabled { cursor: not-allowed; opacity: 0.62; }
   .try-button { border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); color: #e5e3ec; }
   .try-button:hover { background: rgba(255,255,255,0.1); }
   .try-button.active { border-color: rgba(148,126,255,0.28); background: rgba(132,107,255,0.13); color: #dcd4ff; }
-  .detail-button { border: 1px solid var(--shop-line); background: transparent; color: #7c7e8d; letter-spacing: 0.08em; }
+  .primary-item-action { border: 1px solid rgba(153,130,255,0.3); background: rgba(132,108,255,0.14); color: #e1dcff; }
+  .primary-item-action:not(:disabled):hover { border-color: rgba(168,148,255,0.48); background: rgba(132,108,255,0.22); }
+  .item-actions > .primary-item-action:first-child { grid-column: 1 / -1; }
+  .detail-button { grid-column: 1 / -1; min-height: 36px !important; border: 1px solid var(--shop-line); background: transparent; color: #8d8f9e; }
+  .detail-button:hover { border-color: rgba(255,255,255,0.14); color: #c5c4cc; }
 
   .shop-empty { display: flex; flex-direction: column; align-items: center; padding: 56px 20px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 22px; text-align: center; }
   .shop-empty > span { color: #8c7cff; font-size: 1.8rem; }

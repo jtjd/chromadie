@@ -91,7 +91,10 @@
     0%, 100% { background-position: 50% 50%, 50% 42%, 0% 50%; }
     50% { background-position: 48% 46%, 52% 38%, 100% 50%; }
 }
-@keyframes magmaFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 45%; } 100% { background-position: 200% 50%; } }
+@keyframes magmaFlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 45%; }
+}
 @keyframes voidRowPulse { 0%, 100% { background-position: 45% 50%; box-shadow: inset 0 0 24px rgba(0,0,0,0.96), 0 0 10px rgba(104,58,190,0.28); } 50% { background-position: 58% 50%; box-shadow: inset 0 0 34px rgba(0,0,0,1), 0 0 20px rgba(116,72,220,0.54), 0 0 2px rgba(218,235,255,0.9); } }
 @keyframes neonOutlineTravel { 0%, 100% { border-color: #9146ff; box-shadow: -8px 0 18px rgba(145,70,255,0.32), 8px 0 12px rgba(0,255,249,0.12); } 50% { border-color: #00fff9; box-shadow: 8px 0 18px rgba(0,255,249,0.38), -8px 0 12px rgba(255,0,193,0.18); } }
 
