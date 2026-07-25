@@ -30,6 +30,7 @@ Before beginning a new milestone, read:
 6. `docs/04_DESIGN_SYSTEM.md`
 7. `docs/05_DATA_AND_BACKEND.md`
 8. `docs/06_ROADMAP.md`
+9. `docs/10_STACK_RECOMMENDATION.md`
 9. The active milestone file in `docs/milestones/`, when present
 
 ## Non-Negotiable Engineering Rules
