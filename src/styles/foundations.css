@@ -1,0 +1,28 @@
+/* Small layout primitives shared by Phase 1 foundation components. */
+.foundation-page {
+    width: 100%;
+    min-height: 100%;
+}
+
+.foundation-flow > * + * {
+    margin-top: var(--space-6);
+}
+
+.foundation-cluster {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.foundation-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

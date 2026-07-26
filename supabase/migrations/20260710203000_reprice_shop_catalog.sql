@@ -24,6 +24,7 @@ SET cost = CASE item_key
   WHEN 'bg_ocean_void' THEN 300000
   WHEN 'bg_sunset' THEN 210000
   WHEN 'bg_void' THEN 225000
+  WHEN 'bg_prism_atmosphere' THEN 0
   WHEN 'border_celestial' THEN 800000
   WHEN 'border_chroma' THEN 250000
   WHEN 'border_crystal' THEN 275000
@@ -78,6 +79,7 @@ SET cost = CASE item_key
   WHEN 'name_sunset_blur' THEN 600000
   WHEN 'name_toxic' THEN 120000
   WHEN 'name_void' THEN 900000
+  WHEN 'name_prism_atelier' THEN 0
   WHEN 'orb_diamond' THEN 180000
   WHEN 'orb_hexagon' THEN 80000
   WHEN 'orb_square' THEN 260000

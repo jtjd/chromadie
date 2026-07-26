@@ -971,6 +971,12 @@ GRANT EXECUTE ON FUNCTION public.get_public_profile_scores(uuid) TO anon, authen
 
 -- Rebuild safe leaderboard projections with one intentional tie model. RANK()
 -- gives equal scores the same rank and leaves the next competition rank gap.
+--
+-- SECURITY NOTE: These are intentional owner-privilege projection views.
+-- Browser roles have SELECT on these views but no direct SELECT on scores or
+-- user_roll_best_candidates. Keep the SELECT lists limited to approved public
+-- leaderboard/presentation fields. See supabase/SECURITY.md. The Supabase
+-- Advisor warning is expected until this projection boundary is redesigned.
 DROP VIEW IF EXISTS public.leaderboard_view;
 DROP VIEW IF EXISTS public.weekly_best_leaderboard_view;
 DROP VIEW IF EXISTS public.monthly_best_leaderboard_view;

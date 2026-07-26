@@ -1,17 +1,17 @@
 :root {
-    --bg-dark: #0a0a0d;
-    --bg-gradient: radial-gradient(ellipse 900px 500px at 50% -8%, #14151e 0%, #0a0a0d 60%);
-    --card-bg: rgba(17, 18, 24, 0.55);
-    --card-border: rgba(255, 255, 255, 0.07);
-    --card-border-hover: rgba(255, 255, 255, 0.16);
-    --text-main: #f2f3f5;
-    --text-muted: #767b8c;
-    --accent-purple: #8b7cf6;
+    --bg-dark: var(--color-canvas);
+    --bg-gradient: var(--gradient-canvas);
+    --card-bg: var(--surface-panel);
+    --card-border: var(--color-line-subtle);
+    --card-border-hover: var(--color-line-strong);
+    --text-main: var(--color-ink-strong);
+    --text-muted: var(--color-ink-muted);
+    --accent-purple: var(--color-accent);
     --accent-green: #10b981;
     --terminal-bg: rgba(0, 0, 0, 0.6);
     --error-red: #ef4444;
-    --spectrum: linear-gradient(90deg, #ff4d4d, #ffab2e, #ffe14d, #6ee787, #2ed3c9, #4d7dff, #a15cff, #ff4d4d);
-    --font-display: 'Space Grotesk', 'Inter', -apple-system, sans-serif;
+    --spectrum: var(--gradient-spectrum);
+    --font-display: var(--font-display-stack);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,7 +24,7 @@ align-items: stretch;
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-body-stack);
     background: var(--bg-dark);
     background-image: var(--bg-gradient);
     background-attachment: fixed;

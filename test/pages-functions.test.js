@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { createHtmlHeaders } from '../functions/_publicPage.js';
 import { onRequestGet as renderProfileRoute } from '../functions/u/[[username]].js';
 import { onRequestGet as renderChallengeRoute } from '../functions/c/[[id]].js';
+import { onRequestGet as renderPrototypeRoute } from '../functions/prototype/profile.js';
 
 const appShell = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const env = {
@@ -48,4 +49,16 @@ test('challenge route rejects invalid identifiers and still serves a protected s
   assert.match(html, /Challenge Unavailable/);
   assert.match(html, /https:\/\/chromadie\.com\/og-default-v4\.png/);
   assert.doesNotMatch(html, /og-default\.png/);
+});
+
+test('profile canvas prototype is direct-refreshable and non-indexable', async () => {
+  const response = await renderPrototypeRoute({
+    request: new Request('https://chromadie.com/prototype/profile'),
+    env
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('x-frame-options'), 'DENY');
+  const html = await response.text();
+  assert.match(html, /<meta name="robots" content="noindex,nofollow" \/>/);
+  assert.match(html, /Profile Canvas Prototype \| ChromaDie/);
 });

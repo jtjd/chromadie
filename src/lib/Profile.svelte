@@ -6,6 +6,8 @@
   import { formatCount, getTodayString } from './utils';
   import { deleteAccount } from './accountDeletion';
   import ProfileAchievementCard from './ProfileAchievementCard.svelte';
+  import { isOwnProfileTarget } from './profileContract';
+  import { loadProfileContext } from './profileData';
   import { afterUpdate, createEventDispatcher } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
 
@@ -223,75 +225,24 @@
     loading = true;
     loadError = '';
     dataWarning = '';
-    const lookupUsername = profileUsername?.trim() || '';
-    const lookupId = userId || null;
-    if (lookupUsername && !/^[A-Za-z0-9_]{3,20}$/.test(lookupUsername)) {
-      resetProfileState();
-      loadError = 'That profile address is invalid.';
-      loading = false;
-      return;
-    }
     const currentUsername = $profile?.username || $authUser?.user_metadata?.username || '';
-    const viewingOwnProfile = $isAuthenticated && (
-      (!lookupUsername && (!lookupId || lookupId === $session?.user.id)) ||
-      (lookupUsername && currentUsername && lookupUsername.toLowerCase() === currentUsername.toLowerCase())
-    );
-    let profileId = lookupId;
-
-    let profileQuery = supabase
-      .from('profiles')
-      .select('id, username, current_streak, longest_streak, lifetime_ep, total_rolls, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff');
-    profileQuery = lookupUsername
-      ? profileQuery.ilike('username', lookupUsername)
-      : profileQuery.eq('id', lookupId);
-
-    const { data: prof, error: profError } = viewingOwnProfile
-      ? await supabase.rpc('get_my_profile')
-      : await profileQuery.maybeSingle();
-
+    const context = await loadProfileContext({
+      supabaseClient: supabase,
+      isAuthenticated: $isAuthenticated,
+      sessionUserId: $session?.user?.id,
+      currentUsername,
+      profileUsername,
+      userId
+    });
     if (requestId !== loadRequestId) return;
 
-    if (prof && prof.success !== false) {
-      targetProfile = prof;
-      profileId = prof.id || lookupId;
-
-      totalRolls = Number(prof.total_rolls) || 0;
-
-      const { data: scores, error: scoresError } = await supabase.rpc('get_public_profile_scores', {
-        p_user_id: profileId
-      });
-      if (requestId !== loadRequestId) return;
-
-      targetScores = scores || [];
-      if (scoresError) dataWarning = 'Recent roll history is temporarily unavailable.';
-    } else {
-      targetProfile = null;
-      targetScores = [];
-      totalRolls = 0;
-      if (profError) loadError = 'The profile could not be loaded. Please check your connection and retry.';
-    }
-
-    if (profError && !viewingOwnProfile) {
-      console.error('Error loading public profile:', profError);
-    }
-
-    const { data: ach, error: achievementError } = await supabase.from('achievements').select('*');
-    if (requestId !== loadRequestId) return;
-    if (ach) allAchievements = ach;
-    if (achievementError) dataWarning = 'Achievement details are temporarily unavailable.';
-
-    if (viewingOwnProfile) {
-      const { data: unlocked, error: unlockedError } = await supabase.from('user_achievements').select('achievement_id, count').eq('user_id', profileId);
-      if (requestId !== loadRequestId) return;
-      if (unlocked) {
-        const map = {};
-        unlocked.forEach(u => map[u.achievement_id] = u);
-        unlockedAchievements = map;
-      }
-      if (unlockedError) dataWarning = 'Achievement progress is temporarily unavailable.';
-    } else {
-      unlockedAchievements = {};
-    }
+    targetProfile = context.targetProfile;
+    targetScores = context.targetScores;
+    allAchievements = context.allAchievements;
+    unlockedAchievements = context.unlockedAchievements;
+    totalRolls = context.totalRolls;
+    loadError = context.loadError;
+    dataWarning = context.dataWarning;
 
     loading = false;
   }
@@ -306,7 +257,11 @@
   $: bgEff = getProfileBg(cosmetics);
   $: borderEff = getProfileBorder(cosmetics);
   $: username = targetProfile?.username || 'Unknown Player';
-  $: isOwnProfile = $isAuthenticated && targetProfile?.id === $session?.user.id;
+  $: isOwnProfile = isOwnProfileTarget({
+    isAuthenticated: $isAuthenticated,
+    sessionUserId: $session?.user?.id,
+    profileId: targetProfile?.id
+  });
   $: bestRoll = targetScores.length > 0 ? targetScores.reduce((max, s) => s.score > max.score ? s : max, targetScores[0]) : null;
   $: profileBestRoll = targetProfile?.best_roll_score
     ? {

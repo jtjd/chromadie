@@ -1,3 +1,7 @@
+<script>
+  import AnalyticsPreferences from './AnalyticsPreferences.svelte';
+</script>
+
 <svelte:head>
   <title>Privacy Policy | ChromaDie</title>
 </svelte:head>
@@ -42,6 +46,7 @@
       <li>We do not display advertising or use advertising cookies.</li>
       <li>Supabase processes account and gameplay information on our behalf.</li>
       <li>Cloudflare provides site delivery, abuse protection, Turnstile verification, and privacy-focused web analytics. Analytics are used to understand site performance and basic usage, not to build advertising or marketing profiles.</li>
+      <li>Optional product-event measurement is separate from Cloudflare Web Analytics and is off until you choose to allow it. The current product-event adapter keeps only redacted events in the page and does not transmit or store product-event records.</li>
       <li>Your username, cosmetic selections, and certain gameplay information may be visible to other players through profiles and leaderboards.</li>
     </ul>
   </section>
@@ -71,6 +76,7 @@
       <li>Clear guest progress by removing ChromaDie's site data from your browser.</li>
       <li>Play in guest mode without creating or signing in to an account.</li>
     </ul>
+    <AnalyticsPreferences />
   </section>
 
   <section class="card legal-section">

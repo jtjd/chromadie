@@ -36,6 +36,12 @@ async function loadProfile(username, env) {
   }
 }
 
+export function getProfileCacheControl(profile, legacyProfile = false) {
+  return profile && !legacyProfile
+    ? 'public, max-age=60, s-maxage=300, stale-while-revalidate=60'
+    : 'no-cache, must-revalidate';
+}
+
 export async function onRequestGet({ request, params, env }) {
   const username = params.username;
   const profile = await loadProfile(username, env);
@@ -43,11 +49,12 @@ export async function onRequestGet({ request, params, env }) {
   const origin = getSiteOrigin(request, env);
   const profilePath = `/u/${encodeURIComponent(username)}`;
   const canonical = `${origin}${profilePath}`;
+  const legacyProfile = new URL(request.url).searchParams.get('legacy') === '1';
   const title = profile ? `${profile.username} | ChromaDie` : 'Profile Not Found | ChromaDie';
   const description = profile
     ? `View ${profile.username}'s public ChromaDie profile, progress, achievements, and recent rolls.`
     : 'This ChromaDie profile could not be found.';
-  const robots = profile ? 'index,follow' : 'noindex,follow';
+  const robots = legacyProfile || !profile ? 'noindex,follow' : 'index,follow';
   const ogImage = profile ? `${origin}/og/profile.svg?username=${encodeURIComponent(profile.username)}` : `${origin}/og-default-v4.png`;
   const summary = profile
     ? `<section><h1>${escapeHtml(profile.username)} | ChromaDie</h1><p>Public player profile with ${Number(profile.lifetime_ep || 0).toLocaleString()} lifetime EP${profile.best_roll_score ? ` and a best roll of ${Number(profile.best_roll_score).toLocaleString()} EP` : ''}.</p></section>`
@@ -90,6 +97,6 @@ export async function onRequestGet({ request, params, env }) {
 
   return new Response(html, {
     status: profile ? 200 : 404,
-    headers: await createHtmlHeaders(html)
+    headers: await createHtmlHeaders(html, getProfileCacheControl(profile, legacyProfile))
   });
 }

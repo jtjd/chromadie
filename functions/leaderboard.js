@@ -2,9 +2,10 @@ import { renderPublicPage } from './_publicPage.js';
 
 export function onRequestGet({ request, env }) {
   return renderPublicPage(request, env, {
-    title: 'Leaderboard | ChromaDie',
-    description: 'Compare ChromaDie players, scores, and daily color-roll results on the leaderboard.',
+    title: 'Discovery | ChromaDie',
+    description: 'Explore ChromaDie players, public color stories, exceptional rolls, and daily leaderboard results.',
     canonicalPath: '/leaderboard',
-    fallback: 'Compare daily color-roll scores, track the leading players, and see how your ChromaDie results stack up.'
+    fallback: 'Explore public ChromaDie profiles, exceptional color rolls, rising players, and leaderboard results.',
+    cacheControl: 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400'
   });
 }

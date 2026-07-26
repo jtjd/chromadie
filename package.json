@@ -11,6 +11,7 @@
     "test": "node --test",
     "check:links": "node scripts/check-internal-links.mjs",
     "check:csp": "node scripts/check-csp.mjs",
+    "check:performance": "node scripts/check-performance-budget.mjs",
     "db:pull": "supabase db pull",
     "db:diff": "supabase db diff --linked",
     "db:push": "supabase db push",

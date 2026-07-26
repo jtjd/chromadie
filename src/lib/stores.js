@@ -47,6 +47,7 @@ export const shopItemsError = writable(null)
 export const userInventory = writable([])
 export const equippedItems = writable({})
 export const walletBalance = writable(0)
+export const profileEntitlements = writable([])
 
 // --- Progression State ---
 export const rerollShards = writable(0)
@@ -70,6 +71,7 @@ export function clearUserState() {
     userInventory.set([])
     equippedItems.set({})
     walletBalance.set(0)
+    profileEntitlements.set([])
     rerollShards.set(0)
     equippedBadges.set([])
     followedUsers.set([])
@@ -104,9 +106,14 @@ function normalizeShopItem(item) {
     if (!SHOP_SLOTS.has(item.slot) || !['class', 'style', 'text'].includes(item.css_type)) return null
     const cost = Number(item.cost)
     if (!Number.isSafeInteger(cost) || cost < 0) return null
+    const accessTier = item.access_tier || 'earned'
+    if (!['free', 'earned', 'premium'].includes(accessTier)) return null
+    const entitlementKey = item.entitlement_key == null ? null : String(item.entitlement_key)
+    if (entitlementKey && !/^[a-z0-9_]{1,80}$/.test(entitlementKey)) return null
+    if (accessTier === 'premium' && !entitlementKey) return null
     if (item.css_type === 'class' && sanitizeCosmeticClass(item.css_value) !== item.css_value) return null
     if (item.css_type === 'style' && sanitizeCosmeticStyle(item.css_value) !== String(item.css_value || '').trim()) return null
-    return { ...item, cost }
+    return { ...item, cost, access_tier: accessTier, entitlement_key: entitlementKey }
 }
 
 function normalizeShopItems(items) {
@@ -175,7 +182,7 @@ async function loadShopItemsOnce() {
 
         const { data, error: itemsError } = await supabase
             .from('shop_items')
-            .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection, stackable')
+            .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection, stackable, access_tier, entitlement_key')
             .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
             .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
 
@@ -218,6 +225,23 @@ export async function fetchWalletBalance(expectedUserId = null) {
     if (data !== null && (!expectedUserId || get(session)?.user?.id === expectedUserId)) {
         walletBalance.set(data)
     }
+}
+
+function normalizeEntitlementKeys(payload) {
+    const values = Array.isArray(payload) ? payload : payload?.entitlements
+    if (!Array.isArray(values)) return []
+    return [...new Set(values
+        .filter(value => typeof value === 'string' && /^[a-z0-9_]{1,80}$/.test(value))
+    )].slice(0, 100)
+}
+
+export async function fetchProfileEntitlements(expectedUserId = null) {
+    const { data, error } = await supabase.rpc('get_my_profile_entitlements')
+    const items = error || data?.success === false ? [] : normalizeEntitlementKeys(data)
+    if (!expectedUserId || get(session)?.user?.id === expectedUserId) {
+        profileEntitlements.set(items)
+    }
+    return items
 }
 
 export async function fetchInventoryState(userId, expectedUserId = userId) {
@@ -283,7 +307,7 @@ async function hydrateAuthenticatedUser(currentSession, expectedEventId) {
         await loadShopItems()
         if (expectedEventId !== authEventId) return
 
-        const [profileRes, inventoryRes, walletRes, followsRes] = await Promise.all([
+        const [profileRes, inventoryRes, walletRes, followsRes, entitlementsRes] = await Promise.all([
             supabase.rpc('get_my_profile'),
             supabase
                 .from('inventory')
@@ -293,7 +317,8 @@ async function hydrateAuthenticatedUser(currentSession, expectedEventId) {
             supabase
                 .from('user_follows')
                 .select('followee_id')
-                .eq('follower_id', currentSession.user.id)
+                .eq('follower_id', currentSession.user.id),
+            supabase.rpc('get_my_profile_entitlements')
         ])
 
         if (expectedEventId !== authEventId) return
@@ -317,6 +342,9 @@ async function hydrateAuthenticatedUser(currentSession, expectedEventId) {
         }
         if (!followsRes.error) {
             followedUsers.set((followsRes.data || []).map(follow => follow.followee_id))
+        }
+        if (!entitlementsRes.error && entitlementsRes.data?.success !== false) {
+            profileEntitlements.set(normalizeEntitlementKeys(entitlementsRes.data))
         }
     } catch (error) {
         if (expectedEventId !== authEventId) return

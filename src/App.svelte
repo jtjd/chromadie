@@ -9,6 +9,8 @@
   import Shop from './lib/Shop.svelte';
   import Leaderboard from './lib/Leaderboard.svelte';
   import Profile from './lib/Profile.svelte';
+  import ProfileShell from './lib/ProfileShell.svelte';
+  import ProfileCanvasPrototype from './lib/ProfileCanvasPrototype.svelte';
   import PrivacyPolicy from './lib/PrivacyPolicy.svelte';
   import FAQ from './lib/FAQ.svelte';
   import ResetPassword from './lib/ResetPassword.svelte';
@@ -19,13 +21,12 @@
   import { getNameEffect, getFrameEffect, getTitleText } from './lib/cosmetics';
   import { getRankState } from './lib/ranks';
   import { focusFirstElement, restoreFocus, trapFocus } from './lib/a11y';
+  import { VALID_VIEWS, VALID_LEADERBOARD_TABS, parseRouteLocation } from './lib/routes';
+  import { trackProductEvent } from './lib/productAnalytics.js';
   import { onMount, onDestroy, tick } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
-  const VALID_VIEWS = new Set(['game', 'shop', 'leaderboard', 'profile']);
-  const VALID_LEADERBOARD_TABS = new Set(['today', 'rivals', 'weekly', 'monthly', 'roll']);
   const VALID_APP_ROUTES = new Set(['app', 'privacy', 'how-to-play', 'auth-callback', 'reset-password']);
-  const CLEAN_APP_PATHS = new Set(['/', '/shop', '/leaderboard', '/profile']);
   let view = 'game';
   let leaderboardTab = 'today';
   let routeMode = 'app';
@@ -40,83 +41,70 @@
   let mobileNavPanel = null;
   let mobileMenuOpener = null;
   let selectedProfileUsername = null;
+  let legacyProfile = false;
   let founderLaunchWindowActive = false;
   let routeInitialized = false;
+  let mainContent = null;
+  let routeFocusRequest = 0;
+  let lastTrackedRouteKey = '';
+
+  function trackCurrentRoute() {
+    if (typeof window === 'undefined') return;
+    const route = routeMode !== 'app'
+      ? routeMode
+      : view === 'game' && challengeData
+        ? 'challenge'
+        : view;
+    const surfaceKey = route === 'profile'
+      ? selectedProfileUsername ? 'username' : $selectedUserId ? 'id' : 'self'
+      : '';
+    const routeKey = `${route}:${surfaceKey}:${leaderboardTab}`;
+    if (routeKey === lastTrackedRouteKey) return;
+    lastTrackedRouteKey = routeKey;
+    trackProductEvent('route_view', { route });
+  }
 
   function parseRoute() {
     challengeLoadRequestId += 1;
-    const params = new SvelteURLSearchParams(window.location.search);
-    const rawPath = window.location.pathname.replace(/\/+$/, '') || '/';
-    const routeView = params.get('view');
-    const routeTab = params.get('tab');
-    const routeProfileId = params.get('profile');
-    const routeChallengeFrom = params.get('from');
-    const challengeMatch = rawPath.match(/^\/c\/([^/]+)$/);
-    const profileMatch = rawPath.match(/^\/u\/([^/]+)$/);
-    const decodePathSegment = value => {
-      try {
-        return decodeURIComponent(value);
-      } catch {
-        return value;
-      }
-    };
+    const parsed = parseRouteLocation(window.location.pathname, window.location.search);
+    routeMode = parsed.routeMode;
 
-    if (rawPath === '/auth/callback') {
-      routeMode = 'auth-callback';
-    } else if (rawPath === '/reset-password') {
-      routeMode = 'reset-password';
-    } else if (rawPath === '/privacy') {
-      routeMode = 'privacy';
-    } else if (rawPath === '/how-to-play') {
-      routeMode = 'how-to-play';
-    } else if (CLEAN_APP_PATHS.has(rawPath)) {
-      routeMode = 'app';
-    } else {
-      routeMode = 'not-found';
-    }
-
-    if (profileMatch || challengeMatch) {
-      routeMode = 'app';
-    }
-
-    if (profileMatch) {
+    if (parsed.profileUsername !== null) {
       challengeData = null;
       view = 'profile';
-      selectedProfileUsername = decodePathSegment(profileMatch[1]);
+      selectedProfileUsername = parsed.profileUsername;
       selectedUserId.set(null);
-    } else if (challengeMatch) {
+      legacyProfile = parsed.legacyProfile;
+    } else if (parsed.challengeId !== null) {
       view = 'game';
       selectedProfileUsername = null;
       selectedUserId.set(null);
+      legacyProfile = false;
       challengeData = {
-        id: decodePathSegment(challengeMatch[1]),
-        fromUsername: routeChallengeFrom || null,
+        id: parsed.challengeId,
+        fromUsername: parsed.challengeFrom,
         loading: true,
         error: null
       };
-      void loadChallengeById(challengeData.id, routeChallengeFrom || null);
+      void loadChallengeById(challengeData.id, parsed.challengeFrom);
     } else {
-      const cleanPathView = rawPath === '/shop'
-        ? 'shop'
-        : rawPath === '/leaderboard'
-          ? 'leaderboard'
-          : rawPath === '/profile'
-            ? 'profile'
-            : null;
-      view = cleanPathView || (VALID_VIEWS.has(routeView) ? routeView : 'game');
+      view = parsed.view;
       selectedProfileUsername = null;
-      selectedUserId.set(routeMode === 'app' ? routeProfileId || null : null);
+      selectedUserId.set(parsed.routeMode === 'app' ? parsed.profileId : null);
+      legacyProfile = parsed.view === 'profile' && parsed.legacyProfile;
       // Challenge values are accepted only from an authoritative /c/<id>
       // lookup. Legacy query-string score/hex inputs are intentionally ignored.
       challengeData = null;
     }
-    leaderboardTab = VALID_LEADERBOARD_TABS.has(routeTab) ? routeTab : 'today';
+    leaderboardTab = parsed.leaderboardTab;
     routeInitialized = true;
+    trackCurrentRoute();
   }
 
   function syncRoute() {
     if (typeof window === 'undefined') return;
     if (!VALID_APP_ROUTES.has(routeMode) || routeMode !== 'app') return;
+    if (view === 'prototype' && window.location.pathname === '/prototype/profile') return;
 
     const currentProfileUsername = $profile?.username || $authUser?.user_metadata?.username || null;
     if (view === 'game' && challengeData) {
@@ -129,7 +117,8 @@
         || (!$selectedUserId ? currentProfileUsername : null);
       const currentUrl = `${window.location.pathname}${window.location.search}`;
       if (routeUsername) {
-        const nextUrl = `/u/${encodeURIComponent(routeUsername)}`;
+        const legacySuffix = legacyProfile ? '?legacy=1' : '';
+        const nextUrl = `/u/${encodeURIComponent(routeUsername)}${legacySuffix}`;
         if (nextUrl !== currentUrl) {
           window.history.pushState({}, '', nextUrl);
         }
@@ -145,6 +134,7 @@
     if (view === 'profile' && $selectedUserId) {
       params.set('profile', $selectedUserId);
     }
+    if (view === 'profile' && legacyProfile) params.set('legacy', '1');
     const nextSearch = params.toString();
     const nextUrl = nextSearch ? `${window.location.pathname}?${nextSearch}` : window.location.pathname;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
@@ -207,7 +197,7 @@
   }
 
   function setRoute(nextView, options = {}) {
-    if (!VALID_VIEWS.has(nextView)) return;
+    if (!VALID_VIEWS.includes(nextView)) return;
 
     routeMode = 'app';
     if (typeof window !== 'undefined' && window.location.pathname !== '/') {
@@ -216,20 +206,31 @@
     view = nextView;
     mobileMenuOpen = false;
     if (nextView !== 'leaderboard') {
-      leaderboardTab = options.tab && VALID_LEADERBOARD_TABS.has(options.tab) ? options.tab : leaderboardTab;
-    } else if (options.tab && VALID_LEADERBOARD_TABS.has(options.tab)) {
+      leaderboardTab = options.tab && VALID_LEADERBOARD_TABS.includes(options.tab) ? options.tab : leaderboardTab;
+    } else if (options.tab && VALID_LEADERBOARD_TABS.includes(options.tab)) {
       leaderboardTab = options.tab;
     }
 
     if (nextView === 'profile') {
       selectedProfileUsername = options.username || options.profileUsername || $profile?.username || $authUser?.user_metadata?.username || null;
       selectedUserId.set(options.userId || null);
+      legacyProfile = Boolean(options.legacyProfile);
     } else {
       selectedProfileUsername = null;
       selectedUserId.set(null);
+      legacyProfile = false;
     }
 
     syncRoute();
+    trackCurrentRoute();
+    void focusRouteContent();
+  }
+
+  async function focusRouteContent() {
+    const requestId = ++routeFocusRequest;
+    await tick();
+    if (requestId !== routeFocusRequest || !mainContent) return;
+    mainContent.focus({ preventScroll: true });
   }
 
   function navigateToPath(pathname) {
@@ -241,6 +242,7 @@
     }
     window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}`);
     parseRoute();
+    void focusRouteContent();
   }
 
   function clearChallengeState() {
@@ -263,6 +265,7 @@
 
   function handlePopState() {
     parseRoute();
+    void focusRouteContent();
   }
 
   onMount(() => {
@@ -321,7 +324,7 @@
       if (routeMode === 'app' && view === 'game' && challengeData && nextView !== 'game') {
         clearChallengeState();
       }
-      setRoute(nextView, { userId, username, tab });
+      setRoute(nextView, { userId, username, tab, legacyProfile: legacyProfile && nextView === 'profile' });
     }
   }
 
@@ -457,10 +460,12 @@
       ? 'How to Play | ChromaDie'
       : routeMode === 'app' && view === 'profile'
         ? `${profileTitle} | ChromaDie`
+        : routeMode === 'app' && view === 'prototype'
+          ? 'Profile Canvas Prototype | ChromaDie'
         : routeMode === 'app' && view === 'leaderboard'
-          ? 'Leaderboard | ChromaDie'
+          ? 'Discovery | ChromaDie'
         : routeMode === 'app' && view === 'shop'
-          ? 'Cosmetic Shop | ChromaDie'
+          ? 'Decoration Studio | ChromaDie'
         : routeMode === 'app' && view === 'game' && challengeData
           ? challengeData.error
             ? 'Challenge Unavailable | ChromaDie'
@@ -478,8 +483,12 @@
       ? 'Learn how ChromaDie works: roll a color every day, discover rarity and traits, earn EP, and compete on the leaderboard.'
       : routeMode === 'app' && view === 'profile'
         ? `View ${profileTitle}'s public ChromaDie profile, progress, achievements, and recent rolls.`
+        : routeMode === 'app' && view === 'prototype'
+          ? 'A noindex Phase 1 profile canvas prototype for ChromaDie.'
         : routeMode === 'app' && view === 'leaderboard'
-          ? 'Compare ChromaDie players, scores, and daily color-roll results on the leaderboard.'
+          ? 'Explore ChromaDie players, public color stories, exceptional rolls, and leaderboard results.'
+        : routeMode === 'app' && view === 'shop'
+          ? 'Shape a beautiful ChromaDie profile with free foundations, earned cosmetics, and safe premium expression.'
           : 'Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score.';
   $: canonicalPath = routeMode === 'not-found'
     ? '/'
@@ -491,10 +500,12 @@
         ? '/leaderboard'
         : routeMode === 'app' && view === 'profile' && selectedProfileUsername
           ? `/u/${encodeURIComponent(selectedProfileUsername)}`
+          : routeMode === 'app' && view === 'prototype'
+            ? '/prototype/profile'
           : '/';
   $: pageRobots = routeMode === 'not-found'
     ? 'noindex,follow'
-    : routeMode === 'app' && (view === 'game' && challengeData || view === 'shop' || view === 'profile' && !selectedProfileUsername)
+    : routeMode === 'app' && (legacyProfile || view === 'game' && challengeData || view === 'shop' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
     ? 'noindex,follow'
     : routeMode === 'auth-callback' || routeMode === 'reset-password'
       ? 'noindex,nofollow'
@@ -560,6 +571,7 @@
     <ResetPassword />
   {:else}
   <div class="app-shell">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   {#if showAuthModal}
     <div class="auth-modal-overlay" role="presentation" on:click|self={closeAuthModal}>
       <div
@@ -836,7 +848,7 @@
     </div>
   {/if}
 
-  <div class="app-main" role={routeMode === 'app' ? 'main' : undefined}>
+  <div class="app-main" id="main-content" role={routeMode === 'app' ? 'main' : undefined} tabindex="-1" bind:this={mainContent}>
   {#if routeMode === 'not-found'}
     <main class="container" aria-labelledby="not-found-title">
       <section class="card bootstrap-error-card">
@@ -853,6 +865,8 @@
   {:else}
     {#if view === 'game'}
       <Game on:promptlogin={openAuthModal} on:navigate={handleNavigation} />
+    {:else if view === 'prototype'}
+      <ProfileCanvasPrototype />
     {:else if view === 'leaderboard'}
       {#key `leaderboard:${leaderboardTab}`}
         <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
@@ -876,7 +890,11 @@
         </div>
       </div>
     {:else if view === 'profile' && ($isAuthenticated || selectedProfileUsername || $selectedUserId)}
-      <Profile profileUsername={selectedProfileUsername} userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
+      {#if legacyProfile}
+        <Profile profileUsername={selectedProfileUsername} userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
+      {:else}
+        <ProfileShell profileUsername={selectedProfileUsername} userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
+      {/if}
     {:else if $isAuthenticated}
       {#if view === 'shop'}
         <Shop />
@@ -924,6 +942,33 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+  }
+
+  .app-main:focus {
+    outline: none;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 1200;
+    transform: translateY(-220%);
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-canvas-raised);
+    color: var(--color-ink-strong);
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: var(--shadow-panel);
+    transition: transform var(--motion-fast) var(--motion-ease-standard);
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+    outline: 2px solid var(--color-accent-bright);
+    outline-offset: 3px;
   }
 
   .bootstrap-error-card {
@@ -1579,6 +1624,10 @@
       -webkit-backdrop-filter: blur(1px);
       padding: 0;
     }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skip-link { transition: none; }
   }
 
   @keyframes slideDown {

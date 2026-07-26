@@ -18,6 +18,7 @@ Chromadie is a Svelte 5 single-page application built with Vite, Supabase, and C
 npm run dev
 npm run build
 npm run check:csp
+npm run check:performance
 npm run check
 npx eslint src/
 npm test

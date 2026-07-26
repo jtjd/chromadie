@@ -8,8 +8,11 @@
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
   import { getRollEffect, getOrbShape } from './cosmetics';
   import { getBadgeMeta } from './badgeData';
-  import { getAuthoritativeBadgeIds } from './rollPresentation';
+  import { canInitiateRoll, createCanonicalRollData, getRollAccountMode, isRollReady, normalizeCanonicalRoll } from './rollState';
+  import { getPercentileTier } from './rollPresentation.js';
+  import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
   import { getAppOrigin } from './authUrls';
+  import { trackProductEvent } from './productAnalytics.js';
 
   const dispatch = createEventDispatcher();
   let phase = 'preroll';
@@ -62,29 +65,16 @@
   $: rollEff = getRollEffect(cosmetics);
   $: orbEff = getOrbShape(cosmetics);
 
-  function getPercentileTier(p, total) {
-      if (total <= 1) return { text: "🏆 First roll of the day!", color: "#f1c40f", total };
-      let rank = 100 - p;
-      if (rank <= 1) return { text: "🔥 Top 1% today", color: "#f1c40f", total };
-      if (rank <= 5) return { text: "⭐ Top 5% today", color: "#ffeb3b", total };
-      if (rank <= 10) return { text: "🚀 Top 10% today", color: "#10b981", total };
-      if (rank <= 25) return { text: "👍 Top 25% today", color: "#6ee787", total };
-      if (rank <= 50) return { text: "📊 Above average today", color: "#e0e0e0", total };
-      if (rank <= 75) return { text: "⚪ Around average today", color: "#8a8a9a", total };
-      if (rank <= 90) return { text: "⚠️ Bottom 25% today", color: "#ff9800", total };
-      if (rank <= 95) return { text: "🔻 Bottom 10% today", color: "#ef4444", total };
-      return { text: "💀 Bottom 5% today", color: "#b91c1c", total };
-  }
-
   function sortBadgesDescending(arr) {
       return (arr || []).slice().sort((a, b) => getBadgeMeta(b).points - getBadgeMeta(a).points);
   }
 
   function setRollPresentationFromData(data) {
-      traits = Array.isArray(data?.traits) ? data.traits.slice(0, 12) : [];
-      identity = typeof data?.identity === 'string' ? data.identity.slice(0, 120) : '';
-      rollContributors = Array.isArray(data?.contributors) ? data.contributors.slice(0, 64) : [];
-      badges = sortBadgesDescending(getAuthoritativeBadgeIds(data));
+      const canonical = normalizeCanonicalRoll(data);
+      traits = canonical.traits;
+      identity = canonical.identity;
+      rollContributors = canonical.contributors;
+      badges = sortBadgesDescending(canonical.badges);
   }
 
   function getTomorrowMidnightUTC() {
@@ -167,44 +157,6 @@
     }
   }
 
-  function getRerollLockKey() {
-    return `chromadie-reroll-lock:${getTodayString()}`;
-  }
-
-  function getRerollLockExpiry() {
-    return Date.now() + 10000;
-  }
-
-  function setRerollLock() {
-    try {
-      localStorage.setItem(getRerollLockKey(), String(getRerollLockExpiry()));
-    } catch {
-      // Ignore storage failures.
-    }
-  }
-
-  function clearRerollLock() {
-    try {
-      localStorage.removeItem(getRerollLockKey());
-    } catch {
-      // Ignore storage failures.
-    }
-  }
-
-  function hasActiveRerollLock() {
-    try {
-      const expiry = Number(localStorage.getItem(getRerollLockKey()));
-      if (!Number.isFinite(expiry)) return false;
-      if (expiry <= Date.now()) {
-        localStorage.removeItem(getRerollLockKey());
-        return false;
-      }
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   function resetRollPresentation() {
     if (scoreCountUpInterval) {
       clearInterval(scoreCountUpInterval);
@@ -232,7 +184,7 @@
   async function loadAuthenticatedRollState(userId, requestId) {
     loading = true;
 
-    const { data: dbRoll } = await supabase.rpc('get_my_daily_roll');
+    const { data: dbRoll, error: dailyRollError } = await supabase.rpc('get_my_daily_roll');
 
     if (requestId !== initialStateRequestId) return;
 
@@ -254,6 +206,12 @@
     } else {
       phase = 'preroll';
       guestProgressRestored = false;
+      if (!dailyRollError) {
+        trackProductEvent('roll_ready', {
+          surface: 'root',
+          accountMode: 'authenticated'
+        });
+      }
     }
 
     loading = false;
@@ -299,10 +257,14 @@
     guestProgressActive.set(false);
     phase = 'preroll';
     loading = false;
+    trackProductEvent('roll_ready', {
+      surface: 'root',
+      accountMode: 'guest'
+    });
   }
 
   async function syncInitialState() {
-    if (!$authInitialized) return;
+    if (!isRollReady($authInitialized)) return;
 
     const nextKey = $session?.user.id || 'guest';
     if (nextKey === initialStateKey) return;
@@ -315,7 +277,7 @@
     resetRollPresentation();
     loading = true;
 
-    if ($session?.user?.id) {
+    if (getRollAccountMode($session) === 'authenticated') {
       guestProgressActive.set(false);
       await loadAuthenticatedRollState($session.user.id, requestId);
     } else {
@@ -521,11 +483,15 @@
   }
 
   async function initiateRoll(isReroll = false) {
-    if (!$authInitialized) {
-      return;
-    }
-
-    if (isReroll && (loading || rerollRequestInFlight || !$session?.user?.id || $rerollShards <= 0 || hasActiveRerollLock())) {
+    if (!canInitiateRoll({
+      authInitialized: $authInitialized,
+      loading,
+      rerollRequestInFlight,
+      isReroll,
+      userId: $session?.user?.id || null,
+      rerollShards: $rerollShards,
+      rerollLocked: hasActiveRerollLock()
+    })) {
       return;
     }
 
@@ -552,7 +518,7 @@
       if (isReroll) clearRerollLock();
     };
 
-    const { data, error: rpcError } = await supabase.rpc('roll_die', { p_is_reroll: isReroll });
+    const { data, error: rpcError } = await requestRoll(supabase, isReroll);
 
     if (!requestIsCurrent()) {
       abandonStaleRequest();
@@ -602,12 +568,13 @@
       abandonStaleRequest();
       return;
     }
-    displayColor = data.hex;
+    const canonical = normalizeCanonicalRoll(data);
+    displayColor = canonical.hex;
 
-    traits = Array.isArray(data.traits) ? data.traits.slice(0, 12) : [];
-    identity = typeof data.identity === 'string' ? data.identity.slice(0, 120) : '';
-    rollContributors = Array.isArray(data.contributors) ? data.contributors.slice(0, 64) : [];
-    const finalBadges = sortBadgesDescending(getAuthoritativeBadgeIds(data));
+    traits = canonical.traits;
+    identity = canonical.identity;
+    rollContributors = canonical.contributors;
+    const finalBadges = sortBadgesDescending(canonical.badges);
     const sortedBadgesForAnim = finalBadges.slice().sort((a, b) => getBadgeMeta(a).points - getBadgeMeta(b).points);
 
     for (const badgeId of sortedBadgesForAnim) {
@@ -655,23 +622,20 @@
       displayScore = Math.floor(currentScore);
     }, 33);
 
-    const rollData = {
-      date: getTodayString(),
-      hex: data.hex,
-      score: data.score,
-      rarity: data.rarity,
-      badges: finalBadges,
-      traits: Array.isArray(data.traits) ? data.traits.slice(0, 12) : [],
-      contributors: Array.isArray(data.contributors) ? data.contributors.slice(0, 64) : [],
-      identity: typeof data.identity === 'string' ? data.identity.slice(0, 120) : ''
-    };
+    const rollData = createCanonicalRollData(data, getTodayString(), finalBadges);
+
+    trackProductEvent('roll_completed', {
+      surface: 'root',
+      accountMode: getRollAccountMode($session),
+      isReroll
+    });
 
     if (!requestIsCurrent()) {
       abandonStaleRequest();
       return;
     }
 
-    if (!$session?.user?.id) {
+    if (getRollAccountMode($session) === 'guest') {
       saveGuestRoll(rollData);
       guestProgressRestored = true;
       guestProgressActive.set(true);

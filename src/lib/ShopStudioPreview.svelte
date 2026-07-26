@@ -1,5 +1,7 @@
 <script>
   import RollPreview from './RollPreview.svelte';
+  import ProfileShell from './ProfileShell.svelte';
+  import { createDefaultProfileConfig } from './profileConfig.js';
   import { getCosmeticEffect } from './cosmetics';
   import { SHOP_CONTEXT_LABELS } from './shopCatalog';
 
@@ -8,14 +10,27 @@
   export let username = 'Chromanaut';
   export let selectedItem = /** @type {any} */ (null);
   export let displayColor = '#7B5CFF';
+  /** @type {any} */
+  export let accountProfile = null;
 
   $: nameEffect = getCosmeticEffect(loadout, 'name_effect');
-  $: frameEffect = getCosmeticEffect(loadout, 'frame');
-  $: profileBackground = getCosmeticEffect(loadout, 'profile_bg');
-  $: profileBorder = getCosmeticEffect(loadout, 'profile_border');
   $: orbShape = getCosmeticEffect(loadout, 'orb_shape');
   $: rollEffect = getCosmeticEffect(loadout, 'roll_effect');
   $: leaderboardTheme = getCosmeticEffect(loadout, 'lb_theme');
+  $: account = /** @type {any} */ (accountProfile || {});
+  $: previewProfile = {
+    ...account,
+    id: 'decoration-studio-preview',
+    username,
+    mood_color: displayColor,
+    current_streak: Number(account.current_streak) || 0,
+    longest_streak: Number(account.longest_streak) || 0,
+    lifetime_ep: Number(account.lifetime_ep) || 0,
+    total_rolls: Number(account.total_rolls) || 0,
+    equipped_cosmetics: { ...loadout },
+    equipped_badges: Array.isArray(account.equipped_badges) ? account.equipped_badges : []
+  };
+  $: previewProfileConfig = createDefaultProfileConfig(displayColor);
 </script>
 
 <section class="studio-preview" aria-label="Your cosmetic preview">
@@ -44,31 +59,12 @@
     <div class="stage-grid" aria-hidden="true"></div>
 
     {#if activeContext === 'profile'}
-      <div class="studio-profile-card {profileBorder.cls}" style={profileBorder.style}>
-        {#if profileBackground.style}
-          <div class="studio-profile-background" style={profileBackground.style}></div>
-        {/if}
-        <div class="studio-profile-shade"></div>
-        <div class="studio-profile-content">
-          <div class="profile-kicker-row">
-            <span>Chromadie profile</span>
-            <span class="profile-online"><i></i> Online</span>
-          </div>
-          <div class="studio-name-wrap">
-            <span class="profile-name-frame {frameEffect.cls}" style={frameEffect.style}>
-              <span class="studio-username {nameEffect.cls}" style={nameEffect.style} data-text={username}>{username}</span>
-            </span>
-          </div>
-          <div class="profile-rank-row">
-            <span class="profile-rank">Mythic rank</span>
-            <span>1.24M lifetime EP</span>
-          </div>
-          <div class="studio-stat-grid">
-            <div><strong>9.8M</strong><span>Best roll</span></div>
-            <div><strong>42</strong><span>Day streak</span></div>
-            <div><strong>128</strong><span>Total rolls</span></div>
-          </div>
-        </div>
+      <div class="studio-profile-canvas">
+        <ProfileShell
+          previewMode={true}
+          previewProfile={previewProfile}
+          previewProfileConfig={previewProfileConfig}
+        />
       </div>
     {:else if activeContext === 'roll'}
       <div class="studio-roll-scene">
@@ -222,6 +218,16 @@
     background-size: 30px 30px;
     mask-image: linear-gradient(to bottom, #000, transparent 90%);
   }
+
+  .studio-profile-canvas {
+    position: relative;
+    z-index: 1;
+    width: calc(100% - 24px);
+    max-height: 100%;
+    overflow: hidden;
+    border-radius: 18px;
+  }
+  .studio-profile-canvas :global(.profile-shell-page--preview) { width: 100%; }
 
   .studio-profile-card {
     position: relative;
@@ -406,6 +412,7 @@
   @media (max-width: 650px) {
     .studio-preview { padding: 13px; border-radius: 22px; }
     .studio-stage { min-height: 286px; }
+    .studio-profile-canvas { width: calc(100% - 14px); }
     .studio-profile-card { min-height: 218px; }
     .studio-profile-content { min-height: 218px; padding: 15px; }
     .studio-name-wrap { padding: 18px 6px 12px; }

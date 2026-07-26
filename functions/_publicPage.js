@@ -69,7 +69,14 @@ export async function createHtmlHeaders(html, cacheControl = 'no-cache, must-rev
   };
 }
 
-export async function renderPublicPage(request, env, { title, description, canonicalPath, fallback }) {
+export async function renderPublicPage(request, env, {
+  title,
+  description,
+  canonicalPath,
+  fallback,
+  robots = 'index,follow',
+  cacheControl = 'no-cache, must-revalidate'
+}) {
   const shellResponse = await fetchAppShell(request, env);
   if (!shellResponse.ok) return new Response('Unable to load app shell.', { status: 502, headers: baseSecurityHeaders });
 
@@ -81,7 +88,7 @@ export async function renderPublicPage(request, env, { title, description, canon
   html = html
     .replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`)
     .replace(/<meta name="description"[^>]*>/i, `<meta name="description" content="${escapeHtml(description)}" />`)
-    .replace(/<meta name="robots"[^>]*>/i, '<meta name="robots" content="index,follow" />')
+    .replace(/<meta name="robots"[^>]*>/i, `<meta name="robots" content="${escapeHtml(robots)}" />`)
     .replace(/<link rel="canonical"[^>]*>/i, `<link rel="canonical" href="${escapeHtml(canonical)}" />`)
     .replace(/<meta property="og:title"[^>]*>/i, `<meta property="og:title" content="${escapeHtml(title)}" />`)
     .replace(/<meta property="og:description"[^>]*>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`)
@@ -90,5 +97,5 @@ export async function renderPublicPage(request, env, { title, description, canon
     .replace(/<meta name="twitter:description"[^>]*>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`)
     .replace('</body>', `${fallbackMarkup}</body>`);
 
-  return new Response(html, { headers: await createHtmlHeaders(html) });
+  return new Response(html, { headers: await createHtmlHeaders(html, cacheControl) });
 }

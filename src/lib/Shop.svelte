@@ -1,7 +1,7 @@
 <script>
   import { onDestroy, onMount, tick } from 'svelte';
   import ShopItemPreview from './ShopItemPreview.svelte';
-  import ShopStudioPreview from './ShopStudioPreview.svelte';
+  import DecorationStudio from './DecorationStudio.svelte';
   import {
     shopItems,
     shopItemsLoading,
@@ -10,6 +10,7 @@
     userInventory,
     equippedItems,
     walletBalance,
+    profileEntitlements,
     rerollShards,
     profile,
     authUser,
@@ -17,9 +18,11 @@
     addToast,
     fetchInventoryState,
     fetchWalletBalance,
+    fetchProfileEntitlements,
     refreshProfileState
   } from './stores';
   import { supabase } from './supabase';
+  import { trackProductEvent } from './productAnalytics.js';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
   import {
     SHOP_RARITIES,
@@ -32,6 +35,9 @@
     filterShopItems,
     getCollectionItems,
     getShopContextForSlot,
+    getShopAccessLabel,
+    getShopAccessTier,
+    hasShopEntitlement,
     isShopCosmetic,
     requiresPurchaseConfirmation,
     tryOnShopItem
@@ -81,7 +87,8 @@
     return {
       ...source,
       inventoryCounts: { ...(source.inventoryCounts || {}) },
-      loadout: { ...(source.loadout || {}) }
+      loadout: { ...(source.loadout || {}) },
+      entitlements: [...(source.entitlements || [])]
     };
   }
 
@@ -91,7 +98,8 @@
       walletBalance: $walletBalance,
       userInventory: $userInventory,
       equippedItems: $equippedItems,
-      rerollShards: $rerollShards
+      rerollShards: $rerollShards,
+      entitlements: $profileEntitlements
     });
     fittingRoom = cloneFittingRoom(created);
     fittingRoomInitialized = true;
@@ -102,7 +110,8 @@
       walletBalance: $walletBalance,
       userInventory: $userInventory,
       equippedItems: $equippedItems,
-      rerollShards: $rerollShards
+      rerollShards: $rerollShards,
+      entitlements: $profileEntitlements
     });
     fittingRoom = cloneFittingRoom(created);
     fittingRoomInitialized = true;
@@ -129,7 +138,8 @@
   $: relatedItems = selectedItem ? getCollectionItems(catalogItems, selectedItem.collection, selectedItem.item_key).slice(0, 4) : [];
   $: selectedOwnedCount = selectedItem ? (fittingRoom.inventoryCounts[selectedItem.item_key] || 0) : 0;
   $: selectedActuallyEquipped = Boolean(selectedItem && $equippedItems[selectedItem.slot] === selectedItem.item_key);
-  $: selectedCanPurchase = Boolean(selectedItem && selectedItem.cost > 0 && fittingRoom.balance >= selectedItem.cost && (selectedItem.slot === 'consumable' || selectedOwnedCount === 0));
+  $: selectedHasAccess = Boolean(selectedItem && hasShopEntitlement(selectedItem, fittingRoom));
+  $: selectedCanPurchase = Boolean(selectedItem && getShopAccessTier(selectedItem) === 'earned' && selectedItem.cost > 0 && fittingRoom.balance >= selectedItem.cost && (selectedItem.slot === 'consumable' || selectedOwnedCount === 0));
   $: loadoutEntries = LOADOUT_SLOTS.map(slot => ({ slot, item: $shopItems[fittingRoom.loadout[slot]] || null }));
   $: equippedSlotCount = loadoutEntries.filter(entry => entry.item).length;
 
@@ -143,9 +153,16 @@
     const actuallyEquipped = Boolean(item && accountEquippedSnapshot[item.slot] === item.item_key);
     const previewing = Boolean(item && fittingRoomSnapshot.loadout[item.slot] === item.item_key);
     const cost = Number(item?.cost) || 0;
+    const accessTier = getShopAccessTier(item);
 
     if (actuallyEquipped) return { label: 'Equipped', tone: 'equipped', ownedCount };
     if (previewing) return { label: 'Previewing', tone: 'previewing', ownedCount };
+    if (accessTier === 'free') return { label: 'Free baseline', tone: 'free', ownedCount };
+    if (accessTier === 'premium') {
+      return hasShopEntitlement(item, fittingRoomSnapshot)
+        ? { label: 'Premium unlocked', tone: 'premium', ownedCount }
+        : { label: 'Premium expression', tone: 'premium-locked', ownedCount };
+    }
     if (ownedCount > 0) {
       return {
         label: item?.slot === 'consumable' ? `${ownedCount} owned` : 'Owned',
@@ -153,7 +170,7 @@
         ownedCount
       };
     }
-    if (cost <= 0) return { label: 'Milestone reward', tone: 'milestone', ownedCount };
+    if (cost <= 0) return { label: 'Earned milestone', tone: 'milestone', ownedCount };
     if (fittingRoomSnapshot.balance < cost) return { label: 'Not enough EP', tone: 'unaffordable', ownedCount };
     return { label: 'Available', tone: 'available', ownedCount };
   }
@@ -164,6 +181,11 @@
     activeContext = getShopContextForSlot(item.slot) || activeContext;
     previewedItem = item;
     shopNotice = message || `${item.name} is now previewing in your ${SHOP_SLOT_LABELS[item.slot].toLowerCase()} slot.`;
+    trackProductEvent('shop_try_on', {
+      slot: item.slot,
+      accessTier: getShopAccessTier(item),
+      context: activeContext
+    });
   }
 
   function clearSlot(slot) {
@@ -186,7 +208,8 @@
     await Promise.all([
       refreshProfileState(userId),
       fetchInventoryState(userId),
-      fetchWalletBalance(userId)
+      fetchWalletBalance(userId),
+      fetchProfileEntitlements(userId)
     ]);
     syncFittingRoomFromAccount();
   }
@@ -207,6 +230,11 @@
           const { data: equipData, error: equipError } = await supabase.rpc('equip_item', { p_item_key: item.item_key });
           if (equipError || !equipData?.success) {
             equipWarning = equipError?.message || equipData?.error || 'The item could not be equipped automatically.';
+          } else {
+            trackProductEvent('shop_equip', {
+              slot: item.slot,
+              accessTier: getShopAccessTier(item)
+            });
           }
         }
 
@@ -226,6 +254,10 @@
         if (error) throw new Error(error.message);
         if (!data?.success) throw new Error(data?.error || 'The item could not be equipped.');
         await refreshLiveAccountState();
+        trackProductEvent('shop_equip', {
+          slot: item.slot,
+          accessTier: getShopAccessTier(item)
+        });
         previewedItem = item;
         activeContext = getShopContextForSlot(item.slot) || activeContext;
         shopNotice = `${item.name} equipped to your account.`;
@@ -338,7 +370,10 @@
   }
 
   function getPriceLabel(item) {
-    return item.cost > 0 ? `${item.cost.toLocaleString()} EP` : 'Earned';
+    const tier = getShopAccessTier(item);
+    if (tier === 'free') return 'Free baseline';
+    if (tier === 'premium') return 'Premium expression';
+    return item.cost > 0 ? `${item.cost.toLocaleString()} EP` : 'Earned milestone';
   }
 
   onDestroy(() => {
@@ -359,8 +394,8 @@
   <header class="shop-header">
     <div class="shop-heading">
       <span class="shop-kicker">ChromaDie</span>
-      <h1>Cosmetic Shop</h1>
-      <p>Preview cosmetics, unlock favorites with EP, and equip them to your account.</p>
+      <h1>Decoration Studio</h1>
+      <p>Shape the profile people remember, then unlock earned expression without touching the game’s competitive core.</p>
     </div>
     <div class="shop-wallet" aria-label={`Wallet balance: ${fittingRoom.balance.toLocaleString()} EP`}>
       <span>Your wallet</span>
@@ -368,6 +403,15 @@
       <small>EP available</small>
     </div>
   </header>
+
+  <section class="shop-foundations" aria-labelledby="shop-foundations-title">
+    <div>
+      <span class="shop-foundations__eyebrow">Free baseline</span>
+      <h2 id="shop-foundations-title">Every profile starts with a complete identity.</h2>
+      <p>Signature color, curated layouts, module order, visibility, and secure links are included before you spend or earn anything.</p>
+    </div>
+    <a href="/profile">Open profile studio <span aria-hidden="true">↗</span></a>
+  </section>
 
   {#if $shopItemsLoading}
     <div class="shop-status" role="status" aria-live="polite">
@@ -384,11 +428,12 @@
     <div class="atelier-layout">
       <aside class="studio-column">
         <div class="studio-sticky">
-          <ShopStudioPreview
+          <DecorationStudio
             bind:activeContext
             loadout={fittingRoom.loadout}
             {username}
             {displayColor}
+            accountProfile={$profile}
             selectedItem={previewedItem}
           />
 
@@ -516,13 +561,16 @@
               {@const isWearing = fittingRoom.loadout[item.slot] === item.item_key}
               {@const ownedCount = fittingRoom.inventoryCounts[item.item_key] || 0}
               {@const actuallyEquipped = $equippedItems[item.slot] === item.item_key}
-              {@const canPurchase = item.cost > 0 && fittingRoom.balance >= item.cost && (item.slot === 'consumable' || ownedCount === 0)}
+              {@const accessTier = getShopAccessTier(item)}
+              {@const hasAccess = hasShopEntitlement(item, fittingRoom)}
+              {@const canPurchase = accessTier === 'earned' && item.cost > 0 && fittingRoom.balance >= item.cost && (item.slot === 'consumable' || ownedCount === 0)}
               {@const itemBusy = Boolean(loadingAction?.endsWith(`:${item.item_key}`))}
               <article class="shop-item rarity-{item.rarity || 'Common'}" class:is-wearing={isWearing}>
                 <div class="item-topline">
                   <span>{SHOP_SLOT_LABELS[item.slot] || item.slot}</span>
                   <span class="item-state tone-{state.tone}">{state.label}</span>
                 </div>
+                <div class="item-access-label tier-{accessTier}">{getShopAccessLabel(item)}</div>
 
                 <button class="item-preview-button" type="button" aria-label={`View details for ${item.name}`} on:click={() => openItemDetails(item)}>
                   <ShopItemPreview {item} />
@@ -545,7 +593,7 @@
                     </button>
                   {/if}
 
-                  {#if isShopCosmetic(item) && ownedCount > 0}
+                  {#if isShopCosmetic(item) && hasAccess}
                     <button
                       type="button"
                       class="primary-item-action"
@@ -554,8 +602,12 @@
                     >
                       {itemBusy ? (actuallyEquipped ? 'Unequipping…' : 'Equipping…') : (actuallyEquipped ? 'Unequip' : 'Equip')}
                     </button>
+                  {:else if accessTier === 'premium'}
+                    <button type="button" class="primary-item-action" disabled>Premium expression · Preview only</button>
+                  {:else if accessTier === 'free'}
+                    <button type="button" class="primary-item-action" disabled>Free baseline</button>
                   {:else if item.cost <= 0}
-                    <button type="button" class="primary-item-action" disabled>Milestone reward</button>
+                    <button type="button" class="primary-item-action" disabled>Earned milestone</button>
                   {:else}
                     <button
                       type="button"
@@ -621,6 +673,7 @@
 
       <div class="drawer-stats">
         <div><span>Price</span><strong>{getPriceLabel(selectedItem)}</strong></div>
+        <div><span>Access</span><strong>{getShopAccessLabel(selectedItem)}</strong></div>
         <div><span>Your balance</span><strong>{fittingRoom.balance.toLocaleString()} EP</strong></div>
         <div><span>Status</span><strong>{selectedState?.label}</strong></div>
       </div>
@@ -644,7 +697,7 @@
           <button type="button" class="drawer-try" on:click={() => tryOnItem(selectedItem)}>Try on this piece</button>
         {/if}
 
-        {#if isShopCosmetic(selectedItem) && selectedOwnedCount > 0}
+        {#if isShopCosmetic(selectedItem) && selectedHasAccess}
           <button
             type="button"
             class="drawer-buy"
@@ -655,8 +708,12 @@
               ? (selectedActuallyEquipped ? 'Unequipping…' : 'Equipping…')
               : (selectedActuallyEquipped ? 'Unequip from account' : 'Equip to account')}
           </button>
+        {:else if getShopAccessTier(selectedItem) === 'premium'}
+          <button type="button" class="drawer-buy" disabled>Premium expression · Preview only</button>
+        {:else if getShopAccessTier(selectedItem) === 'free'}
+          <button type="button" class="drawer-buy" disabled>Free baseline</button>
         {:else if selectedItem.cost <= 0}
-          <button type="button" class="drawer-buy" disabled>Milestone reward · Preview only</button>
+          <button type="button" class="drawer-buy" disabled>Earned milestone · Preview only</button>
         {:else}
           <button type="button" class="drawer-buy" disabled={!selectedCanPurchase || !!loadingAction} on:click={() => requestPurchase(selectedItem)}>
             {loadingAction
@@ -695,7 +752,7 @@
         <span>Your fitting room</span>
         <button type="button" aria-label="Close your look" on:click={closeLoadoutSheet}>×</button>
       </div>
-      <ShopStudioPreview bind:activeContext loadout={fittingRoom.loadout} {username} {displayColor} selectedItem={previewedItem} />
+      <DecorationStudio bind:activeContext loadout={fittingRoom.loadout} {username} {displayColor} accountProfile={$profile} selectedItem={previewedItem} />
       <div class="sheet-slots">
         {#each loadoutEntries as entry (entry.slot)}
           <div>
@@ -777,6 +834,23 @@
     letter-spacing: -0.075em;
   }
   .shop-heading p { max-width: 610px; margin: 0; color: #8d8f9e; font-size: 1rem; line-height: 1.65; }
+
+  .shop-foundations {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 0 0 30px;
+    padding: 18px 20px;
+    border: 1px solid rgba(75,222,165,0.16);
+    border-radius: 18px;
+    background: linear-gradient(105deg, rgba(75,222,165,0.08), rgba(255,255,255,0.025));
+  }
+  .shop-foundations__eyebrow { color: #8fe1bd; font: 700 0.62rem/1 'JetBrains Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase; }
+  .shop-foundations h2 { margin: 7px 0 5px; color: #f0eef5; font: 680 1rem/1.2 var(--font-display); }
+  .shop-foundations p { max-width: 760px; margin: 0; color: #8d9e98; font-size: 0.72rem; line-height: 1.5; }
+  .shop-foundations a { flex: 0 0 auto; color: #b9f4da; font-size: 0.72rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+  .shop-foundations a:hover { text-decoration: underline; }
 
   .shop-wallet {
     min-width: 210px;
@@ -1029,6 +1103,13 @@
   .item-state.tone-previewing { border-color: rgba(109,225,208,0.2); background: rgba(73,196,180,0.08); color: #a7eee4; }
   .item-state.tone-owned { border-color: rgba(77,159,255,0.18); color: #abd2ff; }
   .item-state.tone-available { border-color: rgba(74,222,170,0.17); color: #9de5ca; }
+  .item-state.tone-free { border-color: rgba(75,222,165,0.2); background: rgba(75,222,165,0.07); color: #a9efd1; }
+  .item-state.tone-premium { border-color: rgba(245,181,255,0.2); background: rgba(186,125,255,0.08); color: #e4c9ff; }
+  .item-state.tone-premium-locked { border-color: rgba(245,181,255,0.16); color: #c6a9d7; }
+  .item-access-label { margin: -2px 0 8px; font: 700 0.55rem/1.2 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+  .item-access-label.tier-free { color: #8fe1bd; }
+  .item-access-label.tier-earned { color: #a5b8d4; }
+  .item-access-label.tier-premium { color: #d8b8ff; }
 
   .item-preview-button { position: relative; width: 100%; padding: 0; border: 0; border-radius: 16px; background: transparent; color: inherit; cursor: pointer; text-align: inherit; }
   .item-preview-button :global(.shop-preview-area) { margin-bottom: 0; }
@@ -1120,7 +1201,7 @@
   .drawer-rarity { padding: 6px 9px; border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; color: #ccc8dc; font-size: 0.6rem; text-transform: uppercase; }
   .drawer-description { margin: 15px 0 18px; color: #9697a5; font-size: 0.85rem; line-height: 1.6; }
 
-  .drawer-stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+  .drawer-stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
   .drawer-stats > div { min-width: 0; padding: 11px; border: 1px solid rgba(255,255,255,0.075); border-radius: 13px; background: rgba(255,255,255,0.025); }
   .drawer-stats span,
   .drawer-stats strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1193,6 +1274,7 @@
     .shop-heading h1 { font-size: clamp(2.8rem, 15vw, 4.4rem); }
     .shop-heading p { font-size: 0.88rem; }
     .shop-wallet { min-width: 0; text-align: left; }
+    .shop-foundations { align-items: flex-start; flex-direction: column; gap: 15px; padding: 16px; }
     .studio-sticky { display: block; }
     .loadout-panel { display: none; }
     .collection-hero { min-height: 390px; align-items: flex-start; padding: 28px 22px; }

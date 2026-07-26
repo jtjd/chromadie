@@ -1,0 +1,34 @@
+/* Explicit motion primitives for new surfaces. Legacy motion remains unchanged. */
+@keyframes foundation-rise {
+    from { opacity: 0; transform: translateY(0.75rem); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes foundation-ambient {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(1.5%, -1%, 0) scale(1.04); }
+}
+
+.motion-rise {
+    animation: foundation-rise var(--motion-slow) var(--motion-ease-emphasis) both;
+}
+
+.motion-rise--delay-1 { animation-delay: 80ms; }
+.motion-rise--delay-2 { animation-delay: 160ms; }
+.motion-rise--delay-3 { animation-delay: 240ms; }
+
+.motion-ambient {
+    animation: foundation-ambient var(--motion-ambient) ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .motion-rise,
+    .motion-rise--delay-1,
+    .motion-rise--delay-2,
+    .motion-rise--delay-3,
+    .motion-ambient {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}

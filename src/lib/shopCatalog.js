@@ -51,6 +51,7 @@ export const SHOP_SORTS = Object.freeze([
 ]);
 
 export const SHOP_RARITIES = Object.freeze(['Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']);
+export const SHOP_ACCESS_TIERS = Object.freeze(['free', 'earned', 'premium']);
 
 const RARITY_RANK = Object.freeze({
   Trash: 0,
@@ -73,6 +74,28 @@ const FEATURED_KEYS = Object.freeze([
 
 export function isShopCosmetic(item) {
   return Boolean(item && COSMETIC_SLOTS.includes(item.slot));
+}
+
+export function getShopAccessTier(item) {
+  return SHOP_ACCESS_TIERS.includes(item?.access_tier) ? item.access_tier : 'earned';
+}
+
+export function getShopAccessLabel(item) {
+  const tier = getShopAccessTier(item);
+  if (tier === 'free') return 'Free baseline';
+  if (tier === 'premium') return 'Premium expression';
+  return Number(item?.cost) > 0 ? 'Earned with EP' : 'Earned milestone';
+}
+
+export function hasShopEntitlement(item, fittingRoom = createFittingRoom()) {
+  const tier = getShopAccessTier(item);
+  if (tier === 'free') return true;
+  if (tier !== 'premium') return (fittingRoom.inventoryCounts?.[item?.item_key] || 0) > 0;
+  return Boolean(
+    item?.entitlement_key
+    && Array.isArray(fittingRoom.entitlements)
+    && fittingRoom.entitlements.includes(item.entitlement_key)
+  );
 }
 
 export function requiresPurchaseConfirmation(item) {
@@ -99,7 +122,8 @@ export function createFittingRoom({
   walletBalance = 0,
   userInventory = [],
   equippedItems = {},
-  rerollShards = 0
+  rerollShards = 0,
+  entitlements = []
 } = {}) {
   const inventoryCounts = inventoryToCounts(userInventory);
   const shardCount = Math.max(0, Math.floor(Number(rerollShards) || 0));
@@ -108,7 +132,9 @@ export function createFittingRoom({
   return {
     balance: Math.max(0, Math.floor(Number(walletBalance) || 0)),
     inventoryCounts,
-    loadout: { ...(equippedItems || {}) }
+    loadout: { ...(equippedItems || {}) },
+    entitlements: [...new Set((Array.isArray(entitlements) ? entitlements : [])
+      .filter(value => typeof value === 'string' && /^[a-z0-9_]{1,80}$/.test(value)))]
   };
 }
 
@@ -156,7 +182,7 @@ export function filterShopItems(items, filters = {}, fittingRoom = createFitting
   const filtered = (Array.isArray(items) ? items : [])
     .filter(item => item && item.item_key !== 'title_founder' && item.slot !== 'title')
     .filter(item => matchesSection(item, section, subslot))
-    .filter(item => section !== 'owned' || (fittingRoom.inventoryCounts?.[item.item_key] || 0) > 0)
+    .filter(item => section !== 'owned' || hasShopEntitlement(item, fittingRoom))
     .filter(item => rarity === 'all' || item.rarity === rarity)
     .filter(item => !affordableOnly || (item.cost > 0 && item.cost <= fittingRoom.balance))
     .filter(item => {

@@ -13,6 +13,7 @@ INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, 
 ('bg_ocean_void', 'Ocean Void', 'profile_bg', '3000000', 'style', 'background-color: #000; background-image: radial-gradient(circle at 52% 46%, #00060a 0 20%, #001827 38%, #00618a 46%, #00111d 60%, #000 78%); background-size: 130% 130%; animation: voidFieldDrift 7.8s ease-in-out infinite reverse;', NULL, NULL, 'Epic', 'A dark core bends a cold blue oceanic horizon.', 'Voidwalker'),
 ('bg_sunset', 'Sunset Background', 'profile_bg', '1500000', 'style', 'background-color: #351242; background-image: radial-gradient(ellipse at 75% 25%, rgba(255,210,133,0.76), transparent 42%), linear-gradient(125deg, #592b84, #e64f74, #ff9b68, #592b84); background-size: 170% 170%, 240% 100%; animation: sunsetDrift 10s ease-in-out infinite;', NULL, NULL, 'Epic', 'Layered sunset light drifts across warm violet and coral bands.', NULL),
 ('bg_void', 'Void Background', 'profile_bg', '4500000', 'style', 'background-color: #000; background-image: radial-gradient(circle at 50% 48%, #000 0 25%, #080612 34%, #4d287d 43%, #11091d 50%, #000 72%); background-size: 145% 145%; box-shadow: inset 0 0 50px #000; animation: voidFieldDrift 8.5s ease-in-out infinite;', NULL, NULL, 'Mythic', 'A black center bends a visible violet event horizon across the card.', 'Voidwalker'),
+('bg_prism_atmosphere', 'Prism Atmosphere', 'profile_bg', '0', 'style', 'background-color: #0b0b16; background-image: radial-gradient(circle at 18% 22%, rgba(110,231,249,0.42), transparent 38%), radial-gradient(circle at 82% 72%, rgba(249,168,212,0.35), transparent 42%), linear-gradient(135deg, #10102a, #17112b 54%, #0a1d2a); background-size: 140% 140%, 140% 140%, 100% 100%; background-position: 0% 0%, 100% 100%, 0% 0%;', NULL, NULL, 'Mythic', 'A calm prismatic atmosphere reserved for the Atelier expression pass.', 'Atelier Expression'),
 ('border_celestial', 'Celestial Border', 'profile_border', '20000000', 'class', 'border-celestial-anim', NULL, NULL, 'Mythic', 'A border fit for the stars.', 'Royal Metals'),
 ('border_chroma', 'Chroma Border', 'profile_border', '5000000', 'class', 'border-chroma-anim', NULL, NULL, 'Mythic', 'A full card border pulsing with chroma.', 'Chroma'),
 ('border_crystal', 'Crystal Border', 'profile_border', '6000000', 'class', 'border-crystal-anim', NULL, NULL, 'Mythic', 'A shimmering crystal border.', 'Royal Metals'),
@@ -67,6 +68,7 @@ INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, 
 ('name_sunset_blur', 'Sunset Blur', 'name_effect', '13500000', 'class', 'sunset-blur-anim', NULL, NULL, 'Mythic', 'A warm sunset gradient with a blurred glow.', NULL),
 ('name_toxic', 'Toxic Gradient', 'name_effect', '750000', 'style', 'background: linear-gradient(45deg, #43e97b, #38f9d7); -webkit-background-clip: text; background-clip: text; color: transparent;', NULL, NULL, 'Epic', 'A bright acid-green gradient with a chemical glow.', 'Elemental'),
 ('name_void', 'Void Name', 'name_effect', '20000000', 'class', 'name_void', NULL, NULL, 'Mythic', 'A near-black name bends cold cyan-violet light around its edge.', 'Voidwalker'),
+('name_prism_atelier', 'Prism Atelier Name', 'name_effect', '0', 'style', 'color: transparent; background: linear-gradient(90deg, #6ee7f9, #c4b5fd, #f9a8d4); -webkit-background-clip: text; background-clip: text; text-shadow: 0 0 18px rgba(196,181,253,0.65);', NULL, NULL, 'Mythic', 'A restrained spectrum signature for players who want the name to carry the atmosphere.', 'Atelier Expression'),
 ('orb_diamond', 'Diamond Orb', 'orb_shape', '1000000', 'class', 'orb-shape-diamond', NULL, NULL, 'Epic', 'A cut crystal orb with shifting facets and an icy flare.', 'Geometric'),
 ('orb_hexagon', 'Hexagon Orb', 'orb_shape', '500000', 'class', 'orb-shape-hexagon', NULL, NULL, 'Rare', 'A beveled hex core with layered facets and a cool pulse.', 'Geometric'),
 ('orb_square', 'Holo Cube', 'orb_shape', '2000000', 'class', 'orb-shape-square', NULL, NULL, 'Epic', 'An isometric cube with dimensional faces and drifting holographic light.', 'Geometric'),
@@ -116,6 +118,7 @@ SET cost = CASE item_key
   WHEN 'bg_ocean_void' THEN 300000
   WHEN 'bg_sunset' THEN 210000
   WHEN 'bg_void' THEN 225000
+  WHEN 'bg_prism_atmosphere' THEN 0
   WHEN 'border_celestial' THEN 800000
   WHEN 'border_chroma' THEN 250000
   WHEN 'border_crystal' THEN 275000
@@ -170,6 +173,7 @@ SET cost = CASE item_key
   WHEN 'name_sunset_blur' THEN 600000
   WHEN 'name_toxic' THEN 120000
   WHEN 'name_void' THEN 900000
+  WHEN 'name_prism_atelier' THEN 0
   WHEN 'orb_diamond' THEN 180000
   WHEN 'orb_hexagon' THEN 80000
   WHEN 'orb_square' THEN 260000
