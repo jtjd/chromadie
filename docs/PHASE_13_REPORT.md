@@ -318,7 +318,7 @@ identity, routing, and editor changes:
 | `npm run build` | PASS; Vite 8.1.3, 282 modules; existing >500 kB JS chunk warning remains |
 | `npm run check` | PASS; 0 errors, 0 warnings |
 | `npx eslint src/` | PASS |
-| `npm test` | PASS; 124 passed, 0 failed |
+| `npm test` | PASS; 125 passed, 0 failed |
 | `npm run check:links` | PASS |
 | `npm run check:csp` | PASS; 1 inline script hash verified |
 | `npm run check:balance-drift` | PASS; 66 conditions, 7 rarities, 42 achievements |
@@ -341,6 +341,11 @@ username-only, missing-bio, maximum-length identity, reduced-motion, and the
 390×844 owner identity editor. Human review confirmed the sparse approved
 composition, safe long-text wrapping, owner/visitor identity ordering, and
 correct editor counters after the final CSS pass.
+
+The temporary Pages preview middleware now bypasses only
+`/.well-known/acme-challenge/*` GET/HEAD requests so Cloudflare can complete
+custom-domain HTTP validation. All other requests remain password-protected;
+the behavior is covered by the Pages Function regression test.
 
 ## Final recommendation
 

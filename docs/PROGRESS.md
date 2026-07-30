@@ -689,7 +689,7 @@ the remaining Phase 11 boundary.
 - Added canonical root username routing, shared reserved paths, encoded-path
   rejection, `/u/<username>` compatibility, canonical metadata, OG/Twitter
   links, JSON-LD, crawler assets, share helpers, and origin-safe auth helpers.
-- Fresh local reset, schema lint, build, Svelte check, ESLint, 124 tests,
+- Fresh local reset, schema lint, build, Svelte check, ESLint, 125 tests,
   links, CSP, balance, catalog, scoring, database security, and repository
   hygiene checks pass. Full browser screenshots are stored under
   `artifacts/phase-13/` and were reviewed at 100% zoom/device scale 1.
@@ -700,3 +700,6 @@ the remaining Phase 11 boundary.
   email-template installation, and final live browser smoke tests remain
   operator checklist items. Phase 13 is the final phase; no avatar/media/music
   work may start.
+- The temporary Pages gate permits only the Cloudflare ACME validation path
+  through so custom-domain verification can complete; normal site access stays
+  protected by `PREVIEW_PASSWORD`.

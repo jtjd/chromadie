@@ -122,6 +122,19 @@ const MAINTENANCE_HTML = `<!doctype html>
 </html>`;
 
 export async function onRequest(context) {
+  const { request } = context;
+  const url = new URL(request.url);
+
+  // Cloudflare Pages uses this public HTTP path for custom-domain
+  // certificate validation. Keep the rest of the site behind the preview
+  // gate while allowing only the validation endpoint through.
+  if (
+    ['GET', 'HEAD'].includes(request.method)
+    && url.pathname.startsWith('/.well-known/acme-challenge/')
+  ) {
+    return context.next();
+  }
+
   const password = context.env?.PREVIEW_PASSWORD;
 
   if (typeof password !== "string" || password.length === 0) {
@@ -129,9 +142,6 @@ export async function onRequest(context) {
       "retry-after": "1800"
     });
   }
-
-  const { request } = context;
-  const url = new URL(request.url);
 
   if (url.pathname === LOGOUT_PATH) {
     return new Response(null, {

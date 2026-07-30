@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import { createHtmlHeaders } from '../functions/_publicPage.js';
+import { onRequest as previewMiddleware } from '../functions/_middleware.js';
 import { onRequestGet as renderProfileRoute } from '../functions/u/[[username]].js';
 import { onRequestGet as renderChallengeRoute } from '../functions/c/[[id]].js';
 import { onRequestGet as renderPrototypeRoute } from '../functions/prototype/profile.js';
@@ -21,6 +22,28 @@ test('dynamic HTML responses carry strict security headers and script hashes', a
   assert.match(headers['Strict-Transport-Security'], /max-age=31536000/);
   assert.match(headers['Content-Security-Policy'], /script-src 'self' 'sha256-/);
   assert.doesNotMatch(headers['Content-Security-Policy'], /script-src[^;]*'unsafe-inline'/);
+});
+
+test('preview gate leaves Cloudflare ACME validation reachable without opening the site', async () => {
+  let validationNextCalled = false;
+  const validationResponse = await previewMiddleware({
+    request: new Request('http://chm.lol/.well-known/acme-challenge/cloudflare-check'),
+    env: {},
+    next: () => {
+      validationNextCalled = true;
+      return new Response('validation endpoint', { status: 200 });
+    }
+  });
+
+  assert.equal(validationNextCalled, true);
+  assert.equal(validationResponse.status, 200);
+
+  const normalResponse = await previewMiddleware({
+    request: new Request('https://chm.lol/'),
+    env: {},
+    next: () => new Response('site', { status: 200 })
+  });
+  assert.equal(normalResponse.status, 503);
 });
 
 test('profile route rejects PostgREST wildcard/filter input without an API request', async () => {

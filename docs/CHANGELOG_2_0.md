@@ -587,3 +587,11 @@ presentation without changing its data or gameplay authority.
 - Phase 13A is complete and Phase 13 may resume after gated browser smoke
   testing. Identity, avatar, music, and root-routing work was not started by
   this release.
+
+## 2026-07-30 — Allow Cloudflare Pages domain validation through the preview gate
+
+- Added a narrow GET/HEAD bypass for `/.well-known/acme-challenge/*` so Pages
+  can validate `chm.lol` over HTTP while the rest of the site remains behind
+  the temporary `PREVIEW_PASSWORD` gate.
+- Added regression coverage proving the validation path is reachable while
+  ordinary requests remain closed when the gate secret is unavailable.
