@@ -27,6 +27,7 @@ const CSP_BASE = [
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' https://cdn.fontshare.com https://cdn.jsdelivr.net data:",
   "img-src 'self' data: blob: https://*.supabase.co",
+  "media-src 'self' blob: https://*.supabase.co",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://cloudflareinsights.com",
   "frame-src https://challenges.cloudflare.com https://open.spotify.com"
 ];
