@@ -248,7 +248,12 @@
 
   function scrollToProfileHero() {
     profileMoreActive = false;
-    document.querySelector('.profile-shell__approved-canvas')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const hero = document.querySelector('.profile-shell__approved-main');
+    if (!hero) return;
+    window.scrollTo({
+      top: Math.max(0, hero.getBoundingClientRect().top + window.scrollY),
+      behavior: 'smooth'
+    });
   }
 
   function handleRollCancel() {
