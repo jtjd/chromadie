@@ -364,7 +364,9 @@
       </div>
       <div style="display:grid;gap:.75rem;max-width:42rem">
         {#if audioSrc}
-          <audio src={audioSrc} controls loop preload="metadata" aria-label="Profile audio preview"></audio>
+          {#key audioSrc}
+            <audio src={audioSrc} controls loop preload="auto" aria-label="Profile audio preview"></audio>
+          {/key}
         {:else}
           <p style="margin:0;color:var(--color-ink-muted)">No profile audio configured.</p>
         {/if}

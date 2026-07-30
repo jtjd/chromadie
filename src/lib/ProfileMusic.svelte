@@ -18,7 +18,9 @@
 
 {#if audioSrc}
   <div class="profile-music profile-music--audio" data-music-state="audio" aria-label="Profile audio">
-    <audio src={audioSrc} autoplay loop controls preload="metadata"></audio>
+    {#key audioSrc}
+      <audio src={audioSrc} autoplay loop controls preload="auto"></audio>
+    {/key}
     <span class="profile-music__audio-note">Audio may require a tap to start.</span>
   </div>
 {:else if spotifyEmbedSrc}
