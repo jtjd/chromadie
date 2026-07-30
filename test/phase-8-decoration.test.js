@@ -81,6 +81,7 @@ test('decoration studio previews the live profile canvas in an isolated mode', a
   assert.match(preview, /ProfileShell/);
   assert.match(preview, /previewMode=\{true\}/);
   assert.match(shell, /previewMode/);
+  assert.match(shell, /\{#if !previewMode\}\s*<ProfileAtmosphere/);
   assert.match(shell, /profile-shell-page--preview/);
   assert.doesNotMatch(studio + preview, /innerHTML|new Function|eval\s*\(/);
 });

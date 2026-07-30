@@ -339,7 +339,9 @@
 </script>
 
 <main class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + dailyAccentColor + ';'} aria-busy={loading}>
-  <ProfileAtmosphere accent={dailyAccentColor} secondaryAccent={colorFor(effectiveProfileConfig.signatureColor, '#71D6FF')} backgroundSrc={backgroundSrc} rollState={profileRollState} rollColor={profileRollColor || dailyAccentColor} />
+  {#if !previewMode}
+    <ProfileAtmosphere accent={dailyAccentColor} secondaryAccent={colorFor(effectiveProfileConfig.signatureColor, '#71D6FF')} backgroundSrc={backgroundSrc} rollState={profileRollState} rollColor={profileRollColor || dailyAccentColor} />
+  {/if}
 
   {#if !loading && targetProfile}
     <div class="profile-shell__approved-canvas">
