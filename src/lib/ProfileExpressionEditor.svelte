@@ -239,7 +239,7 @@
   <div class="profile-expression-editor__media-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
     <div class="profile-expression-editor__preview" style="flex:0 0 7rem;width:7rem" aria-label="Avatar preview">
       {#if avatarSrc}
-        <Media src={avatarSrc} alt="Avatar preview" aspect="square" loading="eager" className="profile-expression-editor__avatar" fallbackLabel="Avatar unavailable" />
+        <Media src={avatarSrc} alt="Avatar preview" aspect="square" loading="eager" className="profile-expression-editor__avatar" fallbackLabel="Avatar unavailable" allowLocalPreview={true} />
       {:else}
         <div class="profile-expression-editor__avatar profile-expression-editor__avatar--fallback" style="display:grid;place-items:center;width:7rem;aspect-ratio:1;border-radius:50%;background:var(--profile-accent);color:var(--color-ink-strong);font-size:2.8rem" aria-label="Initials fallback">{fallbackInitial.slice(0, 1).toUpperCase() || '✦'}</div>
       {/if}
@@ -264,7 +264,7 @@
     <div class="profile-expression-editor__background-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
       <div class="profile-expression-editor__background-preview" style="flex:1 1 16rem;min-width:10rem" aria-label="Background preview">
         {#if backgroundSrc}
-          <Media src={backgroundSrc} alt="Background preview" aspect="wide" loading="eager" className="profile-expression-editor__background" fallbackLabel="Background unavailable" />
+          <Media src={backgroundSrc} alt="Background preview" aspect="wide" loading="eager" className="profile-expression-editor__background" fallbackLabel="Background unavailable" allowLocalPreview={true} />
         {:else}
           <div class="profile-expression-editor__background profile-expression-editor__background--fallback">Generated color atmosphere</div>
         {/if}

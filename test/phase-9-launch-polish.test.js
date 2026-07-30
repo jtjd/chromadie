@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import { createHtmlHeaders } from '../functions/_publicPage.js';
 import { getProfileCacheControl } from '../functions/u/[[username]].js';
-import { isSafeMediaSource, normalizeMediaSource } from '../src/lib/mediaSafety.js';
+import { isSafeMediaSource, normalizeLocalMediaPreviewSource, normalizeMediaSource } from '../src/lib/mediaSafety.js';
 
 const appSource = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
 const mediaSource = await readFile(new URL('../src/lib/foundation/Media.svelte', import.meta.url), 'utf8');
@@ -19,6 +19,12 @@ test('media sources allow local and HTTPS assets but reject unsafe protocols', (
   assert.equal(normalizeMediaSource('//cdn.example.com/profile.png'), '');
   assert.equal(normalizeMediaSource('http://cdn.example.com/profile.png'), '');
   assert.equal(normalizeMediaSource('data:image/svg+xml;base64,unsafe'), '');
+  assert.equal(normalizeMediaSource('blob:https://chm.lol/local-preview'), '');
+  assert.equal(
+    normalizeLocalMediaPreviewSource('blob:https://chm.lol/local-preview', 'https://chm.lol'),
+    'blob:https://chm.lol/local-preview'
+  );
+  assert.equal(normalizeLocalMediaPreviewSource('blob:https://evil.example/local-preview', 'https://chm.lol'), '');
   assert.equal(normalizeMediaSource('javascript:alert(1)'), '');
   assert.equal(isSafeMediaSource('/logo-mark.svg'), true);
   assert.equal(isSafeMediaSource('javascript:alert(1)'), false);
@@ -26,6 +32,7 @@ test('media sources allow local and HTTPS assets but reject unsafe protocols', (
 
 test('media renderer has a bounded source, load failure, and accessible fallback contract', () => {
   assert.match(mediaSource, /normalizeMediaSource/);
+  assert.match(mediaSource, /allowLocalPreview/);
   assert.match(mediaSource, /on:error={handleError}/);
   assert.match(mediaSource, /foundation-media__fallback/);
   assert.doesNotMatch(mediaSource, /innerHTML|new Function|eval\s*\(/);

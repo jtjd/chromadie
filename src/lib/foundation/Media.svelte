@@ -1,5 +1,5 @@
 <script>
-  import { normalizeMediaSource } from '../mediaSafety.js';
+  import { normalizeLocalMediaPreviewSource, normalizeMediaSource } from '../mediaSafety.js';
 
   export let src = '';
   export let alt = '';
@@ -8,11 +8,13 @@
   export let loading = 'lazy';
   export let className = '';
   export let fallbackLabel = 'Media unavailable';
+  export let allowLocalPreview = false;
 
   const allowedAspects = new Set(['square', 'landscape', 'portrait', 'wide']);
   $: safeAspect = allowedAspects.has(aspect) ? aspect : 'square';
   $: mediaClass = ['foundation-media', `foundation-media--${safeAspect}`, className].filter(Boolean).join(' ');
-  $: safeSrc = normalizeMediaSource(src);
+  $: safeSrc = normalizeMediaSource(src)
+    || (allowLocalPreview ? normalizeLocalMediaPreviewSource(src) : '');
   let failedSource = '';
   $: if (safeSrc !== failedSource && safeSrc) failedSource = '';
 

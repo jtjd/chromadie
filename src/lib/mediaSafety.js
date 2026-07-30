@@ -29,6 +29,28 @@ export function normalizeMediaSource(value) {
   }
 }
 
+/**
+ * Allow a browser-created object URL only for an explicit local preview. The
+ * normal media contract continues to reject blob URLs, and the embedded blob
+ * origin must match the current page.
+ */
+export function normalizeLocalMediaPreviewSource(value, expectedOrigin = '') {
+  if (typeof value !== 'string') return '';
+  const source = value.trim();
+  if (!source || source.length > MAX_MEDIA_SOURCE_LENGTH || hasControlCharacters(source)) return '';
+
+  try {
+    const parsed = new URL(source);
+    const pageOrigin = expectedOrigin
+      || (typeof window !== 'undefined' ? window.location.origin : '');
+    return parsed.protocol === 'blob:' && pageOrigin && parsed.origin === pageOrigin
+      ? source
+      : '';
+  } catch {
+    return '';
+  }
+}
+
 export function isSafeMediaSource(value) {
   return Boolean(normalizeMediaSource(value));
 }
