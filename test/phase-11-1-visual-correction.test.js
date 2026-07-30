@@ -57,3 +57,15 @@ test('phase 11.1 optional expression is hidden without a real or explicit fixtur
   assert.doesNotMatch(music, /Music off/);
   assert.doesNotMatch(music, /safeColor\}<\/strong>/);
 });
+
+test('profile exploration uses one bounded snap scroller with sibling pages', async () => {
+  const shell = await read('src/lib/ProfileShell.svelte');
+
+  assert.match(shell, /<main bind:this=\{profilePageElement\}/);
+  assert.match(shell, /profilePageElement\?\.addEventListener\('scroll'/);
+  assert.match(shell, /profilePageElement\?\.addEventListener\('wheel'/);
+  assert.match(shell, /scroll-snap-type: y mandatory/);
+  assert.match(shell, /scroll-snap-stop: always/);
+  assert.match(shell, /profilePageElement\?\.scrollTo\(\{ top: 0/);
+  assert.match(shell, /<\/div>\s*\n\s*<div id="profile-more" class="profile-shell__more">/);
+});

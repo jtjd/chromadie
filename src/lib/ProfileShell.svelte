@@ -53,6 +53,7 @@
   let mediaCacheKey = '';
   let refreshing = false;
   let profileMoreActive = false;
+  let profilePageElement;
 
   function resetShellState(nextLoading = false) {
     targetProfile = null;
@@ -143,26 +144,32 @@
     };
     document.addEventListener('visibilitychange', refreshOnReturn);
     window.addEventListener('pageshow', refreshOnReturn);
+    const getProfileOffsetTop = element => {
+      if (!profilePageElement || !element) return 0;
+      return element.getBoundingClientRect().top
+        - profilePageElement.getBoundingClientRect().top
+        + profilePageElement.scrollTop;
+    };
     const updateProfileScrollState = () => {
       const more = document.getElementById('profile-more');
-      if (!more) {
+      if (!profilePageElement || !more) {
         profileMoreActive = false;
         return;
       }
-      const moreTop = more.getBoundingClientRect().top + window.scrollY;
-      profileMoreActive = window.scrollY >= moreTop - window.innerHeight * 0.45;
+      const moreTop = getProfileOffsetTop(more);
+      profileMoreActive = profilePageElement.scrollTop >= moreTop - profilePageElement.clientHeight * 0.45;
     };
-    window.addEventListener('scroll', updateProfileScrollState, { passive: true });
+    profilePageElement?.addEventListener('scroll', updateProfileScrollState, { passive: true });
     const handleProfileWheel = event => {
-      if (previewMode || !hasProfileMore || event.ctrlKey || Math.abs(event.deltaY) < 8) return;
+      if (!profilePageElement || previewMode || !hasProfileMore || event.ctrlKey || Math.abs(event.deltaY) < 8) return;
       if (event.target?.closest?.('.profile-audio-control, input, button, a')) return;
 
       const more = document.getElementById('profile-more');
       if (!more) return;
-      const moreTop = more.getBoundingClientRect().top + window.scrollY;
-      const currentY = window.scrollY;
-      const nearHero = currentY < moreTop - window.innerHeight * 0.35;
-      const nearMoreTop = currentY >= moreTop - 48 && currentY <= moreTop + window.innerHeight * 0.35;
+      const moreTop = getProfileOffsetTop(more);
+      const currentY = profilePageElement.scrollTop;
+      const nearHero = currentY < moreTop - profilePageElement.clientHeight * 0.35;
+      const nearMoreTop = currentY >= moreTop - 48 && currentY <= moreTop + profilePageElement.clientHeight * 0.35;
 
       if (event.deltaY > 0 && nearHero) {
         event.preventDefault();
@@ -172,12 +179,12 @@
         scrollToProfileHero();
       }
     };
-    window.addEventListener('wheel', handleProfileWheel, { passive: false });
+    profilePageElement?.addEventListener('wheel', handleProfileWheel, { passive: false });
     return () => {
       document.removeEventListener('visibilitychange', refreshOnReturn);
       window.removeEventListener('pageshow', refreshOnReturn);
-      window.removeEventListener('scroll', updateProfileScrollState);
-      window.removeEventListener('wheel', handleProfileWheel);
+      profilePageElement?.removeEventListener('scroll', updateProfileScrollState);
+      profilePageElement?.removeEventListener('wheel', handleProfileWheel);
     };
   });
 
@@ -243,17 +250,19 @@
 
   function scrollToProfileMore() {
     profileMoreActive = true;
-    document.getElementById('profile-more')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const more = document.getElementById('profile-more');
+    if (!profilePageElement || !more) return;
+    profilePageElement.scrollTo({
+      top: more.getBoundingClientRect().top
+        - profilePageElement.getBoundingClientRect().top
+        + profilePageElement.scrollTop,
+      behavior: 'smooth'
+    });
   }
 
   function scrollToProfileHero() {
     profileMoreActive = false;
-    const hero = document.querySelector('.profile-shell__approved-main');
-    if (!hero) return;
-    window.scrollTo({
-      top: Math.max(0, hero.getBoundingClientRect().top + window.scrollY),
-      behavior: 'smooth'
-    });
+    profilePageElement?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleRollCancel() {
@@ -399,7 +408,7 @@
   });
 </script>
 
-<main class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + dailyAccentColor + ';'} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + dailyAccentColor + ';'} aria-busy={loading}>
   {#if !previewMode}
     <ProfileAtmosphere accent={dailyAccentColor} secondaryAccent={colorFor(effectiveProfileConfig.signatureColor, '#71D6FF')} backgroundSrc={backgroundSrc} rollState={profileRollState} rollColor={profileRollColor || dailyAccentColor} />
   {/if}
@@ -442,7 +451,9 @@
       {/if}
       </div>
 
-      <div id="profile-more" class="profile-shell__more">
+    </div>
+
+    <div id="profile-more" class="profile-shell__more">
         {#if !previewMode && hasProfileMore && profileMoreActive}
           <button type="button" class="profile-shell__more-back" aria-label="Return to profile top" on:click={scrollToProfileHero}>
             <span aria-hidden="true">↑</span>
@@ -477,7 +488,6 @@
             </div>
           </div>
         {/if}
-      </div>
     </div>
 
     {#if !previewMode}
@@ -939,10 +949,15 @@
   /* Phase 10.2 approved mockup convergence: one atmosphere, one identity surface. */
   .profile-shell-page {
     min-height: calc(100dvh - 4.75rem);
-    overflow: visible;
+    height: calc(100dvh - 4.75rem);
+    overflow-x: hidden;
+    overflow-y: auto;
     padding: 0 clamp(0.9rem, 3vw, 2.5rem) 1.5rem;
     background: transparent;
     isolation: isolate;
+    overscroll-behavior-y: contain;
+    scroll-snap-type: y mandatory;
+    scroll-padding-block: 0;
   }
 
   .profile-shell__approved-canvas {
@@ -950,7 +965,9 @@
     z-index: 1;
     display: block;
     min-height: calc(100dvh - 4.75rem);
-    padding: 0 0 1.5rem;
+    padding: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   .profile-shell__approved-main {
@@ -990,13 +1007,14 @@
   .profile-shell__more {
     position: relative;
     display: flex;
-    min-height: 100dvh;
+    min-height: calc(100dvh - 4.75rem);
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 1.25rem;
     padding: clamp(4rem, 12vh, 8rem) 0 clamp(4rem, 10vh, 7rem);
-    scroll-margin-top: 4.5rem;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   .profile-shell__more-back {
@@ -1125,6 +1143,13 @@
     padding: 0;
   }
 
+  .profile-shell-page--preview {
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+    scroll-snap-type: none;
+  }
+
   .profile-shell-page--preview .profile-shell__approved-main {
     min-height: 0;
   }
@@ -1140,13 +1165,13 @@
   }
 
   @media (max-width: 36rem) {
-    .profile-shell-page { padding-inline: 1.5rem; padding-bottom: 1rem; }
-    .profile-shell__approved-canvas { display: flex; flex-direction: column; min-height: calc(100dvh - 3.85rem); padding: clamp(3.75rem, 9vh, 5rem) 0 1.5rem; }
+    .profile-shell-page { height: calc(100dvh - 3.85rem); min-height: calc(100dvh - 3.85rem); padding-inline: 1.5rem; padding-bottom: 0; }
+    .profile-shell__approved-canvas { display: block; min-height: calc(100dvh - 3.85rem); padding: 0; }
     .profile-shell__approved-main { width: 100%; flex: 0 0 auto; }
     .profile-shell__opening.profile-shell__approved-opening { align-self: stretch; }
     .profile-shell__approved-main { height: calc(100dvh - 3.85rem); min-height: calc(100dvh - 3.85rem); }
     .profile-shell__more-cue { bottom: 1rem; }
-    .profile-shell__more { min-height: 100svh; padding-block: 4rem; }
+    .profile-shell__more { min-height: calc(100dvh - 3.85rem); padding-block: 4rem; }
     .profile-shell__approved-game { margin-top: 1.75rem; padding-inline: 0.25rem; }
     .profile-shell__approved-featured { margin-top: 1.25rem; padding-inline: 0.25rem; }
     .profile-shell__approved-supporting { margin-top: clamp(3rem, 8vh, 4.5rem); }
