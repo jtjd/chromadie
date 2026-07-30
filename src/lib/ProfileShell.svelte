@@ -389,7 +389,6 @@
             />
           </div>
         </div>
-      </div>
 
       {#if !previewMode && hasProfileMore}
         <button type="button" class="profile-shell__more-cue" aria-controls="profile-more" on:click={scrollToProfileMore}>
@@ -397,6 +396,7 @@
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
         </button>
       {/if}
+      </div>
 
       <div id="profile-more" class="profile-shell__more">
         {#if showRoll && !refreshing}
@@ -899,30 +899,30 @@
   .profile-shell__approved-canvas {
     position: relative;
     z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    display: block;
     min-height: calc(100dvh - 4.75rem);
     padding: 0 0 1.5rem;
   }
 
   .profile-shell__approved-main {
-    flex: 0 0 auto;
-    min-height: calc(100dvh - 4.75rem);
+    position: relative;
     display: flex;
-    min-height: 0;
+    height: calc(100dvh - 4.75rem);
+    min-height: calc(100dvh - 4.75rem);
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
 
   .profile-shell__more-cue {
+    position: absolute;
+    left: 50%;
+    bottom: 1.25rem;
     display: grid;
     place-items: center;
-    align-self: center;
     width: 2.9rem;
     height: 2.9rem;
-    margin: -3.5rem auto 0;
+    margin: 0;
     padding: 0;
     border: 1px solid color-mix(in srgb, var(--profile-accent) 38%, var(--color-line-subtle));
     border-radius: 50%;
@@ -930,10 +930,11 @@
     color: color-mix(in srgb, var(--profile-accent) 68%, white);
     cursor: pointer;
     box-shadow: 0 0 1.5rem color-mix(in srgb, var(--profile-accent) 14%, transparent);
+    transform: translateX(-50%);
     transition: transform 160ms ease, border-color 160ms ease, color 160ms ease;
   }
 
-  .profile-shell__more-cue:hover { color: var(--color-ink-strong); border-color: var(--profile-accent); transform: translateY(0.2rem); }
+  .profile-shell__more-cue:hover { color: var(--color-ink-strong); border-color: var(--profile-accent); transform: translate(-50%, 0.2rem); }
   .profile-shell__more-cue:focus-visible { outline: 2px solid var(--profile-accent); outline-offset: 4px; border-radius: var(--radius-sm); }
   .profile-shell__more-cue-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .profile-shell__more-cue-arrow { font-size: 1.35rem; line-height: 1; }
@@ -1071,7 +1072,8 @@
     .profile-shell__approved-canvas { display: flex; flex-direction: column; min-height: calc(100dvh - 3.85rem); padding: clamp(3.75rem, 9vh, 5rem) 0 1.5rem; }
     .profile-shell__approved-main { width: 100%; flex: 0 0 auto; }
     .profile-shell__opening.profile-shell__approved-opening { align-self: stretch; }
-    .profile-shell__more-cue { margin-top: -3.25rem; }
+    .profile-shell__approved-main { height: calc(100dvh - 3.85rem); min-height: calc(100dvh - 3.85rem); }
+    .profile-shell__more-cue { bottom: 1rem; }
     .profile-shell__more { min-height: 100svh; padding-block: 4rem; }
     .profile-shell__approved-game { margin-top: 1.75rem; padding-inline: 0.25rem; }
     .profile-shell__approved-featured { margin-top: 1.25rem; padding-inline: 0.25rem; }
