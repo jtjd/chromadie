@@ -12,6 +12,7 @@ test('the profile identity surface stays sparse and keeps the archive outside th
   assert.match(identity, /identity-card__link-glyph/);
   assert.match(identity, /identity-card__badges/);
   assert.match(identity, /identity-card__badge--staff/);
+  assert.match(identity, /<span>STAFF<\/span>/);
   assert.match(identity, /staff \|\| founder \|\| displayedBadges\.length/);
   assert.match(identity, /export let staff = false/);
   assert.match(identity, /badges = \[\]/);
