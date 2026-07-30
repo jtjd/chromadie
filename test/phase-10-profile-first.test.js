@@ -41,6 +41,7 @@ test('profile settings keeps secondary features available away from the public c
   const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
 
   assert.match(shell, /data-profile-region="identity"/);
+  assert.match(shell, /profile-shell__identity-boundary/);
   assert.match(shell, /data-profile-region="roll"/);
   assert.match(shell, /data-profile-region="expression"/);
   assert.match(shell, /data-profile-region="featured"/);

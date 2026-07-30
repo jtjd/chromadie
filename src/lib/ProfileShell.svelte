@@ -346,28 +346,30 @@
   {#if !loading && targetProfile}
     <div class="profile-shell__approved-canvas">
       <div class="profile-shell__approved-main">
-        <div class={'profile-shell__opening profile-shell__approved-opening ' + borderEff.cls} data-profile-region="identity">
-          {#if bgEff.style}
-            <div class="profile-shell__cosmetic-bg" style={bgEff.style} aria-hidden="true"></div>
-          {/if}
-          <IdentityCard
-            username={username}
-            displayName={profileDisplayName}
-            profilePath={profilePath}
-            bio={profileBio}
-            bioFallback={profileBioFallback}
-            links={visibleLinks}
-            badges={pinnedAchievements}
-            avatarSrc={avatarSrc}
-            founder={targetProfile.equipped_badges?.includes('launch_edition')}
-            accentColor={dailyAccentColor}
-            nameClass={nameEff.cls}
-            nameStyle={nameEff.style}
-            frameClass={frameEff.cls}
-            frameStyle={frameEff.style}
-            rollState={profileRollState}
-            showToday={false}
-          />
+        <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity">
+          <div class={'profile-shell__identity-boundary ' + borderEff.cls} style={borderEff.style}>
+            {#if bgEff.cls || bgEff.style}
+              <div class={'profile-shell__cosmetic-bg ' + bgEff.cls} style={bgEff.style} aria-hidden="true"></div>
+            {/if}
+            <IdentityCard
+              username={username}
+              displayName={profileDisplayName}
+              profilePath={profilePath}
+              bio={profileBio}
+              bioFallback={profileBioFallback}
+              links={visibleLinks}
+              badges={pinnedAchievements}
+              avatarSrc={avatarSrc}
+              founder={targetProfile.equipped_badges?.includes('launch_edition')}
+              accentColor={dailyAccentColor}
+              nameClass={nameEff.cls}
+              nameStyle={nameEff.style}
+              frameClass={frameEff.cls}
+              frameStyle={frameEff.style}
+              rollState={profileRollState}
+              showToday={false}
+            />
+          </div>
         </div>
 
         <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
@@ -904,14 +906,24 @@
     box-shadow: none;
   }
 
-  .profile-shell__approved-opening > .profile-shell__cosmetic-bg {
-    position: absolute;
-    z-index: -1;
-    inset: -2rem;
-    opacity: 0.16;
-    pointer-events: none;
-    filter: blur(1.2rem);
+  .profile-shell__identity-boundary {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    isolation: isolate;
   }
+
+  .profile-shell__identity-boundary > .profile-shell__cosmetic-bg {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0.34;
+    pointer-events: none;
+  }
+
+  .profile-shell__identity-boundary :global(.identity-card) { z-index: 1; }
 
   .profile-shell__approved-game,
   .profile-shell__approved-featured { min-width: 0; }
