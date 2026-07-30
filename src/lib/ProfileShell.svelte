@@ -962,8 +962,8 @@
     display: grid;
     grid-template-columns: 1fr;
     grid-row: 2;
-    width: min(100%, 46rem);
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
     padding: 0;
   }
 

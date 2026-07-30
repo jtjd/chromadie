@@ -20,7 +20,8 @@
   $: showVisualFixture = !audioSrc && !spotifyEmbedSrc && !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
   $: if (audioElement) audioElement.volume = Number(volume);
 
-  async function startAudioAfterInteraction() {
+  async function startAudioAfterInteraction(event) {
+    if (event?.target?.closest?.('.profile-audio-control')) return;
     if (!audioElement || !audioSrc || !audioElement.paused) return;
     try {
       await audioElement.play();
