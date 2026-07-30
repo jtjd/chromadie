@@ -757,17 +757,19 @@
   {/if}
   </div>
 
-  <footer class="site-footer">
-    <div class="site-footer-inner">
-      <p>ChromaDie</p>
-      <nav aria-label="Footer">
-        <a href="/privacy" on:click|preventDefault={() => navigateToPath('/privacy')}>Privacy Policy</a>
-        <a href="/how-to-play" on:click|preventDefault={() => navigateToPath('/how-to-play')}>How to Play</a>
-        <a href="mailto:support@chromadie.com">Support</a>
-        <a href="mailto:business@chromadie.com">Business</a>
-      </nav>
-    </div>
-  </footer>
+  {#if view !== 'profile'}
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <p>ChromaDie</p>
+        <nav aria-label="Footer">
+          <a href="/privacy" on:click|preventDefault={() => navigateToPath('/privacy')}>Privacy Policy</a>
+          <a href="/how-to-play" on:click|preventDefault={() => navigateToPath('/how-to-play')}>How to Play</a>
+          <a href="mailto:support@chromadie.com">Support</a>
+          <a href="mailto:business@chromadie.com">Business</a>
+        </nav>
+      </div>
+    </footer>
+  {/if}
   </div>
 {/if}
 
