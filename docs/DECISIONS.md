@@ -2,6 +2,15 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-07-30 — Remove the profile hydration waterfall
+
+**Status:** accepted and implemented
+
+Independent profile projections now start together instead of waiting for
+social data, scores, story, configuration, and achievements one at a time.
+The static achievement catalog is cached for the lifetime of the browser
+session, while owner-only data remains owner-scoped and server-authoritative.
+
 ## 2026-07-30 — Let owners hide the daily roll from visitors
 
 **Status:** accepted and implemented

@@ -13,6 +13,23 @@ export const PUBLIC_PROFILE_SELECT = 'id, username, display_name, bio, current_s
 
 const INVALID_PROFILE_MESSAGE = 'That profile address is invalid.';
 const PROFILE_LOAD_MESSAGE = 'The profile could not be loaded. Please check your connection and retry.';
+let achievementsCache = null;
+let achievementsRequest = null;
+
+async function loadAchievements(supabaseClient) {
+  if (achievementsCache) return { data: achievementsCache, error: null };
+  if (!achievementsRequest) {
+    achievementsRequest = supabaseClient
+      .from('achievements')
+      .select('*')
+      .then(response => {
+        if (response.data) achievementsCache = response.data;
+        achievementsRequest = null;
+        return response;
+      });
+  }
+  return achievementsRequest;
+}
 
 async function loadLegacyPublicProfile(supabaseClient, { username, userId }) {
   let profileQuery = supabaseClient
@@ -110,6 +127,8 @@ export async function loadProfileContext({
     viewingOwnProfile,
     loadError: profError ? PROFILE_LOAD_MESSAGE : ''
   });
+  let profileUnlockedResponse = { data: null, error: null };
+  let profileAchievementsResponse = { data: null, error: null };
 
   if (prof && prof.success !== false) {
     let publicProjection = prof;
@@ -130,9 +149,50 @@ export async function loadProfileContext({
     context.profileId = context.targetProfile?.id || lookupId;
     context.totalRolls = Number(context.targetProfile?.total_rolls) || 0;
 
-    const { data: social, error: socialError } = await supabaseClient.rpc('get_public_profile_social', {
+    const socialRequest = supabaseClient.rpc('get_public_profile_social', {
       p_user_id: context.profileId
     });
+    const socialSettingsRequest = viewingOwnProfile
+      ? supabaseClient.rpc('get_my_profile_social_settings')
+      : Promise.resolve({ data: null, error: null });
+    const scoresRequest = supabaseClient.rpc('get_public_profile_scores', {
+      p_user_id: context.profileId
+    });
+    const storyRequest = supabaseClient.rpc('get_public_profile_story', {
+      p_user_id: context.profileId
+    });
+    const configRequest = viewingOwnProfile
+      ? supabaseClient.rpc('get_my_profile_configuration')
+      : supabaseClient.rpc('get_public_profile_configuration', { p_user_id: context.profileId });
+    const achievementsRequestForProfile = loadAchievements(supabaseClient);
+    const unlockedRequest = viewingOwnProfile
+      ? supabaseClient
+        .from('user_achievements')
+        .select('achievement_id, count')
+        .eq('user_id', context.profileId)
+      : Promise.resolve({ data: null, error: null });
+
+    const [
+      socialResponse,
+      socialSettingsResponse,
+      scoresResponse,
+      storyResponse,
+      configResponse,
+      achievementsResponse,
+      unlockedResponse
+    ] = await Promise.all([
+      socialRequest,
+      socialSettingsRequest,
+      scoresRequest,
+      storyRequest,
+      configRequest,
+      achievementsRequestForProfile,
+      unlockedRequest
+    ]);
+    profileUnlockedResponse = unlockedResponse;
+    profileAchievementsResponse = achievementsResponse;
+
+    const { data: social, error: socialError } = socialResponse;
     if (socialError || social?.success === false) {
       context.dataWarning = 'Profile interactions are temporarily unavailable.';
     } else {
@@ -140,7 +200,7 @@ export async function loadProfileContext({
     }
 
     if (viewingOwnProfile) {
-      const { data: socialSettings, error: socialSettingsError } = await supabaseClient.rpc('get_my_profile_social_settings');
+      const { data: socialSettings, error: socialSettingsError } = socialSettingsResponse;
       if (socialSettingsError || socialSettings?.success === false) {
         context.dataWarning = context.dataWarning || 'Profile privacy settings are temporarily unavailable.';
       } else {
@@ -148,15 +208,11 @@ export async function loadProfileContext({
       }
     }
 
-    const { data: scores, error: scoresError } = await supabaseClient.rpc('get_public_profile_scores', {
-      p_user_id: context.profileId
-    });
+    const { data: scores, error: scoresError } = scoresResponse;
     context.targetScores = mapProfileScores(scores);
     if (scoresError) context.dataWarning = 'Recent roll history is temporarily unavailable.';
 
-    const { data: story, error: storyError } = await supabaseClient.rpc('get_public_profile_story', {
-      p_user_id: context.profileId
-    });
+    const { data: story, error: storyError } = storyResponse;
     if (storyError) {
       context.dataWarning = context.dataWarning || 'Profile story is temporarily unavailable.';
     } else {
@@ -165,9 +221,6 @@ export async function loadProfileContext({
       context.collectionItems = normalizedStory.collection;
     }
 
-    const configResponse = viewingOwnProfile
-      ? await supabaseClient.rpc('get_my_profile_configuration')
-      : await supabaseClient.rpc('get_public_profile_configuration', { p_user_id: context.profileId });
     const fallbackColor = context.targetProfile?.mood_color || '#8B7CF6';
     if (configResponse.error || (viewingOwnProfile && configResponse.data?.success === false)) {
       context.dataWarning = context.dataWarning || 'Profile customization is temporarily unavailable.';
@@ -192,17 +245,12 @@ export async function loadProfileContext({
     }
   }
 
-  const { data: achievements, error: achievementError } = await supabaseClient
-    .from('achievements')
-    .select('*');
+  const { data: achievements, error: achievementError } = profileAchievementsResponse;
   if (achievements) context.allAchievements = achievements;
   if (achievementError) context.dataWarning = 'Achievement details are temporarily unavailable.';
 
   if (viewingOwnProfile && context.profileId) {
-    const { data: unlocked, error: unlockedError } = await supabaseClient
-      .from('user_achievements')
-      .select('achievement_id, count')
-      .eq('user_id', context.profileId);
+    const { data: unlocked, error: unlockedError } = profileUnlockedResponse;
     if (unlocked) {
       context.unlockedAchievements = Object.fromEntries(
         unlocked.map(entry => [entry.achievement_id, entry])

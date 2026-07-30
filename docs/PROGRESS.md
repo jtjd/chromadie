@@ -19,6 +19,9 @@ Profile settings now controls visitor-facing daily-roll visibility, and profile
 refreshes avoid briefly rendering stale daily-color presentation when returning
 to a browser tab.
 
+Profile hydration now requests independent projections in parallel and caches
+the static achievement catalog to reduce tab-return and first-profile latency.
+
 ## Completed
 
 - Product direction agreed.

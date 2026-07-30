@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-07-30 — Faster profile loading
+
+- Removed the serial profile-data request waterfall by loading independent
+  profile projections in parallel.
+- Cached the static achievement catalog during the browser session.
+- Preserved owner-only requests, public projections, and server authority.
+
 ## 2026-07-30 — Profile visibility controls
 
 - Added a profile-settings toggle for hiding the daily roll from visitors while
