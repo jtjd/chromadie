@@ -11,6 +11,8 @@ test('the profile identity surface stays sparse and keeps the archive outside th
   assert.match(identity, /identity-card__handle-row/);
   assert.match(identity, /identity-card__link-glyph/);
   assert.match(identity, /identity-card__badges/);
+  assert.match(identity, /identity-card__badge--staff/);
+  assert.match(identity, /export let staff = false/);
   assert.match(identity, /badges = \[\]/);
   assert.match(identity, /showToday = true/);
   assert.match(identity, /slot name="today"/);
@@ -21,6 +23,7 @@ test('the profile identity surface stays sparse and keeps the archive outside th
   assert.match(shell, /profile-shell__approved-game/);
   assert.match(shell, /profile-shell__approved-featured/);
   assert.match(shell, /badges=\{pinnedAchievements\}/);
+  assert.match(shell, /staff=\{Boolean\(targetProfile\?\.is_staff\)\}/);
   assert.match(shell, /showToday=\{false\}/);
   assert.match(shell, /quiet=\{true\}/);
   assert.match(shell, /data-profile-region="featured"/);

@@ -8,6 +8,7 @@
   export let bioFallback = '';
   export let links = [];
   export let badges = [];
+  export let staff = false;
   export let founder = false;
   export let accentColor = '#8B7CF6';
   export let nameClass = '';
@@ -49,7 +50,8 @@
       <div class="identity-card__name-row">
         <h1 id="identity-card-title" class={'identity-card__name ' + nameClass} style={nameStyle}>{safeDisplayName}</h1>
         {#if founder || displayedBadges.length}
-          <div class="identity-card__badges" aria-label="Earned badges">
+          <div class="identity-card__badges" aria-label="Profile badges">
+            {#if staff}<span class="identity-card__badge identity-card__badge--staff" title="Staff" aria-label="Staff badge">✦</span>{/if}
             {#if founder}<span class="identity-card__badge identity-card__badge--founder" title="Launch Edition" aria-label="Launch Edition badge">✦</span>{/if}
             {#each displayedBadges as badge (badge.id)}
               <span class="identity-card__badge" title={badge.name} aria-label={badge.name + ' badge'}>{badge.icon}</span>
@@ -136,6 +138,7 @@
   .identity-card__badges { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.28rem; }
   .identity-card__badge { display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border: 1px solid color-mix(in srgb, var(--identity-accent) 42%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--identity-accent) 14%, rgba(255, 255, 255, 0.06)); color: color-mix(in srgb, var(--identity-accent) 82%, white); font-size: 0.72rem; line-height: 1; }
   .identity-card__badge--founder { background: color-mix(in srgb, var(--identity-accent) 22%, transparent); }
+  .identity-card__badge--staff { border-color: color-mix(in srgb, var(--color-accent-cyan) 72%, transparent); background: color-mix(in srgb, var(--color-accent-cyan) 18%, transparent); color: var(--color-accent-cyan); }
   .identity-card__handle-row { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 0.6rem 0.8rem; margin-top: 0.38rem; }
   .identity-card__handle { display: inline-block; color: rgba(220, 230, 248, 0.62); font: 600 0.75rem / 1.25 var(--font-mono-stack); text-decoration: none; letter-spacing: 0.05em; }
   .identity-card__handle:hover { color: color-mix(in srgb, var(--identity-accent) 85%, white); }

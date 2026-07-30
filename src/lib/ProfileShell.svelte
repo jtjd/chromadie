@@ -366,6 +366,7 @@
               bioFallback={profileBioFallback}
               links={visibleLinks}
               badges={pinnedAchievements}
+              staff={Boolean(targetProfile?.is_staff)}
               avatarSrc={avatarSrc}
               founder={targetProfile.equipped_badges?.includes('launch_edition')}
               accentColor={dailyAccentColor}
