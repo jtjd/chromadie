@@ -375,16 +375,18 @@
           {/if}
         </div>
 
-        <div class="profile-shell__approved-featured" data-profile-region="featured" aria-label={username + ' color archive'}>
-          <FeaturedCollection
-            items={collectionItems}
-            samples={recentScores}
-            accentColor={dailyAccentColor}
-            unlocked={storyUnlocks.collectionUnlocked}
-            rollsRequired={storyUnlocks.collectionRollsRequired}
-            totalRolls={storyUnlocks.totalRolls}
-          />
-        </div>
+        {#if getProfileStoryVisible(effectiveProfileConfig)}
+          <div class="profile-shell__approved-featured" data-profile-region="featured" aria-label={username + ' color archive'}>
+            <FeaturedCollection
+              items={collectionItems}
+              samples={recentScores}
+              accentColor={dailyAccentColor}
+              unlocked={storyUnlocks.collectionUnlocked}
+              rollsRequired={storyUnlocks.collectionRollsRequired}
+              totalRolls={storyUnlocks.totalRolls}
+            />
+          </div>
+        {/if}
       </div>
 
       {#if !previewMode && showExpression}

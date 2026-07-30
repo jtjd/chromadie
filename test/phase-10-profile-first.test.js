@@ -52,6 +52,7 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(shell, /TodayColor result=\{latestRoll\}[^\n]*cosmetics=\{cosmetics\}/);
   assert.doesNotMatch(shell, /<ProfileSocial/);
   assert.match(shell, /Add to rivals/);
+  assert.match(shell, /getProfileStoryVisible\(effectiveProfileConfig\)/);
   assert.match(settings, /Profile settings/);
   assert.match(shell, /A founding color identity/);
   assert.doesNotMatch(shell, /Public boundary|What visitors can see/);

@@ -29,8 +29,11 @@
     .filter(badge => badge?.id !== 'launch_edition')
     .slice(0, 3);
 
-  function linkInitial(link) {
-    return String(link?.type || 'link').slice(0, 1).toUpperCase();
+  function linkIconSource(link) {
+    const type = String(link?.type || 'link').toLowerCase();
+    return ['/github', '/youtube'].includes('/' + type)
+      ? '/link-icons/' + type + '.svg'
+      : '/link-icons/link.svg';
   }
 </script>
 
@@ -69,7 +72,7 @@
         <nav class="identity-card__links" aria-label={safeDisplayName + ' social links'}>
           {#each displayedLinks as link (link.order)}
             <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')}>
-              <span class="identity-card__link-glyph" aria-hidden="true">{linkInitial(link)}</span>
+              <span class="identity-card__link-glyph" aria-hidden="true"><img src={linkIconSource(link)} alt="" loading="lazy" /></span>
               <strong>{link.label}</strong>
             </a>
           {/each}
@@ -148,6 +151,7 @@
   .identity-card__links a { display: inline-flex; align-items: center; gap: 0.38rem; min-height: 2rem; max-width: 100%; padding: 0.25rem 0 0.3rem; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.16); border-radius: 0; background: transparent; color: rgba(220, 230, 248, 0.7); font-size: 0.78rem; text-decoration: none; transition: border-color var(--motion-base) var(--motion-ease-standard), color var(--motion-base) var(--motion-ease-standard), transform var(--motion-fast) var(--motion-ease-standard); }
   .identity-card__links a:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--identity-accent) 72%, white); color: rgba(248, 250, 255, 0.96); }
   .identity-card__link-glyph { display: grid; place-items: center; width: 1rem; height: 1rem; border-radius: 0; background: transparent; color: color-mix(in srgb, var(--identity-accent) 84%, white); font: 700 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0; }
+  .identity-card__link-glyph img { display: block; width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.78; }
   .identity-card__links strong { min-width: 0; color: inherit; font-weight: 600; overflow-wrap: anywhere; }
   .identity-card__links a:focus-visible,
   .identity-card__handle:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 4px; border-radius: 0.25rem; }

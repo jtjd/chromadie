@@ -266,8 +266,8 @@
         on:change={event => updateDraft(setProfileStoryVisible(draft, event.currentTarget.checked))}
       />
       <span>
-        <strong>Show the color story</strong>
-        <small>Let visitors open the history, milestones, and collection behind this identity.</small>
+        <strong>Show the color archive</strong>
+        <small>Let visitors see the archive and optional color story behind this identity.</small>
       </span>
     </label>
   </div>
