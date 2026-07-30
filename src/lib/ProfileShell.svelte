@@ -1,5 +1,5 @@
 <script>
-  import { afterUpdate, onDestroy } from 'svelte';
+  import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { authUser, followedUsers, isAuthenticated, profile, session, toggleFollow } from './stores';
   import { supabase } from './supabase';
   import { getFrameEffect, getNameEffect, getProfileBg, getProfileBorder } from './cosmetics';
@@ -15,7 +15,7 @@
   import ProfileTimeline from './ProfileTimeline.svelte';
   import ProfileCollection from './ProfileCollection.svelte';
   import { getProfileStoryUnlocks } from './profileStory.js';
-  import { createDefaultProfileConfig, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
+  import { createDefaultProfileConfig, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
   import { getProfileComposition } from './profileComposition.js';
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
@@ -51,6 +51,7 @@
   let profileRollColor = '';
   let profileRollEffectTimer = null;
   let mediaCacheKey = '';
+  let refreshing = false;
 
   function resetShellState(nextLoading = false) {
     targetProfile = null;
@@ -132,6 +133,20 @@
   }
 
   afterUpdate(syncProfileData);
+
+  onMount(() => {
+    const refreshOnReturn = () => {
+      if (document.visibilityState !== 'visible' || previewMode || loading || refreshing || !targetProfile) return;
+      refreshing = true;
+      void loadProfileData().finally(() => { refreshing = false; });
+    };
+    document.addEventListener('visibilitychange', refreshOnReturn);
+    window.addEventListener('pageshow', refreshOnReturn);
+    return () => {
+      document.removeEventListener('visibilitychange', refreshOnReturn);
+      window.removeEventListener('pageshow', refreshOnReturn);
+    };
+  });
 
   async function loadProfileData() {
     if (previewMode) return;
@@ -322,6 +337,7 @@
   $: secondaryModules = composition.secondaryModules;
   $: rollModule = activeModules.find(module => module.id === 'roll') || { size: 'wide' };
   $: layoutVariant = effectiveProfileConfig.layoutVariant;
+  $: showRoll = isOwnProfile || getProfileRollVisible(effectiveProfileConfig);
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
   $: pinnedAchievements = (targetProfile?.equipped_badges || []).map(getAchievement);
   $: recentScores = targetScores.slice(0, 6);
@@ -367,13 +383,15 @@
           </div>
         </div>
 
-        <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
-          {#if isOwnProfile}
-            <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} on:colorpreview={handleRollPreview} on:colorchange={handleRollColor} />
-          {:else}
-            <TodayColor result={latestRoll} quiet={true} accentColor={dailyAccentColor} cosmetics={cosmetics} />
-          {/if}
-        </div>
+        {#if showRoll && !refreshing}
+          <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
+            {#if isOwnProfile}
+              <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} on:colorpreview={handleRollPreview} on:colorchange={handleRollColor} />
+            {:else}
+              <TodayColor result={latestRoll} quiet={true} accentColor={dailyAccentColor} cosmetics={cosmetics} />
+            {/if}
+          </div>
+        {/if}
 
         {#if getProfileStoryVisible(effectiveProfileConfig)}
           <div class="profile-shell__approved-featured" data-profile-region="featured" aria-label={username + ' color archive'}>

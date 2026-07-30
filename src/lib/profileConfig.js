@@ -77,7 +77,7 @@ function normalizeModule(value) {
   if (!PROFILE_MODULE_IDS.includes(id) || !Number.isInteger(order) || order < 0 || order > 7 || !size) return null;
   return {
     id,
-    visible: id === 'roll' ? true : value.visible !== false,
+    visible: value.visible !== false,
     order,
     size
   };
@@ -130,6 +130,20 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
 
 export function getProfileModule(config, id) {
   return normalizeProfileConfig(config).modules.find(module => module.id === id) || null;
+}
+
+export function getProfileRollVisible(config) {
+  return getProfileModule(config, 'roll')?.visible !== false;
+}
+
+export function setProfileRollVisible(config, visible) {
+  const normalized = normalizeProfileConfig(config);
+  return {
+    ...normalized,
+    modules: normalized.modules.map(module => module.id === 'roll'
+      ? { ...module, visible: Boolean(visible) }
+      : module)
+  };
 }
 
 /**

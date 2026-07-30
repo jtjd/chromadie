@@ -2,6 +2,14 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-07-30 — Let owners hide the daily roll from visitors
+
+**Status:** accepted and implemented
+
+The daily roll remains available to the owner for gameplay, while profile
+settings can hide the visitor-facing daily-color surface. The existing module
+visibility contract is extended additively and remains server-normalized.
+
 ## 2026-07-30 — Use username as the public display name
 
 **Status:** accepted and implemented

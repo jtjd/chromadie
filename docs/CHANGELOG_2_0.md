@@ -2,6 +2,12 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-07-30 — Profile visibility controls
+
+- Added a profile-settings toggle for hiding the daily roll from visitors while
+  keeping it available to the owner.
+- Prevented stale daily-color presentation from flashing during tab returns.
+
 ## 2026-07-30 — Username is the display name
 
 - Removed editable display names from profile settings.

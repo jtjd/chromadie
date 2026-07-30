@@ -7,6 +7,8 @@ import {
   getProfileStoryVisible,
   getVisibleProfileLinks,
   getVisibleProfileModules,
+  getProfileRollVisible,
+  setProfileRollVisible,
   normalizeProfileConfig,
   setProfileStoryVisible
 } from '../src/lib/profileConfig.js';
@@ -96,6 +98,9 @@ test('profile configuration normalization rejects incomplete structure and drops
   ]);
   assert.equal(getVisibleProfileModules(normalized, false).some(module => module.id === 'roll'), false);
   assert.equal(getVisibleProfileModules(normalized, true).some(module => module.id === 'roll'), true);
+  const hiddenRoll = setProfileRollVisible(normalized, false);
+  assert.equal(getProfileRollVisible(hiddenRoll), false);
+  assert.equal(getVisibleProfileModules(hiddenRoll, false).some(module => module.id === 'roll'), false);
 });
 
 test('profile context separates owner drafts from the published visitor projection', async () => {

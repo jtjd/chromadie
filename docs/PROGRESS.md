@@ -15,6 +15,10 @@ public gate remains active for testing.
 The profile identity editor now treats each account username as its display
 name and exposes only bio editing.
 
+Profile settings now controls visitor-facing daily-roll visibility, and profile
+refreshes avoid briefly rendering stale daily-color presentation when returning
+to a browser tab.
+
 ## Completed
 
 - Product direction agreed.

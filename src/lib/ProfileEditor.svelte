@@ -108,7 +108,6 @@
   }
 
   function setModuleVisible(id, visible) {
-    if (id === 'roll') return;
     updateDraft({
       modules: draft.modules.map(module => module.id === id ? { ...module, visible } : module)
     });
@@ -281,8 +280,11 @@
       {#each orderedModules.filter(module => module.id !== 'explore') as module (module.id)}
         <li>
           <label class="profile-editor__check">
-            <input type="checkbox" checked={module.visible} disabled={module.id === 'roll'} on:change={event => setModuleVisible(module.id, event.currentTarget.checked)} />
-            <span>{MODULE_LABELS[module.id]}</span>
+            <input type="checkbox" checked={module.visible} on:change={event => setModuleVisible(module.id, event.currentTarget.checked)} />
+            <span>
+              <strong>{MODULE_LABELS[module.id]}</strong>
+              {#if module.id === 'roll'}<small>Visible to visitors when enabled.</small>{/if}
+            </span>
           </label>
           <div class="profile-editor__module-actions">
             <span>{module.size}</span>
@@ -366,6 +368,8 @@
   .profile-editor__module-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); counter-increment: profile-module; }
   .profile-editor__module-list li::before { content: counter(profile-module); color: var(--color-ink-faint); font: var(--type-label) / 1 var(--font-mono-stack); }
   .profile-editor__check { display: flex; align-items: center; gap: var(--space-3); flex: 1; color: var(--color-ink); font-size: var(--type-small); }
+  .profile-editor__check > span { display: grid; gap: 0.2rem; }
+  .profile-editor__check small { color: var(--color-ink-muted); font-size: var(--type-label); }
   .profile-editor__check input { width: 1rem; height: 1rem; accent-color: var(--profile-accent); }
   .profile-editor__module-actions { display: flex; align-items: center; gap: var(--space-2); }
   .profile-editor__module-actions > span { color: var(--color-ink-faint); font: var(--type-label) / 1 var(--font-mono-stack); text-transform: uppercase; }
