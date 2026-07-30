@@ -53,6 +53,7 @@
   let profileRollState = 'idle';
   let profileRollColor = '';
   let profileRollEffectTimer = null;
+  let mediaCacheKey = '';
 
   function resetShellState(nextLoading = false) {
     targetProfile = null;
@@ -67,6 +68,7 @@
     canonicalDailyColor = null;
     profileRollState = 'idle';
     profileRollColor = '';
+    mediaCacheKey = '';
     if (profileRollEffectTimer) {
       clearTimeout(profileRollEffectTimer);
       profileRollEffectTimer = null;
@@ -154,6 +156,7 @@
     timelineEvents = context.timelineEvents;
     collectionItems = context.collectionItems;
     profileConfig = context.profileConfig;
+    mediaCacheKey = String(Date.now());
     social = context.social;
     socialSettings = context.socialSettings;
     previewConfig = null;
@@ -307,8 +310,8 @@
     colorFor(effectiveProfileConfig.signatureColor)
   );
   $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
-  $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path);
-  $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path);
+  $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
+  $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
   $: showExpression = Boolean(effectiveProfileConfig.spotify_type && effectiveProfileConfig.spotify_id)
     || PROFILE_MUSIC_ENABLED
     || (import.meta.env.DEV && visualFixture === 'music');

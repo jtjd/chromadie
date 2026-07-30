@@ -1,7 +1,7 @@
 # Phase 14 Report — Avatars, Backgrounds, and Spotify
 
-**Status:** implementation complete; expression migration applied to the
-linked project; storage-size migration pending.
+**Status:** implementation complete; expression and storage-size migrations
+are applied to the linked project. The public gate remains active.
 
 ## Scope delivered
 
@@ -33,7 +33,7 @@ Focused tests: **133/133 passed**.
 
 Performance budget passed:
 
-- JavaScript: 619.01 kB / 625 kB
+- JavaScript: 619.64 kB / 625 kB
 - CSS: 294.81 kB / 295 kB
 - HTML shell: 5.22 kB / 12 kB
 
@@ -47,10 +47,10 @@ visually.
 
 ## Release boundary
 
-The linked project now records `20260730110000_profile_expression_media.sql`.
-The additive `20260730120000_profile_media_size_limits.sql` migration applies
-the tighter storage budget and remains the next linked database action. The
-public gate remains active.
+The linked project records both `20260730110000_profile_expression_media.sql`
+and `20260730120000_profile_media_size_limits.sql`. The latter enforces the
+256 KiB avatar and 1 MiB background stored-object limits. The public gate
+remains active.
 
 **Recommendation:** GO for local review and staged deployment preparation;
 NO-GO for production until the migration and media flows receive an explicit

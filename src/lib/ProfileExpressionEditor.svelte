@@ -1,7 +1,7 @@
 <script>
   import { onDestroy, createEventDispatcher } from 'svelte';
   import { supabase } from './supabase.js';
-  import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts } from './profileExpression.js';
+  import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { processProfileImage } from './profileMediaProcessing.js';
   import Module from './foundation/Module.svelte';
@@ -22,6 +22,9 @@
   let busy = false;
   let status = '';
   let error = '';
+  let mediaCacheKey = String(Date.now());
+  const avatarRules = PROFILE_IMAGE_RULES.avatar;
+  const backgroundRules = PROFILE_IMAGE_RULES.background;
   const actionButtonStyle = 'display:inline-flex;align-items:center;justify-content:center;min-height:2.65rem;border:1px solid transparent;border-radius:var(--radius-sm);padding:0 1rem;background:var(--color-ink-strong);color:var(--color-canvas-deep);font:600 var(--type-small)/1 var(--font-body-stack);cursor:pointer';
   const quietButtonStyle = 'display:inline-flex;align-items:center;justify-content:center;min-height:2.65rem;border:1px solid var(--color-line-subtle);border-radius:var(--radius-sm);padding:0 1rem;background:transparent;color:var(--color-ink-muted);font:600 var(--type-small)/1 var(--font-body-stack);cursor:pointer';
   const fieldStyle = 'width:100%;min-height:2.65rem;min-width:0;border:1px solid var(--color-line-subtle);border-radius:var(--radius-sm);padding:0 .75rem;background:var(--surface-inset);color:var(--color-ink-strong);font:500 var(--type-small)/1 var(--font-body-stack)';
@@ -37,8 +40,18 @@
     syncedKey = nextKey;
   }
   $: syncIncomingExpression(incomingExpression, incomingKey);
-  $: avatarSrc = avatarPreviewSrc || getProfileMediaUrl(expression.avatar_path);
-  $: backgroundSrc = backgroundPreviewSrc || getProfileMediaUrl(expression.background_path);
+  $: avatarSrc = avatarPreviewSrc || getProfileMediaUrl(expression.avatar_path, mediaCacheKey);
+  $: backgroundSrc = backgroundPreviewSrc || getProfileMediaUrl(expression.background_path, mediaCacheKey);
+
+  function formatInputLimit(bytes) {
+    const megabytes = bytes / (1024 * 1024);
+    return Number.isInteger(megabytes) ? `${megabytes} MB` : `${Math.round(bytes / 1024)} KB`;
+  }
+
+  function formatStoredSize(bytes) {
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
 
   function revokeAvatarPreview() {
     if (avatarPreviewSrc && avatarPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(avatarPreviewSrc);
@@ -68,6 +81,7 @@
 
     expression = normalizeProfileExpression(data);
     syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
+    mediaCacheKey = String(Date.now());
     dispatch('expressionchange', { ...expression });
     return expression;
   }
@@ -98,7 +112,7 @@
       if (uploadError) throw new Error(uploadError.message || 'The avatar could not be uploaded.');
 
       await saveExpression({ ...expression, avatar_path: storedPath });
-      setFeedback('', 'Avatar saved to your public profile.');
+      setFeedback('', `Avatar saved to your public profile (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The avatar could not be saved.');
       revokeAvatarPreview();
@@ -157,7 +171,7 @@
       if (uploadError) throw new Error(uploadError.message || 'The background could not be uploaded.');
 
       await saveExpression({ ...expression, background_path: storedPath });
-      setFeedback('', 'Background saved to your public atmosphere.');
+      setFeedback('', `Background saved to your public atmosphere (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The background could not be saved.');
       revokeBackgroundPreview();
@@ -232,7 +246,7 @@
     </div>
     <div class="profile-expression-editor__copy" style="display:grid;gap:.5rem;min-width:12rem;flex:1">
       <strong>{expression.avatar_path ? 'Avatar is visible' : 'Initials fallback is active'}</strong>
-      <p>JPEG, PNG, or WebP · maximum 5 MB before processing.</p>
+      <p>JPEG, PNG, or WebP · up to {formatInputLimit(avatarRules.maxInputBytes)} input; stored as WebP up to {avatarRules.outputLabel}.</p>
       <div class="profile-expression-editor__actions">
         <input bind:this={avatarInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose avatar image" on:change={handleAvatarChange} />
         <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => avatarInput?.click()}>{expression.avatar_path ? 'Replace avatar' : 'Upload avatar'}</button>
@@ -257,7 +271,7 @@
       </div>
       <div class="profile-expression-editor__copy" style="display:grid;gap:.5rem;min-width:12rem;flex:1">
         <strong>{expression.background_path ? 'Background is visible' : 'Generated atmosphere is active'}</strong>
-        <p>JPEG, PNG, or WebP · maximum 10 MB before processing.</p>
+        <p>JPEG, PNG, or WebP · up to {formatInputLimit(backgroundRules.maxInputBytes)} input; stored as WebP up to {backgroundRules.outputLabel}.</p>
         <div class="profile-expression-editor__actions">
           <input bind:this={backgroundInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose background image" on:change={handleBackgroundChange} />
           <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => backgroundInput?.click()}>{expression.background_path ? 'Replace background' : 'Upload background'}</button>

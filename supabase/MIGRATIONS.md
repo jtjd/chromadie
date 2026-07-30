@@ -64,7 +64,7 @@ Phase 13.1 local pending migration:
   migration repair, or push this migration until the Phase 13.1 release gates
   and the `Admin`/`ChromaDie` collision handling are reviewed.
 
-Phase 14 local pending migration:
+Phase 14 migrations:
 
 - `migrations/20260730110000_profile_expression_media.sql` adds the four
   bounded profile-expression columns, configures the `avatars` and
@@ -74,10 +74,10 @@ Phase 14 local pending migration:
 - `migrations/20260730120000_profile_media_size_limits.sql` tightens the
   stored-object limits to 256 KiB per avatar and 1 MiB per background. The
   browser processor and Storage bucket limits enforce the same budget.
-- The migration has passed a fresh local reset, schema lint, database-security
-  audit, and browser evidence pass. It has not been pushed to the linked
-  production project. Do not edit applied migrations or introduce a separate
-  media service for this phase.
+- Both migrations have passed a fresh local reset, schema lint,
+  database-security audit, and browser evidence pass, and are recorded in the
+  linked project. Do not edit applied migrations or introduce a separate media
+  service for this phase.
 
 Version-controlled cron schedule:
 

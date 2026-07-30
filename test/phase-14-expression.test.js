@@ -87,6 +87,10 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(migration, /DELETE FROM storage\.objects/);
   assert.doesNotMatch(migration, /iframe|innerHTML|CREATE TABLE.*media/i);
   assert.match(settings, /accept="image\/jpeg,image\/png,image\/webp"/);
+  assert.match(settings, /stored as WebP under/);
+  assert.match(settings, /avatarRules\.maxInputBytes/);
+  assert.match(settings, /backgroundRules\.maxInputBytes/);
+  assert.match(settings, /formatStoredSize\(blob\.size\)/);
   assert.match(settings, /processProfileImage\(file, 'avatar'\)/);
   assert.match(settings, /processProfileImage\(file, 'background'\)/);
   assert.match(settings, /update_my_profile_expression/);

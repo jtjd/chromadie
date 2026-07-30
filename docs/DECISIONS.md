@@ -1409,8 +1409,8 @@ gate remains active during certification.
 
 ## 2026-07-30 — Keep Phase 14 expression bounded and settings-only
 
-**Status:** accepted and implemented; expression migration applied to linked
-project; storage-size migration pending
+**Status:** accepted and implemented; expression and storage-size migrations
+applied to linked project; public gate remains active
 
 Phase 14 uses the existing Supabase stack for the smallest optional expression
 surface: two owner-scoped WebP Storage buckets and four nullable profile
