@@ -8,6 +8,7 @@
   import Surface from './foundation/Surface.svelte';
   import IdentityEditor from './IdentityEditor.svelte';
   import ProfileExpressionEditor from './ProfileExpressionEditor.svelte';
+  import ProfileCosmeticsEditor from './ProfileCosmeticsEditor.svelte';
   import ProfileEditor from './ProfileEditor.svelte';
   import ProfileSocial from './ProfileSocial.svelte';
 
@@ -147,6 +148,10 @@
           fallbackInitial={(context.targetProfile?.display_name || context.targetProfile?.username || '✦').slice(0, 1)}
           on:expressionchange={updateExpression}
         />
+        <ProfileCosmeticsEditor
+          accountProfile={context.targetProfile}
+          profileConfig={context.profileConfig}
+        />
         <ProfileEditor
           profileId={context.profileId}
           draftConfig={context.profileConfig?.draft}
@@ -167,13 +172,12 @@
 
         <section class="profile-settings-page__compatibility" aria-labelledby="profile-settings-account-title">
           <div>
-            <p class="profile-settings-page__eyebrow">Account and studio</p>
+            <p class="profile-settings-page__eyebrow">Account</p>
             <h2 id="profile-settings-account-title">Keep the established controls close.</h2>
-            <p>Mood, pinned badges, account management, and earned presentation remain available through the existing controls.</p>
+            <p>Mood, pinned badges, and account management remain available through the existing controls.</p>
           </div>
           <div class="profile-settings-page__actions">
             <Button variant="secondary" href="/profile?legacy=1">Open account controls</Button>
-            <Button variant="ghost" href="/shop">Open decoration studio</Button>
           </div>
         </section>
       </div>

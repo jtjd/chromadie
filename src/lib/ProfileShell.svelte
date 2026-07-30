@@ -88,6 +88,8 @@
         targetProfile = {
           id: 'decoration-studio-preview',
           username: previewProfile?.username || 'Chromanaut',
+          display_name: previewProfile?.display_name ?? null,
+          bio: previewProfile?.bio ?? null,
           current_streak: Number(previewProfile?.current_streak) || 0,
           longest_streak: Number(previewProfile?.longest_streak) || 0,
           lifetime_ep: Number(previewProfile?.lifetime_ep) || 0,
@@ -968,6 +970,12 @@
 
   .profile-shell-page--preview .profile-shell__approved-main {
     min-height: 0;
+  }
+
+  .profile-shell-page--preview .profile-shell__approved-game,
+  .profile-shell-page--preview .profile-shell__approved-featured,
+  .profile-shell-page--preview .profile-shell__approved-supporting {
+    display: none;
   }
 
   .profile-shell-page--preview .profile-shell__approved-opening {

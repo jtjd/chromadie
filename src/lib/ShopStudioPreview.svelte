@@ -12,6 +12,8 @@
   export let displayColor = '#7B5CFF';
   /** @type {any} */
   export let accountProfile = null;
+  /** @type {any} */
+  export let profileConfig = null;
 
   $: nameEffect = getCosmeticEffect(loadout, 'name_effect');
   $: orbShape = getCosmeticEffect(loadout, 'orb_shape');
@@ -22,6 +24,8 @@
     ...account,
     id: 'decoration-studio-preview',
     username,
+    display_name: account.display_name ?? null,
+    bio: account.bio ?? null,
     mood_color: displayColor,
     current_streak: Number(account.current_streak) || 0,
     longest_streak: Number(account.longest_streak) || 0,
@@ -30,7 +34,7 @@
     equipped_cosmetics: { ...loadout },
     equipped_badges: Array.isArray(account.equipped_badges) ? account.equipped_badges : []
   };
-  $: previewProfileConfig = createDefaultProfileConfig(displayColor);
+  $: previewProfileConfig = profileConfig?.published || profileConfig?.draft || profileConfig || createDefaultProfileConfig(displayColor);
 </script>
 
 <section class="studio-preview" aria-label="Your cosmetic preview">
@@ -207,6 +211,7 @@
       radial-gradient(circle at 50% 40%, rgba(122,96,255,0.13), transparent 42%),
       #07080c;
   }
+  .studio-stage.context-profile { min-height: 275px; }
 
   .stage-grid {
     position: absolute;
@@ -228,6 +233,13 @@
     border-radius: 18px;
   }
   .studio-profile-canvas :global(.profile-shell-page--preview) { width: 100%; }
+  .studio-profile-canvas :global(.identity-card) { padding: 1rem; }
+  .studio-profile-canvas :global(.identity-card__person) { gap: 0.75rem; }
+  .studio-profile-canvas :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
+  .studio-profile-canvas :global(.identity-card__avatar-letter) { font-size: 1.5rem; }
+  .studio-profile-canvas :global(.identity-card__name) { font-size: clamp(1.1rem, 4.5vw, 1.65rem); }
+  .studio-profile-canvas :global(.identity-card__bio) { margin-top: 0.45rem; font-size: 0.72rem; }
+  .studio-profile-canvas :global(.identity-card__divider) { margin: 1rem 0; }
 
   .studio-profile-card {
     position: relative;
@@ -412,6 +424,7 @@
   @media (max-width: 650px) {
     .studio-preview { padding: 13px; border-radius: 22px; }
     .studio-stage { min-height: 286px; }
+    .studio-stage.context-profile { min-height: 245px; }
     .studio-profile-canvas { width: calc(100% - 14px); }
     .studio-profile-card { min-height: 218px; }
     .studio-profile-content { min-height: 218px; padding: 15px; }

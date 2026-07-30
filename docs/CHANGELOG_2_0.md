@@ -625,3 +625,13 @@ presentation without changing its data or gameplay authority.
   parity, initials fallback, and generated-color fallback intact.
 - No production migration, deployment, public-gate change, Cloudflare media
   service, OAuth, hosted audio, or custom player was added.
+
+## 2026-07-30 — Consolidate cosmetic editing in profile settings
+
+- Added an owned-cosmetic appearance editor to profile settings with live
+  profile, roll, and leaderboard previews.
+- Reused the existing entitlement checks and authenticated equip/unequip RPCs.
+- Converted the shop from a duplicated fitting room into a focused catalog and
+  purchase surface that routes appearance management back to profile settings.
+- Improved the isolated preview’s real identity rendering and compact mobile
+  composition without changing the public profile design.

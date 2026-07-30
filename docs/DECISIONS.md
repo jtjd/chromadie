@@ -1431,3 +1431,17 @@ All management controls remain in `/profile/settings`; the visitor/owner
 profile composition is unchanged. The migration is local-only until a separate
 release review authorizes a linked push. No Cloudflare media service, arbitrary
 HTML/CSS, OAuth, hosted audio, or additional profile widgets were introduced.
+
+## 2026-07-30 — Separate cosmetic shopping from profile appearance management
+
+**Status:** accepted and implemented
+
+The shop is the catalog and purchase surface. Profile settings is the single
+owner surface for previewing and equipping owned cosmetics. The appearance
+editor groups cosmetics by the surface they affect—profile, roll, or
+leaderboard—and renders the existing profile canvas beside the controls.
+
+This adopts the useful information architecture of mature profile-customization
+sites without copying their visual design or introducing unrestricted CSS.
+Equip and unequip operations continue through the existing authenticated RPCs;
+the public profile composition and visitor rendering are unchanged.

@@ -1,7 +1,6 @@
 <script>
   import { onDestroy, onMount, tick } from 'svelte';
   import ShopItemPreview from './ShopItemPreview.svelte';
-  import DecorationStudio from './DecorationStudio.svelte';
   import {
     shopItems,
     shopItemsLoading,
@@ -12,8 +11,6 @@
     walletBalance,
     profileEntitlements,
     rerollShards,
-    profile,
-    authUser,
     session,
     addToast,
     fetchInventoryState,
@@ -31,33 +28,20 @@
     SHOP_SLOT_LABELS,
     SHOP_SORTS,
     SHOP_SUBSECTIONS,
-    clearShopSlot,
     createFittingRoom,
     filterShopItems,
     getCollectionItems,
-    getShopContextForSlot,
     getShopAccessLabel,
     getShopAccessTier,
     hasShopEntitlement,
     isShopCosmetic,
     requiresPurchaseConfirmation,
-    tryOnShopItem
   } from './shopCatalog';
-
-  const LOADOUT_SLOTS = [
-    'name_effect',
-    'frame',
-    'profile_border',
-    'profile_bg',
-    'orb_shape',
-    'roll_effect',
-    'lb_theme'
-  ];
 
   const SECTION_COPY = {
     overview: ['Curated cosmetics', 'Start with a collection or browse the strongest pieces across every surface.'],
-    profile: ['Profile studio', 'Shape the identity people see when they visit your profile.'],
-    roll: ['Roll studio', 'Change the silhouette, atmosphere, and reveal of your daily color.'],
+    profile: ['Profile cosmetics', 'Find pieces for the identity people see when they visit your profile.'],
+    roll: ['Roll cosmetics', 'Find a silhouette, atmosphere, or reveal for your daily color.'],
     leaderboard: ['Leaderboard presence', 'Make every ranked appearance unmistakably yours.'],
     utility: ['Utility shelf', 'Protect progress with practical items that stack in your inventory.'],
     owned: ['Your collection', 'Revisit everything you own and assemble a new look without spending EP.']
@@ -65,8 +49,6 @@
 
   let fittingRoomInitialized = false;
   let fittingRoom = createFittingRoom();
-  let activeContext = 'profile';
-  let previewedItem = null;
   let selectedItem = null;
   let selectedSection = 'overview';
   let selectedSubslot = 'all';
@@ -74,15 +56,12 @@
   let selectedRarity = 'all';
   let affordableOnly = false;
   let sortMode = 'curated';
-  let shopNotice = 'Shop ready. Trying on cosmetics does not change your equipped items.';
+  let shopNotice = 'Shop ready. Your equipped look is managed from profile settings.';
   let loadingAction = null;
   let purchaseArmedKey = null;
   let searchInput = null;
   let detailDialog = null;
   let detailOpener = null;
-  let loadoutDialog = null;
-  let loadoutOpener = null;
-  let loadoutSheetOpen = false;
   let viewStateReady = false;
   let restoredShopScope = null;
 
@@ -136,9 +115,6 @@
     const sortIds = new Set(SHOP_SORTS.map(sort => sort.id));
     const rarityValues = new Set(['all', ...SHOP_RARITIES]);
 
-    activeContext = ['profile', 'roll', 'leaderboard'].includes(savedState?.activeContext)
-      ? savedState.activeContext
-      : 'profile';
     selectedSection = sectionIds.has(savedState?.selectedSection) ? savedState.selectedSection : 'overview';
     const subslotIds = new Set([
       'all',
@@ -149,15 +125,6 @@
     selectedRarity = rarityValues.has(savedState?.selectedRarity) ? savedState.selectedRarity : 'all';
     affordableOnly = savedState?.affordableOnly === true;
     sortMode = sortIds.has(savedState?.sortMode) ? savedState.sortMode : 'curated';
-
-    if (savedState?.loadout && typeof savedState.loadout === 'object') {
-      const loadout = Object.fromEntries(
-        LOADOUT_SLOTS
-          .map(slot => [slot, savedState.loadout[slot]])
-          .filter(([, itemKey]) => typeof itemKey === 'string' && /^[a-z0-9_]{1,80}$/.test(itemKey))
-      );
-      fittingRoom = { ...fittingRoom, loadout: { ...fittingRoom.loadout, ...loadout } };
-    }
 
     restoredShopScope = stateScope;
     viewStateReady = true;
@@ -176,19 +143,15 @@
 
   $: if (viewStateReady && currentShopScope === restoredShopScope) {
     writeViewState(VIEW_STATE_NAMESPACE, shopStateScope(), {
-      activeContext,
       selectedSection,
       selectedSubslot,
       searchQuery: searchQuery.slice(0, 80),
       selectedRarity,
       affordableOnly,
-      sortMode,
-      loadout: fittingRoom.loadout
+      sortMode
     });
   }
   $: currentShopScope = $session?.user?.id || 'guest';
-  $: username = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Chromanaut';
-  $: displayColor = $profile?.mood_color || '#7B5CFF';
   $: catalogItems = Object.values($shopItems).filter(item => item.item_key !== 'title_founder' && item.slot !== 'title');
   $: filteredItems = filterShopItems(catalogItems, {
     section: selectedSection,
@@ -206,11 +169,8 @@
     : null;
   $: relatedItems = selectedItem ? getCollectionItems(catalogItems, selectedItem.collection, selectedItem.item_key).slice(0, 4) : [];
   $: selectedOwnedCount = selectedItem ? (fittingRoom.inventoryCounts[selectedItem.item_key] || 0) : 0;
-  $: selectedActuallyEquipped = Boolean(selectedItem && $equippedItems[selectedItem.slot] === selectedItem.item_key);
   $: selectedHasAccess = Boolean(selectedItem && hasShopEntitlement(selectedItem, fittingRoom));
   $: selectedCanPurchase = Boolean(selectedItem && getShopAccessTier(selectedItem) === 'earned' && selectedItem.cost > 0 && fittingRoom.balance >= selectedItem.cost && (selectedItem.slot === 'consumable' || selectedOwnedCount === 0));
-  $: loadoutEntries = LOADOUT_SLOTS.map(slot => ({ slot, item: $shopItems[fittingRoom.loadout[slot]] || null }));
-  $: equippedSlotCount = loadoutEntries.filter(entry => entry.item).length;
 
   function setSection(section) {
     selectedSection = section;
@@ -220,12 +180,10 @@
   function getDisplayItemState(item, accountEquippedSnapshot, fittingRoomSnapshot) {
     const ownedCount = fittingRoomSnapshot.inventoryCounts?.[item?.item_key] || 0;
     const actuallyEquipped = Boolean(item && accountEquippedSnapshot[item.slot] === item.item_key);
-    const previewing = Boolean(item && fittingRoomSnapshot.loadout[item.slot] === item.item_key);
     const cost = Number(item?.cost) || 0;
     const accessTier = getShopAccessTier(item);
 
     if (actuallyEquipped) return { label: 'Equipped', tone: 'equipped', ownedCount };
-    if (previewing) return { label: 'Previewing', tone: 'previewing', ownedCount };
     if (accessTier === 'free') return { label: 'Free baseline', tone: 'free', ownedCount };
     if (accessTier === 'premium') {
       return hasShopEntitlement(item, fittingRoomSnapshot)
@@ -242,33 +200,6 @@
     if (cost <= 0) return { label: 'Earned milestone', tone: 'milestone', ownedCount };
     if (fittingRoomSnapshot.balance < cost) return { label: 'Not enough EP', tone: 'unaffordable', ownedCount };
     return { label: 'Available', tone: 'available', ownedCount };
-  }
-
-  function tryOnItem(item, message = null) {
-    if (!isShopCosmetic(item)) return;
-    fittingRoom = { ...fittingRoom, loadout: tryOnShopItem(fittingRoom.loadout, item) };
-    activeContext = getShopContextForSlot(item.slot) || activeContext;
-    previewedItem = item;
-    shopNotice = message || `${item.name} is now previewing in your ${SHOP_SLOT_LABELS[item.slot].toLowerCase()} slot.`;
-    trackProductEvent('shop_try_on', {
-      slot: item.slot,
-      accessTier: getShopAccessTier(item),
-      context: activeContext
-    });
-  }
-
-  function clearSlot(slot) {
-    const previousItem = $shopItems[fittingRoom.loadout[slot]];
-    fittingRoom = { ...fittingRoom, loadout: clearShopSlot(fittingRoom.loadout, slot) };
-    if (previousItem?.item_key === previewedItem?.item_key) previewedItem = null;
-    shopNotice = `${SHOP_SLOT_LABELS[slot]} cleared from the fitting room.`;
-  }
-
-  function resetFittingRoom() {
-    syncFittingRoomFromAccount();
-    previewedItem = null;
-    activeContext = 'profile';
-    shopNotice = 'Fitting room reset to your currently equipped cosmetics.';
   }
 
   async function refreshLiveAccountState() {
@@ -308,37 +239,11 @@
         }
 
         await refreshLiveAccountState();
-        if (equipWarning && isShopCosmetic(item)) {
-          fittingRoom = { ...fittingRoom, loadout: tryOnShopItem(fittingRoom.loadout, item) };
-        }
-        previewedItem = isShopCosmetic(item) ? item : previewedItem;
-        activeContext = getShopContextForSlot(item.slot) || activeContext;
         shopNotice = isShopCosmetic(item)
           ? `${item.name} purchased${equipWarning ? '' : ' and equipped'}.`
           : `${item.name} purchased. You now own ${fittingRoom.inventoryCounts[item.item_key] || 0}.`;
         addToast(`${item.name} purchased.`, 'success');
         if (equipWarning) addToast(`Purchased, but not equipped: ${equipWarning}`, 'error');
-      } else if (action === 'equip') {
-        const { data, error } = await supabase.rpc('equip_item', { p_item_key: item.item_key });
-        if (error) throw new Error(error.message);
-        if (!data?.success) throw new Error(data?.error || 'The item could not be equipped.');
-        await refreshLiveAccountState();
-        trackProductEvent('shop_equip', {
-          slot: item.slot,
-          accessTier: getShopAccessTier(item)
-        });
-        previewedItem = item;
-        activeContext = getShopContextForSlot(item.slot) || activeContext;
-        shopNotice = `${item.name} equipped to your account.`;
-        addToast(`${item.name} equipped.`, 'success');
-      } else if (action === 'unequip') {
-        const { data, error } = await supabase.rpc('unequip_item', { p_slot: item.slot });
-        if (error) throw new Error(error.message);
-        if (!data?.success) throw new Error(data?.error || 'The item could not be unequipped.');
-        await refreshLiveAccountState();
-        previewedItem = null;
-        shopNotice = `${item.name} unequipped from your account.`;
-        addToast(`${item.name} unequipped.`, 'success');
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'The shop request failed.';
@@ -357,17 +262,6 @@
     }
 
     void runLiveAction(item, 'buy');
-  }
-
-  function tryVoidwalkerCollection() {
-    let nextLoadout = { ...fittingRoom.loadout };
-    for (const item of voidwalkerItems) {
-      nextLoadout = tryOnShopItem(nextLoadout, item);
-    }
-    fittingRoom = { ...fittingRoom, loadout: nextLoadout };
-    previewedItem = voidwalkerItems.find(item => item.item_key === 'bg_void') || voidwalkerItems[0] || null;
-    activeContext = 'profile';
-    shopNotice = 'The full Voidwalker collection is previewing across your available slots.';
   }
 
   async function exploreVoidwalker() {
@@ -397,7 +291,7 @@
     if (!selectedItem) return;
     selectedItem = null;
     purchaseArmedKey = null;
-    if (!loadoutSheetOpen) document.body.style.overflow = '';
+    document.body.style.overflow = '';
     await tick();
     restoreFocus(detailOpener);
     detailOpener = null;
@@ -410,32 +304,6 @@
       return;
     }
     trapFocus(event, detailDialog);
-  }
-
-  async function openLoadoutSheet() {
-    loadoutOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    loadoutSheetOpen = true;
-    document.body.style.overflow = 'hidden';
-    await tick();
-    focusFirstElement(loadoutDialog) || loadoutDialog?.focus();
-  }
-
-  async function closeLoadoutSheet() {
-    if (!loadoutSheetOpen) return;
-    loadoutSheetOpen = false;
-    if (!selectedItem) document.body.style.overflow = '';
-    await tick();
-    restoreFocus(loadoutOpener);
-    loadoutOpener = null;
-  }
-
-  function handleLoadoutKeydown(event) {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      void closeLoadoutSheet();
-      return;
-    }
-    trapFocus(event, loadoutDialog);
   }
 
   function getPriceLabel(item) {
@@ -455,7 +323,7 @@
     <span class="shop-info-dot" aria-hidden="true"></span>
     <div>
       <strong>Permanent unlocks</strong>
-      <span>Try on any cosmetic before spending EP. Purchases and equipped choices save instantly.</span>
+      <span>Browse permanent cosmetics here, then manage your complete look from profile settings.</span>
     </div>
     <a href="/how-to-play">How EP works</a>
   </div>
@@ -463,8 +331,8 @@
   <header class="shop-header">
     <div class="shop-heading">
       <span class="shop-kicker">ChromaDie</span>
-      <h1>Decoration Studio</h1>
-      <p>Shape the profile people remember, then unlock earned expression without touching the game’s competitive core.</p>
+      <h1>Cosmetic Shop</h1>
+      <p>Unlock earned expression without touching the game’s competitive core.</p>
     </div>
     <div class="shop-wallet" aria-label={`Wallet balance: ${fittingRoom.balance.toLocaleString()} EP`}>
       <span>Your wallet</span>
@@ -479,7 +347,7 @@
       <h2 id="shop-foundations-title">Every profile starts with a complete identity.</h2>
       <p>Signature color, curated layouts, module order, visibility, and secure links are included before you spend or earn anything.</p>
     </div>
-    <a href="/profile">Open profile studio <span aria-hidden="true">↗</span></a>
+    <a href="/profile/settings">Edit profile appearance <span aria-hidden="true">↗</span></a>
   </section>
 
   {#if $shopItemsLoading}
@@ -495,40 +363,6 @@
     </div>
   {:else}
     <div class="atelier-layout">
-      <aside class="studio-column">
-        <div class="studio-sticky">
-          <DecorationStudio
-            bind:activeContext
-            loadout={fittingRoom.loadout}
-            {username}
-            {displayColor}
-            accountProfile={$profile}
-            selectedItem={previewedItem}
-          />
-
-          <div class="loadout-panel">
-            <div class="loadout-panel-head">
-              <div>
-                <span>Fitting room</span>
-                <strong>{equippedSlotCount} of {LOADOUT_SLOTS.length} slots</strong>
-              </div>
-              <button type="button" on:click={resetFittingRoom}>Reset fitting</button>
-            </div>
-            <div class="loadout-list">
-              {#each loadoutEntries as entry (entry.slot)}
-                <div class:filled={entry.item}>
-                  <span>{SHOP_SLOT_LABELS[entry.slot]}</span>
-                  <strong>{entry.item?.name || 'Empty slot'}</strong>
-                  {#if entry.item}
-                    <button type="button" aria-label={`Clear ${SHOP_SLOT_LABELS[entry.slot]} slot`} on:click={() => clearSlot(entry.slot)}>×</button>
-                  {/if}
-                </div>
-              {/each}
-            </div>
-          </div>
-        </div>
-      </aside>
-
       <main class="catalog-column">
         {#if selectedSection === 'overview' && !searchQuery}
           <section class="collection-hero" aria-labelledby="voidwalker-title">
@@ -538,7 +372,7 @@
               <h2 id="voidwalker-title">Bend the light.</h2>
               <p>A complete identity system cut from cold violet horizons, black cores, and impossible gravity.</p>
               <div class="collection-actions">
-                <button type="button" class="primary-action" on:click={tryVoidwalkerCollection}>Try the full look</button>
+                <a class="primary-action" href="/profile/settings">Preview your owned look</a>
                 <button type="button" class="quiet-action" on:click={exploreVoidwalker}>Explore {voidwalkerItems.length} pieces</button>
               </div>
             </div>
@@ -627,7 +461,7 @@
           <div class="shop-grid">
             {#each filteredItems as item (item.item_key)}
               {@const state = getDisplayItemState(item, $equippedItems, fittingRoom)}
-              {@const isWearing = fittingRoom.loadout[item.slot] === item.item_key}
+              {@const isWearing = $equippedItems[item.slot] === item.item_key}
               {@const ownedCount = fittingRoom.inventoryCounts[item.item_key] || 0}
               {@const actuallyEquipped = $equippedItems[item.slot] === item.item_key}
               {@const accessTier = getShopAccessTier(item)}
@@ -656,21 +490,8 @@
                 <p>{item.description}</p>
 
                 <div class="item-actions">
-                  {#if isShopCosmetic(item)}
-                    <button type="button" class="try-button" class:active={isWearing} disabled={!!loadingAction} on:click={() => tryOnItem(item)}>
-                      {isWearing ? (actuallyEquipped ? 'Equipped' : 'Previewing') : 'Try on'}
-                    </button>
-                  {/if}
-
                   {#if isShopCosmetic(item) && hasAccess}
-                    <button
-                      type="button"
-                      class="primary-item-action"
-                      disabled={!!loadingAction}
-                      on:click={() => runLiveAction(item, actuallyEquipped ? 'unequip' : 'equip')}
-                    >
-                      {itemBusy ? (actuallyEquipped ? 'Unequipping…' : 'Equipping…') : (actuallyEquipped ? 'Unequip' : 'Equip')}
-                    </button>
+                    <a class="primary-item-action" href="/profile/settings">{actuallyEquipped ? 'Manage equipped look' : 'Preview in profile'}</a>
                   {:else if accessTier === 'premium'}
                     <button type="button" class="primary-item-action" disabled>Premium expression · Preview only</button>
                   {:else if accessTier === 'free'}
@@ -706,11 +527,6 @@
 
   <div class="shop-live-region visually-hidden" role="status" aria-live="polite">{shopNotice}</div>
 
-  <button type="button" class="mobile-look-tray" on:click={openLoadoutSheet}>
-    <span><i aria-hidden="true"></i> Your look</span>
-    <strong>{equippedSlotCount}/{LOADOUT_SLOTS.length} slots</strong>
-    <span aria-hidden="true">↑</span>
-  </button>
 </div>
 
 {#if selectedItem}
@@ -762,21 +578,8 @@
       {/if}
 
       <div class="drawer-actions">
-        {#if isShopCosmetic(selectedItem)}
-          <button type="button" class="drawer-try" on:click={() => tryOnItem(selectedItem)}>Try on this piece</button>
-        {/if}
-
         {#if isShopCosmetic(selectedItem) && selectedHasAccess}
-          <button
-            type="button"
-            class="drawer-buy"
-            disabled={!!loadingAction}
-            on:click={() => runLiveAction(selectedItem, selectedActuallyEquipped ? 'unequip' : 'equip')}
-          >
-            {loadingAction
-              ? (selectedActuallyEquipped ? 'Unequipping…' : 'Equipping…')
-              : (selectedActuallyEquipped ? 'Unequip from account' : 'Equip to account')}
-          </button>
+          <a class="drawer-buy" href="/profile/settings">Preview and equip in profile settings</a>
         {:else if getShopAccessTier(selectedItem) === 'premium'}
           <button type="button" class="drawer-buy" disabled>Premium expression · Preview only</button>
         {:else if getShopAccessTier(selectedItem) === 'free'}
@@ -801,37 +604,7 @@
           <strong>{Math.max(0, fittingRoom.balance - selectedItem.cost).toLocaleString()} EP</strong>
         </div>
       {/if}
-      <p class="drawer-safety">Trying on is temporary until you equip or purchase an item.</p>
-    </div>
-  </div>
-{/if}
-
-{#if loadoutSheetOpen}
-  <div class="shop-overlay loadout-overlay" role="presentation" on:click|self={closeLoadoutSheet}>
-    <div
-      class="loadout-sheet"
-      bind:this={loadoutDialog}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Your fitting room"
-      tabindex="-1"
-      on:keydown={handleLoadoutKeydown}
-    >
-      <div class="drawer-head">
-        <span>Your fitting room</span>
-        <button type="button" aria-label="Close your look" on:click={closeLoadoutSheet}>×</button>
-      </div>
-      <DecorationStudio bind:activeContext loadout={fittingRoom.loadout} {username} {displayColor} accountProfile={$profile} selectedItem={previewedItem} />
-      <div class="sheet-slots">
-        {#each loadoutEntries as entry (entry.slot)}
-          <div>
-            <span>{SHOP_SLOT_LABELS[entry.slot]}</span>
-            <strong>{entry.item?.name || 'Empty'}</strong>
-            {#if entry.item}<button type="button" aria-label={`Clear ${SHOP_SLOT_LABELS[entry.slot]}`} on:click={() => clearSlot(entry.slot)}>Clear</button>{/if}
-          </div>
-        {/each}
-      </div>
-      <button type="button" class="sheet-reset" on:click={resetFittingRoom}>Reset to equipped items</button>
+      <p class="drawer-safety">Manage and preview your complete equipped look from profile settings.</p>
     </div>
   </div>
 {/if}
@@ -948,57 +721,7 @@
 
   .atelier-layout {
     display: grid;
-    grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
-    gap: clamp(24px, 3vw, 42px);
-    align-items: start;
-  }
-
-  .studio-sticky { position: sticky; top: 92px; display: grid; gap: 14px; }
-
-  .loadout-panel {
-    padding: 16px;
-    border: 1px solid var(--shop-line);
-    border-radius: 22px;
-    background: rgba(14,15,20,0.88);
-  }
-  .loadout-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
-  .loadout-panel-head div { display: flex; flex-direction: column; gap: 3px; }
-  .loadout-panel-head span { color: #77798a; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; }
-  .loadout-panel-head strong { font: 650 0.82rem var(--font-display); }
-  .loadout-panel-head button,
-  .sheet-reset {
-    min-height: 44px;
-    padding: 0 12px;
-    border: 1px solid var(--shop-line);
-    border-radius: 10px;
-    background: rgba(255,255,255,0.035);
-    color: #d2d0dc;
-    cursor: pointer;
-    font-size: 0.7rem;
-  }
-
-  .loadout-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
-  .loadout-list > div {
-    position: relative;
-    min-width: 0;
-    min-height: 53px;
-    padding: 9px 42px 9px 10px;
-    border: 1px dashed rgba(255,255,255,0.075);
-    border-radius: 11px;
-    background: rgba(0,0,0,0.13);
-  }
-  .loadout-list > div.filled { border-style: solid; border-color: rgba(153,133,255,0.16); background: rgba(135,111,255,0.045); }
-  .loadout-list span,
-  .loadout-list strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .loadout-list span { color: #737585; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; }
-  .loadout-list strong { margin-top: 4px; color: #d8d6e0; font-size: 0.68rem; }
-  .loadout-list button {
-    position: absolute;
-    top: 50%; right: 3px;
-    width: 36px; height: 36px;
-    transform: translateY(-50%);
-    border: 0; border-radius: 7px;
-    background: rgba(255,255,255,0.05); color: #8e909f; cursor: pointer;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .catalog-column { min-width: 0; }
@@ -1027,12 +750,17 @@
   .collection-copy h2 { margin: 13px 0 12px; font: 720 clamp(2rem, 4vw, 3.8rem)/0.95 var(--font-display); letter-spacing: -0.055em; }
   .collection-copy p { max-width: 500px; margin: 0; color: #9b99a9; font-size: 0.9rem; line-height: 1.6; }
   .collection-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
-  .collection-actions button {
+  .collection-actions button,
+  .collection-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 44px;
     padding: 0 16px;
     border-radius: 12px;
     cursor: pointer;
     font-weight: 700;
+    text-decoration: none;
   }
   .primary-action { border: 0; background: #f1eefb; color: #111117; }
   .quiet-action { border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #e2dff0; }
@@ -1211,12 +939,10 @@
   .shop-item > p { min-height: 2.8em; display: -webkit-box; overflow: hidden; margin: 10px 0 13px; color: #858795; font-size: 0.68rem; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 
   .item-actions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; margin-top: auto; }
-  .item-actions button { min-width: 0; min-height: 44px; padding: 0 9px; border-radius: 11px; cursor: pointer; font: 700 0.65rem var(--font-display); }
+  .item-actions button,
+  .item-actions a { min-width: 0; min-height: 44px; padding: 0 9px; border-radius: 11px; cursor: pointer; font: 700 0.65rem var(--font-display); }
   .item-actions button:disabled { cursor: not-allowed; opacity: 0.62; }
-  .try-button { border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); color: #e5e3ec; }
-  .try-button:hover { background: rgba(255,255,255,0.1); }
-  .try-button.active { border-color: rgba(148,126,255,0.28); background: rgba(132,107,255,0.13); color: #dcd4ff; }
-  .primary-item-action { border: 1px solid rgba(153,130,255,0.3); background: rgba(132,108,255,0.14); color: #e1dcff; }
+  .primary-item-action { display:flex;align-items:center;justify-content:center;border: 1px solid rgba(153,130,255,0.3); background: rgba(132,108,255,0.14); color: #e1dcff;text-align:center;text-decoration:none; }
   .primary-item-action:not(:disabled):hover { border-color: rgba(168,148,255,0.48); background: rgba(132,108,255,0.22); }
   .item-actions > .primary-item-action:first-child { grid-column: 1 / -1; }
   .detail-button { grid-column: 1 / -1; min-height: 36px !important; border: 1px solid var(--shop-line); background: transparent; color: #8d8f9e; }
@@ -1228,7 +954,6 @@
   .shop-empty p { max-width: 440px; margin: 0; color: #858797; font-size: 0.78rem; line-height: 1.5; }
   .shop-empty button { min-height: 44px; margin-top: 16px; padding: 0 14px; border: 1px solid var(--shop-line); border-radius: 11px; background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; }
 
-  .mobile-look-tray { display: none; }
   .visually-hidden {
     position: absolute !important;
     width: 1px !important; height: 1px !important;
@@ -1289,9 +1014,9 @@
   .related-list strong { margin-top: 4px; color: #d8d6e0; font-size: 0.66rem; }
 
   .drawer-actions { display: grid; gap: 8px; margin-top: 22px; }
-  .drawer-actions button { min-height: 48px; border-radius: 13px; cursor: pointer; font-weight: 750; }
-  .drawer-try { border: 0; background: #f1eef9; color: #101116; }
-  .drawer-buy { border: 1px solid rgba(153,130,255,0.25); background: rgba(132,108,255,0.12); color: #dbd3ff; }
+  .drawer-actions button,
+  .drawer-actions a { min-height: 48px; border-radius: 13px; cursor: pointer; font-weight: 750; }
+  .drawer-buy { display:flex;align-items:center;justify-content:center;border: 1px solid rgba(153,130,255,0.25); background: rgba(132,108,255,0.12); color: #dbd3ff;text-align:center;text-decoration:none; }
   .drawer-buy:disabled { border-color: rgba(255,255,255,0.07); background: rgba(255,255,255,0.035); color: #717381; cursor: not-allowed; }
   .purchase-confirmation {
     display: flex;
@@ -1308,29 +1033,7 @@
   .purchase-confirmation strong { color: #ded8ff; font: 700 0.78rem var(--font-mono-stack); }
   .drawer-safety { margin: 12px 10px 2px; color: #686a78; font-size: 0.64rem; line-height: 1.45; text-align: center; }
 
-  .loadout-overlay { display: none; align-items: flex-end; }
-  .loadout-sheet {
-    width: 100%;
-    max-height: calc(100dvh - 18px);
-    overflow-y: auto;
-    padding: 16px;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 22px 22px 0 0;
-    background: #0e0f14;
-  }
-  .sheet-slots { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; margin-top: 12px; }
-  .sheet-slots > div { position: relative; min-width: 0; padding: 10px; border: 1px solid rgba(255,255,255,0.07); border-radius: 11px; }
-  .sheet-slots span,
-  .sheet-slots strong { display: block; overflow: hidden; padding-right: 34px; text-overflow: ellipsis; white-space: nowrap; }
-  .sheet-slots span { color: #737585; font-size: 0.54rem; text-transform: uppercase; }
-  .sheet-slots strong { margin-top: 4px; color: #d6d4df; font-size: 0.67rem; }
-  .sheet-slots button { position: absolute; right: 2px; top: 50%; min-width: 44px; min-height: 44px; transform: translateY(-50%); border: 0; background: none; color: #918ba9; cursor: pointer; font-size: 0.58rem; }
-  .sheet-reset { width: 100%; min-height: 44px; margin-top: 10px; }
-
   @media (max-width: 1080px) {
-    .atelier-layout { grid-template-columns: 1fr; }
-    .studio-sticky { position: static; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); align-items: start; }
-    .loadout-panel { align-self: stretch; }
     .collection-hero { min-height: 300px; }
   }
 
@@ -1344,8 +1047,6 @@
     .shop-heading p { font-size: 0.88rem; }
     .shop-wallet { min-width: 0; text-align: left; }
     .shop-foundations { align-items: flex-start; flex-direction: column; gap: 15px; padding: 16px; }
-    .studio-sticky { display: block; }
-    .loadout-panel { display: none; }
     .collection-hero { min-height: 390px; align-items: flex-start; padding: 28px 22px; }
     .collection-copy { width: 100%; }
     .collection-copy p { max-width: 90%; }
@@ -1360,31 +1061,6 @@
     .shop-grid { grid-template-columns: 1fr; }
     .shop-item { padding: 12px; }
     .preview-cue { opacity: 1; transform: none; }
-    .mobile-look-tray {
-      position: fixed;
-      left: 50%; bottom: 12px;
-      z-index: 38;
-      width: min(calc(100% - 24px), 500px);
-      min-height: 54px;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-      gap: 12px;
-      transform: translateX(-50%);
-      padding: 0 15px;
-      border: 1px solid rgba(171,152,255,0.24);
-      border-radius: 16px;
-      background: rgba(17,18,25,0.94);
-      backdrop-filter: blur(16px);
-      color: #f0edf8;
-      box-shadow: 0 18px 50px rgba(0,0,0,0.48);
-      cursor: pointer;
-      text-align: left;
-    }
-    .mobile-look-tray span:first-child { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
-    .mobile-look-tray i { width: 8px; height: 8px; border-radius: 50%; background: #9c89ff; box-shadow: 0 0 12px rgba(156,137,255,0.8); }
-    .mobile-look-tray strong { color: #898b9a; font-size: 0.67rem; font-weight: 600; text-align: right; }
-    .loadout-overlay { display: flex; }
     .detail-overlay { align-items: flex-end; }
     .detail-drawer { width: 100%; height: auto; max-height: calc(100dvh - 18px); border-left: 0; border-top: 1px solid rgba(255,255,255,0.1); border-radius: 22px 22px 0 0; padding: 16px; }
     .drawer-preview :global(.shop-preview-area) { height: 170px; }
@@ -1395,7 +1071,8 @@
   @media (max-width: 420px) {
     .shop-heading h1 { letter-spacing: -0.065em; }
     .collection-actions { display: grid; }
-    .collection-actions button { width: 100%; }
+    .collection-actions button,
+    .collection-actions a { width: 100%; }
     .related-list { grid-template-columns: 1fr; }
     .drawer-title-row h2 { font-size: 1.45rem; }
   }

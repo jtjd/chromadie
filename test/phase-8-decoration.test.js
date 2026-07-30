@@ -85,6 +85,22 @@ test('decoration studio previews the live profile canvas in an isolated mode', a
   assert.doesNotMatch(studio + preview, /innerHTML|new Function|eval\s*\(/);
 });
 
+test('owned cosmetic management lives in profile settings while the shop stays a catalog', async () => {
+  const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
+  const editor = await readFile(new URL('../src/lib/ProfileCosmeticsEditor.svelte', import.meta.url), 'utf8');
+  const shop = await readFile(new URL('../src/lib/Shop.svelte', import.meta.url), 'utf8');
+
+  assert.match(settings, /<ProfileCosmeticsEditor/);
+  assert.match(editor, /<DecorationStudio/);
+  assert.match(editor, /supabase\.rpc\('equip_item'/);
+  assert.match(editor, /supabase\.rpc\('unequip_item'/);
+  assert.match(editor, /hasShopEntitlement/);
+  assert.match(editor, /Browse the shop/);
+  assert.doesNotMatch(shop, /<DecorationStudio/);
+  assert.match(shop, /Cosmetic Shop/);
+  assert.match(shop, /href="\/profile\/settings"/);
+});
+
 test('premium entitlement writes stay behind fixed server RPC boundaries', async () => {
   const migration = await readFile(new URL('../supabase/migrations/20260725140000_decoration_entitlements.sql', import.meta.url), 'utf8');
 

@@ -6,16 +6,20 @@
   export let username = 'Chromanaut';
   export let displayColor = '#7B5CFF';
   export let accountProfile = null;
+  export let profileConfig = null;
   export let selectedItem = null;
+  export let title = 'Make the profile yours.';
+  export let modeLabel = 'Try-on only';
+  export let showBaseline = true;
 </script>
 
 <section class="decoration-studio" aria-label="Decoration studio">
   <div class="decoration-studio__heading">
     <div>
       <span>Decoration studio</span>
-      <h2>Make the profile yours.</h2>
+      <h2>{title}</h2>
     </div>
-    <span class="decoration-studio__mode">Try-on only</span>
+    <span class="decoration-studio__mode">{modeLabel}</span>
   </div>
 
   <ShopStudioPreview
@@ -24,16 +28,19 @@
     {username}
     {displayColor}
     {accountProfile}
+    {profileConfig}
     {selectedItem}
   />
 
-  <div class="decoration-studio__baseline">
-    <span class="decoration-studio__baseline-mark" aria-hidden="true">✦</span>
-    <div>
-      <strong>Free foundations stay beautiful.</strong>
-      <p>Signature color, layout, module order, and secure links are profile tools—not premium gates.</p>
+  {#if showBaseline}
+    <div class="decoration-studio__baseline">
+      <span class="decoration-studio__baseline-mark" aria-hidden="true">✦</span>
+      <div>
+        <strong>Free foundations stay beautiful.</strong>
+        <p>Signature color, layout, module order, and secure links are profile tools—not premium gates.</p>
+      </div>
     </div>
-  </div>
+  {/if}
 </section>
 
 <style>

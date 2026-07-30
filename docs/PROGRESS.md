@@ -736,3 +736,16 @@ the remaining Phase 11 boundary.
 - Captured and reviewed the requested local Phase 14 browser evidence. The
   both expression migrations are applied to the linked database; the public
   gate remains active for testing.
+
+## 2026-07-30 — Profile appearance editor consolidation
+
+- Moved owned-cosmetic preview and equip controls into `/profile/settings`.
+- Grouped the existing slots by profile, roll, and leaderboard context while
+  preserving the server-authoritative `equip_item` and `unequip_item` RPCs.
+- Simplified `/shop` into a full-width catalog and purchase surface with clear
+  links back to profile appearance management.
+- Kept the approved public profile composition unchanged and made the isolated
+  settings preview compact enough for mobile.
+- The focused tests, full unit suite, Svelte check, ESLint, build, and
+  performance budget pass. Compiled assets are 619.96 kB JavaScript, 291.57 kB
+  CSS, and 5.22 kB HTML before final validation.

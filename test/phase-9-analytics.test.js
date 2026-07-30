@@ -133,9 +133,10 @@ test('existing flows use the product-event contract without exposing private pay
     readFile(new URL('../src/lib/Game.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/DiscoveryCard.svelte', import.meta.url), 'utf8'),
-    readFile(new URL('../src/lib/Shop.svelte', import.meta.url), 'utf8')
+    readFile(new URL('../src/lib/Shop.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileCosmeticsEditor.svelte', import.meta.url), 'utf8')
   ]);
-  const [app, shell, game, profileRoll, discovery, shop] = sources;
+  const [app, shell, game, profileRoll, discovery, shop, cosmeticsEditor] = sources;
 
   assert.match(app, /trackProductEvent\('route_view'/);
   assert.match(shell, /trackProductEvent\('public_profile_view'/);
@@ -144,7 +145,7 @@ test('existing flows use the product-event contract without exposing private pay
   assert.match(profileRoll, /trackProductEvent\('roll_ready'/);
   assert.match(profileRoll, /trackProductEvent\('roll_completed'/);
   assert.match(discovery, /trackProductEvent\('profile_shared'/);
-  assert.match(shop, /trackProductEvent\('shop_try_on'/);
+  assert.match(cosmeticsEditor, /trackProductEvent\('shop_try_on'/);
   assert.match(shop, /trackProductEvent\('shop_equip'/);
-  assert.doesNotMatch(app + shell + game + profileRoll + discovery + shop, /trackProductEvent\([^\n]*(username|profileId|score|hex|email|details)/i);
+  assert.doesNotMatch(app + shell + game + profileRoll + discovery + shop + cosmeticsEditor, /trackProductEvent\([^\n]*(username|profileId|score|hex|email|details)/i);
 });
