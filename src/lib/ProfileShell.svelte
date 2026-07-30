@@ -14,7 +14,6 @@
   import ProfileRoll from './ProfileRoll.svelte';
   import ProfileTimeline from './ProfileTimeline.svelte';
   import ProfileCollection from './ProfileCollection.svelte';
-  import ProfileSocial from './ProfileSocial.svelte';
   import { getProfileStoryUnlocks } from './profileStory.js';
   import { createDefaultProfileConfig, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
   import { getProfileComposition } from './profileComposition.js';
@@ -39,8 +38,6 @@
   let timelineEvents = [];
   let collectionItems = [];
   let profileConfig = null;
-  let social = null;
-  let socialSettings = null;
   let previewConfig = null;
   let allAchievements = [];
   let loading = true;
@@ -61,8 +58,6 @@
     timelineEvents = [];
     collectionItems = [];
     profileConfig = null;
-    social = null;
-    socialSettings = null;
     previewConfig = null;
     allAchievements = [];
     canonicalDailyColor = null;
@@ -159,8 +154,6 @@
     collectionItems = context.collectionItems;
     profileConfig = context.profileConfig;
     mediaCacheKey = String(Date.now());
-    social = context.social;
-    socialSettings = context.socialSettings;
     previewConfig = null;
     allAchievements = context.allAchievements;
     loadError = context.loadError;
@@ -228,10 +221,6 @@
     if (!nextColor) return;
     canonicalDailyColor = colorFor(nextColor);
     if (profileRollState === 'rolling') settleProfileRoll(nextColor);
-  }
-
-  async function handleSocialChange() {
-    await loadProfileData();
   }
 
   async function handleFollow() {
@@ -382,7 +371,7 @@
           {#if isOwnProfile}
             <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} on:colorpreview={handleRollPreview} on:colorchange={handleRollColor} />
           {:else}
-            <TodayColor result={latestRoll} quiet={true} accentColor={dailyAccentColor} />
+            <TodayColor result={latestRoll} quiet={true} accentColor={dailyAccentColor} cosmetics={cosmetics} />
           {/if}
         </div>
 
@@ -557,15 +546,6 @@
               {followLoading ? 'Updating…' : isFollowed ? 'Remove rival' : 'Add to rivals'}
             </button>
           {/if}
-          <ProfileSocial
-            profileId={targetProfile.id}
-            {username}
-            {isOwnProfile}
-            isAuthenticated={$isAuthenticated}
-            {social}
-            settings={socialSettings}
-            on:socialchange={handleSocialChange}
-          />
           </div>
         </section>
       {/if}
