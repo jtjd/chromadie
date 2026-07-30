@@ -646,4 +646,6 @@ presentation without changing its data or gameplay authority.
   unified EP score, leading conditions, and a quieter score breakdown.
 - Lengthened the reveal and added an explicit Spectrum → Signal → Lock tracker.
 - Fixed score breakdowns closing themselves during countdown updates.
+- Added a staff-only presentation replay for repeatedly testing the reveal
+  without another roll RPC or database write.
 - Added reduced-motion coverage and kept the approved profile layout intact.

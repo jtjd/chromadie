@@ -1462,3 +1462,8 @@ the complete server-reported record stays behind a quiet score-breakdown
 disclosure. Motion intensity scales with rarity and collapses to a static,
 immediate result under reduced-motion preferences. The compact disclosure owns
 its open state so the live countdown cannot override the reader's choice.
+
+Staff owners may replay that stored presentation from the score breakdown.
+Replay is deliberately client-only: it reuses the canonical result already
+returned for the account and never calls a roll, reward, history, inventory, or
+profile-refresh boundary.

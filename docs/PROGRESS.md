@@ -766,3 +766,5 @@ the remaining Phase 11 boundary.
   Spectrum → Signal → Lock progress track.
 - Fixed the compact score breakdown so countdown updates no longer close an
   open disclosure.
+- Added a staff-only `Replay reveal` control that rehearses the stored canonical
+  result without creating a roll or changing rewards, history, or eligibility.

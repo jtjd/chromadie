@@ -85,12 +85,15 @@
   let skipRevealRequested = false;
   let freshReveal = false;
   let detailsOpen = false;
+  let replayData = null;
+  let replayCanonical = null;
 
   $: cosmetics = $equippedItems || {};
   $: rollEff = getRollEffect(cosmetics);
   $: orbEff = getOrbShape(cosmetics);
   $: rewardBadges = revealedBadges.filter(id => SYSTEM_BADGE_IDS.has(id));
   $: canReroll = Boolean($isAuthenticated && Number($rerollShards) > 0);
+  $: canReplayReveal = Boolean($isAuthenticated && $profile?.is_staff && replayData && replayCanonical);
   $: revealStatus = REVEAL_STAGES[revealStage] || REVEAL_STAGES[0];
   $: conditionSource = contributors.length
     ? contributors.map((contributor, index) => {
@@ -246,7 +249,9 @@
       return;
     }
 
-    applyServerPresentation({ ...data, hex: data.hex_code || data.hex }, normalizeCanonicalRoll({ ...data, hex: data.hex_code || data.hex }));
+    replayData = { ...data, hex: data.hex_code || data.hex };
+    replayCanonical = normalizeCanonicalRoll(replayData);
+    applyServerPresentation(replayData, replayCanonical);
     revealStage = 3;
     phase = 'results';
     loading = false;
@@ -304,6 +309,26 @@
     revealStage = 3;
   }
 
+  async function replayReveal() {
+    if (!canReplayReveal || loading) return;
+
+    const requestId = ++rollRequestId;
+    const requestUserId = $session?.user?.id || null;
+    const savedData = replayData;
+    const savedCanonical = replayCanonical;
+    loading = true;
+    error = '';
+    phase = 'rolling';
+    clearRollState();
+    dispatch('rollstart', { replay: true });
+
+    const animated = await animateCanonicalResult(savedData, savedCanonical, requestId, requestUserId);
+    if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return;
+
+    loading = false;
+    if (!animated) phase = 'results';
+  }
+
   async function initiateRoll(isReroll = false) {
     if (!canInitiateRoll({
       authInitialized: $authInitialized,
@@ -345,6 +370,12 @@
       return;
     }
 
+    replayData = {
+      ...response.data,
+      new_achievements: [],
+      milestone_granted: null
+    };
+    replayCanonical = response.canonical;
     const animated = await animateCanonicalResult(response.data, response.canonical, requestId, requestUserId);
     if (!animated) {
       abandonStaleRequest();
@@ -577,6 +608,17 @@
               <p>Come back when the next color is available.</p>
             </div>
             <div class="profile-roll__actions">
+              {#if canReplayReveal}
+                <button
+                  type="button"
+                  class="profile-roll__button profile-roll__button--replay"
+                  on:click={replayReveal}
+                  disabled={loading}
+                  title="Presentation only—this does not create another roll or award rewards."
+                >
+                  Replay reveal
+                </button>
+              {/if}
               {#if canReroll}
                 <button type="button" class="profile-roll__button profile-roll__button--reroll" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || hasActiveRerollLock() || !$authInitialized}>
                   Use reroll shard ({$rerollShards})
@@ -611,6 +653,7 @@
   .profile-roll__button:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
   .profile-roll__button:disabled { cursor: wait; opacity: 0.55; }
   .profile-roll__button--secondary { border-color: color-mix(in srgb, var(--profile-accent) 55%, transparent); background: color-mix(in srgb, var(--profile-accent) 14%, transparent); color: var(--color-accent-bright); }
+  .profile-roll__button--replay { border-color: color-mix(in srgb, var(--profile-accent) 42%, transparent); background: color-mix(in srgb, var(--profile-accent) 10%, transparent); color: color-mix(in srgb, var(--profile-accent) 48%, white); }
   .profile-roll__button--reroll { min-height: 2.35rem; padding-inline: var(--space-4); border-color: color-mix(in srgb, var(--color-warning) 50%, transparent); background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: var(--color-warning); font-size: var(--type-label); }
   .profile-roll__preview { display: grid; place-items: center; min-width: 9rem; }
   .profile-roll__preview :global(.roll-effect-wrapper) { transform: scale(0.72); transform-origin: center; }

@@ -46,6 +46,13 @@ test('the owner roll uses a staged presentation without moving authority into th
   assert.match(roll, /dispatch\('colorpreview'/);
   assert.match(roll, /View score breakdown/);
   assert.match(roll, /bind:open=\{detailsOpen\}/);
+  assert.match(roll, /\$profile\?\.is_staff/);
+  assert.match(roll, /Replay reveal/);
+  assert.match(roll, /async function replayReveal/);
+  assert.doesNotMatch(
+    roll.slice(roll.indexOf('async function replayReveal'), roll.indexOf('async function initiateRoll')),
+    /requestRoll|supabase\.rpc|refreshProfileState|fetchInventoryState|fetchWalletBalance/
+  );
   assert.match(roll, /displayScore\.toLocaleString\(\)\} <span>EP/);
   assert.match(roll, /animateScore: true/);
   assert.match(roll, /revealBadges: false/);
