@@ -33,6 +33,7 @@ test('the owner roll uses a staged presentation without moving authority into th
 
   assert.match(roll, /REVEAL_STAGES/);
   assert.match(roll, /REVEAL_SPECTRUM/);
+  assert.match(roll, /REVEAL_PACE = 3/);
   assert.match(roll, /REVEAL_STEP_LABELS/);
   assert.match(roll, /profile-roll__reveal-button/);
   assert.match(roll, /profile-roll__scan-field/);

@@ -762,7 +762,7 @@ the remaining Phase 11 boundary.
   above `View score breakdown`.
 - Verified the completed state at 1440×900 and 390×844, including reduced-motion
   fallbacks and the existing profile composition.
-- Extended the readable reveal cadence to roughly 2.5 seconds and added a
+- Extended the readable reveal cadence to roughly 7.5 seconds and added a
   Spectrum → Signal → Lock progress track.
 - Fixed the compact score breakdown so countdown updates no longer close an
   open disclosure.

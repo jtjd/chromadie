@@ -48,7 +48,10 @@
     '#C65CFF',
     '#FF5DB1'
   ]);
-  const REVEAL_DELAYS = Object.freeze([100, 110, 120, 140, 175, 220, 280, 360]);
+  const REVEAL_PACE = 3;
+  const REVEAL_DELAYS = Object.freeze(
+    [100, 110, 120, 140, 175, 220, 280, 360].map(delay => delay * REVEAL_PACE)
+  );
   const REVEAL_STEP_LABELS = Object.freeze(['Spectrum', 'Signal', 'Lock']);
   const SYSTEM_BADGE_IDS = new Set([
     'beat_your_best',
@@ -283,7 +286,7 @@
       notifyProfile: true
     });
     revealStage = 3;
-    if (!reducedMotion && !skipRevealRequested) await sleep(480);
+    if (!reducedMotion && !skipRevealRequested) await sleep(480 * REVEAL_PACE);
     if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
 
     freshReveal = true;
@@ -295,7 +298,7 @@
       const progress = step / scoreSteps;
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       displayScore = Math.round(scoreTarget * easedProgress);
-      if (!reducedMotion && !skipRevealRequested) await sleep(45);
+      if (!reducedMotion && !skipRevealRequested) await sleep(45 * REVEAL_PACE);
       if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
     }
     displayScore = scoreTarget;
