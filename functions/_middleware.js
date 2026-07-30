@@ -10,7 +10,7 @@ const LOGIN_HTML = `<!doctype html>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>Chromadie — Private preview</title>
+    <title>Chromadie — Site under maintenance</title>
     <style>
       :root {
         color-scheme: dark;
@@ -94,12 +94,12 @@ const LOGIN_HTML = `<!doctype html>
   </head>
   <body>
     <main>
-      <h1>Private preview</h1>
-      <p>Enter the preview password to visit this live Pages deployment.</p>
+      <h1>Site is under maintenance</h1>
+      <p>Enter the access password to continue.</p>
       {{ERROR}}
       <form method="post" action="/__preview-login">
         <input type="hidden" name="returnTo" value="{{RETURN_TO}}">
-        <label for="password">Preview password</label>
+        <label for="password">Access password</label>
         <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
         <button type="submit">Continue</button>
       </form>
@@ -113,11 +113,11 @@ const MAINTENANCE_HTML = `<!doctype html>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>Chromadie — Maintenance</title>
+    <title>Chromadie — Site under maintenance</title>
   </head>
   <body style="font-family:system-ui;text-align:center;padding:20vh 2rem;background:#101010;color:#f4f1eb">
-    <h1>Chromadie is taking a short break.</h1>
-    <p>Preview access has not been configured yet.</p>
+    <h1>Site is under maintenance</h1>
+    <p>Access is not configured yet.</p>
   </body>
 </html>`;
 
@@ -162,7 +162,7 @@ async function handleLogin(request, password) {
   try {
     form = await request.formData();
   } catch {
-    return loginResponse("/", "Enter the preview password to continue.", 400);
+    return loginResponse("/", "Enter the access password to continue.", 400);
   }
 
   const candidate = form.get("password");
