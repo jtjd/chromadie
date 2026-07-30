@@ -393,7 +393,7 @@
 
       {#if !previewMode && hasProfileMore}
         <button type="button" class="profile-shell__more-cue" aria-controls="profile-more" on:click={scrollToProfileMore}>
-          <span>Explore profile</span>
+          <span class="profile-shell__more-cue-label">Explore profile</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
         </button>
       {/if}
@@ -907,7 +907,8 @@
   }
 
   .profile-shell__approved-main {
-    flex: 1 0 auto;
+    flex: 0 0 auto;
+    min-height: calc(100dvh - 4.75rem);
     display: flex;
     min-height: 0;
     flex-direction: column;
@@ -916,25 +917,26 @@
   }
 
   .profile-shell__more-cue {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.65rem;
+    display: grid;
+    place-items: center;
     align-self: center;
-    margin: 0.75rem auto 0;
-    padding: 0.6rem 0.85rem;
-    border: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--profile-accent) 42%, var(--color-line-subtle));
-    background: transparent;
+    width: 2.9rem;
+    height: 2.9rem;
+    margin: -3.5rem auto 0;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--profile-accent) 38%, var(--color-line-subtle));
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-canvas-deep) 72%, transparent);
     color: color-mix(in srgb, var(--profile-accent) 68%, white);
     cursor: pointer;
-    font: 700 0.66rem / 1.2 var(--font-mono-stack);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    box-shadow: 0 0 1.5rem color-mix(in srgb, var(--profile-accent) 14%, transparent);
+    transition: transform 160ms ease, border-color 160ms ease, color 160ms ease;
   }
 
-  .profile-shell__more-cue:hover { color: var(--color-ink-strong); border-color: var(--profile-accent); }
+  .profile-shell__more-cue:hover { color: var(--color-ink-strong); border-color: var(--profile-accent); transform: translateY(0.2rem); }
   .profile-shell__more-cue:focus-visible { outline: 2px solid var(--profile-accent); outline-offset: 4px; border-radius: var(--radius-sm); }
-  .profile-shell__more-cue-arrow { font-size: 1rem; line-height: 0.8; }
+  .profile-shell__more-cue-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .profile-shell__more-cue-arrow { font-size: 1.35rem; line-height: 1; }
   .profile-shell__more {
     display: flex;
     min-height: 100dvh;
@@ -1069,7 +1071,7 @@
     .profile-shell__approved-canvas { display: flex; flex-direction: column; min-height: calc(100dvh - 3.85rem); padding: clamp(3.75rem, 9vh, 5rem) 0 1.5rem; }
     .profile-shell__approved-main { width: 100%; flex: 0 0 auto; }
     .profile-shell__opening.profile-shell__approved-opening { align-self: stretch; }
-    .profile-shell__more-cue { margin-top: 1.25rem; }
+    .profile-shell__more-cue { margin-top: -3.25rem; }
     .profile-shell__more { min-height: 100svh; padding-block: 4rem; }
     .profile-shell__approved-game { margin-top: 1.75rem; padding-inline: 0.25rem; }
     .profile-shell__approved-featured { margin-top: 1.25rem; padding-inline: 0.25rem; }
