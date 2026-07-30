@@ -64,6 +64,7 @@ export function createDefaultProfileConfig(signatureColor = '#8B7CF6') {
     links: [],
     avatar_path: null,
     background_path: null,
+    audio_path: null,
     spotify_type: null,
     spotify_id: null
   };

@@ -1,7 +1,7 @@
-# Phase 14 Report — Avatars, Backgrounds, and Spotify
+# Phase 14 Report — Profile Expression and Staff Audio Alpha
 
-**Status:** implementation complete; expression and storage-size migrations
-are applied to the linked project. The public gate remains active.
+**Status:** implementation complete locally; the staff-audio migration is
+pending linked-project release. The public gate remains active.
 
 ## Scope delivered
 
@@ -21,6 +21,9 @@ are applied to the linked project. The public gate remains active.
   composition was not expanded.
 - Added profile-deletion Storage cleanup and focused SQL/client regression
   coverage.
+- Added a staff-only hosted MP3 alpha with one owner-scoped object per staff
+  profile, 1 MiB storage limit, 60-second client duration limit, server-side
+  staff enforcement, looping playback, and autoplay fallback controls.
 
 ## Verification
 
@@ -29,12 +32,12 @@ successfully after the complete local migration chain, and the database
 security audit passed Storage ownership, RLS, bounded RPC, public projection,
 invalid-input, and account-cleanup checks.
 
-Focused tests: **133/133 passed**.
+Focused and full tests: **136/136 passed**.
 
 Performance budget passed:
 
-- JavaScript: 619.64 kB / 625 kB
-- CSS: 294.81 kB / 295 kB
+- JavaScript: 622.55 kB / 625 kB
+- CSS: 294.88 kB / 295 kB
 - HTML shell: 5.22 kB / 12 kB
 
 The Vite chunk-size advisory remains non-blocking; the repository performance
@@ -47,9 +50,11 @@ visually.
 
 ## Release boundary
 
-The linked project records both `20260730110000_profile_expression_media.sql`
-and `20260730120000_profile_media_size_limits.sql`. The latter enforces the
-256 KiB avatar and 1 MiB background stored-object limits. The public gate
+The linked project records `20260730110000_profile_expression_media.sql` and
+`20260730120000_profile_media_size_limits.sql`. The new
+`20260730150000_staff_profile_audio.sql` migration is additive and passed the
+fresh local reset, schema lint, and database-security audit; it has not been
+applied to the linked project in this implementation pass. The public gate
 remains active.
 
 **Recommendation:** GO for local review and staged deployment preparation;

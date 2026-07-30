@@ -33,6 +33,7 @@
       ...next,
       avatar_path: current.avatar_path ?? next.avatar_path ?? null,
       background_path: current.background_path ?? next.background_path ?? null,
+      audio_path: current.audio_path ?? next.audio_path ?? null,
       spotify_type: current.spotify_type ?? next.spotify_type ?? null,
       spotify_id: current.spotify_id ?? next.spotify_id ?? null
     };
@@ -145,6 +146,7 @@
           profileId={context.profileId}
           config={context.profileConfig}
           fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)}
+          staff={Boolean(context.targetProfile?.is_staff)}
           on:expressionchange={updateExpression}
         />
         <ProfileCosmeticsEditor

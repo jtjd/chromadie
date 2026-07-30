@@ -323,7 +323,9 @@
   $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
-  $: showExpression = Boolean(effectiveProfileConfig.spotify_type && effectiveProfileConfig.spotify_id)
+  $: audioSrc = getProfileMediaUrl(effectiveProfileConfig.audio_path, mediaCacheKey);
+  $: showExpression = Boolean(audioSrc)
+    || Boolean(effectiveProfileConfig.spotify_type && effectiveProfileConfig.spotify_id)
     || PROFILE_MUSIC_ENABLED
     || (import.meta.env.DEV && visualFixture === 'music');
   $: composition = getProfileComposition(effectiveProfileConfig, {
@@ -410,7 +412,7 @@
       {#if !previewMode && showExpression}
         <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
           <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
-            <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={dailyAccentColor} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} />
+            <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={dailyAccentColor} audioSrc={audioSrc} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} />
           </div>
         </div>
       {/if}

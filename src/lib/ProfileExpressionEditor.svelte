@@ -1,23 +1,26 @@
 <script>
   import { onDestroy, createEventDispatcher } from 'svelte';
   import { supabase } from './supabase.js';
-  import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
+  import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_AUDIO_RULES, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import { processProfileImage } from './profileMediaProcessing.js';
+  import { processProfileImage, validateProfileAudioDuration } from './profileMediaProcessing.js';
   import Module from './foundation/Module.svelte';
   import Media from './foundation/Media.svelte';
 
   export let profileId = null;
   export let config = {};
   export let fallbackInitial = '✦';
+  export let staff = false;
 
   const dispatch = createEventDispatcher();
   let expression = normalizeProfileExpression();
   let syncedKey = '';
   let avatarInput;
   let backgroundInput;
+  let audioInput;
   let avatarPreviewSrc = '';
   let backgroundPreviewSrc = '';
+  let audioPreviewSrc = '';
   let spotifyUrl = '';
   let busy = false;
   let status = '';
@@ -42,6 +45,7 @@
   $: syncIncomingExpression(incomingExpression, incomingKey);
   $: avatarSrc = avatarPreviewSrc || getProfileMediaUrl(expression.avatar_path, mediaCacheKey);
   $: backgroundSrc = backgroundPreviewSrc || getProfileMediaUrl(expression.background_path, mediaCacheKey);
+  $: audioSrc = audioPreviewSrc || getProfileMediaUrl(expression.audio_path, mediaCacheKey);
 
   function formatInputLimit(bytes) {
     const megabytes = bytes / (1024 * 1024);
@@ -229,9 +233,78 @@
     }
   }
 
+  async function handleAudioChange(event) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (!file || !profileId || !staff || busy) return;
+
+    busy = true;
+    setFeedback('', 'Checking the audio…');
+    try {
+      const validationError = await validateProfileAudioDuration(file);
+      if (validationError) throw new Error(validationError);
+
+      const storedPath = buildProfileStoragePath('audio', profileId);
+      const reference = getProfileStorageRef(storedPath);
+      if (!reference) throw new Error('The audio path could not be prepared.');
+
+      const objectUrl = URL.createObjectURL(file);
+      if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
+      audioPreviewSrc = objectUrl;
+      const { error: uploadError } = await supabase.storage
+        .from(reference.bucket)
+        .upload(reference.objectPath, file, {
+          cacheControl: '3600',
+          contentType: 'audio/mpeg',
+          upsert: true
+        });
+      if (uploadError) throw new Error(uploadError.message || 'The audio could not be uploaded.');
+
+      const { data, error: rpcError } = await supabase.rpc('update_my_profile_audio', { p_audio_path: storedPath });
+      if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The audio could not be saved.');
+      expression = normalizeProfileExpression({ ...expression, audio_path: data.audio_path });
+      syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
+      mediaCacheKey = String(Date.now());
+      dispatch('expressionchange', { ...expression });
+      setFeedback('', `Profile audio saved. It will autoplay when the browser permits (${Math.round(file.size / 1024)} KB).`);
+    } catch (audioError) {
+      setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be saved.');
+      if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
+      audioPreviewSrc = '';
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function removeAudio() {
+    if (!expression.audio_path || !staff || busy) return;
+    const previousPath = expression.audio_path;
+    busy = true;
+    setFeedback('', 'Removing profile audio…');
+    try {
+      const { data, error: rpcError } = await supabase.rpc('update_my_profile_audio', { p_audio_path: null });
+      if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The audio could not be removed.');
+      const reference = getProfileStorageRef(previousPath);
+      if (reference) {
+        const { error: removeError } = await supabase.storage.from(reference.bucket).remove([reference.objectPath]);
+        if (removeError) throw new Error(removeError.message || 'The audio reference was removed, but the file could not be deleted.');
+      }
+      expression = normalizeProfileExpression({ ...expression, audio_path: null });
+      syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
+      mediaCacheKey = String(Date.now());
+      dispatch('expressionchange', { ...expression });
+      setFeedback('', 'Profile audio removed.');
+    } catch (audioError) {
+      setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be removed.');
+    } finally {
+      busy = false;
+    }
+  }
+
   onDestroy(() => {
     revokeAvatarPreview();
     revokeBackgroundPreview();
+    if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
   });
 </script>
 
@@ -280,6 +353,29 @@
       </div>
     </div>
   </div>
+
+  {#if staff}
+    <div class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
+      <div>
+        <p class="profile-expression-editor__eyebrow">Staff alpha</p>
+        <h3>Profile audio</h3>
+        <p class="profile-expression-editor__section-copy">Upload one short MP3. It loops after playback starts and attempts autoplay on public profiles when the browser allows it.</p>
+      </div>
+      <div style="display:grid;gap:.75rem;max-width:42rem">
+        {#if audioSrc}
+          <audio src={audioSrc} controls loop preload="metadata" aria-label="Profile audio preview"></audio>
+        {:else}
+          <p style="margin:0;color:var(--color-ink-muted)">No profile audio configured.</p>
+        {/if}
+        <p>MP3 only · up to 1 MB · up to {PROFILE_AUDIO_RULES.maxDurationSeconds} seconds.</p>
+        <div class="profile-expression-editor__actions">
+          <input bind:this={audioInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={handleAudioChange} />
+          <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => audioInput?.click()}>{expression.audio_path ? 'Replace audio' : 'Upload audio'}</button>
+          {#if expression.audio_path}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAudio}>Remove</button>{/if}
+        </div>
+      </div>
+    </div>
+  {/if}
 
   <div class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
     <div>

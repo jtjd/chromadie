@@ -2,7 +2,8 @@ export const PROFILE_EXPRESSION_TYPES = Object.freeze(['track', 'playlist', 'alb
 
 export const PROFILE_STORAGE_BUCKETS = Object.freeze({
   avatar: 'avatars',
-  background: 'backgrounds'
+  background: 'backgrounds',
+  audio: 'profile_audio'
 });
 
 const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
@@ -28,6 +29,7 @@ export function normalizeProfileExpression(value = {}) {
   return {
     avatar_path: normalizeStoredPath(source.avatar_path, PROFILE_STORAGE_BUCKETS.avatar, 'avatar.webp'),
     background_path: normalizeStoredPath(source.background_path, PROFILE_STORAGE_BUCKETS.background, 'background.webp'),
+    audio_path: normalizeStoredPath(source.audio_path, PROFILE_STORAGE_BUCKETS.audio, 'profile.mp3'),
     spotify_type: spotifyType && spotifyId ? spotifyType : null,
     spotify_id: spotifyType && spotifyId ? spotifyId : null
   };
@@ -68,8 +70,20 @@ export function getSpotifyEmbedUrl(type, id) {
 }
 
 export function buildProfileStoragePath(kind, userId) {
-  const bucket = kind === 'avatar' ? PROFILE_STORAGE_BUCKETS.avatar : kind === 'background' ? PROFILE_STORAGE_BUCKETS.background : '';
-  const filename = kind === 'avatar' ? 'avatar.webp' : kind === 'background' ? 'background.webp' : '';
+  const bucket = kind === 'avatar'
+    ? PROFILE_STORAGE_BUCKETS.avatar
+    : kind === 'background'
+      ? PROFILE_STORAGE_BUCKETS.background
+      : kind === 'audio'
+        ? PROFILE_STORAGE_BUCKETS.audio
+        : '';
+  const filename = kind === 'avatar'
+    ? 'avatar.webp'
+    : kind === 'background'
+      ? 'background.webp'
+      : kind === 'audio'
+        ? 'profile.mp3'
+        : '';
   if (!bucket || !filename || !new RegExp(`^${UUID_PATTERN}$`, 'i').test(String(userId || ''))) return '';
   return `${bucket}/${String(userId).toLowerCase()}/${filename}`;
 }
@@ -84,6 +98,10 @@ export function getProfileStorageRef(storedPath) {
     ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.background})/(${UUID_PATTERN})/(background\\.webp)$`, 'i'))
     : null;
   if (backgroundMatch) return { bucket: PROFILE_STORAGE_BUCKETS.background, objectPath: `${backgroundMatch[2]}/${backgroundMatch[3]}` };
+  const audioMatch = typeof storedPath === 'string'
+    ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.audio})/(${UUID_PATTERN})/(profile\\.mp3)$`, 'i'))
+    : null;
+  if (audioMatch) return { bucket: PROFILE_STORAGE_BUCKETS.audio, objectPath: `${audioMatch[2]}/${audioMatch[3]}` };
   return null;
 }
 
@@ -100,4 +118,10 @@ export const PROFILE_IMAGE_RULES = Object.freeze({
     outputLabel: '1 MB',
     accept: Object.freeze(['image/jpeg', 'image/png', 'image/webp'])
   })
+});
+
+export const PROFILE_AUDIO_RULES = Object.freeze({
+  maxInputBytes: 1024 * 1024,
+  maxDurationSeconds: 60,
+  accept: Object.freeze(['audio/mpeg'])
 });

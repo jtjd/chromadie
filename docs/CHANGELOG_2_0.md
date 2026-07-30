@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-07-30 — Staff profile audio alpha
+
+- Added one bounded MP3 profile-audio upload for staff accounts.
+- Added looping playback with autoplay attempted by default and native controls
+  when browser policy requires interaction.
+- Kept audio out of non-staff profiles and preserved the existing profile
+  composition.
+
 ## 2026-07-30 — Faster profile loading
 
 - Removed the serial profile-data request waterfall by loading independent

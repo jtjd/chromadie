@@ -989,7 +989,9 @@ SELECT pg_temp.audit_assert(
 INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
 VALUES
   (gen_random_uuid(), 'avatars', '10000000-0000-0000-0000-000000000001/avatar.webp', '10000000-0000-0000-0000-000000000001', '{"mimetype":"image/webp"}'::jsonb),
-  (gen_random_uuid(), 'backgrounds', '10000000-0000-0000-0000-000000000001/background.webp', '10000000-0000-0000-0000-000000000001', '{"mimetype":"image/webp"}'::jsonb);
+  (gen_random_uuid(), 'backgrounds', '10000000-0000-0000-0000-000000000001/background.webp', '10000000-0000-0000-0000-000000000001', '{"mimetype":"image/webp"}'::jsonb),
+  (gen_random_uuid(), 'profile_audio', '10000000-0000-0000-0000-000000000001/profile.mp3', '10000000-0000-0000-0000-000000000001', '{"mimetype":"audio/mpeg"}'::jsonb);
+UPDATE public.profiles SET is_staff = true WHERE id = '10000000-0000-0000-0000-000000000001';
 INSERT INTO audit_results VALUES (
   'expression_save',
   public.update_my_profile_expression(
@@ -1006,6 +1008,16 @@ SELECT pg_temp.audit_assert(
    FROM audit_results WHERE name = 'expression_save'),
   'valid profile expression values were not saved'
 );
+INSERT INTO audit_results VALUES (
+  'audio_save',
+  public.update_my_profile_audio('profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->>'audio_path' = 'profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3'
+   FROM audit_results WHERE name = 'audio_save'),
+  'valid staff profile audio was not saved'
+);
 SELECT pg_temp.audit_expect_error(
   $expression_path$SELECT public.update_my_profile_expression(
     'avatars/10000000-0000-0000-0000-000000000002/avatar.webp', NULL, NULL
@@ -1018,10 +1030,25 @@ SELECT pg_temp.audit_expect_error(
   )$expression_spotify$,
   'profile expression RPC accepted an arbitrary Spotify host'
 );
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',
+  true
+);
+SELECT pg_temp.audit_expect_error(
+  $staff_audio$SELECT public.update_my_profile_audio(NULL)$staff_audio$,
+  'non-staff account received the staff-only profile audio boundary'
+);
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
+  true
+);
 INSERT INTO audit_results VALUES ('config_public_expression', public.get_public_profile_configuration('10000000-0000-0000-0000-000000000001'));
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'avatar_path' = 'avatars/10000000-0000-0000-0000-000000000001/avatar.webp'
       AND payload->>'background_path' = 'backgrounds/10000000-0000-0000-0000-000000000001/background.webp'
+      AND payload->>'audio_path' = 'profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3'
       AND payload->>'spotify_type' = 'track'
       AND payload->>'spotify_id' = '1234567890123456789012'
       AND NOT (payload ? 'draft')
@@ -1074,6 +1101,7 @@ SELECT pg_temp.audit_assert(
     SELECT 1 FROM storage.objects
     WHERE (bucket_id = 'avatars' AND name = '10000000-0000-0000-0000-000000000001/avatar.webp')
        OR (bucket_id = 'backgrounds' AND name = '10000000-0000-0000-0000-000000000001/background.webp')
+       OR (bucket_id = 'profile_audio' AND name = '10000000-0000-0000-0000-000000000001/profile.mp3')
   ),
   'profile expression storage objects did not follow account deletion'
 );

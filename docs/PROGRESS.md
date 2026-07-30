@@ -22,6 +22,9 @@ to a browser tab.
 Profile hydration now requests independent projections in parallel and caches
 the static achievement catalog to reduce tab-return and first-profile latency.
 
+Staff accounts now have an alpha-only hosted MP3 profile-audio path with
+server-enforced storage limits, looping playback, and autoplay fallback.
+
 ## Completed
 
 - Product direction agreed.

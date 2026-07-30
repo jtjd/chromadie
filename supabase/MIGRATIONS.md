@@ -79,6 +79,15 @@ Phase 14 migrations:
   linked project. Do not edit applied migrations or introduce a separate media
   service for this phase.
 
+Staff audio alpha migration:
+
+- `migrations/20260730150000_staff_profile_audio.sql` adds the bounded
+  `audio_path` field, the public `profile_audio` bucket, exact staff-only
+  upload/replace/delete policies, the authenticated `update_my_profile_audio`
+  RPC, staff-only public projection, and account-deletion cleanup. It is an
+  alpha-only hosted MP3 path intended for future paid expression access; it
+  does not alter Spotify or image contracts.
+
 Version-controlled cron schedule:
 
 - `update_cotw()` runs every Monday at `00:00 UTC`.

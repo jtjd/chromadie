@@ -121,6 +121,24 @@ The database security audit covers unauthenticated/other-owner Storage access,
 invalid paths and Spotify hosts, public projection bounds, fixed permissions,
 and deletion cleanup. The migration is currently local-only.
 
+## Staff profile audio alpha boundary
+
+Migration `20260730150000_staff_profile_audio.sql` adds one bounded
+`audio_path` to profile configuration and a public `profile_audio` bucket.
+The object path is exactly `profile_audio/{auth.uid()}/profile.mp3`, the bucket
+accepts only `audio/mpeg` objects up to 1 MiB, and Storage insert/update/delete
+policies require the current profile's `is_staff = true`. Public reads are
+limited to the bucket and the public profile projection returns the path only
+while the profile is currently staff.
+
+`update_my_profile_audio(text)` is a `SECURITY DEFINER` RPC with fixed
+`public` search path. It derives identity from `auth.uid()`, requires staff
+status, validates the exact path and existing MIME-tagged object, and returns
+only the bounded audio path. The profile deletion media trigger removes the
+owned MP3 with the existing account cleanup boundary. This is an alpha access
+gate, not a payment or entitlement system; future paid access must replace the
+staff predicate through a separately reviewed migration.
+
 ## Public profile story boundary
 
 Migration `20260725110000_profile_story.sql` adds
