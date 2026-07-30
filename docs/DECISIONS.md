@@ -2,6 +2,15 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-07-30 — Keep secondary profile data on an intentional second page
+
+**Status:** accepted and implemented
+
+The opening profile remains a focused identity card. When a profile has
+secondary content enabled, an Explore profile cue leads to a centered,
+full-height continuation containing the roll, archive, expression, and deeper
+profile data. Profiles without secondary content do not show the cue.
+
 ## 2026-07-30 — Keep hosted profile audio staff-only during alpha
 
 **Status:** accepted and implemented

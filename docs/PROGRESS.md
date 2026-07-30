@@ -750,6 +750,14 @@ the remaining Phase 11 boundary.
   both expression migrations are applied to the linked database; the public
   gate remains active for testing.
 
+## 2026-07-30 — Scrollable profile continuation
+
+- Kept the opening identity card visually focused and moved secondary profile
+  content behind an intentional full-height Explore profile continuation.
+- Centered the visitor daily-color presentation and preserved roll, archive,
+  expression, achievement, and story data below the fold.
+- Hide the continuation cue when no secondary profile content is enabled.
+
 ## 2026-07-30 — Profile appearance editor consolidation
 
 - Moved owned-cosmetic preview and equip controls into `/profile/settings`.

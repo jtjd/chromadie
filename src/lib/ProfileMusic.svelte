@@ -114,8 +114,8 @@
   .profile-music { display: flex; align-items: center; gap: 1rem; min-height: 4.375rem; padding: 0.75rem 1rem; border: 1px solid rgba(230,238,255,0.14); border-radius: 1rem; background: rgba(255,255,255,0.055); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 1.5rem 3rem rgba(0,0,0,0.18); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
   .profile-music--spotify { display: block; min-height: 0; padding: 0; overflow: hidden; }
   .profile-music--spotify iframe { display: block; width: 100%; height: 152px; border: 0; }
-  .profile-music--audio { justify-content: flex-start; min-height: 0; padding: 0.5rem 0; border: 0; background: transparent; box-shadow: none; }
-  .profile-audio-control { display: flex; align-items: center; gap: 0.45rem; }
+  .profile-music--audio { position: fixed; z-index: 6; left: clamp(1rem, 3vw, 2rem); bottom: max(1rem, env(safe-area-inset-bottom)); justify-content: flex-start; min-height: 0; padding: 0.5rem 0; border: 0; background: transparent; box-shadow: none; pointer-events: none; }
+  .profile-audio-control { display: flex; align-items: center; gap: 0.45rem; pointer-events: auto; }
   .profile-audio-control__toggle, .profile-audio-control__volume { display: inline-flex; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb, var(--profile-accent) 58%, rgba(230,238,255,0.2)); background: color-mix(in srgb, var(--profile-accent) 13%, rgba(9,11,20,0.88)); color: color-mix(in srgb, var(--profile-accent) 84%, white); box-shadow: 0 0 1.2rem color-mix(in srgb, var(--profile-accent) 18%, transparent), inset 0 1px 0 rgba(255,255,255,0.08); }
   .profile-audio-control__toggle { display: grid; place-items: center; width: 3.1rem; height: 3.1rem; padding: 0; border-radius: 50%; cursor: pointer; transition: transform 160ms ease, background 160ms ease; }
   .profile-audio-control__toggle:hover { transform: scale(1.06); background: color-mix(in srgb, var(--profile-accent) 25%, rgba(9,11,20,0.92)); }

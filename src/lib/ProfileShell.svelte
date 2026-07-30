@@ -344,6 +344,7 @@
   $: rollModule = activeModules.find(module => module.id === 'roll') || { size: 'wide' };
   $: layoutVariant = effectiveProfileConfig.layoutVariant;
   $: showRoll = isOwnProfile || getProfileRollVisible(effectiveProfileConfig);
+  $: hasProfileMore = showRoll || showExpression || (getProfileStoryVisible(effectiveProfileConfig) && secondaryModules.length > 0);
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
   $: pinnedAchievements = (targetProfile?.equipped_badges || []).map(getAchievement);
   $: recentScores = targetScores.slice(0, 6);
@@ -390,7 +391,7 @@
         </div>
       </div>
 
-      {#if !previewMode}
+      {#if !previewMode && hasProfileMore}
         <button type="button" class="profile-shell__more-cue" aria-controls="profile-more" on:click={scrollToProfileMore}>
           <span>Explore profile</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
@@ -898,15 +899,15 @@
   .profile-shell__approved-canvas {
     position: relative;
     z-index: 1;
-    display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
+    display: flex;
+    flex-direction: column;
     align-items: stretch;
     min-height: calc(100dvh - 4.75rem);
     padding: 0 0 1.5rem;
   }
 
   .profile-shell__approved-main {
-    grid-row: 1;
+    flex: 1 0 auto;
     display: flex;
     min-height: 0;
     flex-direction: column;
@@ -934,7 +935,16 @@
   .profile-shell__more-cue:hover { color: var(--color-ink-strong); border-color: var(--profile-accent); }
   .profile-shell__more-cue:focus-visible { outline: 2px solid var(--profile-accent); outline-offset: 4px; border-radius: var(--radius-sm); }
   .profile-shell__more-cue-arrow { font-size: 1rem; line-height: 0.8; }
-  .profile-shell__more { scroll-margin-top: 1.5rem; }
+  .profile-shell__more {
+    display: flex;
+    min-height: 100dvh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    padding: clamp(4rem, 12vh, 8rem) 0 clamp(4rem, 10vh, 7rem);
+    scroll-margin-top: 1.5rem;
+  }
 
   .profile-shell__opening.profile-shell__approved-opening {
     width: min(100%, 46rem);
@@ -975,6 +985,20 @@
     margin-top: clamp(1.5rem, 4vw, 2.5rem);
     padding: 1.25rem 0.5rem 0;
     border-top: 1px solid color-mix(in srgb, var(--profile-accent) 24%, var(--color-line-subtle));
+  }
+
+  .profile-shell__more .profile-shell__approved-game {
+    margin-top: 0;
+  }
+
+  .profile-shell__more .profile-shell__approved-game :global(.today-color) {
+    width: min(100%, 34rem);
+    margin: 0 auto;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--color-line-subtle);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--surface-panel) 62%, transparent);
+    box-shadow: 0 1.5rem 4rem rgba(0,0,0,0.18);
   }
 
   .profile-shell__more > .profile-shell__approved-game:first-child { margin-top: 0; }
@@ -1046,6 +1070,7 @@
     .profile-shell__approved-main { width: 100%; flex: 0 0 auto; }
     .profile-shell__opening.profile-shell__approved-opening { align-self: stretch; }
     .profile-shell__more-cue { margin-top: 1.25rem; }
+    .profile-shell__more { min-height: 100svh; padding-block: 4rem; }
     .profile-shell__approved-game { margin-top: 1.75rem; padding-inline: 0.25rem; }
     .profile-shell__approved-featured { margin-top: 1.25rem; padding-inline: 0.25rem; }
     .profile-shell__approved-supporting { margin-top: clamp(3rem, 8vh, 4.5rem); }

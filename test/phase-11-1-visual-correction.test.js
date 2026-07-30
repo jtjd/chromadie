@@ -29,8 +29,8 @@ test('phase 11.1 production composition uses a full atmosphere and intentional a
 
   assert.match(shell, /PROFILE_MUSIC_ENABLED/);
   assert.match(shell, /showExpression/);
-  assert.match(shell, /grid-template-rows: minmax\(0, 1fr\) auto/);
-  assert.match(shell, /grid-row: 2/);
+  assert.match(shell, /flex-direction: column/);
+  assert.match(shell, /profile-shell__more/);
   assert.match(atmosphere, /position: fixed/);
   assert.match(atmosphere, /width: 100vw/);
   assert.match(atmosphere, /height: 100dvh/);

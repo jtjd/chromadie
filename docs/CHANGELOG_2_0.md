@@ -655,6 +655,14 @@ presentation without changing its data or gameplay authority.
 - No production migration, deployment, public-gate change, Cloudflare media
   service, OAuth, hosted audio, or custom player was added.
 
+## 2026-07-30 — Scrollable profile continuation
+
+- Added an optional full-height profile continuation so the opening identity
+  card stays sparse while roll, daily color, achievements, archive, audio, and
+  story details remain available below the fold.
+- Added a centered visitor daily-color treatment and an Explore profile cue
+  that appears only when secondary content is configured.
+
 ## 2026-07-30 — Consolidate cosmetic editing in profile settings
 
 - Added an owned-cosmetic appearance editor to profile settings with live
