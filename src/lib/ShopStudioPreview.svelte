@@ -69,7 +69,7 @@
         {/if}
         <IdentityCard
           {username}
-          displayName={account.display_name || ''}
+          displayName={username}
           bio={account.bio || ''}
           bioFallback="No bio added yet."
           links={previewLinks}

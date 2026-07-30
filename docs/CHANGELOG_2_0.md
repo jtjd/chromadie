@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-07-30 — Username is the display name
+
+- Removed editable display names from profile settings.
+- Profile cards and the cosmetics preview consistently render the account
+  username as the display name.
+- Preserved bio editing and normalized legacy display-name values through an
+  additive database migration.
+
 ## 2026-07-25 — Phase 0: Baseline and Safety
 
 Internal milestone; no user-visible redesign or product behavior change.

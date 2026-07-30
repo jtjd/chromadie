@@ -2,6 +2,15 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-07-30 — Use username as the public display name
+
+**Status:** accepted and implemented
+
+The account username is now the sole public display name. Profile settings
+continues to support an optional bio, but no longer offers a display-name
+editor. Existing display-name values are normalized to the username by an
+additive migration, and the identity RPC preserves that invariant.
+
 ## 2026-07-25 — Preserve live boundaries during Phase 0
 
 **Status:** accepted

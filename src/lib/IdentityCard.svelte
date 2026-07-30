@@ -49,7 +49,7 @@
     <div class="identity-card__copy">
       <div class="identity-card__name-row">
         <h1 id="identity-card-title" class={'identity-card__name ' + nameClass} style={nameStyle}>{safeDisplayName}</h1>
-        {#if founder || displayedBadges.length}
+        {#if staff || founder || displayedBadges.length}
           <div class="identity-card__badges" aria-label="Profile badges">
             {#if staff}<span class="identity-card__badge identity-card__badge--staff" title="Staff" aria-label="Staff badge">✦</span>{/if}
             {#if founder}<span class="identity-card__badge identity-card__badge--founder" title="Launch Edition" aria-label="Launch Edition badge">✦</span>{/if}

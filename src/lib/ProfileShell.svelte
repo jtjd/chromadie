@@ -274,9 +274,7 @@
   }
 
   $: username = targetProfile?.username || 'Unknown Player';
-  $: profileDisplayName = typeof targetProfile?.display_name === 'string'
-    ? targetProfile.display_name.trim().slice(0, 40)
-    : '';
+  $: profileDisplayName = username;
   $: isOwnProfile = previewMode
     ? false
     : ['owner', 'pre-roll'].includes(visualFixture)

@@ -99,7 +99,6 @@
       ...context,
       targetProfile: {
         ...context.targetProfile,
-        display_name: nextIdentity.displayName ?? null,
         bio: nextIdentity.bio ?? null
       }
     };
@@ -138,14 +137,14 @@
         {/if}
         <IdentityEditor
           profileId={context.profileId}
-          displayName={context.targetProfile?.display_name || ''}
+          username={context.targetProfile?.username || accountUsername}
           bio={context.targetProfile?.bio || ''}
           on:identitysaved={updateIdentity}
         />
         <ProfileExpressionEditor
           profileId={context.profileId}
           config={context.profileConfig}
-          fallbackInitial={(context.targetProfile?.display_name || context.targetProfile?.username || '✦').slice(0, 1)}
+          fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)}
           on:expressionchange={updateExpression}
         />
         <ProfileCosmeticsEditor

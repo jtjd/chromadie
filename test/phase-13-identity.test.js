@@ -48,7 +48,8 @@ test('identity values stay plain text in the public render contract', async () =
   assert.equal(normalizePublicIdentity({ displayName: dangerous, bio: dangerous }).displayName, dangerous);
   assert.match(identityCard, /\{bio\}/);
   assert.doesNotMatch(identityCard, /innerHTML|{@html}|marked\(|new Function|eval\s*\(/);
-  assert.match(identityEditor, /countIdentityCharacters\(draftDisplayName\)/);
+  assert.match(identityEditor, /export let username = ''/);
+  assert.doesNotMatch(identityEditor, /profile-display-name|draftDisplayName|Display name/);
   assert.match(identityEditor, /countIdentityCharacters\(draftBio\)/);
   assert.match(migration, /auth\.uid\(\)/);
   assert.match(migration, /UPDATE public\.profiles/);

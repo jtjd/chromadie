@@ -12,6 +12,9 @@ Supabase stack without changing the approved profile composition. The
 expression and storage-size migrations are applied to the linked database; the
 public gate remains active for testing.
 
+The profile identity editor now treats each account username as its display
+name and exposes only bio editing.
+
 ## Completed
 
 - Product direction agreed.

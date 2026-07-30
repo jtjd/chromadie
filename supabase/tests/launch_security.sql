@@ -514,11 +514,11 @@ INSERT INTO audit_results VALUES (
 );
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'username' = 'audit_recovery'
-      AND payload->>'display_name' = 'Renée ✦'
+      AND payload->>'display_name' = 'audit_recovery'
       AND payload->>'bio' = 'A quiet record of daily colors.'
       AND NOT (payload ? 'ep_spent')
    FROM audit_results WHERE name = 'identity_update')
-    AND (SELECT display_name = 'Renée ✦' AND bio = 'A quiet record of daily colors.'
+    AND (SELECT display_name = 'audit_recovery' AND bio = 'A quiet record of daily colors.'
          FROM public.profiles WHERE id = '10000000-0000-0000-0000-000000000002'),
   'identity update did not normalize and persist the authenticated projection'
 );
@@ -527,7 +527,7 @@ INSERT INTO audit_results VALUES (
   public.update_my_profile_identity('Renée ✦', 'A quiet record of daily colors.')
 );
 SELECT pg_temp.audit_assert(
-  (SELECT payload->>'display_name' = 'Renée ✦' AND payload->>'bio' = 'A quiet record of daily colors.'
+  (SELECT payload->>'display_name' = 'audit_recovery' AND payload->>'bio' = 'A quiet record of daily colors.'
    FROM audit_results WHERE name = 'identity_retry'),
   'identity retry was not idempotent'
 );
@@ -536,7 +536,7 @@ INSERT INTO audit_results VALUES (
   public.get_public_profile_identity('AUDIT_RECOVERY')
 );
 SELECT pg_temp.audit_assert(
-  (SELECT payload->>'display_name' = 'Renée ✦'
+  (SELECT payload->>'display_name' = 'audit_recovery'
       AND payload->>'bio' = 'A quiet record of daily colors.'
       AND NOT (payload ? 'ep_spent')
       AND NOT (payload ? 'reroll_shards')
