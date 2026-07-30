@@ -160,10 +160,25 @@ export async function onRequest(context) {
 
   const session = getCookie(request.headers.get("cookie"), COOKIE_NAME);
   if (session && await verifySession(session, password)) {
-    return context.next();
+    return uncachedPreviewResponse(await context.next());
   }
 
   return loginResponse(url.pathname + url.search);
+}
+
+function uncachedPreviewResponse(response) {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("text/html")) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set("cache-control", "no-store, no-cache, must-revalidate");
+  headers.set("x-robots-tag", "noindex, nofollow");
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
 }
 
 async function handleLogin(request, password) {

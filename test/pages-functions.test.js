@@ -46,6 +46,40 @@ test('preview gate leaves Cloudflare ACME validation reachable without opening t
   assert.equal(normalResponse.status, 503);
 });
 
+test('authenticated preview HTML is never cached between deployments', async () => {
+  const password = 'preview-test-password';
+  const loginResponse = await previewMiddleware({
+    request: new Request('https://chm.lol/__preview-login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ password, returnTo: '/profile/settings' })
+    }),
+    env: { PREVIEW_PASSWORD: password },
+    next: () => new Response('unused', { status: 500 })
+  });
+  const cookie = loginResponse.headers.get('set-cookie')?.split(';')[0];
+  assert.ok(cookie);
+
+  const previewResponse = await previewMiddleware({
+    request: new Request('https://chm.lol/profile/settings', {
+      headers: { cookie }
+    }),
+    env: { PREVIEW_PASSWORD: password },
+    next: () => new Response('<!doctype html><title>Current deployment</title>', {
+      status: 200,
+      headers: {
+        'content-type': 'text/html; charset=UTF-8',
+        'cache-control': 'public, max-age=300'
+      }
+    })
+  });
+
+  assert.equal(previewResponse.status, 200);
+  assert.equal(previewResponse.headers.get('cache-control'), 'no-store, no-cache, must-revalidate');
+  assert.equal(previewResponse.headers.get('x-robots-tag'), 'noindex, nofollow');
+  assert.match(await previewResponse.text(), /Current deployment/);
+});
+
 test('profile route rejects PostgREST wildcard/filter input without an API request', async () => {
   const response = await renderProfileRoute({
     request: new Request('https://chromadie.com/u/%25'),
