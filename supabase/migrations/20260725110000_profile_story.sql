@@ -5,7 +5,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.profile_events (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id uuid PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
   user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   event_key text NOT NULL,
   event_type text NOT NULL,

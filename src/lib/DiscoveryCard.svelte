@@ -3,6 +3,7 @@
   import { addToast } from './stores';
   import { getLbTheme, getNameEffect, getOrbShape, getProfileBorder, getStaffTitleText, getTitleText } from './cosmetics';
   import { getPublicProfilePath, getProfileShareText } from './discoveryData.js';
+  import { getAppOrigin } from './authUrls.js';
   import { trackProductEvent } from './productAnalytics.js';
 
   export let item;
@@ -48,7 +49,7 @@
   async function shareProfile(event) {
     event?.preventDefault?.();
     event?.stopPropagation?.();
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const origin = getAppOrigin();
     const text = getProfileShareText(item, origin);
     const url = profilePath && origin ? new URL(profilePath, origin).toString() : profilePath;
     if (!text || !url) return;
@@ -131,11 +132,11 @@
   .discovery-card:hover { transform: translateY(-2px); border-color: rgba(139,124,246,0.52); box-shadow: 0 18px 34px rgba(0,0,0,0.23); }
   .discovery-card--featured { grid-column: span 2; padding: 1.3rem; border-color: rgba(241,196,15,0.42); background: radial-gradient(circle at 8% 0%, rgba(241,196,15,0.15), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(139,124,246,0.09)); }
   .discovery-card__topline, .discovery-card__actions, .discovery-card__stats, .discovery-card__name-line { display: flex; align-items: center; }
-  .discovery-card__topline { justify-content: space-between; gap: 0.75rem; color: var(--text-muted); font: 700 0.62rem/1.2 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+  .discovery-card__topline { justify-content: space-between; gap: 0.75rem; color: var(--text-muted); font: 700 0.62rem/1.2 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
   .discovery-card__eyebrow { color: #ffd34f; }
   .discovery-card__topline time { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; letter-spacing: 0.02em; text-transform: none; }
   .discovery-card__identity { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto; gap: 0.9rem; align-items: center; min-width: 0; }
-  .discovery-card__color { display: grid; place-items: center; width: 4.2rem; height: 4.2rem; border: 1px solid rgba(255,255,255,0.42); border-radius: 1.15rem; color: rgba(255,255,255,0.88); font: 800 0.56rem/1 'JetBrains Mono', monospace; text-decoration: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.16), 0 8px 18px rgba(0,0,0,0.2); }
+  .discovery-card__color { display: grid; place-items: center; width: 4.2rem; height: 4.2rem; border: 1px solid rgba(255,255,255,0.42); border-radius: 1.15rem; color: rgba(255,255,255,0.88); font: 800 0.56rem/1 var(--font-mono-stack); text-decoration: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.16), 0 8px 18px rgba(0,0,0,0.2); }
   .discovery-card__color:focus-visible, .discovery-card__name:focus-visible, .discovery-card__cta:focus-visible, .discovery-card__share:focus-visible, .discovery-card__icon-button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
   .discovery-card__color span { padding: 0.25rem; border-radius: 0.35rem; background: rgba(0,0,0,0.22); }
   .discovery-card__name-block { min-width: 0; }
@@ -144,22 +145,22 @@
   .discovery-card__name:hover { color: #fff; text-decoration: underline; text-underline-offset: 0.16em; }
   .discovery-card__subline { overflow: hidden; margin: 0.3rem 0 0; color: var(--text-muted); font-size: 0.72rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
   .discovery-card__score { display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; min-width: 5rem; text-align: right; }
-  .discovery-card__score strong { color: #ffd34f; font: 900 0.92rem/1 'JetBrains Mono', monospace; white-space: nowrap; }
-  .discovery-card__score span { color: var(--text-muted); font: 700 0.6rem/1 'JetBrains Mono', monospace; text-transform: uppercase; }
-  .discovery-card__stats { flex-wrap: wrap; gap: 0.45rem 0.8rem; padding-top: 0.75rem; border-top: 1px solid rgba(157,166,194,0.16); color: var(--text-muted); font: 600 0.68rem/1.2 'JetBrains Mono', monospace; }
+  .discovery-card__score strong { color: #ffd34f; font: 900 0.92rem/1 var(--font-mono-stack); white-space: nowrap; }
+  .discovery-card__score span { color: var(--text-muted); font: 700 0.6rem/1 var(--font-mono-stack); text-transform: uppercase; }
+  .discovery-card__stats { flex-wrap: wrap; gap: 0.45rem 0.8rem; padding-top: 0.75rem; border-top: 1px solid rgba(157,166,194,0.16); color: var(--text-muted); font: 600 0.68rem/1.2 var(--font-mono-stack); }
   .discovery-card__stats b { color: #e6eaff; }
   .discovery-card__hex { margin-left: auto; color: #e6eaff; }
   .discovery-card__actions { justify-content: space-between; gap: 0.75rem; margin-top: auto; }
   .discovery-card__cta { color: #c8c1ff; font-size: 0.78rem; font-weight: 800; text-decoration: none; }
   .discovery-card__cta:hover { color: #fff; }
   .discovery-card__secondary-actions { display: flex; align-items: center; gap: 0.4rem; }
-  .discovery-card__share, .discovery-card__icon-button { min-height: 2rem; border: 1px solid rgba(157,166,194,0.3); border-radius: 999px; background: rgba(255,255,255,0.04); color: var(--text-muted); cursor: pointer; font: 700 0.66rem/1 'JetBrains Mono', monospace; }
+  .discovery-card__share, .discovery-card__icon-button { min-height: 2rem; border: 1px solid rgba(157,166,194,0.3); border-radius: 999px; background: rgba(255,255,255,0.04); color: var(--text-muted); cursor: pointer; font: 700 0.66rem/1 var(--font-mono-stack); }
   .discovery-card__share { padding: 0.45rem 0.7rem; }
   .discovery-card__icon-button { width: 2rem; padding: 0; }
   .discovery-card__share:hover, .discovery-card__icon-button:hover, .discovery-card__icon-button.active { border-color: rgba(139,124,246,0.6); background: rgba(139,124,246,0.14); color: #fff; }
-  .title-chip { color: #d9cbff; font: 700 0.6rem/1 'JetBrains Mono', monospace; }
+  .title-chip { color: #d9cbff; font: 700 0.6rem/1 var(--font-mono-stack); }
   .staff-title { color: #ffd34f; }
-  .launch-edition-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.45rem; height: 1.05rem; padding: 0 0.25rem; border: 1px solid rgba(161, 92, 255, 0.55); border-radius: 999px; background: linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(161, 92, 255, 0.2)); color: #d8c7ff; font: 700 0.58rem/1 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .launch-edition-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.45rem; height: 1.05rem; padding: 0 0.25rem; border: 1px solid rgba(161, 92, 255, 0.55); border-radius: 999px; background: linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(161, 92, 255, 0.2)); color: #d8c7ff; font: 700 0.58rem/1 var(--font-mono-stack); letter-spacing: 0.05em; }
   @media (max-width: 700px) {
     .discovery-card--featured { grid-column: span 1; }
   }

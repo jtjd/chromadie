@@ -90,7 +90,7 @@
 .site-header .nav-links button.nav-link {
     background: none; border: none; color: var(--text-muted); text-decoration: none;
     font-weight: 500; font-size: 0.9rem; transition: color 0.2s; cursor: pointer; padding: 0;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-body-stack);
     min-height: 40px;
     padding: 0.25rem 0;
 }
@@ -221,7 +221,7 @@ h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; }
 /* =========================================
  *  GACHA ROLL ANIMATION UI
  * ========================================= */
-.rolling-hex { font-family: 'JetBrains Mono', monospace; font-size: 2rem; letter-spacing: 3px; margin: 15px 0; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.6); }
+.rolling-hex { font-family: var(--font-mono-stack); font-size: 2rem; letter-spacing: 3px; margin: 15px 0; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.6); }
 .scan-container { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin: 20px 0; }
 .scan-bar { height: 100%; width: 0%; background: var(--spectrum); background-size: 300% 100%; animation: spectrumFlow 2.5s linear infinite; box-shadow: 0 0 10px rgba(139, 124, 246, 0.4); transition: width 0.1s linear; }
 .rolling-badges-container { display: flex; flex-direction: column; align-items: center; gap: 10px; min-height: 60px; margin-top: 10px; }
@@ -318,5 +318,83 @@ h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; }
     .info-text {
         font-size: 0.95rem;
         margin-bottom: 24px;
+    }
+}
+
+/* Phase 12 site composition: supporting surfaces share the profile's
+ * atmosphere, quiet surfaces, and readable hierarchy without changing their
+ * domain-specific behavior. */
+.app-main--site {
+    color: var(--color-ink);
+}
+
+.app-main--site .container {
+    width: min(100%, 72rem);
+    max-width: none;
+    margin-top: clamp(2rem, 6vh, 5rem);
+    padding: clamp(1rem, 3vw, 2.5rem);
+}
+
+.app-main--site .game-container {
+    width: min(100%, 42rem);
+    max-width: none !important;
+    text-align: center;
+}
+
+.app-main--site .card {
+    background:
+        radial-gradient(circle at 80% 0%, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 40%),
+        linear-gradient(145deg, rgba(15, 20, 31, 0.9), rgba(7, 11, 18, 0.94));
+    border-color: rgba(225, 232, 255, 0.11);
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.app-main--site .card:hover {
+    border-color: color-mix(in srgb, var(--color-accent-bright) 34%, rgba(225, 232, 255, 0.11));
+}
+
+.app-main--site .info-text,
+.app-main--site .legal-section p,
+.app-main--site .legal-section li {
+    color: rgba(224, 230, 246, 0.7);
+}
+
+.app-main--site .discovery-hub {
+    width: min(72rem, calc(100% - 2rem));
+    max-width: none;
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.app-main--site .shop-page {
+    width: min(76rem, calc(100% - 2rem));
+    margin-top: clamp(2rem, 6vh, 5rem);
+}
+
+.app-main--site .shop-info-banner,
+.app-main--site .shop-foundations,
+.app-main--site .loadout-panel,
+.app-main--site .collection-hero,
+.app-main--site .catalog-card,
+.app-main--site .shop-status {
+    border-color: rgba(225, 232, 255, 0.11);
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.2);
+}
+
+.app-main--site .guide-page,
+.app-main--site .legal-page {
+    width: min(100%, 64rem);
+}
+
+@media (max-width: 600px) {
+    .app-main--site .container {
+        width: calc(100% - 1rem);
+        margin-top: 1.5rem;
+        padding: 0.75rem;
+    }
+
+    .app-main--site .discovery-hub,
+    .app-main--site .shop-page {
+        width: calc(100% - 1rem);
     }
 }

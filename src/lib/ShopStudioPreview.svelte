@@ -138,7 +138,7 @@
 
   .studio-eyebrow {
     color: #aaa5bd;
-    font: 700 0.64rem/1 'JetBrains Mono', monospace;
+    font: 700 0.64rem/1 var(--font-mono-stack);
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
@@ -264,7 +264,7 @@
   .profile-kicker-row,
   .profile-rank-row {
     color: rgba(235,238,255,0.68);
-    font: 600 0.61rem 'JetBrains Mono', monospace;
+    font: 600 0.61rem var(--font-mono-stack);
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
@@ -325,14 +325,14 @@
   .roll-scene-label,
   .roll-rarity {
     color: #858899;
-    font: 650 0.62rem 'JetBrains Mono', monospace;
+    font: 650 0.62rem var(--font-mono-stack);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
   .roll-scene-label { margin-bottom: 3px; }
   .studio-roll-scene :global(.roll-effect-wrapper) { transform: scale(0.76); margin: -2px 0; }
-  .studio-roll-scene > strong { color: #fff; font: 700 1rem 'JetBrains Mono', monospace; letter-spacing: 0.08em; }
+  .studio-roll-scene > strong { color: #fff; font: 700 1rem var(--font-mono-stack); letter-spacing: 0.08em; }
   .roll-rarity { margin-top: 7px; color: #d4c9ff; }
 
   .studio-leaderboard-scene {
@@ -348,7 +348,7 @@
   .leaderboard-caption {
     margin-bottom: 18px;
     color: #858899;
-    font: 650 0.62rem 'JetBrains Mono', monospace;
+    font: 650 0.62rem var(--font-mono-stack);
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
@@ -361,7 +361,7 @@
     background: rgba(255,255,255,0.045);
   }
 
-  .studio-rank { color: #d4c9ff; font: 700 0.76rem 'JetBrains Mono', monospace; }
+  .studio-rank { color: #d4c9ff; font: 700 0.76rem var(--font-mono-stack); }
   .studio-player { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 5px; }
   .studio-player-name {
     max-width: 100%;
@@ -372,7 +372,7 @@
     white-space: nowrap;
   }
   .studio-player > span:last-child { color: #9295a5; font-size: 0.62rem; }
-  .studio-leaderboard-row > strong { color: #fff; font: 700 0.78rem 'JetBrains Mono', monospace; }
+  .studio-leaderboard-row > strong { color: #fff; font: 700 0.78rem var(--font-mono-stack); }
 
   .leaderboard-ghost-row {
     min-height: 44px;
@@ -397,7 +397,7 @@
   }
   .studio-selection span {
     color: #77798a;
-    font: 650 0.58rem 'JetBrains Mono', monospace;
+    font: 650 0.58rem var(--font-mono-stack);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }

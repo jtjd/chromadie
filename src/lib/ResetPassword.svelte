@@ -186,7 +186,7 @@
   }
 
   .bootstrap-error-details {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono-stack);
     color: #f9a8d4;
   }
 </style>

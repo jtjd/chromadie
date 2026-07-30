@@ -105,7 +105,7 @@
   async function shareResultsText() {
       const shareHex = normalizeHexColor(displayColor);
       const senderUsername = $profile?.username || $authUser?.user_metadata?.username || null;
-      let shareUrl = window.location.origin;
+      let shareUrl = getAppOrigin();
 
       const challengeLink = $isAuthenticated
         ? await createChallengeLink(supabase, {
@@ -116,7 +116,7 @@
         : { success: false };
 
       if (challengeLink.success && challengeLink.shareUrl) {
-          shareUrl = `${window.location.origin}${challengeLink.shareUrl}`;
+          shareUrl = new URL(challengeLink.shareUrl, getAppOrigin()).toString();
       } else if ($isAuthenticated) {
           addToast('The result was copied without a challenge link because the server could not create one.', 'error');
       }
@@ -355,13 +355,13 @@
     ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '700 44px "Space Grotesk", sans-serif';
+    ctx.font = '700 44px "Cabinet Grotesk", sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText('ChromaDie', 96, 132);
 
     ctx.fillStyle = '#767b8c';
-    ctx.font = '600 20px "Inter", sans-serif';
+    ctx.font = '600 20px "Satoshi", sans-serif';
     ctx.fillText('Daily Roll', 96, 164);
 
     const orbGlow = ctx.createRadialGradient(262, 326, 18, 262, 326, 150);
@@ -385,16 +385,16 @@
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#e0e0e0';
-    ctx.font = '700 28px "JetBrains Mono", monospace';
+    ctx.font = '700 28px "Geist Mono", monospace';
     ctx.fillText(cardColor.toUpperCase(), 262, 482);
 
     ctx.textAlign = 'left';
     ctx.fillStyle = '#ffffff';
-    ctx.font = '700 92px "Space Grotesk", sans-serif';
+    ctx.font = '700 92px "Cabinet Grotesk", sans-serif';
     ctx.fillText(scoreText, 460, 320);
 
     ctx.fillStyle = '#767b8c';
-    ctx.font = '500 24px "Inter", sans-serif';
+    ctx.font = '500 24px "Satoshi", sans-serif';
     ctx.fillText('Entropy Points', 460, 368);
 
     const rarityColors = {
@@ -406,15 +406,15 @@
       Trash: '#767b8c'
     };
     ctx.fillStyle = rarityColors[rarity] || '#ffffff';
-    ctx.font = '700 30px "Space Grotesk", sans-serif';
+    ctx.font = '700 30px "Cabinet Grotesk", sans-serif';
     ctx.fillText((rarity || 'Common').toUpperCase(), 460, 420);
 
     ctx.fillStyle = '#767b8c';
-    ctx.font = '500 22px "Inter", sans-serif';
+    ctx.font = '500 22px "Satoshi", sans-serif';
     ctx.fillText('Can you beat my color?', 460, 476);
 
     ctx.fillStyle = '#8b7cf6';
-    ctx.font = '600 18px "Inter", sans-serif';
+    ctx.font = '600 18px "Satoshi", sans-serif';
     ctx.fillText(getAppOrigin().replace(/^https?:\/\//, ''), 460, 514);
 
     ctx.restore();
@@ -968,12 +968,12 @@
 <style>
   .results-header-tight { margin-bottom: 5px !important; }
   .post-score-actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 20px 0; flex-wrap: wrap; }
-  .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--card-border); }
-  .chroma-btn { position: relative; isolation: isolate; background: #16171f; color: #fff; border: 1px solid transparent; padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 600; transition: transform 0.15s ease, box-shadow 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: inline-flex; align-items: center; gap: 5px; }
+  .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-mono-stack); background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--card-border); }
+  .chroma-btn { position: relative; isolation: isolate; background: #16171f; color: #fff; border: 1px solid transparent; padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: var(--font-display-stack); font-weight: 600; transition: transform 0.15s ease, box-shadow 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: inline-flex; align-items: center; gap: 5px; }
   .chroma-btn::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; z-index: -1; background: var(--spectrum); background-size: 300% 100%; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spectrumFlow 5s linear infinite; }
   .chroma-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 124, 246, 0.25); }
   .chroma-btn:active { transform: translateY(1px); }
-  .reroll-btn { background: rgba(139, 124, 246, 0.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 600; transition: all 0.2s; }
+  .reroll-btn { background: rgba(139, 124, 246, 0.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: var(--font-display-stack); font-weight: 600; transition: all 0.2s; }
   .reroll-btn:hover { background: rgba(139, 124, 246, 0.3); }
   .reroll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -1080,11 +1080,11 @@
     letter-spacing: 1.4px;
     color: var(--accent-purple);
     margin-bottom: 6px;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-display-stack);
   }
   .guest-prompt-title {
     color: #fff;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-display-stack);
     font-size: 1.15rem;
     font-weight: 700;
     margin-bottom: 8px;
@@ -1112,7 +1112,7 @@
   }
   .shop-onboarding-title {
     color: #fff;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: var(--font-display-stack);
     font-size: 1rem;
     font-weight: 700;
     margin-bottom: 4px;
@@ -1144,7 +1144,7 @@
     display: flex; align-items: center; justify-content: space-between; gap: 15px;
   }
   .cotw-info { text-align: left; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .cotw-title { font-size: 0.9rem; font-weight: 700; color: var(--accent-purple); font-family: 'Space Grotesk', sans-serif; }
+  .cotw-title { font-size: 0.9rem; font-weight: 700; color: var(--accent-purple); font-family: var(--font-display-stack); }
   .cotw-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.35; }
   .cotw-swatch { width: 48px; height: 48px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 0 15px rgba(0,0,0,0.3); flex-shrink: 0; }
 
@@ -1161,7 +1161,7 @@
     -webkit-backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;
   }
   .image-modal-content { background: #16171f; border: 1px solid var(--card-border); border-radius: 16px; padding: 25px; max-width: 650px; width: 100%; max-height: calc(100dvh - 2rem); overflow-y: auto; text-align: center; }
-  .image-modal-content h3 { margin: 0 0 20px 0; font-family: 'Space Grotesk', sans-serif; color: #fff; }
+  .image-modal-content h3 { margin: 0 0 20px 0; font-family: var(--font-display-stack); color: #fff; }
   .preview-img { width: 100%; max-height: min(63vw, calc(100dvh - 10rem)); object-fit: contain; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 20px; }
   .modal-actions { display: flex; gap: 15px; justify-content: center; }
   .download-btn { background: var(--accent-purple); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }

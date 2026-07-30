@@ -1,38 +1,17 @@
-const LOCAL_ORIGIN = 'http://localhost:5173'
-
-function normalizeOrigin(value) {
-  try {
-    const url = new URL(value)
-    return ['http:', 'https:'].includes(url.protocol) ? url.origin : null
-  } catch {
-    return null
-  }
-}
-
-function isLocalOrigin(value) {
-  return value === LOCAL_ORIGIN || value.startsWith('http://localhost') || value.startsWith('http://127.0.0.1')
-}
+import { getBrowserPublicOrigin, isLocalOrigin, normalizeOrigin, LOCAL_DEVELOPMENT_ORIGINS } from './siteOrigin.js';
 
 export function getAppOrigin() {
   const configured = import.meta.env?.VITE_SITE_URL?.trim()
+  const currentOrigin = typeof window !== 'undefined' ? window.location?.origin || '' : ''
   const normalizedConfigured = configured ? normalizeOrigin(configured) : null
 
-  if (typeof window !== 'undefined' && window.location?.origin) {
-    const currentOrigin = window.location.origin
-    if (normalizedConfigured && isLocalOrigin(normalizedConfigured) && !isLocalOrigin(currentOrigin)) {
-      return currentOrigin
-    }
+  if (!currentOrigin && !normalizedConfigured) return LOCAL_DEVELOPMENT_ORIGINS[0]
+
+  if (normalizedConfigured && isLocalOrigin(normalizedConfigured) && currentOrigin && !isLocalOrigin(currentOrigin)) {
+    return currentOrigin
   }
 
-  if (normalizedConfigured) {
-    return normalizedConfigured
-  }
-
-  if (typeof window !== 'undefined' && window.location?.origin) {
-    return window.location.origin
-  }
-
-  return LOCAL_ORIGIN
+  return getBrowserPublicOrigin({ configuredOrigin: configured, currentOrigin });
 }
 
 export function buildAppUrl(pathname = '/', params = {}) {

@@ -214,9 +214,49 @@ SELECT pg_temp.audit_assert(
     AND NOT EXISTS (
       SELECT 1 FROM information_schema.columns
       WHERE table_schema = 'public' AND table_name = 'profiles'
-        AND column_name IN ('bio', 'is_admin', 'force_cotw_next_roll')
+        AND column_name IN ('is_admin', 'force_cotw_next_roll')
     ),
   'legacy admin/test profile surface must be removed'
+);
+SELECT pg_temp.audit_assert(
+  EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'profiles'
+      AND column_name = 'display_name'
+  )
+  AND EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'profiles'
+      AND column_name = 'bio'
+  )
+  AND (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.profiles'::regclass),
+  'public identity fields must remain on the protected profiles table'
+);
+SELECT pg_temp.audit_assert(
+  has_function_privilege('authenticated', 'public.update_my_profile_identity(text,text)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.update_my_profile_identity(text,text)', 'EXECUTE')
+    AND has_function_privilege('anon', 'public.get_public_profile_identity(text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.get_public_profile_identity(text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.get_public_profile_identity_by_id(uuid)', 'EXECUTE'),
+  'identity RPCs must be available only to their intended browser roles'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT bool_and(p.proconfig @> ARRAY['search_path=public'])
+   FROM pg_proc p
+   WHERE p.oid IN (
+     'public.update_my_profile_identity(text,text)'::regprocedure,
+     'public.get_public_profile_identity(text)'::regprocedure,
+     'public.get_public_profile_identity_by_id(uuid)'::regprocedure,
+     'public.public_profile_identity_projection(uuid)'::regprocedure
+   )),
+  'identity SECURITY DEFINER functions must have fixed search paths'
+);
+SELECT pg_temp.audit_assert(
+  position('ep_spent' IN pg_get_functiondef('public.public_profile_identity_projection(uuid)'::regprocedure)) = 0
+    AND position('reroll_shards' IN pg_get_functiondef('public.public_profile_identity_projection(uuid)'::regprocedure)) = 0
+    AND position('staff_test_ep' IN pg_get_functiondef('public.public_profile_identity_projection(uuid)'::regprocedure)) = 0
+    AND position('auth.users' IN pg_get_functiondef('public.public_profile_identity_projection(uuid)'::regprocedure)) = 0,
+  'public identity projection must exclude private account fields'
 );
 SELECT pg_temp.audit_assert(
   position('force_cotw' IN pg_get_functiondef('public.roll_die_impl_pre_audit(boolean)'::regprocedure)) = 0
@@ -257,6 +297,41 @@ SELECT pg_temp.audit_assert(
       AND payload->>'username' = 'audit_recovery'
    FROM audit_results WHERE name = 'profile_recovery'),
   'authenticated user did not recover a missing profile'
+);
+INSERT INTO audit_results VALUES (
+  'identity_update',
+  public.update_my_profile_identity('  Renée ✦  ', '  A quiet record of daily colors.  ')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'username' = 'audit_recovery'
+      AND payload->>'display_name' = 'Renée ✦'
+      AND payload->>'bio' = 'A quiet record of daily colors.'
+      AND NOT (payload ? 'ep_spent')
+   FROM audit_results WHERE name = 'identity_update')
+    AND (SELECT display_name = 'Renée ✦' AND bio = 'A quiet record of daily colors.'
+         FROM public.profiles WHERE id = '10000000-0000-0000-0000-000000000002'),
+  'identity update did not normalize and persist the authenticated projection'
+);
+INSERT INTO audit_results VALUES (
+  'identity_retry',
+  public.update_my_profile_identity('Renée ✦', 'A quiet record of daily colors.')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'display_name' = 'Renée ✦' AND payload->>'bio' = 'A quiet record of daily colors.'
+   FROM audit_results WHERE name = 'identity_retry'),
+  'identity retry was not idempotent'
+);
+INSERT INTO audit_results VALUES (
+  'identity_public',
+  public.get_public_profile_identity('AUDIT_RECOVERY')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'display_name' = 'Renée ✦'
+      AND payload->>'bio' = 'A quiet record of daily colors.'
+      AND NOT (payload ? 'ep_spent')
+      AND NOT (payload ? 'reroll_shards')
+   FROM audit_results WHERE name = 'identity_public'),
+  'public identity lookup did not return the bounded published projection'
 );
 
 INSERT INTO auth.users (

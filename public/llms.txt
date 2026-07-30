@@ -4,15 +4,15 @@ ChromaDie is a daily color-rolling game. Players roll a new color, discover its 
 
 ## Public pages
 
-- [Play ChromaDie](https://chromadie.com/)
-- [How to Play](https://chromadie.com/how-to-play)
-- [Leaderboard](https://chromadie.com/leaderboard)
-- [Privacy Policy](https://chromadie.com/privacy)
+- [Play ChromaDie](https://chm.lol/)
+- [How to Play](https://chm.lol/how-to-play)
+- [Leaderboard](https://chm.lol/leaderboard)
+- [Privacy Policy](https://chm.lol/privacy)
 
 ## Public profile pages
 
-Public player profiles are available at `https://chromadie.com/u/{username}` when a player has a public profile and meaningful activity.
+Public player profiles are available at `https://chm.lol/{username}` when a player has a public profile and meaningful activity. Existing `/u/{username}` links remain compatibility routes during the staged cutover.
 
 ## Sharing
 
-Challenge links are available at `https://chromadie.com/c/{challenge-id}` and may expire.
+Challenge links are available at `https://chm.lol/c/{challenge-id}` and may expire.

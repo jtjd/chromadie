@@ -24,8 +24,8 @@ const CSP_BASE = [
   "form-action 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' https://cdn.fontshare.com https://cdn.jsdelivr.net data:",
   "img-src 'self' data: blob:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://cloudflareinsights.com",
   "frame-src https://challenges.cloudflare.com"
@@ -41,14 +41,8 @@ export const baseSecurityHeaders = Object.freeze({
 
 export function getSiteOrigin(request, env) {
   const requestOrigin = new URL(request.url).origin;
-  const configured = env?.VITE_SITE_URL?.trim();
-  if (!configured) return requestOrigin;
-  try {
-    const url = new URL(configured);
-    return ['http:', 'https:'].includes(url.protocol) ? url.origin : requestOrigin;
-  } catch {
-    return requestOrigin;
-  }
+  const configured = env?.CANONICAL_ORIGIN?.trim() || env?.VITE_SITE_URL?.trim() || '';
+  return getServerPublicOrigin({ configuredOrigin: configured, requestOrigin });
 }
 
 async function sha256Source(value) {
@@ -95,7 +89,9 @@ export async function renderPublicPage(request, env, {
     .replace(/<meta property="og:url"[^>]*>/i, `<meta property="og:url" content="${escapeHtml(canonical)}" />`)
     .replace(/<meta name="twitter:title"[^>]*>/i, `<meta name="twitter:title" content="${escapeHtml(title)}" />`)
     .replace(/<meta name="twitter:description"[^>]*>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`)
+    .replace(/<meta name="twitter:url"[^>]*>/i, `<meta name="twitter:url" content="${escapeHtml(canonical)}" />`)
     .replace('</body>', `${fallbackMarkup}</body>`);
 
   return new Response(html, { headers: await createHtmlHeaders(html, cacheControl) });
 }
+import { getServerPublicOrigin } from '../src/lib/siteOrigin.js';

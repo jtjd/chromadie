@@ -4,12 +4,16 @@
   import {
     getVisibleProfileLinks,
     getVisibleProfileModules,
+    getProfileStoryVisible,
     normalizeProfileConfig,
     PROFILE_LAYOUT_VARIANTS,
-    PROFILE_LINK_TYPES
+    PROFILE_LINK_TYPES,
+    setProfileStoryVisible
   } from './profileConfig.js';
+  import { clearViewState, readViewState, writeViewState } from './viewState.js';
   import Module from './foundation/Module.svelte';
 
+  export let profileId = null;
   export let draftConfig = null;
   export let publishedConfig = null;
 
@@ -36,11 +40,55 @@
     other: 'Other'
   });
 
+  const VIEW_STATE_NAMESPACE = 'profile-editor';
   let draft = normalizeProfileConfig(draftConfig || publishedConfig);
+  let draftProfileId = null;
   let previewing = false;
   let saving = false;
   let status = '';
   let error = '';
+
+  function restoreDraft(value, fallbackColor) {
+    const normalized = normalizeProfileConfig(value, fallbackColor);
+    if (!value || typeof value !== 'object') return normalized;
+
+    const links = Array.isArray(value.links)
+      ? value.links.slice(0, 6).map((link, index) => ({
+        type: PROFILE_LINK_TYPES.includes(link?.type) ? link.type : 'other',
+        label: String(link?.label || '').slice(0, 40),
+        url: String(link?.url || '').slice(0, 2048),
+        visible: link?.visible !== false,
+        order: index
+      }))
+      : normalized.links;
+
+    return { ...normalized, links };
+  }
+
+  function profileStateScope() {
+    return profileId || 'unknown';
+  }
+
+  function persistDraftState(nextDraft) {
+    if (!profileId) return;
+    writeViewState(VIEW_STATE_NAMESPACE, profileStateScope(), {
+      draft: restoreDraft(nextDraft, nextDraft?.signatureColor)
+    });
+  }
+
+  function restoreProfileDraft() {
+    if (!profileId || profileId === draftProfileId) return;
+
+    draftProfileId = profileId;
+    const cachedState = readViewState(VIEW_STATE_NAMESPACE, profileStateScope());
+    const fallbackColor = publishedConfig?.signatureColor || draftConfig?.signatureColor;
+    draft = restoreDraft(cachedState?.draft || draftConfig || publishedConfig, fallbackColor);
+    previewing = false;
+    error = '';
+    status = cachedState?.draft ? 'Unsaved draft restored.' : '';
+  }
+
+  $: if (profileId && profileId !== draftProfileId) restoreProfileDraft();
 
   $: previewConfig = normalizeProfileConfig(draft, draft?.signatureColor);
   $: orderedModules = [...draft.modules].sort((left, right) => left.order - right.order);
@@ -50,6 +98,7 @@
   function updateDraft(next) {
     const nextDraft = { ...draft, ...next };
     draft = nextDraft;
+    persistDraftState(nextDraft);
     error = '';
     if (previewing) {
       dispatch('configpreview', {
@@ -120,6 +169,7 @@
     }
 
     draft = normalizeProfileConfig(data.draft, draft.signatureColor);
+    clearViewState(VIEW_STATE_NAMESPACE, profileStateScope());
     status = 'Draft saved. It is private until published.';
     dispatch('configsaved', { draft, published: normalizeProfileConfig(data.published, draft.signatureColor) });
     if (previewing) {
@@ -149,6 +199,7 @@
     }
 
     const published = normalizeProfileConfig(data.published, draft.signatureColor);
+    clearViewState(VIEW_STATE_NAMESPACE, profileStateScope());
     status = 'Published. Visitors will now see this profile arrangement.';
     dispatch('configpublished', { draft, published });
     saving = false;
@@ -172,9 +223,12 @@
       <strong>{previewConfig.layoutVariant}</strong>
     </div>
     <div class="profile-editor__preview-grid">
-      {#each getVisibleProfileModules(previewConfig, true) as module (module.id)}
-        <span class={'profile-editor__preview-module profile-editor__preview-module--' + module.size}>{MODULE_LABELS[module.id]}</span>
+    {#each getVisibleProfileModules(previewConfig, true) as module (module.id)}
+        {#if module.id !== 'explore'}
+          <span class={'profile-editor__preview-module profile-editor__preview-module--' + module.size}>{MODULE_LABELS[module.id]}</span>
+        {/if}
       {/each}
+      {#if getProfileStoryVisible(previewConfig)}<span class="profile-editor__preview-module profile-editor__preview-module--wide">Color story</span>{/if}
     </div>
     {#if visibleLinks.length}
       <div class="profile-editor__preview-links">
@@ -200,13 +254,31 @@
     </label>
   </div>
 
+  <div class="profile-editor__section profile-editor__story-setting">
+    <div class="profile-editor__section-heading">
+      <div><p class="profile-editor__eyebrow">Profile depth</p><h3>Keep the profile quiet</h3></div>
+      <span>Optional public history</span>
+    </div>
+    <label class="profile-editor__story-toggle">
+      <input
+        type="checkbox"
+        checked={getProfileStoryVisible(previewConfig)}
+        on:change={event => updateDraft(setProfileStoryVisible(draft, event.currentTarget.checked))}
+      />
+      <span>
+        <strong>Show the color story</strong>
+        <small>Let visitors open the history, milestones, and collection behind this identity.</small>
+      </span>
+    </label>
+  </div>
+
   <div class="profile-editor__section">
     <div class="profile-editor__section-heading">
       <div><p class="profile-editor__eyebrow">Composition</p><h3>Choose what leads</h3></div>
       <span>Drag-free controls stay keyboard friendly.</span>
     </div>
     <ol class="profile-editor__module-list">
-      {#each orderedModules as module, index (module.id)}
+      {#each orderedModules.filter(module => module.id !== 'explore') as module (module.id)}
         <li>
           <label class="profile-editor__check">
             <input type="checkbox" checked={module.visible} disabled={module.id === 'roll'} on:change={event => setModuleVisible(module.id, event.currentTarget.checked)} />
@@ -214,8 +286,8 @@
           </label>
           <div class="profile-editor__module-actions">
             <span>{module.size}</span>
-            <button type="button" aria-label={'Move ' + MODULE_LABELS[module.id] + ' up'} disabled={index === 0} on:click={() => moveModule(index, -1)}>↑</button>
-            <button type="button" aria-label={'Move ' + MODULE_LABELS[module.id] + ' down'} disabled={index === orderedModules.length - 1} on:click={() => moveModule(index, 1)}>↓</button>
+            <button type="button" aria-label={'Move ' + MODULE_LABELS[module.id] + ' up'} disabled={orderedModules.indexOf(module) === 0} on:click={() => moveModule(orderedModules.indexOf(module), -1)}>↑</button>
+            <button type="button" aria-label={'Move ' + MODULE_LABELS[module.id] + ' down'} disabled={orderedModules.indexOf(module) === orderedModules.length - 2} on:click={() => moveModule(orderedModules.indexOf(module), 1)}>↓</button>
           </div>
         </li>
       {/each}
@@ -285,6 +357,11 @@
   .profile-editor__eyebrow { margin: 0 0 var(--space-1); color: var(--profile-accent); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.12em; text-transform: uppercase; }
   .profile-editor__section-heading h3 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h3) / 1.1 var(--font-display-stack); }
   .profile-editor__section-heading > span { color: var(--color-ink-faint); font-size: var(--type-label); }
+  .profile-editor__story-toggle { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); border: 1px solid color-mix(in srgb, var(--profile-accent) 34%, var(--color-line-subtle)); border-radius: var(--radius-md); background: color-mix(in srgb, var(--profile-accent) 6%, var(--surface-inset)); cursor: pointer; }
+  .profile-editor__story-toggle input { width: 1rem; height: 1rem; margin-top: 0.2rem; accent-color: var(--profile-accent); }
+  .profile-editor__story-toggle span { display: grid; gap: var(--space-1); }
+  .profile-editor__story-toggle strong { color: var(--color-ink-strong); font-size: var(--type-small); }
+  .profile-editor__story-toggle small { color: var(--color-ink-muted); font-size: var(--type-label); line-height: 1.45; }
   .profile-editor__module-list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; counter-reset: profile-module; }
   .profile-editor__module-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); counter-increment: profile-module; }
   .profile-editor__module-list li::before { content: counter(profile-module); color: var(--color-ink-faint); font: var(--type-label) / 1 var(--font-mono-stack); }

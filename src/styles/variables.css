@@ -37,6 +37,13 @@ body {
     overflow-x: hidden;
     position: relative;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+::selection {
+    background: var(--color-ink-strong);
+    color: var(--color-canvas-deep);
 }
 
 .background-overlay {

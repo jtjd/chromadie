@@ -333,15 +333,13 @@
   })();
 </script>
 
-<div class="container profile-container">
+<div class="container profile-container" aria-busy={loading}>
   <div class="section-title">
     <div class="section-bar bar-purple"></div>
     <h2>{isOwnProfile ? 'Your Profile' : 'Player Profile'}</h2>
   </div>
 
-  {#if loading}
-    <div class="card"><p>Loading profile...</p></div>
-  {:else if targetProfile}
+  {#if !loading && targetProfile}
     {#if dataWarning}<p class="auth-error" role="status">{dataWarning}</p>{/if}
     <div class="card mood-card {borderEff.cls}">
       {#if bgEff.style}
@@ -650,7 +648,7 @@
         <p class="info-text">Achievements are private. Pinned achievements and progress highlights are shown above.</p>
       </div>
     {/if}
-  {:else}
+  {:else if !loading}
     <div class="card" role={loadError ? 'alert' : undefined}>
       <p>{loadError || 'Player not found.'}</p>
       {#if loadError}
@@ -688,7 +686,7 @@
   .profile-name-frame { display: inline-flex; align-items: center; line-height: 1; }
   .profile-username-large { line-height: 1; }
   .name-row { display: flex; align-items: center; justify-content: center; gap: 0.65rem; flex-wrap: wrap; }
-  .launch-edition-badge { display: inline-flex; align-items: center; min-height: 1.4rem; padding: 0.15rem 0.5rem; border: 1px solid rgba(161, 92, 255, 0.55); border-radius: 999px; background: linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(161, 92, 255, 0.2)); color: #d8c7ff; font: 700 0.65rem/1 'JetBrains Mono', monospace; letter-spacing: 0.04em; text-transform: uppercase; }
+  .launch-edition-badge { display: inline-flex; align-items: center; min-height: 1.4rem; padding: 0.15rem 0.5rem; border: 1px solid rgba(161, 92, 255, 0.55); border-radius: 999px; background: linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(161, 92, 255, 0.2)); color: #d8c7ff; font: 700 0.65rem/1 var(--font-mono-stack); letter-spacing: 0.04em; text-transform: uppercase; }
   .title-chip { margin-right: 0; }
   .rank-chip { margin-top: 1px; align-self: center; }
   .header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-top: 2px; flex: 0 0 auto; margin-left: auto; }
@@ -880,12 +878,12 @@
 
   .best-roll-hex {
     color: var(--text-muted);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono-stack);
     font-size: 0.72rem;
     letter-spacing: 0.08em;
   }
 
-  .best-roll-score { margin: 10px 0 0; color: var(--accent-green); font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .best-roll-score { margin: 10px 0 0; color: var(--accent-green); font-weight: 700; font-family: var(--font-mono-stack); }
   .best-roll-rarity { margin: 4px 0 0; color: var(--text-muted); font-size: 0.8rem; }
 
   .progress-bar-container {
@@ -906,7 +904,7 @@
     font-size: 0.68rem;
     color: var(--text-muted);
     margin-top: 4px;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono-stack);
   }
 
   .ach-icon { position: relative; font-size: 1.2rem; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 10px; flex-shrink: 0; }

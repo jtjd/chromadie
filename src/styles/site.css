@@ -1,0 +1,513 @@
+/* Sitewide profile language.
+ *
+ * The profile is the visual source of truth: quiet atmospheric canvas,
+ * translucent surfaces, mono labels, generous type, and accent-led focus.
+ * Supporting routes keep their domain layouts, but share these primitives so
+ * the application reads as one product.
+ */
+
+.app-shell {
+  background: transparent;
+}
+
+.app-main--site {
+  --site-accent: var(--color-accent);
+  --site-accent-bright: var(--color-accent-bright);
+  --site-line: rgba(255, 255, 255, 0.11);
+  --site-line-subtle: rgba(255, 255, 255, 0.075);
+  --site-surface: rgba(9, 11, 15, 0.76);
+  --site-surface-soft: rgba(255, 255, 255, 0.035);
+  --site-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --site-radius: var(--radius-lg);
+  color: var(--color-ink);
+}
+
+.app-main--site h1,
+.app-main--site h2,
+.app-main--site h3,
+.app-main--site h4 {
+  font-family: var(--font-display-stack);
+}
+
+.app-main--site p,
+.app-main--site li,
+.app-main--site button,
+.app-main--site input,
+.app-main--site textarea,
+.app-main--site select {
+  font-family: var(--font-body-stack);
+}
+
+.app-main--site :is(button, input, select, textarea, a):focus-visible {
+  outline-color: var(--site-accent-bright);
+}
+
+.app-main--site .container {
+  margin-top: clamp(2.5rem, 8vh, 5.5rem);
+  padding: clamp(1rem, 3vw, 2.5rem);
+}
+
+.app-main--site .game-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 42rem);
+  min-height: calc(100dvh - 4.25rem);
+  max-width: none !important;
+  margin-top: 0;
+  padding-block: clamp(3rem, 9vh, 6rem);
+}
+
+.app-main--site .card,
+.app-main--site .discovery-tabs,
+.app-main--site .discovery-empty,
+.app-main--site .discovery-your-rank,
+.app-main--site .shop-info-banner,
+.app-main--site .shop-foundations,
+.app-main--site .loadout-panel,
+.app-main--site .collection-hero,
+.app-main--site .catalog-controls,
+.app-main--site .shop-status {
+  border-color: var(--site-line);
+  border-radius: var(--site-radius);
+  background: var(--site-surface);
+  box-shadow: var(--site-shadow);
+}
+
+.app-main--site .card {
+  padding: clamp(2rem, 4vw, 3.25rem) clamp(1.25rem, 4vw, 3rem);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.app-main--site .card:hover,
+.app-main--site .discovery-tabs:hover,
+.app-main--site .discovery-card:hover,
+.app-main--site .shop-item:hover {
+  border-color: color-mix(in srgb, var(--site-accent-bright) 42%, var(--site-line));
+}
+
+.app-main--site .info-text,
+.app-main--site .legal-section p,
+.app-main--site .legal-section li,
+.app-main--site .guide-intro,
+.app-main--site .section-note,
+.app-main--site .welcome-card p,
+.app-main--site .flow-card p,
+.app-main--site .rarity-card p,
+.app-main--site .condition-card p,
+.app-main--site .info-panel p,
+.app-main--site .guest-card p {
+  color: rgba(226, 233, 246, 0.72);
+}
+
+.app-main--site :is(.guide-kicker, .section-kicker, .legal-kicker, .panel-label, .shop-kicker, .collection-number, .results-heading > div > span) {
+  color: color-mix(in srgb, var(--site-accent) 74%, white);
+  font-family: var(--font-mono-stack);
+  letter-spacing: 0.14em;
+}
+
+.app-main--site .roll-btn {
+  min-height: 3rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink-strong);
+  color: var(--color-canvas-deep);
+  box-shadow: 0 1rem 2.5rem color-mix(in srgb, var(--site-accent) 22%, transparent);
+  letter-spacing: 0.12em;
+}
+
+.app-main--site .roll-btn::before,
+.app-main--site .chroma-btn::before {
+  display: none;
+}
+
+.app-main--site .roll-btn:hover {
+  background: #ffffff;
+  box-shadow: 0 1.2rem 3rem color-mix(in srgb, var(--site-accent) 34%, transparent);
+}
+
+.app-main--site :is(.chroma-btn, .share-btn, .roll-again-btn, .download-btn, .close-btn, .challenge-close) {
+  min-height: 2.5rem;
+  border: 1px solid var(--site-line);
+  border-radius: var(--radius-sm);
+  background: var(--site-surface-soft);
+  color: var(--color-ink-strong);
+  box-shadow: none;
+}
+
+.app-main--site :is(.chroma-btn, .share-btn, .roll-again-btn, .download-btn, .close-btn, .challenge-close):hover {
+  border-color: color-mix(in srgb, var(--site-accent-bright) 46%, var(--site-line));
+  background: color-mix(in srgb, var(--site-accent) 10%, var(--site-surface-soft));
+  box-shadow: none;
+}
+
+.app-main--site .reroll-btn {
+  border-color: color-mix(in srgb, var(--site-accent) 58%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--site-accent) 13%, transparent);
+  color: var(--site-accent-bright);
+}
+
+.app-main--site .cotw-widget,
+.app-main--site .guest-prompt,
+.app-main--site .local-progress-banner,
+.app-main--site .shop-onboarding,
+.app-main--site .info-panel,
+.app-main--site :is(.welcome-card, .flow-card, .rarity-card, .rank-card, .condition-card, .guest-card, .cosmetic-pill) {
+  border-color: var(--site-line-subtle);
+  border-radius: var(--radius-md);
+  background: var(--site-surface-soft);
+}
+
+.app-main--site .cotw-widget {
+  border-color: color-mix(in srgb, var(--site-accent) 28%, var(--site-line-subtle));
+}
+
+.app-main--site .cotw-title,
+.app-main--site .guest-prompt-header,
+.app-main--site .shop-onboarding-title,
+.app-main--site .shop-onboarding-btn {
+  color: color-mix(in srgb, var(--site-accent) 76%, white);
+}
+
+/* Roll: a single profile-like focal surface with the old result states intact. */
+.app-main--site .game-container > .card {
+  width: 100%;
+  margin-bottom: var(--space-5);
+}
+
+.app-main--site .game-container > .card:last-child {
+  margin-bottom: 0;
+}
+
+.app-main--site .final-color-display {
+  box-shadow: 0 0 3.5rem color-mix(in srgb, var(--site-accent) 34%, transparent), inset 0 0 1.25rem rgba(0, 0, 0, 0.5);
+}
+
+/* Discovery: the profile card language carries into the profile directory. */
+.app-main--site .discovery-hub {
+  width: min(72rem, calc(100% - 2rem));
+  max-width: none;
+  padding: clamp(1rem, 3vw, 2.5rem) 0 3.5rem;
+}
+
+.app-main--site .discovery-hub__kicker,
+.app-main--site .discovery-heading__eyebrow,
+.app-main--site .discovery-card__eyebrow {
+  color: color-mix(in srgb, var(--site-accent) 74%, white);
+}
+
+/* The discovery components carry their own scoped color declarations. Keep
+ * these selectors intentionally specific so the shared accent remains the
+ * winning visual language after Svelte scopes those rules. */
+.app-main--site .discovery-hub .discovery-hub__kicker,
+.app-main--site .discovery-hub .discovery-heading__eyebrow,
+.app-main--site .discovery-hub .discovery-card__eyebrow,
+.app-main--site .discovery-hub .discovery-card__score strong,
+.app-main--site .discovery-hub .staff-title {
+  color: color-mix(in srgb, var(--site-accent) 74%, white);
+}
+
+.app-main--site .discovery-hub__intro {
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.app-main--site .discovery-hub h1 {
+  color: var(--color-ink-strong);
+  font-size: clamp(2.25rem, 5vw, 4.2rem);
+}
+
+.app-main--site .discovery-hub__copy,
+.app-main--site .discovery-heading p:not(.discovery-heading__eyebrow) {
+  color: var(--color-ink-muted);
+}
+
+.app-main--site .discovery-tabs {
+  padding: 0.55rem;
+  background: color-mix(in srgb, var(--site-surface-soft) 82%, transparent);
+  box-shadow: none;
+}
+
+.app-main--site .discovery-tabs__group + .discovery-tabs__group {
+  border-color: var(--site-line-subtle);
+}
+
+.app-main--site .discovery-tabs button,
+.app-main--site .discovery-filter-button,
+.app-main--site .discovery-clear-button,
+.app-main--site .discovery-filters input,
+.app-main--site .discovery-filters select {
+  border-color: var(--site-line);
+  border-radius: var(--radius-sm);
+  background: var(--site-surface-soft);
+  color: var(--color-ink);
+}
+
+.app-main--site .discovery-tabs button:hover,
+.app-main--site .discovery-tabs button.active,
+.app-main--site .discovery-filter-button:hover,
+.app-main--site .discovery-clear-button:hover {
+  border-color: color-mix(in srgb, var(--site-accent-bright) 58%, transparent);
+  background: color-mix(in srgb, var(--site-accent) 14%, transparent);
+  color: var(--color-ink-strong);
+}
+
+.app-main--site .discovery-card {
+  border-color: var(--site-line);
+  border-radius: var(--site-radius);
+  background: var(--site-surface);
+  box-shadow: var(--site-shadow);
+}
+
+.app-main--site .discovery-card--featured {
+  border-color: color-mix(in srgb, var(--site-accent) 48%, var(--site-line));
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--site-accent) 16%, transparent), transparent 34%),
+    var(--site-surface);
+}
+
+.app-main--site .discovery-card__score strong {
+  color: color-mix(in srgb, var(--site-accent) 78%, white);
+}
+
+.app-main--site .discovery-card__stats {
+  border-top-color: var(--site-line-subtle);
+}
+
+.app-main--site .discovery-card__cta {
+  color: color-mix(in srgb, var(--site-accent) 76%, white);
+}
+
+.app-main--site .discovery-empty {
+  min-height: 10rem;
+  background: color-mix(in srgb, var(--site-surface-soft) 72%, transparent);
+  box-shadow: none;
+}
+
+/* Studio: preserve the catalog's own information architecture, but remove the
+ * separate black/purple product skin in favor of the profile surface tokens. */
+.app-main--site .shop-page {
+  width: min(76rem, calc(100% - 2rem));
+  margin-top: clamp(2.5rem, 8vh, 5.5rem);
+  --shop-line: var(--site-line-subtle);
+  --shop-muted: var(--color-ink-muted);
+  --shop-panel: var(--color-canvas-raised);
+  --shop-purple: var(--site-accent);
+}
+
+.app-main--site .shop-heading h1 {
+  max-width: 13ch;
+  margin-top: 0.8rem;
+  color: var(--color-ink-strong);
+  font-size: clamp(2.4rem, 6vw, 4.8rem);
+}
+
+.app-main--site .shop-heading p,
+.app-main--site .shop-foundations p,
+.app-main--site .shop-info-banner div span,
+.app-main--site .collection-copy p,
+.app-main--site .results-heading h2 {
+  color: var(--color-ink-muted);
+}
+
+.app-main--site .shop-info-banner,
+.app-main--site .shop-foundations,
+.app-main--site .loadout-panel,
+.app-main--site .catalog-controls,
+.app-main--site .shop-status {
+  box-shadow: none;
+}
+
+.app-main--site .collection-hero {
+  min-height: 330px;
+  border-color: color-mix(in srgb, var(--site-accent) 30%, var(--site-line));
+  background:
+    radial-gradient(circle at 78% 44%, color-mix(in srgb, var(--site-accent) 24%, transparent), transparent 28%),
+    var(--site-surface);
+  box-shadow: var(--site-shadow);
+}
+
+.app-main--site .shop-item {
+  border-color: var(--site-line-subtle);
+  border-radius: var(--radius-md);
+  background: var(--site-surface-soft);
+  box-shadow: none;
+}
+
+.app-main--site .shop-item.is-wearing {
+  border-color: color-mix(in srgb, var(--site-accent) 58%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--site-accent) 14%, transparent);
+}
+
+.app-main--site :is(.primary-action, .primary-item-action, .drawer-buy, .try-button, .quiet-action, .detail-button, .loadout-panel-head button, .sheet-reset, .shop-empty button) {
+  border-color: var(--site-line);
+  border-radius: var(--radius-sm);
+  background: var(--site-surface-soft);
+  color: var(--color-ink);
+}
+
+.app-main--site :is(.primary-action, .primary-item-action):not(:disabled) {
+  border-color: color-mix(in srgb, var(--site-accent) 48%, transparent);
+  background: color-mix(in srgb, var(--site-accent) 15%, transparent);
+  color: var(--color-accent-bright);
+}
+
+.app-main--site .drawer-try {
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-ink-strong);
+  color: var(--color-canvas-deep);
+}
+
+/* Help, privacy, auth boundaries, challenge prompts, and footer use the same
+ * quiet edge treatment without changing their content or behavior. */
+.app-main--site .guide-section + .guide-section,
+.app-main--site .legal-section + .legal-section {
+  margin-top: var(--space-5);
+}
+
+.app-main--site .account-error-banner,
+.app-main--site .challenge-banner,
+.app-main--site .founder-banner {
+  border-color: var(--site-line);
+  border-radius: var(--radius-lg);
+  background: var(--site-surface);
+  box-shadow: var(--site-shadow);
+}
+
+.app-main--site .account-error-kicker,
+.app-main--site .challenge-kicker {
+  color: color-mix(in srgb, var(--site-accent) 74%, white);
+}
+
+.site-footer {
+  border-top-color: var(--site-line-subtle);
+  background: transparent;
+}
+
+.site-footer-inner {
+  width: min(100%, 78rem);
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
+}
+
+@media (max-width: 48rem) {
+  .app-main--site .game-container {
+    min-height: calc(100dvh - 3.85rem);
+    padding-block: 2.5rem;
+  }
+
+  .app-main--site .discovery-hub,
+  .app-main--site .shop-page {
+    width: calc(100% - 2rem);
+  }
+}
+
+@media (max-width: 36rem) {
+  .app-main--site .container {
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+  }
+
+  .app-main--site .game-container {
+    width: calc(100% - 1rem);
+    padding-block: 2rem;
+  }
+
+  .app-main--site .card {
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .app-main--site .discovery-hub,
+  .app-main--site .shop-page {
+    width: calc(100% - 1rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-main--site .roll-btn:hover,
+  .app-main--site .chroma-btn:hover,
+  .app-main--site .share-btn:hover,
+  .app-main--site .roll-again-btn:hover {
+    transform: none;
+  }
+}
+
+/* Quiet reference pass: neutral surfaces, typographic hierarchy, and one
+ * restrained accent carry the catchii direction across supporting routes. */
+.app-main--site :is(.card, .discovery-tabs, .discovery-empty, .discovery-your-rank, .shop-info-banner, .shop-foundations, .loadout-panel, .collection-hero, .catalog-controls, .shop-status, .discovery-card) {
+  border-radius: var(--radius-lg);
+  background: rgba(9, 11, 15, 0.76);
+  box-shadow: var(--site-shadow);
+}
+
+.app-main--site :is(.guide-kicker, .section-kicker, .legal-kicker, .panel-label, .shop-kicker, .collection-number, .results-heading > div > span) {
+  font-family: var(--font-mono-stack);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+}
+
+.app-main--site :is(.section-bar.bar-spectrum, .section-bar.bar-purple, .section-bar.bar-green, .section-bar.bar-gold) {
+  background: var(--site-accent);
+  animation: none;
+}
+
+.app-main--site .roll-btn {
+  font-family: var(--font-body-stack);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.app-main--site .roll-btn::before { animation: none; }
+
+.app-main--site :is(.chroma-btn, .share-btn, .roll-again-btn, .download-btn, .close-btn, .challenge-close) {
+  font-family: var(--font-body-stack);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+/* Phase 13 settings controls. Keep this compact because settings is a
+ * secondary surface and should not inflate the profile bundle. */
+.identity-editor .foundation-module__body { display: grid; gap: 1.5rem; }
+.identity-editor__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.identity-editor__field { display: grid; gap: .5rem; min-width: 0; color: var(--color-ink-strong); font-weight: 600; }
+.identity-editor__label-row, .identity-editor__footer { display: flex; justify-content: space-between; gap: 1rem; }
+.identity-editor__counter { color: var(--color-ink-muted); font: 600 var(--type-label)/1.2 var(--font-mono-stack); }
+.identity-editor__field :is(input, textarea) { width: 100%; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); padding: .7rem; background: var(--surface-inset); color: var(--color-ink-strong); font: 500 var(--type-body)/1.45 var(--font-body-stack); }
+.identity-editor__field input { min-height: 2.9rem; }
+.identity-editor__field textarea { min-height: 7.5rem; resize: vertical; }
+.identity-editor__field :is(input, textarea):focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; border-color: var(--color-accent); }
+.identity-editor__field :is(input, textarea)[aria-invalid=true] { border-color: var(--color-warning); }
+.identity-editor__error, .identity-editor__message--error { color: var(--color-warning); }
+.identity-editor__footer { align-items: center; }
+.identity-editor__message, .identity-editor__hint { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.45; }
+.identity-editor__save { min-height: 2.75rem; border: 1px solid var(--color-ink-strong); border-radius: var(--radius-sm); padding: 0 1.25rem; background: var(--color-ink-strong); color: var(--color-canvas-deep); font: 600 var(--type-small)/1 var(--font-body-stack); cursor: pointer; }
+.identity-editor__save:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
+.identity-editor__save:disabled { cursor: not-allowed; opacity: .55; }
+.profile-settings-page { min-height: calc(100dvh - 4.75rem); padding: clamp(2.5rem, 8vh, 6rem) clamp(1.25rem, 4vw, 3rem) 4rem; color: var(--color-ink); }
+.profile-settings-page__inner { width: min(100%, 64rem); margin: 0 auto; }
+.profile-settings-page__header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-bottom: clamp(2rem, 5vw, 4rem); padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-line-subtle); }
+.profile-settings-page__eyebrow { margin: 0 0 .5rem; color: var(--color-accent-bright); font: 700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing: .12em; text-transform: uppercase; }
+.profile-settings-page h1 { max-width: 38rem; margin: 0; color: var(--color-ink-strong); font: 600 clamp(2.2rem, 5vw, 4.25rem)/.98 var(--font-display-stack); letter-spacing: -.045em; }
+.profile-settings-page__intro { max-width: 38rem; margin: 1.25rem 0 0; color: var(--color-ink-muted); font-size: var(--type-body); line-height: 1.6; }
+.profile-settings-page__stack { display: grid; gap: 1.25rem; }
+.profile-settings-page__warning { margin: 0; padding: .75rem 1rem; border: 1px solid color-mix(in srgb, var(--color-warning) 36%, transparent); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-warning) 8%, transparent); color: var(--color-warning); font-size: var(--type-small); }
+.profile-settings-page__state { width: min(100%, 42rem); margin: 0 auto; }
+.profile-settings-page__state h2, .profile-settings-page__compatibility h2 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h2)/1.05 var(--font-display-stack); }
+.profile-settings-page__state p:not(.profile-settings-page__eyebrow), .profile-settings-page__compatibility p:not(.profile-settings-page__eyebrow) { color: var(--color-ink-muted); line-height: 1.55; }
+.profile-settings-page__state .foundation-button { margin-top: 1rem; }
+.profile-settings-page__compatibility { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-panel-soft); }
+.profile-settings-page__compatibility p:not(.profile-settings-page__eyebrow) { max-width: 38rem; margin: .75rem 0 0; }
+.profile-settings-page__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; }
+@media (max-width: 48rem) {
+  .identity-editor__fields { grid-template-columns: 1fr; }
+  .identity-editor__footer { align-items: stretch; flex-direction: column; }
+  .identity-editor__save, .profile-settings-page__header .foundation-button, .profile-settings-page__actions .foundation-button { width: 100%; }
+  .profile-settings-page { padding-top: 2rem; }
+  .profile-settings-page__header, .profile-settings-page__compatibility { align-items: flex-start; flex-direction: column; }
+  .profile-settings-page__actions { width: 100%; justify-content: stretch; }
+}

@@ -57,6 +57,7 @@ export function createDefaultProfileConfig(signatureColor = '#8B7CF6') {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(signatureColor),
     layoutVariant: 'immersive',
+    storyVisible: false,
     modules: defaultModules(),
     links: []
   };
@@ -108,17 +109,43 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
     ? value.links.map((link, index) => normalizeLink(link, index)).filter(Boolean).slice(0, 6)
     : [];
 
-  return {
+  const normalized = {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(value.signatureColor, fallback.signatureColor),
     layoutVariant: PROFILE_LAYOUT_VARIANTS.includes(value.layoutVariant) ? value.layoutVariant : fallback.layoutVariant,
     modules: modules.sort((left, right) => left.order - right.order),
     links: links.sort((left, right) => left.order - right.order)
   };
+  if (typeof value.storyVisible === 'boolean') normalized.storyVisible = value.storyVisible;
+  return normalized;
 }
 
 export function getProfileModule(config, id) {
   return normalizeProfileConfig(config).modules.find(module => module.id === id) || null;
+}
+
+/**
+ * The current profile configuration RPC predates an explicit storyVisible
+ * field. The approved composition does not render the `explore` module, so
+ * its visibility is used as a backwards-compatible storage bit until the
+ * linked database baseline can accept a new additive field.
+ */
+export function getProfileStoryVisible(config) {
+  const normalized = normalizeProfileConfig(config);
+  return typeof normalized.storyVisible === 'boolean'
+    ? normalized.storyVisible
+    : normalized.modules.find(module => module.id === 'explore')?.visible === false;
+}
+
+export function setProfileStoryVisible(config, visible) {
+  const normalized = normalizeProfileConfig(config);
+  return {
+    ...normalized,
+    storyVisible: Boolean(visible),
+    modules: normalized.modules.map(module => module.id === 'explore'
+      ? { ...module, visible: !visible }
+      : module)
+  };
 }
 
 export function getVisibleProfileModules(config, isOwner = false) {

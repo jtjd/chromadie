@@ -1,0 +1,37 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+test('phase 11 profile composition uses one opening canvas and quiet supporting surfaces', async () => {
+  const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
+  const expression = await readFile(new URL('../src/lib/ProfileExpression.svelte', import.meta.url), 'utf8');
+  const featured = await readFile(new URL('../src/lib/ProfileFeatured.svelte', import.meta.url), 'utf8');
+  const roll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
+
+  assert.match(shell, /profile-shell__opening/);
+  assert.match(shell, /profile-shell__supporting/);
+  assert.match(shell, /profile-shell__identity/);
+  assert.match(shell, /profile-shell__opening-roll/);
+  assert.match(shell, /<ProfileRoll[^>]+integrated=\{true\}/);
+  assert.doesNotMatch(shell, /More of the color story|Connect with this profile|Public boundary/);
+  assert.doesNotMatch(featured, /Featured accomplishment/);
+  assert.doesNotMatch(expression, /<Module/);
+  assert.doesNotMatch(featured, /<Module/);
+  assert.match(roll, /export let integrated = false/);
+  assert.match(roll, /profile-roll--integrated/);
+});
+
+test('phase 11 visual contract preserves secondary detail and owner boundaries', async () => {
+  const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
+  const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
+  const roll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
+
+  assert.match(shell, /getProfileStoryVisible/);
+  assert.doesNotMatch(shell, /<details class="profile-shell__details/);
+  assert.match(settings, /<ProfileEditor/);
+  assert.match(settings, /<ProfileSocial/);
+  assert.match(shell, /<ProfileSocial/);
+  assert.match(roll, /<details class="profile-roll__details"/);
+  assert.match(roll, /requestRoll\(supabase, isReroll\)/);
+  assert.doesNotMatch(roll, /client.*score|calculate.*reward/i);
+});

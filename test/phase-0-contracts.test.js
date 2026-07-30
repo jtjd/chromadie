@@ -60,16 +60,18 @@ test('canonical roll contracts retain bounded server presentation fields', () =>
 });
 
 test('public route parsing preserves profile, challenge, and app route contracts', () => {
-  assert.deepEqual(parseRouteLocation('/u/Neon%20User/'), {
-    rawPath: '/u/Neon%20User',
+  assert.deepEqual(parseRouteLocation('/u/NeonUser/'), {
+    rawPath: '/u/NeonUser',
     routeMode: 'app',
     view: 'profile',
     leaderboardTab: 'today',
-    profileUsername: 'Neon User',
+    profileUsername: 'NeonUser',
+    profileRouteKind: 'compatibility',
     legacyProfile: false,
     profileId: null,
     challengeId: null,
     challengeFrom: null
+    ,canonicalProfilePath: '/neonuser'
   });
 
   const leaderboard = parseRouteLocation('/leaderboard', '?tab=weekly&profile=user-2');
@@ -82,7 +84,9 @@ test('public route parsing preserves profile, challenge, and app route contracts
   assert.equal(challenge.view, 'game');
   assert.equal(challenge.challengeId, 'challenge-1');
   assert.equal(challenge.challengeFrom, 'NeonUser');
-  assert.equal(parseRouteLocation('/missing').routeMode, 'not-found');
+  assert.equal(parseRouteLocation('/bad%2Fname').routeMode, 'not-found');
+  assert.equal(parseRouteLocation('/NeonUser').profileRouteKind, 'root');
+  assert.equal(parseRouteLocation('/leaderboard').profileUsername, null);
 });
 
 test('profile mapping keeps critical public fields and excludes private extras', () => {

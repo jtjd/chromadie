@@ -624,3 +624,762 @@ refactor.
 `supabase/MIGRATIONS.md`, `supabase/migrations/20260725100000_profile_configuration.sql`,
 `supabase/migrations/20260725140000_decoration_entitlements.sql`,
 `test/phase-9-browser-audit.test.js`.
+
+## 2026-07-25 — Reconcile the live profile around identity first
+
+**Status:** accepted for Phase 10
+
+**Context**
+
+The Phase 0–9 infrastructure was complete and protected, but the live
+`ProfileShell` still presented identity, roll, stats, history, achievements,
+social, owner controls, and boundary explanations as an equal-weight game
+dashboard. The product direction now requires the public profile to feel like
+a composed personal website before the visitor understands the game.
+
+**Decision**
+
+Keep the existing live data/authority seams and project their stored v1
+configuration into at most four primary regions: identity, roll/latest result,
+expression, and one featured story/accomplishment. Make the authenticated bare
+root resolve to the owner profile while keeping explicit `/?view=game` as the
+direct roll route. Collapse secondary history, stats, social, configuration,
+and owner compatibility surfaces behind native detail/owner sections. Remove
+the visible public-boundary explanation and redundant primary calls to action.
+
+Use `src/lib/profileComposition.js` as a presentation projection only. Keep
+`ProfileEditor`, `ProfileSocial`, the secure `ProfileRoll`, the legacy
+`legacy=1` renderer, the profile configuration normalizer, all RPCs, and all
+stored data intact. Use real mapped profile data in production and a stable
+public account only for screenshot inspection.
+
+**Alternatives considered**
+
+- Rewrite the profile and remove legacy/configuration paths: rejected because
+  it would discard working controls, stored configurations, and rollback
+  safety.
+- Add a new profile schema or bio/avatar/media system: rejected because Phase
+  10 is a visual reconciliation, not a data-model or media milestone.
+- Hide secondary data entirely: rejected because the profile’s history,
+  achievements, social, and account features remain important attachment and
+  compatibility surfaces.
+- Leave the root as Roll and add a separate profile home: rejected because it
+  preserves the dashboard-first product impression and makes the profile
+  secondary to the game.
+
+**Consequences**
+
+The public profile reads as identity and expression first, with the latest
+color visible before the detail history. The primary composition fits the
+desktop gates and leads with identity/roll on mobile. Secondary content adds
+intentional disclosure instead of competing for initial attention. The global
+footer remains normal site navigation, while legacy/configuration/RPC data
+remain available for compatibility.
+
+The linked Supabase project still has the Phase 9 documented migration/catalog
+drift. Phase 10 does not push migrations, add client fallbacks, or claim launch
+certification; remote reconciliation remains an authorized release action.
+
+**Related files**
+
+`src/lib/profileComposition.js`, `src/lib/ProfileShell.svelte`,
+`src/lib/ProfileExpression.svelte`, `src/lib/ProfileFeatured.svelte`,
+`src/lib/ProfileRoll.svelte`, `src/App.svelte`, `src/lib/routes.js`,
+`src/lib/foundation/Surface.svelte`, `test/phase-10-profile-first.test.js`,
+`docs/11_PRODUCT_DIRECTION_ADDENDUM.md`,
+`docs/milestones/PHASE_10_VISION_RECONCILIATION.md`,
+`docs/PHASE_10_REPORT.md`.
+
+## 2026-07-26 — Treat minimalism as a composition constraint, not a card count
+
+**Status:** accepted as the Phase 11 workflow boundary
+
+**Context**
+
+The Phase 10 profile reduced the number of visible regions, but the result
+still retained the visual grammar of an AI-designed dashboard: a large hero
+followed by separate cards and repeated module chrome. The intended reference
+is a simple personal page whose identity, mood, links, and daily color ritual
+feel authored as one surface.
+
+**Decision**
+
+The next workflow will evaluate and implement a continuous profile composition,
+not another pass that merely removes or collapses cards. Identity and roll are
+one central moment. Links and story are quiet continuation. Cards, borders,
+eyebrows, repeated labels, and subsystem language are exceptional treatments,
+not defaults. The screenshot review is a hard design gate: if the page reads as
+a set of modules or needs explanation as a dashboard, the work fails review.
+
+Keep the existing profile data, configuration, RPC, auth, RLS, roll, scoring,
+rewards, economy, entitlements, history, cosmetics, social, moderation,
+routes, and legacy compatibility boundaries unchanged.
+
+**Consequences**
+
+Phase 11 will begin with a visual contract and before/after screenshots before
+component changes. The profile may become visually simpler even though the
+underlying feature set remains intact. Detail surfaces can still expose the
+full system, but the public first impression must communicate a person and a
+mood before mechanics and statistics.
+
+**Related files**
+
+`docs/12_NEXT_PHASES_ROADMAP.md`,
+`docs/milestones/PHASE_11_CONTINUOUS_PROFILE_COMPOSITION.md`,
+`docs/PHASE_10_REPORT.md`.
+
+## 2026-07-26 — Make identity and roll one authored opening composition
+
+**Status:** accepted and implemented for Phase 11
+
+**Context**
+
+The Phase 10 four-region projection met the content ceiling but still looked
+like a hero followed by three equal cards. The intended reaction is personal
+website envy before game comprehension; card count alone could not create that
+reaction.
+
+**Decision**
+
+Keep the four-region data contract as a ceiling, but render identity and the
+latest/next color inside one continuous atmospheric opening canvas. Render
+links, signature expression, and one story/accomplishment trace as quiet
+typographic continuation. Reserve visible card treatment and repeated module
+chrome for deliberate detail or owner surfaces. The owner roll gets an
+integrated presentation mode that changes copy and framing only; its secure
+request, canonical response, reroll guard, reward handling, and refresh seam
+remain the same.
+
+**Consequences**
+
+The default public profile is materially simpler without deleting data or
+feature access. The first viewport communicates a person, mood, and color
+before stats, mechanics, or social subsystems. The supporting detail disclosures
+remain available for users who want the full game/profile history. Screenshot
+review is required evidence for this visual boundary.
+
+The linked Supabase migration/catalog drift and Firefox/device certification
+gap remain release blockers. This decision does not authorize remote writes,
+schema changes, media integration, or later product expansion.
+
+**Related files**
+
+`src/lib/ProfileShell.svelte`, `src/lib/ProfileRoll.svelte`,
+`src/lib/ProfileExpression.svelte`, `src/lib/ProfileFeatured.svelte`,
+`test/phase-11-continuous-profile.test.js`,
+`docs/PHASE_11_VISUAL_CONTRACT.md`, `docs/PHASE_11_REPORT.md`.
+
+## 2026-07-26 — Use the approved mockup as a composition contract
+
+**Status:** accepted and implemented for Phase 10.2
+
+The approved `design/reference/v0-profile-mockup/` is translated into Svelte
+as a centered personal identity surface: a minimal profile header, canonical
+daily color, one quiet collection trace, and one expression/music boundary.
+The reference remains frontend-only inspection material. Its React/Next.js
+architecture, literals, local roll simulation, placeholder socials, and fake
+music behavior are rejected from production.
+
+The live renderer uses the existing mapped profile/configuration/story/social
+projections and the secure owner roll flow. Missing avatar, bio, and music
+contracts use safe, quiet fallbacks rather than fabricated user content. A
+local-only screenshot fixture can expose the same mapped public profile in
+owner/pre-roll states for visual evidence; it is disabled in production
+builds and cannot change roll authority.
+
+**Consequences**
+
+The first impression is a personal page rather than a game dashboard while
+history, configuration, social, moderation, entitlements, account controls,
+and `legacy=1` remain reachable through deliberate detail surfaces. Music
+integration, richer identity fields, and media contracts remain Phase 11
+boundaries. No schema, auth, RLS, route, scoring, reward, economy, or
+deployment behavior changed.
+
+**Related files**
+
+`docs/APPROVED_MOCKUP_TRANSLATION.md`,
+`checklists/APPROVED_MOCKUP_PARITY_GATE.md`,
+`src/lib/ProfileAtmosphere.svelte`, `src/lib/ProfileModeHeader.svelte`,
+`src/lib/IdentityCard.svelte`, `src/lib/TodayColor.svelte`,
+`src/lib/FeaturedCollection.svelte`, `src/lib/ProfileMusic.svelte`,
+`docs/PHASE_10_2_REPORT.md`.
+
+## 2026-07-26 — Correct visual fidelity without expanding the data contract
+
+**Status:** accepted and implemented for Phase 11.1
+
+The approved mockup comparison showed that the live profile still read as a
+small card on an empty canvas even after the Phase 11 composition work.
+Correct the presentation at the CSS/component boundary only: use a
+viewport-fixed atmosphere, readable essential type, upper-middle placement,
+and an independently bottom-anchored optional expression surface. When no
+production music/expression data exists, omit that surface and rebalance the
+profile. Use a mapped color-history sentence or a designed first-chapter state
+instead of generic placeholder bio copy.
+
+Do not add public bio/avatar/music fields, media storage, playback, schema
+changes, new routes, or gameplay behavior. The visual fixture remains local
+and cannot settle a roll or introduce mock production content.
+
+**Consequences**
+
+The profile’s visual impact is now judged with repeatable 100%/dSF1 browser
+captures and computed-style measurements, not source assertions alone. Missing
+optional content remains honest without leaving a broken-looking control.
+The owner/visitor distinction, secure roll authority, all compatibility
+surfaces, and the Phase 12 boundary remain unchanged.
+
+**Related files**
+
+`src/lib/ProfileShell.svelte`, `src/lib/ProfileAtmosphere.svelte`,
+`src/lib/IdentityCard.svelte`, `src/lib/ProfileMusic.svelte`,
+`src/lib/ProfileRoll.svelte`, `scripts/audit-phase-11-1.mjs`,
+`docs/PHASE_11_1_VISUAL_AUDIT.md`, `docs/PHASE_11_1_REPORT.md`.
+
+## 2026-07-26 — Hold real identity work until linked schema reconciliation
+
+**Status:** blocked at the Phase 13 database baseline gate
+
+Phase 13 requires a new server-authoritative identity contract and a
+canonical-domain transition, but the linked Supabase project is not at the
+branch's Phase 4–8 schema boundary. `supabase migration list --linked` shows
+the remote ending at `20260712200000_launch_audit_remediation`; the five local
+profile configuration/story, discovery, social, and entitlement migrations
+remain pending. The linked catalog also lacks `bg_prism_atmosphere` and
+`name_prism_atelier`, while the local snapshot/seed pair contains 82 matching
+items.
+
+Do not create or apply the Phase 13 identity migration, restore the removed
+legacy bio implementation, or change public-domain runtime behavior while the
+production projection/RLS boundary is unverified. First obtain backup/PITR
+confirmation, apply the five pending migrations in order through the reviewed
+workflow, verify all RPCs/RLS/grants/catalog rows, and record the rollback
+point. Then resume the additive identity/domain slice.
+
+**Related files**
+
+`docs/PHASE_13_PLAN.md`, `docs/PHASE_13_DATABASE_BASELINE.md`,
+`docs/CHM_LOL_DOMAIN_CUTOVER.md`, `docs/PHASE_13_REPORT.md`.
+
+## 2026-07-26 — Extend the approved profile language to supporting surfaces
+
+**Status:** accepted and implemented for Phase 12
+
+The approved profile composition is now the visual language for the rest of
+the site. Non-profile routes use a shared atmospheric canvas and restrained
+`SiteModeHeader`, while public and authenticated profile routes retain the
+existing `ProfileModeHeader` and centered `ProfileShell` composition.
+
+The default-entry semantics remain explicit rather than being inferred from
+presentation: signed-out `/` opens the guest daily-roll surface;
+authenticated `/` resolves to the owner live profile after session hydration;
+and `/?view=game` remains the direct roll route. Explicit profile, discovery,
+shop, help, privacy, challenge, and legacy routes retain their existing
+meaning.
+
+**Consequences**
+
+Roll authority, authentication, RLS, scoring, rewards, economy, entitlements,
+history, cosmetics, social/moderation boundaries, direct refresh, and old
+profile URLs are unchanged. The sitewide extension changes the visual shell
+and navigation affordances only. It does not fabricate an unauthenticated
+profile, add identity fields, or turn supporting pages into dashboard cards.
+
+The captured evidence is under `artifacts/phase-12/` and the exact boundary
+and validation results are in `docs/PHASE_12_REPORT.md`. The linked Supabase
+schema/catalog drift remains a pre-existing release blocker and was not
+modified.
+
+**Related files**
+
+`src/lib/SiteModeHeader.svelte`, `src/lib/ProfileAtmosphere.svelte`,
+`src/App.svelte`, `src/styles/layout.css`,
+`test/phase-12-sitewide-profile-entry.test.js`,
+`docs/milestones/PHASE_12_SITEWIDE_PROFILE_ENTRY.md`,
+`docs/PHASE_12_REPORT.md`.
+
+## 2026-07-27 — Use one profile language across supporting surfaces
+
+**Status:** accepted and implemented as a visual refinement
+
+**Context**
+
+The Phase 12 shell extended the profile atmosphere to the rest of the site,
+but the supporting routes still exposed parts of the older dashboard skin:
+the application header had a different chrome treatment, Roll controls used a
+legacy spectrum button, and Discover/Studio/help surfaces carried competing
+surface, radius, and accent rules.
+
+**Decision**
+
+Keep `ProfileShell` and its composition as the visual source of truth. Align
+`SiteModeHeader` and `ProfileModeHeader` around the same transparent brand,
+mark, typography, spacing, and slash-separated navigation language. Add one
+sitewide stylesheet that projects the profile surface, border, radius, text,
+control, responsive, and reduced-motion tokens onto non-profile routes while
+leaving each route's information architecture and domain components intact.
+
+Do not rewrite Roll, Discover, Studio, help, privacy, or guest-lock content
+into profile modules. The shared layer changes presentation only; existing
+authentication, route handling, server-authoritative gameplay, catalog,
+privacy, social, and legacy boundaries remain the authority.
+
+**Consequences**
+
+Supporting routes now read as rooms around the profile: the same atmospheric
+canvas, quiet translucent surfaces, mono labels, accent-led focus states, and
+profile-like primary actions appear across the site. Discovery's grid and the
+Studio catalog remain intentionally domain-specific, but no longer introduce a
+separate black/purple skin. The refinement adds no schema migration, backend
+write, route change, or production data dependency.
+
+**Related files**
+
+`src/styles/site.css`, `src/lib/SiteModeHeader.svelte`,
+`src/lib/ProfileModeHeader.svelte`, `src/main.js`,
+`test/sitewide-profile-cohesion.test.js`.
+
+## 2026-07-28 — Let the canonical roll animate the profile composition
+
+**Status:** accepted and implemented as a presentation refinement
+
+**Context**
+
+The owner roll already lived inside the profile identity surface and reused
+the secure roll path, but the rest of the profile only noticed the result
+after the color value changed. The ritual still read like a control embedded
+in a static page instead of an event that changed the identity.
+
+**Decision**
+
+Keep `ProfileRoll.svelte` responsible for the existing server-authoritative
+transaction and emit only bounded lifecycle signals (`rollstart`,
+`rollcancel`, and the existing canonical `colorchange`/`rollcomplete`
+events). Let `ProfileShell` own transient presentation state. While the
+canonical result is resolving, the identity recedes and the roll stays focal;
+when the server result arrives, the canonical color drives a short atmosphere,
+identity, and collection response. CSS owns the effect and includes a reduced-
+motion equivalent.
+
+No result, score, rarity, reward, eligibility, inventory, or profile data is
+computed by the effect layer, and no durable roll-effect state is stored.
+
+**Consequences**
+
+Rolling now changes the profile in place: the atmosphere intensifies, the
+identity quiets during resolution, and the new color settles through the
+profile surface before the page returns to rest. Visitors remain read-only;
+the owner-only roll and all existing RPC, RLS, scoring, reward, route, and
+historical-data boundaries are unchanged.
+
+**Related files**
+
+`src/lib/ProfileRoll.svelte`, `src/lib/ProfileShell.svelte`,
+`src/lib/ProfileAtmosphere.svelte`, `src/lib/IdentityCard.svelte`,
+`test/profile-roll-effect.test.js`.
+
+## 2026-07-29 — Make the roll a profile ritual and reduce identity-surface noise
+
+**Status:** accepted and implemented as a separately scoped visual refinement
+
+**Context**
+
+The profile response effect made a completed roll influence the surrounding
+composition, but the owner action still read as a small utility control and
+the identity card combined person, game result, story copy, and collection
+metadata in one dense surface. The current public schema still has no
+authoritative personal bio/avatar contract, so the refinement must improve
+hierarchy without inventing identity content or adding a migration.
+
+**Decision**
+
+Keep one centered identity surface with only the person, handle, optional
+validated links, and the integrated roll. Move the color archive to a quiet
+featured trace outside the card. Present the owner roll as a short ritual:
+open the color field, read and lock the server-returned signal, count up the
+canonical score, reveal returned conditions, and let the player skip the
+presentation after initiation. Use reduced-motion equivalents and preserve
+the existing visitor result path.
+
+The animation layer may stage and count canonical values for presentation,
+but it may not determine eligibility, score, rarity, rewards, purchases, or
+prestige. The existing `roll_die` RPC and client request/lock seam remain the
+only gameplay authority exposed to the UI.
+
+**Alternatives considered**
+
+- Add more profile widgets or persistent statistics to make the page feel
+  richer: rejected because the problem is competing hierarchy, not missing
+  information.
+- Recreate a literal slot-machine or lever interaction: rejected because the
+  daily roll should feel like a color ritual attached to identity, not a
+  casino mechanic or a second game implementation.
+- Add personal bio/avatar fields during this pass: rejected because Phase 13's
+  linked database baseline is blocked and identity data needs its own additive
+  privacy/validation milestone.
+
+**Consequences**
+
+The initial viewport has fewer competing facts and a clearer primary action;
+the profile remains recognizable as a personal page before its game details
+are opened. The archive and detailed roll conditions remain reachable, while
+owner, visitor, guest, private, and historical data boundaries continue to be
+handled by the existing adapters and disclosure surfaces. No schema or
+backend deployment work is required.
+
+**Related files**
+
+`src/lib/IdentityCard.svelte`, `src/lib/ProfileRoll.svelte`,
+`src/lib/ProfileShell.svelte`, `test/profile-ritual-refinement.test.js`,
+`docs/PROGRESS.md`, `docs/CHANGELOG_2_0.md`.
+
+## 2026-07-29 — Surface scoring conditions without restoring the dashboard
+
+**Status:** accepted and implemented as a visual follow-up
+
+The compact owner result hid the most meaningful proof of a roll—its scoring
+conditions—inside a collapsed details panel. At the same time, the centered
+profile composition underused desktop width compared with the spacious,
+identity-first layouts reviewed across current guns.lol profiles.
+
+Keep the condition data server-reported and display only a bounded rail of
+active contributors, score awards, and an overflow count in the primary result.
+Leave the complete traits, contributor, badge, reward, and reroll record in the
+existing expandable details surface. Widen the approved profile canvas to a
+single two-column identity/roll surface above the archive, with a CSS breakpoint
+that returns to the existing stacked mobile composition.
+
+Do not add a profile schema, duplicate scoring logic, infer conditions in the
+browser, or turn the profile back into an equal-weight results dashboard.
+
+**Related files**
+
+`src/lib/IdentityCard.svelte`, `src/lib/ProfileShell.svelte`,
+`src/lib/ProfileRoll.svelte`, `test/profile-ritual-refinement.test.js`,
+`docs/PROGRESS.md`, `docs/CHANGELOG_2_0.md`.
+
+## 2026-07-29 — Separate identity from the game on the same profile page
+
+**Status:** accepted and implemented as the simpler profile boundary
+
+The two-column identity/roll surface still made the profile card feel like a
+game dashboard. A profile should first communicate one person, while the
+daily game can remain close by without competing with that identity.
+
+Render the identity card with only avatar, name, handle, optional validated
+links, and the small earned badge. Move the daily roll into a quiet sibling
+layer below the card on the same page. In that profile mode, show only the
+daily color/result summary and a details disclosure; keep the full scoring
+conditions, rewards, countdown, and reroll controls available inside the
+disclosure and on the direct game route. Keep the archive outside the card as
+a low-contrast progression trace.
+
+This is a presentation boundary only. The same `ProfileRoll` request, secure
+RPC, canonical server result, eligibility guard, refresh behavior, and
+visitor-read-only path remain in force. Mobile uses the same stacked flow.
+
+**Related files**
+
+`src/lib/IdentityCard.svelte`, `src/lib/ProfileRoll.svelte`,
+`src/lib/ProfileShell.svelte`, `src/lib/TodayColor.svelte`,
+`test/profile-ritual-refinement.test.js`, `docs/PROGRESS.md`,
+`docs/CHANGELOG_2_0.md`.
+
+## 2026-07-29 — Use one typography contract for the shared header
+
+**Status:** accepted and implemented as a cohesion correction
+
+The shared header used separate typographic treatments for primary navigation,
+profile actions, account controls, and the mobile menu. Although the component
+was shared across routes, inherited fonts and mismatched sizes made each state
+look like different navigation chrome.
+
+Use the body typeface for every interactive header control at one 0.78 rem,
+600-weight scale with restrained letter spacing and title case. Apply the same
+contract to desktop navigation, Share/Edit, account actions, the mobile Menu
+trigger, and every mobile-menu action. Keep the compact brand wordmark as the
+only intentional typographic exception.
+
+**Related files**
+
+`src/lib/SiteModeHeader.svelte`, `test/sitewide-profile-cohesion.test.js`,
+`docs/PROGRESS.md`, `docs/CHANGELOG_2_0.md`.
+
+## 2026-07-29 — Give the bare root a minimal public homepage
+
+**Status:** accepted and implemented as an acquisition and orientation surface
+
+The bare root previously changed meaning by session: guest Roll when signed
+out and owner profile after authentication. That left no stable place to
+explain ChromaDie, offer account creation, or return when the logo was
+activated.
+
+Make `/` a session-independent landing page with one concise explanation of
+the daily color identity loop, one signup CTA for visitors, an owner-profile
+CTA for signed-in players, a quiet abstract color composition, and the shared
+legal/support footer. Keep the homepage header minimal with brand and account
+actions only. The header logo always navigates to `home`.
+
+Preserve gameplay and share compatibility: `/?view=game` remains the direct
+Roll route, `/c/<id>` remains the challenge route, `/u/<username>` remains the
+public profile route, and clean Discover/Studio/legal routes retain their
+meaning. The direct game route is non-indexed so `/` is the canonical
+acquisition surface. No auth, roll, scoring, reward, RLS, or schema behavior
+changes.
+
+**Related files**
+
+`src/lib/HomePage.svelte`, `src/lib/SiteModeHeader.svelte`,
+`src/lib/routes.js`, `src/App.svelte`, `test/home-page.test.js`,
+`test/phase-10-profile-first.test.js`,
+`test/phase-12-sitewide-profile-entry.test.js`, `docs/PROGRESS.md`,
+`docs/CHANGELOG_2_0.md`.
+
+## 2026-07-29 — Keep primary destination navigation off profile pages
+
+**Status:** accepted and implemented as a profile-simplicity refinement
+
+The profile is the product’s identity surface and already contains its owner
+gameplay. Repeating Profile, Discover, and Studio in the middle of the profile
+header adds application chrome to an intentionally sparse public page.
+
+In profile mode, retain the ChromaDie brand, Share, owner Edit, and account
+controls, but omit the primary destination navigation on desktop and from the
+mobile menu. Keep Profile, Discover, and Studio available through the same
+shared header on non-profile routes. Preserve the header grid with a
+non-interactive spacer so contextual actions remain aligned consistently, and
+label the profile mobile menu as profile actions.
+
+**Related files**
+
+`src/lib/SiteModeHeader.svelte`, `test/sitewide-profile-cohesion.test.js`,
+`docs/PROGRESS.md`, `docs/CHANGELOG_2_0.md`.
+
+## 2026-07-29 — Use one navigation shell across profile and application routes
+
+**Status:** accepted and implemented as a sitewide cohesion refinement
+
+The profile route had a minimal profile-only header while Roll, Discover, and
+Studio used a separate application header. That made the site feel like
+several products and left the profile without an obvious way to reach core
+surfaces.
+
+Render one `SiteModeHeader` on every application and public-profile route. The
+header owns the shared Profile / Discover / Studio navigation, active
+states, account controls, and responsive mobile menu. Profile Share and owner
+Edit remain available as contextual actions in the same header rather than a
+second navigation system.
+
+This is a presentation and navigation-boundary change only. Existing route
+parsing, public profile URLs, auth/session behavior, share analytics, owner
+editing, and secure gameplay services remain unchanged. The former
+`ProfileModeHeader` remains available as an unused compatibility component;
+the application no longer renders it.
+
+**Related files**
+
+`src/App.svelte`, `src/lib/SiteModeHeader.svelte`,
+`test/phase-10-2-approved-mockup.test.js`,
+`test/phase-12-sitewide-profile-entry.test.js`,
+`test/sitewide-profile-cohesion.test.js`, `docs/PROGRESS.md`,
+`docs/CHANGELOG_2_0.md`.
+
+## 2026-07-29 — Absorb Roll navigation into the profile and suppress fast-load interstitials
+
+**Status:** accepted and implemented as a profile-first navigation refinement
+
+The owner roll already lives inside the profile, so a primary Roll tab
+duplicated the same product action and weakened the principle that the profile
+is the game. Profile requests also replaced the page immediately with a
+text-heavy loading panel, producing a distracting flash during ordinary fast
+loads.
+
+Remove Roll from desktop and mobile primary navigation. Keep the existing game
+route as a compatibility boundary for signed-out guest play, shared challenges,
+and old direct links; do not alter roll authority or route parsing. Profile and
+account hydration remain non-visual: keep the atmospheric canvas stable, expose
+loading state through `aria-busy`, and render content when it is ready. Do not
+show account banners, header labels, profile cards, or silhouettes for routine
+loading. Error and unavailable-profile states remain explicit because they
+require user action.
+
+**Related files**
+
+`src/App.svelte`, `src/lib/SiteModeHeader.svelte`,
+`src/lib/ProfileShell.svelte`, `src/lib/Profile.svelte`,
+`test/phase-12-sitewide-profile-entry.test.js`,
+`test/profile-ritual-refinement.test.js`, `docs/PROGRESS.md`,
+`docs/CHANGELOG_2_0.md`.
+
+## 2026-07-29 — Preserve transient view state without publishing drafts
+
+**Status:** accepted and implemented
+
+Navigation should not discard work a player has started, but transient UI state
+must not become a second source of truth for published profile data or gameplay.
+
+Store bounded, allowlisted drafts and view preferences in a small session-scoped
+client layer. Scope profile drafts by profile id and Shop state by account id;
+keep Discovery state global to the current tab. Restore on remount, clear a
+profile draft after an authoritative save/publish, and clear all transient view
+state when local account cache is cleared. Use memory as a fallback when browser
+storage is unavailable.
+
+This preserves in-progress editing across navigation and same-tab reloads while
+leaving server-authoritative save/publish, authentication, RLS, roll, scoring,
+reward, inventory, and published-profile boundaries unchanged.
+
+**Related files**
+
+`src/lib/viewState.js`, `src/lib/ProfileEditor.svelte`,
+`src/lib/ProfileShell.svelte`, `src/lib/DiscoveryHub.svelte`,
+`src/lib/Shop.svelte`, `src/lib/stores.js`, `test/view-state.test.js`.
+
+## 2026-07-29 — Keep the default identity card horizontal and identity-first
+
+**Status:** accepted and implemented
+
+The default profile should read like a compact identity card rather than a
+stacked dashboard. Keep the avatar as the visual anchor, place the name and a
+small bounded set of earned badges beside it, and place public links beneath
+the identity copy. Preserve the existing roll and archive as separate regions
+below the card.
+
+Use the existing public `equipped_badges` projection, show no more than three
+secondary badges in the opening card, and keep badge labels available through
+accessible names and titles. Continue rendering links as validated structured
+values; do not add custom markup or a new profile data contract.
+
+**Related files**
+
+`src/lib/IdentityCard.svelte`, `src/lib/ProfileShell.svelte`,
+`test/profile-ritual-refinement.test.js`.
+
+## 2026-07-29 — Use a typographic personal-site language across the app
+
+**Status:** accepted and implemented as a visual-system refinement
+
+The previous Google-font and saturated-glass combination made Chromadie read
+like a generic generated dashboard. Adopt the reference qualities observed on
+catchii.de without copying its content or replacing Chromadie’s identity:
+Satoshi body copy, Cabinet Grotesk display type, Geist Mono labels, near-black
+canvas, thin rules, quiet capsule controls, restrained surfaces, and subtle
+grain/radial light.
+
+Keep the profile’s signature color as the game-specific differentiator. The
+visual pass changes typography, surfaces, navigation treatments, homepage
+composition, and atmosphere intensity only. It does not add a profile region,
+alter profile data, move roll authority, change authentication, or change
+database/RLS behavior. Font loading uses swap-safe fallbacks and explicitly
+allowlisted font origins in the deployed CSP.
+
+**Related files**
+
+`src/styles/fonts.css`, `src/styles/tokens.css`, `src/styles/site.css`,
+`src/lib/HomePage.svelte`, `src/lib/SiteModeHeader.svelte`,
+`src/lib/ProfileAtmosphere.svelte`, `src/lib/IdentityCard.svelte`,
+`test/reference-visual-language.test.js`.
+
+## 2026-07-29 — Move profile disclosures into a dedicated settings surface
+
+**Status:** accepted and implemented
+
+The public profile should remain a small identity, roll, and archive surface.
+Owner editing, social/privacy controls, account compatibility controls, and
+the optional color story now live at `/profile/settings`. The public story is
+off by default and is rendered only after the owner explicitly enables it.
+Visitor social controls remain available as a non-collapsible continuation so
+moving owner settings does not remove public interaction behavior.
+
+The linked production database is still marked drifted/NO-GO in the Phase 13
+baseline, so this change does not add a migration. The existing configuration
+slot that is excluded from the approved composition stores the story opt-in as
+a compatibility bit; a future approved additive migration can promote that to
+an explicit `storyVisible` field without changing the UI contract.
+
+**Related files**
+
+`src/lib/ProfileSettings.svelte`, `src/lib/ProfileShell.svelte`,
+`src/lib/ProfileEditor.svelte`, `src/lib/profileConfig.js`, `src/lib/routes.js`,
+`test/phase-10-profile-first.test.js`.
+
+## 2026-07-29 — Reconcile the production Phase 4–8 baseline before Phase 13
+
+**Status:** approved by owner, execution blocked by release gates
+
+The linked Supabase project is behind and drifted relative to the local chain.
+The safe reconciliation is the exact five-migration timestamp order documented
+in `docs/PHASE_13A_RELEASE_PLAN.md`. Do not stack identity work on the unknown
+production state, edit applied migrations, use migration repair, execute a
+generated destructive diff, or reset the linked database.
+
+Owner approval authorizes the reviewed release only after read-only preflight,
+backup/PITR confirmation, named rollback ownership, and lock/row-count review.
+Because the database password, backup/PITR point, rollback owner, and complete
+remote counts were unavailable on 2026-07-29, no production write was made.
+
+**Related files**
+
+`docs/PHASE_13A_RELEASE_PLAN.md`,
+`docs/PHASE_13A_RECONCILIATION_REPORT.md`,
+`docs/ROLLBACK_AND_RECOVERY.md`.
+
+## 2026-07-29 — Credentialed Phase 13A preflight passed, release still held
+
+The owner-side CLI can now connect to the linked database. The migration list
+and dry run confirm exactly the five reviewed migrations are pending. The
+linked schema diff is informational only: its broad reverse operations reflect
+the known remote/local drift and must not be executed. Read-only table stats
+confirm 10 profiles, 71 scores, 80 shop items, and 5 meta rows; no application
+blocking query was observed.
+
+Do not push until exact counts, backup/PITR restore point, named rollback owner,
+and the low-traffic window are recorded.
+
+## 2026-07-29 — Use a temporary Pages secret gate for live rehearsal
+
+Cloudflare Zero Trust Access was not selected because its onboarding requires
+billing setup for this account. The temporary Pages middleware is the
+no-cost, repository-native alternative: it protects the existing production
+domain with an encrypted `PREVIEW_PASSWORD` secret and a signed short-lived
+cookie, without placing credentials in source control. It must be deployed
+only for the approved rehearsal and removed afterward.
+
+## 2026-07-29 — Complete Phase 13A reconciliation after explicit risk acceptance
+
+The owner accepted that the Supabase Free plan provides no managed backup/PITR
+and authorized the live reconciliation behind the temporary Pages gate. The
+first push stopped on the remote UUID extension schema mismatch. The failed
+unapplied migrations were corrected to call
+`extensions.uuid_generate_v4()` explicitly, locally rehearsed, and retried
+once. All five migrations are now recorded remotely.
+
+This decision does not authorize identity, avatar, music, or root-routing work
+by itself. Phase 13 may resume only after the owner completes the gated browser
+smoke checks and the release report is retained with the exact remote results.
+
+## 2026-07-29 — Add the bounded Phase 13 identity contract after reconciliation
+
+**Status:** accepted and implemented; external domain cutover remains pending
+
+After Phase 13A aligned the linked production migration baseline, add the
+smallest additive identity contract: nullable display name and bio fields,
+Unicode-aware normalization, a server-authoritative `auth.uid()` update RPC,
+and explicit bounded public projections. Existing profile rows remain intact
+and identity values are not backfilled. Owner editing belongs in the existing
+settings surface, while visitor rendering remains visually equivalent to the
+owner's published identity.
+
+Canonical profile URLs are root `/<username>` paths. `/u/<username>` remains a
+temporary compatibility route, reserved application paths share one definition
+across client/server/tests, and legacy origins are normalized through the
+shared origin helper. Cloudflare host attachment, redirect rules, Supabase
+dashboard settings, and email-template installation are separate operator
+steps and are not implied by the repository implementation.
+
+Related files: `supabase/migrations/20260725150000_profile_identity.sql`,
+`src/lib/profileIdentity.js`, `src/lib/IdentityEditor.svelte`,
+`src/lib/routeContract.js`, `src/lib/siteOrigin.js`,
+`docs/CHM_LOL_DOMAIN_CUTOVER.md`.

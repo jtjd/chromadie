@@ -41,5 +41,5 @@ test('prototype route remains additive, direct-refreshable, and noindex', () => 
   assert.equal(route.routeMode, 'app');
   assert.equal(route.view, 'prototype');
   assert.equal(route.profileUsername, null);
-  assert.equal(parseRouteLocation('/').view, 'game');
+  assert.equal(parseRouteLocation('/').view, 'home');
 });

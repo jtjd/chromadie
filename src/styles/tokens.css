@@ -1,32 +1,32 @@
 /* Phase 1 design foundations. Legacy aliases remain in variables.css. */
 :root {
     /* Color */
-    --color-canvas: #0a0a0d;
-    --color-canvas-raised: #111218;
-    --color-canvas-deep: #06070a;
-    --color-ink-strong: #f2f3f5;
-    --color-ink: #d7d9e2;
-    --color-ink-muted: #9095a8;
-    --color-ink-faint: #696f82;
+    --color-canvas: #07080b;
+    --color-canvas-raised: #0d0f13;
+    --color-canvas-deep: #050608;
+    --color-ink-strong: #e9ebef;
+    --color-ink: #d4d7dd;
+    --color-ink-muted: #a2a5aa;
+    --color-ink-faint: #7d8086;
     --color-line-subtle: rgba(255, 255, 255, 0.08);
     --color-line-strong: rgba(255, 255, 255, 0.16);
-    --color-accent: #8b7cf6;
-    --color-accent-bright: #b7aaff;
+    --color-accent: #9f8cff;
+    --color-accent-bright: #c7baff;
     --color-accent-cyan: #2ed3c9;
     --color-success: #6ee787;
     --color-warning: #f1c40f;
     --color-danger: #ef6b78;
-    --gradient-canvas: radial-gradient(ellipse 900px 500px at 50% -8%, #14151e 0%, #0a0a0d 60%);
+    --gradient-canvas: radial-gradient(ellipse 72% 56% at 50% 8%, #10131c 0%, #07080b 68%);
     --gradient-spectrum: linear-gradient(90deg, #ff4d4d, #ffab2e, #ffe14d, #6ee787, #2ed3c9, #4d7dff, #a15cff, #ff4d4d);
-    --surface-panel: rgba(17, 18, 24, 0.55);
-    --surface-panel-strong: rgba(20, 21, 30, 0.82);
-    --surface-panel-soft: rgba(255, 255, 255, 0.045);
-    --surface-inset: rgba(0, 0, 0, 0.28);
+    --surface-panel: rgba(10, 12, 17, 0.74);
+    --surface-panel-strong: rgba(12, 14, 19, 0.9);
+    --surface-panel-soft: rgba(255, 255, 255, 0.035);
+    --surface-inset: rgba(0, 0, 0, 0.36);
 
     /* Type */
-    --font-body-stack: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-display-stack: 'Space Grotesk', 'Inter', -apple-system, sans-serif;
-    --font-mono-stack: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+    --font-body-stack: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+    --font-display-stack: 'Cabinet Grotesk', 'Satoshi', ui-sans-serif, system-ui, sans-serif;
+    --font-mono-stack: 'Geist Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
     --type-display: clamp(2.5rem, 7vw, 5.75rem);
     --type-h1: clamp(2rem, 4vw, 3.6rem);
     --type-h2: clamp(1.35rem, 2.2vw, 2rem);
@@ -34,8 +34,8 @@
     --type-body: 1rem;
     --type-small: 0.8125rem;
     --type-label: 0.6875rem;
-    --type-line-tight: 1.08;
-    --type-line-body: 1.6;
+    --type-line-tight: 1.02;
+    --type-line-body: 1.55;
 
     /* Space */
     --space-1: 0.25rem;
@@ -51,13 +51,13 @@
     --space-20: 5rem;
 
     /* Shape and depth */
-    --radius-sm: 0.625rem;
-    --radius-md: 1rem;
-    --radius-lg: 1.5rem;
-    --radius-xl: 2rem;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
     --radius-pill: 999px;
-    --shadow-panel: 0 1.5rem 4rem rgba(0, 0, 0, 0.3);
-    --shadow-float: 0 1rem 2.5rem rgba(0, 0, 0, 0.34);
+    --shadow-panel: 0 2rem 5rem rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    --shadow-float: 0 1.5rem 4rem rgba(0, 0, 0, 0.42);
     --shadow-accent: 0 1rem 3rem color-mix(in srgb, var(--color-accent) 24%, transparent);
     --blur-panel: 1.25rem;
 

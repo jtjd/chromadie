@@ -2,6 +2,7 @@ import { derived, writable, get } from 'svelte/store'
 import { supabase } from './supabase'
 import { resolveAccountState } from './authState'
 import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety'
+import { clearAllViewState } from './viewState.js'
 
 // --- Auth & Profile State ---
 export const session = writable(null)
@@ -97,6 +98,8 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
     } catch {
         // Ignore storage failures in hardened/private browsing modes.
     }
+
+    clearAllViewState()
 }
 
 const SHOP_SLOTS = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'orb_shape', 'profile_bg', 'profile_border', 'roll_effect', 'title'])

@@ -1,6 +1,7 @@
 import { isOwnProfileLookup, mapProfileRecord, mapProfileScores } from './profileContract.js';
 import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
 import { normalizeProfileStory } from './profileStory.js';
+import { normalizeUsernameSegment } from './routeContract.js';
 import {
   createDefaultProfileSocialSettings,
   createEmptyProfileSocial,
@@ -8,10 +9,35 @@ import {
   normalizeProfileSocialSettings
 } from './profileSocial.js';
 
-export const PUBLIC_PROFILE_SELECT = 'id, username, current_streak, longest_streak, lifetime_ep, total_rolls, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff';
+export const PUBLIC_PROFILE_SELECT = 'id, username, display_name, bio, current_streak, longest_streak, lifetime_ep, total_rolls, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff';
 
 const INVALID_PROFILE_MESSAGE = 'That profile address is invalid.';
 const PROFILE_LOAD_MESSAGE = 'The profile could not be loaded. Please check your connection and retry.';
+
+async function loadLegacyPublicProfile(supabaseClient, { username, userId }) {
+  let profileQuery = supabaseClient
+    .from('profiles')
+    .select(PUBLIC_PROFILE_SELECT);
+  profileQuery = username
+    ? profileQuery.ilike('username', username)
+    : profileQuery.eq('id', userId);
+  return profileQuery.maybeSingle();
+}
+
+/**
+ * Use the bounded RPC as the public contract. The explicit-column fallback is
+ * retained only while an older deployment is rolling forward to Phase 13; it
+ * never requests private profile fields.
+ */
+async function loadPublicProfile(supabaseClient, { username, userId }) {
+  const rpcResponse = username
+    ? await supabaseClient.rpc('get_public_profile_identity', { p_username: username })
+    : await supabaseClient.rpc('get_public_profile_identity_by_id', { p_user_id: userId });
+
+  if (!rpcResponse.error && rpcResponse.data) return rpcResponse;
+  if (rpcResponse.error && !['PGRST202', '42883'].includes(rpcResponse.error.code)) return rpcResponse;
+  return loadLegacyPublicProfile(supabaseClient, { username, userId });
+}
 
 function emptyProfileContext(overrides = {}) {
   return {
@@ -54,7 +80,7 @@ export async function loadProfileContext({
   const lookupUsername = profileUsername?.trim() || '';
   const lookupId = userId || null;
 
-  if (lookupUsername && !/^[A-Za-z0-9_]{3,20}$/.test(lookupUsername)) {
+  if (lookupUsername && !normalizeUsernameSegment(lookupUsername)) {
     return emptyProfileContext({ loadError: INVALID_PROFILE_MESSAGE });
   }
 
@@ -71,13 +97,10 @@ export async function loadProfileContext({
   if (viewingOwnProfile) {
     profileResponse = await supabaseClient.rpc('get_my_profile');
   } else {
-    let profileQuery = supabaseClient
-      .from('profiles')
-      .select(PUBLIC_PROFILE_SELECT);
-    profileQuery = lookupUsername
-      ? profileQuery.ilike('username', lookupUsername)
-      : profileQuery.eq('id', lookupId);
-    profileResponse = await profileQuery.maybeSingle();
+    profileResponse = await loadPublicProfile(supabaseClient, {
+      username: lookupUsername,
+      userId: lookupId
+    });
   }
 
   const { data: prof, error: profError } = profileResponse;
@@ -89,7 +112,21 @@ export async function loadProfileContext({
   });
 
   if (prof && prof.success !== false) {
-    context.targetProfile = mapProfileRecord(prof);
+    let publicProjection = prof;
+    if (viewingOwnProfile && prof.id) {
+      const projectionResponse = await supabaseClient.rpc('get_public_profile_identity_by_id', {
+        p_user_id: prof.id
+      });
+      if (projectionResponse.error || !projectionResponse.data) {
+        context.dataWarning = 'Public identity details are temporarily unavailable.';
+      } else {
+        publicProjection = projectionResponse.data;
+      }
+    }
+
+    context.targetProfile = mapProfileRecord(viewingOwnProfile
+      ? { ...prof, ...publicProjection }
+      : publicProjection);
     context.profileId = context.targetProfile?.id || lookupId;
     context.totalRolls = Number(context.targetProfile?.total_rolls) || 0;
 

@@ -1,6 +1,8 @@
 const PROFILE_FIELDS = Object.freeze([
   'id',
   'username',
+  'display_name',
+  'bio',
   'current_streak',
   'longest_streak',
   'ep_spent',

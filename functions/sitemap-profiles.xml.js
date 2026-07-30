@@ -1,8 +1,9 @@
-import { baseSecurityHeaders } from './_publicPage.js';
+import { baseSecurityHeaders, getSiteOrigin } from './_publicPage.js';
+import { getCanonicalProfilePath, normalizeUsernameSegment } from '../src/lib/routeContract.js';
 
 const PAGE_SIZE = 1000;
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
   const supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
   const supabaseKey = env.VITE_SUPABASE_KEY || env.SUPABASE_ANON_KEY;
 
@@ -12,13 +13,7 @@ export async function onRequestGet({ env }) {
 
   const urls = [];
   let lastUsername = null;
-  let siteOrigin = 'https://chromadie.com';
-  try {
-    const configured = new URL(env.VITE_SITE_URL || siteOrigin);
-    if (configured.protocol === 'https:') siteOrigin = configured.origin;
-  } catch {
-    // Keep the production domain fallback for malformed optional configuration.
-  }
+  const siteOrigin = getSiteOrigin(request, env);
 
   try {
     while (true) {
@@ -42,8 +37,10 @@ export async function onRequestGet({ env }) {
 
       const profiles = await response.json();
       for (const profile of profiles) {
-        if (typeof profile.username === 'string' && /^[A-Za-z0-9_]{3,20}$/.test(profile.username)) {
-          urls.push(`<url><loc>${siteOrigin}/u/${encodeURIComponent(profile.username)}</loc></url>`);
+        const username = normalizeUsernameSegment(profile.username);
+        const path = username ? getCanonicalProfilePath(username) : null;
+        if (path) {
+          urls.push(`<url><loc>${siteOrigin}${path}</loc></url>`);
         }
       }
 

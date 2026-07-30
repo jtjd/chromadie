@@ -66,6 +66,20 @@ Create tokens for:
 
 Components must consume tokens rather than scattered literals.
 
+### Current typography contract
+
+The sitewide type direction uses Satoshi for body copy and controls, Cabinet
+Grotesk for display identity and major headings, and Geist Mono for technical
+labels, scores, and compact metadata. The stack is loaded with swap-safe
+fallbacks and should be consumed through the shared font tokens rather than
+literal family names in components.
+
+The visual reference is typographic and atmospheric: near-black canvas, thin
+rules, quiet capsule controls, restrained surfaces, subtle grain, and one
+profile-derived accent. Chromadie retains its own daily color response and
+earned progression so the reference informs the composition without turning
+the product into a copy of a personal portfolio site.
+
 ## Customization Boundaries
 
 Allow:

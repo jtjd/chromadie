@@ -7,10 +7,10 @@ Chromadie is a Svelte 5 single-page application built with Vite, Supabase, and C
 - Guest mode is local-only and must not be treated as authenticated.
 - Real auth uses Supabase session state plus profile hydration.
 - Gameplay mutations are intended to be server-authoritative through Supabase RPCs.
-- The remote Supabase staging project is the authoritative live test target right now.
+- The gated remote Supabase project is the current live test target.
 - Cloudflare Pages deploys production automatically from the GitHub `main` branch.
-- The canonical production site is `https://chromadie.com`.
-- Cloudflare Pages may remain the hosting provider, but public links, metadata, and share cards should use `https://chromadie.com`.
+- The canonical production site is `https://chm.lol`.
+- Cloudflare Pages may remain the hosting provider, but public links, metadata, and share cards use `https://chm.lol`.
 
 ## Key Commands
 
@@ -45,6 +45,25 @@ Use `.env` or the deployment environment:
 
 Do not commit secrets.
 
+## Local Development
+
+Use the local Supabase project for feature testing so the Vite app cannot write
+to the linked project:
+
+```bash
+supabase start
+supabase db reset
+supabase status
+npm run dev
+```
+
+Create an ignored `.env.local` with the local `API_URL` and `ANON_KEY` from
+`supabase status`, plus `VITE_SITE_URL=http://localhost:5173`. Vite loads
+`.env.local` after `.env`, so these values override any remote project values
+during local development. Local auth bypasses Turnstile and disables email
+confirmation only on localhost, so a test account is available immediately.
+Stop the local services with `supabase stop` when finished.
+
 ## Production Deployment
 
 - Cloudflare Pages source: GitHub `main`
@@ -64,16 +83,20 @@ Both functions perform their own token validation. Hosted Supabase supplies `SUP
 `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; confirm all three are visible to the
 function runtime without printing their values.
 
-- In Supabase Auth URL Configuration, set `https://chromadie.com` as the Site URL and allow exactly:
-  - `https://chromadie.com/auth/callback`
-  - `https://chromadie.com/reset-password`
+- In Supabase Auth URL Configuration, set `https://chm.lol` as the Site URL and allow exactly these production transition URLs:
+  - `https://chm.lol/auth/callback`
+  - `https://chm.lol/reset-password`
+- `https://chromadie.com/auth/callback`
+- `https://chromadie.com/reset-password`
+- Keep the legacy callback URLs only until the old host and existing email
+  links have been verified; do not replace these entries with wildcards.
 - Enable email confirmations, secure password changes, and Cloudflare Turnstile in Supabase Auth.
   Store the Turnstile secret only in Supabase/Cloudflare settings; never use a `VITE_` name for it.
 - Install the versioned templates from `docs/email-*-template.html` in the matching Supabase Auth
   email-template slots.
 
 After pushing to `main`, verify the deployed asset bundle changed and smoke-test `/`, `/privacy`,
-`/how-to-play`, `/auth/callback`, `/reset-password`, `/shop`, `/leaderboard`, `/u/<username>`,
+`/how-to-play`, `/auth/callback`, `/reset-password`, `/shop`, `/leaderboard`, `/<username>`, `/u/<username>`,
 `/c/<challenge-id>`, both SVG share-card endpoints, account deletion, and a direct refresh of every
 route. Confirm CSP/HSTS headers on both static and Pages Function responses.
 

@@ -1,15 +1,18 @@
 <script>
-  import { session, authUser, profile, authInitialized, authEvent, accountState, guestProgressActive, profileLoading, profileError, equippedItems, selectedUserId, walletBalance, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
-  import { ACCOUNT_STATES } from './lib/authState';
+  import { session, authUser, profile, authInitialized, authEvent, accountState, guestProgressActive, profileLoading, profileError, selectedUserId, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
   import { signOutCurrentBrowser } from './lib/authSession';
   import { supabase, supabaseError } from './lib/supabase';
   import Auth from './lib/Auth.svelte';
   import AuthCallback from './lib/AuthCallback.svelte';
+  import HomePage from './lib/HomePage.svelte';
   import Game from './lib/Game.svelte';
   import Shop from './lib/Shop.svelte';
   import Leaderboard from './lib/Leaderboard.svelte';
   import Profile from './lib/Profile.svelte';
   import ProfileShell from './lib/ProfileShell.svelte';
+  import ProfileSettings from './lib/ProfileSettings.svelte';
+  import SiteModeHeader from './lib/SiteModeHeader.svelte';
+  import ProfileAtmosphere from './lib/ProfileAtmosphere.svelte';
   import ProfileCanvasPrototype from './lib/ProfileCanvasPrototype.svelte';
   import PrivacyPolicy from './lib/PrivacyPolicy.svelte';
   import FAQ from './lib/FAQ.svelte';
@@ -18,16 +21,16 @@
   import GuestLock from './lib/GuestLock.svelte';
   import { loadChallengeLink } from './lib/challenges';
   import { getAppOrigin } from './lib/authUrls';
-  import { getNameEffect, getFrameEffect, getTitleText } from './lib/cosmetics';
-  import { getRankState } from './lib/ranks';
   import { focusFirstElement, restoreFocus, trapFocus } from './lib/a11y';
   import { VALID_VIEWS, VALID_LEADERBOARD_TABS, parseRouteLocation } from './lib/routes';
+  import { getCanonicalProfilePath } from './lib/routeContract.js';
   import { trackProductEvent } from './lib/productAnalytics.js';
+  import { normalizeHexColor } from './lib/utils';
   import { onMount, onDestroy, tick } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
   const VALID_APP_ROUTES = new Set(['app', 'privacy', 'how-to-play', 'auth-callback', 'reset-password']);
-  let view = 'game';
+  let view = 'home';
   let leaderboardTab = 'today';
   let routeMode = 'app';
   let showAuthModal = false;
@@ -37,16 +40,21 @@
   let challengeLoadRequestId = 0;
   let authDialog = null;
   let authOpener = null;
-  let mobileMenuOpen = false;
-  let mobileNavPanel = null;
-  let mobileMenuOpener = null;
   let selectedProfileUsername = null;
+  let profileRouteKind = null;
   let legacyProfile = false;
   let founderLaunchWindowActive = false;
   let routeInitialized = false;
   let mainContent = null;
   let routeFocusRequest = 0;
   let lastTrackedRouteKey = '';
+  let profileVisualFixture = '';
+
+  function getProfileVisualFixture() {
+    if (!import.meta.env.DEV || typeof window === 'undefined' || window.location.hostname !== '127.0.0.1') return '';
+    const value = new URLSearchParams(window.location.search).get('profile_fixture');
+    return ['owner', 'pre-roll', 'music'].includes(value) ? value : '';
+  }
 
   function trackCurrentRoute() {
     if (typeof window === 'undefined') return;
@@ -66,6 +74,7 @@
 
   function parseRoute() {
     challengeLoadRequestId += 1;
+    profileVisualFixture = getProfileVisualFixture();
     const parsed = parseRouteLocation(window.location.pathname, window.location.search);
     routeMode = parsed.routeMode;
 
@@ -73,11 +82,13 @@
       challengeData = null;
       view = 'profile';
       selectedProfileUsername = parsed.profileUsername;
+      profileRouteKind = parsed.profileRouteKind;
       selectedUserId.set(null);
       legacyProfile = parsed.legacyProfile;
     } else if (parsed.challengeId !== null) {
       view = 'game';
       selectedProfileUsername = null;
+      profileRouteKind = null;
       selectedUserId.set(null);
       legacyProfile = false;
       challengeData = {
@@ -110,15 +121,18 @@
     if (view === 'game' && challengeData) {
       return;
     }
-
     if (view === 'profile') {
       const routeUsername = selectedProfileUsername
         || ($selectedUserId && $session?.user?.id && $selectedUserId === $session.user.id ? currentProfileUsername : null)
         || (!$selectedUserId ? currentProfileUsername : null);
       const currentUrl = `${window.location.pathname}${window.location.search}`;
       if (routeUsername) {
+        const canonicalProfilePath = getCanonicalProfilePath(routeUsername);
+        const nextPath = legacyProfile
+          ? `/u/${encodeURIComponent(routeUsername)}`
+          : canonicalProfilePath;
         const legacySuffix = legacyProfile ? '?legacy=1' : '';
-        const nextUrl = `/u/${encodeURIComponent(routeUsername)}${legacySuffix}`;
+        const nextUrl = `${nextPath || '/'}${legacySuffix}`;
         if (nextUrl !== currentUrl) {
           window.history.pushState({}, '', nextUrl);
         }
@@ -126,8 +140,23 @@
       }
     }
 
+    if (view === 'home') {
+      if (`${window.location.pathname}${window.location.search}` !== '/') {
+        window.history.pushState({}, '', '/');
+      }
+      return;
+    }
+
+    if (view === 'profile-settings') {
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+      if (currentUrl !== '/profile/settings') {
+        window.history.pushState({}, '', '/profile/settings');
+      }
+      return;
+    }
+
     const params = new SvelteURLSearchParams();
-    if (view !== 'game') params.set('view', view);
+    params.set('view', view);
     if (view === 'leaderboard' && leaderboardTab !== 'today') {
       params.set('tab', leaderboardTab);
     }
@@ -200,11 +229,13 @@
     if (!VALID_VIEWS.includes(nextView)) return;
 
     routeMode = 'app';
-    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
-      window.history.pushState({}, '', '/');
+    if (typeof window !== 'undefined') {
+      const nextPath = nextView === 'profile-settings' ? '/profile/settings' : '/';
+      if (window.location.pathname !== nextPath || window.location.search) {
+        window.history.pushState({}, '', nextPath);
+      }
     }
     view = nextView;
-    mobileMenuOpen = false;
     if (nextView !== 'leaderboard') {
       leaderboardTab = options.tab && VALID_LEADERBOARD_TABS.includes(options.tab) ? options.tab : leaderboardTab;
     } else if (options.tab && VALID_LEADERBOARD_TABS.includes(options.tab)) {
@@ -215,8 +246,10 @@
       selectedProfileUsername = options.username || options.profileUsername || $profile?.username || $authUser?.user_metadata?.username || null;
       selectedUserId.set(options.userId || null);
       legacyProfile = Boolean(options.legacyProfile);
+      profileRouteKind = legacyProfile ? 'compatibility' : 'root';
     } else {
       selectedProfileUsername = null;
+      profileRouteKind = null;
       selectedUserId.set(null);
       legacyProfile = false;
     }
@@ -296,26 +329,12 @@
     selectedUserId.set(null);
     selectedProfileUsername = null;
     challengeData = null;
-    closeMobileMenu();
-    setRoute('game');
+    setRoute('home');
     logoutInProgress = false;
   }
 
-  function handleNavClick(newView) {
-    if (routeMode === 'app' && view === 'game' && challengeData && newView !== 'game') {
-      clearChallengeState();
-    }
-    if (newView === 'profile') {
-      setRoute(newView, { username: $profile?.username || $authUser?.user_metadata?.username || null });
-    } else {
-      setRoute(newView);
-    }
-  }
-
-  function handleLogoClick(event) {
-    event.preventDefault();
-    clearChallengeState();
-    setRoute('game');
+  function handleProfileHeaderEdit() {
+    setRoute('profile-settings');
   }
 
   function handleNavigation(event) {
@@ -336,10 +355,9 @@
     selectedUserId.set(null);
     selectedProfileUsername = null;
     challengeData = null;
-    mobileMenuOpen = false;
     showAuthModal = false;
     routeMode = 'app';
-    setRoute('game');
+    setRoute('home');
 
     const signOutResult = await signOutCurrentBrowser(supabase.auth);
 
@@ -362,11 +380,7 @@
         : 'login';
     authInitialTab = requestedMode === 'signup' ? 'signup' : 'login';
     const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    authOpener = mobileMenuOpen ? (mobileMenuOpener || activeElement) : activeElement;
-    if (mobileMenuOpen) {
-      mobileMenuOpen = false;
-      mobileMenuOpener = null;
-    }
+    authOpener = activeElement;
     showAuthModal = true;
     await tick();
     focusFirstElement(authDialog) || authDialog?.focus();
@@ -390,76 +404,47 @@
     trapFocus(event, authDialog);
   }
 
-  async function toggleMobileMenu() {
-    if (mobileMenuOpen) {
-      await closeMobileMenu();
-      return;
-    }
-    mobileMenuOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    mobileMenuOpen = true;
-    await tick();
-    focusFirstElement(mobileNavPanel) || mobileNavPanel?.focus();
-  }
-
-  async function closeMobileMenu() {
-    if (!mobileMenuOpen) return;
-    mobileMenuOpen = false;
-    await tick();
-    restoreFocus(mobileMenuOpener);
-    mobileMenuOpener = null;
-  }
-
-  function handleMobileMenuKeydown(event) {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      void closeMobileMenu();
-      return;
-    }
-    trapFocus(event, mobileNavPanel);
-  }
-
-  async function handleMobileNavClick(nextView, options = {}) {
-    await closeMobileMenu();
-    if (nextView === 'profile') {
-      handleNavClick('profile');
-    } else if (Object.keys(options).length > 0) {
-      setRoute(nextView, options);
-    } else {
-      handleNavClick(nextView);
-    }
-  }
-
   $: if (challengeData && routeMode === 'app' && view !== 'game') {
     clearChallengeState();
   }
 
-  $: userCosmetics = $equippedItems;
-  $: nameEff = getNameEffect(userCosmetics);
-  $: frameEff = getFrameEffect(userCosmetics);
-  $: titleTxt = getTitleText(userCosmetics);
-  $: headerRank = $profile ? getRankState($profile.lifetime_ep || 0) : null;
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
-  $: headerWalletBalance = $profileLoading ? '—' : (Number($walletBalance) || 0).toLocaleString();
+  $: siteAtmosphereColor = normalizeHexColor($profile?.mood_color, '#8B7CF6');
   $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
-  $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && (!$authUser || !$profileLoading);
-  $: username = $session ? ($profile?.username || 'Loading your account...') : 'Guest Mode';
-  $: mobileStatusText = $accountState === ACCOUNT_STATES.AUTHENTICATED
-    ? username
-    : $accountState === ACCOUNT_STATES.BOOTING
-      ? 'Loading account'
-      : $accountState === ACCOUNT_STATES.PROFILE_LOADING
-        ? 'Loading profile'
-        : $accountState === ACCOUNT_STATES.PROFILE_ERROR
-          ? 'Account issue'
-          : ($guestProgressActive ? 'Guest Mode' : 'Signed out');
-  $: mobileStatusActionable = $accountState === ACCOUNT_STATES.SIGNED_OUT;
+  $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && view !== 'home' && view !== 'profile' && view !== 'profile-settings' && (!$authUser || !$profileLoading);
   $: profileTitle = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || 'Profile';
+  $: profileModeVisible = routeMode === 'app' && view === 'profile' && !legacyProfile;
+  $: profileSettingsModeVisible = routeMode === 'app' && view === 'profile-settings';
+  $: homeModeVisible = routeMode === 'app' && view === 'home';
+  $: profileModeUsername = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || '';
+  $: currentAccountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
+  $: profileModeOwner = Boolean(
+    profileModeVisible
+      && (
+        profileVisualFixture
+        || (
+          $isAuthenticated
+          && profileModeUsername
+          && currentAccountUsername
+          && profileModeUsername.toLowerCase() === currentAccountUsername.toLowerCase()
+          && (!$selectedUserId || $selectedUserId === $session?.user?.id)
+        )
+      )
+  );
+  $: profileModePath = getCanonicalProfilePath(profileModeUsername) || '/profile';
+  $: profileModeUrl = typeof window !== 'undefined'
+    ? new URL(profileModePath, window.location.origin).toString()
+    : profileModePath;
   $: pageTitle = routeMode === 'privacy'
     ? 'Privacy Policy | ChromaDie'
     : routeMode === 'how-to-play'
       ? 'How to Play | ChromaDie'
       : routeMode === 'app' && view === 'profile'
         ? `${profileTitle} | ChromaDie`
+        : routeMode === 'app' && view === 'profile-settings'
+          ? 'Profile Settings | ChromaDie'
+        : routeMode === 'app' && view === 'home'
+          ? 'ChromaDie — A daily color identity'
         : routeMode === 'app' && view === 'prototype'
           ? 'Profile Canvas Prototype | ChromaDie'
         : routeMode === 'app' && view === 'leaderboard'
@@ -483,6 +468,10 @@
       ? 'Learn how ChromaDie works: roll a color every day, discover rarity and traits, earn EP, and compete on the leaderboard.'
       : routeMode === 'app' && view === 'profile'
         ? `View ${profileTitle}'s public ChromaDie profile, progress, achievements, and recent rolls.`
+        : routeMode === 'app' && view === 'profile-settings'
+          ? 'Edit your ChromaDie profile, public story visibility, links, expression, and interaction settings.'
+        : routeMode === 'app' && view === 'home'
+          ? 'Roll one color each day and build a personal profile that grows through rarity, conditions, collections, and time.'
         : routeMode === 'app' && view === 'prototype'
           ? 'A noindex Phase 1 profile canvas prototype for ChromaDie.'
         : routeMode === 'app' && view === 'leaderboard'
@@ -498,14 +487,18 @@
       ? '/how-to-play'
       : routeMode === 'app' && view === 'leaderboard'
         ? '/leaderboard'
+        : routeMode === 'app' && view === 'profile-settings'
+          ? '/profile/settings'
         : routeMode === 'app' && view === 'profile' && selectedProfileUsername
-          ? `/u/${encodeURIComponent(selectedProfileUsername)}`
+          ? (getCanonicalProfilePath(selectedProfileUsername) || '/')
           : routeMode === 'app' && view === 'prototype'
             ? '/prototype/profile'
+          : routeMode === 'app' && view === 'game' && !challengeData
+            ? '/?view=game'
           : '/';
   $: pageRobots = routeMode === 'not-found'
     ? 'noindex,follow'
-    : routeMode === 'app' && (legacyProfile || view === 'game' && challengeData || view === 'shop' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
+    : routeMode === 'app' && (legacyProfile || profileRouteKind === 'compatibility' || view === 'game' || view === 'shop' || view === 'profile-settings' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
     ? 'noindex,follow'
     : routeMode === 'auth-callback' || routeMode === 'reset-password'
       ? 'noindex,nofollow'
@@ -517,7 +510,7 @@
   }
 
   $: if (typeof document !== 'undefined') {
-    document.body.style.overflow = (showAuthModal || mobileMenuOpen) ? 'hidden' : '';
+    document.body.style.overflow = showAuthModal ? 'hidden' : '';
   }
 
   $: if (typeof document !== 'undefined') {
@@ -590,121 +583,23 @@
   {/if}
 
   <div id="header-mount">
-    {#if mobileMenuOpen}
-      <button
-        type="button"
-        class="mobile-nav-backdrop"
-        aria-label="Close navigation menu"
-        on:click={closeMobileMenu}
-      ></button>
-    {/if}
-    <header class="site-header">
-      <div class="header-brand">
-        <a href="/" class="logo" on:click={handleLogoClick} aria-label="ChromaDie home">
-          <img class="logo-mark" src="/logo-mark.svg" alt="" width="34" height="34" />
-          <span>ChromaDie</span>
-        </a>
-        <a
-          href="/how-to-play"
-          class="header-guide-link"
-          aria-label="Open How to Play"
-          on:click|preventDefault={() => navigateToPath('/how-to-play')}
-        >
-          How to Play
-        </a>
-      </div>
-      {#if $accountState === ACCOUNT_STATES.PROFILE_LOADING}
-        <span class="mobile-status-pill">Loading profile</span>
-      {:else if $accountState === ACCOUNT_STATES.PROFILE_ERROR}
-        <span class="mobile-status-pill">Account issue</span>
-      {:else if $isAuthenticated}
-        <div class="mobile-user-chip {frameEff.cls}" style="{frameEff.style}">
-          {#if titleTxt}
-            <span class="title-chip">[{titleTxt}]</span>
-          {/if}
-          {#if headerRank}
-            <span
-              class="rank-pill"
-              style={`color: ${headerRank.current.color}; border-color: ${headerRank.current.color === 'var(--spectrum)' ? '#a15cff' : headerRank.current.color};`}
-              aria-label={`${headerRank.current.name} rank`}
-            >
-              {headerRank.current.name}
-            </span>
-          {/if}
-          <span class="user-name {nameEff.cls}" style="{nameEff.style}" data-text={headerUsername}>
-            {headerUsername}
-          </span>
-        </div>
-      {:else if mobileStatusActionable}
-        <button type="button" class="mobile-status-pill mobile-status-action" on:click={openAuthModal}>
-          {mobileStatusText}
-        </button>
-      {:else}
-        <span class="mobile-status-pill">
-          {mobileStatusText}
-        </span>
-      {/if}
-      <button
-        type="button"
-        class="menu-toggle"
-        aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-        aria-expanded={mobileMenuOpen}
-        aria-controls="mobile-navigation"
-        on:click={toggleMobileMenu}
-      >
-        <span class="menu-toggle-lines" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
-        </span>
-      </button>
-
-      <nav class="nav-links desktop-nav">
-        <button class="nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => handleNavClick('game')}>Roll</button>
-        <button class="nav-link" class:active={routeMode === 'app' && view === 'shop'} on:click={() => handleNavClick('shop')}>Shop</button>
-        <button class="nav-link" class:active={routeMode === 'app' && view === 'leaderboard'} on:click={() => setRoute('leaderboard', { tab: 'today' })}>Leaderboard</button>
-        <button class="nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => handleNavClick('profile')}>Profile</button>
-
-        {#if $accountState === ACCOUNT_STATES.BOOTING}
-          <div class="user-chip loading-chip"><span class="user-name">Loading account...</span></div>
-        {:else if $accountState === ACCOUNT_STATES.PROFILE_LOADING}
-          <div class="user-chip loading-chip">
-            <span class="user-name">Loading account...</span>
-          </div>
-        {:else if $accountState === ACCOUNT_STATES.PROFILE_ERROR}
-          <div class="user-chip loading-chip profile-error-chip">
-            <span class="user-name">Account unavailable</span>
-            <button type="button" class="logout-btn" on:click={() => window.location.reload()}>Retry</button>
-            <button type="button" class="logout-btn" on:click={handleLogout} disabled={logoutInProgress}>{logoutInProgress ? 'Logging out…' : 'Log Out'}</button>
-          </div>
-        {:else if $isAuthenticated}
-          <button type="button" class="wallet-pill desktop-wallet-pill" on:click={() => handleNavClick('shop')} aria-label={`${headerWalletBalance} EP. Open shop.`}>
-            <span class="wallet-pill-label">Balance</span>
-            <span class="wallet-pill-value">{headerWalletBalance} EP</span>
-          </button>
-          <div class="user-chip {frameEff.cls}" style="{frameEff.style}">
-            {#if titleTxt}
-              <span class="title-chip">[{titleTxt}]</span>
-            {/if}
-            {#if headerRank}
-              <span
-                class="rank-pill"
-                style={`color: ${headerRank.current.color}; border-color: ${headerRank.current.color === 'var(--spectrum)' ? '#a15cff' : headerRank.current.color};`}
-                aria-label={`${headerRank.current.name} rank`}
-              >
-                {headerRank.current.name}
-              </span>
-            {/if}
-            <span class="user-name {nameEff.cls}" style="{nameEff.style}" data-text={headerUsername}>
-              {headerUsername}
-            </span>
-            <button class="logout-btn" on:click={handleLogout} disabled={logoutInProgress}>{logoutInProgress ? 'Logging out…' : 'Log Out'}</button>
-          </div>
-        {:else}
-          <button type="button" class="login-btn-header" on:click={openAuthModal}>Sign In / Sign Up</button>
-        {/if}
-      </nav>
-    </header>
+    <SiteModeHeader
+      activeView={routeMode === 'app' ? view : routeMode}
+      accountState={$accountState}
+      username={headerUsername}
+      isAuthenticated={$isAuthenticated}
+      logoutInProgress={logoutInProgress}
+      isProfileMode={profileModeVisible}
+      isHomeMode={homeModeVisible}
+      profileUsername={profileModeUsername}
+      shareUrl={profileModeUrl}
+      isOwner={profileModeOwner}
+      on:navigate={handleNavigation}
+      on:login={openAuthModal}
+      on:logout={handleLogout}
+      on:retry={() => window.location.reload()}
+      on:edit={handleProfileHeaderEdit}
+    />
 
     {#if founderAnnouncementVisible}
       <section class="founder-banner" aria-label="Launch announcement" role="status" aria-live="polite">
@@ -721,53 +616,6 @@
         </div>
       </section>
     {/if}
-
-    <div
-      id="mobile-navigation"
-      class="mobile-nav-panel"
-      class:open={mobileMenuOpen}
-      bind:this={mobileNavPanel}
-      role="dialog"
-      aria-modal={mobileMenuOpen ? 'true' : undefined}
-      aria-hidden={!mobileMenuOpen}
-      inert={!mobileMenuOpen}
-      aria-label="Navigation menu"
-      tabindex="-1"
-      on:keydown={handleMobileMenuKeydown}
-    >
-      <div class="mobile-nav-section">
-        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'game'} on:click={() => handleMobileNavClick('game')}>Roll</button>
-        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'shop'} on:click={() => handleMobileNavClick('shop')}>Shop</button>
-        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'leaderboard'} on:click={() => handleMobileNavClick('leaderboard', { tab: 'today' })}>Leaderboard</button>
-        <button class="nav-link mobile-nav-link" class:active={routeMode === 'app' && view === 'profile'} on:click={() => handleMobileNavClick('profile')}>Profile</button>
-      </div>
-
-      <div class="mobile-nav-section mobile-auth-section">
-        {#if $accountState === ACCOUNT_STATES.BOOTING}
-          <div class="mobile-auth-summary loading-chip mobile-loading-summary">
-            <span class="user-name">Loading account...</span>
-          </div>
-        {:else if $accountState === ACCOUNT_STATES.PROFILE_LOADING}
-          <div class="mobile-auth-summary loading-chip mobile-loading-summary">
-            <span class="user-name">Loading account...</span>
-          </div>
-        {:else if $accountState === ACCOUNT_STATES.PROFILE_ERROR}
-          <div class="mobile-auth-summary loading-chip profile-error-chip">
-            <span class="user-name">Account unavailable</span>
-          </div>
-          <button type="button" class="logout-btn mobile-auth-btn" on:click={() => window.location.reload()}>Retry</button>
-          <button type="button" class="logout-btn mobile-auth-btn" on:click={handleLogout} disabled={logoutInProgress}>{logoutInProgress ? 'Logging out…' : 'Log Out'}</button>
-        {:else if $isAuthenticated}
-          <button type="button" class="mobile-wallet-card" on:click={() => handleMobileNavClick('shop')}>
-            <span class="mobile-wallet-label">Wallet balance</span>
-            <span class="mobile-wallet-value">{headerWalletBalance} EP</span>
-          </button>
-          <button type="button" class="logout-btn mobile-auth-btn" on:click={handleLogout} disabled={logoutInProgress}>{logoutInProgress ? 'Logging out…' : 'Log Out'}</button>
-        {:else}
-          <button type="button" class="login-btn-header mobile-auth-btn" on:click={openAuthModal}>Sign In / Sign Up</button>
-        {/if}
-      </div>
-    </div>
   </div>
 
   {#if challengeData && view === 'game'}
@@ -834,28 +682,25 @@
     </section>
   {/if}
 
-  {#if $profileLoading}
-    <div class="auth-loading-banner" role="status" aria-live="polite">
-      <span class="auth-loading-kicker">Loading account</span>
-      <span class="auth-loading-copy">Preparing your account data...</span>
+  {#if $authInitialized && $session && $profileError && !profileModeVisible}
+    <div class="account-error-banner" role="alert" aria-live="polite">
+      <span class="account-error-kicker">Account load error</span>
+      <span class="account-error-copy">Your signed-in session could not load account data.</span>
     </div>
   {/if}
 
-  {#if $authInitialized && $session && $profileError}
-    <div class="auth-loading-banner auth-error-banner" role="alert" aria-live="polite">
-      <span class="auth-loading-kicker">Account load error</span>
-      <span class="auth-loading-copy">Your signed-in session could not load account data.</span>
-    </div>
+  {#if !profileModeVisible}
+    <ProfileAtmosphere accent={siteAtmosphereColor} secondaryAccent="#2ED3C9" />
   {/if}
 
-  <div class="app-main" id="main-content" role={routeMode === 'app' ? 'main' : undefined} tabindex="-1" bind:this={mainContent}>
+  <div class={'app-main ' + (profileModeVisible ? 'app-main--profile' : 'app-main--site') + (homeModeVisible ? ' app-main--home' : '') + (profileSettingsModeVisible ? ' app-main--profile-settings' : '')} id="main-content" role={routeMode === 'app' ? 'main' : undefined} tabindex="-1" bind:this={mainContent}>
   {#if routeMode === 'not-found'}
     <main class="container" aria-labelledby="not-found-title">
       <section class="card bootstrap-error-card">
         <p class="bootstrap-error-kicker">404</p>
         <h1 id="not-found-title">Page not found</h1>
         <p class="info-text">That ChromaDie page does not exist or may have moved.</p>
-        <a class="roll-btn" href="/" on:click|preventDefault={() => navigateToPath('/')}>Back to Roll</a>
+        <a class="roll-btn" href="/" on:click|preventDefault={() => navigateToPath('/')}>Back home</a>
       </section>
     </main>
   {:else if routeMode === 'privacy'}
@@ -863,7 +708,13 @@
   {:else if routeMode === 'how-to-play'}
     <FAQ />
   {:else}
-    {#if view === 'game'}
+    {#if view === 'home'}
+      <HomePage
+        isAuthenticated={$isAuthenticated}
+        on:signup={() => openAuthModal('signup')}
+        on:profile={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
+      />
+    {:else if view === 'game'}
       <Game on:promptlogin={openAuthModal} on:navigate={handleNavigation} />
     {:else if view === 'prototype'}
       <ProfileCanvasPrototype />
@@ -871,13 +722,12 @@
       {#key `leaderboard:${leaderboardTab}`}
         <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
       {/key}
-    {:else if $profileLoading && (view === 'shop' || view === 'profile')}
-      <div class="container">
-        <div class="card">
-          <h1>Loading account</h1>
-          <p class="info-text">Preparing your account features. Guest play stays available in Roll.</p>
-        </div>
-      </div>
+    {:else if view === 'profile-settings'}
+      {#if $isAuthenticated}
+        <ProfileSettings on:navigate={handleNavigation} />
+      {:else}
+        <GuestLock view="profile" guestActive={$guestProgressActive} on:login={openAuthModal} />
+      {/if}
     {:else if $authInitialized && $session && $profileError && (view === 'shop' || view === 'profile')}
       <div class="container">
         <div class="card">
@@ -893,7 +743,7 @@
       {#if legacyProfile}
         <Profile profileUsername={selectedProfileUsername} userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
       {:else}
-        <ProfileShell profileUsername={selectedProfileUsername} userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
+        <ProfileShell profileUsername={selectedProfileUsername} userId={$selectedUserId} visualFixture={profileVisualFixture} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
       {/if}
     {:else if $isAuthenticated}
       {#if view === 'shop'}
@@ -942,6 +792,21 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+  }
+
+  .app-main--site {
+    position: relative;
+    isolation: isolate;
+    min-height: calc(100dvh - 4.25rem);
+  }
+
+  .app-main--home {
+    min-height: calc(100dvh - 9.75rem);
+  }
+
+  .app-main--site > * {
+    position: relative;
+    z-index: 1;
   }
 
   .app-main:focus {
@@ -1006,7 +871,7 @@
   }
 
   .bootstrap-error-details {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono-stack);
     color: #f9a8d4;
   }
 
@@ -1045,7 +910,7 @@
     color: var(--text-muted);
   }
 
-  .auth-loading-banner {
+  .account-error-banner {
     margin: 0 1rem 1rem;
     padding: 0.8rem 1rem;
     border-radius: 12px;
@@ -1059,7 +924,7 @@
     justify-content: center;
   }
 
-  .auth-loading-kicker {
+  .account-error-kicker {
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -1067,12 +932,12 @@
     color: var(--accent-purple);
   }
 
-  .auth-loading-copy {
+  .account-error-copy {
     font-size: 0.92rem;
     color: var(--text-muted);
   }
 
-  .auth-error-banner {
+  .account-error-banner {
     border-color: rgba(248, 113, 113, 0.35);
     background: rgba(248, 113, 113, 0.08);
   }
@@ -1245,7 +1110,7 @@
   }
   .challenge-score {
     margin: 0;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono-stack);
     font-weight: 700;
     color: #fff;
     font-size: 1rem;
@@ -1274,12 +1139,14 @@
   }
 
   .site-footer {
+    position: relative;
+    z-index: 1;
     width: 100%;
     margin-top: auto;
-    padding: 0 0 28px;
+    padding: 0 0 1.5rem;
     border-top: 1px solid rgba(255,255,255,0.08);
     color: var(--text-muted);
-    font-size: 0.84rem;
+    font: 500 0.72rem / 1.4 var(--font-mono-stack);
   }
 
   .site-footer-inner {
@@ -1297,10 +1164,9 @@
   .site-footer p {
     margin: 0;
     color: rgba(255,255,255,0.7);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    font-size: 0.72rem;
-    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+    font-weight: 500;
   }
 
   .site-footer nav {
@@ -1367,7 +1233,7 @@
 
   .wallet-pill-value {
     color: #8ff7df;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono-stack);
     font-size: 0.76rem;
     font-weight: 700;
   }
@@ -1433,7 +1299,7 @@
       width: 100%;
       align-self: flex-start;
     }
-    .auth-loading-banner {
+    .account-error-banner {
       margin-left: 0;
       margin-right: 0;
       justify-content: flex-start;
@@ -1452,11 +1318,6 @@
       min-width: 0;
       flex: 1 1 auto;
     }
-    .site-header .logo {
-      font-size: 1rem;
-      letter-spacing: -0.2px;
-      flex: 0 0 auto;
-    }
     .header-guide-link {
       display: none;
     }
@@ -1471,13 +1332,6 @@
       margin-left: auto;
       margin-right: 0.25rem;
       overflow: hidden;
-    }
-    .mobile-user-chip .user-name {
-      min-width: 0;
-      max-width: min(44vw, 180px);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
     .mobile-status-pill,
     .mobile-user-chip {
@@ -1606,7 +1460,7 @@
     }
     .mobile-wallet-value {
       color: #8ff7df;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--font-mono-stack);
       font-size: 0.88rem;
       font-weight: 700;
     }

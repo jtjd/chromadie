@@ -141,7 +141,9 @@ Maintain current public routes during migration.
 
 Possible route map:
 
-- `/` → own profile when authenticated; public landing/onboarding otherwise.
+- `/` → public landing/onboarding; signed-in visitors receive an owner-profile
+  CTA without changing the root route.
+- `/?view=game` → compatibility Roll route for guest play and old links.
 - `/u/:username` → public profile.
 - `/leaderboard` → discovery hub or preserved redirect.
 - `/shop` → decoration studio or preserved redirect.

@@ -50,6 +50,11 @@
     return value.trim().toLowerCase();
   }
 
+  function isLocalDevelopment() {
+    if (!import.meta.env.DEV || typeof window === 'undefined') return false;
+    return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+  }
+
   function setMode(nextTab) {
     tab = nextTab;
     error = '';
@@ -77,6 +82,11 @@
   }
 
   onMount(() => {
+    if (isLocalDevelopment()) {
+      turnstileState = 'ready';
+      return;
+    }
+
     if (!siteKey) {
       error = 'Authentication is not configured.';
       return;
@@ -148,15 +158,16 @@
     loading = true;
     error = '';
     notice = '';
+    const localDevelopment = isLocalDevelopment();
 
-    if (!siteKey) {
+    if (!localDevelopment && !siteKey) {
       error = 'Authentication is not configured.';
       loading = false;
       return;
     }
 
-    const captchaToken = getCaptchaToken();
-    if (!captchaToken) {
+    const captchaToken = localDevelopment ? null : getCaptchaToken();
+    if (!localDevelopment && !captchaToken) {
       error = 'Please complete the security check.';
       loading = false;
       return;
@@ -205,7 +216,7 @@
         options: {
           emailRedirectTo: getAuthCallbackUrl(),
           data: { username, display_name: username },
-          captchaToken
+          ...(captchaToken ? { captchaToken } : {})
         }
       });
 
@@ -228,7 +239,7 @@
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: getResetPasswordUrl(),
-        captchaToken
+        ...(captchaToken ? { captchaToken } : {})
       });
 
       if (resetError) {
@@ -247,7 +258,7 @@
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email,
         password: password,
-        options: { captchaToken }
+        options: captchaToken ? { captchaToken } : {}
       });
 
       if (signInError) {
@@ -316,7 +327,9 @@
     <div class="security-check">
       <span class="field-label">Security check</span>
       <div id="turnstile-container"></div>
-      {#if turnstileState === 'loading'}
+      {#if isLocalDevelopment()}
+        <span class="field-hint" role="status">Disabled for local development.</span>
+      {:else if turnstileState === 'loading'}
         <span class="field-hint" role="status">Loading security check…</span>
       {:else if turnstileState === 'error'}
         <button type="button" class="link-btn" on:click={retryTurnstile}>Retry security check</button>
@@ -347,7 +360,11 @@
 
     <p class="auth-footnote">
       {#if tab === 'signup'}
-        A confirmation email will be sent before your account is fully active.
+        {#if isLocalDevelopment()}
+          Local accounts are activated immediately for testing.
+        {:else}
+          A confirmation email will be sent before your account is fully active.
+        {/if}
       {:else if tab === 'forgot'}
         Reset links expire, so use the newest email you receive.
       {:else}

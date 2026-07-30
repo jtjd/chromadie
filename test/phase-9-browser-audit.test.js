@@ -5,9 +5,10 @@ import { readFile } from 'node:fs/promises';
 import { parseRouteLocation } from '../src/lib/routes.js';
 import { canInitiateRoll, normalizeCanonicalRoll } from '../src/lib/rollState.js';
 
-const [redirects, app, privacy, game, profileShell, profileRoll, profileFunction, migrations, rollback] = await Promise.all([
+const [redirects, app, header, privacy, game, profileShell, profileRoll, profileFunction, migrations, rollback] = await Promise.all([
   readFile(new URL('../public/_redirects', import.meta.url), 'utf8'),
   readFile(new URL('../src/App.svelte', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/SiteModeHeader.svelte', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/PrivacyPolicy.svelte', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/Game.svelte', import.meta.url), 'utf8'),
   readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8'),
@@ -28,18 +29,18 @@ test('browser audit keeps direct refresh, route parsing, and metadata boundaries
 
   const privacyRoute = parseRouteLocation('/privacy');
   assert.equal(privacyRoute.routeMode, 'privacy');
-  assert.equal(privacyRoute.view, 'game');
+  assert.equal(privacyRoute.view, 'home');
 
-  assert.match(profileFunction, /status: profile \? 200 : 404/);
-  assert.match(profileFunction, /robots = legacyProfile \|\| !profile \? 'noindex,follow' : 'index,follow'/);
-  assert.match(profileFunction, /getProfileCacheControl\(profile, legacyProfile\)/);
+  assert.match(profileFunction, /status: 307/);
+  assert.match(profileFunction, /legacyProfile/);
+  assert.match(profileFunction, /getProfileCacheControl/);
 });
 
 test('browser audit keeps keyboard, reduced-motion, and consent controls on the existing shell', () => {
   assert.match(app, /class="skip-link" href="#main-content"/);
   assert.match(app, /id="main-content"/);
-  assert.match(app, /aria-expanded=/);
-  assert.match(app, /aria-hidden=/);
+  assert.match(header, /aria-expanded=/);
+  assert.match(header, /aria-hidden=/);
   assert.match(app, /prefers-reduced-motion: reduce/);
   assert.match(privacy, /AnalyticsPreferences/);
   assert.match(privacy, /Privacy/);

@@ -4,9 +4,11 @@ import { readFile } from 'node:fs/promises';
 
 import {
   createDefaultProfileConfig,
+  getProfileStoryVisible,
   getVisibleProfileLinks,
   getVisibleProfileModules,
-  normalizeProfileConfig
+  normalizeProfileConfig,
+  setProfileStoryVisible
 } from '../src/lib/profileConfig.js';
 import { loadProfileContext } from '../src/lib/profileData.js';
 
@@ -61,6 +63,17 @@ test('profile configuration has a complete safe default and keeps the roll modul
   assert.equal(config.modules.length, 8);
   assert.equal(config.modules.find(module => module.id === 'roll').visible, true);
   assert.deepEqual(config.links, []);
+  assert.equal(getProfileStoryVisible(config), false);
+});
+
+test('color story visibility has an off-by-default compatibility path and an explicit opt-in', () => {
+  const config = createDefaultProfileConfig('#123456');
+  const visible = setProfileStoryVisible(config, true);
+
+  assert.equal(getProfileStoryVisible(visible), true);
+  assert.equal(visible.storyVisible, true);
+  assert.equal(visible.modules.find(module => module.id === 'explore').visible, false);
+  assert.equal(getProfileStoryVisible(normalizeProfileConfig({ ...visible, storyVisible: undefined })), true);
 });
 
 test('profile configuration normalization rejects incomplete structure and drops unsafe links', () => {
@@ -142,7 +155,7 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   assert.doesNotMatch(editor, /innerHTML|new Function|eval\s*\(/);
   assert.match(profileData, /get_my_profile_configuration/);
   assert.match(profileData, /get_public_profile_configuration/);
-  assert.match(shell, /getVisibleProfileModules/);
+  assert.match(shell, /getProfileComposition/);
   assert.match(shell, /getVisibleProfileLinks/);
   assert.match(shell, /profile-shell-page--/);
 });

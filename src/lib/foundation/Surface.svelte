@@ -4,6 +4,7 @@
   export let padding = 'md';
   export let className = '';
   export let labelledBy = null;
+  export let dataProfileRegion = null;
 
   $: surfaceClass = [
     'foundation-surface',
@@ -13,7 +14,7 @@
   ].filter(Boolean).join(' ');
 </script>
 
-<svelte:element this={as} class={surfaceClass} aria-labelledby={labelledBy || undefined}>
+<svelte:element this={as} class={surfaceClass} aria-labelledby={labelledBy || undefined} data-profile-region={dataProfileRegion || undefined}>
   <slot />
 </svelte:element>
 

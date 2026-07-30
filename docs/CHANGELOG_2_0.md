@@ -229,3 +229,361 @@ deployment blocker.
 Phase 9 launch certification is **NO-GO** until an authorized release/DB owner
 reconciles the remote migration/catalog state, verifies the RPC/security
 boundary, deploys matching assets, and completes a clean Firefox/device pass.
+
+## 2026-07-25 — Phase 10: Vision Reconciliation and Profile Simplification
+
+The live profile now leads with identity and color expression instead of
+presenting a game-dashboard grid.
+
+- The authenticated bare home route resolves to the owner’s live profile;
+  explicit roll navigation remains available at `/?view=game`.
+- Public profiles now lead with four bounded regions: identity, latest color
+  or owner roll, selected expression, and one featured story or accomplishment.
+- Real mapped account/profile data remains the production source. No fixture is
+  used by the live renderer.
+- Stats, rank progress, history, collections, achievements, social controls,
+  profile configuration, decoration, and account controls are preserved behind
+  collapsed detail or owner compatibility surfaces.
+- Removed the visible public-boundary explanation, dashboard owner/visitor
+  labels, and redundant primary edit/explore/shop/leaderboard calls.
+- Added repeatable before/after screenshots at 1440×900, 1280×720, and
+  390×844 plus a focused profile-first test contract.
+- Preserved auth, RLS, secure roll behavior, anti-reroll, scoring, rewards,
+  rarity, economy, entitlements, history, cosmetics, public/private behavior,
+  social/moderation boundaries, direct refresh, old share links, and the
+  `legacy=1` fallback. No Phase 11 work started.
+
+## 2026-07-26 — Phase 11: Continuous Profile Composition and Minimalism
+
+Folded the minimalist personal-website direction into the live profile
+presentation without changing its data or gameplay authority.
+
+- Replaced the remaining hero-plus-card visual grammar with one atmospheric
+  opening composition that combines identity and the latest color or owner
+  roll.
+- Made selected links, signature expression, and one story/accomplishment
+  trace continue through typography, alignment, whitespace, and color instead
+  of equal-weight card containers.
+- Added an integrated owner-roll presentation mode with one clear daily action;
+  secure roll RPCs, anti-reroll behavior, canonical scoring/rewards, and store
+  refreshes are unchanged.
+- Removed visible featured/long-game/profile-connection dashboard language
+  from the default hierarchy while preserving detail, owner, social, account,
+  shop, entitlement, and `legacy=1` paths.
+- Added the Phase 11 visual contract, focused regression tests, and repeatable
+  real-data screenshots at 1440×900, 1280×720, and 390×844.
+- No schema migration, route redesign, media integration, new social feature,
+  monetization, or production write was introduced. Phase 11 stops here.
+
+## 2026-07-26 — Phase 10.2: Approved Mockup Visual Convergence
+
+- Translated the approved profile mockup into focused Svelte components without
+  merging the reference Next.js/React project or copying its mock data.
+- Added the minimal `chm.lol` profile-mode header, canonical-color atmosphere,
+  centered identity surface, compact collection treatment, and quiet
+  expression/music boundary.
+- Kept the authenticated owner roll server-authoritative and compacted its
+  presentation so the first viewport remains a personal page instead of a
+  result dashboard.
+- Added the mockup translation map, parity gate, repeatable viewport capture
+  script, comparison artifacts, and exact Phase 10.2 report.
+- Preserved old routes, `legacy=1`, authentication, RLS, RPCs, scoring,
+  rewards, economy, entitlements, history, cosmetics, social/moderation
+  boundaries, and deployment behavior. Phase 11 remains a separate boundary.
+
+## 2026-07-26 — Phase 11.1: Approved Mockup Fidelity Correction
+
+- Restored readable essential type scale and replaced the generic bio fallback
+  with a truthful mapped color-history/first-chapter state.
+- Made the atmosphere fill the viewport with a restrained canonical-color
+  bloom, vignette, grain, and lower reflection; the primary card now sits in
+  an upper-middle, height-aware composition.
+- Separated the optional expression fixture into a lower viewport anchor and
+  hid it in production while no real music configuration exists.
+- Captured 1920×1080, 1440×900, 1280×720, and 390×844 visitor, owner,
+  pre-roll, expression-fixture, missing-optional, and reduced-motion evidence.
+- Preserved authentication, RLS, secure roll authority, anti-reroll,
+  scoring, rewards, economy, history, cosmetics, social/moderation, routes,
+  old URLs, media/music architecture, and deployment behavior. Phase 12 has
+  not started.
+
+## 2026-07-26 — Phase 12: Sitewide Profile Language and Default Entry
+
+- Extended the approved atmospheric profile language to Roll, Discover,
+  Studio, help, privacy, unavailable, and guest-lock surfaces with a shared
+  minimal application header and responsive Menu disclosure.
+- Kept public and authenticated profiles on the approved centered
+  `ProfileShell`/`ProfileModeHeader` composition.
+- Made the first-visit route contract explicit: signed-out `/` opens the guest
+  daily-roll surface, authenticated `/` resolves to the owner live profile
+  after session hydration, and `/?view=game` remains the direct Roll route.
+- Preserved authentication, server-authoritative rolls, RLS, scoring, rewards,
+  economy, entitlements, history, cosmetics, social/moderation, routing,
+  direct refresh, old URLs, and the legacy profile fallback.
+- Added focused route/shell tests and repeatable Chromium screenshots under
+  `artifacts/phase-12/`; no schema, identity-data, media, Spotify, social, or
+  monetization feature work was introduced.
+
+## 2026-07-26 — Phase 13 database baseline gate
+
+- Audited the local and linked Supabase migration histories before creating an
+  identity migration.
+- Recorded that the linked project is missing the Phase 4–8 configuration,
+  story, discovery, social, and entitlement migrations and two catalog rows:
+  `bg_prism_atmosphere` and `name_prism_atelier`.
+- Held Phase 13 schema, identity-editor, root-username-route, and canonical
+  domain runtime changes until the authorized ordered migration/catalog
+  reconciliation is complete.
+- Added the Phase 13 plan, database baseline, domain cutover checklist, and
+  blocked report. No gameplay, profile composition, auth, RLS, or deployment
+  behavior changed.
+
+## 2026-07-27 — Sitewide profile-language refinement
+
+- Made the non-profile header share the profile's transparent brand, logo,
+  spacing, typography, and slash-separated navigation language.
+- Added a shared visual layer for Roll, Discover, Studio, help, privacy,
+  challenge, unavailable, and guest-lock surfaces so they use the profile's
+  atmospheric canvas, translucent surfaces, quiet borders, accent-led
+  controls, responsive rhythm, and reduced-motion behavior.
+- Kept discovery and studio information architecture intact while removing the
+  competing legacy dashboard skin.
+- Added focused cohesion tests. No auth, route, roll authority, scoring,
+  economy, catalog, RLS, social, schema, or production-data behavior changed.
+
+## 2026-07-28 — The roll now changes the profile
+
+- Kept the daily roll embedded in the profile and made its lifecycle visible:
+  the identity recedes while the result resolves, then the canonical color
+  settles through the atmosphere, identity surface, and collection trace.
+- Added reduced-motion behavior and focused regression coverage.
+- Preserved the secure roll RPC, server-authoritative scoring/rewards,
+  eligibility, inventory refresh, visitor read-only behavior, and all existing
+  routes and profile data.
+
+## 2026-07-29 — A calmer profile and a more meaningful daily reveal
+
+- Simplified the public identity surface to a centered person-first card with
+  optional structured link pills and a focused integrated roll.
+- Moved the color archive below the card as a quiet progression trace instead
+  of another competing section inside the identity surface.
+- Replaced the small utility-style pre-roll action with a staged color-field
+  reveal, canonical score count-up, progressive conditions, and an explicit
+  skip path. Reduced-motion users receive the same result without the staged
+  animation.
+- Kept the existing server-authoritative roll RPC, eligibility, reroll guard,
+  score/rarity/reward authority, profile refresh, visitor read-only behavior,
+  routes, privacy boundaries, and historical data unchanged.
+
+## 2026-07-29 — Scoring conditions and a wider desktop profile
+
+- Restored a compact scoring-condition rail to integrated profile results,
+  showing server-reported contributors, awarded score, and additional-condition
+  overflow without reopening the dashboard hierarchy.
+- Expanded the desktop identity surface into one spacious two-column profile
+  canvas, keeping identity/links, daily color, and the archive in a clear
+  hierarchy while preserving the stacked mobile layout.
+- Reviewed varied current guns.lol profile patterns for identity-first spacing,
+  compact metadata, links, and subordinate optional content.
+- Preserved all existing server-authoritative roll, scoring, reward, auth/RLS,
+  route, privacy, and historical-data behavior. No schema migration added.
+
+## 2026-07-29 — A simpler identity card with a quiet game layer
+
+- Reduced the profile card to identity only: avatar, name, handle, optional
+  links, and the earned launch badge.
+- Moved the daily color roll into a separate low-contrast layer directly below
+  the card on the same page. The quiet profile result shows only the color,
+  score, rarity, and a game-details disclosure.
+- Kept scoring conditions, rewards, countdown, rerolls, and the staged reveal
+  available through the expanded game details and direct game route.
+- Kept the archive outside the identity card as a subtle progression trace.
+  No schema, auth/RLS, scoring, roll-authority, route, or historical-data
+  behavior changed.
+
+## 2026-07-29 — One header across the whole site
+
+- Unified profile, Roll, Discover, and Studio under the same transparent
+  application header with consistent Profile / Discover / Studio
+  navigation and active states.
+- Kept profile Share and owner Edit as contextual actions in that shared
+  header, with matching mobile-menu behavior.
+- Preserved direct routes, profile URLs, authentication, sharing analytics,
+  owner editing, roll authority, and all backend behavior. No schema migration
+  was added.
+
+## 2026-07-29 — Profile-first navigation and quieter profile loads
+
+- Removed the duplicate Roll destination from desktop and mobile primary
+  navigation now that authenticated gameplay is integrated into the profile.
+- Retained the existing game route for guest play, challenge links, and old
+  direct URLs without changing server-authoritative roll behavior.
+- Removed visible account hydration from the shared header, global banner, and
+  route content area.
+- Removed loading cards and silhouettes from both profile renderers. Profile
+  content now appears directly over the stable atmospheric canvas, with
+  non-visual `aria-busy` state retained for assistive technology.
+- Preserved explicit profile error states, authentication, RLS, scoring,
+  rewards, historical data, and public-profile URL behavior.
+- Passed the complete validation suite with 106 tests and the performance,
+  security, link, CSP, drift, and scoring-parity gates.
+
+## 2026-07-29 — Consistent shared-header typography
+
+- Unified desktop navigation, contextual profile actions, account controls,
+  the mobile Menu trigger, and mobile-menu actions under one Inter-based
+  0.78 rem control style.
+- Removed the mismatched mono, inherited, and differently sized treatments
+  while retaining the logo wordmark as the sole brand-specific exception.
+- Passed desktop/mobile visual checks and the complete 106-test validation
+  suite.
+
+## 2026-07-29 — Minimal profile-mode header
+
+- Removed Profile, Discover, and Studio destination links from profile pages
+  on desktop and mobile.
+- Kept brand, Share, owner Edit, and account controls on profiles while
+  retaining full destination navigation everywhere else.
+- Updated the profile mobile-menu label and first-section spacing for the
+  reduced action set.
+- Passed desktop/mobile visual checks and the complete 106-test validation
+  suite.
+
+## 2026-07-29 — Minimal public homepage
+
+- Added a responsive root landing page that explains the daily color identity
+  game through one headline, a concise description, and a CSS-native color
+  composition.
+- Added a visitor signup CTA and a signed-in owner-profile CTA while retaining
+  the shared legal/support footer.
+- Changed the header logo to return to the homepage in every session.
+- Made `/` the stable landing route and preserved `/?view=game`, challenge
+  links, public profile URLs, clean application routes, and legal routes.
+- Kept authentication, RLS, server-authoritative rolls, scoring, rewards,
+  history, and schema behavior unchanged.
+- Passed desktop/mobile visual review and the complete 108-test validation
+  suite.
+
+## 2026-07-29 — Preserve in-progress view state
+
+- Profile editing now keeps unsaved configuration and link rows when navigating
+  away and returning in the same tab.
+- Discovery keeps search and rarity filters, while Shop keeps its context,
+  filters, sorting, and fitting-room choices, scoped per account.
+- Restored state is bounded and allowlisted; successful profile save/publish
+  and logout clear the relevant transient state.
+- No published profile data, authentication, RLS, gameplay, scoring, rewards,
+  inventory, or schema behavior changed.
+
+## 2026-07-29 — Horizontal identity card refinement
+
+- Moved the avatar to the left side of the default profile card.
+- Placed the profile name and up to three earned badges beside the avatar.
+- Moved public links beneath the identity copy while keeping the card sparse
+  and preserving the existing mobile composition.
+- No profile data, authentication, gameplay, or schema behavior changed.
+
+## 2026-07-29 — Catchii visual language refinement
+
+- Replaced the generic Google-font direction with Satoshi, Cabinet Grotesk,
+  and Geist Mono through one shared typography contract.
+- Reworked the homepage around a large quiet `chm.lol` wordmark, concise
+  daily-identity copy, a direct signup action, and the existing footer.
+- Applied consistent capsule navigation/action controls and neutral near-black
+  surfaces across supporting routes.
+- Softened the profile atmosphere and identity card while retaining dynamic
+  Chromadie color, the avatar-left layout, daily roll, archive, and earned
+  expression.
+- No profile data, authentication, gameplay, RLS, RPC, or schema behavior
+  changed.
+
+## 2026-07-29 — Homepage navigation and footer correction
+
+- Restored the shared Profile / Discover / authenticated Studio navigation on
+  the homepage while keeping profile pages in their reduced action mode.
+- Made the existing legal/support footer paint above the atmospheric layer so
+  it is visible at desktop and mobile viewport heights.
+- No profile data, authentication, gameplay, RLS, RPC, or schema behavior
+  changed.
+
+## 2026-07-29 — Profile settings boundary and quiet color story
+
+- Added `/profile/settings` for profile configuration, color-story visibility,
+  social/privacy controls, account controls, and decoration-studio access.
+- Removed the owner/story disclosure menus from the primary profile canvas.
+- Hid the color story by default; owners can explicitly enable it from the new
+  settings page. Visitor social controls remain available without a collapse
+  menu.
+- No migration was added while the linked Phase 13 database baseline remains
+  drifted/NO-GO. Existing authentication, RLS, roll authority, scoring,
+  rewards, inventory, social RPCs, and history behavior remain unchanged.
+
+## 2026-07-29 — Phase 13 identity contract and canonical profile routing
+
+- Added optional display names and bios through an additive,
+  server-authoritative identity RPC. Existing profiles were not backfilled or
+  deleted, and private account fields remain outside public projections.
+- Added the owner-only identity editor to `/profile/settings` with bounded
+  Unicode-aware validation, counters, draft persistence, accessible errors,
+  and retry-safe saves.
+- Rendered the published identity in the existing compact profile card with a
+  username fallback and truthful missing-bio state. Plain text remains plain
+  text.
+- Added canonical root profile URLs, `/u/<username>` compatibility redirects,
+  shared reserved-route validation, canonical profile metadata, share URLs,
+  sitemaps, robots, and origin-safe auth helpers.
+- Kept the approved profile composition, authentication, RLS, rolls, scoring,
+  rewards, economy, inventory, cosmetics, achievements, history, social data,
+  and mobile behavior intact.
+- External Cloudflare domain attachment, legacy host forwarding, Supabase
+  dashboard configuration, and email-template installation remain pending and
+  are documented separately.
+
+## 2026-07-29 — Phase 13A production database reconciliation held
+
+- Audited the linked Supabase migration history and confirmed exactly five
+  Phase 4–8 migrations are pending after the shared 59-migration baseline.
+- Rehearsed the complete 64-migration chain locally; schema lint, database
+  security, catalog parity, expected RPC grants/search paths, and RLS checks
+  passed, with 82 local catalog items.
+- Confirmed production remains drifted: 80 catalog rows with two missing
+  decoration entries and missing Phase 4–8 RPCs.
+- Recorded the exact release order, lock risks, backfill uncertainty,
+  verification plan, and rollback procedure in the Phase 13A documents.
+- Owner approval was received, but production was not changed because the
+  linked database password, backup/PITR restore point, rollback owner, and
+  complete row-count/lock checks were not available.
+- Phase 13 identity work remains on hold; no display-name, bio, root-routing,
+  canonical-domain, avatar, or music implementation was started.
+
+## 2026-07-29 — Credentialed Phase 13A preflight completed
+
+- Confirmed the owner-side CLI can connect to the linked production database.
+- Confirmed the migration list and dry run contain exactly the five reviewed
+  Phase 4–8 migrations and no unexpected pending work.
+- Completed read-only schema diff, table-statistics, lock, and blocking checks.
+  The expected destructive-looking diff output was not executed.
+- Exact current production counts are 10 profiles, 71 scores, 80 shop items,
+  and 5 meta rows. Production remains unchanged while backup/PITR,
+  rollback ownership, and the release window are finalized.
+
+## 2026-07-29 — Temporary Pages preview gate prepared
+
+- Added a temporary Pages middleware that protects the live site with an
+  encrypted `PREVIEW_PASSWORD` secret and signed one-hour preview sessions.
+- The gate fails closed when the production secret is missing and can be
+  removed after migration verification to restore public access.
+
+## 2026-07-29 — Phase 13A production baseline reconciled
+
+- Kept the live Pages site behind the temporary password gate during release.
+- Corrected the unapplied profile-story and social migrations to qualify the
+  remote `extensions.uuid_generate_v4()` function after the first push exposed
+  the project-specific extension schema.
+- Applied all five Phase 4–8 migrations to the linked production project.
+- Verified 82 catalog items, both missing decoration entries, 81 story events,
+  expected RPCs/search paths/grants, RLS, deletion cascades, and no blocking
+  queries.
+- Phase 13A is complete and Phase 13 may resume after gated browser smoke
+  testing. Identity, avatar, music, and root-routing work was not started by
+  this release.

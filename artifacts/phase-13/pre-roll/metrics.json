@@ -1,0 +1,194 @@
+[
+  {
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 1160,
+    "bodyScrollHeight": 1160,
+    "horizontalOverflow": false,
+    "primaryBottom": 786,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 346,
+        "bottom": 515,
+        "height": 169
+      },
+      {
+        "name": "roll",
+        "top": 555,
+        "bottom": 644,
+        "height": 89
+      },
+      {
+        "name": "featured",
+        "top": 668,
+        "bottom": 786,
+        "height": 119
+      }
+    ],
+    "surfaces": [
+      {
+        "selector": ".profile-roll",
+        "top": 576,
+        "bottom": 644,
+        "height": 68,
+        "padding": "0px",
+        "border": "0px none rgb(212, 215, 221)"
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-13/pre-roll/1920x1080.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 980,
+    "bodyScrollHeight": 980,
+    "horizontalOverflow": false,
+    "primaryBottom": 696,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 256,
+        "bottom": 425,
+        "height": 169
+      },
+      {
+        "name": "roll",
+        "top": 465,
+        "bottom": 554,
+        "height": 89
+      },
+      {
+        "name": "featured",
+        "top": 578,
+        "bottom": 696,
+        "height": 119
+      }
+    ],
+    "surfaces": [
+      {
+        "selector": ".profile-roll",
+        "top": 486,
+        "bottom": 554,
+        "height": 68,
+        "padding": "0px",
+        "border": "0px none rgb(212, 215, 221)"
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-13/pre-roll/1440x900.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 776,
+    "bodyScrollHeight": 776,
+    "horizontalOverflow": false,
+    "primaryBottom": 509,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 96,
+        "bottom": 241,
+        "height": 145
+      },
+      {
+        "name": "roll",
+        "top": 281,
+        "bottom": 370,
+        "height": 89
+      },
+      {
+        "name": "featured",
+        "top": 390,
+        "bottom": 509,
+        "height": 119
+      }
+    ],
+    "surfaces": [
+      {
+        "selector": ".profile-roll",
+        "top": 302,
+        "bottom": 370,
+        "height": 68,
+        "padding": "0px",
+        "border": "0px none rgb(212, 215, 221)"
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-13/pre-roll/1280x720.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 936,
+    "bodyScrollHeight": 936,
+    "horizontalOverflow": false,
+    "primaryBottom": 640,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 142,
+        "bottom": 328,
+        "height": 186
+      },
+      {
+        "name": "roll",
+        "top": 356,
+        "bottom": 501,
+        "height": 145
+      },
+      {
+        "name": "featured",
+        "top": 521,
+        "bottom": 640,
+        "height": 119
+      }
+    ],
+    "surfaces": [
+      {
+        "selector": ".profile-roll",
+        "top": 377,
+        "bottom": 501,
+        "height": 124,
+        "padding": "0px",
+        "border": "0px none rgb(212, 215, 221)"
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-13/pre-roll/390x844.png",
+    "reducedMotion": false
+  }
+]

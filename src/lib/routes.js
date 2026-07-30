@@ -1,22 +1,23 @@
-export const VALID_VIEWS = Object.freeze(['game', 'shop', 'leaderboard', 'profile', 'prototype'])
+import {
+  decodeRouteSegment,
+  getCanonicalProfilePath,
+  isReservedRouteSegment,
+  normalizeUsernameSegment
+} from './routeContract.js';
+
+export const VALID_VIEWS = Object.freeze(['home', 'game', 'shop', 'leaderboard', 'profile', 'profile-settings', 'prototype'])
 export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'rivals', 'weekly', 'monthly', 'roll', 'recent', 'rising', 'new', 'random'])
 
 const VALID_VIEW_SET = new Set(VALID_VIEWS)
 const VALID_LEADERBOARD_TAB_SET = new Set(VALID_LEADERBOARD_TABS)
-const CLEAN_APP_PATHS = new Set(['/', '/shop', '/leaderboard', '/profile', '/prototype/profile'])
-
-function decodePathSegment(value) {
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
-}
+const CLEAN_APP_PATHS = new Set(['/', '/shop', '/leaderboard', '/profile', '/profile/settings', '/prototype/profile'])
 
 function getCleanPathView(pathname) {
+  if (pathname === '/') return 'home'
   if (pathname === '/shop') return 'shop'
   if (pathname === '/leaderboard') return 'leaderboard'
   if (pathname === '/profile') return 'profile'
+  if (pathname === '/profile/settings') return 'profile-settings'
   if (pathname === '/prototype/profile') return 'prototype'
   return null
 }
@@ -33,7 +34,16 @@ export function parseRouteLocation(pathname = '/', search = '') {
   const routeProfileId = params.get('profile')
   const routeChallengeFrom = params.get('from')
   const challengeMatch = rawPath.match(/^\/c\/([^/]+)$/)
-  const profileMatch = rawPath.match(/^\/u\/([^/]+)$/)
+  const compatibilityProfileMatch = rawPath.match(/^\/u\/([^/]+)$/)
+  const rootProfileMatch = rawPath.match(/^\/([^/]+)$/)
+  const compatibilityUsername = compatibilityProfileMatch
+    ? normalizeUsernameSegment(compatibilityProfileMatch[1])
+    : null
+  const rootUsername = rootProfileMatch && !isReservedRouteSegment(rootProfileMatch[1])
+    ? normalizeUsernameSegment(rootProfileMatch[1])
+    : null
+  const profileUsername = compatibilityUsername || rootUsername
+  const profileRouteKind = compatibilityUsername ? 'compatibility' : rootUsername ? 'root' : null
 
   let routeMode = 'not-found'
   if (rawPath === '/auth/callback') {
@@ -48,21 +58,25 @@ export function parseRouteLocation(pathname = '/', search = '') {
     routeMode = 'app'
   }
 
-  if (profileMatch || challengeMatch) routeMode = 'app'
+  if (profileRouteKind || challengeMatch) routeMode = 'app'
 
   return {
     rawPath,
     routeMode,
-    view: profileMatch
+    view: profileRouteKind
       ? 'profile'
       : challengeMatch
         ? 'game'
-        : getCleanPathView(rawPath) || (VALID_VIEW_SET.has(routeView) ? routeView : 'game'),
+        : rawPath === '/' && VALID_VIEW_SET.has(routeView)
+          ? routeView
+          : getCleanPathView(rawPath) || 'home',
     leaderboardTab: VALID_LEADERBOARD_TAB_SET.has(routeTab) ? routeTab : 'today',
-    profileUsername: profileMatch ? decodePathSegment(profileMatch[1]) : null,
+    profileUsername,
+    profileRouteKind,
     legacyProfile: params.get('legacy') === '1',
-    profileId: (profileMatch || challengeMatch || routeMode !== 'app') ? null : routeProfileId || null,
-    challengeId: challengeMatch ? decodePathSegment(challengeMatch[1]) : null,
-    challengeFrom: challengeMatch ? routeChallengeFrom || null : null
+    profileId: (profileRouteKind || challengeMatch || routeMode !== 'app') ? null : routeProfileId || null,
+    challengeId: challengeMatch ? decodeRouteSegment(challengeMatch[1]) : null,
+    challengeFrom: challengeMatch ? routeChallengeFrom || null : null,
+    canonicalProfilePath: profileUsername ? getCanonicalProfilePath(profileUsername) : null
   }
 }

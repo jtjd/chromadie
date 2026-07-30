@@ -2,7 +2,11 @@ User-agent: *
 Allow: /
 Disallow: /auth/
 Disallow: /reset-password
+Disallow: /profile
+Disallow: /shop
+Disallow: /u/
+Disallow: /prototype/
 Disallow: /?view=shop
 Disallow: /?view=profile
 
-Sitemap: https://chromadie.com/sitemap-index.xml
+Sitemap: https://chm.lol/sitemap-index.xml

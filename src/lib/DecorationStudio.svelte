@@ -57,7 +57,7 @@
   .decoration-studio__heading > div > span,
   .decoration-studio__mode {
     color: #9e9aaa;
-    font: 700 0.58rem/1 'JetBrains Mono', monospace;
+    font: 700 0.58rem/1 var(--font-mono-stack);
     letter-spacing: 0.11em;
     text-transform: uppercase;
   }

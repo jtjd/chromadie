@@ -24,6 +24,7 @@
   import { supabase } from './supabase';
   import { trackProductEvent } from './productAnalytics.js';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
+  import { readViewState, writeViewState } from './viewState.js';
   import {
     SHOP_RARITIES,
     SHOP_SECTIONS,
@@ -82,6 +83,10 @@
   let loadoutDialog = null;
   let loadoutOpener = null;
   let loadoutSheetOpen = false;
+  let viewStateReady = false;
+  let restoredShopScope = null;
+
+  const VIEW_STATE_NAMESPACE = 'shop';
 
   function cloneFittingRoom(source) {
     return {
@@ -117,7 +122,71 @@
     fittingRoomInitialized = true;
   }
 
-  onMount(initializeFittingRoom);
+  function shopStateScope() {
+    return currentShopScope;
+  }
+
+  function restoreShopViewState() {
+    const stateScope = shopStateScope();
+    if (restoredShopScope !== null && restoredShopScope !== stateScope) {
+      syncFittingRoomFromAccount();
+    }
+    const savedState = readViewState(VIEW_STATE_NAMESPACE, stateScope, {});
+    const sectionIds = new Set(SHOP_SECTIONS.map(section => section.id));
+    const sortIds = new Set(SHOP_SORTS.map(sort => sort.id));
+    const rarityValues = new Set(['all', ...SHOP_RARITIES]);
+
+    activeContext = ['profile', 'roll', 'leaderboard'].includes(savedState?.activeContext)
+      ? savedState.activeContext
+      : 'profile';
+    selectedSection = sectionIds.has(savedState?.selectedSection) ? savedState.selectedSection : 'overview';
+    const subslotIds = new Set([
+      'all',
+      ...(SHOP_SUBSECTIONS[selectedSection] || []).map(subslot => subslot.id)
+    ]);
+    selectedSubslot = subslotIds.has(savedState?.selectedSubslot) ? savedState.selectedSubslot : 'all';
+    searchQuery = typeof savedState?.searchQuery === 'string' ? savedState.searchQuery.slice(0, 80) : '';
+    selectedRarity = rarityValues.has(savedState?.selectedRarity) ? savedState.selectedRarity : 'all';
+    affordableOnly = savedState?.affordableOnly === true;
+    sortMode = sortIds.has(savedState?.sortMode) ? savedState.sortMode : 'curated';
+
+    if (savedState?.loadout && typeof savedState.loadout === 'object') {
+      const loadout = Object.fromEntries(
+        LOADOUT_SLOTS
+          .map(slot => [slot, savedState.loadout[slot]])
+          .filter(([, itemKey]) => typeof itemKey === 'string' && /^[a-z0-9_]{1,80}$/.test(itemKey))
+      );
+      fittingRoom = { ...fittingRoom, loadout: { ...fittingRoom.loadout, ...loadout } };
+    }
+
+    restoredShopScope = stateScope;
+    viewStateReady = true;
+  }
+
+  onMount(() => {
+    initializeFittingRoom();
+    restoreShopViewState();
+  });
+
+  $: if (viewStateReady) {
+    if (currentShopScope !== restoredShopScope) {
+      restoreShopViewState();
+    }
+  }
+
+  $: if (viewStateReady && currentShopScope === restoredShopScope) {
+    writeViewState(VIEW_STATE_NAMESPACE, shopStateScope(), {
+      activeContext,
+      selectedSection,
+      selectedSubslot,
+      searchQuery: searchQuery.slice(0, 80),
+      selectedRarity,
+      affordableOnly,
+      sortMode,
+      loadout: fittingRoom.loadout
+    });
+  }
+  $: currentShopScope = $session?.user?.id || 'guest';
   $: username = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Chromanaut';
   $: displayColor = $profile?.mood_color || '#7B5CFF';
   $: catalogItems = Object.values($shopItems).filter(item => item.item_key !== 'title_founder' && item.slot !== 'title');
@@ -822,7 +891,7 @@
   .collection-number,
   .results-heading > div > span {
     color: #9b96af;
-    font: 700 0.66rem/1 'JetBrains Mono', monospace;
+    font: 700 0.66rem/1 var(--font-mono-stack);
     letter-spacing: 0.13em;
     text-transform: uppercase;
   }
@@ -846,7 +915,7 @@
     border-radius: 18px;
     background: linear-gradient(105deg, rgba(75,222,165,0.08), rgba(255,255,255,0.025));
   }
-  .shop-foundations__eyebrow { color: #8fe1bd; font: 700 0.62rem/1 'JetBrains Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase; }
+  .shop-foundations__eyebrow { color: #8fe1bd; font: 700 0.62rem/1 var(--font-mono-stack); letter-spacing: 0.12em; text-transform: uppercase; }
   .shop-foundations h2 { margin: 7px 0 5px; color: #f0eef5; font: 680 1rem/1.2 var(--font-display); }
   .shop-foundations p { max-width: 760px; margin: 0; color: #8d9e98; font-size: 0.72rem; line-height: 1.5; }
   .shop-foundations a { flex: 0 0 auto; color: #b9f4da; font-size: 0.72rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
@@ -1079,7 +1148,7 @@
   .results-heading { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; margin: 30px 2px 14px; }
   .results-heading > div { min-width: 0; }
   .results-heading h2 { max-width: 680px; margin: 7px 0 0; color: #aaaab5; font: 500 0.85rem/1.5 var(--font-display); }
-  .results-heading > strong { color: #747685; font: 600 0.68rem 'JetBrains Mono', monospace; white-space: nowrap; }
+  .results-heading > strong { color: #747685; font: 600 0.68rem var(--font-mono-stack); white-space: nowrap; }
 
   .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 13px; }
   .shop-item {
@@ -1106,7 +1175,7 @@
   .item-state.tone-free { border-color: rgba(75,222,165,0.2); background: rgba(75,222,165,0.07); color: #a9efd1; }
   .item-state.tone-premium { border-color: rgba(245,181,255,0.2); background: rgba(186,125,255,0.08); color: #e4c9ff; }
   .item-state.tone-premium-locked { border-color: rgba(245,181,255,0.16); color: #c6a9d7; }
-  .item-access-label { margin: -2px 0 8px; font: 700 0.55rem/1.2 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+  .item-access-label { margin: -2px 0 8px; font: 700 0.55rem/1.2 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
   .item-access-label.tier-free { color: #8fe1bd; }
   .item-access-label.tier-earned { color: #a5b8d4; }
   .item-access-label.tier-premium { color: #d8b8ff; }
@@ -1138,7 +1207,7 @@
   .item-copy > div { min-width: 0; }
   .item-copy h3 { overflow: hidden; margin: 0; color: #f3f2f7; font: 680 0.88rem/1.2 var(--font-display); text-overflow: ellipsis; white-space: nowrap; }
   .item-copy div span { display: block; overflow: hidden; margin-top: 4px; color: #767887; font-size: 0.58rem; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
-  .item-copy > strong { color: #d8d4e5; font: 650 0.67rem 'JetBrains Mono', monospace; white-space: nowrap; }
+  .item-copy > strong { color: #d8d4e5; font: 650 0.67rem var(--font-mono-stack); white-space: nowrap; }
   .shop-item > p { min-height: 2.8em; display: -webkit-box; overflow: hidden; margin: 10px 0 13px; color: #858795; font-size: 0.68rem; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 
   .item-actions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; margin-top: auto; }
@@ -1189,7 +1258,7 @@
     box-shadow: -28px 0 80px rgba(0,0,0,0.38);
   }
   .drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
-  .drawer-head > span { color: #888a99; font: 700 0.63rem 'JetBrains Mono', monospace; letter-spacing: 0.11em; text-transform: uppercase; }
+  .drawer-head > span { color: #888a99; font: 700 0.63rem var(--font-mono-stack); letter-spacing: 0.11em; text-transform: uppercase; }
   .drawer-head > button { width: 44px; height: 44px; border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; background: rgba(255,255,255,0.04); color: #d5d3df; cursor: pointer; font-size: 1.25rem; }
   .drawer-preview { padding: 14px; border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; background: rgba(4,5,8,0.5); }
   .drawer-preview :global(.shop-preview-area) { height: 220px; margin: 0; }
@@ -1236,7 +1305,7 @@
     background: rgba(132,108,255,0.07);
   }
   .purchase-confirmation span { color: #8f90a0; font-size: 0.65rem; }
-  .purchase-confirmation strong { color: #ded8ff; font: 700 0.78rem 'JetBrains Mono', monospace; }
+  .purchase-confirmation strong { color: #ded8ff; font: 700 0.78rem var(--font-mono-stack); }
   .drawer-safety { margin: 12px 10px 2px; color: #686a78; font-size: 0.64rem; line-height: 1.45; text-align: center; }
 
   .loadout-overlay { display: none; align-items: flex-end; }

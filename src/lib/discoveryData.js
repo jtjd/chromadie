@@ -24,7 +24,6 @@ export const DISCOVERY_SURFACES = Object.freeze({
 });
 
 const RARITIES = new Set(['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']);
-const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 const ITEM_KEY_PATTERN = /^[a-z0-9_]{1,80}$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -81,7 +80,7 @@ function normalizeHex(value) {
 }
 
 export function isSafeDiscoveryUsername(value) {
-  return typeof value === 'string' && USERNAME_PATTERN.test(value);
+  return typeof value === 'string' && normalizeUsernameSegment(value) === value;
 }
 
 export function getDiscoverySurface(tab) {
@@ -90,7 +89,7 @@ export function getDiscoverySurface(tab) {
 
 export function getPublicProfilePath(username) {
   if (!isSafeDiscoveryUsername(username)) return null;
-  return `/u/${encodeURIComponent(username)}`;
+  return getCanonicalProfilePath(username);
 }
 
 export function getPublicProfileShareUrl(username, origin = '') {
@@ -185,3 +184,4 @@ export function normalizeDiscoveryQuery(value) {
 export function isDiscoveryRarity(value) {
   return value === '' || RARITIES.has(value);
 }
+import { getCanonicalProfilePath, normalizeUsernameSegment } from './routeContract.js';

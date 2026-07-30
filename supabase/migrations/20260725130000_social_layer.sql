@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.profile_reactions (
 );
 
 CREATE TABLE IF NOT EXISTS public.profile_guestbook_entries (
-  entry_key uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  entry_key uuid PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
   author_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   profile_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   body text NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS public.profile_blocks (
 );
 
 CREATE TABLE IF NOT EXISTS public.profile_reports (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id uuid PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
   reporter_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   target_profile_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   entry_key uuid REFERENCES public.profile_guestbook_entries(entry_key) ON DELETE SET NULL,

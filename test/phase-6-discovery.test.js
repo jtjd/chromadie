@@ -64,10 +64,10 @@ test('discovery response pagination is bounded and surface names stay allow-list
 });
 
 test('every discovery card resolves to a safe public profile route and share text', () => {
-  assert.equal(getPublicProfilePath('NeonUser'), '/u/NeonUser');
+  assert.equal(getPublicProfilePath('NeonUser'), '/neonuser');
   assert.equal(getPublicProfilePath('%'), null);
-  assert.equal(getPublicProfileShareUrl('NeonUser', 'https://chromadie.com'), 'https://chromadie.com/u/NeonUser');
-  assert.match(getProfileShareText(publicItem, 'https://chromadie.com'), /https:\/\/chromadie\.com\/u\/NeonUser/);
+  assert.equal(getPublicProfileShareUrl('NeonUser', 'https://chm.lol'), 'https://chm.lol/neonuser');
+  assert.match(getProfileShareText(publicItem, 'https://chm.lol'), /https:\/\/chm\.lol\/neonuser/);
 });
 
 test('rivals retain the existing authenticated follow identifier only at the compatibility boundary', () => {

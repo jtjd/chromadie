@@ -1,8 +1,10 @@
 # Target Experience
 
-## Logged-In Home
+## Authenticated Profile Destination
 
-Authenticated players land on their own profile, not a separate game dashboard.
+Authenticated players use their own profile as the product destination, not a
+separate game dashboard. The public `/` marketing page remains available as a
+minimal introduction and points signed-in players back to their profile.
 
 The profile contains:
 

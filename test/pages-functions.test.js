@@ -9,7 +9,7 @@ import { onRequestGet as renderPrototypeRoute } from '../functions/prototype/pro
 
 const appShell = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const env = {
-  VITE_SITE_URL: 'https://chromadie.com',
+  VITE_SITE_URL: 'https://chm.lol',
   ASSETS: {
     fetch: async () => new Response(appShell, { status: 200 })
   }
@@ -32,9 +32,7 @@ test('profile route rejects PostgREST wildcard/filter input without an API reque
   assert.equal(response.status, 404);
   assert.equal(response.headers.get('x-frame-options'), 'DENY');
   const html = await response.text();
-  assert.match(html, /Profile Not Found/);
-  assert.match(html, /https:\/\/chromadie\.com\/og-default-v4\.png/);
-  assert.doesNotMatch(html, /og-default\.png/);
+  assert.match(html, /Profile not found/);
 });
 
 test('challenge route rejects invalid identifiers and still serves a protected shell', async () => {
@@ -47,7 +45,7 @@ test('challenge route rejects invalid identifiers and still serves a protected s
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
   const html = await response.text();
   assert.match(html, /Challenge Unavailable/);
-  assert.match(html, /https:\/\/chromadie\.com\/og-default-v4\.png/);
+  assert.match(html, /https:\/\/chm\.lol\/og-default-v4\.png/);
   assert.doesNotMatch(html, /og-default\.png/);
 });
 

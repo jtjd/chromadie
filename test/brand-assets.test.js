@@ -19,9 +19,10 @@ async function readPngSize(path) {
 }
 
 test('brand icon references use the new vector and versioned raster assets', async () => {
-  const [index, app, manifestText] = await Promise.all([
+  const [index, app, header, manifestText] = await Promise.all([
     readText('index.html'),
     readText('src/App.svelte'),
+    readText('src/lib/SiteModeHeader.svelte'),
     readText('public/site.webmanifest')
   ]);
   const manifest = JSON.parse(manifestText);
@@ -30,8 +31,8 @@ test('brand icon references use the new vector and versioned raster assets', asy
   assert.match(index, /href="\/favicon-16-v2\.png"/);
   assert.match(index, /href="\/favicon-32-v2\.png"/);
   assert.match(index, /href="\/apple-touch-icon-v2\.png"/);
-  assert.match(app, /src="\/logo-mark\.svg"/);
-  assert.doesNotMatch(`${index}\n${app}\n${manifestText}`, /favicon-96\.png|apple-touch-icon\.png|icon-(?:192|512)\.png/);
+  assert.match(header, /src="\/logo-mark\.svg"/);
+  assert.doesNotMatch(`${index}\n${app}\n${header}\n${manifestText}`, /favicon-96\.png|apple-touch-icon\.png|icon-(?:192|512)\.png/);
 
   assert.deepEqual(manifest.icons, [
     { src: '/icon-192-v2.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
@@ -64,22 +65,22 @@ test('homepage structured data connects Google-facing logo and primary image ent
 
   const schema = JSON.parse(jsonLdMatch[1]);
   const entities = new Map(schema['@graph'].map(entity => [entity['@id'], entity]));
-  const organization = entities.get('https://chromadie.com/#organization');
-  const logo = entities.get('https://chromadie.com/#logo');
-  const primaryImage = entities.get('https://chromadie.com/#primaryimage');
-  const website = entities.get('https://chromadie.com/#website');
-  const webpage = entities.get('https://chromadie.com/#webpage');
-  const game = entities.get('https://chromadie.com/#game');
+  const organization = entities.get('https://chm.lol/#organization');
+  const logo = entities.get('https://chm.lol/#logo');
+  const primaryImage = entities.get('https://chm.lol/#primaryimage');
+  const website = entities.get('https://chm.lol/#website');
+  const webpage = entities.get('https://chm.lol/#webpage');
+  const game = entities.get('https://chm.lol/#game');
 
   assert.equal(organization['@type'], 'Organization');
   assert.deepEqual(organization.logo, { '@id': logo['@id'] });
   assert.deepEqual(
     { url: logo.contentUrl, width: logo.width, height: logo.height },
-    { url: 'https://chromadie.com/icon-512-v2.png', width: 512, height: 512 }
+    { url: 'https://chm.lol/icon-512-v2.png', width: 512, height: 512 }
   );
   assert.deepEqual(
     { url: primaryImage.contentUrl, width: primaryImage.width, height: primaryImage.height },
-    { url: 'https://chromadie.com/og-default-v4.png', width: 1200, height: 630 }
+    { url: 'https://chm.lol/og-default-v4.png', width: 1200, height: 630 }
   );
   assert.deepEqual(website.publisher, { '@id': organization['@id'] });
   assert.deepEqual(website.image, { '@id': primaryImage['@id'] });

@@ -26,12 +26,12 @@ enabled = false
 
 [studio]
 enabled = true
-port = 54323
+port = 54327
 api_url = "http://127.0.0.1"
 
 [local_smtp]
 enabled = true
-port = 54324
+port = 54326
 
 [storage]
 enabled = false
@@ -42,6 +42,8 @@ site_url = "http://localhost:5173"
 additional_redirect_urls = [
   "http://localhost:5173/auth/callback",
   "http://localhost:5173/reset-password",
+  "https://chm.lol/auth/callback",
+  "https://chm.lol/reset-password",
   "https://chromadie.com/auth/callback",
   "https://chromadie.com/reset-password"
 ]
@@ -55,7 +57,7 @@ minimum_password_length = 8
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
-enable_confirmations = true
+enable_confirmations = false
 secure_password_change = true
 max_frequency = "60s"
 otp_length = 6
