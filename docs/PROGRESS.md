@@ -749,3 +749,16 @@ the remaining Phase 11 boundary.
 - The focused tests, full unit suite, Svelte check, ESLint, build, and
   performance budget pass. Compiled assets are 619.96 kB JavaScript, 291.57 kB
   CSS, and 5.22 kB HTML before final validation.
+
+## 2026-07-30 — Chromatic lock-in roll refinement
+
+- Replaced the passive hexadecimal reveal with a spectrum charge, narrowing
+  scan, decisive final-color lock, and rarity-scaled impact.
+- Broadcast presentation-only candidate colors to the profile atmosphere while
+  preserving the server response as the sole roll authority.
+- Made score settlement visible after the result enters instead of completing
+  it offscreen.
+- Cleaned the result hierarchy and surfaced the leading scoring conditions
+  above `View score breakdown`.
+- Verified the completed state at 1440×900 and 390×844, including reduced-motion
+  fallbacks and the existing profile composition.

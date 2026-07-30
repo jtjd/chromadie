@@ -1445,3 +1445,19 @@ This adopts the useful information architecture of mature profile-customization
 sites without copying their visual design or introducing unrestricted CSS.
 Equip and unequip operations continue through the existing authenticated RPCs;
 the public profile composition and visitor rendering are unchanged.
+
+## 2026-07-30 — Make the daily reveal a chromatic lock-in
+
+**Status:** accepted and implemented
+
+The profile roll uses a deterministic presentation sequence after the
+server-authoritative result returns: spectrum charge, chroma scan, decelerating
+lock, final-color impact, and score settlement. Candidate colors are visual
+only and may tint the profile atmosphere; they never affect scoring, rewards,
+eligibility, or the canonical result.
+
+The completed result keeps the orb, hex, rarity, and EP in one aligned group.
+The strongest scoring conditions remain visible in the collapsed state, while
+the complete server-reported record stays behind a quiet score-breakdown
+disclosure. Motion intensity scales with rarity and collapses to a static,
+immediate result under reduced-motion preferences.

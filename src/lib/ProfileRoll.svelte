@@ -33,12 +33,22 @@
 
   const dispatch = createEventDispatcher();
   const REVEAL_STAGES = Object.freeze([
-    'Opening the color field…',
-    'Reading the signal…',
-    'Locking the spectrum…',
-    'Your color is here.'
+    'Charging the spectrum…',
+    'Reading the chroma…',
+    'Locking your color…',
+    'Color locked.'
   ]);
-  const REVEAL_STEP_DELAY = 130;
+  const REVEAL_SPECTRUM = Object.freeze([
+    '#FF4D8D',
+    '#FF8A4C',
+    '#F7DA4B',
+    '#63DE8B',
+    '#43C8F5',
+    '#756CFF',
+    '#C65CFF',
+    '#FF5DB1'
+  ]);
+  const REVEAL_DELAYS = Object.freeze([65, 72, 82, 96, 118, 148, 185, 235]);
   const SYSTEM_BADGE_IDS = new Set([
     'beat_your_best',
     'cotw_hit',
@@ -72,6 +82,7 @@
   let rerollRequestInFlight = false;
   let revealStage = 0;
   let skipRevealRequested = false;
+  let freshReveal = false;
 
   $: cosmetics = $equippedItems || {};
   $: rollEff = getRollEffect(cosmetics);
@@ -102,8 +113,12 @@
           const badge = getBadge(id);
           return { id: 'badge-' + id, label: badge.name || id, symbol: badge.symbol || '✦', points: 0 };
         });
-  $: visibleConditions = conditionSource.slice(0, integrated ? 4 : 6);
-  $: hiddenConditionCount = Math.max(0, conditionSource.length - visibleConditions.length);
+  $: headlineConditions = conditionSource.slice(0, integrated ? 3 : 4);
+  $: revealIntensity = ['Mythic', 'Anomaly'].includes(rarity)
+    ? 'high'
+    : ['Epic', 'Rare'].includes(rarity)
+      ? 'medium'
+      : 'quiet';
 
   function prefersReducedMotion() {
     return typeof window !== 'undefined'
@@ -163,6 +178,7 @@
     percentileDisplay = null;
     revealStage = 0;
     skipRevealRequested = false;
+    freshReveal = false;
   }
 
   function applyServerPresentation(data, canonical, { animateScore = false, revealBadges = true, notifyProfile = true } = {}) {
@@ -238,52 +254,45 @@
   }
 
   async function animateCanonicalResult(data, canonical, requestId, requestUserId) {
-    const safeHex = normalizeHexColor(canonical.hex, '#222222');
     const reducedMotion = prefersReducedMotion();
-    const delay = reducedMotion ? 0 : REVEAL_STEP_DELAY;
     displayColor = '#222222';
     displayHex = '#------';
     revealedBadges = [];
     revealStage = 0;
 
-    for (let index = 0; index < 6; index += 1) {
+    for (let index = 0; index < REVEAL_SPECTRUM.length; index += 1) {
       if (skipRevealRequested) break;
-      revealStage = index < 2 ? 0 : index < 4 ? 1 : 2;
-      displayHex = '#' + safeHex.slice(1, index + 2) + '-'.repeat(5 - index);
-      if (delay) await sleep(delay);
+      revealStage = index < 3 ? 0 : index < 6 ? 1 : 2;
+      displayColor = REVEAL_SPECTRUM[index];
+      dispatch('colorpreview', { hex: displayColor });
+      if (!reducedMotion) await sleep(REVEAL_DELAYS[index]);
       if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
     }
-
-    displayHex = safeHex;
-    displayColor = safeHex;
-    revealStage = 3;
-    if (delay && !skipRevealRequested) await sleep(180);
-    if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
 
     applyServerPresentation(data, canonical, {
       animateScore: true,
       revealBadges: false,
-      notifyProfile: false
+      notifyProfile: true
     });
+    revealStage = 3;
+    if (!reducedMotion && !skipRevealRequested) await sleep(280);
+    if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
+
+    freshReveal = true;
+    phase = 'results';
 
     const scoreTarget = score;
     const scoreSteps = reducedMotion || skipRevealRequested ? 1 : 12;
     for (let step = 1; step <= scoreSteps; step += 1) {
-      displayScore = Math.round(scoreTarget * (step / scoreSteps));
-      if (delay && !skipRevealRequested) await sleep(32);
+      const progress = step / scoreSteps;
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      displayScore = Math.round(scoreTarget * easedProgress);
+      if (!reducedMotion && !skipRevealRequested) await sleep(30);
       if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
     }
     displayScore = scoreTarget;
 
-    const badges = sortBadgesDescending(canonical.badges).slice().reverse();
-    for (const badgeId of badges) {
-      if (skipRevealRequested) break;
-      if (delay) await sleep(delay);
-      if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
-      revealedBadges = [badgeId, ...revealedBadges];
-    }
-
-    applyServerPresentation(data, canonical);
+    applyServerPresentation(data, canonical, { notifyProfile: false });
     return true;
   }
 
@@ -419,9 +428,11 @@
   {:else if phase === 'rolling'}
     <div class="profile-roll__rolling" data-reveal-stage={revealStage} role="status" aria-live="polite">
       <div class="profile-roll__scan-field" aria-hidden="true">
+        <span class="profile-roll__spectrum-wash"></span>
         <span class="profile-roll__scan-orbit profile-roll__scan-orbit--one"></span>
         <span class="profile-roll__scan-orbit profile-roll__scan-orbit--two"></span>
         <span class="profile-roll__scan-sweep"></span>
+        <span class="profile-roll__lock-ring"></span>
       </div>
       <div class="profile-roll__preview">
         <RollPreview effectCls={rollEff.cls} effectStyle={rollEff.style} orbCls={orbEff.cls} displayColor={displayColor} rarity={rarity || 'Common'} />
@@ -429,25 +440,26 @@
       <div class="profile-roll__rolling-copy">
         <div class="profile-roll__reading-line"><span aria-hidden="true"></span><p class="profile-roll__eyebrow">{revealStatus}</p></div>
         <p class="profile-roll__hex">{displayHex}</p>
-        <h3>{revealStage === 3 ? 'Hold the moment.' : 'Your color is taking shape.'}</h3>
-        <p>The profile will settle when it arrives.</p>
+        <h3>{revealStage === 3 ? 'This one is yours.' : 'Finding today’s signal.'}</h3>
+        <p>{revealStage === 3 ? 'Adding it to your profile.' : 'The spectrum is narrowing.'}</p>
         <button type="button" class="profile-roll__skip" on:click={skipReveal}>Skip reveal</button>
       </div>
     </div>
   {:else if phase === 'results'}
-    <div class="profile-roll__result" role="status" aria-live="polite">
+    <div class={'profile-roll__result profile-roll__result--' + revealIntensity + (freshReveal ? ' profile-roll__result--fresh' : '')} role="status" aria-live="polite">
       <div class="profile-roll__result-head">
         <div class="profile-roll__preview">
           <RollPreview effectCls={rollEff.cls} effectStyle={rollEff.style} orbCls={orbEff.cls} displayColor={displayColor} rarity={rarity || 'Common'} />
         </div>
         <div class="profile-roll__result-copy">
           <p class="profile-roll__eyebrow">{quiet ? 'Daily color' : 'Today’s color'}</p>
-          <p class="profile-roll__hex">{displayHex}</p>
-          <div class="profile-roll__score-row">
-            <strong>{displayScore.toLocaleString()}</strong>
-            <span>EP</span>
+          <div class="profile-roll__identity-row">
+            <p class="profile-roll__hex">{displayHex}</p>
+            <span class="profile-roll__rarity">{rarity}</span>
           </div>
-          <span class="profile-roll__rarity">{rarity}</span>
+          <div class="profile-roll__score-row">
+            <strong>{displayScore.toLocaleString()} <span>EP</span></strong>
+          </div>
           {#if percentileDisplay}
             <p class="profile-roll__percentile" style={'color: ' + percentileDisplay.color + ';'}>
               {percentileDisplay.text} <span>(of {percentileDisplay.total.toLocaleString()} rollers)</span>
@@ -456,28 +468,26 @@
         </div>
       </div>
 
-      <details class="profile-roll__details" open={!compact}>
-        <summary>{quiet ? 'Open game details' : compact ? 'Open color details' : 'See result details'}</summary>
-        <div class="profile-roll__details-body">
-          {#if conditionSource.length}
-            <div class="profile-roll__condition-rail" aria-label="Scoring conditions">
-              <div class="profile-roll__section-heading">
-                <p class="profile-roll__eyebrow">Scoring conditions</p>
-                <span>{conditionSource.length} active</span>
-              </div>
-              <div class="profile-roll__condition-list">
-                {#each visibleConditions as condition (condition.id)}
-                  <span class="profile-roll__condition-chip">
-                    <span aria-hidden="true">{condition.symbol}</span>
-                    <strong>{condition.label}</strong>
-                    {#if condition.points}<small>+{condition.points.toLocaleString()} score</small>{/if}
-                  </span>
-                {/each}
-                {#if hiddenConditionCount}<span class="profile-roll__condition-chip profile-roll__condition-more">+{hiddenConditionCount} more</span>{/if}
-              </div>
-            </div>
-          {/if}
+      {#if headlineConditions.length}
+        <div class="profile-roll__condition-rail" aria-label="Top scoring conditions">
+          <div class="profile-roll__condition-list">
+            {#each headlineConditions as condition (condition.id)}
+              <span class="profile-roll__condition-chip">
+                <span aria-hidden="true">{condition.symbol}</span>
+                <strong>{condition.label}</strong>
+                {#if condition.points}<small>+{condition.points.toLocaleString()}</small>{/if}
+              </span>
+            {/each}
+            {#if conditionSource.length > headlineConditions.length}
+              <span class="profile-roll__condition-chip profile-roll__condition-more">+{conditionSource.length - headlineConditions.length} more</span>
+            {/if}
+          </div>
+        </div>
+      {/if}
 
+      <details class="profile-roll__details" open={!compact}>
+        <summary>View score breakdown</summary>
+        <div class="profile-roll__details-body">
           <div class="profile-roll__story">
             <div>
               <p class="profile-roll__eyebrow">{integrated ? 'A new chapter' : 'Profile story updated'}</p>
@@ -605,17 +615,18 @@
   .profile-roll__section-heading h3,
   .profile-roll__rewards h3 { margin: var(--space-2) 0 var(--space-2); color: var(--color-ink-strong); font: 600 var(--type-h2) / 1.1 var(--font-display-stack); letter-spacing: -0.035em; }
   .profile-roll__hex { margin: 0; color: var(--color-ink-strong); font: 600 clamp(1.15rem, 3vw, 1.75rem) / 1 var(--font-mono-stack); letter-spacing: 0.06em; }
-  .profile-roll__result { display: grid; gap: var(--space-5); }
+  .profile-roll__result { display: grid; gap: var(--space-4); }
   .profile-roll__result-head { display: grid; grid-template-columns: minmax(8rem, 11rem) 1fr; align-items: center; gap: var(--space-5); }
   .profile-roll__result-copy { min-width: 0; }
   .profile-roll__eyebrow { margin: 0; color: color-mix(in srgb, var(--profile-accent) 48%, white); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.14em; text-transform: uppercase; }
-  .profile-roll__score-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-3); }
+  .profile-roll__identity-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem; margin-top: 0.35rem; }
+  .profile-roll__score-row { display: flex; align-items: baseline; flex-wrap: wrap; margin-top: 0.7rem; }
   .profile-roll__score-row strong { color: var(--color-ink-strong); font: 600 clamp(2rem, 5vw, 3.5rem) / 0.95 var(--font-display-stack); letter-spacing: -0.06em; }
-  .profile-roll__score-row span { color: var(--color-ink-muted); font-size: var(--type-small); }
-  .profile-roll__rarity { display: inline-flex; margin-top: var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid color-mix(in srgb, var(--profile-accent) 45%, transparent); border-radius: var(--radius-pill); color: color-mix(in srgb, var(--profile-accent) 48%, white); font: 700 var(--type-label) / 1 var(--font-mono-stack); text-transform: uppercase; letter-spacing: 0.08em; }
+  .profile-roll__score-row strong span { margin-left: 0.2rem; color: var(--color-ink-muted); font: 600 0.72rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; }
+  .profile-roll__rarity { display: inline-flex; padding: 0.28rem 0.55rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 45%, transparent); border-radius: var(--radius-pill); color: color-mix(in srgb, var(--profile-accent) 48%, white); font: 700 0.62rem / 1 var(--font-mono-stack); text-transform: uppercase; letter-spacing: 0.08em; }
   .profile-roll__percentile { margin: var(--space-3) 0 0; font-weight: 700; }
   .profile-roll__percentile span { color: var(--color-ink-muted); font-size: var(--type-label); font-weight: 500; }
-  .profile-roll__condition-rail { display: grid; gap: 0.65rem; padding: 0.85rem 0 0.15rem; border-top: 1px solid var(--color-line-subtle); }
+  .profile-roll__condition-rail { display: grid; gap: 0.65rem; padding: 0; }
   .profile-roll__condition-list { display: flex; flex-wrap: wrap; gap: 0.45rem; }
   .profile-roll__condition-chip { display: inline-flex; align-items: center; gap: 0.38rem; padding: 0.32rem 0.55rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 22%, var(--color-line-subtle)); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--profile-accent) 8%, transparent); color: var(--color-ink-muted); font-size: var(--type-label); }
   .profile-roll__condition-chip strong { overflow: hidden; color: var(--color-ink-strong); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
@@ -713,16 +724,26 @@
   .profile-roll__reveal-arrow { color: color-mix(in srgb, var(--profile-accent) 76%, white); font: 600 1.15rem / 1 var(--font-mono-stack); }
 
   .profile-roll__rolling { position: relative; display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); align-items: center; min-height: 13rem; overflow: visible; isolation: isolate; }
-  .profile-roll__scan-field { position: absolute; z-index: 0; inset: -3rem -4rem; pointer-events: none; opacity: 0.8; }
+  .profile-roll__scan-field { position: absolute; z-index: 0; inset: -3rem -4rem; overflow: hidden; pointer-events: none; opacity: 0.9; }
+  .profile-roll__spectrum-wash { position: absolute; inset: 5% 20% 5% 0; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--profile-accent) 28%, transparent), transparent 64%); filter: blur(1rem); animation: profile-roll-spectrum 0.85s ease-in-out infinite; }
   .profile-roll__scan-orbit,
   .profile-roll__scan-sweep { position: absolute; top: 50%; left: 28%; border: 1px solid color-mix(in srgb, var(--profile-accent) 36%, transparent); border-radius: 50%; transform: translate(-50%, -50%); }
   .profile-roll__scan-orbit--one { width: 11rem; height: 6rem; transform: translate(-50%, -50%) rotate(28deg); animation: profile-roll-orbit-one 3.2s ease-in-out infinite; }
   .profile-roll__scan-orbit--two { width: 6rem; height: 11rem; transform: translate(-50%, -50%) rotate(-22deg); border-color: color-mix(in srgb, var(--color-accent-cyan) 30%, transparent); animation: profile-roll-orbit-two 2.8s ease-in-out infinite; }
   .profile-roll__scan-sweep { width: 12rem; height: 12rem; border: 0; background: conic-gradient(from 0deg, transparent 0 68%, color-mix(in srgb, var(--profile-accent) 20%, transparent) 78%, transparent 90% 100%); -webkit-mask: radial-gradient(circle, transparent 56%, #000 57% 58%, transparent 60%); mask: radial-gradient(circle, transparent 56%, #000 57% 58%, transparent 60%); animation: profile-roll-sweep 2.2s linear infinite; }
+  .profile-roll__lock-ring { position: absolute; top: 50%; left: 28%; width: 8rem; height: 8rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 82%, white); border-radius: 50%; opacity: 0; transform: translate(-50%, -50%) scale(0.45); }
   .profile-roll__rolling > :not(.profile-roll__scan-field) { position: relative; z-index: 1; }
   .profile-roll__rolling .profile-roll__preview { width: 7.5rem; min-width: 7.5rem; height: 7.5rem; }
   .profile-roll__rolling .profile-roll__preview :global(.roll-effect-wrapper) { width: 7.5rem; height: 7.5rem; transform: none; }
   .profile-roll__rolling .profile-roll__preview :global(.final-color-display) { width: 7.5rem; height: 7.5rem; }
+  .profile-roll__rolling[data-reveal-stage='0'] .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-charge 0.42s ease-in-out infinite; }
+  .profile-roll__rolling[data-reveal-stage='1'] .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-charge 0.62s ease-in-out infinite; }
+  .profile-roll__rolling[data-reveal-stage='2'] .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-narrow 0.82s var(--motion-ease-emphasis) both; }
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-lock 0.48s var(--motion-ease-emphasis) both; }
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__lock-ring { animation: profile-roll-lock-ring 0.7s ease-out both; }
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__scan-orbit,
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__scan-sweep,
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__spectrum-wash { animation-play-state: paused; opacity: 0.18; }
   .profile-roll__rolling-copy { min-width: 0; }
   .profile-roll__reading-line { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
   .profile-roll__reading-line > span { width: 0.42rem; height: 0.42rem; flex: 0 0 auto; border-radius: 50%; background: var(--profile-accent); box-shadow: 0 0 0.8rem color-mix(in srgb, var(--profile-accent) 74%, transparent); animation: profile-roll-signal 1s ease-in-out infinite; }
@@ -734,9 +755,23 @@
 
   @keyframes profile-roll-pulse { 50% { opacity: 0.45; transform: scale(0.86); } }
   @keyframes profile-roll-signal { 50% { opacity: 0.35; transform: scale(0.72); } }
+  @keyframes profile-roll-spectrum { 50% { opacity: 0.55; transform: scale(1.12); } }
+  @keyframes profile-roll-charge { 0%, 100% { transform: scale(0.86); filter: saturate(1.25) brightness(0.92); } 50% { transform: scale(1.08); filter: saturate(1.65) brightness(1.28); } }
+  @keyframes profile-roll-narrow { from { transform: scale(1.08) rotate(-4deg); filter: saturate(1.6) brightness(1.2); } to { transform: scale(0.9) rotate(0); filter: saturate(1.15) brightness(0.95); } }
+  @keyframes profile-roll-lock { 0% { transform: scale(0.88); filter: brightness(0.9); } 48% { transform: scale(1.2); filter: brightness(1.65) saturate(1.5); } 100% { transform: scale(1); filter: brightness(1); } }
+  @keyframes profile-roll-lock-ring { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.45); } 24% { opacity: 0.9; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.45); } }
   @keyframes profile-roll-orbit-one { 0%, 100% { transform: translate(-50%, -50%) rotate(20deg) scale(0.92); opacity: 0.55; } 50% { transform: translate(-50%, -50%) rotate(38deg) scale(1.08); opacity: 1; } }
   @keyframes profile-roll-orbit-two { 0%, 100% { transform: translate(-50%, -50%) rotate(-30deg) scale(1); opacity: 0.42; } 50% { transform: translate(-50%, -50%) rotate(-8deg) scale(0.86); opacity: 0.9; } }
   @keyframes profile-roll-sweep { to { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes profile-roll-result-enter { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+  @keyframes profile-roll-result-impact { 0% { transform: scale(0.78); filter: brightness(0.8); } 52% { transform: scale(var(--result-impact, 1.1)); filter: brightness(var(--result-brightness, 1.35)); } 100% { transform: scale(1); filter: brightness(1); } }
+
+  .profile-roll__result--fresh .profile-roll__result-copy,
+  .profile-roll__result--fresh .profile-roll__condition-rail { animation: profile-roll-result-enter 0.42s var(--motion-ease-emphasis) both; }
+  .profile-roll__result--fresh .profile-roll__condition-rail { animation-delay: 0.16s; }
+  .profile-roll__result--fresh .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-result-impact 0.62s var(--motion-ease-emphasis) both; }
+  .profile-roll__result--medium { --result-impact: 1.16; --result-brightness: 1.5; }
+  .profile-roll__result--high { --result-impact: 1.24; --result-brightness: 1.8; }
 
   @media (max-width: 48rem) {
     .profile-roll__ready,
@@ -770,8 +805,14 @@
     .profile-roll__button:hover:not(:disabled),
     .profile-roll__reveal-button:hover:not(:disabled) { transform: none; }
     .profile-roll__reading-line > span,
+    .profile-roll__spectrum-wash,
     .profile-roll__scan-orbit,
-    .profile-roll__scan-sweep { animation: none; }
+    .profile-roll__scan-sweep,
+    .profile-roll__lock-ring,
+    .profile-roll__rolling .profile-roll__preview :global(.roll-effect-wrapper),
+    .profile-roll__result--fresh .profile-roll__result-copy,
+    .profile-roll__result--fresh .profile-roll__condition-rail,
+    .profile-roll__result--fresh .profile-roll__preview :global(.roll-effect-wrapper) { animation: none; }
     .profile-roll__scan-field { opacity: 0.45; }
   }
 

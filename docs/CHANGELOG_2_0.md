@@ -635,3 +635,13 @@ presentation without changing its data or gameplay authority.
   purchase surface that routes appearance management back to profile settings.
 - Improved the isolated preview’s real identity rendering and compact mobile
   composition without changing the public profile design.
+
+## 2026-07-30 — Strengthen the daily color reveal
+
+- Added a chromatic lock-in sequence with spectrum cycling, deceleration, final
+  color impact, and rarity-scaled motion.
+- Let presentation-only preview colors move through the profile atmosphere
+  without changing server-authoritative roll behavior.
+- Reorganized completed results around the color identity: hex and rarity,
+  unified EP score, leading conditions, and a quieter score breakdown.
+- Added reduced-motion coverage and kept the approved profile layout intact.

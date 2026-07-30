@@ -32,14 +32,19 @@ test('the owner roll uses a staged presentation without moving authority into th
   const roll = await read('src/lib/ProfileRoll.svelte');
 
   assert.match(roll, /REVEAL_STAGES/);
+  assert.match(roll, /REVEAL_SPECTRUM/);
   assert.match(roll, /profile-roll__reveal-button/);
   assert.match(roll, /profile-roll__scan-field/);
+  assert.match(roll, /profile-roll__lock-ring/);
   assert.match(roll, /profile-roll__condition-rail/);
-  assert.match(roll, /Scoring conditions/);
+  assert.match(roll, /Top scoring conditions/);
   assert.match(roll, /profile-roll--quiet/);
-  assert.ok(roll.indexOf('class="profile-roll__details"') < roll.indexOf('class="profile-roll__condition-rail"'));
+  assert.ok(roll.indexOf('class="profile-roll__condition-rail"') < roll.indexOf('class="profile-roll__details"'));
   assert.ok(roll.indexOf('class="profile-roll__details"') < roll.indexOf('class="profile-roll__story"'));
   assert.match(roll, /profile-roll__skip/);
+  assert.match(roll, /dispatch\('colorpreview'/);
+  assert.match(roll, /View score breakdown/);
+  assert.match(roll, /displayScore\.toLocaleString\(\)\} <span>EP/);
   assert.match(roll, /animateScore: true/);
   assert.match(roll, /revealBadges: false/);
   assert.match(roll, /prefersReducedMotion/);

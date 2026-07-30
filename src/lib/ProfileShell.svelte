@@ -209,6 +209,13 @@
     }
   }
 
+  function handleRollPreview(event) {
+    const nextColor = event.detail?.hex;
+    if (profileRollState === 'rolling' && nextColor) {
+      profileRollColor = colorFor(nextColor);
+    }
+  }
+
   async function handleRollComplete(event) {
     if (profileRollState === 'rolling') {
       settleProfileRoll(event.detail?.canonical?.hex || event.detail?.data?.hex || event.detail?.data?.hex_code);
@@ -374,7 +381,7 @@
 
         <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
           {#if isOwnProfile}
-            <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} on:colorchange={handleRollColor} />
+            <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} on:colorpreview={handleRollPreview} on:colorchange={handleRollColor} />
           {:else}
             <TodayColor result={latestRoll} quiet={true} accentColor={dailyAccentColor} />
           {/if}
