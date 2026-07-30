@@ -71,18 +71,14 @@ test('owned catalog includes entitled expression without treating it as an EP pu
   );
 });
 
-test('decoration studio previews the live profile canvas in an isolated mode', async () => {
+test('decoration studio previews a compact identity card without mounting a page shell', async () => {
   const studio = await readFile(new URL('../src/lib/DecorationStudio.svelte', import.meta.url), 'utf8');
   const preview = await readFile(new URL('../src/lib/ShopStudioPreview.svelte', import.meta.url), 'utf8');
-  const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
 
   assert.match(studio, /Decoration studio/);
   assert.match(studio, /Free foundations stay beautiful/);
-  assert.match(preview, /ProfileShell/);
-  assert.match(preview, /previewMode=\{true\}/);
-  assert.match(shell, /previewMode/);
-  assert.match(shell, /\{#if !previewMode\}\s*<ProfileAtmosphere/);
-  assert.match(shell, /profile-shell-page--preview/);
+  assert.match(preview, /IdentityCard/);
+  assert.doesNotMatch(preview, /ProfileShell|ProfileAtmosphere/);
   assert.doesNotMatch(studio + preview, /innerHTML|new Function|eval\s*\(/);
 });
 

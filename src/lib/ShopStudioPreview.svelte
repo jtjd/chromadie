@@ -1,7 +1,9 @@
 <script>
   import RollPreview from './RollPreview.svelte';
-  import ProfileShell from './ProfileShell.svelte';
-  import { createDefaultProfileConfig } from './profileConfig.js';
+  import IdentityCard from './IdentityCard.svelte';
+  import { getBadgeMeta } from './badgeData.js';
+  import { createDefaultProfileConfig, getVisibleProfileLinks } from './profileConfig.js';
+  import { getProfileMediaUrl } from './profileMedia.js';
   import { getCosmeticEffect } from './cosmetics';
   import { SHOP_CONTEXT_LABELS } from './shopCatalog';
 
@@ -16,25 +18,23 @@
   export let profileConfig = null;
 
   $: nameEffect = getCosmeticEffect(loadout, 'name_effect');
+  $: frameEffect = getCosmeticEffect(loadout, 'frame');
+  $: profileBackground = getCosmeticEffect(loadout, 'profile_bg');
+  $: profileBorder = getCosmeticEffect(loadout, 'profile_border');
   $: orbShape = getCosmeticEffect(loadout, 'orb_shape');
   $: rollEffect = getCosmeticEffect(loadout, 'roll_effect');
   $: leaderboardTheme = getCosmeticEffect(loadout, 'lb_theme');
   $: account = /** @type {any} */ (accountProfile || {});
-  $: previewProfile = {
-    ...account,
-    id: 'decoration-studio-preview',
-    username,
-    display_name: account.display_name ?? null,
-    bio: account.bio ?? null,
-    mood_color: displayColor,
-    current_streak: Number(account.current_streak) || 0,
-    longest_streak: Number(account.longest_streak) || 0,
-    lifetime_ep: Number(account.lifetime_ep) || 0,
-    total_rolls: Number(account.total_rolls) || 0,
-    equipped_cosmetics: { ...loadout },
-    equipped_badges: Array.isArray(account.equipped_badges) ? account.equipped_badges : []
-  };
   $: previewProfileConfig = profileConfig?.published || profileConfig?.draft || profileConfig || createDefaultProfileConfig(displayColor);
+  $: previewBadges = (Array.isArray(account.equipped_badges) ? account.equipped_badges : [])
+    .filter(id => typeof id === 'string' && id !== 'launch_edition')
+    .slice(0, 3)
+    .map(id => {
+      const meta = getBadgeMeta(id);
+      return { id, name: meta.name, icon: meta.symbol };
+    });
+  $: previewAvatarSrc = getProfileMediaUrl(previewProfileConfig.avatar_path);
+  $: previewLinks = getVisibleProfileLinks(previewProfileConfig);
 </script>
 
 <section class="studio-preview" aria-label="Your cosmetic preview">
@@ -63,11 +63,25 @@
     <div class="stage-grid" aria-hidden="true"></div>
 
     {#if activeContext === 'profile'}
-      <div class="studio-profile-canvas">
-        <ProfileShell
-          previewMode={true}
-          previewProfile={previewProfile}
-          previewProfileConfig={previewProfileConfig}
+      <div class={'studio-profile-card ' + profileBorder.cls} style={profileBorder.style}>
+        {#if profileBackground.cls || profileBackground.style}
+          <div class={'studio-profile-cosmetic-bg ' + profileBackground.cls} style={profileBackground.style} aria-hidden="true"></div>
+        {/if}
+        <IdentityCard
+          {username}
+          displayName={account.display_name || ''}
+          bio={account.bio || ''}
+          bioFallback="No bio added yet."
+          links={previewLinks}
+          badges={previewBadges}
+          founder={Boolean(account.equipped_badges?.includes('launch_edition'))}
+          avatarSrc={previewAvatarSrc}
+          accentColor={displayColor}
+          nameClass={nameEffect.cls}
+          nameStyle={nameEffect.style}
+          frameClass={frameEffect.cls}
+          frameStyle={frameEffect.style}
+          showToday={false}
         />
       </div>
     {:else if activeContext === 'roll'}
@@ -211,7 +225,7 @@
       radial-gradient(circle at 50% 40%, rgba(122,96,255,0.13), transparent 42%),
       #07080c;
   }
-  .studio-stage.context-profile { min-height: 275px; }
+  .studio-stage.context-profile { min-height: 220px; }
 
   .stage-grid {
     position: absolute;
@@ -224,105 +238,23 @@
     mask-image: linear-gradient(to bottom, #000, transparent 90%);
   }
 
-  .studio-profile-canvas {
+  .studio-profile-card {
     position: relative;
     z-index: 1;
     width: calc(100% - 24px);
-    max-height: 100%;
     overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 18px;
-  }
-  .studio-profile-canvas :global(.profile-shell-page--preview) { width: 100%; }
-  .studio-profile-canvas :global(.identity-card) { padding: 1rem; }
-  .studio-profile-canvas :global(.identity-card__person) { gap: 0.75rem; }
-  .studio-profile-canvas :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
-  .studio-profile-canvas :global(.identity-card__avatar-letter) { font-size: 1.5rem; }
-  .studio-profile-canvas :global(.identity-card__name) { font-size: clamp(1.1rem, 4.5vw, 1.65rem); }
-  .studio-profile-canvas :global(.identity-card__bio) { margin-top: 0.45rem; font-size: 0.72rem; }
-  .studio-profile-canvas :global(.identity-card__divider) { margin: 1rem 0; }
-
-  .studio-profile-card {
-    position: relative;
-    width: calc(100% - 32px);
-    min-height: 268px;
-    overflow: hidden;
-    border: 2px solid rgba(255,255,255,0.11);
-    border-radius: 22px;
     background: #11131a;
     box-shadow: 0 24px 48px rgba(0,0,0,0.38);
   }
-
-  .studio-profile-background,
-  .studio-profile-shade {
-    position: absolute;
-    inset: 0;
-  }
-
-  .studio-profile-background { z-index: 0; will-change: transform, opacity, filter; }
-  .studio-profile-shade {
-    z-index: 1;
-    background: linear-gradient(145deg, rgba(4,5,9,0.18), rgba(4,5,9,0.68));
-  }
-
-  .studio-profile-content {
-    position: relative;
-    z-index: 2;
-    min-height: 268px;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-  }
-
-  .profile-kicker-row,
-  .profile-rank-row {
-    color: rgba(235,238,255,0.68);
-    font: 600 0.61rem var(--font-mono-stack);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .profile-online { display: inline-flex; align-items: center; gap: 5px; }
-  .profile-online i { width: 6px; height: 6px; border-radius: 50%; background: #4bdea5; }
-
-  .studio-name-wrap {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 28px 8px 18px;
-  }
-
-  .profile-name-frame { display: inline-flex; align-items: center; }
-  .studio-username {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font: 750 clamp(1.35rem, 4vw, 2rem)/1 var(--font-display);
-    white-space: nowrap;
-  }
-
-  .profile-rank-row { margin-bottom: 14px; }
-  .profile-rank { color: #d2c7ff; }
-
-  .studio-stat-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0,1fr));
-    gap: 7px;
-  }
-
-  .studio-stat-grid div {
-    min-width: 0;
-    padding: 10px 8px;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
-    background: rgba(8,9,14,0.5);
-    text-align: center;
-  }
-
-  .studio-stat-grid strong,
-  .studio-stat-grid span { display: block; }
-  .studio-stat-grid strong { color: #fff; font: 700 0.78rem var(--font-display); }
-  .studio-stat-grid span { margin-top: 3px; color: #8d90a0; font-size: 0.55rem; }
+  .studio-profile-cosmetic-bg { position: absolute; z-index: 0; inset: 0; opacity: 0.28; pointer-events: none; }
+  .studio-profile-card :global(.identity-card) { z-index: 1; padding: 1rem; border: 0; border-radius: 17px; }
+  .studio-profile-card :global(.identity-card__person) { gap: 0.75rem; }
+  .studio-profile-card :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
+  .studio-profile-card :global(.identity-card__avatar-letter) { font-size: 1.5rem; }
+  .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.1rem, 4.5vw, 1.65rem); }
+  .studio-profile-card :global(.identity-card__bio) { margin-top: 0.45rem; font-size: 0.72rem; }
 
   .studio-roll-scene {
     position: relative;
@@ -424,8 +356,8 @@
   @media (max-width: 650px) {
     .studio-preview { padding: 13px; border-radius: 22px; }
     .studio-stage { min-height: 286px; }
-    .studio-stage.context-profile { min-height: 245px; }
-    .studio-profile-canvas { width: calc(100% - 14px); }
+    .studio-stage.context-profile { min-height: 210px; }
+    .studio-profile-card { width: calc(100% - 14px); }
     .studio-profile-card { min-height: 218px; }
     .studio-profile-content { min-height: 218px; padding: 15px; }
     .studio-name-wrap { padding: 18px 6px 12px; }
