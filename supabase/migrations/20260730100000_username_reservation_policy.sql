@@ -1,5 +1,7 @@
 -- Phase 13.1: exact username reservations and database-authoritative policy.
 -- Existing confirmed staff identity Admin is grandfathered without changing its URL.
+-- The owner-approved legacy ChromaDie profile is renamed to a deterministic
+-- player_* fallback so its history is preserved without retaining the brand key.
 
 BEGIN;
 
@@ -225,6 +227,57 @@ WHERE reserved.username_key = 'admin'
   AND profiles.username_key = 'admin'
   AND profiles.is_staff = true
   AND (reserved.grandfathered_profile_id IS NULL OR reserved.grandfathered_profile_id = profiles.id);
+
+-- Owner-approved remediation for the existing ChromaDie collision. This is a
+-- one-time exact-key rename, not a general fallback for reserved usernames.
+-- Keep the account and all historical data; only its public username changes.
+DO $$
+DECLARE
+  v_profile_id uuid;
+  v_candidate text;
+  v_candidates text[];
+BEGIN
+  SELECT profiles.id
+  INTO v_profile_id
+  FROM public.profiles
+  WHERE profiles.username_key = 'chromadie'
+  LIMIT 1;
+
+  IF v_profile_id IS NULL THEN
+    RETURN;
+  END IF;
+
+  v_candidates := ARRAY[
+    'player_' || substr(replace(v_profile_id::text, '-', ''), 1, 13),
+    'legacy_' || substr(replace(v_profile_id::text, '-', ''), 1, 13),
+    'p_' || substr(replace(v_profile_id::text, '-', ''), 1, 18)
+  ];
+
+  FOREACH v_candidate IN ARRAY v_candidates LOOP
+    IF v_candidate ~ '^[A-Za-z0-9_]{3,20}$'
+       AND public.is_username_allowed(v_candidate)
+       AND NOT EXISTS (
+         SELECT 1
+         FROM public.reserved_usernames
+         WHERE reserved_usernames.enabled
+           AND reserved_usernames.username_key = lower(v_candidate)
+       )
+       AND NOT EXISTS (
+         SELECT 1
+         FROM public.profiles
+         WHERE profiles.username_key = lower(v_candidate)
+           AND profiles.id <> v_profile_id
+       ) THEN
+      UPDATE public.profiles
+      SET username = v_candidate
+      WHERE profiles.id = v_profile_id;
+      RETURN;
+    END IF;
+  END LOOP;
+
+  RAISE EXCEPTION 'Approved ChromaDie remediation could not find a safe replacement username.';
+END;
+$$;
 
 DO $$
 DECLARE

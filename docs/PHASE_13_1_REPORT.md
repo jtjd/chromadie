@@ -25,21 +25,26 @@ Phase 13 identity/canonical baseline remains the previously aligned release;
 `20260730100000_username_reservation_policy.sql` is not recorded remotely.
 
 The existing live `Admin` account was audited read-only. The owner approved
-grandfathering it. The local migration records that exception without changing
-the remote account or renaming any profile.
+grandfathering it. A second existing `ChromaDie` collision was discovered when
+the reviewed migration was attempted; the owner approved preserving that
+account by renaming it to a deterministic `player_*` fallback inside the
+transactional migration. No account deletion is used.
 
 ## Username audit
 
 The proposed policy contains 131 hard-reserved names and 40 protected/manual
 release names, for 171 normalized reservations. Existing public usernames were
-audited against exact normalized equality. The only collision was:
+audited against exact normalized equality. The collisions and approved
+remediations are:
 
 | Existing username | Normalized key | Classification | State | Decision |
 | --- | --- | --- | --- | --- |
 | `Admin` | `admin` | staff/official collision | confirmed; has signed in; staff | preserve and grandfather exact profile id |
+| `ChromaDie` | `chromadie` | brand collision | existing account; migration-time details redacted | preserve account and rename to deterministic `player_*` fallback |
 
-No automatic rename is performed. `admin` remains unavailable to every other
-account. Ordinary substring variants are not blocked.
+`admin` remains unavailable to every other account. `chromadie` remains
+reserved after the approved rename. Ordinary substring variants are not
+blocked.
 
 ## Local implementation
 
@@ -53,7 +58,8 @@ account. Ordinary substring variants are not blocked.
   unavailable message.
 - `20260730100000_username_reservation_policy.sql` adds the reservation table,
   RLS, helpers, trigger, explicit signup behavior, recovery fallback behavior,
-  pending reclaim preservation, and the approved grandfather exception.
+  pending reclaim preservation, the approved Admin grandfather exception, and
+  the exact ChromaDie rename remediation.
 - `scripts/check-username-policy-drift.mjs` compares the JS snapshot, SQL seed,
   route contract, local table, and optionally the linked table.
 - `supabase/tests/launch_security.sql` covers browser table access, fixed

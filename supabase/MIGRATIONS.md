@@ -56,12 +56,13 @@ Phase 13.1 local pending migration:
 - `migrations/20260730100000_username_reservation_policy.sql` adds the exact
   normalized `reserved_usernames` policy, authoritative availability and
   profile-write enforcement, grandfathered existing staff identity support,
-  and RLS on `username_blocklist` and `reserved_usernames`.
+  the owner-approved ChromaDie collision rename, and RLS on `username_blocklist`
+  and `reserved_usernames`.
 - The migration is additive and has passed a fresh local reset, schema lint,
   username-policy drift check, and database-security check. It is not recorded
   in the linked production history. Do not edit applied migrations, use
   migration repair, or push this migration until the Phase 13.1 release gates
-  and the `Admin` collision handling are reviewed.
+  and the `Admin`/`ChromaDie` collision handling are reviewed.
 
 Phase 14 local pending migration:
 

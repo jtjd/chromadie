@@ -58,6 +58,8 @@ test('username policy is shared by the client and database migration', async () 
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.is_username_reserved/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.enforce_username_policy/);
   assert.match(migration, /grandfathered_profile_id/);
+  assert.match(migration, /profiles\.username_key = 'chromadie'/);
+  assert.match(migration, /Approved ChromaDie remediation/);
   assert.match(migration, /profiles_username_policy/);
   assert.match(driftCheck, /--linked/);
 });
