@@ -83,7 +83,7 @@
       throw new Error(rpcError?.message || data?.error || 'The profile expression could not be saved.');
     }
 
-    expression = normalizeProfileExpression(data);
+    expression = normalizeProfileExpression({ ...expression, ...data });
     syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
     mediaCacheKey = String(Date.now());
     dispatch('expressionchange', { ...expression });
