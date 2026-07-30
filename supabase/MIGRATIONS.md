@@ -87,6 +87,9 @@ Staff audio alpha migration:
   RPC, staff-only public projection, and account-deletion cleanup. It is an
   alpha-only hosted MP3 path intended for future paid expression access; it
   does not alter Spotify or image contracts.
+- `migrations/20260730160000_increase_staff_profile_audio_limit.sql` increases
+  the staff-alpha MP3 bucket allowance to 5 MiB without changing its path,
+  MIME-type, ownership, or staff-only RPC boundary.
 
 Version-controlled cron schedule:
 

@@ -7,7 +7,7 @@ Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 **Status:** accepted and implemented
 
 Profile audio uses the existing Supabase Storage stack with one MP3 per staff
-profile and a 1 MiB file limit. The player
+profile and a 5 MiB file limit. The player
 attempts autoplay and loops by default, while native controls and browser
 autoplay fallback preserve visitor control. Public profile composition gains
 no new primary region. Future paid access must introduce an entitlement-aware

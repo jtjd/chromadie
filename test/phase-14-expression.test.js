@@ -72,16 +72,17 @@ test('image input rules reject SVG and oversized originals before processing', (
 });
 
 test('staff audio input rules stay bounded', () => {
-  assert.equal(PROFILE_AUDIO_RULES.maxInputBytes, 1024 * 1024);
+  assert.equal(PROFILE_AUDIO_RULES.maxInputBytes, 5 * 1024 * 1024);
   assert.equal(validateProfileAudioFile({ type: 'audio/mpeg', size: 1024 }), '');
   assert.match(validateProfileAudioFile({ type: 'audio/ogg', size: 1024 }), /MP3/);
-  assert.match(validateProfileAudioFile({ type: 'audio/mpeg', size: 1024 * 1024 + 1 }), /1 MB/);
+  assert.match(validateProfileAudioFile({ type: 'audio/mpeg', size: 5 * 1024 * 1024 + 1 }), /5 MB/);
 });
 
 test('media storage, server validation, and public rendering boundaries are explicit', async () => {
   const migration = await read('supabase/migrations/20260730110000_profile_expression_media.sql');
   const limitsMigration = await read('supabase/migrations/20260730120000_profile_media_size_limits.sql');
   const audioMigration = await read('supabase/migrations/20260730150000_staff_profile_audio.sql');
+  const audioLimitMigration = await read('supabase/migrations/20260730160000_increase_staff_profile_audio_limit.sql');
   const settings = await read('src/lib/ProfileExpressionEditor.svelte');
   const identity = await read('src/lib/IdentityCard.svelte');
   const atmosphere = await read('src/lib/ProfileAtmosphere.svelte');
@@ -103,6 +104,7 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(audioMigration, /is_staff = true/);
   assert.match(audioMigration, /CREATE OR REPLACE FUNCTION public\.update_my_profile_audio/);
   assert.match(audioMigration, /audio\/mpeg/);
+  assert.match(audioLimitMigration, /file_size_limit = 5242880/);
   assert.match(audioMigration, /profile_audio\/.*profile[.]mp3/);
   assert.match(settings, /export let staff = false/);
   assert.match(settings, /update_my_profile_audio/);

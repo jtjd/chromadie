@@ -121,6 +121,6 @@ export const PROFILE_IMAGE_RULES = Object.freeze({
 });
 
 export const PROFILE_AUDIO_RULES = Object.freeze({
-  maxInputBytes: 1024 * 1024,
+  maxInputBytes: 5 * 1024 * 1024,
   accept: Object.freeze(['audio/mpeg'])
 });

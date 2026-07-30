@@ -126,7 +126,7 @@ and deletion cleanup. The migration is currently local-only.
 Migration `20260730150000_staff_profile_audio.sql` adds one bounded
 `audio_path` to profile configuration and a public `profile_audio` bucket.
 The object path is exactly `profile_audio/{auth.uid()}/profile.mp3`, the bucket
-accepts only `audio/mpeg` objects up to 1 MiB, and Storage insert/update/delete
+accepts only `audio/mpeg` objects up to 5 MiB, and Storage insert/update/delete
 policies require the current profile's `is_staff = true`. Public reads are
 limited to the bucket and the public profile projection returns the path only
 while the profile is currently staff.

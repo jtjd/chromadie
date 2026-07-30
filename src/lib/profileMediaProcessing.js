@@ -4,7 +4,7 @@ export function validateProfileAudioFile(file) {
   if (!file || typeof file !== 'object') return 'Choose an MP3 file first.';
   if (!PROFILE_AUDIO_RULES.accept.includes(file.type)) return 'Use an MP3 audio file.';
   if (!Number.isFinite(file.size) || file.size > PROFILE_AUDIO_RULES.maxInputBytes) {
-    return 'That audio file is too large. Keep it under 1 MB.';
+    return 'That audio file is too large. Keep it under 5 MB.';
   }
   return '';
 }

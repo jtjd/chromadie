@@ -22,7 +22,7 @@ the linked project. The public gate remains active.
 - Added profile-deletion Storage cleanup and focused SQL/client regression
   coverage.
 - Added a staff-only hosted MP3 alpha with one owner-scoped object per staff
-  profile, 1 MiB storage limit, server-side staff enforcement, looping playback,
+  profile, 5 MiB storage limit, server-side staff enforcement, looping playback,
   and autoplay fallback controls.
 
 ## Verification
@@ -53,7 +53,7 @@ visually.
 The linked project records `20260730110000_profile_expression_media.sql`,
 `20260730120000_profile_media_size_limits.sql`, and
 `20260730150000_staff_profile_audio.sql`. The staff-audio migration is
-additive and enforces the staff-only RPC boundary and 1 MiB Storage limit. The
+additive and enforces the staff-only RPC boundary and 5 MiB Storage limit. The
 public gate remains active.
 
 **Recommendation:** GO for staff-alpha testing behind the existing gate;
