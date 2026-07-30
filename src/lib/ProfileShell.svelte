@@ -52,6 +52,7 @@
   let profileRollEffectTimer = null;
   let mediaCacheKey = '';
   let refreshing = false;
+  let profileMoreActive = false;
 
   function resetShellState(nextLoading = false) {
     targetProfile = null;
@@ -142,6 +143,16 @@
     };
     document.addEventListener('visibilitychange', refreshOnReturn);
     window.addEventListener('pageshow', refreshOnReturn);
+    const updateProfileScrollState = () => {
+      const more = document.getElementById('profile-more');
+      if (!more) {
+        profileMoreActive = false;
+        return;
+      }
+      const moreTop = more.getBoundingClientRect().top + window.scrollY;
+      profileMoreActive = window.scrollY >= moreTop - window.innerHeight * 0.45;
+    };
+    window.addEventListener('scroll', updateProfileScrollState, { passive: true });
     const handleProfileWheel = event => {
       if (previewMode || !hasProfileMore || event.ctrlKey || Math.abs(event.deltaY) < 8) return;
       if (event.target?.closest?.('.profile-audio-control, input, button, a')) return;
@@ -165,6 +176,7 @@
     return () => {
       document.removeEventListener('visibilitychange', refreshOnReturn);
       window.removeEventListener('pageshow', refreshOnReturn);
+      window.removeEventListener('scroll', updateProfileScrollState);
       window.removeEventListener('wheel', handleProfileWheel);
     };
   });
@@ -230,10 +242,12 @@
   }
 
   function scrollToProfileMore() {
+    profileMoreActive = true;
     document.getElementById('profile-more')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function scrollToProfileHero() {
+    profileMoreActive = false;
     document.querySelector('.profile-shell__approved-canvas')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -415,7 +429,7 @@
           </div>
         </div>
 
-      {#if !previewMode && hasProfileMore}
+      {#if !previewMode && hasProfileMore && !profileMoreActive}
         <button type="button" class="profile-shell__more-cue" aria-controls="profile-more" on:click={scrollToProfileMore}>
           <span class="profile-shell__more-cue-label">Explore profile</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
@@ -424,7 +438,7 @@
       </div>
 
       <div id="profile-more" class="profile-shell__more">
-        {#if !previewMode && hasProfileMore}
+        {#if !previewMode && hasProfileMore && profileMoreActive}
           <button type="button" class="profile-shell__more-back" aria-label="Return to profile top" on:click={scrollToProfileHero}>
             <span aria-hidden="true">↑</span>
           </button>
