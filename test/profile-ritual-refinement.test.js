@@ -33,6 +33,7 @@ test('the owner roll uses a staged presentation without moving authority into th
 
   assert.match(roll, /REVEAL_STAGES/);
   assert.match(roll, /REVEAL_SPECTRUM/);
+  assert.match(roll, /REVEAL_STEP_LABELS/);
   assert.match(roll, /profile-roll__reveal-button/);
   assert.match(roll, /profile-roll__scan-field/);
   assert.match(roll, /profile-roll__lock-ring/);
@@ -44,6 +45,7 @@ test('the owner roll uses a staged presentation without moving authority into th
   assert.match(roll, /profile-roll__skip/);
   assert.match(roll, /dispatch\('colorpreview'/);
   assert.match(roll, /View score breakdown/);
+  assert.match(roll, /bind:open=\{detailsOpen\}/);
   assert.match(roll, /displayScore\.toLocaleString\(\)\} <span>EP/);
   assert.match(roll, /animateScore: true/);
   assert.match(roll, /revealBadges: false/);

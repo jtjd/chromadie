@@ -48,7 +48,8 @@
     '#C65CFF',
     '#FF5DB1'
   ]);
-  const REVEAL_DELAYS = Object.freeze([65, 72, 82, 96, 118, 148, 185, 235]);
+  const REVEAL_DELAYS = Object.freeze([100, 110, 120, 140, 175, 220, 280, 360]);
+  const REVEAL_STEP_LABELS = Object.freeze(['Spectrum', 'Signal', 'Lock']);
   const SYSTEM_BADGE_IDS = new Set([
     'beat_your_best',
     'cotw_hit',
@@ -83,6 +84,7 @@
   let revealStage = 0;
   let skipRevealRequested = false;
   let freshReveal = false;
+  let detailsOpen = false;
 
   $: cosmetics = $equippedItems || {};
   $: rollEff = getRollEffect(cosmetics);
@@ -179,6 +181,7 @@
     revealStage = 0;
     skipRevealRequested = false;
     freshReveal = false;
+    detailsOpen = !compact;
   }
 
   function applyServerPresentation(data, canonical, { animateScore = false, revealBadges = true, notifyProfile = true } = {}) {
@@ -275,7 +278,7 @@
       notifyProfile: true
     });
     revealStage = 3;
-    if (!reducedMotion && !skipRevealRequested) await sleep(280);
+    if (!reducedMotion && !skipRevealRequested) await sleep(480);
     if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
 
     freshReveal = true;
@@ -287,7 +290,7 @@
       const progress = step / scoreSteps;
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       displayScore = Math.round(scoreTarget * easedProgress);
-      if (!reducedMotion && !skipRevealRequested) await sleep(30);
+      if (!reducedMotion && !skipRevealRequested) await sleep(45);
       if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
     }
     displayScore = scoreTarget;
@@ -376,6 +379,7 @@
   }
 
   onMount(() => {
+    detailsOpen = !compact;
     tickCountdown();
     countdownInterval = setInterval(tickCountdown, 1000);
     if (visualFixture === 'pre-roll') {
@@ -430,8 +434,6 @@
       <div class="profile-roll__scan-field" aria-hidden="true">
         <span class="profile-roll__spectrum-wash"></span>
         <span class="profile-roll__scan-orbit profile-roll__scan-orbit--one"></span>
-        <span class="profile-roll__scan-orbit profile-roll__scan-orbit--two"></span>
-        <span class="profile-roll__scan-sweep"></span>
         <span class="profile-roll__lock-ring"></span>
       </div>
       <div class="profile-roll__preview">
@@ -442,6 +444,11 @@
         <p class="profile-roll__hex">{displayHex}</p>
         <h3>{revealStage === 3 ? 'This one is yours.' : 'Finding today’s signal.'}</h3>
         <p>{revealStage === 3 ? 'Adding it to your profile.' : 'The spectrum is narrowing.'}</p>
+        <div class="profile-roll__stage-track" aria-hidden="true">
+          {#each REVEAL_STEP_LABELS as label, index (label)}
+            <span class:active={revealStage === index} class:complete={revealStage > index}>{label}</span>
+          {/each}
+        </div>
         <button type="button" class="profile-roll__skip" on:click={skipReveal}>Skip reveal</button>
       </div>
     </div>
@@ -485,7 +492,7 @@
         </div>
       {/if}
 
-      <details class="profile-roll__details" open={!compact}>
+      <details class="profile-roll__details" bind:open={detailsOpen}>
         <summary>View score breakdown</summary>
         <div class="profile-roll__details-body">
           <div class="profile-roll__story">
@@ -605,10 +612,8 @@
   .profile-roll__button:disabled { cursor: wait; opacity: 0.55; }
   .profile-roll__button--secondary { border-color: color-mix(in srgb, var(--profile-accent) 55%, transparent); background: color-mix(in srgb, var(--profile-accent) 14%, transparent); color: var(--color-accent-bright); }
   .profile-roll__button--reroll { min-height: 2.35rem; padding-inline: var(--space-4); border-color: color-mix(in srgb, var(--color-warning) 50%, transparent); background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: var(--color-warning); font-size: var(--type-label); }
-  .profile-roll__rolling { align-items: center; min-height: 11rem; }
   .profile-roll__preview { display: grid; place-items: center; min-width: 9rem; }
   .profile-roll__preview :global(.roll-effect-wrapper) { transform: scale(0.72); transform-origin: center; }
-  .profile-roll__rolling-copy { flex: 1; }
   .profile-roll__rolling-copy h3,
   .profile-roll__story h3,
   .profile-roll__next h3,
@@ -726,11 +731,8 @@
   .profile-roll__rolling { position: relative; display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); align-items: center; min-height: 13rem; overflow: visible; isolation: isolate; }
   .profile-roll__scan-field { position: absolute; z-index: 0; inset: -3rem -4rem; overflow: hidden; pointer-events: none; opacity: 0.9; }
   .profile-roll__spectrum-wash { position: absolute; inset: 5% 20% 5% 0; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--profile-accent) 28%, transparent), transparent 64%); filter: blur(1rem); animation: profile-roll-spectrum 0.85s ease-in-out infinite; }
-  .profile-roll__scan-orbit,
-  .profile-roll__scan-sweep { position: absolute; top: 50%; left: 28%; border: 1px solid color-mix(in srgb, var(--profile-accent) 36%, transparent); border-radius: 50%; transform: translate(-50%, -50%); }
+  .profile-roll__scan-orbit { position: absolute; top: 50%; left: 28%; border: 1px solid color-mix(in srgb, var(--profile-accent) 36%, transparent); border-radius: 50%; transform: translate(-50%, -50%); }
   .profile-roll__scan-orbit--one { width: 11rem; height: 6rem; transform: translate(-50%, -50%) rotate(28deg); animation: profile-roll-orbit-one 3.2s ease-in-out infinite; }
-  .profile-roll__scan-orbit--two { width: 6rem; height: 11rem; transform: translate(-50%, -50%) rotate(-22deg); border-color: color-mix(in srgb, var(--color-accent-cyan) 30%, transparent); animation: profile-roll-orbit-two 2.8s ease-in-out infinite; }
-  .profile-roll__scan-sweep { width: 12rem; height: 12rem; border: 0; background: conic-gradient(from 0deg, transparent 0 68%, color-mix(in srgb, var(--profile-accent) 20%, transparent) 78%, transparent 90% 100%); -webkit-mask: radial-gradient(circle, transparent 56%, #000 57% 58%, transparent 60%); mask: radial-gradient(circle, transparent 56%, #000 57% 58%, transparent 60%); animation: profile-roll-sweep 2.2s linear infinite; }
   .profile-roll__lock-ring { position: absolute; top: 50%; left: 28%; width: 8rem; height: 8rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 82%, white); border-radius: 50%; opacity: 0; transform: translate(-50%, -50%) scale(0.45); }
   .profile-roll__rolling > :not(.profile-roll__scan-field) { position: relative; z-index: 1; }
   .profile-roll__rolling .profile-roll__preview { width: 7.5rem; min-width: 7.5rem; height: 7.5rem; }
@@ -742,13 +744,16 @@
   .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-lock 0.48s var(--motion-ease-emphasis) both; }
   .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__lock-ring { animation: profile-roll-lock-ring 0.7s ease-out both; }
   .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__scan-orbit,
-  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__scan-sweep,
   .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__spectrum-wash { animation-play-state: paused; opacity: 0.18; }
   .profile-roll__rolling-copy { min-width: 0; }
   .profile-roll__reading-line { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
   .profile-roll__reading-line > span { width: 0.42rem; height: 0.42rem; flex: 0 0 auto; border-radius: 50%; background: var(--profile-accent); box-shadow: 0 0 0.8rem color-mix(in srgb, var(--profile-accent) 74%, transparent); animation: profile-roll-signal 1s ease-in-out infinite; }
   .profile-roll__rolling-copy h3 { margin: 0.5rem 0 0.35rem; color: var(--color-ink-strong); font: 600 clamp(1.2rem, 3.5vw, 1.65rem) / 1.04 var(--font-display-stack); letter-spacing: -0.045em; }
   .profile-roll__rolling-copy > p:not(.profile-roll__eyebrow):not(.profile-roll__hex) { max-width: 12rem; font-size: 0.78rem; }
+  .profile-roll__stage-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.35rem; max-width: 15rem; margin-top: 0.85rem; }
+  .profile-roll__stage-track span { padding-top: 0.4rem; border-top: 1px solid var(--color-line-subtle); color: var(--color-ink-faint); font: 600 0.56rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+  .profile-roll__stage-track span.active,
+  .profile-roll__stage-track span.complete { border-color: var(--profile-accent); color: color-mix(in srgb, var(--profile-accent) 52%, white); box-shadow: 0 -0.18rem 0.55rem color-mix(in srgb, var(--profile-accent) 24%, transparent); }
   .profile-roll__skip { display: inline-flex; margin-top: 1rem; padding: 0; border: 0; background: transparent; color: var(--color-ink-faint); font: 600 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: color var(--motion-base) var(--motion-ease-standard); }
   .profile-roll__skip:hover { color: var(--color-ink-strong); }
   .profile-roll__skip:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 4px; border-radius: 0.25rem; }
@@ -761,8 +766,6 @@
   @keyframes profile-roll-lock { 0% { transform: scale(0.88); filter: brightness(0.9); } 48% { transform: scale(1.2); filter: brightness(1.65) saturate(1.5); } 100% { transform: scale(1); filter: brightness(1); } }
   @keyframes profile-roll-lock-ring { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.45); } 24% { opacity: 0.9; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.45); } }
   @keyframes profile-roll-orbit-one { 0%, 100% { transform: translate(-50%, -50%) rotate(20deg) scale(0.92); opacity: 0.55; } 50% { transform: translate(-50%, -50%) rotate(38deg) scale(1.08); opacity: 1; } }
-  @keyframes profile-roll-orbit-two { 0%, 100% { transform: translate(-50%, -50%) rotate(-30deg) scale(1); opacity: 0.42; } 50% { transform: translate(-50%, -50%) rotate(-8deg) scale(0.86); opacity: 0.9; } }
-  @keyframes profile-roll-sweep { to { transform: translate(-50%, -50%) rotate(360deg); } }
   @keyframes profile-roll-result-enter { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
   @keyframes profile-roll-result-impact { 0% { transform: scale(0.78); filter: brightness(0.8); } 52% { transform: scale(var(--result-impact, 1.1)); filter: brightness(var(--result-brightness, 1.35)); } 100% { transform: scale(1); filter: brightness(1); } }
 
@@ -783,6 +786,7 @@
     .profile-roll__rolling .profile-roll__preview :global(.final-color-display) { width: 7rem; height: 7rem; }
     .profile-roll__rolling-copy { width: 100%; text-align: center; }
     .profile-roll__reading-line { justify-content: center; }
+    .profile-roll__stage-track { margin-inline: auto; }
     .profile-roll__rolling-copy > p:not(.profile-roll__eyebrow):not(.profile-roll__hex) { max-width: none; }
     .profile-roll__skip { margin-top: 0.8rem; }
     .profile-roll__scan-field { inset: -2rem -1rem; }
@@ -801,13 +805,13 @@
     .profile-roll__pulse { animation: none; }
     .profile-roll__button,
     .profile-roll__reveal-button,
-    .profile-roll__skip { transition-duration: 0.001ms; }
+    .profile-roll__skip,
+    .profile-roll__stage-track span { transition-duration: 0.001ms; }
     .profile-roll__button:hover:not(:disabled),
     .profile-roll__reveal-button:hover:not(:disabled) { transform: none; }
     .profile-roll__reading-line > span,
     .profile-roll__spectrum-wash,
     .profile-roll__scan-orbit,
-    .profile-roll__scan-sweep,
     .profile-roll__lock-ring,
     .profile-roll__rolling .profile-roll__preview :global(.roll-effect-wrapper),
     .profile-roll__result--fresh .profile-roll__result-copy,

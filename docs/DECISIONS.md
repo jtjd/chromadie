@@ -1460,4 +1460,5 @@ The completed result keeps the orb, hex, rarity, and EP in one aligned group.
 The strongest scoring conditions remain visible in the collapsed state, while
 the complete server-reported record stays behind a quiet score-breakdown
 disclosure. Motion intensity scales with rarity and collapses to a static,
-immediate result under reduced-motion preferences.
+immediate result under reduced-motion preferences. The compact disclosure owns
+its open state so the live countdown cannot override the reader's choice.

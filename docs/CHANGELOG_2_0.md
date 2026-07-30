@@ -644,4 +644,6 @@ presentation without changing its data or gameplay authority.
   without changing server-authoritative roll behavior.
 - Reorganized completed results around the color identity: hex and rarity,
   unified EP score, leading conditions, and a quieter score breakdown.
+- Lengthened the reveal and added an explicit Spectrum → Signal → Lock tracker.
+- Fixed score breakdowns closing themselves during countdown updates.
 - Added reduced-motion coverage and kept the approved profile layout intact.
