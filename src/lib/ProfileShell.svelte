@@ -208,6 +208,10 @@
     }, reducedMotion ? 420 : 1400);
   }
 
+  function scrollToProfileMore() {
+    document.getElementById('profile-more')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function handleRollCancel() {
     profileRollState = 'idle';
     profileRollColor = '';
@@ -384,7 +388,16 @@
             />
           </div>
         </div>
+      </div>
 
+      {#if !previewMode}
+        <button type="button" class="profile-shell__more-cue" aria-controls="profile-more" on:click={scrollToProfileMore}>
+          <span>Explore profile</span>
+          <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
+        </button>
+      {/if}
+
+      <div id="profile-more" class="profile-shell__more">
         {#if showRoll && !refreshing}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
@@ -407,15 +420,14 @@
             />
           </div>
         {/if}
-      </div>
-
-      {#if !previewMode && showExpression}
-        <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
-          <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
-            <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={dailyAccentColor} audioSrc={audioSrc} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} />
+        {#if !previewMode && showExpression}
+          <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
+            <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
+              <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={dailyAccentColor} audioSrc={audioSrc} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} />
+            </div>
           </div>
-        </div>
-      {/if}
+        {/if}
+      </div>
     </div>
 
     {#if !previewMode}
@@ -902,6 +914,28 @@
     justify-content: center;
   }
 
+  .profile-shell__more-cue {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    align-self: center;
+    margin: 0.75rem auto 0;
+    padding: 0.6rem 0.85rem;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--profile-accent) 42%, var(--color-line-subtle));
+    background: transparent;
+    color: color-mix(in srgb, var(--profile-accent) 68%, white);
+    cursor: pointer;
+    font: 700 0.66rem / 1.2 var(--font-mono-stack);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .profile-shell__more-cue:hover { color: var(--color-ink-strong); border-color: var(--profile-accent); }
+  .profile-shell__more-cue:focus-visible { outline: 2px solid var(--profile-accent); outline-offset: 4px; border-radius: var(--radius-sm); }
+  .profile-shell__more-cue-arrow { font-size: 1rem; line-height: 0.8; }
+  .profile-shell__more { scroll-margin-top: 1.5rem; }
+
   .profile-shell__opening.profile-shell__approved-opening {
     width: min(100%, 46rem);
     align-self: center;
@@ -942,6 +976,8 @@
     padding: 1.25rem 0.5rem 0;
     border-top: 1px solid color-mix(in srgb, var(--profile-accent) 24%, var(--color-line-subtle));
   }
+
+  .profile-shell__more > .profile-shell__approved-game:first-child { margin-top: 0; }
 
   .profile-shell__approved-game :global(.profile-roll--integrated) {
     padding: 0;
@@ -1009,6 +1045,7 @@
     .profile-shell__approved-canvas { display: flex; flex-direction: column; min-height: calc(100dvh - 3.85rem); padding: clamp(3.75rem, 9vh, 5rem) 0 1.5rem; }
     .profile-shell__approved-main { width: 100%; flex: 0 0 auto; }
     .profile-shell__opening.profile-shell__approved-opening { align-self: stretch; }
+    .profile-shell__more-cue { margin-top: 1.25rem; }
     .profile-shell__approved-game { margin-top: 1.75rem; padding-inline: 0.25rem; }
     .profile-shell__approved-featured { margin-top: 1.25rem; padding-inline: 0.25rem; }
     .profile-shell__approved-supporting { margin-top: clamp(3rem, 8vh, 4.5rem); }
