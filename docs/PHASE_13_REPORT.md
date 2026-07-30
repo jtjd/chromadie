@@ -3,7 +3,7 @@
 Date: 2026-07-29  
 Branch: `redesign/profile-first-reconciliation`  
 HEAD: current working tree (pre-existing Phase 10–12 changes retained)  
-Status: **REPOSITORY IMPLEMENTATION COMPLETE — external domain cutover pending**
+Status: **PHASE 13 COMPLETE; PHASE 13.1 CERTIFICATION IN PROGRESS**
 
 ## Decision
 
@@ -357,3 +357,48 @@ custom domain, configure Supabase production auth URLs, install/review email
 templates, perform gated browser smoke tests, resolve the CSS budget overage,
 and only then remove the temporary password gate. Stop after those Phase 13
 checks; do not begin avatar storage, media uploads, or Spotify integration.
+
+## Phase 13.1 superseding addendum — 2026-07-30
+
+Phase 13.1 addresses the documented username-safety and performance follow-up.
+The additive local reservation migration contains 131 hard-reserved names and
+40 manual-release names, exact normalized equality checks, server-authoritative
+availability/trigger enforcement, the approved `Admin` grandfather exception,
+and RLS on the moderation and reservation tables. It has not been pushed to
+the linked production project, so this addendum does not claim production
+reservation parity or a public launch.
+
+Current local evidence:
+
+| Check | Result |
+|---|---|
+| `npm run build` | PASS; CSS 294.39 kB, JavaScript 602.27 kB, HTML 5.22 kB by the budget script |
+| `npm run check:performance` | PASS at CSS 295 kB, JavaScript 625 kB, HTML 12 kB limits |
+| `npm run check:username-policy-drift` | PASS; 171 reservations, 18 valid route segments, local RLS enabled |
+| local username-policy tests | PASS; 4 tests |
+| `npm run check:db-security` | PASS |
+| local schema lint and complete reset | PASS |
+
+The Pages password/maintenance gate remains active. Full Phase 13.1 browser
+screenshots and human review, external Cloudflare/Supabase/email verification,
+and a reviewed production reservation release are not complete in this
+working session.
+
+The final linked read-only checks on 2026-07-30 reported that the remote
+migration history matches local through `20260725150000_profile_identity` and
+that `supabase db push --linked --dry-run` would apply exactly one migration:
+`20260730100000_username_reservation_policy.sql`. No linked write was run.
+`https://chm.lol/` returned `401` with `noindex, nofollow`; the root legacy
+domain returned a `307` to `https://chm.lol/`, and
+`https://chromadie.com/u/example` returned a `307` to
+`https://chm.lol/example`. These are expected gated-transition observations,
+not public-launch certification.
+
+## Phase 13.1 final recommendation
+
+- Database reservation release: **NO-GO** until the additive migration is
+  reviewed again against the live collision and release procedure.
+- chm.lol public cutover: **NO-GO** until external DNS, SSL, auth/email,
+  legacy-domain, and gated browser checks are verified.
+- Public launch/password-gate removal: **NO-GO**.
+- Phase 14/avatar/music work: **NO-GO**; stop after Phase 13.1.

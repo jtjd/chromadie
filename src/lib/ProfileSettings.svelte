@@ -7,6 +7,7 @@
   import Button from './foundation/Button.svelte';
   import Surface from './foundation/Surface.svelte';
   import IdentityEditor from './IdentityEditor.svelte';
+  import ProfileExpressionEditor from './ProfileExpressionEditor.svelte';
   import ProfileEditor from './ProfileEditor.svelte';
   import ProfileSocial from './ProfileSocial.svelte';
 
@@ -23,6 +24,18 @@
   $: profilePath = context?.targetProfile?.username
     ? getCanonicalProfilePath(context.targetProfile.username)
     : '/profile';
+
+  function preserveExpressionFields(nextConfig, currentConfig) {
+    const next = nextConfig || {};
+    const current = currentConfig || {};
+    return {
+      ...next,
+      avatar_path: current.avatar_path ?? next.avatar_path ?? null,
+      background_path: current.background_path ?? next.background_path ?? null,
+      spotify_type: current.spotify_type ?? next.spotify_type ?? null,
+      spotify_id: current.spotify_id ?? next.spotify_id ?? null
+    };
+  }
 
   async function loadSettings() {
     const nextRequestId = ++requestId;
@@ -48,12 +61,29 @@
 
   function updateConfiguration(event) {
     const fallbackColor = context?.targetProfile?.mood_color || '#8B7CF6';
+    const currentDraft = context?.profileConfig?.draft || {};
+    const currentPublished = context?.profileConfig?.published || {};
     context = {
       ...context,
       profileConfig: {
         ...(context.profileConfig || {}),
-        draft: normalizeProfileConfig(event.detail?.draft, fallbackColor),
-        published: normalizeProfileConfig(event.detail?.published, fallbackColor)
+        draft: normalizeProfileConfig(preserveExpressionFields(event.detail?.draft, currentDraft), fallbackColor),
+        published: normalizeProfileConfig(preserveExpressionFields(event.detail?.published, currentPublished), fallbackColor)
+      }
+    };
+  }
+
+  function updateExpression(event) {
+    const fallbackColor = context?.targetProfile?.mood_color || '#8B7CF6';
+    const fields = event.detail || {};
+    const currentDraft = context?.profileConfig?.draft || {};
+    const currentPublished = context?.profileConfig?.published || {};
+    context = {
+      ...context,
+      profileConfig: {
+        ...(context.profileConfig || {}),
+        draft: normalizeProfileConfig({ ...currentDraft, ...fields }, fallbackColor),
+        published: normalizeProfileConfig({ ...currentPublished, ...fields }, fallbackColor)
       }
     };
   }
@@ -110,6 +140,12 @@
           displayName={context.targetProfile?.display_name || ''}
           bio={context.targetProfile?.bio || ''}
           on:identitysaved={updateIdentity}
+        />
+        <ProfileExpressionEditor
+          profileId={context.profileId}
+          config={context.profileConfig}
+          fallbackInitial={(context.targetProfile?.display_name || context.targetProfile?.username || '✦').slice(0, 1)}
+          on:expressionchange={updateExpression}
         />
         <ProfileEditor
           profileId={context.profileId}

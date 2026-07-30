@@ -12,6 +12,7 @@ import {
 import { parseRouteLocation } from '../src/lib/routes.js';
 import { getBrowserPublicOrigin, getServerPublicOrigin } from '../src/lib/siteOrigin.js';
 import { getSafeNextUrl } from '../src/lib/authUrls.js';
+import { isProtectedUsername } from '../src/lib/usernamePolicy.js';
 import { onRequestGet as compatibilityRoute } from '../functions/u/[[username]].js';
 import { onRequestGet as rootProfileRoute } from '../functions/[[username]].js';
 
@@ -38,7 +39,10 @@ test('reserved application and asset paths cannot become usernames', () => {
     assert.equal(parseRouteLocation(`/${segment}`).profileUsername, null, segment);
   }
 
-  assert.equal(normalizeUsernameSegment('%61dmin'), null);
+  assert.equal(normalizeUsernameSegment('%61dmin'), 'admin');
+  assert.equal(normalizeUsernameSegment('Admin'), 'Admin');
+  assert.equal(isProtectedUsername('Admin'), true);
+  assert.equal(parseRouteLocation('/Admin').profileUsername, 'Admin');
   assert.equal(parseRouteLocation('/Neon%252FUser').routeMode, 'not-found');
   assert.equal(parseRouteLocation('/Neon%2525252FUser').routeMode, 'not-found');
   assert.equal(parseRouteLocation('/Neon%').routeMode, 'not-found');

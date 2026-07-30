@@ -1,11 +1,12 @@
-export const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
+import { USERNAME_PATTERN } from './usernamePolicy.js';
 
-// Keep this list shared by the browser parser and Pages Functions. Every
+export { USERNAME_PATTERN } from './usernamePolicy.js';
+
+// Keep route-reserved segments shared by the browser parser and Pages Functions. Every
 // actual top-level application/asset endpoint is reserved before a segment
 // can be considered a public username.
 export const RESERVED_ROUTE_SEGMENTS = Object.freeze([
   'account',
-  'admin',
   'api',
   'assets',
   'auth',

@@ -595,3 +595,31 @@ presentation without changing its data or gameplay authority.
   the temporary `PREVIEW_PASSWORD` gate.
 - Added regression coverage proving the validation path is reachable while
   ordinary requests remain closed when the gate secret is unavailable.
+
+## 2026-07-30 — Phase 13.1 username policy and performance certification
+
+- Added the shared route/protected-username policy with exact normalized
+  matching and hard/manual release categories.
+- Added the additive reservation migration, server-side availability and
+  write enforcement, reservation drift check, and blocklist/reservation RLS
+  coverage. The migration remains local-only.
+- Preserved the existing `Admin` staff profile through an explicit
+  grandfathered profile identity; no other account can register `admin`.
+- Removed obsolete compiled CSS and tightened the performance guard to 295 kB
+  CSS, 625 kB JavaScript, and 12 kB HTML. The current build passes at 294.39,
+  602.27, and 5.22 kB respectively.
+- Kept the Cloudflare Pages password/maintenance gate active. Public cutover,
+  external auth/email checks, browser evidence, and Phase 14 remain NO-GO.
+
+## 2026-07-30 — Phase 14 optional profile expression
+
+- Added optional uploaded avatars and backgrounds through owner-scoped Supabase
+  Storage buckets. Images are validated, cropped/resized, converted to WebP,
+  and removable from profile settings.
+- Added server-validated Spotify track, playlist, and album embeds. The profile
+  stores only the provider type and identifier and lazy-loads the official
+  embed without autoplay.
+- Kept the existing identity card, full-viewport atmosphere, owner/visitor
+  parity, initials fallback, and generated-color fallback intact.
+- No production migration, deployment, public-gate change, Cloudflare media
+  service, OAuth, hosted audio, or custom player was added.

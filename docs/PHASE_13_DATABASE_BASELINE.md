@@ -351,3 +351,23 @@ Production is now **ALIGNED** with the corrected Phase 4–8 baseline. The
 database write changed production; no identity, avatar, music, or root-routing
 work was started by this reconciliation. Phase 13 may resume after the gated
 owner browser smoke checks.
+
+## Phase 13.1 database addendum — 2026-07-30
+
+The Phase 13A result above remains the production baseline: the linked project
+is aligned through the Phase 13 identity migration. Phase 13.1 introduces the
+new additive `20260730100000_username_reservation_policy.sql` migration, but it
+has not been pushed to production. No production database write was performed
+for this milestone.
+
+The read-only collision audit found one exact normalized collision: the
+confirmed, active staff profile `Admin` owns the key `admin`. The owner
+approved grandfathering this account. The local migration stores its profile
+identity on the reservation row, preserving the historical profile and URL;
+all other inserts and updates using `admin` are rejected. No existing username
+was renamed and no historical data was deleted.
+
+The local rehearsal has RLS enabled on `reserved_usernames` and
+`username_blocklist`, browser table grants removed, fixed-search-path helpers,
+and trigger enforcement. Production reservation-table parity is intentionally
+**unverified/not yet applicable** until the reviewed migration is released.

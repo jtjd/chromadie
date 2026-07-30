@@ -12,6 +12,7 @@
     "check:links": "node scripts/check-internal-links.mjs",
     "check:csp": "node scripts/check-csp.mjs",
     "check:performance": "node scripts/check-performance-budget.mjs",
+    "check:username-policy-drift": "node scripts/check-username-policy-drift.mjs",
     "db:pull": "supabase db pull",
     "db:diff": "supabase db diff --linked",
     "db:push": "supabase db push",

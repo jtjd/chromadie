@@ -92,6 +92,33 @@ hidden daily-roll module. Account deletion cascades to the configuration row.
 The launch security test checks the role grants, invalid draft rejection,
 explicit publish boundary, public draft exclusion, and deletion cascade.
 
+## Profile expression media and Spotify boundary
+
+Added in migration `20260730110000_profile_expression_media.sql`, optional
+expression remains part of the protected profile configuration contract. The
+only added values are `avatar_path`, `background_path`, `spotify_type`, and
+`spotify_id`; public readers receive those bounded published values through the
+existing configuration RPC and no private configuration row access.
+
+The `avatars` and `backgrounds` buckets accept only the processed `image/webp`
+representation and enforce 5 MB and 10 MB object limits respectively. Public
+reads are limited to those buckets. Authenticated inserts, replacements, and
+deletes require the exact current user's Storage path and matching WebP MIME
+metadata; browser roles cannot modify another user's object path. SVG and
+other original input types are rejected before upload by the client and are
+not accepted by the bucket boundary.
+
+`update_my_profile_expression(text,text,text)` is `SECURITY DEFINER`, derives
+the owner only from `auth.uid()`, uses a fixed `public` search path, validates
+exact object paths, parses only HTTPS `open.spotify.com` track/playlist/album
+URLs, and stores only the provider type and 22-character identifier. Browser
+execution is granted only to `authenticated`; the profile deletion trigger
+cleans up the exact owned objects without exposing a direct cleanup RPC.
+
+The database security audit covers unauthenticated/other-owner Storage access,
+invalid paths and Spotify hosts, public projection bounds, fixed permissions,
+and deletion cleanup. The migration is currently local-only.
+
 ## Public profile story boundary
 
 Migration `20260725110000_profile_story.sql` adds
@@ -197,3 +224,29 @@ premium catalog row, and upserts the grant. A zero catalog cost is not a free
 access signal for premium rows. The launch security audit checks table grants,
 RLS, fixed search paths, premium metadata, wrapper/implementation grants, and
 account-deletion cleanup.
+
+## Username reservation and moderation boundary — Phase 13.1
+
+`reserved_usernames` is the authoritative exact-match policy for route,
+brand, official, trust, system, and protected identities. It is separate from
+the profanity/moderation algorithm and never performs substring blocking.
+Browser routing and signup feedback use the checked-in policy snapshot for
+fast feedback, but `is_username_available(text)` and the
+`profiles_username_policy` trigger remain the final authority for every
+profile insert or username update.
+
+The table has RLS enabled, no `anon` or `authenticated` table privileges, and
+only bounded SECURITY DEFINER helpers expose the policy result. Helpers use
+fixed search paths and explicitly qualified objects. `username_blocklist` now
+also has RLS enabled with no browser policies or direct browser grants;
+moderation helpers retain their service/security-definer access.
+
+The existing confirmed staff profile `Admin` is the only approved grandfather
+for the normalized `admin` reservation. The reservation row stores the
+specific profile identity, so that profile keeps its historical URL while
+other accounts cannot claim the key. No automatic rename or historical-data
+deletion is allowed.
+
+The Phase 13.1 migration is currently local-only. Re-run
+`npm run check:username-policy-drift` and `npm run check:db-security` after
+resets and before any reviewed linked release.

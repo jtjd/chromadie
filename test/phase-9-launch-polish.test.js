@@ -15,6 +15,7 @@ test('media sources allow local and HTTPS assets but reject unsafe protocols', (
   assert.equal(normalizeMediaSource('/logo-mark.svg'), '/logo-mark.svg');
   assert.equal(normalizeMediaSource('images/profile.png'), 'images/profile.png');
   assert.equal(normalizeMediaSource('https://cdn.example.com/profile.png'), 'https://cdn.example.com/profile.png');
+  assert.equal(normalizeMediaSource('http://127.0.0.1:54321/storage/v1/object/public/avatars/avatar.webp'), 'http://127.0.0.1:54321/storage/v1/object/public/avatars/avatar.webp');
   assert.equal(normalizeMediaSource('//cdn.example.com/profile.png'), '');
   assert.equal(normalizeMediaSource('http://cdn.example.com/profile.png'), '');
   assert.equal(normalizeMediaSource('data:image/svg+xml;base64,unsafe'), '');
@@ -51,8 +52,9 @@ test('public HTML cache controls remain explicit and security headers stay intac
 });
 
 test('performance budget script defines regression limits instead of hiding the bundle warning', () => {
-  assert.match(budgetSource, /javascript: 650 \* 1024/);
-  assert.match(budgetSource, /css: 300 \* 1024/);
+  assert.match(budgetSource, /javascript: 625 \* 1024/);
+  assert.match(budgetSource, /css: 295 \* 1024/);
+  assert.match(budgetSource, /html: 12 \* 1024/);
   assert.match(budgetSource, /Performance budget/);
   assert.match(budgetSource, /process\.exitCode = 1/);
 });

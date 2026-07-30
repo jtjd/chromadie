@@ -6,8 +6,8 @@ const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const distRoot = join(projectRoot, 'dist');
 const assetsRoot = join(distRoot, 'assets');
 const budgets = {
-  javascript: 650 * 1024,
-  css: 300 * 1024,
+  javascript: 625 * 1024,
+  css: 295 * 1024,
   html: 12 * 1024
 };
 

@@ -1,17 +1,31 @@
 <script>
   import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
+  import { getSpotifyEmbedUrl } from './profileExpression.js';
   import { normalizeHexColor } from './utils.js';
 
   export let accentColor = '#8B7CF6';
   /** @type {Record<string, any> | null} */
   export let bestRoll = null;
   export let visualFixture = '';
+  export let spotifyType = '';
+  export let spotifyId = '';
 
   $: safeColor = normalizeHexColor(bestRoll?.hex_code, accentColor);
-  $: showVisualFixture = !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
+  $: spotifyEmbedSrc = getSpotifyEmbedUrl(spotifyType, spotifyId);
+  $: showVisualFixture = !spotifyEmbedSrc && !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
 </script>
 
-{#if PROFILE_MUSIC_ENABLED}
+{#if spotifyEmbedSrc}
+  <div class="profile-music profile-music--spotify" data-music-state="spotify" aria-label="Spotify profile music">
+    <iframe
+      src={spotifyEmbedSrc}
+      title="Spotify player"
+      loading="lazy"
+      allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      referrerpolicy="strict-origin-when-cross-origin"
+    ></iframe>
+  </div>
+{:else if PROFILE_MUSIC_ENABLED}
   <div class="profile-music profile-music--configured" data-music-state="configured" aria-label="Profile expression">
     <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true">♪</span>
     <div class="profile-music__copy">
@@ -37,6 +51,8 @@
 
 <style>
   .profile-music { display: flex; align-items: center; gap: 1rem; min-height: 4.375rem; padding: 0.75rem 1rem; border: 1px solid rgba(230,238,255,0.14); border-radius: 1rem; background: rgba(255,255,255,0.055); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 1.5rem 3rem rgba(0,0,0,0.18); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+  .profile-music--spotify { display: block; min-height: 0; padding: 0; overflow: hidden; }
+  .profile-music--spotify iframe { display: block; width: 100%; height: 152px; border: 0; }
   .profile-music__mark { display: grid; place-items: center; flex: 0 0 2.75rem; width: 2.75rem; height: 2.75rem; border-radius: 0.7rem; background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.58), var(--music-accent) 58%, rgba(0,0,0,0.48)); box-shadow: 0 0 1.35rem color-mix(in srgb, var(--music-accent) 42%, transparent); }
   .profile-music__mark::after { content: ''; width: 0.38rem; height: 0.38rem; border-radius: 50%; background: rgba(255,255,255,0.72); }
   .profile-music__copy { display: grid; flex: 1; min-width: 0; gap: 0.2rem; }

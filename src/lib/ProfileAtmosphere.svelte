@@ -1,18 +1,23 @@
 <script>
 export let accent = '#8B7CF6';
 export let secondaryAccent = '#71D6FF';
+export let backgroundSrc = '';
 export let rollState = 'idle';
 export let rollColor = '';
 
 $: safeRollState = ['rolling', 'settled'].includes(rollState) ? rollState : 'idle';
 $: safeRollColor = rollColor || accent;
+$: backgroundStyle = backgroundSrc
+  ? `linear-gradient(135deg, color-mix(in srgb, ${accent} 24%, rgba(0, 0, 0, 0.62)), rgba(0, 0, 0, 0.66)), url("${backgroundSrc}")`
+  : 'none';
 </script>
 
 <div
   class={'profile-atmosphere profile-atmosphere--' + safeRollState}
-  style={'--atmosphere-accent: ' + accent + '; --atmosphere-secondary: ' + secondaryAccent + '; --atmosphere-roll-color: ' + safeRollColor + ';'}
+  style={'--atmosphere-accent: ' + accent + '; --atmosphere-secondary: ' + secondaryAccent + '; --atmosphere-roll-color: ' + safeRollColor + '; --atmosphere-background: ' + backgroundStyle + ';'}
   aria-hidden="true"
 >
+  <span class="profile-atmosphere__background"></span>
   <span class="profile-atmosphere__core"></span>
   <span class="profile-atmosphere__corner profile-atmosphere__corner--top"></span>
   <span class="profile-atmosphere__corner profile-atmosphere__corner--bottom"></span>
@@ -36,6 +41,7 @@ $: safeRollColor = rollColor || accent;
   }
 
   .profile-atmosphere__core,
+  .profile-atmosphere__background,
   .profile-atmosphere__corner,
   .profile-atmosphere__roll-flare,
   .profile-atmosphere__roll-ring,
@@ -51,6 +57,14 @@ $: safeRollColor = rollColor || accent;
       radial-gradient(ellipse 48% 38% at 50% 86%, color-mix(in srgb, var(--atmosphere-secondary) 7%, transparent), transparent 74%);
     opacity: 0.9;
     animation: profile-atmosphere-breathe 24s ease-in-out infinite;
+  }
+
+  .profile-atmosphere__background {
+    background-image: var(--atmosphere-background);
+    background-position: center;
+    background-size: cover;
+    filter: saturate(0.82);
+    opacity: 0.66;
   }
 
   .profile-atmosphere__corner--top {

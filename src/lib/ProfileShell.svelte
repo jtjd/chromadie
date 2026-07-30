@@ -21,6 +21,7 @@
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
   import IdentityCard from './IdentityCard.svelte';
+  import { getProfileMediaUrl } from './profileMedia.js';
   import TodayColor from './TodayColor.svelte';
   import FeaturedCollection from './FeaturedCollection.svelte';
   import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
@@ -306,7 +307,11 @@
     colorFor(effectiveProfileConfig.signatureColor)
   );
   $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
-  $: showExpression = PROFILE_MUSIC_ENABLED || (import.meta.env.DEV && visualFixture === 'music');
+  $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path);
+  $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path);
+  $: showExpression = Boolean(effectiveProfileConfig.spotify_type && effectiveProfileConfig.spotify_id)
+    || PROFILE_MUSIC_ENABLED
+    || (import.meta.env.DEV && visualFixture === 'music');
   $: composition = getProfileComposition(effectiveProfileConfig, {
     isOwner: isOwnProfile,
     hasLinks: visibleLinks.length > 0,
@@ -329,7 +334,7 @@
 </script>
 
 <main class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + dailyAccentColor + ';'} aria-busy={loading}>
-  <ProfileAtmosphere accent={dailyAccentColor} secondaryAccent={colorFor(effectiveProfileConfig.signatureColor, '#71D6FF')} rollState={profileRollState} rollColor={profileRollColor || dailyAccentColor} />
+  <ProfileAtmosphere accent={dailyAccentColor} secondaryAccent={colorFor(effectiveProfileConfig.signatureColor, '#71D6FF')} backgroundSrc={backgroundSrc} rollState={profileRollState} rollColor={profileRollColor || dailyAccentColor} />
 
   {#if !loading && targetProfile}
     <div class="profile-shell__approved-canvas">
@@ -346,6 +351,7 @@
             bioFallback={profileBioFallback}
             links={visibleLinks}
             badges={pinnedAchievements}
+            avatarSrc={avatarSrc}
             founder={targetProfile.equipped_badges?.includes('launch_edition')}
             accentColor={dailyAccentColor}
             nameClass={nameEff.cls}
@@ -380,7 +386,7 @@
       {#if !previewMode && showExpression}
         <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
           <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
-            <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={dailyAccentColor} visualFixture={visualFixture} />
+            <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={dailyAccentColor} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} />
           </div>
         </div>
       {/if}

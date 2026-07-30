@@ -51,6 +51,30 @@ Catalog source of truth:
 - `npm run check:catalog-drift` detects snapshot/seed drift and checks the remote catalog when
   Supabase credentials are available.
 
+Phase 13.1 local pending migration:
+
+- `migrations/20260730100000_username_reservation_policy.sql` adds the exact
+  normalized `reserved_usernames` policy, authoritative availability and
+  profile-write enforcement, grandfathered existing staff identity support,
+  and RLS on `username_blocklist` and `reserved_usernames`.
+- The migration is additive and has passed a fresh local reset, schema lint,
+  username-policy drift check, and database-security check. It is not recorded
+  in the linked production history. Do not edit applied migrations, use
+  migration repair, or push this migration until the Phase 13.1 release gates
+  and the `Admin` collision handling are reviewed.
+
+Phase 14 local pending migration:
+
+- `migrations/20260730110000_profile_expression_media.sql` adds the four
+  bounded profile-expression columns, configures the `avatars` and
+  `backgrounds` WebP-only Storage buckets and owner-path policies, adds the
+  authenticated expression update RPC, and removes owned objects during the
+  existing profile deletion boundary.
+- The migration has passed a fresh local reset, schema lint, database-security
+  audit, and browser evidence pass. It has not been pushed to the linked
+  production project. Do not edit applied migrations or introduce a separate
+  media service for this phase.
+
 Version-controlled cron schedule:
 
 - `update_cotw()` runs every Monday at `00:00 UTC`.

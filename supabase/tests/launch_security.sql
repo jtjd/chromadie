@@ -27,6 +27,24 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION pg_temp.audit_expect_error(statement text, message text)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_failed boolean := false;
+BEGIN
+  BEGIN
+    EXECUTE statement;
+  EXCEPTION WHEN OTHERS THEN
+    v_failed := true;
+  END;
+  IF NOT v_failed THEN
+    RAISE EXCEPTION 'AUDIT ASSERTION FAILED: %', message;
+  END IF;
+END;
+$$;
+
 SELECT pg_temp.audit_assert(
   NOT has_function_privilege('authenticated', 'public.grant_staff_test_ep(uuid,bigint)', 'EXECUTE'),
   'authenticated must not execute grant_staff_test_ep'
@@ -154,6 +172,41 @@ SELECT pg_temp.audit_assert(
   'browser roles must use profile configuration RPCs instead of the protected table'
 );
 SELECT pg_temp.audit_assert(
+  EXISTS (SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'profile_configurations' AND column_name = 'avatar_path')
+    AND EXISTS (SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'profile_configurations' AND column_name = 'background_path')
+    AND EXISTS (SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'profile_configurations' AND column_name = 'spotify_type')
+    AND EXISTS (SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'profile_configurations' AND column_name = 'spotify_id')
+    AND has_function_privilege('authenticated', 'public.update_my_profile_expression(text,text,text)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.update_my_profile_expression(text,text,text)', 'EXECUTE'),
+  'profile expression fields must use the authenticated bounded RPC'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT p.proconfig @> ARRAY['search_path=public']
+   FROM pg_proc p
+   WHERE p.oid = 'public.update_my_profile_expression(text,text,text)'::regprocedure),
+  'profile expression RPC must have a fixed search_path'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT public AND file_size_limit = 5242880 AND allowed_mime_types = ARRAY['image/webp']::text[]
+   FROM storage.buckets WHERE id = 'avatars')
+    AND (SELECT public AND file_size_limit = 10485760 AND allowed_mime_types = ARRAY['image/webp']::text[]
+         FROM storage.buckets WHERE id = 'backgrounds')
+    AND (SELECT relrowsecurity FROM pg_class WHERE oid = 'storage.objects'::regclass)
+    AND (SELECT count(*) = 4 FROM pg_policies
+         WHERE schemaname = 'storage' AND tablename = 'objects'
+           AND policyname IN (
+             'Public profile expression media read',
+             'Owners can upload profile expression media',
+             'Owners can replace profile expression media',
+             'Owners can delete profile expression media'
+           )),
+  'profile media buckets and owner-scoped storage policies must remain bounded'
+);
+SELECT pg_temp.audit_assert(
   NOT has_table_privilege('anon', 'public.profile_entitlements', 'SELECT')
     AND NOT has_table_privilege('authenticated', 'public.profile_entitlements', 'SELECT')
     AND has_table_privilege('service_role', 'public.profile_entitlements', 'SELECT')
@@ -257,6 +310,163 @@ SELECT pg_temp.audit_assert(
     AND position('staff_test_ep' IN pg_get_functiondef('public.public_profile_identity_projection(uuid)'::regprocedure)) = 0
     AND position('auth.users' IN pg_get_functiondef('public.public_profile_identity_projection(uuid)'::regprocedure)) = 0,
   'public identity projection must exclude private account fields'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.username_blocklist'::regclass)
+    AND (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.reserved_usernames'::regclass)
+    AND NOT has_table_privilege('anon', 'public.username_blocklist', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.username_blocklist', 'SELECT')
+    AND NOT has_table_privilege('anon', 'public.reserved_usernames', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.reserved_usernames', 'SELECT')
+    AND has_table_privilege('service_role', 'public.reserved_usernames', 'SELECT'),
+  'username policy tables must remain RLS-protected and unavailable to browser roles'
+);
+SELECT pg_temp.audit_assert(
+  has_function_privilege('anon', 'public.is_username_available(text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.is_username_available(text)', 'EXECUTE')
+    AND has_function_privilege('anon', 'public.is_username_reserved(text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.is_username_reserved(text)', 'EXECUTE')
+    AND (SELECT p.proconfig @> ARRAY['search_path=public']
+         FROM pg_proc p
+         WHERE p.oid = 'public.is_username_reserved(text)'::regprocedure)
+    AND (SELECT p.proconfig @> ARRAY['search_path=public']
+         FROM pg_proc p
+         WHERE p.oid = 'public.is_username_available(text)'::regprocedure),
+  'username policy RPCs must have bounded browser grants and fixed search paths'
+);
+SELECT pg_temp.audit_assert(
+  public.is_username_reserved('  ADMIN  ')
+    AND NOT public.is_username_reserved('administratorx')
+    AND NOT public.is_username_reserved('myspotifylist')
+    AND NOT public.is_username_reserved('chromadiefan')
+    AND NOT public.is_username_available('admin')
+    AND NOT public.is_username_available('ABOUT')
+    AND public.is_username_available('supporter')
+    AND public.is_username_available('administratorx'),
+  'username reservation must use exact normalized equality without substring overblocking'
+);
+
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '10000000-0000-0000-0000-000000000003',
+  'authenticated', 'authenticated', 'policy-user@example.invalid', '', now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"username":"policy_user"}'::jsonb, now(), now()
+);
+SELECT pg_temp.audit_expect_check(
+  'UPDATE public.profiles SET username = ''Admin'' WHERE id = ''10000000-0000-0000-0000-000000000003''',
+  'direct profile update bypassed the hard reservation'
+);
+SELECT pg_temp.audit_expect_check(
+  'UPDATE public.profiles SET username = ''bad/name'' WHERE id = ''10000000-0000-0000-0000-000000000003''',
+  'direct profile update bypassed username format validation'
+);
+SELECT pg_temp.audit_expect_check(
+  'UPDATE public.profiles SET username = ''fuck_player'' WHERE id = ''10000000-0000-0000-0000-000000000003''',
+  'direct profile update bypassed moderation'
+);
+UPDATE public.reserved_usernames
+SET grandfathered_profile_id = '10000000-0000-0000-0000-000000000003'
+WHERE username_key = 'admin';
+UPDATE public.profiles
+SET username = 'Admin'
+WHERE id = '10000000-0000-0000-0000-000000000003';
+SELECT pg_temp.audit_assert(
+  (SELECT username = 'Admin' FROM public.profiles WHERE id = '10000000-0000-0000-0000-000000000003'),
+  'approved grandfathered profile could not retain its username'
+);
+SELECT pg_temp.audit_expect_check(
+  $policy_signup$
+    INSERT INTO auth.users (
+      instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    ) VALUES (
+      '00000000-0000-0000-0000-000000000000',
+      '10000000-0000-0000-0000-000000000004',
+      'authenticated', 'authenticated', 'policy-reserved@example.invalid', '', now(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      '{"username":"Admin"}'::jsonb, now(), now()
+    )
+  $policy_signup$,
+  'explicit reserved signup silently fell back instead of being rejected'
+);
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '10000000-0000-0000-0000-000000000005',
+  'authenticated', 'authenticated', 'pending-policy@example.invalid', '',
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"username":"reclaimable"}'::jsonb, now(), now()
+);
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '10000000-0000-0000-0000-000000000006',
+  'authenticated', 'authenticated', 'confirmed-policy@example.invalid', '', now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"username":"reclaimable"}'::jsonb, now(), now()
+);
+SELECT pg_temp.audit_assert(
+  (SELECT username = 'reclaimable' FROM public.profiles WHERE id = '10000000-0000-0000-0000-000000000006')
+    AND (SELECT username <> 'reclaimable' FROM public.profiles WHERE id = '10000000-0000-0000-0000-000000000005'),
+  'valid username reclaim from a pending account no longer works'
+);
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '10000000-0000-0000-0000-000000000009',
+  'authenticated', 'authenticated', 'confirmed-holder@example.invalid', '', now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"username":"confirmed_holder"}'::jsonb, now(), now()
+);
+SELECT pg_temp.audit_assert(
+  NOT public.is_username_available('confirmed_holder')
+    AND EXISTS (
+      SELECT 1
+      FROM public.profiles p
+      JOIN auth.users u ON u.id = p.id
+      WHERE p.username_key = 'confirmed_holder'
+        AND u.email_confirmed_at IS NOT NULL
+    ),
+  'confirmed username collision was not visible to the authoritative availability check'
+);
+SELECT pg_temp.audit_expect_check(
+  $taken_signup$
+    INSERT INTO auth.users (
+      instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    ) VALUES (
+      '00000000-0000-0000-0000-000000000000',
+      '10000000-0000-0000-0000-000000000007',
+      'authenticated', 'authenticated', 'taken-policy@example.invalid', '', now(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      '{"username":"confirmed_holder"}'::jsonb, now(), now()
+    )
+  $taken_signup$,
+  'explicit confirmed username collision silently fell back'
+);
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '80000000-0000-0000-0000-000000000008',
+  'authenticated', 'authenticated', 'fallback-policy@example.invalid', '', now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{}'::jsonb, now(), now()
+);
+SELECT pg_temp.audit_assert(
+  (SELECT username LIKE 'player_%' FROM public.profiles WHERE id = '80000000-0000-0000-0000-000000000008'),
+  'missing requested username did not use the generated fallback'
 );
 SELECT pg_temp.audit_assert(
   position('force_cotw' IN pg_get_functiondef('public.roll_die_impl_pre_audit(boolean)'::regprocedure)) = 0
@@ -776,6 +986,48 @@ SELECT pg_temp.audit_assert(
    FROM audit_results WHERE name = 'config_publish'),
   'profile configuration publish did not promote the saved draft'
 );
+INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
+VALUES
+  (gen_random_uuid(), 'avatars', '10000000-0000-0000-0000-000000000001/avatar.webp', '10000000-0000-0000-0000-000000000001', '{"mimetype":"image/webp"}'::jsonb),
+  (gen_random_uuid(), 'backgrounds', '10000000-0000-0000-0000-000000000001/background.webp', '10000000-0000-0000-0000-000000000001', '{"mimetype":"image/webp"}'::jsonb);
+INSERT INTO audit_results VALUES (
+  'expression_save',
+  public.update_my_profile_expression(
+    'avatars/10000000-0000-0000-0000-000000000001/avatar.webp',
+    'backgrounds/10000000-0000-0000-0000-000000000001/background.webp',
+    'https://open.spotify.com/track/1234567890123456789012?si=test'
+  )
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->>'avatar_path' = 'avatars/10000000-0000-0000-0000-000000000001/avatar.webp'
+      AND payload->>'spotify_type' = 'track'
+      AND payload->>'spotify_id' = '1234567890123456789012'
+   FROM audit_results WHERE name = 'expression_save'),
+  'valid profile expression values were not saved'
+);
+SELECT pg_temp.audit_expect_error(
+  $expression_path$SELECT public.update_my_profile_expression(
+    'avatars/10000000-0000-0000-0000-000000000002/avatar.webp', NULL, NULL
+  )$expression_path$,
+  'profile expression RPC accepted another user''s storage path'
+);
+SELECT pg_temp.audit_expect_error(
+  $expression_spotify$SELECT public.update_my_profile_expression(
+    NULL, NULL, 'https://evil.example/track/1234567890123456789012'
+  )$expression_spotify$,
+  'profile expression RPC accepted an arbitrary Spotify host'
+);
+INSERT INTO audit_results VALUES ('config_public_expression', public.get_public_profile_configuration('10000000-0000-0000-0000-000000000001'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'avatar_path' = 'avatars/10000000-0000-0000-0000-000000000001/avatar.webp'
+      AND payload->>'background_path' = 'backgrounds/10000000-0000-0000-0000-000000000001/background.webp'
+      AND payload->>'spotify_type' = 'track'
+      AND payload->>'spotify_id' = '1234567890123456789012'
+      AND NOT (payload ? 'draft')
+   FROM audit_results WHERE name = 'config_public_expression'),
+  'public profile expression projection was not bounded'
+);
 SELECT set_config('request.jwt.claims', '{"role":"anon"}', true);
 INSERT INTO audit_results VALUES ('config_anon_owner', public.get_my_profile_configuration());
 SELECT pg_temp.audit_assert(
@@ -816,6 +1068,14 @@ SELECT pg_temp.audit_assert(
     WHERE user_id = '10000000-0000-0000-0000-000000000001'
   ),
   'profile configuration did not follow account deletion'
+);
+SELECT pg_temp.audit_assert(
+  NOT EXISTS (
+    SELECT 1 FROM storage.objects
+    WHERE (bucket_id = 'avatars' AND name = '10000000-0000-0000-0000-000000000001/avatar.webp')
+       OR (bucket_id = 'backgrounds' AND name = '10000000-0000-0000-0000-000000000001/background.webp')
+  ),
+  'profile expression storage objects did not follow account deletion'
 );
 SELECT pg_temp.audit_assert(
   NOT EXISTS (

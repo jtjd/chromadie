@@ -6,7 +6,7 @@ import { parseRouteLocation } from '../src/lib/routes.js';
 
 const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
 const header = await readFile(new URL('../src/lib/SiteModeHeader.svelte', import.meta.url), 'utf8');
-const layout = await readFile(new URL('../src/styles/layout.css', import.meta.url), 'utf8');
+const site = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
 
 test('the bare root is the landing page and explicit gameplay remains compatible', () => {
   assert.equal(parseRouteLocation('/').view, 'home');
@@ -36,9 +36,9 @@ test('site surfaces use one shared header and the shared atmospheric shell', () 
   assert.match(header, /navigator\.share/);
   assert.match(header, /Share profile/);
   assert.match(header, /dispatch\('logout'/);
-  assert.match(layout, /\.app-main--site \.card/);
-  assert.match(layout, /\.app-main--site \.shop-page/);
-  assert.match(layout, /\.app-main--site \.discovery-hub/);
+  assert.match(site, /\.app-main--site \.card/);
+  assert.match(site, /\.app-main--site \.shop-page/);
+  assert.match(site, /\.app-main--site \.discovery-hub/);
 });
 
 test('explicit routes remain available instead of being rewritten to the profile', () => {

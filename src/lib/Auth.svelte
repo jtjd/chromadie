@@ -1,6 +1,7 @@
 <script>
   import { supabase } from './supabase';
   import { getAuthCallbackUrl, getResetPasswordUrl } from './authUrls';
+  import { isProtectedUsername, isUsernameShapeValid } from './usernamePolicy.js';
   import { onMount } from 'svelte';
 
   export let onClose = () => {};
@@ -18,7 +19,6 @@
   let captchaToken = '';
   let turnstileState = 'loading';
   const siteKey = import.meta.env.VITE_CLOUDFLARE_SITE_KEY;
-  const RESERVED_USERNAMES = new Set(['guest', 'anon', 'anonymous']);
   const MODE_COPY = {
     login: {
       kicker: 'Welcome back',
@@ -45,10 +45,6 @@
       helper: 'Use the email address tied to the account you want to recover.'
     }
   };
-
-  function normalizeUsername(value) {
-    return value.trim().toLowerCase();
-  }
 
   function isLocalDevelopment() {
     if (!import.meta.env.DEV || typeof window === 'undefined') return false;
@@ -179,32 +175,28 @@
         loading = false;
         return;
       }
-      if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      const requestedUsername = username.trim();
+      if (!isUsernameShapeValid(requestedUsername)) {
         error = 'Username must be 3-20 characters and use only letters, numbers, or underscores.';
-        loading = false;
-        return;
-      }
-      if (RESERVED_USERNAMES.has(normalizeUsername(username))) {
-        error = 'That username is reserved. Please choose another one.';
         loading = false;
         return;
       }
 
       const { data: usernameAllowed, error: moderationError } = await supabase.rpc('is_username_allowed', {
-        p_username: username
+        p_username: requestedUsername
       });
-      if (!moderationError && usernameAllowed === false) {
-        error = 'That username is not available. Please choose another one.';
-        loading = false;
-        resetCaptcha();
-        return;
-      }
 
       const { data: usernameAvailable, error: availabilityError } = await supabase.rpc('is_username_available', {
-        p_username: username
+        p_username: requestedUsername
       });
-      if (availabilityError || usernameAvailable === false) {
-        error = 'That username is already taken.';
+      if (
+        isProtectedUsername(requestedUsername)
+        || moderationError
+        || usernameAllowed === false
+        || availabilityError
+        || usernameAvailable === false
+      ) {
+        error = 'That username is not available. Please choose another one.';
         loading = false;
         resetCaptcha();
         return;
@@ -215,7 +207,7 @@
         password,
         options: {
           emailRedirectTo: getAuthCallbackUrl(),
-          data: { username, display_name: username },
+          data: { username: requestedUsername, display_name: requestedUsername },
           ...(captchaToken ? { captchaToken } : {})
         }
       });

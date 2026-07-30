@@ -83,25 +83,43 @@ start with a new audit and may not assume identity-data contracts exist.
 
 ## Phase 13 — Real Identity Contract and chm.lol Canonicalization
 
-Status: **blocked at the required database baseline gate**.
+Status: **repository implementation complete; external cutover remains gated**.
 
-The approved Phase 10–12 composition is fixed. Phase 13 is intended to add
-nullable, server-authoritative `display_name` and `bio` fields, extend the
-existing owner editor, and make `https://chm.lol` canonical while preserving
-`/u/<username>`, old-domain links, challenge URLs, auth callbacks, and direct
-refresh behavior.
+Phase 13A reconciled the linked production baseline, and Phase 13 added the
+nullable server-authoritative identity contract, owner editor, bounded public
+projection, canonical root username routing, `/u/<username>` compatibility,
+and chm.lol repository metadata. The approved Phase 10–12 composition remains
+fixed. Cloudflare attachment, Supabase dashboard settings, email templates,
+and final browser smoke checks are operator gates documented separately.
 
-The linked project currently ends at
-`20260712200000_launch_audit_remediation`; local Phase 4–8 migrations and two
-catalog rows are still pending remotely. Per the milestone stop condition, no
-Phase 13 schema or runtime implementation has begun. See
-[`PHASE_13_DATABASE_BASELINE.md`](PHASE_13_DATABASE_BASELINE.md),
-[`PHASE_13_PLAN.md`](PHASE_13_PLAN.md), and
-[`PHASE_13_REPORT.md`](PHASE_13_REPORT.md).
+## Phase 13.1 — Username Safety, Performance, and Public Cutover Certification
+
+Status: **local implementation complete; production reservation and public
+launch are NO-GO**.
+
+Phase 13.1 adds exact authoritative username reservations, preserves the
+approved grandfathered `Admin` staff profile, enables moderation-table RLS,
+adds policy drift detection, and restores strict CSS/JavaScript/HTML budget
+headroom. The reservation migration is intentionally not recorded remotely;
+the Pages password/maintenance gate remains active. See
+[`PHASE_13_1_PLAN.md`](PHASE_13_1_PLAN.md),
+[`USERNAME_RESERVATION_POLICY.md`](USERNAME_RESERVATION_POLICY.md),
+[`PHASE_13_1_CUTOVER_CHECKLIST.md`](PHASE_13_1_CUTOVER_CHECKLIST.md), and
+[`PHASE_13_1_REPORT.md`](PHASE_13_1_REPORT.md).
+
+## Phase 14 — Avatars, Backgrounds, and Spotify
+
+Status: **local implementation complete; production rollout pending**.
+
+Phase 14 adds only optional avatar, background, and Spotify expression through
+the existing Supabase stack. Uploads are processed into owner-scoped WebP
+objects, Spotify values are bounded provider identifiers, and all management
+controls remain in profile settings. The approved centered identity card and
+full-viewport atmosphere are unchanged. See [`PHASE_14_REPORT.md`](PHASE_14_REPORT.md).
 
 ## Deferred themes
 
-Media/embeds, richer expression data, broader discovery, operational
+Richer expression data, broader discovery, operational
 moderation tooling, analytics ownership and retention, payment/webhook
 entitlement issuance, private messaging, notifications, comparisons, and any
 SvelteKit migration remain separate proposals. Each requires its own scope,

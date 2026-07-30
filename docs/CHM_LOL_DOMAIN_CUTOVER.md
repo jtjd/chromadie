@@ -2,11 +2,19 @@
 
 Date: 2026-07-29
 
-Status: **repository implementation complete; external cutover pending**.
+Status: **repository implementation complete; external cutover and Phase 13.1
+certification pending**.
 
 This document separates checked-in behavior from Cloudflare, Supabase, and
 email operations. No DNS, Cloudflare custom-domain, Supabase dashboard, or
 email-template installation was performed by this repository change.
+
+Phase 13.1 adds a separate release boundary: the local username-reservation
+policy has not been pushed to the linked project, the approved `Admin` staff
+profile remains grandfathered by identity, and the temporary Pages password /
+maintenance gate must stay active until the certification checklist passes.
+No external configuration or public-launch readiness is implied by the local
+repository checks.
 
 ## Target strategy
 
@@ -44,6 +52,11 @@ email-template installation was performed by this repository change.
 - [x] Automated tests cover root routing, `/u` compatibility, reserved and
   encoded paths, canonical metadata, share URLs, old-origin handling, and
   auth callback safety.
+- [x] Username route protection and exact protected-name policy are shared by
+  browser routing, Pages Functions, signup feedback, and local SQL tests.
+- [ ] Apply and verify the additive username-reservation migration in the
+  linked project after the Phase 13.1 release gates are approved. The existing
+  `Admin` staff profile must remain grandfathered; do not auto-rename it.
 - [ ] Update the production Pages `VITE_SITE_URL` to `https://chm.lol` and
   verify the deployed value after the custom domain is attached.
 

@@ -1383,3 +1383,49 @@ Related files: `supabase/migrations/20260725150000_profile_identity.sql`,
 `src/lib/profileIdentity.js`, `src/lib/IdentityEditor.svelte`,
 `src/lib/routeContract.js`, `src/lib/siteOrigin.js`,
 `docs/CHM_LOL_DOMAIN_CUTOVER.md`.
+
+## 2026-07-30 — Make username reservation exact, authoritative, and grandfather-safe
+
+**Status:** accepted and implemented locally; production release pending
+
+Username routing and username protection are separate contracts. Route
+segments protect application endpoints, while a focused reservation table
+protects exact normalized usernames by category and release policy. The
+database is authoritative through the availability RPC and a profile-write
+trigger; browser checks remain convenience feedback and cannot bypass the
+policy. Reserved words are never rejected by substring match, so ordinary
+creative identities remain available.
+
+The existing confirmed staff account `Admin` is an approved grandfathered
+exception. The migration records its profile identity on the `admin` row,
+preserving the historical profile and URL while preventing every other
+profile from claiming that normalized key. No automatic rename or historical
+data deletion is permitted.
+
+The reservation migration is additive and currently local-only. The linked
+production project must not receive it until the collision, backup/recovery,
+low-traffic, and verification gates are reviewed again. The temporary Pages
+gate remains active during certification.
+
+## 2026-07-30 — Keep Phase 14 expression bounded and settings-only
+
+**Status:** accepted and implemented locally; production rollout pending
+
+Phase 14 uses the existing Supabase stack for the smallest optional expression
+surface: two owner-scoped WebP Storage buckets and four nullable profile
+configuration columns. Browser image files are resized/cropped and converted
+before upload. Spotify URLs are validated by both the client convenience layer
+and the authenticated server RPC, which stores only a supported entity type and
+bounded identifier.
+
+Avatar and background references are exact owner-shaped paths, Storage writes
+are restricted to the matching authenticated user path, and profile deletion
+removes the owned objects inside the existing deletion boundary. Public
+rendering uses the existing identity card and atmosphere, with initials and the
+generated daily-color background as fallbacks. Music is a lazy official embed
+with no autoplay and no custom player.
+
+All management controls remain in `/profile/settings`; the visitor/owner
+profile composition is unchanged. The migration is local-only until a separate
+release review authorizes a linked push. No Cloudflare media service, arbitrary
+HTML/CSS, OAuth, hosted audio, or additional profile widgets were introduced.

@@ -18,8 +18,11 @@
   export let rollState = 'idle';
   export let showToday = true;
 
+  let failedAvatarSource = '';
+
   $: safeDisplayName = displayName || username;
   $: safeInitial = safeDisplayName.slice(0, 1).toUpperCase() || '✦';
+  $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
   $: displayedLinks = (Array.isArray(links) ? links : []).slice(0, 4);
   $: displayedBadges = (Array.isArray(badges) ? badges : [])
     .filter(badge => badge?.id !== 'launch_edition')
@@ -33,8 +36,8 @@
 <section class={'identity-card identity-card--roll-' + rollState} style={'--identity-accent: ' + accentColor + ';'} aria-labelledby="identity-card-title">
   <div class="identity-card__person">
     <div class={'identity-card__avatar ' + frameClass} style={frameStyle}>
-      {#if avatarSrc}
-        <Media src={avatarSrc} alt={safeDisplayName + ' avatar'} aspect="square" loading="eager" className="identity-card__avatar-media" fallbackLabel="Avatar unavailable" />
+      {#if avatarSrc && failedAvatarSource !== avatarSrc}
+        <img class="identity-card__avatar-media" src={avatarSrc} alt={safeDisplayName + ' avatar'} loading="eager" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
       {:else}
         <span class="identity-card__avatar-glow" aria-hidden="true"></span>
         <span class="identity-card__avatar-letter" aria-hidden="true">{safeInitial}</span>

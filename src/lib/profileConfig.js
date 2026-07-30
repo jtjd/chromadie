@@ -1,3 +1,5 @@
+import { normalizeProfileExpression } from './profileExpression.js';
+
 export const PROFILE_CONFIG_VERSION = 1;
 
 export const PROFILE_LAYOUT_VARIANTS = Object.freeze(['immersive', 'editorial', 'focus']);
@@ -59,7 +61,11 @@ export function createDefaultProfileConfig(signatureColor = '#8B7CF6') {
     layoutVariant: 'immersive',
     storyVisible: false,
     modules: defaultModules(),
-    links: []
+    links: [],
+    avatar_path: null,
+    background_path: null,
+    spotify_type: null,
+    spotify_id: null
   };
 }
 
@@ -109,12 +115,14 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
     ? value.links.map((link, index) => normalizeLink(link, index)).filter(Boolean).slice(0, 6)
     : [];
 
+  /** @type {Record<string, any>} */
   const normalized = {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(value.signatureColor, fallback.signatureColor),
     layoutVariant: PROFILE_LAYOUT_VARIANTS.includes(value.layoutVariant) ? value.layoutVariant : fallback.layoutVariant,
     modules: modules.sort((left, right) => left.order - right.order),
-    links: links.sort((left, right) => left.order - right.order)
+    links: links.sort((left, right) => left.order - right.order),
+    ...normalizeProfileExpression(value)
   };
   if (typeof value.storyVisible === 'boolean') normalized.storyVisible = value.storyVisible;
   return normalized;

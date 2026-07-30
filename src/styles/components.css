@@ -42,10 +42,6 @@
 @keyframes badgePopIn { 0% { opacity: 0; transform: scale(0.5) translateY(10px); } 70% { transform: scale(1.02) translateY(0); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 @keyframes flashGold { 0% { background-color: rgba(20, 20, 30, 0.5); } 50% { background-color: rgba(241, 196, 15, 0.2); } 100% { background-color: rgba(20, 20, 30, 0.5); } }
 .flash-jackpot { animation: flashGold 0.5s; }
-@keyframes digitPunch { 0% { transform: scale(1); color: #fff; } 50% { transform: scale(1.25); color: var(--accent-green); text-shadow: 0 0 20px var(--accent-green); } 100% { transform: scale(1); color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.4); } }
-.digit-lock { animation: digitPunch 0.3s ease-out; }
-@keyframes colorRevealPop { 0% { transform: scale(1); box-shadow: 0 0 30px rgba(255,255,255,0.4); } 50% { transform: scale(1.3); box-shadow: 0 0 60px rgba(255,255,255,0.9); } 100% { transform: scale(1); box-shadow: 0 0 30px rgba(255,255,255,0.4); } }
-.color-reveal { animation: colorRevealPop 0.6s ease-out; }
 @keyframes shakeScreen { 0% { transform: translate(0, 0) rotate(0deg); } 25% { transform: translate(-2px, 2px) rotate(-1deg); } 50% { transform: translate(2px, -2px) rotate(1deg); } 75% { transform: translate(-2px, -2px) rotate(-1deg); } 100% { transform: translate(0, 0) rotate(0deg); } }
 .shake-screen { animation: shakeScreen 0.4s ease-in-out; }
 
@@ -73,17 +69,6 @@
 .rank-display { color: var(--accent-purple); font-size: 0.9rem; font-weight: 600; margin-bottom: 35px; letter-spacing: 0.5px; }
 .badges-title { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; text-align: left; }
 .badges-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 30px; }
-.brand-promo { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; margin-bottom: 25px; text-align: left; position: relative; overflow: hidden; }
-.brand-promo::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent-purple); }
-.brand-promo-header { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; letter-spacing: 1px; margin-bottom: 8px; }
-.brand-promo-title { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 8px; }
-.brand-promo-copy { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
-.results-buttons { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-.share-btn, .roll-again-btn { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--card-border); padding: 12px 24px; font-size: 0.9rem; border-radius: 12px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
-.share-btn:hover, .roll-again-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--card-border-hover); }
-.roll-again-btn { border-color: var(--accent-purple); color: var(--accent-purple); }
-.countdown-footer { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-mono-stack); margin-bottom: 20px; }
-#countdown-timer { color: #fff; font-weight: 600; }
 
 .cotw-widget { margin-top: 25px; padding: 15px; background: rgba(139, 124, 246, 0.05); border: 1px solid rgba(139, 124, 246, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
 .cotw-info { text-align: left; display: flex; flex-direction: column; gap: 4px; }
@@ -170,15 +155,6 @@
 .best-box { min-width: min(100%, 240px); }
 .best-box { flex: 1; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 16px; border: 1px solid var(--card-border); }
 .best-color-display { width: 80px; height: 80px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.2); margin: 0 auto; }
-.top-badge-item { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); color: #ccc; padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; margin-bottom: 8px; display: block; }
-.history-row { background: rgba(255,255,255,0.03); border-radius: 14px; padding: 15px; margin-bottom: 12px; border: 1px solid var(--card-border); }
-.history-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--card-border); padding-bottom: 8px; }
-.history-date { color: var(--text-muted); font-size: 0.8rem; font-weight: 500; }
-.history-score { color: var(--accent-green); font-weight: 600; font-family: var(--font-mono-stack); }
-.history-bottom { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.history-color { width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
-.profile-badges-container { display: flex; flex-wrap: wrap; gap: 5px; margin-left: auto; }
-.profile-badge { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); color: #ccc; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-family: var(--font-mono-stack); }
 
 .achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
 .achievement-box {
@@ -221,25 +197,7 @@
 .shop-preview-text { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; height: 40px; display: flex; align-items: center; justify-content: center; }
 .shop-item h3 { font-size: 1rem; margin-bottom: 8px; font-weight: 600; word-break: break-word; }
 .shop-item p { color: var(--accent-green); font-family: var(--font-mono-stack); font-size: 0.85rem; margin-bottom: 20px; }
-.shop-btn { background: #fff; color: #000; border: none; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; transition: all 0.2s; font-size: 0.85rem; min-height: 44px; }
-.shop-btn:hover { background: #ddd; }
-.shop-btn.equipped { background: var(--accent-green); color: #000; cursor: pointer; }
-.shop-btn.equipped:hover { background: #0ca678; }
-.shop-btn.owned { background: rgba(255,255,255,0.1); color: #fff; }
-.shop-btn.disabled { background: transparent; color: var(--text-muted); border: 1px solid var(--card-border); pointer-events: none; }
-.wallet-display { background: rgba(255,255,255,0.03); border: 1px solid var(--card-border); padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 30px; }
-.wallet-display h3 { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 5px; }
-.wallet-display span { color: var(--accent-green); font-size: 2rem; font-weight: 700; font-family: var(--font-mono-stack); }
-
-.auth-toggle { display: flex; justify-content: center; gap: 0; margin-bottom: 25px; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 4px; border: 1px solid var(--card-border); }
-.auth-tab { flex: 1; background: transparent; color: var(--text-muted); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: all 0.2s; min-height: 40px; }
-.auth-tab.active { background: rgba(255,255,255,0.1); color: #fff; }
-.auth-form { display: flex; flex-direction: column; gap: 12px; }
-.auth-input-full { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: #fff; padding: 14px; border-radius: 12px; font-size: 0.95rem; box-sizing: border-box; font-family: var(--font-body-stack); transition: border 0.2s; min-height: 44px; }
-.auth-input-full:focus { outline: none; border-color: var(--accent-purple); }
 .auth-error { color: var(--error-red); font-size: 0.85rem; margin-top: 15px; min-height: 20px; }
-.back-link { display: inline-block; margin-top: 20px; color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
-.back-link:hover { color: #fff; }
 
 .rarity-Trash { background-color: rgba(255,255,255,0.05); color: var(--text-muted); border-color: var(--card-border); }
 .rarity-Common { background-color: rgba(255,255,255,0.1); color: #fff; border-color: var(--card-border); }
@@ -275,30 +233,15 @@
     .roll-neon-rings-anim::before, .roll-neon-rings-anim::after { width: 118px; height: 118px; }
     .score-display { font-size: 2.5rem; }
     .hex-code { font-size: 1rem; letter-spacing: 1px; padding: 7px 12px; }
-    .results-buttons { flex-direction: column; }
     .countdown-inline,
-    .share-btn,
-    .roll-again-btn,
     .chroma-btn,
-    .reroll-btn,
-    .shop-btn,
-    .auth-tab {
+    .reroll-btn {
         width: 100%;
         justify-content: center;
     }
-    .lb-tabs { justify-content: flex-start; }
     .leaderboard-row,
-    .my-rank-row {
+    .rival-row {
         align-items: flex-start;
-    }
-    .leaderboard-row > .lb-actions,
-    .my-rank-row > .lb-score {
-        width: 100%;
-    }
-    .lb-actions {
-        margin-left: 0;
-        justify-content: space-between;
-        width: 100%;
     }
     .lb-info {
         margin-left: 0;
@@ -315,9 +258,6 @@
     .best-row-container { flex-direction: column; }
     .achievements-grid { grid-template-columns: 1fr; }
     .shop-grid { grid-template-columns: 1fr; gap: 14px; }
-    .shop-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; justify-content: flex-start; flex-wrap: nowrap; }
-    .shop-tabs::-webkit-scrollbar { display: none; }
-    .shop-tab { flex: 0 0 auto; white-space: nowrap; }
     .modal-actions { flex-direction: column; }
     .download-btn,
     .close-btn {

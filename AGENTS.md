@@ -75,6 +75,8 @@ npx eslint src/
 npm test
 npm run check:links
 npm run check:csp
+npm run check:performance
+npm run check:username-policy-drift
 npm run check:balance-drift
 npm run check:catalog-drift
 npm run check:scoring-parity

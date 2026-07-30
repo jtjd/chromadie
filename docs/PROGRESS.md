@@ -2,26 +2,14 @@
 
 ## Active Phase
 
-Phase 13 — Real Identity Contract and chm.lol Canonicalization
+Phase 14 — Avatars, Backgrounds, and Spotify
 
 ## Current Milestone
 
-Phase 13A has reconciled the production database baseline. Phase 13 repository
-implementation is complete: the additive identity contract is live, the owner
-settings editor and bounded public projection are wired, and canonical
-root-profile routing is implemented. A separately scoped profile ritual and identity-surface refinement is complete
-on top of the approved Phase 12 sitewide visual language, Phase 11.1 profile
-composition, the Phase 11 continuous-composition pass, the Phase 10
-profile-first reconciliation, and the Phase 0–9 launch-hardening,
-consented measurement/operations, and local browser-audit work. Public and
-authenticated surfaces have a measurable
-asset budget, keyboard route access, safe structured media fallbacks, bounded
-public HTML caching, immutable asset caching, an opt-in redacted product-event
-contract, an explicit social moderation operations boundary, and Chromium
-desktop/mobile smoke evidence. Existing discovery, social, shop, profile URLs,
-and server-authoritative gameplay remain intact. External Cloudflare host
-attachment and dashboard configuration are still pending and are tracked
-separately from repository completion.
+Phase 13.1 remains local-only and its public cutover is still gated. Phase 14
+adds optional avatar, background, and Spotify expression through the existing
+Supabase stack without changing the approved profile composition. The Phase 14
+migration is local-only; no linked database or deployment was changed.
 
 ## Completed
 
@@ -703,3 +691,44 @@ the remaining Phase 11 boundary.
 - The temporary Pages gate permits only the Cloudflare ACME validation path
   through so custom-domain verification can complete; normal site access stays
   protected by `PREVIEW_PASSWORD`.
+
+## Phase 13.1 — Username safety, performance, and cutover certification — 2026-07-30
+
+- Added one shared distinction between route-reserved segments and protected
+  usernames. Reservation uses exact normalized equality; ordinary creative
+  names such as `supporter`, `administratorx`, and `chromadiefan` remain
+  available unless another policy rejects them.
+- Added the additive local migration
+  `20260730100000_username_reservation_policy.sql` with 131 hard-reserved and
+  40 manual-release names, authoritative availability/trigger checks, and RLS
+  on both reservation and moderation tables. It has not been pushed to the
+  linked project.
+- The existing staff account `Admin` is explicitly grandfathered by profile
+  identity. Its profile and URL are preserved; no other account may claim the
+  normalized key `admin`.
+- Added `npm run check:username-policy-drift` and its local policy/security
+  coverage. Local drift, security, schema lint, and fresh-reset checks pass.
+- Reduced compiled CSS to 294.39 kB against the 295 kB Phase 13.1 budget;
+  JavaScript is 602.27 kB against 625 kB and the HTML shell is 5.22 kB against
+  12 kB.
+- Phase 13.1 remains **NO-GO for a public launch**: the reservation migration,
+  full browser evidence, external auth/email verification, and password-gate
+  removal are still pending. Do not begin avatars, media, or music.
+
+## 2026-07-30 — Phase 14 expression implementation
+
+- Added the additive profile-expression migration with owner-scoped `avatars`
+  and `backgrounds` Storage buckets, WebP limits, policies, bounded expression
+  RPCs, and account-deletion cleanup.
+- Added settings-only avatar and background upload/replace/remove controls with
+  client-side MIME/size validation, square cropping or bounded resizing, WebP
+  conversion, and safe initials/generated-atmosphere fallbacks.
+- Added server-validated Spotify track, playlist, and album links with lazy
+  official embeds and no autoplay; only `spotify_type` and `spotify_id` are
+  stored.
+- Preserved owner/visitor parity and the frozen profile composition. Local
+  reset, schema lint, security audit, build, check, ESLint, 133 tests, links,
+  CSP, balance, catalog, scoring, username drift, repository hygiene, and
+  performance budgets pass.
+- Captured and reviewed the requested local Phase 14 browser evidence. No
+  production migration, deployment, or public-gate change was performed.
