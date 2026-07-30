@@ -619,6 +619,8 @@ presentation without changing its data or gameplay authority.
 - Added server-validated Spotify track, playlist, and album embeds. The profile
   stores only the provider type and identifier and lazy-loads the official
   embed without autoplay.
+- Capped stored profile media at 256 KiB per avatar and 1 MiB per background,
+  with matching browser compression and Supabase Storage enforcement.
 - Kept the existing identity card, full-viewport atmosphere, owner/visitor
   parity, initials fallback, and generated-color fallback intact.
 - No production migration, deployment, public-gate change, Cloudflare media

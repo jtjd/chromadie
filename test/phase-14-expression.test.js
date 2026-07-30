@@ -7,7 +7,8 @@ import {
   getProfileStorageRef,
   getSpotifyEmbedUrl,
   normalizeProfileExpression,
-  parseSpotifyUrl
+  parseSpotifyUrl,
+  PROFILE_IMAGE_RULES
 } from '../src/lib/profileExpression.js';
 import { validateProfileImageFile } from '../src/lib/profileMediaProcessing.js';
 
@@ -56,6 +57,8 @@ test('expression paths are exact, owner-shaped, and bounded', () => {
 });
 
 test('image input rules reject SVG and oversized originals before processing', () => {
+  assert.equal(PROFILE_IMAGE_RULES.avatar.maxOutputBytes, 256 * 1024);
+  assert.equal(PROFILE_IMAGE_RULES.background.maxOutputBytes, 1024 * 1024);
   assert.equal(validateProfileImageFile({ type: 'image/jpeg', size: 1024 }, 'avatar'), '');
   assert.match(validateProfileImageFile({ type: 'image/svg+xml', size: 1024 }, 'avatar'), /JPEG, PNG, or WebP/);
   assert.match(validateProfileImageFile({ type: 'image/png', size: 5 * 1024 * 1024 + 1 }, 'avatar'), /5 MB/);
@@ -64,6 +67,7 @@ test('image input rules reject SVG and oversized originals before processing', (
 
 test('media storage, server validation, and public rendering boundaries are explicit', async () => {
   const migration = await read('supabase/migrations/20260730110000_profile_expression_media.sql');
+  const limitsMigration = await read('supabase/migrations/20260730120000_profile_media_size_limits.sql');
   const settings = await read('src/lib/ProfileExpressionEditor.svelte');
   const identity = await read('src/lib/IdentityCard.svelte');
   const atmosphere = await read('src/lib/ProfileAtmosphere.svelte');
@@ -72,6 +76,8 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(migration, /INSERT INTO storage\.buckets/);
   assert.match(migration, /'avatars', 'avatars', true, 5242880/);
   assert.match(migration, /'backgrounds', 'backgrounds', true, 10485760/);
+  assert.match(limitsMigration, /file_size_limit = 262144/);
+  assert.match(limitsMigration, /file_size_limit = 1048576/);
   assert.match(migration, /Owners can upload profile expression media/);
   assert.match(migration, /name = auth\.uid\(\)::text \|\| '\/avatar\.webp'/);
   assert.match(migration, /COALESCE\(metadata->>'mimetype', ''\) = 'image\/webp'/);

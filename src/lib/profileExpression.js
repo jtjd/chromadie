@@ -90,10 +90,14 @@ export function getProfileStorageRef(storedPath) {
 export const PROFILE_IMAGE_RULES = Object.freeze({
   avatar: Object.freeze({
     maxInputBytes: 5 * 1024 * 1024,
+    maxOutputBytes: 256 * 1024,
+    outputLabel: '256 KB',
     accept: Object.freeze(['image/jpeg', 'image/png', 'image/webp'])
   }),
   background: Object.freeze({
     maxInputBytes: 10 * 1024 * 1024,
+    maxOutputBytes: 1024 * 1024,
+    outputLabel: '1 MB',
     accept: Object.freeze(['image/jpeg', 'image/png', 'image/webp'])
   })
 });

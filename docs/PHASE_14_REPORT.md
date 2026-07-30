@@ -1,6 +1,7 @@
 # Phase 14 Report — Avatars, Backgrounds, and Spotify
 
-**Status:** local implementation complete; production deployment not performed.
+**Status:** implementation complete; expression migration applied to the
+linked project; storage-size migration pending.
 
 ## Scope delivered
 
@@ -11,6 +12,8 @@
 - Added browser-side image validation, square avatar crop, background resize,
   WebP conversion, replacement, removal, and initials/generated-atmosphere
   fallbacks.
+- Added stored-output budgets of 256 KiB per avatar and 1 MiB per background,
+  enforced by the browser processor and Supabase Storage bucket limits.
 - Added server-authoritative Spotify URL parsing for HTTPS
   `open.spotify.com` track, playlist, and album URLs. Only the bounded type and
   identifier are stored; the public profile uses Spotify's lazy official embed.
@@ -44,10 +47,10 @@ visually.
 
 ## Release boundary
 
-No linked Supabase migration was pushed, no production database was changed,
-and no deployment or public-gate change was made. The local-only Phase 14
-migration is `20260730110000_profile_expression_media.sql`. Production rollout
-remains a separate reviewed release action.
+The linked project now records `20260730110000_profile_expression_media.sql`.
+The additive `20260730120000_profile_media_size_limits.sql` migration applies
+the tighter storage budget and remains the next linked database action. The
+public gate remains active.
 
 **Recommendation:** GO for local review and staged deployment preparation;
 NO-GO for production until the migration and media flows receive an explicit

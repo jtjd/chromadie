@@ -109,7 +109,7 @@ the Pages password/maintenance gate remains active. See
 
 ## Phase 14 — Avatars, Backgrounds, and Spotify
 
-Status: **local implementation complete; production rollout pending**.
+Status: **expression migration applied; storage-size migration pending**.
 
 Phase 14 adds only optional avatar, background, and Spotify expression through
 the existing Supabase stack. Uploads are processed into owner-scoped WebP

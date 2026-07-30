@@ -32,6 +32,37 @@ function blobFromCanvas(canvas, quality) {
   });
 }
 
+function resizeCanvas(canvas, scale) {
+  const nextCanvas = document.createElement('canvas');
+  nextCanvas.width = Math.max(1, Math.round(canvas.width * scale));
+  nextCanvas.height = Math.max(1, Math.round(canvas.height * scale));
+  nextCanvas.getContext('2d').drawImage(canvas, 0, 0, nextCanvas.width, nextCanvas.height);
+  return nextCanvas;
+}
+
+async function boundedWebpFromCanvas(canvas, kind) {
+  const rules = PROFILE_IMAGE_RULES[kind];
+  let candidateCanvas = canvas;
+  let quality = kind === 'avatar' ? 0.86 : 0.8;
+  const minimumSide = kind === 'avatar' ? 320 : 800;
+
+  for (let attempt = 0; attempt < 14; attempt += 1) {
+    const blob = await blobFromCanvas(candidateCanvas, quality);
+    if (blob.size <= rules.maxOutputBytes) return blob;
+
+    if (quality > 0.35) {
+      quality = Math.max(0.35, quality - 0.1);
+      continue;
+    }
+
+    if (Math.min(candidateCanvas.width, candidateCanvas.height) <= minimumSide) break;
+    candidateCanvas = resizeCanvas(candidateCanvas, 0.8);
+    quality = 0.72;
+  }
+
+  throw new Error(`That image could not be compressed below ${rules.outputLabel}. Try a simpler image.`);
+}
+
 /**
  * Convert an accepted local image to the bounded WebP representation used by
  * the profile buckets. No original file is sent to Storage.
@@ -59,7 +90,7 @@ export async function processProfileImage(file, kind) {
       const sourceX = (sourceWidth - side) / 2;
       const sourceY = (sourceHeight - side) / 2;
       canvas.getContext('2d').drawImage(image, sourceX, sourceY, side, side, 0, 0, outputSide, outputSide);
-      return await blobFromCanvas(canvas, 0.86);
+      return await boundedWebpFromCanvas(canvas, kind);
     }
 
     const maxDimension = 2400;
@@ -67,7 +98,7 @@ export async function processProfileImage(file, kind) {
     canvas.width = Math.max(1, Math.round(sourceWidth * scale));
     canvas.height = Math.max(1, Math.round(sourceHeight * scale));
     canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-    return await blobFromCanvas(canvas, 0.8);
+    return await boundedWebpFromCanvas(canvas, kind);
   } finally {
     URL.revokeObjectURL(sourceUrl);
   }

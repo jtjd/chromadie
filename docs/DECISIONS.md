@@ -1409,14 +1409,16 @@ gate remains active during certification.
 
 ## 2026-07-30 — Keep Phase 14 expression bounded and settings-only
 
-**Status:** accepted and implemented locally; production rollout pending
+**Status:** accepted and implemented; expression migration applied to linked
+project; storage-size migration pending
 
 Phase 14 uses the existing Supabase stack for the smallest optional expression
 surface: two owner-scoped WebP Storage buckets and four nullable profile
 configuration columns. Browser image files are resized/cropped and converted
-before upload. Spotify URLs are validated by both the client convenience layer
-and the authenticated server RPC, which stores only a supported entity type and
-bounded identifier.
+before upload. Stored output is capped at 256 KiB for avatars and 1 MiB for
+backgrounds in both the browser processor and Storage buckets. Spotify URLs
+are validated by both the client convenience layer and the authenticated
+server RPC, which stores only a supported entity type and bounded identifier.
 
 Avatar and background references are exact owner-shaped paths, Storage writes
 are restricted to the matching authenticated user path, and profile deletion

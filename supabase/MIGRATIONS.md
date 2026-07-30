@@ -71,6 +71,9 @@ Phase 14 local pending migration:
   `backgrounds` WebP-only Storage buckets and owner-path policies, adds the
   authenticated expression update RPC, and removes owned objects during the
   existing profile deletion boundary.
+- `migrations/20260730120000_profile_media_size_limits.sql` tightens the
+  stored-object limits to 256 KiB per avatar and 1 MiB per background. The
+  browser processor and Storage bucket limits enforce the same budget.
 - The migration has passed a fresh local reset, schema lint, database-security
   audit, and browser evidence pass. It has not been pushed to the linked
   production project. Do not edit applied migrations or introduce a separate

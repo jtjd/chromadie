@@ -8,8 +8,9 @@ Phase 14 — Avatars, Backgrounds, and Spotify
 
 Phase 13.1 remains local-only and its public cutover is still gated. Phase 14
 adds optional avatar, background, and Spotify expression through the existing
-Supabase stack without changing the approved profile composition. The Phase 14
-migration is local-only; no linked database or deployment was changed.
+Supabase stack without changing the approved profile composition. The
+expression migration is applied to the linked database; its follow-up storage
+size-limit migration remains pending.
 
 ## Completed
 
@@ -726,9 +727,12 @@ the remaining Phase 11 boundary.
 - Added server-validated Spotify track, playlist, and album links with lazy
   official embeds and no autoplay; only `spotify_type` and `spotify_id` are
   stored.
+- Added stored-output budgets of 256 KiB per avatar and 1 MiB per background,
+  enforced by browser compression and Supabase Storage bucket limits.
 - Preserved owner/visitor parity and the frozen profile composition. Local
   reset, schema lint, security audit, build, check, ESLint, 133 tests, links,
   CSP, balance, catalog, scoring, username drift, repository hygiene, and
   performance budgets pass.
-- Captured and reviewed the requested local Phase 14 browser evidence. No
-  production migration, deployment, or public-gate change was performed.
+- Captured and reviewed the requested local Phase 14 browser evidence. The
+  expression migration was applied to the linked database; the public gate
+  remains active and the storage-size migration is still pending.
