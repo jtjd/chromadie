@@ -9,6 +9,25 @@ export function validateProfileAudioFile(file) {
   return '';
 }
 
+/**
+ * Some otherwise-valid MP3 exports carry an ID3v2 wrapper that Chromium
+ * rejects as a media format error. Keep the MPEG audio frames and remove only
+ * that metadata wrapper before the object is stored.
+ */
+export async function prepareProfileAudioFile(file) {
+  if (!file || typeof file.arrayBuffer !== 'function') return file;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (bytes.length < 10 || bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) return file;
+
+  const tagSize = ((bytes[6] & 0x7f) << 21)
+    | ((bytes[7] & 0x7f) << 14)
+    | ((bytes[8] & 0x7f) << 7)
+    | (bytes[9] & 0x7f);
+  const audioStart = 10 + tagSize + ((bytes[5] & 0x10) ? 10 : 0);
+  if (audioStart >= bytes.length) return file;
+  return new Blob([bytes.slice(audioStart)], { type: 'audio/mpeg' });
+}
+
 export function validateProfileImageFile(file, kind) {
   const rules = PROFILE_IMAGE_RULES[kind];
   if (!rules) return 'This image type is not supported.';

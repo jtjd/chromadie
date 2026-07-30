@@ -3,7 +3,7 @@
   import { supabase } from './supabase.js';
   import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import { processProfileImage, validateProfileAudioFile } from './profileMediaProcessing.js';
+  import { prepareProfileAudioFile, processProfileImage, validateProfileAudioFile } from './profileMediaProcessing.js';
   import Module from './foundation/Module.svelte';
   import Media from './foundation/Media.svelte';
 
@@ -248,12 +248,13 @@
       const reference = getProfileStorageRef(storedPath);
       if (!reference) throw new Error('The audio path could not be prepared.');
 
-      const objectUrl = URL.createObjectURL(file);
+      const blob = await prepareProfileAudioFile(file);
+      const objectUrl = URL.createObjectURL(blob);
       if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
       audioPreviewSrc = objectUrl;
       const { error: uploadError } = await supabase.storage
         .from(reference.bucket)
-        .upload(reference.objectPath, file, {
+        .upload(reference.objectPath, blob, {
           cacheControl: '3600',
           contentType: 'audio/mpeg',
           upsert: true
@@ -266,7 +267,7 @@
       syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
       mediaCacheKey = String(Date.now());
       dispatch('expressionchange', { ...expression });
-      setFeedback('', `Profile audio saved. It will autoplay when the browser permits (${Math.round(file.size / 1024)} KB).`);
+      setFeedback('', `Profile audio saved. It will autoplay when the browser permits (${Math.round(blob.size / 1024)} KB).`);
     } catch (audioError) {
       setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be saved.');
       if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);

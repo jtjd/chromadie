@@ -11,7 +11,7 @@ import {
   PROFILE_AUDIO_RULES,
   PROFILE_IMAGE_RULES
 } from '../src/lib/profileExpression.js';
-import { validateProfileAudioFile, validateProfileImageFile } from '../src/lib/profileMediaProcessing.js';
+import { prepareProfileAudioFile, validateProfileAudioFile, validateProfileImageFile } from '../src/lib/profileMediaProcessing.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const spotifyId = '1234567890123456789012';
@@ -76,6 +76,19 @@ test('staff audio input rules stay bounded', () => {
   assert.equal(validateProfileAudioFile({ type: 'audio/mpeg', size: 1024 }), '');
   assert.match(validateProfileAudioFile({ type: 'audio/ogg', size: 1024 }), /MP3/);
   assert.match(validateProfileAudioFile({ type: 'audio/mpeg', size: 5 * 1024 * 1024 + 1 }), /5 MB/);
+});
+
+test('staff audio preparation strips incompatible ID3v2 wrappers', async () => {
+  const bytes = new Uint8Array(20);
+  bytes.set([0x49, 0x44, 0x33, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05]);
+  bytes.set([0xff, 0xfb, 0x90, 0x64, 0x11], 15);
+  const prepared = await prepareProfileAudioFile({
+    type: 'audio/mpeg',
+    size: bytes.length,
+    arrayBuffer: async () => bytes.buffer
+  });
+  assert.equal(prepared.type, 'audio/mpeg');
+  assert.deepEqual(new Uint8Array(await prepared.arrayBuffer()), bytes.slice(15));
 });
 
 test('media storage, server validation, and public rendering boundaries are explicit', async () => {
