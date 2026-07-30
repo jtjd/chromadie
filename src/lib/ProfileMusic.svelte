@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
   import { getSpotifyEmbedUrl } from './profileExpression.js';
   import { normalizeHexColor } from './utils.js';
@@ -10,18 +11,39 @@
   export let spotifyType = '';
   export let spotifyId = '';
   export let audioSrc = '';
+  let audioElement;
 
   $: safeColor = normalizeHexColor(bestRoll?.hex_code, accentColor);
   $: spotifyEmbedSrc = getSpotifyEmbedUrl(spotifyType, spotifyId);
   $: showVisualFixture = !audioSrc && !spotifyEmbedSrc && !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
+
+  async function startAudioAfterInteraction() {
+    if (!audioElement || !audioSrc || !audioElement.paused) return;
+    try {
+      await audioElement.play();
+      window.removeEventListener('pointerdown', startAudioAfterInteraction);
+      window.removeEventListener('keydown', startAudioAfterInteraction);
+    } catch {
+      // The native controls remain available when the browser still denies playback.
+    }
+  }
+
+  onMount(() => {
+    window.addEventListener('pointerdown', startAudioAfterInteraction, { passive: true });
+    window.addEventListener('keydown', startAudioAfterInteraction);
+    return () => {
+      window.removeEventListener('pointerdown', startAudioAfterInteraction);
+      window.removeEventListener('keydown', startAudioAfterInteraction);
+    };
+  });
 </script>
 
 {#if audioSrc}
-  <div class="profile-music profile-music--audio" data-music-state="audio" aria-label="Profile audio">
+    <div class="profile-music profile-music--audio" data-music-state="audio" aria-label="Profile audio">
     {#key audioSrc}
-      <audio src={audioSrc} autoplay loop controls preload="auto"></audio>
+      <audio bind:this={audioElement} src={audioSrc} autoplay loop controls preload="auto"></audio>
     {/key}
-    <span class="profile-music__audio-note">Audio may require a tap to start.</span>
+    <span class="profile-music__audio-note">Audio starts automatically when your browser allows it, or after your first interaction.</span>
   </div>
 {:else if spotifyEmbedSrc}
   <div class="profile-music profile-music--spotify" data-music-state="spotify" aria-label="Spotify profile music">
