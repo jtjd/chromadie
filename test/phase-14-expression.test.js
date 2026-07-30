@@ -73,7 +73,6 @@ test('image input rules reject SVG and oversized originals before processing', (
 
 test('staff audio input rules stay bounded', () => {
   assert.equal(PROFILE_AUDIO_RULES.maxInputBytes, 1024 * 1024);
-  assert.equal(PROFILE_AUDIO_RULES.maxDurationSeconds, 60);
   assert.equal(validateProfileAudioFile({ type: 'audio/mpeg', size: 1024 }), '');
   assert.match(validateProfileAudioFile({ type: 'audio/ogg', size: 1024 }), /MP3/);
   assert.match(validateProfileAudioFile({ type: 'audio/mpeg', size: 1024 * 1024 + 1 }), /1 MB/);
@@ -107,7 +106,6 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(audioMigration, /profile_audio\/.*profile[.]mp3/);
   assert.match(settings, /export let staff = false/);
   assert.match(settings, /update_my_profile_audio/);
-  assert.match(settings, /maxDurationSeconds/);
   assert.doesNotMatch(migration, /iframe|innerHTML|CREATE TABLE.*media/i);
   assert.match(settings, /accept="image\/jpeg,image\/png,image\/webp"/);
   assert.match(settings, /stored as WebP up to/);

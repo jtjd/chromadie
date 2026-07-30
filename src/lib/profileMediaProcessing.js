@@ -9,36 +9,6 @@ export function validateProfileAudioFile(file) {
   return '';
 }
 
-function loadAudioDuration(source) {
-  return new Promise((resolve, reject) => {
-    const audio = new Audio();
-    audio.preload = 'metadata';
-    audio.onloadedmetadata = () => resolve(audio.duration);
-    audio.onerror = () => reject(new Error('The audio file could not be read.'));
-    audio.src = source;
-  });
-}
-
-export async function validateProfileAudioDuration(file) {
-  const validationError = validateProfileAudioFile(file);
-  if (validationError) return validationError;
-  if (typeof window === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
-    return 'Audio validation is only available in a browser.';
-  }
-
-  const sourceUrl = URL.createObjectURL(file);
-  try {
-    const duration = await loadAudioDuration(sourceUrl);
-    if (!Number.isFinite(duration) || duration <= 0) return 'That audio file has no readable duration.';
-    if (duration > PROFILE_AUDIO_RULES.maxDurationSeconds) {
-      return `Keep profile audio under ${PROFILE_AUDIO_RULES.maxDurationSeconds} seconds.`;
-    }
-    return '';
-  } finally {
-    URL.revokeObjectURL(sourceUrl);
-  }
-}
-
 export function validateProfileImageFile(file, kind) {
   const rules = PROFILE_IMAGE_RULES[kind];
   if (!rules) return 'This image type is not supported.';

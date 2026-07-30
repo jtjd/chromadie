@@ -1,9 +1,9 @@
 <script>
   import { onDestroy, createEventDispatcher } from 'svelte';
   import { supabase } from './supabase.js';
-  import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_AUDIO_RULES, PROFILE_IMAGE_RULES } from './profileExpression.js';
+  import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import { processProfileImage, validateProfileAudioDuration } from './profileMediaProcessing.js';
+  import { processProfileImage, validateProfileAudioFile } from './profileMediaProcessing.js';
   import Module from './foundation/Module.svelte';
   import Media from './foundation/Media.svelte';
 
@@ -241,7 +241,7 @@
     busy = true;
     setFeedback('', 'Checking the audio…');
     try {
-      const validationError = await validateProfileAudioDuration(file);
+      const validationError = validateProfileAudioFile(file);
       if (validationError) throw new Error(validationError);
 
       const storedPath = buildProfileStoragePath('audio', profileId);
@@ -359,7 +359,7 @@
       <div>
         <p class="profile-expression-editor__eyebrow">Staff alpha</p>
         <h3>Profile audio</h3>
-        <p class="profile-expression-editor__section-copy">Upload one short MP3. It loops after playback starts and attempts autoplay on public profiles when the browser allows it.</p>
+        <p class="profile-expression-editor__section-copy">Upload one MP3 up to 1 MB. It loops after playback starts and attempts autoplay on public profiles when the browser allows it.</p>
       </div>
       <div style="display:grid;gap:.75rem;max-width:42rem">
         {#if audioSrc}
@@ -367,7 +367,7 @@
         {:else}
           <p style="margin:0;color:var(--color-ink-muted)">No profile audio configured.</p>
         {/if}
-        <p>MP3 only · up to 1 MB · up to {PROFILE_AUDIO_RULES.maxDurationSeconds} seconds.</p>
+        <p>MP3 only · up to 1 MB.</p>
         <div class="profile-expression-editor__actions">
           <input bind:this={audioInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={handleAudioChange} />
           <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => audioInput?.click()}>{expression.audio_path ? 'Replace audio' : 'Upload audio'}</button>
