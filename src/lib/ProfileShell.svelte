@@ -142,9 +142,30 @@
     };
     document.addEventListener('visibilitychange', refreshOnReturn);
     window.addEventListener('pageshow', refreshOnReturn);
+    const handleProfileWheel = event => {
+      if (previewMode || !hasProfileMore || event.ctrlKey || Math.abs(event.deltaY) < 8) return;
+      if (event.target?.closest?.('.profile-audio-control, input, button, a')) return;
+
+      const more = document.getElementById('profile-more');
+      if (!more) return;
+      const moreTop = more.getBoundingClientRect().top + window.scrollY;
+      const currentY = window.scrollY;
+      const nearHero = currentY < moreTop - window.innerHeight * 0.35;
+      const nearMoreTop = currentY >= moreTop - 48 && currentY <= moreTop + window.innerHeight * 0.35;
+
+      if (event.deltaY > 0 && nearHero) {
+        event.preventDefault();
+        scrollToProfileMore();
+      } else if (event.deltaY < 0 && nearMoreTop) {
+        event.preventDefault();
+        scrollToProfileHero();
+      }
+    };
+    window.addEventListener('wheel', handleProfileWheel, { passive: false });
     return () => {
       document.removeEventListener('visibilitychange', refreshOnReturn);
       window.removeEventListener('pageshow', refreshOnReturn);
+      window.removeEventListener('wheel', handleProfileWheel);
     };
   });
 
@@ -210,6 +231,10 @@
 
   function scrollToProfileMore() {
     document.getElementById('profile-more')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function scrollToProfileHero() {
+    document.querySelector('.profile-shell__approved-canvas')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function handleRollCancel() {
@@ -399,6 +424,11 @@
       </div>
 
       <div id="profile-more" class="profile-shell__more">
+        {#if !previewMode && hasProfileMore}
+          <button type="button" class="profile-shell__more-back" aria-label="Return to profile top" on:click={scrollToProfileHero}>
+            <span aria-hidden="true">↑</span>
+          </button>
+        {/if}
         {#if showRoll && !refreshing}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
@@ -939,6 +969,7 @@
   .profile-shell__more-cue-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .profile-shell__more-cue-arrow { font-size: 1.35rem; line-height: 1; }
   .profile-shell__more {
+    position: relative;
     display: flex;
     min-height: 100dvh;
     flex-direction: column;
@@ -946,8 +977,30 @@
     justify-content: center;
     gap: 1.25rem;
     padding: clamp(4rem, 12vh, 8rem) 0 clamp(4rem, 10vh, 7rem);
-    scroll-margin-top: 1.5rem;
+    scroll-margin-top: 4.5rem;
   }
+
+  .profile-shell__more-back {
+    position: absolute;
+    top: 1.25rem;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: 2.9rem;
+    height: 2.9rem;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--profile-accent) 38%, var(--color-line-subtle));
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-canvas-deep) 72%, transparent);
+    color: color-mix(in srgb, var(--profile-accent) 68%, white);
+    cursor: pointer;
+    font-size: 1.35rem;
+    line-height: 1;
+    transform: translateX(-50%);
+  }
+
+  .profile-shell__more-back:hover { color: var(--color-ink-strong); border-color: var(--profile-accent); }
+  .profile-shell__more-back:focus-visible { outline: 2px solid var(--profile-accent); outline-offset: 4px; }
 
   .profile-shell__opening.profile-shell__approved-opening {
     width: min(100%, 46rem);
