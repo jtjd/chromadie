@@ -1,816 +1,101 @@
 <script>
-  import { RANKS } from './ranks';
-
-  const rollSteps = [
-    {
-      icon: '🎲',
-      title: 'Roll once a day',
-      copy: 'Roll once a day and see what color the day gives you.'
-    },
-    {
-      icon: '🎨',
-      title: 'Read the result',
-      copy: 'Your color comes with a rarity tier and any conditions it meets.'
-    },
-    {
-      icon: '✨',
-      title: 'Earn EP and badges',
-      copy: 'When signed in, better rolls can award more EP, achievements, and milestone rewards.'
-    },
-    {
-      icon: '📈',
-      title: 'Improve your profile',
-      copy: 'Spend EP on cosmetics, pin achievements, and climb the boards.'
-    }
+  const steps = [
+    ['01', 'Build your page', 'Claim a username and shape a public profile with your background, avatar, links, bio, and cosmetics.'],
+    ['02', 'Roll once each day', 'Your daily color is scored from its RGB values and the special conditions it meets.'],
+    ['03', 'Earn EP', 'Strong rolls earn more EP. EP helps you unlock and equip profile expression.'],
+    ['04', 'Get discovered', 'Your leaderboard position gives more people a path to your profile and links.']
   ];
-
-  const rarityTiers = [
-    {
-      name: 'Trash',
-      color: '#767b8c',
-      note: 'The lowest tier. Usually plain, but still part of the full spectrum.',
-      ep: 'Lowest'
-    },
-    {
-      name: 'Common',
-      color: '#ffffff',
-      note: 'The baseline tier for everyday rolls.',
-      ep: 'Base'
-    },
-    {
-      name: 'Uncommon',
-      color: '#10b981',
-      note: 'A step above the baseline with stronger patterns and better EP.',
-      ep: 'Above average'
-    },
-    {
-      name: 'Rare',
-      color: '#3b82f6',
-      note: 'Harder to hit and usually worth a stronger reward.',
-      ep: 'High'
-    },
-    {
-      name: 'Epic',
-      color: '#a15cff',
-      note: 'Very uncommon rolls with standout rewards.',
-      ep: 'Very high'
-    },
-    {
-      name: 'Anomaly',
-      color: '#f97316',
-      note: 'An unusual result that stands out immediately.',
-      ep: 'Exceptional'
-    },
-    {
-      name: 'Mythic',
-      color: '#f1c40f',
-      note: 'The top tier. Extremely rare and heavily rewarded.',
-      ep: 'Top'
-    }
-  ];
-
-  const conditionExamples = [
-    {
-      icon: '🌓',
-      title: 'High Contrast',
-      copy: 'Very wide RGB spread. Big visual differences usually mean a stronger score.'
-    },
-    {
-      icon: '⚫',
-      title: 'Greyscale',
-      copy: 'All three channels match, creating a clean monochrome result.'
-    },
-    {
-      icon: '🪞',
-      title: 'Palindrome',
-      copy: 'The hex color reads the same forward and backward.'
-    },
-    {
-      icon: '🔢',
-      title: 'Prime Energy',
-      copy: 'The three RGB channels add up to a prime number.'
-    },
-    {
-      icon: '🧬',
-      title: 'Meaning of Life',
-      copy: 'A tiny edge-case result that is memorable when it lands.'
-    }
-  ];
-
-  const cosmeticSections = [
-    'Frames',
-    'Borders',
-    'Name effects',
-    'Orb shapes',
-    'Roll effects',
-    'Leaderboard themes',
-    'Profile styling'
-  ];
-
-  const quickLinks = [
-    { href: '/?view=game', label: 'Start Rolling' },
-    { href: '/?view=shop', label: 'Browse Shop' },
-    { href: '/?view=leaderboard&tab=today', label: 'View Leaderboard' }
-  ];
-
-  const rankNotes = {
-    Bronze: 'Starting rank. A new account begins here.',
-    Silver: 'A steady starter who has built a solid EP base.',
-    Gold: 'A strong midgame rank with visible momentum.',
-    Platinum: 'A high-EP account with consistent progress.',
-    Diamond: 'A very high lifetime-EP account.',
-    Chroma: 'The top tier. You have reached the current cap.'
-  };
 </script>
 
-<svelte:head>
-  <title>How to Play | ChromaDie</title>
-</svelte:head>
+<svelte:head><title>How to Play | ChromaDie</title></svelte:head>
 
-<main class="container guide-page" aria-labelledby="guide-title">
-  <section class="card guide-hero">
-    <p class="guide-kicker">Getting started</p>
-    <h1 id="guide-title">Learn ChromaDie in a minute</h1>
-    <p class="guide-intro">
-      ChromaDie is a daily color-roll game. Each roll gives you a new color, a rarity tier, and
-      conditions that can boost your score. Build EP, unlock cosmetics, and chase better results
-      without needing a long tutorial.
-    </p>
-
-    <div class="quick-links" aria-label="Jump to key pages">
-      {#each quickLinks as link (link.label)}
-        <a class="quick-link" href={link.href}>{link.label}</a>
-      {/each}
+<main class="guide" aria-labelledby="guide-title">
+  <header class="guide__hero">
+    <p class="guide__eyebrow">how chromadie works</p>
+    <h1 id="guide-title">Your profile is the game.</h1>
+    <p>Build a public identity, roll one color each day, and let strong results bring more people to your page.</p>
+    <div class="guide__actions">
+      <a href="/">Claim a username</a>
+      <a href="/leaderboard">View the leaderboard</a>
     </div>
-  </section>
+  </header>
 
-  <section class="card guide-section">
-    <div class="section-head">
-      <p class="section-kicker">Welcome</p>
-      <h2>What you are playing for</h2>
-    </div>
-    <div class="welcome-grid">
-      <article class="welcome-card">
-        <div class="welcome-icon">🎨</div>
-        <h3>A fresh color every day</h3>
-        <p>Roll once, see what the day gives you, and keep your best results moving forward.</p>
-      </article>
-      <article class="welcome-card">
-        <div class="welcome-icon">✨</div>
-        <h3>Better rolls, better rewards</h3>
-        <p>Rarer colors and stronger condition combos earn more EP and more bragging rights.</p>
-      </article>
-      <article class="welcome-card">
-        <div class="welcome-icon">🏆</div>
-        <h3>Cosmetics and competition</h3>
-        <p>Spend EP on style, pin achievements, and compare your progress on the leaderboard.</p>
-      </article>
-    </div>
-  </section>
-
-  <section class="card guide-section">
-    <div class="section-head">
-      <p class="section-kicker">How it works</p>
-      <h2>The roll loop</h2>
-    </div>
-
-    <div class="roll-flow" role="list" aria-label="Roll steps">
-      {#each rollSteps as step, index (step.title)}
-      <article class="flow-card" role="listitem">
-        <div class="flow-top">
-          <span class="flow-index">{index + 1}</span>
-          <span class="flow-icon" aria-hidden="true">{step.icon}</span>
-        </div>
-        <h3>{step.title}</h3>
-        <p>{step.copy}</p>
-      </article>
-      {/each}
-    </div>
-    <p class="section-note">
-      You can roll once a day. Signed-in players can spend a reroll shard after rolling; each shard permanently replaces today&apos;s color, score, and EP contribution. Guests cannot reroll.
-    </p>
-  </section>
-
-  <section class="card guide-section">
-    <div class="section-head">
-      <p class="section-kicker">Rarity</p>
-      <h2>Color tiers</h2>
-    </div>
-    <p class="section-note">
-      Higher tiers are harder to hit and usually reward more EP. The exact odds stay hidden, but
-      the color itself always tells you where the roll landed.
-    </p>
-
-    <div class="rarity-grid">
-      {#each rarityTiers as tier (tier.name)}
-        <article class="rarity-card">
-          <div class="rarity-swatch" style="background: {tier.color};"></div>
-          <div class="rarity-copy">
-            <div class="rarity-header">
-              <h3>{tier.name}</h3>
-              <span>{tier.ep} EP</span>
-            </div>
-            <p>{tier.note}</p>
-          </div>
+  <section class="guide__section" aria-labelledby="loop-title">
+    <p class="guide__eyebrow">the daily loop</p>
+    <h2 id="loop-title">One roll. More profile.</h2>
+    <div class="guide__steps">
+      {#each steps as step (step[0])}
+        <article>
+          <span>{step[0]}</span>
+          <h3>{step[1]}</h3>
+          <p>{step[2]}</p>
         </article>
       {/each}
     </div>
   </section>
 
-  <section class="card guide-section">
-    <div class="section-head">
-      <p class="section-kicker">Conditions</p>
-      <h2>Extra traits that boost a roll</h2>
+  <section class="guide__section guide__split" aria-labelledby="profile-title">
+    <div>
+      <p class="guide__eyebrow">your public identity</p>
+      <h2 id="profile-title">Make the page yours.</h2>
+      <p>A profile can hold a custom background, avatar, bio, public links, colors, borders, name effects, and roll effects. These choices are presentation—not a separate dashboard.</p>
     </div>
-    <p class="section-note">
-      A single roll can satisfy more than one condition. The rarer the combination, the more EP it
-      can generate.
-    </p>
-
-    <div class="condition-grid">
-      {#each conditionExamples as condition (condition.title)}
-        <article class="condition-card">
-          <div class="condition-icon" aria-hidden="true">{condition.icon}</div>
-          <h3>{condition.title}</h3>
-          <p>{condition.copy}</p>
-        </article>
-      {/each}
+    <div class="guide__list">
+      <span>Background and atmosphere</span>
+      <span>Avatar and identity</span>
+      <span>Links and personal content</span>
+      <span>Frames, borders, and effects</span>
     </div>
   </section>
 
-  <section class="card guide-section">
-    <div class="section-head">
-      <p class="section-kicker">EP</p>
-      <h2>Experience points</h2>
+  <section class="guide__section guide__split" aria-labelledby="score-title">
+    <div>
+      <p class="guide__eyebrow">rolls and discovery</p>
+      <h2 id="score-title">Strong colors travel.</h2>
+      <p>Every roll receives a score. RGB values and special conditions can increase the result, while rarity gives the color a clear place in the spectrum.</p>
     </div>
-    <div class="info-split">
-      <div>
-        <p class="section-note">
-          EP is the game&apos;s progression currency. You earn it by rolling, then spend it in the
-          cosmetic shop.
-        </p>
-        <ul class="simple-list">
-          <li>EP unlocks cosmetics and utility items.</li>
-          <li>Strong rolls can also unlock milestones and achievements.</li>
-        </ul>
-      </div>
-      <div class="info-panel">
-        <p class="panel-label">EP focus</p>
-        <p class="panel-value">Unlock, equip, and express your style.</p>
-        <p class="panel-copy">The shop is built around customization and presentation.</p>
-      </div>
+    <div class="guide__callout">
+      <strong>Roll a color → earn EP → move up the leaderboard</strong>
+      <p>Profiles on leaderboard and discovery surfaces can lead visitors to your links, projects, and other public content.</p>
     </div>
   </section>
 
-  <section class="card guide-section">
-    <div class="section-head">
-      <p class="section-kicker">Ranks</p>
-      <h2>Lifetime EP ladder</h2>
-    </div>
-    <div class="info-split">
-      <div>
-        <p class="section-note">
-          Ranks are based on lifetime EP earned across your account. Spending EP in the shop does
-          not lower your rank.
-        </p>
-        <p class="section-note section-note-tight">
-          If your profile says Diamond, that means your account has crossed the Diamond threshold
-          for total lifetime EP.
-        </p>
-      </div>
-      <div class="info-panel">
-        <p class="panel-label">How to read it</p>
-        <p class="panel-value">More lifetime EP means a higher rank.</p>
-        <p class="panel-copy">Your current rank and progress to the next one appear on your profile.</p>
-      </div>
-    </div>
-
-    <div class="rank-grid">
-      {#each RANKS as rank, index (rank.name)}
-        <article class="rank-card">
-          <div class="rank-swatch" style="background: {rank.color};"></div>
-          <div class="rank-copy">
-            <div class="rank-header">
-              <h3>{rank.name}</h3>
-              <span>{rank.min.toLocaleString()}+ EP</span>
-            </div>
-            <p>{rankNotes[rank.name]}</p>
-            {#if index === RANKS.length - 1}
-              <div class="rank-cap-pill">Current cap</div>
-            {/if}
-          </div>
-        </article>
-      {/each}
-    </div>
-  </section>
-
-  <section class="card guide-section">
-    <div class="section-head">
-      <p class="section-kicker">Cosmetics</p>
-      <h2>Make your profile yours</h2>
-    </div>
-    <p class="section-note">
-      The shop is focused on presentation. Buy items with EP, equip them, and build a look that
-      matches your style.
-    </p>
-
-    <div class="cosmetic-grid">
-      {#each cosmeticSections as item (item)}
-        <div class="cosmetic-pill">{item}</div>
-      {/each}
-    </div>
-  </section>
-
-  <section class="card guide-section">
-    <div class="two-column">
-      <article>
-        <div class="section-head">
-          <p class="section-kicker">Achievements</p>
-          <h2>Track your milestones</h2>
-        </div>
-        <p class="section-note">
-          Achievements reward long-term play, special rolls, and rare conditions. You can pin a few
-          favorites to your profile so they stay visible.
-        </p>
-      </article>
-
-      <article>
-        <div class="section-head">
-          <p class="section-kicker">Leaderboards</p>
-          <h2>Compare your rolls</h2>
-        </div>
-        <p class="section-note">
-          Leaderboards show how your best rolls stack up. Rivals make it easy to follow friends and
-          compare daily results without losing the fun part.
-        </p>
-        <p class="section-note section-note-tight">
-          Rivals is a focused view for players you want to track more closely, so you can check their
-          daily results without sorting through the full leaderboard.
-        </p>
-      </article>
-    </div>
-  </section>
-
-  <section class="card guide-section">
-    <div class="section-head">
-      <p class="section-kicker">Guest mode</p>
-      <h2>Play first, sign in later</h2>
-    </div>
-    <div class="guest-grid">
-      <article class="guest-card">
-        <h3>Start immediately</h3>
-        <p>You can roll as a guest with no account setup.</p>
-      </article>
-      <article class="guest-card">
-        <h3>Local progress</h3>
-        <p>The current guest roll stays in this browser for the day. It is not written to an account, wallet, leaderboard, achievement, shop, or rivals record.</p>
-      </article>
-      <article class="guest-card">
-        <h3>Why create an account</h3>
-        <p>Create an account for server-saved EP, achievements, cosmetics, leaderboards, and rivals. Existing guest rolls are not imported into the account.</p>
-      </article>
+  <section class="guide__section" aria-labelledby="account-title">
+    <p class="guide__eyebrow">starting out</p>
+    <h2 id="account-title">Play first, sign in when you’re ready.</h2>
+    <div class="guide__account-grid">
+      <article><h3>Guest mode</h3><p>Try a roll locally in your browser. Guest progress does not enter the account leaderboard.</p></article>
+      <article><h3>Signed-in mode</h3><p>Your profile, EP, cosmetics, achievements, and leaderboard progress stay connected to your account.</p></article>
     </div>
   </section>
 </main>
 
 <style>
-  .guide-page {
-    max-width: 1040px;
-    text-align: left;
-    margin-bottom: 48px;
-  }
-
-  .guide-hero {
-    background:
-      radial-gradient(circle at top right, rgba(161, 92, 255, 0.18), transparent 34%),
-      radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.15), transparent 32%),
-      rgba(8, 10, 18, 0.82);
-  }
-
-  .guide-kicker,
-  .section-kicker {
-    margin: 0 0 0.6rem;
-    color: var(--accent-purple);
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    font-size: 0.72rem;
-    font-weight: 700;
-  }
-
-  .guide-hero h1 {
-    margin: 0 0 0.8rem;
-    font-size: clamp(2.1rem, 4vw, 3.4rem);
-  }
-
-  .guide-intro,
-  .section-note,
-  .welcome-card p,
-  .flow-card p,
-  .rarity-card p,
-  .condition-card p,
-  .info-panel p,
-  .guest-card p {
-    color: var(--text-muted);
-    line-height: 1.65;
-  }
-
-  .guide-intro {
-    max-width: 72ch;
-    margin: 0;
-    font-size: 1.03rem;
-  }
-
-  .quick-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.3rem;
-  }
-
-  .quick-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.72rem 1rem;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
-    text-decoration: none;
-    font-weight: 600;
-    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-  }
-
-  .quick-link:hover,
-  .quick-link:focus-visible {
-    transform: translateY(-1px);
-    border-color: rgba(161, 92, 255, 0.38);
-    background: rgba(161, 92, 255, 0.14);
-  }
-
-  .guide-section + .guide-section {
-    margin-top: 1rem;
-  }
-
-  .section-head h2 {
-    margin: 0;
-    font-size: clamp(1.35rem, 2.4vw, 1.9rem);
-  }
-
-  .section-head {
-    margin-bottom: 1rem;
-  }
-
-  .welcome-grid,
-  .condition-grid,
-  .guest-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1rem;
-  }
-
-  .welcome-card,
-  .flow-card,
-  .rarity-card,
-  .condition-card,
-  .info-panel,
-  .guest-card {
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.03);
-  }
-
-  .welcome-card,
-  .condition-card,
-  .guest-card {
-    padding: 1rem;
-  }
-
-  .welcome-icon,
-  .condition-icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    display: grid;
-    place-items: center;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.06);
-    margin-bottom: 0.85rem;
-    font-size: 1.15rem;
-  }
-
-  .welcome-card h3,
-  .condition-card h3,
-  .guest-card h3,
-  .flow-card h3,
-  .rarity-card h3 {
-    margin: 0 0 0.45rem;
-    color: #fff;
-    font-size: 1.02rem;
-  }
-
-  .roll-flow {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1rem;
-  }
-
-  .flow-card {
-    padding: 1rem;
-    position: relative;
-    overflow: hidden;
-    min-height: 100%;
-  }
-
-  .flow-card::after {
-    content: '';
-    position: absolute;
-    inset: auto 1rem 1rem 1rem;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(161, 92, 255, 0.2), rgba(255, 255, 255, 0.08));
-  }
-
-  .flow-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.9rem;
-  }
-
-  .flow-index {
-    display: inline-grid;
-    place-items: center;
-    width: 1.9rem;
-    height: 1.9rem;
-    border-radius: 999px;
-    background: rgba(161, 92, 255, 0.18);
-    color: #fff;
-    font-weight: 700;
-    font-size: 0.9rem;
-  }
-
-  .flow-icon {
-    font-size: 1.15rem;
-  }
-
-  .rarity-grid {
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  .rank-grid {
-    display: grid;
-    gap: 0.85rem;
-    margin-top: 0.9rem;
-  }
-
-  .rarity-card {
-    display: grid;
-    grid-template-columns: 86px minmax(0, 1fr);
-    align-items: stretch;
-    overflow: hidden;
-  }
-
-  .rank-card {
-    display: grid;
-    grid-template-columns: 86px minmax(0, 1fr);
-    align-items: stretch;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.03);
-  }
-
-  .rarity-swatch {
-    min-height: 100%;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
-  }
-
-  .rank-swatch {
-    min-height: 100%;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
-  }
-
-  .rarity-copy {
-    padding: 0.95rem 1rem;
-  }
-
-  .rank-copy {
-    padding: 0.95rem 1rem;
-  }
-
-  .rarity-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.45rem;
-  }
-
-  .rarity-header span {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .rank-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.45rem;
-  }
-
-  .rank-header span {
-    color: var(--accent-purple);
-    font-size: 0.85rem;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-    font-weight: 700;
-  }
-
-  .rank-header h3 {
-    margin: 0;
-  }
-
-  .rank-copy p {
-    margin: 0;
-  }
-
-  .rank-copy p + .rank-cap-pill {
-    margin-top: 0.65rem;
-  }
-
-  .rank-cap-pill {
-    display: inline-flex;
-    align-items: center;
-    width: fit-content;
-    padding: 0.35rem 0.6rem;
-    border-radius: 999px;
-    background: rgba(161, 92, 255, 0.14);
-    color: #d9c9ff;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .info-split,
-  .two-column {
-    display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
-    gap: 1rem;
-    align-items: start;
-  }
-
-  .simple-list {
-    margin: 1rem 0 0;
-    padding-left: 1.1rem;
-    display: grid;
-    gap: 0.55rem;
-    color: var(--text-muted);
-    line-height: 1.6;
-  }
-
-  .info-panel {
-    padding: 1rem;
-    background:
-      radial-gradient(circle at top left, rgba(241, 196, 15, 0.14), transparent 34%),
-      rgba(255, 255, 255, 0.04);
-  }
-
-  .panel-label {
-    margin: 0 0 0.4rem;
-    color: var(--accent-purple);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-size: 0.72rem;
-    font-weight: 700;
-  }
-
-  .panel-value {
-    margin: 0 0 0.35rem;
-    color: #fff;
-    font-size: 1.2rem;
-    font-weight: 700;
-  }
-
-  .panel-copy {
-    margin: 0;
-  }
-
-  .cosmetic-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-
-  .cosmetic-pill {
-    padding: 0.72rem 0.95rem;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.04);
-    color: #fff;
-    font-weight: 600;
-  }
-
-  .guest-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .guest-card {
-    min-height: 100%;
-  }
-
-  @media (max-width: 900px) {
-    .roll-flow,
-    .welcome-grid,
-    .condition-grid,
-    .guest-grid,
-    .info-split,
-    .two-column {
-      grid-template-columns: 1fr;
-    }
-
-    .roll-flow {
-      gap: 0.85rem;
-    }
-
-    .rarity-card {
-      grid-template-columns: 1fr;
-    }
-
-    .rank-card {
-      grid-template-columns: 1fr;
-    }
-
-    .rarity-swatch {
-      min-height: 26px;
-    }
-
-    .rank-swatch {
-      min-height: 26px;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .guide-page {
-      margin-bottom: 32px;
-    }
-
-    .guide-hero {
-      padding-top: 1.15rem;
-      padding-bottom: 1.15rem;
-    }
-
-    .guide-hero h1 {
-      font-size: clamp(1.9rem, 10vw, 2.6rem);
-      line-height: 1.05;
-    }
-
-    .guide-intro {
-      font-size: 0.98rem;
-    }
-
-    .quick-links {
-      gap: 0.6rem;
-    }
-
-    .quick-link {
-      width: 100%;
-    }
-
-    .welcome-card,
-    .condition-card,
-    .guest-card,
-    .flow-card,
-    .rarity-copy,
-    .info-panel {
-      padding: 0.9rem;
-    }
-
-    .section-head h2 {
-      font-size: 1.28rem;
-      line-height: 1.15;
-    }
-
-  .section-note {
-    font-size: 0.97rem;
-  }
-
-  .section-note-tight {
-    margin-top: 0.4rem;
-  }
-
-    .rarity-header {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    .cosmetic-pill {
-      width: 100%;
-      text-align: center;
-    }
-  }
+  .guide { width: min(100%, 72rem); margin: 0 auto; padding: clamp(3rem, 8vw, 7rem) clamp(1.1rem, 4vw, 3rem) 6rem; color: var(--color-ink-strong); }
+  .guide__hero { max-width: 52rem; padding-bottom: clamp(4rem, 9vw, 8rem); }
+  .guide__eyebrow { margin: 0; color: var(--color-accent-bright); font: 600 .68rem/1.2 var(--font-mono-stack); letter-spacing: .12em; text-transform: lowercase; }
+  .guide h1, .guide h2 { margin: .65rem 0 0; font: 700 clamp(2.25rem, 5vw, 4.4rem)/.96 var(--font-display-stack); letter-spacing: -.055em; }
+  .guide h2 { font-size: clamp(1.9rem, 3.5vw, 3rem); }
+  .guide h3 { margin: 0; color: var(--color-ink-strong); font: 650 1rem/1.1 var(--font-body-stack); }
+  .guide p { color: var(--color-ink-muted); line-height: 1.6; }
+  .guide__hero > p:not(.guide__eyebrow) { max-width: 42rem; margin: 1.3rem 0 0; font-size: clamp(1rem, 1.5vw, 1.2rem); }
+  .guide__actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.7rem; }
+  .guide__actions a { padding: .7rem .95rem; border: 1px solid rgba(214,255,99,.35); border-radius: var(--radius-sm); background: rgba(214,255,99,.1); color: #e7f6b7; font: 600 .8rem/1 var(--font-body-stack); text-decoration: none; }
+  .guide__actions a + a { border-color: rgba(255,255,255,.2); background: transparent; color: var(--color-ink-muted); }
+  .guide__section { padding: clamp(2.5rem, 6vw, 5rem) 0; border-top: 1px solid rgba(255,255,255,.12); }
+  .guide__steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-top: 2rem; }
+  .guide__steps article, .guide__account-grid article { min-height: 10rem; padding: 1.1rem; border: 1px solid rgba(255,255,255,.12); border-radius: .9rem; background: rgba(10,12,19,.5); }
+  .guide__steps span { display: block; margin-bottom: 2.8rem; color: var(--color-accent-bright); font: 500 .65rem/1 var(--font-mono-stack); }
+  .guide__steps p, .guide__account-grid p { margin: .55rem 0 0; font-size: .82rem; }
+  .guide__split { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 7vw, 7rem); align-items: start; }
+  .guide__split > div > p:not(.guide__eyebrow) { max-width: 34rem; margin: 1rem 0 0; }
+  .guide__list { display: grid; gap: .55rem; }
+  .guide__list span { padding: .8rem .9rem; border-left: 2px solid var(--color-accent-bright); border-radius: 0 .5rem .5rem 0; background: rgba(214,255,99,.06); color: var(--color-ink-muted); font: 500 .76rem/1.2 var(--font-mono-stack); }
+  .guide__callout { padding: 1.25rem; border: 1px solid rgba(139,124,246,.32); border-radius: .9rem; background: rgba(139,124,246,.08); }
+  .guide__callout strong { color: #eeeaff; font: 650 1.05rem/1.35 var(--font-body-stack); }
+  .guide__callout p { margin: .8rem 0 0; font-size: .82rem; }
+  .guide__account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: 1.6rem; }
+  @media (max-width: 46rem) { .guide__steps, .guide__split { grid-template-columns: 1fr 1fr; gap: .65rem; } .guide__split { gap: 1.5rem; } }
+  @media (max-width: 34rem) { .guide__steps, .guide__split, .guide__account-grid { grid-template-columns: 1fr; } .guide__steps span { margin-bottom: 1.5rem; } }
+  @media (prefers-reduced-motion: reduce) { .guide a { transition: none; } }
 </style>

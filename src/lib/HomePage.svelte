@@ -8,7 +8,6 @@
 
   const dispatch = createEventDispatcher();
   let claimUsername = '';
-  let finalClaimUsername = '';
   let claimError = '';
   let claimStarted = false;
 
@@ -64,6 +63,7 @@
     <div class="home-page__section-heading">
       <p class="home-page__eyebrow">the daily loop</p>
       <h2 id="loop-title">One roll each day</h2>
+      <a class="home-page__guide-link" href="/how-to-play">How to play <span aria-hidden="true">↗</span></a>
     </div>
     <div class="home-page__loop-layout">
       <div class="home-page__steps" aria-label="Roll a color, earn EP, move up the leaderboard, and get discovered">
@@ -77,22 +77,6 @@
     <p class="home-page__loop-copy">Your color is scored from its RGB values and special conditions. Strong rolls earn more EP and improve your leaderboard position. Profiles on the leaderboard and discovery pages can lead visitors to your links, music, projects, or other content.</p>
   </section>
 
-  {#if !isAuthenticated}
-  <section class="home-page__final" aria-labelledby="final-claim-title">
-    <p class="home-page__eyebrow">your page starts here</p>
-    <h2 id="final-claim-title">Claim your profile</h2>
-    <p>Choose a username, customize your page, and roll your first color.</p>
-    {#if isAuthenticated}
-      <button class="home-page__primary" type="button" on:click={() => dispatch('profile')}>View your profile <span aria-hidden="true">↗</span></button>
-    {:else}
-      <form class="home-page__claim home-page__claim--final" on:submit|preventDefault={() => submitClaim(finalClaimUsername)} aria-label="Claim your profile URL">
-        <label for="home-final-username">Claim your username</label>
-        <div class="home-page__claim-field"><span aria-hidden="true">chm.lol/</span><input id="home-final-username" bind:value={finalClaimUsername} on:focus={beginClaim} on:input={beginClaim} placeholder="username" autocomplete="nickname" spellcheck="false" minlength="3" maxlength="20" aria-describedby="home-final-hint" /><button type="submit">Claim</button></div>
-        <small id="home-final-hint" class:home-page__claim-error={claimError} aria-live="polite">{claimError || 'Free to use · One roll each day'}</small>
-      </form>
-    {/if}
-  </section>
-  {/if}
 </main>
 
 <style>
@@ -120,8 +104,10 @@
   .home-page__secondary { border: 1px solid rgba(233,235,239,.2); background: transparent; color: var(--color-ink-muted); }
   .home-page__secondary:hover { border-color: var(--color-accent-bright); color: var(--color-ink-strong); }
   .home-page__section { padding-top: clamp(5rem, 10vw, 9rem); }
-  .home-page__section-heading h2, .home-page__final h2 { margin: .55rem 0 0; font: 700 clamp(2rem, 4vw, 3.4rem)/1 var(--font-display-stack); letter-spacing: -.045em; }
-  .home-page__section-heading > p:last-child, .home-page__final > p { margin: .8rem 0 0; color: var(--color-ink-muted); font-size: 1rem; }
+  .home-page__section-heading h2 { margin: .55rem 0 0; font: 700 clamp(2rem, 4vw, 3.4rem)/1 var(--font-display-stack); letter-spacing: -.045em; }
+  .home-page__section-heading > p:last-child { margin: .8rem 0 0; color: var(--color-ink-muted); font-size: 1rem; }
+  .home-page__guide-link { display: inline-flex; gap: .4rem; align-items: center; margin-top: 1rem; color: var(--color-accent-bright); font: 600 .76rem/1 var(--font-mono-stack); text-decoration: none; }
+  .home-page__guide-link:hover { color: var(--color-ink-strong); }
   .home-page__loop { margin-top: 1rem; padding: clamp(2rem, 4vw, 3rem); border: 1px solid rgba(139,124,246,.2); border-radius: 1.2rem; background: radial-gradient(circle at 85% 0%, rgba(139,124,246,.12), transparent 34%), linear-gradient(135deg, rgba(21,16,29,.7), rgba(8,11,17,.72)); box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 1.5rem 4rem rgba(0,0,0,.16); }
   .home-page__loop-layout { display: grid; gap: 1.4rem; margin-top: 2rem; }
   .home-page__steps { display: flex; align-items: center; gap: .55rem; padding: .7rem; border: 1px solid rgba(255,255,255,.1); border-radius: .85rem; background: rgba(5,7,13,.38); color: var(--color-ink-strong); font: 600 clamp(.82rem, 1.25vw, 1rem)/1.2 var(--font-body-stack); }
@@ -136,8 +122,6 @@
   .home-page__leaderboard-preview { display: block; }
   .home-page__leaderboard-preview strong { margin-top: .5rem; color: #d6ff63; }
   .home-page__loop-copy { max-width: 58rem; margin: 1.4rem 0 0; color: var(--color-ink-muted); font-size: .88rem; line-height: 1.55; }
-  .home-page__final { display: grid; justify-items: start; padding-top: clamp(6rem, 12vw, 11rem); }
-  .home-page__claim--final { margin-top: 1.8rem; }
   @media (max-width: 48rem) { .home-page { padding-top: 1rem; } .home-page__hero { grid-template-columns: 1fr; min-height: auto; gap: 3rem; padding-block: 3.5rem 2rem; } .home-page__steps { flex-wrap: wrap; } .home-page__steps span { flex: 1 1 calc(50% - 1rem); } .home-page__steps i { display: none; } }
   @media (max-width: 36rem) { .home-page { padding-inline: 1.1rem; } .home-page h1 { font-size: clamp(2.55rem, 12vw, 3.7rem); } .home-page__actions { align-items: stretch; flex-direction: column; } .home-page__claim { width: 100%; } .home-page__claim-field input { flex: 1; width: auto; } .home-page__steps { align-items: stretch; flex-direction: column; gap: .2rem; } .home-page__steps span { flex: none; } .home-page__loop-detail { grid-template-columns: 1fr; } }
   @media (prefers-reduced-motion: reduce) { .home-page button { transition: none; } }
