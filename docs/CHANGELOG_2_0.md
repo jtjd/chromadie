@@ -744,6 +744,12 @@ phase, with an immediate reduced-motion equivalent.
 - Made conditions, EP, atmosphere, and leaderboard discovery visible before
   signup so the homepage demonstrates the product loop.
 - Kept the showcase presentation-only and reduced-motion safe.
+
+## 2026-07-31 — Refine the wordmark and leaderboard navigation
+
+- Changed the homepage/header `.lol` suffix from gray to restrained lavender.
+- Renamed the shared header’s `Discover` label to `Leaderboard` without
+  changing its route or data behavior.
 - Kept the existing die logo for favicon, auth, homepage, and roll contexts.
 
 ## 2026-07-30 — Keep roll conditions in the active reveal

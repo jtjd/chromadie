@@ -92,7 +92,7 @@
   }
 
   .home-page h1 em {
-    color: var(--color-ink-faint);
+    color: #c4b5fd;
     font-style: normal;
   }
 

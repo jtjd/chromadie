@@ -39,7 +39,7 @@
     <nav class="site-mode-header__nav" aria-label="Primary application navigation">
       <button type="button" class:active={activeView === 'profile'} aria-current={activeView === 'profile' ? 'page' : undefined} on:click={() => navigate('profile')}>Profile</button>
       <span aria-hidden="true">/</span>
-      <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:click={() => navigate('leaderboard')}>Discover</button>
+      <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:click={() => navigate('leaderboard')}>Leaderboard</button>
       {#if isAuthenticated}
         <span aria-hidden="true">/</span>
         <button type="button" class:active={activeView === 'shop'} aria-current={activeView === 'shop' ? 'page' : undefined} on:click={() => navigate('shop')}>Studio</button>
@@ -82,7 +82,7 @@
       {#if !minimalMode}
         <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
           <button type="button" class:active={activeView === 'profile'} on:click={() => navigate('profile')}>Profile</button>
-          <button type="button" class:active={activeView === 'leaderboard'} on:click={() => navigate('leaderboard')}>Discover</button>
+          <button type="button" class:active={activeView === 'leaderboard'} on:click={() => navigate('leaderboard')}>Leaderboard</button>
           {#if isAuthenticated}
             <button type="button" class:active={activeView === 'shop'} on:click={() => navigate('shop')}>Studio</button>
           {/if}
@@ -142,7 +142,7 @@
   }
 
   .site-mode-header__wordmark { color: rgba(246, 248, 255, 0.94); }
-  .site-mode-header__wordmark > span { color: rgba(246, 248, 255, 0.68); }
+  .site-mode-header__wordmark > span { color: #c4b5fd; }
 
   .site-mode-header__nav,
   .site-mode-header__right,

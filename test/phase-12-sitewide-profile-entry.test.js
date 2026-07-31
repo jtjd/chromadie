@@ -30,7 +30,7 @@ test('site surfaces use one shared header and the shared atmospheric shell', () 
   assert.match(header, /Profile/);
   assert.doesNotMatch(header, />Roll</);
   assert.match(header, /navigate\('home'\)/);
-  assert.match(header, /Discover/);
+  assert.match(header, /Leaderboard/);
   assert.match(header, /Studio/);
   assert.match(header, /isProfileMode/);
   assert.doesNotMatch(header, /navigator\.share/);

@@ -1621,3 +1621,12 @@ The landing page now demonstrates a fictional Mythic roll using the existing
 roll renderer, scoring conditions, and a lightweight discovery/profile cue.
 This is presentation-only fixture content: it never calls the roll RPC,
 changes eligibility, or implies a visitor has earned the displayed result.
+
+## 2026-07-31 — Use lavender for the `.lol` suffix and name the destination
+
+**Status:** accepted and implemented
+
+The homepage and shared header use a restrained lavender `.lol` suffix instead
+of gray, which reads as disabled. The primary nav calls the leaderboard
+`Leaderboard` rather than `Discover`; the route and discovery implementation
+remain unchanged.

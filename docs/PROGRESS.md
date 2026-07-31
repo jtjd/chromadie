@@ -838,6 +838,8 @@ the remaining Phase 11 boundary.
   validated username.
 - Added a Mythic homepage roll showcase with conditions, effects, and a
   leaderboard/profile discovery cue using fixture-only presentation data.
+- Changed the `.lol` suffix to lavender and renamed the header destination to
+  `Leaderboard`.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 
