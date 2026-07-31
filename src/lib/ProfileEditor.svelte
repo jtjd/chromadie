@@ -39,6 +39,11 @@
     tiktok: 'TikTok',
     other: 'Other'
   });
+  const STYLE_LABELS = Object.freeze({
+    immersive: 'Immersive',
+    editorial: 'Editorial',
+    focus: 'Focused'
+  });
 
   const VIEW_STATE_NAMESPACE = 'profile-editor';
   let draft = normalizeProfileConfig(draftConfig || publishedConfig);
@@ -205,11 +210,11 @@
   }
 </script>
 
-<Module size="wide" tone="quiet" className="profile-editor" eyebrow="Profile studio" title="Make the page yours" description="Shape the free profile with a signature color, curated layout, visible modules, and safe links. Your draft stays private until you publish it.">
+<Module size="wide" tone="quiet" className="profile-editor" eyebrow="Profile studio" title="Customize your public profile" description="Choose the color, sections, and links visitors see. Save a draft while you work, then publish when the page is ready.">
   <div class="profile-editor__toolbar">
     <div>
-      <p class="profile-editor__hint">Published layout: <strong>{publishedLabel}</strong></p>
-      <p class="profile-editor__hint">Version 1 configuration · no custom code or CSS</p>
+      <p class="profile-editor__hint">Current public style: <strong>{STYLE_LABELS[publishedLabel] || publishedLabel}</strong></p>
+      <p class="profile-editor__hint">Your edits stay private until you publish them.</p>
     </div>
     <button type="button" class="profile-editor__button profile-editor__button--preview" on:click={togglePreview}>
       {previewing ? 'Stop profile preview' : 'Preview on profile'}
@@ -218,8 +223,8 @@
 
   <div class="profile-editor__preview" style={'--editor-accent: ' + previewConfig.signatureColor + ';'} aria-label="Draft profile preview">
     <div class="profile-editor__preview-topline">
-      <span>Draft preview</span>
-      <strong>{previewConfig.layoutVariant}</strong>
+      <span>Your public page preview</span>
+      <strong>{STYLE_LABELS[previewConfig.layoutVariant] || previewConfig.layoutVariant}</strong>
     </div>
     <div class="profile-editor__preview-grid">
     {#each getVisibleProfileModules(previewConfig, true) as module (module.id)}
@@ -246,17 +251,17 @@
     </label>
 
     <label class="profile-editor__field">
-      <span>Layout variant</span>
+      <span>Profile style</span>
       <select value={previewConfig.layoutVariant} on:change={event => updateDraft({ layoutVariant: event.currentTarget.value })}>
-        {#each PROFILE_LAYOUT_VARIANTS as variant (variant)}<option value={variant}>{variant}</option>{/each}
+        {#each PROFILE_LAYOUT_VARIANTS as variant (variant)}<option value={variant}>{STYLE_LABELS[variant] || variant}</option>{/each}
       </select>
     </label>
   </div>
 
   <div class="profile-editor__section profile-editor__story-setting">
     <div class="profile-editor__section-heading">
-      <div><p class="profile-editor__eyebrow">Profile depth</p><h3>Keep the profile quiet</h3></div>
-      <span>Optional public history</span>
+      <div><p class="profile-editor__eyebrow">Profile history</p><h3>Choose whether to show past colors</h3></div>
+      <span>Off by default</span>
     </div>
     <label class="profile-editor__story-toggle">
       <input
@@ -266,15 +271,15 @@
       />
       <span>
         <strong>Show the color archive</strong>
-        <small>Let visitors see the archive and optional color story behind this identity.</small>
+        <small>Visitors can browse your previous rolls and color story.</small>
       </span>
     </label>
   </div>
 
   <div class="profile-editor__section">
     <div class="profile-editor__section-heading">
-      <div><p class="profile-editor__eyebrow">Composition</p><h3>Choose what leads</h3></div>
-      <span>Drag-free controls stay keyboard friendly.</span>
+      <div><p class="profile-editor__eyebrow">Page sections</p><h3>Choose what visitors see</h3></div>
+      <span>Turn sections on or off and set their order.</span>
     </div>
     <ol class="profile-editor__module-list">
       {#each orderedModules.filter(module => module.id !== 'explore') as module (module.id)}
