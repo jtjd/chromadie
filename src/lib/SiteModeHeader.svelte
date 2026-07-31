@@ -162,7 +162,7 @@
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 1rem;
-    width: min(100%, 92rem);
+    width: 100%;
     min-height: 4.75rem;
     margin-inline: auto;
     padding: 1rem clamp(1.25rem, 4vw, 3rem);

@@ -87,7 +87,7 @@
   let revealStage = 0;
   let skipRevealRequested = false;
   let freshReveal = false;
-  let detailsOpen = false;
+  let detailsOpen = true;
   let replayData = null;
   let replayCanonical = null;
 
@@ -187,7 +187,7 @@
     revealStage = 0;
     skipRevealRequested = false;
     freshReveal = false;
-    detailsOpen = !compact;
+    detailsOpen = true;
   }
 
   function applyServerPresentation(data, canonical, { animateScore = false, revealBadges = true, notifyProfile = true } = {}) {
@@ -413,7 +413,7 @@
   }
 
   onMount(() => {
-    detailsOpen = !compact;
+    detailsOpen = true;
     tickCountdown();
     countdownInterval = setInterval(tickCountdown, 1000);
     if (visualFixture === 'pre-roll') {
@@ -483,6 +483,20 @@
             <span class:active={revealStage === index} class:complete={revealStage > index}>{label}</span>
           {/each}
         </div>
+        {#if headlineConditions.length}
+          <div class="profile-roll__rolling-conditions" aria-label="Score conditions being revealed">
+            <p class="profile-roll__eyebrow">Conditions aligning</p>
+            <div class="profile-roll__condition-list">
+              {#each headlineConditions as condition, index (condition.id)}
+                <span class="profile-roll__condition-chip profile-roll__condition--revealing" style={'--condition-delay: ' + (index * 0.18) + 's;'}>
+                  <span aria-hidden="true">{condition.symbol}</span>
+                  <strong>{condition.label}</strong>
+                  {#if condition.points}<small>+{condition.points.toLocaleString()}</small>{/if}
+                </span>
+              {/each}
+            </div>
+          </div>
+        {/if}
         <button type="button" class="profile-roll__skip" on:click={skipReveal}>Skip reveal</button>
       </div>
     </div>
@@ -527,7 +541,7 @@
       {/if}
 
       <details class="profile-roll__details" bind:open={detailsOpen}>
-        <summary>View score breakdown</summary>
+        <summary>{detailsOpen ? 'Collapse score breakdown' : 'View score breakdown'}</summary>
         <div class="profile-roll__details-body">
           <div class="profile-roll__story">
             <div>
@@ -800,6 +814,9 @@
   .profile-roll__stage-track span { padding-top: 0.4rem; border-top: 1px solid var(--color-line-subtle); color: var(--color-ink-faint); font: 600 0.56rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
   .profile-roll__stage-track span.active,
   .profile-roll__stage-track span.complete { border-color: var(--profile-accent); color: color-mix(in srgb, var(--profile-accent) 52%, white); box-shadow: 0 -0.18rem 0.55rem color-mix(in srgb, var(--profile-accent) 24%, transparent); }
+  .profile-roll__rolling-conditions { display: grid; gap: 0.45rem; margin-top: 0.9rem; }
+  .profile-roll__rolling-conditions .profile-roll__eyebrow { margin: 0; }
+  .profile-roll__condition--revealing { opacity: 0; transform: translateY(0.35rem) scale(0.96); animation: profile-roll-condition-reveal 0.42s var(--motion-ease-emphasis) var(--condition-delay, 0s) both; }
   .profile-roll__skip { display: inline-flex; margin-top: 1rem; padding: 0; border: 0; background: transparent; color: var(--color-ink-faint); font: 600 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: color var(--motion-base) var(--motion-ease-standard); }
   .profile-roll__skip:hover { color: var(--color-ink-strong); }
   .profile-roll__skip:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 4px; border-radius: 0.25rem; }
@@ -813,6 +830,7 @@
   @keyframes profile-roll-lock-ring { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.45); } 24% { opacity: 0.9; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.45); } }
   @keyframes profile-roll-orbit-one { 0%, 100% { transform: translate(-50%, -50%) rotate(20deg) scale(0.92); opacity: 0.55; } 50% { transform: translate(-50%, -50%) rotate(38deg) scale(1.08); opacity: 1; } }
   @keyframes profile-roll-result-enter { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+  @keyframes profile-roll-condition-reveal { from { opacity: 0; transform: translateY(0.35rem) scale(0.96); } to { opacity: 1; transform: none; } }
   @keyframes profile-roll-result-impact { 0% { transform: scale(0.78); filter: brightness(0.8); } 52% { transform: scale(var(--result-impact, 1.1)); filter: brightness(var(--result-brightness, 1.35)); } 100% { transform: scale(1); filter: brightness(1); } }
 
   .profile-roll__result--fresh .profile-roll__result-copy,
@@ -856,6 +874,7 @@
     .profile-roll__button:hover:not(:disabled),
     .profile-roll__reveal-button:hover:not(:disabled) { transform: none; }
     .profile-roll__reading-line > span,
+    .profile-roll__condition--revealing,
     .profile-roll__spectrum-wash,
     .profile-roll__scan-orbit,
     .profile-roll__lock-ring,
@@ -863,6 +882,7 @@
     .profile-roll__result--fresh .profile-roll__result-copy,
     .profile-roll__result--fresh .profile-roll__condition-rail,
     .profile-roll__result--fresh .profile-roll__preview :global(.roll-effect-wrapper) { animation: none; }
+    .profile-roll__condition--revealing { opacity: 1; transform: none; }
     .profile-roll__scan-field { opacity: 0.45; }
   }
 

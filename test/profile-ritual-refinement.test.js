@@ -50,6 +50,10 @@ test('the owner roll uses a staged presentation without moving authority into th
   assert.ok(roll.indexOf('class="profile-roll__condition-rail"') < roll.indexOf('class="profile-roll__details"'));
   assert.ok(roll.indexOf('class="profile-roll__details"') < roll.indexOf('class="profile-roll__story"'));
   assert.match(roll, /profile-roll__skip/);
+  assert.match(roll, /let detailsOpen = true/);
+  assert.match(roll, /profile-roll__rolling-conditions/);
+  assert.match(roll, /profile-roll__condition--revealing/);
+  assert.match(roll, /Collapse score breakdown/);
   assert.match(roll, /dispatch\('colorpreview'/);
   assert.match(roll, /View score breakdown/);
   assert.match(roll, /bind:open=\{detailsOpen\}/);

@@ -789,3 +789,32 @@ the remaining Phase 11 boundary.
   open disclosure.
 - Added a staff-only `Replay reveal` control that rehearses the stored canonical
   result without creating a roll or changing rewards, history, or eligibility.
+
+## 2026-07-30 — Completed-result text contrast
+
+- Added a shared soft-gold earned-value token.
+- Applied it only to the completed daily-color EP total and condition point
+  values, preserving the rolled color for the label and rarity.
+- Added focused regression coverage for the semantic color split.
+- Build, Svelte check, ESLint, 139 tests, links, CSP, username policy, balance,
+  catalog, scoring parity, and database security pass. The pre-existing dirty
+  result/layout work was already over the performance gate at 631.54 kB
+  JavaScript and 301.05 kB CSS against 625 kB and 295 kB budgets; this reveal
+  adds a small CSS/markup increment, leaving the current build at 634.15 kB
+  JavaScript and 303.19 kB CSS. Performance follow-up remains required.
+
+## 2026-07-30 — Reveal score conditions during the roll
+
+- Opened the score breakdown by default on completed results and made its
+  summary label communicate the collapse action.
+- Added a staged condition rail during the final lock phase using only the
+  canonical server-reported contributors.
+- Added reduced-motion coverage in the component styles and regression tests.
+
+## 2026-07-30 — Full-width sitewide header
+
+- Removed the 92rem cap from the shared application header so its background
+  and layout span the viewport on wide screens.
+- Preserved responsive padding, mobile menu behavior, and the narrower content
+  widths used by each route below it.
+- Added a regression assertion for the full-width header contract.

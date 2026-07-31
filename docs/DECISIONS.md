@@ -1513,3 +1513,36 @@ Staff owners may replay that stored presentation from the score breakdown.
 Replay is deliberately client-only: it reuses the canonical result already
 returned for the account and never calls a roll, reward, history, inventory, or
 profile-refresh boundary.
+
+## 2026-07-30 — Give earned result values a restrained warm counterpoint
+
+**Status:** accepted and implemented
+
+Completed daily-color results keep the rolled color as the identity accent for
+the label and rarity. Earned EP and per-condition point values use a shared
+soft-gold `--color-earned` token so reward text is visually distinct from both
+the roll color and neutral descriptive text. The counterpoint is limited to
+earned typography; it does not recolor the atmosphere, roll object, surfaces,
+or canonical color identity.
+
+## 2026-07-30 — Make score conditions part of the reveal
+
+**Status:** accepted and implemented
+
+The completed score breakdown opens by default so the result explains itself
+without an extra interaction. During the final lock phase, the already
+server-reported condition list enters progressively before the result settles;
+this is presentation-only and does not calculate, reorder, or award any
+condition client-side. The native disclosure remains available so players can
+collapse the detail after reading it. Reduced-motion users receive the same
+conditions immediately with no staged animation.
+
+## 2026-07-30 — Let the shared header span the viewport
+
+**Status:** accepted and implemented
+
+The sitewide application header is a viewport-level shell, not a content
+column. Its outer width is now 100% across routes, while the existing
+responsive horizontal padding keeps controls readable and touchable. Profile,
+roll, discovery, studio, and settings content retain their own intentional
+max-widths beneath the header.

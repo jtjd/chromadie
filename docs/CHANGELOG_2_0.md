@@ -687,3 +687,21 @@ presentation without changing its data or gameplay authority.
 - Added a staff-only presentation replay for repeatedly testing the reveal
   without another roll RPC or database write.
 - Added reduced-motion coverage and kept the approved profile layout intact.
+
+## 2026-07-30 — Balance completed-result typography
+
+- Added a restrained earned-gold text token for EP and condition point values.
+- Kept the daily color label and rarity tied to the canonical roll accent, with
+  no changes to the background, roll object, scoring, or result data.
+
+## 2026-07-30 — Animate score conditions into the reveal
+
+- Score breakdowns now open by default and can be collapsed after the result is
+  understood.
+- Server-reported score conditions appear one by one during the final lock
+phase, with an immediate reduced-motion equivalent.
+
+## 2026-07-30 — Full-width application header
+
+- The shared site header now spans the full viewport across application routes.
+- Existing inner padding and responsive navigation behavior are unchanged.
