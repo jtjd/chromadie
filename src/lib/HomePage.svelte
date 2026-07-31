@@ -2,7 +2,6 @@
   import { createEventDispatcher } from 'svelte';
   import { isUsernameShapeValid } from './usernamePolicy.js';
   import { trackProductEvent } from './productAnalytics.js';
-  import HomepageLiveProfiles from './HomepageLiveProfiles.svelte';
   import HomeRollShowcase from './HomeRollShowcase.svelte';
 
   export let isAuthenticated = false;
@@ -30,11 +29,6 @@
     dispatch('claim', { username: nextUsername });
   }
 
-  function openExplore() {
-    trackProductEvent('explore_clicked');
-    dispatch('explore');
-  }
-
 </script>
 
 <main class="home-page" aria-labelledby="home-title">
@@ -59,21 +53,11 @@
             </div>
             <small id={claimError ? 'home-claim-error' : 'home-claim-hint'} class:home-page__claim-error={claimError} aria-live="polite">{claimError || 'Free to use · One roll each day'}</small>
           </form>
-          <button class="home-page__secondary" type="button" on:click={openExplore}>Explore profiles <span aria-hidden="true">↗</span></button>
         {/if}
       </div>
     </div>
 
     <HomeRollShowcase />
-  </section>
-
-  <section class="home-page__section home-page__examples" aria-labelledby="examples-title">
-    <div class="home-page__section-heading">
-      <p class="home-page__eyebrow">live from the leaderboard</p>
-      <h2 id="examples-title">Profiles worth exploring</h2>
-      <p>See real public profiles shaped by today’s strongest rolls.</p>
-    </div>
-    <HomepageLiveProfiles on:navigate={event => dispatch('navigate', event.detail)} />
   </section>
 
   <section class="home-page__section home-page__loop" aria-labelledby="loop-title">

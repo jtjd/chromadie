@@ -14,11 +14,10 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(home, /dispatch\('claim'/);
   assert.match(home, /chm\.lol\//);
   assert.match(home, /View your profile/);
-  assert.match(home, /Profiles worth exploring/);
   assert.match(home, /One roll each day/);
   assert.match(home, /Roll a color/);
   assert.match(home, /Get discovered/);
-  assert.match(home, /HomepageLiveProfiles/);
+  assert.doesNotMatch(home, /HomepageLiveProfiles/);
   assert.match(home, /prefers-reduced-motion/);
   assert.match(home, /HomeRollShowcase/);
 });
