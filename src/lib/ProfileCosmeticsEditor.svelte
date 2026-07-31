@@ -218,7 +218,7 @@
 </Surface>
 
 <style>
-  .profile-cosmetics-layout { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(18rem,.75fr); gap:1.25rem; align-items:start; }
+  .profile-cosmetics-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(20rem,1fr); gap:1.25rem; align-items:start; }
   .profile-cosmetics-controls { display:grid; gap:.75rem; min-width:0; padding:1rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
   .profile-cosmetics-controls__heading span { display:block; color:var(--color-accent-bright); font:700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
   .profile-cosmetics-controls__heading strong { display:block; margin-top:.35rem; color:var(--color-ink-strong); font-size:1.05rem; }
@@ -230,5 +230,5 @@
   .profile-cosmetics-atmosphere button:disabled, .profile-cosmetics-slot button:disabled { opacity:.45; cursor:not-allowed; }
   .profile-cosmetics-slot-list { display:grid; gap:.75rem; }
   .profile-cosmetics-empty { margin:0; padding:.8rem; border:1px dashed var(--color-line-subtle); border-radius:var(--radius-sm); color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
-  @media (max-width: 850px) { .profile-cosmetics-layout { grid-template-columns:1fr; } }
+  @media (max-width: 900px) { .profile-cosmetics-layout { grid-template-columns:1fr; } }
 </style>
