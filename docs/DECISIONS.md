@@ -1638,3 +1638,12 @@ remain unchanged.
 The landing hero now names Chromadie as a daily color game and states the
 actual loop—one roll, condition-based EP, profile effects, and leaderboard
 progression—before the fictional Mythic showcase demonstrates it.
+
+## 2026-07-31 — Anchor the homepage hero independently from the claim form
+
+**Status:** accepted and implemented
+
+The homepage hero is top-anchored rather than bottom-aligned. This prevents
+the username claim helper text from shifting the giant wordmark upward as the
+left column grows. The dot in `.lol` is also dimmed slightly to make the
+transition into the lavender suffix easier to read.

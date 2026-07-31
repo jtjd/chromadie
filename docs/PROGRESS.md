@@ -842,6 +842,8 @@ the remaining Phase 11 boundary.
   `Leaderboard`.
 - Reworked the homepage hero copy to explicitly describe the daily color game,
   score conditions, effects, and leaderboard progression.
+- Anchored the homepage hero from the top and softened the `.lol` separator dot
+  so the claim form no longer changes the wordmark’s vertical position.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 

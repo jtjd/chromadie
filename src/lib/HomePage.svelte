@@ -24,7 +24,7 @@
   <div class="home-page__copy">
     <p class="home-page__eyebrow">daily color game · chm.lol</p>
     <h1 id="home-title" aria-label="chm.lol">
-      <span>chm</span><em>.lol</em>
+      <span>chm</span><em><span class="home-page__dot">.</span>lol</em>
     </h1>
     <p class="home-page__intro">
       Roll one color each day. Earn EP from its conditions, unlock profile
@@ -60,7 +60,7 @@
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(22rem, 34rem);
-    align-items: end;
+    align-items: start;
     gap: clamp(2rem, 8vw, 8rem);
     width: min(100%, 88rem);
     min-height: calc(100dvh - 9.75rem);
@@ -96,6 +96,8 @@
     color: #c4b5fd;
     font-style: normal;
   }
+
+  .home-page h1 em .home-page__dot { color: rgba(196, 181, 253, 0.48); }
 
   .home-page__intro {
     max-width: 34rem;

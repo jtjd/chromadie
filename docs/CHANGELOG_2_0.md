@@ -757,6 +757,11 @@ phase, with an immediate reduced-motion equivalent.
   game, condition-based EP, profile effects, and leaderboard progression.
 - Added a compact factual line so visitors can understand the loop at a glance.
 - Clarified the showcase caption to connect a strong roll to profile discovery.
+
+## 2026-07-31 — Stabilize homepage hero positioning
+
+- Top-anchored the hero so claim helper text does not pull the wordmark upward.
+- Reduced the dot contrast before the lavender `.lol` suffix.
 - Kept the existing die logo for favicon, auth, homepage, and roll contexts.
 
 ## 2026-07-30 — Keep roll conditions in the active reveal
