@@ -4,7 +4,7 @@ import { baseSecurityHeaders, getSiteOrigin } from '../_publicPage.js';
 
 export { getProfileCacheControl } from '../_profilePage.js';
 
-export function onRequestGet({ request, env, next }) {
+export function onRequestGet({ request, env }) {
   const rawUsername = new URL(request.url).pathname.split('/').filter(Boolean).at(-1) || '';
   const username = normalizeUsernameSegment(rawUsername);
   if (!username) return new Response('Profile not found.', { status: 404, headers: baseSecurityHeaders });

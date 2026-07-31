@@ -22,7 +22,9 @@ async function pageTarget(port) {
       const pages = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
       const page = pages.find(item => item.type === 'page');
       if (page) return page;
-    } catch {}
+    } catch {
+      continue;
+    }
     await delay(100);
   }
   throw new Error('Chromium page target unavailable');
