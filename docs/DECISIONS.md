@@ -1594,3 +1594,12 @@ allowlist (`rain`, `snow`, `fireflies`, and `scanlines`). This preserves safe
 structured customization and lets effects live across the full profile canvas
 without accepting arbitrary CSS or executable content. Every effect has a
 reduced-motion fallback.
+
+## 2026-07-31 — Simplify the sitewide header mark
+
+**Status:** accepted and implemented
+
+The sitewide header now uses a small single-color prism glyph instead of the
+multicolor die asset. The die remains available in game, homepage, auth, and
+favicon contexts where its literal game signal is useful; the profile-facing
+header stays quiet and typographic.

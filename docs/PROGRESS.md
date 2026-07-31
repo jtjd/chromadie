@@ -832,6 +832,8 @@ the remaining Phase 11 boundary.
   better-integrated lockup.
 - Added four curated profile atmosphere cosmetics with full-canvas layers and
   reduced-motion fallbacks.
+- Replaced the header die icon with a compact prism glyph so the wordmark and
+  profile atmosphere carry the primary visual language.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 

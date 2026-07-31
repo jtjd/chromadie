@@ -726,6 +726,12 @@ phase, with an immediate reduced-motion equivalent.
 - Added reduced-motion behavior and a curated allowlist so catalog values never
   become arbitrary profile CSS.
 
+## 2026-07-31 — Simplify the sitewide header mark
+
+- Replaced the bright rounded die icon in the shared header with a restrained
+  prism glyph.
+- Kept the existing die logo for favicon, auth, homepage, and roll contexts.
+
 ## 2026-07-30 — Keep roll conditions in the active reveal
 
 - Condition chips now begin entering during the scan/lock animation as soon as
