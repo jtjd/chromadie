@@ -131,7 +131,7 @@
   .home-page__hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(22rem, 34rem); align-items: center; gap: clamp(2rem, 7vw, 7rem); min-height: min(48rem, calc(100dvh - 5rem)); padding-block: clamp(3rem, 8vh, 7rem); }
   .home-page__copy { max-width: 38rem; }
   .home-page__eyebrow { margin: 0; color: var(--color-ink-faint); font: 500 .68rem/1.2 var(--font-mono-stack); letter-spacing: .1em; text-transform: lowercase; }
-  .home-page h1 { max-width: 34rem; margin: 1.25rem 0 0; font: 700 clamp(2.8rem, 5.5vw, 5.4rem)/.98 var(--font-display-stack); letter-spacing: -.055em; text-wrap: balance; }
+  .home-page h1 { max-width: 42rem; margin: 1.25rem 0 0; font: 700 clamp(2.7rem, 4.4vw, 4.7rem)/.96 var(--font-display-stack); letter-spacing: -.055em; text-wrap: balance; }
   .home-page__intro { max-width: 34rem; margin: 1.7rem 0 0; color: var(--color-ink-muted); font-size: clamp(1rem, 1.4vw, 1.16rem); line-height: 1.55; }
   .home-page__supporting { margin: .8rem 0 0; color: var(--color-accent-bright); font: 500 .78rem/1.4 var(--font-mono-stack); }
   .home-page__actions { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 1rem 1.25rem; margin-top: 2rem; }
