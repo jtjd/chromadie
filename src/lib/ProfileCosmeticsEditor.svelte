@@ -132,7 +132,7 @@
       <div>
         <p class="profile-settings-page__eyebrow">Appearance</p>
         <h2 id="profile-cosmetics-title" style="margin:0;color:var(--color-ink-strong);font:600 var(--type-h2)/1.05 var(--font-display-stack)">Choose your equipped cosmetics.</h2>
-        <p style="max-width:42rem;margin:.75rem 0 0;color:var(--color-ink-muted);line-height:1.55">Preview owned pieces on the surface they affect, then apply each change to your public profile.</p>
+        <p style="max-width:42rem;margin:.75rem 0 0;color:var(--color-ink-muted);line-height:1.55">Preview owned pieces on the surface they affect, then apply each change to your public profile. Backgrounds can add animated atmospheres such as rain, snow, fireflies, or scanlines.</p>
       </div>
       <Button variant="ghost" href="/shop">Browse the shop ↗</Button>
     </div>

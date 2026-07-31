@@ -225,7 +225,7 @@
       radial-gradient(circle at 50% 40%, rgba(122,96,255,0.13), transparent 42%),
       #07080c;
   }
-  .studio-stage.context-profile { min-height: 220px; }
+  .studio-stage.context-profile { min-height: 300px; }
 
   .stage-grid {
     position: absolute;
@@ -241,7 +241,7 @@
   .studio-profile-card {
     position: relative;
     z-index: 1;
-    width: calc(100% - 24px);
+    width: min(100% - 32px, 72rem);
     overflow: hidden;
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 18px;
