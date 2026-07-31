@@ -60,7 +60,7 @@
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(22rem, 34rem);
-    align-items: start;
+    align-items: center;
     gap: clamp(2rem, 8vw, 8rem);
     width: min(100%, 88rem);
     min-height: calc(100dvh - 9.75rem);
@@ -72,6 +72,7 @@
     position: relative;
     z-index: 1;
     min-width: 0;
+    align-self: center;
   }
 
   .home-page__eyebrow {

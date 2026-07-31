@@ -849,6 +849,8 @@ the remaining Phase 11 boundary.
   that mounts the local roll and account-save CTA.
 - Restyled that guest roll in profile mode so it reads as the first profile
   environment rather than the legacy standalone Roll screen.
+- Reworked the homepage showcase into a composed public profile: identity,
+  in-profile Mythic roll, equipped effects, and leaderboard visibility.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 

@@ -778,6 +778,15 @@ phase, with an immediate reduced-motion equivalent.
 - Restored the giant `chm.lol` wordmark to its lower desktop composition.
 - Kept the existing die logo for favicon, auth, homepage, and roll contexts.
 
+## 2026-07-31 — Compose the homepage profile showcase
+
+- Added a fictional public identity card with avatar, handle, bio, links, and
+  leaderboard rank to the homepage preview.
+- Positioned the Mythic daily roll inside that profile and labeled its
+  equipped effects so the profile-as-game loop is visible at a glance.
+- Removed the duplicate discovery rank and replaced it with a concise
+  leaderboard visibility cue.
+
 ## 2026-07-30 — Keep roll conditions in the active reveal
 
 - Condition chips now begin entering during the scan/lock animation as soon as

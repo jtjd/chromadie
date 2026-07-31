@@ -1662,3 +1662,13 @@ enter leaderboard competition.
 The guest roll is presented with a profile-mode surface and copy, while the
 existing Game component remains the authority for local roll persistence and
 guest scoring.
+
+## 2026-07-31 — Make the homepage preview a composed profile surface
+
+**Status:** accepted and implemented
+
+The fictional homepage example now follows the profile-first product model:
+an identity card with handle, bio, links, and rank leads into the daily roll.
+The roll is explicitly presented as living inside that profile, followed by
+equipped effects and a leaderboard/discovery cue. This makes the product loop
+legible without presenting the roll as a disconnected color widget.
