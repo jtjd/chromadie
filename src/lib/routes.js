@@ -52,6 +52,8 @@ export function parseRouteLocation(pathname = '/', search = '') {
     routeMode = 'reset-password'
   } else if (rawPath === '/privacy') {
     routeMode = 'privacy'
+  } else if (rawPath === '/terms') {
+    routeMode = 'terms'
   } else if (rawPath === '/how-to-play') {
     routeMode = 'how-to-play'
   } else if (CLEAN_APP_PATHS.has(rawPath)) {

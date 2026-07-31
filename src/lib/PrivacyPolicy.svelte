@@ -21,6 +21,7 @@
     <ul>
       <li><strong>Account information:</strong> your email address, which is used for sign-in, email confirmation, and account recovery.</li>
       <li><strong>Profile information:</strong> your username and cosmetic selections. This information may be visible on your profile and the leaderboard.</li>
+      <li><strong>Uploaded profile content:</strong> if you use profile uploads, we process the avatar, background, and other supported media you choose to publish. Public uploads are associated with your profile and may be cached or transformed to serve them efficiently.</li>
       <li><strong>Gameplay information:</strong> rolls, scores, EP, inventory, achievements, pinned achievements, rivals, and other information associated with your progress.</li>
       <li><strong>Guest data:</strong> game progress and shop data stored locally in your browser when you play without an account.</li>
       <li><strong>Security and technical information:</strong> information used to maintain reliable sign-in, protect the service, and prevent abuse.</li>
@@ -36,7 +37,15 @@
       <li>Support guest mode and save guest progress on your device.</li>
       <li>Monitor site performance and understand basic usage.</li>
       <li>Detect and prevent spam, fraud, and other abusive activity.</li>
+      <li>Review, restrict, or remove uploaded content that violates the Terms of Service or creates a safety, legal, or operational risk.</li>
     </ul>
+  </section>
+
+  <section class="card legal-section">
+    <h2>Public profiles and uploaded content</h2>
+    <p>
+      Profile pages, links, avatars, backgrounds, and other published customization are public by design. Do not upload content you need to keep private. We may scan, moderate, unpublish, or remove content and accounts when required to enforce our rules, respond to reports, protect people, or comply with law.
+    </p>
   </section>
 
   <section class="card legal-section">

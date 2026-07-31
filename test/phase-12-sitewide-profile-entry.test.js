@@ -47,4 +47,5 @@ test('explicit routes remain available instead of being rewritten to the profile
   assert.equal(parseRouteLocation('/leaderboard').view, 'leaderboard');
   assert.equal(parseRouteLocation('/how-to-play').routeMode, 'how-to-play');
   assert.equal(parseRouteLocation('/privacy').routeMode, 'privacy');
+  assert.equal(parseRouteLocation('/terms').routeMode, 'terms');
 });

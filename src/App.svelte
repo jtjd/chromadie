@@ -15,6 +15,7 @@
   import ProfileAtmosphere from './lib/ProfileAtmosphere.svelte';
   import ProfileCanvasPrototype from './lib/ProfileCanvasPrototype.svelte';
   import PrivacyPolicy from './lib/PrivacyPolicy.svelte';
+  import TermsOfService from './lib/TermsOfService.svelte';
   import FAQ from './lib/FAQ.svelte';
   import ResetPassword from './lib/ResetPassword.svelte';
   import Toast from './lib/Toast.svelte';
@@ -30,7 +31,7 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
-  const VALID_APP_ROUTES = new Set(['app', 'privacy', 'how-to-play', 'auth-callback', 'reset-password']);
+  const VALID_APP_ROUTES = new Set(['app', 'privacy', 'terms', 'how-to-play', 'auth-callback', 'reset-password']);
   let view = 'home';
   let leaderboardTab = 'today';
   let routeMode = 'app';
@@ -439,6 +440,8 @@
   );
   $: pageTitle = routeMode === 'privacy'
     ? 'Privacy Policy | ChromaDie'
+    : routeMode === 'terms'
+      ? 'Terms of Service | ChromaDie'
     : routeMode === 'how-to-play'
       ? 'How to Play | ChromaDie'
       : routeMode === 'app' && view === 'profile'
@@ -466,6 +469,8 @@
     ? 'The ChromaDie page you requested could not be found.'
     : routeMode === 'privacy'
     ? 'Read the ChromaDie privacy policy and learn how account and gameplay data is handled.'
+    : routeMode === 'terms'
+      ? 'Read the ChromaDie Terms of Service for profiles, uploads, customization, and community safety.'
     : routeMode === 'how-to-play'
       ? 'Learn how ChromaDie works: roll a color every day, discover rarity and traits, earn EP, and compete on the leaderboard.'
       : routeMode === 'app' && view === 'profile'
@@ -485,6 +490,8 @@
     ? '/'
     : routeMode === 'privacy'
     ? '/privacy'
+    : routeMode === 'terms'
+      ? '/terms'
     : routeMode === 'how-to-play'
       ? '/how-to-play'
       : routeMode === 'app' && view === 'leaderboard'
@@ -705,6 +712,8 @@
     </main>
   {:else if routeMode === 'privacy'}
     <PrivacyPolicy />
+  {:else if routeMode === 'terms'}
+    <TermsOfService />
   {:else if routeMode === 'how-to-play'}
     <FAQ />
   {:else}
@@ -768,6 +777,7 @@
         <p>ChromaDie</p>
         <nav aria-label="Footer">
           <a href="/privacy" on:click|preventDefault={() => navigateToPath('/privacy')}>Privacy Policy</a>
+          <a href="/terms" on:click|preventDefault={() => navigateToPath('/terms')}>Terms</a>
           <a href="/how-to-play" on:click|preventDefault={() => navigateToPath('/how-to-play')}>How to Play</a>
           <a href="mailto:support@chromadie.com">Support</a>
           <a href="mailto:business@chromadie.com">Business</a>
