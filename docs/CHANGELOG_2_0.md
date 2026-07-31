@@ -787,6 +787,15 @@ phase, with an immediate reduced-motion equivalent.
 - Removed the duplicate discovery rank and replaced it with a concise
   leaderboard visibility cue.
 
+## 2026-07-31 — Stage profile onboarding and clarify result hierarchy
+
+- Added a profile-first signed-out onboarding sequence: identity preview,
+  customization explanation, then the daily roll.
+- Preserved local guest roll authority and the existing account CTA after a
+  result while removing the legacy roll-first presentation from onboarding.
+- Standardized hex/rarity, score/EP, and condition-rail spacing across the
+  homepage showcase, `TodayColor`, and integrated profile roll.
+
 ## 2026-07-30 — Keep roll conditions in the active reveal
 
 - Condition chips now begin entering during the scan/lock animation as soon as

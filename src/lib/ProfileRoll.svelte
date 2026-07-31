@@ -730,13 +730,13 @@
   .profile-roll__result-copy { min-width: 0; }
   .profile-roll__eyebrow { margin: 0; color: color-mix(in srgb, var(--profile-accent) 48%, white); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.14em; text-transform: uppercase; }
   .profile-roll__identity-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem; margin-top: 0.35rem; }
-  .profile-roll__score-row { display: flex; align-items: baseline; flex-wrap: wrap; margin-top: 0.7rem; }
-  .profile-roll__score-row strong { color: var(--color-ink-strong); font: 600 clamp(2rem, 5vw, 3.5rem) / 0.95 var(--font-display-stack); letter-spacing: -0.06em; }
-  .profile-roll__score-row strong span { margin-left: 0.2rem; color: var(--color-ink-muted); font: 600 0.72rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; }
+  .profile-roll__score-row { display: flex; align-items: baseline; flex-wrap: wrap; margin-top: 0.8rem; }
+  .profile-roll__score-row strong { display: inline-flex; align-items: baseline; color: var(--color-ink-strong); font: 600 clamp(2rem, 5vw, 3.5rem) / 0.95 var(--font-display-stack); letter-spacing: -0.06em; }
+  .profile-roll__score-row strong span { margin-left: 0.45rem; padding-left: 0.5rem; border-left: 1px solid color-mix(in srgb, var(--profile-accent) 38%, var(--color-line-subtle)); color: var(--color-ink-muted); font: 600 0.68rem / 1 var(--font-mono-stack); letter-spacing: 0.1em; }
   .profile-roll__rarity { display: inline-flex; padding: 0.28rem 0.55rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 45%, transparent); border-radius: var(--radius-pill); color: color-mix(in srgb, var(--profile-accent) 48%, white); font: 700 0.62rem / 1 var(--font-mono-stack); text-transform: uppercase; letter-spacing: 0.08em; }
   .profile-roll__percentile { margin: var(--space-3) 0 0; font-weight: 700; }
   .profile-roll__percentile span { color: var(--color-ink-muted); font-size: var(--type-label); font-weight: 500; }
-  .profile-roll__condition-rail { display: grid; gap: 0.65rem; padding: 0; }
+  .profile-roll__condition-rail { display: grid; gap: 0.65rem; margin-top: 0.15rem; padding-top: 0.8rem; border-top: 1px solid var(--color-line-subtle); }
   .profile-roll__condition-list { display: flex; flex-wrap: wrap; gap: 0.45rem; }
   .profile-roll__condition-chip { display: inline-flex; align-items: center; gap: 0.38rem; padding: 0.32rem 0.55rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 22%, var(--color-line-subtle)); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--profile-accent) 8%, transparent); color: var(--color-ink-muted); font-size: var(--type-label); }
   .profile-roll__condition-chip strong { overflow: hidden; color: var(--color-ink-strong); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }

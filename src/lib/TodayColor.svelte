@@ -136,9 +136,9 @@
   .today-color__copy strong { display: block; color: rgba(248,250,255,0.98); font: 600 clamp(1.9rem, 3vw, 2.45rem) / 1.08 var(--font-display-stack); letter-spacing: -0.035em; overflow-wrap: anywhere; }
   .today-color__rarity { padding: 0.25rem 0.55rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 55%, transparent); border-radius: var(--radius-pill); color: color-mix(in srgb, var(--profile-accent) 70%, white); font: 700 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
   .today-color__meta { margin: 0.48rem 0 0; color: rgba(220,230,248,0.72); font: 600 0.75rem / 1.35 var(--font-mono-stack); letter-spacing: 0.03em; }
-  .today-color__score { margin: 0.55rem 0 0; color: rgba(248,250,255,0.96); font: 700 clamp(2rem, 4vw, 3.5rem) / 1 var(--font-display-stack); letter-spacing: -0.04em; }
-  .today-color__score span { color: rgba(220,230,248,0.58); font: 600 0.65rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; }
-  .today-color__condition-rail { display: grid; gap: 0.65rem; padding: 0; }
+  .today-color__score { display: inline-flex; align-items: baseline; margin: 0.8rem 0 0; color: rgba(248,250,255,0.96); font: 700 clamp(2rem, 4vw, 3.5rem) / 1 var(--font-display-stack); letter-spacing: -0.04em; }
+  .today-color__score span { margin-left: 0.45rem; padding-left: 0.5rem; border-left: 1px solid color-mix(in srgb, var(--profile-accent) 38%, var(--color-line-subtle)); color: rgba(220,230,248,0.58); font: 600 0.65rem / 1 var(--font-mono-stack); letter-spacing: 0.1em; }
+  .today-color__condition-rail { display: grid; gap: 0.65rem; margin-top: 0.15rem; padding-top: 0.8rem; border-top: 1px solid var(--color-line-subtle); }
   .today-color__condition-list { display: flex; flex-wrap: wrap; gap: 0.45rem; }
   .today-color__condition-chip { display: inline-flex; align-items: center; gap: 0.38rem; min-width: 0; padding: 0.32rem 0.55rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 22%, var(--color-line-subtle)); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--profile-accent) 8%, transparent); color: var(--color-ink-muted); font-size: var(--type-label); }
   .today-color__condition-chip strong { max-width: 12rem; overflow: hidden; color: var(--color-ink-strong); font-size: var(--type-label); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }

@@ -1663,6 +1663,21 @@ The guest roll is presented with a profile-mode surface and copy, while the
 existing Game component remains the authority for local roll persistence and
 guest scoring.
 
+## 2026-07-31 — Guide signed-out visitors through the profile before the roll
+
+**Status:** accepted and implemented
+
+The signed-out profile route now opens a three-step profile-first onboarding:
+the visitor sees a representative identity card, learns that rolls unlock
+profile expression, and then advances into the existing guest roll. The roll
+remains local and server-compatible through `Game`; the onboarding only owns
+presentation and progression, and the existing post-roll account CTA remains
+the save/compete boundary.
+
+The homepage, `TodayColor`, and integrated `ProfileRoll` now share the same
+result hierarchy: hex and rarity identify the color, score and EP are one
+lockup, and conditions occupy a distinct rail beneath them.
+
 ## 2026-07-31 — Make the homepage preview a composed profile surface
 
 **Status:** accepted and implemented

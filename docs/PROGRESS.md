@@ -851,6 +851,11 @@ the remaining Phase 11 boundary.
   environment rather than the legacy standalone Roll screen.
 - Reworked the homepage showcase into a composed public profile: identity,
   in-profile Mythic roll, equipped effects, and leaderboard visibility.
+- Replaced the signed-out profile’s legacy roll-first screen with staged
+  profile onboarding and a deliberate transition into the guest roll.
+- Aligned color-result formatting across the homepage, profile roll, and
+  visitor color module so hex, rarity, score, EP, and conditions read as one
+  consistent hierarchy.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 
