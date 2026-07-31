@@ -819,6 +819,12 @@ the remaining Phase 11 boundary.
 - Kept the action presentation-only and sourced its text from the canonical
   result and displayed conditions.
 
+## 2026-07-30 — Promote roll sharing above the breakdown
+
+- Moved `Share roll` into the main result element, directly below the visible
+  condition rail and above the collapsible breakdown.
+- Removed the orphaned header separator left after removing global sharing.
+
 ## 2026-07-30 — Reveal conditions during scan and lock
 
 - Primed canonical condition metadata before the visual spectrum loop finishes,

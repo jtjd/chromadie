@@ -578,6 +578,12 @@
         </div>
       {/if}
 
+      <div class="profile-roll__result-actions">
+        <button type="button" class="profile-roll__button profile-roll__button--share" on:click={shareRoll} disabled={shareInProgress}>
+          {shareInProgress ? 'Sharing…' : 'Share roll'}
+        </button>
+      </div>
+
       <details class="profile-roll__details" bind:open={detailsOpen}>
         <summary>{detailsOpen ? 'Collapse score breakdown' : 'View score breakdown'}</summary>
         <div class="profile-roll__details-body">
@@ -663,9 +669,6 @@
               <p>Come back when the next color is available.</p>
             </div>
             <div class="profile-roll__actions">
-              <button type="button" class="profile-roll__button profile-roll__button--share" on:click={shareRoll} disabled={shareInProgress}>
-                {shareInProgress ? 'Sharing…' : 'Share roll'}
-              </button>
               {#if canReplayReveal}
                 <button
                   type="button"
@@ -772,6 +775,7 @@
   .profile-roll__next { align-items: flex-end; }
   .profile-roll__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
   .profile-roll__empty { padding: var(--space-4); border: 1px dashed var(--color-line-subtle); border-radius: var(--radius-sm); color: var(--color-ink-muted); font-size: var(--type-small); }
+  .profile-roll__result-actions { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-2); }
   .profile-roll__details { display: grid; gap: var(--space-4); }
   .profile-roll__details summary { color: color-mix(in srgb, var(--profile-accent) 48%, white); cursor: pointer; font: 700 0.68rem / 1.2 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
   .profile-roll__details summary:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 4px; border-radius: var(--radius-sm); }

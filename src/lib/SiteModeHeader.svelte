@@ -54,7 +54,6 @@
     {#if isProfileMode}
       <div class="site-mode-header__context" aria-label="Profile actions">
         {#if isOwner}
-          <span aria-hidden="true">/</span>
           <button type="button" on:click={editProfile}>Edit</button>
         {/if}
       </div>

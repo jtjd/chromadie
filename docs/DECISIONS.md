@@ -1548,6 +1548,14 @@ that uses native share when available and copies a bounded text-and-URL
 fallback otherwise. The share text is derived from the server-reported result
 and leading conditions; it does not create a roll or mutate gameplay state.
 
+## 2026-07-30 — Keep roll sharing in the primary result hierarchy
+
+**Status:** accepted and implemented
+
+The `Share roll` action sits immediately after the visible result conditions
+and before the expandable breakdown. This keeps the action attached to the
+daily color moment instead of burying it among secondary reward controls.
+
 ## 2026-07-30 — Keep reveal conditions visible through the scan phase
 
 **Status:** accepted and implemented

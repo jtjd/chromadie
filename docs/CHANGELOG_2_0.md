@@ -707,6 +707,12 @@ phase, with an immediate reduced-motion equivalent.
 - Added `Share roll` to the completed result action row using the existing safe
   native-share/clipboard pattern.
 
+## 2026-07-30 — Promote the roll share action
+
+- Moved `Share roll` above the result breakdown so it is visible without
+  opening or scrolling through secondary details.
+- Removed the leftover header separator from the old share action.
+
 ## 2026-07-30 — Keep roll conditions in the active reveal
 
 - Condition chips now begin entering during the scan/lock animation as soon as

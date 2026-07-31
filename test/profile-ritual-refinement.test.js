@@ -64,6 +64,7 @@ test('the owner roll uses a staged presentation without moving authority into th
   assert.match(roll, /async function shareRoll/);
   assert.match(roll, /Share roll/);
   assert.match(roll, /surface: 'roll'/);
+  assert.ok(roll.indexOf('class="profile-roll__result-actions"') < roll.indexOf('class="profile-roll__details"'));
   assert.match(roll, /async function replayReveal/);
   assert.doesNotMatch(
     roll.slice(roll.indexOf('async function replayReveal'), roll.indexOf('async function initiateRoll')),
