@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { isUsernameShapeValid } from './usernamePolicy.js';
+  import HomeRollShowcase from './HomeRollShowcase.svelte';
 
   export let isAuthenticated = false;
 
@@ -26,8 +27,8 @@
       <span>chm</span><em>.lol</em>
     </h1>
     <p class="home-page__intro">
-      Roll one color each day. Keep the one that finds you. Your profile grows
-      into a record of every return.
+      Roll a new color every day, earn points from its conditions, and build a
+      public profile from your roll history.
     </p>
 
     <div class="home-page__actions">
@@ -50,22 +51,14 @@
     </div>
   </div>
 
-  <aside class="home-page__aside" aria-label="About ChromaDie">
-    <div class="home-page__aside-rule" aria-hidden="true"></div>
-    <p class="home-page__aside-label">how it works</p>
-    <p class="home-page__aside-copy">Roll a new color every day, earn points from its conditions, and build a profile from your roll history.</p>
-    <div class="home-page__aside-status">
-      <span aria-hidden="true"></span>
-      <span>one roll · every 24 hours</span>
-    </div>
-  </aside>
+  <HomeRollShowcase />
 </section>
 
 <style>
   .home-page {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(12rem, 15rem);
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 34rem);
     align-items: end;
     gap: clamp(2rem, 8vw, 8rem);
     width: min(100%, 88rem);
@@ -80,8 +73,7 @@
     min-width: 0;
   }
 
-  .home-page__eyebrow,
-  .home-page__aside-label {
+  .home-page__eyebrow {
     margin: 0;
     color: var(--color-ink-faint);
     font: 500 0.7rem / 1.2 var(--font-mono-stack);
@@ -209,57 +201,16 @@
 
   .home-page__note span { margin-inline: 0.25rem; color: var(--color-accent); }
 
-  .home-page__aside {
-    align-self: center;
-    max-width: 15rem;
-    margin-bottom: clamp(1rem, 9vh, 6rem);
-    color: var(--color-ink-muted);
-  }
-
-  .home-page__aside-rule {
-    width: 100%;
-    height: 1px;
-    margin-bottom: 1.25rem;
-    background: rgba(255, 255, 255, 0.13);
-  }
-
-  .home-page__aside-copy {
-    margin: 0.8rem 0 0;
-    color: var(--color-ink-muted);
-    font-size: 0.9rem;
-    line-height: 1.55;
-  }
-
-  .home-page__aside-status {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    margin-top: 2rem;
-    color: var(--color-ink-faint);
-    font: 500 0.68rem / 1 var(--font-mono-stack);
-    letter-spacing: 0.08em;
-    text-transform: lowercase;
-  }
-
-  .home-page__aside-status span:first-child {
-    width: 0.4rem;
-    height: 0.4rem;
-    border-radius: 50%;
-    background: var(--color-accent);
-    box-shadow: 0 0 1rem color-mix(in srgb, var(--color-accent) 70%, transparent);
-  }
-
   @media (max-width: 48rem) {
     .home-page {
       grid-template-columns: 1fr;
       align-items: start;
-      gap: 3.5rem;
+      gap: 2.5rem;
       min-height: calc(100dvh - 8.75rem);
       padding-block: 5rem 4.5rem;
     }
 
     .home-page h1 { font-size: clamp(4.4rem, 19vw, 9rem); }
-    .home-page__aside { align-self: start; margin-bottom: 0; }
   }
 
   @media (max-width: 36rem) {

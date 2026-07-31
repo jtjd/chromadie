@@ -1612,3 +1612,12 @@ Signed-out visitors can enter a bounded username directly in a `chm.lol/`
 claim field. Submission opens the existing account flow with that username
 pre-filled; availability, moderation, and account creation remain enforced by
 the existing authentication and server RPCs.
+
+## 2026-07-31 — Show the product loop on the homepage
+
+**Status:** accepted and implemented
+
+The landing page now demonstrates a fictional Mythic roll using the existing
+roll renderer, scoring conditions, and a lightweight discovery/profile cue.
+This is presentation-only fixture content: it never calls the roll RPC,
+changes eligibility, or implies a visitor has earned the displayed result.

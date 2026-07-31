@@ -737,6 +737,13 @@ phase, with an immediate reduced-motion equivalent.
   claim field.
 - Prefills the existing signup modal while preserving server-side username
   availability and moderation checks.
+
+## 2026-07-31 — Add a homepage Mythic roll showcase
+
+- Added a fictional Mythic daily roll using the real roll preview renderer.
+- Made conditions, EP, atmosphere, and leaderboard discovery visible before
+  signup so the homepage demonstrates the product loop.
+- Kept the showcase presentation-only and reduced-motion safe.
 - Kept the existing die logo for favicon, auth, homepage, and roll contexts.
 
 ## 2026-07-30 — Keep roll conditions in the active reveal

@@ -836,6 +836,8 @@ the remaining Phase 11 boundary.
   primary visual language.
 - Added a homepage claim field that pre-fills the existing signup flow with a
   validated username.
+- Added a Mythic homepage roll showcase with conditions, effects, and a
+  leaderboard/profile discovery cue using fixture-only presentation data.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 
