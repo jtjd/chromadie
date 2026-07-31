@@ -208,8 +208,8 @@
   <section class="discovery-hub__intro" aria-labelledby="discovery-title">
     <div>
       <p class="discovery-hub__kicker">Public spectrum</p>
-      <h1 id="discovery-title">Find a color story.</h1>
-      <p class="discovery-hub__copy">Every roll is a doorway into a profile. Explore the players, colors, and small streaks that make ChromaDie feel alive.</p>
+      <h1 id="discovery-title">Explore profiles.</h1>
+      <p class="discovery-hub__copy">Browse public profiles and recent rolls.</p>
     </div>
     <div class="discovery-hub__privacy-note"><span aria-hidden="true">◎</span> Public profile data only</div>
   </section>
