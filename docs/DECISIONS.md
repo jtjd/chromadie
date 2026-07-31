@@ -1682,6 +1682,10 @@ The onboarding roll uses `ProfileRoll` in a bounded guest fixture mode rather
 than mounting the legacy `Game` screen. This preserves the active-profile
 presentation while keeping the fictional result local and presentation-only.
 
+The onboarding also forwards `ProfileRoll` lifecycle events into
+`ProfileAtmosphere`, so guest previews receive the same rolling flare, ring,
+color wash, and settled impact as an active profile.
+
 ## 2026-07-31 — Make the homepage preview a composed profile surface
 
 **Status:** accepted and implemented

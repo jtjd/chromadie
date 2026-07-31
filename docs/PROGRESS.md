@@ -859,6 +859,8 @@ the remaining Phase 11 boundary.
 - Replaced the onboarding’s legacy `Game` mount with the integrated profile
   roll and a bounded fictional guest result, including a prominent save/
   compete CTA after completion.
+- Matched onboarding atmosphere lifecycle effects to the active profile roll,
+  and strengthened the reveal entry with a larger geometric orb and orbit.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 

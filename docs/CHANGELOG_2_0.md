@@ -797,6 +797,9 @@ phase, with an immediate reduced-motion equivalent.
   homepage showcase, `TodayColor`, and integrated profile roll.
 - The onboarding now uses the integrated profile-roll presentation with a
   fictional guest fixture instead of the legacy standalone roll screen.
+- Forwarded roll lifecycle color/effect state into the onboarding atmosphere
+  and expanded the reveal entry visual so it carries the same event weight as
+  an active profile.
 
 ## 2026-07-30 — Keep roll conditions in the active reveal
 

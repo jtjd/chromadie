@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onDestroy } from 'svelte';
   import IdentityCard from './IdentityCard.svelte';
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import ProfileRoll from './ProfileRoll.svelte';
@@ -9,6 +9,9 @@
   let stage = 0;
   let rollComplete = false;
   let rollSection;
+  let rollState = 'idle';
+  let rollColor = '#8B7CF6';
+  let rollEffectTimer;
 
   const fixtureResult = {
     hex: '#B666C9',
@@ -32,10 +35,35 @@
     stage = 1;
     requestAnimationFrame(() => rollSection?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
   }
+
+  function handleRollStart() {
+    rollState = 'rolling';
+    rollColor = '#8B7CF6';
+    if (rollEffectTimer) clearTimeout(rollEffectTimer);
+  }
+
+  function handleRollPreview(event) {
+    if (event.detail?.hex) rollColor = event.detail.hex;
+  }
+
+  function handleRollComplete(event) {
+    rollColor = event.detail?.canonical?.hex || event.detail?.data?.hex || rollColor;
+    rollState = 'settled';
+    rollComplete = true;
+    if (rollEffectTimer) clearTimeout(rollEffectTimer);
+    rollEffectTimer = setTimeout(() => {
+      rollState = 'idle';
+      rollEffectTimer = null;
+    }, 1400);
+  }
+
+  onDestroy(() => {
+    if (rollEffectTimer) clearTimeout(rollEffectTimer);
+  });
 </script>
 
 <div class="guest-profile-onboarding" data-stage={stage}>
-  <ProfileAtmosphere accent="#8B7CF6" secondaryAccent="#2ED3C9" effect="rain" />
+  <ProfileAtmosphere accent="#8B7CF6" secondaryAccent="#2ED3C9" effect="rain" rollState={rollState} rollColor={rollColor} />
 
   {#if stage === 0}
     <section class="guest-profile-onboarding__identity-stage" aria-labelledby="guest-profile-title">
@@ -69,7 +97,7 @@
       <div class="guest-profile-onboarding__progress" aria-label="Onboarding step 2 of 2"><span class="complete"></span><span class="active"></span></div>
 
       <div class="guest-profile-onboarding__roll">
-        <ProfileRoll moduleSize="wide" compact={true} integrated={true} quiet={true} visualFixture="guest-onboarding" fixtureResult={fixtureResult} on:rollcomplete={() => rollComplete = true} />
+        <ProfileRoll moduleSize="wide" compact={true} integrated={true} quiet={true} visualFixture="guest-onboarding" fixtureResult={fixtureResult} on:rollstart={handleRollStart} on:colorpreview={handleRollPreview} on:rollcomplete={handleRollComplete} />
       </div>
 
       {#if rollComplete}

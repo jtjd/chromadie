@@ -799,7 +799,7 @@
   :global(.profile-roll--compact) .profile-roll__ready { min-height: 9rem; }
   :global(.profile-roll--integrated) { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
   :global(.profile-roll--integrated) :global(.foundation-module__body) { padding: 0; }
-  :global(.profile-roll--integrated) .profile-roll__ready { align-items: flex-start; flex-direction: column; gap: var(--space-5); min-height: 0; }
+  :global(.profile-roll--integrated) .profile-roll__ready { align-items: center; flex-direction: row; gap: clamp(1.5rem, 5vw, 3.5rem); min-height: 0; }
   :global(.profile-roll--integrated) .profile-roll__button { min-height: 3rem; padding-inline: var(--space-6); border-radius: var(--radius-pill); }
   :global(.profile-roll--integrated) .profile-roll__rolling { min-height: 11rem; }
   :global(.profile-roll--integrated) .profile-roll__result { gap: var(--space-4); }
@@ -812,23 +812,29 @@
   :global(.profile-roll--integrated) .profile-roll__details { margin-top: var(--space-2); }
 
   .profile-roll__ready {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 1.15rem;
-    min-height: 11rem;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+    align-items: center;
+    gap: clamp(1.5rem, 5vw, 3.5rem);
+    min-height: 15rem;
+    padding: 1.5rem 0;
+    isolation: isolate;
   }
+  .profile-roll__ready::before { content: ''; position: absolute; z-index: -1; inset: 8% 14% 8% 4%; border-radius: 50%; background: radial-gradient(ellipse at 42% 50%, color-mix(in srgb, var(--profile-accent) 13%, transparent), transparent 66%); filter: blur(0.35rem); pointer-events: none; }
+  .profile-roll__ready::after { content: ''; position: absolute; z-index: -1; top: 50%; left: 30%; width: min(24rem, 52vw); height: 8rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 25%, transparent); border-radius: 50%; transform: translate(-50%, -50%) rotate(-18deg); opacity: 0.7; pointer-events: none; }
 
-  .profile-roll__ready-copy { display: grid; gap: 0.42rem; }
-  .profile-roll__ready-copy h3 { margin: 0; color: var(--color-ink-strong); font: 600 clamp(1.55rem, 4vw, 2.1rem) / 1 var(--font-display-stack); letter-spacing: -0.05em; }
-  .profile-roll__ready .profile-roll__copy { display: block; max-width: 22rem; margin: 0.1rem 0 0; font-size: 0.8rem; }
+  .profile-roll__ready-copy { display: grid; gap: 0.55rem; }
+  .profile-roll__ready-copy h3 { margin: 0; color: var(--color-ink-strong); font: 600 clamp(1.8rem, 4.5vw, 2.65rem) / 0.98 var(--font-display-stack); letter-spacing: -0.055em; }
+  .profile-roll__ready .profile-roll__copy { display: block; max-width: 28rem; margin: 0.15rem 0 0; color: var(--color-ink-muted); font-size: 0.88rem; line-height: 1.55; }
   .profile-roll__reveal-button {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.75rem;
     width: 100%;
-    min-height: 4.25rem;
-    padding: 0.55rem 0.75rem 0.55rem 0.6rem;
+    min-height: 6.25rem;
+    padding: 0.75rem 1rem 0.75rem 0.8rem;
     border: 1px solid color-mix(in srgb, var(--profile-accent) 48%, rgba(230, 238, 255, 0.16));
     border-radius: 1.1rem;
     background: linear-gradient(100deg, color-mix(in srgb, var(--profile-accent) 17%, rgba(255, 255, 255, 0.055)), rgba(255, 255, 255, 0.045));
@@ -841,9 +847,10 @@
   .profile-roll__reveal-button:hover:not(:disabled) { transform: translateY(-2px); border-color: color-mix(in srgb, var(--profile-accent) 78%, white); background: linear-gradient(100deg, color-mix(in srgb, var(--profile-accent) 24%, rgba(255, 255, 255, 0.07)), rgba(255, 255, 255, 0.06)); box-shadow: 0 1.1rem 3rem color-mix(in srgb, var(--profile-accent) 23%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
   .profile-roll__reveal-button:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 4px; }
   .profile-roll__reveal-button:disabled { cursor: wait; opacity: 0.58; }
-  .profile-roll__reveal-orb { position: relative; display: grid; place-items: center; width: 3rem; height: 3rem; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 50%; background: radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.68), var(--profile-accent) 45%, rgba(3, 6, 11, 0.92) 100%); box-shadow: 0 0 1.8rem color-mix(in srgb, var(--profile-accent) 54%, transparent), inset 0 0.25rem 0.45rem rgba(255, 255, 255, 0.18); }
-  .profile-roll__reveal-orb::before { content: ''; position: absolute; inset: 0.35rem; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: inherit; }
-  .profile-roll__reveal-orb span { position: relative; z-index: 1; width: 0.42rem; height: 0.42rem; border-radius: 50%; background: rgba(255, 255, 255, 0.82); box-shadow: 0 0 0.8rem rgba(255, 255, 255, 0.9); }
+  .profile-roll__reveal-orb { position: relative; display: grid; place-items: center; width: 4.4rem; height: 4.4rem; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%; background: radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.72), var(--profile-accent) 43%, rgba(3, 6, 11, 0.92) 100%); box-shadow: 0 0 2.4rem color-mix(in srgb, var(--profile-accent) 58%, transparent), inset 0 0.35rem 0.55rem rgba(255, 255, 255, 0.2); }
+  .profile-roll__reveal-orb::before { content: ''; position: absolute; inset: 0.42rem; border: 1px solid rgba(255, 255, 255, 0.34); border-radius: inherit; transform: rotate(28deg) scaleY(0.62); }
+  .profile-roll__reveal-orb::after { content: ''; position: absolute; inset: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 42% 58% 48% 52%; transform: rotate(-34deg); }
+  .profile-roll__reveal-orb span { position: relative; z-index: 1; width: 0.62rem; height: 0.62rem; border-radius: 50%; background: rgba(255, 255, 255, 0.88); box-shadow: 0 0 1rem rgba(255, 255, 255, 0.95); }
   .profile-roll__reveal-copy { display: grid; min-width: 0; gap: 0.28rem; }
   .profile-roll__reveal-copy strong { overflow-wrap: anywhere; font: 600 0.88rem / 1.15 var(--font-body-stack); }
   .profile-roll__reveal-copy small { color: var(--color-ink-muted); font: 600 0.64rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
