@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { isUsernameShapeValid } from './usernamePolicy.js';
   import { trackProductEvent } from './productAnalytics.js';
-  import { HOMEPAGE_DEMO_PROFILES } from './homepageDemoData.js';
+  import HomepageLiveProfiles from './HomepageLiveProfiles.svelte';
   import HomeRollShowcase from './HomeRollShowcase.svelte';
 
   export let isAuthenticated = false;
@@ -35,9 +35,6 @@
     dispatch('explore');
   }
 
-  function openExample() {
-    trackProductEvent('example_profile_opened');
-  }
 </script>
 
 <main class="home-page" aria-labelledby="home-title">
@@ -72,25 +69,11 @@
 
   <section class="home-page__section home-page__examples" aria-labelledby="examples-title">
     <div class="home-page__section-heading">
-      <p class="home-page__eyebrow">make it yours</p>
-      <h2 id="examples-title">Example profiles</h2>
-      <p>Every profile can carry a different point of view.</p>
+      <p class="home-page__eyebrow">live from the leaderboard</p>
+      <h2 id="examples-title">Profiles worth exploring</h2>
+      <p>See real public profiles shaped by today’s strongest rolls.</p>
     </div>
-    <div class="home-page__example-grid">
-      {#each HOMEPAGE_DEMO_PROFILES as demo (demo.id)}
-        <article class="demo-profile" style={`--demo-bg: ${demo.background}; --demo-avatar: ${demo.avatar}; --demo-accent: ${demo.accent}; --demo-color: ${demo.color};`}>
-          <div class="demo-profile__topline"><span>{demo.label}</span><span aria-hidden="true">↗</span></div>
-          <div class="demo-profile__identity">
-            <span class="demo-profile__avatar" aria-hidden="true"></span>
-            <div><strong>@{demo.username}</strong><p>{demo.bio}</p></div>
-          </div>
-          <div class="demo-profile__meta"><span>{demo.music}</span><span>rank {demo.rank}</span></div>
-          <div class="demo-profile__links">{#each demo.links as link (link)}<span>{link}</span>{/each}</div>
-          <div class="demo-profile__color"><span aria-hidden="true"></span><span>{demo.color}</span><small>{demo.effect}</small></div>
-          <a class="demo-profile__open" href={`/u/${demo.username}`} on:click={openExample}>Open full profile <span aria-hidden="true">↗</span></a>
-        </article>
-      {/each}
-    </div>
+    <HomepageLiveProfiles on:navigate={event => dispatch('navigate', event.detail)} />
   </section>
 
   <section class="home-page__section home-page__loop" aria-labelledby="loop-title">
@@ -153,22 +136,6 @@
   .home-page__section { padding-top: clamp(5rem, 10vw, 9rem); }
   .home-page__section-heading h2, .home-page__final h2 { margin: .55rem 0 0; font: 700 clamp(2rem, 4vw, 3.4rem)/1 var(--font-display-stack); letter-spacing: -.045em; }
   .home-page__section-heading > p:last-child, .home-page__final > p { margin: .8rem 0 0; color: var(--color-ink-muted); font-size: 1rem; }
-  .home-page__example-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
-  .demo-profile { position: relative; min-height: 24rem; display: flex; flex-direction: column; padding: 1.2rem; border: 1px solid rgba(255,255,255,.14); border-radius: 1rem; overflow: hidden; isolation: isolate; background: var(--demo-bg); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
-  .demo-profile::after { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--demo-accent), transparent 72%), transparent 38%); pointer-events: none; }
-  .demo-profile__topline, .demo-profile__meta, .demo-profile__color { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: rgba(245,247,255,.62); font: 500 .62rem/1.2 var(--font-mono-stack); }
-  .demo-profile__identity { display: flex; align-items: center; gap: .8rem; margin-top: 3.8rem; }
-  .demo-profile__avatar { flex: 0 0 3.8rem; width: 3.8rem; height: 3.8rem; border: 2px solid color-mix(in srgb, var(--demo-accent), transparent 45%); border-radius: 50%; background: var(--demo-avatar); box-shadow: 0 0 1.5rem color-mix(in srgb, var(--demo-accent), transparent 72%); }
-  .demo-profile__identity strong { font: 700 1.45rem/1 var(--font-display-stack); }
-  .demo-profile__identity p { max-width: 15rem; margin: .45rem 0 0; color: rgba(245,247,255,.72); font-size: .78rem; line-height: 1.35; }
-  .demo-profile__meta { margin-top: 1.4rem; padding-top: .8rem; border-top: 1px solid rgba(255,255,255,.14); }
-  .demo-profile__links { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; color: rgba(245,247,255,.8); font: 500 .65rem/1 var(--font-mono-stack); }
-  .demo-profile__links span { padding: .35rem .48rem; border: 1px solid rgba(255,255,255,.2); border-radius: var(--radius-pill); }
-  .demo-profile__color { justify-content: flex-start; margin-top: auto; padding-top: 1rem; color: rgba(245,247,255,.72); }
-  .demo-profile__color > span:first-child { width: 1rem; height: 1rem; border-radius: 50%; background: var(--demo-color); box-shadow: 0 0 .8rem color-mix(in srgb, var(--demo-color), transparent 25%); }
-  .demo-profile__color small { margin-left: auto; color: rgba(245,247,255,.58); }
-  .demo-profile__open { display: flex; justify-content: space-between; margin-top: 1.2rem; padding-top: .9rem; border-top: 1px solid rgba(255,255,255,.14); color: var(--color-ink-strong); font: 600 .76rem/1 var(--font-body-stack); text-decoration: none; }
-  .demo-profile__open:hover { color: var(--demo-accent); }
   .home-page__loop-layout { display: grid; grid-template-columns: 1.25fr .75fr; gap: 2rem; margin-top: 2rem; }
   .home-page__steps { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; color: var(--color-ink-strong); font: 600 clamp(.9rem, 1.5vw, 1.15rem)/1.2 var(--font-body-stack); }
   .home-page__steps span { display: inline-flex; align-items: baseline; gap: .45rem; }
@@ -184,7 +151,7 @@
   .home-page__loop-copy { max-width: 58rem; margin: 1.5rem 0 0; color: var(--color-ink-muted); font-size: .92rem; line-height: 1.55; }
   .home-page__final { display: grid; justify-items: start; padding-top: clamp(6rem, 12vw, 11rem); }
   .home-page__claim--final { margin-top: 1.8rem; }
-  @media (max-width: 48rem) { .home-page { padding-top: 1rem; } .home-page__hero { grid-template-columns: 1fr; min-height: auto; gap: 3rem; padding-block: 3.5rem 2rem; } .home-page__example-grid, .home-page__loop-layout { grid-template-columns: 1fr; } .demo-profile { min-height: 22rem; } }
+  @media (max-width: 48rem) { .home-page { padding-top: 1rem; } .home-page__hero { grid-template-columns: 1fr; min-height: auto; gap: 3rem; padding-block: 3.5rem 2rem; } .home-page__loop-layout { grid-template-columns: 1fr; } }
   @media (max-width: 36rem) { .home-page { padding-inline: 1.1rem; } .home-page h1 { font-size: clamp(2.55rem, 12vw, 3.7rem); } .home-page__actions { align-items: stretch; flex-direction: column; } .home-page__claim { width: 100%; } .home-page__claim-field input { flex: 1; width: auto; } .home-page__steps { align-items: flex-start; flex-direction: column; gap: .8rem; } .home-page__steps i { display: none; } }
-  @media (prefers-reduced-motion: reduce) { .home-page button, .home-page a { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .home-page button { transition: none; } }
 </style>
