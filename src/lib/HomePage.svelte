@@ -77,6 +77,7 @@
     <p class="home-page__loop-copy">Your color is scored from its RGB values and special conditions. Strong rolls earn more EP and improve your leaderboard position. Profiles on the leaderboard and discovery pages can lead visitors to your links, music, projects, or other content.</p>
   </section>
 
+  {#if !isAuthenticated}
   <section class="home-page__final" aria-labelledby="final-claim-title">
     <p class="home-page__eyebrow">your page starts here</p>
     <h2 id="final-claim-title">Claim your profile</h2>
@@ -91,6 +92,7 @@
       </form>
     {/if}
   </section>
+  {/if}
 </main>
 
 <style>
@@ -120,22 +122,23 @@
   .home-page__section { padding-top: clamp(5rem, 10vw, 9rem); }
   .home-page__section-heading h2, .home-page__final h2 { margin: .55rem 0 0; font: 700 clamp(2rem, 4vw, 3.4rem)/1 var(--font-display-stack); letter-spacing: -.045em; }
   .home-page__section-heading > p:last-child, .home-page__final > p { margin: .8rem 0 0; color: var(--color-ink-muted); font-size: 1rem; }
-  .home-page__loop-layout { display: grid; grid-template-columns: 1.25fr .75fr; gap: 2rem; margin-top: 2rem; }
-  .home-page__steps { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; color: var(--color-ink-strong); font: 600 clamp(.9rem, 1.5vw, 1.15rem)/1.2 var(--font-body-stack); }
-  .home-page__steps span { display: inline-flex; align-items: baseline; gap: .45rem; }
-  .home-page__steps b { color: var(--color-ink-faint); font: 500 .6rem/1 var(--font-mono-stack); }
+  .home-page__loop { margin-top: 1rem; padding: clamp(2rem, 4vw, 3rem); border: 1px solid rgba(139,124,246,.2); border-radius: 1.2rem; background: radial-gradient(circle at 85% 0%, rgba(139,124,246,.12), transparent 34%), linear-gradient(135deg, rgba(21,16,29,.7), rgba(8,11,17,.72)); box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 1.5rem 4rem rgba(0,0,0,.16); }
+  .home-page__loop-layout { display: grid; gap: 1.4rem; margin-top: 2rem; }
+  .home-page__steps { display: flex; align-items: center; gap: .55rem; padding: .7rem; border: 1px solid rgba(255,255,255,.1); border-radius: .85rem; background: rgba(5,7,13,.38); color: var(--color-ink-strong); font: 600 clamp(.82rem, 1.25vw, 1rem)/1.2 var(--font-body-stack); }
+  .home-page__steps span { display: flex; flex: 1; align-items: baseline; gap: .45rem; min-width: 0; padding: .7rem .55rem; }
+  .home-page__steps b { color: var(--color-accent-bright); font: 500 .58rem/1 var(--font-mono-stack); }
   .home-page__steps i { color: var(--color-accent-bright); font-style: normal; }
-  .home-page__loop-detail { display: grid; gap: .65rem; }
-  .home-page__roll-result, .home-page__leaderboard-preview { display: flex; align-items: center; gap: .7rem; padding: .75rem; border: 1px solid rgba(255,255,255,.12); border-radius: .7rem; background: rgba(12,14,20,.52); }
+  .home-page__loop-detail { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .8rem; }
+  .home-page__roll-result, .home-page__leaderboard-preview { display: flex; align-items: center; gap: .7rem; min-height: 4.7rem; padding: 1rem; border: 1px solid rgba(255,255,255,.14); border-radius: .8rem; background: rgba(7,9,16,.6); }
   .home-page__roll-result > span { width: 2.25rem; height: 2.25rem; border-radius: .55rem; box-shadow: 0 0 1.4rem rgba(182,102,201,.42); }
   .home-page__roll-result strong, .home-page__leaderboard-preview strong { display: block; font: 700 1rem/1 var(--font-display-stack); }
   .home-page__roll-result small, .home-page__leaderboard-preview small, .home-page__leaderboard-preview > span { display: block; margin-top: .3rem; color: var(--color-ink-faint); font: 500 .58rem/1.2 var(--font-mono-stack); }
   .home-page__leaderboard-preview { display: block; }
   .home-page__leaderboard-preview strong { margin-top: .5rem; color: #d6ff63; }
-  .home-page__loop-copy { max-width: 58rem; margin: 1.5rem 0 0; color: var(--color-ink-muted); font-size: .92rem; line-height: 1.55; }
+  .home-page__loop-copy { max-width: 58rem; margin: 1.4rem 0 0; color: var(--color-ink-muted); font-size: .88rem; line-height: 1.55; }
   .home-page__final { display: grid; justify-items: start; padding-top: clamp(6rem, 12vw, 11rem); }
   .home-page__claim--final { margin-top: 1.8rem; }
-  @media (max-width: 48rem) { .home-page { padding-top: 1rem; } .home-page__hero { grid-template-columns: 1fr; min-height: auto; gap: 3rem; padding-block: 3.5rem 2rem; } .home-page__loop-layout { grid-template-columns: 1fr; } }
-  @media (max-width: 36rem) { .home-page { padding-inline: 1.1rem; } .home-page h1 { font-size: clamp(2.55rem, 12vw, 3.7rem); } .home-page__actions { align-items: stretch; flex-direction: column; } .home-page__claim { width: 100%; } .home-page__claim-field input { flex: 1; width: auto; } .home-page__steps { align-items: flex-start; flex-direction: column; gap: .8rem; } .home-page__steps i { display: none; } }
+  @media (max-width: 48rem) { .home-page { padding-top: 1rem; } .home-page__hero { grid-template-columns: 1fr; min-height: auto; gap: 3rem; padding-block: 3.5rem 2rem; } .home-page__steps { flex-wrap: wrap; } .home-page__steps span { flex: 1 1 calc(50% - 1rem); } .home-page__steps i { display: none; } }
+  @media (max-width: 36rem) { .home-page { padding-inline: 1.1rem; } .home-page h1 { font-size: clamp(2.55rem, 12vw, 3.7rem); } .home-page__actions { align-items: stretch; flex-direction: column; } .home-page__claim { width: 100%; } .home-page__claim-field input { flex: 1; width: auto; } .home-page__steps { align-items: stretch; flex-direction: column; gap: .2rem; } .home-page__steps span { flex: none; } .home-page__loop-detail { grid-template-columns: 1fr; } }
   @media (prefers-reduced-motion: reduce) { .home-page button { transition: none; } }
 </style>
