@@ -309,7 +309,7 @@
   });
 </script>
 
-<Module size="wide" tone="quiet" className="profile-expression-editor" eyebrow="Profile expression" title="Personal expression" description="Optional avatar, atmosphere, and music settings. Images are cropped or compressed and converted to WebP before upload.">
+<Module size="wide" tone="quiet" className="profile-expression-editor" eyebrow="Media" title="Profile media" description="Add an avatar, background, or Spotify item. Uploads are resized and converted to WebP.">
   <div class="profile-expression-editor__media-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
     <div class="profile-expression-editor__preview" style="flex:0 0 7rem;width:7rem" aria-label="Avatar preview">
       {#if avatarSrc}

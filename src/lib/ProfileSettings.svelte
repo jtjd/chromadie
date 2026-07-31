@@ -111,8 +111,8 @@
     <header class="profile-settings-page__header">
       <div>
         <p class="profile-settings-page__eyebrow">Profile settings</p>
-        <h1>Shape the page without crowding it.</h1>
-        <p class="profile-settings-page__intro">Edit the parts visitors can see, choose whether your color story returns, and keep the public profile focused on the identity.</p>
+        <h1>Edit your profile</h1>
+        <p class="profile-settings-page__intro">Update your identity, media, appearance, layout, links, and social settings.</p>
       </div>
       <Button variant="ghost" href={profilePath}>View profile ↗</Button>
     </header>
@@ -132,6 +132,11 @@
         </Surface>
       </div>
     {:else if context}
+      <div class="profile-settings-page__quickbar">
+        <div><span>Your public profile</span><strong>{profilePath}</strong></div>
+        <p>Changes save in their section. Layout edits stay private until you publish.</p>
+        <Button variant="secondary" href={profilePath}>View live profile ↗</Button>
+      </div>
       <div class="profile-settings-page__stack">
         {#if context.dataWarning}
           <p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>
@@ -174,8 +179,8 @@
         <section class="profile-settings-page__compatibility" aria-labelledby="profile-settings-account-title">
           <div>
             <p class="profile-settings-page__eyebrow">Account</p>
-            <h2 id="profile-settings-account-title">Keep the established controls close.</h2>
-            <p>Mood, pinned badges, and account management remain available through the existing controls.</p>
+            <h2 id="profile-settings-account-title">Account controls</h2>
+            <p>Mood, badges, and account management.</p>
           </div>
           <div class="profile-settings-page__actions">
             <Button variant="secondary" href="/profile?legacy=1">Open account controls</Button>

@@ -112,8 +112,8 @@
   tone="quiet"
   className="identity-editor"
   eyebrow="Public identity"
-  title="Write the profile bio"
-  description="Your username is your display name. Add an optional plain-text bio for visitors."
+  title="Profile identity"
+  description="Your username is your display name. Add a short bio for visitors."
 >
   <form class="identity-editor__form" on:submit|preventDefault={saveIdentity}>
     <div class="identity-editor__fields">

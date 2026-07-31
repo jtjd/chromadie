@@ -494,13 +494,21 @@
 .identity-editor__save { min-height: 2.75rem; border: 1px solid var(--color-ink-strong); border-radius: var(--radius-sm); padding: 0 1.25rem; background: var(--color-ink-strong); color: var(--color-canvas-deep); font: 600 var(--type-small)/1 var(--font-body-stack); cursor: pointer; }
 .identity-editor__save:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
 .identity-editor__save:disabled { cursor: not-allowed; opacity: .55; }
-.profile-settings-page { min-height: calc(100dvh - 4.75rem); padding: clamp(2.5rem, 8vh, 6rem) clamp(1.25rem, 4vw, 3rem) 4rem; color: var(--color-ink); }
+.profile-settings-page { min-height: calc(100dvh - 4.75rem); padding: clamp(1.5rem, 4vh, 3rem) clamp(1.25rem, 4vw, 3rem) 3rem; color: var(--color-ink); }
 .profile-settings-page__inner { width: min(100%, 88rem); margin: 0 auto; }
-.profile-settings-page__header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-bottom: clamp(2rem, 5vw, 4rem); padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-line-subtle); }
+.profile-settings-page__header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-line-subtle); }
 .profile-settings-page__eyebrow { margin: 0 0 .5rem; color: var(--color-accent-bright); font: 700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing: .12em; text-transform: uppercase; }
 .profile-settings-page h1 { max-width: 38rem; margin: 0; color: var(--color-ink-strong); font: 600 clamp(2.2rem, 5vw, 4.25rem)/.98 var(--font-display-stack); letter-spacing: -.045em; }
 .profile-settings-page__intro { max-width: 38rem; margin: 1.25rem 0 0; color: var(--color-ink-muted); font-size: var(--type-body); line-height: 1.6; }
-.profile-settings-page__stack { display: grid; gap: 1.25rem; }
+.profile-settings-page__stack { display: grid; gap: .75rem; }
+.profile-settings-page__quickbar { display:flex; align-items:center; gap:1rem; margin-bottom:1rem; padding:.7rem .9rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-panel-soft); }
+.profile-settings-page__quickbar > div { display:grid; gap:.2rem; min-width:0; }
+.profile-settings-page__quickbar span { color:var(--color-ink-faint); font:700 var(--type-label)/1 var(--font-mono-stack); letter-spacing:.08em; text-transform:uppercase; }
+.profile-settings-page__quickbar strong { overflow:hidden; color:var(--color-ink-strong); font:600 var(--type-small)/1.2 var(--font-mono-stack); text-overflow:ellipsis; white-space:nowrap; }
+.profile-settings-page__quickbar p { flex:1; margin:0; color:var(--color-ink-muted); font-size:var(--type-label); }
+.profile-settings-page__quickbar .foundation-button { flex:0 0 auto; }
+.profile-settings-page .foundation-module { padding:clamp(1rem, 2vw, 1.5rem); }
+.profile-settings-page .foundation-module__header { margin-bottom:1rem; }
 .profile-settings-page__warning { margin: 0; padding: .75rem 1rem; border: 1px solid color-mix(in srgb, var(--color-warning) 36%, transparent); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-warning) 8%, transparent); color: var(--color-warning); font-size: var(--type-small); }
 .profile-settings-page__state { width: min(100%, 42rem); margin: 0 auto; }
 .profile-settings-page__state h2, .profile-settings-page__compatibility h2 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h2)/1.05 var(--font-display-stack); }
@@ -513,7 +521,9 @@
   .identity-editor__fields { grid-template-columns: 1fr; }
   .identity-editor__footer { align-items: stretch; flex-direction: column; }
   .identity-editor__save, .profile-settings-page__header .foundation-button, .profile-settings-page__actions .foundation-button { width: 100%; }
-  .profile-settings-page { padding-top: 2rem; }
+  .profile-settings-page { padding-top: 1.5rem; }
+  .profile-settings-page__quickbar { align-items:flex-start; flex-wrap:wrap; }
+  .profile-settings-page__quickbar p { flex-basis:100%; order:3; }
   .profile-settings-page__header, .profile-settings-page__compatibility { align-items: flex-start; flex-direction: column; }
   .profile-settings-page__actions { width: 100%; justify-content: stretch; }
 }

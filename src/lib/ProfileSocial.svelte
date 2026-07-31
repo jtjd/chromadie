@@ -186,7 +186,7 @@
   }
 </script>
 
-<Module size="wide" tone="accent" moduleId="profile-social" eyebrow="Profile connections" title="Leave a good trace" description="Save a profile, send a small positive signal, or leave a moderated note. There are no private messages here.">
+<Module size="wide" tone="accent" moduleId="profile-social" eyebrow="Social settings" title="Control profile interactions" description="Manage favorites, reactions, guestbook notes, and discovery visibility.">
   <div class="profile-social">
     {#if notice}<p class="profile-social__notice" role="status" aria-live="polite">{notice}</p>{/if}
 
