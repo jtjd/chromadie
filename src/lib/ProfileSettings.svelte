@@ -11,6 +11,7 @@
   import ProfileCosmeticsEditor from './ProfileCosmeticsEditor.svelte';
   import ProfileEditor from './ProfileEditor.svelte';
   import ProfileSocial from './ProfileSocial.svelte';
+  import ProfileSettingsPreview from './ProfileSettingsPreview.svelte';
 
   let context = null;
   let loading = true;
@@ -132,41 +133,24 @@
         </Surface>
       </div>
     {:else if context}
-      <div class="profile-settings-page__quickbar">
+      <nav class="profile-settings-page__quickbar" aria-label="Profile editor sections">
         <div><span>Your public profile</span><strong>{profilePath}</strong></div>
-        <p>Changes save in their section. Layout edits stay private until you publish.</p>
+        <div class="profile-settings-page__section-links">
+          <a href="#identity">Identity</a><a href="#media">Media</a><a href="#appearance">Appearance</a><a href="#layout">Layout</a><a href="#social">Social</a>
+        </div>
         <Button variant="secondary" href={profilePath}>View live profile ↗</Button>
-      </div>
-      <div class="profile-settings-page__stack">
+      </nav>
+      <div class="profile-settings-page__layout">
+        <div class="profile-settings-page__stack">
         {#if context.dataWarning}
           <p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>
         {/if}
-        <IdentityEditor
-          profileId={context.profileId}
-          username={context.targetProfile?.username || accountUsername}
-          bio={context.targetProfile?.bio || ''}
-          on:identitysaved={updateIdentity}
-        />
-        <ProfileExpressionEditor
-          profileId={context.profileId}
-          config={context.profileConfig}
-          fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)}
-          staff={Boolean(context.targetProfile?.is_staff)}
-          on:expressionchange={updateExpression}
-        />
-        <ProfileCosmeticsEditor
-          accountProfile={context.targetProfile}
-          profileConfig={context.profileConfig}
-        />
-        <ProfileEditor
-          profileId={context.profileId}
-          draftConfig={context.profileConfig?.draft}
-          publishedConfig={context.profileConfig?.published}
-          on:configsaved={updateConfiguration}
-          on:configpublished={updateConfiguration}
-        />
+        <section id="identity"><IdentityEditor profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} on:identitysaved={updateIdentity} /></section>
+        <section id="media"><ProfileExpressionEditor profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} on:expressionchange={updateExpression} /></section>
+        <section id="appearance"><ProfileCosmeticsEditor accountProfile={context.targetProfile} profileConfig={context.profileConfig} /></section>
+        <section id="layout"><ProfileEditor profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} /></section>
 
-        <ProfileSocial
+        <section id="social"><ProfileSocial
           profileId={context.profileId}
           username={context.targetProfile?.username || accountUsername}
           isOwnProfile={true}
@@ -174,7 +158,7 @@
           social={context.social}
           settings={context.socialSettings}
           on:socialchange={handleSocialChange}
-        />
+        /></section>
 
         <section class="profile-settings-page__compatibility" aria-labelledby="profile-settings-account-title">
           <div>
@@ -186,6 +170,8 @@
             <Button variant="secondary" href="/profile?legacy=1">Open account controls</Button>
           </div>
         </section>
+        </div>
+        <ProfileSettingsPreview profile={context.targetProfile} profileConfig={context.profileConfig} />
       </div>
     {/if}
   </div>
