@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const home = await readFile(new URL('../src/lib/HomePage.svelte', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
+const guestProfile = await readFile(new URL('../src/lib/GuestProfileOnboarding.svelte', import.meta.url), 'utf8');
 
 test('the homepage explains the daily identity loop with a direct claim action', () => {
   assert.match(home, /Roll one color each day/);
@@ -26,4 +27,10 @@ test('the application mounts the homepage, signup flow, and global footer', () =
   assert.match(app, /\.site-footer \{\s*position: relative;\s*z-index: 1;/s);
   assert.match(app, /Privacy Policy/);
   assert.match(app, /How to Play/);
+});
+
+test('the signed-out profile route opens the guest onboarding roll', () => {
+  assert.match(app, /import GuestProfileOnboarding from '.\/lib\/GuestProfileOnboarding\.svelte'/);
+  assert.match(app, /<GuestProfileOnboarding guestActive/);
+  assert.match(guestProfile, /Roll your first color/);
 });

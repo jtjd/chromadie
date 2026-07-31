@@ -19,6 +19,7 @@
   import ResetPassword from './lib/ResetPassword.svelte';
   import Toast from './lib/Toast.svelte';
   import GuestLock from './lib/GuestLock.svelte';
+  import GuestProfileOnboarding from './lib/GuestProfileOnboarding.svelte';
   import { loadChallengeLink } from './lib/challenges';
   import { getAppOrigin } from './lib/authUrls';
   import { focusFirstElement, restoreFocus, trapFocus } from './lib/a11y';
@@ -750,7 +751,9 @@
         <Shop />
       {/if}
     {:else}
-      {#if view === 'shop' || view === 'profile'}
+      {#if view === 'profile'}
+        <GuestProfileOnboarding guestActive={$guestProgressActive} on:login={openAuthModal} on:navigate={handleNavigation} />
+      {:else if view === 'shop'}
         <GuestLock view={view} guestActive={$guestProgressActive} on:login={openAuthModal} />
       {/if}
     {/if}

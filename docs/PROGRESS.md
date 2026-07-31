@@ -844,6 +844,8 @@ the remaining Phase 11 boundary.
   score conditions, effects, and leaderboard progression.
 - Anchored the homepage hero from the top and softened the `.lol` separator dot
   so the claim form no longer changes the wordmark’s vertical position.
+- Replaced the signed-out profile lock screen with a guest onboarding profile
+  that mounts the local roll and account-save CTA.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 

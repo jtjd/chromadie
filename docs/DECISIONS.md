@@ -1647,3 +1647,13 @@ The homepage hero is top-anchored rather than bottom-aligned. This prevents
 the username claim helper text from shifting the giant wordmark upward as the
 left column grows. The dot in `.lol` is also dimmed slightly to make the
 transition into the lavender suffix easier to read.
+
+## 2026-07-31 — Replace signed-out profile lock with guest onboarding
+
+**Status:** accepted and implemented
+
+The signed-out `/profile` destination now opens the existing local guest roll
+inside an onboarding profile surface. The legacy “Profile Locked” card is
+removed from this path; the roll’s existing signup prompt explains that an
+account is required to save progress, earn account EP, unlock cosmetics, and
+enter leaderboard competition.

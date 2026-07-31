@@ -762,6 +762,13 @@ phase, with an immediate reduced-motion equivalent.
 
 - Top-anchored the hero so claim helper text does not pull the wordmark upward.
 - Reduced the dot contrast before the lavender `.lol` suffix.
+
+## 2026-07-31 — Replace the signed-out profile lock
+
+- Signed-out visitors opening Profile now see an onboarding surface with the
+  local guest roll instead of the legacy “Profile Locked” card.
+- Preserved the existing signup prompt and its account benefits: saved profile,
+  EP, cosmetics, and leaderboard eligibility.
 - Kept the existing die logo for favicon, auth, homepage, and roll contexts.
 
 ## 2026-07-30 — Keep roll conditions in the active reveal
