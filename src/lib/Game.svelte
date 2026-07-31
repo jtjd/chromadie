@@ -15,6 +15,7 @@
   import { trackProductEvent } from './productAnalytics.js';
 
   const dispatch = createEventDispatcher();
+  export let profileMode = false;
   let phase = 'preroll';
   let loading = false;
   let error = null;
@@ -720,21 +721,21 @@
   </div>
 {/if}
 
-<div class="container game-container">
+<div class={'container game-container' + (profileMode ? ' game-container--profile' : '')}>
   {#if error}
     <p class="auth-error">{error}</p>
   {/if}
 
   {#if phase === 'preroll'}
     <div class="card">
-      <h1>Daily Roll</h1>
+      <h1>{profileMode ? 'Today’s color' : 'Daily Roll'}</h1>
       {#if $isAuthenticated}
         <p class="info-text">You can roll once a day. Your score counts on the leaderboard and adds to spendable EP; achievements and bonuses can add extra EP.</p>
       {:else}
         <p class="info-text">You can roll once a day in guest mode. Guest rolls stay on this device and do not earn account EP or enter leaderboards.</p>
       {/if}
       <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
-        {loading ? 'Rolling...' : 'Roll the Die'}
+        {loading ? 'Reading the spectrum…' : profileMode ? 'Reveal today’s color' : 'Roll the Die'}
       </button>
 
       {#if cotwColor}

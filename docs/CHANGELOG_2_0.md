@@ -769,6 +769,8 @@ phase, with an immediate reduced-motion equivalent.
   local guest roll instead of the legacy “Profile Locked” card.
 - Preserved the existing signup prompt and its account benefits: saved profile,
   EP, cosmetics, and leaderboard eligibility.
+- Styled the guest roll presentation as a profile environment while preserving
+  the existing local-roll authority.
 
 ## 2026-07-31 — Restore homepage hero placement
 

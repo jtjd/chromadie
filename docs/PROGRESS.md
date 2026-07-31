@@ -847,6 +847,8 @@ the remaining Phase 11 boundary.
   wordmark’s vertical position.
 - Replaced the signed-out profile lock screen with a guest onboarding profile
   that mounts the local roll and account-save CTA.
+- Restyled that guest roll in profile mode so it reads as the first profile
+  environment rather than the legacy standalone Roll screen.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 

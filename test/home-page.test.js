@@ -33,4 +33,5 @@ test('the signed-out profile route opens the guest onboarding roll', () => {
   assert.match(app, /import GuestProfileOnboarding from '.\/lib\/GuestProfileOnboarding\.svelte'/);
   assert.match(app, /<GuestProfileOnboarding guestActive/);
   assert.match(guestProfile, /Roll your first color/);
+  assert.match(guestProfile, /profileMode=\{true\}/);
 });

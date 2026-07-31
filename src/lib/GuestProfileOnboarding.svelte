@@ -17,7 +17,7 @@
   </section>
 
   <div class="guest-profile-onboarding__game">
-    <Game on:promptlogin={event => dispatch('login', event.detail)} on:navigate={event => dispatch('navigate', event.detail)} />
+    <Game profileMode={true} on:promptlogin={event => dispatch('login', event.detail)} on:navigate={event => dispatch('navigate', event.detail)} />
   </div>
 </div>
 
@@ -30,5 +30,11 @@
   .guest-profile-onboarding__intro > p:not(.guest-profile-onboarding__eyebrow) { max-width: 34rem; margin: 1rem auto 0; color: var(--color-ink-muted); font-size: 1rem; line-height: 1.55; }
   .guest-profile-onboarding__status { display: inline-block; margin-top: 0.9rem; color: #d6ff63; font: 500 0.68rem / 1.2 var(--font-mono-stack); }
   .guest-profile-onboarding__game :global(.game-container) { margin-top: 0; }
+  .guest-profile-onboarding__game :global(.game-container--profile) { max-width: 60rem; padding: 0; }
+  .guest-profile-onboarding__game :global(.game-container--profile > .card) { border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 1.5rem 0; }
+  .guest-profile-onboarding__game :global(.game-container--profile h1) { color: var(--color-ink-faint); font: 500 0.72rem / 1 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: lowercase; }
+  .guest-profile-onboarding__game :global(.game-container--profile .info-text) { max-width: 34rem; margin-inline: auto; color: var(--color-ink-muted); }
+  .guest-profile-onboarding__game :global(.game-container--profile .roll-btn) { border-radius: var(--radius-pill); background: rgba(139,124,246,0.16); border: 1px solid rgba(196,181,253,0.5); box-shadow: 0 0 2rem rgba(139,124,246,0.16); }
+  .guest-profile-onboarding__game :global(.game-container--profile .roll-btn:hover) { background: rgba(139,124,246,0.28); }
   @media (max-width: 36rem) { .guest-profile-onboarding { padding-inline: 0.75rem; } }
 </style>

@@ -1658,3 +1658,7 @@ inside an onboarding profile surface. The legacy “Profile Locked” card is
 removed from this path; the roll’s existing signup prompt explains that an
 account is required to save progress, earn account EP, unlock cosmetics, and
 enter leaderboard competition.
+
+The guest roll is presented with a profile-mode surface and copy, while the
+existing Game component remains the authority for local roll persistence and
+guest scoring.
