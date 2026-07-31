@@ -14,7 +14,6 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     accent: '#d7e2f2',
     color: '#B8C7E2',
     rank: '#28',
-    music: 'Slow morning · playlist',
     links: ['portfolio', 'notes'],
     effect: 'Soft grain'
   },
@@ -28,7 +27,6 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     accent: '#8f9dff',
     color: '#5967D5',
     rank: '#12',
-    music: 'Afterimage · track',
     links: ['soundcloud', 'archive'],
     effect: 'Indigo halo'
   },
@@ -42,7 +40,6 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     accent: '#ffd36e',
     color: '#F28A6C',
     rank: '#7',
-    music: 'Open windows · playlist',
     links: ['shop', 'projects'],
     effect: 'Prism edge'
   }

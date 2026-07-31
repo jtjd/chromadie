@@ -5,6 +5,8 @@
   import Auth from './lib/Auth.svelte';
   import AuthCallback from './lib/AuthCallback.svelte';
   import HomePage from './lib/HomePage.svelte';
+  import HomepageDemoProfile from './lib/HomepageDemoProfile.svelte';
+  import { HOMEPAGE_DEMO_PROFILES } from './lib/homepageDemoData.js';
   import Game from './lib/Game.svelte';
   import Shop from './lib/Shop.svelte';
   import Leaderboard from './lib/Leaderboard.svelte';
@@ -51,6 +53,7 @@
   let routeFocusRequest = 0;
   let lastTrackedRouteKey = '';
   let profileVisualFixture = '';
+  $: homepageDemoProfile = HOMEPAGE_DEMO_PROFILES.find(item => item.username === selectedProfileUsername) || null;
 
   function getProfileVisualFixture() {
     if (!import.meta.env.DEV || typeof window === 'undefined' || window.location.hostname !== '127.0.0.1') return '';
@@ -742,6 +745,8 @@
           </div>
         </div>
       </div>
+    {:else if view === 'profile' && homepageDemoProfile}
+      <HomepageDemoProfile profile={homepageDemoProfile} on:navigate={handleNavigation} />
     {:else if view === 'profile' && ($isAuthenticated || selectedProfileUsername || $selectedUserId)}
       {#if legacyProfile}
         <Profile profileUsername={selectedProfileUsername} userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />

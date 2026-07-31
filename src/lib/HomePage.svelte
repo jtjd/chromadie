@@ -78,15 +78,14 @@
     </div>
     <div class="home-page__example-grid">
       {#each HOMEPAGE_DEMO_PROFILES as demo (demo.id)}
-        <article class="demo-profile" style={`--demo-bg: ${demo.background}; --demo-avatar: ${demo.avatar}; --demo-accent: ${demo.accent}; --demo-color: ${demo.color};`}>
-          <div class="demo-profile__topline"><span>{demo.label}</span><span aria-hidden="true">↗</span></div>
+        <article class="demo-profile border-prism-anim" style={`--demo-bg: ${demo.background}; --demo-avatar: ${demo.avatar}; --demo-accent: ${demo.accent}; --demo-color: ${demo.color};`}>
           <div class="demo-profile__identity">
-            <span class="demo-profile__avatar" aria-hidden="true"></span>
+            <span class="demo-profile__avatar" aria-hidden="true"><b>{demo.username.slice(0, 1).toUpperCase()}</b></span>
             <div><strong>@{demo.username}</strong><p>{demo.bio}</p></div>
           </div>
-          <div class="demo-profile__meta"><span>{demo.music}</span><span>rank {demo.rank}</span></div>
-          <div class="demo-profile__links">{#each demo.links as link (link)}<span>{link}</span>{/each}</div>
-          <div class="demo-profile__color"><span aria-hidden="true"></span><span>{demo.color}</span><small>{demo.effect}</small></div>
+          <div class="demo-profile__links">{#each demo.links as link (link)}<span><i aria-hidden="true">↗</i>{link}</span>{/each}</div>
+          <div class="demo-profile__rank"><span>rank</span><strong>{demo.rank}</strong><span>today’s leaderboard</span></div>
+          <div class="demo-profile__color"><span class="demo-profile__orb orb-shape-diamond" aria-hidden="true"></span><div><small>today's roll</small><strong>{demo.color}</strong><em>{demo.effect}</em></div></div>
           <a class="demo-profile__open" href={`/u/${demo.username}`} on:click={openExample}>Open full profile <span aria-hidden="true">↗</span></a>
         </article>
       {/each}
@@ -154,19 +153,25 @@
   .home-page__section-heading h2, .home-page__final h2 { margin: .55rem 0 0; font: 700 clamp(2rem, 4vw, 3.4rem)/1 var(--font-display-stack); letter-spacing: -.045em; }
   .home-page__section-heading > p:last-child, .home-page__final > p { margin: .8rem 0 0; color: var(--color-ink-muted); font-size: 1rem; }
   .home-page__example-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2rem; }
-  .demo-profile { position: relative; min-height: 24rem; display: flex; flex-direction: column; padding: 1.2rem; border: 1px solid rgba(255,255,255,.14); border-radius: 1rem; overflow: hidden; isolation: isolate; background: var(--demo-bg); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+  .demo-profile { position: relative; min-height: 24rem; display: flex; flex-direction: column; padding: 1.2rem; border-radius: 1rem; overflow: hidden; isolation: isolate; background: var(--demo-bg); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
   .demo-profile::after { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--demo-accent), transparent 72%), transparent 38%); pointer-events: none; }
-  .demo-profile__topline, .demo-profile__meta, .demo-profile__color { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: rgba(245,247,255,.62); font: 500 .62rem/1.2 var(--font-mono-stack); }
-  .demo-profile__identity { display: flex; align-items: center; gap: .8rem; margin-top: 3.8rem; }
-  .demo-profile__avatar { flex: 0 0 3.8rem; width: 3.8rem; height: 3.8rem; border: 2px solid color-mix(in srgb, var(--demo-accent), transparent 45%); border-radius: 50%; background: var(--demo-avatar); box-shadow: 0 0 1.5rem color-mix(in srgb, var(--demo-accent), transparent 72%); }
+  .demo-profile__identity { display: flex; align-items: center; gap: .8rem; }
+  .demo-profile__avatar { display: grid; place-items: center; flex: 0 0 3.8rem; width: 3.8rem; height: 3.8rem; border: 1px solid color-mix(in srgb, var(--demo-accent), transparent 35%); border-radius: 1rem; background: var(--demo-avatar); box-shadow: 0 0 1.5rem color-mix(in srgb, var(--demo-accent), transparent 72%); }
+  .demo-profile__avatar b { color: white; font: 700 1.5rem/1 var(--font-display-stack); }
   .demo-profile__identity strong { font: 700 1.45rem/1 var(--font-display-stack); }
   .demo-profile__identity p { max-width: 15rem; margin: .45rem 0 0; color: rgba(245,247,255,.72); font-size: .78rem; line-height: 1.35; }
-  .demo-profile__meta { margin-top: 1.4rem; padding-top: .8rem; border-top: 1px solid rgba(255,255,255,.14); }
   .demo-profile__links { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; color: rgba(245,247,255,.8); font: 500 .65rem/1 var(--font-mono-stack); }
-  .demo-profile__links span { padding: .35rem .48rem; border: 1px solid rgba(255,255,255,.2); border-radius: var(--radius-pill); }
-  .demo-profile__color { justify-content: flex-start; margin-top: auto; padding-top: 1rem; color: rgba(245,247,255,.72); }
-  .demo-profile__color > span:first-child { width: 1rem; height: 1rem; border-radius: 50%; background: var(--demo-color); box-shadow: 0 0 .8rem color-mix(in srgb, var(--demo-color), transparent 25%); }
-  .demo-profile__color small { margin-left: auto; color: rgba(245,247,255,.58); }
+  .demo-profile__links span { display: inline-flex; align-items: center; gap: .25rem; padding: .35rem .48rem; border: 1px solid rgba(255,255,255,.2); border-radius: var(--radius-pill); }
+  .demo-profile__links i { font-style: normal; }
+  .demo-profile__rank { display: flex; align-items: center; gap: .5rem; margin-top: 1.1rem; padding-top: .75rem; border-top: 1px solid rgba(255,255,255,.14); color: rgba(245,247,255,.6); font: 500 .62rem/1 var(--font-mono-stack); }
+  .demo-profile__rank strong { color: var(--demo-accent); font: 700 1.2rem/1 var(--font-display-stack); }
+  .demo-profile__rank span:last-child { margin-left: auto; }
+  .demo-profile__color { display: flex; align-items: center; gap: .7rem; margin-top: auto; padding-top: 1rem; color: rgba(245,247,255,.72); }
+  .demo-profile__orb { flex: 0 0 2.8rem; width: 2.8rem; height: 2.8rem; background: var(--demo-color); filter: drop-shadow(0 0 .8rem color-mix(in srgb, var(--demo-color), transparent 25%)); }
+  .demo-profile__color small, .demo-profile__color strong, .demo-profile__color em { display: block; }
+  .demo-profile__color small { color: var(--demo-accent); font: 700 .5rem/1 var(--font-mono-stack); letter-spacing: .1em; text-transform: uppercase; }
+  .demo-profile__color strong { margin-top: .25rem; color: white; font: 600 .8rem/1 var(--font-mono-stack); }
+  .demo-profile__color em { margin-top: .25rem; color: rgba(245,247,255,.52); font: normal 500 .56rem/1 var(--font-mono-stack); }
   .demo-profile__open { display: flex; justify-content: space-between; margin-top: 1.2rem; padding-top: .9rem; border-top: 1px solid rgba(255,255,255,.14); color: var(--color-ink-strong); font: 600 .76rem/1 var(--font-body-stack); text-decoration: none; }
   .demo-profile__open:hover { color: var(--demo-accent); }
   .home-page__loop-layout { display: grid; grid-template-columns: 1.25fr .75fr; gap: 2rem; margin-top: 2rem; }
