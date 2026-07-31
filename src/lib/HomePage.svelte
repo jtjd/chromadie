@@ -22,14 +22,15 @@
 
 <section class="home-page" aria-labelledby="home-title">
   <div class="home-page__copy">
-    <p class="home-page__eyebrow">daily color identity · chm.lol</p>
+    <p class="home-page__eyebrow">daily color game · chm.lol</p>
     <h1 id="home-title" aria-label="chm.lol">
       <span>chm</span><em>.lol</em>
     </h1>
     <p class="home-page__intro">
-      Roll a new color every day, earn points from its conditions, and build a
-      public profile from your roll history.
+      Roll one color each day. Earn EP from its conditions, unlock profile
+      effects, and climb the leaderboard.
     </p>
+    <p class="home-page__facts">one roll daily <span aria-hidden="true">·</span> score conditions <span aria-hidden="true">·</span> public profiles</p>
 
     <div class="home-page__actions">
       {#if isAuthenticated}
@@ -104,6 +105,16 @@
     line-height: 1.55;
     text-wrap: balance;
   }
+
+  .home-page__facts {
+    margin: 1rem 0 0;
+    color: rgba(235, 240, 252, 0.56);
+    font: 500 0.68rem / 1.4 var(--font-mono-stack);
+    letter-spacing: 0.05em;
+    text-transform: lowercase;
+  }
+
+  .home-page__facts span { margin-inline: 0.35rem; color: var(--color-accent); }
 
   .home-page__actions {
     display: flex;

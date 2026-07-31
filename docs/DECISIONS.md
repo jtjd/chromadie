@@ -1630,3 +1630,11 @@ The homepage and shared header use a restrained lavender `.lol` suffix instead
 of gray, which reads as disabled. The primary nav calls the leaderboard
 `Leaderboard` rather than `Discover`; the route and discovery implementation
 remain unchanged.
+
+## 2026-07-31 — Make the homepage explain the game before the brand
+
+**Status:** accepted and implemented
+
+The landing hero now names Chromadie as a daily color game and states the
+actual loop—one roll, condition-based EP, profile effects, and leaderboard
+progression—before the fictional Mythic showcase demonstrates it.

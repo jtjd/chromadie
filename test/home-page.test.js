@@ -6,9 +6,10 @@ const home = await readFile(new URL('../src/lib/HomePage.svelte', import.meta.ur
 const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
 
 test('the homepage explains the daily identity loop with a direct claim action', () => {
-  assert.match(home, /Roll a new color every day/);
-  assert.match(home, /public profile from your roll history/);
-  assert.match(home, /daily color identity/);
+  assert.match(home, /Roll one color each day/);
+  assert.match(home, /Earn EP from its conditions/);
+  assert.match(home, /daily color game/);
+  assert.match(home, /one roll daily/);
   assert.match(home, /Claim your profile/);
   assert.match(home, /dispatch\('claim'/);
   assert.match(home, /chm\.lol\//);

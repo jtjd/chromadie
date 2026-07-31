@@ -840,6 +840,8 @@ the remaining Phase 11 boundary.
   leaderboard/profile discovery cue using fixture-only presentation data.
 - Changed the `.lol` suffix to lavender and renamed the header destination to
   `Leaderboard`.
+- Reworked the homepage hero copy to explicitly describe the daily color game,
+  score conditions, effects, and leaderboard progression.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 

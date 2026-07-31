@@ -750,6 +750,13 @@ phase, with an immediate reduced-motion equivalent.
 - Changed the homepage/header `.lol` suffix from gray to restrained lavender.
 - Renamed the shared header’s `Discover` label to `Leaderboard` without
   changing its route or data behavior.
+
+## 2026-07-31 — Clarify the homepage product statement
+
+- Replaced abstract hero copy with a direct explanation of the daily color
+  game, condition-based EP, profile effects, and leaderboard progression.
+- Added a compact factual line so visitors can understand the loop at a glance.
+- Clarified the showcase caption to connect a strong roll to profile discovery.
 - Kept the existing die logo for favicon, auth, homepage, and roll contexts.
 
 ## 2026-07-30 — Keep roll conditions in the active reveal
