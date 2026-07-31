@@ -1599,7 +1599,16 @@ reduced-motion fallback.
 
 **Status:** accepted and implemented
 
-The sitewide header now uses a small single-color prism glyph instead of the
-multicolor die asset. The die remains available in game, homepage, auth, and
-favicon contexts where its literal game signal is useful; the profile-facing
-header stays quiet and typographic.
+The sitewide header now uses only the compact `chm.lol` wordmark instead of a
+graphic mark. The die remains available in game, homepage, auth, and favicon
+contexts where its literal game signal is useful; the profile-facing header
+stays quiet and typographic.
+
+## 2026-07-31 — Make profile claiming the homepage CTA
+
+**Status:** accepted and implemented
+
+Signed-out visitors can enter a bounded username directly in a `chm.lol/`
+claim field. Submission opens the existing account flow with that username
+pre-filled; availability, moderation, and account creation remain enforced by
+the existing authentication and server RPCs.

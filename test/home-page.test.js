@@ -5,12 +5,13 @@ import { readFile } from 'node:fs/promises';
 const home = await readFile(new URL('../src/lib/HomePage.svelte', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
 
-test('the homepage explains the daily identity loop with a direct signup action', () => {
-  assert.match(home, /Roll one color each day/);
-  assert.match(home, /record of every return/);
+test('the homepage explains the daily identity loop with a direct claim action', () => {
+  assert.match(home, /Roll a new color every day/);
+  assert.match(home, /build a profile from your roll history/);
   assert.match(home, /daily color identity/);
-  assert.match(home, /Create your profile/);
-  assert.match(home, /dispatch\('signup'\)/);
+  assert.match(home, /Claim your profile/);
+  assert.match(home, /dispatch\('claim'/);
+  assert.match(home, /chm\.lol\//);
   assert.match(home, /Open your profile/);
   assert.match(home, /prefers-reduced-motion/);
 });

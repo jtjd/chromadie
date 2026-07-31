@@ -6,11 +6,12 @@
 
   export let onClose = () => {};
   export let initialTab = 'login';
+  export let initialUsername = '';
 
   let tab = initialTab === 'signup' ? 'signup' : 'login'; // 'login', 'signup', or 'forgot'
   let email = '';
   let password = '';
-  let username = '';
+  let username = initialUsername;
   let error = '';
   let notice = '';
   let loading = false;

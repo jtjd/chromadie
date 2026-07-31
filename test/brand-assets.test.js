@@ -31,7 +31,7 @@ test('brand icon references use the new vector and versioned raster assets', asy
   assert.match(index, /href="\/favicon-16-v2\.png"/);
   assert.match(index, /href="\/favicon-32-v2\.png"/);
   assert.match(index, /href="\/apple-touch-icon-v2\.png"/);
-  assert.match(header, /site-mode-header__mark/);
+  assert.match(header, /site-mode-header__wordmark/);
   assert.doesNotMatch(`${index}\n${app}\n${header}\n${manifestText}`, /favicon-96\.png|apple-touch-icon\.png|icon-(?:192|512)\.png/);
 
   assert.deepEqual(manifest.icons, [

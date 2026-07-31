@@ -728,8 +728,15 @@ phase, with an immediate reduced-motion equivalent.
 
 ## 2026-07-31 — Simplify the sitewide header mark
 
-- Replaced the bright rounded die icon in the shared header with a restrained
-  prism glyph.
+- Removed the bright rounded die icon from the shared header, leaving only the
+  restrained `chm.lol` wordmark.
+
+## 2026-07-31 — Add homepage profile claiming
+
+- Replaced the generic signed-out homepage CTA with a `chm.lol/username`
+  claim field.
+- Prefills the existing signup modal while preserving server-side username
+  availability and moderation checks.
 - Kept the existing die logo for favicon, auth, homepage, and roll contexts.
 
 ## 2026-07-30 — Keep roll conditions in the active reveal

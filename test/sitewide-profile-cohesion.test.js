@@ -7,7 +7,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('all routes use one cohesive application header', async () => {
   const siteHeader = await read('src/lib/SiteModeHeader.svelte');
 
-  assert.match(siteHeader, /site-mode-header__mark/);
+  assert.match(siteHeader, /site-mode-header__wordmark/);
   assert.match(siteHeader, /background: transparent/);
   assert.match(siteHeader, /site-mode-header__nav.*\//s);
   assert.match(siteHeader, /\{#if !minimalMode\}\s*<nav class="site-mode-header__nav"/);

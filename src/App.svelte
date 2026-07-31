@@ -35,6 +35,7 @@
   let routeMode = 'app';
   let showAuthModal = false;
   let authInitialTab = 'login';
+  let authInitialUsername = '';
   let logoutInProgress = false;
   let challengeData = null;
   let challengeLoadRequestId = 0;
@@ -371,14 +372,18 @@
     }
   }
 
-  /** @param {string | MouseEvent | CustomEvent<{mode?: string}>} modeOrEvent */
+  /** @param {any} modeOrEvent */
   async function openAuthModal(modeOrEvent = 'login') {
+    const eventDetail = typeof modeOrEvent === 'object' && modeOrEvent
+      ? modeOrEvent.detail || modeOrEvent
+      : null;
     const requestedMode = typeof modeOrEvent === 'string'
       ? modeOrEvent
-      : modeOrEvent instanceof CustomEvent
-        ? modeOrEvent.detail?.mode
-        : 'login';
+      : eventDetail?.mode || 'login';
     authInitialTab = requestedMode === 'signup' ? 'signup' : 'login';
+    authInitialUsername = eventDetail?.username
+      ? String(eventDetail.username).trim().slice(0, 20)
+      : '';
     const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     authOpener = activeElement;
     showAuthModal = true;
@@ -573,7 +578,7 @@
         tabindex="-1"
         on:keydown={handleAuthModalKeydown}
       >
-        <Auth onClose={closeAuthModal} initialTab={authInitialTab} />
+        <Auth onClose={closeAuthModal} initialTab={authInitialTab} initialUsername={authInitialUsername} />
       </div>
     </div>
   {/if}
@@ -706,6 +711,7 @@
       <HomePage
         isAuthenticated={$isAuthenticated}
         on:signup={() => openAuthModal('signup')}
+        on:claim={event => openAuthModal({ detail: { mode: 'signup', username: event.detail?.username } })}
         on:profile={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
       />
     {:else if view === 'game'}

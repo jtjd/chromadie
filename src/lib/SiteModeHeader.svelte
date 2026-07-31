@@ -32,7 +32,6 @@
 
 <header class="site-mode-header" class:site-mode-header--profile={isProfileMode}>
   <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
-    <span class="site-mode-header__mark" aria-hidden="true"></span>
     <span class="site-mode-header__wordmark">chm<span>.lol</span></span>
   </a>
 
@@ -144,24 +143,6 @@
 
   .site-mode-header__wordmark { color: rgba(246, 248, 255, 0.94); }
   .site-mode-header__wordmark > span { color: rgba(246, 248, 255, 0.68); }
-  .site-mode-header__mark {
-    position: relative;
-    display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    flex: 0 0 auto;
-    background: linear-gradient(145deg, #c4b5fd 0%, #8b7cf6 48%, #5eead4 100%);
-    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-    filter: drop-shadow(0 0 0.45rem rgba(139, 124, 246, 0.28));
-    opacity: 0.86;
-  }
-  .site-mode-header__mark::after {
-    content: '';
-    position: absolute;
-    inset: 0.12rem;
-    background: rgba(7, 8, 11, 0.62);
-    clip-path: polygon(50% 0, 52% 50%, 50% 100%, 48% 50%);
-  }
 
   .site-mode-header__nav,
   .site-mode-header__right,
@@ -324,7 +305,6 @@
   @media (max-width: 36rem) {
     .site-mode-header { min-height: 3.85rem; padding: 0.8rem 1rem; }
     .site-mode-header__brand { font-size: 0.9rem; }
-    .site-mode-header__mark { width: 0.9rem; height: 0.9rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
