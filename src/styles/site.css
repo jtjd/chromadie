@@ -502,14 +502,7 @@
 .profile-settings-page__eyebrow { margin: 0 0 .5rem; color: var(--color-accent-bright); font: 700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing: .12em; text-transform: uppercase; }
 .profile-settings-page h1 { max-width: 38rem; margin: 0; color: var(--color-ink-strong); font: 600 clamp(2.2rem, 5vw, 4.25rem)/.98 var(--font-display-stack); letter-spacing: -.045em; }
 .profile-settings-page__intro { max-width: 38rem; margin: 1.25rem 0 0; color: var(--color-ink-muted); font-size: var(--type-body); line-height: 1.6; }
-.profile-settings-page__stack { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; align-items:start; }
-.profile-settings-page__stack > #identity,
-.profile-settings-page__stack > #media { grid-column:1; }
-.profile-settings-page__stack > #appearance,
-.profile-settings-page__stack > #layout { grid-column:2; }
-.profile-settings-page__stack > #social,
-.profile-settings-page__stack > .profile-settings-page__compatibility { grid-column:3; }
-.profile-settings-page__stack > .profile-settings-page__warning { grid-column:1 / -1; }
+.profile-settings-page__stack { display:grid; gap:.75rem; align-items:stretch; }
 .profile-settings-page__layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(18rem,22rem); gap:1rem; align-items:start; }
 .profile-settings-page__layout > .profile-settings-page__stack { min-width:0; }
 .profile-settings-page__layout > .settings-preview { min-width:0; }
@@ -542,13 +535,6 @@
   .profile-settings-page { padding-top: 1.5rem; }
   .profile-settings-page__quickbar { align-items:flex-start; flex-wrap:wrap; }
   .profile-settings-page__layout { grid-template-columns:1fr; }
-  .profile-settings-page__stack { grid-template-columns:1fr; }
-  .profile-settings-page__stack > #identity,
-  .profile-settings-page__stack > #media,
-  .profile-settings-page__stack > #appearance,
-  .profile-settings-page__stack > #layout,
-  .profile-settings-page__stack > #social,
-  .profile-settings-page__stack > .profile-settings-page__compatibility { grid-column:1; }
   .profile-settings-page__header, .profile-settings-page__compatibility { align-items: flex-start; flex-direction: column; }
   .profile-settings-page__actions { width: 100%; justify-content: stretch; }
 }

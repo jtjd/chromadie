@@ -276,11 +276,9 @@
     </label>
   </div>
 
-  <div class="profile-editor__section">
-    <div class="profile-editor__section-heading">
-      <div><p class="profile-editor__eyebrow">Page sections</p><h3>Choose what visitors see</h3></div>
-      <span>Turn sections on or off and set their order.</span>
-    </div>
+  <details class="profile-editor__details">
+    <summary><span>Page sections</span><small>Show, hide, and reorder profile modules</small></summary>
+    <div class="profile-editor__section">
     <ol class="profile-editor__module-list">
       {#each orderedModules.filter(module => module.id !== 'explore') as module (module.id)}
         <li>
@@ -299,13 +297,16 @@
         </li>
       {/each}
     </ol>
-  </div>
-
-  <div class="profile-editor__section">
-    <div class="profile-editor__section-heading">
-      <div><p class="profile-editor__eyebrow">Links</p><h3>Point visitors somewhere good</h3></div>
-      <button type="button" class="profile-editor__text-button" on:click={addLink} disabled={draft.links.length >= 6}>+ Add link</button>
     </div>
+  </details>
+
+  <details class="profile-editor__details">
+    <summary><span>Public links</span><small>{draft.links.length} of 6 links</small></summary>
+    <div class="profile-editor__section">
+      <div class="profile-editor__section-heading">
+        <div><p class="profile-editor__eyebrow">Links</p><h3>Public links</h3></div>
+        <button type="button" class="profile-editor__text-button" on:click={addLink} disabled={draft.links.length >= 6}>+ Add link</button>
+      </div>
     {#if draft.links.length}
       <div class="profile-editor__links">
         {#each draft.links as link, index (index)}
@@ -323,7 +324,8 @@
       <p class="profile-editor__empty">No links yet. Your profile stays complete and attractive without them.</p>
     {/if}
     <p class="profile-editor__hint">Links must use HTTPS and are rendered as safe structured anchors.</p>
-  </div>
+    </div>
+  </details>
 
   {#if error}<p class="profile-editor__message profile-editor__message--error" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-editor__message" role="status" aria-live="polite">{status}</p>{/if}
@@ -401,6 +403,13 @@
   .profile-editor__button:disabled { cursor: wait; opacity: 0.55; }
   .profile-editor__button--secondary,
   .profile-editor__button--preview { border-color: color-mix(in srgb, var(--profile-accent) 50%, transparent); background: color-mix(in srgb, var(--profile-accent) 14%, transparent); color: var(--color-accent-bright); }
+  .profile-editor__details { border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
+  .profile-editor__details summary { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem; color:var(--color-ink-strong); cursor:pointer; list-style:none; }
+  .profile-editor__details summary::-webkit-details-marker { display:none; }
+  .profile-editor__details summary::after { content:'+'; color:var(--color-ink-muted); }
+  .profile-editor__details[open] summary::after { content:'−'; }
+  .profile-editor__details summary span { font-weight:650; }
+  .profile-editor__details summary small { color:var(--color-ink-muted); font-size:var(--type-label); }
 
   @media (max-width: 48rem) {
     .profile-editor__toolbar,
