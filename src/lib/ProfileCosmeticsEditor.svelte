@@ -54,6 +54,9 @@
   $: contextSlots = [...new Set(ownedCosmetics
     .filter(item => getShopContextForSlot(item.slot) === activeContext)
     .map(item => item.slot))];
+  $: atmosphereItems = Object.values($shopItems)
+    .filter(item => item.slot === 'profile_bg' && item.css_type === 'class' && /^profile-effect-/.test(item.css_value || ''))
+    .sort((left, right) => left.name.localeCompare(right.name));
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: syncEquippedLoadout(equippedKey, $equippedItems);
 
@@ -142,23 +145,45 @@
     {:else if $shopItemsError}
       <p role="alert">{$shopItemsError}</p>
     {:else}
-      <DecorationStudio
-        bind:activeContext
-        loadout={previewLoadout}
-        {username}
-        {displayColor}
-        {accountProfile}
-        {profileConfig}
-        {selectedItem}
-        title="Preview your public look."
-        modeLabel="Owned cosmetics"
-        showBaseline={false}
-      />
+      <div class="profile-cosmetics-layout">
+        <DecorationStudio
+          bind:activeContext
+          loadout={previewLoadout}
+          {username}
+          {displayColor}
+          {accountProfile}
+          {profileConfig}
+          {selectedItem}
+          title="Preview your public look."
+          modeLabel="Owned cosmetics"
+          showBaseline={false}
+        />
 
-      {#if contextSlots.length}
-        <div style="display:grid;gap:.75rem;margin-top:1rem">
-          {#each contextSlots as slot (slot)}
-            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:.75rem;padding:.75rem 0;border-top:1px solid var(--color-line-subtle)">
+        <div class="profile-cosmetics-controls">
+          <div class="profile-cosmetics-controls__heading">
+            <span>Atmosphere</span>
+            <strong>Animated backgrounds</strong>
+            <p>Choose a profile mood such as rain, snow, fireflies, or scanlines.</p>
+          </div>
+          {#if atmosphereItems.length}
+            <div class="profile-cosmetics-atmosphere">
+              <label for="cosmetic-profile-atmosphere">Profile atmosphere</label>
+              <select id="cosmetic-profile-atmosphere" value={previewLoadout.profile_bg || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_bg', event.currentTarget.value)}>
+                <option value="">No atmosphere</option>
+                {#each atmosphereItems as item (item.item_key)}
+                  <option value={item.item_key} disabled={!ownedCosmetics.some(owned => owned.item_key === item.item_key)}>{item.name}{ownedCosmetics.some(owned => owned.item_key === item.item_key) ? '' : ' · unlock in shop'}</option>
+                {/each}
+              </select>
+              <button type="button" disabled={!!loadingSlot || (previewLoadout.profile_bg || '') === (($equippedItems || {})['profile_bg'] || '')} on:click={() => applySlot('profile_bg')}>{loadingSlot === 'profile_bg' ? 'Saving…' : 'Apply atmosphere'}</button>
+            </div>
+          {:else}
+            <p class="profile-cosmetics-empty">No atmosphere cosmetics are owned yet. Browse the shop to unlock animated backgrounds.</p>
+          {/if}
+
+          {#if contextSlots.length}
+            <div class="profile-cosmetics-slot-list">
+              {#each contextSlots.filter(slot => slot !== 'profile_bg') as slot (slot)}
+                <div class="profile-cosmetics-slot">
               <div style="min-width:0">
                 <label for={`cosmetic-${slot}`} style="display:block;margin-bottom:.4rem;color:var(--color-ink-strong);font-weight:650">{SHOP_SLOT_LABELS[slot]}</label>
                 <select
@@ -180,14 +205,30 @@
                 on:click={() => applySlot(slot)}
                 style="min-height:2.75rem;padding:0 1rem;border:1px solid transparent;border-radius:var(--radius-sm);background:var(--color-ink-strong);color:var(--color-canvas-deep);cursor:pointer;font-weight:700"
               >{loadingSlot === slot ? 'Saving…' : 'Apply'}</button>
+                </div>
+              {/each}
             </div>
-          {/each}
+          {/if}
         </div>
-      {:else}
-        <p style="margin:0;padding:1rem;border:1px dashed var(--color-line-subtle);border-radius:var(--radius-sm);color:var(--color-ink-muted)">No owned cosmetics affect this surface yet. Your default presentation remains active.</p>
-      {/if}
+      </div>
 
       <p role={error ? 'alert' : 'status'} aria-live="polite" style={`min-height:1.25rem;margin:1rem 0 0;color:${error ? 'var(--color-danger)' : 'var(--color-ink-muted)'};font-size:var(--type-small)`}>{error || status}</p>
     {/if}
   </section>
 </Surface>
+
+<style>
+  .profile-cosmetics-layout { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(18rem,.75fr); gap:1.25rem; align-items:start; }
+  .profile-cosmetics-controls { display:grid; gap:.75rem; min-width:0; padding:1rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
+  .profile-cosmetics-controls__heading span { display:block; color:var(--color-accent-bright); font:700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
+  .profile-cosmetics-controls__heading strong { display:block; margin-top:.35rem; color:var(--color-ink-strong); font-size:1.05rem; }
+  .profile-cosmetics-controls__heading p { margin:.45rem 0 0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
+  .profile-cosmetics-atmosphere, .profile-cosmetics-slot { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.55rem .7rem; align-items:end; padding-top:.8rem; border-top:1px solid var(--color-line-subtle); }
+  .profile-cosmetics-atmosphere label, .profile-cosmetics-slot label { grid-column:1 / -1; color:var(--color-ink-strong); font-weight:650; font-size:var(--type-small); }
+  .profile-cosmetics-atmosphere select, .profile-cosmetics-slot select { width:100%; min-height:2.65rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); padding:0 .7rem; background:var(--surface-inset); color:var(--color-ink-strong); font:500 var(--type-small)/1 var(--font-body-stack); }
+  .profile-cosmetics-atmosphere button, .profile-cosmetics-slot button { min-height:2.65rem; padding:0 .8rem; border:0; border-radius:var(--radius-sm); background:var(--color-ink-strong); color:var(--color-canvas-deep); font-weight:700; cursor:pointer; white-space:nowrap; }
+  .profile-cosmetics-atmosphere button:disabled, .profile-cosmetics-slot button:disabled { opacity:.45; cursor:not-allowed; }
+  .profile-cosmetics-slot-list { display:grid; gap:.75rem; }
+  .profile-cosmetics-empty { margin:0; padding:.8rem; border:1px dashed var(--color-line-subtle); border-radius:var(--radius-sm); color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
+  @media (max-width: 850px) { .profile-cosmetics-layout { grid-template-columns:1fr; } }
+</style>

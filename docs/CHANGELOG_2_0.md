@@ -820,3 +820,10 @@ phase, with an immediate reduced-motion equivalent.
 
 - The shared site header now spans the full viewport across application routes.
 - Existing inner padding and responsive navigation behavior are unchanged.
+## 2026-07-31 — Profile appearance atmosphere controls
+
+- Added explicit atmosphere choices to profile settings for the existing
+  rain, snow, fireflies, and scanline cosmetics.
+- Widened the fitting-room preview and kept unowned effects locked behind the
+  existing shop/entitlement flow.
+- Added `/terms` to the internal-link validation allowlist.

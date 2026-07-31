@@ -889,3 +889,11 @@ the remaining Phase 11 boundary.
 - Preserved responsive padding, mobile menu behavior, and the narrower content
   widths used by each route below it.
 - Added a regression assertion for the full-width header contract.
+## 2026-07-31 — Surface atmosphere controls in profile settings
+
+- Added a dedicated animated-background control for rain, snow, fireflies,
+  and scanlines in the appearance editor.
+- Kept locked atmosphere entries visible with an unlock-in-shop affordance while
+  preserving server-side entitlement checks.
+- Rebalanced the appearance editor into a wide preview-and-controls layout that
+  collapses cleanly on mobile.

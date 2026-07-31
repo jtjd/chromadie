@@ -1705,3 +1705,10 @@ an identity card with handle, bio, links, and rank leads into the daily roll.
 The roll is explicitly presented as living inside that profile, followed by
 equipped effects and a leaderboard/discovery cue. This makes the product loop
 legible without presenting the roll as a disconnected color widget.
+## 2026-07-31 — Keep atmosphere selection visible but entitlement-safe
+
+Profile settings now shows the curated animated atmosphere catalog directly,
+including locked entries, so owners can discover the rain, snow, fireflies, and
+scanline effects without weakening the existing server-authoritative equip
+boundary. The preview and controls use a two-column layout on wide screens and
+stack on small screens.
