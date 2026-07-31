@@ -93,7 +93,7 @@ test('staff audio preparation strips incompatible ID3v2 wrappers', async () => {
 
 test('media storage, server validation, and public rendering boundaries are explicit', async () => {
   const migration = await read('supabase/migrations/20260730110000_profile_expression_media.sql');
-  const limitsMigration = await read('supabase/migrations/20260730120000_profile_media_size_limits.sql');
+  const limitsMigration = await read('supabase/migrations/20260730120500_profile_media_size_limits.sql');
   const audioMigration = await read('supabase/migrations/20260730150000_staff_profile_audio.sql');
   const audioLimitMigration = await read('supabase/migrations/20260730160000_increase_staff_profile_audio_limit.sql');
   const settings = await read('src/lib/ProfileExpressionEditor.svelte');
