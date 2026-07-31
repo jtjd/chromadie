@@ -856,6 +856,9 @@ the remaining Phase 11 boundary.
 - Aligned color-result formatting across the homepage, profile roll, and
   visitor color module so hex, rarity, score, EP, and conditions read as one
   consistent hierarchy.
+- Replaced the onboarding’s legacy `Game` mount with the integrated profile
+  roll and a bounded fictional guest result, including a prominent save/
+  compete CTA after completion.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 

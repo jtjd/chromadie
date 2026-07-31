@@ -1678,6 +1678,10 @@ The homepage, `TodayColor`, and integrated `ProfileRoll` now share the same
 result hierarchy: hex and rarity identify the color, score and EP are one
 lockup, and conditions occupy a distinct rail beneath them.
 
+The onboarding roll uses `ProfileRoll` in a bounded guest fixture mode rather
+than mounting the legacy `Game` screen. This preserves the active-profile
+presentation while keeping the fictional result local and presentation-only.
+
 ## 2026-07-31 — Make the homepage preview a composed profile surface
 
 **Status:** accepted and implemented

@@ -32,9 +32,10 @@ test('the application mounts the homepage, signup flow, and global footer', () =
 test('the signed-out profile route opens the guest onboarding roll', () => {
   assert.match(app, /import GuestProfileOnboarding from '.\/lib\/GuestProfileOnboarding\.svelte'/);
   assert.match(app, /<GuestProfileOnboarding guestActive/);
-  assert.match(guestProfile, /This is your profile/);
-  assert.match(guestProfile, /See how profiles grow/);
-  assert.match(guestProfile, /Go to today’s roll/);
+  assert.match(guestProfile, /This could be your profile/);
+  assert.match(guestProfile, /See today’s roll/);
+  assert.match(guestProfile, /guest-onboarding/);
   assert.match(guestProfile, /IdentityCard/);
-  assert.match(guestProfile, /profileMode=\{true\}/);
+  assert.match(guestProfile, /ProfileRoll/);
+  assert.match(guestProfile, /Create your profile/);
 });

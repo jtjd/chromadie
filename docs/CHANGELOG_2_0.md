@@ -795,6 +795,8 @@ phase, with an immediate reduced-motion equivalent.
   result while removing the legacy roll-first presentation from onboarding.
 - Standardized hex/rarity, score/EP, and condition-rail spacing across the
   homepage showcase, `TodayColor`, and integrated profile roll.
+- The onboarding now uses the integrated profile-roll presentation with a
+  fictional guest fixture instead of the legacy standalone roll screen.
 
 ## 2026-07-30 — Keep roll conditions in the active reveal
 

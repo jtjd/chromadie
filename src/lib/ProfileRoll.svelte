@@ -388,6 +388,17 @@
     phase = 'rolling';
     clearRollState();
     dispatch('rollstart', { isReroll });
+
+    if (visualFixture === 'guest-onboarding' && fixtureResult) {
+      const canonical = normalizeCanonicalRoll(fixtureResult);
+      const animated = await animateCanonicalResult(fixtureResult, canonical, requestId, requestUserId);
+      if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return;
+      loading = false;
+      if (!animated) phase = 'results';
+      dispatch('rollcomplete', { data: fixtureResult, canonical, guest: true });
+      return;
+    }
+
     rerollRequestInFlight = isReroll;
     if (isReroll) setRerollLock();
 
@@ -455,6 +466,10 @@
     tickCountdown();
     countdownInterval = setInterval(tickCountdown, 1000);
     if (visualFixture === 'pre-roll') {
+      setPrerollState();
+      return;
+    }
+    if (visualFixture === 'guest-onboarding' && fixtureResult) {
       setPrerollState();
       return;
     }
