@@ -2,7 +2,7 @@
   import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { authUser, followedUsers, isAuthenticated, profile, session, toggleFollow } from './stores';
   import { supabase } from './supabase';
-  import { getFrameEffect, getNameEffect, getProfileBg, getProfileBorder } from './cosmetics';
+  import { getFrameEffect, getNameEffect, getProfileAtmosphereEffect, getProfileBg, getProfileBorder } from './cosmetics';
   import { getBadgeMeta } from './badgeData';
   import { getRank, getRankState } from './ranks';
   import { loadProfileContext } from './profileData';
@@ -349,6 +349,7 @@
   $: nameEff = getNameEffect(cosmetics);
   $: frameEff = getFrameEffect(cosmetics);
   $: bgEff = getProfileBg(cosmetics);
+  $: atmosphereEffect = getProfileAtmosphereEffect(cosmetics);
   $: borderEff = getProfileBorder(cosmetics);
   $: rank = targetProfile ? getRank(targetProfile.lifetime_ep || 0) : null;
   $: rankState = targetProfile ? getRankState(targetProfile.lifetime_ep || 0) : null;
@@ -410,7 +411,7 @@
 
 <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + dailyAccentColor + ';'} aria-busy={loading}>
   {#if !previewMode}
-    <ProfileAtmosphere accent={dailyAccentColor} secondaryAccent={colorFor(effectiveProfileConfig.signatureColor, '#71D6FF')} backgroundSrc={backgroundSrc} rollState={profileRollState} rollColor={profileRollColor || dailyAccentColor} />
+    <ProfileAtmosphere accent={dailyAccentColor} secondaryAccent={colorFor(effectiveProfileConfig.signatureColor, '#71D6FF')} backgroundSrc={backgroundSrc} effect={atmosphereEffect} rollState={profileRollState} rollColor={profileRollColor || dailyAccentColor} />
   {/if}
 
   {#if !loading && targetProfile}

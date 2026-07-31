@@ -830,6 +830,8 @@ the remaining Phase 11 boundary.
 - Set `chm.lol` in the shared Geist Mono header language.
 - Kept the mark and normalized the wordmark color treatment for a quieter,
   better-integrated lockup.
+- Added four curated profile atmosphere cosmetics with full-canvas layers and
+  reduced-motion fallbacks.
 
 ## 2026-07-30 — Reveal conditions during scan and lock
 

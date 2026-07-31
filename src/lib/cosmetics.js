@@ -19,6 +19,17 @@ export function getCosmeticEffect(cosmetics, slot) {
 export const getNameEffect = cosmetics => getCosmeticEffect(cosmetics, 'name_effect');
 export const getFrameEffect = cosmetics => getCosmeticEffect(cosmetics, 'frame');
 export const getProfileBg = cosmetics => getCosmeticEffect(cosmetics, 'profile_bg');
+const PROFILE_ATMOSPHERE_EFFECTS = Object.freeze({
+  bg_rain: 'rain',
+  bg_snow: 'snow',
+  bg_fireflies: 'fireflies',
+  bg_scanlines: 'scanlines'
+});
+
+/** Return only a curated, code-owned atmosphere effect name. */
+export function getProfileAtmosphereEffect(cosmetics) {
+  return PROFILE_ATMOSPHERE_EFFECTS[cosmetics?.profile_bg] || '';
+}
 export const getRollEffect = cosmetics => getCosmeticEffect(cosmetics, 'roll_effect');
 export const getLbTheme = cosmetics => getCosmeticEffect(cosmetics, 'lb_theme');
 export const getOrbShape = cosmetics => getCosmeticEffect(cosmetics, 'orb_shape');

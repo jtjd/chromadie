@@ -718,6 +718,14 @@ phase, with an immediate reduced-motion equivalent.
 - Updated `chm.lol` to use the same compact monospaced language as the header
   controls.
 
+## 2026-07-30 — Add profile atmosphere effects
+
+- Added Rainfall, Soft Snow, Fireflies, and Signal Scanlines as structured
+  profile cosmetics.
+- Effects render behind the composed profile and include shop/studio previews.
+- Added reduced-motion behavior and a curated allowlist so catalog values never
+  become arbitrary profile CSS.
+
 ## 2026-07-30 — Keep roll conditions in the active reveal
 
 - Condition chips now begin entering during the scan/lock animation as soon as

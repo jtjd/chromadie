@@ -10,7 +10,7 @@
 
 <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
   {#if item.slot === 'profile_bg'}
-    <div class="preview-bg" style={effectStyle}></div>
+    <div class={'preview-bg ' + effectClass} style={effectStyle}></div>
   {:else if item.slot === 'roll_effect'}
     <RollPreview effectCls={effectClass} effectStyle={effectStyle} size="shop" />
   {:else if item.slot === 'lb_theme'}

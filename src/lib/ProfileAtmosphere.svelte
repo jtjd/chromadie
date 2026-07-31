@@ -2,18 +2,20 @@
 export let accent = '#8B7CF6';
 export let secondaryAccent = '#71D6FF';
 export let backgroundSrc = '';
+export let effect = '';
 export let rollState = 'idle';
 export let rollColor = '';
 
 $: safeRollState = ['rolling', 'settled'].includes(rollState) ? rollState : 'idle';
 $: safeRollColor = rollColor || accent;
+$: safeEffect = ['rain', 'snow', 'fireflies', 'scanlines'].includes(effect) ? effect : '';
 $: backgroundStyle = backgroundSrc
   ? `linear-gradient(135deg, color-mix(in srgb, ${accent} 24%, rgba(0, 0, 0, 0.62)), rgba(0, 0, 0, 0.66)), url("${backgroundSrc}")`
   : 'none';
 </script>
 
 <div
-  class={'profile-atmosphere profile-atmosphere--' + safeRollState}
+  class={'profile-atmosphere profile-atmosphere--' + safeRollState + (safeEffect ? ' profile-atmosphere--effect-' + safeEffect : '')}
   style={'--atmosphere-accent: ' + accent + '; --atmosphere-secondary: ' + secondaryAccent + '; --atmosphere-roll-color: ' + safeRollColor + '; --atmosphere-background: ' + backgroundStyle + ';'}
   aria-hidden="true"
 >
@@ -25,6 +27,7 @@ $: backgroundStyle = backgroundSrc
   <span class="profile-atmosphere__roll-ring"></span>
   <span class="profile-atmosphere__vignette"></span>
   <span class="profile-atmosphere__grain"></span>
+  <span class="profile-atmosphere__effect" aria-hidden="true"></span>
 </div>
 
 <style>
@@ -49,6 +52,40 @@ $: backgroundStyle = backgroundSrc
   .profile-atmosphere__grain {
     position: absolute;
     inset: 0;
+  }
+
+  .profile-atmosphere__effect {
+    z-index: 1;
+    opacity: 0;
+  }
+
+  .profile-atmosphere--effect-rain .profile-atmosphere__effect {
+    opacity: 0.28;
+    background-image: repeating-linear-gradient(104deg, transparent 0 14px, color-mix(in srgb, var(--atmosphere-secondary) 34%, transparent) 15px 16px, transparent 17px 29px);
+    background-size: 84px 118px;
+    animation: profile-atmosphere-rain 0.9s linear infinite;
+    mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+  }
+
+  .profile-atmosphere--effect-snow .profile-atmosphere__effect {
+    opacity: 0.55;
+    background-image: radial-gradient(circle, color-mix(in srgb, white 72%, var(--atmosphere-secondary)) 0 1.5px, transparent 2px), radial-gradient(circle, rgba(255,255,255,0.6) 0 1px, transparent 1.5px);
+    background-size: 68px 82px, 43px 57px;
+    animation: profile-atmosphere-snow 12s linear infinite;
+  }
+
+  .profile-atmosphere--effect-fireflies .profile-atmosphere__effect {
+    opacity: 0.64;
+    background-image: radial-gradient(circle, color-mix(in srgb, var(--atmosphere-accent) 85%, white) 0 1.5px, transparent 3px), radial-gradient(circle, color-mix(in srgb, var(--atmosphere-secondary) 82%, white) 0 1px, transparent 2.5px);
+    background-size: 126px 154px, 83px 117px;
+    animation: profile-atmosphere-fireflies 7s ease-in-out infinite alternate;
+    filter: blur(0.2px);
+  }
+
+  .profile-atmosphere--effect-scanlines .profile-atmosphere__effect {
+    opacity: 0.17;
+    background: repeating-linear-gradient(to bottom, transparent 0 4px, color-mix(in srgb, var(--atmosphere-accent) 30%, transparent) 5px 6px);
+    animation: profile-atmosphere-scanlines 8s linear infinite;
   }
 
   .profile-atmosphere__core {
@@ -156,8 +193,14 @@ $: backgroundStyle = backgroundSrc
     100% { opacity: 0; transform: scale(1.36); }
   }
 
+  @keyframes profile-atmosphere-rain { from { background-position: 0 -118px; } to { background-position: 84px 0; } }
+  @keyframes profile-atmosphere-snow { from { background-position: 0 -82px, 0 -57px; } to { background-position: 34px 100vh, -22px 100vh; } }
+  @keyframes profile-atmosphere-fireflies { from { background-position: 0 0, 0 0; opacity: 0.34; } to { background-position: 46px -28px, -34px 24px; opacity: 0.78; } }
+  @keyframes profile-atmosphere-scanlines { from { transform: translateY(-6px); } to { transform: translateY(6px); } }
+
   @media (prefers-reduced-motion: reduce) {
     .profile-atmosphere__core,
+    .profile-atmosphere__effect,
     .profile-atmosphere--rolling .profile-atmosphere__core,
     .profile-atmosphere--rolling .profile-atmosphere__roll-flare,
     .profile-atmosphere--rolling .profile-atmosphere__roll-ring,

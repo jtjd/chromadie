@@ -1584,3 +1584,13 @@ column. Its outer width is now 100% across routes, while the existing
 responsive horizontal padding keeps controls readable and touchable. Profile,
 roll, discovery, studio, and settings content retain their own intentional
 max-widths beneath the header.
+
+## 2026-07-30 — Keep profile atmosphere effects curated
+
+**Status:** accepted and implemented
+
+Profile effects are catalog-backed but rendered from a small code-owned
+allowlist (`rain`, `snow`, `fireflies`, and `scanlines`). This preserves safe
+structured customization and lets effects live across the full profile canvas
+without accepting arbitrary CSS or executable content. Every effect has a
+reduced-motion fallback.
