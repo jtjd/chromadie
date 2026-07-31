@@ -811,6 +811,15 @@ the remaining Phase 11 boundary.
   canonical server-reported contributors.
 - Added reduced-motion coverage in the component styles and regression tests.
 
+## 2026-07-30 — Reveal conditions during scan and lock
+
+- Primed canonical condition metadata before the visual spectrum loop finishes,
+  allowing condition chips to animate during the active roll.
+- Distributed the condition entrances across the scan cadence and retained an
+  immediate reduced-motion path.
+- Made the viewport-wide header sticky with a subtle translucent boundary so it
+  remains visible across profile continuation scroll.
+
 ## 2026-07-30 — Full-width sitewide header
 
 - Removed the 92rem cap from the shared application header so its background

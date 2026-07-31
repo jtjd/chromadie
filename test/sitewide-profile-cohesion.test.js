@@ -17,6 +17,8 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /class:site-mode-header--profile/);
   assert.match(siteHeader, /width: 100%;/);
   assert.doesNotMatch(siteHeader, /width: min\(100%, 92rem\)/);
+  assert.match(siteHeader, /position: sticky/);
+  assert.match(siteHeader, /border-bottom: 1px solid/);
   assert.match(siteHeader, /site-mode-header__context/);
   assert.match(siteHeader, /site-mode-header__mobile-primary/);
   assert.match(siteHeader, /\$: minimalMode = isProfileMode;/);

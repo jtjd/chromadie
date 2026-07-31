@@ -214,6 +214,11 @@
     }
   }
 
+  function primeCanonicalConditions(canonical) {
+    traits = Array.isArray(canonical?.traits) ? canonical.traits : [];
+    contributors = Array.isArray(canonical?.contributors) ? canonical.contributors : [];
+  }
+
   function setPrerollState() {
     clearRollState();
     phase = 'preroll';
@@ -270,6 +275,11 @@
     displayHex = '#------';
     revealedBadges = [];
     revealStage = 0;
+    // The secure roll response is already canonical at this point. Prime only
+    // its condition metadata so the reveal can stage those conditions while
+    // the visual spectrum is still resolving; score and rewards remain settled
+    // by applyServerPresentation below.
+    primeCanonicalConditions(canonical);
 
     for (let index = 0; index < REVEAL_SPECTRUM.length; index += 1) {
       if (skipRevealRequested) break;
@@ -488,7 +498,7 @@
             <p class="profile-roll__eyebrow">Conditions aligning</p>
             <div class="profile-roll__condition-list">
               {#each headlineConditions as condition, index (condition.id)}
-                <span class="profile-roll__condition-chip profile-roll__condition--revealing" style={'--condition-delay: ' + (index * 0.18) + 's;'}>
+                <span class="profile-roll__condition-chip profile-roll__condition--revealing" style={'--condition-delay: ' + (index * 0.55) + 's;'}>
                   <span aria-hidden="true">{condition.symbol}</span>
                   <strong>{condition.label}</strong>
                   {#if condition.points}<small>+{condition.points.toLocaleString()}</small>{/if}

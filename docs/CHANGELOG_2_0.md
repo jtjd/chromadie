@@ -701,6 +701,13 @@ presentation without changing its data or gameplay authority.
 - Server-reported score conditions appear one by one during the final lock
 phase, with an immediate reduced-motion equivalent.
 
+## 2026-07-30 — Keep roll conditions in the active reveal
+
+- Condition chips now begin entering during the scan/lock animation as soon as
+  the canonical response is available.
+- The full-width application header remains visible as the profile continuation
+  scrolls.
+
 ## 2026-07-30 — Full-width application header
 
 - The shared site header now spans the full viewport across application routes.

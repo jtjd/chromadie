@@ -1537,6 +1537,16 @@ condition client-side. The native disclosure remains available so players can
 collapse the detail after reading it. Reduced-motion users receive the same
 conditions immediately with no staged animation.
 
+## 2026-07-30 — Keep reveal conditions visible through the scan phase
+
+**Status:** accepted and implemented
+
+Canonical condition metadata is primed as soon as the secure roll response is
+received, before the presentation-only spectrum loop completes. This lets the
+condition rail animate during the visible scan and lock stages rather than
+waiting for the result state. The canonical score, rewards, and final color
+still settle only through the existing server-authoritative presentation path.
+
 ## 2026-07-30 — Let the shared header span the viewport
 
 **Status:** accepted and implemented

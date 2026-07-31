@@ -156,7 +156,8 @@
     --site-header-control-size: 0.78rem;
     --site-header-control-weight: 500;
     --site-header-control-spacing: 0.01em;
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 20;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -167,7 +168,10 @@
     margin-inline: auto;
     padding: 1rem clamp(1.25rem, 4vw, 3rem);
     color: rgba(235, 240, 252, 0.72);
-    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: color-mix(in srgb, var(--color-canvas-deep) 76%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
   }
 
   .site-mode-header__brand {
