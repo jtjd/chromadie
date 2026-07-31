@@ -1643,10 +1643,11 @@ progression—before the fictional Mythic showcase demonstrates it.
 
 **Status:** accepted and implemented
 
-The homepage hero is top-anchored rather than bottom-aligned. This prevents
-the username claim helper text from shifting the giant wordmark upward as the
-left column grows. The dot in `.lol` is also dimmed slightly to make the
-transition into the lavender suffix easier to read.
+The homepage hero is independently top-anchored with a deliberate lower
+desktop offset rather than bottom-aligned. This prevents the username claim
+helper text from shifting the giant wordmark upward while preserving its
+original lower composition. The dot in `.lol` is also dimmed slightly to make
+the transition into the lavender suffix easier to read.
 
 ## 2026-07-31 — Replace signed-out profile lock with guest onboarding
 

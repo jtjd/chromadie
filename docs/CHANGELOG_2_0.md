@@ -769,6 +769,11 @@ phase, with an immediate reduced-motion equivalent.
   local guest roll instead of the legacy “Profile Locked” card.
 - Preserved the existing signup prompt and its account benefits: saved profile,
   EP, cosmetics, and leaderboard eligibility.
+
+## 2026-07-31 — Restore homepage hero placement
+
+- Kept the claim form independent from the hero’s vertical anchor.
+- Restored the giant `chm.lol` wordmark to its lower desktop composition.
 - Kept the existing die logo for favicon, auth, homepage, and roll contexts.
 
 ## 2026-07-30 — Keep roll conditions in the active reveal

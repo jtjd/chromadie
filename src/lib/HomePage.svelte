@@ -65,7 +65,7 @@
     width: min(100%, 88rem);
     min-height: calc(100dvh - 9.75rem);
     margin-inline: auto;
-    padding: clamp(4rem, 13vh, 9rem) clamp(1.5rem, 5vw, 3rem) clamp(4rem, 9vh, 6.5rem);
+    padding: clamp(8rem, 22vh, 12rem) clamp(1.5rem, 5vw, 3rem) clamp(4rem, 9vh, 6.5rem);
   }
 
   .home-page__copy {

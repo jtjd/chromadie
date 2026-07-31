@@ -842,8 +842,9 @@ the remaining Phase 11 boundary.
   `Leaderboard`.
 - Reworked the homepage hero copy to explicitly describe the daily color game,
   score conditions, effects, and leaderboard progression.
-- Anchored the homepage hero from the top and softened the `.lol` separator dot
-  so the claim form no longer changes the wordmark’s vertical position.
+- Anchored the homepage hero from the top with its original lower offset and
+  softened the `.lol` separator dot so the claim form no longer changes the
+  wordmark’s vertical position.
 - Replaced the signed-out profile lock screen with a guest onboarding profile
   that mounts the local roll and account-save CTA.
 
