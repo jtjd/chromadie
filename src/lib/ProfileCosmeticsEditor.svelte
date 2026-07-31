@@ -129,7 +129,7 @@
   }
 </script>
 
-<Surface variant="panel" padding="lg">
+<Surface variant="panel" padding="lg" className="profile-cosmetics-surface">
   <section aria-labelledby="profile-cosmetics-title">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
       <div>
@@ -218,6 +218,7 @@
 </Surface>
 
 <style>
+  :global(.profile-cosmetics-surface) { width:100%; box-sizing:border-box; }
   .profile-cosmetics-layout { display:block; }
   .profile-cosmetics-layout > :global(.decoration-studio) { width:100%; }
   .profile-cosmetics-controls { display:grid; gap:.75rem; min-width:0; margin-top:1.25rem; padding:1rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
