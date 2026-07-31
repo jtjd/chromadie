@@ -479,6 +479,8 @@
 /* Phase 13 settings controls. Keep this compact because settings is a
  * secondary surface and should not inflate the profile bundle. */
 .identity-editor .foundation-module__body { display: grid; gap: 1.5rem; }
+.identity-editor .foundation-module__body { grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:1rem; }
+.identity-editor .foundation-module__body > .identity-editor__form { display:contents; }
 .identity-editor__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
 .identity-editor__field { display: grid; gap: .5rem; min-width: 0; color: var(--color-ink-strong); font-weight: 600; }
 .identity-editor__label-row, .identity-editor__footer { display: flex; justify-content: space-between; gap: 1rem; }
@@ -505,13 +507,13 @@
 .profile-settings-page__layout > .profile-settings-page__stack { min-width:0; }
 .profile-settings-page__layout > .settings-preview { min-width:0; }
 .profile-settings-page__layout section { scroll-margin-top:1rem; }
-.profile-settings-page__quickbar { display:flex; align-items:center; gap:1rem; margin-bottom:1rem; padding:.7rem .9rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-panel-soft); }
+.profile-settings-page__quickbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; padding:.7rem .9rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-panel-soft); }
 .profile-settings-page__quickbar > div { display:grid; gap:.2rem; min-width:0; }
 .profile-settings-page__quickbar span { color:var(--color-ink-faint); font:700 var(--type-label)/1 var(--font-mono-stack); letter-spacing:.08em; text-transform:uppercase; }
 .profile-settings-page__quickbar strong { overflow:hidden; color:var(--color-ink-strong); font:600 var(--type-small)/1.2 var(--font-mono-stack); text-overflow:ellipsis; white-space:nowrap; }
 .profile-settings-page__quickbar p { flex:1; margin:0; color:var(--color-ink-muted); font-size:var(--type-label); }
 .profile-settings-page__quickbar .foundation-button { flex:0 0 auto; }
-.profile-settings-page__section-links { display:flex; flex-wrap:wrap; gap:.35rem; }
+.profile-settings-page__section-links { display:flex; flex:1; justify-content:center; flex-wrap:wrap; gap:.35rem; }
 .profile-settings-page__section-links a { padding:.35rem .5rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-pill); color:var(--color-ink-muted); font-size:var(--type-label); text-decoration:none; }
 .profile-settings-page__section-links a:hover { color:var(--color-ink-strong); border-color:var(--color-line-strong); }
 .profile-settings-page .foundation-module { padding:clamp(1rem, 2vw, 1.5rem); }
@@ -526,6 +528,8 @@
 .profile-settings-page__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; }
 @media (max-width: 48rem) {
   .identity-editor__fields { grid-template-columns: 1fr; }
+  .identity-editor .foundation-module__body { grid-template-columns:1fr; }
+  .identity-editor .foundation-module__body > .identity-editor__form { display:grid; gap:1rem; }
   .identity-editor__footer { align-items: stretch; flex-direction: column; }
   .identity-editor__save, .profile-settings-page__header .foundation-button, .profile-settings-page__actions .foundation-button { width: 100%; }
   .profile-settings-page { padding-top: 1.5rem; }

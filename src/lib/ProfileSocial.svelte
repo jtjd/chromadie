@@ -329,17 +329,16 @@
     {/if}
 
     {#if isOwnProfile}
-      <div class="profile-social__settings">
-        <div class="profile-social__subheading">
-          <strong>Privacy and interaction controls</strong>
-          <span>You decide how much of this profile invites conversation.</span>
-        </div>
+      <details class="profile-social__settings">
+        <summary><strong>Privacy and interaction controls</strong><span>Favorites, guestbook, activity, discovery</span></summary>
+        <div class="profile-social__settings-body">
         <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.interactionsEnabled} on:change={(event) => updateSetting('interactionsEnabled', event.currentTarget.checked)} /><span><b>Allow favorites, reactions, and rivals</b><small>Turn off new social connections while keeping your public profile visible.</small></span></label>
         <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.guestbookEnabled} on:change={(event) => updateSetting('guestbookEnabled', event.currentTarget.checked)} /><span><b>Accept guestbook notes</b><small>Existing notes remain visible until you remove them.</small></span></label>
         <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.activityVisible} on:change={(event) => updateSetting('activityVisible', event.currentTarget.checked)} /><span><b>Show recent color activity</b><small>Hides the recent roll timeline and collection story from visitors.</small></span></label>
         <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.discoverable} on:change={(event) => updateSetting('discoverable', event.currentTarget.checked)} /><span><b>Include me in discovery</b><small>Your direct public profile link continues to work when this is off.</small></span></label>
-        <button type="button" class="profile-social__button" disabled={settingsLoading} on:click={saveSettings}>{settingsLoading ? 'Saving…' : 'Save privacy settings'}</button>
-      </div>
+          <button type="button" class="profile-social__button" disabled={settingsLoading} on:click={saveSettings}>{settingsLoading ? 'Saving…' : 'Save privacy settings'}</button>
+        </div>
+      </details>
     {/if}
   </div>
 </Module>
@@ -418,6 +417,13 @@
   .profile-social__check span { display: grid; gap: var(--space-1); }
   .profile-social__check b { font-size: var(--type-small); }
   .profile-social__check small { color: var(--color-ink-muted); font-size: var(--type-label); line-height: 1.4; }
+  .profile-social__settings { border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
+  .profile-social__settings summary { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem; color:var(--color-ink-strong); cursor:pointer; list-style:none; }
+  .profile-social__settings summary::-webkit-details-marker { display:none; }
+  .profile-social__settings summary::after { content:'+'; color:var(--color-ink-muted); font-size:1.1rem; }
+  .profile-social__settings[open] summary::after { content:'−'; }
+  .profile-social__settings summary span { color:var(--color-ink-muted); font-size:var(--type-label); }
+  .profile-social__settings-body { display:grid; gap:.7rem; padding:0 1rem 1rem; }
   @media (max-width: 46rem) {
     .profile-social__save,
     .profile-social__safety { align-items: flex-start; flex-direction: column; }
