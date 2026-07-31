@@ -32,6 +32,15 @@
         </article>
       {/each}
     </div>
+    <div class="guide__visual" aria-label="A roll result moving into the leaderboard">
+      <div class="guide__roll-card">
+        <span class="guide__roll-swatch" aria-hidden="true"></span>
+        <div><small>today's color · rare</small><strong>#B7FD4D</strong><b>53,296 <em>EP</em></b></div>
+      </div>
+      <span class="guide__visual-arrow" aria-hidden="true">→</span>
+      <div class="guide__leader-card"><small>today’s leaderboard</small><strong>#12&nbsp; @neonuser</strong><span>strong rolls rise into view</span></div>
+    </div>
+    <p class="guide__note">The color is the result. EP is the reward. Your position is the discovery surface other people can browse.</p>
   </section>
 
   <section class="guide__section guide__split" aria-labelledby="profile-title">
@@ -87,6 +96,18 @@
   .guide__steps article, .guide__account-grid article { min-height: 10rem; padding: 1.1rem; border: 1px solid rgba(255,255,255,.12); border-radius: .9rem; background: rgba(10,12,19,.5); }
   .guide__steps span { display: block; margin-bottom: 2.8rem; color: var(--color-accent-bright); font: 500 .65rem/1 var(--font-mono-stack); }
   .guide__steps p, .guide__account-grid p { margin: .55rem 0 0; font-size: .82rem; }
+  .guide__visual { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 1rem; margin-top: 1.2rem; padding: 1rem; border: 1px solid rgba(214,255,99,.18); border-radius: .9rem; background: rgba(6,10,10,.5); }
+  .guide__roll-card, .guide__leader-card { display: flex; align-items: center; gap: .8rem; min-height: 5rem; padding: .8rem; border: 1px solid rgba(255,255,255,.12); border-radius: .7rem; background: rgba(12,15,22,.62); }
+  .guide__roll-swatch { width: 3rem; height: 3rem; flex: 0 0 3rem; border-radius: .65rem; background: #b7fd4d; box-shadow: 0 0 1.5rem rgba(183,253,77,.42); }
+  .guide__visual small, .guide__leader-card span { display: block; color: var(--color-ink-faint); font: 500 .58rem/1.2 var(--font-mono-stack); }
+  .guide__roll-card strong, .guide__leader-card strong { display: block; margin-top: .3rem; color: var(--color-ink-strong); font: 650 1.05rem/1 var(--font-display-stack); }
+  .guide__roll-card b { display: block; margin-top: .35rem; color: #d6ff63; font: 700 .72rem/1 var(--font-mono-stack); }
+  .guide__roll-card em { color: var(--color-ink-faint); font-size: .52rem; font-style: normal; font-weight: 500; letter-spacing: .08em; }
+  .guide__leader-card { display: block; }
+  .guide__leader-card strong { color: #d6ff63; }
+  .guide__leader-card span { margin-top: .45rem; }
+  .guide__visual-arrow { color: var(--color-accent-bright); font-size: 1.4rem; }
+  .guide__note { margin: .9rem 0 0; color: var(--color-ink-faint); font: 500 .72rem/1.5 var(--font-mono-stack); }
   .guide__split { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 7vw, 7rem); align-items: start; }
   .guide__split > div > p:not(.guide__eyebrow) { max-width: 34rem; margin: 1rem 0 0; }
   .guide__list { display: grid; gap: .55rem; }
@@ -96,6 +117,6 @@
   .guide__callout p { margin: .8rem 0 0; font-size: .82rem; }
   .guide__account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: 1.6rem; }
   @media (max-width: 46rem) { .guide__steps, .guide__split { grid-template-columns: 1fr 1fr; gap: .65rem; } .guide__split { gap: 1.5rem; } }
-  @media (max-width: 34rem) { .guide__steps, .guide__split, .guide__account-grid { grid-template-columns: 1fr; } .guide__steps span { margin-bottom: 1.5rem; } }
+  @media (max-width: 34rem) { .guide__steps, .guide__split, .guide__account-grid { grid-template-columns: 1fr; } .guide__steps span { margin-bottom: 1.5rem; } .guide__visual { grid-template-columns: 1fr; } .guide__visual-arrow { justify-self: center; transform: rotate(90deg); } }
   @media (prefers-reduced-motion: reduce) { .guide a { transition: none; } }
 </style>
