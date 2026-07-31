@@ -149,3 +149,26 @@ test('existing flows use the product-event contract without exposing private pay
   assert.match(shop, /trackProductEvent\('shop_equip'/);
   assert.doesNotMatch(app + shell + game + profileRoll + discovery + shop + cosmeticsEditor, /trackProductEvent\([^\n]*(username|profileId|score|hex|email|details)/i);
 });
+
+test('homepage conversion events are allowlisted without identity payloads', () => {
+  const restore = installStorage();
+  const adapter = createMemoryProductAnalyticsAdapter();
+  setProductAnalyticsAdapter(adapter);
+
+  try {
+    setProductAnalyticsConsent('granted');
+    for (const eventName of ['username_claim_started', 'username_claim_completed', 'example_profile_opened', 'explore_clicked']) {
+      assert.equal(trackProductEvent(eventName, { username: 'private-name' }).accepted, true);
+    }
+    assert.deepEqual(adapter.getEvents().map(event => event.name), [
+      'username_claim_started',
+      'username_claim_completed',
+      'example_profile_opened',
+      'explore_clicked'
+    ]);
+    assert.doesNotMatch(JSON.stringify(adapter.getEvents()), /private-name/);
+    assert.deepEqual(adapter.getEvents().map(event => event.properties), [{}, {}, {}, {}]);
+  } finally {
+    restore();
+  }
+});

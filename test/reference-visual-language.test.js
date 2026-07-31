@@ -30,7 +30,7 @@ test('quiet reference surfaces and reduced-motion behavior are encoded', async (
 
   assert.match(header, /border-radius: var\(--radius-pill\)/);
   assert.match(header, /background: rgba\(7, 8, 11, 0\.52\)/);
-  assert.match(home, /font: 800 clamp\(5\.5rem/);
+  assert.match(home, /font: 700 clamp\(2\.8rem/);
   assert.match(home, /text-transform: lowercase/);
   assert.match(atmosphere, /background: #07080b/);
   assert.match(atmosphere, /prefers-reduced-motion/);

@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Homepage Conversion Pass — 2026-07-31
+
+- Reframed `/` around customizable public profiles, daily rolls, leaderboard
+  discovery, and a repeated username claim action.
+- Added one profile-led hero, three centralized example-profile fixtures, and
+  a compact roll/discovery explanation with desktop and 390 × 844 evidence.
+- Added four redacted, consent-gated homepage conversion events without
+  changing authentication, username moderation, routes, or gameplay authority.
+- `npm run build`, `npm run check`, `npx eslint src/`, and `npm test` pass;
+  performance budgets remain over the repository thresholds.
+
 ## Active Phase
 
 Phase 14 — Avatars, Backgrounds, and Spotify

@@ -714,6 +714,8 @@
         on:signup={() => openAuthModal('signup')}
         on:claim={event => openAuthModal({ detail: { mode: 'signup', username: event.detail?.username } })}
         on:profile={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
+        on:roll={() => setRoute('game')}
+        on:explore={() => setRoute('leaderboard', { tab: 'today' })}
       />
     {:else if view === 'game'}
       <Game on:promptlogin={openAuthModal} on:navigate={handleNavigation} />

@@ -2,6 +2,16 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-07-31 — Make the public profile the homepage conversion promise
+
+**Status:** accepted and implemented
+
+The homepage explains the profile-first loop directly and uses a curated,
+structured demo-profile projection rather than a score dashboard. The existing
+auth, username policy, route, and roll boundaries remain the authority. The
+homepage conversion events are added to the existing consent-gated analytics
+allowlist with no identity payloads.
+
 ## 2026-07-30 — Keep secondary profile data on an intentional second page
 
 **Status:** accepted and implemented

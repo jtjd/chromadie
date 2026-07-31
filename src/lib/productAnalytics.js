@@ -7,7 +7,11 @@ export const PRODUCT_ANALYTICS_EVENTS = Object.freeze([
   'roll_completed',
   'profile_shared',
   'shop_try_on',
-  'shop_equip'
+  'shop_equip',
+  'username_claim_started',
+  'username_claim_completed',
+  'example_profile_opened',
+  'explore_clicked'
 ]);
 
 const EVENT_PROPERTY_KEYS = Object.freeze({
@@ -17,7 +21,11 @@ const EVENT_PROPERTY_KEYS = Object.freeze({
   roll_completed: new Set(['surface', 'accountMode', 'isReroll']),
   profile_shared: new Set(['surface', 'method']),
   shop_try_on: new Set(['slot', 'accessTier', 'context']),
-  shop_equip: new Set(['slot', 'accessTier'])
+  shop_equip: new Set(['slot', 'accessTier']),
+  username_claim_started: new Set(),
+  username_claim_completed: new Set(),
+  example_profile_opened: new Set(),
+  explore_clicked: new Set()
 });
 
 const CONSENT_VALUES = new Set(['granted', 'denied']);

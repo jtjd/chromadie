@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { ACCOUNT_STATES } from './authState';
+  import { trackProductEvent } from './productAnalytics.js';
 
   export let activeView = 'game';
   export let accountState = /** @type {string} */ (ACCOUNT_STATES.SIGNED_OUT);
@@ -17,6 +18,7 @@
 
   function navigate(view) {
     mobileMenuOpen = false;
+    if (view === 'leaderboard' && isHomeMode && !isAuthenticated) trackProductEvent('explore_clicked');
     dispatch('navigate', { view, ...(view === 'leaderboard' ? { tab: 'today' } : {}) });
   }
 
@@ -37,12 +39,18 @@
 
   {#if !minimalMode}
     <nav class="site-mode-header__nav" aria-label="Primary application navigation">
-      <button type="button" class:active={activeView === 'profile'} aria-current={activeView === 'profile' ? 'page' : undefined} on:click={() => navigate('profile')}>Profile</button>
+      {#if isHomeMode && !isAuthenticated}
+        <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:click={() => navigate('leaderboard')}>Explore</button>
+        <span aria-hidden="true">/</span>
+        <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+      {:else}
+        <button type="button" class:active={activeView === 'profile'} aria-current={activeView === 'profile' ? 'page' : undefined} on:click={() => navigate('profile')}>Profile</button>
       <span aria-hidden="true">/</span>
       <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:click={() => navigate('leaderboard')}>Leaderboard</button>
       {#if isAuthenticated}
         <span aria-hidden="true">/</span>
         <button type="button" class:active={activeView === 'shop'} aria-current={activeView === 'shop' ? 'page' : undefined} on:click={() => navigate('shop')}>Studio</button>
+      {/if}
       {/if}
     </nav>
   {:else}
@@ -81,10 +89,15 @@
     <div class="site-mode-header__mobile-panel" aria-hidden={!mobileMenuOpen}>
       {#if !minimalMode}
         <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
-          <button type="button" class:active={activeView === 'profile'} on:click={() => navigate('profile')}>Profile</button>
+          {#if isHomeMode && !isAuthenticated}
+            <button type="button" class:active={activeView === 'leaderboard'} on:click={() => navigate('leaderboard')}>Explore</button>
+            <button type="button" class:active={activeView === 'leaderboard'} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+          {:else}
+            <button type="button" class:active={activeView === 'profile'} on:click={() => navigate('profile')}>Profile</button>
           <button type="button" class:active={activeView === 'leaderboard'} on:click={() => navigate('leaderboard')}>Leaderboard</button>
           {#if isAuthenticated}
             <button type="button" class:active={activeView === 'shop'} on:click={() => navigate('shop')}>Studio</button>
+          {/if}
           {/if}
         </div>
       {/if}

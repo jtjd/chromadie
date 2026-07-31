@@ -7,14 +7,18 @@ const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8'
 const guestProfile = await readFile(new URL('../src/lib/GuestProfileOnboarding.svelte', import.meta.url), 'utf8');
 
 test('the homepage explains the daily identity loop with a direct claim action', () => {
-  assert.match(home, /Roll one color each day/);
-  assert.match(home, /Earn EP from its conditions/);
-  assert.match(home, /daily color game/);
-  assert.match(home, /one roll daily/);
-  assert.match(home, /Claim your profile/);
+  assert.match(home, /A customizable public profile with a daily color roll/);
+  assert.match(home, /Add your own background, avatar, music, links/);
+  assert.match(home, /Strong rolls make your profile easier to discover/);
+  assert.match(home, /Claim your username/);
   assert.match(home, /dispatch\('claim'/);
   assert.match(home, /chm\.lol\//);
-  assert.match(home, /Open your profile/);
+  assert.match(home, /View your profile/);
+  assert.match(home, /Example profiles/);
+  assert.match(home, /One roll each day/);
+  assert.match(home, /Roll a color/);
+  assert.match(home, /Get discovered/);
+  assert.match(home, /HOMEPAGE_DEMO_PROFILES/);
   assert.match(home, /prefers-reduced-motion/);
   assert.match(home, /HomeRollShowcase/);
 });

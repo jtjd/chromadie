@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-07-31 — Homepage conversion pass
+
+- The homepage now introduces the customizable `chm.lol/username` profile
+  before the daily color game.
+- Added a profile-led hero, three differentiated example profiles, and a
+  simplified daily-roll-to-discovery explanation.
+- Preserved existing signup, username policy, auth, route, moderation, and
+  server-authoritative roll behavior.
+
 ## 2026-07-30 — Staff profile audio alpha
 
 - Added one bounded MP3 profile-audio upload for staff accounts.
