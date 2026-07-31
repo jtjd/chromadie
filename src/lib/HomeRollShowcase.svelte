@@ -13,7 +13,7 @@
     <div class="home-showcase__color" aria-label="Today’s color, purple">
       <span class="home-showcase__color-orb roll-sparkles-anim" aria-hidden="true"></span>
     </div>
-    <div class="home-showcase__result"><div class="home-showcase__result-heading"><p>today's roll</p><span>rare</span></div><strong class="home-showcase__color-value">#B7FD4D</strong><div class="home-showcase__score-row"><strong>53,296</strong><span>EP earned</span></div></div>
+    <div class="home-showcase__result"><div class="home-showcase__result-heading"><p>today's roll</p><span>rare</span></div><div class="home-showcase__score-row"><strong>53,296</strong><span>EP</span></div><div class="home-showcase__color-meta"><i aria-hidden="true"></i><code>#B7FD4D</code><span>color code</span></div></div>
   </div>
 </div>
 
@@ -39,10 +39,13 @@
   .home-showcase__result-heading { display: flex; align-items: center; gap: .55rem; }
   .home-showcase__result-heading p { margin: 0; color: #d6ff63; font: 700 .6rem/1.2 var(--font-mono-stack); letter-spacing: .14em; text-transform: uppercase; }
   .home-showcase__result-heading span { padding: .24rem .4rem; border: 1px solid rgba(214,255,99,.58); border-radius: var(--radius-pill); color: #d6ff63; font: 600 .46rem/1 var(--font-mono-stack); letter-spacing: .05em; text-transform: uppercase; }
-  .home-showcase__color-value { display: block; margin-top: .38rem; color: #f3f7eb; font: 700 1.95rem/.95 var(--font-display-stack); letter-spacing: -.05em; }
-  .home-showcase__score-row { display: flex; align-items: baseline; gap: .48rem; margin-top: .48rem; }
-  .home-showcase__score-row strong { color: #f3f7eb; font: 700 2.85rem/.86 var(--font-display-stack); letter-spacing: -.06em; }
-  .home-showcase__score-row span { color: rgba(244,246,255,.52); font: 500 .57rem/1 var(--font-mono-stack); letter-spacing: .08em; text-transform: uppercase; }
-  @media (max-width: 36rem) { .home-showcase { min-height: 27rem; padding: 1rem; } .home-showcase__profile-card { padding: .8rem; } .home-showcase__identity { margin-top: 2.7rem; } .home-showcase__avatar { flex-basis: 4rem; width: 4rem; height: 4rem; } .home-showcase__roll { grid-template-columns: 5.2rem minmax(0,1fr); gap: .65rem; padding: 1.15rem .25rem 1.1rem; } .home-showcase__color { width: 4.8rem; height: 4.8rem; } .home-showcase__color-orb { width: 4rem; height: 4rem; } .home-showcase__color-value { font-size: 1.55rem; } .home-showcase__score-row strong { font-size: 2.35rem; } .home-showcase__rank span:last-child { max-width: 7rem; text-align: right; line-height: 1.3; } }
+  .home-showcase__score-row { display: flex; align-items: baseline; gap: .48rem; margin-top: .58rem; }
+  .home-showcase__score-row strong { color: #f3f7eb; font: 700 3.2rem/.84 var(--font-display-stack); letter-spacing: -.07em; }
+  .home-showcase__score-row span { color: rgba(244,246,255,.5); font: 500 .58rem/1 var(--font-mono-stack); letter-spacing: .1em; text-transform: uppercase; }
+  .home-showcase__color-meta { display: flex; align-items: center; gap: .38rem; margin-top: .62rem; }
+  .home-showcase__color-meta i { width: .42rem; height: .42rem; border-radius: 50%; background: #b7fd4d; box-shadow: 0 0 .55rem rgba(183,253,77,.8); }
+  .home-showcase__color-meta code { color: rgba(244,246,255,.72); font: 500 .66rem/1 var(--font-mono-stack); letter-spacing: .05em; }
+  .home-showcase__color-meta span { color: rgba(244,246,255,.38); font: 500 .52rem/1 var(--font-mono-stack); }
+  @media (max-width: 36rem) { .home-showcase { min-height: 27rem; padding: 1rem; } .home-showcase__profile-card { padding: .8rem; } .home-showcase__identity { margin-top: 2.7rem; } .home-showcase__avatar { flex-basis: 4rem; width: 4rem; height: 4rem; } .home-showcase__roll { grid-template-columns: 5.2rem minmax(0,1fr); gap: .65rem; padding: 1.15rem .25rem 1.1rem; } .home-showcase__color { width: 4.8rem; height: 4.8rem; } .home-showcase__color-orb { width: 4rem; height: 4rem; } .home-showcase__score-row strong { font-size: 2.45rem; } .home-showcase__rank span:last-child { max-width: 7rem; text-align: right; line-height: 1.3; } }
   @media (prefers-reduced-motion: reduce) { .home-showcase * { transition: none !important; } }
 </style>
