@@ -713,6 +713,11 @@ phase, with an immediate reduced-motion equivalent.
   opening or scrolling through secondary details.
 - Removed the leftover header separator from the old share action.
 
+## 2026-07-30 — Align the header wordmark
+
+- Updated `chm.lol` to use the same compact monospaced language as the header
+  controls.
+
 ## 2026-07-30 — Keep roll conditions in the active reveal
 
 - Condition chips now begin entering during the scan/lock animation as soon as

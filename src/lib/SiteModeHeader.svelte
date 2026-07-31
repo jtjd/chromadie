@@ -135,13 +135,14 @@
     align-items: center;
     gap: 0.5rem;
     color: rgba(246, 248, 255, 0.94);
-    font: 600 0.92rem / 1 var(--font-body-stack);
-    letter-spacing: -0.035em;
+    font: 600 0.72rem / 1 var(--font-mono-stack);
+    letter-spacing: 0.08em;
+    text-transform: lowercase;
     text-decoration: none;
     white-space: nowrap;
   }
 
-  .site-mode-header__brand span { color: rgba(246, 248, 255, 0.38); }
+  .site-mode-header__brand span { color: rgba(246, 248, 255, 0.68); }
   .site-mode-header__brand > img {
     width: 1.15rem;
     height: 1.15rem;

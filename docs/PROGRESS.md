@@ -825,6 +825,12 @@ the remaining Phase 11 boundary.
   condition rail and above the collapsible breakdown.
 - Removed the orphaned header separator left after removing global sharing.
 
+## 2026-07-30 — Align header wordmark typography
+
+- Set `chm.lol` in the shared Geist Mono header language.
+- Kept the mark and normalized the wordmark color treatment for a quieter,
+  better-integrated lockup.
+
 ## 2026-07-30 — Reveal conditions during scan and lock
 
 - Primed canonical condition metadata before the visual spectrum loop finishes,

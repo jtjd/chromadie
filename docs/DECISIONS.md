@@ -1556,6 +1556,15 @@ The `Share roll` action sits immediately after the visible result conditions
 and before the expandable breakdown. This keeps the action attached to the
 daily color moment instead of burying it among secondary reward controls.
 
+## 2026-07-30 — Set the chm.lol wordmark in the header type language
+
+**Status:** accepted and implemented
+
+The header wordmark uses Geist Mono, lowercase treatment, and the same compact
+letter spacing family as its navigation controls. The logo mark remains the
+brand anchor, while `chm.lol` now reads as a quiet navigation label rather than
+a separate display-style lockup.
+
 ## 2026-07-30 — Keep reveal conditions visible through the scan phase
 
 **Status:** accepted and implemented
