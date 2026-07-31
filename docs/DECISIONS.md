@@ -1537,6 +1537,17 @@ condition client-side. The native disclosure remains available so players can
 collapse the detail after reading it. Reduced-motion users receive the same
 conditions immediately with no staged animation.
 
+## 2026-07-30 — Put sharing at the roll result
+
+**Status:** accepted and implemented
+
+Profile sharing belongs beside the canonical result it describes, not in the
+global header. The header now stays focused on navigation, account, and owner
+editing controls. Completed owners’ rolls expose a styled `Share roll` action
+that uses native share when available and copies a bounded text-and-URL
+fallback otherwise. The share text is derived from the server-reported result
+and leading conditions; it does not create a roll or mutate gameplay state.
+
 ## 2026-07-30 — Keep reveal conditions visible through the scan phase
 
 **Status:** accepted and implemented

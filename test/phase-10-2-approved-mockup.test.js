@@ -68,8 +68,10 @@ test('approved profile composition uses production adapters without prototype au
   assert.match(shell, /visualFixture={visualFixture}/);
   assert.match(shell, /on:colorchange=\{handleRollColor\}/);
   assert.doesNotMatch(shell, /profile-shell-warning.*Profile interactions are temporarily unavailable/s);
-  assert.match(header, /navigator\.share/);
-  assert.match(header, /navigator\.clipboard/);
+  assert.doesNotMatch(header, /navigator\.share/);
+  assert.doesNotMatch(header, /navigator\.clipboard/);
+  assert.match(roll, /navigator\.share/);
+  assert.match(roll, /navigator\.clipboard/);
   assert.match(roll, /requestRoll\(supabase, isReroll\)/);
   assert.match(roll, /visualFixture === 'pre-roll'/);
   assert.match(roll, /fixtureResult/);

@@ -701,6 +701,12 @@ presentation without changing its data or gameplay authority.
 - Server-reported score conditions appear one by one during the final lock
 phase, with an immediate reduced-motion equivalent.
 
+## 2026-07-30 — Share the roll from its result
+
+- Removed the global header share action.
+- Added `Share roll` to the completed result action row using the existing safe
+  native-share/clipboard pattern.
+
 ## 2026-07-30 — Keep roll conditions in the active reveal
 
 - Condition chips now begin entering during the scan/lock animation as soon as

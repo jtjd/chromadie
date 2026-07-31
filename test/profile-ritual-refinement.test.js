@@ -61,6 +61,9 @@ test('the owner roll uses a staged presentation without moving authority into th
   assert.match(roll, /bind:open=\{detailsOpen\}/);
   assert.match(roll, /\$profile\?\.is_staff/);
   assert.match(roll, /Replay reveal/);
+  assert.match(roll, /async function shareRoll/);
+  assert.match(roll, /Share roll/);
+  assert.match(roll, /surface: 'roll'/);
   assert.match(roll, /async function replayReveal/);
   assert.doesNotMatch(
     roll.slice(roll.indexOf('async function replayReveal'), roll.indexOf('async function initiateRoll')),

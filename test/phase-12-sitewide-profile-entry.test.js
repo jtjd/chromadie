@@ -33,8 +33,9 @@ test('site surfaces use one shared header and the shared atmospheric shell', () 
   assert.match(header, /Discover/);
   assert.match(header, /Studio/);
   assert.match(header, /isProfileMode/);
-  assert.match(header, /navigator\.share/);
-  assert.match(header, /Share profile/);
+  assert.doesNotMatch(header, /navigator\.share/);
+  assert.doesNotMatch(header, /Share profile/);
+  assert.doesNotMatch(header, /shareProfile/);
   assert.match(header, /dispatch\('logout'/);
   assert.match(site, /\.app-main--site \.card/);
   assert.match(site, /\.app-main--site \.shop-page/);

@@ -1,8 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { ACCOUNT_STATES } from './authState';
-  import { addToast } from './stores';
-  import { trackProductEvent } from './productAnalytics.js';
 
   export let activeView = 'game';
   export let accountState = /** @type {string} */ (ACCOUNT_STATES.SIGNED_OUT);
@@ -11,13 +9,10 @@
   export let logoutInProgress = false;
   export let isProfileMode = false;
   export let isHomeMode = false;
-  export let profileUsername = '';
-  export let shareUrl = '';
   export let isOwner = false;
 
   const dispatch = createEventDispatcher();
   let mobileMenuOpen = false;
-  let shareInProgress = false;
   $: minimalMode = isProfileMode;
 
   function navigate(view) {
@@ -27,36 +22,6 @@
 
   function navigateHome() {
     navigate('home');
-  }
-
-  async function shareProfile() {
-    if (shareInProgress) return;
-    shareInProgress = true;
-    const url = shareUrl || (typeof window !== 'undefined' ? window.location.href : '');
-
-    try {
-      let method = '';
-      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-        await navigator.share({
-          title: profileUsername ? `${profileUsername} | chm.lol` : 'A ChromaDie profile',
-          text: profileUsername ? `See ${profileUsername}'s color identity.` : 'See this color identity.',
-          url
-        });
-        method = 'native';
-      } else if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-        method = 'clipboard';
-      } else {
-        throw new Error('Share is unavailable.');
-      }
-
-      trackProductEvent('profile_shared', { surface: 'profile', method });
-      addToast(method === 'clipboard' ? 'Profile link copied.' : 'Profile shared.', 'success');
-    } catch (error) {
-      if (error?.name !== 'AbortError') addToast('Could not share this profile.', 'error');
-    } finally {
-      shareInProgress = false;
-    }
   }
 
   function editProfile() {
@@ -88,9 +53,6 @@
   <div class="site-mode-header__right">
     {#if isProfileMode}
       <div class="site-mode-header__context" aria-label="Profile actions">
-        <button type="button" on:click={shareProfile} disabled={shareInProgress}>
-          {shareInProgress ? 'Sharing…' : 'Share'}
-        </button>
         {#if isOwner}
           <span aria-hidden="true">/</span>
           <button type="button" on:click={editProfile}>Edit</button>
@@ -131,7 +93,6 @@
 
       {#if isProfileMode}
         <div class="site-mode-header__mobile-context" aria-label="Profile actions">
-          <button type="button" on:click={shareProfile} disabled={shareInProgress}>{shareInProgress ? 'Sharing…' : 'Share profile'}</button>
           {#if isOwner}<button type="button" on:click={editProfile}>Edit profile</button>{/if}
         </div>
       {/if}

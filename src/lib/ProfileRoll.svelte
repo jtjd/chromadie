@@ -88,6 +88,7 @@
   let skipRevealRequested = false;
   let freshReveal = false;
   let detailsOpen = true;
+  let shareInProgress = false;
   let replayData = null;
   let replayCanonical = null;
 
@@ -320,6 +321,33 @@
   function skipReveal() {
     skipRevealRequested = true;
     revealStage = 3;
+  }
+
+  async function shareRoll() {
+    if (shareInProgress || phase !== 'results') return;
+    shareInProgress = true;
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const conditions = headlineConditions.map(condition => condition.label).join(', ');
+    const text = `I rolled ${displayHex} for ${displayScore.toLocaleString()} EP (${rarity}) on ChromaDie.${conditions ? ` Conditions: ${conditions}.` : ''}`;
+
+    try {
+      let method = '';
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        await navigator.share({ title: `${displayHex} · ${displayScore.toLocaleString()} EP`, text, url });
+        method = 'native';
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        method = 'clipboard';
+      } else {
+        throw new Error('Share is unavailable.');
+      }
+      trackProductEvent('profile_shared', { surface: 'roll', method });
+      addToast(method === 'clipboard' ? 'Roll share text copied.' : 'Roll shared.', 'success');
+    } catch (error) {
+      if (error?.name !== 'AbortError') addToast('Could not share this roll.', 'error');
+    } finally {
+      shareInProgress = false;
+    }
   }
 
   async function replayReveal() {
@@ -635,6 +663,9 @@
               <p>Come back when the next color is available.</p>
             </div>
             <div class="profile-roll__actions">
+              <button type="button" class="profile-roll__button profile-roll__button--share" on:click={shareRoll} disabled={shareInProgress}>
+                {shareInProgress ? 'Sharing…' : 'Share roll'}
+              </button>
               {#if canReplayReveal}
                 <button
                   type="button"
@@ -681,6 +712,7 @@
   .profile-roll__button:disabled { cursor: wait; opacity: 0.55; }
   .profile-roll__button--secondary { border-color: color-mix(in srgb, var(--profile-accent) 55%, transparent); background: color-mix(in srgb, var(--profile-accent) 14%, transparent); color: var(--color-accent-bright); }
   .profile-roll__button--replay { border-color: color-mix(in srgb, var(--profile-accent) 42%, transparent); background: color-mix(in srgb, var(--profile-accent) 10%, transparent); color: color-mix(in srgb, var(--profile-accent) 48%, white); }
+  .profile-roll__button--share { border-color: color-mix(in srgb, var(--profile-accent) 58%, transparent); background: color-mix(in srgb, var(--profile-accent) 16%, transparent); color: color-mix(in srgb, var(--profile-accent) 74%, white); }
   .profile-roll__button--reroll { min-height: 2.35rem; padding-inline: var(--space-4); border-color: color-mix(in srgb, var(--color-warning) 50%, transparent); background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: var(--color-warning); font-size: var(--type-label); }
   .profile-roll__preview { display: grid; place-items: center; min-width: 9rem; }
   .profile-roll__preview :global(.roll-effect-wrapper) { transform: scale(0.72); transform-origin: center; }

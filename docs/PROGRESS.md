@@ -811,6 +811,14 @@ the remaining Phase 11 boundary.
   canonical server-reported contributors.
 - Added reduced-motion coverage in the component styles and regression tests.
 
+## 2026-07-30 — Move sharing into roll results
+
+- Removed profile sharing controls from the sitewide header.
+- Added a new-style `Share roll` action to completed owner results with native
+  share and clipboard fallback behavior.
+- Kept the action presentation-only and sourced its text from the canonical
+  result and displayed conditions.
+
 ## 2026-07-30 — Reveal conditions during scan and lock
 
 - Primed canonical condition metadata before the visual spectrum loop finishes,

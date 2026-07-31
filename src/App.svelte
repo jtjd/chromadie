@@ -431,10 +431,6 @@
         )
       )
   );
-  $: profileModePath = getCanonicalProfilePath(profileModeUsername) || '/profile';
-  $: profileModeUrl = typeof window !== 'undefined'
-    ? new URL(profileModePath, window.location.origin).toString()
-    : profileModePath;
   $: pageTitle = routeMode === 'privacy'
     ? 'Privacy Policy | ChromaDie'
     : routeMode === 'how-to-play'
@@ -591,8 +587,6 @@
       logoutInProgress={logoutInProgress}
       isProfileMode={profileModeVisible}
       isHomeMode={homeModeVisible}
-      profileUsername={profileModeUsername}
-      shareUrl={profileModeUrl}
       isOwner={profileModeOwner}
       on:navigate={handleNavigation}
       on:login={openAuthModal}
