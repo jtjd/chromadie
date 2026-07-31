@@ -39,7 +39,7 @@ test('phase 11.1 production composition uses a full atmosphere and intentional a
   assert.match(identity, /font: 600 0\.75rem/);
   assert.match(identity, /if bio/);
   assert.match(identity, /link-icons/);
-  assert.match(today, /font: 600 clamp\(1\.25rem/);
+  assert.match(today, /font: 600 clamp\(1\.9rem/);
   assert.match(today, /getOrbShape/);
   assert.match(today, /getRollEffect/);
   assert.match(collection, /Color archive/);

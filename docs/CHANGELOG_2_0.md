@@ -705,8 +705,7 @@ phase, with an immediate reduced-motion equivalent.
 
 - Condition chips now begin entering during the scan/lock animation as soon as
   the canonical response is available.
-- The full-width application header remains visible as the profile continuation
-  scrolls.
+- The full-width application header retains its transparent visual treatment.
 
 ## 2026-07-30 — Full-width application header
 

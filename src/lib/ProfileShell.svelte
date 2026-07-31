@@ -396,7 +396,7 @@
   $: secondaryModules = composition.secondaryModules;
   $: rollModule = activeModules.find(module => module.id === 'roll') || { size: 'wide' };
   $: layoutVariant = effectiveProfileConfig.layoutVariant;
-  $: showRoll = isOwnProfile || getProfileRollVisible(effectiveProfileConfig);
+  $: showRoll = getProfileRollVisible(effectiveProfileConfig);
   $: hasProfileMore = showRoll || showExpression || (getProfileStoryVisible(effectiveProfileConfig) && secondaryModules.length > 0);
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
   $: pinnedAchievements = (targetProfile?.equipped_badges || []).map(getAchievement);
@@ -1085,13 +1085,13 @@
   }
 
   .profile-shell__more .profile-shell__approved-game :global(.today-color) {
-    width: min(100%, 34rem);
+    width: min(100%, 46rem);
     margin: 0 auto;
     padding: 1.25rem 1.5rem;
-    border: 1px solid var(--color-line-subtle);
-    border-radius: var(--radius-lg);
-    background: color-mix(in srgb, var(--surface-panel) 62%, transparent);
-    box-shadow: 0 1.5rem 4rem rgba(0,0,0,0.18);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .profile-shell__more > .profile-shell__approved-game:first-child { margin-top: 0; }

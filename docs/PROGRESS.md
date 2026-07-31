@@ -817,8 +817,8 @@ the remaining Phase 11 boundary.
   allowing condition chips to animate during the active roll.
 - Distributed the condition entrances across the scan cadence and retained an
   immediate reduced-motion path.
-- Made the viewport-wide header sticky with a subtle translucent boundary so it
-  remains visible across profile continuation scroll.
+- Kept the viewport-wide header transparent while preserving its responsive
+  inner padding and route-wide layout.
 
 ## 2026-07-30 — Full-width sitewide header
 
