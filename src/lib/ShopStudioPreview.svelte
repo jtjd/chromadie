@@ -65,17 +65,17 @@
     <div class="stage-grid" aria-hidden="true"></div>
 
     {#if activeContext === 'profile'}
+      {#if profileAtmosphere}
+        <ProfileAtmosphere
+          canvasOnly={true}
+          accent={displayColor}
+          secondaryAccent="#71D6FF"
+          effect={profileAtmosphere}
+        />
+      {/if}
       <div class={'studio-profile-card ' + profileBorder.cls} style={profileBorder.style}>
         {#if profileBackground.cls || profileBackground.style}
           <div class={'studio-profile-cosmetic-bg ' + profileBackground.cls} style={profileBackground.style} aria-hidden="true"></div>
-        {/if}
-        {#if profileAtmosphere}
-          <ProfileAtmosphere
-            canvasOnly={true}
-            accent={displayColor}
-            secondaryAccent="#71D6FF"
-            effect={profileAtmosphere}
-          />
         {/if}
         <IdentityCard
           {username}
@@ -235,6 +235,7 @@
       radial-gradient(circle at 50% 40%, rgba(122,96,255,0.13), transparent 42%),
       #07080c;
   }
+  .studio-stage :global(.profile-atmosphere--canvas-only) { z-index: 1; }
   .studio-stage.context-profile { min-height: 300px; }
 
   .stage-grid {
@@ -250,7 +251,7 @@
 
   .studio-profile-card {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     width: min(100% - 32px, 72rem);
     overflow: hidden;
     border: 1px solid rgba(255,255,255,0.1);

@@ -1796,3 +1796,17 @@ repetitive. Atmosphere effects now use a seeded 2D canvas renderer with shared
 resize, density, depth, color, and reduced-motion behavior. The renderer is
 also used by owner previews and shop cards, so future effects can be added as
 curated drawing recipes without accepting user HTML, JavaScript, or CSS.
+
+## 2026-08-01 — Make the cosmetics shop a visual atelier
+
+The shop and profile editor remain separate surfaces with separate jobs. The
+shop is now a discovery and acquisition surface: it presents a large live
+profile canvas, a compact featured collection, direct catalog filters, and a
+selected-item panel. The profile editor remains the permanent equip surface.
+
+Selecting a cosmetic creates a temporary try-on loadout and never writes
+equipped state. Purchasing calls the existing `purchase_item` RPC only; the
+shop does not auto-equip the item. Owned cosmetics link back to profile
+settings, where the existing `equip_item` and `unequip_item` authority stays
+unchanged. The redesign is presentation-only and requires no schema or
+entitlement migration.

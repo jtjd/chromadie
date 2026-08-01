@@ -146,7 +146,8 @@ test('existing flows use the product-event contract without exposing private pay
   assert.match(profileRoll, /trackProductEvent\('roll_completed'/);
   assert.match(discovery, /trackProductEvent\('profile_shared'/);
   assert.match(cosmeticsEditor, /trackProductEvent\('shop_try_on'/);
-  assert.match(shop, /trackProductEvent\('shop_equip'/);
+  assert.match(shop, /supabase\.rpc\('purchase_item'/);
+  assert.doesNotMatch(shop, /trackProductEvent\('shop_equip'/);
   assert.doesNotMatch(app + shell + game + profileRoll + discovery + shop + cosmeticsEditor, /trackProductEvent\([^\n]*(username|profileId|score|hex|email|details)/i);
 });
 

@@ -886,3 +886,17 @@ phase, with an immediate reduced-motion equivalent.
 - Reused the same renderer in profile settings, the decoration studio, and shop
   previews so effects stay visually consistent while being extended.
 - Preserved curated effect allowlisting and `prefers-reduced-motion` behavior.
+
+## 2026-08-01 — Rebuild the cosmetics shop as a visual atelier
+
+- Replaced the dashboard-like shop presentation with a profile canvas beside
+  catalog browsing and a compact featured collection strip.
+- Added reusable shop item cards and a selected-item panel with clear free,
+  earned, premium, owned, and preview states.
+- Added temporary try-on across profile, roll, and leaderboard preview
+  contexts without changing equipped account state.
+- Kept purchases server-authoritative and purchase-only; owned cosmetics now
+  link to profile settings for permanent equip management instead of being
+  equipped automatically.
+- Removed the redundant detail drawer and kept the existing catalog, wallet,
+  entitlement, route, and RPC contracts intact.

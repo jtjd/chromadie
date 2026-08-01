@@ -962,3 +962,17 @@ Profile atmosphere effects now use a seeded canvas particle layer across public
 profiles, settings previews, the decoration fitting room, and shop item cards.
 The first recipes are rain, snow, fireflies, and scanlines. Reduced-motion mode
 stops animation while preserving a static visual state.
+
+## 2026-08-01 — Redesign the cosmetics shop as a profile atelier
+
+The shop now uses a profile-first workspace with a larger live preview, compact
+featured collection strip, department and filter rails, reusable item cards,
+and a selected cosmetic panel. Temporary try-on changes the preview loadout
+only, while purchase remains a server-authoritative `purchase_item` action and
+owned items hand off to profile settings for permanent equip management.
+
+No database, RLS, entitlement, or route contracts changed. Added source-level
+coverage for the new shop composition and purchase-only boundary. Full
+validation is recorded at handoff; the existing performance budget remains a
+known baseline concern if the performance check reports the current bundle
+size overage.
