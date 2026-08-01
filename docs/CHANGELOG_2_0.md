@@ -863,3 +863,10 @@ phase, with an immediate reduced-motion equivalent.
 - Connected every normalized layout draft edit to the shared profile preview.
 - Made style, signature color, links, story visibility, and section order
   visible in the draft preview before publishing.
+
+## 2026-08-01 — Refine the profile roll entry point
+
+- Replaced “Reveal your color” with direct “Roll your color” copy.
+- Added a live `Resets in HH:MM:SS` countdown to the ready state.
+- Replaced the orb/orbit treatment with a restrained square signal mark and
+  quieter profile-aligned button styling.

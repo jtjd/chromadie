@@ -506,14 +506,20 @@
   {:else if phase === 'preroll'}
     <div class="profile-roll__ready">
       <div class="profile-roll__ready-copy">
-        <p class="profile-roll__eyebrow">Today’s ritual</p>
-        <h3>Reveal your color.</h3>
-        <p class="profile-roll__copy">One new mark joins this identity. You get one reveal each day.</p>
+        <div class="profile-roll__ready-meta">
+          <p class="profile-roll__eyebrow">Today’s color</p>
+          <div class="profile-roll__availability" aria-label={'Roll resets in ' + countdownString}>
+            <span>Resets in</span>
+            <strong>{countdownString}</strong>
+          </div>
+        </div>
+        <h3>Roll your color.</h3>
+        <p class="profile-roll__copy">One daily roll adds a new color to your profile.</p>
       </div>
       <button type="button" class="profile-roll__reveal-button" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
-        <span class="profile-roll__reveal-orb" aria-hidden="true"><span></span></span>
-        <span class="profile-roll__reveal-copy"><strong>{loading ? 'Preparing…' : 'Reveal today’s color'}</strong><small>Once today</small></span>
-        <span class="profile-roll__reveal-arrow" aria-hidden="true">↗</span>
+        <span class="profile-roll__reveal-swatch" aria-hidden="true"><span></span></span>
+        <span class="profile-roll__reveal-copy"><strong>{loading ? 'Preparing…' : 'Roll today'}</strong><small>One roll available</small></span>
+        <span class="profile-roll__reveal-arrow" aria-hidden="true">→</span>
       </button>
     </div>
   {:else if phase === 'rolling'}
@@ -819,12 +825,12 @@
     gap: clamp(1.5rem, 5vw, 3.5rem);
     min-height: 15rem;
     padding: 1.5rem 0;
-    isolation: isolate;
   }
-  .profile-roll__ready::before { content: ''; position: absolute; z-index: -1; inset: 8% 14% 8% 4%; border-radius: 50%; background: radial-gradient(ellipse at 42% 50%, color-mix(in srgb, var(--profile-accent) 13%, transparent), transparent 66%); filter: blur(0.35rem); pointer-events: none; }
-  .profile-roll__ready::after { content: ''; position: absolute; z-index: -1; top: 50%; left: 30%; width: min(24rem, 52vw); height: 8rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 25%, transparent); border-radius: 50%; transform: translate(-50%, -50%) rotate(-18deg); opacity: 0.7; pointer-events: none; }
 
   .profile-roll__ready-copy { display: grid; gap: 0.55rem; }
+  .profile-roll__ready-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem 1rem; }
+  .profile-roll__availability { display: inline-flex; align-items: baseline; gap: 0.4rem; color: var(--color-ink-muted); font: 600 0.64rem / 1 var(--font-mono-stack); letter-spacing: 0.06em; text-transform: uppercase; }
+  .profile-roll__availability strong { color: color-mix(in srgb, var(--profile-accent) 72%, white); font-weight: 600; letter-spacing: 0.04em; }
   .profile-roll__ready-copy h3 { margin: 0; color: var(--color-ink-strong); font: 600 clamp(1.8rem, 4.5vw, 2.65rem) / 0.98 var(--font-display-stack); letter-spacing: -0.055em; }
   .profile-roll__ready .profile-roll__copy { display: block; max-width: 28rem; margin: 0.15rem 0 0; color: var(--color-ink-muted); font-size: 0.88rem; line-height: 1.55; }
   .profile-roll__reveal-button {
@@ -836,21 +842,20 @@
     min-height: 6.25rem;
     padding: 0.75rem 1rem 0.75rem 0.8rem;
     border: 1px solid color-mix(in srgb, var(--profile-accent) 48%, rgba(230, 238, 255, 0.16));
-    border-radius: 1.1rem;
-    background: linear-gradient(100deg, color-mix(in srgb, var(--profile-accent) 17%, rgba(255, 255, 255, 0.055)), rgba(255, 255, 255, 0.045));
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--profile-accent) 9%, var(--surface-panel-soft));
     color: var(--color-ink-strong);
     text-align: left;
     cursor: pointer;
-    box-shadow: 0 0.8rem 2.5rem color-mix(in srgb, var(--profile-accent) 13%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0.7rem 1.8rem color-mix(in srgb, var(--profile-accent) 8%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     transition: transform var(--motion-fast) var(--motion-ease-emphasis), border-color var(--motion-base) var(--motion-ease-standard), background-color var(--motion-base) var(--motion-ease-standard), box-shadow var(--motion-base) var(--motion-ease-standard), opacity var(--motion-base) var(--motion-ease-standard);
   }
-  .profile-roll__reveal-button:hover:not(:disabled) { transform: translateY(-2px); border-color: color-mix(in srgb, var(--profile-accent) 78%, white); background: linear-gradient(100deg, color-mix(in srgb, var(--profile-accent) 24%, rgba(255, 255, 255, 0.07)), rgba(255, 255, 255, 0.06)); box-shadow: 0 1.1rem 3rem color-mix(in srgb, var(--profile-accent) 23%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+  .profile-roll__reveal-button:hover:not(:disabled) { transform: translateY(-2px); border-color: color-mix(in srgb, var(--profile-accent) 78%, white); background: color-mix(in srgb, var(--profile-accent) 15%, var(--surface-panel-soft)); box-shadow: 0 0.95rem 2.3rem color-mix(in srgb, var(--profile-accent) 15%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
   .profile-roll__reveal-button:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 4px; }
   .profile-roll__reveal-button:disabled { cursor: wait; opacity: 0.58; }
-  .profile-roll__reveal-orb { position: relative; display: grid; place-items: center; width: 4.4rem; height: 4.4rem; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%; background: radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.72), var(--profile-accent) 43%, rgba(3, 6, 11, 0.92) 100%); box-shadow: 0 0 2.4rem color-mix(in srgb, var(--profile-accent) 58%, transparent), inset 0 0.35rem 0.55rem rgba(255, 255, 255, 0.2); }
-  .profile-roll__reveal-orb::before { content: ''; position: absolute; inset: 0.42rem; border: 1px solid rgba(255, 255, 255, 0.34); border-radius: inherit; transform: rotate(28deg) scaleY(0.62); }
-  .profile-roll__reveal-orb::after { content: ''; position: absolute; inset: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 42% 58% 48% 52%; transform: rotate(-34deg); }
-  .profile-roll__reveal-orb span { position: relative; z-index: 1; width: 0.62rem; height: 0.62rem; border-radius: 50%; background: rgba(255, 255, 255, 0.88); box-shadow: 0 0 1rem rgba(255, 255, 255, 0.95); }
+  .profile-roll__reveal-swatch { position: relative; display: grid; place-items: center; width: 3.7rem; height: 3.7rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 64%, white); border-radius: 0.55rem; background: linear-gradient(145deg, color-mix(in srgb, var(--profile-accent) 64%, white), color-mix(in srgb, var(--profile-accent) 22%, var(--surface-inset))); box-shadow: inset 0 0 0 0.25rem color-mix(in srgb, var(--profile-accent) 12%, transparent), 0 0 1.5rem color-mix(in srgb, var(--profile-accent) 17%, transparent); }
+  .profile-roll__reveal-swatch::before { content: ''; position: absolute; inset: 0.65rem; border: 1px solid rgba(255, 255, 255, 0.42); border-radius: 0.25rem; transform: rotate(45deg); }
+  .profile-roll__reveal-swatch span { position: relative; z-index: 1; width: 0.48rem; height: 0.48rem; border-radius: 0.1rem; background: rgba(255, 255, 255, 0.9); box-shadow: 0 0 0.8rem rgba(255, 255, 255, 0.78); }
   .profile-roll__reveal-copy { display: grid; min-width: 0; gap: 0.28rem; }
   .profile-roll__reveal-copy strong { overflow-wrap: anywhere; font: 600 0.88rem / 1.15 var(--font-body-stack); }
   .profile-roll__reveal-copy small { color: var(--color-ink-muted); font: 600 0.64rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
@@ -909,6 +914,7 @@
   .profile-roll__result--high { --result-impact: 1.24; --result-brightness: 1.8; }
 
   @media (max-width: 48rem) {
+    .profile-roll__ready { grid-template-columns: 1fr; }
     .profile-roll__ready,
     .profile-roll__story,
     .profile-roll__next { align-items: flex-start; flex-direction: column; }
@@ -964,6 +970,8 @@
   :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__ready .profile-roll__copy,
   :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__percentile { display: none; }
   :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__reveal-button { width: auto; min-width: 12rem; min-height: 3.25rem; }
+  :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__reveal-swatch { width: 2.55rem; height: 2.55rem; }
+  :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__reveal-swatch::before { inset: 0.45rem; }
   :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__details { margin-top: 0; padding-top: 0.7rem; border-top: 1px solid var(--color-line-subtle); }
 
   @media (max-width: 48rem) {

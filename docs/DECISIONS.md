@@ -1761,3 +1761,18 @@ removed because they described the configuration without showing the profile it
 actually changes. Draft preview state is local to the settings surface; save
 and publish still use the existing server RPCs and visitors only receive the
 published configuration.
+
+## 2026-08-01 — Keep the daily roll inside the profile language
+
+**Status:** accepted and implemented
+
+The owner preroll is a profile module, not a promotional hero. Its ready state
+uses direct copy, a restrained square signal mark, and the existing daily reset
+timer. The countdown creates a light reason to act while remaining secondary to
+the profile and disappearing as a marketing device once the daily roll is
+complete.
+
+The server-authoritative roll flow, reveal animation, result details, and UTC
+reset calculation remain unchanged. The visual update removes the decorative
+orb, orbit, and oversized glow that made the action feel disconnected from the
+rest of the profile surface.

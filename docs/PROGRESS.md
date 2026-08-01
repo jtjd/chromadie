@@ -916,6 +916,12 @@ links, color-story toggle, and visible section order. The misleading abstract
 layout diagram and manual preview toggle were removed; draft/save/publish
 boundaries remain unchanged.
 
+## 2026-08-01 — Refine the daily roll entry point
+
+The profile preroll now uses direct copy, a compact square signal mark, and a
+live daily reset countdown. The previous floating orb, orbit lines, and heavy
+glow were removed so the roll reads as a profile module with a clear action.
+
 ## 2026-08-01 — Simplify settings copy and viewport hierarchy
 
 - Replaced poetic settings copy with direct instructional labels and task
