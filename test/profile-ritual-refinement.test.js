@@ -88,13 +88,16 @@ test('profile and account hydration remain non-visual', async () => {
   const shell = await read('src/lib/ProfileShell.svelte');
   const legacyProfile = await read('src/lib/Profile.svelte');
   const app = await read('src/App.svelte');
+  const accountUnavailable = await read('src/lib/AccountUnavailable.svelte');
   const header = await read('src/lib/SiteModeHeader.svelte');
 
   assert.match(shell, /aria-busy=\{loading\}/);
   assert.match(legacyProfile, /aria-busy=\{loading\}/);
   assert.doesNotMatch(shell + legacyProfile, /Loading profile|Loading color identity|profile-shell-loading/);
-  assert.doesNotMatch(app + header, /Loading account|Preparing your account/);
-  assert.match(app, /Account unavailable/);
+  assert.match(app, /staticComponent: RouteLoading/);
+  assert.match(app, /currentLegacyProfile \? 'profileLegacy' : 'profileShell'/);
+  assert.doesNotMatch(header, /Loading account|Preparing your account/);
+  assert.match(accountUnavailable, /Account unavailable/);
   assert.match(header, /Retry account/);
 });
 

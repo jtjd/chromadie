@@ -371,7 +371,7 @@
 </div>
 
 <style>
-  .shop-page { width:min(1540px,calc(100% - 32px)); margin:28px auto 80px; color:#f4f3f8; --shop-line:rgba(255,255,255,.085); --shop-muted:#888a99; --shop-purple:#8b7cf6; }
+  .shop-page { width:min(1540px,calc(100% - 32px)); margin:28px auto 80px; color:var(--color-ink-strong); --shop-line:var(--color-line-subtle); --shop-muted:var(--color-ink-muted); --shop-purple:var(--color-accent); }
   .shop-header { display:flex; align-items:center; justify-content:space-between; gap:32px; padding:34px 4px 28px; }
   .shop-kicker { color:#a99cf5; font:700 .62rem/1 var(--font-mono-stack); letter-spacing:.13em; text-transform:uppercase; }
   .shop-heading h1 { max-width:760px; margin:10px 0; color:#f4f2f8; font:720 clamp(2.8rem,6vw,5.6rem)/.88 var(--font-display); letter-spacing:-.075em; }
@@ -403,7 +403,7 @@
   .catalog-controls { display:grid; gap:10px; padding:12px; border:1px solid var(--shop-line); border-radius:19px; background:rgba(255,255,255,.018); }
   .search-field { position:relative; display:flex; align-items:center; }
   .search-field input { width:100%; min-height:48px; padding:0 44px 0 42px; border:1px solid rgba(255,255,255,.085); border-radius:13px; background:rgba(5,6,9,.72); color:#fff; outline:none; }
-  .search-field input:focus { border-color:rgba(158,140,255,.55); box-shadow:0 0 0 3px rgba(139,124,246,.1); }
+  .search-field input:focus { border-color:var(--color-accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--color-accent) 14%, transparent); }
   .search-field input::placeholder { color:#656776; }
   .search-icon { position:absolute; left:15px; z-index:1; color:#858797; font-size:1.1rem; }
   .search-field button { position:absolute; right:9px; width:32px; height:32px; border:0; border-radius:9px; background:rgba(255,255,255,.05); color:#999baa; cursor:pointer; }

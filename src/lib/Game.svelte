@@ -972,10 +972,10 @@
   .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-mono-stack); background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--card-border); }
   .chroma-btn { position: relative; isolation: isolate; background: #16171f; color: #fff; border: 1px solid transparent; padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: var(--font-display-stack); font-weight: 600; transition: transform 0.15s ease, box-shadow 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: inline-flex; align-items: center; gap: 5px; }
   .chroma-btn::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; z-index: -1; background: var(--spectrum); background-size: 300% 100%; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spectrumFlow 5s linear infinite; }
-  .chroma-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 124, 246, 0.25); }
+  .chroma-btn:hover { transform: translateY(-1px); box-shadow: none; border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 9%, transparent); }
   .chroma-btn:active { transform: translateY(1px); }
-  .reroll-btn { background: rgba(139, 124, 246, 0.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: var(--font-display-stack); font-weight: 600; transition: all 0.2s; }
-  .reroll-btn:hover { background: rgba(139, 124, 246, 0.3); }
+  .reroll-btn { background: transparent; color: var(--color-accent-bright); border: 1px solid color-mix(in srgb, var(--color-accent) 58%, transparent); padding: 7px 18px; font-size: 0.85rem; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-body-stack); font-weight: 600; transition: all 0.2s; }
+  .reroll-btn:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
   .reroll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .identity-label {
@@ -1140,8 +1140,8 @@
   }
 
   .cotw-widget {
-    margin-top: 25px; padding: 15px; background: rgba(139, 124, 246, 0.05);
-    border: 1px solid rgba(139, 124, 246, 0.2); border-radius: 12px;
+    margin-top: 25px; padding: 15px; background: var(--surface-panel-soft);
+    border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm);
     display: flex; align-items: center; justify-content: space-between; gap: 15px;
   }
   .cotw-info { text-align: left; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -1150,7 +1150,7 @@
   .cotw-swatch { width: 48px; height: 48px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 0 15px rgba(0,0,0,0.3); flex-shrink: 0; }
 
   .cotw-success-banner {
-    background: linear-gradient(90deg, rgba(139, 124, 246, 0.2), rgba(0,0,0,0));
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 12%, transparent), rgba(0,0,0,0));
     border-left: 4px solid var(--accent-purple); color: #fff; padding: 12px 15px;
     border-radius: 8px; margin-bottom: 20px; font-weight: 600; text-align: left; font-size: 0.9rem;
   }
@@ -1166,7 +1166,7 @@
   .preview-img { width: 100%; max-height: min(63vw, calc(100dvh - 10rem)); object-fit: contain; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 20px; }
   .modal-actions { display: flex; gap: 15px; justify-content: center; }
   .download-btn { background: var(--accent-purple); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-  .download-btn:hover { background: #7c3aed; }
+  .download-btn:hover { background: var(--color-accent-bright); }
   .close-btn { background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; }
 
   @media (max-width: 600px) {

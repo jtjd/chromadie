@@ -9,6 +9,8 @@ const discovery = await readFile(new URL('../src/lib/HomeDiscovery.svelte', impo
 const guestRollFixture = await readFile(new URL('../src/lib/guestRollFixture.js', import.meta.url), 'utf8');
 const profileRoll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
+const routeLoaders = await readFile(new URL('../src/lib/routeLoaders.js', import.meta.url), 'utf8');
+const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 const guestProfile = await readFile(new URL('../src/lib/GuestProfileOnboarding.svelte', import.meta.url), 'utf8');
 
 test('the homepage explains the daily identity loop with a direct claim action', () => {
@@ -22,8 +24,8 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.doesNotMatch(home, /HomepageLiveProfiles/);
   assert.match(home, /prefers-reduced-motion/);
   assert.match(home, /HomeRollShowcase/);
-  assert.match(home, /@fontsource-variable\/spline-sans/);
-  assert.match(home, /@fontsource\/ibm-plex-mono/);
+  assert.match(main, /@fontsource-variable\/spline-sans/);
+  assert.match(main, /@fontsource\/ibm-plex-mono/);
   assert.match(showcase, /import IdentityCard from '.\/IdentityCard\.svelte'/);
   assert.match(showcase, /import ProfileAtmosphere from '.\/ProfileAtmosphere\.svelte'/);
   assert.match(showcase, /profile_bg: 'bg_deep_space'/);
@@ -61,9 +63,11 @@ test('the homepage explains the daily identity loop with a direct claim action',
 
 test('the application mounts the homepage, signup flow, and global footer', () => {
   assert.match(app, /import HomePage from '.\/lib\/HomePage\.svelte'/);
-  assert.match(app, /\{#if view === 'home'\}/);
+  assert.match(app, /currentView === 'home'/);
+  assert.match(app, /staticComponent: HomePage/);
   assert.match(app, /on:signup=\{\(\) => openAuthModal\('signup'\)\}/);
-  assert.match(app, /\{#if !profileModeVisible && !homeModeVisible\}\s*<ProfileAtmosphere/);
+  assert.match(app, /<RouteOutlet/);
+  assert.doesNotMatch(app, /<ProfileAtmosphere/);
   assert.match(app, /class:app-shell--home=\{homeModeVisible\}/);
   assert.match(app, /<footer class="site-footer">/);
   assert.match(app, /\.site-footer \{\s*position: relative;\s*z-index: 1;/s);
@@ -72,8 +76,9 @@ test('the application mounts the homepage, signup flow, and global footer', () =
 });
 
 test('the signed-out profile route opens the guest onboarding roll', () => {
-  assert.match(app, /import GuestProfileOnboarding from '.\/lib\/GuestProfileOnboarding\.svelte'/);
-  assert.match(app, /<GuestProfileOnboarding guestActive/);
+  assert.match(routeLoaders, /guestProfile: \(\) => import\('\.\/GuestProfileOnboarding\.svelte'\)/);
+  assert.match(app, /loaderKey: 'guestProfile'/);
+  assert.match(app, /componentProps: \{ guestActive \}/);
   assert.match(guestProfile, /This could be your profile/);
   assert.match(guestProfile, /See today’s roll/);
   assert.match(guestProfile, /guest-onboarding/);

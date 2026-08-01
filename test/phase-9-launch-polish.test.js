@@ -59,9 +59,15 @@ test('public HTML cache controls remain explicit and security headers stay intac
 });
 
 test('performance budget script defines regression limits instead of hiding the bundle warning', () => {
-  assert.match(budgetSource, /javascript: 625 \* 1024/);
-  assert.match(budgetSource, /css: 295 \* 1024/);
+  assert.match(budgetSource, /initialJavascript: 450 \* 1024/);
+  assert.match(budgetSource, /lazyJavascript: 100 \* 1024/);
+  assert.match(budgetSource, /totalJavascript: 700 \* 1024/);
+  assert.match(budgetSource, /initialCss: 200 \* 1024/);
+  assert.match(budgetSource, /lazyCss: 75 \* 1024/);
+  assert.match(budgetSource, /totalCss: 380 \* 1024/);
   assert.match(budgetSource, /html: 12 \* 1024/);
+  assert.match(budgetSource, /getInitialAssetNames/);
+  assert.match(budgetSource, /Largest lazy JavaScript/);
   assert.match(budgetSource, /Performance budget/);
   assert.match(budgetSource, /process\.exitCode = 1/);
 });

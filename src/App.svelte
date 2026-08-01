@@ -2,32 +2,21 @@
   import { session, authUser, profile, authInitialized, authEvent, accountState, guestProgressActive, profileLoading, profileError, selectedUserId, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
   import { signOutCurrentBrowser } from './lib/authSession';
   import { supabase, supabaseError } from './lib/supabase';
-  import Auth from './lib/Auth.svelte';
-  import AuthCallback from './lib/AuthCallback.svelte';
   import HomePage from './lib/HomePage.svelte';
-  import Game from './lib/Game.svelte';
-  import Shop from './lib/Shop.svelte';
-  import Leaderboard from './lib/Leaderboard.svelte';
-  import Profile from './lib/Profile.svelte';
-  import ProfileShell from './lib/ProfileShell.svelte';
-  import ProfileSettings from './lib/ProfileSettings.svelte';
   import SiteModeHeader from './lib/SiteModeHeader.svelte';
-  import ProfileAtmosphere from './lib/ProfileAtmosphere.svelte';
-  import ProfileCanvasPrototype from './lib/ProfileCanvasPrototype.svelte';
-  import PrivacyPolicy from './lib/PrivacyPolicy.svelte';
-  import TermsOfService from './lib/TermsOfService.svelte';
-  import FAQ from './lib/FAQ.svelte';
-  import ResetPassword from './lib/ResetPassword.svelte';
   import Toast from './lib/Toast.svelte';
   import GuestLock from './lib/GuestLock.svelte';
-  import GuestProfileOnboarding from './lib/GuestProfileOnboarding.svelte';
+  import AccountUnavailable from './lib/AccountUnavailable.svelte';
+  import NotFound from './lib/NotFound.svelte';
+  import RouteLoading from './lib/RouteLoading.svelte';
+  import RouteOutlet from './lib/RouteOutlet.svelte';
+  import { prefetchRouteComponent } from './lib/routeLoaders.js';
   import { loadChallengeLink } from './lib/challenges';
   import { getAppOrigin } from './lib/authUrls';
   import { focusFirstElement, restoreFocus, trapFocus } from './lib/a11y';
   import { VALID_VIEWS, VALID_LEADERBOARD_TABS, parseRouteLocation } from './lib/routes';
   import { getCanonicalProfilePath } from './lib/routeContract.js';
   import { trackProductEvent } from './lib/productAnalytics.js';
-  import { normalizeHexColor } from './lib/utils';
   import { ACCOUNT_STATES } from './lib/authState';
   import { onMount, onDestroy, tick } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
@@ -53,6 +42,9 @@
   let routeFocusRequest = 0;
   let lastTrackedRouteKey = '';
   let profileVisualFixture = '';
+  let cancelIdlePrefetch = null;
+  let routeTarget;
+  let authComponentProps;
 
   function getProfileVisualFixture() {
     if (!import.meta.env.DEV || typeof window === 'undefined' || window.location.hostname !== '127.0.0.1') return '';
@@ -338,9 +330,25 @@
     parseRoute();
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('click', handleInternalLinkClick);
+
+    const prefetchCommonRoutes = () => {
+      for (const key of ['game', 'leaderboard', 'profileShell', 'auth']) {
+        void prefetchRouteComponent(key);
+      }
+    };
+
+    const idleWindow = /** @type {any} */ (window);
+    if (typeof idleWindow.requestIdleCallback === 'function') {
+      const idleId = idleWindow.requestIdleCallback(prefetchCommonRoutes, { timeout: 1800 });
+      cancelIdlePrefetch = () => idleWindow.cancelIdleCallback(idleId);
+    } else {
+      const timerId = window.setTimeout(prefetchCommonRoutes, 1200);
+      cancelIdlePrefetch = () => window.clearTimeout(timerId);
+    }
   });
 
   onDestroy(() => {
+    cancelIdlePrefetch?.();
     window.removeEventListener('popstate', handlePopState);
     window.removeEventListener('click', handleInternalLinkClick);
   });
@@ -441,12 +449,191 @@
     trapFocus(event, authDialog);
   }
 
+  function getRouteTarget({
+    routeMode: currentRouteMode,
+    view: currentView,
+    tab,
+    isAuthenticated: authenticated,
+    sessionState,
+    authInitialized: initialized,
+    accountState: currentAccountState,
+    profileError: accountError,
+    selectedUsername,
+    selectedId,
+    currentLegacyProfile,
+    visualFixture,
+    guestActive,
+    challenge
+  }) {
+    if (currentRouteMode === 'not-found') {
+      return { componentKey: 'not-found', staticComponent: NotFound, componentProps: {}, loadingLabel: 'Opening page' };
+    }
+
+    if (currentRouteMode === 'privacy' || currentRouteMode === 'terms' || currentRouteMode === 'how-to-play') {
+      return {
+        loaderKey: currentRouteMode === 'how-to-play' ? 'howToPlay' : currentRouteMode,
+        componentKey: currentRouteMode,
+        componentProps: {},
+        loadingLabel: 'Opening information'
+      };
+    }
+
+    if (currentView === 'home') {
+      return {
+        componentKey: `home:${authenticated}`,
+        staticComponent: HomePage,
+        componentProps: { isAuthenticated: authenticated },
+        loadingLabel: 'Opening ChromaDie'
+      };
+    }
+
+    if (currentView === 'game') {
+      return {
+        loaderKey: 'game',
+        componentKey: `game:${challenge?.id || 'daily'}`,
+        componentProps: {},
+        loadingLabel: 'Opening today’s roll'
+      };
+    }
+
+    if (currentView === 'prototype') {
+      return {
+        loaderKey: 'prototype',
+        componentKey: 'prototype',
+        componentProps: {},
+        loadingLabel: 'Opening prototype'
+      };
+    }
+
+    if (currentView === 'leaderboard') {
+      return {
+        loaderKey: 'leaderboard',
+        componentKey: `leaderboard:${tab}`,
+        componentProps: { initialTab: tab },
+        loadingLabel: 'Opening discovery'
+      };
+    }
+
+    if (currentView === 'profile-settings') {
+      if (authenticated) {
+        return {
+          loaderKey: 'profileSettings',
+          componentKey: 'profile-settings',
+          componentProps: {},
+          loadingLabel: 'Opening profile settings'
+        };
+      }
+
+      if (currentAccountState === ACCOUNT_STATES.SIGNED_OUT) {
+        return {
+          componentKey: `profile-settings-guest:${guestActive}`,
+          staticComponent: GuestLock,
+          componentProps: { view: 'profile', guestActive },
+          loadingLabel: 'Checking account access'
+        };
+      }
+
+      if (currentAccountState === ACCOUNT_STATES.PROFILE_ERROR) {
+        return {
+          componentKey: 'profile-settings-error',
+          staticComponent: AccountUnavailable,
+          componentProps: {},
+          loadingLabel: 'Loading account'
+        };
+      }
+
+      return {
+        componentKey: 'profile-settings-loading',
+        staticComponent: RouteLoading,
+        componentProps: { label: 'Loading your account' },
+        loadingLabel: 'Loading your account'
+      };
+    }
+
+    if (initialized && sessionState && accountError && (currentView === 'shop' || currentView === 'profile')) {
+      return {
+        componentKey: `account-error:${currentView}`,
+        staticComponent: AccountUnavailable,
+        componentProps: {},
+        loadingLabel: 'Loading account'
+      };
+    }
+
+    if (currentView === 'profile' && (authenticated || sessionState || selectedUsername || selectedId)) {
+      const loaderKey = currentLegacyProfile ? 'profileLegacy' : 'profileShell';
+      const profileKey = selectedUsername || selectedId || 'self';
+      return {
+        loaderKey,
+        componentKey: `profile:${currentLegacyProfile ? 'legacy' : 'shell'}:${profileKey}:${visualFixture}`,
+        componentProps: currentLegacyProfile
+          ? { profileUsername: selectedUsername, userId: selectedId }
+          : { profileUsername: selectedUsername, userId: selectedId, visualFixture },
+        loadingLabel: 'Opening profile'
+      };
+    }
+
+    if (authenticated && currentView === 'shop') {
+      return {
+        loaderKey: 'shop',
+        componentKey: 'shop',
+        componentProps: {},
+        loadingLabel: 'Opening decoration studio'
+      };
+    }
+
+    if (currentView === 'profile' && currentAccountState === ACCOUNT_STATES.SIGNED_OUT) {
+      return {
+        loaderKey: 'guestProfile',
+        componentKey: `guest-profile:${guestActive}`,
+        componentProps: { guestActive },
+        loadingLabel: 'Opening a profile preview'
+      };
+    }
+
+    if (currentView === 'shop' && currentAccountState === ACCOUNT_STATES.SIGNED_OUT) {
+      return {
+        componentKey: `shop-guest:${guestActive}`,
+        staticComponent: GuestLock,
+        componentProps: { view: currentView, guestActive },
+        loadingLabel: 'Checking account access'
+      };
+    }
+
+    return {
+      componentKey: `route-loading:${currentView}`,
+      staticComponent: RouteLoading,
+      componentProps: { label: initialized ? 'Loading page' : 'Loading your account' },
+      loadingLabel: 'Loading page'
+    };
+  }
+
   $: if (challengeData && routeMode === 'app' && view !== 'game') {
     clearChallengeState();
   }
 
+  $: authComponentProps = {
+    onClose: closeAuthModal,
+    initialTab: authInitialTab,
+    initialUsername: authInitialUsername
+  };
+  $: routeTarget = getRouteTarget({
+    routeMode,
+    view,
+    tab: leaderboardTab,
+    isAuthenticated: $isAuthenticated,
+    sessionState: $session,
+    authInitialized: $authInitialized,
+    accountState: $accountState,
+    profileError: $profileError,
+    selectedUsername: selectedProfileUsername,
+    selectedId: $selectedUserId,
+    currentLegacyProfile: legacyProfile,
+    visualFixture: profileVisualFixture,
+    guestActive: $guestProgressActive,
+    challenge: challengeData
+  });
+
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
-  $: siteAtmosphereColor = normalizeHexColor($profile?.mood_color, '#8B7CF6');
   $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
   $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && view !== 'home' && view !== 'profile' && view !== 'profile-settings' && (!$authUser || !$profileLoading);
   $: profileTitle = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || 'Profile';
@@ -598,9 +785,17 @@
       </section>
     </main>
   {:else if routeMode === 'auth-callback'}
-    <AuthCallback />
+    <RouteOutlet
+      loaderKey="authCallback"
+      componentKey="auth-callback"
+      loadingLabel="Confirming your account"
+    />
   {:else if routeMode === 'reset-password'}
-    <ResetPassword />
+    <RouteOutlet
+      loaderKey="resetPassword"
+      componentKey="reset-password"
+      loadingLabel="Opening password reset"
+    />
   {:else}
   <div class="app-shell" class:app-shell--home={homeModeVisible}>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -616,7 +811,13 @@
         tabindex="-1"
         on:keydown={handleAuthModalKeydown}
       >
-        <Auth onClose={closeAuthModal} initialTab={authInitialTab} initialUsername={authInitialUsername} />
+        <RouteOutlet
+          loaderKey="auth"
+          componentKey={`auth:${authInitialTab}:${authInitialUsername}`}
+          componentProps={authComponentProps}
+          loadingLabel="Preparing sign in"
+          on:loaded={() => { if (showAuthModal) focusFirstElement(authDialog) || authDialog?.focus(); }}
+        />
       </div>
     </div>
   {/if}
@@ -726,90 +927,24 @@
     </div>
   {/if}
 
-  {#if !profileModeVisible && !homeModeVisible}
-    <ProfileAtmosphere accent={siteAtmosphereColor} secondaryAccent="#2ED3C9" />
-  {/if}
-
   <div class={'app-main ' + (profileModeVisible ? 'app-main--profile' : 'app-main--site') + (homeModeVisible ? ' app-main--home' : '') + (profileSettingsModeVisible ? ' app-main--profile-settings' : '')} id="main-content" role={routeMode === 'app' ? 'main' : undefined} tabindex="-1" bind:this={mainContent}>
-  {#if routeMode === 'not-found'}
-    <main class="container" aria-labelledby="not-found-title">
-      <section class="card bootstrap-error-card">
-        <p class="bootstrap-error-kicker">404</p>
-        <h1 id="not-found-title">Page not found</h1>
-        <p class="info-text">That ChromaDie page does not exist or may have moved.</p>
-        <a class="roll-btn" href="/" on:click|preventDefault={() => navigateToPath('/')}>Back home</a>
-      </section>
-    </main>
-  {:else if routeMode === 'privacy'}
-    <PrivacyPolicy />
-  {:else if routeMode === 'terms'}
-    <TermsOfService />
-  {:else if routeMode === 'how-to-play'}
-    <FAQ />
-  {:else}
-    {#if view === 'home'}
-      <HomePage
-        isAuthenticated={$isAuthenticated}
-        on:signup={() => openAuthModal('signup')}
-        on:claim={event => openAuthModal({ detail: { mode: 'signup', username: event.detail?.username } })}
-        on:profile={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
-        on:roll={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
-        on:navigate={handleNavigation}
-      />
-    {:else if view === 'game'}
-      <Game on:promptlogin={openAuthModal} on:navigate={handleNavigation} />
-    {:else if view === 'prototype'}
-      <ProfileCanvasPrototype />
-    {:else if view === 'leaderboard'}
-      {#key `leaderboard:${leaderboardTab}`}
-        <Leaderboard initialTab={leaderboardTab} on:navigate={handleNavigation} />
-      {/key}
-    {:else if view === 'profile-settings'}
-      {#if $isAuthenticated}
-        <ProfileSettings on:navigate={handleNavigation} />
-      {:else if $accountState === ACCOUNT_STATES.SIGNED_OUT}
-        <GuestLock view="profile" guestActive={$guestProgressActive} on:login={openAuthModal} />
-      {:else if $accountState === ACCOUNT_STATES.PROFILE_ERROR}
-        <div class="container">
-          <div class="card" role="alert">
-            <h1>Account unavailable</h1>
-            <p class="info-text">We could not load your account data. Retry or sign out, then sign in again.</p>
-            <div class="button-row">
-              <button type="button" class="roll-btn" on:click={() => window.location.reload()}>Retry</button>
-              <button type="button" class="roll-btn" on:click={handleLogout}>Log Out</button>
-            </div>
-          </div>
-        </div>
-      {/if}
-    {:else if $authInitialized && $session && $profileError && (view === 'shop' || view === 'profile')}
-      <div class="container">
-        <div class="card">
-          <h1>Account unavailable</h1>
-          <p class="info-text">We could not load your account data. Retry or sign out, then sign in again.</p>
-          <div class="button-row">
-            <button type="button" class="roll-btn" on:click={() => window.location.reload()}>Retry</button>
-            <button type="button" class="roll-btn" on:click={handleLogout}>Log Out</button>
-          </div>
-        </div>
-      </div>
-    {:else if view === 'profile' && ($isAuthenticated || $session || selectedProfileUsername || $selectedUserId)}
-      {#if legacyProfile}
-        <Profile profileUsername={selectedProfileUsername} userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
-      {:else}
-        <ProfileShell profileUsername={selectedProfileUsername} userId={$selectedUserId} visualFixture={profileVisualFixture} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
-      {/if}
-    {:else if $isAuthenticated}
-      {#if view === 'shop'}
-        <Shop />
-      {/if}
-    {:else if view === 'profile' && $accountState === ACCOUNT_STATES.SIGNED_OUT}
-      {#if view === 'profile'}
-        <GuestProfileOnboarding guestActive={$guestProgressActive} on:login={openAuthModal} on:navigate={handleNavigation} />
-      {/if}
-    {:else if view === 'shop' && $accountState === ACCOUNT_STATES.SIGNED_OUT}
-      <GuestLock view={view} guestActive={$guestProgressActive} on:login={openAuthModal} />
-    {/if}
-  {/if}
+  <RouteOutlet
+    loaderKey={routeTarget.loaderKey}
+    staticComponent={routeTarget.staticComponent}
+    componentKey={routeTarget.componentKey}
+    componentProps={routeTarget.componentProps}
+    loadingLabel={routeTarget.loadingLabel}
+    on:navigate={handleNavigation}
+    on:promptlogin={openAuthModal}
+    on:accountdeleted={handleAccountDeleted}
+    on:login={openAuthModal}
+    on:logout={handleLogout}
+    on:retry={() => window.location.reload()}
+    on:signup={() => openAuthModal('signup')}
+    on:claim={event => openAuthModal({ detail: { mode: 'signup', username: event.detail?.username } })}
+    on:profile={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
+    on:roll={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
+  />
   </div>
 
   {#if view !== 'profile'}
@@ -865,11 +1000,6 @@
   .app-main--home {
     min-height: calc(100dvh - 9.75rem);
     background: #080908;
-  }
-
-  .app-main--site > * {
-    position: relative;
-    z-index: 1;
   }
 
   .app-main:focus {
@@ -1008,14 +1138,6 @@
   .profile-error-chip {
     flex-wrap: wrap;
     gap: 0.5rem;
-  }
-
-  .button-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: center;
-    margin-top: 1rem;
   }
 
   .challenge-banner {
@@ -1436,12 +1558,6 @@
       justify-content: flex-start;
     }
     .challenge-close {
-      width: 100%;
-    }
-    .button-row {
-      flex-direction: column;
-    }
-    .button-row > button {
       width: 100%;
     }
     .site-footer {

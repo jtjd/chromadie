@@ -126,7 +126,7 @@
 
   .legal-kicker {
     margin: 0 0 0.6rem;
-    color: var(--accent-purple);
+    color: var(--color-accent-bright);
     text-transform: uppercase;
     letter-spacing: 0.16em;
     font-size: 0.72rem;
@@ -146,7 +146,7 @@
   }
 
   .legal-section a {
-    color: var(--accent-purple);
+    color: var(--color-accent-bright);
     font-weight: 600;
     text-decoration-color: color-mix(in srgb, var(--accent-purple) 55%, transparent);
     text-decoration-thickness: 1px;
@@ -156,7 +156,7 @@
 
   .legal-section a:hover,
   .legal-section a:focus-visible {
-    color: #d8c7ff;
+    color: var(--color-accent-bright);
     text-decoration-color: currentColor;
   }
 

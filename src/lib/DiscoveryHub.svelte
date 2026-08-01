@@ -301,7 +301,7 @@
 <style>
   .discovery-hub { padding-top: 1.6rem; padding-bottom: 3.4rem; }
   .discovery-hub__intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.4rem; }
-  .discovery-hub__kicker, .discovery-heading__eyebrow { margin: 0 0 0.45rem; color: #ffd34f; font: 800 0.68rem/1.2 var(--font-mono-stack); letter-spacing: 0.15em; text-transform: uppercase; }
+  .discovery-hub__kicker, .discovery-heading__eyebrow { margin: 0 0 0.45rem; color: var(--color-accent-bright); font: 700 0.68rem/1.2 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: lowercase; }
   .discovery-hub h1 { max-width: 13ch; margin: 0; color: #f5f6ff; font-size: clamp(2rem, 5vw, 3.8rem); line-height: 0.98; letter-spacing: -0.06em; }
   .discovery-hub__copy { max-width: 42rem; margin: 0.85rem 0 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
   .discovery-hub__privacy-note { display: inline-flex; align-items: center; gap: 0.45rem; flex: 0 0 auto; padding: 0.55rem 0.72rem; border: 1px solid rgba(94,234,212,0.28); border-radius: 999px; color: #a7eee5; font: 700 0.63rem/1 var(--font-mono-stack); }
@@ -310,7 +310,7 @@
   .discovery-tabs__group + .discovery-tabs__group { padding-left: 0.7rem; border-left: 1px solid rgba(157,166,194,0.18); }
   .discovery-tabs__label { margin: 0 0.2rem 0 0.2rem; color: var(--text-muted); font: 800 0.58rem/1 var(--font-mono-stack); letter-spacing: 0.11em; text-transform: uppercase; }
   .discovery-tabs button, .discovery-filter-button, .discovery-clear-button { min-height: 2.25rem; padding: 0.52rem 0.75rem; border: 1px solid rgba(157,166,194,0.24); border-radius: 0.65rem; background: rgba(255,255,255,0.035); color: var(--text-muted); cursor: pointer; font: 700 0.68rem/1 var(--font-mono-stack); transition: border-color 160ms ease, background 160ms ease, color 160ms ease; }
-  .discovery-tabs button:hover, .discovery-tabs button.active, .discovery-filter-button:hover, .discovery-clear-button:hover { border-color: rgba(139,124,246,0.62); background: rgba(139,124,246,0.14); color: #fff; }
+  .discovery-tabs button:hover, .discovery-tabs button.active, .discovery-filter-button:hover, .discovery-clear-button:hover { border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 10%, transparent); color: var(--color-ink-strong); }
   .discovery-tabs button:focus-visible, .discovery-filter-button:focus-visible, .discovery-clear-button:focus-visible, .discovery-filters input:focus-visible, .discovery-filters select:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .discovery-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1rem; }
   .discovery-heading h2 { margin: 0; color: #eef1ff; font-size: clamp(1.35rem, 3vw, 2rem); letter-spacing: -0.035em; }
@@ -326,8 +326,8 @@
   .discovery-empty { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 9rem; padding: 1.3rem; border: 1px dashed rgba(157,166,194,0.3); border-radius: 1rem; color: var(--text-muted); }
   .discovery-empty p { margin: 0; line-height: 1.5; }
   .discovery-skeleton { min-height: 14rem; border: 1px solid rgba(157,166,194,0.13); border-radius: 1.15rem; background: linear-gradient(110deg, rgba(255,255,255,0.035) 25%, rgba(255,255,255,0.08) 37%, rgba(255,255,255,0.035) 63%); background-size: 300% 100%; animation: discovery-shimmer 1.4s ease-in-out infinite; }
-  .discovery-your-rank { display: flex; align-items: center; gap: 0.8rem; width: min(100%, 28rem); margin: 1rem auto 0; padding: 0.85rem 1rem; border: 1px dashed rgba(139,124,246,0.5); border-radius: 0.85rem; background: rgba(139,124,246,0.1); }
-  .discovery-your-rank > span { color: #d9cbff; font: 900 1.1rem/1 var(--font-mono-stack); }
+  .discovery-your-rank { display: flex; align-items: center; gap: 0.8rem; width: min(100%, 28rem); margin: 1rem auto 0; padding: 0.85rem 1rem; border: 1px dashed color-mix(in srgb, var(--color-accent) 56%, transparent); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-accent) 8%, transparent); }
+  .discovery-your-rank > span { color: var(--color-accent-bright); font: 900 1.1rem/1 var(--font-mono-stack); }
   .discovery-your-rank div { display: flex; flex-direction: column; gap: 0.2rem; }
   .discovery-your-rank strong { color: #f4f2ff; font-size: 0.78rem; }
   .discovery-your-rank small { color: var(--text-muted); font: 600 0.65rem/1.2 var(--font-mono-stack); }

@@ -1,7 +1,4 @@
 <script>
-  import '@fontsource-variable/spline-sans/wght.css';
-  import '@fontsource/ibm-plex-mono/latin-400.css';
-  import '@fontsource/ibm-plex-mono/latin-600.css';
   import { createEventDispatcher } from 'svelte';
   import { isUsernameShapeValid } from './usernamePolicy.js';
   import { trackProductEvent } from './productAnalytics.js';

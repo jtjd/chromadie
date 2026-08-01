@@ -21,8 +21,8 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /site-mode-header__mobile-primary/);
   assert.match(siteHeader, /\$: minimalMode = isProfileMode;/);
   assert.match(siteHeader, /--site-header-control-size: 0\.78rem/);
-  assert.match(siteHeader, /var\(--font-body-stack\)/);
-  assert.match(siteHeader, /var\(--font-mono-stack\)/);
+  assert.match(siteHeader, /--site-header-font: 'Satoshi'/);
+  assert.doesNotMatch(siteHeader, /var\(--font-mono-stack\)/);
 });
 
 test('supporting surfaces consume the profile visual tokens without changing route components', async () => {

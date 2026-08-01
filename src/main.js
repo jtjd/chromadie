@@ -1,4 +1,7 @@
 import './styles/fonts.css'
+import '@fontsource-variable/spline-sans/wght.css'
+import '@fontsource/ibm-plex-mono/latin-400.css'
+import '@fontsource/ibm-plex-mono/latin-600.css'
 import './styles/tokens.css'
 import './styles/variables.css'
 import './styles/foundations.css'

@@ -61,6 +61,6 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(roll, /<details class="profile-roll__details"/);
   assert.doesNotMatch(roll, /Style in shop|View leaderboard/);
   assert.match(app, /view === 'home'/);
-  assert.match(app, /<HomePage/);
+  assert.match(app, /staticComponent: HomePage/);
   assert.doesNotMatch(app, /shouldUseAuthenticatedProfileHome/);
 });

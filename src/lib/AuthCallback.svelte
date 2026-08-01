@@ -84,15 +84,13 @@
     width: min(720px, 100%);
     padding: 2rem;
     text-align: left;
-    border-color: rgba(139, 124, 246, 0.35);
-    background:
-      radial-gradient(circle at top right, rgba(139, 124, 246, 0.16), transparent 45%),
-      rgba(10, 10, 14, 0.92);
+    border-color: var(--color-line-subtle);
+    background: var(--surface-panel);
   }
 
   .bootstrap-error-kicker {
     margin: 0 0 0.65rem 0;
-    color: var(--accent-purple);
+    color: var(--color-accent-bright);
     text-transform: uppercase;
     letter-spacing: 0.16em;
     font-size: 0.72rem;

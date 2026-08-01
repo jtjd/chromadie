@@ -1030,3 +1030,48 @@ while its full context refreshes, and protected routes no longer show
 - Build, checks, lint, tests, link, CSP, drift, scoring, and database security
   validation pass. The existing performance budget remains over its thresholds
   at 670.49 kB JavaScript / 625 kB and 348.34 kB CSS / 295 kB; HTML passes.
+
+## 2026-08-01 — Adopt the homepage styling across the site
+
+- Updated shared tokens and global typography to warm black, signal lime,
+  Spline Sans, and IBM Plex Mono.
+- Removed the default non-profile atmosphere mount so Roll, discovery,
+  leaderboard, studio, settings, auth, guest, help, legal, and error surfaces
+  share a quiet site shell.
+- Restyled route-level cards, controls, banners, filters, previews, settings
+  navigation, and authentication inputs without changing their behavior.
+- Preserved atmosphere rendering in public profile and cosmetic-preview
+  contexts, plus all existing authentication, RLS, RPC, catalog, scoring, and
+  route contracts.
+- Updated visual contract tests for the new shared shell and font loading.
+- Svelte check, build, ESLint, 146 tests, links, CSP, username policy,
+  balance, catalog, scoring parity, and database security checks pass.
+- Performance budget remains over threshold: 670.45 kB JavaScript / 625 kB
+  and 361.46 kB CSS / 295 kB; HTML passes. JavaScript matches the existing
+  baseline overage, while the shared styling layer increases CSS from the
+  previously recorded 348.34 kB.
+
+## Route loading and initial bundle boundary — 2026-08-01
+
+- Added explicit cached dynamic imports for game, studio, discovery, profile,
+  settings, legal, auth, and prototype surfaces.
+- Added a persistent route outlet that keeps the current destination mounted
+  during client navigation and uses a compact inline state only for direct
+  loads or a failed destination.
+- Added idle and keyboard/mouse navigation prefetching without changing route
+  parsing, authentication, profile compatibility, public URLs, or server
+  authority.
+- Reworked `check:performance` to separate initial assets, the largest lazy
+  route assets, transitional total caps, and the HTML shell.
+- The route split is validated by `test/route-loading.test.js`; final build
+  measurements are 414.95 kB initial JavaScript, 182.03 kB initial CSS,
+  72.57 kB largest lazy JavaScript, and 48.42 kB largest lazy CSS. Total
+  assets remain within the transitional 700 kB JavaScript and 380 kB CSS caps.
+
+## Header treatment correction — 2026-08-01
+
+- Restored the pre-migration transparent header shell, blurred pill controls,
+  and account treatment.
+- Scoped Satoshi to the header so the `chm.lol` wordmark matches its controls;
+  retained signal lime only for `.lol`.
+- Preserved route prefetch handlers and mobile navigation behavior.

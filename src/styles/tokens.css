@@ -1,33 +1,33 @@
 /* Phase 1 design foundations. Legacy aliases remain in variables.css. */
 :root {
     /* Color */
-    --color-canvas: #07080b;
-    --color-canvas-raised: #0d0f13;
-    --color-canvas-deep: #050608;
-    --color-ink-strong: #e9ebef;
-    --color-ink: #d4d7dd;
-    --color-ink-muted: #a2a5aa;
-    --color-ink-faint: #7d8086;
-    --color-line-subtle: rgba(255, 255, 255, 0.08);
-    --color-line-strong: rgba(255, 255, 255, 0.16);
-    --color-accent: #9f8cff;
-    --color-accent-bright: #c7baff;
-    --color-accent-cyan: #2ed3c9;
+    --color-canvas: #080908;
+    --color-canvas-raised: #0e100e;
+    --color-canvas-deep: #050605;
+    --color-ink-strong: #f1f3ed;
+    --color-ink: #d9ddd5;
+    --color-ink-muted: #a4a9a0;
+    --color-ink-faint: #737970;
+    --color-line-subtle: rgba(241, 243, 237, 0.12);
+    --color-line-strong: rgba(241, 243, 237, 0.24);
+    --color-accent: #b7fd4d;
+    --color-accent-bright: #d6ff8a;
+    --color-accent-cyan: #b7fd4d;
     --color-success: #6ee787;
     --color-earned: #f0c779;
     --color-warning: #f1c40f;
     --color-danger: #ef6b78;
-    --gradient-canvas: radial-gradient(ellipse 72% 56% at 50% 8%, #10131c 0%, #07080b 68%);
+    --gradient-canvas: none;
     --gradient-spectrum: linear-gradient(90deg, #ff4d4d, #ffab2e, #ffe14d, #6ee787, #2ed3c9, #4d7dff, #a15cff, #ff4d4d);
-    --surface-panel: rgba(10, 12, 17, 0.74);
-    --surface-panel-strong: rgba(12, 14, 19, 0.9);
-    --surface-panel-soft: rgba(255, 255, 255, 0.035);
-    --surface-inset: rgba(0, 0, 0, 0.36);
+    --surface-panel: #0e100e;
+    --surface-panel-strong: #121412;
+    --surface-panel-soft: rgba(241, 243, 237, 0.045);
+    --surface-inset: rgba(0, 0, 0, 0.28);
 
     /* Type */
-    --font-body-stack: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
-    --font-display-stack: 'Cabinet Grotesk', 'Satoshi', ui-sans-serif, system-ui, sans-serif;
-    --font-mono-stack: 'Geist Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+    --font-body-stack: 'Spline Sans Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-display-stack: 'Spline Sans Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-mono-stack: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
     --type-display: clamp(2.5rem, 7vw, 5.75rem);
     --type-h1: clamp(2rem, 4vw, 3.6rem);
     --type-h2: clamp(1.35rem, 2.2vw, 2rem);
@@ -52,13 +52,13 @@
     --space-20: 5rem;
 
     /* Shape and depth */
-    --radius-sm: 0.5rem;
-    --radius-md: 0.75rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.25rem;
+    --radius-sm: 0.35rem;
+    --radius-md: 0.55rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
     --radius-pill: 999px;
-    --shadow-panel: 0 2rem 5rem rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    --shadow-float: 0 1.5rem 4rem rgba(0, 0, 0, 0.42);
+    --shadow-panel: 0 1.5rem 4rem rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(241, 243, 237, 0.035);
+    --shadow-float: 0 1.25rem 3rem rgba(0, 0, 0, 0.34);
     --shadow-accent: 0 1rem 3rem color-mix(in srgb, var(--color-accent) 24%, transparent);
     --blur-panel: 1.25rem;
 

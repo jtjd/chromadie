@@ -112,7 +112,7 @@
   .guide__split > div > p:not(.guide__eyebrow) { max-width: 34rem; margin: 1rem 0 0; }
   .guide__list { display: grid; gap: .55rem; }
   .guide__list span { padding: .8rem .9rem; border-left: 2px solid var(--color-accent-bright); border-radius: 0 .5rem .5rem 0; background: rgba(214,255,99,.06); color: var(--color-ink-muted); font: 500 .76rem/1.2 var(--font-mono-stack); }
-  .guide__callout { padding: 1.25rem; border: 1px solid rgba(139,124,246,.32); border-radius: .9rem; background: rgba(139,124,246,.08); }
+  .guide__callout { padding: 1.25rem; border: 1px solid color-mix(in srgb, var(--color-accent) 32%, transparent); border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-accent) 6%, var(--surface-panel)); }
   .guide__callout strong { color: #eeeaff; font: 650 1.05rem/1.35 var(--font-body-stack); }
   .guide__callout p { margin: .8rem 0 0; font-size: .82rem; }
   .guide__account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: 1.6rem; }

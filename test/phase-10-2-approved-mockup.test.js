@@ -46,6 +46,7 @@ test('approved mockup translation and parity gate exist before visual convergenc
 
 test('approved profile composition uses production adapters without prototype authority', async () => {
   const app = await read('src/App.svelte');
+  const routeLoaders = await read('src/lib/routeLoaders.js');
   const shell = await read('src/lib/ProfileShell.svelte');
   const settings = await read('src/lib/ProfileSettings.svelte');
   const header = await read('src/lib/SiteModeHeader.svelte');
@@ -59,7 +60,8 @@ test('approved profile composition uses production adapters without prototype au
   assert.match(app, /getProfileVisualFixture/);
   assert.match(app, /<SiteModeHeader/);
   assert.match(app, /isProfileMode=\{profileModeVisible\}/);
-  assert.match(app, /<ProfileSettings/);
+  assert.match(app, /loaderKey: 'profileSettings'/);
+  assert.match(routeLoaders, /profileSettings: \(\) => import\('\.\/ProfileSettings\.svelte'\)/);
   assert.match(app, /setRoute\('profile-settings'\)/);
   assert.match(shell, /<ProfileAtmosphere/);
   assert.match(shell, /<IdentityCard/);

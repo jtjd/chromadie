@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { ACCOUNT_STATES } from './authState';
   import { trackProductEvent } from './productAnalytics.js';
+  import { prefetchRouteComponent } from './routeLoaders.js';
 
   export let activeView = 'game';
   export let accountState = /** @type {string} */ (ACCOUNT_STATES.SIGNED_OUT);
@@ -30,6 +31,13 @@
     mobileMenuOpen = false;
     dispatch('edit');
   }
+
+  function prefetch(view) {
+    const loaderKey = view === 'profile' ? 'profileShell' : view;
+    if (['profileShell', 'leaderboard', 'shop'].includes(loaderKey)) {
+      void prefetchRouteComponent(loaderKey);
+    }
+  }
 </script>
 
 <header class="site-mode-header" class:site-mode-header--profile={isProfileMode}>
@@ -40,16 +48,16 @@
   {#if !minimalMode}
     <nav class="site-mode-header__nav" aria-label="Primary application navigation">
       {#if isHomeMode && !isAuthenticated}
-        <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:click={() => navigate('leaderboard')}>Explore</button>
+        <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Explore</button>
         <span aria-hidden="true">/</span>
-        <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+        <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
       {:else}
-        <button type="button" class:active={activeView === 'profile'} aria-current={activeView === 'profile' ? 'page' : undefined} on:click={() => navigate('profile')}>Profile</button>
+        <button type="button" class:active={activeView === 'profile'} aria-current={activeView === 'profile' ? 'page' : undefined} on:mouseenter={() => prefetch('profile')} on:focus={() => prefetch('profile')} on:click={() => navigate('profile')}>Profile</button>
       <span aria-hidden="true">/</span>
-      <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+      <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
       {#if isAuthenticated}
         <span aria-hidden="true">/</span>
-        <button type="button" class:active={activeView === 'shop'} aria-current={activeView === 'shop' ? 'page' : undefined} on:click={() => navigate('shop')}>Studio</button>
+        <button type="button" class:active={activeView === 'shop'} aria-current={activeView === 'shop' ? 'page' : undefined} on:mouseenter={() => prefetch('shop')} on:focus={() => prefetch('shop')} on:click={() => navigate('shop')}>Studio</button>
       {/if}
       {/if}
     </nav>
@@ -90,13 +98,13 @@
       {#if !minimalMode}
         <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
           {#if isHomeMode && !isAuthenticated}
-            <button type="button" class:active={activeView === 'leaderboard'} on:click={() => navigate('leaderboard')}>Explore</button>
-            <button type="button" class:active={activeView === 'leaderboard'} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+            <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Explore</button>
+            <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
           {:else}
-            <button type="button" class:active={activeView === 'profile'} on:click={() => navigate('profile')}>Profile</button>
-          <button type="button" class:active={activeView === 'leaderboard'} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+            <button type="button" class:active={activeView === 'profile'} on:mouseenter={() => prefetch('profile')} on:focus={() => prefetch('profile')} on:click={() => navigate('profile')}>Profile</button>
+          <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
           {#if isAuthenticated}
-            <button type="button" class:active={activeView === 'shop'} on:click={() => navigate('shop')}>Studio</button>
+            <button type="button" class:active={activeView === 'shop'} on:mouseenter={() => prefetch('shop')} on:focus={() => prefetch('shop')} on:click={() => navigate('shop')}>Studio</button>
           {/if}
           {/if}
         </div>
@@ -128,6 +136,7 @@
     --site-header-control-size: 0.78rem;
     --site-header-control-weight: 500;
     --site-header-control-spacing: 0.01em;
+    --site-header-font: 'Satoshi', ui-sans-serif, system-ui, sans-serif;
     position: relative;
     z-index: 20;
     display: grid;
@@ -147,7 +156,7 @@
     align-items: center;
     gap: 0.5rem;
     color: rgba(246, 248, 255, 0.94);
-    font: 600 0.72rem / 1 var(--font-mono-stack);
+    font: 600 0.72rem / 1 var(--site-header-font);
     letter-spacing: 0.08em;
     text-transform: lowercase;
     text-decoration: none;
@@ -155,7 +164,7 @@
   }
 
   .site-mode-header__wordmark { color: rgba(246, 248, 255, 0.94); }
-  .site-mode-header__wordmark > span { color: #c4b5fd; }
+  .site-mode-header__wordmark > span { color: var(--color-accent); }
 
   .site-mode-header__nav,
   .site-mode-header__right,
@@ -169,7 +178,7 @@
   .site-mode-header__nav,
   .site-mode-header__context,
   .site-mode-header__account {
-    font: var(--site-header-control-weight) var(--site-header-control-size) / 1 var(--font-body-stack);
+    font: var(--site-header-control-weight) var(--site-header-control-size) / 1 var(--site-header-font);
     letter-spacing: var(--site-header-control-spacing);
   }
 
@@ -216,7 +225,7 @@
     border-radius: var(--radius-pill);
     background: transparent;
     color: inherit;
-    font: var(--site-header-control-weight) var(--site-header-control-size) / 1 var(--font-body-stack);
+    font: var(--site-header-control-weight) var(--site-header-control-size) / 1 var(--site-header-font);
     letter-spacing: var(--site-header-control-spacing);
     text-transform: lowercase;
     cursor: pointer;
@@ -326,4 +335,5 @@
     .site-mode-header__account button,
     .site-mode-header__mobile-panel button { transition-duration: 0.001ms; }
   }
+
 </style>

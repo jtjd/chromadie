@@ -2,6 +2,22 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-01 — Restore the application header treatment
+
+- Returned the header to its transparent, blurred-pill presentation.
+- Matched the `chm.lol` wordmark to the header’s Satoshi typography.
+- Kept the `.lol` accent lime and preserved navigation prefetch behavior.
+
+## 2026-08-01 — Keep navigation inside the live shell
+
+- Split non-home route components into cached deferred chunks.
+- Keep the current page visible while a destination loads, with compact inline
+  loading and retry states for direct loads and failures.
+- Prefetch common destinations during idle time and when users hover or focus
+  primary navigation.
+- Preserve existing SPA routes, authentication boundaries, profile URLs, and
+  server-authoritative gameplay behavior.
+
 ## 2026-08-01 — Add interactive roll and profile discovery to the homepage
 
 - The homepage daily-roll example now opens into a local sample reveal with a
@@ -941,3 +957,15 @@ phase, with an immediate reduced-motion equivalent.
   give the specimen more character without adding visual noise.
 - Added a curated real-cosmetics fixture and local anime-dog avatar so the
   homepage preview demonstrates the same expression systems as live profiles.
+
+## 2026-08-01 — Extend the game-native visual system across the site
+
+- Applied the homepage warm-black canvas, signal-lime accent, Spline Sans
+  typography, and IBM Plex Mono metadata treatment to supporting routes.
+- Reworked the shared shell, Roll, discovery, leaderboard, studio, profile
+  settings, auth, guest, help, legal, banner, error, and footer surfaces.
+- Removed the legacy route-wide purple/cyan atmosphere from supporting pages;
+  public profile and cosmetic previews retain profile effects.
+- Preserved server-authoritative rolls, authentication, catalog and purchase
+  behavior, profile rendering, URLs, and accessibility boundaries.
+- Updated source-level visual contracts and retained reduced-motion behavior.

@@ -1875,3 +1875,52 @@ by the bounded `get_public_discovery` projection. It requests three public
 entries, normalizes them through `discoveryData.js`, keeps profile navigation in
 the SPA shell, and handles loading, retry, and no-public-profiles states. No
 schema, RLS, ranking, or private-data behavior changed.
+
+## 2026-08-01 — Extend the homepage visual language across supporting routes
+
+The homepage’s warm-black canvas, signal-lime accent, Spline Sans interface
+type, and IBM Plex Mono metadata type are now the shared visual contract for
+Roll, discovery, leaderboard, studio, profile settings, auth, guest, help,
+legal, error, banner, and footer surfaces.
+
+Supporting routes no longer mount the default full-page profile atmosphere.
+Atmosphere effects remain available to public profiles, profile previews, and
+cosmetic previews where they represent profile expression. Route behavior,
+profile rendering, authentication, RPC authority, catalog ownership, and
+server-side gameplay boundaries remain unchanged.
+
+The migration is intentionally additive and token-led: existing components
+retain their markup and domain logic while shared surfaces move away from the
+legacy purple/cyan glass skin. The repository’s performance budget remains
+over threshold at the current monolithic bundle size; JavaScript is at the
+existing baseline overage and this migration adds a larger shared CSS layer.
+The failure is reported rather than hidden.
+
+## 2026-08-01 — Keep the legacy application header treatment
+
+The sitewide visual migration does not replace the application header. Keep
+its transparent shell, blurred pill navigation and account controls, and use
+Satoshi consistently for the header controls and `chm.lol` wordmark. The
+`.lol` suffix may use the site’s signal-lime accent; the rest of the header
+keeps its quiet neutral treatment. Route prefetch behavior remains attached to
+the existing navigation controls.
+
+## 2026-08-01 — Keep the application shell mounted during route loading
+
+The SPA now uses explicit route loaders and one persistent `RouteOutlet` for
+non-home route components. The outlet snapshots the visible component and its
+props, keeps that snapshot mounted while a destination chunk is loading, and
+swaps only after the destination resolves. Direct refreshes receive a compact
+inline loading state; client navigation does not flash a full-screen loader.
+
+Route chunks are prefetched after a short idle period and on primary-nav
+hover/focus. Loader promises are cached for the session and rejected promises
+are evicted so a failed chunk can be retried. Existing route parsing, auth
+boundaries, profile compatibility, public URLs, event handlers, and server
+authority remain unchanged.
+
+The performance check now measures initial JavaScript/CSS, the largest lazy
+JavaScript/CSS asset, total asset ceilings, and the HTML shell separately.
+Initial and per-route budgets describe user-facing loading cost; total caps
+remain as transitional regression limits so route splitting does not conceal
+asset growth.
