@@ -955,3 +955,10 @@ Separated weather cosmetics from card backgrounds with a new
 the fixed full-viewport atmosphere layer on public profiles, while existing
 background cosmetics remain card-scoped. Existing weather loadouts are migrated
 without changing item keys or entitlement checks.
+
+## 2026-08-01 — Replace tiled atmosphere previews with a shared renderer
+
+Profile atmosphere effects now use a seeded canvas particle layer across public
+profiles, settings previews, the decoration fitting room, and shop item cards.
+The first recipes are rain, snow, fireflies, and scanlines. Reduced-motion mode
+stops animation while preserving a static visual state.

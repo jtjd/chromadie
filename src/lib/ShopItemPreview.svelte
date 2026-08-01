@@ -1,16 +1,30 @@
 <script>
   import RollPreview from './RollPreview.svelte';
+  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
+  import { getProfileAtmosphereEffect } from './cosmetics';
   import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety';
 
   export let item;
 
   $: effectClass = item?.css_type === 'class' ? sanitizeCosmeticClass(item.css_value) : '';
   $: effectStyle = item?.css_type === 'style' ? sanitizeCosmeticStyle(item.css_value) : '';
+  $: atmosphereEffect = item?.slot === 'profile_atmosphere'
+    ? getProfileAtmosphereEffect({ profile_atmosphere: item.item_key })
+    : '';
 </script>
 
 <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
   {#if item.slot === 'profile_bg' || item.slot === 'profile_atmosphere'}
-    <div class={'preview-bg ' + effectClass} style={effectStyle}></div>
+    <div class={'preview-bg ' + (atmosphereEffect ? '' : effectClass)} style={atmosphereEffect ? '' : effectStyle}>
+      {#if atmosphereEffect}
+        <ProfileAtmosphere
+          canvasOnly={true}
+          accent="#8B7CF6"
+          secondaryAccent="#71D6FF"
+          effect={atmosphereEffect}
+        />
+      {/if}
+    </div>
   {:else if item.slot === 'roll_effect'}
     <RollPreview effectCls={effectClass} effectStyle={effectStyle} size="shop" />
   {:else if item.slot === 'lb_theme'}
@@ -56,7 +70,7 @@
   .shop-preview-area { height: 112px; margin-bottom: 14px; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.075); border-radius: 16px; background: radial-gradient(circle at 50% 42%, rgba(123,92,255,0.1), transparent 58%), rgba(5,6,10,0.58); overflow: hidden; }
   .shop-preview-area-tall { height: 112px; }
   .shop-preview-area-roll-effect { height: 140px; border-color: rgba(139,124,246,0.16); background: radial-gradient(circle at center, rgba(123,92,255,0.12), rgba(6,7,12,0.7) 62%, rgba(3,4,8,0.9)); }
-  .preview-bg { width: 100%; height: 100%; border-radius: 12px; border: 1px solid var(--card-border); background-color: #111; flex-shrink: 0; box-sizing: border-box; will-change: transform, opacity, filter; }
+  .preview-bg { position: relative; width: 100%; height: 100%; border-radius: 12px; border: 1px solid var(--card-border); background-color: #111; flex-shrink: 0; box-sizing: border-box; will-change: transform, opacity, filter; overflow: hidden; }
   .preview-bg[style*="godRaysTurn"] { animation-duration: 5.5s !important; }
   .preview-bg[style*="deepSpaceTwinkle"] { animation-duration: 6.2s !important; }
   .preview-lb-row { width: 100%; min-height: 58px; border-radius: 14px; padding: 10px 12px; box-sizing: border-box; overflow: hidden; margin: 0; gap: 10px; }

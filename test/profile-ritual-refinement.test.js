@@ -102,8 +102,10 @@ test('profile atmosphere effects stay curated and reduced-motion safe', async ()
   const atmosphere = await read('src/lib/ProfileAtmosphere.svelte');
   const cosmetics = await read('src/lib/cosmetics.js');
   const shell = await read('src/lib/ProfileShell.svelte');
-  assert.match(atmosphere, /profile-atmosphere--effect-rain/);
-  assert.match(atmosphere, /profile-atmosphere--effect-snow/);
+  assert.match(atmosphere, /const EFFECTS = new Set/);
+  assert.match(atmosphere, /function drawRain/);
+  assert.match(atmosphere, /function drawSnow/);
+  assert.match(atmosphere, /function drawFireflies/);
   assert.match(atmosphere, /prefers-reduced-motion/);
   assert.match(cosmetics, /bg_fireflies/);
   assert.match(cosmetics, /getProfileAtmosphereEffect/);

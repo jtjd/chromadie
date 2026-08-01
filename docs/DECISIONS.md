@@ -1788,3 +1788,11 @@ The migration keeps existing item keys, ownership, and entitlements, backfills
 legacy equipped weather effects, and retains a client compatibility fallback.
 Only curated effect keys map to code-owned CSS layers; profile data cannot
 provide arbitrary HTML, JavaScript, or CSS.
+
+## 2026-08-01 — Use procedural canvas layers for atmosphere effects
+
+The tiled CSS patterns made rain, snow, fireflies, and scanlines visibly
+repetitive. Atmosphere effects now use a seeded 2D canvas renderer with shared
+resize, density, depth, color, and reduced-motion behavior. The renderer is
+also used by owner previews and shop cards, so future effects can be added as
+curated drawing recipes without accepting user HTML, JavaScript, or CSS.

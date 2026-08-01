@@ -19,15 +19,18 @@ test('profile atmosphere effects render as a full-page layer', async () => {
   assert.match(atmosphere, /width:\s*100vw/);
   assert.match(atmosphere, /height:\s*100dvh/);
   assert.match(atmosphere, /\.profile-atmosphere__effect[\s\S]*position:\s*absolute/);
+  assert.match(atmosphere, /<canvas bind:this=\{effectCanvas\} class="profile-atmosphere__effect-canvas"/);
+  assert.match(atmosphere, /const EFFECTS = new Set/);
   for (const effect of ['rain', 'snow', 'fireflies', 'scanlines']) {
-    assert.match(atmosphere, new RegExp(`profile-atmosphere--effect-${effect}`));
+    assert.match(atmosphere, new RegExp(`draw${effect[0].toUpperCase()}${effect.slice(1)}`));
   }
   assert.match(atmosphere, /prefers-reduced-motion/);
+  assert.doesNotMatch(atmosphere, /repeating-linear-gradient/);
   assert.match(shell, /<ProfileAtmosphere[\s\S]*effect=\{atmosphereEffect\}/);
   assert.match(cosmetics, /getProfileAtmosphere/);
   assert.match(cosmetics, /profile_atmosphere/);
-  assert.match(settingsPreview, /settings-preview__atmosphere/);
-  assert.match(studioPreview, /studio-profile-cosmetic-atmosphere/);
+  assert.match(settingsPreview, /<ProfileAtmosphere[\s\S]*canvasOnly=\{true\}/);
+  assert.match(studioPreview, /<ProfileAtmosphere[\s\S]*canvasOnly=\{true\}/);
   assert.match(editor, /previewSlot\('profile_atmosphere'/);
   assert.match(editor, /applySlot\('profile_atmosphere'/);
 });

@@ -1,10 +1,11 @@
 <script>
   import RollPreview from './RollPreview.svelte';
   import IdentityCard from './IdentityCard.svelte';
+  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import { getBadgeMeta } from './badgeData.js';
   import { createDefaultProfileConfig, getVisibleProfileLinks } from './profileConfig.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import { getAtmosphereEffect, getCosmeticEffect, getProfileBg } from './cosmetics';
+  import { getCosmeticEffect, getProfileAtmosphereEffect, getProfileBg } from './cosmetics';
   import { SHOP_CONTEXT_LABELS } from './shopCatalog';
 
   export let loadout = {};
@@ -20,7 +21,7 @@
   $: nameEffect = getCosmeticEffect(loadout, 'name_effect');
   $: frameEffect = getCosmeticEffect(loadout, 'frame');
   $: profileBackground = getProfileBg(loadout);
-  $: profileAtmosphere = getAtmosphereEffect(loadout);
+  $: profileAtmosphere = getProfileAtmosphereEffect(loadout);
   $: profileBorder = getCosmeticEffect(loadout, 'profile_border');
   $: orbShape = getCosmeticEffect(loadout, 'orb_shape');
   $: rollEffect = getCosmeticEffect(loadout, 'roll_effect');
@@ -68,8 +69,13 @@
         {#if profileBackground.cls || profileBackground.style}
           <div class={'studio-profile-cosmetic-bg ' + profileBackground.cls} style={profileBackground.style} aria-hidden="true"></div>
         {/if}
-        {#if profileAtmosphere.cls || profileAtmosphere.style}
-          <div class={'studio-profile-cosmetic-atmosphere ' + profileAtmosphere.cls} style={profileAtmosphere.style} aria-hidden="true"></div>
+        {#if profileAtmosphere}
+          <ProfileAtmosphere
+            canvasOnly={true}
+            accent={displayColor}
+            secondaryAccent="#71D6FF"
+            effect={profileAtmosphere}
+          />
         {/if}
         <IdentityCard
           {username}
@@ -253,7 +259,6 @@
     box-shadow: 0 24px 48px rgba(0,0,0,0.38);
   }
   .studio-profile-cosmetic-bg { position: absolute; z-index: 0; inset: 0; opacity: 0.28; pointer-events: none; }
-  .studio-profile-cosmetic-atmosphere { position: absolute; z-index: 1; inset: 0; opacity: 0.42; pointer-events: none; }
   .studio-profile-card :global(.identity-card) { z-index: 2; padding: 1rem; border: 0; border-radius: 17px; }
   .studio-profile-card :global(.identity-card__person) { gap: 0.75rem; }
   .studio-profile-card :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }

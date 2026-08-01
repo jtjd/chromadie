@@ -1,7 +1,8 @@
 <script>
   import IdentityCard from './IdentityCard.svelte';
+  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import { equippedItems } from './stores';
-  import { getCosmeticEffect, getProfileAtmosphere, getProfileBg } from './cosmetics';
+  import { getCosmeticEffect, getProfileAtmosphereEffect, getProfileBg } from './cosmetics';
   import { getProfileStoryVisible, getVisibleProfileLinks, getVisibleProfileModules } from './profileConfig.js';
   import { getProfileMediaUrl } from './profileMedia.js';
 
@@ -29,7 +30,7 @@
   $: frameEffect = getCosmeticEffect(loadout, 'frame');
   $: borderEffect = getCosmeticEffect(loadout, 'profile_border');
   $: backgroundEffect = getProfileBg(loadout);
-  $: atmosphereEffect = getProfileAtmosphere(loadout);
+  $: atmosphereEffect = getProfileAtmosphereEffect(loadout);
   $: links = getVisibleProfileLinks(config);
   $: modules = getVisibleProfileModules(config, true).filter(module => module.id !== 'explore');
   $: showStory = getProfileStoryVisible(config);
@@ -40,7 +41,14 @@
   <div class="settings-preview__topline"><span>Live profile</span><span>Draft preview</span></div>
   <div class={'settings-preview__canvas ' + borderEffect.cls + ' settings-preview__canvas--' + (config.layoutVariant || 'immersive')} style={borderEffect.style + '--preview-accent:' + (config.signatureColor || profile.mood_color || '#8B7CF6') + ';'}>
     {#if backgroundEffect.cls || backgroundEffect.style}<div class="settings-preview__background {backgroundEffect.cls}" style={backgroundEffect.style} aria-hidden="true"></div>{/if}
-    {#if atmosphereEffect.cls || atmosphereEffect.style}<div class="settings-preview__atmosphere {atmosphereEffect.cls}" style={atmosphereEffect.style} aria-hidden="true"></div>{/if}
+    {#if atmosphereEffect}
+      <ProfileAtmosphere
+        canvasOnly={true}
+        accent={config.signatureColor || profile.mood_color || '#8B7CF6'}
+        secondaryAccent="#71D6FF"
+        effect={atmosphereEffect}
+      />
+    {/if}
     <IdentityCard
       username={profile.username || 'Your username'}
       displayName={profile.username || 'Your username'}
@@ -83,7 +91,6 @@
   .settings-preview__topline span:last-child { color:var(--color-ink-faint); }
   .settings-preview__canvas { position:relative; overflow:hidden; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-inset); }
   .settings-preview__background { position:absolute; inset:0; opacity:.4; pointer-events:none; }
-  .settings-preview__atmosphere { position:absolute; z-index:1; inset:0; opacity:.34; pointer-events:none; }
   .settings-preview__canvas :global(.identity-card) { position:relative; z-index:2; min-height:15rem; padding:1rem; border:0; border-radius:var(--radius-md); }
   .settings-preview__canvas :global(.identity-card__name) { font-size:clamp(1.35rem, 2vw, 2rem); }
   .settings-preview__canvas :global(.identity-card__bio) { font-size:.75rem; }

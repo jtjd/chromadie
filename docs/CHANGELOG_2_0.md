@@ -878,3 +878,11 @@ phase, with an immediate reduced-motion equivalent.
 - Rendered those effects across the full public profile viewport while keeping
   profile backgrounds scoped to the identity card.
 - Migrated existing weather loadouts and kept their item keys and entitlements.
+
+## 2026-08-01 — Replace tiled profile effects with procedural layers
+
+- Replaced repetitive CSS grids and repeated background tiles with a seeded
+  canvas renderer for rain, snow, fireflies, and scanlines.
+- Reused the same renderer in profile settings, the decoration studio, and shop
+  previews so effects stay visually consistent while being extended.
+- Preserved curated effect allowlisting and `prefers-reduced-motion` behavior.
