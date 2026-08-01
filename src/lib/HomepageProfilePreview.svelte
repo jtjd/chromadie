@@ -88,7 +88,6 @@
   {#if profile}
     <header class="homepage-preview__header">
       <a href={profilePath} on:click|stopPropagation>{profilePath.replace(/^\//, 'chm.lol/')}</a>
-      <span>{model?.label || ''}</span>
     </header>
 
     <div class="homepage-preview__scene">
@@ -205,7 +204,7 @@
 
   .homepage-preview:hover { border-color: color-mix(in srgb, var(--preview-accent) 72%, white 10%); }
   .homepage-preview:focus-visible { outline: 2px solid var(--preview-accent); outline-offset: 4px; }
-  .homepage-preview__header { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 2.25rem; padding: 0.65rem 0.85rem; border-bottom: 1px solid rgba(241, 243, 237, 0.12); background: rgba(7, 9, 9, 0.72); }
+  .homepage-preview__header { position: relative; z-index: 3; display: flex; align-items: center; justify-content: flex-start; gap: 1rem; min-height: 2.25rem; padding: 0.65rem 0.85rem; border-bottom: 1px solid rgba(241, 243, 237, 0.12); background: rgba(7, 9, 9, 0.72); }
   .homepage-preview__header a { min-width: 0; overflow: hidden; color: rgba(241, 243, 237, 0.78); font: 600 0.62rem / 1 var(--home-mono, 'IBM Plex Mono', monospace); text-overflow: ellipsis; text-decoration: none; white-space: nowrap; }
   .homepage-preview__header a:hover { color: var(--preview-accent); }
   .homepage-preview__header span { color: rgba(241, 243, 237, 0.42); font: 600 0.57rem / 1 var(--home-mono, 'IBM Plex Mono', monospace); letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap; }

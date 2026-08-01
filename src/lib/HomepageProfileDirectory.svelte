@@ -117,7 +117,6 @@
   <div class="homepage-directory__hero-layout">
     <slot name="intro"></slot>
     <section class="homepage-directory__collage" aria-label="Live public profile directory">
-      <div class="homepage-directory__collage-label">Live profile directory</div>
       <div class="homepage-directory__main">
         <HomepageProfilePreview
           model={primaryProfile}
@@ -184,7 +183,6 @@
   .homepage-directory__hero-layout :global(.homepage-hero-intro) { padding-top: clamp(2rem, 6vh, 4rem); }
   .homepage-directory__collage { position: relative; display: grid; grid-template-columns: minmax(8rem, 0.68fr) minmax(20rem, 1.55fr) minmax(8rem, 0.68fr); grid-template-rows: auto auto; align-items: center; gap: 0.8rem; min-height: 32rem; padding: 2rem 0 1.5rem; }
   .homepage-directory__collage::before { position: absolute; z-index: -1; inset: 10% 8% 15%; content: ''; background: radial-gradient(ellipse at center, rgba(141, 220, 255, 0.09), transparent 62%); filter: blur(2.5rem); pointer-events: none; }
-  .homepage-directory__collage-label { position: absolute; top: 0; left: 0; color: rgba(241, 243, 237, 0.42); font: 600 0.58rem / 1 var(--home-mono, 'IBM Plex Mono', monospace); letter-spacing: 0.13em; text-transform: uppercase; }
   .homepage-directory__main { z-index: 3; grid-column: 2; grid-row: 1; width: 100%; }
   .homepage-directory__left { z-index: 2; grid-column: 1; grid-row: 1; width: calc(100% + 3.5rem); margin-left: -4.2rem; }
   .homepage-directory__right { z-index: 2; grid-column: 3; grid-row: 1; width: calc(100% + 3.5rem); margin-right: -4.2rem; }
