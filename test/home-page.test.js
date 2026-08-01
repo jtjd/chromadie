@@ -28,7 +28,7 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(showcase, /avatarSrc="\/avatars\/mara-dog-v1\.jpg"/);
   assert.match(showcase, /<IdentityCard/);
   assert.match(showcase, /showToday=\{false\}/);
-  assert.match(showcase, /Live public profile/);
+  assert.match(showcase, /Mara's color log/);
   assert.match(showcase, /Collecting bright colors, one day at a time/);
   assert.match(showcase, /Recent colors/);
   assert.match(showcase, /Roll once\. Improve your position/);
@@ -36,7 +36,7 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(showcase, /Get discovered/);
   assert.match(showcase, /Leaderboard/);
   assert.match(showcase, /--home-profile-accent/);
-  assert.match(showcase, /resets in 08:42:16/);
+  assert.match(showcase, /18 colors collected · next roll in 08:42:16/);
   assert.match(showcase, /home-showcase__roll-result/);
   assert.doesNotMatch(showcase, /border-prism-anim|frame-diamond-anim|name-spectrum-anim|roll-sparkles-anim|orb-shape-diamond/);
 });

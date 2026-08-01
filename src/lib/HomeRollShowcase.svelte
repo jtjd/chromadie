@@ -46,10 +46,10 @@
   };
 </script>
 
-<section class="home-showcase" style="--home-roll-color: #B7FD4D; --home-profile-accent: {previewProfile.accentColor};" aria-label="A live public profile and daily color result preview">
+<section class="home-showcase" style="--home-roll-color: #B7FD4D; --home-profile-accent: {previewProfile.accentColor};" aria-label="Mara's profile and daily color result preview">
   <header class="home-showcase__header">
-    <span>Live public profile</span>
-    <span>{previewProfile.username} · 18 rolls · resets in 08:42:16</span>
+    <span>Mara's color log</span>
+    <span>18 colors collected · next roll in 08:42:16</span>
   </header>
 
   <div class="home-showcase__stage">
