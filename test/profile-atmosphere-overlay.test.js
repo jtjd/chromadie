@@ -18,6 +18,7 @@ test('profile atmosphere effects render as a full-page layer', async () => {
   assert.match(atmosphere, /inset:\s*0/);
   assert.match(atmosphere, /width:\s*100vw/);
   assert.match(atmosphere, /height:\s*100dvh/);
+  assert.match(atmosphere, /\.profile-atmosphere__effect[\s\S]*position:\s*absolute/);
   for (const effect of ['rain', 'snow', 'fireflies', 'scanlines']) {
     assert.match(atmosphere, new RegExp(`profile-atmosphere--effect-${effect}`));
   }

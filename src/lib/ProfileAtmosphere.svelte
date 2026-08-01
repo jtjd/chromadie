@@ -49,7 +49,8 @@ $: backgroundStyle = backgroundSrc
   .profile-atmosphere__roll-flare,
   .profile-atmosphere__roll-ring,
   .profile-atmosphere__vignette,
-  .profile-atmosphere__grain {
+  .profile-atmosphere__grain,
+  .profile-atmosphere__effect {
     position: absolute;
     inset: 0;
   }
