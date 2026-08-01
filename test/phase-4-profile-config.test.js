@@ -62,6 +62,7 @@ test('profile configuration has a complete safe default and keeps the roll modul
 
   assert.equal(config.version, 1);
   assert.equal(config.signatureColor, '#123ABC');
+  assert.equal(config.colorEffectsEnabled, false);
   assert.equal(config.modules.length, 8);
   assert.equal(config.modules.find(module => module.id === 'roll').visible, true);
   assert.deepEqual(config.links, []);
@@ -96,6 +97,7 @@ test('profile configuration normalization rejects incomplete structure and drops
   assert.deepEqual(getVisibleProfileLinks(normalized), [
     { type: 'github', label: 'Code', url: 'https://github.com/example', visible: true, order: 0 }
   ]);
+  assert.equal(normalizeProfileConfig({ ...config, colorEffectsEnabled: true }).colorEffectsEnabled, true);
   assert.equal(getVisibleProfileModules(normalized, false).some(module => module.id === 'roll'), false);
   assert.equal(getVisibleProfileModules(normalized, true).some(module => module.id === 'roll'), true);
   const hiddenRoll = setProfileRollVisible(normalized, false);
@@ -156,6 +158,7 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   assert.match(editor, /save_profile_configuration/);
   assert.match(editor, /publish_profile_configuration/);
   assert.match(editor, /configpreview/);
+  assert.match(editor, /colorEffectsEnabled/);
   assert.match(editor, /Changes update the live preview/);
   assert.match(editor, /https/);
   assert.doesNotMatch(editor, /innerHTML|new Function|eval\s*\(/);
@@ -164,4 +167,13 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   assert.match(shell, /getProfileComposition/);
   assert.match(shell, /getVisibleProfileLinks/);
   assert.match(shell, /profile-shell-page--/);
+});
+
+test('ambient color preference is persisted as a validated configuration field', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20260801140000_profile_color_effects.sql', import.meta.url), 'utf8');
+
+  assert.match(migration, /'colorEffectsEnabled', false/);
+  assert.match(migration, /v_color_effects_enabled boolean/);
+  assert.match(migration, /jsonb_typeof\(p_input->'colorEffectsEnabled'\) <> 'boolean'/);
+  assert.match(migration, /'colorEffectsEnabled', v_color_effects_enabled/);
 });

@@ -12,9 +12,11 @@ test('the owner roll broadcasts its lifecycle into the profile presentation', as
   assert.match(profileRoll, /dispatch\('rollcancel'/);
   assert.match(profileShell, /on:rollstart=\{handleRollStart\}/);
   assert.match(profileShell, /on:rollcancel=\{handleRollCancel\}/);
-  assert.match(profileShell, /rollState=\{profileRollState\}/);
-  assert.doesNotMatch(profileShell, /rollColor=/);
-  assert.doesNotMatch(profileShell, /dailyAccentColor|profileRollColor/);
+  assert.match(profileShell, /colorEffectsEnabled = effectiveProfileConfig\.colorEffectsEnabled === true/);
+  assert.match(profileShell, /rollState=\{colorEffectsEnabled \? profileRollState : 'idle'\}/);
+  assert.match(profileShell, /rollColor=\{colorEffectsEnabled \?/);
+  assert.match(profileShell, /backgroundTint=\{colorEffectsEnabled\}/);
+  assert.match(profileShell, /profileRollColor/);
   assert.match(profileShell, /profile-shell-page--roll-/);
   assert.match(atmosphere, /profile-atmosphere--rolling/);
   assert.match(atmosphere, /profile-atmosphere--settled/);

@@ -12,13 +12,16 @@
   export let spotifyType = '';
   export let spotifyId = '';
   export let audioSrc = '';
+  export let colorEffectsEnabled = false;
   export let deferMedia = false;
   let audioElement;
   let isPlaying = false;
   let volume = 0.75;
   let spotifyActive = false;
 
-  $: safeColor = normalizeHexColor(bestRoll?.hex_code, accentColor);
+  $: safeColor = colorEffectsEnabled
+    ? normalizeHexColor(bestRoll?.hex_code, accentColor)
+    : normalizeHexColor(accentColor, '#5D6A73');
   $: spotifyEmbedSrc = getSpotifyEmbedUrl(spotifyType, spotifyId);
   $: showVisualFixture = !audioSrc && !spotifyEmbedSrc && !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
   $: if (audioElement) audioElement.volume = Number(volume);

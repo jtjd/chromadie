@@ -4,6 +4,7 @@
   export let accent = '#8B7CF6';
   export let secondaryAccent = '#71D6FF';
   export let backgroundSrc = '';
+  export let backgroundTint = false;
   export let effect = '';
   export let rollState = 'idle';
   export let rollColor = '';
@@ -29,7 +30,7 @@
   $: safeRollColor = rollColor || accent;
   $: safeEffect = EFFECTS.has(effect) ? effect : '';
   $: backgroundStyle = backgroundSrc
-    ? `linear-gradient(135deg, color-mix(in srgb, ${accent} 24%, rgba(0, 0, 0, 0.62)), rgba(0, 0, 0, 0.66)), url("${backgroundSrc}")`
+    ? `${backgroundTint ? `linear-gradient(135deg, color-mix(in srgb, ${accent} 24%, rgba(0, 0, 0, 0.62)), rgba(0, 0, 0, 0.66)), ` : ''}url("${backgroundSrc}")`
     : 'none';
 
   $: if (mounted && safeEffect !== activeEffect) {

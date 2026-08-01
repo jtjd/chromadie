@@ -68,9 +68,10 @@ test('approved profile composition uses production adapters without prototype au
   assert.match(shell, /<FeaturedCollection/);
   assert.match(shell, /<ProfileMusic/);
   assert.match(shell, /visualFixture={visualFixture}/);
-  assert.doesNotMatch(shell, /on:colorchange=\{handleRollColor\}/);
+  assert.match(shell, /on:colorchange=\{handleRollColor\}/);
   assert.match(shell, /PROFILE_SURFACE_ACCENT/);
-  assert.match(shell, /accent=\{PROFILE_SURFACE_ACCENT\}/);
+  assert.match(shell, /colorEffectsEnabled = effectiveProfileConfig\.colorEffectsEnabled === true/);
+  assert.match(shell, /backgroundTint=\{colorEffectsEnabled\}/);
   assert.doesNotMatch(shell, /profile-shell-warning.*Profile interactions are temporarily unavailable/s);
   assert.doesNotMatch(header, /navigator\.share/);
   assert.doesNotMatch(header, /navigator\.clipboard/);

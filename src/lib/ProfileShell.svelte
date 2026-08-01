@@ -50,6 +50,7 @@
   let trackedProfileViewKey = null;
   let followLoading = false;
   let profileRollState = 'idle';
+  let profileRollColor = '';
   let profileRollEffectTimer = null;
   let mediaCacheKey = '';
   let refreshing = false;
@@ -65,6 +66,7 @@
     previewConfig = null;
     allAchievements = [];
     profileRollState = 'idle';
+    profileRollColor = '';
     mediaCacheKey = '';
     if (profileRollEffectTimer) {
       clearTimeout(profileRollEffectTimer);
@@ -225,21 +227,26 @@
     }
   }
 
-  function handleRollStart() {
+  function handleRollStart(event) {
     profileRollState = 'rolling';
+    profileRollColor = colorEffectsEnabled
+      ? colorFor(event.detail?.hex || signatureColor)
+      : '';
     if (profileRollEffectTimer) {
       clearTimeout(profileRollEffectTimer);
       profileRollEffectTimer = null;
     }
   }
 
-  function settleProfileRoll() {
+  function settleProfileRoll(nextColor = '') {
+    if (colorEffectsEnabled && nextColor) profileRollColor = colorFor(nextColor);
     profileRollState = 'settled';
     if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
     const reducedMotion = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     profileRollEffectTimer = setTimeout(() => {
       profileRollState = 'idle';
+      profileRollColor = '';
       profileRollEffectTimer = null;
     }, reducedMotion ? 420 : 1400);
   }
@@ -263,17 +270,30 @@
 
   function handleRollCancel() {
     profileRollState = 'idle';
+    profileRollColor = '';
     if (profileRollEffectTimer) {
       clearTimeout(profileRollEffectTimer);
       profileRollEffectTimer = null;
     }
   }
 
-  async function handleRollComplete() {
+  function handleRollPreview(event) {
+    if (colorEffectsEnabled && profileRollState === 'rolling' && event.detail?.hex) {
+      profileRollColor = colorFor(event.detail.hex);
+    }
+  }
+
+  async function handleRollComplete(event) {
     if (profileRollState === 'rolling') {
-      settleProfileRoll();
+      settleProfileRoll(event.detail?.canonical?.hex || event.detail?.data?.hex || event.detail?.data?.hex_code);
     }
     await loadProfileData();
+  }
+
+  function handleRollColor(event) {
+    if (colorEffectsEnabled && event.detail?.hex) {
+      profileRollColor = colorFor(event.detail.hex);
+    }
   }
 
   async function handleFollow() {
@@ -356,6 +376,13 @@
   $: profileBio = typeof targetProfile?.bio === 'string' ? targetProfile.bio.trim().slice(0, 160) : '';
   $: profileBioFallback = profileBio ? '' : 'No bio added yet.';
   $: signatureColor = colorFor(effectiveProfileConfig.signatureColor);
+  $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
+  $: profileSurfaceAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
+  $: profileControlAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
+  $: profileAtmosphereSecondary = colorEffectsEnabled
+    ? colorFor(effectiveProfileConfig.signatureColor, '#71D6FF')
+    : PROFILE_SURFACE_SECONDARY;
+  $: if (!colorEffectsEnabled) profileRollColor = '';
   $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
@@ -387,9 +414,9 @@
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + signatureColor + '; --profile-surface-accent: ' + PROFILE_SURFACE_ACCENT + ';'} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + signatureColor + '; --profile-surface-accent: ' + profileSurfaceAccent + '; --profile-control-accent: ' + profileControlAccent + ';'} aria-busy={loading}>
   {#if !previewMode}
-    <ProfileAtmosphere accent={PROFILE_SURFACE_ACCENT} secondaryAccent={PROFILE_SURFACE_SECONDARY} backgroundSrc={backgroundSrc} effect={atmosphereEffect} />
+    <ProfileAtmosphere accent={profileSurfaceAccent} secondaryAccent={profileAtmosphereSecondary} backgroundSrc={backgroundSrc} backgroundTint={colorEffectsEnabled} effect={atmosphereEffect} rollState={colorEffectsEnabled ? profileRollState : 'idle'} rollColor={colorEffectsEnabled ? (profileRollColor || profileSurfaceAccent) : ''} />
   {/if}
 
   {#if !loading && targetProfile}
@@ -441,7 +468,7 @@
         {#if showRoll && !refreshing}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
-              <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} />
+              <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} on:colorpreview={handleRollPreview} on:colorchange={handleRollColor} />
             {:else}
               <TodayColor result={latestRoll} quiet={true} accentColor={signatureColor} cosmetics={cosmetics} />
             {/if}
@@ -463,7 +490,7 @@
         {#if !previewMode && showExpression}
           <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
             <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
-              <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={signatureColor} audioSrc={audioSrc} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} />
+              <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} />
             </div>
           </div>
         {/if}
@@ -771,7 +798,7 @@
   .profile-shell__action:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
   .profile-shell__action:disabled { cursor: wait; opacity: 0.6; }
   .profile-shell__action--primary { background: var(--color-ink-strong); color: var(--color-canvas-deep); }
-  .profile-shell__action--secondary { border-color: color-mix(in srgb, var(--profile-accent) 55%, transparent); background: color-mix(in srgb, var(--profile-accent) 14%, transparent); color: var(--color-accent-bright); }
+  .profile-shell__action--secondary { border-color: color-mix(in srgb, var(--profile-control-accent) 55%, transparent); background: color-mix(in srgb, var(--profile-control-accent) 14%, transparent); color: var(--color-accent-bright); }
 
   .profile-shell__rank-row { flex-wrap: wrap; gap: var(--space-3) var(--space-5); margin-top: var(--space-8); padding-top: var(--space-5); border-top: 1px solid var(--color-line-subtle); }
   .profile-shell__rank-row > div:first-child { display: flex; align-items: baseline; gap: var(--space-3); }
@@ -969,18 +996,18 @@
     height: 2.9rem;
     margin: 0;
     padding: 0;
-    border: 1px solid color-mix(in srgb, var(--profile-accent) 38%, var(--color-line-subtle));
+    border: 1px solid color-mix(in srgb, var(--profile-control-accent) 38%, var(--color-line-subtle));
     border-radius: 50%;
     background: color-mix(in srgb, var(--color-canvas-deep) 72%, transparent);
-    color: color-mix(in srgb, var(--profile-accent) 68%, white);
+    color: color-mix(in srgb, var(--profile-control-accent) 68%, white);
     cursor: pointer;
-    box-shadow: 0 0 1.5rem color-mix(in srgb, var(--profile-accent) 14%, transparent);
+    box-shadow: 0 0 1.5rem color-mix(in srgb, var(--profile-control-accent) 14%, transparent);
     transform: translateX(-50%);
     transition: transform 160ms ease, border-color 160ms ease, color 160ms ease;
   }
 
-  .profile-shell__more-cue:hover { color: var(--color-ink-strong); border-color: var(--profile-accent); transform: translate(-50%, 0.2rem); }
-  .profile-shell__more-cue:focus-visible { outline: 2px solid var(--profile-accent); outline-offset: 4px; border-radius: var(--radius-sm); }
+  .profile-shell__more-cue:hover { color: var(--color-ink-strong); border-color: var(--profile-control-accent); transform: translate(-50%, 0.2rem); }
+  .profile-shell__more-cue:focus-visible { outline: 2px solid var(--profile-control-accent); outline-offset: 4px; border-radius: var(--radius-sm); }
   .profile-shell__more-cue-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .profile-shell__more-cue-arrow { font-size: 1.35rem; line-height: 1; }
   .profile-shell__more {
@@ -1005,18 +1032,18 @@
     width: 2.9rem;
     height: 2.9rem;
     padding: 0;
-    border: 1px solid color-mix(in srgb, var(--profile-accent) 38%, var(--color-line-subtle));
+    border: 1px solid color-mix(in srgb, var(--profile-control-accent) 38%, var(--color-line-subtle));
     border-radius: 50%;
     background: color-mix(in srgb, var(--color-canvas-deep) 72%, transparent);
-    color: color-mix(in srgb, var(--profile-accent) 68%, white);
+    color: color-mix(in srgb, var(--profile-control-accent) 68%, white);
     cursor: pointer;
     font-size: 1.35rem;
     line-height: 1;
     transform: translateX(-50%);
   }
 
-  .profile-shell__more-back:hover { color: var(--color-ink-strong); border-color: var(--profile-accent); }
-  .profile-shell__more-back:focus-visible { outline: 2px solid var(--profile-accent); outline-offset: 4px; }
+  .profile-shell__more-back:hover { color: var(--color-ink-strong); border-color: var(--profile-control-accent); }
+  .profile-shell__more-back:focus-visible { outline: 2px solid var(--profile-control-accent); outline-offset: 4px; }
 
   .profile-shell__opening.profile-shell__approved-opening {
     width: min(100%, 46rem);
@@ -1056,7 +1083,7 @@
     width: min(100%, 46rem);
     margin-top: clamp(1.5rem, 4vw, 2.5rem);
     padding: 1.25rem 0.5rem 0;
-    border-top: 1px solid color-mix(in srgb, var(--profile-accent) 24%, var(--color-line-subtle));
+    border-top: 1px solid color-mix(in srgb, var(--profile-control-accent) 24%, var(--color-line-subtle));
   }
 
   .profile-shell__more .profile-shell__approved-game {

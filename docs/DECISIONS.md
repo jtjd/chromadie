@@ -2,6 +2,20 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-01 — Make ambient profile color effects opt-in
+
+**Status:** accepted and implemented
+
+The profile’s rolled and signature colors should communicate identity without
+silently taking over the entire presentation. The structured profile config
+therefore stores `colorEffectsEnabled`, defaulting to `false`. Disabled
+profiles keep the selected background image, atmosphere, play/volume controls,
+and profile navigation cues on neutral surface tokens. Signature color remains
+available for links and other card data, and the avatar fallback stays neutral.
+
+Users can explicitly enable ambient tinting from profile settings when they
+want the signature and roll colors to shape the broader profile presentation.
+
 ## 2026-08-01 — Keep profile color identity local to card data
 
 **Status:** accepted and implemented

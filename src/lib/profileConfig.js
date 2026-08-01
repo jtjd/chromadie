@@ -58,6 +58,7 @@ export function createDefaultProfileConfig(signatureColor = '#8B7CF6') {
   return {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(signatureColor),
+    colorEffectsEnabled: false,
     layoutVariant: 'immersive',
     storyVisible: false,
     modules: defaultModules(),
@@ -120,6 +121,7 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
   const normalized = {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(value.signatureColor, fallback.signatureColor),
+    colorEffectsEnabled: value.colorEffectsEnabled === true,
     layoutVariant: PROFILE_LAYOUT_VARIANTS.includes(value.layoutVariant) ? value.layoutVariant : fallback.layoutVariant,
     modules: modules.sort((left, right) => left.order - right.order),
     links: links.sort((left, right) => left.order - right.order),

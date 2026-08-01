@@ -218,6 +218,24 @@
     </label>
   </div>
 
+  <div class="profile-editor__section profile-editor__color-effects-setting">
+    <div class="profile-editor__section-heading">
+      <div><p class="profile-editor__eyebrow">Ambient color</p><h3>Choose whether color effects leave the card</h3></div>
+      <span>Off by default</span>
+    </div>
+    <label class="profile-editor__story-toggle">
+      <input
+        type="checkbox"
+        checked={previewConfig.colorEffectsEnabled}
+        on:change={event => updateDraft({ colorEffectsEnabled: event.currentTarget.checked })}
+      />
+      <span>
+        <strong>Enable ambient color effects</strong>
+        <small>When enabled, roll and signature colors can tint the backdrop and profile controls. Links and card data keep their signature color either way.</small>
+      </span>
+    </label>
+  </div>
+
   <div class="profile-editor__section profile-editor__story-setting">
     <div class="profile-editor__section-heading">
       <div><p class="profile-editor__eyebrow">Profile history</p><h3>Choose whether to show past colors</h3></div>

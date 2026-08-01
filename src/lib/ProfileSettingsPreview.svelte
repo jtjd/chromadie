@@ -35,6 +35,9 @@
   $: modules = getVisibleProfileModules(config, true).filter(module => module.id !== 'explore');
   $: showStory = getProfileStoryVisible(config);
   $: avatarSrc = getProfileMediaUrl(config.avatar_path);
+  $: previewSurfaceAccent = config.colorEffectsEnabled === true
+    ? (config.signatureColor || profile.mood_color || '#8B7CF6')
+    : '#5D6A73';
 </script>
 
 <aside class="settings-preview" aria-label="Live profile preview">
@@ -44,8 +47,9 @@
     {#if atmosphereEffect}
       <ProfileAtmosphere
         canvasOnly={true}
-        accent={config.signatureColor || profile.mood_color || '#8B7CF6'}
-        secondaryAccent="#71D6FF"
+        accent={previewSurfaceAccent}
+        secondaryAccent={config.colorEffectsEnabled === true ? '#71D6FF' : '#87959D'}
+        backgroundTint={config.colorEffectsEnabled === true}
         effect={atmosphereEffect}
       />
     {/if}
