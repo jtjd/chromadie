@@ -1848,3 +1848,8 @@ reuses the production `IdentityCard` so it stays faithful to the public profile
 instead of inventing a parallel marketing mockup. A compact daily result sits
 below it as secondary status. It remains presentation-only: no sample roll,
 score, reward, or countdown becomes client authority.
+
+The specimen now carries a distinct example identity, a short recent-color
+trail, and two separate color roles: the profile accent and the current daily
+roll. This adds warmth and a sense of history through the product model itself,
+without introducing decorative animation or a second profile composition.

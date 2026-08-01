@@ -1005,10 +1005,12 @@ while its full context refreshes, and protected routes no longer show
 - Reused the production identity card in the homepage preview and placed the
   sample daily result in a compact status strip below it, keeping the example
   faithful to live public profiles.
+- Added a warmer example identity, a short recent-color trail, and distinct
+  profile-accent/current-roll colors so the specimen feels lived-in.
 - Simplified the daily-loop section and retained the existing claim,
   authenticated profile, analytics, routing, and accessibility contracts.
 - Captured 1440×900, 1280×720, 390×844, and daily-loop evidence under
   `artifacts/homepage-game-prototype/`.
 - Build, checks, lint, tests, link, CSP, drift, scoring, and database security
   validation pass. The existing performance budget remains over its thresholds
-  at 663.52 kB JavaScript / 625 kB and 339.69 kB CSS / 295 kB; HTML passes.
+  at 664.61 kB JavaScript / 625 kB and 341.46 kB CSS / 295 kB; HTML passes.

@@ -26,6 +26,10 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(showcase, /<IdentityCard/);
   assert.match(showcase, /showToday=\{false\}/);
   assert.match(showcase, /Live public profile/);
+  assert.match(showcase, /Collecting bright colors, one day at a time/);
+  assert.match(showcase, /Recent colors/);
+  assert.match(showcase, /Bright mint · #B7FD4D/);
+  assert.match(showcase, /--home-profile-accent/);
   assert.match(showcase, /resets in 08:42:16/);
   assert.match(showcase, /home-showcase__daily/);
   assert.doesNotMatch(showcase, /border-prism-anim|frame-diamond-anim|name-spectrum-anim|roll-sparkles-anim|orb-shape-diamond/);

@@ -927,3 +927,5 @@ phase, with an immediate reduced-motion equivalent.
   status strip.
 - Removed showcase prism, spectrum, sparkle, orb, nested-glass, and colored
   frame treatments while preserving existing homepage actions and analytics.
+- Added a profile color trail and separate warm identity/daily-roll accents to
+  give the specimen more character without adding visual noise.
