@@ -1065,6 +1065,18 @@ while its full context refreshes, and protected routes no longer show
   baseline overage, while the shared styling layer increases CSS from the
   previously recorded 348.34 kB.
 
+## 2026-08-01 — Finish profile language reconciliation
+
+- Added `CompactRollPreview` as the shared compact presentation boundary around
+  the production `RollPreview`.
+- Updated the homepage sample, discovery/leaderboard cards, and shop
+  leaderboard preview to use the same cosmetic-aware orb and roll-effect
+  rendering.
+- Added the configured avatar to the shop leaderboard preview and preserved
+  initials as the safe fallback.
+- Kept the additive public-avatar projection migration unchanged; linked
+  database application is still a deployment step, not a client-side fallback.
+
 ## Route loading and initial bundle boundary — 2026-08-01
 
 - Added explicit cached dynamic imports for game, studio, discovery, profile,

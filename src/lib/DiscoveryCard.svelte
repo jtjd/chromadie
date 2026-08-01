@@ -2,7 +2,8 @@
   import { createEventDispatcher } from 'svelte';
   import { addToast } from './stores';
   import { getBadgeMeta } from './badgeData';
-  import { getLbTheme, getNameEffect, getProfileBorder, getStaffTitleText, getTitleText } from './cosmetics';
+  import CompactRollPreview from './CompactRollPreview.svelte';
+  import { getLbTheme, getNameEffect, getOrbShape, getProfileBorder, getRollEffect, getStaffTitleText, getTitleText } from './cosmetics';
   import { getPublicProfilePath, getProfileShareText } from './discoveryData.js';
   import { getAppOrigin } from './authUrls.js';
   import { getProfileMediaUrl } from './profileMedia.js';
@@ -28,6 +29,8 @@
   $: displayName = item?.displayName || item?.username || 'Unknown player';
   $: profileAccent = item?.profileAccent || '#8B7CF6';
   $: rollColor = item?.hexCode || profileAccent;
+  $: orbShape = getOrbShape(item?.equippedCosmetics);
+  $: rollEffect = getRollEffect(item?.equippedCosmetics);
   $: avatarSrc = getProfileMediaUrl(item?.avatarPath);
   $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
   $: scoreLabel = item?.score === null || item?.score === undefined ? 'No roll yet' : `${item.score.toLocaleString()} EP`;
@@ -128,7 +131,15 @@
     </div>
 
     <div class="discovery-card__roll">
-      <div class="discovery-card__swatch" aria-hidden="true"><span>{item?.hexCode || '—'}</span></div>
+      <CompactRollPreview
+        displayColor={rollColor}
+        rarity={item?.rarity || 'Common'}
+        effectCls={rollEffect.cls}
+        effectStyle={rollEffect.style}
+        orbCls={orbShape.cls}
+        size="3.5rem"
+        scale={0.34}
+      />
       <div class="discovery-card__roll-copy">
         <span>Latest color</span>
         <strong>{rollLabel}</strong>
@@ -213,8 +224,6 @@
   .discovery-card__bio { display: -webkit-box; overflow: hidden; max-width: 36rem; margin: 0.4rem 0 0; color: var(--color-ink-muted); font-size: 0.75rem; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 
   .discovery-card__roll { display: flex; grid-column: 1 / -1; align-items: center; gap: 0.7rem; min-width: 0; padding-top: 0.85rem; border-top: 1px solid var(--color-line-subtle); }
-  .discovery-card__swatch { display: grid; place-items: center; flex: 0 0 3rem; width: 3rem; height: 3rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 0.8rem; background: radial-gradient(circle at 30% 22%, color-mix(in srgb, var(--discovery-roll-color) 68%, white), var(--discovery-roll-color) 52%, var(--surface-inset)); box-shadow: 0 0 1.3rem color-mix(in srgb, var(--discovery-roll-color) 24%, transparent), inset 0 0 0 0.22rem rgba(0,0,0,0.12); color: rgba(255,255,255,0.84); font: 700 0.48rem/1 var(--font-mono-stack); }
-  .discovery-card__swatch span { padding: 0.2rem 0.24rem; border-radius: 0.25rem; background: rgba(0,0,0,0.25); }
   .discovery-card__roll-copy { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
   .discovery-card__roll-copy > span { color: var(--color-ink-muted); font: 700 0.54rem/1 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; }
   .discovery-card__roll-copy strong { overflow: hidden; color: var(--color-ink-strong); font-size: 0.78rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }

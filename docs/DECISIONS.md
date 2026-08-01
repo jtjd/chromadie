@@ -1939,3 +1939,18 @@ accent initial when it is not, and show the handle, short bio, latest color,
 score, streak, and profile entry point in one composed surface. Roll color and
 profile accent remain separate visual roles so the result still reads as a
 player's profile with a current roll, rather than a decorated score row.
+
+## 2026-08-01 — Use one compact roll language across discovery surfaces
+
+Compact profile contexts now render their color result through
+`CompactRollPreview`, a small layout adapter around the existing canonical
+`RollPreview`. The homepage sample, discovery cards, and shop leaderboard
+preview therefore share the same orb geometry, rarity glow, equipped orb
+shape, roll effect, and reduced-motion behavior. The adapter owns sizing only;
+roll scoring, rarity, cosmetic resolution, and live profile rendering remain
+unchanged.
+
+The shop leaderboard preview also uses the configured preview avatar. Public
+discovery avatars continue to come only from the bounded profile projection and
+the additive `profile_configurations` migration; no private account data is
+added to the client contract.

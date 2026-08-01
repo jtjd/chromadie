@@ -78,6 +78,8 @@ test('decoration studio previews a compact identity card without mounting a page
   assert.match(studio, /Decoration studio/);
   assert.match(studio, /Free foundations stay beautiful/);
   assert.match(preview, /IdentityCard/);
+  assert.match(preview, /CompactRollPreview/);
+  assert.match(preview, /previewAvatarSrc/);
   assert.doesNotMatch(preview, /ProfileShell/);
   assert.match(preview, /<ProfileAtmosphere[\s\S]*canvasOnly=\{true\}/);
   assert.doesNotMatch(studio + preview, /innerHTML|new Function|eval\s*\(/);

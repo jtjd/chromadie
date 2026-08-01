@@ -1,10 +1,11 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import CompactRollPreview from './CompactRollPreview.svelte';
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import IdentityCard from './IdentityCard.svelte';
   import HomeDemoRoll from './HomeDemoRoll.svelte';
   import { shopItems } from './stores';
-  import { getCosmeticEffect, getProfileAtmosphereEffect, getProfileBg } from './cosmetics';
+  import { getCosmeticEffect, getOrbShape, getProfileAtmosphereEffect, getProfileBg, getRollEffect } from './cosmetics';
 
   export let isAuthenticated = false;
 
@@ -45,7 +46,9 @@
     profile_atmosphere: 'bg_rain',
     profile_border: 'border_chroma',
     frame: 'frame_holo',
-    name_effect: 'name_chroma'
+    name_effect: 'name_chroma',
+    orb_shape: 'orb_hexagon',
+    roll_effect: 'roll_sparkles'
   };
 
   $: previewCosmetics = $shopItems && {
@@ -53,7 +56,9 @@
     atmosphere: getProfileAtmosphereEffect(previewLoadout),
     border: getCosmeticEffect(previewLoadout, 'profile_border'),
     frame: getCosmeticEffect(previewLoadout, 'frame'),
-    name: getCosmeticEffect(previewLoadout, 'name_effect')
+    name: getCosmeticEffect(previewLoadout, 'name_effect'),
+    orb: getOrbShape(previewLoadout),
+    roll: getRollEffect(previewLoadout)
   };
 </script>
 
@@ -133,7 +138,15 @@
           <strong>Rare</strong>
         </div>
         <div class="home-showcase__roll-result-main">
-          <span class="home-showcase__swatch" aria-hidden="true"></span>
+          <CompactRollPreview
+            displayColor="#B7FD4D"
+            rarity="Rare"
+            effectCls={previewCosmetics.roll.cls}
+            effectStyle={previewCosmetics.roll.style}
+            orbCls={previewCosmetics.orb.cls}
+            size="4.5rem"
+            scale={0.42}
+          />
           <div>
             <code>#B7FD4D</code>
             <strong>53,296 <small>EP</small></strong>
@@ -422,16 +435,6 @@
     margin-top: 1.4rem;
   }
 
-  .home-showcase__swatch {
-    flex: 0 0 4.5rem;
-    width: 4.5rem;
-    aspect-ratio: 1;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 0.55rem;
-    background: var(--home-roll-color);
-    box-shadow: 0 0 1.5rem color-mix(in srgb, var(--home-roll-color) 26%, transparent);
-  }
-
   .home-showcase__roll-result-main code {
     color: var(--home-ink-muted);
     font: 600 0.7rem / 1 var(--home-mono);
@@ -585,10 +588,6 @@
       padding: 1rem;
     }
 
-    .home-showcase__swatch {
-      flex-basis: 3.75rem;
-      width: 3.75rem;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {

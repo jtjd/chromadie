@@ -27,6 +27,7 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(main, /@fontsource-variable\/spline-sans/);
   assert.match(main, /@fontsource\/ibm-plex-mono/);
   assert.match(showcase, /import IdentityCard from '.\/IdentityCard\.svelte'/);
+  assert.match(showcase, /import CompactRollPreview from '.\/CompactRollPreview\.svelte'/);
   assert.match(showcase, /import ProfileAtmosphere from '.\/ProfileAtmosphere\.svelte'/);
   assert.match(showcase, /profile_bg: 'bg_deep_space'/);
   assert.match(showcase, /profile_atmosphere: 'bg_rain'/);
@@ -44,6 +45,8 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(showcase, /--home-profile-accent/);
   assert.match(showcase, /18 colors collected · next roll in 08:42:16/);
   assert.match(showcase, /home-showcase__roll-result/);
+  assert.match(showcase, /orb_shape: 'orb_hexagon'/);
+  assert.match(showcase, /roll_effect: 'roll_sparkles'/);
   assert.match(showcase, /import HomeDemoRoll from '.\/HomeDemoRoll\.svelte'/);
   assert.match(showcase, /Try a sample roll/);
   assert.match(home, /import HomeDiscovery from '.\/HomeDiscovery\.svelte'/);

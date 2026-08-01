@@ -979,3 +979,13 @@ phase, with an immediate reduced-motion equivalent.
 - Preserved server-authoritative rolls, authentication, catalog and purchase
   behavior, profile rendering, URLs, and accessibility boundaries.
 - Updated source-level visual contracts and retained reduced-motion behavior.
+
+## 2026-08-01 — Reconcile compact profile and roll previews
+
+- Added a shared `CompactRollPreview` adapter so homepage, discovery, and shop
+  previews use the same orb shapes, rarity treatment, and roll effects as the
+  live profile.
+- Replaced the homepage and discovery-only color swatches with the shared
+  cosmetic-aware renderer.
+- Added the configured avatar to the shop leaderboard context while retaining
+  a safe initial fallback.
