@@ -26,16 +26,18 @@ test('reference typography is a shared, non-Google font contract', async () => {
 });
 
 test('quiet reference surfaces and reduced-motion behavior are encoded', async () => {
-  const [header, home, directory, preview, atmosphere, site] = await Promise.all([
+  const [header, home, directory, showcase, atmosphere, site] = await Promise.all([
     read('src/lib/SiteModeHeader.svelte'),
     read('src/lib/HomePage.svelte'),
     read('src/lib/HomepageProfileDirectory.svelte'),
-    read('src/lib/HomepageProfilePreview.svelte'),
+    read('src/lib/HomepageScreenshotShowcase.svelte'),
     read('src/lib/ProfileAtmosphere.svelte'),
     read('src/styles/site.css')
   ]);
 
   assert.match(header, /background: rgba\(7, 8, 11, 0\.52\)/);
+  assert.match(header, /class:site-mode-header--home=\{isHomeMode\}/);
+  assert.match(header, /\.site-mode-header--home \{[\s\S]*position: sticky;/);
   assert.match(header, /--site-header-font: 'Satoshi'/);
   assert.match(header, /font: 600 0\.72rem \/ 1 var\(--site-header-font\)/);
   assert.match(header, /color: var\(--color-accent-cyan\)/);
@@ -45,8 +47,9 @@ test('quiet reference surfaces and reduced-motion behavior are encoded', async (
   assert.doesNotMatch(home, /rgba\(139,124,246|radial-gradient\(circle at 85%/);
   assert.match(directory, /HomepageLiveTicker/);
   assert.match(directory, /grid-template-columns: minmax\(22rem/);
-  assert.match(preview, /ProfileAtmosphere/);
-  assert.doesNotMatch(preview, /border-prism-anim|frame-diamond-anim|name-spectrum-anim|roll-sparkles-anim|orb-shape-diamond/);
+  assert.match(showcase, /grid-template-columns: minmax\(8rem/);
+  assert.match(showcase, /prefers-reduced-motion/);
+  assert.doesNotMatch(directory, /ProfileAtmosphere|ProfileMusic|IdentityCard/);
   assert.match(atmosphere, /background: #07080b/);
   assert.match(atmosphere, /prefers-reduced-motion/);
   assert.match(site, /background-color: var\(--color-canvas\)/);

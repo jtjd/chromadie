@@ -1,5 +1,29 @@
 # Chromadie 2.0 Progress
 
+## Profile color boundary — 2026-08-01
+
+- Removed daily-roll color propagation from the profile shell’s full-page
+  atmosphere, opening surface, and avatar fallback. The roll result remains
+  visible in the roll module and color data surfaces.
+- Kept the configured signature color for links, badges, labels, and other
+  profile data accents inside the card and supporting data surfaces.
+- Preserved cosmetic background and atmosphere slots while preventing them
+  from inheriting either the latest roll or signature color.
+
+## Homepage screenshot showcase — 2026-08-01
+
+- Replaced the homepage’s embedded profile previews and lower directory cards
+  with four static WebP screenshot slots in an uneven desktop collage and a
+  stacked mobile layout.
+- Added the checked-in `homepageShowcase.js` manifest with only the approved
+  capture fields; each capture links to its corresponding public profile route.
+- Removed unavailable homepage metrics and kept the existing ticker component,
+  discovery source, links, polling, and reduced-motion behavior unchanged.
+- Added the reference-style daily-ritual explanation with a local sample roll;
+  it never calls the server roll path.
+- Added desktop/mobile capture support under
+  `artifacts/homepage-screenshot-showcase/`.
+
 ## Homepage/live-surface cleanup — 2026-08-01
 
 - Removed the invented horizontal recent-colors strip from the featured

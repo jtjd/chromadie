@@ -5,17 +5,17 @@ import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const output = resolve(root, 'artifacts/homepage-game-prototype');
+const output = resolve(root, 'artifacts/homepage-screenshot-showcase');
 const chromium = process.env.CHROMIUM_BIN || '/usr/bin/chromium';
 const appPort = Number(process.env.CAPTURE_PORT || 5174);
 const captures = [
-  { name: 'homepage-1920x1080', width: 1920, height: 1080, scroll: 0 },
+  { name: 'homepage-wide-1920x1080', width: 1920, height: 1080, scroll: 0 },
   { name: 'homepage-desktop-1440x900', width: 1440, height: 900, scroll: 0 },
   { name: 'homepage-compact-1280x720', width: 1280, height: 720, scroll: 0 },
   { name: 'homepage-mobile-390x844', width: 390, height: 844, scroll: 0 },
-  { name: 'directory-1440x900', width: 1440, height: 900, scroll: 'directory' },
-  { name: 'mechanic-1440x900', width: 1440, height: 900, scroll: 'mechanic' },
-  { name: 'directory-mobile-390x844', width: 390, height: 844, scroll: 'directory' }
+  { name: 'mechanic-desktop-1440x900', width: 1440, height: 900, scroll: 'mechanic' },
+  { name: 'showcase-desktop-1440x900', width: 1440, height: 900, scroll: 'showcase' },
+  { name: 'showcase-mobile-390x844', width: 390, height: 844, scroll: 'showcase' }
 ];
 
 await mkdir(output, { recursive: true });
@@ -76,9 +76,13 @@ async function capture(item, index) {
     await delay(250);
     if (item.scroll) {
       const scrollSelector = item.scroll === 'roll'
-        ? '.homepage-directory__mechanic'
+        ? '.home-page__mechanic'
+        : item.scroll === 'mechanic'
+          ? '.home-page__mechanic'
         : item.scroll === 'directory'
           ? '.homepage-directory__collage'
+          : item.scroll === 'showcase'
+            ? '.homepage-screenshot-showcase__profiles'
           : '.homepage-directory__' + item.scroll;
       await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { const target = document.querySelector(${JSON.stringify(scrollSelector)}); if (target) { target.scrollIntoView({ block: 'start' }); resolve(true); } else if (Date.now() - start > 12000) resolve(false); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
       await delay(350);

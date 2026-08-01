@@ -2,6 +2,35 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-01 — Keep profile color identity local to card data
+
+**Status:** accepted and implemented
+
+Daily rolls should remain visually meaningful without recoloring the entire
+public profile. The latest roll is therefore contained in the roll/result
+module and its color data surfaces. The full-page atmosphere, opening canvas,
+and fallback avatar use fixed neutral surface accents, and user-selected
+background/atmosphere cosmetics remain independent of the roll.
+
+The configured signature color remains available for links, badges, labels,
+and other data treatments inside the identity card and supporting profile
+surfaces. This keeps personal expression visible while preventing either a
+daily result or signature color from taking over the profile background or
+avatar.
+
+## 2026-08-01 — Isolate homepage screenshot showcases behind a replacement manifest
+
+**Status:** accepted and implemented
+
+The homepage collage and below-fold showcase now render static WebP capture
+slots from one small manifest containing only username, screenshot path, public
+profile URL, alt text, and collage position. The central capture is eager and
+the below-fold showcase is lazy; no live profile component tree, media embed,
+or profile content is mounted for the screenshot surface. Four approved
+public-profile captures are checked in and link to their corresponding public
+routes. The ticker component, data source, polling, links, and motion behavior
+remain unchanged.
+
 ## 2026-08-01 — Keep homepage profile previews limited to the live surface
 
 **Status:** accepted and implemented

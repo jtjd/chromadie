@@ -2,6 +2,8 @@
   import { createEventDispatcher } from 'svelte';
   import { isUsernameShapeValid } from './usernamePolicy.js';
   import { trackProductEvent } from './productAnalytics.js';
+  import CompactRollPreview from './CompactRollPreview.svelte';
+  import { guestRollFixture } from './guestRollFixture.js';
   import HomepageProfileDirectory from './HomepageProfileDirectory.svelte';
 
   export let isAuthenticated = false;
@@ -11,6 +13,7 @@
   let claimError = '';
   let claimStarted = false;
   let claimInput;
+  const sampleRoll = guestRollFixture;
 
   function forwardAction(event) {
     dispatch(event.type, event.detail);
@@ -72,15 +75,39 @@
       </section>
     </HomepageProfileDirectory>
 
+    <section class="home-page__mechanic" aria-labelledby="home-roll-title">
+      <div class="home-page__mechanic-copy">
+        <p class="home-page__eyebrow">The daily ritual</p>
+        <h2 id="home-roll-title">Roll once a day. <span>Your score changes your position.</span></h2>
+        <p>Higher profiles are seen by more people. Every roll becomes another detail in the page you are building.</p>
+      </div>
+
+      <aside class="home-page__roll-demo" aria-label="Sample roll preview">
+        <div class="home-page__roll-demo-label">Sample roll</div>
+        <div class="home-page__roll-demo-body">
+          <CompactRollPreview displayColor={sampleRoll.hex} rarity={sampleRoll.rarity} size="4rem" scale={0.34} />
+          <div>
+            <strong>{Number(sampleRoll.score).toLocaleString()}</strong>
+            <small>{sampleRoll.hex} / {sampleRoll.rarity}</small>
+          </div>
+        </div>
+        <div class="home-page__roll-demo-note">Presentation only · your roll is server-authoritative</div>
+      </aside>
+    </section>
+
     <section class="home-page__final" aria-labelledby="final-claim-title">
-      <p class="home-page__eyebrow">Start with your username</p>
-      <h2 id="final-claim-title">Claim your profile</h2>
-      <p>Choose a username, customize your page, and roll your first color.</p>
-      {#if isAuthenticated}
-        <button class="home-page__primary" type="button" on:click={() => dispatch('profile')}>View your profile <span aria-hidden="true">↗</span></button>
-      {:else}
-        <button class="home-page__primary" type="button" on:click={focusClaim}>Claim your profile <span aria-hidden="true">↑</span></button>
-      {/if}
+      <div class="home-page__final-copy">
+        <p class="home-page__eyebrow">Start with your username</p>
+        <h2 id="final-claim-title">Claim<br />your page.</h2>
+      </div>
+      <div class="home-page__final-action">
+        <p>Choose a username, customize your page, and roll your first color.</p>
+        {#if isAuthenticated}
+          <button class="home-page__primary" type="button" on:click={() => dispatch('profile')}>View your profile <span aria-hidden="true">↗</span></button>
+        {:else}
+          <button class="home-page__primary" type="button" on:click={focusClaim}>Claim your profile <span aria-hidden="true">↑</span></button>
+        {/if}
+      </div>
     </section>
   </div>
 </main>
@@ -132,9 +159,20 @@
   .home-page__primary { border: 1px solid var(--home-color); background: var(--home-color); color: #11140d; }
   .home-page__secondary { border: 1px solid var(--home-line-strong); background: var(--home-surface); color: var(--home-ink-muted); }
   .home-page__secondary:hover { border-color: var(--home-ink-muted); color: var(--home-ink); }
-  .home-page__final { display: grid; justify-items: start; margin-top: clamp(5rem, 10vw, 8rem); padding-top: clamp(2.5rem, 5vw, 4rem); border-top: 1px solid var(--home-line); }
-  .home-page__final h2 { margin: 0.55rem 0 0; color: var(--home-ink); font: 650 clamp(2rem, 4vw, 3.2rem) / 0.94 var(--home-font); letter-spacing: -0.055em; }
-  .home-page__final > p:not(.home-page__eyebrow) { margin: 0.75rem 0 0; color: var(--home-ink-muted); font-size: 0.9rem; line-height: 1.55; }
+  .home-page__mechanic { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 18rem); align-items: center; gap: clamp(1.5rem, 6vw, 6rem); margin-top: clamp(4rem, 9vw, 7rem); padding: clamp(2.5rem, 5vw, 4.5rem) 0; border-top: 1px solid var(--home-line); border-bottom: 1px solid var(--home-line); }
+  .home-page__mechanic-copy { max-width: 46rem; }
+  .home-page__mechanic-copy h2 { max-width: 42rem; margin: 0.55rem 0 0; color: var(--home-ink); font: 650 clamp(2.2rem, 4.2vw, 4.1rem) / 0.98 var(--home-font); letter-spacing: -0.055em; }
+  .home-page__mechanic-copy h2 span { color: var(--home-ink-faint); }
+  .home-page__mechanic-copy > p:last-child { max-width: 34rem; margin: 1rem 0 0; color: var(--home-ink-muted); font-size: 0.94rem; line-height: 1.55; }
+  .home-page__roll-demo { overflow: hidden; border: 1px solid var(--home-line); background: var(--home-surface); }
+  .home-page__roll-demo-label { padding: 0.78rem 0.9rem; border-bottom: 1px solid var(--home-line); color: var(--home-ink-faint); font: 600 0.59rem / 1 var(--home-mono); letter-spacing: 0.12em; text-transform: uppercase; }
+  .home-page__roll-demo-body { display: grid; grid-template-columns: 4rem minmax(0, 1fr); align-items: center; gap: 0.8rem; min-height: 6.2rem; padding: 1rem; }
+  .home-page__roll-demo-body strong { display: block; color: var(--home-ink); font: 700 1.8rem / 0.95 var(--home-font); letter-spacing: -0.05em; }
+  .home-page__roll-demo-body small { display: block; margin-top: 0.4rem; color: var(--home-ink-faint); font: 600 0.57rem / 1.2 var(--home-mono); }
+  .home-page__roll-demo-note { padding: 0.7rem 0.9rem; border-top: 1px solid var(--home-line); color: var(--home-ink-faint); font: 400 0.55rem / 1.35 var(--home-mono); }
+  .home-page__final { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 28rem); align-items: end; gap: clamp(2rem, 6vw, 6rem); margin-top: 0; padding: clamp(4rem, 8vw, 7rem) 0 clamp(5rem, 9vw, 8rem); border-top: 1px solid var(--home-line); }
+  .home-page__final h2 { margin: 0.55rem 0 0; color: var(--home-ink); font: 650 clamp(3.8rem, 8vw, 7rem) / 0.9 var(--home-font); letter-spacing: -0.065em; }
+  .home-page__final-action p { max-width: 24rem; margin: 0; color: var(--home-ink-muted); font-size: 0.94rem; line-height: 1.55; }
   .home-page__final .home-page__primary { margin-top: 1.4rem; }
 
   @media (min-width: 64rem) {
@@ -145,12 +183,16 @@
     .home-page__inner { padding-bottom: 5rem; }
     .home-page h1 { max-width: 31rem; font-size: clamp(2.8rem, 11vw, 4.5rem); }
     .home-page__intro { margin-top: 1.2rem; }
+    .home-page__mechanic, .home-page__final { grid-template-columns: 1fr; gap: 1.5rem; }
+    .home-page__roll-demo { width: min(100%, 22rem); }
   }
 
   @media (max-width: 36rem) {
     .home-page__claim { width: 100%; }
     .home-page__claim-field { min-height: 3rem; }
     .home-page__signed-in-actions > div { align-items: stretch; flex-direction: column; }
+    .home-page__roll-demo { width: 100%; }
+    .home-page__final h2 { font-size: clamp(3.6rem, 18vw, 5.5rem); }
   }
 
   @media (prefers-reduced-motion: reduce) {

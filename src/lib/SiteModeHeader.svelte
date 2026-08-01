@@ -40,7 +40,7 @@
   }
 </script>
 
-<header class="site-mode-header" class:site-mode-header--profile={isProfileMode}>
+<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--home={isHomeMode}>
   <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
     <span class="site-mode-header__wordmark">chm<span>.lol</span></span>
   </a>
@@ -149,6 +149,23 @@
     padding: 1rem clamp(1.25rem, 4vw, 3rem);
     color: rgba(235, 240, 252, 0.72);
     background: transparent;
+  }
+
+  .site-mode-header--home {
+    position: sticky;
+    top: 0;
+    min-height: 3.75rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+    background: rgba(7, 7, 8, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .site-mode-header--home .site-mode-header__brand {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.68rem;
   }
 
   .site-mode-header__brand {

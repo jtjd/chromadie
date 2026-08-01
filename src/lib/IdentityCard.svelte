@@ -103,6 +103,7 @@
     border: 1px solid rgba(255, 255, 255, 0.11);
     border-radius: var(--radius-lg);
     background: rgba(9, 11, 15, 0.64);
+    --identity-avatar-accent: #5D6A73;
     box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.045);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(24px);
@@ -129,12 +130,12 @@
     overflow: hidden;
     border: 1px solid rgba(239, 244, 255, 0.18);
     border-radius: 50%;
-    background: radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.26), var(--identity-accent) 42%, rgba(3, 6, 11, 0.92) 100%);
-    box-shadow: 0 0 2rem color-mix(in srgb, var(--identity-accent) 28%, transparent), inset 0 0 1.4rem rgba(255, 255, 255, 0.13);
+    background: radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.26), var(--identity-avatar-accent) 42%, rgba(3, 6, 11, 0.92) 100%);
+    box-shadow: 0 0 2rem color-mix(in srgb, var(--identity-avatar-accent) 28%, transparent), inset 0 0 1.4rem rgba(255, 255, 255, 0.13);
   }
 
   .identity-card__avatar-glow { position: absolute; inset: -20%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.35), transparent 56%); filter: blur(0.7rem); opacity: 0.6; }
-  .identity-card__avatar-letter { position: relative; z-index: 1; color: rgba(250, 252, 255, 0.94); font: 600 clamp(2.25rem, 6vw, 3.25rem) / 1 var(--font-display-stack); letter-spacing: -0.08em; text-shadow: 0 0 1.5rem color-mix(in srgb, var(--identity-accent) 70%, transparent); }
+  .identity-card__avatar-letter { position: relative; z-index: 1; color: rgba(250, 252, 255, 0.94); font: 600 clamp(2.25rem, 6vw, 3.25rem) / 1 var(--font-display-stack); letter-spacing: -0.08em; text-shadow: 0 0 1.5rem color-mix(in srgb, var(--identity-avatar-accent) 70%, transparent); }
   .identity-card__avatar-mark { position: absolute; z-index: 2; inset: 26%; opacity: 0.14; border: 0; border-radius: 0; background: transparent; }
   .identity-card__avatar-media { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 0; background: transparent; }
   .identity-card__avatar-media :global(.foundation-media__fallback) { border: 0; border-radius: 0; }

@@ -2,6 +2,27 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-01 — Keep roll and signature colors inside profile data surfaces
+
+- Stopped the latest daily roll from recoloring the full profile atmosphere,
+  opening surface, or avatar fallback.
+- Kept signature color for links, badges, labels, and other card/data accents.
+- Preserved user-selected background and atmosphere cosmetics without applying
+  the roll or signature color to them.
+
+## 2026-08-01 — Add screenshot-based homepage showcase slots
+
+- Replaced cramped embedded profile previews with an asymmetric screenshot
+  collage and screenshot-based below-fold profile showcase.
+- Central imagery uses explicit dimensions and eager loading; below-fold
+  imagery is lazy-loaded and mobile screenshots stack for readability.
+- Removed unavailable homepage metric placeholders and left the live-roll
+  ticker unchanged.
+- Replaced the temporary capture placeholders with four static public-profile
+  screenshots linked to their corresponding profile routes.
+- Added a reference-style daily-ritual explanation using a local sample roll;
+  it does not call or simulate the authoritative roll transaction.
+
 ## 2026-08-01 — Remove invented homepage profile history
 
 - Removed the horizontal recent-colors strip from the featured homepage

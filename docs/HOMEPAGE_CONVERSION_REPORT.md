@@ -1,28 +1,26 @@
-# Homepage Live Directory
+# Homepage Screenshot Showcase
 
-The public homepage now follows the approved live-directory composition. It
-keeps the current header, places a real public-roll ticker below it, pairs
-direct product copy and username claiming with an uneven profile collage, and
-links into discovery and the leaderboard.
+The public homepage keeps the approved live-directory structure, header, copy,
+claim flow, and real public-roll ticker. The collage and below-fold showcase
+now use static, dimensioned screenshot slots rather than mounting live profile
+components. The captures are fixed WebP assets sourced from existing approved
+public-profile browser evidence and link to their corresponding public routes.
 
-Preview identity, backgrounds, avatars, links, badges, cosmetics, music state,
-roll data, rarity, EP, rank, and timestamps come from the existing public
-profile/discovery contracts. Fictional homepage profiles and invented activity
-are not rendered. Public staff accounts are preferred; when no valid showcase
-account resolves, the homepage shows an honest empty state.
+The screenshot replacement surface contains no invented profile fields,
+cosmetics, rolls, scores, ranks, music embeds, or profile background data. The
+live ticker continues to use its existing discovery/profile data path and
+presentation unchanged. Unavailable homepage metrics are not rendered.
 
 Validation captures:
 
-- [1920 × 1080 homepage](../artifacts/homepage-game-prototype/homepage-1920x1080.png)
-- [1440 × 900 homepage](../artifacts/homepage-game-prototype/homepage-desktop-1440x900.png)
-- [1280 × 720 homepage](../artifacts/homepage-game-prototype/homepage-compact-1280x720.png)
-- [390 × 844 homepage](../artifacts/homepage-game-prototype/homepage-mobile-390x844.png)
-- [1440 × 900 directory](../artifacts/homepage-game-prototype/directory-1440x900.png)
-- [390 × 844 directory](../artifacts/homepage-game-prototype/directory-mobile-390x844.png)
+- [1920 × 1080 homepage](../artifacts/homepage-screenshot-showcase/homepage-wide-1920x1080.png)
+- [1440 × 900 homepage](../artifacts/homepage-screenshot-showcase/homepage-desktop-1440x900.png)
+- [1280 × 720 homepage](../artifacts/homepage-screenshot-showcase/homepage-compact-1280x720.png)
+- [390 × 844 homepage](../artifacts/homepage-screenshot-showcase/homepage-mobile-390x844.png)
+- [1440 × 900 daily ritual](../artifacts/homepage-screenshot-showcase/mechanic-desktop-1440x900.png)
+- [1440 × 900 showcase](../artifacts/homepage-screenshot-showcase/showcase-desktop-1440x900.png)
+- [390 × 844 showcase](../artifacts/homepage-screenshot-showcase/showcase-mobile-390x844.png)
 
-Audio and Spotify are deferred on preview surfaces; the normal public profile
-renderer is unchanged. `npm run check:performance` continues to report the
-repository’s transitional total JavaScript and CSS budget overage (705.88 kB /
-700 kB JavaScript; 381.13 kB / 380 kB CSS); the other required checks pass.
-The hero also includes the authoritative public daily-roll count and UTC reset
-countdown used by the live game.
+The normal public profile renderer, authentication, routes, scoring, and
+leaderboard logic are unchanged. The daily-ritual section uses a local,
+presentation-only sample and never calls the roll RPC.
