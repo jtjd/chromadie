@@ -27,9 +27,12 @@ test('profile atmosphere effects render as a full-page layer', async () => {
   assert.match(atmosphere, /prefers-reduced-motion/);
   assert.doesNotMatch(atmosphere, /repeating-linear-gradient/);
   assert.match(atmosphere, /export let backgroundTint = false/);
+  assert.match(atmosphere, /export let ambientEffects = true/);
   assert.match(atmosphere, /backgroundTint \?/);
+  assert.match(atmosphere, /profile-atmosphere--ambient-muted/);
   assert.match(shell, /<ProfileAtmosphere[\s\S]*effect=\{atmosphereEffect\}/);
   assert.match(shell, /backgroundTint=\{colorEffectsEnabled\}/);
+  assert.match(shell, /ambientEffects=\{colorEffectsEnabled\}/);
   assert.match(cosmetics, /getProfileAtmosphere/);
   assert.match(cosmetics, /profile_atmosphere/);
   assert.match(settingsPreview, /<ProfileAtmosphere[\s\S]*canvasOnly=\{true\}/);

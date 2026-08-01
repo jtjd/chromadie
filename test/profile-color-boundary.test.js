@@ -19,6 +19,7 @@ test('profile color effects stay inside card data unless ambient effects are opt
   assert.match(shell, /--profile-surface-accent: '\s*\+ profileSurfaceAccent/);
   assert.match(shell, /--profile-control-accent: '\s*\+ profileControlAccent/);
   assert.match(shell, /<ProfileAtmosphere[^>]*backgroundTint=\{colorEffectsEnabled\}/);
+  assert.match(shell, /<ProfileAtmosphere[^>]*ambientEffects=\{colorEffectsEnabled\}/);
   assert.match(shell, /rollState=\{colorEffectsEnabled \? profileRollState : 'idle'\}/);
   assert.match(shell, /rollColor=\{colorEffectsEnabled \?/);
   assert.match(shell, /profile-shell__more-cue[\s\S]*var\(--profile-control-accent\)/);

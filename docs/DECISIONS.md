@@ -9,9 +9,10 @@ Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 The profile’s rolled and signature colors should communicate identity without
 silently taking over the entire presentation. The structured profile config
 therefore stores `colorEffectsEnabled`, defaulting to `false`. Disabled
-profiles keep the selected background image, atmosphere, play/volume controls,
-and profile navigation cues on neutral surface tokens. Signature color remains
-available for links and other card data, and the avatar fallback stays neutral.
+profiles show the selected background without the atmosphere veil or ambient
+color layers; play/volume controls and profile navigation cues use neutral
+surface tokens. Signature color remains available for links and other card
+data, and the avatar fallback stays neutral.
 
 Users can explicitly enable ambient tinting from profile settings when they
 want the signature and roll colors to shape the broader profile presentation.

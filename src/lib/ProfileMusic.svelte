@@ -21,7 +21,7 @@
 
   $: safeColor = colorEffectsEnabled
     ? normalizeHexColor(bestRoll?.hex_code, accentColor)
-    : normalizeHexColor(accentColor, '#5D6A73');
+    : '#5D6A73';
   $: spotifyEmbedSrc = getSpotifyEmbedUrl(spotifyType, spotifyId);
   $: showVisualFixture = !audioSrc && !spotifyEmbedSrc && !PROFILE_MUSIC_ENABLED && import.meta.env.DEV && visualFixture === 'music';
   $: if (audioElement) audioElement.volume = Number(volume);

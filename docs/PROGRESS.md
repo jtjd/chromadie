@@ -5,8 +5,8 @@
 - Added a persisted `colorEffectsEnabled` profile setting, off by default.
 - When disabled, roll and signature colors stay in the identity card, links,
   badges, labels, and other data surfaces; they no longer tint the uploaded
-  background, atmosphere layer, play/volume controls, or profile navigation
-  cues.
+  background, dim it with the atmosphere veil, add ambient layers, recolor the
+  play/volume controls, or recolor profile navigation cues.
 - Added the opt-in setting to profile editing and kept the neutral avatar
   fallback unchanged.
 

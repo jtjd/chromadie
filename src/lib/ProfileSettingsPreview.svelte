@@ -50,6 +50,7 @@
         accent={previewSurfaceAccent}
         secondaryAccent={config.colorEffectsEnabled === true ? '#71D6FF' : '#87959D'}
         backgroundTint={config.colorEffectsEnabled === true}
+        ambientEffects={config.colorEffectsEnabled === true}
         effect={atmosphereEffect}
       />
     {/if}

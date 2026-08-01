@@ -416,7 +416,7 @@
 
 <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + signatureColor + '; --profile-surface-accent: ' + profileSurfaceAccent + '; --profile-control-accent: ' + profileControlAccent + ';'} aria-busy={loading}>
   {#if !previewMode}
-    <ProfileAtmosphere accent={profileSurfaceAccent} secondaryAccent={profileAtmosphereSecondary} backgroundSrc={backgroundSrc} backgroundTint={colorEffectsEnabled} effect={atmosphereEffect} rollState={colorEffectsEnabled ? profileRollState : 'idle'} rollColor={colorEffectsEnabled ? (profileRollColor || profileSurfaceAccent) : ''} />
+    <ProfileAtmosphere accent={profileSurfaceAccent} secondaryAccent={profileAtmosphereSecondary} backgroundSrc={backgroundSrc} backgroundTint={colorEffectsEnabled} ambientEffects={colorEffectsEnabled} effect={atmosphereEffect} rollState={colorEffectsEnabled ? profileRollState : 'idle'} rollColor={colorEffectsEnabled ? (profileRollColor || profileSurfaceAccent) : ''} />
   {/if}
 
   {#if !loading && targetProfile}

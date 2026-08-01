@@ -5,9 +5,9 @@ Document user-visible redesign changes by milestone.
 ## 2026-08-01 — Make ambient profile color effects opt-in
 
 - Added an off-by-default profile setting for ambient color effects.
-- Roll and signature colors no longer add a background overlay or recolor the
-  play/volume controls and profile navigation cues unless the setting is
-  enabled.
+- Disabled profiles show their selected background without the atmosphere
+  veil or ambient tint layers; roll and signature colors also no longer recolor
+  the play/volume controls or profile navigation cues.
 - Card data, links, labels, and badges keep their signature color treatment;
   avatar fallback styling remains neutral.
 

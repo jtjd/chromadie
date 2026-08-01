@@ -5,6 +5,7 @@
   export let secondaryAccent = '#71D6FF';
   export let backgroundSrc = '';
   export let backgroundTint = false;
+  export let ambientEffects = true;
   export let effect = '';
   export let rollState = 'idle';
   export let rollColor = '';
@@ -300,7 +301,7 @@
 </script>
 
 <div
-  class={'profile-atmosphere profile-atmosphere--' + safeRollState + (safeEffect ? ' profile-atmosphere--effect-' + safeEffect : '') + (canvasOnly ? ' profile-atmosphere--canvas-only' : '')}
+  class={'profile-atmosphere profile-atmosphere--' + safeRollState + (safeEffect ? ' profile-atmosphere--effect-' + safeEffect : '') + (canvasOnly ? ' profile-atmosphere--canvas-only' : '') + (!ambientEffects ? ' profile-atmosphere--ambient-muted' : '')}
   style={'--atmosphere-accent: ' + accent + '; --atmosphere-secondary: ' + secondaryAccent + '; --atmosphere-roll-color: ' + safeRollColor + '; --atmosphere-background: ' + backgroundStyle + ';'}
   aria-hidden="true"
 >
@@ -373,6 +374,20 @@
     background-size: cover;
     filter: saturate(0.82);
     opacity: 0.66;
+  }
+
+  .profile-atmosphere--ambient-muted .profile-atmosphere__background {
+    filter: none;
+    opacity: 1;
+  }
+
+  .profile-atmosphere--ambient-muted .profile-atmosphere__core,
+  .profile-atmosphere--ambient-muted .profile-atmosphere__corner,
+  .profile-atmosphere--ambient-muted .profile-atmosphere__roll-flare,
+  .profile-atmosphere--ambient-muted .profile-atmosphere__roll-ring,
+  .profile-atmosphere--ambient-muted .profile-atmosphere__vignette,
+  .profile-atmosphere--ambient-muted .profile-atmosphere__grain {
+    display: none;
   }
 
   .profile-atmosphere__corner--top {
