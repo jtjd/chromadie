@@ -15,12 +15,12 @@
   import ProfileSettingsPreview from './ProfileSettingsPreview.svelte';
 
   const SETTINGS_SECTIONS = Object.freeze([
-    { id: 'identity', number: '01', label: 'Identity', description: 'Bio & presence', detail: 'Edit your bio and public identity.' },
-    { id: 'expression', number: '02', label: 'Expression', description: 'Avatar, backdrop & music', detail: 'Add an avatar, background, or Spotify item.' },
-    { id: 'appearance', number: '03', label: 'Appearance', description: 'Colors & cosmetics', detail: 'Equip colors, effects, and cosmetics.' },
-    { id: 'layout', number: '04', label: 'Layout & links', description: 'Your public canvas', detail: 'Choose sections, order, and public links.' },
-    { id: 'social', number: '05', label: 'Privacy & social', description: 'Visitors & interactions', detail: 'Manage interactions, guestbook, activity, and discovery.' },
-    { id: 'account', number: '06', label: 'Account', description: 'Progress & controls', detail: 'Open progress, badges, and account controls.' }
+    { id: 'identity', number: '01', label: 'Identity', description: 'Bio & presence' },
+    { id: 'expression', number: '02', label: 'Expression', description: 'Avatar, backdrop & music' },
+    { id: 'appearance', number: '03', label: 'Appearance', description: 'Colors & cosmetics' },
+    { id: 'layout', number: '04', label: 'Layout & links', description: 'Your public canvas' },
+    { id: 'social', number: '05', label: 'Privacy & social', description: 'Visitors & interactions' },
+    { id: 'account', number: '06', label: 'Account', description: 'Progress & controls' }
   ]);
 
   let context = null;
@@ -37,7 +37,6 @@
   $: profilePath = context?.targetProfile?.username
     ? getCanonicalProfilePath(context.targetProfile.username)
     : '/profile';
-  $: activeSectionMeta = SETTINGS_SECTIONS.find(section => section.id === activeSection) || SETTINGS_SECTIONS[0];
   $: activeSectionIndex = Math.max(0, SETTINGS_SECTIONS.findIndex(section => section.id === activeSection));
 
   onMount(() => {
@@ -147,20 +146,6 @@
 
 <main class="profile-settings-page foundation-page" aria-busy={loading}>
   <div class="profile-settings-page__inner">
-    <header class="profile-settings-page__topbar">
-      <a class="profile-settings-page__brand" href="/" aria-label="Back to Chromadie home">
-        <span class="profile-settings-page__brand-mark" aria-hidden="true">✦</span>
-        <span>Chromadie</span>
-      </a>
-      <div class="profile-settings-page__crumbs" aria-label="Breadcrumb">
-        <span>Profile</span><span aria-hidden="true">/</span><strong>Settings</strong>
-      </div>
-      <div class="profile-settings-page__top-actions">
-        <span class="profile-settings-page__save-note"><i aria-hidden="true"></i> Save changes in each section</span>
-        <Button variant="ghost" size="sm" href={profilePath}>View profile <span aria-hidden="true">↗</span></Button>
-      </div>
-    </header>
-
     {#if loading}
       <div class="profile-settings-page__state" role="status" aria-live="polite">
         <span class="profile-settings-page__state-mark" aria-hidden="true">✦</span>
@@ -218,16 +203,7 @@
           </div>
         </aside>
 
-        <section class="profile-settings-page__editor" aria-labelledby="profile-settings-editor-title">
-          <header class="profile-settings-page__editor-heading">
-            <div>
-              <span class="profile-settings-page__section-number">{activeSectionMeta.number}</span>
-              <h2 id="profile-settings-editor-title">{activeSectionMeta.label}</h2>
-              <p>{activeSectionMeta.detail}</p>
-            </div>
-            <span class="profile-settings-page__editor-count">{String(activeSectionIndex + 1).padStart(2, '0')} / 06</span>
-          </header>
-
+        <section class="profile-settings-page__editor" aria-label="Profile settings editor">
           <div class="profile-settings-page__editor-body">
             {#if activeSection === 'identity'}
               <section class="profile-settings-page__editor-section" aria-label="Identity editor">

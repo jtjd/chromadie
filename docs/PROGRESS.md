@@ -925,5 +925,11 @@ the remaining Phase 11 boundary.
   supports play/pause, seeking, progress, and duration.
 - Removed the large gap between the audio description, preview, and upload
   actions.
+
+## 2026-08-01 — Remove redundant settings chrome
+
+- Removed the repeated editor section header and local settings utility bar.
+- Let the left rail provide the only section context and moved the active
+  configuration surface into the first available editor row.
 - Added a contract test for the new settings information architecture and
   reduced-motion styling.

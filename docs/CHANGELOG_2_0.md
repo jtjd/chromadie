@@ -851,3 +851,8 @@ phase, with an immediate reduced-motion equivalent.
 - Added a themed staff audio player with play/pause, seeking, progress, and
   duration controls.
 - Tightened spacing between audio details, playback, and upload actions.
+
+## 2026-08-01 — Remove redundant settings chrome
+
+- Removed the duplicate section heading and local top utility bar.
+- The left settings rail now provides the sole section context.

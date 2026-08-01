@@ -11,6 +11,8 @@ test('profile settings uses a focused section workspace', async () => {
   assert.match(settings, /profile-settings-page__editor/);
   assert.match(settings, /profile-settings-page__preview-column/);
   assert.match(settings, /setActiveSection\(/);
+  assert.doesNotMatch(settings, /profile-settings-page__topbar/);
+  assert.doesNotMatch(settings, /profile-settings-page__editor-heading/);
   assert.match(settings, /Edit your profile\./);
   assert.doesNotMatch(settings, /profile-settings-page__profile-link/);
   assert.doesNotMatch(settings, /Make it unmistakably yours/);

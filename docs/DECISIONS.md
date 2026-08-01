@@ -1742,3 +1742,6 @@ The editor also gives primary fields the available width and uses themed media
 controls for owner previews. Native browser audio chrome is not part of the
 settings visual language when a bounded custom control can provide the same
 playback and seeking behavior accessibly.
+
+The settings rail is the sole section context. Do not repeat the selected
+section number, title, description, or local utility header above the editor.
