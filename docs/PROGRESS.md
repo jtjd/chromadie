@@ -897,3 +897,15 @@ the remaining Phase 11 boundary.
   preserving server-side entitlement checks.
 - Rebalanced the appearance editor into a wide preview-and-controls layout that
   collapses cleanly on mobile.
+
+## 2026-08-01 — Rebuild profile settings as a focused studio
+
+- Replaced the long all-sections settings stack with a sectioned studio
+  workspace: compact navigation rail, one active editor, and live profile
+  preview.
+- Kept existing identity, expression, cosmetics, layout, social, and account
+  controls available without changing their RPC or validation boundaries.
+- Added hash-aware section navigation, previous/next controls, compact profile
+  shortcuts, and a touch-friendly mobile rail.
+- Added a contract test for the new settings information architecture and
+  reduced-motion styling.

@@ -1712,3 +1712,20 @@ including locked entries, so owners can discover the rain, snow, fireflies, and
 scanline effects without weakening the existing server-authoritative equip
 boundary. The preview and controls use a two-column layout on wide screens and
 stack on small screens.
+
+## 2026-08-01 — Rebuild profile settings as a focused studio workspace
+
+**Status:** accepted and implemented
+
+The owner-only `/profile/settings` surface now presents one active editor at a
+time inside a three-zone workspace: a section rail, the selected editor, and a
+sticky live profile preview. Identity, expression, appearance, layout/links,
+privacy/social, and account controls remain available through the rail and
+mobile horizontal navigation. This reduces repeated module chrome and long
+scrolling while keeping each existing editor responsible for its own validation,
+draft restoration, save/publish behavior, and server-authoritative RPCs.
+
+The redesign is presentation-only. It does not change profile configuration,
+media, social, cosmetics, authentication, RLS, routes, or public-profile
+rendering. Section state is hash-addressable for refreshable navigation, and
+the reduced-motion contract covers the new navigation and preview transitions.

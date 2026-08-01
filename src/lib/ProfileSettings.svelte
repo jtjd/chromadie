@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   import { authUser, isAuthenticated, profile, session } from './stores';
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData.js';
@@ -13,10 +14,20 @@
   import ProfileSocial from './ProfileSocial.svelte';
   import ProfileSettingsPreview from './ProfileSettingsPreview.svelte';
 
+  const SETTINGS_SECTIONS = Object.freeze([
+    { id: 'identity', number: '01', label: 'Identity', description: 'Bio & presence', detail: 'The first impression visitors get.' },
+    { id: 'expression', number: '02', label: 'Expression', description: 'Avatar, backdrop & music', detail: 'Add the visual details that feel like you.' },
+    { id: 'appearance', number: '03', label: 'Appearance', description: 'Colors & cosmetics', detail: 'Tune the atmosphere and earned look.' },
+    { id: 'layout', number: '04', label: 'Layout & links', description: 'Your public canvas', detail: 'Decide what your profile says first.' },
+    { id: 'social', number: '05', label: 'Privacy & social', description: 'Visitors & interactions', detail: 'Choose how people can connect.' },
+    { id: 'account', number: '06', label: 'Account', description: 'Progress & controls', detail: 'Legacy account controls and history.' }
+  ]);
+
   let context = null;
   let loading = true;
   let error = '';
   let requestId = 0;
+  let activeSection = 'identity';
 
   $: accountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
   $: accountKey = $isAuthenticated && $session?.user?.id ? $session.user.id : '';
@@ -26,6 +37,33 @@
   $: profilePath = context?.targetProfile?.username
     ? getCanonicalProfilePath(context.targetProfile.username)
     : '/profile';
+  $: activeSectionMeta = SETTINGS_SECTIONS.find(section => section.id === activeSection) || SETTINGS_SECTIONS[0];
+  $: activeSectionIndex = Math.max(0, SETTINGS_SECTIONS.findIndex(section => section.id === activeSection));
+
+  onMount(() => {
+    const syncHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (SETTINGS_SECTIONS.some(section => section.id === hash)) activeSection = hash;
+    };
+
+    syncHash();
+    window.addEventListener('hashchange', syncHash);
+    return () => window.removeEventListener('hashchange', syncHash);
+  });
+
+  function setActiveSection(sectionId) {
+    if (!SETTINGS_SECTIONS.some(section => section.id === sectionId)) return;
+    activeSection = sectionId;
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', `${window.location.pathname}${window.location.search}#${sectionId}`);
+    }
+  }
+
+  function goToAdjacentSection(direction) {
+    const nextIndex = activeSectionIndex + direction;
+    const nextSection = SETTINGS_SECTIONS[nextIndex];
+    if (nextSection) setActiveSection(nextSection.id);
+  }
 
   function preserveExpressionFields(nextConfig, currentConfig) {
     const next = nextConfig || {};
@@ -109,69 +147,152 @@
 
 <main class="profile-settings-page foundation-page" aria-busy={loading}>
   <div class="profile-settings-page__inner">
-    <header class="profile-settings-page__header">
-      <div>
-        <p class="profile-settings-page__eyebrow">Profile settings</p>
-        <h1>Edit your profile</h1>
-        <p class="profile-settings-page__intro">Update your identity, media, appearance, layout, links, and social settings.</p>
+    <header class="profile-settings-page__topbar">
+      <a class="profile-settings-page__brand" href="/" aria-label="Back to Chromadie home">
+        <span class="profile-settings-page__brand-mark" aria-hidden="true">✦</span>
+        <span>Chromadie</span>
+      </a>
+      <div class="profile-settings-page__crumbs" aria-label="Breadcrumb">
+        <span>Profile</span><span aria-hidden="true">/</span><strong>Settings</strong>
       </div>
-      <Button variant="ghost" href={profilePath}>View profile ↗</Button>
+      <div class="profile-settings-page__top-actions">
+        <span class="profile-settings-page__save-note"><i aria-hidden="true"></i> Changes save by section</span>
+        <Button variant="ghost" size="sm" href={profilePath}>View profile <span aria-hidden="true">↗</span></Button>
+      </div>
     </header>
 
     {#if loading}
       <div class="profile-settings-page__state" role="status" aria-live="polite">
+        <span class="profile-settings-page__state-mark" aria-hidden="true">✦</span>
         <p class="profile-settings-page__eyebrow">Loading settings</p>
-        <h2>Preparing your profile controls.</h2>
+        <h1>Preparing your profile studio.</h1>
       </div>
     {:else if error}
       <div class="profile-settings-page__state" role="alert">
         <Surface variant="panel" padding="lg">
           <p class="profile-settings-page__eyebrow">Settings unavailable</p>
-          <h2>{error}</h2>
+          <h1>{error}</h1>
           <p>Return to the profile or sign in again to manage your public presentation.</p>
           <Button variant="secondary" href={profilePath}>Back to profile</Button>
         </Surface>
       </div>
     {:else if context}
-      <nav class="profile-settings-page__quickbar" aria-label="Profile editor sections">
-        <div><span>Your public profile</span><strong>{profilePath}</strong></div>
-        <div class="profile-settings-page__section-links">
-          <a href="#identity">Identity</a><a href="#media">Media</a><a href="#appearance">Appearance</a><a href="#layout">Layout</a><a href="#social">Social</a>
+      <section class="profile-settings-page__intro-row" aria-labelledby="profile-settings-title">
+        <div>
+          <p class="profile-settings-page__eyebrow">Your profile studio</p>
+          <h1 id="profile-settings-title">Make it unmistakably yours.</h1>
+          <p class="profile-settings-page__intro">Shape the identity people meet when they find you. Your profile stays live while you work.</p>
         </div>
-        <Button variant="secondary" href={profilePath}>View live profile ↗</Button>
-      </nav>
-      <div class="profile-settings-page__layout">
-        <div class="profile-settings-page__stack">
-        {#if context.dataWarning}
-          <p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>
-        {/if}
-        <section id="identity"><IdentityEditor profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} on:identitysaved={updateIdentity} /></section>
-        <section id="media"><ProfileExpressionEditor profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} on:expressionchange={updateExpression} /></section>
-        <section id="appearance"><ProfileCosmeticsEditor accountProfile={context.targetProfile} profileConfig={context.profileConfig} /></section>
-        <section id="layout"><ProfileEditor profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} /></section>
+        <a class="profile-settings-page__profile-link" href={profilePath}>
+          <span>Public profile</span>
+          <strong>{profilePath}</strong>
+          <span aria-hidden="true">↗</span>
+        </a>
+      </section>
 
-        <section id="social"><ProfileSocial
-          profileId={context.profileId}
-          username={context.targetProfile?.username || accountUsername}
-          isOwnProfile={true}
-          isAuthenticated={$isAuthenticated}
-          social={context.social}
-          settings={context.socialSettings}
-          on:socialchange={handleSocialChange}
-        /></section>
+      {#if context.dataWarning}
+        <p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>
+      {/if}
 
-        <section class="profile-settings-page__compatibility" aria-labelledby="profile-settings-account-title">
-          <div>
-            <p class="profile-settings-page__eyebrow">Account</p>
-            <h2 id="profile-settings-account-title">Account controls</h2>
-            <p>Mood, badges, and account management.</p>
+      <div class="profile-settings-page__workspace">
+        <aside class="profile-settings-page__rail" aria-label="Profile settings sections">
+          <div class="profile-settings-page__rail-heading">
+            <span>Customize</span>
+            <strong>{String(activeSectionIndex + 1).padStart(2, '0')} <em>/</em> 06</strong>
           </div>
-          <div class="profile-settings-page__actions">
-            <Button variant="secondary" href="/profile?legacy=1">Open account controls</Button>
+          <nav>
+            {#each SETTINGS_SECTIONS as section (section.id)}
+              <button
+                type="button"
+                class:active={activeSection === section.id}
+                aria-current={activeSection === section.id ? 'page' : undefined}
+                on:click={() => setActiveSection(section.id)}
+              >
+                <span class="profile-settings-page__rail-number">{section.number}</span>
+                <span class="profile-settings-page__rail-copy">
+                  <strong>{section.label}</strong>
+                  <small>{section.description}</small>
+                </span>
+                <span class="profile-settings-page__rail-arrow" aria-hidden="true">→</span>
+              </button>
+            {/each}
+          </nav>
+          <div class="profile-settings-page__rail-footer">
+            <span class="profile-settings-page__live-dot" aria-hidden="true"></span>
+            <div><strong>Profile is live</strong><small>Changes stay yours until saved.</small></div>
           </div>
+        </aside>
+
+        <section class="profile-settings-page__editor" aria-labelledby="profile-settings-editor-title">
+          <header class="profile-settings-page__editor-heading">
+            <div>
+              <span class="profile-settings-page__section-number">{activeSectionMeta.number}</span>
+              <h2 id="profile-settings-editor-title">{activeSectionMeta.label}</h2>
+              <p>{activeSectionMeta.detail}</p>
+            </div>
+            <span class="profile-settings-page__editor-count">{String(activeSectionIndex + 1).padStart(2, '0')} / 06</span>
+          </header>
+
+          <div class="profile-settings-page__editor-body">
+            {#if activeSection === 'identity'}
+              <section class="profile-settings-page__editor-section" aria-label="Identity editor">
+                <IdentityEditor profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} on:identitysaved={updateIdentity} />
+              </section>
+            {:else if activeSection === 'expression'}
+              <section class="profile-settings-page__editor-section" aria-label="Expression editor">
+                <ProfileExpressionEditor profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} on:expressionchange={updateExpression} />
+              </section>
+            {:else if activeSection === 'appearance'}
+              <section class="profile-settings-page__editor-section" aria-label="Appearance editor">
+                <ProfileCosmeticsEditor accountProfile={context.targetProfile} profileConfig={context.profileConfig} />
+              </section>
+            {:else if activeSection === 'layout'}
+              <section class="profile-settings-page__editor-section" aria-label="Layout and links editor">
+                <ProfileEditor profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} />
+              </section>
+            {:else if activeSection === 'social'}
+              <section class="profile-settings-page__editor-section" aria-label="Privacy and social editor">
+                <ProfileSocial
+                  profileId={context.profileId}
+                  username={context.targetProfile?.username || accountUsername}
+                  isOwnProfile={true}
+                  isAuthenticated={$isAuthenticated}
+                  social={context.social}
+                  settings={context.socialSettings}
+                  on:socialchange={handleSocialChange}
+                />
+              </section>
+            {:else}
+              <section class="profile-settings-page__account" aria-labelledby="profile-settings-account-title">
+                <div class="profile-settings-page__account-icon" aria-hidden="true">◌</div>
+                <div>
+                  <p class="profile-settings-page__eyebrow">Account controls</p>
+                  <h3 id="profile-settings-account-title">Progress, badges & account tools</h3>
+                  <p>Open the established account view for your mood, badges, progression, and account management. Your public profile settings remain safely separate.</p>
+                  <Button variant="secondary" href="/profile?legacy=1">Open account controls <span aria-hidden="true">↗</span></Button>
+                </div>
+              </section>
+            {/if}
+          </div>
+
+          <footer class="profile-settings-page__editor-footer">
+            <button type="button" class="profile-settings-page__step-button" disabled={activeSectionIndex === 0} on:click={() => goToAdjacentSection(-1)}>
+              <span aria-hidden="true">←</span> Previous
+            </button>
+            <span>Section {activeSectionIndex + 1} of {SETTINGS_SECTIONS.length}</span>
+            <button type="button" class="profile-settings-page__step-button" disabled={activeSectionIndex === SETTINGS_SECTIONS.length - 1} on:click={() => goToAdjacentSection(1)}>
+              Next <span aria-hidden="true">→</span>
+            </button>
+          </footer>
         </section>
-        </div>
-        <ProfileSettingsPreview profile={context.targetProfile} profileConfig={context.profileConfig} />
+
+        <aside class="profile-settings-page__preview-column" aria-label="Profile preview and shortcuts">
+          <ProfileSettingsPreview profile={context.targetProfile} profileConfig={context.profileConfig} />
+          <div class="profile-settings-page__preview-links">
+            <a href={profilePath}><span>Open live profile</span><span aria-hidden="true">↗</span></a>
+            <a href="/shop"><span>Browse cosmetics</span><span aria-hidden="true">↗</span></a>
+          </div>
+        </aside>
       </div>
     {/if}
   </div>

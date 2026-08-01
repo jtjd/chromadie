@@ -827,3 +827,14 @@ phase, with an immediate reduced-motion equivalent.
 - Widened the fitting-room preview and kept unowned effects locked behind the
   existing shop/entitlement flow.
 - Added `/terms` to the internal-link validation allowlist.
+
+## 2026-08-01 — Profile settings studio redesign
+
+- Replaced the crowded profile settings page with a focused section workspace.
+- Added a compact editor rail for identity, expression, appearance, layout and
+  links, privacy and social, and account controls.
+- Kept a live profile preview visible on desktop and added mobile-friendly
+  navigation, section stepping, public-profile shortcuts, and reduced-motion
+  behavior.
+- Preserved existing saves, drafts, publish flow, media handling, cosmetics,
+  privacy settings, routes, and server-authoritative boundaries.
