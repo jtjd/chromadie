@@ -908,6 +908,14 @@ the remaining Phase 11 boundary.
 - Added hash-aware section navigation, previous/next controls, compact profile
   shortcuts, and a touch-friendly mobile rail.
 
+## 2026-08-01 — Make layout configuration immediately understandable
+
+The layout and links editor now updates the shared live preview as controls
+change. The preview reflects the draft signature color, profile style, public
+links, color-story toggle, and visible section order. The misleading abstract
+layout diagram and manual preview toggle were removed; draft/save/publish
+boundaries remain unchanged.
+
 ## 2026-08-01 — Simplify settings copy and viewport hierarchy
 
 - Replaced poetic settings copy with direct instructional labels and task

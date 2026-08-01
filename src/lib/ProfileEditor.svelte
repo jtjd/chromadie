@@ -2,8 +2,6 @@
   import { createEventDispatcher } from 'svelte';
   import { supabase } from './supabase';
   import {
-    getVisibleProfileLinks,
-    getVisibleProfileModules,
     getProfileStoryVisible,
     normalizeProfileConfig,
     PROFILE_LAYOUT_VARIANTS,
@@ -48,7 +46,6 @@
   const VIEW_STATE_NAMESPACE = 'profile-editor';
   let draft = normalizeProfileConfig(draftConfig || publishedConfig);
   let draftProfileId = null;
-  let previewing = false;
   let saving = false;
   let status = '';
   let error = '';
@@ -88,7 +85,6 @@
     const cachedState = readViewState(VIEW_STATE_NAMESPACE, profileStateScope());
     const fallbackColor = publishedConfig?.signatureColor || draftConfig?.signatureColor;
     draft = restoreDraft(cachedState?.draft || draftConfig || publishedConfig, fallbackColor);
-    previewing = false;
     error = '';
     status = cachedState?.draft ? 'Unsaved draft restored.' : '';
   }
@@ -97,7 +93,6 @@
 
   $: previewConfig = normalizeProfileConfig(draft, draft?.signatureColor);
   $: orderedModules = [...draft.modules].sort((left, right) => left.order - right.order);
-  $: visibleLinks = getVisibleProfileLinks(previewConfig);
   $: publishedLabel = normalizeProfileConfig(publishedConfig).layoutVariant;
 
   function updateDraft(next) {
@@ -105,11 +100,9 @@
     draft = nextDraft;
     persistDraftState(nextDraft);
     error = '';
-    if (previewing) {
-      dispatch('configpreview', {
-        config: normalizeProfileConfig(nextDraft, nextDraft?.signatureColor)
-      });
-    }
+    dispatch('configpreview', {
+      config: normalizeProfileConfig(nextDraft, nextDraft?.signatureColor)
+    });
   }
 
   function setModuleVisible(id, visible) {
@@ -156,11 +149,6 @@
     });
   }
 
-  function togglePreview() {
-    previewing = !previewing;
-    dispatch('configpreview', { config: previewing ? previewConfig : null });
-  }
-
   async function persistDraft() {
     saving = true;
     status = '';
@@ -176,11 +164,6 @@
     clearViewState(VIEW_STATE_NAMESPACE, profileStateScope());
     status = 'Draft saved. It is private until published.';
     dispatch('configsaved', { draft, published: normalizeProfileConfig(data.published, draft.signatureColor) });
-    if (previewing) {
-      dispatch('configpreview', {
-        config: normalizeProfileConfig(draft, draft?.signatureColor)
-      });
-    }
     saving = false;
     return draft;
   }
@@ -214,31 +197,8 @@
   <div class="profile-editor__toolbar">
     <div>
       <p class="profile-editor__hint">Current public style: <strong>{STYLE_LABELS[publishedLabel] || publishedLabel}</strong></p>
-      <p class="profile-editor__hint">Your edits stay private until you publish them.</p>
+      <p class="profile-editor__hint">Changes update the live preview on the right. Visitors see them after you publish.</p>
     </div>
-    <button type="button" class="profile-editor__button profile-editor__button--preview" on:click={togglePreview}>
-      {previewing ? 'Stop profile preview' : 'Preview on profile'}
-    </button>
-  </div>
-
-  <div class="profile-editor__preview" style={'--editor-accent: ' + previewConfig.signatureColor + ';'} aria-label="Draft profile preview">
-    <div class="profile-editor__preview-topline">
-      <span>Your public page preview</span>
-      <strong>{STYLE_LABELS[previewConfig.layoutVariant] || previewConfig.layoutVariant}</strong>
-    </div>
-    <div class="profile-editor__preview-grid">
-    {#each getVisibleProfileModules(previewConfig, true) as module (module.id)}
-        {#if module.id !== 'explore'}
-          <span class={'profile-editor__preview-module profile-editor__preview-module--' + module.size}>{MODULE_LABELS[module.id]}</span>
-        {/if}
-      {/each}
-      {#if getProfileStoryVisible(previewConfig)}<span class="profile-editor__preview-module profile-editor__preview-module--wide">Color story</span>{/if}
-    </div>
-    {#if visibleLinks.length}
-      <div class="profile-editor__preview-links">
-        {#each visibleLinks as link (link.order)}<span>{link.label}</span>{/each}
-      </div>
-    {/if}
   </div>
 
   <div class="profile-editor__fields">
@@ -339,21 +299,12 @@
 <style>
   :global(.profile-editor .foundation-module__body) { display: grid; gap: var(--space-5); }
   .profile-editor__toolbar,
-  .profile-editor__preview-topline,
   .profile-editor__section-heading,
   .profile-editor__actions { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
   .profile-editor__hint,
   .profile-editor__empty { margin: 0; color: var(--color-ink-muted); font-size: var(--type-label); line-height: 1.5; }
   .profile-editor__hint + .profile-editor__hint { margin-top: var(--space-1); color: var(--color-ink-faint); }
   .profile-editor__hint strong { color: var(--profile-accent); }
-  .profile-editor__preview { display: grid; gap: var(--space-3); padding: var(--space-4); border: 1px solid color-mix(in srgb, var(--editor-accent) 48%, var(--color-line-subtle)); border-radius: var(--radius-md); background: linear-gradient(145deg, color-mix(in srgb, var(--editor-accent) 14%, var(--surface-panel)), var(--surface-inset)); }
-  .profile-editor__preview-topline { color: var(--editor-accent); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; }
-  .profile-editor__preview-topline strong { color: var(--color-ink); font-weight: 600; letter-spacing: 0; text-transform: capitalize; }
-  .profile-editor__preview-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); }
-  .profile-editor__preview-module { min-height: 2.75rem; display: grid; place-items: center; padding: var(--space-2); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--editor-accent) 12%, var(--surface-panel-soft)); color: var(--color-ink); font-size: var(--type-label); text-align: center; }
-  .profile-editor__preview-module--wide { grid-column: span 2; }
-  .profile-editor__preview-links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-  .profile-editor__preview-links span { padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--editor-accent) 18%, transparent); color: var(--color-ink); font-size: var(--type-label); }
   .profile-editor__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
   .profile-editor__field { display: grid; gap: var(--space-2); color: var(--color-ink-muted); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
   .profile-editor__field select,
@@ -401,8 +352,7 @@
   .profile-editor__button { display: inline-flex; align-items: center; justify-content: center; min-height: 2.65rem; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 0 var(--space-4); background: var(--color-ink-strong); color: var(--color-canvas-deep); font: 600 var(--type-small) / 1 var(--font-body-stack); cursor: pointer; transition: transform var(--motion-fast) var(--motion-ease-standard), opacity var(--motion-base) var(--motion-ease-standard); }
   .profile-editor__button:hover:not(:disabled) { transform: translateY(-2px); }
   .profile-editor__button:disabled { cursor: wait; opacity: 0.55; }
-  .profile-editor__button--secondary,
-  .profile-editor__button--preview { border-color: color-mix(in srgb, var(--profile-accent) 50%, transparent); background: color-mix(in srgb, var(--profile-accent) 14%, transparent); color: var(--color-accent-bright); }
+  .profile-editor__button--secondary { border-color: color-mix(in srgb, var(--profile-accent) 50%, transparent); background: color-mix(in srgb, var(--profile-accent) 14%, transparent); color: var(--color-accent-bright); }
   .profile-editor__details { border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
   .profile-editor__details summary { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem; color:var(--color-ink-strong); cursor:pointer; list-style:none; }
   .profile-editor__details summary::-webkit-details-marker { display:none; }
@@ -415,7 +365,6 @@
     .profile-editor__toolbar,
     .profile-editor__section-heading,
     .profile-editor__actions { align-items: flex-start; flex-direction: column; }
-    .profile-editor__preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-editor__fields { grid-template-columns: 1fr; }
     .profile-editor__link-row { grid-template-columns: 1fr 1fr; }
     .profile-editor__link-row input:nth-of-type(2) { grid-column: 1 / -1; }

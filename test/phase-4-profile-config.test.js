@@ -155,7 +155,8 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
 
   assert.match(editor, /save_profile_configuration/);
   assert.match(editor, /publish_profile_configuration/);
-  assert.match(editor, /Preview on profile/);
+  assert.match(editor, /configpreview/);
+  assert.match(editor, /Changes update the live preview/);
   assert.match(editor, /https/);
   assert.doesNotMatch(editor, /innerHTML|new Function|eval\s*\(/);
   assert.match(profileData, /get_my_profile_configuration/);

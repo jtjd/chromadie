@@ -1745,3 +1745,19 @@ playback and seeking behavior accessibly.
 
 The settings rail is the sole section context. Do not repeat the selected
 section number, title, description, or local utility header above the editor.
+
+## 2026-08-01 — Make layout edits visible in the real draft preview
+
+**Status:** accepted and implemented
+
+The layout and links editor now sends its normalized draft configuration to the
+shared right-hand profile preview on every edit. The preview renders the
+identity card, signature color, links, style, and a compact ordered section map
+from that draft, so visibility and reorder controls have immediate, legible
+feedback.
+
+The old abstract module-chip diagram and its separate preview toggle were
+removed because they described the configuration without showing the profile it
+actually changes. Draft preview state is local to the settings surface; save
+and publish still use the existing server RPCs and visitors only receive the
+published configuration.

@@ -856,3 +856,10 @@ phase, with an immediate reduced-motion equivalent.
 
 - Removed the duplicate section heading and local top utility bar.
 - The left settings rail now provides the sole section context.
+
+## 2026-08-01 — Connect layout controls to the live draft preview
+
+- Removed the abstract layout chip diagram and its separate preview toggle.
+- Connected every normalized layout draft edit to the shared profile preview.
+- Made style, signature color, links, story visibility, and section order
+  visible in the draft preview before publishing.

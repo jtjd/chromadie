@@ -28,6 +28,7 @@
   let error = '';
   let requestId = 0;
   let activeSection = 'identity';
+  let configurationPreview = null;
 
   $: accountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
   $: accountKey = $isAuthenticated && $session?.user?.id ? $session.user.id : '';
@@ -38,6 +39,9 @@
     ? getCanonicalProfilePath(context.targetProfile.username)
     : '/profile';
   $: activeSectionIndex = Math.max(0, SETTINGS_SECTIONS.findIndex(section => section.id === activeSection));
+  $: previewProfileConfig = configurationPreview
+    ? { ...(context?.profileConfig || {}), draft: configurationPreview }
+    : context?.profileConfig;
 
   onMount(() => {
     const syncHash = () => {
@@ -100,6 +104,7 @@
   }
 
   function updateConfiguration(event) {
+    configurationPreview = null;
     const fallbackColor = context?.targetProfile?.mood_color || '#8B7CF6';
     const currentDraft = context?.profileConfig?.draft || {};
     const currentPublished = context?.profileConfig?.published || {};
@@ -130,6 +135,16 @@
 
   function handleSocialChange() {
     void loadSettings();
+  }
+
+  function updateConfigurationPreview(event) {
+    const nextPreview = event.detail?.config;
+    if (!nextPreview) {
+      configurationPreview = null;
+      return;
+    }
+    const fallbackColor = context?.targetProfile?.mood_color || '#8B7CF6';
+    configurationPreview = normalizeProfileConfig(nextPreview, fallbackColor);
   }
 
   function updateIdentity(event) {
@@ -219,7 +234,7 @@
               </section>
             {:else if activeSection === 'layout'}
               <section class="profile-settings-page__editor-section" aria-label="Layout and links editor">
-                <ProfileEditor profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} />
+                <ProfileEditor profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configpreview={updateConfigurationPreview} />
               </section>
             {:else if activeSection === 'social'}
               <section class="profile-settings-page__editor-section" aria-label="Privacy and social editor">
@@ -258,7 +273,7 @@
         </section>
 
         <aside class="profile-settings-page__preview-column" aria-label="Profile preview and shortcuts">
-          <ProfileSettingsPreview profile={context.targetProfile} profileConfig={context.profileConfig} />
+          <ProfileSettingsPreview profile={context.targetProfile} profileConfig={previewProfileConfig} />
           <div class="profile-settings-page__preview-links">
             <a href="/shop"><span>Browse cosmetics</span><span aria-hidden="true">↗</span></a>
           </div>
