@@ -2057,3 +2057,12 @@ The homepage uses Instrument Sans locally while the existing Satoshi header,
 sitewide tokens, auth, routes, and normal public profile renderer remain
 unchanged. Audio uses the live profile controls with deferred playback and
 Spotify uses an explicit load action to avoid autoplay and duplicate embeds.
+
+## 2026-08-01 — Keep homepage activity compact and authoritative
+
+The homepage directory now uses a full-bleed, slow roll ticker with only the
+public username, real hex value, and a color dot in the visual treatment. The
+full roll metadata remains available in the link label for assistive technology.
+The hero uses the same UTC reset boundary as daily rolls, and the daily public
+roll count is exposed as an aggregate on the existing public discovery RPC;
+no profile rows or private fields are added to the contract.

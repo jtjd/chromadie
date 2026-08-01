@@ -44,7 +44,7 @@ test('quiet reference surfaces and reduced-motion behavior are encoded', async (
   assert.match(home, /--home-mono: 'IBM Plex Mono'/);
   assert.doesNotMatch(home, /rgba\(139,124,246|radial-gradient\(circle at 85%/);
   assert.match(directory, /HomepageLiveTicker/);
-  assert.match(directory, /grid-template-columns: minmax\(18rem/);
+  assert.match(directory, /grid-template-columns: minmax\(22rem/);
   assert.match(preview, /ProfileAtmosphere/);
   assert.doesNotMatch(preview, /border-prism-anim|frame-diamond-anim|name-spectrum-anim|roll-sparkles-anim|orb-shape-diamond/);
   assert.match(atmosphere, /background: #07080b/);

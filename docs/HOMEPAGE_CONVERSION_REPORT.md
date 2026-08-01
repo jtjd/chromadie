@@ -22,5 +22,7 @@ Validation captures:
 
 Audio and Spotify are deferred on preview surfaces; the normal public profile
 renderer is unchanged. `npm run check:performance` continues to report the
-repository’s transitional total JavaScript and CSS budget overage (704.75 kB /
-700 kB JavaScript; 380.55 kB / 380 kB CSS); the other required checks pass.
+repository’s transitional total JavaScript and CSS budget overage (705.88 kB /
+700 kB JavaScript; 381.13 kB / 380 kB CSS); the other required checks pass.
+The hero also includes the authoritative public daily-roll count and UTC reset
+countdown used by the live game.

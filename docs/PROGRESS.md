@@ -1185,6 +1185,15 @@ while its full context refreshes, and protected routes no longer show
   budgets: total JavaScript is 704.75 kB / 700 kB and total CSS is 380.55 kB /
   380 kB.
 
+## Homepage directory activity summary — 2026-08-01
+
+- Matched the reference’s wider first-viewport rhythm with a full-width roll
+  ticker, shorter hero copy, stronger daily-roll consequence, and two compact
+  activity stats.
+- Added the real daily public-roll count to the discovery projection and used
+  the existing UTC daily reset boundary for the live countdown.
+- Local validation includes schema lint and a clean database reset.
+
 ## Header treatment correction — 2026-08-01
 
 - Restored the pre-migration transparent header shell, blurred pill controls,

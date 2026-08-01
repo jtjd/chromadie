@@ -9,6 +9,8 @@ const preview = await read('src/lib/HomepageProfilePreview.svelte');
 const ticker = await read('src/lib/HomepageLiveTicker.svelte');
 const rollSummary = await read('src/lib/HomepageRollSummary.svelte');
 const directoryData = await read('src/lib/homepageDirectory.js');
+const discoveryPreviewMigration = await read('supabase/migrations/20260801090000_discovery_profile_preview.sql');
+const discoveryStatsMigration = await read('supabase/migrations/20260801130000_discovery_roll_count.sql');
 const audioControls = await read('src/lib/ProfileAudioControls.svelte');
 const profileMusic = await read('src/lib/ProfileMusic.svelte');
 const app = await read('src/App.svelte');
@@ -17,10 +19,9 @@ const main = await read('src/main.js');
 const guestProfile = await read('src/lib/GuestProfileOnboarding.svelte');
 
 test('the homepage explains the daily identity loop with a direct claim action', () => {
-  assert.match(home, /Public profiles\. One color roll a day/);
-  assert.match(home, /Add your background, avatar, music, links, projects/);
-  assert.match(home, /daily roll affects your leaderboard position/);
-  assert.match(home, /Higher ranks make your profile easier to find/);
+  assert.match(home, /Public profiles\.<br \/>One color roll a day/);
+  assert.match(home, /Add your background, music, links, projects, or whatever else you want/);
+  assert.match(home, /daily color changes where the profile appears/);
   assert.match(home, /Claim your username/);
   assert.match(home, /dispatch\('claim'/);
   assert.match(home, /chm\.lol\//);
@@ -54,6 +55,10 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(ticker, /focus-within/);
   assert.match(rollSummary, /getLatestHomepageRoll/);
   assert.match(directoryData, /KNOWN_STAFF_SHOWCASE_USERNAMES/);
+  assert.match(directoryData, /getHomepageTodayRollCount/);
+  assert.match(directoryData, /formatHomepageResetCountdown/);
+  assert.match(discoveryPreviewMigration, /get_public_discovery/);
+  assert.match(discoveryStatsMigration, /todayRollCount/);
   assert.match(audioControls, /profile-audio-control__toggle/);
   assert.match(audioControls, /profile-audio-control__volume/);
   assert.match(audioControls, /Play profile audio/);

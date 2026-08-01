@@ -55,9 +55,9 @@
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    width: min(100%, 86rem);
+    width: 100vw;
     min-height: 2.65rem;
-    margin: 0 auto;
+    margin: 0 0 0 calc(50% - 50vw);
     border-top: 1px solid rgba(241, 243, 237, 0.12);
     border-bottom: 1px solid rgba(241, 243, 237, 0.12);
     color: rgba(241, 243, 237, 0.62);

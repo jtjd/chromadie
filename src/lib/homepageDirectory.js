@@ -127,3 +127,27 @@ export function formatHomepageRelativeTime(value, now = Date.now()) {
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
 }
+
+export function getHomepageTodayRollCount(responses = []) {
+  const todayResponse = responses.find(response => response?.surface === 'today');
+  const count = Number(todayResponse?.data?.todayRollCount);
+  return Number.isSafeInteger(count) && count >= 0 ? count : null;
+}
+
+export function formatHomepageResetCountdown(now = Date.now()) {
+  const current = new Date(now);
+  const nextReset = Date.UTC(
+    current.getUTCFullYear(),
+    current.getUTCMonth(),
+    current.getUTCDate() + 1,
+    0,
+    0,
+    0,
+    0
+  );
+  const difference = Math.max(0, nextReset - now);
+  const hours = Math.floor(difference / 3600000);
+  const minutes = Math.floor((difference % 3600000) / 60000);
+  const seconds = Math.floor((difference % 60000) / 1000);
+  return [hours, minutes, seconds].map(value => String(value).padStart(2, '0')).join(':');
+}

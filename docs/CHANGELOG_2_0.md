@@ -1064,3 +1064,11 @@ phase, with an immediate reduced-motion equivalent.
   homepage-only appearance, roll, rank, music, or activity data.
 - Added local Instrument Sans for the homepage only and deferred audio/Spotify
   media until explicit interaction.
+
+## Homepage directory activity summary — 2026-08-01
+
+- Simplified the public-roll ticker to username, hex, and a color dot, with a
+  slower full-width loop.
+- Added authoritative daily roll count and next-reset countdown stats beneath
+  the username claim.
+- Tightened the hero copy and widened the desktop profile-directory split.

@@ -47,9 +47,8 @@
     <HomepageProfileDirectory on:navigate={forwardAction}>
       <section class="home-page__copy homepage-hero-intro" slot="intro" aria-labelledby="home-title">
         <p class="home-page__eyebrow">Public profiles / one roll daily</p>
-        <h1 id="home-title">Public profiles. One color roll a day.</h1>
-        <p class="home-page__intro">Add your background, avatar, music, links, projects, or whatever else you want. Your daily roll affects your leaderboard position and how easily people can discover your profile.</p>
-        <p class="home-page__supporting">Higher ranks make your profile easier to find.</p>
+        <h1 id="home-title">Public profiles.<br />One color roll a day.</h1>
+        <p class="home-page__intro">Add your background, music, links, projects, or whatever else you want. <strong>Your daily color changes where the profile appears.</strong></p>
 
         {#if isAuthenticated}
           <div class="home-page__signed-in-actions" aria-label="Your profile actions">
@@ -110,12 +109,12 @@
   }
 
   .home-page::before { position: absolute; z-index: -1; inset: 0; content: ''; background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0 0.4px, transparent 0.55px); background-size: 19px 19px; opacity: 0.12; pointer-events: none; }
-  .home-page__inner { width: min(100%, 86rem); margin-inline: auto; padding: 0 clamp(1.1rem, 4vw, 3rem) clamp(5rem, 9vw, 8rem); }
+  .home-page__inner { width: min(100%, 94rem); margin-inline: auto; padding: 0 clamp(1.1rem, 3vw, 2.5rem) clamp(5rem, 9vw, 8rem); }
   .home-page__copy { max-width: 34rem; }
   .home-page__eyebrow, .home-page__action-label { margin: 0; color: var(--home-ink-faint); font: 600 0.63rem / 1.2 var(--home-mono); letter-spacing: 0.12em; text-transform: uppercase; }
-  .home-page h1 { max-width: 33rem; margin: 1rem 0 0; color: var(--home-ink); font: 650 clamp(3rem, 5.1vw, 5.7rem) / 0.9 var(--home-font); letter-spacing: -0.055em; text-wrap: balance; }
-  .home-page__intro { max-width: 31rem; margin: 1.55rem 0 0; color: var(--home-ink-muted); font-size: clamp(0.95rem, 1.25vw, 1.08rem); line-height: 1.48; }
-  .home-page__supporting { margin: 0.8rem 0 0; color: var(--home-link); font: 500 0.68rem / 1.4 var(--home-mono); }
+  .home-page h1 { max-width: 38rem; margin: 1rem 0 0; color: var(--home-ink); font: 650 clamp(3rem, 5.1vw, 5.7rem) / 0.9 var(--home-font); letter-spacing: -0.055em; text-wrap: balance; }
+  .home-page__intro { max-width: 32rem; margin: 1.55rem 0 0; color: var(--home-ink-muted); font-size: clamp(0.95rem, 1.25vw, 1.08rem); line-height: 1.48; }
+  .home-page__intro strong { color: var(--home-ink); font-weight: 650; }
   .home-page__claim { display: grid; gap: 0.5rem; width: min(100%, 30rem); margin-top: 1.7rem; }
   .home-page__claim label { color: var(--home-ink); font: 600 0.78rem / 1 var(--home-font); }
   .home-page__claim-field { display: flex; align-items: center; min-height: 2.9rem; overflow: hidden; border: 1px solid var(--home-line-strong); border-radius: 0.45rem; background: var(--home-surface); color: var(--home-ink-faint); font: 400 0.72rem / 1 var(--home-mono); }
@@ -139,7 +138,7 @@
   .home-page__final .home-page__primary { margin-top: 1.4rem; }
 
   @media (min-width: 64rem) {
-    .home-page h1 { max-width: 30rem; font-size: clamp(3.4rem, 4.5vw, 5.2rem); }
+    .home-page h1 { max-width: 38rem; font-size: clamp(3.4rem, 4.5vw, 5.2rem); }
   }
 
   @media (max-width: 48rem) {

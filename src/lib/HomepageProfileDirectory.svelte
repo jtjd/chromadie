@@ -9,6 +9,8 @@
   import {
     collectHomepageCandidates,
     collectHomepageRollEvents,
+    formatHomepageResetCountdown,
+    getHomepageTodayRollCount,
     KNOWN_STAFF_SHOWCASE_USERNAMES,
     selectHomepageProfiles
   } from './homepageDirectory.js';
@@ -24,11 +26,18 @@
   let loadError = '';
   let requestId = 0;
   let refreshTimer;
+  let countdownTimer;
   let mediaCacheKey = '';
+  let todayRollCount = null;
+  let resetCountdown = '24:00:00';
 
   $: featuredProfiles = homepageProfiles.slice(0, 4);
   $: directoryProfiles = homepageProfiles.slice(4);
   $: primaryProfile = featuredProfiles[0] || null;
+
+  function updateResetCountdown() {
+    resetCountdown = formatHomepageResetCountdown();
+  }
 
   async function fetchDiscoverySurface(surface) {
     const response = await supabase.rpc('get_public_discovery', {
@@ -84,6 +93,7 @@
 
       homepageProfiles = selectHomepageProfiles(hydrated, MAX_HOMEPAGE_PROFILES);
       tickerEvents = collectHomepageRollEvents(hydrated);
+      todayRollCount = getHomepageTodayRollCount(responses);
       mediaCacheKey = String(Date.now());
       loading = false;
       if (!homepageProfiles.length && failedCount === DISCOVERY_SURFACES.length) {
@@ -103,19 +113,34 @@
   }
 
   onMount(() => {
+    updateResetCountdown();
+    countdownTimer = window.setInterval(updateResetCountdown, 1000);
     void loadDirectory();
     refreshTimer = window.setInterval(() => void loadDirectory(), REFRESH_INTERVAL_MS);
     return () => window.clearInterval(refreshTimer);
   });
 
   onDestroy(() => window.clearInterval(refreshTimer));
+  onDestroy(() => window.clearInterval(countdownTimer));
 </script>
 
 <div class="homepage-directory">
   <HomepageLiveTicker events={tickerEvents} {loading} loadError={loadError} />
 
   <div class="homepage-directory__hero-layout">
-    <slot name="intro"></slot>
+    <div class="homepage-directory__hero-copy">
+      <slot name="intro"></slot>
+      <div class="homepage-directory__stats" aria-label="Daily roll activity">
+        <div class="homepage-directory__stat">
+          <strong>{todayRollCount === null ? '—' : todayRollCount.toLocaleString()}</strong>
+          <span>Profiles rolled today</span>
+        </div>
+        <div class="homepage-directory__stat">
+          <strong>{resetCountdown}</strong>
+          <span>Until the next global reset</span>
+        </div>
+      </div>
+    </div>
     <section class="homepage-directory__collage" aria-label="Live public profile directory">
       <div class="homepage-directory__main">
         <HomepageProfilePreview
@@ -179,9 +204,13 @@
 
 <style>
   .homepage-directory { display: grid; gap: 0; }
-  .homepage-directory__hero-layout { display: grid; grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.45fr); align-items: start; gap: clamp(2rem, 6vw, 6.5rem); }
+  .homepage-directory__hero-layout { display: grid; grid-template-columns: minmax(22rem, 0.82fr) minmax(0, 1.6fr); align-items: start; gap: clamp(2rem, 4vw, 4rem); }
+  .homepage-directory__hero-copy { min-width: 0; }
   .homepage-directory__hero-layout :global(.homepage-hero-intro) { padding-top: clamp(2rem, 6vh, 4rem); }
-  .homepage-directory__collage { position: relative; display: grid; grid-template-columns: minmax(8rem, 0.68fr) minmax(20rem, 1.55fr) minmax(8rem, 0.68fr); grid-template-rows: auto auto; align-items: center; gap: 0.8rem; min-height: 32rem; padding: 2rem 0 1.5rem; }
+  .homepage-directory__stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; max-width: 34rem; margin-top: clamp(3.5rem, 9vh, 6rem); padding-top: 1rem; border-top: 1px solid rgba(241, 243, 237, 0.14); }
+  .homepage-directory__stat { min-width: 0; color: rgba(241, 243, 237, 0.42); font: 600 0.58rem / 1.35 var(--home-mono, 'IBM Plex Mono', monospace); letter-spacing: 0.04em; text-transform: uppercase; }
+  .homepage-directory__stat strong { display: block; margin-bottom: 0.25rem; color: rgba(241, 243, 237, 0.9); font: 600 clamp(1rem, 1.5vw, 1.25rem) / 1 var(--home-mono, 'IBM Plex Mono', monospace); letter-spacing: 0; }
+  .homepage-directory__collage { position: relative; display: grid; grid-template-columns: minmax(9rem, 0.55fr) minmax(24rem, 1.7fr) minmax(9rem, 0.55fr); grid-template-rows: auto auto; align-items: center; gap: 0.8rem; min-height: 32rem; padding: 2rem 0 1.5rem; }
   .homepage-directory__collage::before { position: absolute; z-index: -1; inset: 10% 8% 15%; content: ''; background: radial-gradient(ellipse at center, rgba(141, 220, 255, 0.09), transparent 62%); filter: blur(2.5rem); pointer-events: none; }
   .homepage-directory__main { z-index: 3; grid-column: 2; grid-row: 1; width: 100%; }
   .homepage-directory__left { z-index: 2; grid-column: 1; grid-row: 1; width: calc(100% + 3.5rem); margin-left: -4.2rem; }
@@ -211,6 +240,7 @@
   @media (max-width: 48rem) {
     .homepage-directory__hero-layout { grid-template-columns: 1fr; gap: 1rem; }
     .homepage-directory__hero-layout :global(.homepage-hero-intro) { padding-top: 2rem; }
+    .homepage-directory__stats { margin-top: 3rem; }
     .homepage-directory__collage { grid-template-columns: 1fr; grid-template-rows: auto; gap: 0.85rem; min-height: 0; padding-top: 2.25rem; }
     .homepage-directory__main, .homepage-directory__left, .homepage-directory__right, .homepage-directory__lower { grid-column: 1; grid-row: auto; width: 100%; margin: 0; transform: none; }
     .homepage-directory__left, .homepage-directory__right { display: none; }
