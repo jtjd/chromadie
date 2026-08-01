@@ -900,3 +900,12 @@ phase, with an immediate reduced-motion equivalent.
   equipped automatically.
 - Removed the redundant detail drawer and kept the existing catalog, wallet,
   entitlement, route, and RPC contracts intact.
+
+## 2026-08-01 — Remove auth flashes during internal navigation
+
+- Kept same-origin application links inside the SPA router so shop, profile,
+  settings, discovery, and legal navigation do not reload the document.
+- Prevented protected routes from showing the signed-out account lock while
+  the existing session is hydrating.
+- Let profile settings render from the current account profile immediately
+  while deeper configuration data refreshes in place.

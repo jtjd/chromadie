@@ -3,7 +3,8 @@
   import { authUser, isAuthenticated, profile, session } from './stores';
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData.js';
-  import { normalizeProfileConfig } from './profileConfig.js';
+  import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
+  import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
   import { getCanonicalProfilePath } from './routeContract.js';
   import Button from './foundation/Button.svelte';
   import Surface from './foundation/Surface.svelte';
@@ -23,8 +24,34 @@
     { id: 'account', number: '06', label: 'Account', description: 'Progress & controls' }
   ]);
 
-  let context = null;
-  let loading = true;
+  function createInitialSettingsContext() {
+    const currentProfile = { ...($profile || {}) };
+    const fallbackColor = currentProfile.mood_color || '#8B7CF6';
+    return {
+      profileId: currentProfile.id || $session?.user?.id || null,
+      viewingOwnProfile: true,
+      targetProfile: currentProfile,
+      targetScores: [],
+      timelineEvents: [],
+      collectionItems: [],
+      profileConfig: {
+        version: 1,
+        draft: createDefaultProfileConfig(fallbackColor),
+        published: createDefaultProfileConfig(fallbackColor)
+      },
+      social: createEmptyProfileSocial(),
+      socialSettings: createDefaultProfileSocialSettings(),
+      allAchievements: [],
+      unlockedAchievements: {},
+      totalRolls: Number(currentProfile.total_rolls) || 0,
+      loadError: '',
+      dataWarning: ''
+    };
+  }
+
+  /** @type {any} */
+  let context = createInitialSettingsContext();
+  let loading = false;
   let error = '';
   let requestId = 0;
   let activeSection = 'identity';
@@ -83,7 +110,8 @@
 
   async function loadSettings() {
     const nextRequestId = ++requestId;
-    loading = true;
+    const previousContext = context;
+    loading = !previousContext;
     error = '';
     const nextContext = await loadProfileContext({
       supabaseClient: supabase,
@@ -93,6 +121,15 @@
     });
 
     if (nextRequestId !== requestId) return;
+
+    if (nextContext.loadError && previousContext) {
+      context = {
+        ...previousContext,
+        dataWarning: nextContext.loadError
+      };
+      loading = false;
+      return;
+    }
 
     context = nextContext;
     loading = false;

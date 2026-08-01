@@ -24,6 +24,9 @@ test('site surfaces use one shared header and the shared atmospheric shell', () 
   assert.match(app, /<ProfileAtmosphere accent=\{siteAtmosphereColor\}/);
   assert.match(app, /app-main--site/);
   assert.match(app, /setRoute\('profile', \{ username:/);
+  assert.match(app, /handleInternalLinkClick/);
+  assert.match(app, /navigateToPath\(nextPath\)/);
+  assert.match(app, /ACCOUNT_STATES\.SIGNED_OUT/);
   assert.match(app, /<HomePage/);
   assert.match(app, /<ProfileSettings/);
   assert.match(app, /on:signup=\{\(\) => openAuthModal\('signup'\)\}/);

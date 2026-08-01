@@ -29,6 +29,8 @@ test('profile settings uses a focused section workspace', async () => {
   assert.match(settings, /<ProfileEditor/);
   assert.match(settings, /<ProfileSocial/);
   assert.match(settings, /profile-settings-page__editor-footer/);
+  assert.match(settings, /createInitialSettingsContext/);
+  assert.match(settings, /loading = !previousContext/);
   assert.match(siteStyles, /\.profile-settings-page__workspace/);
   assert.match(siteStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });

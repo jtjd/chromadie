@@ -28,6 +28,7 @@
   import { getCanonicalProfilePath } from './lib/routeContract.js';
   import { trackProductEvent } from './lib/productAnalytics.js';
   import { normalizeHexColor } from './lib/utils';
+  import { ACCOUNT_STATES } from './lib/authState';
   import { onMount, onDestroy, tick } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
@@ -281,6 +282,33 @@
     void focusRouteContent();
   }
 
+  function handleInternalLinkClick(event) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const target = event.target;
+    const link = target instanceof Element ? target.closest('a[href]') : null;
+    if (!(link instanceof HTMLAnchorElement) || link.target && link.target !== '_self' || link.hasAttribute('download')) return;
+
+    const nextUrl = new URL(link.href, window.location.href);
+    if (nextUrl.origin !== window.location.origin || !['http:', 'https:'].includes(nextUrl.protocol)) return;
+
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+    if (currentUrl === nextPath) return;
+
+    const nextRoute = parseRouteLocation(nextUrl.pathname, nextUrl.search);
+    const isSpaRoute = nextRoute.routeMode === 'app'
+      || ['privacy', 'terms', 'how-to-play'].includes(nextRoute.routeMode);
+    if (!isSpaRoute) return;
+
+    event.preventDefault();
+    if (showAuthModal) {
+      showAuthModal = false;
+      authOpener = null;
+    }
+    navigateToPath(nextPath);
+  }
+
   function clearChallengeState() {
     if (typeof window === 'undefined') return;
 
@@ -309,10 +337,12 @@
     void loadFounderAnnouncementState();
     parseRoute();
     window.addEventListener('popstate', handlePopState);
+    window.addEventListener('click', handleInternalLinkClick);
   });
 
   onDestroy(() => {
     window.removeEventListener('popstate', handlePopState);
+    window.removeEventListener('click', handleInternalLinkClick);
   });
 
   async function handleLogout() {
@@ -737,8 +767,19 @@
     {:else if view === 'profile-settings'}
       {#if $isAuthenticated}
         <ProfileSettings on:navigate={handleNavigation} />
-      {:else}
+      {:else if $accountState === ACCOUNT_STATES.SIGNED_OUT}
         <GuestLock view="profile" guestActive={$guestProgressActive} on:login={openAuthModal} />
+      {:else if $accountState === ACCOUNT_STATES.PROFILE_ERROR}
+        <div class="container">
+          <div class="card" role="alert">
+            <h1>Account unavailable</h1>
+            <p class="info-text">We could not load your account data. Retry or sign out, then sign in again.</p>
+            <div class="button-row">
+              <button type="button" class="roll-btn" on:click={() => window.location.reload()}>Retry</button>
+              <button type="button" class="roll-btn" on:click={handleLogout}>Log Out</button>
+            </div>
+          </div>
+        </div>
       {/if}
     {:else if $authInitialized && $session && $profileError && (view === 'shop' || view === 'profile')}
       <div class="container">
@@ -751,7 +792,7 @@
           </div>
         </div>
       </div>
-    {:else if view === 'profile' && ($isAuthenticated || selectedProfileUsername || $selectedUserId)}
+    {:else if view === 'profile' && ($isAuthenticated || $session || selectedProfileUsername || $selectedUserId)}
       {#if legacyProfile}
         <Profile profileUsername={selectedProfileUsername} userId={$selectedUserId} on:navigate={handleNavigation} on:accountdeleted={handleAccountDeleted} />
       {:else}
@@ -761,12 +802,12 @@
       {#if view === 'shop'}
         <Shop />
       {/if}
-    {:else}
+    {:else if view === 'profile' && $accountState === ACCOUNT_STATES.SIGNED_OUT}
       {#if view === 'profile'}
         <GuestProfileOnboarding guestActive={$guestProgressActive} on:login={openAuthModal} on:navigate={handleNavigation} />
-      {:else if view === 'shop'}
-        <GuestLock view={view} guestActive={$guestProgressActive} on:login={openAuthModal} />
       {/if}
+    {:else if view === 'shop' && $accountState === ACCOUNT_STATES.SIGNED_OUT}
+      <GuestLock view={view} guestActive={$guestProgressActive} on:login={openAuthModal} />
     {/if}
   {/if}
   </div>

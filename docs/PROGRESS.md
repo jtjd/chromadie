@@ -976,3 +976,12 @@ coverage for the new shop composition and purchase-only boundary. Full
 validation is recorded at handoff; the existing performance budget remains a
 known baseline concern if the performance check reports the current bundle
 size overage.
+
+## 2026-08-01 — Keep page changes inside the live application shell
+
+Internal same-origin links now use the existing client router instead of
+reloading the document. Authenticated shop, profile, editor, discovery, and
+legal navigation preserves the mounted session and shared atmosphere. The
+profile settings surface renders an immediate draft from the hydrated profile
+while its full context refreshes, and protected routes no longer show
+`GuestLock` during auth hydration.

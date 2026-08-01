@@ -1810,3 +1810,17 @@ shop does not auto-equip the item. Owned cosmetics link back to profile
 settings, where the existing `equip_item` and `unequip_item` authority stays
 unchanged. The redesign is presentation-only and requires no schema or
 entitlement migration.
+
+## 2026-08-01 — Keep app navigation inside the authenticated shell
+
+Same-origin links for app and legal routes are intercepted by the existing SPA
+router and resolved with `history.pushState`. This keeps the current Supabase
+session and shared shell mounted while the destination view changes, avoiding
+the false signed-out state that appeared during a full document reload.
+
+Protected routes render the guest lock only after the account state is known to
+be signed out. Profile settings also seeds its editor from the already-loaded
+account profile while deeper configuration and social data refresh, so normal
+shop/editor navigation does not show an auth lock or a loading interstitial.
+Direct refreshes and real profile/account errors retain their existing auth and
+retry boundaries.
