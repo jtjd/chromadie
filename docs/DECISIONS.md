@@ -1729,3 +1729,11 @@ The redesign is presentation-only. It does not change profile configuration,
 media, social, cosmetics, authentication, RLS, routes, or public-profile
 rendering. Section state is hash-addressable for refreshable navigation, and
 the reduced-motion contract covers the new navigation and preview transitions.
+
+## 2026-08-01 — Use direct instructional copy in owner settings
+
+Profile settings uses concise, task-oriented labels and descriptions. Copy
+should tell the owner what a control changes, avoid aspirational or poetic
+language, and preserve vertical space for the configuration itself. Redundant
+profile links stay out of the editor body when the shared header already
+provides the primary profile action.

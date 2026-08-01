@@ -599,7 +599,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 2rem;
-  padding: clamp(2.5rem, 7vh, 5.5rem) 0 clamp(1.6rem, 4vh, 3rem);
+  padding: clamp(1.5rem, 4vh, 3rem) 0 1.25rem;
 }
 
 .profile-settings-page__eyebrow {
@@ -626,36 +626,6 @@
   line-height: 1.55;
 }
 
-.profile-settings-page__profile-link {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.35rem 0.8rem;
-  min-width: min(100%, 15rem);
-  padding: 0.85rem 0;
-  border-top: 1px solid var(--color-line-subtle);
-  color: var(--color-ink-muted);
-  text-decoration: none;
-}
-
-.profile-settings-page__profile-link span:first-child {
-  grid-column: 1 / -1;
-  color: var(--color-ink-faint);
-  font: 700 0.63rem / 1 var(--font-mono-stack);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.profile-settings-page__profile-link strong {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--color-ink-strong);
-  font: 600 var(--type-small) / 1.2 var(--font-mono-stack);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.profile-settings-page__profile-link span:last-child { color: var(--color-accent-bright); }
-
 .profile-settings-page__warning {
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;
@@ -668,7 +638,7 @@
 
 .profile-settings-page__workspace {
   display: grid;
-  grid-template-columns: minmax(12rem, 14.5rem) minmax(0, 1fr) minmax(17rem, 20rem);
+  grid-template-columns: minmax(12rem, 14.5rem) minmax(0, 1fr) minmax(20rem, 25rem);
   gap: clamp(0.75rem, 2vw, 1.5rem);
   align-items: start;
 }
@@ -734,8 +704,7 @@
 
 .profile-settings-page__rail nav button:focus-visible,
 .profile-settings-page__step-button:focus-visible,
-.profile-settings-page__preview-links a:focus-visible,
-.profile-settings-page__profile-link:focus-visible {
+.profile-settings-page__preview-links a:focus-visible {
   outline: 2px solid var(--color-accent-bright);
   outline-offset: 3px;
 }
@@ -879,7 +848,7 @@
 .profile-settings-page__state .foundation-button { margin-top: 1rem; }
 
 @media (max-width: 74rem) {
-  .profile-settings-page__workspace { grid-template-columns: minmax(11.5rem, 13rem) minmax(0, 1fr) minmax(15rem, 17rem); }
+  .profile-settings-page__workspace { grid-template-columns: minmax(11.5rem, 13rem) minmax(0, 1fr) minmax(18rem, 22rem); }
   .profile-settings-page__rail-copy small { display: none; }
   .profile-settings-page__rail nav button { grid-template-columns: 1.5rem minmax(0, 1fr) auto; }
 }
@@ -897,10 +866,9 @@
   .profile-settings-page__crumbs { display: none; }
   .profile-settings-page__top-actions { gap: 0.45rem; }
   .profile-settings-page__save-note { display: none; }
-  .profile-settings-page__intro-row { align-items: stretch; flex-direction: column; gap: 1.4rem; padding: 2.5rem 0 1.75rem; }
+  .profile-settings-page__intro-row { align-items: stretch; flex-direction: column; gap: 1.4rem; padding: 1.75rem 0 1.25rem; }
   .profile-settings-page h1 { font-size: clamp(2.5rem, 13vw, 4.2rem); }
   .profile-settings-page__intro { margin-top: 1rem; }
-  .profile-settings-page__profile-link { width: min(100%, 23rem); }
   .profile-settings-page__workspace { grid-template-columns: 1fr; gap: 0.8rem; }
   .profile-settings-page__rail { position: static; border-radius: var(--radius-md); }
   .profile-settings-page__rail-heading { padding: 0.8rem 0.85rem 0.65rem; }

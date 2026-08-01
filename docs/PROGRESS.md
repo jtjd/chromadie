@@ -907,5 +907,14 @@ the remaining Phase 11 boundary.
   controls available without changing their RPC or validation boundaries.
 - Added hash-aware section navigation, previous/next controls, compact profile
   shortcuts, and a touch-friendly mobile rail.
+
+## 2026-08-01 — Simplify settings copy and viewport hierarchy
+
+- Replaced poetic settings copy with direct instructional labels and task
+  descriptions.
+- Removed the redundant public-profile callout and duplicate live-profile
+  shortcut from the editor body.
+- Reduced intro spacing and widened the live preview column so configuration
+  controls begin higher and remain easier to inspect.
 - Added a contract test for the new settings information architecture and
   reduced-motion styling.

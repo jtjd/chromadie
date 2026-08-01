@@ -838,3 +838,9 @@ phase, with an immediate reduced-motion equivalent.
   behavior.
 - Preserved existing saves, drafts, publish flow, media handling, cosmetics,
   privacy settings, routes, and server-authoritative boundaries.
+
+## 2026-08-01 — Simplify profile settings hierarchy
+
+- Replaced poetic settings copy with concise, instructional text.
+- Removed redundant public-profile links from the editor body.
+- Reduced the intro footprint and widened the live profile preview.

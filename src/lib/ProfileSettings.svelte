@@ -15,12 +15,12 @@
   import ProfileSettingsPreview from './ProfileSettingsPreview.svelte';
 
   const SETTINGS_SECTIONS = Object.freeze([
-    { id: 'identity', number: '01', label: 'Identity', description: 'Bio & presence', detail: 'The first impression visitors get.' },
-    { id: 'expression', number: '02', label: 'Expression', description: 'Avatar, backdrop & music', detail: 'Add the visual details that feel like you.' },
-    { id: 'appearance', number: '03', label: 'Appearance', description: 'Colors & cosmetics', detail: 'Tune the atmosphere and earned look.' },
-    { id: 'layout', number: '04', label: 'Layout & links', description: 'Your public canvas', detail: 'Decide what your profile says first.' },
-    { id: 'social', number: '05', label: 'Privacy & social', description: 'Visitors & interactions', detail: 'Choose how people can connect.' },
-    { id: 'account', number: '06', label: 'Account', description: 'Progress & controls', detail: 'Legacy account controls and history.' }
+    { id: 'identity', number: '01', label: 'Identity', description: 'Bio & presence', detail: 'Edit your bio and public identity.' },
+    { id: 'expression', number: '02', label: 'Expression', description: 'Avatar, backdrop & music', detail: 'Add an avatar, background, or Spotify item.' },
+    { id: 'appearance', number: '03', label: 'Appearance', description: 'Colors & cosmetics', detail: 'Equip colors, effects, and cosmetics.' },
+    { id: 'layout', number: '04', label: 'Layout & links', description: 'Your public canvas', detail: 'Choose sections, order, and public links.' },
+    { id: 'social', number: '05', label: 'Privacy & social', description: 'Visitors & interactions', detail: 'Manage interactions, guestbook, activity, and discovery.' },
+    { id: 'account', number: '06', label: 'Account', description: 'Progress & controls', detail: 'Open progress, badges, and account controls.' }
   ]);
 
   let context = null;
@@ -156,7 +156,7 @@
         <span>Profile</span><span aria-hidden="true">/</span><strong>Settings</strong>
       </div>
       <div class="profile-settings-page__top-actions">
-        <span class="profile-settings-page__save-note"><i aria-hidden="true"></i> Changes save by section</span>
+        <span class="profile-settings-page__save-note"><i aria-hidden="true"></i> Save changes in each section</span>
         <Button variant="ghost" size="sm" href={profilePath}>View profile <span aria-hidden="true">↗</span></Button>
       </div>
     </header>
@@ -179,15 +179,10 @@
     {:else if context}
       <section class="profile-settings-page__intro-row" aria-labelledby="profile-settings-title">
         <div>
-          <p class="profile-settings-page__eyebrow">Your profile studio</p>
-          <h1 id="profile-settings-title">Make it unmistakably yours.</h1>
-          <p class="profile-settings-page__intro">Shape the identity people meet when they find you. Your profile stays live while you work.</p>
+          <p class="profile-settings-page__eyebrow">Profile settings</p>
+          <h1 id="profile-settings-title">Edit your profile.</h1>
+          <p class="profile-settings-page__intro">Update your bio, media, appearance, layout, links, and privacy settings.</p>
         </div>
-        <a class="profile-settings-page__profile-link" href={profilePath}>
-          <span>Public profile</span>
-          <strong>{profilePath}</strong>
-          <span aria-hidden="true">↗</span>
-        </a>
       </section>
 
       {#if context.dataWarning}
@@ -219,7 +214,7 @@
           </nav>
           <div class="profile-settings-page__rail-footer">
             <span class="profile-settings-page__live-dot" aria-hidden="true"></span>
-            <div><strong>Profile is live</strong><small>Changes stay yours until saved.</small></div>
+            <div><strong>Profile is live</strong><small>Each section has its own save or apply action.</small></div>
           </div>
         </aside>
 
@@ -268,7 +263,7 @@
                 <div>
                   <p class="profile-settings-page__eyebrow">Account controls</p>
                   <h3 id="profile-settings-account-title">Progress, badges & account tools</h3>
-                  <p>Open the established account view for your mood, badges, progression, and account management. Your public profile settings remain safely separate.</p>
+                  <p>Use the existing account view to manage your mood, badges, progression, and account settings.</p>
                   <Button variant="secondary" href="/profile?legacy=1">Open account controls <span aria-hidden="true">↗</span></Button>
                 </div>
               </section>
@@ -289,7 +284,6 @@
         <aside class="profile-settings-page__preview-column" aria-label="Profile preview and shortcuts">
           <ProfileSettingsPreview profile={context.targetProfile} profileConfig={context.profileConfig} />
           <div class="profile-settings-page__preview-links">
-            <a href={profilePath}><span>Open live profile</span><span aria-hidden="true">↗</span></a>
             <a href="/shop"><span>Browse cosmetics</span><span aria-hidden="true">↗</span></a>
           </div>
         </aside>
