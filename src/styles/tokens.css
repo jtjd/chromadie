@@ -10,9 +10,11 @@
     --color-ink-faint: #737970;
     --color-line-subtle: rgba(241, 243, 237, 0.12);
     --color-line-strong: rgba(241, 243, 237, 0.24);
-    --color-accent: #b7fd4d;
-    --color-accent-bright: #d6ff8a;
-    --color-accent-cyan: #b7fd4d;
+    /* Cool interface accent; the daily roll keeps its own signal color. */
+    --color-accent: #dbe7ef;
+    --color-accent-bright: #f7fbff;
+    --color-accent-cyan: #8ddcff;
+    --color-accent-roll: #b7fd4d;
     --color-success: #6ee787;
     --color-earned: #f0c779;
     --color-warning: #f1c40f;
@@ -59,7 +61,7 @@
     --radius-pill: 999px;
     --shadow-panel: 0 1.5rem 4rem rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(241, 243, 237, 0.035);
     --shadow-float: 0 1.25rem 3rem rgba(0, 0, 0, 0.34);
-    --shadow-accent: 0 1rem 3rem color-mix(in srgb, var(--color-accent) 24%, transparent);
+    --shadow-accent: 0 1rem 3rem color-mix(in srgb, var(--color-accent-cyan) 24%, transparent);
     --blur-panel: 1.25rem;
 
     /* Layout */

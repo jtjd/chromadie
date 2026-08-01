@@ -2,6 +2,69 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-01 — Keep homepage profile previews limited to the live surface
+
+**Status:** accepted and implemented
+
+The featured homepage specimen shows the live identity card and floating audio
+controls only. The horizontal “recent colors” strip was removed because it
+does not exist in that form on the public profile. Color history remains in
+the live profile’s secondary continuation, where the actual archive and story
+components render.
+
+## 2026-08-01 — Separate interface accent from daily-roll color
+
+**Status:** accepted and implemented
+
+The shared interface now uses a cool near-white accent with cyan interaction
+cues. Signal lime remains available as a distinct roll and reward color, so
+the game loop keeps its own visual signal without tinting every route, button,
+and navigation element lime.
+
+## 2026-08-01 — Show the profile in the first desktop viewport
+
+**Status:** accepted and implemented
+
+The desktop homepage keeps the product explanation, username claim, and
+featured profile in one first-screen composition at 1920×1080. The hero uses
+slightly tighter type scale, line height, spacing, and top padding on desktop;
+mobile keeps its separate stacked reading order and type treatment. The
+featured profile remains the primary visual proof rather than being pushed
+below the fold.
+
+## 2026-08-01 — Keep homepage profile previews faithful to live profiles
+
+**Status:** accepted and implemented
+
+Homepage profile specimens use the same floating play and volume control
+pattern as live profiles. The controls are anchored to the preview canvas,
+outside the identity card, and the card contains only identity, content, and
+links. Daily color and rank remain in the separate roll explanation rather
+than being presented as invented card fields.
+
+The featured example now uses existing cool-toned Aurora, Celestial, Holo,
+Prism, Hexagon, and Nebula cosmetics. The homepage/demo treatment no longer
+uses amber as a brand accent. User-owned warm cosmetics remain available as
+individual expression choices.
+
+## 2026-08-01 — Show profiles before leaderboard data on the homepage
+
+**Status:** accepted and implemented
+
+The homepage now leads with a direct description of the customizable public
+profile, keeps the username claim beside that explanation, and uses the large
+Mara specimen to demonstrate identity, content, music, and restrained
+cosmetics. The lower homepage discovery rail is replaced by
+three centralized Minimal, Atmospheric, and Expressive profile specimens. Each
+opens an in-page full example view, so fictional examples do not reserve real
+usernames or alter public profile routing. Competitive details remain on the
+leaderboard.
+
+The example audio controls are presentation-only and do not load Spotify or
+full media on the homepage. Existing username validation, auth handoff,
+analytics consent, discovery navigation, scoring, and public profile data
+boundaries remain unchanged.
+
 ## 2026-07-31 — Make the public profile the homepage conversion promise
 
 **Status:** accepted and implemented
@@ -1975,3 +2038,22 @@ so the shop and public renderers use the same validated interfaces. The
 homepage keeps a small local class fallback so the specimen remains coherent
 while a fresh catalog is loading; that fallback does not alter account state,
 shop ownership, profile loadouts, or server-authoritative behavior.
+
+## 2026-08-01 — Make the homepage a live profile directory
+
+The public homepage now follows the approved live-directory composition: the
+existing header stays intact, a bounded recent-roll ticker sits beneath it, and
+the first viewport pairs direct product copy and the username claim with an
+uneven profile collage. Profile previews are hydrated through the existing
+public discovery, profile identity, configuration, score, and story RPCs.
+
+The homepage does not contain fictional profile data or homepage-only cosmetics.
+It prefers public staff profiles, falls back to the known `Admin` account only
+when the public contract resolves it, and otherwise renders an honest empty
+state. Identity, backgrounds, avatars, links, badges, cosmetics, roll names,
+rarity, EP, rank, and public roll timestamps remain authoritative.
+
+The homepage uses Instrument Sans locally while the existing Satoshi header,
+sitewide tokens, auth, routes, and normal public profile renderer remain
+unchanged. Audio uses the live profile controls with deferred playback and
+Spotify uses an explicit load action to avoid autoplay and duplicate embeds.

@@ -18,6 +18,10 @@
   export let avatarSrc = '';
   export let rollState = 'idle';
   export let showToday = true;
+  export let titleId = 'identity-card-title';
+  export let showAvatarMark = true;
+  export let avatarLoading = 'eager';
+  export let headingTag = 'h1';
 
   let failedAvatarSource = '';
 
@@ -37,21 +41,21 @@
   }
 </script>
 
-<section class={'identity-card identity-card--roll-' + rollState} style={'--identity-accent: ' + accentColor + ';'} aria-labelledby="identity-card-title">
+<section class={'identity-card identity-card--roll-' + rollState} style={'--identity-accent: ' + accentColor + ';'} aria-labelledby={titleId}>
   <div class="identity-card__person">
     <div class={'identity-card__avatar ' + frameClass} style={frameStyle}>
       {#if avatarSrc && failedAvatarSource !== avatarSrc}
-        <img class="identity-card__avatar-media" src={avatarSrc} alt={safeDisplayName + ' avatar'} loading="eager" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
+        <img class="identity-card__avatar-media" src={avatarSrc} alt={safeDisplayName + ' avatar'} loading={avatarLoading === 'lazy' ? 'lazy' : 'eager'} decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
       {:else}
         <span class="identity-card__avatar-glow" aria-hidden="true"></span>
         <span class="identity-card__avatar-letter" aria-hidden="true">{safeInitial}</span>
-        <Media src="/logo-mark.svg" alt="" aspect="square" loading="eager" className="identity-card__avatar-mark" />
+        {#if showAvatarMark}<Media src="/logo-mark.svg" alt="" aspect="square" loading="eager" className="identity-card__avatar-mark" />{/if}
       {/if}
     </div>
 
     <div class="identity-card__copy">
       <div class="identity-card__name-row">
-        <h1 id="identity-card-title" class={'identity-card__name ' + nameClass} style={nameStyle}>{safeDisplayName}</h1>
+        <svelte:element this={headingTag} id={titleId} class={'identity-card__name ' + nameClass} style={nameStyle}>{safeDisplayName}</svelte:element>
         {#if staff || founder || displayedBadges.length}
           <div class="identity-card__badges" aria-label="Profile badges">
             {#if staff}<span class="identity-card__badge identity-card__badge--staff" title="Staff" aria-label="Staff badge"><span aria-hidden="true">✦</span><span>STAFF</span></span>{/if}

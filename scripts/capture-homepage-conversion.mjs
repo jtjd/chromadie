@@ -7,13 +7,15 @@ import { setTimeout as delay } from 'node:timers/promises';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const output = resolve(root, 'artifacts/homepage-game-prototype');
 const chromium = process.env.CHROMIUM_BIN || '/usr/bin/chromium';
+const appPort = Number(process.env.CAPTURE_PORT || 5174);
 const captures = [
+  { name: 'homepage-1920x1080', width: 1920, height: 1080, scroll: 0 },
   { name: 'homepage-desktop-1440x900', width: 1440, height: 900, scroll: 0 },
   { name: 'homepage-compact-1280x720', width: 1280, height: 720, scroll: 0 },
   { name: 'homepage-mobile-390x844', width: 390, height: 844, scroll: 0 },
-  { name: 'daily-loop-1440x900', width: 1440, height: 900, scroll: 'roll' },
-  { name: 'sample-roll-1440x900', width: 1440, height: 900, action: 'demo', scroll: 'roll' },
-  { name: 'discovery-1440x900', width: 1440, height: 900, scroll: 'discovery' }
+  { name: 'directory-1440x900', width: 1440, height: 900, scroll: 'directory' },
+  { name: 'mechanic-1440x900', width: 1440, height: 900, scroll: 'mechanic' },
+  { name: 'directory-mobile-390x844', width: 390, height: 844, scroll: 'directory' }
 ];
 
 await mkdir(output, { recursive: true });
@@ -60,7 +62,7 @@ async function evaluateEventually(run, expression, params = {}) {
 
 async function capture(item, index) {
   const port = 9500 + index;
-  const browser = spawn(chromium, ['--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=/tmp/chromadie-homepage-${process.pid}-${index}`, `--window-size=${item.width},${item.height}`, 'http://127.0.0.1:5174/'], { stdio: 'ignore' });
+    const browser = spawn(chromium, ['--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=/tmp/chromadie-homepage-${process.pid}-${index}`, `--window-size=${item.width},${item.height}`, `http://127.0.0.1:${appPort}/`], { stdio: 'ignore' });
   let ws;
   try {
     const target = await pageTarget(port);
@@ -74,17 +76,11 @@ async function capture(item, index) {
     await delay(250);
     if (item.scroll) {
       const scrollSelector = item.scroll === 'roll'
-        ? '.home-showcase__roll'
-        : item.scroll === 'discovery'
-          ? '.home-discovery'
-          : `.home-page__${item.scroll}`;
+        ? '.homepage-directory__mechanic'
+        : item.scroll === 'directory'
+          ? '.homepage-directory__collage'
+          : '.homepage-directory__' + item.scroll;
       await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { const target = document.querySelector(${JSON.stringify(scrollSelector)}); if (target) { target.scrollIntoView({ block: 'start' }); resolve(true); } else if (Date.now() - start > 12000) resolve(false); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
-      await delay(350);
-    }
-    if (item.action === 'demo') {
-      await evaluateEventually(run, `new Promise(resolve => { const button = document.querySelector('.home-showcase__roll-action'); if (!button) { resolve(false); return; } button.click(); resolve(true); })`, { awaitPromise: true });
-      await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { const button = document.querySelector('.home-demo-roll .profile-roll__reveal-button'); if (button) { button.click(); resolve(true); } else if (Date.now() - start > 12000) resolve(false); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
-      await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { if (document.querySelector('.home-demo-roll__cta') || Date.now() - start > 15000) resolve(true); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
       await delay(350);
     }
     const screenshot = await run('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });

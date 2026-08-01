@@ -6,8 +6,8 @@
     --card-border-hover: var(--color-line-strong);
     --text-main: var(--color-ink-strong);
     --text-muted: var(--color-ink-muted);
-    --accent-purple: var(--color-accent);
-    --accent-green: var(--color-accent);
+    --accent-purple: var(--color-accent-cyan);
+    --accent-green: var(--color-accent-roll);
     --terminal-bg: rgba(0, 0, 0, 0.6);
     --error-red: #ef4444;
     --spectrum: var(--gradient-spectrum);

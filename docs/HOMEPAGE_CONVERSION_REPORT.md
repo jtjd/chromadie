@@ -1,41 +1,26 @@
-# Homepage Conversion Pass
+# Homepage Live Directory
 
-## Scope
+The public homepage now follows the approved live-directory composition. It
+keeps the current header, places a real public-roll ticker below it, pairs
+direct product copy and username claiming with an uneven profile collage, and
+links into discovery and the leaderboard.
 
-The root homepage now leads with the public profile promise: a customizable
-`chm.lol/username` page, one daily color roll, leaderboard progression, and
-profile discovery. Existing signup handoff, username shape validation, auth,
-moderation/reservation behavior, routes, and server-authoritative gameplay were
-left unchanged.
+Preview identity, backgrounds, avatars, links, badges, cosmetics, music state,
+roll data, rarity, EP, rank, and timestamps come from the existing public
+profile/discovery contracts. Fictional homepage profiles and invented activity
+are not rendered. Public staff accounts are preferred; when no valid showcase
+account resolves, the homepage shows an honest empty state.
 
-The hero uses a fully customized profile preview. The homepage also includes
-centralized demo data for Minimal and clean, Dark and atmospheric, and Bright
-and expressive profile examples; each links to a full public-profile route.
-The daily loop section shows a simplified result and leaderboard preview.
+Validation captures:
 
-Homepage conversion events use the existing consent-gated product analytics
-adapter: `username_claim_started`, `username_claim_completed`,
-`example_profile_opened`, and `explore_clicked`. No username or identity data
-is included.
+- [1920 × 1080 homepage](../artifacts/homepage-game-prototype/homepage-1920x1080.png)
+- [1440 × 900 homepage](../artifacts/homepage-game-prototype/homepage-desktop-1440x900.png)
+- [1280 × 720 homepage](../artifacts/homepage-game-prototype/homepage-compact-1280x720.png)
+- [390 × 844 homepage](../artifacts/homepage-game-prototype/homepage-mobile-390x844.png)
+- [1440 × 900 directory](../artifacts/homepage-game-prototype/directory-1440x900.png)
+- [390 × 844 directory](../artifacts/homepage-game-prototype/directory-mobile-390x844.png)
 
-## Evidence
-
-Only homepage captures were taken:
-
-- [Desktop homepage](../artifacts/homepage-conversion/homepage-desktop-1440x900.png)
-- [Mobile homepage at 390 × 844](../artifacts/homepage-conversion/homepage-mobile-390x844.png)
-- [Example profiles](../artifacts/homepage-conversion/example-profiles-1440x900.png)
-- [Roll/discovery explanation](../artifacts/homepage-conversion/roll-discovery-1440x900.png)
-
-The mobile capture keeps the claim action first, leaves the profile preview
-readable, and uses the existing compact header menu without horizontal
-overflow.
-
-## Validation
-
-Passed: `npm run build`, `npm run check`, `npx eslint src/`, and `npm test` (142
-tests).
-
-`npm run check:performance` is over the repository’s existing budgets
-(JavaScript 646.19 kB / 625 kB; CSS 325.02 kB / 295 kB). No backend or schema
-change was made in this homepage-only pass.
+Audio and Spotify are deferred on preview surfaces; the normal public profile
+renderer is unchanged. `npm run check:performance` continues to report the
+repository’s transitional total JavaScript and CSS budget overage (704.75 kB /
+700 kB JavaScript; 380.55 kB / 380 kB CSS); the other required checks pass.

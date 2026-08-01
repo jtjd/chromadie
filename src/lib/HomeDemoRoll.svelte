@@ -62,7 +62,7 @@
   .home-demo-roll__cta span { color: color-mix(in srgb, var(--profile-accent) 58%, white); font: 600 0.6rem / 1.2 var(--home-mono); letter-spacing: 0.1em; text-transform: uppercase; }
   .home-demo-roll__cta strong { color: var(--home-ink); font-size: 0.82rem; font-weight: 600; }
   .home-demo-roll__cta button { flex: 0 0 auto; min-height: 2.6rem; padding: 0.65rem 0.85rem; border: 1px solid var(--home-color); border-radius: 0.5rem; background: var(--home-color); color: #11140d; cursor: pointer; font: 650 0.72rem / 1 var(--home-font); }
-  .home-demo-roll__cta button:hover { background: #c7ff72; }
+  .home-demo-roll__cta button:hover { background: var(--color-accent-bright); }
   :global(.home-demo-roll .profile-roll__details),
   :global(.home-demo-roll .profile-roll__result-actions) { display: none; }
   :global(.home-demo-roll .profile-roll--quiet.profile-roll--compact .profile-roll__ready) { padding: 0; }

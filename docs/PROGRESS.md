@@ -1,5 +1,60 @@
 # Chromadie 2.0 Progress
 
+## Homepage/live-surface cleanup — 2026-08-01
+
+- Removed the invented horizontal recent-colors strip from the featured
+  homepage preview.
+- Kept color history in the actual live profile continuation, where the
+  profile archive/story components render it.
+- Updated homepage tests and visual documentation to keep the example limited
+  to the live identity surface.
+
+## Interface accent refinement — 2026-08-01
+
+- Replaced the sitewide lime interface accent with a cool near-white token.
+- Added cyan interaction cues for links, focus, the wordmark, and shop
+  highlights.
+- Kept signal lime scoped to daily-roll and reward semantics.
+
+## Homepage first-viewport refinement — 2026-08-01
+
+- Tightened desktop hero spacing, type scale, line height, claim field height,
+  and showcase spacing so the featured profile card is visible at 1920×1080.
+- Kept the mobile homepage stacked and readable without applying the desktop
+  compression to its headline.
+- Added a 1920×1080 homepage capture to the visual evidence set.
+
+## Homepage/live-profile parity — 2026-08-01
+
+- Replaced the homepage’s invented music card with the production floating
+  play and expandable volume controls.
+- Shared the audio-control component with live profile audio so the homepage
+  demonstrates the actual interaction and placement without loading media.
+- Moved controls outside the featured identity card and removed the invented
+  today-color/rank strip from that card.
+- Replaced the featured example’s warm Signal Garden treatment with existing
+  cool-toned profile cosmetics and removed amber from the homepage demo layer.
+
+## Homepage aspiration refinement — 2026-08-01
+
+- Replaced the homepage slogan with direct product, customization, daily-roll,
+  and visibility copy; the existing username validation and signup handoff are
+  unchanged.
+- Expanded the featured Mara specimen with the real dog avatar, profile music
+  control, rank, and production cosmetics.
+- Replaced the homepage leaderboard-style discovery cards with three distinct
+  Minimal, Atmospheric, and Expressive profile specimens backed by centralized
+  demo data. Each opens a full in-page example profile without intercepting
+  public usernames or changing profile routing.
+- Kept the daily loop compact with “Earn points”, “Climb the leaderboard”, and
+  “Get discovered”, added a secondary leaderboard link, and added a final claim
+  action that returns visitors to the hero input.
+- Captured desktop, mobile, featured-profile, daily-roll, and example-profile
+  evidence under `artifacts/homepage-game-prototype/`.
+
+No schema, RLS, scoring, ranking, reward, authentication, or public discovery
+logic changed in this homepage-only pass.
+
 ## Profile-forward leaderboard — 2026-08-01
 
 - Added a compatibility migration that layers a bounded public profile preview
@@ -1113,6 +1168,22 @@ while its full context refreshes, and protected routes no longer show
   measurements are 414.95 kB initial JavaScript, 182.03 kB initial CSS,
   72.57 kB largest lazy JavaScript, and 48.42 kB largest lazy CSS. Total
   assets remain within the transitional 700 kB JavaScript and 380 kB CSS caps.
+
+## 2026-08-01 — Rebuild the homepage as a live profile directory
+
+- Replaced the fictional homepage showcase and equal example cards with the
+  approved uneven live-directory composition.
+- Added a public-roll ticker sourced from bounded profile story events and
+  refreshed through the existing public discovery/profile RPCs.
+- Added a reusable bounded profile preview that reuses `IdentityCard`,
+  `ProfileAtmosphere`, the canonical compact roll renderer, public links,
+  badges, cosmetics, avatars, backgrounds, and deferred profile media.
+- Kept empty, missing-field, loading, and unavailable states truthful; no
+  fictional accounts or profile fields are rendered.
+- Captured the homepage at desktop and mobile target sizes. Required checks
+  pass except for the repository’s transitional total JavaScript and CSS
+  budgets: total JavaScript is 704.75 kB / 700 kB and total CSS is 380.55 kB /
+  380 kB.
 
 ## Header treatment correction — 2026-08-01
 

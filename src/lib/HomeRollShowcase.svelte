@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import CompactRollPreview from './CompactRollPreview.svelte';
+  import HomeMusicPreview from './HomeMusicPreview.svelte';
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import IdentityCard from './IdentityCard.svelte';
   import HomeDemoRoll from './HomeDemoRoll.svelte';
@@ -18,9 +19,9 @@
 
   const previewProfile = {
     username: 'mara',
-    displayName: 'mara',
-    bio: 'Collecting bright colors, one day at a time.',
-    accentColor: '#FFB86B'
+    displayName: 'Mara',
+    bio: 'Designer and night-shift builder. I collect bright colors and ship small tools.',
+    accentColor: '#8DDCFF'
   };
 
   const previewLinks = [
@@ -34,21 +35,14 @@
     { id: 'daily_streak', name: '18 day streak', icon: '18' }
   ];
 
-  const recentColors = [
-    { label: 'Apricot', color: '#FFB86B' },
-    { label: 'Mint', color: '#B7FD4D' },
-    { label: 'Lilac', color: '#B9A7FF' },
-    { label: 'Cobalt', color: '#5CA8FF' }
-  ];
-
   const previewLoadout = {
-    profile_bg: 'bg_signal_garden',
+    profile_bg: 'bg_aurora',
     profile_atmosphere: 'bg_fireflies',
-    profile_border: 'border_signal',
-    frame: 'frame_signal',
-    name_effect: 'name_signal',
-    orb_shape: 'orb_signal',
-    roll_effect: 'roll_signal'
+    profile_border: 'border_celestial',
+    frame: 'frame_holo',
+    name_effect: 'name_prism_atelier',
+    orb_shape: 'orb_hexagon',
+    roll_effect: 'roll_smoke'
   };
 
   function classFallback(effect, cls) {
@@ -56,20 +50,20 @@
   }
 
   $: previewCosmetics = $shopItems && {
-    background: classFallback(getProfileBg(previewLoadout), 'bg-signal-garden'),
+    background: classFallback(getProfileBg(previewLoadout), 'home-showcase__cosmetic-background--fallback'),
     atmosphere: getProfileAtmosphereEffect(previewLoadout) || 'fireflies',
-    border: classFallback(getCosmeticEffect(previewLoadout, 'profile_border'), 'border-signal-anim'),
-    frame: classFallback(getCosmeticEffect(previewLoadout, 'frame'), 'frame-signal-anim'),
-    name: classFallback(getCosmeticEffect(previewLoadout, 'name_effect'), 'name-signal-anim'),
-    orb: classFallback(getOrbShape(previewLoadout), 'orb-shape-signal'),
-    roll: classFallback(getRollEffect(previewLoadout), 'roll-signal-anim')
+    border: classFallback(getCosmeticEffect(previewLoadout, 'profile_border'), 'border-celestial-anim'),
+    frame: classFallback(getCosmeticEffect(previewLoadout, 'frame'), 'frame_holo'),
+    name: classFallback(getCosmeticEffect(previewLoadout, 'name_effect'), 'name_prism_atelier'),
+    orb: classFallback(getOrbShape(previewLoadout), 'orb-shape-hexagon'),
+    roll: classFallback(getRollEffect(previewLoadout), 'roll-smoke-anim')
   };
 </script>
 
-<section class="home-showcase" style="--home-roll-color: #B7FD4D; --home-profile-accent: {previewProfile.accentColor};" aria-label="Mara's profile and daily color result preview">
+<section class="home-showcase" style="--home-roll-color: #B7FD4D; --home-profile-accent: {previewProfile.accentColor};" aria-label="Example public profile preview for Mara">
   <header class="home-showcase__header">
-    <span>Mara's color log</span>
-    <span>18 colors collected · next roll in 08:42:16</span>
+    <span>chm.lol/mara</span>
+    <span>Example profile</span>
   </header>
 
   <div class="home-showcase__stage">
@@ -77,57 +71,46 @@
       <ProfileAtmosphere
         canvasOnly={true}
         accent={previewProfile.accentColor}
-        secondaryAccent="#B7FD4D"
+        secondaryAccent="#9D8CFF"
         effect={previewCosmetics.atmosphere}
       />
     {/if}
 
-    <div class="home-showcase__profile" inert>
+    <div class="home-showcase__profile">
       <div class={'home-showcase__profile-boundary ' + previewCosmetics.border.cls} style={previewCosmetics.border.style}>
         {#if previewCosmetics.background.cls || previewCosmetics.background.style}
           <div class={'home-showcase__cosmetic-background ' + previewCosmetics.background.cls} style={previewCosmetics.background.style} aria-hidden="true"></div>
         {/if}
-        <IdentityCard
-          username={previewProfile.username}
-          displayName={previewProfile.displayName}
-          bio={previewProfile.bio}
-          links={previewLinks}
-          badges={previewBadges}
-          avatarSrc="/avatars/mara-dog-v1.jpg"
-          accentColor={previewProfile.accentColor}
-          nameClass={previewCosmetics.name.cls}
-          nameStyle={previewCosmetics.name.style}
-          frameClass={previewCosmetics.frame.cls}
-          frameStyle={previewCosmetics.frame.style}
-          showToday={false}
-        />
+        <div class="home-showcase__identity" inert>
+          <IdentityCard
+            titleId="home-featured-profile-title"
+            username={previewProfile.username}
+            displayName={previewProfile.displayName}
+            bio={previewProfile.bio}
+            links={previewLinks}
+            badges={previewBadges}
+            avatarSrc="/avatars/mara-dog-v1.jpg"
+            accentColor={previewProfile.accentColor}
+            nameClass={previewCosmetics.name.cls}
+            nameStyle={previewCosmetics.name.style}
+            frameClass={previewCosmetics.frame.cls}
+            frameStyle={previewCosmetics.frame.style}
+            showToday={false}
+          />
+        </div>
       </div>
     </div>
-
-    <div class="home-showcase__story" aria-label="Recent colors from this profile">
-      <div class="home-showcase__story-heading">
-        <span>Recent colors</span>
-        <strong>18 rolls</strong>
-      </div>
-      <div class="home-showcase__story-colors">
-        {#each recentColors as recentColor (recentColor.label)}
-          <span class="home-showcase__story-color" style={'--story-color: ' + recentColor.color}>
-            <i aria-hidden="true"></i>
-            <small>{recentColor.label}</small>
-          </span>
-        {/each}
-      </div>
-    </div>
+    <HomeMusicPreview accent={previewProfile.accentColor} />
   </div>
 
   <section class="home-showcase__roll" aria-labelledby="home-roll-title">
     <div class="home-showcase__roll-copy">
       <span class="home-showcase__roll-kicker">Daily roll</span>
-      <h2 id="home-roll-title">Roll once. Improve your position.</h2>
-      <p>Each color is scored. Higher-scoring rolls earn more EP, move you up the leaderboard, and give more people a reason to visit your profile or projects.</p>
+      <h2 id="home-roll-title">Your daily roll builds visibility.</h2>
+      <p>Roll once a day to collect a color and earn points. Stronger rolls move your profile up the leaderboard, where more people can find it.</p>
 
       <div class="home-showcase__roll-path" aria-label="How a roll builds profile visibility">
-        <span><b>01</b><strong>Earn EP</strong></span>
+        <span><b>01</b><strong>Earn points</strong></span>
         <span><b>02</b><strong>Climb the leaderboard</strong></span>
         <span><b>03</b><strong>Get discovered</strong></span>
       </div>
@@ -138,7 +121,7 @@
         <HomeDemoRoll isAuthenticated={isAuthenticated} on:close={() => demoOpen = false} on:signup={forwardAction} on:profile={forwardAction} />
       {:else}
         <div class="home-showcase__roll-result-heading">
-          <span>Today’s roll</span>
+          <span>Today’s color</span>
           <strong>Rare</strong>
         </div>
         <div class="home-showcase__roll-result-main">
@@ -153,17 +136,17 @@
           />
           <div>
             <code>#B7FD4D</code>
-            <strong>53,296 <small>EP</small></strong>
+            <strong>Signal lime</strong>
           </div>
         </div>
         <dl class="home-showcase__roll-stats">
           <div>
-            <dt>Leaderboard</dt>
+            <dt>Current rank</dt>
             <dd>#12 today</dd>
           </div>
           <div>
-            <dt>Visibility</dt>
-            <dd>Higher rank</dd>
+            <dt>Why it matters</dt>
+            <dd>More people find you</dd>
           </div>
         </dl>
         <button class="home-showcase__roll-action" type="button" on:click={() => demoOpen = true}>Try a sample roll <span aria-hidden="true">→</span></button>
@@ -175,7 +158,7 @@
 <style>
   .home-showcase {
     width: 100%;
-    margin-top: clamp(2.5rem, 6vh, 4.25rem);
+    margin-top: clamp(1.5rem, 3vh, 2.5rem);
     overflow: hidden;
     border: 1px solid var(--home-line-strong);
     border-top: 2px solid var(--home-color);
@@ -198,6 +181,8 @@
     text-transform: uppercase;
   }
 
+  .home-showcase__header span:first-child { color: var(--home-ink); text-transform: none; }
+
   .home-showcase__stage {
     position: relative;
     display: grid;
@@ -209,7 +194,7 @@
     background:
       radial-gradient(circle at 30% 45%, color-mix(in srgb, var(--home-profile-accent) 12%, transparent), transparent 35%),
       radial-gradient(circle at 78% 58%, color-mix(in srgb, var(--home-roll-color) 9%, transparent), transparent 37%),
-      linear-gradient(132deg, rgba(255, 184, 107, 0.035), transparent 42%),
+      linear-gradient(132deg, rgba(141, 220, 255, 0.035), transparent 42%),
       #090a09;
   }
 
@@ -264,6 +249,14 @@
     pointer-events: none;
   }
 
+  .home-showcase__cosmetic-background--fallback {
+    background:
+      radial-gradient(circle at 18% 24%, rgba(141, 220, 255, 0.28) 0 1px, transparent 2px),
+      radial-gradient(circle at 78% 68%, rgba(157, 140, 255, 0.24) 0 1px, transparent 2px),
+      linear-gradient(135deg, #080d18 0%, #111c35 56%, #080b12 100%);
+    background-size: 210px 210px, 260px 260px, 100% 100%;
+  }
+
   .home-showcase__profile-boundary :global(.identity-card) {
     position: relative;
     z-index: 2;
@@ -273,68 +266,6 @@
     box-shadow:
       0 1.8rem 4rem rgba(0, 0, 0, 0.48),
       0 0 2.5rem color-mix(in srgb, var(--home-profile-accent) 15%, transparent);
-  }
-
-  .home-showcase__story {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 1.2rem;
-    margin-top: 0.85rem;
-    padding: 0.7rem 0.9rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .home-showcase__story-heading {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    white-space: nowrap;
-  }
-
-  .home-showcase__story-heading span,
-  .home-showcase__story-heading strong,
-  .home-showcase__story-color small {
-    color: var(--home-ink-faint);
-    font: 600 0.58rem / 1 var(--home-mono);
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-  }
-
-  .home-showcase__story-heading strong {
-    color: color-mix(in srgb, var(--home-profile-accent) 76%, white);
-    font-weight: 500;
-  }
-
-  .home-showcase__story-colors {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.5rem;
-  }
-
-  .home-showcase__story-color {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-width: 0;
-  }
-
-  .home-showcase__story-color i {
-    display: block;
-    flex: 0 0 0.75rem;
-    width: 0.75rem;
-    height: 0.75rem;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    border-radius: 50%;
-    background: var(--story-color);
-    box-shadow: 0 0 0.7rem color-mix(in srgb, var(--story-color) 28%, transparent);
-  }
-
-  .home-showcase__story-color small {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .home-showcase__roll {
@@ -453,12 +384,6 @@
     letter-spacing: -0.06em;
   }
 
-  .home-showcase__roll-result-main small {
-    color: var(--home-ink-faint);
-    font: 600 0.58rem / 1 var(--home-mono);
-    letter-spacing: 0.06em;
-  }
-
   .home-showcase__roll-stats {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -496,7 +421,7 @@
     font: 600 0.68rem / 1 var(--home-mono);
   }
 
-  .home-showcase__roll-action:hover { color: #d3ff91; }
+  .home-showcase__roll-action:hover { color: var(--color-accent-bright); }
 
   .home-showcase__roll-result--demo {
     padding: 0;
@@ -509,11 +434,6 @@
     .home-showcase__stage {
       min-height: 22rem;
       padding: 2rem 1.25rem;
-    }
-
-    .home-showcase__story {
-      grid-template-columns: 1fr;
-      gap: 0.7rem;
     }
 
     .home-showcase__roll {
@@ -561,10 +481,6 @@
     .home-showcase__profile :global(.identity-card__bio) {
       margin-right: auto;
       margin-left: auto;
-    }
-
-    .home-showcase__story-colors {
-      gap: 0.35rem;
     }
 
     .home-showcase__roll {

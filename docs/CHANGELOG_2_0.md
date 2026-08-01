@@ -2,6 +2,49 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-01 — Remove invented homepage profile history
+
+- Removed the horizontal recent-colors strip from the featured homepage
+  preview because it does not match the live public profile.
+- Kept profile history in the live profile’s secondary archive/story surface.
+
+## 2026-08-01 — Cool the interface accent
+
+- Switched shared interface accents from lime to a cool near-white.
+- Added cyan interaction cues across navigation, links, focus states, and shop
+  highlights.
+- Retained lime for daily-roll and reward feedback.
+
+## 2026-08-01 — Tighten the homepage first impression
+
+- Reduced desktop hero height so the claim action and featured profile appear
+  together in the first viewport at 1920×1080.
+- Preserved the larger mobile headline and stacked mobile reading order.
+- Added a 1920×1080 homepage capture for visual review.
+
+## 2026-08-01 — Match homepage previews to live profile controls
+
+- Replaced the invented homepage music card and waveform with the same floating
+  play and expandable volume controls used by live profiles.
+- Anchored preview controls outside the featured identity card and removed the
+  invented today-color/current-rank strip from that card.
+- Switched the featured example to existing cool-toned profile cosmetics and
+  removed amber from the homepage/demo visual treatment.
+
+## 2026-08-01 — Refine homepage profile aspiration
+
+- Replaced vague homepage copy with a direct explanation of public profiles,
+  customization, the daily color roll, and rank-based visibility.
+- Upgraded the featured example to show the Mara dog avatar, identity, links,
+  music controls, and restrained production cosmetics.
+- Replaced the homepage leaderboard-style cards with three distinct profile
+  examples: Minimal, Atmospheric, and Expressive.
+- Added full in-page example-profile views, a quiet “Explore today’s
+  leaderboard” link, and a final claim action without changing public profile
+  routes or leaderboard logic.
+- Styled homepage audio controls are preview-only; no full Spotify or media
+  embeds load on initial page render.
+
 ## 2026-08-01 — Rework leaderboard cards around profile identity
 
 - Replaced anonymous score-first cards with profile-forward discovery surfaces.
@@ -1009,3 +1052,15 @@ phase, with an immediate reduced-motion equivalent.
   catalog and fitting-room flow.
 - Added source contracts for catalog parity, CSS class coverage, and preview
   loadout completeness.
+
+## 2026-08-01 — Homepage live-directory rebuild
+
+- Rebuilt only the public homepage around the approved live-directory
+  reference while preserving the existing header and public profile routes.
+- Added an authoritative recent public-roll ticker, uneven profile collage,
+  real public profile hydration, truthful empty states, discovery links, and a
+  compact roll-to-discovery explanation.
+- Removed homepage use of fictional profile specimens and avoided adding any
+  homepage-only appearance, roll, rank, music, or activity data.
+- Added local Instrument Sans for the homepage only and deferred audio/Spotify
+  media until explicit interaction.

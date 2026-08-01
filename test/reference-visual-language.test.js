@@ -15,6 +15,10 @@ test('reference typography is a shared, non-Google font contract', async () => {
   assert.match(tokens, /--font-body-stack: 'Spline Sans Variable'/);
   assert.match(tokens, /--font-display-stack: 'Spline Sans Variable'/);
   assert.match(tokens, /--font-mono-stack: 'IBM Plex Mono'/);
+  assert.match(tokens, /--color-accent: #dbe7ef/);
+  assert.match(tokens, /--color-accent-cyan: #8ddcff/);
+  assert.match(tokens, /--color-accent-roll: #b7fd4d/);
+  assert.match(main, /@fontsource-variable\/instrument-sans/);
   assert.match(main, /@fontsource-variable\/spline-sans/);
   assert.match(main, /@fontsource\/ibm-plex-mono/);
   assert.match(fonts, /font-family: 'Satoshi'/);
@@ -22,10 +26,11 @@ test('reference typography is a shared, non-Google font contract', async () => {
 });
 
 test('quiet reference surfaces and reduced-motion behavior are encoded', async () => {
-  const [header, home, showcase, atmosphere, site] = await Promise.all([
+  const [header, home, directory, preview, atmosphere, site] = await Promise.all([
     read('src/lib/SiteModeHeader.svelte'),
     read('src/lib/HomePage.svelte'),
-    read('src/lib/HomeRollShowcase.svelte'),
+    read('src/lib/HomepageProfileDirectory.svelte'),
+    read('src/lib/HomepageProfilePreview.svelte'),
     read('src/lib/ProfileAtmosphere.svelte'),
     read('src/styles/site.css')
   ]);
@@ -33,12 +38,15 @@ test('quiet reference surfaces and reduced-motion behavior are encoded', async (
   assert.match(header, /background: rgba\(7, 8, 11, 0\.52\)/);
   assert.match(header, /--site-header-font: 'Satoshi'/);
   assert.match(header, /font: 600 0\.72rem \/ 1 var\(--site-header-font\)/);
-  assert.match(header, /color: var\(--color-accent\)/);
+  assert.match(header, /color: var\(--color-accent-cyan\)/);
   assert.match(home, /--home-canvas: #080908/);
-  assert.match(home, /--home-font: 'Spline Sans Variable'/);
+  assert.match(home, /--home-font: 'Instrument Sans Variable'/);
   assert.match(home, /--home-mono: 'IBM Plex Mono'/);
   assert.doesNotMatch(home, /rgba\(139,124,246|radial-gradient\(circle at 85%/);
-  assert.doesNotMatch(showcase, /border-prism-anim|frame-diamond-anim|name-spectrum-anim|roll-sparkles-anim|orb-shape-diamond/);
+  assert.match(directory, /HomepageLiveTicker/);
+  assert.match(directory, /grid-template-columns: minmax\(18rem/);
+  assert.match(preview, /ProfileAtmosphere/);
+  assert.doesNotMatch(preview, /border-prism-anim|frame-diamond-anim|name-spectrum-anim|roll-sparkles-anim|orb-shape-diamond/);
   assert.match(atmosphere, /background: #07080b/);
   assert.match(atmosphere, /prefers-reduced-motion/);
   assert.match(site, /background-color: var\(--color-canvas\)/);

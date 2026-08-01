@@ -164,7 +164,7 @@
   }
 
   .site-mode-header__wordmark { color: rgba(246, 248, 255, 0.94); }
-  .site-mode-header__wordmark > span { color: var(--color-accent); }
+  .site-mode-header__wordmark > span { color: var(--color-accent-cyan); }
 
   .site-mode-header__nav,
   .site-mode-header__right,
