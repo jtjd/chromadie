@@ -1002,15 +1002,19 @@ while its full context refreshes, and protected routes no longer show
 - Replaced the ambient navy/purple canvas with warm black, faint grain, and a
   single sample roll color.
 - Added homepage-scoped Spline Sans and IBM Plex Mono assets.
-- Reused the production identity card in the homepage preview and placed the
-  sample daily result in a compact status strip below it, keeping the example
-  faithful to live public profiles.
+- Reused the production identity card in the homepage preview and added a
+  dedicated daily-roll section below it, keeping the example faithful to live
+  public profiles while explaining score, leaderboard position, and visibility.
 - Added a warmer example identity, a short recent-color trail, and distinct
   profile-accent/current-roll colors so the specimen feels lived-in.
-- Simplified the daily-loop section and retained the existing claim,
-  authenticated profile, analytics, routing, and accessibility contracts.
+- Added a local anime-dog avatar and a catalog-backed cosmetic fixture using
+  the real space background, rain atmosphere, chroma border, holo frame, and
+  chroma name treatments.
+- Consolidated the game explanation into the daily-roll section and retained
+  the existing claim, authenticated profile, analytics, routing, and
+  accessibility contracts.
 - Captured 1440×900, 1280×720, 390×844, and daily-loop evidence under
   `artifacts/homepage-game-prototype/`.
 - Build, checks, lint, tests, link, CSP, drift, scoring, and database security
   validation pass. The existing performance budget remains over its thresholds
-  at 664.61 kB JavaScript / 625 kB and 341.46 kB CSS / 295 kB; HTML passes.
+  at 665.86 kB JavaScript / 625 kB and 341.57 kB CSS / 295 kB; HTML passes.

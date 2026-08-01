@@ -64,24 +64,6 @@
       <HomeRollShowcase />
     </section>
 
-    <section class="home-page__loop" aria-labelledby="loop-title">
-      <div class="home-page__section-heading">
-        <div>
-          <p class="home-page__eyebrow">How it works</p>
-          <h2 id="loop-title">One roll each day</h2>
-        </div>
-        <a class="home-page__guide-link" href="/how-to-play">How to play <span aria-hidden="true">↗</span></a>
-      </div>
-
-      <div class="home-page__steps" aria-label="Roll a color, earn EP, move up the leaderboard, and get discovered">
-        <span><b>01</b><strong>Roll a color</strong></span>
-        <span><b>02</b><strong>Earn EP</strong></span>
-        <span><b>03</b><strong>Move up</strong></span>
-        <span><b>04</b><strong>Get discovered</strong></span>
-      </div>
-
-      <p class="home-page__loop-copy">Each color is scored from its RGB values and special conditions. Strong rolls earn more EP, improve your leaderboard position, and bring more visitors to your profile.</p>
-    </section>
   </div>
 </main>
 
@@ -273,79 +255,6 @@
     color: var(--home-ink);
   }
 
-  .home-page__loop {
-    padding-top: clamp(5rem, 10vw, 8rem);
-    border-top: 1px solid var(--home-line);
-  }
-
-  .home-page__section-heading {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: 2rem;
-  }
-
-  .home-page__section-heading h2 {
-    margin: 0.65rem 0 0;
-    color: var(--home-ink);
-    font: 620 clamp(2rem, 4vw, 3.35rem) / 1 var(--home-font);
-    letter-spacing: -0.045em;
-  }
-
-  .home-page__guide-link {
-    display: inline-flex;
-    gap: 0.4rem;
-    align-items: center;
-    padding-bottom: 0.2rem;
-    border-bottom: 1px solid var(--home-line-strong);
-    color: var(--home-ink-muted);
-    font: 600 0.7rem / 1 var(--home-mono);
-    text-decoration: none;
-  }
-
-  .home-page__guide-link:hover {
-    border-color: var(--home-color);
-    color: var(--home-ink);
-  }
-
-  .home-page__steps {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin-top: 2.25rem;
-    border-top: 1px solid var(--home-line-strong);
-    border-bottom: 1px solid var(--home-line);
-  }
-
-  .home-page__steps span {
-    display: grid;
-    gap: 1.2rem;
-    min-height: 8rem;
-    padding: 1rem 1.1rem 1.25rem;
-  }
-
-  .home-page__steps span + span {
-    border-left: 1px solid var(--home-line);
-  }
-
-  .home-page__steps b {
-    color: var(--home-color);
-    font: 600 0.63rem / 1 var(--home-mono);
-  }
-
-  .home-page__steps strong {
-    align-self: end;
-    color: var(--home-ink);
-    font: 560 clamp(0.95rem, 1.4vw, 1.15rem) / 1.2 var(--home-font);
-  }
-
-  .home-page__loop-copy {
-    max-width: 47rem;
-    margin: 1.35rem 0 0;
-    color: var(--home-ink-muted);
-    font-size: 0.9rem;
-    line-height: 1.6;
-  }
-
   @media (max-width: 48rem) {
     .home-page__inner {
       padding-top: 2rem;
@@ -364,17 +273,6 @@
       max-width: 28rem;
     }
 
-    .home-page__steps {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .home-page__steps span:nth-child(3) {
-      border-left: 0;
-    }
-
-    .home-page__steps span:nth-child(n + 3) {
-      border-top: 1px solid var(--home-line);
-    }
   }
 
   @media (max-width: 36rem) {
@@ -392,37 +290,10 @@
       width: auto;
     }
 
-    .home-page__section-heading {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .home-page__steps {
-      grid-template-columns: 1fr;
-    }
-
-    .home-page__steps span {
-      grid-template-columns: 2rem 1fr;
-      align-items: center;
-      min-height: 4.5rem;
-      gap: 0.6rem;
-    }
-
-    .home-page__steps span + span,
-    .home-page__steps span:nth-child(3) {
-      border-top: 1px solid var(--home-line);
-      border-left: 0;
-    }
-
-    .home-page__steps strong {
-      align-self: center;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .home-page button,
-    .home-page a {
+    .home-page button {
       transition: none;
     }
   }

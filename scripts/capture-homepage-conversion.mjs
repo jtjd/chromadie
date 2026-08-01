@@ -11,7 +11,7 @@ const captures = [
   { name: 'homepage-desktop-1440x900', width: 1440, height: 900, scroll: 0 },
   { name: 'homepage-compact-1280x720', width: 1280, height: 720, scroll: 0 },
   { name: 'homepage-mobile-390x844', width: 390, height: 844, scroll: 0 },
-  { name: 'daily-loop-1440x900', width: 1440, height: 900, scroll: 'loop' }
+  { name: 'daily-loop-1440x900', width: 1440, height: 900, scroll: 'roll' }
 ];
 
 await mkdir(output, { recursive: true });
@@ -22,7 +22,9 @@ async function pageTarget(port) {
       const pages = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
       const page = pages.find(item => item.type === 'page');
       if (page) return page;
-    } catch {}
+    } catch {
+      // Keep polling while Chromium starts.
+    }
     await delay(100);
   }
   throw new Error('Chromium page target unavailable');
@@ -69,7 +71,8 @@ async function capture(item, index) {
     await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { if (document.querySelector('.home-page') || Date.now() - start > 12000) resolve(true); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
     await delay(250);
     if (item.scroll) {
-      await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { const target = document.querySelector('.home-page__${item.scroll}'); if (target) { target.scrollIntoView({ block: 'start' }); resolve(true); } else if (Date.now() - start > 12000) resolve(false); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
+      const scrollSelector = item.scroll === 'roll' ? '.home-showcase__roll' : `.home-page__${item.scroll}`;
+      await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { const target = document.querySelector(${JSON.stringify(scrollSelector)}); if (target) { target.scrollIntoView({ block: 'start' }); resolve(true); } else if (Date.now() - start > 12000) resolve(false); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
       await delay(350);
     }
     const screenshot = await run('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });

@@ -1845,11 +1845,19 @@ geometric game identity without changing profile or application typography.
 The opening composition combines a direct product statement, the existing
 claim/profile actions, and one static profile-and-roll specimen. The specimen
 reuses the production `IdentityCard` so it stays faithful to the public profile
-instead of inventing a parallel marketing mockup. A compact daily result sits
-below it as secondary status. It remains presentation-only: no sample roll,
-score, reward, or countdown becomes client authority.
+instead of inventing a parallel marketing mockup. A dedicated daily-roll
+section sits below it and explains the connection between score, leaderboard
+position, and profile visibility. It remains presentation-only: no sample
+roll, score, reward, or countdown becomes client authority.
 
 The specimen now carries a distinct example identity, a short recent-color
 trail, and two separate color roles: the profile accent and the current daily
 roll. This adds warmth and a sense of history through the product model itself,
-without introducing decorative animation or a second profile composition.
+without inventing a second profile composition. Cosmetic motion remains
+catalog-owned and follows the shared reduced-motion behavior.
+
+The fixture also uses a curated real cosmetic loadout (`bg_deep_space`,
+`bg_rain`, `border_chroma`, `frame_holo`, and `name_chroma`) through the same
+catalog and rendering components as public profiles. Its generated dog avatar
+is a local static asset; it is presentation-only and does not affect account
+media, entitlements, or profile state.

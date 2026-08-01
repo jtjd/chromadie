@@ -923,9 +923,11 @@ phase, with an immediate reduced-motion equivalent.
   warm-black background without the default purple/cyan atmosphere.
 - Introduced homepage-scoped geometric and technical typography.
 - Replaced the glowing SaaS-style mockup with a restrained specimen that
-  reuses the live public-profile identity card and a secondary daily-roll
-  status strip.
+  reuses the live public-profile identity card and a dedicated daily-roll
+  section explaining score, leaderboard position, and profile visibility.
 - Removed showcase prism, spectrum, sparkle, orb, nested-glass, and colored
   frame treatments while preserving existing homepage actions and analytics.
 - Added a profile color trail and separate warm identity/daily-roll accents to
   give the specimen more character without adding visual noise.
+- Added a curated real-cosmetics fixture and local anime-dog avatar so the
+  homepage preview demonstrates the same expression systems as live profiles.

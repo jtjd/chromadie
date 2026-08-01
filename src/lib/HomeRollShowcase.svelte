@@ -1,5 +1,8 @@
 <script>
+  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import IdentityCard from './IdentityCard.svelte';
+  import { shopItems } from './stores';
+  import { getCosmeticEffect, getProfileAtmosphereEffect, getProfileBg } from './cosmetics';
 
   const previewProfile = {
     username: 'mara',
@@ -25,6 +28,22 @@
     { label: 'Lilac', color: '#B9A7FF' },
     { label: 'Cobalt', color: '#5CA8FF' }
   ];
+
+  const previewLoadout = {
+    profile_bg: 'bg_deep_space',
+    profile_atmosphere: 'bg_rain',
+    profile_border: 'border_chroma',
+    frame: 'frame_holo',
+    name_effect: 'name_chroma'
+  };
+
+  $: previewCosmetics = $shopItems && {
+    background: getProfileBg(previewLoadout),
+    atmosphere: getProfileAtmosphereEffect(previewLoadout),
+    border: getCosmeticEffect(previewLoadout, 'profile_border'),
+    frame: getCosmeticEffect(previewLoadout, 'frame'),
+    name: getCosmeticEffect(previewLoadout, 'name_effect')
+  };
 </script>
 
 <section class="home-showcase" style="--home-roll-color: #B7FD4D; --home-profile-accent: {previewProfile.accentColor};" aria-label="A live public profile and daily color result preview">
@@ -34,16 +53,35 @@
   </header>
 
   <div class="home-showcase__stage">
-    <div class="home-showcase__profile" inert>
-      <IdentityCard
-        username={previewProfile.username}
-        displayName={previewProfile.displayName}
-        bio={previewProfile.bio}
-        links={previewLinks}
-        badges={previewBadges}
-        accentColor={previewProfile.accentColor}
-        showToday={false}
+    {#if previewCosmetics.atmosphere}
+      <ProfileAtmosphere
+        canvasOnly={true}
+        accent={previewProfile.accentColor}
+        secondaryAccent="#B7FD4D"
+        effect={previewCosmetics.atmosphere}
       />
+    {/if}
+
+    <div class="home-showcase__profile" inert>
+      <div class={'home-showcase__profile-boundary ' + (previewCosmetics.border.cls || 'border-chroma-anim')} style={previewCosmetics.border.style}>
+        {#if previewCosmetics.background.cls || previewCosmetics.background.style}
+          <div class={'home-showcase__cosmetic-background ' + previewCosmetics.background.cls} style={previewCosmetics.background.style} aria-hidden="true"></div>
+        {/if}
+        <IdentityCard
+          username={previewProfile.username}
+          displayName={previewProfile.displayName}
+          bio={previewProfile.bio}
+          links={previewLinks}
+          badges={previewBadges}
+          avatarSrc="/avatars/mara-dog-v1.jpg"
+          accentColor={previewProfile.accentColor}
+          nameClass={previewCosmetics.name.cls || 'chroma-name-anim'}
+          nameStyle={previewCosmetics.name.style}
+          frameClass={previewCosmetics.frame.cls || 'frame_holo'}
+          frameStyle={previewCosmetics.frame.style}
+          showToday={false}
+        />
+      </div>
     </div>
 
     <div class="home-showcase__story" aria-label="Recent colors from this profile">
@@ -62,30 +100,43 @@
     </div>
   </div>
 
-  <div class="home-showcase__daily" aria-label="Example daily roll result">
-    <div class="home-showcase__daily-title">
-      <span class="home-showcase__swatch" aria-hidden="true"></span>
-      <div>
-        <span>Today’s roll</span>
-        <strong>Bright mint · #B7FD4D</strong>
+  <section class="home-showcase__roll" aria-labelledby="home-roll-title">
+    <div class="home-showcase__roll-copy">
+      <span class="home-showcase__roll-kicker">Daily roll</span>
+      <h2 id="home-roll-title">Roll once. Improve your position.</h2>
+      <p>Each color is scored. Higher-scoring rolls earn more EP, move you up the leaderboard, and give more people a reason to visit your profile or projects.</p>
+
+      <div class="home-showcase__roll-path" aria-label="How a roll builds profile visibility">
+        <span><b>01</b><strong>Earn EP</strong></span>
+        <span><b>02</b><strong>Climb the leaderboard</strong></span>
+        <span><b>03</b><strong>Get discovered</strong></span>
       </div>
     </div>
 
-    <dl class="home-showcase__daily-stats">
-      <div>
-        <dt>Rarity</dt>
-        <dd>Rare</dd>
+    <div class="home-showcase__roll-result" aria-label="Example daily roll result">
+      <div class="home-showcase__roll-result-heading">
+        <span>Today’s roll</span>
+        <strong>Rare</strong>
       </div>
-      <div>
-        <dt>Score</dt>
-        <dd>53,296 EP</dd>
+      <div class="home-showcase__roll-result-main">
+        <span class="home-showcase__swatch" aria-hidden="true"></span>
+        <div>
+          <code>#B7FD4D</code>
+          <strong>53,296 <small>EP</small></strong>
+        </div>
       </div>
-      <div>
-        <dt>Rank</dt>
-        <dd>#12 today</dd>
-      </div>
-    </dl>
-  </div>
+      <dl class="home-showcase__roll-stats">
+        <div>
+          <dt>Leaderboard</dt>
+          <dd>#12 today</dd>
+        </div>
+        <div>
+          <dt>Visibility</dt>
+          <dd>Higher rank</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
 </section>
 
 <style>
@@ -160,13 +211,32 @@
   }
 
   .home-showcase__profile {
+    position: relative;
+    z-index: 2;
     width: min(100%, 46rem);
   }
 
-  .home-showcase__profile :global(.identity-card) {
-    border-color: color-mix(in srgb, var(--home-profile-accent) 56%, rgba(255, 255, 255, 0.12));
+  .home-showcase__profile-boundary {
+    position: relative;
+    overflow: hidden;
     border-radius: 0.75rem;
-    background: rgba(8, 9, 8, 0.88);
+    background: #08090d;
+  }
+
+  .home-showcase__cosmetic-background {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    opacity: 0.72;
+    pointer-events: none;
+  }
+
+  .home-showcase__profile-boundary :global(.identity-card) {
+    position: relative;
+    z-index: 2;
+    border: 0;
+    border-radius: 0.75rem;
+    background: rgba(8, 9, 8, 0.74);
     box-shadow:
       0 1.8rem 4rem rgba(0, 0, 0, 0.48),
       0 0 2.5rem color-mix(in srgb, var(--home-profile-accent) 15%, transparent);
@@ -234,68 +304,156 @@
     white-space: nowrap;
   }
 
-  .home-showcase__daily {
-    display: flex;
-    align-items: stretch;
-    justify-content: space-between;
-    gap: 2rem;
-    padding: 1rem clamp(1rem, 3vw, 1.5rem);
+  .home-showcase__roll {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(19rem, 0.9fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    padding: clamp(2rem, 4vw, 3.25rem);
     border-top: 1px solid var(--home-line);
     background: var(--home-surface-raised);
   }
 
-  .home-showcase__daily-title {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    min-width: 10rem;
-  }
-
-  .home-showcase__swatch {
-    flex: 0 0 2.75rem;
-    width: 2.75rem;
-    aspect-ratio: 1;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 0.35rem;
-    background: var(--home-roll-color);
-    box-shadow: 0 0 1.25rem color-mix(in srgb, var(--home-roll-color) 22%, transparent);
-  }
-
-  .home-showcase__daily-title span:not(.home-showcase__swatch),
-  .home-showcase__daily-stats dt {
-    display: block;
+  .home-showcase__roll-kicker,
+  .home-showcase__roll-result-heading span,
+  .home-showcase__roll-stats dt {
     color: var(--home-ink-faint);
-    font: 600 0.58rem / 1 var(--home-mono);
-    letter-spacing: 0.08em;
+    font: 600 0.6rem / 1 var(--home-mono);
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
-  .home-showcase__daily-title strong {
-    display: block;
-    margin-top: 0.35rem;
+  .home-showcase__roll-copy h2 {
+    max-width: 27rem;
+    margin: 0.75rem 0 0;
     color: var(--home-ink);
-    font: 600 0.78rem / 1 var(--home-mono);
+    font: 620 clamp(1.8rem, 3.4vw, 2.8rem) / 0.98 var(--home-font);
+    letter-spacing: -0.055em;
   }
 
-  .home-showcase__daily-stats {
+  .home-showcase__roll-copy > p {
+    max-width: 34rem;
+    margin: 1rem 0 0;
+    color: var(--home-ink-muted);
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  .home-showcase__roll-path {
     display: grid;
-    grid-template-columns: repeat(3, minmax(5.5rem, 1fr));
-    flex: 1;
-    max-width: 29rem;
-    margin: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 2rem;
+    border-top: 1px solid var(--home-line-strong);
+    border-bottom: 1px solid var(--home-line);
   }
 
-  .home-showcase__daily-stats div {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.42rem;
-    min-width: 0;
-    padding: 0 1rem;
+  .home-showcase__roll-path span {
+    display: grid;
+    gap: 1rem;
+    min-height: 5rem;
+    padding: 0.8rem 0.75rem 0.9rem 0;
+  }
+
+  .home-showcase__roll-path span + span {
+    padding-left: 0.75rem;
     border-left: 1px solid var(--home-line);
   }
 
-  .home-showcase__daily-stats dd {
+  .home-showcase__roll-path b {
+    color: var(--home-roll-color);
+    font: 600 0.58rem / 1 var(--home-mono);
+  }
+
+  .home-showcase__roll-path strong {
+    align-self: end;
+    color: var(--home-ink);
+    font: 560 0.76rem / 1.2 var(--home-font);
+  }
+
+  .home-showcase__roll-result {
+    align-self: center;
+    min-width: 0;
+    padding: 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--home-roll-color) 28%, var(--home-line));
+    border-radius: 0.6rem;
+    background: rgba(7, 9, 7, 0.7);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1rem 2rem rgba(0, 0, 0, 0.16);
+  }
+
+  .home-showcase__roll-result-heading,
+  .home-showcase__roll-result-main,
+  .home-showcase__roll-stats {
+    display: flex;
+    align-items: center;
+  }
+
+  .home-showcase__roll-result-heading {
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .home-showcase__roll-result-heading strong {
+    padding: 0.3rem 0.45rem;
+    border: 1px solid color-mix(in srgb, var(--home-roll-color) 46%, transparent);
+    border-radius: 999px;
+    color: var(--home-roll-color);
+    font: 600 0.58rem / 1 var(--home-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .home-showcase__roll-result-main {
+    gap: 1rem;
+    margin-top: 1.4rem;
+  }
+
+  .home-showcase__swatch {
+    flex: 0 0 4.5rem;
+    width: 4.5rem;
+    aspect-ratio: 1;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.55rem;
+    background: var(--home-roll-color);
+    box-shadow: 0 0 1.5rem color-mix(in srgb, var(--home-roll-color) 26%, transparent);
+  }
+
+  .home-showcase__roll-result-main code {
+    color: var(--home-ink-muted);
+    font: 600 0.7rem / 1 var(--home-mono);
+  }
+
+  .home-showcase__roll-result-main > div > strong {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--home-ink);
+    font: 620 clamp(2.25rem, 4vw, 3.5rem) / 0.85 var(--home-font);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.06em;
+  }
+
+  .home-showcase__roll-result-main small {
+    color: var(--home-ink-faint);
+    font: 600 0.58rem / 1 var(--home-mono);
+    letter-spacing: 0.06em;
+  }
+
+  .home-showcase__roll-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--home-line);
+    margin-top: 1.25rem;
+  }
+
+  .home-showcase__roll-stats div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .home-showcase__roll-stats dd {
     margin: 0;
     color: var(--home-ink);
     font: 600 0.72rem / 1.2 var(--home-font);
@@ -313,20 +471,13 @@
       gap: 0.7rem;
     }
 
-    .home-showcase__daily {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 1rem;
+    .home-showcase__roll {
+      grid-template-columns: 1fr;
+      gap: 2rem;
     }
 
-    .home-showcase__daily-stats {
+    .home-showcase__roll-result {
       width: 100%;
-      max-width: none;
-    }
-
-    .home-showcase__daily-stats div:first-child {
-      padding-left: 0;
-      border-left: 0;
     }
   }
 
@@ -371,21 +522,34 @@
       gap: 0.35rem;
     }
 
-    .home-showcase__daily {
-      padding: 1rem;
+    .home-showcase__roll {
+      gap: 1.5rem;
+      padding: 1.35rem;
     }
 
-    .home-showcase__daily-stats {
+    .home-showcase__roll-path {
       grid-template-columns: 1fr;
+      margin-top: 1.5rem;
     }
 
-    .home-showcase__daily-stats div,
-    .home-showcase__daily-stats div:first-child {
-      flex-direction: row;
+    .home-showcase__roll-path span,
+    .home-showcase__roll-path span + span {
+      display: flex;
+      align-items: center;
       justify-content: space-between;
+      min-height: 0;
       padding: 0.65rem 0;
       border-top: 1px solid var(--home-line);
       border-left: 0;
+    }
+
+    .home-showcase__roll-result {
+      padding: 1rem;
+    }
+
+    .home-showcase__swatch {
+      flex-basis: 3.75rem;
+      width: 3.75rem;
     }
   }
 
