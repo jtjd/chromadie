@@ -119,6 +119,8 @@ test('discovery implementation uses public RPC projections, profile CTAs, sharin
   assert.match(card, /CompactRollPreview/);
   assert.match(card, /getOrbShape/);
   assert.match(card, /getRollEffect/);
+  assert.match(card, /filter\(badge => badge\.symbol !== '❓'\)/);
+  assert.match(card, /Color roll/);
   assert.match(card, /Open profile/);
   assert.match(card, /prefers-reduced-motion/);
   assert.doesNotMatch(hub + card, /innerHTML|new Function|eval\s*\(/);

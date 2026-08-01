@@ -97,6 +97,58 @@
 }
 @keyframes voidRowPulse { 0%, 100% { background-position: 45% 50%; box-shadow: inset 0 0 24px rgba(0,0,0,0.96), 0 0 10px rgba(104,58,190,0.28); } 50% { background-position: 58% 50%; box-shadow: inset 0 0 34px rgba(0,0,0,1), 0 0 20px rgba(116,72,220,0.54), 0 0 2px rgba(218,235,255,0.9); } }
 
+/* =========================================
+ *  SIGNAL GARDEN COLLECTION
+ *  A restrained lime-and-amber set used by the homepage profile example.
+ *  These are code-owned classes so the same look is safe to render publicly.
+ * ========================================= */
+.bg-signal-garden {
+    background-color: #090c08;
+    background-image:
+        radial-gradient(circle at 16% 26%, rgba(183, 253, 77, 0.48) 0 1px, transparent 2px),
+        radial-gradient(circle at 78% 38%, rgba(255, 184, 107, 0.42) 0 1px, transparent 2px),
+        radial-gradient(circle at 62% 76%, rgba(183, 253, 77, 0.24) 0 1px, transparent 2px),
+        radial-gradient(ellipse at 52% 42%, rgba(183, 253, 77, 0.1), transparent 54%),
+        linear-gradient(135deg, #080a08 0%, #11170d 56%, #090b08 100%);
+    background-size: 210px 210px, 260px 260px, 180px 180px, 100% 100%, 100% 100%;
+    background-position: 0 0, 40px 28px, 92px 68px, 0 0, 0 0;
+    animation: signalGardenDrift 15s ease-in-out infinite;
+}
+
+@keyframes signalGardenDrift {
+    0%, 100% { background-position: 0 0, 40px 28px, 92px 68px, 0 0, 0 0; }
+    50% { background-position: 26px -18px, 8px 50px, 118px 46px, 4% -2%, 0 0; }
+}
+
+.border-signal-anim {
+    border: 1px solid rgba(183, 253, 77, 0.88);
+    box-shadow: 0 0 0 1px rgba(183, 253, 77, 0.1), 0 0 22px rgba(183, 253, 77, 0.14), inset 0 0 12px rgba(183, 253, 77, 0.04);
+    animation: signalBorderBreath 5.4s ease-in-out infinite;
+}
+
+@keyframes signalBorderBreath {
+    0%, 100% { border-color: rgba(183, 253, 77, 0.72); box-shadow: 0 0 0 1px rgba(183, 253, 77, 0.08), 0 0 16px rgba(183, 253, 77, 0.1), inset 0 0 10px rgba(183, 253, 77, 0.03); }
+    52% { border-color: rgba(255, 184, 107, 0.84); box-shadow: 0 0 0 1px rgba(255, 184, 107, 0.1), 0 0 24px rgba(255, 184, 107, 0.16), inset 0 0 14px rgba(183, 253, 77, 0.05); }
+}
+
+.orb-shape-signal {
+    clip-path: polygon(50% 0%, 84% 14%, 100% 50%, 84% 86%, 50% 100%, 16% 86%, 0% 50%, 16% 14%);
+    border-radius: 0 !important;
+    border: none !important;
+    background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0 18%, transparent 19%),
+        linear-gradient(315deg, rgba(0, 0, 0, 0.3) 0 28%, transparent 29%),
+        radial-gradient(circle at 42% 38%, rgba(255, 255, 255, 0.3), transparent 34%),
+        linear-gradient(135deg, #b7fd4d, #6caa2d 56%, #ffb86b);
+    filter: drop-shadow(0 0 8px rgba(183, 253, 77, 0.48));
+    animation: signalOrbBreath 4.4s ease-in-out infinite;
+}
+
+@keyframes signalOrbBreath {
+    0%, 100% { transform: translateY(1px) rotate(-1deg); filter: drop-shadow(0 0 7px rgba(183, 253, 77, 0.4)); }
+    50% { transform: translateY(-3px) rotate(1deg); filter: drop-shadow(0 0 13px rgba(255, 184, 107, 0.58)); }
+}
+
 /* Atmosphere item keys are retained for catalog compatibility. The curated
  * effects render through the code-owned ProfileAtmosphere canvas layer. */
 .profile-effect-rain,
@@ -337,6 +389,45 @@
     animation-delay: 1.05s;
 }
 
+.roll-signal-anim {
+    overflow: visible;
+}
+
+.roll-signal-anim::before,
+.roll-signal-anim::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.roll-signal-anim::before {
+    width: 196px;
+    height: 196px;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(236, 255, 198, 0.36) 0 5%, rgba(183, 253, 77, 0.2) 22%, transparent 64%),
+        conic-gradient(from 20deg, transparent 0 22deg, rgba(183, 253, 77, 0.26) 34deg 52deg, transparent 66deg 188deg, rgba(255, 184, 107, 0.2) 204deg 224deg, transparent 240deg);
+    filter: blur(5px);
+    animation: signalRollPulse 4.6s ease-in-out infinite;
+}
+
+.roll-signal-anim::after {
+    width: 224px;
+    height: 224px;
+    background:
+        radial-gradient(circle at 50% 5%, rgba(183, 253, 77, 0.86) 0 1.5px, transparent 2.5px),
+        radial-gradient(circle at 88% 32%, rgba(255, 184, 107, 0.8) 0 1.3px, transparent 2.4px),
+        radial-gradient(circle at 78% 84%, rgba(183, 253, 77, 0.72) 0 1px, transparent 2px),
+        radial-gradient(circle at 18% 72%, rgba(255, 184, 107, 0.7) 0 1.2px, transparent 2.2px),
+        conic-gradient(from 170deg, transparent 0 62deg, rgba(183, 253, 77, 0.28) 76deg 84deg, transparent 98deg 212deg, rgba(255, 184, 107, 0.22) 224deg 236deg, transparent 250deg);
+    filter: drop-shadow(0 0 4px rgba(183, 253, 77, 0.54));
+    animation: signalRollOrbit 11s linear infinite;
+}
+
 @keyframes pulseAura { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.9; } }
 @keyframes rotateAura { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
 @keyframes ringExpand { 0% { width: 140px; height: 140px; opacity: 0.8; } 100% { width: 200px; height: 200px; opacity: 0; } }
@@ -365,6 +456,8 @@
 @keyframes nebulaDrift { to { transform: translate(-50%, -50%) rotate(360deg); } }
 @keyframes supernovaCore { 0%, 100% { transform: translate(-50%, -50%) scale(0.9) rotate(0deg); opacity: 0.62; } 38% { transform: translate(-50%, -50%) scale(1.08) rotate(4deg); opacity: 1; } 68% { transform: translate(-50%, -50%) scale(0.98) rotate(-2deg); opacity: 0.84; } }
 @keyframes supernovaShockwave { 0% { transform: translate(-50%, -50%) scale(0.62); opacity: 0; } 18% { opacity: 0.9; } 72%, 100% { transform: translate(-50%, -50%) scale(1.22); opacity: 0; } }
+@keyframes signalRollPulse { 0%, 100% { transform: translate(-50%, -50%) scale(0.94); opacity: 0.54; } 50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.9; } }
+@keyframes signalRollOrbit { to { transform: translate(-50%, -50%) rotate(360deg); } }
 
 /* =========================================
  *  PROFILE BORDERS
@@ -524,6 +617,22 @@
     -webkit-text-fill-color: transparent;
     animation: slideBg 2.2s linear infinite;
     filter: drop-shadow(0 0 4px rgba(139, 124, 246, 0.72)) drop-shadow(0 0 12px rgba(46, 211, 201, 0.24));
+}
+
+.name-signal-anim {
+    background: linear-gradient(100deg, #b7fd4d 0%, #f4f8ea 30%, #ffb86b 54%, #b7fd4d 78%, #f4f8ea 100%);
+    background-size: 240% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 3px rgba(183, 253, 77, 0.44));
+    animation: signalNamePass 5.8s ease-in-out infinite;
+}
+
+@keyframes signalNamePass {
+    0%, 100% { background-position: 0% 50%; filter: drop-shadow(0 0 2px rgba(183, 253, 77, 0.28)); }
+    50% { background-position: 100% 50%; filter: drop-shadow(0 0 7px rgba(255, 184, 107, 0.42)); }
 }
 
 .inferno-name-anim { color: #fff; text-shadow: 0 -1px 4px #fff, 0 -3px 8px #FFD700, 0 -8px 15px #FF8C00, 0 -15px 20px #FF4500; animation: inferno-fire-anim 0.8s infinite alternate; }
@@ -718,6 +827,23 @@
     background-size: 100% 100%, 300% 100%;
     box-shadow: 0 0 14px rgba(124, 247, 255, 0.16), inset 0 0 10px rgba(255,255,255,0.05);
     animation: slideFrame 2.8s linear infinite;
+}
+
+.frame-signal-anim {
+    border: 1px solid transparent;
+    background-image:
+        linear-gradient(rgba(10, 14, 9, 0.9), rgba(10, 14, 9, 0.9)),
+        linear-gradient(105deg, #607f2f 0%, #b7fd4d 28%, #f4f8ea 48%, #ffb86b 66%, #607f2f 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-size: 100% 100%, 260% 100%;
+    box-shadow: 0 0 12px rgba(183, 253, 77, 0.1), inset 0 0 10px rgba(255, 184, 107, 0.04);
+    animation: signalFramePass 6s linear infinite;
+}
+
+@keyframes signalFramePass {
+    from { background-position: 0 0, 130% 50%; }
+    to { background-position: 0 0, -130% 50%; }
 }
 
 .frame-platinum-shine {

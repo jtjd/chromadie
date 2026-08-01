@@ -92,6 +92,13 @@ Staff audio alpha migration:
   the staff-alpha MP3 bucket allowance to 5 MiB without changing its path,
   MIME-type, ownership, or staff-only RPC boundary.
 
+Homepage profile collection:
+
+- `migrations/20260801120000_signal_garden_catalog.sql` adds the catalog-backed
+  Signal Garden background, border, frame, name, orb, and roll effect used by
+  the homepage profile specimen. It only upserts catalog metadata and does not
+  change inventory, entitlements, equipped loadouts, or gameplay authority.
+
 Version-controlled cron schedule:
 
 - `update_cotw()` runs every Monday at `00:00 UTC`.

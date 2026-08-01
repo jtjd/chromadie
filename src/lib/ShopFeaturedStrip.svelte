@@ -4,7 +4,7 @@
   import { createEventDispatcher } from 'svelte';
 
   export let items = [];
-  export let collection = 'Voidwalker';
+  export let collection = 'Signal Garden';
 
   const dispatch = createEventDispatcher();
 </script>
@@ -13,7 +13,7 @@
   <div class="featured-strip__copy">
     <span>Featured collection</span>
     <h2 id="featured-strip-title">{collection}</h2>
-    <p>Profile, roll, and leaderboard cosmetics with one visual language.</p>
+    <p>A coordinated profile look that links the page, name, and daily roll.</p>
     <button type="button" on:click={() => dispatch('explore')}>Browse {items.length} pieces <span aria-hidden="true">↗</span></button>
   </div>
   <div class="featured-strip__items" aria-label={`${collection} previews`}>
@@ -28,16 +28,16 @@
 </section>
 
 <style>
-  .featured-strip { display:grid; grid-template-columns:minmax(230px,.75fr) minmax(0,1.5fr); gap:18px; align-items:stretch; margin-bottom:24px; padding:16px; border:1px solid rgba(174,153,255,.16); border-radius:22px; background:linear-gradient(110deg, rgba(91,66,151,.16), rgba(255,255,255,.025) 52%, rgba(31,115,136,.08)); }
+  .featured-strip { display:grid; grid-template-columns:minmax(230px,.75fr) minmax(0,1.5fr); gap:18px; align-items:stretch; margin-bottom:24px; padding:16px; border:1px solid rgba(183,253,77,.17); border-radius:12px; background:linear-gradient(110deg, rgba(183,253,77,.08), rgba(255,255,255,.025) 52%, rgba(255,184,107,.05)); }
   .featured-strip__copy { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; padding:8px 6px 8px 8px; }
-  .featured-strip__copy > span { color:#b9a9ff; font:700 .58rem/1 var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
+  .featured-strip__copy > span { color:#b7fd4d; font:700 .58rem/1 var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
   .featured-strip h2 { margin:8px 0 4px; color:#f5f2ff; font:700 clamp(1.35rem,2.4vw,2.15rem)/1 var(--font-display); letter-spacing:-.045em; }
   .featured-strip p { max-width:290px; margin:0; color:#9e9aaa; font-size:.72rem; line-height:1.45; }
-  .featured-strip__copy button { min-height:36px; margin-top:14px; padding:0 12px; border:1px solid rgba(191,171,255,.26); border-radius:10px; background:rgba(132,108,255,.1); color:#ded7ff; cursor:pointer; font:700 .64rem var(--font-display); }
-  .featured-strip__copy button:hover { background:rgba(132,108,255,.18); }
+  .featured-strip__copy button { min-height:36px; margin-top:14px; padding:0 12px; border:1px solid rgba(183,253,77,.34); border-radius:7px; background:rgba(183,253,77,.08); color:#d9f6a5; cursor:pointer; font:700 .64rem var(--font-display); }
+  .featured-strip__copy button:hover { background:rgba(183,253,77,.15); }
   .featured-strip__items { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; min-width:0; }
   .featured-strip__item { min-width:0; padding:8px; border:1px solid rgba(255,255,255,.07); border-radius:15px; background:rgba(4,5,8,.34); color:inherit; cursor:pointer; text-align:left; }
-  .featured-strip__item:hover, .featured-strip__item:focus-visible { border-color:rgba(202,187,255,.36); background:rgba(4,5,8,.55); }
+  .featured-strip__item:hover, .featured-strip__item:focus-visible { border-color:rgba(183,253,77,.38); background:rgba(4,5,8,.55); }
   .featured-strip__item :global(.shop-preview-area) { height:100px; margin-bottom:8px; padding:8px; border-radius:11px; }
   .featured-strip__item > span, .featured-strip__item > strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .featured-strip__item > span { color:#8d899f; font:700 .52rem var(--font-mono-stack); letter-spacing:.08em; text-transform:uppercase; }

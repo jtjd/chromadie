@@ -42,23 +42,27 @@
   ];
 
   const previewLoadout = {
-    profile_bg: 'bg_deep_space',
-    profile_atmosphere: 'bg_rain',
-    profile_border: 'border_chroma',
-    frame: 'frame_holo',
-    name_effect: 'name_chroma',
-    orb_shape: 'orb_hexagon',
-    roll_effect: 'roll_sparkles'
+    profile_bg: 'bg_signal_garden',
+    profile_atmosphere: 'bg_fireflies',
+    profile_border: 'border_signal',
+    frame: 'frame_signal',
+    name_effect: 'name_signal',
+    orb_shape: 'orb_signal',
+    roll_effect: 'roll_signal'
   };
 
+  function classFallback(effect, cls) {
+    return effect?.cls || effect?.style ? effect : { cls, style: '' };
+  }
+
   $: previewCosmetics = $shopItems && {
-    background: getProfileBg(previewLoadout),
-    atmosphere: getProfileAtmosphereEffect(previewLoadout),
-    border: getCosmeticEffect(previewLoadout, 'profile_border'),
-    frame: getCosmeticEffect(previewLoadout, 'frame'),
-    name: getCosmeticEffect(previewLoadout, 'name_effect'),
-    orb: getOrbShape(previewLoadout),
-    roll: getRollEffect(previewLoadout)
+    background: classFallback(getProfileBg(previewLoadout), 'bg-signal-garden'),
+    atmosphere: getProfileAtmosphereEffect(previewLoadout) || 'fireflies',
+    border: classFallback(getCosmeticEffect(previewLoadout, 'profile_border'), 'border-signal-anim'),
+    frame: classFallback(getCosmeticEffect(previewLoadout, 'frame'), 'frame-signal-anim'),
+    name: classFallback(getCosmeticEffect(previewLoadout, 'name_effect'), 'name-signal-anim'),
+    orb: classFallback(getOrbShape(previewLoadout), 'orb-shape-signal'),
+    roll: classFallback(getRollEffect(previewLoadout), 'roll-signal-anim')
   };
 </script>
 
@@ -79,7 +83,7 @@
     {/if}
 
     <div class="home-showcase__profile" inert>
-      <div class={'home-showcase__profile-boundary ' + (previewCosmetics.border.cls || 'border-chroma-anim')} style={previewCosmetics.border.style}>
+      <div class={'home-showcase__profile-boundary ' + previewCosmetics.border.cls} style={previewCosmetics.border.style}>
         {#if previewCosmetics.background.cls || previewCosmetics.background.style}
           <div class={'home-showcase__cosmetic-background ' + previewCosmetics.background.cls} style={previewCosmetics.background.style} aria-hidden="true"></div>
         {/if}
@@ -91,9 +95,9 @@
           badges={previewBadges}
           avatarSrc="/avatars/mara-dog-v1.jpg"
           accentColor={previewProfile.accentColor}
-          nameClass={previewCosmetics.name.cls || 'chroma-name-anim'}
+          nameClass={previewCosmetics.name.cls}
           nameStyle={previewCosmetics.name.style}
-          frameClass={previewCosmetics.frame.cls || 'frame_holo'}
+          frameClass={previewCosmetics.frame.cls}
           frameStyle={previewCosmetics.frame.style}
           showToday={false}
         />

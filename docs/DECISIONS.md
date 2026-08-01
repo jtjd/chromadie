@@ -1954,3 +1954,24 @@ The shop leaderboard preview also uses the configured preview avatar. Public
 discovery avatars continue to come only from the bounded profile projection and
 the additive `profile_configurations` migration; no private account data is
 added to the client contract.
+
+## 2026-08-01 — Make discovery cards read as profiles, not widgets
+
+The homepage discovery rail and leaderboard share one profile-tile treatment:
+the avatar, display name, handle, and score establish the person first; the
+current color is a compact secondary signal; streak and roll count stay in a
+quiet footer. Decorative gradients, nested panel treatment, and generic
+surface labels are reduced so these cards belong to the flat game-native shell.
+Unknown badge ids are omitted instead of rendering question-mark placeholders.
+
+## 2026-08-01 — Make the homepage profile example a real cosmetic build
+
+The homepage specimen now uses a complete `Signal Garden` collection rather
+than a mix of unrelated background, rain, chroma, and holographic items. The
+collection covers the profile background, border, frame, display name, roll
+orb, and roll effect; the existing Fireflies full-page atmosphere supplies the
+ambient layer. All pieces are normal catalog rows with code-owned CSS classes,
+so the shop and public renderers use the same validated interfaces. The
+homepage keeps a small local class fallback so the specimen remains coherent
+while a fresh catalog is loading; that fallback does not alter account state,
+shop ownership, profile loadouts, or server-authoritative behavior.

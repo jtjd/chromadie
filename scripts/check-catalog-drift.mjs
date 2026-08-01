@@ -10,7 +10,8 @@ const snapshotPath = path.join(
   'supabase/migrations/20260710190000_snapshot_live_shop_catalog.sql'
 );
 const catalogExtensionPaths = [
-  path.join(repoRoot, 'supabase/migrations/20260801110000_profile_atmosphere_catalog.sql')
+  path.join(repoRoot, 'supabase/migrations/20260801110000_profile_atmosphere_catalog.sql'),
+  path.join(repoRoot, 'supabase/migrations/20260801120000_signal_garden_catalog.sql')
 ];
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
 

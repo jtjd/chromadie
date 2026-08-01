@@ -989,3 +989,23 @@ phase, with an immediate reduced-motion equivalent.
   cosmetic-aware renderer.
 - Added the configured avatar to the shop leaderboard context while retaining
   a safe initial fallback.
+
+## 2026-08-01 — Refine discovery cards into profile tiles
+
+- Reduced the generic leaderboard-widget treatment on homepage and leaderboard
+  cards.
+- Kept the profile identity and score primary, with the current color presented
+  as one compact secondary signal.
+- Removed visible question-mark placeholders for unknown badge ids.
+
+## 2026-08-01 — Add a cohesive homepage cosmetic build
+
+- Added the `Signal Garden` collection for the homepage's Mara profile
+  example: background, border, frame, name treatment, roll orb, and roll
+  effect.
+- Replaced the mixed starfield/rain/chroma treatment with a warm-black,
+  lime-and-amber visual system and kept Fireflies as the full-page atmosphere.
+- Added the collection to the shop's featured strip through the existing
+  catalog and fitting-room flow.
+- Added source contracts for catalog parity, CSS class coverage, and preview
+  loadout completeness.

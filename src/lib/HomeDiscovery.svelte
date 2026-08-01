@@ -106,8 +106,8 @@
   .home-discovery__empty a:hover { color: #d3ff91; }
   .home-discovery__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
   .home-discovery__card { min-width: 0; }
-  .home-discovery__card :global(.discovery-card) { height: 100%; border-color: var(--home-line); border-radius: 0.8rem; background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(182,102,201,0.035)); box-shadow: none; }
-  .home-discovery__card :global(.discovery-card:hover) { border-color: color-mix(in srgb, var(--home-color) 45%, var(--home-line)); box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.2); }
+  .home-discovery__card :global(.discovery-card) { height: 100%; border-color: var(--home-line); border-radius: 0.35rem; background: rgba(255,255,255,0.018); box-shadow: none; }
+  .home-discovery__card :global(.discovery-card:hover) { border-color: color-mix(in srgb, var(--home-color) 38%, var(--home-line)); background: rgba(255,255,255,0.032); box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.2); }
   .home-discovery__skeleton { min-height: 15rem; border: 1px solid var(--home-line); border-radius: 0.8rem; background: linear-gradient(110deg, rgba(255,255,255,0.035) 30%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.035) 60%); background-size: 200% 100%; animation: home-discovery-loading 1.5s ease-in-out infinite; }
   .home-discovery__empty { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem; border: 1px dashed var(--home-line-strong); border-radius: 0.8rem; color: var(--home-ink-muted); }
   .home-discovery__empty p { margin: 0; font-size: 0.84rem; line-height: 1.5; }

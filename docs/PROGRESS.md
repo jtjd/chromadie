@@ -1077,6 +1077,26 @@ while its full context refreshes, and protected routes no longer show
 - Kept the additive public-avatar projection migration unchanged; linked
   database application is still a deployment step, not a client-side fallback.
 
+## 2026-08-01 — Refine discovery cards into profile tiles
+
+- Reduced card chrome, nested separators, and generic leaderboard labels across
+  the homepage discovery rail and full leaderboard.
+- Made avatar, identity, score, and current color read as one profile snapshot.
+- Suppressed unknown badge placeholders so stale or future badge ids do not
+  surface as question marks.
+
+## 2026-08-01 — Add the Signal Garden profile specimen
+
+- Replaced the homepage sample's mixed cool-toned cosmetics with a restrained
+  lime-and-amber `Signal Garden` build.
+- Added catalog-backed background, border, frame, name, orb, and roll-effect
+  items with an additive migration, matching seed/catalog extension, and safe
+  CSS classes.
+- Featured the collection in the shop so the preview demonstrates a look users
+  can actually browse and build.
+- Kept Fireflies as the full-page atmosphere and preserved reduced-motion,
+  public rendering, ownership, and purchase boundaries.
+
 ## Route loading and initial bundle boundary — 2026-08-01
 
 - Added explicit cached dynamic imports for game, studio, discovery, profile,

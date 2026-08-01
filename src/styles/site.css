@@ -257,17 +257,21 @@
 }
 
 .app-main--site .discovery-card {
-  border-color: var(--site-line);
-  border-radius: var(--site-radius);
-  background: var(--site-surface);
-  box-shadow: var(--site-shadow);
+  border-color: var(--color-line-subtle);
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--surface-panel) 48%, transparent);
+  box-shadow: none;
 }
 
 .app-main--site .discovery-card--featured {
   border-color: color-mix(in srgb, var(--site-accent) 48%, var(--site-line));
-  background:
-    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--site-accent) 16%, transparent), transparent 34%),
-    var(--site-surface);
+  background: color-mix(in srgb, var(--surface-panel) 68%, transparent);
+}
+
+.app-main--site .discovery-card:hover {
+  border-color: color-mix(in srgb, var(--discovery-profile-accent, var(--site-accent)) 38%, var(--color-line-subtle));
+  background: color-mix(in srgb, var(--surface-panel) 74%, transparent);
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.18);
 }
 
 .app-main--site .discovery-card__score strong {

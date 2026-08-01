@@ -136,7 +136,7 @@
   }, fittingRoom);
   $: sectionSubsections = SHOP_SUBSECTIONS[selectedSection] || [];
   $: sectionCopy = SECTION_COPY[selectedSection] || SECTION_COPY.overview;
-  $: featuredItems = getCollectionItems(catalogItems, 'Voidwalker');
+  $: featuredItems = getCollectionItems(catalogItems, 'Signal Garden');
   $: selectedState = selectedItem ? getDisplayItemState(selectedItem, $equippedItems, fittingRoom) : null;
   $: relatedItems = selectedItem ? getCollectionItems(catalogItems, selectedItem.collection, selectedItem.item_key).slice(0, 3) : [];
   $: selectedOwnedCount = selectedItem ? fittingRoom.inventoryCounts[selectedItem.item_key] || 0 : 0;

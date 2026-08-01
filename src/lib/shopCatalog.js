@@ -66,6 +66,12 @@ const RARITY_RANK = Object.freeze({
 });
 
 const FEATURED_KEYS = Object.freeze([
+  'bg_signal_garden',
+  'name_signal',
+  'border_signal',
+  'frame_signal',
+  'roll_signal',
+  'orb_signal',
   'bg_void',
   'roll_black_hole',
   'name_void',
@@ -166,7 +172,9 @@ function matchesSection(item, section, subslot) {
 function curatedScore(item) {
   const featuredIndex = FEATURED_KEYS.indexOf(item.item_key);
   const featuredScore = featuredIndex === -1 ? 0 : (FEATURED_KEYS.length - featuredIndex) * 100000000;
-  const collectionScore = item.collection === 'Voidwalker' ? 10000000 : 0;
+  const collectionScore = item.collection === 'Signal Garden'
+    ? 12000000
+    : item.collection === 'Voidwalker' ? 10000000 : 0;
   return featuredScore + collectionScore + ((RARITY_RANK[item.rarity] || 0) * 1000000) + (Number(item.cost) || 0);
 }
 
