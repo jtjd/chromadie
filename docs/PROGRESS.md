@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Profile-forward leaderboard — 2026-08-01
+
+- Added a compatibility migration that layers a bounded public profile preview
+  onto the existing discovery projection: display name, bio, accent, and an
+  owner-shaped avatar path.
+- Rebuilt discovery cards around the person and their latest color instead of
+  treating the score as the primary identity.
+- Added avatar loading with an accent-initial fallback, short bio clamping,
+  profile badges, responsive featured/compact layouts, and reduced-motion
+  behavior.
+- Preserved ranking semantics, filters, pagination, public route navigation,
+  privacy settings, and server-authoritative scoring.
+
 ## Homepage product entry point — 2026-08-01
 
 - Added an inline local sample roll to the homepage daily-roll result card.
@@ -402,10 +415,11 @@ The Phase 9 implementation and browser-audit slice added no database migration. 
 ## Phase 6 boundary notes
 
 - `get_public_discovery` is a read-only SECURITY DEFINER projection with a fixed search path, allow-listed surfaces/rarities, username-prefix validation, a maximum page of 20, and a maximum response of 12 rows. The client renders eight cards per page.
-- New discovery JSON contains only public profile/card fields and validated usernames; it does not contain internal profile ids, email, wallet state, private achievement progress, draft configuration, or direct score-table rows.
+- New discovery JSON contains only public profile/card fields and validated usernames. The profile preview adds bounded display name, bio, accent, and exact public avatar paths; it does not contain internal profile ids, email, wallet state, private achievement progress, draft configuration, or direct score-table rows.
 - Today, weekly, monthly, all-time, exceptional, rising, new, and random surfaces remain discovery presentation semantics. They do not create a second score, rarity, reward, eligibility, economy, or prestige authority.
 - `Leaderboard.svelte` remains the route entry point. `DiscoveryHub.svelte` owns the new feed; the existing rivals RPC and follow mutation remain the only compatibility path that carries a target id.
 - Cards navigate and share through the existing `/u/<username>` route. Pages Function metadata and direct-refresh behavior remain unchanged for profiles and `/leaderboard`.
+- The discovery profile preview wraps the existing ranking projection rather than changing rank ordering, score semantics, or public discoverability rules. Missing avatars render as safe accent initials.
 - Phase 6 stops before social writes, reactions, guestbooks, blocking/reporting, SvelteKit, broad refactors, and unrelated profile schema work.
 
 ## Phase 7 boundary notes

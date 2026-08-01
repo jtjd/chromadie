@@ -1924,3 +1924,18 @@ JavaScript/CSS asset, total asset ceilings, and the HTML shell separately.
 Initial and per-route budgets describe user-facing loading cost; total caps
 remain as transitional regression limits so route splitting does not conceal
 asset growth.
+
+## 2026-08-01 — Make leaderboard entries profile-forward
+
+The leaderboard is a discovery surface, so each result needs to identify a
+person before presenting the score. The existing bounded ranking function is
+kept as a renamed base projection and wrapped with a small public preview:
+display name, bio, profile accent, and an exact owner-shaped public avatar path.
+The wrapper does not expose profile ids, account data, draft configuration,
+wallet values, or any new ranking authority.
+
+Discovery cards now use a real avatar when one is available, fall back to an
+accent initial when it is not, and show the handle, short bio, latest color,
+score, streak, and profile entry point in one composed surface. Roll color and
+profile accent remain separate visual roles so the result still reads as a
+player's profile with a current roll, rather than a decorated score row.

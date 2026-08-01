@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-01 — Rework leaderboard cards around profile identity
+
+- Replaced anonymous score-first cards with profile-forward discovery surfaces.
+- Added public display name, bio, accent, and validated avatar data to the
+  bounded discovery projection.
+- Show the latest color beside the person it belongs to, with streak, rolls,
+  score, rarity, share, and profile actions kept in the same card.
+- Keep initials as the designed fallback when a profile has no avatar.
+- Preserve ranking, filters, pagination, privacy, and server authority.
+
 ## 2026-08-01 — Restore the application header treatment
 
 - Returned the header to its transparent, blurred-pill presentation.

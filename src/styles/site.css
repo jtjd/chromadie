@@ -1050,16 +1050,25 @@ body,
 }
 
 .app-main--site .discovery-card {
-  background: var(--surface-panel);
+  border-color: color-mix(in srgb, var(--discovery-profile-accent, var(--color-accent)) 24%, var(--color-line-subtle));
+  background: linear-gradient(125deg, color-mix(in srgb, var(--discovery-profile-accent, var(--color-accent)) 8%, var(--surface-panel)), var(--surface-panel) 58%, color-mix(in srgb, var(--discovery-roll-color, var(--color-accent)) 5%, var(--surface-panel)));
+}
+
+.app-main--site .discovery-card:hover {
+  border-color: color-mix(in srgb, var(--discovery-profile-accent, var(--color-accent)) 54%, var(--color-line-subtle));
 }
 
 .app-main--site .discovery-card--featured {
-  border-color: color-mix(in srgb, var(--color-accent) 48%, var(--color-line-subtle));
-  background: var(--surface-panel);
+  border-color: color-mix(in srgb, var(--discovery-profile-accent, var(--color-accent)) 48%, var(--color-line-subtle));
+  background: linear-gradient(115deg, color-mix(in srgb, var(--discovery-profile-accent, var(--color-accent)) 13%, var(--surface-panel)), var(--surface-panel) 52%, color-mix(in srgb, var(--discovery-roll-color, var(--color-accent)) 8%, var(--surface-panel)));
 }
 
-.app-main--site :is(.discovery-card__score strong, .discovery-card__cta, .staff-title) {
-  color: var(--color-accent-bright);
+.app-main--site :is(.discovery-card__score strong, .discovery-card__cta) {
+  color: color-mix(in srgb, var(--discovery-profile-accent, var(--color-accent)) 76%, white);
+}
+
+.app-main--site .discovery-card .staff-title {
+  color: var(--color-accent-cyan);
 }
 
 /* Studio and settings */

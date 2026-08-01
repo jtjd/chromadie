@@ -1,9 +1,11 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { addToast } from './stores';
-  import { getLbTheme, getNameEffect, getOrbShape, getProfileBorder, getStaffTitleText, getTitleText } from './cosmetics';
+  import { getBadgeMeta } from './badgeData';
+  import { getLbTheme, getNameEffect, getProfileBorder, getStaffTitleText, getTitleText } from './cosmetics';
   import { getPublicProfilePath, getProfileShareText } from './discoveryData.js';
   import { getAppOrigin } from './authUrls.js';
+  import { getProfileMediaUrl } from './profileMedia.js';
   import { trackProductEvent } from './productAnalytics.js';
 
   export let item;
@@ -15,17 +17,30 @@
 
   const dispatch = createEventDispatcher();
 
+  let failedAvatarSource = '';
+
   $: profilePath = getPublicProfilePath(item?.username);
   $: theme = getLbTheme(item?.equippedCosmetics);
   $: border = getProfileBorder(item?.equippedCosmetics);
-  $: orb = getOrbShape(item?.equippedCosmetics);
   $: nameEffect = getNameEffect(item?.equippedCosmetics);
   $: title = getTitleText(item?.equippedCosmetics);
   $: staffTitle = getStaffTitleText(item?.isStaff);
-  $: scoreLabel = item?.score === null || item?.score === undefined ? 'Waiting for a first roll' : `${item.score.toLocaleString()} EP`;
+  $: displayName = item?.displayName || item?.username || 'Unknown player';
+  $: profileAccent = item?.profileAccent || '#8B7CF6';
+  $: rollColor = item?.hexCode || profileAccent;
+  $: avatarSrc = getProfileMediaUrl(item?.avatarPath);
+  $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
+  $: scoreLabel = item?.score === null || item?.score === undefined ? 'No roll yet' : `${item.score.toLocaleString()} EP`;
+  $: rollLabel = item?.score === null || item?.score === undefined
+    ? 'Profile preview'
+    : item?.identity || 'Latest color';
   $: dateLabel = formatDate(item?.rollDate);
   $: profileDateLabel = formatDate(item?.profileCreatedAt);
-  $: cardStyle = `${theme.style || ''}; ${border.style || ''}`;
+  $: profileBadges = (item?.equippedBadges || [])
+    .filter(badgeId => badgeId !== 'launch_edition')
+    .slice(0, 3)
+    .map(badgeId => ({ id: badgeId, ...getBadgeMeta(badgeId) }));
+  $: cardStyle = `--discovery-profile-accent: ${profileAccent}; --discovery-roll-color: ${rollColor}; ${theme.style || ''}; ${border.style || ''}`;
 
   function formatDate(value) {
     if (!value) return '';
@@ -57,7 +72,7 @@
     try {
       let method = 'clipboard';
       if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-        await navigator.share({ title: `${item.username} | ChromaDie`, text, url });
+        await navigator.share({ title: `${displayName} | ChromaDie`, text, url });
       } else if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
         addToast('Profile link copied.', 'success');
@@ -75,9 +90,10 @@
 
 <article class={'discovery-card' + (featured ? ' discovery-card--featured' : '') + ' ' + theme.cls + ' ' + border.cls} style={cardStyle}>
   <div class="discovery-card__topline">
-    <span class="discovery-card__eyebrow">
-      {#if item?.rank}#{item.rank}{:else if item?.kind === 'profile'}Public profile{:else}Color roll{/if}
-    </span>
+    <div class="discovery-card__rank-lockup">
+      <span class="discovery-card__rank">{item?.rank ? `#${item.rank}` : 'Profile'}</span>
+      <span class="discovery-card__surface-label">{featured ? 'Top roll' : item?.kind === 'profile' ? 'Public profile' : 'Leaderboard'}</span>
+    </div>
     {#if dateLabel}
       <time datetime={item.rollDate}>{dateLabel}</time>
     {:else if profileDateLabel}
@@ -85,92 +101,169 @@
     {/if}
   </div>
 
-  <div class="discovery-card__identity">
-    <a class={'discovery-card__color ' + orb.cls} href={profilePath || '/leaderboard'} on:click={viewProfile} aria-label={`Open ${item.username}'s public profile`} style={`background-color: ${item.hexCode || '#8B7CF6'}; ${orb.style || ''}`}>
-      <span aria-hidden="true">{item?.hexCode || '✦'}</span>
-    </a>
+  <div class="discovery-card__main">
+    <div class="discovery-card__profile">
+      <a class="discovery-card__avatar" href={profilePath || '/leaderboard'} on:click={viewProfile} aria-label={`Open ${displayName}'s public profile`}>
+        {#if avatarSrc && avatarSrc !== failedAvatarSource}
+          <img src={avatarSrc} alt="" loading="lazy" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
+        {:else}
+          <span class="discovery-card__avatar-initial" aria-hidden="true">{displayName.slice(0, 1).toUpperCase() || '✦'}</span>
+        {/if}
+        <span class="discovery-card__avatar-accent" aria-hidden="true"></span>
+      </a>
 
-    <div class="discovery-card__name-block">
-      <div class="discovery-card__name-line">
-        {#if title}<span class="title-chip">[{title}]</span>{/if}
-        {#if staffTitle}<span class="title-chip staff-title">[{staffTitle}]</span>{/if}
-        <a class={'discovery-card__name ' + nameEffect.cls} href={profilePath || '/leaderboard'} on:click={viewProfile} data-text={item.username}>{item.username}</a>
-        {#if item?.equippedBadges?.includes('launch_edition')}<span class="launch-edition-badge" title="Launch Edition player" aria-label="Launch Edition player">LE</span>{/if}
+      <div class="discovery-card__identity">
+        <div class="discovery-card__name-line">
+          <a class={'discovery-card__name ' + nameEffect.cls} href={profilePath || '/leaderboard'} on:click={viewProfile} data-text={displayName}>{displayName}</a>
+          {#if title}<span class="title-chip">{title}</span>{/if}
+          {#if staffTitle}<span class="title-chip staff-title">{staffTitle}</span>{/if}
+          {#if item?.equippedBadges?.includes('launch_edition')}<span class="launch-edition-badge" title="Launch Edition player" aria-label="Launch Edition player">LE</span>{/if}
+          {#each profileBadges as badge (badge.id)}
+            <span class="profile-badge" title={badge.name} aria-label={badge.name + ' badge'}>{badge.symbol}</span>
+          {/each}
+        </div>
+        <a class="discovery-card__handle" href={profilePath || '/leaderboard'} on:click={viewProfile}>@{item.username}</a>
+        {#if item?.bio}<p class="discovery-card__bio">{item.bio}</p>{/if}
       </div>
-      <p class="discovery-card__subline">
-        {#if item?.identity}{item.identity}{:else if item?.kind === 'profile' && item?.totalRolls === 0}Ready for a first color story{:else}{item?.rarity || 'Color explorer'} profile{/if}
-      </p>
+    </div>
+
+    <div class="discovery-card__roll">
+      <div class="discovery-card__swatch" aria-hidden="true"><span>{item?.hexCode || '—'}</span></div>
+      <div class="discovery-card__roll-copy">
+        <span>Latest color</span>
+        <strong>{rollLabel}</strong>
+        {#if item?.rarity}<small>{item.rarity}</small>{/if}
+      </div>
     </div>
 
     <div class="discovery-card__score">
       <strong>{scoreLabel}</strong>
-      {#if item?.rarity}<span>{item.rarity}</span>{/if}
+      <span>{item?.score === null || item?.score === undefined ? 'Not ranked yet' : 'Roll score'}</span>
     </div>
   </div>
 
-  <div class="discovery-card__stats" aria-label={`${item.username} public profile summary`}>
+  <div class="discovery-card__stats" aria-label={`${displayName} public profile summary`}>
     <span><b>{item?.currentStreak || 0}</b> day streak</span>
     <span><b>{item?.totalRolls || 0}</b> rolls</span>
-    {#if item?.kind === 'roll' && item?.hexCode}<span class="discovery-card__hex">{item.hexCode}</span>{/if}
+    {#if item?.hexCode}<span class="discovery-card__hex">{item.hexCode}</span>{/if}
   </div>
 
   <div class="discovery-card__actions">
-    <a class="discovery-card__cta" href={profilePath || '/leaderboard'} on:click={viewProfile}>View profile <span aria-hidden="true">→</span></a>
+    <a class="discovery-card__cta" href={profilePath || '/leaderboard'} on:click={viewProfile}>Open profile <span aria-hidden="true">↗</span></a>
     <div class="discovery-card__secondary-actions">
       {#if showFollow && canFollow && item?.userId}
         <button type="button" class:active={isFollowed} class="discovery-card__icon-button" on:click={toggleFollow} aria-label={isFollowed ? `Remove ${item.username} from rivals` : `Add ${item.username} as a rival`} title={isFollowed ? 'Remove rival' : 'Add rival'}>
           {isFollowed ? '✓' : '+'}
         </button>
       {/if}
-      <button type="button" class="discovery-card__share" on:click={shareProfile} aria-label={`Share ${item.username}'s public profile`}>Share</button>
+      <button type="button" class="discovery-card__share" on:click={shareProfile} aria-label={`Share ${displayName}'s public profile`}>Share</button>
     </div>
   </div>
 </article>
 
 <style>
-  .discovery-card { display: flex; flex-direction: column; min-width: 0; gap: 0.85rem; padding: 1.05rem; border: 1px solid rgba(157, 166, 194, 0.24); border-radius: 1.15rem; background: linear-gradient(145deg, rgba(255,255,255,0.065), rgba(139,124,246,0.055)); box-shadow: 0 14px 28px rgba(0,0,0,0.16); transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
-  .discovery-card:hover { transform: translateY(-2px); border-color: rgba(139,124,246,0.52); box-shadow: 0 18px 34px rgba(0,0,0,0.23); }
-  .discovery-card--featured { grid-column: span 2; padding: 1.3rem; border-color: rgba(241,196,15,0.42); background: radial-gradient(circle at 8% 0%, rgba(241,196,15,0.15), transparent 34%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(139,124,246,0.09)); }
-  .discovery-card__topline, .discovery-card__actions, .discovery-card__stats, .discovery-card__name-line { display: flex; align-items: center; }
-  .discovery-card__topline { justify-content: space-between; gap: 0.75rem; color: var(--text-muted); font: 700 0.62rem/1.2 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
-  .discovery-card__eyebrow { color: #ffd34f; }
+  .discovery-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1rem;
+    overflow: hidden;
+    padding: 1.15rem;
+    border: 1px solid color-mix(in srgb, var(--discovery-profile-accent) 24%, var(--color-line-subtle));
+    border-radius: var(--radius-md);
+    background: linear-gradient(125deg, color-mix(in srgb, var(--discovery-profile-accent) 8%, var(--surface-panel)), var(--surface-panel) 58%, color-mix(in srgb, var(--discovery-roll-color) 5%, var(--surface-panel)));
+    box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, 0.16);
+    transition: transform var(--motion-fast) var(--motion-ease-standard), border-color var(--motion-fast) var(--motion-ease-standard), box-shadow var(--motion-fast) var(--motion-ease-standard);
+  }
+
+  .discovery-card::before { position: absolute; inset: 0 auto auto 0; width: 32%; height: 1px; background: linear-gradient(90deg, var(--discovery-profile-accent), transparent); content: ''; opacity: 0.86; }
+  .discovery-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--discovery-profile-accent) 54%, var(--color-line-subtle)); box-shadow: 0 1.8rem 3.4rem rgba(0, 0, 0, 0.24); }
+  .discovery-card--featured { grid-column: span 2; padding: 1.35rem; border-color: color-mix(in srgb, var(--discovery-profile-accent) 48%, var(--color-line-subtle)); background: linear-gradient(115deg, color-mix(in srgb, var(--discovery-profile-accent) 13%, var(--surface-panel)), var(--surface-panel) 52%, color-mix(in srgb, var(--discovery-roll-color) 8%, var(--surface-panel))); }
+
+  .discovery-card__topline,
+  .discovery-card__rank-lockup,
+  .discovery-card__stats,
+  .discovery-card__actions,
+  .discovery-card__name-line { display: flex; align-items: center; }
+  .discovery-card__topline { justify-content: space-between; gap: 0.75rem; color: var(--color-ink-muted); font: 700 0.6rem/1.2 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
+  .discovery-card__rank-lockup { gap: 0.55rem; min-width: 0; }
+  .discovery-card__rank { color: color-mix(in srgb, var(--discovery-profile-accent) 72%, white); font-weight: 800; }
+  .discovery-card__surface-label { overflow: hidden; color: var(--color-ink-muted); font-size: 0.56rem; font-weight: 600; letter-spacing: 0.1em; text-overflow: ellipsis; white-space: nowrap; }
   .discovery-card__topline time { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; letter-spacing: 0.02em; text-transform: none; }
-  .discovery-card__identity { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr) auto; gap: 0.9rem; align-items: center; min-width: 0; }
-  .discovery-card__color { display: grid; place-items: center; width: 4.2rem; height: 4.2rem; border: 1px solid rgba(255,255,255,0.42); border-radius: 1.15rem; color: rgba(255,255,255,0.88); font: 800 0.56rem/1 var(--font-mono-stack); text-decoration: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.16), 0 8px 18px rgba(0,0,0,0.2); }
-  .discovery-card__color:focus-visible, .discovery-card__name:focus-visible, .discovery-card__cta:focus-visible, .discovery-card__share:focus-visible, .discovery-card__icon-button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-  .discovery-card__color span { padding: 0.25rem; border-radius: 0.35rem; background: rgba(0,0,0,0.22); }
-  .discovery-card__name-block { min-width: 0; }
-  .discovery-card__name-line { flex-wrap: wrap; gap: 0.36rem; min-width: 0; }
-  .discovery-card__name { overflow: hidden; color: #f3f5ff; font-size: 1.02rem; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+
+  .discovery-card__main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; min-width: 0; }
+  .discovery-card__profile { display: flex; grid-column: 1; align-items: center; gap: 0.85rem; min-width: 0; }
+  .discovery-card__avatar { position: relative; display: grid; place-items: center; flex: 0 0 4rem; width: 4rem; height: 4rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--discovery-profile-accent) 56%, white 12%); border-radius: 1.1rem; background: radial-gradient(circle at 32% 24%, color-mix(in srgb, var(--discovery-profile-accent) 72%, white), var(--discovery-profile-accent) 48%, var(--surface-inset) 100%); box-shadow: 0 0 1.8rem color-mix(in srgb, var(--discovery-profile-accent) 18%, transparent), inset 0 0 0 1px rgba(255,255,255,0.1); text-decoration: none; }
+  .discovery-card__avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .discovery-card__avatar-initial { position: relative; z-index: 1; color: var(--color-ink-strong); font: 700 1.8rem/1 var(--font-display-stack); letter-spacing: -0.08em; }
+  .discovery-card__avatar-accent { position: absolute; right: 0.28rem; bottom: 0.28rem; width: 0.55rem; height: 0.55rem; border: 2px solid var(--surface-panel); border-radius: 50%; background: var(--discovery-roll-color); box-shadow: 0 0 0.8rem var(--discovery-roll-color); }
+  .discovery-card__avatar:focus-visible,
+  .discovery-card__name:focus-visible,
+  .discovery-card__handle:focus-visible,
+  .discovery-card__cta:focus-visible,
+  .discovery-card__share:focus-visible,
+  .discovery-card__icon-button:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
+  .discovery-card__identity { min-width: 0; }
+  .discovery-card__name-line { flex-wrap: wrap; gap: 0.34rem 0.42rem; min-width: 0; }
+  .discovery-card__name { overflow: hidden; color: var(--color-ink-strong); font: 700 1.08rem/1.05 var(--font-display-stack); letter-spacing: -0.035em; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
   .discovery-card__name:hover { color: #fff; text-decoration: underline; text-underline-offset: 0.16em; }
-  .discovery-card__subline { overflow: hidden; margin: 0.3rem 0 0; color: var(--text-muted); font-size: 0.72rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
-  .discovery-card__score { display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; min-width: 5rem; text-align: right; }
-  .discovery-card__score strong { color: #ffd34f; font: 900 0.92rem/1 var(--font-mono-stack); white-space: nowrap; }
-  .discovery-card__score span { color: var(--text-muted); font: 700 0.6rem/1 var(--font-mono-stack); text-transform: uppercase; }
-  .discovery-card__stats { flex-wrap: wrap; gap: 0.45rem 0.8rem; padding-top: 0.75rem; border-top: 1px solid rgba(157,166,194,0.16); color: var(--text-muted); font: 600 0.68rem/1.2 var(--font-mono-stack); }
-  .discovery-card__stats b { color: #e6eaff; }
-  .discovery-card__hex { margin-left: auto; color: #e6eaff; }
+  .discovery-card__handle { display: block; width: fit-content; margin-top: 0.3rem; color: var(--color-ink-muted); font: 600 0.64rem/1.2 var(--font-mono-stack); letter-spacing: 0.04em; text-decoration: none; }
+  .discovery-card__handle:hover { color: color-mix(in srgb, var(--discovery-profile-accent) 78%, white); }
+  .discovery-card__bio { display: -webkit-box; overflow: hidden; max-width: 36rem; margin: 0.4rem 0 0; color: var(--color-ink-muted); font-size: 0.75rem; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+
+  .discovery-card__roll { display: flex; grid-column: 1 / -1; align-items: center; gap: 0.7rem; min-width: 0; padding-top: 0.85rem; border-top: 1px solid var(--color-line-subtle); }
+  .discovery-card__swatch { display: grid; place-items: center; flex: 0 0 3rem; width: 3rem; height: 3rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 0.8rem; background: radial-gradient(circle at 30% 22%, color-mix(in srgb, var(--discovery-roll-color) 68%, white), var(--discovery-roll-color) 52%, var(--surface-inset)); box-shadow: 0 0 1.3rem color-mix(in srgb, var(--discovery-roll-color) 24%, transparent), inset 0 0 0 0.22rem rgba(0,0,0,0.12); color: rgba(255,255,255,0.84); font: 700 0.48rem/1 var(--font-mono-stack); }
+  .discovery-card__swatch span { padding: 0.2rem 0.24rem; border-radius: 0.25rem; background: rgba(0,0,0,0.25); }
+  .discovery-card__roll-copy { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+  .discovery-card__roll-copy > span { color: var(--color-ink-muted); font: 700 0.54rem/1 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; }
+  .discovery-card__roll-copy strong { overflow: hidden; color: var(--color-ink-strong); font-size: 0.78rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+  .discovery-card__roll-copy small { color: color-mix(in srgb, var(--discovery-roll-color) 68%, white); font: 700 0.56rem/1 var(--font-mono-stack); letter-spacing: 0.07em; text-transform: uppercase; }
+  .discovery-card__score { display: flex; grid-column: 2; grid-row: 1; flex-direction: column; align-items: flex-end; gap: 0.28rem; min-width: 7rem; text-align: right; }
+  .discovery-card__score strong { color: color-mix(in srgb, var(--discovery-profile-accent) 76%, white); font: 900 0.98rem/1 var(--font-mono-stack); white-space: nowrap; }
+  .discovery-card__score span { color: var(--color-ink-muted); font: 700 0.54rem/1 var(--font-mono-stack); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .discovery-card__stats { flex-wrap: wrap; gap: 0.45rem 0.85rem; padding-top: 0.8rem; border-top: 1px solid var(--color-line-subtle); color: var(--color-ink-muted); font: 600 0.64rem/1.2 var(--font-mono-stack); }
+  .discovery-card__stats b { color: var(--color-ink-strong); }
+  .discovery-card__hex { margin-left: auto; color: var(--color-ink-strong); }
   .discovery-card__actions { justify-content: space-between; gap: 0.75rem; margin-top: auto; }
-  .discovery-card__cta { color: #c8c1ff; font-size: 0.78rem; font-weight: 800; text-decoration: none; }
+  .discovery-card__cta { color: color-mix(in srgb, var(--discovery-profile-accent) 78%, white); font-size: 0.76rem; font-weight: 800; text-decoration: none; }
   .discovery-card__cta:hover { color: #fff; }
   .discovery-card__secondary-actions { display: flex; align-items: center; gap: 0.4rem; }
-  .discovery-card__share, .discovery-card__icon-button { min-height: 2rem; border: 1px solid rgba(157,166,194,0.3); border-radius: 999px; background: rgba(255,255,255,0.04); color: var(--text-muted); cursor: pointer; font: 700 0.66rem/1 var(--font-mono-stack); }
+  .discovery-card__share, .discovery-card__icon-button { min-height: 2rem; border: 1px solid var(--color-line-strong); border-radius: 999px; background: transparent; color: var(--color-ink-muted); cursor: pointer; font: 700 0.62rem/1 var(--font-mono-stack); }
   .discovery-card__share { padding: 0.45rem 0.7rem; }
   .discovery-card__icon-button { width: 2rem; padding: 0; }
-  .discovery-card__share:hover, .discovery-card__icon-button:hover, .discovery-card__icon-button.active { border-color: rgba(139,124,246,0.6); background: rgba(139,124,246,0.14); color: #fff; }
-  .title-chip { color: #d9cbff; font: 700 0.6rem/1 var(--font-mono-stack); }
-  .staff-title { color: #ffd34f; }
-  .launch-edition-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.45rem; height: 1.05rem; padding: 0 0.25rem; border: 1px solid rgba(161, 92, 255, 0.55); border-radius: 999px; background: linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(161, 92, 255, 0.2)); color: #d8c7ff; font: 700 0.58rem/1 var(--font-mono-stack); letter-spacing: 0.05em; }
+  .discovery-card__share:hover, .discovery-card__icon-button:hover, .discovery-card__icon-button.active { border-color: color-mix(in srgb, var(--discovery-profile-accent) 60%, transparent); background: color-mix(in srgb, var(--discovery-profile-accent) 12%, transparent); color: var(--color-ink-strong); }
+  .title-chip { color: color-mix(in srgb, var(--discovery-profile-accent) 70%, white); font: 700 0.58rem/1 var(--font-mono-stack); }
+  .staff-title { color: var(--color-accent-cyan); }
+  .profile-badge { display: inline-grid; place-items: center; width: 1.15rem; height: 1.15rem; border: 1px solid color-mix(in srgb, var(--discovery-profile-accent) 42%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--discovery-profile-accent) 12%, transparent); font-size: 0.64rem; line-height: 1; }
+  .launch-edition-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.35rem; height: 1.05rem; padding: 0 0.22rem; border: 1px solid color-mix(in srgb, var(--discovery-profile-accent) 55%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--discovery-profile-accent) 14%, transparent); color: color-mix(in srgb, var(--discovery-profile-accent) 72%, white); font: 700 0.54rem/1 var(--font-mono-stack); letter-spacing: 0.05em; }
+
+  .discovery-card--featured .discovery-card__main { grid-template-columns: minmax(0, 1.3fr) minmax(12rem, 0.9fr) auto; }
+  .discovery-card--featured .discovery-card__profile { grid-column: auto; }
+  .discovery-card--featured .discovery-card__roll { grid-column: auto; padding-top: 0; padding-left: 1rem; border-top: 0; border-left: 1px solid var(--color-line-subtle); }
+  .discovery-card--featured .discovery-card__avatar { flex-basis: 4.7rem; width: 4.7rem; height: 4.7rem; }
+  .discovery-card--featured .discovery-card__name { font-size: 1.28rem; }
+  .discovery-card--featured .discovery-card__score { grid-column: auto; grid-row: auto; }
+
   @media (max-width: 700px) {
     .discovery-card--featured { grid-column: span 1; }
+    .discovery-card--featured .discovery-card__main { grid-template-columns: minmax(0, 1fr) auto; }
+    .discovery-card--featured .discovery-card__profile { grid-column: 1 / -1; }
+    .discovery-card--featured .discovery-card__roll { grid-column: 1 / -1; padding-top: 0.85rem; padding-left: 0; border-top: 1px solid var(--color-line-subtle); border-left: 0; }
+    .discovery-card--featured .discovery-card__score { grid-column: 2; grid-row: 1; }
   }
+
   @media (max-width: 460px) {
-    .discovery-card { padding: 0.9rem; }
-    .discovery-card__identity { grid-template-columns: 3.45rem minmax(0, 1fr); gap: 0.7rem; }
-    .discovery-card__color { width: 3.45rem; height: 3.45rem; border-radius: 0.9rem; }
-    .discovery-card__score { grid-column: 2; align-items: flex-start; text-align: left; }
+    .discovery-card, .discovery-card--featured { padding: 0.95rem; }
+    .discovery-card__main, .discovery-card--featured .discovery-card__main { grid-template-columns: minmax(0, 1fr); }
+    .discovery-card__profile { grid-column: 1; }
+    .discovery-card__score, .discovery-card--featured .discovery-card__score { grid-column: 1; grid-row: auto; align-items: flex-start; text-align: left; }
+    .discovery-card__avatar, .discovery-card--featured .discovery-card__avatar { flex-basis: 3.5rem; width: 3.5rem; height: 3.5rem; border-radius: 0.9rem; }
+    .discovery-card--featured .discovery-card__roll { grid-column: 1; }
     .discovery-card__hex { margin-left: 0; }
   }
+
   @media (prefers-reduced-motion: reduce) {
     .discovery-card { transition: none; }
     .discovery-card:hover { transform: none; }

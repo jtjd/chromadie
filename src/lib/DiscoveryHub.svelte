@@ -48,15 +48,15 @@
 
   function getTabMeta(tab) {
     const labels = {
-      today: ['Today’s strongest rolls', 'The best colors claimed today, each one attached to a living profile.'],
+      today: ['Today’s strongest rolls', 'The highest-scoring colors rolled today.'],
       rivals: ['Your rivals', 'Keep an eye on the players you chose to follow.'],
       weekly: ['This week', 'The strongest roll from each player this week.'],
       monthly: ['This month', 'The strongest roll from each player this month.'],
-      roll: ['All-time roll', 'Profiles with the most memorable canonical roll on record.'],
-      recent: ['Exceptional lately', 'Rare and above rolls from the last thirty days.'],
-      rising: ['Rising now', 'Players with recent activity, momentum, and a strong current roll.'],
-      new: ['New profiles', 'New color identities worth meeting.'],
-      random: ['Random spectrum', 'A fresh daily shuffle of public profiles to explore.']
+      roll: ['All-time roll', 'Profiles with the strongest roll on record.'],
+      recent: ['Exceptional lately', 'Rare and higher rolls from the last thirty days.'],
+      rising: ['Rising now', 'Players with recent activity and strong rolls.'],
+      new: ['New profiles', 'Recently created profiles to explore.'],
+      random: ['Random spectrum', 'A daily shuffle of public profiles.']
     };
     const [title, description] = labels[tab] || labels.today;
     return { title, description };
