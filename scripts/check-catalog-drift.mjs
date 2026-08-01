@@ -183,7 +183,7 @@ const srcRoot = path.join(repoRoot, 'src');
 const styleFiles = (await readdir(srcRoot, { recursive: true }))
   .filter(file => file.endsWith('.css') || file.endsWith('.svelte'));
 const cosmeticCss = (await Promise.all(styleFiles.map(file => readFile(path.join(srcRoot, file), 'utf8')))).join('\n');
-const validSlots = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'orb_shape', 'profile_bg', 'profile_border', 'roll_effect', 'title']);
+const validSlots = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'orb_shape', 'profile_bg', 'profile_atmosphere', 'profile_border', 'roll_effect', 'title']);
 for (const item of snapshot.catalog.values()) {
   if (!validSlots.has(item.slot)) fail(`${item.item_key} has unknown slot ${item.slot}`);
   if (!Number.isSafeInteger(Number(item.cost)) || Number(item.cost) < 0) fail(`${item.item_key} has invalid cost ${item.cost}`);

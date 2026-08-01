@@ -1776,3 +1776,15 @@ The server-authoritative roll flow, reveal animation, result details, and UTC
 reset calculation remain unchanged. The visual update removes the decorative
 orb, orbit, and oversized glow that made the action feel disconnected from the
 rest of the profile surface.
+
+## 2026-08-01 — Separate full-page atmosphere overlays from card backgrounds
+
+Weather effects such as rain, snow, fireflies, and scanlines now use their own
+`profile_atmosphere` cosmetic slot. They render through the existing fixed,
+viewport-sized `ProfileAtmosphere` layer, so the effect covers the public page
+and can coexist with a separate card background.
+
+The migration keeps existing item keys, ownership, and entitlements, backfills
+legacy equipped weather effects, and retains a client compatibility fallback.
+Only curated effect keys map to code-owned CSS layers; profile data cannot
+provide arbitrary HTML, JavaScript, or CSS.

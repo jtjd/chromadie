@@ -102,7 +102,7 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
     clearAllViewState()
 }
 
-const SHOP_SLOTS = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'orb_shape', 'profile_bg', 'profile_border', 'roll_effect', 'title'])
+const SHOP_SLOTS = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'orb_shape', 'profile_bg', 'profile_atmosphere', 'profile_border', 'roll_effect', 'title'])
 
 function normalizeShopItem(item) {
     if (!item || typeof item !== 'object' || !/^[a-z0-9_]{1,80}$/.test(item.item_key || '')) return null

@@ -870,3 +870,11 @@ phase, with an immediate reduced-motion equivalent.
 - Added a live `Resets in HH:MM:SS` countdown to the ready state.
 - Replaced the orb/orbit treatment with a restrained square signal mark and
   quieter profile-aligned button styling.
+
+## 2026-08-01 — Make atmosphere effects full-page overlays
+
+- Added a separate `profile_atmosphere` cosmetic slot for rain, snow,
+  fireflies, and scanlines.
+- Rendered those effects across the full public profile viewport while keeping
+  profile backgrounds scoped to the identity card.
+- Migrated existing weather loadouts and kept their item keys and entitlements.

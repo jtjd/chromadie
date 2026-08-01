@@ -105,6 +105,14 @@
 .studio-profile-cosmetic-bg.profile-effect-fireflies { background: radial-gradient(circle, #b8fff0 0 1.5px, transparent 3px), rgba(7,14,17,0.9); background-size: 76px 96px; animation: profilePreviewFireflies 5s ease-in-out infinite alternate; }
 .preview-bg.profile-effect-scanlines,
 .studio-profile-cosmetic-bg.profile-effect-scanlines { background: repeating-linear-gradient(to bottom, rgba(24,30,48,0.9) 0 4px, rgba(113,214,255,0.18) 5px 6px); }
+.settings-preview__atmosphere.profile-effect-rain,
+.studio-profile-cosmetic-atmosphere.profile-effect-rain { background-image: repeating-linear-gradient(104deg, transparent 0 14px, rgba(113,214,255,0.38) 15px 16px, transparent 17px 29px); background-size: 84px 118px; animation: profilePreviewRain .9s linear infinite; }
+.settings-preview__atmosphere.profile-effect-snow,
+.studio-profile-cosmetic-atmosphere.profile-effect-snow { background-image: radial-gradient(circle, rgba(255,255,255,0.8) 0 1.5px, transparent 2px), radial-gradient(circle, rgba(255,255,255,0.6) 0 1px, transparent 1.5px); background-size: 68px 82px, 43px 57px; animation: profilePreviewSnow 8s linear infinite; }
+.settings-preview__atmosphere.profile-effect-fireflies,
+.studio-profile-cosmetic-atmosphere.profile-effect-fireflies { background-image: radial-gradient(circle, #b8fff0 0 1.5px, transparent 3px), radial-gradient(circle, rgba(255,255,255,0.72) 0 1px, transparent 2.5px); background-size: 76px 96px, 54px 72px; animation: profilePreviewFireflies 5s ease-in-out infinite alternate; }
+.settings-preview__atmosphere.profile-effect-scanlines,
+.studio-profile-cosmetic-atmosphere.profile-effect-scanlines { background: repeating-linear-gradient(to bottom, transparent 0 4px, rgba(113,214,255,0.2) 5px 6px); }
 @keyframes profilePreviewRain { from { background-position: 0 -118px; } to { background-position: 84px 0; } }
 @keyframes profilePreviewSnow { from { background-position: 0 -82px; } to { background-position: 34px 100%; } }
 @keyframes profilePreviewFireflies { from { background-position: 0 0; opacity: .45; } to { background-position: 46px -28px; opacity: .85; } }

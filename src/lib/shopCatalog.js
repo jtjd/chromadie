@@ -1,4 +1,4 @@
-const PROFILE_SLOTS = ['name_effect', 'frame', 'profile_border', 'profile_bg'];
+const PROFILE_SLOTS = ['name_effect', 'frame', 'profile_border', 'profile_bg', 'profile_atmosphere'];
 const ROLL_SLOTS = ['orb_shape', 'roll_effect'];
 const COSMETIC_SLOTS = [...PROFILE_SLOTS, ...ROLL_SLOTS, 'lb_theme'];
 
@@ -17,7 +17,8 @@ export const SHOP_SUBSECTIONS = Object.freeze({
     { id: 'name_effect', label: 'Names' },
     { id: 'frame', label: 'Frames' },
     { id: 'profile_border', label: 'Borders' },
-    { id: 'profile_bg', label: 'Backgrounds' }
+    { id: 'profile_bg', label: 'Backgrounds' },
+    { id: 'profile_atmosphere', label: 'Atmospheres' }
   ],
   roll: [
     { id: 'all', label: 'All roll' },
@@ -31,6 +32,7 @@ export const SHOP_SLOT_LABELS = Object.freeze({
   frame: 'Frame',
   profile_border: 'Border',
   profile_bg: 'Background',
+  profile_atmosphere: 'Atmosphere',
   orb_shape: 'Orb',
   roll_effect: 'Roll effect',
   lb_theme: 'Leaderboard',

@@ -34,6 +34,7 @@
   let status = '';
   let error = '';
   let syncedLoadoutKey = '';
+  const ATMOSPHERE_KEYS = new Set(['bg_rain', 'bg_snow', 'bg_fireflies', 'bg_scanlines']);
 
   $: account = {
     ...($profile || {}),
@@ -55,8 +56,12 @@
     .filter(item => getShopContextForSlot(item.slot) === activeContext)
     .map(item => item.slot))];
   $: atmosphereItems = Object.values($shopItems)
-    .filter(item => item.slot === 'profile_bg' && item.css_type === 'class' && /^profile-effect-/.test(item.css_value || ''))
+    .filter(item => item.slot === 'profile_atmosphere' && item.css_type === 'class' && /^profile-effect-/.test(item.css_value || ''))
     .sort((left, right) => left.name.localeCompare(right.name));
+  $: selectedAtmosphere = previewLoadout['profile_atmosphere']
+    || (ATMOSPHERE_KEYS.has(previewLoadout['profile_bg']) ? previewLoadout['profile_bg'] : '');
+  $: equippedAtmosphere = $equippedItems?.['profile_atmosphere']
+    || (ATMOSPHERE_KEYS.has($equippedItems?.['profile_bg']) ? $equippedItems['profile_bg'] : '');
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: syncEquippedLoadout(equippedKey, $equippedItems);
 
@@ -135,7 +140,7 @@
       <div>
         <p class="profile-settings-page__eyebrow">Appearance</p>
         <h2 id="profile-cosmetics-title" style="margin:0;color:var(--color-ink-strong);font:600 var(--type-h2)/1.05 var(--font-display-stack)">Choose your equipped cosmetics.</h2>
-        <p style="max-width:42rem;margin:.75rem 0 0;color:var(--color-ink-muted);line-height:1.55">Preview owned pieces on the surface they affect, then apply each change to your public profile. Backgrounds can add animated atmospheres such as rain, snow, fireflies, or scanlines.</p>
+        <p style="max-width:42rem;margin:.75rem 0 0;color:var(--color-ink-muted);line-height:1.55">Preview owned cosmetics, then apply changes to your public profile. Backgrounds affect the profile card. Atmosphere overlays cover the full page.</p>
       </div>
       <Button variant="ghost" href="/shop">Browse the shop ↗</Button>
     </div>
@@ -162,27 +167,27 @@
         <div class="profile-cosmetics-controls">
           <div class="profile-cosmetics-controls__heading">
             <span>Atmosphere</span>
-            <strong>Animated backgrounds</strong>
-            <p>Choose a profile mood such as rain, snow, fireflies, or scanlines.</p>
+            <strong>Atmosphere overlays</strong>
+            <p>Choose a full-page effect: rain, snow, fireflies, or scanlines.</p>
           </div>
           {#if atmosphereItems.length}
             <div class="profile-cosmetics-atmosphere">
               <label for="cosmetic-profile-atmosphere">Profile atmosphere</label>
-              <select id="cosmetic-profile-atmosphere" value={previewLoadout.profile_bg || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_bg', event.currentTarget.value)}>
+              <select id="cosmetic-profile-atmosphere" value={selectedAtmosphere} disabled={!!loadingSlot} on:change={event => previewSlot('profile_atmosphere', event.currentTarget.value)}>
                 <option value="">No atmosphere</option>
                 {#each atmosphereItems as item (item.item_key)}
                   <option value={item.item_key} disabled={!ownedCosmetics.some(owned => owned.item_key === item.item_key)}>{item.name}{ownedCosmetics.some(owned => owned.item_key === item.item_key) ? '' : ' · unlock in shop'}</option>
                 {/each}
               </select>
-              <button type="button" disabled={!!loadingSlot || (previewLoadout.profile_bg || '') === (($equippedItems || {})['profile_bg'] || '')} on:click={() => applySlot('profile_bg')}>{loadingSlot === 'profile_bg' ? 'Saving…' : 'Apply atmosphere'}</button>
+              <button type="button" disabled={!!loadingSlot || selectedAtmosphere === equippedAtmosphere} on:click={() => applySlot('profile_atmosphere')}>{loadingSlot === 'profile_atmosphere' ? 'Saving…' : 'Apply atmosphere'}</button>
             </div>
           {:else}
-            <p class="profile-cosmetics-empty">No atmosphere cosmetics are owned yet. Browse the shop to unlock animated backgrounds.</p>
+            <p class="profile-cosmetics-empty">No atmosphere effects are owned yet. Browse the shop to unlock full-page overlays.</p>
           {/if}
 
           {#if contextSlots.length}
             <div class="profile-cosmetics-slot-list">
-              {#each contextSlots.filter(slot => slot !== 'profile_bg') as slot (slot)}
+              {#each contextSlots.filter(slot => !['profile_bg', 'profile_atmosphere'].includes(slot)) as slot (slot)}
                 <div class="profile-cosmetics-slot">
               <div style="min-width:0">
                 <label for={`cosmetic-${slot}`} style="display:block;margin-bottom:.4rem;color:var(--color-ink-strong);font-weight:650">{SHOP_SLOT_LABELS[slot]}</label>

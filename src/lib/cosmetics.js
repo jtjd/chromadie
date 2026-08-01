@@ -18,7 +18,7 @@ export function getCosmeticEffect(cosmetics, slot) {
 
 export const getNameEffect = cosmetics => getCosmeticEffect(cosmetics, 'name_effect');
 export const getFrameEffect = cosmetics => getCosmeticEffect(cosmetics, 'frame');
-export const getProfileBg = cosmetics => getCosmeticEffect(cosmetics, 'profile_bg');
+const PROFILE_ATMOSPHERE_KEYS = new Set(['bg_rain', 'bg_snow', 'bg_fireflies', 'bg_scanlines']);
 const PROFILE_ATMOSPHERE_EFFECTS = Object.freeze({
   bg_rain: 'rain',
   bg_snow: 'snow',
@@ -26,9 +26,26 @@ const PROFILE_ATMOSPHERE_EFFECTS = Object.freeze({
   bg_scanlines: 'scanlines'
 });
 
+/** Backgrounds and atmospheres occupy separate cosmetic layers. */
+export function getProfileBg(cosmetics) {
+  return PROFILE_ATMOSPHERE_KEYS.has(cosmetics?.profile_bg)
+    ? { cls: '', style: '' }
+    : getCosmeticEffect(cosmetics, 'profile_bg');
+}
+
+export function getAtmosphereEffect(cosmetics) {
+  const itemKey = cosmetics?.profile_atmosphere || (
+    PROFILE_ATMOSPHERE_KEYS.has(cosmetics?.profile_bg) ? cosmetics.profile_bg : ''
+  );
+  return itemKey ? getCosmeticEffect({ profile_atmosphere: itemKey }, 'profile_atmosphere') : { cls: '', style: '' };
+}
+export const getProfileAtmosphere = getAtmosphereEffect;
+
 /** Return only a curated, code-owned atmosphere effect name. */
 export function getProfileAtmosphereEffect(cosmetics) {
-  return PROFILE_ATMOSPHERE_EFFECTS[cosmetics?.profile_bg] || '';
+  return PROFILE_ATMOSPHERE_EFFECTS[cosmetics?.profile_atmosphere]
+    || PROFILE_ATMOSPHERE_EFFECTS[cosmetics?.profile_bg]
+    || '';
 }
 export const getRollEffect = cosmetics => getCosmeticEffect(cosmetics, 'roll_effect');
 export const getLbTheme = cosmetics => getCosmeticEffect(cosmetics, 'lb_theme');

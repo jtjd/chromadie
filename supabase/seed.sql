@@ -223,10 +223,10 @@ INSERT INTO public.shop_items (
   item_key, name, slot, cost, css_type, css_value, available_from, available_until,
   rarity, description, collection, stackable, access_tier, entitlement_key
 ) VALUES
-  ('bg_rain', 'Rainfall', 'profile_bg', 1200000, 'class', 'profile-effect-rain', NULL, NULL, 'Epic', 'A quiet curtain of rain falls through your profile atmosphere.', 'Weather', false, 'earned', NULL),
-  ('bg_snow', 'Soft Snow', 'profile_bg', 1800000, 'class', 'profile-effect-snow', NULL, NULL, 'Epic', 'Slow snow drifts across a cold, luminous atmosphere.', 'Weather', false, 'earned', NULL),
-  ('bg_fireflies', 'Fireflies', 'profile_bg', 2400000, 'class', 'profile-effect-fireflies', NULL, NULL, 'Mythic', 'Warm points of light wander through the dark like fireflies.', 'Weather', false, 'earned', NULL),
-  ('bg_scanlines', 'Signal Scanlines', 'profile_bg', 900000, 'class', 'profile-effect-scanlines', NULL, NULL, 'Rare', 'A restrained analog scanline texture gives the profile a signal glow.', 'Digital Landscape', false, 'earned', NULL)
+  ('bg_rain', 'Rainfall', 'profile_atmosphere', 1200000, 'class', 'profile-effect-rain', NULL, NULL, 'Epic', 'Animated rain overlay across the full profile page.', 'Weather', false, 'earned', NULL),
+  ('bg_snow', 'Soft Snow', 'profile_atmosphere', 1800000, 'class', 'profile-effect-snow', NULL, NULL, 'Epic', 'Animated snow overlay across the full profile page.', 'Weather', false, 'earned', NULL),
+  ('bg_fireflies', 'Fireflies', 'profile_atmosphere', 2400000, 'class', 'profile-effect-fireflies', NULL, NULL, 'Mythic', 'Animated firefly lights across the full profile page.', 'Weather', false, 'earned', NULL),
+  ('bg_scanlines', 'Signal Scanlines', 'profile_atmosphere', 900000, 'class', 'profile-effect-scanlines', NULL, NULL, 'Rare', 'Animated scanlines across the full profile page.', 'Digital Landscape', false, 'earned', NULL)
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,

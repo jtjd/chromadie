@@ -947,3 +947,11 @@ glow were removed so the roll reads as a profile module with a clear action.
   configuration surface into the first available editor row.
 - Added a contract test for the new settings information architecture and
   reduced-motion styling.
+
+## 2026-08-01 — Render profile atmosphere effects across the page
+
+Separated weather cosmetics from card backgrounds with a new
+`profile_atmosphere` slot. Rain, snow, fireflies, and scanlines now render via
+the fixed full-viewport atmosphere layer on public profiles, while existing
+background cosmetics remain card-scoped. Existing weather loadouts are migrated
+without changing item keys or entitlement checks.
