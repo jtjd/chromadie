@@ -909,3 +909,10 @@ phase, with an immediate reduced-motion equivalent.
   the existing session is hydrating.
 - Let profile settings render from the current account profile immediately
   while deeper configuration data refreshes in place.
+
+## 2026-08-01 — Reconcile additive catalog migrations
+
+- Updated the catalog drift check to include the additive atmosphere catalog
+  migration on top of the base live snapshot.
+- Parsed all `shop_items` insert blocks in the seed and supported SQL boolean
+  values, keeping fresh resets and remote catalog checks aligned.

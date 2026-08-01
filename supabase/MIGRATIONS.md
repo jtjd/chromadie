@@ -46,8 +46,9 @@ exists when it runs.
 
 Catalog source of truth:
 
-- `migrations/20260710190000_snapshot_live_shop_catalog.sql` is the versioned live snapshot.
-- `seed.sql` mirrors that snapshot for fresh reset reproducibility.
+- `migrations/20260710190000_snapshot_live_shop_catalog.sql` is the versioned live snapshot;
+  additive catalog migrations are composed on top of it by the drift checker.
+- `seed.sql` mirrors the snapshot and its additive catalog extensions for fresh reset reproducibility.
 - `npm run check:catalog-drift` detects snapshot/seed drift and checks the remote catalog when
   Supabase credentials are available.
 

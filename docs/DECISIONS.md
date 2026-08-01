@@ -1824,3 +1824,12 @@ account profile while deeper configuration and social data refresh, so normal
 shop/editor navigation does not show an auth lock or a loading interstitial.
 Direct refreshes and real profile/account errors retain their existing auth and
 retry boundaries.
+
+## 2026-08-01 — Compose additive catalog migrations in drift checks
+
+The catalog drift checker now treats the versioned live snapshot as the base
+catalog and composes explicitly listed additive catalog migrations on top of
+it. It also parses every `shop_items` insert block in `seed.sql`, so newly
+added catalog rows are compared without editing an already-applied snapshot
+migration. The atmosphere catalog migration remains the source for the four
+weather effect rows that are present in the live catalog.

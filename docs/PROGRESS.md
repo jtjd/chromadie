@@ -985,3 +985,13 @@ legal navigation preserves the mounted session and shared atmosphere. The
 profile settings surface renders an immediate draft from the hydrated profile
 while its full context refreshes, and protected routes no longer show
 `GuestLock` during auth hydration.
+
+## 2026-08-01 — Reconcile additive shop catalog rows
+
+- Updated `check:catalog-drift` to compose the atmosphere catalog migration
+  with the base live snapshot.
+- Updated the parser to read all catalog insert blocks and SQL booleans, so
+  the four intentional weather rows no longer appear as unexpected remote
+  items.
+- Added contract coverage and documented the snapshot-plus-extension model;
+  no database migration or catalog data change was required.

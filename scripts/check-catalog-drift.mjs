@@ -9,6 +9,9 @@ const snapshotPath = path.join(
   repoRoot,
   'supabase/migrations/20260710190000_snapshot_live_shop_catalog.sql'
 );
+const catalogExtensionPaths = [
+  path.join(repoRoot, 'supabase/migrations/20260801110000_profile_atmosphere_catalog.sql')
+];
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
 
 function fail(message) {
@@ -47,6 +50,8 @@ function splitSqlValues(row, source) {
 
 function decodeSqlValue(value, source) {
   if (value.toUpperCase() === 'NULL') return null;
+  if (value.toUpperCase() === 'TRUE') return 'true';
+  if (value.toUpperCase() === 'FALSE') return 'false';
   if (value.startsWith("'") && value.endsWith("'")) {
     return value.slice(1, -1).replaceAll("''", "'");
   }
@@ -55,51 +60,60 @@ function decodeSqlValue(value, source) {
 }
 
 function parseCatalog(sql, source) {
-  const insert = sql.match(
-    /INSERT INTO public\.shop_items\s*\(([^)]+)\)\s*VALUES\s*([\s\S]*?)\nON CONFLICT/
-  );
-  if (!insert) fail(`could not find shop_items insert in ${source}`);
+  const inserts = [...sql.matchAll(
+    /INSERT INTO public\.shop_items\s*\(([^)]+)\)\s*VALUES\s*([\s\S]*?)\nON CONFLICT/g
+  )];
+  if (!inserts.length) fail(`could not find shop_items insert in ${source}`);
 
-  const columns = insert[1].split(',').map(column => column.trim());
+  let columns = null;
   const rows = [];
-  let rowStart = -1;
-  let depth = 0;
-  let quoted = false;
-  const body = insert[2];
+  for (const insert of inserts) {
+    const insertColumns = insert[1].split(',').map(column => column.trim());
+    if (!columns) columns = insertColumns;
+    const body = insert[2];
+    let rowStart = -1;
+    let depth = 0;
+    let quoted = false;
 
-  for (let index = 0; index < body.length; index += 1) {
-    const character = body[index];
-    if (character === "'") {
-      if (quoted && body[index + 1] === "'") index += 1;
-      else quoted = !quoted;
-      continue;
+    for (let index = 0; index < body.length; index += 1) {
+      const character = body[index];
+      if (character === "'") {
+        if (quoted && body[index + 1] === "'") index += 1;
+        else quoted = !quoted;
+        continue;
+      }
+      if (quoted) continue;
+      if (character === '(') {
+        if (depth === 0) rowStart = index + 1;
+        depth += 1;
+      } else if (character === ')') {
+        depth -= 1;
+        if (depth === 0) rows.push({ values: body.slice(rowStart, index), columns: insertColumns });
+        if (depth < 0) fail(`unbalanced row delimiters in ${source}`);
+      }
     }
-    if (quoted) continue;
-    if (character === '(') {
-      if (depth === 0) rowStart = index + 1;
-      depth += 1;
-    } else if (character === ')') {
-      depth -= 1;
-      if (depth === 0) rows.push(body.slice(rowStart, index));
-      if (depth < 0) fail(`unbalanced row delimiters in ${source}`);
-    }
+    if (quoted || depth !== 0) fail(`malformed shop_items insert in ${source}`);
   }
-
-  if (quoted || depth !== 0) fail(`malformed shop_items insert in ${source}`);
 
   const catalog = new Map();
   for (const row of rows) {
-    const values = splitSqlValues(row, source).map(value => decodeSqlValue(value, source));
-    if (values.length !== columns.length) {
-      fail(`expected ${columns.length} values but found ${values.length} in ${source}`);
+    const values = splitSqlValues(row.values, source).map(value => decodeSqlValue(value, source));
+    if (values.length !== row.columns.length) {
+      fail(`expected ${row.columns.length} values but found ${values.length} in ${source}`);
     }
-    const item = Object.fromEntries(columns.map((column, index) => [column, values[index]]));
+    const item = Object.fromEntries(row.columns.map((column, index) => [column, values[index]]));
     if (!item.item_key) fail(`row without item_key in ${source}`);
-    if (catalog.has(item.item_key)) fail(`duplicate key ${item.item_key} in ${source}`);
-    catalog.set(item.item_key, item);
+    catalog.set(item.item_key, { ...(catalog.get(item.item_key) || {}), ...item });
   }
 
   return { columns, catalog };
+}
+
+function mergeCatalog(target, extension) {
+  for (const [itemKey, item] of extension.catalog) {
+    target.catalog.set(itemKey, { ...(target.catalog.get(itemKey) || {}), ...item });
+  }
+  return target;
 }
 
 function applyCostUpdates(sql, catalog, source) {
@@ -176,6 +190,9 @@ async function readRemoteCatalog(columns, url, key) {
 }
 
 const snapshot = await readLocalCatalog(snapshotPath);
+for (const extensionPath of catalogExtensionPaths) {
+  mergeCatalog(snapshot, await readLocalCatalog(extensionPath));
+}
 const seed = await readLocalCatalog(seedPath);
 compareCatalogs(snapshot, seed, 'supabase/seed.sql');
 

@@ -36,10 +36,11 @@ test('profile atmosphere effects render as a full-page layer', async () => {
 });
 
 test('weather cosmetics migrate to a separate atmosphere slot without changing item keys', async () => {
-  const [migration, catalogMigration, seed] = await Promise.all([
+  const [migration, catalogMigration, seed, catalogDrift] = await Promise.all([
     read('supabase/migrations/20260801100000_profile_atmosphere_slot.sql'),
     read('supabase/migrations/20260801110000_profile_atmosphere_catalog.sql'),
-    read('supabase/seed.sql')
+    read('supabase/seed.sql'),
+    read('scripts/check-catalog-drift.mjs')
   ]);
 
   assert.match(migration, /profile_atmosphere/);
@@ -56,4 +57,7 @@ test('weather cosmetics migrate to a separate atmosphere slot without changing i
   assert.match(seed, /'bg_snow', 'Soft Snow', 'profile_atmosphere'/);
   assert.match(seed, /'bg_fireflies', 'Fireflies', 'profile_atmosphere'/);
   assert.match(seed, /'bg_scanlines', 'Signal Scanlines', 'profile_atmosphere'/);
+  assert.match(catalogDrift, /catalogExtensionPaths/);
+  assert.match(catalogDrift, /20260801110000_profile_atmosphere_catalog\.sql/);
+  assert.match(catalogDrift, /matchAll/);
 });
