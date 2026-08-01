@@ -130,6 +130,9 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(settings, /processProfileImage\(file, 'avatar'\)/);
   assert.match(settings, /processProfileImage\(file, 'background'\)/);
   assert.match(settings, /update_my_profile_expression/);
+  assert.match(settings, /profile-expression-editor__audio-player/);
+  assert.match(settings, /toggleAudio/);
+  assert.match(settings, /Seek profile audio/);
   assert.match(identity, /failedAvatarSource/);
   assert.match(identity, /on:error/);
   assert.match(atmosphere, /background-position: center/);

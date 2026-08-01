@@ -496,6 +496,11 @@
 .identity-editor__save { min-height: 2.75rem; border: 1px solid var(--color-ink-strong); border-radius: var(--radius-sm); padding: 0 1.25rem; background: var(--color-ink-strong); color: var(--color-canvas-deep); font: 600 var(--type-small)/1 var(--font-body-stack); cursor: pointer; }
 .identity-editor__save:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
 .identity-editor__save:disabled { cursor: not-allowed; opacity: .55; }
+.profile-settings-page .identity-editor .foundation-module__body { display: block; }
+.profile-settings-page .identity-editor .foundation-module__body > .identity-editor__form { display: grid; gap: 1rem; }
+.profile-settings-page .identity-editor__fields { grid-template-columns: minmax(0, 1fr); }
+.profile-settings-page .identity-editor__field textarea { min-height: 9rem; }
+.profile-settings-page .identity-editor__footer { align-items: center; }
 @media (max-width: 48rem) {
   .identity-editor__fields { grid-template-columns: 1fr; }
   .identity-editor .foundation-module__body { grid-template-columns:1fr; }

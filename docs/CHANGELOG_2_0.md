@@ -844,3 +844,10 @@ phase, with an immediate reduced-motion equivalent.
 - Replaced poetic settings copy with concise, instructional text.
 - Removed redundant public-profile links from the editor body.
 - Reduced the intro footprint and widened the live profile preview.
+
+## 2026-08-01 — Improve settings editor density
+
+- Expanded the profile bio field across the available editor width.
+- Added a themed staff audio player with play/pause, seeking, progress, and
+  duration controls.
+- Tightened spacing between audio details, playback, and upload actions.

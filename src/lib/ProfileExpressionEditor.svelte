@@ -21,6 +21,10 @@
   let avatarPreviewSrc = '';
   let backgroundPreviewSrc = '';
   let audioPreviewSrc = '';
+  let audioElement;
+  let audioPlaying = false;
+  let audioCurrentTime = 0;
+  let audioDuration = 0;
   let spotifyUrl = '';
   let busy = false;
   let status = '';
@@ -46,6 +50,7 @@
   $: avatarSrc = avatarPreviewSrc || getProfileMediaUrl(expression.avatar_path, mediaCacheKey);
   $: backgroundSrc = backgroundPreviewSrc || getProfileMediaUrl(expression.background_path, mediaCacheKey);
   $: audioSrc = audioPreviewSrc || getProfileMediaUrl(expression.audio_path, mediaCacheKey);
+  $: audioProgress = audioDuration > 0 ? Math.min(100, (audioCurrentTime / audioDuration) * 100) : 0;
 
   function formatInputLimit(bytes) {
     const megabytes = bytes / (1024 * 1024);
@@ -70,6 +75,41 @@
   function setFeedback(nextError = '', nextStatus = '') {
     error = nextError;
     status = nextStatus;
+  }
+
+  function formatAudioTime(value) {
+    if (!Number.isFinite(value) || value < 0) return '0:00';
+    const totalSeconds = Math.floor(value);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+    return `${minutes}:${seconds}`;
+  }
+
+  async function toggleAudio() {
+    if (!audioElement) return;
+    if (audioElement.paused) {
+      try {
+        await audioElement.play();
+      } catch {
+        setFeedback('', 'Press play to start the profile audio preview.');
+      }
+    } else {
+      audioElement.pause();
+    }
+  }
+
+  function updateAudioMetadata(event) {
+    audioDuration = Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0;
+  }
+
+  function updateAudioTime(event) {
+    audioCurrentTime = event.currentTarget.currentTime || 0;
+  }
+
+  function seekAudio(event) {
+    if (!audioElement || !audioDuration) return;
+    audioElement.currentTime = (Number(event.currentTarget.value) / 100) * audioDuration;
+    audioCurrentTime = audioElement.currentTime;
   }
 
   async function saveExpression(nextExpression) {
@@ -356,21 +396,41 @@
   </div>
 
   {#if staff}
-    <div class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
+    <div class="profile-expression-editor__section profile-expression-editor__section--audio">
       <div>
-        <p class="profile-expression-editor__eyebrow">Staff alpha</p>
+        <p class="profile-expression-editor__eyebrow">Staff audio</p>
         <h3>Profile audio</h3>
-        <p class="profile-expression-editor__section-copy">Upload one MP3 up to 5 MB. It loops after playback starts and attempts autoplay on public profiles when the browser allows it.</p>
+        <p class="profile-expression-editor__section-copy">Upload an MP3 up to 5 MB for the public profile. It loops after playback starts and can autoplay when the browser allows it.</p>
       </div>
-      <div style="display:grid;gap:.75rem;max-width:42rem">
+      <div class="profile-expression-editor__audio-block">
         {#if audioSrc}
           {#key audioSrc}
-            <audio src={audioSrc} controls loop preload="auto" aria-label="Profile audio preview"></audio>
+            <div class="profile-expression-editor__audio-player">
+              <audio
+                bind:this={audioElement}
+                class="profile-expression-editor__audio-native"
+                src={audioSrc}
+                loop
+                preload="metadata"
+                aria-label="Profile audio preview"
+                on:loadedmetadata={updateAudioMetadata}
+                on:timeupdate={updateAudioTime}
+                on:play={() => audioPlaying = true}
+                on:pause={() => audioPlaying = false}
+              ></audio>
+              <button type="button" class="profile-expression-editor__audio-play" aria-label={audioPlaying ? 'Pause profile audio' : 'Play profile audio'} aria-pressed={audioPlaying} on:click={toggleAudio}>
+                <span aria-hidden="true">{audioPlaying ? 'Ⅱ' : '▶'}</span>
+              </button>
+              <div class="profile-expression-editor__audio-track">
+                <div class="profile-expression-editor__audio-meta"><strong>{audioPlaying ? 'Playing profile audio' : 'Profile audio preview'}</strong><time>{formatAudioTime(audioCurrentTime)} / {formatAudioTime(audioDuration)}</time></div>
+                <input class="profile-expression-editor__audio-range" type="range" min="0" max="100" step="0.1" value={audioProgress} style={`--audio-progress:${audioProgress}%`} aria-label="Seek profile audio" on:input={seekAudio} />
+              </div>
+            </div>
           {/key}
         {:else}
-          <p style="margin:0;color:var(--color-ink-muted)">No profile audio configured.</p>
+          <p class="profile-expression-editor__audio-empty">No profile audio configured.</p>
         {/if}
-        <p>MP3 only · up to 5 MB.</p>
+        <p class="profile-expression-editor__audio-limit">MP3 only · up to 5 MB.</p>
         <div class="profile-expression-editor__actions">
           <input bind:this={audioInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={handleAudioChange} />
           <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => audioInput?.click()}>{expression.audio_path ? 'Replace audio' : 'Upload audio'}</button>
@@ -400,3 +460,106 @@
   {#if error}<p class="profile-expression-editor__message profile-expression-editor__message--error" style="margin:0" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-expression-editor__message" style="margin:0" role="status" aria-live="polite">{status}</p>{/if}
 </Module>
+
+<style>
+  .profile-expression-editor__section--audio {
+    display: grid;
+    gap: 0.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-line-subtle);
+  }
+
+  .profile-expression-editor__audio-block {
+    display: grid;
+    gap: 0.55rem;
+    max-width: 42rem;
+  }
+
+  .profile-expression-editor__audio-player {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid var(--color-line-subtle);
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 12%, var(--surface-inset)), var(--surface-inset));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .profile-expression-editor__audio-native {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .profile-expression-editor__audio-play {
+    display: grid;
+    width: 2.65rem;
+    height: 2.65rem;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 58%, transparent);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+    color: var(--color-ink-strong);
+    font: 700 0.78rem / 1 var(--font-body-stack);
+    cursor: pointer;
+    transition: background-color var(--motion-base) var(--motion-ease-standard), transform var(--motion-fast) var(--motion-ease-standard);
+  }
+
+  .profile-expression-editor__audio-play:hover,
+  .profile-expression-editor__audio-play:focus-visible {
+    background: color-mix(in srgb, var(--color-accent) 32%, transparent);
+  }
+
+  .profile-expression-editor__audio-play:hover { transform: translateY(-1px); }
+  .profile-expression-editor__audio-play:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
+
+  .profile-expression-editor__audio-track { display: grid; min-width: 0; gap: 0.5rem; }
+  .profile-expression-editor__audio-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; min-width: 0; }
+  .profile-expression-editor__audio-meta strong { overflow: hidden; color: var(--color-ink-strong); font-size: var(--type-small); text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__audio-meta time { flex: 0 0 auto; color: var(--color-ink-muted); font: 600 var(--type-label) / 1 var(--font-mono-stack); }
+
+  .profile-expression-editor__audio-range {
+    width: 100%;
+    height: 0.9rem;
+    margin: 0;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .profile-expression-editor__audio-range::-webkit-slider-runnable-track {
+    height: 0.22rem;
+    border-radius: 999px;
+    background: linear-gradient(to right, var(--color-accent-bright) var(--audio-progress), rgba(255, 255, 255, 0.14) var(--audio-progress));
+  }
+
+  .profile-expression-editor__audio-range::-moz-range-track {
+    height: 0.22rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .profile-expression-editor__audio-range::-moz-range-progress { height: 0.22rem; border-radius: 999px; background: var(--color-accent-bright); }
+  .profile-expression-editor__audio-range::-webkit-slider-thumb { width: 0.72rem; height: 0.72rem; margin-top: -0.25rem; appearance: none; border: 0; border-radius: 50%; background: var(--color-ink-strong); box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--color-accent) 34%, transparent); }
+  .profile-expression-editor__audio-range::-moz-range-thumb { width: 0.72rem; height: 0.72rem; border: 0; border-radius: 50%; background: var(--color-ink-strong); box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--color-accent) 34%, transparent); }
+  .profile-expression-editor__audio-range:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
+
+  .profile-expression-editor__audio-empty,
+  .profile-expression-editor__audio-limit { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.45; }
+
+  @media (max-width: 34rem) {
+    .profile-expression-editor__audio-player { grid-template-columns: auto minmax(0, 1fr); padding: 0.65rem; }
+    .profile-expression-editor__audio-meta { align-items: flex-start; flex-direction: column; gap: 0.3rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .profile-expression-editor__audio-play { transition: none; }
+    .profile-expression-editor__audio-play:hover { transform: none; }
+  }
+</style>

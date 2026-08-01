@@ -916,5 +916,14 @@ the remaining Phase 11 boundary.
   shortcut from the editor body.
 - Reduced intro spacing and widened the live preview column so configuration
   controls begin higher and remain easier to inspect.
+
+## 2026-08-01 — Improve identity and audio editor density
+
+- Expanded the bio field to use the full editor card width and placed its save
+  row directly below the field.
+- Replaced the staff audio browser controls with a compact themed player that
+  supports play/pause, seeking, progress, and duration.
+- Removed the large gap between the audio description, preview, and upload
+  actions.
 - Added a contract test for the new settings information architecture and
   reduced-motion styling.

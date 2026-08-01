@@ -1737,3 +1737,8 @@ should tell the owner what a control changes, avoid aspirational or poetic
 language, and preserve vertical space for the configuration itself. Redundant
 profile links stay out of the editor body when the shared header already
 provides the primary profile action.
+
+The editor also gives primary fields the available width and uses themed media
+controls for owner previews. Native browser audio chrome is not part of the
+settings visual language when a bounded custom control can provide the same
+playback and seeking behavior accessibly.
