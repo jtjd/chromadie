@@ -602,7 +602,7 @@
   {:else if routeMode === 'reset-password'}
     <ResetPassword />
   {:else}
-  <div class="app-shell">
+  <div class="app-shell" class:app-shell--home={homeModeVisible}>
   <a class="skip-link" href="#main-content">Skip to main content</a>
   {#if showAuthModal}
     <div class="auth-modal-overlay" role="presentation" on:click|self={closeAuthModal}>
@@ -726,7 +726,7 @@
     </div>
   {/if}
 
-  {#if !profileModeVisible}
+  {#if !profileModeVisible && !homeModeVisible}
     <ProfileAtmosphere accent={siteAtmosphereColor} secondaryAccent="#2ED3C9" />
   {/if}
 
@@ -845,6 +845,10 @@
     flex-direction: column;
   }
 
+  .app-shell--home {
+    background: #080908;
+  }
+
   .app-main {
     flex: 1 0 auto;
     width: 100%;
@@ -860,6 +864,7 @@
 
   .app-main--home {
     min-height: calc(100dvh - 9.75rem);
+    background: #080908;
   }
 
   .app-main--site > * {

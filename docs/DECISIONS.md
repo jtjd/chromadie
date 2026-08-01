@@ -1833,3 +1833,18 @@ it. It also parses every `shop_items` insert block in `seed.sql`, so newly
 added catalog rows are compared without editing an already-applied snapshot
 migration. The atmosphere catalog migration remains the source for the four
 weather effect rows that are present in the live catalog.
+
+## 2026-08-01 — Prototype a restrained game-native homepage
+
+The homepage is the isolated proving ground for a less generic visual
+language. Keep the approved shared header unchanged, but remove the route-wide
+purple/cyan atmosphere from `/` and give the page a flat warm-black canvas.
+Use homepage-scoped Spline Sans and IBM Plex Mono so the prototype can test a
+geometric game identity without changing profile or application typography.
+
+The opening composition combines a direct product statement, the existing
+claim/profile actions, and one static profile-and-roll specimen. The specimen
+reuses the production `IdentityCard` so it stays faithful to the public profile
+instead of inventing a parallel marketing mockup. A compact daily result sits
+below it as secondary status. It remains presentation-only: no sample roll,
+score, reward, or countdown becomes client authority.

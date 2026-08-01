@@ -916,3 +916,14 @@ phase, with an immediate reduced-motion equivalent.
   migration on top of the base live snapshot.
 - Parsed all `shop_items` insert blocks in the seed and supported SQL boolean
   values, keeping fresh resets and remote catalog checks aligned.
+
+## 2026-08-01 — Prototype a quieter game-native homepage
+
+- Kept the shared application header unchanged while giving `/` a flat
+  warm-black background without the default purple/cyan atmosphere.
+- Introduced homepage-scoped geometric and technical typography.
+- Replaced the glowing SaaS-style mockup with a restrained specimen that
+  reuses the live public-profile identity card and a secondary daily-roll
+  status strip.
+- Removed showcase prism, spectrum, sparkle, orb, nested-glass, and colored
+  frame treatments while preserving existing homepage actions and analytics.

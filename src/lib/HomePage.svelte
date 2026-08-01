@@ -1,4 +1,7 @@
 <script>
+  import '@fontsource-variable/spline-sans/wght.css';
+  import '@fontsource/ibm-plex-mono/latin-400.css';
+  import '@fontsource/ibm-plex-mono/latin-600.css';
   import { createEventDispatcher } from 'svelte';
   import { isUsernameShapeValid } from './usernamePolicy.js';
   import { trackProductEvent } from './productAnalytics.js';
@@ -27,102 +30,400 @@
     trackProductEvent('username_claim_completed');
     dispatch('claim', { username: nextUsername });
   }
-
 </script>
 
 <main class="home-page" aria-labelledby="home-title">
-  <section class="home-page__hero">
-    <div class="home-page__copy">
-      <p class="home-page__eyebrow">chm.lol · public identity</p>
-      <h1 id="home-title">A customizable public profile with a daily color roll.</h1>
-      <p class="home-page__intro">Add your own background, avatar, music, links, and personal content. Roll once each day to collect colors, unlock profile effects, and move up the leaderboard.</p>
-      <p class="home-page__supporting">Strong rolls make your profile easier to discover.</p>
+  <div class="home-page__inner">
+    <section class="home-page__hero">
+      <div class="home-page__intro-grid">
+        <div class="home-page__copy">
+          <p class="home-page__eyebrow">Daily color profile</p>
+          <h1 id="home-title">A public profile built through one daily color roll.</h1>
+          <p class="home-page__intro">Roll once a day to collect colors, earn EP, unlock cosmetics, and customize a profile you can share.</p>
+        </div>
 
-      <div class="home-page__actions">
-        {#if isAuthenticated}
-          <button class="home-page__primary" type="button" on:click={() => dispatch('profile')}>View your profile <span aria-hidden="true">↗</span></button>
-          <button class="home-page__secondary" type="button" on:click={() => dispatch('roll')}>Roll today’s color</button>
-        {:else}
-          <form class="home-page__claim" on:submit|preventDefault={() => submitClaim()} aria-label="Claim your profile URL">
-            <label for="home-claim-username">Claim your username</label>
-            <div class="home-page__claim-field">
-              <span aria-hidden="true">chm.lol/</span>
-              <input id="home-claim-username" bind:value={claimUsername} on:focus={beginClaim} on:input={beginClaim} placeholder="username" autocomplete="nickname" spellcheck="false" minlength="3" maxlength="20" aria-describedby={claimError ? 'home-claim-error' : 'home-claim-hint'} />
-              <button type="submit">Claim</button>
-            </div>
-            <small id={claimError ? 'home-claim-error' : 'home-claim-hint'} class:home-page__claim-error={claimError} aria-live="polite">{claimError || 'Free to use · One roll each day'}</small>
-          </form>
-        {/if}
+        <div class="home-page__actions">
+          {#if isAuthenticated}
+            <p class="home-page__action-label">Your daily profile</p>
+            <button class="home-page__primary" type="button" on:click={() => dispatch('profile')}>View your profile <span aria-hidden="true">↗</span></button>
+            <button class="home-page__secondary" type="button" on:click={() => dispatch('roll')}>Roll today’s color</button>
+          {:else}
+            <form class="home-page__claim" on:submit|preventDefault={() => submitClaim()} aria-label="Claim your profile URL">
+              <label for="home-claim-username">Claim your username</label>
+              <div class="home-page__claim-field">
+                <span aria-hidden="true">chm.lol/</span>
+                <input id="home-claim-username" bind:value={claimUsername} on:focus={beginClaim} on:input={beginClaim} placeholder="username" autocomplete="nickname" spellcheck="false" minlength="3" maxlength="20" aria-describedby={claimError ? 'home-claim-error' : 'home-claim-hint'} />
+                <button type="submit">Claim</button>
+              </div>
+              <small id={claimError ? 'home-claim-error' : 'home-claim-hint'} class:home-page__claim-error={claimError} aria-live="polite">{claimError || 'Free to use · One roll each day'}</small>
+            </form>
+          {/if}
+        </div>
       </div>
-    </div>
 
-    <HomeRollShowcase />
-  </section>
+      <HomeRollShowcase />
+    </section>
 
-  <section class="home-page__section home-page__loop" aria-labelledby="loop-title">
-    <div class="home-page__section-heading">
-      <p class="home-page__eyebrow">the daily loop</p>
-      <h2 id="loop-title">One roll each day</h2>
-      <a class="home-page__guide-link" href="/how-to-play">How to play <span aria-hidden="true">↗</span></a>
-    </div>
-    <div class="home-page__loop-layout">
+    <section class="home-page__loop" aria-labelledby="loop-title">
+      <div class="home-page__section-heading">
+        <div>
+          <p class="home-page__eyebrow">How it works</p>
+          <h2 id="loop-title">One roll each day</h2>
+        </div>
+        <a class="home-page__guide-link" href="/how-to-play">How to play <span aria-hidden="true">↗</span></a>
+      </div>
+
       <div class="home-page__steps" aria-label="Roll a color, earn EP, move up the leaderboard, and get discovered">
-        <span><b>01</b>Roll a color</span><i aria-hidden="true">→</i><span><b>02</b>Earn EP</span><i aria-hidden="true">→</i><span><b>03</b>Move up the leaderboard</span><i aria-hidden="true">→</i><span><b>04</b>Get discovered</span>
+        <span><b>01</b><strong>Roll a color</strong></span>
+        <span><b>02</b><strong>Earn EP</strong></span>
+        <span><b>03</b><strong>Move up</strong></span>
+        <span><b>04</b><strong>Get discovered</strong></span>
       </div>
-      <div class="home-page__loop-detail">
-        <div class="home-page__roll-result"><span style="background:#B666C9" aria-hidden="true"></span><div><strong>#B666C9</strong><small>today’s color · strong roll</small></div></div>
-        <div class="home-page__leaderboard-preview"><span>leaderboard</span><strong>#12&nbsp; @neonuser</strong><small>public profile · links · music</small></div>
-      </div>
-    </div>
-    <p class="home-page__loop-copy">Your color is scored from its RGB values and special conditions. Strong rolls earn more EP and improve your leaderboard position. Profiles on the leaderboard and discovery pages can lead visitors to your links, music, projects, or other content.</p>
-  </section>
 
+      <p class="home-page__loop-copy">Each color is scored from its RGB values and special conditions. Strong rolls earn more EP, improve your leaderboard position, and bring more visitors to your profile.</p>
+    </section>
+  </div>
 </main>
 
 <style>
-  .home-page { width: min(100%, 78rem); margin-inline: auto; padding: 3rem clamp(1.25rem, 4vw, 3rem) 6rem; color: var(--color-ink-strong); }
-  .home-page__hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(22rem, 34rem); align-items: center; gap: clamp(2rem, 7vw, 7rem); min-height: min(48rem, calc(100dvh - 5rem)); padding-block: clamp(3rem, 8vh, 7rem); }
-  .home-page__copy { max-width: 38rem; }
-  .home-page__eyebrow { margin: 0; color: var(--color-ink-faint); font: 500 .68rem/1.2 var(--font-mono-stack); letter-spacing: .1em; text-transform: lowercase; }
-  .home-page h1 { max-width: 42rem; margin: 1.25rem 0 0; font: 700 clamp(2.7rem, 4.4vw, 4.7rem)/.96 var(--font-display-stack); letter-spacing: -.055em; text-wrap: balance; }
-  .home-page__intro { max-width: 34rem; margin: 1.7rem 0 0; color: var(--color-ink-muted); font-size: clamp(1rem, 1.4vw, 1.16rem); line-height: 1.55; }
-  .home-page__supporting { margin: .8rem 0 0; color: var(--color-accent-bright); font: 500 .78rem/1.4 var(--font-mono-stack); }
-  .home-page__actions { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 1rem 1.25rem; margin-top: 2rem; }
-  .home-page__claim { display: grid; gap: .55rem; min-width: min(100%, 22rem); }
-  .home-page__claim label { color: var(--color-ink-strong); font: 600 .82rem/1 var(--font-body-stack); }
-  .home-page__claim-field { display: flex; align-items: center; min-height: 2.9rem; border: 1px solid rgba(233,235,239,.28); border-radius: var(--radius-sm); background: rgba(7,8,11,.42); color: var(--color-ink-faint); font: 500 .78rem/1 var(--font-mono-stack); }
-  .home-page__claim-field > span { padding-left: .8rem; }
-  .home-page__claim-field input { width: 8rem; min-width: 0; padding: .78rem .25rem; border: 0; outline: 0; background: transparent; color: var(--color-ink-strong); font: inherit; }
-  .home-page__claim-field input:focus-visible { outline: 1px solid var(--color-accent-bright); outline-offset: -2px; }
-  .home-page__claim-field button { align-self: stretch; margin-left: auto; padding-inline: 1rem; border: 0; border-left: 1px solid rgba(233,235,239,.18); background: rgba(139,124,246,.16); color: var(--color-ink-strong); font: 600 .78rem/1 var(--font-body-stack); cursor: pointer; }
-  .home-page__claim-field button:hover { background: rgba(139,124,246,.3); }
-  .home-page__claim small { color: var(--color-ink-faint); font: 500 .68rem/1.35 var(--font-mono-stack); }
-  .home-page__claim-error { color: var(--color-danger) !important; }
-  .home-page__primary, .home-page__secondary { min-height: 2.75rem; padding: .65rem 1rem; border-radius: var(--radius-sm); font: 600 .82rem/1 var(--font-body-stack); cursor: pointer; }
-  .home-page__primary { border: 1px solid rgba(214,255,99,.42); background: rgba(214,255,99,.12); color: #e7f6b7; }
-  .home-page__primary:hover { background: rgba(214,255,99,.2); }
-  .home-page__secondary { border: 1px solid rgba(233,235,239,.2); background: transparent; color: var(--color-ink-muted); }
-  .home-page__secondary:hover { border-color: var(--color-accent-bright); color: var(--color-ink-strong); }
-  .home-page__section { padding-top: clamp(5rem, 10vw, 9rem); }
-  .home-page__section-heading h2 { margin: .55rem 0 0; font: 700 clamp(2rem, 4vw, 3.4rem)/1 var(--font-display-stack); letter-spacing: -.045em; }
-  .home-page__section-heading > p:last-child { margin: .8rem 0 0; color: var(--color-ink-muted); font-size: 1rem; }
-  .home-page__guide-link { display: inline-flex; gap: .4rem; align-items: center; margin-top: 1rem; color: var(--color-accent-bright); font: 600 .76rem/1 var(--font-mono-stack); text-decoration: none; }
-  .home-page__guide-link:hover { color: var(--color-ink-strong); }
-  .home-page__loop { margin-top: 1rem; padding: clamp(2rem, 4vw, 3rem); border: 1px solid rgba(139,124,246,.2); border-radius: 1.2rem; background: radial-gradient(circle at 85% 0%, rgba(139,124,246,.12), transparent 34%), linear-gradient(135deg, rgba(21,16,29,.7), rgba(8,11,17,.72)); box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 1.5rem 4rem rgba(0,0,0,.16); }
-  .home-page__loop-layout { display: grid; gap: 1.4rem; margin-top: 2rem; }
-  .home-page__steps { display: flex; align-items: center; gap: .55rem; padding: .7rem; border: 1px solid rgba(255,255,255,.1); border-radius: .85rem; background: rgba(5,7,13,.38); color: var(--color-ink-strong); font: 600 clamp(.82rem, 1.25vw, 1rem)/1.2 var(--font-body-stack); }
-  .home-page__steps span { display: flex; flex: 1; align-items: baseline; gap: .45rem; min-width: 0; padding: .7rem .55rem; }
-  .home-page__steps b { color: var(--color-accent-bright); font: 500 .58rem/1 var(--font-mono-stack); }
-  .home-page__steps i { color: var(--color-accent-bright); font-style: normal; }
-  .home-page__loop-detail { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .8rem; }
-  .home-page__roll-result, .home-page__leaderboard-preview { display: flex; align-items: center; gap: .7rem; min-height: 4.7rem; padding: 1rem; border: 1px solid rgba(255,255,255,.14); border-radius: .8rem; background: rgba(7,9,16,.6); }
-  .home-page__roll-result > span { width: 2.25rem; height: 2.25rem; border-radius: .55rem; box-shadow: 0 0 1.4rem rgba(182,102,201,.42); }
-  .home-page__roll-result strong, .home-page__leaderboard-preview strong { display: block; font: 700 1rem/1 var(--font-display-stack); }
-  .home-page__roll-result small, .home-page__leaderboard-preview small, .home-page__leaderboard-preview > span { display: block; margin-top: .3rem; color: var(--color-ink-faint); font: 500 .58rem/1.2 var(--font-mono-stack); }
-  .home-page__leaderboard-preview { display: block; }
-  .home-page__leaderboard-preview strong { margin-top: .5rem; color: #d6ff63; }
-  .home-page__loop-copy { max-width: 58rem; margin: 1.4rem 0 0; color: var(--color-ink-muted); font-size: .88rem; line-height: 1.55; }
-  @media (max-width: 48rem) { .home-page { padding-top: 1rem; } .home-page__hero { grid-template-columns: 1fr; min-height: auto; gap: 3rem; padding-block: 3.5rem 2rem; } .home-page__steps { flex-wrap: wrap; } .home-page__steps span { flex: 1 1 calc(50% - 1rem); } .home-page__steps i { display: none; } }
-  @media (max-width: 36rem) { .home-page { padding-inline: 1.1rem; } .home-page h1 { font-size: clamp(2.55rem, 12vw, 3.7rem); } .home-page__actions { align-items: stretch; flex-direction: column; } .home-page__claim { width: 100%; } .home-page__claim-field input { flex: 1; width: auto; } .home-page__steps { align-items: stretch; flex-direction: column; gap: .2rem; } .home-page__steps span { flex: none; } .home-page__loop-detail { grid-template-columns: 1fr; } }
-  @media (prefers-reduced-motion: reduce) { .home-page button { transition: none; } }
+  .home-page {
+    --home-canvas: #080908;
+    --home-surface: #0e100e;
+    --home-surface-raised: #121412;
+    --home-ink: #f1f3ed;
+    --home-ink-muted: #a4a9a0;
+    --home-ink-faint: #737970;
+    --home-line: rgba(241, 243, 237, 0.13);
+    --home-line-strong: rgba(241, 243, 237, 0.24);
+    --home-color: #b7fd4d;
+    --home-font: 'Spline Sans Variable', ui-sans-serif, system-ui, sans-serif;
+    --home-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    color: var(--home-ink);
+    background: var(--home-canvas);
+    font-family: var(--home-font);
+    isolation: isolate;
+  }
+
+  .home-page::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: '';
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0 0.4px, transparent 0.55px);
+    background-size: 19px 19px;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  .home-page__inner {
+    width: min(100%, 78rem);
+    margin-inline: auto;
+    padding: clamp(2.5rem, 6vh, 4.5rem) clamp(1.25rem, 4vw, 3rem) clamp(5rem, 9vw, 8rem);
+  }
+
+  .home-page__hero {
+    display: grid;
+    align-content: center;
+    min-height: calc(100dvh - 4.75rem);
+  }
+
+  .home-page__intro-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(19rem, 0.65fr);
+    align-items: end;
+    gap: clamp(2rem, 7vw, 7rem);
+  }
+
+  .home-page__copy {
+    max-width: 49rem;
+  }
+
+  .home-page__eyebrow,
+  .home-page__action-label {
+    margin: 0;
+    color: var(--home-ink-faint);
+    font: 600 0.67rem / 1.2 var(--home-mono);
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .home-page h1 {
+    max-width: 48rem;
+    margin: 1rem 0 0;
+    color: var(--home-ink);
+    font: 620 clamp(2.75rem, 5.2vw, 5rem) / 0.98 var(--home-font);
+    letter-spacing: -0.055em;
+    text-wrap: balance;
+  }
+
+  .home-page__intro {
+    max-width: 42rem;
+    margin: 1.4rem 0 0;
+    color: var(--home-ink-muted);
+    font-size: clamp(1rem, 1.35vw, 1.13rem);
+    line-height: 1.55;
+  }
+
+  .home-page__actions {
+    display: grid;
+    gap: 0.65rem;
+    align-self: end;
+  }
+
+  .home-page__claim {
+    display: grid;
+    gap: 0.6rem;
+    width: 100%;
+  }
+
+  .home-page__claim label {
+    color: var(--home-ink);
+    font: 600 0.82rem / 1 var(--home-font);
+  }
+
+  .home-page__claim-field {
+    display: flex;
+    align-items: center;
+    min-height: 3.15rem;
+    border: 1px solid var(--home-line-strong);
+    border-radius: 0.55rem;
+    background: var(--home-surface);
+    color: var(--home-ink-faint);
+    font: 400 0.76rem / 1 var(--home-mono);
+  }
+
+  .home-page__claim-field:focus-within {
+    border-color: color-mix(in srgb, var(--home-color) 62%, var(--home-line-strong));
+  }
+
+  .home-page__claim-field > span {
+    padding-left: 0.85rem;
+  }
+
+  .home-page__claim-field input {
+    width: 7rem;
+    min-width: 0;
+    padding: 0.85rem 0.25rem;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--home-ink);
+    font: inherit;
+  }
+
+  .home-page__claim-field input:focus-visible {
+    outline: 0;
+  }
+
+  .home-page__claim-field button {
+    align-self: stretch;
+    margin-left: auto;
+    padding-inline: 1.1rem;
+    border: 0;
+    border-left: 1px solid var(--home-line);
+    background: var(--home-color);
+    color: #11140d;
+    font: 650 0.78rem / 1 var(--home-font);
+    cursor: pointer;
+  }
+
+  .home-page__claim-field button:hover {
+    background: #c7ff72;
+  }
+
+  .home-page__claim small {
+    color: var(--home-ink-faint);
+    font: 400 0.66rem / 1.35 var(--home-mono);
+  }
+
+  .home-page__claim-error {
+    color: #ff8791 !important;
+  }
+
+  .home-page__primary,
+  .home-page__secondary {
+    min-height: 3rem;
+    padding: 0.7rem 1rem;
+    border-radius: 0.55rem;
+    font: 650 0.82rem / 1 var(--home-font);
+    cursor: pointer;
+  }
+
+  .home-page__primary {
+    border: 1px solid var(--home-color);
+    background: var(--home-color);
+    color: #11140d;
+  }
+
+  .home-page__primary:hover {
+    background: #c7ff72;
+  }
+
+  .home-page__secondary {
+    border: 1px solid var(--home-line-strong);
+    background: var(--home-surface);
+    color: var(--home-ink-muted);
+  }
+
+  .home-page__secondary:hover {
+    border-color: var(--home-ink-muted);
+    color: var(--home-ink);
+  }
+
+  .home-page__loop {
+    padding-top: clamp(5rem, 10vw, 8rem);
+    border-top: 1px solid var(--home-line);
+  }
+
+  .home-page__section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .home-page__section-heading h2 {
+    margin: 0.65rem 0 0;
+    color: var(--home-ink);
+    font: 620 clamp(2rem, 4vw, 3.35rem) / 1 var(--home-font);
+    letter-spacing: -0.045em;
+  }
+
+  .home-page__guide-link {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid var(--home-line-strong);
+    color: var(--home-ink-muted);
+    font: 600 0.7rem / 1 var(--home-mono);
+    text-decoration: none;
+  }
+
+  .home-page__guide-link:hover {
+    border-color: var(--home-color);
+    color: var(--home-ink);
+  }
+
+  .home-page__steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 2.25rem;
+    border-top: 1px solid var(--home-line-strong);
+    border-bottom: 1px solid var(--home-line);
+  }
+
+  .home-page__steps span {
+    display: grid;
+    gap: 1.2rem;
+    min-height: 8rem;
+    padding: 1rem 1.1rem 1.25rem;
+  }
+
+  .home-page__steps span + span {
+    border-left: 1px solid var(--home-line);
+  }
+
+  .home-page__steps b {
+    color: var(--home-color);
+    font: 600 0.63rem / 1 var(--home-mono);
+  }
+
+  .home-page__steps strong {
+    align-self: end;
+    color: var(--home-ink);
+    font: 560 clamp(0.95rem, 1.4vw, 1.15rem) / 1.2 var(--home-font);
+  }
+
+  .home-page__loop-copy {
+    max-width: 47rem;
+    margin: 1.35rem 0 0;
+    color: var(--home-ink-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 48rem) {
+    .home-page__inner {
+      padding-top: 2rem;
+    }
+
+    .home-page__hero {
+      min-height: auto;
+    }
+
+    .home-page__intro-grid {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .home-page__actions {
+      max-width: 28rem;
+    }
+
+    .home-page__steps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .home-page__steps span:nth-child(3) {
+      border-left: 0;
+    }
+
+    .home-page__steps span:nth-child(n + 3) {
+      border-top: 1px solid var(--home-line);
+    }
+  }
+
+  @media (max-width: 36rem) {
+    .home-page__inner {
+      padding-inline: 1.1rem;
+      padding-bottom: 5rem;
+    }
+
+    .home-page h1 {
+      font-size: clamp(2.45rem, 11.5vw, 3.45rem);
+    }
+
+    .home-page__claim-field input {
+      flex: 1;
+      width: auto;
+    }
+
+    .home-page__section-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .home-page__steps {
+      grid-template-columns: 1fr;
+    }
+
+    .home-page__steps span {
+      grid-template-columns: 2rem 1fr;
+      align-items: center;
+      min-height: 4.5rem;
+      gap: 0.6rem;
+    }
+
+    .home-page__steps span + span,
+    .home-page__steps span:nth-child(3) {
+      border-top: 1px solid var(--home-line);
+      border-left: 0;
+    }
+
+    .home-page__steps strong {
+      align-self: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .home-page button,
+    .home-page a {
+      transition: none;
+    }
+  }
 </style>

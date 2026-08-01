@@ -995,3 +995,20 @@ while its full context refreshes, and protected routes no longer show
   items.
 - Added contract coverage and documented the snapshot-plus-extension model;
   no database migration or catalog data change was required.
+
+## 2026-08-01 — Build the homepage identity-game prototype
+
+- Preserved the current header and isolated the new visual language to `/`.
+- Replaced the ambient navy/purple canvas with warm black, faint grain, and a
+  single sample roll color.
+- Added homepage-scoped Spline Sans and IBM Plex Mono assets.
+- Reused the production identity card in the homepage preview and placed the
+  sample daily result in a compact status strip below it, keeping the example
+  faithful to live public profiles.
+- Simplified the daily-loop section and retained the existing claim,
+  authenticated profile, analytics, routing, and accessibility contracts.
+- Captured 1440×900, 1280×720, 390×844, and daily-loop evidence under
+  `artifacts/homepage-game-prototype/`.
+- Build, checks, lint, tests, link, CSP, drift, scoring, and database security
+  validation pass. The existing performance budget remains over its thresholds
+  at 663.52 kB JavaScript / 625 kB and 339.69 kB CSS / 295 kB; HTML passes.

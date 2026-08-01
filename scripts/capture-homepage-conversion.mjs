@@ -5,13 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const output = resolve(root, 'artifacts/homepage-conversion');
+const output = resolve(root, 'artifacts/homepage-game-prototype');
 const chromium = process.env.CHROMIUM_BIN || '/usr/bin/chromium';
 const captures = [
   { name: 'homepage-desktop-1440x900', width: 1440, height: 900, scroll: 0 },
+  { name: 'homepage-compact-1280x720', width: 1280, height: 720, scroll: 0 },
   { name: 'homepage-mobile-390x844', width: 390, height: 844, scroll: 0 },
-  { name: 'example-profiles-1440x900', width: 1440, height: 900, scroll: 'examples' },
-  { name: 'roll-discovery-1440x900', width: 1440, height: 900, scroll: 'loop' }
+  { name: 'daily-loop-1440x900', width: 1440, height: 900, scroll: 'loop' }
 ];
 
 await mkdir(output, { recursive: true });
@@ -22,9 +22,7 @@ async function pageTarget(port) {
       const pages = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
       const page = pages.find(item => item.type === 'page');
       if (page) return page;
-    } catch {
-      continue;
-    }
+    } catch {}
     await delay(100);
   }
   throw new Error('Chromium page target unavailable');
@@ -69,6 +67,7 @@ async function capture(item, index) {
     await run('Page.enable');
     await run('Emulation.setDeviceMetricsOverride', { width: item.width, height: item.height, deviceScaleFactor: 1, mobile: false });
     await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { if (document.querySelector('.home-page') || Date.now() - start > 12000) resolve(true); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
+    await delay(250);
     if (item.scroll) {
       await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { const target = document.querySelector('.home-page__${item.scroll}'); if (target) { target.scrollIntoView({ block: 'start' }); resolve(true); } else if (Date.now() - start > 12000) resolve(false); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
       await delay(350);
