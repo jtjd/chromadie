@@ -32,8 +32,9 @@ test('profile atmosphere effects render as a full-page layer', async () => {
 });
 
 test('weather cosmetics migrate to a separate atmosphere slot without changing item keys', async () => {
-  const [migration, seed] = await Promise.all([
+  const [migration, catalogMigration, seed] = await Promise.all([
     read('supabase/migrations/20260801100000_profile_atmosphere_slot.sql'),
+    read('supabase/migrations/20260801110000_profile_atmosphere_catalog.sql'),
     read('supabase/seed.sql')
   ]);
 
@@ -43,6 +44,10 @@ test('weather cosmetics migrate to a separate atmosphere slot without changing i
   assert.match(migration, /jsonb_build_object\('profile_atmosphere'/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.equip_item/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.unequip_item/);
+  assert.match(catalogMigration, /INSERT INTO public\.shop_items/);
+  assert.match(catalogMigration, /ON CONFLICT \(item_key\) DO UPDATE/);
+  assert.match(catalogMigration, /'bg_rain'.*'profile_atmosphere'/);
+  assert.match(catalogMigration, /'bg_scanlines'.*'profile_atmosphere'/);
   assert.match(seed, /'bg_rain', 'Rainfall', 'profile_atmosphere'/);
   assert.match(seed, /'bg_snow', 'Soft Snow', 'profile_atmosphere'/);
   assert.match(seed, /'bg_fireflies', 'Fireflies', 'profile_atmosphere'/);
