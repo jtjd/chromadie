@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-01 — Add interactive roll and profile discovery to the homepage
+
+- The homepage daily-roll example now opens into a local sample reveal with a
+  real rarity, score, and condition presentation.
+- Visitors can continue from the completed preview into profile creation;
+  authenticated users can open their profile.
+- Added a “Today on Chromadie” rail using public discovery entries, direct
+  profile navigation, retry handling, and an intentional empty state.
+- Preserved server-authoritative roll behavior and public-data boundaries.
+
 ## 2026-07-31 — Homepage conversion pass
 
 - The homepage now introduces the customizable `chm.lol/username` profile

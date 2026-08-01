@@ -93,6 +93,7 @@
   let replayCanonical = null;
 
   $: cosmetics = $equippedItems || {};
+  $: fixtureRollReady = visualFixture === 'guest-onboarding' && Boolean(fixtureResult);
   $: rollEff = getRollEffect(cosmetics);
   $: orbEff = getOrbShape(cosmetics);
   $: rewardBadges = revealedBadges.filter(id => SYSTEM_BADGE_IDS.has(id));
@@ -372,7 +373,7 @@
 
   async function initiateRoll(isReroll = false) {
     if (!canInitiateRoll({
-      authInitialized: $authInitialized,
+      authInitialized: $authInitialized || fixtureRollReady,
       loading,
       rerollRequestInFlight,
       isReroll,
@@ -516,7 +517,7 @@
         <h3>Roll your color.</h3>
         <p class="profile-roll__copy">One daily roll adds a new color to your profile.</p>
       </div>
-      <button type="button" class="profile-roll__reveal-button" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
+      <button type="button" class="profile-roll__reveal-button" on:click={() => initiateRoll(false)} disabled={loading || (!$authInitialized && !fixtureRollReady)}>
         <span class="profile-roll__reveal-swatch" aria-hidden="true"><span></span></span>
         <span class="profile-roll__reveal-copy"><strong>{loading ? 'Preparing…' : 'Roll today'}</strong><small>One roll available</small></span>
         <span class="profile-roll__reveal-arrow" aria-hidden="true">→</span>

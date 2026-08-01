@@ -4,6 +4,10 @@ import { readFile } from 'node:fs/promises';
 
 const home = await readFile(new URL('../src/lib/HomePage.svelte', import.meta.url), 'utf8');
 const showcase = await readFile(new URL('../src/lib/HomeRollShowcase.svelte', import.meta.url), 'utf8');
+const demoRoll = await readFile(new URL('../src/lib/HomeDemoRoll.svelte', import.meta.url), 'utf8');
+const discovery = await readFile(new URL('../src/lib/HomeDiscovery.svelte', import.meta.url), 'utf8');
+const guestRollFixture = await readFile(new URL('../src/lib/guestRollFixture.js', import.meta.url), 'utf8');
+const profileRoll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
 const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
 const guestProfile = await readFile(new URL('../src/lib/GuestProfileOnboarding.svelte', import.meta.url), 'utf8');
 
@@ -38,6 +42,20 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(showcase, /--home-profile-accent/);
   assert.match(showcase, /18 colors collected · next roll in 08:42:16/);
   assert.match(showcase, /home-showcase__roll-result/);
+  assert.match(showcase, /import HomeDemoRoll from '.\/HomeDemoRoll\.svelte'/);
+  assert.match(showcase, /Try a sample roll/);
+  assert.match(home, /import HomeDiscovery from '.\/HomeDiscovery\.svelte'/);
+  assert.match(home, /<HomeDiscovery on:navigate={forwardAction}/);
+  assert.match(demoRoll, /visualFixture="guest-onboarding"/);
+  assert.match(demoRoll, /fixtureResult={guestRollFixture}/);
+  assert.doesNotMatch(demoRoll, /requestRoll|supabase\.rpc/);
+  assert.match(discovery, /get_public_discovery/);
+  assert.match(discovery, /normalizeDiscoveryResponse/);
+  assert.match(discovery, /p_limit: DISCOVERY_LIMIT/);
+  assert.match(discovery, /No public profiles have entered today/);
+  assert.match(guestRollFixture, /hex: '#B666C9'/);
+  assert.match(profileRoll, /fixtureRollReady = visualFixture === 'guest-onboarding'/);
+  assert.match(profileRoll, /authInitialized: \$authInitialized \|\| fixtureRollReady/);
   assert.doesNotMatch(showcase, /border-prism-anim|frame-diamond-anim|name-spectrum-anim|roll-sparkles-anim|orb-shape-diamond/);
 });
 

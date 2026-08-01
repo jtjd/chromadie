@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Homepage product entry point — 2026-08-01
+
+- Added an inline local sample roll to the homepage daily-roll result card.
+- Reused the existing guest roll fixture and `ProfileRoll` reveal/result
+  presentation; the sample never calls the roll RPC or persists state.
+- Added a bounded “Today on Chromadie” rail backed by the existing public
+  discovery projection with loading, retry, empty, responsive, and SPA
+  navigation states.
+- Added sample-roll and discovery screenshots under
+  `artifacts/homepage-game-prototype/`.
+- No schema, RLS, scoring, ranking, reward, or authentication behavior changed.
+
 ## Homepage Conversion Pass — 2026-07-31
 
 - Reframed `/` around customizable public profiles, daily rolls, leaderboard
@@ -1017,4 +1029,4 @@ while its full context refreshes, and protected routes no longer show
   `artifacts/homepage-game-prototype/`.
 - Build, checks, lint, tests, link, CSP, drift, scoring, and database security
   validation pass. The existing performance budget remains over its thresholds
-  at 665.86 kB JavaScript / 625 kB and 341.57 kB CSS / 295 kB; HTML passes.
+  at 670.49 kB JavaScript / 625 kB and 348.34 kB CSS / 295 kB; HTML passes.

@@ -1,8 +1,19 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import IdentityCard from './IdentityCard.svelte';
+  import HomeDemoRoll from './HomeDemoRoll.svelte';
   import { shopItems } from './stores';
   import { getCosmeticEffect, getProfileAtmosphereEffect, getProfileBg } from './cosmetics';
+
+  export let isAuthenticated = false;
+
+  const dispatch = createEventDispatcher();
+  let demoOpen = false;
+
+  function forwardAction(event) {
+    dispatch(event.type, event.detail);
+  }
 
   const previewProfile = {
     username: 'mara',
@@ -113,28 +124,33 @@
       </div>
     </div>
 
-    <div class="home-showcase__roll-result" aria-label="Example daily roll result">
-      <div class="home-showcase__roll-result-heading">
-        <span>Today’s roll</span>
-        <strong>Rare</strong>
-      </div>
-      <div class="home-showcase__roll-result-main">
-        <span class="home-showcase__swatch" aria-hidden="true"></span>
-        <div>
-          <code>#B7FD4D</code>
-          <strong>53,296 <small>EP</small></strong>
+    <div class={'home-showcase__roll-result' + (demoOpen ? ' home-showcase__roll-result--demo' : '')} aria-label={demoOpen ? 'Interactive sample roll' : 'Example daily roll result'}>
+      {#if demoOpen}
+        <HomeDemoRoll isAuthenticated={isAuthenticated} on:close={() => demoOpen = false} on:signup={forwardAction} on:profile={forwardAction} />
+      {:else}
+        <div class="home-showcase__roll-result-heading">
+          <span>Today’s roll</span>
+          <strong>Rare</strong>
         </div>
-      </div>
-      <dl class="home-showcase__roll-stats">
-        <div>
-          <dt>Leaderboard</dt>
-          <dd>#12 today</dd>
+        <div class="home-showcase__roll-result-main">
+          <span class="home-showcase__swatch" aria-hidden="true"></span>
+          <div>
+            <code>#B7FD4D</code>
+            <strong>53,296 <small>EP</small></strong>
+          </div>
         </div>
-        <div>
-          <dt>Visibility</dt>
-          <dd>Higher rank</dd>
-        </div>
-      </dl>
+        <dl class="home-showcase__roll-stats">
+          <div>
+            <dt>Leaderboard</dt>
+            <dd>#12 today</dd>
+          </div>
+          <div>
+            <dt>Visibility</dt>
+            <dd>Higher rank</dd>
+          </div>
+        </dl>
+        <button class="home-showcase__roll-action" type="button" on:click={() => demoOpen = true}>Try a sample roll <span aria-hidden="true">→</span></button>
+      {/if}
     </div>
   </section>
 </section>
@@ -458,6 +474,28 @@
     color: var(--home-ink);
     font: 600 0.72rem / 1.2 var(--home-font);
     font-variant-numeric: tabular-nums;
+  }
+
+  .home-showcase__roll-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-top: 1.25rem;
+    padding: 0.55rem 0;
+    border: 0;
+    background: transparent;
+    color: var(--home-roll-color);
+    cursor: pointer;
+    font: 600 0.68rem / 1 var(--home-mono);
+  }
+
+  .home-showcase__roll-action:hover { color: #d3ff91; }
+
+  .home-showcase__roll-result--demo {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   @media (max-width: 48rem) {

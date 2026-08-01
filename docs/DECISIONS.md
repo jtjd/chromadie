@@ -1861,3 +1861,17 @@ The fixture also uses a curated real cosmetic loadout (`bg_deep_space`,
 catalog and rendering components as public profiles. Its generated dog avatar
 is a local static asset; it is presentation-only and does not affect account
 media, entitlements, or profile state.
+
+## 2026-08-01 — Make the homepage a usable product entry point
+
+The homepage now lets visitors open the daily-roll result card into a local
+sample roll. It reuses the existing `ProfileRoll` presentation and shared guest
+fixture, but never calls the roll RPC, writes account state, or affects scoring.
+The explicit fixture path is allowed to run before auth hydration; real rolls
+remain gated by the existing authenticated/server-authoritative path.
+
+The homepage also includes a compact “Today on Chromadie” discovery rail backed
+by the bounded `get_public_discovery` projection. It requests three public
+entries, normalizes them through `discoveryData.js`, keeps profile navigation in
+the SPA shell, and handles loading, retry, and no-public-profiles states. No
+schema, RLS, ranking, or private-data behavior changed.

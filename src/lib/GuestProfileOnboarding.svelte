@@ -3,6 +3,7 @@
   import IdentityCard from './IdentityCard.svelte';
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import ProfileRoll from './ProfileRoll.svelte';
+  import { guestRollFixture } from './guestRollFixture.js';
 
   export let guestActive = false;
   const dispatch = createEventDispatcher();
@@ -12,24 +13,6 @@
   let rollState = 'idle';
   let rollColor = '#8B7CF6';
   let rollEffectTimer;
-
-  const fixtureResult = {
-    hex: '#B666C9',
-    score: 119059,
-    rarity: 'Mythic',
-    badges: ['rich_saturation', 'hex_echo', 'vivid_contrast'],
-    traits: [
-      { id: 'violet_hue', label: 'Violet Hue' },
-      { id: 'electric_saturation', label: 'Electric Saturation' },
-      { id: 'mythic_signal', label: 'Mythic Signal' }
-    ],
-    contributors: [
-      { id: 'rich_saturation', name: 'Rich Saturation', awardedPoints: 7040 },
-      { id: 'hex_echo', name: 'Hex Echo', awardedPoints: 7007 },
-      { id: 'vivid_contrast', name: 'Vivid Contrast', awardedPoints: 10013 }
-    ],
-    identity: 'A vivid violet signal'
-  };
 
   function advanceToRoll() {
     stage = 1;
@@ -97,7 +80,7 @@
       <div class="guest-profile-onboarding__progress" aria-label="Onboarding step 2 of 2"><span class="complete"></span><span class="active"></span></div>
 
       <div class="guest-profile-onboarding__roll">
-        <ProfileRoll moduleSize="wide" compact={true} integrated={true} quiet={true} visualFixture="guest-onboarding" fixtureResult={fixtureResult} on:rollstart={handleRollStart} on:colorpreview={handleRollPreview} on:rollcomplete={handleRollComplete} />
+        <ProfileRoll moduleSize="wide" compact={true} integrated={true} quiet={true} visualFixture="guest-onboarding" fixtureResult={guestRollFixture} on:rollstart={handleRollStart} on:colorpreview={handleRollPreview} on:rollcomplete={handleRollComplete} />
       </div>
 
       {#if rollComplete}

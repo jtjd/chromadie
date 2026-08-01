@@ -5,6 +5,7 @@
   import { createEventDispatcher } from 'svelte';
   import { isUsernameShapeValid } from './usernamePolicy.js';
   import { trackProductEvent } from './productAnalytics.js';
+  import HomeDiscovery from './HomeDiscovery.svelte';
   import HomeRollShowcase from './HomeRollShowcase.svelte';
 
   export let isAuthenticated = false;
@@ -13,6 +14,10 @@
   let claimUsername = '';
   let claimError = '';
   let claimStarted = false;
+
+  function forwardAction(event) {
+    dispatch(event.type, event.detail);
+  }
 
   function beginClaim() {
     if (claimStarted) return;
@@ -61,9 +66,10 @@
         </div>
       </div>
 
-      <HomeRollShowcase />
+      <HomeRollShowcase isAuthenticated={isAuthenticated} on:signup={forwardAction} on:profile={forwardAction} />
     </section>
 
+    <HomeDiscovery on:navigate={forwardAction} />
   </div>
 </main>
 
