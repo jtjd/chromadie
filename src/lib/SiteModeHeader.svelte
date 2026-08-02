@@ -47,7 +47,7 @@
 
   {#if !minimalMode}
     <nav class="site-mode-header__nav" aria-label="Primary application navigation">
-      {#if isHomeMode && !isAuthenticated}
+      {#if !isAuthenticated}
         <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Explore</button>
         <span aria-hidden="true">/</span>
         <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
@@ -100,7 +100,7 @@
     <div class="site-mode-header__mobile-panel" aria-hidden={!mobileMenuOpen}>
       {#if !minimalMode}
         <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
-          {#if isHomeMode && !isAuthenticated}
+          {#if !isAuthenticated}
             <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Explore</button>
             <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
           {:else}

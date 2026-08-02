@@ -20,6 +20,8 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /site-mode-header__context/);
   assert.match(siteHeader, /site-mode-header__mobile-primary/);
   assert.match(siteHeader, /\$: minimalMode = isProfileMode;/);
+  assert.match(siteHeader, /\{#if !isAuthenticated\}[\s\S]*Explore[\s\S]*Leaderboard/);
+  assert.doesNotMatch(siteHeader, /\{#if isHomeMode && !isAuthenticated\}[\s\S]*Profile/);
   assert.match(siteHeader, /--site-header-control-size: 0\.78rem/);
   assert.match(siteHeader, /--site-header-font: 'Satoshi'/);
   assert.doesNotMatch(siteHeader, /var\(--font-mono-stack\)/);

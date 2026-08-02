@@ -395,6 +395,12 @@ indexing, and deletion reviews. Scoring, eligibility, rewards, economy,
 private achievements, auth, and existing configuration semantics remain
 unchanged.
 
+## 2026-08-01 — Keep signed-out navigation out of guest profile onboarding
+
+Signed-out supporting routes now keep the public Explore/Leaderboard header
+navigation instead of exposing the legacy `?view=profile` guest onboarding
+surface. Authenticated profile navigation is unchanged.
+
 **Related files**
 
 `supabase/migrations/20260725110000_profile_story.sql`,

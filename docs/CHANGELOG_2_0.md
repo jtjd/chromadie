@@ -1111,6 +1111,9 @@ phase, with an immediate reduced-motion equivalent.
   and off-white controls.
 - Left public profile rendering and profile-specific visual systems unchanged.
 
+Signed-out supporting routes now use Explore/Leaderboard navigation instead of
+linking to the legacy guest profile onboarding page.
+
 ## Homepage directory activity summary — 2026-08-01
 
 - Simplified the public-roll ticker to username, hex, and a color dot, with a

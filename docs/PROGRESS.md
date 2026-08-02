@@ -1303,3 +1303,7 @@ catalog keys and equipped-cosmetic data remain unchanged.
   help/legal, auth, utility states, the supporting header, and footer.
 - Kept public profiles and profile-specific rendering outside the new baseline;
   no data, auth, scoring, catalog, or route contracts changed.
+
+Signed-out header navigation no longer links to the legacy guest profile
+onboarding route; the public Explore/Leaderboard navigation remains available
+on every signed-out supporting route.
