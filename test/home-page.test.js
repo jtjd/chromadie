@@ -72,6 +72,8 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(dailyResult, /CompactRollPreview/);
   assert.match(dailyResult, /referenceShape/);
   assert.match(dailyResult, /place-items: center/);
+  assert.match(dailyResult, /grid-template-rows: auto minmax\(0, 1fr\) auto/);
+  assert.match(dailyResult, /\.home-daily__body \{ display: grid; align-content: center/);
   assert.match(howItWorks, /role="tablist"/);
   assert.match(howItWorks, /aria-selected/);
   assert.match(howItWorks, /ArrowRight/);

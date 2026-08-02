@@ -405,6 +405,14 @@ scale, muted copy role, and rule-separated sections. This is presentation-only;
 RPC data, filters, follow/share behavior, auth, public profile routes, and
 profile-specific rendering remain unchanged.
 
+## 2026-08-01 — Keep profile entry transparent and account-only
+
+Profile mode uses the homepage header typography over the profile atmosphere,
+without a header surface, application navigation, edit control, or mobile menu.
+The only visible controls are the `chm.lol` wordmark and the current account
+identity/sign-out or sign-in action. The homepage daily-result column uses a
+centered middle row so its color presentation is not top-heavy.
+
 ## 2026-08-01 — Keep signed-out navigation out of guest profile onboarding
 
 Signed-out supporting routes now keep the public Explore/Leaderboard header

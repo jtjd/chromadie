@@ -1163,4 +1163,11 @@ linking to the legacy guest profile onboarding page.
 - Restyled Privacy and Terms as one shared product-document family with the
   homepage font, color, spacing, and border roles.
 - Preserved public profile rendering, auth, scoring, RLS/RPC boundaries, and
-  direct route behavior.
+direct route behavior.
+
+## 2026-08-01 — Refine profile header and homepage daily result
+
+- Made the public profile header transparent and limited it to `chm.lol` plus
+  username/sign-out or sign-in controls.
+- Vertically centered the homepage Today’s Color content within its hero panel.
+- Preserved profile rendering, authentication, and route contracts.

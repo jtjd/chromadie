@@ -86,9 +86,9 @@
         <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('retry')}>Retry account</button>
       {:else if accountState === ACCOUNT_STATES.BOOTING || accountState === ACCOUNT_STATES.PROFILE_LOADING}
         <!-- Keep account controls visually quiet while session data hydrates. -->
-      {:else if isHomeMode && !isAuthenticated}
+      {:else if (isHomeMode || isProfileMode) && !isAuthenticated}
         <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('login', { mode: 'login' })}>Sign in</button>
-        <button type="button" class="site-mode-header__account-action site-mode-header__account-action--signup" on:click={() => dispatch('login', { mode: 'signup' })}>Sign up</button>
+        {#if isHomeMode}<button type="button" class="site-mode-header__account-action site-mode-header__account-action--signup" on:click={() => dispatch('login', { mode: 'signup' })}>Sign up</button>{/if}
       {:else}
         <button type="button" class="site-mode-header__account-action site-mode-header__account-action--light" on:click={() => dispatch('login', { mode: 'login' })}>Sign in / Sign up</button>
       {/if}
@@ -126,9 +126,9 @@
           <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('retry'); }}>Retry account</button>
         {:else if accountState === ACCOUNT_STATES.BOOTING || accountState === ACCOUNT_STATES.PROFILE_LOADING}
           <!-- Keep account controls visually quiet while session data hydrates. -->
-        {:else if isHomeMode && !isAuthenticated}
+        {:else if (isHomeMode || isProfileMode) && !isAuthenticated}
           <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in</button>
-          <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Sign up</button>
+          {#if isHomeMode}<button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Sign up</button>{/if}
         {:else}
           <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in / Sign up</button>
         {/if}
@@ -198,6 +198,48 @@
     gap: 0.25rem;
     padding: 0.2rem 0.35rem;
   }
+
+  /* Public profiles keep the homepage header language, but let the profile
+   * atmosphere run behind it. Only identity and account access remain. */
+  .site-mode-header--profile {
+    --site-header-font: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+    min-height: 3.5rem;
+    margin: 0;
+    padding: 0.9rem clamp(1.25rem, 4vw, 3rem);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(242, 240, 235, 0.72);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .site-mode-header--profile .site-mode-header__brand {
+    color: #f2f0eb;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    font-variant-ligatures: none;
+    letter-spacing: 0.08em;
+  }
+
+  .site-mode-header--profile .site-mode-header__wordmark > span { color: #cdd2ff; }
+  .site-mode-header--profile .site-mode-header__nav-space { display: none; }
+  .site-mode-header--profile .site-mode-header__context { display: none; }
+
+  .site-mode-header--profile .site-mode-header__right {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .site-mode-header--profile .site-mode-header__account { gap: 0.35rem; }
+  .site-mode-header--profile .site-mode-header__account button { min-height: 2rem; }
+  .site-mode-header--profile .site-mode-header__mobile-menu { display: none; }
 
   .site-mode-header--home .site-mode-header__nav button,
   .site-mode-header--home .site-mode-header__account button {
@@ -379,6 +421,8 @@
     .site-mode-header__nav,
     .site-mode-header__right { display: none; }
     .site-mode-header__mobile-menu { display: block; justify-self: end; }
+    .site-mode-header--profile .site-mode-header__right { display: flex; }
+    .site-mode-header--profile .site-mode-header__mobile-menu { display: none; }
   }
 
   @media (max-width: 36rem) {

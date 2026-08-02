@@ -63,11 +63,12 @@
 </aside>
 
 <style>
-  .home-daily { position: relative; display: flex; min-width: 0; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 1.3rem 1.2rem; color: #efedf3; background: linear-gradient(180deg, #1a1c22 0%, #121419 100%); }
+  .home-daily { position: relative; display: grid; min-width: 0; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; padding: 1.3rem 1.2rem; color: #efedf3; background: linear-gradient(180deg, #1a1c22 0%, #121419 100%); }
   .home-daily::before { position: absolute; top: 7%; bottom: 7%; left: 0; width: 1px; content: ''; background: linear-gradient(180deg, transparent, var(--home-daily-color) 28%, var(--home-daily-color) 72%, transparent); opacity: 0.75; }
   .home-daily::after { position: absolute; inset: 0; content: ''; pointer-events: none; background: linear-gradient(110deg, transparent 0 38%, rgba(255, 255, 255, 0.035) 47%, transparent 56% 100%); transform: translateX(-120%); animation: home-panel-sheen 7.5s 1.8s ease-in-out infinite; }
   .home-daily__label { position: relative; z-index: 1; color: #858a96; font: 0.625rem / 1 var(--home-mono); letter-spacing: 0.12em; text-transform: uppercase; }
-  .home-daily__body, .home-daily__main, .home-daily__stats, .home-daily__action { position: relative; z-index: 1; }
+  .home-daily__body { display: grid; align-content: center; min-height: 0; }
+  .home-daily__main, .home-daily__stats, .home-daily__action { position: relative; z-index: 1; }
   .home-daily__main { padding: 1.25rem 0 1.0625rem; text-align: left; }
   .home-daily__effect-wrap { display: grid; width: 100%; min-height: 6.25rem; place-items: center; margin-bottom: 0.6875rem; }
   .home-daily__effect-wrap :global(.compact-roll-preview) { flex-basis: 6.25rem; width: 6.25rem; height: 6.25rem; }
@@ -77,7 +78,7 @@
   .home-daily__stats > div { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.6875rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.075); }
   .home-daily__stats span { color: #8c919d; font: 0.5625rem / 1 var(--home-mono); letter-spacing: 0.08em; text-transform: uppercase; }
   .home-daily__stats strong { color: #f2eff5; font-size: 0.8125rem; }
-  .home-daily__action { margin-top: auto; }
+  .home-daily__action { margin-top: 0; }
   .home-daily__action a { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem 0; border-top: 1px solid rgba(255, 255, 255, 0.075); color: #d2d6e0; font: 0.625rem / 1 var(--home-mono); text-decoration: none; }
   .home-daily__action a:hover { color: #fff; }
   .home-daily__empty { position: relative; z-index: 1; display: grid; gap: 0.55rem; min-height: 17rem; align-content: center; color: #9297a3; }

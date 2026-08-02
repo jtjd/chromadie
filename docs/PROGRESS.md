@@ -1317,4 +1317,13 @@ on every signed-out supporting route.
   large Instrument Sans headings, IBM Plex Mono labels, quiet borders, and
   muted body copy.
 - Added source contracts for the shared leaderboard/document presentation and
-  kept public profile selectors outside the supporting-route baseline.
+kept public profile selectors outside the supporting-route baseline.
+
+## Profile header and hero balance — 2026-08-01
+
+- Applied the homepage header treatment to profile mode with a transparent
+  canvas, lavender `.lol` accent, and account-only controls.
+- Vertically centered the homepage Today’s Color result/details between its
+  label and bottom profile-link action.
+- Preserved profile navigation, auth behavior, public rendering, and reduced
+  motion handling.
