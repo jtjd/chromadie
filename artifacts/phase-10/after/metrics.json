@@ -1,0 +1,110 @@
+[
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scrollHeight": 928,
+    "bodyScrollHeight": 928,
+    "primaryBottom": 702,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 161,
+        "bottom": 444,
+        "height": 283
+      },
+      {
+        "name": "roll",
+        "top": 468,
+        "bottom": 702,
+        "height": 234
+      },
+      {
+        "name": "expression",
+        "top": 468,
+        "bottom": 702,
+        "height": 234
+      },
+      {
+        "name": "featured",
+        "top": 468,
+        "bottom": 702,
+        "height": 234
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10/after/1440x900.png"
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollHeight": 917,
+    "bodyScrollHeight": 917,
+    "primaryBottom": 690,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 161,
+        "bottom": 442,
+        "height": 281
+      },
+      {
+        "name": "roll",
+        "top": 466,
+        "bottom": 690,
+        "height": 224
+      },
+      {
+        "name": "expression",
+        "top": 466,
+        "bottom": 690,
+        "height": 224
+      },
+      {
+        "name": "featured",
+        "top": 466,
+        "bottom": 690,
+        "height": 224
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10/after/1280x720.png"
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollHeight": 1206,
+    "bodyScrollHeight": 1206,
+    "primaryBottom": 914,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 146,
+        "bottom": 381,
+        "height": 235
+      },
+      {
+        "name": "roll",
+        "top": 397,
+        "bottom": 599,
+        "height": 201
+      },
+      {
+        "name": "expression",
+        "top": 611,
+        "bottom": 766,
+        "height": 156
+      },
+      {
+        "name": "featured",
+        "top": 778,
+        "bottom": 914,
+        "height": 136
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10/after/390x844.png"
+  }
+]

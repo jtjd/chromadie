@@ -1,0 +1,158 @@
+[
+  {
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 1303,
+    "bodyScrollHeight": 1303,
+    "horizontalOverflow": false,
+    "primaryBottom": 785,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 347,
+        "bottom": 535,
+        "height": 188
+      },
+      {
+        "name": "roll",
+        "top": 575,
+        "bottom": 668,
+        "height": 93
+      },
+      {
+        "name": "featured",
+        "top": 692,
+        "bottom": 785,
+        "height": 93
+      }
+    ],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/profile-layout-identity/1920x1080.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 1123,
+    "bodyScrollHeight": 1123,
+    "horizontalOverflow": false,
+    "primaryBottom": 695,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 257,
+        "bottom": 445,
+        "height": 188
+      },
+      {
+        "name": "roll",
+        "top": 485,
+        "bottom": 578,
+        "height": 93
+      },
+      {
+        "name": "featured",
+        "top": 602,
+        "bottom": 695,
+        "height": 93
+      }
+    ],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/profile-layout-identity/1440x900.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 783,
+    "bodyScrollHeight": 783,
+    "horizontalOverflow": false,
+    "primaryBottom": 502,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 92,
+        "bottom": 256,
+        "height": 164
+      },
+      {
+        "name": "roll",
+        "top": 296,
+        "bottom": 389,
+        "height": 93
+      },
+      {
+        "name": "featured",
+        "top": 409,
+        "bottom": 502,
+        "height": 93
+      }
+    ],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/profile-layout-identity/1280x720.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 1129,
+    "bodyScrollHeight": 1129,
+    "horizontalOverflow": false,
+    "primaryBottom": 528,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 142,
+        "bottom": 299,
+        "height": 157
+      },
+      {
+        "name": "roll",
+        "top": 327,
+        "bottom": 416,
+        "height": 89
+      },
+      {
+        "name": "featured",
+        "top": 436,
+        "bottom": 528,
+        "height": 93
+      }
+    ],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/profile-layout-identity/390x844.png",
+    "reducedMotion": false
+  }
+]

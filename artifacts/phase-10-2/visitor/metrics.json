@@ -1,0 +1,154 @@
+[
+  {
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "scrollHeight": 1303,
+    "bodyScrollHeight": 1303,
+    "horizontalOverflow": false,
+    "primaryBottom": 795,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 117,
+        "bottom": 711,
+        "height": 594
+      },
+      {
+        "name": "roll",
+        "top": 477,
+        "bottom": 565,
+        "height": 88
+      },
+      {
+        "name": "featured",
+        "top": 600,
+        "bottom": 678,
+        "height": 78
+      },
+      {
+        "name": "expression",
+        "top": 735,
+        "bottom": 795,
+        "height": 60
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10-2/visitor/1920x1080.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scrollHeight": 1123,
+    "bodyScrollHeight": 1123,
+    "horizontalOverflow": false,
+    "primaryBottom": 786,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 110,
+        "bottom": 704,
+        "height": 594
+      },
+      {
+        "name": "roll",
+        "top": 470,
+        "bottom": 558,
+        "height": 88
+      },
+      {
+        "name": "featured",
+        "top": 592,
+        "bottom": 671,
+        "height": 78
+      },
+      {
+        "name": "expression",
+        "top": 726,
+        "bottom": 786,
+        "height": 60
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10-2/visitor/1440x900.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollHeight": 943,
+    "bodyScrollHeight": 943,
+    "horizontalOverflow": false,
+    "primaryBottom": 669,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 76,
+        "bottom": 600,
+        "height": 524
+      },
+      {
+        "name": "roll",
+        "top": 389,
+        "bottom": 478,
+        "height": 88
+      },
+      {
+        "name": "featured",
+        "top": 503,
+        "bottom": 581,
+        "height": 78
+      },
+      {
+        "name": "expression",
+        "top": 609,
+        "bottom": 669,
+        "height": 60
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10-2/visitor/1280x720.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollHeight": 1142,
+    "bodyScrollHeight": 1142,
+    "horizontalOverflow": false,
+    "primaryBottom": 645,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 82,
+        "bottom": 564,
+        "height": 483
+      },
+      {
+        "name": "roll",
+        "top": 352,
+        "bottom": 433,
+        "height": 81
+      },
+      {
+        "name": "featured",
+        "top": 468,
+        "bottom": 546,
+        "height": 78
+      },
+      {
+        "name": "expression",
+        "top": 586,
+        "bottom": 645,
+        "height": 60
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10-2/visitor/390x844.png",
+    "reducedMotion": false
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scrollHeight": 3119,
+    "bodyScrollHeight": 3119,
+    "primaryBottom": 0,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 278,
+        "bottom": 640,
+        "height": 362
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10/before/1440x900.png"
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollHeight": 3115,
+    "bodyScrollHeight": 3115,
+    "primaryBottom": 0,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 278,
+        "bottom": 638,
+        "height": 360
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10/before/1280x720.png"
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollHeight": 4079,
+    "bodyScrollHeight": 4079,
+    "primaryBottom": 0,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 285,
+        "bottom": 891,
+        "height": 605
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10/before/390x844.png"
+  }
+]

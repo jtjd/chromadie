@@ -1,0 +1,630 @@
+{
+  "captureContract": {
+    "browserZoom": "100%",
+    "deviceScaleFactor": 1,
+    "pageScaleFactor": 1,
+    "reducedMotion": false
+  },
+  "results": [
+    {
+      "target": "production",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "scale": {
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "documentZoom": "1",
+        "bodyZoom": "1"
+      },
+      "card": {
+        "x": 736,
+        "y": 281.56,
+        "top": 281.56,
+        "right": 1184,
+        "bottom": 850.36,
+        "width": 448,
+        "height": 568.8
+      },
+      "cardCenter": 960,
+      "music": null,
+      "musicBottomOffset": null,
+      "name": {
+        "x": 846.08,
+        "y": 474.55,
+        "top": 474.55,
+        "right": 944.48,
+        "bottom": 515.7,
+        "width": 98.41,
+        "height": 41.16
+      },
+      "body": {
+        "x": 835.14,
+        "y": 551.97,
+        "top": 551.97,
+        "right": 1084.84,
+        "bottom": 574.36,
+        "width": 249.7,
+        "height": 22.39
+      },
+      "metadata": {
+        "x": 936.58,
+        "y": 524.97,
+        "top": 524.97,
+        "right": 983.39,
+        "bottom": 539.97,
+        "width": 46.81,
+        "height": 15
+      },
+      "smallestEssential": {
+        "selector": ".identity-card__handle",
+        "rect": {
+          "x": 936.58,
+          "y": 524.97,
+          "top": 524.97,
+          "right": 983.39,
+          "bottom": 539.97,
+          "width": 46.81,
+          "height": 15
+        },
+        "style": {
+          "fontSize": "12px",
+          "lineHeight": "15px",
+          "fontWeight": "600",
+          "letterSpacing": "0.6px",
+          "opacity": "1",
+          "color": "rgba(220, 230, 248, 0.64)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px none rgba(220, 230, 248, 0.64)"
+        }
+      },
+      "styles": {
+        "card": {
+          "fontSize": "16px",
+          "lineHeight": "normal",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "rgb(215, 217, 226)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "32px",
+          "border": "1px solid rgba(230, 238, 255, 0.16)"
+        },
+        "name": {
+          "fontSize": "42px",
+          "lineHeight": "41.16px",
+          "fontWeight": "600",
+          "letterSpacing": "-2.52px",
+          "opacity": "1",
+          "color": "rgba(248, 250, 255, 0.98)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px none rgba(248, 250, 255, 0.98)"
+        },
+        "body": {
+          "fontSize": "14px",
+          "lineHeight": "22.4px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "rgba(226, 233, 246, 0.76)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px none rgba(226, 233, 246, 0.76)"
+        },
+        "metadata": {
+          "fontSize": "12px",
+          "lineHeight": "15px",
+          "fontWeight": "600",
+          "letterSpacing": "0.6px",
+          "opacity": "1",
+          "color": "rgba(220, 230, 248, 0.64)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px none rgba(220, 230, 248, 0.64)"
+        },
+        "music": null,
+        "atmosphere": {
+          "fontSize": "16px",
+          "lineHeight": "normal",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "rgb(215, 217, 226)",
+          "backgroundColor": "rgb(8, 16, 22)",
+          "padding": "0px",
+          "border": "0px none rgb(215, 217, 226)"
+        }
+      },
+      "atmosphereBounds": {
+        "x": 0,
+        "y": 0,
+        "top": 0,
+        "right": 1920,
+        "bottom": 1080,
+        "width": 1920,
+        "height": 1080
+      },
+      "primaryBottom": 850.36,
+      "documentScrollHeight": 1303,
+      "horizontalOverflow": false,
+      "screenshotPath": "/home/alex/My Projects/Chromadie/artifacts/phase-11-1/final-audit/production-1920x1080.png"
+    },
+    {
+      "target": "production",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scale": {
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "documentZoom": "1",
+        "bodyZoom": "1"
+      },
+      "card": {
+        "x": 496,
+        "y": 191.56,
+        "top": 191.56,
+        "right": 944,
+        "bottom": 760.36,
+        "width": 448,
+        "height": 568.8
+      },
+      "cardCenter": 720,
+      "music": null,
+      "musicBottomOffset": null,
+      "name": {
+        "x": 606.08,
+        "y": 384.55,
+        "top": 384.55,
+        "right": 704.48,
+        "bottom": 425.7,
+        "width": 98.41,
+        "height": 41.16
+      },
+      "body": {
+        "x": 595.14,
+        "y": 461.97,
+        "top": 461.97,
+        "right": 844.84,
+        "bottom": 484.36,
+        "width": 249.7,
+        "height": 22.39
+      },
+      "metadata": {
+        "x": 696.58,
+        "y": 434.97,
+        "top": 434.97,
+        "right": 743.39,
+        "bottom": 449.97,
+        "width": 46.81,
+        "height": 15
+      },
+      "smallestEssential": {
+        "selector": ".identity-card__handle",
+        "rect": {
+          "x": 696.58,
+          "y": 434.97,
+          "top": 434.97,
+          "right": 743.39,
+          "bottom": 449.97,
+          "width": 46.81,
+          "height": 15
+        },
+        "style": {
+          "fontSize": "12px",
+          "lineHeight": "15px",
+          "fontWeight": "600",
+          "letterSpacing": "0.6px",
+          "opacity": "1",
+          "color": "rgba(220, 230, 248, 0.64)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px none rgba(220, 230, 248, 0.64)"
+        }
+      },
+      "styles": {
+        "card": {
+          "fontSize": "16px",
+          "lineHeight": "normal",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "rgb(215, 217, 226)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "32px",
+          "border": "1px solid rgba(230, 238, 255, 0.16)"
+        },
+        "name": {
+          "fontSize": "42px",
+          "lineHeight": "41.16px",
+          "fontWeight": "600",
+          "letterSpacing": "-2.52px",
+          "opacity": "1",
+          "color": "rgba(248, 250, 255, 0.98)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px none rgba(248, 250, 255, 0.98)"
+        },
+        "body": {
+          "fontSize": "14px",
+          "lineHeight": "22.4px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "rgba(226, 233, 246, 0.76)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px none rgba(226, 233, 246, 0.76)"
+        },
+        "metadata": {
+          "fontSize": "12px",
+          "lineHeight": "15px",
+          "fontWeight": "600",
+          "letterSpacing": "0.6px",
+          "opacity": "1",
+          "color": "rgba(220, 230, 248, 0.64)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px none rgba(220, 230, 248, 0.64)"
+        },
+        "music": null,
+        "atmosphere": {
+          "fontSize": "16px",
+          "lineHeight": "normal",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "rgb(215, 217, 226)",
+          "backgroundColor": "rgb(8, 16, 22)",
+          "padding": "0px",
+          "border": "0px none rgb(215, 217, 226)"
+        }
+      },
+      "atmosphereBounds": {
+        "x": 0,
+        "y": 0,
+        "top": 0,
+        "right": 1440,
+        "bottom": 900,
+        "width": 1440,
+        "height": 900
+      },
+      "primaryBottom": 760.36,
+      "documentScrollHeight": 1123,
+      "horizontalOverflow": false,
+      "screenshotPath": "/home/alex/My Projects/Chromadie/artifacts/phase-11-1/final-audit/production-1440x900.png"
+    },
+    {
+      "target": "reference",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "scale": {
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "documentZoom": "1",
+        "bodyZoom": "1"
+      },
+      "card": {
+        "x": 736,
+        "y": 252.38,
+        "top": 252.38,
+        "right": 1184,
+        "bottom": 793.63,
+        "width": 448,
+        "height": 541.25
+      },
+      "cardCenter": 960,
+      "music": {
+        "x": 624,
+        "y": 986,
+        "top": 986,
+        "right": 1296,
+        "bottom": 1056,
+        "width": 672,
+        "height": 70
+      },
+      "musicBottomOffset": 24,
+      "name": {
+        "x": 866.55,
+        "y": 437.88,
+        "top": 437.88,
+        "right": 972.69,
+        "bottom": 473.88,
+        "width": 106.14,
+        "height": 36
+      },
+      "body": {
+        "x": 835.27,
+        "y": 481.88,
+        "top": 481.88,
+        "right": 1084.72,
+        "bottom": 504.63,
+        "width": 249.45,
+        "height": 22.75
+      },
+      "metadata": {
+        "x": 769,
+        "y": 285.38,
+        "top": 285.38,
+        "right": 1151,
+        "bottom": 301.88,
+        "width": 382,
+        "height": 16.5
+      },
+      "smallestEssential": {
+        "selector": "main > div.relative.z-10 .text-\\[11px\\]",
+        "rect": {
+          "x": 769,
+          "y": 285.38,
+          "top": 285.38,
+          "right": 1151,
+          "bottom": 301.88,
+          "width": 382,
+          "height": 16.5
+        },
+        "style": {
+          "fontSize": "11px",
+          "lineHeight": "16.5px",
+          "fontWeight": "400",
+          "letterSpacing": "1.98px",
+          "opacity": "1",
+          "color": "lab(66.128 -0.0000298023 0.0000119209)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        }
+      },
+      "styles": {
+        "card": {
+          "fontSize": "16px",
+          "lineHeight": "24px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "lab(98.26 0 0)",
+          "backgroundColor": "oklab(0.999994 0.0000455678 0.0000200868 / 0.04)",
+          "padding": "32px",
+          "border": "1px solid oklab(0.999994 0.0000455678 0.0000200868 / 0.1)"
+        },
+        "name": {
+          "fontSize": "30px",
+          "lineHeight": "36px",
+          "fontWeight": "600",
+          "letterSpacing": "-0.75px",
+          "opacity": "1",
+          "color": "lab(98.26 0 0)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        },
+        "body": {
+          "fontSize": "14px",
+          "lineHeight": "22.75px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "lab(66.128 -0.0000298023 0.0000119209)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        },
+        "metadata": {
+          "fontSize": "11px",
+          "lineHeight": "16.5px",
+          "fontWeight": "400",
+          "letterSpacing": "1.98px",
+          "opacity": "1",
+          "color": "lab(66.128 -0.0000298023 0.0000119209)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        },
+        "music": {
+          "fontSize": "16px",
+          "lineHeight": "24px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "lab(98.26 0 0)",
+          "backgroundColor": "oklab(0.999994 0.0000455678 0.0000200868 / 0.04)",
+          "padding": "12px 16px",
+          "border": "1px solid oklab(0.999994 0.0000455678 0.0000200868 / 0.1)"
+        },
+        "atmosphere": {
+          "fontSize": "16px",
+          "lineHeight": "24px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "lab(98.26 0 0)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        }
+      },
+      "atmosphereBounds": {
+        "x": 0,
+        "y": 0,
+        "top": 0,
+        "right": 1920,
+        "bottom": 1080,
+        "width": 1920,
+        "height": 1080
+      },
+      "primaryBottom": 1056,
+      "documentScrollHeight": 1080,
+      "horizontalOverflow": false,
+      "screenshotPath": "/home/alex/My Projects/Chromadie/artifacts/phase-11-1/final-audit/reference-1920x1080.png"
+    },
+    {
+      "target": "reference",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scale": {
+        "devicePixelRatio": 1,
+        "visualViewportScale": 1,
+        "documentZoom": "1",
+        "bodyZoom": "1"
+      },
+      "card": {
+        "x": 496,
+        "y": 162.38,
+        "top": 162.38,
+        "right": 944,
+        "bottom": 703.63,
+        "width": 448,
+        "height": 541.25
+      },
+      "cardCenter": 720,
+      "music": {
+        "x": 384,
+        "y": 806,
+        "top": 806,
+        "right": 1056,
+        "bottom": 876,
+        "width": 672,
+        "height": 70
+      },
+      "musicBottomOffset": 24,
+      "name": {
+        "x": 626.55,
+        "y": 347.88,
+        "top": 347.88,
+        "right": 732.69,
+        "bottom": 383.88,
+        "width": 106.14,
+        "height": 36
+      },
+      "body": {
+        "x": 595.27,
+        "y": 391.88,
+        "top": 391.88,
+        "right": 844.72,
+        "bottom": 414.63,
+        "width": 249.45,
+        "height": 22.75
+      },
+      "metadata": {
+        "x": 529,
+        "y": 195.38,
+        "top": 195.38,
+        "right": 911,
+        "bottom": 211.88,
+        "width": 382,
+        "height": 16.5
+      },
+      "smallestEssential": {
+        "selector": "main > div.relative.z-10 .text-\\[11px\\]",
+        "rect": {
+          "x": 529,
+          "y": 195.38,
+          "top": 195.38,
+          "right": 911,
+          "bottom": 211.88,
+          "width": 382,
+          "height": 16.5
+        },
+        "style": {
+          "fontSize": "11px",
+          "lineHeight": "16.5px",
+          "fontWeight": "400",
+          "letterSpacing": "1.98px",
+          "opacity": "1",
+          "color": "lab(66.128 -0.0000298023 0.0000119209)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        }
+      },
+      "styles": {
+        "card": {
+          "fontSize": "16px",
+          "lineHeight": "24px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "lab(98.26 0 0)",
+          "backgroundColor": "oklab(0.999994 0.0000455678 0.0000200868 / 0.04)",
+          "padding": "32px",
+          "border": "1px solid oklab(0.999994 0.0000455678 0.0000200868 / 0.1)"
+        },
+        "name": {
+          "fontSize": "30px",
+          "lineHeight": "36px",
+          "fontWeight": "600",
+          "letterSpacing": "-0.75px",
+          "opacity": "1",
+          "color": "lab(98.26 0 0)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        },
+        "body": {
+          "fontSize": "14px",
+          "lineHeight": "22.75px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "lab(66.128 -0.0000298023 0.0000119209)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        },
+        "metadata": {
+          "fontSize": "11px",
+          "lineHeight": "16.5px",
+          "fontWeight": "400",
+          "letterSpacing": "1.98px",
+          "opacity": "1",
+          "color": "lab(66.128 -0.0000298023 0.0000119209)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        },
+        "music": {
+          "fontSize": "16px",
+          "lineHeight": "24px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "lab(98.26 0 0)",
+          "backgroundColor": "oklab(0.999994 0.0000455678 0.0000200868 / 0.04)",
+          "padding": "12px 16px",
+          "border": "1px solid oklab(0.999994 0.0000455678 0.0000200868 / 0.1)"
+        },
+        "atmosphere": {
+          "fontSize": "16px",
+          "lineHeight": "24px",
+          "fontWeight": "400",
+          "letterSpacing": "normal",
+          "opacity": "1",
+          "color": "lab(98.26 0 0)",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "padding": "0px",
+          "border": "0px solid lab(100 0 0 / 0.1)"
+        }
+      },
+      "atmosphereBounds": {
+        "x": 0,
+        "y": 0,
+        "top": 0,
+        "right": 1440,
+        "bottom": 900,
+        "width": 1440,
+        "height": 900
+      },
+      "primaryBottom": 876,
+      "documentScrollHeight": 900,
+      "horizontalOverflow": false,
+      "screenshotPath": "/home/alex/My Projects/Chromadie/artifacts/phase-11-1/final-audit/reference-1440x900.png"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+[
+  {
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "scrollHeight": 1303,
+    "bodyScrollHeight": 1303,
+    "horizontalOverflow": false,
+    "primaryBottom": 1060,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 246,
+        "bottom": 816,
+        "height": 569
+      },
+      {
+        "name": "roll",
+        "top": 589,
+        "bottom": 685,
+        "height": 97
+      },
+      {
+        "name": "featured",
+        "top": 723,
+        "bottom": 783,
+        "height": 59
+      },
+      {
+        "name": "expression",
+        "top": 990,
+        "bottom": 1060,
+        "height": 70
+      }
+    ],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-11-1/corrected-expression-fixture-2/1920x1080.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scrollHeight": 1123,
+    "bodyScrollHeight": 1123,
+    "horizontalOverflow": false,
+    "primaryBottom": 880,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 156,
+        "bottom": 726,
+        "height": 569
+      },
+      {
+        "name": "roll",
+        "top": 499,
+        "bottom": 595,
+        "height": 97
+      },
+      {
+        "name": "featured",
+        "top": 633,
+        "bottom": 693,
+        "height": 59
+      },
+      {
+        "name": "expression",
+        "top": 810,
+        "bottom": 880,
+        "height": 70
+      }
+    ],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-11-1/corrected-expression-fixture-2/1440x900.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollHeight": 929,
+    "bodyScrollHeight": 929,
+    "horizontalOverflow": false,
+    "primaryBottom": 690,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 92,
+        "bottom": 596,
+        "height": 504
+      },
+      {
+        "name": "roll",
+        "top": 387,
+        "bottom": 484,
+        "height": 97
+      },
+      {
+        "name": "featured",
+        "top": 512,
+        "bottom": 571,
+        "height": 59
+      },
+      {
+        "name": "expression",
+        "top": 620,
+        "bottom": 690,
+        "height": 70
+      }
+    ],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-11-1/corrected-expression-fixture-2/1280x720.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollHeight": 844,
+    "bodyScrollHeight": 844,
+    "horizontalOverflow": false,
+    "primaryBottom": 0,
+    "regions": [],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-11-1/corrected-expression-fixture-2/390x844.png",
+    "reducedMotion": false
+  }
+]

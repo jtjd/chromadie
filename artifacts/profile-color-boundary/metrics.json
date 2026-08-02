@@ -1,0 +1,82 @@
+[
+  {
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 1080,
+    "bodyScrollHeight": 1080,
+    "horizontalOverflow": false,
+    "primaryBottom": 0,
+    "regions": [],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/profile-color-boundary/1920x1080.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 900,
+    "bodyScrollHeight": 900,
+    "horizontalOverflow": false,
+    "primaryBottom": 0,
+    "regions": [],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/profile-color-boundary/1440x900.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 720,
+    "bodyScrollHeight": 720,
+    "horizontalOverflow": false,
+    "primaryBottom": 0,
+    "regions": [],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/profile-color-boundary/1280x720.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scale": {
+      "devicePixelRatio": 1,
+      "visualViewportScale": 1,
+      "documentZoom": "1",
+      "bodyZoom": "1"
+    },
+    "scrollHeight": 848,
+    "bodyScrollHeight": 848,
+    "horizontalOverflow": false,
+    "primaryBottom": 0,
+    "regions": [],
+    "surfaces": [],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/profile-color-boundary/390x844.png",
+    "reducedMotion": false
+  }
+]

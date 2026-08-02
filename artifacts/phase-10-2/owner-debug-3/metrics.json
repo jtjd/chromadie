@@ -1,0 +1,322 @@
+[
+  {
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "scrollHeight": 1370,
+    "bodyScrollHeight": 1370,
+    "horizontalOverflow": false,
+    "primaryBottom": 921,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 117,
+        "bottom": 837,
+        "height": 719
+      },
+      {
+        "name": "roll",
+        "top": 477,
+        "bottom": 691,
+        "height": 214
+      },
+      {
+        "name": "featured",
+        "top": 725,
+        "bottom": 804,
+        "height": 78
+      },
+      {
+        "name": "expression",
+        "top": 861,
+        "bottom": 921,
+        "height": 60
+      }
+    ],
+    "surfaces": [
+      {
+        "selector": ".profile-roll",
+        "top": 477,
+        "bottom": 691,
+        "height": 214,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__result",
+        "top": 477,
+        "bottom": 691,
+        "height": 214,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__result-head",
+        "top": 477,
+        "bottom": 574,
+        "height": 96,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__story",
+        "top": 587,
+        "bottom": 641,
+        "height": 54,
+        "padding": "12px 0px 0px",
+        "border": ""
+      },
+      {
+        "selector": ".profile-roll__details",
+        "top": 662,
+        "bottom": 691,
+        "height": 29,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10-2/owner-debug-3/1920x1080.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scrollHeight": 1209,
+    "bodyScrollHeight": 1209,
+    "horizontalOverflow": false,
+    "primaryBottom": 911,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 110,
+        "bottom": 829,
+        "height": 719
+      },
+      {
+        "name": "roll",
+        "top": 470,
+        "bottom": 683,
+        "height": 214
+      },
+      {
+        "name": "featured",
+        "top": 718,
+        "bottom": 796,
+        "height": 78
+      },
+      {
+        "name": "expression",
+        "top": 852,
+        "bottom": 911,
+        "height": 60
+      }
+    ],
+    "surfaces": [
+      {
+        "selector": ".profile-roll",
+        "top": 470,
+        "bottom": 683,
+        "height": 214,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__result",
+        "top": 470,
+        "bottom": 683,
+        "height": 214,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__result-head",
+        "top": 470,
+        "bottom": 566,
+        "height": 96,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__story",
+        "top": 579,
+        "bottom": 633,
+        "height": 54,
+        "padding": "12px 0px 0px",
+        "border": ""
+      },
+      {
+        "selector": ".profile-roll__details",
+        "top": 654,
+        "bottom": 683,
+        "height": 29,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10-2/owner-debug-3/1440x900.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollHeight": 1092,
+    "bodyScrollHeight": 1092,
+    "horizontalOverflow": false,
+    "primaryBottom": 794,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 76,
+        "bottom": 725,
+        "height": 649
+      },
+      {
+        "name": "roll",
+        "top": 389,
+        "bottom": 603,
+        "height": 214
+      },
+      {
+        "name": "featured",
+        "top": 628,
+        "bottom": 706,
+        "height": 78
+      },
+      {
+        "name": "expression",
+        "top": 735,
+        "bottom": 794,
+        "height": 60
+      }
+    ],
+    "surfaces": [
+      {
+        "selector": ".profile-roll",
+        "top": 389,
+        "bottom": 603,
+        "height": 214,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__result",
+        "top": 389,
+        "bottom": 603,
+        "height": 214,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__result-head",
+        "top": 389,
+        "bottom": 486,
+        "height": 96,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__story",
+        "top": 499,
+        "bottom": 553,
+        "height": 54,
+        "padding": "12px 0px 0px",
+        "border": ""
+      },
+      {
+        "selector": ".profile-roll__details",
+        "top": 574,
+        "bottom": 603,
+        "height": 29,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10-2/owner-debug-3/1280x720.png",
+    "reducedMotion": false
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollHeight": 1243,
+    "bodyScrollHeight": 1243,
+    "horizontalOverflow": false,
+    "primaryBottom": 835,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 82,
+        "bottom": 754,
+        "height": 673
+      },
+      {
+        "name": "roll",
+        "top": 352,
+        "bottom": 623,
+        "height": 270
+      },
+      {
+        "name": "featured",
+        "top": 657,
+        "bottom": 736,
+        "height": 78
+      },
+      {
+        "name": "expression",
+        "top": 775,
+        "bottom": 835,
+        "height": 60
+      }
+    ],
+    "surfaces": [
+      {
+        "selector": ".profile-roll",
+        "top": 352,
+        "bottom": 623,
+        "height": 270,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__result",
+        "top": 352,
+        "bottom": 623,
+        "height": 270,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__result-head",
+        "top": 352,
+        "bottom": 464,
+        "height": 112,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      },
+      {
+        "selector": ".profile-roll__story",
+        "top": 477,
+        "bottom": 573,
+        "height": 96,
+        "padding": "12px 0px 0px",
+        "border": ""
+      },
+      {
+        "selector": ".profile-roll__details",
+        "top": 594,
+        "bottom": 623,
+        "height": 29,
+        "padding": "0px",
+        "border": "0px none rgb(215, 217, 226)"
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-10-2/owner-debug-3/390x844.png",
+    "reducedMotion": false
+  }
+]

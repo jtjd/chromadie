@@ -1,0 +1,92 @@
+[
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "scrollHeight": 980,
+    "bodyScrollHeight": 980,
+    "primaryBottom": 722,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 230,
+        "bottom": 400,
+        "height": 169
+      },
+      {
+        "name": "roll",
+        "top": 440,
+        "bottom": 605,
+        "height": 165
+      },
+      {
+        "name": "featured",
+        "top": 629,
+        "bottom": 722,
+        "height": 93
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-13/completed-roll/1440x900.png"
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollHeight": 776,
+    "bodyScrollHeight": 776,
+    "primaryBottom": 559,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 96,
+        "bottom": 241,
+        "height": 145
+      },
+      {
+        "name": "roll",
+        "top": 281,
+        "bottom": 446,
+        "height": 165
+      },
+      {
+        "name": "featured",
+        "top": 466,
+        "bottom": 559,
+        "height": 93
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-13/completed-roll/1280x720.png"
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollHeight": 936,
+    "bodyScrollHeight": 936,
+    "primaryBottom": 605,
+    "regions": [
+      {
+        "name": "identity",
+        "top": 142,
+        "bottom": 299,
+        "height": 158
+      },
+      {
+        "name": "roll",
+        "top": 327,
+        "bottom": 492,
+        "height": 165
+      },
+      {
+        "name": "featured",
+        "top": 512,
+        "bottom": 605,
+        "height": 93
+      }
+    ],
+    "outputPath": "/home/alex/My Projects/Chromadie/artifacts/phase-13/completed-roll/390x844.png"
+  }
+]
