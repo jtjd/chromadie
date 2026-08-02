@@ -6,7 +6,7 @@
   <title>Privacy Policy | ChromaDie</title>
 </svelte:head>
 
-<main class="container legal-page" aria-labelledby="privacy-title">
+<main class="container site-document legal-page" aria-labelledby="privacy-title">
   <section class="card legal-hero">
     <p class="legal-kicker">Privacy policy</p>
     <h1 id="privacy-title">ChromaDie Privacy Policy</h1>

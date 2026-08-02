@@ -395,6 +395,16 @@ indexing, and deletion reviews. Scoring, eligibility, rewards, economy,
 private achievements, auth, and existing configuration semantics remain
 unchanged.
 
+## 2026-08-01 — Extend the homepage contract across supporting pages
+
+The full leaderboard route now presents its existing discovery results as one
+quiet, homepage-style board: profile identity, current roll, score, and the
+existing metadata/actions remain available without the previous feature-card
+visual hierarchy. Privacy and Terms now share the same document shell, type
+scale, muted copy role, and rule-separated sections. This is presentation-only;
+RPC data, filters, follow/share behavior, auth, public profile routes, and
+profile-specific rendering remain unchanged.
+
 ## 2026-08-01 — Keep signed-out navigation out of guest profile onboarding
 
 Signed-out supporting routes now keep the public Explore/Leaderboard header

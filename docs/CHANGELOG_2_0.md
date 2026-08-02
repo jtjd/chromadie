@@ -1155,3 +1155,12 @@ linking to the legacy guest profile onboarding page.
 - Replaced the homepage’s default circular/orb roll preview with the
   reference’s faceted SVG glyph and float motion. Existing orb-shape classes
   now use the same clean presentation while retaining their catalog keys.
+
+## 2026-08-01 — Cohere supporting pages with the homepage
+
+- Reworked the leaderboard surface from feature cards into a quiet, homepage-
+  style public-profile board without changing discovery data or actions.
+- Restyled Privacy and Terms as one shared product-document family with the
+  homepage font, color, spacing, and border roles.
+- Preserved public profile rendering, auth, scoring, RLS/RPC boundaries, and
+  direct route behavior.

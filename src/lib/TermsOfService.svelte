@@ -1,6 +1,6 @@
 <svelte:head><title>Terms of Service | ChromaDie</title></svelte:head>
 
-<main class="terms" aria-labelledby="terms-title">
+<main class="site-document terms" aria-labelledby="terms-title">
   <header class="terms__hero">
     <p class="terms__eyebrow">terms of service</p>
     <h1 id="terms-title">Keep ChromaDie public, personal, and safe.</h1>

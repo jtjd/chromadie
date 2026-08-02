@@ -415,6 +415,335 @@
   }
 }
 
+/* Supporting routes use the homepage leaderboard as their quiet data
+ * presentation: one flat board, one row per profile, and actions kept in the
+ * metadata line. The discovery controls and live data remain unchanged. */
+.app-main--site .discovery-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--site-line);
+  border-radius: 0.5rem;
+  background: #101217;
+}
+
+.app-main--site .discovery-grid > .discovery-card,
+.app-main--site .discovery-grid > .discovery-card.discovery-card--featured {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "topline topline" "main main" "stats actions";
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1.05rem 1.25rem;
+  border: 0;
+  border-top: 1px solid var(--site-line-subtle);
+  border-radius: 0;
+  background: #101217;
+  box-shadow: none;
+  transform: none;
+}
+
+.app-main--site .discovery-grid > .discovery-card:first-child {
+  border-top: 0;
+}
+
+.app-main--site .discovery-grid > .discovery-card::before {
+  inset: 0 auto 0 0;
+  width: 2px;
+  height: auto;
+  background: var(--discovery-profile-accent, var(--site-accent));
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.app-main--site .discovery-grid > .discovery-card:hover {
+  border-color: transparent;
+  background: #171920;
+  box-shadow: none;
+}
+
+.app-main--site .discovery-grid > .discovery-card:hover::before {
+  opacity: 0.9;
+}
+
+.app-main--site .discovery-card__topline {
+  grid-area: topline;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--site-line-subtle);
+}
+
+.app-main--site .discovery-card__rank-lockup {
+  min-width: 0;
+}
+
+.app-main--site .discovery-card__surface-label {
+  color: var(--site-muted);
+}
+
+.app-main--site .discovery-card__topline time {
+  color: var(--site-faint);
+}
+
+.app-main--site .discovery-card__main {
+  grid-area: main;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, auto) auto;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.app-main--site .discovery-card__profile,
+.app-main--site .discovery-card__roll,
+.app-main--site .discovery-card__score {
+  grid-row: auto;
+}
+
+.app-main--site .discovery-card__profile {
+  grid-column: 1;
+}
+
+.app-main--site .discovery-card__avatar,
+.app-main--site .discovery-card--featured .discovery-card__avatar {
+  flex-basis: 2.65rem;
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+.app-main--site .discovery-card__avatar-initial {
+  font-size: 1.1rem;
+}
+
+.app-main--site .discovery-card__name,
+.app-main--site .discovery-card--featured .discovery-card__name {
+  color: var(--site-ink);
+  font-size: 0.95rem;
+}
+
+.app-main--site .discovery-card__handle {
+  color: var(--site-faint);
+}
+
+.app-main--site .discovery-card__bio {
+  max-width: 30rem;
+  margin-top: 0.25rem;
+  color: var(--site-muted);
+}
+
+.app-main--site .discovery-card__roll,
+.app-main--site .discovery-card--featured .discovery-card__roll {
+  grid-column: 2;
+  align-items: center;
+  padding: 0;
+  border: 0;
+}
+
+.app-main--site .discovery-card__roll-copy > span,
+.app-main--site .discovery-card__score span,
+.app-main--site .discovery-card__stats,
+.app-main--site .discovery-card__topline {
+  color: var(--site-faint);
+}
+
+.app-main--site .discovery-card__roll-copy strong {
+  color: var(--site-ink);
+}
+
+.app-main--site .discovery-card__score {
+  grid-column: 3;
+  min-width: 6.9rem;
+  align-items: flex-end;
+}
+
+.app-main--site .discovery-card__score strong {
+  color: var(--site-ink);
+  font: 600 0.78rem/1 var(--site-mono);
+}
+
+.app-main--site .discovery-card__stats {
+  grid-area: stats;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.app-main--site .discovery-card__actions {
+  grid-area: actions;
+  justify-content: flex-end;
+  gap: 0.85rem;
+}
+
+.app-main--site .discovery-card__cta {
+  color: var(--site-accent);
+  font: 600 0.66rem/1 var(--site-mono);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.app-main--site .discovery-card__share,
+.app-main--site .discovery-card__icon-button {
+  color: var(--site-muted);
+}
+
+.app-main--site .discovery-card--featured {
+  grid-column: auto;
+}
+
+/* Privacy and Terms are the same kind of quiet product document. */
+.app-main--site .site-document {
+  width: min(100%, 86.25rem);
+  max-width: none;
+  margin: 0 auto;
+  padding: clamp(3.5rem, 8vw, 6rem) clamp(1rem, 4vw, 2.5rem) 5rem;
+  text-align: left;
+}
+
+.app-main--site .site-document :is(.legal-hero, .terms__hero) {
+  max-width: 58rem;
+  margin: 0;
+  padding: 0 0 clamp(3rem, 6vw, 5rem);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-main--site .site-document :is(.legal-kicker, .terms__eyebrow) {
+  margin-bottom: 0.7rem;
+  color: var(--site-faint);
+  font: 500 0.68rem/1 var(--site-mono);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.app-main--site .site-document :is(.legal-hero h1, .terms h1) {
+  max-width: 13ch;
+  margin: 0;
+  color: var(--site-ink);
+  font: 650 clamp(3.25rem, 7vw, 6rem)/0.9 var(--site-font);
+  letter-spacing: -0.044em;
+}
+
+.app-main--site .site-document :is(.legal-updated, .terms__updated) {
+  margin: 1rem 0 0;
+  color: var(--site-faint);
+  font: 500 0.68rem/1.2 var(--site-mono);
+}
+
+.app-main--site .site-document :is(.legal-hero .info-text, .terms__hero > p:not(.terms__eyebrow):not(.terms__updated)) {
+  max-width: 43rem;
+  margin: 1.15rem 0 0;
+  color: var(--site-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.app-main--site .site-document :is(.legal-section, .terms__section) {
+  max-width: 58rem;
+  margin: 0;
+  padding: 2rem 0;
+  border: 0;
+  border-top: 1px solid var(--site-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-main--site .site-document :is(.legal-section + .legal-section, .terms__section + .terms__section) {
+  margin-top: 0;
+}
+
+.app-main--site .site-document :is(.legal-section h2, .terms__section h2) {
+  margin: 0;
+  color: var(--site-ink);
+  font: 600 1.35rem/1.1 var(--site-font);
+  letter-spacing: -0.035em;
+}
+
+.app-main--site .site-document :is(.legal-section p, .legal-section li, .terms__section p, .terms__section li) {
+  max-width: 52rem;
+  color: var(--site-muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.app-main--site .site-document :is(.legal-section p, .terms__section p) {
+  margin: 0.75rem 0 0;
+}
+
+.app-main--site .site-document :is(.legal-section ul, .terms__section ul) {
+  display: grid;
+  gap: 0.55rem;
+  max-width: 52rem;
+  margin: 0.85rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.app-main--site .site-document :is(.legal-section a, .terms__section a) {
+  color: var(--site-accent);
+}
+
+@media (max-width: 48rem) {
+  .app-main--site .discovery-grid > .discovery-card,
+  .app-main--site .discovery-grid > .discovery-card.discovery-card--featured {
+    padding: 1rem;
+  }
+
+  .app-main--site .discovery-grid > .discovery-card,
+  .app-main--site .discovery-grid > .discovery-card.discovery-card--featured {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "topline" "main" "stats" "actions";
+  }
+
+  .app-main--site .discovery-card__main {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.85rem;
+  }
+
+  .app-main--site .discovery-card__profile {
+    grid-column: 1 / -1;
+  }
+
+  .app-main--site .discovery-card__roll {
+    grid-column: 1;
+  }
+
+  .app-main--site .discovery-card__score {
+    grid-column: 2;
+  }
+
+  .app-main--site .discovery-card__topline {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .app-main--site .discovery-card__topline time {
+    display: none;
+  }
+
+  .app-main--site .discovery-card__stats {
+    grid-area: stats;
+  }
+
+  .app-main--site .discovery-card__actions {
+    grid-area: actions;
+    justify-content: space-between;
+  }
+
+  .app-main--site .site-document {
+    padding-inline: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-main--site .discovery-grid > .discovery-card::before {
+    transition: none;
+  }
+}
+
 @media (max-width: 36rem) {
   .app-main--site .container {
     margin-top: 1.5rem;

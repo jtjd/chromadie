@@ -1307,3 +1307,14 @@ catalog keys and equipped-cosmetic data remain unchanged.
 Signed-out header navigation no longer links to the legacy guest profile
 onboarding route; the public Explore/Leaderboard navigation remains available
 on every signed-out supporting route.
+
+## Supporting-page visual pass — 2026-08-01
+
+- Restyled the leaderboard route toward the homepage's flat three-column row
+  language while retaining all discovery tabs, filters, pagination, rank state,
+  follow actions, share actions, and live public data.
+- Unified Privacy and Terms under a shared homepage-derived document surface:
+  large Instrument Sans headings, IBM Plex Mono labels, quiet borders, and
+  muted body copy.
+- Added source contracts for the shared leaderboard/document presentation and
+  kept public profile selectors outside the supporting-route baseline.

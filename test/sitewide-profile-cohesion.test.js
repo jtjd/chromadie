@@ -43,3 +43,21 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /Homepage baseline for supporting routes/);
   assert.match(siteStyles, /prefers-reduced-motion/);
 });
+
+test('leaderboard and legal routes share the homepage presentation contract', async () => {
+  const siteStyles = await read('src/styles/site.css');
+  const discoveryHub = await read('src/lib/DiscoveryHub.svelte');
+  const privacy = await read('src/lib/PrivacyPolicy.svelte');
+  const terms = await read('src/lib/TermsOfService.svelte');
+
+  assert.match(discoveryHub, /<div class="discovery-grid">/);
+  assert.match(siteStyles, /.app-main--site \.discovery-grid {/);
+  assert.match(siteStyles, /grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(siteStyles, /\.app-main--site \.discovery-card__main \{/);
+  assert.match(siteStyles, /grid-template-columns: minmax\(0, 1fr\) minmax\(14rem, auto\) auto;/);
+  assert.match(privacy, /class="container site-document legal-page"/);
+  assert.match(terms, /class="site-document terms"/);
+  assert.match(siteStyles, /Privacy and Terms are the same kind of quiet product document/);
+  assert.match(siteStyles, /\.app-main--site \.site-document :is\(\.legal-section, \.terms__section\)/);
+  assert.doesNotMatch(siteStyles, /\.app-main--profile \{/);
+});
