@@ -101,7 +101,7 @@ only added values are `avatar_path`, `background_path`, `spotify_type`, and
 existing configuration RPC and no private configuration row access.
 
 The `avatars` and `backgrounds` buckets accept only the processed `image/webp`
-representation and enforce 256 KB and 1 MB object limits respectively. The
+representation and enforce 256 KB and 4 MB object limits respectively. The
 browser accepts originals up to 5 MB for avatars and 10 MB for backgrounds so
 they can be processed locally before upload. Public
 reads are limited to those buckets. Authenticated inserts, replacements, and

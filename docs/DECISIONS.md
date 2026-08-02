@@ -2,6 +2,16 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-01 — Give profile backgrounds a larger quality budget
+
+**Status:** accepted and implemented
+
+Backgrounds are the broadest visual surface on a profile, so a 1 MB output
+ceiling and 2400 px cap caused visible detail loss in textured or geometric
+images. Background uploads now use a 4 MB Storage limit, a 3200 px maximum
+dimension, and an initial WebP quality of 0.9. Avatar limits stay compact and
+unchanged because avatars render at a much smaller scale.
+
 ## 2026-08-01 — Make ambient profile color effects opt-in
 
 **Status:** accepted and implemented

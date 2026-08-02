@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-01 — Preserve more background image detail
+
+- Increased the stored background-image limit from 1 MB to 4 MB.
+- Background uploads now retain up to 3200 px and begin WebP conversion at
+  higher quality; avatar processing is unchanged.
+- Public identity cards now show all six configured links, including a
+  dedicated Twitch icon.
+
 ## 2026-08-01 — Make ambient profile color effects opt-in
 
 - Added an off-by-default profile setting for ambient color effects.

@@ -12,8 +12,10 @@ the linked project. The public gate remains active.
 - Added browser-side image validation, square avatar crop, background resize,
   WebP conversion, replacement, removal, and initials/generated-atmosphere
   fallbacks.
-- Added stored-output budgets of 256 KiB per avatar and 1 MiB per background,
-  enforced by the browser processor and Supabase Storage bucket limits.
+- Added stored-output budgets of 256 KiB per avatar and 4 MiB per background,
+  enforced by the browser processor and Supabase Storage bucket limits. The
+  background processor keeps up to 3200 px and starts WebP encoding at 0.9
+  quality so large visual scenes retain more detail.
 - Added server-authoritative Spotify URL parsing for HTTPS
   `open.spotify.com` track, playlist, and album URLs. Only the bounded type and
   identifier are stored; the public profile uses Spotify's lazy official embed.

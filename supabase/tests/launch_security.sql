@@ -193,7 +193,7 @@ SELECT pg_temp.audit_assert(
 SELECT pg_temp.audit_assert(
   (SELECT public AND file_size_limit = 262144 AND allowed_mime_types = ARRAY['image/webp']::text[]
    FROM storage.buckets WHERE id = 'avatars')
-    AND (SELECT public AND file_size_limit = 1048576 AND allowed_mime_types = ARRAY['image/webp']::text[]
+    AND (SELECT public AND file_size_limit = 4194304 AND allowed_mime_types = ARRAY['image/webp']::text[]
          FROM storage.buckets WHERE id = 'backgrounds')
     AND (SELECT relrowsecurity FROM pg_class WHERE oid = 'storage.objects'::regclass)
     AND (SELECT count(*) = 4 FROM pg_policies

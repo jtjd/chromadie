@@ -71,7 +71,7 @@ function resizeCanvas(canvas, scale) {
 async function boundedWebpFromCanvas(canvas, kind) {
   const rules = PROFILE_IMAGE_RULES[kind];
   let candidateCanvas = canvas;
-  let quality = kind === 'avatar' ? 0.86 : 0.8;
+  let quality = kind === 'avatar' ? 0.86 : 0.9;
   const minimumSide = kind === 'avatar' ? 320 : 800;
 
   for (let attempt = 0; attempt < 14; attempt += 1) {
@@ -121,7 +121,7 @@ export async function processProfileImage(file, kind) {
       return await boundedWebpFromCanvas(canvas, kind);
     }
 
-    const maxDimension = 2400;
+    const maxDimension = 3200;
     const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
     canvas.width = Math.max(1, Math.round(sourceWidth * scale));
     canvas.height = Math.max(1, Math.round(sourceHeight * scale));

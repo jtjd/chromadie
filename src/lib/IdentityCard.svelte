@@ -28,14 +28,14 @@
   $: safeDisplayName = displayName || username;
   $: safeInitial = safeDisplayName.slice(0, 1).toUpperCase() || '✦';
   $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
-  $: displayedLinks = (Array.isArray(links) ? links : []).slice(0, 4);
+  $: displayedLinks = (Array.isArray(links) ? links : []).slice(0, 6);
   $: displayedBadges = (Array.isArray(badges) ? badges : [])
     .filter(badge => badge?.id !== 'launch_edition')
     .slice(0, 3);
 
   function linkIconSource(link) {
     const type = String(link?.type || 'link').toLowerCase();
-    return ['/github', '/youtube'].includes('/' + type)
+    return ['/github', '/twitch', '/youtube'].includes('/' + type)
       ? '/link-icons/' + type + '.svg'
       : '/link-icons/link.svg';
   }

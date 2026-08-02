@@ -74,8 +74,10 @@ Phase 14 migrations:
   existing profile deletion boundary.
 - `migrations/20260730120000_profile_media_size_limits.sql` tightens the
   stored-object limits to 256 KiB per avatar and 1 MiB per background. The
-  browser processor and Storage bucket limits enforce the same budget.
-- Both migrations have passed a fresh local reset, schema lint,
+  later `migrations/20260801150000_increase_profile_background_quality.sql`
+  raises only the background limit to 4 MiB; the browser processor and
+  Storage bucket limits enforce the current budget.
+- These migrations have passed a fresh local reset, schema lint,
   database-security audit, and browser evidence pass, and are recorded in the
   linked project. Do not edit applied migrations or introduce a separate media
   service for this phase.

@@ -114,8 +114,8 @@ export const PROFILE_IMAGE_RULES = Object.freeze({
   }),
   background: Object.freeze({
     maxInputBytes: 10 * 1024 * 1024,
-    maxOutputBytes: 1024 * 1024,
-    outputLabel: '1 MB',
+    maxOutputBytes: 4 * 1024 * 1024,
+    outputLabel: '4 MB',
     accept: Object.freeze(['image/jpeg', 'image/png', 'image/webp'])
   })
 });

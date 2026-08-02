@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Background image quality — 2026-08-01
+
+- Raised the stored background WebP ceiling from 1 MB to 4 MB.
+- Increased the background processing dimension cap to 3200 px and initial
+  WebP quality to 0.9; avatar limits remain unchanged.
+- Added an additive Storage limit migration so existing background objects and
+  profile paths remain compatible.
+- Profile cards now render the full six-link allowance and use a dedicated
+  Twitch icon instead of the generic link mark.
+
 ## Profile ambient color preference — 2026-08-01
 
 - Added a persisted `colorEffectsEnabled` profile setting, off by default.
