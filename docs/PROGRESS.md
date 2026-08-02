@@ -1416,3 +1416,36 @@ kept public profile selectors outside the supporting-route baseline.
 - Added owned-collection search and removed duplicate Studio reset/settings
   controls. No catalog, schema, pricing, seed, inventory, entitlement, RLS,
   Name renderer, or legacy CSS behavior changed.
+
+## 2026-08-02 — Phase D1 composable Name renderer catalog
+
+- Added the code-owned composable resolver and compatibility contract for
+  explicit Font/Material/Motion loadouts while preserving legacy renderer-key
+  resolution and semantic Name rendering.
+- Completed all reference definitions: 18 Fonts, 23 Materials including
+  Plain, and 25 Motions including Still. The 64 paid definitions are prepared
+  in code only; no Supabase slots, catalog rows, products, prices, or live
+  shop tabs were changed.
+- Added bounded Canvas primitives and deterministic implementations for every
+  paid Material and Motion. Daily color is used by Thermal Ink, Chroma Glass,
+  Liquid Fill, Color Memory, and Daily Pulse; recent color history remains an
+  explicit bounded input.
+- Added an internal, unrouted composable catalog gallery with isolated layer
+  previews and combined loadouts. It defaults repeated cards to static
+  signatures and relies on the same shared clock/renderer when animation is
+  requested.
+- Kept the existing local font packages and added no font assets. Unsupported
+  prototype families have documented system or bundled substitutions and
+  trigger a bounded redraw when the browser reports font availability.
+- Added deterministic registry, composition, fallback, motion-visibility,
+  daily/history, reduced-motion, semantic, and lifecycle coverage. All 29
+  legacy keys continue to resolve.
+- Validation passes for build/check/lint/tests/links/CSP/username/balance/
+  catalog/scoring/database security. Performance initial and largest-lazy
+  budgets pass; the known transitional total caps remain at 794.07 kB JS/700
+  kB and 430.09 kB CSS/380 kB. Font assets remain 220.49 kB (215.32 KiB in
+  binary units).
+- D2 remains deferred: additive database slots, catalog activation and rows,
+  live shop subtype navigation, Profile Settings controls, equip conflict
+  behavior, legacy product archiving, pricing, replacement grants, and legacy
+  CSS removal.

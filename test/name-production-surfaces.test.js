@@ -109,6 +109,7 @@ test('the parity harness is internal-only and compares legacy, shared, and reduc
   assert.match(harness, /Shared renderer/);
   assert.match(harness, /mode="reduced-motion"/);
   assert.match(harness, /LEGACY_NAME_PARITY/);
+  assert.match(harness, /NameComposableCatalogHarness/);
 
   const sourceFiles = await findSvelteFiles('src/lib');
   for (const path of sourceFiles) {

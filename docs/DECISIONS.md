@@ -2300,3 +2300,59 @@ entitlement refresh, and Profile Settings equip boundaries remain unchanged.
 Collection and Studio use the same card/preview language without changing
 inventory, entitlement, or permanent equip behavior. No schema, catalog, seed,
 price, item-key, Name renderer, or legacy CSS changes were introduced.
+
+## 2026-08-02 — Establish the Phase D1 composable Name renderer catalog
+
+Phase D1 extends the existing shared Name renderer with a code-owned,
+composable loadout contract. `getComposableNameDefinition({ fontKey,
+materialKey, motionKey })` and `resolveNameLoadout(loadout)` independently
+validate each layer against finite registries. Invalid Font, Material, and
+Motion values fall back to `soft-grotesk`, `plain`, and `none` respectively;
+legacy `rendererKey` values remain on the legacy preset path unless an explicit
+composable key is supplied. The contract accepts future `name_font`,
+`name_material`, and `name_motion` field names without reading a store or
+database.
+
+The code-owned catalog now contains exactly 18 Fonts, 23 Materials including
+Plain, and 25 Motions including Still. The 64 paid definitions are the 18
+Fonts, 22 paid Materials, and 24 paid Motions. No definition is exposed as a
+live product, no database slot or catalog row was added, and existing legacy
+keys remain unchanged.
+
+No new font dependency was added. The existing locally bundled Instrument Sans
+Variable, Spline Sans Variable, and IBM Plex Mono packages remain the only
+production font assets. Soft Grotesk and Mono Compact use the bundled families.
+The other requested faces use deterministic system or bundled substitutions:
+Cormorant Garamond/DM Serif/Roboto Slab/Abril Fatface/Pirata One use a Georgia
+serif fallback; Syne, Black Ops One, Michroma, Fredoka, and Archivo Black use
+Spline Sans; Archivo Narrow and Libre Franklin use a system/Instrument sans;
+Sono, Pixelify Sans, and VT323 use IBM Plex Mono; Permanent Marker uses the
+system cursive fallback. The renderer redraws after a best-effort local font
+load event and never loads Google Fonts or catalog-provided font declarations.
+
+Reusable Canvas 2D primitives cover bounded fills and gradients, outline and
+emboss passes, masks, specular bands, seeded texture, scanlines, particles,
+pixel fragments, horizontal slices, character layers, echoes, radial color,
+daily-color palettes, and recent-color history. All paid Motion branches use
+the shared clock's normalized progress; none starts its own animation loop.
+Explicit composable previews load these branches once through
+`nameComposableRenderer.js`, then redraw through the same `NameEffectCanvas`
+path. The internal `NameComposableCatalogHarness.svelte` shows every layer and
+combined loadout but is unrouted and not imported by production navigation.
+
+Measured D1 build output is JavaScript 794.07 kB and CSS 430.09 kB versus the
+Phase C baselines of 765.16 kB and 430.09 kB. Initial JavaScript is 440.13 kB
+and largest lazy JavaScript is 73.13 kB; initial/largest-lazy CSS is 165.34/
+48.94 kB. The existing transitional total caps still report JavaScript
+794.07/700 kB and CSS 430.09/380 kB. The font asset payload remains 220.49 kB
+(215.32 KiB in the performance script's binary units) with zero new font
+assets. D2 must resolve the total-cap debt without raising
+the limits or removing legacy CSS merely to hide the warning.
+
+The three Phase B legacy parity concerns remain honest and unchanged:
+`name_prism_atelier`, `name_sunset_blur`, and `name_void` still need visual
+refinement. The new fallback typefaces and subtle texture/material treatments
+also need manual visual signoff before paid products are activated. Phase D2
+is responsible for additive database slots, catalog activation, product rows,
+profile controls, and equip conflict semantics; none of that work belongs in
+D1.

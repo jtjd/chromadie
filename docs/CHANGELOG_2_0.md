@@ -1236,3 +1236,29 @@ direct route behavior.
 - Refined Collection search/quantities and Studio presentation without
   changing item keys, prices, catalog rows, inventory, entitlements, RLS,
   profile saves, permanent equip, schema, or legacy Name CSS.
+
+## 2026-08-02 — Phase D1: prepare the composable Name catalog
+
+- Extended the Phase A/B shared Name renderer with a safe composable loadout
+  resolver and explicit Font, Material, and Motion inputs. Legacy
+  `rendererKey` behavior remains compatible and takes the fallback path unless
+  a composable layer is explicitly supplied.
+- Added all 18 Font definitions, 23 Material definitions including Plain, and
+  25 Motion definitions including Still. This is renderer/catalog foundation
+  work only; the 64 paid definitions are not live, purchasable, or connected
+  to database slots.
+- Added reusable Canvas primitives for bounded fills, strokes, masks, seeded
+  texture, slices, fragments, character layers, echoes, daily color, and
+  recent-color history. Paid Motion output uses the shared animation clock and
+  no per-component requestAnimationFrame loop.
+- Added an internal-only composable catalog gallery for layer isolation and
+  combined-loadout review. No production route or navigation entry was added.
+- Preserved all 29 legacy Name keys, item ownership, entitlements, prices,
+  inventory, equip behavior, purchase RPCs, RLS, shop behavior, and legacy CSS.
+- Kept the existing Instrument Sans Variable, Spline Sans Variable, and IBM
+  Plex Mono font packages. Unsupported reference faces use documented local or
+  system fallbacks; no remote font or new font asset was added.
+- D1 build totals are 794.07 kB JavaScript and 430.09 kB CSS versus Phase C
+  765.16/430.09 kB. Initial JavaScript is 440.13 kB, largest lazy JavaScript
+  73.13 kB, and font assets total 220.49 kB (215.32 KiB in binary units). The transitional total caps still
+  fail honestly; initial/largest-lazy budgets pass.

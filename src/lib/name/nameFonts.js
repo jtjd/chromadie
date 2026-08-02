@@ -1,52 +1,183 @@
 /*
- * Name fonts are code-owned renderer inputs. The families below are either
- * bundled by @fontsource in main.js or are stable system fallbacks. Nothing in
- * this module accepts a font family from catalog data or from a profile.
+ * Name fonts are code-owned renderer inputs. The requested display families
+ * come from the approved catalog reference, but only the locally bundled
+ * families are treated as faithful production assets. Every other face has a
+ * deliberate system fallback so a missing optional font can never make a
+ * username disappear or inject a catalog-provided font declaration.
  */
 
 const SYSTEM_SANS = 'ui-sans-serif, system-ui, sans-serif';
 const SYSTEM_SERIF = 'Georgia, Times New Roman, serif';
 const SYSTEM_MONO = 'ui-monospace, SFMono-Regular, Consolas, monospace';
+const SYSTEM_DISPLAY = 'ui-sans-serif, system-ui, sans-serif';
+
+function font(key, family, fallback, weight, extra = {}) {
+  return Object.freeze({
+    key,
+    family,
+    fallback,
+    weight,
+    style: 'normal',
+    widthFactor: 0.56,
+    source: 'system-fallback',
+    targetFamily: family,
+    ...extra
+  });
+}
 
 export const NAME_FONTS = Object.freeze({
-  'soft-grotesk': Object.freeze({
-    key: 'soft-grotesk',
-    family: 'Instrument Sans Variable',
-    fallback: SYSTEM_SANS,
-    weight: 650,
-    style: 'normal'
+  'editorial-serif': font('editorial-serif', 'Cormorant Garamond', SYSTEM_SERIF, 600, {
+    targetFamily: 'Cormorant Garamond',
+    substitution: 'Georgia',
+    widthFactor: 0.58,
+    label: 'Editorial Serif', collection: 'Archive', rarity: 'Rare'
   }),
-  'mono-compact': Object.freeze({
-    key: 'mono-compact',
-    family: 'IBM Plex Mono',
-    fallback: SYSTEM_MONO,
-    weight: 600,
-    style: 'normal'
+  'condensed-sans': font('condensed-sans', 'Archivo Narrow', SYSTEM_SANS, 700, {
+    targetFamily: 'Archivo Narrow',
+    substitution: 'system sans',
+    widthFactor: 0.44,
+    label: 'Condensed Sans', collection: 'Nocturne', rarity: 'Rare'
   }),
-  'editorial-serif': Object.freeze({
-    key: 'editorial-serif',
-    family: 'Georgia',
-    fallback: SYSTEM_SERIF,
-    weight: 700,
-    style: 'normal'
+  'wide-geometric': font('wide-geometric', 'Syne', SYSTEM_DISPLAY, 700, {
+    targetFamily: 'Syne',
+    substitution: 'Spline Sans',
+    widthFactor: 0.68,
+    letterSpacing: 0.02,
+    label: 'Wide Geometric', collection: 'Prism', rarity: 'Rare'
   }),
-  'high-contrast-italic': Object.freeze({
-    key: 'high-contrast-italic',
-    family: 'Instrument Sans Variable',
-    fallback: SYSTEM_SANS,
-    weight: 650,
-    style: 'italic'
+  'mono-compact': font('mono-compact', 'IBM Plex Mono', SYSTEM_MONO, 600, {
+    source: 'bundled-fontsource',
+    targetFamily: 'IBM Plex Mono',
+    widthFactor: 0.64,
+    label: 'Mono Compact', collection: 'Signal', rarity: 'Uncommon'
+  }),
+  'rounded-mono': font('rounded-mono', 'Sono', SYSTEM_MONO, 600, {
+    targetFamily: 'Sono',
+    substitution: 'IBM Plex Mono',
+    widthFactor: 0.62,
+    label: 'Rounded Mono', collection: 'Static Bloom', rarity: 'Rare'
+  }),
+  'soft-grotesk': font('soft-grotesk', 'Instrument Sans Variable', SYSTEM_SANS, 650, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Instrument Sans',
+    widthFactor: 0.56,
+    label: 'Soft Grotesk', collection: 'Nocturne', rarity: 'Uncommon'
+  }),
+  'humanist-display': font('humanist-display', 'Libre Franklin', SYSTEM_SANS, 600, {
+    targetFamily: 'Libre Franklin',
+    substitution: 'Instrument Sans',
+    widthFactor: 0.56,
+    label: 'Humanist Display', collection: 'Archive', rarity: 'Rare'
+  }),
+  'modern-fraktur': font('modern-fraktur', 'Pirata One', SYSTEM_SERIF, 400, {
+    targetFamily: 'Pirata One',
+    substitution: 'Georgia',
+    widthFactor: 0.58,
+    label: 'Modern Fraktur', collection: 'Nocturne', rarity: 'Epic'
+  }),
+  'pixel-display': font('pixel-display', 'Pixelify Sans', SYSTEM_MONO, 600, {
+    targetFamily: 'Pixelify Sans',
+    substitution: 'IBM Plex Mono',
+    widthFactor: 0.62,
+    label: 'Pixel Display', collection: 'Static Bloom', rarity: 'Rare'
+  }),
+  'high-contrast-italic': font('high-contrast-italic', 'DM Serif Display', SYSTEM_SERIF, 400, {
+    targetFamily: 'DM Serif Display',
+    substitution: 'Georgia italic',
+    style: 'italic',
+    widthFactor: 0.58,
+    label: 'High-Contrast Italic', collection: 'Archive', rarity: 'Epic'
+  }),
+  'neo-slab': font('neo-slab', 'Roboto Slab', SYSTEM_SERIF, 700, {
+    targetFamily: 'Roboto Slab',
+    substitution: 'Georgia',
+    widthFactor: 0.59,
+    label: 'Neo Slab', collection: 'Archive', rarity: 'Rare'
+  }),
+  'reverse-contrast': font('reverse-contrast', 'Abril Fatface', SYSTEM_SERIF, 400, {
+    targetFamily: 'Abril Fatface',
+    substitution: 'Georgia',
+    widthFactor: 0.62,
+    label: 'Reverse Contrast', collection: 'Archive', rarity: 'Epic'
+  }),
+  'industrial-stencil': font('industrial-stencil', 'Black Ops One', SYSTEM_DISPLAY, 400, {
+    targetFamily: 'Black Ops One',
+    substitution: 'Spline Sans',
+    widthFactor: 0.57,
+    label: 'Industrial Stencil', collection: 'Signal', rarity: 'Epic'
+  }),
+  'futurist-extended': font('futurist-extended', 'Michroma', SYSTEM_DISPLAY, 400, {
+    targetFamily: 'Michroma',
+    substitution: 'Spline Sans',
+    widthFactor: 0.63,
+    letterSpacing: 0.025,
+    label: 'Futurist Extended', collection: 'Prism', rarity: 'Rare'
+  }),
+  'terminal-bitmap': font('terminal-bitmap', 'VT323', SYSTEM_MONO, 400, {
+    targetFamily: 'VT323',
+    substitution: 'IBM Plex Mono',
+    widthFactor: 0.58,
+    label: 'Terminal Bitmap', collection: 'Static Bloom', rarity: 'Rare'
+  }),
+  'rounded-display': font('rounded-display', 'Fredoka', SYSTEM_DISPLAY, 600, {
+    targetFamily: 'Fredoka',
+    substitution: 'Spline Sans',
+    widthFactor: 0.59,
+    label: 'Rounded Display', collection: 'Prism', rarity: 'Rare'
+  }),
+  'marker-tag': font('marker-tag', 'Permanent Marker', 'cursive', 400, {
+    targetFamily: 'Permanent Marker',
+    substitution: 'system cursive',
+    widthFactor: 0.58,
+    label: 'Marker Tag', collection: 'Ember', rarity: 'Epic'
+  }),
+  'newspaper-black': font('newspaper-black', 'Archivo Black', SYSTEM_DISPLAY, 400, {
+    targetFamily: 'Archivo Black',
+    substitution: 'Spline Sans',
+    widthFactor: 0.61,
+    label: 'Newspaper Black', collection: 'Archive', rarity: 'Epic'
   })
 });
 
+export const NAME_FONT_KEYS = Object.freeze(Object.keys(NAME_FONTS));
+export const NAME_PAID_FONT_KEYS = NAME_FONT_KEYS;
 export const DEFAULT_NAME_FONT_KEY = 'soft-grotesk';
 
+function canonicalFontKey(fontKey) {
+  if (typeof fontKey !== 'string') return DEFAULT_NAME_FONT_KEY;
+  const candidate = fontKey.trim();
+  if (Object.prototype.hasOwnProperty.call(NAME_FONTS, candidate)) return candidate;
+  const prefix = 'name_font_';
+  const namespaced = candidate.startsWith(prefix) ? candidate.slice(prefix.length) : '';
+  const normalizedNamespaced = namespaced.replaceAll('_', '-');
+  return Object.prototype.hasOwnProperty.call(NAME_FONTS, normalizedNamespaced)
+    ? normalizedNamespaced
+    : DEFAULT_NAME_FONT_KEY;
+}
+
+export function resolveNameFontKey(fontKey) {
+  return canonicalFontKey(fontKey);
+}
+
 export function getNameFont(fontKey) {
-  return NAME_FONTS[fontKey] || NAME_FONTS[DEFAULT_NAME_FONT_KEY];
+  return NAME_FONTS[canonicalFontKey(fontKey)];
 }
 
 export function getNameCanvasFont(fontKey, pixelSize) {
-  const font = getNameFont(fontKey);
+  const fontDefinition = getNameFont(fontKey);
   const size = Number.isFinite(pixelSize) && pixelSize > 0 ? pixelSize : 24;
-  return `${font.style} ${font.weight} ${size}px "${font.family}", ${font.fallback}`;
+  return `${fontDefinition.style} ${fontDefinition.weight} ${size}px "${fontDefinition.family}", ${fontDefinition.fallback}`;
+}
+
+/**
+ * Ask the browser to resolve a code-owned font declaration. This is a best
+ * effort request: the renderer remains valid when FontFaceSet is unavailable
+ * or the optional family cannot be found locally.
+ */
+export function requestNameFontLoad(fontKey, pixelSize = 24, text = 'Chromadie') {
+  if (typeof document === 'undefined' || !document.fonts?.load) return Promise.resolve(false);
+  const descriptor = getNameCanvasFont(fontKey, pixelSize);
+  return document.fonts.load(descriptor, String(text || 'Chromadie'))
+    .then(() => true)
+    .catch(() => false);
 }

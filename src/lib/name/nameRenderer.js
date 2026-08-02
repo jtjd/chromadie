@@ -2,7 +2,8 @@ import { DISPLAY_NAME_MAX_LENGTH } from '../profileIdentity.js';
 import { getNameCanvasFont, getNameFont } from './nameFonts.js';
 import { getNameMaterial } from './nameMaterials.js';
 import { getNameMotion } from './nameMotions.js';
-import { getNameRendererDefinition } from './nameCatalog.js';
+import { hasComposableNameInput, resolveNameLoadout } from './nameCatalog.js';
+import { getCodeOwnedNameRenderers } from './nameComposableRenderer.js';
 
 export const NAME_MAX_RENDER_LENGTH = DISPLAY_NAME_MAX_LENGTH;
 export const NAME_RENDER_CONTEXTS = Object.freeze({ card: 'card', profile: 'profile' });
@@ -95,14 +96,18 @@ function rgba(color, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${clamp(alpha, 0, 1)})`;
 }
 
-function estimateTextWidth(text, fontSize, fontKey) {
-  const widthFactor = fontKey === 'mono-compact' ? 0.64 : fontKey === 'editorial-serif' ? 0.58 : 0.56;
-  return Array.from(text).reduce((total, character) => {
+function estimateTextWidth(text, fontSize, font) {
+  const widthFactor = Number.isFinite(font?.widthFactor)
+    ? font.widthFactor
+    : font?.key === 'mono-compact' ? 0.64 : font?.key === 'editorial-serif' ? 0.58 : 0.56;
+  const letterSpacing = Number.isFinite(font?.letterSpacing) ? font.letterSpacing * fontSize : 0;
+  const measured = Array.from(text).reduce((total, character) => {
     if (character === ' ') return total + fontSize * 0.32;
     if ('ilI.,:;!|'.includes(character)) return total + fontSize * 0.27;
     if ('MW@#%&'.includes(character)) return total + fontSize * (widthFactor + 0.16);
     return total + fontSize * widthFactor;
   }, 0);
+  return measured + Math.max(0, Array.from(text).length - 1) * letterSpacing;
 }
 
 function getCanvasSize(options, compact) {
@@ -119,10 +124,10 @@ function getTextMetrics(text, font, width, height, compact) {
   const availableWidth = Math.max(1, width - horizontalPadding * 2);
   const maxFontSize = compact ? Math.min(28, height * 0.72) : Math.min(54, height * 0.72);
   let fontSize = Math.max(compact ? 10 : 12, maxFontSize);
-  let measuredWidth = estimateTextWidth(text, fontSize, font.key);
+  let measuredWidth = estimateTextWidth(text, fontSize, font);
   while (measuredWidth > availableWidth && fontSize > 10) {
     fontSize -= 0.5;
-    measuredWidth = estimateTextWidth(text, fontSize, font.key);
+    measuredWidth = estimateTextWidth(text, fontSize, font);
   }
   return Object.freeze({
     fontSize,
@@ -151,7 +156,19 @@ export function shouldAnimateNameFrame({ visible = true, mode = NAME_RENDER_MODE
 
 export function getNameFrameModel(options = {}) {
   const requestedRendererKey = options.rendererKey || options.legacyKey;
-  const definition = getNameRendererDefinition(requestedRendererKey);
+  const loadout = options.loadout && typeof options.loadout === 'object' ? options.loadout : {};
+  const explicitLoadout = {
+    fontKey: options.fontKey ?? loadout.fontKey ?? loadout.name_font ?? '',
+    materialKey: options.materialKey ?? loadout.materialKey ?? loadout.name_material ?? '',
+    motionKey: options.motionKey ?? loadout.motionKey ?? loadout.name_motion ?? ''
+  };
+  const definition = hasComposableNameInput(explicitLoadout)
+    ? resolveNameLoadout(explicitLoadout)
+    : resolveNameLoadout({
+      rendererKey: requestedRendererKey,
+      legacyKey: options.legacyKey,
+      name_effect: loadout.name_effect
+    });
   const rendererKey = definition.key;
   const text = normalizeNameText(options.text);
   const compact = Boolean(options.compact || options.context === NAME_RENDER_CONTEXTS.card || options.size === 'compact');
@@ -175,7 +192,13 @@ export function getNameFrameModel(options = {}) {
 
   return Object.freeze({
     rendererKey,
-    requestedRendererKey: definition.requestedKey,
+    requestedRendererKey: definition.requestedKey || requestedRendererKey || '',
+    composable: definition.kind === 'composable',
+    layerKeys: Object.freeze({
+      font: definition.font,
+      material: definition.material,
+      motion: definition.motion
+    }),
     text,
     displayText,
     context: compact ? NAME_RENDER_CONTEXTS.card : NAME_RENDER_CONTEXTS.profile,
@@ -245,6 +268,13 @@ function drawMaterial(ctx, model) {
   const { material, metrics, progress, todayColor } = model;
   const textWidth = Math.max(metrics.availableWidth, metrics.width + 24);
   const colors = material.colors;
+
+  if (material.composable) {
+    const { material: drawComposableMaterial } = getCodeOwnedNameRenderers();
+    if (drawComposableMaterial) drawComposableMaterial(ctx, model);
+    else drawText(ctx, model, mixColors(colors[0] || '#F7FBFF', todayColor, 0.12));
+    return;
+  }
 
   if (material.kind === 'void') {
     ctx.save();
@@ -322,6 +352,13 @@ function drawShimmer(ctx, model, colors = ['#ffffff', '#b9fcff']) {
 }
 
 function drawMotion(ctx, model) {
+  if (model.motion.composable && model.motion.key !== 'none') {
+    const { motion: drawComposableMotion } = getCodeOwnedNameRenderers();
+    if (drawComposableMotion) return drawComposableMotion(ctx, model, drawMaterial);
+    drawMaterial(ctx, model);
+    return false;
+  }
+
   const kind = model.motion.kind;
   const { metrics, fontSize } = { metrics: model.metrics, fontSize: model.metrics.fontSize };
   const phase = model.progress * Math.PI * 2;
@@ -407,7 +444,8 @@ export function drawNameFrame(ctx, model) {
     ctx.scale(model.metrics.scaleX, 1);
     ctx.translate(-model.metrics.x, -model.metrics.y);
   }
-  drawMaterial(ctx, model);
+  const composableMotion = model.motion.composable && model.motion.key !== 'none';
+  if (!composableMotion) drawMaterial(ctx, model);
   drawMotion(ctx, model);
   ctx.restore();
 }

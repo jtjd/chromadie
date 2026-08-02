@@ -1,5 +1,6 @@
 <script>
   import NameEffectCanvas from './NameEffectCanvas.svelte';
+  import NameComposableCatalogHarness from './NameComposableCatalogHarness.svelte';
   import { LEGACY_NAME_PARITY } from './nameLegacyParity.js';
 
   /** Internal QA surface. It is intentionally not imported by a production route. */
@@ -62,6 +63,8 @@
       </article>
     {/each}
   </div>
+
+  <NameComposableCatalogHarness {text} {todayColor} {recentColors} {mode} {compact} />
 </section>
 
 <style>

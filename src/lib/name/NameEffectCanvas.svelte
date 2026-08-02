@@ -2,11 +2,17 @@
   import { onDestroy, onMount } from 'svelte';
   import { registerNameAnimation } from './nameAnimationClock.js';
   import { shouldAnimateNameFrame, createNameCanvasRenderer } from './nameRenderer.js';
-  import { resolveNameRendererKey } from './nameCatalog.js';
+  import { getNameRendererDefinition, hasComposableNameInput, resolveNameRendererKey } from './nameCatalog.js';
+  import { loadCodeOwnedNameRenderers } from './nameComposableRenderer.js';
+  import { requestNameFontLoad } from './nameFonts.js';
 
   export let text = '';
   export let rendererKey = '';
   export let legacyKey = '';
+  export let loadout = null;
+  export let fontKey = '';
+  export let materialKey = '';
+  export let motionKey = '';
   export let todayColor = '#8B7CF6';
   export let recentColors = [];
   export let context = 'profile';
@@ -49,8 +55,33 @@
   let mediaQuery;
   let removeMediaListener;
   let removeFontListener;
+  let composableLoadPromise;
+  let requestedFontLoadKey = '';
 
-  $: safeRendererKey = resolveNameRendererKey(rendererKey || legacyKey || 'plain');
+  function loadoutValue(key, namespacedKey) {
+    const input = /** @type {Record<string, any>} */ (loadout && typeof loadout === 'object' ? loadout : {});
+    return input[key] ?? input[namespacedKey] ?? '';
+  }
+
+  $: explicitFontKey = typeof fontKey === 'string' && fontKey.trim()
+    ? fontKey
+    : loadoutValue('fontKey', 'name_font');
+  $: explicitMaterialKey = typeof materialKey === 'string' && materialKey.trim()
+    ? materialKey
+    : loadoutValue('materialKey', 'name_material');
+  $: explicitMotionKey = typeof motionKey === 'string' && motionKey.trim()
+    ? motionKey
+    : loadoutValue('motionKey', 'name_motion');
+  $: hasComposableKeys = hasComposableNameInput({
+    fontKey: explicitFontKey,
+    materialKey: explicitMaterialKey,
+    motionKey: explicitMotionKey
+  });
+  $: safeRendererKey = hasComposableKeys ? 'plain' : resolveNameRendererKey(rendererKey || legacyKey || 'plain');
+  $: activeFontKey = hasComposableKeys
+    ? explicitFontKey || 'soft-grotesk'
+    : getNameRendererDefinition(safeRendererKey).font;
+  $: fontLoadKey = `${activeFontKey}:${text}`;
   $: safeSemanticTag = SEMANTIC_TAGS.has(semanticTag) ? semanticTag : 'span';
   $: safeSemanticClass = SEMANTIC_CLASSES.has(semanticClass) ? semanticClass : '';
   $: safeMode = RENDER_MODES.has(mode) ? mode : 'animated';
@@ -58,6 +89,14 @@
   $: rendererOptions = {
     text,
     rendererKey: safeRendererKey,
+    loadout: hasComposableKeys ? {
+      fontKey: explicitFontKey,
+      materialKey: explicitMaterialKey,
+      motionKey: explicitMotionKey
+    } : null,
+    fontKey: hasComposableKeys ? explicitFontKey : '',
+    materialKey: hasComposableKeys ? explicitMaterialKey : '',
+    motionKey: hasComposableKeys ? explicitMotionKey : '',
     todayColor,
     recentColors,
     context,
@@ -71,6 +110,24 @@
     renderer.draw(lastDrawTime);
     syncAnimationLoop();
   }
+  function requestFontLoad() {
+    if (!renderer || fontLoadKey === requestedFontLoadKey) return;
+    requestedFontLoadKey = fontLoadKey;
+    requestNameFontLoad(activeFontKey, 24, text).then(() => {
+      renderer?.draw(lastDrawTime);
+    });
+  }
+
+  $: if (mounted && renderer) requestFontLoad();
+
+  function requestComposableRenderers() {
+    if (!hasComposableKeys || composableLoadPromise) return;
+    composableLoadPromise = loadCodeOwnedNameRenderers()
+      .then(() => renderer?.draw(lastDrawTime))
+      .catch(() => renderer?.draw(lastDrawTime));
+  }
+
+  $: if (mounted && renderer) requestComposableRenderers();
 
   function isAnimated() {
     return shouldAnimateNameFrame({ visible, mode: effectiveMode, reducedMotion });
@@ -115,6 +172,7 @@
     canvasReady = renderer.supported;
     renderer.resize();
     renderer.draw(0);
+    requestedFontLoadKey = '';
 
     if (typeof IntersectionObserver === 'function') {
       intersectionObserver = new IntersectionObserver(entries => {
@@ -179,7 +237,7 @@
   });
 </script>
 
-<div bind:this={host} class={'name-effect-canvas name-effect-canvas--' + (canvasReady ? 'ready' : 'fallback')}>
+<div bind:this={host} class={'name-effect-canvas name-effect-canvas--' + (canvasReady ? 'ready' : 'fallback')} data-name-renderer={safeRendererKey}>
   {#if safeSemanticTag === 'a'}
     <a id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} href={href || undefined} title={title || undefined} on:click={semanticOnClick}>{text}</a>
   {:else}

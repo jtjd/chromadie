@@ -3,13 +3,24 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
   LEGACY_NAME_EFFECT_KEYS,
+  NAME_COMPOSABLE_COUNTS,
+  NAME_COMPOSABLE_MATERIAL_KEYS,
+  NAME_COMPOSABLE_MOTION_KEYS,
+  NAME_FONTS,
+  NAME_MATERIALS,
+  NAME_MOTIONS,
+  NAME_PAID_MATERIAL_KEYS,
+  NAME_PAID_MOTION_KEYS,
+  getComposableNameDefinition,
   getNameRendererDefinition,
   isNameRendererKey,
+  resolveNameLoadout,
   resolveNameRendererKey
 } from '../src/lib/name/nameCatalog.js';
 import {
   NAME_MAX_RENDER_LENGTH,
   createNameCanvasRenderer,
+  drawNameFrame,
   getNameFrameModel,
   getNameFrameSignature,
   normalizeHexColor,
@@ -18,6 +29,14 @@ import {
 } from '../src/lib/name/nameRenderer.js';
 import { createNameAnimationClock } from '../src/lib/name/nameAnimationClock.js';
 import { LEGACY_NAME_PARITY, getLegacyNameParity } from '../src/lib/name/nameLegacyParity.js';
+import {
+  getCodeOwnedNameRenderers,
+  loadCodeOwnedNameRenderers
+} from '../src/lib/name/nameComposableRenderer.js';
+import { drawComposableMaterial } from '../src/lib/name/render/composableMaterials.js';
+import { drawComposableMotion } from '../src/lib/name/render/composableMotions.js';
+
+await loadCodeOwnedNameRenderers();
 
 const LEGACY_KEYS_FROM_PHASE_A_MAPPING = Object.freeze([
   'name_prism_atelier',
@@ -240,8 +259,238 @@ test('the canvas component keeps semantic text and cleans observers and renderer
   assert.match(canvasComponent, /intersectionObserver\?\.disconnect\(\)/);
   assert.match(canvasComponent, /resizeObserver\?\.disconnect\(\)/);
   assert.match(canvasComponent, /renderer\?\.destroy\(\)/);
+  assert.match(canvasComponent, /loadCodeOwnedNameRenderers/);
   assert.match(identityCard, /<NameEffectCanvas/);
   assert.match(identityCard, /semanticClass="identity-card__name"/);
   assert.match(preview, /nameRendererKey=\{nameRendererKey\}/);
   assert.match(preview, /loadout\?\.name_effect/);
+});
+
+test('the composable registries match the reference layer counts and IDs', async () => {
+  const catalog = JSON.parse(await readFile(new URL('../chromadie_name_catalog_64_effects.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(NAME_FONTS), catalog.fonts.map(item => item.id));
+  assert.deepEqual(NAME_COMPOSABLE_MATERIAL_KEYS, catalog.materials.map(item => item.id));
+  assert.deepEqual(NAME_COMPOSABLE_MOTION_KEYS, catalog.motions.map(item => item.id));
+  assert.equal(NAME_COMPOSABLE_COUNTS.fonts, 18);
+  assert.equal(NAME_COMPOSABLE_COUNTS.materials, 23);
+  assert.equal(NAME_COMPOSABLE_COUNTS.motions, 25);
+  assert.equal(NAME_COMPOSABLE_COUNTS.paidMaterials, 22);
+  assert.equal(NAME_COMPOSABLE_COUNTS.paidMotions, 24);
+  assert.equal(NAME_COMPOSABLE_COUNTS.paidTotal, 64);
+  assert.equal(new Set(Object.keys(NAME_FONTS)).size, 18);
+  assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, Object.keys(NAME_MATERIALS).length);
+  assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, Object.keys(NAME_MOTIONS).length);
+  catalog.fonts.forEach(item => {
+    assert.equal(NAME_FONTS[item.id].label, item.name, item.id);
+    assert.equal(NAME_FONTS[item.id].collection, item.collection, item.id);
+    assert.equal(NAME_FONTS[item.id].rarity, item.rarity, item.id);
+  });
+  catalog.materials.forEach(item => {
+    assert.equal(NAME_MATERIALS[item.id].label, item.name, item.id);
+    assert.equal(NAME_MATERIALS[item.id].collection, item.collection, item.id);
+    assert.equal(NAME_MATERIALS[item.id].rarity, item.rarity, item.id);
+  });
+  catalog.motions.forEach(item => {
+    assert.equal(NAME_MOTIONS[item.id].label, item.name, item.id);
+    assert.equal(NAME_MOTIONS[item.id].collection, item.collection, item.id);
+    assert.equal(NAME_MOTIONS[item.id].rarity, item.rarity, item.id);
+    assert.equal(NAME_MOTIONS[item.id].description, item.note, item.id);
+  });
+});
+
+test('composable definitions accept canonical and future namespaced layer keys', () => {
+  const definition = getComposableNameDefinition({
+    fontKey: 'editorial-serif',
+    materialKey: 'name_material_liquid_mercury',
+    motionKey: 'name_motion_ghost_offset'
+  });
+  assert.equal(definition.kind, 'composable');
+  assert.equal(definition.font, 'editorial-serif');
+  assert.equal(definition.material, 'liquid-mercury');
+  assert.equal(definition.motion, 'ghost-offset');
+  assert.equal(definition.key, 'composable:editorial-serif:liquid-mercury:ghost-offset');
+});
+
+test('composable draw branches load once through the shared renderer seam', async () => {
+  const firstLoad = loadCodeOwnedNameRenderers();
+  const secondLoad = loadCodeOwnedNameRenderers();
+  assert.equal(firstLoad, secondLoad);
+  const renderers = await firstLoad;
+  assert.equal(renderers.material, drawComposableMaterial);
+  assert.equal(renderers.motion, drawComposableMotion);
+  assert.equal(getCodeOwnedNameRenderers().material, drawComposableMaterial);
+  assert.equal(getCodeOwnedNameRenderers().motion, drawComposableMotion);
+});
+
+test('invalid composable layers fall back independently and cannot inject renderer values', () => {
+  const definition = resolveNameLoadout({
+    fontKey: 'font; draw evil code',
+    materialKey: 'https://example.invalid/style.css',
+    motionKey: '<script>alert(1)</script>'
+  });
+  assert.equal(definition.kind, 'composable');
+  assert.equal(definition.font, 'soft-grotesk');
+  assert.equal(definition.material, 'plain');
+  assert.equal(definition.motion, 'none');
+  assert.equal(getComposableNameDefinition({ materialKey: 'drop-shadow' }).material, 'plain');
+  assert.equal(getComposableNameDefinition({ motionKey: 'shimmer' }).motion, 'none');
+  assert.equal(resolveNameLoadout({ rendererKey: 'name_chroma' }).key, 'name_chroma');
+  assert.equal(resolveNameLoadout({ rendererKey: 'name_chroma', fontKey: 'bad' }).kind, 'composable');
+});
+
+test('composable frame models preserve daily color and recent history inputs', () => {
+  const frame = getNameFrameModel({
+    text: 'Chromadie',
+    fontKey: 'soft-grotesk',
+    materialKey: 'chroma-glass',
+    motionKey: 'color-memory',
+    todayColor: '#abc',
+    recentColors: ['#111111', '#ABC', '#111111'],
+    width: 320,
+    height: 72,
+    time: 440
+  });
+  assert.equal(frame.composable, true);
+  assert.deepEqual(frame.layerKeys, { font: 'soft-grotesk', material: 'chroma-glass', motion: 'color-memory' });
+  assert.equal(frame.todayColor, '#AABBCC');
+  assert.deepEqual(frame.recentColors, ['#111111', '#AABBCC']);
+  assert.equal(frame.context, 'profile');
+});
+
+function createTraceCanvas(width = 300, height = 64) {
+  const operations = [];
+  const gradient = () => ({ addColorStop: (...args) => operations.push(['addColorStop', ...args]) });
+  const context = {
+    save: () => operations.push(['save']),
+    restore: () => operations.push(['restore']),
+    setTransform: (...args) => operations.push(['setTransform', ...args]),
+    clearRect: (...args) => operations.push(['clearRect', ...args]),
+    fillText: (...args) => operations.push(['fillText', ...args]),
+    strokeText: (...args) => operations.push(['strokeText', ...args]),
+    fillRect: (...args) => operations.push(['fillRect', ...args]),
+    translate: (...args) => operations.push(['translate', ...args]),
+    scale: (...args) => operations.push(['scale', ...args]),
+    transform: (...args) => operations.push(['transform', ...args]),
+    beginPath: () => operations.push(['beginPath']),
+    moveTo: (...args) => operations.push(['moveTo', ...args]),
+    lineTo: (...args) => operations.push(['lineTo', ...args]),
+    closePath: () => operations.push(['closePath']),
+    rect: (...args) => operations.push(['rect', ...args]),
+    clip: () => operations.push(['clip']),
+    stroke: () => operations.push(['stroke']),
+    fill: () => operations.push(['fill']),
+    arc: (...args) => operations.push(['arc', ...args]),
+    createLinearGradient: (...args) => { operations.push(['linearGradient', ...args]); return gradient(); },
+    createRadialGradient: (...args) => { operations.push(['radialGradient', ...args]); return gradient(); }
+  };
+  ['globalAlpha', 'globalCompositeOperation', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY', 'fillStyle', 'strokeStyle', 'lineWidth', 'font', 'textAlign', 'textBaseline', 'lineJoin', 'lineCap'].forEach(property => {
+    let value;
+    Object.defineProperty(context, property, {
+      configurable: true,
+      get: () => value,
+      set: nextValue => {
+        value = nextValue;
+        operations.push([property, nextValue]);
+      }
+    });
+  });
+  return {
+    canvas: { width: 0, height: 0, getContext: () => context, getBoundingClientRect: () => ({ width, height }) },
+    operations,
+    context
+  };
+}
+
+test('every composable material produces bounded Canvas output in card and profile contexts', () => {
+  NAME_COMPOSABLE_MATERIAL_KEYS.forEach(materialKey => {
+    for (const context of ['card', 'profile']) {
+      const trace = createTraceCanvas(context === 'card' ? 180 : 360, context === 'card' ? 44 : 72);
+      const renderer = createNameCanvasRenderer(trace.canvas, {
+        text: 'Chromadie',
+        fontKey: 'soft-grotesk',
+        materialKey,
+        motionKey: 'none',
+        context,
+        compact: context === 'card'
+      });
+      assert.ok(renderer.draw(0), `${materialKey} ${context}`);
+      assert.ok(trace.operations.some(operation => operation[0] === 'fillText' || operation[0] === 'strokeText'), `${materialKey} ${context}`);
+      renderer.destroy();
+    }
+  });
+});
+
+test('every paid composable motion changes at intentional progress points and Still remains stable', () => {
+  NAME_PAID_MOTION_KEYS.forEach(motionKey => {
+    const trace = createTraceCanvas();
+    const renderer = createNameCanvasRenderer(trace.canvas, {
+      text: 'Chromadie',
+      fontKey: 'soft-grotesk',
+      materialKey: 'plain',
+      motionKey,
+      mode: 'paused',
+      pauseAt: 0.11
+    });
+    const signatures = [0.11, 0.37, 0.67].map(pauseAt => {
+      trace.operations.length = 0;
+      renderer.setOptions({ pauseAt });
+      renderer.draw(0);
+      return JSON.stringify(trace.operations);
+    });
+    assert.ok(new Set(signatures).size > 1, motionKey);
+    renderer.destroy();
+  });
+
+  const stillTrace = createTraceCanvas();
+  const still = createNameCanvasRenderer(stillTrace.canvas, {
+    text: 'Chromadie',
+    fontKey: 'soft-grotesk',
+    materialKey: 'plain',
+    motionKey: 'none',
+    mode: 'paused',
+    pauseAt: 0.17
+  });
+  stillTrace.operations.length = 0;
+  still.draw(0);
+  const firstStill = JSON.stringify(stillTrace.operations);
+  stillTrace.operations.length = 0;
+  still.setOptions({ pauseAt: 0.67 });
+  still.draw(0);
+  assert.equal(JSON.stringify(stillTrace.operations), firstStill);
+  assert.equal(stillTrace.operations.filter(operation => operation[0] === 'fillText').length, 1);
+  still.destroy();
+});
+
+test('seeded composable frames are deterministic and vary intentionally with seed inputs', () => {
+  const input = {
+    text: 'Signal',
+    fontKey: 'mono-compact',
+    materialKey: 'plain',
+    motionKey: 'particle-drift',
+    width: 260,
+    height: 54,
+    mode: 'paused',
+    pauseAt: 0.42,
+    todayColor: '#101820',
+    recentColors: ['#101820', '#F7FBFF']
+  };
+  const first = getNameFrameModel(input);
+  const second = getNameFrameModel(input);
+  const different = getNameFrameModel({ ...input, text: 'Different' });
+  assert.deepEqual(first, second);
+  assert.notEqual(first.seed, different.seed);
+  assert.equal(getNameFrameSignature(first), getNameFrameSignature(second));
+});
+
+test('the internal composable gallery stays unrouted and exposes all layer groups', async () => {
+  const gallery = await readFile(new URL('../src/lib/name/NameComposableCatalogHarness.svelte', import.meta.url), 'utf8');
+  assert.match(gallery, /Internal D1 review surface/);
+  assert.match(gallery, /Object\.values\(NAME_FONTS\)/);
+  assert.match(gallery, /Object\.values\(NAME_MATERIALS\)/);
+  assert.match(gallery, /Object\.values\(NAME_MOTIONS\)/);
+  assert.match(gallery, /fontKey=\{selectedFont\}/);
+  assert.match(gallery, /materialKey=\{selectedMaterial\}/);
+  assert.match(gallery, /motionKey=\{selectedMotion\}/);
+  const sourceFiles = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
+  assert.doesNotMatch(sourceFiles, /NameComposableCatalogHarness/);
 });
