@@ -28,7 +28,7 @@
     { id: 'overview', label: 'Browse', description: 'full catalog' },
     ...SHOP_SECTIONS.filter(section => !['overview', 'owned'].includes(section.id)).map(section => ({
       ...section,
-      description: section.id === 'profile' ? 'identity' : section.id === 'roll' ? 'daily color' : section.id === 'leaderboard' ? 'ranked row' : 'progress'
+      description: section.id === 'profile' ? 'identity' : section.id === 'names' ? 'name layers' : section.id === 'roll' ? 'daily color' : section.id === 'leaderboard' ? 'ranked row' : 'progress'
     })),
     { id: 'owned', label: 'Collection', description: 'your pieces' }
   ]);

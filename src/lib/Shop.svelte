@@ -28,6 +28,7 @@
     SHOP_SECTIONS,
     createFittingRoom,
     getCollectionItems,
+    getCatalogStatus,
     getShopAccessTier,
     getShopContextForSlot,
     hasShopEntitlement,
@@ -67,14 +68,19 @@
     entitlements: $profileEntitlements
   });
   // Reserved founder titles remain outside the public catalog, matching the existing cosmetic boundary.
-  $: catalogItems = Object.values($shopItems).filter(item => item.item_key !== 'title_founder' && item.slot !== 'title');
+  $: catalogItems = Object.values($shopItems).filter(item => item.item_key !== 'title_founder' && item.slot !== 'title' && getCatalogStatus(item) !== 'retired');
   $: selectedState = selectedItem ? getDisplayItemState(selectedItem) : null;
-  $: relatedItems = selectedItem ? getCollectionItems(catalogItems, selectedItem.collection, selectedItem.item_key).slice(0, 3) : [];
+  $: relatedItems = selectedItem
+    ? getCollectionItems(catalogItems, selectedItem.collection, selectedItem.item_key)
+      .filter(item => getCatalogStatus(item) === 'active' || hasShopEntitlement(item, fittingRoom))
+      .slice(0, 3)
+    : [];
   $: selectedOwnedCount = selectedItem ? fittingRoom.inventoryCounts?.[selectedItem.item_key] || 0 : 0;
   $: selectedHasAccess = Boolean(selectedItem && hasShopEntitlement(selectedItem, fittingRoom));
   $: selectedCanPurchase = Boolean(
     isSignedIn
       && selectedItem
+      && getCatalogStatus(selectedItem) === 'active'
       && getShopAccessTier(selectedItem) === 'earned'
       && selectedItem.cost > 0
       && fittingRoom.balance >= selectedItem.cost
@@ -118,6 +124,11 @@
     const ownedCount = fittingRoom.inventoryCounts?.[item.item_key] || 0;
     const accessTier = getShopAccessTier(item);
     if ($equippedItems[item.slot] === item.item_key) return { label: 'Equipped', tone: 'equipped', ownedCount };
+    if (getCatalogStatus(item) !== 'active') {
+      return hasShopEntitlement(item, fittingRoom)
+        ? { label: 'Legacy preset', tone: 'legacy', ownedCount }
+        : { label: 'Legacy · owner only', tone: 'legacy-locked', ownedCount };
+    }
     if (accessTier === 'free') return { label: 'Free baseline', tone: 'free', ownedCount };
     if (accessTier === 'premium') {
       return hasShopEntitlement(item, fittingRoom)

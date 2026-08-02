@@ -1,6 +1,6 @@
 <script>
   import ShopItemPreview from './ShopItemPreview.svelte';
-  import { SHOP_SLOT_LABELS, getShopAccessLabel, getShopAccessTier, isShopCosmetic } from './shopCatalog';
+  import { SHOP_SLOT_LABELS, getCatalogStatus, getShopAccessLabel, getShopAccessTier, getShopNameSubtype, isShopCosmetic } from './shopCatalog';
   import { createEventDispatcher } from 'svelte';
 
   /** @type {any} */
@@ -18,11 +18,15 @@
   const dispatch = createEventDispatcher();
 
   $: accessTier = item ? getShopAccessTier(item) : 'earned';
+  $: catalogStatus = item ? getCatalogStatus(item) : 'active';
+  $: subtype = item && getShopNameSubtype(item);
   $: purchaseLabel = !item
     ? ''
     : !isSignedIn
     ? 'Sign in to buy'
-    : loadingAction
+    : catalogStatus !== 'active'
+      ? 'Legacy preset · owner access only'
+      : loadingAction
       ? 'Completing purchase…'
       : purchaseArmed
         ? `Confirm purchase · ${item.cost.toLocaleString()} EP`
@@ -37,7 +41,7 @@
       <p>Your current equipped look is shown above. Choosing an item changes only this temporary preview.</p>
     </div>
   {:else}
-    <div class="selection-panel__eyebrow">Product detail · {SHOP_SLOT_LABELS[item.slot] || item.slot}</div>
+    <div class="selection-panel__eyebrow">Product detail · {subtype === 'name_font' ? 'Font' : subtype === 'name_material' ? 'Material' : subtype === 'name_motion' ? 'Motion' : SHOP_SLOT_LABELS[item.slot] || item.slot}</div>
     <div class="selection-panel__heading">
       <div>
         <span>{item.collection || `${item.rarity} cosmetic`}</span>
@@ -56,6 +60,8 @@
       <button type="button" class="selection-panel__try-on" on:click={() => dispatch('tryon', item)}>Try on</button>
       {#if isShopCosmetic(item) && selectedHasAccess}
         <a class="selection-panel__primary" href="/profile/settings">Manage in profile settings ↗</a>
+      {:else if catalogStatus !== 'active'}
+        <button type="button" class="selection-panel__primary" disabled>Legacy preset · preview or manage if owned</button>
       {:else if accessTier === 'premium'}
         <button type="button" class="selection-panel__primary" disabled>Premium expression · Preview only</button>
       {:else if accessTier === 'free'}

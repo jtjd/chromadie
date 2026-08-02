@@ -11,6 +11,7 @@
   import { getCanonicalProfilePath } from './routeContract.js';
   import { getLatestHomepageRoll } from './homepageDirectory.js';
   import { normalizeHexColor } from './utils.js';
+  import { getNameRendererLoadout } from './name/nameLoadout.js';
 
   /** @type {Record<string, any> | null} */
   export let model = null;
@@ -31,6 +32,7 @@
   $: displayName = profile?.display_name || username;
   $: profilePath = getCanonicalProfilePath(username) || '#';
   $: cosmetics = profile?.equipped_cosmetics || {};
+  $: nameRendererLoadout = getNameRendererLoadout(cosmetics);
   $: accentColor = normalizeHexColor(
     getLatestHomepageRoll(context)?.hex_code || profile?.mood_color || config.signatureColor,
     config.signatureColor
@@ -124,6 +126,7 @@
           founder={Array.isArray(profile.equipped_badges) && profile.equipped_badges.includes('launch_edition')}
           accentColor={accentColor}
           nameRendererKey={nameRendererKey}
+          nameRendererLoadout={nameRendererLoadout}
           nameRendererContext="card"
           nameRendererMode="static-signature"
           nameRendererRecentColors={nameRendererRecentColors}

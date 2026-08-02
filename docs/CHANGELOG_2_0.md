@@ -2,6 +2,27 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-02 — Phase D2 composable Name catalog activation
+
+- Activated 64 paid Name products through the existing shop and purchase
+  authority: 18 Fonts, 22 Materials, and 24 Motions. Plain and Still remain
+  free defaults rather than purchasable products.
+- Added independent Font, Material, and Motion equipped layers while keeping
+  legacy Name presets usable by their existing owners. Applying one modern
+  layer preserves the other modern layers; switching between legacy and
+  modern Name presentation clears the conflicting side atomically.
+- Added Name subtype navigation in Browse, owned subtype filters and legacy
+  labels in Collection, combined temporary fitting in Studio, and permanent
+  layer selectors in Profile Settings. All previews use the shared Name
+  renderer and semantic username path.
+- Preserved `purchase_item`, wallet/inventory/entitlement refresh, RLS,
+  profile-save boundaries, item keys, prices, legacy CSS, and old ownership.
+  The catalog lifecycle prevents new purchases of legacy rows and keeps
+  retired rows out of the shop.
+- The 64 new rows total 20,480,000 EP. No automatic replacement grants,
+  payment changes, font dependencies, or legacy-row deletion were introduced.
+  Legacy CSS removal and final parity cleanup remain Phase E.
+
 ## 2026-08-01 — Preserve more background image detail
 
 - Increased the stored background-image limit from 1 MB to 4 MB.

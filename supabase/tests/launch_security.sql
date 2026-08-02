@@ -239,6 +239,38 @@ SELECT pg_temp.audit_assert(
   'premium catalog rows must carry an explicit entitlement key'
 );
 SELECT pg_temp.audit_assert(
+  EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'shop_items' AND column_name = 'catalog_status'
+  )
+  AND EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.shop_items'::regclass AND conname = 'shop_items_catalog_status_check'
+  )
+  AND (SELECT count(*) = 29 FROM public.shop_items WHERE slot = 'name_effect' AND catalog_status = 'legacy')
+  AND (SELECT count(*) = 64 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
+  AND (SELECT count(*) = 18 FROM public.shop_items WHERE slot = 'name_font' AND catalog_status = 'active')
+  AND (SELECT count(*) = 22 FROM public.shop_items WHERE slot = 'name_material' AND catalog_status = 'active')
+  AND (SELECT count(*) = 24 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
+  AND NOT EXISTS (
+    SELECT 1 FROM public.shop_items
+    WHERE item_key IN ('name_material_plain', 'name_motion_none')
+  )
+  AND (SELECT bool_and(catalog_status = 'active') FROM public.shop_items WHERE slot NOT IN ('name_effect', 'name_font', 'name_material', 'name_motion')),
+  'D2 catalog status, slot counts, and legacy preservation are not valid'
+);
+SELECT pg_temp.audit_assert(
+  has_function_privilege('anon', 'public.get_shop_catalog()', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
+    AND (SELECT p.proconfig @> ARRAY['search_path=public']
+         FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
+    AND (SELECT count(*) = 64
+         FROM public.get_shop_catalog()
+         WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
+    AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),
+  'shop catalog RPC must expose only active/legacy rows with bounded renderer access'
+);
+SELECT pg_temp.audit_assert(
   NOT has_function_privilege('anon', 'public.purchase_item_impl(text)', 'EXECUTE')
     AND NOT has_function_privilege('authenticated', 'public.purchase_item_impl(text)', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.equip_item(text)', 'EXECUTE'),
@@ -555,10 +587,76 @@ INSERT INTO auth.users (
   '{"username":"audit_one"}'::jsonb, now(), now()
 );
 
+INSERT INTO public.inventory (user_id, item_key, quantity)
+VALUES
+  ('10000000-0000-0000-0000-000000000001', 'name_font_editorial_serif', 1),
+  ('10000000-0000-0000-0000-000000000001', 'name_font_mono_compact', 1),
+  ('10000000-0000-0000-0000-000000000001', 'name_material_copper_press', 1),
+  ('10000000-0000-0000-0000-000000000001', 'name_motion_soft_rise', 1),
+  ('10000000-0000-0000-0000-000000000001', 'name_motion_daily_pulse', 1),
+  ('10000000-0000-0000-0000-000000000001', 'name_void', 1);
+UPDATE public.profiles
+SET equipped_cosmetics = jsonb_build_object(
+  'frame', 'frame_thin_white',
+  'name_effect', 'name_void',
+  'name_material', 'name_material_copper_press',
+  'name_motion', 'name_motion_soft_rise'
+)
+WHERE id = '10000000-0000-0000-0000-000000000001';
+
 SELECT set_config(
   'request.jwt.claims',
   '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
   true
+);
+INSERT INTO audit_results VALUES ('d2_equip_font', public.equip_item('name_font_editorial_serif'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->'cosmetics'->>'name_font' = 'name_font_editorial_serif'
+      AND NOT (payload->'cosmetics' ? 'name_effect')
+      AND payload->'cosmetics'->>'name_material' = 'name_material_copper_press'
+      AND payload->'cosmetics'->>'name_motion' = 'name_motion_soft_rise'
+      AND payload->'cosmetics'->>'frame' = 'frame_thin_white'
+   FROM audit_results WHERE name = 'd2_equip_font'),
+  'equipping a Name Font did not clear the legacy preset while preserving other layers'
+);
+INSERT INTO audit_results VALUES ('d2_equip_legacy', public.equip_item('name_void'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->'cosmetics'->>'name_effect' = 'name_void'
+      AND NOT (payload->'cosmetics' ? 'name_font')
+      AND NOT (payload->'cosmetics' ? 'name_material')
+      AND NOT (payload->'cosmetics' ? 'name_motion')
+      AND payload->'cosmetics'->>'frame' = 'frame_thin_white'
+   FROM audit_results WHERE name = 'd2_equip_legacy'),
+  'equipping a legacy Name preset did not clear modern layers'
+);
+INSERT INTO audit_results VALUES ('d2_equip_material', public.equip_item('name_material_copper_press'));
+INSERT INTO audit_results VALUES ('d2_equip_motion', public.equip_item('name_motion_daily_pulse'));
+INSERT INTO audit_results VALUES ('d2_equip_font_again', public.equip_item('name_font_mono_compact'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->'cosmetics'->>'name_font' = 'name_font_mono_compact'
+      AND payload->'cosmetics'->>'name_material' = 'name_material_copper_press'
+      AND payload->'cosmetics'->>'name_motion' = 'name_motion_daily_pulse'
+      AND NOT (payload->'cosmetics' ? 'name_effect')
+   FROM audit_results WHERE name = 'd2_equip_font_again'),
+  'composable Name layers did not preserve each other across atomic equip calls'
+);
+INSERT INTO audit_results VALUES ('d2_unequip_material', public.unequip_item('name_material'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND NOT (payload->'cosmetics' ? 'name_material')
+      AND payload->'cosmetics'->>'name_font' = 'name_font_mono_compact'
+      AND payload->'cosmetics'->>'name_motion' = 'name_motion_daily_pulse'
+   FROM audit_results WHERE name = 'd2_unequip_material'),
+  'unequipping one Name layer removed unrelated modern layers'
+);
+INSERT INTO audit_results VALUES ('d2_legacy_purchase', public.purchase_item('name_void'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'false'
+      AND payload->>'error' = 'This item is no longer available for purchase.'
+   FROM audit_results WHERE name = 'd2_legacy_purchase'),
+  'legacy Name rows remained purchasable through purchase_item'
 );
 INSERT INTO audit_results VALUES ('first_roll', public.roll_die(false));
 SELECT pg_temp.audit_assert(

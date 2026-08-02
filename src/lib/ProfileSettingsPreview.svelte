@@ -5,6 +5,7 @@
   import { getCosmeticEffect, getProfileAtmosphereEffect, getProfileBg } from './cosmetics';
   import { getProfileStoryVisible, getVisibleProfileLinks, getVisibleProfileModules } from './profileConfig.js';
   import { getProfileMediaUrl } from './profileMedia.js';
+  import { getNameRendererLoadout } from './name/nameLoadout.js';
 
   export let profile = {};
   export let profileConfig = null;
@@ -29,6 +30,7 @@
   $: config = configSource.draft || configSource.published || configSource;
   $: loadout = /** @type {Record<string, string>} */ ($equippedItems || {});
   $: nameRendererKey = String(loadout?.name_effect || '');
+  $: nameRendererLoadout = getNameRendererLoadout(loadout);
   $: frameEffect = getCosmeticEffect(loadout, 'frame');
   $: borderEffect = getCosmeticEffect(loadout, 'profile_border');
   $: backgroundEffect = getProfileBg(loadout);
@@ -66,6 +68,7 @@
       avatarSrc={avatarSrc}
       accentColor={config.signatureColor || profile.mood_color || '#8B7CF6'}
       nameRendererKey={nameRendererKey}
+      nameRendererLoadout={nameRendererLoadout}
       nameRendererContext="profile"
       nameRendererMode="animated"
       frameClass={frameEffect.cls}

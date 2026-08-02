@@ -28,6 +28,7 @@
         badges={expanded ? previewBadges : []}
         accentColor={profile.accent}
         nameRendererKey={profile.nameRendererKey}
+        nameRendererLoadout={profile.nameRendererLoadout || null}
         nameRendererContext="card"
         nameRendererMode="static-signature"
         frameClass={profile.frameClass + ' ' + profile.avatarClass}

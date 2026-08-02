@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import ShopItemCard from './ShopItemCard.svelte';
   import {
+    SHOP_NAME_SLOTS,
     getShopAccessTier,
     getShopItemState,
     getShopContextForSlot,
@@ -23,6 +24,11 @@
   const collectionSections = Object.freeze([
     { id: 'all', label: 'All owned' },
     { id: 'profile', label: 'Profile' },
+    { id: 'names', label: 'Names' },
+    { id: 'name_font', label: 'Fonts' },
+    { id: 'name_material', label: 'Materials' },
+    { id: 'name_motion', label: 'Motion' },
+    { id: 'name_effect', label: 'Legacy presets' },
     { id: 'roll', label: 'Roll' },
     { id: 'leaderboard', label: 'Leaderboard' },
     { id: 'utility', label: 'Utility' }
@@ -40,8 +46,7 @@
     .sort((left, right) => (left.slot === 'consumable' ? 1 : 0) - (right.slot === 'consumable' ? 1 : 0) || left.name.localeCompare(right.name));
   $: consumables = items.filter(item => item.slot === 'consumable' && (fittingRoom.inventoryCounts?.[item.item_key] || 0) > 0);
   $: visibleOwnedItems = ownedItems
-    .filter(item => selectedCollectionSection === 'all'
-      || (selectedCollectionSection === 'utility' ? item.slot === 'consumable' : getShopContextForSlot(item.slot) === selectedCollectionSection))
+    .filter(item => collectionSectionMatches(item, selectedCollectionSection))
     .filter(item => {
       const query = searchQuery.trim().toLowerCase();
       return !query || [item.name, item.collection, item.description].filter(Boolean).some(value => String(value).toLowerCase().includes(query));
@@ -49,6 +54,14 @@
   $: username = profile?.display_name || profile?.username || 'Your profile';
   $: displayColor = currentRoll?.hex_code || profile?.mood_color || '#8B7CF6';
   $: displayRarity = currentRoll?.rarity || 'Current roll';
+
+  function collectionSectionMatches(item, section) {
+    if (section === 'all') return true;
+    if (section === 'utility') return item.slot === 'consumable';
+    if (section === 'names') return SHOP_NAME_SLOTS.includes(item.slot);
+    if (['name_font', 'name_material', 'name_motion', 'name_effect'].includes(section)) return item.slot === section;
+    return getShopContextForSlot(item.slot) === section;
+  }
 
 </script>
 

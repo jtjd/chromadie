@@ -22,6 +22,7 @@
   export let avatarLoading = 'eager';
   export let headingTag = 'h1';
   export let nameRendererKey = '';
+  export let nameRendererLoadout = null;
   export let nameRendererContext = 'profile';
   export let nameRendererMode = 'animated';
   export let nameRendererRecentColors = [];
@@ -59,10 +60,11 @@
 
     <div class="identity-card__copy">
       <div class="identity-card__name-row">
-        {#if nameRendererKey}
+        {#if nameRendererKey || nameRendererLoadout}
           <NameEffectCanvas
             text={safeDisplayName}
             rendererKey={nameRendererKey}
+            loadout={nameRendererLoadout}
             todayColor={nameRendererTodayColor || accentColor}
             recentColors={nameRendererRecentColors}
             context={nameRendererContext}

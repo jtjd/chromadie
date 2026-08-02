@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher, onDestroy, onMount, tick } from 'svelte';
   import ShopSelectionPanel from './ShopSelectionPanel.svelte';
+  import ShopItemPreview from './ShopItemPreview.svelte';
   import ShopStudioPreview from './ShopStudioPreview.svelte';
 
   /** @type {any} */
@@ -81,6 +82,10 @@
       </header>
       <div class="shop-detail-body">
         <div class="shop-detail-preview">
+          <div class="shop-detail-isolated">
+            <span>Item preview</span>
+            <ShopItemPreview item={item} username={username} displayColor={displayColor} rollRarity={rollRarity || 'Current roll'} />
+          </div>
           <ShopStudioPreview
             bind:activeContext
             loadout={loadout}
@@ -122,7 +127,11 @@
   .shop-detail-close { display:grid; width:2.35rem; height:2.35rem; place-items:center; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#f2f0eb; font-size:1.3rem; cursor:pointer; }
   .shop-detail-close:hover, .shop-detail-close:focus-visible { border-color:#9ca3b8; background:#20232b; }
   .shop-detail-body { display:grid; grid-template-columns:1fr; }
-  .shop-detail-preview { min-height:24rem; display:flex; align-items:center; padding:1rem; background:#07080b; }
+  .shop-detail-preview { min-height:24rem; display:flex; align-items:stretch; flex-direction:column; padding:1rem; background:#07080b; }
+  .shop-detail-isolated { display:grid; gap:.45rem; width:100%; min-width:0; }
+  .shop-detail-isolated > span { color:#858690; font:.65rem var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
+  .shop-detail-isolated :global(.shop-preview-area) { height:15rem; }
+  .shop-detail-preview :global(.studio-preview) { margin-top:1rem; }
   .shop-detail-preview :global(.studio-preview) { border:0; padding:0; border-radius:0; background:transparent; box-shadow:none; }
   .shop-detail-preview :global(.context-switcher) { margin:0 0 .8rem; border-radius:4px; }
   .shop-detail-preview :global(.studio-stage) { min-height:21rem; }

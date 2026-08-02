@@ -17,6 +17,10 @@
   import { supabase } from './supabase';
   import { trackProductEvent } from './productAnalytics.js';
   import {
+    NAME_COMPOSABLE_SLOTS,
+    applyNamePreviewLayer,
+  } from './name/nameLoadout.js';
+  import {
     SHOP_SLOT_LABELS,
     createFittingRoom,
     getShopContextForSlot,
@@ -35,6 +39,12 @@
   let error = '';
   let syncedLoadoutKey = '';
   const ATMOSPHERE_KEYS = new Set(['bg_rain', 'bg_snow', 'bg_fireflies', 'bg_scanlines']);
+  const NAME_DEFAULT_LABELS = Object.freeze({
+    name_font: 'Platform default font',
+    name_material: 'Plain material',
+    name_motion: 'Still motion'
+  });
+  const nameLayerSlots = [...NAME_COMPOSABLE_SLOTS];
 
   $: account = {
     ...($profile || {}),
@@ -54,7 +64,10 @@
       || left.name.localeCompare(right.name));
   $: contextSlots = [...new Set(ownedCosmetics
     .filter(item => getShopContextForSlot(item.slot) === activeContext)
-    .map(item => item.slot))];
+    .map(item => item.slot))]
+    .filter(slot => !NAME_COMPOSABLE_SLOTS.includes(slot) && slot !== 'name_effect');
+  $: nameOwnedItems = ownedCosmetics.filter(item => NAME_COMPOSABLE_SLOTS.includes(item.slot) || item.slot === 'name_effect');
+  $: legacyNameItems = nameOwnedItems.filter(item => item.slot === 'name_effect');
   $: atmosphereItems = Object.values($shopItems)
     .filter(item => item.slot === 'profile_atmosphere' && item.css_type === 'class' && /^profile-effect-/.test(item.css_value || ''))
     .sort((left, right) => left.name.localeCompare(right.name));
@@ -77,14 +90,14 @@
 
   function previewSlot(slot, itemKey) {
     const item = $shopItems[itemKey] || null;
-    previewLoadout = { ...previewLoadout };
-    if (item) {
-      previewLoadout[slot] = item.item_key;
-      selectedItem = item;
+    if (NAME_COMPOSABLE_SLOTS.includes(slot) || slot === 'name_effect') {
+      previewLoadout = applyNamePreviewLayer(previewLoadout, slot, item?.item_key || '');
     } else {
-      delete previewLoadout[slot];
-      selectedItem = null;
+      previewLoadout = { ...previewLoadout };
+      if (item) previewLoadout[slot] = item.item_key;
+      else delete previewLoadout[slot];
     }
+    selectedItem = item;
     error = '';
     status = 'Preview only. Apply the change when the look feels right.';
     trackProductEvent('shop_try_on', {
@@ -170,6 +183,56 @@
             <strong>Atmosphere overlays</strong>
             <p>Choose a full-page effect: rain, snow, fireflies, or scanlines.</p>
           </div>
+          <div class="profile-cosmetics-name" aria-labelledby="profile-name-cosmetics-title">
+            <div class="profile-cosmetics-name__heading">
+              <span>Name composition</span>
+              <strong id="profile-name-cosmetics-title">Shape the name in three layers.</strong>
+              <p>Defaults are always available. Applying an owned modern layer replaces an active legacy preset; the other modern layers remain equipped.</p>
+            </div>
+            {#each nameLayerSlots as slot (slot)}
+              <div class="profile-cosmetics-slot profile-cosmetics-name__slot">
+                <div style="min-width:0">
+                  <label for={`cosmetic-${slot}`} style="display:block;margin-bottom:.4rem;color:var(--color-ink-strong);font-weight:650">{SHOP_SLOT_LABELS[slot]}</label>
+                  <select
+                    id={`cosmetic-${slot}`}
+                    value={previewLoadout[slot] || ''}
+                    disabled={!!loadingSlot}
+                    on:change={event => previewSlot(slot, event.currentTarget.value)}
+                    style="width:100%;min-height:2.75rem;border:1px solid var(--color-line-subtle);border-radius:var(--radius-sm);padding:0 .75rem;background:var(--surface-inset);color:var(--color-ink-strong);font:500 var(--type-small)/1 var(--font-body-stack)"
+                  >
+                    <option value="">{NAME_DEFAULT_LABELS[slot]}</option>
+                    {#each nameOwnedItems.filter(item => item.slot === slot) as item (item.item_key)}
+                      <option value={item.item_key}>{item.name}</option>
+                    {/each}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  disabled={!!loadingSlot || (previewLoadout[slot] || '') === ($equippedItems[slot] || '')}
+                  on:click={() => applySlot(slot)}
+                  style="min-height:2.75rem;padding:0 1rem;border:1px solid transparent;border-radius:var(--radius-sm);background:var(--color-ink-strong);color:var(--color-canvas-deep);cursor:pointer;font-weight:700"
+                >{loadingSlot === slot ? 'Saving…' : 'Apply'}</button>
+              </div>
+            {/each}
+            {#if legacyNameItems.length}
+              <div class="profile-cosmetics-slot profile-cosmetics-name__slot">
+                <div style="min-width:0">
+                  <label for="cosmetic-name-effect" style="display:block;margin-bottom:.4rem;color:var(--color-ink-strong);font-weight:650">Legacy Name preset</label>
+                  <select id="cosmetic-name-effect" value={previewLoadout.name_effect || ''} disabled={!!loadingSlot} on:change={event => previewSlot('name_effect', event.currentTarget.value)} style="width:100%;min-height:2.75rem;border:1px solid var(--color-line-subtle);border-radius:var(--radius-sm);padding:0 .75rem;background:var(--surface-inset);color:var(--color-ink-strong);font:500 var(--type-small)/1 var(--font-body-stack)">
+                    <option value="">No legacy preset</option>
+                    {#each legacyNameItems as item (item.item_key)}
+                      <option value={item.item_key}>{item.name}</option>
+                    {/each}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  disabled={!!loadingSlot || (previewLoadout['name_effect'] || '') === ($equippedItems['name_effect'] || '')}
+                  on:click={() => applySlot('name_effect')}
+                >{loadingSlot === 'name_effect' ? 'Saving…' : 'Apply'}</button>
+              </div>
+            {/if}
+          </div>
           {#if atmosphereItems.length}
             <div class="profile-cosmetics-atmosphere">
               <label for="cosmetic-profile-atmosphere">Profile atmosphere</label>
@@ -230,6 +293,10 @@
   .profile-cosmetics-controls__heading span { display:block; color:var(--color-accent-bright); font:700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
   .profile-cosmetics-controls__heading strong { display:block; margin-top:.35rem; color:var(--color-ink-strong); font-size:1.05rem; }
   .profile-cosmetics-controls__heading p { margin:.45rem 0 0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
+  .profile-cosmetics-name { display:grid; gap:.75rem; padding:.85rem 0 .2rem; border-top:1px solid var(--color-line-subtle); }
+  .profile-cosmetics-name__heading span { display:block; color:var(--color-accent-bright); font:700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
+  .profile-cosmetics-name__heading strong { display:block; margin-top:.35rem; color:var(--color-ink-strong); font-size:1.05rem; }
+  .profile-cosmetics-name__heading p { margin:.45rem 0 0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.45; }
   .profile-cosmetics-atmosphere, .profile-cosmetics-slot { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.55rem .7rem; align-items:end; padding-top:.8rem; border-top:1px solid var(--color-line-subtle); }
   .profile-cosmetics-atmosphere label, .profile-cosmetics-slot label { grid-column:1 / -1; color:var(--color-ink-strong); font-weight:650; font-size:var(--type-small); }
   .profile-cosmetics-atmosphere select, .profile-cosmetics-slot select { width:100%; min-height:2.65rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); padding:0 .7rem; background:var(--surface-inset); color:var(--color-ink-strong); font:500 var(--type-small)/1 var(--font-body-stack); }

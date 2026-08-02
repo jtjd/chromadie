@@ -52,6 +52,25 @@ Catalog source of truth:
 - `npm run check:catalog-drift` detects snapshot/seed drift and checks the remote catalog when
   Supabase credentials are available.
 
+Phase D2 composable Name activation:
+
+- `migrations/20260802100000_composable_name_catalog_activation.sql` adds the
+  additive `catalog_status` lifecycle, validates renderer-backed Name rows,
+  marks the 29 legacy Name keys as `legacy`, inserts the 64 active paid rows,
+  updates the server purchase/equip boundaries, and bumps `shop_version`.
+- The migration is forward-only and preserves old keys, inventory, equipped
+  JSON, prices, entitlements, and legacy CSS. The D2 client reads
+  `get_shop_catalog()`; the temporary direct-table RLS policy hides only the
+  new slots from old clients so a client-first deployment cannot reject the
+  expanded catalog shape.
+- Deploy in this order: apply the migration, verify `catalog_status`, slot
+  counts, RPC grants and an end-to-end local purchase/equip flow, deploy the
+  matching client, then repeat read-only catalog and cache checks. Recovery is
+  non-destructive: set the 64 rows to `retired`/non-purchasable status without
+  deleting rows or ownership, restore the prior compatible client, and use a
+  reviewed corrective migration if a schema issue is found. Never reset a
+  remote project or manually mark the migration applied.
+
 Phase 13.1 local pending migration:
 
 - `migrations/20260730100000_username_reservation_policy.sql` adds the exact

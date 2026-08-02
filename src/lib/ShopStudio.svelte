@@ -1,6 +1,7 @@
 <script>
   import ShopStudioPreview from './ShopStudioPreview.svelte';
-  import { SHOP_SLOT_LABELS, getShopContextForSlot, hasShopEntitlement, isShopCosmetic } from './shopCatalog.js';
+  import { SHOP_NAME_SLOTS, SHOP_SLOT_LABELS, getShopContextForSlot, hasShopEntitlement, isShopCosmetic } from './shopCatalog.js';
+  import { applyNamePreviewLayer } from './name/nameLoadout.js';
 
   export let items = [];
   /** @type {any} */
@@ -17,6 +18,13 @@
   let activeContext = 'profile';
   let draftLoadout = {};
   let syncedEquippedKey = '';
+  const NAME_DEFAULT_LABELS = Object.freeze({
+    name_font: 'Platform default font',
+    name_material: 'Plain material',
+    name_motion: 'Still motion'
+  });
+  const nameLayerSlots = SHOP_NAME_SLOTS.filter(slot => slot !== 'name_effect');
+  const SLOT_ORDER = Object.freeze(['profile_bg', 'profile_atmosphere', 'name_effect', 'frame', 'profile_border', 'orb_shape', 'roll_effect', 'lb_theme']);
 
   $: equippedKey = JSON.stringify(equippedItems || {});
   $: syncEquippedLoadout(equippedKey);
@@ -25,9 +33,11 @@
     const ownedCount = fittingRoom.inventoryCounts?.[item.item_key] || 0;
     return ownedCount > 0 || equippedItems[item.slot] === item.item_key || (item.access_tier === 'premium' && hasShopEntitlement(item, fittingRoom));
   });
+  $: nameItems = ownedItems.filter(item => SHOP_NAME_SLOTS.includes(item.slot));
+  $: legacyNameItems = nameItems.filter(item => item.slot === 'name_effect');
   $: slots = Object.keys(SHOP_SLOT_LABELS)
-    .filter(slot => slot !== 'consumable' && (ownedItems.some(item => item.slot === slot) || equippedItems[slot]))
-    .sort((a, b) => ['profile_bg', 'profile_atmosphere', 'name_effect', 'frame', 'profile_border', 'orb_shape', 'roll_effect', 'lb_theme'].indexOf(a) - ['profile_bg', 'profile_atmosphere', 'name_effect', 'frame', 'profile_border', 'orb_shape', 'roll_effect', 'lb_theme'].indexOf(b));
+    .filter(slot => slot !== 'consumable' && !nameLayerSlots.includes(slot) && (ownedItems.some(item => item.slot === slot) || equippedItems[slot]))
+    .sort((a, b) => SLOT_ORDER.indexOf(a) - SLOT_ORDER.indexOf(b));
   $: username = profile?.display_name || profile?.username || 'Your profile';
   $: displayColor = currentRoll?.hex_code || profile?.mood_color || '#8B7CF6';
   $: displayRarity = currentRoll?.rarity || 'Current roll';
@@ -44,9 +54,10 @@
   }
 
   function updateSlot(slot, value) {
-    draftLoadout = { ...draftLoadout };
-    if (value) draftLoadout[slot] = value;
-    else delete draftLoadout[slot];
+    draftLoadout = (SHOP_NAME_SLOTS.includes(slot))
+      ? applyNamePreviewLayer(draftLoadout, slot, value)
+      : { ...draftLoadout, ...(value ? { [slot]: value } : {}) };
+    if (!value && !SHOP_NAME_SLOTS.includes(slot)) delete draftLoadout[slot];
   }
 
   function resetStudio() {
@@ -67,6 +78,33 @@
   <div class="shop-studio-layout">
     <aside class="shop-studio-slots">
       <div class="shop-panel-heading"><span>Equipped slots</span><strong>{changed ? 'Unsaved preview' : 'Current look'}</strong></div>
+      <div class="shop-studio-name">
+        <div class="shop-studio-name-heading"><span>Name composition</span><strong>Three independent layers</strong><small>Defaults are always available and never create inventory rows.</small></div>
+        {#each nameLayerSlots as slot (slot)}
+          <label class="shop-slot-control">
+            <span>{SHOP_SLOT_LABELS[slot]}</span>
+            <select value={draftLoadout[slot] || ''} on:change={event => updateSlot(slot, event.currentTarget.value)}>
+              <option value="">{NAME_DEFAULT_LABELS[slot]}</option>
+              {#each itemsForSlot(slot) as item (item.item_key)}
+                <option value={item.item_key}>{item.name}</option>
+              {/each}
+            </select>
+            <small>{itemsForSlot(slot).length ? `${itemsForSlot(slot).length} owned option${itemsForSlot(slot).length === 1 ? '' : 's'}` : 'Unlock options in the shop'}</small>
+          </label>
+        {/each}
+        {#if legacyNameItems.length || draftLoadout.name_effect}
+          <label class="shop-slot-control">
+            <span>Legacy preset</span>
+            <select value={draftLoadout.name_effect || ''} on:change={event => updateSlot('name_effect', event.currentTarget.value)}>
+              <option value="">No legacy preset</option>
+              {#each legacyNameItems as item (item.item_key)}
+                <option value={item.item_key}>{item.name}</option>
+              {/each}
+            </select>
+            <small>Choosing this clears the three modern layers in this preview.</small>
+          </label>
+        {/if}
+      </div>
       {#if slots.length}
         {#each slots as slot (slot)}
           <label class="shop-slot-control">
@@ -134,6 +172,11 @@
   .shop-panel-heading { display:grid; gap:.35rem; padding:1rem; border-bottom:1px solid var(--shop-line); background:#111319; }
   .shop-panel-heading span { color:#858690; font:.65rem var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
   .shop-panel-heading strong { color:#f2f0eb; font-size:.95rem; }
+  .shop-studio-name { border-bottom:1px solid var(--shop-line); }
+  .shop-studio-name-heading { display:grid; gap:.3rem; padding:1rem; background:#0f1116; }
+  .shop-studio-name-heading span { color:#cdd2ff; font:.65rem var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
+  .shop-studio-name-heading strong { color:#f2f0eb; font-size:.9rem; }
+  .shop-studio-name-heading small { color:#858690; font-size:.68rem; line-height:1.4; }
   .shop-slot-control { display:grid; gap:.35rem; padding:.8rem 1rem; border-bottom:1px solid #252830; }
   .shop-slot-control > span { color:#f2f0eb; font-size:.82rem; font-weight:650; }
   .shop-slot-control select { min-height:2.45rem; padding:0 .55rem; border:1px solid #41444e; border-radius:5px; background:#121419; color:#d9d7d2; font-size:.78rem; }

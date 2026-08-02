@@ -11,7 +11,8 @@ const snapshotPath = path.join(
 );
 const catalogExtensionPaths = [
   path.join(repoRoot, 'supabase/migrations/20260801110000_profile_atmosphere_catalog.sql'),
-  path.join(repoRoot, 'supabase/migrations/20260801120000_signal_garden_catalog.sql')
+  path.join(repoRoot, 'supabase/migrations/20260801120000_signal_garden_catalog.sql'),
+  path.join(repoRoot, 'supabase/migrations/20260802100000_composable_name_catalog_activation.sql')
 ];
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
 
@@ -66,11 +67,13 @@ function parseCatalog(sql, source) {
   )];
   if (!inserts.length) fail(`could not find shop_items insert in ${source}`);
 
-  let columns = null;
+  let columns = [];
   const rows = [];
   for (const insert of inserts) {
     const insertColumns = insert[1].split(',').map(column => column.trim());
-    if (!columns) columns = insertColumns;
+    for (const column of insertColumns) {
+      if (!columns.includes(column)) columns.push(column);
+    }
     const body = insert[2];
     let rowStart = -1;
     let depth = 0;
@@ -111,6 +114,9 @@ function parseCatalog(sql, source) {
 }
 
 function mergeCatalog(target, extension) {
+  for (const column of extension.columns) {
+    if (!target.columns.includes(column)) target.columns.push(column);
+  }
   for (const [itemKey, item] of extension.catalog) {
     target.catalog.set(itemKey, { ...(target.catalog.get(itemKey) || {}), ...item });
   }
@@ -129,9 +135,31 @@ function applyCostUpdates(sql, catalog, source) {
   }
 }
 
+function applyCatalogStatusUpdates(sql, catalog, source) {
+  const update = sql.match(/UPDATE public\.shop_items\s+SET catalog_status\s*=\s*'([^']+)'\s+WHERE item_key IN\s*\(([^)]+)\);/i);
+  if (!update) return;
+
+  const [, status, keys] = update;
+  for (const [, itemKey] of keys.matchAll(/'([a-z0-9_]+)'/g)) {
+    const item = catalog.get(itemKey);
+    if (!item) continue;
+    item.catalog_status = status;
+  }
+}
+
+const DEFAULT_CATALOG_VALUES = Object.freeze({
+  stackable: 'false',
+  access_tier: 'earned',
+  entitlement_key: null,
+  catalog_status: 'active'
+});
+
 function normalizeItem(item, columns) {
   return Object.fromEntries(
-    columns.map(column => [column, item[column] === null ? null : String(item[column])])
+    columns.map(column => {
+      const value = item[column] === undefined ? DEFAULT_CATALOG_VALUES[column] : item[column];
+      return [column, value === null ? null : String(value)];
+    })
   );
 }
 
@@ -170,20 +198,21 @@ async function readLocalCatalog(filePath) {
   const sql = await readFile(filePath, 'utf8');
   const parsed = parseCatalog(sql, source);
   applyCostUpdates(sql, parsed.catalog, source);
+  applyCatalogStatusUpdates(sql, parsed.catalog, source);
   return parsed;
 }
 
 async function readRemoteCatalog(columns, url, key) {
-  const endpoint = new URL('/rest/v1/shop_items', url);
-  endpoint.searchParams.set('select', columns.join(','));
-  endpoint.searchParams.set('order', 'item_key.asc');
+  const endpoint = new URL('/rest/v1/rpc/get_shop_catalog', url);
   const response = await fetch(endpoint, {
-    headers: { apikey: key, Authorization: `Bearer ${key}` }
+    method: 'POST',
+    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: '{}'
   });
   if (!response.ok) {
     fail(`remote query failed (${response.status}): ${await response.text()}`);
   }
-  const items = await response.json();
+  const items = (await response.json()).sort((left, right) => left.item_key.localeCompare(right.item_key));
   return {
     columns,
     catalog: new Map(items.map(item => [item.item_key, item]))
@@ -194,6 +223,8 @@ const snapshot = await readLocalCatalog(snapshotPath);
 for (const extensionPath of catalogExtensionPaths) {
   mergeCatalog(snapshot, await readLocalCatalog(extensionPath));
 }
+const activationSql = await readFile(catalogExtensionPaths.at(-1), 'utf8');
+applyCatalogStatusUpdates(activationSql, snapshot.catalog, path.relative(repoRoot, catalogExtensionPaths.at(-1)));
 const seed = await readLocalCatalog(seedPath);
 compareCatalogs(snapshot, seed, 'supabase/seed.sql');
 
@@ -201,9 +232,19 @@ const srcRoot = path.join(repoRoot, 'src');
 const styleFiles = (await readdir(srcRoot, { recursive: true }))
   .filter(file => file.endsWith('.css') || file.endsWith('.svelte'));
 const cosmeticCss = (await Promise.all(styleFiles.map(file => readFile(path.join(srcRoot, file), 'utf8')))).join('\n');
-const validSlots = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'orb_shape', 'profile_bg', 'profile_atmosphere', 'profile_border', 'roll_effect', 'title']);
+const validSlots = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'name_font', 'name_material', 'name_motion', 'orb_shape', 'profile_bg', 'profile_atmosphere', 'profile_border', 'roll_effect', 'title']);
+const validCatalogStatuses = new Set(['active', 'legacy', 'retired']);
+const rendererKeys = Object.freeze({
+  name_font: new Set(['editorial-serif', 'condensed-sans', 'wide-geometric', 'mono-compact', 'rounded-mono', 'soft-grotesk', 'humanist-display', 'modern-fraktur', 'pixel-display', 'high-contrast-italic', 'neo-slab', 'reverse-contrast', 'industrial-stencil', 'futurist-extended', 'terminal-bitmap', 'rounded-display', 'marker-tag', 'newspaper-black']),
+  name_material: new Set(['polished-chrome', 'copper-press', 'glass-emboss', 'fine-outline', 'ink-bleed', 'pearl-foil', 'carbon-cut', 'frosted-edge', 'holographic-film', 'cut-paper', 'neon-tube', 'liquid-mercury', 'oil-slick', 'thermal-ink', 'velvet-ink', 'embroidered-thread', 'engraved-stone', 'crt-phosphor', 'gold-leaf', 'chroma-glass', 'ceramic-glaze', 'blueprint-ink']),
+  name_motion: new Set(['velvet-sweep', 'refraction-sweep', 'ghost-offset', 'focus-resolve', 'mask-reveal', 'quiet-afterimage', 'soft-rise', 'scanline-reveal', 'particle-drift', 'letter-shuffle', 'fuzzy-signal', 'typewriter-name', 'chromatic-ripple', 'liquid-fill', 'pixel-dissolve', 'echo-collapse', 'heat-shimmer', 'signal-lock', 'letter-cascade', 'orbiting-spark', 'color-memory', 'daily-pulse', 'prism-shatter', 'ink-spread'])
+});
+const legacyNameKeys = new Set(['name_prism_atelier', 'name_drop_shadow', 'name_italic', 'name_glow_blue', 'name_glow_green', 'name_smallcaps', 'name_glow_purple', 'name_glow_red', 'name_glow_pink_neon', 'name_glow_gold', 'name_gradient_purple', 'name_gradient_fire', 'name_ice', 'name_toxic', 'name_slow_pulse', 'name_signal', 'name_flicker_neon', 'name_matrix_rain', 'name_rainbow', 'name_diamond_shimmer', 'name_holographic', 'name_pulsing_glow', 'name_shining_gold', 'name_glitch_effect', 'name_ocean_wave', 'name_inferno', 'name_sunset_blur', 'name_void', 'name_chroma']);
+const expectedComposableCounts = Object.freeze({ name_font: 18, name_material: 22, name_motion: 24 });
+const composableCounts = { name_font: 0, name_material: 0, name_motion: 0 };
 for (const item of snapshot.catalog.values()) {
   if (!validSlots.has(item.slot)) fail(`${item.item_key} has unknown slot ${item.slot}`);
+  if (!validCatalogStatuses.has(item.catalog_status || 'active')) fail(`${item.item_key} has unknown catalog_status ${item.catalog_status}`);
   if (!Number.isSafeInteger(Number(item.cost)) || Number(item.cost) < 0) fail(`${item.item_key} has invalid cost ${item.cost}`);
   if (item.css_type === 'style' && sanitizeCosmeticStyle(item.css_value) !== item.css_value.trim()) {
     fail(`${item.item_key} contains a rejected inline style`);
@@ -214,7 +255,28 @@ for (const item of snapshot.catalog.values()) {
       if (!cosmeticCss.includes(`.${className}`)) fail(`${item.item_key} references missing CSS class ${className}`);
     }
   }
-  if (!['style', 'class', 'text'].includes(item.css_type)) fail(`${item.item_key} has unknown css_type ${item.css_type}`);
+  if (item.css_type === 'renderer') {
+    if (!rendererKeys[item.slot]?.has(item.css_value)) fail(`${item.item_key} references an unknown ${item.slot} renderer ${item.css_value}`);
+    if (item.catalog_status !== 'active') fail(`${item.item_key} renderer row must be active`);
+    composableCounts[item.slot] += 1;
+  } else if (['name_font', 'name_material', 'name_motion'].includes(item.slot)) {
+    fail(`${item.item_key} must use css_type=renderer`);
+  } else if (!['style', 'class', 'text'].includes(item.css_type)) {
+    fail(`${item.item_key} has unknown css_type ${item.css_type}`);
+  }
+}
+
+for (const [slot, count] of Object.entries(expectedComposableCounts)) {
+  if (composableCounts[slot] !== count) fail(`${slot} expected ${count} renderer rows, found ${composableCounts[slot]}`);
+}
+const legacyCatalogKeys = new Set([...snapshot.catalog.values()]
+  .filter(item => item.slot === 'name_effect' && item.catalog_status === 'legacy')
+  .map(item => item.item_key));
+if (legacyCatalogKeys.size !== legacyNameKeys.size || [...legacyNameKeys].some(key => !legacyCatalogKeys.has(key))) {
+  fail(`expected exactly the 29 mapped legacy Name rows, found ${legacyCatalogKeys.size}`);
+}
+if (snapshot.catalog.has('name_material_plain') || snapshot.catalog.has('name_motion_none')) {
+  fail('Plain and Still must not be purchasable catalog rows');
 }
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -224,11 +286,13 @@ if (supabaseUrl && supabaseKey) {
   const remote = await readRemoteCatalog(snapshot.columns, supabaseUrl, supabaseKey);
   compareCatalogs(snapshot, remote, 'remote shop_items');
   console.log(
-    `Catalog drift check passed: snapshot, seed, and remote match (${snapshot.catalog.size} items).`
+    `Catalog drift check passed: snapshot, seed, and remote match (${snapshot.catalog.size} items; ` +
+      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions).`
   );
 } else {
   console.log(
-    `Catalog drift check passed locally: snapshot and seed match (${snapshot.catalog.size} items). ` +
+    `Catalog drift check passed locally: snapshot and seed match (${snapshot.catalog.size} items; ` +
+      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions). ` +
       'Set SUPABASE_URL and SUPABASE_ANON_KEY to include the remote catalog.'
   );
 }

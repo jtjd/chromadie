@@ -12,6 +12,7 @@ const rollSqlPath = path.join(repoRoot, 'supabase/migrations/20260710202000_roll
 const badgeDataPath = path.join(repoRoot, 'src/lib/badgeData.js');
 const balanceConfigPath = path.join(repoRoot, 'src/lib/balanceConfig.js');
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
+const d2NameCatalogMigrationPath = path.join(repoRoot, 'supabase/migrations/20260802100000_composable_name_catalog_activation.sql');
 
 const badgeModule = await import(pathToFileURL(badgeDataPath).href);
 const balanceConfig = await import(pathToFileURL(balanceConfigPath).href);
@@ -20,6 +21,7 @@ const finalScoringSql = await readFile(finalScoringSqlPath, 'utf8');
 const scoringSql = `${baseScoringSql}\n${finalScoringSql}`;
 const rollSql = await readFile(rollSqlPath, 'utf8');
 const seed = await readFile(seedPath, 'utf8');
+const d2NameCatalogMigration = await readFile(d2NameCatalogMigrationPath, 'utf8');
 
 const knownBadgeIds = new Set([
   ...Object.keys(badgeModule.BADGES || {}),
@@ -138,8 +140,72 @@ if (achievementRewardMismatches.length > 0) {
   process.exit(1);
 }
 
+const d2NameCatalogRows = [...d2NameCatalogMigration.matchAll(
+  /^\s*\('(name_(?:font|material|motion)_[a-z0-9_]+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)',\s*false,\s*'earned',\s*NULL,\s*'active'\),?$/gm
+)].map(([, itemKey, name, slot, cost, rendererKey, rarity, description, collection]) => ({
+  itemKey,
+  name,
+  slot,
+  cost: Number(cost),
+  rendererKey,
+  rarity,
+  description,
+  collection
+}));
+
+const expectedNameSlotCounts = { name_font: 18, name_material: 22, name_motion: 24 };
+const expectedNameRarities = new Set(['Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']);
+const d2NameKeyPattern = /^name_(font|material|motion)_[a-z0-9_]+$/;
+const d2NameRendererPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const d2NameDuplicateKeys = d2NameCatalogRows.length - new Set(d2NameCatalogRows.map(row => row.itemKey)).size;
+const d2NameInvalidRows = d2NameCatalogRows.filter(row => (
+  !d2NameKeyPattern.test(row.itemKey)
+    || !d2NameRendererPattern.test(row.rendererKey)
+    || !expectedNameRarities.has(row.rarity)
+    || !row.description.trim()
+    || !row.collection.trim()
+));
+const d2NameSlotCounts = Object.fromEntries(Object.entries(expectedNameSlotCounts).map(([slot]) => [
+  slot,
+  d2NameCatalogRows.filter(row => row.slot === slot).length
+]));
+if (
+  d2NameCatalogRows.length !== 64
+    || d2NameDuplicateKeys > 0
+    || d2NameInvalidRows.length > 0
+    || JSON.stringify(d2NameSlotCounts) !== JSON.stringify(expectedNameSlotCounts)
+    || d2NameCatalogRows.some(row => row.itemKey === 'name_material_plain' || row.itemKey === 'name_motion_none')
+) {
+  console.error('D2 Name catalog balance/drift check failed.');
+  console.error(JSON.stringify({
+    rowCount: d2NameCatalogRows.length,
+    duplicateKeys: d2NameDuplicateKeys,
+    invalidRows: d2NameInvalidRows.map(row => row.itemKey),
+    slotCounts: d2NameSlotCounts
+  }, null, 2));
+  process.exit(1);
+}
+
+const d2NameTotalCost = d2NameCatalogRows.reduce((total, row) => total + row.cost, 0);
+const d2NameBySlot = Object.fromEntries(Object.keys(expectedNameSlotCounts).map(slot => {
+  const rows = d2NameCatalogRows.filter(row => row.slot === slot);
+  return [slot, { count: rows.length, total: rows.reduce((total, row) => total + row.cost, 0) }];
+}));
+const d2NameByRarity = Object.fromEntries([...expectedNameRarities].map(rarity => {
+  const rows = d2NameCatalogRows.filter(row => row.rarity === rarity);
+  return [rarity, { count: rows.length, total: rows.reduce((total, row) => total + row.cost, 0) }];
+}));
+const cheapestD2Name = d2NameCatalogRows.reduce((lowest, row) => row.cost < lowest.cost ? row : lowest);
+const mostExpensiveD2Name = d2NameCatalogRows.reduce((highest, row) => row.cost > highest.cost ? row : highest);
+const documentedAverageDailyEp = 54182;
+const daysFor = cost => Math.ceil(cost / documentedAverageDailyEp);
 console.log(
   `Balance drift check passed: ${scoringEntries.length} v2 score conditions, ` +
     `${sqlRarities.length} rarity tiers, ${achievementChecks.size} achievement checks, ` +
-    `${seededAchievementRewards.size} seeded achievements.`
+    `${seededAchievementRewards.size} seeded achievements.\n` +
+    `D2 Name catalog: ${d2NameCatalogRows.length} rows / ${d2NameTotalCost.toLocaleString()} EP; ` +
+    `Font ${d2NameBySlot.name_font.total.toLocaleString()}, ` +
+    `Material ${d2NameBySlot.name_material.total.toLocaleString()}, ` +
+    `Motion ${d2NameBySlot.name_motion.total.toLocaleString()}; ` +
+    `average-roll pacing ${daysFor(d2NameTotalCost)} days for the full set.`
 );

@@ -5,13 +5,15 @@
   import ShopItemCard from './ShopItemCard.svelte';
   import {
     SHOP_RARITIES,
+    SHOP_NAME_SUBTYPES,
     SHOP_SECTIONS,
     SHOP_SORTS,
     SHOP_SUBSECTIONS,
     SHOP_OWNERSHIP_FILTERS,
     filterShopItems,
     getShopAccessTier,
-    getShopItemState
+    getShopItemState,
+    tryOnShopItem
   } from './shopCatalog.js';
 
   export let items = [];
@@ -41,6 +43,8 @@
 
   const availableSections = SHOP_SECTIONS.filter(item => item.id !== 'owned');
   $: subsections = SHOP_SUBSECTIONS[section] || [];
+  $: if (section === 'names' && selectedSubslot === 'all') selectedSubslot = 'name_font';
+  $: if (section !== 'names' && SHOP_NAME_SUBTYPES.some(subtype => subtype.id === selectedSubslot)) selectedSubslot = 'all';
   $: collections = [...new Set(items.map(item => item.collection).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   $: rarities = [...new Set(items.map(item => item.rarity).filter(Boolean))]
     .sort((a, b) => ['Common', ...SHOP_RARITIES].indexOf(a) - ['Common', ...SHOP_RARITIES].indexOf(b));
@@ -58,7 +62,7 @@
   $: displayColor = currentRoll?.hex_code || profile?.mood_color || '#8B7CF6';
   $: displayRarity = currentRoll?.rarity || 'Current roll';
   $: previewLoadout = previewedItem?.slot
-    ? { ...(equippedItems || {}), [previewedItem.slot]: previewedItem.item_key }
+    ? tryOnShopItem(equippedItems, previewedItem)
     : { ...(equippedItems || {}) };
   $: activeFilterCount = [
     selectedSubslot !== 'all',
@@ -84,7 +88,7 @@
   }
 
   function selectSection(nextSection) {
-    selectedSubslot = 'all';
+    selectedSubslot = nextSection === 'names' ? 'name_font' : 'all';
     previewedItem = null;
     filtersOpen = false;
     dispatch('section', nextSection);
@@ -100,7 +104,7 @@
     <div>
       <span class="shop-eyebrow">Browse the catalog</span>
       <h2 id="shop-browse-title">Find the piece that changes the page.</h2>
-      <p>{filteredItems.length} live catalog item{filteredItems.length === 1 ? '' : 's'} across profile, roll, leaderboard, and utility.</p>
+      <p>{filteredItems.length} active catalog item{filteredItems.length === 1 ? '' : 's'} across profile, roll, leaderboard, and utility.</p>
     </div>
     <button type="button" class="shop-text-link" on:click={resetFilters}>Reset filters</button>
   </div>
@@ -111,6 +115,15 @@
     ariaLabel="Catalog categories"
     on:select={event => selectSection(event.detail)}
   />
+
+  {#if section === 'names'}
+    <ShopCategoryNav
+      sections={SHOP_NAME_SUBTYPES}
+      activeId={selectedSubslot}
+      ariaLabel="Name catalog layers"
+      on:select={event => { selectedSubslot = event.detail; previewedItem = null; }}
+    />
+  {/if}
 
   <div class="shop-browse-layout">
     <div class="shop-browse-main">

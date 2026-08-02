@@ -9,6 +9,7 @@
   import { getAppOrigin } from './authUrls.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { trackProductEvent } from './productAnalytics.js';
+  import { getNameRendererLoadout } from './name/nameLoadout.js';
 
   export let item;
   export let featured = false;
@@ -25,6 +26,7 @@
   $: theme = getLbTheme(item?.equippedCosmetics);
   $: border = getProfileBorder(item?.equippedCosmetics);
   $: nameRendererKey = String(item?.equippedCosmetics?.name_effect || '');
+  $: nameRendererLoadout = getNameRendererLoadout(item?.equippedCosmetics);
   $: title = getTitleText(item?.equippedCosmetics);
   $: staffTitle = getStaffTitleText(item?.isStaff);
   $: displayName = item?.displayName || item?.username || 'Unknown player';
@@ -119,10 +121,11 @@
 
       <div class="discovery-card__identity">
         <div class="discovery-card__name-line">
-          {#if nameRendererKey}
+          {#if nameRendererKey || nameRendererLoadout}
             <NameEffectCanvas
               text={displayName}
               rendererKey={nameRendererKey}
+              loadout={nameRendererLoadout}
               todayColor={rollColor}
               context="card"
               compact={true}

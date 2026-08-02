@@ -11,6 +11,7 @@
   import { afterUpdate, createEventDispatcher } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
+  import { getNameRendererLoadout } from './name/nameLoadout.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -252,6 +253,7 @@
   $: rankState = targetProfile ? getRankState(targetProfile.lifetime_ep || 0) : null;
   $: cosmetics = targetProfile?.equipped_cosmetics || {};
   $: nameRendererKey = String(cosmetics?.name_effect || '');
+  $: nameRendererLoadout = getNameRendererLoadout(cosmetics);
   $: frameEff = getFrameEffect(cosmetics);
   $: titleTxt = getTitleText(cosmetics);
   $: staffTitleTxt = getStaffTitleText(targetProfile?.is_staff);
@@ -362,10 +364,11 @@
             {/if}
             <div class="name-row">
               <span class="profile-name-frame {frameEff.cls}" style="{frameEff.style}">
-                {#if nameRendererKey}
+                {#if nameRendererKey || nameRendererLoadout}
                   <NameEffectCanvas
                     text={username}
                     rendererKey={nameRendererKey}
+                    loadout={nameRendererLoadout}
                     todayColor={nameTodayColor}
                     recentColors={nameRendererRecentColors}
                     context="profile"
@@ -545,6 +548,7 @@
           <div class="rivals-list">
             {#each rivalsData as rival (rival.user_id)}
               {@const rivalNameRendererKey = String(rival.equipped_cosmetics?.name_effect || '')}
+              {@const rivalNameRendererLoadout = getNameRendererLoadout(rival.equipped_cosmetics)}
               {@const rivalTitleTxt = getTitleText(rival.equipped_cosmetics)}
               {@const rivalStaffTitleTxt = getStaffTitleText(rival.is_staff)}
               {@const rivalLbTheme = getLbTheme(rival.equipped_cosmetics)}
@@ -557,10 +561,11 @@
                   {#if rivalStaffTitleTxt}
                     <span class="title-chip staff-title">[{rivalStaffTitleTxt}]</span>
                   {/if}
-                  {#if rivalNameRendererKey}
+                  {#if rivalNameRendererKey || rivalNameRendererLoadout}
                     <NameEffectCanvas
                       text={rival.username}
                       rendererKey={rivalNameRendererKey}
+                      loadout={rivalNameRendererLoadout}
                       todayColor={rival.hex_code || '#8B7CF6'}
                       context="card"
                       compact={true}

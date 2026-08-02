@@ -71,6 +71,18 @@ shop, or gameplay contracts.
 
 ## Database migration rollback
 
+### Phase D2 composable Name recovery
+
+Phase D2 has no destructive down migration. If the client or catalog activation
+must be stopped after deployment, restore the previous compatible client and
+use a reviewed service-side SQL change to set the 64 new `name_font`,
+`name_material`, and `name_motion` rows to `retired` (or another explicitly
+approved non-purchasable status). Do not delete those rows, inventory records,
+or equipped JSON; do not grant replacement products. Existing 29 legacy Name
+rows remain usable by owners. After recovery, verify `purchase_item`,
+`equip_item`, `get_shop_catalog`, cache versioning, and the database-security
+audit before reopening traffic.
+
 - Do not run `supabase db reset` against a remote project. It is a local
   development/reproducibility operation and can destroy data when pointed at a
   remote target.

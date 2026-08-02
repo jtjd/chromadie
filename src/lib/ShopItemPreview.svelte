@@ -16,6 +16,13 @@
   $: atmosphereEffect = item?.slot === 'profile_atmosphere'
     ? getProfileAtmosphereEffect({ profile_atmosphere: item.item_key })
     : '';
+  $: nameLayerLoadout = item?.slot === 'name_font'
+    ? { fontKey: item.css_value }
+    : item?.slot === 'name_material'
+      ? { materialKey: item.css_value }
+      : item?.slot === 'name_motion'
+        ? { motionKey: item.css_value }
+        : null;
 </script>
 
 <div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
@@ -54,6 +61,18 @@
         <span class="preview-profile-name">{username}</span>
       <div class="preview-profile-meta"><span>Rank</span><span>30d</span></div>
       </div>
+  {:else if ['name_font', 'name_material', 'name_motion'].includes(item.slot)}
+    <div class="shop-preview-text shop-preview-text--name">
+      <NameEffectCanvas
+        text={username}
+        loadout={nameLayerLoadout}
+        todayColor={displayColor}
+        context="card"
+        compact={true}
+        mode="animated"
+        semanticClass="shop-item-name"
+      />
+    </div>
   {:else if item.slot === 'name_effect'}
     <div class="shop-preview-text shop-preview-text--name">
       <NameEffectCanvas

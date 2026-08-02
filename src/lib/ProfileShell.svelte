@@ -25,6 +25,7 @@
   import FeaturedCollection from './FeaturedCollection.svelte';
   import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
   import { trackProductEvent } from './productAnalytics.js';
+  import { getNameRendererLoadout } from './name/nameLoadout.js';
 
   const PROFILE_SURFACE_ACCENT = '#5D6A73';
   const PROFILE_SURFACE_SECONDARY = '#87959D';
@@ -348,6 +349,7 @@
       });
   $: cosmetics = targetProfile?.equipped_cosmetics || {};
   $: nameRendererKey = String(cosmetics?.name_effect || '');
+  $: nameRendererLoadout = getNameRendererLoadout(cosmetics);
   $: frameEff = getFrameEffect(cosmetics);
   $: bgEff = getProfileBg(cosmetics);
   $: atmosphereEffect = getProfileAtmosphereEffect(cosmetics);
@@ -442,6 +444,7 @@
               founder={targetProfile.equipped_badges?.includes('launch_edition')}
               accentColor={signatureColor}
               nameRendererKey={nameRendererKey}
+              nameRendererLoadout={nameRendererLoadout}
               nameRendererContext="profile"
               nameRendererMode="animated"
               nameRendererRecentColors={nameRendererRecentColors}

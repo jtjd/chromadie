@@ -2,6 +2,49 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-02 — Activate composable Name layers behind the existing cosmetic boundary
+
+**Status:** accepted and implemented for Phase D2
+
+The three Name layers use the existing `profiles.equipped_cosmetics` JSONB
+object rather than introducing a parallel profile-customization model. The
+additive `name_font`, `name_material`, and `name_motion` slots coexist with
+the legacy `name_effect` slot. The server-authoritative `equip_item` RPC locks
+the profile row, preserves the other modern layers when one layer changes,
+and clears the mutually exclusive legacy/modern side atomically. Unequipping
+one layer removes only that layer.
+
+The catalog adds `catalog_status` with `active`, `legacy`, and `retired`
+states. The 29 existing Name keys are explicitly `legacy`, remain in the
+catalog and inventory, and remain equippable by owners; they cannot be newly
+purchased. The 64 new renderer rows use stable keys of the form
+`name_<slot>_<normalized_id>` and hyphenated code-owned registry keys in
+`css_value`. Plain and Still remain UI defaults, not purchase rows. Renderer
+rows are checked against finite Font, Material, and Motion registries and can
+never contain catalog-provided CSS, HTML, JavaScript, URLs, shaders, or
+Canvas commands.
+
+The current client reads `get_shop_catalog()` so Browse/Home receive active
+rows and Collection can retain owned legacy rows. A compatibility RLS policy
+keeps the direct table read available to older clients while hiding the three
+new slots until the D2 client is deployed. Deployment order is: apply and
+verify the migration/RPCs, deploy the matching client, then verify counts,
+purchase, inventory refresh, and equip conflict behavior. Recovery hides the
+64 active rows by changing their status to `retired` (or another reviewed
+non-purchasable state) without deleting rows, inventory, or equipped JSON;
+legacy ownership is never exchanged or granted automatically.
+
+The reference prices total 20,480,000 EP: Fonts 4,150,000, Materials
+7,340,000, and Motions 8,990,000. Using the documented 54,182 average EP
+per roll/day, this is approximately 6 days for an average item, 15 days for
+the 760,000 EP high-rarity item, 77/136/166 days for complete Font/Material/
+Motion subtypes, and 378 days for the full set before achievement rewards.
+The reference supplied complete merchandising copy for Motions; the Font and
+Material rows receive one concise sentence each, derived from their documented
+visual identity, because those reference entries did not include descriptions.
+Phase E remains responsible for proving legacy CSS is unused and removing it;
+this milestone deliberately keeps the legacy renderer and CSS available.
+
 ## 2026-08-01 — Give profile backgrounds a larger quality budget
 
 **Status:** accepted and implemented

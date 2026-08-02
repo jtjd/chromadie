@@ -1,6 +1,6 @@
 <script>
   import ShopItemPreview from './ShopItemPreview.svelte';
-  import { SHOP_SLOT_LABELS, getShopAccessTier } from './shopCatalog';
+  import { SHOP_SLOT_LABELS, getShopAccessTier, isLegacyCatalogItem } from './shopCatalog';
   import { createEventDispatcher } from 'svelte';
 
   export let item;
@@ -35,6 +35,7 @@
   <div class="item-card-meta">
     <span class="item-rarity rarity-{(item.rarity || 'Common').toLowerCase()}" aria-label={`Rarity: ${item.rarity || 'Common'}`}>{item.rarity || 'Common'}</span>
     <span class="item-collection">{item.collection || 'Core collection'}</span>
+    {#if isLegacyCatalogItem(item)}<span class="item-state tone-legacy">Legacy preset</span>{/if}
     <span class="item-state tone-{isPreviewing ? 'previewing' : state.tone}">{isPreviewing ? 'Previewing' : state.label}</span>
   </div>
 
@@ -68,6 +69,8 @@
   .item-state.tone-equipped { border-color:#7d83a9; background:#171923; color:#d7dbff; }
   .item-state.tone-previewing { border-color:#7b9baf; background:#111b20; color:#c9ecf3; }
   .item-state.tone-owned { border-color:#5875a4; color:#b7d2ff; }
+  .item-state.tone-legacy { border-color:#8e673d; background:#201811; color:#ffd09a; }
+  .item-state.tone-legacy-locked { border-color:#5c4a3b; background:#17130f; color:#c7aa88; }
   .item-state.tone-available { border-color:#597b70; color:#b6e5d2; }
   .item-state.tone-free { border-color:#597b70; background:#101b17; color:#b6e5d2; }
   .item-state.tone-premium { border-color:#745c9e; background:#191522; color:#dcc3ff; }

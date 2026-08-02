@@ -1,5 +1,41 @@
 # Chromadie 2.0 Progress
 
+## Phase D2 — Composable Name catalog activation — 2026-08-02
+
+- Added the additive `catalog_status` lifecycle (`active`, `legacy`,
+  `retired`) and marked all 29 existing `name_effect` rows as `legacy` without
+  deleting keys, inventory, prices, entitlement identity, or equipped data.
+- Added exactly 64 active renderer-backed rows: 18 Fonts, 22 Materials, and
+  24 Motions. Plain and Still remain explicit defaults and are not purchasable
+  rows. Stable item keys normalize registry hyphens to underscores while
+  `css_value` retains the code-owned registry key.
+- Extended the existing JSONB equipped-cosmetics contract with
+  `name_font`, `name_material`, and `name_motion`. `equip_item` and
+  `unequip_item` remain the server authority; Name conflict clearing is locked
+  and atomic, and unrelated cosmetic slots are preserved.
+- Added a SECURITY DEFINER `get_shop_catalog()` read boundary for active and
+  legacy rows. Older direct table readers continue receiving only the old slot
+  vocabulary during the rollout window, while the D2 client uses the versioned
+  RPC and `shop_cache:v2` shape.
+- Browse exposes Fonts, Materials, and Motion under the Name category;
+  Collection exposes owned modern layers and clearly labels owned legacy
+  presets. Studio and Profile Settings provide local/default choices and one
+  combined preview while applying changes through the existing equip RPC.
+- Balance/drift/security coverage reports 20,480,000 EP across the new set and
+  uses the documented 54,182 average EP/day assumption for acquisition pacing.
+  The D2 migration includes non-destructive recovery by status change only.
+- Fresh local reset, SQL lint, RPC security assertions, full client checks,
+  tests, catalog/balance/scoring drift, links, CSP, username policy, and
+  authenticated Chromium width checks passed. Remote parity is skipped because
+  linked Supabase credentials are unavailable.
+- D1-to-D2 build output is JavaScript 794.07 kB → 806.28 kB (+12.21 kB) and
+  CSS 430.09 kB → 431.81 kB (+1.72 kB). Initial JavaScript is 441.65/450 kB
+  and largest lazy JavaScript is 77.28/100 kB; initial/largest-lazy CSS is
+  165.34/200 and 48.94/75 kB. The known transitional total caps remain
+  JavaScript 806.28/700 kB and CSS 431.81/380 kB; they are reported rather
+  than raised or disabled. Font assets remain 220.49 kB with no new font
+  dependency.
+
 ## Background image quality — 2026-08-01
 
 - Raised the stored background WebP ceiling from 1 MB to 4 MB.

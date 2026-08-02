@@ -9,6 +9,7 @@
   import { getProfileMediaUrl } from './profileMedia.js';
   import { getCosmeticEffect, getProfileAtmosphereEffect, getProfileBg } from './cosmetics';
   import { SHOP_CONTEXT_LABELS } from './shopCatalog';
+  import { getNameRendererLoadout } from './name/nameLoadout.js';
 
   export let loadout = {};
   export let activeContext = 'profile';
@@ -43,6 +44,7 @@
   let failedPreviewAvatarSource = '';
   $: if (previewAvatarSrc && previewAvatarSrc !== failedPreviewAvatarSource) failedPreviewAvatarSource = '';
   $: previewLinks = getVisibleProfileLinks(previewProfileConfig);
+  $: nameRendererLoadout = getNameRendererLoadout(loadout);
 </script>
 
 <section class="studio-preview" class:studio-preview--compact={compact} aria-label="Your cosmetic preview">
@@ -96,6 +98,7 @@
           avatarSrc={previewAvatarSrc}
           accentColor={displayColor}
           nameRendererKey={String(loadout?.name_effect || '')}
+          nameRendererLoadout={nameRendererLoadout}
           nameRendererContext={compact ? 'card' : 'profile'}
           nameRendererMode={compact ? 'static-signature' : 'animated'}
           frameClass={frameEffect.cls}
@@ -133,10 +136,11 @@
             {/if}
           </div>
           <div class="studio-player">
-            {#if loadout?.name_effect}
+            {#if loadout?.name_effect || nameRendererLoadout}
               <NameEffectCanvas
                 text={username}
                 rendererKey={String(loadout.name_effect)}
+                loadout={nameRendererLoadout}
                 todayColor={displayColor}
                 context="card"
                 compact={true}
