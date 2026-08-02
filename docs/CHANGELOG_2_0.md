@@ -1188,3 +1188,16 @@ direct route behavior.
   workspace, product visual height, and detail drawer styling.
 - Kept all content account-backed and preserved existing purchase, inventory,
   entitlement, equipped, preview, and profile-settings contracts.
+
+## 2026-08-02 — Add Phase A Name rendering foundation
+
+- Added one shared Canvas 2D Name renderer with compact/profile contexts,
+  animated/paused/static/reduced-motion modes, deterministic seeded noise,
+  capped device pixel ratio, offscreen pausing, and cleanup-safe clock and
+  observer lifecycles.
+- Added code-owned renderer presets for all 29 existing `name_effect` keys and
+  kept the existing catalog, ownership, entitlement, pricing, purchase, and
+  equip contracts unchanged.
+- Integrated the renderer only into the internal Profile Settings preview;
+  legacy CSS remains available on every other surface until parity is signed
+  off.

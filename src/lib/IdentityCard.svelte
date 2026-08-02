@@ -1,5 +1,6 @@
 <script>
   import Media from './foundation/Media.svelte';
+  import NameEffectCanvas from './name/NameEffectCanvas.svelte';
 
   export let username = 'Unknown Player';
   export let displayName = '';
@@ -22,6 +23,10 @@
   export let showAvatarMark = true;
   export let avatarLoading = 'eager';
   export let headingTag = 'h1';
+  export let nameRendererKey = '';
+  export let nameRendererContext = 'profile';
+  export let nameRendererMode = 'animated';
+  export let nameRendererRecentColors = [];
 
   let failedAvatarSource = '';
 
@@ -55,7 +60,21 @@
 
     <div class="identity-card__copy">
       <div class="identity-card__name-row">
-        <svelte:element this={headingTag} id={titleId} class={'identity-card__name ' + nameClass} style={nameStyle}>{safeDisplayName}</svelte:element>
+        {#if nameRendererKey}
+          <NameEffectCanvas
+            text={safeDisplayName}
+            rendererKey={nameRendererKey}
+            todayColor={accentColor}
+            recentColors={nameRendererRecentColors}
+            context={nameRendererContext}
+            mode={nameRendererMode}
+            semanticTag={headingTag}
+            semanticClass="identity-card__name"
+            {titleId}
+          />
+        {:else}
+          <svelte:element this={headingTag} id={titleId} class={'identity-card__name ' + nameClass} style={nameStyle}>{safeDisplayName}</svelte:element>
+        {/if}
         {#if staff || founder || displayedBadges.length}
           <div class="identity-card__badges" aria-label="Profile badges">
             {#if staff}<span class="identity-card__badge identity-card__badge--staff" title="Staff" aria-label="Staff badge"><span aria-hidden="true">✦</span><span>STAFF</span></span>{/if}

@@ -1329,6 +1329,23 @@ on every signed-out supporting route.
 - Increased product visual/card proportions and retained readable blue inline
   EP pricing, real rarity/state labels, and existing preview components.
 
+## 2026-08-02 — Phase A Name cosmetic migration foundation
+
+- Read the root Name migration references and audited the existing catalog,
+  CSS bridge, profile identity surfaces, shop previews, and profile settings
+  preview before editing.
+- Added the shared `src/lib/name/` renderer foundation: code-owned fonts,
+  materials, motions, legacy presets/catalog, deterministic Canvas 2D frame
+  generation, and one lifecycle-managed animation clock.
+- Ported all 29 existing `name_effect` keys as legacy presets, including the
+  premium `name_prism_atelier` entitlement identity and the fixed palettes of
+  the legacy glow effects.
+- Migrated only the internal Profile Settings live preview through the shared
+  semantic Name canvas. Existing production surfaces and legacy CSS remain in
+  place for parity validation.
+- No catalog rows, prices, slots, schema, purchase/inventory/entitlement/equip
+  contracts, or automatic grants changed. Phase B is intentionally not begun.
+
 ## Supporting-page visual pass — 2026-08-01
 
 - Restyled the leaderboard route toward the homepage's flat three-column row

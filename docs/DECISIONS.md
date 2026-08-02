@@ -2233,3 +2233,19 @@ Collection, three-column Studio workspace, taller product visuals, boxed inline
 EP pricing, and a drawer-like product detail view. These are presentation
 changes only; catalog, account, preview, purchase, and equip boundaries remain
 unchanged.
+
+## 2026-08-02 — Establish the Phase A Name renderer compatibility boundary
+
+The Name migration starts with a shared, canvas-backed renderer and explicit
+code-owned legacy presets for all 29 existing `name_effect` keys. The renderer
+uses the existing local font packages and system fallbacks, one shared
+requestAnimationFrame clock, visibility/reduced-motion lifecycle controls,
+deterministic seeded noise, and a semantic text layer outside the canvas.
+
+Only the contained Profile Settings live preview uses the new path in Phase A.
+All other production Name surfaces continue to use their existing CSS bridge
+until legacy parity is validated. Catalog rows, prices, purchase RPCs,
+inventory, entitlements, equipped profiles, RLS, and permanent equip behavior
+are unchanged. `name_prism_atelier` remains an owned legacy key with its
+premium entitlement identity; no replacement grants or new catalog slots were
+introduced.

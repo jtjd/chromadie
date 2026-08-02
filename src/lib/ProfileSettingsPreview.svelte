@@ -23,10 +23,12 @@
 
   /** @type {any} */
   let configSource;
+  /** @type {Record<string, string>} */
+  let loadout;
   $: configSource = profileConfig || {};
   $: config = configSource.draft || configSource.published || configSource;
-  $: loadout = $equippedItems || {};
-  $: nameEffect = getCosmeticEffect(loadout, 'name_effect');
+  $: loadout = /** @type {Record<string, string>} */ ($equippedItems || {});
+  $: nameRendererKey = String(loadout?.name_effect || '');
   $: frameEffect = getCosmeticEffect(loadout, 'frame');
   $: borderEffect = getCosmeticEffect(loadout, 'profile_border');
   $: backgroundEffect = getProfileBg(loadout);
@@ -63,8 +65,9 @@
       badges={[]}
       avatarSrc={avatarSrc}
       accentColor={config.signatureColor || profile.mood_color || '#8B7CF6'}
-      nameClass={nameEffect.cls}
-      nameStyle={nameEffect.style}
+      nameRendererKey={nameRendererKey}
+      nameRendererContext="profile"
+      nameRendererMode="animated"
       frameClass={frameEffect.cls}
       frameStyle={frameEffect.style}
       showToday={false}
