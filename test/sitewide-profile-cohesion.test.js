@@ -39,6 +39,7 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /--site-font: 'Instrument Sans Variable'/);
   assert.match(siteStyles, /--site-accent: #cdd2ff/);
   assert.match(siteStyles, /site-mode-header:not\(\.site-mode-header--home\):not\(\.site-mode-header--profile\)/);
+  assert.match(siteStyles, /\.site-mode-header__wordmark \{[\s\S]*font-size: 0\.75rem;[\s\S]*letter-spacing: 0\.08em;/);
   assert.match(siteStyles, /Homepage baseline for supporting routes/);
   assert.match(siteStyles, /prefers-reduced-motion/);
 });

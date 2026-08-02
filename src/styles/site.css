@@ -1425,6 +1425,15 @@ body,
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
+.site-mode-header:not(.site-mode-header--home):not(.site-mode-header--profile) .site-mode-header__wordmark {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  font-variant-ligatures: none;
+}
+
 .site-mode-header:not(.site-mode-header--home):not(.site-mode-header--profile) .site-mode-header__wordmark > span {
   color: #cdd2ff;
 }
