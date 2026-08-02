@@ -83,6 +83,8 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(referenceRollGlyph, /polygon points="60,10 103,91 60,109 17,91"/);
   assert.match(referenceRollGlyph, /home-reference-glyph-float/);
   assert.doesNotMatch(compactRollPreview, /referenceShape && !orbCls/);
+  assert.match(compactRollPreview, /<div class="roll-effect-wrapper">/);
+  assert.doesNotMatch(compactRollPreview, /roll-effect-wrapper \{effectCls\}/);
   assert.match(rollPreview, /orb-shape-/);
   assert.match(rollPreview, /HomeReferenceRollGlyph/);
   assert.match(shopItemPreview, /HomeReferenceRollGlyph/);

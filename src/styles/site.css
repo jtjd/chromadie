@@ -1287,3 +1287,436 @@ body,
   .app-main--site .card { padding: 1.25rem; }
   .app-main--site .game-container { padding-block: 2rem; }
 }
+
+/* -------------------------------------------------------------------------
+ * Homepage baseline for supporting routes
+ *
+ * The homepage is the shared visual language for the application shell. Keep
+ * this layer on the site boundary so public profile rendering remains its
+ * own visual system.
+ * ------------------------------------------------------------------------- */
+
+.app-main--site {
+  --site-font: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --site-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --site-canvas: #0d0f13;
+  --site-deep: #090a0d;
+  --site-raised: #111319;
+  --site-ink: #f2f0eb;
+  --site-muted: #aaa8b0;
+  --site-faint: #7d7e87;
+  --site-accent: #cdd2ff;
+  --site-accent-bright: #f2f0eb;
+  --site-line: rgba(255, 255, 255, 0.075);
+  --site-line-strong: rgba(255, 255, 255, 0.15);
+  --site-surface: var(--site-raised);
+  --site-surface-soft: rgba(255, 255, 255, 0.035);
+  --font-display-stack: var(--site-font);
+  --font-body-stack: var(--site-font);
+  --font-mono-stack: var(--site-mono);
+  --font-display: var(--site-font);
+  --color-canvas: var(--site-canvas);
+  --color-canvas-raised: var(--site-raised);
+  --color-canvas-deep: var(--site-deep);
+  --color-ink-strong: var(--site-ink);
+  --color-ink: #d8d6d2;
+  --color-ink-muted: var(--site-muted);
+  --color-ink-faint: var(--site-faint);
+  --color-accent: var(--site-accent);
+  --color-accent-bright: var(--site-accent-bright);
+  --surface-panel: var(--site-raised);
+  --surface-panel-strong: #15171d;
+  --surface-panel-soft: var(--site-surface-soft);
+  --surface-inset: rgba(0, 0, 0, 0.32);
+  min-height: calc(100dvh - 4.25rem);
+  color: var(--site-ink);
+  background: linear-gradient(180deg, #121419 0%, var(--site-canvas) 35%, var(--site-deep) 100%);
+  font-family: var(--site-font);
+}
+
+.app-main--site :is(h1, h2, h3, h4, h5, p, li, label, button, input, textarea, select) {
+  font-family: var(--site-font);
+}
+
+.app-main--site :is(h1, h2, h3, h4, h5) {
+  color: var(--site-ink);
+  font-family: var(--site-font) !important;
+  letter-spacing: -0.045em;
+}
+
+.app-main--site :is(p, li, .info-text, .section-note) {
+  color: var(--site-muted);
+}
+
+.app-main--site :is(.section-kicker, .guide__eyebrow, .legal-kicker, .panel-label, .shop-kicker, .collection-number, .results-heading > div > span, .discovery-hub__kicker, .discovery-heading__eyebrow, .discovery-card__eyebrow) {
+  color: var(--site-faint);
+  font: 500 0.68rem / 1 var(--site-mono);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.app-main--site :is(.card, .discovery-card, .discovery-empty, .discovery-your-rank, .discovery-tabs, .shop-info-banner, .shop-foundations, .loadout-panel, .collection-hero, .catalog-controls, .shop-status, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section) {
+  border: 1px solid var(--site-line);
+  border-radius: 0.5rem;
+  background: var(--site-raised);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.app-main--site :is(.card, .discovery-card, .shop-item, .discovery-tabs, .catalog-controls):hover {
+  border-color: var(--site-line-strong);
+  background: var(--site-raised);
+}
+
+.app-main--site :is(.roll-btn, .auth-submit) {
+  border: 1px solid var(--site-ink);
+  border-radius: 0.35rem;
+  background: var(--site-ink);
+  color: var(--site-deep);
+  box-shadow: none;
+  font: 650 0.82rem / 1 var(--site-font);
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.app-main--site :is(.roll-btn, .auth-submit):hover:not(:disabled) {
+  background: #ffffff;
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.app-main--site :is(.chroma-btn, .download-btn, .close-btn, .challenge-close, .reroll-btn, .discovery-filter-button, .discovery-clear-button, .detail-button, .quiet-action, .try-button, .shop-empty button) {
+  border: 1px solid var(--site-line-strong);
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--site-ink);
+  box-shadow: none;
+  font-family: var(--site-font);
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.app-main--site :is(.chroma-btn, .download-btn, .close-btn, .challenge-close, .reroll-btn, .discovery-filter-button, .discovery-clear-button, .detail-button, .quiet-action, .try-button, .shop-empty button):hover:not(:disabled) {
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-accent) 9%, transparent);
+  color: var(--site-ink);
+}
+
+/* Supporting-route header. The home and profile header variants keep their
+ * own selectors in SiteModeHeader.svelte. */
+.site-mode-header:not(.site-mode-header--home):not(.site-mode-header--profile) {
+  --site-header-font: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  width: min(calc(100% - 2.5rem), 86.25rem);
+  min-height: 2.75rem;
+  margin: 0.625rem auto;
+  padding: 0 0.5rem 0 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 999px;
+  background: rgba(17, 19, 25, 0.9);
+  color: rgba(242, 240, 235, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.site-mode-header:not(.site-mode-header--home):not(.site-mode-header--profile) .site-mode-header__wordmark,
+.site-mode-header:not(.site-mode-header--home):not(.site-mode-header--profile) .site-mode-header__brand {
+  color: #f2f0eb;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.site-mode-header:not(.site-mode-header--home):not(.site-mode-header--profile) .site-mode-header__wordmark > span {
+  color: #cdd2ff;
+}
+
+.site-mode-header:not(.site-mode-header--home):not(.site-mode-header--profile) :is(.site-mode-header__nav, .site-mode-header__right) {
+  border-color: rgba(255, 255, 255, 0.075);
+  background: rgba(9, 10, 13, 0.62);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Daily roll */
+.app-main--site .game-container {
+  width: min(100%, 52rem);
+  min-height: calc(100dvh - 4rem);
+  padding: clamp(3.5rem, 9vh, 6.5rem) clamp(1rem, 4vw, 2rem) 5rem;
+}
+
+.app-main--site .game-container > .card {
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.app-main--site .game-container h1 {
+  max-width: 15ch;
+  font-size: clamp(2.65rem, 6vw, 4.5rem);
+  line-height: 0.92;
+}
+
+.app-main--site .game-container .rolling-hex,
+.app-main--site .game-container .hex-code {
+  color: var(--site-ink);
+  text-shadow: none;
+}
+
+.app-main--site .game-container .scan-bar {
+  background: var(--site-accent);
+  box-shadow: none;
+  animation: none;
+}
+
+.app-main--site :is(.cotw-widget, .guest-prompt, .local-progress-banner, .shop-onboarding, .info-panel, .conditions-section) {
+  border-color: var(--site-line);
+  border-radius: 0.35rem;
+  background: var(--site-surface-soft);
+}
+
+.app-main--site :is(.cotw-title, .guest-prompt-header, .shop-onboarding-title, .badges-title, .score-label) {
+  color: var(--site-accent);
+}
+
+.app-main--site :is(.rank-display, .badge-points, .ep-points) {
+  color: var(--site-accent) !important;
+  text-shadow: none !important;
+}
+
+/* Discovery and leaderboard */
+.app-main--site .discovery-hub {
+  width: min(100%, 86.25rem);
+  padding: clamp(3.5rem, 8vw, 6rem) clamp(1rem, 4vw, 2.5rem) 5rem;
+}
+
+.app-main--site .discovery-hub h1 {
+  max-width: 11ch;
+  font-size: clamp(3.25rem, 7vw, 6rem);
+  line-height: 0.9;
+}
+
+.app-main--site .discovery-hub__privacy-note {
+  border-color: var(--site-line);
+  border-radius: 0.35rem;
+  color: var(--site-muted);
+}
+
+.app-main--site .discovery-tabs {
+  padding: 0.35rem;
+  background: transparent;
+}
+
+.app-main--site :is(.discovery-tabs button, .discovery-filter-button, .discovery-clear-button, .discovery-filters input, .discovery-filters select) {
+  border-color: var(--site-line);
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--site-muted);
+}
+
+.app-main--site :is(.discovery-tabs button:hover, .discovery-tabs button.active, .discovery-filter-button:hover, .discovery-clear-button:hover) {
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-accent) 9%, transparent);
+  color: var(--site-ink);
+}
+
+.app-main--site .discovery-card,
+.app-main--site .discovery-card--featured {
+  border-color: var(--site-line);
+  background: var(--site-raised);
+}
+
+.app-main--site .discovery-card:hover {
+  border-color: color-mix(in srgb, var(--site-accent) 48%, var(--site-line));
+}
+
+.app-main--site :is(.discovery-card__score strong, .discovery-card__cta, .discovery-card .staff-title) {
+  color: var(--site-accent);
+}
+
+/* Studio */
+.app-main--site .shop-page {
+  width: min(100%, 86.25rem);
+  margin: 0 auto;
+  padding: clamp(3.5rem, 8vw, 6rem) clamp(1rem, 4vw, 2.5rem) 5rem;
+  --shop-line: var(--site-line);
+  --shop-muted: var(--site-muted);
+  --shop-panel: var(--site-raised);
+  --shop-purple: var(--site-accent);
+}
+
+.app-main--site .shop-heading h1 {
+  max-width: 12ch;
+  color: var(--site-ink);
+  font-size: clamp(3.25rem, 7vw, 6rem);
+  line-height: 0.9;
+}
+
+.app-main--site :is(.shop-wallet, .section-rail, .subsection-rail, .catalog-controls, .shop-status, .shop-studio-column .studio-preview) {
+  border-color: var(--site-line);
+  border-radius: 0.5rem;
+  background: var(--site-raised);
+  box-shadow: none;
+}
+
+.app-main--site .shop-wallet {
+  background: var(--site-raised);
+}
+
+.app-main--site :is(.section-rail button.active, .subsection-rail button.active) {
+  border-color: color-mix(in srgb, var(--site-accent) 56%, var(--site-line));
+  background: color-mix(in srgb, var(--site-accent) 10%, transparent);
+  color: var(--site-ink);
+}
+
+.app-main--site .shop-item {
+  border-color: var(--site-line);
+  border-radius: 0.5rem;
+  background: var(--site-raised);
+  box-shadow: none;
+}
+
+.app-main--site .shop-item.is-wearing {
+  border-color: var(--site-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--site-accent) 18%, transparent);
+}
+
+.app-main--site :is(.search-field input, .select-row select) {
+  border-color: var(--site-line);
+  border-radius: 0.35rem;
+  background: var(--site-deep);
+  color: var(--site-ink);
+}
+
+/* Help, legal, and utility surfaces */
+.app-main--site :is(.guide, .legal-page, .terms) {
+  width: min(100%, 86.25rem);
+  margin: 0 auto;
+  padding: clamp(3.5rem, 8vw, 6rem) clamp(1rem, 4vw, 2.5rem) 5rem;
+}
+
+.app-main--site .guide__hero,
+.app-main--site .terms__hero {
+  max-width: 58rem;
+  padding-bottom: clamp(3.5rem, 8vw, 6rem);
+}
+
+.app-main--site :is(.guide h1, .terms h1, .legal-hero h1) {
+  max-width: 13ch;
+  margin-top: 0.8rem;
+  font-size: clamp(3.25rem, 7vw, 6rem);
+  line-height: 0.9;
+}
+
+.app-main--site :is(.guide h2, .terms h2, .legal-section h2) {
+  color: var(--site-ink);
+  letter-spacing: -0.035em;
+}
+
+.app-main--site :is(.guide__section, .terms__section) {
+  border-top-color: var(--site-line);
+}
+
+.app-main--site .legal-page .card {
+  margin-bottom: 0;
+}
+
+.app-main--site .legal-page .legal-section + .legal-section {
+  margin-top: 0.75rem;
+}
+
+.app-main--site :is(.guide__callout, .guide__actions a, .guide__list span) {
+  border-color: var(--site-line);
+  border-radius: 0.35rem;
+  background: var(--site-surface-soft);
+}
+
+.app-main--site :is(.guide__actions a, .guide__list span, .terms a, .legal-section a) {
+  color: var(--site-accent);
+}
+
+/* Auth and route-state shells do not live inside .app-main--site. They still
+ * use the same homepage surfaces when rendered as modal or full-screen state. */
+.auth-modal-overlay {
+  background: rgba(9, 10, 13, 0.86);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.auth-container,
+.bootstrap-error-card {
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border-radius: 0.5rem !important;
+  background: #111319 !important;
+  box-shadow: none !important;
+  font-family: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.auth-container :is(.auth-header, .tabs, #turnstile-container) {
+  border-color: rgba(255, 255, 255, 0.075);
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.auth-container :is(.auth-brand, .auth-kicker, .link-btn, .privacy-link-note a),
+.bootstrap-error-kicker {
+  color: #cdd2ff !important;
+}
+
+.auth-container .tabs button.active {
+  background: color-mix(in srgb, #cdd2ff 10%, transparent);
+  box-shadow: inset 0 -2px 0 #cdd2ff;
+}
+
+.auth-container .input-field,
+.bootstrap-error-card .input-field {
+  border-color: rgba(255, 255, 255, 0.075);
+  border-radius: 0.35rem;
+  background: #090a0d;
+  color: #f2f0eb;
+}
+
+.auth-container .auth-submit,
+.bootstrap-error-card .roll-btn {
+  border-color: #f2f0eb;
+  background: #f2f0eb;
+  color: #090a0d;
+}
+
+.bootstrap-error-shell {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #121419 0%, #0d0f13 35%, #090a0d 100%);
+  font-family: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.bootstrap-error-card h1 {
+  color: #f2f0eb !important;
+  font-family: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif !important;
+  letter-spacing: -0.045em;
+}
+
+.bootstrap-error-message,
+.bootstrap-error-help { color: #aaa8b0 !important; }
+
+.site-footer {
+  border-top-color: rgba(255, 255, 255, 0.075);
+  background: #090a0d;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.site-footer p,
+.site-footer a { color: #7d7e87; }
+.site-footer a:hover { color: #cdd2ff; }
+
+@media (max-width: 48rem) {
+  .site-mode-header:not(.site-mode-header--home):not(.site-mode-header--profile) {
+    width: calc(100% - 1.5rem);
+    margin: 0.5rem auto;
+  }
+
+  .app-main--site :is(.guide, .legal-page, .terms, .shop-page, .discovery-hub) {
+    width: 100%;
+    padding-inline: 1rem;
+  }
+
+  .app-main--site :is(.discovery-hub h1, .shop-heading h1, .guide h1, .terms h1, .legal-hero h1) {
+    font-size: clamp(2.85rem, 15vw, 4.75rem);
+  }
+}

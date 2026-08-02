@@ -2179,3 +2179,14 @@ and shadow facets, a contained SVG glow filter, and the reference float motion.
 The existing orb-shape class names now resolve to this shared clean glyph in
 the roll renderer, preserving the catalog and equipped-cosmetic contracts
 without retaining the older CSS orb treatments.
+
+## 2026-08-01 — Use the homepage baseline for supporting routes
+
+The clean reference facet glyph no longer inherits the equipped roll-effect
+wrapper in compact reference previews, so the Today panel and other reference
+presentations remain centered and free of the older orb treatment. Non-profile
+application routes now inherit the homepage's warm-black canvas, Instrument
+Sans/IBM Plex Mono typography, lavender-blue accent, restrained borders, and
+off-white controls through the shared site boundary. Public profile rendering,
+profile-specific headers, auth/data contracts, and route behavior remain
+unchanged.

@@ -1103,6 +1103,14 @@ phase, with an immediate reduced-motion equivalent.
 - Added local Instrument Sans for the homepage only and deferred audio/Spotify
   media until explicit interaction.
 
+## 2026-08-01 — Apply homepage visual language to supporting routes
+
+- Removed the old equipped effect wrapper from compact reference orb previews.
+- Unified non-profile route surfaces around the homepage's warm-black canvas,
+  Instrument Sans/IBM Plex Mono typography, lavender-blue accent, quiet borders,
+  and off-white controls.
+- Left public profile rendering and profile-specific visual systems unchanged.
+
 ## Homepage directory activity summary — 2026-08-01
 
 - Simplified the public-roll ticker to username, hex, and a color dot, with a

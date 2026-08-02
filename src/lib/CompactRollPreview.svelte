@@ -17,7 +17,7 @@
 
 <div class:compact-roll-preview--static={staticEffect} class="compact-roll-preview" style={previewStyle} aria-hidden="true">
   {#if referenceShape}
-    <div class="roll-effect-wrapper {effectCls}" style={effectStyle}>
+    <div class="roll-effect-wrapper">
       <HomeReferenceRollGlyph {displayColor} {rarity} />
     </div>
   {:else}

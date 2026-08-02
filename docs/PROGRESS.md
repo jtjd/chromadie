@@ -1294,3 +1294,12 @@ The homepage’s default daily and leaderboard roll previews now use the
 reference’s faceted SVG glyph and float motion. Existing orb-shape classes
 also resolve to the same clean glyph in production roll previews while their
 catalog keys and equipped-cosmetic data remain unchanged.
+
+## 2026-08-01 — Supporting-route visual cohesion
+
+- Removed the legacy equipped effect layer from reference compact roll previews;
+  the clean four-facet glyph is now centered on its own.
+- Applied the homepage visual baseline to daily roll, discovery, Studio,
+  help/legal, auth, utility states, the supporting header, and footer.
+- Kept public profiles and profile-specific rendering outside the new baseline;
+  no data, auth, scoring, catalog, or route contracts changed.
