@@ -14,6 +14,7 @@ const howItWorks = await read('src/lib/HomeHowItWorks.svelte');
 const leaderboard = await read('src/lib/HomeLeaderboard.svelte');
 const claim = await read('src/lib/HomeUsernameClaim.svelte');
 const imageLightbox = await read('src/lib/HomeImageLightbox.svelte');
+const referenceRollGlyph = await read('src/lib/HomeReferenceRollGlyph.svelte');
 const discoveryPreviewMigration = await read('supabase/migrations/20260801090000_discovery_profile_preview.sql');
 const discoveryStatsMigration = await read('supabase/migrations/20260801130000_discovery_roll_count.sql');
 const audioControls = await read('src/lib/ProfileAudioControls.svelte');
@@ -66,6 +67,7 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(ticker, /ResizeObserver/);
   assert.match(ticker, /document\.fonts/);
   assert.match(dailyResult, /CompactRollPreview/);
+  assert.match(dailyResult, /referenceShape/);
   assert.match(dailyResult, /place-items: center/);
   assert.match(howItWorks, /role="tablist"/);
   assert.match(howItWorks, /aria-selected/);
@@ -73,6 +75,9 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(leaderboard, /slice\(0, 3\)/);
   assert.match(leaderboard, /getProfileMediaUrl/);
   assert.match(leaderboard, /CompactRollPreview/);
+  assert.match(leaderboard, /referenceShape/);
+  assert.match(referenceRollGlyph, /linearGradient/);
+  assert.match(referenceRollGlyph, /polygon points="60,10 103,91 60,109 17,91"/);
   assert.match(imageLightbox, /aria-modal="true"/);
   assert.match(imageLightbox, /event\.key === 'Escape'/);
   assert.match(imageLightbox, /View larger image/);

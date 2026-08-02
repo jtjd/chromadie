@@ -37,7 +37,8 @@
             effectStyle={effect.style}
             orbCls={orb.cls}
             size="6.25rem"
-            scale={0.54}
+            scale={0.7}
+            referenceShape={true}
             {staticEffect}
           />
         </div>

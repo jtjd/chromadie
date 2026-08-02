@@ -2172,3 +2172,8 @@ and muted color values.
 The Product showcase is rendered statically instead of participating in the
 scroll reveal observer. This prevents its profile/roll pair from becoming
 temporarily transparent when a fast scroll interrupts the reveal transition.
+
+Homepage default roll previews now use a small code-owned SVG facet glyph based
+on the reference implementation: four geometric planes, color-derived light
+and shadow facets, and a contained SVG glow filter. Equipped orb shapes and
+roll effects still route through the existing production renderer.

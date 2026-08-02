@@ -59,7 +59,7 @@
             {/if}
             <span class="home-rank-row__user"><strong>{row.displayName || row.username}</strong><span>{row.bio || 'Public color profile'}</span></span>
             <span class="home-rank-row__result">
-              <CompactRollPreview displayColor={color} rarity={row.rarity || 'Common'} effectCls={effects.cls} effectStyle={effects.style} orbCls={orb.cls} size="2rem" scale={0.2} staticEffect={true} />
+              <CompactRollPreview displayColor={color} rarity={row.rarity || 'Common'} effectCls={effects.cls} effectStyle={effects.style} orbCls={orb.cls} size="2rem" scale={0.2} staticEffect={true} referenceShape={true} />
               <span><b>{row.identity || 'Latest color'}</b><small>{row.rarity || color}</small></span>
             </span>
             <span class="home-rank-row__score">{row.score === null || row.score === undefined ? '—' : `${Number(row.score).toLocaleString()} EP`}</span>

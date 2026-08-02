@@ -1290,3 +1290,6 @@ kicker, and supporting copy now follow the reference typography and color
 roles.
 The Product showcase no longer uses the scroll reveal animation, preventing
 the section from disappearing during interrupted scroll transitions.
+The homepage’s default daily and leaderboard roll previews now use the
+reference’s faceted SVG glyph, while configured cosmetic orb shapes remain
+unchanged.

@@ -1141,3 +1141,5 @@ phase, with an immediate reduced-motion equivalent.
   restored the Candidate 5.11 leaderboard heading, kicker, and subcopy roles.
 - Kept the profile/roll showcase statically visible so interrupted scroll
   reveals cannot hide the section.
+- Replaced the homepage’s default circular roll preview with the reference’s
+  faceted SVG glyph and retained configured orb/effect rendering paths.

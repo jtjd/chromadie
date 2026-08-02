@@ -1,5 +1,6 @@
 <script>
   import RollPreview from './RollPreview.svelte';
+  import HomeReferenceRollGlyph from './HomeReferenceRollGlyph.svelte';
 
   export let displayColor = '#7B5CFF';
   export let rarity = 'Common';
@@ -9,19 +10,26 @@
   export let size = '3.5rem';
   export let scale = 0.34;
   export let staticEffect = false;
+  export let referenceShape = false;
 
   $: previewStyle = `--compact-roll-size: ${size}; --compact-roll-scale: ${scale};`;
 </script>
 
 <div class:compact-roll-preview--static={staticEffect} class="compact-roll-preview" style={previewStyle} aria-hidden="true">
-  <RollPreview
-    {effectCls}
-    {effectStyle}
-    {orbCls}
-    {displayColor}
-    {rarity}
-    size="game"
-  />
+  {#if referenceShape && !orbCls}
+    <div class="roll-effect-wrapper {effectCls}" style={effectStyle}>
+      <HomeReferenceRollGlyph {displayColor} {rarity} />
+    </div>
+  {:else}
+    <RollPreview
+      {effectCls}
+      {effectStyle}
+      {orbCls}
+      {displayColor}
+      {rarity}
+      size="game"
+    />
+  {/if}
 </div>
 
 <style>
