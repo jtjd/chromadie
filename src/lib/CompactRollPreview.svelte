@@ -16,7 +16,7 @@
 </script>
 
 <div class:compact-roll-preview--static={staticEffect} class="compact-roll-preview" style={previewStyle} aria-hidden="true">
-  {#if referenceShape && !orbCls}
+  {#if referenceShape}
     <div class="roll-effect-wrapper {effectCls}" style={effectStyle}>
       <HomeReferenceRollGlyph {displayColor} {rarity} />
     </div>

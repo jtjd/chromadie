@@ -59,8 +59,12 @@
 </svg>
 
 <style>
-  .home-reference-roll-glyph.final-color-display { display: block; width: 100%; height: 100%; overflow: visible; border: 0; border-radius: 0; background: transparent !important; box-shadow: none; filter: saturate(0.95); animation: none; }
+  .home-reference-roll-glyph.final-color-display { display: block; width: 100%; height: 100%; overflow: visible; border: 0; border-radius: 0; background: transparent !important; box-shadow: none; filter: saturate(0.95); animation: home-reference-glyph-float 5.2s ease-in-out infinite; transform-origin: 50% 58%; }
+  @keyframes home-reference-glyph-float {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50% { transform: translateY(-6px) rotate(1deg); }
+  }
   @media (prefers-reduced-motion: reduce) {
-    .home-reference-roll-glyph { transition: none; }
+    .home-reference-roll-glyph { animation: none; transition: none; }
   }
 </style>

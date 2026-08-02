@@ -2175,5 +2175,7 @@ temporarily transparent when a fast scroll interrupts the reveal transition.
 
 Homepage default roll previews now use a small code-owned SVG facet glyph based
 on the reference implementation: four geometric planes, color-derived light
-and shadow facets, and a contained SVG glow filter. Equipped orb shapes and
-roll effects still route through the existing production renderer.
+and shadow facets, a contained SVG glow filter, and the reference float motion.
+The existing orb-shape class names now resolve to this shared clean glyph in
+the roll renderer, preserving the catalog and equipped-cosmetic contracts
+without retaining the older CSS orb treatments.

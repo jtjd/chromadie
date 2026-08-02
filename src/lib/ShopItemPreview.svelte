@@ -1,5 +1,6 @@
 <script>
   import RollPreview from './RollPreview.svelte';
+  import HomeReferenceRollGlyph from './HomeReferenceRollGlyph.svelte';
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import { getProfileAtmosphereEffect } from './cosmetics';
   import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety';
@@ -37,7 +38,9 @@
       <span class="lb-score preview-lb-score">9.8M</span>
     </div>
   {:else if item.slot === 'orb_shape'}
-    <div class="preview-orb-shape {effectClass}"></div>
+    <div class="preview-orb-shape">
+      <HomeReferenceRollGlyph displayColor="#7B5CFF" rarity={item.rarity || 'Common'} />
+    </div>
   {:else if item.slot === 'profile_border'}
     <div class="preview-profile-card {effectClass}" style={effectStyle}>
       <div class="preview-profile-topline">
@@ -81,7 +84,7 @@
   .preview-lb-score { font-size: 0.74rem; }
   :global(.preview-lb-row.lb-gold-theme) .preview-lb-rank,
   :global(.preview-lb-row.lb-gold-theme) .preview-lb-sub { color: rgba(26,26,26,0.72); }
-  .preview-orb-shape { width: 72px; height: 72px; flex: 0 0 auto; background-color: #7b5cff; box-shadow: 0 0 0 12px rgba(123,92,255,0.06); }
+  .preview-orb-shape { display: grid; width: 72px; height: 72px; flex: 0 0 auto; place-items: center; background: transparent; }
   .preview-profile-card { width: 100%; min-height: 72px; background: radial-gradient(circle at top right, rgba(123,92,255,0.18), transparent 42%), linear-gradient(180deg, rgba(15,15,21,0.98), rgba(9,9,14,0.96)); border-radius: 16px; border: 2px solid transparent; padding: 10px 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
   .preview-profile-topline, .preview-profile-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .preview-profile-badge, .preview-profile-meta span { color: var(--text-muted); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; }

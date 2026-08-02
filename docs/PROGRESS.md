@@ -1291,5 +1291,6 @@ roles.
 The Product showcase no longer uses the scroll reveal animation, preventing
 the section from disappearing during interrupted scroll transitions.
 The homepage’s default daily and leaderboard roll previews now use the
-reference’s faceted SVG glyph, while configured cosmetic orb shapes remain
-unchanged.
+reference’s faceted SVG glyph and float motion. Existing orb-shape classes
+also resolve to the same clean glyph in production roll previews while their
+catalog keys and equipped-cosmetic data remain unchanged.
