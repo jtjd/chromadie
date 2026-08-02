@@ -35,7 +35,7 @@
 
   function linkIconSource(link) {
     const type = String(link?.type || 'link').toLowerCase();
-    return ['/github', '/twitch', '/youtube'].includes('/' + type)
+    return ['/github', '/instagram', '/tiktok', '/twitch', '/youtube'].includes('/' + type)
       ? '/link-icons/' + type + '.svg'
       : '/link-icons/link.svg';
   }

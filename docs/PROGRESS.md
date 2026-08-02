@@ -7,8 +7,8 @@
   WebP quality to 0.9; avatar limits remain unchanged.
 - Added an additive Storage limit migration so existing background objects and
   profile paths remain compatible.
-- Profile cards now render the full six-link allowance and use a dedicated
-  Twitch icon instead of the generic link mark.
+- Profile cards now render the full six-link allowance and use dedicated
+  Twitch, Instagram, and TikTok icons instead of generic link marks.
 
 ## Profile ambient color preference — 2026-08-01
 

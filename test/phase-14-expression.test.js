@@ -102,6 +102,8 @@ test('media storage, server validation, and public rendering boundaries are expl
   const identity = await read('src/lib/IdentityCard.svelte');
   const atmosphere = await read('src/lib/ProfileAtmosphere.svelte');
   const music = await read('src/lib/ProfileMusic.svelte');
+  const instagramIcon = await read('public/link-icons/instagram.svg');
+  const tiktokIcon = await read('public/link-icons/tiktok.svg');
   const twitchIcon = await read('public/link-icons/twitch.svg');
 
   assert.match(migration, /INSERT INTO storage\.buckets/);
@@ -128,7 +130,13 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(audioMigration, /profile_audio\/.*profile[.]mp3/);
   assert.match(settings, /export let staff = false/);
   assert.match(identity, /slice\(0, 6\)/);
+  assert.match(identity, /'\/instagram'/);
+  assert.match(identity, /'\/tiktok'/);
   assert.match(identity, /'\/twitch'/);
+  assert.match(instagramIcon, /<svg/);
+  assert.match(instagramIcon, /currentColor/);
+  assert.match(tiktokIcon, /<svg/);
+  assert.match(tiktokIcon, /currentColor/);
   assert.match(twitchIcon, /<svg/);
   assert.match(twitchIcon, /currentColor/);
   assert.match(settings, /update_my_profile_audio/);
