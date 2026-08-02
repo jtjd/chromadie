@@ -2249,3 +2249,32 @@ inventory, entitlements, equipped profiles, RLS, and permanent equip behavior
 are unchanged. `name_prism_atelier` remains an owned legacy key with its
 premium entitlement identity; no replacement grants or new catalog slots were
 introduced.
+
+## 2026-08-02 — Migrate every Name surface through the shared Phase A renderer
+
+Phase B moves all equipped and preview Name rendering through the single
+`NameEffectCanvas` wrapper and the existing code-owned renderer foundation.
+Public profile shells and large settings/Studio previews use full animated
+rendering with reduced-motion and offscreen pause behavior. Shop item previews
+use compact bounded animation. Discovery, leaderboard, rivals, and homepage
+directory/example rows use deterministic static-signature mode. Unstyled names
+remain plain semantic text without mounting a canvas.
+
+The semantic username remains the real heading, link, button content, or text
+node. Canvas is only an `aria-hidden` visual layer. The wrapper allowlists its
+semantic tags/classes and renderer modes; catalog values cannot provide CSS,
+HTML, URLs, or executable renderer code. Profile contexts pass the real latest
+roll color where available, with existing signature/profile color fallbacks;
+recent public colors are passed where the context already has them.
+
+An internal, un-routed parity harness places each of the 29 legacy CSS
+representations beside its shared animated/static and reduced-motion canvas
+render. Legacy Name CSS remains in the repository for comparison and rollback,
+but no production component applies the legacy Name classes or the old
+`getNameEffect` class/style bridge. The parity review records strong parity,
+acceptable reinterpretation, or needs refinement per key; it does not claim
+pixel-perfect equivalence for the old pseudo-element/filter-heavy effects.
+
+No catalog rows, prices, item keys, schema slots, purchase RPCs, inventory,
+entitlements, RLS, profile saves, permanent equip behavior, or replacement
+grants changed in this phase.

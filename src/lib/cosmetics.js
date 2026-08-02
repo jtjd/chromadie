@@ -16,7 +16,6 @@ export function getCosmeticEffect(cosmetics, slot) {
   return { cls: '', style: '' };
 }
 
-export const getNameEffect = cosmetics => getCosmeticEffect(cosmetics, 'name_effect');
 export const getFrameEffect = cosmetics => getCosmeticEffect(cosmetics, 'frame');
 const PROFILE_ATMOSPHERE_KEYS = new Set(['bg_rain', 'bg_snow', 'bg_fireflies', 'bg_scanlines']);
 const PROFILE_ATMOSPHERE_EFFECTS = Object.freeze({

@@ -14,7 +14,7 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     secondaryAccent: '#8ea78d',
     backgroundClass: 'home-demo-background--minimal',
     avatarClass: 'home-demo-avatar--minimal',
-    nameClass: '',
+    nameRendererKey: '',
     frameClass: '',
     atmosphere: '',
     links: [
@@ -38,7 +38,7 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     secondaryAccent: '#71d6ff',
     backgroundClass: 'home-demo-background--atmospheric',
     avatarClass: 'home-demo-avatar--atmospheric',
-    nameClass: 'name_void',
+    nameRendererKey: 'name_void',
     frameClass: 'frame_holo',
     atmosphere: 'fireflies',
     links: [
@@ -62,7 +62,7 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     secondaryAccent: '#B49AFF',
     backgroundClass: 'home-demo-background--expressive',
     avatarClass: 'home-demo-avatar--expressive',
-    nameClass: 'rainbow-text-anim',
+    nameRendererKey: 'name_rainbow',
     frameClass: 'frame-chroma-anim',
     atmosphere: 'scanlines',
     links: [

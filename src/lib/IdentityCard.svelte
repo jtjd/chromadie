@@ -12,8 +12,6 @@
   export let staff = false;
   export let founder = false;
   export let accentColor = '#8B7CF6';
-  export let nameClass = '';
-  export let nameStyle = '';
   export let frameClass = '';
   export let frameStyle = '';
   export let avatarSrc = '';
@@ -27,6 +25,7 @@
   export let nameRendererContext = 'profile';
   export let nameRendererMode = 'animated';
   export let nameRendererRecentColors = [];
+  export let nameRendererTodayColor = '';
 
   let failedAvatarSource = '';
 
@@ -64,7 +63,7 @@
           <NameEffectCanvas
             text={safeDisplayName}
             rendererKey={nameRendererKey}
-            todayColor={accentColor}
+            todayColor={nameRendererTodayColor || accentColor}
             recentColors={nameRendererRecentColors}
             context={nameRendererContext}
             mode={nameRendererMode}
@@ -73,7 +72,7 @@
             {titleId}
           />
         {:else}
-          <svelte:element this={headingTag} id={titleId} class={'identity-card__name ' + nameClass} style={nameStyle}>{safeDisplayName}</svelte:element>
+          <svelte:element this={headingTag} id={titleId} class="identity-card__name">{safeDisplayName}</svelte:element>
         {/if}
         {#if staff || founder || displayedBadges.length}
           <div class="identity-card__badges" aria-label="Profile badges">

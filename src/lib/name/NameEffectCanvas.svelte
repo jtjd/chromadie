@@ -5,7 +5,7 @@
   import { resolveNameRendererKey } from './nameCatalog.js';
 
   export let text = '';
-  export let rendererKey = 'plain';
+  export let rendererKey = '';
   export let legacyKey = '';
   export let todayColor = '#8B7CF6';
   export let recentColors = [];
@@ -18,9 +18,21 @@
   export let titleId = '';
   export let href = '';
   export let title = '';
+  export let semanticOnClick = null;
 
-  const SEMANTIC_TAGS = new Set(['span', 'h1', 'h2', 'h3', 'a']);
-  const SEMANTIC_CLASSES = new Set(['', 'identity-card__name', 'shop-name', 'profile-name']);
+  const SEMANTIC_TAGS = new Set(['span', 'strong', 'h1', 'h2', 'h3', 'a']);
+  const SEMANTIC_CLASSES = new Set([
+    '',
+    'identity-card__name',
+    'shop-name',
+    'shop-item-name',
+    'profile-name',
+    'profile-username-large',
+    'discovery-card__name',
+    'lb-username',
+    'studio-player-name',
+    'home-leaderboard__username'
+  ]);
   const RENDER_MODES = new Set(['animated', 'paused', 'static', 'static-signature', 'reduced-motion']);
 
   let host;
@@ -38,7 +50,7 @@
   let removeMediaListener;
   let removeFontListener;
 
-  $: safeRendererKey = resolveNameRendererKey(rendererKey || legacyKey);
+  $: safeRendererKey = resolveNameRendererKey(rendererKey || legacyKey || 'plain');
   $: safeSemanticTag = SEMANTIC_TAGS.has(semanticTag) ? semanticTag : 'span';
   $: safeSemanticClass = SEMANTIC_CLASSES.has(semanticClass) ? semanticClass : '';
   $: safeMode = RENDER_MODES.has(mode) ? mode : 'animated';
@@ -169,7 +181,7 @@
 
 <div bind:this={host} class={'name-effect-canvas name-effect-canvas--' + (canvasReady ? 'ready' : 'fallback')}>
   {#if safeSemanticTag === 'a'}
-    <a id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} href={href || undefined} title={title || undefined}>{text}</a>
+    <a id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} href={href || undefined} title={title || undefined} on:click={semanticOnClick}>{text}</a>
   {:else}
     <svelte:element this={safeSemanticTag} id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} title={title || undefined}>{text}</svelte:element>
   {/if}
@@ -180,7 +192,7 @@
   .name-effect-canvas { position: relative; display: inline-block; min-width: 0; max-width: 100%; vertical-align: middle; }
   .name-effect-canvas__semantic { position: relative; z-index: 1; display: inline-block; max-width: 100%; }
   .name-effect-canvas__visual { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; max-width: 100%; pointer-events: none; }
-  .name-effect-canvas--ready .name-effect-canvas__semantic { color: transparent; text-shadow: none; -webkit-text-fill-color: transparent; }
+  .name-effect-canvas--ready .name-effect-canvas__semantic { color: transparent !important; text-shadow: none !important; -webkit-text-fill-color: transparent !important; }
   .name-effect-canvas--fallback .name-effect-canvas__visual { display: none; }
   .name-effect-canvas--fallback .name-effect-canvas__semantic { color: inherit; -webkit-text-fill-color: currentColor; }
   @media (prefers-reduced-motion: reduce) {

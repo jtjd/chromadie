@@ -2,6 +2,7 @@
   import RollPreview from './RollPreview.svelte';
   import HomeReferenceRollGlyph from './HomeReferenceRollGlyph.svelte';
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
+  import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import { getProfileAtmosphereEffect } from './cosmetics';
   import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety';
 
@@ -52,6 +53,18 @@
       </div>
         <span class="preview-profile-name">{username}</span>
       <div class="preview-profile-meta"><span>Rank</span><span>30d</span></div>
+      </div>
+  {:else if item.slot === 'name_effect'}
+    <div class="shop-preview-text shop-preview-text--name">
+      <NameEffectCanvas
+        text={username}
+        rendererKey={String(item.item_key || '')}
+        todayColor={displayColor}
+        context="card"
+        compact={true}
+        mode="animated"
+        semanticClass="shop-item-name"
+      />
     </div>
   {:else}
     <div class="shop-preview-text">

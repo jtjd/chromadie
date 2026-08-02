@@ -1201,3 +1201,21 @@ direct route behavior.
 - Integrated the renderer only into the internal Profile Settings preview;
   legacy CSS remains available on every other surface until parity is signed
   off.
+
+## 2026-08-02 — Complete Phase B Name renderer integration
+
+- Replaced production and internal Name effect rendering across public
+  profiles, profile settings, shop item/product previews, Studio, discovery,
+  leaderboard, rivals, homepage directory/leaderboard, and homepage examples
+  with the shared semantic `NameEffectCanvas` path.
+- Added deliberate full, compact animated, and static-signature context modes,
+  real daily-color/history inputs, offscreen pause behavior, and accessible
+  semantic text preservation.
+- Added an internal-only 29-key legacy parity harness and static architecture
+  checks. Legacy CSS remains for comparison/rollback and is no longer applied
+  by production Name surfaces.
+- Recorded parity as strong, acceptable reinterpretation, or needs refinement
+  per legacy key without claiming pixel-perfect equivalence.
+- Preserved all item keys, catalog rows, prices, entitlement identity,
+  purchase/inventory/equip behavior, RLS, and server authority. No schema,
+  catalog, new effect, or replacement-grant work started.

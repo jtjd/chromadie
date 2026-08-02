@@ -3,7 +3,8 @@
   import { addToast } from './stores';
   import { getBadgeMeta } from './badgeData';
   import CompactRollPreview from './CompactRollPreview.svelte';
-  import { getLbTheme, getNameEffect, getOrbShape, getProfileBorder, getRollEffect, getStaffTitleText, getTitleText } from './cosmetics';
+  import NameEffectCanvas from './name/NameEffectCanvas.svelte';
+  import { getLbTheme, getOrbShape, getProfileBorder, getRollEffect, getStaffTitleText, getTitleText } from './cosmetics';
   import { getPublicProfilePath, getProfileShareText } from './discoveryData.js';
   import { getAppOrigin } from './authUrls.js';
   import { getProfileMediaUrl } from './profileMedia.js';
@@ -23,7 +24,7 @@
   $: profilePath = getPublicProfilePath(item?.username);
   $: theme = getLbTheme(item?.equippedCosmetics);
   $: border = getProfileBorder(item?.equippedCosmetics);
-  $: nameEffect = getNameEffect(item?.equippedCosmetics);
+  $: nameRendererKey = String(item?.equippedCosmetics?.name_effect || '');
   $: title = getTitleText(item?.equippedCosmetics);
   $: staffTitle = getStaffTitleText(item?.isStaff);
   $: displayName = item?.displayName || item?.username || 'Unknown player';
@@ -118,7 +119,22 @@
 
       <div class="discovery-card__identity">
         <div class="discovery-card__name-line">
-          <a class={'discovery-card__name ' + nameEffect.cls} href={profilePath || '/leaderboard'} on:click={viewProfile} data-text={displayName}>{displayName}</a>
+          {#if nameRendererKey}
+            <NameEffectCanvas
+              text={displayName}
+              rendererKey={nameRendererKey}
+              todayColor={rollColor}
+              context="card"
+              compact={true}
+              mode="static-signature"
+              semanticTag="a"
+              semanticClass="discovery-card__name"
+              href={profilePath || '/leaderboard'}
+              semanticOnClick={viewProfile}
+            />
+          {:else}
+            <a class="discovery-card__name" href={profilePath || '/leaderboard'} on:click={viewProfile}>{displayName}</a>
+          {/if}
           {#if title}<span class="title-chip">{title}</span>{/if}
           {#if staffTitle}<span class="title-chip staff-title">{staffTitle}</span>{/if}
           {#if item?.equippedBadges?.includes('launch_edition')}<span class="launch-edition-badge" title="Launch Edition player" aria-label="Launch Edition player">LE</span>{/if}

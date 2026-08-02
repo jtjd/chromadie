@@ -1,5 +1,6 @@
 <script>
   import CompactRollPreview from './CompactRollPreview.svelte';
+  import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import { getOrbShape, getRollEffect } from './cosmetics.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { normalizeHexColor } from './utils.js';
@@ -20,6 +21,7 @@
   <div class="home-mini-leaderboard" aria-label="Three real public profiles">
     {#each rows.slice(0, 3) as row, index (row.username)}
       {@const color = rowColor(row)}
+      {@const nameRendererKey = String(row?.equippedCosmetics?.name_effect || '')}
       <a class="home-mini-leaderboard__row" href={row.profilePath} aria-label={`Open ${row.displayName || row.username}'s public profile`} style={`--row-accent: ${color};`}>
         <i>{String(index + 1).padStart(2, '0')}</i>
         {#if avatarUrl(row)}
@@ -27,7 +29,23 @@
         {:else}
           <span class="home-mini-leaderboard__avatar">{(row.displayName || row.username || '?').slice(0, 1).toUpperCase()}</span>
         {/if}
-        <span class="home-mini-leaderboard__user"><strong>@{row.username}</strong><span>{row.identity || row.hexCode || 'Public color profile'}</span></span>
+        <span class="home-mini-leaderboard__user">
+          {#if nameRendererKey}
+            <NameEffectCanvas
+              text={'@' + row.username}
+              rendererKey={nameRendererKey}
+              todayColor={color}
+              context="card"
+              compact={true}
+              mode="static-signature"
+              semanticTag="strong"
+              semanticClass="home-leaderboard__username"
+            />
+          {:else}
+            <strong>@{row.username}</strong>
+          {/if}
+          <span>{row.identity || row.hexCode || 'Public color profile'}</span>
+        </span>
         <span class="home-mini-leaderboard__score">{row.score === null || row.score === undefined ? '—' : `${Number(row.score).toLocaleString()} EP`}</span>
       </a>
     {:else}
@@ -50,6 +68,7 @@
           {@const color = rowColor(row)}
           {@const effects = getRollEffect(row.equippedCosmetics)}
           {@const orb = getOrbShape(row.equippedCosmetics)}
+          {@const nameRendererKey = String(row?.equippedCosmetics?.name_effect || '')}
           <a class="home-rank-row" href={row.profilePath} aria-label={`Open ${row.displayName || row.username}'s public profile`} style={`--row-accent: ${color};`}>
             <span class="home-rank-row__number">{String(row.rank || index + 1).padStart(2, '0')}</span>
             {#if avatarUrl(row)}
@@ -57,7 +76,23 @@
             {:else}
               <span class="home-rank-row__avatar home-rank-row__avatar--monogram">{(row.displayName || row.username || '?').slice(0, 1).toUpperCase()}</span>
             {/if}
-            <span class="home-rank-row__user"><strong>{row.displayName || row.username}</strong><span>{row.bio || 'Public color profile'}</span></span>
+            <span class="home-rank-row__user">
+              {#if nameRendererKey}
+                <NameEffectCanvas
+                  text={row.displayName || row.username}
+                  rendererKey={nameRendererKey}
+                  todayColor={color}
+                  context="card"
+                  compact={true}
+                  mode="static-signature"
+                  semanticTag="strong"
+                  semanticClass="home-leaderboard__username"
+                />
+              {:else}
+                <strong>{row.displayName || row.username}</strong>
+              {/if}
+              <span>{row.bio || 'Public color profile'}</span>
+            </span>
             <span class="home-rank-row__result">
               <CompactRollPreview displayColor={color} rarity={row.rarity || 'Common'} effectCls={effects.cls} effectStyle={effects.style} orbCls={orb.cls} size="2rem" scale={0.2} staticEffect={true} referenceShape={true} />
               <span><b>{row.identity || 'Latest color'}</b><small>{row.rarity || color}</small></span>
@@ -88,6 +123,7 @@
   .home-rank-row__avatar, .home-mini-leaderboard__row img, .home-mini-leaderboard__avatar { width: 2.65rem; height: 2.65rem; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 50%; object-fit: cover; }
   .home-rank-row__avatar--monogram, .home-mini-leaderboard__avatar { display: grid; place-items: center; background: #242731; color: #d6d4db; font: 600 0.8rem / 1 var(--home-mono); }
   .home-rank-row__user, .home-mini-leaderboard__user { min-width: 0; }
+  :global(.home-leaderboard__username) { display: block; overflow: hidden; color: #f1eff3; font: 600 0.88rem / 1.1 var(--home-font); text-overflow: ellipsis; white-space: nowrap; }
   .home-rank-row__user strong, .home-mini-leaderboard__user strong { display: block; overflow: hidden; color: #f1eff3; font-size: 0.88rem; text-overflow: ellipsis; white-space: nowrap; }
   .home-rank-row__user span, .home-mini-leaderboard__user span { display: block; overflow: hidden; margin-top: 0.25rem; color: #98969f; font-size: 0.69rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
   .home-rank-row__result { display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: center; gap: 0.6rem; min-width: 0; color: #8d8e98; font: 0.62rem / 1 var(--home-mono); }

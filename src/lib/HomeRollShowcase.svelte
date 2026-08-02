@@ -54,7 +54,6 @@
     atmosphere: getProfileAtmosphereEffect(previewLoadout) || 'fireflies',
     border: classFallback(getCosmeticEffect(previewLoadout, 'profile_border'), 'border-celestial-anim'),
     frame: classFallback(getCosmeticEffect(previewLoadout, 'frame'), 'frame_holo'),
-    name: classFallback(getCosmeticEffect(previewLoadout, 'name_effect'), 'name_prism_atelier'),
     orb: classFallback(getOrbShape(previewLoadout), 'orb-shape-hexagon'),
     roll: classFallback(getRollEffect(previewLoadout), 'roll-smoke-anim')
   };
@@ -91,8 +90,9 @@
             badges={previewBadges}
             avatarSrc="/avatars/mara-dog-v1.jpg"
             accentColor={previewProfile.accentColor}
-            nameClass={previewCosmetics.name.cls}
-            nameStyle={previewCosmetics.name.style}
+            nameRendererKey={previewLoadout.name_effect}
+            nameRendererContext="profile"
+            nameRendererMode="static-signature"
             frameClass={previewCosmetics.frame.cls}
             frameStyle={previewCosmetics.frame.style}
             showToday={false}

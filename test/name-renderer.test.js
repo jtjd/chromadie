@@ -17,6 +17,7 @@ import {
   shouldAnimateNameFrame
 } from '../src/lib/name/nameRenderer.js';
 import { createNameAnimationClock } from '../src/lib/name/nameAnimationClock.js';
+import { LEGACY_NAME_PARITY, getLegacyNameParity } from '../src/lib/name/nameLegacyParity.js';
 
 const LEGACY_KEYS_FROM_PHASE_A_MAPPING = Object.freeze([
   'name_prism_atelier',
@@ -62,6 +63,20 @@ test('the code-owned renderer resolves every legacy name_effect key', () => {
     assert.ok(definition.fontDefinition);
     assert.ok(definition.materialDefinition);
     assert.ok(definition.motionDefinition);
+  });
+});
+
+test('the internal parity fixture covers every legacy key with an honest classification', () => {
+  assert.equal(LEGACY_NAME_PARITY.length, 29);
+  const classifications = new Set(['strong parity', 'acceptable reinterpretation', 'needs refinement']);
+
+  LEGACY_KEYS_FROM_PHASE_A_MAPPING.forEach(itemKey => {
+    const parity = getLegacyNameParity(itemKey);
+    assert.ok(parity, itemKey);
+    assert.equal(parity.key, itemKey);
+    assert.ok(parity.className || parity.style, itemKey);
+    assert.equal(classifications.has(parity.classification), true, itemKey);
+    assert.ok(parity.note, itemKey);
   });
 });
 

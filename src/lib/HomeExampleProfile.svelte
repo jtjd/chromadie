@@ -27,7 +27,9 @@
         links={profile.links}
         badges={expanded ? previewBadges : []}
         accentColor={profile.accent}
-        nameClass={profile.nameClass}
+        nameRendererKey={profile.nameRendererKey}
+        nameRendererContext="card"
+        nameRendererMode="static-signature"
         frameClass={profile.frameClass + ' ' + profile.avatarClass}
         showAvatarMark={false}
         showToday={false}

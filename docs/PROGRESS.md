@@ -1346,6 +1346,38 @@ on every signed-out supporting route.
 - No catalog rows, prices, slots, schema, purchase/inventory/entitlement/equip
   contracts, or automatic grants changed. Phase B is intentionally not begun.
 
+## 2026-08-02 — Complete Phase B Name cosmetic surface migration
+
+- Audited and migrated the public profile shell, compatibility profile,
+  profile settings preview, shop item/product previews, Studio, discovery,
+  leaderboard, rivals, homepage directory, homepage leaderboard, and internal
+  homepage examples through the Phase A shared Name renderer.
+- Chose full animated mode for public profile/settings/large Studio identity;
+  compact animated mode for visible shop item previews; and static-signature
+  mode for repeated discovery, leaderboard, rival, and homepage rows/examples.
+  Real latest-roll colors and available recent color history are passed without
+  changing roll/history behavior.
+- Added the internal un-routed 29-key legacy parity harness and production
+  static checks proving production Svelte surfaces no longer apply legacy Name
+  CSS classes, inline Name catalog styles, or `getNameEffect`.
+- Legacy Name CSS remains available for parity and rollback. `name_void`,
+  `name_matrix_rain`, `name_sunset_blur`, `name_prism_atelier`,
+  `name_holographic`, `name_inferno`, `name_ocean_wave`, and
+  `name_glitch_effect` are recorded as acceptable reinterpretations or needs
+  refinement where old pseudo-elements, filters, or stacked shadows are not
+  pixel-identical.
+- Required validation passes except the pre-existing transitional total asset
+  caps. Phase A baseline totals were JavaScript 762.72 kB/700 kB and CSS
+  426.53 kB/380 kB; the Phase B build reports JavaScript 765.82 kB/700 kB
+  (+3.10 kB) and CSS 426.70 kB/380 kB (+0.17 kB). Initial JavaScript
+  424.66 kB/450 kB, largest lazy JavaScript 73.13 kB/100 kB, initial CSS
+  165.34 kB/200 kB, largest lazy CSS 48.94 kB/75 kB, and HTML shell 5.60
+  kB/12 kB remain within budget. The small increase comes from wiring the
+  real homepage leaderboard into the shared renderer and does not duplicate
+  renderer modules across chunks.
+- No catalog, schema, purchase, inventory, entitlement, equip, RLS, auth, or
+  seed behavior changed. Phase C/D work remains stopped.
+
 ## Supporting-page visual pass — 2026-08-01
 
 - Restyled the leaderboard route toward the homepage's flat three-column row

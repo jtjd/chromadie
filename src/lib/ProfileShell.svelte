@@ -2,7 +2,7 @@
   import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { authUser, followedUsers, isAuthenticated, profile, session, toggleFollow } from './stores';
   import { supabase } from './supabase';
-  import { getFrameEffect, getNameEffect, getProfileAtmosphereEffect, getProfileBg, getProfileBorder } from './cosmetics';
+  import { getFrameEffect, getProfileAtmosphereEffect, getProfileBg, getProfileBorder } from './cosmetics';
   import { getBadgeMeta } from './badgeData';
   import { getRank, getRankState } from './ranks';
   import { loadProfileContext } from './profileData';
@@ -347,7 +347,7 @@
         profileId: targetProfile?.id
       });
   $: cosmetics = targetProfile?.equipped_cosmetics || {};
-  $: nameEff = getNameEffect(cosmetics);
+  $: nameRendererKey = String(cosmetics?.name_effect || '');
   $: frameEff = getFrameEffect(cosmetics);
   $: bgEff = getProfileBg(cosmetics);
   $: atmosphereEffect = getProfileAtmosphereEffect(cosmetics);
@@ -376,6 +376,7 @@
   $: profileBio = typeof targetProfile?.bio === 'string' ? targetProfile.bio.trim().slice(0, 160) : '';
   $: profileBioFallback = profileBio ? '' : 'No bio added yet.';
   $: signatureColor = colorFor(effectiveProfileConfig.signatureColor);
+  $: nameRendererTodayColor = colorFor(latestRoll?.hex_code || signatureColor);
   $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
   $: profileSurfaceAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
   $: profileControlAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
@@ -407,6 +408,7 @@
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
   $: pinnedAchievements = (targetProfile?.equipped_badges || []).map(getAchievement);
   $: recentScores = targetScores.slice(0, 6);
+  $: nameRendererRecentColors = recentScores.map(score => score?.hex_code).filter(Boolean);
   $: profilePath = getCanonicalProfilePath(username) || '/profile';
 
   onDestroy(() => {
@@ -439,8 +441,11 @@
               avatarSrc={avatarSrc}
               founder={targetProfile.equipped_badges?.includes('launch_edition')}
               accentColor={signatureColor}
-              nameClass={nameEff.cls}
-              nameStyle={nameEff.style}
+              nameRendererKey={nameRendererKey}
+              nameRendererContext="profile"
+              nameRendererMode="animated"
+              nameRendererRecentColors={nameRendererRecentColors}
+              nameRendererTodayColor={nameRendererTodayColor}
               frameClass={frameEff.cls}
               frameStyle={frameEff.style}
               rollState={profileRollState}

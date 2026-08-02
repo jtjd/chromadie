@@ -1,7 +1,7 @@
 <script>
   import { supabase } from './supabase';
   import { session, profile, authUser, equippedBadges, addToast, followedUsers, toggleFollow, isAuthenticated } from './stores';
-  import { getNameEffect, getFrameEffect, getTitleText, getStaffTitleText, getProfileBg, getProfileBorder, getLbTheme } from './cosmetics';
+  import { getFrameEffect, getTitleText, getStaffTitleText, getProfileBg, getProfileBorder, getLbTheme } from './cosmetics';
   import { getRank, getRankState } from './ranks';
   import { formatCount, getTodayString } from './utils';
   import { deleteAccount } from './accountDeletion';
@@ -10,6 +10,7 @@
   import { loadProfileContext } from './profileData';
   import { afterUpdate, createEventDispatcher } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
+  import NameEffectCanvas from './name/NameEffectCanvas.svelte';
 
   export let profileUsername = null;
   export let userId = null;
@@ -250,7 +251,7 @@
   $: rank = targetProfile ? getRank(targetProfile.lifetime_ep || 0) : null;
   $: rankState = targetProfile ? getRankState(targetProfile.lifetime_ep || 0) : null;
   $: cosmetics = targetProfile?.equipped_cosmetics || {};
-  $: nameEff = getNameEffect(cosmetics);
+  $: nameRendererKey = String(cosmetics?.name_effect || '');
   $: frameEff = getFrameEffect(cosmetics);
   $: titleTxt = getTitleText(cosmetics);
   $: staffTitleTxt = getStaffTitleText(targetProfile?.is_staff);
@@ -272,6 +273,8 @@
     : null;
   $: displayBestRoll = profileBestRoll || bestRoll;
   $: recentRollCount = targetScores.length;
+  $: nameTodayColor = targetScores[0]?.hex_code || targetProfile?.mood_color || '#8B7CF6';
+  $: nameRendererRecentColors = targetScores.slice(0, 6).map(score => score?.hex_code).filter(Boolean);
   $: isFollowed = $followedUsers.includes(targetProfile?.id);
 
   $: moodStyle = targetProfile?.mood_color
@@ -359,7 +362,19 @@
             {/if}
             <div class="name-row">
               <span class="profile-name-frame {frameEff.cls}" style="{frameEff.style}">
-                <span class="profile-username-large {nameEff.cls}" style="{nameEff.style}" data-text={username}>{username}</span>
+                {#if nameRendererKey}
+                  <NameEffectCanvas
+                    text={username}
+                    rendererKey={nameRendererKey}
+                    todayColor={nameTodayColor}
+                    recentColors={nameRendererRecentColors}
+                    context="profile"
+                    mode="animated"
+                    semanticClass="profile-username-large"
+                  />
+                {:else}
+                  <span class="profile-username-large">{username}</span>
+                {/if}
               </span>
               {#if staffTitleTxt}
                 <span class="title-chip staff-title">[{staffTitleTxt}]</span>
@@ -529,22 +544,32 @@
         {#if rivalsData.length > 0}
           <div class="rivals-list">
             {#each rivalsData as rival (rival.user_id)}
-              {@const rivalNameEff = getNameEffect(rival.equipped_cosmetics)}
+              {@const rivalNameRendererKey = String(rival.equipped_cosmetics?.name_effect || '')}
               {@const rivalTitleTxt = getTitleText(rival.equipped_cosmetics)}
               {@const rivalStaffTitleTxt = getStaffTitleText(rival.is_staff)}
               {@const rivalLbTheme = getLbTheme(rival.equipped_cosmetics)}
 
               <div class="rival-row {rivalLbTheme.cls}" style="{rivalLbTheme.style}">
-                <button type="button" class="rival-profile-btn lb-username" on:click={() => viewProfile(rival.username, rival.user_id)}>
+                <button type="button" class="rival-profile-btn" on:click={() => viewProfile(rival.username, rival.user_id)}>
                   {#if rivalTitleTxt}
                     <span class="title-chip">[{rivalTitleTxt}]</span>
                   {/if}
                   {#if rivalStaffTitleTxt}
                     <span class="title-chip staff-title">[{rivalStaffTitleTxt}]</span>
                   {/if}
-                  <span class="lb-username {rivalNameEff.cls}" style="{rivalNameEff.style}" data-text={rival.username}>
-                    {rival.username}
-                  </span>
+                  {#if rivalNameRendererKey}
+                    <NameEffectCanvas
+                      text={rival.username}
+                      rendererKey={rivalNameRendererKey}
+                      todayColor={rival.hex_code || '#8B7CF6'}
+                      context="card"
+                      compact={true}
+                      mode="static-signature"
+                      semanticClass="lb-username"
+                    />
+                  {:else}
+                    <span class="lb-username">{rival.username}</span>
+                  {/if}
                 </button>
                 <span class="rival-score" title={formatFullValue(rival.score)}>{formatStat(rival.score)}</span>
               </div>

@@ -5,7 +5,7 @@
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
   import { getBadgeMeta } from './badgeData.js';
-  import { getFrameEffect, getNameEffect, getProfileAtmosphereEffect, getProfileBg, getProfileBorder, getOrbShape, getRollEffect } from './cosmetics.js';
+  import { getFrameEffect, getProfileAtmosphereEffect, getProfileBg, getProfileBorder, getOrbShape, getRollEffect } from './cosmetics.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
   import { getCanonicalProfilePath } from './routeContract.js';
@@ -36,7 +36,11 @@
     config.signatureColor
   );
   $: secondaryAccent = normalizeHexColor(config.signatureColor, '#71D6FF');
-  $: nameEffect = getNameEffect(cosmetics);
+  $: nameRendererKey = String(cosmetics?.name_effect || '');
+  $: nameRendererRecentColors = (Array.isArray(context?.targetScores) ? context.targetScores : [])
+    .slice(0, 8)
+    .map(score => score?.hex_code)
+    .filter(Boolean);
   $: frameEffect = getFrameEffect(cosmetics);
   $: borderEffect = getProfileBorder(cosmetics);
   $: backgroundEffect = getProfileBg(cosmetics);
@@ -119,8 +123,10 @@
           staff={profile.is_staff === true}
           founder={Array.isArray(profile.equipped_badges) && profile.equipped_badges.includes('launch_edition')}
           accentColor={accentColor}
-          nameClass={nameEffect.cls}
-          nameStyle={nameEffect.style}
+          nameRendererKey={nameRendererKey}
+          nameRendererContext="card"
+          nameRendererMode="static-signature"
+          nameRendererRecentColors={nameRendererRecentColors}
           frameClass={frameEffect.cls}
           frameStyle={frameEffect.style}
           avatarSrc={avatarSrc}

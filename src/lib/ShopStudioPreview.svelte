@@ -2,6 +2,7 @@
   import CompactRollPreview from './CompactRollPreview.svelte';
   import RollPreview from './RollPreview.svelte';
   import IdentityCard from './IdentityCard.svelte';
+  import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import { getBadgeMeta } from './badgeData.js';
   import { createDefaultProfileConfig, getVisibleProfileLinks } from './profileConfig.js';
@@ -22,7 +23,6 @@
   export let rollScore = null;
   export let compact = false;
 
-  $: nameEffect = getCosmeticEffect(loadout, 'name_effect');
   $: frameEffect = getCosmeticEffect(loadout, 'frame');
   $: profileBackground = getProfileBg(loadout);
   $: profileAtmosphere = getProfileAtmosphereEffect(loadout);
@@ -95,8 +95,9 @@
           founder={Boolean(account.equipped_badges?.includes('launch_edition'))}
           avatarSrc={previewAvatarSrc}
           accentColor={displayColor}
-          nameClass={nameEffect.cls}
-          nameStyle={nameEffect.style}
+          nameRendererKey={String(loadout?.name_effect || '')}
+          nameRendererContext={compact ? 'card' : 'profile'}
+          nameRendererMode={compact ? 'static-signature' : 'animated'}
           frameClass={frameEffect.cls}
           frameStyle={frameEffect.style}
           showToday={false}
@@ -132,7 +133,19 @@
             {/if}
           </div>
           <div class="studio-player">
-            <span class="studio-player-name {nameEffect.cls}" style={nameEffect.style} data-text={username}>{username}</span>
+            {#if loadout?.name_effect}
+              <NameEffectCanvas
+                text={username}
+                rendererKey={String(loadout.name_effect)}
+                todayColor={displayColor}
+                context="card"
+                compact={true}
+                mode="static-signature"
+                semanticClass="studio-player-name"
+              />
+            {:else}
+              <span class="studio-player-name">{username}</span>
+            {/if}
             <span>{displayColor} · {rollRarity || 'Current roll'}</span>
           </div>
           <CompactRollPreview
