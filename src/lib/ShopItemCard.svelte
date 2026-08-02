@@ -117,7 +117,7 @@
   .rarity-epic { border-color:#745c9e; background:#191522; color:#dcc3ff; }
   .rarity-anomaly { border-color:#8e673d; background:#201811; color:#ffd09a; }
   .rarity-mythic { border-color:#8d4869; background:#21131b; color:#ffb3d2; }
-  .item-price { display:inline-flex; align-items:baseline; color:#cdd2ff; font:650 0.94rem/1 var(--font-mono-stack); white-space:nowrap; }
+  .item-price { display:inline-flex; align-items:center; min-width:5.1rem; min-height:2.25rem; justify-content:center; padding:0 .55rem; border:1px solid #414550; border-radius:5px; background:#181b22; color:#cdd2ff; font:650 0.94rem/1 var(--font-mono-stack); white-space:nowrap; }
   .shop-item > p { min-height:2.8em; display:-webkit-box; overflow:hidden; margin:10px 0 13px; color:#aaa8b0; font-size:.82rem; line-height:1.45; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; }
   .item-actions { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,.7fr); gap:7px; margin-top:auto; }
   .item-actions button, .item-actions a { min-width:0; min-height:44px; padding:0 9px; border-radius:5px; cursor:pointer; font:700 .78rem var(--font-display); }

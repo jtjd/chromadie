@@ -1180,3 +1180,11 @@ direct route behavior.
   wallet/inventory/entitlement refreshes, and profile customization boundaries.
 - Added search, category, collection, rarity, ownership, affordability, and
   sort controls without introducing migrations, seed changes, or new effects.
+
+## 2026-08-02 — Refine shop visual composition
+
+- Aligned the live shop surfaces more closely with the approved reference’s
+  stage proportions, category strip, filter rail, collection tabs, Studio
+  workspace, product visual height, and detail drawer styling.
+- Kept all content account-backed and preserved existing purchase, inventory,
+  entitlement, equipped, preview, and profile-settings contracts.

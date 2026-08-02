@@ -2224,3 +2224,12 @@ Browse is the full public catalog with filters; Collection is account-backed;
 Studio is try-on only. `purchase_item` and the profile-settings equip flow
 remain unchanged. No migrations, seed changes, new effects, or client
 authority were added.
+
+## 2026-08-02 — Tune shop composition to the approved reference
+
+The live-data shop keeps the reference’s visual grammar: a two-column Today’s
+Edit stage, six-way category strip, denser Browse filter rail, tabbed
+Collection, three-column Studio workspace, taller product visuals, boxed inline
+EP pricing, and a drawer-like product detail view. These are presentation
+changes only; catalog, account, preview, purchase, and equip boundaries remain
+unchanged.

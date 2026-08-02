@@ -102,6 +102,25 @@
       />
       <p class="shop-studio-note" role="status" aria-live="polite">{changed ? 'Preview only — use profile customization to make an actual change.' : 'Showing your equipped look.'}</p>
     </div>
+
+    <aside class="shop-studio-summary">
+      <div class="shop-panel-heading"><span>Preview details</span><strong>{changed ? 'Temporary changes' : 'Equipped state'}</strong></div>
+      <div class="shop-studio-roll-summary">
+        <span class="shop-eyebrow">Current roll</span>
+        <div class="shop-studio-roll-swatch" style={`--shop-roll-color:${displayColor}`} aria-label={`Current color ${displayColor}`}></div>
+        <strong>{displayColor}</strong>
+        <span>{displayRarity}{currentRoll?.score ? ` · ${Number(currentRoll.score).toLocaleString()} EP` : ''}</span>
+      </div>
+      <div class="shop-studio-account-summary">
+        <span class="shop-eyebrow">Profile</span>
+        <strong>{username}</strong>
+        <span>{Object.keys(draftLoadout).length} equipped slot{Object.keys(draftLoadout).length === 1 ? '' : 's'} in this preview</span>
+      </div>
+      <div class="shop-studio-summary-actions">
+        <button type="button" class="shop-button shop-button--outline" disabled={!changed} on:click={resetStudio}>Reset preview</button>
+        <a class="shop-button shop-button--light" href="/profile/settings">Open profile settings ↗</a>
+      </div>
+    </aside>
   </div>
 </section>
 
@@ -114,7 +133,7 @@
   .shop-button { display:inline-flex; align-items:center; justify-content:center; min-height:2.7rem; padding:0 .9rem; border-radius:5px; font-weight:650; text-decoration:none; cursor:pointer; }
   .shop-button--outline { border:1px solid #4a4d57; background:#121419; color:#d3d0d8; }
   .shop-button--light { border:1px solid #efede7; background:#efede7; color:#101116; }
-  .shop-studio-layout { display:grid; grid-template-columns:minmax(15rem,18rem) minmax(0,1fr); gap:1rem; }
+  .shop-studio-layout { display:grid; grid-template-columns:minmax(15rem,14rem) minmax(0,1fr) minmax(15rem,18rem); gap:.8rem; }
   .shop-studio-slots { border:1px solid var(--shop-line); background:#0a0c10; }
   .shop-panel-heading { display:grid; gap:.35rem; padding:1rem; border-bottom:1px solid var(--shop-line); background:#111319; }
   .shop-panel-heading span { color:#858690; font:.65rem var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
@@ -128,7 +147,20 @@
   .shop-studio-actions .shop-button { width:100%; }
   .shop-studio-actions .shop-button:disabled { cursor:not-allowed; opacity:.45; }
   .shop-studio-preview { min-width:0; }
-  .shop-studio-preview :global(.studio-preview) { min-height:100%; }
+  .shop-studio-preview :global(.studio-preview) { min-height:100%; border-radius:6px; padding:1rem; background:#0a0c10; box-shadow:none; }
+  .shop-studio-preview :global(.context-switcher) { margin:0 0 .8rem; border-radius:4px; }
+  .shop-studio-preview :global(.context-switcher button) { min-height:2.25rem; border-radius:3px; }
+  .shop-studio-preview :global(.studio-stage) { min-height:34rem; border-radius:5px; background:#07080b; }
   .shop-studio-note { margin:.65rem 0 0; color:#aaa8b0; font-size:.8rem; line-height:1.45; }
-  @media (max-width: 760px) { .shop-surface-heading { align-items:flex-start; flex-direction:column; } .shop-studio-layout { grid-template-columns:1fr; } }
+  .shop-studio-summary { border:1px solid var(--shop-line); background:#0a0c10; }
+  .shop-studio-roll-summary, .shop-studio-account-summary { display:grid; gap:.45rem; padding:1rem; border-bottom:1px solid #252830; }
+  .shop-studio-roll-swatch { width:100%; height:7.4rem; margin:.35rem 0 .25rem; border:1px solid rgba(255,255,255,.18); border-radius:5px; background:var(--shop-roll-color); }
+  .shop-studio-roll-summary strong { color:#f2f0eb; font:650 .95rem var(--font-mono-stack); }
+  .shop-studio-roll-summary > span:last-child, .shop-studio-account-summary > span:last-child { color:#858690; font-size:.75rem; line-height:1.45; }
+  .shop-studio-account-summary strong { color:#f2f0eb; font-size:1.3rem; letter-spacing:-.03em; }
+  .shop-studio-summary-actions { display:grid; gap:.5rem; padding:1rem; }
+  .shop-studio-summary-actions .shop-button { width:100%; }
+  .shop-studio-summary-actions .shop-button:disabled { cursor:not-allowed; opacity:.45; }
+  @media (max-width: 1050px) { .shop-studio-layout { grid-template-columns:minmax(13rem,15rem) minmax(0,1fr); } .shop-studio-summary { grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr auto; } .shop-studio-summary .shop-panel-heading { grid-column:1 / -1; } .shop-studio-summary-actions { align-content:center; } }
+  @media (max-width: 760px) { .shop-surface-heading { align-items:flex-start; flex-direction:column; } .shop-studio-layout { grid-template-columns:1fr; } .shop-studio-summary { display:block; } .shop-studio-preview :global(.studio-stage) { min-height:24rem; } }
 </style>

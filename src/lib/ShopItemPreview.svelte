@@ -73,13 +73,13 @@
 </div>
 
 <style>
-  .shop-preview-area { height: 112px; margin-bottom: 14px; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.075); border-radius: 16px; background: radial-gradient(circle at 50% 42%, rgba(123,92,255,0.1), transparent 58%), rgba(5,6,10,0.58); overflow: hidden; }
-  .shop-preview-area-tall { height: 112px; }
-  .shop-preview-area-roll-effect { height: 140px; border-color: rgba(139,124,246,0.16); background: radial-gradient(circle at center, rgba(123,92,255,0.12), rgba(6,7,12,0.7) 62%, rgba(3,4,8,0.9)); }
+  .shop-preview-area { height: 174px; margin-bottom: 0; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 14px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.075); border-radius: 6px; background: radial-gradient(circle at 50% 42%, rgba(123,92,255,0.1), transparent 58%), rgba(5,6,10,0.58); overflow: hidden; }
+  .shop-preview-area-tall { height: 174px; }
+  .shop-preview-area-roll-effect { height: 174px; border-color: rgba(139,124,246,0.16); background: radial-gradient(circle at center, rgba(123,92,255,0.12), rgba(6,7,12,0.7) 62%, rgba(3,4,8,0.9)); }
   .preview-bg { position: relative; width: 100%; height: 100%; border-radius: 12px; border: 1px solid var(--card-border); background-color: #111; flex-shrink: 0; box-sizing: border-box; will-change: transform, opacity, filter; overflow: hidden; }
   .preview-bg[style*="godRaysTurn"] { animation-duration: 5.5s !important; }
   .preview-bg[style*="deepSpaceTwinkle"] { animation-duration: 6.2s !important; }
-  .preview-lb-row { width: 100%; min-height: 58px; border-radius: 14px; padding: 10px 12px; box-sizing: border-box; overflow: hidden; margin: 0; gap: 10px; }
+  .preview-lb-row { width: 100%; min-height: 58px; border-radius: 4px; padding: 10px 12px; box-sizing: border-box; overflow: hidden; margin: 0; gap: 10px; }
   .preview-lb-rank { width: auto; min-width: 22px; font-size: 0.72rem; }
   .preview-lb-info { display: flex; flex-direction: column; gap: 3px; margin-left: 0; }
   .preview-lb-name { font-size: 0.76rem; line-height: 1.1; }
@@ -88,7 +88,7 @@
   :global(.preview-lb-row.lb-gold-theme) .preview-lb-rank,
   :global(.preview-lb-row.lb-gold-theme) .preview-lb-sub { color: rgba(26,26,26,0.72); }
   .preview-orb-shape { display: grid; width: 72px; height: 72px; flex: 0 0 auto; place-items: center; background: transparent; }
-  .preview-profile-card { width: 100%; min-height: 72px; background: radial-gradient(circle at top right, rgba(123,92,255,0.18), transparent 42%), linear-gradient(180deg, rgba(15,15,21,0.98), rgba(9,9,14,0.96)); border-radius: 16px; border: 2px solid transparent; padding: 10px 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+  .preview-profile-card { width: 100%; min-height: 100px; background: radial-gradient(circle at top right, rgba(123,92,255,0.18), transparent 42%), linear-gradient(180deg, rgba(15,15,21,0.98), rgba(9,9,14,0.96)); border-radius: 5px; border: 2px solid transparent; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
   .preview-profile-topline, .preview-profile-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .preview-profile-badge, .preview-profile-meta span { color: var(--text-muted); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; }
   .preview-profile-dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.3); box-shadow: 0 0 12px rgba(255,255,255,0.18); flex-shrink: 0; }
@@ -96,8 +96,8 @@
   .shop-preview-text { width: 100%; min-height: 0; margin-bottom: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px; text-align: center; box-sizing: border-box; }
 
   @media (max-width: 600px) {
-    .shop-preview-area { height: 104px; padding: 10px; margin-bottom: 16px; }
-    .shop-preview-area-tall { height: 104px; }
-    .shop-preview-area-roll-effect { height: 128px; }
+    .shop-preview-area { height: 150px; padding: 10px; }
+    .shop-preview-area-tall { height: 150px; }
+    .shop-preview-area-roll-effect { height: 150px; }
   }
 </style>

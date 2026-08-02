@@ -317,9 +317,9 @@
 {/if}
 
 <style>
-  .shop-page { --shop-line:#32353e; --shop-accent:#cdd2ff; width:min(1380px,calc(100% - 2.5rem)); margin:0 auto 5rem; color:#f2f0eb; }
-  .shop-header { display:flex; align-items:end; justify-content:space-between; gap:2rem; padding:2.25rem 0 1.4rem; border-bottom:1px solid var(--shop-line); }
-  .shop-heading h1 { max-width:52rem; margin:.65rem 0 .8rem; font:650 clamp(3rem,6vw,5.9rem)/.9 var(--font-display); letter-spacing:-.06em; }
+  .shop-page { --shop-line:#32353e; --shop-accent:#cdd2ff; width:min(1480px,calc(100% - 1.75rem)); margin:0 auto 5.5rem; color:#f2f0eb; }
+  .shop-header { display:flex; align-items:end; justify-content:space-between; gap:2rem; padding:1.75rem 0 1.1rem; border-bottom:1px solid var(--shop-line); }
+  .shop-heading h1 { max-width:52rem; margin:.65rem 0 .8rem; font:650 clamp(2.5rem,4vw,3.35rem)/.95 var(--font-display); letter-spacing:-.055em; }
   .shop-heading p { max-width:40rem; margin:0; color:#aaa8b0; font-size:1rem; line-height:1.55; }
   .shop-eyebrow { color:#858690; font:500 .7rem/1.3 var(--font-mono-stack); letter-spacing:.13em; text-transform:uppercase; }
   .shop-header-actions { display:flex; align-items:center; gap:.7rem; flex:0 0 auto; }
@@ -329,16 +329,17 @@
   .shop-wallet strong { margin-top:.25rem; color:#f2f0eb; font:650 1rem var(--font-mono-stack); }
   .shop-profile-link { min-height:2.7rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .8rem; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#d9d7d2; text-decoration:none; font-size:.82rem; }
   .shop-profile-link:hover, .shop-profile-link:focus-visible { border-color:#777d8d; background:#1b1e25; color:#fff; }
-  .shop-navigation { display:flex; gap:.25rem; width:max-content; max-width:100%; margin:1.1rem 0 1.8rem; padding:.25rem; border:1px solid rgba(255,255,255,.08); border-radius:999px; background:#111217; }
-  .shop-navigation button { min-height:2.25rem; padding:0 .9rem; border:0; border-radius:999px; background:transparent; color:#92949d; font-size:.82rem; cursor:pointer; }
-  .shop-navigation button:hover, .shop-navigation button:focus-visible { color:#fff; background:#1b1e25; }
-  .shop-navigation button.active { color:var(--shop-accent); background:#1b1e25; }
+  .shop-navigation { display:flex; gap:1.25rem; width:max-content; max-width:100%; margin:1rem 0 1.25rem; border-bottom:1px solid var(--shop-line); }
+  .shop-navigation button { position:relative; min-height:2.45rem; padding:0 .05rem; border:0; background:transparent; color:#92949d; font:500 .72rem var(--font-mono-stack); letter-spacing:.03em; cursor:pointer; }
+  .shop-navigation button:hover, .shop-navigation button:focus-visible { color:#fff; }
+  .shop-navigation button.active { color:var(--shop-accent); }
+  .shop-navigation button.active::after { position:absolute; right:0; bottom:-1px; left:0; height:2px; background:var(--shop-accent); content:""; }
   .shop-status { display:grid; gap:.45rem; min-height:14rem; align-content:center; padding:2rem; border:1px solid var(--shop-line); background:#0a0c10; }
   .shop-status span { color:#858690; font:.7rem var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
   .shop-status strong { font-size:1.1rem; }
   .shop-status--error { border-color:#754d58; }
   .shop-status button { width:max-content; min-height:2.6rem; padding:0 .85rem; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#f2f0eb; cursor:pointer; }
   .shop-live-region { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  @media (max-width: 760px) { .shop-page { width:min(100% - 1.25rem,1380px); } .shop-header { align-items:flex-start; flex-direction:column; gap:1.1rem; padding-top:1.5rem; } .shop-header-actions { width:100%; align-items:stretch; } .shop-wallet { flex:1; } .shop-profile-link { flex:1; justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
+  @media (max-width: 760px) { .shop-page { width:min(100% - 1.25rem,1480px); } .shop-header { align-items:flex-start; flex-direction:column; gap:1.1rem; padding-top:1.25rem; } .shop-header-actions { width:100%; align-items:stretch; } .shop-wallet { flex:1; } .shop-profile-link { flex:1; justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
   @media (prefers-reduced-motion: reduce) { .shop-navigation button, .shop-profile-link { transition:none; } }
 </style>

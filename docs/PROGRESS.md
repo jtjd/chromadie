@@ -1320,6 +1320,15 @@ on every signed-out supporting route.
   check still fails its transitional total JavaScript/CSS caps; initial and
   largest-lazy budgets pass.
 
+## 2026-08-02 — Bring shop composition closer to approved reference
+
+- Refined Home’s Today’s Edit stage, category strip, live profile/roll pathway
+  cards, and spacing scale.
+- Reworked Browse into a reference-style filter rail plus result toolbar,
+  Collection into tabbed owned views, and Studio into a three-column workspace.
+- Increased product visual/card proportions and retained readable blue inline
+  EP pricing, real rarity/state labels, and existing preview components.
+
 ## Supporting-page visual pass — 2026-08-01
 
 - Restyled the leaderboard route toward the homepage's flat three-column row
