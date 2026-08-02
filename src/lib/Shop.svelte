@@ -245,14 +245,9 @@
       profile={$profile}
       {profileConfig}
       {currentRoll}
-      {loadingAction}
-      {purchaseArmedKey}
-      {isSignedIn}
       on:browse={event => openBrowse(event.detail?.section || 'overview')}
       on:collection={() => setView('collection')}
-      on:studio={() => setView('studio')}
       on:select={event => selectItem(event.detail)}
-      on:purchase={event => requestPurchase(event.detail)}
     />
   {:else if activeView === 'browse'}
     <ShopBrowse
@@ -261,13 +256,10 @@
       {fittingRoom}
       equippedItems={$equippedItems}
       profile={$profile}
+      {profileConfig}
       {currentRoll}
-      {loadingAction}
-      {purchaseArmedKey}
-      {isSignedIn}
       on:section={event => browseSection = event.detail}
       on:select={event => selectItem(event.detail)}
-      on:purchase={event => requestPurchase(event.detail)}
     />
   {:else if activeView === 'collection'}
     <ShopCollection
@@ -276,12 +268,8 @@
       equippedItems={$equippedItems}
       profile={$profile}
       {currentRoll}
-      {loadingAction}
-      {purchaseArmedKey}
-      {isSignedIn}
       on:browse={() => openBrowse('overview')}
       on:select={event => selectItem(event.detail)}
-      on:purchase={event => requestPurchase(event.detail)}
     />
   {:else}
     <ShopStudio items={catalogItems} {fittingRoom} equippedItems={$equippedItems} profile={$profile} {profileConfig} {currentRoll} />
@@ -318,8 +306,10 @@
 
 <style>
   .shop-page { --shop-line:#32353e; --shop-accent:#cdd2ff; width:min(1480px,calc(100% - 1.75rem)); margin:0 auto 5.5rem; color:#f2f0eb; }
+  :global(.app-main--site) .shop-page { width:min(1480px,calc(100% - 1.75rem)); padding:1.25rem 0 4rem; }
   .shop-header { display:flex; align-items:end; justify-content:space-between; gap:2rem; padding:1.75rem 0 1.1rem; border-bottom:1px solid var(--shop-line); }
   .shop-heading h1 { max-width:52rem; margin:.65rem 0 .8rem; font:650 clamp(2.5rem,4vw,3.35rem)/.95 var(--font-display); letter-spacing:-.055em; }
+  :global(.app-main--site) .shop-heading h1 { max-width:52rem; margin:.65rem 0 .8rem; font:650 clamp(2.5rem,4vw,3.35rem)/.95 var(--font-display); letter-spacing:-.055em; }
   .shop-heading p { max-width:40rem; margin:0; color:#aaa8b0; font-size:1rem; line-height:1.55; }
   .shop-eyebrow { color:#858690; font:500 .7rem/1.3 var(--font-mono-stack); letter-spacing:.13em; text-transform:uppercase; }
   .shop-header-actions { display:flex; align-items:center; gap:.7rem; flex:0 0 auto; }
@@ -340,6 +330,6 @@
   .shop-status--error { border-color:#754d58; }
   .shop-status button { width:max-content; min-height:2.6rem; padding:0 .85rem; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#f2f0eb; cursor:pointer; }
   .shop-live-region { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  @media (max-width: 760px) { .shop-page { width:min(100% - 1.25rem,1480px); } .shop-header { align-items:flex-start; flex-direction:column; gap:1.1rem; padding-top:1.25rem; } .shop-header-actions { width:100%; align-items:stretch; } .shop-wallet { flex:1; } .shop-profile-link { flex:1; justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
+  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,1480px); padding-top:0; } .shop-header { align-items:flex-start; flex-direction:column; gap:1.1rem; padding-top:1.25rem; } .shop-header-actions { width:100%; align-items:stretch; } .shop-wallet { flex:1; } .shop-profile-link { flex:1; justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
   @media (prefers-reduced-motion: reduce) { .shop-navigation button, .shop-profile-link { transition:none; } }
 </style>

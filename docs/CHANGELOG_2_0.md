@@ -1219,3 +1219,20 @@ direct route behavior.
 - Preserved all item keys, catalog rows, prices, entitlement identity,
   purchase/inventory/equip behavior, RLS, and server authority. No schema,
   catalog, new effect, or replacement-grant work started.
+
+## 2026-08-02 — Complete Phase C shop presentation refinement
+
+- Simplified Shop Home around a compact category bar, real Today’s Edit
+  merchandising, the current profile/roll context, one curated row, and
+  Browse/Collection text paths.
+- Replaced Browse’s permanent filter rail with a compact toolbar and
+  contained filter panel, added a sticky contextual preview using the shared
+  Studio/Name renderer, and kept the full real catalog/filter contracts.
+- Reworked cards around readable name/price/preview/rarity/collection/state
+  hierarchy with detail-first purchase decisions.
+- Converted Product Detail to a right drawer on desktop and bottom sheet on
+  mobile with focus restoration, Escape handling, existing confirmation,
+  temporary try-on, related items, and account refresh behavior preserved.
+- Refined Collection search/quantities and Studio presentation without
+  changing item keys, prices, catalog rows, inventory, entitlements, RLS,
+  profile saves, permanent equip, schema, or legacy Name CSS.

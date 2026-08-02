@@ -2278,3 +2278,25 @@ pixel-perfect equivalence for the old pseudo-element/filter-heavy effects.
 No catalog rows, prices, item keys, schema slots, purchase RPCs, inventory,
 entitlements, RLS, profile saves, permanent equip behavior, or replacement
 grants changed in this phase.
+
+## 2026-08-02 — Refine the shop without changing its authority boundaries
+
+Phase C keeps the existing `/shop` view-state architecture and account-backed
+catalog contracts while simplifying the presentation. Shop Home now has a
+compact category navigation, one real Today’s Edit product, the live equipped
+profile/current-roll context, one curated row, and text-level Browse and
+Collection paths. Redundant profile/roll continuation cards are removed.
+
+Browse keeps the full catalog and all existing filters/sorts, but moves the
+secondary filters into an accessible contained panel and adds one sticky
+contextual fitting-room preview. Product cards expose semantic product names,
+prices, rarity/collection metadata, ownership state, preview, and detail; the
+purchase decision remains in Product Detail.
+
+Product Detail remains the existing `<dialog>` contract and is presented as a
+right-side drawer on desktop and a bottom sheet on mobile. Escape, focus trap,
+focus restoration, try-on, confirmation, purchase RPC, inventory/wallet/
+entitlement refresh, and Profile Settings equip boundaries remain unchanged.
+Collection and Studio use the same card/preview language without changing
+inventory, entitlement, or permanent equip behavior. No schema, catalog, seed,
+price, item-key, Name renderer, or legacy CSS changes were introduced.

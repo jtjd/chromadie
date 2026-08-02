@@ -1397,3 +1397,22 @@ kept public profile selectors outside the supporting-route baseline.
   label and bottom profile-link action.
 - Preserved profile navigation, auth behavior, public rendering, and reduced
   motion handling.
+
+## 2026-08-02 — Phase C shop presentation refinement
+
+- Simplified Shop Home to compact category navigation, a real catalog-backed
+  Today’s Edit, the live profile/current-roll context, one curated row, and
+  text-level Browse and Collection paths. Removed the redundant profile/roll
+  continuation cards.
+- Reworked Browse around a product grid, compact search/sort toolbar,
+  accessible contained filters, and one sticky contextual fitting-room
+  preview. Existing category, collection, rarity, ownership, affordability,
+  search, and sort behavior remains live-data backed.
+- Refined cards to keep product name/price, preview, rarity/collection,
+  ownership state, description, and a detail affordance readable without
+  repeating purchase buttons. Product Detail now presents as a desktop drawer
+  and mobile bottom sheet while preserving confirmation, try-on, RPC, refresh,
+  focus, and equip boundaries.
+- Added owned-collection search and removed duplicate Studio reset/settings
+  controls. No catalog, schema, pricing, seed, inventory, entitlement, RLS,
+  Name renderer, or legacy CSS behavior changed.
