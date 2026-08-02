@@ -63,3 +63,20 @@ test('catalog filtering combines section, query, ownership, affordability, rarit
     ['frame_clean']
   );
 });
+
+test('catalog filtering supports collection and explicit ownership states', () => {
+  const fittingRoom = createFittingRoom({ userInventory: ['frame_clean'] });
+
+  assert.deepEqual(
+    filterShopItems(items, { collection: 'Voidwalker', ownership: 'owned' }, fittingRoom).map(item => item.item_key),
+    []
+  );
+  assert.deepEqual(
+    filterShopItems(items, { collection: 'Voidwalker', ownership: 'unowned' }, fittingRoom).map(item => item.item_key),
+    ['name_void']
+  );
+  assert.deepEqual(
+    filterShopItems(items, { collection: 'Geometric' }, fittingRoom).map(item => item.item_key),
+    ['orb_star']
+  );
+});

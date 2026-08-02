@@ -11,13 +11,16 @@
 
   export let loadout = {};
   export let activeContext = 'profile';
-  export let username = 'Chromanaut';
+  export let username = 'Your profile';
   export let selectedItem = /** @type {any} */ (null);
-  export let displayColor = '#7B5CFF';
+  export let displayColor = '#8B7CF6';
   /** @type {any} */
   export let accountProfile = null;
   /** @type {any} */
   export let profileConfig = null;
+  export let rollRarity = '';
+  export let rollScore = null;
+  export let compact = false;
 
   $: nameEffect = getCosmeticEffect(loadout, 'name_effect');
   $: frameEffect = getCosmeticEffect(loadout, 'frame');
@@ -42,7 +45,8 @@
   $: previewLinks = getVisibleProfileLinks(previewProfileConfig);
 </script>
 
-<section class="studio-preview" aria-label="Your cosmetic preview">
+<section class="studio-preview" class:studio-preview--compact={compact} aria-label="Your cosmetic preview">
+  {#if !compact}
   <div class="studio-preview-head">
     <div>
       <span class="studio-eyebrow">Live fitting room</span>
@@ -63,6 +67,7 @@
       </button>
     {/each}
   </div>
+  {/if}
 
   <div class="studio-stage context-{activeContext}">
     <div class="stage-grid" aria-hidden="true"></div>
@@ -105,11 +110,11 @@
           effectStyle={rollEffect.style}
           orbCls={orbShape.cls}
           {displayColor}
-          rarity="Mythic"
+          rarity={rollRarity || 'Common'}
           size="game"
         />
         <strong>{displayColor}</strong>
-        <span class="roll-rarity">Mythic result</span>
+        <span class="roll-rarity">{rollRarity || 'Current roll'}</span>
       </div>
     {:else}
       <div class="studio-leaderboard-scene">
@@ -128,18 +133,18 @@
           </div>
           <div class="studio-player">
             <span class="studio-player-name {nameEffect.cls}" style={nameEffect.style} data-text={username}>{username}</span>
-            <span>{displayColor} · Mythic</span>
+            <span>{displayColor} · {rollRarity || 'Current roll'}</span>
           </div>
           <CompactRollPreview
             displayColor={displayColor}
-            rarity="Mythic"
+            rarity={rollRarity || 'Common'}
             effectCls={rollEffect.cls}
             effectStyle={rollEffect.style}
             orbCls={orbShape.cls}
             size="3rem"
             scale={0.29}
           />
-          <strong>9.8M</strong>
+          <strong>{rollScore === null || rollScore === undefined ? '—' : Number(rollScore).toLocaleString()}</strong>
         </div>
         <div class="leaderboard-ghost-row"><span>#2</span><i></i><i></i></div>
         <div class="leaderboard-ghost-row short"><span>#3</span><i></i><i></i></div>
@@ -147,10 +152,12 @@
     {/if}
   </div>
 
+  {#if !compact}
   <div class="studio-selection" aria-live="polite">
     <span>{selectedItem ? 'Previewing' : 'Studio ready'}</span>
     <strong>{selectedItem?.name || 'Choose an item to try it on'}</strong>
   </div>
+  {/if}
 </section>
 
 <style>
@@ -164,6 +171,8 @@
       var(--surface-panel);
     box-shadow: 0 1.5rem 4rem rgba(0,0,0,0.28);
   }
+  .studio-preview--compact { border:0; padding:0; background:transparent; box-shadow:none; }
+  .studio-preview--compact .studio-stage { min-height:18rem; border:0; border-radius:0; background:transparent; }
 
   .studio-preview-head,
   .profile-kicker-row,

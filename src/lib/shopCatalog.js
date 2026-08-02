@@ -54,6 +54,11 @@ export const SHOP_SORTS = Object.freeze([
 
 export const SHOP_RARITIES = Object.freeze(['Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']);
 export const SHOP_ACCESS_TIERS = Object.freeze(['free', 'earned', 'premium']);
+export const SHOP_OWNERSHIP_FILTERS = Object.freeze([
+  { id: 'all', label: 'All items' },
+  { id: 'owned', label: 'Owned' },
+  { id: 'unowned', label: 'Not owned' }
+]);
 
 const RARITY_RANK = Object.freeze({
   Trash: 0,
@@ -157,6 +162,28 @@ export function clearShopSlot(loadout, slot) {
   return next;
 }
 
+export function getShopItemState(item, equippedItems = {}, fittingRoom = createFittingRoom()) {
+  const ownedCount = fittingRoom.inventoryCounts?.[item?.item_key] || 0;
+  const accessTier = getShopAccessTier(item);
+  const cost = Number(item?.cost) || 0;
+
+  if (item && equippedItems[item.slot] === item.item_key) {
+    return { label: 'Equipped', tone: 'equipped', ownedCount };
+  }
+  if (accessTier === 'free') return { label: 'Free baseline', tone: 'free', ownedCount };
+  if (accessTier === 'premium') {
+    return hasShopEntitlement(item, fittingRoom)
+      ? { label: 'Premium unlocked', tone: 'premium', ownedCount }
+      : { label: 'Premium expression', tone: 'premium-locked', ownedCount };
+  }
+  if (ownedCount > 0) {
+    return { label: item?.slot === 'consumable' ? `${ownedCount} owned` : 'Owned', tone: 'owned', ownedCount };
+  }
+  if (cost <= 0) return { label: 'Earned milestone', tone: 'milestone', ownedCount };
+  if (fittingRoom.balance < cost) return { label: 'Not enough EP', tone: 'unaffordable', ownedCount };
+  return { label: 'Available', tone: 'available', ownedCount };
+}
+
 function matchesSection(item, section, subslot) {
   if (section === 'profile') {
     return PROFILE_SLOTS.includes(item.slot) && (subslot === 'all' || item.slot === subslot);
@@ -184,6 +211,8 @@ export function filterShopItems(items, filters = {}, fittingRoom = createFitting
     subslot = 'all',
     query = '',
     rarity = 'all',
+    collection = 'all',
+    ownership = 'all',
     affordableOnly = false,
     sortMode = 'curated'
   } = filters;
@@ -194,6 +223,10 @@ export function filterShopItems(items, filters = {}, fittingRoom = createFitting
     .filter(item => matchesSection(item, section, subslot))
     .filter(item => section !== 'owned' || hasShopEntitlement(item, fittingRoom))
     .filter(item => rarity === 'all' || item.rarity === rarity)
+    .filter(item => collection === 'all' || item.collection === collection)
+    .filter(item => ownership === 'all'
+      || (ownership === 'owned' && hasShopEntitlement(item, fittingRoom))
+      || (ownership === 'unowned' && !hasShopEntitlement(item, fittingRoom)))
     .filter(item => !affordableOnly || (item.cost > 0 && item.cost <= fittingRoom.balance))
     .filter(item => {
       if (!normalizedQuery) return true;

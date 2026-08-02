@@ -1308,6 +1308,18 @@ Signed-out header navigation no longer links to the legacy guest profile
 onboarding route; the public Explore/Leaderboard navigation remains available
 on every signed-out supporting route.
 
+## 2026-08-02 — Complete shop architecture reset
+
+- Split the shop into live-data Home, Browse, Collection, Studio, and product
+  detail surfaces using the existing catalog, preview, inventory, entitlement,
+  wallet, profile, and daily-roll contracts.
+- Added collection and ownership filter coverage plus structural tests for the
+  temporary fitting-room and accessible product-detail flows.
+- Validation complete: build, type checking, lint, tests, links, CSP, drift,
+  scoring parity, and database security checks pass. The performance budget
+  check still fails its transitional total JavaScript/CSS caps; initial and
+  largest-lazy budgets pass.
+
 ## Supporting-page visual pass — 2026-08-01
 
 - Restyled the leaderboard route toward the homepage's flat three-column row

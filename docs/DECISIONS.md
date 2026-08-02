@@ -2214,3 +2214,13 @@ Sans/IBM Plex Mono typography, lavender-blue accent, restrained borders, and
 off-white controls through the shared site boundary. Public profile rendering,
 profile-specific headers, auth/data contracts, and route behavior remain
 unchanged.
+
+## 2026-08-02 — Recompose the shop around live profile expression
+
+The `/shop` route now projects the existing server-owned catalog, wallet,
+inventory, entitlement, equipped, profile, and daily-roll data into separate
+Home, Browse, Collection, Studio, and product-detail surfaces. Home is curated;
+Browse is the full public catalog with filters; Collection is account-backed;
+Studio is try-on only. `purchase_item` and the profile-settings equip flow
+remain unchanged. No migrations, seed changes, new effects, or client
+authority were added.

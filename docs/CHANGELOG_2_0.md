@@ -1171,3 +1171,12 @@ direct route behavior.
   username/sign-out or sign-in controls.
 - Vertically centered the homepage Today’s Color content within its hero panel.
 - Preserved profile rendering, authentication, and route contracts.
+
+## 2026-08-02 — Reset shop architecture around the live profile
+
+- Rebuilt `/shop` around curated Home, full-catalog Browse, real Collection,
+  temporary Studio, and product-detail surfaces.
+- Preserved item keys, prices, rarities, server-authoritative `purchase_item`,
+  wallet/inventory/entitlement refreshes, and profile customization boundaries.
+- Added search, category, collection, rarity, ownership, affordability, and
+  sort controls without introducing migrations, seed changes, or new effects.

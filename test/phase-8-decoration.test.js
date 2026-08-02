@@ -89,6 +89,11 @@ test('owned cosmetic management lives in profile settings while the shop stays a
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
   const editor = await readFile(new URL('../src/lib/ProfileCosmeticsEditor.svelte', import.meta.url), 'utf8');
   const shop = await readFile(new URL('../src/lib/Shop.svelte', import.meta.url), 'utf8');
+  const home = await readFile(new URL('../src/lib/ShopHome.svelte', import.meta.url), 'utf8');
+  const browse = await readFile(new URL('../src/lib/ShopBrowse.svelte', import.meta.url), 'utf8');
+  const collection = await readFile(new URL('../src/lib/ShopCollection.svelte', import.meta.url), 'utf8');
+  const studio = await readFile(new URL('../src/lib/ShopStudio.svelte', import.meta.url), 'utf8');
+  const detail = await readFile(new URL('../src/lib/ShopProductDetail.svelte', import.meta.url), 'utf8');
 
   assert.match(settings, /<ProfileCosmeticsEditor/);
   assert.match(editor, /<DecorationStudio/);
@@ -98,33 +103,51 @@ test('owned cosmetic management lives in profile settings while the shop stays a
   assert.match(editor, /Browse the shop/);
   assert.doesNotMatch(shop, /<DecorationStudio/);
   assert.match(shop, /Profile atelier/);
-  assert.match(shop, /Build your look/);
-  assert.match(shop, /<ShopStudioPreview/);
-  assert.match(shop, /<ShopItemCard/);
-  assert.match(shop, /<ShopSelectionPanel/);
-  assert.match(shop, /<ShopFeaturedStrip/);
+  assert.match(shop, /Make the profile yours/);
+  assert.match(shop, /<ShopHome/);
+  assert.match(shop, /<ShopBrowse/);
+  assert.match(shop, /<ShopCollection/);
+  assert.match(shop, /<ShopStudio/);
+  assert.match(shop, /<ShopProductDetail/);
   assert.match(shop, /tryOnShopItem/);
   assert.match(shop, /supabase\.rpc\('purchase_item'/);
   assert.doesNotMatch(shop, /supabase\.rpc\('equip_item'/);
   assert.match(shop, /href="\/profile\/settings"/);
+  assert.match(home, /Today.s edit/);
+  assert.match(home, /featuredItems/);
+  assert.match(browse, /Collection/);
+  assert.match(browse, /Ownership/);
+  assert.match(browse, /Rarity/);
+  assert.match(collection, /inventoryCounts/);
+  assert.match(collection, /Consumables/);
+  assert.match(studio, /temporary/i);
+  assert.match(studio, /Reset preview/);
+  assert.match(studio, /href="\/profile\/settings"/);
+  assert.match(detail, /<dialog/);
+  assert.match(detail, /aria-labelledby/);
+  assert.match(detail, /on:tryon/);
 });
 
 test('shop previews are temporary and the selection surface keeps equipping in profile settings', async () => {
   const shop = await readFile(new URL('../src/lib/Shop.svelte', import.meta.url), 'utf8');
   const card = await readFile(new URL('../src/lib/ShopItemCard.svelte', import.meta.url), 'utf8');
   const selection = await readFile(new URL('../src/lib/ShopSelectionPanel.svelte', import.meta.url), 'utf8');
-  const featured = await readFile(new URL('../src/lib/ShopFeaturedStrip.svelte', import.meta.url), 'utf8');
+  const studio = await readFile(new URL('../src/lib/ShopStudio.svelte', import.meta.url), 'utf8');
+  const preview = await readFile(new URL('../src/lib/ShopStudioPreview.svelte', import.meta.url), 'utf8');
 
   assert.match(shop, /This does not change your equipped look/);
-  assert.match(shop, /Manage it from profile settings/);
   assert.match(shop, /previewLoadout/);
   assert.match(shop, /activeContext/);
   assert.match(card, /Try on/);
   assert.match(card, /Manage in profile/);
-  assert.match(selection, /Reset preview/);
+  assert.match(selection, /Try on/);
   assert.match(selection, /Manage in profile settings/);
-  assert.match(featured, /Featured collection/);
-  assert.match(featured, /Browse \{items\.length\} pieces/);
+  assert.match(studio, /draftLoadout/);
+  assert.match(studio, /Reset preview/);
+  assert.doesNotMatch(studio, /supabase\.rpc\('equip_item'/);
+  assert.match(preview, /rollRarity/);
+  assert.match(preview, /rollScore/);
+  assert.doesNotMatch(preview, /9\.8M|Mythic result/);
 });
 
 test('premium entitlement writes stay behind fixed server RPC boundaries', async () => {

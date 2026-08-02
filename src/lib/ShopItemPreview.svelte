@@ -6,6 +6,9 @@
   import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety';
 
   export let item;
+  export let username = 'Your profile';
+  export let displayColor = '#8B7CF6';
+  export let rollRarity = 'Current roll';
 
   $: effectClass = item?.css_type === 'class' ? sanitizeCosmeticClass(item.css_value) : '';
   $: effectStyle = item?.css_type === 'style' ? sanitizeCosmeticStyle(item.css_value) : '';
@@ -20,7 +23,7 @@
       {#if atmosphereEffect}
         <ProfileAtmosphere
           canvasOnly={true}
-          accent="#8B7CF6"
+          accent={displayColor}
           secondaryAccent="#71D6FF"
           effect={atmosphereEffect}
         />
@@ -30,16 +33,16 @@
     <RollPreview effectCls={effectClass} effectStyle={effectStyle} size="shop" />
   {:else if item.slot === 'lb_theme'}
     <div class="leaderboard-row preview-lb-row {effectClass}" style={effectStyle}>
-      <span class="lb-rank preview-lb-rank">#1</span>
-      <div class="lb-info preview-lb-info">
-        <span class="lb-username preview-lb-name">YourName</span>
-        <span class="preview-lb-sub">#7B5CFF • Mythic</span>
-      </div>
-      <span class="lb-score preview-lb-score">9.8M</span>
+          <span class="lb-rank preview-lb-rank">#1</span>
+          <div class="lb-info preview-lb-info">
+            <span class="lb-username preview-lb-name">{username}</span>
+            <span class="preview-lb-sub">{displayColor} • {rollRarity}</span>
+          </div>
+      <span class="lb-score preview-lb-score">Preview</span>
     </div>
   {:else if item.slot === 'orb_shape'}
     <div class="preview-orb-shape">
-      <HomeReferenceRollGlyph displayColor="#7B5CFF" rarity={item.rarity || 'Common'} />
+          <HomeReferenceRollGlyph displayColor={displayColor} rarity={item.rarity || 'Common'} />
     </div>
   {:else if item.slot === 'profile_border'}
     <div class="preview-profile-card {effectClass}" style={effectStyle}>
@@ -47,22 +50,22 @@
         <span class="preview-profile-badge">Featured</span>
         <span class="preview-profile-dot"></span>
       </div>
-      <span class="preview-profile-name">YourName</span>
+        <span class="preview-profile-name">{username}</span>
       <div class="preview-profile-meta"><span>Rank</span><span>30d</span></div>
     </div>
   {:else}
     <div class="shop-preview-text">
       {#if item.css_type === 'class'}
         {#if item.slot === 'frame'}
-          <span class="profile-name-frame {effectClass}">Username</span>
+          <span class="profile-name-frame {effectClass}">{username}</span>
         {:else}
-          <span class={effectClass} data-text="Username">Username</span>
+          <span class={effectClass} data-text={username}>{username}</span>
         {/if}
       {:else if item.css_type === 'style'}
         {#if item.slot === 'frame'}
-          <span class="profile-name-frame" style={effectStyle}>Username</span>
+          <span class="profile-name-frame" style={effectStyle}>{username}</span>
         {:else}
-          <span style={effectStyle} data-text="Username">Username</span>
+          <span style={effectStyle} data-text={username}>{username}</span>
         {/if}
       {/if}
     </div>
