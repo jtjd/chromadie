@@ -1245,3 +1245,48 @@ while its full context refreshes, and protected routes no longer show
 - Scoped Satoshi to the header so the `chm.lol` wordmark matches its controls;
   retained signal lime only for `.lol`.
 - Preserved route prefetch handlers and mobile navigation behavior.
+
+## Candidate 5.11 homepage reconciliation — 2026-08-01
+
+- Replaced the homepage showcase with the supplied Candidate 5.11 composition:
+  live ticker, daily hero panel, product view, keyboard-accessible tabs, three
+  live leaderboard rows, and the final username claim.
+- Kept discovery data, public profile hydration, the canonical roll preview,
+  authentication, routes, and username policy on their existing production
+  interfaces. No database migration or mock production data was introduced.
+- Added optimized responsive derivatives for the supplied reference assets and
+  refreshed homepage interaction/source-contract tests.
+- Browser captures are in `artifacts/homepage-candidate-5-11/`; the local
+  environment may show the truthful public-data loading/empty state when its
+  Supabase discovery endpoint is unavailable.
+- Validation is green except for the repository’s existing transitional total
+  asset caps: the current build reports 710.58 kB JavaScript / 387.18 kB CSS
+  against 700 kB / 380 kB. Initial and largest-lazy asset budgets pass.
+
+## 2026-08-01 — Complete homepage layout and interaction corrections
+
+- Matched the centered 1380px homepage shell, header/ticker rhythm, and hero
+  vertical allocation to the supplied 1907×942 reference.
+- Added click/tap and keyboard-accessible enlarged previews for the profile and
+  roll showcase images and the How it works result images.
+- Connected “View today’s profiles” to the live leaderboard section with smooth
+  scrolling that respects `prefers-reduced-motion`.
+- Matched the homepage `.lol` wordmark accent to the hero lavender-blue.
+- No backend, image source, authentication, username, or public-route changes.
+
+The hero profile specimen was tightened with a small CSS-only crop adjustment;
+the supplied asset and frame dimensions remain unchanged.
+
+The How it works heading, subcopy color, and roll-preview fit now match the
+reference composition.
+
+The desktop hero now uses the original-resolution PNG source to avoid visible
+quality loss from the previous downsampled WebP.
+
+Product showcase images now use a shorter 235px desktop frame with their
+existing focal positions; responsive mobile aspect ratios are unchanged.
+The profile crop now zooms to the identity card, and the leaderboard heading,
+kicker, and supporting copy now follow the reference typography and color
+roles.
+The Product showcase no longer uses the scroll reveal animation, preventing
+the section from disappearing during interrupted scroll transitions.

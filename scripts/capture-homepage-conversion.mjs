@@ -5,17 +5,25 @@ import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const output = resolve(root, 'artifacts/homepage-screenshot-showcase');
+const output = resolve(root, 'artifacts/homepage-candidate-5-11');
 const chromium = process.env.CHROMIUM_BIN || '/usr/bin/chromium';
 const appPort = Number(process.env.CAPTURE_PORT || 5174);
 const captures = [
+  { name: 'homepage-reference-1907x942', width: 1907, height: 942, scroll: 0 },
   { name: 'homepage-wide-1920x1080', width: 1920, height: 1080, scroll: 0 },
+  { name: 'homepage-wide-1600x900', width: 1600, height: 900, scroll: 0 },
   { name: 'homepage-desktop-1440x900', width: 1440, height: 900, scroll: 0 },
+  { name: 'homepage-desktop-1366x768', width: 1366, height: 768, scroll: 0 },
   { name: 'homepage-compact-1280x720', width: 1280, height: 720, scroll: 0 },
+  { name: 'homepage-tablet-1024x768', width: 1024, height: 768, scroll: 0 },
+  { name: 'homepage-tablet-768x1024', width: 768, height: 1024, scroll: 0 },
+  { name: 'homepage-mobile-430x932', width: 430, height: 932, scroll: 0 },
   { name: 'homepage-mobile-390x844', width: 390, height: 844, scroll: 0 },
-  { name: 'mechanic-desktop-1440x900', width: 1440, height: 900, scroll: 'mechanic' },
-  { name: 'showcase-desktop-1440x900', width: 1440, height: 900, scroll: 'showcase' },
-  { name: 'showcase-mobile-390x844', width: 390, height: 844, scroll: 'showcase' }
+  { name: 'homepage-mobile-360x800', width: 360, height: 800, scroll: 0 },
+  { name: 'product-desktop-1440x900', width: 1440, height: 900, scroll: 'product' },
+  { name: 'how-desktop-1440x900', width: 1440, height: 900, scroll: 'how' },
+  { name: 'leaderboard-mobile-390x844', width: 390, height: 844, scroll: 'leaderboard' },
+  { name: 'claim-mobile-390x844', width: 390, height: 844, scroll: 'claim' }
 ];
 
 await mkdir(output, { recursive: true });
@@ -74,16 +82,18 @@ async function capture(item, index) {
     await run('Emulation.setDeviceMetricsOverride', { width: item.width, height: item.height, deviceScaleFactor: 1, mobile: false });
     await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { if (document.querySelector('.home-page') || Date.now() - start > 12000) resolve(true); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
     await delay(250);
+    await run('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    await run('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
     if (item.scroll) {
-      const scrollSelector = item.scroll === 'roll'
-        ? '.home-page__mechanic'
-        : item.scroll === 'mechanic'
-          ? '.home-page__mechanic'
-        : item.scroll === 'directory'
-          ? '.homepage-directory__collage'
-          : item.scroll === 'showcase'
-            ? '.homepage-screenshot-showcase__profiles'
-          : '.homepage-directory__' + item.scroll;
+      const scrollSelector = item.scroll === 'product'
+        ? '#showcase'
+        : item.scroll === 'how'
+          ? '#how-it-works'
+          : item.scroll === 'leaderboard'
+            ? '#home-leaderboard'
+            : item.scroll === 'claim'
+              ? '#claim'
+              : '.home-page';
       await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { const target = document.querySelector(${JSON.stringify(scrollSelector)}); if (target) { target.scrollIntoView({ block: 'start' }); resolve(true); } else if (Date.now() - start > 12000) resolve(false); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
       await delay(350);
     }

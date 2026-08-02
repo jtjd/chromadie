@@ -1110,3 +1110,34 @@ phase, with an immediate reduced-motion equivalent.
 - Added authoritative daily roll count and next-reset countdown stats beneath
   the username claim.
 - Tightened the hero copy and widened the desktop profile-directory split.
+
+## Candidate 5.11 homepage reconciliation — 2026-08-01
+
+- Reworked the public homepage to match the supplied centered-roll reference:
+  measured live activity ticker, daily result panel, product explanation,
+  Roll/Progress/Visibility tabs, three-row leaderboard, and final claim.
+- Connected the visible public activity to existing discovery/profile data and
+  reused the real roll-effect renderer; no mock production profiles or new
+  gameplay authority were added.
+- Preserved the existing sign-in/sign-up modal flow, username validation,
+  public profile links, global footer, and mobile/reduced-motion behavior.
+
+## Candidate 5.11 homepage interaction corrections — 2026-08-01
+
+- Corrected the centered shell and hero vertical spacing for the supplied
+  1907×942 desktop composition.
+- Added enlarged image previews to the profile/roll and How it works sections.
+- Made the hero Today panel link scroll to the live leaderboard.
+- Matched the home header `.lol` color to the hero lavender-blue.
+
+- Tightened the hero profile specimen with a subtle CSS-only zoom.
+- Restored the How it works heading scale, muted its explanatory copy, and
+  contained the daily-roll image so the full preview remains visible.
+- Switched the desktop hero to the original-resolution PNG source to preserve
+  image detail during the tighter crop.
+- Halved the desktop Product showcase image height while preserving the key
+  profile and daily-result focal areas.
+- Zoomed the shortened profile crop to keep the identity card legible and
+  restored the Candidate 5.11 leaderboard heading, kicker, and subcopy roles.
+- Kept the profile/roll showcase statically visible so interrupted scroll
+  reveals cannot hide the section.

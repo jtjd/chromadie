@@ -86,6 +86,9 @@
         <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('retry')}>Retry account</button>
       {:else if accountState === ACCOUNT_STATES.BOOTING || accountState === ACCOUNT_STATES.PROFILE_LOADING}
         <!-- Keep account controls visually quiet while session data hydrates. -->
+      {:else if isHomeMode && !isAuthenticated}
+        <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('login', { mode: 'login' })}>Sign in</button>
+        <button type="button" class="site-mode-header__account-action site-mode-header__account-action--signup" on:click={() => dispatch('login', { mode: 'signup' })}>Sign up</button>
       {:else}
         <button type="button" class="site-mode-header__account-action site-mode-header__account-action--light" on:click={() => dispatch('login', { mode: 'login' })}>Sign in / Sign up</button>
       {/if}
@@ -123,6 +126,9 @@
           <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('retry'); }}>Retry account</button>
         {:else if accountState === ACCOUNT_STATES.BOOTING || accountState === ACCOUNT_STATES.PROFILE_LOADING}
           <!-- Keep account controls visually quiet while session data hydrates. -->
+        {:else if isHomeMode && !isAuthenticated}
+          <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in</button>
+          <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Sign up</button>
         {:else}
           <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in / Sign up</button>
         {/if}
@@ -153,19 +159,50 @@
 
   .site-mode-header--home {
     position: sticky;
-    top: 0;
-    min-height: 3.75rem;
-    padding-top: 0.6rem;
-    padding-bottom: 0.6rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
-    background: rgba(7, 7, 8, 0.94);
+    top: 0.5rem;
+    grid-template-columns: 1fr auto 1fr;
+    width: min(calc(100% - 2.5rem), 86.25rem);
+    height: 2.75rem;
+    min-height: 2.75rem;
+    margin: 0.625rem auto 0.625rem;
+    padding: 0 0.5rem 0 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 999px;
+    background: rgba(17, 18, 23, 0.9);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
   }
 
   .site-mode-header--home .site-mode-header__brand {
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 0.68rem;
+    font-size: 0.75rem;
+  }
+
+  .site-mode-header--home .site-mode-header__wordmark > span { color: #cdd2ff; }
+
+  .site-mode-header--home .site-mode-header__right {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .site-mode-header--home .site-mode-header__nav,
+  .site-mode-header--home .site-mode-header__right { justify-self: center; }
+
+  .site-mode-header--home .site-mode-header__right { justify-self: end; }
+
+  .site-mode-header--home .site-mode-header__nav {
+    gap: 0.25rem;
+    padding: 0.2rem 0.35rem;
+  }
+
+  .site-mode-header--home .site-mode-header__nav button,
+  .site-mode-header--home .site-mode-header__account button {
+    min-height: 0;
+    padding: 0.5rem 0.8rem;
   }
 
   .site-mode-header__brand {
@@ -283,6 +320,8 @@
 
   .site-mode-header__account-action { color: rgba(232, 238, 250, 0.62) !important; }
   .site-mode-header__account-action--light { color: rgba(246, 248, 255, 0.9) !important; }
+  .site-mode-header__account-action--signup { color: #101116 !important; background: #efede7 !important; font-weight: 700 !important; }
+  .site-mode-header__account-action--signup:hover { background: #fff !important; }
   .site-mode-header__account-action:disabled { cursor: wait; opacity: 0.55; }
 
   .site-mode-header__mobile-menu { display: none; position: relative; }
@@ -336,14 +375,15 @@
 
   @media (max-width: 48rem) {
     .site-mode-header { grid-template-columns: auto minmax(0, 1fr) auto; }
+    .site-mode-header--home { width: calc(100% - 1.5rem); height: 2.625rem; min-height: 2.625rem; margin: 0.5rem auto; padding: 0 0.8rem; }
     .site-mode-header__nav,
     .site-mode-header__right { display: none; }
     .site-mode-header__mobile-menu { display: block; justify-self: end; }
   }
 
   @media (max-width: 36rem) {
-    .site-mode-header { min-height: 3.85rem; padding: 0.8rem 1rem; }
-    .site-mode-header__brand { font-size: 0.9rem; }
+    .site-mode-header { min-height: 2.625rem; padding: 0 0.8rem; }
+    .site-mode-header__brand { font-size: 0.75rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {

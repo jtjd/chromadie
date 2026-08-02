@@ -2120,3 +2120,55 @@ full roll metadata remains available in the link label for assistive technology.
 The hero uses the same UTC reset boundary as daily rolls, and the daily public
 roll count is exposed as an aggregate on the existing public discovery RPC;
 no profile rows or private fields are added to the contract.
+
+## 2026-08-01 — Reconcile the homepage with Candidate 5.11 production boundaries
+
+The homepage now follows the Candidate 5.11 section order and visual contract:
+the existing global header, measured live ticker, full hero, product view, tabbed
+How it works section, three-row leaderboard, final claim, and existing footer.
+The ticker, leaderboard, and Today panel consume the existing bounded public
+discovery/profile contracts; no schema, mock account, or client-authoritative
+roll data was added.
+
+The Today panel reuses the canonical `RollPreview` path through
+`CompactRollPreview`, while the reference product imagery is represented only by
+optimized derivatives of the supplied assets. Both claim forms dispatch into
+the existing auth modal and username validation flow, preserving availability,
+duplicate, and account-boundary handling.
+
+## 2026-08-01 — Finish homepage reference interaction pass
+
+The homepage now keeps the Candidate 5.11 spacing and centered shell while
+adding an accessible image preview for the profile/roll and How it works
+reference images. Enlarged previews reuse the same optimized assets, close from
+Escape or the backdrop, and return focus to the trigger. The hero's Today panel
+link scrolls to the live leaderboard section with reduced-motion handling, and
+the home header's `.lol` accent uses the same lavender-blue as the hero copy.
+No profile data, roll authority, or image source was changed.
+
+The hero profile image uses a modest 4% base crop within the existing frame so
+the reference composition reads as a closer profile specimen without changing
+the source asset or the hero's measured layout.
+
+The How it works heading and explanatory copy now use the reference scale and
+muted text role. Its daily-roll preview explicitly contains the full source
+image so the interaction enlarges the complete result rather than a cropped
+center slice.
+
+The desktop hero now serves the supplied 2553×1379 PNG source instead of a
+1600px lossy derivative. This preserves detail while the CSS crop provides the
+tighter framing requested for the hero.
+
+The Product section reference images use a 235px desktop presentation height.
+The profile remains centered on its identity card and the daily result remains
+top-aligned so the important result metadata survives the shorter crop.
+
+The shortened profile frame uses a focused CSS crop around the identity card,
+while the daily result keeps its top metadata crop. Shared homepage kicker
+styles are global so the child sections retain the reference mono label role;
+the leaderboard heading and explanatory copy now use the Candidate 5.11 scale
+and muted color values.
+
+The Product showcase is rendered statically instead of participating in the
+scroll reveal observer. This prevents its profile/roll pair from becoming
+temporarily transparent when a fast scroll interrupts the reveal transition.

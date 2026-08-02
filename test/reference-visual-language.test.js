@@ -26,12 +26,12 @@ test('reference typography is a shared, non-Google font contract', async () => {
 });
 
 test('quiet reference surfaces and reduced-motion behavior are encoded', async () => {
-  const [header, home, directory, showcase, atmosphere, site] = await Promise.all([
+  const [header, home, directory, dailyResult, how, site] = await Promise.all([
     read('src/lib/SiteModeHeader.svelte'),
     read('src/lib/HomePage.svelte'),
     read('src/lib/HomepageProfileDirectory.svelte'),
-    read('src/lib/HomepageScreenshotShowcase.svelte'),
-    read('src/lib/ProfileAtmosphere.svelte'),
+    read('src/lib/HomeDailyResult.svelte'),
+    read('src/lib/HomeHowItWorks.svelte'),
     read('src/styles/site.css')
   ]);
 
@@ -41,17 +41,16 @@ test('quiet reference surfaces and reduced-motion behavior are encoded', async (
   assert.match(header, /--site-header-font: 'Satoshi'/);
   assert.match(header, /font: 600 0\.72rem \/ 1 var\(--site-header-font\)/);
   assert.match(header, /color: var\(--color-accent-cyan\)/);
-  assert.match(home, /--home-canvas: #080908/);
+  assert.match(header, /\.site-mode-header--home \.site-mode-header__wordmark > span \{ color: #cdd2ff; \}/);
+  assert.match(home, /--home-canvas: #0d0f13/);
   assert.match(home, /--home-font: 'Instrument Sans Variable'/);
   assert.match(home, /--home-mono: 'IBM Plex Mono'/);
   assert.doesNotMatch(home, /rgba\(139,124,246|radial-gradient\(circle at 85%/);
   assert.match(directory, /HomepageLiveTicker/);
-  assert.match(directory, /grid-template-columns: minmax\(22rem/);
-  assert.match(showcase, /grid-template-columns: minmax\(8rem/);
-  assert.match(showcase, /prefers-reduced-motion/);
-  assert.doesNotMatch(directory, /ProfileAtmosphere|ProfileMusic|IdentityCard/);
-  assert.match(atmosphere, /background: #07080b/);
-  assert.match(atmosphere, /prefers-reduced-motion/);
+  assert.match(dailyResult, /place-items: center/);
+  assert.match(dailyResult, /prefers-reduced-motion/);
+  assert.match(how, /prefers-reduced-motion/);
+  assert.match(how, /role="tablist"/);
   assert.match(site, /background-color: var\(--color-canvas\)/);
   assert.match(site, /--site-accent: var\(--color-accent\)/);
 });

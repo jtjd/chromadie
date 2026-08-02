@@ -8,11 +8,12 @@
   export let orbCls = '';
   export let size = '3.5rem';
   export let scale = 0.34;
+  export let staticEffect = false;
 
   $: previewStyle = `--compact-roll-size: ${size}; --compact-roll-scale: ${scale};`;
 </script>
 
-<div class="compact-roll-preview" style={previewStyle} aria-hidden="true">
+<div class:compact-roll-preview--static={staticEffect} class="compact-roll-preview" style={previewStyle} aria-hidden="true">
   <RollPreview
     {effectCls}
     {effectStyle}
@@ -42,6 +43,11 @@
     height: 140px;
     transform: translate(-50%, -50%) scale(var(--compact-roll-scale));
     transform-origin: center;
+  }
+
+  .compact-roll-preview--static :global(*) {
+    animation: none !important;
+    transition: none !important;
   }
 
   @media (prefers-reduced-motion: reduce) {
