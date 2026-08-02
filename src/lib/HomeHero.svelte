@@ -46,8 +46,8 @@
   .home-hero__profile-frame { position: relative; min-width: 0; overflow: hidden; }
   .home-hero__profile-frame::after { position: absolute; right: 0; bottom: 0; left: 0; height: 22%; content: ''; background: linear-gradient(180deg, transparent, rgba(7, 8, 11, 0.34)); pointer-events: none; }
   .home-hero__profile-frame picture, .home-hero__profile-frame img { display: block; width: 100%; height: 100%; }
-  .home-hero__profile-frame img { min-height: 0; object-fit: cover; object-position: center; filter: saturate(0.94) brightness(0.92); transform: scale(1.08); transition: transform 0.22s ease-out, filter 0.4s ease; will-change: transform; }
-  .home-hero__profile-frame:hover img { filter: saturate(0.99) brightness(0.96); transform: scale(1.09); }
+  .home-hero__profile-frame img { min-height: 0; object-fit: cover; object-position: center; filter: saturate(0.94) brightness(0.92); transform: scale(1.14); transition: transform 0.22s ease-out, filter 0.4s ease; will-change: transform; }
+  .home-hero__profile-frame:hover img { filter: saturate(0.99) brightness(0.96); transform: scale(1.15); }
   @keyframes home-stage-enter { from { opacity: 0; transform: translateY(1.5rem) scale(0.992); } to { opacity: 1; transform: none; } }
   .home-hero__intro > * { animation: home-hero-enter 0.8s cubic-bezier(0.2, 0.72, 0.2, 1) both; }
   .home-hero__intro > :nth-child(2) { animation-delay: 0.1s; }

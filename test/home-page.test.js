@@ -101,7 +101,7 @@ test('homepage uses optimized reference imagery without embedding mock data', as
     assert.ok(imageStats.size > 1000, `${imagePath} should contain an optimized reference capture`);
   }
   assert.doesNotMatch(hero, /data:image/);
-  assert.match(hero, /transform: scale\(1\.08\)/);
+  assert.match(hero, /transform: scale\(1\.14\)/);
   assert.doesNotMatch(dailyResult, /<svg/);
 });
 
