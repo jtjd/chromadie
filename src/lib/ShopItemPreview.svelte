@@ -38,8 +38,8 @@
         text={username}
         loadout={nameLayerLoadout}
         todayColor={CATALOG_PREVIEW_COLOR}
-        context="card"
-        compact={true}
+        context="profile"
+        compact={false}
         {mode}
         semanticClass="shop-item-name"
       />
@@ -63,13 +63,13 @@
   .preview-profile-name { color: #fff; font-family: var(--font-display-stack, var(--font-display)); font-size: 1.1rem; font-weight: 700; overflow-wrap: anywhere; }
   .shop-preview-text { width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px; text-align: center; box-sizing: border-box; }
   .shop-preview-text--name :global(.name-effect-canvas) { width: 100%; max-width: 100%; text-align: center; }
-  .shop-preview-text--name :global(.name-effect-canvas__semantic) { max-width: 100%; color: var(--shop-ink, #f2f0eb); font: 650 clamp(1.7rem, 4vw, 2.5rem)/.95 var(--font-display-stack, var(--font-display)); letter-spacing: -.045em; overflow-wrap: anywhere; white-space: nowrap; }
+  .shop-preview-text--name :global(.name-effect-canvas__semantic) { max-width: 100%; color: var(--shop-ink, #f2f0eb); font: 700 clamp(2rem, 5vw, 3rem)/1.08 var(--font-display-stack, var(--font-display)); letter-spacing: -.045em; overflow-wrap: anywhere; white-space: nowrap; }
   .shop-preview-text--utility { flex-direction: column; gap: 0.65rem; color: var(--shop-muted, var(--color-ink-muted)); font: 600 0.95rem var(--shop-mono, var(--font-mono-stack)); }
   .preview-utility-mark { color: #d8ccff; font-size: 1.8rem; }
 
   @media (max-width: 600px) {
     .shop-preview-area { height: 142px; padding: 10px; }
     .shop-preview-area-tall { height: 142px; }
-    .shop-preview-text--name :global(.name-effect-canvas__semantic) { font-size: clamp(1.35rem, 8vw, 2rem); }
+    .shop-preview-text--name :global(.name-effect-canvas__semantic) { font-size: clamp(1.75rem, 9vw, 2.5rem); }
   }
 </style>

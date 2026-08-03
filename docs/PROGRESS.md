@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Shop fitting-room readability pass — 2026-08-03
+
+- Increased the name scale in catalog swatches and the contextual profile
+  preview so the identity—not the surrounding chrome—gets the first read.
+- Centered the fitting-room profile surface and changed its social links to a
+  compact two-column grid with safe truncation at narrow widths.
+- Moved the EP amount into the single Buy action and strengthened collection
+  metadata contrast without changing the product detail or purchase flow.
+- Added focused source-contract coverage for the visual hierarchy and kept
+  the change limited to shop presentation surfaces.
+
 ## Shop visual composition pass — 2026-08-03
 
 - Decoupled catalog swatches from the daily roll so product previews stay

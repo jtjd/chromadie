@@ -179,7 +179,7 @@
 
   .shop-contextual-preview :global(.studio-preview-head) { display: none; }
   .shop-contextual-preview :global(.studio-stage) { min-height: 14.5rem; border-radius: 6px; }
-  .shop-contextual-preview :global(.studio-profile-card) { width: min(calc(100% - 1.25rem), 100%); }
+  .shop-contextual-preview :global(.studio-profile-card) { width: calc(100% - 1.25rem); max-width: 100%; margin-inline: auto; }
 
   @media (max-width: 960px) {
     .shop-contextual-preview { position: relative; top: auto; }

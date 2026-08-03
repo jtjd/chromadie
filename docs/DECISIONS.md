@@ -2,6 +2,19 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Make the fitting room read like the finished profile
+
+The Browse fitting room now uses the same identity hierarchy as a finished
+profile: the rendered name is large enough to anchor the card, the profile
+surface is centered inside its stage, and social links use a bounded two-column
+grid with truncation instead of colliding in a narrow flex row. Catalog name
+swatches use the profile renderer context at a larger readable scale. Purchase
+cards show an EP price once, inside the Buy action, while collection names use
+stronger contrast and a quiet divider so they remain scannable beside rarity.
+These are presentation-only changes; catalog keys, pricing, purchase RPCs,
+inventory, temporary try-on, profile settings, and public profile rendering are
+unchanged.
+
 ## 2026-08-03 — Keep catalog presentation independent from the daily roll
 
 The daily color belongs to the player’s identity and Today’s Edit context;

@@ -82,6 +82,7 @@ test('product cards keep product decisions in detail and expose a readable hiera
   assert.match(source, /item-rarity/);
   assert.match(source, /item-collection/);
   assert.match(source, /item-card-footer/);
+  assert.match(source, /item-buy-price/);
   assert.match(source, /dispatch\('preview'/);
   assert.match(source, /dispatch\('purchase'/);
   assert.match(source, /item-buy-button/);
@@ -89,6 +90,7 @@ test('product cards keep product decisions in detail and expose a readable hiera
   assert.doesNotMatch(source, /primary-item-action|secondary-item-action/);
   assert.match(source, /height:108px/);
   assert.match(source, /font:650 \.78rem\/1 var\(--shop-mono/);
+  assert.match(source, /border-left:1px solid rgba\(205,210,255/);
   assert.doesNotMatch(source, /<p>\{item\.description\}<\/p>/);
   assert.doesNotMatch(source, /item-detail-link|>Details<|>Manage</);
   assert.doesNotMatch(source, /preview-cue/);
@@ -152,9 +154,13 @@ test('contextual shop preview delegates to the shared Studio and Name renderer p
   assert.match(contextual, /Nothing is saved until you choose it/);
   assert.match(contextual, />On your profile<\/button>/);
   assert.match(studio, /nameRendererLoadout/);
+  assert.match(studio, /identity-card__links\) \{ display: grid/);
+  assert.match(studio, /identity-card__name\) \{ font-size: clamp\(1\.8rem/);
+  assert.match(studio, /profile-border-effect__content/);
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(itemPreview, /<NameEffectCanvas/);
-  assert.match(itemPreview, /context="card"/);
+  assert.match(itemPreview, /context="profile"/);
+  assert.match(itemPreview, /compact=\{false\}/);
   assert.match(itemPreview, /CATALOG_PREVIEW_COLOR/);
   assert.match(itemPreview, /background: linear-gradient\(145deg/);
 });

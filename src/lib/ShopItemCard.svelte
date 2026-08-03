@@ -51,7 +51,9 @@
     <div class="item-card-title">
       <h3><button type="button" class="item-product-button" aria-label={`Open ${item.name} details`} on:click={() => dispatch('select', item)}>{item.name}</button></h3>
     </div>
-    <strong class="item-price">{priceLabel}</strong>
+    {#if !purchasable}
+      <strong class="item-price">{priceLabel}</strong>
+    {/if}
   </div>
   <button class="item-preview-button" type="button" aria-label={`Preview ${item.name}`} on:click={() => dispatch('preview', item)}>
     <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} />
@@ -67,7 +69,10 @@
 
   {#if purchasable}
     <div class="item-card-footer">
-      <button type="button" class="item-buy-button" disabled={purchaseDisabled} on:click|stopPropagation={() => dispatch('purchase', item)}>{purchaseLabel}</button>
+      <button type="button" class="item-buy-button" disabled={purchaseDisabled} on:click|stopPropagation={() => dispatch('purchase', item)}>
+        <span>{purchaseLabel}</span>
+        <span class="item-buy-price" aria-label={`Cost ${priceLabel}`}>· {priceLabel}</span>
+      </button>
     </div>
   {/if}
 </article>
@@ -83,7 +88,7 @@
   .item-product-button { overflow:hidden; max-width:100%; padding:0; border:0; background:transparent; color:var(--shop-ink, #f3f2f7); cursor:pointer; font:680 .96rem/1.15 var(--shop-display, var(--font-display)); text-align:left; text-overflow:ellipsis; white-space:nowrap; }
   .item-product-button:hover, .item-product-button:focus-visible { color:#cdd2ff; text-decoration:underline; text-underline-offset:3px; }
   .item-card-meta { display:flex; align-items:center; flex-wrap:wrap; gap:5px 8px; width:100%; min-height:1.45rem; margin:.5rem 0 .1rem; }
-  .item-collection { overflow:hidden; min-width:0; color:var(--shop-faint, #858690); font: .74rem var(--shop-mono, var(--font-mono-stack)); text-overflow:ellipsis; white-space:nowrap; }
+  .item-collection { overflow:hidden; min-width:0; padding-left:.55rem; border-left:1px solid rgba(205,210,255,.28); color:#b9b6c7; font:600 .76rem/1.1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.015em; text-overflow:ellipsis; white-space:nowrap; }
   .item-state { max-width:100%; overflow:hidden; padding:5px 8px; border:1px solid rgba(255,255,255,.1); border-radius:3px; color:#a7a9b2; font: .7rem var(--shop-mono, var(--font-mono-stack)); text-overflow:ellipsis; white-space:nowrap; }
   .item-state.tone-equipped { border-color:#7d83a9; background:#171923; color:#d7dbff; }
   .item-state.tone-previewing { border-color:#7b9baf; background:#111b20; color:#c9ecf3; }
@@ -106,7 +111,8 @@
   .rarity-mythic { border-color:#8d4869; background:#21131b; color:#ffb3d2; }
   .item-price { flex:0 0 auto; min-width:0; padding-top:.08rem; color:var(--shop-accent, #cdd2ff); font:650 .78rem/1 var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
   .item-card-footer { display:flex; align-items:center; gap:8px; width:100%; margin-top:.55rem; padding-top:.55rem; border-top:1px solid rgba(255,255,255,.08); }
-  .item-buy-button { min-height:2.15rem; padding:0 .75rem; border:1px solid var(--shop-accent, #cdd2ff); border-radius:var(--radius-sm, 4px); background:var(--shop-accent, #cdd2ff); color:#0d0f14; cursor:pointer; font:650 .7rem var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
+  .item-buy-button { display:inline-flex; align-items:center; gap:.4rem; min-height:2.15rem; padding:0 .75rem; border:1px solid var(--shop-accent, #cdd2ff); border-radius:var(--radius-sm, 4px); background:var(--shop-accent, #cdd2ff); color:#0d0f14; cursor:pointer; font:650 .7rem var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
+  .item-buy-price { font-weight:750; opacity:.78; }
   .item-buy-button:hover, .item-buy-button:focus-visible { border-color:#fff; background:#fff; }
   .item-buy-button:disabled { border-color:#454852; background:#23262e; color:#858994; cursor:not-allowed; }
   @media (max-width: 520px) { .item-card-title h3, .item-product-button { font-size:1.05rem; } .item-preview-button :global(.shop-preview-area) { height:124px; } }

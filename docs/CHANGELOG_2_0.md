@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Make the shop preview feel finished
+
+- Enlarged the name treatment in product swatches and the fitting-room profile
+  so the identity is readable at a glance.
+- Centered the preview card and laid out social links in a clean responsive
+  grid, preventing labels from stacking or colliding.
+- Put each product’s EP cost beside its Buy action and raised collection-label
+  contrast for faster scanning.
+
 ## 2026-08-03 — Give the shop a cleaner visual system
 
 - Removed daily-color gradients from catalog product stages; previews now use

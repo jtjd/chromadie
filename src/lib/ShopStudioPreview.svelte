@@ -155,6 +155,8 @@
       var(--color-canvas-deep);
   }
   .studio-stage.context-profile { min-height: 300px; }
+  .studio-stage > :global(.profile-border-effect) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
+  .studio-stage > :global(.profile-border-effect) :global(.profile-border-effect__content) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
 
   .stage-grid {
     position: absolute;
@@ -170,18 +172,24 @@
   .studio-profile-card {
     position: relative;
     z-index: 2;
-    width: min(100% - 32px, 72rem);
+    width: calc(100% - 32px);
+    max-width: 72rem;
+    margin-inline: auto;
+    box-sizing: border-box;
     overflow: hidden;
     border: 1px solid var(--color-line-subtle);
     border-radius: var(--radius-md);
     background: var(--surface-panel-strong);
     box-shadow: 0 24px 48px rgba(0,0,0,0.38);
   }
-  .studio-profile-card :global(.identity-card) { z-index: 2; padding: 1rem; border: 0; border-radius: 17px; }
+  .studio-profile-card :global(.identity-card) { z-index: 2; width: 100%; box-sizing: border-box; padding: 1rem; border: 0; border-radius: 17px; }
   .studio-profile-card :global(.identity-card__person) { gap: 0.75rem; }
   .studio-profile-card :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
   .studio-profile-card :global(.identity-card__avatar-letter) { font-size: 1.5rem; }
-  .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.1rem, 4.5vw, 1.65rem); }
+  .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.8rem, 6.5vw, 2.35rem); line-height: .98; }
+  .studio-profile-card :global(.identity-card__links) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem .65rem; margin-top: .8rem; }
+  .studio-profile-card :global(.identity-card__links a) { width: 100%; min-width: 0; min-height: 1.8rem; padding: .25rem 0; font-size: .7rem; }
+  .studio-profile-card :global(.identity-card__links strong) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .studio-profile-card :global(.identity-card__bio) { margin-top: 0.45rem; font-size: 0.72rem; }
 
   .studio-selection {
@@ -211,5 +219,6 @@
     .studio-stage.context-profile { min-height: 210px; }
     .studio-profile-card { width: calc(100% - 14px); }
     .studio-profile-card { min-height: 218px; }
+    .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.65rem, 9vw, 2.2rem); }
   }
 </style>
