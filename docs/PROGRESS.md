@@ -1,5 +1,99 @@
 # Chromadie 2.0 Progress
 
+## Homepage daily-color brand accent — 2026-08-03
+
+- Propagated the validated homepage color from the live/preview directory to
+  the shared site header.
+- Applied it to the `.lol` wordmark segment and the “changes every day” hero
+  phrase so the daily color reads as part of the brand system.
+- Added a restrained glow/transition with a reduced-motion equivalent; no
+  gameplay or backend authority changed.
+
+## Homepage daily-color alignment — 2026-08-03
+
+- Retitled the module “Today’s color” so the heading describes the visible
+  subject rather than the roll mechanic.
+- Centered the daily-color label, glyph, color, and rarity so the result reads
+  as one balanced visual unit.
+- Kept score and earned rarity as the secondary utility layer.
+- Removed the “A new color joins the profile” sentence instead of replacing it
+  with another abstract marketing line.
+- Live featured rolls still show the public profile owner; local preview data
+  stays neutral.
+
+## Homepage daily roll presentation — 2026-08-03
+
+- Removed the visible “example” framing from the localhost fixture so it uses
+  the same product language as live homepage data.
+- Reframed the card as a daily roll, with a featured profile owner shown when
+  discovery data supplies one, and a neutral “one roll, every day” explanation
+  for the local fixture.
+- Grouped the color and earned rarity together, kept score explicit, and
+  changed the discovery action to “See today’s public rolls.”
+- Clarified the empty state as public rolls forming rather than a universal
+  daily color being generated.
+
+## Homepage daily-color preview clarification — 2026-08-03
+
+- Replaced the opaque preview identity phrase with the readable hex color and
+  explicit “Example daily color” context.
+- Removed ambiguous position/rank from the hero preview, labeled the numeric
+  value as a roll score, and labeled rarity as a property of the roll.
+- Changed the preview’s discovery action to “Explore public profiles.”
+- Local preview data now uses a Rare example rather than a Mythic showcase;
+  production live-roll data remains unchanged.
+
+## Homepage lower-section refinement — 2026-08-03
+
+- Kept the real product screenshots and lightbox behavior, while preserving
+  the stronger profile-first weighting between the public page and daily roll.
+- Reworked “How it works” into a horizontal three-step rail so the explanation
+  reads as one continuous sequence instead of a dashboard-like side panel.
+- Reframed the leaderboard as a quieter discovery surface with line-based rows
+  and a designed empty state that points to the existing leaderboard route;
+  live discovery data and profile links remain unchanged.
+- Gave the final claim section a restrained closing accent and atmospheric
+  field while preserving its existing claim flow and responsive/reduced-motion
+  behavior. No schema, RPC, auth, roll, scoring, or RLS changes were introduced.
+- Full-page and responsive evidence is under
+  `artifacts/homepage-lower-pass/` and
+  `artifacts/homepage-lower-pass-viewports/`.
+- The existing transitional performance gate remains red at 778.30/700 kB
+  total JavaScript and 402.60/380 kB total CSS; initial and largest-lazy
+  budgets still pass.
+
+## Homepage first-viewport refinement — 2026-08-03
+
+- Kept the Candidate 5.11 homepage structure and limited the first iteration
+  to the header, ticker, hero, and unavailable-result state.
+- Hid the recent-roll ticker when it has no real public events and replaced
+  the duplicate signed-out Leaderboard navigation with an in-page How it works
+  action.
+- Tightened the hero copy and claim label, made the headline neutral, enlarged
+  the profile focal crop, and restored the original 2553×1379 PNG so the hero
+  does not lose detail to a lossy derivative.
+- Let the profile fill the hero stage when no live roll is available. Desktop
+  uses a compact overlaid status; mobile places the same status beneath the
+  profile so it does not obscure the identity.
+- Added a localhost-only daily-color fixture that renders by default for local
+  visual testing; `?home_preview=empty` remains available to inspect the
+  honest empty state. Live discovery remains the production source and wins
+  whenever available.
+- Added a compact, higher-contrast browser toolbar around the hero capture so
+  the profile reads as an actual `chm.lol` page instead of a standalone image.
+  Removed the redundant inset border/padding and extra state label; the frame
+  remains responsive, preserves the original source asset, and now uses a
+  complete Safari-style toolbar with traffic lights, navigation, privacy,
+  locked URL, reload, share, new-tab, and tab controls.
+- Updated focused source-contract tests and capture timing. Visual evidence is
+  under `artifacts/homepage-candidate-5-11/` and
+  `artifacts/homepage-full-preview/`; the latter renders the complete desktop
+  page with lazy imagery and reveal states settled for a single review frame.
+- Build, Svelte check, ESLint, all 165 tests, links, CSP, username policy,
+  balance, catalog, scoring parity, and database security pass. The existing
+  transitional performance gate remains red at 777.75/700 kB total JavaScript
+  and 401.24/380 kB total CSS; initial and largest-lazy budgets still pass.
+
 ## Shop reference presentation pass — 2026-08-02
 
 - Refined the existing Shop Home around the approved hierarchy: compact live
@@ -1547,3 +1641,27 @@ kept public profile selectors outside the supporting-route baseline.
   live shop subtype navigation, Profile Settings controls, equip conflict
   behavior, legacy product archiving, pricing, replacement grants, and legacy
   CSS removal.
+
+## 2026-08-03 — Homepage identity and story refinement
+
+- Kept the approved hero/browser structure and original 2553×1379 profile
+  source while increasing the readable profile focus through CSS.
+- Propagated the validated live or localhost-preview daily color through
+  decorative homepage accents with a light-mixed text treatment.
+- Reframed the product proof around persistent profile history and replaced
+  the hidden three-tab explanation with a static Roll/Evolve/Explore sequence.
+- Added real hydrated public-profile fallbacks to the homepage directory.
+  Today’s rolls, featured profiles, loading, failure, and legitimate empty
+  states now render separately without invented rank or demo data.
+- Updated the closing claim around the accumulating public-history promise.
+- Added focused featured-profile mapping/state contracts and updated the
+  reference visual-language tests.
+- Reviewed the live daily-preview composition at 1440×900, 1280×720,
+  430×932, and 390×844 plus focused desktop product/how and mobile
+  discovery/claim captures. No new font, package, image, RPC, or migration was
+  introduced.
+- Build, Svelte check, lint, tests, links, CSP, username policy, balance,
+  catalog, scoring parity, and database security pass. The pre-existing
+  transitional total asset caps remain the only failing gate: JavaScript is
+  777.63/700 kB and CSS is 401.80/380 kB. Initial and largest-lazy JavaScript,
+  initial and largest-lazy CSS, and the HTML shell remain within budget.

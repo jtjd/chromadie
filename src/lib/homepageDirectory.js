@@ -1,4 +1,5 @@
 import { normalizeDiscoveryResponse } from './discoveryData.js';
+import { getCanonicalProfilePath } from './routeContract.js';
 
 const VALID_ROLL_RARITIES = new Set(['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']);
 
@@ -74,6 +75,33 @@ export function selectHomepageProfiles(models = [], limit = 6) {
     label: model.context.targetProfile.is_staff === true ? 'Example profile' : 'Public profile',
     placement: ['primary', 'left', 'right', 'lower'][index] || 'directory'
   }));
+}
+
+export function buildHomepageFeaturedProfiles(models = [], limit = 3) {
+  return selectHomepageProfiles(models, limit)
+    .map(model => {
+      const context = model.context;
+      const profile = context.targetProfile;
+      const config = context.profileConfig?.published;
+      const latestRoll = getLatestHomepageRoll(context);
+      const profilePath = getCanonicalProfilePath(profile.username);
+      if (!profilePath) return null;
+
+      return {
+        username: profile.username,
+        displayName: profile.display_name || profile.username,
+        bio: profile.bio || '',
+        avatarPath: config?.avatar_path || null,
+        profileAccent: config?.signatureColor || profile.mood_color || '#8B7CF6',
+        equippedCosmetics: profile.equipped_cosmetics || {},
+        hexCode: latestRoll?.hex_code || profile.best_roll_hex || null,
+        score: latestRoll?.score ?? profile.best_roll_score ?? null,
+        rarity: latestRoll?.rarity || profile.best_roll_rarity || null,
+        identity: latestRoll?.identity || '',
+        profilePath
+      };
+    })
+    .filter(Boolean);
 }
 
 export function getLatestHomepageRoll(context) {

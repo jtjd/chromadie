@@ -16,6 +16,7 @@
   import { focusFirstElement, restoreFocus, trapFocus } from './lib/a11y';
   import { VALID_VIEWS, VALID_LEADERBOARD_TABS, parseRouteLocation } from './lib/routes';
   import { getCanonicalProfilePath } from './lib/routeContract.js';
+  import { normalizeHexColor } from './lib/utils.js';
   import { trackProductEvent } from './lib/productAnalytics.js';
   import { ACCOUNT_STATES } from './lib/authState';
   import { onMount, onDestroy, tick } from 'svelte';
@@ -45,6 +46,11 @@
   let cancelIdlePrefetch = null;
   let routeTarget;
   let authComponentProps;
+  let homeActiveColor = '#8B7CF6';
+
+  function handleHomeActiveColor(event) {
+    homeActiveColor = normalizeHexColor(event.detail?.color, '#8B7CF6');
+  }
 
   function getProfileVisualFixture() {
     if (!import.meta.env.DEV || typeof window === 'undefined' || window.location.hostname !== '127.0.0.1') return '';
@@ -837,6 +843,7 @@
       on:logout={handleLogout}
       on:retry={() => window.location.reload()}
       on:edit={handleProfileHeaderEdit}
+      accentColor={homeModeVisible ? homeActiveColor : '#cdd2ff'}
     />
 
     {#if founderAnnouncementVisible}
@@ -944,6 +951,7 @@
     on:claim={event => openAuthModal({ detail: { mode: 'signup', username: event.detail?.username } })}
     on:profile={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
     on:roll={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
+    on:activecolor={handleHomeActiveColor}
   />
   </div>
 

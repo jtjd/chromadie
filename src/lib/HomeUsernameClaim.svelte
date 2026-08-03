@@ -7,6 +7,7 @@
   export let inputId = 'home-claim-username';
   export let showLabel = true;
   export let showNote = true;
+  export let buttonLabel = 'Claim';
 
   const dispatch = createEventDispatcher();
   let username = '';
@@ -54,7 +55,7 @@
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${inputId}-error` : showNote ? `${inputId}-hint` : undefined}
       />
-      <button type="submit">Claim</button>
+      <button type="submit">{buttonLabel}</button>
     </div>
     {#if showNote || error}
       <small id={error ? `${inputId}-error` : `${inputId}-hint`} class:home-claim__error={error} aria-live="polite">

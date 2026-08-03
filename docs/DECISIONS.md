@@ -2,6 +2,87 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Carry the active daily color into the homepage wordmark
+
+The homepage now shares one validated active-color value between the daily
+color panel, the “changes every day” hero phrase, and the `.lol` portion of the
+`chm.lol` wordmark. The live discovery result or localhost fixture supplies
+the value through the existing homepage directory; no client gameplay state or
+new data contract is introduced. The header color is mixed with light ink for
+contrast and its transition is disabled under reduced motion.
+
+## 2026-08-03 — Center the daily-color readout around the color
+
+The homepage rail is titled “Today’s color,” which describes the visitor-facing
+subject rather than the underlying roll mechanic. It centers the label, glyph,
+color, and rarity as one visual unit. Score and earned rarity remain in the
+lower utility rows so the result does not read like a left-aligned table beside
+a centered visual. The owner line appears only for a live featured roll; the
+local fixture has no extra explanatory sentence.
+
+## 2026-08-03 — Treat the homepage daily color as a roll, not a mock result
+
+The homepage daily-color module now uses the same language for live data and
+the localhost fixture. It presents a daily roll as a color, earned rarity, and
+score, without calling the fixture an “example” or exposing a made-up identity
+phrase. When live discovery data is available, the module identifies the
+featured profile roll; the local fixture stays owner-neutral. Its discovery
+action says “See today’s public rolls” so the destination matches the content.
+The result is intentionally not described as a universal color-of-the-day:
+rarity belongs to each player’s roll, not to the calendar day.
+
+## 2026-08-03 — Explain the homepage daily-color preview plainly
+
+The homepage preview no longer presents a generated identity phrase, ambiguous
+leaderboard position, or unexplained rarity value. It leads with the hex color,
+labels the result as an example or latest daily color, names the score as a
+roll score, and presents rarity as a property of that particular roll. The
+preview uses a Rare example so a local visitor does not infer that every daily
+color is Mythic. Its lower action says “Explore public profiles” and remains an
+in-page path to the discovery section.
+
+## 2026-08-03 — Give the homepage lower sections one visual rhythm
+
+**Status:** implemented for visual review
+
+The lower homepage remains a single authored continuation of the hero. The
+product screenshots keep their real public-profile/daily-result distinction,
+the explanation surface uses a horizontal three-step rail rather than a
+side-navigation dashboard, and the leaderboard uses quiet line-based rows
+with an explicit empty state and existing discovery route.
+
+This is a presentation-only pass. The existing lightbox, discovery RPC,
+profile links, leaderboard rows, claim flow, route behavior, and server-owned
+gameplay remain intact. No new data or migration is required.
+
+## 2026-08-03 — Refine the homepage one viewport at a time
+
+**Status:** first iteration implemented for visual review
+
+Homepage refinement remains incremental rather than replacing the approved
+Candidate 5.11 structure. The first iteration changes only the home header,
+live ticker, hero, and unavailable daily-result presentation. Empty ticker
+data now takes no space, the hero uses the original-resolution profile
+capture, and missing live roll data gives the profile the full stage instead
+of rendering a large empty result column. Local development renders
+the existing guest fixture by default; `?home_preview=empty` keeps the honest
+empty state available for local testing. The fixture is presentation-only and
+production never falls back to it.
+
+The profile capture now sits inside a restrained browser frame with a small
+high-contrast address bar. The browser shell shares the hero stage’s single
+outer boundary rather than adding another inset card, giving visitors page
+context without stacking redundant frames. A complete Safari-style toolbar
+uses visual-only traffic lights, navigation, privacy, URL, reload, share,
+new-tab, and tab controls; it does not pretend to be an interactive browser.
+The daily result remains a separate product surface.
+
+The existing discovery RPC, profile hydration, username claim flow, routes,
+authentication, typography, lower homepage sections, and server-authoritative
+roll boundary are unchanged. A full-height preview capture now keeps those
+sections visible together for review; their content remains a separate,
+incremental iteration surface.
+
 ## 2026-08-02 — Align the shop presentation with the approved boutique reference
 
 **Status:** implemented in the existing shop architecture
@@ -2456,3 +2537,26 @@ also need manual visual signoff before paid products are activated. Phase D2
 is responsible for additive database slots, catalog activation, product rows,
 profile controls, and equip conflict semantics; none of that work belongs in
 D1.
+
+## 2026-08-03 — Keep the homepage profile-first and make discovery fallbacks truthful
+
+The existing homepage hero, username claim, and browser presentation remain
+the acquisition foundation. The profile capture stays on its original
+high-resolution PNG and is reframed with CSS so identity is readable without
+introducing another image pipeline or compressed derivative.
+
+The live or localhost-preview roll now supplies a validated homepage color.
+That raw color is used for atmosphere, while text-level accents mix toward the
+fixed light ink so dark daily colors cannot erase labels or links.
+
+The lower page tells one cumulative identity story: every roll persists,
+the complete Roll/Evolve/Explore loop is visible without tabs, and discovery
+leads into people. If today has no public rolls, the homepage may show only
+profiles already hydrated through the bounded public profile contract. These
+profiles are labeled as profiles rather than ranked or represented as having
+rolled today. Loading, public-data failure, and a legitimate empty directory
+remain distinct states. Demo fixtures remain localhost-only and never backfill
+production discovery.
+
+No schema, RPC, RLS, scoring, authentication, route, catalog, entitlement, or
+profile-rendering authority changed.

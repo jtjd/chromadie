@@ -1,11 +1,14 @@
 <script>
-  import { onDestroy, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import HomepageLiveTicker from './HomepageLiveTicker.svelte';
   import { supabase } from './supabase.js';
   import { loadProfileContext } from './profileData.js';
   import { normalizeDiscoveryResponse } from './discoveryData.js';
   import { getCanonicalProfilePath } from './routeContract.js';
+  import { normalizeHexColor } from './utils.js';
+  import { guestRollFixture } from './guestRollFixture.js';
   import {
+    buildHomepageFeaturedProfiles,
     collectHomepageCandidates,
     collectHomepageRollEvents,
     KNOWN_STAFF_SHOWCASE_USERNAMES
@@ -13,14 +16,24 @@
 
   const DISCOVERY_SURFACES = ['today', 'recent', 'new', 'all_time'];
   const REFRESH_INTERVAL_MS = 60_000;
+  const LOCAL_PREVIEW_HOSTS = new Set(['127.0.0.1', 'localhost']);
+  const HOMEPAGE_DAILY_PREVIEW = Object.freeze({
+    hexCode: guestRollFixture.hex,
+    score: 78890,
+    rarity: 'Rare',
+    identity: 'Vivid violet'
+  });
 
   const EMPTY_DIRECTORY = Object.freeze({
     loading: true,
     error: '',
     tickerEvents: [],
     leaderboard: [],
+    featuredProfiles: [],
     heroRoll: null,
-    heroModel: null
+    heroModel: null,
+    previewRoll: null,
+    previewAvailable: false
   });
 
   /** @type {any} */
@@ -28,6 +41,24 @@
   let hasLoaded = false;
   let requestId = 0;
   let refreshTimer;
+  let previewRoll = null;
+  let previewAvailable = false;
+  const dispatch = createEventDispatcher();
+
+  $: activeColor = normalizeHexColor((directory.heroRoll || directory.previewRoll)?.hexCode, '#8B7CF6');
+  $: dispatch('activecolor', { color: activeColor });
+
+  function canUseLocalPreview() {
+    return typeof window !== 'undefined'
+      && LOCAL_PREVIEW_HOSTS.has(window.location.hostname);
+  }
+
+  function getLocalPreviewRoll() {
+    if (!previewAvailable) return null;
+    return new URLSearchParams(window.location.search).get('home_preview') === 'empty'
+      ? null
+      : HOMEPAGE_DAILY_PREVIEW;
+  }
 
   async function fetchDiscoverySurface(surface) {
     const response = await supabase.rpc('get_public_discovery', {
@@ -99,7 +130,8 @@
       const heroRoll = leaderboard[0] || null;
       const heroModel = heroRoll ? hydratedByUsername.get(heroRoll.username.toLowerCase()) || null : null;
       const tickerEvents = collectHomepageRollEvents(hydrated);
-      const error = !tickerEvents.length && failedCount === DISCOVERY_SURFACES.length
+      const featuredProfiles = buildHomepageFeaturedProfiles(hydrated, 3);
+      const error = !leaderboard.length && !featuredProfiles.length && failedCount > 0
         ? 'Public profiles could not be loaded right now.'
         : '';
 
@@ -108,8 +140,11 @@
         error,
         tickerEvents,
         leaderboard,
+        featuredProfiles,
         heroRoll,
-        heroModel
+        heroModel,
+        previewRoll,
+        previewAvailable
       };
       hasLoaded = true;
     } catch {
@@ -119,14 +154,20 @@
         error: 'Public profiles could not be loaded right now.',
         tickerEvents: [],
         leaderboard: [],
+        featuredProfiles: [],
         heroRoll: null,
-        heroModel: null
+        heroModel: null,
+        previewRoll,
+        previewAvailable
       };
       hasLoaded = true;
     }
   }
 
   onMount(() => {
+    previewAvailable = canUseLocalPreview();
+    previewRoll = getLocalPreviewRoll();
+    directory = { ...directory, previewRoll, previewAvailable };
     void loadDirectory();
     refreshTimer = window.setInterval(() => void loadDirectory(), REFRESH_INTERVAL_MS);
   });
@@ -138,7 +179,7 @@
 </script>
 
 <div class="homepage-directory">
-  <HomepageLiveTicker events={directory.tickerEvents} loading={directory.loading} loadError={directory.error} />
+  <HomepageLiveTicker events={directory.tickerEvents} />
   <slot {directory} />
 </div>
 

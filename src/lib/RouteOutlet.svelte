@@ -95,6 +95,7 @@
         on:claim={event => forward('claim', event)}
         on:profile={event => forward('profile', event)}
         on:roll={event => forward('roll', event)}
+        on:activecolor={event => forward('activecolor', event)}
       />
     {/key}
   {:else if errorMessage}

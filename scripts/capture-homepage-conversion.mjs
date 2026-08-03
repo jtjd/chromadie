@@ -5,9 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const output = resolve(root, 'artifacts/homepage-candidate-5-11');
+const output = resolve(root, process.env.CAPTURE_OUTPUT || 'artifacts/homepage-candidate-5-11');
 const chromium = process.env.CHROMIUM_BIN || '/usr/bin/chromium';
 const appPort = Number(process.env.CAPTURE_PORT || 5174);
+const urlSuffix = process.env.CAPTURE_URL_SUFFIX || '';
+const fullPage = process.env.CAPTURE_FULL_PAGE === '1';
 const captures = [
   { name: 'homepage-reference-1907x942', width: 1907, height: 942, scroll: 0 },
   { name: 'homepage-wide-1920x1080', width: 1920, height: 1080, scroll: 0 },
@@ -25,6 +27,9 @@ const captures = [
   { name: 'leaderboard-mobile-390x844', width: 390, height: 844, scroll: 'leaderboard' },
   { name: 'claim-mobile-390x844', width: 390, height: 844, scroll: 'claim' }
 ];
+const captureItems = fullPage
+  ? [{ name: 'homepage-full-page-1440', width: 1440, height: 900, scroll: 0 }]
+  : captures;
 
 await mkdir(output, { recursive: true });
 
@@ -70,7 +75,7 @@ async function evaluateEventually(run, expression, params = {}) {
 
 async function capture(item, index) {
   const port = 9500 + index;
-    const browser = spawn(chromium, ['--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=/tmp/chromadie-homepage-${process.pid}-${index}`, `--window-size=${item.width},${item.height}`, `http://127.0.0.1:${appPort}/`], { stdio: 'ignore' });
+  const browser = spawn(chromium, ['--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', `--remote-debugging-port=${port}`, `--user-data-dir=/tmp/chromadie-homepage-${process.pid}-${index}`, `--window-size=${item.width},${item.height}`, `http://127.0.0.1:${appPort}/${urlSuffix}`], { stdio: 'ignore' });
   let ws;
   try {
     const target = await pageTarget(port);
@@ -81,9 +86,23 @@ async function capture(item, index) {
     await run('Page.enable');
     await run('Emulation.setDeviceMetricsOverride', { width: item.width, height: item.height, deviceScaleFactor: 1, mobile: false });
     await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { if (document.querySelector('.home-page') || Date.now() - start > 12000) resolve(true); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
-    await delay(250);
+    await delay(1100);
     await run('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
     await run('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    if (fullPage) {
+      await evaluateEventually(run, `new Promise(resolve => {
+        document.querySelectorAll('.home-reveal').forEach(element => element.classList.add('home-reveal--visible'));
+        document.querySelectorAll('img[loading="lazy"]').forEach(image => { image.loading = 'eager'; });
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        setTimeout(() => { window.scrollTo(0, 0); resolve(true); }, 900);
+      })`, { awaitPromise: true });
+      await evaluateEventually(run, `Promise.all([...document.images].map(image => image.complete ? Promise.resolve(true) : new Promise(resolve => {
+        image.addEventListener('load', () => resolve(true), { once: true });
+        image.addEventListener('error', () => resolve(false), { once: true });
+        setTimeout(() => resolve(false), 3000);
+      }))`, { awaitPromise: true });
+      await delay(350);
+    }
     if (item.scroll) {
       const scrollSelector = item.scroll === 'product'
         ? '#showcase'
@@ -97,7 +116,14 @@ async function capture(item, index) {
       await evaluateEventually(run, `new Promise(resolve => { const start = Date.now(); const wait = () => { const target = document.querySelector(${JSON.stringify(scrollSelector)}); if (target) { target.scrollIntoView({ block: 'start' }); resolve(true); } else if (Date.now() - start > 12000) resolve(false); else setTimeout(wait, 100); }; wait(); })`, { awaitPromise: true });
       await delay(350);
     }
-    const screenshot = await run('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false });
+    const screenshotParams = { format: 'png', fromSurface: true, captureBeyondViewport: false };
+    if (fullPage) {
+      const metrics = await run('Page.getLayoutMetrics');
+      const contentSize = metrics.cssContentSize || metrics.contentSize;
+      await run('Emulation.setDeviceMetricsOverride', { width: item.width, height: Math.ceil(contentSize.height), deviceScaleFactor: 1, mobile: false });
+      await delay(350);
+    }
+    const screenshot = await run('Page.captureScreenshot', screenshotParams);
     const path = resolve(output, `${item.name}.png`);
     await writeFile(path, Buffer.from(screenshot.data, 'base64'));
     console.log(path);
@@ -107,4 +133,4 @@ async function capture(item, index) {
   }
 }
 
-for (const [index, item] of captures.entries()) await capture(item, index);
+for (const [index, item] of captureItems.entries()) await capture(item, index);

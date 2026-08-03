@@ -20,6 +20,7 @@ test('route loading keeps the shell and previous page mounted until a destinatio
   assert.match(outlet, /if \(target\.staticComponent\)/);
   assert.match(outlet, /role="status"/);
   assert.match(outlet, /prefers-reduced-motion/);
+  assert.match(outlet, /on:activecolor=\{event => forward\('activecolor', event\)\}/);
 });
 
 test('route loaders use explicit split points and cache prefetched modules', () => {

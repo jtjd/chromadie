@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the homepage uses optimized source imagery and keeps live discovery data authoritative', async () => {
+test('the homepage uses the original hero source and keeps live discovery data authoritative', async () => {
   const [hero, directory, daily, leaderboard] = await Promise.all([
     read('src/lib/HomeHero.svelte'),
     read('src/lib/HomepageProfileDirectory.svelte'),
@@ -13,7 +13,8 @@ test('the homepage uses optimized source imagery and keeps live discovery data a
   ]);
 
   assert.match(hero, /admin-profile-desktop\.png/);
-  assert.match(hero, /admin-profile-mobile\.webp/);
+  assert.match(hero, /width="2553" height="1379"/);
+  assert.match(hero, /home-browser__viewport/);
   assert.match(directory, /supabase\.rpc\('get_public_discovery'/);
   assert.match(directory, /collectHomepageRollEvents/);
   assert.match(daily, /CompactRollPreview/);

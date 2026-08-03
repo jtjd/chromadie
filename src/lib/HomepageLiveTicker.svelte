@@ -4,8 +4,6 @@
   import { normalizeHexColor } from './utils.js';
 
   export let events = [];
-  export let loading = false;
-  export let loadError = '';
 
   let firstGroup;
   let viewport;
@@ -32,7 +30,7 @@
     measureFrame = window.requestAnimationFrame(measureTicker);
   }
 
-  $: if (events) void scheduleMeasure();
+  $: if (events.length) void scheduleMeasure();
 
   onMount(() => {
     void scheduleMeasure();
@@ -73,11 +71,9 @@
   }
 </script>
 
-<section class="homepage-ticker" aria-label="Recent public rolls">
-  <div class="homepage-ticker__viewport" bind:this={viewport}>
-    {#if loading}
-      <p class="homepage-ticker__empty">Loading recent public rolls.</p>
-    {:else if events.length}
+{#if events.length}
+  <section class="homepage-ticker" aria-label="Recent public rolls">
+    <div class="homepage-ticker__viewport" bind:this={viewport}>
       <div
         class="homepage-ticker__track"
         style={`--ticker-distance: ${distance}px; --ticker-duration: ${duration}s;`}
@@ -101,11 +97,9 @@
           {/each}
         </div>
       </div>
-    {:else}
-      <p class="homepage-ticker__empty">{loadError || 'Waiting for today’s public rolls.'}</p>
-    {/if}
-  </div>
-</section>
+    </div>
+  </section>
+{/if}
 
 <style>
   .homepage-ticker {
@@ -162,8 +156,6 @@
   .homepage-ticker__item:hover,
   .homepage-ticker__item:focus-visible { color: var(--color-accent-cyan, #8ddcff); }
   .homepage-ticker__color { display: inline-block; flex: 0 0 0.4rem; width: 0.4rem; height: 0.4rem; border: 1px solid rgba(241, 243, 237, 0.38); border-radius: 50%; background: var(--ticker-color); box-shadow: 0 0 0.55rem var(--ticker-color); }
-  .homepage-ticker__empty { margin: 0; padding: 0.625rem 1.125rem; color: rgba(241, 243, 237, 0.45); font: 500 0.625rem / 1.2 var(--home-mono, 'IBM Plex Mono', monospace); }
-
   @keyframes homepage-ticker-scroll {
     from { transform: translateX(0); }
     to { transform: translate3d(calc(var(--ticker-distance, 0px) * -1), 0, 0); }

@@ -2,6 +2,73 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Tie the wordmark to today’s color
+
+- The homepage `.lol` wordmark segment now follows the active daily color.
+- The “changes every day” hero phrase uses the same color, keeping the brand
+  accent and daily-color preview synchronized.
+- Added a restrained transition and reduced-motion handling.
+
+## 2026-08-03 — Balance the homepage daily color
+
+- Renamed the module “Today’s color” so its heading describes what visitors
+  are seeing.
+- Centered the color’s glyph, color value, rarity, and heading to match the visual
+  center of the browser stage.
+- Retained score and earned rarity as supporting rows.
+- Removed the “A new color joins the profile” copy entirely.
+
+## 2026-08-03 — Make the homepage daily roll feel native
+
+- Removed the cheesy visible “example” treatment from the local homepage
+  fixture; it now shares the live result presentation.
+- Reframed the panel as a daily roll, identifying the featured public profile
+  when live discovery data is present.
+- Presented the color, earned rarity, and score as one roll result, and renamed
+  the destination to “See today’s public rolls.”
+- Clarified that rarity is earned per roll, not assigned to every color on a
+  given day.
+
+## 2026-08-03 — Clarify the daily-color preview
+
+- Replaced the opaque “vivid violet signal” label with a readable color-first
+  result and explicit example context.
+- Removed ambiguous leaderboard position, clarified the roll score and rarity,
+  and changed the discovery link to “Explore public profiles.”
+- Made the local example Rare so it does not imply every daily color is Mythic.
+
+## 2026-08-03 — Refine the homepage lower sections
+
+- Turned “How it works” into a three-step horizontal sequence with a calmer,
+  continuous stage.
+- Made leaderboard rows lighter and more editorial, with a truthful empty
+  state and a direct path to explore profiles.
+- Kept the real product imagery, lightbox interactions, responsive behavior,
+  and existing discovery/claim boundaries intact.
+
+## 2026-08-03 — Improve the homepage first viewport
+
+- Made the public profile easier to see and read in the homepage hero.
+- Removed empty recent-roll ticker space and replaced the large empty daily
+  result panel with a compact, truthful status.
+- Improved mobile presentation by keeping the unavailable-result status below
+  the profile instead of covering it.
+- Tightened the homepage introduction and changed the primary action to
+  “Claim page.”
+- Restored the original-resolution profile PNG in the hero so its fine detail
+  is not softened by a lossy derivative.
+- Added a localhost-only daily-color preview that uses the existing guest roll
+  fixture by default, with `?home_preview=empty` available for empty-state
+  testing; production remains live-data-only.
+- Refined the browser-style hero frame with a higher-contrast address bar,
+  removed the redundant inset border and “PUBLIC PROFILE” label, and kept one
+  clear outer boundary around the composition. Replaced the placeholder cue
+  with a complete Safari-style toolbar: traffic lights, navigation, privacy,
+  locked URL, reload, share, new-tab, and tab controls.
+- Added a full-height local preview capture so the existing product showcase,
+  How it works, leaderboard, and final claim surfaces can be reviewed as one
+  homepage composition.
+
 ## 2026-08-02 — Align the shop with the approved identity storefront
 
 - Reworked the existing Shop Home hierarchy toward the approved dark boutique
@@ -1320,3 +1387,16 @@ direct route behavior.
   765.16/430.09 kB. Initial JavaScript is 440.13 kB, largest lazy JavaScript
   73.13 kB, and font assets total 220.49 kB (215.32 KiB in binary units). The transitional total caps still
   fail honestly; initial/largest-lazy budgets pass.
+
+## 2026-08-03 — Refine the homepage around accumulated identity
+
+- Made the real profile identity more legible inside the existing
+  high-resolution browser presentation and carried the validated daily color
+  into restrained, contrast-safe homepage accents.
+- Rewrote the lower-page narrative around persistent color history, exposed
+  all three Roll/Evolve/Explore steps at once, and varied the section rhythm.
+- Added distinct today, real-profile fallback, loading, error, and empty
+  discovery states without adding demo data or another backend request.
+- Updated the final username claim to emphasize a page that changes with the
+  player while preserving authentication, routing, scoring, public data, and
+  deployment contracts.

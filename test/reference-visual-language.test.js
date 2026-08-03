@@ -41,7 +41,9 @@ test('quiet reference surfaces and reduced-motion behavior are encoded', async (
   assert.match(header, /--site-header-font: 'Satoshi'/);
   assert.match(header, /font: 600 0\.72rem \/ 1 var\(--site-header-font\)/);
   assert.match(header, /color: var\(--color-accent-cyan\)/);
-  assert.match(header, /\.site-mode-header--home \.site-mode-header__wordmark > span \{ color: #cdd2ff; \}/);
+  assert.match(header, /export let accentColor = '#cdd2ff'/);
+  assert.match(header, /--site-header-accent/);
+  assert.match(header, /color-mix\(in srgb, var\(--site-header-accent/);
   assert.match(home, /--home-canvas: #0d0f13/);
   assert.match(home, /--home-font: 'Instrument Sans Variable'/);
   assert.match(home, /--home-mono: 'IBM Plex Mono'/);
@@ -50,7 +52,8 @@ test('quiet reference surfaces and reduced-motion behavior are encoded', async (
   assert.match(dailyResult, /place-items: center/);
   assert.match(dailyResult, /prefers-reduced-motion/);
   assert.match(how, /prefers-reduced-motion/);
-  assert.match(how, /role="tablist"/);
+  assert.match(how, /<ol class="home-how__steps">/);
+  assert.doesNotMatch(how, /role="tablist"|aria-selected|setTimeout/);
   assert.match(site, /background-color: var\(--color-canvas\)/);
   assert.match(site, /--site-accent: var\(--color-accent\)/);
 });

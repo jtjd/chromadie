@@ -12,6 +12,7 @@
   export let isProfileMode = false;
   export let isHomeMode = false;
   export let isOwner = false;
+  export let accentColor = '#cdd2ff';
 
   const dispatch = createEventDispatcher();
   let mobileMenuOpen = false;
@@ -40,7 +41,7 @@
   }
 </script>
 
-<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--home={isHomeMode}>
+<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--home={isHomeMode} style={`--site-header-accent: ${accentColor};`}>
   <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
     <span class="site-mode-header__wordmark">chm<span>.lol</span></span>
   </a>
@@ -48,8 +49,6 @@
   {#if !minimalMode}
     <nav class="site-mode-header__nav" aria-label="Primary application navigation">
       {#if !isAuthenticated}
-        <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Explore</button>
-        <span aria-hidden="true">/</span>
         <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
       {:else}
         <button type="button" class:active={activeView === 'profile'} aria-current={activeView === 'profile' ? 'page' : undefined} on:mouseenter={() => prefetch('profile')} on:focus={() => prefetch('profile')} on:click={() => navigate('profile')}>Profile</button>
@@ -101,7 +100,6 @@
       {#if !minimalMode}
         <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
           {#if !isAuthenticated}
-            <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Explore</button>
             <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
           {:else}
             <button type="button" class:active={activeView === 'profile'} on:mouseenter={() => prefetch('profile')} on:focus={() => prefetch('profile')} on:click={() => navigate('profile')}>Profile</button>
@@ -178,7 +176,7 @@
     font-size: 0.75rem;
   }
 
-  .site-mode-header--home .site-mode-header__wordmark > span { color: #cdd2ff; }
+  .site-mode-header--home .site-mode-header__wordmark > span { color: color-mix(in srgb, var(--site-header-accent, #cdd2ff) 62%, #f2f0eb); text-shadow: 0 0 1.1rem color-mix(in srgb, var(--site-header-accent, #cdd2ff) 42%, transparent); transition: color 0.45s ease, text-shadow 0.45s ease; }
 
   .site-mode-header--home .site-mode-header__right {
     padding: 0;
@@ -431,6 +429,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .site-mode-header--home .site-mode-header__wordmark > span,
     .site-mode-header__nav button,
     .site-mode-header__context button,
     .site-mode-header__account button,
