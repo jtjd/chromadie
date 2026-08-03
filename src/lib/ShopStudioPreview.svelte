@@ -1,7 +1,7 @@
 <script>
   import IdentityCard from './IdentityCard.svelte';
   import { getBadgeMeta } from './badgeData.js';
-  import { createDefaultProfileConfig, getVisibleProfileLinks } from './profileConfig.js';
+  import { createDefaultProfileConfig } from './profileConfig.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
@@ -32,7 +32,6 @@
     })
     .filter(Boolean);
   $: previewAvatarSrc = getProfileMediaUrl(previewProfileConfig.avatar_path);
-  $: previewLinks = getVisibleProfileLinks(previewProfileConfig);
   $: nameRendererLoadout = getNameRendererLoadout(loadout);
 </script>
 
@@ -62,7 +61,7 @@
           displayName={accountDisplayName}
           bio={account.bio || ''}
           bioFallback="No bio added yet."
-          links={previewLinks}
+          links={[]}
           badges={previewBadges}
           founder={Boolean(account.equipped_badges?.includes('launch_edition'))}
           avatarSrc={previewAvatarSrc}
@@ -187,9 +186,6 @@
   .studio-profile-card :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
   .studio-profile-card :global(.identity-card__avatar-letter) { font-size: 1.5rem; }
   .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.8rem, 6.5vw, 2.35rem); line-height: .98; }
-  .studio-profile-card :global(.identity-card__links) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem .65rem; margin-top: .8rem; }
-  .studio-profile-card :global(.identity-card__links a) { width: 100%; min-width: 0; min-height: 1.8rem; padding: .25rem 0; font-size: .7rem; }
-  .studio-profile-card :global(.identity-card__links strong) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .studio-profile-card :global(.identity-card__bio) { margin-top: 0.45rem; font-size: 0.72rem; }
 
   .studio-selection {

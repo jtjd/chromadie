@@ -67,6 +67,8 @@ test('Browse uses category navigation, a contained filter panel, a grid, and one
   assert.match(source, /affordableOnly/);
   assert.match(source, /SHOP_SORTS/);
   assert.match(source, /<ShopContextualPreview/);
+  assert.match(source, /selectedItem={selectedItem}/);
+  assert.match(source, /on:reset={resetPreview}/);
   assert.match(source, /on:preview/);
   assert.doesNotMatch(source, /shop-browse-filters/);
   assert.match(source, /showCounts=\{false\}/);
@@ -74,10 +76,11 @@ test('Browse uses category navigation, a contained filter panel, a grid, and one
   assert.match(source, /@media \(max-width: 520px\)/);
 });
 
-test('product cards keep product decisions in detail and expose a readable hierarchy', async () => {
+test('product cards apply preview selection and expose a readable hierarchy', async () => {
   const source = await readProjectFile('src/lib/ShopItemCard.svelte');
   assert.ok(source.indexOf('item-card-heading') < source.indexOf('item-preview-button'));
   assert.match(source, /item-product-button/);
+  assert.match(source, /Preview \$\{item\.name\} on your profile/);
   assert.match(source, /item-price/);
   assert.match(source, /item-rarity/);
   assert.match(source, /item-collection/);
@@ -111,24 +114,24 @@ test('card purchases reuse the existing confirmation and RPC boundary', async ()
   assert.match(shop, /supabase\.rpc\('purchase_item'/);
 });
 
-test('Product Detail is a drawer/sheet with existing purchase and focus boundaries', async () => {
-  const source = await readProjectFile('src/lib/ShopProductDetail.svelte');
+test('Shop selection stays in the persistent profile preview', async () => {
   const shop = await readProjectFile('src/lib/Shop.svelte');
-  assert.match(source, /<dialog/);
-  assert.match(source, /aria-modal="true"/);
-  assert.match(source, /previouslyFocusedElement/);
-  assert.match(source, /event\.key === 'Escape'/);
-  assert.match(source, /width:min\(44rem,100%\)/);
-  assert.match(source, /max-height:94dvh/);
-  assert.match(source, /on:tryon/);
-  assert.match(source, /role="tablist"/);
-  assert.match(source, />On your profile<\/button>/);
-  assert.match(source, /previewMode/);
+  const browse = await readProjectFile('src/lib/ShopBrowse.svelte');
+  const contextual = await readProjectFile('src/lib/ShopContextualPreview.svelte');
+  const studio = await readProjectFile('src/lib/ShopStudioPreview.svelte');
+  assert.match(shop, /selectedItem=\{selectedItem\}/);
+  assert.match(shop, /shopNotice = `\$\{item\.name\} is previewing on your profile/);
+  assert.doesNotMatch(shop, /ShopProductDetail/);
+  assert.match(browse, /export let selectedItem = null/);
+  assert.match(browse, /tryOnShopItem\(equippedItems, selectedItem\)/);
+  assert.match(contextual, /Applied to the preview\. Your profile stays unchanged\./);
+  assert.match(contextual, /<ShopStudioPreview/);
+  assert.doesNotMatch(contextual, /ShopItemPreview|shop-preview-mode|Nothing is saved until you choose it/);
+  assert.match(studio, /links=\{\[\]\}/);
   assert.match(shop, /supabase\.rpc\('purchase_item'/);
   assert.match(shop, /fetchInventoryState/);
   assert.match(shop, /fetchWalletBalance/);
   assert.match(shop, /fetchProfileEntitlements/);
-  assert.match(shop, /tryOnShopItem/);
   assert.doesNotMatch(shop, /supabase\.rpc\('equip_item'/);
 });
 
@@ -153,10 +156,11 @@ test('contextual shop preview delegates to the shared Studio and Name renderer p
   const itemPreview = await readProjectFile('src/lib/ShopItemPreview.svelte');
   const identity = await readProjectFile('src/lib/IdentityCard.svelte');
   assert.match(contextual, /<ShopStudioPreview/);
-  assert.match(contextual, /Nothing is saved until you choose it/);
-  assert.match(contextual, />On your profile<\/button>/);
+  assert.match(contextual, /Applied to the preview\. Your profile stays unchanged\./);
+  assert.match(contextual, />Clear<\/button>/);
+  assert.doesNotMatch(contextual, /shop-preview-mode|<ShopItemPreview/);
   assert.match(studio, /nameRendererLoadout/);
-  assert.match(studio, /identity-card__links\) \{ display: grid/);
+  assert.match(studio, /links=\{\[\]\}/);
   assert.match(studio, /identity-card__name\) \{ font-size: clamp\(1\.8rem/);
   assert.match(studio, /profile-border-effect__content/);
   assert.match(identity, /<NameEffectCanvas/);

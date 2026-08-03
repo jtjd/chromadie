@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import ShopItemPreview from './ShopItemPreview.svelte';
   import ShopStudioPreview from './ShopStudioPreview.svelte';
 
   export let loadout = {};
@@ -13,12 +12,10 @@
   export let profileConfig = null;
 
   const dispatch = createEventDispatcher();
-  let previewMode = 'isolated';
   let paused = false;
   let replayKey = 0;
 
   $: previewName = accountProfile?.display_name || accountProfile?.username || username || 'You';
-  $: effectivePreviewMode = selectedItem ? previewMode : 'combined';
   $: rendererMode = paused ? 'paused' : 'animated';
 
   function replayPreview() {
@@ -30,37 +27,33 @@
 <aside class="shop-contextual-preview" aria-labelledby="shop-contextual-preview-title">
   <header class="shop-contextual-preview__header">
     <div>
-      <span class="shop-eyebrow">Preview</span>
+      <span class="shop-eyebrow">{selectedItem ? 'Try it on' : 'Your profile'}</span>
       <h2 id="shop-contextual-preview-title">{selectedItem ? selectedItem.name : previewName}</h2>
-      <p>{selectedItem ? 'Nothing is saved until you choose it.' : 'Your equipped look.'}</p>
-      <div class="shop-preview-mode" role="tablist" aria-label="Preview mode">
-        <button type="button" role="tab" aria-selected={effectivePreviewMode === 'isolated'} class:active={effectivePreviewMode === 'isolated'} disabled={!selectedItem} on:click={() => previewMode = 'isolated'}>Item</button>
-        <button type="button" role="tab" aria-selected={effectivePreviewMode === 'combined'} class:active={effectivePreviewMode === 'combined'} on:click={() => previewMode = 'combined'}>On your profile</button>
-      </div>
+      <p>{selectedItem ? 'Applied to the preview. Your profile stays unchanged.' : 'Your equipped look.'}</p>
+      {#if selectedItem}
+        <div class="shop-preview-selection" aria-label={`${selectedItem.name} preview details`}>
+          <span>{selectedItem.collection || 'Profile piece'}</span>
+          <strong>{selectedItem.rarity || 'Common'}</strong>
+        </div>
+      {/if}
     </div>
     <div class="shop-preview-actions">
       <button type="button" on:click={replayPreview}>Replay</button>
       <button type="button" aria-pressed={paused} on:click={() => paused = !paused}>{paused ? 'Play' : 'Pause'}</button>
-      {#if selectedItem}<button type="button" class="shop-contextual-preview__reset" on:click={() => dispatch('reset')}>Reset</button>{/if}
+      {#if selectedItem}<button type="button" class="shop-contextual-preview__reset" on:click={() => dispatch('reset')}>Clear</button>{/if}
     </div>
   </header>
 
   {#key replayKey}
-    {#if selectedItem && effectivePreviewMode === 'isolated'}
-      <div class="shop-contextual-preview__isolated">
-        <ShopItemPreview item={selectedItem} username={previewName} displayColor={displayColor} mode={rendererMode} />
-      </div>
-    {:else}
-      <ShopStudioPreview
-        {loadout}
-        {selectedItem}
-        username={previewName}
-        {displayColor}
-        {accountProfile}
-        {profileConfig}
-        nameRendererMode={rendererMode}
-      />
-    {/if}
+    <ShopStudioPreview
+      {loadout}
+      {selectedItem}
+      username={previewName}
+      {displayColor}
+      {accountProfile}
+      {profileConfig}
+      nameRendererMode={rendererMode}
+    />
   {/key}
 
 </aside>
@@ -104,18 +97,6 @@
     line-height: 1.35;
   }
 
-  .shop-preview-mode {
-    display: flex;
-    gap: 3px;
-    width: max-content;
-    margin-top: 0.65rem;
-    padding: 3px;
-    border: 1px solid #343740;
-    border-radius: var(--radius-sm, 5px);
-    background: #0d0f14;
-  }
-
-  .shop-preview-mode button,
   .shop-preview-actions button {
     border: 1px solid transparent;
     border-radius: 4px;
@@ -124,10 +105,6 @@
     cursor: pointer;
     font: 0.72rem var(--shop-mono, var(--font-mono-stack));
   }
-
-  .shop-preview-mode button { min-height: 2rem; padding: 0 0.7rem; }
-  .shop-preview-mode button.active { background: #1d2027; color: var(--shop-accent); }
-  .shop-preview-mode button:disabled { cursor: not-allowed; opacity: .45; }
 
   .shop-preview-actions {
     display: flex;
@@ -146,26 +123,37 @@
   }
 
   .shop-preview-actions button:hover,
-  .shop-preview-actions button:focus-visible,
-  .shop-preview-mode button:hover,
-  .shop-preview-mode button:focus-visible { border-color: #aeb5e5; color: #fff; }
+  .shop-preview-actions button:focus-visible { border-color: #aeb5e5; color: #fff; }
 
   .shop-contextual-preview__reset {
     color: #cdd2ff !important;
   }
 
-  .shop-contextual-preview__isolated {
-    display: grid;
-    min-height: 13.5rem;
-    padding: .8rem;
-    place-items: center;
-    background: #0b0e13;
+  .shop-preview-selection {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin-top: .7rem;
   }
 
-  .shop-contextual-preview__isolated :global(.shop-preview-area) {
-    height: 9.5rem;
-    border-color: #414650;
-    background: #12151b;
+  .shop-preview-selection span,
+  .shop-preview-selection strong {
+    overflow: hidden;
+    max-width: 14rem;
+    padding: .25rem .45rem;
+    border: 1px solid #3c404b;
+    border-radius: 4px;
+    color: #bfc2ce;
+    font: .67rem var(--shop-mono, var(--font-mono-stack));
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .shop-preview-selection strong {
+    border-color: color-mix(in srgb, var(--shop-accent) 62%, #3c404b);
+    color: var(--shop-accent);
+    text-transform: uppercase;
   }
 
   .shop-contextual-preview :global(.studio-preview) {
@@ -177,20 +165,19 @@
     box-shadow: none;
   }
 
-  .shop-contextual-preview :global(.studio-preview-head) { display: none; }
-  .shop-contextual-preview :global(.studio-stage) { min-height: 14.5rem; border-radius: 6px; }
+  .shop-contextual-preview :global(.studio-preview-head),
+  .shop-contextual-preview :global(.studio-selection) { display: none; }
+  .shop-contextual-preview :global(.studio-stage) { min-height: 13rem; border-radius: 6px; }
   .shop-contextual-preview :global(.studio-profile-card) { width: calc(100% - 1.25rem); max-width: 100%; margin-inline: auto; }
 
   @media (max-width: 960px) {
     .shop-contextual-preview { position: relative; top: auto; }
-    .shop-contextual-preview :global(.studio-stage) { min-height: 16rem; }
-    .shop-contextual-preview__isolated { min-height: 15.5rem; }
+    .shop-contextual-preview :global(.studio-stage) { min-height: 14rem; }
   }
 
   @media (max-width: 700px) {
     .shop-contextual-preview__header { padding: 0.75rem; }
     .shop-contextual-preview :global(.studio-preview) { padding: 0.6rem; }
-    .shop-contextual-preview :global(.studio-stage) { min-height: 15rem; }
-    .shop-contextual-preview__isolated { min-height: 14rem; padding: 0.75rem; }
+    .shop-contextual-preview :global(.studio-stage) { min-height: 13.5rem; }
   }
 </style>

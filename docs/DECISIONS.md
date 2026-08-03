@@ -2706,3 +2706,18 @@ padding heuristic. Canvas measurement still applies the available-width
 scale, and the semantic node receives the same finite family, style, and weight
 as the active renderer. This keeps browser selection consistent without
 removing the accessible fallback source.
+
+## 2026-08-03 — Keep shop selection inside the fitting-room preview
+
+Selecting a shop item no longer opens the large Product Detail drawer. The
+Browse surface owns the selected item and projects its validated loadout onto
+the persistent Studio profile preview, so the profile remains visible while a
+player compares pieces. Clear restores the equipped loadout; purchase buttons
+still use the existing confirmation and server-authoritative RPC path.
+
+The fitting-room preview intentionally omits public social links. The shop is
+evaluating visual identity, not reproducing a complete public profile, and
+removing the links keeps the avatar, name treatment, bio, and border legible in
+the bounded preview stage. No catalog, inventory, entitlement, equip, profile,
+or data authority changed; the existing detail component remains available for
+rollback but is no longer mounted by the live shop route.

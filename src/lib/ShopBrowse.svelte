@@ -14,11 +14,14 @@
     filterShopItems,
     getShopAccessTier,
     getShopItemState,
+    getShopNameSubtype,
     tryOnShopItem
   } from './shopCatalog.js';
 
   export let items = [];
   export let section = 'overview';
+  /** @type {any} */
+  export let selectedItem = null;
   /** @type {any} */
   export let fittingRoom = {};
   /** @type {any} */
@@ -42,7 +45,6 @@
   let affordableOnly = false;
   let sortMode = 'curated';
   let filtersOpen = false;
-  let previewedItem = null;
 
   $: availableSections = SHOP_SECTIONS
     .filter(item => item.id !== 'owned')
@@ -55,6 +57,7 @@
   $: isNameBrowse = section === 'names';
   $: if (section === 'names' && selectedSubslot === 'all') selectedSubslot = 'name_font';
   $: if (section !== 'names' && SHOP_NAME_SUBTYPES.some(subtype => subtype.id === selectedSubslot)) selectedSubslot = 'all';
+  $: if (section === 'names' && getShopNameSubtype(selectedItem) && selectedSubslot !== getShopNameSubtype(selectedItem)) selectedSubslot = getShopNameSubtype(selectedItem);
   $: collections = [...new Set(items.map(item => item.collection).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   $: rarities = [...new Set(items.map(item => item.rarity).filter(Boolean))]
     .sort((a, b) => ['Common', ...SHOP_RARITIES].indexOf(a) - ['Common', ...SHOP_RARITIES].indexOf(b));
@@ -70,8 +73,8 @@
   }, fittingRoom);
   $: username = profile?.display_name || profile?.username || 'You';
   $: displayColor = normalizeHexColor(currentRoll?.hex_code || profile?.mood_color, '#8B7CF6');
-  $: previewLoadout = previewedItem?.slot
-    ? tryOnShopItem(equippedItems, previewedItem)
+  $: previewLoadout = selectedItem?.slot
+    ? tryOnShopItem(equippedItems, selectedItem)
     : { ...(equippedItems || {}) };
   $: activeFilterCount = [
     selectedSubslot !== 'all',
@@ -98,13 +101,17 @@
 
   function selectSection(nextSection) {
     selectedSubslot = nextSection === 'names' ? 'name_font' : 'all';
-    previewedItem = null;
+    dispatch('reset');
     filtersOpen = false;
     dispatch('section', nextSection);
   }
 
   function previewItem(item) {
-    previewedItem = item;
+    dispatch('select', item);
+  }
+
+  function resetPreview() {
+    dispatch('reset');
   }
 </script>
 
@@ -139,7 +146,7 @@
       variant="subtype"
       showCounts={false}
       ariaLabel="Name catalog layers"
-      on:select={event => { selectedSubslot = event.detail; previewedItem = null; }}
+      on:select={event => { selectedSubslot = event.detail; dispatch('reset'); }}
     />
   {/if}
 
@@ -187,15 +194,15 @@
               {item}
               state={stateFor(item)}
               accessTier={getShopAccessTier(item)}
-              isPreviewing={previewedItem?.item_key === item.item_key}
+              isPreviewing={selectedItem?.item_key === item.item_key}
               actuallyEquipped={equippedItems[item.slot] === item.item_key}
               previewUsername={username}
               previewColor={displayColor}
               {isSignedIn}
               purchaseArmed={purchaseArmedKey === item.item_key}
               purchaseLoading={loadingAction === `buy:${item.item_key}`}
-              on:select={event => dispatch('select', event.detail)}
-              on:preview={event => { previewItem(event.detail); dispatch('select', event.detail); }}
+              on:select={event => previewItem(event.detail)}
+              on:preview={event => previewItem(event.detail)}
               on:purchase={event => dispatch('purchase', event.detail)}
             />
           {/each}
@@ -212,12 +219,12 @@
 
     <ShopContextualPreview
       loadout={previewLoadout}
-      selectedItem={previewedItem}
+      selectedItem={selectedItem}
       username={username}
       displayColor={displayColor}
       accountProfile={profile}
       {profileConfig}
-      on:reset={() => previewedItem = null}
+      on:reset={resetPreview}
     />
   </div>
 </section>

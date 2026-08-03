@@ -1759,6 +1759,20 @@ kept public profile selectors outside the supporting-route baseline.
 - Added focused coverage for intrinsic short-name sizing; no catalog,
   entitlement, profile, or backend contracts changed.
 
+## 2026-08-03 — Keep shop try-on in the persistent profile preview
+
+- Removed the live Browse/Home/Collection Product Detail drawer path so item
+  selection no longer hides or replaces the fitting-room profile.
+- Lifted selected-item state into Shop and projected the selected cosmetic
+  through the existing `tryOnShopItem` loadout contract and shared
+  `ShopStudioPreview` renderer.
+- Replaced the isolated/profile preview toggle with one truthful profile stage;
+  Clear restores the equipped look and changes remain preview-only.
+- Removed social links from the bounded shop profile preview so the name,
+  avatar, bio, badges, and border have room to read cleanly.
+- Added focused source contracts for persistent selection, loadout projection,
+  no live modal mount, and link-free preview composition.
+
 ## 2026-08-03 — Homepage identity and story refinement
 
 - Kept the approved hero/browser structure and original 2553×1379 profile

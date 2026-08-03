@@ -56,7 +56,7 @@
       </div>
       {#if todayEditItem}
         <div class="shop-todays-product">
-          <button type="button" class="shop-todays-product-preview" aria-label={`Open ${todayEditItem.name} details`} on:click={() => dispatch('select', todayEditItem)}>
+          <button type="button" class="shop-todays-product-preview" aria-label={`Preview ${todayEditItem.name} on your profile`} on:click={() => dispatch('select', todayEditItem)}>
             <ShopItemPreview item={todayEditItem} username={username} displayColor={displayColor} />
           </button>
           <div class="shop-todays-product-copy">

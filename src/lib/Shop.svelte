@@ -4,7 +4,6 @@
   import ShopBrowse from './ShopBrowse.svelte';
   import ShopCollection from './ShopCollection.svelte';
   import ShopStudio from './ShopStudio.svelte';
-  import ShopProductDetail from './ShopProductDetail.svelte';
   import {
     shopItems,
     shopItemsLoading,
@@ -27,13 +26,10 @@
   import {
     SHOP_SECTIONS,
     createFittingRoom,
-    getCollectionItems,
     getCatalogStatus,
-    getShopAccessTier,
     hasShopEntitlement,
     isShopCosmetic,
-    requiresPurchaseConfirmation,
-    tryOnShopItem
+    requiresPurchaseConfirmation
   } from './shopCatalog.js';
 
   const SHOP_VIEWS = Object.freeze([
@@ -48,12 +44,11 @@
   let activeView = 'home';
   let browseSection = 'overview';
   let selectedItem = null;
-  let previewLoadout = {};
   let currentRoll = null;
   let profileConfig = null;
   let loadingAction = null;
   let purchaseArmedKey = null;
-  let shopNotice = 'Shop ready. Choose a piece to open its detail view.';
+  let shopNotice = 'Shop ready. Choose a piece to preview it on your profile.';
   let viewStateReady = false;
   let restoredShopScope = null;
 
@@ -68,24 +63,6 @@
   });
   // Reserved founder titles remain outside the public catalog, matching the existing cosmetic boundary.
   $: catalogItems = Object.values($shopItems).filter(item => item.item_key !== 'title_founder' && item.slot !== 'title' && getCatalogStatus(item) !== 'retired');
-  $: selectedState = selectedItem ? getDisplayItemState(selectedItem) : null;
-  $: relatedItems = selectedItem
-    ? getCollectionItems(catalogItems, selectedItem.collection, selectedItem.item_key)
-      .filter(item => getCatalogStatus(item) === 'active' || hasShopEntitlement(item, fittingRoom))
-      .slice(0, 3)
-    : [];
-  $: selectedOwnedCount = selectedItem ? fittingRoom.inventoryCounts?.[selectedItem.item_key] || 0 : 0;
-  $: selectedHasAccess = Boolean(selectedItem && hasShopEntitlement(selectedItem, fittingRoom));
-  $: selectedCanPurchase = Boolean(
-    isSignedIn
-      && selectedItem
-      && getCatalogStatus(selectedItem) === 'active'
-      && getShopAccessTier(selectedItem) === 'earned'
-      && selectedItem.cost > 0
-      && fittingRoom.balance >= selectedItem.cost
-      && (selectedItem.slot === 'consumable' || selectedOwnedCount === 0)
-  );
-  $: displayColor = currentRoll?.hex_code || $profile?.mood_color || '#8B7CF6';
   // The catalog has its own quiet brand accent. Today’s color is shown in the
   // Home swatch and profile preview, but should not recolor every shop control.
   const shopAccent = SHOP_ACCENT;
@@ -98,7 +75,6 @@
 
   onMount(() => {
     restoreShopViewState();
-    previewLoadout = { ...($equippedItems || {}) };
     void loadPreviewData();
   });
 
@@ -127,27 +103,10 @@
     if (!configResponse.error && configResponse.data?.success !== false) profileConfig = configResponse.data;
   }
 
-  function getDisplayItemState(item) {
-    const ownedCount = fittingRoom.inventoryCounts?.[item.item_key] || 0;
-    const accessTier = getShopAccessTier(item);
-    if ($equippedItems[item.slot] === item.item_key) return { label: 'Equipped', tone: 'equipped', ownedCount };
-    if (accessTier === 'free') return { label: 'Free baseline', tone: 'free', ownedCount };
-    if (accessTier === 'premium') {
-      return hasShopEntitlement(item, fittingRoom)
-        ? { label: 'Premium unlocked', tone: 'premium', ownedCount }
-        : { label: 'Premium expression', tone: 'premium-locked', ownedCount };
-    }
-    if (ownedCount > 0) return { label: item.slot === 'consumable' ? `${ownedCount} owned` : 'Owned', tone: 'owned', ownedCount };
-    if (item.cost <= 0) return { label: 'Earned milestone', tone: 'milestone', ownedCount };
-    if (fittingRoom.balance < item.cost) return { label: 'Not enough EP', tone: 'unaffordable', ownedCount };
-    return { label: 'Available', tone: 'available', ownedCount };
-  }
-
   function setView(view) {
     activeView = view;
     selectedItem = null;
     purchaseArmedKey = null;
-    previewLoadout = { ...($equippedItems || {}) };
     shopNotice = view === 'home' ? 'Shop home ready.' : `Opened ${SHOP_VIEWS.find(item => item.id === view)?.label || view}.`;
   }
 
@@ -158,23 +117,20 @@
   }
 
   function selectItem(item) {
+    if (!item) return;
     selectedItem = item;
     purchaseArmedKey = null;
-    previewLoadout = isShopCosmetic(item) ? tryOnShopItem($equippedItems, item) : { ...($equippedItems || {}) };
-    shopNotice = `${item.name} is previewing here. This does not change your equipped look.`;
-  }
-
-  function closeDetail() {
-    selectedItem = null;
-    purchaseArmedKey = null;
-    previewLoadout = { ...($equippedItems || {}) };
-    shopNotice = 'Preview reset to your equipped look.';
-  }
-
-  function tryOnSelected(item) {
-    if (!item) return;
-    previewLoadout = isShopCosmetic(item) ? tryOnShopItem($equippedItems, item) : { ...($equippedItems || {}) };
-    shopNotice = `${item.name} is previewing here. This does not change your equipped look.`;
+    if (activeView !== 'browse') {
+      activeView = 'browse';
+      browseSection = item.slot === 'profile_border'
+        ? 'borders'
+        : ['name_font', 'name_material', 'name_motion'].includes(item.slot)
+          ? 'names'
+          : item.slot === 'consumable'
+            ? 'utility'
+            : 'overview';
+    }
+    shopNotice = `${item.name} is previewing on your profile. Nothing is saved.`;
   }
 
   async function refreshLiveAccountState() {
@@ -267,6 +223,7 @@
     <ShopBrowse
       items={catalogItems}
       section={browseSection}
+      selectedItem={selectedItem}
       {fittingRoom}
       equippedItems={$equippedItems}
       profile={$profile}
@@ -277,6 +234,7 @@
       {loadingAction}
       on:section={event => browseSection = event.detail}
       on:select={event => selectItem(event.detail)}
+      on:reset={() => { selectedItem = null; shopNotice = 'Preview reset to your equipped look.'; }}
       on:purchase={event => requestPurchase(event.detail)}
     />
   {:else if activeView === 'collection'}
@@ -299,29 +257,6 @@
 
   <div class="shop-live-region visually-hidden" role="status" aria-live="polite">{shopNotice}</div>
 </main>
-
-{#if selectedItem}
-  <ShopProductDetail
-    item={selectedItem}
-    loadout={previewLoadout}
-    profile={$profile}
-    {profileConfig}
-    displayColor={displayColor}
-    state={selectedState}
-    {relatedItems}
-    {selectedHasAccess}
-    {selectedCanPurchase}
-    balance={fittingRoom.balance}
-    loadingAction={Boolean(loadingAction?.endsWith(`:${selectedItem.item_key}`))}
-    purchaseArmed={purchaseArmedKey === selectedItem.item_key}
-    {isSignedIn}
-    on:close={closeDetail}
-    on:reset={closeDetail}
-    on:tryon={event => tryOnSelected(event.detail)}
-    on:select={event => selectItem(event.detail)}
-    on:purchase={event => requestPurchase(event.detail)}
-  />
-{/if}
 
 <style>
   .shop-page { --shop-canvas:#0d0f13; --shop-deep:#090a0d; --shop-raised:#111319; --shop-line:rgba(255,255,255,.075); --shop-line-strong:rgba(255,255,255,.15); --shop-ink:#f2f0eb; --shop-muted:#aaa8b0; --shop-faint:#858690; --shop-accent:#CDD2FF; --shop-font:var(--font-body-stack); --shop-display:var(--font-display-stack); --shop-mono:var(--font-mono-stack); width:min(86.25rem,calc(100% - 2.5rem)); margin:0 auto 5.5rem; color:var(--shop-ink); font-family:var(--shop-font); }

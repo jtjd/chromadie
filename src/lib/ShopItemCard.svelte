@@ -49,13 +49,13 @@
 <article class="shop-item rarity-{item.rarity || 'Common'}" class:is-wearing={actuallyEquipped} class:is-previewing={isPreviewing}>
   <div class="item-card-heading">
     <div class="item-card-title">
-      <h3><button type="button" class="item-product-button" aria-label={`Open ${item.name} details`} on:click={() => dispatch('select', item)}>{item.name}</button></h3>
+      <h3><button type="button" class="item-product-button" aria-label={`Preview ${item.name} on your profile`} on:click={() => dispatch('select', item)}>{item.name}</button></h3>
     </div>
     {#if !purchasable && !['owned', 'equipped'].includes(state?.tone)}
       <strong class="item-price">{priceLabel}</strong>
     {/if}
   </div>
-  <button class="item-preview-button" type="button" aria-label={`Preview ${item.name}`} on:click={() => dispatch('preview', item)}>
+  <button class="item-preview-button" type="button" aria-label={`Preview ${item.name} on your profile`} on:click={() => dispatch('preview', item)}>
     <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} />
   </button>
 

@@ -1509,3 +1509,14 @@ direct route behavior.
   canonical seed/check instead of changing its purchase behavior.
 - Bumped the catalog version so existing browser caches pick up the corrected
   labels without requiring users to clear storage manually.
+
+## 2026-08-03 — Keep shop try-on on the profile
+
+- Replaced the oversized product-detail interaction with a persistent
+  fitting-room preview. Selecting a piece now applies its effect to the
+  profile card in place; the equipped profile remains visible and Clear
+  restores it.
+- Removed the isolated-item/profile toggle and the social-link grid from the
+  bounded preview so the actual identity treatment is the focal point.
+- Preserved card purchases, confirmation, inventory refresh, entitlements,
+  server-authoritative purchase RPCs, and profile-settings equip behavior.
