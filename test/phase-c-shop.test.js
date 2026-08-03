@@ -124,7 +124,9 @@ test('Shop selection stays in the persistent profile preview', async () => {
   assert.doesNotMatch(shop, /ShopProductDetail/);
   assert.match(browse, /export let selectedItem = null/);
   assert.match(browse, /tryOnShopItem\(equippedItems, selectedItem\)/);
-  assert.match(contextual, /Applied to the preview\. Your profile stays unchanged\./);
+  assert.match(browse, /getNameItemPreviewLoadout\(selectedItem/);
+  assert.match(contextual, /Your profile/);
+  assert.doesNotMatch(contextual, /Try it on|Applied to the preview|shop-preview-selection/);
   assert.match(contextual, /<ShopStudioPreview/);
   assert.doesNotMatch(contextual, /ShopItemPreview|shop-preview-mode|Nothing is saved until you choose it/);
   assert.match(studio, /links=\{\[\]\}/);
@@ -156,7 +158,8 @@ test('contextual shop preview delegates to the shared Studio and Name renderer p
   const itemPreview = await readProjectFile('src/lib/ShopItemPreview.svelte');
   const identity = await readProjectFile('src/lib/IdentityCard.svelte');
   assert.match(contextual, /<ShopStudioPreview/);
-  assert.match(contextual, /Applied to the preview\. Your profile stays unchanged\./);
+  assert.match(contextual, /<span class="shop-eyebrow">Your profile<\/span>/);
+  assert.doesNotMatch(contextual, /Try it on|Applied to the preview|shop-preview-selection/);
   assert.match(contextual, />Clear<\/button>/);
   assert.doesNotMatch(contextual, /shop-preview-mode|<ShopItemPreview/);
   assert.match(studio, /nameRendererLoadout/);

@@ -1520,3 +1520,10 @@ direct route behavior.
   bounded preview so the actual identity treatment is the focal point.
 - Preserved card purchases, confirmation, inventory refresh, entitlements,
   server-authoritative purchase RPCs, and profile-settings equip behavior.
+
+## 2026-08-03 — Make the selected shop effect visible
+
+- Applied each selected Name catalog item’s renderer value to the persistent
+  profile preview, without mutating the equipped loadout.
+- Removed the redundant Try it on detail block so the preview is anchored by
+  the player’s profile and a small set of playback/reset controls.

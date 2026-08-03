@@ -27,15 +27,8 @@
 <aside class="shop-contextual-preview" aria-labelledby="shop-contextual-preview-title">
   <header class="shop-contextual-preview__header">
     <div>
-      <span class="shop-eyebrow">{selectedItem ? 'Try it on' : 'Your profile'}</span>
-      <h2 id="shop-contextual-preview-title">{selectedItem ? selectedItem.name : previewName}</h2>
-      <p>{selectedItem ? 'Applied to the preview. Your profile stays unchanged.' : 'Your equipped look.'}</p>
-      {#if selectedItem}
-        <div class="shop-preview-selection" aria-label={`${selectedItem.name} preview details`}>
-          <span>{selectedItem.collection || 'Profile piece'}</span>
-          <strong>{selectedItem.rarity || 'Common'}</strong>
-        </div>
-      {/if}
+      <span class="shop-eyebrow">Your profile</span>
+      <h2 id="shop-contextual-preview-title">{previewName}</h2>
     </div>
     <div class="shop-preview-actions">
       <button type="button" on:click={replayPreview}>Replay</button>
@@ -82,19 +75,12 @@
 
   .shop-contextual-preview__header h2 {
     overflow: hidden;
-    margin: 0.3rem 0 0.2rem;
+    margin: 0.3rem 0 0;
     color: #f2f0eb;
     font: 650 1.08rem/1.1 var(--shop-display, var(--font-display));
     letter-spacing: -0.025em;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .shop-contextual-preview__header p {
-    margin: 0;
-    color: #858690;
-    font-size: 0.82rem;
-    line-height: 1.35;
   }
 
   .shop-preview-actions button {
@@ -127,33 +113,6 @@
 
   .shop-contextual-preview__reset {
     color: #cdd2ff !important;
-  }
-
-  .shop-preview-selection {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: .45rem;
-    margin-top: .7rem;
-  }
-
-  .shop-preview-selection span,
-  .shop-preview-selection strong {
-    overflow: hidden;
-    max-width: 14rem;
-    padding: .25rem .45rem;
-    border: 1px solid #3c404b;
-    border-radius: 4px;
-    color: #bfc2ce;
-    font: .67rem var(--shop-mono, var(--font-mono-stack));
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .shop-preview-selection strong {
-    border-color: color-mix(in srgb, var(--shop-accent) 62%, #3c404b);
-    color: var(--shop-accent);
-    text-transform: uppercase;
   }
 
   .shop-contextual-preview :global(.studio-preview) {

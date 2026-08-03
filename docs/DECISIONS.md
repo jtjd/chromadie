@@ -2721,3 +2721,13 @@ removing the links keeps the avatar, name treatment, bio, and border legible in
 the bounded preview stage. No catalog, inventory, entitlement, equip, profile,
 or data authority changed; the existing detail component remains available for
 rollback but is no longer mounted by the live shop route.
+
+## 2026-08-03 — Project catalog renderer values into shop try-on
+
+The persistent Browse preview now resolves a selected Name item through its
+catalog `css_value` before handing the temporary loadout to the shared Name
+renderer. Stable equipped JSON and item keys remain unchanged; this projection
+only makes the selected Font, Material, or Motion visible immediately in the
+fitting room. The preview header identifies the player’s profile and keeps only
+the playback/clear controls, avoiding a second selected-item detail card above
+the profile itself.

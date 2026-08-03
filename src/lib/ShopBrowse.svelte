@@ -3,6 +3,7 @@
   import ShopCategoryNav from './ShopCategoryNav.svelte';
   import ShopContextualPreview from './ShopContextualPreview.svelte';
   import ShopItemCard from './ShopItemCard.svelte';
+  import { getNameItemPreviewLoadout } from './name/nameLoadout.js';
   import { normalizeHexColor } from './utils.js';
   import {
     SHOP_RARITIES,
@@ -74,7 +75,7 @@
   $: username = profile?.display_name || profile?.username || 'You';
   $: displayColor = normalizeHexColor(currentRoll?.hex_code || profile?.mood_color, '#8B7CF6');
   $: previewLoadout = selectedItem?.slot
-    ? tryOnShopItem(equippedItems, selectedItem)
+    ? getNameItemPreviewLoadout(selectedItem, tryOnShopItem(equippedItems, selectedItem))
     : { ...(equippedItems || {}) };
   $: activeFilterCount = [
     selectedSubslot !== 'all',

@@ -1821,3 +1821,14 @@ kept public profile selectors outside the supporting-route baseline.
   22 Materials, 24 Motions, and 9 Profile Borders.
 - Bumped `meta.shop_version` so existing browsers discard the pre-label
   `shop_cache:v3` snapshot and fetch the corrected names immediately.
+
+## 2026-08-03 — Fix selected-item shop try-on projection
+
+- Routed selected Name catalog rows through `css_value` when composing the
+  temporary fitting-room loadout, so the shared profile renderer shows the
+  chosen Font, Material, or Motion rather than the equipped/default layer.
+- Simplified the persistent preview header to the profile name plus Replay,
+  Pause/Play, and Clear controls; removed duplicated try-on copy, collection,
+  and rarity chips.
+- Kept try-on preview-only and left purchase, inventory, equip, and catalog
+  contracts unchanged.
