@@ -28,6 +28,29 @@ test('Shop Home has the Phase C editorial order without redundant continuation c
   assert.doesNotMatch(source, /<strong>Studio<\/strong>|Fit a temporary look/);
 });
 
+test('shop reference hierarchy uses live account metadata and real catalog counts', async () => {
+  const shop = await readProjectFile('src/lib/Shop.svelte');
+  const home = await readProjectFile('src/lib/ShopHome.svelte');
+  const browse = await readProjectFile('src/lib/ShopBrowse.svelte');
+  const studioPreview = await readProjectFile('src/lib/ShopStudioPreview.svelte');
+
+  assert.match(shop, /Shop <span>your identity\.<\/span>/);
+  assert.match(shop, /ownedCatalogCount/);
+  assert.match(shop, /fittingRoom\.balance\.toLocaleString\(\)\} EP/);
+  assert.doesNotMatch(shop, /Admin/);
+  assert.match(home, /Today’s color, <span>made wearable\.<\/span>/);
+  assert.match(home, /Recommended <span>for today\.<\/span>/);
+  assert.match(home, /count: filterShopItems/);
+  assert.match(home, /slice\(0, 5\)/);
+  assert.match(browse, /Build the name\. <span>Keep the identity\.<\/span>/);
+  assert.match(browse, /nameSubtypeSections/);
+  assert.match(browse, /variant="subtype"/);
+  assert.match(studioPreview, /account\.username/);
+  assert.match(studioPreview, /account\.display_name/);
+  assert.match(studioPreview, /username=\{accountUsername\}/);
+  assert.match(studioPreview, /displayName=\{accountDisplayName\}/);
+});
+
 test('Browse uses category navigation, a contained filter panel, a grid, and one contextual preview', async () => {
   const source = await readProjectFile('src/lib/ShopBrowse.svelte');
   assert.match(source, /<ShopCategoryNav/);

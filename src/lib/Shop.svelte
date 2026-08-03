@@ -85,6 +85,12 @@
       && (selectedItem.slot === 'consumable' || selectedOwnedCount === 0)
   );
   $: displayColor = currentRoll?.hex_code || $profile?.mood_color || '#8B7CF6';
+  $: ownedCatalogCount = catalogItems.filter(item => {
+    if (item.slot === 'consumable') return false;
+    const owned = (fittingRoom.inventoryCounts?.[item.item_key] || 0) > 0;
+    const equipped = $equippedItems?.[item.slot] === item.item_key;
+    return owned || equipped || hasShopEntitlement(item, fittingRoom);
+  }).length;
 
   onMount(() => {
     restoreShopViewState();
@@ -217,13 +223,14 @@
 <main class="shop-page" aria-labelledby="shop-title">
   <header class="shop-header">
     <div class="shop-heading">
-      <span class="shop-eyebrow">Profile atelier</span>
-      <h1 id="shop-title">Make the profile yours.</h1>
-      <p>Expression for the identity people see, the color you roll, and the story you keep.</p>
+      <span class="shop-eyebrow">Chromadie shop</span>
+      <h1 id="shop-title">Shop <span>your identity.</span></h1>
+      <p>Finished cosmetics and complete looks.</p>
     </div>
     <div class="shop-header-actions">
-      <div class="shop-wallet" aria-label={`Wallet balance: ${fittingRoom.balance.toLocaleString()} EP`}><span>EP balance</span><strong>{fittingRoom.balance.toLocaleString()}</strong></div>
-      <a class="shop-profile-link" href="/profile/settings">Open profile editor <span aria-hidden="true">↗</span></a>
+      <div class="shop-wallet" aria-label={`Wallet balance: ${fittingRoom.balance.toLocaleString()} EP`}><span>Balance</span><strong>{fittingRoom.balance.toLocaleString()} EP</strong></div>
+      <div class="shop-owned" aria-label={`${ownedCatalogCount} owned catalog items`}><span>Owned</span><strong>{ownedCatalogCount}</strong></div>
+      <a class="shop-profile-link" href="/profile/settings" aria-label="Open profile settings">Profile <span aria-hidden="true">↗</span></a>
     </div>
   </header>
 
@@ -302,21 +309,23 @@
 {/if}
 
 <style>
-  .shop-page { --shop-line:#32353e; --shop-accent:#cdd2ff; width:min(1480px,calc(100% - 1.75rem)); margin:0 auto 5.5rem; color:#f2f0eb; }
-  :global(.app-main--site) .shop-page { width:min(1480px,calc(100% - 1.75rem)); padding:1.25rem 0 4rem; }
-  .shop-header { display:flex; align-items:end; justify-content:space-between; gap:2rem; padding:1.75rem 0 1.1rem; border-bottom:1px solid var(--shop-line); }
-  .shop-heading h1 { max-width:52rem; margin:.65rem 0 .8rem; font:650 clamp(2.5rem,4vw,3.35rem)/.95 var(--font-display); letter-spacing:-.055em; }
-  :global(.app-main--site) .shop-heading h1 { max-width:52rem; margin:.65rem 0 .8rem; font:650 clamp(2.5rem,4vw,3.35rem)/.95 var(--font-display); letter-spacing:-.055em; }
-  .shop-heading p { max-width:40rem; margin:0; color:#aaa8b0; font-size:1rem; line-height:1.55; }
+  .shop-page { --shop-line:#292c34; --shop-accent:#cdd2ff; width:min(1160px,calc(100% - 2rem)); margin:0 auto 5.5rem; color:#f2f0eb; }
+  :global(.app-main--site) .shop-page { width:min(1160px,calc(100% - 2rem)); padding:1.35rem 0 4rem; }
+  .shop-header { display:flex; align-items:end; justify-content:space-between; gap:2rem; padding:1.5rem 0 1.2rem; border-bottom:1px solid var(--shop-line); }
+  .shop-heading h1 { max-width:52rem; margin:.55rem 0 .55rem; font:650 clamp(2.65rem,5vw,4.1rem)/.92 var(--font-display); letter-spacing:-.065em; }
+  :global(.app-main--site) .shop-heading h1 { max-width:52rem; margin:.55rem 0 .55rem; font:650 clamp(2.65rem,5vw,4.1rem)/.92 var(--font-display); letter-spacing:-.065em; }
+  .shop-heading h1 span { color:var(--shop-accent); }
+  .shop-heading p { max-width:40rem; margin:0; color:#9698a1; font-size:.9rem; line-height:1.45; }
   .shop-eyebrow { color:#858690; font:500 .7rem/1.3 var(--font-mono-stack); letter-spacing:.13em; text-transform:uppercase; }
-  .shop-header-actions { display:flex; align-items:center; gap:.7rem; flex:0 0 auto; }
-  .shop-wallet { min-width:8.5rem; padding:.65rem .8rem; border:1px solid #4a4d57; border-radius:5px; background:#121419; }
+  .shop-header-actions { display:flex; align-items:stretch; gap:.55rem; flex:0 0 auto; }
+  .shop-wallet, .shop-owned { min-width:7.5rem; padding:.55rem .7rem; border:1px solid #3a3d46; border-radius:4px; background:#101217; }
   .shop-wallet span, .shop-wallet strong { display:block; }
-  .shop-wallet span { color:#858690; font:.65rem var(--font-mono-stack); letter-spacing:.08em; text-transform:uppercase; }
-  .shop-wallet strong { margin-top:.25rem; color:#f2f0eb; font:650 1rem var(--font-mono-stack); }
-  .shop-profile-link { min-height:2.7rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .8rem; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#d9d7d2; text-decoration:none; font-size:.82rem; }
+  .shop-wallet span, .shop-owned span { display:block; color:#777983; font:.58rem var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
+  .shop-wallet strong, .shop-owned strong { display:block; margin-top:.25rem; color:#f2f0eb; font:650 .88rem var(--font-mono-stack); white-space:nowrap; }
+  .shop-owned { min-width:5.5rem; }
+  .shop-profile-link { min-height:2.7rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .75rem; border:1px solid #3a3d46; border-radius:4px; background:#16181e; color:#d9d7d2; text-decoration:none; font:.7rem var(--font-mono-stack); }
   .shop-profile-link:hover, .shop-profile-link:focus-visible { border-color:#777d8d; background:#1b1e25; color:#fff; }
-  .shop-navigation { display:flex; gap:1.25rem; width:max-content; max-width:100%; margin:1rem 0 1.25rem; border-bottom:1px solid var(--shop-line); }
+  .shop-navigation { display:flex; gap:1.35rem; width:max-content; max-width:100%; margin:0 0 1.45rem; border-bottom:1px solid var(--shop-line); }
   .shop-navigation button { position:relative; min-height:2.45rem; padding:0 .05rem; border:0; background:transparent; color:#92949d; font:500 .72rem var(--font-mono-stack); letter-spacing:.03em; cursor:pointer; }
   .shop-navigation button:hover, .shop-navigation button:focus-visible { color:#fff; }
   .shop-navigation button.active { color:var(--shop-accent); }
@@ -327,6 +336,6 @@
   .shop-status--error { border-color:#754d58; }
   .shop-status button { width:max-content; min-height:2.6rem; padding:0 .85rem; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#f2f0eb; cursor:pointer; }
   .shop-live-region { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,1480px); padding-top:0; } .shop-header { align-items:flex-start; flex-direction:column; gap:1.1rem; padding-top:1.25rem; } .shop-header-actions { width:100%; align-items:stretch; } .shop-wallet { flex:1; } .shop-profile-link { flex:1; justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
+  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,1160px); padding-top:0; } .shop-header { align-items:flex-start; flex-direction:column; gap:1.1rem; padding-top:1.15rem; } .shop-header-actions { width:100%; align-items:stretch; } .shop-wallet, .shop-owned, .shop-profile-link { flex:1; } .shop-profile-link { justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
   @media (prefers-reduced-motion: reduce) { .shop-navigation button, .shop-profile-link { transition:none; } }
 </style>

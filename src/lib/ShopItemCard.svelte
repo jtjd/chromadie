@@ -26,7 +26,6 @@
 <article class="shop-item rarity-{item.rarity || 'Common'}" class:is-wearing={actuallyEquipped} class:is-previewing={isPreviewing}>
   <div class="item-card-heading">
     <div class="item-card-title">
-      <span class="item-slot">{SHOP_SLOT_LABELS[item.slot] || item.slot}</span>
       <h3><button type="button" class="item-detail-button" on:click={() => dispatch('select', item)}>{item.name}</button></h3>
     </div>
     <strong class="item-price">{priceLabel}</strong>
@@ -34,6 +33,7 @@
   <div class="item-card-meta">
     <span class="item-rarity rarity-{(item.rarity || 'Common').toLowerCase()}" aria-label={`Rarity: ${item.rarity || 'Common'}`}>{item.rarity || 'Common'}</span>
     <span class="item-collection">{item.collection || 'Core collection'}</span>
+    <span class="item-slot">{SHOP_SLOT_LABELS[item.slot] || item.slot}</span>
     <span class="item-state tone-{isPreviewing ? 'previewing' : state.tone}">{isPreviewing ? 'Previewing' : state.label}</span>
   </div>
 
@@ -51,17 +51,17 @@
 </article>
 
 <style>
-  .shop-item { min-width:0; display:flex; flex-direction:column; padding:12px; border:1px solid #32353e; border-radius:6px; background:#0a0c10; transition:border-color .2s ease, background .2s ease; }
-  .shop-item:hover { border-color:#4b4f5a; background:#0d0f14; }
+  .shop-item { min-width:0; display:flex; flex-direction:column; padding:12px; border:1px solid #2f323a; border-radius:4px; background:#101217; transition:border-color .2s ease, background .2s ease; }
+  .shop-item:hover { border-color:#4b4f5a; background:#14171d; }
   .shop-item.is-wearing { border-color:#7d83a9; }
   .shop-item.is-previewing { border-color:#7b9baf; }
-  .item-card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; min-height:3.1rem; }
+  .item-card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; min-height:2.05rem; }
   .item-card-title { min-width:0; }
-  .item-slot { display:block; overflow:hidden; color:#858690; font: .62rem var(--font-mono-stack); letter-spacing:.08em; text-overflow:ellipsis; text-transform:uppercase; white-space:nowrap; }
-  .item-card-title h3 { overflow:hidden; margin:.35rem 0 0; font-size:1rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
+  .item-slot { overflow:hidden; color:#777983; font: .58rem var(--font-mono-stack); letter-spacing:.06em; text-overflow:ellipsis; text-transform:uppercase; white-space:nowrap; }
+  .item-card-title h3 { overflow:hidden; margin:0; font-size:1rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
   .item-detail-button { overflow:hidden; max-width:100%; padding:0; border:0; background:transparent; color:#f3f2f7; cursor:pointer; font:680 1rem/1.2 var(--font-display); text-align:left; text-overflow:ellipsis; white-space:nowrap; }
   .item-detail-button:hover, .item-detail-button:focus-visible { color:#cdd2ff; text-decoration:underline; text-underline-offset:3px; }
-  .item-card-meta { display:flex; align-items:center; flex-wrap:wrap; gap:5px 7px; min-height:2rem; margin:.65rem 0 .55rem; }
+  .item-card-meta { display:flex; align-items:center; flex-wrap:wrap; gap:5px 7px; min-height:2.05rem; margin:.7rem 0 .55rem; }
   .item-collection { overflow:hidden; min-width:0; color:#858690; font: .67rem var(--font-mono-stack); text-overflow:ellipsis; white-space:nowrap; }
   .item-state { max-width:100%; overflow:hidden; padding:4px 7px; border:1px solid rgba(255,255,255,.1); border-radius:3px; color:#a7a9b2; font: .66rem var(--font-mono-stack); text-overflow:ellipsis; white-space:nowrap; }
   .item-state.tone-equipped { border-color:#7d83a9; background:#171923; color:#d7dbff; }
@@ -84,7 +84,7 @@
   .rarity-epic { border-color:#745c9e; background:#191522; color:#dcc3ff; }
   .rarity-anomaly { border-color:#8e673d; background:#201811; color:#ffd09a; }
   .rarity-mythic { border-color:#8d4869; background:#21131b; color:#ffb3d2; }
-  .item-price { flex:0 0 auto; min-width:0; padding-top:.15rem; color:#cdd2ff; font:650 1rem/1 var(--font-mono-stack); white-space:nowrap; }
+  .item-price { flex:0 0 auto; min-width:0; padding-top:.08rem; color:#cdd2ff; font:650 1rem/1 var(--font-mono-stack); white-space:nowrap; }
   .shop-item > p { min-height:2.8em; display:-webkit-box; overflow:hidden; margin:10px 0 13px; color:#aaa8b0; font-size:.82rem; line-height:1.45; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; }
   .item-card-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top:.65rem; border-top:1px solid rgba(255,255,255,.07); }
   .item-access { overflow:hidden; color:#777983; font: .62rem var(--font-mono-stack); letter-spacing:.05em; text-overflow:ellipsis; text-transform:uppercase; white-space:nowrap; }

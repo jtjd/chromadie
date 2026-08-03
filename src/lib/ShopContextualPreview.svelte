@@ -16,7 +16,7 @@
 <aside class="shop-contextual-preview" aria-labelledby="shop-contextual-preview-title">
   <header class="shop-contextual-preview__header">
     <div>
-      <span class="shop-eyebrow">Live preview</span>
+      <span class="shop-eyebrow">Live profile preview</span>
       <h2 id="shop-contextual-preview-title">{selectedItem ? selectedItem.name : 'Your equipped look'}</h2>
       <p>{selectedItem ? 'Temporary preview · nothing changes your profile.' : 'Select a piece to see it in your profile.'}</p>
     </div>

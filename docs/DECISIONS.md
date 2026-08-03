@@ -2,6 +2,22 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-02 — Align the shop presentation with the approved boutique reference
+
+**Status:** implemented in the existing shop architecture
+
+The shop keeps its current route/view state, live catalog, purchase RPC,
+wallet/inventory/entitlement refresh, temporary fitting room, and shared
+Name/Profile Border renderers. The presentation now uses a narrower near-black
+storefront canvas, compact balance/owned metadata, real catalog counts in the
+category navigation, an editorial Today’s Edit, a four-item real curated row,
+and a focused Name lab with Fonts, Materials, and Motion navigation.
+
+The live profile preview remains account-backed. It derives the authenticated
+handle and display name independently, so a display name cannot replace the
+real username in the semantic profile card. No mock Admin profile, catalog
+rows, schema, prices, or backend behavior were introduced.
+
 ## 2026-08-02 — Lean alpha cosmetic reset
 
 **Status:** accepted and implemented locally; remote deployment pending backup and approval

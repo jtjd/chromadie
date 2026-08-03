@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Shop reference presentation pass — 2026-08-02
+
+- Refined the existing Shop Home around the approved hierarchy: compact live
+  balance/owned metadata, real category counts, Today’s color made wearable,
+  one real editorial product, a four-item curated row, and concise Browse /
+  Collection paths.
+- Refined Browse and the Name view with a focused “Build the name” heading,
+  real Font/Material/Motion counts, compact subtype tabs, the existing filters,
+  and a shared contextual profile preview.
+- Updated product cards so name and price lead, the renderer preview follows,
+  and rarity, collection, ownership, and description remain readable without
+  repeated purchase actions.
+- The profile preview now uses the signed-in account’s actual username,
+  display name, avatar, links, badges, current roll, and equipped loadout.
+  No catalog, purchase, inventory, entitlement, or equip behavior changed.
+
 ## Lean cosmetic reset — 2026-08-02
 
 - Reduced the active catalog to 64 modern Name rows, nine Profile Border rows,

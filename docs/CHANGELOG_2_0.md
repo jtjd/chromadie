@@ -2,6 +2,21 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-02 — Align the shop with the approved identity storefront
+
+- Reworked the existing Shop Home hierarchy toward the approved dark boutique
+  direction with a compact category row, real catalog counts, an editorial
+  Today’s Edit, and a small real recommended selection.
+- Reworked Browse’s Name surface into a Font/Material/Motion lab while
+  preserving search, sort, filters, contextual preview, Product Detail, and
+  temporary try-on behavior.
+- Product cards now keep the name and EP price together, use the shared visual
+  renderer for previews, and present rarity, collection, ownership, and
+  description as compact metadata.
+- Shop profile previews use the authenticated user’s real handle and display
+  name rather than a placeholder identity. No mock products or backend data
+  were added.
+
 ## 2026-08-02 — Lean alpha cosmetic reset
 
 - Reduced the live cosmetic catalog to the 64 modern Name products and nine

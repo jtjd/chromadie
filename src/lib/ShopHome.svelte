@@ -23,19 +23,18 @@
   export let currentRoll = null;
 
   const dispatch = createEventDispatcher();
-  const categorySections = Object.freeze([
-    { id: 'overview', label: 'Browse', description: 'full catalog' },
-    { id: 'names', label: 'Names', description: 'name layers' },
-    { id: 'borders', label: 'Borders', description: 'profile edge' },
-    { id: 'utility', label: 'Utility', description: 'account items' },
-    { id: 'owned', label: 'Collection', description: 'your pieces' }
-  ]);
-
   $: displayColor = currentRoll?.hex_code || profile?.mood_color || '#8B7CF6';
-  $: featuredItems = filterShopItems(items, { section: 'overview', sortMode: 'curated' }, fittingRoom).slice(0, 4);
+  $: categorySections = Object.freeze([
+    { id: 'overview', label: 'Browse', count: filterShopItems(items, { section: 'overview' }, fittingRoom).length },
+    { id: 'names', label: 'Names', count: filterShopItems(items, { section: 'names' }, fittingRoom).length },
+    { id: 'borders', label: 'Borders', count: filterShopItems(items, { section: 'borders' }, fittingRoom).length },
+    { id: 'utility', label: 'Utility', count: filterShopItems(items, { section: 'utility' }, fittingRoom).length },
+    { id: 'owned', label: 'Collection', count: filterShopItems(items, { section: 'owned' }, fittingRoom).length }
+  ]);
+  $: featuredItems = filterShopItems(items, { section: 'overview', sortMode: 'curated' }, fittingRoom).slice(0, 5);
   $: todayEditItem = featuredItems[0] || null;
   $: curatedItems = featuredItems.slice(1);
-  $: username = profile?.display_name || profile?.username || 'Your profile';
+  $: username = profile?.display_name || profile?.username || 'You';
 
   function stateFor(item) {
     return getShopItemState(item, equippedItems, fittingRoom);
@@ -61,6 +60,7 @@
   <ShopCategoryNav
     sections={categorySections}
     activeId="overview"
+    variant="category"
     on:select={event => openBrowse(event.detail)}
   />
 
@@ -68,8 +68,12 @@
     <div class="shop-todays-merchandise">
       <div class="shop-todays-copy">
         <span class="shop-eyebrow">Today’s edit</span>
-        <h2 id="shop-todays-edit-title">A considered piece for today’s color.</h2>
-        <p>One real catalog piece, previewed against the profile people see now.</p>
+        <h2 id="shop-todays-edit-title">Today’s color, <span>made wearable.</span></h2>
+        <p>A complete profile look selected for the color you rolled today.</p>
+        <div class="shop-todays-actions">
+          {#if todayEditItem}<button type="button" class="shop-button shop-button--light" on:click={() => dispatch('select', todayEditItem)}>Preview look</button>{/if}
+          <button type="button" class="shop-button shop-button--outline" on:click={() => openBrowse('overview')}>Browse catalog</button>
+        </div>
       </div>
       {#if todayEditItem}
         <div class="shop-todays-product">
@@ -120,9 +124,9 @@
   <section class="shop-home-section" aria-labelledby="shop-curated-title">
     <div class="shop-section-heading">
       <div>
-        <span class="shop-eyebrow">A small edit</span>
-        <h2 id="shop-curated-title">Pieces worth trying on.</h2>
-        <p>A curated handful from the live catalog. The rest stays one click away in Browse.</p>
+        <span class="shop-eyebrow">Recommended for today</span>
+        <h2 id="shop-curated-title">Recommended <span>for today.</span></h2>
+        <p>Four real catalog pieces that respond well to today’s color.</p>
       </div>
       <button type="button" class="shop-text-link" on:click={() => openBrowse('overview')}>View full catalog ↗</button>
     </div>
@@ -159,16 +163,22 @@
 </div>
 
 <style>
-  .shop-home { display:grid; gap:1.5rem; padding-top:.15rem; }
-  .shop-todays-edit { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(18rem,.75fr); overflow:hidden; border:1px solid var(--shop-line); background:#0a0c10; }
-  .shop-todays-merchandise { min-width:0; padding:1.5rem; }
+  .shop-home { display:grid; gap:2.2rem; padding-top:.15rem; }
+  .shop-todays-edit { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(17rem,.65fr); overflow:hidden; border:1px solid var(--shop-line); background:#090b0f; }
+  .shop-todays-merchandise { min-width:0; padding:1.7rem; }
   .shop-todays-copy { max-width:34rem; }
   .shop-eyebrow { color:#858690; font:500 .7rem/1.3 var(--font-mono-stack); letter-spacing:.13em; text-transform:uppercase; }
-  .shop-todays-copy h2 { max-width:34rem; margin:.65rem 0 .55rem; font:650 clamp(2rem,3.2vw,3.25rem)/.96 var(--font-display); letter-spacing:-.05em; }
+  .shop-todays-copy h2 { max-width:34rem; margin:.65rem 0 .55rem; font:650 clamp(2.25rem,4vw,3.8rem)/.92 var(--font-display); letter-spacing:-.065em; }
+  .shop-todays-copy h2 span { color:var(--shop-accent); }
   .shop-todays-copy p { max-width:30rem; margin:0; color:#aaa8b0; font-size:.9rem; line-height:1.55; }
-  .shop-todays-product { display:grid; grid-template-columns:minmax(11rem,.85fr) minmax(0,1.15fr); gap:1rem; align-items:stretch; margin-top:1.35rem; padding-top:1.2rem; border-top:1px solid var(--shop-line); }
+  .shop-todays-actions { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:1.15rem; }
+  .shop-button { display:inline-flex; align-items:center; justify-content:center; min-height:2.35rem; padding:0 .8rem; border-radius:4px; cursor:pointer; font:650 .7rem var(--font-mono-stack); text-decoration:none; }
+  .shop-button--light { border:1px solid #efede7; background:#efede7; color:#0d0f14; }
+  .shop-button--outline { border:1px solid #454852; background:#121419; color:#d9d7d2; }
+  .shop-button:hover, .shop-button:focus-visible { border-color:#cdd2ff; }
+  .shop-todays-product { display:grid; grid-template-columns:minmax(12rem,.85fr) minmax(0,1.15fr); gap:1rem; align-items:stretch; margin-top:1.55rem; padding-top:1.3rem; border-top:1px solid var(--shop-line); }
   .shop-todays-product-preview { min-width:0; display:flex; align-items:stretch; }
-  .shop-todays-product-preview :global(.shop-preview-area) { height:100%; min-height:12.5rem; border-radius:4px; }
+  .shop-todays-product-preview :global(.shop-preview-area) { height:100%; min-height:13.5rem; border-radius:4px; }
   .shop-todays-product-copy { display:flex; min-width:0; flex-direction:column; justify-content:center; }
   .shop-todays-product-topline { display:flex; align-items:center; justify-content:space-between; gap:.6rem; color:#777983; font:.61rem var(--font-mono-stack); letter-spacing:.07em; text-transform:uppercase; }
   .shop-todays-product-topline > span:first-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -193,7 +203,7 @@
   .shop-todays-context { display:grid; align-content:start; gap:1rem; padding:1.2rem; border-left:1px solid var(--shop-line); background:#111319; }
   .shop-todays-profile { min-width:0; }
   .shop-todays-profile :global(.studio-preview) { margin-top:.55rem; border:0; padding:0; border-radius:0; background:transparent; box-shadow:none; }
-  .shop-todays-profile :global(.studio-stage) { min-height:13rem; }
+  .shop-todays-profile :global(.studio-stage) { min-height:15.5rem; }
   .shop-todays-color { display:grid; grid-template-columns:3.2rem minmax(0,1fr); gap:.75rem; align-items:center; padding-top:1rem; border-top:1px solid var(--shop-line); }
   .shop-todays-color > .shop-eyebrow { grid-column:1 / -1; }
   .shop-color-swatch { width:3.2rem; height:3.2rem; border:1px solid rgba(255,255,255,.22); background:var(--shop-roll-color); }
@@ -202,11 +212,12 @@
   .shop-todays-color span:last-child { margin-top:.28rem; color:#9297a3; font-size:.7rem; line-height:1.4; }
   .shop-home-section { display:grid; gap:1.25rem; }
   .shop-section-heading { display:flex; align-items:end; justify-content:space-between; gap:1.5rem; }
-  .shop-section-heading h2 { margin:.35rem 0 0; font:650 clamp(2rem,3.5vw,3.4rem)/.98 var(--font-display); letter-spacing:-.045em; }
+  .shop-section-heading h2 { margin:.35rem 0 0; font:650 clamp(2.15rem,3.8vw,3.55rem)/.95 var(--font-display); letter-spacing:-.055em; }
+  .shop-section-heading h2 span { color:var(--shop-accent); }
   .shop-section-heading p { max-width:34rem; margin:.6rem 0 0; color:#aaa8b0; font-size:.9rem; line-height:1.55; }
   .shop-text-link { padding:.5rem 0; border:0; background:transparent; color:#cdd2ff; font: .72rem var(--font-mono-stack); cursor:pointer; white-space:nowrap; }
   .shop-text-link:hover, .shop-text-link:focus-visible { color:#fff; }
-  .shop-product-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; }
+  .shop-product-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.7rem; }
   .shop-home-links { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--shop-line); border-bottom:1px solid var(--shop-line); }
   .shop-home-links a { position:relative; display:grid; gap:.35rem; min-height:4.25rem; align-content:center; padding:.75rem 1.1rem; border-right:1px solid var(--shop-line); color:inherit; text-decoration:none; }
   .shop-home-links a:last-child { border-right:0; }
@@ -215,8 +226,9 @@
   .shop-home-links strong { font-size:1rem; }
   .shop-home-links i { position:absolute; top:1rem; right:1rem; color:#cdd2ff; font-style:normal; }
   .shop-empty-copy { color:#aaa8b0; }
-  @media (max-width: 1100px) { .shop-todays-edit { grid-template-columns:minmax(0,1fr) minmax(16rem,.7fr); } }
+  @media (max-width: 1100px) { .shop-todays-edit { grid-template-columns:minmax(0,1fr) minmax(16rem,.7fr); } .shop-product-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
   @media (max-width: 760px) { .shop-todays-edit { grid-template-columns:1fr; } .shop-todays-merchandise { padding:1rem; } .shop-todays-context { grid-template-columns:1fr 1fr; padding:1rem; border-top:1px solid var(--shop-line); border-left:0; } .shop-todays-profile { min-width:0; } .shop-todays-profile :global(.studio-stage) { min-height:11rem; } .shop-todays-color { align-content:center; padding-top:0; border-top:0; border-left:1px solid var(--shop-line); padding-left:1rem; } .shop-section-heading { align-items:flex-start; flex-direction:column; } .shop-product-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .shop-home-links { grid-template-columns:1fr; } .shop-home-links a { min-height:4.75rem; border-right:0; border-bottom:1px solid var(--shop-line); } .shop-home-links a:last-child { border-bottom:0; } }
   @media (max-width: 520px) { .shop-todays-product { grid-template-columns:1fr; } .shop-todays-product-preview :global(.shop-preview-area) { min-height:9rem; } .shop-todays-context { grid-template-columns:1fr; } .shop-todays-color { padding-top:1rem; border-top:1px solid var(--shop-line); border-left:0; padding-left:0; } .shop-product-grid { grid-template-columns:1fr; } }
+  @media (max-width: 390px) { .shop-todays-copy h2 { font-size:2.05rem; } .shop-todays-actions { align-items:stretch; flex-direction:column; } .shop-todays-actions .shop-button { width:100%; } }
   @media (prefers-reduced-motion: reduce) { .shop-home-links a { transition:none; } }
 </style>

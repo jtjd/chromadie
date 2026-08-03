@@ -17,6 +17,8 @@
   export let compact = false;
 
   $: account = /** @type {any} */ (accountProfile || {});
+  $: accountUsername = account.username || username || 'You';
+  $: accountDisplayName = account.display_name || username || accountUsername;
   $: previewProfileConfig = profileConfig?.published || profileConfig?.draft || profileConfig || createDefaultProfileConfig(displayColor);
   $: previewBadges = (Array.isArray(account.equipped_badges) ? account.equipped_badges : [])
     .filter(id => typeof id === 'string' && id !== 'launch_edition')
@@ -47,8 +49,8 @@
     <ProfileBorderEffect borderKey={loadout?.profile_border} className="studio-profile-border" compact={compact}>
       <div class="studio-profile-card">
         <IdentityCard
-          {username}
-          displayName={username}
+          username={accountUsername}
+          displayName={accountDisplayName}
           bio={account.bio || ''}
           bioFallback="No bio added yet."
           links={previewLinks}
