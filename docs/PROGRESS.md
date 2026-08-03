@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Homepage first-frame loading — 2026-08-03
+
+- Published the real `today` discovery rows and highest roll immediately
+  after that surface resolves, before the richer profile hydration pass.
+- Kept the existing daily roll and leaderboard content in place during later
+  refreshes instead of clearing it back to an empty state.
+- Replaced the visible leaderboard skeleton bars with an intentional textual
+  loading state and gave the daily-color panel a distinct loading treatment.
+- Preserved the existing no-public-roll state after loading completes, the
+  localhost preview fixture, and all live discovery/profile boundaries.
+
 ## Shop readability and hierarchy pass — 2026-08-03
 
 - Added a shared shop visual contract with larger readable typography, warm

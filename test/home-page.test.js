@@ -46,6 +46,7 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.doesNotMatch(hero, /home-browser__state/);
   assert.match(hero, /compactUnavailable=\{true\}/);
   assert.match(hero, /rollIsPreview/);
+  assert.match(hero, /loading=\{loading\}/);
   assert.match(hero, /--home-hero-color/);
   assert.match(hero, /color-mix\(in srgb, var\(--home-hero-color\)/);
   assert.match(claim, /dispatch\('claim'/);
@@ -71,6 +72,7 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(leaderboard, /Profiles worth exploring/);
   assert.match(leaderboard, /featuredProfiles/);
   assert.match(leaderboard, /aria-busy/);
+  assert.doesNotMatch(leaderboard, /home-leaderboard__loading/);
   assert.match(leaderboard, /Profiles couldn’t be loaded/);
   assert.match(leaderboard, /No public profiles are available yet/);
   assert.match(leaderboard, /home-leaderboard h2/);
@@ -100,6 +102,8 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(directory, /featuredProfiles/);
   assert.match(directory, /buildHomepageFeaturedProfiles/);
   assert.match(directory, /heroRoll/);
+  assert.match(directory, /initialLeaderboard/);
+  assert.match(directory, /richer profile hydration pass/);
   assert.match(directory, /home_preview/);
   assert.match(directory, /home_preview.*empty/);
   assert.match(directory, /guestRollFixture/);
@@ -126,6 +130,8 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.doesNotMatch(dailyResult, /See today.s public rolls/);
   assert.doesNotMatch(dailyResult, /Example daily color|Roll score|Position|View today.s profiles|Explore public profiles|Public today|View profile|Rarity earned/);
   assert.match(dailyResult, /home-daily--compact/);
+  assert.match(dailyResult, /export let loading = false/);
+  assert.match(dailyResult, /Loading today’s color/);
   assert.match(dailyResult, /Today’s public rolls are still forming/);
   assert.match(dailyResult, /Show a roll in this panel/);
   assert.doesNotMatch(dailyResult, /A new color joins the profile/);

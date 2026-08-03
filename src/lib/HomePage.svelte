@@ -64,6 +64,7 @@
         roll={directory.heroRoll || directory.previewRoll}
         rollIsPreview={!directory.heroRoll && Boolean(directory.previewRoll)}
         previewAvailable={directory.previewAvailable}
+        loading={directory.loading}
         tickerVisible={directory.tickerEvents.length > 0}
         on:claim={forwardAction}
         on:profile={forwardAction}

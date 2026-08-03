@@ -9,6 +9,7 @@
   export let roll = null;
   export let rollIsPreview = false;
   export let previewAvailable = false;
+  export let loading = false;
   export let tickerVisible = false;
 
   const dispatch = createEventDispatcher();
@@ -38,7 +39,7 @@
 
     <div
       class="home-hero__stage"
-      class:home-hero__stage--profile-only={!hasLiveResult}
+      class:home-hero__stage--profile-only={!hasLiveResult && !loading}
       style={`--home-hero-color: ${heroColor};`}
     >
       <div class="home-hero__profile-frame">
@@ -75,7 +76,7 @@
           </div>
         </div>
       </div>
-      <HomeDailyResult roll={roll} rollIsPreview={rollIsPreview} previewAvailable={previewAvailable} compactUnavailable={true} />
+      <HomeDailyResult roll={roll} rollIsPreview={rollIsPreview} previewAvailable={previewAvailable} loading={loading} compactUnavailable={true} />
     </div>
   </div>
 </section>

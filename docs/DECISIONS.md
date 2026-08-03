@@ -2,6 +2,15 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Publish the daily roll before rich homepage hydration finishes
+
+The homepage now promotes the already-authoritative `today` discovery result
+as soon as that surface returns, before waiting for avatar, link, badge, and
+profile-history hydration. This keeps the first viewport truthful and useful
+without inventing a client-side roll. Existing rows remain visible during
+refreshes, and the lower leaderboard uses a quiet loading state instead of
+placeholder bars. No RPC, scoring, or discovery data contract changed.
+
 ## 2026-08-03 — Make the shop easier to scan without changing its game boundary
 
 The first shop improvement slice keeps the existing Home, Browse, Collection,

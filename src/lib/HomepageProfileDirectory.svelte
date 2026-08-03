@@ -61,14 +61,18 @@
   }
 
   async function fetchDiscoverySurface(surface) {
-    const response = await supabase.rpc('get_public_discovery', {
-      p_surface: surface,
-      p_rarity: null,
-      p_query: null,
-      p_page: 0,
-      p_limit: 12
-    });
-    return { surface, data: response.data, error: response.error };
+    try {
+      const response = await supabase.rpc('get_public_discovery', {
+        p_surface: surface,
+        p_rarity: null,
+        p_query: null,
+        p_page: 0,
+        p_limit: 12
+      });
+      return { surface, data: response.data, error: response.error };
+    } catch (error) {
+      return { surface, data: null, error };
+    }
   }
 
   async function hydrateProfile(candidate) {
@@ -96,13 +100,39 @@
     const currentRequest = ++requestId;
     directory = { ...directory, loading: !hasLoaded, error: '' };
     try {
-      const responses = await Promise.all(DISCOVERY_SURFACES.map(fetchDiscoverySurface));
+      // Keep the slower supporting surfaces in flight, but let the daily
+      // surface paint the first useful result as soon as it responds.
+      const todayResponsePromise = fetchDiscoverySurface('today');
+      const supportingResponsesPromise = Promise.all(
+        DISCOVERY_SURFACES
+          .filter(surface => surface !== 'today')
+          .map(fetchDiscoverySurface)
+      );
+      const todayResponse = await todayResponsePromise;
+      if (currentRequest !== requestId) return;
+      const todayItems = normalizeDiscoveryResponse(todayResponse.data).items;
+      const initialLeaderboard = todayItems
+        .map(toHomepageRow)
+        .filter(Boolean)
+        .slice(0, 3);
+      const initialHeroRoll = initialLeaderboard.find(item => (
+        item.hexCode && item.score !== null && item.score !== undefined
+      )) || null;
+
+      // The daily roll is already public discovery data. Publish it before
+      // waiting for the richer profile hydration pass so the first viewport
+      // never has to wait for avatars, links, badges, and history.
+      if (currentRequest !== requestId) return;
+      directory = {
+        ...directory,
+        loading: !hasLoaded,
+        leaderboard: initialLeaderboard.length || !hasLoaded ? initialLeaderboard : directory.leaderboard,
+        heroRoll: initialHeroRoll || (hasLoaded ? directory.heroRoll : null),
+        error: ''
+      };
+      const responses = [todayResponse, ...(await supportingResponsesPromise)];
       if (currentRequest !== requestId) return;
       const failedCount = responses.filter(response => response.error).length;
-      const normalizedSurfaces = responses.map(response => ({
-        ...response,
-        normalized: normalizeDiscoveryResponse(response.data)
-      }));
       let candidates = collectHomepageCandidates(responses);
 
       if (!candidates.some(candidate => candidate.isStaff)) {
@@ -120,8 +150,6 @@
       const hydrated = (await Promise.all(candidates.slice(0, 12).map(hydrateProfile))).filter(Boolean);
       if (currentRequest !== requestId) return;
 
-      const todayItems = normalizedSurfaces
-        .find(response => response.surface === 'today')?.normalized.items || [];
       const leaderboard = todayItems
         .map(toHomepageRow)
         .filter(Boolean)
@@ -150,13 +178,9 @@
     } catch {
       if (currentRequest !== requestId) return;
       directory = {
+        ...directory,
         loading: false,
         error: 'Public profiles could not be loaded right now.',
-        tickerEvents: [],
-        leaderboard: [],
-        featuredProfiles: [],
-        heroRoll: null,
-        heroModel: null,
         previewRoll,
         previewAvailable
       };

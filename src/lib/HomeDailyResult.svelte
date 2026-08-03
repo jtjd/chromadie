@@ -7,6 +7,7 @@
   export let roll = null;
   export let rollIsPreview = false;
   export let previewAvailable = false;
+  export let loading = false;
   export let staticEffect = false;
   export let compactUnavailable = false;
 
@@ -101,6 +102,12 @@
         <div><span>Current streak</span><strong>{streakLabel}</strong></div>
       </div>
     </div>
+  {:else if loading}
+    <div class="home-daily__empty home-daily__empty--loading" role="status" aria-live="polite">
+      <div class="home-daily__loading-mark" aria-hidden="true"></div>
+      <strong>Loading today’s color.</strong>
+      <span>Fetching the latest public roll.</span>
+    </div>
   {:else}
     <div class="home-daily__empty" role="status">
       <div class="home-daily__empty-mark" aria-hidden="true"></div>
@@ -156,6 +163,8 @@
   .home-daily__preview-link { color: #cdd2ff; font: 600 0.72rem / 1.45 var(--home-mono); text-decoration: none; }
   .home-daily__preview-link:hover { color: #fff; }
   .home-daily__empty-mark { width: 4.5rem; height: 4.5rem; margin-bottom: 0.4rem; border: 1px solid rgba(205, 210, 255, 0.4); border-radius: 50%; box-shadow: 0 0 2.5rem rgba(205, 210, 255, 0.1); }
+  .home-daily__loading-mark { width: 3.5rem; height: 3.5rem; margin-bottom: 0.4rem; border: 1px solid color-mix(in srgb, var(--home-daily-color) 52%, rgba(255, 255, 255, 0.18)); border-radius: 50%; background: conic-gradient(from 0deg, transparent, color-mix(in srgb, var(--home-daily-color) 72%, #f2f0eb), transparent); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0); mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0); animation: home-daily-loading 1.25s linear infinite; }
+  @keyframes home-daily-loading { to { transform: rotate(360deg); } }
   .home-daily--compact { position: absolute; z-index: 2; right: 1rem; bottom: 1rem; left: 1rem; display: grid; min-height: 0 !important; max-height: 5rem; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto; align-items: center; gap: 1rem; padding: 0.75rem 0.9rem; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 0.45rem; background: rgba(12, 14, 19, 0.88); box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.3); backdrop-filter: blur(0.75rem); -webkit-backdrop-filter: blur(0.75rem); }
   .home-daily--compact::before, .home-daily--compact::after, .home-daily--compact > .home-daily__label, .home-daily--compact .home-daily__empty-mark, .home-daily--compact .home-daily__empty span { display: none; }
   .home-daily--compact .home-daily__empty { min-height: 0; display: block; }
@@ -186,5 +195,6 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .home-daily::after { animation: none; }
+    .home-daily__loading-mark { animation: none; }
   }
 </style>

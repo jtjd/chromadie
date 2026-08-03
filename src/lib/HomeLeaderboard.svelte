@@ -99,11 +99,12 @@
           </a>
         {/each}
       {:else if loading}
-        <div class="home-leaderboard__loading">
-          <span>Finding public profiles…</span>
-          <i aria-hidden="true"></i>
-          <i aria-hidden="true"></i>
-          <i aria-hidden="true"></i>
+        <div class="home-leaderboard__state home-leaderboard__state--loading" role="status">
+          <span class="home-leaderboard__state-mark" aria-hidden="true">·</span>
+          <span>
+            <strong>Opening today’s public profiles.</strong>
+            <small>The latest colors are on their way.</small>
+          </span>
         </div>
       {:else if error}
         <div class="home-leaderboard__state">
@@ -162,12 +163,8 @@
   .home-leaderboard__state small { max-width: 35rem; color: #858690; font: 0.65rem / 1.45 var(--home-mono); }
   .home-leaderboard__state a { color: var(--home-accent); font: 0.68rem / 1 var(--home-mono); text-decoration: none; white-space: nowrap; }
   .home-leaderboard__state a:hover { color: #fff; }
-  .home-leaderboard__loading { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; padding: 1.25rem 0.85rem; }
-  .home-leaderboard__loading > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .home-leaderboard__loading i { display: block; height: 4.5rem; border-radius: 0.35rem; background: linear-gradient(90deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.035)); background-size: 200% 100%; animation: home-profile-loading 1.6s ease-in-out infinite; }
   .home-reveal { opacity: 0; transform: translateY(1.35rem); transition: opacity 0.72s cubic-bezier(0.2, 0.72, 0.2, 1), transform 0.72s cubic-bezier(0.2, 0.72, 0.2, 1); }
   .home-reveal--delay-1 { transition-delay: 0.08s; }
-  @keyframes home-profile-loading { from { background-position: 100% 0; } to { background-position: -100% 0; } }
   @media (max-width: 67.5rem) {
     .home-leaderboard { padding: 4.5rem 0; }
     .home-rank-row { grid-template-columns: 3.4rem 2.65rem minmax(0, 1fr) auto; }
@@ -180,11 +177,8 @@
     .home-rank-row__user span { white-space: normal; }
     .home-leaderboard__state { grid-template-columns: 2rem minmax(0, 1fr); gap: 0.75rem; padding: 1.25rem 0.6rem; }
     .home-leaderboard__state a { grid-column: 2; }
-    .home-leaderboard__loading { grid-template-columns: 1fr; }
-    .home-leaderboard__loading i:not(:nth-last-child(1)) { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     .home-rank-row, .home-rank-row::before { transition: none; }
-    .home-leaderboard__loading i { animation: none; }
   }
 </style>

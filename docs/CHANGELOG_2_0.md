@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Make the homepage first frame feel finished
+
+- Show the latest real daily roll as soon as the public “today” surface
+  responds, without waiting for every featured profile detail to hydrate.
+- Keep the current roll and leaderboard rows stable during refreshes.
+- Replace visible placeholder bars with quiet loading copy, while preserving
+  the honest “still forming” state when no public rolls exist yet.
+
 ## 2026-08-03 — Improve shop readability and product focus
 
 - Increased shop typography, control sizing, contrast, and effect-stage space
