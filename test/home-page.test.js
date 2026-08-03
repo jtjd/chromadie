@@ -116,15 +116,15 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(dailyResult, /facetedGlyph/);
   assert.match(dailyResult, /Today’s color/);
   assert.doesNotMatch(dailyResult, /Featured daily roll|>Daily roll</);
-  assert.match(dailyResult, /Rarity earned/);
-  assert.match(dailyResult, /Rarity/);
+  assert.match(dailyResult, /Current streak/);
+  assert.match(dailyResult, /home-daily__rarity/);
   assert.match(dailyResult, /Highest roll today/);
   assert.match(dailyResult, /profilePath/);
   assert.match(dailyResult, /home-daily__profile-link/);
   assert.match(dailyResult, /Open \$\{featuredName\}'s public profile/);
   assert.match(dailyResult, /See today.s top rolls/);
   assert.doesNotMatch(dailyResult, /See today.s public rolls/);
-  assert.doesNotMatch(dailyResult, /Example daily color|Roll score|Position|View today.s profiles|Explore public profiles|Public today/);
+  assert.doesNotMatch(dailyResult, /Example daily color|Roll score|Position|View today.s profiles|Explore public profiles|Public today|View profile|Rarity earned/);
   assert.match(dailyResult, /home-daily--compact/);
   assert.match(dailyResult, /Today’s public rolls are still forming/);
   assert.match(dailyResult, /Show a roll in this panel/);

@@ -2,6 +2,12 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Reduce daily-color repetition
+
+- Removed the extra “View profile” instruction from the clickable winner
+  identity block.
+- Replaced the duplicate “Rarity earned” stat with the winner’s current streak.
+
 ## 2026-08-03 — Connect today’s color to its highest roll
 
 - Clarified that the live homepage color is today’s highest public roll.

@@ -2,6 +2,14 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Keep the winner link quiet and add a useful personal signal
+
+The highest-roll identity block is already a link, so the avatar and username
+do not need an extra “View profile” instruction. The duplicate “Rarity earned”
+utility row was replaced with the winner’s current streak, while the rarity
+badge remains beside the hex color. The local fixture shows an em dash when
+streak data is unavailable; live discovery data supplies the value.
+
 ## 2026-08-03 — Make today’s highest roll a person-led entry point
 
 The homepage “Today’s color” panel represents the highest public roll of the

@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Homepage daily-color identity signal — 2026-08-03
+
+- Removed the redundant “View profile” microcopy; the avatar and username now
+  speak for the existing clickable profile link.
+- Replaced the repeated “Rarity earned” row with the winner’s current streak.
+- Kept the rarity badge attached to the color so it remains visible once.
+
 ## Homepage highest-roll entry point — 2026-08-03
 
 - Identified the live “Today’s color” result as the highest public roll today.

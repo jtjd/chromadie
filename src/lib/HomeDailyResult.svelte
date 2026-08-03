@@ -19,6 +19,12 @@
   $: hasProfileLink = Boolean(hasFeaturedRoll && roll?.profilePath);
   $: featuredName = roll?.displayName || roll?.username || '';
   $: featuredAvatarSrc = getProfileMediaUrl(roll?.avatarPath || '');
+  $: streakValue = roll?.currentStreak === null || roll?.currentStreak === undefined
+    ? null
+    : Number(roll.currentStreak);
+  $: streakLabel = Number.isFinite(streakValue)
+    ? `${streakValue} ${streakValue === 1 ? 'day' : 'days'}`
+    : '—';
   $: if (featuredAvatarSrc && featuredAvatarSrc !== failedAvatarSource) failedAvatarSource = '';
 
   function scrollToLeaderboard(event) {
@@ -82,7 +88,7 @@
               {/if}
               <span class="home-daily__profile-copy">
                 <strong>{featuredName}</strong>
-                <small>@{roll.username} · View profile <span aria-hidden="true">↗</span></small>
+                <small>@{roll.username}</small>
               </span>
             </a>
           {:else if hasFeaturedRoll}
@@ -92,7 +98,7 @@
       </div>
       <div class="home-daily__stats">
         <div><span>Score</span><strong>{Number(roll.score).toLocaleString()} EP</strong></div>
-        <div><span>Rarity earned</span><strong>{rarity} roll</strong></div>
+        <div><span>Current streak</span><strong>{streakLabel}</strong></div>
       </div>
     </div>
   {:else}
