@@ -15,10 +15,12 @@
   /** @type {any} */
   export let profileConfig = null;
   export let compact = false;
+  export let nameRendererMode = '';
 
   $: account = /** @type {any} */ (accountProfile || {});
   $: accountUsername = account.username || username || 'You';
   $: accountDisplayName = account.display_name || username || accountUsername;
+  $: resolvedNameRendererMode = nameRendererMode || (compact ? 'static-signature' : 'animated');
   $: previewProfileConfig = profileConfig?.published || profileConfig?.draft || profileConfig || createDefaultProfileConfig(displayColor);
   $: previewBadges = (Array.isArray(account.equipped_badges) ? account.equipped_badges : [])
     .filter(id => typeof id === 'string' && id !== 'launch_edition')
@@ -46,7 +48,12 @@
 
   <div class="studio-stage context-profile">
     <div class="stage-grid" aria-hidden="true"></div>
-    <ProfileBorderEffect borderKey={loadout?.profile_border} className="studio-profile-border" compact={compact}>
+    <ProfileBorderEffect
+      borderKey={loadout?.profile_border}
+      className="studio-profile-border"
+      compact={compact}
+      animated={resolvedNameRendererMode === 'animated'}
+    >
       <div class="studio-profile-card">
         <IdentityCard
           username={accountUsername}
@@ -60,7 +67,7 @@
           accentColor={displayColor}
           nameRendererLoadout={nameRendererLoadout}
           nameRendererContext={compact ? 'card' : 'profile'}
-          nameRendererMode={compact ? 'static-signature' : 'animated'}
+          nameRendererMode={resolvedNameRendererMode}
           showToday={false}
         />
       </div>

@@ -18,6 +18,9 @@
   export let profile = null;
   /** @type {any} */
   export let currentRoll = null;
+  export let isSignedIn = false;
+  export let purchaseArmedKey = '';
+  export let loadingAction = null;
 
   const dispatch = createEventDispatcher();
   const collectionSections = Object.freeze([
@@ -107,8 +110,12 @@
           actuallyEquipped={equippedItems[item.slot] === item.item_key}
           previewUsername={username}
           previewColor={displayColor}
+          {isSignedIn}
+          purchaseArmed={purchaseArmedKey === item.item_key}
+          purchaseLoading={loadingAction === `buy:${item.item_key}`}
           on:select={event => dispatch('select', event.detail)}
           on:preview={event => dispatch('select', event.detail)}
+          on:purchase={event => dispatch('purchase', event.detail)}
         />
       {/each}
     </div>

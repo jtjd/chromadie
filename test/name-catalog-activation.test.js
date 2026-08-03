@@ -75,7 +75,7 @@ test('obsolete catalog slots are absent from the production seed and active clie
   ]);
   for (const slot of ['name_effect', 'frame', 'profile_bg', 'profile_atmosphere', 'orb_shape', 'roll_effect', 'lb_theme']) {
     assert.doesNotMatch(seed, new RegExp(`'${slot}'`));
-    assert.doesNotMatch(catalog, new RegExp(`['\"]${slot}['\"]`));
-    assert.doesNotMatch(stores, new RegExp(`['\"]${slot}['\"]`));
+    assert.doesNotMatch(catalog, new RegExp(`['"]${slot}['"]`));
+    assert.doesNotMatch(stores, new RegExp(`['"]${slot}['"]`));
   }
 });

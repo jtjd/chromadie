@@ -42,7 +42,7 @@ test('shop reference hierarchy uses live account metadata and real catalog count
   assert.match(home, /Recommended <span>for today\.<\/span>/);
   assert.match(home, /count: filterShopItems/);
   assert.match(home, /slice\(0, 5\)/);
-  assert.match(browse, /Build the name\. <span>Keep the identity\.<\/span>/);
+  assert.match(browse, /More identity\. <span>Same renderer\.<\/span>/);
   assert.match(browse, /nameSubtypeSections/);
   assert.match(browse, /variant="subtype"/);
   assert.match(studioPreview, /account\.username/);
@@ -77,9 +77,24 @@ test('product cards keep product decisions in detail and expose a readable hiera
   assert.match(source, /item-collection/);
   assert.match(source, /item-card-footer/);
   assert.match(source, /dispatch\('preview'/);
-  assert.doesNotMatch(source, /dispatch\('purchase'/);
+  assert.match(source, /dispatch\('purchase'/);
+  assert.match(source, /item-buy-button/);
+  assert.match(source, /Confirm purchase/);
   assert.doesNotMatch(source, /primary-item-action|secondary-item-action/);
   assert.match(source, /font:650 1rem\/1 var\(--font-mono-stack\)/);
+});
+
+test('card purchases reuse the existing confirmation and RPC boundary', async () => {
+  const shop = await readProjectFile('src/lib/Shop.svelte');
+  const home = await readProjectFile('src/lib/ShopHome.svelte');
+  const browse = await readProjectFile('src/lib/ShopBrowse.svelte');
+  const collection = await readProjectFile('src/lib/ShopCollection.svelte');
+  assert.match(home, /on:purchase=\{event => dispatch\('purchase', event\.detail\)\}/);
+  assert.match(browse, /on:purchase=\{event => dispatch\('purchase', event\.detail\)\}/);
+  assert.match(collection, /on:purchase=\{event => dispatch\('purchase', event\.detail\)\}/);
+  assert.match(shop, /on:purchase=\{event => requestPurchase\(event\.detail\)\}/);
+  assert.match(shop, /requiresPurchaseConfirmation\(item\)/);
+  assert.match(shop, /supabase\.rpc\('purchase_item'/);
 });
 
 test('Product Detail is a drawer/sheet with existing purchase and focus boundaries', async () => {

@@ -28,6 +28,9 @@
   export let profileConfig = null;
   /** @type {any} */
   export let currentRoll = null;
+  export let isSignedIn = false;
+  export let purchaseArmedKey = '';
+  export let loadingAction = null;
 
   const dispatch = createEventDispatcher();
   let searchQuery = '';
@@ -109,8 +112,8 @@
     <div>
       <span class="shop-eyebrow">{isNameBrowse ? 'Name effects lab' : 'Browse the catalog'}</span>
       {#if isNameBrowse}
-        <h2 id="shop-browse-title">Build the name. <span>Keep the identity.</span></h2>
-        <p>Choose one font, one material, and one motion treatment. Your name stays readable while the layers carry the personality.</p>
+        <h2 id="shop-browse-title">More identity. <span>Same renderer.</span></h2>
+        <p>The expanded Name catalog keeps every card and live profile on one shared Canvas rendering system.</p>
       {:else}
         <h2 id="shop-browse-title">Find the piece that <span>changes the page.</span></h2>
         <p>{filteredItems.length} active catalog item{filteredItems.length === 1 ? '' : 's'} for names, borders, and utility.</p>
@@ -120,7 +123,7 @@
       {#if isNameBrowse}
         <div class="shop-browse-stats" aria-label="Name catalog counts">
           {#each nameSubtypeSections as subtype (subtype.id)}<span>{subtype.count} {subtype.label.toLowerCase()}</span>{/each}
-          <span>3 defaults</span>
+          <span>{nameSubtypeSections.reduce((total, subtype) => total + subtype.count, 0)} paid</span>
         </div>
       {/if}
       <button type="button" class="shop-text-link" on:click={resetFilters}>Reset filters</button>
@@ -137,9 +140,9 @@
 
   {#if section === 'names'}
     <ShopCategoryNav
-    sections={nameSubtypeSections}
-    activeId={selectedSubslot}
-    variant="subtype"
+      sections={nameSubtypeSections}
+      activeId={selectedSubslot}
+      variant="subtype"
       ariaLabel="Name catalog layers"
       on:select={event => { selectedSubslot = event.detail; previewedItem = null; }}
     />
@@ -194,8 +197,12 @@
               actuallyEquipped={equippedItems[item.slot] === item.item_key}
               previewUsername={username}
               previewColor={displayColor}
+              {isSignedIn}
+              purchaseArmed={purchaseArmedKey === item.item_key}
+              purchaseLoading={loadingAction === `buy:${item.item_key}`}
               on:select={event => dispatch('select', event.detail)}
               on:preview={event => previewItem(event.detail)}
+              on:purchase={event => dispatch('purchase', event.detail)}
             />
           {/each}
         </div>
@@ -224,12 +231,12 @@
 <style>
   .shop-browse { display:grid; gap:1rem; }
   .shop-surface-heading { display:flex; align-items:end; justify-content:space-between; gap:1.5rem; padding-bottom:1.15rem; border-bottom:1px solid var(--shop-line); }
-  .shop-surface-heading h2 { max-width:52rem; margin:.45rem 0 .6rem; font:650 clamp(2.2rem,4.3vw,3.8rem)/.92 var(--font-display); letter-spacing:-.06em; }
+  .shop-surface-heading h2 { max-width:52rem; margin:.45rem 0 .6rem; font:650 clamp(2rem,3.1vw,2.75rem)/.96 var(--font-display); letter-spacing:-.055em; }
   .shop-surface-heading h2 span { color:var(--shop-accent); }
   .shop-surface-heading p { max-width:44rem; margin:0; color:#9698a1; font-size:.88rem; line-height:1.5; }
   .shop-eyebrow { color:#858690; font:500 .7rem/1.3 var(--font-mono-stack); letter-spacing:.13em; text-transform:uppercase; }
   .shop-text-link { padding:.5rem 0; border:0; background:transparent; color:#cdd2ff; font:.72rem var(--font-mono-stack); cursor:pointer; white-space:nowrap; }
-  .shop-browse-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(19rem,25rem); gap:1rem; align-items:start; padding-top:.15rem; }
+  .shop-browse-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(26rem,510px); gap:1.1rem; align-items:start; padding-top:.15rem; }
   .shop-browse-heading-side { display:grid; justify-items:end; gap:.8rem; }
   .shop-browse-stats { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.4rem; max-width:26rem; }
   .shop-browse-stats span { padding:.38rem .48rem; border:1px solid #353841; color:#898c98; font:.58rem var(--font-mono-stack); letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; }
@@ -258,15 +265,15 @@
   .shop-affordable { display:flex!important; align-items:center; gap:.45rem; min-height:2.4rem; color:#aaa8b0; font-size:.78rem; white-space:nowrap; }
   .shop-reset-link { width:max-content; margin-top:.1rem; padding:0; border:0; background:transparent; color:#cdd2ff; font:.67rem var(--font-mono-stack); cursor:pointer; text-align:left; }
   .shop-result-count { display:flex; justify-content:space-between; gap:1rem; padding:.8rem 0 .55rem; color:#777983; font:.65rem var(--font-mono-stack); letter-spacing:.05em; text-transform:uppercase; }
-  .shop-result-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; }
+  .shop-result-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; }
   .shop-empty-state { display:grid; justify-items:start; gap:.55rem; min-height:15rem; align-content:center; padding:2rem; border:1px solid var(--shop-line); background:#0a0c10; }
   .shop-empty-state > span { color:#cdd2ff; font-size:2rem; }
   .shop-empty-state h3 { margin:0; font-size:1.2rem; }
   .shop-empty-state p { margin:0 0 .5rem; color:#aaa8b0; }
   .shop-button { display:inline-flex; align-items:center; justify-content:center; min-height:2.7rem; padding:0 .9rem; border-radius:5px; font-weight:650; text-decoration:none; cursor:pointer; }
   .shop-button--outline { border:1px solid #4a4d57; background:#121419; color:#d3d0d8; }
-  @media (max-width: 1180px) { .shop-browse-layout { grid-template-columns:minmax(0,1fr) minmax(17rem,21rem); } }
-  @media (max-width: 960px) { .shop-browse-layout { grid-template-columns:1fr; } .shop-browse-layout :global(.shop-contextual-preview) { order:-1; } .shop-result-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+  @media (max-width: 1180px) { .shop-browse-layout { grid-template-columns:minmax(0,1fr) minmax(22rem,440px); } }
+  @media (max-width: 900px) { .shop-browse-layout { grid-template-columns:1fr; } .shop-browse-layout :global(.shop-contextual-preview) { order:-1; } .shop-result-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
   @media (max-width: 760px) { .shop-surface-heading { align-items:flex-start; flex-direction:column; } .shop-browse-heading-side { width:100%; justify-items:start; } .shop-browse-stats { justify-content:flex-start; max-width:none; } .shop-browse-toolbar { grid-template-columns:minmax(0,1fr) 8rem; } .shop-filter-toggle { grid-column:1 / -1; } .shop-filter-panel__fields { grid-template-columns:repeat(2,minmax(0,1fr)); } .shop-result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width: 520px) { .shop-browse-toolbar { grid-template-columns:1fr; } .shop-filter-toggle { grid-column:auto; } .shop-filter-list--compact, .shop-filter-panel__fields { grid-template-columns:1fr; } .shop-result-grid { grid-template-columns:1fr; } }
   @media (max-width: 390px) { .shop-surface-heading h2 { font-size:2.05rem; } }

@@ -12,7 +12,10 @@ Document user-visible redesign changes by milestone.
   temporary try-on behavior.
 - Product cards now keep the name and EP price together, use the shared visual
   renderer for previews, and present rarity, collection, ownership, and
-  description as compact metadata.
+  description as compact metadata. Earned products also expose an inline Buy
+  button that preserves the existing confirmation and purchase RPC boundary.
+- Added isolated/combined contextual preview controls with Replay, Pause, and
+  Reset actions while keeping the live account identity in the preview.
 - Shop profile previews use the authenticated user’s real handle and display
   name rather than a placeholder identity. No mock products or backend data
   were added.

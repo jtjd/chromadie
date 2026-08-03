@@ -21,6 +21,9 @@
   export let profileConfig = null;
   /** @type {any} */
   export let currentRoll = null;
+  export let isSignedIn = false;
+  export let purchaseArmedKey = '';
+  export let loadingAction = null;
 
   const dispatch = createEventDispatcher();
   $: displayColor = currentRoll?.hex_code || profile?.mood_color || '#8B7CF6';
@@ -142,8 +145,12 @@
             actuallyEquipped={equippedItems[item.slot] === item.item_key}
             previewUsername={username}
             previewColor={displayColor}
+            {isSignedIn}
+            purchaseArmed={purchaseArmedKey === item.item_key}
+            purchaseLoading={loadingAction === `buy:${item.item_key}`}
             on:select={event => dispatch('select', event.detail)}
             on:preview={event => dispatch('select', event.detail)}
+            on:purchase={event => dispatch('purchase', event.detail)}
           />
         {/each}
       </div>
@@ -168,7 +175,7 @@
   .shop-todays-merchandise { min-width:0; padding:1.7rem; }
   .shop-todays-copy { max-width:34rem; }
   .shop-eyebrow { color:#858690; font:500 .7rem/1.3 var(--font-mono-stack); letter-spacing:.13em; text-transform:uppercase; }
-  .shop-todays-copy h2 { max-width:34rem; margin:.65rem 0 .55rem; font:650 clamp(2.25rem,4vw,3.8rem)/.92 var(--font-display); letter-spacing:-.065em; }
+  .shop-todays-copy h2 { max-width:34rem; margin:.65rem 0 .55rem; font:650 clamp(2rem,3.1vw,2.7rem)/.95 var(--font-display); letter-spacing:-.055em; }
   .shop-todays-copy h2 span { color:var(--shop-accent); }
   .shop-todays-copy p { max-width:30rem; margin:0; color:#aaa8b0; font-size:.9rem; line-height:1.55; }
   .shop-todays-actions { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:1.15rem; }
@@ -212,7 +219,7 @@
   .shop-todays-color span:last-child { margin-top:.28rem; color:#9297a3; font-size:.7rem; line-height:1.4; }
   .shop-home-section { display:grid; gap:1.25rem; }
   .shop-section-heading { display:flex; align-items:end; justify-content:space-between; gap:1.5rem; }
-  .shop-section-heading h2 { margin:.35rem 0 0; font:650 clamp(2.15rem,3.8vw,3.55rem)/.95 var(--font-display); letter-spacing:-.055em; }
+  .shop-section-heading h2 { margin:.35rem 0 0; font:650 clamp(1.8rem,2.2vw,2rem)/1 var(--font-display); letter-spacing:-.045em; }
   .shop-section-heading h2 span { color:var(--shop-accent); }
   .shop-section-heading p { max-width:34rem; margin:.6rem 0 0; color:#aaa8b0; font-size:.9rem; line-height:1.55; }
   .shop-text-link { padding:.5rem 0; border:0; background:transparent; color:#cdd2ff; font: .72rem var(--font-mono-stack); cursor:pointer; white-space:nowrap; }

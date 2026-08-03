@@ -18,6 +18,15 @@ handle and display name independently, so a display name cannot replace the
 real username in the semantic profile card. No mock Admin profile, catalog
 rows, schema, prices, or backend behavior were introduced.
 
+The follow-up Name catalog pass adopts the catalog reference’s compact card
+hierarchy: product name and price lead, the shared renderer occupies a bounded
+preview band, and rarity, collection, description, and state form the decision
+stack. Purchasable cards now expose a visible Buy action (or the existing
+confirmation state) that delegates to the existing `purchase_item` boundary;
+no client-side price or purchase path was added. The contextual preview adds
+isolated/combined, replay, pause, and reset controls while continuing to use
+the live account and shared renderer.
+
 ## 2026-08-02 — Lean alpha cosmetic reset
 
 **Status:** accepted and implemented locally; remote deployment pending backup and approval

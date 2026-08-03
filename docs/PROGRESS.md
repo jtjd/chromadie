@@ -6,15 +6,33 @@
   balance/owned metadata, real category counts, Today’s color made wearable,
   one real editorial product, a four-item curated row, and concise Browse /
   Collection paths.
-- Refined Browse and the Name view with a focused “Build the name” heading,
+- Refined Browse and the Name view with a focused “More identity. Same
+  renderer.” heading,
   real Font/Material/Motion counts, compact subtype tabs, the existing filters,
   and a shared contextual profile preview.
 - Updated product cards so name and price lead, the renderer preview follows,
-  and rarity, collection, ownership, and description remain readable without
-  repeated purchase actions.
+  and rarity, collection, ownership, and description remain readable. Earned
+  catalog cards now include an inline Buy action that reuses the existing
+  expensive-purchase confirmation and server-authoritative purchase flow.
 - The profile preview now uses the signed-in account’s actual username,
   display name, avatar, links, badges, current roll, and equipped loadout.
   No catalog, purchase, inventory, entitlement, or equip behavior changed.
+
+## Name catalog reference pass — 2026-08-02
+
+- Matched the Name Browse workspace more closely to the approved catalog
+  reference with a 1480px storefront canvas, a 510px contextual preview rail,
+  compact 78px card previews, real 18/22/24 subtype counts, and restrained
+  typography/spacing.
+- Added visible inline Buy buttons to Home, Browse, and Collection cards;
+  signed-out users receive the existing sign-in handoff, owned items remain
+  manage-only, and expensive purchases still require the existing second
+  confirmation.
+- Added isolated/combined preview modes plus Replay, Pause, and Reset controls
+  without adding a second renderer or changing temporary try-on persistence.
+- The live preview continues to derive the current account’s display name,
+  username, avatar, links, badges, roll color, and equipped loadout. The mock
+  Admin identity from the reference is not used in production.
 
 ## Lean cosmetic reset — 2026-08-02
 

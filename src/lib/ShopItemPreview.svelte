@@ -3,8 +3,9 @@
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
 
   export let item;
-  export let username = 'Your profile';
+  export let username = 'You';
   export let displayColor = '#8B7CF6';
+  export let mode = 'animated';
 
   $: nameLayerLoadout = item?.slot === 'name_font'
     ? { fontKey: item.css_value }
@@ -17,7 +18,7 @@
 
 <div class="shop-preview-area {item?.slot === 'profile_border' ? 'shop-preview-area-tall' : ''}">
   {#if item?.slot === 'profile_border'}
-    <ProfileBorderEffect borderKey={item.css_value} compact={true} className="preview-border-shell">
+    <ProfileBorderEffect borderKey={item.css_value} compact={true} animated={mode === 'animated'} className="preview-border-shell">
       <div class="preview-profile-card">
         <div class="preview-profile-topline">
           <span class="preview-profile-badge">Profile border</span>
@@ -35,7 +36,7 @@
         todayColor={displayColor}
         context="card"
         compact={true}
-        mode="animated"
+        {mode}
         semanticClass="shop-item-name"
       />
     </div>
