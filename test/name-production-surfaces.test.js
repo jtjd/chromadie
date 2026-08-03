@@ -43,6 +43,8 @@ test('every production identity surface uses the shared Name renderer path', asy
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(identity, /semanticClass="identity-card__name"/);
   assert.match(canvas, /name-effect-canvas__semantic\.identity-card__name/);
+  assert.match(canvas, /getNameFont/);
+  assert.match(canvas, /style=\{semanticStyle\}/);
   assert.match(canvas, /aria-hidden="true"/);
 });
 

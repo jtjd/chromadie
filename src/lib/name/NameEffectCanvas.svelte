@@ -4,7 +4,7 @@
   import { shouldAnimateNameFrame, createNameCanvasRenderer } from './nameRenderer.js';
   import { getNameRendererDefinition, hasComposableNameInput, resolveNameRendererKey } from './nameCatalog.js';
   import { loadCodeOwnedNameRenderers } from './nameComposableRenderer.js';
-  import { requestNameFontLoad } from './nameFonts.js';
+  import { getNameFont, requestNameFontLoad } from './nameFonts.js';
 
   export let text = '';
   export let rendererKey = '';
@@ -81,6 +81,8 @@
   $: activeFontKey = hasComposableKeys
     ? explicitFontKey || 'soft-grotesk'
     : getNameRendererDefinition(safeRendererKey).font;
+  $: activeFont = getNameFont(activeFontKey);
+  $: semanticStyle = `font-family: "${String(activeFont.family || '').replace(/["\\]/g, '')}", ${String(activeFont.fallback || 'sans-serif').replace(/["\\]/g, '')}; font-style: ${activeFont.style}; font-weight: ${activeFont.weight};`;
   $: fontLoadKey = `${activeFontKey}:${text}`;
   $: safeSemanticTag = SEMANTIC_TAGS.has(semanticTag) ? semanticTag : 'span';
   $: safeSemanticClass = SEMANTIC_CLASSES.has(semanticClass) ? semanticClass : '';
@@ -258,9 +260,9 @@
 
 <div bind:this={host} class={'name-effect-canvas name-effect-canvas--' + (canvasReady ? 'ready' : 'fallback')} data-name-renderer={safeRendererKey}>
   {#if safeSemanticTag === 'a'}
-    <a bind:this={semantic} id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} href={href || undefined} title={title || undefined} on:click={semanticOnClick}>{text}</a>
+    <a bind:this={semantic} id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} style={semanticStyle} href={href || undefined} title={title || undefined} on:click={semanticOnClick}>{text}</a>
   {:else}
-    <svelte:element this={safeSemanticTag} bind:this={semantic} id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} title={title || undefined}>{text}</svelte:element>
+    <svelte:element this={safeSemanticTag} bind:this={semantic} id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} style={semanticStyle} title={title || undefined}>{text}</svelte:element>
   {/if}
   <canvas bind:this={canvas} class="name-effect-canvas__visual" aria-hidden="true"></canvas>
 </div>

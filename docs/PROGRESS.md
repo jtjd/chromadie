@@ -1754,6 +1754,8 @@ kept public profile selectors outside the supporting-route baseline.
 - The shared renderer now receives the semantic node's computed font size,
   uses proportional inline padding, and measures the loaded Canvas face before
   applying horizontal fitting.
+- The semantic fallback now carries the active renderer's family, style, and
+  weight, so browser text selection no longer reveals a different typeface.
 - Added focused coverage for intrinsic short-name sizing; no catalog,
   entitlement, profile, or backend contracts changed.
 

@@ -15,6 +15,8 @@ Document user-visible redesign changes by milestone.
   selectable text in profile cards.
 - Kept the accessible semantic name as the sizing source while measuring the
   loaded face for accurate visual fitting.
+- Matched the semantic fallback's font family, style, and weight to the active
+  cosmetic so selecting a username does not expose a different typeface.
 
 ## 2026-08-03 — Make the shop preview feel finished
 

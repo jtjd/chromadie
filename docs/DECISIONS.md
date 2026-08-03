@@ -2703,4 +2703,6 @@ reads that node's computed font size and distinguishes intrinsic inline names
 from full-width product swatches. This keeps short profile names at the same
 scale as their selectable text instead of shrinking them to fit a fixed
 padding heuristic. Canvas measurement still applies the available-width
-scale, and the semantic node remains the fallback and accessible source.
+scale, and the semantic node receives the same finite family, style, and weight
+as the active renderer. This keeps browser selection consistent without
+removing the accessible fallback source.
