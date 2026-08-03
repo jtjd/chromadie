@@ -2694,3 +2694,13 @@ the live value as drift and regressing the economy.
 The label correction also bumps `meta.shop_version`. Shop metadata is the
 existing cache-invalidation boundary, so old `shop_cache:v3` entries are
 refetched without changing the cache shape or forcing a client-side purge.
+
+## 2026-08-03 — Keep Canvas names aligned with their accessible text
+
+`NameEffectCanvas` retains a semantic text node for accessibility and fallback
+rendering, while the visual treatment is drawn to Canvas. The renderer now
+reads that node's computed font size and distinguishes intrinsic inline names
+from full-width product swatches. This keeps short profile names at the same
+scale as their selectable text instead of shrinking them to fit a fixed
+padding heuristic. Canvas measurement still applies the available-width
+scale, and the semantic node remains the fallback and accessible source.

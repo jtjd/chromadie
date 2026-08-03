@@ -114,15 +114,23 @@ function getCanvasSize(options, compact) {
   };
 }
 
-function getTextMetrics(text, font, width, height, compact) {
-  const horizontalPadding = compact ? 8 : 14;
+function getTextMetrics(text, font, width, height, compact, requestedFontSize = 0, inline = false) {
+  // NameEffectCanvas is also used inline beside badges and handles. A fixed
+  // padding value would consume most of the width of a short name such as
+  // "Tjz" and force the renderer down to a tiny fallback size. Keep the
+  // breathing room for full-width swatches, but make it proportional for
+  // intrinsic inline names.
+  const horizontalPadding = inline ? 0 : Math.min(compact ? 8 : 14, width * 0.1);
   const availableWidth = Math.max(1, width - horizontalPadding * 2);
   const maxFontSize = compact ? Math.min(28, height * 0.72) : Math.min(54, height * 0.72);
-  let fontSize = Math.max(compact ? 10 : 12, maxFontSize);
+  const semanticFontSize = finite(requestedFontSize, 0);
+  let fontSize = Math.max(compact ? 10 : 12, semanticFontSize > 0 ? semanticFontSize : maxFontSize);
   let measuredWidth = estimateTextWidth(text, fontSize, font);
-  while (measuredWidth > availableWidth && fontSize > 10) {
-    fontSize -= 0.5;
-    measuredWidth = estimateTextWidth(text, fontSize, font);
+  if (semanticFontSize <= 0) {
+    while (measuredWidth > availableWidth && fontSize > 10) {
+      fontSize -= 0.5;
+      measuredWidth = estimateTextWidth(text, fontSize, font);
+    }
   }
   return Object.freeze({
     fontSize,
@@ -178,7 +186,7 @@ export function getNameFrameModel(options = {}) {
   const font = getNameFont(definition.font);
   const material = getNameMaterial(definition.material);
   const displayText = definition.smallCaps ? text.toUpperCase() : text;
-  const metrics = getTextMetrics(displayText, font, width, height, compact);
+  const metrics = getTextMetrics(displayText, font, width, height, compact, options.fontSize, options.inline === true);
   const seed = hashString(`${rendererKey}:${text}:${todayColor}:${recentColors.join(',')}`);
 
   return Object.freeze({
@@ -285,6 +293,25 @@ export function drawNameFrame(ctx, model) {
   ctx.restore();
 }
 
+function measureCanvasFrame(ctx, model) {
+  if (!ctx || typeof ctx.measureText !== 'function' || !model?.displayText) return model;
+  ctx.save();
+  setTextContext(ctx, model);
+  const measuredWidth = finite(ctx.measureText(model.displayText)?.width, model.metrics.rawWidth);
+  ctx.restore();
+  if (!measuredWidth || measuredWidth <= 0) return model;
+  const availableWidth = model.metrics.availableWidth;
+  return {
+    ...model,
+    metrics: {
+      ...model.metrics,
+      rawWidth: measuredWidth,
+      width: Math.min(measuredWidth, availableWidth),
+      scaleX: Math.min(1, availableWidth / Math.max(1, measuredWidth))
+    }
+  };
+}
+
 export function createNameCanvasRenderer(canvas, options = {}) {
   const context = canvas?.getContext?.('2d') || null;
   if (!context) {
@@ -326,7 +353,7 @@ export function createNameCanvasRenderer(canvas, options = {}) {
 
   function draw(time = 0) {
     if (destroyed) return null;
-    const frame = getNameFrameModel({ ...config, width, height, time });
+    const frame = measureCanvasFrame(context, getNameFrameModel({ ...config, width, height, time }));
     drawNameFrame(context, frame);
     lastFrameModel = frame;
     return frame;

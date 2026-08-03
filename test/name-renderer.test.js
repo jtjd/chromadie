@@ -111,6 +111,20 @@ test('composable loadouts produce deterministic bounded card and profile frames'
   assert.notEqual(getNameFrameSignature(first), getNameFrameSignature(getNameFrameModel({ ...input, time: 980 })));
 });
 
+test('inline canvas names honor the semantic font size instead of shrinking short names', () => {
+  const frame = getNameFrameModel({
+    text: 'Tjz',
+    context: 'profile',
+    width: 35,
+    height: 29,
+    fontSize: 29.64,
+    inline: true
+  });
+
+  assert.equal(frame.metrics.fontSize, 29.64);
+  assert.ok(frame.metrics.width <= frame.metrics.availableWidth);
+});
+
 test('short, long, light, and dark names remain safe and deterministic', () => {
   assert.equal(normalizeNameText('Li'), 'Li');
   const longName = normalizeNameText('x'.repeat(NAME_MAX_RENDER_LENGTH + 12));

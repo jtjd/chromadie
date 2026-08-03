@@ -9,6 +9,13 @@ Document user-visible redesign changes by milestone.
 - Put Buy, Owned, and Equipped states beside rarity and collection metadata.
 - Shortened product previews and removed the redundant footer action band.
 
+## 2026-08-03 — Match rendered names to their real scale
+
+- Corrected short Canvas-rendered usernames appearing smaller than the
+  selectable text in profile cards.
+- Kept the accessible semantic name as the sizing source while measuring the
+  loaded face for accurate visual fitting.
+
 ## 2026-08-03 — Make the shop preview feel finished
 
 - Enlarged the name treatment in product swatches and the fitting-room profile

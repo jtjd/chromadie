@@ -1746,6 +1746,17 @@ kept public profile selectors outside the supporting-route baseline.
   behavior, legacy product archiving, pricing, replacement grants, and legacy
   CSS removal.
 
+## 2026-08-03 — Align Canvas name scale with profile text
+
+- Fixed short Canvas-rendered names such as `Tjz` being visibly smaller than
+  their accessible highlighted text in public profiles and fitting-room
+  previews.
+- The shared renderer now receives the semantic node's computed font size,
+  uses proportional inline padding, and measures the loaded Canvas face before
+  applying horizontal fitting.
+- Added focused coverage for intrinsic short-name sizing; no catalog,
+  entitlement, profile, or backend contracts changed.
+
 ## 2026-08-03 — Homepage identity and story refinement
 
 - Kept the approved hero/browser structure and original 2553×1379 profile

@@ -41,6 +41,7 @@
   const RENDER_MODES = new Set(['animated', 'paused', 'static', 'static-signature', 'reduced-motion']);
 
   let host;
+  let semantic;
   let canvas;
   let renderer;
   let mounted = false;
@@ -158,9 +159,30 @@
     syncAnimationLoop();
   }
 
+  function getSemanticFontSize() {
+    if (!semantic || typeof globalThis.getComputedStyle !== 'function') return 0;
+    const value = Number.parseFloat(globalThis.getComputedStyle(semantic).fontSize);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  }
+
+  function isIntrinsicName() {
+    if (!host || !semantic) return false;
+    const hostRect = host.getBoundingClientRect?.() || {};
+    const semanticRect = semantic.getBoundingClientRect?.() || {};
+    const parentRect = host.parentElement?.getBoundingClientRect?.() || {};
+    return Math.abs((hostRect.width || 0) - (semanticRect.width || 0)) < 1
+      && (!parentRect.width || (hostRect.width || 0) < parentRect.width - 1);
+  }
+
+  function syncSemanticMetrics() {
+    if (!renderer) return;
+    renderer.setOptions({ fontSize: getSemanticFontSize(), inline: isIntrinsicName() });
+  }
+
   function observeResize() {
     if (!renderer || !host) return;
     const rect = host.getBoundingClientRect?.() || {};
+    syncSemanticMetrics();
     renderer.resize({ width: rect.width, height: rect.height });
     renderer.draw(lastDrawTime);
   }
@@ -169,8 +191,7 @@
     mounted = true;
     renderer = createNameCanvasRenderer(canvas, rendererOptions);
     canvasReady = renderer.supported;
-    renderer.resize();
-    renderer.draw(0);
+    observeResize();
     requestedFontLoadKey = '';
 
     if (typeof IntersectionObserver === 'function') {
@@ -185,6 +206,7 @@
       resizeObserver = new ResizeObserver(entries => {
         const entry = entries[0];
         if (!entry || !renderer) return;
+        syncSemanticMetrics();
         renderer.resize({ width: entry.contentRect.width, height: entry.contentRect.height });
         renderer.draw(lastDrawTime);
       });
@@ -238,9 +260,9 @@
 
 <div bind:this={host} class={'name-effect-canvas name-effect-canvas--' + (canvasReady ? 'ready' : 'fallback')} data-name-renderer={safeRendererKey}>
   {#if safeSemanticTag === 'a'}
-    <a id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} href={href || undefined} title={title || undefined} on:click={semanticOnClick}>{text}</a>
+    <a bind:this={semantic} id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} href={href || undefined} title={title || undefined} on:click={semanticOnClick}>{text}</a>
   {:else}
-    <svelte:element this={safeSemanticTag} id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} title={title || undefined}>{text}</svelte:element>
+    <svelte:element this={safeSemanticTag} bind:this={semantic} id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} title={title || undefined}>{text}</svelte:element>
   {/if}
   <canvas bind:this={canvas} class="name-effect-canvas__visual" aria-hidden="true"></canvas>
 </div>
