@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import { NAME_COMPOSABLE_COUNTS, resolveNameLoadout } from '../src/lib/name/nameCatalog.js';
 import { applyNamePreviewLayer } from '../src/lib/name/nameLoadout.js';
-import { NAME_FONTS } from '../src/lib/name/nameFonts.js';
+import { NAME_FONTS, NAME_FONT_ASSET_KEYS } from '../src/lib/name/nameFonts.js';
 import { NAME_MATERIALS } from '../src/lib/name/nameMaterials.js';
 import { NAME_MOTIONS } from '../src/lib/name/nameMotions.js';
 
@@ -29,9 +29,10 @@ test('the reset keeps exactly 64 modern Name rows and nine Profile Border rows',
 });
 
 test('the paid Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
-  const [seed, labelMigration] = await Promise.all([
+  const [seed, labelMigration, fontLabelMigration] = await Promise.all([
     read('supabase/seed.sql'),
-    read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql')
+    read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
+    read('supabase/migrations/20260803130000_use_reference_font_family_names.sql')
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
@@ -49,7 +50,11 @@ test('the paid Name catalog uses distinctive labels synchronized with each rende
     const definition = registries[row.slot][row.rendererKey];
     assert.ok(definition, `${row.itemKey} must resolve to a code-owned renderer`);
     assert.equal(definition.label, row.name, `${row.itemKey} label drifted from its renderer`);
-    assert.match(labelMigration, new RegExp(`\\('${row.itemKey}', '${row.name}'\\)`));
+    assert.equal(
+      [labelMigration, fontLabelMigration].some(migration => migration.includes(`('${row.itemKey}', '${row.name}')`)),
+      true,
+      `${row.itemKey} label is missing from the production migrations`
+    );
   }
 
   for (const blandLabel of [
@@ -57,6 +62,45 @@ test('the paid Name catalog uses distinctive labels synchronized with each rende
     'Liquid Mercury', 'Velvet Sweep', 'Daily Pulse'
   ]) {
     assert.equal(rows.some(row => row.name === blandLabel), false, `stale label remains: ${blandLabel}`);
+  }
+
+  for (const inventedFontLabel of [
+    'Velvet Antiqua', 'Narrowcast', 'Monument', 'Fixed Point', 'Soft Circuit',
+    'Lowlight', 'Paper Lantern', 'Black Cathedral', 'Raster Bloom', 'Razor Script',
+    'Foundry Slab', 'Split Serif', 'Cutline', 'Longwave', 'Greenroom',
+    'Soft Orbit', 'Handstamp', 'Front Page'
+  ]) {
+    assert.equal(rows.some(row => row.name === inventedFontLabel), false, `invented font label remains: ${inventedFontLabel}`);
+  }
+});
+
+test('reference Font families are real bundled assets rather than shared fallbacks', async () => {
+  const fontsSource = await read('src/lib/name/nameFonts.js');
+  assert.deepEqual([...NAME_FONT_ASSET_KEYS].sort(), Object.keys(NAME_FONTS).sort());
+  for (const definition of Object.values(NAME_FONTS)) {
+    assert.equal(definition.label, definition.targetFamily);
+    assert.equal(definition.source, 'bundled-fontsource');
+  }
+
+  for (const familyImport of [
+    '@fontsource/cormorant-garamond/latin-600.css',
+    '@fontsource/archivo-narrow/latin-700.css',
+    '@fontsource/syne/latin-700.css',
+    '@fontsource/sono/latin-600.css',
+    '@fontsource/libre-franklin/latin-600.css',
+    '@fontsource/pirata-one/latin-400.css',
+    '@fontsource/pixelify-sans/latin-600.css',
+    '@fontsource/dm-serif-display/latin-400-italic.css',
+    '@fontsource/roboto-slab/latin-700.css',
+    '@fontsource/abril-fatface/latin-400.css',
+    '@fontsource/black-ops-one/latin-400.css',
+    '@fontsource/michroma/latin-400.css',
+    '@fontsource/vt323/latin-400.css',
+    '@fontsource/fredoka/latin-600.css',
+    '@fontsource/permanent-marker/latin-400.css',
+    '@fontsource/archivo-black/latin-400.css'
+  ]) {
+    assert.match(fontsSource, new RegExp(familyImport.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 });
 

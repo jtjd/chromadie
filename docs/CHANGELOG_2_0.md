@@ -1465,11 +1465,11 @@ direct route behavior.
 - Updated the final username claim to emphasize a page that changes with the
   player while preserving authentication, routing, scoring, public data, and
   deployment contracts.
-## 2026-08-03 — Distinctive composable Name labels
+## 2026-08-03 — Use the reference Font families in production
 
-- Renamed the 64 paid Font, Material, and Motion products with a more varied,
-  identity-oriented vocabulary (for example, `Velvet Antiqua`, `Cold Mirror`,
-  and `Perihelion`).
+- Font products now use their real family names, such as `Cormorant Garamond`,
+  `Syne`, `Pirata One`, and `VT323`, instead of invented aliases.
+- Bundled and lazy-loaded the reference families so each Font preview has a
+  genuinely different face.
 - Preserved all technical keys, effect behavior, prices, rarities,
   descriptions, inventory, and equip/purchase contracts.
-- Added the production label refresh migration and synchronization tests.

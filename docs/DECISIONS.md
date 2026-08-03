@@ -2637,19 +2637,17 @@ production discovery.
 No schema, RPC, RLS, scoring, authentication, route, catalog, entitlement, or
 profile-rendering authority changed.
 
-## 2026-08-03 — Give the composable Name catalog a distinctive naming layer
+## 2026-08-03 — Keep reference font identities and differentiate the actual faces
 
-The supplied 64-effect reference currently uses literal, generic labels that
-describe implementation primitives (for example, “Polished Chrome” and
-“Letter Shuffle”). Those labels made the shop read like an internal effects
-list instead of a collection of identity pieces. The renderer keys remain the
-stable technical contract, while the customer-facing names now use a varied,
-evocative vocabulary such as “Cold Mirror,” “Black Cathedral,” “Ghost
-Frequency,” and “Perihelion.”
+The reference’s Font products are now customer-facing by their real family
+names: Cormorant Garamond, Archivo Narrow, Syne, IBM Plex Mono, Sono, and the
+other approved families. The earlier invented Font labels were removed. Each
+family is bundled locally and lazy-loaded by its stable renderer key, so Canvas
+cards and profiles no longer collapse to a shared Georgia or system-sans
+fallback. Materials and Motions retain their distinct product vocabulary.
 
-The rename is deliberately label-only: item keys, renderer keys, prices,
+The technical contract remains unchanged: item keys, renderer keys, prices,
 rarities, collections, descriptions, inventory, equipped loadouts, purchase
-RPCs, and RLS boundaries are unchanged. The canonical seed, code-owned
-renderer registries, and additive production migration are kept in sync and a
-test asserts all 64 paid labels are unique and resolve to their original
-renderer.
+RPCs, and RLS boundaries are preserved. The canonical seed, code-owned
+registries, and additive production migrations are synchronized, with tests
+asserting real family labels and one local asset loader for every Font key.
