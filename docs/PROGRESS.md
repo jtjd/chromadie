@@ -1748,3 +1748,14 @@ kept public profile selectors outside the supporting-route baseline.
   transitional total asset caps remain the only failing gate: JavaScript is
   777.63/700 kB and CSS is 401.80/380 kB. Initial and largest-lazy JavaScript,
   initial and largest-lazy CSS, and the HTML shell remain within budget.
+## 2026-08-03 — Refresh composable Name catalog vocabulary
+
+- Replaced the bland customer-facing names for all 64 paid Font, Material, and
+  Motion products with a varied, distinctive vocabulary while keeping every
+  item and renderer key stable.
+- Synchronized the code registries and `supabase/seed.sql`, then added the
+  additive `20260803120000_refresh_name_catalog_labels.sql` migration for live
+  rows.
+- Added coverage that checks label uniqueness, registry/seed synchronization,
+  and migration completeness. No renderer behavior, pricing, ownership, or
+  purchase boundary changed.

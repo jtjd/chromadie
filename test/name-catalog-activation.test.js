@@ -4,6 +4,9 @@ import { readFile } from 'node:fs/promises';
 
 import { NAME_COMPOSABLE_COUNTS, resolveNameLoadout } from '../src/lib/name/nameCatalog.js';
 import { applyNamePreviewLayer } from '../src/lib/name/nameLoadout.js';
+import { NAME_FONTS } from '../src/lib/name/nameFonts.js';
+import { NAME_MATERIALS } from '../src/lib/name/nameMaterials.js';
+import { NAME_MOTIONS } from '../src/lib/name/nameMotions.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -23,6 +26,38 @@ test('the reset keeps exactly 64 modern Name rows and nine Profile Border rows',
     paidMotions: 24,
     paidTotal: 64
   });
+});
+
+test('the paid Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
+  const [seed, labelMigration] = await Promise.all([
+    read('supabase/seed.sql'),
+    read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql')
+  ]);
+  const rows = [...seed.matchAll(
+    /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
+  )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }));
+
+  assert.equal(rows.length, 64);
+  assert.equal(new Set(rows.map(row => row.name)).size, rows.length);
+
+  const registries = {
+    name_font: NAME_FONTS,
+    name_material: NAME_MATERIALS,
+    name_motion: NAME_MOTIONS
+  };
+  for (const row of rows) {
+    const definition = registries[row.slot][row.rendererKey];
+    assert.ok(definition, `${row.itemKey} must resolve to a code-owned renderer`);
+    assert.equal(definition.label, row.name, `${row.itemKey} label drifted from its renderer`);
+    assert.match(labelMigration, new RegExp(`\\('${row.itemKey}', '${row.name}'\\)`));
+  }
+
+  for (const blandLabel of [
+    'Editorial Serif', 'Condensed Sans', 'Wide Geometric', 'Polished Chrome',
+    'Liquid Mercury', 'Velvet Sweep', 'Daily Pulse'
+  ]) {
+    assert.equal(rows.some(row => row.name === blandLabel), false, `stale label remains: ${blandLabel}`);
+  }
 });
 
 test('modern Name layers remain independent in temporary fitting-room state', () => {
