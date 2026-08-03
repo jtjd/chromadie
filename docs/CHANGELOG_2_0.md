@@ -1498,3 +1498,5 @@ direct route behavior.
   migration.
 - Kept Streak Freeze quantity stacking intact and declared it explicitly in the
   canonical seed/check instead of changing its purchase behavior.
+- Bumped the catalog version so existing browser caches pick up the corrected
+  labels without requiring users to clear storage manually.

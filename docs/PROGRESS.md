@@ -1792,3 +1792,5 @@ kept public profile selectors outside the supporting-route baseline.
   purchase semantics.
 - Remote `npm run check:catalog-drift` now passes: 75 items, 18 Fonts,
   22 Materials, 24 Motions, and 9 Profile Borders.
+- Bumped `meta.shop_version` so existing browsers discard the pre-label
+  `shop_cache:v3` snapshot and fetch the corrected names immediately.

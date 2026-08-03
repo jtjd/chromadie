@@ -144,7 +144,7 @@ ON CONFLICT (item_key) DO UPDATE SET
   catalog_status = EXCLUDED.catalog_status;
 
 INSERT INTO public.meta (key, value) VALUES
-('shop_version', '2026-08-02T20:00:00Z'),
+('shop_version', '2026-08-03T15:00:00Z'),
 ('cotw_target', '73,114,201'),
 ('official_launch_at', '2026-07-11T00:00:00Z'),
 ('founder_window_ends_at', '2026-08-11T00:00:00Z')

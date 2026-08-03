@@ -2690,3 +2690,7 @@ item keys, prices, rarities, ownership, and equipped loadouts were not touched.
 introduced quantity-based consumption and enables repeated freeze purchases, so
 the canonical seed now declares that behavior explicitly instead of treating
 the live value as drift and regressing the economy.
+
+The label correction also bumps `meta.shop_version`. Shop metadata is the
+existing cache-invalidation boundary, so old `shop_cache:v3` entries are
+refetched without changing the cache shape or forcing a client-side purge.
