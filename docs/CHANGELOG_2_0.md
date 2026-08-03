@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Give the shop a cleaner visual system
+
+- Removed daily-color gradients from catalog product stages; previews now use
+  a stable neutral surface so each effect reads clearly.
+- Reworked Browse into compact category navigation, a three-column product
+  gallery, smaller cards, and a balanced fitting-room preview rail.
+- Removed repeated descriptions and duplicated prices from card actions, while
+  preserving the existing detail sheet and purchase boundary.
+- Tightened the shop header and Today’s Edit panel so the route feels like a
+  focused catalog instead of a collection of empty dashboard panels.
+
 ## 2026-08-03 — Make homepage hydration endpoint-first
 
 - Stop the local daily-roll fixture from appearing before the public `today`

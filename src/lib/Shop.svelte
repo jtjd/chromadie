@@ -35,7 +35,6 @@
     requiresPurchaseConfirmation,
     tryOnShopItem
   } from './shopCatalog.js';
-  import { normalizeHexColor } from './utils.js';
 
   const SHOP_VIEWS = Object.freeze([
     { id: 'home', label: 'Shop' },
@@ -43,6 +42,7 @@
     { id: 'collection', label: 'Collection' },
     { id: 'studio', label: 'Studio' }
   ]);
+  const SHOP_ACCENT = '#C7B4FF';
   const VIEW_STATE_NAMESPACE = 'shop';
 
   let activeView = 'home';
@@ -86,7 +86,9 @@
       && (selectedItem.slot === 'consumable' || selectedOwnedCount === 0)
   );
   $: displayColor = currentRoll?.hex_code || $profile?.mood_color || '#8B7CF6';
-  $: shopAccent = normalizeHexColor(displayColor, '#CDD2FF');
+  // The catalog has its own quiet brand accent. Today’s color is shown in the
+  // Home swatch and profile preview, but should not recolor every shop control.
+  const shopAccent = SHOP_ACCENT;
   $: ownedCatalogCount = catalogItems.filter(item => {
     if (item.slot === 'consumable') return false;
     const owned = (fittingRoom.inventoryCounts?.[item.item_key] || 0) > 0;
@@ -227,7 +229,6 @@
     <div class="shop-heading">
       <span class="shop-eyebrow">Chromadie shop</span>
       <h1 id="shop-title">Shop <span>your identity.</span></h1>
-      <p>Finished cosmetics and complete looks.</p>
     </div>
     <div class="shop-header-actions">
       <div class="shop-wallet" aria-label={`Wallet balance: ${fittingRoom.balance.toLocaleString()} EP`}><span>Balance</span><strong>{fittingRoom.balance.toLocaleString()} EP</strong></div>
@@ -325,11 +326,10 @@
 <style>
   .shop-page { --shop-canvas:#0d0f13; --shop-deep:#090a0d; --shop-raised:#111319; --shop-line:rgba(255,255,255,.075); --shop-line-strong:rgba(255,255,255,.15); --shop-ink:#f2f0eb; --shop-muted:#aaa8b0; --shop-faint:#858690; --shop-accent:#CDD2FF; --shop-font:var(--font-body-stack); --shop-display:var(--font-display-stack); --shop-mono:var(--font-mono-stack); width:min(86.25rem,calc(100% - 2.5rem)); margin:0 auto 5.5rem; color:var(--shop-ink); font-family:var(--shop-font); }
   :global(.app-main--site) .shop-page { width:min(86.25rem,calc(100% - 2.5rem)); margin-top:clamp(1.25rem,4vh,3.25rem); padding:0 0 4rem; }
-  .shop-header { display:flex; align-items:end; justify-content:space-between; gap:2rem; padding:0 0 1.35rem; border-bottom:1px solid var(--shop-line); }
-  .shop-heading h1 { max-width:52rem; margin:.65rem 0 .65rem; font:650 clamp(2.7rem,5vw,4.5rem)/.92 var(--shop-display); letter-spacing:-.055em; }
-  :global(.app-main--site) .shop-heading h1 { max-width:52rem; margin:.65rem 0 .65rem; font:650 clamp(2.7rem,5vw,4.5rem)/.92 var(--shop-display); letter-spacing:-.055em; }
+  .shop-header { display:flex; align-items:center; justify-content:space-between; gap:2rem; padding:0 0 1.1rem; border-bottom:1px solid var(--shop-line); }
+  .shop-heading h1 { max-width:52rem; margin:.55rem 0 .05rem; font:650 clamp(2.35rem,4.4vw,3.8rem)/.92 var(--shop-display); letter-spacing:-.055em; }
+  :global(.app-main--site) .shop-heading h1 { max-width:52rem; margin:.55rem 0 .05rem; font:650 clamp(2.35rem,4.4vw,3.8rem)/.92 var(--shop-display); letter-spacing:-.055em; }
   .shop-heading h1 span { color:var(--shop-accent); }
-  .shop-heading p { max-width:40rem; margin:0; color:var(--shop-muted); font-size:.98rem; line-height:1.5; }
   .shop-eyebrow { color:var(--shop-faint); font:600 .72rem/1.3 var(--shop-mono); letter-spacing:.13em; text-transform:uppercase; }
   .shop-header-actions { display:flex; align-items:stretch; gap:.55rem; flex:0 0 auto; }
   .shop-wallet, .shop-owned { min-width:8.25rem; padding:.7rem .85rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); }
@@ -339,7 +339,7 @@
   .shop-owned { min-width:6.25rem; }
   .shop-profile-link { min-height:2.9rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .9rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; text-decoration:none; font:.78rem var(--shop-mono); }
   .shop-profile-link:hover, .shop-profile-link:focus-visible { border-color:#777d8d; background:#1b1e25; color:#fff; }
-  .shop-navigation { display:flex; gap:.25rem; width:max-content; max-width:100%; margin:1.25rem 0 2rem; padding:.25rem; border:1px solid var(--shop-line); border-radius:var(--radius-pill); background:var(--shop-raised); }
+  .shop-navigation { display:flex; gap:.25rem; width:max-content; max-width:100%; margin:1rem 0 1.6rem; padding:.25rem; border:1px solid var(--shop-line); border-radius:var(--radius-pill); background:var(--shop-raised); }
   .shop-navigation button { position:relative; min-height:2.65rem; padding:0 1.1rem; border:0; border-radius:var(--radius-pill); background:transparent; color:#92949d; font:600 .78rem var(--shop-mono); letter-spacing:.03em; cursor:pointer; }
   .shop-navigation button:hover, .shop-navigation button:focus-visible { color:#fff; }
   .shop-navigation button.active { background:color-mix(in srgb,var(--shop-accent) 16%,transparent); color:var(--shop-ink); }

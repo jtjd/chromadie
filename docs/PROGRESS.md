@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Shop visual composition pass — 2026-08-03
+
+- Decoupled catalog swatches from the daily roll so product previews stay
+  stable and the effect itself carries the visual focus.
+- Converted Browse to a compact category bar, a three-column desktop gallery,
+  and a narrower fitting-room rail with smaller, more legible cards.
+- Removed repeated card descriptions and price repetition from purchase
+  buttons while keeping product detail, purchase confirmation, and profile
+  settings paths intact.
+- Tightened the shop shell and daily edit panel to reduce dashboard-like dead
+  space without changing catalog or account boundaries.
+
 ## Homepage endpoint-first hydration — 2026-08-03
 
 - Delayed the localhost daily-roll fixture until the `today` discovery

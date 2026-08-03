@@ -70,7 +70,7 @@ test('Browse uses category navigation, a contained filter panel, a grid, and one
   assert.match(source, /on:preview/);
   assert.doesNotMatch(source, /shop-browse-filters/);
   assert.match(source, /showCounts=\{false\}/);
-  assert.match(source, /grid-template-columns:repeat\(2/);
+  assert.match(source, /grid-template-columns:repeat\(3/);
   assert.match(source, /@media \(max-width: 520px\)/);
 });
 
@@ -87,8 +87,9 @@ test('product cards keep product decisions in detail and expose a readable hiera
   assert.match(source, /item-buy-button/);
   assert.match(source, /Confirm purchase/);
   assert.doesNotMatch(source, /primary-item-action|secondary-item-action/);
-  assert.match(source, /height:124px/);
-  assert.match(source, /font:650 \.92rem\/1 var\(--shop-mono/);
+  assert.match(source, /height:108px/);
+  assert.match(source, /font:650 \.78rem\/1 var\(--shop-mono/);
+  assert.doesNotMatch(source, /<p>\{item\.description\}<\/p>/);
   assert.doesNotMatch(source, /item-detail-link|>Details<|>Manage</);
   assert.doesNotMatch(source, /preview-cue/);
 });
@@ -154,6 +155,8 @@ test('contextual shop preview delegates to the shared Studio and Name renderer p
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(itemPreview, /<NameEffectCanvas/);
   assert.match(itemPreview, /context="card"/);
+  assert.match(itemPreview, /CATALOG_PREVIEW_COLOR/);
+  assert.match(itemPreview, /background: linear-gradient\(145deg/);
 });
 
 test('shop layout includes explicit responsive targets and no masonry implementation', async () => {

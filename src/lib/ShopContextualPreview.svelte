@@ -73,8 +73,8 @@
     min-width: 0;
     overflow: hidden;
     border: 1px solid var(--shop-line);
-    border-radius: 7px;
-    background: #0b0d11;
+    border-radius: 9px;
+    background: #101319;
   }
 
   .shop-contextual-preview__header {
@@ -82,16 +82,16 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.9rem;
-    padding: 1rem 1.1rem;
+    padding: .85rem .9rem;
     border-bottom: 1px solid var(--shop-line);
-    background: #111319;
+    background: #15181f;
   }
 
   .shop-contextual-preview__header h2 {
     overflow: hidden;
     margin: 0.3rem 0 0.2rem;
     color: #f2f0eb;
-    font: 650 1.2rem/1.1 var(--shop-display, var(--font-display));
+    font: 650 1.08rem/1.1 var(--shop-display, var(--font-display));
     letter-spacing: -0.025em;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -156,16 +156,16 @@
 
   .shop-contextual-preview__isolated {
     display: grid;
-    min-height: 18rem;
-    padding: 1rem;
+    min-height: 13.5rem;
+    padding: .8rem;
     place-items: center;
-    background: #080a0e;
+    background: #0b0e13;
   }
 
   .shop-contextual-preview__isolated :global(.shop-preview-area) {
-    height: 11rem;
-    border-color: #393d46;
-    background: #090b0f;
+    height: 9.5rem;
+    border-color: #414650;
+    background: #12151b;
   }
 
   .shop-contextual-preview :global(.studio-preview) {
@@ -178,18 +178,19 @@
   }
 
   .shop-contextual-preview :global(.studio-preview-head) { display: none; }
-  .shop-contextual-preview :global(.studio-stage) { min-height: 18rem; border-radius: 4px; }
+  .shop-contextual-preview :global(.studio-stage) { min-height: 14.5rem; border-radius: 6px; }
+  .shop-contextual-preview :global(.studio-profile-card) { width: min(calc(100% - 1.25rem), 100%); }
 
   @media (max-width: 960px) {
     .shop-contextual-preview { position: relative; top: auto; }
-    .shop-contextual-preview :global(.studio-stage) { min-height: 17rem; }
-    .shop-contextual-preview__isolated { min-height: 17rem; }
+    .shop-contextual-preview :global(.studio-stage) { min-height: 16rem; }
+    .shop-contextual-preview__isolated { min-height: 15.5rem; }
   }
 
   @media (max-width: 700px) {
     .shop-contextual-preview__header { padding: 0.75rem; }
     .shop-contextual-preview :global(.studio-preview) { padding: 0.6rem; }
     .shop-contextual-preview :global(.studio-stage) { min-height: 15rem; }
-    .shop-contextual-preview__isolated { min-height: 15rem; padding: 0.75rem; }
+    .shop-contextual-preview__isolated { min-height: 14rem; padding: 0.75rem; }
   }
 </style>

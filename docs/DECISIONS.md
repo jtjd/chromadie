@@ -2,6 +2,19 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Keep catalog presentation independent from the daily roll
+
+The daily color belongs to the player’s identity and Today’s Edit context;
+it should not recolor every catalog tile or shop control. ShopItemPreview
+therefore uses a stable neutral stage and a fixed renderer input for isolated
+product previews, while the On your profile fitting-room view continues to
+use the real profile color. Browse uses compact category pills, a
+three-column desktop gallery, and a narrower preview rail so the product
+effect—not empty panel area or repeated copy—carries the scan. Existing
+catalog filtering, temporary try-on, purchase RPC, inventory, entitlement,
+profile settings, responsive behavior, and reduced-motion handling remain
+unchanged.
+
 ## 2026-08-03 — Resolve homepage identity from live state before showing a result
 
 The homepage no longer paints the localhost roll fixture before the public

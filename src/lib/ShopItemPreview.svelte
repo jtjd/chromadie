@@ -7,6 +7,10 @@
   export let displayColor = '#8B7CF6';
   export let mode = 'animated';
 
+  // Catalog previews are product swatches, not another daily-roll surface. Keep
+  // their renderer input stable so a new roll never recolors the whole catalog.
+  const CATALOG_PREVIEW_COLOR = '#C7B4FF';
+
   $: nameLayerLoadout = item?.slot === 'name_font'
     ? { fontKey: item.css_value }
     : item?.slot === 'name_material'
@@ -16,7 +20,7 @@
         : null;
 </script>
 
-<div class="shop-preview-area {item?.slot === 'profile_border' ? 'shop-preview-area-tall' : ''}">
+<div class="shop-preview-area {item?.slot === 'profile_border' ? 'shop-preview-area-tall' : ''}" data-preview-source={displayColor}>
   {#if item?.slot === 'profile_border'}
     <ProfileBorderEffect borderKey={item.css_value} compact={true} animated={mode === 'animated'} className="preview-border-shell">
       <div class="preview-profile-card">
@@ -33,7 +37,7 @@
       <NameEffectCanvas
         text={username}
         loadout={nameLayerLoadout}
-        todayColor={displayColor}
+        todayColor={CATALOG_PREVIEW_COLOR}
         context="card"
         compact={true}
         {mode}
@@ -49,9 +53,10 @@
 </div>
 
 <style>
-  .shop-preview-area { height: 156px; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 14px; box-sizing: border-box; border: 1px solid var(--shop-line, rgba(255,255,255,0.075)); border-radius: var(--radius-sm, 6px); background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--shop-accent, #7b5cff) 18%, transparent), transparent 62%), var(--shop-deep, rgba(5,6,10,0.58)); overflow: hidden; }
+  .shop-preview-area { position:relative; height: 156px; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 14px; box-sizing: border-box; border: 1px solid rgba(255,255,255,.12); border-radius: var(--radius-sm, 6px); background: linear-gradient(145deg, #191c23 0%, #0f1116 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.035), inset 0 -1.25rem 2.5rem rgba(0,0,0,.14); overflow: hidden; }
+  .shop-preview-area::after { position:absolute; inset:0; background: linear-gradient(115deg, rgba(255,255,255,.035), transparent 32%, transparent 72%, rgba(255,255,255,.018)); pointer-events:none; content:''; }
   .shop-preview-area-tall { height: 156px; }
-  .preview-profile-card { width: 100%; min-height: 112px; background: radial-gradient(circle at top right, color-mix(in srgb, var(--shop-accent, #7b5cff) 18%, transparent), transparent 42%), linear-gradient(180deg, rgba(15,15,21,0.98), rgba(9,9,14,0.96)); border-radius: 5px; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+  .preview-profile-card { width: 100%; min-height: 112px; background: linear-gradient(180deg, #171a21, #0d0f14); border:1px solid rgba(255,255,255,.11); border-radius: 5px; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
   .preview-profile-topline, .preview-profile-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .preview-profile-badge, .preview-profile-meta span { color: var(--shop-faint, var(--text-muted)); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; }
   .preview-profile-dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.3); box-shadow: 0 0 12px rgba(255,255,255,0.18); flex-shrink: 0; }
@@ -60,7 +65,7 @@
   .shop-preview-text--name :global(.name-effect-canvas) { width: 100%; max-width: 100%; text-align: center; }
   .shop-preview-text--name :global(.name-effect-canvas__semantic) { max-width: 100%; color: var(--shop-ink, #f2f0eb); font: 650 clamp(1.7rem, 4vw, 2.5rem)/.95 var(--font-display-stack, var(--font-display)); letter-spacing: -.045em; overflow-wrap: anywhere; white-space: nowrap; }
   .shop-preview-text--utility { flex-direction: column; gap: 0.65rem; color: var(--shop-muted, var(--color-ink-muted)); font: 600 0.95rem var(--shop-mono, var(--font-mono-stack)); }
-  .preview-utility-mark { color: var(--shop-accent, var(--color-accent-bright)); font-size: 1.8rem; }
+  .preview-utility-mark { color: #d8ccff; font-size: 1.8rem; }
 
   @media (max-width: 600px) {
     .shop-preview-area { height: 142px; padding: 10px; }
