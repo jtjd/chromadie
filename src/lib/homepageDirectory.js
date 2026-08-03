@@ -1,6 +1,10 @@
 import { normalizeDiscoveryResponse } from './discoveryData.js';
 import { getCanonicalProfilePath } from './routeContract.js';
 
+// Neutral while the live discovery endpoint is resolving; it must not read as
+// a real color-of-the-day result.
+export const HOMEPAGE_LOADING_COLOR = '#CDD2FF';
+
 const VALID_ROLL_RARITIES = new Set(['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']);
 
 // Approved staff-owned fallback identity. It is only hydrated through the

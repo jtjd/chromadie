@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Make homepage hydration endpoint-first
+
+- Stop the local daily-roll fixture from appearing before the public `today`
+  endpoint responds.
+- Use a neutral loading accent instead of presenting the default color as a
+  real daily result.
+- Keep the homepage mounted across auth resolution so signed-in visitors do
+  not briefly see signed-out claim controls or a remounted stale view.
+
 ## 2026-08-03 — Make the shop product-first
 
 - Removed redundant Browse copy and corrected the search field’s visual label.

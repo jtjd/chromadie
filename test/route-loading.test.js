@@ -16,6 +16,7 @@ test('route loading keeps the shell and previous page mounted until a destinatio
   assert.match(app, /prefetchRouteComponent/);
   assert.match(outlet, /activeComponent/);
   assert.match(outlet, /activeProps/);
+  assert.match(outlet, /activeProps = target\.componentProps/);
   assert.match(outlet, /await loadRouteComponent\(target\.loaderKey\)/);
   assert.match(outlet, /if \(target\.staticComponent\)/);
   assert.match(outlet, /role="status"/);

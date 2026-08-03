@@ -86,8 +86,17 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(home, /--home-active-color/);
   assert.match(home, /normalizeHexColor/);
   assert.match(home, /on:activecolor/);
+  assert.match(home, /accountReady/);
+  assert.match(home, /HOMEPAGE_LOADING_COLOR/);
   assert.match(directory, /dispatch\('activecolor'/);
+  assert.match(directory, /HOMEPAGE_LOADING_COLOR/);
+  assert.match(directory, /todayEndpointReady/);
+  assert.match(directory, /localPreviewForEmptyEndpoint/);
+  assert.match(directory, /todayResponse\.error \|\| todayItems\.length/);
   assert.match(app, /on:activecolor=\{handleHomeActiveColor\}/);
+  assert.match(app, /componentKey: 'home'/);
+  assert.match(app, /accountState: currentAccountState/);
+  assert.match(claim, /accountReady/);
   assert.match(app, /accentColor=\{homeModeVisible \? homeActiveColor/);
   assert.match(home, /prefers-reduced-motion/);
   assert.match(main, /@fontsource-variable\/instrument-sans/);

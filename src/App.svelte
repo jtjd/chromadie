@@ -46,10 +46,10 @@
   let cancelIdlePrefetch = null;
   let routeTarget;
   let authComponentProps;
-  let homeActiveColor = '#8B7CF6';
+  let homeActiveColor = '#CDD2FF';
 
   function handleHomeActiveColor(event) {
-    homeActiveColor = normalizeHexColor(event.detail?.color, '#8B7CF6');
+    homeActiveColor = normalizeHexColor(event.detail?.color, '#CDD2FF');
   }
 
   function getProfileVisualFixture() {
@@ -486,9 +486,9 @@
 
     if (currentView === 'home') {
       return {
-        componentKey: `home:${authenticated}`,
+        componentKey: 'home',
         staticComponent: HomePage,
-        componentProps: { isAuthenticated: authenticated },
+        componentProps: { isAuthenticated: authenticated, accountState: currentAccountState },
         loadingLabel: 'Opening ChromaDie'
       };
     }

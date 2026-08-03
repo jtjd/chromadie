@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Homepage endpoint-first hydration — 2026-08-03
+
+- Delayed the localhost daily-roll fixture until the `today` discovery
+  endpoint has answered, so it cannot flash before live data.
+- Kept successful endpoint emptiness honest: the fixture is only a local
+  fallback for an empty response; production remains live-data-only.
+- Used a neutral loading accent instead of the default violet while the daily
+  result is unresolved.
+- Kept the homepage instance mounted while auth transitions and updated its
+  props in place, preventing a brief signed-out claim surface for authenticated
+  visitors.
+
 ## Shop product-first cleanup — 2026-08-03
 
 - Removed redundant Browse copy and fixed the search control so only the

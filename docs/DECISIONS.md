@@ -2,6 +2,18 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Resolve homepage identity from live state before showing a result
+
+The homepage no longer paints the localhost roll fixture before the public
+`today` discovery endpoint responds. A fixture may still appear locally when
+that endpoint succeeds with no public rows, while production remains
+live-data-only. During resolution, the homepage uses a neutral accent rather
+than implying a real color. Authentication state is passed into the existing
+homepage instance and the route outlet updates its props without remounting,
+so a signed-in visitor does not briefly see signed-out claim controls or lose
+the current endpoint result. Discovery, auth, scoring, and profile boundaries
+remain unchanged.
+
 ## 2026-08-03 — Make the shop product-first and remove interface noise
 
 The shop now treats the effect itself as the primary browse target. Browse

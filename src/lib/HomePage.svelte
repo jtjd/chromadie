@@ -6,9 +6,12 @@
   import HomeHowItWorks from './HomeHowItWorks.svelte';
   import HomeLeaderboard from './HomeLeaderboard.svelte';
   import HomeUsernameClaim from './HomeUsernameClaim.svelte';
+  import { ACCOUNT_STATES } from './authState.js';
+  import { HOMEPAGE_LOADING_COLOR } from './homepageDirectory.js';
   import { normalizeHexColor } from './utils.js';
 
   export let isAuthenticated = false;
+  export let accountState = /** @type {string} */ (ACCOUNT_STATES.BOOTING);
 
   const dispatch = createEventDispatcher();
   let revealObserver;
@@ -17,6 +20,9 @@
   function forwardAction(event) {
     dispatch(event.type, event.detail);
   }
+
+  $: accountReady = accountState === ACCOUNT_STATES.SIGNED_OUT || accountState === ACCOUNT_STATES.AUTHENTICATED;
+  $: accountUnavailable = accountState === ACCOUNT_STATES.PROFILE_ERROR;
 
   function revealHomepageContent() {
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -57,10 +63,12 @@
   <HomepageProfileDirectory on:navigate={forwardAction} on:activecolor={event => dispatch('activecolor', event.detail)} let:directory>
     <div
       class="home-page__content"
-      style={`--home-active-color: ${normalizeHexColor((directory.heroRoll || directory.previewRoll)?.hexCode, '#8B7CF6')};`}
+      style={`--home-active-color: ${normalizeHexColor((directory.heroRoll || directory.previewRoll)?.hexCode, HOMEPAGE_LOADING_COLOR)};`}
     >
       <HomeHero
         isAuthenticated={isAuthenticated}
+        {accountReady}
+        {accountUnavailable}
         roll={directory.heroRoll || directory.previewRoll}
         rollIsPreview={!directory.heroRoll && Boolean(directory.previewRoll)}
         previewAvailable={directory.previewAvailable}
@@ -83,7 +91,7 @@
           <p class="home-kicker">chm.lol/yourname</p>
           <h2 id="home-final-title">Claim the page that changes with you.</h2>
           <p>Free to begin. One color each day. Every result becomes part of your public history.</p>
-          <HomeUsernameClaim isAuthenticated={isAuthenticated} inputId="home-claim-final" showLabel={false} showNote={false} on:claim={forwardAction} on:profile={forwardAction} />
+          <HomeUsernameClaim isAuthenticated={isAuthenticated} {accountReady} {accountUnavailable} inputId="home-claim-final" showLabel={false} showNote={false} on:claim={forwardAction} on:profile={forwardAction} />
         </div>
       </section>
     </div>

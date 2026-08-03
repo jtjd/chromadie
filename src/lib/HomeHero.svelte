@@ -2,9 +2,12 @@
   import { createEventDispatcher } from 'svelte';
   import HomeDailyResult from './HomeDailyResult.svelte';
   import HomeUsernameClaim from './HomeUsernameClaim.svelte';
+  import { HOMEPAGE_LOADING_COLOR } from './homepageDirectory.js';
   import { normalizeHexColor } from './utils.js';
 
   export let isAuthenticated = false;
+  export let accountReady = false;
+  export let accountUnavailable = false;
   /** @type {any} */
   export let roll = null;
   export let rollIsPreview = false;
@@ -14,7 +17,7 @@
 
   const dispatch = createEventDispatcher();
   $: hasLiveResult = Boolean(roll?.hexCode && roll?.score !== null && roll?.score !== undefined);
-  $: heroColor = normalizeHexColor(roll?.hexCode, '#8B7CF6');
+  $: heroColor = normalizeHexColor(roll?.hexCode, HOMEPAGE_LOADING_COLOR);
 </script>
 
 <section class="home-hero" class:home-hero--with-ticker={tickerVisible} style={`--home-hero-color: ${heroColor};`} aria-labelledby="home-title">
@@ -28,6 +31,8 @@
         <p>Add your background, avatar, music, links, and effects. Each daily color becomes part of your public history and changes where your profile appears.</p>
         <HomeUsernameClaim
           isAuthenticated={isAuthenticated}
+          {accountReady}
+          {accountUnavailable}
           inputId="home-claim-hero"
           showLabel={false}
           buttonLabel="Claim page"

@@ -65,7 +65,10 @@
   }
 
   function syncTarget(target) {
-    if (target.signature === activeTargetSignature) return;
+    if (target.signature === activeTargetSignature) {
+      if (activeComponent && activeKey === target.componentKey) activeProps = target.componentProps;
+      return;
+    }
     activeTargetSignature = target.signature;
     void resolveTarget(target);
   }

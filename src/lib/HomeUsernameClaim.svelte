@@ -4,6 +4,8 @@
   import { trackProductEvent } from './productAnalytics.js';
 
   export let isAuthenticated = false;
+  export let accountReady = true;
+  export let accountUnavailable = false;
   export let inputId = 'home-claim-username';
   export let showLabel = true;
   export let showNote = true;
@@ -32,7 +34,11 @@
   }
 </script>
 
-{#if isAuthenticated}
+{#if accountUnavailable}
+  <span class="home-claim__loading" role="status" aria-live="polite">Account unavailable. Try again above.</span>
+{:else if !accountReady}
+  <span class="home-claim__loading" role="status" aria-live="polite">Checking your account…</span>
+{:else if isAuthenticated}
   <button class="home-claim__primary" type="button" on:click={() => dispatch('profile')}>
     View your profile <span aria-hidden="true">↗</span>
   </button>
@@ -80,6 +86,7 @@
   .home-claim small { color: #797b85; font: 400 0.63rem / 1.35 var(--home-mono); }
   .home-claim__error { color: #ff8791 !important; }
   .home-claim__primary { padding: 0.72rem 1rem; border: 1px solid var(--home-accent, #cdd2ff); border-radius: 0.35rem; background: var(--home-accent, #cdd2ff); color: #101116; }
+  .home-claim__loading { display: inline-flex; align-items: center; min-height: 3rem; color: #9b9da8; font: 600 0.72rem / 1 var(--home-mono); }
   .home-claim__primary:focus-visible, .home-claim__field button:focus-visible { outline: 2px solid #8ddcff; outline-offset: 3px; }
 
   @media (max-width: 36rem) {

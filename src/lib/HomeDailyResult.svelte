@@ -1,6 +1,7 @@
 <script>
   import CompactRollPreview from './CompactRollPreview.svelte';
   import { getProfileMediaUrl } from './profileMedia.js';
+  import { HOMEPAGE_LOADING_COLOR } from './homepageDirectory.js';
   import { normalizeHexColor } from './utils.js';
 
   /** @type {any} */
@@ -14,7 +15,7 @@
   let failedAvatarSource = '';
 
   $: hasResult = Boolean(roll?.hexCode && roll?.score !== null && roll?.score !== undefined);
-  $: color = normalizeHexColor(roll?.hexCode, '#8B7CF6');
+  $: color = normalizeHexColor(roll?.hexCode, HOMEPAGE_LOADING_COLOR);
   $: rarity = roll?.rarity || 'Common';
   $: hasFeaturedRoll = Boolean(hasResult && !rollIsPreview && roll?.username);
   $: hasProfileLink = Boolean(hasFeaturedRoll && roll?.profilePath);

@@ -11,6 +11,7 @@
     buildHomepageFeaturedProfiles,
     collectHomepageCandidates,
     collectHomepageRollEvents,
+    HOMEPAGE_LOADING_COLOR,
     KNOWN_STAFF_SHOWCASE_USERNAMES
   } from './homepageDirectory.js';
 
@@ -45,7 +46,7 @@
   let previewAvailable = false;
   const dispatch = createEventDispatcher();
 
-  $: activeColor = normalizeHexColor((directory.heroRoll || directory.previewRoll)?.hexCode, '#8B7CF6');
+  $: activeColor = normalizeHexColor((directory.heroRoll || directory.previewRoll)?.hexCode, HOMEPAGE_LOADING_COLOR);
   $: dispatch('activecolor', { color: activeColor });
 
   function canUseLocalPreview() {
@@ -118,6 +119,10 @@
       const initialHeroRoll = initialLeaderboard.find(item => (
         item.hexCode && item.score !== null && item.score !== undefined
       )) || null;
+      const todayEndpointReady = !todayResponse.error;
+      const localPreviewForEmptyEndpoint = todayEndpointReady && !todayItems.length
+        ? previewRoll
+        : null;
 
       // The daily roll is already public discovery data. Publish it before
       // waiting for the richer profile hydration pass so the first viewport
@@ -126,8 +131,9 @@
       directory = {
         ...directory,
         loading: !hasLoaded,
-        leaderboard: initialLeaderboard.length || !hasLoaded ? initialLeaderboard : directory.leaderboard,
-        heroRoll: initialHeroRoll || (hasLoaded ? directory.heroRoll : null),
+        leaderboard: todayEndpointReady || !hasLoaded ? initialLeaderboard : directory.leaderboard,
+        heroRoll: todayEndpointReady || !hasLoaded ? initialHeroRoll : directory.heroRoll,
+        previewRoll: localPreviewForEmptyEndpoint,
         error: ''
       };
       const responses = [todayResponse, ...(await supportingResponsesPromise)];
@@ -150,10 +156,12 @@
       const hydrated = (await Promise.all(candidates.slice(0, 12).map(hydrateProfile))).filter(Boolean);
       if (currentRequest !== requestId) return;
 
-      const leaderboard = todayItems
-        .map(toHomepageRow)
-        .filter(Boolean)
-        .slice(0, 3);
+      const leaderboard = todayResponse.error && hasLoaded
+        ? directory.leaderboard
+        : todayItems
+          .map(toHomepageRow)
+          .filter(Boolean)
+          .slice(0, 3);
       const hydratedByUsername = new Map(hydrated.map(model => [model.discoveryItem.username.toLowerCase(), model]));
       const heroRoll = leaderboard[0] || null;
       const heroModel = heroRoll ? hydratedByUsername.get(heroRoll.username.toLowerCase()) || null : null;
@@ -171,7 +179,7 @@
         featuredProfiles,
         heroRoll,
         heroModel,
-        previewRoll,
+        previewRoll: todayResponse.error || todayItems.length ? null : previewRoll,
         previewAvailable
       };
       hasLoaded = true;
@@ -181,7 +189,6 @@
         ...directory,
         loading: false,
         error: 'Public profiles could not be loaded right now.',
-        previewRoll,
         previewAvailable
       };
       hasLoaded = true;
@@ -191,7 +198,7 @@
   onMount(() => {
     previewAvailable = canUseLocalPreview();
     previewRoll = getLocalPreviewRoll();
-    directory = { ...directory, previewRoll, previewAvailable };
+    directory = { ...directory, previewAvailable };
     void loadDirectory();
     refreshTimer = window.setInterval(() => void loadDirectory(), REFRESH_INTERVAL_MS);
   });
