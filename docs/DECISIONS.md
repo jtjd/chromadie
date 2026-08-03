@@ -2,6 +2,20 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Keep rendered names as legible as their semantic fallback
+
+The shared Canvas name renderer now mirrors the IdentityCard heading contract
+on its semantic node. IdentityCard owns that heading style in its component
+scope, but the Canvas semantic text is rendered by a child component; without
+an explicit bridge, the canvas measured a browser-default-sized node and made
+equipped fonts look deceptively small. The bridge is presentation-only,
+preserves the accessible text layer, and leaves renderer keys, loadouts, and
+profile data unchanged.
+
+Catalog cards also use one compact metadata/action row: Buy with its EP cost,
+or a disabled Owned/Equipped state when the item is already in the account.
+The preview stage is shorter and no longer reserves a separate footer row.
+
 ## 2026-08-03 — Make the fitting room read like the finished profile
 
 The Browse fitting room now uses the same identity hierarchy as a finished

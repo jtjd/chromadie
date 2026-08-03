@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Shop identity scale and card density pass — 2026-08-03
+
+- Matched Canvas-rendered IdentityCard names to the readable semantic heading
+  size so the visual effect no longer shrinks compared with the fallback text.
+- Moved Buy, Owned, and Equipped actions into the rarity/collection row.
+- Removed the card footer action band and shortened the preview stage to make
+  the catalog denser without reducing effect clarity.
+- Preserved detail selection, purchase confirmation, inventory state, and
+  temporary preview behavior.
+
 ## Shop fitting-room readability pass — 2026-08-03
 
 - Increased the name scale in catalog swatches and the contextual profile

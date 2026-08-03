@@ -51,7 +51,7 @@
     <div class="item-card-title">
       <h3><button type="button" class="item-product-button" aria-label={`Open ${item.name} details`} on:click={() => dispatch('select', item)}>{item.name}</button></h3>
     </div>
-    {#if !purchasable}
+    {#if !purchasable && !['owned', 'equipped'].includes(state?.tone)}
       <strong class="item-price">{priceLabel}</strong>
     {/if}
   </div>
@@ -62,19 +62,19 @@
   <div class="item-card-meta">
     <span class="item-rarity rarity-{(item.rarity || 'Common').toLowerCase()}" aria-label={`Rarity: ${item.rarity || 'Common'}`}>{item.rarity || 'Common'}</span>
     <span class="item-collection">{item.collection || 'Core collection'}</span>
-    {#if isPreviewing || ['owned', 'equipped', 'premium', 'premium-locked', 'unaffordable'].includes(state?.tone)}
-      <span class="item-state tone-{isPreviewing ? 'previewing' : state.tone}">{isPreviewing ? 'Previewing' : state.label}</span>
-    {/if}
-  </div>
-
-  {#if purchasable}
-    <div class="item-card-footer">
+    {#if purchasable}
       <button type="button" class="item-buy-button" disabled={purchaseDisabled} on:click|stopPropagation={() => dispatch('purchase', item)}>
         <span>{purchaseLabel}</span>
         <span class="item-buy-price" aria-label={`Cost ${priceLabel}`}>· {priceLabel}</span>
       </button>
-    </div>
-  {/if}
+    {:else if ['owned', 'equipped'].includes(state?.tone)}
+      <button type="button" class="item-buy-button item-buy-button--state tone-{state.tone}" disabled aria-label={`${state.label}: ${item.name}`}>{state.label}</button>
+    {:else if isPreviewing}
+      <span class="item-state tone-{isPreviewing ? 'previewing' : state.tone}">{isPreviewing ? 'Previewing' : state.label}</span>
+    {:else if ['premium', 'premium-locked', 'unaffordable'].includes(state?.tone)}
+      <span class="item-state tone-{state.tone}">{state.label}</span>
+    {/if}
+  </div>
 </article>
 
 <style>
@@ -87,7 +87,7 @@
   .item-card-title h3 { overflow:hidden; margin:0; font-size:.96rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
   .item-product-button { overflow:hidden; max-width:100%; padding:0; border:0; background:transparent; color:var(--shop-ink, #f3f2f7); cursor:pointer; font:680 .96rem/1.15 var(--shop-display, var(--font-display)); text-align:left; text-overflow:ellipsis; white-space:nowrap; }
   .item-product-button:hover, .item-product-button:focus-visible { color:#cdd2ff; text-decoration:underline; text-underline-offset:3px; }
-  .item-card-meta { display:flex; align-items:center; flex-wrap:wrap; gap:5px 8px; width:100%; min-height:1.45rem; margin:.5rem 0 .1rem; }
+  .item-card-meta { display:flex; align-items:center; flex-wrap:wrap; gap:5px 8px; width:100%; min-height:1.8rem; margin:.45rem 0 0; }
   .item-collection { overflow:hidden; min-width:0; padding-left:.55rem; border-left:1px solid rgba(205,210,255,.28); color:#b9b6c7; font:600 .76rem/1.1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.015em; text-overflow:ellipsis; white-space:nowrap; }
   .item-state { max-width:100%; overflow:hidden; padding:5px 8px; border:1px solid rgba(255,255,255,.1); border-radius:3px; color:#a7a9b2; font: .7rem var(--shop-mono, var(--font-mono-stack)); text-overflow:ellipsis; white-space:nowrap; }
   .item-state.tone-equipped { border-color:#7d83a9; background:#171923; color:#d7dbff; }
@@ -99,9 +99,9 @@
   .item-state.tone-free { border-color:#597b70; background:#101b17; color:#b6e5d2; }
   .item-state.tone-premium { border-color:#745c9e; background:#191522; color:#dcc3ff; }
   .item-state.tone-premium-locked { border-color:#745c9e; color:#d0b5e4; }
-  .item-preview-button { position:relative; width:100%; margin:.6rem 0 .1rem; padding:0; border:0; border-radius:5px; background:transparent; color:inherit; cursor:pointer; text-align:inherit; }
-  .item-preview-button :global(.shop-preview-area) { height:108px; margin-bottom:0; padding:10px; border-radius:6px; }
-  .item-preview-button :global(.shop-preview-area-tall) { height:108px; }
+  .item-preview-button { position:relative; width:100%; margin:.45rem 0 0; padding:0; border:0; border-radius:5px; background:transparent; color:inherit; cursor:pointer; text-align:inherit; }
+  .item-preview-button :global(.shop-preview-area) { height:92px; margin-bottom:0; padding:8px; border-radius:6px; }
+  .item-preview-button :global(.shop-preview-area-tall) { height:92px; }
   .item-rarity { width:max-content; padding:5px 8px; border:1px solid; border-radius:3px; font:600 .72rem/1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.03em; text-transform:uppercase; }
   .rarity-common { border-color:#555a66; background:#15171c; color:#cdd0d8; }
   .rarity-uncommon { border-color:#597b70; background:#111b18; color:#b6e5d2; }
@@ -110,11 +110,13 @@
   .rarity-anomaly { border-color:#8e673d; background:#201811; color:#ffd09a; }
   .rarity-mythic { border-color:#8d4869; background:#21131b; color:#ffb3d2; }
   .item-price { flex:0 0 auto; min-width:0; padding-top:.08rem; color:var(--shop-accent, #cdd2ff); font:650 .78rem/1 var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
-  .item-card-footer { display:flex; align-items:center; gap:8px; width:100%; margin-top:.55rem; padding-top:.55rem; border-top:1px solid rgba(255,255,255,.08); }
-  .item-buy-button { display:inline-flex; align-items:center; gap:.4rem; min-height:2.15rem; padding:0 .75rem; border:1px solid var(--shop-accent, #cdd2ff); border-radius:var(--radius-sm, 4px); background:var(--shop-accent, #cdd2ff); color:#0d0f14; cursor:pointer; font:650 .7rem var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
+  .item-buy-button { display:inline-flex; align-items:center; gap:.35rem; min-height:1.8rem; margin-left:auto; padding:0 .6rem; border:1px solid var(--shop-accent, #cdd2ff); border-radius:var(--radius-sm, 4px); background:var(--shop-accent, #cdd2ff); color:#0d0f14; cursor:pointer; font:650 .68rem var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
   .item-buy-price { font-weight:750; opacity:.78; }
   .item-buy-button:hover, .item-buy-button:focus-visible { border-color:#fff; background:#fff; }
   .item-buy-button:disabled { border-color:#454852; background:#23262e; color:#858994; cursor:not-allowed; }
-  @media (max-width: 520px) { .item-card-title h3, .item-product-button { font-size:1.05rem; } .item-preview-button :global(.shop-preview-area) { height:124px; } }
+  .item-buy-button--state { background:transparent; color:#b9b6c7; }
+  .item-buy-button--state.tone-equipped { border-color:#7d83a9; background:#171923; color:#d7dbff; }
+  .item-buy-button--state.tone-owned { border-color:#5875a4; background:#111923; color:#b7d2ff; }
+  @media (max-width: 520px) { .item-card-title h3, .item-product-button { font-size:1.05rem; } .item-preview-button :global(.shop-preview-area) { height:100px; } }
   @media (prefers-reduced-motion: reduce) { .shop-item { transition:none; } .shop-item:hover { transform:none; } }
 </style>

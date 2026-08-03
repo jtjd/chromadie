@@ -248,6 +248,11 @@
 <style>
   .name-effect-canvas { position: relative; display: inline-block; min-width: 0; max-width: 100%; vertical-align: middle; }
   .name-effect-canvas__semantic { position: relative; z-index: 1; display: inline-block; max-width: 100%; }
+  /* IdentityCard styles its fallback heading in the parent component. The
+     semantic node lives here when the Canvas renderer is active, so mirror
+     that contract locally or the visual Canvas would measure a tiny default
+     heading and render the name at the wrong scale. */
+  .name-effect-canvas__semantic.identity-card__name { max-width: 100%; margin: 0; color: rgba(248, 250, 255, 0.98); font: 700 clamp(1.85rem, 3.8vw, 2.55rem) / 0.98 var(--font-display-stack, var(--font-display)); letter-spacing: -0.055em; overflow-wrap: anywhere; }
   .name-effect-canvas__visual { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; max-width: 100%; pointer-events: none; }
   .name-effect-canvas--ready .name-effect-canvas__semantic { color: transparent !important; text-shadow: none !important; -webkit-text-fill-color: transparent !important; }
   .name-effect-canvas--fallback .name-effect-canvas__visual { display: none; }

@@ -42,6 +42,7 @@ test('every production identity surface uses the shared Name renderer path', asy
   const canvas = await readProjectFile('src/lib/name/NameEffectCanvas.svelte');
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(identity, /semanticClass="identity-card__name"/);
+  assert.match(canvas, /name-effect-canvas__semantic\.identity-card__name/);
   assert.match(canvas, /aria-hidden="true"/);
 });
 
