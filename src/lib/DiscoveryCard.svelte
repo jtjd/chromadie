@@ -4,7 +4,8 @@
   import { getBadgeMeta } from './badgeData';
   import CompactRollPreview from './CompactRollPreview.svelte';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
-  import { getLbTheme, getOrbShape, getProfileBorder, getRollEffect, getStaffTitleText, getTitleText } from './cosmetics';
+  import { getStaffTitleText, getTitleText } from './cosmetics';
+  import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import { getPublicProfilePath, getProfileShareText } from './discoveryData.js';
   import { getAppOrigin } from './authUrls.js';
   import { getProfileMediaUrl } from './profileMedia.js';
@@ -23,17 +24,12 @@
   let failedAvatarSource = '';
 
   $: profilePath = getPublicProfilePath(item?.username);
-  $: theme = getLbTheme(item?.equippedCosmetics);
-  $: border = getProfileBorder(item?.equippedCosmetics);
-  $: nameRendererKey = String(item?.equippedCosmetics?.name_effect || '');
   $: nameRendererLoadout = getNameRendererLoadout(item?.equippedCosmetics);
   $: title = getTitleText(item?.equippedCosmetics);
   $: staffTitle = getStaffTitleText(item?.isStaff);
   $: displayName = item?.displayName || item?.username || 'Unknown player';
   $: profileAccent = item?.profileAccent || '#8B7CF6';
   $: rollColor = item?.hexCode || profileAccent;
-  $: orbShape = getOrbShape(item?.equippedCosmetics);
-  $: rollEffect = getRollEffect(item?.equippedCosmetics);
   $: avatarSrc = getProfileMediaUrl(item?.avatarPath);
   $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
   $: scoreLabel = item?.score === null || item?.score === undefined ? 'No roll yet' : `${item.score.toLocaleString()} EP`;
@@ -47,7 +43,7 @@
     .map(badgeId => ({ id: badgeId, ...getBadgeMeta(badgeId) }))
     .filter(badge => badge.symbol !== '❓')
     .slice(0, 3);
-  $: cardStyle = `--discovery-profile-accent: ${profileAccent}; --discovery-roll-color: ${rollColor}; ${theme.style || ''}; ${border.style || ''}`;
+  $: cardStyle = `--discovery-profile-accent: ${profileAccent}; --discovery-roll-color: ${rollColor};`;
 
   function formatDate(value) {
     if (!value) return '';
@@ -95,7 +91,8 @@
   }
 </script>
 
-<article class={'discovery-card' + (featured ? ' discovery-card--featured' : '') + ' ' + theme.cls + ' ' + border.cls} style={cardStyle}>
+<ProfileBorderEffect borderKey={item?.equippedCosmetics?.profile_border} compact={true} className="discovery-card-border">
+<article class={'discovery-card' + (featured ? ' discovery-card--featured' : '')} style={cardStyle}>
   <div class="discovery-card__topline">
     <div class="discovery-card__rank-lockup">
       <span class="discovery-card__rank">{item?.rank ? `#${item.rank}` : 'Profile'}</span>
@@ -121,10 +118,9 @@
 
       <div class="discovery-card__identity">
         <div class="discovery-card__name-line">
-          {#if nameRendererKey || nameRendererLoadout}
+          {#if nameRendererLoadout}
             <NameEffectCanvas
               text={displayName}
-              rendererKey={nameRendererKey}
               loadout={nameRendererLoadout}
               todayColor={rollColor}
               context="card"
@@ -154,9 +150,6 @@
       <CompactRollPreview
         displayColor={rollColor}
         rarity={item?.rarity || 'Common'}
-        effectCls={rollEffect.cls}
-        effectStyle={rollEffect.style}
-        orbCls={orbShape.cls}
         size="3.5rem"
         scale={0.34}
       />
@@ -191,6 +184,7 @@
     </div>
   </div>
 </article>
+</ProfileBorderEffect>
 
 <style>
   .discovery-card {
@@ -207,6 +201,8 @@
     box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, 0.16);
     transition: transform var(--motion-fast) var(--motion-ease-standard), border-color var(--motion-fast) var(--motion-ease-standard), box-shadow var(--motion-fast) var(--motion-ease-standard);
   }
+
+  :global(.discovery-card-border) { display: block; height: 100%; }
 
   .discovery-card::before { position: absolute; inset: 0 auto auto 0; width: 32%; height: 1px; background: linear-gradient(90deg, var(--discovery-profile-accent), transparent); content: ''; opacity: 0.86; }
   .discovery-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--discovery-profile-accent) 54%, var(--color-line-subtle)); box-shadow: 0 1.8rem 3.4rem rgba(0, 0, 0, 0.24); }

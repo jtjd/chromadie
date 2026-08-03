@@ -1,21 +1,11 @@
 <script>
-  import RollPreview from './RollPreview.svelte';
-  import HomeReferenceRollGlyph from './HomeReferenceRollGlyph.svelte';
-  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
-  import { getProfileAtmosphereEffect } from './cosmetics';
-  import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety';
+  import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
 
   export let item;
   export let username = 'Your profile';
   export let displayColor = '#8B7CF6';
-  export let rollRarity = 'Current roll';
 
-  $: effectClass = item?.css_type === 'class' ? sanitizeCosmeticClass(item.css_value) : '';
-  $: effectStyle = item?.css_type === 'style' ? sanitizeCosmeticStyle(item.css_value) : '';
-  $: atmosphereEffect = item?.slot === 'profile_atmosphere'
-    ? getProfileAtmosphereEffect({ profile_atmosphere: item.item_key })
-    : '';
   $: nameLayerLoadout = item?.slot === 'name_font'
     ? { fontKey: item.css_value }
     : item?.slot === 'name_material'
@@ -25,43 +15,19 @@
         : null;
 </script>
 
-<div class="shop-preview-area {item.slot === 'profile_border' || item.slot === 'lb_theme' ? 'shop-preview-area-tall' : ''} {item.slot === 'roll_effect' ? 'shop-preview-area-roll-effect' : ''}">
-  {#if item.slot === 'profile_bg' || item.slot === 'profile_atmosphere'}
-    <div class={'preview-bg ' + (atmosphereEffect ? '' : effectClass)} style={atmosphereEffect ? '' : effectStyle}>
-      {#if atmosphereEffect}
-        <ProfileAtmosphere
-          canvasOnly={true}
-          accent={displayColor}
-          secondaryAccent="#71D6FF"
-          effect={atmosphereEffect}
-        />
-      {/if}
-    </div>
-  {:else if item.slot === 'roll_effect'}
-    <RollPreview effectCls={effectClass} effectStyle={effectStyle} size="shop" />
-  {:else if item.slot === 'lb_theme'}
-    <div class="leaderboard-row preview-lb-row {effectClass}" style={effectStyle}>
-          <span class="lb-rank preview-lb-rank">#1</span>
-          <div class="lb-info preview-lb-info">
-            <span class="lb-username preview-lb-name">{username}</span>
-            <span class="preview-lb-sub">{displayColor} • {rollRarity}</span>
-          </div>
-      <span class="lb-score preview-lb-score">Preview</span>
-    </div>
-  {:else if item.slot === 'orb_shape'}
-    <div class="preview-orb-shape">
-          <HomeReferenceRollGlyph displayColor={displayColor} rarity={item.rarity || 'Common'} />
-    </div>
-  {:else if item.slot === 'profile_border'}
-    <div class="preview-profile-card {effectClass}" style={effectStyle}>
-      <div class="preview-profile-topline">
-        <span class="preview-profile-badge">Featured</span>
-        <span class="preview-profile-dot"></span>
-      </div>
+<div class="shop-preview-area {item?.slot === 'profile_border' ? 'shop-preview-area-tall' : ''}">
+  {#if item?.slot === 'profile_border'}
+    <ProfileBorderEffect borderKey={item.css_value} compact={true} className="preview-border-shell">
+      <div class="preview-profile-card">
+        <div class="preview-profile-topline">
+          <span class="preview-profile-badge">Profile border</span>
+          <span class="preview-profile-dot"></span>
+        </div>
         <span class="preview-profile-name">{username}</span>
-      <div class="preview-profile-meta"><span>Rank</span><span>30d</span></div>
+        <div class="preview-profile-meta"><span>{item.collection}</span><span>{item.rarity}</span></div>
       </div>
-  {:else if ['name_font', 'name_material', 'name_motion'].includes(item.slot)}
+    </ProfileBorderEffect>
+  {:else if nameLayerLoadout}
     <div class="shop-preview-text shop-preview-text--name">
       <NameEffectCanvas
         text={username}
@@ -73,63 +39,28 @@
         semanticClass="shop-item-name"
       />
     </div>
-  {:else if item.slot === 'name_effect'}
-    <div class="shop-preview-text shop-preview-text--name">
-      <NameEffectCanvas
-        text={username}
-        rendererKey={String(item.item_key || '')}
-        todayColor={displayColor}
-        context="card"
-        compact={true}
-        mode="animated"
-        semanticClass="shop-item-name"
-      />
-    </div>
   {:else}
-    <div class="shop-preview-text">
-      {#if item.css_type === 'class'}
-        {#if item.slot === 'frame'}
-          <span class="profile-name-frame {effectClass}">{username}</span>
-        {:else}
-          <span class={effectClass} data-text={username}>{username}</span>
-        {/if}
-      {:else if item.css_type === 'style'}
-        {#if item.slot === 'frame'}
-          <span class="profile-name-frame" style={effectStyle}>{username}</span>
-        {:else}
-          <span style={effectStyle} data-text={username}>{username}</span>
-        {/if}
-      {/if}
+    <div class="shop-preview-text shop-preview-text--utility">
+      <span class="preview-utility-mark" aria-hidden="true">✦</span>
+      <span>{item?.name || 'Catalog item'}</span>
     </div>
   {/if}
 </div>
 
 <style>
-  .shop-preview-area { height: 174px; margin-bottom: 0; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 14px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.075); border-radius: 6px; background: radial-gradient(circle at 50% 42%, rgba(123,92,255,0.1), transparent 58%), rgba(5,6,10,0.58); overflow: hidden; }
+  .shop-preview-area { height: 174px; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 14px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.075); border-radius: 6px; background: radial-gradient(circle at 50% 42%, rgba(123,92,255,0.1), transparent 58%), rgba(5,6,10,0.58); overflow: hidden; }
   .shop-preview-area-tall { height: 174px; }
-  .shop-preview-area-roll-effect { height: 174px; border-color: rgba(139,124,246,0.16); background: radial-gradient(circle at center, rgba(123,92,255,0.12), rgba(6,7,12,0.7) 62%, rgba(3,4,8,0.9)); }
-  .preview-bg { position: relative; width: 100%; height: 100%; border-radius: 12px; border: 1px solid var(--card-border); background-color: #111; flex-shrink: 0; box-sizing: border-box; will-change: transform, opacity, filter; overflow: hidden; }
-  .preview-bg[style*="godRaysTurn"] { animation-duration: 5.5s !important; }
-  .preview-bg[style*="deepSpaceTwinkle"] { animation-duration: 6.2s !important; }
-  .preview-lb-row { width: 100%; min-height: 58px; border-radius: 4px; padding: 10px 12px; box-sizing: border-box; overflow: hidden; margin: 0; gap: 10px; }
-  .preview-lb-rank { width: auto; min-width: 22px; font-size: 0.72rem; }
-  .preview-lb-info { display: flex; flex-direction: column; gap: 3px; margin-left: 0; }
-  .preview-lb-name { font-size: 0.76rem; line-height: 1.1; }
-  .preview-lb-sub { color: var(--text-muted); font-size: 0.62rem; line-height: 1.1; white-space: nowrap; }
-  .preview-lb-score { font-size: 0.74rem; }
-  :global(.preview-lb-row.lb-gold-theme) .preview-lb-rank,
-  :global(.preview-lb-row.lb-gold-theme) .preview-lb-sub { color: rgba(26,26,26,0.72); }
-  .preview-orb-shape { display: grid; width: 72px; height: 72px; flex: 0 0 auto; place-items: center; background: transparent; }
-  .preview-profile-card { width: 100%; min-height: 100px; background: radial-gradient(circle at top right, rgba(123,92,255,0.18), transparent 42%), linear-gradient(180deg, rgba(15,15,21,0.98), rgba(9,9,14,0.96)); border-radius: 5px; border: 2px solid transparent; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+  .preview-profile-card { width: 100%; min-height: 100px; background: radial-gradient(circle at top right, rgba(123,92,255,0.18), transparent 42%), linear-gradient(180deg, rgba(15,15,21,0.98), rgba(9,9,14,0.96)); border-radius: 5px; padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
   .preview-profile-topline, .preview-profile-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .preview-profile-badge, .preview-profile-meta span { color: var(--text-muted); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; }
   .preview-profile-dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.3); box-shadow: 0 0 12px rgba(255,255,255,0.18); flex-shrink: 0; }
-  .preview-profile-name { color: #fff; font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; }
-  .shop-preview-text { width: 100%; min-height: 0; margin-bottom: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px; text-align: center; box-sizing: border-box; }
+  .preview-profile-name { color: #fff; font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; overflow-wrap: anywhere; }
+  .shop-preview-text { width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px; text-align: center; box-sizing: border-box; }
+  .shop-preview-text--utility { flex-direction: column; gap: 0.55rem; color: var(--color-ink-muted); font: 600 0.8rem var(--font-mono-stack); }
+  .preview-utility-mark { color: var(--color-accent-bright); font-size: 1.5rem; }
 
   @media (max-width: 600px) {
     .shop-preview-area { height: 150px; padding: 10px; }
     .shop-preview-area-tall { height: 150px; }
-    .shop-preview-area-roll-effect { height: 150px; }
   }
 </style>

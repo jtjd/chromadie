@@ -1,6 +1,6 @@
 <script>
   import ShopItemPreview from './ShopItemPreview.svelte';
-  import { SHOP_SLOT_LABELS, getShopAccessTier, isLegacyCatalogItem } from './shopCatalog';
+  import { SHOP_SLOT_LABELS, getShopAccessTier } from './shopCatalog';
   import { createEventDispatcher } from 'svelte';
 
   export let item;
@@ -10,7 +10,6 @@
   export let actuallyEquipped = false;
   export let previewUsername = 'Your profile';
   export let previewColor = '#8B7CF6';
-  export let previewRarity = 'Current roll';
 
   const dispatch = createEventDispatcher();
 
@@ -35,12 +34,11 @@
   <div class="item-card-meta">
     <span class="item-rarity rarity-{(item.rarity || 'Common').toLowerCase()}" aria-label={`Rarity: ${item.rarity || 'Common'}`}>{item.rarity || 'Common'}</span>
     <span class="item-collection">{item.collection || 'Core collection'}</span>
-    {#if isLegacyCatalogItem(item)}<span class="item-state tone-legacy">Legacy preset</span>{/if}
     <span class="item-state tone-{isPreviewing ? 'previewing' : state.tone}">{isPreviewing ? 'Previewing' : state.label}</span>
   </div>
 
   <button class="item-preview-button" type="button" aria-label={`Preview ${item.name}`} on:click={() => dispatch('preview', item)}>
-    <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} rollRarity={previewRarity} />
+    <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} />
     <span class="preview-cue">Preview <i aria-hidden="true">↗</i></span>
   </button>
 

@@ -1,7 +1,7 @@
 <script>
   import { supabase } from './supabase';
   import { session, profile, authUser, equippedBadges, addToast, followedUsers, toggleFollow, isAuthenticated } from './stores';
-  import { getFrameEffect, getTitleText, getStaffTitleText, getProfileBg, getProfileBorder, getLbTheme } from './cosmetics';
+  import { getTitleText, getStaffTitleText } from './cosmetics';
   import { getRank, getRankState } from './ranks';
   import { formatCount, getTodayString } from './utils';
   import { deleteAccount } from './accountDeletion';
@@ -12,6 +12,7 @@
   import { SvelteDate } from 'svelte/reactivity';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
+  import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
 
   export let profileUsername = null;
   export let userId = null;
@@ -252,13 +253,9 @@
   $: rank = targetProfile ? getRank(targetProfile.lifetime_ep || 0) : null;
   $: rankState = targetProfile ? getRankState(targetProfile.lifetime_ep || 0) : null;
   $: cosmetics = targetProfile?.equipped_cosmetics || {};
-  $: nameRendererKey = String(cosmetics?.name_effect || '');
   $: nameRendererLoadout = getNameRendererLoadout(cosmetics);
-  $: frameEff = getFrameEffect(cosmetics);
   $: titleTxt = getTitleText(cosmetics);
   $: staffTitleTxt = getStaffTitleText(targetProfile?.is_staff);
-  $: bgEff = getProfileBg(cosmetics);
-  $: borderEff = getProfileBorder(cosmetics);
   $: username = targetProfile?.username || 'Unknown Player';
   $: isOwnProfile = isOwnProfileTarget({
     isAuthenticated: $isAuthenticated,
@@ -346,10 +343,8 @@
 
   {#if !loading && targetProfile}
     {#if dataWarning}<p class="auth-error" role="status">{dataWarning}</p>{/if}
-    <div class="card mood-card {borderEff.cls}">
-      {#if bgEff.style}
-        <div class="profile-bg-layer" style="{bgEff.style}"></div>
-      {/if}
+    <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-card-border">
+    <div class="card mood-card">
       {#if targetProfile.mood_color}
         <div class="profile-mood-layer" style="{moodStyle}"></div>
       {/if}
@@ -363,11 +358,10 @@
               </div>
             {/if}
             <div class="name-row">
-              <span class="profile-name-frame {frameEff.cls}" style="{frameEff.style}">
-                {#if nameRendererKey || nameRendererLoadout}
+              <span>
+                {#if nameRendererLoadout}
                   <NameEffectCanvas
                     text={username}
-                    rendererKey={nameRendererKey}
                     loadout={nameRendererLoadout}
                     todayColor={nameTodayColor}
                     recentColors={nameRendererRecentColors}
@@ -498,6 +492,7 @@
         </div>
       </div>
     </div>
+    </ProfileBorderEffect>
 
     {#if displayBestRoll || targetProfile}
       <div class="best-row-container" style="margin-top: 20px;">
@@ -547,13 +542,11 @@
         {#if rivalsData.length > 0}
           <div class="rivals-list">
             {#each rivalsData as rival (rival.user_id)}
-              {@const rivalNameRendererKey = String(rival.equipped_cosmetics?.name_effect || '')}
               {@const rivalNameRendererLoadout = getNameRendererLoadout(rival.equipped_cosmetics)}
               {@const rivalTitleTxt = getTitleText(rival.equipped_cosmetics)}
               {@const rivalStaffTitleTxt = getStaffTitleText(rival.is_staff)}
-              {@const rivalLbTheme = getLbTheme(rival.equipped_cosmetics)}
 
-              <div class="rival-row {rivalLbTheme.cls}" style="{rivalLbTheme.style}">
+              <div class="rival-row">
                 <button type="button" class="rival-profile-btn" on:click={() => viewProfile(rival.username, rival.user_id)}>
                   {#if rivalTitleTxt}
                     <span class="title-chip">[{rivalTitleTxt}]</span>
@@ -561,10 +554,9 @@
                   {#if rivalStaffTitleTxt}
                     <span class="title-chip staff-title">[{rivalStaffTitleTxt}]</span>
                   {/if}
-                  {#if rivalNameRendererKey || rivalNameRendererLoadout}
+                  {#if rivalNameRendererLoadout}
                     <NameEffectCanvas
                       text={rival.username}
-                      rendererKey={rivalNameRendererKey}
                       loadout={rivalNameRendererLoadout}
                       todayColor={rival.hex_code || '#8B7CF6'}
                       context="card"
@@ -690,30 +682,12 @@
 
 <style>
   .mood-card { position: relative; overflow: hidden; transition: background-image 0.5s ease; }
-  .profile-bg-layer {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-    background-color: #0f1118;
-    will-change: transform, opacity, filter;
-  }
-  .profile-bg-layer[style*="godRaysTurn"] { animation-duration: 5.5s !important; }
-  .profile-bg-layer[style*="deepSpaceTwinkle"] { animation-duration: 6.2s !important; }
-  .profile-bg-layer::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(115deg, rgba(2, 4, 10, 0.2), rgba(2, 4, 10, 0.38));
-    pointer-events: none;
-  }
   .profile-mood-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen; opacity: 0.9; }
   .profile-content-layer { position: relative; z-index: 2; }
   .profile-header-row { display: flex; justify-content: flex-start; align-items: flex-start; margin-bottom: 18px; gap: 18px; }
   .profile-identity { display: flex; flex: 0 1 auto; min-width: 0; flex-direction: column; gap: 6px; align-items: center; text-align: center; }
   .title-row { display: flex; align-items: center; justify-content: center; min-height: 18px; width: 100%; }
   .name-row { display: flex; align-items: center; justify-content: center; width: 100%; }
-  .profile-name-frame { display: inline-flex; align-items: center; line-height: 1; }
   .profile-username-large { line-height: 1; }
   .name-row { display: flex; align-items: center; justify-content: center; gap: 0.65rem; flex-wrap: wrap; }
   .launch-edition-badge { display: inline-flex; align-items: center; min-height: 1.4rem; padding: 0.15rem 0.5rem; border: 1px solid rgba(161, 92, 255, 0.55); border-radius: 999px; background: linear-gradient(135deg, rgba(94, 234, 212, 0.16), rgba(161, 92, 255, 0.2)); color: #d8c7ff; font: 700 0.65rem/1 var(--font-mono-stack); letter-spacing: 0.04em; text-transform: uppercase; }
@@ -953,12 +927,6 @@
 
   .rivals-list { display: flex; flex-direction: column; gap: 8px; }
   .rival-row { display: flex; justify-content: space-between; align-items: center; gap: 10px 12px; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--card-border); flex-wrap: wrap; }
-  .rival-row.lb-glow-theme { background: rgba(59, 130, 246, 0.14); border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 15px rgba(59, 130, 246, 0.22), inset 0 0 8px rgba(59, 130, 246, 0.12); }
-  .rival-row.lb-gold-theme { background: linear-gradient(90deg, rgba(191, 149, 63, 0.9), rgba(252, 246, 186, 0.95), rgba(179, 135, 40, 0.92), rgba(251, 245, 183, 0.95)); border-color: rgba(255, 215, 0, 0.8); box-shadow: 0 0 15px rgba(255, 215, 0, 0.22); }
-  .rival-row.lb-gold-theme .lb-username,
-  .rival-row.lb-gold-theme .rival-score { color: #1a1a1a !important; -webkit-text-fill-color: #1a1a1a; text-shadow: 0 1px 1px rgba(255,255,255,0.4); }
-  .rival-row.lb-spectrum-theme,
-  .rival-row.lb-chroma-theme { border: 2px solid transparent; background-image: linear-gradient(rgba(10, 10, 13, 0.85), rgba(10, 10, 13, 0.85)), var(--spectrum); background-origin: border-box; background-clip: padding-box, border-box; background-size: 100% 100%, 300% 100%; animation: spectrumFlow 3s linear infinite; box-shadow: 0 0 15px rgba(168, 85, 247, 0.28); }
   .rival-profile-btn { background: none; border: none; padding: 0; cursor: pointer; text-align: left; min-width: 0; }
 
   /* NEW: Empty Rivals State */
@@ -1052,7 +1020,6 @@
     .profile-header-row { flex-direction: column; align-items: stretch; gap: 12px; }
     .header-actions { align-items: flex-start; padding-top: 0; width: 100%; }
     .profile-identity { align-items: center; text-align: center; width: 100%; }
-    .profile-name-frame { max-width: 100%; }
     .profile-username-large { font-size: 2rem; max-width: 100%; overflow-wrap: anywhere; }
     .rank-chip { align-self: center; }
     .mood-options-scroll { max-height: none; }

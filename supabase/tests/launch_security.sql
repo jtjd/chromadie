@@ -232,13 +232,6 @@ SELECT pg_temp.audit_assert(
   'decoration entitlement and cosmetic mutation functions must have fixed search paths'
 );
 SELECT pg_temp.audit_assert(
-  (SELECT access_tier = 'premium' AND entitlement_key = 'atelier_plus'
-   FROM public.shop_items WHERE item_key = 'name_prism_atelier')
-    AND (SELECT access_tier = 'premium' AND entitlement_key = 'atelier_plus'
-         FROM public.shop_items WHERE item_key = 'bg_prism_atmosphere'),
-  'premium catalog rows must carry an explicit entitlement key'
-);
-SELECT pg_temp.audit_assert(
   EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'shop_items' AND column_name = 'catalog_status'
@@ -247,28 +240,29 @@ SELECT pg_temp.audit_assert(
     SELECT 1 FROM pg_constraint
     WHERE conrelid = 'public.shop_items'::regclass AND conname = 'shop_items_catalog_status_check'
   )
-  AND (SELECT count(*) = 29 FROM public.shop_items WHERE slot = 'name_effect' AND catalog_status = 'legacy')
   AND (SELECT count(*) = 64 FROM public.shop_items WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
   AND (SELECT count(*) = 18 FROM public.shop_items WHERE slot = 'name_font' AND catalog_status = 'active')
   AND (SELECT count(*) = 22 FROM public.shop_items WHERE slot = 'name_material' AND catalog_status = 'active')
   AND (SELECT count(*) = 24 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
+  AND (SELECT count(*) = 9 FROM public.shop_items WHERE slot = 'profile_border' AND catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
   )
-  AND (SELECT bool_and(catalog_status = 'active') FROM public.shop_items WHERE slot NOT IN ('name_effect', 'name_font', 'name_material', 'name_motion')),
-  'D2 catalog status, slot counts, and legacy preservation are not valid'
+  AND NOT EXISTS (SELECT 1 FROM public.shop_items WHERE slot IN ('name_effect', 'frame', 'profile_bg', 'profile_atmosphere', 'orb_shape', 'roll_effect', 'lb_theme'))
+  AND (SELECT bool_and(catalog_status = 'active') FROM public.shop_items),
+  'lean catalog status and slot counts are not valid'
 );
 SELECT pg_temp.audit_assert(
   has_function_privilege('anon', 'public.get_shop_catalog()', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 64
+    AND (SELECT count(*) = 73
          FROM public.get_shop_catalog()
-         WHERE slot IN ('name_font', 'name_material', 'name_motion') AND catalog_status = 'active')
+         WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),
-  'shop catalog RPC must expose only active/legacy rows with bounded renderer access'
+  'shop catalog RPC must expose only active retained rows with bounded renderer access'
 );
 SELECT pg_temp.audit_assert(
   NOT has_function_privilege('anon', 'public.purchase_item_impl(text)', 'EXECUTE')
@@ -594,11 +588,10 @@ VALUES
   ('10000000-0000-0000-0000-000000000001', 'name_material_copper_press', 1),
   ('10000000-0000-0000-0000-000000000001', 'name_motion_soft_rise', 1),
   ('10000000-0000-0000-0000-000000000001', 'name_motion_daily_pulse', 1),
-  ('10000000-0000-0000-0000-000000000001', 'name_void', 1);
+  ('10000000-0000-0000-0000-000000000001', 'border_signal', 1);
 UPDATE public.profiles
 SET equipped_cosmetics = jsonb_build_object(
-  'frame', 'frame_thin_white',
-  'name_effect', 'name_void',
+  'profile_border', 'border_signal',
   'name_material', 'name_material_copper_press',
   'name_motion', 'name_motion_soft_rise'
 )
@@ -613,23 +606,21 @@ INSERT INTO audit_results VALUES ('d2_equip_font', public.equip_item('name_font_
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
       AND payload->'cosmetics'->>'name_font' = 'name_font_editorial_serif'
-      AND NOT (payload->'cosmetics' ? 'name_effect')
       AND payload->'cosmetics'->>'name_material' = 'name_material_copper_press'
       AND payload->'cosmetics'->>'name_motion' = 'name_motion_soft_rise'
-      AND payload->'cosmetics'->>'frame' = 'frame_thin_white'
+      AND payload->'cosmetics'->>'profile_border' = 'border_signal'
    FROM audit_results WHERE name = 'd2_equip_font'),
-  'equipping a Name Font did not clear the legacy preset while preserving other layers'
+  'equipping a Name Font did not preserve the other independent layers'
 );
-INSERT INTO audit_results VALUES ('d2_equip_legacy', public.equip_item('name_void'));
+INSERT INTO audit_results VALUES ('lean_equip_border', public.equip_item('border_signal'));
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
-      AND payload->'cosmetics'->>'name_effect' = 'name_void'
-      AND NOT (payload->'cosmetics' ? 'name_font')
-      AND NOT (payload->'cosmetics' ? 'name_material')
-      AND NOT (payload->'cosmetics' ? 'name_motion')
-      AND payload->'cosmetics'->>'frame' = 'frame_thin_white'
-   FROM audit_results WHERE name = 'd2_equip_legacy'),
-  'equipping a legacy Name preset did not clear modern layers'
+      AND payload->'cosmetics'->>'profile_border' = 'border_signal'
+      AND payload->'cosmetics'->>'name_font' = 'name_font_editorial_serif'
+      AND payload->'cosmetics'->>'name_material' = 'name_material_copper_press'
+      AND payload->'cosmetics'->>'name_motion' = 'name_motion_soft_rise'
+   FROM audit_results WHERE name = 'lean_equip_border'),
+  'equipping a Profile Border did not preserve modern Name layers'
 );
 INSERT INTO audit_results VALUES ('d2_equip_material', public.equip_item('name_material_copper_press'));
 INSERT INTO audit_results VALUES ('d2_equip_motion', public.equip_item('name_motion_daily_pulse'));
@@ -638,7 +629,6 @@ SELECT pg_temp.audit_assert(
   (SELECT payload->'cosmetics'->>'name_font' = 'name_font_mono_compact'
       AND payload->'cosmetics'->>'name_material' = 'name_material_copper_press'
       AND payload->'cosmetics'->>'name_motion' = 'name_motion_daily_pulse'
-      AND NOT (payload->'cosmetics' ? 'name_effect')
    FROM audit_results WHERE name = 'd2_equip_font_again'),
   'composable Name layers did not preserve each other across atomic equip calls'
 );
@@ -651,12 +641,12 @@ SELECT pg_temp.audit_assert(
    FROM audit_results WHERE name = 'd2_unequip_material'),
   'unequipping one Name layer removed unrelated modern layers'
 );
-INSERT INTO audit_results VALUES ('d2_legacy_purchase', public.purchase_item('name_void'));
+INSERT INTO audit_results VALUES ('lean_deleted_purchase', public.purchase_item('name_void'));
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'false'
-      AND payload->>'error' = 'This item is no longer available for purchase.'
-   FROM audit_results WHERE name = 'd2_legacy_purchase'),
-  'legacy Name rows remained purchasable through purchase_item'
+      AND payload->>'error' = 'Invalid item'
+   FROM audit_results WHERE name = 'lean_deleted_purchase'),
+  'deleted Name rows remained purchasable through purchase_item'
 );
 INSERT INTO audit_results VALUES ('first_roll', public.roll_die(false));
 SELECT pg_temp.audit_assert(
@@ -728,9 +718,6 @@ SELECT set_config(
   '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
   true
 );
-
-INSERT INTO public.profile_entitlements (user_id, entitlement_key, source)
-VALUES ('10000000-0000-0000-0000-000000000001', 'atelier_plus', 'security-test');
 
 INSERT INTO audit_results VALUES (
   'social_default',

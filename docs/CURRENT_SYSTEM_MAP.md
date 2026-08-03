@@ -1,10 +1,12 @@
 # Chromadie 2.0 — Current System Map
 
-**Audit date:** 2026-07-25  
-**Application:** Svelte 5 + Vite SPA  
-**Backend:** Supabase Auth/Postgres/RPCs/Edge Functions  
-**Hosting:** Cloudflare Pages + Pages Functions  
-**Scope:** Phase 0 audit plus the completed Phase 1 foundations, Phase 2 live profile-shell slice, Phase 3 integrated owner roll slice, Phase 4 structured profile configuration slice, Phase 5 story/progression slice, Phase 6 discovery slice, Phase 7 social-layer slice, Phase 8 decoration-studio/entitlement slice, and the Phase 9 launch-hardening plus consented product-event/operations-documentation slices. This map describes the current system and migration seams; it is not a claim that the full Phase 9 roadmap is complete.
+**Audit date:** 2026-08-02
+**Application:** Svelte 5 + Vite SPA
+**Backend:** Supabase Auth/Postgres/RPCs/Edge Functions
+**Hosting:** Cloudflare Pages + Pages Functions
+**Scope:** Current post-reset runtime and migration seams. Historical phase
+records remain in their milestone documents; this map describes the supported
+alpha systems rather than the removed cosmetic catalog.
 
 ## Runtime shape
 
@@ -17,7 +19,7 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | URL / input | Client interpretation | Primary owner | Server / metadata behavior | Access notes |
 | --- | --- | --- | --- | --- |
 | `/` | `view = game` | `App.svelte` → `Game.svelte` | `functions/index.js` serves shell metadata | Guest and authenticated play |
-| `/shop` or `/?view=shop` | `view = shop` | `Shop.svelte` → `DecorationStudio.svelte` → `ShopStudioPreview.svelte` → `ProfileShell.svelte` in isolated preview mode | Shell metadata is canonicalized to `/` by the client for query form; `/shop` title/description identify Decoration Studio | Authenticated account only; guests see `GuestLock`; preview has no social or owner controls |
+| `/shop` or `/?view=shop` | `view = shop` | `Shop.svelte` → `ShopHome.svelte` / `ShopBrowse.svelte` / `ShopCollection.svelte` / `ShopStudio.svelte` → shared preview components | Shell metadata is canonicalized to `/` by the client for query form; `/shop` title/description identify the Shop | Authenticated account only; guests see `GuestLock`; previews have no permanent equip side effects |
 | `/leaderboard` or `/?view=leaderboard` | `view = leaderboard` | `Leaderboard.svelte` | `functions/leaderboard.js` serves crawler metadata for `/leaderboard` | Public leaderboard reads; rival tab is authenticated |
 | `/leaderboard?tab=today|rivals|weekly|monthly|roll|recent|rising|new|random` | Leaderboard/discovery tab | `Leaderboard.svelte` → `DiscoveryHub.svelte` | Tab is client state; route accepts only the allow-listed values | `rivals` requires an authenticated session; other surfaces are public |
 | `/profile` or `/?view=profile` | Owner profile when authenticated; otherwise guest lock | `ProfileShell.svelte` by default, including owner roll and owner-only profile configuration editor; `Profile.svelte` with `legacy=1` | Client metadata is profile-aware; private owner form is `noindex` when no public username is selected | Public username/id lookups are supported separately |
@@ -52,7 +54,7 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | `src/lib/DiscoveryHub.svelte` | Public discovery tabs, bounded RPC pagination, filters, loading/error/empty states, rank lookup, and navigation event forwarding | `get_public_discovery`, `get_rivals_scores`, `DiscoveryCard.svelte`, stores, route allow-list |
 | `src/lib/DiscoveryCard.svelte` | Public profile card presentation, safe color/cosmetic display, profile CTA, profile sharing, and compatibility rival follow control | `discoveryData.js`, cosmetics safety, stores, `DiscoveryHub.svelte` |
 | `src/lib/Shop.svelte` | Catalog browsing/filtering, fitting room, access-tier state, preview state, purchase confirmation, equip/unequip actions | Live catalog and entitlement stores, `shopCatalog.js`, purchase/equip RPCs, inventory/wallet/profile refresh |
-| `src/lib/DecorationStudio.svelte` | Named decoration-studio wrapper, actual profile-canvas hero context, free-baseline explanation, preview-only boundary | `ShopStudioPreview.svelte`; no purchase authority or account mutation |
+| `src/lib/ShopStudio.svelte` | Temporary fitting room for Name Font, Material, Motion, and Profile Border | `ShopStudioPreview.svelte`; no purchase authority or account mutation |
 | `src/lib/Auth.svelte` | Login/signup/password reset form, Turnstile, username moderation/availability checks | Supabase Auth, `is_username_allowed`, `is_username_available` |
 | `src/lib/AuthCallback.svelte` | OAuth/email callback completion and redirect behavior | Supabase Auth/session utilities |
 | `src/lib/ResetPassword.svelte` | Password update form and recovery session handling | Supabase Auth |
@@ -76,7 +78,7 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | `src/lib/profileConfig.js` | Version-1 configuration constants, safe defaults, render normalization, visible module/link projections | `ProfileShell.svelte`, `ProfileEditor.svelte`; server RPC remains the write/publish authority |
 | `src/lib/profileStory.js` | Public story/collection normalizers and progressive story unlock thresholds based on server-owned roll totals | `profileData.js`, `ProfileShell.svelte`, `ProfileTimeline.svelte`, `ProfileCollection.svelte`; no scoring or grant authority |
 | `src/lib/profileSocial.js` | Bounded social/reaction/settings normalizers and RPC invocation seam | `profileData.js`, `ProfileSocial.svelte`; rejects malformed public entries and keeps social writes server-authoritative |
-| `src/lib/cosmetics.js` / `cosmeticSafety.js` | Structured cosmetic lookup, safe class/style/text interpretation | Live `shopItems` store, component renderers, studio preview |
+| `src/lib/cosmetics.js` | Retained title display helpers; renderer-backed Name and Border registries own cosmetic interpretation | Live `shopItems` store, component renderers, studio preview |
 | `src/lib/badgeData.js` / `balanceConfig.js` / `ranks.js` | Client display registries and thresholds | Profile, Game, Leaderboard, shop previews; server remains authoritative for grants/scoring |
 | `src/lib/mediaSafety.js` | Safe media-source normalization for local and HTTPS assets | `Media.svelte`; rejects protocol-relative, HTTP, data, blob, JavaScript, control-character, and oversized sources |
 | `src/lib/productAnalytics.js` | Consent state, event/property allow-list, redaction, bounded local adapter seam | `AnalyticsPreferences.svelte`, `main.js`, and existing flow call sites; no scoring, account, social, or network authority |
@@ -294,9 +296,9 @@ Svelte text interpolation, with links rejected at the database boundary.
 
 | Domain | Current source | Consumer / hazard |
 | --- | --- | --- |
-| Shop catalog | `public.shop_items` plus `meta.shop_version`; local cache; `supabase/seed.sql`, catalog snapshot, and reprice migration for drift checks; 82 rows at this audit | `stores.js` validates item keys, slots, CSS type/value, cost, availability, access tier, and premium entitlement key; `Shop.svelte` adds section/filter behavior and explicit access labels |
+| Shop catalog | `public.shop_items` plus `meta.shop_version`; local cache; `supabase/seed.sql` and the lean reset migration; 75 active rows at this audit | `stores.js` validates final slots, renderer keys, cost, availability, access tier, and premium entitlement key; `Shop.svelte` adds section/filter behavior and explicit access labels |
 | Premium expression entitlements | `public.profile_entitlements`, written only by service-role grant code and read through `get_my_profile_entitlements()` | RLS is enabled, browser roles have no table privileges, and `equip_item` rechecks the matching catalog entitlement server-side; no payment provider or client grant path exists in Phase 8 |
-| Cosmetic rendering | Live `shopItems` values interpreted by `cosmetics.js` and sanitized by `cosmeticSafety.js`; structured slots only | Avoid treating CSS strings as user-authored unrestricted markup; renderers must keep the allow-list |
+| Cosmetic rendering | Modern Name rows resolve through `src/lib/name/`; nine Profile Border rows resolve through `src/lib/profile-border/`; titles and utility use bounded text | Catalog values select finite code-owned renderers; no catalog CSS, HTML, JavaScript, URLs, or arbitrary effects are accepted |
 | Badges and achievement labels | `src/lib/badgeData.js` for client labels/icons/points; database seeded definitions and SQL achievement checks | Display metadata can drift from server ids; `check:balance-drift` and tests protect the registry/seed relationship |
 | Scoring and roll conditions | Authoritative SQL `calculate_roll_v2`/`roll_die_impl`; `src/lib/scoringCandidate.js` mirrors deterministic parity for checks | Never move scoring or grant decisions to client code; `check:scoring-parity` requires local PostgreSQL |
 | Ranks | `src/lib/ranks.js` and `src/lib/balanceConfig.js` for display thresholds | Must remain aligned with product/economy docs; rank is display state, not an authority for grants |

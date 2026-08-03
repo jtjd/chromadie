@@ -34,29 +34,23 @@ export function getNameRendererLoadout(cosmetics = {}) {
 export function getNameRendererProps(cosmetics = {}) {
   const loadout = getNameRendererLoadout(cosmetics);
   return {
-    rendererKey: loadout ? '' : String(cosmetics?.name_effect || ''),
+    rendererKey: '',
     loadout
   };
 }
 
 export function applyNamePreviewLayer(loadout = {}, slot, itemKey = '') {
   const next = /** @type {Record<string, string>} */ ({ ...(loadout || {}) });
-  if (!NAME_COMPOSABLE_SLOTS.includes(slot) && slot !== 'name_effect') return next;
+  if (!NAME_COMPOSABLE_SLOTS.includes(slot)) return next;
 
   if (itemKey) next[slot] = itemKey;
   else delete next[slot];
-
-  if (slot === 'name_effect') {
-    NAME_COMPOSABLE_SLOTS.forEach(nameSlot => delete next[nameSlot]);
-  } else if (itemKey) {
-    delete next.name_effect;
-  }
 
   return next;
 }
 
 export function getNameItemPreviewLoadout(item, baseLoadout = {}) {
-  if (!item || !['name_effect', ...NAME_COMPOSABLE_SLOTS].includes(item.slot)) {
+  if (!item || !NAME_COMPOSABLE_SLOTS.includes(item.slot)) {
     return { ...(baseLoadout || {}) };
   }
   return applyNamePreviewLayer(baseLoadout, item.slot, item.css_value || item.item_key);

@@ -1,7 +1,6 @@
 <script>
   import CompactRollPreview from './CompactRollPreview.svelte';
   import { getLatestHomepageRoll } from './homepageDirectory.js';
-  import { getOrbShape, getRollEffect } from './cosmetics.js';
   import { normalizeHexColor } from './utils.js';
 
   /** @type {Record<string, any> | null} */
@@ -10,10 +9,7 @@
   $: context = model && model.context ? model.context : null;
   $: profile = context?.targetProfile;
   $: latestRoll = getLatestHomepageRoll(context);
-  $: cosmetics = profile?.equipped_cosmetics || {};
   $: color = normalizeHexColor(latestRoll?.hex_code, profile?.mood_color || '#8B7CF6');
-  $: orbEffect = getOrbShape(cosmetics);
-  $: rollEffect = getRollEffect(cosmetics);
 </script>
 
 <div class="homepage-roll-summary" aria-label="Real public roll example">
@@ -21,9 +17,6 @@
     <CompactRollPreview
       displayColor={latestRoll.hex_code || color}
       rarity={latestRoll.rarity || 'Common'}
-      effectCls={rollEffect.cls}
-      effectStyle={rollEffect.style}
-      orbCls={orbEffect.cls}
       size="4.2rem"
       scale={0.34}
     />

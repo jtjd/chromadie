@@ -10,73 +10,56 @@ import {
 } from '../src/lib/shopCatalog.js';
 
 const items = [
-  { item_key: 'name_void', name: 'Void Name', slot: 'name_effect', cost: 900000, rarity: 'Mythic', collection: 'Voidwalker', description: 'Cold light.' },
-  { item_key: 'frame_clean', name: 'Clean Frame', slot: 'frame', cost: 15000, rarity: 'Uncommon', description: 'Minimal.' },
-  { item_key: 'orb_star', name: 'Radiant Star', slot: 'orb_shape', cost: 350000, rarity: 'Mythic', collection: 'Geometric', description: 'Stellar.' },
-  { item_key: 'streak_freeze', name: 'Streak Freeze', slot: 'consumable', cost: 50000, rarity: 'Rare', description: 'Protection.' },
-  { item_key: 'frame_30_day', name: 'Monthly Grinder', slot: 'frame', cost: 0, rarity: 'Mythic', description: 'Milestone.' }
+  { item_key: 'name_font_editorial_serif', name: 'Editorial Serif', slot: 'name_font', cost: 180000, rarity: 'Rare', collection: 'Archive', description: 'A serif.' },
+  { item_key: 'name_material_liquid_mercury', name: 'Liquid Mercury', slot: 'name_material', cost: 560000, rarity: 'Anomaly', collection: 'Nocturne', description: 'A reflective face.' },
+  { item_key: 'name_motion_soft_rise', name: 'Soft Rise', slot: 'name_motion', cost: 150000, rarity: 'Uncommon', collection: 'Ember', description: 'A subtle entrance.' },
+  { item_key: 'border_signal', name: 'Signal Border', slot: 'profile_border', cost: 160000, rarity: 'Rare', collection: 'Signal', description: 'A quiet edge.' },
+  { item_key: 'streak_freeze', name: 'Streak Freeze', slot: 'consumable', cost: 50000, rarity: 'Rare', description: 'Protection.' }
 ];
 
-test('shop preview context follows the surface where a cosmetic renders', () => {
-  assert.equal(getShopContextForSlot('name_effect'), 'profile');
-  assert.equal(getShopContextForSlot('orb_shape'), 'roll');
-  assert.equal(getShopContextForSlot('lb_theme'), 'leaderboard');
+test('retained shop preview context follows the profile surface', () => {
+  assert.equal(getShopContextForSlot('name_font'), 'profile');
+  assert.equal(getShopContextForSlot('name_material'), 'profile');
+  assert.equal(getShopContextForSlot('name_motion'), 'profile');
+  assert.equal(getShopContextForSlot('profile_border'), 'profile');
   assert.equal(getShopContextForSlot('consumable'), null);
 });
 
 test('purchase confirmation protects expensive and consumable purchases', () => {
+  assert.equal(requiresPurchaseConfirmation(items[1]), true);
   assert.equal(requiresPurchaseConfirmation(items[0]), true);
-  assert.equal(requiresPurchaseConfirmation(items[1]), false);
-  assert.equal(requiresPurchaseConfirmation(items[3]), true);
+  assert.equal(requiresPurchaseConfirmation(items[4]), true);
 });
 
-test('the fitting room copies account state and changes only the selected slot', () => {
+test('the fitting room changes only the selected retained slot', () => {
   const fittingRoom = createFittingRoom({
     walletBalance: 400000,
-    userInventory: ['frame_clean'],
-    equippedItems: { frame: 'frame_clean', name_effect: 'name_old' }
+    userInventory: ['border_signal'],
+    equippedItems: { profile_border: 'border_signal', name_material: 'name_material_liquid_mercury' }
   });
   const next = tryOnShopItem(fittingRoom.loadout, items[0]);
-
-  assert.deepEqual(fittingRoom.inventoryCounts, { frame_clean: 1 });
-  assert.equal(next.frame, 'frame_clean');
-  assert.equal(next.name_effect, 'name_void');
-  assert.deepEqual(clearShopSlot(next, 'frame'), { name_effect: 'name_void' });
-});
-
-test('catalog filtering combines section, query, ownership, affordability, rarity, and sorting', () => {
-  const fittingRoom = createFittingRoom({
-    walletBalance: 100000,
-    userInventory: ['frame_clean']
+  assert.deepEqual(fittingRoom.inventoryCounts, { border_signal: 1 });
+  assert.equal(next.profile_border, 'border_signal');
+  assert.equal(next.name_font, 'name_font_editorial_serif');
+  assert.equal(next.name_material, 'name_material_liquid_mercury');
+  assert.deepEqual(clearShopSlot(next, 'profile_border'), {
+    name_font: 'name_font_editorial_serif',
+    name_material: 'name_material_liquid_mercury'
   });
-
-  assert.deepEqual(
-    filterShopItems(items, { section: 'profile', subslot: 'frame', sortMode: 'price_asc' }, fittingRoom).map(item => item.item_key),
-    ['frame_30_day', 'frame_clean']
-  );
-  assert.deepEqual(
-    filterShopItems(items, { section: 'owned', query: 'clean' }, fittingRoom).map(item => item.item_key),
-    ['frame_clean']
-  );
-  assert.deepEqual(
-    filterShopItems(items, { section: 'overview', affordableOnly: true, rarity: 'Uncommon' }, fittingRoom).map(item => item.item_key),
-    ['frame_clean']
-  );
 });
 
-test('catalog filtering supports collection and explicit ownership states', () => {
-  const fittingRoom = createFittingRoom({ userInventory: ['frame_clean'] });
-
+test('catalog filtering combines retained sections, ownership, affordability, and sorting', () => {
+  const fittingRoom = createFittingRoom({ walletBalance: 170000, userInventory: ['border_signal'] });
   assert.deepEqual(
-    filterShopItems(items, { collection: 'Voidwalker', ownership: 'owned' }, fittingRoom).map(item => item.item_key),
-    []
+    filterShopItems(items, { section: 'names', subslot: 'name_motion', sortMode: 'price_asc' }, fittingRoom).map(item => item.item_key),
+    ['name_motion_soft_rise']
   );
   assert.deepEqual(
-    filterShopItems(items, { collection: 'Voidwalker', ownership: 'unowned' }, fittingRoom).map(item => item.item_key),
-    ['name_void']
+    filterShopItems(items, { section: 'owned' }, fittingRoom).map(item => item.item_key),
+    ['border_signal']
   );
   assert.deepEqual(
-    filterShopItems(items, { collection: 'Geometric' }, fittingRoom).map(item => item.item_key),
-    ['orb_star']
+    filterShopItems(items, { section: 'overview', affordableOnly: true, rarity: 'Rare' }, fittingRoom).map(item => item.item_key),
+    ['border_signal']
   );
 });

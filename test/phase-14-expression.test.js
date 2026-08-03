@@ -100,7 +100,6 @@ test('media storage, server validation, and public rendering boundaries are expl
   const audioLimitMigration = await read('supabase/migrations/20260730160000_increase_staff_profile_audio_limit.sql');
   const settings = await read('src/lib/ProfileExpressionEditor.svelte');
   const identity = await read('src/lib/IdentityCard.svelte');
-  const atmosphere = await read('src/lib/ProfileAtmosphere.svelte');
   const music = await read('src/lib/ProfileMusic.svelte');
   const instagramIcon = await read('public/link-icons/instagram.svg');
   const tiktokIcon = await read('public/link-icons/tiktok.svg');
@@ -154,7 +153,6 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(settings, /Seek profile audio/);
   assert.match(identity, /failedAvatarSource/);
   assert.match(identity, /on:error/);
-  assert.match(atmosphere, /background-position: center/);
   assert.match(music, /loading="lazy"/);
   assert.match(music, /autoplay/);
   assert.match(music, /loop/);

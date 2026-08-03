@@ -1,8 +1,7 @@
 <script>
   import IdentityCard from './IdentityCard.svelte';
-  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import { equippedItems } from './stores';
-  import { getCosmeticEffect, getProfileAtmosphereEffect, getProfileBg } from './cosmetics';
+  import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import { getProfileStoryVisible, getVisibleProfileLinks, getVisibleProfileModules } from './profileConfig.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
@@ -29,35 +28,17 @@
   $: configSource = profileConfig || {};
   $: config = configSource.draft || configSource.published || configSource;
   $: loadout = /** @type {Record<string, string>} */ ($equippedItems || {});
-  $: nameRendererKey = String(loadout?.name_effect || '');
   $: nameRendererLoadout = getNameRendererLoadout(loadout);
-  $: frameEffect = getCosmeticEffect(loadout, 'frame');
-  $: borderEffect = getCosmeticEffect(loadout, 'profile_border');
-  $: backgroundEffect = getProfileBg(loadout);
-  $: atmosphereEffect = getProfileAtmosphereEffect(loadout);
   $: links = getVisibleProfileLinks(config);
   $: modules = getVisibleProfileModules(config, true).filter(module => module.id !== 'explore');
   $: showStory = getProfileStoryVisible(config);
   $: avatarSrc = getProfileMediaUrl(config.avatar_path);
-  $: previewSurfaceAccent = config.colorEffectsEnabled === true
-    ? (config.signatureColor || profile.mood_color || '#8B7CF6')
-    : '#5D6A73';
 </script>
 
 <aside class="settings-preview" aria-label="Live profile preview">
   <div class="settings-preview__topline"><span>Live profile</span><span>Draft preview</span></div>
-  <div class={'settings-preview__canvas ' + borderEffect.cls + ' settings-preview__canvas--' + (config.layoutVariant || 'immersive')} style={borderEffect.style + '--preview-accent:' + (config.signatureColor || profile.mood_color || '#8B7CF6') + ';'}>
-    {#if backgroundEffect.cls || backgroundEffect.style}<div class="settings-preview__background {backgroundEffect.cls}" style={backgroundEffect.style} aria-hidden="true"></div>{/if}
-    {#if atmosphereEffect}
-      <ProfileAtmosphere
-        canvasOnly={true}
-        accent={previewSurfaceAccent}
-        secondaryAccent={config.colorEffectsEnabled === true ? '#71D6FF' : '#87959D'}
-        backgroundTint={config.colorEffectsEnabled === true}
-        ambientEffects={config.colorEffectsEnabled === true}
-        effect={atmosphereEffect}
-      />
-    {/if}
+  <ProfileBorderEffect borderKey={loadout?.profile_border} className="settings-preview__border">
+  <div class={'settings-preview__canvas settings-preview__canvas--' + (config.layoutVariant || 'immersive')} style={'--preview-accent:' + (config.signatureColor || profile.mood_color || '#8B7CF6') + ';'}>
     <IdentityCard
       username={profile.username || 'Your username'}
       displayName={profile.username || 'Your username'}
@@ -67,12 +48,9 @@
       badges={[]}
       avatarSrc={avatarSrc}
       accentColor={config.signatureColor || profile.mood_color || '#8B7CF6'}
-      nameRendererKey={nameRendererKey}
       nameRendererLoadout={nameRendererLoadout}
       nameRendererContext="profile"
       nameRendererMode="animated"
-      frameClass={frameEffect.cls}
-      frameStyle={frameEffect.style}
       showToday={false}
     />
     <div class="settings-preview__composition">
@@ -93,6 +71,7 @@
       </div>
     </div>
   </div>
+  </ProfileBorderEffect>
   <p>Updates use your current draft. Publish when the layout is ready.</p>
 </aside>
 
@@ -101,7 +80,6 @@
   .settings-preview__topline { display:flex; justify-content:space-between; color:var(--color-accent-bright); font:700 var(--type-label)/1 var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
   .settings-preview__topline span:last-child { color:var(--color-ink-faint); }
   .settings-preview__canvas { position:relative; overflow:hidden; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-inset); }
-  .settings-preview__background { position:absolute; inset:0; opacity:.4; pointer-events:none; }
   .settings-preview__canvas :global(.identity-card) { position:relative; z-index:2; min-height:15rem; padding:1rem; border:0; border-radius:var(--radius-md); }
   .settings-preview__canvas :global(.identity-card__name) { font-size:clamp(1.35rem, 2vw, 2rem); }
   .settings-preview__canvas :global(.identity-card__bio) { font-size:.75rem; }

@@ -2,7 +2,7 @@
   import CompactRollPreview from './CompactRollPreview.svelte';
   import HomeMusicPreview from './HomeMusicPreview.svelte';
   import IdentityCard from './IdentityCard.svelte';
-  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
+  import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
 
   export let profile;
   export let expanded = false;
@@ -12,12 +12,9 @@
   ];
 </script>
 
-<article class={'home-example-profile home-example-profile--' + profile.id + (expanded ? ' home-example-profile--expanded' : '')} style={'--example-accent: ' + profile.accent + '; --example-secondary: ' + profile.secondaryAccent + '; --example-color: ' + profile.color}>
+<article class={'home-example-profile home-example-profile--' + profile.id + (expanded ? ' home-example-profile--expanded' : '')} style={'--example-accent: ' + profile.accent + '; --example-color: ' + profile.color}>
   <div class={'home-example-profile__canvas ' + profile.backgroundClass}>
-    {#if profile.atmosphere}
-      <ProfileAtmosphere canvasOnly={true} accent={profile.accent} secondaryAccent={profile.secondaryAccent} effect={profile.atmosphere} />
-    {/if}
-
+    <ProfileBorderEffect borderKey={profile.profileBorder} compact={true} className="home-example-profile__border">
     <div class="home-example-profile__identity-shell">
       <IdentityCard
         titleId={'home-example-' + profile.id + '-title'}
@@ -27,20 +24,19 @@
         links={profile.links}
         badges={expanded ? previewBadges : []}
         accentColor={profile.accent}
-        nameRendererKey={profile.nameRendererKey}
         nameRendererLoadout={profile.nameRendererLoadout || null}
         nameRendererContext="card"
         nameRendererMode="static-signature"
-        frameClass={profile.frameClass + ' ' + profile.avatarClass}
         showAvatarMark={false}
         showToday={false}
       />
     </div>
+    </ProfileBorderEffect>
 
     <HomeMusicPreview accent={profile.accent} />
     <div class="home-example-profile__expression">
       <div class="home-example-profile__roll">
-        <CompactRollPreview displayColor={profile.color} rarity={profile.rarity} effectCls={profile.effectClass} orbCls={profile.orbClass} size={expanded ? '4rem' : '3rem'} scale={expanded ? 0.36 : 0.3} />
+        <CompactRollPreview displayColor={profile.color} rarity={profile.rarity} size={expanded ? '4rem' : '3rem'} scale={expanded ? 0.36 : 0.3} />
         <div>
           <span>Today’s color</span>
           <strong>{profile.colorName}</strong>

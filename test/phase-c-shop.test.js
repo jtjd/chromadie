@@ -96,9 +96,11 @@ test('contextual shop preview delegates to the shared Studio and Name renderer p
   const contextual = await readProjectFile('src/lib/ShopContextualPreview.svelte');
   const studio = await readProjectFile('src/lib/ShopStudioPreview.svelte');
   const itemPreview = await readProjectFile('src/lib/ShopItemPreview.svelte');
+  const identity = await readProjectFile('src/lib/IdentityCard.svelte');
   assert.match(contextual, /<ShopStudioPreview/);
   assert.match(contextual, /Temporary preview/);
-  assert.match(studio, /<NameEffectCanvas/);
+  assert.match(studio, /nameRendererLoadout/);
+  assert.match(identity, /<NameEffectCanvas/);
   assert.match(itemPreview, /<NameEffectCanvas/);
   assert.match(itemPreview, /context="card"/);
 });

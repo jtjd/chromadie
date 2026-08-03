@@ -28,7 +28,7 @@ const publicItem = {
   currentStreak: 4,
   totalRolls: 12,
   lifetimeEp: 200000,
-  equippedCosmetics: { lb_theme: 'theme_violet', unsafe: 'javascript:alert(1)' },
+  equippedCosmetics: { profile_border: 'border_signal', unsafe: 'javascript:alert(1)' },
   equippedBadges: ['launch_edition', '<script>'],
   isStaff: false,
   rank: 1,
@@ -117,8 +117,8 @@ test('discovery implementation uses public RPC projections, profile CTAs, sharin
   assert.match(card, /getProfileShareText/);
   assert.match(card, /getProfileMediaUrl/);
   assert.match(card, /CompactRollPreview/);
-  assert.match(card, /getOrbShape/);
-  assert.match(card, /getRollEffect/);
+  assert.match(card, /ProfileBorderEffect/);
+  assert.match(card, /getNameRendererLoadout/);
   assert.match(card, /filter\(badge => badge\.symbol !== '❓'\)/);
   assert.match(card, /Color roll/);
   assert.match(card, /Open profile/);

@@ -9,7 +9,6 @@ import { ACHIEVEMENTS } from '../src/lib/badgeData.js';
 import { simulateBalance } from '../scripts/simulate-balance.mjs';
 import {
   CANDIDATE_RANKS,
-  PRESTIGE_ITEM_KEYS,
   PRESTIGE_ITEM_PRICE,
   SHOP_PRICE_BANDS,
   STREAK_FREEZE_PRICE
@@ -167,7 +166,6 @@ test('candidate economy pacing remains explicit', () => {
   assert.deepEqual(SHOP_PRICE_BANDS.Mythic, { min: 175000, max: 1150000 });
   assert.equal(STREAK_FREEZE_PRICE, 50000);
   assert.equal(PRESTIGE_ITEM_PRICE, 1250000);
-  assert.deepEqual(PRESTIGE_ITEM_KEYS, ['bg_god_rays', 'lb_chroma', 'name_chroma']);
   assert.equal(Object.keys(CANDIDATE_ACHIEVEMENT_REWARDS).length, 42);
   assert.equal(CANDIDATE_ACHIEVEMENT_TOTAL, 8820000);
   assert.ok(RETIRED_ACHIEVEMENT_IDS.includes('launch_adopter'));

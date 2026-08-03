@@ -11,12 +11,10 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     displayName: 'Mira',
     bio: 'Product designer making quiet tools for busy days.',
     accent: '#c8d5c0',
-    secondaryAccent: '#8ea78d',
     backgroundClass: 'home-demo-background--minimal',
     avatarClass: 'home-demo-avatar--minimal',
-    nameRendererKey: '',
-    frameClass: '',
-    atmosphere: '',
+    nameRendererLoadout: null,
+    profileBorder: '',
     links: [
       { type: 'link', label: 'mira.design', url: 'https://example.com/mira-design', order: 0 },
       { type: 'github', label: 'GitHub', url: 'https://github.com', order: 1 }
@@ -25,8 +23,6 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     colorName: 'Pale fern',
     rarity: 'Common',
     rank: '#28',
-    effectClass: '',
-    orbClass: 'orb-shape-diamond'
   }),
   Object.freeze({
     id: 'atmospheric',
@@ -35,12 +31,10 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     displayName: 'Nocturne',
     bio: 'Field recordings, night walks, and things in progress.',
     accent: '#8f9dff',
-    secondaryAccent: '#71d6ff',
     backgroundClass: 'home-demo-background--atmospheric',
     avatarClass: 'home-demo-avatar--atmospheric',
-    nameRendererKey: 'name_void',
-    frameClass: 'frame_holo',
-    atmosphere: 'fireflies',
+    nameRendererLoadout: { fontKey: 'editorial-serif', materialKey: 'liquid-mercury', motionKey: 'ghost-offset' },
+    profileBorder: 'void',
     links: [
       { type: 'link', label: 'soundcloud', url: 'https://example.com/nocturne-audio', order: 0 },
       { type: 'link', label: 'field notes', url: 'https://example.com/nocturne-notes', order: 1 }
@@ -49,8 +43,6 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     colorName: 'Deep indigo',
     rarity: 'Uncommon',
     rank: '#12',
-    effectClass: 'roll-sparkles-anim',
-    orbClass: 'orb-shape-diamond'
   }),
   Object.freeze({
     id: 'expressive',
@@ -59,12 +51,10 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     displayName: 'Solstice',
     bio: 'Illustration, tiny experiments, and loud colors.',
     accent: '#7CE7FF',
-    secondaryAccent: '#B49AFF',
     backgroundClass: 'home-demo-background--expressive',
     avatarClass: 'home-demo-avatar--expressive',
-    nameRendererKey: 'name_rainbow',
-    frameClass: 'frame-chroma-anim',
-    atmosphere: 'scanlines',
+    nameRendererLoadout: { fontKey: 'wide-geometric', materialKey: 'chroma-glass', motionKey: 'chromatic-ripple' },
+    profileBorder: 'prism',
     links: [
       { type: 'link', label: 'solstice.art', url: 'https://example.com/solstice-art', order: 0 },
       { type: 'youtube', label: 'YouTube', url: 'https://youtube.com', order: 1 }
@@ -73,7 +63,5 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     colorName: 'Electric periwinkle',
     rarity: 'Rare',
     rank: '#7',
-    effectClass: 'roll-spectrum-anim',
-    orbClass: 'orb-shape-diamond'
   })
 ]);

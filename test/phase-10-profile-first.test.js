@@ -49,7 +49,7 @@ test('profile settings keeps secondary features available away from the public c
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
   assert.match(settings, /<ProfileEditor/);
   assert.match(settings, /<ProfileSocial/);
-  assert.match(shell, /TodayColor result=\{latestRoll\}[^\n]*cosmetics=\{cosmetics\}/);
+  assert.match(shell, /TodayColor result=\{latestRoll\}[^\n]*accentColor=\{signatureColor\}/);
   assert.doesNotMatch(shell, /<ProfileSocial/);
   assert.match(shell, /Add to rivals/);
   assert.match(shell, /getProfileStoryVisible\(effectiveProfileConfig\)/);

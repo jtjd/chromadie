@@ -50,23 +50,7 @@ export const NAME_MOTIONS = Object.freeze({
   'color-memory': composableMotion('color-memory', 4600, { label: 'Color Memory', collection: 'Prism', rarity: 'Anomaly', description: 'Recent rolled colors pass through the lettering in sequence.', usesRecentColors: true }),
   'daily-pulse': composableMotion('daily-pulse', 4200, { label: 'Daily Pulse', collection: 'Ember', rarity: 'Epic', description: 'Today’s color blooms outward from the center.', usesDailyColor: true }),
   'prism-shatter': composableMotion('prism-shatter', 4200, { label: 'Prism Shatter', collection: 'Prism', rarity: 'Mythic', description: 'Faceted fragments separate and reassemble.' }),
-  'ink-spread': composableMotion('ink-spread', 4000, { label: 'Ink Spread', collection: 'Archive', rarity: 'Epic', description: 'Soft ink expands into crisp finished letterforms.' }),
-
-  // Legacy motion identities. They remain separate from the new paid motion
-  // definitions so old equipped keys keep their established behavior.
-  shimmer: motion('shimmer', 2000, 'shimmer'),
-  flicker: motion('flicker', 3200, 'flicker'),
-  pulse: motion('pulse', 4200, 'pulse'),
-  matrix: motion('matrix', 1800, 'matrix'),
-  rainbow: motion('rainbow', 3000, 'rainbow'),
-  glitch: motion('glitch', 4800, 'glitch'),
-  wave: motion('wave', 3600, 'wave'),
-  inferno: motion('inferno', 800, 'inferno'),
-  sunset: motion('sunset', 4200, 'sunset'),
-  void: motion('void', 4800, 'void'),
-  signal: motion('signal', 5800, 'signal'),
-  chroma: motion('chroma', 2200, 'chroma'),
-  atelier: motion('atelier', 5400, 'atelier')
+  'ink-spread': composableMotion('ink-spread', 4000, { label: 'Ink Spread', collection: 'Archive', rarity: 'Epic', description: 'Soft ink expands into crisp finished letterforms.' })
 });
 
 export const NAME_MOTION_KEYS = Object.freeze(Object.keys(NAME_MOTIONS));

@@ -14,8 +14,8 @@
 
     <div class="home-product__grid">
       <figure class="home-product__shot home-product__shot--profile">
-        <HomeImageLightbox src="/homepage/bfr-profile.webp" alt="A live public profile with avatar, bio, links, background, and profile effects" width="1600" height="789" buttonClass="home-product__image-trigger" imageClass="home-product__image" />
-        <figcaption><span>Public profile</span><span>Identity · links · atmosphere</span></figcaption>
+        <HomeImageLightbox src="/homepage/bfr-profile.webp" alt="A live public profile with avatar, bio, links, background, name layers, and profile border" width="1600" height="789" buttonClass="home-product__image-trigger" imageClass="home-product__image" />
+        <figcaption><span>Public profile</span><span>Identity · links · color story</span></figcaption>
       </figure>
       <figure class="home-product__shot home-product__shot--roll">
         <HomeImageLightbox src="/homepage/daily-roll-full.webp" alt="A live daily color result with score, conditions, story, and countdown" width="794" height="1131" buttonClass="home-product__image-trigger" imageClass="home-product__image" />

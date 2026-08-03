@@ -95,7 +95,7 @@ test('profile mapping keeps critical public fields and excludes private extras',
     username: 'NeonUser',
     lifetime_ep: 12345,
     total_rolls: 8,
-    equipped_cosmetics: { frame: 'frame-basic' },
+    equipped_cosmetics: { profile_border: 'border_prism' },
     email: 'private@example.com'
   });
   assert.deepEqual(mappedProfile, {
@@ -103,7 +103,7 @@ test('profile mapping keeps critical public fields and excludes private extras',
     username: 'NeonUser',
     lifetime_ep: 12345,
     total_rolls: 8,
-    equipped_cosmetics: { frame: 'frame-basic' }
+    equipped_cosmetics: { profile_border: 'border_prism' }
   });
 
   assert.deepEqual(mapProfileScores([{

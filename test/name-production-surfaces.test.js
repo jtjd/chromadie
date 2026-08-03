@@ -19,102 +19,46 @@ async function findSvelteFiles(directory) {
   return files;
 }
 
-const EXPECTED_SHARED_SURFACES = Object.freeze([
-  ['src/lib/ProfileShell.svelte', 'nameRendererKey={nameRendererKey}'],
-  ['src/lib/Profile.svelte', '<NameEffectCanvas'],
-  ['src/lib/ProfileSettingsPreview.svelte', '<IdentityCard'],
-  ['src/lib/DiscoveryCard.svelte', '<NameEffectCanvas'],
-  ['src/lib/HomeLeaderboard.svelte', '<NameEffectCanvas'],
-  ['src/lib/HomepageProfilePreview.svelte', 'nameRendererKey={nameRendererKey}'],
-  ['src/lib/HomeExampleProfile.svelte', 'nameRendererKey={profile.nameRendererKey}'],
-  ['src/lib/HomeRollShowcase.svelte', 'nameRendererKey={previewLoadout.name_effect}'],
-  ['src/lib/ShopItemPreview.svelte', '<NameEffectCanvas'],
-  ['src/lib/ShopStudioPreview.svelte', '<NameEffectCanvas']
+const PRODUCTION_SURFACES = Object.freeze([
+  'src/lib/Profile.svelte',
+  'src/lib/ProfileShell.svelte',
+  'src/lib/ProfileSettingsPreview.svelte',
+  'src/lib/DiscoveryCard.svelte',
+  'src/lib/HomeLeaderboard.svelte',
+  'src/lib/HomepageProfilePreview.svelte',
+  'src/lib/HomeExampleProfile.svelte',
+  'src/lib/HomeRollShowcase.svelte',
+  'src/lib/ShopItemPreview.svelte',
+  'src/lib/ShopStudioPreview.svelte'
 ]);
 
-const LEGACY_CLASS_TOKENS = Object.freeze([
-  'name_drop_shadow',
-  'name_holographic',
-  'name_void',
-  'rainbow-text-anim',
-  'matrix-rain-anim',
-  'glitch-anim',
-  'ocean-wave-anim',
-  'inferno-name-anim',
-  'sunset-blur-anim',
-  'chroma-name-anim',
-  'diamond-shimmer-anim',
-  'pulsing-glow-anim',
-  'shining-gold-anim',
-  'slow-pulse-name-anim',
-  'flicker-neon-anim',
-  'name-signal-anim'
-]);
-
-test('every production Name surface is wired to the shared renderer path', async () => {
-  for (const [path, marker] of EXPECTED_SHARED_SURFACES) {
+test('every production identity surface uses the shared Name renderer path', async () => {
+  for (const path of PRODUCTION_SURFACES) {
     const source = await readProjectFile(path);
-    assert.match(source, /NameEffectCanvas|nameRendererKey/, path);
-    assert.match(source, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `${path} missing ${marker}`);
+    assert.match(source, /NameEffectCanvas|nameRendererLoadout|nameRendererContext/, path);
   }
 
   const identity = await readProjectFile('src/lib/IdentityCard.svelte');
+  const canvas = await readProjectFile('src/lib/name/NameEffectCanvas.svelte');
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(identity, /semanticClass="identity-card__name"/);
+  assert.match(canvas, /aria-hidden="true"/);
 });
 
-test('production components no longer apply legacy Name CSS classes or the old bridge', async () => {
+test('production components no longer apply removed cosmetic slots or legacy CSS bridges', async () => {
   const files = await findSvelteFiles('src/lib');
+  const removed = /name_effect|profile_bg|profile_atmosphere|orb_shape|roll_effect|lb_theme|frame_holo|ProfileAtmosphere|DecorationStudio|NameLegacyParity/;
   for (const path of files) {
-    if (path === 'src/lib/name/NameLegacyParityHarness.svelte') continue;
     const source = await readProjectFile(path);
-    assert.doesNotMatch(source, /getNameEffect|\bnameClass\s*=|\bnameStyle\s*=/, path);
-    for (const token of LEGACY_CLASS_TOKENS) {
-      assert.doesNotMatch(source, new RegExp(`(?:class|className)\\s*=[^\\n]*\\b${token}\\b`), `${path} directly applies ${token}`);
-    }
+    assert.doesNotMatch(source, removed, path);
   }
-
-  const cosmetics = await readProjectFile('src/lib/cosmetics.js');
-  assert.doesNotMatch(cosmetics, /getNameEffect/);
 });
 
-test('shared Name semantics and deliberate repeated-list modes remain explicit', async () => {
+test('shared renderer semantics and lifecycle hooks remain explicit', async () => {
   const canvas = await readProjectFile('src/lib/name/NameEffectCanvas.svelte');
   assert.match(canvas, /<svelte:element/);
-  assert.match(canvas, /<canvas[\s\S]*aria-hidden="true"/);
-  assert.match(canvas, /semanticOnClick/);
   assert.match(canvas, /IntersectionObserver/);
+  assert.match(canvas, /resizeObserver\?\.disconnect\(\)/);
+  assert.match(canvas, /renderer\?\.destroy\(\)/);
   assert.match(canvas, /registerNameAnimation/);
-
-  const compactSources = await Promise.all([
-    readProjectFile('src/lib/DiscoveryCard.svelte'),
-    readProjectFile('src/lib/HomeLeaderboard.svelte'),
-    readProjectFile('src/lib/Profile.svelte'),
-    readProjectFile('src/lib/ShopStudioPreview.svelte')
-  ]);
-  compactSources.forEach(source => assert.match(source, /static-signature/));
-
-  const cardPreview = await readProjectFile('src/lib/ShopItemPreview.svelte');
-  assert.match(cardPreview, /context="card"/);
-  assert.match(cardPreview, /mode="animated"/);
-
-  const profile = await readProjectFile('src/lib/ProfileShell.svelte');
-  assert.match(profile, /nameRendererRecentColors/);
-  assert.match(profile, /nameRendererMode="animated"/);
-});
-
-test('the parity harness is internal-only and compares legacy, shared, and reduced-motion samples', async () => {
-  const harness = await readProjectFile('src/lib/name/NameLegacyParityHarness.svelte');
-  assert.match(harness, /Legacy CSS/);
-  assert.match(harness, /Shared renderer/);
-  assert.match(harness, /mode="reduced-motion"/);
-  assert.match(harness, /LEGACY_NAME_PARITY/);
-  assert.match(harness, /NameComposableCatalogHarness/);
-
-  const sourceFiles = await findSvelteFiles('src/lib');
-  for (const path of sourceFiles) {
-    if (path === 'src/lib/name/NameLegacyParityHarness.svelte') continue;
-    const source = await readProjectFile(path);
-    assert.doesNotMatch(source, /NameLegacyParityHarness/);
-  }
 });

@@ -1,7 +1,6 @@
 <script>
   import CompactRollPreview from './CompactRollPreview.svelte';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
-  import { getOrbShape, getRollEffect } from './cosmetics.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { normalizeHexColor } from './utils.js';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
@@ -22,7 +21,6 @@
   <div class="home-mini-leaderboard" aria-label="Three real public profiles">
     {#each rows.slice(0, 3) as row, index (row.username)}
       {@const color = rowColor(row)}
-      {@const nameRendererKey = String(row?.equippedCosmetics?.name_effect || '')}
       {@const nameRendererLoadout = getNameRendererLoadout(row?.equippedCosmetics)}
       <a class="home-mini-leaderboard__row" href={row.profilePath} aria-label={`Open ${row.displayName || row.username}'s public profile`} style={`--row-accent: ${color};`}>
         <i>{String(index + 1).padStart(2, '0')}</i>
@@ -32,10 +30,9 @@
           <span class="home-mini-leaderboard__avatar">{(row.displayName || row.username || '?').slice(0, 1).toUpperCase()}</span>
         {/if}
         <span class="home-mini-leaderboard__user">
-          {#if nameRendererKey || nameRendererLoadout}
+          {#if nameRendererLoadout}
             <NameEffectCanvas
               text={'@' + row.username}
-              rendererKey={nameRendererKey}
               loadout={nameRendererLoadout}
               todayColor={color}
               context="card"
@@ -69,9 +66,6 @@
       <div class="home-leaderboard__board home-reveal home-reveal--delay-1">
         {#each rows.slice(0, 3) as row, index (row.username)}
           {@const color = rowColor(row)}
-          {@const effects = getRollEffect(row.equippedCosmetics)}
-          {@const orb = getOrbShape(row.equippedCosmetics)}
-          {@const nameRendererKey = String(row?.equippedCosmetics?.name_effect || '')}
           {@const nameRendererLoadout = getNameRendererLoadout(row?.equippedCosmetics)}
           <a class="home-rank-row" href={row.profilePath} aria-label={`Open ${row.displayName || row.username}'s public profile`} style={`--row-accent: ${color};`}>
             <span class="home-rank-row__number">{String(row.rank || index + 1).padStart(2, '0')}</span>
@@ -81,10 +75,9 @@
               <span class="home-rank-row__avatar home-rank-row__avatar--monogram">{(row.displayName || row.username || '?').slice(0, 1).toUpperCase()}</span>
             {/if}
             <span class="home-rank-row__user">
-              {#if nameRendererKey || nameRendererLoadout}
+              {#if nameRendererLoadout}
                 <NameEffectCanvas
                   text={row.displayName || row.username}
-                  rendererKey={nameRendererKey}
                   loadout={nameRendererLoadout}
                   todayColor={color}
                   context="card"
@@ -99,7 +92,7 @@
               <span>{row.bio || 'Public color profile'}</span>
             </span>
             <span class="home-rank-row__result">
-              <CompactRollPreview displayColor={color} rarity={row.rarity || 'Common'} effectCls={effects.cls} effectStyle={effects.style} orbCls={orb.cls} size="2rem" scale={0.2} staticEffect={true} referenceShape={true} />
+              <CompactRollPreview displayColor={color} rarity={row.rarity || 'Common'} size="2rem" scale={0.2} staticEffect={true} facetedGlyph={true} />
               <span><b>{row.identity || 'Latest color'}</b><small>{row.rarity || color}</small></span>
             </span>
             <span class="home-rank-row__score">{row.score === null || row.score === undefined ? '—' : `${Number(row.score).toLocaleString()} EP`}</span>

@@ -101,17 +101,13 @@ test('profile and account hydration remain non-visual', async () => {
   assert.match(header, /Retry account/);
 });
 
-test('profile atmosphere effects stay curated and reduced-motion safe', async () => {
-  const atmosphere = await read('src/lib/ProfileAtmosphere.svelte');
-  const cosmetics = await read('src/lib/cosmetics.js');
-  const shell = await read('src/lib/ProfileShell.svelte');
-  assert.match(atmosphere, /const EFFECTS = new Set/);
-  assert.match(atmosphere, /function drawRain/);
-  assert.match(atmosphere, /function drawSnow/);
-  assert.match(atmosphere, /function drawFireflies/);
-  assert.match(atmosphere, /prefers-reduced-motion/);
-  assert.match(cosmetics, /bg_fireflies/);
-  assert.match(cosmetics, /getProfileAtmosphereEffect/);
-  assert.match(shell, /atmosphereEffect/);
-  assert.doesNotMatch(atmosphere, /\{@html/);
+test('profile presentation keeps visual effects code-owned and bounded', async () => {
+  const border = await read('src/lib/profile-border/ProfileBorderEffect.svelte');
+  const registry = await read('src/lib/profile-border/profileBorders.js');
+  const profile = await read('src/lib/Profile.svelte');
+  assert.match(registry, /PROFILE_BORDER_KEYS/);
+  assert.match(border, /prefers-reduced-motion/);
+  assert.match(border, /IntersectionObserver/);
+  assert.match(profile, /ProfileBorderEffect/);
+  assert.doesNotMatch(border, /\{@html|catalog/);
 });

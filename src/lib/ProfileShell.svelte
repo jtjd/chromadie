@@ -2,7 +2,6 @@
   import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { authUser, followedUsers, isAuthenticated, profile, session, toggleFollow } from './stores';
   import { supabase } from './supabase';
-  import { getFrameEffect, getProfileAtmosphereEffect, getProfileBg, getProfileBorder } from './cosmetics';
   import { getBadgeMeta } from './badgeData';
   import { getRank, getRankState } from './ranks';
   import { loadProfileContext } from './profileData';
@@ -17,7 +16,7 @@
   import { getProfileStoryUnlocks } from './profileStory.js';
   import { createDefaultProfileConfig, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
   import { getProfileComposition } from './profileComposition.js';
-  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
+  import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
   import IdentityCard from './IdentityCard.svelte';
   import { getProfileMediaUrl } from './profileMedia.js';
@@ -28,7 +27,6 @@
   import { getNameRendererLoadout } from './name/nameLoadout.js';
 
   const PROFILE_SURFACE_ACCENT = '#5D6A73';
-  const PROFILE_SURFACE_SECONDARY = '#87959D';
 
   export let profileUsername = null;
   export let userId = null;
@@ -51,7 +49,6 @@
   let trackedProfileViewKey = null;
   let followLoading = false;
   let profileRollState = 'idle';
-  let profileRollColor = '';
   let profileRollEffectTimer = null;
   let mediaCacheKey = '';
   let refreshing = false;
@@ -67,7 +64,6 @@
     previewConfig = null;
     allAchievements = [];
     profileRollState = 'idle';
-    profileRollColor = '';
     mediaCacheKey = '';
     if (profileRollEffectTimer) {
       clearTimeout(profileRollEffectTimer);
@@ -79,14 +75,14 @@
 
   function syncProfileData() {
     if (previewMode) {
-      const nextPreviewKey = 'decoration-preview:' + JSON.stringify({ profile: previewProfile, config: previewProfileConfig });
+      const nextPreviewKey = 'profile-preview:' + JSON.stringify({ profile: previewProfile, config: previewProfileConfig });
       if (nextPreviewKey !== activeProfileKey) {
         activeProfileKey = nextPreviewKey;
         loadRequestId += 1;
         resetShellState(false);
         const fallbackColor = previewProfile?.mood_color || '#8B7CF6';
         targetProfile = {
-          id: 'decoration-studio-preview',
+          id: 'profile-studio-preview',
           username: previewProfile?.username || 'Chromanaut',
           display_name: previewProfile?.display_name ?? null,
           bio: previewProfile?.bio ?? null,
@@ -228,26 +224,21 @@
     }
   }
 
-  function handleRollStart(event) {
+  function handleRollStart() {
     profileRollState = 'rolling';
-    profileRollColor = colorEffectsEnabled
-      ? colorFor(event.detail?.hex || signatureColor)
-      : '';
     if (profileRollEffectTimer) {
       clearTimeout(profileRollEffectTimer);
       profileRollEffectTimer = null;
     }
   }
 
-  function settleProfileRoll(nextColor = '') {
-    if (colorEffectsEnabled && nextColor) profileRollColor = colorFor(nextColor);
+  function settleProfileRoll() {
     profileRollState = 'settled';
     if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
     const reducedMotion = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     profileRollEffectTimer = setTimeout(() => {
       profileRollState = 'idle';
-      profileRollColor = '';
       profileRollEffectTimer = null;
     }, reducedMotion ? 420 : 1400);
   }
@@ -271,30 +262,17 @@
 
   function handleRollCancel() {
     profileRollState = 'idle';
-    profileRollColor = '';
     if (profileRollEffectTimer) {
       clearTimeout(profileRollEffectTimer);
       profileRollEffectTimer = null;
     }
   }
 
-  function handleRollPreview(event) {
-    if (colorEffectsEnabled && profileRollState === 'rolling' && event.detail?.hex) {
-      profileRollColor = colorFor(event.detail.hex);
-    }
-  }
-
-  async function handleRollComplete(event) {
+  async function handleRollComplete() {
     if (profileRollState === 'rolling') {
-      settleProfileRoll(event.detail?.canonical?.hex || event.detail?.data?.hex || event.detail?.data?.hex_code);
+      settleProfileRoll();
     }
     await loadProfileData();
-  }
-
-  function handleRollColor(event) {
-    if (colorEffectsEnabled && event.detail?.hex) {
-      profileRollColor = colorFor(event.detail.hex);
-    }
   }
 
   async function handleFollow() {
@@ -348,12 +326,7 @@
         profileId: targetProfile?.id
       });
   $: cosmetics = targetProfile?.equipped_cosmetics || {};
-  $: nameRendererKey = String(cosmetics?.name_effect || '');
   $: nameRendererLoadout = getNameRendererLoadout(cosmetics);
-  $: frameEff = getFrameEffect(cosmetics);
-  $: bgEff = getProfileBg(cosmetics);
-  $: atmosphereEffect = getProfileAtmosphereEffect(cosmetics);
-  $: borderEff = getProfileBorder(cosmetics);
   $: rank = targetProfile ? getRank(targetProfile.lifetime_ep || 0) : null;
   $: rankState = targetProfile ? getRankState(targetProfile.lifetime_ep || 0) : null;
   $: bestRoll = targetScores.length > 0
@@ -382,10 +355,6 @@
   $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
   $: profileSurfaceAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
   $: profileControlAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
-  $: profileAtmosphereSecondary = colorEffectsEnabled
-    ? colorFor(effectiveProfileConfig.signatureColor, '#71D6FF')
-    : PROFILE_SURFACE_SECONDARY;
-  $: if (!colorEffectsEnabled) profileRollColor = '';
   $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
@@ -419,18 +388,15 @@
 </script>
 
 <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + signatureColor + '; --profile-surface-accent: ' + profileSurfaceAccent + '; --profile-control-accent: ' + profileControlAccent + ';'} aria-busy={loading}>
-  {#if !previewMode}
-    <ProfileAtmosphere accent={profileSurfaceAccent} secondaryAccent={profileAtmosphereSecondary} backgroundSrc={backgroundSrc} backgroundTint={colorEffectsEnabled} ambientEffects={colorEffectsEnabled} effect={atmosphereEffect} rollState={colorEffectsEnabled ? profileRollState : 'idle'} rollColor={colorEffectsEnabled ? (profileRollColor || profileSurfaceAccent) : ''} />
+  {#if !previewMode && backgroundSrc}
+    <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
   {/if}
 
   {#if !loading && targetProfile}
     <div class="profile-shell__approved-canvas">
       <div class="profile-shell__approved-main">
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity">
-          <div class={'profile-shell__identity-boundary ' + borderEff.cls} style={borderEff.style}>
-            {#if bgEff.cls || bgEff.style}
-              <div class={'profile-shell__cosmetic-bg ' + bgEff.cls} style={bgEff.style} aria-hidden="true"></div>
-            {/if}
+          <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-shell__identity-boundary">
             <IdentityCard
               username={username}
               displayName={profileDisplayName}
@@ -443,18 +409,15 @@
               avatarSrc={avatarSrc}
               founder={targetProfile.equipped_badges?.includes('launch_edition')}
               accentColor={signatureColor}
-              nameRendererKey={nameRendererKey}
               nameRendererLoadout={nameRendererLoadout}
               nameRendererContext="profile"
               nameRendererMode="animated"
               nameRendererRecentColors={nameRendererRecentColors}
               nameRendererTodayColor={nameRendererTodayColor}
-              frameClass={frameEff.cls}
-              frameStyle={frameEff.style}
               rollState={profileRollState}
               showToday={false}
             />
-          </div>
+          </ProfileBorderEffect>
         </div>
 
       {#if !previewMode && hasProfileMore && !profileMoreActive}
@@ -476,9 +439,9 @@
         {#if showRoll && !refreshing}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
-              <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} on:colorpreview={handleRollPreview} on:colorchange={handleRollColor} />
+              <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} />
             {:else}
-              <TodayColor result={latestRoll} quiet={true} accentColor={signatureColor} cosmetics={cosmetics} />
+              <TodayColor result={latestRoll} quiet={true} accentColor={signatureColor} />
             {/if}
           </div>
         {/if}
@@ -727,7 +690,7 @@
     100% { transform: scale(1); box-shadow: none; }
   }
 
-  .profile-shell__cosmetic-bg { position: absolute; inset: 0; opacity: 0.33; pointer-events: none; }
+  .profile-shell__media-background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 0.28; filter: saturate(0.8); pointer-events: none; }
   .profile-shell__opening-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr); align-items: center; gap: clamp(2rem, 6vw, 7rem); width: min(100%, 70rem); margin-inline: auto; }
   .profile-shell__identity { min-width: 0; }
 
@@ -840,7 +803,7 @@
   .profile-shell__compatibility-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
   .profile-shell__social-tools > .profile-shell__action { justify-self: start; }
   .profile-shell-page--editorial .profile-shell__opening { background: linear-gradient(110deg, color-mix(in srgb, var(--profile-surface-accent) 10%, var(--surface-panel-strong)), color-mix(in srgb, var(--surface-panel) 34%, transparent)); }
-  .profile-shell-page--focus .profile-shell__opening-content { max-width: 64rem; }
+  :global(.profile-shell-page--focus) .profile-shell__opening-content { max-width: 64rem; }
   .profile-shell__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
   .profile-shell__stats > div { min-width: 0; padding: var(--space-4); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-inset); }
   .profile-shell__stats strong { display: block; color: var(--color-ink-strong); font: 600 clamp(1.45rem, 3vw, 2.25rem) / 1 var(--font-display-stack); }
@@ -937,19 +900,18 @@
     padding: 0;
     background: transparent;
   }
-  .profile-shell-page--preview .profile-shell__ambient { display: none; }
-  .profile-shell-page--preview .profile-shell__opening { width: 100%; margin: 0; border-radius: 16px; box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.28); }
-  .profile-shell-page--preview .profile-shell__opening-content { grid-template-columns: 1fr; }
-  .profile-shell-page--preview .profile-shell__identity-row { gap: var(--space-4); }
-  .profile-shell-page--preview .profile-shell__avatar { flex-basis: 4.25rem; width: 4.25rem; border-radius: var(--radius-lg); }
-  .profile-shell-page--preview .profile-shell__avatar-letter { font-size: 1.9rem; }
-  .profile-shell-page--preview .profile-shell__name { font-size: clamp(1.45rem, 5vw, 2.7rem); }
-  .profile-shell-page--preview .profile-shell__subline { margin-top: var(--space-2); font-size: var(--type-small); }
-  .profile-shell-page--preview .profile-shell__mood { margin-top: var(--space-2); font-size: 0.58rem; }
-  .profile-shell-page--preview .profile-shell__rank-row { gap: var(--space-2) var(--space-3); margin-top: var(--space-4); padding-top: var(--space-3); }
-  .profile-shell-page--preview .profile-shell__rank-label,
-  .profile-shell-page--preview .profile-shell__rank-next { font-size: 0.54rem; }
-  .profile-shell-page--preview .profile-shell__rank-value { font-size: 0.62rem; }
+  :global(.profile-shell-page--preview) .profile-shell__opening { width: 100%; margin: 0; border-radius: 16px; box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.28); }
+  :global(.profile-shell-page--preview) .profile-shell__opening-content { grid-template-columns: 1fr; }
+  :global(.profile-shell-page--preview) .profile-shell__identity-row { gap: var(--space-4); }
+  :global(.profile-shell-page--preview) .profile-shell__avatar { flex-basis: 4.25rem; width: 4.25rem; border-radius: var(--radius-lg); }
+  :global(.profile-shell-page--preview) .profile-shell__avatar-letter { font-size: 1.9rem; }
+  :global(.profile-shell-page--preview) .profile-shell__name { font-size: clamp(1.45rem, 5vw, 2.7rem); }
+  :global(.profile-shell-page--preview) .profile-shell__subline { margin-top: var(--space-2); font-size: var(--type-small); }
+  :global(.profile-shell-page--preview) .profile-shell__mood { margin-top: var(--space-2); font-size: 0.58rem; }
+  :global(.profile-shell-page--preview) .profile-shell__rank-row { gap: var(--space-2) var(--space-3); margin-top: var(--space-4); padding-top: var(--space-3); }
+  :global(.profile-shell-page--preview) .profile-shell__rank-label,
+  :global(.profile-shell-page--preview) .profile-shell__rank-next { font-size: 0.54rem; }
+  :global(.profile-shell-page--preview) .profile-shell__rank-value { font-size: 0.62rem; }
   .profile-shell__preview-label { color: var(--profile-accent); font: 700 0.58rem / 1.2 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -960,7 +922,7 @@
     .profile-shell__action:hover:not(:disabled) { transform: none; }
     .profile-shell__link:hover { transform: none; }
   }
-  /* Phase 10.2 approved mockup convergence: one atmosphere, one identity surface. */
+  /* Profile composition: one color field, one identity surface. */
   .profile-shell-page {
     min-height: calc(100dvh - 4.75rem);
     height: calc(100dvh - 4.75rem);
@@ -1065,24 +1027,14 @@
     box-shadow: none;
   }
 
-  .profile-shell__identity-boundary {
+  :global(.profile-shell__identity-boundary) {
     position: relative;
     width: 100%;
-    overflow: hidden;
     border-radius: var(--radius-lg);
     isolation: isolate;
   }
 
-  .profile-shell__identity-boundary > .profile-shell__cosmetic-bg {
-    position: absolute;
-    z-index: 0;
-    inset: 0;
-    border-radius: inherit;
-    opacity: 0.34;
-    pointer-events: none;
-  }
-
-  .profile-shell__identity-boundary :global(.identity-card) { z-index: 1; }
+  :global(.profile-shell__identity-boundary) :global(.identity-card) { z-index: 1; }
 
   .profile-shell__approved-game,
   .profile-shell__approved-featured { min-width: 0; }

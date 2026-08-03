@@ -47,13 +47,13 @@
     <div>
       <p class="guide__eyebrow">your public identity</p>
       <h2 id="profile-title">Make the page yours.</h2>
-      <p>A profile can hold a custom background, avatar, bio, public links, colors, borders, name effects, and roll effects. These choices are presentation—not a separate dashboard.</p>
+      <p>A profile can hold a custom background, avatar, bio, public links, colors, three Name layers, and a Profile Border. These choices are presentation—not a separate dashboard.</p>
     </div>
     <div class="guide__list">
-      <span>Background and atmosphere</span>
+      <span>Background and color story</span>
       <span>Avatar and identity</span>
       <span>Links and personal content</span>
-      <span>Frames, borders, and effects</span>
+      <span>Name layers and Profile Borders</span>
     </div>
   </section>
 

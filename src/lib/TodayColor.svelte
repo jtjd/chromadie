@@ -1,6 +1,5 @@
 <script>
   import RollPreview from './RollPreview.svelte';
-  import { getOrbShape, getRollEffect } from './cosmetics.js';
   import { getBadgeMeta } from './badgeData.js';
   import { normalizeHexColor } from './utils.js';
 
@@ -8,7 +7,6 @@
   export let result = null;
   export let quiet = false;
   export let accentColor = '#8B7CF6';
-  export let cosmetics = {};
 
   let detailsOpen = true;
 
@@ -16,8 +14,6 @@
   $: title = result?.identity || 'The latest color';
   $: rarity = result?.rarity || 'Unranked';
   $: score = Number(result?.score) || 0;
-  $: orbEffect = getOrbShape(cosmetics);
-  $: rollEffect = getRollEffect(cosmetics);
   $: conditionSource = Array.isArray(result?.contributors) && result.contributors.length
     ? result.contributors.map((contributor, index) => ({
         id: contributor?.id || `contributor-${index}`,
@@ -41,9 +37,6 @@
     <div class="today-color__result-head">
       <div class="today-color__preview" aria-hidden="true">
         <RollPreview
-          effectCls={rollEffect.cls}
-          effectStyle={rollEffect.style}
-          orbCls={orbEffect.cls}
           displayColor={safeHex}
           rarity={rarity === 'Unranked' ? 'Common' : rarity}
         />
@@ -112,7 +105,7 @@
   {:else}
     <div class="today-color__empty-state">
       <div class="today-color__preview" aria-hidden="true">
-        <RollPreview effectCls={rollEffect.cls} effectStyle={rollEffect.style} orbCls={orbEffect.cls} displayColor={safeHex} rarity="Common" />
+        <RollPreview displayColor={safeHex} rarity="Common" />
       </div>
       <div class="today-color__copy">
         <p class="today-color__label">{quiet ? 'Daily color' : 'Today’s color'}</p>
@@ -128,7 +121,7 @@
   .today-color { display: grid; gap: 1rem; min-width: 0; }
   .today-color__result-head { display: grid; grid-template-columns: minmax(7rem, 9rem) 1fr; align-items: center; gap: var(--space-5); }
   .today-color__preview { position: relative; display: grid; place-items: center; width: 8rem; height: 8rem; }
-  .today-color__preview :global(.roll-effect-wrapper) { width: 8rem; height: 8rem; }
+  .today-color__preview :global(.roll-preview-frame) { width: 8rem; height: 8rem; }
   .today-color__preview :global(.final-color-display) { width: 8rem; height: 8rem; }
   .today-color__copy { min-width: 0; }
   .today-color__label { margin: 0; color: color-mix(in srgb, var(--profile-accent) 48%, white); font: 700 0.68rem / 1.2 var(--font-mono-stack); letter-spacing: 0.14em; text-transform: uppercase; }
@@ -161,5 +154,5 @@
   .today-color__empty { padding: var(--space-4); border: 1px dashed var(--color-line-subtle); border-radius: var(--radius-sm); }
   .today-color__empty-state { display: grid; grid-template-columns: 8rem minmax(0, 1fr); align-items: center; gap: 1.5rem; }
   .today-color__next { margin: 0.5rem 0 0; color: rgba(220,230,248,0.56); font-size: 0.875rem; line-height: 1.4; }
-  @media (max-width: 36rem) { .today-color__result-head { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.85rem; } .today-color__preview, .today-color__preview :global(.roll-effect-wrapper), .today-color__preview :global(.final-color-display) { width: 5.5rem; height: 5.5rem; } .today-color__copy strong { font-size: 1.35rem; } .today-color__condition-chip strong { max-width: 8rem; } .today-color__empty-state { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.85rem; } .today-color__condition-record { grid-template-columns: auto 1fr; } .today-color__condition-record small { grid-column: 2; } }
+  @media (max-width: 36rem) { .today-color__result-head { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.85rem; } .today-color__preview, .today-color__preview :global(.roll-preview-frame), .today-color__preview :global(.final-color-display) { width: 5.5rem; height: 5.5rem; } .today-color__copy strong { font-size: 1.35rem; } .today-color__condition-chip strong { max-width: 8rem; } .today-color__empty-state { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.85rem; } .today-color__condition-record { grid-template-columns: auto 1fr; } .today-color__condition-record small { grid-column: 2; } }
 </style>

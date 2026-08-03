@@ -5,11 +5,8 @@
   export let loadout = {};
   /** @type {any} */
   export let selectedItem = null;
-  export let activeContext = 'profile';
   export let username = 'Your profile';
   export let displayColor = '#8B7CF6';
-  export let rollRarity = 'Current roll';
-  export let rollScore = null;
   export let accountProfile = null;
   export let profileConfig = null;
 
@@ -29,13 +26,10 @@
   </header>
 
   <ShopStudioPreview
-    bind:activeContext
     {loadout}
     {selectedItem}
     {username}
     {displayColor}
-    {rollRarity}
-    {rollScore}
     {accountProfile}
     {profileConfig}
   />

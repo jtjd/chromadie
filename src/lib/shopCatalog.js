@@ -1,7 +1,6 @@
-const NAME_SLOTS = ['name_effect', 'name_font', 'name_material', 'name_motion'];
-const PROFILE_SLOTS = [...NAME_SLOTS, 'frame', 'profile_border', 'profile_bg', 'profile_atmosphere'];
-const ROLL_SLOTS = ['orb_shape', 'roll_effect'];
-const COSMETIC_SLOTS = [...PROFILE_SLOTS, ...ROLL_SLOTS, 'lb_theme'];
+const NAME_SLOTS = ['name_font', 'name_material', 'name_motion'];
+const PROFILE_SLOTS = [...NAME_SLOTS, 'profile_border'];
+const COSMETIC_SLOTS = [...PROFILE_SLOTS];
 
 export const SHOP_NAME_SLOTS = Object.freeze([...NAME_SLOTS]);
 export const SHOP_NAME_SUBTYPES = Object.freeze([
@@ -12,54 +11,32 @@ export const SHOP_NAME_SUBTYPES = Object.freeze([
 
 export const SHOP_SECTIONS = Object.freeze([
   { id: 'overview', label: 'Overview' },
-  { id: 'profile', label: 'Profile' },
   { id: 'names', label: 'Names' },
-  { id: 'roll', label: 'Roll' },
-  { id: 'leaderboard', label: 'Leaderboard' },
+  { id: 'borders', label: 'Borders' },
   { id: 'utility', label: 'Utility' },
   { id: 'owned', label: 'Owned' }
 ]);
 
 export const SHOP_SUBSECTIONS = Object.freeze({
-  profile: [
-    { id: 'all', label: 'All profile' },
-    { id: 'name_effect', label: 'Legacy presets' },
-    { id: 'frame', label: 'Frames' },
-    { id: 'profile_border', label: 'Borders' },
-    { id: 'profile_bg', label: 'Backgrounds' },
-    { id: 'profile_atmosphere', label: 'Atmospheres' }
-  ],
   names: [
     { id: 'name_font', label: 'Fonts' },
     { id: 'name_material', label: 'Materials' },
     { id: 'name_motion', label: 'Motion' }
   ],
-  roll: [
-    { id: 'all', label: 'All roll' },
-    { id: 'orb_shape', label: 'Orbs' },
-    { id: 'roll_effect', label: 'Effects' }
-  ]
+  borders: [{ id: 'profile_border', label: 'Borders' }]
 });
 
 export const SHOP_SLOT_LABELS = Object.freeze({
-  name_effect: 'Name',
   name_font: 'Name · Font',
   name_material: 'Name · Material',
   name_motion: 'Name · Motion',
-  frame: 'Frame',
   profile_border: 'Border',
-  profile_bg: 'Background',
-  profile_atmosphere: 'Atmosphere',
-  orb_shape: 'Orb',
-  roll_effect: 'Roll effect',
-  lb_theme: 'Leaderboard',
-  consumable: 'Utility'
+  consumable: 'Utility',
+  title: 'Title'
 });
 
 export const SHOP_CONTEXT_LABELS = Object.freeze({
-  profile: 'Profile',
-  roll: 'Roll',
-  leaderboard: 'Leaderboard'
+  profile: 'Profile'
 });
 
 export const SHOP_SORTS = Object.freeze([
@@ -88,18 +65,13 @@ const RARITY_RANK = Object.freeze({
 });
 
 const FEATURED_KEYS = Object.freeze([
-  'bg_signal_garden',
-  'name_signal',
+  'name_font_editorial_serif',
+  'name_material_liquid_mercury',
+  'name_motion_color_memory',
   'border_signal',
-  'frame_signal',
-  'roll_signal',
-  'orb_signal',
-  'bg_void',
-  'roll_black_hole',
-  'name_void',
-  'border_void',
-  'lb_void',
-  'orb_star'
+  'name_material_chroma_glass',
+  'name_motion_prism_shatter',
+  'border_prism'
 ]);
 
 export function isShopCosmetic(item) {
@@ -127,16 +99,11 @@ export function isActiveCatalogItem(item) {
   return getCatalogStatus(item) === 'active';
 }
 
-export function isLegacyCatalogItem(item) {
-  return getCatalogStatus(item) === 'legacy';
-}
-
 export function getShopNameSubtype(itemOrSlot) {
   const slot = typeof itemOrSlot === 'string' ? itemOrSlot : itemOrSlot?.slot;
   if (slot === 'name_font') return 'name_font';
   if (slot === 'name_material') return 'name_material';
   if (slot === 'name_motion') return 'name_motion';
-  if (slot === 'name_effect') return 'name_effect';
   return null;
 }
 
@@ -157,8 +124,6 @@ export function requiresPurchaseConfirmation(item) {
 
 export function getShopContextForSlot(slot) {
   if (PROFILE_SLOTS.includes(slot)) return 'profile';
-  if (ROLL_SLOTS.includes(slot)) return 'roll';
-  if (slot === 'lb_theme') return 'leaderboard';
   return null;
 }
 
@@ -193,15 +158,7 @@ export function createFittingRoom({
 
 export function tryOnShopItem(loadout, item) {
   if (!isShopCosmetic(item)) return { ...(loadout || {}) };
-  const next = { ...(loadout || {}), [item.slot]: item.item_key };
-  if (NAME_SLOTS.includes(item.slot)) {
-    if (item.slot === 'name_effect') {
-      NAME_SLOTS.filter(slot => slot !== 'name_effect').forEach(slot => delete next[slot]);
-    } else {
-      delete next.name_effect;
-    }
-  }
-  return next;
+  return { ...(loadout || {}), [item.slot]: item.item_key };
 }
 
 export function clearShopSlot(loadout, slot) {
@@ -218,11 +175,6 @@ export function getShopItemState(item, equippedItems = {}, fittingRoom = createF
   if (item && equippedItems[item.slot] === item.item_key) {
     return { label: 'Equipped', tone: 'equipped', ownedCount };
   }
-  if (isLegacyCatalogItem(item)) {
-    return hasShopEntitlement(item, fittingRoom)
-      ? { label: 'Legacy preset', tone: 'legacy', ownedCount }
-      : { label: 'Legacy · owner only', tone: 'legacy-locked', ownedCount };
-  }
   if (accessTier === 'free') return { label: 'Free baseline', tone: 'free', ownedCount };
   if (accessTier === 'premium') {
     return hasShopEntitlement(item, fittingRoom)
@@ -238,19 +190,14 @@ export function getShopItemState(item, equippedItems = {}, fittingRoom = createF
 }
 
 function matchesSection(item, section, subslot) {
-  if (section === 'profile') {
-    return PROFILE_SLOTS.includes(item.slot) && (subslot === 'all' || item.slot === subslot);
-  }
   if (section === 'names') {
-    return NAME_SLOTS.includes(item.slot) && item.slot !== 'name_effect'
+    return NAME_SLOTS.includes(item.slot)
       && (subslot === 'all' || item.slot === subslot);
   }
-  if (section === 'roll') {
-    return ROLL_SLOTS.includes(item.slot) && (subslot === 'all' || item.slot === subslot);
-  }
-  if (section === 'leaderboard') return item.slot === 'lb_theme';
+  if (section === 'borders') return item.slot === 'profile_border';
   if (section === 'utility') return item.slot === 'consumable';
-  return item.slot !== 'consumable';
+  if (section === 'owned') return item.slot !== 'consumable';
+  return item.slot !== 'consumable' && item.slot !== 'title';
 }
 
 function curatedScore(item) {

@@ -18,6 +18,5 @@ export const SHOP_PRICE_BANDS = Object.freeze({
 
 export const STREAK_FREEZE_PRICE = 50000;
 export const PRESTIGE_ITEM_PRICE = 1250000;
-export const PRESTIGE_ITEM_KEYS = Object.freeze(['bg_god_rays', 'lb_chroma', 'name_chroma']);
 
 export const getCandidateRarity = getRarity;

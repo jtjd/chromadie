@@ -30,7 +30,6 @@
     getCollectionItems,
     getCatalogStatus,
     getShopAccessTier,
-    getShopContextForSlot,
     hasShopEntitlement,
     isShopCosmetic,
     requiresPurchaseConfirmation,
@@ -49,7 +48,6 @@
   let browseSection = 'overview';
   let selectedItem = null;
   let previewLoadout = {};
-  let activeContext = 'profile';
   let currentRoll = null;
   let profileConfig = null;
   let loadingAction = null;
@@ -87,7 +85,6 @@
       && (selectedItem.slot === 'consumable' || selectedOwnedCount === 0)
   );
   $: displayColor = currentRoll?.hex_code || $profile?.mood_color || '#8B7CF6';
-  $: displayRarity = currentRoll?.rarity || '';
 
   onMount(() => {
     restoreShopViewState();
@@ -124,11 +121,6 @@
     const ownedCount = fittingRoom.inventoryCounts?.[item.item_key] || 0;
     const accessTier = getShopAccessTier(item);
     if ($equippedItems[item.slot] === item.item_key) return { label: 'Equipped', tone: 'equipped', ownedCount };
-    if (getCatalogStatus(item) !== 'active') {
-      return hasShopEntitlement(item, fittingRoom)
-        ? { label: 'Legacy preset', tone: 'legacy', ownedCount }
-        : { label: 'Legacy · owner only', tone: 'legacy-locked', ownedCount };
-    }
     if (accessTier === 'free') return { label: 'Free baseline', tone: 'free', ownedCount };
     if (accessTier === 'premium') {
       return hasShopEntitlement(item, fittingRoom)
@@ -158,7 +150,6 @@
   function selectItem(item) {
     selectedItem = item;
     purchaseArmedKey = null;
-    activeContext = getShopContextForSlot(item.slot) || 'profile';
     previewLoadout = isShopCosmetic(item) ? tryOnShopItem($equippedItems, item) : { ...($equippedItems || {}) };
     shopNotice = `${item.name} is previewing here. This does not change your equipped look.`;
   }
@@ -166,14 +157,12 @@
   function closeDetail() {
     selectedItem = null;
     purchaseArmedKey = null;
-    activeContext = 'profile';
     previewLoadout = { ...($equippedItems || {}) };
     shopNotice = 'Preview reset to your equipped look.';
   }
 
   function tryOnSelected(item) {
     if (!item) return;
-    activeContext = getShopContextForSlot(item.slot) || activeContext;
     previewLoadout = isShopCosmetic(item) ? tryOnShopItem($equippedItems, item) : { ...($equippedItems || {}) };
     shopNotice = `${item.name} is previewing here. This does not change your equipped look.`;
   }
@@ -293,12 +282,9 @@
   <ShopProductDetail
     item={selectedItem}
     loadout={previewLoadout}
-    bind:activeContext
     profile={$profile}
     {profileConfig}
     displayColor={displayColor}
-    rollRarity={displayRarity}
-    rollScore={currentRoll?.score}
     state={selectedState}
     {relatedItems}
     {selectedHasAccess}

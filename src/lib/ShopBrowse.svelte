@@ -39,7 +39,6 @@
   let sortMode = 'curated';
   let filtersOpen = false;
   let previewedItem = null;
-  let previewContext = 'profile';
 
   const availableSections = SHOP_SECTIONS.filter(item => item.id !== 'owned');
   $: subsections = SHOP_SUBSECTIONS[section] || [];
@@ -60,7 +59,6 @@
   }, fittingRoom);
   $: username = profile?.display_name || profile?.username || 'Your profile';
   $: displayColor = currentRoll?.hex_code || profile?.mood_color || '#8B7CF6';
-  $: displayRarity = currentRoll?.rarity || 'Current roll';
   $: previewLoadout = previewedItem?.slot
     ? tryOnShopItem(equippedItems, previewedItem)
     : { ...(equippedItems || {}) };
@@ -104,7 +102,7 @@
     <div>
       <span class="shop-eyebrow">Browse the catalog</span>
       <h2 id="shop-browse-title">Find the piece that changes the page.</h2>
-      <p>{filteredItems.length} active catalog item{filteredItems.length === 1 ? '' : 's'} across profile, roll, leaderboard, and utility.</p>
+    <p>{filteredItems.length} active catalog item{filteredItems.length === 1 ? '' : 's'} for names, borders, and utility.</p>
     </div>
     <button type="button" class="shop-text-link" on:click={resetFilters}>Reset filters</button>
   </div>
@@ -174,7 +172,6 @@
               actuallyEquipped={equippedItems[item.slot] === item.item_key}
               previewUsername={username}
               previewColor={displayColor}
-              previewRarity={displayRarity}
               on:select={event => dispatch('select', event.detail)}
               on:preview={event => previewItem(event.detail)}
             />
@@ -193,11 +190,8 @@
     <ShopContextualPreview
       loadout={previewLoadout}
       selectedItem={previewedItem}
-      bind:activeContext={previewContext}
       username={username}
       displayColor={displayColor}
-      rollRarity={displayRarity}
-      rollScore={currentRoll?.score}
       accountProfile={profile}
       {profileConfig}
       on:reset={() => previewedItem = null}

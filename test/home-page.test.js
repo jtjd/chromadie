@@ -29,7 +29,7 @@ const guestProfile = await read('src/lib/GuestProfileOnboarding.svelte');
 
 test('the homepage explains the daily identity loop with a direct claim action', () => {
   assert.match(hero, /A public profile that <span>changes every day\.<\/span>/);
-  assert.match(hero, /Customize your page with a background, avatar, music, links, and profile effects/);
+  assert.match(hero, /Customize your page with a background, avatar, music, links, name layers, and a profile border/);
   assert.match(hero, /Each daily color becomes part of your profile history, earns EP/);
   assert.match(hero, /HomeUsernameClaim/);
   assert.match(claim, /dispatch\('claim'/);
@@ -70,7 +70,7 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(ticker, /ResizeObserver/);
   assert.match(ticker, /document\.fonts/);
   assert.match(dailyResult, /CompactRollPreview/);
-  assert.match(dailyResult, /referenceShape/);
+  assert.match(dailyResult, /facetedGlyph/);
   assert.match(dailyResult, /place-items: center/);
   assert.match(dailyResult, /grid-template-rows: auto minmax\(0, 1fr\) auto/);
   assert.match(dailyResult, /\.home-daily__body \{ display: grid; align-content: center/);
@@ -80,16 +80,14 @@ test('the homepage explains the daily identity loop with a direct claim action',
   assert.match(leaderboard, /slice\(0, 3\)/);
   assert.match(leaderboard, /getProfileMediaUrl/);
   assert.match(leaderboard, /CompactRollPreview/);
-  assert.match(leaderboard, /referenceShape/);
+  assert.match(leaderboard, /facetedGlyph/);
   assert.match(referenceRollGlyph, /linearGradient/);
   assert.match(referenceRollGlyph, /polygon points="60,10 103,91 60,109 17,91"/);
   assert.match(referenceRollGlyph, /home-reference-glyph-float/);
-  assert.doesNotMatch(compactRollPreview, /referenceShape && !orbCls/);
-  assert.match(compactRollPreview, /<div class="roll-effect-wrapper">/);
-  assert.doesNotMatch(compactRollPreview, /roll-effect-wrapper \{effectCls\}/);
-  assert.match(rollPreview, /orb-shape-/);
-  assert.match(rollPreview, /HomeReferenceRollGlyph/);
-  assert.match(shopItemPreview, /HomeReferenceRollGlyph/);
+  assert.doesNotMatch(compactRollPreview, /orbCls|effectCls|effectStyle|referenceShape/);
+  assert.match(compactRollPreview, /<div class="roll-preview-frame">/);
+  assert.doesNotMatch(rollPreview, /orb-shape-|HomeReferenceRollGlyph/);
+  assert.doesNotMatch(shopItemPreview, /HomeReferenceRollGlyph/);
   assert.match(imageLightbox, /aria-modal="true"/);
   assert.match(imageLightbox, /event\.key === 'Escape'/);
   assert.match(imageLightbox, /View larger image/);
@@ -123,7 +121,6 @@ test('the application mounts the homepage, signup flow, and global footer', () =
   assert.match(app, /staticComponent: HomePage/);
   assert.match(app, /on:signup=\{\(\) => openAuthModal\('signup'\)\}/);
   assert.match(app, /<RouteOutlet/);
-  assert.doesNotMatch(app, /<ProfileAtmosphere/);
   assert.match(app, /class:app-shell--home=\{homeModeVisible\}/);
   assert.match(app, /<footer class="site-footer">/);
   assert.match(app, /Privacy Policy/);

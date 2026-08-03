@@ -5,7 +5,6 @@
   import ShopItemPreview from './ShopItemPreview.svelte';
   import ShopStudioPreview from './ShopStudioPreview.svelte';
   import {
-    SHOP_SECTIONS,
     filterShopItems,
     getShopAccessTier,
     getShopItemState
@@ -26,15 +25,13 @@
   const dispatch = createEventDispatcher();
   const categorySections = Object.freeze([
     { id: 'overview', label: 'Browse', description: 'full catalog' },
-    ...SHOP_SECTIONS.filter(section => !['overview', 'owned'].includes(section.id)).map(section => ({
-      ...section,
-      description: section.id === 'profile' ? 'identity' : section.id === 'names' ? 'name layers' : section.id === 'roll' ? 'daily color' : section.id === 'leaderboard' ? 'ranked row' : 'progress'
-    })),
+    { id: 'names', label: 'Names', description: 'name layers' },
+    { id: 'borders', label: 'Borders', description: 'profile edge' },
+    { id: 'utility', label: 'Utility', description: 'account items' },
     { id: 'owned', label: 'Collection', description: 'your pieces' }
   ]);
 
   $: displayColor = currentRoll?.hex_code || profile?.mood_color || '#8B7CF6';
-  $: displayRarity = currentRoll?.rarity || '';
   $: featuredItems = filterShopItems(items, { section: 'overview', sortMode: 'curated' }, fittingRoom).slice(0, 4);
   $: todayEditItem = featuredItems[0] || null;
   $: curatedItems = featuredItems.slice(1);
@@ -77,7 +74,7 @@
       {#if todayEditItem}
         <div class="shop-todays-product">
           <div class="shop-todays-product-preview">
-            <ShopItemPreview item={todayEditItem} username={username} displayColor={displayColor} rollRarity={displayRarity || 'Current roll'} />
+            <ShopItemPreview item={todayEditItem} username={username} displayColor={displayColor} />
           </div>
           <div class="shop-todays-product-copy">
             <div class="shop-todays-product-topline"><span>Featured catalog item</span><span class="shop-item-state tone-{stateFor(todayEditItem).tone}">{stateFor(todayEditItem).label}</span></div>
@@ -105,8 +102,6 @@
           loadout={equippedItems}
           username={username}
           displayColor={displayColor}
-          rollRarity={displayRarity}
-          rollScore={currentRoll?.score}
           accountProfile={profile}
           profileConfig={profileConfig}
         />
@@ -143,7 +138,6 @@
             actuallyEquipped={equippedItems[item.slot] === item.item_key}
             previewUsername={username}
             previewColor={displayColor}
-            previewRarity={displayRarity || 'Current roll'}
             on:select={event => dispatch('select', event.detail)}
             on:preview={event => dispatch('select', event.detail)}
           />

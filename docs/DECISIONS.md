@@ -2,9 +2,42 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
-## 2026-08-02 — Activate composable Name layers behind the existing cosmetic boundary
+## 2026-08-02 — Lean alpha cosmetic reset
 
-**Status:** accepted and implemented for Phase D2
+**Status:** accepted and implemented locally; remote deployment pending backup and approval
+
+The alpha catalog now supports only `name_font`, `name_material`,
+`name_motion`, and `profile_border` as cosmetic slots. The 64 modern Name
+rows remain active, and the nine retained Profile Border keys use one finite,
+code-owned `ProfileBorderEffect.svelte` component with bounded animation,
+reduced-motion states, and offscreen cleanup.
+
+The forward-only `20260802110000_lean_cosmetic_catalog_reset.sql` migration
+clears obsolete equipped JSON keys, removes obsolete inventory and catalog
+rows, normalizes the nine Border rows, tightens slot/renderer checks, replaces
+the equip boundaries, and bumps `shop_version`. It does not refund EP or
+touch wallets, rolls, scores, achievements, profile media, titles,
+consumables, links, rivals, or leaderboard data. The existing inventory
+foreign key is the only purchase-history dependency, so inventory is cleaned
+before catalog deletion; no financial ledger is introduced.
+
+Production order is: create a verified backup, deploy a reduced-slot client,
+apply the migration, invalidate caches, verify counts and RLS/RPC behavior,
+then smoke-test one Name purchase/equip, one Border purchase/equip, and safe
+fallback for an obsolete-equipped profile. Recovery is a backup restore
+through the database owner process; no destructive down migration or
+automatic replacement grant exists.
+
+The reset reduced the measured D2 build from 806.28 kB JavaScript and 431.81
+kB CSS to 767.87 kB JavaScript and 388.92 kB CSS. Initial and largest-lazy
+budgets remain passing: 431.36/450 kB and 69.24/100 kB JavaScript, plus
+133.80/200 kB and 47.69/75 kB CSS. The transitional total caps still fail
+honestly at 767.87/700 kB JavaScript and 388.92/380 kB CSS; no budget was
+raised.
+
+## 2026-08-02 — Historical: Activate composable Name layers behind the existing cosmetic boundary
+
+**Status:** historical Phase D2 record; superseded by the lean alpha reset
 
 The three Name layers use the existing `profiles.equipped_cosmetics` JSONB
 object rather than introducing a parallel profile-customization model. The
@@ -1217,8 +1250,7 @@ historical-data boundaries are unchanged.
 **Related files**
 
 `src/lib/ProfileRoll.svelte`, `src/lib/ProfileShell.svelte`,
-`src/lib/ProfileAtmosphere.svelte`, `src/lib/IdentityCard.svelte`,
-`test/profile-roll-effect.test.js`.
+`src/lib/IdentityCard.svelte`, `test/profile-roll-presentation.test.js`.
 
 ## 2026-07-29 — Make the roll a profile ritual and reduce identity-surface noise
 

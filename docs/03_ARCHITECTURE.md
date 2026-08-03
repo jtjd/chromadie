@@ -40,7 +40,7 @@ src/
     RollLeaderboard.svelte
     ProfileCard.svelte
   commerce/
-    DecorationStudio.svelte
+    Shop.svelte
     catalog/
   domain/
     rolls/

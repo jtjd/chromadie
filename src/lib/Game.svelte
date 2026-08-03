@@ -1,12 +1,11 @@
 <script>
   import RollPreview from './RollPreview.svelte';
   import { supabase } from './supabase';
-  import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, equippedItems, isAuthenticated, addToast } from './stores';
+  import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast } from './stores';
   import { createChallengeLink } from './challenges';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
-  import { getRollEffect, getOrbShape } from './cosmetics';
   import { getBadgeMeta } from './badgeData';
   import { canInitiateRoll, createCanonicalRollData, getRollAccountMode, isRollReady, normalizeCanonicalRoll } from './rollState';
   import { getPercentileTier } from './rollPresentation.js';
@@ -62,9 +61,6 @@
     return badgeId.startsWith('ach_') || SYSTEM_BADGE_IDS.includes(badgeId);
   }
 
-  $: cosmetics = $equippedItems || {};
-  $: rollEff = getRollEffect(cosmetics);
-  $: orbEff = getOrbShape(cosmetics);
 
   function sortBadgesDescending(arr) {
       return (arr || []).slice().sort((a, b) => getBadgeMeta(b).points - getBadgeMeta(a).points);
@@ -758,7 +754,7 @@
   {:else if phase === 'rolling'}
     <div class="card">
       <div class="results-header results-header-tight">
-        <RollPreview effectCls={rollEff.cls} effectStyle={rollEff.style} orbCls={orbEff.cls} displayColor={displayColor} rarity={rarity} />
+        <RollPreview displayColor={displayColor} rarity={rarity} />
         <div class="rolling-hex">{displayHex}</div>
       </div>
       <div class="scan-container">
@@ -798,7 +794,7 @@
       <div class="results-header results-header-tight">
         <div class="rarity-tag rarity-{rarity}">{rarity}</div>
 
-        <RollPreview effectCls={rollEff.cls} effectStyle={rollEff.style} orbCls={orbEff.cls} displayColor={displayColor} rarity={rarity} />
+        <RollPreview displayColor={displayColor} rarity={rarity} />
 
         <div class="hex-code">{displayColor}</div>
         {#if identity}
@@ -1181,7 +1177,7 @@
       width: 116px;
       height: 116px;
     }
-    .roll-effect-wrapper {
+    .roll-preview-frame {
       width: 116px;
       height: 116px;
     }

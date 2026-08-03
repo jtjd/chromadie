@@ -91,11 +91,6 @@ function mixColors(first, second, amount) {
   });
 }
 
-function rgba(color, alpha) {
-  const { r, g, b } = hexToRgb(color);
-  return `rgba(${r}, ${g}, ${b}, ${clamp(alpha, 0, 1)})`;
-}
-
 function estimateTextWidth(text, fontSize, font) {
   const widthFactor = Number.isFinite(font?.widthFactor)
     ? font.widthFactor
@@ -155,7 +150,7 @@ export function shouldAnimateNameFrame({ visible = true, mode = NAME_RENDER_MODE
 }
 
 export function getNameFrameModel(options = {}) {
-  const requestedRendererKey = options.rendererKey || options.legacyKey;
+  const requestedRendererKey = options.rendererKey;
   const loadout = options.loadout && typeof options.loadout === 'object' ? options.loadout : {};
   const explicitLoadout = {
     fontKey: options.fontKey ?? loadout.fontKey ?? loadout.name_font ?? '',
@@ -164,11 +159,7 @@ export function getNameFrameModel(options = {}) {
   };
   const definition = hasComposableNameInput(explicitLoadout)
     ? resolveNameLoadout(explicitLoadout)
-    : resolveNameLoadout({
-      rendererKey: requestedRendererKey,
-      legacyKey: options.legacyKey,
-      name_effect: loadout.name_effect
-    });
+    : resolveNameLoadout({ rendererKey: requestedRendererKey });
   const rendererKey = definition.key;
   const text = normalizeNameText(options.text);
   const compact = Boolean(options.compact || options.context === NAME_RENDER_CONTEXTS.card || options.size === 'compact');
@@ -246,15 +237,6 @@ function setTextContext(ctx, model) {
   ctx.lineCap = 'round';
 }
 
-function gradientFor(ctx, colors, width, progress, vertical = false) {
-  const offset = (progress - 0.5) * width * 1.6;
-  const gradient = vertical
-    ? ctx.createLinearGradient(0, -width, 0, width)
-    : ctx.createLinearGradient(-width + offset, 0, width + offset, 0);
-  colors.forEach((color, index) => gradient.addColorStop(index / Math.max(1, colors.length - 1), color));
-  return gradient;
-}
-
 function drawText(ctx, model, fillStyle, alpha = 1, offsetX = 0, offsetY = 0) {
   ctx.save();
   setTextContext(ctx, model);
@@ -265,8 +247,7 @@ function drawText(ctx, model, fillStyle, alpha = 1, offsetX = 0, offsetY = 0) {
 }
 
 function drawMaterial(ctx, model) {
-  const { material, metrics, progress, todayColor } = model;
-  const textWidth = Math.max(metrics.availableWidth, metrics.width + 24);
+  const { material, todayColor } = model;
   const colors = material.colors;
 
   if (material.composable) {
@@ -275,80 +256,7 @@ function drawMaterial(ctx, model) {
     else drawText(ctx, model, mixColors(colors[0] || '#F7FBFF', todayColor, 0.12));
     return;
   }
-
-  if (material.kind === 'void') {
-    ctx.save();
-    setTextContext(ctx, model);
-    ctx.fillStyle = colors[0];
-    ctx.fillText(model.displayText, metrics.x, metrics.y);
-    ctx.strokeStyle = rgba(colors[1], 0.98);
-    ctx.lineWidth = Math.max(0.7, model.metrics.fontSize * 0.025);
-    ctx.strokeText(model.displayText, metrics.x, metrics.y);
-    ctx.shadowColor = rgba(colors[2], 0.7);
-    ctx.shadowBlur = model.metrics.fontSize * (0.42 + model.progress * 0.24);
-    ctx.strokeStyle = rgba(colors[2], 0.65);
-    ctx.strokeText(model.displayText, metrics.x, metrics.y);
-    ctx.restore();
-    return;
-  }
-
-  if (material.kind === 'matrix') {
-    const matrixGradient = ctx.createLinearGradient(0, -model.height, 0, model.height);
-    colors.forEach((color, index) => matrixGradient.addColorStop(index / Math.max(1, colors.length - 1), color));
-    ctx.save();
-    setTextContext(ctx, model);
-    ctx.fillStyle = matrixGradient;
-    ctx.shadowColor = rgba('#00ff50', 0.65);
-    ctx.shadowBlur = 4;
-    ctx.fillText(model.displayText, metrics.x, metrics.y);
-    ctx.strokeStyle = rgba('#91ffaa', 0.34);
-    ctx.lineWidth = 0.5;
-    ctx.strokeText(model.displayText, metrics.x, metrics.y);
-    ctx.restore();
-    return;
-  }
-
-  if (material.kind === 'gradient') {
-    drawText(ctx, model, gradientFor(ctx, colors, textWidth, progress));
-    return;
-  }
-
-  if (material.kind === 'glow') {
-    ctx.save();
-    setTextContext(ctx, model);
-    ctx.shadowColor = rgba(colors[1] || todayColor, 0.82);
-    ctx.shadowBlur = model.metrics.fontSize * 0.42;
-    ctx.fillStyle = colors[0];
-    ctx.fillText(model.displayText, metrics.x, metrics.y);
-    ctx.shadowColor = rgba(colors[2] || colors[1] || todayColor, 0.52);
-    ctx.shadowBlur = model.metrics.fontSize * 0.82;
-    ctx.fillText(model.displayText, metrics.x, metrics.y);
-    ctx.restore();
-    return;
-  }
-
-  const baseColor = material.shadow ? colors[0] : material.usesDailyColor ? mixColors(colors[0], todayColor, 0.12) : colors[0];
-  ctx.save();
-  setTextContext(ctx, model);
-  if (material.shadow) {
-    ctx.shadowColor = rgba(material.shadow, 0.8);
-    ctx.shadowBlur = model.metrics.fontSize * 0.28;
-    ctx.shadowOffsetY = model.metrics.fontSize * 0.16;
-  }
-  ctx.fillStyle = baseColor;
-  ctx.fillText(model.displayText, metrics.x, metrics.y);
-  ctx.restore();
-}
-
-function drawShimmer(ctx, model, colors = ['#ffffff', '#b9fcff']) {
-  const sweep = ((model.progress * 2.2) - 0.6) * model.width;
-  ctx.save();
-  setTextContext(ctx, model);
-  ctx.globalCompositeOperation = 'source-atop';
-  ctx.fillStyle = gradientFor(ctx, ['rgba(255,255,255,0)', colors[0], colors[1], 'rgba(255,255,255,0)'], model.width, model.progress);
-  ctx.globalAlpha = 0.78;
-  ctx.fillRect(sweep - model.width * 0.18, 0, model.width * 0.36, model.height);
-  ctx.restore();
+  drawText(ctx, model, mixColors(colors[0] || '#F7FBFF', todayColor, material.usesDailyColor ? 0.12 : 0));
 }
 
 function drawMotion(ctx, model) {
@@ -359,80 +267,7 @@ function drawMotion(ctx, model) {
     return false;
   }
 
-  const kind = model.motion.kind;
-  const { metrics, fontSize } = { metrics: model.metrics, fontSize: model.metrics.fontSize };
-  const phase = model.progress * Math.PI * 2;
-
-  if (kind === 'shimmer') {
-    drawShimmer(ctx, model, model.material.colors);
-  } else if (kind === 'flicker') {
-    const flicker = 0.7 + seededNoise(model.seed, Math.floor(model.progress * 18)) * 0.3;
-    drawText(ctx, model, '#ffffff', flicker * 0.35);
-  } else if (kind === 'pulse') {
-    const pulse = 0.5 + 0.5 * Math.sin(phase);
-    ctx.save();
-    setTextContext(ctx, model);
-    ctx.shadowColor = rgba(model.todayColor, 0.16 + pulse * 0.36);
-    ctx.shadowBlur = fontSize * (0.25 + pulse * 0.55);
-    ctx.globalAlpha = 0.24 + pulse * 0.24;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(model.displayText, metrics.x, metrics.y);
-    ctx.restore();
-  } else if (kind === 'matrix') {
-    ctx.save();
-    ctx.globalCompositeOperation = 'source-atop';
-    for (let index = 0; index < 8; index += 1) {
-      const x = ((seededNoise(model.seed, index) + model.progress * 0.42) % 1) * model.width;
-      const y = ((seededNoise(model.seed, index + 20) + model.progress) % 1) * model.height;
-      ctx.fillStyle = rgba(index % 2 ? '#00ff66' : '#e8ffe8', 0.2 + seededNoise(model.seed, index + 40) * 0.3);
-      ctx.fillRect(x, y, Math.max(1, fontSize * 0.035), Math.max(2, fontSize * 0.22));
-    }
-    ctx.restore();
-  } else if (kind === 'rainbow' || kind === 'chroma') {
-    drawShimmer(ctx, model, model.material.colors.slice(0, 4));
-  } else if (kind === 'glitch') {
-    const glitchWindow = model.staticFrame ? 0 : seededNoise(model.seed, Math.floor(model.progress * 16));
-    if (glitchWindow > 0.6) {
-      drawText(ctx, model, '#00e7ff', 0.72, -fontSize * 0.09, fontSize * 0.02);
-      drawText(ctx, model, '#ff335f', 0.72, fontSize * 0.09, -fontSize * 0.02);
-    } else {
-      drawText(ctx, model, '#ffffff', 0.34);
-    }
-  } else if (kind === 'wave') {
-    const yOffset = Math.sin(phase) * Math.min(1.4, fontSize * 0.045);
-    drawText(ctx, model, '#b9fbff', 0.3, 0, yOffset);
-  } else if (kind === 'inferno') {
-    ctx.save();
-    setTextContext(ctx, model);
-    ctx.shadowColor = rgba('#ff4500', 0.74);
-    ctx.shadowBlur = fontSize * (0.55 + seededNoise(model.seed, Math.floor(model.progress * 12)) * 0.35);
-    ctx.shadowOffsetY = -fontSize * 0.24;
-    ctx.fillStyle = '#fff6c4';
-    ctx.globalAlpha = 0.6;
-    ctx.fillText(model.displayText, metrics.x, metrics.y);
-    ctx.restore();
-  } else if (kind === 'sunset') {
-    ctx.save();
-    ctx.translate(metrics.x, metrics.y);
-    ctx.transform(1, 0, Math.sin(phase) * 0.018, 1, 0, 0);
-    ctx.translate(-metrics.x, -metrics.y);
-    drawText(ctx, model, '#ffd36a', 0.2, 0, 1);
-    ctx.restore();
-  } else if (kind === 'void') {
-    const sweep = (model.progress * 2.6 - 1.3) * model.width;
-    ctx.save();
-    setTextContext(ctx, model);
-    ctx.globalCompositeOperation = 'source-atop';
-    ctx.fillStyle = gradientFor(ctx, ['rgba(139,92,255,0)', '#8b5cff', '#f5f1ff', '#6ee7ff', 'rgba(110,231,255,0)'], model.width, model.progress);
-    ctx.globalAlpha = 0.9;
-    ctx.fillRect(sweep, 0, model.width * 0.22, model.height);
-    ctx.restore();
-  } else if (kind === 'signal') {
-    drawShimmer(ctx, model, ['#f4f8ea', '#ffb86b']);
-  } else if (kind === 'atelier') {
-    drawShimmer(ctx, model, ['#ffffff', '#ff9ee9']);
-    drawText(ctx, model, '#9ce4ff', 0.15, -fontSize * 0.05, 0);
-  }
+  drawMaterial(ctx, model);
 }
 
 export function drawNameFrame(ctx, model) {

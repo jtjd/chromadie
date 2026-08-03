@@ -1,6 +1,6 @@
 <script>
   import ShopStudioPreview from './ShopStudioPreview.svelte';
-  import { SHOP_NAME_SLOTS, SHOP_SLOT_LABELS, getShopContextForSlot, hasShopEntitlement, isShopCosmetic } from './shopCatalog.js';
+  import { SHOP_NAME_SLOTS, SHOP_SLOT_LABELS, hasShopEntitlement, isShopCosmetic } from './shopCatalog.js';
   import { applyNamePreviewLayer } from './name/nameLoadout.js';
 
   export let items = [];
@@ -15,7 +15,6 @@
   /** @type {any} */
   export let currentRoll = null;
 
-  let activeContext = 'profile';
   let draftLoadout = {};
   let syncedEquippedKey = '';
   const NAME_DEFAULT_LABELS = Object.freeze({
@@ -23,8 +22,8 @@
     name_material: 'Plain material',
     name_motion: 'Still motion'
   });
-  const nameLayerSlots = SHOP_NAME_SLOTS.filter(slot => slot !== 'name_effect');
-  const SLOT_ORDER = Object.freeze(['profile_bg', 'profile_atmosphere', 'name_effect', 'frame', 'profile_border', 'orb_shape', 'roll_effect', 'lb_theme']);
+  const nameLayerSlots = SHOP_NAME_SLOTS;
+  const SLOT_ORDER = Object.freeze(['profile_border']);
 
   $: equippedKey = JSON.stringify(equippedItems || {});
   $: syncEquippedLoadout(equippedKey);
@@ -33,10 +32,8 @@
     const ownedCount = fittingRoom.inventoryCounts?.[item.item_key] || 0;
     return ownedCount > 0 || equippedItems[item.slot] === item.item_key || (item.access_tier === 'premium' && hasShopEntitlement(item, fittingRoom));
   });
-  $: nameItems = ownedItems.filter(item => SHOP_NAME_SLOTS.includes(item.slot));
-  $: legacyNameItems = nameItems.filter(item => item.slot === 'name_effect');
   $: slots = Object.keys(SHOP_SLOT_LABELS)
-    .filter(slot => slot !== 'consumable' && !nameLayerSlots.includes(slot) && (ownedItems.some(item => item.slot === slot) || equippedItems[slot]))
+    .filter(slot => slot === 'profile_border' && (ownedItems.some(item => item.slot === slot) || equippedItems[slot]))
     .sort((a, b) => SLOT_ORDER.indexOf(a) - SLOT_ORDER.indexOf(b));
   $: username = profile?.display_name || profile?.username || 'Your profile';
   $: displayColor = currentRoll?.hex_code || profile?.mood_color || '#8B7CF6';
@@ -92,18 +89,6 @@
             <small>{itemsForSlot(slot).length ? `${itemsForSlot(slot).length} owned option${itemsForSlot(slot).length === 1 ? '' : 's'}` : 'Unlock options in the shop'}</small>
           </label>
         {/each}
-        {#if legacyNameItems.length || draftLoadout.name_effect}
-          <label class="shop-slot-control">
-            <span>Legacy preset</span>
-            <select value={draftLoadout.name_effect || ''} on:change={event => updateSlot('name_effect', event.currentTarget.value)}>
-              <option value="">No legacy preset</option>
-              {#each legacyNameItems as item (item.item_key)}
-                <option value={item.item_key}>{item.name}</option>
-              {/each}
-            </select>
-            <small>Choosing this clears the three modern layers in this preview.</small>
-          </label>
-        {/if}
       </div>
       {#if slots.length}
         {#each slots as slot (slot)}
@@ -115,7 +100,7 @@
                 <option value={item.item_key}>{item.name}</option>
               {/each}
             </select>
-            <small>{getShopContextForSlot(slot) || 'Profile'} surface</small>
+            <small>Profile surface</small>
           </label>
         {/each}
       {:else}
@@ -129,12 +114,9 @@
 
     <div class="shop-studio-preview">
       <ShopStudioPreview
-        bind:activeContext
         loadout={draftLoadout}
         username={username}
         displayColor={displayColor}
-        rollRarity={displayRarity}
-        rollScore={currentRoll?.score}
         accountProfile={profile}
         profileConfig={profileConfig}
       />
@@ -187,8 +169,6 @@
   .shop-studio-actions .shop-button:disabled { cursor:not-allowed; opacity:.45; }
   .shop-studio-preview { min-width:0; }
   .shop-studio-preview :global(.studio-preview) { min-height:100%; border-radius:6px; padding:1rem; background:#0a0c10; box-shadow:none; }
-  .shop-studio-preview :global(.context-switcher) { margin:0 0 .8rem; border-radius:4px; }
-  .shop-studio-preview :global(.context-switcher button) { min-height:2.25rem; border-radius:3px; }
   .shop-studio-preview :global(.studio-stage) { min-height:30rem; border-radius:5px; background:#07080b; }
   .shop-studio-note { margin:.65rem 0 0; color:#aaa8b0; font-size:.8rem; line-height:1.45; }
   .shop-studio-summary { border:1px solid var(--shop-line); background:#0a0c10; }

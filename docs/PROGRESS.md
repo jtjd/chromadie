@@ -1,6 +1,34 @@
 # Chromadie 2.0 Progress
 
-## Phase D2 — Composable Name catalog activation — 2026-08-02
+## Lean cosmetic reset — 2026-08-02
+
+- Reduced the active catalog to 64 modern Name rows, nine Profile Border rows,
+  one consumable, and the retained Founder title. Supported cosmetic slots are
+  `name_font`, `name_material`, `name_motion`, and `profile_border`.
+- Added one forward-only cleanup migration that removes obsolete catalog rows,
+  obsolete inventory references, and obsolete equipped JSON keys without
+  touching gameplay, wallets, rolls, scores, achievements, profile media,
+  social links, rivals, or leaderboard behavior.
+- Replaced the separate Border implementation with the shared finite
+  `ProfileBorderEffect` component across profile, discovery, homepage,
+  Collection, Shop, Studio, Product Detail, and Profile Settings previews.
+- Removed legacy Name presets/parity tooling and obsolete cosmetic UI,
+  client allowlists, preview branches, and stylesheet dependencies. Modern Name
+  layers now use safe defaults independently.
+- Normalized Border collections and prices to a 3,540,000 EP complete set;
+  balance drift reports Signal at 160,000 EP and Celestial at 600,000 EP.
+- Fresh local reset, schema lint, database security, client checks, tests,
+  catalog drift, balance drift, scoring parity, links, CSP, and username
+  policy checks are release gates. Remote destructive migration is not applied
+  because production ownership could not be verified in this workspace.
+- Build output improved from the D2 baseline of 806.28 kB JavaScript and
+  431.81 kB CSS to 767.87 kB JavaScript and 388.92 kB CSS. Initial JavaScript
+  is 431.36/450 kB and largest lazy JavaScript is 69.24/100 kB; initial CSS
+  is 133.80/200 kB and largest lazy CSS is 47.69/75 kB. Font assets are
+  215.32 KiB (220.49 kB in the build report). The transitional total caps
+  still fail at 767.87/700 kB JavaScript and 388.92/380 kB CSS.
+
+## Historical Phase D2 — Composable Name catalog activation — 2026-08-02
 
 - Added the additive `catalog_status` lifecycle (`active`, `legacy`,
   `retired`) and marked all 29 existing `name_effect` rows as `legacy` without

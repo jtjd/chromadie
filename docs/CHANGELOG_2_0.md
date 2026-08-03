@@ -2,6 +2,25 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-02 — Lean alpha cosmetic reset
+
+- Reduced the live cosmetic catalog to the 64 modern Name products and nine
+  retained Profile Border designs, plus the existing utility/title entries.
+- Removed legacy Name presets, Frames, cosmetic profile backgrounds and
+  atmospheres, Orb Shapes, Roll Effects, and Leaderboard Themes from the live
+  catalog, equipped loadout, shop, settings, Studio, preview, and CSS paths.
+- Added one shared, code-owned Profile Border renderer with finite keys,
+  reduced-motion handling, offscreen pausing, and stable card/profile output.
+- Preserved wallets, EP, rolls, scores, achievements, profile media, links,
+  rivals, leaderboard behavior, consumables, and titles. No refunds or
+  replacement grants are created by the reset.
+- Remote cleanup remains pending a verified backup and explicit database-owner
+  deployment approval.
+- The measured build fell from the D2 baseline of 806.28 kB JavaScript and
+  431.81 kB CSS to 767.87 kB JavaScript and 388.92 kB CSS. Initial and
+  largest-lazy budgets pass; the transitional total caps remain documented
+  debt at 767.87/700 kB JavaScript and 388.92/380 kB CSS.
+
 ## 2026-08-02 — Phase D2 composable Name catalog activation
 
 - Activated 64 paid Name products through the existing shop and purchase

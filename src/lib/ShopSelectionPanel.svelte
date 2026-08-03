@@ -25,7 +25,7 @@
     : !isSignedIn
     ? 'Sign in to buy'
     : catalogStatus !== 'active'
-      ? 'Legacy preset · owner access only'
+      ? 'Unavailable'
       : loadingAction
       ? 'Completing purchase…'
       : purchaseArmed
@@ -61,7 +61,7 @@
       {#if isShopCosmetic(item) && selectedHasAccess}
         <a class="selection-panel__primary" href="/profile/settings">Manage in profile settings ↗</a>
       {:else if catalogStatus !== 'active'}
-        <button type="button" class="selection-panel__primary" disabled>Legacy preset · preview or manage if owned</button>
+        <button type="button" class="selection-panel__primary" disabled>Unavailable</button>
       {:else if accessTier === 'premium'}
         <button type="button" class="selection-panel__primary" disabled>Premium expression · Preview only</button>
       {:else if accessTier === 'free'}

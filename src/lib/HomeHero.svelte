@@ -17,7 +17,7 @@
         <h1 id="home-title">A public profile that <span>changes every day.</span></h1>
       </div>
       <div class="home-hero__side">
-        <p>Customize your page with a background, avatar, music, links, and profile effects. Each daily color becomes part of your profile history, earns EP, and changes where your page appears on chm.lol.</p>
+        <p>Customize your page with a background, avatar, music, links, name layers, and a profile border. Each daily color becomes part of your profile history, earns EP, and changes where your page appears on chm.lol.</p>
         <HomeUsernameClaim isAuthenticated={isAuthenticated} inputId="home-claim-hero" showLabel={false} on:claim={event => dispatch('claim', event.detail)} on:profile={() => dispatch('profile')} />
       </div>
     </div>

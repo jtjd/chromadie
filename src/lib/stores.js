@@ -1,11 +1,11 @@
 import { derived, writable, get } from 'svelte/store'
 import { supabase } from './supabase'
 import { resolveAccountState } from './authState'
-import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from './cosmeticSafety'
 import { clearAllViewState } from './viewState.js'
 import { resolveNameFontKey } from './name/nameFonts.js'
 import { resolveNameMaterialKey } from './name/nameMaterials.js'
 import { resolveNameMotionKey } from './name/nameMotions.js'
+import { isProfileBorderKey } from './profile-border/profileBorders.js'
 
 // --- Auth & Profile State ---
 export const session = writable(null)
@@ -94,7 +94,7 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
         }
 
         if (clearShopCache) {
-            keysToRemove.push('shop_cache', 'shop_cache:v2')
+            keysToRemove.push('shop_cache', 'shop_cache:v2', 'shop_cache:v3')
         }
 
         keysToRemove.forEach(key => localStorage.removeItem(key))
@@ -105,18 +105,20 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
     clearAllViewState()
 }
 
-const SHOP_CACHE_KEY = 'shop_cache:v2'
-const SHOP_CACHE_SHAPE_VERSION = 2
-const SHOP_SLOTS = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'name_font', 'name_material', 'name_motion', 'orb_shape', 'profile_bg', 'profile_atmosphere', 'profile_border', 'roll_effect', 'title'])
-const NAME_RENDERER_SLOTS = new Set(['name_font', 'name_material', 'name_motion'])
+const SHOP_CACHE_KEY = 'shop_cache:v3'
+const SHOP_CACHE_SHAPE_VERSION = 3
+const SHOP_SLOTS = new Set(['consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border'])
+const NAME_RENDERER_SLOTS = new Set(['name_font', 'name_material', 'name_motion', 'profile_border'])
 
 function normalizeShopItem(item) {
     if (!item || typeof item !== 'object' || !/^[a-z0-9_]{1,80}$/.test(item.item_key || '')) return null
-    if (!SHOP_SLOTS.has(item.slot) || !['class', 'style', 'text', 'renderer'].includes(item.css_type)) return null
+    if (!SHOP_SLOTS.has(item.slot) || !['text', 'renderer'].includes(item.css_type)) return null
     if (item.css_type === 'renderer') {
         if (!NAME_RENDERER_SLOTS.has(item.slot)) return null
         const rendererKey = String(item.css_value || '')
-        const resolvedKey = item.slot === 'name_font'
+        const resolvedKey = item.slot === 'profile_border'
+            ? (isProfileBorderKey(rendererKey) ? rendererKey : '')
+            : item.slot === 'name_font'
             ? resolveNameFontKey(rendererKey)
             : item.slot === 'name_material'
                 ? resolveNameMaterialKey(rendererKey)
@@ -134,8 +136,6 @@ function normalizeShopItem(item) {
     if (accessTier === 'premium' && !entitlementKey) return null
     const catalogStatus = item.catalog_status || 'active'
     if (!['active', 'legacy', 'retired'].includes(catalogStatus)) return null
-    if (item.css_type === 'class' && sanitizeCosmeticClass(item.css_value) !== item.css_value) return null
-    if (item.css_type === 'style' && sanitizeCosmeticStyle(item.css_value) !== String(item.css_value || '').trim()) return null
     return { ...item, cost, access_tier: accessTier, entitlement_key: entitlementKey, catalog_status: catalogStatus }
 }
 
@@ -206,13 +206,11 @@ async function loadShopItemsOnce() {
 
         let { data, error: itemsError } = await supabase.rpc('get_shop_catalog');
 
-        // A client-first rollout can briefly meet a pre-D2 database. Keep a
-        // bounded legacy fallback for that window; the deployed D2 path uses
-        // the RPC so old direct table readers never see renderer rows.
         if (itemsError && ['42883', 'PGRST202'].includes(itemsError.code)) {
             const fallback = await supabase
                 .from('shop_items')
-                .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection, stackable, access_tier, entitlement_key')
+                .select('item_key, name, slot, cost, css_type, css_value, rarity, description, collection, stackable, access_tier, entitlement_key, catalog_status')
+                .eq('catalog_status', 'active')
                 .or(`available_from.is.null,available_from.lte.${new Date().toISOString().split('T')[0]}`)
                 .or(`available_until.is.null,available_until.gte.${new Date().toISOString().split('T')[0]}`);
             data = fallback.data;

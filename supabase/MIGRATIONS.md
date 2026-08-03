@@ -52,7 +52,29 @@ Catalog source of truth:
 - `npm run check:catalog-drift` detects snapshot/seed drift and checks the remote catalog when
   Supabase credentials are available.
 
-Phase D2 composable Name activation:
+Lean alpha cosmetic reset:
+
+- `migrations/20260802110000_lean_cosmetic_catalog_reset.sql` is the single
+  forward-only cleanup migration. It preserves referential safety by deleting
+  obsolete inventory before obsolete catalog rows, keeps the final Name and
+  Profile Border rows, tightens the catalog/equip boundaries, and bumps
+  `shop_version` to `2026-08-02T20:00:00Z`.
+- The final active catalog is 64 modern Name rows, nine Profile Border rows,
+  one consumable, and one title. Historical migrations remain unchanged for
+  reproducibility; they are not the current catalog source of truth.
+- Production order: create a verified backup, deploy a client compatible with
+  the reduced slot set, apply the migration, invalidate caches, verify counts
+  and RLS/RPC behavior, then smoke-test one Name and one Border purchase/equip.
+  A backup restore is the recovery path; do not refund automatically or create
+  a destructive down migration.
+
+Recommended pre-migration backup command (run only by the authorized DB owner):
+
+```bash
+supabase db dump --linked --data-only --schema public > backups/chromadie-pre-lean-reset-$(date +%Y%m%d%H%M%S).sql
+```
+
+Historical Phase D2 composable Name activation:
 
 - `migrations/20260802100000_composable_name_catalog_activation.sql` adds the
   additive `catalog_status` lifecycle, validates renderer-backed Name rows,

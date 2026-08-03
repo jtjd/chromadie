@@ -1,4 +1,3 @@
-import { NAME_LEGACY_PRESETS, LEGACY_NAME_EFFECT_KEYS, getLegacyNamePreset } from './nameLegacyPresets.js';
 import {
   DEFAULT_NAME_FONT_KEY,
   NAME_FONTS,
@@ -27,9 +26,7 @@ import {
  *   name_font?: string,
  *   name_material?: string,
  *   name_motion?: string,
- *   rendererKey?: string,
- *   legacyKey?: string,
- *   name_effect?: string
+ *   rendererKey?: string
  * }} NameLoadoutInput
  */
 
@@ -43,8 +40,6 @@ const DEFAULT_NAME_RENDERER = Object.freeze({
 
 export {
   DEFAULT_NAME_RENDERER,
-  LEGACY_NAME_EFFECT_KEYS,
-  NAME_LEGACY_PRESETS,
   NAME_FONTS,
   NAME_FONT_KEYS,
   NAME_PAID_FONT_KEYS,
@@ -56,14 +51,8 @@ export {
   NAME_PAID_MOTION_KEYS
 };
 
-/**
- * The legacy key space remains intentionally finite and separate from the
- * composable space. There is no need to enumerate the Cartesian product of
- * the three new layers in this catalog.
- */
 export const NAME_RENDERER_CATALOG = Object.freeze({
-  plain: DEFAULT_NAME_RENDERER,
-  ...NAME_LEGACY_PRESETS
+  plain: DEFAULT_NAME_RENDERER
 });
 
 export const NAME_COMPOSABLE_COUNTS = Object.freeze({
@@ -73,7 +62,7 @@ export const NAME_COMPOSABLE_COUNTS = Object.freeze({
   paidFonts: NAME_PAID_FONT_KEYS.length,
   paidMaterials: NAME_PAID_MATERIAL_KEYS.length,
   paidMotions: NAME_PAID_MOTION_KEYS.length,
-  paidTotal: NAME_FONT_KEYS.length + NAME_PAID_MATERIAL_KEYS.length + NAME_PAID_MOTION_KEYS.length
+  paidTotal: NAME_PAID_FONT_KEYS.length + NAME_PAID_MATERIAL_KEYS.length + NAME_PAID_MOTION_KEYS.length
 });
 
 function hasOwn(record, key) {
@@ -139,7 +128,7 @@ export function resolveNameLoadout(loadout = {}) {
     motionKey: input.motionKey ?? input.name_motion ?? ''
   };
   if (hasComposableNameInput(composable)) return getComposableNameDefinition(composable);
-  return getNameRendererDefinition(input.rendererKey || input.legacyKey || input.name_effect || 'plain');
+  return getNameRendererDefinition(input.rendererKey || 'plain');
 }
 
 export function getNameRendererDefinition(rendererKey) {
@@ -152,8 +141,4 @@ export function getNameRendererDefinition(rendererKey) {
     materialDefinition: getNameMaterial(definition.material),
     motionDefinition: getNameMotion(definition.motion)
   });
-}
-
-export function getLegacyNameRenderer(itemKey) {
-  return getLegacyNamePreset(itemKey) ? getNameRendererDefinition(itemKey) : null;
 }

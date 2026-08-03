@@ -1,20 +1,11 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { sanitizeCosmeticClass, sanitizeCosmeticStyle } from '../src/lib/cosmeticSafety.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
-const snapshotPath = path.join(
-  repoRoot,
-  'supabase/migrations/20260710190000_snapshot_live_shop_catalog.sql'
-);
-const catalogExtensionPaths = [
-  path.join(repoRoot, 'supabase/migrations/20260801110000_profile_atmosphere_catalog.sql'),
-  path.join(repoRoot, 'supabase/migrations/20260801120000_signal_garden_catalog.sql'),
-  path.join(repoRoot, 'supabase/migrations/20260802100000_composable_name_catalog_activation.sql')
-];
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
+const resetMigrationPath = path.join(repoRoot, 'supabase/migrations/20260802110000_lean_cosmetic_catalog_reset.sql');
 
 function fail(message) {
   console.error(`Catalog drift detected: ${message}`);
@@ -219,80 +210,68 @@ async function readRemoteCatalog(columns, url, key) {
   };
 }
 
-const snapshot = await readLocalCatalog(snapshotPath);
-for (const extensionPath of catalogExtensionPaths) {
-  mergeCatalog(snapshot, await readLocalCatalog(extensionPath));
-}
-const activationSql = await readFile(catalogExtensionPaths.at(-1), 'utf8');
-applyCatalogStatusUpdates(activationSql, snapshot.catalog, path.relative(repoRoot, catalogExtensionPaths.at(-1)));
 const seed = await readLocalCatalog(seedPath);
-compareCatalogs(snapshot, seed, 'supabase/seed.sql');
-
-const srcRoot = path.join(repoRoot, 'src');
-const styleFiles = (await readdir(srcRoot, { recursive: true }))
-  .filter(file => file.endsWith('.css') || file.endsWith('.svelte'));
-const cosmeticCss = (await Promise.all(styleFiles.map(file => readFile(path.join(srcRoot, file), 'utf8')))).join('\n');
-const validSlots = new Set(['consumable', 'frame', 'lb_theme', 'name_effect', 'name_font', 'name_material', 'name_motion', 'orb_shape', 'profile_bg', 'profile_atmosphere', 'profile_border', 'roll_effect', 'title']);
+const resetMigration = await readFile(resetMigrationPath, 'utf8');
+const validSlots = new Set(['consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border']);
 const validCatalogStatuses = new Set(['active', 'legacy', 'retired']);
 const rendererKeys = Object.freeze({
   name_font: new Set(['editorial-serif', 'condensed-sans', 'wide-geometric', 'mono-compact', 'rounded-mono', 'soft-grotesk', 'humanist-display', 'modern-fraktur', 'pixel-display', 'high-contrast-italic', 'neo-slab', 'reverse-contrast', 'industrial-stencil', 'futurist-extended', 'terminal-bitmap', 'rounded-display', 'marker-tag', 'newspaper-black']),
   name_material: new Set(['polished-chrome', 'copper-press', 'glass-emboss', 'fine-outline', 'ink-bleed', 'pearl-foil', 'carbon-cut', 'frosted-edge', 'holographic-film', 'cut-paper', 'neon-tube', 'liquid-mercury', 'oil-slick', 'thermal-ink', 'velvet-ink', 'embroidered-thread', 'engraved-stone', 'crt-phosphor', 'gold-leaf', 'chroma-glass', 'ceramic-glaze', 'blueprint-ink']),
   name_motion: new Set(['velvet-sweep', 'refraction-sweep', 'ghost-offset', 'focus-resolve', 'mask-reveal', 'quiet-afterimage', 'soft-rise', 'scanline-reveal', 'particle-drift', 'letter-shuffle', 'fuzzy-signal', 'typewriter-name', 'chromatic-ripple', 'liquid-fill', 'pixel-dissolve', 'echo-collapse', 'heat-shimmer', 'signal-lock', 'letter-cascade', 'orbiting-spark', 'color-memory', 'daily-pulse', 'prism-shatter', 'ink-spread'])
 });
-const legacyNameKeys = new Set(['name_prism_atelier', 'name_drop_shadow', 'name_italic', 'name_glow_blue', 'name_glow_green', 'name_smallcaps', 'name_glow_purple', 'name_glow_red', 'name_glow_pink_neon', 'name_glow_gold', 'name_gradient_purple', 'name_gradient_fire', 'name_ice', 'name_toxic', 'name_slow_pulse', 'name_signal', 'name_flicker_neon', 'name_matrix_rain', 'name_rainbow', 'name_diamond_shimmer', 'name_holographic', 'name_pulsing_glow', 'name_shining_gold', 'name_glitch_effect', 'name_ocean_wave', 'name_inferno', 'name_sunset_blur', 'name_void', 'name_chroma']);
-const expectedComposableCounts = Object.freeze({ name_font: 18, name_material: 22, name_motion: 24 });
-const composableCounts = { name_font: 0, name_material: 0, name_motion: 0 };
-for (const item of snapshot.catalog.values()) {
+const expectedCounts = Object.freeze({ name_font: 18, name_material: 22, name_motion: 24, profile_border: 9 });
+const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0 };
+const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'profile_atmosphere', 'orb_shape', 'roll_effect', 'lb_theme'];
+for (const item of seed.catalog.values()) {
   if (!validSlots.has(item.slot)) fail(`${item.item_key} has unknown slot ${item.slot}`);
   if (!validCatalogStatuses.has(item.catalog_status || 'active')) fail(`${item.item_key} has unknown catalog_status ${item.catalog_status}`);
   if (!Number.isSafeInteger(Number(item.cost)) || Number(item.cost) < 0) fail(`${item.item_key} has invalid cost ${item.cost}`);
-  if (item.css_type === 'style' && sanitizeCosmeticStyle(item.css_value) !== item.css_value.trim()) {
-    fail(`${item.item_key} contains a rejected inline style`);
-  }
-  if (item.css_type === 'class') {
-    if (sanitizeCosmeticClass(item.css_value) !== item.css_value) fail(`${item.item_key} contains an invalid CSS class value`);
-    for (const className of item.css_value.split(/\s+/)) {
-      if (!cosmeticCss.includes(`.${className}`)) fail(`${item.item_key} references missing CSS class ${className}`);
-    }
-  }
   if (item.css_type === 'renderer') {
-    if (!rendererKeys[item.slot]?.has(item.css_value)) fail(`${item.item_key} references an unknown ${item.slot} renderer ${item.css_value}`);
-    if (item.catalog_status !== 'active') fail(`${item.item_key} renderer row must be active`);
+    const allowedRendererKeys = item.slot === 'profile_border'
+      ? new Set(['celestial', 'chroma', 'crystal', 'glitch', 'gold', 'neon', 'prism', 'void', 'signal'])
+      : rendererKeys[item.slot];
+    if (!allowedRendererKeys?.has(item.css_value)) fail(`${item.item_key} references an unknown ${item.slot} renderer ${item.css_value}`);
+    if (!['name_font', 'name_material', 'name_motion', 'profile_border'].includes(item.slot)) {
+      fail(`${item.item_key} uses renderer syntax outside a retained renderer slot`);
+    }
+    if ((item.catalog_status || 'active') !== 'active') fail(`${item.item_key} renderer row must be active`);
     composableCounts[item.slot] += 1;
-  } else if (['name_font', 'name_material', 'name_motion'].includes(item.slot)) {
+  } else if (['name_font', 'name_material', 'name_motion', 'profile_border'].includes(item.slot)) {
     fail(`${item.item_key} must use css_type=renderer`);
   } else if (!['style', 'class', 'text'].includes(item.css_type)) {
     fail(`${item.item_key} has unknown css_type ${item.css_type}`);
   }
 }
 
-for (const [slot, count] of Object.entries(expectedComposableCounts)) {
-  if (composableCounts[slot] !== count) fail(`${slot} expected ${count} renderer rows, found ${composableCounts[slot]}`);
+for (const [slot, count] of Object.entries(expectedCounts)) {
+  const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
+  if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-const legacyCatalogKeys = new Set([...snapshot.catalog.values()]
-  .filter(item => item.slot === 'name_effect' && item.catalog_status === 'legacy')
-  .map(item => item.item_key));
-if (legacyCatalogKeys.size !== legacyNameKeys.size || [...legacyNameKeys].some(key => !legacyCatalogKeys.has(key))) {
-  fail(`expected exactly the 29 mapped legacy Name rows, found ${legacyCatalogKeys.size}`);
+if ([...seed.catalog.values()].some(item => obsoleteSlots.includes(item.slot))) {
+  fail('the seed still contains an obsolete cosmetic slot');
 }
-if (snapshot.catalog.has('name_material_plain') || snapshot.catalog.has('name_motion_none')) {
+if (seed.catalog.has('name_material_plain') || seed.catalog.has('name_motion_none')) {
   fail('Plain and Still must not be purchasable catalog rows');
 }
+if (!resetMigration.includes("slot IN ('consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border')")) {
+  fail('the reset migration does not declare the final catalog slot allowlist');
+}
+if (!resetMigration.includes("DELETE FROM public.shop_items")) fail('the reset migration does not delete obsolete catalog rows');
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_KEY;
 
 if (supabaseUrl && supabaseKey) {
-  const remote = await readRemoteCatalog(snapshot.columns, supabaseUrl, supabaseKey);
-  compareCatalogs(snapshot, remote, 'remote shop_items');
+  const remote = await readRemoteCatalog(seed.columns, supabaseUrl, supabaseKey);
+  compareCatalogs(seed, remote, 'remote shop_items');
   console.log(
-    `Catalog drift check passed: snapshot, seed, and remote match (${snapshot.catalog.size} items; ` +
-      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions).`
+    `Catalog drift check passed: seed and remote match (${seed.catalog.size} items; ` +
+      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders).`
   );
 } else {
   console.log(
-    `Catalog drift check passed locally: snapshot and seed match (${snapshot.catalog.size} items; ` +
-      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions). ` +
+    `Catalog drift check passed locally: final seed is valid (${seed.catalog.size} items; ` +
+      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders). ` +
       'Set SUPABASE_URL and SUPABASE_ANON_KEY to include the remote catalog.'
   );
 }

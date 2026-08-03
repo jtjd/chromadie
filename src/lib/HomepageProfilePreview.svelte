@@ -1,11 +1,9 @@
 <script>
-  import { onDestroy, onMount } from 'svelte';
   import CompactRollPreview from './CompactRollPreview.svelte';
   import IdentityCard from './IdentityCard.svelte';
-  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
+  import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
   import { getBadgeMeta } from './badgeData.js';
-  import { getFrameEffect, getProfileAtmosphereEffect, getProfileBg, getProfileBorder, getOrbShape, getRollEffect } from './cosmetics.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
   import { getCanonicalProfilePath } from './routeContract.js';
@@ -16,14 +14,9 @@
   /** @type {Record<string, any> | null} */
   export let model = null;
   export let variant = 'directory';
-  export let lazyAtmosphere = false;
   export let mediaCacheKey = '';
   export let emptyMessage = 'No public profiles available yet.';
   export let emptyDetail = 'Profiles will appear here after players publish and roll.';
-
-  let previewElement;
-  let atmosphereVisible = !lazyAtmosphere;
-  let atmosphereObserver;
 
   $: context = model && model.context ? model.context : null;
   $: profile = context?.targetProfile || null;
@@ -37,18 +30,10 @@
     getLatestHomepageRoll(context)?.hex_code || profile?.mood_color || config.signatureColor,
     config.signatureColor
   );
-  $: secondaryAccent = normalizeHexColor(config.signatureColor, '#71D6FF');
-  $: nameRendererKey = String(cosmetics?.name_effect || '');
   $: nameRendererRecentColors = (Array.isArray(context?.targetScores) ? context.targetScores : [])
     .slice(0, 8)
     .map(score => score?.hex_code)
     .filter(Boolean);
-  $: frameEffect = getFrameEffect(cosmetics);
-  $: borderEffect = getProfileBorder(cosmetics);
-  $: backgroundEffect = getProfileBg(cosmetics);
-  $: atmosphereEffect = getProfileAtmosphereEffect(cosmetics);
-  $: orbEffect = getOrbShape(cosmetics);
-  $: rollEffect = getRollEffect(cosmetics);
   $: avatarSrc = getProfileMediaUrl(config.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(config.background_path, mediaCacheKey);
   $: audioSrc = getProfileMediaUrl(config.audio_path, mediaCacheKey);
@@ -64,29 +49,9 @@
   });
   $: accessibleName = displayName ? `${displayName}'s public profile` : 'Public profile preview';
 
-  $: if (!lazyAtmosphere) atmosphereVisible = true;
-
-  onMount(() => {
-    if (!lazyAtmosphere || !previewElement) return undefined;
-    if (!('IntersectionObserver' in window)) {
-      atmosphereVisible = true;
-      return undefined;
-    }
-    atmosphereObserver = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) {
-        atmosphereVisible = true;
-        atmosphereObserver?.disconnect();
-      }
-    }, { rootMargin: '220px' });
-    atmosphereObserver.observe(previewElement);
-    return () => atmosphereObserver?.disconnect();
-  });
-
-  onDestroy(() => atmosphereObserver?.disconnect());
 </script>
 
 <article
-  bind:this={previewElement}
   class={'homepage-preview homepage-preview--' + variant}
   class:homepage-preview--empty={!profile}
   aria-label={profile ? accessibleName : 'No public profile available'}
@@ -97,21 +62,11 @@
     </header>
 
     <div class="homepage-preview__scene">
-      {#if atmosphereVisible}
-        <div class="homepage-preview__atmosphere" aria-hidden="true">
-          <ProfileAtmosphere
-            accent={accentColor}
-            secondaryAccent={secondaryAccent}
-            backgroundSrc={backgroundSrc}
-            effect={atmosphereEffect}
-          />
-        </div>
+      {#if backgroundSrc}
+        <div class="homepage-preview__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
       {/if}
 
-      <div class={'homepage-preview__identity-boundary ' + borderEffect.cls} style={borderEffect.style}>
-        {#if backgroundEffect.cls || backgroundEffect.style}
-          <div class={'homepage-preview__cosmetic-bg ' + backgroundEffect.cls} style={backgroundEffect.style} aria-hidden="true"></div>
-        {/if}
+      <ProfileBorderEffect borderKey={cosmetics?.profile_border} compact={true} className="homepage-preview__identity-boundary">
         <IdentityCard
           titleId={'homepage-preview-title-' + username}
           headingTag="h2"
@@ -125,18 +80,15 @@
           staff={profile.is_staff === true}
           founder={Array.isArray(profile.equipped_badges) && profile.equipped_badges.includes('launch_edition')}
           accentColor={accentColor}
-          nameRendererKey={nameRendererKey}
           nameRendererLoadout={nameRendererLoadout}
           nameRendererContext="card"
           nameRendererMode="static-signature"
           nameRendererRecentColors={nameRendererRecentColors}
-          frameClass={frameEffect.cls}
-          frameStyle={frameEffect.style}
           avatarSrc={avatarSrc}
           avatarLoading={variant === 'directory' ? 'lazy' : 'eager'}
           showToday={false}
         />
-      </div>
+      </ProfileBorderEffect>
 
       {#if hasAudio || hasSpotify}
         <div class="homepage-preview__music">
@@ -158,9 +110,6 @@
           <CompactRollPreview
             displayColor={latestRoll.hex_code || accentColor}
             rarity={latestRoll.rarity || 'Common'}
-            effectCls={rollEffect.cls}
-            effectStyle={rollEffect.style}
-            orbCls={orbEffect.cls}
             size={variant === 'primary' ? '3rem' : '2.4rem'}
             scale={variant === 'primary' ? 0.3 : 0.24}
           />
@@ -218,11 +167,8 @@
   .homepage-preview__header a:hover { color: var(--preview-accent); }
   .homepage-preview__header span { color: rgba(241, 243, 237, 0.42); font: 600 0.57rem / 1 var(--home-mono, 'IBM Plex Mono', monospace); letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap; }
   .homepage-preview__scene { position: relative; min-height: 12.5rem; padding: clamp(1rem, 3vw, 2rem); overflow: hidden; background: #080a0c; }
-  .homepage-preview__atmosphere { position: absolute; z-index: 0; inset: 0; pointer-events: none; }
-  .homepage-preview__atmosphere :global(.profile-atmosphere) { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .homepage-preview__identity-boundary { position: relative; z-index: 2; width: 100%; overflow: hidden; border-radius: 0.45rem; isolation: isolate; }
-  .homepage-preview__identity-boundary > .homepage-preview__cosmetic-bg { position: absolute; z-index: 0; inset: 0; opacity: 0.34; pointer-events: none; }
-  .homepage-preview__identity-boundary :global(.identity-card) { position: relative; z-index: 1; }
+  :global(.homepage-preview__identity-boundary) { position: relative; z-index: 2; width: 100%; overflow: hidden; border-radius: 0.45rem; isolation: isolate; }
+  :global(.homepage-preview__identity-boundary) :global(.identity-card) { position: relative; z-index: 1; }
   .homepage-preview__music { position: relative; z-index: 4; margin-top: 0.8rem; }
   .homepage-preview__music :global(.profile-music--audio) { position: static; left: auto; bottom: auto; min-height: 0; padding: 0; }
   .homepage-preview__music :global(.profile-music--audio > audio) { position: absolute; }

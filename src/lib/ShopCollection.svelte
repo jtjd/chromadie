@@ -5,7 +5,6 @@
     SHOP_NAME_SLOTS,
     getShopAccessTier,
     getShopItemState,
-    getShopContextForSlot,
     hasShopEntitlement,
     isShopCosmetic
   } from './shopCatalog.js';
@@ -23,14 +22,11 @@
   const dispatch = createEventDispatcher();
   const collectionSections = Object.freeze([
     { id: 'all', label: 'All owned' },
-    { id: 'profile', label: 'Profile' },
     { id: 'names', label: 'Names' },
     { id: 'name_font', label: 'Fonts' },
     { id: 'name_material', label: 'Materials' },
     { id: 'name_motion', label: 'Motion' },
-    { id: 'name_effect', label: 'Legacy presets' },
-    { id: 'roll', label: 'Roll' },
-    { id: 'leaderboard', label: 'Leaderboard' },
+    { id: 'profile_border', label: 'Borders' },
     { id: 'utility', label: 'Utility' }
   ]);
   let selectedCollectionSection = 'all';
@@ -53,14 +49,13 @@
     });
   $: username = profile?.display_name || profile?.username || 'Your profile';
   $: displayColor = currentRoll?.hex_code || profile?.mood_color || '#8B7CF6';
-  $: displayRarity = currentRoll?.rarity || 'Current roll';
 
   function collectionSectionMatches(item, section) {
     if (section === 'all') return true;
     if (section === 'utility') return item.slot === 'consumable';
     if (section === 'names') return SHOP_NAME_SLOTS.includes(item.slot);
-    if (['name_font', 'name_material', 'name_motion', 'name_effect'].includes(section)) return item.slot === section;
-    return getShopContextForSlot(item.slot) === section;
+    if (['name_font', 'name_material', 'name_motion', 'profile_border'].includes(section)) return item.slot === section;
+    return false;
   }
 
 </script>
@@ -112,7 +107,6 @@
           actuallyEquipped={equippedItems[item.slot] === item.item_key}
           previewUsername={username}
           previewColor={displayColor}
-          previewRarity={displayRarity}
           on:select={event => dispatch('select', event.detail)}
           on:preview={event => dispatch('select', event.detail)}
         />

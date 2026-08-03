@@ -71,6 +71,23 @@ shop, or gameplay contracts.
 
 ## Database migration rollback
 
+### Lean alpha cosmetic reset recovery
+
+The lean reset is destructive to obsolete cosmetic catalog and inventory rows,
+so take a verified backup before deployment. The authorized DB owner can use:
+
+```bash
+supabase db dump --linked --data-only --schema public > backups/chromadie-pre-lean-reset-$(date +%Y%m%d%H%M%S).sql
+```
+
+Deploy the reduced-slot-compatible client before applying
+`20260802110000_lean_cosmetic_catalog_reset.sql`. Then invalidate the shop
+cache, verify 64 modern Name rows plus nine Profile Border rows, test one Name
+and one Border purchase/equip, and confirm an obsolete equipped profile falls
+back to safe defaults. There is no automatic refund and no destructive down
+migration; recovery is a verified database restore followed by the normal
+local/security/catalog checks.
+
 ### Phase D2 composable Name recovery
 
 Phase D2 has no destructive down migration. If the client or catalog activation

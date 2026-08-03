@@ -1,7 +1,6 @@
 <script>
   import { createEventDispatcher, onDestroy } from 'svelte';
   import IdentityCard from './IdentityCard.svelte';
-  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import ProfileRoll from './ProfileRoll.svelte';
   import { guestRollFixture } from './guestRollFixture.js';
 
@@ -10,9 +9,8 @@
   let stage = 0;
   let rollComplete = false;
   let rollSection;
-  let rollState = 'idle';
   let rollColor = '#8B7CF6';
-  let rollEffectTimer;
+  let rollAnimationTimer;
 
   function advanceToRoll() {
     stage = 1;
@@ -20,9 +18,8 @@
   }
 
   function handleRollStart() {
-    rollState = 'rolling';
     rollColor = '#8B7CF6';
-    if (rollEffectTimer) clearTimeout(rollEffectTimer);
+    if (rollAnimationTimer) clearTimeout(rollAnimationTimer);
   }
 
   function handleRollPreview(event) {
@@ -31,36 +28,32 @@
 
   function handleRollComplete(event) {
     rollColor = event.detail?.canonical?.hex || event.detail?.data?.hex || rollColor;
-    rollState = 'settled';
     rollComplete = true;
-    if (rollEffectTimer) clearTimeout(rollEffectTimer);
-    rollEffectTimer = setTimeout(() => {
-      rollState = 'idle';
-      rollEffectTimer = null;
+    if (rollAnimationTimer) clearTimeout(rollAnimationTimer);
+    rollAnimationTimer = setTimeout(() => {
+      rollAnimationTimer = null;
     }, 1400);
   }
 
   onDestroy(() => {
-    if (rollEffectTimer) clearTimeout(rollEffectTimer);
+    if (rollAnimationTimer) clearTimeout(rollAnimationTimer);
   });
 </script>
 
 <div class="guest-profile-onboarding" data-stage={stage}>
-  <ProfileAtmosphere accent="#8B7CF6" secondaryAccent="#2ED3C9" effect="rain" rollState={rollState} rollColor={rollColor} />
-
   {#if stage === 0}
     <section class="guest-profile-onboarding__identity-stage" aria-labelledby="guest-profile-title">
       <p class="guest-profile-onboarding__eyebrow">your public identity</p>
       <h1 id="guest-profile-title">This could be your profile.</h1>
-      <p class="guest-profile-onboarding__intro-copy">Your name, colors, effects, and roll history come together here. Every day gives your profile another detail.</p>
+      <p class="guest-profile-onboarding__intro-copy">Your name, border, colors, and roll history come together here. Every day gives your profile another detail.</p>
       {#if guestActive}<span class="guest-profile-onboarding__status">A local profile is ready on this device.</span>{/if}
 
       <div class="guest-profile-onboarding__identity-wrap">
         <IdentityCard username="yourname" displayName="Your profile" bio="A public identity shaped by your daily colors." accentColor="#8B7CF6" badges={[{ id: 'profile_seed', name: 'Profile Seed', icon: '✦' }]} showToday={false} />
-        <div class="guest-profile-onboarding__effects" aria-label="Example profile effects">
-          <span><i aria-hidden="true"></i> Rainfall</span>
-          <span><i aria-hidden="true"></i> Chroma aura</span>
-          <span><i aria-hidden="true"></i> Mythic border</span>
+        <div class="guest-profile-onboarding__effects" aria-label="Example profile details">
+          <span><i aria-hidden="true"></i> Name layers</span>
+          <span><i aria-hidden="true"></i> Profile border</span>
+          <span><i aria-hidden="true"></i> Daily color</span>
           <span><i aria-hidden="true"></i> Color story</span>
         </div>
       </div>

@@ -8,15 +8,11 @@
   export let item = null;
   /** @type {any} */
   export let loadout = {};
-  export let activeContext = 'profile';
   /** @type {any} */
   export let profile = null;
   /** @type {any} */
   export let profileConfig = null;
   export let displayColor = '#8B7CF6';
-  export let rollRarity = '';
-  /** @type {any} */
-  export let rollScore = null;
   /** @type {any} */
   export let state = null;
   export let relatedItems = [];
@@ -84,16 +80,13 @@
         <div class="shop-detail-preview">
           <div class="shop-detail-isolated">
             <span>Item preview</span>
-            <ShopItemPreview item={item} username={username} displayColor={displayColor} rollRarity={rollRarity || 'Current roll'} />
+            <ShopItemPreview item={item} username={username} displayColor={displayColor} />
           </div>
           <ShopStudioPreview
-            bind:activeContext
             loadout={loadout}
             selectedItem={item}
             username={username}
             displayColor={displayColor}
-            rollRarity={rollRarity}
-            rollScore={rollScore}
             accountProfile={profile}
             profileConfig={profileConfig}
           />
@@ -133,7 +126,6 @@
   .shop-detail-isolated :global(.shop-preview-area) { height:15rem; }
   .shop-detail-preview :global(.studio-preview) { margin-top:1rem; }
   .shop-detail-preview :global(.studio-preview) { border:0; padding:0; border-radius:0; background:transparent; box-shadow:none; }
-  .shop-detail-preview :global(.context-switcher) { margin:0 0 .8rem; border-radius:4px; }
   .shop-detail-preview :global(.studio-stage) { min-height:21rem; }
   .shop-detail-info { padding:1.2rem; border-top:1px solid var(--shop-line); }
   .shop-detail-info :global(.selection-panel) { padding:0; border:0; border-radius:0; background:transparent; }

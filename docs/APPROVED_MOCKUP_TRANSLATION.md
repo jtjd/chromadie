@@ -11,10 +11,10 @@ and server-authoritative roll flow.
 
 | Mockup element | Mockup source | Production data source | Production Svelte component | Action |
 |---|---|---|---|---|
-| Ambient background | `components/ambient-background.tsx` | Canonical daily roll hex when available; otherwise the mapped signature/mood fallback; validated cosmetic background only | `src/lib/ProfileAtmosphere.svelte` + `ProfileShell.svelte` | adapt |
+| Ambient background | `components/ambient-background.tsx` | Canonical daily roll hex when available; otherwise the mapped signature/mood fallback; validated profile media/color configuration | `ProfileShell.svelte` + profile configuration | adapt |
 | Minimal chm.lol header | `app/page.tsx` top-bar markup | Current route, canonical public username URL, auth/owner predicate, existing navigation handlers | `src/lib/ProfileModeHeader.svelte` + `src/App.svelte` | translate |
 | Identity card | `components/bio-card.tsx` | `loadProfileContext()` mapped profile, published v1 configuration, earned badges, safe cosmetics, public links | `src/lib/IdentityCard.svelte` | adapt |
-| Avatar | `components/bio-card.tsx` avatar image | No public avatar field exists; existing monogram/logo-mark fallback and equipped frame/cosmetic data | `src/lib/IdentityCard.svelte` | preserve existing |
+| Avatar | `components/bio-card.tsx` avatar image | Validated public profile media with the existing monogram/logo-mark fallback and Profile Border | `src/lib/IdentityCard.svelte` + `ProfileBorderEffect.svelte` | preserve existing |
 | Display name | `components/bio-card.tsx` `profile.name`/`profile.handle` hierarchy | Safe public `targetProfile.username`; no separate display-name field | `src/lib/IdentityCard.svelte` | adapt |
 | Handle | `components/bio-card.tsx` `profile.handle` | Safe public `targetProfile.username` | `src/lib/IdentityCard.svelte` | translate |
 | Profile URL | `components/bio-card.tsx` `profile.url` | Canonical `/u/<username>` route derived from the existing route/share helper | `src/lib/IdentityCard.svelte` + `ProfileModeHeader.svelte` | adapt |
@@ -29,8 +29,8 @@ and server-authoritative roll flow.
 | Expression fallback bar | Mockup bottom music placement and selected-link intent | Published profile links or signature color when links are absent | `src/lib/ProfileMusic.svelte` + existing `ProfileExpression.svelte` data | adapt |
 | Share action | `app/page.tsx` `handleShare()` | Canonical public profile URL; existing Web Share/clipboard capability and analytics seam | `src/lib/ProfileModeHeader.svelte` | adapt |
 | Edit action | Required production owner boundary; not a public mockup feature | Existing validated draft/publish editor and owner compatibility controls | `src/lib/ProfileModeHeader.svelte` + `ProfileShell.svelte` owner detail | preserve existing |
-| Optional tilt | `components/tilt-card.tsx` | No production data; existing reduced-motion contract | `ProfileAtmosphere.svelte`/profile CSS only if subtle | reject from production |
-| Grain and restrained dark base | `app/globals.css` `.grain` and root colors | Existing design tokens and profile accent CSS variables | `ProfileAtmosphere.svelte` and profile styles | adapt |
+| Optional tilt | `components/tilt-card.tsx` | No production data; existing reduced-motion contract | profile CSS only if subtle | reject from production |
+| Grain and restrained dark base | `app/globals.css` `.grain` and root colors | Existing design tokens and profile accent CSS variables | profile styles | adapt |
 | Mobile composition | `app/page.tsx` flex/min-svh layout and component responsive styles | Same mapped profile/roll data; mobile-first Svelte layout | `ProfileModeHeader.svelte`, `ProfileShell.svelte`, and focused profile components | translate |
 
 ## Data and authority decisions

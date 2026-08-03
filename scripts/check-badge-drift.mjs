@@ -13,9 +13,11 @@ const badgeDataPath = path.join(repoRoot, 'src/lib/badgeData.js');
 const balanceConfigPath = path.join(repoRoot, 'src/lib/balanceConfig.js');
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
 const d2NameCatalogMigrationPath = path.join(repoRoot, 'supabase/migrations/20260802100000_composable_name_catalog_activation.sql');
+const profileBordersPath = path.join(repoRoot, 'src/lib/profile-border/profileBorders.js');
 
 const badgeModule = await import(pathToFileURL(badgeDataPath).href);
 const balanceConfig = await import(pathToFileURL(balanceConfigPath).href);
+const profileBorders = await import(pathToFileURL(profileBordersPath).href);
 const baseScoringSql = await readFile(baseScoringSqlPath, 'utf8');
 const finalScoringSql = await readFile(finalScoringSqlPath, 'utf8');
 const scoringSql = `${baseScoringSql}\n${finalScoringSql}`;
@@ -197,6 +199,50 @@ const d2NameByRarity = Object.fromEntries([...expectedNameRarities].map(rarity =
 }));
 const cheapestD2Name = d2NameCatalogRows.reduce((lowest, row) => row.cost < lowest.cost ? row : lowest);
 const mostExpensiveD2Name = d2NameCatalogRows.reduce((highest, row) => row.cost > highest.cost ? row : highest);
+const borderRows = [...seed.matchAll(
+  /^\('(border_[a-z0-9_]+)',\s*'([^']+)',\s*'profile_border',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)'\),?$/gm
+)].map(([, itemKey, name, cost, rendererKey, rarity, description, collection]) => ({
+  itemKey,
+  name,
+  cost: Number(cost),
+  rendererKey,
+  rarity,
+  description,
+  collection
+}));
+const expectedBorderPrices = Object.freeze({
+  border_celestial: 600000,
+  border_chroma: 450000,
+  border_crystal: 450000,
+  border_glitch: 500000,
+  border_gold: 350000,
+  border_neon: 180000,
+  border_prism: 300000,
+  border_void: 550000,
+  border_signal: 160000
+});
+const expectedBorderKeys = new Set(Object.values(profileBorders.PROFILE_BORDER_DEFINITIONS).map(definition => definition.itemKey));
+const borderKeySet = new Set(borderRows.map(row => row.itemKey));
+const borderInvalidRows = borderRows.filter(row => (
+  !expectedBorderKeys.has(row.itemKey)
+    || expectedBorderPrices[row.itemKey] !== row.cost
+    || !profileBorders.isProfileBorderKey(row.rendererKey)
+    || !expectedNameRarities.has(row.rarity)
+    || !row.description.trim()
+    || !row.collection.trim()
+));
+if (borderRows.length !== 9 || borderKeySet.size !== 9 || borderInvalidRows.length > 0) {
+  console.error('Profile Border balance/drift check failed.');
+  console.error(JSON.stringify({
+    rowCount: borderRows.length,
+    duplicateKeys: borderRows.length - borderKeySet.size,
+    invalidRows: borderInvalidRows.map(row => row.itemKey)
+  }, null, 2));
+  process.exit(1);
+}
+const borderTotalCost = borderRows.reduce((total, row) => total + row.cost, 0);
+const cheapestBorder = borderRows.reduce((lowest, row) => row.cost < lowest.cost ? row : lowest);
+const mostExpensiveBorder = borderRows.reduce((highest, row) => row.cost > highest.cost ? row : highest);
 const documentedAverageDailyEp = 54182;
 const daysFor = cost => Math.ceil(cost / documentedAverageDailyEp);
 console.log(
@@ -207,5 +253,9 @@ console.log(
     `Font ${d2NameBySlot.name_font.total.toLocaleString()}, ` +
     `Material ${d2NameBySlot.name_material.total.toLocaleString()}, ` +
     `Motion ${d2NameBySlot.name_motion.total.toLocaleString()}; ` +
-    `average-roll pacing ${daysFor(d2NameTotalCost)} days for the full set.`
+    `average-roll pacing ${daysFor(d2NameTotalCost)} days for the full set.\n` +
+    `Lean Profile Borders: ${borderRows.length} rows / ${borderTotalCost.toLocaleString()} EP; ` +
+    `cheapest ${cheapestBorder.itemKey} ${daysFor(cheapestBorder.cost)} days, ` +
+    `highest ${mostExpensiveBorder.itemKey} ${daysFor(mostExpensiveBorder.cost)} days; ` +
+    `the complete border set is ${daysFor(borderTotalCost)} days.`
 );

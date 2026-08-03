@@ -5,7 +5,6 @@
   import {
     addToast,
     authInitialized,
-    equippedItems,
     fetchInventoryState,
     fetchWalletBalance,
     isAuthenticated,
@@ -15,7 +14,6 @@
     session
   } from './stores';
   import { getBadgeMeta } from './badgeData';
-  import { getOrbShape, getRollEffect } from './cosmetics';
   import { getPercentileTier } from './rollPresentation.js';
   import { canInitiateRoll, normalizeCanonicalRoll } from './rollState.js';
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
@@ -92,10 +90,7 @@
   let replayData = null;
   let replayCanonical = null;
 
-  $: cosmetics = $equippedItems || {};
   $: fixtureRollReady = visualFixture === 'guest-onboarding' && Boolean(fixtureResult);
-  $: rollEff = getRollEffect(cosmetics);
-  $: orbEff = getOrbShape(cosmetics);
   $: rewardBadges = revealedBadges.filter(id => SYSTEM_BADGE_IDS.has(id));
   $: canReroll = Boolean($isAuthenticated && Number($rerollShards) > 0);
   $: canReplayReveal = Boolean($isAuthenticated && $profile?.is_staff && replayData && replayCanonical);
@@ -211,7 +206,7 @@
       : null;
     if (notifyProfile) {
       // This event is presentation-only. The canonical server response remains
-      // the authority for the roll and lets the profile atmosphere follow it.
+      // the authority for the roll and lets the profile color presentation follow it.
       dispatch('colorchange', { hex: displayHex, canonical: safeCanonical });
     }
   }
@@ -531,7 +526,7 @@
         <span class="profile-roll__lock-ring"></span>
       </div>
       <div class="profile-roll__preview">
-        <RollPreview effectCls={rollEff.cls} effectStyle={rollEff.style} orbCls={orbEff.cls} displayColor={displayColor} rarity={rarity || 'Common'} />
+        <RollPreview displayColor={displayColor} rarity={rarity || 'Common'} />
       </div>
       <div class="profile-roll__rolling-copy">
         <div class="profile-roll__reading-line"><span aria-hidden="true"></span><p class="profile-roll__eyebrow">{revealStatus}</p></div>
@@ -564,7 +559,7 @@
     <div class={'profile-roll__result profile-roll__result--' + revealIntensity + (freshReveal ? ' profile-roll__result--fresh' : '')} role="status" aria-live="polite">
       <div class="profile-roll__result-head">
         <div class="profile-roll__preview">
-          <RollPreview effectCls={rollEff.cls} effectStyle={rollEff.style} orbCls={orbEff.cls} displayColor={displayColor} rarity={rarity || 'Common'} />
+        <RollPreview displayColor={displayColor} rarity={rarity || 'Common'} />
         </div>
         <div class="profile-roll__result-copy">
           <p class="profile-roll__eyebrow">{quiet ? 'Daily color' : 'Today’s color'}</p>
@@ -740,7 +735,7 @@
   .profile-roll__button--share { border-color: color-mix(in srgb, var(--profile-accent) 58%, transparent); background: color-mix(in srgb, var(--profile-accent) 16%, transparent); color: color-mix(in srgb, var(--profile-accent) 74%, white); }
   .profile-roll__button--reroll { min-height: 2.35rem; padding-inline: var(--space-4); border-color: color-mix(in srgb, var(--color-warning) 50%, transparent); background: color-mix(in srgb, var(--color-warning) 12%, transparent); color: var(--color-warning); font-size: var(--type-label); }
   .profile-roll__preview { display: grid; place-items: center; min-width: 9rem; }
-  .profile-roll__preview :global(.roll-effect-wrapper) { transform: scale(0.72); transform-origin: center; }
+  .profile-roll__preview :global(.roll-preview-frame) { transform: scale(0.72); transform-origin: center; }
   .profile-roll__rolling-copy h3,
   .profile-roll__story h3,
   .profile-roll__next h3,
@@ -812,7 +807,7 @@
   :global(.profile-roll--integrated) .profile-roll__result { gap: var(--space-4); }
   :global(.profile-roll--integrated) .profile-roll__result-head { grid-template-columns: minmax(7rem, 9rem) 1fr; gap: var(--space-5); }
   :global(.profile-roll--integrated) .profile-roll__preview { min-width: 7rem; }
-  :global(.profile-roll--integrated) .profile-roll__preview :global(.roll-effect-wrapper) { transform: scale(0.64); }
+  :global(.profile-roll--integrated) .profile-roll__preview :global(.roll-preview-frame) { transform: scale(0.64); }
   :global(.profile-roll--integrated) .profile-roll__score-row strong { font-size: clamp(2rem, 5vw, 3.5rem); }
   :global(.profile-roll--integrated) .profile-roll__story,
   :global(.profile-roll--integrated) .profile-roll__next { padding: var(--space-4) 0 0; border: 0; border-top: 1px solid var(--color-line-subtle); border-radius: 0; background: transparent; }
@@ -870,12 +865,12 @@
   .profile-roll__lock-ring { position: absolute; top: 50%; left: 28%; width: 8rem; height: 8rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 82%, white); border-radius: 50%; opacity: 0; transform: translate(-50%, -50%) scale(0.45); }
   .profile-roll__rolling > :not(.profile-roll__scan-field) { position: relative; z-index: 1; }
   .profile-roll__rolling .profile-roll__preview { width: 7.5rem; min-width: 7.5rem; height: 7.5rem; }
-  .profile-roll__rolling .profile-roll__preview :global(.roll-effect-wrapper) { width: 7.5rem; height: 7.5rem; transform: none; }
+  .profile-roll__rolling .profile-roll__preview :global(.roll-preview-frame) { width: 7.5rem; height: 7.5rem; transform: none; }
   .profile-roll__rolling .profile-roll__preview :global(.final-color-display) { width: 7.5rem; height: 7.5rem; }
-  .profile-roll__rolling[data-reveal-stage='0'] .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-charge 0.42s ease-in-out infinite; }
-  .profile-roll__rolling[data-reveal-stage='1'] .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-charge 0.62s ease-in-out infinite; }
-  .profile-roll__rolling[data-reveal-stage='2'] .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-narrow 0.82s var(--motion-ease-emphasis) both; }
-  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-lock 0.48s var(--motion-ease-emphasis) both; }
+  .profile-roll__rolling[data-reveal-stage='0'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-charge 0.42s ease-in-out infinite; }
+  .profile-roll__rolling[data-reveal-stage='1'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-charge 0.62s ease-in-out infinite; }
+  .profile-roll__rolling[data-reveal-stage='2'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-narrow 0.82s var(--motion-ease-emphasis) both; }
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-lock 0.48s var(--motion-ease-emphasis) both; }
   .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__lock-ring { animation: profile-roll-lock-ring 0.7s ease-out both; }
   .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__scan-orbit,
   .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__spectrum-wash { animation-play-state: paused; opacity: 0.18; }
@@ -910,7 +905,7 @@
   .profile-roll__result--fresh .profile-roll__result-copy,
   .profile-roll__result--fresh .profile-roll__condition-rail { animation: profile-roll-result-enter 0.42s var(--motion-ease-emphasis) both; }
   .profile-roll__result--fresh .profile-roll__condition-rail { animation-delay: 0.16s; }
-  .profile-roll__result--fresh .profile-roll__preview :global(.roll-effect-wrapper) { animation: profile-roll-result-impact 0.62s var(--motion-ease-emphasis) both; }
+  .profile-roll__result--fresh .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-result-impact 0.62s var(--motion-ease-emphasis) both; }
   .profile-roll__result--medium { --result-impact: 1.16; --result-brightness: 1.5; }
   .profile-roll__result--high { --result-impact: 1.24; --result-brightness: 1.8; }
 
@@ -921,7 +916,7 @@
     .profile-roll__next { align-items: flex-start; flex-direction: column; }
     .profile-roll__rolling { grid-template-columns: 1fr; justify-items: center; min-height: 17rem; gap: 0.4rem; }
     .profile-roll__rolling .profile-roll__preview { width: 7rem; min-width: 7rem; height: 7rem; }
-    .profile-roll__rolling .profile-roll__preview :global(.roll-effect-wrapper),
+    .profile-roll__rolling .profile-roll__preview :global(.roll-preview-frame),
     .profile-roll__rolling .profile-roll__preview :global(.final-color-display) { width: 7rem; height: 7rem; }
     .profile-roll__rolling-copy { width: 100%; text-align: center; }
     .profile-roll__reading-line { justify-content: center; }
@@ -953,10 +948,10 @@
     .profile-roll__spectrum-wash,
     .profile-roll__scan-orbit,
     .profile-roll__lock-ring,
-    .profile-roll__rolling .profile-roll__preview :global(.roll-effect-wrapper),
+    .profile-roll__rolling .profile-roll__preview :global(.roll-preview-frame),
     .profile-roll__result--fresh .profile-roll__result-copy,
     .profile-roll__result--fresh .profile-roll__condition-rail,
-    .profile-roll__result--fresh .profile-roll__preview :global(.roll-effect-wrapper) { animation: none; }
+    .profile-roll__result--fresh .profile-roll__preview :global(.roll-preview-frame) { animation: none; }
     .profile-roll__condition--revealing { opacity: 1; transform: none; }
     .profile-roll__scan-field { opacity: 0.45; }
   }

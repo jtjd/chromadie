@@ -8,7 +8,6 @@
 
   export let text = '';
   export let rendererKey = '';
-  export let legacyKey = '';
   export let loadout = null;
   export let fontKey = '';
   export let materialKey = '';
@@ -77,7 +76,7 @@
     materialKey: explicitMaterialKey,
     motionKey: explicitMotionKey
   });
-  $: safeRendererKey = hasComposableKeys ? 'plain' : resolveNameRendererKey(rendererKey || legacyKey || 'plain');
+  $: safeRendererKey = hasComposableKeys ? 'plain' : resolveNameRendererKey(rendererKey || 'plain');
   $: activeFontKey = hasComposableKeys
     ? explicitFontKey || 'soft-grotesk'
     : getNameRendererDefinition(safeRendererKey).font;

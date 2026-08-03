@@ -1,6 +1,5 @@
 <script>
   import CompactRollPreview from './CompactRollPreview.svelte';
-  import { getOrbShape, getRollEffect } from './cosmetics.js';
   import { normalizeHexColor } from './utils.js';
 
   /** @type {any} */
@@ -9,9 +8,6 @@
 
   $: hasResult = Boolean(roll?.hexCode && roll?.score !== null && roll?.score !== undefined);
   $: color = normalizeHexColor(roll?.hexCode, '#8B7CF6');
-  $: cosmetics = roll?.equippedCosmetics || {};
-  $: effect = getRollEffect(cosmetics);
-  $: orb = getOrbShape(cosmetics);
   $: label = roll?.identity || 'Latest color';
   $: rank = roll?.rank ? `#${roll.rank} today` : 'Not ranked';
 
@@ -33,12 +29,9 @@
           <CompactRollPreview
             displayColor={color}
             rarity={roll.rarity || 'Common'}
-            effectCls={effect.cls}
-            effectStyle={effect.style}
-            orbCls={orb.cls}
             size="6.25rem"
             scale={0.7}
-            referenceShape={true}
+            facetedGlyph={true}
             {staticEffect}
           />
         </div>

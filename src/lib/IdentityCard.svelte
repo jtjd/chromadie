@@ -12,8 +12,6 @@
   export let staff = false;
   export let founder = false;
   export let accentColor = '#8B7CF6';
-  export let frameClass = '';
-  export let frameStyle = '';
   export let avatarSrc = '';
   export let rollState = 'idle';
   export let showToday = true;
@@ -21,7 +19,6 @@
   export let showAvatarMark = true;
   export let avatarLoading = 'eager';
   export let headingTag = 'h1';
-  export let nameRendererKey = '';
   export let nameRendererLoadout = null;
   export let nameRendererContext = 'profile';
   export let nameRendererMode = 'animated';
@@ -48,7 +45,7 @@
 
 <section class={'identity-card identity-card--roll-' + rollState} style={'--identity-accent: ' + accentColor + ';'} aria-labelledby={titleId}>
   <div class="identity-card__person">
-    <div class={'identity-card__avatar ' + frameClass} style={frameStyle}>
+    <div class="identity-card__avatar">
       {#if avatarSrc && failedAvatarSource !== avatarSrc}
         <img class="identity-card__avatar-media" src={avatarSrc} alt={safeDisplayName + ' avatar'} loading={avatarLoading === 'lazy' ? 'lazy' : 'eager'} decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
       {:else}
@@ -60,10 +57,9 @@
 
     <div class="identity-card__copy">
       <div class="identity-card__name-row">
-        {#if nameRendererKey || nameRendererLoadout}
+        {#if nameRendererLoadout}
           <NameEffectCanvas
             text={safeDisplayName}
-            rendererKey={nameRendererKey}
             loadout={nameRendererLoadout}
             todayColor={nameRendererTodayColor || accentColor}
             recentColors={nameRendererRecentColors}

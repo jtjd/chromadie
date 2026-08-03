@@ -22,7 +22,6 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.doesNotMatch(app, /<ProfileModeHeader/);
   assert.match(app, /isProfileMode=\{profileModeVisible\}/);
   assert.match(app, /on:edit=\{handleProfileHeaderEdit\}/);
-  assert.doesNotMatch(app, /<ProfileAtmosphere/);
   assert.match(app, /app-main--site/);
   assert.match(app, /setRoute\('profile', \{ username:/);
   assert.match(app, /handleInternalLinkClick/);

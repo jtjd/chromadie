@@ -56,7 +56,7 @@ const ownerProfile = {
   username: 'NeonUser',
   lifetime_ep: 12345,
   total_rolls: 8,
-  equipped_cosmetics: { frame: 'frame-basic' },
+  equipped_cosmetics: { profile_border: 'border_prism' },
   equipped_badges: ['ach_first_roll'],
   ep_spent: 999,
   email: 'private@example.com'

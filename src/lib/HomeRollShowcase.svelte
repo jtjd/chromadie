@@ -2,11 +2,9 @@
   import { createEventDispatcher } from 'svelte';
   import CompactRollPreview from './CompactRollPreview.svelte';
   import HomeMusicPreview from './HomeMusicPreview.svelte';
-  import ProfileAtmosphere from './ProfileAtmosphere.svelte';
   import IdentityCard from './IdentityCard.svelte';
+  import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import HomeDemoRoll from './HomeDemoRoll.svelte';
-  import { shopItems } from './stores';
-  import { getCosmeticEffect, getOrbShape, getProfileAtmosphereEffect, getProfileBg, getRollEffect } from './cosmetics';
 
   export let isAuthenticated = false;
 
@@ -36,26 +34,10 @@
   ];
 
   const previewLoadout = {
-    profile_bg: 'bg_aurora',
-    profile_atmosphere: 'bg_fireflies',
     profile_border: 'border_celestial',
-    frame: 'frame_holo',
-    name_effect: 'name_prism_atelier',
-    orb_shape: 'orb_hexagon',
-    roll_effect: 'roll_smoke'
-  };
-
-  function classFallback(effect, cls) {
-    return effect?.cls || effect?.style ? effect : { cls, style: '' };
-  }
-
-  $: previewCosmetics = $shopItems && {
-    background: classFallback(getProfileBg(previewLoadout), 'home-showcase__cosmetic-background--fallback'),
-    atmosphere: getProfileAtmosphereEffect(previewLoadout) || 'fireflies',
-    border: classFallback(getCosmeticEffect(previewLoadout, 'profile_border'), 'border-celestial-anim'),
-    frame: classFallback(getCosmeticEffect(previewLoadout, 'frame'), 'frame_holo'),
-    orb: classFallback(getOrbShape(previewLoadout), 'orb-shape-hexagon'),
-    roll: classFallback(getRollEffect(previewLoadout), 'roll-smoke-anim')
+    name_font: 'editorial-serif',
+    name_material: 'chroma-glass',
+    name_motion: 'daily-pulse'
   };
 </script>
 
@@ -66,20 +48,8 @@
   </header>
 
   <div class="home-showcase__stage">
-    {#if previewCosmetics.atmosphere}
-      <ProfileAtmosphere
-        canvasOnly={true}
-        accent={previewProfile.accentColor}
-        secondaryAccent="#9D8CFF"
-        effect={previewCosmetics.atmosphere}
-      />
-    {/if}
-
     <div class="home-showcase__profile">
-      <div class={'home-showcase__profile-boundary ' + previewCosmetics.border.cls} style={previewCosmetics.border.style}>
-        {#if previewCosmetics.background.cls || previewCosmetics.background.style}
-          <div class={'home-showcase__cosmetic-background ' + previewCosmetics.background.cls} style={previewCosmetics.background.style} aria-hidden="true"></div>
-        {/if}
+      <ProfileBorderEffect borderKey={previewLoadout.profile_border} compact={true} className="home-showcase__profile-boundary">
         <div class="home-showcase__identity" inert>
           <IdentityCard
             titleId="home-featured-profile-title"
@@ -90,15 +60,13 @@
             badges={previewBadges}
             avatarSrc="/avatars/mara-dog-v1.jpg"
             accentColor={previewProfile.accentColor}
-            nameRendererKey={previewLoadout.name_effect}
+            nameRendererLoadout={{ fontKey: previewLoadout.name_font, materialKey: previewLoadout.name_material, motionKey: previewLoadout.name_motion }}
             nameRendererContext="profile"
             nameRendererMode="static-signature"
-            frameClass={previewCosmetics.frame.cls}
-            frameStyle={previewCosmetics.frame.style}
             showToday={false}
           />
         </div>
-      </div>
+      </ProfileBorderEffect>
     </div>
     <HomeMusicPreview accent={previewProfile.accentColor} />
   </div>
@@ -128,9 +96,6 @@
           <CompactRollPreview
             displayColor="#B7FD4D"
             rarity="Rare"
-            effectCls={previewCosmetics.roll.cls}
-            effectStyle={previewCosmetics.roll.style}
-            orbCls={previewCosmetics.orb.cls}
             size="4.5rem"
             scale={0.42}
           />
@@ -234,7 +199,7 @@
     width: min(100%, 46rem);
   }
 
-  .home-showcase__profile-boundary {
+  :global(.home-showcase__profile-boundary) {
     position: relative;
     overflow: hidden;
     border-radius: 0.75rem;
@@ -257,7 +222,7 @@
     background-size: 210px 210px, 260px 260px, 100% 100%;
   }
 
-  .home-showcase__profile-boundary :global(.identity-card) {
+  :global(.home-showcase__profile-boundary) :global(.identity-card) {
     position: relative;
     z-index: 2;
     border: 0;
