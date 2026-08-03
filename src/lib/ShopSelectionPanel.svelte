@@ -1,6 +1,6 @@
 <script>
   import ShopItemPreview from './ShopItemPreview.svelte';
-  import { SHOP_SLOT_LABELS, getCatalogStatus, getShopAccessLabel, getShopAccessTier, getShopNameSubtype, isShopCosmetic } from './shopCatalog';
+  import { getCatalogStatus, getShopAccessLabel, getShopAccessTier, isShopCosmetic } from './shopCatalog';
   import { createEventDispatcher } from 'svelte';
 
   /** @type {any} */
@@ -19,7 +19,6 @@
 
   $: accessTier = item ? getShopAccessTier(item) : 'earned';
   $: catalogStatus = item ? getCatalogStatus(item) : 'active';
-  $: subtype = item && getShopNameSubtype(item);
   $: purchaseLabel = !item
     ? ''
     : !isSignedIn
@@ -41,10 +40,9 @@
       <p>Your current equipped look is shown above. Choosing an item changes only this temporary preview.</p>
     </div>
   {:else}
-    <div class="selection-panel__eyebrow">Product detail · {subtype === 'name_font' ? 'Font' : subtype === 'name_material' ? 'Material' : subtype === 'name_motion' ? 'Motion' : SHOP_SLOT_LABELS[item.slot] || item.slot}</div>
     <div class="selection-panel__heading">
       <div>
-        <span>{item.collection || `${item.rarity} cosmetic`}</span>
+        <span>{item.collection || 'Profile piece'}</span>
         <h2 id={`shop-product-title-${item.item_key}`}>{item.name}</h2>
       </div>
       <span class="selection-panel__rarity rarity-{(item.rarity || 'Common').toLowerCase()}" aria-label={`Rarity: ${item.rarity || 'Common'}`}>{item.rarity || 'Common'}</span>
@@ -83,7 +81,7 @@
 
     {#if relatedItems.length}
       <div class="selection-panel__related">
-        <div><span>More from {item.collection}</span><strong>Explore the set</strong></div>
+        <div><span>More from {item.collection || 'this collection'}</span><strong>Keep exploring</strong></div>
         <div class="selection-panel__related-list">
           {#each relatedItems as related (related.item_key)}
             <button type="button" on:click={() => dispatch('select', related)}>
@@ -100,28 +98,28 @@
 <style>
   .selection-panel { padding:0; border:0; background:transparent; }
   .selection-panel__empty { display:grid; gap:7px; min-height:150px; align-content:center; }
-  .selection-panel__empty > span, .selection-panel__eyebrow { color:#858690; font:700 .7rem/1.2 var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
-  .selection-panel__empty strong { color:#eceaf3; font:700 1.05rem/1.15 var(--font-display); }
-  .selection-panel__empty p { max-width:32rem; margin:0; color:#858795; font-size:.72rem; line-height:1.5; }
-  .selection-panel__heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-top:9px; }
+  .selection-panel__empty > span { color:var(--shop-faint, #858690); font:700 .72rem/1.2 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.1em; text-transform:uppercase; }
+  .selection-panel__empty strong { color:var(--shop-ink, #eceaf3); font:700 1.15rem/1.15 var(--shop-display, var(--font-display)); }
+  .selection-panel__empty p { max-width:32rem; margin:0; color:var(--shop-faint, #858795); font-size:.82rem; line-height:1.5; }
+  .selection-panel__heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-top:0; }
   .selection-panel__heading > div { min-width:0; }
-  .selection-panel__heading > div > span { color:#8c889c; font-size:.66rem; text-transform:uppercase; letter-spacing:.08em; }
-  .selection-panel h2 { overflow:hidden; margin:5px 0 0; color:#f2f0f7; font:720 2rem/1 var(--font-display); letter-spacing:-.04em; text-overflow:ellipsis; white-space:nowrap; }
-  .selection-panel__rarity { flex:0 0 auto; padding:6px 8px; border:1px solid; border-radius:4px; font:600 .7rem var(--font-mono-stack); text-transform:uppercase; }
+  .selection-panel__heading > div > span { color:var(--shop-faint, #8c889c); font:.74rem var(--shop-mono, var(--font-mono-stack)); text-transform:uppercase; letter-spacing:.08em; }
+  .selection-panel h2 { overflow:hidden; margin:7px 0 0; color:var(--shop-ink, #f2f0f7); font:720 clamp(2.1rem,5vw,2.8rem)/.96 var(--shop-display, var(--font-display)); letter-spacing:-.04em; text-overflow:ellipsis; white-space:nowrap; }
+  .selection-panel__rarity { flex:0 0 auto; padding:7px 9px; border:1px solid; border-radius:4px; font:600 .74rem var(--shop-mono, var(--font-mono-stack)); text-transform:uppercase; }
   .selection-panel__rarity.rarity-common { border-color:#555a66; background:#15171c; color:#cdd0d8; }
   .selection-panel__rarity.rarity-uncommon { border-color:#597b70; background:#111b18; color:#b6e5d2; }
   .selection-panel__rarity.rarity-rare { border-color:#5875a4; background:#111923; color:#b7d2ff; }
   .selection-panel__rarity.rarity-epic { border-color:#745c9e; background:#191522; color:#dcc3ff; }
   .selection-panel__rarity.rarity-anomaly { border-color:#8e673d; background:#201811; color:#ffd09a; }
   .selection-panel__rarity.rarity-mythic { border-color:#8d4869; background:#21131b; color:#ffb3d2; }
-  .selection-panel__description { margin:13px 0 16px; color:#aaa8b0; font-size:.9rem; line-height:1.6; }
+  .selection-panel__description { margin:1rem 0 1.25rem; color:var(--shop-muted, #aaa8b0); font-size:.96rem; line-height:1.6; }
   .selection-panel__meta { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
   .selection-panel__meta > div { min-width:0; padding:9px; border:1px solid rgba(255,255,255,.07); background:#111319; }
   .selection-panel__meta span, .selection-panel__meta strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .selection-panel__meta span { color:#747685; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; }
-  .selection-panel__meta strong { margin-top:4px; color:#e1dfea; font:650 .94rem/1.1 var(--font-mono-stack); }
-  .selection-panel__actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:18px; }
-  .selection-panel__primary, .selection-panel__try-on, .selection-panel__reset { display:flex; align-items:center; justify-content:center; min-height:46px; border-radius:5px; cursor:pointer; font:700 .78rem var(--font-display); text-align:center; text-decoration:none; }
+  .selection-panel__meta span { color:var(--shop-faint, #747685); font:.72rem var(--shop-mono, var(--font-mono-stack)); text-transform:uppercase; letter-spacing:.06em; }
+  .selection-panel__meta strong { margin-top:5px; color:#e1dfea; font:650 1rem/1.1 var(--shop-mono, var(--font-mono-stack)); }
+  .selection-panel__actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:1.35rem; }
+  .selection-panel__primary, .selection-panel__try-on, .selection-panel__reset { display:flex; align-items:center; justify-content:center; min-height:3rem; border-radius:var(--radius-sm, 5px); cursor:pointer; font:700 .8rem var(--shop-display, var(--font-display)); text-align:center; text-decoration:none; }
   .selection-panel__try-on { border:1px solid #4a4d57; background:#121419; color:#d3d0d8; }
   .selection-panel__try-on:hover, .selection-panel__try-on:focus-visible { border-color:#7b839b; color:#fff; }
   .selection-panel__primary { border:1px solid #656b80; background:#efede7; color:#101116; }
@@ -133,8 +131,8 @@
   .selection-panel__confirmation strong { color:#ded8ff; font:700 .72rem var(--font-mono-stack); }
   .selection-panel__related { margin-top:18px; padding-top:15px; border-top:1px solid rgba(255,255,255,.07); }
   .selection-panel__related > div:first-child { display:flex; justify-content:space-between; gap:10px; margin-bottom:9px; }
-  .selection-panel__related > div:first-child span { color:#777989; font-size:.66rem; text-transform:uppercase; letter-spacing:.07em; }
-  .selection-panel__related > div:first-child strong { color:#c9c2e8; font-size:.68rem; }
+  .selection-panel__related > div:first-child span { color:var(--shop-faint, #777989); font:.72rem var(--shop-mono, var(--font-mono-stack)); text-transform:uppercase; letter-spacing:.07em; }
+  .selection-panel__related > div:first-child strong { color:#c9c2e8; font-size:.76rem; }
   .selection-panel__related-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
   .selection-panel__related-list button { min-width:0; padding:5px; border:1px solid rgba(255,255,255,.06); background:#111319; color:inherit; cursor:pointer; text-align:left; }
   .selection-panel__related-list button:hover { border-color:rgba(202,187,255,.3); }

@@ -11,7 +11,6 @@ async function readProjectFile(path) {
 test('Shop Home has the Phase C editorial order without redundant continuation cards', async () => {
   const source = await readProjectFile('src/lib/ShopHome.svelte');
   const order = [
-    'ShopCategoryNav',
     'shop-todays-edit',
     'shop-curated-title',
     'shop-home-links'
@@ -19,6 +18,7 @@ test('Shop Home has the Phase C editorial order without redundant continuation c
 
   assert.ok(order.every(index => index >= 0));
   assert.deepEqual([...order].sort((a, b) => a - b), order);
+  assert.doesNotMatch(source, /<ShopCategoryNav/);
   assert.match(source, /todayEditItem/);
   assert.match(source, /ShopItemPreview/);
   assert.match(source, /currentRoll/);
@@ -38,13 +38,15 @@ test('shop reference hierarchy uses live account metadata and real catalog count
   assert.match(shop, /ownedCatalogCount/);
   assert.match(shop, /fittingRoom\.balance\.toLocaleString\(\)\} EP/);
   assert.doesNotMatch(shop, /Admin/);
-  assert.match(home, /Today’s color, <span>made wearable\.<\/span>/);
-  assert.match(home, /Recommended <span>for today\.<\/span>/);
-  assert.match(home, /count: filterShopItems/);
+  assert.match(home, /Make today’s color <span>yours\.<\/span>/);
+  assert.match(home, /Carry it <span>forward\.<\/span>/);
+  assert.doesNotMatch(home, /count: filterShopItems/);
   assert.match(home, /slice\(0, 5\)/);
-  assert.match(browse, /More identity\. <span>Same renderer\.<\/span>/);
+  assert.match(browse, /Build your profile <span>name\.<\/span>/);
+  assert.doesNotMatch(browse, /Same renderer|shop-browse-stats/);
   assert.match(browse, /nameSubtypeSections/);
   assert.match(browse, /variant="subtype"/);
+  assert.match(browse, /showCounts={false}/);
   assert.match(studioPreview, /account\.username/);
   assert.match(studioPreview, /account\.display_name/);
   assert.match(studioPreview, /username=\{accountUsername\}/);
@@ -64,7 +66,8 @@ test('Browse uses category navigation, a contained filter panel, a grid, and one
   assert.match(source, /<ShopContextualPreview/);
   assert.match(source, /on:preview/);
   assert.doesNotMatch(source, /shop-browse-filters/);
-  assert.match(source, /grid-template-columns:repeat\(3/);
+  assert.match(source, /showCounts=\{false\}/);
+  assert.match(source, /grid-template-columns:repeat\(2/);
   assert.match(source, /@media \(max-width: 520px\)/);
 });
 
@@ -81,7 +84,9 @@ test('product cards keep product decisions in detail and expose a readable hiera
   assert.match(source, /item-buy-button/);
   assert.match(source, /Confirm purchase/);
   assert.doesNotMatch(source, /primary-item-action|secondary-item-action/);
-  assert.match(source, /font:650 1rem\/1 var\(--font-mono-stack\)/);
+  assert.match(source, /height:166px/);
+  assert.match(source, /font:650 1\.05rem\/1 var\(--shop-mono/);
+  assert.doesNotMatch(source, /preview-cue/);
 });
 
 test('card purchases reuse the existing confirmation and RPC boundary', async () => {
@@ -107,6 +112,9 @@ test('Product Detail is a drawer/sheet with existing purchase and focus boundari
   assert.match(source, /width:min\(44rem,100%\)/);
   assert.match(source, /max-height:94dvh/);
   assert.match(source, /on:tryon/);
+  assert.match(source, /role="tablist"/);
+  assert.match(source, />On your profile<\/button>/);
+  assert.match(source, /previewMode/);
   assert.match(shop, /supabase\.rpc\('purchase_item'/);
   assert.match(shop, /fetchInventoryState/);
   assert.match(shop, /fetchWalletBalance/);
@@ -136,7 +144,8 @@ test('contextual shop preview delegates to the shared Studio and Name renderer p
   const itemPreview = await readProjectFile('src/lib/ShopItemPreview.svelte');
   const identity = await readProjectFile('src/lib/IdentityCard.svelte');
   assert.match(contextual, /<ShopStudioPreview/);
-  assert.match(contextual, /Temporary preview/);
+  assert.match(contextual, /Nothing is saved until you choose it/);
+  assert.match(contextual, />On your profile<\/button>/);
   assert.match(studio, /nameRendererLoadout/);
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(itemPreview, /<NameEffectCanvas/);

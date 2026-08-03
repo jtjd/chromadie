@@ -28,6 +28,7 @@
   let closeButton;
   let previouslyFocusedElement = null;
   let previousBodyOverflow = '';
+  let previewMode = 'isolated';
 
   $: username = profile?.display_name || profile?.username || 'Your profile';
 
@@ -73,23 +74,32 @@
   <div class="shop-detail-backdrop" role="presentation" on:click={() => dispatch('close')}>
     <dialog open class="shop-detail-dialog" bind:this={dialogElement} aria-modal="true" aria-labelledby={`shop-product-title-${item.item_key}`} aria-describedby={`shop-product-description-${item.item_key}`} on:click|stopPropagation>
       <header class="shop-detail-header">
-        <span>Product detail · {item.collection || 'Chromadie catalog'}</span>
+        <span>{item.collection || 'Chromadie catalog'}</span>
         <button bind:this={closeButton} type="button" class="shop-detail-close" aria-label="Close product detail" on:click={() => dispatch('close')}>×</button>
       </header>
       <div class="shop-detail-body">
         <div class="shop-detail-preview">
-          <div class="shop-detail-isolated">
-            <span>Item preview</span>
-            <ShopItemPreview item={item} username={username} displayColor={displayColor} />
+          <div class="shop-detail-preview-head">
+            <span class="shop-eyebrow">Preview</span>
+            <div class="shop-detail-preview-toggle" role="tablist" aria-label="Product preview">
+              <button type="button" role="tab" aria-selected={previewMode === 'isolated'} class:active={previewMode === 'isolated'} on:click={() => previewMode = 'isolated'}>Item</button>
+              <button type="button" role="tab" aria-selected={previewMode === 'profile'} class:active={previewMode === 'profile'} on:click={() => previewMode = 'profile'}>On your profile</button>
+            </div>
           </div>
-          <ShopStudioPreview
-            loadout={loadout}
-            selectedItem={item}
-            username={username}
-            displayColor={displayColor}
-            accountProfile={profile}
-            profileConfig={profileConfig}
-          />
+          {#if previewMode === 'isolated'}
+            <div class="shop-detail-primary-preview">
+              <ShopItemPreview item={item} username={username} displayColor={displayColor} />
+            </div>
+          {:else}
+            <ShopStudioPreview
+              loadout={loadout}
+              selectedItem={item}
+              username={username}
+              displayColor={displayColor}
+              accountProfile={profile}
+              profileConfig={profileConfig}
+            />
+          {/if}
         </div>
         <div class="shop-detail-info">
           <ShopSelectionPanel
@@ -116,20 +126,24 @@
 <style>
   .shop-detail-backdrop { position:fixed; inset:0; z-index:100; display:flex; justify-content:flex-end; background:rgba(4,5,7,.78); }
   .shop-detail-dialog { position:relative; inset:auto; display:block; flex:0 0 auto; width:min(44rem,100%); height:100%; max-height:none; margin:0; padding:0; overflow:auto; overscroll-behavior:contain; border:0; border-left:1px solid #41444e; border-radius:0; background:#0b0d11; color:#f2f0eb; box-shadow:-1.5rem 0 5rem rgba(0,0,0,.36); }
-  .shop-detail-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; min-height:3.4rem; padding:.6rem .9rem .6rem 1.1rem; border-bottom:1px solid var(--shop-line); background:#111319; color:#92939c; font:.7rem var(--font-mono-stack); letter-spacing:.05em; text-transform:uppercase; }
+  .shop-detail-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; min-height:3.4rem; padding:.6rem .9rem .6rem 1.1rem; border-bottom:1px solid var(--shop-line); background:#111319; color:#92939c; font:.76rem var(--shop-mono, var(--font-mono-stack)); letter-spacing:.05em; text-transform:uppercase; }
+  .shop-eyebrow { color:var(--shop-faint, #858690); font:600 .72rem/1.3 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.13em; text-transform:uppercase; }
   .shop-detail-close { display:grid; width:2.35rem; height:2.35rem; place-items:center; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#f2f0eb; font-size:1.3rem; cursor:pointer; }
   .shop-detail-close:hover, .shop-detail-close:focus-visible { border-color:#9ca3b8; background:#20232b; }
   .shop-detail-body { display:grid; grid-template-columns:1fr; }
-  .shop-detail-preview { min-height:24rem; display:flex; align-items:stretch; flex-direction:column; padding:1rem; background:#07080b; }
-  .shop-detail-isolated { display:grid; gap:.45rem; width:100%; min-width:0; }
-  .shop-detail-isolated > span { color:#858690; font:.65rem var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
-  .shop-detail-isolated :global(.shop-preview-area) { height:15rem; }
-  .shop-detail-preview :global(.studio-preview) { margin-top:1rem; }
+  .shop-detail-preview { min-height:24rem; display:flex; align-items:stretch; flex-direction:column; gap:.85rem; padding:1.15rem; background:#07080b; }
+  .shop-detail-preview-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .shop-detail-preview-toggle { display:flex; gap:3px; width:max-content; padding:3px; border:1px solid #343740; border-radius:var(--radius-sm); background:#0d0f14; }
+  .shop-detail-preview-toggle button { min-height:2.15rem; padding:0 .75rem; border:1px solid transparent; border-radius:4px; background:transparent; color:#858892; cursor:pointer; font:.72rem var(--shop-mono, var(--font-mono-stack)); }
+  .shop-detail-preview-toggle button:hover, .shop-detail-preview-toggle button:focus-visible { border-color:#aeb5e5; color:#fff; }
+  .shop-detail-preview-toggle button.active { background:#1d2027; color:var(--shop-accent); }
+  .shop-detail-primary-preview { display:grid; min-height:21rem; place-items:center; }
+  .shop-detail-primary-preview :global(.shop-preview-area) { height:16rem; border-color:#393d46; background:#090b0f; }
   .shop-detail-preview :global(.studio-preview) { border:0; padding:0; border-radius:0; background:transparent; box-shadow:none; }
   .shop-detail-preview :global(.studio-stage) { min-height:21rem; }
   .shop-detail-info { padding:1.2rem; border-top:1px solid var(--shop-line); }
   .shop-detail-info :global(.selection-panel) { padding:0; border:0; border-radius:0; background:transparent; }
   .shop-detail-info :global(.selection-panel__meta > div) { border-radius:4px; background:#111319; }
-  @media (max-width: 760px) { .shop-detail-backdrop { align-items:end; padding:0; } .shop-detail-dialog { width:100%; height:auto; max-height:94dvh; border-top:1px solid #41444e; border-left:0; border-radius:8px 8px 0 0; } .shop-detail-preview { min-height:17rem; padding:.75rem; } .shop-detail-preview :global(.studio-stage) { min-height:14rem; } .shop-detail-info { padding:.85rem; } }
-  @media (max-width: 390px) { .shop-detail-preview { min-height:14rem; } .shop-detail-preview :global(.studio-stage) { min-height:11rem; } }
+  @media (max-width: 760px) { .shop-detail-backdrop { align-items:end; padding:0; } .shop-detail-dialog { width:100%; height:auto; max-height:94dvh; border-top:1px solid #41444e; border-left:0; border-radius:8px 8px 0 0; } .shop-detail-preview { min-height:17rem; padding:.85rem; } .shop-detail-preview-head { align-items:flex-start; flex-direction:column; } .shop-detail-preview-toggle { width:100%; } .shop-detail-preview-toggle button { flex:1; } .shop-detail-primary-preview { min-height:14rem; } .shop-detail-primary-preview :global(.shop-preview-area) { height:13rem; } .shop-detail-preview :global(.studio-stage) { min-height:14rem; } .shop-detail-info { padding:.85rem; } }
+  @media (max-width: 390px) { .shop-detail-preview { min-height:14rem; } .shop-detail-primary-preview { min-height:11rem; } .shop-detail-primary-preview :global(.shop-preview-area) { height:10rem; } .shop-detail-preview :global(.studio-stage) { min-height:11rem; } }
 </style>

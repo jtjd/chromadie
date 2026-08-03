@@ -2,6 +2,19 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Make the shop easier to scan without changing its game boundary
+
+The first shop improvement slice keeps the existing Home, Browse, Collection,
+Studio, Product Detail, purchase, and temporary try-on architecture. Home now
+leads with one daily-color edit, a compact current-profile identity strip, and
+one clear detail action rather than a second full profile preview. Browse keeps
+its category, subtype, search, sort, filter, and quick-buy behavior, but uses
+larger effect-first cards in a two-column desktop grid and removes technical
+renderer/count copy. Product Detail mounts one preview at a time through an
+Item / On your profile toggle, preserving focus trapping, Escape, purchase,
+try-on, and related-item behavior. No schema, RPC, catalog, price, or RLS
+changes were required.
+
 ## 2026-08-03 — Keep the winner link quiet and add a useful personal signal
 
 The highest-roll identity block is already a link, so the avatar and username

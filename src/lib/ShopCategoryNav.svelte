@@ -5,6 +5,7 @@
   export let activeId = '';
   export let ariaLabel = 'Shop categories';
   export let variant = 'category';
+  export let showCounts = true;
 
   const dispatch = createEventDispatcher();
 </script>
@@ -18,7 +19,7 @@
       on:click={() => dispatch('select', section.id)}
     >
       <span>{section.label}</span>
-      {#if section.count !== undefined || section.description}
+      {#if showCounts && (section.count !== undefined || section.description)}
         <small>{section.count !== undefined ? `${section.count} ${section.count === 1 ? 'item' : 'items'}` : section.description}</small>
       {/if}
     </button>

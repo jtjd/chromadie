@@ -1,5 +1,24 @@
 # Chromadie 2.0 Progress
 
+## Shop readability and hierarchy pass — 2026-08-03
+
+- Added a shared shop visual contract with larger readable typography, warm
+  near-black surfaces, stronger controls, and the active daily color as the
+  shop accent.
+- Simplified Shop Home to one focused daily-color edit, a real profile avatar
+  or monogram, a larger featured effect stage, and a single Open detail path.
+- Reworked Browse into a two-column desktop result grid with larger previews,
+  no technical “same renderer” or count-chip copy, and the existing filters,
+  contextual fitting room, and quick-buy boundary intact.
+- Removed the default “Catalog item” card label and the hidden Preview cue;
+  cards now reserve their hierarchy for the effect, rarity, collection,
+  meaningful ownership state, description, and Details/Buy actions.
+- Product Detail now shows one primary preview at a time through Item / On
+  your profile tabs. Purchase confirmation, try-on, related items, focus
+  restoration, and Escape handling remain unchanged.
+- No data or backend changes were made. Collection and Studio behavior remain
+  in scope for a later pass, apart from inheriting shared shop tokens.
+
 ## Homepage daily-color identity signal — 2026-08-03
 
 - Removed the redundant “View profile” microcopy; the avatar and username now

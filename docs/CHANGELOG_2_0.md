@@ -2,6 +2,20 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Improve shop readability and product focus
+
+- Increased shop typography, control sizing, contrast, and effect-stage space
+  while keeping the existing homepage visual language and font system.
+- Simplified Shop Home around one daily-color edit, a real current-profile
+  identity strip, a larger featured preview, and one clear Product Detail path.
+- Made Browse cards effect-first in a two-column desktop grid, removed tiny
+  technical/count labels, and retained the existing inline quick-buy flow.
+- Replaced the stacked Product Detail previews with an Item / On your profile
+  toggle so only one context is shown at a time.
+- Preserved the catalog, purchase RPC, confirmation, inventory, entitlement,
+  temporary fitting-room, route, and accessibility boundaries. No schema or
+  backend changes were introduced.
+
 ## 2026-08-03 — Reduce daily-color repetition
 
 - Removed the extra “View profile” instruction from the clickable winner

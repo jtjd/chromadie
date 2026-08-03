@@ -30,12 +30,12 @@
 <aside class="shop-contextual-preview" aria-labelledby="shop-contextual-preview-title">
   <header class="shop-contextual-preview__header">
     <div>
-      <span class="shop-eyebrow">Live profile preview</span>
+      <span class="shop-eyebrow">Preview</span>
       <h2 id="shop-contextual-preview-title">{selectedItem ? selectedItem.name : previewName}</h2>
-      <p>{selectedItem ? 'Temporary preview · nothing changes your profile.' : 'Your equipped look.'}</p>
+      <p>{selectedItem ? 'Nothing is saved until you choose it.' : 'Your equipped look.'}</p>
       <div class="shop-preview-mode" role="tablist" aria-label="Preview mode">
-        <button type="button" role="tab" aria-selected={effectivePreviewMode === 'isolated'} class:active={effectivePreviewMode === 'isolated'} disabled={!selectedItem} on:click={() => previewMode = 'isolated'}>Isolated</button>
-        <button type="button" role="tab" aria-selected={effectivePreviewMode === 'combined'} class:active={effectivePreviewMode === 'combined'} on:click={() => previewMode = 'combined'}>Combined</button>
+        <button type="button" role="tab" aria-selected={effectivePreviewMode === 'isolated'} class:active={effectivePreviewMode === 'isolated'} disabled={!selectedItem} on:click={() => previewMode = 'isolated'}>Item</button>
+        <button type="button" role="tab" aria-selected={effectivePreviewMode === 'combined'} class:active={effectivePreviewMode === 'combined'} on:click={() => previewMode = 'combined'}>On your profile</button>
       </div>
     </div>
     <div class="shop-preview-actions">
@@ -64,8 +64,8 @@
   {/key}
 
   <footer class="shop-contextual-preview__footer">
-    <span>Temporary fitting room</span>
-    <strong>Use Product Detail or Profile Settings for the next step.</strong>
+    <span>Preview only</span>
+    <strong>Try it here, then open details when you’re ready.</strong>
   </footer>
 </aside>
 
@@ -86,7 +86,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.9rem;
-    padding: 0.8rem 0.95rem;
+    padding: 1rem 1.1rem;
     border-bottom: 1px solid var(--shop-line);
     background: #111319;
   }
@@ -95,7 +95,7 @@
     overflow: hidden;
     margin: 0.3rem 0 0.2rem;
     color: #f2f0eb;
-    font: 650 1.05rem/1.1 var(--font-display);
+    font: 650 1.2rem/1.1 var(--shop-display, var(--font-display));
     letter-spacing: -0.025em;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -104,7 +104,7 @@
   .shop-contextual-preview__header p {
     margin: 0;
     color: #858690;
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     line-height: 1.35;
   }
 
@@ -112,10 +112,10 @@
     display: flex;
     gap: 3px;
     width: max-content;
-    margin-top: 0.45rem;
+    margin-top: 0.65rem;
     padding: 3px;
     border: 1px solid #343740;
-    border-radius: 5px;
+    border-radius: var(--radius-sm, 5px);
     background: #0d0f14;
   }
 
@@ -126,10 +126,10 @@
     background: transparent;
     color: #858892;
     cursor: pointer;
-    font: 0.62rem var(--font-mono-stack);
+    font: 0.72rem var(--shop-mono, var(--font-mono-stack));
   }
 
-  .shop-preview-mode button { min-height: 1.7rem; padding: 0 0.55rem; }
+  .shop-preview-mode button { min-height: 2rem; padding: 0 0.7rem; }
   .shop-preview-mode button.active { background: #1d2027; color: var(--shop-accent); }
   .shop-preview-mode button:disabled { cursor: not-allowed; opacity: .45; }
 
@@ -142,8 +142,8 @@
   }
 
   .shop-preview-actions button {
-    min-height: 1.9rem;
-    padding: 0 0.5rem;
+    min-height: 2.2rem;
+    padding: 0 0.65rem;
     border-color: #3a3e47;
     background: #17191f;
     color: #b5b8c1;
@@ -161,13 +161,13 @@
   .shop-contextual-preview__isolated {
     display: grid;
     min-height: 26rem;
-    padding: 1.5rem;
+    padding: 1.75rem;
     place-items: center;
     background: #080a0e;
   }
 
   .shop-contextual-preview__isolated :global(.shop-preview-area) {
-    height: 8rem;
+    height: 11rem;
     border-color: #393d46;
     background: #090b0f;
   }
@@ -186,16 +186,16 @@
   .shop-contextual-preview__footer {
     display: grid;
     gap: 0.2rem;
-    padding: 0.7rem 1rem 0.85rem;
+    padding: 0.9rem 1.1rem 1rem;
     border-top: 1px solid var(--shop-line);
   }
   .shop-contextual-preview__footer span {
     color: #777983;
-    font: 0.61rem var(--font-mono-stack);
+    font: 0.7rem var(--shop-mono, var(--font-mono-stack));
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
-  .shop-contextual-preview__footer strong { color: #aaa8b0; font-size: 0.72rem; font-weight: 500; }
+  .shop-contextual-preview__footer strong { color: #aaa8b0; font-size: 0.8rem; font-weight: 500; }
 
   @media (max-width: 960px) {
     .shop-contextual-preview { position: relative; top: auto; }
