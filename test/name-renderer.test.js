@@ -6,6 +6,8 @@ import {
   NAME_COMPOSABLE_COUNTS,
   NAME_COMPOSABLE_MATERIAL_KEYS,
   NAME_COMPOSABLE_MOTION_KEYS,
+  NAME_PAID_MATERIAL_KEYS,
+  NAME_PAID_MOTION_KEYS,
   NAME_FONTS,
   NAME_MATERIALS,
   NAME_MOTIONS,
@@ -28,10 +30,17 @@ import { createNameAnimationClock } from '../src/lib/name/nameAnimationClock.js'
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('the lean renderer registries contain the 64 paid layers and free baselines', async () => {
-  const catalog = JSON.parse(await readFile(new URL('../chromadie_name_catalog_64_effects.json', import.meta.url), 'utf8'));
-  assert.deepEqual(Object.keys(NAME_FONTS), catalog.fonts.map(item => item.id));
-  assert.deepEqual(NAME_COMPOSABLE_MATERIAL_KEYS, catalog.materials.map(item => item.id));
-  assert.deepEqual(NAME_COMPOSABLE_MOTION_KEYS, catalog.motions.map(item => item.id));
+  const seed = await read('supabase/seed.sql');
+  const seedRendererRows = [...seed.matchAll(
+    /^\s*\('name_(font|material|motion)_[^']+',\s*'[^']+',\s*'(name_font|name_material|name_motion)',\s*\d+,\s*'renderer',\s*'([^']+)'/gm
+  )].map(([, , slot, rendererKey]) => ({ slot, rendererKey }));
+  const seedKeys = slot => seedRendererRows
+    .filter(row => row.slot === slot)
+    .map(row => row.rendererKey);
+
+  assert.deepEqual(Object.keys(NAME_FONTS), seedKeys('name_font'));
+  assert.deepEqual(NAME_PAID_MATERIAL_KEYS, seedKeys('name_material'));
+  assert.deepEqual(NAME_PAID_MOTION_KEYS, seedKeys('name_motion'));
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
     fonts: 18,
     materials: 23,
