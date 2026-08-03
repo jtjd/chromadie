@@ -2,6 +2,18 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Make the shop product-first and remove interface noise
+
+The shop now treats the effect itself as the primary browse target. Browse
+headings are concise, the search control has one visible label, cards use a
+shorter effect stage, and product titles open the existing detail sheet without
+separate Details/Manage links. Home keeps one compact today edit and a smaller
+curated row; the existing Profile settings link remains the single path for
+equipping owned cosmetics. The contextual fitting-room rail is shorter and its
+duplicate footer copy is gone. Unknown badge IDs are omitted from previews
+instead of rendering placeholder question marks. Catalog, purchase, fitting
+room, profile settings, and backend boundaries are unchanged.
+
 ## 2026-08-03 — Publish the daily roll before rich homepage hydration finishes
 
 The homepage now promotes the already-authoritative `today` discovery result

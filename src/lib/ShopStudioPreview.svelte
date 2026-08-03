@@ -27,8 +27,10 @@
     .slice(0, 3)
     .map(id => {
       const meta = getBadgeMeta(id);
+      if (!meta || meta.symbol === '❓' || meta.name === id || meta.name === 'Unknown Badge' || meta.name === 'Unknown Achievement') return null;
       return { id, name: meta.name, icon: meta.symbol };
-    });
+    })
+    .filter(Boolean);
   $: previewAvatarSrc = getProfileMediaUrl(previewProfileConfig.avatar_path);
   $: previewLinks = getVisibleProfileLinks(previewProfileConfig);
   $: nameRendererLoadout = getNameRendererLoadout(loadout);

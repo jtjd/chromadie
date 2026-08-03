@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Make the shop product-first
+
+- Removed redundant Browse copy and corrected the search field’s visual label.
+- Made catalog cards shorter and effect-led, with product titles opening the
+  existing detail sheet instead of separate Details/Manage actions.
+- Tightened the daily edit, curated row, and fitting-room preview to remove
+  dead space and repeated collection/status copy.
+- Kept Profile settings as the single path for equipping owned cosmetics and
+  hid unknown badge placeholders from the preview.
+
 ## 2026-08-03 — Make the homepage first frame feel finished
 
 - Show the latest real daily roll as soon as the public “today” surface

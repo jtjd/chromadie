@@ -8,12 +8,11 @@ async function readProjectFile(path) {
   return readFile(new URL(path, ROOT), 'utf8');
 }
 
-test('Shop Home has the Phase C editorial order without redundant continuation cards', async () => {
+test('Shop Home keeps the today edit and curated catalog compact', async () => {
   const source = await readProjectFile('src/lib/ShopHome.svelte');
   const order = [
     'shop-todays-edit',
-    'shop-curated-title',
-    'shop-home-links'
+    'shop-curated-title'
   ].map(marker => source.indexOf(marker));
 
   assert.ok(order.every(index => index >= 0));
@@ -39,10 +38,12 @@ test('shop reference hierarchy uses live account metadata and real catalog count
   assert.match(shop, /fittingRoom\.balance\.toLocaleString\(\)\} EP/);
   assert.doesNotMatch(shop, /Admin/);
   assert.match(home, /Make today’s color <span>yours\.<\/span>/);
-  assert.match(home, /Carry it <span>forward\.<\/span>/);
+  assert.match(home, /Keep <span>exploring\.<\/span>/);
+  assert.doesNotMatch(home, /shop-home-links|Browse catalog|View full catalog|Open detail/);
   assert.doesNotMatch(home, /count: filterShopItems/);
   assert.match(home, /slice\(0, 5\)/);
-  assert.match(browse, /Build your profile <span>name\.<\/span>/);
+  assert.match(browse, /Shape your <span>name\.<\/span>/);
+  assert.doesNotMatch(browse, /Find the piece that|Effects, borders, and utility|Search the catalog/);
   assert.doesNotMatch(browse, /Same renderer|shop-browse-stats/);
   assert.match(browse, /nameSubtypeSections/);
   assert.match(browse, /variant="subtype"/);
@@ -51,6 +52,8 @@ test('shop reference hierarchy uses live account metadata and real catalog count
   assert.match(studioPreview, /account\.display_name/);
   assert.match(studioPreview, /username=\{accountUsername\}/);
   assert.match(studioPreview, /displayName=\{accountDisplayName\}/);
+  assert.match(studioPreview, /meta\.symbol === '❓'/);
+  assert.match(studioPreview, /\.filter\(Boolean\)/);
 });
 
 test('Browse uses category navigation, a contained filter panel, a grid, and one contextual preview', async () => {
@@ -74,7 +77,7 @@ test('Browse uses category navigation, a contained filter panel, a grid, and one
 test('product cards keep product decisions in detail and expose a readable hierarchy', async () => {
   const source = await readProjectFile('src/lib/ShopItemCard.svelte');
   assert.ok(source.indexOf('item-card-heading') < source.indexOf('item-preview-button'));
-  assert.match(source, /item-detail-button/);
+  assert.match(source, /item-product-button/);
   assert.match(source, /item-price/);
   assert.match(source, /item-rarity/);
   assert.match(source, /item-collection/);
@@ -84,8 +87,9 @@ test('product cards keep product decisions in detail and expose a readable hiera
   assert.match(source, /item-buy-button/);
   assert.match(source, /Confirm purchase/);
   assert.doesNotMatch(source, /primary-item-action|secondary-item-action/);
-  assert.match(source, /height:166px/);
-  assert.match(source, /font:650 1\.05rem\/1 var\(--shop-mono/);
+  assert.match(source, /height:124px/);
+  assert.match(source, /font:650 \.92rem\/1 var\(--shop-mono/);
+  assert.doesNotMatch(source, /item-detail-link|>Details<|>Manage</);
   assert.doesNotMatch(source, /preview-cue/);
 });
 

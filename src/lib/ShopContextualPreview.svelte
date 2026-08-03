@@ -63,10 +63,6 @@
     {/if}
   {/key}
 
-  <footer class="shop-contextual-preview__footer">
-    <span>Preview only</span>
-    <strong>Try it here, then open details when you’re ready.</strong>
-  </footer>
 </aside>
 
 <style>
@@ -160,8 +156,8 @@
 
   .shop-contextual-preview__isolated {
     display: grid;
-    min-height: 26rem;
-    padding: 1.75rem;
+    min-height: 18rem;
+    padding: 1rem;
     place-items: center;
     background: #080a0e;
   }
@@ -182,25 +178,12 @@
   }
 
   .shop-contextual-preview :global(.studio-preview-head) { display: none; }
-  .shop-contextual-preview :global(.studio-stage) { min-height: 26rem; border-radius: 4px; }
-  .shop-contextual-preview__footer {
-    display: grid;
-    gap: 0.2rem;
-    padding: 0.9rem 1.1rem 1rem;
-    border-top: 1px solid var(--shop-line);
-  }
-  .shop-contextual-preview__footer span {
-    color: #777983;
-    font: 0.7rem var(--shop-mono, var(--font-mono-stack));
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .shop-contextual-preview__footer strong { color: #aaa8b0; font-size: 0.8rem; font-weight: 500; }
+  .shop-contextual-preview :global(.studio-stage) { min-height: 18rem; border-radius: 4px; }
 
   @media (max-width: 960px) {
     .shop-contextual-preview { position: relative; top: auto; }
-    .shop-contextual-preview :global(.studio-stage) { min-height: 20rem; }
-    .shop-contextual-preview__isolated { min-height: 20rem; }
+    .shop-contextual-preview :global(.studio-stage) { min-height: 17rem; }
+    .shop-contextual-preview__isolated { min-height: 17rem; }
   }
 
   @media (max-width: 700px) {
@@ -208,6 +191,5 @@
     .shop-contextual-preview :global(.studio-preview) { padding: 0.6rem; }
     .shop-contextual-preview :global(.studio-stage) { min-height: 15rem; }
     .shop-contextual-preview__isolated { min-height: 15rem; padding: 0.75rem; }
-    .shop-contextual-preview__footer { padding-inline: 0.75rem; }
   }
 </style>

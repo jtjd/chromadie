@@ -232,7 +232,7 @@
     <div class="shop-header-actions">
       <div class="shop-wallet" aria-label={`Wallet balance: ${fittingRoom.balance.toLocaleString()} EP`}><span>Balance</span><strong>{fittingRoom.balance.toLocaleString()} EP</strong></div>
       <div class="shop-owned" aria-label={`${ownedCatalogCount} owned catalog items`}><span>Owned</span><strong>{ownedCatalogCount}</strong></div>
-      <a class="shop-profile-link" href="/profile/settings" aria-label="Open profile settings">Profile <span aria-hidden="true">↗</span></a>
+      <a class="shop-profile-link" href="/profile/settings" aria-label="Open profile settings">Profile settings <span aria-hidden="true">↗</span></a>
     </div>
   </header>
 

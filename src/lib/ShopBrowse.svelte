@@ -111,13 +111,11 @@
 <section class="shop-browse" class:shop-browse--names={isNameBrowse} aria-labelledby="shop-browse-title">
   <div class="shop-surface-heading">
     <div>
-      <span class="shop-eyebrow">{isNameBrowse ? 'Name effects lab' : 'Browse the catalog'}</span>
+      <span class="shop-eyebrow">{isNameBrowse ? 'Name effects' : 'Catalog'}</span>
       {#if isNameBrowse}
-        <h2 id="shop-browse-title">Build your profile <span>name.</span></h2>
-        <p>Layer a font, material, and motion treatment onto the name people remember.</p>
+        <h2 id="shop-browse-title">Shape your <span>name.</span></h2>
       {:else}
-        <h2 id="shop-browse-title">Find the piece that <span>changes the page.</span></h2>
-        <p>Effects, borders, and utility for a profile that feels like yours.</p>
+        <h2 id="shop-browse-title">Choose a <span>piece.</span></h2>
       {/if}
     </div>
     <div class="shop-browse-heading-side">
@@ -150,8 +148,7 @@
       <div class="shop-browse-toolbar">
         <label class="shop-search">
           <span aria-hidden="true">⌕</span>
-          <span class="visually-hidden">Search the catalog</span>
-          <input bind:value={searchQuery} type="search" placeholder={isNameBrowse ? 'Search name effects' : 'Search effects and collections'} />
+          <input bind:value={searchQuery} type="search" aria-label={isNameBrowse ? 'Search name effects' : 'Search catalog'} placeholder={isNameBrowse ? 'Search name effects' : 'Search effects and collections'} />
         </label>
         <label class="shop-sort"><span class="shop-filter-label">Sort</span><select bind:value={sortMode}>{#each SHOP_SORTS as sort (sort.id)}<option value={sort.id}>{sort.label}</option>{/each}</select></label>
         <button type="button" class="shop-filter-toggle" aria-expanded={filtersOpen} aria-controls="shop-filter-panel" on:click={() => filtersOpen = !filtersOpen}>
@@ -183,7 +180,7 @@
       {/if}
 
       {#if filteredItems.length}
-        <div class="shop-result-count"><span>{filteredItems.length} result{filteredItems.length === 1 ? '' : 's'}</span></div>
+        <div class="shop-result-count"><span>{filteredItems.length} piece{filteredItems.length === 1 ? '' : 's'}</span></div>
         <div class="shop-result-grid">
           {#each filteredItems as item (item.item_key)}
             <ShopItemCard
@@ -198,7 +195,7 @@
               purchaseArmed={purchaseArmedKey === item.item_key}
               purchaseLoading={loadingAction === `buy:${item.item_key}`}
               on:select={event => dispatch('select', event.detail)}
-              on:preview={event => previewItem(event.detail)}
+              on:preview={event => { previewItem(event.detail); dispatch('select', event.detail); }}
               on:purchase={event => dispatch('purchase', event.detail)}
             />
           {/each}
@@ -228,18 +225,17 @@
 <style>
   .shop-browse { display:grid; gap:1.25rem; }
   .shop-surface-heading { display:flex; align-items:end; justify-content:space-between; gap:1.5rem; padding-bottom:1.15rem; border-bottom:1px solid var(--shop-line); }
-  .shop-surface-heading h2 { max-width:52rem; margin:.5rem 0 .65rem; font:650 clamp(2.3rem,4vw,3.35rem)/.94 var(--shop-display); letter-spacing:-.055em; }
+  .shop-surface-heading h2 { max-width:52rem; margin:.45rem 0 0; font:650 clamp(2.15rem,3.5vw,3rem)/.94 var(--shop-display); letter-spacing:-.055em; }
   .shop-surface-heading h2 span { color:var(--shop-accent); }
-  .shop-surface-heading p { max-width:44rem; margin:0; color:var(--shop-muted); font-size:.98rem; line-height:1.55; }
   .shop-eyebrow { color:var(--shop-faint); font:600 .72rem/1.3 var(--shop-mono); letter-spacing:.13em; text-transform:uppercase; }
   .shop-text-link { padding:.5rem 0; border:0; background:transparent; color:var(--shop-accent); font:.78rem var(--shop-mono); cursor:pointer; white-space:nowrap; }
-  .shop-browse-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(26rem,510px); gap:1.1rem; align-items:start; padding-top:.15rem; }
+  .shop-browse-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(23rem,430px); gap:1rem; align-items:start; padding-top:.15rem; }
   .shop-browse-heading-side { display:grid; justify-items:end; gap:.8rem; }
   .shop-browse-main { min-width:0; }
   .shop-browse-toolbar { display:grid; grid-template-columns:minmax(0,1fr) 10.5rem auto; gap:.7rem; align-items:end; padding-bottom:1rem; border-bottom:1px solid var(--shop-line); }
   .shop-browse-toolbar label { min-width:0; }
   .shop-search { display:flex; align-items:center; gap:.6rem; min-height:3rem; padding:0 .9rem; border:1px solid #4a4d57; border-radius:var(--radius-sm); background:var(--shop-raised); }
-  .shop-search span { color:var(--shop-accent); font-size:1.2rem; }
+  .shop-search > span { color:var(--shop-accent); font-size:1.2rem; }
   .shop-search input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:var(--shop-ink); font-size:.96rem; }
   .shop-sort select { width:100%; min-height:3rem; padding:0 .7rem; border:1px solid #4a4d57; border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; font-size:.86rem; }
   .shop-filter-toggle { min-height:3rem; padding:0 .9rem; border:1px solid #4a4d57; border-radius:var(--radius-sm); background:#16181e; color:#d3d0d8; cursor:pointer; font:.76rem var(--shop-mono); white-space:nowrap; }
@@ -259,7 +255,7 @@
   .shop-filter-panel__fields select { width:100%; min-height:2.65rem; padding:0 .6rem; border:1px solid #3d404a; border-radius:var(--radius-sm); background:var(--shop-deep); color:var(--shop-muted); font-size:.84rem; }
   .shop-affordable { display:flex!important; align-items:center; gap:.45rem; min-height:2.6rem; color:var(--shop-muted); font-size:.84rem; white-space:nowrap; }
   .shop-reset-link { width:max-content; margin-top:.1rem; padding:0; border:0; background:transparent; color:var(--shop-accent); font:.74rem var(--shop-mono); cursor:pointer; text-align:left; }
-  .shop-result-count { display:flex; justify-content:space-between; gap:1rem; padding:.95rem 0 .65rem; color:var(--shop-faint); font:.7rem var(--shop-mono); letter-spacing:.05em; text-transform:uppercase; }
+  .shop-result-count { display:flex; justify-content:space-between; gap:1rem; padding:.75rem 0 .55rem; color:var(--shop-faint); font:.68rem var(--shop-mono); letter-spacing:.05em; text-transform:uppercase; }
   .shop-result-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
   .shop-empty-state { display:grid; justify-items:start; gap:.55rem; min-height:15rem; align-content:center; padding:2rem; border:1px solid var(--shop-line); background:#0a0c10; }
   .shop-empty-state > span { color:#cdd2ff; font-size:2rem; }
@@ -267,7 +263,7 @@
   .shop-empty-state p { margin:0 0 .5rem; color:#aaa8b0; }
   .shop-button { display:inline-flex; align-items:center; justify-content:center; min-height:2.7rem; padding:0 .9rem; border-radius:5px; font-weight:650; text-decoration:none; cursor:pointer; }
   .shop-button--outline { border:1px solid #4a4d57; background:#121419; color:#d3d0d8; }
-  @media (max-width: 1180px) { .shop-browse-layout { grid-template-columns:minmax(0,1fr) minmax(22rem,440px); } }
+  @media (max-width: 1180px) { .shop-browse-layout { grid-template-columns:minmax(0,1fr) minmax(21rem,400px); } }
   @media (max-width: 900px) { .shop-browse-layout { grid-template-columns:1fr; } .shop-browse-layout :global(.shop-contextual-preview) { order:-1; } .shop-result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width: 760px) { .shop-surface-heading { align-items:flex-start; flex-direction:column; } .shop-browse-heading-side { width:100%; justify-items:start; } .shop-browse-toolbar { grid-template-columns:minmax(0,1fr) 8rem; } .shop-filter-toggle { grid-column:1 / -1; } .shop-filter-panel__fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width: 520px) { .shop-browse-toolbar { grid-template-columns:1fr; } .shop-filter-toggle { grid-column:auto; } .shop-filter-list--compact, .shop-filter-panel__fields { grid-template-columns:1fr; } .shop-result-grid { grid-template-columns:1fr; } }

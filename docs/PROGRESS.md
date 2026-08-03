@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Shop product-first cleanup — 2026-08-03
+
+- Removed redundant Browse copy and fixed the search control so only the
+  actual search field is visible.
+- Reduced Browse card and fitting-room stage heights so the effect, rarity,
+  and price carry the visual weight instead of empty space.
+- Removed per-card Details/Manage links; product names and previews open the
+  existing detail flow, while Profile settings remains the equip destination.
+- Tightened Shop Home around the daily edit and curated pieces, removing
+  duplicate catalog links and repeated collection/status copy.
+- Filtered unknown equipped badge IDs from the studio preview so stale data no
+  longer appears as question-mark badges.
+
 ## Homepage first-frame loading — 2026-08-03
 
 - Published the real `today` discovery rows and highest roll immediately
@@ -17,13 +30,13 @@
   near-black surfaces, stronger controls, and the active daily color as the
   shop accent.
 - Simplified Shop Home to one focused daily-color edit, a real profile avatar
-  or monogram, a larger featured effect stage, and a single Open detail path.
+  or monogram, and a compact featured effect stage whose product opens detail.
 - Reworked Browse into a two-column desktop result grid with larger previews,
   no technical “same renderer” or count-chip copy, and the existing filters,
   contextual fitting room, and quick-buy boundary intact.
 - Removed the default “Catalog item” card label and the hidden Preview cue;
-  cards now reserve their hierarchy for the effect, rarity, collection,
-  meaningful ownership state, description, and Details/Buy actions.
+  cards reserve their hierarchy for the effect, rarity, collection, meaningful
+  ownership state, description, and Buy action.
 - Product Detail now shows one primary preview at a time through Item / On
   your profile tabs. Purchase confirmation, try-on, related items, focus
   restoration, and Escape handling remain unchanged.
