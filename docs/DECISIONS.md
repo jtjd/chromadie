@@ -2678,3 +2678,15 @@ rarities, collections, descriptions, inventory, equipped loadouts, purchase
 RPCs, and RLS boundaries are preserved. The canonical seed, code-owned
 registries, and additive production migrations are synchronized, with tests
 asserting real family labels and one local asset loader for every Font key.
+
+## 2026-08-03 — Reconcile the live catalog without changing consumable behavior
+
+The linked catalog was missing the two additive Name-label migrations and still
+had the pre-reset copy for the nine retained profile borders. Those migrations
+were applied in order, followed by an idempotent border-description correction;
+item keys, prices, rarities, ownership, and equipped loadouts were not touched.
+
+`streak_freeze` remains stackable. The earlier inventory migration deliberately
+introduced quantity-based consumption and enables repeated freeze purchases, so
+the canonical seed now declares that behavior explicitly instead of treating
+the live value as drift and regressing the economy.

@@ -47,18 +47,18 @@ INSERT INTO public.achievements (id, name, description, icon, ep_reward, rarity)
 ('classic_cola_red', 'Classic Cola Red', 'Roll Classic Cola Red.', '🥤', 350000, 'Mythic')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, available_from, available_until, rarity, description, collection) VALUES
-('border_celestial', 'Celestial Border', 'profile_border', 600000, 'renderer', 'celestial', NULL, NULL, 'Mythic', 'A precise celestial edge with a restrained star-like pulse.', 'Prism'),
-('border_chroma', 'Chroma Border', 'profile_border', 450000, 'renderer', 'chroma', NULL, NULL, 'Mythic', 'A spectrum edge that moves through the profile without overwhelming it.', 'Prism'),
-('border_crystal', 'Crystal Border', 'profile_border', 450000, 'renderer', 'crystal', NULL, NULL, 'Mythic', 'A cool faceted edge with a clean crystalline glint.', 'Prism'),
-('border_glitch', 'Glitch Border', 'profile_border', 500000, 'renderer', 'glitch', NULL, NULL, 'Mythic', 'A clipped signal edge with brief cyan and rose interruptions.', 'Static Bloom'),
-('border_gold', 'Gold Border', 'profile_border', 350000, 'renderer', 'gold', NULL, NULL, 'Mythic', 'A warm archival metal edge with a measured glint.', 'Archive'),
-('border_neon', 'Neon Border', 'profile_border', 180000, 'renderer', 'neon', NULL, NULL, 'Epic', 'A clean electric edge that breathes between cyan and mint.', 'Signal'),
-('border_prism', 'Prism Border', 'profile_border', 300000, 'renderer', 'prism', NULL, NULL, 'Epic', 'Refracted light travels around the profile edge in a compact spectrum.', 'Prism'),
-('border_void', 'Void Border', 'profile_border', 550000, 'renderer', 'void', NULL, NULL, 'Mythic', 'A dark violet edge that absorbs light around the card.', 'Nocturne'),
-('border_signal', 'Signal Border', 'profile_border', 160000, 'renderer', 'signal', NULL, NULL, 'Rare', 'A quiet lime edge with a bounded signal pulse.', 'Signal'),
-('streak_freeze', 'Streak Freeze', 'consumable', 50000, 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL),
-('title_founder', 'Founder Title', 'title', 0, 'text', '✦ FOUNDER ✦', NULL, '2026-07-10', 'Mythic', 'Reserved for people whose early contributions helped shape ChromaDie.', 'Project Legacy')
+INSERT INTO public.shop_items (item_key, name, slot, cost, css_type, css_value, available_from, available_until, rarity, description, collection, stackable) VALUES
+('border_celestial', 'Celestial Border', 'profile_border', 600000, 'renderer', 'celestial', NULL, NULL, 'Mythic', 'A precise celestial edge with a restrained star-like pulse.', 'Prism', false),
+('border_chroma', 'Chroma Border', 'profile_border', 450000, 'renderer', 'chroma', NULL, NULL, 'Mythic', 'A spectrum edge that moves through the profile without overwhelming it.', 'Prism', false),
+('border_crystal', 'Crystal Border', 'profile_border', 450000, 'renderer', 'crystal', NULL, NULL, 'Mythic', 'A cool faceted edge with a clean crystalline glint.', 'Prism', false),
+('border_glitch', 'Glitch Border', 'profile_border', 500000, 'renderer', 'glitch', NULL, NULL, 'Mythic', 'A clipped signal edge with brief cyan and rose interruptions.', 'Static Bloom', false),
+('border_gold', 'Gold Border', 'profile_border', 350000, 'renderer', 'gold', NULL, NULL, 'Mythic', 'A warm archival metal edge with a measured glint.', 'Archive', false),
+('border_neon', 'Neon Border', 'profile_border', 180000, 'renderer', 'neon', NULL, NULL, 'Epic', 'A clean electric edge that breathes between cyan and mint.', 'Signal', false),
+('border_prism', 'Prism Border', 'profile_border', 300000, 'renderer', 'prism', NULL, NULL, 'Epic', 'Refracted light travels around the profile edge in a compact spectrum.', 'Prism', false),
+('border_void', 'Void Border', 'profile_border', 550000, 'renderer', 'void', NULL, NULL, 'Mythic', 'A dark violet edge that absorbs light around the card.', 'Nocturne', false),
+('border_signal', 'Signal Border', 'profile_border', 160000, 'renderer', 'signal', NULL, NULL, 'Rare', 'A quiet lime edge with a bounded signal pulse.', 'Signal', false),
+('streak_freeze', 'Streak Freeze', 'consumable', 50000, 'text', 'Protects your streak if you miss a day.', NULL, NULL, 'Rare', 'Protects your streak if you miss a day.', NULL, true),
+('title_founder', 'Founder Title', 'title', 0, 'text', '✦ FOUNDER ✦', NULL, '2026-07-10', 'Mythic', 'Reserved for people whose early contributions helped shape ChromaDie.', 'Project Legacy', false)
 ON CONFLICT (item_key) DO NOTHING;
 
 INSERT INTO public.shop_items (

@@ -1779,3 +1779,16 @@ kept public profile selectors outside the supporting-route baseline.
   ownership, equip, and purchase boundaries unchanged.
 - Added coverage for real family labels, loader coverage, seed synchronization,
   and the additive live-row migration.
+
+## 2026-08-03 — Reconcile live shop catalog labels
+
+- Applied the pending Name catalog label migrations and synchronized all 64 paid
+  product names with the canonical seed, including the actual Font family
+  names.
+- Corrected the nine retained profile-border descriptions through an additive,
+  idempotent migration.
+- Made the intentional quantity-based `streak_freeze` behavior explicit in the
+  seed and catalog check (`stackable = true`) rather than changing live
+  purchase semantics.
+- Remote `npm run check:catalog-drift` now passes: 75 items, 18 Fonts,
+  22 Materials, 24 Motions, and 9 Profile Borders.

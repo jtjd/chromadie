@@ -200,7 +200,7 @@ const d2NameByRarity = Object.fromEntries([...expectedNameRarities].map(rarity =
 const cheapestD2Name = d2NameCatalogRows.reduce((lowest, row) => row.cost < lowest.cost ? row : lowest);
 const mostExpensiveD2Name = d2NameCatalogRows.reduce((highest, row) => row.cost > highest.cost ? row : highest);
 const borderRows = [...seed.matchAll(
-  /^\('(border_[a-z0-9_]+)',\s*'([^']+)',\s*'profile_border',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)'\),?$/gm
+  /^\('(border_[a-z0-9_]+)',\s*'([^']+)',\s*'profile_border',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)'(?:,\s*(?:true|false))?\),?$/gm
 )].map(([, itemKey, name, cost, rendererKey, rarity, description, collection]) => ({
   itemKey,
   name,

@@ -1489,3 +1489,12 @@ direct route behavior.
   genuinely different face.
 - Preserved all technical keys, effect behavior, prices, rarities,
   descriptions, inventory, and equip/purchase contracts.
+
+## 2026-08-03 — Reconcile the live shop catalog
+
+- Applied the pending Name-label migrations so the live shop uses the canonical
+  Font family names and the approved Material/Motion vocabulary.
+- Restored the nine retained profile-border descriptions with a safe additive
+  migration.
+- Kept Streak Freeze quantity stacking intact and declared it explicitly in the
+  canonical seed/check instead of changing its purchase behavior.
