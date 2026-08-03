@@ -169,9 +169,7 @@
     if (!host || !semantic) return false;
     const hostRect = host.getBoundingClientRect?.() || {};
     const semanticRect = semantic.getBoundingClientRect?.() || {};
-    const parentRect = host.parentElement?.getBoundingClientRect?.() || {};
-    return Math.abs((hostRect.width || 0) - (semanticRect.width || 0)) < 1
-      && (!parentRect.width || (hostRect.width || 0) < parentRect.width - 1);
+    return Math.abs((hostRect.width || 0) - (semanticRect.width || 0)) < 1;
   }
 
   function syncSemanticMetrics() {
