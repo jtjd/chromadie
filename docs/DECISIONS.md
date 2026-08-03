@@ -2,6 +2,15 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Make today’s highest roll a person-led entry point
+
+The homepage “Today’s color” panel represents the highest public roll of the
+day, so the live result now says “Highest roll today” instead of leaving the
+relationship between the color and the leaderboard implicit. The winning
+profile is presented with its avatar, name, handle, and a direct public-profile
+link. The lower action says “See today’s top rolls” and continues to scroll to
+the existing leaderboard. No ranking, roll, or discovery data contract changed.
+
 ## 2026-08-03 — Carry the active daily color into the homepage wordmark
 
 The homepage now shares one validated active-color value between the daily

@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Connect today’s color to its highest roll
+
+- Clarified that the live homepage color is today’s highest public roll.
+- Added the winning profile’s avatar and a direct link to its public profile.
+- Renamed “See today’s public rolls” to “See today’s top rolls” to match the
+  leaderboard destination.
+
 ## 2026-08-03 — Tie the wordmark to today’s color
 
 - The homepage `.lol` wordmark segment now follows the active daily color.

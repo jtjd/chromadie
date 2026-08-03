@@ -1,5 +1,6 @@
 <script>
   import CompactRollPreview from './CompactRollPreview.svelte';
+  import { getProfileMediaUrl } from './profileMedia.js';
   import { normalizeHexColor } from './utils.js';
 
   /** @type {any} */
@@ -9,11 +10,16 @@
   export let staticEffect = false;
   export let compactUnavailable = false;
 
+  let failedAvatarSource = '';
+
   $: hasResult = Boolean(roll?.hexCode && roll?.score !== null && roll?.score !== undefined);
   $: color = normalizeHexColor(roll?.hexCode, '#8B7CF6');
   $: rarity = roll?.rarity || 'Common';
   $: hasFeaturedRoll = Boolean(hasResult && !rollIsPreview && roll?.username);
+  $: hasProfileLink = Boolean(hasFeaturedRoll && roll?.profilePath);
   $: featuredName = roll?.displayName || roll?.username || '';
+  $: featuredAvatarSrc = getProfileMediaUrl(roll?.avatarPath || '');
+  $: if (featuredAvatarSrc && featuredAvatarSrc !== failedAvatarSource) failedAvatarSource = '';
 
   function scrollToLeaderboard(event) {
     event.preventDefault();
@@ -28,7 +34,7 @@
   class="home-daily"
   class:home-daily--compact={compactUnavailable && !hasResult}
   style={`--home-daily-color: ${color};`}
-  aria-label="Today’s color"
+  aria-label="Today’s highest roll"
 >
   <span class="home-daily__label">Today’s color</span>
   {#if hasResult}
@@ -46,14 +52,41 @@
         </div>
         <div class="home-daily__readout">
           {#if hasFeaturedRoll}
-            <p class="home-daily__result-label">{featuredName}</p>
+            <p class="home-daily__result-label">Highest roll today</p>
           {/if}
           <div class="home-daily__identity-row">
             <h2>{color}</h2>
             <span class="home-daily__rarity">{rarity}</span>
           </div>
-          {#if hasFeaturedRoll}
-            <div class="home-daily__hex">@{roll.username} · Public today</div>
+          {#if hasProfileLink}
+            <a
+              class="home-daily__profile-link"
+              href={roll.profilePath}
+              aria-label={`Open ${featuredName}'s public profile`}
+            >
+              {#if featuredAvatarSrc && featuredAvatarSrc !== failedAvatarSource}
+                <img
+                  class="home-daily__avatar"
+                  src={featuredAvatarSrc}
+                  alt=""
+                  width="44"
+                  height="44"
+                  loading="lazy"
+                  decoding="async"
+                  on:error={() => failedAvatarSource = featuredAvatarSrc}
+                />
+              {:else}
+                <span class="home-daily__avatar home-daily__avatar--monogram" aria-hidden="true">
+                  {featuredName.slice(0, 1).toUpperCase() || '?'}
+                </span>
+              {/if}
+              <span class="home-daily__profile-copy">
+                <strong>{featuredName}</strong>
+                <small>@{roll.username} · View profile <span aria-hidden="true">↗</span></small>
+              </span>
+            </a>
+          {:else if hasFeaturedRoll}
+            <div class="home-daily__hex">@{roll.username}</div>
           {/if}
         </div>
       </div>
@@ -74,7 +107,7 @@
     </div>
   {/if}
   <div class="home-daily__action">
-    <a href="#home-leaderboard" on:click={scrollToLeaderboard}>See today’s public rolls <span aria-hidden="true">↓</span></a>
+    <a href="#home-leaderboard" on:click={scrollToLeaderboard}>See today’s top rolls <span aria-hidden="true">↓</span></a>
   </div>
 </aside>
 
@@ -90,11 +123,20 @@
   .home-daily__effect-wrap { display: grid; width: 100%; min-height: 7.5rem; place-items: center; margin-inline: auto; margin-bottom: 0.8rem; }
   .home-daily__effect-wrap :global(.compact-roll-preview) { flex-basis: 7.5rem; width: 7.5rem; height: 7.5rem; }
   .home-daily__readout { display: grid; min-width: 0; justify-items: center; }
-  .home-daily__result-label { overflow: hidden; margin: 0 0 0.55rem; color: #e0dde5; font: 500 0.88rem / 1.2 var(--home-font); text-overflow: ellipsis; white-space: nowrap; }
+  .home-daily__result-label { overflow: hidden; margin: 0 0 0.55rem; color: #e0dde5; font: 600 0.88rem / 1.2 var(--home-font); text-overflow: ellipsis; white-space: nowrap; }
   .home-daily__identity-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.55rem; }
   .home-daily h2 { margin: 0; color: #f3f0f5; font: 600 1.85rem / 1 var(--home-mono); letter-spacing: -0.035em; }
   .home-daily__rarity { padding: 0.32rem 0.55rem; border: 1px solid color-mix(in srgb, var(--home-daily-color) 62%, transparent); border-radius: 999px; color: color-mix(in srgb, var(--home-daily-color) 78%, #f2f0eb); font: 600 0.68rem / 1 var(--home-mono); letter-spacing: 0.06em; text-transform: uppercase; }
   .home-daily__hex { margin-top: 0.65rem; color: #b8bac3; font: 0.78rem / 1.25 var(--home-mono); }
+  .home-daily__profile-link { display: flex; align-items: center; justify-content: center; gap: 0.7rem; max-width: 100%; margin-top: 0.75rem; color: #e8e5eb; text-align: left; text-decoration: none; }
+  .home-daily__profile-link:hover { color: #fff; }
+  .home-daily__profile-link:focus-visible { outline: 2px solid color-mix(in srgb, var(--home-daily-color) 76%, #fff); outline-offset: 4px; border-radius: 0.25rem; }
+  .home-daily__avatar { flex: 0 0 2.75rem; width: 2.75rem; height: 2.75rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--home-daily-color) 60%, rgba(255, 255, 255, 0.24)); border-radius: 50%; object-fit: cover; box-shadow: 0 0 1.1rem color-mix(in srgb, var(--home-daily-color) 24%, transparent); }
+  .home-daily__avatar--monogram { display: grid; place-items: center; background: #282a34; color: #f2eff5; font: 600 0.88rem / 1 var(--home-mono); }
+  .home-daily__profile-copy { display: grid; min-width: 0; gap: 0.22rem; }
+  .home-daily__profile-copy strong { overflow: hidden; color: inherit; font: 600 0.88rem / 1.15 var(--home-font); text-overflow: ellipsis; white-space: nowrap; }
+  .home-daily__profile-copy small { overflow: hidden; color: #aeb1bb; font: 0.69rem / 1.25 var(--home-mono); text-overflow: ellipsis; white-space: nowrap; }
+  .home-daily__profile-link:hover .home-daily__profile-copy small { color: color-mix(in srgb, var(--home-daily-color) 78%, #f2f0eb); }
   .home-daily__stats { margin-top: 1.15rem; border-top: 1px solid rgba(255, 255, 255, 0.1); }
   .home-daily__stats > div { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.82rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
   .home-daily__stats span { color: #aeb1bb; font: 600 0.72rem / 1.15 var(--home-mono); letter-spacing: 0.08em; text-transform: uppercase; }

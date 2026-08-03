@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Homepage highest-roll entry point — 2026-08-03
+
+- Identified the live “Today’s color” result as the highest public roll today.
+- Added the winner’s avatar, name, handle, and a clickable public-profile link
+  to make the color personal and discoverable from the panel itself.
+- Renamed the leaderboard action to “See today’s top rolls.”
+- Kept the local fixture owner-neutral and left discovery, scoring, and backend
+  authority unchanged.
+
 ## Homepage daily-color brand accent — 2026-08-03
 
 - Propagated the validated homepage color from the live/preview directory to
