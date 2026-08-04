@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Improve shop scale and readability
+
+- Expanded the desktop shop surface so the catalog uses the available viewport.
+- Increased supporting labels, controls, card metadata, and purchase text.
+- Simplified Name layers into a compact selector with count badges.
+- Made the live profile preview larger and less surrounded by empty stage space.
+
 ## 2026-08-03 — Condense the shop catalog
 
 - Removed the redundant catalog intro band and its repeated Today’s color

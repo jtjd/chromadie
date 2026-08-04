@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Shop scale and preview readability pass — 2026-08-03
+
+- Widened the desktop catalog canvas and raised supporting type sizes.
+- Replaced the verbose Name layers explanation with a compact layer selector
+  while retaining descriptions for accessible labels and hover guidance.
+- Enlarged the fitting-room identity surface, shortened its stage, and removed
+  repeated Name labels from name-effect cards.
+
 ## Shop catalog context pass — 2026-08-03
 
 - Removed the redundant Catalog headline, copy, and Today’s color band from

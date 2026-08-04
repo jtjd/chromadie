@@ -2,6 +2,17 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Scale the shop around the profile preview
+
+The shop desktop surface now uses a wider bounded canvas, larger supporting
+type, and a wider fitting-room rail so the catalog does not read as a small
+dashboard inside a large viewport. Name-layer filtering is reduced to a compact
+layer selector with count badges; the descriptions remain available through
+accessible labels and tooltips. Product cards omit the repeated Name slot
+label, and the shared preview uses a shorter stage with a larger identity
+surface. These are presentation-only changes; catalog, purchase, and profile
+boundaries remain unchanged.
+
 ## 2026-08-03 — Keep catalog context in the shop header
 
 The Catalog/Owned switch and Today’s color are account-level context, not a

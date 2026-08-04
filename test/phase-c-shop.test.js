@@ -43,11 +43,9 @@ test('catalog removes redundant context, bounds results, and keeps one profile p
   assert.doesNotMatch(source, /shop-result-count/);
   assert.match(source, /grid-template-columns:repeat\(3/);
   assert.match(source, /Name layers/);
-  assert.match(source, /Choose what to change\./);
+  assert.match(source, /Filter by layer/);
   assert.match(source, /Name effect layers/);
-  assert.match(source, /Typeface and structure/);
-  assert.match(source, /Surface and finish/);
-  assert.match(source, /Movement and reveal/);
+  assert.match(source, /aria-label=\{`\$\{subtype\.label\}: \$\{subtype\.description\}`\}/);
   assert.doesNotMatch(source, /Build your name\.|Choose a font, material, or motion layer and see it on your profile\./);
   assert.match(source, /@media \(max-width: 960px\)/);
   assert.match(source, /@media \(max-width: 520px\)/);

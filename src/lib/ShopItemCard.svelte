@@ -57,7 +57,9 @@
   <button class="item-select-button" type="button" aria-label={`Preview ${item.name} on your profile`} aria-pressed={isPreviewing} on:click={() => dispatch('select', item)}>
     <span class="item-card-heading">
       <span class="item-card-title">
-        <span class="item-slot-label">{item.slot === 'profile_border' ? 'Border' : item.slot === 'consumable' ? 'Utility' : 'Name'}</span>
+        {#if !['name_font', 'name_material', 'name_motion'].includes(item.slot)}
+          <span class="item-slot-label">{item.slot === 'profile_border' ? 'Border' : item.slot === 'consumable' ? 'Utility' : 'Name'}</span>
+        {/if}
         <strong>{item.name}</strong>
       </span>
       {#if !purchasable && !['owned', 'equipped'].includes(state?.tone)}
@@ -96,15 +98,15 @@
   .shop-item.is-previewing { border-color:#7b9baf; }
   .item-select-button { display:flex; flex:1 1 auto; flex-direction:column; min-width:0; width:100%; padding:0; border:0; background:transparent; color:inherit; cursor:pointer; text-align:left; }
   .item-select-button:focus-visible { outline:2px solid #cdd2ff; outline-offset:4px; border-radius:4px; }
-  .item-card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; width:100%; min-height:2.15rem; }
+  .item-card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; width:100%; min-height:1.95rem; }
   .item-card-title { display:grid; min-width:0; gap:.15rem; }
-  .item-card-title strong { overflow:hidden; color:var(--shop-ink, #f3f2f7); font:680 1rem/1.15 var(--shop-display, var(--font-display)); text-overflow:ellipsis; white-space:nowrap; }
-  .item-slot-label { color:#858892; font:600 .62rem/1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.09em; text-transform:uppercase; }
+  .item-card-title strong { overflow:hidden; color:var(--shop-ink, #f3f2f7); font:680 1.1rem/1.15 var(--shop-display, var(--font-display)); text-overflow:ellipsis; white-space:nowrap; }
+  .item-slot-label { color:#858892; font:600 .68rem/1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.09em; text-transform:uppercase; }
   .item-select-button:hover .item-card-title strong, .item-select-button:focus-visible .item-card-title strong { color:#d7dbff; }
   .item-card-meta { display:flex; align-items:center; justify-content:space-between; gap:.65rem; width:100%; min-height:2.35rem; margin:.55rem 0 0; padding-top:.55rem; border-top:1px solid rgba(255,255,255,.09); }
   .item-taxonomy { display:flex; align-items:center; flex-wrap:wrap; gap:.45rem; min-width:0; }
-  .item-collection { overflow:hidden; min-width:0; padding-left:.55rem; border-left:1px solid rgba(205,210,255,.28); color:#c1becc; font:600 .76rem/1.1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.015em; text-overflow:ellipsis; white-space:nowrap; }
-  .item-state { max-width:100%; overflow:hidden; padding:5px 8px; border:1px solid rgba(255,255,255,.1); border-radius:3px; color:#a7a9b2; font:.7rem var(--shop-mono, var(--font-mono-stack)); text-overflow:ellipsis; white-space:nowrap; }
+  .item-collection { overflow:hidden; min-width:0; padding-left:.55rem; border-left:1px solid rgba(205,210,255,.28); color:#c1becc; font:600 .82rem/1.1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.015em; text-overflow:ellipsis; white-space:nowrap; }
+  .item-state { max-width:100%; overflow:hidden; padding:5px 8px; border:1px solid rgba(255,255,255,.1); border-radius:3px; color:#a7a9b2; font:.74rem var(--shop-mono, var(--font-mono-stack)); text-overflow:ellipsis; white-space:nowrap; }
   .item-state.tone-equipped { border-color:#7d83a9; background:#171923; color:#d7dbff; }
   .item-state.tone-previewing { border-color:#7b9baf; background:#111b20; color:#c9ecf3; }
   .item-state.tone-owned { border-color:#5875a4; color:#b7d2ff; }
@@ -115,16 +117,16 @@
   .item-state.tone-unaffordable { border-color:#5b4b4d; color:#c7a9ae; }
   .item-select-button :global(.shop-preview-area) { height:138px; margin-top:.5rem; padding:10px; border-radius:6px; }
   .item-select-button :global(.shop-preview-area-tall) { height:138px; }
-  .item-rarity { width:max-content; padding:5px 8px; border:1px solid; border-radius:3px; font:600 .72rem/1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.03em; text-transform:uppercase; }
+  .item-rarity { width:max-content; padding:5px 8px; border:1px solid; border-radius:3px; font:600 .76rem/1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.03em; text-transform:uppercase; }
   .rarity-common { border-color:#555a66; background:#15171c; color:#cdd0d8; }
   .rarity-uncommon { border-color:#597b70; background:#111b18; color:#b6e5d2; }
   .rarity-rare { border-color:#5875a4; background:#111923; color:#b7d2ff; }
   .rarity-epic { border-color:#745c9e; background:#191522; color:#dcc3ff; }
   .rarity-anomaly { border-color:#8e673d; background:#201811; color:#ffd09a; }
   .rarity-mythic { border-color:#8d4869; background:#21131b; color:#ffb3d2; }
-  .item-price { flex:0 0 auto; min-width:0; padding-top:.08rem; color:var(--shop-accent, #cdd2ff); font:650 .78rem/1 var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
+  .item-price { flex:0 0 auto; min-width:0; padding-top:.08rem; color:var(--shop-accent, #cdd2ff); font:650 .82rem/1 var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
   .item-card-action { display:flex; flex:0 0 auto; justify-content:flex-end; min-width:0; }
-  .item-buy-button { display:inline-flex; align-items:center; gap:.35rem; min-height:2.2rem; max-width:100%; padding:0 .65rem; border:1px solid var(--shop-accent, #cdd2ff); border-radius:var(--radius-sm, 4px); background:var(--shop-accent, #cdd2ff); color:#0d0f14; cursor:pointer; font:650 .68rem var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
+  .item-buy-button { display:inline-flex; align-items:center; gap:.35rem; min-height:2.2rem; max-width:100%; padding:0 .65rem; border:1px solid var(--shop-accent, #cdd2ff); border-radius:var(--radius-sm, 4px); background:var(--shop-accent, #cdd2ff); color:#0d0f14; cursor:pointer; font:650 .72rem var(--shop-mono, var(--font-mono-stack)); white-space:nowrap; }
   .item-buy-price { font-weight:750; opacity:.78; }
   .item-buy-button:hover, .item-buy-button:focus-visible { border-color:#fff; background:#fff; }
   .item-buy-button:disabled { border-color:#454852; background:#23262e; color:#858994; cursor:not-allowed; }
