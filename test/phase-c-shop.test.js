@@ -10,44 +10,43 @@ async function readProjectFile(path) {
 
 test('shop shell is one profile studio with Catalog and Owned surfaces', async () => {
   const shop = await readProjectFile('src/lib/Shop.svelte');
+  const rail = await readProjectFile('src/lib/ShopRail.svelte');
   const app = await readProjectFile('src/App.svelte');
 
   assert.match(shop, /Profile studio/);
   assert.match(shop, /Shape <span>your identity\.<\/span>/);
-  assert.match(shop, /\{ id: 'browse', label: 'Catalog' \}/);
-  assert.match(shop, /\{ id: 'collection', label: 'Owned' \}/);
+  assert.match(shop, /<ShopRail/);
+  assert.match(shop, /<ShopContextualPreview/);
+  assert.match(rail, /\{ id: 'browse', number: '01', label: 'Catalog'/);
+  assert.match(rail, /\{ id: 'collection', number: '02', label: 'Owned'/);
   assert.doesNotMatch(shop, /ShopHome|ShopStudio/);
   assert.doesNotMatch(shop, /activeView === 'home'/);
   assert.match(shop, /previewDataLoading/);
   assert.match(shop, /shop-daily-color/);
-  assert.match(shop, /aria-label="Shop views"/);
   assert.match(app, /view !== 'shop'/);
 });
 
 test('catalog removes redundant context, bounds results, and keeps one profile preview', async () => {
   const source = await readProjectFile('src/lib/ShopBrowse.svelte');
+  const rail = await readProjectFile('src/lib/ShopRail.svelte');
 
-  assert.match(source, /const CATALOG_SECTIONS/);
-  assert.match(source, /label: 'All'/);
   assert.doesNotMatch(source, /shop-browse-context|Find your next piece|Today’s color/);
   assert.doesNotMatch(source, /previewDataLoading|previewDataError/);
-  assert.match(source, /<ShopCategoryNav/);
+  assert.doesNotMatch(source, /<ShopCategoryNav/);
+  assert.doesNotMatch(source, /<ShopContextualPreview/);
   assert.match(source, /id="shop-filter-panel"/);
   assert.match(source, /SHOP_OWNERSHIP_FILTERS/);
   assert.match(source, /INITIAL_VISIBLE_ITEMS = 18/);
   assert.match(source, /displayedItems = showAllItems/);
   assert.match(source, /Load more pieces/);
-  assert.match(source, /<ShopContextualPreview/);
-  assert.match(source, /selectedItem=\{selectedItem\}/);
   assert.doesNotMatch(source, /Choose a <span>piece\.|shop-browse-heading-side/);
   assert.doesNotMatch(source, /shop-result-count/);
   assert.match(source, /grid-template-columns:repeat\(3/);
-  assert.match(source, /Name layers/);
-  assert.match(source, /Filter by layer/);
-  assert.match(source, /Name effect layers/);
-  assert.match(source, /aria-label=\{`\$\{subtype\.label\}: \$\{subtype\.description\}`\}/);
+  assert.match(source, /selectedSubslot/);
+  assert.match(rail, /Name layers/);
+  assert.match(rail, /Name effect layers/);
+  assert.match(rail, /Filter by layer|Choose a layer/);
   assert.doesNotMatch(source, /Build your name\.|Choose a font, material, or motion layer and see it on your profile\./);
-  assert.match(source, /@media \(max-width: 960px\)/);
   assert.match(source, /@media \(max-width: 520px\)/);
 });
 
@@ -57,7 +56,7 @@ test('product cards use one selection surface and readable purchase states', asy
   assert.match(source, /class="item-select-button"/);
   assert.match(source, /aria-pressed=\{isPreviewing\}/);
   assert.match(source, /walletBalance/);
-  assert.match(source, /Earn .* more EP/);
+  assert.match(source, /Need .* more EP/);
   assert.match(source, /item-buy-price/);
   assert.match(source, /item-buy-button--locked/);
   assert.match(source, /stateLabel/);
@@ -89,13 +88,14 @@ test('selection stays in the persistent profile preview without a replacement de
 
   assert.match(shop, /selectedItem=\{selectedItem\}/);
   assert.match(shop, /is previewing on your profile/);
-  assert.match(browse, /tryOnShopItem\(equippedItems, selectedItem\)/);
-  assert.match(browse, /getNameItemPreviewLoadout\(selectedItem/);
+  assert.match(shop, /tryOnShopItem\(\$equippedItems, selectedItem\)/);
+  assert.match(shop, /getNameItemPreviewLoadout\(selectedItem/);
+  assert.match(shop, /<ShopContextualPreview/);
   assert.match(contextual, /<ShopStudioPreview/);
   assert.match(contextual, /Live profile/);
   assert.match(contextual, /previewKey/);
   assert.match(contextual, /\{#key previewKey\}/);
-  assert.match(contextual, /Previewing \$\{selectedItem\.name\}/);
+  assert.match(contextual, /Temporary preview/);
   assert.match(contextual, />Clear<\/button>/);
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview|shop-preview-selection/);
   assert.doesNotMatch(contextual, /ShopItemPreview|shop-preview-mode/);
@@ -103,9 +103,13 @@ test('selection stays in the persistent profile preview without a replacement de
 
 test('collection keeps ownership categories concise and the empty state actionable', async () => {
   const collection = await readProjectFile('src/lib/ShopCollection.svelte');
+  const rail = await readProjectFile('src/lib/ShopRail.svelte');
+  const shop = await readProjectFile('src/lib/Shop.svelte');
 
   assert.match(collection, /Pieces you own\./);
-  assert.match(collection, /All pieces/);
+  assert.match(shop, /label: 'All pieces'/);
+  assert.match(rail, /Owned categories/);
+  assert.match(collection, /section = 'all'/);
   assert.match(collection, /Search your pieces/);
   assert.match(collection, /Browse catalog/);
   assert.match(collection, /inventoryCounts/);
@@ -136,12 +140,12 @@ test('shop layout includes desktop, tablet, mobile, and reduced-motion targets',
     readProjectFile('src/lib/Shop.svelte'),
     readProjectFile('src/lib/ShopBrowse.svelte'),
     readProjectFile('src/lib/ShopCollection.svelte'),
-    readProjectFile('src/lib/ShopItemCard.svelte')
+    readProjectFile('src/lib/ShopItemCard.svelte'),
+    readProjectFile('src/lib/ShopRail.svelte')
   ]);
   const source = sources.join('\n');
 
-  assert.match(source, /max-width: 1180px/);
-  assert.match(source, /max-width: 960px/);
+  assert.match(source, /max-width: 1200px/);
   assert.match(source, /max-width: 760px/);
   assert.match(source, /max-width: 520px/);
   assert.match(source, /prefers-reduced-motion/);

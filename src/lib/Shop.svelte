@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import ShopBrowse from './ShopBrowse.svelte';
   import ShopCollection from './ShopCollection.svelte';
+  import ShopRail from './ShopRail.svelte';
+  import ShopContextualPreview from './ShopContextualPreview.svelte';
   import {
     shopItems,
     shopItemsLoading,
@@ -23,23 +25,25 @@
   import { readViewState, writeViewState } from './viewState.js';
   import {
     SHOP_SECTIONS,
+    SHOP_NAME_SUBTYPES,
     createFittingRoom,
+    filterShopItems,
     getCatalogStatus,
     hasShopEntitlement,
     isShopCosmetic,
-    requiresPurchaseConfirmation
+    requiresPurchaseConfirmation,
+    tryOnShopItem
   } from './shopCatalog.js';
   import { normalizeHexColor } from './utils.js';
+  import { getNameItemPreviewLoadout } from './name/nameLoadout.js';
 
-  const SHOP_VIEWS = Object.freeze([
-    { id: 'browse', label: 'Catalog' },
-    { id: 'collection', label: 'Owned' },
-  ]);
   const SHOP_ACCENT = '#C7B4FF';
   const VIEW_STATE_NAMESPACE = 'shop';
 
   let activeView = 'browse';
   let browseSection = 'overview';
+  let activeNameLayer = 'all';
+  let ownedSection = 'all';
   let selectedItem = null;
   let currentRoll = null;
   let profileConfig = null;
@@ -65,12 +69,45 @@
   // The catalog has its own quiet brand accent. Today’s color is shown as
   // compact context and in the real profile preview, not on every product.
   const shopAccent = SHOP_ACCENT;
+  const CATALOG_NAV = Object.freeze([
+    { id: 'overview', label: 'All', description: 'Every shop piece' },
+    { id: 'names', label: 'Names', description: 'Name expression' },
+    { id: 'borders', label: 'Borders', description: 'Profile edges' },
+    { id: 'utility', label: 'Utility', description: 'Consumables' }
+  ]);
+  const NAME_LAYER_NAV = Object.freeze([
+    { id: 'all', label: 'All layers', description: 'Every name effect' },
+    { id: 'name_font', label: 'Font', description: 'Typeface and structure' },
+    { id: 'name_material', label: 'Material', description: 'Surface and finish' },
+    { id: 'name_motion', label: 'Motion', description: 'Movement and reveal' }
+  ]);
+  const OWNED_NAV = Object.freeze([
+    { id: 'all', label: 'All pieces', description: 'Everything you own' },
+    { id: 'names', label: 'Names', description: 'Name expression' },
+    { id: 'profile_border', label: 'Borders', description: 'Profile edges' },
+    { id: 'utility', label: 'Utility', description: 'Consumables' }
+  ]);
   $: ownedCatalogCount = catalogItems.filter(item => {
     if (item.slot === 'consumable') return false;
     const owned = (fittingRoom.inventoryCounts?.[item.item_key] || 0) > 0;
     const equipped = $equippedItems?.[item.slot] === item.item_key;
     return owned || equipped || hasShopEntitlement(item, fittingRoom);
   }).length;
+  $: catalogSections = CATALOG_NAV.map(section => ({
+    ...section,
+    count: filterShopItems(catalogItems, { section: section.id }, fittingRoom).length
+  }));
+  $: nameLayers = NAME_LAYER_NAV.map(layer => ({
+    ...layer,
+    count: layer.id === 'all'
+      ? catalogItems.filter(item => SHOP_NAME_SUBTYPES.some(subtype => subtype.id === item.slot)).length
+      : catalogItems.filter(item => item.slot === layer.id).length
+  }));
+  $: previewUsername = $profile?.display_name || $profile?.username || 'You';
+  $: previewColor = normalizeHexColor(currentRoll?.hex_code || $profile?.mood_color, '#8B7CF6');
+  $: previewLoadout = selectedItem?.slot
+    ? getNameItemPreviewLoadout(selectedItem, tryOnShopItem($equippedItems, selectedItem))
+    : { ...($equippedItems || {}) };
   $: dailyColor = normalizeHexColor(currentRoll?.hex_code, '');
 
   onMount(() => {
@@ -121,17 +158,25 @@
     shopNotice = activeView === 'collection' ? 'Owned opened.' : 'Catalog opened.';
   }
 
-  function openBrowse(section = 'overview') {
-    browseSection = section;
-    activeView = 'browse';
+  function setBrowseSection(section) {
+    browseSection = CATALOG_NAV.some(item => item.id === section) ? section : 'overview';
+    activeNameLayer = 'all';
     selectedItem = null;
+    purchaseArmedKey = null;
+    shopNotice = `${CATALOG_NAV.find(item => item.id === browseSection)?.label || 'Catalog'} opened.`;
   }
 
-  function selectItem(item) {
+  function setNameLayer(layer) {
+    activeNameLayer = NAME_LAYER_NAV.some(item => item.id === layer) ? layer : 'all';
+    selectedItem = null;
+    purchaseArmedKey = null;
+  }
+
+  function selectItem(item, sourceView = activeView) {
     if (!item) return;
     selectedItem = item;
     purchaseArmedKey = null;
-    activeView = 'browse';
+    activeView = sourceView === 'collection' ? 'collection' : 'browse';
     browseSection = item.slot === 'profile_border'
       ? 'borders'
       : ['name_font', 'name_material', 'name_motion'].includes(item.slot)
@@ -139,6 +184,7 @@
         : item.slot === 'consumable'
           ? 'utility'
           : 'overview';
+    activeNameLayer = ['name_font', 'name_material', 'name_motion'].includes(item.slot) ? item.slot : 'all';
     shopNotice = `${item.name} is previewing on your profile. Nothing is saved.`;
   }
 
@@ -212,52 +258,75 @@
         {/if}
       </div>
       <div class="shop-owned" aria-label={`${ownedCatalogCount} owned catalog items`}><span>Owned</span><strong>{ownedCatalogCount}</strong></div>
-      <nav class="shop-navigation" aria-label="Shop views">
-        {#each SHOP_VIEWS as view (view.id)}
-          <button type="button" class:active={activeView === view.id} aria-current={activeView === view.id ? 'page' : undefined} on:click={() => setView(view.id)}>{view.label}</button>
-        {/each}
-      </nav>
       <a class="shop-profile-link" href="/profile/settings" aria-label="Open profile settings">Profile settings <span aria-hidden="true">↗</span></a>
     </div>
   </header>
 
-  {#if $shopItemsLoading}
-    <div class="shop-status" role="status" aria-live="polite"><span>Loading catalog</span><strong>Preparing your live collection…</strong></div>
-  {:else if $shopItemsError}
-    <div class="shop-status shop-status--error" role="alert"><span>Catalog unavailable</span><strong>{$shopItemsError}</strong><button type="button" on:click={() => loadShopItems()}>Try again</button></div>
-  {:else if activeView === 'browse'}
-    <ShopBrowse
-      items={catalogItems}
-      section={browseSection}
+  <div class="shop-workspace">
+    <ShopRail
+      {activeView}
+      activeSection={browseSection}
+      {activeNameLayer}
+      {ownedSection}
+      catalogSections={catalogSections}
+      nameLayers={nameLayers}
+      ownedSections={[...OWNED_NAV]}
+      on:view={event => setView(event.detail)}
+      on:section={event => setBrowseSection(event.detail)}
+      on:nameLayer={event => setNameLayer(event.detail)}
+      on:ownedSection={event => ownedSection = event.detail}
+    />
+
+    <section class="shop-workspace-main" aria-label={activeView === 'browse' ? 'Shop catalog' : 'Owned shop pieces'}>
+      {#if $shopItemsLoading}
+        <div class="shop-status" role="status" aria-live="polite"><span>Loading catalog</span><strong>Preparing your live collection…</strong></div>
+      {:else if $shopItemsError}
+        <div class="shop-status shop-status--error" role="alert"><span>Catalog unavailable</span><strong>{$shopItemsError}</strong><button type="button" on:click={() => loadShopItems()}>Try again</button></div>
+      {:else if activeView === 'browse'}
+        <ShopBrowse
+          items={catalogItems}
+          section={browseSection}
+          selectedItem={selectedItem}
+          selectedSubslot={activeNameLayer}
+          username={previewUsername}
+          displayColor={previewColor}
+          {fittingRoom}
+          equippedItems={$equippedItems}
+          {isSignedIn}
+          {purchaseArmedKey}
+          {loadingAction}
+          on:select={event => selectItem(event.detail, 'browse')}
+          on:reset={() => { selectedItem = null; shopNotice = 'Preview reset to your equipped look.'; }}
+          on:purchase={event => requestPurchase(event.detail)}
+        />
+      {:else}
+        <ShopCollection
+          items={catalogItems}
+          section={ownedSection}
+          {fittingRoom}
+          equippedItems={$equippedItems}
+          profile={$profile}
+          {currentRoll}
+          {isSignedIn}
+          {purchaseArmedKey}
+          {loadingAction}
+          on:browse={() => { setView('browse'); setBrowseSection('overview'); }}
+          on:select={event => selectItem(event.detail, 'collection')}
+          on:purchase={event => requestPurchase(event.detail)}
+        />
+      {/if}
+    </section>
+
+    <ShopContextualPreview
+      loadout={previewLoadout}
       selectedItem={selectedItem}
-      {fittingRoom}
-      equippedItems={$equippedItems}
-      profile={$profile}
+      username={previewUsername}
+      displayColor={previewColor}
+      accountProfile={$profile}
       {profileConfig}
-      {currentRoll}
-      {isSignedIn}
-      {purchaseArmedKey}
-      {loadingAction}
-      on:section={event => browseSection = event.detail}
-      on:select={event => selectItem(event.detail)}
       on:reset={() => { selectedItem = null; shopNotice = 'Preview reset to your equipped look.'; }}
-      on:purchase={event => requestPurchase(event.detail)}
     />
-  {:else}
-    <ShopCollection
-      items={catalogItems}
-      {fittingRoom}
-      equippedItems={$equippedItems}
-      profile={$profile}
-      {currentRoll}
-      {isSignedIn}
-      {purchaseArmedKey}
-      {loadingAction}
-      on:browse={() => openBrowse('overview')}
-      on:select={event => selectItem(event.detail)}
-      on:purchase={event => requestPurchase(event.detail)}
-    />
-  {/if}
+  </div>
 
   <div class="shop-live-region visually-hidden" role="status" aria-live="polite">{shopNotice}</div>
 </main>
@@ -287,18 +356,17 @@
   .shop-daily-color__status { color:var(--shop-muted)!important; }
   .shop-profile-link { min-height:2.9rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .75rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; text-decoration:none; font:.78rem var(--shop-mono); }
   .shop-profile-link:hover, .shop-profile-link:focus-visible { border-color:#777d8d; background:#1b1e25; color:#fff; }
-  .shop-navigation { display:flex; gap:.25rem; width:max-content; max-width:100%; margin:0; padding:.25rem; border:1px solid var(--shop-line); border-radius:var(--radius-pill); background:var(--shop-raised); }
-  .shop-navigation button { position:relative; min-height:2.65rem; padding:0 .9rem; border:0; border-radius:var(--radius-pill); background:transparent; color:#92949d; font:600 .82rem var(--shop-mono); letter-spacing:.03em; cursor:pointer; }
-  .shop-navigation button:hover, .shop-navigation button:focus-visible { color:#fff; }
-  .shop-navigation button.active { background:color-mix(in srgb,var(--shop-accent) 16%,transparent); color:var(--shop-ink); }
-  .shop-navigation button.active::after { display:none; }
+  .shop-workspace { display:grid; grid-template-columns:minmax(13rem,15rem) minmax(0,1fr) minmax(28rem,32rem); gap:clamp(.75rem,2vw,1.5rem); align-items:start; }
+  .shop-workspace-main { min-width:0; }
   .shop-status { display:grid; gap:.55rem; min-height:12rem; align-content:center; padding:2rem; border:1px solid var(--shop-line); background:var(--shop-deep); }
   .shop-status span { color:#858690; font:.7rem var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
   .shop-status strong { font-size:1.1rem; }
   .shop-status--error { border-color:#754d58; }
   .shop-status button { width:max-content; min-height:2.6rem; padding:0 .85rem; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#f2f0eb; cursor:pointer; }
   .shop-live-region { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  @media (max-width: 1200px) { .shop-workspace { grid-template-columns:minmax(12rem,14rem) minmax(0,1fr); } .shop-workspace > :global(.shop-contextual-preview) { grid-column:1 / -1; position:static; } }
   @media (max-width: 1000px) { .shop-header { align-items:flex-start; flex-direction:column; gap:1rem; } .shop-header-actions { width:100%; } }
-  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,100rem); margin-top:.8rem; padding-top:0; } .shop-header-actions { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr); align-items:stretch; } .shop-wallet, .shop-navigation, .shop-profile-link { grid-column:1 / -1; min-width:0; } .shop-daily-color, .shop-owned { min-width:0; } .shop-wallet strong { font-size:1rem; } .shop-profile-link { justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
-  @media (prefers-reduced-motion: reduce) { .shop-navigation button, .shop-profile-link { transition:none; } }
+  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,100rem); margin-top:.8rem; padding-top:0; } .shop-header-actions { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr); align-items:stretch; } .shop-wallet, .shop-profile-link { grid-column:1 / -1; min-width:0; } .shop-daily-color, .shop-owned { min-width:0; } .shop-wallet strong { font-size:1rem; } .shop-profile-link { justify-content:center; } }
+  @media (max-width: 620px) { .shop-workspace { grid-template-columns:1fr; } .shop-workspace > :global(.shop-contextual-preview) { grid-column:auto; } }
+  @media (prefers-reduced-motion: reduce) { .shop-profile-link { transition:none; } }
 </style>

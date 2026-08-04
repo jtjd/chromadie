@@ -39,8 +39,8 @@
   <header class="shop-contextual-preview__header">
     <div>
       <span class="shop-eyebrow">Live profile</span>
-      <h2 id="shop-contextual-preview-title">{previewName}</h2>
-      <p>{selectedItem ? `Previewing ${selectedItem.name}` : 'Select a piece to see it here.'}</p>
+      <h2 id="shop-contextual-preview-title">{selectedItem?.name || 'Your profile'}</h2>
+      <p>{selectedItem ? 'Temporary preview · nothing is saved.' : 'Your equipped look.'}</p>
     </div>
     <div class="shop-preview-actions">
       <button type="button" on:click={replayPreview}>Replay</button>

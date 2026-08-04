@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Turn the shop into a profile workspace
+
+- Added a Profile Settings-inspired navigation rail for Catalog, Owned,
+  categories, and Name layers.
+- Made the shop a three-column workspace: navigation, catalog results, and a
+  persistent live profile preview.
+- Removed duplicate horizontal menus and redundant preview/detail framing so
+  selecting a piece immediately keeps the real profile renderer in view.
+- Kept catalog filtering, ownership, purchase RPCs, temporary try-on, and
+  profile settings behavior unchanged.
+
 ## 2026-08-03 — Improve shop scale and readability
 
 - Expanded the desktop shop surface so the catalog uses the available viewport.

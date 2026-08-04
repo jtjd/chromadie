@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Shop profile-studio workspace pass — 2026-08-03
+
+- Replaced competing shop menus with a Profile Settings-inspired left rail
+  for Catalog, Owned, category, and Name layer navigation.
+- Kept product results in a focused center column and the production profile
+  renderer in a persistent right-side live preview.
+- Removed duplicate Browse/Collection navigation and preview context so the
+  workspace has one clear information hierarchy.
+- Preserved temporary try-on, purchase confirmation, inventory refresh,
+  account boundaries, responsive behavior, and reduced-motion behavior.
+
 ## Shop scale and preview readability pass — 2026-08-03
 
 - Widened the desktop catalog canvas and raised supporting type sizes.

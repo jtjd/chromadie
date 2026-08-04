@@ -32,10 +32,10 @@
     ? 'Buying…'
     : purchaseArmed
       ? 'Confirm purchase'
-      : !isSignedIn
-        ? 'Sign in to buy'
-        : state?.tone === 'unaffordable'
-          ? `Earn ${compactPrice(Math.max(0, Number(item?.cost || 0) - Number(walletBalance || 0)))} more EP`
+        : !isSignedIn
+          ? 'Sign in to buy'
+          : state?.tone === 'unaffordable'
+          ? `Need ${compactPrice(Math.max(0, Number(item?.cost || 0) - Number(walletBalance || 0)))} more EP`
           : 'Buy';
   $: stateLabel = state?.tone === 'free'
     ? 'Included'
@@ -62,7 +62,7 @@
         {/if}
         <strong>{item.name}</strong>
       </span>
-      {#if !purchasable && !['owned', 'equipped'].includes(state?.tone)}
+      {#if state?.tone === 'unaffordable'}
         <strong class="item-price">{priceLabel}</strong>
       {/if}
     </span>
@@ -78,7 +78,7 @@
       {#if purchasable}
         <button type="button" class="item-buy-button" class:item-buy-button--locked={state?.tone === 'unaffordable'} disabled={purchaseDisabled} on:click|stopPropagation={() => dispatch('purchase', item)}>
           <span>{purchaseLabel}</span>
-          <span class="item-buy-price" aria-label={`Cost ${priceLabel}`}>· {priceLabel}</span>
+          {#if state?.tone !== 'unaffordable'}<span class="item-buy-price" aria-label={`Cost ${priceLabel}`}>· {priceLabel}</span>{/if}
         </button>
       {:else if ['owned', 'equipped'].includes(state?.tone)}
         <button type="button" class="item-buy-button item-buy-button--state tone-{state.tone}" disabled aria-label={`${state.label}: ${item.name}`}>{stateLabel}</button>

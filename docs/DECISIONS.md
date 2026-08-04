@@ -2,6 +2,22 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Make the shop an expression workspace
+
+The shop now borrows the Profile Settings editor's three-part composition:
+one compact rail for Catalog/Owned and layer navigation, one focused results
+column, and one persistent live profile preview. This gives navigation a
+single home, removes competing horizontal menus, and makes the preview part
+of the selection workflow rather than a separate detail surface. The change
+reuses existing catalog filtering, temporary fitting-room state, purchase
+RPCs, and profile renderer boundaries; it is presentation-only and requires
+no schema or endpoint changes.
+
+Unaffordable purchase actions use a single “Need … more EP” message instead
+of repeating the shortfall and full price in the same button. This keeps the
+card metadata row readable at the three-column desktop density while leaving
+the authoritative purchase guard unchanged.
+
 ## 2026-08-03 — Scale the shop around the profile preview
 
 The shop desktop surface now uses a wider bounded canvas, larger supporting
