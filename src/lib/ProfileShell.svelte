@@ -1144,8 +1144,9 @@
     width: 100%;
   }
 
-  /* Paid layouts change composition, not profile data. Each keeps the same
-     semantic DOM order and collapses back to a readable single column on mobile. */
+  /* Layouts style the identity card only. The approved identity page and the
+     daily-roll page deliberately keep the same shell relationship for every
+     layout so cosmetics cannot change scroll snapping or roll presentation. */
   .profile-shell__composition { display:contents; min-width:0; }
   .profile-shell__approved-canvas,
   .profile-shell__approved-main,
@@ -1160,57 +1161,20 @@
   .profile-shell-page :global(.identity-card__links) { min-width:0; }
   .profile-shell-page :global(.identity-card__copy) { overflow-wrap:anywhere; }
   .profile-shell-page :global(.identity-card__links a) { min-width:0; max-width:100%; }
-  .profile-shell-page--split-signal .profile-shell__composition { display:grid; grid-template-columns:minmax(14rem,.34fr) minmax(0,.66fr); gap:clamp(1rem,3vw,3rem); align-items:stretch; width:min(100%,var(--content-profile)); min-height:calc(100dvh - 4.75rem); margin-inline:auto; }
-  .profile-shell-page--split-signal .profile-shell__approved-canvas { grid-column:1; }
-  .profile-shell-page--split-signal .profile-shell__approved-main { height:auto; min-height:calc(100dvh - 4.75rem); align-items:stretch; justify-content:flex-start; padding-top:clamp(2rem,8vh,6rem); }
-  .profile-shell-page--split-signal .profile-shell__opening.profile-shell__approved-opening { width:100%; }
-  .profile-shell-page--split-signal .profile-shell__more { grid-column:2; min-height:0; align-items:stretch; justify-content:flex-start; padding-block:clamp(2rem,8vh,6rem); }
-  .profile-shell-page--split-signal .profile-shell__approved-game,
-  .profile-shell-page--split-signal .profile-shell__approved-featured,
-  .profile-shell-page--split-signal .profile-shell__approved-supporting { width:100%; }
-
+  .profile-shell-page--split-signal :global(.profile-shell__identity-boundary) { border-left:2px solid color-mix(in srgb,var(--profile-accent) 58%,var(--color-line-subtle)); border-radius:0 var(--radius-lg) var(--radius-lg) 0; }
+  .profile-shell-page--split-signal :global(.profile-shell__identity-boundary .identity-card) { border-radius:0 var(--radius-md) var(--radius-md) 0; }
   .profile-shell-page--archive-index { --profile-index-rule:color-mix(in srgb,var(--profile-accent) 34%,var(--color-line-subtle)); }
-  .profile-shell-page--archive-index .profile-shell__opening,
-  .profile-shell-page--archive-index .profile-shell__story-section { border-top-color:var(--profile-index-rule); border-bottom-color:var(--profile-index-rule); }
-  .profile-shell-page--archive-index .profile-shell__more { counter-reset:archive-section; }
-  .profile-shell-page--archive-index .profile-shell__more > [data-profile-region]::before { counter-increment:archive-section; content:'0' counter(archive-section); display:block; margin-bottom:.55rem; color:var(--profile-accent); font:700 .62rem/1 var(--font-mono-stack); letter-spacing:.12em; }
-  .profile-shell-page--archive-index .profile-shell__approved-game,
-  .profile-shell-page--archive-index .profile-shell__approved-featured { border-left:1px solid var(--profile-index-rule); padding-left:1rem; }
-
-  .profile-shell-page--prism-mosaic .profile-shell__more { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); align-content:center; align-items:start; gap:1.25rem; }
-  .profile-shell-page--prism-mosaic .profile-shell__more .profile-shell__approved-game { grid-column:1 / -1; }
-  .profile-shell-page--prism-mosaic .profile-shell__more .profile-shell__approved-featured { grid-column:1; }
-  .profile-shell-page--prism-mosaic .profile-shell__more .profile-shell__approved-supporting { grid-column:2; }
-  .profile-shell-page--prism-mosaic .profile-shell__approved-game,
-  .profile-shell-page--prism-mosaic .profile-shell__approved-featured,
-  .profile-shell-page--prism-mosaic .profile-shell__approved-supporting { width:100%; margin-top:0; }
-
+  .profile-shell-page--archive-index :global(.profile-shell__identity-boundary) { border-top:1px solid var(--profile-index-rule); border-bottom:1px solid var(--profile-index-rule); border-radius:0; }
+  .profile-shell-page--archive-index :global(.profile-shell__identity-boundary .identity-card) { border-radius:0; box-shadow:none; }
+  .profile-shell-page--archive-index :global(.profile-shell__identity-boundary .identity-card__handle-row)::before { content:'01 / IDENTITY'; margin-right:.35rem; color:var(--profile-accent); font:700 .58rem/1 var(--font-mono-stack); letter-spacing:.12em; }
+  .profile-shell-page--prism-mosaic :global(.profile-shell__identity-boundary .identity-card) { border-color:color-mix(in srgb,var(--profile-accent) 45%,var(--color-line-subtle)); box-shadow:0 1.5rem 3rem color-mix(in srgb,var(--profile-accent) 12%,transparent), inset 0 1px 0 color-mix(in srgb,var(--profile-accent) 22%,transparent); }
+  .profile-shell-page--prism-mosaic :global(.profile-shell__identity-boundary .identity-card__name-row) { padding-bottom:.7rem; border-bottom:1px solid color-mix(in srgb,var(--profile-accent) 30%,var(--color-line-subtle)); }
   .profile-shell-page--night-terminal { --profile-terminal-line:color-mix(in srgb,var(--profile-accent) 32%,var(--color-line-subtle)); }
-  .profile-shell-page--night-terminal .profile-shell__opening,
-  .profile-shell-page--night-terminal .profile-shell__approved-game,
-  .profile-shell-page--night-terminal .profile-shell__story-section { border-color:var(--profile-terminal-line); border-radius:2px; }
-  .profile-shell-page--night-terminal .profile-shell__more { align-items:stretch; padding-inline:clamp(1rem,4vw,4rem); }
-  .profile-shell-page--night-terminal .profile-shell__approved-game,
-  .profile-shell-page--night-terminal .profile-shell__approved-featured { width:100%; }
-  .profile-shell-page--night-terminal .profile-shell__more::before { content:'PROFILE / LIVE'; align-self:flex-start; color:var(--profile-accent); font:700 .62rem/1 var(--font-mono-stack); letter-spacing:.14em; }
-
-  .profile-shell-page--story-stack .profile-shell__approved-canvas { min-height:0; }
-  .profile-shell-page--story-stack .profile-shell__approved-main { height:auto; min-height:70vh; padding-block:clamp(3rem,10vh,8rem); }
-  .profile-shell-page--story-stack .profile-shell__more { min-height:0; align-items:stretch; justify-content:flex-start; padding-block:clamp(2rem,7vh,5rem); }
-  .profile-shell-page--story-stack .profile-shell__more > * { width:min(100%,42rem); }
-  .profile-shell-page--story-stack .profile-shell__approved-game { border-top:2px solid color-mix(in srgb,var(--profile-accent) 48%,var(--color-line-subtle)); }
-
-  @media (max-width: 48rem) {
-    .profile-shell-page--split-signal .profile-shell__composition { display:block; min-height:0; width:100%; }
-    .profile-shell-page--split-signal .profile-shell__approved-canvas,
-    .profile-shell-page--split-signal .profile-shell__more { width:100%; max-width:100%; margin-inline:0; }
-    .profile-shell-page--split-signal .profile-shell__approved-main { min-height:calc(100dvh - 3.85rem); padding-top:0; }
-    .profile-shell-page--split-signal .profile-shell__more { padding-block:4rem; }
-    .profile-shell-page--prism-mosaic .profile-shell__more { display:flex; }
-    .profile-shell-page--prism-mosaic .profile-shell__more > * { width:100%; max-width:100%; }
-    .profile-shell-page--night-terminal .profile-shell__more { padding-inline:0; }
-    .profile-shell-page--story-stack .profile-shell__approved-main { min-height:calc(100dvh - 3.85rem); }
-  }
+  .profile-shell-page--night-terminal :global(.profile-shell__identity-boundary) { border-color:var(--profile-terminal-line); border-radius:2px; }
+  .profile-shell-page--night-terminal :global(.profile-shell__identity-boundary .identity-card) { border-color:var(--profile-terminal-line); border-radius:2px; background:rgba(3,8,12,.84); }
+  .profile-shell-page--night-terminal :global(.profile-shell__identity-boundary .identity-card__handle-row)::before { content:'PROFILE / LIVE'; margin-right:.35rem; color:var(--profile-accent); font:700 .58rem/1 var(--font-mono-stack); letter-spacing:.14em; }
+  .profile-shell-page--story-stack :global(.profile-shell__identity-boundary .identity-card) { padding-block:clamp(2rem,5vw,3.5rem); }
+  .profile-shell-page--story-stack :global(.profile-shell__identity-boundary .identity-card__bio) { max-width:34rem; font-size:1rem; }
 
   @media (max-width: 36rem) {
     .profile-shell-page { height: calc(100dvh - 3.85rem); min-height: calc(100dvh - 3.85rem); padding-inline: 1.5rem; padding-bottom: 0; }

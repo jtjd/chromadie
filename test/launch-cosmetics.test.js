@@ -53,6 +53,14 @@ test('paid layout resolution preserves the free fallback and supports temporary 
   assert.equal(resolveProfileLayoutVariant({ profile_layout: 'not-real' }, { layoutVariant: 'not-real' }), 'immersive');
 });
 
+test('profile layouts stay on the identity card and cannot recompose the roll page', async () => {
+  const shell = await read('src/lib/ProfileShell.svelte');
+  assert.match(shell, /profile-shell-page--split-signal :global\(\.profile-shell__identity-boundary/);
+  assert.match(shell, /profile-shell-page--story-stack :global\(\.profile-shell__identity-boundary/);
+  assert.doesNotMatch(shell, /profile-shell-page--(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)[^\n]*profile-shell__more/);
+  assert.doesNotMatch(shell, /profile-shell-page--(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)[^\n]*profile-shell__approved-(?:game|featured|supporting)/);
+});
+
 test('new catalog slots filter independently and fitting-room selection preserves other slots', () => {
   const items = [
     { item_key: 'cursor_trail_signal_trace', slot: 'cursor_trail', cost: 160000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
