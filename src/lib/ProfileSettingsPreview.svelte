@@ -59,6 +59,7 @@
       avatarEffectKey={loadout?.avatar_effect}
       avatarEffectMode="profile"
       avatarEffectAnimated={true}
+      layoutVariant={layoutVariant}
       showToday={false}
     />
     <div class="settings-preview__composition">
@@ -95,6 +96,11 @@
   .settings-preview__canvas :global(.identity-card__name-row),
   .settings-preview__canvas :global(.identity-card__links) { min-width:0; }
   .settings-preview__canvas :global(.identity-card__links a) { min-width:0; max-width:100%; }
+  .settings-preview__canvas :global(.identity-card.identity-card--layout-split-signal) { border-left:2px solid color-mix(in srgb,var(--preview-accent) 58%,transparent); border-radius:0 var(--radius-md) var(--radius-md) 0; }
+  .settings-preview__canvas :global(.identity-card.identity-card--layout-archive-index) { border-radius:0; box-shadow:none; }
+  .settings-preview__canvas :global(.identity-card.identity-card--layout-prism-mosaic) { border-color:color-mix(in srgb,var(--preview-accent) 45%,var(--color-line-subtle)); }
+  .settings-preview__canvas :global(.identity-card.identity-card--layout-night-terminal) { border-radius:2px; background:rgba(3,8,12,.84); }
+  .settings-preview__canvas :global(.identity-card.identity-card--layout-story-stack) { border-radius:var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-sm); }
   .settings-preview__canvas :global(.identity-card__name) { font-size:clamp(1.35rem, 2vw, 2rem); }
   .settings-preview__canvas :global(.identity-card__bio) { font-size:.75rem; }
   .settings-preview__composition { position:relative; z-index:1; margin:0 .75rem .75rem; padding:.7rem; border:1px solid color-mix(in srgb, var(--preview-accent) 28%, var(--color-line-subtle)); border-radius:var(--radius-sm); background:rgba(5,7,11,.72); }

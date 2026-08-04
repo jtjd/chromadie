@@ -54,9 +54,13 @@ test('paid layout resolution preserves the free fallback and supports temporary 
 });
 
 test('profile layouts stay on the identity card and cannot recompose the roll page', async () => {
-  const shell = await read('src/lib/ProfileShell.svelte');
-  assert.match(shell, /profile-shell-page--split-signal :global\(\.profile-shell__identity-boundary/);
-  assert.match(shell, /profile-shell-page--story-stack :global\(\.profile-shell__identity-boundary/);
+  const [shell, card] = await Promise.all([
+    read('src/lib/ProfileShell.svelte'),
+    read('src/lib/IdentityCard.svelte')
+  ]);
+  assert.match(card, /identity-card--layout-split-signal/);
+  assert.match(card, /identity-card--layout-story-stack/);
+  assert.match(shell, /layoutVariant=\{layoutVariant\}/);
   assert.doesNotMatch(shell, /profile-shell-page--(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)[^\n]*profile-shell__more/);
   assert.doesNotMatch(shell, /profile-shell-page--(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)[^\n]*profile-shell__approved-(?:game|featured|supporting)/);
 });

@@ -82,6 +82,7 @@
           avatarEffectMode={compact ? 'compact' : 'profile'}
           avatarEffectAnimated={resolvedNameRendererMode === 'animated'}
           avatarEffectActive={resolvedNameRendererMode === 'animated'}
+          layoutVariant={previewLayout}
           showToday={false}
         />
       </div>
@@ -204,11 +205,11 @@
   .studio-profile-card :global(.identity-card__avatar-letter) { font-size: 1.5rem; }
   .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.8rem, 6.5vw, 2.35rem); line-height: .98; }
   .studio-profile-card :global(.identity-card__bio) { margin-top: 0.45rem; font-size: 0.72rem; }
-  .studio-profile-card--split-signal { margin-left: 4%; width: 92%; border-left: 2px solid color-mix(in srgb, var(--color-accent-cyan) 56%, transparent); }
-  .studio-profile-card--archive-index { border-radius: 0; border-top: 2px solid color-mix(in srgb, var(--color-accent-bright) 54%, transparent); }
-  .studio-profile-card--prism-mosaic { width: 88%; transform: rotate(-.35deg); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 26%, transparent), 0 24px 48px rgba(0,0,0,.38); }
-  .studio-profile-card--night-terminal { border-radius: 2px; background: #0b1015; }
-  .studio-profile-card--story-stack { width: 84%; margin-left: 8%; border-radius: 18px 6px 18px 6px; }
+  .studio-profile-card--split-signal :global(.identity-card.identity-card--layout-split-signal) { border-left: 2px solid color-mix(in srgb, var(--color-accent-cyan) 56%, transparent); border-radius: 0 17px 17px 0; }
+  .studio-profile-card--archive-index :global(.identity-card.identity-card--layout-archive-index) { border-top: 2px solid color-mix(in srgb, var(--color-accent-bright) 54%, transparent); border-radius: 0; box-shadow: none; }
+  .studio-profile-card--prism-mosaic :global(.identity-card.identity-card--layout-prism-mosaic) { border-color: color-mix(in srgb, var(--color-accent) 36%, var(--color-line-subtle)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent), 0 24px 48px rgba(0,0,0,.28); }
+  .studio-profile-card--night-terminal :global(.identity-card.identity-card--layout-night-terminal) { border-radius: 2px; background: #0b1015; }
+  .studio-profile-card--story-stack :global(.identity-card.identity-card--layout-story-stack) { border-radius: 18px 6px 18px 6px; }
   .studio-layout-badge { position:absolute; z-index:4; left:.9rem; bottom:.8rem; padding:.25rem .45rem; border:1px solid rgba(255,255,255,.16); background:rgba(7,9,13,.74); color:rgba(239,243,255,.68); font:600 .58rem var(--font-mono-stack); letter-spacing:.08em; text-transform:uppercase; }
 
   .studio-selection {

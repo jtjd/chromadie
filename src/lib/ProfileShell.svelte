@@ -425,6 +425,7 @@
               avatarEffectKey={cosmetics?.avatar_effect}
               avatarEffectMode="profile"
               avatarEffectAnimated={true}
+              layoutVariant={layoutVariant}
               rollState={profileRollState}
               showToday={false}
             />
@@ -1161,20 +1162,6 @@
   .profile-shell-page :global(.identity-card__links) { min-width:0; }
   .profile-shell-page :global(.identity-card__copy) { overflow-wrap:anywhere; }
   .profile-shell-page :global(.identity-card__links a) { min-width:0; max-width:100%; }
-  .profile-shell-page--split-signal :global(.profile-shell__identity-boundary) { border-left:2px solid color-mix(in srgb,var(--profile-accent) 58%,var(--color-line-subtle)); border-radius:0 var(--radius-lg) var(--radius-lg) 0; }
-  .profile-shell-page--split-signal :global(.profile-shell__identity-boundary .identity-card) { border-radius:0 var(--radius-md) var(--radius-md) 0; }
-  .profile-shell-page--archive-index { --profile-index-rule:color-mix(in srgb,var(--profile-accent) 34%,var(--color-line-subtle)); }
-  .profile-shell-page--archive-index :global(.profile-shell__identity-boundary) { border-top:1px solid var(--profile-index-rule); border-bottom:1px solid var(--profile-index-rule); border-radius:0; }
-  .profile-shell-page--archive-index :global(.profile-shell__identity-boundary .identity-card) { border-radius:0; box-shadow:none; }
-  .profile-shell-page--archive-index :global(.profile-shell__identity-boundary .identity-card__handle-row)::before { content:'01 / IDENTITY'; margin-right:.35rem; color:var(--profile-accent); font:700 .58rem/1 var(--font-mono-stack); letter-spacing:.12em; }
-  .profile-shell-page--prism-mosaic :global(.profile-shell__identity-boundary .identity-card) { border-color:color-mix(in srgb,var(--profile-accent) 45%,var(--color-line-subtle)); box-shadow:0 1.5rem 3rem color-mix(in srgb,var(--profile-accent) 12%,transparent), inset 0 1px 0 color-mix(in srgb,var(--profile-accent) 22%,transparent); }
-  .profile-shell-page--prism-mosaic :global(.profile-shell__identity-boundary .identity-card__name-row) { padding-bottom:.7rem; border-bottom:1px solid color-mix(in srgb,var(--profile-accent) 30%,var(--color-line-subtle)); }
-  .profile-shell-page--night-terminal { --profile-terminal-line:color-mix(in srgb,var(--profile-accent) 32%,var(--color-line-subtle)); }
-  .profile-shell-page--night-terminal :global(.profile-shell__identity-boundary) { border-color:var(--profile-terminal-line); border-radius:2px; }
-  .profile-shell-page--night-terminal :global(.profile-shell__identity-boundary .identity-card) { border-color:var(--profile-terminal-line); border-radius:2px; background:rgba(3,8,12,.84); }
-  .profile-shell-page--night-terminal :global(.profile-shell__identity-boundary .identity-card__handle-row)::before { content:'PROFILE / LIVE'; margin-right:.35rem; color:var(--profile-accent); font:700 .58rem/1 var(--font-mono-stack); letter-spacing:.14em; }
-  .profile-shell-page--story-stack :global(.profile-shell__identity-boundary .identity-card) { padding-block:clamp(2rem,5vw,3.5rem); }
-  .profile-shell-page--story-stack :global(.profile-shell__identity-boundary .identity-card__bio) { max-width:34rem; font-size:1rem; }
 
   @media (max-width: 36rem) {
     .profile-shell-page { height: calc(100dvh - 3.85rem); min-height: calc(100dvh - 3.85rem); padding-inline: 1.5rem; padding-bottom: 0; }

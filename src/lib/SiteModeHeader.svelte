@@ -65,7 +65,7 @@
     {#if isProfileMode}
       <div class="site-mode-header__context" aria-label="Profile actions">
         {#if isOwner}
-          <button type="button" on:click={editProfile}>Edit</button>
+          <button type="button" class="site-mode-header__context-action" aria-label="Edit your profile" on:click={editProfile}>Edit profile <span aria-hidden="true">↗</span></button>
         {/if}
       </div>
     {/if}
@@ -105,7 +105,7 @@
 
       {#if isProfileMode}
         <div class="site-mode-header__mobile-context" aria-label="Profile actions">
-          {#if isOwner}<button type="button" on:click={editProfile}>Edit profile</button>{/if}
+          {#if isOwner}<button type="button" on:click={editProfile}>Edit profile <span aria-hidden="true">↗</span></button>{/if}
         </div>
       {/if}
 
@@ -281,6 +281,9 @@
   }
   .site-mode-header__nav-space { min-width: 0; }
   .site-mode-header__context { flex: 0 0 auto; }
+  .site-mode-header__context-action { border: 1px solid color-mix(in srgb, var(--site-header-accent) 40%, rgba(255, 255, 255, 0.14)) !important; background: color-mix(in srgb, var(--site-header-accent) 12%, transparent) !important; color: rgba(246, 248, 255, 0.9) !important; }
+  .site-mode-header__context-action:hover { border-color: color-mix(in srgb, var(--site-header-accent) 72%, rgba(255, 255, 255, 0.2)) !important; background: color-mix(in srgb, var(--site-header-accent) 20%, transparent) !important; }
+  .site-mode-header__context-action span { margin-left: 0.25rem; color: color-mix(in srgb, var(--site-header-accent) 78%, white); }
 
   .site-mode-header__nav {
     justify-content: center;
