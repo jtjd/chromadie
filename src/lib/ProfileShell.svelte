@@ -711,7 +711,7 @@
     100% { transform: scale(1); box-shadow: none; }
   }
 
-  .profile-shell__media-background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 0.28; filter: saturate(0.8); pointer-events: none; }
+  .profile-shell__media-background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
   .profile-shell__opening-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr); align-items: center; gap: clamp(2rem, 6vw, 7rem); width: min(100%, 70rem); margin-inline: auto; }
   .profile-shell__identity { min-width: 0; }
 

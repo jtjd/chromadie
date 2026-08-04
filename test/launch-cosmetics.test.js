@@ -61,6 +61,8 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.match(atmosphereSource, /atmosphereInstanceCounter/);
   assert.match(atmosphereSource, /--atmosphere-spectrum:url\(#\$\{instanceId\}-spectrum\)/);
   assert.match(atmosphereSource, /mode === 'card' \|\| mode === 'compact'/);
+  assert.match(atmosphereSource, /background:transparent/);
+  assert.doesNotMatch(atmosphereSource, /mix-blend-mode:soft-light/);
 });
 
 test('paid layout resolution preserves the free fallback and supports temporary previews', () => {

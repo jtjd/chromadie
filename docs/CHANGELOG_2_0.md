@@ -1605,6 +1605,9 @@ direct route behavior.
   artwork, and a finite server-validated renderer registry.
 - Bumped the shop cache/catalog version and synchronized seed, migration, RPC
   allowlists, database security checks, balance drift, and catalog drift.
+- Atmospheres are now additive-only so uploaded backgrounds are not darkened;
+  the scene plates use layered authored particles, refraction, paper marks,
+  moon detail, and signal structure instead of a generic wash.
 
 ## 2026-08-03 — Use the reference Font families in production
 

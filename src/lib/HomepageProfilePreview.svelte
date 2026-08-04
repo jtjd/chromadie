@@ -174,6 +174,7 @@
   .homepage-preview__header a:hover { color: var(--preview-accent); }
   .homepage-preview__header span { color: rgba(241, 243, 237, 0.42); font: 600 0.57rem / 1 var(--home-mono, 'IBM Plex Mono', monospace); letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap; }
   .homepage-preview__scene { position: relative; min-height: 12.5rem; padding: clamp(1rem, 3vw, 2rem); overflow: hidden; background: #080a0c; }
+  .homepage-preview__media-background { position:absolute; inset:0; z-index:0; background-position:center; background-size:cover; pointer-events:none; }
   :global(.homepage-preview__atmosphere) { z-index: 0; opacity: .72; }
   :global(.homepage-preview__identity-boundary) { position: relative; z-index: 2; width: 100%; overflow: hidden; border-radius: 0.45rem; isolation: isolate; }
   :global(.homepage-preview__identity-boundary) :global(.identity-card) { position: relative; z-index: 1; }

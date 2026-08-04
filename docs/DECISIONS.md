@@ -2924,3 +2924,8 @@ Shop cards render static miniatures; only public profiles and fitting-room
 previews animate. The additive migration updates the existing slot allowlists,
 RPCs, seed, cache version, and catalog drift checks without reviving the old
 weather-class rows.
+
+The atmosphere layer is explicitly additive: it has no opaque base, blend-mode
+texture, or color wash, and uploaded profile backgrounds render at full fidelity.
+Scene plates use layered authored linework, particles, refractive edges, and
+material details rather than a single gradient or glow preset.

@@ -1944,6 +1944,9 @@ kept public profile selectors outside the supporting-route baseline.
   constraints, seed, cache version, and drift/security checks.
 - Existing uploaded profile backgrounds remain independent. Final active
   catalog count is 122 (eight atmospheres added to the existing 114).
+- Removed the atmosphere tint/grain treatment that could darken uploaded
+  backgrounds and strengthened each scene with authored particles, edges,
+  frame details, and layered motion.
 
 ## 2026-08-03 — Differentiate the reference Name fonts
 
