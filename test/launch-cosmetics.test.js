@@ -59,6 +59,8 @@ test('profile layouts stay on the identity card and cannot recompose the roll pa
     read('src/lib/IdentityCard.svelte')
   ]);
   assert.match(card, /identity-card--layout-split-signal/);
+  assert.match(card, /identity-card--layout-editorial/);
+  assert.match(card, /identity-card--layout-focus/);
   assert.match(card, /identity-card--layout-story-stack/);
   assert.match(shell, /layoutVariant=\{layoutVariant\}/);
   assert.doesNotMatch(shell, /profile-shell-page--(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)[^\n]*profile-shell__more/);

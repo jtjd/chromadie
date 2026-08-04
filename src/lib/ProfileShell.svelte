@@ -817,8 +817,6 @@
   .profile-shell__compatibility p:not(.profile-shell__story-eyebrow) { max-width: 42rem; margin: var(--space-2) 0 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
   .profile-shell__compatibility-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
   .profile-shell__social-tools > .profile-shell__action { justify-self: start; }
-  .profile-shell-page--editorial .profile-shell__opening { background: linear-gradient(110deg, color-mix(in srgb, var(--profile-surface-accent) 10%, var(--surface-panel-strong)), color-mix(in srgb, var(--surface-panel) 34%, transparent)); }
-  :global(.profile-shell-page--focus) .profile-shell__opening-content { max-width: 64rem; }
   .profile-shell__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
   .profile-shell__stats > div { min-width: 0; padding: var(--space-4); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-inset); }
   .profile-shell__stats strong { display: block; color: var(--color-ink-strong); font: 600 clamp(1.45rem, 3vw, 2.25rem) / 1 var(--font-display-stack); }

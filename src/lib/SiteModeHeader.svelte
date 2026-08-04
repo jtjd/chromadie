@@ -216,7 +216,10 @@
 
   .site-mode-header--profile .site-mode-header__wordmark > span { color: #cdd2ff; }
   .site-mode-header--profile .site-mode-header__nav-space { display: none; }
-  .site-mode-header--profile .site-mode-header__context { display: none; }
+  .site-mode-header--profile .site-mode-header__context { display: flex; align-items: center; }
+  .site-mode-header--profile .site-mode-header__context-action { min-height: 2rem; padding: 0.48rem 0.7rem; border: 1px solid color-mix(in srgb, var(--site-header-accent) 42%, rgba(255, 255, 255, 0.12)); border-radius: 0.35rem; background: color-mix(in srgb, var(--site-header-accent) 9%, transparent); color: rgba(242, 240, 235, 0.82); font: 600 0.7rem / 1 var(--site-header-font); letter-spacing: 0.02em; cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease; }
+  .site-mode-header--profile .site-mode-header__context-action:hover { border-color: color-mix(in srgb, var(--site-header-accent) 72%, white); background: color-mix(in srgb, var(--site-header-accent) 16%, transparent); color: #fff; }
+  .site-mode-header--profile .site-mode-header__context-action:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
 
   .site-mode-header--profile .site-mode-header__right {
     padding: 0;
