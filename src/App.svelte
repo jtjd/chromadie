@@ -641,7 +641,7 @@
 
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
   $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
-  $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && view !== 'home' && view !== 'profile' && view !== 'profile-settings' && (!$authUser || !$profileLoading);
+  $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && view !== 'home' && view !== 'profile' && view !== 'profile-settings' && view !== 'shop' && (!$authUser || !$profileLoading);
   $: profileTitle = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || 'Profile';
   $: profileModeVisible = routeMode === 'app' && view === 'profile' && !legacyProfile;
   $: profileSettingsModeVisible = routeMode === 'app' && view === 'profile-settings';

@@ -1,5 +1,26 @@
 # Chromadie 2.0 Progress
 
+## Shop profile-studio restructure — 2026-08-03
+
+- Replaced the four-way Shop/Browse/Collection/Studio shop navigation with a
+  focused Catalog and Collection model; legacy saved view state normalizes to
+  Catalog without changing routes or account data.
+- Removed the gameplay launch announcement from the shop route and tightened
+  the shell so the first fold reaches catalog controls and the profile preview
+  sooner.
+- Made the fitting-room profile the dominant contextual surface, with a
+  readable selected-item label, stable neutral catalog stages, and a compact
+  daily-color context that waits for the live roll endpoint.
+- Rebuilt product cards around one selectable effect surface, stronger
+  collection contrast, one EP/state action, meaningful insufficient-balance
+  copy, and an 18-item initial render with Load more.
+- Simplified Collection categories and its empty state while preserving
+  ownership, equipped state, profile settings, purchase RPCs, and inventory
+  refresh behavior.
+- Updated shop source-contract tests to cover the unified shell, preview
+  selection, card states, bounded rendering, responsive targets, and launch
+  banner boundary.
+
 ## Shop identity scale and card density pass — 2026-08-03
 
 - Matched Canvas-rendered IdentityCard names to the readable semantic heading

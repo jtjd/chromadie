@@ -2,6 +2,23 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Reframe the shop as a profile studio
+
+- Replaced the competing Shop, Browse, Collection, and Studio navigation with
+  a focused Catalog and Collection experience.
+- Removed the launch announcement from the shop so the first view starts with
+  profile expression instead of gameplay promotion.
+- Made the live profile fitting room the dominant preview surface and added a
+  small endpoint-backed Today’s color context without recoloring product
+  cards.
+- Rebuilt catalog cards around one selectable effect preview, readable rarity
+  and collection metadata, and a single Buy/Owned/Equipped/Premium state.
+- Replaced the repetitive “Need more EP” dead end with an explicit amount of
+  EP still needed and bounded the initial catalog render with Load more.
+- Simplified Collection categories and empty-state actions. Existing purchase,
+  inventory, entitlement, try-on, profile settings, and server-authoritative
+  boundaries remain unchanged.
+
 ## 2026-08-03 — Make names readable and cards denser
 
 - Corrected Canvas-rendered profile names so they match the intended semantic

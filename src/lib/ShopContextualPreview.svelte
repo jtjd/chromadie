@@ -27,8 +27,9 @@
 <aside class="shop-contextual-preview" aria-labelledby="shop-contextual-preview-title">
   <header class="shop-contextual-preview__header">
     <div>
-      <span class="shop-eyebrow">Your profile</span>
+      <span class="shop-eyebrow">Live profile</span>
       <h2 id="shop-contextual-preview-title">{previewName}</h2>
+      <p>{selectedItem ? `Previewing ${selectedItem.name}` : 'Select a piece to see it here.'}</p>
     </div>
     <div class="shop-preview-actions">
       <button type="button" on:click={replayPreview}>Replay</button>
@@ -59,7 +60,7 @@
     min-width: 0;
     overflow: hidden;
     border: 1px solid var(--shop-line);
-    border-radius: 9px;
+    border-radius: 10px;
     background: #101319;
   }
 
@@ -68,7 +69,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.9rem;
-    padding: .85rem .9rem;
+    padding: 1rem;
     border-bottom: 1px solid var(--shop-line);
     background: #15181f;
   }
@@ -77,8 +78,18 @@
     overflow: hidden;
     margin: 0.3rem 0 0;
     color: #f2f0eb;
-    font: 650 1.08rem/1.1 var(--shop-display, var(--font-display));
+    font: 650 1.35rem/1.05 var(--shop-display, var(--font-display));
     letter-spacing: -0.025em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .shop-contextual-preview__header p {
+    overflow: hidden;
+    margin: .35rem 0 0;
+    color: #aeb0bb;
+    font-size: .8rem;
+    line-height: 1.35;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -117,7 +128,7 @@
 
   .shop-contextual-preview :global(.studio-preview) {
     min-height: 0;
-    padding: 0.75rem;
+    padding: .75rem;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -126,17 +137,17 @@
 
   .shop-contextual-preview :global(.studio-preview-head),
   .shop-contextual-preview :global(.studio-selection) { display: none; }
-  .shop-contextual-preview :global(.studio-stage) { min-height: 13rem; border-radius: 6px; }
-  .shop-contextual-preview :global(.studio-profile-card) { width: calc(100% - 1.25rem); max-width: 100%; margin-inline: auto; }
+  .shop-contextual-preview :global(.studio-stage) { min-height: 21rem; padding: 1rem .7rem; border-radius: 7px; }
+  .shop-contextual-preview :global(.studio-profile-card) { width: calc(100% - .5rem); max-width: 100%; margin-inline: auto; }
 
   @media (max-width: 960px) {
     .shop-contextual-preview { position: relative; top: auto; }
-    .shop-contextual-preview :global(.studio-stage) { min-height: 14rem; }
+    .shop-contextual-preview :global(.studio-stage) { min-height: 19rem; }
   }
 
   @media (max-width: 700px) {
-    .shop-contextual-preview__header { padding: 0.75rem; }
+    .shop-contextual-preview__header { padding: .85rem; }
     .shop-contextual-preview :global(.studio-preview) { padding: 0.6rem; }
-    .shop-contextual-preview :global(.studio-stage) { min-height: 13.5rem; }
+    .shop-contextual-preview :global(.studio-stage) { min-height: 17rem; }
   }
 </style>

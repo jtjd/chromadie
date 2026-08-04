@@ -2,6 +2,24 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Make the shop one profile studio instead of four competing surfaces
+
+The shop now opens on one Catalog surface with a persistent, readable profile
+fitting room and keeps Collection as the only secondary surface. The former
+Home and temporary Studio views remain compatible through view-state
+normalization but are no longer presented as parallel destinations. The shop
+launch announcement is suppressed because it belongs to the gameplay surface,
+not the expression task.
+
+Catalog cards use one selectable product surface, a neutral effect stage, and
+one purchase/ownership state. The daily color appears as compact profile
+context and in the real fitting-room renderer; it does not recolor the catalog.
+The initial catalog render is bounded with an explicit Load more action so
+Name canvases do not all mount in the first frame. Existing purchase RPCs,
+wallet/inventory/entitlement refresh, temporary try-on, RLS, and profile
+settings boundaries are unchanged. No schema or catalog data migration is
+required.
+
 ## 2026-08-03 — Keep rendered names as legible as their semantic fallback
 
 The shared Canvas name renderer now mirrors the IdentityCard heading contract
