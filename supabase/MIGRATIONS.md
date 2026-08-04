@@ -68,6 +68,17 @@ Lean alpha cosmetic reset:
   A backup restore is the recovery path; do not refund automatically or create
   a destructive down migration.
 
+Atmosphere quality curation:
+
+- `migrations/20260804223000_curate_atmosphere_catalog.sql` removes the seven
+  procedural atmosphere presets that did not meet the visual quality bar,
+  clears any equipped references and inventory for those keys, and keeps the
+  five authored looping video plates.
+- The migration is intentionally forward-only and destructive for retired
+  atmosphere records per the release decision. It tightens the renderer
+  allowlist and bumps `shop_version` to `2026-08-04T22:30:00Z`; the final active
+  catalog is 119 rows with five `profile_atmosphere` rows.
+
 Recommended pre-migration backup command (run only by the authorized DB owner):
 
 ```bash

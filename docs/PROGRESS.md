@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Atmosphere quality curation — 2026-08-04
+
+- Retired the seven procedural SVG atmosphere presets after review: Signal
+  Garden, Aurora Veil, Emberfall, Paper Archive, Prism Lens, Lunar Tide, and
+  Color Memory.
+- Kept the five authored video plates as the quality floor: Rain Window,
+  Droplets on Glass, Dustlight, Ink Bloom, and Snowfall.
+- Removed the retired renderer branches and deleted their catalog, inventory,
+  and equipped references through a forward-only migration. The active catalog
+  is now 119 rows with five Profile Atmospheres.
+
 ## Atmosphere expansion — 2026-08-04
 
 - Added Dustlight, Ink Bloom, and Snowfall as three authored video atmospheres.

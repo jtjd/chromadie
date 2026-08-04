@@ -2983,3 +2983,11 @@ poster frame. The source is not redistributed unchanged. The video is isolated
 to the Rain Window atmosphere, uses screen
 blending so black contributes no tint or dimming, and falls back to the poster
 for cards, reduced motion, hidden documents, and unsupported video formats.
+## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
+
+Atmospheres are a high-salience profile surface, so thin procedural SVG lines,
+rings, and gradients do not meet the same quality bar as the authored weather,
+glass, light, ink, and snow plates. We removed the seven procedural presets and
+their catalog/inventory/equipped records instead of presenting them as legacy
+choices. The slot now contains five finite video-backed renderers; new scenes
+must meet that authored-media bar before being added.

@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-04 — Curate the atmosphere catalog
+
+- Removed seven procedural atmosphere presets that read as generic gradients,
+  rings, or thin signal paths.
+- Kept Rain Window, Droplets on Glass, Dustlight, Ink Bloom, and Snowfall as
+  the authored video-plate set, with poster fallbacks and reduced-motion
+  handling.
+- Removed retired shop and inventory records and cleared any equipped retired
+  atmosphere, leaving 119 active catalog items.
+
 ## 2026-08-04 — Add three authored looping atmospheres
 
 - Added Dustlight, Ink Bloom, and Snowfall to the atmosphere catalog.

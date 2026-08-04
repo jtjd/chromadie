@@ -19,7 +19,7 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(CURSOR_TRAIL_KEYS.length, 16);
   assert.equal(AVATAR_EFFECT_KEYS.length, 18);
   assert.equal(PAID_PROFILE_LAYOUT_KEYS.length, 5);
-  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 12);
+  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 5);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
   assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 18);
   assert.equal(new Set(PAID_PROFILE_LAYOUT_KEYS).size, 5);
@@ -27,7 +27,8 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
   assert.equal(isAvatarEffectKey('avatar_effect_color_archive'), true);
   assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Story Stack');
-  assert.equal(getAtmosphereDefinition('profile_atmosphere_color_memory')?.key, 'color-memory');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_color_memory'), null);
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_signal_garden'), null);
   assert.equal(getAtmosphereDefinition('profile_atmosphere_droplets_glass')?.key, 'droplets-glass');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_dust_light')?.key, 'dust-light');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_ink_bloom')?.key, 'ink-bloom');
@@ -58,23 +59,20 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   for (const key of PROFILE_ATMOSPHERE_KEYS) {
     assert.equal(getAtmosphereDefinition(key)?.key, key);
   }
-  assert.match(atmosphereSource, /pointer-events:none/);
+  assert.match(atmosphereSource, /pointer-events: none/);
   assert.match(atmosphereSource, /prefers-reduced-motion/);
   assert.match(atmosphereSource, /visibilitychange/);
   assert.match(atmosphereSource, /data-atmosphere=\{definition\.key\}/);
-  assert.match(atmosphereSource, /atmosphereInstanceCounter/);
-  assert.match(atmosphereSource, /--atmosphere-spectrum:url\(#\$\{instanceId\}-spectrum\)/);
   assert.match(atmosphereSource, /mode === 'card' \|\| mode === 'compact'/);
-  assert.match(atmosphereSource, /background:transparent/);
-  assert.match(atmosphereSource, /RAIN_WINDOW_VIDEO/);
+  assert.match(atmosphereSource, /background: transparent/);
+  assert.match(atmosphereSource, /rain-window-loop-v2\.webm/);
   assert.match(atmosphereSource, /rain-window-loop-v2-poster\.png/);
-  assert.match(atmosphereSource, /DROPLETS_GLASS_VIDEO/);
-  assert.match(atmosphereSource, /DROPLETS_GLASS_POSTER/);
-  assert.match(atmosphereSource, /DUST_LIGHT_VIDEO/);
-  assert.match(atmosphereSource, /INK_BLOOM_VIDEO/);
-  assert.match(atmosphereSource, /SNOWFALL_VIDEO/);
+  assert.match(atmosphereSource, /droplets-on-glass-loop-v3\.webm/);
+  assert.match(atmosphereSource, /dust-light-loop-v1\.webm/);
+  assert.match(atmosphereSource, /ink-bloom-loop-v1\.webm/);
+  assert.match(atmosphereSource, /snowfall-loop-v1\.webm/);
   assert.match(atmosphereSource, /autoplay muted loop playsinline/);
-  assert.match(atmosphereSource, /mix-blend-mode:screen/);
+  assert.match(atmosphereSource, /mix-blend-mode: screen/);
   assert.doesNotMatch(atmosphereSource, /mix-blend-mode:soft-light/);
 
   const rainVideo = await readFile(new URL('../public/atmospheres/rain-window/rain-window-loop-v2.webm', import.meta.url));
@@ -127,7 +125,7 @@ test('new catalog slots filter independently and fitting-room selection preserve
   const items = [
     { item_key: 'cursor_trail_signal_trace', slot: 'cursor_trail', cost: 160000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
     { item_key: 'avatar_effect_signal_ring', slot: 'avatar_effect', cost: 180000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
-    { item_key: 'profile_atmosphere_signal_garden', slot: 'profile_atmosphere', cost: 180000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
+    { item_key: 'profile_atmosphere_rain_window', slot: 'profile_atmosphere', cost: 260000, rarity: 'Rare', collection: 'Nocturne', catalog_status: 'active' },
     { item_key: 'profile_layout_split_signal', slot: 'profile_layout', cost: 320000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' }
   ];
   for (const section of ['avatar', 'atmosphere', 'cursor', 'layouts']) {
@@ -148,10 +146,11 @@ test('seed and migrations contain the launch products and version bumps', async 
   assert.equal((seed.match(/'cursor_trail_[a-z0-9_]+'/g) || []).length, 16);
   assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 18);
   assert.equal((seed.match(/'profile_layout_[a-z0-9_]+'/g) || []).length, 5);
-  assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 12);
+  assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 5);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
   const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');
   const atmosphereExpansionMigration = await read('supabase/migrations/20260804210000_atmosphere_expansion.sql');
+  const atmosphereCurationMigration = await read('supabase/migrations/20260804223000_curate_atmosphere_catalog.sql');
   assert.match(atmosphereMigration, /Expected 122 active catalog rows/);
   assert.match(dropletsMigration, /Expected 123 active catalog rows/);
   assert.match(atmosphereExpansionMigration, /Expected 126 active catalog rows/);
@@ -163,4 +162,7 @@ test('seed and migrations contain the launch products and version bumps', async 
   assert.match(migration, /VALUES \('shop_version', '2026-08-04T12:00:00Z'\)/);
   assert.match(migration, /Expected 114 active catalog rows/);
   assert.match(atmosphereMigration, /profile_atmosphere.*signal-garden/s);
+  assert.match(atmosphereCurationMigration, /Expected 119 active catalog rows/);
+  assert.match(atmosphereCurationMigration, /Expected 5 active Profile Atmosphere rows/);
+  assert.match(atmosphereCurationMigration, /DELETE FROM public\.shop_items/);
 });
