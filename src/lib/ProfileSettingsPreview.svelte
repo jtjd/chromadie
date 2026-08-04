@@ -84,12 +84,17 @@
 </aside>
 
 <style>
-  .settings-preview { position:sticky; top:1rem; display:grid; gap:.8rem; padding:1rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
+  .settings-preview { position:sticky; top:1rem; display:grid; gap:.8rem; min-width:0; width:100%; padding:1rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
   .settings-preview__topline { display:flex; justify-content:space-between; color:var(--color-accent-bright); font:700 var(--type-label)/1 var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
   .settings-preview__topline span:last-child { color:var(--color-ink-faint); }
-  .settings-preview__canvas { position:relative; overflow:hidden; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-inset); }
+  .settings-preview__canvas { position:relative; min-width:0; width:100%; overflow:hidden; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-inset); }
   .settings-preview__canvas :global(.settings-preview__cursor) { z-index:3 !important; }
-  .settings-preview__canvas :global(.identity-card) { position:relative; z-index:2; min-height:15rem; padding:1rem; border:0; border-radius:var(--radius-md); }
+  .settings-preview__canvas :global(.identity-card) { position:relative; z-index:2; min-width:0; min-height:15rem; padding:1rem; border:0; border-radius:var(--radius-md); }
+  .settings-preview__canvas :global(.identity-card__person) { min-width:0; }
+  .settings-preview__canvas :global(.identity-card__copy) { min-width:0; flex:1 1 0; overflow:hidden; }
+  .settings-preview__canvas :global(.identity-card__name-row),
+  .settings-preview__canvas :global(.identity-card__links) { min-width:0; }
+  .settings-preview__canvas :global(.identity-card__links a) { min-width:0; max-width:100%; }
   .settings-preview__canvas :global(.identity-card__name) { font-size:clamp(1.35rem, 2vw, 2rem); }
   .settings-preview__canvas :global(.identity-card__bio) { font-size:.75rem; }
   .settings-preview__composition { position:relative; z-index:1; margin:0 .75rem .75rem; padding:.7rem; border:1px solid color-mix(in srgb, var(--preview-accent) 28%, var(--color-line-subtle)); border-radius:var(--radius-sm); background:rgba(5,7,11,.72); }
@@ -102,6 +107,15 @@
   .settings-preview__section--wide { grid-column:span 2; }
   .settings-preview__canvas--editorial .settings-preview__section { border-radius:0; }
   .settings-preview__canvas--focus .settings-preview__section { background:color-mix(in srgb, var(--preview-accent) 14%, transparent); }
+  .settings-preview__canvas--split-signal .settings-preview__composition { margin-left:1rem; border-left:2px solid color-mix(in srgb, var(--preview-accent) 58%, transparent); border-radius:0 var(--radius-sm) var(--radius-sm) 0; }
+  .settings-preview__canvas--archive-index .settings-preview__composition { border-radius:0; border-top-color:color-mix(in srgb, var(--preview-accent) 58%, transparent); border-bottom-color:color-mix(in srgb, var(--preview-accent) 36%, transparent); }
+  .settings-preview__canvas--archive-index .settings-preview__section { border-radius:0; font-family:var(--font-mono-stack); }
+  .settings-preview__canvas--prism-mosaic .settings-preview__sections { grid-template-columns:1.15fr .85fr; }
+  .settings-preview__canvas--prism-mosaic .settings-preview__section--wide { grid-column:1 / -1; }
+  .settings-preview__canvas--night-terminal .settings-preview__composition { border-radius:2px; background:rgba(3,8,12,.84); font-family:var(--font-mono-stack); }
+  .settings-preview__canvas--night-terminal .settings-preview__section { border-radius:2px; }
+  .settings-preview__canvas--story-stack .settings-preview__sections { grid-template-columns:1fr; }
+  .settings-preview__canvas--story-stack .settings-preview__section--wide { grid-column:auto; }
   .settings-preview p { margin:0; color:var(--color-ink-muted); font-size:var(--type-label); line-height:1.45; }
   @media (max-width: 900px) { .settings-preview { position:static; } }
 </style>

@@ -1146,7 +1146,20 @@
 
   /* Paid layouts change composition, not profile data. Each keeps the same
      semantic DOM order and collapses back to a readable single column on mobile. */
-  .profile-shell__composition { display:contents; }
+  .profile-shell__composition { display:contents; min-width:0; }
+  .profile-shell__approved-canvas,
+  .profile-shell__approved-main,
+  .profile-shell__more,
+  .profile-shell__approved-opening,
+  .profile-shell__approved-game,
+  .profile-shell__approved-featured,
+  .profile-shell__approved-supporting { min-width:0; max-width:100%; }
+  .profile-shell-page :global(.identity-card__person),
+  .profile-shell-page :global(.identity-card__copy),
+  .profile-shell-page :global(.identity-card__name-row),
+  .profile-shell-page :global(.identity-card__links) { min-width:0; }
+  .profile-shell-page :global(.identity-card__copy) { overflow-wrap:anywhere; }
+  .profile-shell-page :global(.identity-card__links a) { min-width:0; max-width:100%; }
   .profile-shell-page--split-signal .profile-shell__composition { display:grid; grid-template-columns:minmax(14rem,.34fr) minmax(0,.66fr); gap:clamp(1rem,3vw,3rem); align-items:stretch; width:min(100%,var(--content-profile)); min-height:calc(100dvh - 4.75rem); margin-inline:auto; }
   .profile-shell-page--split-signal .profile-shell__approved-canvas { grid-column:1; }
   .profile-shell-page--split-signal .profile-shell__approved-main { height:auto; min-height:calc(100dvh - 4.75rem); align-items:stretch; justify-content:flex-start; padding-top:clamp(2rem,8vh,6rem); }
@@ -1189,10 +1202,12 @@
 
   @media (max-width: 48rem) {
     .profile-shell-page--split-signal .profile-shell__composition { display:block; min-height:0; width:100%; }
+    .profile-shell-page--split-signal .profile-shell__approved-canvas,
+    .profile-shell-page--split-signal .profile-shell__more { width:100%; max-width:100%; margin-inline:0; }
     .profile-shell-page--split-signal .profile-shell__approved-main { min-height:calc(100dvh - 3.85rem); padding-top:0; }
     .profile-shell-page--split-signal .profile-shell__more { padding-block:4rem; }
     .profile-shell-page--prism-mosaic .profile-shell__more { display:flex; }
-    .profile-shell-page--prism-mosaic .profile-shell__more > * { width:100%; }
+    .profile-shell-page--prism-mosaic .profile-shell__more > * { width:100%; max-width:100%; }
     .profile-shell-page--night-terminal .profile-shell__more { padding-inline:0; }
     .profile-shell-page--story-stack .profile-shell__approved-main { min-height:calc(100dvh - 3.85rem); }
   }

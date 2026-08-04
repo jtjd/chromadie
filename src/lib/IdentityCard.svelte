@@ -152,7 +152,10 @@
     margin-top: 0;
   }
 
-  .identity-card__avatar {
+  /* AvatarEffect owns the wrapper DOM. Keep the sizing contract global so the
+     effect layer cannot fall back to the uploaded image's intrinsic size when
+     it is rendered from a child component. */
+  :global(.identity-card__avatar) {
     position: relative;
     display: grid;
     place-items: center;
@@ -166,12 +169,12 @@
     box-shadow: 0 0 2rem color-mix(in srgb, var(--identity-avatar-accent) 28%, transparent), inset 0 0 1.4rem rgba(255, 255, 255, 0.13);
   }
 
-  .identity-card__avatar-glow { position: absolute; inset: -20%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.35), transparent 56%); filter: blur(0.7rem); opacity: 0.6; }
-  .identity-card__avatar-letter { position: relative; z-index: 1; color: rgba(250, 252, 255, 0.94); font: 600 clamp(2.25rem, 6vw, 3.25rem) / 1 var(--font-display-stack); letter-spacing: -0.08em; text-shadow: 0 0 1.5rem color-mix(in srgb, var(--identity-avatar-accent) 70%, transparent); }
-  .identity-card__avatar-mark { position: absolute; z-index: 2; inset: 26%; opacity: 0.14; border: 0; border-radius: 0; background: transparent; }
-  .identity-card__avatar-media { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 0; background: transparent; }
-  .identity-card__avatar-media { border-radius: 50%; clip-path: circle(50% at 50% 50%); }
-  .identity-card__avatar-media :global(.foundation-media__fallback) { border: 0; border-radius: 0; }
+  :global(.identity-card__avatar-glow) { position: absolute; inset: -20%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.35), transparent 56%); filter: blur(0.7rem); opacity: 0.6; }
+  :global(.identity-card__avatar-letter) { position: relative; z-index: 1; color: rgba(250, 252, 255, 0.94); font: 600 clamp(2.25rem, 6vw, 3.25rem) / 1 var(--font-display-stack); letter-spacing: -0.08em; text-shadow: 0 0 1.5rem color-mix(in srgb, var(--identity-avatar-accent) 70%, transparent); }
+  :global(.identity-card__avatar-mark) { position: absolute; z-index: 2; inset: 26%; opacity: 0.14; border: 0; border-radius: 0; background: transparent; }
+  :global(.identity-card__avatar-media) { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 0; background: transparent; }
+  :global(.identity-card__avatar-media) { border-radius: 50%; clip-path: circle(50% at 50% 50%); }
+  :global(.identity-card__avatar-media) :global(.foundation-media__fallback) { border: 0; border-radius: 0; }
 
   .identity-card__copy { min-width: 0; flex: 1; padding-top: 0.15rem; text-align: left; }
   .identity-card__name-row { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 0.45rem 0.55rem; }
@@ -241,7 +244,7 @@
 
   @media (max-width: 36rem) {
     .identity-card { padding: 1.35rem; border-radius: var(--radius-md); }
-    .identity-card__avatar { flex-basis: 4.75rem; width: 4.75rem; }
+    :global(.identity-card__avatar) { flex-basis: 4.75rem; width: 4.75rem; }
     .identity-card__name { font-size: clamp(1.75rem, 9vw, 2.35rem); }
     .identity-card__bio { font-size: 0.875rem; }
     .identity-card__links { margin-top: 0.8rem; }
