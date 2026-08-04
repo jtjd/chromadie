@@ -1858,6 +1858,20 @@ kept public profile selectors outside the supporting-route baseline.
 - Added focused source contracts for persistent selection, loadout projection,
   no live modal mount, and link-free preview composition.
 
+## 2026-08-04 — Focused Shop catalog quality pass
+
+- Audited the 18 Fonts, 22 Materials, 24 Motions, and 9 Profile Borders with
+  representative short/long names, dark/light color inputs, card/profile
+  frames, and reduced-motion contracts.
+- Kept all Font mappings and catalog metadata unchanged. Brightened only the
+  four materials that were effectively unreadable on dark surfaces and added
+  restrained readability rims where needed.
+- Fixed Typefall’s dark-color blank frame and confined the affected border
+  animations to border properties, removing content fades, wrapper hue filters,
+  and whole-profile translation.
+- Removed six unreferenced legacy Shop components and updated the system map;
+  purchase/equip and database slot boundaries were not changed.
+
 ## 2026-08-03 — Homepage identity and story refinement
 
 - Kept the approved hero/browser structure and original 2553×1379 profile

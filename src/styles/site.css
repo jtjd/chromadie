@@ -65,11 +65,6 @@
 .app-main--site .discovery-tabs,
 .app-main--site .discovery-empty,
 .app-main--site .discovery-your-rank,
-.app-main--site .shop-info-banner,
-.app-main--site .shop-foundations,
-.app-main--site .loadout-panel,
-.app-main--site .collection-hero,
-.app-main--site .catalog-controls,
 .app-main--site .shop-status {
   border-color: var(--site-line);
   border-radius: var(--site-radius);
@@ -316,28 +311,13 @@
 }
 
 .app-main--site .shop-heading p,
-.app-main--site .shop-foundations p,
-.app-main--site .shop-info-banner div span,
 .app-main--site .collection-copy p,
 .app-main--site .results-heading h2 {
   color: var(--color-ink-muted);
 }
 
-.app-main--site .shop-info-banner,
-.app-main--site .shop-foundations,
-.app-main--site .loadout-panel,
-.app-main--site .catalog-controls,
 .app-main--site .shop-status {
   box-shadow: none;
-}
-
-.app-main--site .collection-hero {
-  min-height: 330px;
-  border-color: color-mix(in srgb, var(--site-accent) 30%, var(--site-line));
-  background:
-    radial-gradient(circle at 78% 44%, color-mix(in srgb, var(--site-accent) 24%, transparent), transparent 28%),
-    var(--site-surface);
-  box-shadow: var(--site-shadow);
 }
 
 .app-main--site .shop-item {
@@ -352,7 +332,7 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--site-accent) 14%, transparent);
 }
 
-.app-main--site :is(.primary-action, .primary-item-action, .drawer-buy, .try-button, .quiet-action, .detail-button, .loadout-panel-head button, .sheet-reset, .shop-empty button) {
+.app-main--site :is(.primary-action, .primary-item-action, .drawer-buy, .try-button, .quiet-action, .detail-button, .sheet-reset, .shop-empty button) {
   border-color: var(--site-line);
   border-radius: var(--radius-sm);
   background: var(--site-surface-soft);
@@ -775,7 +755,7 @@
 
 /* Quiet reference pass: neutral surfaces, typographic hierarchy, and one
  * restrained accent carry the catchii direction across supporting routes. */
-.app-main--site :is(.card, .discovery-tabs, .discovery-empty, .discovery-your-rank, .shop-info-banner, .shop-foundations, .loadout-panel, .collection-hero, .catalog-controls, .shop-status, .discovery-card) {
+.app-main--site :is(.card, .discovery-tabs, .discovery-empty, .discovery-your-rank, .shop-status, .discovery-card) {
   border-radius: var(--radius-lg);
   background: rgba(9, 11, 15, 0.76);
   box-shadow: var(--site-shadow);
@@ -1204,11 +1184,6 @@ body,
 .app-main--site .discovery-empty,
 .app-main--site .discovery-your-rank,
 .app-main--site .discovery-tabs,
-.app-main--site .shop-info-banner,
-.app-main--site .shop-foundations,
-.app-main--site .loadout-panel,
-.app-main--site .collection-hero,
-.app-main--site .catalog-controls,
 .app-main--site .shop-status,
 .app-main--site .guide__steps article,
 .app-main--site .guide__account-grid article,
@@ -1228,15 +1203,15 @@ body,
   padding: clamp(1.35rem, 3vw, 2.25rem);
 }
 
-.app-main--site :is(.card, .discovery-card, .shop-item, .discovery-tabs, .catalog-controls) {
+.app-main--site :is(.card, .discovery-card, .shop-item, .discovery-tabs) {
   transition: border-color var(--motion-fast) var(--motion-ease-standard), background-color var(--motion-fast) var(--motion-ease-standard);
 }
 
-.app-main--site :is(.card, .discovery-card, .shop-item, .discovery-tabs, .catalog-controls):hover {
+.app-main--site :is(.card, .discovery-card, .shop-item, .discovery-tabs):hover {
   border-color: color-mix(in srgb, var(--color-accent) 36%, var(--color-line-subtle));
 }
 
-.app-main--site :is(.info-text, .section-note, .guide p, .legal-section p, .legal-section li, .shop-heading p, .shop-foundations p, .collection-copy p, .results-heading h2, .guest-card p) {
+.app-main--site :is(.info-text, .section-note, .guide p, .legal-section p, .legal-section li, .shop-heading p, .collection-copy p, .results-heading h2, .guest-card p) {
   color: var(--color-ink-muted);
 }
 
@@ -1422,11 +1397,6 @@ body,
   letter-spacing: -0.06em;
 }
 
-.app-main--site .collection-hero {
-  min-height: 18rem;
-  background: var(--surface-panel);
-}
-
 .app-main--site .shop-item {
   border-color: var(--color-line-subtle);
   border-radius: var(--radius-sm);
@@ -1439,7 +1409,7 @@ body,
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 16%, transparent);
 }
 
-.app-main--site :is(.primary-action, .primary-item-action, .drawer-buy, .try-button, .quiet-action, .detail-button, .loadout-panel-head button, .sheet-reset, .shop-empty button) {
+.app-main--site :is(.primary-action, .primary-item-action, .drawer-buy, .try-button, .quiet-action, .detail-button, .sheet-reset, .shop-empty button) {
   border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-sm);
   background: transparent;
@@ -1684,7 +1654,7 @@ body,
   text-transform: uppercase;
 }
 
-.app-main--site :is(.card, .discovery-card, .discovery-empty, .discovery-your-rank, .discovery-tabs, .shop-info-banner, .shop-foundations, .loadout-panel, .collection-hero, .catalog-controls, .shop-status, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section) {
+.app-main--site :is(.card, .discovery-card, .discovery-empty, .discovery-your-rank, .discovery-tabs, .shop-status, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section) {
   border: 1px solid var(--site-line);
   border-radius: 0.5rem;
   background: var(--site-raised);
@@ -1693,7 +1663,7 @@ body,
   -webkit-backdrop-filter: none;
 }
 
-.app-main--site :is(.card, .discovery-card, .shop-item, .discovery-tabs, .catalog-controls):hover {
+.app-main--site :is(.card, .discovery-card, .shop-item, .discovery-tabs):hover {
   border-color: var(--site-line-strong);
   background: var(--site-raised);
 }
@@ -1844,21 +1814,11 @@ body,
   line-height: 0.9;
 }
 
-.app-main--site :is(.shop-wallet, .section-rail, .subsection-rail, .catalog-controls, .shop-status, .shop-studio-column .studio-preview) {
+.app-main--site .shop-status {
   border-color: var(--site-line);
   border-radius: 0.5rem;
   background: var(--site-raised);
   box-shadow: none;
-}
-
-.app-main--site .shop-wallet {
-  background: var(--site-raised);
-}
-
-.app-main--site :is(.section-rail button.active, .subsection-rail button.active) {
-  border-color: color-mix(in srgb, var(--site-accent) 56%, var(--site-line));
-  background: color-mix(in srgb, var(--site-accent) 10%, transparent);
-  color: var(--site-ink);
 }
 
 .app-main--site .shop-item {

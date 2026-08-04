@@ -1,12 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 
 const ROOT = new URL('../', import.meta.url);
 
 async function readProjectFile(path) {
   return readFile(new URL(path, ROOT), 'utf8');
 }
+
+async function projectFileExists(path) {
+  try {
+    await access(new URL(path, ROOT));
+    return true;
+  } catch (error) {
+    if (error?.code === 'ENOENT') return false;
+    throw error;
+  }
+}
+
+test('retired Shop sources are absent from the production tree', async () => {
+  const retired = [
+    'src/lib/ShopHome.svelte',
+    'src/lib/ShopProductDetail.svelte',
+    'src/lib/ShopStudio.svelte',
+    'src/lib/ShopFeaturedStrip.svelte',
+    'src/lib/ShopCategoryNav.svelte',
+    'src/lib/ShopSelectionPanel.svelte'
+  ];
+  for (const path of retired) assert.equal(await projectFileExists(path), false, path);
+});
 
 test('shop shell is one profile studio with Catalog and Owned surfaces', async () => {
   const shop = await readProjectFile('src/lib/Shop.svelte');

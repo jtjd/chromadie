@@ -2816,8 +2816,8 @@ The fitting-room preview intentionally omits public social links. The shop is
 evaluating visual identity, not reproducing a complete public profile, and
 removing the links keeps the avatar, name treatment, bio, and border legible in
 the bounded preview stage. No catalog, inventory, entitlement, equip, profile,
-or data authority changed; the existing detail component remains available for
-rollback but is no longer mounted by the live shop route.
+or data authority changed; the legacy detail path was not mounted by the live
+shop route and is now removed after the production-import audit.
 
 ## 2026-08-03 — Project catalog renderer values into shop try-on
 
@@ -2828,3 +2828,22 @@ only makes the selected Font, Material, or Motion visible immediately in the
 fitting room. The preview header identifies the player’s profile and keeps only
 the playback/clear controls, avoiding a second selected-item detail card above
 the profile itself.
+
+## 2026-08-04 — Keep the catalog quality pass narrowly renderer-focused
+
+The catalog audit found no Font mapping failures and no justified pricing,
+rarity, collection, description, or stable-key changes. Four dark Name
+Materials received small palette/rim adjustments so their existing treatments
+remain readable on dark profile surfaces. Typefall now mixes very dark daily
+colors toward the existing light ink instead of drawing an invisible frame.
+Oil Slick also received a brighter code-owned palette and a restrained amber
+rim after the fully loaded renderer check showed its static frame could vanish.
+
+The shared Profile Border component keeps all nine registry keys and metadata,
+but its Chroma, Prism, Crystal, Glitch, and Neon animations now animate only
+border color/shadow. Wrapper hue filters, opacity fades, and translation were
+removed so profile content stays stable and Mythic treatments read as distinct.
+
+The six retired Shop source components had no production or required-test
+imports and were deleted. Purchase, inventory, equip, profile rendering, and
+database slot contracts remain unchanged.

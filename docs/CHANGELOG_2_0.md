@@ -1603,3 +1603,16 @@ direct route behavior.
   profile preview, without mutating the equipped loadout.
 - Removed the redundant Try it on detail block so the preview is anchored by
   the player’s profile and a small set of playback/reset controls.
+
+## 2026-08-04 — Audit Shop catalog rendering quality
+
+- Preserved all 18 Font mappings, 22 Material keys, 24 Motion keys, 9 Border
+  keys, prices, rarities, collections, descriptions, ownership, inventory,
+  and equipped state.
+- Improved readability for Carbon Vein, Soft Black, Quarry Mark, and Spillway
+  without changing their catalog metadata.
+- Kept Typefall visible on dark daily colors and made Chroma, Prism, Crystal,
+  Glitch, and Neon border motion stay on the border instead of moving or
+  fading profile content.
+- Removed six unreferenced pre-workspace Shop components; the current Shop
+  workspace and shared renderers remain the only production path.

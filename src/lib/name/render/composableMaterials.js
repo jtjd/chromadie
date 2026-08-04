@@ -101,6 +101,9 @@ export function drawComposableMaterial(ctx, model) {
     }
     case 'oil-slick':
       linearMaterial(ctx, model, material.colors, progress * textWidth * 1.2);
+      // The static catalog frame can land on the deepest part of the slick;
+      // keep a restrained amber edge so the Epic treatment never vanishes.
+      strokeText(ctx, model, rgba(material.colors[3] || '#D9AD64', 0.5), Math.max(0.55, metrics.fontSize * 0.02));
       return;
     case 'thermal-ink': {
       const thermal = [first, second, third, material.colors[3] || '#F3D34A', todayColor];
@@ -109,6 +112,9 @@ export function drawComposableMaterial(ctx, model) {
     }
     case 'velvet-ink': {
       drawText(ctx, model, first);
+      // Keep the intentionally dark velvet fill legible without turning it
+      // into a bright solid. The warm rim also reads at compact card scale.
+      strokeText(ctx, model, rgba(second, 0.68), Math.max(0.7, metrics.fontSize * 0.026));
       const highlight = createLinearGradient(ctx, ['rgba(255,180,210,0)', 'rgba(255,180,210,.52)', 'rgba(255,180,210,0)'], 0, 0, metrics.width * 0.35, 0, 'rgba(255,180,210,.3)');
       withTextMask(ctx, model, target => {
         target.fillStyle = highlight;
@@ -138,6 +144,7 @@ export function drawComposableMaterial(ctx, model) {
       ctx.shadowOffsetY = -1;
       drawText(ctx, model, first);
       ctx.restore?.();
+      strokeText(ctx, model, rgba(third, 0.55), Math.max(0.55, metrics.fontSize * 0.022), 1, -1, -1);
       ctx.save?.();
       ctx.shadowColor = 'rgba(0,0,0,.82)';
       ctx.shadowOffsetY = 2;

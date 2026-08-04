@@ -26,6 +26,7 @@ import {
   shouldAnimateNameFrame
 } from '../src/lib/name/nameRenderer.js';
 import { createNameAnimationClock } from '../src/lib/name/nameAnimationClock.js';
+import { getReadableMotionColor } from '../src/lib/name/render/composableMotions.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -133,6 +134,14 @@ test('short, long, light, and dark names remain safe and deterministic', () => {
   assert.equal(getNameFrameModel({ text: 'Light', todayColor: '#ABC' }).todayColor, '#AABBCC');
   assert.equal(getNameFrameModel({ text: 'Dark', todayColor: '#101820' }).todayColor, '#101820');
   assert.ok(getNameFrameModel({ text: longName, context: 'card', width: 220, height: 44 }).metrics.scaleX <= 1);
+});
+
+test('Typefall keeps motion text readable on dark daily colors', () => {
+  const dark = getReadableMotionColor('#101820');
+  const light = getReadableMotionColor('#F7FBFF');
+  assert.notEqual(dark, '#101820');
+  assert.match(dark, /^#[0-9A-F]{6}$/);
+  assert.match(light, /^#[0-9A-F]{6}$/);
 });
 
 test('reduced-motion, static-signature, and offscreen modes are stable', () => {

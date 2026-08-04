@@ -16,6 +16,14 @@ import {
   withTextMask
 } from './primitives.js';
 
+const MOTION_TEXT_LIGHT = '#F7FBFF';
+
+// Daily colors can be near-black. Motion layers still need a readable frame
+// while retaining a visible relationship to the roll color.
+export function getReadableMotionColor(color) {
+  return mixColors(color, MOTION_TEXT_LIGHT, 0.72);
+}
+
 function cloneTextModel(model, text, metrics = model.metrics) {
   return {
     ...model,
@@ -244,7 +252,8 @@ export function drawComposableMotion(ctx, model, drawBase) {
       drawSliceMotion(ctx, model, drawBase, 9, index => (seededNoise(model.seed, index + Math.floor(progress * 18) * 3) - 0.5) * 18 * (1 - lock), 1);
       return true;
     }
-    case 'letter-cascade':
+    case 'letter-cascade': {
+      const cascadeColor = getReadableMotionColor(model.todayColor);
       drawCharacterLayers(ctx, model, (character, index, x, local, characterWidth) => {
         const offsetY = lerp(-metrics.fontSize * 0.9, 0, easeOut(local));
         const alpha = Math.min(1, local * 1.7);
@@ -252,9 +261,10 @@ export function drawComposableMotion(ctx, model, drawBase) {
           ...model,
           displayText: character,
           metrics: { ...metrics, x, width: characterWidth }
-        }, model.todayColor, alpha, 0, offsetY);
+        }, cascadeColor, alpha, 0, offsetY);
       });
       return true;
+    }
     case 'orbiting-spark': {
       drawBase(ctx, model);
       const angle = phase;

@@ -46,7 +46,7 @@ export const NAME_MATERIALS = Object.freeze({
   'pearl-foil': composableMaterial('pearl-foil', 'pearl-foil', ['#f7f5fb', '#d8e8f3', '#f0dfe9', '#dcece7', '#f6efdf'], {
     label: 'Mother of Pearl', collection: 'Prism', rarity: 'Epic'
   }),
-  'carbon-cut': composableMaterial('carbon-cut', 'carbon-cut', ['#838993', '#17191f', '#d3d8e2'], {
+  'carbon-cut': composableMaterial('carbon-cut', 'carbon-cut', ['#aab3c0', '#2b3038', '#e2e8f0'], {
     label: 'Carbon Vein', collection: 'Nocturne', rarity: 'Rare'
   }),
   'frosted-edge': composableMaterial('frosted-edge', 'frosted-edge', ['#e7effe', '#ffffff', '#b8d2ff'], {
@@ -64,19 +64,19 @@ export const NAME_MATERIALS = Object.freeze({
   'liquid-mercury': composableMaterial('liquid-mercury', 'liquid-mercury', ['#31343b', '#eef1f5', '#555a64', '#ffffff', '#24272d', '#cfd3d9'], {
     label: 'Quicksilver', collection: 'Nocturne', rarity: 'Anomaly', usesDailyColor: true
   }),
-  'oil-slick': composableMaterial('oil-slick', 'oil-slick', ['#161a24', '#564078', '#187078', '#9c7044', '#32224e', '#161a24'], {
+  'oil-slick': composableMaterial('oil-slick', 'oil-slick', ['#273044', '#66528f', '#1f8f95', '#d9ad64', '#51356f', '#273044'], {
     label: 'Spillway', collection: 'Prism', rarity: 'Epic'
   }),
   'thermal-ink': composableMaterial('thermal-ink', 'thermal-ink', ['#24123a', '#5d4dd7', '#2bc4c9', '#f3d34a', '#d84b8e'], {
     label: 'Heat Map', collection: 'Signal', rarity: 'Epic', usesDailyColor: true
   }),
-  'velvet-ink': composableMaterial('velvet-ink', 'velvet-ink', ['#3c172a', '#ffb4d2', '#6c294e'], {
+  'velvet-ink': composableMaterial('velvet-ink', 'velvet-ink', ['#5b2b43', '#ffb4d2', '#8d4669'], {
     label: 'Soft Black', collection: 'Ember', rarity: 'Rare'
   }),
   'embroidered-thread': composableMaterial('embroidered-thread', 'embroidered-thread', ['#d9d0c7', '#8f8275', '#f7eadb'], {
     label: 'Threadwork', collection: 'Archive', rarity: 'Epic'
   }),
-  'engraved-stone': composableMaterial('engraved-stone', 'engraved-stone', ['#666b72', '#292c31', '#c4c8cf'], {
+  'engraved-stone': composableMaterial('engraved-stone', 'engraved-stone', ['#9aa1aa', '#353a40', '#e2e6eb'], {
     label: 'Quarry Mark', collection: 'Nocturne', rarity: 'Rare'
   }),
   'crt-phosphor': composableMaterial('crt-phosphor', 'crt-phosphor', ['#9df5c3', '#5cff9a', '#043b17'], {
