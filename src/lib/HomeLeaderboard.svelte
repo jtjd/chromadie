@@ -4,6 +4,7 @@
   import { getProfileMediaUrl } from './profileMedia.js';
   import { normalizeHexColor } from './utils.js';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
+  import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
 
   export let rows = [];
   export let featuredProfiles = [];
@@ -62,11 +63,13 @@
             style={`--row-accent: ${color};`}
           >
             <span class="home-rank-row__number">{showingToday ? String(row.rank || index + 1).padStart(2, '0') : 'view'}</span>
-            {#if avatarUrl(row)}
-              <img class="home-rank-row__avatar" src={avatarUrl(row)} alt="" width="42" height="42" loading="lazy" decoding="async" />
-            {:else}
-              <span class="home-rank-row__avatar home-rank-row__avatar--monogram">{(row.displayName || row.username || '?').slice(0, 1).toUpperCase()}</span>
-            {/if}
+            <AvatarEffect effectKey={row?.equippedCosmetics?.avatar_effect} accentColor={color} mode="compact" animated={false} className="home-rank-row__avatar-effect">
+              {#if avatarUrl(row)}
+                <img class="home-rank-row__avatar" src={avatarUrl(row)} alt="" width="42" height="42" loading="lazy" decoding="async" />
+              {:else}
+                <span class="home-rank-row__avatar home-rank-row__avatar--monogram">{(row.displayName || row.username || '?').slice(0, 1).toUpperCase()}</span>
+              {/if}
+            </AvatarEffect>
             <span class="home-rank-row__user">
               {#if nameRendererLoadout}
                 <NameEffectCanvas
@@ -145,6 +148,7 @@
   .home-rank-row__number { color: #737580; font: 0.59rem / 1 var(--home-mono); letter-spacing: 0.08em; text-transform: uppercase; }
   .home-rank-row--featured .home-rank-row__number { color: color-mix(in srgb, var(--row-accent) 42%, #f2f0eb); }
   .home-rank-row__avatar { width: 2.65rem; height: 2.65rem; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 50%; object-fit: cover; }
+  :global(.home-rank-row__avatar-effect) { display: grid; place-items: center; width: 2.65rem; height: 2.65rem; border-radius: 50%; }
   .home-rank-row__avatar--monogram { display: grid; place-items: center; background: #242731; color: #d6d4db; font: 600 0.8rem / 1 var(--home-mono); }
   .home-rank-row__user { min-width: 0; }
   :global(.home-leaderboard__username) { display: block; overflow: hidden; color: #f1eff3; font: 600 0.88rem / 1.1 var(--home-font); text-overflow: ellipsis; white-space: nowrap; }

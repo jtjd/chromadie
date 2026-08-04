@@ -49,6 +49,8 @@
   let saving = false;
   let status = '';
   let error = '';
+  let layoutPreviewOverride = '';
+  let layoutChangedSinceSave = false;
 
   function restoreDraft(value, fallbackColor) {
     const normalized = normalizeProfileConfig(value, fallbackColor);
@@ -85,6 +87,8 @@
     const cachedState = readViewState(VIEW_STATE_NAMESPACE, profileStateScope());
     const fallbackColor = publishedConfig?.signatureColor || draftConfig?.signatureColor;
     draft = restoreDraft(cachedState?.draft || draftConfig || publishedConfig, fallbackColor);
+    layoutPreviewOverride = '';
+    layoutChangedSinceSave = false;
     error = '';
     status = cachedState?.draft ? 'Unsaved draft restored.' : '';
   }
@@ -98,10 +102,17 @@
   function updateDraft(next) {
     const nextDraft = { ...draft, ...next };
     draft = nextDraft;
+    if (Object.prototype.hasOwnProperty.call(next, 'layoutVariant')) {
+      layoutPreviewOverride = nextDraft.layoutVariant;
+      layoutChangedSinceSave = true;
+    }
     persistDraftState(nextDraft);
     error = '';
     dispatch('configpreview', {
-      config: normalizeProfileConfig(nextDraft, nextDraft?.signatureColor)
+      config: {
+        ...normalizeProfileConfig(nextDraft, nextDraft?.signatureColor),
+        ...(layoutPreviewOverride ? { layoutOverride: layoutPreviewOverride } : {})
+      }
     });
   }
 
@@ -160,10 +171,13 @@
       return null;
     }
 
+    const layoutChanged = layoutChangedSinceSave;
     draft = normalizeProfileConfig(data.draft, draft.signatureColor);
+    layoutPreviewOverride = '';
+    layoutChangedSinceSave = false;
     clearViewState(VIEW_STATE_NAMESPACE, profileStateScope());
     status = 'Draft saved. It is private until published.';
-    dispatch('configsaved', { draft, published: normalizeProfileConfig(data.published, draft.signatureColor) });
+    dispatch('configsaved', { draft, published: normalizeProfileConfig(data.published, draft.signatureColor), layoutChanged });
     saving = false;
     return draft;
   }

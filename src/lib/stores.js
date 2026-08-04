@@ -6,6 +6,9 @@ import { resolveNameFontKey } from './name/nameFonts.js'
 import { resolveNameMaterialKey } from './name/nameMaterials.js'
 import { resolveNameMotionKey } from './name/nameMotions.js'
 import { isProfileBorderKey } from './profile-border/profileBorders.js'
+import { getCursorTrailKey } from './cursor-trail/cursorTrails.js'
+import { isAvatarEffectKey } from './avatar-effect/avatarEffects.js'
+import { isPaidProfileLayoutKey } from './profile-layout/profileLayouts.js'
 
 // --- Auth & Profile State ---
 export const session = writable(null)
@@ -94,7 +97,7 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
         }
 
         if (clearShopCache) {
-            keysToRemove.push('shop_cache', 'shop_cache:v2', 'shop_cache:v3')
+            keysToRemove.push('shop_cache', 'shop_cache:v2', 'shop_cache:v3', 'shop_cache:v4')
         }
 
         keysToRemove.forEach(key => localStorage.removeItem(key))
@@ -105,10 +108,10 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
     clearAllViewState()
 }
 
-const SHOP_CACHE_KEY = 'shop_cache:v3'
-const SHOP_CACHE_SHAPE_VERSION = 3
-const SHOP_SLOTS = new Set(['consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border'])
-const NAME_RENDERER_SLOTS = new Set(['name_font', 'name_material', 'name_motion', 'profile_border'])
+const SHOP_CACHE_KEY = 'shop_cache:v4'
+const SHOP_CACHE_SHAPE_VERSION = 4
+const SHOP_SLOTS = new Set(['consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout'])
+const NAME_RENDERER_SLOTS = new Set(['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout'])
 
 function normalizeShopItem(item) {
     if (!item || typeof item !== 'object' || !/^[a-z0-9_]{1,80}$/.test(item.item_key || '')) return null
@@ -122,7 +125,13 @@ function normalizeShopItem(item) {
             ? resolveNameFontKey(rendererKey)
             : item.slot === 'name_material'
                 ? resolveNameMaterialKey(rendererKey)
-                : resolveNameMotionKey(rendererKey)
+                : item.slot === 'name_motion'
+                    ? resolveNameMotionKey(rendererKey)
+                    : item.slot === 'cursor_trail'
+                        ? getCursorTrailKey(rendererKey)
+                        : item.slot === 'avatar_effect'
+                            ? (isAvatarEffectKey(rendererKey) ? rendererKey : '')
+                            : isPaidProfileLayoutKey(rendererKey) ? rendererKey : ''
         if (resolvedKey !== rendererKey || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(rendererKey)) return null
     } else if (NAME_RENDERER_SLOTS.has(item.slot)) {
         return null

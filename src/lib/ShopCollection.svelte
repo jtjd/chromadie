@@ -49,6 +49,9 @@
     if (section === 'utility') return item.slot === 'consumable';
     if (section === 'names') return SHOP_NAME_SLOTS.includes(item.slot);
     if (['name_font', 'name_material', 'name_motion', 'profile_border'].includes(section)) return item.slot === section;
+    if (section === 'avatar') return item.slot === 'avatar_effect';
+    if (section === 'cursor') return item.slot === 'cursor_trail';
+    if (section === 'layouts') return item.slot === 'profile_layout';
     return false;
   }
 

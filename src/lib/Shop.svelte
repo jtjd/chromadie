@@ -23,6 +23,7 @@
   } from './stores';
   import { supabase } from './supabase';
   import { readViewState, writeViewState } from './viewState.js';
+  import { getNameItemPreviewLoadout } from './name/nameLoadout.js';
   import {
     SHOP_SECTIONS,
     SHOP_NAME_SUBTYPES,
@@ -35,7 +36,6 @@
     tryOnShopItem
   } from './shopCatalog.js';
   import { normalizeHexColor } from './utils.js';
-  import { getNameItemPreviewLoadout } from './name/nameLoadout.js';
 
   const SHOP_ACCENT = '#C7B4FF';
   const VIEW_STATE_NAMESPACE = 'shop';
@@ -73,6 +73,9 @@
     { id: 'overview', label: 'All', description: 'Every shop piece' },
     { id: 'names', label: 'Names', description: 'Name expression' },
     { id: 'borders', label: 'Borders', description: 'Profile edges' },
+    { id: 'avatar', label: 'Avatar', description: 'Portrait effects' },
+    { id: 'cursor', label: 'Cursor', description: 'Pointer trails' },
+    { id: 'layouts', label: 'Layouts', description: 'Profile compositions' },
     { id: 'utility', label: 'Utility', description: 'Consumables' }
   ]);
   const NAME_LAYER_NAV = Object.freeze([
@@ -85,6 +88,9 @@
     { id: 'all', label: 'All pieces', description: 'Everything you own' },
     { id: 'names', label: 'Names', description: 'Name expression' },
     { id: 'profile_border', label: 'Borders', description: 'Profile edges' },
+    { id: 'avatar', label: 'Avatar', description: 'Portrait effects' },
+    { id: 'cursor', label: 'Cursor', description: 'Pointer trails' },
+    { id: 'layouts', label: 'Layouts', description: 'Profile compositions' },
     { id: 'utility', label: 'Utility', description: 'Consumables' }
   ]);
   $: ownedCatalogCount = catalogItems.filter(item => {
@@ -106,7 +112,9 @@
   $: previewUsername = $profile?.display_name || $profile?.username || 'You';
   $: previewColor = normalizeHexColor(currentRoll?.hex_code || $profile?.mood_color, '#8B7CF6');
   $: previewLoadout = selectedItem?.slot
-    ? getNameItemPreviewLoadout(selectedItem, tryOnShopItem($equippedItems, selectedItem))
+    ? ['name_font', 'name_material', 'name_motion'].includes(selectedItem.slot)
+      ? getNameItemPreviewLoadout(selectedItem, $equippedItems)
+      : tryOnShopItem($equippedItems, selectedItem)
     : { ...($equippedItems || {}) };
   $: dailyColor = normalizeHexColor(currentRoll?.hex_code, '');
 
@@ -181,6 +189,12 @@
       ? 'borders'
       : ['name_font', 'name_material', 'name_motion'].includes(item.slot)
         ? 'names'
+        : item.slot === 'avatar_effect'
+          ? 'avatar'
+          : item.slot === 'cursor_trail'
+            ? 'cursor'
+            : item.slot === 'profile_layout'
+              ? 'layouts'
         : item.slot === 'consumable'
           ? 'utility'
           : 'overview';

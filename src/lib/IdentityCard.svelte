@@ -1,6 +1,7 @@
 <script>
   import Media from './foundation/Media.svelte';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
+  import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
 
   export let username = 'Unknown Player';
   export let displayName = '';
@@ -24,6 +25,9 @@
   export let nameRendererMode = 'animated';
   export let nameRendererRecentColors = [];
   export let nameRendererTodayColor = '';
+  export let avatarEffectKey = '';
+  export let avatarEffectMode = 'profile';
+  export let avatarEffectAnimated = true;
 
   let failedAvatarSource = '';
 
@@ -45,7 +49,14 @@
 
 <section class={'identity-card identity-card--roll-' + rollState} style={'--identity-accent: ' + accentColor + ';'} aria-labelledby={titleId}>
   <div class="identity-card__person">
-    <div class="identity-card__avatar">
+    <AvatarEffect
+      effectKey={avatarEffectKey}
+      accentColor={accentColor}
+      recentColors={nameRendererRecentColors}
+      mode={avatarEffectMode}
+      animated={avatarEffectAnimated}
+      className="identity-card__avatar"
+    >
       {#if avatarSrc && failedAvatarSource !== avatarSrc}
         <img class="identity-card__avatar-media" src={avatarSrc} alt={safeDisplayName + ' avatar'} loading={avatarLoading === 'lazy' ? 'lazy' : 'eager'} decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
       {:else}
@@ -53,7 +64,7 @@
         <span class="identity-card__avatar-letter" aria-hidden="true">{safeInitial}</span>
         {#if showAvatarMark}<Media src="/logo-mark.svg" alt="" aspect="square" loading="eager" className="identity-card__avatar-mark" />{/if}
       {/if}
-    </div>
+    </AvatarEffect>
 
     <div class="identity-card__copy">
       <div class="identity-card__name-row">
@@ -143,7 +154,7 @@
     flex: 0 0 clamp(5rem, 8vw, 5.75rem);
     width: clamp(5rem, 8vw, 5.75rem);
     aspect-ratio: 1;
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid rgba(239, 244, 255, 0.18);
     border-radius: 50%;
     background: radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.26), var(--identity-avatar-accent) 42%, rgba(3, 6, 11, 0.92) 100%);
@@ -154,6 +165,7 @@
   .identity-card__avatar-letter { position: relative; z-index: 1; color: rgba(250, 252, 255, 0.94); font: 600 clamp(2.25rem, 6vw, 3.25rem) / 1 var(--font-display-stack); letter-spacing: -0.08em; text-shadow: 0 0 1.5rem color-mix(in srgb, var(--identity-avatar-accent) 70%, transparent); }
   .identity-card__avatar-mark { position: absolute; z-index: 2; inset: 26%; opacity: 0.14; border: 0; border-radius: 0; background: transparent; }
   .identity-card__avatar-media { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 0; background: transparent; }
+  .identity-card__avatar-media { border-radius: 50%; clip-path: circle(50% at 50% 50%); }
   .identity-card__avatar-media :global(.foundation-media__fallback) { border: 0; border-radius: 0; }
 
   .identity-card__copy { min-width: 0; flex: 1; padding-top: 0.15rem; text-align: left; }

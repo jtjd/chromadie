@@ -245,6 +245,10 @@ SELECT pg_temp.audit_assert(
   AND (SELECT count(*) = 22 FROM public.shop_items WHERE slot = 'name_material' AND catalog_status = 'active')
   AND (SELECT count(*) = 24 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
   AND (SELECT count(*) = 9 FROM public.shop_items WHERE slot = 'profile_border' AND catalog_status = 'active')
+  AND (SELECT count(*) = 16 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
+  AND (SELECT count(*) = 18 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
+  AND (SELECT count(*) = 5 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
+  AND (SELECT count(*) = 114 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -258,9 +262,9 @@ SELECT pg_temp.audit_assert(
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 73
+    AND (SELECT count(*) = 112
          FROM public.get_shop_catalog()
-         WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border') AND catalog_status = 'active')
+         WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),
   'shop catalog RPC must expose only active retained rows with bounded renderer access'
 );
@@ -588,7 +592,10 @@ VALUES
   ('10000000-0000-0000-0000-000000000001', 'name_material_copper_press', 1),
   ('10000000-0000-0000-0000-000000000001', 'name_motion_soft_rise', 1),
   ('10000000-0000-0000-0000-000000000001', 'name_motion_daily_pulse', 1),
-  ('10000000-0000-0000-0000-000000000001', 'border_signal', 1);
+  ('10000000-0000-0000-0000-000000000001', 'border_signal', 1),
+  ('10000000-0000-0000-0000-000000000001', 'cursor_trail_signal_trace', 1),
+  ('10000000-0000-0000-0000-000000000001', 'avatar_effect_signal_ring', 1),
+  ('10000000-0000-0000-0000-000000000001', 'profile_layout_split_signal', 1);
 UPDATE public.profiles
 SET equipped_cosmetics = jsonb_build_object(
   'profile_border', 'border_signal',
@@ -621,6 +628,46 @@ SELECT pg_temp.audit_assert(
       AND payload->'cosmetics'->>'name_motion' = 'name_motion_soft_rise'
    FROM audit_results WHERE name = 'lean_equip_border'),
   'equipping a Profile Border did not preserve modern Name layers'
+);
+INSERT INTO audit_results VALUES ('launch_equip_cursor', public.equip_item('cursor_trail_signal_trace'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->'cosmetics'->>'cursor_trail' = 'cursor_trail_signal_trace'
+      AND payload->'cosmetics'->>'profile_border' = 'border_signal'
+      AND payload->'cosmetics'->>'name_font' = 'name_font_editorial_serif'
+   FROM audit_results WHERE name = 'launch_equip_cursor'),
+  'equipping a Cursor Trail did not preserve unrelated cosmetic slots'
+);
+INSERT INTO audit_results VALUES ('launch_equip_avatar', public.equip_item('avatar_effect_signal_ring'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_signal_ring'
+      AND payload->'cosmetics'->>'cursor_trail' = 'cursor_trail_signal_trace'
+   FROM audit_results WHERE name = 'launch_equip_avatar'),
+  'equipping an Avatar Effect did not preserve the Cursor Trail slot'
+);
+INSERT INTO audit_results VALUES ('launch_equip_layout', public.equip_item('profile_layout_split_signal'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_split_signal'
+      AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_signal_ring'
+   FROM audit_results WHERE name = 'launch_equip_layout'),
+  'equipping a paid Profile Layout did not preserve Avatar Effect state'
+);
+INSERT INTO audit_results VALUES ('launch_wrong_slot', public.equip_item('streak_freeze'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'false' AND payload->>'error' = 'Invalid item'
+   FROM audit_results WHERE name = 'launch_wrong_slot'),
+  'non-cosmetic utility rows remained equipable'
+);
+INSERT INTO audit_results VALUES ('launch_unequip_cursor', public.unequip_item('cursor_trail'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND NOT (payload->'cosmetics' ? 'cursor_trail')
+      AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_signal_ring'
+      AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_split_signal'
+   FROM audit_results WHERE name = 'launch_unequip_cursor'),
+  'unequipping Cursor Trail cleared unrelated new slots'
 );
 INSERT INTO audit_results VALUES ('d2_equip_material', public.equip_item('name_material_copper_press'));
 INSERT INTO audit_results VALUES ('d2_equip_motion', public.equip_item('name_motion_daily_pulse'));

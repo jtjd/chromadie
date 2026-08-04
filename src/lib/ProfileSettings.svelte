@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { authUser, isAuthenticated, profile, session } from './stores';
+  import { authUser, equippedItems, isAuthenticated, profile, refreshProfileState, session } from './stores';
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData.js';
   import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
@@ -56,6 +56,12 @@
   let requestId = 0;
   let activeSection = 'identity';
   let configurationPreview = null;
+  function getEquippedLayout(value) {
+    return value && typeof value === 'object' && typeof value.profile_layout === 'string'
+      ? value.profile_layout
+      : '';
+  }
+  $: currentEquippedLayout = getEquippedLayout($equippedItems);
 
   $: accountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
   $: accountKey = $isAuthenticated && $session?.user?.id ? $session.user.id : '';
@@ -153,6 +159,16 @@
         published: normalizeProfileConfig(preserveExpressionFields(event.detail?.published, currentPublished), fallbackColor)
       }
     };
+    const savedLayout = normalizeProfileConfig(event.detail?.draft, fallbackColor).layoutVariant;
+    if (event.detail?.layoutChanged && ['immersive', 'editorial', 'focus'].includes(savedLayout) && currentEquippedLayout) {
+      void clearPaidLayoutOverride();
+    }
+  }
+
+  async function clearPaidLayoutOverride() {
+    const { data, error: rpcError } = await supabase.rpc('unequip_item', { p_slot: 'profile_layout' });
+    if (rpcError || !data?.success) return;
+    await refreshProfileState($session?.user?.id || null);
   }
 
   function updateExpression(event) {
@@ -181,7 +197,10 @@
       return;
     }
     const fallbackColor = context?.targetProfile?.mood_color || '#8B7CF6';
-    configurationPreview = normalizeProfileConfig(nextPreview, fallbackColor);
+    const normalizedPreview = normalizeProfileConfig(nextPreview, fallbackColor);
+    configurationPreview = nextPreview?.layoutOverride
+      ? { ...normalizedPreview, layoutOverride: nextPreview.layoutOverride }
+      : normalizedPreview;
   }
 
   function updateIdentity(event) {

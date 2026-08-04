@@ -5,6 +5,9 @@
   import { getProfileStoryVisible, getVisibleProfileLinks, getVisibleProfileModules } from './profileConfig.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
+  import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
+  import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
+  import { resolveProfileLayoutVariant, getProfileLayoutLabel } from './profile-layout/profileLayouts.js';
 
   export let profile = {};
   export let profileConfig = null;
@@ -19,7 +22,6 @@
     boundary: 'Public boundary',
     explore: 'Explore footer'
   });
-  const STYLE_LABELS = Object.freeze({ immersive: 'Immersive', editorial: 'Editorial', focus: 'Focused' });
 
   /** @type {any} */
   let configSource;
@@ -33,12 +35,15 @@
   $: modules = getVisibleProfileModules(config, true).filter(module => module.id !== 'explore');
   $: showStory = getProfileStoryVisible(config);
   $: avatarSrc = getProfileMediaUrl(config.avatar_path);
+  $: layoutVariant = resolveProfileLayoutVariant(loadout, config);
+  $: cursorKey = getCursorTrailKey(loadout?.cursor_trail);
 </script>
 
 <aside class="settings-preview" aria-label="Live profile preview">
   <div class="settings-preview__topline"><span>Live profile</span><span>Draft preview</span></div>
   <ProfileBorderEffect borderKey={loadout?.profile_border} className="settings-preview__border">
-  <div class={'settings-preview__canvas settings-preview__canvas--' + (config.layoutVariant || 'immersive')} style={'--preview-accent:' + (config.signatureColor || profile.mood_color || '#8B7CF6') + ';'}>
+  <div class={'settings-preview__canvas settings-preview__canvas--' + layoutVariant} style={'--preview-accent:' + (config.signatureColor || profile.mood_color || '#8B7CF6') + ';'}>
+    {#if cursorKey}<CursorTrailLayer trailKey={cursorKey} todayColor={config.signatureColor || profile.mood_color || '#8B7CF6'} className="settings-preview__cursor" />{/if}
     <IdentityCard
       username={profile.username || 'Your username'}
       displayName={profile.username || 'Your username'}
@@ -51,12 +56,15 @@
       nameRendererLoadout={nameRendererLoadout}
       nameRendererContext="profile"
       nameRendererMode="animated"
+      avatarEffectKey={loadout?.avatar_effect}
+      avatarEffectMode="profile"
+      avatarEffectAnimated={true}
       showToday={false}
     />
     <div class="settings-preview__composition">
       <div class="settings-preview__composition-heading">
         <span>Page sections</span>
-        <strong>{STYLE_LABELS[config.layoutVariant] || 'Immersive'}</strong>
+        <strong>{getProfileLayoutLabel(layoutVariant)}</strong>
       </div>
       <div class="settings-preview__sections">
         {#each modules as module (module.id)}
@@ -80,6 +88,7 @@
   .settings-preview__topline { display:flex; justify-content:space-between; color:var(--color-accent-bright); font:700 var(--type-label)/1 var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
   .settings-preview__topline span:last-child { color:var(--color-ink-faint); }
   .settings-preview__canvas { position:relative; overflow:hidden; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-inset); }
+  .settings-preview__canvas :global(.settings-preview__cursor) { z-index:3 !important; }
   .settings-preview__canvas :global(.identity-card) { position:relative; z-index:2; min-height:15rem; padding:1rem; border:0; border-radius:var(--radius-md); }
   .settings-preview__canvas :global(.identity-card__name) { font-size:clamp(1.35rem, 2vw, 2rem); }
   .settings-preview__canvas :global(.identity-card__bio) { font-size:.75rem; }

@@ -11,6 +11,7 @@
   import { getProfileMediaUrl } from './profileMedia.js';
   import { trackProductEvent } from './productAnalytics.js';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
+  import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
 
   export let item;
   export let featured = false;
@@ -108,12 +109,14 @@
   <div class="discovery-card__main">
     <div class="discovery-card__profile">
       <a class="discovery-card__avatar" href={profilePath || '/leaderboard'} on:click={viewProfile} aria-label={`Open ${displayName}'s public profile`}>
-        {#if avatarSrc && avatarSrc !== failedAvatarSource}
-          <img src={avatarSrc} alt="" loading="lazy" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
-        {:else}
-          <span class="discovery-card__avatar-initial" aria-hidden="true">{displayName.slice(0, 1).toUpperCase() || '✦'}</span>
-        {/if}
-        <span class="discovery-card__avatar-accent" aria-hidden="true"></span>
+        <AvatarEffect effectKey={item?.equippedCosmetics?.avatar_effect} accentColor={profileAccent} mode="compact" animated={false} className="discovery-card__avatar-effect">
+          {#if avatarSrc && avatarSrc !== failedAvatarSource}
+            <img src={avatarSrc} alt="" loading="lazy" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
+          {:else}
+            <span class="discovery-card__avatar-initial" aria-hidden="true">{displayName.slice(0, 1).toUpperCase() || '✦'}</span>
+          {/if}
+          <span class="discovery-card__avatar-accent" aria-hidden="true"></span>
+        </AvatarEffect>
       </a>
 
       <div class="discovery-card__identity">
@@ -223,6 +226,7 @@
   .discovery-card__profile { display: flex; grid-column: 1; align-items: center; gap: 0.85rem; min-width: 0; }
   .discovery-card__avatar { position: relative; display: grid; place-items: center; flex: 0 0 4rem; width: 4rem; height: 4rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--discovery-profile-accent) 56%, white 12%); border-radius: 1.1rem; background: radial-gradient(circle at 32% 24%, color-mix(in srgb, var(--discovery-profile-accent) 72%, white), var(--discovery-profile-accent) 48%, var(--surface-inset) 100%); box-shadow: 0 0 1.8rem color-mix(in srgb, var(--discovery-profile-accent) 18%, transparent), inset 0 0 0 1px rgba(255,255,255,0.1); text-decoration: none; }
   .discovery-card__avatar img { width: 100%; height: 100%; object-fit: cover; }
+  :global(.discovery-card__avatar-effect) { display:grid; place-items:center; width:100%; height:100%; border-radius:inherit; overflow:hidden; }
   .discovery-card__avatar-initial { position: relative; z-index: 1; color: var(--color-ink-strong); font: 700 1.8rem/1 var(--font-display-stack); letter-spacing: -0.08em; }
   .discovery-card__avatar-accent { position: absolute; right: 0.28rem; bottom: 0.28rem; width: 0.55rem; height: 0.55rem; border: 2px solid var(--surface-panel); border-radius: 50%; background: var(--discovery-roll-color); box-shadow: 0 0 0.8rem var(--discovery-roll-color); }
   .discovery-card__avatar:focus-visible,

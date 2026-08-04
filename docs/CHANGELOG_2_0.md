@@ -2,6 +2,24 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-04 — Expand launch identity expression
+
+- Added 16 Cursor Trails, 18 Avatar Effects, and five paid Profile Layouts to
+  the existing shop catalog without adding new categories beyond the launch
+  brief.
+- Cursor Trails follow pointer movement only on public profiles and bounded
+  previews; they pause offscreen, disable on touch/reduced-motion contexts, and
+  never intercept input.
+- Avatar Effects decorate the portrait locally and keep compact discovery and
+  leaderboard surfaces readable with static signatures.
+- Added Split Signal, Archive Index, Prism Mosaic, Night Terminal, and Story
+  Stack as paid composition overrides while keeping Immersive, Editorial, and
+  Focus free fallbacks.
+- Updated Shop, Owned, Profile Settings, public profiles, discovery, and
+  homepage profile rows to resolve the new structured slots through shared
+  renderers. Existing Name, Border, purchase, equip, and profile-save behavior
+  remains intact.
+
 ## 2026-08-03 — Align supporting-route navigation with the homepage
 
 - Reused the homepage header treatment across the shop, leaderboard, roll,

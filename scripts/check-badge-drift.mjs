@@ -14,10 +14,16 @@ const balanceConfigPath = path.join(repoRoot, 'src/lib/balanceConfig.js');
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
 const d2NameCatalogMigrationPath = path.join(repoRoot, 'supabase/migrations/20260802100000_composable_name_catalog_activation.sql');
 const profileBordersPath = path.join(repoRoot, 'src/lib/profile-border/profileBorders.js');
+const cursorTrailsPath = path.join(repoRoot, 'src/lib/cursor-trail/cursorTrails.js');
+const avatarEffectsPath = path.join(repoRoot, 'src/lib/avatar-effect/avatarEffects.js');
+const profileLayoutsPath = path.join(repoRoot, 'src/lib/profile-layout/profileLayouts.js');
 
 const badgeModule = await import(pathToFileURL(badgeDataPath).href);
 const balanceConfig = await import(pathToFileURL(balanceConfigPath).href);
 const profileBorders = await import(pathToFileURL(profileBordersPath).href);
+const cursorTrails = await import(pathToFileURL(cursorTrailsPath).href);
+const avatarEffects = await import(pathToFileURL(avatarEffectsPath).href);
+const profileLayouts = await import(pathToFileURL(profileLayoutsPath).href);
 const baseScoringSql = await readFile(baseScoringSqlPath, 'utf8');
 const finalScoringSql = await readFile(finalScoringSqlPath, 'utf8');
 const scoringSql = `${baseScoringSql}\n${finalScoringSql}`;
@@ -240,6 +246,65 @@ if (borderRows.length !== 9 || borderKeySet.size !== 9 || borderInvalidRows.leng
   }, null, 2));
   process.exit(1);
 }
+const launchRows = [...seed.matchAll(
+  /^\s*\('((?:cursor_trail|avatar_effect|profile_layout)_[a-z0-9_]+)',\s*'[^']+',\s*'(cursor_trail|avatar_effect|profile_layout)',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)',\s*false,\s*'earned',\s*NULL,\s*'active'\),?$/gm
+)].map(([, itemKey, slot, cost, rendererKey, rarity, description, collection]) => ({
+  itemKey,
+  slot,
+  cost: Number(cost),
+  rendererKey,
+  rarity,
+  description,
+  collection
+}));
+const launchExpectedCosts = Object.freeze({
+  cursor_trail_signal_trace: 160000, cursor_trail_pixel_wake: 180000, cursor_trail_chroma_ribbon: 340000,
+  cursor_trail_glass_shards: 360000, cursor_trail_ember_ash: 210000, cursor_trail_comet_thread: 330000,
+  cursor_trail_ink_drops: 220000, cursor_trail_orbit_dust: 350000, cursor_trail_static_echo: 320000,
+  cursor_trail_rain_trace: 230000, cursor_trail_gold_fleck: 370000, cursor_trail_ghost_tail: 320000,
+  cursor_trail_color_memory: 540000, cursor_trail_marker_stroke: 360000, cursor_trail_solar_sparks: 520000,
+  cursor_trail_void_lensing: 700000, avatar_effect_signal_ring: 180000, avatar_effect_neon_halo: 320000,
+  avatar_effect_prism_orbit: 350000, avatar_effect_crystal_aperture: 360000, avatar_effect_chroma_arc: 520000,
+  avatar_effect_ember_crown: 380000, avatar_effect_ashfall: 230000, avatar_effect_gold_laurel: 390000,
+  avatar_effect_ink_stamp: 220000, avatar_effect_paper_tear: 350000, avatar_effect_static_offset: 340000,
+  avatar_effect_pixel_satellites: 240000, avatar_effect_crt_scan: 330000, avatar_effect_void_eclipse: 560000,
+  avatar_effect_ghost_double: 350000, avatar_effect_night_frame: 220000, avatar_effect_daily_aura: 400000,
+  avatar_effect_color_archive: 720000, profile_layout_split_signal: 320000, profile_layout_archive_index: 300000,
+  profile_layout_prism_mosaic: 450000, profile_layout_night_terminal: 480000, profile_layout_story_stack: 600000
+});
+const launchExpectedRenderers = new Set([
+  ...cursorTrails.CURSOR_TRAIL_KEYS.map(key => `cursor_trail_${key.replaceAll('-', '_')}`),
+  ...avatarEffects.AVATAR_EFFECT_KEYS.map(key => `avatar_effect_${key.replaceAll('-', '_')}`),
+  ...profileLayouts.PAID_PROFILE_LAYOUT_KEYS.map(key => `profile_layout_${key.replaceAll('-', '_')}`)
+]);
+const launchInvalidRows = launchRows.filter(row => (
+  !launchExpectedRenderers.has(row.itemKey)
+    || launchExpectedCosts[row.itemKey] !== row.cost
+    || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.rendererKey)
+    || !expectedNameRarities.has(row.rarity)
+    || !row.description.trim()
+    || !row.collection.trim()
+));
+const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profile_layout'].map(slot => [
+  slot,
+  launchRows.filter(row => row.slot === slot).length
+]));
+if (
+  launchRows.length !== 39
+    || new Set(launchRows.map(row => row.itemKey)).size !== 39
+    || launchInvalidRows.length > 0
+    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 16, avatar_effect: 18, profile_layout: 5 })
+) {
+  console.error('Launch cosmetic catalog balance/drift check failed.');
+  console.error(JSON.stringify({
+    rowCount: launchRows.length,
+    duplicateKeys: launchRows.length - new Set(launchRows.map(row => row.itemKey)).size,
+    invalidRows: launchInvalidRows.map(row => row.itemKey),
+    slotCounts: launchCounts
+  }, null, 2));
+  process.exit(1);
+}
+const launchTotalCost = launchRows.reduce((total, row) => total + row.cost, 0);
 const borderTotalCost = borderRows.reduce((total, row) => total + row.cost, 0);
 const cheapestBorder = borderRows.reduce((lowest, row) => row.cost < lowest.cost ? row : lowest);
 const mostExpensiveBorder = borderRows.reduce((highest, row) => row.cost > highest.cost ? row : highest);
@@ -257,5 +322,8 @@ console.log(
     `Lean Profile Borders: ${borderRows.length} rows / ${borderTotalCost.toLocaleString()} EP; ` +
     `cheapest ${cheapestBorder.itemKey} ${daysFor(cheapestBorder.cost)} days, ` +
     `highest ${mostExpensiveBorder.itemKey} ${daysFor(mostExpensiveBorder.cost)} days; ` +
-    `the complete border set is ${daysFor(borderTotalCost)} days.`
+    `the complete border set is ${daysFor(borderTotalCost)} days.\n` +
+    `Launch cosmetics: ${launchRows.length} rows / ${launchTotalCost.toLocaleString()} EP; ` +
+    `Cursor ${launchCounts.cursor_trail}, Avatar ${launchCounts.avatar_effect}, ` +
+    `paid Layout ${launchCounts.profile_layout}.`
 );

@@ -2,6 +2,42 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-04 — Add three launch cosmetic slots without widening the renderer boundary
+
+The launch catalog now adds exactly `cursor_trail`, `avatar_effect`, and
+`profile_layout`. Their 39 products are finite database rows whose renderer
+values resolve through code-owned registries; no catalog CSS, Canvas commands,
+HTML, or URLs are accepted. Cursor trails use one profile-scoped canvas layer,
+avatar effects stay inside a shared avatar wrapper, and paid layouts compose
+the existing profile modules without duplicating profile data.
+
+The three existing free layouts remain the fallback stored in
+`profile_config.layoutVariant`. An owned paid layout is an equipped override;
+clearing it reveals the saved free layout. Free layout selection continues to
+use the existing Profile Settings save action and clears a paid override only
+after that save succeeds. Shop try-on remains temporary and purchase/equip
+authority stays in the existing RPCs.
+
+The benchmark review (accessed 2026-08-04) used [guns.lol cursor/profile
+effects](https://help.guns.lol/premium-guides/cursor-profile-effects), [guns.lol
+layout settings](https://help.guns.lol/premium-guides/layout-settings), [guns.lol
+customization](https://help.guns.lol/getting-started/customization), and the
+[guns.lol changelog](https://help.guns.lol/changelog), plus [haunt.gg
+Premium](https://help.haunt.gg/guides/premium), the [haunt.gg
+changelog](https://help.haunt.gg/overview/changelog), and the [haunt.gg
+overview](https://help.haunt.gg/). Strong reference points were direct pointer
+trails, bounded profile-entry motion, avatar-local decoration, structurally
+different layouts, and live previews. Chromadie adapts those interaction
+patterns around daily/recent roll colors, keeps trails off touch devices, and
+uses reduced-motion/static compact signatures.
+
+| Area | Competitor baseline | Current Chromadie | Chromadie target |
+| --- | --- | --- | --- |
+| Cursor | Direct trails, selectable effects, and profile-scoped animation | No launch cursor slot | One bounded pointer layer with 16 distinct, roll-aware trails |
+| Avatar | Local decoration, crop/radius controls, and reveal polish | Avatar and border only | Shared avatar wrapper with animated full-profile and quiet compact signatures |
+| Layout | Multiple structural compositions and section modes | Three free profile variants | Eight compositions with five paid overrides and one clear free fallback |
+| Preview/mobile | Live editing previews with responsive/reveal behavior | Shop preview covers retained Name/Border layers | Persistent contextual preview, meaningful mobile stacking, and reduced-motion parity |
+
 ## 2026-08-03 — Keep the homepage header consistent across supporting routes
 
 All non-profile routes now opt into the homepage header presentation through

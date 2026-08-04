@@ -25,6 +25,9 @@
   import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
   import { trackProductEvent } from './productAnalytics.js';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
+  import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
+  import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
+  import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
 
   const PROFILE_SURFACE_ACCENT = '#5D6A73';
 
@@ -352,6 +355,7 @@
   $: profileBioFallback = profileBio ? '' : 'No bio added yet.';
   $: signatureColor = colorFor(effectiveProfileConfig.signatureColor);
   $: nameRendererTodayColor = colorFor(latestRoll?.hex_code || signatureColor);
+  $: cursorTrailKey = getCursorTrailKey(cosmetics?.cursor_trail);
   $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
   $: profileSurfaceAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
   $: profileControlAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
@@ -373,7 +377,7 @@
   $: activeModules = composition.activeModules;
   $: secondaryModules = composition.secondaryModules;
   $: rollModule = activeModules.find(module => module.id === 'roll') || { size: 'wide' };
-  $: layoutVariant = effectiveProfileConfig.layoutVariant;
+  $: layoutVariant = resolveProfileLayoutVariant(cosmetics, effectiveProfileConfig);
   $: showRoll = getProfileRollVisible(effectiveProfileConfig);
   $: hasProfileMore = showRoll || showExpression || (getProfileStoryVisible(effectiveProfileConfig) && secondaryModules.length > 0);
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
@@ -388,11 +392,15 @@
 </script>
 
 <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + signatureColor + '; --profile-surface-accent: ' + profileSurfaceAccent + '; --profile-control-accent: ' + profileControlAccent + ';'} aria-busy={loading}>
+  {#if !loading && targetProfile && cursorTrailKey}
+    <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__cursor-layer" />
+  {/if}
   {#if !previewMode && backgroundSrc}
     <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
   {/if}
 
   {#if !loading && targetProfile}
+    <div class="profile-shell__composition">
     <div class="profile-shell__approved-canvas">
       <div class="profile-shell__approved-main">
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity">
@@ -414,6 +422,9 @@
               nameRendererMode="animated"
               nameRendererRecentColors={nameRendererRecentColors}
               nameRendererTodayColor={nameRendererTodayColor}
+              avatarEffectKey={cosmetics?.avatar_effect}
+              avatarEffectMode="profile"
+              avatarEffectAnimated={true}
               rollState={profileRollState}
               showToday={false}
             />
@@ -465,6 +476,7 @@
             </div>
           </div>
         {/if}
+    </div>
     </div>
 
     {#if !previewMode}
@@ -647,6 +659,8 @@
       radial-gradient(circle at 94% 76%, color-mix(in srgb, var(--color-accent-cyan) 9%, transparent), transparent 30rem),
       var(--color-canvas-deep);
   }
+
+  :global(.profile-shell__cursor-layer) { z-index: 0 !important; }
 
   .profile-shell__opening,
   .profile-shell__supporting,
@@ -1128,6 +1142,59 @@
 
   .profile-shell-page--preview .profile-shell__approved-opening {
     width: 100%;
+  }
+
+  /* Paid layouts change composition, not profile data. Each keeps the same
+     semantic DOM order and collapses back to a readable single column on mobile. */
+  .profile-shell__composition { display:contents; }
+  .profile-shell-page--split-signal .profile-shell__composition { display:grid; grid-template-columns:minmax(14rem,.34fr) minmax(0,.66fr); gap:clamp(1rem,3vw,3rem); align-items:stretch; width:min(100%,var(--content-profile)); min-height:calc(100dvh - 4.75rem); margin-inline:auto; }
+  .profile-shell-page--split-signal .profile-shell__approved-canvas { grid-column:1; }
+  .profile-shell-page--split-signal .profile-shell__approved-main { height:auto; min-height:calc(100dvh - 4.75rem); align-items:stretch; justify-content:flex-start; padding-top:clamp(2rem,8vh,6rem); }
+  .profile-shell-page--split-signal .profile-shell__opening.profile-shell__approved-opening { width:100%; }
+  .profile-shell-page--split-signal .profile-shell__more { grid-column:2; min-height:0; align-items:stretch; justify-content:flex-start; padding-block:clamp(2rem,8vh,6rem); }
+  .profile-shell-page--split-signal .profile-shell__approved-game,
+  .profile-shell-page--split-signal .profile-shell__approved-featured,
+  .profile-shell-page--split-signal .profile-shell__approved-supporting { width:100%; }
+
+  .profile-shell-page--archive-index { --profile-index-rule:color-mix(in srgb,var(--profile-accent) 34%,var(--color-line-subtle)); }
+  .profile-shell-page--archive-index .profile-shell__opening,
+  .profile-shell-page--archive-index .profile-shell__story-section { border-top-color:var(--profile-index-rule); border-bottom-color:var(--profile-index-rule); }
+  .profile-shell-page--archive-index .profile-shell__more { counter-reset:archive-section; }
+  .profile-shell-page--archive-index .profile-shell__more > [data-profile-region]::before { counter-increment:archive-section; content:'0' counter(archive-section); display:block; margin-bottom:.55rem; color:var(--profile-accent); font:700 .62rem/1 var(--font-mono-stack); letter-spacing:.12em; }
+  .profile-shell-page--archive-index .profile-shell__approved-game,
+  .profile-shell-page--archive-index .profile-shell__approved-featured { border-left:1px solid var(--profile-index-rule); padding-left:1rem; }
+
+  .profile-shell-page--prism-mosaic .profile-shell__more { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); align-content:center; align-items:start; gap:1.25rem; }
+  .profile-shell-page--prism-mosaic .profile-shell__more .profile-shell__approved-game { grid-column:1 / -1; }
+  .profile-shell-page--prism-mosaic .profile-shell__more .profile-shell__approved-featured { grid-column:1; }
+  .profile-shell-page--prism-mosaic .profile-shell__more .profile-shell__approved-supporting { grid-column:2; }
+  .profile-shell-page--prism-mosaic .profile-shell__approved-game,
+  .profile-shell-page--prism-mosaic .profile-shell__approved-featured,
+  .profile-shell-page--prism-mosaic .profile-shell__approved-supporting { width:100%; margin-top:0; }
+
+  .profile-shell-page--night-terminal { --profile-terminal-line:color-mix(in srgb,var(--profile-accent) 32%,var(--color-line-subtle)); }
+  .profile-shell-page--night-terminal .profile-shell__opening,
+  .profile-shell-page--night-terminal .profile-shell__approved-game,
+  .profile-shell-page--night-terminal .profile-shell__story-section { border-color:var(--profile-terminal-line); border-radius:2px; }
+  .profile-shell-page--night-terminal .profile-shell__more { align-items:stretch; padding-inline:clamp(1rem,4vw,4rem); }
+  .profile-shell-page--night-terminal .profile-shell__approved-game,
+  .profile-shell-page--night-terminal .profile-shell__approved-featured { width:100%; }
+  .profile-shell-page--night-terminal .profile-shell__more::before { content:'PROFILE / LIVE'; align-self:flex-start; color:var(--profile-accent); font:700 .62rem/1 var(--font-mono-stack); letter-spacing:.14em; }
+
+  .profile-shell-page--story-stack .profile-shell__approved-canvas { min-height:0; }
+  .profile-shell-page--story-stack .profile-shell__approved-main { height:auto; min-height:70vh; padding-block:clamp(3rem,10vh,8rem); }
+  .profile-shell-page--story-stack .profile-shell__more { min-height:0; align-items:stretch; justify-content:flex-start; padding-block:clamp(2rem,7vh,5rem); }
+  .profile-shell-page--story-stack .profile-shell__more > * { width:min(100%,42rem); }
+  .profile-shell-page--story-stack .profile-shell__approved-game { border-top:2px solid color-mix(in srgb,var(--profile-accent) 48%,var(--color-line-subtle)); }
+
+  @media (max-width: 48rem) {
+    .profile-shell-page--split-signal .profile-shell__composition { display:block; min-height:0; width:100%; }
+    .profile-shell-page--split-signal .profile-shell__approved-main { min-height:calc(100dvh - 3.85rem); padding-top:0; }
+    .profile-shell-page--split-signal .profile-shell__more { padding-block:4rem; }
+    .profile-shell-page--prism-mosaic .profile-shell__more { display:flex; }
+    .profile-shell-page--prism-mosaic .profile-shell__more > * { width:100%; }
+    .profile-shell-page--night-terminal .profile-shell__more { padding-inline:0; }
+    .profile-shell-page--story-stack .profile-shell__approved-main { min-height:calc(100dvh - 3.85rem); }
   }
 
   @media (max-width: 36rem) {

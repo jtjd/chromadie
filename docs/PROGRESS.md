@@ -1,5 +1,23 @@
 # Chromadie 2.0 Progress
 
+## Launch cosmetic expansion — 2026-08-04
+
+- Added the finite `cursor_trail`, `avatar_effect`, and `profile_layout` slots
+  with 16 Cursor Trails, 18 Avatar Effects, and five paid Profile Layouts.
+- Kept `immersive`, `editorial`, and `focus` free; paid layouts override the
+  saved free fallback until unequipped, while Profile Settings keeps one save
+  path for free-layout changes.
+- Added a shared profile-scoped cursor canvas with bounded history, visibility
+  and intersection pausing, touch/reduced-motion guards, and cleanup on unmount.
+- Added a shared avatar-local effect wrapper for public profiles, settings and
+  shop previews, with static signatures in discovery/leaderboard cards.
+- Extended Shop/Owned filters and the contextual fitting room without restoring
+  the removed legacy shop surfaces. Selection composes all temporary layers.
+- Added the forward-only catalog migration, seed synchronization, cache-version
+  bump, slot/RPC checks, focused renderer/layout tests, and benchmark notes.
+- The current project still carries the pre-existing aggregate bundle-budget
+  debt; initial/lazy caps are measured separately by the performance check.
+
 ## Sitewide header alignment — 2026-08-03
 
 - Applied the homepage pill/header treatment to all supporting routes through

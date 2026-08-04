@@ -84,6 +84,9 @@
           nameRendererContext="card"
           nameRendererMode="static-signature"
           nameRendererRecentColors={nameRendererRecentColors}
+          avatarEffectKey={cosmetics?.avatar_effect}
+          avatarEffectMode="compact"
+          avatarEffectAnimated={false}
           avatarSrc={avatarSrc}
           avatarLoading={variant === 'directory' ? 'lazy' : 'eager'}
           showToday={false}

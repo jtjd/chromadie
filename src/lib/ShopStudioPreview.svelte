@@ -5,6 +5,9 @@
   import { getProfileMediaUrl } from './profileMedia.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
+  import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
+  import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
+  import { resolveProfileLayoutVariant, getProfileLayoutLabel } from './profile-layout/profileLayouts.js';
 
   export let loadout = {};
   export let username = 'Your profile';
@@ -34,6 +37,8 @@
     .filter(Boolean);
   $: previewAvatarSrc = getProfileMediaUrl(previewProfileConfig.avatar_path);
   $: nameRendererLoadout = getNameRendererLoadout(loadout);
+  $: previewLayout = resolveProfileLayoutVariant(loadout, previewProfileConfig);
+  $: cursorKey = getCursorTrailKey(loadout?.cursor_trail);
 </script>
 
 <section class="studio-preview" class:studio-preview--compact={compact} aria-label="Your cosmetic preview">
@@ -50,13 +55,16 @@
 
   <div class="studio-stage context-profile">
     <div class="stage-grid" aria-hidden="true"></div>
+    {#if cursorKey}
+      <CursorTrailLayer trailKey={cursorKey} todayColor={displayColor} active={true} className="studio-cursor-layer" />
+    {/if}
     <ProfileBorderEffect
       borderKey={loadout?.profile_border}
       className="studio-profile-border"
       compact={compact}
       animated={resolvedNameRendererMode === 'animated'}
     >
-      <div class="studio-profile-card">
+      <div class={'studio-profile-card studio-profile-card--' + previewLayout}>
         <IdentityCard
           username={accountUsername}
           displayName={accountDisplayName}
@@ -70,10 +78,16 @@
           nameRendererLoadout={nameRendererLoadout}
           nameRendererContext={compact ? 'card' : 'profile'}
           nameRendererMode={resolvedNameRendererMode}
+          avatarEffectKey={loadout?.avatar_effect}
+          avatarEffectMode={compact ? 'compact' : 'profile'}
+          avatarEffectAnimated={resolvedNameRendererMode === 'animated'}
           showToday={false}
         />
       </div>
     </ProfileBorderEffect>
+    {#if previewLayout !== 'immersive'}
+      <div class="studio-layout-badge" aria-hidden="true">{getProfileLayoutLabel(previewLayout)}</div>
+    {/if}
   </div>
 
   {#if !compact}
@@ -155,6 +169,7 @@
       var(--color-canvas-deep);
   }
   .studio-stage.context-profile { min-height: 300px; }
+  .studio-stage :global(.studio-cursor-layer) { z-index: 3 !important; }
   .studio-stage > :global(.profile-border-effect) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
   .studio-stage > :global(.profile-border-effect) :global(.profile-border-effect__content) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
 
@@ -188,6 +203,12 @@
   .studio-profile-card :global(.identity-card__avatar-letter) { font-size: 1.5rem; }
   .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.8rem, 6.5vw, 2.35rem); line-height: .98; }
   .studio-profile-card :global(.identity-card__bio) { margin-top: 0.45rem; font-size: 0.72rem; }
+  .studio-profile-card--split-signal { margin-left: 4%; width: 92%; border-left: 2px solid color-mix(in srgb, var(--color-accent-cyan) 56%, transparent); }
+  .studio-profile-card--archive-index { border-radius: 0; border-top: 2px solid color-mix(in srgb, var(--color-accent-bright) 54%, transparent); }
+  .studio-profile-card--prism-mosaic { width: 88%; transform: rotate(-.35deg); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 26%, transparent), 0 24px 48px rgba(0,0,0,.38); }
+  .studio-profile-card--night-terminal { border-radius: 2px; background: #0b1015; }
+  .studio-profile-card--story-stack { width: 84%; margin-left: 8%; border-radius: 18px 6px 18px 6px; }
+  .studio-layout-badge { position:absolute; z-index:4; left:.9rem; bottom:.8rem; padding:.25rem .45rem; border:1px solid rgba(255,255,255,.16); background:rgba(7,9,13,.74); color:rgba(239,243,255,.68); font:600 .58rem var(--font-mono-stack); letter-spacing:.08em; text-transform:uppercase; }
 
   .studio-selection {
     display: flex;

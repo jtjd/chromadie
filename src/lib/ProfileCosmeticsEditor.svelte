@@ -48,6 +48,9 @@
     .sort((left, right) => (SHOP_SLOT_LABELS[left.slot] || left.slot).localeCompare(SHOP_SLOT_LABELS[right.slot] || right.slot)
       || left.name.localeCompare(right.name));
   $: borderItems = ownedCosmetics.filter(item => item.slot === 'profile_border');
+  $: avatarItems = ownedCosmetics.filter(item => item.slot === 'avatar_effect');
+  $: cursorItems = ownedCosmetics.filter(item => item.slot === 'cursor_trail');
+  $: layoutItems = ownedCosmetics.filter(item => item.slot === 'profile_layout');
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: syncEquippedLoadout(equippedKey, $equippedItems);
 
@@ -106,7 +109,7 @@
       <div>
         <p class="profile-settings-page__eyebrow">Appearance</p>
         <h2 id="profile-cosmetics-title">Shape your public identity.</h2>
-        <p>Preview the three Name layers and Profile Border together, then apply each owned choice through the existing server-authoritative equip flow.</p>
+        <p>Preview your expression layers together, then apply each owned choice through the existing server-authoritative equip flow.</p>
       </div>
       <Button variant="ghost" href="/shop">Browse the shop ↗</Button>
     </div>
@@ -166,6 +169,54 @@
               </select>
             </div>
             <button type="button" disabled={!!loadingSlot || (previewLoadout['profile_border'] || '') === ($equippedItems['profile_border'] || '')} on:click={() => applySlot('profile_border')}>{loadingSlot === 'profile_border' ? 'Saving…' : 'Apply'}</button>
+          </div>
+
+          <div class="profile-cosmetics-controls__heading profile-cosmetics-controls__heading--border">
+            <span>Portrait</span>
+            <strong>Avatar effect</strong>
+            <p>Decorates the portrait locally and stays quiet in compact cards.</p>
+          </div>
+          <div class="profile-cosmetics-slot">
+            <div>
+              <label for="cosmetic-avatar-effect">Avatar effect</label>
+              <select id="cosmetic-avatar-effect" value={previewLoadout['avatar_effect'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('avatar_effect', event.currentTarget.value)}>
+                <option value="">No avatar effect</option>
+                {#each avatarItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
+              </select>
+            </div>
+            <button type="button" disabled={!!loadingSlot || (previewLoadout['avatar_effect'] || '') === ($equippedItems['avatar_effect'] || '')} on:click={() => applySlot('avatar_effect')}>{loadingSlot === 'avatar_effect' ? 'Saving…' : 'Apply'}</button>
+          </div>
+
+          <div class="profile-cosmetics-controls__heading profile-cosmetics-controls__heading--border">
+            <span>Pointer</span>
+            <strong>Cursor trail</strong>
+            <p>Only appears on public profiles and this preview surface.</p>
+          </div>
+          <div class="profile-cosmetics-slot">
+            <div>
+              <label for="cosmetic-cursor-trail">Cursor trail</label>
+              <select id="cosmetic-cursor-trail" value={previewLoadout['cursor_trail'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('cursor_trail', event.currentTarget.value)}>
+                <option value="">No cursor trail</option>
+                {#each cursorItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
+              </select>
+            </div>
+            <button type="button" disabled={!!loadingSlot || (previewLoadout['cursor_trail'] || '') === ($equippedItems['cursor_trail'] || '')} on:click={() => applySlot('cursor_trail')}>{loadingSlot === 'cursor_trail' ? 'Saving…' : 'Apply'}</button>
+          </div>
+
+          <div class="profile-cosmetics-controls__heading profile-cosmetics-controls__heading--border">
+            <span>Composition</span>
+            <strong>Paid profile layout</strong>
+            <p>Free layouts remain in Layout & links. An owned paid layout overrides the saved free fallback until cleared.</p>
+          </div>
+          <div class="profile-cosmetics-slot">
+            <div>
+              <label for="cosmetic-profile-layout">Paid layout</label>
+              <select id="cosmetic-profile-layout" value={previewLoadout['profile_layout'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_layout', event.currentTarget.value)}>
+                <option value="">Use saved free layout</option>
+                {#each layoutItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
+              </select>
+            </div>
+            <button type="button" disabled={!!loadingSlot || (previewLoadout['profile_layout'] || '') === ($equippedItems['profile_layout'] || '')} on:click={() => applySlot('profile_layout')}>{loadingSlot === 'profile_layout' ? 'Saving…' : 'Apply'}</button>
           </div>
         </div>
       </div>

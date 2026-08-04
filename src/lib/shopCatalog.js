@@ -1,5 +1,5 @@
 const NAME_SLOTS = ['name_font', 'name_material', 'name_motion'];
-const PROFILE_SLOTS = [...NAME_SLOTS, 'profile_border'];
+const PROFILE_SLOTS = [...NAME_SLOTS, 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout'];
 const COSMETIC_SLOTS = [...PROFILE_SLOTS];
 
 export const SHOP_NAME_SLOTS = Object.freeze([...NAME_SLOTS]);
@@ -13,6 +13,9 @@ export const SHOP_SECTIONS = Object.freeze([
   { id: 'overview', label: 'Overview' },
   { id: 'names', label: 'Names' },
   { id: 'borders', label: 'Borders' },
+  { id: 'avatar', label: 'Avatar' },
+  { id: 'cursor', label: 'Cursor' },
+  { id: 'layouts', label: 'Layouts' },
   { id: 'utility', label: 'Utility' },
   { id: 'owned', label: 'Owned' }
 ]);
@@ -31,6 +34,9 @@ export const SHOP_SLOT_LABELS = Object.freeze({
   name_material: 'Name · Material',
   name_motion: 'Name · Motion',
   profile_border: 'Border',
+  avatar_effect: 'Avatar effect',
+  cursor_trail: 'Cursor trail',
+  profile_layout: 'Profile layout',
   consumable: 'Utility',
   title: 'Title'
 });
@@ -71,7 +77,10 @@ const FEATURED_KEYS = Object.freeze([
   'border_signal',
   'name_material_chroma_glass',
   'name_motion_prism_shatter',
-  'border_prism'
+  'border_prism',
+  'cursor_trail_color_memory',
+  'avatar_effect_color_archive',
+  'profile_layout_prism_mosaic'
 ]);
 
 export function isShopCosmetic(item) {
@@ -195,6 +204,9 @@ function matchesSection(item, section, subslot) {
       && (subslot === 'all' || item.slot === subslot);
   }
   if (section === 'borders') return item.slot === 'profile_border';
+  if (section === 'avatar') return item.slot === 'avatar_effect';
+  if (section === 'cursor') return item.slot === 'cursor_trail';
+  if (section === 'layouts') return item.slot === 'profile_layout';
   if (section === 'utility') return item.slot === 'consumable';
   if (section === 'owned') return item.slot !== 'consumable';
   return item.slot !== 'consumable' && item.slot !== 'title';
