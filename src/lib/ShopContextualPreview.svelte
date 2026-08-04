@@ -17,6 +17,17 @@
 
   $: previewName = accountProfile?.display_name || accountProfile?.username || username || 'You';
   $: rendererMode = paused ? 'paused' : 'animated';
+  // Re-mount the shared renderer whenever the fitting-room selection or any
+  // selected layer changes. This keeps Canvas, border, and motion effects in
+  // sync even when a renderer owns mount-time state or an async font loader.
+  $: previewKey = [
+    replayKey,
+    selectedItem?.item_key || 'equipped',
+    loadout?.name_font || '',
+    loadout?.name_material || '',
+    loadout?.name_motion || '',
+    loadout?.profile_border || ''
+  ].join('|');
 
   function replayPreview() {
     paused = false;
@@ -38,7 +49,7 @@
     </div>
   </header>
 
-  {#key replayKey}
+  {#key previewKey}
     <ShopStudioPreview
       {loadout}
       {selectedItem}

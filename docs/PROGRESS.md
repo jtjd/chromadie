@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Shop header and fitting-room reliability pass — 2026-08-03
+
+- Removed the redundant Names headline and supporting copy so the category and
+  layer controls arrive sooner.
+- Made EP balance the prominent header account signal and renamed the
+  secondary shop surface from Collection to Owned.
+- Keyed the shared fitting-room renderer from the selected item and resolved
+  loadout so Canvas, border, and motion selections visibly refresh together.
+
 ## Shop catalog density and name-layer navigation — 2026-08-03
 
 - Changed Browse and Collection galleries to three cards per row on desktop,

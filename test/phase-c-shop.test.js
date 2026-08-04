@@ -8,14 +8,14 @@ async function readProjectFile(path) {
   return readFile(new URL(path, ROOT), 'utf8');
 }
 
-test('shop shell is one profile studio with Catalog and Collection surfaces', async () => {
+test('shop shell is one profile studio with Catalog and Owned surfaces', async () => {
   const shop = await readProjectFile('src/lib/Shop.svelte');
   const app = await readProjectFile('src/App.svelte');
 
   assert.match(shop, /Profile studio/);
   assert.match(shop, /Shape <span>your identity\.<\/span>/);
   assert.match(shop, /\{ id: 'browse', label: 'Catalog' \}/);
-  assert.match(shop, /\{ id: 'collection', label: 'Collection' \}/);
+  assert.match(shop, /\{ id: 'collection', label: 'Owned' \}/);
   assert.doesNotMatch(shop, /ShopHome|ShopStudio/);
   assert.doesNotMatch(shop, /activeView === 'home'/);
   assert.match(shop, /previewDataLoading/);
@@ -46,6 +46,7 @@ test('catalog uses one category rail, compact context, bounded results, and one 
   assert.match(source, /Typeface and structure/);
   assert.match(source, /Surface and finish/);
   assert.match(source, /Movement and reveal/);
+  assert.doesNotMatch(source, /Build your name\.|Choose a font, material, or motion layer and see it on your profile\./);
   assert.match(source, /@media \(max-width: 960px\)/);
   assert.match(source, /@media \(max-width: 520px\)/);
 });
@@ -92,6 +93,8 @@ test('selection stays in the persistent profile preview without a replacement de
   assert.match(browse, /getNameItemPreviewLoadout\(selectedItem/);
   assert.match(contextual, /<ShopStudioPreview/);
   assert.match(contextual, /Live profile/);
+  assert.match(contextual, /previewKey/);
+  assert.match(contextual, /\{#key previewKey\}/);
   assert.match(contextual, /Previewing \$\{selectedItem\.name\}/);
   assert.match(contextual, />Clear<\/button>/);
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview|shop-preview-selection/);

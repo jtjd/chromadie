@@ -63,7 +63,7 @@
 <section class="shop-collection" id="collection" aria-labelledby="shop-collection-title">
   <div class="shop-surface-heading">
     <div>
-      <span class="shop-eyebrow">Collection</span>
+      <span class="shop-eyebrow">Owned</span>
       <h2 id="shop-collection-title">Pieces you own.</h2>
       <p>Your equipped look and earned expression, in one place.</p>
     </div>
@@ -81,7 +81,7 @@
     </section>
   {/if}
 
-  <nav class="shop-collection-tabs" aria-label="Collection categories">
+  <nav class="shop-collection-tabs" aria-label="Owned categories">
     {#each collectionSections as collectionSection (collectionSection.id)}
       <button type="button" class:active={selectedCollectionSection === collectionSection.id} on:click={() => selectedCollectionSection = collectionSection.id}>{collectionSection.label}</button>
     {/each}

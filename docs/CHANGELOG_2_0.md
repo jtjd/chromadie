@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Compact the shop and stabilize try-on previews
+
+- Removed the redundant Names headline and copy from the catalog context.
+- Gave EP balance a larger, more prominent header treatment.
+- Renamed Collection to Owned so the account surface is immediately clear.
+- Made selecting a font, material, motion, or border remount the shared live
+  profile renderer so the preview always reflects the current choice.
+
 ## 2026-08-03 — Improve catalog density and name-layer discovery
 
 - Show three shop pieces per row on desktop so the catalog is easier to scan.

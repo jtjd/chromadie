@@ -2,6 +2,20 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Keep the shop header compact and make fitting-room state deterministic
+
+The Names view does not need a second headline because the category rail and
+Name layers menu already establish the task. Its context row now keeps only
+the live Today’s color signal. EP balance is the primary account affordance,
+so it receives the strongest header scale and accent treatment; the secondary
+surface is labeled Owned to describe its purpose directly.
+
+The fitting-room renderer is keyed by the selected item and resolved loadout,
+not only by the Replay control. A selection therefore remounts the shared
+production renderer whenever a font, material, motion, or border changes,
+while purchase and equip authority remain in their existing RPC/settings
+boundaries.
+
 ## 2026-08-03 — Make catalog density and name layers immediately scannable
 
 The shop catalog uses three effect cards per row on desktop so the browse

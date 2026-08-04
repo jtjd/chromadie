@@ -32,7 +32,7 @@
 
   const SHOP_VIEWS = Object.freeze([
     { id: 'browse', label: 'Catalog' },
-    { id: 'collection', label: 'Collection' },
+    { id: 'collection', label: 'Owned' },
   ]);
   const SHOP_ACCENT = '#C7B4FF';
   const VIEW_STATE_NAMESPACE = 'shop';
@@ -114,7 +114,7 @@
     activeView = view === 'collection' ? 'collection' : 'browse';
     selectedItem = null;
     purchaseArmedKey = null;
-    shopNotice = activeView === 'collection' ? 'Collection opened.' : 'Catalog opened.';
+    shopNotice = activeView === 'collection' ? 'Owned opened.' : 'Catalog opened.';
   }
 
   function openBrowse(section = 'overview') {
@@ -193,7 +193,7 @@
       <p class="shop-header-intro">Preview a piece on your profile before you commit.</p>
     </div>
     <div class="shop-header-actions">
-      <div class="shop-wallet" aria-label={`Wallet balance: ${fittingRoom.balance.toLocaleString()} EP`}><span>Balance</span><strong>{fittingRoom.balance.toLocaleString()} EP</strong></div>
+      <div class="shop-wallet" aria-label={`EP balance: ${fittingRoom.balance.toLocaleString()} EP`}><span>EP balance</span><strong>{fittingRoom.balance.toLocaleString()} EP</strong></div>
       <div class="shop-owned" aria-label={`${ownedCatalogCount} owned catalog items`}><span>Owned</span><strong>{ownedCatalogCount}</strong></div>
       <a class="shop-profile-link" href="/profile/settings" aria-label="Open profile settings">Profile settings <span aria-hidden="true">↗</span></a>
     </div>
@@ -258,10 +258,12 @@
   .shop-header-intro { margin:.5rem 0 0; color:var(--shop-muted); font-size:.9rem; line-height:1.45; }
   .shop-eyebrow { color:var(--shop-faint); font:600 .72rem/1.3 var(--shop-mono); letter-spacing:.13em; text-transform:uppercase; }
   .shop-header-actions { display:flex; align-items:stretch; gap:.55rem; flex:0 0 auto; }
-  .shop-wallet, .shop-owned { min-width:8.25rem; padding:.7rem .85rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); }
+  .shop-wallet, .shop-owned { padding:.7rem .85rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); }
+  .shop-wallet { min-width:13rem; padding:.85rem 1rem; border-color:color-mix(in srgb,var(--shop-accent) 45%,var(--shop-line-strong)); background:color-mix(in srgb,var(--shop-accent) 8%,var(--shop-raised)); }
   .shop-wallet span, .shop-wallet strong { display:block; }
   .shop-wallet span, .shop-owned span { display:block; color:var(--shop-faint); font:.64rem var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
-  .shop-wallet strong, .shop-owned strong { display:block; margin-top:.3rem; color:var(--shop-ink); font:650 1rem var(--shop-mono); white-space:nowrap; }
+  .shop-wallet strong { display:block; margin-top:.32rem; color:var(--shop-ink); font:700 clamp(1.15rem,1.7vw,1.45rem)/1 var(--shop-mono); letter-spacing:-.04em; white-space:nowrap; }
+  .shop-owned strong { display:block; margin-top:.3rem; color:var(--shop-ink); font:650 1rem var(--shop-mono); white-space:nowrap; }
   .shop-owned { min-width:6.25rem; }
   .shop-profile-link { min-height:2.9rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .9rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; text-decoration:none; font:.78rem var(--shop-mono); }
   .shop-profile-link:hover, .shop-profile-link:focus-visible { border-color:#777d8d; background:#1b1e25; color:#fff; }
@@ -276,6 +278,6 @@
   .shop-status--error { border-color:#754d58; }
   .shop-status button { width:max-content; min-height:2.6rem; padding:0 .85rem; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#f2f0eb; cursor:pointer; }
   .shop-live-region { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,86.25rem); margin-top:.8rem; padding-top:0; } .shop-header { align-items:flex-start; flex-direction:column; gap:1rem; } .shop-header-actions { width:100%; align-items:stretch; } .shop-wallet, .shop-owned, .shop-profile-link { flex:1; } .shop-profile-link { justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
+  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,86.25rem); margin-top:.8rem; padding-top:0; } .shop-header { align-items:flex-start; flex-direction:column; gap:1rem; } .shop-header-actions { width:100%; align-items:stretch; } .shop-wallet, .shop-owned, .shop-profile-link { min-width:0; flex:1; } .shop-wallet strong { font-size:1rem; } .shop-profile-link { justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
   @media (prefers-reduced-motion: reduce) { .shop-navigation button, .shop-profile-link { transition:none; } }
 </style>

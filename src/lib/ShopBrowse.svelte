@@ -137,13 +137,15 @@
   }
 </script>
 
-<section class="shop-browse" class:shop-browse--names={isNameBrowse} aria-labelledby="shop-browse-title">
-  <div class="shop-browse-context">
-    <div class="shop-browse-context-copy">
-      <span class="shop-eyebrow">{isNameBrowse ? 'Name expression' : 'Catalog'}</span>
-      <h2 id="shop-browse-title">{isNameBrowse ? 'Build your name.' : 'Find your next piece.'}</h2>
-      <p>{isNameBrowse ? 'Choose a font, material, or motion layer and see it on your profile.' : 'Every piece is previewed on your profile before you decide.'}</p>
-    </div>
+<section class="shop-browse" class:shop-browse--names={isNameBrowse} aria-labelledby={isNameBrowse ? undefined : 'shop-browse-title'} aria-label={isNameBrowse ? 'Name catalog' : undefined}>
+  <div class="shop-browse-context" class:shop-browse-context--compact={isNameBrowse}>
+    {#if !isNameBrowse}
+      <div class="shop-browse-context-copy">
+        <span class="shop-eyebrow">Catalog</span>
+        <h2 id="shop-browse-title">Find your next piece.</h2>
+        <p>Every piece is previewed on your profile before you decide.</p>
+      </div>
+    {/if}
     <div class="shop-roll-context" aria-live="polite" aria-label="Today’s color">
       <span class="shop-eyebrow">Today’s color</span>
       {#if currentRoll?.hex_code}
@@ -276,6 +278,7 @@
 <style>
   .shop-browse { display:grid; gap:1rem; }
   .shop-browse-context { display:flex; align-items:center; justify-content:space-between; gap:1.25rem; padding:1rem 0 .9rem; border-bottom:1px solid var(--shop-line); }
+  .shop-browse-context--compact { justify-content:flex-end; padding:.45rem 0; }
   .shop-browse-context-copy { min-width:0; }
   .shop-browse-context-copy h2 { margin:.35rem 0 .35rem; color:var(--shop-ink); font:650 clamp(1.65rem,2.5vw,2.25rem)/1 var(--shop-display); letter-spacing:-.045em; }
   .shop-browse-context-copy p { max-width:38rem; margin:0; color:var(--shop-muted); font-size:.84rem; line-height:1.4; }
