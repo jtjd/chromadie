@@ -16,6 +16,11 @@ Preview-specific gradients, loud color blocks, highlight overlays, and nested
 profile panels were removed because they made different renderers feel like
 unrelated UI components and weakened the actual effect.
 
+The fitting-room chrome stays subordinate to the profile: rail descriptions,
+playback controls, and the redundant layout-status badge are omitted. The live
+identity surface is transparent in the inspector so atmosphere media remains
+visible behind it; the title carries the primary lavender-to-blue contrast cue.
+
 Borders now show the effect around a simple name specimen; Atmospheres show the
 media directly behind a simple specimen label. The real profile fitting-room
 preview remains the place for full composition context. Selection, purchase,

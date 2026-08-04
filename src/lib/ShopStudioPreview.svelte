@@ -7,7 +7,7 @@
   import { getNameRendererLoadout } from './name/nameLoadout.js';
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
-  import { resolveProfileLayoutVariant, getProfileLayoutLabel } from './profile-layout/profileLayouts.js';
+  import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
 
   export let loadout = {};
@@ -91,9 +91,6 @@
         />
       </div>
     </ProfileBorderEffect>
-    {#if previewLayout !== 'immersive'}
-      <div class="studio-layout-badge" aria-hidden="true">{getProfileLayoutLabel(previewLayout)}</div>
-    {/if}
   </div>
 
   {#if !compact}
@@ -215,8 +212,6 @@
   .studio-profile-card--prism-mosaic :global(.identity-card.identity-card--layout-prism-mosaic) { border-color: color-mix(in srgb, var(--color-accent) 36%, var(--color-line-subtle)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent), 0 24px 48px rgba(0,0,0,.28); }
   .studio-profile-card--night-terminal :global(.identity-card.identity-card--layout-night-terminal) { border-radius: 2px; background: #0b1015; }
   .studio-profile-card--story-stack :global(.identity-card.identity-card--layout-story-stack) { border-radius: 18px 6px 18px 6px; }
-  .studio-layout-badge { position:absolute; z-index:4; left:.9rem; bottom:.8rem; padding:.25rem .45rem; border:1px solid rgba(255,255,255,.16); background:rgba(7,9,13,.74); color:rgba(239,243,255,.68); font:600 .58rem var(--font-mono-stack); letter-spacing:.08em; text-transform:uppercase; }
-
   .studio-selection {
     display: flex;
     flex-direction: column;

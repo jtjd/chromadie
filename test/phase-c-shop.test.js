@@ -43,6 +43,7 @@ test('shop shell is one profile studio with Catalog and Owned surfaces', async (
   assert.match(shop, /font:600 \.8rem var\(--shop-font\)/);
   assert.match(rail, /\{ id: 'browse', number: '01', label: 'Catalog'/);
   assert.match(rail, /\{ id: 'collection', number: '02', label: 'Owned'/);
+  assert.doesNotMatch(rail, /<small>/);
   assert.doesNotMatch(shop, /ShopHome|ShopStudio/);
   assert.doesNotMatch(shop, /activeView === 'home'/);
   assert.match(shop, /previewDataLoading/);
@@ -162,7 +163,8 @@ test('contextual preview delegates to the shared production profile renderer', a
 
   assert.match(contextual, /<ShopStudioPreview/);
   assert.match(contextual, /Live profile/);
-  assert.match(contextual, /aria-pressed=\{paused\}/);
+  assert.match(contextual, /nameRendererMode="animated"/);
+  assert.doesNotMatch(contextual, /Replay|Pause|aria-pressed=\{paused\}|replayKey|replayPreview|let paused/);
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview/);
   assert.match(itemPreview, /COLLECTION_TONES/);
   assert.match(itemPreview, /PREVIEW_SURFACE = '#090C11'/);
@@ -176,6 +178,7 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(studio, /export let links = \[\]/);
   assert.match(studio, /\{links\}/);
   assert.match(studio, /profile-border-effect__content/);
+  assert.doesNotMatch(studio, /studio-layout-badge|getProfileLayoutLabel/);
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(itemPreview, /<NameEffectCanvas/);
 });

@@ -21,15 +21,12 @@
   export let purchaseLoading = false;
 
   const dispatch = createEventDispatcher();
-  let paused = false;
-  let replayKey = 0;
 
   $: previewName = accountProfile?.display_name || accountProfile?.username || username || 'You';
   $: previewConfig = profileConfig
     ? (profileConfig.published || profileConfig.draft || profileConfig)
     : {};
   $: previewLinks = getVisibleProfileLinks(previewConfig);
-  $: rendererMode = paused ? 'paused' : 'animated';
   $: selectedPriceLabel = accessTier === 'free'
     ? 'Included'
     : accessTier === 'premium'
@@ -73,7 +70,6 @@
   // selected layer changes. This keeps Canvas, border, and motion effects in
   // sync even when a renderer owns mount-time state or an async font loader.
   $: previewKey = [
-    replayKey,
     selectedItem?.item_key || 'equipped',
     loadout?.name_font || '',
     loadout?.name_material || '',
@@ -84,11 +80,6 @@
     loadout?.profile_layout || '',
     loadout?.profile_atmosphere || ''
   ].join('|');
-
-  function replayPreview() {
-    paused = false;
-    replayKey += 1;
-  }
 
   function compactPrice(value) {
     const amount = Number(value) || 0;
@@ -109,11 +100,9 @@
       <span>EP balance</span>
       <strong>{Number(walletBalance || 0).toLocaleString()} EP</strong>
     </div>
-    <div class="shop-preview-actions" aria-label="Preview controls">
-      <button type="button" on:click={replayPreview}>Replay</button>
-      <button type="button" aria-pressed={paused} on:click={() => paused = !paused}>{paused ? 'Play' : 'Pause'}</button>
-      {#if selectedItem}<button type="button" class="shop-contextual-preview__reset" on:click={() => dispatch('reset')}>Clear</button>{/if}
-    </div>
+    {#if selectedItem}
+      <button type="button" class="shop-contextual-preview__reset" on:click={() => dispatch('reset')}>Clear</button>
+    {/if}
   </header>
 
   {#key previewKey}
@@ -125,7 +114,7 @@
       {accountProfile}
       {profileConfig}
       links={previewLinks}
-      nameRendererMode={rendererMode}
+      nameRendererMode="animated"
       compact
     />
   {/key}
@@ -195,15 +184,7 @@
   .shop-contextual-preview__balance { display:grid; gap:.28rem; min-width:0; }
   .shop-contextual-preview__balance span { color:var(--shop-faint); font:700 .62rem/1 var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
   .shop-contextual-preview__balance strong { overflow:hidden; color:var(--shop-ink); font:700 1rem/1 var(--shop-mono); letter-spacing:-.03em; text-overflow:ellipsis; white-space:nowrap; }
-  .shop-preview-actions {
-    display: flex;
-    flex: 0 0 auto;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.35rem;
-  }
-
-  .shop-preview-actions button {
+  .shop-contextual-preview__reset {
     min-height: 2.2rem;
     padding: 0 0.65rem;
     border: 1px solid #3a3e47;
@@ -214,10 +195,9 @@
     font: 600 .72rem var(--shop-font);
   }
 
-  .shop-preview-actions button:hover,
-  .shop-preview-actions button:focus-visible { border-color: #aeb5e5; color: #fff; }
-
-  .shop-contextual-preview__reset {
+  .shop-contextual-preview__reset:hover,
+  .shop-contextual-preview__reset:focus-visible {
+    border-color: #aeb5e5;
     color: #cdd2ff !important;
   }
 
@@ -232,8 +212,8 @@
 
   .shop-contextual-preview :global(.studio-stage.context-profile) { min-height: 19rem; padding: .55rem; border: 1px solid var(--shop-line); border-radius: var(--radius-md); background: var(--shop-deep); }
   .shop-contextual-preview :global(.stage-grid) { display:none; }
-  .shop-contextual-preview :global(.studio-profile-card) { width: calc(100% - .25rem); max-width: 100%; margin-inline: auto; }
-  .shop-contextual-preview :global(.studio-profile-card .identity-card) { min-height: 16rem; padding: 1.15rem; }
+  .shop-contextual-preview :global(.studio-profile-card) { width: calc(100% - .25rem); max-width: 100%; margin-inline: auto; border-color: transparent; background: transparent; box-shadow: none; }
+  .shop-contextual-preview :global(.studio-profile-card .identity-card) { min-height: 16rem; padding: 1.15rem; border-color: transparent; background: transparent !important; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .shop-contextual-preview :global(.studio-profile-card .identity-card__avatar) { flex-basis: 3.5rem; width: 3.5rem; }
   .shop-contextual-preview :global(.studio-profile-card .identity-card__name) { font-size: clamp(2rem, 5.5vw, 2.65rem); }
   .shop-contextual-preview :global(.studio-profile-card .identity-card__links) { gap: .45rem .8rem; margin-top: .8rem; }
@@ -270,7 +250,6 @@
   @media (max-width: 700px) {
     .shop-contextual-preview { padding: .8rem; }
     .shop-contextual-preview__header { align-items:flex-start; flex-direction:column; padding: .75rem 0; }
-    .shop-preview-actions { width:100%; justify-content:flex-start; }
     .shop-contextual-preview :global(.studio-stage.context-profile) { min-height: 15rem; }
   }
 </style>

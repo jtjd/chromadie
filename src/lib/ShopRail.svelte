@@ -66,7 +66,7 @@
         on:click={() => chooseView(view.id)}
       >
         <span class="shop-rail__icon" aria-hidden="true">{view.id === 'browse' ? '✦' : '◇'}</span>
-        <span class="shop-rail__copy"><strong>{view.label}</strong><small>{view.description}</small></span>
+        <span class="shop-rail__copy"><strong>{view.label}</strong></span>
         <span class="shop-rail__count" aria-hidden="true">{view.id === activeView ? 'Open' : 'View'}</span>
       </button>
     {/each}
@@ -85,7 +85,7 @@
           on:click={() => chooseSection(section.id)}
         >
           <span class="shop-rail__icon" aria-hidden="true">{sectionIcon(section.id)}</span>
-          <span class="shop-rail__copy"><strong>{section.label}</strong><small>{section.description}</small></span>
+          <span class="shop-rail__copy"><strong>{section.label}</strong></span>
           {#if Number.isFinite(section.count)}<span class="shop-rail__count">{section.count}</span>{/if}
         </button>
       {/each}
@@ -104,7 +104,7 @@
             on:click={() => chooseNameLayer(layer.id)}
           >
             <span class="shop-rail__icon" aria-hidden="true">{sectionIcon(layer.id)}</span>
-            <span class="shop-rail__copy"><strong>{layer.label}</strong><small>{layer.description}</small></span>
+            <span class="shop-rail__copy"><strong>{layer.label}</strong></span>
             <span class="shop-rail__count">{layer.count}</span>
           </button>
         {/each}
@@ -121,7 +121,7 @@
           on:click={() => chooseOwnedSection(section.id)}
         >
           <span class="shop-rail__icon" aria-hidden="true">{sectionIcon(section.id)}</span>
-          <span class="shop-rail__copy"><strong>{section.label}</strong><small>{section.description}</small></span>
+          <span class="shop-rail__copy"><strong>{section.label}</strong></span>
         </button>
       {/each}
     </nav>
@@ -129,7 +129,7 @@
 
   <div class="shop-rail__footer">
     <span class="shop-rail__live-dot" aria-hidden="true"></span>
-    <div><strong>Profile is live</strong><small>Every piece can be previewed before purchase.</small></div>
+    <div><strong>Profile is live</strong></div>
   </div>
 </aside>
 
@@ -143,9 +143,8 @@
   .shop-rail button.active { border-color:color-mix(in srgb,var(--shop-accent) 48%,var(--shop-line)); background:color-mix(in srgb,var(--shop-accent) 11%,transparent); color:var(--shop-ink); }
   .shop-rail__icon { color:var(--shop-faint); font:600 .82rem/1 var(--shop-mono); text-align:center; }
   .shop-rail button.active .shop-rail__icon { color:var(--shop-accent); }
-  .shop-rail__copy { display:grid; gap:.25rem; min-width:0; }
+  .shop-rail__copy { display:block; min-width:0; }
   .shop-rail__copy strong { overflow:hidden; font:600 .78rem/1.1 var(--shop-font); text-overflow:ellipsis; white-space:nowrap; }
-  .shop-rail__copy small { overflow:hidden; color:var(--shop-faint); font-size:.7rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
   .shop-rail__count { color:var(--shop-faint); font:600 .68rem/1 var(--shop-mono); }
   .shop-rail button.active .shop-rail__count { color:#e1ddff; }
   .shop-rail__divider { height:1px; margin:.1rem .9rem .8rem; background:var(--shop-line); }
@@ -155,10 +154,8 @@
   .shop-rail__section-heading--nested { margin-top:.35rem; padding-top:.75rem; border-top:1px solid var(--shop-line); }
   .shop-rail__footer { display:flex; align-items:flex-start; gap:.6rem; margin:.35rem .9rem .9rem; padding-top:.8rem; border-top:1px solid var(--shop-line); }
   .shop-rail__live-dot { display:block; flex:0 0 .45rem; width:.45rem; height:.45rem; margin-top:.18rem; border-radius:50%; background:var(--shop-accent); box-shadow:0 0 0 .22rem color-mix(in srgb,var(--shop-accent) 14%,transparent); }
-  .shop-rail__footer > div { display:grid; gap:.25rem; }
+  .shop-rail__footer > div { display:grid; }
   .shop-rail__footer strong { color:var(--shop-muted); font-size:.72rem; font-weight:650; }
-  .shop-rail__footer small { color:var(--shop-faint); font-size:.66rem; line-height:1.35; }
-  @media (max-width: 1200px) { .shop-rail__copy small { display:none; } }
   @media (max-width: 760px) { .shop-rail { position:static; } .shop-rail__surface-nav, .shop-rail__section-nav { grid-template-columns:repeat(2,minmax(0,1fr)); } .shop-rail__footer { display:none; } }
   @media (prefers-reduced-motion: reduce) { .shop-rail button { transition:none; } }
 </style>

@@ -13,6 +13,10 @@
 - Preserved one selection surface, temporary fitting-room preview behavior,
   purchase confirmation, ownership states, responsive layout, and reduced-motion
   handling.
+- Simplified the fitting-room chrome by removing rail subcopy, replay/pause
+  controls, and the layout-status badge. The inspector profile surface is now
+  transparent so atmosphere plates remain visible behind the identity, and the
+  title has a restrained lavender-to-blue contrast treatment.
 
 ## Atmosphere replacement plates — 2026-08-04
 

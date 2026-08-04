@@ -9,6 +9,9 @@ Document user-visible redesign changes by milestone.
   details, and a clear purchase action.
 - Kept product tiles focused on the effect and Preview action while preserving
   the existing fitting-room selection and server-authoritative purchase flow.
+- Removed explanatory rail subcopy, replay/pause controls, and the redundant
+  layout-status badge. The live profile window now lets atmosphere effects show
+  through the transparent identity surface, with a stronger title accent.
 
 ## 2026-08-04 — Add seven sourced atmosphere plates
 

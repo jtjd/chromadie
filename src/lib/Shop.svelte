@@ -354,10 +354,11 @@
 <style>
   .shop-page { --shop-canvas:#0d0f13; --shop-deep:#090a0d; --shop-raised:#111319; --shop-line:rgba(255,255,255,.075); --shop-line-strong:rgba(255,255,255,.15); --shop-ink:#f2f0eb; --shop-muted:#aaa8b0; --shop-faint:#858690; --shop-accent:#CDD2FF; --shop-font:var(--font-body-stack); --shop-display:var(--font-display-stack); --shop-mono:var(--font-mono-stack); width:min(100rem,calc(100% - 3rem)); margin:0 auto 5.5rem; color:var(--shop-ink); font-family:var(--shop-font); }
   :global(.app-main--site) .shop-page { width:min(100rem,calc(100% - 3rem)); margin-top:clamp(.8rem,2.5vh,1.8rem); padding:0 0 4rem; }
-  .shop-header { display:flex; align-items:flex-end; justify-content:space-between; gap:1.15rem; padding:0 0 1rem; border-bottom:1px solid var(--shop-line); }
+  .shop-header { position:relative; isolation:isolate; display:flex; align-items:flex-end; justify-content:space-between; gap:1.15rem; padding:0 0 1rem; border-bottom:1px solid var(--shop-line); }
+  .shop-header::before { position:absolute; z-index:-1; top:-4rem; left:-4rem; width:min(42rem,70%); height:13rem; border-radius:50%; background:radial-gradient(ellipse at 42% 50%,color-mix(in srgb,var(--shop-accent) 13%,transparent),transparent 70%); content:''; pointer-events:none; }
   .shop-heading h1 { max-width:52rem; margin:.55rem 0 .05rem; font:650 clamp(2.65rem,4.2vw,4.25rem)/.92 var(--shop-display); letter-spacing:-.055em; }
   :global(.app-main--site) .shop-heading h1 { max-width:52rem; margin:.55rem 0 .05rem; font:650 clamp(2.65rem,4.2vw,4.25rem)/.92 var(--shop-display); letter-spacing:-.055em; }
-  .shop-heading h1 span { color:var(--shop-accent); }
+  .shop-heading h1 span { background:linear-gradient(105deg,#d9d1ff 0%,#b9a8ff 46%,#7f93ff 100%); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 1.5rem color-mix(in srgb,var(--shop-accent) 16%,transparent); }
   .shop-header-intro { margin:.5rem 0 0; color:var(--shop-muted); font-size:.98rem; line-height:1.45; }
   .shop-eyebrow { color:var(--shop-faint); font:600 .76rem/1.3 var(--shop-mono); letter-spacing:.13em; text-transform:uppercase; }
   .shop-header-actions { display:flex; align-items:stretch; justify-content:flex-end; flex-wrap:wrap; gap:.55rem; max-width:100%; flex:0 0 auto; }
