@@ -19,7 +19,7 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(CURSOR_TRAIL_KEYS.length, 16);
   assert.equal(AVATAR_EFFECT_KEYS.length, 18);
   assert.equal(PAID_PROFILE_LAYOUT_KEYS.length, 5);
-  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 8);
+  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 9);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
   assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 18);
   assert.equal(new Set(PAID_PROFILE_LAYOUT_KEYS).size, 5);
@@ -28,6 +28,7 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(isAvatarEffectKey('avatar_effect_color_archive'), true);
   assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Story Stack');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_color_memory')?.key, 'color-memory');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_droplets_glass')?.key, 'droplets-glass');
 });
 
 test('authored avatar anchors resolve raster plates and the shared texture atlas', async () => {
@@ -63,19 +64,20 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.match(atmosphereSource, /mode === 'card' \|\| mode === 'compact'/);
   assert.match(atmosphereSource, /background:transparent/);
   assert.match(atmosphereSource, /RAIN_WINDOW_VIDEO/);
-  assert.match(atmosphereSource, /RAIN_WINDOW_TEXTURE/);
   assert.match(atmosphereSource, /rain-window-loop-v2-poster\.png/);
+  assert.match(atmosphereSource, /DROPLETS_GLASS_TEXTURE/);
   assert.match(atmosphereSource, /mix-blend-mode:screen/);
   assert.doesNotMatch(atmosphereSource, /mix-blend-mode:soft-light/);
 
   const rainVideo = await readFile(new URL('../public/atmospheres/rain-window/rain-window-loop-v2.webm', import.meta.url));
   const rainFallback = await readFile(new URL('../public/atmospheres/rain-window/rain-window-loop-v2.mp4', import.meta.url));
   const rainPoster = await readFile(new URL('../public/atmospheres/rain-window/rain-window-loop-v2-poster.png', import.meta.url));
-  const rainTexture = await readFile(new URL('../public/atmospheres/rain-window/rain-window-texture-v2.png', import.meta.url));
+  const dropletsTexture = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-v1.png', import.meta.url));
   assert.deepEqual([...rainVideo.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
   assert.equal(rainFallback.subarray(4, 8).toString('ascii'), 'ftyp');
   assert.deepEqual([...rainPoster.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-  assert.deepEqual([...rainTexture.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.deepEqual([...dropletsTexture.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.doesNotMatch(atmosphereSource, /RAIN_WINDOW_TEXTURE/);
 });
 
 test('paid layout resolution preserves the free fallback and supports temporary previews', () => {
@@ -116,7 +118,7 @@ test('new catalog slots filter independently and fitting-room selection preserve
   assert.equal(next.profile_border, 'border_signal');
 });
 
-test('seed and migrations contain the 47 launch products and version bumps', async () => {
+test('seed and migrations contain the launch products and version bumps', async () => {
   const [seed, migration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260804120000_launch_cosmetic_expansion.sql')
@@ -124,9 +126,12 @@ test('seed and migrations contain the 47 launch products and version bumps', asy
   assert.equal((seed.match(/'cursor_trail_[a-z0-9_]+'/g) || []).length, 16);
   assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 18);
   assert.equal((seed.match(/'profile_layout_[a-z0-9_]+'/g) || []).length, 5);
-  assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 8);
+  assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 9);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
+  const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');
   assert.match(atmosphereMigration, /Expected 122 active catalog rows/);
+  assert.match(dropletsMigration, /Expected 123 active catalog rows/);
+  assert.match(dropletsMigration, /droplets-glass/);
   assert.match(migration, /VALUES \('shop_version', '2026-08-04T12:00:00Z'\)/);
   assert.match(migration, /Expected 114 active catalog rows/);
   assert.match(atmosphereMigration, /profile_atmosphere.*signal-garden/s);

@@ -2,6 +2,14 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-04 — Separate motion rain from anchored droplets
+
+Rain Window is now a rain-only seamless motion plate. The fixed windshield
+texture was removed from it because the still droplet field read as a frozen
+layer behind the moving rain. Droplets on Glass is a separate Rare atmosphere
+using that authored, static pane texture; its droplets stay anchored instead
+of pretending to loop.
+
 ## 2026-08-04 — Use a loop-native Rain Window plate
 
 The first Rain Window pass tried to force arbitrary windshield footage into a

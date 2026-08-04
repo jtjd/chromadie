@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Atmosphere split — 2026-08-04
+
+- Rain Window now renders only the explicit seamless rain plate.
+- Added Droplets on Glass as a separate Rare atmosphere with an authored
+  windshield-droplet still and no fake animation reset.
+- Added the ninth atmosphere catalog row, migration, renderer allowlist, seed,
+  cache version, drift checks, and security-count coverage.
+
 ## Rain Window loop quality pass — 2026-08-04
 
 - Replaced the crossfaded arbitrary rain clip with a Pexels source explicitly

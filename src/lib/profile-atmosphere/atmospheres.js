@@ -13,7 +13,11 @@ const definitions = {
   },
   'rain-window': {
     key: 'rain-window', label: 'Rain Window', collection: 'Nocturne', rarity: 'Rare',
-    description: 'Refracted glass streaks and distant light make the profile feel viewed through weather.'
+    description: 'A seamless fall of fine rain turns the profile into a quiet weather signal.'
+  },
+  'droplets-glass': {
+    key: 'droplets-glass', label: 'Droplets on Glass', collection: 'Archive', rarity: 'Rare',
+    description: 'Realistic beads and trails cling to a pane, catching the daily color without obscuring the profile.'
   },
   'emberfall': {
     key: 'emberfall', label: 'Emberfall', collection: 'Ember', rarity: 'Epic',

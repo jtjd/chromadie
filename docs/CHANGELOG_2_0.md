@@ -2,6 +2,12 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-04 — Separate rain and glass droplets
+
+- Rain Window is now a clean rain-only overlay.
+- Added Droplets on Glass as a separate anchored pane texture so the two
+  weather treatments have distinct visual identities.
+
 ## 2026-08-04 — Make Rain Window loop-native
 
 - Swapped the crossfaded rain footage for an explicitly seamless rain loop.
