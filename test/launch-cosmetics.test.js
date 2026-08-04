@@ -75,13 +75,13 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   const rainPoster = await readFile(new URL('../public/atmospheres/rain-window/rain-window-loop-v2-poster.png', import.meta.url));
   const dropletsVideo = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.webm', import.meta.url));
   const dropletsFallback = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.mp4', import.meta.url));
-  const dropletsPoster = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.jpg', import.meta.url));
+  const dropletsPoster = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.png', import.meta.url));
   assert.deepEqual([...rainVideo.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
   assert.equal(rainFallback.subarray(4, 8).toString('ascii'), 'ftyp');
   assert.deepEqual([...rainPoster.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.deepEqual([...dropletsVideo.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
   assert.equal(dropletsFallback.subarray(4, 8).toString('ascii'), 'ftyp');
-  assert.deepEqual([...dropletsPoster.subarray(0, 2)], [0xff, 0xd8]);
+  assert.deepEqual([...dropletsPoster.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.doesNotMatch(atmosphereSource, /RAIN_WINDOW_TEXTURE/);
 });
 

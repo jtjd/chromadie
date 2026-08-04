@@ -28,7 +28,7 @@
   const RAIN_WINDOW_POSTER = '/atmospheres/rain-window/rain-window-loop-v2-poster.png';
   const DROPLETS_GLASS_VIDEO = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.webm';
   const DROPLETS_GLASS_VIDEO_FALLBACK = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.mp4';
-  const DROPLETS_GLASS_POSTER = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.jpg';
+  const DROPLETS_GLASS_POSTER = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.png';
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: compact = mode === 'card' || mode === 'compact';
