@@ -39,7 +39,13 @@ test('catalog uses one category rail, compact context, bounded results, and one 
   assert.match(source, /selectedItem=\{selectedItem\}/);
   assert.doesNotMatch(source, /Choose a <span>piece\.|shop-browse-heading-side/);
   assert.doesNotMatch(source, /shop-result-count/);
-  assert.match(source, /grid-template-columns:repeat\(2/);
+  assert.match(source, /grid-template-columns:repeat\(3/);
+  assert.match(source, /Name layers/);
+  assert.match(source, /Choose what to change\./);
+  assert.match(source, /Name effect layers/);
+  assert.match(source, /Typeface and structure/);
+  assert.match(source, /Surface and finish/);
+  assert.match(source, /Movement and reveal/);
   assert.match(source, /@media \(max-width: 960px\)/);
   assert.match(source, /@media \(max-width: 520px\)/);
 });

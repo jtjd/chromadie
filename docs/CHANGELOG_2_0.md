@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Improve catalog density and name-layer discovery
+
+- Show three shop pieces per row on desktop so the catalog is easier to scan.
+- Add a clear Name layers menu with Font, Material, and Motion choices,
+  explanations, and item counts.
+- Preserve the existing profile preview, filtering, purchase, collection, and
+  responsive behavior.
+
 ## 2026-08-03 — Reframe the shop as a profile studio
 
 - Replaced the competing Shop, Browse, Collection, and Studio navigation with

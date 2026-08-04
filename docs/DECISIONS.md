@@ -2,6 +2,16 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Make catalog density and name layers immediately scannable
+
+The shop catalog uses three effect cards per row on desktop so the browse
+surface feels like a real collection rather than a sparse two-column form.
+The Names category now exposes a dedicated Name layers menu with explicit
+Font, Material, and Motion choices, short explanations, and counts. The menu
+keeps the existing slot filtering and fitting-room selection behavior; it is a
+presentation-only navigation improvement and requires no catalog or schema
+change.
+
 ## 2026-08-03 — Make the shop one profile studio instead of four competing surfaces
 
 The shop now opens on one Catalog surface with a persistent, readable profile

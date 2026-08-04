@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Shop catalog density and name-layer navigation — 2026-08-03
+
+- Changed Browse and Collection galleries to three cards per row on desktop,
+  with two-column and single-column fallbacks at smaller widths.
+- Replaced the understated Names subtype strip with a labeled Name layers
+  menu that explains Font, Material, and Motion and shows each layer count.
+- Kept active filtering, temporary preview selection, purchases, ownership
+  states, keyboard semantics, and reduced-motion behavior unchanged.
+
 ## Shop profile-studio restructure — 2026-08-03
 
 - Replaced the four-way Shop/Browse/Collection/Studio shop navigation with a
