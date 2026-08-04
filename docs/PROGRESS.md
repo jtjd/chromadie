@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Atmosphere expansion — 2026-08-04
+
+- Added Dustlight, Ink Bloom, and Snowfall as three authored video atmospheres.
+- Each has WebM/MP4 media, a reduced-motion poster, and an explicit
+  tail-to-head crossfade so the native video loop has no hard reset.
+- Added finite renderer keys, catalog rows, migration, seed synchronization,
+  drift/security checks, and source notes without changing existing cosmetics.
+
 ## Droplets on Glass loop pass — 2026-08-04
 
 - Replaced the static droplet plate with a full-frame Pexels window source.

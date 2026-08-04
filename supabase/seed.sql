@@ -208,6 +208,9 @@ INSERT INTO public.shop_items (
   ('profile_atmosphere_aurora_veil', 'Aurora Veil', 'profile_atmosphere', 420000, 'renderer', 'aurora-veil', NULL, NULL, 'Epic', 'Layered luminous veils drift behind the profile with a soft, editorial depth.', 'Prism', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_rain_window', 'Rain Window', 'profile_atmosphere', 260000, 'renderer', 'rain-window', NULL, NULL, 'Rare', 'A seamless fall of fine rain turns the profile into a quiet weather signal.', 'Nocturne', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_droplets_glass', 'Droplets on Glass', 'profile_atmosphere', 240000, 'renderer', 'droplets-glass', NULL, NULL, 'Rare', 'Realistic beads and trails cling to a pane, catching the daily color without obscuring the profile.', 'Archive', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_dust_light', 'Dustlight', 'profile_atmosphere', 280000, 'renderer', 'dust-light', NULL, NULL, 'Rare', 'Fine particles drift through a single beam of light, revealing depth without filling the page.', 'Archive', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_ink_bloom', 'Ink Bloom', 'profile_atmosphere', 520000, 'renderer', 'ink-bloom', NULL, NULL, 'Epic', 'A slow plume of ink unfurls like a living cloud, turning the profile into a moving study in density.', 'Prism', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_snowfall', 'Snowfall', 'profile_atmosphere', 300000, 'renderer', 'snowfall', NULL, NULL, 'Rare', 'Quiet flakes cross a black winter field in a soft, unhurried descent.', 'Nocturne', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_emberfall', 'Emberfall', 'profile_atmosphere', 430000, 'renderer', 'emberfall', NULL, NULL, 'Epic', 'A small constellation of warm embers rises through the dark without covering the profile.', 'Ember', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_paper_archive', 'Paper Archive', 'profile_atmosphere', 280000, 'renderer', 'paper-archive', NULL, NULL, 'Rare', 'Registration lines, paper fibers, and a restrained ink wash give the page a tactile history.', 'Archive', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_prism_lens', 'Prism Lens', 'profile_atmosphere', 500000, 'renderer', 'prism-lens', NULL, NULL, 'Epic', 'A precise lens breaks the daily color into quiet spectral planes around the identity.', 'Prism', false, 'earned', NULL, 'active'),
@@ -228,7 +231,7 @@ ON CONFLICT (item_key) DO UPDATE SET
   catalog_status = EXCLUDED.catalog_status;
 
 INSERT INTO public.meta (key, value) VALUES
-('shop_version', '2026-08-04T18:30:00Z'),
+('shop_version', '2026-08-04T21:00:00Z'),
 ('cotw_target', '73,114,201'),
 ('official_launch_at', '2026-07-11T00:00:00Z'),
 ('founder_window_ends_at', '2026-08-11T00:00:00Z')

@@ -2,6 +2,21 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-04 — Expand atmospheres with authored, crossfaded video plates
+
+The next atmosphere pass adds three distinct sourced treatments: Dustlight,
+Ink Bloom, and Snowfall. Each source is processed into a bounded 16:9 plate,
+encoded as WebM and MP4, and joined with a tail-to-head crossfade before the
+native video loop. This makes looping an asset property rather than relying on
+an abrupt browser restart. Screen blending keeps the user's background intact;
+posters provide the reduced-motion and compact fallback.
+
+Sources are documented beside the assets and come from [Dust Particles in Light
+Beam](https://www.pexels.com/video/close-up-abstract-dust-particles-in-light-beam-36637658/),
+[Ink in Water](https://www.pexels.com/video/ink-in-water-18333374/), and
+[Snowfall in Black Background](https://www.pexels.com/video/snowfall-in-black-background-5485148/),
+all accessed 2026-08-04.
+
 ## 2026-08-04 — Use a sourced droplet loop for Droplets on Glass
 
 Droplets on Glass now uses a full-frame Pexels window clip rather than a

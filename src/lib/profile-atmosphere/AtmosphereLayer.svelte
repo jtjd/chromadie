@@ -29,6 +29,15 @@
   const DROPLETS_GLASS_VIDEO = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.webm';
   const DROPLETS_GLASS_VIDEO_FALLBACK = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.mp4';
   const DROPLETS_GLASS_POSTER = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.png';
+  const DUST_LIGHT_VIDEO = '/atmospheres/dust-light/dust-light-loop-v1.webm';
+  const DUST_LIGHT_VIDEO_FALLBACK = '/atmospheres/dust-light/dust-light-loop-v1.mp4';
+  const DUST_LIGHT_POSTER = '/atmospheres/dust-light/dust-light-loop-v1-poster.png';
+  const INK_BLOOM_VIDEO = '/atmospheres/ink-bloom/ink-bloom-loop-v1.webm';
+  const INK_BLOOM_VIDEO_FALLBACK = '/atmospheres/ink-bloom/ink-bloom-loop-v1.mp4';
+  const INK_BLOOM_POSTER = '/atmospheres/ink-bloom/ink-bloom-loop-v1-poster.png';
+  const SNOWFALL_VIDEO = '/atmospheres/snowfall/snowfall-loop-v1.webm';
+  const SNOWFALL_VIDEO_FALLBACK = '/atmospheres/snowfall/snowfall-loop-v1.mp4';
+  const SNOWFALL_POSTER = '/atmospheres/snowfall/snowfall-loop-v1-poster.png';
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: compact = mode === 'card' || mode === 'compact';
@@ -98,6 +107,33 @@
         </video>
       {:else}
         <img class="profile-atmosphere__droplets-video profile-atmosphere__droplets-video--poster" src={DROPLETS_GLASS_POSTER} alt="" />
+      {/if}
+    {:else if definition.key === 'dust-light'}
+      {#if motionActive}
+        <video class="profile-atmosphere__media profile-atmosphere__media--dust" autoplay muted loop playsinline preload="metadata" poster={DUST_LIGHT_POSTER}>
+          <source src={DUST_LIGHT_VIDEO} type="video/webm" />
+          <source src={DUST_LIGHT_VIDEO_FALLBACK} type="video/mp4" />
+        </video>
+      {:else}
+        <img class="profile-atmosphere__media profile-atmosphere__media--dust profile-atmosphere__media--poster" src={DUST_LIGHT_POSTER} alt="" />
+      {/if}
+    {:else if definition.key === 'ink-bloom'}
+      {#if motionActive}
+        <video class="profile-atmosphere__media profile-atmosphere__media--ink" autoplay muted loop playsinline preload="metadata" poster={INK_BLOOM_POSTER}>
+          <source src={INK_BLOOM_VIDEO} type="video/webm" />
+          <source src={INK_BLOOM_VIDEO_FALLBACK} type="video/mp4" />
+        </video>
+      {:else}
+        <img class="profile-atmosphere__media profile-atmosphere__media--ink profile-atmosphere__media--poster" src={INK_BLOOM_POSTER} alt="" />
+      {/if}
+    {:else if definition.key === 'snowfall'}
+      {#if motionActive}
+        <video class="profile-atmosphere__media profile-atmosphere__media--snow" autoplay muted loop playsinline preload="metadata" poster={SNOWFALL_POSTER}>
+          <source src={SNOWFALL_VIDEO} type="video/webm" />
+          <source src={SNOWFALL_VIDEO_FALLBACK} type="video/mp4" />
+        </video>
+      {:else}
+        <img class="profile-atmosphere__media profile-atmosphere__media--snow profile-atmosphere__media--poster" src={SNOWFALL_POSTER} alt="" />
       {/if}
     {:else}
       <svg class="profile-atmosphere__art" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" focusable="false">
@@ -191,6 +227,11 @@
      while allowing the moving droplet contours to catch the daily color. */
   .profile-atmosphere__droplets-video { position:absolute; inset:-6%; width:112%; height:112%; object-fit:cover; opacity:.34; mix-blend-mode:screen; filter:sepia(.2) saturate(1.15) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
   .profile-atmosphere__droplets-video--poster { opacity:.2; }
+  .profile-atmosphere__media { position:absolute; inset:-6%; width:112%; height:112%; object-fit:cover; mix-blend-mode:screen; }
+  .profile-atmosphere__media--dust { opacity:.24; filter:grayscale(1) contrast(1.12) brightness(1.08) drop-shadow(0 0 6px var(--atmosphere-color-1)); }
+  .profile-atmosphere__media--ink { opacity:.17; filter:saturate(1.2) drop-shadow(0 0 8px var(--atmosphere-color-1)); }
+  .profile-atmosphere__media--snow { opacity:.23; filter:contrast(1.12) brightness(1.08) drop-shadow(0 0 6px var(--atmosphere-color-2)); }
+  .profile-atmosphere__media--poster { opacity:.14; }
   .profile-atmosphere__art path, .profile-atmosphere__art ellipse, .profile-atmosphere__art circle { vector-effect:non-scaling-stroke; }
   .atmosphere-art__wash { fill:none; stroke:var(--atmosphere-ribbon); stroke-width:86; opacity:.3; filter:var(--atmosphere-soft); }
   .atmosphere-art__signal { fill:none; stroke:var(--atmosphere-spectrum); stroke-linecap:round; stroke-width:2.5; opacity:.62; stroke-dasharray:2 16; }

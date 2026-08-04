@@ -19,7 +19,7 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(CURSOR_TRAIL_KEYS.length, 16);
   assert.equal(AVATAR_EFFECT_KEYS.length, 18);
   assert.equal(PAID_PROFILE_LAYOUT_KEYS.length, 5);
-  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 9);
+  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 12);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
   assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 18);
   assert.equal(new Set(PAID_PROFILE_LAYOUT_KEYS).size, 5);
@@ -29,6 +29,9 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Story Stack');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_color_memory')?.key, 'color-memory');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_droplets_glass')?.key, 'droplets-glass');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_dust_light')?.key, 'dust-light');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_ink_bloom')?.key, 'ink-bloom');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_snowfall')?.key, 'snowfall');
 });
 
 test('authored avatar anchors resolve raster plates and the shared texture atlas', async () => {
@@ -67,6 +70,10 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.match(atmosphereSource, /rain-window-loop-v2-poster\.png/);
   assert.match(atmosphereSource, /DROPLETS_GLASS_VIDEO/);
   assert.match(atmosphereSource, /DROPLETS_GLASS_POSTER/);
+  assert.match(atmosphereSource, /DUST_LIGHT_VIDEO/);
+  assert.match(atmosphereSource, /INK_BLOOM_VIDEO/);
+  assert.match(atmosphereSource, /SNOWFALL_VIDEO/);
+  assert.match(atmosphereSource, /autoplay muted loop playsinline/);
   assert.match(atmosphereSource, /mix-blend-mode:screen/);
   assert.doesNotMatch(atmosphereSource, /mix-blend-mode:soft-light/);
 
@@ -76,12 +83,22 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   const dropletsVideo = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.webm', import.meta.url));
   const dropletsFallback = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.mp4', import.meta.url));
   const dropletsPoster = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.png', import.meta.url));
+  const authoredMedia = await Promise.all(['dust-light', 'ink-bloom', 'snowfall'].map(async key => ({
+    video: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-v1.webm`, import.meta.url)),
+    fallback: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-v1.mp4`, import.meta.url)),
+    poster: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-v1-poster.png`, import.meta.url))
+  })));
   assert.deepEqual([...rainVideo.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
   assert.equal(rainFallback.subarray(4, 8).toString('ascii'), 'ftyp');
   assert.deepEqual([...rainPoster.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.deepEqual([...dropletsVideo.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
   assert.equal(dropletsFallback.subarray(4, 8).toString('ascii'), 'ftyp');
   assert.deepEqual([...dropletsPoster.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  for (const { video, fallback, poster } of authoredMedia) {
+    assert.deepEqual([...video.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
+    assert.equal(fallback.subarray(4, 8).toString('ascii'), 'ftyp');
+    assert.deepEqual([...poster.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  }
   assert.doesNotMatch(atmosphereSource, /RAIN_WINDOW_TEXTURE/);
 });
 
@@ -131,11 +148,17 @@ test('seed and migrations contain the launch products and version bumps', async 
   assert.equal((seed.match(/'cursor_trail_[a-z0-9_]+'/g) || []).length, 16);
   assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 18);
   assert.equal((seed.match(/'profile_layout_[a-z0-9_]+'/g) || []).length, 5);
-  assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 9);
+  assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 12);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
   const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');
+  const atmosphereExpansionMigration = await read('supabase/migrations/20260804210000_atmosphere_expansion.sql');
   assert.match(atmosphereMigration, /Expected 122 active catalog rows/);
   assert.match(dropletsMigration, /Expected 123 active catalog rows/);
+  assert.match(atmosphereExpansionMigration, /Expected 126 active catalog rows/);
+  assert.match(atmosphereExpansionMigration, /Expected 12 active Profile Atmosphere rows/);
+  assert.match(atmosphereExpansionMigration, /dust-light/);
+  assert.match(atmosphereExpansionMigration, /ink-bloom/);
+  assert.match(atmosphereExpansionMigration, /snowfall/);
   assert.match(dropletsMigration, /droplets-glass/);
   assert.match(migration, /VALUES \('shop_version', '2026-08-04T12:00:00Z'\)/);
   assert.match(migration, /Expected 114 active catalog rows/);

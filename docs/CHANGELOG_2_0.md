@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-04 — Add three authored looping atmospheres
+
+- Added Dustlight, Ink Bloom, and Snowfall to the atmosphere catalog.
+- Each treatment uses a sourced video plate processed with a crossfaded seam,
+  WebM/MP4 fallback, and a reduced-motion poster, so looping stays quiet and
+  continuous instead of visibly resetting.
+
 ## 2026-08-04 — Loop the Droplets on Glass treatment
 
 - Replaced the static droplet texture with a full-frame Pexels window source,

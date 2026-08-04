@@ -7,6 +7,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
 const resetMigrationPath = path.join(repoRoot, 'supabase/migrations/20260802110000_lean_cosmetic_catalog_reset.sql');
 const expansionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260804120000_launch_cosmetic_expansion.sql');
+const atmosphereExpansionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260804210000_atmosphere_expansion.sql');
 
 function fail(message) {
   console.error(`Catalog drift detected: ${message}`);
@@ -225,9 +226,9 @@ const rendererKeys = Object.freeze({
   cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing']),
   avatar_effect: new Set(['signal-ring', 'neon-halo', 'prism-orbit', 'crystal-aperture', 'chroma-arc', 'ember-crown', 'ashfall', 'gold-laurel', 'ink-stamp', 'paper-tear', 'static-offset', 'pixel-satellites', 'crt-scan', 'void-eclipse', 'ghost-double', 'night-frame', 'daily-aura', 'color-archive']),
   profile_layout: new Set(['split-signal', 'archive-index', 'prism-mosaic', 'night-terminal', 'story-stack']),
-  profile_atmosphere: new Set(['signal-garden', 'aurora-veil', 'rain-window', 'droplets-glass', 'emberfall', 'paper-archive', 'prism-lens', 'lunar-tide', 'color-memory'])
+  profile_atmosphere: new Set(['signal-garden', 'aurora-veil', 'rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'emberfall', 'paper-archive', 'prism-lens', 'lunar-tide', 'color-memory'])
 });
-const expectedCounts = Object.freeze({ name_font: 18, name_material: 22, name_motion: 24, profile_border: 9, cursor_trail: 16, avatar_effect: 18, profile_layout: 5, profile_atmosphere: 9 });
+const expectedCounts = Object.freeze({ name_font: 18, name_material: 22, name_motion: 24, profile_border: 9, cursor_trail: 16, avatar_effect: 18, profile_layout: 5, profile_atmosphere: 12 });
 const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0 };
 const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'];
 for (const item of seed.catalog.values()) {
@@ -255,8 +256,8 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 123) {
-  fail(`expected 123 active catalog rows, found ${seed.catalog.size}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 126) {
+  fail(`expected 126 active catalog rows, found ${seed.catalog.size}`);
 }
 if ([...seed.catalog.values()].some(item => obsoleteSlots.includes(item.slot))) {
   fail('the seed still contains an obsolete cosmetic slot');
@@ -274,6 +275,13 @@ if (!atmosphereMigration.includes("'profile_atmosphere' AND css_value IN ('signa
 }
 const dropletsMigration = await readFile(path.join(repoRoot, 'supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql'), 'utf8');
 if (!dropletsMigration.includes("'droplets-glass'")) fail('the Droplets on Glass migration does not declare its renderer key');
+const atmosphereExpansionMigration = await readFile(atmosphereExpansionMigrationPath, 'utf8');
+if (!atmosphereExpansionMigration.includes("'dust-light'") || !atmosphereExpansionMigration.includes("'ink-bloom'") || !atmosphereExpansionMigration.includes("'snowfall'")) {
+  fail('the atmosphere expansion migration does not declare all new renderer keys');
+}
+if (!atmosphereExpansionMigration.includes('Expected 126 active catalog rows') || !atmosphereExpansionMigration.includes('Expected 12 active Profile Atmosphere rows')) {
+  fail('the atmosphere expansion migration has stale verification counts');
+}
 if (!resetMigration.includes("DELETE FROM public.shop_items")) fail('the reset migration does not delete obsolete catalog rows');
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;

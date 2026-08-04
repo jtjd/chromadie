@@ -19,6 +19,18 @@ const definitions = {
     key: 'droplets-glass', label: 'Droplets on Glass', collection: 'Archive', rarity: 'Rare',
     description: 'Realistic beads and trails cling to a pane, catching the daily color without obscuring the profile.'
   },
+  'dust-light': {
+    key: 'dust-light', label: 'Dustlight', collection: 'Archive', rarity: 'Rare',
+    description: 'Fine particles drift through a single beam of light, revealing depth without filling the page.'
+  },
+  'ink-bloom': {
+    key: 'ink-bloom', label: 'Ink Bloom', collection: 'Prism', rarity: 'Epic',
+    description: 'A slow plume of ink unfurls like a living cloud, turning the profile into a moving study in density.'
+  },
+  snowfall: {
+    key: 'snowfall', label: 'Snowfall', collection: 'Nocturne', rarity: 'Rare',
+    description: 'Quiet flakes cross a black winter field in a soft, unhurried descent.'
+  },
   'emberfall': {
     key: 'emberfall', label: 'Emberfall', collection: 'Ember', rarity: 'Epic',
     description: 'A small constellation of warm embers rises through the dark without covering the profile.'
