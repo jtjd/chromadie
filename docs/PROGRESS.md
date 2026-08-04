@@ -3,17 +3,19 @@
 ## Avatar effect quality pass — 2026-08-04
 
 - Replaced the generic treatments for Prism Orbit, Ember Crown, and Ghost
-  Double with five small local authored SVG layers and a shared bounded Canvas
-  particle layer for the two particle effects.
+  Double with three authored raster plates and one shared texture atlas. The
+  bounded compositor uses authored fragments for all 18 avatar signatures
+  without a per-card animation loop.
 - Passed the real avatar source into the shared wrapper so Ghost Double can
   create a controlled image-aware offset; Shop cards now show the real local
   avatar fixture instead of a letter-only stand-in.
-- Kept compact discovery, leaderboard, and card contexts static; full-profile
-  particles pause offscreen, stop on hidden tabs, cap DPR, and clean up their
-  observers and animation frame. Reduced motion renders a deterministic frame.
+- Kept compact discovery, leaderboard, and unselected card contexts static;
+  the selected Shop preview and full profile animate. The compositor pauses
+  offscreen, stops on hidden tabs, caps DPR, and cleans up its observers and
+  animation frame. Reduced motion renders a deterministic authored frame.
 - No item keys, metadata, catalog rows, purchase/equip logic, slots, or
-  database files changed. The remaining 15 avatar effects are intentionally
-  unchanged pending their own authored-art review.
+  database files changed. The three anchor plates are the first authored-art
+  pass; the other signatures still need individual manual creative review.
 
 ## Launch cosmetic expansion — 2026-08-04
 

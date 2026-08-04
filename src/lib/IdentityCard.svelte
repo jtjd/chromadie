@@ -28,6 +28,7 @@
   export let avatarEffectKey = '';
   export let avatarEffectMode = 'profile';
   export let avatarEffectAnimated = true;
+  export let avatarEffectActive = false;
 
   let failedAvatarSource = '';
 
@@ -56,6 +57,7 @@
       recentColors={nameRendererRecentColors}
       mode={avatarEffectMode}
       animated={avatarEffectAnimated}
+      active={avatarEffectActive}
       avatarSrc={activeAvatarSource}
       fallbackText={safeInitial}
       className="identity-card__avatar"

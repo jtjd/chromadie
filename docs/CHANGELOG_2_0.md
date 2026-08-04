@@ -4,13 +4,13 @@ Document user-visible redesign changes by milestone.
 
 ## 2026-08-04 — Upgrade the first avatar effects with authored art
 
-- Prism Orbit now combines local faceted overlays with a sparse orbit of
-  refracted shards; Ember Crown combines a locally authored metal crown with
-  small rising embers and occasional restrained flares.
-- Ghost Double uses the actual portrait for a brief, clipped cyan/rose image
-  offset instead of a generic glow, while keeping the face readable.
-- Shop previews use the real local avatar fixture, and compact profile surfaces
-  stay static so repeated cards do not create animation loops.
+- Prism Orbit now uses an authored refractive-glass plate with sparse orbiting
+  fragments; Ember Crown uses an authored metal crown plate with rising
+  embers; Ghost Double uses a textured chromatic double-exposure plate plus
+  the actual portrait offset.
+- The selected Shop preview and full profile animate through one bounded shared
+  compositor. Unselected cards and compact profile surfaces stay static so
+  repeated surfaces do not create animation loops.
 
 ## 2026-08-04 — Expand launch identity expression
 

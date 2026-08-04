@@ -9,6 +9,7 @@
   export let username = 'You';
   export let displayColor = '#8B7CF6';
   export let mode = 'animated';
+  export let active = false;
 
   // Catalog previews are product swatches, not another daily-roll surface. Keep
   // their renderer input stable so a new roll never recolors the whole catalog.
@@ -63,7 +64,7 @@
     </div>
   {:else if isAvatar}
     <div class="shop-avatar-preview">
-      <AvatarEffect effectKey={item.css_value} accentColor={displayColor} mode="compact" animated={false} avatarSrc="/avatars/mara-dog-v1.jpg" fallbackText={String(username || 'Y').slice(0, 1).toUpperCase()}>
+      <AvatarEffect effectKey={item.css_value} accentColor={displayColor} mode="compact" active={active} animated={active} avatarSrc="/avatars/mara-dog-v1.jpg" fallbackText={String(username || 'Y').slice(0, 1).toUpperCase()}>
         <img class="shop-avatar-preview__media" src="/avatars/mara-dog-v1.jpg" alt="" loading="lazy" decoding="async" />
       </AvatarEffect>
     </div>

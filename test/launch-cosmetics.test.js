@@ -27,23 +27,19 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Story Stack');
 });
 
-test('authored avatar anchor effects resolve their local layers and particle mode', async () => {
-  const anchors = [
-    ['prism-orbit', ['back', 'front']],
-    ['ember-crown', ['back', 'front']],
-    ['ghost-double', ['front']]
-  ];
+test('authored avatar anchors resolve raster plates and the shared texture atlas', async () => {
+  const anchors = ['prism-orbit', 'ember-crown', 'ghost-double'];
 
-  for (const [key, layers] of anchors) {
+  for (const key of anchors) {
     const definition = AVATAR_EFFECT_DEFINITIONS[key];
     assert.ok(definition, key);
-    for (const layer of layers) {
-      const assetPath = definition.assets?.[layer];
-      assert.match(assetPath, /^\/avatar-effects\/.+\.svg$/);
-      const asset = await read(`public${assetPath}`);
-      assert.match(asset, /<svg\b/);
-    }
+    assert.match(definition.authoredOverlay, /^\/avatar-effects\/.+\.png$/);
+    const asset = await readFile(new URL(`../public${definition.authoredOverlay}`, import.meta.url));
+    assert.deepEqual([...asset.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   }
+
+  const atlas = await readFile(new URL('../public/avatar-effects/particle-atlas.png', import.meta.url));
+  assert.deepEqual([...atlas.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
 
   assert.equal(AVATAR_EFFECT_DEFINITIONS['prism-orbit'].particles, true);
   assert.equal(AVATAR_EFFECT_DEFINITIONS['ember-crown'].particles, true);

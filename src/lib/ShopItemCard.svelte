@@ -66,7 +66,7 @@
         <strong class="item-price">{priceLabel}</strong>
       {/if}
     </span>
-    <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} />
+    <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} active={isPreviewing} />
   </button>
 
   <div class="item-card-meta">

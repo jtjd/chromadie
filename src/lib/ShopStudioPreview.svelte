@@ -81,6 +81,7 @@
           avatarEffectKey={loadout?.avatar_effect}
           avatarEffectMode={compact ? 'compact' : 'profile'}
           avatarEffectAnimated={resolvedNameRendererMode === 'animated'}
+          avatarEffectActive={resolvedNameRendererMode === 'animated'}
           showToday={false}
         />
       </div>
