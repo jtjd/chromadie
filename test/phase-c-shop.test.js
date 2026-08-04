@@ -87,7 +87,7 @@ test('product cards use one selection surface and readable purchase states', asy
   assert.match(source, /stateLabel/);
   assert.doesNotMatch(source, /item-preview-button|item-product-button/);
   assert.doesNotMatch(source, /item-detail-link|>Details<|>Manage<|Need more EP/);
-  assert.match(source, /height:138px/);
+  assert.match(source, /aspect-ratio:16 \/ 9/);
   assert.match(source, /@media \(max-width: 420px\)/);
 });
 
@@ -158,6 +158,9 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(contextual, /Live profile/);
   assert.match(contextual, /aria-pressed=\{paused\}/);
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview/);
+  assert.match(itemPreview, /background: #0a0d12/);
+  assert.doesNotMatch(itemPreview, /\.shop-preview-area::after/);
+  assert.doesNotMatch(itemPreview, /preview-profile-card|shop-atmosphere-preview__card/);
   assert.match(studio, /nameRendererLoadout/);
   assert.match(studio, /export let links = \[\]/);
   assert.match(studio, /\{links\}/);

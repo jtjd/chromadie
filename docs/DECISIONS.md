@@ -2,6 +2,20 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-05 — Treat shop pieces as specimens, not nested interface cards
+
+The catalog preview is the product surface, so every slot uses the same flat
+16:9 stage and the same card hierarchy: slot eyebrow, piece name, specimen,
+then a quiet rarity/collection and purchase footer. Preview-specific gradients,
+highlight overlays, and nested profile panels were removed because they made
+different renderers feel like unrelated UI components and weakened the actual
+effect.
+
+Borders now show the effect around a simple name specimen; Atmospheres show the
+media directly behind a simple specimen label. The real profile fitting-room
+preview remains the place for full composition context. Selection, purchase,
+ownership, accessibility, and reduced-motion behavior stay unchanged.
+
 ## 2026-08-04 — Replace retired atmosphere presets with sourced video plates
 
 The seven retired procedural presets are replaced by seven new Pexels-sourced

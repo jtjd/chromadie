@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Shop specimen-card pass — 2026-08-05
+
+- Reworked Catalog and Owned product cards into one consistent specimen-card
+  system: every piece now uses the same 16:9 preview stage, explicit slot
+  eyebrow, quiet rarity/collection footer, and restrained purchase action.
+- Removed the preview-stage gradients, highlight veil, nested border profile
+  card, and nested atmosphere panel so each renderer reads directly as the
+  product being previewed.
+- Preserved one selection surface, temporary fitting-room preview behavior,
+  purchase confirmation, ownership states, responsive layout, and reduced-motion
+  handling.
+
 ## Atmosphere replacement plates — 2026-08-04
 
 - Added seven new authored video atmospheres sourced from Pexels: Silk Folds,

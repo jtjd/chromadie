@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-05 — Clarify shop specimen cards
+
+- Reworked product cards so Fonts, Materials, Borders, Avatars, Cursors,
+  Layouts, and Atmospheres share one consistent preview stage and metadata
+  structure.
+- Removed the preview gradient and highlight veil, simplified nested previews,
+  and softened the purchase action so the product specimen carries the visual
+  weight.
+
 ## 2026-08-04 — Add seven sourced atmosphere plates
 
 - Replaced the removed procedural atmosphere slots with Silk Folds, Glass
