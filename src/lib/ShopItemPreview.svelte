@@ -12,9 +12,25 @@
   export let mode = 'animated';
   export let active = false;
 
-  // Catalog previews are product swatches, not another daily-roll surface. Keep
-  // their renderer input stable so a new roll never recolors the whole catalog.
-  const CATALOG_PREVIEW_COLOR = '#C7B4FF';
+  const COLLECTION_TONES = Object.freeze({
+    Signal: '#B7FD4D',
+    Prism: '#C7B4FF',
+    Archive: '#8DDCFF',
+    Ember: '#FFD27A',
+    Nocturne: '#B5A9FF',
+    'Static Bloom': '#8DDCFF'
+  });
+  const SLOT_TONES = Object.freeze({
+    name_font: '#171717',
+    name_material: '#111923',
+    name_motion: '#191520',
+    profile_border: '#101913',
+    avatar_effect: '#17131B',
+    cursor_trail: '#101A20',
+    profile_layout: '#151421',
+    profile_atmosphere: '#0F1719',
+    consumable: '#17131F'
+  });
 
   $: nameLayerLoadout = item?.slot === 'name_font'
     ? { fontKey: item.css_value }
@@ -28,6 +44,27 @@
   $: isLayout = item?.slot === 'profile_layout';
   $: isAtmosphere = item?.slot === 'profile_atmosphere';
   $: cursorPreviewKey = getCursorTrailKey(item?.css_value);
+  $: previewAccent = COLLECTION_TONES[item?.collection] || '#C7B4FF';
+  $: previewSurface = SLOT_TONES[item?.slot] || '#14161D';
+  $: previewType = item?.slot === 'name_font'
+    ? 'font'
+    : item?.slot === 'name_material'
+      ? 'material'
+      : item?.slot === 'name_motion'
+        ? 'motion'
+        : item?.slot === 'profile_border'
+          ? 'border'
+          : item?.slot === 'avatar_effect'
+            ? 'avatar'
+            : item?.slot === 'cursor_trail'
+              ? 'cursor'
+              : item?.slot === 'profile_layout'
+                ? 'layout'
+                : item?.slot === 'profile_atmosphere'
+                  ? 'atmosphere'
+                  : 'utility';
+  $: previewClasses = `shop-preview-area shop-preview-area--${previewType}`;
+  $: previewStyle = `--preview-accent:${previewAccent}; --preview-surface:${previewSurface};`;
 
   let cursorPoint = { x: 50, y: 50 };
 
@@ -40,7 +77,7 @@
   }
 </script>
 
-<div class="shop-preview-area" data-preview-source={displayColor}>
+<div class={previewClasses} style={previewStyle} data-preview-source={displayColor}>
   {#if item?.slot === 'profile_border'}
     <ProfileBorderEffect borderKey={item.css_value} compact={true} animated={mode === 'animated'} className="preview-border-shell">
       <div class="preview-profile-specimen">
@@ -53,7 +90,7 @@
       <NameEffectCanvas
         text={username}
         loadout={nameLayerLoadout}
-        todayColor={CATALOG_PREVIEW_COLOR}
+        todayColor={previewAccent}
         context="profile"
         compact={false}
         {mode}
@@ -62,7 +99,7 @@
     </div>
   {:else if isAvatar}
     <div class="shop-avatar-preview">
-      <AvatarEffect effectKey={item.css_value} accentColor={displayColor} mode="compact" active={active} animated={active} avatarSrc="/avatars/mara-dog-v1.jpg" fallbackText={String(username || 'Y').slice(0, 1).toUpperCase()}>
+      <AvatarEffect effectKey={item.css_value} accentColor={previewAccent} mode="compact" active={active} animated={active} avatarSrc="/avatars/mara-dog-v1.jpg" fallbackText={String(username || 'Y').slice(0, 1).toUpperCase()}>
         <img class="shop-avatar-preview__media" src="/avatars/mara-dog-v1.jpg" alt="" loading="lazy" decoding="async" />
       </AvatarEffect>
     </div>
@@ -89,7 +126,7 @@
     </div>
   {:else if isAtmosphere}
     <div class="shop-atmosphere-preview">
-      <AtmosphereLayer atmosphereKey={item.css_value} todayColor={CATALOG_PREVIEW_COLOR} recentColors={['#8DDCFF', '#B7FD4D', '#F7B7E2']} mode="card" active={false} animated={false} />
+      <AtmosphereLayer atmosphereKey={item.css_value} todayColor={previewAccent} recentColors={['#8DDCFF', '#B7FD4D', '#F7B7E2']} mode="card" active={false} animated={false} />
       <div class="shop-atmosphere-preview__specimen"><span>{username}</span><small>profile atmosphere</small></div>
     </div>
   {:else}
@@ -101,20 +138,20 @@
 </div>
 
 <style>
-  .shop-preview-area { position:relative; aspect-ratio:16 / 9; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: #0a0d12; overflow: hidden; }
-  .shop-preview-area :global(.preview-border-shell) { width: min(74%, 18rem); height: 68%; }
+  .shop-preview-area { position:relative; aspect-ratio:16 / 9; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 0; border-radius: 12px; background: color-mix(in srgb, var(--preview-accent, #C7B4FF) 8%, var(--preview-surface, #14161D)); overflow: hidden; }
+  .shop-preview-area :global(.preview-border-shell) { width: min(82%, 22rem); height: 78%; }
   .preview-profile-specimen { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; box-sizing: border-box; overflow: hidden; }
-  .preview-profile-name { color: #fff; font-family: var(--font-display-stack, var(--font-display)); font-size: 1.45rem; font-weight: 700; overflow-wrap: anywhere; }
+  .preview-profile-name { color: var(--preview-accent, #fff); font-family: var(--font-display-stack, var(--font-display)); font-size: clamp(1.7rem, 5vw, 2.5rem); font-weight: 700; overflow-wrap: anywhere; }
   .preview-profile-specimen small { color: rgba(232,236,248,.52); font: .55rem var(--shop-mono, var(--font-mono-stack)); letter-spacing: .1em; text-transform: uppercase; }
   .shop-preview-text { width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px; text-align: center; box-sizing: border-box; }
   .shop-preview-text--name :global(.name-effect-canvas) { width: 100%; max-width: 100%; text-align: center; }
-  .shop-preview-text--name :global(.name-effect-canvas__semantic) { max-width: 100%; color: var(--shop-ink, #f2f0eb); font: 700 clamp(2rem, 5vw, 3rem)/1.08 var(--font-display-stack, var(--font-display)); letter-spacing: -.045em; overflow-wrap: anywhere; white-space: nowrap; }
+  .shop-preview-text--name :global(.name-effect-canvas__semantic) { max-width: 100%; color: var(--preview-accent, var(--shop-ink, #f2f0eb)); font: 700 clamp(2.7rem, 6vw, 4.4rem)/1.08 var(--font-display-stack, var(--font-display)); letter-spacing: -.045em; overflow-wrap: anywhere; white-space: nowrap; }
   .shop-preview-text--utility { flex-direction: column; gap: 0.65rem; color: var(--shop-muted, var(--color-ink-muted)); font: 600 0.95rem var(--shop-mono, var(--font-mono-stack)); }
   .preview-utility-mark { color: #d8ccff; font-size: 1.8rem; }
-  .shop-avatar-preview { display:grid; place-items:center; width:5.2rem; height:5.2rem; }
-  .shop-avatar-preview :global(.avatar-effect) { display:grid; place-items:center; width:4.2rem; height:4.2rem; border:1px solid rgba(255,255,255,.28); border-radius:50%; background:#0b0e14; }
+  .shop-avatar-preview { display:grid; place-items:center; width:8rem; height:8rem; }
+  .shop-avatar-preview :global(.avatar-effect) { display:grid; place-items:center; width:6.7rem; height:6.7rem; border:1px solid color-mix(in srgb, var(--preview-accent, #fff) 54%, white); border-radius:50%; background:var(--preview-surface, #0b0e14); }
   .shop-avatar-preview__media { position:relative; z-index:2; display:block; width:100%; height:100%; border-radius:50%; object-fit:cover; }
-  .shop-cursor-preview { position:relative; width:78%; height:70%; }
+  .shop-cursor-preview { position:relative; width:92%; height:82%; }
   .shop-cursor-preview__line { position:absolute; left:5%; right:13%; top:48%; height:2px; border-radius:99px; background:linear-gradient(90deg, transparent, #8ddcff 22%, #b7fd4d 70%, transparent); transform:rotate(-16deg); transform-origin:right center; box-shadow:0 0 10px rgba(141,220,255,.45); }
   .shop-cursor-preview__head { position:absolute; left:calc(var(--cursor-x) - 4px); top:calc(var(--cursor-y) - 4px); width:9px; height:9px; border:1px solid #f2f0eb; border-radius:50%; box-shadow:0 0 0 4px rgba(141,220,255,.12), 0 0 12px #8ddcff; transition:left .12s ease, top .12s ease; }
   .shop-cursor-preview__particle { position:absolute; width:5px; height:5px; background:#cdd2ff; opacity:.75; }
@@ -136,8 +173,8 @@
   .shop-cursor-preview--marker-stroke .shop-cursor-preview__line { height:6px; border-radius:2px; background:#e7d4c4; opacity:.55; }
   .shop-cursor-preview--solar-sparks .shop-cursor-preview__line { background:linear-gradient(90deg,transparent,#ffd77a 35%,#fff 70%,transparent); box-shadow:0 0 14px rgba(255,215,122,.7); }
   .shop-cursor-preview--void-lensing .shop-cursor-preview__line { background:linear-gradient(90deg,transparent,#9c7bff,#66e8ff,transparent); }
-  .shop-layout-preview { position:relative; width:76%; height:74%; border:1px solid rgba(205,210,255,.42); border-radius:5px; background:#0b0e14; }
-  .shop-layout-preview span { position:absolute; display:block; border:1px solid rgba(205,210,255,.35); background:rgba(205,210,255,.1); }
+  .shop-layout-preview { position:relative; width:88%; height:82%; border:1px solid color-mix(in srgb, var(--preview-accent, #cdd2ff) 62%, white); border-radius:5px; background:color-mix(in srgb, var(--preview-surface, #0b0e14) 84%, white); }
+  .shop-layout-preview span { position:absolute; display:block; border:1px solid color-mix(in srgb, var(--preview-accent, #cdd2ff) 52%, white); background:color-mix(in srgb, var(--preview-accent, #cdd2ff) 14%, transparent); }
   .shop-layout-preview__rail { left:7%; top:10%; bottom:10%; width:19%; }
   .shop-layout-preview__hero { left:33%; right:8%; top:10%; height:25%; }
   .shop-layout-preview__module--one { left:33%; width:28%; top:43%; height:20%; }
@@ -154,9 +191,9 @@
   .shop-layout-preview--story-stack .shop-layout-preview__module { left:9%; right:9%; width:auto; }
   .shop-atmosphere-preview { position:relative; width:100%; height:100%; min-height:7.5rem; overflow:hidden; border-radius:5px; background:#070a10; }
   .shop-atmosphere-preview :global(.profile-atmosphere) { opacity:.9; }
-  .shop-atmosphere-preview :global(.profile-atmosphere__video--poster) { opacity:.3; }
+  .shop-atmosphere-preview :global(.profile-atmosphere__video--poster) { opacity:.42; }
   .shop-atmosphere-preview__specimen { position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:.3rem; color:#f1f1f5; text-shadow:0 1px 1rem rgba(0,0,0,.9); }
-  .shop-atmosphere-preview__specimen span { font:700 1.35rem/1 var(--font-display-stack, var(--font-display)); letter-spacing:-.04em; }
+  .shop-atmosphere-preview__specimen span { color:var(--preview-accent, #f1f1f5); font:700 clamp(1.5rem, 4vw, 2.1rem)/1 var(--font-display-stack, var(--font-display)); letter-spacing:-.04em; }
   .shop-atmosphere-preview__specimen small { color:rgba(232,236,248,.64); font:.55rem var(--shop-mono, var(--font-mono-stack)); letter-spacing:.11em; text-transform:uppercase; }
 
   @media (max-width: 600px) {

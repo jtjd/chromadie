@@ -6,10 +6,11 @@ Document user-visible redesign changes by milestone.
 
 - Reworked product cards so Fonts, Materials, Borders, Avatars, Cursors,
   Layouts, and Atmospheres share one consistent preview stage and metadata
-  structure.
+  structure, with larger specimens on solid collection-tinted stages.
 - Expanded the catalog to a more spacious two-column gallery, removed the
-  preview gradient and highlight veil, simplified nested previews, and softened
-  the purchase action so the product specimen carries the visual weight.
+  preview gradient and highlight veil, simplified nested previews, and made
+  the purchase/status actions read as quiet text controls so the product
+  specimen carries the visual weight.
 
 ## 2026-08-04 — Add seven sourced atmosphere plates
 

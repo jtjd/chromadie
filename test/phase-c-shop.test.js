@@ -158,7 +158,10 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(contextual, /Live profile/);
   assert.match(contextual, /aria-pressed=\{paused\}/);
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview/);
-  assert.match(itemPreview, /background: #0a0d12/);
+  assert.match(itemPreview, /COLLECTION_TONES/);
+  assert.match(itemPreview, /previewClasses = `shop-preview-area shop-preview-area--\$\{previewType\}`/);
+  assert.match(itemPreview, /background: color-mix\(in srgb, var\(--preview-accent/);
+  assert.doesNotMatch(itemPreview, /\.shop-preview-area \{[^}]*border: 1px/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area::after/);
   assert.doesNotMatch(itemPreview, /preview-profile-card|shop-atmosphere-preview__card/);
   assert.match(studio, /nameRendererLoadout/);
