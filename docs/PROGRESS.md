@@ -1959,6 +1959,15 @@ kept public profile selectors outside the supporting-route baseline.
 - Added coverage for real family labels, loader coverage, seed synchronization,
   and the additive live-row migration.
 
+## 2026-08-04 — Rain Window pilot
+
+- Replaced the Rain Window SVG placeholder with a transformed, locally served
+  Pexels droplet plate (8-second WebM plus MP4 fallback and poster).
+- Kept the plate additive with `screen` blending; it does not apply an opaque
+  wash or darken uploaded profile media.
+- Public profiles and full fitting-room previews animate one video layer;
+  cards, reduced-motion environments, and unsupported video use the poster.
+
 ## 2026-08-03 — Reconcile live shop catalog labels
 
 - Applied the pending Name catalog label migrations and synchronized all 64 paid

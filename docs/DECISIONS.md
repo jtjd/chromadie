@@ -2929,3 +2929,15 @@ The atmosphere layer is explicitly additive: it has no opaque base, blend-mode
 texture, or color wash, and uploaded profile backgrounds render at full fidelity.
 Scene plates use layered authored linework, particles, refractive edges, and
 material details rather than a single gradient or glow preset.
+
+## 2026-08-04 — Rain Window uses a transformed stock plate for the pilot
+
+The Rain Window pilot uses a short, locally served plate derived from Pexels
+video 34479250 (Jonathan David,
+https://www.pexels.com/video/rain-droplets-on-windshield-close-up-34479250/).
+The source is cropped to a profile-safe 16:9 composition, converted to a
+high-contrast droplet highlight plate, trimmed to an 8-second loop, and served
+as WebM with an MP4 fallback and poster frame. The source is not redistributed
+unchanged. The video is isolated to the Rain Window atmosphere, uses screen
+blending so black contributes no tint or dimming, and falls back to the poster
+for cards, reduced motion, hidden documents, and unsupported video formats.

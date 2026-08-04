@@ -21,6 +21,10 @@
   let mounted = false;
   let instanceId = 'atmosphere';
 
+  const RAIN_WINDOW_VIDEO = '/atmospheres/rain-window/rain-window.webm';
+  const RAIN_WINDOW_VIDEO_FALLBACK = '/atmospheres/rain-window/rain-window.mp4';
+  const RAIN_WINDOW_POSTER = '/atmospheres/rain-window/rain-window-poster.png';
+
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: compact = mode === 'card' || mode === 'compact';
   $: motionActive = Boolean(active && animated && visible && !reducedMotion && !compact);
@@ -72,7 +76,17 @@
 
 {#if mounted && definition}
   <div class={classes} style={style} aria-hidden="true" data-atmosphere={definition.key}>
-    <svg class="profile-atmosphere__art" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" focusable="false">
+    {#if definition.key === 'rain-window'}
+      {#if motionActive}
+        <video class="profile-atmosphere__rain-video" autoplay muted loop playsinline preload="metadata" poster={RAIN_WINDOW_POSTER}>
+          <source src={RAIN_WINDOW_VIDEO} type="video/webm" />
+          <source src={RAIN_WINDOW_VIDEO_FALLBACK} type="video/mp4" />
+        </video>
+      {:else}
+        <img class="profile-atmosphere__rain-video profile-atmosphere__rain-video--poster" src={RAIN_WINDOW_POSTER} alt="" />
+      {/if}
+    {:else}
+      <svg class="profile-atmosphere__art" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" focusable="false">
       <defs>
         <linearGradient id={`${instanceId}-ribbon`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="var(--atmosphere-color-2)" stop-opacity=".08" />
@@ -110,12 +124,6 @@
         <path class="atmosphere-art__veil atmosphere-art__veil--second" d="M-100 570 C160 190 390 650 640 270 S1010 120 1300 490" />
         <path class="atmosphere-art__veil atmosphere-art__veil--thin" d="M-100 570 C200 220 390 650 640 270 S1010 120 1300 490" />
         <g class="atmosphere-art__aurora-stars"><circle cx="185" cy="210" r="2" /><circle cx="930" cy="120" r="2.5" /><circle cx="1080" cy="440" r="1.7" /></g>
-      {:else if definition.key === 'rain-window'}
-        <rect class="atmosphere-art__window" x="0" y="0" width="1200" height="700" />
-        <g class="atmosphere-art__window-frame"><path d="M300 0V700" /><path d="M900 0V700" /><path d="M0 420H1200" /></g>
-        <g class="atmosphere-art__rain"><path d="M90 0 L20 260" /><path d="M210 80 L120 410" /><path d="M410 -20 L320 310" /><path d="M580 40 L510 300" /><path d="M790 -30 L700 330" /><path d="M990 30 L880 420" /><path d="M1170 0 L1060 370" /></g>
-        <g class="atmosphere-art__droplets"><ellipse cx="220" cy="500" rx="11" ry="22" /><ellipse cx="930" cy="180" rx="8" ry="16" /><ellipse cx="1040" cy="560" rx="13" ry="26" /></g>
-        <g class="atmosphere-art__bokeh"><circle cx="140" cy="150" r="22" /><circle cx="760" cy="160" r="34" /><circle cx="1080" cy="330" r="18" /></g>
       {:else if definition.key === 'emberfall'}
         <ellipse class="atmosphere-art__ember-bed" cx="580" cy="690" rx="520" ry="170" />
         <g class="atmosphere-art__embers"><path d="M180 650 C140 520 210 470 176 360" /><path d="M390 680 C360 540 430 470 398 300" /><path d="M640 690 C590 540 670 470 650 260" /><path d="M880 680 C850 550 920 480 900 340" /><path d="M1070 680 C1010 560 1090 520 1060 410" /></g>
@@ -150,7 +158,8 @@
         <circle class="atmosphere-art__memory-ring" cx="600" cy="360" r="220" />
         <circle class="atmosphere-art__memory-ring atmosphere-art__memory-ring--inner" cx="600" cy="360" r="188" />
       {/if}
-    </svg>
+      </svg>
+    {/if}
   </div>
 {/if}
 
@@ -159,7 +168,11 @@
   .profile-atmosphere { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; isolation:isolate; opacity:1; background:transparent; }
   .profile-atmosphere--compact { opacity:1; }
   .profile-atmosphere__art { position:absolute; inset:-7%; width:114%; height:114%; opacity:.9; }
-  .profile-atmosphere__art path, .profile-atmosphere__art ellipse, .profile-atmosphere__art circle, .profile-atmosphere__art rect { vector-effect:non-scaling-stroke; }
+  /* The plate is black-backed so screen blending contributes only the authored
+     highlights; it never washes or darkens the user's media underneath. */
+  .profile-atmosphere__rain-video { position:absolute; inset:-6%; width:112%; height:112%; object-fit:cover; opacity:.34; mix-blend-mode:screen; filter:drop-shadow(0 0 7px var(--atmosphere-color-1)); }
+  .profile-atmosphere__rain-video--poster { opacity:.28; }
+  .profile-atmosphere__art path, .profile-atmosphere__art ellipse, .profile-atmosphere__art circle { vector-effect:non-scaling-stroke; }
   .atmosphere-art__wash { fill:none; stroke:var(--atmosphere-ribbon); stroke-width:86; opacity:.3; filter:var(--atmosphere-soft); }
   .atmosphere-art__signal { fill:none; stroke:var(--atmosphere-spectrum); stroke-linecap:round; stroke-width:2.5; opacity:.62; stroke-dasharray:2 16; }
   .atmosphere-art__signal--glow { stroke-width:18; opacity:.12; filter:var(--atmosphere-soft); stroke-dasharray:none; }
@@ -173,11 +186,6 @@
   .atmosphere-art__veil--second { stroke:var(--atmosphere-color-3); stroke-width:28; opacity:.2; filter:var(--atmosphere-soft); }
   .atmosphere-art__veil--thin { stroke-width:14; opacity:.34; filter:none; }
   .atmosphere-art__aurora-stars circle { fill:var(--atmosphere-color-4); filter:drop-shadow(0 0 8px var(--atmosphere-color-4)); opacity:.72; }
-  .atmosphere-art__window { fill:var(--atmosphere-wash); opacity:.65; }
-  .atmosphere-art__window-frame { fill:none; stroke:var(--atmosphere-color-2); stroke-width:1; opacity:.14; }
-  .atmosphere-art__rain { fill:none; stroke:var(--atmosphere-spectrum); stroke-width:2; stroke-linecap:round; opacity:.28; }
-  .atmosphere-art__droplets ellipse { fill:none; stroke:var(--atmosphere-color-2); stroke-width:1.5; opacity:.42; }
-  .atmosphere-art__bokeh circle { fill:var(--atmosphere-color-1); opacity:.08; filter:var(--atmosphere-soft); }
   .atmosphere-art__ember-bed { fill:var(--atmosphere-color-1); opacity:.12; filter:var(--atmosphere-soft); }
   .atmosphere-art__embers { fill:none; stroke:var(--atmosphere-spectrum); stroke-width:2; stroke-linecap:round; opacity:.34; }
   .atmosphere-art__ember-smoke { fill:none; stroke:var(--atmosphere-color-1); stroke-width:22; opacity:.1; filter:var(--atmosphere-soft); }
@@ -213,9 +221,6 @@
   .profile-atmosphere--animated .atmosphere-art__nodes { animation: atmosphere-nodes 4s ease-in-out infinite alternate; transform-origin: center; }
   .profile-atmosphere--animated .atmosphere-art__veil { animation: atmosphere-veil 14s ease-in-out infinite alternate; }
   .profile-atmosphere--animated .atmosphere-art__aurora-stars { animation: atmosphere-stars 6s ease-in-out infinite alternate; }
-  .profile-atmosphere--animated .atmosphere-art__rain { animation: atmosphere-rain 8s linear infinite; }
-  .profile-atmosphere--animated .atmosphere-art__droplets { animation: atmosphere-droplets 5s ease-in-out infinite; }
-  .profile-atmosphere--animated .atmosphere-art__bokeh { animation: atmosphere-bokeh 9s ease-in-out infinite alternate; }
   .profile-atmosphere--animated .atmosphere-art__embers { animation: atmosphere-embers 7s ease-in-out infinite alternate; }
   .profile-atmosphere--animated .atmosphere-art__sparks { animation: atmosphere-sparks 4.5s ease-in-out infinite; }
   .profile-atmosphere--animated .atmosphere-art__ember-smoke { animation: atmosphere-smoke 8s ease-in-out infinite alternate; }
@@ -228,9 +233,6 @@
   @keyframes atmosphere-nodes { from { opacity:.72; } to { opacity:1; } }
   @keyframes atmosphere-veil { to { transform:translateX(5%) translateY(-2%) rotate(2deg); opacity:.68; } }
   @keyframes atmosphere-stars { from { opacity:.45; } to { opacity:.95; } }
-  @keyframes atmosphere-rain { to { transform:translate(4%, 5%); } }
-  @keyframes atmosphere-droplets { 0%,100% { opacity:.3; transform:translateY(0); } 50% { opacity:.78; transform:translateY(8px); } }
-  @keyframes atmosphere-bokeh { from { opacity:.04; transform:translateY(2%); } to { opacity:.14; transform:translateY(-2%); } }
   @keyframes atmosphere-embers { to { transform:translateY(-2%) scale(1.01); opacity:.62; } }
   @keyframes atmosphere-sparks { 0%,100% { opacity:.5; transform:translateY(3px); } 50% { opacity:1; transform:translateY(-5px); } }
   @keyframes atmosphere-smoke { from { opacity:.06; transform:translateY(2%); } to { opacity:.16; transform:translateY(-2%); } }
@@ -244,9 +246,6 @@
     .profile-atmosphere--animated .atmosphere-art__nodes,
     .profile-atmosphere--animated .atmosphere-art__veil,
     .profile-atmosphere--animated .atmosphere-art__aurora-stars,
-    .profile-atmosphere--animated .atmosphere-art__rain,
-    .profile-atmosphere--animated .atmosphere-art__droplets,
-    .profile-atmosphere--animated .atmosphere-art__bokeh,
     .profile-atmosphere--animated .atmosphere-art__embers,
     .profile-atmosphere--animated .atmosphere-art__sparks,
     .profile-atmosphere--animated .atmosphere-art__ember-smoke,

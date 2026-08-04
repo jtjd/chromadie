@@ -1659,3 +1659,11 @@ direct route behavior.
   fading profile content.
 - Removed six unreferenced pre-workspace Shop components; the current Shop
   workspace and shared renderers remain the only production path.
+
+## 2026-08-04 — Rain Window pilot
+
+- Added a realistic droplet video plate to Rain Window, sourced from a
+  commercially usable Pexels clip and transformed into a Chromadie-specific
+  highlight loop.
+- Added WebM/MP4 delivery, poster fallback, screen-only blending, and reduced-
+  motion/card handling without changing the atmosphere slot or catalog key.
