@@ -17,6 +17,8 @@ test('shop shell is one profile studio with Catalog and Owned surfaces', async (
   assert.match(shop, /Shape <span>your identity\.<\/span>/);
   assert.match(shop, /<ShopRail/);
   assert.match(shop, /<ShopContextualPreview/);
+  assert.match(shop, /walletBalance=\{fittingRoom\.balance\}/);
+  assert.match(shop, /font:600 \.8rem var\(--shop-font\)/);
   assert.match(rail, /\{ id: 'browse', number: '01', label: 'Catalog'/);
   assert.match(rail, /\{ id: 'collection', number: '02', label: 'Owned'/);
   assert.doesNotMatch(shop, /ShopHome|ShopStudio/);
@@ -43,6 +45,7 @@ test('catalog removes redundant context, bounds results, and keeps one profile p
   assert.doesNotMatch(source, /shop-result-count/);
   assert.match(source, /grid-template-columns:repeat\(3/);
   assert.match(source, /selectedSubslot/);
+  assert.match(source, /font:600 \.84rem var\(--shop-font\)/);
   assert.match(rail, /Name layers/);
   assert.match(rail, /Name effect layers/);
   assert.match(rail, /Filter by layer|Choose a layer/);
@@ -91,11 +94,16 @@ test('selection stays in the persistent profile preview without a replacement de
   assert.match(shop, /tryOnShopItem\(\$equippedItems, selectedItem\)/);
   assert.match(shop, /getNameItemPreviewLoadout\(selectedItem/);
   assert.match(shop, /<ShopContextualPreview/);
+  assert.match(shop, /walletBalance=\{fittingRoom\.balance\}/);
+  assert.doesNotMatch(shop, /class="shop-wallet"/);
   assert.match(contextual, /<ShopStudioPreview/);
   assert.match(contextual, /Live profile/);
   assert.match(contextual, /previewKey/);
   assert.match(contextual, /\{#key previewKey\}/);
   assert.match(contextual, /Temporary preview/);
+  assert.match(contextual, /EP balance/);
+  assert.match(contextual, /previewLinks/);
+  assert.doesNotMatch(contextual, /Page sections/);
   assert.match(contextual, />Clear<\/button>/);
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview|shop-preview-selection/);
   assert.doesNotMatch(contextual, /ShopItemPreview|shop-preview-mode/);
@@ -129,7 +137,8 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(contextual, /aria-pressed=\{paused\}/);
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview/);
   assert.match(studio, /nameRendererLoadout/);
-  assert.match(studio, /links=\{\[\]\}/);
+  assert.match(studio, /export let links = \[\]/);
+  assert.match(studio, /\{links\}/);
   assert.match(studio, /profile-border-effect__content/);
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(itemPreview, /<NameEffectCanvas/);

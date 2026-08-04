@@ -2,6 +2,16 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Match the shop preview to Profile Settings
+
+The shop fitting room now uses the Profile Settings preview language: a
+Live profile / Draft preview topline, the production identity card with
+avatar and visible social links, and one quiet status line. The editable page
+section composition stays exclusive to Profile Settings; it does not belong
+in a purchase preview. EP balance lives inside this sticky panel so account
+context remains attached to the profile while the catalog scrolls. Existing
+temporary try-on and renderer boundaries remain unchanged.
+
 ## 2026-08-03 — Make the shop an expression workspace
 
 The shop now borrows the Profile Settings editor's three-part composition:

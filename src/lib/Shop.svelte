@@ -243,7 +243,6 @@
       <p class="shop-header-intro">Preview a piece on your profile before you commit.</p>
     </div>
     <div class="shop-header-actions">
-      <div class="shop-wallet" aria-label={`EP balance: ${fittingRoom.balance.toLocaleString()} EP`}><span>EP balance</span><strong>{fittingRoom.balance.toLocaleString()} EP</strong></div>
       <div class="shop-daily-color" aria-live="polite" aria-label="Today’s color">
         <span>Today’s color</span>
         {#if dailyColor}
@@ -323,6 +322,7 @@
       username={previewUsername}
       displayColor={previewColor}
       accountProfile={$profile}
+      walletBalance={fittingRoom.balance}
       {profileConfig}
       on:reset={() => { selectedItem = null; shopNotice = 'Preview reset to your equipped look.'; }}
     />
@@ -341,11 +341,8 @@
   .shop-header-intro { margin:.5rem 0 0; color:var(--shop-muted); font-size:.98rem; line-height:1.45; }
   .shop-eyebrow { color:var(--shop-faint); font:600 .76rem/1.3 var(--shop-mono); letter-spacing:.13em; text-transform:uppercase; }
   .shop-header-actions { display:flex; align-items:stretch; justify-content:flex-end; flex-wrap:wrap; gap:.55rem; max-width:100%; flex:0 0 auto; }
-  .shop-wallet, .shop-owned { padding:.7rem .85rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); }
-  .shop-wallet { min-width:12rem; padding:.85rem 1rem; border-color:color-mix(in srgb,var(--shop-accent) 45%,var(--shop-line-strong)); background:color-mix(in srgb,var(--shop-accent) 8%,var(--shop-raised)); }
-  .shop-wallet span, .shop-wallet strong { display:block; }
-  .shop-wallet span, .shop-owned span { display:block; color:var(--shop-faint); font:.7rem var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
-  .shop-wallet strong { display:block; margin-top:.32rem; color:var(--shop-ink); font:700 clamp(1.15rem,1.7vw,1.45rem)/1 var(--shop-mono); letter-spacing:-.04em; white-space:nowrap; }
+  .shop-owned { padding:.7rem .85rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); }
+  .shop-owned span { display:block; color:var(--shop-faint); font:.7rem var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
   .shop-owned strong { display:block; margin-top:.3rem; color:var(--shop-ink); font:650 1rem var(--shop-mono); white-space:nowrap; }
   .shop-owned { min-width:5.25rem; }
   .shop-daily-color { display:grid; align-content:center; min-width:9rem; padding:.6rem .7rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); }
@@ -354,7 +351,7 @@
   .shop-daily-color strong i { display:block; flex:0 0 1rem; width:1rem; height:1rem; border:1px solid rgba(255,255,255,.24); border-radius:3px; background:var(--shop-daily-color,#292d37); box-shadow:0 0 .8rem color-mix(in srgb,var(--shop-daily-color,#292d37) 24%,transparent); }
   .shop-daily-color small { margin-top:.18rem; color:var(--shop-muted); font-size:.74rem; }
   .shop-daily-color__status { color:var(--shop-muted)!important; }
-  .shop-profile-link { min-height:2.9rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .75rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; text-decoration:none; font:.78rem var(--shop-mono); }
+  .shop-profile-link { min-height:2.9rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .75rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; text-decoration:none; font:600 .8rem var(--shop-font); }
   .shop-profile-link:hover, .shop-profile-link:focus-visible { border-color:#777d8d; background:#1b1e25; color:#fff; }
   .shop-workspace { display:grid; grid-template-columns:minmax(13rem,15rem) minmax(0,1fr) minmax(28rem,32rem); gap:clamp(.75rem,2vw,1.5rem); align-items:start; }
   .shop-workspace-main { min-width:0; }
@@ -366,7 +363,7 @@
   .shop-live-region { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   @media (max-width: 1200px) { .shop-workspace { grid-template-columns:minmax(12rem,14rem) minmax(0,1fr); } .shop-workspace > :global(.shop-contextual-preview) { grid-column:1 / -1; position:static; } }
   @media (max-width: 1000px) { .shop-header { align-items:flex-start; flex-direction:column; gap:1rem; } .shop-header-actions { width:100%; } }
-  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,100rem); margin-top:.8rem; padding-top:0; } .shop-header-actions { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr); align-items:stretch; } .shop-wallet, .shop-profile-link { grid-column:1 / -1; min-width:0; } .shop-daily-color, .shop-owned { min-width:0; } .shop-wallet strong { font-size:1rem; } .shop-profile-link { justify-content:center; } }
+  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,100rem); margin-top:.8rem; padding-top:0; } .shop-header-actions { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr); align-items:stretch; } .shop-profile-link { grid-column:1 / -1; min-width:0; } .shop-daily-color, .shop-owned { min-width:0; } .shop-profile-link { justify-content:center; } }
   @media (max-width: 620px) { .shop-workspace { grid-template-columns:1fr; } .shop-workspace > :global(.shop-contextual-preview) { grid-column:auto; } }
   @media (prefers-reduced-motion: reduce) { .shop-profile-link { transition:none; } }
 </style>

@@ -159,7 +159,7 @@
   .shop-search input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:var(--shop-ink); font-size:.98rem; }
   .shop-search input::placeholder { color:#8e9099; }
   .shop-sort select { width:100%; min-height:2.8rem; padding:0 .7rem; border:1px solid #454953; border-radius:var(--radius-sm); background:#11141a; color:#d9d7d2; font-size:.9rem; }
-  .shop-filter-toggle { min-height:2.8rem; padding:0 .85rem; border:1px solid #454953; border-radius:var(--radius-sm); background:#15181f; color:#d3d0d8; cursor:pointer; font:.8rem var(--shop-mono); white-space:nowrap; }
+  .shop-filter-toggle { min-height:2.8rem; padding:0 .85rem; border:1px solid #454953; border-radius:var(--radius-sm); background:#15181f; color:#d3d0d8; cursor:pointer; font:600 .84rem var(--shop-font); white-space:nowrap; }
   .shop-filter-toggle:hover, .shop-filter-toggle:focus-visible, .shop-filter-toggle[aria-expanded="true"] { border-color:#aeb5e5; color:#fff; }
   .shop-filter-toggle span { display:inline-grid; min-width:1.25rem; height:1.25rem; margin-left:.25rem; place-items:center; border:1px solid #6e7699; color:#cdd2ff; }
   .shop-filter-panel { position:relative; z-index:3; display:grid; gap:1rem; margin-top:.75rem; padding:1.15rem; border:1px solid #4a4d57; border-radius:var(--radius-sm); background:var(--shop-raised); box-shadow:0 1rem 3rem rgba(0,0,0,.28); }

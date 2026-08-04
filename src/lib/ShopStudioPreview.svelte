@@ -16,6 +16,7 @@
   export let profileConfig = null;
   export let compact = false;
   export let nameRendererMode = '';
+  export let links = [];
 
   $: account = /** @type {any} */ (accountProfile || {});
   $: accountUsername = account.username || username || 'You';
@@ -61,7 +62,7 @@
           displayName={accountDisplayName}
           bio={account.bio || ''}
           bioFallback="No bio added yet."
-          links={[]}
+          {links}
           badges={previewBadges}
           founder={Boolean(account.equipped_badges?.includes('launch_edition'))}
           avatarSrc={previewAvatarSrc}

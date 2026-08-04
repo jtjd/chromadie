@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Polish the shop live preview
+
+- Matched the shop fitting room to the Profile Settings preview with a Live
+  profile / Draft preview header and a cleaner identity card.
+- Showed the profile avatar, name, bio, and safe social links in the live
+  preview while leaving editable page sections in Profile Settings only.
+- Moved EP balance into the sticky preview panel and normalized Filter and
+  Profile settings controls to the shop's body type stack.
+
 ## 2026-08-03 — Turn the shop into a profile workspace
 
 - Added a Profile Settings-inspired navigation rail for Catalog, Owned,

@@ -116,7 +116,7 @@
 </aside>
 
 <style>
-  .shop-rail { position:sticky; top:1rem; min-width:0; border:1px solid var(--shop-line); border-radius:var(--radius-md); background:var(--shop-raised); }
+  .shop-rail { position:sticky; top:1rem; z-index:2; min-width:0; border:1px solid var(--shop-line); border-radius:var(--radius-md); background:rgba(11,13,18,.7); box-shadow:0 1.5rem 4rem rgba(0,0,0,.16); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
   .shop-rail__heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:1rem 1rem .8rem; color:var(--shop-faint); font:700 .68rem/1 var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
   .shop-rail__heading strong { color:var(--shop-muted); font-weight:600; }
   .shop-rail__heading em { color:var(--shop-faint); font-style:normal; }
@@ -127,7 +127,7 @@
   .shop-rail__number { align-self:start; padding-top:.1rem; color:var(--shop-faint); font:600 .68rem/1 var(--shop-mono); }
   .shop-rail button.active .shop-rail__number { color:var(--shop-accent); }
   .shop-rail__copy { display:grid; gap:.25rem; min-width:0; }
-  .shop-rail__copy strong { overflow:hidden; font:600 .84rem/1.1 var(--shop-font); text-overflow:ellipsis; white-space:nowrap; }
+  .shop-rail__copy strong { overflow:hidden; font:600 .78rem/1.1 var(--shop-font); text-overflow:ellipsis; white-space:nowrap; }
   .shop-rail__copy small { overflow:hidden; color:var(--shop-faint); font-size:.7rem; line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
   .shop-rail__count { color:var(--shop-faint); font:600 .68rem/1 var(--shop-mono); }
   .shop-rail button.active .shop-rail__count { color:#e1ddff; }

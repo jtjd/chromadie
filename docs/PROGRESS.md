@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Shop live preview polish — 2026-08-03
+
+- Reworked the fitting-room shell to match Profile Settings' Live profile /
+  Draft preview treatment without importing its editable page sections.
+- Restored safe visible profile links in the production preview and moved EP
+  balance into the sticky preview panel.
+- Matched shop action controls to the body type stack and strengthened the
+  rail/preview panel surfaces and sticky behavior.
+
 ## Shop profile-studio workspace pass — 2026-08-03
 
 - Replaced competing shop menus with a Profile Settings-inspired left rail
