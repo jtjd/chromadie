@@ -2,6 +2,15 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Keep the homepage header consistent across supporting routes
+
+All non-profile routes now opt into the homepage header presentation through
+the shared `SiteModeHeader`. The primary navigation is intentionally limited
+to Leaderboard and Shop; the account identity remains available as an account
+control, while the redundant Profile navigation item is removed. Profile mode
+keeps its separate account-only treatment so the public composition is not
+changed. No route, auth, or data contracts changed.
+
 ## 2026-08-03 — Match the shop preview to Profile Settings
 
 The shop fitting room now uses the Profile Settings preview language: a

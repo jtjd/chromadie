@@ -36,7 +36,7 @@ test('quiet reference surfaces and reduced-motion behavior are encoded', async (
   ]);
 
   assert.match(header, /background: rgba\(7, 8, 11, 0\.52\)/);
-  assert.match(header, /class:site-mode-header--home=\{isHomeMode\}/);
+  assert.match(header, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);
   assert.match(header, /\.site-mode-header--home \{[\s\S]*position: sticky;/);
   assert.match(header, /--site-header-font: 'Satoshi'/);
   assert.match(header, /font: 600 0\.72rem \/ 1 var\(--site-header-font\)/);

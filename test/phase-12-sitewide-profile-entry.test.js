@@ -21,6 +21,7 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.match(app, /<SiteModeHeader/);
   assert.doesNotMatch(app, /<ProfileModeHeader/);
   assert.match(app, /isProfileMode=\{profileModeVisible\}/);
+  assert.match(app, /isHomepageStyle=\{!profileModeVisible\}/);
   assert.match(app, /on:edit=\{handleProfileHeaderEdit\}/);
   assert.match(app, /app-main--site/);
   assert.match(app, /setRoute\('profile', \{ username:/);
@@ -35,7 +36,10 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.doesNotMatch(header, />Roll</);
   assert.match(header, /navigate\('home'\)/);
   assert.match(header, /Leaderboard/);
-  assert.match(header, /Studio/);
+  assert.match(header, />Shop</);
+  assert.doesNotMatch(header, />Studio</);
+  assert.doesNotMatch(header, />Profile</);
+  assert.match(header, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);
   assert.match(header, /isProfileMode/);
   assert.doesNotMatch(header, /navigator\.share/);
   assert.doesNotMatch(header, /Share profile/);

@@ -11,6 +11,9 @@
   export let logoutInProgress = false;
   export let isProfileMode = false;
   export let isHomeMode = false;
+  // Supporting routes use the homepage header language without inheriting
+  // homepage-only account behavior (for example, the signup CTA).
+  export let isHomepageStyle = false;
   export let isOwner = false;
   export let accentColor = '#cdd2ff';
 
@@ -41,23 +44,17 @@
   }
 </script>
 
-<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--home={isHomeMode} style={`--site-header-accent: ${accentColor};`}>
+<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--home={isHomeMode || isHomepageStyle} style={`--site-header-accent: ${accentColor};`}>
   <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
     <span class="site-mode-header__wordmark">chm<span>.lol</span></span>
   </a>
 
   {#if !minimalMode}
     <nav class="site-mode-header__nav" aria-label="Primary application navigation">
-      {#if !isAuthenticated}
-        <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
-      {:else}
-        <button type="button" class:active={activeView === 'profile'} aria-current={activeView === 'profile' ? 'page' : undefined} on:mouseenter={() => prefetch('profile')} on:focus={() => prefetch('profile')} on:click={() => navigate('profile')}>Profile</button>
-      <span aria-hidden="true">/</span>
       <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
       {#if isAuthenticated}
         <span aria-hidden="true">/</span>
-        <button type="button" class:active={activeView === 'shop'} aria-current={activeView === 'shop' ? 'page' : undefined} on:mouseenter={() => prefetch('shop')} on:focus={() => prefetch('shop')} on:click={() => navigate('shop')}>Studio</button>
-      {/if}
+        <button type="button" class:active={activeView === 'shop'} aria-current={activeView === 'shop' ? 'page' : undefined} on:mouseenter={() => prefetch('shop')} on:focus={() => prefetch('shop')} on:click={() => navigate('shop')}>Shop</button>
       {/if}
     </nav>
   {:else}
@@ -85,9 +82,9 @@
         <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('retry')}>Retry account</button>
       {:else if accountState === ACCOUNT_STATES.BOOTING || accountState === ACCOUNT_STATES.PROFILE_LOADING}
         <!-- Keep account controls visually quiet while session data hydrates. -->
-      {:else if (isHomeMode || isProfileMode) && !isAuthenticated}
+      {:else if (isHomeMode || isHomepageStyle || isProfileMode) && !isAuthenticated}
         <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('login', { mode: 'login' })}>Sign in</button>
-        {#if isHomeMode}<button type="button" class="site-mode-header__account-action site-mode-header__account-action--signup" on:click={() => dispatch('login', { mode: 'signup' })}>Sign up</button>{/if}
+        {#if isHomeMode || isHomepageStyle}<button type="button" class="site-mode-header__account-action site-mode-header__account-action--signup" on:click={() => dispatch('login', { mode: 'signup' })}>Sign up</button>{/if}
       {:else}
         <button type="button" class="site-mode-header__account-action site-mode-header__account-action--light" on:click={() => dispatch('login', { mode: 'login' })}>Sign in / Sign up</button>
       {/if}
@@ -95,18 +92,13 @@
   </div>
 
   <details class="site-mode-header__mobile-menu" bind:open={mobileMenuOpen}>
-    <summary aria-expanded={mobileMenuOpen} aria-label={isProfileMode ? 'Open profile actions' : isHomeMode ? 'Open account actions' : 'Open application navigation'}>Menu</summary>
+    <summary aria-expanded={mobileMenuOpen} aria-label={isProfileMode ? 'Open profile actions' : isHomeMode || isHomepageStyle ? 'Open account actions' : 'Open application navigation'}>Menu</summary>
     <div class="site-mode-header__mobile-panel" aria-hidden={!mobileMenuOpen}>
       {#if !minimalMode}
         <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
-          {#if !isAuthenticated}
-            <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
-          {:else}
-            <button type="button" class:active={activeView === 'profile'} on:mouseenter={() => prefetch('profile')} on:focus={() => prefetch('profile')} on:click={() => navigate('profile')}>Profile</button>
           <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
           {#if isAuthenticated}
-            <button type="button" class:active={activeView === 'shop'} on:mouseenter={() => prefetch('shop')} on:focus={() => prefetch('shop')} on:click={() => navigate('shop')}>Studio</button>
-          {/if}
+            <button type="button" class:active={activeView === 'shop'} on:mouseenter={() => prefetch('shop')} on:focus={() => prefetch('shop')} on:click={() => navigate('shop')}>Shop</button>
           {/if}
         </div>
       {/if}
@@ -124,9 +116,9 @@
           <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('retry'); }}>Retry account</button>
         {:else if accountState === ACCOUNT_STATES.BOOTING || accountState === ACCOUNT_STATES.PROFILE_LOADING}
           <!-- Keep account controls visually quiet while session data hydrates. -->
-        {:else if (isHomeMode || isProfileMode) && !isAuthenticated}
+        {:else if (isHomeMode || isHomepageStyle || isProfileMode) && !isAuthenticated}
           <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in</button>
-          {#if isHomeMode}<button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Sign up</button>{/if}
+          {#if isHomeMode || isHomepageStyle}<button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Sign up</button>{/if}
         {:else}
           <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in / Sign up</button>
         {/if}

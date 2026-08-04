@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Sitewide header alignment — 2026-08-03
+
+- Applied the homepage pill/header treatment to all supporting routes through
+  the shared `SiteModeHeader`.
+- Simplified the primary navigation to Leaderboard and Shop, removing the
+  redundant Profile item and renaming Studio to Shop in desktop and mobile
+  navigation.
+- Kept profile mode's account-only header and all route/auth behavior intact.
+
 ## Shop live preview polish — 2026-08-03
 
 - Reworked the fitting-room shell to match Profile Settings' Live profile /

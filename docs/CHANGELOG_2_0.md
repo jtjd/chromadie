@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Align supporting-route navigation with the homepage
+
+- Reused the homepage header treatment across the shop, leaderboard, roll,
+  settings, help, legal, and other supporting surfaces.
+- Renamed the header destination from Studio to Shop.
+- Removed the redundant Profile item from the primary desktop and mobile nav.
+
 ## 2026-08-03 — Polish the shop live preview
 
 - Matched the shop fitting room to the Profile Settings preview with a Live

@@ -837,6 +837,7 @@
       logoutInProgress={logoutInProgress}
       isProfileMode={profileModeVisible}
       isHomeMode={homeModeVisible}
+      isHomepageStyle={!profileModeVisible}
       isOwner={profileModeOwner}
       on:navigate={handleNavigation}
       on:login={openAuthModal}

@@ -12,18 +12,21 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /site-mode-header__nav.*\//s);
   assert.match(siteHeader, /\{#if !minimalMode\}\s*<nav class="site-mode-header__nav"/);
   assert.match(siteHeader, /\{#if !minimalMode\}\s*<div class="site-mode-header__mobile-primary"/);
-  assert.match(siteHeader, /isProfileMode \? 'Open profile actions' : isHomeMode \? 'Open account actions'/);
+  assert.match(siteHeader, /isProfileMode \? 'Open profile actions' : isHomeMode \|\| isHomepageStyle \? 'Open account actions'/);
   assert.match(siteHeader, /navigate\('home'\)/);
   assert.match(siteHeader, /class:site-mode-header--profile/);
-  assert.match(siteHeader, /\(isHomeMode \|\| isProfileMode\) && !isAuthenticated/);
+  assert.match(siteHeader, /\(isHomeMode \|\| isHomepageStyle \|\| isProfileMode\) && !isAuthenticated/);
   assert.match(siteHeader, /width: 100%;/);
   assert.doesNotMatch(siteHeader, /width: min\(100%, 92rem\)/);
   assert.match(siteHeader, /site-mode-header__context/);
   assert.match(siteHeader, /site-mode-header__mobile-primary/);
   assert.match(siteHeader, /\$: minimalMode = isProfileMode;/);
-  assert.match(siteHeader, /\{#if !isAuthenticated\}[\s\S]*Leaderboard/);
+  assert.match(siteHeader, /activeView === 'leaderboard'[\s\S]*>Leaderboard</);
   assert.doesNotMatch(siteHeader, /Explore|How it works|scrollToHomeSection/);
-  assert.doesNotMatch(siteHeader, /\{#if isHomeMode && !isAuthenticated\}[\s\S]*Profile/);
+  assert.doesNotMatch(siteHeader, />Profile</);
+  assert.doesNotMatch(siteHeader, />Studio</);
+  assert.match(siteHeader, />Shop</);
+  assert.match(siteHeader, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);
   assert.match(siteHeader, /--site-header-control-size: 0\.78rem/);
   assert.match(siteHeader, /--site-header-font: 'Satoshi'/);
   assert.doesNotMatch(siteHeader, /var\(--font-mono-stack\)/);
@@ -32,6 +35,7 @@ test('all routes use one cohesive application header', async () => {
 test('supporting surfaces consume the profile visual tokens without changing route components', async () => {
   const siteStyles = await read('src/styles/site.css');
   const main = await read('src/main.js');
+  const siteHeader = await read('src/lib/SiteModeHeader.svelte');
 
   assert.match(main, /styles\/site\.css/);
   assert.match(siteStyles, /--site-surface:/);
@@ -40,8 +44,8 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /\.app-main--site \.shop-page/);
   assert.match(siteStyles, /--site-font: 'Instrument Sans Variable'/);
   assert.match(siteStyles, /--site-accent: #cdd2ff/);
-  assert.match(siteStyles, /site-mode-header:not\(\.site-mode-header--home\):not\(\.site-mode-header--profile\)/);
-  assert.match(siteStyles, /\.site-mode-header__wordmark \{[\s\S]*font-size: 0\.75rem;[\s\S]*letter-spacing: 0\.08em;/);
+  assert.doesNotMatch(siteStyles, /site-mode-header:not\(\.site-mode-header--home\):not\(\.site-mode-header--profile\)/);
+  assert.match(siteHeader, /\.site-mode-header--home \.site-mode-header__brand[\s\S]*font-size: 0\.75rem/);
   assert.match(siteStyles, /Homepage baseline for supporting routes/);
   assert.match(siteStyles, /prefers-reduced-motion/);
 });
@@ -54,7 +58,7 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__nav-space \{ display: none; \}/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: none; \}/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__wordmark > span \{ color: #cdd2ff; \}/);
-  assert.match(siteHeader, /\{#if isHomeMode\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
+  assert.match(siteHeader, /\{#if isHomeMode \|\| isHomepageStyle\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
 });
 
 test('leaderboard and legal routes share the homepage presentation contract', async () => {
