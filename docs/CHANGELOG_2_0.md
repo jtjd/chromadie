@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-04 — Add seven sourced atmosphere plates
+
+- Replaced the removed procedural atmosphere slots with Silk Folds, Glass
+  Caustics, Cinder Drift, Night Pollen, Paper Shadow, Smoke Spiral, and Lumen
+  Flare, all sourced from Pexels and processed as authored video loops.
+- Added WebM/MP4 media, representative posters, screen-blended black backing,
+  reduced-motion handling, catalog rows, and the renderer allowlist. The active
+  catalog now contains 126 items, including 12 Profile Atmospheres.
+
 ## 2026-08-04 — Curate the atmosphere catalog
 
 - Removed seven procedural atmosphere presets that read as generic gradients,

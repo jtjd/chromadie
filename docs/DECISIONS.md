@@ -2,6 +2,21 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-04 — Replace retired atmosphere presets with sourced video plates
+
+The seven retired procedural presets are replaced by seven new Pexels-sourced
+plates: Silk Folds, Glass Caustics, Cinder Drift, Night Pollen, Paper Shadow,
+Smoke Spiral, and Lumen Flare. The new product keys are additive and do not
+reuse the retired identities or restore historical inventory references.
+
+Each source is treated as a black-backed grayscale 16:9 plate, delivered at
+960×540 in WebM and MP4, with a forward/reverse native loop and a representative
+poster. Black backing is intentional: the renderer's `screen` blend ignores the
+black field while the CSS opacity controls intensity, preserving the profile's
+uploaded background across browsers. This keeps the media portable without
+depending on alpha-video support. Source pages and processing notes live beside
+each asset.
+
 ## 2026-08-04 — Expand atmospheres with authored, crossfaded video plates
 
 The next atmosphere pass adds three distinct sourced treatments: Dustlight,

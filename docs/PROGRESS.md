@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Atmosphere replacement plates — 2026-08-04
+
+- Added seven new authored video atmospheres sourced from Pexels: Silk Folds,
+  Glass Caustics, Cinder Drift, Night Pollen, Paper Shadow, Smoke Spiral, and
+  Lumen Flare.
+- Processed each source into a black-backed, grayscale 960×540 plate with
+  WebM/MP4 fallback, a forward/reverse native loop, and a representative
+  poster. Screen blending keeps the user's uploaded profile background intact;
+  reduced-motion and compact surfaces use the poster.
+- Added the finite renderer keys, catalog/seed rows, additive migration, source
+  manifests, and registry/catalog/security drift coverage. The active catalog is
+  now 126 rows with 12 Profile Atmospheres.
+
 ## Atmosphere quality curation — 2026-08-04
 
 - Retired the seven procedural SVG atmosphere presets after review: Signal

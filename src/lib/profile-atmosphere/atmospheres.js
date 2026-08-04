@@ -22,6 +22,34 @@ const definitions = {
   snowfall: {
     key: 'snowfall', label: 'Snowfall', collection: 'Nocturne', rarity: 'Rare',
     description: 'Quiet flakes cross a black winter field in a soft, unhurried descent.'
+  },
+  'silk-folds': {
+    key: 'silk-folds', label: 'Silk Folds', collection: 'Prism', rarity: 'Rare',
+    description: 'Moving folds of black silk carry a restrained sheen through the profile without adding a frame.'
+  },
+  'glass-caustics': {
+    key: 'glass-caustics', label: 'Glass Caustics', collection: 'Archive', rarity: 'Epic',
+    description: 'Refracted water light breaks across the page like a quiet pane catching the daily color.'
+  },
+  'cinder-drift': {
+    key: 'cinder-drift', label: 'Cinder Drift', collection: 'Ember', rarity: 'Epic',
+    description: 'Fine sparks lift through a dark field, adding a warm trace of motion behind the identity.'
+  },
+  'night-pollen': {
+    key: 'night-pollen', label: 'Night Pollen', collection: 'Nocturne', rarity: 'Rare',
+    description: 'Sparse points of out-of-focus light drift across a nocturnal field with a photographic softness.'
+  },
+  'paper-shadow': {
+    key: 'paper-shadow', label: 'Paper Shadow', collection: 'Archive', rarity: 'Rare',
+    description: 'Crumpled black paper gives the atmosphere a tactile surface and a quiet record of pressure.'
+  },
+  'smoke-spiral': {
+    key: 'smoke-spiral', label: 'Smoke Spiral', collection: 'Prism', rarity: 'Anomaly',
+    description: 'A slow, sculptural spiral of smoke turns the background into a living study of air and light.'
+  },
+  'lumen-flare': {
+    key: 'lumen-flare', label: 'Lumen Flare', collection: 'Signal', rarity: 'Mythic',
+    description: 'A distant lens flare blooms and recedes like a signal arriving through the dark.'
   }
 };
 

@@ -41,6 +41,48 @@
       fallback: '/atmospheres/snowfall/snowfall-loop-v1.mp4',
       poster: '/atmospheres/snowfall/snowfall-loop-v1-poster.png',
       className: 'snow'
+    }),
+    'silk-folds': Object.freeze({
+      video: '/atmospheres/silk-folds/silk-folds-loop-v1.webm',
+      fallback: '/atmospheres/silk-folds/silk-folds-loop-v1.mp4',
+      poster: '/atmospheres/silk-folds/silk-folds-loop-v1-poster.png',
+      className: 'silk'
+    }),
+    'glass-caustics': Object.freeze({
+      video: '/atmospheres/glass-caustics/glass-caustics-loop-v1.webm',
+      fallback: '/atmospheres/glass-caustics/glass-caustics-loop-v1.mp4',
+      poster: '/atmospheres/glass-caustics/glass-caustics-loop-v1-poster.png',
+      className: 'caustics'
+    }),
+    'cinder-drift': Object.freeze({
+      video: '/atmospheres/cinder-drift/cinder-drift-loop-v1.webm',
+      fallback: '/atmospheres/cinder-drift/cinder-drift-loop-v1.mp4',
+      poster: '/atmospheres/cinder-drift/cinder-drift-loop-v1-poster.png',
+      className: 'cinder'
+    }),
+    'night-pollen': Object.freeze({
+      video: '/atmospheres/night-pollen/night-pollen-loop-v1.webm',
+      fallback: '/atmospheres/night-pollen/night-pollen-loop-v1.mp4',
+      poster: '/atmospheres/night-pollen/night-pollen-loop-v1-poster.png',
+      className: 'pollen'
+    }),
+    'paper-shadow': Object.freeze({
+      video: '/atmospheres/paper-shadow/paper-shadow-loop-v1.webm',
+      fallback: '/atmospheres/paper-shadow/paper-shadow-loop-v1.mp4',
+      poster: '/atmospheres/paper-shadow/paper-shadow-loop-v1-poster.png',
+      className: 'paper'
+    }),
+    'smoke-spiral': Object.freeze({
+      video: '/atmospheres/smoke-spiral/smoke-spiral-loop-v1.webm',
+      fallback: '/atmospheres/smoke-spiral/smoke-spiral-loop-v1.mp4',
+      poster: '/atmospheres/smoke-spiral/smoke-spiral-loop-v1-poster.png',
+      className: 'smoke'
+    }),
+    'lumen-flare': Object.freeze({
+      video: '/atmospheres/lumen-flare/lumen-flare-loop-v1.webm',
+      fallback: '/atmospheres/lumen-flare/lumen-flare-loop-v1.mp4',
+      poster: '/atmospheres/lumen-flare/lumen-flare-loop-v1-poster.png',
+      className: 'lumen'
     })
   });
 
@@ -117,6 +159,13 @@
   .profile-atmosphere__video--dust { opacity: .24; filter: grayscale(1) contrast(1.12) brightness(1.08) drop-shadow(0 0 6px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--ink { opacity: .17; filter: saturate(1.2) drop-shadow(0 0 8px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--snow { opacity: .23; filter: contrast(1.12) brightness(1.08) drop-shadow(0 0 6px var(--atmosphere-color-2)); }
+  .profile-atmosphere__video--silk { opacity: .22; filter: contrast(1.14) brightness(1.05) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
+  .profile-atmosphere__video--caustics { opacity: .14; filter: contrast(1.04) brightness(.92) drop-shadow(0 0 5px var(--atmosphere-color-2)); }
+  .profile-atmosphere__video--cinder { opacity: .24; filter: sepia(.16) saturate(1.1) brightness(1.08) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
+  .profile-atmosphere__video--pollen { opacity: .25; filter: contrast(1.16) brightness(1.1) drop-shadow(0 0 6px var(--atmosphere-color-4)); }
+  .profile-atmosphere__video--paper { opacity: .16; filter: contrast(1.1) brightness(1.08) drop-shadow(0 0 5px var(--atmosphere-color-1)); }
+  .profile-atmosphere__video--smoke { opacity: .16; filter: contrast(1.08) brightness(1.05) drop-shadow(0 0 8px var(--atmosphere-color-2)); }
+  .profile-atmosphere__video--lumen { opacity: .13; filter: contrast(1.12) brightness(1.1) drop-shadow(0 0 9px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--poster { opacity: .14; }
 
   @media (prefers-reduced-motion: reduce) {

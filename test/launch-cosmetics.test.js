@@ -19,7 +19,7 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(CURSOR_TRAIL_KEYS.length, 16);
   assert.equal(AVATAR_EFFECT_KEYS.length, 18);
   assert.equal(PAID_PROFILE_LAYOUT_KEYS.length, 5);
-  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 5);
+  assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 12);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
   assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 18);
   assert.equal(new Set(PAID_PROFILE_LAYOUT_KEYS).size, 5);
@@ -33,6 +33,13 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(getAtmosphereDefinition('profile_atmosphere_dust_light')?.key, 'dust-light');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_ink_bloom')?.key, 'ink-bloom');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_snowfall')?.key, 'snowfall');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_silk_folds')?.key, 'silk-folds');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_glass_caustics')?.key, 'glass-caustics');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_cinder_drift')?.key, 'cinder-drift');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_night_pollen')?.key, 'night-pollen');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_paper_shadow')?.key, 'paper-shadow');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_smoke_spiral')?.key, 'smoke-spiral');
+  assert.equal(getAtmosphereDefinition('profile_atmosphere_lumen_flare')?.key, 'lumen-flare');
 });
 
 test('authored avatar anchors resolve raster plates and the shared texture atlas', async () => {
@@ -71,6 +78,13 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.match(atmosphereSource, /dust-light-loop-v1\.webm/);
   assert.match(atmosphereSource, /ink-bloom-loop-v1\.webm/);
   assert.match(atmosphereSource, /snowfall-loop-v1\.webm/);
+  assert.match(atmosphereSource, /silk-folds-loop-v1\.webm/);
+  assert.match(atmosphereSource, /glass-caustics-loop-v1\.webm/);
+  assert.match(atmosphereSource, /cinder-drift-loop-v1\.webm/);
+  assert.match(atmosphereSource, /night-pollen-loop-v1\.webm/);
+  assert.match(atmosphereSource, /paper-shadow-loop-v1\.webm/);
+  assert.match(atmosphereSource, /smoke-spiral-loop-v1\.webm/);
+  assert.match(atmosphereSource, /lumen-flare-loop-v1\.webm/);
   assert.match(atmosphereSource, /autoplay muted loop playsinline/);
   assert.match(atmosphereSource, /mix-blend-mode: screen/);
   assert.doesNotMatch(atmosphereSource, /mix-blend-mode:soft-light/);
@@ -81,7 +95,7 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   const dropletsVideo = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.webm', import.meta.url));
   const dropletsFallback = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.mp4', import.meta.url));
   const dropletsPoster = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.png', import.meta.url));
-  const authoredMedia = await Promise.all(['dust-light', 'ink-bloom', 'snowfall'].map(async key => ({
+  const authoredMedia = await Promise.all(['dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare'].map(async key => ({
     video: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-v1.webm`, import.meta.url)),
     fallback: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-v1.mp4`, import.meta.url)),
     poster: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-v1-poster.png`, import.meta.url))
@@ -146,11 +160,12 @@ test('seed and migrations contain the launch products and version bumps', async 
   assert.equal((seed.match(/'cursor_trail_[a-z0-9_]+'/g) || []).length, 16);
   assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 18);
   assert.equal((seed.match(/'profile_layout_[a-z0-9_]+'/g) || []).length, 5);
-  assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 5);
+  assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 12);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
   const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');
   const atmosphereExpansionMigration = await read('supabase/migrations/20260804210000_atmosphere_expansion.sql');
   const atmosphereCurationMigration = await read('supabase/migrations/20260804223000_curate_atmosphere_catalog.sql');
+  const atmosphereReplacementMigration = await read('supabase/migrations/20260804230000_authored_atmosphere_replacements.sql');
   assert.match(atmosphereMigration, /Expected 122 active catalog rows/);
   assert.match(dropletsMigration, /Expected 123 active catalog rows/);
   assert.match(atmosphereExpansionMigration, /Expected 126 active catalog rows/);
@@ -165,4 +180,13 @@ test('seed and migrations contain the launch products and version bumps', async 
   assert.match(atmosphereCurationMigration, /Expected 119 active catalog rows/);
   assert.match(atmosphereCurationMigration, /Expected 5 active Profile Atmosphere rows/);
   assert.match(atmosphereCurationMigration, /DELETE FROM public\.shop_items/);
+  assert.match(atmosphereReplacementMigration, /silk-folds/);
+  assert.match(atmosphereReplacementMigration, /glass-caustics/);
+  assert.match(atmosphereReplacementMigration, /cinder-drift/);
+  assert.match(atmosphereReplacementMigration, /night-pollen/);
+  assert.match(atmosphereReplacementMigration, /paper-shadow/);
+  assert.match(atmosphereReplacementMigration, /smoke-spiral/);
+  assert.match(atmosphereReplacementMigration, /lumen-flare/);
+  assert.match(atmosphereReplacementMigration, /Expected 126 active catalog rows/);
+  assert.match(atmosphereReplacementMigration, /Expected 12 active Profile Atmosphere rows/);
 });

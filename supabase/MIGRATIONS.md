@@ -79,6 +79,20 @@ Atmosphere quality curation:
   allowlist and bumps `shop_version` to `2026-08-04T22:30:00Z`; the final active
   catalog is 119 rows with five `profile_atmosphere` rows.
 
+Authored atmosphere replacements:
+
+- `migrations/20260804230000_authored_atmosphere_replacements.sql` adds seven
+  Pexels-sourced video atmospheres: `silk-folds`, `glass-caustics`,
+  `cinder-drift`, `night-pollen`, `paper-shadow`, `smoke-spiral`, and
+  `lumen-flare`.
+- The migration is additive for the retained catalog and does not reuse retired
+  product keys or restore retired inventory. It extends both renderer checks,
+  synchronizes `shop_version` to `2026-08-04T23:00:00Z`, and verifies 126 active
+  catalog rows with 12 active `profile_atmosphere` rows.
+- Deploy the client media and renderer with the migration, then verify catalog
+  counts, renderer resolution, and profile rendering before invalidating cached
+  shop data.
+
 Recommended pre-migration backup command (run only by the authorized DB owner):
 
 ```bash

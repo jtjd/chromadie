@@ -208,7 +208,14 @@ INSERT INTO public.shop_items (
   ('profile_atmosphere_droplets_glass', 'Droplets on Glass', 'profile_atmosphere', 240000, 'renderer', 'droplets-glass', NULL, NULL, 'Rare', 'Realistic beads and trails cling to a pane, catching the daily color without obscuring the profile.', 'Archive', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_dust_light', 'Dustlight', 'profile_atmosphere', 280000, 'renderer', 'dust-light', NULL, NULL, 'Rare', 'Fine particles drift through a single beam of light, revealing depth without filling the page.', 'Archive', false, 'earned', NULL, 'active'),
   ('profile_atmosphere_ink_bloom', 'Ink Bloom', 'profile_atmosphere', 520000, 'renderer', 'ink-bloom', NULL, NULL, 'Epic', 'A slow plume of ink unfurls like a living cloud, turning the profile into a moving study in density.', 'Prism', false, 'earned', NULL, 'active'),
-  ('profile_atmosphere_snowfall', 'Snowfall', 'profile_atmosphere', 300000, 'renderer', 'snowfall', NULL, NULL, 'Rare', 'Quiet flakes cross a black winter field in a soft, unhurried descent.', 'Nocturne', false, 'earned', NULL, 'active')
+  ('profile_atmosphere_snowfall', 'Snowfall', 'profile_atmosphere', 300000, 'renderer', 'snowfall', NULL, NULL, 'Rare', 'Quiet flakes cross a black winter field in a soft, unhurried descent.', 'Nocturne', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_silk_folds', 'Silk Folds', 'profile_atmosphere', 320000, 'renderer', 'silk-folds', NULL, NULL, 'Rare', 'Moving folds of black silk carry a restrained sheen through the profile without adding a frame.', 'Prism', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_glass_caustics', 'Glass Caustics', 'profile_atmosphere', 460000, 'renderer', 'glass-caustics', NULL, NULL, 'Epic', 'Refracted water light breaks across the page like a quiet pane catching the daily color.', 'Archive', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_cinder_drift', 'Cinder Drift', 'profile_atmosphere', 430000, 'renderer', 'cinder-drift', NULL, NULL, 'Epic', 'Fine sparks lift through a dark field, adding a warm trace of motion behind the identity.', 'Ember', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_night_pollen', 'Night Pollen', 'profile_atmosphere', 340000, 'renderer', 'night-pollen', NULL, NULL, 'Rare', 'Sparse points of out-of-focus light drift across a nocturnal field with a photographic softness.', 'Nocturne', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_paper_shadow', 'Paper Shadow', 'profile_atmosphere', 300000, 'renderer', 'paper-shadow', NULL, NULL, 'Rare', 'Crumpled black paper gives the atmosphere a tactile surface and a quiet record of pressure.', 'Archive', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_smoke_spiral', 'Smoke Spiral', 'profile_atmosphere', 580000, 'renderer', 'smoke-spiral', NULL, NULL, 'Anomaly', 'A slow, sculptural spiral of smoke turns the background into a living study of air and light.', 'Prism', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_lumen_flare', 'Lumen Flare', 'profile_atmosphere', 640000, 'renderer', 'lumen-flare', NULL, NULL, 'Mythic', 'A distant lens flare blooms and recedes like a signal arriving through the dark.', 'Signal', false, 'earned', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,
@@ -224,7 +231,7 @@ ON CONFLICT (item_key) DO UPDATE SET
   catalog_status = EXCLUDED.catalog_status;
 
 INSERT INTO public.meta (key, value) VALUES
-('shop_version', '2026-08-04T22:30:00Z'),
+('shop_version', '2026-08-04T23:00:00Z'),
 ('cotw_target', '73,114,201'),
 ('official_launch_at', '2026-07-11T00:00:00Z'),
 ('founder_window_ends_at', '2026-08-11T00:00:00Z')
