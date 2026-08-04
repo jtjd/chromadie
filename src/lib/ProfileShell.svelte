@@ -666,8 +666,19 @@
       var(--color-canvas-deep);
   }
 
-  :global(.profile-shell__cursor-layer) { z-index: 0 !important; }
-  :global(.profile-shell__atmosphere-layer) { z-index: 0; opacity: .62; }
+  /* Public-profile visuals belong to the viewport, not the scrolling content.
+   * Keep the editor preview bounded so its effects cannot bleed into settings. */
+  :global(.profile-shell-page:not(.profile-shell-page--preview) .profile-shell__cursor-layer) {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 0 !important;
+  }
+  :global(.profile-shell-page:not(.profile-shell-page--preview) .profile-shell__atmosphere-layer) {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 0;
+    opacity: .62;
+  }
 
   .profile-shell__opening,
   .profile-shell__supporting,
@@ -711,7 +722,7 @@
     100% { transform: scale(1); box-shadow: none; }
   }
 
-  .profile-shell__media-background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
+  .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
   .profile-shell__opening-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr); align-items: center; gap: clamp(2rem, 6vw, 7rem); width: min(100%, 70rem); margin-inline: auto; }
   .profile-shell__identity { min-width: 0; }
 

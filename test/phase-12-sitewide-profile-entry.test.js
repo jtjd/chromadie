@@ -41,7 +41,7 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.doesNotMatch(header, />Profile</);
   assert.match(header, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);
   assert.match(header, /isProfileMode/);
-  assert.match(header, /Edit profile/);
+  assert.match(header, />Edit</);
   assert.match(header, /site-mode-header--profile \.site-mode-header__context \{ display: flex/);
   assert.doesNotMatch(header, /navigator\.share/);
   assert.doesNotMatch(header, /Share profile/);

@@ -65,7 +65,7 @@
     {#if isProfileMode}
       <div class="site-mode-header__context" aria-label="Profile actions">
         {#if isOwner}
-          <button type="button" class="site-mode-header__context-action" aria-label="Edit your profile" on:click={editProfile}>Edit profile <span aria-hidden="true">↗</span></button>
+          <button type="button" class="site-mode-header__account-action" aria-label="Edit your profile" on:click={editProfile}>Edit</button>
         {/if}
       </div>
     {/if}
@@ -105,7 +105,7 @@
 
       {#if isProfileMode}
         <div class="site-mode-header__mobile-context" aria-label="Profile actions">
-          {#if isOwner}<button type="button" on:click={editProfile}>Edit profile <span aria-hidden="true">↗</span></button>{/if}
+          {#if isOwner}<button type="button" class="site-mode-header__account-action" aria-label="Edit your profile" on:click={editProfile}>Edit</button>{/if}
         </div>
       {/if}
 
@@ -200,10 +200,11 @@
     padding: 0.9rem clamp(1.25rem, 4vw, 3rem);
     border: 0;
     border-radius: 0;
-    background: transparent;
+    background: transparent !important;
+    background-color: transparent;
     color: rgba(242, 240, 235, 0.72);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .site-mode-header--profile .site-mode-header__brand {
@@ -217,9 +218,6 @@
   .site-mode-header--profile .site-mode-header__wordmark > span { color: #cdd2ff; }
   .site-mode-header--profile .site-mode-header__nav-space { display: none; }
   .site-mode-header--profile .site-mode-header__context { display: flex; align-items: center; }
-  .site-mode-header--profile .site-mode-header__context-action { min-height: 2rem; padding: 0.48rem 0.7rem; border: 1px solid color-mix(in srgb, var(--site-header-accent) 42%, rgba(255, 255, 255, 0.12)); border-radius: 0.35rem; background: color-mix(in srgb, var(--site-header-accent) 9%, transparent); color: rgba(242, 240, 235, 0.82); font: 600 0.7rem / 1 var(--site-header-font); letter-spacing: 0.02em; cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease; }
-  .site-mode-header--profile .site-mode-header__context-action:hover { border-color: color-mix(in srgb, var(--site-header-accent) 72%, white); background: color-mix(in srgb, var(--site-header-accent) 16%, transparent); color: #fff; }
-  .site-mode-header--profile .site-mode-header__context-action:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
 
   .site-mode-header--profile .site-mode-header__right {
     padding: 0;
@@ -284,9 +282,6 @@
   }
   .site-mode-header__nav-space { min-width: 0; }
   .site-mode-header__context { flex: 0 0 auto; }
-  .site-mode-header__context-action { border: 1px solid color-mix(in srgb, var(--site-header-accent) 40%, rgba(255, 255, 255, 0.14)) !important; background: color-mix(in srgb, var(--site-header-accent) 12%, transparent) !important; color: rgba(246, 248, 255, 0.9) !important; }
-  .site-mode-header__context-action:hover { border-color: color-mix(in srgb, var(--site-header-accent) 72%, rgba(255, 255, 255, 0.2)) !important; background: color-mix(in srgb, var(--site-header-accent) 20%, transparent) !important; }
-  .site-mode-header__context-action span { margin-left: 0.25rem; color: color-mix(in srgb, var(--site-header-accent) 78%, white); }
 
   .site-mode-header__nav {
     justify-content: center;
