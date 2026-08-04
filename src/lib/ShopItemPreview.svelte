@@ -20,17 +20,7 @@
     Nocturne: '#B5A9FF',
     'Static Bloom': '#8DDCFF'
   });
-  const SLOT_TONES = Object.freeze({
-    name_font: '#0E1115',
-    name_material: '#0E131A',
-    name_motion: '#120F16',
-    profile_border: '#0D140E',
-    avatar_effect: '#120E15',
-    cursor_trail: '#0B1318',
-    profile_layout: '#100F16',
-    profile_atmosphere: '#0B1313',
-    consumable: '#110D17'
-  });
+  const PREVIEW_SURFACE = '#090C11';
 
   $: nameLayerLoadout = item?.slot === 'name_font'
     ? { fontKey: item.css_value }
@@ -45,7 +35,6 @@
   $: isAtmosphere = item?.slot === 'profile_atmosphere';
   $: cursorPreviewKey = getCursorTrailKey(item?.css_value);
   $: previewAccent = COLLECTION_TONES[item?.collection] || '#C7B4FF';
-  $: previewSurface = SLOT_TONES[item?.slot] || '#14161D';
   $: previewType = item?.slot === 'name_font'
     ? 'font'
     : item?.slot === 'name_material'
@@ -64,7 +53,7 @@
                   ? 'atmosphere'
                   : 'utility';
   $: previewClasses = `shop-preview-area shop-preview-area--${previewType}`;
-  $: previewStyle = `--preview-accent:${previewAccent}; --preview-surface:${previewSurface};`;
+  $: previewStyle = `--preview-accent:${previewAccent}; --preview-surface:${PREVIEW_SURFACE};`;
 
   let cursorPoint = { x: 50, y: 50 };
 
@@ -149,7 +138,7 @@
   .shop-preview-text--utility { flex-direction: column; gap: 0.65rem; color: var(--shop-muted, var(--color-ink-muted)); font: 600 0.95rem var(--shop-mono, var(--font-mono-stack)); }
   .preview-utility-mark { color: #d8ccff; font-size: 1.8rem; }
   .shop-avatar-preview { display:grid; place-items:center; width:8rem; height:8rem; }
-  .shop-avatar-preview :global(.avatar-effect) { display:grid; place-items:center; width:6.7rem; height:6.7rem; border:1px solid color-mix(in srgb, var(--preview-accent, #fff) 54%, white); border-radius:50%; background:var(--preview-surface, #0b0e14); }
+  .shop-avatar-preview :global(.avatar-effect) { display:grid; place-items:center; width:6.7rem; height:6.7rem; border:1px solid color-mix(in srgb, var(--preview-accent, #fff) 54%, white); border-radius:50%; background:var(--preview-surface, #090c11); }
   .shop-avatar-preview__media { position:relative; z-index:2; display:block; width:100%; height:100%; border-radius:50%; object-fit:cover; }
   .shop-cursor-preview { position:relative; width:92%; height:82%; }
   .shop-cursor-preview__line { position:absolute; left:5%; right:13%; top:48%; height:2px; border-radius:99px; background:linear-gradient(90deg, transparent, #8ddcff 22%, #b7fd4d 70%, transparent); transform:rotate(-16deg); transform-origin:right center; box-shadow:0 0 10px rgba(141,220,255,.45); }
@@ -173,8 +162,8 @@
   .shop-cursor-preview--marker-stroke .shop-cursor-preview__line { height:6px; border-radius:2px; background:#e7d4c4; opacity:.55; }
   .shop-cursor-preview--solar-sparks .shop-cursor-preview__line { background:linear-gradient(90deg,transparent,#ffd77a 35%,#fff 70%,transparent); box-shadow:0 0 14px rgba(255,215,122,.7); }
   .shop-cursor-preview--void-lensing .shop-cursor-preview__line { background:linear-gradient(90deg,transparent,#9c7bff,#66e8ff,transparent); }
-  .shop-layout-preview { position:relative; width:88%; height:82%; border:1px solid color-mix(in srgb, var(--preview-accent, #cdd2ff) 62%, white); border-radius:5px; background:color-mix(in srgb, var(--preview-surface, #0b0e14) 84%, white); }
-  .shop-layout-preview span { position:absolute; display:block; border:1px solid color-mix(in srgb, var(--preview-accent, #cdd2ff) 52%, white); background:color-mix(in srgb, var(--preview-accent, #cdd2ff) 14%, transparent); }
+  .shop-layout-preview { position:relative; width:88%; height:82%; border:1px solid rgba(205,210,255,.52); border-radius:5px; background:#0D1117; }
+  .shop-layout-preview span { position:absolute; display:block; border:1px solid rgba(205,210,255,.35); background:rgba(205,210,255,.07); }
   .shop-layout-preview__rail { left:7%; top:10%; bottom:10%; width:19%; }
   .shop-layout-preview__hero { left:33%; right:8%; top:10%; height:25%; }
   .shop-layout-preview__module--one { left:33%; width:28%; top:43%; height:20%; }

@@ -4,7 +4,7 @@
 
 - Reworked Catalog and Owned product cards into one consistent specimen-card
   system: the catalog now gives each piece a larger visual-first tile with a
-  near-black slot-tinted 16:9 stage, explicit slot eyebrow, quiet
+  neutral near-black 16:9 stage, explicit slot eyebrow, quiet
   rarity/collection footer, and restrained purchase action.
 - Expanded the catalog to a two-column gallery at desktop widths so the product
   specimens are not compressed between the navigation rail and live profile.

@@ -160,6 +160,8 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(contextual, /aria-pressed=\{paused\}/);
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview/);
   assert.match(itemPreview, /COLLECTION_TONES/);
+  assert.match(itemPreview, /PREVIEW_SURFACE = '#090C11'/);
+  assert.doesNotMatch(itemPreview, /SLOT_TONES/);
   assert.match(itemPreview, /previewClasses = `shop-preview-area shop-preview-area--\$\{previewType\}`/);
   assert.match(itemPreview, /background: var\(--preview-surface/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area \{[^}]*border: 1px/);
