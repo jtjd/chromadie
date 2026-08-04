@@ -78,7 +78,7 @@
   .avatar-effect { position:relative; isolation:isolate; }
   .avatar-effect > :global(img), .avatar-effect > :global(.identity-card__avatar-glow), .avatar-effect > :global(.identity-card__avatar-letter), .avatar-effect > :global(.identity-card__avatar-mark), .avatar-effect > :global(.discovery-card__avatar-initial), .avatar-effect > :global(.home-rank-row__avatar) { position:relative; z-index:2; }
   .avatar-effect__authored-plate, .avatar-effect > .avatar-effect__authored-plate { position:absolute; z-index:3; inset:-25%; width:150%; height:150%; max-width:none; object-fit:contain; pointer-events:none; user-select:none; }
-  .avatar-effect__duplicate { position:absolute; z-index:1; inset:0; width:100%; height:100%; object-fit:cover; border-radius:inherit; clip-path:circle(50% at 50% 50%); opacity:.2; transform:translate(4px, -1px) scale(1.012); filter:saturate(1.55) contrast(1.1) hue-rotate(14deg); mix-blend-mode:screen; pointer-events:none; }
+  .avatar-effect__duplicate, .avatar-effect > .avatar-effect__duplicate { position:absolute; z-index:1; inset:0; width:100%; height:100%; object-fit:cover; border-radius:inherit; clip-path:circle(50% at 50% 50%); opacity:.2; transform:translate(4px, -1px) scale(1.012); filter:saturate(1.55) contrast(1.1) hue-rotate(14deg); mix-blend-mode:screen; pointer-events:none; }
   .avatar-effect__duplicate--fallback { display:grid; place-items:center; color:rgba(245,247,255,.74); font:600 2.2rem/1 var(--font-display-stack); letter-spacing:-.08em; }
   .avatar-effect--animated .avatar-effect__duplicate { animation:avatar-effect-ghost 3.8s steps(2,end) infinite; }
   .avatar-effect__halo, .avatar-effect__ring, .avatar-effect__arc, .avatar-effect__marks, .avatar-effect__scan, .avatar-effect__satellites, .avatar-effect__crown, .avatar-effect__laurel, .avatar-effect__tear { position:absolute; z-index:3; pointer-events:none; content:''; }
@@ -124,6 +124,7 @@
   .avatar-effect--animated.avatar-effect--prism-orbit .avatar-effect__authored-plate { animation:avatar-authored-prism 8s cubic-bezier(.45,0,.25,1) infinite; }
   .avatar-effect--animated.avatar-effect--ember-crown .avatar-effect__authored-plate { animation:avatar-authored-crown 4.6s ease-in-out infinite; }
   .avatar-effect--animated.avatar-effect--ghost-double .avatar-effect__authored-plate { animation:avatar-authored-ghost 4.4s steps(3,end) infinite; }
+  .avatar-effect--ember-crown .avatar-effect__authored-plate { transform:translateY(-22%) scale(.94); }
 
   .avatar-effect--animated.avatar-effect--neon-halo .avatar-effect__halo, .avatar-effect--animated.avatar-effect--daily-aura .avatar-effect__halo { animation:avatar-effect-breathe 2.8s ease-in-out infinite; }
   .avatar-effect--animated.avatar-effect--signal-ring .avatar-effect__ring, .avatar-effect--animated.avatar-effect--chroma-arc .avatar-effect__arc { animation:avatar-effect-spin 5.5s linear infinite; }
@@ -135,7 +136,7 @@
   @keyframes avatar-effect-scan { 0%,100% { transform:translateY(-35%); opacity:.1; } 50% { transform:translateY(35%); opacity:.8; } }
   @keyframes avatar-effect-offset { 0%,80%,100% { opacity:.1; } 84% { transform:translateX(-2px); opacity:.7; } 88% { transform:translateX(2px); opacity:.45; } }
   @keyframes avatar-authored-prism { 0%,100% { transform:rotate(-2deg) scale(.985); filter:saturate(.94) brightness(.96); } 42% { transform:rotate(1.5deg) scale(1.01); filter:saturate(1.12) brightness(1.05); } 74% { transform:rotate(-.5deg) scale(1); filter:saturate(1) brightness(1); } }
-  @keyframes avatar-authored-crown { 0%,100% { transform:translateY(2px) rotate(-.8deg); filter:brightness(.94); } 45% { transform:translateY(-2px) rotate(.5deg); filter:brightness(1.1); } 70% { transform:translateY(0) rotate(-.2deg); filter:brightness(1); } }
+  @keyframes avatar-authored-crown { 0%,100% { transform:translateY(calc(-22% + 2px)) scale(.94) rotate(-.8deg); filter:brightness(.94); } 45% { transform:translateY(calc(-22% - 2px)) scale(.96) rotate(.5deg); filter:brightness(1.1); } 70% { transform:translateY(-22%) scale(.94) rotate(-.2deg); filter:brightness(1); } }
   @keyframes avatar-authored-ghost { 0%,64%,100% { transform:translateX(0) scale(1); filter:saturate(.92) brightness(.96); opacity:.86; } 70% { transform:translateX(-3px) scale(1.018); filter:saturate(1.18) brightness(1.08); opacity:1; } 76% { transform:translateX(2px) scale(.992); filter:saturate(1.08) brightness(1.02); opacity:.9; } }
   @keyframes avatar-effect-ghost { 0%,70%,100% { opacity:.12; transform:translate(4px,-1px) scale(1.012); clip-path:circle(50% at 50% 50%); } 74% { opacity:.36; transform:translate(-3px,1px) scale(1.018); clip-path:polygon(0 18%, 100% 18%, 100% 34%, 0 34%, 0 58%, 100% 58%, 100% 72%, 0 72%); } 79% { opacity:.2; transform:translate(3px,0) scale(1.014); clip-path:circle(50% at 50% 50%); } }
   .avatar-effect--compact .avatar-effect__halo { filter:none; }
