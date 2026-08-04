@@ -20,7 +20,7 @@
     cursor_trail: 'Cursor',
     profile_layout: 'Layout',
     consumable: 'Utility'
-  }[item?.slot] || 'Piece';
+  }[item?.slot] || 'Cosmetic';
 
 </script>
 

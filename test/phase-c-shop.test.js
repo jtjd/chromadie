@@ -35,14 +35,18 @@ test('shop shell is one profile studio with Catalog and Owned surfaces', async (
   const rail = await readProjectFile('src/lib/ShopRail.svelte');
   const app = await readProjectFile('src/App.svelte');
 
-  assert.match(shop, /Profile studio/);
-  assert.match(shop, /Shape <span>your identity\.<\/span>/);
+  assert.match(shop, /Cosmetic shop/);
+  assert.match(shop, /Profile <span>cosmetics\.<\/span>/);
   assert.match(shop, /<ShopRail/);
   assert.match(shop, /<ShopContextualPreview/);
   assert.match(shop, /walletBalance=\{fittingRoom\.balance\}/);
   assert.match(shop, /font:600 \.8rem var\(--shop-font\)/);
   assert.match(rail, /\{ id: 'browse', number: '01', label: 'Catalog'/);
   assert.match(rail, /\{ id: 'collection', number: '02', label: 'Owned'/);
+  assert.match(shop, /\{ id: 'featured', label: 'Featured'/);
+  assert.match(shop, /activeRarity=\{browseRarity\}/);
+  assert.match(rail, /Filter cosmetics/);
+  assert.match(rail, /shop-rail__rarity-swatch/);
   assert.doesNotMatch(rail, /<small>/);
   assert.doesNotMatch(shop, /ShopHome|ShopStudio/);
   assert.doesNotMatch(shop, /activeView === 'home'/);
@@ -63,7 +67,7 @@ test('catalog removes redundant context, bounds results, and keeps one profile p
   assert.match(source, /SHOP_OWNERSHIP_FILTERS/);
   assert.match(source, /INITIAL_VISIBLE_ITEMS = 18/);
   assert.match(source, /displayedItems = showAllItems/);
-  assert.match(source, /Load more pieces/);
+  assert.match(source, /Load more cosmetics/);
   assert.doesNotMatch(source, /Choose a <span>piece\.|shop-browse-heading-side/);
   assert.doesNotMatch(source, /shop-result-count/);
   assert.match(source, /grid-template-columns:repeat\(3/);
@@ -89,6 +93,7 @@ test('product cards use compact visual previews with explicit selection actions'
   assert.match(source, /aspect-ratio:1\.82 \/ 1/);
   assert.match(source, /:global\(\.app-main--site\) \.shop-item \{ padding:0; border:1px/);
   assert.match(source, /@media \(max-width: 420px\)/);
+  assert.doesNotMatch(source, /border specimen/);
 });
 
 test('inspector purchases reuse the existing confirmation and RPC boundary', async () => {
@@ -143,11 +148,11 @@ test('collection keeps ownership categories concise and the empty state actionab
   const rail = await readProjectFile('src/lib/ShopRail.svelte');
   const shop = await readProjectFile('src/lib/Shop.svelte');
 
-  assert.match(collection, /Pieces you own\./);
-  assert.match(shop, /label: 'All pieces'/);
+  assert.match(collection, /Your cosmetics\./);
+  assert.match(shop, /label: 'All cosmetics'/);
   assert.match(rail, /Owned categories/);
   assert.match(collection, /section = 'all'/);
-  assert.match(collection, /Search your pieces/);
+  assert.match(collection, /Search your cosmetics/);
   assert.match(collection, /Browse catalog/);
   assert.match(collection, /inventoryCounts/);
   assert.match(collection, /equippedItems/);
@@ -170,6 +175,8 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(itemPreview, /PREVIEW_SURFACE = '#090C11'/);
   assert.doesNotMatch(itemPreview, /SLOT_TONES/);
   assert.match(itemPreview, /previewClasses = `shop-preview-area shop-preview-area--\$\{previewType\}`/);
+  assert.match(itemPreview, /mode="preview" active=\{active \|\| hovered\} animated=\{active \|\| hovered\}/);
+  assert.doesNotMatch(itemPreview, /profile atmosphere/);
   assert.match(itemPreview, /background: var\(--preview-surface/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area \{[^}]*border: 1px/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area::after/);

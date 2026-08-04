@@ -4,7 +4,7 @@
 
 - Rebuilt the Shop workspace as one fitting-room frame: a compact category
   rail, three-column Catalog gallery, and a right inspector for the live profile
-  plus the selected piece’s description, price, and purchase action.
+  plus the selected cosmetic’s description, price, and purchase action.
 - Made product cards compact visual specimens with neutral near-black stages,
   explicit Preview actions, and no purchase logic in each repeated tile.
 - Kept the shared production renderers, temporary selection behavior, existing
@@ -17,6 +17,11 @@
   controls, and the layout-status badge. The inspector profile surface is now
   transparent so atmosphere plates remain visible behind the identity, and the
   title has a restrained lavender-to-blue contrast treatment.
+- Reframed the default Catalog view as a curated Featured set, added
+  color-coded rarity filters to the rail, strengthened the EP balance signal,
+  and replaced shop-facing “piece” language with “cosmetic.” Atmosphere cards
+  now reveal their real video loop on hover or selection without specimen text
+  or edge bars.
 
 ## Atmosphere replacement plates — 2026-08-04
 

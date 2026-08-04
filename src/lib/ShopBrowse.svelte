@@ -9,7 +9,8 @@
   } from './shopCatalog.js';
 
   export let items = [];
-  export let section = 'overview';
+  export let section = 'featured';
+  export let activeRarity = 'all';
   /** @type {any} */
   export let selectedItem = null;
   /** @type {any} */
@@ -57,6 +58,7 @@
     searchQuery = '';
     selectedCollection = 'all';
     selectedRarity = 'all';
+    dispatch('rarity', 'all');
     selectedOwnership = 'all';
     affordableOnly = false;
     sortMode = 'curated';
@@ -68,6 +70,15 @@
     dispatch('select', item);
   }
 
+  function setRarity(rarity) {
+    selectedRarity = rarity;
+    dispatch('rarity', rarity);
+    selectedOwnership = 'all';
+    showAllItems = false;
+  }
+
+  $: if (selectedRarity !== activeRarity) selectedRarity = activeRarity;
+
 </script>
 
 <section class="shop-browse" class:shop-browse--names={isNameBrowse} aria-label={isNameBrowse ? 'Name catalog' : 'Catalog'}>
@@ -77,7 +88,7 @@
       <div class="shop-browse-toolbar">
         <label class="shop-search">
           <span aria-hidden="true">⌕</span>
-          <input bind:value={searchQuery} type="search" aria-label={isNameBrowse ? 'Search name effects' : 'Search catalog'} placeholder={isNameBrowse ? 'Search fonts, materials, motion' : 'Search pieces or collections'} />
+          <input bind:value={searchQuery} type="search" aria-label={isNameBrowse ? 'Search name effects' : 'Search catalog'} placeholder={isNameBrowse ? 'Search fonts, materials, motion' : 'Search cosmetics or collections'} />
         </label>
         <label class="shop-sort"><span class="shop-filter-label">Sort</span><select bind:value={sortMode} aria-label="Sort catalog">{#each SHOP_SORTS as sort (sort.id)}<option value={sort.id}>{sort.label}</option>{/each}</select></label>
         <button type="button" class="shop-filter-toggle" aria-expanded={filtersOpen} aria-controls="shop-filter-panel" on:click={() => filtersOpen = !filtersOpen}>
@@ -86,11 +97,11 @@
       </div>
 
       <div class="shop-quick-filters" aria-label="Quick catalog filters">
-        <button type="button" class:active={selectedRarity === 'all' && selectedOwnership === 'all'} on:click={() => { selectedRarity = 'all'; selectedOwnership = 'all'; showAllItems = false; }}>All</button>
+        <button type="button" class:active={selectedRarity === 'all' && selectedOwnership === 'all'} on:click={() => setRarity('all')}>All rarities</button>
         {#each SHOP_RARITIES as rarity (rarity)}
-          <button type="button" class:active={selectedRarity === rarity} on:click={() => { selectedRarity = selectedRarity === rarity ? 'all' : rarity; selectedOwnership = 'all'; showAllItems = false; }}>{rarity}</button>
+          <button type="button" class:active={selectedRarity === rarity} on:click={() => setRarity(selectedRarity === rarity ? 'all' : rarity)}>{rarity}</button>
         {/each}
-        <button type="button" class:active={selectedOwnership === 'owned'} on:click={() => { selectedOwnership = selectedOwnership === 'owned' ? 'all' : 'owned'; selectedRarity = 'all'; showAllItems = false; }}>Owned</button>
+        <button type="button" class:active={selectedOwnership === 'owned'} on:click={() => { selectedOwnership = selectedOwnership === 'owned' ? 'all' : 'owned'; selectedRarity = 'all'; dispatch('rarity', 'all'); showAllItems = false; }}>Owned</button>
       </div>
 
       {#if filtersOpen}
@@ -98,7 +109,7 @@
           <div class="shop-filter-panel__head"><strong>Filter products</strong><button type="button" on:click={() => filtersOpen = false}>Done</button></div>
           <div class="shop-filter-panel__fields">
             <label><span class="shop-filter-label">Collection</span><select bind:value={selectedCollection}><option value="all">All collections</option>{#each collections as collection (collection)}<option value={collection}>{collection}</option>{/each}</select></label>
-            <label><span class="shop-filter-label">Rarity</span><select bind:value={selectedRarity}><option value="all">All rarities</option>{#each rarities as rarity (rarity)}<option value={rarity}>{rarity}</option>{/each}</select></label>
+            <label><span class="shop-filter-label">Rarity</span><select value={selectedRarity} on:change={event => setRarity(event.currentTarget.value)}><option value="all">All rarities</option>{#each rarities as rarity (rarity)}<option value={rarity}>{rarity}</option>{/each}</select></label>
             <label><span class="shop-filter-label">Ownership</span><select bind:value={selectedOwnership}>{#each SHOP_OWNERSHIP_FILTERS as ownership (ownership.id)}<option value={ownership.id}>{ownership.label}</option>{/each}</select></label>
             <label class="shop-affordable"><input type="checkbox" bind:checked={affordableOnly} /><span>Affordable now</span></label>
           </div>
@@ -107,7 +118,7 @@
       {/if}
 
       <div class="shop-results-header">
-        <span>{filteredItems.length} piece{filteredItems.length === 1 ? '' : 's'}</span>
+        <span>{filteredItems.length} cosmetic{filteredItems.length === 1 ? '' : 's'}</span>
         {#if activeFilterCount}<button type="button" on:click={resetFilters}>Clear filters</button>{/if}
       </div>
 
@@ -125,12 +136,12 @@
           {/each}
         </div>
         {#if displayedItems.length < filteredItems.length}
-          <button type="button" class="shop-load-more" on:click={() => showAllItems = true}>Load more pieces <span>{filteredItems.length - displayedItems.length} remaining</span></button>
+          <button type="button" class="shop-load-more" on:click={() => showAllItems = true}>Load more cosmetics <span>{filteredItems.length - displayedItems.length} remaining</span></button>
         {/if}
       {:else}
         <div class="shop-empty-state">
           <span aria-hidden="true">⌕</span>
-          <h3>No pieces match those filters.</h3>
+          <h3>No cosmetics match those filters.</h3>
           <p>Try a different search or clear the filters to see the full catalog.</p>
           <button type="button" class="shop-button shop-button--outline" on:click={resetFilters}>Reset filters</button>
         </div>

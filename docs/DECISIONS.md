@@ -6,12 +6,14 @@ Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
 The Shop is organized as one fitting-room frame: a compact category rail owns
 taxonomy, a three-column gallery owns discovery, and a right inspector owns the
-live profile plus the selected piece’s context and purchase action. Repeated
+live profile plus the selected cosmetic’s context and purchase action. Repeated
 cards expose Preview/Owned state; the inspector is the single purchase surface.
 
 Product cards use compact visual-first tiles with neutral near-black stages and
 the same card hierarchy: specimen, slot eyebrow, piece name, then quiet
-rarity/collection metadata and a Preview action.
+rarity/collection metadata and a Preview action. The default Catalog entry is a
+curated Featured set, while category and color-coded rarity filters expose the
+full catalog without making the first view feel like an inventory dump.
 Preview-specific gradients, loud color blocks, highlight overlays, and nested
 profile panels were removed because they made different renderers feel like
 unrelated UI components and weakened the actual effect.

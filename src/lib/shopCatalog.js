@@ -10,7 +10,7 @@ export const SHOP_NAME_SUBTYPES = Object.freeze([
 ]);
 
 export const SHOP_SECTIONS = Object.freeze([
-  { id: 'overview', label: 'Overview' },
+  { id: 'featured', label: 'Featured' },
   { id: 'names', label: 'Names' },
   { id: 'borders', label: 'Borders' },
   { id: 'avatar', label: 'Avatar' },
@@ -201,6 +201,7 @@ export function getShopItemState(item, equippedItems = {}, fittingRoom = createF
 }
 
 function matchesSection(item, section, subslot) {
+  if (section === 'featured') return FEATURED_KEYS.includes(item.item_key);
   if (section === 'names') {
     return NAME_SLOTS.includes(item.slot)
       && (subslot === 'all' || item.slot === subslot);

@@ -26,6 +26,7 @@
   import { getNameItemPreviewLoadout } from './name/nameLoadout.js';
   import {
     SHOP_SECTIONS,
+    SHOP_RARITIES,
     SHOP_NAME_SUBTYPES,
     createFittingRoom,
     filterShopItems,
@@ -43,7 +44,8 @@
   const VIEW_STATE_NAMESPACE = 'shop';
 
   let activeView = 'browse';
-  let browseSection = 'overview';
+  let browseSection = 'featured';
+  let browseRarity = 'all';
   let activeNameLayer = 'all';
   let ownedSection = 'all';
   let selectedItem = null;
@@ -51,7 +53,7 @@
   let profileConfig = null;
   let loadingAction = null;
   let purchaseArmedKey = null;
-  let shopNotice = 'Catalog ready. Choose a piece to preview it on your profile.';
+  let shopNotice = 'Catalog ready. Choose a cosmetic to preview it on your profile.';
   let previewDataLoading = true;
   let previewDataError = null;
   let viewStateReady = false;
@@ -72,7 +74,7 @@
   // compact context and in the real profile preview, not on every product.
   const shopAccent = SHOP_ACCENT;
   const CATALOG_NAV = Object.freeze([
-    { id: 'overview', label: 'All', description: 'Every shop piece' },
+    { id: 'featured', label: 'Featured', description: 'Curated cosmetics' },
     { id: 'names', label: 'Names', description: 'Name expression' },
     { id: 'borders', label: 'Borders', description: 'Profile edges' },
     { id: 'avatar', label: 'Avatar', description: 'Portrait effects' },
@@ -88,7 +90,7 @@
     { id: 'name_motion', label: 'Motion', description: 'Movement and reveal' }
   ]);
   const OWNED_NAV = Object.freeze([
-    { id: 'all', label: 'All pieces', description: 'Everything you own' },
+    { id: 'all', label: 'All cosmetics', description: 'Everything you own' },
     { id: 'names', label: 'Names', description: 'Name expression' },
     { id: 'profile_border', label: 'Borders', description: 'Profile edges' },
     { id: 'avatar', label: 'Avatar', description: 'Portrait effects' },
@@ -107,6 +109,14 @@
     ...section,
     count: filterShopItems(catalogItems, { section: section.id }, fittingRoom).length
   }));
+  $: rarityFilters = [
+    { id: 'all', label: 'All rarities', count: filterShopItems(catalogItems, { section: browseSection }, fittingRoom).length },
+    ...['Common', ...SHOP_RARITIES].map(rarity => ({
+      id: rarity,
+      label: rarity,
+      count: filterShopItems(catalogItems, { section: browseSection, rarity }, fittingRoom).length
+    }))
+  ].filter(option => option.id === 'all' || option.count > 0 || option.id === browseRarity);
   $: nameLayers = NAME_LAYER_NAV.map(layer => ({
     ...layer,
     count: layer.id === 'all'
@@ -138,10 +148,12 @@
     const scope = currentShopScope;
     const savedState = readViewState(VIEW_STATE_NAMESPACE, scope, {});
     const validSections = new Set(SHOP_SECTIONS.filter(section => section.id !== 'owned').map(section => section.id));
+    const savedBrowseSection = savedState?.browseSection === 'overview' ? 'featured' : savedState?.browseSection;
     // Older sessions may have saved Home, Browse, or Studio. Keep those
     // states compatible, but bring them into the unified Catalog surface.
     activeView = savedState?.activeView === 'collection' ? 'collection' : 'browse';
-    browseSection = validSections.has(savedState?.browseSection) ? savedState.browseSection : 'overview';
+    browseSection = validSections.has(savedBrowseSection) ? savedBrowseSection : 'featured';
+    browseRarity = 'all';
     restoredShopScope = scope;
     viewStateReady = true;
   }
@@ -173,7 +185,8 @@
   }
 
   function setBrowseSection(section) {
-    browseSection = CATALOG_NAV.some(item => item.id === section) ? section : 'overview';
+    browseSection = CATALOG_NAV.some(item => item.id === section) ? section : 'featured';
+    browseRarity = 'all';
     activeNameLayer = 'all';
     selectedItem = null;
     purchaseArmedKey = null;
@@ -205,7 +218,7 @@
               ? 'layouts'
         : item.slot === 'consumable'
           ? 'utility'
-          : 'overview';
+          : 'featured';
     activeNameLayer = ['name_font', 'name_material', 'name_motion'].includes(item.slot) ? item.slot : 'all';
     shopNotice = `${item.name} is previewing on your profile. Nothing is saved.`;
   }
@@ -260,9 +273,9 @@
 <main class="shop-page" style={`--shop-accent:${shopAccent};`} aria-labelledby="shop-title">
   <header class="shop-header">
     <div class="shop-heading">
-      <span class="shop-eyebrow">Profile studio</span>
-      <h1 id="shop-title">Shape <span>your identity.</span></h1>
-      <p class="shop-header-intro">Preview a piece on your profile before you commit.</p>
+      <span class="shop-eyebrow">Cosmetic shop</span>
+      <h1 id="shop-title">Profile <span>cosmetics.</span></h1>
+      <p class="shop-header-intro">Preview cosmetics on your profile before you buy.</p>
     </div>
     <div class="shop-header-actions">
       <div class="shop-daily-color" aria-live="polite" aria-label="Today’s color">
@@ -287,18 +300,21 @@
     <ShopRail
       {activeView}
       activeSection={browseSection}
+      activeRarity={browseRarity}
       {activeNameLayer}
       {ownedSection}
       catalogSections={catalogSections}
+      rarityFilters={rarityFilters}
       nameLayers={nameLayers}
       ownedSections={[...OWNED_NAV]}
       on:view={event => setView(event.detail)}
       on:section={event => setBrowseSection(event.detail)}
+      on:rarity={event => browseRarity = event.detail}
       on:nameLayer={event => setNameLayer(event.detail)}
       on:ownedSection={event => ownedSection = event.detail}
     />
 
-    <section class="shop-workspace-main" aria-label={activeView === 'browse' ? 'Shop catalog' : 'Owned shop pieces'}>
+    <section class="shop-workspace-main" aria-label={activeView === 'browse' ? 'Shop catalog' : 'Owned shop cosmetics'}>
       {#if $shopItemsLoading}
         <div class="shop-status" role="status" aria-live="polite"><span>Loading catalog</span><strong>Preparing your live collection…</strong></div>
       {:else if $shopItemsError}
@@ -307,6 +323,7 @@
         <ShopBrowse
           items={catalogItems}
           section={browseSection}
+          activeRarity={browseRarity}
           selectedItem={selectedItem}
           selectedSubslot={activeNameLayer}
           username={previewUsername}
@@ -314,6 +331,7 @@
           {fittingRoom}
           equippedItems={$equippedItems}
           on:select={event => selectItem(event.detail, 'browse')}
+          on:rarity={event => browseRarity = event.detail}
           on:reset={() => { selectedItem = null; shopNotice = 'Preview reset to your equipped look.'; }}
         />
       {:else}
@@ -324,7 +342,7 @@
           equippedItems={$equippedItems}
           profile={$profile}
           {currentRoll}
-          on:browse={() => { setView('browse'); setBrowseSection('overview'); }}
+          on:browse={() => { setView('browse'); setBrowseSection('featured'); }}
           on:select={event => selectItem(event.detail, 'collection')}
         />
       {/if}

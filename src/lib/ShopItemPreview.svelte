@@ -56,6 +56,7 @@
   $: previewStyle = `--preview-accent:${previewAccent}; --preview-surface:${PREVIEW_SURFACE};`;
 
   let cursorPoint = { x: 50, y: 50 };
+  let hovered = false;
 
   function handleCursorPreviewMove(event) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -66,7 +67,7 @@
   }
 </script>
 
-<div class={previewClasses} style={previewStyle} data-preview-source={displayColor}>
+<div class={previewClasses} style={previewStyle} data-preview-source={displayColor} role="presentation" on:pointerenter={() => hovered = true} on:pointerleave={() => hovered = false}>
   {#if item?.slot === 'profile_border'}
     <ProfileBorderEffect borderKey={item.css_value} compact={true} animated={mode === 'animated'} className="preview-border-shell">
       <div class="preview-profile-specimen">
@@ -115,13 +116,12 @@
     </div>
   {:else if isAtmosphere}
     <div class="shop-atmosphere-preview">
-      <AtmosphereLayer atmosphereKey={item.css_value} todayColor={previewAccent} recentColors={['#8DDCFF', '#B7FD4D', '#F7B7E2']} mode="card" active={false} animated={false} />
-      <div class="shop-atmosphere-preview__specimen"><span>{username}</span><small>profile atmosphere</small></div>
+      <AtmosphereLayer atmosphereKey={item.css_value} todayColor={previewAccent} recentColors={['#8DDCFF', '#B7FD4D', '#F7B7E2']} mode="preview" active={active || hovered} animated={active || hovered} />
     </div>
   {:else}
     <div class="shop-preview-text shop-preview-text--utility">
       <span class="preview-utility-mark" aria-hidden="true">✦</span>
-      <span>{item?.name || 'Catalog item'}</span>
+      <span>{item?.name || 'Catalog cosmetic'}</span>
     </div>
   {/if}
 </div>
@@ -180,10 +180,8 @@
   .shop-layout-preview--story-stack .shop-layout-preview__module { left:9%; right:9%; width:auto; }
   .shop-atmosphere-preview { position:relative; width:100%; height:100%; min-height:7.5rem; overflow:hidden; border-radius:5px; background:#070a10; }
   .shop-atmosphere-preview :global(.profile-atmosphere) { opacity:.9; }
+  .shop-atmosphere-preview :global(.profile-atmosphere__video) { inset:-12%; width:124%; height:124%; }
   .shop-atmosphere-preview :global(.profile-atmosphere__video--poster) { opacity:.42; }
-  .shop-atmosphere-preview__specimen { position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:.3rem; color:#f1f1f5; text-shadow:0 1px 1rem rgba(0,0,0,.9); }
-  .shop-atmosphere-preview__specimen span { color:var(--preview-accent, #f1f1f5); font:700 clamp(1.5rem, 4vw, 2.1rem)/1 var(--font-display-stack, var(--font-display)); letter-spacing:-.04em; }
-  .shop-atmosphere-preview__specimen small { color:rgba(232,236,248,.64); font:.55rem var(--shop-mono, var(--font-mono-stack)); letter-spacing:.11em; text-transform:uppercase; }
 
   @media (max-width: 600px) {
     .shop-preview-area { padding: 10px; }

@@ -57,7 +57,7 @@
   <div class="shop-surface-heading">
     <div>
       <span class="shop-eyebrow">Owned</span>
-      <h2 id="shop-collection-title">Pieces you own.</h2>
+      <h2 id="shop-collection-title">Your cosmetics.</h2>
       <p>Your equipped look and earned expression, in one place.</p>
     </div>
     <a class="shop-button shop-button--outline" href="/profile/settings">Open profile settings ↗</a>
@@ -78,9 +78,9 @@
     <label class="shop-collection-search">
       <span aria-hidden="true">⌕</span>
       <span class="visually-hidden">Search your collection</span>
-      <input bind:value={searchQuery} type="search" placeholder="Search your pieces" />
+      <input bind:value={searchQuery} type="search" placeholder="Search your cosmetics" />
     </label>
-    <span>{visibleOwnedItems.length} owned piece{visibleOwnedItems.length === 1 ? '' : 's'}</span>
+    <span>{visibleOwnedItems.length} owned cosmetic{visibleOwnedItems.length === 1 ? '' : 's'}</span>
   </div>
 
   {#if visibleOwnedItems.length}
@@ -100,7 +100,7 @@
     <div class="shop-empty-state">
       <span aria-hidden="true">◇</span>
       <h3>{ownedItems.length ? 'Nothing in this view yet.' : 'Your collection is empty.'}</h3>
-      <p>{ownedItems.length ? 'Try another category or clear your search.' : 'Browse the catalog to find your first piece.'}</p>
+      <p>{ownedItems.length ? 'Try another category or clear your search.' : 'Browse the catalog to find your first cosmetic.'}</p>
       <button type="button" class="shop-button shop-button--light" on:click={() => dispatch('browse')}>Browse catalog</button>
     </div>
   {/if}

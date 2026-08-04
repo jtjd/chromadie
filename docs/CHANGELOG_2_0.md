@@ -5,13 +5,17 @@ Document user-visible redesign changes by milestone.
 ## 2026-08-05 — Reframe the Shop as a fitting room
 
 - Reorganized the Shop into a category rail, compact three-column Catalog
-  gallery, and right-side inspector with the live profile, selected-item
+  gallery, and right-side inspector with the live profile, selected-cosmetic
   details, and a clear purchase action.
 - Kept product tiles focused on the effect and Preview action while preserving
   the existing fitting-room selection and server-authoritative purchase flow.
 - Removed explanatory rail subcopy, replay/pause controls, and the redundant
   layout-status badge. The live profile window now lets atmosphere effects show
   through the transparent identity surface, with a stronger title accent.
+- Replaced the cluttered default All catalog with a curated Featured set,
+  added color-coded rarity filters to the rail, made EP balance more prominent,
+  and standardized the shop language around cosmetics. Atmosphere cards now
+  animate on hover/selection and show only the media plate.
 
 ## 2026-08-04 — Add seven sourced atmosphere plates
 

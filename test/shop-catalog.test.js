@@ -63,4 +63,8 @@ test('catalog filtering combines retained sections, ownership, affordability, an
     filterShopItems(items, { section: 'overview', affordableOnly: true, rarity: 'Rare' }, fittingRoom).map(item => item.item_key),
     ['border_signal']
   );
+  assert.deepEqual(
+    filterShopItems(items, { section: 'featured' }, fittingRoom).map(item => item.item_key),
+    ['name_font_editorial_serif', 'name_material_liquid_mercury', 'border_signal']
+  );
 });

@@ -97,8 +97,12 @@
 
   <header class="shop-contextual-preview__header">
     <div class="shop-contextual-preview__balance">
-      <span>EP balance</span>
-      <strong>{Number(walletBalance || 0).toLocaleString()} EP</strong>
+      <span class="shop-contextual-preview__balance-icon" aria-hidden="true">✦</span>
+      <div>
+        <span>EP balance</span>
+        <strong>{Number(walletBalance || 0).toLocaleString()} EP</strong>
+        <small>Available to spend</small>
+      </div>
     </div>
     {#if selectedItem}
       <button type="button" class="shop-contextual-preview__reset" on:click={() => dispatch('reset')}>Clear</button>
@@ -134,7 +138,7 @@
         </div>
         <strong>{selectedPriceLabel}</strong>
       </div>
-      <p>{selectedItem.description || 'A profile piece designed to make your identity more personal.'}</p>
+      <p>{selectedItem.description || 'A profile cosmetic designed to make your identity more personal.'}</p>
       <div class="shop-selection-meta">
         <span>{selectedItem.collection || 'Core collection'}</span>
         <span>{stateLabel}</span>
@@ -149,7 +153,7 @@
   {:else}
     <div class="shop-contextual-preview__empty-selection">
       <span>Catalog</span>
-      <strong>Select a piece to inspect it.</strong>
+      <strong>Select a cosmetic to inspect it.</strong>
       <small>Preview it on your profile, then purchase it when it feels right.</small>
     </div>
   {/if}
@@ -181,9 +185,12 @@
     border-bottom: 1px solid var(--shop-line);
   }
 
-  .shop-contextual-preview__balance { display:grid; gap:.28rem; min-width:0; }
-  .shop-contextual-preview__balance span { color:var(--shop-faint); font:700 .62rem/1 var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
-  .shop-contextual-preview__balance strong { overflow:hidden; color:var(--shop-ink); font:700 1rem/1 var(--shop-mono); letter-spacing:-.03em; text-overflow:ellipsis; white-space:nowrap; }
+  .shop-contextual-preview__balance { display:grid; grid-template-columns:2rem minmax(0,1fr); align-items:center; gap:.55rem; min-width:0; padding:.32rem .7rem .32rem .35rem; border:1px solid color-mix(in srgb,var(--shop-accent) 38%,var(--shop-line)); border-radius:6px; background:color-mix(in srgb,var(--shop-accent) 7%,transparent); }
+  .shop-contextual-preview__balance-icon { display:grid; place-items:center; width:1.8rem; height:1.8rem; border-radius:5px; background:color-mix(in srgb,var(--shop-accent) 20%,transparent); color:var(--shop-accent); font-size:.95rem; }
+  .shop-contextual-preview__balance > div { display:grid; gap:.2rem; min-width:0; }
+  .shop-contextual-preview__balance > div > span { color:var(--shop-accent); font:700 .62rem/1 var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
+  .shop-contextual-preview__balance strong { overflow:hidden; color:var(--shop-ink); font:750 1.2rem/1 var(--shop-mono); letter-spacing:-.04em; text-overflow:ellipsis; white-space:nowrap; }
+  .shop-contextual-preview__balance small { color:var(--shop-muted); font-size:.65rem; line-height:1; }
   .shop-contextual-preview__reset {
     min-height: 2.2rem;
     padding: 0 0.65rem;
