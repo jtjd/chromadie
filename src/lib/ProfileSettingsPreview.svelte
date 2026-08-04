@@ -8,6 +8,7 @@
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { resolveProfileLayoutVariant, getProfileLayoutLabel } from './profile-layout/profileLayouts.js';
+  import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
 
   export let profile = {};
   export let profileConfig = null;
@@ -43,6 +44,9 @@
   <div class="settings-preview__topline"><span>Live profile</span><span>Draft preview</span></div>
   <ProfileBorderEffect borderKey={loadout?.profile_border} className="settings-preview__border">
   <div class={'settings-preview__canvas settings-preview__canvas--' + layoutVariant} style={'--preview-accent:' + (config.signatureColor || profile.mood_color || '#8B7CF6') + ';'}>
+    {#if loadout?.profile_atmosphere}
+      <AtmosphereLayer atmosphereKey={loadout.profile_atmosphere} todayColor={config.signatureColor || profile.mood_color || '#8B7CF6'} mode="preview" active={true} animated={true} className="settings-preview__atmosphere" />
+    {/if}
     {#if cursorKey}<CursorTrailLayer trailKey={cursorKey} todayColor={config.signatureColor || profile.mood_color || '#8B7CF6'} className="settings-preview__cursor" />{/if}
     <IdentityCard
       username={profile.username || 'Your username'}
@@ -90,6 +94,7 @@
   .settings-preview__topline span:last-child { color:var(--color-ink-faint); }
   .settings-preview__canvas { position:relative; min-width:0; width:100%; overflow:hidden; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-inset); }
   .settings-preview__canvas :global(.settings-preview__cursor) { z-index:3 !important; }
+  .settings-preview__canvas :global(.settings-preview__atmosphere) { z-index:0; opacity:.8; }
   .settings-preview__canvas :global(.identity-card) { position:relative; z-index:2; min-width:0; min-height:15rem; padding:1rem; border:0; border-radius:var(--radius-md); }
   .settings-preview__canvas :global(.identity-card__person) { min-width:0; }
   .settings-preview__canvas :global(.identity-card__copy) { min-width:0; flex:1 1 0; overflow:hidden; }

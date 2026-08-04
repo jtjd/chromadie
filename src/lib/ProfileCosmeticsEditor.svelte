@@ -50,6 +50,7 @@
   $: borderItems = ownedCosmetics.filter(item => item.slot === 'profile_border');
   $: avatarItems = ownedCosmetics.filter(item => item.slot === 'avatar_effect');
   $: cursorItems = ownedCosmetics.filter(item => item.slot === 'cursor_trail');
+  $: atmosphereItems = ownedCosmetics.filter(item => item.slot === 'profile_atmosphere');
   $: layoutItems = ownedCosmetics.filter(item => item.slot === 'profile_layout');
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: syncEquippedLoadout(equippedKey, $equippedItems);
@@ -217,6 +218,22 @@
               </select>
             </div>
             <button type="button" disabled={!!loadingSlot || (previewLoadout['profile_layout'] || '') === ($equippedItems['profile_layout'] || '')} on:click={() => applySlot('profile_layout')}>{loadingSlot === 'profile_layout' ? 'Saving…' : 'Apply'}</button>
+          </div>
+
+          <div class="profile-cosmetics-controls__heading profile-cosmetics-controls__heading--border">
+            <span>Atmosphere</span>
+            <strong>Profile atmosphere</strong>
+            <p>Authored scene lighting sits behind the identity card. Uploaded backgrounds stay independent.</p>
+          </div>
+          <div class="profile-cosmetics-slot">
+            <div>
+              <label for="cosmetic-profile-atmosphere">Profile atmosphere</label>
+              <select id="cosmetic-profile-atmosphere" value={previewLoadout['profile_atmosphere'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_atmosphere', event.currentTarget.value)}>
+                <option value="">No atmosphere</option>
+                {#each atmosphereItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
+              </select>
+            </div>
+            <button type="button" disabled={!!loadingSlot || (previewLoadout['profile_atmosphere'] || '') === ($equippedItems['profile_atmosphere'] || '')} on:click={() => applySlot('profile_atmosphere')}>{loadingSlot === 'profile_atmosphere' ? 'Saving…' : 'Apply'}</button>
           </div>
         </div>
       </div>

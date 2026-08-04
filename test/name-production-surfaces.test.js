@@ -50,7 +50,7 @@ test('every production identity surface uses the shared Name renderer path', asy
 
 test('production components no longer apply removed cosmetic slots or legacy CSS bridges', async () => {
   const files = await findSvelteFiles('src/lib');
-  const removed = /name_effect|profile_bg|profile_atmosphere|orb_shape|roll_effect|lb_theme|frame_holo|ProfileAtmosphere|DecorationStudio|NameLegacyParity/;
+  const removed = /name_effect|profile_bg|orb_shape|roll_effect|lb_theme|frame_holo|ProfileAtmosphere|DecorationStudio|NameLegacyParity/;
   for (const path of files) {
     const source = await readProjectFile(path);
     assert.doesNotMatch(source, removed, path);

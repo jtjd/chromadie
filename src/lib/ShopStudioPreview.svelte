@@ -8,6 +8,7 @@
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { resolveProfileLayoutVariant, getProfileLayoutLabel } from './profile-layout/profileLayouts.js';
+  import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
 
   export let loadout = {};
   export let username = 'Your profile';
@@ -55,6 +56,9 @@
 
   <div class="studio-stage context-profile">
     <div class="stage-grid" aria-hidden="true"></div>
+    {#if loadout?.profile_atmosphere}
+      <AtmosphereLayer atmosphereKey={loadout.profile_atmosphere} todayColor={displayColor} mode={compact ? 'compact' : 'preview'} active={true} animated={resolvedNameRendererMode === 'animated'} className="studio-atmosphere-layer" />
+    {/if}
     {#if cursorKey}
       <CursorTrailLayer trailKey={cursorKey} todayColor={displayColor} active={true} className="studio-cursor-layer" />
     {/if}
@@ -171,6 +175,7 @@
       var(--color-canvas-deep);
   }
   .studio-stage.context-profile { min-height: 300px; }
+  .studio-stage :global(.studio-atmosphere-layer) { z-index: 0; opacity: .82; }
   .studio-stage :global(.studio-cursor-layer) { z-index: 3 !important; }
   .studio-stage > :global(.profile-border-effect) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
   .studio-stage > :global(.profile-border-effect) :global(.profile-border-effect__content) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }

@@ -9,6 +9,7 @@ import { isProfileBorderKey } from './profile-border/profileBorders.js'
 import { getCursorTrailKey } from './cursor-trail/cursorTrails.js'
 import { isAvatarEffectKey } from './avatar-effect/avatarEffects.js'
 import { isPaidProfileLayoutKey } from './profile-layout/profileLayouts.js'
+import { isAtmosphereKey } from './profile-atmosphere/atmospheres.js'
 
 // --- Auth & Profile State ---
 export const session = writable(null)
@@ -97,7 +98,7 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
         }
 
         if (clearShopCache) {
-            keysToRemove.push('shop_cache', 'shop_cache:v2', 'shop_cache:v3', 'shop_cache:v4')
+            keysToRemove.push('shop_cache', 'shop_cache:v2', 'shop_cache:v3', 'shop_cache:v4', 'shop_cache:v5')
         }
 
         keysToRemove.forEach(key => localStorage.removeItem(key))
@@ -108,10 +109,10 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
     clearAllViewState()
 }
 
-const SHOP_CACHE_KEY = 'shop_cache:v4'
-const SHOP_CACHE_SHAPE_VERSION = 4
-const SHOP_SLOTS = new Set(['consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout'])
-const NAME_RENDERER_SLOTS = new Set(['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout'])
+const SHOP_CACHE_KEY = 'shop_cache:v5'
+const SHOP_CACHE_SHAPE_VERSION = 5
+const SHOP_SLOTS = new Set(['consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'])
+const NAME_RENDERER_SLOTS = new Set(['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'])
 
 function normalizeShopItem(item) {
     if (!item || typeof item !== 'object' || !/^[a-z0-9_]{1,80}$/.test(item.item_key || '')) return null
@@ -131,7 +132,9 @@ function normalizeShopItem(item) {
                         ? getCursorTrailKey(rendererKey)
                         : item.slot === 'avatar_effect'
                             ? (isAvatarEffectKey(rendererKey) ? rendererKey : '')
-                            : isPaidProfileLayoutKey(rendererKey) ? rendererKey : ''
+                            : item.slot === 'profile_layout'
+                                ? isPaidProfileLayoutKey(rendererKey) ? rendererKey : ''
+                                : isAtmosphereKey(rendererKey) ? rendererKey : ''
         if (resolvedKey !== rendererKey || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(rendererKey)) return null
     } else if (NAME_RENDERER_SLOTS.has(item.slot)) {
         return null

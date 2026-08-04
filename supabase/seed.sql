@@ -200,8 +200,34 @@ ON CONFLICT (item_key) DO UPDATE SET
   entitlement_key = EXCLUDED.entitlement_key,
   catalog_status = EXCLUDED.catalog_status;
 
+INSERT INTO public.shop_items (
+  item_key, name, slot, cost, css_type, css_value, available_from, available_until,
+  rarity, description, collection, stackable, access_tier, entitlement_key, catalog_status
+) VALUES
+  ('profile_atmosphere_signal_garden', 'Signal Garden', 'profile_atmosphere', 180000, 'renderer', 'signal-garden', NULL, NULL, 'Rare', 'Measured signal filaments grow through a quiet field of roll-colored light.', 'Signal', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_aurora_veil', 'Aurora Veil', 'profile_atmosphere', 420000, 'renderer', 'aurora-veil', NULL, NULL, 'Epic', 'Layered luminous veils drift behind the profile with a soft, editorial depth.', 'Prism', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_rain_window', 'Rain Window', 'profile_atmosphere', 260000, 'renderer', 'rain-window', NULL, NULL, 'Rare', 'Refracted glass streaks and distant light make the profile feel viewed through weather.', 'Nocturne', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_emberfall', 'Emberfall', 'profile_atmosphere', 430000, 'renderer', 'emberfall', NULL, NULL, 'Epic', 'A small constellation of warm embers rises through the dark without covering the profile.', 'Ember', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_paper_archive', 'Paper Archive', 'profile_atmosphere', 280000, 'renderer', 'paper-archive', NULL, NULL, 'Rare', 'Registration lines, paper fibers, and a restrained ink wash give the page a tactile history.', 'Archive', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_prism_lens', 'Prism Lens', 'profile_atmosphere', 500000, 'renderer', 'prism-lens', NULL, NULL, 'Epic', 'A precise lens breaks the daily color into quiet spectral planes around the identity.', 'Prism', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_lunar_tide', 'Lunar Tide', 'profile_atmosphere', 620000, 'renderer', 'lunar-tide', NULL, NULL, 'Anomaly', 'A slow lunar arc and a deep tide of light create a composed nocturnal stage.', 'Nocturne', false, 'earned', NULL, 'active'),
+  ('profile_atmosphere_color_memory', 'Color Memory', 'profile_atmosphere', 850000, 'renderer', 'color-memory', NULL, NULL, 'Mythic', 'Recent rolls become an authored archive of moving light unique to the profile’s history.', 'Prism', false, 'earned', NULL, 'active')
+ON CONFLICT (item_key) DO UPDATE SET
+  name = EXCLUDED.name,
+  slot = EXCLUDED.slot,
+  cost = EXCLUDED.cost,
+  css_type = EXCLUDED.css_type,
+  css_value = EXCLUDED.css_value,
+  rarity = EXCLUDED.rarity,
+  description = EXCLUDED.description,
+  collection = EXCLUDED.collection,
+  stackable = EXCLUDED.stackable,
+  access_tier = EXCLUDED.access_tier,
+  entitlement_key = EXCLUDED.entitlement_key,
+  catalog_status = EXCLUDED.catalog_status;
+
 INSERT INTO public.meta (key, value) VALUES
-('shop_version', '2026-08-04T12:00:00Z'),
+('shop_version', '2026-08-04T16:00:00Z'),
 ('cotw_target', '73,114,201'),
 ('official_launch_at', '2026-07-11T00:00:00Z'),
 ('founder_window_ends_at', '2026-08-11T00:00:00Z')

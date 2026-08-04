@@ -1930,6 +1930,21 @@ kept public profile selectors outside the supporting-route baseline.
   transitional total asset caps remain the only failing gate: JavaScript is
   777.63/700 kB and CSS is 401.80/380 kB. Initial and largest-lazy JavaScript,
   initial and largest-lazy CSS, and the HTML shell remain within budget.
+## 2026-08-04 — Add authored profile atmospheres
+
+- Added eight finite `profile_atmosphere` products: Signal Garden, Aurora Veil,
+  Rain Window, Emberfall, Paper Archive, Prism Lens, Lunar Tide, and Color
+  Memory.
+- Added a shared SVG scene renderer with authored linework, veils, glass,
+  embers, paper registration, lens planes, lunar orbits, and recent-roll color
+  memory. Scenes pause when hidden, honor reduced motion, stay pointer-safe,
+  and use static compact frames in catalog cards.
+- Integrated the slot into Shop Catalog/Owned filters, fitting-room preview,
+  Profile Settings preview, public ProfileShell, RPC allowlists, database
+  constraints, seed, cache version, and drift/security checks.
+- Existing uploaded profile backgrounds remain independent. Final active
+  catalog count is 122 (eight atmospheres added to the existing 114).
+
 ## 2026-08-03 — Differentiate the reference Name fonts
 
 - Restored the real family names for Font products, including Cormorant

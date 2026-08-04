@@ -10,6 +10,7 @@
   import { getLatestHomepageRoll } from './homepageDirectory.js';
   import { normalizeHexColor } from './utils.js';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
+  import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
 
   /** @type {Record<string, any> | null} */
   export let model = null;
@@ -64,6 +65,9 @@
     <div class="homepage-preview__scene">
       {#if backgroundSrc}
         <div class="homepage-preview__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
+      {/if}
+      {#if cosmetics?.profile_atmosphere}
+        <AtmosphereLayer atmosphereKey={cosmetics.profile_atmosphere} todayColor={accentColor} recentColors={nameRendererRecentColors} mode="card" active={false} animated={false} className="homepage-preview__atmosphere" />
       {/if}
 
       <ProfileBorderEffect borderKey={cosmetics?.profile_border} compact={true} className="homepage-preview__identity-boundary">
@@ -170,6 +174,7 @@
   .homepage-preview__header a:hover { color: var(--preview-accent); }
   .homepage-preview__header span { color: rgba(241, 243, 237, 0.42); font: 600 0.57rem / 1 var(--home-mono, 'IBM Plex Mono', monospace); letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap; }
   .homepage-preview__scene { position: relative; min-height: 12.5rem; padding: clamp(1rem, 3vw, 2rem); overflow: hidden; background: #080a0c; }
+  :global(.homepage-preview__atmosphere) { z-index: 0; opacity: .72; }
   :global(.homepage-preview__identity-boundary) { position: relative; z-index: 2; width: 100%; overflow: hidden; border-radius: 0.45rem; isolation: isolate; }
   :global(.homepage-preview__identity-boundary) :global(.identity-card) { position: relative; z-index: 1; }
   .homepage-preview__music { position: relative; z-index: 4; margin-top: 0.8rem; }

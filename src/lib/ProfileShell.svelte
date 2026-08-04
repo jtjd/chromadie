@@ -28,6 +28,7 @@
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
+  import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
 
   const PROFILE_SURFACE_ACCENT = '#5D6A73';
 
@@ -356,6 +357,7 @@
   $: signatureColor = colorFor(effectiveProfileConfig.signatureColor);
   $: nameRendererTodayColor = colorFor(latestRoll?.hex_code || signatureColor);
   $: cursorTrailKey = getCursorTrailKey(cosmetics?.cursor_trail);
+  $: atmosphereKey = cosmetics?.profile_atmosphere || '';
   $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
   $: profileSurfaceAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
   $: profileControlAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
@@ -397,6 +399,9 @@
   {/if}
   {#if !previewMode && backgroundSrc}
     <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
+  {/if}
+  {#if !loading && targetProfile && atmosphereKey}
+    <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} className="profile-shell__atmosphere-layer" />
   {/if}
 
   {#if !loading && targetProfile}
@@ -662,6 +667,7 @@
   }
 
   :global(.profile-shell__cursor-layer) { z-index: 0 !important; }
+  :global(.profile-shell__atmosphere-layer) { z-index: 0; opacity: .62; }
 
   .profile-shell__opening,
   .profile-shell__supporting,

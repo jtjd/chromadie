@@ -22,6 +22,7 @@ test('retained shop preview context follows the profile surface', () => {
   assert.equal(getShopContextForSlot('name_material'), 'profile');
   assert.equal(getShopContextForSlot('name_motion'), 'profile');
   assert.equal(getShopContextForSlot('profile_border'), 'profile');
+  assert.equal(getShopContextForSlot('profile_atmosphere'), 'profile');
   assert.equal(getShopContextForSlot('consumable'), null);
 });
 

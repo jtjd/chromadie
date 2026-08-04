@@ -2900,3 +2900,27 @@ removed so profile content stays stable and Mythic treatments read as distinct.
 The six retired Shop source components had no production or required-test
 imports and were deleted. Purchase, inventory, equip, profile rendering, and
 database slot contracts remain unchanged.
+
+## 2026-08-04 — Atmospheres are authored scene plates, not background presets
+
+Competitor review found that haunt.gg treats profile effects as a composed
+background manager with live preview, reveal/parallax, and restrained animated
+layers; guns.lol similarly combines authored background effects with profile
+animation; fakecrime.bio makes uploaded media and cursor presentation part of
+the page identity. Chromadie keeps uploaded backgrounds as their own surface
+and adds a finite `profile_atmosphere` slot for authored SVG scene plates. The
+plates use roll and recent-roll colors as palette input, but their geometry and
+material language remain code-owned so they do not collapse into generic
+gradients or user CSS. Public references: haunt.gg changelog
+(https://help.haunt.gg/overview/changelog), haunt.gg profile assets
+(https://help.haunt.gg/customization/assets), guns.lol customization
+(https://help.guns.lol/getting-started/customization), and fakecrime.bio
+(https://fakecrime.bio/).
+
+The first catalog slice contains eight scenes across Signal, Prism, Nocturne,
+Ember, and Archive. One shared `AtmosphereLayer` owns the SVG plate, visibility
+pause, reduced-motion frame, compact card treatment, and pointer-safe stacking.
+Shop cards render static miniatures; only public profiles and fitting-room
+previews animate. The additive migration updates the existing slot allowlists,
+RPCs, seed, cache version, and catalog drift checks without reviving the old
+weather-class rows.

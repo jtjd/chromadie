@@ -74,6 +74,7 @@
     { id: 'names', label: 'Names', description: 'Name expression' },
     { id: 'borders', label: 'Borders', description: 'Profile edges' },
     { id: 'avatar', label: 'Avatar', description: 'Portrait effects' },
+    { id: 'atmosphere', label: 'Atmosphere', description: 'Authored profile scenes' },
     { id: 'cursor', label: 'Cursor', description: 'Pointer trails' },
     { id: 'layouts', label: 'Layouts', description: 'Profile compositions' },
     { id: 'utility', label: 'Utility', description: 'Consumables' }
@@ -89,6 +90,7 @@
     { id: 'names', label: 'Names', description: 'Name expression' },
     { id: 'profile_border', label: 'Borders', description: 'Profile edges' },
     { id: 'avatar', label: 'Avatar', description: 'Portrait effects' },
+    { id: 'atmosphere', label: 'Atmosphere', description: 'Authored profile scenes' },
     { id: 'cursor', label: 'Cursor', description: 'Pointer trails' },
     { id: 'layouts', label: 'Layouts', description: 'Profile compositions' },
     { id: 'utility', label: 'Utility', description: 'Consumables' }
@@ -191,6 +193,8 @@
         ? 'names'
         : item.slot === 'avatar_effect'
           ? 'avatar'
+          : item.slot === 'profile_atmosphere'
+            ? 'atmosphere'
           : item.slot === 'cursor_trail'
             ? 'cursor'
             : item.slot === 'profile_layout'

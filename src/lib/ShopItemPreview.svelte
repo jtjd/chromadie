@@ -4,6 +4,7 @@
   import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { getProfileLayoutLabel } from './profile-layout/profileLayouts.js';
+  import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
 
   export let item;
   export let username = 'You';
@@ -25,6 +26,7 @@
   $: isAvatar = item?.slot === 'avatar_effect';
   $: isCursor = item?.slot === 'cursor_trail';
   $: isLayout = item?.slot === 'profile_layout';
+  $: isAtmosphere = item?.slot === 'profile_atmosphere';
   $: cursorPreviewKey = getCursorTrailKey(item?.css_value);
 
   let cursorPoint = { x: 50, y: 50 };
@@ -89,6 +91,11 @@
       <span class="shop-layout-preview__module shop-layout-preview__module--two"></span>
       <span class="shop-layout-preview__module shop-layout-preview__module--three"></span>
     </div>
+  {:else if isAtmosphere}
+    <div class="shop-atmosphere-preview">
+      <AtmosphereLayer atmosphereKey={item.css_value} todayColor={CATALOG_PREVIEW_COLOR} recentColors={['#8DDCFF', '#B7FD4D', '#F7B7E2']} mode="card" active={false} animated={false} />
+      <div class="shop-atmosphere-preview__card"><span>{username}</span><small>profile atmosphere</small></div>
+    </div>
   {:else}
     <div class="shop-preview-text shop-preview-text--utility">
       <span class="preview-utility-mark" aria-hidden="true">✦</span>
@@ -152,6 +159,11 @@
   .shop-layout-preview--story-stack .shop-layout-preview__rail { display:none; }
   .shop-layout-preview--story-stack .shop-layout-preview__hero { left:9%; right:9%; height:31%; }
   .shop-layout-preview--story-stack .shop-layout-preview__module { left:9%; right:9%; width:auto; }
+  .shop-atmosphere-preview { position:relative; width:100%; height:100%; min-height:7.5rem; overflow:hidden; border:1px solid rgba(255,255,255,.12); border-radius:5px; background:#070a10; }
+  .shop-atmosphere-preview :global(.profile-atmosphere) { opacity:.9; }
+  .shop-atmosphere-preview__card { position:absolute; left:13%; right:13%; top:25%; bottom:25%; z-index:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:.3rem; border:1px solid rgba(239,243,255,.34); background:rgba(6,9,14,.58); box-shadow:0 1rem 2rem rgba(0,0,0,.28); color:#f1f1f5; }
+  .shop-atmosphere-preview__card span { font:700 1.25rem/1 var(--font-display-stack, var(--font-display)); letter-spacing:-.04em; }
+  .shop-atmosphere-preview__card small { color:rgba(232,236,248,.58); font:.55rem var(--shop-mono, var(--font-mono-stack)); letter-spacing:.11em; text-transform:uppercase; }
 
   @media (max-width: 600px) {
     .shop-preview-area { height: 142px; padding: 10px; }

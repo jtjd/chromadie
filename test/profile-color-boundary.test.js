@@ -35,5 +35,5 @@ test('profile color presentation remains bounded and the retained border is shar
   assert.doesNotMatch(border, /@keyframes profile-border-glitch[\s\S]*transform/);
   assert.doesNotMatch(border, /@keyframes profile-border-crystal[\s\S]*opacity/);
   assert.doesNotMatch(border, /@keyframes profile-border-neon[\s\S]*opacity/);
-  assert.doesNotMatch(shell + profile + border, /ProfileAtmosphere|profile_atmosphere|profile_bg/);
+  assert.doesNotMatch(shell + profile + border, /ProfileAtmosphere|profile_bg/);
 });

@@ -33,7 +33,11 @@
     loadout?.name_font || '',
     loadout?.name_material || '',
     loadout?.name_motion || '',
-    loadout?.profile_border || ''
+    loadout?.profile_border || '',
+    loadout?.avatar_effect || '',
+    loadout?.cursor_trail || '',
+    loadout?.profile_layout || '',
+    loadout?.profile_atmosphere || ''
   ].join('|');
 
   function replayPreview() {

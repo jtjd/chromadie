@@ -1,5 +1,5 @@
 const NAME_SLOTS = ['name_font', 'name_material', 'name_motion'];
-const PROFILE_SLOTS = [...NAME_SLOTS, 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout'];
+const PROFILE_SLOTS = [...NAME_SLOTS, 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'];
 const COSMETIC_SLOTS = [...PROFILE_SLOTS];
 
 export const SHOP_NAME_SLOTS = Object.freeze([...NAME_SLOTS]);
@@ -14,6 +14,7 @@ export const SHOP_SECTIONS = Object.freeze([
   { id: 'names', label: 'Names' },
   { id: 'borders', label: 'Borders' },
   { id: 'avatar', label: 'Avatar' },
+  { id: 'atmosphere', label: 'Atmosphere' },
   { id: 'cursor', label: 'Cursor' },
   { id: 'layouts', label: 'Layouts' },
   { id: 'utility', label: 'Utility' },
@@ -37,6 +38,7 @@ export const SHOP_SLOT_LABELS = Object.freeze({
   avatar_effect: 'Avatar effect',
   cursor_trail: 'Cursor trail',
   profile_layout: 'Profile layout',
+  profile_atmosphere: 'Atmosphere',
   consumable: 'Utility',
   title: 'Title'
 });
@@ -205,6 +207,7 @@ function matchesSection(item, section, subslot) {
   }
   if (section === 'borders') return item.slot === 'profile_border';
   if (section === 'avatar') return item.slot === 'avatar_effect';
+  if (section === 'atmosphere') return item.slot === 'profile_atmosphere';
   if (section === 'cursor') return item.slot === 'cursor_trail';
   if (section === 'layouts') return item.slot === 'profile_layout';
   if (section === 'utility') return item.slot === 'consumable';

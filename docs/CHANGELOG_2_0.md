@@ -1594,6 +1594,18 @@ direct route behavior.
 - Updated the final username claim to emphasize a page that changes with the
   player while preserving authentication, routing, scoring, public data, and
   deployment contracts.
+## 2026-08-04 — Add authored profile atmospheres
+
+- Added the new Atmosphere Shop category with eight roll-aware authored scene
+  plates, from Signal Garden and Rain Window to the Mythic Color Memory.
+- Atmospheres render behind the identity card on public profiles and in the
+  Shop/Profile Settings fitting rooms. Uploaded backgrounds remain a separate
+  user-controlled layer.
+- Added reduced-motion/static card states, visibility pausing, bounded SVG
+  artwork, and a finite server-validated renderer registry.
+- Bumped the shop cache/catalog version and synchronized seed, migration, RPC
+  allowlists, database security checks, balance drift, and catalog drift.
+
 ## 2026-08-03 — Use the reference Font families in production
 
 - Font products now use their real family names, such as `Cormorant Garamond`,

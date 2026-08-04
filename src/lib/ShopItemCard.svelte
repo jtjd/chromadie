@@ -58,7 +58,7 @@
     <span class="item-card-heading">
       <span class="item-card-title">
         {#if !['name_font', 'name_material', 'name_motion'].includes(item.slot)}
-          <span class="item-slot-label">{item.slot === 'profile_border' ? 'Border' : item.slot === 'avatar_effect' ? 'Avatar' : item.slot === 'cursor_trail' ? 'Cursor' : item.slot === 'profile_layout' ? 'Layout' : item.slot === 'consumable' ? 'Utility' : 'Name'}</span>
+          <span class="item-slot-label">{item.slot === 'profile_border' ? 'Border' : item.slot === 'avatar_effect' ? 'Avatar' : item.slot === 'profile_atmosphere' ? 'Atmosphere' : item.slot === 'cursor_trail' ? 'Cursor' : item.slot === 'profile_layout' ? 'Layout' : item.slot === 'consumable' ? 'Utility' : 'Name'}</span>
         {/if}
         <strong>{item.name}</strong>
       </span>
