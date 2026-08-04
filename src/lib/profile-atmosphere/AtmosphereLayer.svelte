@@ -21,10 +21,12 @@
   let mounted = false;
   let instanceId = 'atmosphere';
 
-  const RAIN_WINDOW_VIDEO = '/atmospheres/rain-window/rain-window.webm';
-  const RAIN_WINDOW_VIDEO_FALLBACK = '/atmospheres/rain-window/rain-window.mp4';
-  const RAIN_WINDOW_POSTER = '/atmospheres/rain-window/rain-window-poster.png';
-  const RAIN_WINDOW_TEXTURE = '/atmospheres/rain-window/rain-window-texture.png';
+  // Version the media paths so browsers and the edge do not keep serving the
+  // previous cached loop after a visual asset replacement.
+  const RAIN_WINDOW_VIDEO = '/atmospheres/rain-window/rain-window-loop-v2.webm';
+  const RAIN_WINDOW_VIDEO_FALLBACK = '/atmospheres/rain-window/rain-window-loop-v2.mp4';
+  const RAIN_WINDOW_POSTER = '/atmospheres/rain-window/rain-window-loop-v2-poster.png';
+  const RAIN_WINDOW_TEXTURE = '/atmospheres/rain-window/rain-window-texture-v2.png';
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: compact = mode === 'card' || mode === 'compact';
