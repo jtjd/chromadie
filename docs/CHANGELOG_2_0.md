@@ -6,7 +6,7 @@ Document user-visible redesign changes by milestone.
 
 - Reworked product cards so Fonts, Materials, Borders, Avatars, Cursors,
   Layouts, and Atmospheres share one consistent preview stage and metadata
-  structure, with larger specimens on solid collection-tinted stages.
+  structure, with larger specimens on restrained near-black stages.
 - Expanded the catalog to a more spacious two-column gallery, removed the
   preview gradient and highlight veil, simplified nested previews, and made
   the purchase/status actions read as quiet text controls so the product

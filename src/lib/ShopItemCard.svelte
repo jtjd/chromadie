@@ -101,6 +101,8 @@
 <style>
   .shop-item { min-width:0; display:flex; flex-direction:column; align-items:stretch; min-height:0; text-align:left; transition:transform .2s ease; }
   .shop-item:hover { transform:translateY(-2px); }
+  :global(.app-main--site) .shop-item { padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
+  :global(.app-main--site) .shop-item:hover { border-color:transparent; background:transparent; box-shadow:none; }
   .shop-item.is-wearing :global(.shop-preview-area) { box-shadow:inset 0 0 0 2px #7d83a9; }
   .shop-item.is-previewing :global(.shop-preview-area) { box-shadow:inset 0 0 0 2px #9aa7d1, 0 .8rem 1.8rem rgba(0,0,0,.22); }
   .item-select-button { display:flex; flex:1 1 auto; flex-direction:column; min-width:0; width:100%; padding:0; border:0; background:transparent; color:inherit; cursor:pointer; text-align:left; }

@@ -88,6 +88,7 @@ test('product cards use one selection surface and readable purchase states', asy
   assert.doesNotMatch(source, /item-preview-button|item-product-button/);
   assert.doesNotMatch(source, /item-detail-link|>Details<|>Manage<|Need more EP/);
   assert.match(source, /aspect-ratio:16 \/ 9/);
+  assert.match(source, /:global\(\.app-main--site\) \.shop-item \{ padding:0; border:0/);
   assert.match(source, /@media \(max-width: 420px\)/);
 });
 
@@ -160,7 +161,7 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview/);
   assert.match(itemPreview, /COLLECTION_TONES/);
   assert.match(itemPreview, /previewClasses = `shop-preview-area shop-preview-area--\$\{previewType\}`/);
-  assert.match(itemPreview, /background: color-mix\(in srgb, var\(--preview-accent/);
+  assert.match(itemPreview, /background: var\(--preview-surface/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area \{[^}]*border: 1px/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area::after/);
   assert.doesNotMatch(itemPreview, /preview-profile-card|shop-atmosphere-preview__card/);

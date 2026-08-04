@@ -5,13 +5,13 @@ Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 ## 2026-08-05 — Treat shop pieces as specimens, not nested interface cards
 
 The catalog preview is the product surface, so every slot uses a larger visual-
-first tile with a solid collection-tinted 16:9 stage and the same card
+first tile with a near-black slot-tinted 16:9 stage and the same card
 hierarchy: specimen, slot eyebrow, piece name, then a quiet rarity/collection
 and purchase footer.
 The desktop catalog uses two columns so the effects have enough room to read.
-Preview-specific gradients, generic black stages, highlight overlays, and
-nested profile panels were removed because they made different renderers feel
-like unrelated UI components and weakened the actual effect.
+Preview-specific gradients, loud color blocks, highlight overlays, and nested
+profile panels were removed because they made different renderers feel like
+unrelated UI components and weakened the actual effect.
 
 Borders now show the effect around a simple name specimen; Atmospheres show the
 media directly behind a simple specimen label. The real profile fitting-room

@@ -21,15 +21,15 @@
     'Static Bloom': '#8DDCFF'
   });
   const SLOT_TONES = Object.freeze({
-    name_font: '#171717',
-    name_material: '#111923',
-    name_motion: '#191520',
-    profile_border: '#101913',
-    avatar_effect: '#17131B',
-    cursor_trail: '#101A20',
-    profile_layout: '#151421',
-    profile_atmosphere: '#0F1719',
-    consumable: '#17131F'
+    name_font: '#0E1115',
+    name_material: '#0E131A',
+    name_motion: '#120F16',
+    profile_border: '#0D140E',
+    avatar_effect: '#120E15',
+    cursor_trail: '#0B1318',
+    profile_layout: '#100F16',
+    profile_atmosphere: '#0B1313',
+    consumable: '#110D17'
   });
 
   $: nameLayerLoadout = item?.slot === 'name_font'
@@ -138,7 +138,7 @@
 </div>
 
 <style>
-  .shop-preview-area { position:relative; aspect-ratio:16 / 9; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 0; border-radius: 12px; background: color-mix(in srgb, var(--preview-accent, #C7B4FF) 8%, var(--preview-surface, #14161D)); overflow: hidden; }
+  .shop-preview-area { position:relative; aspect-ratio:16 / 9; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 0; border-radius: 12px; background: var(--preview-surface, #0B0E12); overflow: hidden; }
   .shop-preview-area :global(.preview-border-shell) { width: min(82%, 22rem); height: 78%; }
   .preview-profile-specimen { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; box-sizing: border-box; overflow: hidden; }
   .preview-profile-name { color: var(--preview-accent, #fff); font-family: var(--font-display-stack, var(--font-display)); font-size: clamp(1.7rem, 5vw, 2.5rem); font-weight: 700; overflow-wrap: anywhere; }
