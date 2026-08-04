@@ -63,8 +63,8 @@
     </div>
   {:else if isAvatar}
     <div class="shop-avatar-preview">
-      <AvatarEffect effectKey={item.css_value} accentColor={displayColor} mode="compact" animated={false}>
-        <span class="shop-avatar-preview__letter" aria-hidden="true">{String(username || 'Y').slice(0, 1).toUpperCase()}</span>
+      <AvatarEffect effectKey={item.css_value} accentColor={displayColor} mode="compact" animated={false} avatarSrc="/avatars/mara-dog-v1.jpg" fallbackText={String(username || 'Y').slice(0, 1).toUpperCase()}>
+        <img class="shop-avatar-preview__media" src="/avatars/mara-dog-v1.jpg" alt="" loading="lazy" decoding="async" />
       </AvatarEffect>
     </div>
   {:else if isCursor}
@@ -112,7 +112,7 @@
   .preview-utility-mark { color: #d8ccff; font-size: 1.8rem; }
   .shop-avatar-preview { display:grid; place-items:center; width:5.2rem; height:5.2rem; }
   .shop-avatar-preview :global(.avatar-effect) { display:grid; place-items:center; width:4.2rem; height:4.2rem; border:1px solid rgba(255,255,255,.28); border-radius:50%; background:radial-gradient(circle at 32% 24%, #dce4ff, #5c5f85 48%, #080a10 100%); }
-  .shop-avatar-preview__letter { position:relative; z-index:2; color:#f6f4ff; font:700 2rem/1 var(--font-display-stack); }
+  .shop-avatar-preview__media { position:relative; z-index:2; display:block; width:100%; height:100%; border-radius:50%; object-fit:cover; }
   .shop-cursor-preview { position:relative; width:78%; height:70%; }
   .shop-cursor-preview__line { position:absolute; left:5%; right:13%; top:48%; height:2px; border-radius:99px; background:linear-gradient(90deg, transparent, #8ddcff 22%, #b7fd4d 70%, transparent); transform:rotate(-16deg); transform-origin:right center; box-shadow:0 0 10px rgba(141,220,255,.45); }
   .shop-cursor-preview__head { position:absolute; left:calc(var(--cursor-x) - 4px); top:calc(var(--cursor-y) - 4px); width:9px; height:9px; border:1px solid #f2f0eb; border-radius:50%; box-shadow:0 0 0 4px rgba(141,220,255,.12), 0 0 12px #8ddcff; transition:left .12s ease, top .12s ease; }

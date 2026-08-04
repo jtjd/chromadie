@@ -1,5 +1,20 @@
 # Chromadie 2.0 Progress
 
+## Avatar effect quality pass — 2026-08-04
+
+- Replaced the generic treatments for Prism Orbit, Ember Crown, and Ghost
+  Double with five small local authored SVG layers and a shared bounded Canvas
+  particle layer for the two particle effects.
+- Passed the real avatar source into the shared wrapper so Ghost Double can
+  create a controlled image-aware offset; Shop cards now show the real local
+  avatar fixture instead of a letter-only stand-in.
+- Kept compact discovery, leaderboard, and card contexts static; full-profile
+  particles pause offscreen, stop on hidden tabs, cap DPR, and clean up their
+  observers and animation frame. Reduced motion renders a deterministic frame.
+- No item keys, metadata, catalog rows, purchase/equip logic, slots, or
+  database files changed. The remaining 15 avatar effects are intentionally
+  unchanged pending their own authored-art review.
+
 ## Launch cosmetic expansion — 2026-08-04
 
 - Added the finite `cursor_trail`, `avatar_effect`, and `profile_layout` slots

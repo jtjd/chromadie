@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import { CURSOR_TRAIL_KEYS, getCursorTrailKey } from '../src/lib/cursor-trail/cursorTrails.js';
-import { AVATAR_EFFECT_KEYS, isAvatarEffectKey } from '../src/lib/avatar-effect/avatarEffects.js';
+import { AVATAR_EFFECT_KEYS, AVATAR_EFFECT_DEFINITIONS, isAvatarEffectKey } from '../src/lib/avatar-effect/avatarEffects.js';
 import {
   FREE_PROFILE_LAYOUTS,
   PAID_PROFILE_LAYOUT_KEYS,
@@ -25,6 +25,29 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
   assert.equal(isAvatarEffectKey('avatar_effect_color_archive'), true);
   assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Story Stack');
+});
+
+test('authored avatar anchor effects resolve their local layers and particle mode', async () => {
+  const anchors = [
+    ['prism-orbit', ['back', 'front']],
+    ['ember-crown', ['back', 'front']],
+    ['ghost-double', ['front']]
+  ];
+
+  for (const [key, layers] of anchors) {
+    const definition = AVATAR_EFFECT_DEFINITIONS[key];
+    assert.ok(definition, key);
+    for (const layer of layers) {
+      const assetPath = definition.assets?.[layer];
+      assert.match(assetPath, /^\/avatar-effects\/.+\.svg$/);
+      const asset = await read(`public${assetPath}`);
+      assert.match(asset, /<svg\b/);
+    }
+  }
+
+  assert.equal(AVATAR_EFFECT_DEFINITIONS['prism-orbit'].particles, true);
+  assert.equal(AVATAR_EFFECT_DEFINITIONS['ember-crown'].particles, true);
+  assert.equal(AVATAR_EFFECT_DEFINITIONS['ghost-double'].imageAware, true);
 });
 
 test('paid layout resolution preserves the free fallback and supports temporary previews', () => {

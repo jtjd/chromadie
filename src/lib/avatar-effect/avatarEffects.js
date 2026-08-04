@@ -2,10 +2,26 @@
 const definitions = {
   'signal-ring': { key: 'signal-ring', label: 'Signal Ring' },
   'neon-halo': { key: 'neon-halo', label: 'Neon Halo' },
-  'prism-orbit': { key: 'prism-orbit', label: 'Prism Orbit' },
+  'prism-orbit': {
+    key: 'prism-orbit',
+    label: 'Prism Orbit',
+    assets: {
+      back: '/avatar-effects/prism-orbit-back.svg',
+      front: '/avatar-effects/prism-orbit-front.svg'
+    },
+    particles: true
+  },
   'crystal-aperture': { key: 'crystal-aperture', label: 'Crystal Aperture' },
   'chroma-arc': { key: 'chroma-arc', label: 'Chroma Arc' },
-  'ember-crown': { key: 'ember-crown', label: 'Ember Crown' },
+  'ember-crown': {
+    key: 'ember-crown',
+    label: 'Ember Crown',
+    assets: {
+      back: '/avatar-effects/ember-crown-back.svg',
+      front: '/avatar-effects/ember-crown-front.svg'
+    },
+    particles: true
+  },
   ashfall: { key: 'ashfall', label: 'Ashfall' },
   'gold-laurel': { key: 'gold-laurel', label: 'Gold Laurel' },
   'ink-stamp': { key: 'ink-stamp', label: 'Ink Stamp' },
@@ -14,7 +30,12 @@ const definitions = {
   'pixel-satellites': { key: 'pixel-satellites', label: 'Pixel Satellites' },
   'crt-scan': { key: 'crt-scan', label: 'CRT Scan' },
   'void-eclipse': { key: 'void-eclipse', label: 'Void Eclipse' },
-  'ghost-double': { key: 'ghost-double', label: 'Ghost Double' },
+  'ghost-double': {
+    key: 'ghost-double',
+    label: 'Ghost Double',
+    assets: { front: '/avatar-effects/ghost-double-front.svg' },
+    imageAware: true
+  },
   'night-frame': { key: 'night-frame', label: 'Night Frame' },
   'daily-aura': { key: 'daily-aura', label: 'Daily Aura' },
   'color-archive': { key: 'color-archive', label: 'Color Archive' }

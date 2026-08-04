@@ -1,4 +1,5 @@
 <script>
+  import AvatarParticles from './AvatarParticles.svelte';
   import { getAvatarEffectDefinition } from './avatarEffects.js';
 
   export let effectKey = '';
@@ -7,20 +8,46 @@
   export let mode = 'profile';
   export let animated = true;
   export let className = '';
+  export let avatarSrc = '';
+  export let fallbackText = '';
 
+  /** @type {any} */
+  let definition;
   $: definition = getAvatarEffectDefinition(effectKey);
   $: compact = mode === 'compact' || mode === 'card';
+  $: colors = [accentColor, ...(Array.isArray(recentColors) ? recentColors : [])]
+    .filter(color => /^#[0-9a-f]{6}$/i.test(String(color || '')))
+    .slice(0, 4);
   $: effectClass = [
     'avatar-effect',
     className,
     definition ? `avatar-effect--${definition.key}` : 'avatar-effect--none',
+    definition?.assets ? 'avatar-effect--asset-backed' : '',
+    definition?.imageAware ? 'avatar-effect--image-aware' : '',
     compact ? 'avatar-effect--compact' : '',
     animated && !compact ? 'avatar-effect--animated' : 'avatar-effect--static'
   ].filter(Boolean).join(' ');
-  $: colors = [accentColor, ...(Array.isArray(recentColors) ? recentColors : [])].filter(color => /^#[0-9a-f]{6}$/i.test(String(color || ''))).slice(0, 4);
+  $: effectStyle = [
+    `--avatar-accent:${colors[0] || '#8B7CF6'}`,
+    `--avatar-color-2:${colors[1] || '#8DDCFF'}`,
+    `--avatar-color-3:${colors[2] || '#B7FD4D'}`,
+    `--avatar-color-4:${colors[3] || '#F7B7E2'}`
+  ].join(';');
 </script>
 
-<div class={effectClass} style={`--avatar-accent:${colors[0] || '#8B7CF6'}; --avatar-color-2:${colors[1] || '#8DDCFF'}; --avatar-color-3:${colors[2] || '#B7FD4D'};`}>
+<div class={effectClass} style={effectStyle}>
+  {#if definition?.assets?.back}
+    <img class="avatar-effect__asset avatar-effect__asset--back" src={definition.assets.back} alt="" aria-hidden="true" />
+  {/if}
+
+  {#if definition?.imageAware}
+    {#if avatarSrc}
+      <img class="avatar-effect__duplicate" src={avatarSrc} alt="" aria-hidden="true" />
+    {:else if fallbackText}
+      <span class="avatar-effect__duplicate avatar-effect__duplicate--fallback" aria-hidden="true">{fallbackText}</span>
+    {/if}
+  {/if}
+
   <span class="avatar-effect__halo" aria-hidden="true"></span>
   <span class="avatar-effect__ring" aria-hidden="true"></span>
   <span class="avatar-effect__arc" aria-hidden="true"></span>
@@ -31,11 +58,30 @@
   <span class="avatar-effect__laurel" aria-hidden="true"></span>
   <span class="avatar-effect__tear" aria-hidden="true"></span>
   <slot />
+
+  {#if definition?.assets?.front}
+    <img class="avatar-effect__asset avatar-effect__asset--front" src={definition.assets.front} alt="" aria-hidden="true" />
+  {/if}
+
+  {#if definition?.particles}
+    <AvatarParticles
+      effectKey={definition.key}
+      accentColor={colors[0] || '#8B7CF6'}
+      recentColors={colors.slice(1)}
+      active={!compact}
+      {animated}
+    />
+  {/if}
 </div>
 
 <style>
   .avatar-effect { position:relative; isolation:isolate; }
-  .avatar-effect > :global(img), .avatar-effect > :global(.identity-card__avatar-glow), .avatar-effect > :global(.identity-card__avatar-letter), .avatar-effect > :global(.identity-card__avatar-mark) { position:relative; z-index:2; }
+  .avatar-effect > :global(img), .avatar-effect > :global(.identity-card__avatar-glow), .avatar-effect > :global(.identity-card__avatar-letter), .avatar-effect > :global(.identity-card__avatar-mark), .avatar-effect > :global(.discovery-card__avatar-initial), .avatar-effect > :global(.home-rank-row__avatar) { position:relative; z-index:2; }
+  .avatar-effect__asset { position:absolute; z-index:1; inset:-18%; width:136%; height:136%; max-width:none; object-fit:contain; pointer-events:none; user-select:none; }
+  .avatar-effect__asset--front { z-index:3; }
+  .avatar-effect__duplicate { position:absolute; z-index:1; inset:0; width:100%; height:100%; object-fit:cover; border-radius:inherit; clip-path:circle(50% at 50% 50%); opacity:.2; transform:translate(4px, -1px) scale(1.012); filter:saturate(1.55) contrast(1.1) hue-rotate(14deg); mix-blend-mode:screen; pointer-events:none; }
+  .avatar-effect__duplicate--fallback { display:grid; place-items:center; color:rgba(245,247,255,.74); font:600 2.2rem/1 var(--font-display-stack); letter-spacing:-.08em; }
+  .avatar-effect--animated .avatar-effect__duplicate { animation:avatar-effect-ghost 3.8s steps(2,end) infinite; }
   .avatar-effect__halo, .avatar-effect__ring, .avatar-effect__arc, .avatar-effect__marks, .avatar-effect__scan, .avatar-effect__satellites, .avatar-effect__crown, .avatar-effect__laurel, .avatar-effect__tear { position:absolute; z-index:3; pointer-events:none; content:''; }
   .avatar-effect__halo { inset:-10%; border-radius:50%; box-shadow:0 0 1.5rem var(--avatar-accent); opacity:0; }
   .avatar-effect--neon-halo .avatar-effect__halo, .avatar-effect--daily-aura .avatar-effect__halo, .avatar-effect--void-eclipse .avatar-effect__halo { opacity:.72; }
@@ -50,7 +96,7 @@
   .avatar-effect--night-frame .avatar-effect__marks { inset:4%; background:transparent; border:1px solid color-mix(in srgb, var(--avatar-accent) 55%, transparent); clip-path:none; }
   .avatar-effect__arc { inset:-9%; border:2px solid transparent; border-left-color:var(--avatar-accent); border-top-color:var(--avatar-color-2); border-radius:50%; opacity:0; }
   .avatar-effect--chroma-arc .avatar-effect__arc, .avatar-effect--prism-orbit .avatar-effect__arc, .avatar-effect--color-archive .avatar-effect__arc { opacity:.9; }
-  .avatar-effect--color-archive .avatar-effect__arc { border-right-color:var(--avatar-color-3); border-bottom-color:var(--avatar-color-2); }
+  .avatar-effect--color-archive .avatar-effect__arc { border-right-color:var(--avatar-color-3); border-bottom-color:var(--avatar-color-4); }
   .avatar-effect__scan { inset:0; border-radius:inherit; background:linear-gradient(180deg, transparent 35%, color-mix(in srgb, var(--avatar-color-2) 28%, transparent) 47%, transparent 55%); opacity:0; mix-blend-mode:screen; }
   .avatar-effect--crt-scan .avatar-effect__scan, .avatar-effect--static-offset .avatar-effect__scan { opacity:.75; }
   .avatar-effect__satellites { inset:-12%; opacity:0; background:radial-gradient(circle at 12% 34%, var(--avatar-color-2) 0 2px, transparent 2.5px), radial-gradient(circle at 90% 22%, var(--avatar-accent) 0 2px, transparent 2.5px), radial-gradient(circle at 84% 85%, var(--avatar-color-3) 0 2px, transparent 2.5px); }
@@ -65,8 +111,14 @@
   .avatar-effect--ink-stamp .avatar-effect__tear { border-style:dotted; transform:rotate(-2deg); }
   .avatar-effect--ashfall::after, .avatar-effect--ghost-double::after, .avatar-effect--static-offset::after { position:absolute; inset:0; z-index:1; pointer-events:none; content:''; }
   .avatar-effect--ashfall::after { opacity:.6; background:radial-gradient(circle at 24% 6%, #E7D4C4 0 1px, transparent 1.5px), radial-gradient(circle at 72% 14%, #C9B39A 0 1px, transparent 1.5px), radial-gradient(circle at 52% 88%, #B7A18D 0 1px, transparent 1.5px); }
-  .avatar-effect--ghost-double::after { opacity:.23; background:inherit; transform:translate(3px,1px); mix-blend-mode:screen; }
+  .avatar-effect--ghost-double::after { opacity:0; background:transparent; }
   .avatar-effect--static-offset::after { opacity:.38; background:linear-gradient(90deg, transparent 0 22%, #69E9FF 22% 24%, transparent 24% 76%, #FF8FCA 76% 78%, transparent 78%); mix-blend-mode:screen; }
+
+  /* Asset-backed anchors replace the old generic shape vocabulary. */
+  .avatar-effect--prism-orbit .avatar-effect__arc,
+  .avatar-effect--prism-orbit .avatar-effect__satellites,
+  .avatar-effect--ember-crown .avatar-effect__crown { display:none; }
+
   .avatar-effect--animated.avatar-effect--neon-halo .avatar-effect__halo, .avatar-effect--animated.avatar-effect--daily-aura .avatar-effect__halo { animation:avatar-effect-breathe 2.8s ease-in-out infinite; }
   .avatar-effect--animated.avatar-effect--signal-ring .avatar-effect__ring, .avatar-effect--animated.avatar-effect--chroma-arc .avatar-effect__arc { animation:avatar-effect-spin 5.5s linear infinite; }
   .avatar-effect--animated.avatar-effect--crt-scan .avatar-effect__scan { animation:avatar-effect-scan 3.6s ease-in-out infinite; }
@@ -76,6 +128,14 @@
   @keyframes avatar-effect-spin { to { transform:rotate(360deg); } }
   @keyframes avatar-effect-scan { 0%,100% { transform:translateY(-35%); opacity:.1; } 50% { transform:translateY(35%); opacity:.8; } }
   @keyframes avatar-effect-offset { 0%,80%,100% { opacity:.1; } 84% { transform:translateX(-2px); opacity:.7; } 88% { transform:translateX(2px); opacity:.45; } }
+  @keyframes avatar-effect-ghost { 0%,70%,100% { opacity:.12; transform:translate(4px,-1px) scale(1.012); clip-path:circle(50% at 50% 50%); } 74% { opacity:.36; transform:translate(-3px,1px) scale(1.018); clip-path:polygon(0 18%, 100% 18%, 100% 34%, 0 34%, 0 58%, 100% 58%, 100% 72%, 0 72%); } 79% { opacity:.2; transform:translate(3px,0) scale(1.014); clip-path:circle(50% at 50% 50%); } }
   .avatar-effect--compact .avatar-effect__halo { filter:none; }
-  @media (prefers-reduced-motion: reduce) { .avatar-effect--animated .avatar-effect__halo, .avatar-effect--animated .avatar-effect__ring, .avatar-effect--animated .avatar-effect__arc, .avatar-effect--animated .avatar-effect__scan, .avatar-effect--animated::after { animation:none !important; } }
+  @media (prefers-reduced-motion: reduce) {
+    .avatar-effect--animated .avatar-effect__halo,
+    .avatar-effect--animated .avatar-effect__ring,
+    .avatar-effect--animated .avatar-effect__arc,
+    .avatar-effect--animated .avatar-effect__scan,
+    .avatar-effect--animated::after,
+    .avatar-effect--animated .avatar-effect__duplicate { animation:none !important; }
+  }
 </style>

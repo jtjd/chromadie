@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="facet-a" x1="147" y1="28" x2="177" y2="76" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" stop-opacity=".86"/>
+      <stop offset=".28" stop-color="#8DDCFF" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#8DDCFF" stop-opacity=".06"/>
+    </linearGradient>
+    <linearGradient id="facet-b" x1="31" y1="106" x2="65" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7B7E2" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#C7B4FF" stop-opacity=".04"/>
+    </linearGradient>
+    <linearGradient id="facet-c" x1="133" y1="164" x2="171" y2="127" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B7FD4D" stop-opacity=".06"/>
+      <stop offset=".64" stop-color="#B7FD4D" stop-opacity=".68"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".4"/>
+    </linearGradient>
+  </defs>
+  <path d="m151 24 24 36-22 16-17-29z" fill="url(#facet-a)" stroke="#fff" stroke-opacity=".42" stroke-width=".8"/>
+  <path d="m28 110 36-9 3 29-28 19z" fill="url(#facet-b)" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
+  <path d="m132 168 6-34 34-9-15 35z" fill="url(#facet-c)" stroke="#fff" stroke-opacity=".32" stroke-width=".8"/>
+  <path d="m151 24 2 52m-89 25 3 29m65 4-34 34" stroke="#fff" stroke-opacity=".34" stroke-width=".65"/>
+</svg>

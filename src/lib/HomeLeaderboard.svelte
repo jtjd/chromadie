@@ -55,6 +55,7 @@
         {#each visibleProfiles as row, index (row.username)}
           {@const color = rowColor(row)}
           {@const nameRendererLoadout = getNameRendererLoadout(row?.equippedCosmetics)}
+          {@const avatarSource = avatarUrl(row)}
           <a
             class="home-rank-row"
             class:home-rank-row--featured={!showingToday}
@@ -63,9 +64,9 @@
             style={`--row-accent: ${color};`}
           >
             <span class="home-rank-row__number">{showingToday ? String(row.rank || index + 1).padStart(2, '0') : 'view'}</span>
-            <AvatarEffect effectKey={row?.equippedCosmetics?.avatar_effect} accentColor={color} mode="compact" animated={false} className="home-rank-row__avatar-effect">
-              {#if avatarUrl(row)}
-                <img class="home-rank-row__avatar" src={avatarUrl(row)} alt="" width="42" height="42" loading="lazy" decoding="async" />
+            <AvatarEffect effectKey={row?.equippedCosmetics?.avatar_effect} accentColor={color} mode="compact" animated={false} avatarSrc={avatarSource} fallbackText={(row.displayName || row.username || '?').slice(0, 1).toUpperCase()} className="home-rank-row__avatar-effect">
+              {#if avatarSource}
+                <img class="home-rank-row__avatar" src={avatarSource} alt="" width="42" height="42" loading="lazy" decoding="async" />
               {:else}
                 <span class="home-rank-row__avatar home-rank-row__avatar--monogram">{(row.displayName || row.username || '?').slice(0, 1).toUpperCase()}</span>
               {/if}

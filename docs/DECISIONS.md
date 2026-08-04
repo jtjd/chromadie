@@ -2,6 +2,23 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-04 — Give avatar anchors authored layers, not generic CSS presets
+
+The first avatar quality pass keeps the existing 18 stable renderer keys and
+catalog metadata, but upgrades three anchor effects with local authored SVG
+layers: Prism Orbit, Ember Crown, and Ghost Double. Prism and Ember add one
+shared, bounded Canvas particle layer for a small number of deterministic
+facets/embers; Ghost uses the real avatar as a restrained image-aware offset.
+The layers are decorative, pointer-inert, and remain inside the shared avatar
+wrapper, so the same treatment works in profile, Shop, and compact surfaces.
+
+Compact cards render a static signature and never start a per-card animation
+clock. Full-profile particles pause when hidden or offscreen, cap device-pixel
+ratio, clean up observers/frames, and respect reduced motion. The remaining
+avatar keys keep their existing renderer until an individual visual review
+justifies authored treatment; no broad CSS renderer rewrite or new catalog
+product was introduced.
+
 ## 2026-08-04 — Add three launch cosmetic slots without widening the renderer boundary
 
 The launch catalog now adds exactly `cursor_trail`, `avatar_effect`, and

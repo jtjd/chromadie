@@ -34,6 +34,7 @@
   $: safeDisplayName = displayName || username;
   $: safeInitial = safeDisplayName.slice(0, 1).toUpperCase() || '✦';
   $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
+  $: activeAvatarSource = avatarSrc && failedAvatarSource !== avatarSrc ? avatarSrc : '';
   $: displayedLinks = (Array.isArray(links) ? links : []).slice(0, 6);
   $: displayedBadges = (Array.isArray(badges) ? badges : [])
     .filter(badge => badge?.id !== 'launch_edition')
@@ -55,9 +56,11 @@
       recentColors={nameRendererRecentColors}
       mode={avatarEffectMode}
       animated={avatarEffectAnimated}
+      avatarSrc={activeAvatarSource}
+      fallbackText={safeInitial}
       className="identity-card__avatar"
     >
-      {#if avatarSrc && failedAvatarSource !== avatarSrc}
+      {#if activeAvatarSource}
         <img class="identity-card__avatar-media" src={avatarSrc} alt={safeDisplayName + ' avatar'} loading={avatarLoading === 'lazy' ? 'lazy' : 'eager'} decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
       {:else}
         <span class="identity-card__avatar-glow" aria-hidden="true"></span>

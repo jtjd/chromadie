@@ -109,7 +109,7 @@
   <div class="discovery-card__main">
     <div class="discovery-card__profile">
       <a class="discovery-card__avatar" href={profilePath || '/leaderboard'} on:click={viewProfile} aria-label={`Open ${displayName}'s public profile`}>
-        <AvatarEffect effectKey={item?.equippedCosmetics?.avatar_effect} accentColor={profileAccent} mode="compact" animated={false} className="discovery-card__avatar-effect">
+        <AvatarEffect effectKey={item?.equippedCosmetics?.avatar_effect} accentColor={profileAccent} mode="compact" animated={false} avatarSrc={avatarSrc && avatarSrc !== failedAvatarSource ? avatarSrc : ''} fallbackText={displayName.slice(0, 1).toUpperCase() || '✦'} className="discovery-card__avatar-effect">
           {#if avatarSrc && avatarSrc !== failedAvatarSource}
             <img src={avatarSrc} alt="" loading="lazy" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
           {:else}
