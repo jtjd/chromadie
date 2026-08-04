@@ -65,18 +65,23 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.match(atmosphereSource, /background:transparent/);
   assert.match(atmosphereSource, /RAIN_WINDOW_VIDEO/);
   assert.match(atmosphereSource, /rain-window-loop-v2-poster\.png/);
-  assert.match(atmosphereSource, /DROPLETS_GLASS_TEXTURE/);
+  assert.match(atmosphereSource, /DROPLETS_GLASS_VIDEO/);
+  assert.match(atmosphereSource, /DROPLETS_GLASS_POSTER/);
   assert.match(atmosphereSource, /mix-blend-mode:screen/);
   assert.doesNotMatch(atmosphereSource, /mix-blend-mode:soft-light/);
 
   const rainVideo = await readFile(new URL('../public/atmospheres/rain-window/rain-window-loop-v2.webm', import.meta.url));
   const rainFallback = await readFile(new URL('../public/atmospheres/rain-window/rain-window-loop-v2.mp4', import.meta.url));
   const rainPoster = await readFile(new URL('../public/atmospheres/rain-window/rain-window-loop-v2-poster.png', import.meta.url));
-  const dropletsTexture = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-v1.png', import.meta.url));
+  const dropletsVideo = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.webm', import.meta.url));
+  const dropletsFallback = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.mp4', import.meta.url));
+  const dropletsPoster = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.jpg', import.meta.url));
   assert.deepEqual([...rainVideo.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
   assert.equal(rainFallback.subarray(4, 8).toString('ascii'), 'ftyp');
   assert.deepEqual([...rainPoster.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-  assert.deepEqual([...dropletsTexture.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.deepEqual([...dropletsVideo.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
+  assert.equal(dropletsFallback.subarray(4, 8).toString('ascii'), 'ftyp');
+  assert.deepEqual([...dropletsPoster.subarray(0, 2)], [0xff, 0xd8]);
   assert.doesNotMatch(atmosphereSource, /RAIN_WINDOW_TEXTURE/);
 });
 

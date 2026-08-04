@@ -26,7 +26,9 @@
   const RAIN_WINDOW_VIDEO = '/atmospheres/rain-window/rain-window-loop-v2.webm';
   const RAIN_WINDOW_VIDEO_FALLBACK = '/atmospheres/rain-window/rain-window-loop-v2.mp4';
   const RAIN_WINDOW_POSTER = '/atmospheres/rain-window/rain-window-loop-v2-poster.png';
-  const DROPLETS_GLASS_TEXTURE = '/atmospheres/droplets-on-glass/droplets-on-glass-v1.png';
+  const DROPLETS_GLASS_VIDEO = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.webm';
+  const DROPLETS_GLASS_VIDEO_FALLBACK = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.mp4';
+  const DROPLETS_GLASS_POSTER = '/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.jpg';
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: compact = mode === 'card' || mode === 'compact';
@@ -89,7 +91,14 @@
         <img class="profile-atmosphere__rain-video profile-atmosphere__rain-video--poster" src={RAIN_WINDOW_POSTER} alt="" />
       {/if}
     {:else if definition.key === 'droplets-glass'}
-      <img class="profile-atmosphere__droplets-texture" src={DROPLETS_GLASS_TEXTURE} alt="" />
+      {#if motionActive}
+        <video class="profile-atmosphere__droplets-video" autoplay muted loop playsinline preload="metadata" poster={DROPLETS_GLASS_POSTER}>
+          <source src={DROPLETS_GLASS_VIDEO} type="video/webm" />
+          <source src={DROPLETS_GLASS_VIDEO_FALLBACK} type="video/mp4" />
+        </video>
+      {:else}
+        <img class="profile-atmosphere__droplets-video profile-atmosphere__droplets-video--poster" src={DROPLETS_GLASS_POSTER} alt="" />
+      {/if}
     {:else}
       <svg class="profile-atmosphere__art" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" focusable="false">
       <defs>
@@ -177,9 +186,11 @@
      highlights; it never washes or darkens the user's media underneath. */
   .profile-atmosphere__rain-video { position:absolute; inset:-6%; width:112%; height:112%; object-fit:cover; opacity:.5; mix-blend-mode:screen; filter:drop-shadow(0 0 5px var(--atmosphere-color-2)); }
   .profile-atmosphere__rain-video--poster { opacity:.2; }
-  /* Droplets on Glass is intentionally a still: the photographic droplet
-     field stays anchored to the pane instead of exposing a fake loop. */
-  .profile-atmosphere__droplets-texture { position:absolute; inset:-6%; width:112%; height:112%; object-fit:cover; opacity:.11; mix-blend-mode:screen; filter:contrast(1.08) drop-shadow(0 0 8px var(--atmosphere-color-1)); }
+  /* Droplets on Glass is an authored, black-backed highlight plate derived
+     from real window droplets. Screen blending keeps the pane transparent
+     while allowing the moving droplet contours to catch the daily color. */
+  .profile-atmosphere__droplets-video { position:absolute; inset:-6%; width:112%; height:112%; object-fit:cover; opacity:.34; mix-blend-mode:screen; filter:sepia(.2) saturate(1.15) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
+  .profile-atmosphere__droplets-video--poster { opacity:.2; }
   .profile-atmosphere__art path, .profile-atmosphere__art ellipse, .profile-atmosphere__art circle { vector-effect:non-scaling-stroke; }
   .atmosphere-art__wash { fill:none; stroke:var(--atmosphere-ribbon); stroke-width:86; opacity:.3; filter:var(--atmosphere-soft); }
   .atmosphere-art__signal { fill:none; stroke:var(--atmosphere-spectrum); stroke-linecap:round; stroke-width:2.5; opacity:.62; stroke-dasharray:2 16; }

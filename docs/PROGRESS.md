@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Droplets on Glass loop pass — 2026-08-04
+
+- Replaced the static droplet plate with a full-frame Pexels window source.
+- Authored a black-backed highlight treatment that preserves realistic droplet
+  contours while keeping the user's profile background transparent.
+- Added a 24-second WebM/MP4 loop with a crossfaded seam and a poster fallback
+  for reduced motion and compact surfaces.
+
 ## Atmosphere split — 2026-08-04
 
 - Rain Window now renders only the explicit seamless rain plate.

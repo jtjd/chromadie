@@ -2,6 +2,11 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-04 — Loop the Droplets on Glass treatment
+
+- Replaced the static droplet texture with a full-frame Pexels window source,
+  a crossfaded loop, and a reduced-motion poster.
+
 ## 2026-08-04 — Separate rain and glass droplets
 
 - Rain Window is now a clean rain-only overlay.

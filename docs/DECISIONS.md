@@ -2,6 +2,14 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-04 — Use a sourced droplet loop for Droplets on Glass
+
+Droplets on Glass now uses a full-frame Pexels window clip rather than a
+static plate. The source is reduced to a black-backed droplet highlight layer,
+then encoded as a 24-second loop with a short tail-to-head crossfade. This
+keeps the real droplet contours visible without bringing a dark pane or frame
+edge into the profile, and gives reduced-motion surfaces a clean poster frame.
+
 ## 2026-08-04 — Separate motion rain from anchored droplets
 
 Rain Window is now a rain-only seamless motion plate. The fixed windshield
