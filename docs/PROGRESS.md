@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Shop catalog context pass — 2026-08-03
+
+- Removed the redundant Catalog headline, copy, and Today’s color band from
+  Browse so the category rail and product tools arrive immediately.
+- Moved Catalog/Owned navigation and the endpoint-backed Today’s color card
+  into the existing shop header action row.
+- Reduced the fitting-room stage height modestly to reclaim vertical space
+  while keeping the live profile preview visible.
+
 ## Shop header and fitting-room reliability pass — 2026-08-03
 
 - Removed the redundant Names headline and supporting copy so the category and

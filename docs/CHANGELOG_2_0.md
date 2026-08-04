@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-03 — Condense the shop catalog
+
+- Removed the redundant catalog intro band and its repeated Today’s color
+  panel.
+- Put Catalog/Owned navigation and Today’s color beside the account actions
+  so the product grid starts sooner.
+- Tightened the live profile stage slightly without changing try-on or
+  purchase behavior.
+
 ## 2026-08-03 — Compact the shop and stabilize try-on previews
 
 - Removed the redundant Names headline and copy from the catalog context.

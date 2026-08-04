@@ -29,6 +29,7 @@
     isShopCosmetic,
     requiresPurchaseConfirmation
   } from './shopCatalog.js';
+  import { normalizeHexColor } from './utils.js';
 
   const SHOP_VIEWS = Object.freeze([
     { id: 'browse', label: 'Catalog' },
@@ -70,6 +71,7 @@
     const equipped = $equippedItems?.[item.slot] === item.item_key;
     return owned || equipped || hasShopEntitlement(item, fittingRoom);
   }).length;
+  $: dailyColor = normalizeHexColor(currentRoll?.hex_code, '');
 
   onMount(() => {
     restoreShopViewState();
@@ -101,8 +103,10 @@
         supabase.rpc('get_my_daily_roll'),
         supabase.rpc('get_my_profile_configuration')
       ]);
-      if (!rollResponse.error && rollResponse.data) currentRoll = rollResponse.data;
-      if (!configResponse.error && configResponse.data?.success !== false) profileConfig = configResponse.data;
+      if (rollResponse.error) previewDataError = rollResponse.error.message || 'Today’s color is unavailable.';
+      else if (rollResponse.data) currentRoll = rollResponse.data;
+      if (configResponse.error && !previewDataError) previewDataError = configResponse.error.message || 'Profile preview is unavailable.';
+      else if (configResponse.data?.success !== false) profileConfig = configResponse.data;
     } catch (error) {
       previewDataError = error instanceof Error ? error.message : 'Preview data is unavailable.';
     } finally {
@@ -194,16 +198,28 @@
     </div>
     <div class="shop-header-actions">
       <div class="shop-wallet" aria-label={`EP balance: ${fittingRoom.balance.toLocaleString()} EP`}><span>EP balance</span><strong>{fittingRoom.balance.toLocaleString()} EP</strong></div>
+      <div class="shop-daily-color" aria-live="polite" aria-label="Today’s color">
+        <span>Today’s color</span>
+        {#if dailyColor}
+          <strong><i style={`--shop-daily-color:${dailyColor}`}></i>{dailyColor}</strong>
+          <small>{currentRoll?.rarity || 'Daily roll'}</small>
+        {:else if previewDataLoading}
+          <strong class="shop-daily-color__status">Loading</strong>
+        {:else if previewDataError}
+          <strong class="shop-daily-color__status">Unavailable</strong>
+        {:else}
+          <strong class="shop-daily-color__status">Not rolled</strong>
+        {/if}
+      </div>
       <div class="shop-owned" aria-label={`${ownedCatalogCount} owned catalog items`}><span>Owned</span><strong>{ownedCatalogCount}</strong></div>
+      <nav class="shop-navigation" aria-label="Shop views">
+        {#each SHOP_VIEWS as view (view.id)}
+          <button type="button" class:active={activeView === view.id} aria-current={activeView === view.id ? 'page' : undefined} on:click={() => setView(view.id)}>{view.label}</button>
+        {/each}
+      </nav>
       <a class="shop-profile-link" href="/profile/settings" aria-label="Open profile settings">Profile settings <span aria-hidden="true">↗</span></a>
     </div>
   </header>
-
-  <nav class="shop-navigation" aria-label="Studio surfaces">
-    {#each SHOP_VIEWS as view (view.id)}
-      <button type="button" class:active={activeView === view.id} aria-current={activeView === view.id ? 'page' : undefined} on:click={() => setView(view.id)}>{view.label}</button>
-    {/each}
-  </nav>
 
   {#if $shopItemsLoading}
     <div class="shop-status" role="status" aria-live="polite"><span>Loading catalog</span><strong>Preparing your live collection…</strong></div>
@@ -220,8 +236,6 @@
       {profileConfig}
       {currentRoll}
       {isSignedIn}
-      {previewDataLoading}
-      {previewDataError}
       {purchaseArmedKey}
       {loadingAction}
       on:section={event => browseSection = event.detail}
@@ -251,24 +265,30 @@
 <style>
   .shop-page { --shop-canvas:#0d0f13; --shop-deep:#090a0d; --shop-raised:#111319; --shop-line:rgba(255,255,255,.075); --shop-line-strong:rgba(255,255,255,.15); --shop-ink:#f2f0eb; --shop-muted:#aaa8b0; --shop-faint:#858690; --shop-accent:#CDD2FF; --shop-font:var(--font-body-stack); --shop-display:var(--font-display-stack); --shop-mono:var(--font-mono-stack); width:min(86.25rem,calc(100% - 2.5rem)); margin:0 auto 5.5rem; color:var(--shop-ink); font-family:var(--shop-font); }
   :global(.app-main--site) .shop-page { width:min(86.25rem,calc(100% - 2.5rem)); margin-top:clamp(.8rem,2.5vh,1.8rem); padding:0 0 4rem; }
-  .shop-header { display:flex; align-items:flex-end; justify-content:space-between; gap:2rem; padding:0 0 1rem; border-bottom:1px solid var(--shop-line); }
+  .shop-header { display:flex; align-items:flex-end; justify-content:space-between; gap:1.15rem; padding:0 0 1rem; border-bottom:1px solid var(--shop-line); }
   .shop-heading h1 { max-width:52rem; margin:.55rem 0 .05rem; font:650 clamp(2.35rem,4.4vw,3.8rem)/.92 var(--shop-display); letter-spacing:-.055em; }
   :global(.app-main--site) .shop-heading h1 { max-width:52rem; margin:.55rem 0 .05rem; font:650 clamp(2.35rem,4.4vw,3.8rem)/.92 var(--shop-display); letter-spacing:-.055em; }
   .shop-heading h1 span { color:var(--shop-accent); }
   .shop-header-intro { margin:.5rem 0 0; color:var(--shop-muted); font-size:.9rem; line-height:1.45; }
   .shop-eyebrow { color:var(--shop-faint); font:600 .72rem/1.3 var(--shop-mono); letter-spacing:.13em; text-transform:uppercase; }
-  .shop-header-actions { display:flex; align-items:stretch; gap:.55rem; flex:0 0 auto; }
+  .shop-header-actions { display:flex; align-items:stretch; justify-content:flex-end; flex-wrap:wrap; gap:.55rem; max-width:100%; flex:0 0 auto; }
   .shop-wallet, .shop-owned { padding:.7rem .85rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); }
-  .shop-wallet { min-width:13rem; padding:.85rem 1rem; border-color:color-mix(in srgb,var(--shop-accent) 45%,var(--shop-line-strong)); background:color-mix(in srgb,var(--shop-accent) 8%,var(--shop-raised)); }
+  .shop-wallet { min-width:12rem; padding:.85rem 1rem; border-color:color-mix(in srgb,var(--shop-accent) 45%,var(--shop-line-strong)); background:color-mix(in srgb,var(--shop-accent) 8%,var(--shop-raised)); }
   .shop-wallet span, .shop-wallet strong { display:block; }
   .shop-wallet span, .shop-owned span { display:block; color:var(--shop-faint); font:.64rem var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
   .shop-wallet strong { display:block; margin-top:.32rem; color:var(--shop-ink); font:700 clamp(1.15rem,1.7vw,1.45rem)/1 var(--shop-mono); letter-spacing:-.04em; white-space:nowrap; }
   .shop-owned strong { display:block; margin-top:.3rem; color:var(--shop-ink); font:650 1rem var(--shop-mono); white-space:nowrap; }
-  .shop-owned { min-width:6.25rem; }
-  .shop-profile-link { min-height:2.9rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .9rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; text-decoration:none; font:.78rem var(--shop-mono); }
+  .shop-owned { min-width:5.25rem; }
+  .shop-daily-color { display:grid; align-content:center; min-width:9rem; padding:.6rem .7rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); }
+  .shop-daily-color > span { color:var(--shop-faint); font:.64rem var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
+  .shop-daily-color strong { display:flex; align-items:center; gap:.45rem; margin-top:.3rem; color:var(--shop-ink); font:650 .88rem var(--shop-mono); white-space:nowrap; }
+  .shop-daily-color strong i { display:block; flex:0 0 1rem; width:1rem; height:1rem; border:1px solid rgba(255,255,255,.24); border-radius:3px; background:var(--shop-daily-color,#292d37); box-shadow:0 0 .8rem color-mix(in srgb,var(--shop-daily-color,#292d37) 24%,transparent); }
+  .shop-daily-color small { margin-top:.18rem; color:var(--shop-muted); font-size:.68rem; }
+  .shop-daily-color__status { color:var(--shop-muted)!important; }
+  .shop-profile-link { min-height:2.9rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .75rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; text-decoration:none; font:.78rem var(--shop-mono); }
   .shop-profile-link:hover, .shop-profile-link:focus-visible { border-color:#777d8d; background:#1b1e25; color:#fff; }
-  .shop-navigation { display:flex; gap:.25rem; width:max-content; max-width:100%; margin:.85rem 0 1rem; padding:.25rem; border:1px solid var(--shop-line); border-radius:var(--radius-pill); background:var(--shop-raised); }
-  .shop-navigation button { position:relative; min-height:2.65rem; padding:0 1.1rem; border:0; border-radius:var(--radius-pill); background:transparent; color:#92949d; font:600 .78rem var(--shop-mono); letter-spacing:.03em; cursor:pointer; }
+  .shop-navigation { display:flex; gap:.25rem; width:max-content; max-width:100%; margin:0; padding:.25rem; border:1px solid var(--shop-line); border-radius:var(--radius-pill); background:var(--shop-raised); }
+  .shop-navigation button { position:relative; min-height:2.65rem; padding:0 .85rem; border:0; border-radius:var(--radius-pill); background:transparent; color:#92949d; font:600 .78rem var(--shop-mono); letter-spacing:.03em; cursor:pointer; }
   .shop-navigation button:hover, .shop-navigation button:focus-visible { color:#fff; }
   .shop-navigation button.active { background:color-mix(in srgb,var(--shop-accent) 16%,transparent); color:var(--shop-ink); }
   .shop-navigation button.active::after { display:none; }
@@ -278,6 +298,7 @@
   .shop-status--error { border-color:#754d58; }
   .shop-status button { width:max-content; min-height:2.6rem; padding:0 .85rem; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#f2f0eb; cursor:pointer; }
   .shop-live-region { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,86.25rem); margin-top:.8rem; padding-top:0; } .shop-header { align-items:flex-start; flex-direction:column; gap:1rem; } .shop-header-actions { width:100%; align-items:stretch; } .shop-wallet, .shop-owned, .shop-profile-link { min-width:0; flex:1; } .shop-wallet strong { font-size:1rem; } .shop-profile-link { justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
+  @media (max-width: 1000px) { .shop-header { align-items:flex-start; flex-direction:column; gap:1rem; } .shop-header-actions { width:100%; } }
+  @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,86.25rem); margin-top:.8rem; padding-top:0; } .shop-header-actions { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr); align-items:stretch; } .shop-wallet, .shop-navigation, .shop-profile-link { grid-column:1 / -1; min-width:0; } .shop-daily-color, .shop-owned { min-width:0; } .shop-wallet strong { font-size:1rem; } .shop-profile-link { justify-content:center; } .shop-navigation { width:100%; overflow:auto; } .shop-navigation button { flex:1 0 auto; } }
   @media (prefers-reduced-motion: reduce) { .shop-navigation button, .shop-profile-link { transition:none; } }
 </style>

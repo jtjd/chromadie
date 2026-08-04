@@ -2,6 +2,15 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-03 — Keep catalog context in the shop header
+
+The Catalog/Owned switch and Today’s color are account-level context, not a
+second catalog introduction. They now sit with the EP balance and profile
+settings actions in the shop header, so Browse can begin directly with its
+category rail and product tools. The fitting-room stage is also slightly
+shorter to keep the profile preview present without pushing the results below
+the fold. No catalog, purchase, or endpoint behavior changes.
+
 ## 2026-08-03 — Keep the shop header compact and make fitting-room state deterministic
 
 The Names view does not need a second headline because the category rail and

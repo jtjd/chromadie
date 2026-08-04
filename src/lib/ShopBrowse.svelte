@@ -31,8 +31,6 @@
   export let profileConfig = null;
   /** @type {any} */
   export let currentRoll = null;
-  export let previewDataLoading = false;
-  export let previewDataError = '';
   export let isSignedIn = false;
   export let purchaseArmedKey = '';
   export let loadingAction = null;
@@ -137,31 +135,7 @@
   }
 </script>
 
-<section class="shop-browse" class:shop-browse--names={isNameBrowse} aria-labelledby={isNameBrowse ? undefined : 'shop-browse-title'} aria-label={isNameBrowse ? 'Name catalog' : undefined}>
-  <div class="shop-browse-context" class:shop-browse-context--compact={isNameBrowse}>
-    {#if !isNameBrowse}
-      <div class="shop-browse-context-copy">
-        <span class="shop-eyebrow">Catalog</span>
-        <h2 id="shop-browse-title">Find your next piece.</h2>
-        <p>Every piece is previewed on your profile before you decide.</p>
-      </div>
-    {/if}
-    <div class="shop-roll-context" aria-live="polite" aria-label="Today’s color">
-      <span class="shop-eyebrow">Today’s color</span>
-      {#if currentRoll?.hex_code}
-        <div class="shop-roll-value">
-          <span class="shop-roll-swatch" style={`--shop-roll-color:${displayColor}`}></span>
-          <span><strong>{displayColor}</strong><small>{currentRoll.rarity || 'Daily roll'}</small></span>
-        </div>
-      {:else if previewDataLoading}
-        <div class="shop-roll-loading"><span></span><strong>Loading today’s roll</strong></div>
-      {:else if previewDataError}
-        <div class="shop-roll-loading"><span class="shop-roll-swatch shop-roll-swatch--empty"></span><strong>Color unavailable</strong></div>
-      {:else}
-        <div class="shop-roll-loading"><span class="shop-roll-swatch shop-roll-swatch--empty"></span><strong>Roll unavailable</strong></div>
-      {/if}
-    </div>
-  </div>
+<section class="shop-browse" class:shop-browse--names={isNameBrowse} aria-label={isNameBrowse ? 'Name catalog' : 'Catalog'}>
 
   <ShopCategoryNav
     sections={availableSections}
@@ -276,23 +250,9 @@
 </section>
 
 <style>
-  .shop-browse { display:grid; gap:1rem; }
-  .shop-browse-context { display:flex; align-items:center; justify-content:space-between; gap:1.25rem; padding:1rem 0 .9rem; border-bottom:1px solid var(--shop-line); }
-  .shop-browse-context--compact { justify-content:flex-end; padding:.45rem 0; }
-  .shop-browse-context-copy { min-width:0; }
-  .shop-browse-context-copy h2 { margin:.35rem 0 .35rem; color:var(--shop-ink); font:650 clamp(1.65rem,2.5vw,2.25rem)/1 var(--shop-display); letter-spacing:-.045em; }
-  .shop-browse-context-copy p { max-width:38rem; margin:0; color:var(--shop-muted); font-size:.84rem; line-height:1.4; }
+  .shop-browse { display:grid; gap:.75rem; }
   .shop-eyebrow { color:var(--shop-faint); font:600 .72rem/1.3 var(--shop-mono); letter-spacing:.13em; text-transform:uppercase; }
-  .shop-roll-context { display:grid; flex:0 0 auto; gap:.45rem; min-width:13rem; padding:.65rem .75rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:rgba(17,19,25,.72); }
-  .shop-roll-value { display:flex; align-items:center; gap:.6rem; }
-  .shop-roll-value > span:last-child { display:grid; gap:.15rem; min-width:0; }
-  .shop-roll-value strong { color:var(--shop-ink); font:650 .88rem var(--shop-mono); }
-  .shop-roll-value small { color:var(--shop-muted); font-size:.7rem; }
-  .shop-roll-swatch { display:block; flex:0 0 1.8rem; width:1.8rem; height:1.8rem; border:1px solid rgba(255,255,255,.24); border-radius:4px; background:var(--shop-roll-color); box-shadow:0 0 1.2rem color-mix(in srgb,var(--shop-roll-color) 26%,transparent); }
-  .shop-roll-swatch--empty { background:#262a34; box-shadow:none; }
-  .shop-roll-loading { display:flex; align-items:center; gap:.55rem; min-height:1.8rem; color:var(--shop-muted); font-size:.75rem; }
-  .shop-roll-loading > span:not(.shop-roll-swatch) { width:.6rem; height:.6rem; border:1px solid #777d8d; border-radius:50%; }
-  .shop-browse-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(25rem,29rem); gap:1.25rem; align-items:start; }
+  .shop-browse-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(25rem,29rem); gap:1rem; align-items:start; }
   .shop-name-layer-menu { display:grid; grid-template-columns:minmax(14rem,.65fr) minmax(0,1.35fr); gap:1rem; align-items:stretch; padding:.85rem 0 .95rem; border-bottom:1px solid var(--shop-line); }
   .shop-name-layer-menu__heading { display:grid; align-content:center; gap:.4rem; }
   .shop-name-layer-menu__heading h3 { margin:.25rem 0 .25rem; color:var(--shop-ink); font-size:1.05rem; letter-spacing:-.02em; }
@@ -340,8 +300,7 @@
   .shop-button { display:inline-flex; align-items:center; justify-content:center; min-height:2.7rem; padding:0 .9rem; border-radius:5px; font-weight:650; text-decoration:none; cursor:pointer; }
   .shop-button--outline { border:1px solid #4a4d57; background:#121419; color:#d3d0d8; }
   @media (max-width: 1180px) { .shop-browse-layout { grid-template-columns:minmax(0,1fr) minmax(22rem,26rem); } }
-  @media (max-width: 960px) { .shop-browse-context { align-items:flex-start; flex-direction:column; } .shop-roll-context { width:min(100%,20rem); } .shop-browse-layout { grid-template-columns:1fr; } .shop-browse-layout :global(.shop-contextual-preview) { order:-1; } .shop-name-layer-menu { grid-template-columns:1fr; } .shop-name-layer-menu__heading p { max-width:34rem; } }
+  @media (max-width: 960px) { .shop-browse-layout { grid-template-columns:1fr; } .shop-browse-layout :global(.shop-contextual-preview) { order:-1; } .shop-name-layer-menu { grid-template-columns:1fr; } .shop-name-layer-menu__heading p { max-width:34rem; } }
   @media (max-width: 760px) { .shop-browse-toolbar { grid-template-columns:minmax(0,1fr) 8rem; } .shop-filter-toggle { grid-column:1 / -1; } .shop-filter-panel__fields { grid-template-columns:repeat(2,minmax(0,1fr)); } .shop-result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .shop-name-layer-options { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width: 520px) { .shop-browse-toolbar { grid-template-columns:1fr; } .shop-filter-toggle { grid-column:auto; } .shop-filter-panel__fields { grid-template-columns:1fr; } .shop-result-grid { grid-template-columns:1fr; } }
-  @media (max-width: 390px) { .shop-browse-context-copy h2 { font-size:1.55rem; } }
 </style>

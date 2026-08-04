@@ -19,16 +19,18 @@ test('shop shell is one profile studio with Catalog and Owned surfaces', async (
   assert.doesNotMatch(shop, /ShopHome|ShopStudio/);
   assert.doesNotMatch(shop, /activeView === 'home'/);
   assert.match(shop, /previewDataLoading/);
+  assert.match(shop, /shop-daily-color/);
+  assert.match(shop, /aria-label="Shop views"/);
   assert.match(app, /view !== 'shop'/);
 });
 
-test('catalog uses one category rail, compact context, bounded results, and one profile preview', async () => {
+test('catalog removes redundant context, bounds results, and keeps one profile preview', async () => {
   const source = await readProjectFile('src/lib/ShopBrowse.svelte');
 
   assert.match(source, /const CATALOG_SECTIONS/);
   assert.match(source, /label: 'All'/);
-  assert.match(source, /Today’s color/);
-  assert.match(source, /previewDataLoading/);
+  assert.doesNotMatch(source, /shop-browse-context|Find your next piece|Today’s color/);
+  assert.doesNotMatch(source, /previewDataLoading|previewDataError/);
   assert.match(source, /<ShopCategoryNav/);
   assert.match(source, /id="shop-filter-panel"/);
   assert.match(source, /SHOP_OWNERSHIP_FILTERS/);
