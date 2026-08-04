@@ -30,6 +30,8 @@
     createFittingRoom,
     filterShopItems,
     getCatalogStatus,
+    getShopAccessTier,
+    getShopItemState,
     hasShopEntitlement,
     isShopCosmetic,
     requiresPurchaseConfirmation,
@@ -118,6 +120,8 @@
       ? getNameItemPreviewLoadout(selectedItem, $equippedItems)
       : tryOnShopItem($equippedItems, selectedItem)
     : { ...($equippedItems || {}) };
+  $: selectedState = selectedItem ? getShopItemState(selectedItem, $equippedItems, fittingRoom) : null;
+  $: selectedAccessTier = selectedItem ? getShopAccessTier(selectedItem) : 'earned';
   $: dailyColor = normalizeHexColor(currentRoll?.hex_code, '');
 
   onMount(() => {
@@ -309,12 +313,8 @@
           displayColor={previewColor}
           {fittingRoom}
           equippedItems={$equippedItems}
-          {isSignedIn}
-          {purchaseArmedKey}
-          {loadingAction}
           on:select={event => selectItem(event.detail, 'browse')}
           on:reset={() => { selectedItem = null; shopNotice = 'Preview reset to your equipped look.'; }}
-          on:purchase={event => requestPurchase(event.detail)}
         />
       {:else}
         <ShopCollection
@@ -324,12 +324,8 @@
           equippedItems={$equippedItems}
           profile={$profile}
           {currentRoll}
-          {isSignedIn}
-          {purchaseArmedKey}
-          {loadingAction}
           on:browse={() => { setView('browse'); setBrowseSection('overview'); }}
           on:select={event => selectItem(event.detail, 'collection')}
-          on:purchase={event => requestPurchase(event.detail)}
         />
       {/if}
     </section>
@@ -341,8 +337,14 @@
       displayColor={previewColor}
       accountProfile={$profile}
       walletBalance={fittingRoom.balance}
+      state={selectedState}
+      accessTier={selectedAccessTier}
+      {isSignedIn}
+      purchaseArmed={purchaseArmedKey === selectedItem?.item_key}
+      purchaseLoading={loadingAction === `buy:${selectedItem?.item_key}`}
       {profileConfig}
       on:reset={() => { selectedItem = null; shopNotice = 'Preview reset to your equipped look.'; }}
+      on:purchase={event => requestPurchase(event.detail)}
     />
   </div>
 
@@ -371,17 +373,17 @@
   .shop-daily-color__status { color:var(--shop-muted)!important; }
   .shop-profile-link { min-height:2.9rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .75rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; text-decoration:none; font:600 .8rem var(--shop-font); }
   .shop-profile-link:hover, .shop-profile-link:focus-visible { border-color:#777d8d; background:#1b1e25; color:#fff; }
-  .shop-workspace { display:grid; grid-template-columns:minmax(12rem,14rem) minmax(0,1fr) minmax(24rem,28rem); gap:clamp(.9rem,2vw,1.5rem); align-items:start; }
-  .shop-workspace-main { min-width:0; }
+  .shop-workspace { display:grid; grid-template-columns:minmax(12rem,14rem) minmax(0,1fr) minmax(21rem,24rem); gap:0; align-items:stretch; border:1px solid var(--shop-line); border-radius:var(--radius-md); background:rgba(11,13,18,.72); box-shadow:0 1.5rem 4rem rgba(0,0,0,.18); overflow:clip; }
+  .shop-workspace-main { min-width:0; padding:1rem; border-inline:1px solid var(--shop-line); }
   .shop-status { display:grid; gap:.55rem; min-height:12rem; align-content:center; padding:2rem; border:1px solid var(--shop-line); background:var(--shop-deep); }
   .shop-status span { color:#858690; font:.7rem var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
   .shop-status strong { font-size:1.1rem; }
   .shop-status--error { border-color:#754d58; }
   .shop-status button { width:max-content; min-height:2.6rem; padding:0 .85rem; border:1px solid #4a4d57; border-radius:5px; background:#16181e; color:#f2f0eb; cursor:pointer; }
   .shop-live-region { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  @media (max-width: 1200px) { .shop-workspace { grid-template-columns:minmax(12rem,14rem) minmax(0,1fr); } .shop-workspace > :global(.shop-contextual-preview) { grid-column:1 / -1; position:static; } }
+  @media (max-width: 1200px) { .shop-workspace { grid-template-columns:minmax(12rem,14rem) minmax(0,1fr); } .shop-workspace-main { border-right:0; } .shop-workspace > :global(.shop-contextual-preview) { grid-column:1 / -1; position:static; border-top:1px solid var(--shop-line); border-left:0; } }
   @media (max-width: 1000px) { .shop-header { align-items:flex-start; flex-direction:column; gap:1rem; } .shop-header-actions { width:100%; } }
   @media (max-width: 760px) { .shop-page, :global(.app-main--site) .shop-page { width:min(100% - 1.25rem,100rem); margin-top:.8rem; padding-top:0; } .shop-header-actions { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr); align-items:stretch; } .shop-profile-link { grid-column:1 / -1; min-width:0; } .shop-daily-color, .shop-owned { min-width:0; } .shop-profile-link { justify-content:center; } }
-  @media (max-width: 620px) { .shop-workspace { grid-template-columns:1fr; } .shop-workspace > :global(.shop-contextual-preview) { grid-column:auto; } }
+  @media (max-width: 620px) { .shop-workspace { grid-template-columns:1fr; overflow:visible; } .shop-workspace-main { border-inline:0; } .shop-workspace > :global(.shop-contextual-preview) { grid-column:auto; border-top:1px solid var(--shop-line); } }
   @media (prefers-reduced-motion: reduce) { .shop-profile-link { transition:none; } }
 </style>

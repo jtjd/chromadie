@@ -2,13 +2,16 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
-## 2026-08-05 — Treat shop pieces as specimens, not nested interface cards
+## 2026-08-05 — Treat the Shop as a fitting room
 
-The catalog preview is the product surface, so every slot uses a larger visual-
-first tile with a neutral near-black 16:9 stage and the same card
-hierarchy: specimen, slot eyebrow, piece name, then a quiet rarity/collection
-and purchase footer.
-The desktop catalog uses two columns so the effects have enough room to read.
+The Shop is organized as one fitting-room frame: a compact category rail owns
+taxonomy, a three-column gallery owns discovery, and a right inspector owns the
+live profile plus the selected piece’s context and purchase action. Repeated
+cards expose Preview/Owned state; the inspector is the single purchase surface.
+
+Product cards use compact visual-first tiles with neutral near-black stages and
+the same card hierarchy: specimen, slot eyebrow, piece name, then quiet
+rarity/collection metadata and a Preview action.
 Preview-specific gradients, loud color blocks, highlight overlays, and nested
 profile panels were removed because they made different renderers feel like
 unrelated UI components and weakened the actual effect.

@@ -5,9 +5,7 @@
     SHOP_RARITIES,
     SHOP_SORTS,
     SHOP_OWNERSHIP_FILTERS,
-    filterShopItems,
-    getShopAccessTier,
-    getShopItemState
+    filterShopItems
   } from './shopCatalog.js';
 
   export let items = [];
@@ -21,9 +19,6 @@
   export let selectedSubslot = 'all';
   export let username = 'You';
   export let displayColor = '#8B7CF6';
-  export let isSignedIn = false;
-  export let purchaseArmedKey = '';
-  export let loadingAction = null;
 
   const dispatch = createEventDispatcher();
   let searchQuery = '';
@@ -58,10 +53,6 @@
   ].filter(Boolean).length;
   $: displayedItems = showAllItems ? filteredItems : filteredItems.slice(0, INITIAL_VISIBLE_ITEMS);
 
-  function stateFor(item) {
-    return getShopItemState(item, equippedItems, fittingRoom);
-  }
-
   function resetFilters() {
     searchQuery = '';
     selectedCollection = 'all';
@@ -94,6 +85,14 @@
         </button>
       </div>
 
+      <div class="shop-quick-filters" aria-label="Quick catalog filters">
+        <button type="button" class:active={selectedRarity === 'all' && selectedOwnership === 'all'} on:click={() => { selectedRarity = 'all'; selectedOwnership = 'all'; showAllItems = false; }}>All</button>
+        {#each SHOP_RARITIES as rarity (rarity)}
+          <button type="button" class:active={selectedRarity === rarity} on:click={() => { selectedRarity = selectedRarity === rarity ? 'all' : rarity; selectedOwnership = 'all'; showAllItems = false; }}>{rarity}</button>
+        {/each}
+        <button type="button" class:active={selectedOwnership === 'owned'} on:click={() => { selectedOwnership = selectedOwnership === 'owned' ? 'all' : 'owned'; selectedRarity = 'all'; showAllItems = false; }}>Owned</button>
+      </div>
+
       {#if filtersOpen}
         <div id="shop-filter-panel" class="shop-filter-panel" role="region" aria-label="Catalog filters">
           <div class="shop-filter-panel__head"><strong>Filter products</strong><button type="button" on:click={() => filtersOpen = false}>Done</button></div>
@@ -117,18 +116,11 @@
           {#each displayedItems as item (item.item_key)}
             <ShopItemCard
               {item}
-              state={stateFor(item)}
-              accessTier={getShopAccessTier(item)}
               isPreviewing={selectedItem?.item_key === item.item_key}
               actuallyEquipped={equippedItems[item.slot] === item.item_key}
               previewUsername={username}
               previewColor={displayColor}
-              walletBalance={fittingRoom.balance}
-              {isSignedIn}
-              purchaseArmed={purchaseArmedKey === item.item_key}
-              purchaseLoading={loadingAction === `buy:${item.item_key}`}
               on:select={event => previewItem(event.detail)}
-              on:purchase={event => dispatch('purchase', event.detail)}
             />
           {/each}
         </div>
@@ -173,7 +165,11 @@
   .shop-reset-link { width:max-content; margin-top:.1rem; padding:0; border:0; background:transparent; color:var(--shop-accent); font:.74rem var(--shop-mono); cursor:pointer; text-align:left; }
   .shop-results-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.7rem 0 .55rem; color:var(--shop-faint); font:.74rem var(--shop-mono); letter-spacing:.05em; text-transform:uppercase; }
   .shop-results-header button { padding:0; border:0; background:transparent; color:var(--shop-accent); cursor:pointer; font:inherit; text-transform:none; }
-  .shop-result-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.25rem 1rem; }
+  .shop-quick-filters { display:flex; align-items:center; gap:.25rem; min-width:0; padding:.62rem 0 .1rem; overflow-x:auto; }
+  .shop-quick-filters button { flex:0 0 auto; min-height:1.9rem; padding:0 .7rem; border:1px solid transparent; border-radius:999px; background:transparent; color:var(--shop-faint); cursor:pointer; font:.68rem var(--shop-mono); }
+  .shop-quick-filters button:hover, .shop-quick-filters button:focus-visible { color:var(--shop-ink); }
+  .shop-quick-filters button.active { border-color:color-mix(in srgb,var(--shop-accent) 42%,transparent); background:color-mix(in srgb,var(--shop-accent) 12%,transparent); color:var(--shop-ink); }
+  .shop-result-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
   .shop-load-more { display:flex; align-items:center; justify-content:center; gap:.55rem; width:100%; min-height:2.8rem; margin-top:.75rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:#11141a; color:var(--shop-ink); cursor:pointer; font:.76rem var(--shop-mono); }
   .shop-load-more:hover, .shop-load-more:focus-visible { border-color:#aeb5e5; background:#171a22; }
   .shop-load-more span { color:var(--shop-muted); }
@@ -183,6 +179,7 @@
   .shop-empty-state p { margin:0 0 .5rem; color:#aaa8b0; }
   .shop-button { display:inline-flex; align-items:center; justify-content:center; min-height:2.7rem; padding:0 .9rem; border-radius:5px; font-weight:650; text-decoration:none; cursor:pointer; }
   .shop-button--outline { border:1px solid #4a4d57; background:#121419; color:#d3d0d8; }
+  @media (max-width: 900px) { .shop-result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width: 760px) { .shop-browse-toolbar { grid-template-columns:minmax(0,1fr) 8rem; } .shop-filter-toggle { grid-column:1 / -1; } .shop-filter-panel__fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width: 520px) { .shop-browse-toolbar { grid-template-columns:1fr; } .shop-filter-toggle { grid-column:auto; } .shop-filter-panel__fields { grid-template-columns:1fr; } .shop-result-grid { grid-template-columns:1fr; } }
 </style>

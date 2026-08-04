@@ -3,8 +3,6 @@
   import ShopItemCard from './ShopItemCard.svelte';
   import {
     SHOP_NAME_SLOTS,
-    getShopAccessTier,
-    getShopItemState,
     hasShopEntitlement,
     isShopCosmetic
   } from './shopCatalog.js';
@@ -19,9 +17,6 @@
   export let profile = null;
   /** @type {any} */
   export let currentRoll = null;
-  export let isSignedIn = false;
-  export let purchaseArmedKey = '';
-  export let loadingAction = null;
 
   const dispatch = createEventDispatcher();
   let searchQuery = '';
@@ -93,18 +88,11 @@
       {#each visibleOwnedItems as item (item.item_key)}
         <ShopItemCard
           {item}
-          state={getShopItemState(item, equippedItems, fittingRoom)}
-          accessTier={getShopAccessTier(item)}
           isPreviewing={false}
           actuallyEquipped={equippedItems[item.slot] === item.item_key}
           previewUsername={username}
           previewColor={displayColor}
-          walletBalance={fittingRoom.balance}
-          {isSignedIn}
-          purchaseArmed={purchaseArmedKey === item.item_key}
-          purchaseLoading={loadingAction === `buy:${item.item_key}`}
           on:select={event => dispatch('select', event.detail)}
-          on:purchase={event => dispatch('purchase', event.detail)}
         />
       {/each}
     </div>
@@ -139,11 +127,12 @@
   .shop-collection-search input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:#f2f0eb; font-size:.86rem; }
   .shop-collection-search input::placeholder { color:#8e9099; }
   .shop-collection-toolbar > span { color:#777983; font:.65rem var(--font-mono-stack); letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; }
-  .shop-result-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.25rem 1rem; }
+  .shop-result-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
   .shop-empty-state { display:grid; justify-items:start; gap:.55rem; min-height:11rem; align-content:center; padding:1.6rem; border:1px solid var(--shop-line); background:#0a0c10; }
   .shop-empty-state > span { color:#cdd2ff; font-size:2rem; }
   .shop-empty-state h3 { margin:0; font-size:1.2rem; }
   .shop-empty-state p { margin:0 0 .5rem; color:#aaa8b0; }
-  @media (max-width: 760px) { .shop-surface-heading { align-items:flex-start; flex-direction:column; } .shop-quantity-strip { align-items:flex-start; flex-direction:column; } .shop-collection-toolbar { align-items:stretch; flex-direction:column; } .shop-collection-search { width:auto; } .shop-result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width: 900px) { .shop-result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width: 760px) { .shop-surface-heading { align-items:flex-start; flex-direction:column; } .shop-quantity-strip { align-items:flex-start; flex-direction:column; } .shop-collection-toolbar { align-items:stretch; flex-direction:column; } .shop-collection-search { width:auto; } }
   @media (max-width: 520px) { .shop-result-grid { grid-template-columns:1fr; } }
 </style>

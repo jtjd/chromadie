@@ -2,15 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
-## 2026-08-05 — Clarify shop specimen cards
+## 2026-08-05 — Reframe the Shop as a fitting room
 
-- Reworked product cards so Fonts, Materials, Borders, Avatars, Cursors,
-  Layouts, and Atmospheres share one consistent preview stage and metadata
-  structure, with larger specimens on neutral near-black stages.
-- Expanded the catalog to a more spacious two-column gallery, removed the
-  preview gradient and highlight veil, simplified nested previews, and made
-  the purchase/status actions read as quiet text controls so the product
-  specimen carries the visual weight.
+- Reorganized the Shop into a category rail, compact three-column Catalog
+  gallery, and right-side inspector with the live profile, selected-item
+  details, and a clear purchase action.
+- Kept product tiles focused on the effect and Preview action while preserving
+  the existing fitting-room selection and server-authoritative purchase flow.
 
 ## 2026-08-04 — Add seven sourced atmosphere plates
 

@@ -1,16 +1,15 @@
 # Chromadie 2.0 Progress
 
-## Shop specimen-card pass — 2026-08-05
+## Shop fitting-room structure — 2026-08-05
 
-- Reworked Catalog and Owned product cards into one consistent specimen-card
-  system: the catalog now gives each piece a larger visual-first tile with a
-  neutral near-black 16:9 stage, explicit slot eyebrow, quiet
-  rarity/collection footer, and restrained purchase action.
-- Expanded the catalog to a two-column gallery at desktop widths so the product
-  specimens are not compressed between the navigation rail and live profile.
-- Removed the preview-stage gradients, loud color blocks, highlight veil,
-  nested border profile card, and nested atmosphere panel so each renderer
-  reads directly as the product being previewed.
+- Rebuilt the Shop workspace as one fitting-room frame: a compact category
+  rail, three-column Catalog gallery, and a right inspector for the live profile
+  plus the selected piece’s description, price, and purchase action.
+- Made product cards compact visual specimens with neutral near-black stages,
+  explicit Preview actions, and no purchase logic in each repeated tile.
+- Kept the shared production renderers, temporary selection behavior, existing
+  purchase confirmation/RPC boundary, Owned surface, responsive layout, and
+  reduced-motion handling intact.
 - Preserved one selection surface, temporary fitting-room preview behavior,
   purchase confirmation, ownership states, responsive layout, and reduced-motion
   handling.

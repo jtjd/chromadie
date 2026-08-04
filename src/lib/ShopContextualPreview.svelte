@@ -13,6 +13,12 @@
   /** @type {any} */
   export let profileConfig = null;
   export let walletBalance = 0;
+  /** @type {any} */
+  export let state = null;
+  export let accessTier = 'earned';
+  export let isSignedIn = false;
+  export let purchaseArmed = false;
+  export let purchaseLoading = false;
 
   const dispatch = createEventDispatcher();
   let paused = false;
@@ -24,6 +30,45 @@
     : {};
   $: previewLinks = getVisibleProfileLinks(previewConfig);
   $: rendererMode = paused ? 'paused' : 'animated';
+  $: selectedPriceLabel = accessTier === 'free'
+    ? 'Included'
+    : accessTier === 'premium'
+      ? 'Premium'
+      : selectedItem?.cost > 0
+        ? `${compactPrice(selectedItem.cost)} EP`
+        : 'Milestone';
+  $: selectedPurchasable = Boolean(selectedItem)
+    && accessTier === 'earned'
+    && Number(selectedItem?.cost) > 0
+    && (selectedItem?.slot === 'consumable' || !['owned', 'equipped'].includes(state?.tone));
+  $: purchaseDisabled = purchaseLoading || (isSignedIn && state?.tone === 'unaffordable');
+  $: purchaseLabel = purchaseLoading
+    ? 'Buying…'
+    : purchaseArmed
+      ? 'Confirm purchase'
+      : !isSignedIn
+        ? 'Sign in to buy'
+        : state?.tone === 'unaffordable'
+          ? `Need ${compactPrice(Math.max(0, Number(selectedItem?.cost || 0) - Number(walletBalance || 0)))} more EP`
+          : `Buy for ${selectedPriceLabel}`;
+  $: stateLabel = state?.tone === 'free'
+    ? 'Included'
+    : state?.tone === 'premium-locked'
+      ? 'Premium'
+      : state?.tone === 'premium'
+        ? 'Premium unlocked'
+        : state?.label || 'Unavailable';
+  $: slotLabel = {
+    name_font: 'Font',
+    name_material: 'Material',
+    name_motion: 'Motion',
+    profile_border: 'Border',
+    avatar_effect: 'Avatar',
+    profile_atmosphere: 'Atmosphere',
+    cursor_trail: 'Cursor',
+    profile_layout: 'Layout',
+    consumable: 'Utility'
+  }[selectedItem?.slot] || 'Piece';
   // Re-mount the shared renderer whenever the fitting-room selection or any
   // selected layer changes. This keeps Canvas, border, and motion effects in
   // sync even when a renderer owns mount-time state or an async font loader.
@@ -43,6 +88,13 @@
   function replayPreview() {
     paused = false;
     replayKey += 1;
+  }
+
+  function compactPrice(value) {
+    const amount = Number(value) || 0;
+    if (amount >= 1000000) return `${(amount / 1000000).toFixed(amount % 1000000 ? 1 : 0)}M`;
+    if (amount >= 1000) return `${Math.round(amount / 1000)}K`;
+    return amount.toLocaleString();
   }
 </script>
 
@@ -84,6 +136,35 @@
     {#if selectedItem}<small>Nothing is saved until you equip it in Profile settings.</small>{/if}
   </div>
 
+  {#if selectedItem}
+    <section class="shop-contextual-preview__selection" aria-labelledby="shop-selected-item-title">
+      <div class="shop-selection-heading">
+        <div>
+          <span>{slotLabel} · {selectedItem.rarity || 'Common'}</span>
+          <h2 id="shop-selected-item-title">{selectedItem.name}</h2>
+        </div>
+        <strong>{selectedPriceLabel}</strong>
+      </div>
+      <p>{selectedItem.description || 'A profile piece designed to make your identity more personal.'}</p>
+      <div class="shop-selection-meta">
+        <span>{selectedItem.collection || 'Core collection'}</span>
+        <span>{stateLabel}</span>
+      </div>
+      {#if selectedPurchasable}
+        <button type="button" class="shop-selection-buy" disabled={purchaseDisabled} on:click={() => dispatch('purchase', selectedItem)}>{purchaseLabel}</button>
+      {:else}
+        <button type="button" class="shop-selection-buy shop-selection-buy--state" disabled>{stateLabel}</button>
+      {/if}
+      <button type="button" class="shop-selection-clear" on:click={() => dispatch('reset')}>Clear preview</button>
+    </section>
+  {:else}
+    <div class="shop-contextual-preview__empty-selection">
+      <span>Catalog</span>
+      <strong>Select a piece to inspect it.</strong>
+      <small>Preview it on your profile, then purchase it when it feels right.</small>
+    </div>
+  {/if}
+
 </aside>
 
 <style>
@@ -94,14 +175,9 @@
     display: grid;
     gap: .8rem;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
     padding: 1rem;
-    border: 1px solid var(--shop-line);
-    border-radius: var(--radius-md);
-    background: rgba(11, 13, 18, .7);
-    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .18);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: transparent;
   }
 
   .shop-contextual-preview__topline { display:flex; align-items:center; justify-content:space-between; gap:.8rem; color:var(--shop-accent); font:700 .64rem/1 var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
@@ -166,6 +242,25 @@
   .shop-contextual-preview__status span { color:var(--shop-faint); font:700 .62rem/1 var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
   .shop-contextual-preview__status strong { overflow:hidden; color:var(--shop-ink); font:600 .9rem/1.15 var(--shop-font); text-overflow:ellipsis; white-space:nowrap; }
   .shop-contextual-preview__status small { color:var(--shop-muted); font-size:.72rem; line-height:1.35; }
+  .shop-contextual-preview__selection { display:grid; gap:.7rem; padding-top:1rem; border-top:1px solid var(--shop-line); }
+  .shop-selection-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:.8rem; }
+  .shop-selection-heading > div { min-width:0; }
+  .shop-selection-heading span { color:var(--shop-faint); font:700 .62rem/1 var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
+  .shop-selection-heading h2 { overflow:hidden; margin:.35rem 0 0; color:var(--shop-ink); font:650 1.15rem/1.1 var(--shop-display); letter-spacing:-.03em; text-overflow:ellipsis; white-space:nowrap; }
+  .shop-selection-heading strong { flex:0 0 auto; padding-top:.2rem; color:var(--shop-ink); font:650 .76rem var(--shop-mono); white-space:nowrap; }
+  .shop-contextual-preview__selection p { margin:0; color:var(--shop-muted); font-size:.75rem; line-height:1.5; }
+  .shop-selection-meta { display:flex; align-items:center; justify-content:space-between; gap:.7rem; color:var(--shop-faint); font:.65rem var(--shop-mono); text-transform:uppercase; }
+  .shop-selection-buy, .shop-selection-clear { width:100%; min-height:2.65rem; border-radius:5px; cursor:pointer; font:650 .76rem var(--shop-font); }
+  .shop-selection-buy { border:1px solid color-mix(in srgb,var(--shop-accent) 68%,transparent); background:linear-gradient(100deg,color-mix(in srgb,var(--shop-accent) 80%,#5965e8),color-mix(in srgb,var(--shop-accent) 82%,#a070f3)); color:#11121a; box-shadow:0 .7rem 1.5rem color-mix(in srgb,var(--shop-accent) 16%,transparent); }
+  .shop-selection-buy:hover, .shop-selection-buy:focus-visible { filter:brightness(1.08); }
+  .shop-selection-buy:disabled { border-color:#333947; background:#171c27; color:#727c96; box-shadow:none; cursor:not-allowed; }
+  .shop-selection-buy--state { background:transparent; color:#b9b6c7; }
+  .shop-selection-clear { border:1px solid var(--shop-line-strong); background:transparent; color:var(--shop-muted); }
+  .shop-selection-clear:hover, .shop-selection-clear:focus-visible { border-color:#8b91a3; color:var(--shop-ink); }
+  .shop-contextual-preview__empty-selection { display:grid; gap:.35rem; padding-top:1rem; border-top:1px solid var(--shop-line); }
+  .shop-contextual-preview__empty-selection span { color:var(--shop-faint); font:700 .62rem/1 var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }
+  .shop-contextual-preview__empty-selection strong { color:var(--shop-ink); font:650 .95rem var(--shop-display); }
+  .shop-contextual-preview__empty-selection small { color:var(--shop-muted); font-size:.72rem; line-height:1.4; }
 
   @media (max-width: 960px) {
     .shop-contextual-preview { position: static; }

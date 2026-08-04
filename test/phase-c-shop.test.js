@@ -65,7 +65,8 @@ test('catalog removes redundant context, bounds results, and keeps one profile p
   assert.match(source, /Load more pieces/);
   assert.doesNotMatch(source, /Choose a <span>piece\.|shop-browse-heading-side/);
   assert.doesNotMatch(source, /shop-result-count/);
-  assert.match(source, /grid-template-columns:repeat\(2/);
+  assert.match(source, /grid-template-columns:repeat\(3/);
+  assert.match(source, /shop-quick-filters/);
   assert.match(source, /selectedSubslot/);
   assert.match(source, /font:600 \.84rem var\(--shop-font\)/);
   assert.match(rail, /Name layers/);
@@ -75,30 +76,31 @@ test('catalog removes redundant context, bounds results, and keeps one profile p
   assert.match(source, /@media \(max-width: 520px\)/);
 });
 
-test('product cards use one selection surface and readable purchase states', async () => {
+test('product cards use compact visual previews with explicit selection actions', async () => {
   const source = await readProjectFile('src/lib/ShopItemCard.svelte');
 
   assert.match(source, /class="item-select-button"/);
   assert.match(source, /aria-pressed=\{isPreviewing\}/);
-  assert.match(source, /walletBalance/);
-  assert.match(source, /Need .* more EP/);
-  assert.match(source, /item-buy-price/);
-  assert.match(source, /item-buy-button--locked/);
-  assert.match(source, /stateLabel/);
+  assert.match(source, /class="item-preview-action"/);
+  assert.match(source, /Previewing/);
   assert.doesNotMatch(source, /item-preview-button|item-product-button/);
   assert.doesNotMatch(source, /item-detail-link|>Details<|>Manage<|Need more EP/);
-  assert.match(source, /aspect-ratio:16 \/ 9/);
-  assert.match(source, /:global\(\.app-main--site\) \.shop-item \{ padding:0; border:0/);
+  assert.match(source, /aspect-ratio:1\.82 \/ 1/);
+  assert.match(source, /:global\(\.app-main--site\) \.shop-item \{ padding:0; border:1px/);
   assert.match(source, /@media \(max-width: 420px\)/);
 });
 
-test('card purchases reuse the existing confirmation and RPC boundary', async () => {
+test('inspector purchases reuse the existing confirmation and RPC boundary', async () => {
   const shop = await readProjectFile('src/lib/Shop.svelte');
   const browse = await readProjectFile('src/lib/ShopBrowse.svelte');
   const collection = await readProjectFile('src/lib/ShopCollection.svelte');
 
-  assert.match(browse, /on:purchase=\{event => dispatch\('purchase', event\.detail\)\}/);
-  assert.match(collection, /on:purchase=\{event => dispatch\('purchase', event\.detail\)\}/);
+  const contextual = await readProjectFile('src/lib/ShopContextualPreview.svelte');
+
+  assert.doesNotMatch(browse, /on:purchase/);
+  assert.doesNotMatch(collection, /on:purchase/);
+  assert.match(contextual, /dispatch\('purchase', selectedItem\)/);
+  assert.match(shop, /on:purchase=\{event => requestPurchase\(event\.detail\)\}/);
   assert.match(shop, /requiresPurchaseConfirmation\(item\)/);
   assert.match(shop, /supabase\.rpc\('purchase_item'/);
   assert.match(shop, /fetchInventoryState/);
@@ -125,6 +127,9 @@ test('selection stays in the persistent profile preview without a replacement de
   assert.match(contextual, /\{#key previewKey\}/);
   assert.match(contextual, /Temporary preview/);
   assert.match(contextual, /EP balance/);
+  assert.match(contextual, /shop-contextual-preview__selection/);
+  assert.match(contextual, /shop-selection-buy/);
+  assert.match(contextual, /Buy for/);
   assert.match(contextual, /previewLinks/);
   assert.doesNotMatch(contextual, /Page sections/);
   assert.match(contextual, />Clear<\/button>/);
