@@ -2936,8 +2936,9 @@ The Rain Window pilot uses a short, locally served plate derived from Pexels
 video 34479250 (Jonathan David,
 https://www.pexels.com/video/rain-droplets-on-windshield-close-up-34479250/).
 The source is cropped to a profile-safe 16:9 composition, converted to a
-high-contrast droplet highlight plate, trimmed to an 8-second loop, and served
-as WebM with an MP4 fallback and poster frame. The source is not redistributed
-unchanged. The video is isolated to the Rain Window atmosphere, uses screen
+high-contrast droplet highlight plate, trimmed to a 14-second loop with a
+one-second tail-to-head crossfade, and served as WebM with an MP4 fallback and
+poster frame. The source is not redistributed unchanged. The video is isolated
+to the Rain Window atmosphere, uses screen
 blending so black contributes no tint or dimming, and falls back to the poster
 for cards, reduced motion, hidden documents, and unsupported video formats.

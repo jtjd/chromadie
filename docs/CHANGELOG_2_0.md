@@ -1664,6 +1664,7 @@ direct route behavior.
 
 - Added a realistic droplet video plate to Rain Window, sourced from a
   commercially usable Pexels clip and transformed into a Chromadie-specific
-  highlight loop.
+  highlight loop with a longer tail-to-head crossfade so the reset is not
+  visually abrupt.
 - Added WebM/MP4 delivery, poster fallback, screen-only blending, and reduced-
   motion/card handling without changing the atmosphere slot or catalog key.
