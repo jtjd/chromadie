@@ -2,6 +2,12 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-04 — Make Rain Window loop-native
+
+- Swapped the crossfaded rain footage for an explicitly seamless rain loop.
+- Layered a quiet still of real windshield droplets over the motion plate so
+  the glass texture stays grounded while the moving rain repeats cleanly.
+
 ## 2026-08-04 — Upgrade the first avatar effects with authored art
 
 - Prism Orbit now uses an authored refractive-glass plate with sparse orbiting

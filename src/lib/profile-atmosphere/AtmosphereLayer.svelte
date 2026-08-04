@@ -24,6 +24,7 @@
   const RAIN_WINDOW_VIDEO = '/atmospheres/rain-window/rain-window.webm';
   const RAIN_WINDOW_VIDEO_FALLBACK = '/atmospheres/rain-window/rain-window.mp4';
   const RAIN_WINDOW_POSTER = '/atmospheres/rain-window/rain-window-poster.png';
+  const RAIN_WINDOW_TEXTURE = '/atmospheres/rain-window/rain-window-texture.png';
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: compact = mode === 'card' || mode === 'compact';
@@ -78,12 +79,18 @@
   <div class={classes} style={style} aria-hidden="true" data-atmosphere={definition.key}>
     {#if definition.key === 'rain-window'}
       {#if motionActive}
-        <video class="profile-atmosphere__rain-video" autoplay muted loop playsinline preload="metadata" poster={RAIN_WINDOW_POSTER}>
-          <source src={RAIN_WINDOW_VIDEO} type="video/webm" />
-          <source src={RAIN_WINDOW_VIDEO_FALLBACK} type="video/mp4" />
-        </video>
+        <div class="profile-atmosphere__rain-plate">
+          <img class="profile-atmosphere__rain-texture" src={RAIN_WINDOW_TEXTURE} alt="" />
+          <video class="profile-atmosphere__rain-video" autoplay muted loop playsinline preload="metadata" poster={RAIN_WINDOW_POSTER}>
+            <source src={RAIN_WINDOW_VIDEO} type="video/webm" />
+            <source src={RAIN_WINDOW_VIDEO_FALLBACK} type="video/mp4" />
+          </video>
+        </div>
       {:else}
-        <img class="profile-atmosphere__rain-video profile-atmosphere__rain-video--poster" src={RAIN_WINDOW_POSTER} alt="" />
+        <div class="profile-atmosphere__rain-plate">
+          <img class="profile-atmosphere__rain-texture" src={RAIN_WINDOW_TEXTURE} alt="" />
+          <img class="profile-atmosphere__rain-video profile-atmosphere__rain-video--poster" src={RAIN_WINDOW_POSTER} alt="" />
+        </div>
       {/if}
     {:else}
       <svg class="profile-atmosphere__art" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" focusable="false">
@@ -170,8 +177,14 @@
   .profile-atmosphere__art { position:absolute; inset:-7%; width:114%; height:114%; opacity:.9; }
   /* The plate is black-backed so screen blending contributes only the authored
      highlights; it never washes or darkens the user's media underneath. */
-  .profile-atmosphere__rain-video { position:absolute; inset:-6%; width:112%; height:112%; object-fit:cover; opacity:.34; mix-blend-mode:screen; filter:drop-shadow(0 0 7px var(--atmosphere-color-1)); }
-  .profile-atmosphere__rain-video--poster { opacity:.28; }
+  .profile-atmosphere__rain-plate { position:absolute; inset:-6%; width:112%; height:112%; }
+  .profile-atmosphere__rain-plate > img, .profile-atmosphere__rain-plate > video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; mix-blend-mode:screen; }
+  /* The authored still holds the irregular droplets in place while the
+     explicitly seamless loop supplies motion. Keeping the two layers
+     separate avoids asking unrelated droplet frames to crossfade. */
+  .profile-atmosphere__rain-texture { opacity:.055; filter:blur(.2px) drop-shadow(0 0 8px var(--atmosphere-color-1)); }
+  .profile-atmosphere__rain-video { opacity:.5; filter:drop-shadow(0 0 5px var(--atmosphere-color-2)); }
+  .profile-atmosphere__rain-video--poster { opacity:.2; }
   .profile-atmosphere__art path, .profile-atmosphere__art ellipse, .profile-atmosphere__art circle { vector-effect:non-scaling-stroke; }
   .atmosphere-art__wash { fill:none; stroke:var(--atmosphere-ribbon); stroke-width:86; opacity:.3; filter:var(--atmosphere-soft); }
   .atmosphere-art__signal { fill:none; stroke:var(--atmosphere-spectrum); stroke-linecap:round; stroke-width:2.5; opacity:.62; stroke-dasharray:2 16; }

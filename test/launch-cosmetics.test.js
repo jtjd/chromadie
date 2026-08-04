@@ -63,6 +63,7 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.match(atmosphereSource, /mode === 'card' \|\| mode === 'compact'/);
   assert.match(atmosphereSource, /background:transparent/);
   assert.match(atmosphereSource, /RAIN_WINDOW_VIDEO/);
+  assert.match(atmosphereSource, /RAIN_WINDOW_TEXTURE/);
   assert.match(atmosphereSource, /rain-window-poster\.png/);
   assert.match(atmosphereSource, /mix-blend-mode:screen/);
   assert.doesNotMatch(atmosphereSource, /mix-blend-mode:soft-light/);
@@ -70,9 +71,11 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   const rainVideo = await readFile(new URL('../public/atmospheres/rain-window/rain-window.webm', import.meta.url));
   const rainFallback = await readFile(new URL('../public/atmospheres/rain-window/rain-window.mp4', import.meta.url));
   const rainPoster = await readFile(new URL('../public/atmospheres/rain-window/rain-window-poster.png', import.meta.url));
+  const rainTexture = await readFile(new URL('../public/atmospheres/rain-window/rain-window-texture.png', import.meta.url));
   assert.deepEqual([...rainVideo.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
   assert.equal(rainFallback.subarray(4, 8).toString('ascii'), 'ftyp');
   assert.deepEqual([...rainPoster.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.deepEqual([...rainTexture.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
 });
 
 test('paid layout resolution preserves the free fallback and supports temporary previews', () => {

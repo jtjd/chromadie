@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Rain Window loop quality pass — 2026-08-04
+
+- Replaced the crossfaded arbitrary rain clip with a Pexels source explicitly
+  described as a seamless loop.
+- Added a separate static windshield-droplet texture so the atmosphere keeps
+  realistic glass depth without a visible texture reset at the loop boundary.
+- Kept screen blending, responsive cropping, poster fallback, reduced motion,
+  and compact static surfaces unchanged.
+
 ## Avatar effect quality pass — 2026-08-04
 
 - Replaced the generic treatments for Prism Orbit, Ember Crown, and Ghost

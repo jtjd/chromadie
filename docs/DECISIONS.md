@@ -2,6 +2,16 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-04 — Use a loop-native Rain Window plate
+
+The first Rain Window pass tried to force arbitrary windshield footage into a
+loop with a tail-to-head crossfade. Because the droplet field is random, the
+crossfade still exposed a reset. The atmosphere now uses a Pexels clip marked
+as a seamless loop for motion, paired with a separate low-opacity still made
+from real windshield droplets. The static glass layer preserves the tactile
+window identity while the loop-native plate repeats without asking unrelated
+droplet states to match. Cards and reduced-motion surfaces remain static.
+
 ## 2026-08-04 — Give avatar anchors authored layers, not generic CSS presets
 
 The first avatar quality pass keeps the existing 18 stable renderer keys and
