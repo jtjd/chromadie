@@ -371,7 +371,7 @@
   .shop-daily-color__status { color:var(--shop-muted)!important; }
   .shop-profile-link { min-height:2.9rem; display:inline-flex; align-items:center; gap:.45rem; padding:0 .75rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:var(--shop-raised); color:#d9d7d2; text-decoration:none; font:600 .8rem var(--shop-font); }
   .shop-profile-link:hover, .shop-profile-link:focus-visible { border-color:#777d8d; background:#1b1e25; color:#fff; }
-  .shop-workspace { display:grid; grid-template-columns:minmax(13rem,15rem) minmax(0,1fr) minmax(28rem,32rem); gap:clamp(.75rem,2vw,1.5rem); align-items:start; }
+  .shop-workspace { display:grid; grid-template-columns:minmax(12rem,14rem) minmax(0,1fr) minmax(24rem,28rem); gap:clamp(.9rem,2vw,1.5rem); align-items:start; }
   .shop-workspace-main { min-width:0; }
   .shop-status { display:grid; gap:.55rem; min-height:12rem; align-content:center; padding:2rem; border:1px solid var(--shop-line); background:var(--shop-deep); }
   .shop-status span { color:#858690; font:.7rem var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }

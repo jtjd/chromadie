@@ -66,13 +66,13 @@
 
 <article class="shop-item rarity-{item.rarity || 'Common'}" class:is-wearing={actuallyEquipped} class:is-previewing={isPreviewing}>
   <button class="item-select-button" type="button" aria-label={`Preview ${item.name} on your profile`} aria-pressed={isPreviewing} on:click={() => dispatch('select', item)}>
+    <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} active={isPreviewing} />
     <span class="item-card-heading">
       <span class="item-card-title">
         <span class="item-slot-label">{slotLabel}</span>
         <strong>{item.name}</strong>
       </span>
     </span>
-    <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} active={isPreviewing} />
   </button>
 
   <div class="item-card-meta">
@@ -99,18 +99,18 @@
 </article>
 
 <style>
-  .shop-item { min-width:0; display:flex; flex-direction:column; align-items:stretch; min-height:0; padding:.72rem; border:1px solid rgba(255,255,255,.14); border-radius:11px; background:#11141a; box-shadow:0 .5rem 1.25rem rgba(0,0,0,.12); text-align:left; transition:border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease; }
-  .shop-item:hover { border-color:rgba(205,210,255,.42); background:#15191f; box-shadow:0 .75rem 1.7rem rgba(0,0,0,.2); transform:translateY(-2px); }
-  .shop-item.is-wearing { border-color:#7d83a9; }
-  .shop-item.is-previewing { border-color:#7b9baf; }
+  .shop-item { min-width:0; display:flex; flex-direction:column; align-items:stretch; min-height:0; text-align:left; transition:transform .2s ease; }
+  .shop-item:hover { transform:translateY(-2px); }
+  .shop-item.is-wearing :global(.shop-preview-area) { border-color:#7d83a9; }
+  .shop-item.is-previewing :global(.shop-preview-area) { border-color:#9aa7d1; box-shadow:0 0 0 2px color-mix(in srgb,#9aa7d1 22%,transparent), 0 .8rem 1.8rem rgba(0,0,0,.22); }
   .item-select-button { display:flex; flex:1 1 auto; flex-direction:column; min-width:0; width:100%; padding:0; border:0; background:transparent; color:inherit; cursor:pointer; text-align:left; }
   .item-select-button:focus-visible { outline:2px solid #cdd2ff; outline-offset:4px; border-radius:4px; }
-  .item-card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; width:100%; }
+  .item-card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; width:100%; margin:.72rem .15rem 0; }
   .item-card-title { display:grid; min-width:0; gap:.15rem; }
   .item-card-title strong { overflow:hidden; color:var(--shop-ink, #f3f2f7); font:680 1.06rem/1.15 var(--shop-display, var(--font-display)); text-overflow:ellipsis; white-space:nowrap; }
   .item-slot-label { color:#8f929d; font:600 .62rem/1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.1em; text-transform:uppercase; }
   .item-select-button:hover .item-card-title strong, .item-select-button:focus-visible .item-card-title strong { color:#d7dbff; }
-  .item-card-meta { display:flex; align-items:center; justify-content:space-between; gap:.65rem; width:100%; min-height:2rem; margin:.62rem 0 0; }
+  .item-card-meta { display:flex; align-items:center; justify-content:space-between; gap:.65rem; width:100%; min-height:2rem; margin:.48rem .15rem 0; }
   .item-taxonomy { display:flex; align-items:center; flex-wrap:wrap; gap:.35rem; min-width:0; }
   .item-taxonomy-divider { color:#60636d; font:600 .76rem/1 var(--shop-mono, var(--font-mono-stack)); }
   .item-collection { overflow:hidden; min-width:0; color:#aaaab5; font:600 .74rem/1.1 var(--shop-mono, var(--font-mono-stack)); letter-spacing:.015em; text-overflow:ellipsis; white-space:nowrap; }

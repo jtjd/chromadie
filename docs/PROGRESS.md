@@ -3,8 +3,11 @@
 ## Shop specimen-card pass — 2026-08-05
 
 - Reworked Catalog and Owned product cards into one consistent specimen-card
-  system: every piece now uses the same 16:9 preview stage, explicit slot
-  eyebrow, quiet rarity/collection footer, and restrained purchase action.
+  system: the catalog now gives each piece a larger visual-first tile with the
+  same 16:9 preview stage, explicit slot eyebrow, quiet rarity/collection
+  footer, and restrained purchase action.
+- Expanded the catalog to a two-column gallery at desktop widths so the product
+  specimens are not compressed between the navigation rail and live profile.
 - Removed the preview-stage gradients, highlight veil, nested border profile
   card, and nested atmosphere panel so each renderer reads directly as the
   product being previewed.

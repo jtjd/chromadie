@@ -65,7 +65,7 @@ test('catalog removes redundant context, bounds results, and keeps one profile p
   assert.match(source, /Load more pieces/);
   assert.doesNotMatch(source, /Choose a <span>piece\.|shop-browse-heading-side/);
   assert.doesNotMatch(source, /shop-result-count/);
-  assert.match(source, /grid-template-columns:repeat\(3/);
+  assert.match(source, /grid-template-columns:repeat\(2/);
   assert.match(source, /selectedSubslot/);
   assert.match(source, /font:600 \.84rem var\(--shop-font\)/);
   assert.match(rail, /Name layers/);

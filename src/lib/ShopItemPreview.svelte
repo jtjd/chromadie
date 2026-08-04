@@ -102,7 +102,8 @@
 
 <style>
   .shop-preview-area { position:relative; aspect-ratio:16 / 9; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: #0a0d12; overflow: hidden; }
-  .preview-profile-specimen { width: 100%; min-height: 112px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; box-sizing: border-box; overflow: hidden; }
+  .shop-preview-area :global(.preview-border-shell) { width: min(74%, 18rem); height: 68%; }
+  .preview-profile-specimen { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; box-sizing: border-box; overflow: hidden; }
   .preview-profile-name { color: #fff; font-family: var(--font-display-stack, var(--font-display)); font-size: 1.45rem; font-weight: 700; overflow-wrap: anywhere; }
   .preview-profile-specimen small { color: rgba(232,236,248,.52); font: .55rem var(--shop-mono, var(--font-mono-stack)); letter-spacing: .1em; text-transform: uppercase; }
   .shop-preview-text { width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px; text-align: center; box-sizing: border-box; }
@@ -153,6 +154,7 @@
   .shop-layout-preview--story-stack .shop-layout-preview__module { left:9%; right:9%; width:auto; }
   .shop-atmosphere-preview { position:relative; width:100%; height:100%; min-height:7.5rem; overflow:hidden; border-radius:5px; background:#070a10; }
   .shop-atmosphere-preview :global(.profile-atmosphere) { opacity:.9; }
+  .shop-atmosphere-preview :global(.profile-atmosphere__video--poster) { opacity:.3; }
   .shop-atmosphere-preview__specimen { position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:.3rem; color:#f1f1f5; text-shadow:0 1px 1rem rgba(0,0,0,.9); }
   .shop-atmosphere-preview__specimen span { font:700 1.35rem/1 var(--font-display-stack, var(--font-display)); letter-spacing:-.04em; }
   .shop-atmosphere-preview__specimen small { color:rgba(232,236,248,.64); font:.55rem var(--shop-mono, var(--font-mono-stack)); letter-spacing:.11em; text-transform:uppercase; }

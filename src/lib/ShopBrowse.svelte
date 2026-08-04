@@ -173,7 +173,7 @@
   .shop-reset-link { width:max-content; margin-top:.1rem; padding:0; border:0; background:transparent; color:var(--shop-accent); font:.74rem var(--shop-mono); cursor:pointer; text-align:left; }
   .shop-results-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.7rem 0 .55rem; color:var(--shop-faint); font:.74rem var(--shop-mono); letter-spacing:.05em; text-transform:uppercase; }
   .shop-results-header button { padding:0; border:0; background:transparent; color:var(--shop-accent); cursor:pointer; font:inherit; text-transform:none; }
-  .shop-result-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; }
+  .shop-result-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.25rem 1rem; }
   .shop-load-more { display:flex; align-items:center; justify-content:center; gap:.55rem; width:100%; min-height:2.8rem; margin-top:.75rem; border:1px solid var(--shop-line-strong); border-radius:var(--radius-sm); background:#11141a; color:var(--shop-ink); cursor:pointer; font:.76rem var(--shop-mono); }
   .shop-load-more:hover, .shop-load-more:focus-visible { border-color:#aeb5e5; background:#171a22; }
   .shop-load-more span { color:var(--shop-muted); }
@@ -183,6 +183,6 @@
   .shop-empty-state p { margin:0 0 .5rem; color:#aaa8b0; }
   .shop-button { display:inline-flex; align-items:center; justify-content:center; min-height:2.7rem; padding:0 .9rem; border-radius:5px; font-weight:650; text-decoration:none; cursor:pointer; }
   .shop-button--outline { border:1px solid #4a4d57; background:#121419; color:#d3d0d8; }
-  @media (max-width: 760px) { .shop-browse-toolbar { grid-template-columns:minmax(0,1fr) 8rem; } .shop-filter-toggle { grid-column:1 / -1; } .shop-filter-panel__fields { grid-template-columns:repeat(2,minmax(0,1fr)); } .shop-result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width: 760px) { .shop-browse-toolbar { grid-template-columns:minmax(0,1fr) 8rem; } .shop-filter-toggle { grid-column:1 / -1; } .shop-filter-panel__fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width: 520px) { .shop-browse-toolbar { grid-template-columns:1fr; } .shop-filter-toggle { grid-column:auto; } .shop-filter-panel__fields { grid-template-columns:1fr; } .shop-result-grid { grid-template-columns:1fr; } }
 </style>
