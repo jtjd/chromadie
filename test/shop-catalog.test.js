@@ -11,8 +11,8 @@ import {
 
 const items = [
   { item_key: 'name_font_editorial_serif', name: 'Cormorant Garamond', slot: 'name_font', cost: 180000, rarity: 'Rare', collection: 'Archive', description: 'A serif.' },
-  { item_key: 'name_material_liquid_mercury', name: 'Quicksilver', slot: 'name_material', cost: 560000, rarity: 'Anomaly', collection: 'Nocturne', description: 'A reflective face.' },
-  { item_key: 'name_motion_soft_rise', name: 'Lift Off', slot: 'name_motion', cost: 150000, rarity: 'Uncommon', collection: 'Ember', description: 'A subtle entrance.' },
+  { item_key: 'name_material_glass_emboss', name: 'Raised Glass', slot: 'name_material', cost: 350000, rarity: 'Epic', collection: 'Prism', description: 'A raised glass face.' },
+  { item_key: 'name_motion_filament_trace', name: 'Filament Trace', slot: 'name_motion', cost: 430000, rarity: 'Epic', collection: 'Signal', description: 'A luminous filament traces the name.' },
   { item_key: 'border_signal', name: 'Signal Border', slot: 'profile_border', cost: 160000, rarity: 'Rare', collection: 'Signal', description: 'A quiet edge.' },
   { item_key: 'streak_freeze', name: 'Streak Freeze', slot: 'consumable', cost: 50000, rarity: 'Rare', description: 'Protection.' }
 ];
@@ -36,16 +36,16 @@ test('the fitting room changes only the selected retained slot', () => {
   const fittingRoom = createFittingRoom({
     walletBalance: 400000,
     userInventory: ['border_signal'],
-    equippedItems: { profile_border: 'border_signal', name_material: 'name_material_liquid_mercury' }
+    equippedItems: { profile_border: 'border_signal', name_material: 'name_material_glass_emboss' }
   });
   const next = tryOnShopItem(fittingRoom.loadout, items[0]);
   assert.deepEqual(fittingRoom.inventoryCounts, { border_signal: 1 });
   assert.equal(next.profile_border, 'border_signal');
   assert.equal(next.name_font, 'name_font_editorial_serif');
-  assert.equal(next.name_material, 'name_material_liquid_mercury');
+  assert.equal(next.name_material, 'name_material_glass_emboss');
   assert.deepEqual(clearShopSlot(next, 'profile_border'), {
     name_font: 'name_font_editorial_serif',
-    name_material: 'name_material_liquid_mercury'
+    name_material: 'name_material_glass_emboss'
   });
 });
 
@@ -53,7 +53,7 @@ test('catalog filtering combines retained sections, ownership, affordability, an
   const fittingRoom = createFittingRoom({ walletBalance: 170000, userInventory: ['border_signal'] });
   assert.deepEqual(
     filterShopItems(items, { section: 'names', subslot: 'name_motion', sortMode: 'price_asc' }, fittingRoom).map(item => item.item_key),
-    ['name_motion_soft_rise']
+    ['name_motion_filament_trace']
   );
   assert.deepEqual(
     filterShopItems(items, { section: 'owned' }, fittingRoom).map(item => item.item_key),
@@ -65,6 +65,6 @@ test('catalog filtering combines retained sections, ownership, affordability, an
   );
   assert.deepEqual(
     filterShopItems(items, { section: 'featured' }, fittingRoom).map(item => item.item_key),
-    ['name_font_editorial_serif', 'name_material_liquid_mercury', 'border_signal']
+    ['name_font_editorial_serif', 'name_material_glass_emboss', 'border_signal']
   );
 });

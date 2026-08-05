@@ -2,6 +2,26 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-05 — Curate Name Motion into ten authored gestures
+
+The active Name Motion catalog is now intentionally small: Ghost Frequency,
+Scramble, Color Wake, Dustfall, Type In, Filament Trace, Prism Fracture,
+Molten Rise, Voltage Arc, and Archive Bloom. Each is a complete Canvas 2D
+gesture with authored color, timing, and geometry; players do not shop through
+generic motion fragments or combine a large matrix of weak options.
+
+The renderer remains composable internally so materials and fonts keep their
+stable boundaries, but the player-facing motion catalog is curated. Removed
+motion rows are marked legacy by an additive migration, and historical keys
+resolve to the closest retained gesture through a finite compatibility alias
+map. This preserves equipped profiles and inventory references while keeping
+deprecated products out of new purchases. All motion paths use the shared
+clock, remain Canvas-owned, and keep reduced-motion/static fallbacks intact.
+
+The same curation applies to Name Materials: Raised Glass, Carbon Vein,
+Afterglow, Soft Black, Quarry Mark, Cathode Bloom, and Draftline remain active;
+the other material rows become legacy-only with finite material aliases.
+
 ## 2026-08-05 — Replace weak atmosphere plates without changing stable keys
 
 Night Pollen and Paper Shadow keep their existing renderer and ownership keys so

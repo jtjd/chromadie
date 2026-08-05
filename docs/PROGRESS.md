@@ -1,5 +1,23 @@
 # Chromadie 2.0 Progress
 
+## Name Motion curation — 2026-08-05
+
+- Replaced the 24-item motion catalog with ten curated gestures: Ghost
+  Frequency, Scramble, Color Wake, Dustfall, Type In, Filament Trace, Prism
+  Fracture, Molten Rise, Voltage Arc, and Archive Bloom.
+- Added five renderer-owned Canvas 2D motions with vivid spectral, thermal,
+  archival, filament, and electrical treatments; Dustfall now has a denser,
+  brighter particle field.
+- Restored the missing player-facing Type In label and updated live featured
+  and homepage previews to use retained motions.
+- Added a compatibility alias map and additive catalog migration. Nineteen
+  deprecated motion rows become legacy-only, while existing equipped and
+  inventory references remain valid. The active catalog is now 97 rows with
+  10 Name Motions, 7 Name Materials, and 35 paid Name layers total.
+- Curated the material shelf to Raised Glass, Carbon Vein, Afterglow, Soft
+  Black, Quarry Mark, Cathode Bloom, and Draftline; fifteen rejected material
+  rows are legacy-only and keep historical loadouts renderable.
+
 ## Shop card contrast pass — 2026-08-05
 
 - Set catalog cards and preview stages to black so media and renderer details

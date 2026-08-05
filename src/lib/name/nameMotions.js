@@ -26,31 +26,43 @@ export const NAME_MOTIONS = Object.freeze({
     description: 'No animation.'
   }),
 
-  // Phase D1 paid motion definitions.
-  'velvet-sweep': composableMotion('velvet-sweep', 3600, { label: 'Satin Pass', collection: 'Ember', rarity: 'Epic', description: 'A soft satin highlight travels across the name.' }),
-  'refraction-sweep': composableMotion('refraction-sweep', 3600, { label: 'Split Light', collection: 'Prism', rarity: 'Epic', description: 'Cyan and rose refraction bands cross the letters.' }),
-  'ghost-offset': composableMotion('ghost-offset', 4200, { label: 'Double Exposure', collection: 'Static Bloom', rarity: 'Epic', description: 'Slow chromatic echoes drift behind the name.' }),
-  'focus-resolve': composableMotion('focus-resolve', 3200, { label: 'Come Into Focus', collection: 'Nocturne', rarity: 'Rare', description: 'The name resolves from controlled blur.' }),
-  'mask-reveal': composableMotion('mask-reveal', 3000, { label: 'Curtain Lift', collection: 'Archive', rarity: 'Rare', description: 'A clean horizontal reveal.' }),
-  'quiet-afterimage': composableMotion('quiet-afterimage', 3600, { label: 'Residual', collection: 'Static Bloom', rarity: 'Rare', description: 'A restrained delayed copy trails the text.' }),
-  'soft-rise': composableMotion('soft-rise', 3000, { label: 'Lift Off', collection: 'Ember', rarity: 'Uncommon', description: 'A subtle entrance from below.' }),
-  'scanline-reveal': composableMotion('scanline-reveal', 3200, { label: 'Scan In', collection: 'Signal', rarity: 'Epic', description: 'A scanning line reveals the name.' }),
-  'particle-drift': composableMotion('particle-drift', 4200, { label: 'Dustfall', collection: 'Prism', rarity: 'Epic', description: 'Small particles lift from the letterforms.' }),
-  'letter-shuffle': composableMotion('letter-shuffle', 3400, { label: 'Scramble', collection: 'Static Bloom', rarity: 'Anomaly', description: 'Characters rearrange before locking into place.' }),
+  // Curated paid motion definitions. These are complete, authored gestures;
+  // the player never has to assemble a motion from a bag of generic parts.
   'fuzzy-signal': composableMotion('fuzzy-signal', 3000, { label: 'Ghost Frequency', collection: 'Signal', rarity: 'Epic', description: 'Controlled horizontal signal slices distort the name.' }),
-  'typewriter-name': composableMotion('typewriter-name', 3600, { label: 'Keyed In', collection: 'Archive', rarity: 'Rare', description: 'Characters appear one by one.' }),
+  'letter-shuffle': composableMotion('letter-shuffle', 3400, { label: 'Scramble', collection: 'Static Bloom', rarity: 'Anomaly', description: 'Characters rearrange before locking into place.' }),
   'chromatic-ripple': composableMotion('chromatic-ripple', 3600, { label: 'Color Wake', collection: 'Prism', rarity: 'Epic', description: 'A colored wave bends vertical sections of the letters.' }),
-  'liquid-fill': composableMotion('liquid-fill', 4200, { label: 'Floodline', collection: 'Prism', rarity: 'Anomaly', description: 'Today’s color rises inside the name and settles.' }),
-  'pixel-dissolve': composableMotion('pixel-dissolve', 3800, { label: 'Rasterfall', collection: 'Static Bloom', rarity: 'Epic', description: 'The name assembles from a field of square fragments.' }),
-  'echo-collapse': composableMotion('echo-collapse', 3800, { label: 'Convergence', collection: 'Nocturne', rarity: 'Epic', description: 'Distant copies converge into the final name.' }),
-  'heat-shimmer': composableMotion('heat-shimmer', 3400, { label: 'Mirage', collection: 'Ember', rarity: 'Rare', description: 'Thin horizontal bands refract like rising heat.' }),
-  'signal-lock': composableMotion('signal-lock', 3200, { label: 'Lockstep', collection: 'Signal', rarity: 'Epic', description: 'Misaligned signal slices snap cleanly into place.' }),
-  'letter-cascade': composableMotion('letter-cascade', 3600, { label: 'Typefall', collection: 'Archive', rarity: 'Epic', description: 'Characters fall individually into their final positions.' }),
-  'orbiting-spark': composableMotion('orbiting-spark', 4200, { label: 'Perihelion', collection: 'Prism', rarity: 'Epic', description: 'A bright spark traces around the name.' }),
-  'color-memory': composableMotion('color-memory', 4600, { label: 'Archive Loop', collection: 'Prism', rarity: 'Anomaly', description: 'Recent rolled colors pass through the lettering in sequence.', usesRecentColors: true }),
-  'daily-pulse': composableMotion('daily-pulse', 4200, { label: 'Solar Return', collection: 'Ember', rarity: 'Epic', description: 'Today’s color blooms outward from the center.', usesDailyColor: true }),
-  'prism-shatter': composableMotion('prism-shatter', 4200, { label: 'Facet Break', collection: 'Prism', rarity: 'Mythic', description: 'Faceted fragments separate and reassemble.' }),
-  'ink-spread': composableMotion('ink-spread', 4000, { label: 'Bloomline', collection: 'Archive', rarity: 'Epic', description: 'Soft ink expands into crisp finished letterforms.' })
+  'particle-drift': composableMotion('particle-drift', 4200, { label: 'Dustfall', collection: 'Prism', rarity: 'Epic', description: 'A bright field of dust lifts from the letterforms and falls back through them.' }),
+  'typewriter-name': composableMotion('typewriter-name', 3600, { label: 'Type In', collection: 'Archive', rarity: 'Rare', description: 'Characters arrive one by one with a precise editorial cursor.' }),
+  'filament-trace': composableMotion('filament-trace', 3800, { label: 'Filament Trace', collection: 'Signal', rarity: 'Epic', description: 'Luminous filaments thread through the name before tightening into a clean signal.' }),
+  'prism-fracture': composableMotion('prism-fracture', 4200, { label: 'Prism Fracture', collection: 'Prism', rarity: 'Mythic', description: 'The name separates into vivid spectral facets, then snaps back into focus.' }),
+  'molten-rise': composableMotion('molten-rise', 4400, { label: 'Molten Rise', collection: 'Ember', rarity: 'Anomaly', description: 'A hot liquid front climbs through the letters, shedding bright heat at the edge.', usesDailyColor: true }),
+  'voltage-arc': composableMotion('voltage-arc', 3600, { label: 'Voltage Arc', collection: 'Signal', rarity: 'Anomaly', description: 'A living arc jumps between the letterforms in sharp cyan, violet, and white.' }),
+  'archive-bloom': composableMotion('archive-bloom', 4600, { label: 'Archive Bloom', collection: 'Archive', rarity: 'Anomaly', description: 'Stored color memories bloom through the name like layered exposures.', usesRecentColors: true })
+});
+
+// Removed catalog rows remain valid historical values. They resolve to the
+// closest curated motion at render time while their shop rows are marked
+// legacy by the catalog migration and are no longer purchasable.
+export const LEGACY_NAME_MOTION_ALIASES = Object.freeze({
+  'velvet-sweep': 'filament-trace',
+  'refraction-sweep': 'prism-fracture',
+  'ghost-offset': 'fuzzy-signal',
+  'focus-resolve': 'archive-bloom',
+  'mask-reveal': 'typewriter-name',
+  'quiet-afterimage': 'fuzzy-signal',
+  'soft-rise': 'filament-trace',
+  'scanline-reveal': 'fuzzy-signal',
+  'liquid-fill': 'molten-rise',
+  'pixel-dissolve': 'prism-fracture',
+  'echo-collapse': 'archive-bloom',
+  'heat-shimmer': 'molten-rise',
+  'signal-lock': 'voltage-arc',
+  'letter-cascade': 'typewriter-name',
+  'orbiting-spark': 'voltage-arc',
+  'color-memory': 'archive-bloom',
+  'daily-pulse': 'molten-rise',
+  'prism-shatter': 'prism-fracture',
+  'ink-spread': 'archive-bloom'
 });
 
 export const NAME_MOTION_KEYS = Object.freeze(Object.keys(NAME_MOTIONS));
@@ -64,13 +76,12 @@ export const NAME_PAID_MOTION_KEYS = Object.freeze(
 function canonicalMotionKey(motionKey) {
   if (typeof motionKey !== 'string') return 'none';
   const candidate = motionKey.trim();
-  if (Object.prototype.hasOwnProperty.call(NAME_MOTIONS, candidate) && NAME_MOTIONS[candidate].composable) return candidate;
   const prefix = 'name_motion_';
   const namespaced = candidate.startsWith(prefix) ? candidate.slice(prefix.length) : '';
   const normalizedNamespaced = namespaced.replaceAll('_', '-');
-  return Object.prototype.hasOwnProperty.call(NAME_MOTIONS, normalizedNamespaced) && NAME_MOTIONS[normalizedNamespaced].composable
-    ? normalizedNamespaced
-    : 'none';
+  const normalized = Object.prototype.hasOwnProperty.call(NAME_MOTIONS, candidate) ? candidate : normalizedNamespaced;
+  if (Object.prototype.hasOwnProperty.call(NAME_MOTIONS, normalized) && NAME_MOTIONS[normalized].composable) return normalized;
+  return LEGACY_NAME_MOTION_ALIASES[normalized] || 'none';
 }
 
 export function resolveNameMotionKey(motionKey) {
@@ -78,8 +89,5 @@ export function resolveNameMotionKey(motionKey) {
 }
 
 export function getNameMotion(motionKey) {
-  const candidate = typeof motionKey === 'string' && Object.prototype.hasOwnProperty.call(NAME_MOTIONS, motionKey.trim())
-    ? motionKey.trim()
-    : canonicalMotionKey(motionKey);
-  return NAME_MOTIONS[candidate] || NAME_MOTIONS.none;
+  return NAME_MOTIONS[canonicalMotionKey(motionKey)] || NAME_MOTIONS.none;
 }

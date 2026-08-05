@@ -2,6 +2,20 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-05 — Curate Name Motion effects
+
+- Reduced the live Name Motion shop to ten authored effects: Ghost Frequency,
+  Scramble, Color Wake, Dustfall, Type In, Filament Trace, Prism Fracture,
+  Molten Rise, Voltage Arc, and Archive Bloom.
+- Added five new Canvas-rendered gestures with high-contrast spectral,
+  electrical, thermal, filament, and color-memory motion; strengthened
+  Dustfall with a larger, brighter field of particles.
+- Removed deprecated motions from new purchases while preserving historical
+  ownership and equipped profiles through legacy rows and renderer aliases.
+- Curated the active material shelf to Raised Glass, Carbon Vein, Afterglow,
+  Soft Black, Quarry Mark, Cathode Bloom, and Draftline; deprecated material
+  rows remain legacy-compatible but are no longer offered.
+
 ## 2026-08-05 — Increase catalog contrast
 
 - Changed shop cards and preview stages to black for a cleaner, higher-contrast

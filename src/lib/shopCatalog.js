@@ -74,11 +74,11 @@ const RARITY_RANK = Object.freeze({
 
 const FEATURED_KEYS = Object.freeze([
   'name_font_editorial_serif',
-  'name_material_liquid_mercury',
-  'name_motion_color_memory',
+  'name_material_glass_emboss',
+  'name_motion_archive_bloom',
   'border_signal',
-  'name_material_chroma_glass',
-  'name_motion_prism_shatter',
+  'name_material_neon_tube',
+  'name_motion_prism_fracture',
   'border_prism',
   'cursor_trail_color_memory',
   'avatar_effect_color_archive',

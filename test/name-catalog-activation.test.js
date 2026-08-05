@@ -10,35 +10,41 @@ import { NAME_MOTIONS } from '../src/lib/name/nameMotions.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the reset keeps exactly 64 modern Name rows and nine Profile Border rows', async () => {
+test('the curated catalog keeps exactly 35 paid Name rows and nine Profile Border rows', async () => {
   const seed = await read('supabase/seed.sql');
   assert.equal((seed.match(/'name_font_[a-z0-9_]+'/g) || []).length, 18);
-  assert.equal((seed.match(/'name_material_[a-z0-9_]+'/g) || []).length, 22);
-  assert.equal((seed.match(/'name_motion_[a-z0-9_]+'/g) || []).length, 24);
+  assert.equal((seed.match(/'name_material_[a-z0-9_]+'/g) || []).length, 7);
+  assert.equal((seed.match(/'name_motion_[a-z0-9_]+'/g) || []).length, 10);
   assert.equal((seed.match(/'border_(?:celestial|chroma|crystal|glitch|gold|neon|prism|void|signal)'/g) || []).length, 9);
   assert.doesNotMatch(seed, /name_material_plain|name_motion_none/);
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
     fonts: 18,
-    materials: 23,
-    motions: 25,
+    materials: 8,
+    motions: 11,
     paidFonts: 18,
-    paidMaterials: 22,
-    paidMotions: 24,
-    paidTotal: 64
+    paidMaterials: 7,
+    paidMotions: 10,
+    paidTotal: 35
   });
+  assert.deepEqual(Object.keys(NAME_MOTIONS).filter(key => key !== 'none'), [
+    'fuzzy-signal', 'letter-shuffle', 'chromatic-ripple', 'particle-drift',
+    'typewriter-name', 'filament-trace', 'prism-fracture', 'molten-rise',
+    'voltage-arc', 'archive-bloom'
+  ]);
 });
 
 test('the paid Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
-  const [seed, labelMigration, fontLabelMigration] = await Promise.all([
+  const [seed, labelMigration, fontLabelMigration, motionCurationMigration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
-    read('supabase/migrations/20260803130000_use_reference_font_family_names.sql')
+    read('supabase/migrations/20260803130000_use_reference_font_family_names.sql'),
+    read('supabase/migrations/20260805120000_curate_name_motion_catalog.sql')
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
   )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }));
 
-  assert.equal(rows.length, 64);
+  assert.equal(rows.length, 35);
   assert.equal(new Set(rows.map(row => row.name)).size, rows.length);
 
   const registries = {
@@ -51,7 +57,7 @@ test('the paid Name catalog uses distinctive labels synchronized with each rende
     assert.ok(definition, `${row.itemKey} must resolve to a code-owned renderer`);
     assert.equal(definition.label, row.name, `${row.itemKey} label drifted from its renderer`);
     assert.equal(
-      [labelMigration, fontLabelMigration].some(migration => migration.includes(`('${row.itemKey}', '${row.name}')`)),
+      [labelMigration, fontLabelMigration, motionCurationMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
       true,
       `${row.itemKey} label is missing from the production migrations`
     );
@@ -59,7 +65,7 @@ test('the paid Name catalog uses distinctive labels synchronized with each rende
 
   for (const blandLabel of [
     'Editorial Serif', 'Condensed Sans', 'Wide Geometric', 'Polished Chrome',
-    'Liquid Mercury', 'Velvet Sweep', 'Daily Pulse'
+    'Liquid Mercury', 'Velvet Sweep', 'Daily Pulse', 'Keyed In'
   ]) {
     assert.equal(rows.some(row => row.name === blandLabel), false, `stale label remains: ${blandLabel}`);
   }
@@ -107,8 +113,8 @@ test('reference Font families are real bundled assets rather than shared fallbac
 test('modern Name layers remain independent in temporary fitting-room state', () => {
   const initial = {
     name_font: 'name_font_editorial_serif',
-    name_material: 'name_material_copper_press',
-    name_motion: 'name_motion_soft_rise',
+    name_material: 'name_material_velvet_ink',
+    name_motion: 'name_motion_filament_trace',
     profile_border: 'border_signal'
   };
   const next = applyNamePreviewLayer(initial, 'name_font', 'name_font_mono_compact');
@@ -131,8 +137,20 @@ test('loadout resolution uses safe defaults for absent or malformed layers', () 
   assert.equal(definition.kind, 'composable');
   assert.equal(definition.font, 'editorial-serif');
   assert.equal(definition.material, 'plain');
-  assert.equal(definition.motion, 'daily-pulse');
+  assert.equal(definition.motion, 'molten-rise');
   assert.equal(resolveNameLoadout({}).kind, 'default');
+});
+
+test('deprecated motion keys resolve to curated replacements without entering the active registry', () => {
+  assert.equal(NAME_MOTIONS['daily-pulse'], undefined);
+  assert.equal(resolveNameLoadout({ name_motion: 'name_motion_daily_pulse' }).motion, 'molten-rise');
+  assert.equal(resolveNameLoadout({ name_motion: 'name_motion_ghost_offset' }).motion, 'fuzzy-signal');
+});
+
+test('deprecated material keys resolve to curated surfaces without entering the active registry', () => {
+  assert.equal(NAME_MATERIALS['liquid-mercury'], undefined);
+  assert.equal(resolveNameLoadout({ name_material: 'name_material_liquid_mercury' }).material, 'glass-emboss');
+  assert.equal(resolveNameLoadout({ name_material: 'name_material_chroma_glass' }).material, 'neon-tube');
 });
 
 test('the forward-only migration removes obsolete catalog and equipped references', async () => {

@@ -26,11 +26,11 @@ import {
   shouldAnimateNameFrame
 } from '../src/lib/name/nameRenderer.js';
 import { createNameAnimationClock } from '../src/lib/name/nameAnimationClock.js';
-import { getReadableMotionColor } from '../src/lib/name/render/composableMotions.js';
+import { drawComposableMotion, getReadableMotionColor } from '../src/lib/name/render/composableMotions.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the lean renderer registries contain the 64 paid layers and free baselines', async () => {
+test('the curated renderer registries contain the 35 paid layers and free baselines', async () => {
   const seed = await read('supabase/seed.sql');
   const seedRendererRows = [...seed.matchAll(
     /^\s*\('name_(font|material|motion)_[^']+',\s*'[^']+',\s*'(name_font|name_material|name_motion)',\s*\d+,\s*'renderer',\s*'([^']+)'/gm
@@ -44,18 +44,18 @@ test('the lean renderer registries contain the 64 paid layers and free baselines
   assert.deepEqual(NAME_PAID_MOTION_KEYS, seedKeys('name_motion'));
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
     fonts: 18,
-    materials: 23,
-    motions: 25,
+    materials: 8,
+    motions: 11,
     paidFonts: 18,
-    paidMaterials: 22,
-    paidMotions: 24,
-    paidTotal: 64
+    paidMaterials: 7,
+    paidMotions: 10,
+    paidTotal: 35
   });
   assert.equal(NAME_MATERIALS.plain.composable, true);
   assert.equal(NAME_MOTIONS.none.composable, true);
   assert.equal(new Set(Object.keys(NAME_FONTS)).size, 18);
-  assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, 23);
-  assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 25);
+  assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, 8);
+  assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 11);
 });
 
 test('all supported combinations resolve through finite code-owned registries', () => {
@@ -89,8 +89,8 @@ test('invalid inputs fall back independently and cannot inject renderer values',
 test('composable loadouts produce deterministic bounded card and profile frames', () => {
   const loadout = {
     fontKey: 'editorial-serif',
-    materialKey: 'liquid-mercury',
-    motionKey: 'ghost-offset'
+    materialKey: 'glass-emboss',
+    motionKey: 'fuzzy-signal'
   };
   const input = {
     text: 'A long Chromadie identity 123',
@@ -145,9 +145,9 @@ test('Typefall keeps motion text readable on dark daily colors', () => {
 });
 
 test('reduced-motion, static-signature, and offscreen modes are stable', () => {
-  const reducedAtStart = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'daily-pulse' }, mode: 'reduced-motion', time: 0 });
-  const reducedLater = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'daily-pulse' }, mode: 'reduced-motion', time: 5000 });
-  const staticFrame = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'daily-pulse' }, mode: 'static-signature', time: 50 });
+  const reducedAtStart = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'archive-bloom' }, mode: 'reduced-motion', time: 0 });
+  const reducedLater = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'archive-bloom' }, mode: 'reduced-motion', time: 5000 });
+  const staticFrame = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'archive-bloom' }, mode: 'static-signature', time: 50 });
   assert.deepEqual(reducedAtStart, reducedLater);
   assert.equal(staticFrame.staticFrame, true);
   assert.equal(shouldAnimateNameFrame({ visible: false, mode: 'animated' }), false);
@@ -161,6 +161,28 @@ test('every paid motion changes at intentional progress points and Still remains
     const second = getNameFrameModel({ text: 'Chromadie', loadout: { motionKey }, time: 1750 });
     if (motionKey === 'none') assert.equal(getNameFrameSignature(first), getNameFrameSignature(second));
     else assert.notEqual(getNameFrameSignature(first), getNameFrameSignature(second), motionKey);
+  }
+});
+
+test('every curated motion renderer draws safely through the bounded Canvas API', () => {
+  const context = new Proxy({}, {
+    get(target, property) {
+      if (property === 'createLinearGradient') return () => ({ addColorStop() {} });
+      if (property === 'createRadialGradient') return () => ({ addColorStop() {} });
+      if (property === 'measureText') return text => ({ width: String(text).length * 12 });
+      if (!(property in target)) target[property] = () => {};
+      return target[property];
+    }
+  });
+  for (const motionKey of NAME_PAID_MOTION_KEYS) {
+    const frame = getNameFrameModel({
+      text: 'Chromadie',
+      loadout: { motionKey },
+      todayColor: '#D84B8E',
+      recentColors: ['#45E8FF', '#9B7CFF', '#FFD166'],
+      time: 1375
+    });
+    assert.doesNotThrow(() => drawComposableMotion(context, frame, () => {}), motionKey);
   }
 });
 

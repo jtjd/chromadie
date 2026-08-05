@@ -26,55 +26,19 @@ export const NAME_MATERIALS = Object.freeze({
     rarity: 'Free'
   }),
 
-  // Phase D1 composable materials. The colors are intentionally code-owned
+  // Curated composable materials. The colors are intentionally code-owned
   // and bounded; the renderer derives daily-color variants from todayColor.
-  'polished-chrome': composableMaterial('polished-chrome', 'polished-chrome', ['#626771', '#e7ebef', '#777d87', '#ffffff', '#9ca3ad', '#e7ebef'], {
-    label: 'Cold Mirror', collection: 'Nocturne', rarity: 'Epic'
-  }),
-  'copper-press': composableMaterial('copper-press', 'copper-press', ['#efc09a', '#a95637', '#e08d5d', '#6f3321'], {
-    label: 'Oxide Press', collection: 'Ember', rarity: 'Rare'
-  }),
   'glass-emboss': composableMaterial('glass-emboss', 'glass-emboss', ['#dae8ff', '#7da0dc', '#f6fbff'], {
     label: 'Raised Glass', collection: 'Prism', rarity: 'Epic'
-  }),
-  'fine-outline': composableMaterial('fine-outline', 'fine-outline', ['#efede7', '#cdd2ff'], {
-    label: 'Hairline', collection: 'Archive', rarity: 'Uncommon'
-  }),
-  'ink-bleed': composableMaterial('ink-bleed', 'ink-bleed', ['#e7e1d7', '#857b72', '#332b2b'], {
-    label: 'Wet Type', collection: 'Archive', rarity: 'Rare'
-  }),
-  'pearl-foil': composableMaterial('pearl-foil', 'pearl-foil', ['#f7f5fb', '#d8e8f3', '#f0dfe9', '#dcece7', '#f6efdf'], {
-    label: 'Mother of Pearl', collection: 'Prism', rarity: 'Epic'
   }),
   'carbon-cut': composableMaterial('carbon-cut', 'carbon-cut', ['#aab3c0', '#2b3038', '#e2e8f0'], {
     label: 'Carbon Vein', collection: 'Nocturne', rarity: 'Rare'
   }),
-  'frosted-edge': composableMaterial('frosted-edge', 'frosted-edge', ['#e7effe', '#ffffff', '#b8d2ff'], {
-    label: 'Ice Line', collection: 'Signal', rarity: 'Rare'
-  }),
-  'holographic-film': composableMaterial('holographic-film', 'holographic-film', ['#8fd8e8', '#c2b7e8', '#e3b8cc', '#ddd3a6', '#a9d8ca', '#8fd8e8'], {
-    label: 'Spectral Film', collection: 'Prism', rarity: 'Anomaly'
-  }),
-  'cut-paper': composableMaterial('cut-paper', 'cut-paper', ['#716a63', '#e8e1d6', '#b3a89a'], {
-    label: 'Scissorwork', collection: 'Archive', rarity: 'Rare'
-  }),
   'neon-tube': composableMaterial('neon-tube', 'neon-tube', ['#f7eaf2', '#ffffff', '#d84b8e'], {
     label: 'Afterglow', collection: 'Signal', rarity: 'Epic', usesDailyColor: true
   }),
-  'liquid-mercury': composableMaterial('liquid-mercury', 'liquid-mercury', ['#31343b', '#eef1f5', '#555a64', '#ffffff', '#24272d', '#cfd3d9'], {
-    label: 'Quicksilver', collection: 'Nocturne', rarity: 'Anomaly', usesDailyColor: true
-  }),
-  'oil-slick': composableMaterial('oil-slick', 'oil-slick', ['#273044', '#66528f', '#1f8f95', '#d9ad64', '#51356f', '#273044'], {
-    label: 'Spillway', collection: 'Prism', rarity: 'Epic'
-  }),
-  'thermal-ink': composableMaterial('thermal-ink', 'thermal-ink', ['#24123a', '#5d4dd7', '#2bc4c9', '#f3d34a', '#d84b8e'], {
-    label: 'Heat Map', collection: 'Signal', rarity: 'Epic', usesDailyColor: true
-  }),
   'velvet-ink': composableMaterial('velvet-ink', 'velvet-ink', ['#5b2b43', '#ffb4d2', '#8d4669'], {
     label: 'Soft Black', collection: 'Ember', rarity: 'Rare'
-  }),
-  'embroidered-thread': composableMaterial('embroidered-thread', 'embroidered-thread', ['#d9d0c7', '#8f8275', '#f7eadb'], {
-    label: 'Threadwork', collection: 'Archive', rarity: 'Epic'
   }),
   'engraved-stone': composableMaterial('engraved-stone', 'engraved-stone', ['#9aa1aa', '#353a40', '#e2e6eb'], {
     label: 'Quarry Mark', collection: 'Nocturne', rarity: 'Rare'
@@ -82,18 +46,27 @@ export const NAME_MATERIALS = Object.freeze({
   'crt-phosphor': composableMaterial('crt-phosphor', 'crt-phosphor', ['#9df5c3', '#5cff9a', '#043b17'], {
     label: 'Cathode Bloom', collection: 'Static Bloom', rarity: 'Epic'
   }),
-  'gold-leaf': composableMaterial('gold-leaf', 'gold-leaf', ['#5c3d0b', '#f7dc7b', '#a86d11', '#ffe59a', '#6f470c'], {
-    label: 'Gilded', collection: 'Archive', rarity: 'Anomaly'
-  }),
-  'chroma-glass': composableMaterial('chroma-glass', 'chroma-glass', ['#ff335f', '#ff8a00', '#fff44f', '#48ff8b', '#00dcff', '#8f5bff'], {
-    label: 'Color Prism', collection: 'Prism', rarity: 'Epic', usesDailyColor: true
-  }),
-  'ceramic-glaze': composableMaterial('ceramic-glaze', 'ceramic-glaze', ['#fff1e9', '#d88463', '#8b3d2f', '#4a1c18'], {
-    label: 'Kiln Glow', collection: 'Ember', rarity: 'Epic'
-  }),
   'blueprint-ink': composableMaterial('blueprint-ink', 'blueprint-ink', ['#7ec7ff', '#d8efff', '#6eb1e3'], {
     label: 'Draftline', collection: 'Signal', rarity: 'Rare'
   })
+});
+
+export const LEGACY_NAME_MATERIAL_ALIASES = Object.freeze({
+  'polished-chrome': 'carbon-cut',
+  'copper-press': 'velvet-ink',
+  'fine-outline': 'blueprint-ink',
+  'ink-bleed': 'blueprint-ink',
+  'pearl-foil': 'glass-emboss',
+  'frosted-edge': 'glass-emboss',
+  'holographic-film': 'glass-emboss',
+  'cut-paper': 'blueprint-ink',
+  'liquid-mercury': 'glass-emboss',
+  'oil-slick': 'glass-emboss',
+  'thermal-ink': 'neon-tube',
+  'embroidered-thread': 'blueprint-ink',
+  'gold-leaf': 'neon-tube',
+  'chroma-glass': 'neon-tube',
+  'ceramic-glaze': 'velvet-ink'
 });
 
 export const NAME_MATERIAL_KEYS = Object.freeze(Object.keys(NAME_MATERIALS));
@@ -111,9 +84,9 @@ function canonicalMaterialKey(materialKey) {
   const prefix = 'name_material_';
   const namespaced = candidate.startsWith(prefix) ? candidate.slice(prefix.length) : '';
   const normalizedNamespaced = namespaced.replaceAll('_', '-');
-  return Object.prototype.hasOwnProperty.call(NAME_MATERIALS, normalizedNamespaced) && NAME_MATERIALS[normalizedNamespaced].composable
-    ? normalizedNamespaced
-    : 'plain';
+  const normalized = Object.prototype.hasOwnProperty.call(NAME_MATERIALS, candidate) ? candidate : normalizedNamespaced;
+  if (Object.prototype.hasOwnProperty.call(NAME_MATERIALS, normalized) && NAME_MATERIALS[normalized].composable) return normalized;
+  return LEGACY_NAME_MATERIAL_ALIASES[normalized] || 'plain';
 }
 
 export function resolveNameMaterialKey(materialKey) {
@@ -121,8 +94,5 @@ export function resolveNameMaterialKey(materialKey) {
 }
 
 export function getNameMaterial(materialKey) {
-  const candidate = typeof materialKey === 'string' && Object.prototype.hasOwnProperty.call(NAME_MATERIALS, materialKey.trim())
-    ? materialKey.trim()
-    : canonicalMaterialKey(materialKey);
-  return NAME_MATERIALS[candidate] || NAME_MATERIALS.plain;
+  return NAME_MATERIALS[canonicalMaterialKey(materialKey)] || NAME_MATERIALS.plain;
 }
