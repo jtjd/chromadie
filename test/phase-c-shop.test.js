@@ -175,7 +175,7 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.doesNotMatch(contextual, /Replay|Pause|aria-pressed=\{paused\}|replayKey|replayPreview|let paused/);
   assert.doesNotMatch(contextual, /Try it on|Applied to the preview/);
   assert.match(itemPreview, /COLLECTION_TONES/);
-  assert.match(itemPreview, /PREVIEW_SURFACE = '#090C11'/);
+  assert.match(itemPreview, /PREVIEW_SURFACE = '#020306'/);
   assert.doesNotMatch(itemPreview, /SLOT_TONES/);
   assert.match(itemPreview, /previewClasses = `shop-preview-area shop-preview-area--\$\{previewType\}`/);
   assert.match(itemPreview, /mode="preview" active=\{active \|\| hovered\} animated=\{active \|\| hovered\}/);
@@ -186,6 +186,8 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(itemPreview, /shop-cursor-preview__trail--near/);
   assert.match(itemPreview, /filter:none !important/);
   assert.doesNotMatch(itemPreview, /border specimen/);
+  assert.doesNotMatch(itemPreview, /preview-profile-name/);
+  assert.match(itemPreview, /preview-border-space/);
   assert.doesNotMatch(itemPreview, /profile atmosphere/);
   assert.match(itemPreview, /background: var\(--preview-surface/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area \{[^}]*border: 1px/);

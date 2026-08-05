@@ -51,8 +51,8 @@
 <style>
   .shop-item { min-width:0; display:flex; flex-direction:column; align-items:stretch; min-height:0; overflow:hidden; text-align:left; transition:transform .2s ease; }
   .shop-item:hover { transform:translateY(-2px); }
-  :global(.app-main--site) .shop-item { padding:0; border:1px solid var(--shop-line, rgba(255,255,255,.075)); border-radius:var(--radius-sm, 8px); background:rgba(13,16,24,.72); box-shadow:none; }
-  :global(.app-main--site) .shop-item:hover { border-color:color-mix(in srgb,var(--shop-accent) 36%,var(--shop-line)); background:rgba(15,18,27,.84); }
+  :global(.app-main--site) .shop-item { padding:0; border:1px solid var(--shop-line, rgba(255,255,255,.075)); border-radius:var(--radius-sm, 8px); background:#050609; box-shadow:none; }
+  :global(.app-main--site) .shop-item:hover { border-color:color-mix(in srgb,var(--shop-accent) 36%,var(--shop-line)); background:#070a0f; }
   .shop-item.is-wearing, .shop-item.is-previewing { border-color:color-mix(in srgb,var(--shop-accent) 58%,var(--shop-line)); }
   .shop-item.is-previewing { box-shadow:0 0 0 1px color-mix(in srgb,var(--shop-accent) 22%,transparent), 0 1rem 2.25rem rgba(0,0,0,.22); }
   .item-select-button { display:flex; flex:1 1 auto; flex-direction:column; min-width:0; width:100%; padding:0; border:0; background:transparent; color:inherit; cursor:pointer; text-align:left; }

@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-05 — Increase catalog contrast
+
+- Changed shop cards and preview stages to black for a cleaner, higher-contrast
+  gallery.
+- Profile Border thumbnails now show only the border treatment without a
+  repeated profile name.
+
 ## 2026-08-05 — Replace weak atmosphere treatments
 
 - Replaced Night Pollen with the denser Starlight Tunnel particle field.

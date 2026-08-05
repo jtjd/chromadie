@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Shop card contrast pass — 2026-08-05
+
+- Set catalog cards and preview stages to black so media and renderer details
+  carry the visual weight instead of muted gray card fills.
+- Removed the repeated name specimen from Profile Border thumbnails while
+  preserving names in the inspector and live profile preview.
+
 ## Atmosphere replacement quality pass — 2026-08-05
 
 - Replaced the weak Night Pollen plate with a denser particle-tunnel loop and

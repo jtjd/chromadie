@@ -39,7 +39,7 @@ media URL and fall back to the user’s initial when no avatar is configured;
 the former demo dog is not part of the product. Atmosphere thumbnails suppress
 the shared video drop-shadow that produced colored edge bars, while cursor
 thumbnails identify the product directly with a pointer, click ring, and
-layered trail. Border previews keep only the visual border/name specimen, and
+layered trail. Border previews keep only the visual border treatment, and
 atmosphere thumbnails explicitly size their media to the card bounds so a
 black-backed plate cannot leave an artificial side strip.
 
@@ -47,6 +47,13 @@ Borders show the effect around a simple name specimen; Atmospheres show the
 media plate directly. The real profile fitting-room preview remains the place
 for full composition context. Selection, purchase, ownership, accessibility,
 and reduced-motion behavior stay unchanged.
+
+## 2026-08-05 — Use black shop card shells and border-only specimens
+
+Catalog cards now use a near-black shell and black preview stage so the effect
+is the highest-contrast element in the gallery. Profile Border thumbnails no
+longer repeat a profile name; they show the border treatment on an empty field,
+while the selected inspector and real profile retain the identity name.
 
 ## 2026-08-04 — Replace retired atmosphere presets with sourced video plates
 
