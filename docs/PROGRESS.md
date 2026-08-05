@@ -1,5 +1,23 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio / Collection / Progression slice — 2026-08-05
+
+- Established the owner-facing decision boundary: Studio is the primary
+  dashboard, Collection owns expression/equip, Progression owns earned story,
+  and Shop remains secondary acquisition.
+- Replaced the settings catch-all Account panel with a progression workspace
+  showing rank, EP-to-next-rank, daily rolls, streaks, achievements, story
+  collection unlock state, and recent roll history from existing authoritative
+  profile context.
+- Renamed the settings appearance destination to Collection without changing
+  its server-authoritative inventory/equip behavior.
+- Preserved `/shop`, catalog loading, purchases, entitlements, inventory, RLS,
+  and historical cosmetic keys. No new economy or reward grant was added.
+- Validation: build, Svelte check, ESLint, all 186 tests, links, CSP, username,
+  balance, catalog, scoring, and database-security checks pass. The existing
+  performance-budget check remains red for Initial JS, Total JS, and Total CSS
+  (the repository was already over budget before this slice).
+
 ## Name Motion curation — 2026-08-05
 
 - Replaced the 24-item motion catalog with ten curated gestures: Ghost

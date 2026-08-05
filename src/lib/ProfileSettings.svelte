@@ -11,6 +11,7 @@
   import IdentityEditor from './IdentityEditor.svelte';
   import ProfileExpressionEditor from './ProfileExpressionEditor.svelte';
   import ProfileCosmeticsEditor from './ProfileCosmeticsEditor.svelte';
+  import ProfileProgression from './ProfileProgression.svelte';
   import ProfileEditor from './ProfileEditor.svelte';
   import ProfileSocial from './ProfileSocial.svelte';
   import ProfileSettingsPreview from './ProfileSettingsPreview.svelte';
@@ -18,10 +19,10 @@
   const SETTINGS_SECTIONS = Object.freeze([
     { id: 'identity', number: '01', label: 'Identity', description: 'Bio & presence' },
     { id: 'expression', number: '02', label: 'Expression', description: 'Avatar, backdrop & music' },
-    { id: 'appearance', number: '03', label: 'Appearance', description: 'Colors & cosmetics' },
+    { id: 'collection', number: '03', label: 'Collection', description: 'Owned expression' },
     { id: 'layout', number: '04', label: 'Layout & links', description: 'Your public canvas' },
     { id: 'social', number: '05', label: 'Privacy & social', description: 'Visitors & interactions' },
-    { id: 'account', number: '06', label: 'Account', description: 'Progress & controls' }
+    { id: 'progression', number: '06', label: 'Progression', description: 'Rolls & milestones' }
   ]);
 
   function createInitialSettingsContext() {
@@ -284,8 +285,8 @@
               <section class="profile-settings-page__editor-section" aria-label="Expression editor">
                 <ProfileExpressionEditor profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} on:expressionchange={updateExpression} />
               </section>
-            {:else if activeSection === 'appearance'}
-              <section class="profile-settings-page__editor-section" aria-label="Appearance editor">
+            {:else if activeSection === 'collection'}
+              <section class="profile-settings-page__editor-section" aria-label="Collection editor">
                 <ProfileCosmeticsEditor accountProfile={context.targetProfile} profileConfig={context.profileConfig} />
               </section>
             {:else if activeSection === 'layout'}
@@ -304,14 +305,25 @@
                   on:socialchange={handleSocialChange}
                 />
               </section>
+            {:else if activeSection === 'progression'}
+              <section class="profile-settings-page__editor-section" aria-label="Progression overview">
+                <ProfileProgression
+                  profile={context.targetProfile}
+                  timelineEvents={context.timelineEvents}
+                  collectionItems={context.collectionItems}
+                  allAchievements={context.allAchievements}
+                  unlockedAchievements={context.unlockedAchievements}
+                />
+              </section>
             {:else}
+              <!-- Compatibility escape hatch for older bookmarks and support workflows. -->
               <section class="profile-settings-page__account" aria-labelledby="profile-settings-account-title">
                 <div class="profile-settings-page__account-icon" aria-hidden="true">◌</div>
                 <div>
                   <p class="profile-settings-page__eyebrow">Account controls</p>
                   <h3 id="profile-settings-account-title">Progress, badges & account tools</h3>
-                  <p>Use the existing account view to manage your mood, badges, progression, and account settings.</p>
-                  <Button variant="secondary" href="/profile?legacy=1">Open account controls <span aria-hidden="true">↗</span></Button>
+                  <p>Use the legacy account view for controls that have not moved into Studio yet.</p>
+                  <Button variant="secondary" href="/profile?legacy=1">Open legacy account controls <span aria-hidden="true">↗</span></Button>
                 </div>
               </section>
             {/if}

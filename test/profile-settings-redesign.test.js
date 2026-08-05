@@ -18,14 +18,15 @@ test('profile settings uses a focused section workspace', async () => {
   assert.doesNotMatch(settings, /Make it unmistakably yours/);
   assert.match(settings, /Identity/);
   assert.match(settings, /Expression/);
-  assert.match(settings, /Appearance/);
+  assert.match(settings, /Collection/);
   assert.match(settings, /Layout & links/);
   assert.match(settings, /Privacy & social/);
-  assert.match(settings, /Account/);
+  assert.match(settings, /Progression/);
 
   assert.match(settings, /<IdentityEditor/);
   assert.match(settings, /<ProfileExpressionEditor/);
   assert.match(settings, /<ProfileCosmeticsEditor/);
+  assert.match(settings, /<ProfileProgression/);
   assert.match(settings, /<ProfileEditor/);
   assert.match(settings, /<ProfileSocial/);
   assert.match(settings, /profile-settings-page__editor-footer/);

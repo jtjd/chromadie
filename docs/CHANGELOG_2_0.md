@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-05 — Make Studio primary and expose progression clearly
+
+- Reframed the authenticated settings workspace around Studio, Collection,
+  and Progression rather than a catch-all account panel.
+- Added a progression view for rank, lifetime EP, next-rank progress, daily
+  rolls, streaks, achievements, story collection unlock state, and recent
+  color history.
+- Kept the Shop route and existing purchase/equip authority intact as a
+  secondary acquisition surface; no rewards, inventory, or historical catalog
+  data were moved into client state.
+
 ## 2026-08-05 — Rebase Name Motion on Haunt reference behaviors
 
 - Replaced the weak authored motion set with ten focused behaviors modeled on

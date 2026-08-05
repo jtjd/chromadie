@@ -108,9 +108,9 @@
   <section aria-labelledby="profile-cosmetics-title">
     <div class="profile-cosmetics-heading">
       <div>
-        <p class="profile-settings-page__eyebrow">Appearance</p>
+        <p class="profile-settings-page__eyebrow">Collection</p>
         <h2 id="profile-cosmetics-title">Shape your public identity.</h2>
-        <p>Preview your expression layers together, then apply each owned choice through the existing server-authoritative equip flow.</p>
+        <p>Preview your owned expression layers together, then apply each choice through the existing server-authoritative equip flow.</p>
       </div>
       <Button variant="ghost" href="/shop">Browse the shop ↗</Button>
     </div>

@@ -2,6 +2,20 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-05 — Make Studio primary, keep Shop secondary, and give Progression its own surface
+
+The product will use a hybrid owner model. Studio answers how a player shapes
+their profile, Collection answers what they own and equip, Progression answers
+what their daily play has earned, and Shop answers what expression can be
+acquired next. The Shop remains available for compatibility and future premium
+expression, but it is no longer the primary mental model for identity.
+
+The first implementation slice is projection-only: it uses the existing
+profile configuration, story, achievement, EP, rank, inventory, entitlement,
+and equip contracts. No client-authoritative reward or purchase behavior is
+introduced, and no historical catalog or inventory data is deleted. See
+`docs/milestones/PROFILE_STUDIO_COLLECTION_PROGRESSION.md`.
+
 ## 2026-08-05 — Curate Name Motion into ten authored gestures
 
 The active Name Motion catalog is now intentionally small: Ghost Frequency,
