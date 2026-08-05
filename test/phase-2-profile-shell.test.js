@@ -129,7 +129,7 @@ test('profile shell is live-data based and keeps roll authority in the owner-onl
   const source = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
   assert.match(source, /loadProfileContext/);
-  assert.match(settings, /legacy=1/);
+  assert.match(settings, /ProfileAccountSettings/);
   assert.match(source, /profile-shell__identity/);
   assert.match(source, /data-profile-region="identity"/);
   assert.doesNotMatch(source, /Public boundary/);

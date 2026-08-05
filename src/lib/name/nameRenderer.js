@@ -182,6 +182,7 @@ export function getNameFrameModel(options = {}) {
     ? clamp(requestedPause, 0, 1)
     : ((time % motion.durationMs) + motion.durationMs) % motion.durationMs / motion.durationMs;
   const todayColor = normalizeHexColor(options.todayColor, DEFAULT_TODAY_COLOR);
+  const baseColor = normalizeHexColor(options.baseColor, '#FFFFFF');
   const recentColors = normalizeRecentColors(options.recentColors);
   const font = getNameFont(definition.font);
   const material = getNameMaterial(definition.material);
@@ -210,6 +211,7 @@ export function getNameFrameModel(options = {}) {
     time,
     progress,
     todayColor,
+    baseColor,
     recentColors: Object.freeze(recentColors),
     font,
     material,
@@ -232,6 +234,7 @@ export function getNameFrameSignature(model) {
     frame.width,
     frame.height,
     frame.progress.toFixed(6),
+    frame.baseColor,
     frame.todayColor,
     frame.recentColors.join(',')
   ].join('|');
@@ -255,16 +258,16 @@ function drawText(ctx, model, fillStyle, alpha = 1, offsetX = 0, offsetY = 0) {
 }
 
 function drawMaterial(ctx, model) {
-  const { material, todayColor } = model;
+  const { material, todayColor, baseColor } = model;
   const colors = material.colors;
 
   if (material.composable) {
     const { material: drawComposableMaterial } = getCodeOwnedNameRenderers();
     if (drawComposableMaterial) drawComposableMaterial(ctx, model);
-    else drawText(ctx, model, mixColors(colors[0] || '#F7FBFF', todayColor, 0.12));
+    else drawText(ctx, model, material.key === 'plain' ? baseColor : mixColors(colors[0] || '#F7FBFF', todayColor, 0.12));
     return;
   }
-  drawText(ctx, model, mixColors(colors[0] || '#F7FBFF', todayColor, material.usesDailyColor ? 0.12 : 0));
+  drawText(ctx, model, material.key === 'plain' ? baseColor : mixColors(colors[0] || '#F7FBFF', todayColor, material.usesDailyColor ? 0.12 : 0));
 }
 
 function drawMotion(ctx, model) {

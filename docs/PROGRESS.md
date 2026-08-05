@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Full-page appearance dashboard — 2026-08-05
+
+- Replaced duplicate settings chrome with the shared homepage header and a
+  compact grouped dashboard sidebar.
+- Added bounded appearance v1 fields for exact theme colors, surface opacity
+  and blur, gradients, and base borders, with independent daily-color rendering.
+- Added additive SQL normalization/backfill and owner-only appearance/composition
+  save and publish RPCs with stale-write protection.
+- Added a lazy real-renderer preview drawer, Account deletion surface, and
+  concise dashboard hierarchy while retaining Collection, Progression, Shop
+  compatibility routing, auth, and server authority.
+
 ## Full-page Profile Dashboard and progression rewards — 2026-08-05
 
 - Replaced the settings route’s generic site chrome with a full-page Profile

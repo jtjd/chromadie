@@ -3,6 +3,7 @@
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y.js';
 
   export let activeSection = 'overview';
+  /** @type {any[]} */
   export let sections = [];
   export let username = '';
   export let profilePath = '/profile';
@@ -14,6 +15,12 @@
   let drawer = null;
 
   $: activeLabel = sections.find(section => section.id === activeSection)?.label || 'Overview';
+  $: groupedSections = sections.reduce((groups, section) => {
+    const group = section.group || 'Profile';
+    if (!groups[group]) groups[group] = [];
+    groups[group].push(section);
+    return groups;
+  }, {});
 
   function navigate(sectionId) {
     mobileOpen = false;
@@ -41,26 +48,12 @@
     trapFocus(event, drawer);
   }
 
-  function dispatchRoute(view) {
-    mobileOpen = false;
-    dispatch('navigate', { view });
-  }
-
-  function dispatchLogout() {
-    mobileOpen = false;
-    dispatch('logout');
-  }
-
   onMount(() => {
     const previousOverflow = document.body.style.overflow;
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return () => { document.body.style.overflow = previousOverflow; };
   });
 
-  $: if (typeof document !== 'undefined') {
-    document.body.style.overflow = mobileOpen ? 'hidden' : '';
-  }
+  $: if (typeof document !== 'undefined') document.body.style.overflow = mobileOpen ? 'hidden' : '';
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -71,56 +64,47 @@
   {/if}
 
   <aside id="profile-dashboard-sidebar" class="profile-dashboard-shell__sidebar" class:is-open={mobileOpen} bind:this={drawer} aria-label="Profile dashboard navigation" aria-hidden={mobileOpen ? undefined : false}>
-    <div class="profile-dashboard-shell__brand-block">
-      <a class="profile-dashboard-shell__brand" href="/" aria-label="ChromaDie home">chm<span>.lol</span></a>
-      <span class="profile-dashboard-shell__brand-caption">Profile dashboard</span>
+    <div class="profile-dashboard-shell__sidebar-head">
+      <span class="profile-dashboard-shell__sidebar-label">Dashboard</span>
+      <button class="profile-dashboard-shell__close" type="button" aria-label="Close dashboard navigation" on:click={closeMobileMenu}>×</button>
     </div>
 
-    <div class="profile-dashboard-shell__sidebar-heading">
-      <span>Workspace</span>
-      <span>{String(Math.max(1, sections.findIndex(section => section.id === activeSection) + 1)).padStart(2, '0')} / {String(sections.length).padStart(2, '0')}</span>
-    </div>
-
-    <nav class="profile-dashboard-shell__nav" aria-label="Profile workspace sections">
-      {#each sections as section (section.id)}
-        <button
-          type="button"
-          class:active={activeSection === section.id}
-          aria-current={activeSection === section.id ? 'page' : undefined}
-          on:click={() => navigate(section.id)}
-        >
-          <span class="profile-dashboard-shell__nav-number">{section.number}</span>
-          <span class="profile-dashboard-shell__nav-copy"><strong>{section.label}</strong><small>{section.description}</small></span>
-          <span class="profile-dashboard-shell__nav-arrow" aria-hidden="true">→</span>
-        </button>
+    <nav class="profile-dashboard-shell__nav" aria-label="Profile dashboard sections">
+      {#each Object.entries(groupedSections) as [group, groupSections] (group)}
+        <div class="profile-dashboard-shell__group">
+          {#if group !== 'Profile'}<span class="profile-dashboard-shell__group-label">{group}</span>{/if}
+          {#each groupSections as section (section.id)}
+            <button
+              type="button"
+              class:active={activeSection === section.id}
+              aria-current={activeSection === section.id ? 'page' : undefined}
+              on:click={() => navigate(section.id)}
+            >
+              <span class="profile-dashboard-shell__nav-icon" aria-hidden="true">{section.icon || '·'}</span>
+              <span>{section.label}</span>
+            </button>
+          {/each}
+        </div>
       {/each}
     </nav>
 
-    <div class="profile-dashboard-shell__sidebar-footer">
-      <a href={profilePath}>View live profile <span aria-hidden="true">↗</span></a>
-      <button type="button" on:click={() => dispatchRoute('leaderboard')}>Explore leaderboard <span aria-hidden="true">→</span></button>
+    <div class="profile-dashboard-shell__sidebar-foot">
+      <a href={profilePath}>View profile <span aria-hidden="true">↗</span></a>
       <div class="profile-dashboard-shell__account">
         <span class="profile-dashboard-shell__account-mark" aria-hidden="true">{(username || 'Y').slice(0, 1).toUpperCase()}</span>
         <span><strong>{username || 'Your profile'}</strong><small>Signed in</small></span>
-        <button type="button" aria-label="Sign out" disabled={logoutInProgress} on:click={dispatchLogout}>{logoutInProgress ? '…' : '···'}</button>
+        <button type="button" aria-label="Sign out" disabled={logoutInProgress} on:click={() => dispatch('logout')}>{logoutInProgress ? '…' : '↗'}</button>
       </div>
     </div>
   </aside>
 
   <div class="profile-dashboard-shell__main">
-    <header class="profile-dashboard-shell__topbar">
-      <button class="profile-dashboard-shell__menu-trigger" type="button" aria-expanded={mobileOpen} aria-controls="profile-dashboard-sidebar" on:click={openMobileMenu}>
-        <span aria-hidden="true">☰</span><span>Menu</span>
+    <div class="profile-dashboard-shell__mobile-bar">
+      <button type="button" aria-expanded={mobileOpen} aria-controls="profile-dashboard-sidebar" on:click={openMobileMenu}>
+        <span aria-hidden="true">☰</span> Menu
       </button>
-      <div class="profile-dashboard-shell__breadcrumb" aria-label="Dashboard location">
-        <span>Dashboard</span><span aria-hidden="true">›</span><strong>{activeLabel}</strong>
-      </div>
-      <div class="profile-dashboard-shell__top-actions">
-        <a href={profilePath}>Live profile <span aria-hidden="true">↗</span></a>
-        <button type="button" disabled={logoutInProgress} on:click={dispatchLogout}>{logoutInProgress ? 'Signing out…' : 'Sign out'}</button>
-      </div>
-    </header>
-
+      <span>{activeLabel}</span>
+    </div>
     <div class="profile-dashboard-shell__content" id="profile-dashboard-content" role="region" aria-label="Profile dashboard content">
       <slot />
     </div>
@@ -128,48 +112,64 @@
 </div>
 
 <style>
-  .profile-dashboard-shell { --dashboard-sidebar-width: 17rem; display: grid; grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr); min-height: 100dvh; color: var(--color-ink); background: var(--color-canvas-deep); }
-  .profile-dashboard-shell__sidebar { position: sticky; top: 0; z-index: 30; display: flex; flex-direction: column; height: 100dvh; min-width: 0; padding: 1.35rem 1rem 1rem; border-right: 1px solid var(--color-line-subtle); background: var(--surface-panel); }
-  .profile-dashboard-shell__brand-block { display: grid; gap: .25rem; padding: .15rem .4rem 2.1rem; }
-  .profile-dashboard-shell__brand { color: var(--color-ink-strong); font: 700 1.25rem/1 var(--font-mono-stack); letter-spacing: -.05em; text-decoration: none; }
-  .profile-dashboard-shell__brand span { color: var(--color-accent-bright); }
-  .profile-dashboard-shell__brand-caption, .profile-dashboard-shell__sidebar-heading { color: var(--color-ink-faint); font: 600 .62rem/1.2 var(--font-mono-stack); letter-spacing: .1em; text-transform: uppercase; }
-  .profile-dashboard-shell__sidebar-heading { display: flex; justify-content: space-between; gap: .5rem; padding: 0 .45rem .7rem; }
-  .profile-dashboard-shell__sidebar-heading span:last-child { color: var(--color-ink-muted); }
-  .profile-dashboard-shell__nav { display: grid; gap: .18rem; }
-  .profile-dashboard-shell__nav button { display: grid; grid-template-columns: 1.6rem minmax(0,1fr) auto; align-items: center; gap: .55rem; min-width: 0; width: 100%; padding: .72rem .55rem; border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--color-ink-muted); text-align: left; cursor: pointer; transition: background-color var(--motion-base) var(--motion-ease-standard), border-color var(--motion-base) var(--motion-ease-standard), color var(--motion-base) var(--motion-ease-standard); }
-  .profile-dashboard-shell__nav button:hover, .profile-dashboard-shell__nav button:focus-visible { border-color: var(--color-line-subtle); background: var(--surface-panel-soft); color: var(--color-ink-strong); }
-  .profile-dashboard-shell__nav button.active { border-color: color-mix(in srgb, var(--color-accent) 48%, var(--color-line-subtle)); background: color-mix(in srgb, var(--color-accent) 12%, var(--surface-panel-soft)); color: var(--color-ink-strong); }
-  .profile-dashboard-shell__nav button:focus-visible, .profile-dashboard-shell__menu-trigger:focus-visible, .profile-dashboard-shell__top-actions :is(a,button):focus-visible, .profile-dashboard-shell__sidebar-footer :is(a,button):focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
-  .profile-dashboard-shell__nav-number { align-self: start; padding-top: .1rem; color: var(--color-ink-faint); font: 600 .62rem/1 var(--font-mono-stack); }
-  .profile-dashboard-shell__nav button.active .profile-dashboard-shell__nav-number { color: var(--color-accent-bright); }
-  .profile-dashboard-shell__nav-copy { display: grid; gap: .25rem; min-width: 0; }
-  .profile-dashboard-shell__nav-copy strong { overflow: hidden; font: 600 .78rem/1.1 var(--font-body-stack); text-overflow: ellipsis; white-space: nowrap; }
-  .profile-dashboard-shell__nav-copy small { overflow: hidden; color: var(--color-ink-faint); font-size: .64rem; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-dashboard-shell__nav-arrow { color: var(--color-accent-bright); opacity: 0; transform: translateX(-.2rem); transition: opacity var(--motion-fast) var(--motion-ease-standard), transform var(--motion-fast) var(--motion-ease-standard); }
-  .profile-dashboard-shell__nav button:hover .profile-dashboard-shell__nav-arrow, .profile-dashboard-shell__nav button.active .profile-dashboard-shell__nav-arrow { opacity: 1; transform: none; }
-  .profile-dashboard-shell__sidebar-footer { display: grid; gap: .15rem; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--color-line-subtle); }
-  .profile-dashboard-shell__sidebar-footer > :is(a,button) { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .55rem .35rem; border: 0; background: transparent; color: var(--color-ink-muted); font: 600 .7rem/1.2 var(--font-body-stack); text-align: left; text-decoration: none; cursor: pointer; }
-  .profile-dashboard-shell__sidebar-footer > :is(a,button):hover { color: var(--color-ink-strong); }
-  .profile-dashboard-shell__sidebar-footer > :is(a,button) span { color: var(--color-accent-bright); }
-  .profile-dashboard-shell__account { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: .55rem; margin-top: .7rem; padding: .65rem .55rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); }
-  .profile-dashboard-shell__account-mark { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--color-accent); color: var(--color-canvas-deep); font: 700 .75rem/1 var(--font-mono-stack); }
-  .profile-dashboard-shell__account > span:nth-child(2) { display: grid; gap: .18rem; min-width: 0; }
-  .profile-dashboard-shell__account strong { overflow: hidden; color: var(--color-ink-strong); font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-dashboard-shell__account small { color: var(--color-ink-faint); font-size: .6rem; }
-  .profile-dashboard-shell__account button { border: 0; background: transparent; color: var(--color-ink-faint); font-size: 1rem; cursor: pointer; }
+  .profile-dashboard-shell {
+    --dashboard-sidebar-width: 13rem;
+    display: grid;
+    grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr);
+    min-height: calc(100dvh - 4.1rem);
+    color: var(--site-ink, var(--color-ink));
+    background: var(--site-deep, var(--color-canvas-deep));
+  }
+  .profile-dashboard-shell__sidebar {
+    position: sticky;
+    top: 4.1rem;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 4.1rem);
+    min-width: 0;
+    padding: 1.1rem .75rem .75rem;
+    border-right: 1px solid var(--site-line, var(--color-line-subtle));
+    background: color-mix(in srgb, var(--site-deep, #090a0d) 92%, transparent);
+  }
+  .profile-dashboard-shell__sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: .1rem .45rem 1rem; }
+  .profile-dashboard-shell__sidebar-label, .profile-dashboard-shell__group-label { color: var(--site-faint, var(--color-ink-faint)); font: 600 .62rem/1 var(--site-mono, var(--font-mono-stack)); letter-spacing: .12em; text-transform: uppercase; }
+  .profile-dashboard-shell__close { display: none; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font-size: 1.2rem; cursor: pointer; }
+  .profile-dashboard-shell__nav { display: grid; gap: 1rem; }
+  .profile-dashboard-shell__group { display: grid; gap: .15rem; }
+  .profile-dashboard-shell__group-label { padding: .2rem .55rem .35rem; font-size: .56rem; }
+  .profile-dashboard-shell__nav button { display: flex; align-items: center; gap: .55rem; width: 100%; min-height: 2.15rem; padding: .55rem .55rem; border: 1px solid transparent; border-radius: .42rem; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 500 .76rem/1.1 var(--site-font, var(--font-body-stack)); text-align: left; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
+  .profile-dashboard-shell__nav button:hover, .profile-dashboard-shell__nav button:focus-visible { border-color: var(--site-line-strong, var(--color-line-strong)); background: var(--site-surface-soft, var(--surface-panel-soft)); color: var(--site-ink, var(--color-ink-strong)); }
+  .profile-dashboard-shell__nav button.active { border-color: color-mix(in srgb, var(--site-accent, var(--color-accent)) 46%, var(--site-line)); background: color-mix(in srgb, var(--site-accent, var(--color-accent)) 12%, transparent); color: var(--site-ink, var(--color-ink-strong)); }
+  .profile-dashboard-shell__nav button:focus-visible, .profile-dashboard-shell__sidebar-foot :is(a, button):focus-visible, .profile-dashboard-shell__mobile-bar button:focus-visible { outline: 2px solid var(--site-accent, var(--color-accent-bright)); outline-offset: 3px; }
+  .profile-dashboard-shell__nav-icon { display: grid; place-items: center; width: 1rem; color: var(--site-faint, var(--color-ink-faint)); font-family: var(--site-mono, var(--font-mono-stack)); }
+  .profile-dashboard-shell__nav button.active .profile-dashboard-shell__nav-icon { color: var(--site-accent, var(--color-accent)); }
+  .profile-dashboard-shell__sidebar-foot { display: grid; gap: .65rem; margin-top: auto; padding-top: .8rem; border-top: 1px solid var(--site-line, var(--color-line-subtle)); }
+  .profile-dashboard-shell__sidebar-foot > a { display: flex; justify-content: space-between; padding: .3rem .45rem; color: var(--site-muted, var(--color-ink-muted)); font-size: .7rem; text-decoration: none; }
+  .profile-dashboard-shell__sidebar-foot > a:hover { color: var(--site-ink, var(--color-ink-strong)); }
+  .profile-dashboard-shell__sidebar-foot > a span { color: var(--site-accent, var(--color-accent)); }
+  .profile-dashboard-shell__account { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .45rem; padding: .55rem .45rem; border: 1px solid var(--site-line, var(--color-line-subtle)); border-radius: .42rem; background: var(--site-surface-soft, var(--surface-panel-soft)); }
+  .profile-dashboard-shell__account-mark { display: grid; place-items: center; width: 1.65rem; height: 1.65rem; border-radius: 50%; background: var(--site-accent, var(--color-accent)); color: var(--site-deep, #090a0d); font: 700 .68rem/1 var(--site-mono, var(--font-mono-stack)); }
+  .profile-dashboard-shell__account > span:nth-child(2) { display: grid; gap: .15rem; min-width: 0; }
+  .profile-dashboard-shell__account strong, .profile-dashboard-shell__account small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-dashboard-shell__account strong { color: var(--site-ink, var(--color-ink-strong)); font-size: .68rem; }
+  .profile-dashboard-shell__account small { color: var(--site-faint, var(--color-ink-faint)); font-size: .58rem; }
+  .profile-dashboard-shell__account button { border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); cursor: pointer; }
   .profile-dashboard-shell__main { min-width: 0; }
-  .profile-dashboard-shell__topbar { position: sticky; top: 0; z-index: 20; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 1rem; min-height: 4.5rem; padding: .85rem clamp(1rem, 3vw, 2.75rem); border-bottom: 1px solid var(--color-line-subtle); background: color-mix(in srgb, var(--surface-panel) 88%, transparent); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
-  .profile-dashboard-shell__menu-trigger { display: none; }
-  .profile-dashboard-shell__breadcrumb { display: flex; align-items: center; gap: .55rem; min-width: 0; color: var(--color-ink-faint); font-size: .72rem; }
-  .profile-dashboard-shell__breadcrumb strong { overflow: hidden; color: var(--color-ink-strong); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-dashboard-shell__top-actions { display: flex; align-items: center; gap: .75rem; }
-  .profile-dashboard-shell__top-actions :is(a,button) { border: 0; background: transparent; color: var(--color-ink-muted); font: 600 .7rem/1 var(--font-body-stack); text-decoration: none; cursor: pointer; }
-  .profile-dashboard-shell__top-actions :is(a,button):hover { color: var(--color-ink-strong); }
-  .profile-dashboard-shell__top-actions a span { color: var(--color-accent-bright); }
-  .profile-dashboard-shell__content { width: min(100%, 112rem); min-height: calc(100dvh - 4.5rem); margin: 0 auto; padding: clamp(1rem, 3vw, 2.5rem) clamp(1rem, 3vw, 3.5rem) 4rem; }
+  .profile-dashboard-shell__content { width: 100%; min-height: calc(100dvh - 4.1rem); padding: clamp(1rem, 2.4vw, 2.25rem) clamp(.85rem, 2.6vw, 3rem) 4rem; }
+  .profile-dashboard-shell__mobile-bar { display: none; }
   .profile-dashboard-shell__backdrop { display: none; }
-  @media (max-width: 60rem) { .profile-dashboard-shell { display: block; } .profile-dashboard-shell__sidebar { position: fixed; left: 0; top: 0; width: min(86vw, 19rem); transform: translateX(-104%); transition: transform var(--motion-base) var(--motion-ease-standard); box-shadow: 1.5rem 0 4rem rgba(0,0,0,.35); } .profile-dashboard-shell__sidebar.is-open { transform: translateX(0); } .profile-dashboard-shell__backdrop { position: fixed; inset: 0; z-index: 25; display: block; border: 0; background: rgba(0,0,0,.55); cursor: pointer; } .profile-dashboard-shell__menu-trigger { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--color-ink-muted); font: 600 .7rem/1 var(--font-body-stack); cursor: pointer; } }
-  @media (max-width: 34rem) { .profile-dashboard-shell__topbar { grid-template-columns: auto minmax(0,1fr); } .profile-dashboard-shell__top-actions { display: none; } .profile-dashboard-shell__breadcrumb { justify-content: end; } .profile-dashboard-shell__content { padding-inline: .8rem; } }
-  @media (prefers-reduced-motion: reduce) { .profile-dashboard-shell__sidebar, .profile-dashboard-shell__nav button, .profile-dashboard-shell__nav-arrow { transition-duration: .001ms; } }
+  @media (max-width: 64rem) {
+    .profile-dashboard-shell { display: block; }
+    .profile-dashboard-shell__sidebar { position: fixed; inset: 0 auto 0 0; z-index: 60; width: min(84vw, 18rem); height: 100dvh; padding-top: 1rem; transform: translateX(-104%); transition: transform .2s ease; box-shadow: 1rem 0 3rem rgba(0,0,0,.34); }
+    .profile-dashboard-shell__sidebar.is-open { transform: translateX(0); }
+    .profile-dashboard-shell__sidebar-head { padding-top: .25rem; }
+    .profile-dashboard-shell__close { display: block; }
+    .profile-dashboard-shell__backdrop { position: fixed; inset: 0; z-index: 55; display: block; border: 0; background: rgba(0,0,0,.58); cursor: pointer; }
+    .profile-dashboard-shell__mobile-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 2.9rem; padding: .45rem .85rem; border-bottom: 1px solid var(--site-line, var(--color-line-subtle)); background: color-mix(in srgb, var(--site-deep, #090a0d) 90%, transparent); backdrop-filter: blur(14px); }
+    .profile-dashboard-shell__mobile-bar button { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .72rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
+    .profile-dashboard-shell__mobile-bar > span { color: var(--site-ink, var(--color-ink-strong)); font-size: .76rem; }
+    .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding-top: 1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .profile-dashboard-shell__sidebar, .profile-dashboard-shell__nav button { transition-duration: .001ms; } }
 </style>

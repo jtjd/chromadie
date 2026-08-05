@@ -16,7 +16,7 @@ test('progression is a dashboard surface backed by existing profile history', as
   assert.match(progression, /server-authoritative/);
   assert.match(progression, /prefers-reduced-motion/);
   assert.match(settings, /activeSection === 'progression'/);
-  assert.match(settings, /<ProfileProgression/);
+  assert.match(settings, /import\('\.\/ProfileProgression\.svelte'\)/);
 });
 
 test('collection remains the owned expression surface while Shop stays acquisition-only', async () => {

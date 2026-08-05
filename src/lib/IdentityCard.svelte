@@ -26,6 +26,7 @@
   export let nameRendererMode = 'animated';
   export let nameRendererRecentColors = [];
   export let nameRendererTodayColor = '';
+  export let nameRendererBaseColor = '#FFFFFF';
   export let avatarEffectKey = '';
   export let avatarEffectMode = 'profile';
   export let avatarEffectAnimated = true;
@@ -52,7 +53,7 @@
   }
 </script>
 
-<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant} style={'--identity-accent: ' + accentColor + ';'} aria-labelledby={titleId}>
+<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + ';'} aria-labelledby={titleId}>
   <div class="identity-card__person">
     <AvatarEffect
       effectKey={avatarEffectKey}
@@ -81,6 +82,7 @@
             text={safeDisplayName}
             loadout={nameRendererLoadout}
             todayColor={nameRendererTodayColor || accentColor}
+            baseColor={nameRendererBaseColor}
             recentColors={nameRendererRecentColors}
             context={nameRendererContext}
             mode={nameRendererMode}
@@ -136,13 +138,13 @@
     width: 100%;
     margin: 0 auto;
     padding: clamp(1.5rem, 3.5vw, 2.25rem);
-    border: 1px solid rgba(255, 255, 255, 0.11);
-    border-radius: var(--radius-lg);
-    background: rgba(9, 11, 15, 0.64);
+    border: var(--profile-border-width, 1px) solid color-mix(in srgb, var(--profile-border-color, #ffffff) calc(var(--profile-border-opacity, .11) * 100%), transparent);
+    border-radius: var(--profile-border-radius, var(--radius-lg));
+    background: color-mix(in srgb, var(--profile-surface, #090b0f) calc(var(--profile-surface-opacity, .64) * 100%), transparent);
     --identity-avatar-accent: #5D6A73;
     box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.045);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(var(--profile-surface-blur, 20px));
+    -webkit-backdrop-filter: blur(var(--profile-surface-blur, 20px));
   }
 
   .identity-card__name-row,
@@ -182,15 +184,15 @@
 
   .identity-card__copy { min-width: 0; flex: 1; padding-top: 0.15rem; text-align: left; }
   .identity-card__name-row { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 0.45rem 0.55rem; }
-  .identity-card__name { max-width: 100%; margin: 0; color: rgba(248, 250, 255, 0.98); font: 700 clamp(1.85rem, 3.8vw, 2.55rem) / 0.98 var(--font-display-stack); letter-spacing: -0.055em; overflow-wrap: anywhere; }
+  .identity-card__name { max-width: 100%; margin: 0; color: var(--identity-base-color, var(--profile-username, rgba(248, 250, 255, 0.98))); font: 700 clamp(1.85rem, 3.8vw, 2.55rem) / 0.98 var(--font-display-stack); letter-spacing: -0.055em; overflow-wrap: anywhere; }
   .identity-card__badges { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.28rem; }
   .identity-card__badge { display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border: 1px solid color-mix(in srgb, var(--identity-accent) 42%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--identity-accent) 14%, rgba(255, 255, 255, 0.06)); color: color-mix(in srgb, var(--identity-accent) 82%, white); font-size: 0.72rem; line-height: 1; }
   .identity-card__badge--founder { background: color-mix(in srgb, var(--identity-accent) 22%, transparent); }
   .identity-card__badge--staff { display: inline-flex; width: auto; min-width: 3.85rem; gap: 0.22rem; padding: 0 0.42rem; border-color: color-mix(in srgb, var(--color-accent-cyan) 72%, transparent); border-radius: 0.42rem; background: color-mix(in srgb, var(--color-accent-cyan) 18%, transparent); color: var(--color-accent-cyan); font: 700 0.56rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; }
   .identity-card__handle-row { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 0.6rem 0.8rem; margin-top: 0.38rem; }
-  .identity-card__handle { display: inline-block; color: rgba(220, 230, 248, 0.62); font: 600 0.75rem / 1.25 var(--font-mono-stack); text-decoration: none; letter-spacing: 0.05em; }
+  .identity-card__handle { display: inline-block; color: var(--profile-secondary-text, rgba(220, 230, 248, 0.62)); font: 600 0.75rem / 1.25 var(--font-mono-stack); text-decoration: none; letter-spacing: 0.05em; }
   .identity-card__handle:hover { color: color-mix(in srgb, var(--identity-accent) 85%, white); }
-  .identity-card__bio { max-width: 28rem; margin: 0.7rem 0 0; color: rgba(226, 233, 246, 0.72); font-size: 0.84rem; line-height: 1.55; overflow-wrap: anywhere; word-break: break-word; }
+  .identity-card__bio { max-width: 28rem; margin: 0.7rem 0 0; color: var(--profile-description, rgba(226, 233, 246, 0.72)); font-size: 0.84rem; line-height: 1.55; overflow-wrap: anywhere; word-break: break-word; }
 
   .identity-card__links { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 0.55rem 1rem; margin-top: 0.95rem; }
   .identity-card__links a { display: inline-flex; align-items: center; gap: 0.38rem; min-height: 2rem; max-width: 100%; padding: 0.25rem 0 0.3rem; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.16); border-radius: 0; background: transparent; color: rgba(220, 230, 248, 0.7); font-size: 0.78rem; text-decoration: none; transition: border-color var(--motion-base) var(--motion-ease-standard), color var(--motion-base) var(--motion-ease-standard), transform var(--motion-fast) var(--motion-ease-standard); }

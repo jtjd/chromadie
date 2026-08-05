@@ -3148,6 +3148,21 @@ characters, including during deletion. No catalog, inventory, entitlement,
 profile, or database authority changed, and all legacy motion aliases remain
 stable. Renderer recording tests cover these gesture boundaries in addition to
 the existing deterministic and bounded-Canvas checks.
+
+## 2026-08-05 — Keep profile theme colors independent from daily colors
+
+The dashboard owns a bounded `appearance` object for profile-wide colors,
+surfaces, gradients, and base borders. Daily roll colors remain inputs to roll
+history and authored effects; they no longer tint the complete public profile.
+The selected username color is the renderer base color, while authored
+materials and motions retain their finite code-owned palettes. Appearance is
+saved and published through owner-only section RPCs so an unpublished layout or
+composition draft cannot be promoted accidentally.
+
+Owner-selected appearance colors are rendered exactly. The former design rule
+against inaccessible user-selected combinations is superseded for this
+structured profile-appearance surface; defaults, system controls, focus states,
+and dashboard interaction colors remain accessible.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

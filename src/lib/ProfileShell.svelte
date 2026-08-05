@@ -30,8 +30,6 @@
   import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
 
-  const PROFILE_SURFACE_ACCENT = '#5D6A73';
-
   export let profileUsername = null;
   export let userId = null;
   export let previewMode = false;
@@ -348,19 +346,24 @@
     previewConfig || profileConfig?.published,
     targetProfile?.mood_color || '#8B7CF6'
   );
+  $: appearance = effectiveProfileConfig.appearance;
+  $: profileBackground = appearance.gradient.enabled
+    ? `linear-gradient(${appearance.gradient.angle}deg, ${appearance.gradient.primary}, ${appearance.gradient.secondary})`
+    : appearance.colors.background;
   $: storyUnlocks = getProfileStoryUnlocks(targetProfile);
   $: latestRoll = targetScores
     .slice()
     .sort((left, right) => String(right.roll_date || '').localeCompare(String(left.roll_date || '')))[0] || null;
   $: profileBio = typeof targetProfile?.bio === 'string' ? targetProfile.bio.trim().slice(0, 160) : '';
   $: profileBioFallback = profileBio ? '' : 'No bio added yet.';
-  $: signatureColor = colorFor(effectiveProfileConfig.signatureColor);
-  $: nameRendererTodayColor = colorFor(latestRoll?.hex_code || signatureColor);
+  $: signatureColor = colorFor(appearance.colors.accent);
+  $: nameRendererBaseColor = colorFor(appearance.colors.username, '#FFFFFF');
+  $: nameRendererTodayColor = colorFor(latestRoll?.hex_code || '#8B7CF6');
   $: cursorTrailKey = getCursorTrailKey(cosmetics?.cursor_trail);
   $: atmosphereKey = cosmetics?.profile_atmosphere || '';
   $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
-  $: profileSurfaceAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
-  $: profileControlAccent = colorEffectsEnabled ? signatureColor : PROFILE_SURFACE_ACCENT;
+  $: profileSurfaceAccent = signatureColor;
+  $: profileControlAccent = signatureColor;
   $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
@@ -393,7 +396,7 @@
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + signatureColor + '; --profile-surface-accent: ' + profileSurfaceAccent + '; --profile-control-accent: ' + profileControlAccent + ';'} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + signatureColor + '; --profile-surface-accent: ' + profileSurfaceAccent + '; --profile-control-accent: ' + profileControlAccent + '; --profile-text: ' + appearance.colors.text + '; --profile-secondary-text: ' + appearance.colors.secondaryText + '; --profile-username: ' + nameRendererBaseColor + '; --profile-description: ' + appearance.colors.description + '; --profile-background: ' + appearance.colors.background + '; --profile-background-paint: ' + profileBackground + '; --profile-surface: ' + appearance.colors.surface + '; --profile-highlight: ' + appearance.colors.highlight + '; --profile-surface-opacity: ' + (appearance.surface.opacity / 100) + '; --profile-surface-blur: ' + appearance.surface.blur + 'px; --profile-border-color: ' + appearance.border.color + '; --profile-border-width: ' + (appearance.border.enabled ? appearance.border.width : 0) + 'px; --profile-border-radius: ' + appearance.border.radius + 'px; --profile-border-opacity: ' + (appearance.border.opacity / 100) + '; --color-ink-strong: ' + appearance.colors.highlight + '; --color-ink: ' + appearance.colors.text + '; --color-ink-muted: ' + appearance.colors.secondaryText + '; --color-ink-faint: ' + appearance.colors.description + '; --color-accent: ' + signatureColor + '; --color-accent-bright: ' + appearance.colors.highlight + '; --surface-panel: ' + appearance.colors.surface + '; --surface-inset: ' + appearance.colors.background + '; --color-canvas-deep: ' + appearance.colors.background + ';'} aria-busy={loading}>
   {#if !loading && targetProfile && cursorTrailKey}
     <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__cursor-layer" />
   {/if}
@@ -427,6 +430,7 @@
               nameRendererMode="animated"
               nameRendererRecentColors={nameRendererRecentColors}
               nameRendererTodayColor={nameRendererTodayColor}
+              nameRendererBaseColor={nameRendererBaseColor}
               avatarEffectKey={cosmetics?.avatar_effect}
               avatarEffectMode="profile"
               avatarEffectAnimated={true}
@@ -659,7 +663,7 @@
     min-height: 100%;
     overflow: hidden;
     padding: clamp(var(--space-4), 3vw, var(--space-8));
-    color: var(--color-ink);
+    color: var(--profile-text, var(--color-ink));
     background:
       radial-gradient(circle at 8% 12%, color-mix(in srgb, var(--profile-surface-accent) 14%, transparent), transparent 28rem),
       radial-gradient(circle at 94% 76%, color-mix(in srgb, var(--color-accent-cyan) 9%, transparent), transparent 30rem),
@@ -959,7 +963,7 @@
     overflow-x: hidden;
     overflow-y: auto;
     padding: 0 clamp(0.9rem, 3vw, 2.5rem) 1.5rem;
-    background: transparent;
+    background: var(--profile-background-paint, var(--color-canvas-deep));
     isolation: isolate;
     overscroll-behavior-y: contain;
     scroll-snap-type: y mandatory;

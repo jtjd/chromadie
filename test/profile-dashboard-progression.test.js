@@ -13,16 +13,17 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
     read('src/styles/site.css')
   ]);
 
-  assert.match(app, /\{#if !profileSettingsModeVisible\}/);
+  assert.match(app, /\{#if !profileModeVisible\}/);
   assert.match(app, /componentProps: \{ logoutInProgress \}/);
   assert.match(settings, /<ProfileDashboardShell/);
   assert.match(settings, /on:sectionchange/);
-  assert.match(shell, /profile-dashboard-shell__menu-trigger/);
+  assert.match(shell, /profile-dashboard-shell__mobile-bar/);
   assert.match(shell, /trapFocus\(event, drawer\)/);
   assert.match(shell, /restoreFocus\(menuTrigger\)/);
   assert.match(shell, /prefers-reduced-motion/);
   assert.match(styles, /\.app-main--profile-settings/);
-  assert.match(styles, /\.profile-settings-page__workspace/);
+  assert.doesNotMatch(styles, /\.profile-settings-page__workspace/);
+  assert.match(settings, /profile-settings-page__content/);
 });
 
 test('progression manifest is a small, stable expression track', () => {

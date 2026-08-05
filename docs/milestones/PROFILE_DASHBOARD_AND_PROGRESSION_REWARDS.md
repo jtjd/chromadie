@@ -6,11 +6,18 @@ Implemented as the next incremental slice after the Profile Studio redesign.
 
 ## Outcome
 
-`/profile/settings` is now a full-page owner dashboard. It owns its brand,
-workspace navigation, account controls, live-profile link, responsive mobile
-drawer, and the editor/preview workspace. The generic application header and
-footer are suppressed only for this route. Existing profile, shop, public
-profile, and direct-refresh routes remain intact.
+`/profile/settings` is now a full-page owner dashboard using the shared
+homepage header, a compact grouped sidebar, concise settings panels, and an
+on-demand real-renderer preview drawer. The Shop is hidden from the primary
+dashboard loop while its direct compatibility route remains intact. Existing
+profile, public profile, authentication, and direct-refresh routes remain
+intact.
+
+The additive appearance v1 contract stores exact theme colors, surface opacity
+and blur, optional gradients, and base borders. Appearance is independent from
+daily roll colors and authored effect palettes. Owner-only section RPCs save and
+publish appearance or composition patches with timestamp conflict protection;
+existing whole-configuration RPCs remain compatible.
 
 Progression now has a server-published expression track. Lifetime EP unlocks
 five active catalog cosmetics:

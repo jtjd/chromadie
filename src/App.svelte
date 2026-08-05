@@ -828,7 +828,7 @@
   {/if}
 
   <div id="header-mount">
-    {#if !profileSettingsModeVisible}
+    {#if !profileModeVisible}
       <SiteModeHeader
         activeView={routeMode === 'app' ? view : routeMode}
         accountState={$accountState}

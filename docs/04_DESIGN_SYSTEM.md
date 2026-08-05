@@ -99,7 +99,7 @@ Do not allow:
 - Raw HTML.
 - Arbitrary JavaScript.
 - Arbitrary CSS.
-- Inaccessible color combinations.
+- Inaccessible color combinations in system-owned controls or defaults.
 - Invisible controls.
 - Layout positions that break mobile behavior.
 - Autoplay audio without user interaction.
@@ -126,6 +126,12 @@ Avoid:
 - Multiple unrelated effects competing simultaneously.
 
 Provide reduced-motion equivalents.
+
+Profile owners may choose exact appearance colors, including combinations with
+low contrast. The structured appearance editor does not rewrite, warn about,
+or block those saved values. Defaults and dashboard controls remain designed
+for accessibility; this exception applies only to owner-authored public
+profile appearance values.
 
 ## Mobile
 

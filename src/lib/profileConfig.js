@@ -26,12 +26,74 @@ export const PROFILE_LINK_TYPES = Object.freeze([
   'other'
 ]);
 
+export const PROFILE_APPEARANCE_DEFAULTS = Object.freeze({
+  colors: Object.freeze({
+    text: '#F4F6FB',
+    secondaryText: '#AEB6C4',
+    username: '#FFFFFF',
+    description: '#CBD1DC',
+    background: '#07080B',
+    surface: '#11141B',
+    accent: '#CDD2FF',
+    highlight: '#FFFFFF'
+  }),
+  surface: Object.freeze({ opacity: 64, blur: 20 }),
+  gradient: Object.freeze({ enabled: false, primary: '#07080B', secondary: '#171A22', angle: 135 }),
+  border: Object.freeze({ enabled: true, color: '#FFFFFF', width: 1, radius: 24, opacity: 11 })
+});
+
 const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 const HTTPS_URL_PATTERN = /^https:\/\/[^\s<>"']+$/;
 
 function safeColor(value, fallback = '#8B7CF6') {
   const candidate = String(value || '').trim();
   return HEX_COLOR_PATTERN.test(candidate) ? candidate.toUpperCase() : fallback;
+}
+
+function safeInteger(value, fallback, minimum, maximum) {
+  const candidate = Number(value);
+  if (!Number.isInteger(candidate)) return fallback;
+  return Math.min(maximum, Math.max(minimum, candidate));
+}
+
+/** @param {any} value @param {string} [fallbackAccent] */
+function normalizeAppearance(value, fallbackAccent = String(PROFILE_APPEARANCE_DEFAULTS.colors.accent)) {
+  const input = value && typeof value === 'object' ? value : {};
+  const colors = input.colors && typeof input.colors === 'object' ? input.colors : {};
+  const surface = input.surface && typeof input.surface === 'object' ? input.surface : {};
+  const gradient = input.gradient && typeof input.gradient === 'object' ? input.gradient : {};
+  const border = input.border && typeof input.border === 'object' ? input.border : {};
+  const defaults = PROFILE_APPEARANCE_DEFAULTS;
+  return {
+    version: 1,
+    colors: {
+      text: safeColor(colors.text, defaults.colors.text),
+      secondaryText: safeColor(colors.secondaryText, defaults.colors.secondaryText),
+      username: safeColor(colors.username, defaults.colors.username),
+      description: safeColor(colors.description, defaults.colors.description),
+      background: safeColor(colors.background, defaults.colors.background),
+      surface: safeColor(colors.surface, defaults.colors.surface),
+      accent: safeColor(colors.accent, safeColor(input.signatureColor, fallbackAccent)),
+      highlight: safeColor(colors.highlight, defaults.colors.highlight)
+    },
+    surface: {
+      opacity: safeInteger(surface.opacity, defaults.surface.opacity, 0, 100),
+      blur: safeInteger(surface.blur, defaults.surface.blur, 0, 40)
+    },
+    gradient: {
+      enabled: gradient.enabled === true,
+      primary: safeColor(gradient.primary, defaults.gradient.primary),
+      secondary: safeColor(gradient.secondary, defaults.gradient.secondary),
+      angle: safeInteger(gradient.angle, defaults.gradient.angle, 0, 360)
+    },
+    border: {
+      enabled: border.enabled !== false,
+      color: safeColor(border.color, defaults.border.color),
+      width: safeInteger(border.width, defaults.border.width, 0, 4),
+      radius: safeInteger(border.radius, defaults.border.radius, 0, 48),
+      opacity: safeInteger(border.opacity, defaults.border.opacity, 0, 100)
+    }
+  };
 }
 
 function hasControlCharacters(value) {
@@ -55,10 +117,12 @@ function defaultModules() {
 }
 
 export function createDefaultProfileConfig(signatureColor = '#8B7CF6') {
+  const appearance = normalizeAppearance({ signatureColor }, signatureColor);
   return {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(signatureColor),
     colorEffectsEnabled: false,
+    appearance,
     layoutVariant: 'immersive',
     storyVisible: false,
     modules: defaultModules(),
@@ -118,17 +182,35 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
     : [];
 
   /** @type {Record<string, any>} */
+  const normalizedAppearance = normalizeAppearance(value.appearance, value.signatureColor || fallback.signatureColor);
+  /** @type {any} */
   const normalized = {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(value.signatureColor, fallback.signatureColor),
     colorEffectsEnabled: value.colorEffectsEnabled === true,
+    appearance: normalizedAppearance,
     layoutVariant: PROFILE_LAYOUT_VARIANTS.includes(value.layoutVariant) ? value.layoutVariant : fallback.layoutVariant,
     modules: modules.sort((left, right) => left.order - right.order),
     links: links.sort((left, right) => left.order - right.order),
     ...normalizeProfileExpression(value)
   };
+  normalized.signatureColor = normalized.appearance.colors.accent;
   if (typeof value.storyVisible === 'boolean') normalized.storyVisible = value.storyVisible;
   return normalized;
+}
+
+export function normalizeProfileAppearance(value, fallbackAccent) {
+  return normalizeAppearance(value, fallbackAccent);
+}
+
+export function withProfileAppearance(config, appearance) {
+  const normalized = normalizeProfileConfig(config);
+  const nextAppearance = normalizeAppearance(appearance, normalized.signatureColor);
+  return {
+    ...normalized,
+    signatureColor: nextAppearance.colors.accent,
+    appearance: nextAppearance
+  };
 }
 
 export function getProfileModule(config, id) {

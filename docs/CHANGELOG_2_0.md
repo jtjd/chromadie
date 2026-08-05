@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-05 — Compact full-page customization dashboard
+
+- `/profile/settings` now uses the homepage header and a grouped sidebar with
+  Overview, Customize, Profile, Progression, and Account destinations.
+- Customize controls exact profile colors, surfaces, gradients, and borders in
+  dense responsive panels with draft, reset, and publish actions.
+- Daily roll colors remain part of the color story and authored effects instead
+  of recoloring the complete profile theme.
+- Live preview opens the real profile renderer in an accessible desktop drawer
+  or mobile fullscreen dialog. Shop remains a direct compatibility route but is
+  not part of the dashboard loop.
+
 ## 2026-08-05 — Turn Profile Studio into a full-page dashboard
 
 - `/profile/settings` now opens as a dedicated dashboard with its own

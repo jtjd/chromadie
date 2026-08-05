@@ -8,12 +8,12 @@ import {
 } from './primitives.js';
 
 export function drawComposableMaterial(ctx, model) {
-  const { material, metrics, progress, todayColor } = model;
+  const { material, metrics, progress, todayColor, baseColor } = model;
   const [first = '#F7FBFF', second = '#CDD2FF', third = '#FFFFFF'] = material.colors;
 
   switch (material.key) {
     case 'plain':
-      drawText(ctx, model, mixColors(first, todayColor, 0.12));
+      drawText(ctx, model, baseColor || mixColors(first, todayColor, 0.12));
       return;
     case 'glass-emboss':
       drawText(ctx, model, 'rgba(218,232,255,.14)');
