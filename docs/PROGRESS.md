@@ -1,5 +1,23 @@
 # Chromadie 2.0 Progress
 
+## Full-page Profile Dashboard and progression rewards — 2026-08-05
+
+- Replaced the settings route’s generic site chrome with a full-page Profile
+  Studio shell containing owner navigation, account controls, live-profile
+  access, and a responsive mobile drawer.
+- Kept the existing section editor and live preview behind the shell, with
+  Overview and Progression as first-class dashboard destinations.
+- Added an owner-only progression RPC and a server-authoritative, idempotent
+  milestone grant path inside `roll_die_impl(boolean)`.
+- Added five EP-rank rewards using existing catalog keys and inventory rows;
+  existing profiles are deterministically backfilled for rewards already
+  earned.
+- Added additive `new_milestones` roll response data and a client unlock notice
+  without moving any reward authority into the browser.
+- Added dashboard/progression contract tests. Full validation is pending for
+  this slice; the repository’s known performance-budget baseline remains a
+  separate risk to report if unchanged.
+
 ## Profile Studio dashboard pass — 2026-08-05
 
 - Added a real Studio Overview with live identity context, current rank/EP

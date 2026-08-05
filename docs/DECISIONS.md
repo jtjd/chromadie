@@ -2,6 +2,20 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-05 — Make Profile Studio a full-page dashboard and make progression tangible
+
+The owner experience uses a full-page dashboard shell at `/profile/settings`.
+The shell owns navigation, account actions, responsive behavior, and the
+editor/preview workspace; the generic site header and footer are suppressed
+only on this route. This keeps the profile editor coherent at desktop and
+mobile sizes while preserving the public profile and direct route contracts.
+
+The Shop stays secondary and direct `/shop` remains available. Progression is
+the first reward surface: lifetime EP unlocks five authored, active catalog
+effects at rank thresholds. Grants are additive, idempotent, and executed by
+the server inside the existing roll transaction; the client only renders the
+returned state. See `docs/milestones/PROFILE_DASHBOARD_AND_PROGRESSION_REWARDS.md`.
+
 ## 2026-08-05 — Evolve Profile Settings into Studio and hide Shop from the primary loop
 
 The authenticated `/profile/settings` route now opens as a Profile Studio

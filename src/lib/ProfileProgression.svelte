@@ -9,6 +9,7 @@
   export let collectionItems = [];
   export let allAchievements = [];
   export let unlockedAchievements = {};
+  export let progression = {};
 
   /** @type {any} */
   let account;
@@ -21,6 +22,8 @@
     ? Object.keys(unlockedAchievements).length
     : 0;
   $: progressPercent = Math.round(rankState.progress * 100);
+  $: milestoneTrack = Array.isArray(progression?.milestones) ? progression.milestones : [];
+  $: recentUnlocks = Array.isArray(progression?.recentUnlocks) ? progression.recentUnlocks : [];
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
@@ -83,6 +86,30 @@
       <div><span>Story collection</span><strong>{formatNumber(collectionItems.length)}</strong><small>{storyUnlocks.collectionUnlocked ? 'Collection showcase unlocked' : `${storyUnlocks.collectionRollsRequired} rolls unlock the showcase`}</small></div>
     </div>
 
+    <section class="profile-progression-track" aria-labelledby="profile-progression-track-title">
+      <div class="profile-progression-section-heading">
+        <div><span class="profile-progression-label">Expression track</span><h3 id="profile-progression-track-title">Earn the pieces that stay.</h3></div>
+        <span>{recentUnlocks.length ? `${recentUnlocks.length} recent unlock${recentUnlocks.length === 1 ? '' : 's'}` : 'Rank rewards'}</span>
+      </div>
+      {#if milestoneTrack.length}
+        <ol>
+          {#each milestoneTrack as milestone (milestone.id)}
+            {@const milestoneProgress = Math.min(100, Math.round((lifetimeEp / Math.max(1, milestone.threshold)) * 100))}
+            <li class:unlocked={milestone.unlocked}>
+              <div class="profile-progression-milestone__head">
+                <span class="profile-progression-milestone__status" aria-hidden="true">{milestone.unlocked ? '✓' : '·'}</span>
+                <div><strong>{milestone.name}</strong><small>{milestone.reward?.name || 'Profile expression reward'}</small></div>
+                <span class="profile-progression-milestone__threshold">{milestone.unlocked ? 'Unlocked' : `${formatNumber(milestone.threshold)} EP`}</span>
+              </div>
+              <div class="profile-progression-milestone__bar" role="progressbar" aria-label={`${milestone.name} progression`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={milestone.unlocked ? 100 : milestoneProgress}><span style={`width:${milestone.unlocked ? 100 : milestoneProgress}%`}></span></div>
+            </li>
+          {/each}
+        </ol>
+      {:else}
+        <p class="profile-progression-empty">Rank expression rewards will appear here as the server publishes your progression track.</p>
+      {/if}
+    </section>
+
     <div class="profile-progression-history">
       <div class="profile-progression-section-heading">
         <div><span class="profile-progression-label">Recent trace</span><h3>Your colors leave a record.</h3></div>
@@ -133,6 +160,7 @@
   .profile-progression-stats strong { color:var(--color-ink-strong); font:650 1.15rem var(--font-mono-stack); }
   .profile-progression-stats small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .profile-progression-history { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--color-line-subtle); }
+  .profile-progression-track { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--color-line-subtle); }
   .profile-progression-section-heading { display:flex; align-items:end; justify-content:space-between; gap:1rem; }
   .profile-progression-section-heading h3 { margin:.35rem 0 0; color:var(--color-ink-strong); font:600 1.25rem/1.1 var(--font-display-stack); }
   .profile-progression-section-heading > span { color:var(--color-ink-muted); font-size:var(--type-small); }
@@ -142,6 +170,18 @@
   .profile-progression-history li > span:nth-child(2) { display:grid; gap:.15rem; min-width:0; }
   .profile-progression-history li strong { overflow:hidden; color:var(--color-ink-strong); font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
   .profile-progression-history li small, .profile-progression-history li em { color:var(--color-ink-muted); font:500 var(--type-small) var(--font-mono-stack); font-style:normal; }
+  .profile-progression-track ol { display:grid; gap:.45rem; margin:.75rem 0 0; padding:0; list-style:none; }
+  .profile-progression-track li { display:grid; gap:.45rem; padding:.65rem .75rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
+  .profile-progression-track li.unlocked { border-color:color-mix(in srgb,var(--color-accent) 42%,var(--color-line-subtle)); }
+  .profile-progression-milestone__head { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.6rem; min-width:0; }
+  .profile-progression-milestone__head > div { display:grid; gap:.15rem; min-width:0; }
+  .profile-progression-milestone__head strong { overflow:hidden; color:var(--color-ink-strong); font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
+  .profile-progression-milestone__head small { overflow:hidden; color:var(--color-ink-muted); font-size:.7rem; text-overflow:ellipsis; white-space:nowrap; }
+  .profile-progression-milestone__status { display:grid; place-items:center; width:1.35rem; height:1.35rem; border:1px solid var(--color-line-strong); border-radius:50%; color:var(--color-ink-faint); font:700 .7rem/1 var(--font-mono-stack); }
+  .profile-progression-track li.unlocked .profile-progression-milestone__status { border-color:var(--color-accent); background:color-mix(in srgb,var(--color-accent) 18%,transparent); color:var(--color-accent-bright); }
+  .profile-progression-milestone__threshold { color:var(--color-ink-muted); font:600 .65rem/1 var(--font-mono-stack); white-space:nowrap; }
+  .profile-progression-milestone__bar { height:.28rem; overflow:hidden; border-radius:999px; background:var(--color-line-subtle); }
+  .profile-progression-milestone__bar span { display:block; height:100%; border-radius:inherit; background:var(--color-accent-bright); }
   .profile-progression-empty, .profile-progression-footer p { color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.55; }
   .profile-progression-empty { margin:.8rem 0 0; }
   .profile-progression-footer { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:1rem; padding-top:.9rem; border-top:1px solid var(--color-line-subtle); }

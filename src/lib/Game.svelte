@@ -8,6 +8,7 @@
   import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
   import { getBadgeMeta } from './badgeData';
   import { canInitiateRoll, createCanonicalRollData, getRollAccountMode, isRollReady, normalizeCanonicalRoll } from './rollState';
+  import { normalizeNewMilestones } from './progressionState.js';
   import { getPercentileTier } from './rollPresentation.js';
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
   import { getAppOrigin } from './authUrls';
@@ -37,6 +38,7 @@
   let countdownString = '24:00:00';
   let countdownInterval;
   let milestoneGranted = '';
+  let newMilestones = [];
 
   let showImageModal = false;
   let imagePreviewUrl = '';
@@ -174,6 +176,7 @@
     scanProgress = 0;
     percentileDisplay = null;
     milestoneGranted = '';
+    newMilestones = [];
     cotwHit = false;
     guestProgressRestored = false;
   }
@@ -503,6 +506,7 @@
     scanProgress = 0;
     percentileDisplay = null;
     milestoneGranted = '';
+    newMilestones = [];
     cotwHit = false;
 
     if (isReroll) {
@@ -592,6 +596,7 @@
     score = data.score;
     rarity = data.rarity;
     milestoneGranted = data.milestone_granted || '';
+    newMilestones = normalizeNewMilestones(data.new_milestones);
 
     if (data.badges && data.badges.includes('cotw_hit')) {
         cotwHit = true;
@@ -845,6 +850,15 @@
       {#if milestoneGranted}
         <div class="milestone-banner">
           🎁 Milestone Unlocked! You received the <strong>{milestoneGranted}</strong>!
+        </div>
+      {/if}
+
+      {#if newMilestones.length}
+        <div class="milestone-banner progression-unlock-banner" role="status" aria-live="polite">
+          <strong>New expression unlocked</strong>
+          {#each newMilestones as milestone (milestone.id)}
+            <span>{milestone.reward?.name || milestone.name}</span>
+          {/each}
         </div>
       {/if}
 

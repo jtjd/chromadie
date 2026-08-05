@@ -7,9 +7,9 @@ test('profile settings uses a focused section workspace', async () => {
   const siteStyles = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
 
   assert.match(settings, /profile-settings-page__workspace/);
-  assert.match(settings, /profile-settings-page__rail/);
   assert.match(settings, /profile-settings-page__editor/);
   assert.match(settings, /profile-settings-page__preview-column/);
+  assert.match(settings, /ProfileDashboardShell/);
   assert.match(settings, /setActiveSection\(/);
   assert.doesNotMatch(settings, /profile-settings-page__topbar/);
   assert.doesNotMatch(settings, /profile-settings-page__editor-heading/);

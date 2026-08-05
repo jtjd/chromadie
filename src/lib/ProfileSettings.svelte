@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { authUser, equippedItems, isAuthenticated, profile, refreshProfileState, session } from './stores';
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData.js';
@@ -16,6 +16,7 @@
   import ProfileEditor from './ProfileEditor.svelte';
   import ProfileSocial from './ProfileSocial.svelte';
   import ProfileSettingsPreview from './ProfileSettingsPreview.svelte';
+  import ProfileDashboardShell from './ProfileDashboardShell.svelte';
 
   const SETTINGS_SECTIONS = Object.freeze([
     { id: 'overview', number: '01', label: 'Overview', description: 'Your living profile' },
@@ -26,6 +27,9 @@
     { id: 'social', number: '06', label: 'Privacy & social', description: 'Visitors & interactions' },
     { id: 'progression', number: '07', label: 'Progression', description: 'Rolls & milestones' }
   ]);
+
+  export let logoutInProgress = false;
+  const dispatch = createEventDispatcher();
 
   function createInitialSettingsContext() {
     const currentProfile = { ...($profile || {}) };
@@ -46,6 +50,14 @@
       socialSettings: createDefaultProfileSocialSettings(),
       allAchievements: [],
       unlockedAchievements: {},
+      progression: {
+        currentEp: Number(currentProfile.lifetime_ep) || 0,
+        currentRank: null,
+        nextRank: null,
+        nextReward: null,
+        milestones: [],
+        recentUnlocks: []
+      },
       totalRolls: Number(currentProfile.total_rolls) || 0,
       loadError: '',
       dataWarning: ''
@@ -104,6 +116,18 @@
     const nextIndex = activeSectionIndex + direction;
     const nextSection = SETTINGS_SECTIONS[nextIndex];
     if (nextSection) setActiveSection(nextSection.id);
+  }
+
+  function handleDashboardSectionChange(event) {
+    setActiveSection(event.detail?.sectionId);
+  }
+
+  function forwardDashboardNavigation(event) {
+    dispatch('navigate', event.detail);
+  }
+
+  function forwardDashboardLogout() {
+    dispatch('logout');
   }
 
   function preserveExpressionFields(nextConfig, currentConfig) {
@@ -220,95 +244,82 @@
   }
 </script>
 
-<main class="profile-settings-page foundation-page" aria-busy={loading}>
-  <div class="profile-settings-page__inner">
-    {#if loading}
-      <div class="profile-settings-page__state" role="status" aria-live="polite">
-        <span class="profile-settings-page__state-mark" aria-hidden="true">✦</span>
-        <p class="profile-settings-page__eyebrow">Loading settings</p>
-        <h1>Preparing your profile studio.</h1>
-      </div>
-    {:else if error}
-      <div class="profile-settings-page__state" role="alert">
-        <Surface variant="panel" padding="lg">
-          <p class="profile-settings-page__eyebrow">Settings unavailable</p>
-          <h1>{error}</h1>
-          <p>Return to the profile or sign in again to manage your public presentation.</p>
-          <Button variant="secondary" href={profilePath}>Back to profile</Button>
-        </Surface>
-      </div>
-    {:else if context}
-      <section class="profile-settings-page__intro-row" aria-labelledby="profile-settings-title">
-        <div>
-          <p class="profile-settings-page__eyebrow">Profile studio</p>
-          <h1 id="profile-settings-title">Build the profile you keep.</h1>
-          <p class="profile-settings-page__intro">Shape your identity, expression, collection, progression, layout, and privacy from one living workspace.</p>
+<ProfileDashboardShell
+  sections={Array.from(SETTINGS_SECTIONS)}
+  {activeSection}
+  {profilePath}
+  username={accountUsername}
+  {logoutInProgress}
+  on:sectionchange={handleDashboardSectionChange}
+  on:navigate={forwardDashboardNavigation}
+  on:logout={forwardDashboardLogout}
+>
+  <div class="profile-settings-page foundation-page" aria-busy={loading} role="region" aria-label="Profile settings">
+    <div class="profile-settings-page__inner">
+      {#if loading}
+        <div class="profile-settings-page__state" role="status" aria-live="polite">
+          <span class="profile-settings-page__state-mark" aria-hidden="true">✦</span>
+          <p class="profile-settings-page__eyebrow">Loading settings</p>
+          <h1>Preparing your profile studio.</h1>
         </div>
-      </section>
-
-      {#if context.dataWarning}
-        <p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>
-      {/if}
-
-      <div class="profile-settings-page__workspace">
-        <aside class="profile-settings-page__rail" aria-label="Profile settings sections">
-          <div class="profile-settings-page__rail-heading">
-            <span>Customize</span>
+      {:else if error}
+        <div class="profile-settings-page__state" role="alert">
+          <Surface variant="panel" padding="lg">
+            <p class="profile-settings-page__eyebrow">Settings unavailable</p>
+            <h1>{error}</h1>
+            <p>Return to the profile or sign in again to manage your public presentation.</p>
+            <Button variant="secondary" href={profilePath}>Back to profile</Button>
+          </Surface>
+        </div>
+      {:else if context}
+        <section class="profile-settings-page__intro-row" aria-labelledby="profile-settings-title">
+          <div>
+            <p class="profile-settings-page__eyebrow">Profile studio</p>
+            <h1 id="profile-settings-title">Build the profile you keep.</h1>
+            <p class="profile-settings-page__intro">Shape your identity, expression, collection, progression, layout, and privacy from one living workspace.</p>
+          </div>
+          <div class="profile-settings-page__section-count" aria-label={`Section ${activeSectionIndex + 1} of ${SETTINGS_SECTIONS.length}`}>
+            <span>Current workspace</span>
             <strong>{String(activeSectionIndex + 1).padStart(2, '0')} <em>/</em> {String(SETTINGS_SECTIONS.length).padStart(2, '0')}</strong>
           </div>
-          <nav>
-            {#each SETTINGS_SECTIONS as section (section.id)}
-              <button
-                type="button"
-                class:active={activeSection === section.id}
-                aria-current={activeSection === section.id ? 'page' : undefined}
-                on:click={() => setActiveSection(section.id)}
-              >
-                <span class="profile-settings-page__rail-number">{section.number}</span>
-                <span class="profile-settings-page__rail-copy">
-                  <strong>{section.label}</strong>
-                  <small>{section.description}</small>
-                </span>
-                <span class="profile-settings-page__rail-arrow" aria-hidden="true">→</span>
-              </button>
-            {/each}
-          </nav>
-          <div class="profile-settings-page__rail-footer">
-            <span class="profile-settings-page__live-dot" aria-hidden="true"></span>
-            <div><strong>Profile is live</strong><small>Each section has its own save or apply action.</small></div>
-          </div>
-        </aside>
+        </section>
 
-        <section class="profile-settings-page__editor" aria-label="Profile settings editor">
+        {#if context.dataWarning}
+          <p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>
+        {/if}
+
+        <div class="profile-settings-page__workspace">
+          <section class="profile-settings-page__editor" aria-label="Profile settings editor">
           <div class="profile-settings-page__editor-body">
             {#if activeSection === 'overview'}
-              <section class="profile-settings-page__editor-section" aria-label="Profile studio overview">
+              <section id="profile-settings-section-overview" class="profile-settings-page__editor-section" aria-label="Profile studio overview">
                 <ProfileStudioOverview
                   profile={context.targetProfile}
                   timelineEvents={context.timelineEvents}
                   collectionItems={context.collectionItems}
                   allAchievements={context.allAchievements}
                   unlockedAchievements={context.unlockedAchievements}
+                  progression={context.progression}
                 />
               </section>
             {:else if activeSection === 'identity'}
-              <section class="profile-settings-page__editor-section" aria-label="Identity editor">
+              <section id="profile-settings-section-identity" class="profile-settings-page__editor-section" aria-label="Identity editor">
                 <IdentityEditor profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} on:identitysaved={updateIdentity} />
               </section>
             {:else if activeSection === 'expression'}
-              <section class="profile-settings-page__editor-section" aria-label="Expression editor">
+              <section id="profile-settings-section-expression" class="profile-settings-page__editor-section" aria-label="Expression editor">
                 <ProfileExpressionEditor profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} on:expressionchange={updateExpression} />
               </section>
             {:else if activeSection === 'collection'}
-              <section class="profile-settings-page__editor-section" aria-label="Collection editor">
+              <section id="profile-settings-section-collection" class="profile-settings-page__editor-section" aria-label="Collection editor">
                 <ProfileCosmeticsEditor accountProfile={context.targetProfile} profileConfig={context.profileConfig} />
               </section>
             {:else if activeSection === 'layout'}
-              <section class="profile-settings-page__editor-section" aria-label="Layout and links editor">
+              <section id="profile-settings-section-layout" class="profile-settings-page__editor-section" aria-label="Layout and links editor">
                 <ProfileEditor profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configpreview={updateConfigurationPreview} />
               </section>
             {:else if activeSection === 'social'}
-              <section class="profile-settings-page__editor-section" aria-label="Privacy and social editor">
+              <section id="profile-settings-section-social" class="profile-settings-page__editor-section" aria-label="Privacy and social editor">
                 <ProfileSocial
                   profileId={context.profileId}
                   username={context.targetProfile?.username || accountUsername}
@@ -320,13 +331,14 @@
                 />
               </section>
             {:else if activeSection === 'progression'}
-              <section class="profile-settings-page__editor-section" aria-label="Progression overview">
+              <section id="profile-settings-section-progression" class="profile-settings-page__editor-section" aria-label="Progression overview">
                 <ProfileProgression
                   profile={context.targetProfile}
                   timelineEvents={context.timelineEvents}
                   collectionItems={context.collectionItems}
                   allAchievements={context.allAchievements}
                   unlockedAchievements={context.unlockedAchievements}
+                  progression={context.progression}
                 />
               </section>
             {:else}
@@ -352,16 +364,17 @@
               Next <span aria-hidden="true">→</span>
             </button>
           </footer>
-        </section>
+          </section>
 
-        <aside class="profile-settings-page__preview-column" aria-label="Profile preview and shortcuts">
-          <ProfileSettingsPreview profile={context.targetProfile} profileConfig={previewProfileConfig} />
-          <div class="profile-settings-page__preview-links">
-            <a href="#collection"><span>Open your collection</span><span aria-hidden="true">→</span></a>
-            <a href="#progression"><span>Review progression</span><span aria-hidden="true">→</span></a>
-          </div>
-        </aside>
-      </div>
-    {/if}
+          <aside class="profile-settings-page__preview-column" aria-label="Profile preview and shortcuts">
+            <ProfileSettingsPreview profile={context.targetProfile} profileConfig={previewProfileConfig} />
+            <div class="profile-settings-page__preview-links">
+              <a href="#collection"><span>Open your collection</span><span aria-hidden="true">→</span></a>
+              <a href="#progression"><span>Review progression</span><span aria-hidden="true">→</span></a>
+            </div>
+          </aside>
+        </div>
+      {/if}
+    </div>
   </div>
-</main>
+</ProfileDashboardShell>

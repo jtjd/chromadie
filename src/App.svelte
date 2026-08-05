@@ -524,7 +524,7 @@
         return {
           loaderKey: 'profileSettings',
           componentKey: 'profile-settings',
-          componentProps: {},
+          componentProps: { logoutInProgress },
           loadingLabel: 'Opening profile settings'
         };
       }
@@ -828,23 +828,25 @@
   {/if}
 
   <div id="header-mount">
-    <SiteModeHeader
-      activeView={routeMode === 'app' ? view : routeMode}
-      accountState={$accountState}
-      username={headerUsername}
-      isAuthenticated={$isAuthenticated}
-      logoutInProgress={logoutInProgress}
-      isProfileMode={profileModeVisible}
-      isHomeMode={homeModeVisible}
-      isHomepageStyle={!profileModeVisible}
-      isOwner={profileModeOwner}
-      on:navigate={handleNavigation}
-      on:login={openAuthModal}
-      on:logout={handleLogout}
-      on:retry={() => window.location.reload()}
-      on:edit={handleProfileHeaderEdit}
-      accentColor={homeModeVisible ? homeActiveColor : '#cdd2ff'}
-    />
+    {#if !profileSettingsModeVisible}
+      <SiteModeHeader
+        activeView={routeMode === 'app' ? view : routeMode}
+        accountState={$accountState}
+        username={headerUsername}
+        isAuthenticated={$isAuthenticated}
+        logoutInProgress={logoutInProgress}
+        isProfileMode={profileModeVisible}
+        isHomeMode={homeModeVisible}
+        isHomepageStyle={!profileModeVisible}
+        isOwner={profileModeOwner}
+        on:navigate={handleNavigation}
+        on:login={openAuthModal}
+        on:logout={handleLogout}
+        on:retry={() => window.location.reload()}
+        on:edit={handleProfileHeaderEdit}
+        accentColor={homeModeVisible ? homeActiveColor : '#cdd2ff'}
+      />
+    {/if}
 
     {#if founderAnnouncementVisible}
       <section class="founder-banner" aria-label="Launch announcement" role="status" aria-live="polite">
@@ -927,7 +929,7 @@
     </section>
   {/if}
 
-  {#if $authInitialized && $session && $profileError && !profileModeVisible}
+  {#if $authInitialized && $session && $profileError && !profileModeVisible && !profileSettingsModeVisible}
     <div class="account-error-banner" role="alert" aria-live="polite">
       <span class="account-error-kicker">Account load error</span>
       <span class="account-error-copy">Your signed-in session could not load account data.</span>
@@ -955,7 +957,7 @@
   />
   </div>
 
-  {#if view !== 'profile'}
+  {#if view !== 'profile' && !profileSettingsModeVisible}
     <footer class="site-footer">
       <div class="site-footer-inner">
         <p>ChromaDie</p>

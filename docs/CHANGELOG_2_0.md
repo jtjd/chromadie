@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-05 — Turn Profile Studio into a full-page dashboard
+
+- `/profile/settings` now opens as a dedicated dashboard with its own
+  navigation, account controls, live-profile link, responsive mobile drawer,
+  and editor/preview workspace.
+- Overview and Progression are first-class destinations, while the Shop stays
+  available at its direct route without occupying the primary dashboard loop.
+- Daily play now unlocks five authored expression effects at EP rank
+  thresholds: Type In, Carbon Vein, Glow, Raised Glass, and Scramble.
+- Unlocks are granted server-side and idempotently, while the dashboard and
+  roll result surface only the authoritative state returned by the server.
+
 ## 2026-08-05 — Make Studio the profile dashboard
 
 - Added a Studio Overview that connects live identity, rank, EP progress,

@@ -1129,6 +1129,34 @@
   .profile-settings-page__rail nav button:focus-visible { transform: none; }
 }
 
+/* Full-page Profile Dashboard takeover. The legacy editor selectors above
+ * remain available to the focused sections, but the dashboard shell owns the
+ * viewport, navigation, and main content columns. */
+.app-main--profile-settings { background: var(--color-canvas-deep); }
+.profile-settings-page { min-height: 100%; padding: 0; background: transparent; }
+.profile-settings-page__inner { width: 100%; max-width: none; }
+.profile-settings-page__intro-row { align-items: flex-end; padding-top: 0; }
+.profile-settings-page__section-count { display: grid; gap: .35rem; align-self: end; color: var(--color-ink-faint); font: 600 .64rem/1.1 var(--font-mono-stack); letter-spacing: .1em; text-align: right; text-transform: uppercase; }
+.profile-settings-page__section-count strong { color: var(--color-ink-muted); font-size: .8rem; }
+.profile-settings-page__section-count em { color: var(--color-ink-faint); font-style: normal; }
+.profile-settings-page__workspace { grid-template-columns: minmax(0, 1fr) minmax(18rem, 23rem); }
+.profile-settings-page__editor { min-width: 0; }
+.profile-settings-page__editor-section > .foundation-module { min-height: 100%; }
+
+@media (max-width: 62rem) {
+  .profile-settings-page__workspace { grid-template-columns: minmax(0, 1fr); }
+  .profile-settings-page__preview-column { display: grid; grid-column: auto; grid-template-columns: minmax(0, 1fr) minmax(12rem, 15rem); gap: 1rem; align-items: start; }
+  .profile-settings-page__preview-column .settings-preview { position: static; }
+  .profile-settings-page__preview-links { align-self: end; margin-top: 0; }
+}
+
+@media (max-width: 48rem) {
+  .profile-settings-page__intro-row { padding-top: 0; }
+  .profile-settings-page__section-count { align-self: flex-start; text-align: left; }
+  .profile-settings-page__preview-column { display: block; }
+  .profile-settings-page__preview-links { grid-template-columns: 1fr 1fr; gap: .75rem; }
+}
+
 /* -------------------------------------------------------------------------
  * Sitewide warm-black migration
  *

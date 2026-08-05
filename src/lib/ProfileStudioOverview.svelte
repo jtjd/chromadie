@@ -8,6 +8,7 @@
   export let collectionItems = [];
   export let allAchievements = [];
   export let unlockedAchievements = {};
+  export let progression = {};
 
   /** @type {any} */
   let account;
@@ -22,6 +23,8 @@
     ? Object.keys(unlockedAchievements).length
     : 0;
   $: progressPercent = Math.round(rankState.progress * 100);
+  $: nextReward = progression?.nextReward || null;
+  $: recentUnlockCount = Array.isArray(progression?.recentUnlocks) ? progression.recentUnlocks.length : 0;
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
@@ -114,8 +117,9 @@
           <div><dt>Current streak</dt><dd>{formatNumber(account.current_streak)} days</dd></div>
           <div><dt>Achievements</dt><dd>{formatNumber(achievementCount)}{achievementTotal ? ` / ${formatNumber(achievementTotal)}` : ''}</dd></div>
           <div><dt>Story collection</dt><dd>{storyUnlocks.collectionUnlocked ? 'Unlocked' : `${storyUnlocks.collectionRollsRequired} rolls`}</dd></div>
+          <div><dt>Next expression</dt><dd>{nextReward?.name || 'Rank track'}</dd></div>
         </dl>
-        <p>{collectionItems.length ? `${formatNumber(collectionItems.length)} recorded pieces are shaping your story.` : 'Your roll history will become a collection as you play.'}</p>
+        <p>{recentUnlockCount ? `${formatNumber(recentUnlockCount)} progression reward${recentUnlockCount === 1 ? '' : 's'} recently unlocked.` : collectionItems.length ? `${formatNumber(collectionItems.length)} recorded pieces are shaping your story.` : 'Your roll history will become a collection as you play.'}</p>
       </section>
     </div>
   </section>

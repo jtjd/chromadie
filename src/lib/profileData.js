@@ -1,6 +1,7 @@
 import { isOwnProfileLookup, mapProfileRecord, mapProfileScores } from './profileContract.js';
 import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
 import { normalizeProfileStory } from './profileStory.js';
+import { createEmptyProgression, loadMyProgression } from './progressionState.js';
 import { normalizeUsernameSegment } from './routeContract.js';
 import {
   createDefaultProfileSocialSettings,
@@ -69,6 +70,7 @@ function emptyProfileContext(overrides = {}) {
     socialSettings: createDefaultProfileSocialSettings(),
     allAchievements: [],
     unlockedAchievements: {},
+    progression: createEmptyProgression(),
     totalRolls: 0,
     loadError: '',
     dataWarning: '',
@@ -165,6 +167,9 @@ export async function loadProfileContext({
       ? supabaseClient.rpc('get_my_profile_configuration')
       : supabaseClient.rpc('get_public_profile_configuration', { p_user_id: context.profileId });
     const achievementsRequestForProfile = loadAchievements(supabaseClient);
+    const progressionRequest = viewingOwnProfile
+      ? loadMyProgression(supabaseClient, context.profileId)
+      : Promise.resolve({ data: createEmptyProgression(), error: null });
     const unlockedRequest = viewingOwnProfile
       ? supabaseClient
         .from('user_achievements')
@@ -179,7 +184,8 @@ export async function loadProfileContext({
       storyResponse,
       configResponse,
       achievementsResponse,
-      unlockedResponse
+      unlockedResponse,
+      progressionResponse
     ] = await Promise.all([
       socialRequest,
       socialSettingsRequest,
@@ -187,10 +193,15 @@ export async function loadProfileContext({
       storyRequest,
       configRequest,
       achievementsRequestForProfile,
-      unlockedRequest
+      unlockedRequest,
+      progressionRequest
     ]);
     profileUnlockedResponse = unlockedResponse;
     profileAchievementsResponse = achievementsResponse;
+    if (viewingOwnProfile) {
+      context.progression = progressionResponse.data || createEmptyProgression();
+      if (progressionResponse.error) context.dataWarning = context.dataWarning || 'Progression rewards are temporarily unavailable.';
+    }
 
     const { data: social, error: socialError } = socialResponse;
     if (socialError || social?.success === false) {
