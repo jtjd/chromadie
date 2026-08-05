@@ -13,6 +13,17 @@ Document user-visible redesign changes by milestone.
 - Deprecated the prior eight active motion rows while preserving historical
   item keys through finite renderer aliases.
 
+## 2026-08-05 — Refine Name Motion quality
+
+- Type In now types from the left edge with a cursor that follows the visible
+  text instead of the full-name bounds.
+- Fuzzy’s signal line is text-masked, removing the compact-card box artifact.
+- Glow, Particles, Rainbow, Gradient, Reveal, Split Reveal, and Flash now use
+  distinct Canvas gestures: breathing aura, baseline trails, prism slices,
+  fluid fill, masked entry edge, chromatic seam, and chromatic exposure.
+- Added renderer behavior coverage for cursor anchoring, masked scanlines,
+  particle trails, spectrum slices, and flash layering.
+
 ## 2026-08-05 — Previous Name Motion pass (superseded)
 
 - Reduced the live Name Motion shop to ten authored effects: Ghost Frequency,

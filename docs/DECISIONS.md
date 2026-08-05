@@ -3084,6 +3084,25 @@ Scramble remain because they were the only two gestures that already passed
 the product review. The active shop now exposes exactly ten motions and marks
 the prior eight active rows legacy while resolving historical equipped values
 through finite aliases.
+
+## 2026-08-05 — Give the Name Motion shelf distinct authored gestures
+
+The follow-up quality audit found that the first Haunt-reference renderers
+overused one diagonal light sweep: Glow, Rainbow, Gradient, Reveal, Split
+Reveal, and Flash read as palette or timing variants at compact card scale.
+The renderer now gives each active key a separate visual grammar while keeping
+the ten catalog keys stable. Glow is a breathing masked aura, Rainbow is a
+moving set of saturated prism slices, Gradient is a slower fluid fill with a
+soft liquid highlight, and Flash is a short chromatic exposure. Particles now
+emit deterministic colored trails from the text baseline; Reveal and Split
+Reveal use masked entry edges and a chromatic center seam; Fuzzy keeps its
+signal line inside the text mask.
+
+Type In now left-anchors partial text and places its cursor after the visible
+characters, including during deletion. No catalog, inventory, entitlement,
+profile, or database authority changed, and all legacy motion aliases remain
+stable. Renderer recording tests cover these gesture boundaries in addition to
+the existing deterministic and bounded-Canvas checks.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

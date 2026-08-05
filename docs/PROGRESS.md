@@ -2095,8 +2095,20 @@ kept public profile selectors outside the supporting-route baseline.
   Canvas 2D gestures based on the public Haunt username/profile behavior
   vocabulary. No competitor code, assets, CSS, or SVG treatments were copied.
 - Added an additive migration that leaves the active catalog at 97 rows while
-  preserving deprecated motion rows as legacy history and resolving their old
-  renderer keys through finite aliases.
+preserving deprecated motion rows as legacy history and resolving their old
+renderer keys through finite aliases.
+
+## 2026-08-05 — Repair Name Motion quality and uniqueness
+
+- Reworked all ten active Canvas motions without changing their stable catalog
+  keys or the historical alias map.
+- Removed the repeated white sweep language from Glow, Rainbow, Gradient,
+  Reveal, Split Reveal, and Flash.
+- Added masked pulse, prism-slice, fluid-highlight, chromatic exposure, split
+  seam, and baseline particle-trail treatments.
+- Fixed Type In’s partial-text anchoring and cursor position, and confined
+  Fuzzy’s scanline to the text mask so compact previews do not draw a frame.
+- Added recording-context tests for the authored gestures and renderer safety.
 
 ## 2026-08-03 — Reconcile live shop catalog labels
 

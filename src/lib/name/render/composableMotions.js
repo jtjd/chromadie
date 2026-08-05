@@ -1,12 +1,11 @@
 import {
   createLinearGradient,
   createRadialGradient,
-  drawDeterministicParticles,
   drawText,
-  drawTextBand,
   drawTextSlices,
   easeInOut,
   easeOut,
+  fract,
   lerp,
   mixColors,
   rgba,
@@ -93,24 +92,116 @@ function drawColorFill(ctx, model, colors, angle, alpha = 0.96) {
   });
 }
 
+function drawMaskedRect(ctx, model, left, top, width, height, fillStyle, alpha = 1) {
+  if (!ctx?.fillRect) return;
+  withTextMask(ctx, model, target => {
+    target.fillStyle = fillStyle;
+    target.globalAlpha = alpha;
+    target.fillRect(left, top, Math.max(0, width), Math.max(0, height));
+  });
+}
+
+function drawMaskedPulse(ctx, model, centerX, centerY, radius, colors, alpha = 1) {
+  const gradient = createRadialGradient(
+    ctx,
+    colors,
+    centerX,
+    centerY,
+    0,
+    centerX,
+    centerY,
+    Math.max(1, radius),
+    colors[colors.length - 1] || 'rgba(255,255,255,0)'
+  );
+  drawMaskedRect(ctx, model, 0, 0, model.width, model.height, gradient, alpha);
+}
+
+function drawPrismSlices(ctx, model, colors, phase) {
+  const offset = Math.floor(phase * colors.length * 1.5);
+  drawTextSlices(ctx, model, index => {
+    const color = colors[(index + offset) % colors.length];
+    const jitter = Math.sin(phase * Math.PI * 2 + index * 0.8) * 1.2;
+    drawText(ctx, model, color, 0.88, jitter);
+  }, colors.length);
+}
+
+function drawLiquidHighlight(ctx, model, progress, phase) {
+  const width = Math.max(8, model.width * 0.3);
+  const left = model.width * (progress * 1.25 - 0.2) + Math.sin(phase) * model.width * 0.08;
+  const highlight = createLinearGradient(
+    ctx,
+    ['rgba(255,255,255,0)', 'rgba(255,255,255,.34)', 'rgba(255,255,255,0)'],
+    left,
+    0,
+    left + width,
+    0,
+    'rgba(255,255,255,.16)'
+  );
+  drawMaskedRect(ctx, model, left, 0, width, model.height, highlight, 0.78);
+}
+
+function drawParticleTrail(ctx, model, count = 32) {
+  if (!ctx?.fillRect && !ctx?.arc) return;
+  const { metrics, progress } = model;
+  const left = metrics.x - metrics.width / 2;
+  const colors = [getReadableMotionColor(model.todayColor), '#45E8FF', '#FF4FA3'];
+  for (let index = 0; index < count; index += 1) {
+    const anchor = seededNoise(model.seed, index + 47);
+    const localPhase = fract(
+      progress * (0.78 + seededNoise(model.seed, index + 31) * 0.42)
+        + seededNoise(model.seed, index + 11)
+    );
+    const baseline = metrics.y + metrics.fontSize * (0.28 + seededNoise(model.seed, index + 71) * 0.12);
+    const lift = metrics.fontSize * (0.52 + seededNoise(model.seed, index + 83) * 1.08);
+    const size = 0.7 + seededNoise(model.seed, index + 101) * 1.7;
+    const x = left + metrics.width * anchor
+      + Math.sin(localPhase * Math.PI * 2 + index) * metrics.fontSize * 0.08;
+    const y = baseline - localPhase * lift;
+    const alpha = Math.sin(localPhase * Math.PI) * (0.28 + seededNoise(model.seed, index + 127) * 0.56);
+    const color = colors[index % colors.length];
+    ctx.save?.();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(0.5, size * 0.7);
+    if (ctx.beginPath && ctx.moveTo && ctx.lineTo && ctx.stroke) {
+      ctx.beginPath();
+      ctx.moveTo(x, y + size * 2.8);
+      ctx.lineTo(x, y + size * 0.6);
+      ctx.stroke();
+    }
+    if (ctx.beginPath && ctx.arc && ctx.fill) {
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (ctx.fillRect) {
+      ctx.fillRect(x - size / 2, y - size / 2, size, size);
+    }
+    ctx.restore?.();
+  }
+}
+
 function drawFuzzyMotion(ctx, model, drawBase) {
   const { progress, metrics } = model;
-  const phase = progress * Math.PI * 2;
   drawBase(ctx, model);
   drawSliceMotion(ctx, model, (target, nextModel) => drawText(target, nextModel, '#45E8FF'), 9,
     index => (seededNoise(model.seed, index + Math.floor(progress * 24) * 7) - 0.5) * 11, 0.45);
   drawSliceMotion(ctx, model, (target, nextModel) => drawText(target, nextModel, '#FF4FA3'), 9,
     index => (seededNoise(model.seed, index + 61 + Math.floor(progress * 19) * 5) - 0.5) * 8, 0.3);
-  drawTextBand(ctx, model,
+  drawMaskedRect(ctx, model,
     lerp(metrics.x - metrics.width * 0.72, metrics.x + metrics.width * 0.72, easeInOut(progress)),
-    metrics.width * 0.08, '#FFFFFF', { blur: 4, alpha: 0.58, slant: 0.1, offsetY: Math.sin(phase) * 0.4 });
-  if (ctx.fillRect) {
-    ctx.save?.();
-    ctx.fillStyle = '#090B0F';
-    ctx.globalAlpha = 0.35;
-    ctx.fillRect(0, (Math.floor(progress * 16) % 6) / 6 * model.height, model.width, 1);
-    ctx.restore?.();
-  }
+    0,
+    Math.max(3, metrics.width * 0.07),
+    model.height,
+    '#FFFFFF',
+    0.48);
+  drawMaskedRect(ctx, model,
+    0,
+    (Math.floor(progress * 16) % 6) / 6 * model.height,
+    model.width,
+    1,
+    '#090B0F',
+    0.28);
 }
 
 export function drawComposableMotion(ctx, model, drawBase) {
@@ -121,18 +212,26 @@ export function drawComposableMotion(ctx, model, drawBase) {
     case 'haunt-glow': {
       const pulse = 0.65 + Math.sin(phase * 1.5 - 0.8) * 0.18;
       drawBaseVariant(ctx, model, drawBase, {
-        alpha: 0.78,
-        blur: 15 * pulse,
+        alpha: 0.68,
+        blur: 17 * pulse,
         shadowColor: model.todayColor
       });
       drawBaseVariant(ctx, model, drawBase, {
-        alpha: 0.92,
-        blur: 4,
+        alpha: 0.76,
+        offsetX: Math.sin(phase * 0.5) * 0.7,
+        blur: 2.5,
         shadowColor: '#FFFFFF'
       });
-      drawTextBand(ctx, model,
-        lerp(metrics.x - metrics.width, metrics.x + metrics.width, easeInOut(progress)),
-        metrics.width * 0.1, '#FFFFFF', { blur: 5, alpha: 0.62, slant: 0.12 });
+      drawBase(ctx, model);
+      drawMaskedPulse(
+        ctx,
+        model,
+        metrics.x + Math.sin(phase) * metrics.width * 0.32,
+        metrics.y,
+        metrics.width * (0.56 + pulse * 0.2),
+        [rgba(model.todayColor, 0.7), 'rgba(255,255,255,.28)', 'rgba(255,255,255,0)'],
+        0.42
+      );
       return true;
     }
     case 'letter-shuffle': {
@@ -163,35 +262,41 @@ export function drawComposableMotion(ctx, model, drawBase) {
           ? model.displayText.length
           : Math.max(0, model.displayText.length - Math.floor(((progress - hold) / (1 - hold)) * model.displayText.length));
       const shown = model.displayText.slice(0, count);
-      const nextModel = cloneTextModel(model, shown, { ...metrics, width: metrics.width * (count / Math.max(1, model.displayText.length)) });
+      const visibleWidth = metrics.width * (count / Math.max(1, model.displayText.length));
+      const nextModel = cloneTextModel(model, shown, {
+        ...metrics,
+        x: metrics.x - (metrics.width - visibleWidth) / 2,
+        width: visibleWidth
+      });
       drawBase(ctx, nextModel);
       if (ctx.fillRect && progress < hold && Math.floor(progress * 18) % 2 === 0) {
         ctx.fillStyle = '#CDD2FF';
-        ctx.fillRect(metrics.x + metrics.width / 2 + 2, metrics.y - metrics.fontSize * 0.45, 2, metrics.fontSize * 0.9);
+        ctx.fillRect(nextModel.metrics.x + visibleWidth / 2 + 3, metrics.y - metrics.fontSize * 0.45, 2, metrics.fontSize * 0.9);
       }
       return true;
     }
     case 'haunt-particles':
+      drawParticleTrail(ctx, model, 32);
       drawBaseVariant(ctx, model, drawBase, { alpha: 0.82, blur: 3, shadowColor: model.todayColor });
       drawBase(ctx, model);
-      drawDeterministicParticles(ctx, model, 32, { colorA: model.todayColor, colorB: '#FFFFFF', spread: 1.6 });
-      drawDeterministicParticles(ctx, model, 14, { colorA: '#FF4FA3', colorB: '#45E8FF', spread: 0.86 });
       return true;
     case 'haunt-rainbow':
       drawBase(ctx, model);
-      drawColorFill(ctx, model,
+      drawPrismSlices(ctx, model,
         ['#FF2458', '#FF9D00', '#FFE600', '#39FF88', '#00D9FF', '#7357FF', '#FF2458'],
-        phase * 0.14 - progress * Math.PI * 1.6, 0.98);
-      drawTextBand(ctx, model,
-        lerp(metrics.x - metrics.width * 1.1, metrics.x + metrics.width * 1.1, progress),
-        metrics.width * 0.06, '#FFFFFF', { blur: 3, alpha: 0.5, slant: 0.08 });
+        progress);
+      drawMaskedRect(ctx, model,
+        lerp(0, model.width, progress) - model.width * 0.035,
+        0,
+        model.width * 0.07,
+        model.height,
+        '#FFFFFF',
+        0.42);
       return true;
     case 'haunt-gradient':
       drawBase(ctx, model);
-      drawColorFill(ctx, model, ['#FF2E78', '#8C4DFF', '#2DD4FF'], -0.2 + Math.sin(phase) * 0.2, 0.96);
-      drawTextBand(ctx, model,
-        lerp(metrics.x - metrics.width, metrics.x + metrics.width, easeInOut(progress)),
-        metrics.width * 0.045, '#FFFFFF', { blur: 2, alpha: 0.72, slant: 0.12 });
+      drawColorFill(ctx, model, ['#FF2E78', '#8C4DFF', '#2DD4FF'], -0.42 + Math.sin(phase) * 0.24, 0.94);
+      drawLiquidHighlight(ctx, model, progress, phase);
       return true;
     case 'haunt-fuzzy':
       drawFuzzyMotion(ctx, model, drawBase);
@@ -211,8 +316,13 @@ export function drawComposableMotion(ctx, model, drawBase) {
         offsetX: (1 - reveal) * -metrics.width * 0.16,
         alpha: 1
       });
-      drawTextBand(ctx, model, left + metrics.width * reveal - metrics.width * 0.025,
-        metrics.width * 0.07, '#FFFFFF', { blur: 5, alpha: 0.9, slant: 0.1 });
+      drawMaskedRect(ctx, model,
+        left + metrics.width * reveal - metrics.width * 0.018,
+        0,
+        Math.max(2, metrics.width * 0.036),
+        model.height,
+        '#FFFFFF',
+        0.84);
       return true;
     }
     case 'haunt-split': {
@@ -233,13 +343,25 @@ export function drawComposableMotion(ctx, model, drawBase) {
         offsetY: (1 - settle) * metrics.fontSize * 0.16,
         alpha: 1
       });
-      drawTextBand(ctx, model,
-        lerp(metrics.x - metrics.width, metrics.x + metrics.width, settle),
-        metrics.width * 0.05, '#FFFFFF', { blur: 4, alpha: 0.7, slant: 0.08 });
+      const seam = Math.max(1, drift * 0.12);
+      drawMaskedRect(ctx, model, metrics.x - seam, 0, 1.5, model.height, '#45E8FF', 0.22 + (1 - settle) * 0.34);
+      drawMaskedRect(ctx, model, metrics.x + seam - 1.5, 0, 1.5, model.height, '#FF4FA3', 0.22 + (1 - settle) * 0.34);
       return true;
     }
     case 'haunt-flash': {
       const exposure = Math.exp(-((progress - 0.42) ** 2) / 0.018);
+      drawBaseVariant(ctx, model, drawBase, {
+        alpha: exposure * 0.34,
+        offsetX: -exposure * 3,
+        blur: 2,
+        shadowColor: '#45E8FF'
+      });
+      drawBaseVariant(ctx, model, drawBase, {
+        alpha: exposure * 0.26,
+        offsetX: exposure * 3,
+        blur: 2,
+        shadowColor: '#FF4FA3'
+      });
       drawBaseVariant(ctx, model, drawBase, {
         alpha: 0.78 + exposure * 0.2,
         blur: 7 + exposure * 8,
@@ -256,9 +378,6 @@ export function drawComposableMotion(ctx, model, drawBase) {
           target.fillRect?.(0, 0, model.width, model.height);
         });
       }
-      drawTextBand(ctx, model,
-        lerp(metrics.x - metrics.width * 1.2, metrics.x + metrics.width * 1.2, easeInOut(progress)),
-        metrics.width * 0.08, '#FFFFFF', { blur: 4, alpha: 0.72, slant: 0.1 });
       return true;
     }
     default:

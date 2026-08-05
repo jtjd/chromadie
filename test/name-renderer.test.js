@@ -186,6 +186,93 @@ test('every curated motion renderer draws safely through the bounded Canvas API'
   }
 });
 
+function createMotionRecordingContext() {
+  const calls = [];
+  const context = new Proxy({}, {
+    get(target, property) {
+      if (property === 'globalCompositeOperation') return target.globalCompositeOperation || 'source-over';
+      if (property === 'createLinearGradient') {
+        return () => ({ addColorStop() {} });
+      }
+      if (property === 'createRadialGradient') {
+        return () => ({ addColorStop() {} });
+      }
+      if (property === 'measureText') {
+        return text => ({ width: String(text).length * 12 });
+      }
+      if (property === 'fillText') {
+        return (...args) => calls.push({ type: 'fillText', args, composite: context.globalCompositeOperation });
+      }
+      if (property === 'fillRect') {
+        return (...args) => calls.push({ type: 'fillRect', args, composite: context.globalCompositeOperation });
+      }
+      if (property === 'arc') {
+        return (...args) => calls.push({ type: 'arc', args });
+      }
+      if (property === 'stroke') {
+        return (...args) => calls.push({ type: 'stroke', args });
+      }
+      if (!(property in target)) target[property] = () => {};
+      return target[property];
+    }
+  });
+  return { calls, context };
+}
+
+test('Type In reveals from the left edge and keeps its cursor after the visible text', () => {
+  const frame = getNameFrameModel({
+    text: 'Chromadie',
+    loadout: { motionKey: 'typewriter-name' },
+    time: 500
+  });
+  const { calls, context } = createMotionRecordingContext();
+  let drawnModel = null;
+  drawComposableMotion(context, frame, (target, model) => {
+    drawnModel = model;
+    target.fillText(model.displayText, model.metrics.x, model.metrics.y);
+  });
+
+  const textCall = calls.find(call => call.type === 'fillText');
+  const cursorCall = calls.find(call => call.type === 'fillRect');
+  assert.ok(drawnModel.displayText.length > 0);
+  assert.ok(drawnModel.metrics.x < frame.metrics.x);
+  assert.ok(cursorCall);
+  assert.equal(cursorCall.args[0], drawnModel.metrics.x + drawnModel.metrics.width / 2 + 3);
+  assert.equal(cursorCall.args[1], frame.metrics.y - frame.metrics.fontSize * 0.45);
+  assert.equal(textCall.args[1], drawnModel.metrics.x);
+});
+
+test('Fuzzy keeps its signal line inside the text mask instead of drawing a frame', () => {
+  const frame = getNameFrameModel({
+    text: 'Chromadie',
+    loadout: { motionKey: 'haunt-fuzzy' },
+    time: 1375
+  });
+  const { calls, context } = createMotionRecordingContext();
+  drawComposableMotion(context, frame, () => {});
+  const scanline = calls.find(call => call.type === 'fillRect' && call.args[3] === 1);
+  assert.ok(scanline);
+  assert.equal(scanline.composite, 'source-atop');
+});
+
+test('the curated motion set retains distinct authored gestures', () => {
+  const render = motionKey => {
+    const frame = getNameFrameModel({ text: 'Chromadie', loadout: { motionKey }, time: 1375 });
+    const recording = createMotionRecordingContext();
+    let baseCalls = 0;
+    drawComposableMotion(recording.context, frame, () => { baseCalls += 1; });
+    return { calls: recording.calls, baseCalls };
+  };
+  const rainbow = render('haunt-rainbow');
+  const gradient = render('haunt-gradient');
+  const particles = render('haunt-particles');
+  const flash = render('haunt-flash');
+  assert.ok(rainbow.calls.filter(call => call.type === 'fillText').length >= 7);
+  assert.ok(gradient.calls.filter(call => call.type === 'fillText').length <= 1);
+  assert.ok(particles.calls.filter(call => call.type === 'arc').length >= 12);
+  assert.ok(flash.baseCalls >= 4);
+});
+
 test('the native Canvas path caps DPR and safely falls back without a 2D context', () => {
   const unsupported = createNameCanvasRenderer({ getContext: () => null });
   assert.equal(unsupported.supported, false);
