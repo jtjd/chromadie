@@ -32,7 +32,12 @@
   let lastIncomingKey = '';
   let layoutChangedSinceSave = false;
 
+  function hasDraftChanges() {
+    return JSON.stringify(draft) !== JSON.stringify(baseline);
+  }
+
   $: isDirty = JSON.stringify(draft) !== JSON.stringify(baseline);
+  $: hasUnpublishedChanges = JSON.stringify(compositionPatch(draft)) !== JSON.stringify(compositionPatch(normalizeProfileConfig(publishedConfig)));
   $: incomingKey = JSON.stringify({ profileId, draft: draftConfig, published: publishedConfig, updatedAt });
   $: if (incomingKey !== lastIncomingKey && !saving && !isDirty) syncIncoming();
   $: orderedModules = [...(draft.modules || [])].sort((left, right) => left.order - right.order);
@@ -67,8 +72,8 @@
     };
   }
 
-  function emitDirty() {
-    dispatch('dirty', { dirty: isDirty });
+  function emitDirty(value = null) {
+    dispatch('dirty', { dirty: typeof value === 'boolean' ? value : hasDraftChanges() });
   }
 
   function updateDraft(next) {
@@ -78,7 +83,7 @@
     status = '';
     error = '';
     conflict = null;
-    emitDirty();
+    emitDirty(true);
     dispatch('configpreview', { config: draft });
   }
 
@@ -113,7 +118,7 @@
   }
 
   async function persist(action) {
-    if (saving || (action === 'save' && !isDirty)) return;
+    if (saving || (action === 'save' && !isDirty) || (action === 'publish' && !isDirty && !hasUnpublishedChanges)) return;
     saving = true;
     status = action === 'publish' ? 'Publishing…' : 'Saving…';
     error = '';
@@ -124,8 +129,8 @@
       p_expected_updated_at: serverUpdatedAt || null
     });
     saving = false;
-    if (rpcError || data?.success === false) {
-      if (data?.error === 'conflict') {
+    if (rpcError || data?.success === false || data?.code === 'conflict') {
+      if (data?.code === 'conflict') {
         conflict = { draft: data.draft, published: data.published, updatedAt: data.updated_at };
         error = 'The server version changed. Reload it before saving.';
       } else {
@@ -153,7 +158,7 @@
       layoutChanged
     });
     dispatch('configpreview', { config: nextDraft });
-    emitDirty();
+    emitDirty(false);
   }
 
   function resetChanges() {
@@ -164,7 +169,7 @@
     layoutChangedSinceSave = false;
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
     dispatch('configpreview', { config: draft });
-    emitDirty();
+    emitDirty(false);
   }
 
   function reloadServerVersion() {
@@ -180,7 +185,7 @@
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
     dispatch('configreloaded', { draft, published: serverVersion.published || publishedConfig, updatedAt: serverUpdatedAt });
     dispatch('configpreview', { config: draft });
-    emitDirty();
+    emitDirty(false);
   }
 </script>
 
@@ -219,7 +224,7 @@
   {#if conflict}<div class="profile-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{:else if error}<p class="profile-editor__message" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-editor__message" role="status" aria-live="polite">{status}</p>{/if}
 
-  <footer class="profile-editor__actions"><button type="button" on:click={resetChanges} disabled={!isDirty || saving}>Reset</button><button type="button" on:click={() => persist('save')} disabled={!isDirty || saving}>Save draft</button><button type="button" class="profile-editor__publish" on:click={() => persist('publish')} disabled={!isDirty || saving}>{saving ? 'Publishing…' : 'Publish'}</button></footer>
+  <footer class="profile-editor__actions"><button type="button" on:click={resetChanges} disabled={!isDirty || saving}>Reset</button><button type="button" on:click={() => persist('save')} disabled={!isDirty || saving}>Save draft</button><button type="button" class="profile-editor__publish" on:click={() => persist('publish')} disabled={saving || (!isDirty && !hasUnpublishedChanges)}>{saving ? 'Publishing…' : 'Publish'}</button></footer>
 </section>
 
 <style>

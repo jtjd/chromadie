@@ -41,12 +41,25 @@ test('section editors publish only their own contract and preserve conflicts', a
   assert.match(layout, /p_section: 'composition'/);
   assert.match(layout, /compositionPatch/);
   assert.match(layout, /Reload server version/);
+  assert.match(layout, /data\?\.code === 'conflict'/);
+  assert.doesNotMatch(layout, /data\?\.error === 'conflict'/);
   assert.doesNotMatch(layout, /save_profile_configuration['"]/);
   assert.doesNotMatch(layout, /publish_profile_configuration['"]/);
   assert.doesNotMatch(layout, /Signature color|Ambient color|colorEffectsEnabled/);
+  assert.match(layout, /function hasDraftChanges\(\)/);
+  assert.match(layout, /emitDirty\(true\)/);
+  assert.match(layout, /emitDirty\(false\)/);
+  assert.doesNotMatch(layout, /dispatch\('dirty', \{ dirty: isDirty \}\)/);
+  assert.match(layout, /hasUnpublishedChanges/);
+  assert.match(layout, /disabled=\{saving \|\| \(!isDirty && !hasUnpublishedChanges\)\}/);
   assert.match(appearance, /invalidHex/);
   assert.match(appearance, /Reload server version/);
-  assert.match(appearance, /disabled=\{!dirty \|\| saving \|\| invalidHex\}/);
+  assert.match(appearance, /data\?\.code === 'conflict'/);
+  assert.doesNotMatch(appearance, /data\?\.error === 'conflict'/);
+  assert.match(appearance, /hasUnpublishedChanges/);
+  assert.match(appearance, /action === 'publish' && !dirty && !hasUnpublishedChanges/);
+  assert.match(appearance, /disabled=\{saving \|\| invalidHex \|\| \(!dirty && !hasUnpublishedChanges\)\}/);
+  assert.match(appearance, /disabled=\{saving \|\| \(!dirty && !invalidHex\)\}/);
   assert.match(migration, /'draft', v_record\.draft_config/);
   assert.match(migration, /'published', v_record\.published_config/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.profile_composition_patch/);
@@ -70,6 +83,22 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(shell, /deferMedia=\{previewMode\}/);
   assert.match(music, /autoplay=\{!deferMedia\}/);
   assert.match(music, /loading="lazy"/);
+});
+
+test('dirty prompt is keyboard-complete and editor reload actions remain reachable', async () => {
+  const [settings, appearance, layout] = await Promise.all([
+    read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/ProfileAppearanceEditor.svelte'),
+    read('src/lib/ProfileEditor.svelte')
+  ]);
+  assert.match(settings, /dirtyPromptPrimary/);
+  assert.match(settings, /requestAnimationFrame\(\(\) => dirtyPromptPrimary\?\.focus\(\)\)/);
+  assert.match(settings, /trapFocus\(event, dirtyPrompt\)/);
+  assert.match(settings, /event\.key === 'Escape'/);
+  assert.match(settings, /stayOnPage\(\)/);
+  assert.match(settings, /restoreFocus\(previous\)/);
+  assert.match(appearance, /on:click=\{reloadServerVersion\}/);
+  assert.match(layout, /on:click=\{reloadServerVersion\}/);
 });
 
 test('legacy profile reuses the account deletion contract and mounted editor copy stays functional', async () => {

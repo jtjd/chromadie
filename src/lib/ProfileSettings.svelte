@@ -94,6 +94,9 @@
   let activeDirtySection = '';
   let pendingNavigation = null;
   let showDirtyPrompt = false;
+  let dirtyPrompt = null;
+  let dirtyPromptPrimary = null;
+  let dirtyPromptReturnFocus = null;
   let appearanceEditor = null;
   let layoutEditor = null;
 
@@ -118,8 +121,7 @@
       if (nextSection === activeSection) return;
       if (activeDirtySection) {
         window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}#${activeSection}`);
-        pendingNavigation = { type: 'section', value: nextSection };
-        showDirtyPrompt = true;
+        openDirtyPrompt({ type: 'section', value: nextSection });
         return;
       }
       setActiveSection(nextSection, { push: false });
@@ -135,10 +137,9 @@
     const navigationGuard = event => {
       if (!activeDirtySection) return;
       event.preventDefault();
-      pendingNavigation = event.detail?.navigation
+      openDirtyPrompt(event.detail?.navigation
         ? { type: 'navigate', value: event.detail.navigation }
-        : { type: 'path', value: event.detail?.nextPath || window.location.pathname };
-      showDirtyPrompt = true;
+        : { type: 'path', value: event.detail?.nextPath || window.location.pathname });
     };
     window.addEventListener('beforeunload', beforeUnload);
     window.addEventListener('chromadie:navigation-request', navigationGuard);
@@ -169,8 +170,7 @@
     const sectionId = event.detail?.sectionId;
     if (!sectionId || sectionId === activeSection) return;
     if (activeDirtySection) {
-      pendingNavigation = { type: 'section', value: sectionId };
-      showDirtyPrompt = true;
+      openDirtyPrompt({ type: 'section', value: sectionId });
       return;
     }
     setActiveSection(sectionId);
@@ -187,16 +187,30 @@
     activeDirtySection = '';
   }
 
+  function openDirtyPrompt(next) {
+    pendingNavigation = next;
+    if (!dirtyPromptReturnFocus && typeof document !== 'undefined') dirtyPromptReturnFocus = document.activeElement;
+    showDirtyPrompt = true;
+    requestAnimationFrame(() => dirtyPromptPrimary?.focus());
+  }
+
+  function closeDirtyPrompt() {
+    const previous = dirtyPromptReturnFocus;
+    dirtyPromptReturnFocus = null;
+    showDirtyPrompt = false;
+    requestAnimationFrame(() => restoreFocus(previous));
+  }
+
   function stayOnPage() {
     pendingNavigation = null;
-    showDirtyPrompt = false;
+    closeDirtyPrompt();
   }
 
   function discardAndContinue() {
     const next = pendingNavigation;
     resetActiveEditor();
     pendingNavigation = null;
-    showDirtyPrompt = false;
+    closeDirtyPrompt();
     if (!next) return;
     if (next.type === 'section') setActiveSection(next.value);
     else if (next.type === 'route') window.location.assign(next.value);
@@ -210,8 +224,7 @@
   function handleViewProfile(event) {
     event.preventDefault();
     if (activeDirtySection) {
-      pendingNavigation = { type: 'route', value: profilePath };
-      showDirtyPrompt = true;
+      openDirtyPrompt({ type: 'route', value: profilePath });
       return;
     }
     window.location.assign(profilePath);
@@ -331,10 +344,20 @@
     trapFocus(event, previewDialog);
   }
 
+  function handleDirtyPromptKeydown(event) {
+    if (!showDirtyPrompt) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      stayOnPage();
+      return;
+    }
+    trapFocus(event, dirtyPrompt);
+  }
+
   function handleAccountDeleted(event) { dispatch('accountdeleted', event.detail); }
 </script>
 
-<svelte:window on:keydown={handlePreviewKeydown} />
+<svelte:window on:keydown={handlePreviewKeydown} on:keydown={handleDirtyPromptKeydown} />
 
 <ProfileDashboardShell
   sections={[...SETTINGS_SECTIONS]}
@@ -386,10 +409,10 @@
 
 {#if showDirtyPrompt}
   <div class="profile-settings-prompt__backdrop" role="presentation">
-    <div class="profile-settings-prompt" role="dialog" aria-modal="true" aria-labelledby="profile-settings-prompt-title">
+    <div class="profile-settings-prompt" bind:this={dirtyPrompt} role="dialog" aria-modal="true" aria-labelledby="profile-settings-prompt-title" tabindex="-1">
       <h2 id="profile-settings-prompt-title">Unsaved changes</h2>
       <p>Stay to keep editing or discard this draft?</p>
-      <div><button type="button" on:click={stayOnPage}>Stay</button><button type="button" class="profile-settings-prompt__discard" on:click={discardAndContinue}>Discard</button></div>
+      <div><button bind:this={dirtyPromptPrimary} type="button" on:click={stayOnPage}>Stay</button><button type="button" class="profile-settings-prompt__discard" on:click={discardAndContinue}>Discard</button></div>
     </div>
   </div>
 {/if}

@@ -30,6 +30,8 @@
   }
   $: syncIncoming(incomingKey);
   $: dirty = JSON.stringify(staged) !== JSON.stringify(saved);
+  $: publishedAppearance = normalizeProfileAppearance(publishedConfig?.appearance, publishedConfig?.signatureColor);
+  $: hasUnpublishedChanges = JSON.stringify(staged) !== JSON.stringify(publishedAppearance);
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -62,7 +64,7 @@
   }
 
   async function persist(action) {
-    if (saving || invalidHex || (action === 'save' && !dirty)) return;
+    if (saving || invalidHex || (action === 'save' && !dirty) || (action === 'publish' && !dirty && !hasUnpublishedChanges)) return;
     saving = true;
     status = action === 'publish' ? 'Publishing…' : 'Saving…';
     error = '';
@@ -73,8 +75,8 @@
       p_expected_updated_at: updatedAt || null
     });
     saving = false;
-    if (rpcError || data?.success === false) {
-      if (data?.error === 'conflict') {
+    if (rpcError || data?.success === false || data?.code === 'conflict') {
+      if (data?.code === 'conflict') {
         conflict = { draft: data.draft, published: data.published, updatedAt: data.updated_at };
         error = 'The server version changed. Reload it before saving.';
       } else error = data?.error || rpcError?.message || 'Could not save appearance.';
@@ -183,9 +185,9 @@
   {#if conflict}<div class="appearance-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{/if}
   <footer class="appearance-editor__actions" aria-live="polite">
     <span class="appearance-editor__status" class:error>{error}</span><span class="appearance-editor__status">{status}</span>
-    <button type="button" class="appearance-editor__reset" disabled={!dirty || saving} on:click={resetChanges}>Reset</button>
+    <button type="button" class="appearance-editor__reset" disabled={saving || (!dirty && !invalidHex)} on:click={resetChanges}>Reset</button>
     <button type="button" class="appearance-editor__save" disabled={!dirty || saving || invalidHex} on:click={() => persist('save')}>Save draft</button>
-    <button type="button" class="appearance-editor__publish" disabled={!dirty || saving || invalidHex} on:click={() => persist('publish')}>Publish</button>
+    <button type="button" class="appearance-editor__publish" disabled={saving || invalidHex || (!dirty && !hasUnpublishedChanges)} on:click={() => persist('publish')}>Publish</button>
   </footer>
 </div>
 
