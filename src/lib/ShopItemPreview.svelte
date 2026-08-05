@@ -73,7 +73,6 @@
     <ProfileBorderEffect borderKey={item.css_value} compact={true} animated={mode === 'animated'} className="preview-border-shell">
       <div class="preview-profile-specimen">
         <span class="preview-profile-name">{username}</span>
-        <small>border specimen</small>
       </div>
     </ProfileBorderEffect>
   {:else if nameLayerLoadout}
@@ -142,7 +141,6 @@
   .shop-preview-area :global(.preview-border-shell) { width: min(82%, 22rem); height: 78%; }
   .preview-profile-specimen { width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; box-sizing: border-box; overflow: hidden; }
   .preview-profile-name { color: var(--preview-accent, #fff); font-family: var(--font-display-stack, var(--font-display)); font-size: clamp(1.7rem, 5vw, 2.5rem); font-weight: 700; overflow-wrap: anywhere; }
-  .preview-profile-specimen small { color: rgba(232,236,248,.52); font: .55rem var(--shop-mono, var(--font-mono-stack)); letter-spacing: .1em; text-transform: uppercase; }
   .shop-preview-text { width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px; text-align: center; box-sizing: border-box; }
   .shop-preview-text--name :global(.name-effect-canvas) { width: 100%; max-width: 100%; text-align: center; }
   .shop-preview-text--name :global(.name-effect-canvas__semantic) { max-width: 100%; color: var(--preview-accent, var(--shop-ink, #f2f0eb)); font: 700 clamp(2.7rem, 6vw, 4.4rem)/1.08 var(--font-display-stack, var(--font-display)); letter-spacing: -.045em; overflow-wrap: anywhere; white-space: nowrap; }
@@ -198,8 +196,8 @@
   .shop-layout-preview--story-stack .shop-layout-preview__hero { left:9%; right:9%; height:31%; }
   .shop-layout-preview--story-stack .shop-layout-preview__module { left:9%; right:9%; width:auto; }
   .shop-atmosphere-preview { position:relative; width:100%; height:100%; min-height:7.5rem; overflow:hidden; border-radius:5px; background:#070a10; }
-  .shop-atmosphere-preview :global(.profile-atmosphere) { opacity:.9; }
-  .shop-atmosphere-preview :global(.profile-atmosphere__video) { inset:-12%; width:124%; height:124%; filter:none !important; }
+  .shop-atmosphere-preview :global(.profile-atmosphere) { inset:0; width:100%; height:100%; opacity:.9; }
+  .shop-atmosphere-preview :global(.profile-atmosphere__video) { inset:0; width:100%; height:100%; display:block; object-fit:cover; transform:scale(1.08); transform-origin:center; filter:none !important; }
   .shop-atmosphere-preview :global(.profile-atmosphere__video--poster) { opacity:.42; }
 
   @media (prefers-reduced-motion: reduce) {

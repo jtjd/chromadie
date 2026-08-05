@@ -185,6 +185,7 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(itemPreview, /shop-cursor-preview__pointer/);
   assert.match(itemPreview, /shop-cursor-preview__trail--near/);
   assert.match(itemPreview, /filter:none !important/);
+  assert.doesNotMatch(itemPreview, /border specimen/);
   assert.doesNotMatch(itemPreview, /profile atmosphere/);
   assert.match(itemPreview, /background: var\(--preview-surface/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area \{[^}]*border: 1px/);

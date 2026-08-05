@@ -23,7 +23,9 @@
   Atmosphere cards now reveal their real video loop on hover or selection
   without specimen text or edge bars. Avatar cosmetics use the signed-in
   profile avatar when available, the unused dog placeholder is removed, and
-  cursor cards use a recognizable pointer-and-trail specimen.
+  cursor cards use a recognizable pointer-and-trail specimen. Border previews
+  now show only the border and name, while atmosphere media fills its card
+  stage without a trailing black strip.
 
 ## Atmosphere replacement plates — 2026-08-04
 

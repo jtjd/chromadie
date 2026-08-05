@@ -17,7 +17,8 @@ Document user-visible redesign changes by milestone.
   language around cosmetics. The EP balance returned to a quiet label/value
   treatment. Atmosphere cards now animate on hover/selection and show only the
   media plate; avatar cosmetics use the signed-in user’s avatar, and cursor
-  cards show an explicit pointer with its trail.
+  cards show an explicit pointer with its trail. Border previews no longer
+  carry specimen copy, and atmosphere media fills the full thumbnail stage.
 
 ## 2026-08-04 — Add seven sourced atmosphere plates
 
