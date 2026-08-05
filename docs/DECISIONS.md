@@ -10,7 +10,7 @@ live profile plus the selected cosmetic’s context and purchase action. Repeate
 cards expose Preview/Owned state; the inspector is the single purchase surface.
 
 Product cards use compact visual-first tiles with neutral near-black stages and
-the same card hierarchy: specimen, slot eyebrow, piece name, then quiet
+the same card hierarchy: specimen, slot eyebrow, cosmetic name, then quiet
 rarity/collection metadata and a Preview action. The default Catalog entry is a
 curated Featured set, while category and color-coded rarity filters expose the
 full catalog without making the first view feel like an inventory dump.
@@ -23,10 +23,18 @@ playback controls, and the redundant layout-status badge are omitted. The live
 identity surface is transparent in the inspector so atmosphere media remains
 visible behind it; the title carries the primary lavender-to-blue contrast cue.
 
-Borders now show the effect around a simple name specimen; Atmospheres show the
-media directly behind a simple specimen label. The real profile fitting-room
-preview remains the place for full composition context. Selection, purchase,
-ownership, accessibility, and reduced-motion behavior stay unchanged.
+The balance display remains a quiet label/value pair rather than a competing
+wallet panel. Catalog avatar previews use the authenticated profile’s safe
+media URL and fall back to the user’s initial when no avatar is configured;
+the former demo dog is not part of the product. Atmosphere thumbnails suppress
+the shared video drop-shadow that produced colored edge bars, while cursor
+thumbnails identify the product directly with a pointer, click ring, and
+layered trail.
+
+Borders show the effect around a simple name specimen; Atmospheres show the
+media plate directly. The real profile fitting-room preview remains the place
+for full composition context. Selection, purchase, ownership, accessibility,
+and reduced-motion behavior stay unchanged.
 
 ## 2026-08-04 — Replace retired atmosphere presets with sourced video plates
 

@@ -18,10 +18,12 @@
   transparent so atmosphere plates remain visible behind the identity, and the
   title has a restrained lavender-to-blue contrast treatment.
 - Reframed the default Catalog view as a curated Featured set, added
-  color-coded rarity filters to the rail, strengthened the EP balance signal,
-  and replaced shop-facing “piece” language with “cosmetic.” Atmosphere cards
-  now reveal their real video loop on hover or selection without specimen text
-  or edge bars.
+  color-coded rarity filters to the rail, and replaced shop-facing “piece”
+  language with “cosmetic.” The EP balance is intentionally quiet again.
+  Atmosphere cards now reveal their real video loop on hover or selection
+  without specimen text or edge bars. Avatar cosmetics use the signed-in
+  profile avatar when available, the unused dog placeholder is removed, and
+  cursor cards use a recognizable pointer-and-trail specimen.
 
 ## Atmosphere replacement plates — 2026-08-04
 

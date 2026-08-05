@@ -24,6 +24,7 @@
   import { supabase } from './supabase';
   import { readViewState, writeViewState } from './viewState.js';
   import { getNameItemPreviewLoadout } from './name/nameLoadout.js';
+  import { getProfileMediaUrl } from './profileMedia.js';
   import {
     SHOP_SECTIONS,
     SHOP_RARITIES,
@@ -125,6 +126,8 @@
   }));
   $: previewUsername = $profile?.display_name || $profile?.username || 'You';
   $: previewColor = normalizeHexColor(currentRoll?.hex_code || $profile?.mood_color, '#8B7CF6');
+  $: previewProfileConfig = profileConfig?.published || profileConfig?.draft || profileConfig || {};
+  $: previewAvatarSrc = getProfileMediaUrl(previewProfileConfig.avatar_path);
   $: previewLoadout = selectedItem?.slot
     ? ['name_font', 'name_material', 'name_motion'].includes(selectedItem.slot)
       ? getNameItemPreviewLoadout(selectedItem, $equippedItems)
@@ -328,6 +331,7 @@
           selectedSubslot={activeNameLayer}
           username={previewUsername}
           displayColor={previewColor}
+          avatarSrc={previewAvatarSrc}
           {fittingRoom}
           equippedItems={$equippedItems}
           on:select={event => selectItem(event.detail, 'browse')}
@@ -342,6 +346,7 @@
           equippedItems={$equippedItems}
           profile={$profile}
           {currentRoll}
+          avatarSrc={previewAvatarSrc}
           on:browse={() => { setView('browse'); setBrowseSection('featured'); }}
           on:select={event => selectItem(event.detail, 'collection')}
         />

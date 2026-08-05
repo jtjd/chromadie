@@ -13,9 +13,11 @@ Document user-visible redesign changes by milestone.
   layout-status badge. The live profile window now lets atmosphere effects show
   through the transparent identity surface, with a stronger title accent.
 - Replaced the cluttered default All catalog with a curated Featured set,
-  added color-coded rarity filters to the rail, made EP balance more prominent,
-  and standardized the shop language around cosmetics. Atmosphere cards now
-  animate on hover/selection and show only the media plate.
+  added color-coded rarity filters to the rail, and standardized the shop
+  language around cosmetics. The EP balance returned to a quiet label/value
+  treatment. Atmosphere cards now animate on hover/selection and show only the
+  media plate; avatar cosmetics use the signed-in user’s avatar, and cursor
+  cards show an explicit pointer with its trail.
 
 ## 2026-08-04 — Add seven sourced atmosphere plates
 

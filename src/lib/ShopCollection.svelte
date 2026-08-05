@@ -17,6 +17,7 @@
   export let profile = null;
   /** @type {any} */
   export let currentRoll = null;
+  export let avatarSrc = '';
 
   const dispatch = createEventDispatcher();
   let searchQuery = '';
@@ -92,6 +93,7 @@
           actuallyEquipped={equippedItems[item.slot] === item.item_key}
           previewUsername={username}
           previewColor={displayColor}
+          {avatarSrc}
           on:select={event => dispatch('select', event.detail)}
         />
       {/each}

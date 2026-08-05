@@ -20,6 +20,7 @@
   export let selectedSubslot = 'all';
   export let username = 'You';
   export let displayColor = '#8B7CF6';
+  export let avatarSrc = '';
 
   const dispatch = createEventDispatcher();
   let searchQuery = '';
@@ -131,6 +132,7 @@
               actuallyEquipped={equippedItems[item.slot] === item.item_key}
               previewUsername={username}
               previewColor={displayColor}
+              {avatarSrc}
               on:select={event => previewItem(event.detail)}
             />
           {/each}

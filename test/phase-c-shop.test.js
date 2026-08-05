@@ -40,6 +40,8 @@ test('shop shell is one profile studio with Catalog and Owned surfaces', async (
   assert.match(shop, /<ShopRail/);
   assert.match(shop, /<ShopContextualPreview/);
   assert.match(shop, /walletBalance=\{fittingRoom\.balance\}/);
+  assert.match(shop, /getProfileMediaUrl/);
+  assert.match(shop, /avatarSrc=\{previewAvatarSrc\}/);
   assert.match(shop, /font:600 \.8rem var\(--shop-font\)/);
   assert.match(rail, /\{ id: 'browse', number: '01', label: 'Catalog'/);
   assert.match(rail, /\{ id: 'collection', number: '02', label: 'Owned'/);
@@ -93,6 +95,7 @@ test('product cards use compact visual previews with explicit selection actions'
   assert.match(source, /aspect-ratio:1\.82 \/ 1/);
   assert.match(source, /:global\(\.app-main--site\) \.shop-item \{ padding:0; border:1px/);
   assert.match(source, /@media \(max-width: 420px\)/);
+  assert.match(source, /avatarSrc/);
   assert.doesNotMatch(source, /border specimen/);
 });
 
@@ -176,6 +179,12 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.doesNotMatch(itemPreview, /SLOT_TONES/);
   assert.match(itemPreview, /previewClasses = `shop-preview-area shop-preview-area--\$\{previewType\}`/);
   assert.match(itemPreview, /mode="preview" active=\{active \|\| hovered\} animated=\{active \|\| hovered\}/);
+  assert.match(itemPreview, /avatarSrc/);
+  assert.doesNotMatch(itemPreview, /mara-dog-v1/);
+  assert.match(itemPreview, /shop-avatar-preview__fallback/);
+  assert.match(itemPreview, /shop-cursor-preview__pointer/);
+  assert.match(itemPreview, /shop-cursor-preview__trail--near/);
+  assert.match(itemPreview, /filter:none !important/);
   assert.doesNotMatch(itemPreview, /profile atmosphere/);
   assert.match(itemPreview, /background: var\(--preview-surface/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area \{[^}]*border: 1px/);

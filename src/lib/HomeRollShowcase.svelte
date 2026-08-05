@@ -58,7 +58,6 @@
             bio={previewProfile.bio}
             links={previewLinks}
             badges={previewBadges}
-            avatarSrc="/avatars/mara-dog-v1.jpg"
             accentColor={previewProfile.accentColor}
             nameRendererLoadout={{ fontKey: previewLoadout.name_font, materialKey: previewLoadout.name_material, motionKey: previewLoadout.name_motion }}
             nameRendererContext="profile"

@@ -7,6 +7,7 @@
   export let actuallyEquipped = false;
   export let previewUsername = 'You';
   export let previewColor = '#8B7CF6';
+  export let avatarSrc = '';
 
   const dispatch = createEventDispatcher();
 
@@ -26,7 +27,7 @@
 
 <article class="shop-item rarity-{item.rarity || 'Common'}" class:is-wearing={actuallyEquipped} class:is-previewing={isPreviewing}>
   <button class="item-select-button" type="button" aria-label={`Preview ${item.name} on your profile`} aria-pressed={isPreviewing} on:click={() => dispatch('select', item)}>
-    <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} active={isPreviewing} />
+    <ShopItemPreview {item} username={previewUsername} displayColor={previewColor} {avatarSrc} active={isPreviewing} />
     <span class="item-card-heading">
       <span class="item-card-title">
         <span class="item-slot-label">{slotLabel}</span>
