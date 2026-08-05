@@ -27,9 +27,9 @@ test('the curated catalog keeps exactly 35 paid Name rows and nine Profile Borde
     paidTotal: 35
   });
   assert.deepEqual(Object.keys(NAME_MOTIONS).filter(key => key !== 'none'), [
-    'fuzzy-signal', 'letter-shuffle', 'chromatic-ripple', 'particle-drift',
-    'typewriter-name', 'filament-trace', 'prism-fracture', 'molten-rise',
-    'voltage-arc', 'archive-bloom'
+    'haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles',
+    'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal',
+    'haunt-split', 'haunt-flash'
   ]);
 });
 
@@ -38,7 +38,7 @@ test('the paid Name catalog uses distinctive labels synchronized with each rende
     read('supabase/seed.sql'),
     read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
     read('supabase/migrations/20260803130000_use_reference_font_family_names.sql'),
-    read('supabase/migrations/20260805120000_curate_name_motion_catalog.sql')
+    read('supabase/migrations/20260805140000_replace_name_motions_with_haunt_reference_set.sql')
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
@@ -114,7 +114,7 @@ test('modern Name layers remain independent in temporary fitting-room state', ()
   const initial = {
     name_font: 'name_font_editorial_serif',
     name_material: 'name_material_velvet_ink',
-    name_motion: 'name_motion_filament_trace',
+    name_motion: 'name_motion_haunt_glow',
     profile_border: 'border_signal'
   };
   const next = applyNamePreviewLayer(initial, 'name_font', 'name_font_mono_compact');
@@ -137,14 +137,14 @@ test('loadout resolution uses safe defaults for absent or malformed layers', () 
   assert.equal(definition.kind, 'composable');
   assert.equal(definition.font, 'editorial-serif');
   assert.equal(definition.material, 'plain');
-  assert.equal(definition.motion, 'molten-rise');
+  assert.equal(definition.motion, 'haunt-glow');
   assert.equal(resolveNameLoadout({}).kind, 'default');
 });
 
 test('deprecated motion keys resolve to curated replacements without entering the active registry', () => {
   assert.equal(NAME_MOTIONS['daily-pulse'], undefined);
-  assert.equal(resolveNameLoadout({ name_motion: 'name_motion_daily_pulse' }).motion, 'molten-rise');
-  assert.equal(resolveNameLoadout({ name_motion: 'name_motion_ghost_offset' }).motion, 'fuzzy-signal');
+  assert.equal(resolveNameLoadout({ name_motion: 'name_motion_daily_pulse' }).motion, 'haunt-glow');
+  assert.equal(resolveNameLoadout({ name_motion: 'name_motion_ghost_offset' }).motion, 'haunt-fuzzy');
 });
 
 test('deprecated material keys resolve to curated surfaces without entering the active registry', () => {

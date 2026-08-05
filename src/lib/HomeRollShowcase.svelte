@@ -37,7 +37,7 @@
     profile_border: 'border_celestial',
     name_font: 'editorial-serif',
     name_material: 'neon-tube',
-    name_motion: 'archive-bloom'
+    name_motion: 'haunt-rainbow'
   };
 </script>
 

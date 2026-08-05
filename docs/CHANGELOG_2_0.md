@@ -2,7 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
-## 2026-08-05 — Curate Name Motion effects
+## 2026-08-05 — Rebase Name Motion on Haunt reference behaviors
+
+- Replaced the weak authored motion set with ten focused behaviors modeled on
+  Haunt’s public username vocabulary: Glow, Scramble, Type In, Particles,
+  Rainbow, Gradient, Fuzzy, Reveal, Split Reveal, and Flash.
+- Kept Type In and Scramble as the strongest existing Chromadie gestures and
+  rewrote the other eight as original Canvas 2D implementations with vivid
+  color, controlled glow, clipping, particles, and deterministic motion.
+- Deprecated the prior eight active motion rows while preserving historical
+  item keys through finite renderer aliases.
+
+## 2026-08-05 — Previous Name Motion pass (superseded)
 
 - Reduced the live Name Motion shop to ten authored effects: Ghost Frequency,
   Scramble, Color Wake, Dustfall, Type In, Filament Trace, Prism Fracture,

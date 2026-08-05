@@ -591,8 +591,8 @@ VALUES
   ('10000000-0000-0000-0000-000000000001', 'name_font_editorial_serif', 1),
   ('10000000-0000-0000-0000-000000000001', 'name_font_mono_compact', 1),
   ('10000000-0000-0000-0000-000000000001', 'name_material_velvet_ink', 1),
-  ('10000000-0000-0000-0000-000000000001', 'name_motion_filament_trace', 1),
-  ('10000000-0000-0000-0000-000000000001', 'name_motion_archive_bloom', 1),
+  ('10000000-0000-0000-0000-000000000001', 'name_motion_haunt_glow', 1),
+  ('10000000-0000-0000-0000-000000000001', 'name_motion_haunt_flash', 1),
   ('10000000-0000-0000-0000-000000000001', 'border_signal', 1),
   ('10000000-0000-0000-0000-000000000001', 'cursor_trail_signal_trace', 1),
   ('10000000-0000-0000-0000-000000000001', 'avatar_effect_signal_ring', 1),
@@ -601,7 +601,7 @@ UPDATE public.profiles
 SET equipped_cosmetics = jsonb_build_object(
   'profile_border', 'border_signal',
   'name_material', 'name_material_velvet_ink',
-  'name_motion', 'name_motion_filament_trace'
+  'name_motion', 'name_motion_haunt_glow'
 )
 WHERE id = '10000000-0000-0000-0000-000000000001';
 
@@ -615,7 +615,7 @@ SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
       AND payload->'cosmetics'->>'name_font' = 'name_font_editorial_serif'
       AND payload->'cosmetics'->>'name_material' = 'name_material_velvet_ink'
-      AND payload->'cosmetics'->>'name_motion' = 'name_motion_filament_trace'
+      AND payload->'cosmetics'->>'name_motion' = 'name_motion_haunt_glow'
       AND payload->'cosmetics'->>'profile_border' = 'border_signal'
    FROM audit_results WHERE name = 'd2_equip_font'),
   'equipping a Name Font did not preserve the other independent layers'
@@ -626,7 +626,7 @@ SELECT pg_temp.audit_assert(
       AND payload->'cosmetics'->>'profile_border' = 'border_signal'
       AND payload->'cosmetics'->>'name_font' = 'name_font_editorial_serif'
       AND payload->'cosmetics'->>'name_material' = 'name_material_velvet_ink'
-      AND payload->'cosmetics'->>'name_motion' = 'name_motion_filament_trace'
+      AND payload->'cosmetics'->>'name_motion' = 'name_motion_haunt_glow'
    FROM audit_results WHERE name = 'lean_equip_border'),
   'equipping a Profile Border did not preserve modern Name layers'
 );
@@ -671,12 +671,12 @@ SELECT pg_temp.audit_assert(
   'unequipping Cursor Trail cleared unrelated new slots'
 );
 INSERT INTO audit_results VALUES ('d2_equip_material', public.equip_item('name_material_velvet_ink'));
-INSERT INTO audit_results VALUES ('d2_equip_motion', public.equip_item('name_motion_archive_bloom'));
+INSERT INTO audit_results VALUES ('d2_equip_motion', public.equip_item('name_motion_haunt_flash'));
 INSERT INTO audit_results VALUES ('d2_equip_font_again', public.equip_item('name_font_mono_compact'));
 SELECT pg_temp.audit_assert(
   (SELECT payload->'cosmetics'->>'name_font' = 'name_font_mono_compact'
       AND payload->'cosmetics'->>'name_material' = 'name_material_velvet_ink'
-      AND payload->'cosmetics'->>'name_motion' = 'name_motion_archive_bloom'
+      AND payload->'cosmetics'->>'name_motion' = 'name_motion_haunt_flash'
    FROM audit_results WHERE name = 'd2_equip_font_again'),
   'composable Name layers did not preserve each other across atomic equip calls'
 );
@@ -685,7 +685,7 @@ SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
       AND NOT (payload->'cosmetics' ? 'name_material')
       AND payload->'cosmetics'->>'name_font' = 'name_font_mono_compact'
-      AND payload->'cosmetics'->>'name_motion' = 'name_motion_archive_bloom'
+      AND payload->'cosmetics'->>'name_motion' = 'name_motion_haunt_flash'
    FROM audit_results WHERE name = 'd2_unequip_material'),
   'unequipping one Name layer removed unrelated modern layers'
 );

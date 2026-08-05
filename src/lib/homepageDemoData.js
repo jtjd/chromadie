@@ -33,7 +33,7 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     accent: '#8f9dff',
     backgroundClass: 'home-demo-background--atmospheric',
     avatarClass: 'home-demo-avatar--atmospheric',
-    nameRendererLoadout: { fontKey: 'editorial-serif', materialKey: 'glass-emboss', motionKey: 'fuzzy-signal' },
+    nameRendererLoadout: { fontKey: 'editorial-serif', materialKey: 'glass-emboss', motionKey: 'haunt-fuzzy' },
     profileBorder: 'void',
     links: [
       { type: 'link', label: 'soundcloud', url: 'https://example.com/nocturne-audio', order: 0 },
@@ -53,7 +53,7 @@ export const HOMEPAGE_DEMO_PROFILES = Object.freeze([
     accent: '#7CE7FF',
     backgroundClass: 'home-demo-background--expressive',
     avatarClass: 'home-demo-avatar--expressive',
-    nameRendererLoadout: { fontKey: 'wide-geometric', materialKey: 'neon-tube', motionKey: 'chromatic-ripple' },
+    nameRendererLoadout: { fontKey: 'wide-geometric', materialKey: 'neon-tube', motionKey: 'haunt-rainbow' },
     profileBorder: 'prism',
     links: [
       { type: 'link', label: 'solstice.art', url: 'https://example.com/solstice-art', order: 0 },

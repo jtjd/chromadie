@@ -3071,6 +3071,19 @@ poster frame. The source is not redistributed unchanged. The video is isolated
 to the Rain Window atmosphere, uses screen
 blending so black contributes no tint or dimming, and falls back to the poster
 for cards, reduced motion, hidden documents, and unsupported video formats.
+
+## 2026-08-05 — Use Haunt’s public effect vocabulary as a reference set
+
+The first authored Name Motion pass was too bespoke and did not meet the
+quality bar in live preview. The next pass uses the public Haunt vocabulary as
+the reference language: glow, typewriter, particles, rainbow, gradient, fuzzy,
+and closely related reveal/entry behaviors. Chromadie implements the gestures
+with its own bounded Canvas renderer, shared animation clock, and daily-color
+inputs; competitor code, assets, and markup are not copied. Type In and
+Scramble remain because they were the only two gestures that already passed
+the product review. The active shop now exposes exactly ten motions and marks
+the prior eight active rows legacy while resolving historical equipped values
+through finite aliases.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

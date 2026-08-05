@@ -2087,6 +2087,17 @@ kept public profile selectors outside the supporting-route baseline.
 - Public profiles and full fitting-room previews animate one video layer;
   cards, reduced-motion environments, and unsupported video use the poster.
 
+## 2026-08-05 — Rebase Name Motion on Haunt reference behaviors
+
+- Replaced the previous ten-effect motion shelf with Glow, Scramble, Type In,
+  Particles, Rainbow, Gradient, Fuzzy, Reveal, Split Reveal, and Flash.
+- Kept Type In and Scramble and rewrote the other eight as original, bounded
+  Canvas 2D gestures based on the public Haunt username/profile behavior
+  vocabulary. No competitor code, assets, CSS, or SVG treatments were copied.
+- Added an additive migration that leaves the active catalog at 97 rows while
+  preserving deprecated motion rows as legacy history and resolving their old
+  renderer keys through finite aliases.
+
 ## 2026-08-03 — Reconcile live shop catalog labels
 
 - Applied the pending Name catalog label migrations and synchronized all 64 paid

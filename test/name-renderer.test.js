@@ -90,7 +90,7 @@ test('composable loadouts produce deterministic bounded card and profile frames'
   const loadout = {
     fontKey: 'editorial-serif',
     materialKey: 'glass-emboss',
-    motionKey: 'fuzzy-signal'
+    motionKey: 'haunt-fuzzy'
   };
   const input = {
     text: 'A long Chromadie identity 123',
@@ -145,9 +145,9 @@ test('Typefall keeps motion text readable on dark daily colors', () => {
 });
 
 test('reduced-motion, static-signature, and offscreen modes are stable', () => {
-  const reducedAtStart = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'archive-bloom' }, mode: 'reduced-motion', time: 0 });
-  const reducedLater = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'archive-bloom' }, mode: 'reduced-motion', time: 5000 });
-  const staticFrame = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'archive-bloom' }, mode: 'static-signature', time: 50 });
+  const reducedAtStart = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'haunt-flash' }, mode: 'reduced-motion', time: 0 });
+  const reducedLater = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'haunt-flash' }, mode: 'reduced-motion', time: 5000 });
+  const staticFrame = getNameFrameModel({ text: 'Still', loadout: { motionKey: 'haunt-flash' }, mode: 'static-signature', time: 50 });
   assert.deepEqual(reducedAtStart, reducedLater);
   assert.equal(staticFrame.staticFrame, true);
   assert.equal(shouldAnimateNameFrame({ visible: false, mode: 'animated' }), false);

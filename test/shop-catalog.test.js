@@ -12,7 +12,7 @@ import {
 const items = [
   { item_key: 'name_font_editorial_serif', name: 'Cormorant Garamond', slot: 'name_font', cost: 180000, rarity: 'Rare', collection: 'Archive', description: 'A serif.' },
   { item_key: 'name_material_glass_emboss', name: 'Raised Glass', slot: 'name_material', cost: 350000, rarity: 'Epic', collection: 'Prism', description: 'A raised glass face.' },
-  { item_key: 'name_motion_filament_trace', name: 'Filament Trace', slot: 'name_motion', cost: 430000, rarity: 'Epic', collection: 'Signal', description: 'A luminous filament traces the name.' },
+  { item_key: 'name_motion_haunt_glow', name: 'Glow', slot: 'name_motion', cost: 280000, rarity: 'Rare', collection: 'Signal', description: 'A concentrated halo breathes around the name.' },
   { item_key: 'border_signal', name: 'Signal Border', slot: 'profile_border', cost: 160000, rarity: 'Rare', collection: 'Signal', description: 'A quiet edge.' },
   { item_key: 'streak_freeze', name: 'Streak Freeze', slot: 'consumable', cost: 50000, rarity: 'Rare', description: 'Protection.' }
 ];
@@ -53,7 +53,7 @@ test('catalog filtering combines retained sections, ownership, affordability, an
   const fittingRoom = createFittingRoom({ walletBalance: 170000, userInventory: ['border_signal'] });
   assert.deepEqual(
     filterShopItems(items, { section: 'names', subslot: 'name_motion', sortMode: 'price_asc' }, fittingRoom).map(item => item.item_key),
-    ['name_motion_filament_trace']
+    ['name_motion_haunt_glow']
   );
   assert.deepEqual(
     filterShopItems(items, { section: 'owned' }, fittingRoom).map(item => item.item_key),

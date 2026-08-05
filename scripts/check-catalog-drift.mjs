@@ -7,6 +7,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const seedPath = path.join(repoRoot, 'supabase/seed.sql');
 const resetMigrationPath = path.join(repoRoot, 'supabase/migrations/20260802110000_lean_cosmetic_catalog_reset.sql');
 const nameMotionCurationMigrationPath = path.join(repoRoot, 'supabase/migrations/20260805120000_curate_name_motion_catalog.sql');
+const nameMotionReferenceMigrationPath = path.join(repoRoot, 'supabase/migrations/20260805140000_replace_name_motions_with_haunt_reference_set.sql');
 const nameMaterialCurationMigrationPath = path.join(repoRoot, 'supabase/migrations/20260805130000_curate_name_material_catalog.sql');
 const expansionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260804120000_launch_cosmetic_expansion.sql');
 const atmosphereExpansionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260804210000_atmosphere_expansion.sql');
@@ -219,6 +220,7 @@ async function readRemoteCatalog(columns, url, key) {
 const seed = await readLocalCatalog(seedPath);
 const resetMigration = await readFile(resetMigrationPath, 'utf8');
 const nameMotionCurationMigration = await readFile(nameMotionCurationMigrationPath, 'utf8');
+const nameMotionReferenceMigration = await readFile(nameMotionReferenceMigrationPath, 'utf8');
 const nameMaterialCurationMigration = await readFile(nameMaterialCurationMigrationPath, 'utf8');
 const validSlots = new Set([
   'consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border',
@@ -228,7 +230,7 @@ const validCatalogStatuses = new Set(['active', 'legacy', 'retired']);
 const rendererKeys = Object.freeze({
   name_font: new Set(['editorial-serif', 'condensed-sans', 'wide-geometric', 'mono-compact', 'rounded-mono', 'soft-grotesk', 'humanist-display', 'modern-fraktur', 'pixel-display', 'high-contrast-italic', 'neo-slab', 'reverse-contrast', 'industrial-stencil', 'futurist-extended', 'terminal-bitmap', 'rounded-display', 'marker-tag', 'newspaper-black']),
   name_material: new Set(['glass-emboss', 'carbon-cut', 'neon-tube', 'velvet-ink', 'engraved-stone', 'crt-phosphor', 'blueprint-ink']),
-  name_motion: new Set(['fuzzy-signal', 'letter-shuffle', 'chromatic-ripple', 'particle-drift', 'typewriter-name', 'filament-trace', 'prism-fracture', 'molten-rise', 'voltage-arc', 'archive-bloom']),
+  name_motion: new Set(['haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles', 'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal', 'haunt-split', 'haunt-flash']),
   cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing']),
   avatar_effect: new Set(['signal-ring', 'neon-halo', 'prism-orbit', 'crystal-aperture', 'chroma-arc', 'ember-crown', 'ashfall', 'gold-laurel', 'ink-stamp', 'paper-tear', 'static-offset', 'pixel-satellites', 'crt-scan', 'void-eclipse', 'ghost-double', 'night-frame', 'daily-aura', 'color-archive']),
   profile_layout: new Set(['split-signal', 'archive-index', 'prism-mosaic', 'night-terminal', 'story-stack']),
@@ -306,6 +308,9 @@ if (!resetMigration.includes("DELETE FROM public.shop_items")) fail('the reset m
 if (!nameMotionCurationMigration.includes('Expected 112 active catalog rows')) fail('the Name Motion curation migration has a stale active catalog count');
 if (!nameMotionCurationMigration.includes('Expected 10 active Name Motion rows')) fail('the Name Motion curation migration has a stale motion count');
 if (!nameMotionCurationMigration.includes("catalog_status = 'legacy'")) fail('the Name Motion curation migration does not preserve deprecated rows as legacy');
+if (!nameMotionReferenceMigration.includes('Expected 97 active catalog rows')) fail('the Haunt-reference motion migration has a stale active catalog count');
+if (!nameMotionReferenceMigration.includes("'haunt-glow'")) fail('the Haunt-reference motion migration does not declare the reference renderer set');
+if (!nameMotionReferenceMigration.includes('Expected 27 legacy Name Motion rows')) fail('the Haunt-reference motion migration has a stale legacy motion count');
 if (!nameMaterialCurationMigration.includes('Expected 97 active catalog rows')) fail('the Name Material curation migration has a stale active catalog count');
 if (!nameMaterialCurationMigration.includes('Expected 7 active Name Material rows')) fail('the Name Material curation migration has a stale material count');
 

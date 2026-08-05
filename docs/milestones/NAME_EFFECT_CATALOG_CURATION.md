@@ -4,23 +4,30 @@ Date: 2026-08-05
 
 ## Scope
 
-Curate the player-facing Name Motion catalog around ten high-quality authored
-gestures while retaining the existing finite font/material/motion renderer
-boundary, curate the approved material shelf, and retain historical profile
-compatibility.
+Rebase the player-facing Name Motion catalog around ten recognizable Haunt
+reference behaviors while retaining the existing finite font/material/motion
+renderer boundary, the approved material shelf, and historical profile
+compatibility. The visual implementations remain original Chromadie Canvas
+code; no competitor code or assets are copied.
 
 ## Active motion set
 
-- Ghost Frequency (`fuzzy-signal`)
+- Glow (`haunt-glow`)
 - Scramble (`letter-shuffle`)
-- Color Wake (`chromatic-ripple`)
-- Dustfall (`particle-drift`)
 - Type In (`typewriter-name`)
-- Filament Trace (`filament-trace`)
-- Prism Fracture (`prism-fracture`)
-- Molten Rise (`molten-rise`)
-- Voltage Arc (`voltage-arc`)
-- Archive Bloom (`archive-bloom`)
+- Particles (`haunt-particles`)
+- Rainbow (`haunt-rainbow`)
+- Gradient (`haunt-gradient`)
+- Fuzzy (`haunt-fuzzy`)
+- Reveal (`haunt-reveal`)
+- Split Reveal (`haunt-split`)
+- Flash (`haunt-flash`)
+
+The reference vocabulary is grounded in Haunt’s public profile payload and
+changelog, which expose username glow, typewriter, particle, rainbow,
+gradient, and fuzzy effects plus reveal/split/flash profile-entry behaviors:
+https://help.haunt.gg/api/lookup/user and
+https://help.haunt.gg/overview/changelog.
 
 ## Acceptance criteria
 
