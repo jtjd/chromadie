@@ -1,9 +1,9 @@
-# Night Pollen source
+# Starlight Tunnel source
 
-Source clip: [Bokeh with a Black Background](https://www.pexels.com/video/bokeh-with-a-black-background-4478840/)
-by Ufuk Avcuoğlu, accessed 2026-08-04.
+Source clip: [Abstract Tunnel of Floating Particles in Motion](https://www.pexels.com/video/abstract-tunnel-of-floating-particles-in-motion-33830771/)
+by Pachon in Motion, accessed 2026-08-04.
 
-The 16:9 source was converted to a low-density grayscale bokeh plate so the
-profile receives sparse points of light rather than a colored background. A
-14.4-second forward-and-reverse cycle creates a clean loop boundary; the
-poster is a representative mid-loop frame.
+The 7680×4320, 8-second source was cropped to a 960×540 grayscale particle
+plate with lifted contrast and a deep black field. A forward-and-reverse
+cycle creates a clean 16-second loop; the poster is a representative mid-loop
+frame.

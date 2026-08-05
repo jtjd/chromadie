@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Atmosphere replacement quality pass — 2026-08-05
+
+- Replaced the weak Night Pollen plate with a denser particle-tunnel loop and
+  renamed it Starlight Tunnel while preserving the `night-pollen` renderer key.
+- Replaced the ineffective Paper Shadow texture with a high-contrast colored
+  light-trail loop and renamed it Chromatic Tangle while preserving the
+  `paper-shadow` renderer key.
+- Added v2 WebM/MP4 media and poster fallbacks, source manifests, catalog
+  metadata updates, and an additive migration without changing ownership data.
+
 ## Shop fitting-room structure — 2026-08-05
 
 - Rebuilt the Shop workspace as one fitting-room frame: a compact category

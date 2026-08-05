@@ -61,15 +61,15 @@
       className: 'cinder'
     }),
     'night-pollen': Object.freeze({
-      video: '/atmospheres/night-pollen/night-pollen-loop-v1.webm',
-      fallback: '/atmospheres/night-pollen/night-pollen-loop-v1.mp4',
-      poster: '/atmospheres/night-pollen/night-pollen-loop-v1-poster.png',
+      video: '/atmospheres/night-pollen/night-pollen-loop-v2.webm',
+      fallback: '/atmospheres/night-pollen/night-pollen-loop-v2.mp4',
+      poster: '/atmospheres/night-pollen/night-pollen-loop-v2-poster.png',
       className: 'pollen'
     }),
     'paper-shadow': Object.freeze({
-      video: '/atmospheres/paper-shadow/paper-shadow-loop-v1.webm',
-      fallback: '/atmospheres/paper-shadow/paper-shadow-loop-v1.mp4',
-      poster: '/atmospheres/paper-shadow/paper-shadow-loop-v1-poster.png',
+      video: '/atmospheres/paper-shadow/paper-shadow-loop-v2.webm',
+      fallback: '/atmospheres/paper-shadow/paper-shadow-loop-v2.mp4',
+      poster: '/atmospheres/paper-shadow/paper-shadow-loop-v2-poster.png',
       className: 'paper'
     }),
     'smoke-spiral': Object.freeze({
@@ -162,8 +162,8 @@
   .profile-atmosphere__video--silk { opacity: .22; filter: contrast(1.14) brightness(1.05) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--caustics { opacity: .14; filter: contrast(1.04) brightness(.92) drop-shadow(0 0 5px var(--atmosphere-color-2)); }
   .profile-atmosphere__video--cinder { opacity: .24; filter: sepia(.16) saturate(1.1) brightness(1.08) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
-  .profile-atmosphere__video--pollen { opacity: .25; filter: contrast(1.16) brightness(1.1) drop-shadow(0 0 6px var(--atmosphere-color-4)); }
-  .profile-atmosphere__video--paper { opacity: .16; filter: contrast(1.1) brightness(1.08) drop-shadow(0 0 5px var(--atmosphere-color-1)); }
+  .profile-atmosphere__video--pollen { opacity: .28; filter: contrast(1.18) brightness(1.12) drop-shadow(0 0 6px var(--atmosphere-color-4)); }
+  .profile-atmosphere__video--paper { opacity: .24; filter: saturate(1.12) contrast(1.12) brightness(1.04) drop-shadow(0 0 6px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--smoke { opacity: .16; filter: contrast(1.08) brightness(1.05) drop-shadow(0 0 8px var(--atmosphere-color-2)); }
   .profile-atmosphere__video--lumen { opacity: .13; filter: contrast(1.12) brightness(1.1) drop-shadow(0 0 9px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--poster { opacity: .14; }

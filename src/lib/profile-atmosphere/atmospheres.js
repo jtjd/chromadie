@@ -36,12 +36,12 @@ const definitions = {
     description: 'Fine sparks lift through a dark field, adding a warm trace of motion behind the identity.'
   },
   'night-pollen': {
-    key: 'night-pollen', label: 'Night Pollen', collection: 'Nocturne', rarity: 'Rare',
-    description: 'Sparse points of out-of-focus light drift across a nocturnal field with a photographic softness.'
+    key: 'night-pollen', label: 'Starlight Tunnel', collection: 'Nocturne', rarity: 'Rare',
+    description: 'A dense field of suspended lights folds through a deep nocturnal tunnel.'
   },
   'paper-shadow': {
-    key: 'paper-shadow', label: 'Paper Shadow', collection: 'Archive', rarity: 'Rare',
-    description: 'Crumpled black paper gives the atmosphere a tactile surface and a quiet record of pressure.'
+    key: 'paper-shadow', label: 'Chromatic Tangle', collection: 'Prism', rarity: 'Rare',
+    description: 'Bright colored trails knot and release across a black field like a living light study.'
   },
   'smoke-spiral': {
     key: 'smoke-spiral', label: 'Smoke Spiral', collection: 'Prism', rarity: 'Anomaly',

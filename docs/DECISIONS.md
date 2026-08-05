@@ -2,6 +2,16 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-05 — Replace weak atmosphere plates without changing stable keys
+
+Night Pollen and Paper Shadow keep their existing renderer and ownership keys so
+equipped profiles and inventory records remain valid, but their authored media
+is replaced with stronger plates. The visible catalog names are now Starlight
+Tunnel and Chromatic Tangle to match the new particle-tunnel and colored
+light-trail treatments. Both use cache-busted v2 WebM/MP4 loops and poster
+fallbacks; the existing screen blend, reduced-motion behavior, and black-backed
+media contract remain unchanged.
+
 ## 2026-08-05 — Treat the Shop as a fitting room
 
 The Shop is organized as one fitting-room frame: a compact category rail owns

@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-05 — Replace weak atmosphere treatments
+
+- Replaced Night Pollen with the denser Starlight Tunnel particle field.
+- Replaced Paper Shadow with the higher-contrast Chromatic Tangle light-trail
+  field. Stable renderer and ownership keys remain compatible with existing
+  profiles while the catalog names now describe the actual visuals.
+
 ## 2026-08-05 — Reframe the Shop as a fitting room
 
 - Reorganized the Shop into a category rail, compact three-column Catalog

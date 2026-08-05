@@ -81,8 +81,8 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.match(atmosphereSource, /silk-folds-loop-v1\.webm/);
   assert.match(atmosphereSource, /glass-caustics-loop-v1\.webm/);
   assert.match(atmosphereSource, /cinder-drift-loop-v1\.webm/);
-  assert.match(atmosphereSource, /night-pollen-loop-v1\.webm/);
-  assert.match(atmosphereSource, /paper-shadow-loop-v1\.webm/);
+  assert.match(atmosphereSource, /night-pollen-loop-v2\.webm/);
+  assert.match(atmosphereSource, /paper-shadow-loop-v2\.webm/);
   assert.match(atmosphereSource, /smoke-spiral-loop-v1\.webm/);
   assert.match(atmosphereSource, /lumen-flare-loop-v1\.webm/);
   assert.match(atmosphereSource, /autoplay muted loop playsinline/);
@@ -95,10 +95,22 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   const dropletsVideo = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.webm', import.meta.url));
   const dropletsFallback = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3.mp4', import.meta.url));
   const dropletsPoster = await readFile(new URL('../public/atmospheres/droplets-on-glass/droplets-on-glass-loop-v3-poster.png', import.meta.url));
-  const authoredMedia = await Promise.all(['dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare'].map(async key => ({
-    video: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-v1.webm`, import.meta.url)),
-    fallback: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-v1.mp4`, import.meta.url)),
-    poster: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-v1-poster.png`, import.meta.url))
+  const authoredMediaVersions = Object.freeze({
+    'dust-light': 'v1',
+    'ink-bloom': 'v1',
+    snowfall: 'v1',
+    'silk-folds': 'v1',
+    'glass-caustics': 'v1',
+    'cinder-drift': 'v1',
+    'night-pollen': 'v2',
+    'paper-shadow': 'v2',
+    'smoke-spiral': 'v1',
+    'lumen-flare': 'v1'
+  });
+  const authoredMedia = await Promise.all(Object.keys(authoredMediaVersions).map(async key => ({
+    video: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-${authoredMediaVersions[key]}.webm`, import.meta.url)),
+    fallback: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-${authoredMediaVersions[key]}.mp4`, import.meta.url)),
+    poster: await readFile(new URL(`../public/atmospheres/${key}/${key}-loop-${authoredMediaVersions[key]}-poster.png`, import.meta.url))
   })));
   assert.deepEqual([...rainVideo.subarray(0, 4)], [0x1a, 0x45, 0xdf, 0xa3]);
   assert.equal(rainFallback.subarray(4, 8).toString('ascii'), 'ftyp');
@@ -166,6 +178,7 @@ test('seed and migrations contain the launch products and version bumps', async 
   const atmosphereExpansionMigration = await read('supabase/migrations/20260804210000_atmosphere_expansion.sql');
   const atmosphereCurationMigration = await read('supabase/migrations/20260804223000_curate_atmosphere_catalog.sql');
   const atmosphereReplacementMigration = await read('supabase/migrations/20260804230000_authored_atmosphere_replacements.sql');
+  const atmosphereQualityMigration = await read('supabase/migrations/20260805000000_replace_weak_atmosphere_plates.sql');
   assert.match(atmosphereMigration, /Expected 122 active catalog rows/);
   assert.match(dropletsMigration, /Expected 123 active catalog rows/);
   assert.match(atmosphereExpansionMigration, /Expected 126 active catalog rows/);
@@ -189,4 +202,8 @@ test('seed and migrations contain the launch products and version bumps', async 
   assert.match(atmosphereReplacementMigration, /lumen-flare/);
   assert.match(atmosphereReplacementMigration, /Expected 126 active catalog rows/);
   assert.match(atmosphereReplacementMigration, /Expected 12 active Profile Atmosphere rows/);
+  assert.match(atmosphereQualityMigration, /Starlight Tunnel/);
+  assert.match(atmosphereQualityMigration, /Chromatic Tangle/);
+  assert.match(atmosphereQualityMigration, /Expected 126 active catalog rows/);
+  assert.match(atmosphereQualityMigration, /Expected 12 active Profile Atmosphere rows/);
 });
