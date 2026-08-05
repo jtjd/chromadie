@@ -15,45 +15,48 @@
 
   const SECTION_LOADERS = Object.freeze({
     overview: () => import('./ProfileStudioOverview.svelte'),
-    identity: () => import('./IdentityEditor.svelte'),
-    expression: () => import('./ProfileExpressionEditor.svelte'),
-    collection: () => import('./ProfileCosmeticsEditor.svelte'),
-    layout: () => import('./ProfileEditor.svelte'),
-    social: () => import('./ProfileSocial.svelte'),
+    'profile-identity': () => import('./IdentityEditor.svelte'),
+    'profile-media': () => import('./ProfileExpressionEditor.svelte'),
+    'profile-collection': () => import('./ProfileCosmeticsEditor.svelte'),
+    'profile-layout': () => import('./ProfileEditor.svelte'),
+    'profile-social': () => import('./ProfileSocial.svelte'),
     progression: () => import('./ProfileProgression.svelte')
   });
 
   const SETTINGS_SECTIONS = Object.freeze([
-    { id: 'overview', label: 'Overview', group: 'Workspace', icon: '⌂' },
-    { id: 'customize', label: 'Customize', group: 'Workspace', icon: '✦' },
-    { id: 'identity', label: 'Identity', group: 'Profile', icon: '◌' },
-    { id: 'expression', label: 'Media', group: 'Profile', icon: '▧' },
-    { id: 'layout', label: 'Layout & links', group: 'Profile', icon: '⌘' },
-    { id: 'social', label: 'Privacy & social', group: 'Profile', icon: '◍' },
-    { id: 'collection', label: 'Collection', group: 'Profile', icon: '◇' },
-    { id: 'progression', label: 'Progression', group: 'Workspace', icon: '↗' },
-    { id: 'account', label: 'Account', group: 'Workspace', icon: '·' }
+    { id: 'overview', label: 'Overview', groupKey: 'top', icon: '⌂' },
+    { id: 'customize', label: 'Customize', groupKey: 'top', icon: '✦' },
+    { id: 'profile-identity', label: 'Identity', groupKey: 'profile', groupLabel: 'Profile', icon: '◌' },
+    { id: 'profile-media', label: 'Media', groupKey: 'profile', groupLabel: 'Profile', icon: '▧' },
+    { id: 'profile-layout', label: 'Layout & links', groupKey: 'profile', groupLabel: 'Profile', icon: '⌘' },
+    { id: 'profile-social', label: 'Privacy & social', groupKey: 'profile', groupLabel: 'Profile', icon: '◍' },
+    { id: 'profile-collection', label: 'Collection', groupKey: 'profile', groupLabel: 'Profile', icon: '◇' },
+    { id: 'progression', label: 'Progression', groupKey: 'bottom', icon: '↗' },
+    { id: 'account', label: 'Account', groupKey: 'bottom', icon: '·' }
   ]);
 
   const HASH_ALIASES = Object.freeze({
     customize: 'customize',
     appearance: 'customize',
-    expression: 'expression',
-    media: 'expression',
-    identity: 'identity',
-    layout: 'layout',
-    social: 'social',
-    collection: 'collection',
+    'profile-identity': 'profile-identity',
+    'profile-media': 'profile-media',
+    'profile-layout': 'profile-layout',
+    'profile-social': 'profile-social',
+    'profile-collection': 'profile-collection',
+    identity: 'profile-identity',
+    expression: 'profile-media',
+    media: 'profile-media',
+    layout: 'profile-layout',
+    social: 'profile-social',
+    collection: 'profile-collection',
     progression: 'progression',
     account: 'account'
   });
 
-  export let logoutInProgress = false;
   const dispatch = createEventDispatcher();
 
   function createInitialSettingsContext() {
     const currentProfile = { ...($profile || {}) };
-    const fallbackColor = currentProfile.mood_color || '#8B7CF6';
     return {
       profileId: currentProfile.id || $session?.user?.id || null,
       viewingOwnProfile: true,
@@ -61,7 +64,7 @@
       targetScores: [],
       timelineEvents: [],
       collectionItems: [],
-      profileConfig: { version: 1, draft: createDefaultProfileConfig(fallbackColor), published: createDefaultProfileConfig(fallbackColor) },
+      profileConfig: { version: 1, draft: createDefaultProfileConfig(), published: createDefaultProfileConfig() },
       social: createEmptyProfileSocial(),
       socialSettings: createDefaultProfileSocialSettings(),
       allAchievements: [],
@@ -88,6 +91,11 @@
   let sectionComponents = {};
   let sectionLoading = false;
   let sectionRequestId = 0;
+  let activeDirtySection = '';
+  let pendingNavigation = null;
+  let showDirtyPrompt = false;
+  let appearanceEditor = null;
+  let layoutEditor = null;
 
   function getEquippedLayout(value) {
     return value && typeof value === 'object' && typeof value.profile_layout === 'string' ? value.profile_layout : '';
@@ -100,34 +108,114 @@
   $: activeLabel = SETTINGS_SECTIONS.find(section => section.id === activeSection)?.label || 'Overview';
   $: previewProfileConfig = configurationPreview || context?.profileConfig?.draft;
   onMount(() => {
-    const syncHash = () => {
+    const getSectionFromLocation = () => {
       const rawHash = window.location.hash.replace(/^#/, '');
       const sectionId = HASH_ALIASES[rawHash] || rawHash;
-      if (SETTINGS_SECTIONS.some(section => section.id === sectionId)) {
-        activeSection = sectionId;
-        void loadSectionComponent(sectionId);
-      }
+      return SETTINGS_SECTIONS.some(section => section.id === sectionId) ? sectionId : 'overview';
     };
-    syncHash();
-    void loadSectionComponent(activeSection);
-    window.addEventListener('hashchange', syncHash);
-    return () => window.removeEventListener('hashchange', syncHash);
+    const restoreLocation = () => {
+      const nextSection = getSectionFromLocation();
+      if (nextSection === activeSection) return;
+      if (activeDirtySection) {
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}#${activeSection}`);
+        pendingNavigation = { type: 'section', value: nextSection };
+        showDirtyPrompt = true;
+        return;
+      }
+      setActiveSection(nextSection, { push: false });
+    };
+    setActiveSection(getSectionFromLocation(), { push: false });
+    window.addEventListener('hashchange', restoreLocation);
+    window.addEventListener('popstate', restoreLocation);
+    const beforeUnload = event => {
+      if (!activeDirtySection) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    const navigationGuard = event => {
+      if (!activeDirtySection) return;
+      event.preventDefault();
+      pendingNavigation = event.detail?.navigation
+        ? { type: 'navigate', value: event.detail.navigation }
+        : { type: 'path', value: event.detail?.nextPath || window.location.pathname };
+      showDirtyPrompt = true;
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    window.addEventListener('chromadie:navigation-request', navigationGuard);
+    return () => {
+      window.removeEventListener('hashchange', restoreLocation);
+      window.removeEventListener('popstate', restoreLocation);
+      window.removeEventListener('beforeunload', beforeUnload);
+      window.removeEventListener('chromadie:navigation-request', navigationGuard);
+    };
   });
 
   onDestroy(() => {
     if (previewOpen && typeof document !== 'undefined') document.body.style.overflow = previousBodyOverflow;
   });
 
-  function setActiveSection(sectionId) {
+  function setActiveSection(sectionId, { push = true } = {}) {
     if (!SETTINGS_SECTIONS.some(section => section.id === sectionId)) return;
     activeSection = sectionId;
     void loadSectionComponent(sectionId);
-    if (typeof window !== 'undefined') window.history.replaceState({}, '', `${window.location.pathname}${window.location.search}#${sectionId}`);
+    if (typeof window !== 'undefined') {
+      const url = `${window.location.pathname}${window.location.search}#${sectionId}`;
+      if (push) window.history.pushState({ dashboardSection: sectionId }, '', url);
+      else if (window.location.hash !== `#${sectionId}`) window.history.replaceState({ dashboardSection: sectionId }, '', url);
+    }
   }
 
-  function handleDashboardSectionChange(event) { setActiveSection(event.detail?.sectionId); }
-  function forwardDashboardNavigation(event) { dispatch('navigate', event.detail); }
-  function forwardDashboardLogout() { dispatch('logout'); }
+  function handleDashboardSectionChange(event) {
+    const sectionId = event.detail?.sectionId;
+    if (!sectionId || sectionId === activeSection) return;
+    if (activeDirtySection) {
+      pendingNavigation = { type: 'section', value: sectionId };
+      showDirtyPrompt = true;
+      return;
+    }
+    setActiveSection(sectionId);
+  }
+
+  function handleSectionDirty(event) {
+    const isDirty = event.detail?.dirty === true;
+    activeDirtySection = isDirty ? activeSection : (activeDirtySection === activeSection ? '' : activeDirtySection);
+  }
+
+  function resetActiveEditor() {
+    if (activeDirtySection === 'customize') appearanceEditor?.resetChanges?.();
+    if (activeDirtySection === 'profile-layout') layoutEditor?.resetChanges?.();
+    activeDirtySection = '';
+  }
+
+  function stayOnPage() {
+    pendingNavigation = null;
+    showDirtyPrompt = false;
+  }
+
+  function discardAndContinue() {
+    const next = pendingNavigation;
+    resetActiveEditor();
+    pendingNavigation = null;
+    showDirtyPrompt = false;
+    if (!next) return;
+    if (next.type === 'section') setActiveSection(next.value);
+    else if (next.type === 'route') window.location.assign(next.value);
+    else if (next.type === 'navigate') dispatch('navigate', next.value);
+    else if (next.type === 'path') {
+      window.history.pushState({}, '', next.value);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  }
+
+  function handleViewProfile(event) {
+    event.preventDefault();
+    if (activeDirtySection) {
+      pendingNavigation = { type: 'route', value: profilePath };
+      showDirtyPrompt = true;
+      return;
+    }
+    window.location.assign(profilePath);
+  }
 
   async function loadSectionComponent(sectionId) {
     const loader = SECTION_LOADERS[sectionId];
@@ -169,12 +257,13 @@
 
   function updateConfiguration(event) {
     configurationPreview = null;
-    const fallbackColor = context?.targetProfile?.mood_color || '#8B7CF6';
+    const fallbackColor = '#CDD2FF';
     const currentDraft = context?.profileConfig?.draft || {};
     const currentPublished = context?.profileConfig?.published || {};
     context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: normalizeProfileConfig(preserveExpressionFields(event.detail?.draft, currentDraft), fallbackColor), published: normalizeProfileConfig(preserveExpressionFields(event.detail?.published, currentPublished), fallbackColor), updatedAt: event.detail?.updatedAt || context.profileConfig?.updatedAt, publishedAt: event.detail?.publishedAt || context.profileConfig?.publishedAt } };
     const savedLayout = normalizeProfileConfig(event.detail?.draft, fallbackColor).layoutVariant;
     if (event.detail?.layoutChanged && ['immersive', 'editorial', 'focus'].includes(savedLayout) && currentEquippedLayout) void clearPaidLayoutOverride();
+    activeDirtySection = '';
   }
 
   async function clearPaidLayoutOverride() {
@@ -184,13 +273,13 @@
   }
 
   function updateExpression(event) {
-    const fallbackColor = context?.targetProfile?.mood_color || '#8B7CF6';
+    const fallbackColor = '#CDD2FF';
     const fields = event.detail || {};
     context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: normalizeProfileConfig({ ...context.profileConfig?.draft, ...fields }, fallbackColor), published: normalizeProfileConfig({ ...context.profileConfig?.published, ...fields }, fallbackColor) } };
   }
 
   function updateAppearance(event) {
-    const fallbackColor = context?.targetProfile?.mood_color || '#8B7CF6';
+    const fallbackColor = '#CDD2FF';
     const nextAppearance = event.detail?.appearance;
     if (!nextAppearance) return;
     const nextDraft = normalizeProfileConfig({ ...context.profileConfig?.draft, appearance: nextAppearance, signatureColor: nextAppearance.colors.accent }, fallbackColor);
@@ -203,10 +292,15 @@
     configurationPreview = event.detail?.draft || null;
   }
 
+  function handleConfigurationReloaded(event) {
+    updateConfiguration({ detail: event.detail });
+    configurationPreview = event.detail?.draft || null;
+  }
+
   function updateConfigurationPreview(event) {
     const nextConfig = event.detail?.config;
     if (!nextConfig) { configurationPreview = null; return; }
-    const fallbackColor = context?.targetProfile?.mood_color || '#8B7CF6';
+    const fallbackColor = '#CDD2FF';
     configurationPreview = normalizeProfileConfig(nextConfig, fallbackColor);
   }
 
@@ -245,12 +339,7 @@
 <ProfileDashboardShell
   sections={[...SETTINGS_SECTIONS]}
   {activeSection}
-  {profilePath}
-  username={accountUsername}
-  {logoutInProgress}
   on:sectionchange={handleDashboardSectionChange}
-  on:navigate={forwardDashboardNavigation}
-  on:logout={forwardDashboardLogout}
 >
   <div class="profile-settings-page" aria-busy={loading}>
     {#if loading}
@@ -260,27 +349,27 @@
     {:else if context}
       <header class="profile-settings-page__toolbar">
         <div><p class="profile-settings-page__breadcrumb">Dashboard <span aria-hidden="true">›</span> {activeLabel}</p><h1>{activeLabel}</h1></div>
-        <div class="profile-settings-page__toolbar-actions"><a href={profilePath}>View profile ↗</a><button type="button" on:click={openPreview}>Live preview</button></div>
+        <div class="profile-settings-page__toolbar-actions"><a href={profilePath} on:click={handleViewProfile}>View profile ↗</a><button type="button" on:click={openPreview}>Live preview</button></div>
       </header>
       {#if context.dataWarning}<p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>{/if}
 
       <div class="profile-settings-page__content">
         {#if activeSection === 'customize'}
-          <ProfileAppearanceEditor draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} on:appearancechange={updateAppearance} on:configsaved={handleAppearanceSaved} />
+          <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} on:appearancechange={updateAppearance} on:dirty={handleSectionDirty} on:configsaved={handleAppearanceSaved} on:configreloaded={handleConfigurationReloaded} />
         {:else if activeSection === 'account'}
           <ProfileAccountSettings on:accountdeleted={handleAccountDeleted} />
         {:else if sectionComponents[activeSection]}
           {#if activeSection === 'overview'}
             <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} />
-          {:else if activeSection === 'identity'}
+          {:else if activeSection === 'profile-identity'}
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} on:identitysaved={updateIdentity} />
-          {:else if activeSection === 'expression'}
+          {:else if activeSection === 'profile-media'}
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} on:expressionchange={updateExpression} />
-          {:else if activeSection === 'collection'}
+          {:else if activeSection === 'profile-collection'}
             <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={context.profileConfig} />
-          {:else if activeSection === 'layout'}
-            <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configpreview={updateConfigurationPreview} />
-          {:else if activeSection === 'social'}
+          {:else if activeSection === 'profile-layout'}
+            <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
+          {:else if activeSection === 'profile-social'}
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} isAuthenticated={$isAuthenticated} social={context.social} settings={context.socialSettings} on:socialchange={handleSocialChange} />
           {:else if activeSection === 'progression'}
             <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} />
@@ -295,12 +384,22 @@
   </div>
 </ProfileDashboardShell>
 
+{#if showDirtyPrompt}
+  <div class="profile-settings-prompt__backdrop" role="presentation">
+    <div class="profile-settings-prompt" role="dialog" aria-modal="true" aria-labelledby="profile-settings-prompt-title">
+      <h2 id="profile-settings-prompt-title">Unsaved changes</h2>
+      <p>Stay to keep editing or discard this draft?</p>
+      <div><button type="button" on:click={stayOnPage}>Stay</button><button type="button" class="profile-settings-prompt__discard" on:click={discardAndContinue}>Discard</button></div>
+    </div>
+  </div>
+{/if}
+
 {#if previewOpen}
   <div class="profile-preview-drawer__backdrop" role="presentation" on:click|self={closePreview}>
     <div class="profile-preview-drawer" bind:this={previewDialog} role="dialog" aria-modal="true" aria-labelledby="profile-preview-title">
       <header class="profile-preview-drawer__header"><h2 id="profile-preview-title">Live preview</h2><button class="profile-preview-drawer__close" type="button" aria-label="Close live preview" on:click={closePreview}>×</button></header>
       <div class="profile-preview-drawer__body">
-        {#if PreviewComponent}<svelte:component this={PreviewComponent} previewMode={true} previewProfile={context.targetProfile} previewProfileConfig={previewProfileConfig} />{/if}
+        {#if PreviewComponent}<svelte:component this={PreviewComponent} previewMode={true} previewProfile={context.targetProfile} previewProfileConfig={previewProfileConfig} previewScores={context.targetScores} previewTimelineEvents={context.timelineEvents} previewCollectionItems={context.collectionItems} previewAllAchievements={context.allAchievements} />{/if}
       </div>
     </div>
   </div>
@@ -324,6 +423,13 @@
   .profile-preview-drawer__header h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .85rem; }
   .profile-preview-drawer__close { width: 2rem; height: 2rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: 1.2rem; cursor: pointer; }
   .profile-preview-drawer__body { min-height: 0; overflow: auto; }
+  .profile-settings-prompt__backdrop { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 1rem; background: rgba(0,0,0,.62); }
+  .profile-settings-prompt { width: min(24rem, 100%); padding: 1.1rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .55rem; background: var(--site-raised, #111319); box-shadow: 0 1.5rem 4rem rgba(0,0,0,.4); }
+  .profile-settings-prompt h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: 1rem; }
+  .profile-settings-prompt p { margin: .5rem 0 1rem; color: var(--site-muted, #aaa8b0); font-size: .75rem; }
+  .profile-settings-prompt > div { display: flex; justify-content: flex-end; gap: .5rem; }
+  .profile-settings-prompt button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .68rem; cursor: pointer; }
+  .profile-settings-prompt__discard { border-color: #ff9da9 !important; color: #ffb4bd !important; }
   @media (max-width: 64rem) { .profile-preview-drawer { width: 100%; } }
   @media (prefers-reduced-motion: reduce) { .profile-preview-drawer__backdrop { scroll-behavior: auto; } }
 </style>

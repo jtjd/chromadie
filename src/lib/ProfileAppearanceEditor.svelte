@@ -17,6 +17,8 @@
   let saving = false;
   let status = '';
   let error = '';
+  let conflict = null;
+  let invalidHex = false;
 
   $: incomingKey = JSON.stringify(draftConfig?.appearance || draftConfig?.signatureColor || '');
 
@@ -41,16 +43,26 @@
     staged = normalizeProfileAppearance(next, next.colors.accent);
     status = '';
     error = '';
-    dispatch('appearancechange', { appearance: staged, dirty });
+    invalidHex = false;
+    conflict = null;
+    dispatch('appearancechange', { appearance: staged, dirty: true });
+    dispatch('dirty', { dirty: true });
   }
 
   function updateColor(path, event) {
     const value = String(event.currentTarget.value || '').trim();
-    if (/^#[0-9A-Fa-f]{6}$/.test(value)) update(path, value.toUpperCase());
+    if (!/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      invalidHex = true;
+      error = 'Enter a 6-digit hex color, for example #CDD2FF.';
+      dispatch('appearancechange', { appearance: staged, dirty: true });
+      dispatch('dirty', { dirty: true });
+      return;
+    }
+    update(path, value.toUpperCase());
   }
 
   async function persist(action) {
-    if (saving || (action === 'save' && !dirty)) return;
+    if (saving || invalidHex || (action === 'save' && !dirty)) return;
     saving = true;
     status = action === 'publish' ? 'Publishing…' : 'Saving…';
     error = '';
@@ -62,14 +74,20 @@
     });
     saving = false;
     if (rpcError || data?.success === false) {
-      error = data?.error || rpcError?.message || 'Could not save appearance.';
+      if (data?.error === 'conflict') {
+        conflict = { draft: data.draft, published: data.published, updatedAt: data.updated_at };
+        error = 'The server version changed. Reload it before saving.';
+      } else error = data?.error || rpcError?.message || 'Could not save appearance.';
       status = '';
+      dispatch('dirty', { dirty });
       return;
     }
     const nextDraft = data?.draft || { ...(draftConfig || {}), appearance: staged };
     const nextPublished = data?.published || publishedConfig;
     saved = normalizeProfileAppearance(nextDraft.appearance, nextDraft.signatureColor);
     staged = saved;
+    conflict = null;
+    invalidHex = false;
     status = action === 'publish' ? 'Published' : 'Saved';
     dispatch('configsaved', {
       draft: nextDraft,
@@ -78,13 +96,33 @@
       publishedAt: data?.published_at || null
     });
     dispatch('appearancechange', { appearance: staged, dirty: false });
+    dispatch('dirty', { dirty: false });
   }
 
-  function reset() {
+  export function resetChanges() {
     staged = clone(saved);
     status = '';
     error = '';
+    conflict = null;
+    invalidHex = false;
     dispatch('appearancechange', { appearance: staged, dirty: false });
+    dispatch('dirty', { dirty: false });
+  }
+
+  function reloadServerVersion() {
+    if (!conflict?.draft) return;
+    const serverVersion = conflict;
+    const next = normalizeProfileAppearance(serverVersion.draft.appearance, serverVersion.draft.signatureColor);
+    saved = next;
+    staged = clone(next);
+    baselineKey = JSON.stringify(conflict.draft.appearance || conflict.draft.signatureColor || '');
+    conflict = null;
+    invalidHex = false;
+    error = '';
+    status = 'Server version loaded';
+    dispatch('configreloaded', { draft: serverVersion.draft, published: serverVersion.published, updatedAt: serverVersion.updatedAt });
+    dispatch('appearancechange', { appearance: staged, dirty: false });
+    dispatch('dirty', { dirty: false });
   }
 
   const colorFields = [
@@ -142,11 +180,12 @@
     </div>
   </section>
 
+  {#if conflict}<div class="appearance-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{/if}
   <footer class="appearance-editor__actions" aria-live="polite">
     <span class="appearance-editor__status" class:error>{error}</span><span class="appearance-editor__status">{status}</span>
-    <button type="button" class="appearance-editor__reset" disabled={!dirty || saving} on:click={reset}>Reset</button>
-    <button type="button" class="appearance-editor__save" disabled={!dirty || saving} on:click={() => persist('save')}>Save draft</button>
-    <button type="button" class="appearance-editor__publish" disabled={saving} on:click={() => persist('publish')}>Publish</button>
+    <button type="button" class="appearance-editor__reset" disabled={!dirty || saving} on:click={resetChanges}>Reset</button>
+    <button type="button" class="appearance-editor__save" disabled={!dirty || saving || invalidHex} on:click={() => persist('save')}>Save draft</button>
+    <button type="button" class="appearance-editor__publish" disabled={!dirty || saving || invalidHex} on:click={() => persist('publish')}>Publish</button>
   </footer>
 </div>
 
@@ -171,6 +210,8 @@
   .appearance-editor__actions { position: sticky; bottom: .8rem; z-index: 4; display: flex; align-items: center; justify-content: flex-end; gap: .55rem; min-height: 3.2rem; padding: .55rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .55rem; background: rgba(17,19,25,.92); box-shadow: 0 1rem 2rem rgba(0,0,0,.18); backdrop-filter: blur(16px); }
   .appearance-editor__status { flex: 1; min-width: 0; overflow: hidden; color: var(--site-faint, #7d7e87); font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
   .appearance-editor__status.error { color: #ff9da9; }
+  .appearance-editor__conflict { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .7rem; border: 1px solid rgba(255,157,169,.4); border-radius: .35rem; color: #ffb4bd; font-size: .7rem; }
+  .appearance-editor__conflict button { border: 1px solid rgba(255,157,169,.5); border-radius: .3rem; padding: .4rem .55rem; background: transparent; color: inherit; cursor: pointer; }
   .appearance-editor__actions button { min-height: 2rem; padding: .45rem .75rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .68rem; cursor: pointer; }
   .appearance-editor__actions button:hover:not(:disabled) { border-color: var(--site-accent, #cdd2ff); }
   .appearance-editor__actions button:disabled { cursor: not-allowed; opacity: .42; }

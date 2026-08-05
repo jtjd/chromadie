@@ -186,7 +186,7 @@
   }
 </script>
 
-<Module size="wide" tone="accent" moduleId="profile-social" eyebrow="Social settings" title="Control profile interactions" description="Manage favorites, reactions, guestbook notes, and discovery visibility.">
+<Module size="wide" tone="accent" moduleId="profile-social" title="Privacy & social" description="Control profile interactions and discovery visibility.">
   <div class="profile-social">
     {#if notice}<p class="profile-social__notice" role="status" aria-live="polite">{notice}</p>{/if}
 
@@ -270,7 +270,7 @@
             {/each}
           </div>
         {:else}
-          <p class="profile-social__empty">No notes yet. A thoughtful sentence can become part of this color identity.</p>
+          <p class="profile-social__empty">No notes yet.</p>
         {/if}
 
         {#if isOwnProfile}
@@ -280,7 +280,7 @@
         {:else if isAuthenticated}
           <form class="profile-social__form" on:submit|preventDefault={submitGuestbook}>
             <label for="profile-guestbook-body">Leave a short note</label>
-            <textarea id="profile-guestbook-body" bind:value={guestbookBody} maxlength="240" rows="3" placeholder="A kind word about this color identity…" disabled={!canWriteGuestbook || actionLoading === 'guestbook'}></textarea>
+          <textarea id="profile-guestbook-body" bind:value={guestbookBody} maxlength="240" rows="3" placeholder="Write a note…" disabled={!canWriteGuestbook || actionLoading === 'guestbook'}></textarea>
             <div class="profile-social__form-row">
               <span>{guestbookBody.length}/240 · plain text, no links</span>
               <button type="submit" class="profile-social__button" disabled={!canWriteGuestbook || actionLoading === 'guestbook'}>{actionLoading === 'guestbook' ? 'Posting…' : 'Sign guestbook'}</button>

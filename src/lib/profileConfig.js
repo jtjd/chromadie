@@ -116,8 +116,9 @@ function defaultModules() {
   ];
 }
 
-export function createDefaultProfileConfig(signatureColor = '#8B7CF6') {
-  const appearance = normalizeAppearance({ signatureColor }, signatureColor);
+/** @param {string} [signatureColor] */
+export function createDefaultProfileConfig(signatureColor = PROFILE_APPEARANCE_DEFAULTS.colors.accent) {
+  const appearance = normalizeAppearance({}, PROFILE_APPEARANCE_DEFAULTS.colors.accent);
   return {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(signatureColor),

@@ -3163,6 +3163,17 @@ Owner-selected appearance colors are rendered exactly. The former design rule
 against inaccessible user-selected combinations is superseded for this
 structured profile-appearance surface; defaults, system controls, focus states,
 and dashboard interaction colors remain accessible.
+
+## 2026-08-05 — Make dashboard pages and publishing section-scoped
+
+The profile dashboard uses a canonical hash IA with a collapsible Profile group.
+Navigation pushes history, restores direct/popstate locations, and guards dirty
+Customize/Layout drafts. Appearance and composition publish through separate
+owner RPCs with optimistic timestamps; composition accepts only layoutVariant,
+modules, and links. New appearance defaults use fixed accent `#CDD2FF`, while
+legacy whole-config saves retain structured appearance values for compatibility.
+The live preview reuses owner-loaded profile data, bounds uploaded media, and
+does not expose social, follow, roll, analytics, or autoplay mutations.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

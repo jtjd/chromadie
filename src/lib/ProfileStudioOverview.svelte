@@ -48,12 +48,10 @@
   <section class="profile-studio-overview" aria-labelledby="profile-studio-overview-title" style={`--profile-overview-accent:${signatureColor}`}>
     <header class="profile-studio-overview__header">
       <div>
-        <p class="profile-settings-page__eyebrow">Profile studio</p>
-        <h2 id="profile-studio-overview-title">Your profile is the game.</h2>
-        <p>Shape the page, follow the color trail, and keep the parts of your identity that matter close at hand.</p>
+        <h2 id="profile-studio-overview-title">Profile overview</h2>
+        <p>Review identity, progression, and recent profile history.</p>
       </div>
       <div class="profile-studio-overview__header-actions">
-        <a href="/profile">View live profile <span aria-hidden="true">↗</span></a>
         <a class="profile-studio-overview__header-action--quiet" href="#progression">Open progression <span aria-hidden="true">→</span></a>
       </div>
     </header>
@@ -81,16 +79,16 @@
     </div>
 
     <nav class="profile-studio-overview__actions" aria-label="Profile studio actions">
-      <a href="#identity"><strong>Identity</strong><span>Bio & presence</span><b aria-hidden="true">→</b></a>
-      <a href="#collection"><strong>Collection</strong><span>Owned expression</span><b aria-hidden="true">→</b></a>
+      <a href="#profile-identity"><strong>Identity</strong><span>Bio & presence</span><b aria-hidden="true">→</b></a>
+      <a href="#profile-collection"><strong>Collection</strong><span>Owned expression</span><b aria-hidden="true">→</b></a>
       <a href="#progression"><strong>Progression</strong><span>Rolls & milestones</span><b aria-hidden="true">→</b></a>
-      <a href="#layout"><strong>Layout</strong><span>Public canvas</span><b aria-hidden="true">→</b></a>
+      <a href="#profile-layout"><strong>Layout</strong><span>Public canvas</span><b aria-hidden="true">→</b></a>
     </nav>
 
     <div class="profile-studio-overview__lower">
       <section class="profile-studio-overview__trace" aria-labelledby="profile-studio-trace-title">
         <div class="profile-studio-overview__section-heading">
-          <div><span class="profile-studio-overview__label">Recent trace</span><h3 id="profile-studio-trace-title">The page remembers.</h3></div>
+          <div><span class="profile-studio-overview__label">Recent history</span><h3 id="profile-studio-trace-title">Recent rolls</h3></div>
           <a href="#progression">See all <span aria-hidden="true">→</span></a>
         </div>
         {#if timelineEvents.length}
@@ -104,13 +102,13 @@
             {/each}
           </ol>
         {:else}
-          <p class="profile-studio-overview__empty">Your first daily roll will start the visible history of this profile.</p>
+          <p class="profile-studio-overview__empty">No rolls recorded yet.</p>
         {/if}
       </section>
 
       <section class="profile-studio-overview__summary" aria-labelledby="profile-studio-summary-title">
         <div class="profile-studio-overview__section-heading">
-          <div><span class="profile-studio-overview__label">At a glance</span><h3 id="profile-studio-summary-title">Built through play.</h3></div>
+          <div><span class="profile-studio-overview__label">Summary</span><h3 id="profile-studio-summary-title">Profile status</h3></div>
         </div>
         <dl>
           <div><dt>Daily rolls</dt><dd>{formatNumber(account.total_rolls)}</dd></div>
@@ -119,7 +117,7 @@
           <div><dt>Story collection</dt><dd>{storyUnlocks.collectionUnlocked ? 'Unlocked' : `${storyUnlocks.collectionRollsRequired} rolls`}</dd></div>
           <div><dt>Next expression</dt><dd>{nextReward?.name || 'Rank track'}</dd></div>
         </dl>
-        <p>{recentUnlockCount ? `${formatNumber(recentUnlockCount)} progression reward${recentUnlockCount === 1 ? '' : 's'} recently unlocked.` : collectionItems.length ? `${formatNumber(collectionItems.length)} recorded pieces are shaping your story.` : 'Your roll history will become a collection as you play.'}</p>
+        <p>{recentUnlockCount ? `${formatNumber(recentUnlockCount)} progression reward${recentUnlockCount === 1 ? '' : 's'} recently unlocked.` : collectionItems.length ? `${formatNumber(collectionItems.length)} collection item${collectionItems.length === 1 ? '' : 's'} recorded.` : 'No collection items recorded yet.'}</p>
       </section>
     </div>
   </section>
@@ -130,7 +128,7 @@
   .profile-studio-overview { display:grid; gap:1rem; }
   .profile-studio-overview__header, .profile-studio-overview__section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; }
   .profile-studio-overview__header h2 { max-width:42rem; margin:0; color:var(--color-ink-strong); font:600 var(--type-h2)/1.05 var(--font-display-stack); letter-spacing:-.03em; }
-  .profile-studio-overview__header p:not(.profile-settings-page__eyebrow) { max-width:42rem; margin:.7rem 0 0; color:var(--color-ink-muted); line-height:1.55; }
+  .profile-studio-overview__header p { max-width:42rem; margin:.7rem 0 0; color:var(--color-ink-muted); line-height:1.55; }
   .profile-studio-overview__header-actions { display:grid; justify-items:end; gap:.4rem; flex:0 0 auto; }
   .profile-studio-overview a { color:var(--color-ink-strong); font-size:var(--type-small); font-weight:650; text-decoration:none; }
   .profile-studio-overview a:hover, .profile-studio-overview a:focus-visible { color:var(--color-accent-bright); }

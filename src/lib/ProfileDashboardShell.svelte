@@ -1,40 +1,56 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y.js';
 
   export let activeSection = 'overview';
   /** @type {any[]} */
   export let sections = [];
-  export let username = '';
-  export let profilePath = '/profile';
-  export let logoutInProgress = false;
 
   const dispatch = createEventDispatcher();
   let mobileOpen = false;
   let menuTrigger = null;
   let drawer = null;
+  let isMobileViewport = false;
+  let bodyOverflowBeforeDrawer = '';
+  let mediaQuery = null;
 
   $: activeLabel = sections.find(section => section.id === activeSection)?.label || 'Overview';
   $: groupedSections = sections.reduce((groups, section) => {
-    const group = section.group || 'Profile';
-    if (!groups[group]) groups[group] = [];
-    groups[group].push(section);
+    const key = section.groupKey || section.group || 'default';
+    let group = groups.find(item => item.key === key);
+    if (!group) {
+      group = { key, label: section.groupLabel || (key === 'profile' ? 'Profile' : ''), collapsible: key === 'profile', sections: [] };
+      groups = [...groups, group];
+    }
+    group.sections = [...group.sections, section];
     return groups;
-  }, {});
+  }, []);
+  let profileExpanded = true;
+  $: profileGroupExpanded = profileExpanded || sections.some(section => section.groupKey === 'profile' && section.id === activeSection);
 
   function navigate(sectionId) {
-    mobileOpen = false;
+    closeMobileMenu();
     dispatch('sectionchange', { sectionId });
+  }
+
+  function toggleProfileGroup() {
+    profileExpanded = !profileExpanded;
   }
 
   function openMobileMenu(event) {
     menuTrigger = event.currentTarget;
+    if (!mobileOpen) {
+      bodyOverflowBeforeDrawer = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    }
     mobileOpen = true;
     requestAnimationFrame(() => focusFirstElement(drawer));
   }
 
   function closeMobileMenu() {
+    if (!mobileOpen) return;
     mobileOpen = false;
+    document.body.style.overflow = bodyOverflowBeforeDrawer;
     requestAnimationFrame(() => restoreFocus(menuTrigger));
   }
 
@@ -49,11 +65,16 @@
   }
 
   onMount(() => {
-    const previousOverflow = document.body.style.overflow;
-    return () => { document.body.style.overflow = previousOverflow; };
+    mediaQuery = window.matchMedia('(max-width: 64rem)');
+    const updateViewport = () => { isMobileViewport = mediaQuery.matches; if (!isMobileViewport && mobileOpen) closeMobileMenu(); };
+    updateViewport();
+    mediaQuery.addEventListener?.('change', updateViewport);
+    return () => mediaQuery?.removeEventListener?.('change', updateViewport);
   });
 
-  $: if (typeof document !== 'undefined') document.body.style.overflow = mobileOpen ? 'hidden' : '';
+  onDestroy(() => {
+    if (typeof document !== 'undefined' && mobileOpen) document.body.style.overflow = bodyOverflowBeforeDrawer;
+  });
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -63,17 +84,19 @@
     <button class="profile-dashboard-shell__backdrop" type="button" aria-label="Close dashboard navigation" on:click={closeMobileMenu}></button>
   {/if}
 
-  <aside id="profile-dashboard-sidebar" class="profile-dashboard-shell__sidebar" class:is-open={mobileOpen} bind:this={drawer} aria-label="Profile dashboard navigation" aria-hidden={mobileOpen ? undefined : false}>
+  <aside id="profile-dashboard-sidebar" class="profile-dashboard-shell__sidebar" class:is-open={mobileOpen} bind:this={drawer} aria-label="Profile dashboard navigation" aria-hidden={isMobileViewport && !mobileOpen ? 'true' : undefined} inert={isMobileViewport && !mobileOpen}>
     <div class="profile-dashboard-shell__sidebar-head">
       <span class="profile-dashboard-shell__sidebar-label">Dashboard</span>
       <button class="profile-dashboard-shell__close" type="button" aria-label="Close dashboard navigation" on:click={closeMobileMenu}>×</button>
     </div>
 
     <nav class="profile-dashboard-shell__nav" aria-label="Profile dashboard sections">
-      {#each Object.entries(groupedSections) as [group, groupSections] (group)}
+      {#each groupedSections as group (group.key)}
         <div class="profile-dashboard-shell__group">
-          {#if group !== 'Profile'}<span class="profile-dashboard-shell__group-label">{group}</span>{/if}
-          {#each groupSections as section (section.id)}
+          {#if group.collapsible}
+            <button class="profile-dashboard-shell__group-toggle" type="button" aria-expanded={profileGroupExpanded} on:click={toggleProfileGroup}><span class="profile-dashboard-shell__group-label">{group.label}</span><span aria-hidden="true">{profileGroupExpanded ? '−' : '+'}</span></button>
+          {:else if group.label}<span class="profile-dashboard-shell__group-label">{group.label}</span>{/if}
+          {#if !group.collapsible || profileGroupExpanded}{#each group.sections as section (section.id)}
             <button
               type="button"
               class:active={activeSection === section.id}
@@ -83,19 +106,10 @@
               <span class="profile-dashboard-shell__nav-icon" aria-hidden="true">{section.icon || '·'}</span>
               <span>{section.label}</span>
             </button>
-          {/each}
+          {/each}{/if}
         </div>
       {/each}
     </nav>
-
-    <div class="profile-dashboard-shell__sidebar-foot">
-      <a href={profilePath}>View profile <span aria-hidden="true">↗</span></a>
-      <div class="profile-dashboard-shell__account">
-        <span class="profile-dashboard-shell__account-mark" aria-hidden="true">{(username || 'Y').slice(0, 1).toUpperCase()}</span>
-        <span><strong>{username || 'Your profile'}</strong><small>Signed in</small></span>
-        <button type="button" aria-label="Sign out" disabled={logoutInProgress} on:click={() => dispatch('logout')}>{logoutInProgress ? '…' : '↗'}</button>
-      </div>
-    </div>
   </aside>
 
   <div class="profile-dashboard-shell__main">
@@ -138,23 +152,14 @@
   .profile-dashboard-shell__nav { display: grid; gap: 1rem; }
   .profile-dashboard-shell__group { display: grid; gap: .15rem; }
   .profile-dashboard-shell__group-label { padding: .2rem .55rem .35rem; font-size: .56rem; }
+  .profile-dashboard-shell__group-toggle { display: flex; align-items: center; justify-content: space-between; min-height: 1.8rem; padding: .2rem .55rem .35rem; border: 0; background: transparent; color: var(--site-faint, var(--color-ink-faint)); cursor: pointer; }
+  .profile-dashboard-shell__group-toggle > span:last-child { color: var(--site-muted, var(--color-ink-muted)); font: .8rem/1 var(--site-mono, var(--font-mono-stack)); }
   .profile-dashboard-shell__nav button { display: flex; align-items: center; gap: .55rem; width: 100%; min-height: 2.15rem; padding: .55rem .55rem; border: 1px solid transparent; border-radius: .42rem; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 500 .76rem/1.1 var(--site-font, var(--font-body-stack)); text-align: left; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
   .profile-dashboard-shell__nav button:hover, .profile-dashboard-shell__nav button:focus-visible { border-color: var(--site-line-strong, var(--color-line-strong)); background: var(--site-surface-soft, var(--surface-panel-soft)); color: var(--site-ink, var(--color-ink-strong)); }
   .profile-dashboard-shell__nav button.active { border-color: color-mix(in srgb, var(--site-accent, var(--color-accent)) 46%, var(--site-line)); background: color-mix(in srgb, var(--site-accent, var(--color-accent)) 12%, transparent); color: var(--site-ink, var(--color-ink-strong)); }
-  .profile-dashboard-shell__nav button:focus-visible, .profile-dashboard-shell__sidebar-foot :is(a, button):focus-visible, .profile-dashboard-shell__mobile-bar button:focus-visible { outline: 2px solid var(--site-accent, var(--color-accent-bright)); outline-offset: 3px; }
+  .profile-dashboard-shell__nav button:focus-visible, .profile-dashboard-shell__group-toggle:focus-visible, .profile-dashboard-shell__mobile-bar button:focus-visible { outline: 2px solid var(--site-accent, var(--color-accent-bright)); outline-offset: 3px; }
   .profile-dashboard-shell__nav-icon { display: grid; place-items: center; width: 1rem; color: var(--site-faint, var(--color-ink-faint)); font-family: var(--site-mono, var(--font-mono-stack)); }
   .profile-dashboard-shell__nav button.active .profile-dashboard-shell__nav-icon { color: var(--site-accent, var(--color-accent)); }
-  .profile-dashboard-shell__sidebar-foot { display: grid; gap: .65rem; margin-top: auto; padding-top: .8rem; border-top: 1px solid var(--site-line, var(--color-line-subtle)); }
-  .profile-dashboard-shell__sidebar-foot > a { display: flex; justify-content: space-between; padding: .3rem .45rem; color: var(--site-muted, var(--color-ink-muted)); font-size: .7rem; text-decoration: none; }
-  .profile-dashboard-shell__sidebar-foot > a:hover { color: var(--site-ink, var(--color-ink-strong)); }
-  .profile-dashboard-shell__sidebar-foot > a span { color: var(--site-accent, var(--color-accent)); }
-  .profile-dashboard-shell__account { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .45rem; padding: .55rem .45rem; border: 1px solid var(--site-line, var(--color-line-subtle)); border-radius: .42rem; background: var(--site-surface-soft, var(--surface-panel-soft)); }
-  .profile-dashboard-shell__account-mark { display: grid; place-items: center; width: 1.65rem; height: 1.65rem; border-radius: 50%; background: var(--site-accent, var(--color-accent)); color: var(--site-deep, #090a0d); font: 700 .68rem/1 var(--site-mono, var(--font-mono-stack)); }
-  .profile-dashboard-shell__account > span:nth-child(2) { display: grid; gap: .15rem; min-width: 0; }
-  .profile-dashboard-shell__account strong, .profile-dashboard-shell__account small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-dashboard-shell__account strong { color: var(--site-ink, var(--color-ink-strong)); font-size: .68rem; }
-  .profile-dashboard-shell__account small { color: var(--site-faint, var(--color-ink-faint)); font-size: .58rem; }
-  .profile-dashboard-shell__account button { border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); cursor: pointer; }
   .profile-dashboard-shell__main { min-width: 0; }
   .profile-dashboard-shell__content { width: 100%; min-height: calc(100dvh - 4.1rem); padding: clamp(1rem, 2.4vw, 2.25rem) clamp(.85rem, 2.6vw, 3rem) 4rem; }
   .profile-dashboard-shell__mobile-bar { display: none; }

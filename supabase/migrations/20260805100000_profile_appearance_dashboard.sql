@@ -81,13 +81,39 @@ LANGUAGE sql
 STABLE
 SET search_path TO public, pg_catalog
 AS $function$
-  SELECT public.profile_default_configuration_legacy(p_signature_color)
+  SELECT public.profile_default_configuration_legacy('#CDD2FF')
     || jsonb_build_object(
+      'signatureColor', '#CDD2FF',
       'appearance', public.normalize_profile_appearance(
-        jsonb_build_object('colors', jsonb_build_object('accent', p_signature_color)),
-        p_signature_color
+        '{}'::jsonb,
+        '#CDD2FF'
       )
     );
+$function$;
+
+CREATE OR REPLACE FUNCTION public.profile_composition_patch(p_patch jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SET search_path TO public, pg_catalog
+AS $function$
+DECLARE
+  v_patch jsonb := '{}'::jsonb;
+BEGIN
+  IF jsonb_typeof(p_patch) <> 'object' THEN
+    RETURN v_patch;
+  END IF;
+  IF p_patch ? 'layoutVariant' THEN
+    v_patch := v_patch || jsonb_build_object('layoutVariant', p_patch->'layoutVariant');
+  END IF;
+  IF p_patch ? 'modules' THEN
+    v_patch := v_patch || jsonb_build_object('modules', p_patch->'modules');
+  END IF;
+  IF p_patch ? 'links' THEN
+    v_patch := v_patch || jsonb_build_object('links', p_patch->'links');
+  END IF;
+  RETURN v_patch;
+END;
 $function$;
 
 CREATE OR REPLACE FUNCTION public.normalize_profile_configuration(
@@ -184,6 +210,7 @@ DECLARE
   v_record public.profile_configurations%ROWTYPE;
   v_default jsonb;
   v_draft jsonb;
+  v_composition_patch jsonb;
   v_normalized jsonb;
   v_fallback text;
 BEGIN
@@ -211,7 +238,7 @@ BEGIN
     SELECT * INTO v_record FROM public.profile_configurations WHERE user_id = v_user_id FOR UPDATE;
   END IF;
   IF p_expected_updated_at IS NOT NULL AND v_record.updated_at <> p_expected_updated_at THEN
-    RETURN jsonb_build_object('success', false, 'code', 'conflict', 'error', 'This profile changed in another tab.', 'updated_at', v_record.updated_at);
+    RETURN jsonb_build_object('success', false, 'code', 'conflict', 'error', 'This profile changed in another tab.', 'updated_at', v_record.updated_at, 'draft', v_record.draft_config, 'published', v_record.published_config);
   END IF;
 
   v_draft := v_record.draft_config;
@@ -220,7 +247,16 @@ BEGIN
       'appearance', COALESCE(v_draft->'appearance', '{}'::jsonb) || p_patch
     );
   ELSE
-    v_draft := v_draft || p_patch;
+    v_composition_patch := public.profile_composition_patch(p_patch);
+    IF v_composition_patch ? 'layoutVariant' THEN
+      v_draft := jsonb_set(v_draft, '{layoutVariant}', v_composition_patch->'layoutVariant', true);
+    END IF;
+    IF v_composition_patch ? 'modules' THEN
+      v_draft := jsonb_set(v_draft, '{modules}', v_composition_patch->'modules', true);
+    END IF;
+    IF v_composition_patch ? 'links' THEN
+      v_draft := jsonb_set(v_draft, '{links}', v_composition_patch->'links', true);
+    END IF;
   END IF;
   v_normalized := public.normalize_profile_configuration(v_draft, v_fallback);
   IF v_normalized IS NULL THEN
@@ -255,6 +291,7 @@ DECLARE
   v_record public.profile_configurations%ROWTYPE;
   v_default jsonb;
   v_draft jsonb;
+  v_composition_patch jsonb;
   v_published jsonb;
   v_normalized_draft jsonb;
   v_normalized_published jsonb;
@@ -281,16 +318,28 @@ BEGIN
     SELECT * INTO v_record FROM public.profile_configurations WHERE user_id = v_user_id FOR UPDATE;
   END IF;
   IF p_expected_updated_at IS NOT NULL AND v_record.updated_at <> p_expected_updated_at THEN
-    RETURN jsonb_build_object('success', false, 'code', 'conflict', 'error', 'This profile changed in another tab.', 'updated_at', v_record.updated_at);
+    RETURN jsonb_build_object('success', false, 'code', 'conflict', 'error', 'This profile changed in another tab.', 'updated_at', v_record.updated_at, 'draft', v_record.draft_config, 'published', v_record.published_config);
   END IF;
 
   v_draft := v_record.draft_config;
+  v_published := v_record.published_config;
   IF p_section = 'appearance' THEN
     v_draft := v_draft || jsonb_build_object('appearance', COALESCE(v_draft->'appearance', '{}'::jsonb) || p_patch);
     v_published := v_record.published_config || jsonb_build_object('appearance', COALESCE(v_record.published_config->'appearance', '{}'::jsonb) || p_patch);
   ELSE
-    v_draft := v_draft || p_patch;
-    v_published := v_record.published_config || p_patch;
+    v_composition_patch := public.profile_composition_patch(p_patch);
+    IF v_composition_patch ? 'layoutVariant' THEN
+      v_draft := jsonb_set(v_draft, '{layoutVariant}', v_composition_patch->'layoutVariant', true);
+      v_published := jsonb_set(v_record.published_config, '{layoutVariant}', v_composition_patch->'layoutVariant', true);
+    END IF;
+    IF v_composition_patch ? 'modules' THEN
+      v_draft := jsonb_set(v_draft, '{modules}', v_composition_patch->'modules', true);
+      v_published := jsonb_set(v_published, '{modules}', v_composition_patch->'modules', true);
+    END IF;
+    IF v_composition_patch ? 'links' THEN
+      v_draft := jsonb_set(v_draft, '{links}', v_composition_patch->'links', true);
+      v_published := jsonb_set(v_published, '{links}', v_composition_patch->'links', true);
+    END IF;
   END IF;
   v_normalized_draft := public.normalize_profile_configuration(v_draft, v_fallback);
   v_normalized_published := public.normalize_profile_configuration(v_published, v_fallback);
@@ -318,6 +367,7 @@ $function$;
 REVOKE ALL ON FUNCTION public.profile_safe_hex(text, text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.normalize_profile_appearance(jsonb, text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.profile_default_configuration(text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.profile_composition_patch(jsonb) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.normalize_profile_configuration(jsonb, text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.profile_default_configuration_legacy(text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.normalize_profile_configuration_roll_visibility(jsonb, text) FROM PUBLIC, anon, authenticated;

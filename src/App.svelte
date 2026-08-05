@@ -272,6 +272,11 @@
     if (typeof window === 'undefined') return;
     const normalized = pathname || '/';
     const nextUrl = new URL(normalized, window.location.origin);
+    const navigationGuard = new CustomEvent('chromadie:navigation-request', {
+      detail: { nextPath: `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}` },
+      cancelable: true
+    });
+    if (!window.dispatchEvent(navigationGuard)) return;
     if (routeMode === 'app' && view === 'game' && challengeData && !nextUrl.pathname.startsWith('/c/')) {
       clearChallengeState();
     }
@@ -384,6 +389,13 @@
   }
 
   function handleNavigation(event) {
+    if (typeof window !== 'undefined') {
+      const navigationGuard = new CustomEvent('chromadie:navigation-request', {
+        detail: { navigation: event.detail || {} },
+        cancelable: true
+      });
+      if (!window.dispatchEvent(navigationGuard)) return;
+    }
     const { view: nextView, userId = null, username = null, tab = null } = event.detail || {};
     if (nextView) {
       if (routeMode === 'app' && view === 'game' && challengeData && nextView !== 'game') {

@@ -24,7 +24,11 @@
       error = result.error?.message || 'Could not delete the account.';
       return;
     }
-    notice = result.alreadyDeleted ? 'This account was already deleted.' : 'Account deleted.';
+    notice = result.alreadyDeleted
+      ? 'This account was already deleted.'
+      : result.cleanup?.missing_profile
+        ? 'Account deleted. Some profile data was already missing.'
+        : 'Account deleted.';
     dispatch('accountdeleted', { ...result, message: notice });
   }
 </script>

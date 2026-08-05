@@ -113,9 +113,8 @@
   <section aria-labelledby="profile-cosmetics-title">
     <div class="profile-cosmetics-heading">
       <div>
-        <p class="profile-settings-page__eyebrow">Collection</p>
-        <h2 id="profile-cosmetics-title">Shape your public identity.</h2>
-        <p>Preview your owned expression layers together, then apply each choice through the existing server-authoritative equip flow.</p>
+        <h2 id="profile-cosmetics-title">Collection</h2>
+        <p>Preview and equip owned expression layers.</p>
       </div>
     </div>
 
@@ -251,7 +250,7 @@
   :global(.profile-cosmetics-surface) { width: 100%; box-sizing: border-box; }
   .profile-cosmetics-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .profile-cosmetics-heading h2 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h2) / 1.05 var(--font-display-stack); }
-  .profile-cosmetics-heading p:not(.profile-settings-page__eyebrow) { max-width: 42rem; margin: .75rem 0 0; color: var(--color-ink-muted); line-height: 1.55; }
+  .profile-cosmetics-heading p { max-width: 42rem; margin: .75rem 0 0; color: var(--color-ink-muted); line-height: 1.55; }
   .profile-cosmetics-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(18rem, .85fr); gap: 1rem; align-items: start; }
   .profile-cosmetics-preview { min-width: 0; }
   .profile-cosmetics-controls { display: grid; gap: .75rem; min-width: 0; padding: 1rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-panel-soft); }

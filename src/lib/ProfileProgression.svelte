@@ -1,5 +1,4 @@
 <script>
-  import Button from './foundation/Button.svelte';
   import Surface from './foundation/Surface.svelte';
   import { getRankState } from './ranks.js';
   import { getProfileStoryUnlocks } from './profileStory.js';
@@ -47,11 +46,9 @@
   <section aria-labelledby="profile-progression-title">
     <div class="profile-progression-heading">
       <div>
-        <p class="profile-settings-page__eyebrow">Progression</p>
-        <h2 id="profile-progression-title">Let the profile remember the work.</h2>
-        <p>Your rank, roll history, achievements, and collection growth are earned through play. Expression stays yours to shape.</p>
+        <h2 id="profile-progression-title">Progression</h2>
+        <p>Track rank, rolls, achievements, and collection milestones.</p>
       </div>
-      <Button variant="secondary" href="/profile">View live profile <span aria-hidden="true">↗</span></Button>
     </div>
 
     <div class="profile-progression-rank">
@@ -73,7 +70,7 @@
             <span style={`width:${progressPercent}%`}></span>
           </div>
         {:else}
-          <div class="profile-progression-rank__next-copy"><span>Final rank reached</span><span>Your color history is the reward.</span></div>
+          <div class="profile-progression-rank__next-copy"><span>Final rank reached</span><span>No higher rank is available.</span></div>
           <div class="profile-progression-bar profile-progression-bar--complete" aria-label="Final rank reached" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span style="width:100%"></span></div>
         {/if}
       </div>
@@ -88,7 +85,7 @@
 
     <section class="profile-progression-track" aria-labelledby="profile-progression-track-title">
       <div class="profile-progression-section-heading">
-        <div><span class="profile-progression-label">Expression track</span><h3 id="profile-progression-track-title">Earn the pieces that stay.</h3></div>
+        <div><span class="profile-progression-label">Expression track</span><h3 id="profile-progression-track-title">Expression rewards</h3></div>
         <span>{recentUnlocks.length ? `${recentUnlocks.length} recent unlock${recentUnlocks.length === 1 ? '' : 's'}` : 'Rank rewards'}</span>
       </div>
       {#if milestoneTrack.length}
@@ -126,13 +123,13 @@
           {/each}
         </ol>
       {:else}
-        <p class="profile-progression-empty">Your first daily roll will start the visible record of this profile.</p>
+        <p class="profile-progression-empty">No progression events recorded yet.</p>
       {/if}
     </div>
 
     <div class="profile-progression-footer">
-      <p>Rewards, rank, and history stay server-authoritative. The Studio only controls how your earned story is presented.</p>
-      <a href="#collection">Review your collection <span aria-hidden="true">→</span></a>
+      <p>Rewards, rank, and history stay server-authoritative.</p>
+      <a href="#profile-collection">Review collection <span aria-hidden="true">→</span></a>
     </div>
   </section>
 </Surface>
@@ -141,7 +138,7 @@
   :global(.profile-progression-surface) { width:100%; box-sizing:border-box; }
   .profile-progression-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1.2rem; }
   .profile-progression-heading h2 { max-width:42rem; margin:0; color:var(--color-ink-strong); font:600 var(--type-h2)/1.05 var(--font-display-stack); }
-  .profile-progression-heading p:not(.profile-settings-page__eyebrow) { max-width:42rem; margin:.75rem 0 0; color:var(--color-ink-muted); line-height:1.55; }
+  .profile-progression-heading p { max-width:42rem; margin:.75rem 0 0; color:var(--color-ink-muted); line-height:1.55; }
   .profile-progression-rank { display:grid; grid-template-columns:minmax(13rem,.8fr) minmax(18rem,1.2fr); gap:1rem; align-items:center; padding:1rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
   .profile-progression-rank__identity { display:flex; align-items:center; gap:.8rem; min-width:0; }
   .profile-progression-rank__mark { display:grid; place-items:center; flex:0 0 3.1rem; width:3.1rem; height:3.1rem; border:1px solid color-mix(in srgb,var(--rank-color) 65%,var(--color-line-subtle)); border-radius:50%; color:var(--rank-color); background:color-mix(in srgb,var(--rank-color) 13%,transparent); font:700 1.3rem var(--font-display-stack); }

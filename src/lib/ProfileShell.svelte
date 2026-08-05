@@ -35,6 +35,10 @@
   export let previewMode = false;
   export let previewProfile = null;
   export let previewProfileConfig = null;
+  export let previewScores = [];
+  export let previewTimelineEvents = [];
+  export let previewCollectionItems = [];
+  export let previewAllAchievements = [];
   export let visualFixture = '';
 
   let targetProfile = null;
@@ -77,12 +81,12 @@
 
   function syncProfileData() {
     if (previewMode) {
-      const nextPreviewKey = 'profile-preview:' + JSON.stringify({ profile: previewProfile, config: previewProfileConfig });
+      const nextPreviewKey = 'profile-preview:' + JSON.stringify({ profile: previewProfile, config: previewProfileConfig, scores: previewScores, timeline: previewTimelineEvents, collection: previewCollectionItems });
       if (nextPreviewKey !== activeProfileKey) {
         activeProfileKey = nextPreviewKey;
         loadRequestId += 1;
         resetShellState(false);
-        const fallbackColor = previewProfile?.mood_color || '#8B7CF6';
+        const fallbackColor = '#CDD2FF';
         targetProfile = {
           id: 'profile-studio-preview',
           username: previewProfile?.username || 'Chromanaut',
@@ -101,10 +105,14 @@
           best_roll_rarity: previewProfile?.best_roll_rarity ?? null
         };
         const config = normalizeProfileConfig(
-          previewProfileConfig || createDefaultProfileConfig(fallbackColor),
+          previewProfileConfig || createDefaultProfileConfig(),
           fallbackColor
         );
         profileConfig = { draft: null, published: config };
+        targetScores = Array.isArray(previewScores) ? previewScores : [];
+        timelineEvents = Array.isArray(previewTimelineEvents) ? previewTimelineEvents : [];
+        collectionItems = Array.isArray(previewCollectionItems) ? previewCollectionItems : [];
+        allAchievements = Array.isArray(previewAllAchievements) ? previewAllAchievements : [];
         loading = false;
       }
       return;
@@ -278,7 +286,7 @@
   }
 
   async function handleFollow() {
-    if (!targetProfile?.id || followLoading) return;
+    if (previewMode || !targetProfile?.id || followLoading) return;
     followLoading = true;
     await toggleFollow(targetProfile.id);
     followLoading = false;
@@ -344,7 +352,7 @@
   $: displayBestRoll = profileBestRoll || bestRoll;
   $: effectiveProfileConfig = normalizeProfileConfig(
     previewConfig || profileConfig?.published,
-    targetProfile?.mood_color || '#8B7CF6'
+    '#CDD2FF'
   );
   $: appearance = effectiveProfileConfig.appearance;
   $: profileBackground = appearance.gradient.enabled
@@ -400,7 +408,7 @@
   {#if !loading && targetProfile && cursorTrailKey}
     <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__cursor-layer" />
   {/if}
-  {#if !previewMode && backgroundSrc}
+  {#if backgroundSrc}
     <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
   {/if}
   {#if !loading && targetProfile && atmosphereKey}
@@ -479,17 +487,15 @@
             />
           </div>
         {/if}
-        {#if !previewMode && showExpression}
+        {#if showExpression}
           <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
             <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
-              <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} />
+              <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} />
             </div>
           </div>
         {/if}
     </div>
     </div>
-
-    {#if !previewMode}
 
       {#if getProfileStoryVisible(effectiveProfileConfig) && (rank && rankState || secondaryModules.length)}
         <section class="profile-shell__story-section" aria-labelledby="profile-story-title">
@@ -625,7 +631,7 @@
         </section>
       {/if}
 
-      {#if !isOwnProfile}
+      {#if !previewMode && !isOwnProfile}
         <section class="profile-shell__social-section" aria-label={username + ' community and safety details'}>
           <div class="profile-shell__social-tools">
           {#if !isOwnProfile && $isAuthenticated}
@@ -642,7 +648,6 @@
           </div>
         </section>
       {/if}
-    {/if}
   {:else if !loading}
     <div class="profile-shell-state" role="alert">
       <Surface variant="panel" padding="lg">
@@ -727,6 +732,7 @@
   }
 
   .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
+  .profile-shell-page--preview .profile-shell__media-background { position: absolute; }
   .profile-shell__opening-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr); align-items: center; gap: clamp(2rem, 6vw, 7rem); width: min(100%, 70rem); margin-inline: auto; }
   .profile-shell__identity { min-width: 0; }
 
@@ -1152,12 +1158,6 @@
 
   .profile-shell-page--preview .profile-shell__approved-main {
     min-height: 0;
-  }
-
-  .profile-shell-page--preview .profile-shell__approved-game,
-  .profile-shell-page--preview .profile-shell__approved-featured,
-  .profile-shell-page--preview .profile-shell__approved-supporting {
-    display: none;
   }
 
   .profile-shell-page--preview .profile-shell__approved-opening {

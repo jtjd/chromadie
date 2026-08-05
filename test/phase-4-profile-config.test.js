@@ -92,7 +92,7 @@ test('profile configuration normalization rejects incomplete structure and drops
   ];
 
   const normalized = normalizeProfileConfig(config);
-  assert.equal(normalized.signatureColor, '#102030');
+  assert.equal(normalized.signatureColor, '#CDD2FF');
   assert.equal(normalized.modules.find(module => module.id === 'stats').visible, false);
   assert.deepEqual(getVisibleProfileLinks(normalized), [
     { type: 'github', label: 'Code', url: 'https://github.com/example', visible: true, order: 0 }
@@ -155,11 +155,12 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   const profileData = await readFile(new URL('../src/lib/profileData.js', import.meta.url), 'utf8');
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
 
-  assert.match(editor, /save_profile_configuration/);
-  assert.match(editor, /publish_profile_configuration/);
+  assert.match(editor, /save_profile_configuration_section/);
+  assert.match(editor, /publish_profile_configuration_section/);
+  assert.match(editor, /p_section: 'composition'/);
   assert.match(editor, /configpreview/);
-  assert.match(editor, /colorEffectsEnabled/);
-  assert.match(editor, /Changes update the live preview/);
+  assert.doesNotMatch(editor, /colorEffectsEnabled/);
+  assert.doesNotMatch(editor, /Signature color|Ambient color/);
   assert.match(editor, /https/);
   assert.doesNotMatch(editor, /innerHTML|new Function|eval\s*\(/);
   assert.match(profileData, /get_my_profile_configuration/);

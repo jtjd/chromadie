@@ -111,9 +111,8 @@
   size="wide"
   tone="quiet"
   className="identity-editor"
-  eyebrow="Public identity"
-  title="Profile identity"
-  description="Your username is your display name. Add a short bio for visitors."
+  title="Identity"
+  description="Your bio is visible on your public profile."
 >
   <form class="identity-editor__form" on:submit|preventDefault={saveIdentity}>
     <div class="identity-editor__fields">

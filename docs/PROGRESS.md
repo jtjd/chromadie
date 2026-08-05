@@ -2201,3 +2201,16 @@ renderer keys through finite aliases.
   and rarity chips.
 - Kept try-on preview-only and left purchase, inventory, equip, and catalog
   contracts unchanged.
+
+## 2026-08-05 — Dashboard follow-up complete
+
+- Corrected dashboard order, canonical hashes, collapsible Profile navigation,
+  history restoration, mobile drawer inertness, and duplicate account actions.
+- Replaced Layout & links whole-config publishing with composition-scoped RPCs,
+  conflict reload, dirty-state prompts, and bounded allowlisted patches.
+- Fixed independent appearance defaults, invalid-hex blocking, preview media
+  bounds/mutation guards, legacy account deletion reuse, and mounted dashboard
+  copy.
+- Validation: build, check, ESLint, 199 tests, links, CSP, all drift checks,
+  scoring parity, database security, schema lint, and database reset passed.
+  Performance remains over inherited initial/total JS and total CSS budgets.

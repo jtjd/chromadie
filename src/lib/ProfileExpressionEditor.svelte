@@ -349,7 +349,7 @@
   });
 </script>
 
-<Module size="wide" tone="quiet" className="profile-expression-editor" eyebrow="Media" title="Profile media" description="Add an avatar, background, or Spotify item. Uploads are resized and converted to WebP.">
+<Module size="wide" tone="quiet" className="profile-expression-editor" title="Media" description="Upload an avatar or background, or connect Spotify.">
   <div class="profile-expression-editor__media-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
     <div class="profile-expression-editor__preview" style="flex:0 0 7rem;width:7rem" aria-label="Avatar preview">
       {#if avatarSrc}
@@ -371,7 +371,6 @@
 
   <div class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
     <div>
-      <p class="profile-expression-editor__eyebrow">Atmosphere</p>
       <h3>Use a background image</h3>
       <p class="profile-expression-editor__section-copy">A centered, compressed image behind the existing daily-color atmosphere. A dark overlay keeps the identity readable.</p>
     </div>

@@ -1824,3 +1824,12 @@ direct route behavior.
   visually abrupt.
 - Added WebM/MP4 delivery, poster fallback, screen-only blending, and reduced-
   motion/card handling without changing the atmosphere slot or catalog key.
+
+## 2026-08-05 — Section-scoped profile dashboard corrections
+
+- Added canonical dashboard history and responsive Profile-group IA with
+  guarded dirty navigation and no duplicate sidebar account controls.
+- Scoped Layout & links draft/publish to composition keys only and added stale
+  version reload actions; appearance remains independently publishable.
+- Fixed `#CDD2FF` appearance defaults, bounded owner-data preview behavior, and
+  reused account deletion in the legacy Profile route.

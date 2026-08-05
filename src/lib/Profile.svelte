@@ -4,8 +4,8 @@
   import { getTitleText, getStaffTitleText } from './cosmetics';
   import { getRank, getRankState } from './ranks';
   import { formatCount, getTodayString } from './utils';
-  import { deleteAccount } from './accountDeletion';
   import ProfileAchievementCard from './ProfileAchievementCard.svelte';
+  import ProfileAccountSettings from './ProfileAccountSettings.svelte';
   import { isOwnProfileTarget } from './profileContract';
   import { loadProfileContext } from './profileData';
   import { afterUpdate, createEventDispatcher } from 'svelte';
@@ -38,10 +38,6 @@
   let selectedBadges = [];
   let editMode = false;
   let moodColorInput = '';
-  let deletePhrase = '';
-  let deleteLoading = false;
-  let deleteError = '';
-  let deleteNotice = '';
   let loadRequestId = 0;
   let activeProfileKey = null;
   let followedSignature = '';
@@ -118,47 +114,17 @@
     selectedBadges = [];
     editMode = false;
     moodColorInput = '';
-    deletePhrase = '';
-    deleteLoading = false;
-    deleteError = '';
-    deleteNotice = '';
     loading = false;
     loadError = '';
     dataWarning = '';
   }
 
-  async function handleDeleteAccount() {
-    if (!isOwnProfile || deleteLoading) return;
-
-    if (deletePhrase.trim().toUpperCase() !== 'DELETE') {
-      deleteError = 'Type DELETE to confirm account deletion.';
-      return;
-    }
-
-    deleteLoading = true;
-    deleteError = '';
-    deleteNotice = '';
-
-    const result = await deleteAccount(supabase, 'DELETE');
-    deleteLoading = false;
-
-    if (!result.success) {
-      deleteError = result.error?.message || 'Could not delete the account.';
-      return;
-    }
-
-    deleteNotice = result.alreadyDeleted
-      ? 'The account was already removed.'
-      : 'Account deleted.';
-
-    if (result.cleanup?.missing_profile && !result.alreadyDeleted) {
-      deleteNotice = 'Account deleted. Some profile data was already missing.';
-    }
-
+  function handleReusableAccountDeleted(event) {
+    const detail = event.detail || {};
     dispatch('accountdeleted', {
-      alreadyDeleted: result.alreadyDeleted,
-      message: deleteNotice,
-      cleanup: result.cleanup
+      alreadyDeleted: detail.alreadyDeleted,
+      message: detail.message,
+      cleanup: detail.cleanup
     });
   }
 
@@ -619,52 +585,7 @@
         </div>
       </div>
 
-      <div class="card danger-zone-card" style="margin-top: 20px;">
-        <div class="section-title">
-          <div class="section-bar bar-mono"></div>
-          <h2>Danger Zone</h2>
-        </div>
-        <p class="danger-copy">
-          Permanently delete your account, profile, scores, inventory, rivals, pinned achievements, and other app-owned account data.
-        </p>
-        <ul class="danger-list">
-          <li>You will be signed out.</li>
-          <li>Local account caches will be cleared by the deletion flow.</li>
-          <li>This cannot be undone.</li>
-        </ul>
-
-        <p class="account-links">
-          Review the <a href="/privacy">Privacy Policy</a> or <a href="/how-to-play">How to Play</a> before deleting.
-        </p>
-
-        <label class="delete-field" for="delete-confirm-input">
-          <span class="field-label">Type DELETE to continue</span>
-          <input
-            id="delete-confirm-input"
-            class="input-field"
-            bind:value={deletePhrase}
-            autocomplete="off"
-            spellcheck="false"
-            placeholder="DELETE"
-          />
-        </label>
-
-        {#if deleteError}
-          <p class="delete-error" role="alert">{deleteError}</p>
-        {/if}
-        {#if deleteNotice}
-          <p class="delete-notice" role="status" aria-live="polite">{deleteNotice}</p>
-        {/if}
-
-        <button
-          type="button"
-          class="delete-account-btn"
-          disabled={deleteLoading || deletePhrase.trim().toUpperCase() !== 'DELETE'}
-          on:click={handleDeleteAccount}
-        >
-          {deleteLoading ? 'Deleting account...' : 'Delete account permanently'}
-        </button>
-      </div>
+      <ProfileAccountSettings on:accountdeleted={handleReusableAccountDeleted} />
     {:else}
       <div class="card" style="margin-top: 20px;">
         <p class="info-text">Achievements are private. Pinned achievements and progress highlights are shown above.</p>
@@ -933,82 +854,6 @@
   .empty-rivals { text-align: center; padding: 15px; color: var(--text-muted); }
   .empty-rivals p { margin-bottom: 5px; }
   .empty-rivals .subtext { font-size: 0.8rem; opacity: 0.8; }
-
-  .danger-zone-card {
-    border-color: rgba(239, 68, 68, 0.2);
-    background:
-      radial-gradient(circle at top right, rgba(239, 68, 68, 0.08), transparent 46%),
-      rgba(255,255,255,0.03);
-  }
-
-  .danger-copy,
-  .danger-list {
-    margin: 0 0 0.9rem;
-    color: var(--text-muted);
-    line-height: 1.6;
-    text-align: left;
-  }
-
-  .account-links {
-    margin: 0 0 1rem;
-    color: var(--text-muted);
-    text-align: left;
-    font-size: 0.88rem;
-    line-height: 1.5;
-  }
-
-  .account-links a {
-    color: #fff;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-
-  .danger-list {
-    padding-left: 1.1rem;
-    display: grid;
-    gap: 0.35rem;
-  }
-
-  .delete-field {
-    display: grid;
-    gap: 0.45rem;
-    text-align: left;
-    margin-bottom: 1rem;
-  }
-
-  .delete-error {
-    margin: 0 0 0.75rem;
-    color: #fca5a5;
-    text-align: left;
-  }
-
-  .delete-notice {
-    margin: 0 0 0.75rem;
-    color: #6ee787;
-    text-align: left;
-  }
-
-  .delete-account-btn {
-    width: 100%;
-    min-height: 48px;
-    border-radius: 12px;
-    border: 1px solid rgba(239, 68, 68, 0.35);
-    background: rgba(239, 68, 68, 0.12);
-    color: #fff;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.15s;
-  }
-
-  .delete-account-btn:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.18);
-    transform: translateY(-1px);
-  }
-
-  .delete-account-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.55;
-  }
 
   @media (max-width: 768px) {
     .best-row-container { flex-direction: column; }

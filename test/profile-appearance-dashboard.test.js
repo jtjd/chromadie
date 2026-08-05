@@ -13,7 +13,8 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('appearance v1 is bounded and independent from daily roll color', () => {
   const defaults = createDefaultProfileConfig('#12abef');
-  assert.equal(defaults.appearance.colors.accent, '#12ABEF');
+  assert.equal(defaults.appearance.colors.accent, '#CDD2FF');
+  assert.equal(defaults.signatureColor, '#12ABEF');
   assert.equal(defaults.appearance.colors.background, PROFILE_APPEARANCE_DEFAULTS.colors.background);
 
   const normalized = normalizeProfileAppearance({
@@ -42,10 +43,11 @@ test('appearance v1 is bounded and independent from daily roll color', () => {
 });
 
 test('dashboard uses the shared header and section RPC contract', async () => {
-  const [app, settings, appearance, migration, shell] = await Promise.all([
+  const [app, settings, appearance, layout, migration, shell] = await Promise.all([
     read('src/App.svelte'),
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
+    read('src/lib/ProfileEditor.svelte'),
     read('supabase/migrations/20260805100000_profile_appearance_dashboard.sql'),
     read('src/lib/ProfileDashboardShell.svelte')
   ]);
@@ -53,14 +55,31 @@ test('dashboard uses the shared header and section RPC contract', async () => {
   assert.match(settings, /<ProfileAccountSettings/);
   assert.match(settings, /id: 'customize'/);
   assert.match(settings, /customize: 'customize'/);
+  assert.match(settings, /id: 'profile-identity'/);
+  assert.match(settings, /id: 'profile-media'/);
+  assert.match(settings, /id: 'profile-layout'/);
+  assert.match(settings, /id: 'profile-social'/);
+  assert.match(settings, /id: 'profile-collection'/);
+  assert.match(settings, /popstate/);
+  assert.match(settings, /history\.pushState/);
   assert.match(settings, /import\('\.\/ProfileShell\.svelte'\)/);
   assert.match(appearance, /save_profile_configuration_section/);
   assert.match(appearance, /publish_profile_configuration_section/);
+  assert.match(layout, /p_section: 'composition'/);
+  assert.match(layout, /save_profile_configuration_section/);
+  assert.match(layout, /publish_profile_configuration_section/);
+  assert.doesNotMatch(layout, /save_profile_configuration['"]/);
+  assert.doesNotMatch(layout, /Signature color|Ambient color|colorEffectsEnabled/);
   assert.match(migration, /UPDATE public\.profile_configurations/);
   assert.match(migration, /SECURITY DEFINER/);
   assert.match(migration, /p_expected_updated_at/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.save_profile_configuration_section/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.publish_profile_configuration_section/);
+  assert.match(migration, /profile_composition_patch/);
+  assert.match(migration, /'layoutVariant'/);
+  assert.match(migration, /'modules'/);
+  assert.match(migration, /'links'/);
   assert.match(shell, /profile-dashboard-shell__group/);
+  assert.match(shell, /inert=/);
   assert.match(shell, /trapFocus\(event, drawer\)/);
 });

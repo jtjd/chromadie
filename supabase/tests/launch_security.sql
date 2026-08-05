@@ -1083,6 +1083,7 @@ SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
       AND payload->'draft'->>'version' = '1'
       AND payload->'published'->>'version' = '1'
+      AND payload->'draft'->'appearance'->'colors'->>'accent' = '#CDD2FF'
    FROM audit_results WHERE name = 'config_owner'),
   'owner profile configuration did not return a safe default projection'
 );
@@ -1118,6 +1119,52 @@ SELECT pg_temp.audit_assert(
       AND payload->'published'->>'signatureColor' = '#112233'
    FROM audit_results WHERE name = 'config_publish'),
   'profile configuration publish did not promote the saved draft'
+);
+INSERT INTO audit_results VALUES (
+  'config_composition_save',
+  public.save_profile_configuration_section(
+    'composition',
+    jsonb_build_object(
+      'layoutVariant', 'focus',
+      'appearance', jsonb_build_object('colors', jsonb_build_object('accent', '#BADBAD')),
+      'signatureColor', '#BADBAD',
+      'colorEffectsEnabled', true,
+      'background_path', 'backgrounds/other-user.webp'
+    ),
+    NULL
+  )
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->'draft'->>'layoutVariant' = 'focus'
+      AND payload->'draft'->'appearance'->'colors'->>'accent' = '#112233'
+      AND payload->'draft'->>'signatureColor' = '#112233'
+      AND COALESCE(payload->'draft'->>'colorEffectsEnabled', 'false') = 'false'
+   FROM audit_results WHERE name = 'config_composition_save'),
+  'composition save accepted appearance or effect keys'
+);
+INSERT INTO audit_results VALUES (
+  'config_composition_publish',
+  public.publish_profile_configuration_section(
+    'composition',
+    jsonb_build_object(
+      'layoutVariant', 'focus',
+      'appearance', jsonb_build_object('colors', jsonb_build_object('accent', '#BADBAD')),
+      'signatureColor', '#BADBAD',
+      'colorEffectsEnabled', true,
+      'background_path', 'backgrounds/other-user.webp'
+    ),
+    NULL
+  )
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->'published'->>'layoutVariant' = 'focus'
+      AND payload->'published'->'appearance'->'colors'->>'accent' = '#112233'
+      AND payload->'published'->>'signatureColor' = '#112233'
+      AND COALESCE(payload->'published'->>'colorEffectsEnabled', 'false') = 'false'
+   FROM audit_results WHERE name = 'config_composition_publish'),
+  'composition publish accepted appearance or effect keys'
 );
 INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
 VALUES
