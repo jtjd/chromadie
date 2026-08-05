@@ -347,7 +347,6 @@ let authEventId = 0
 
 async function hydrateAuthenticatedUser(currentSession, expectedEventId) {
     try {
-        await loadShopItems()
         if (expectedEventId !== authEventId) return
 
         const [profileRes, inventoryRes, walletRes, followsRes, entitlementsRes] = await Promise.all([

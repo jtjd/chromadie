@@ -1,5 +1,23 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio dashboard pass — 2026-08-05
+
+- Added a real Studio Overview with live identity context, current rank/EP
+  progress, recent color trace, roll/streak/achievement summaries, and direct
+  anchors into Identity, Collection, Progression, and Layout.
+- Made Studio the primary authenticated header destination and changed the
+  settings route title/description to match the dashboard role.
+- Hid Shop from primary navigation and dashboard CTAs while preserving direct
+  `/shop` routing, purchase/equip contracts, and the legacy settings escape
+  hatch.
+- Removed catalog loading from authenticated account bootstrap. Shop and
+  Collection now load the catalog only when those surfaces are entered.
+- Added compatibility mapping for old `#appearance` and `#account` settings
+  hashes.
+- Documented the next progression handoff: extend the existing transactional
+  roll/achievement path with idempotent milestone grants and canonical response
+  data; no new currency or client-authoritative rewards yet.
+
 ## Profile Studio / Collection / Progression slice — 2026-08-05
 
 - Established the owner-facing decision boundary: Studio is the primary

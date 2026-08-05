@@ -139,6 +139,7 @@
 
   onMount(() => {
     restoreShopViewState();
+    void loadShopItems();
     void loadPreviewData();
   });
 

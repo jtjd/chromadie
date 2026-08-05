@@ -11,18 +11,20 @@
   import IdentityEditor from './IdentityEditor.svelte';
   import ProfileExpressionEditor from './ProfileExpressionEditor.svelte';
   import ProfileCosmeticsEditor from './ProfileCosmeticsEditor.svelte';
+  import ProfileStudioOverview from './ProfileStudioOverview.svelte';
   import ProfileProgression from './ProfileProgression.svelte';
   import ProfileEditor from './ProfileEditor.svelte';
   import ProfileSocial from './ProfileSocial.svelte';
   import ProfileSettingsPreview from './ProfileSettingsPreview.svelte';
 
   const SETTINGS_SECTIONS = Object.freeze([
-    { id: 'identity', number: '01', label: 'Identity', description: 'Bio & presence' },
-    { id: 'expression', number: '02', label: 'Expression', description: 'Avatar, backdrop & music' },
-    { id: 'collection', number: '03', label: 'Collection', description: 'Owned expression' },
-    { id: 'layout', number: '04', label: 'Layout & links', description: 'Your public canvas' },
-    { id: 'social', number: '05', label: 'Privacy & social', description: 'Visitors & interactions' },
-    { id: 'progression', number: '06', label: 'Progression', description: 'Rolls & milestones' }
+    { id: 'overview', number: '01', label: 'Overview', description: 'Your living profile' },
+    { id: 'identity', number: '02', label: 'Identity', description: 'Bio & presence' },
+    { id: 'expression', number: '03', label: 'Expression', description: 'Avatar, backdrop & music' },
+    { id: 'collection', number: '04', label: 'Collection', description: 'Owned expression' },
+    { id: 'layout', number: '05', label: 'Layout & links', description: 'Your public canvas' },
+    { id: 'social', number: '06', label: 'Privacy & social', description: 'Visitors & interactions' },
+    { id: 'progression', number: '07', label: 'Progression', description: 'Rolls & milestones' }
   ]);
 
   function createInitialSettingsContext() {
@@ -55,7 +57,7 @@
   let loading = false;
   let error = '';
   let requestId = 0;
-  let activeSection = 'identity';
+  let activeSection = 'overview';
   let configurationPreview = null;
   function getEquippedLayout(value) {
     return value && typeof value === 'object' && typeof value.profile_layout === 'string'
@@ -78,9 +80,11 @@
     : context?.profileConfig;
 
   onMount(() => {
+    const sectionAliases = { appearance: 'collection', account: 'progression' };
     const syncHash = () => {
       const hash = window.location.hash.replace('#', '');
-      if (SETTINGS_SECTIONS.some(section => section.id === hash)) activeSection = hash;
+      const sectionId = sectionAliases[hash] || hash;
+      if (SETTINGS_SECTIONS.some(section => section.id === sectionId)) activeSection = sectionId;
     };
 
     syncHash();
@@ -236,9 +240,9 @@
     {:else if context}
       <section class="profile-settings-page__intro-row" aria-labelledby="profile-settings-title">
         <div>
-          <p class="profile-settings-page__eyebrow">Profile settings</p>
-          <h1 id="profile-settings-title">Edit your profile.</h1>
-          <p class="profile-settings-page__intro">Update your bio, media, appearance, layout, links, and privacy settings.</p>
+          <p class="profile-settings-page__eyebrow">Profile studio</p>
+          <h1 id="profile-settings-title">Build the profile you keep.</h1>
+          <p class="profile-settings-page__intro">Shape your identity, expression, collection, progression, layout, and privacy from one living workspace.</p>
         </div>
       </section>
 
@@ -250,7 +254,7 @@
         <aside class="profile-settings-page__rail" aria-label="Profile settings sections">
           <div class="profile-settings-page__rail-heading">
             <span>Customize</span>
-            <strong>{String(activeSectionIndex + 1).padStart(2, '0')} <em>/</em> 06</strong>
+            <strong>{String(activeSectionIndex + 1).padStart(2, '0')} <em>/</em> {String(SETTINGS_SECTIONS.length).padStart(2, '0')}</strong>
           </div>
           <nav>
             {#each SETTINGS_SECTIONS as section (section.id)}
@@ -277,7 +281,17 @@
 
         <section class="profile-settings-page__editor" aria-label="Profile settings editor">
           <div class="profile-settings-page__editor-body">
-            {#if activeSection === 'identity'}
+            {#if activeSection === 'overview'}
+              <section class="profile-settings-page__editor-section" aria-label="Profile studio overview">
+                <ProfileStudioOverview
+                  profile={context.targetProfile}
+                  timelineEvents={context.timelineEvents}
+                  collectionItems={context.collectionItems}
+                  allAchievements={context.allAchievements}
+                  unlockedAchievements={context.unlockedAchievements}
+                />
+              </section>
+            {:else if activeSection === 'identity'}
               <section class="profile-settings-page__editor-section" aria-label="Identity editor">
                 <IdentityEditor profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} on:identitysaved={updateIdentity} />
               </section>
@@ -343,7 +357,8 @@
         <aside class="profile-settings-page__preview-column" aria-label="Profile preview and shortcuts">
           <ProfileSettingsPreview profile={context.targetProfile} profileConfig={previewProfileConfig} />
           <div class="profile-settings-page__preview-links">
-            <a href="/shop"><span>Browse cosmetics</span><span aria-hidden="true">↗</span></a>
+            <a href="#collection"><span>Open your collection</span><span aria-hidden="true">→</span></a>
+            <a href="#progression"><span>Review progression</span><span aria-hidden="true">→</span></a>
           </div>
         </aside>
       </div>

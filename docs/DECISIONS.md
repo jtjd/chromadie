@@ -2,6 +2,23 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-05 — Evolve Profile Settings into Studio and hide Shop from the primary loop
+
+The authenticated `/profile/settings` route now opens as a Profile Studio
+dashboard with an Overview surface. Identity, Expression, Collection, Layout,
+Privacy, and Progression remain deliberate sections behind that overview.
+Studio is exposed in the primary authenticated navigation; Shop is hidden from
+navigation and dashboard calls-to-action while `/shop` remains a compatibility
+route.
+
+Shop catalog loading is lazy at the product boundary: account bootstrap no
+longer waits on catalog availability, while Collection and direct Shop entry
+still load the same catalog and preserve the existing purchase/equip/RLS
+contracts. The next progression reward slice must extend the existing
+server-authoritative `roll_die_impl(boolean)` transaction and existing
+achievement/inventory model rather than introduce a client-side or parallel
+currency system. See `docs/milestones/PROFILE_STUDIO_DASHBOARD.md`.
+
 ## 2026-08-05 — Make Studio primary, keep Shop secondary, and give Progression its own surface
 
 The product will use a hybrid owner model. Studio answers how a player shapes

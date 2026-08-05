@@ -105,7 +105,7 @@
 
     <div class="profile-progression-footer">
       <p>Rewards, rank, and history stay server-authoritative. The Studio only controls how your earned story is presented.</p>
-      <a href="/shop">Find expression for your collection <span aria-hidden="true">↗</span></a>
+      <a href="#collection">Review your collection <span aria-hidden="true">→</span></a>
     </div>
   </section>
 </Surface>

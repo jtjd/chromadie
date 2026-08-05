@@ -1,5 +1,5 @@
 <script>
-  import { session, authUser, profile, authInitialized, authEvent, accountState, guestProgressActive, profileLoading, profileError, selectedUserId, loadShopItems, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
+  import { session, authUser, profile, authInitialized, authEvent, accountState, guestProgressActive, profileLoading, profileError, selectedUserId, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
   import { signOutCurrentBrowser } from './lib/authSession';
   import { supabase, supabaseError } from './lib/supabase';
   import HomePage from './lib/HomePage.svelte';
@@ -331,7 +331,6 @@
   }
 
   onMount(() => {
-    void loadShopItems();
     void loadFounderAnnouncementState();
     parseRoute();
     window.addEventListener('popstate', handlePopState);
@@ -670,7 +669,7 @@
       : routeMode === 'app' && view === 'profile'
         ? `${profileTitle} | ChromaDie`
         : routeMode === 'app' && view === 'profile-settings'
-          ? 'Profile Settings | ChromaDie'
+          ? 'Profile Studio | ChromaDie'
         : routeMode === 'app' && view === 'home'
           ? 'ChromaDie — A daily color identity'
         : routeMode === 'app' && view === 'prototype'
@@ -699,7 +698,7 @@
       : routeMode === 'app' && view === 'profile'
         ? `View ${profileTitle}'s public ChromaDie profile, progress, achievements, and recent rolls.`
         : routeMode === 'app' && view === 'profile-settings'
-          ? 'Edit your ChromaDie profile, public story visibility, links, expression, and interaction settings.'
+          ? 'Shape your ChromaDie identity, collection, progression, public canvas, and privacy from one profile studio.'
         : routeMode === 'app' && view === 'home'
           ? 'Roll one color each day and build a personal profile that grows through rarity, conditions, collections, and time.'
         : routeMode === 'app' && view === 'prototype'

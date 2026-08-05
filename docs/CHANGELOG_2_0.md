@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-05 — Make Studio the profile dashboard
+
+- Added a Studio Overview that connects live identity, rank, EP progress,
+  recent roll history, collection state, and direct editing actions.
+- Promoted Studio in authenticated navigation and hid Shop from primary
+  navigation and dashboard calls-to-action without deleting `/shop` or its
+  existing economy contracts.
+- Made Shop catalog loading lazy so account hydration is not blocked by a
+  catalog outage; Collection and direct Shop entry still load it when needed.
+
 ## 2026-08-05 — Make Studio primary and expose progression clearly
 
 - Reframed the authenticated settings workspace around Studio, Collection,

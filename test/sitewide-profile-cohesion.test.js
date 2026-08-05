@@ -24,8 +24,8 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /activeView === 'leaderboard'[\s\S]*>Leaderboard</);
   assert.doesNotMatch(siteHeader, /Explore|How it works|scrollToHomeSection/);
   assert.doesNotMatch(siteHeader, />Profile</);
-  assert.doesNotMatch(siteHeader, />Studio</);
-  assert.match(siteHeader, />Shop</);
+  assert.match(siteHeader, />Studio</);
+  assert.doesNotMatch(siteHeader, />Shop</);
   assert.match(siteHeader, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);
   assert.match(siteHeader, /--site-header-control-size: 0\.78rem/);
   assert.match(siteHeader, /--site-header-font: 'Satoshi'/);

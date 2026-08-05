@@ -35,6 +35,6 @@ test('route loaders use explicit split points and cache prefetched modules', () 
 test('primary navigation prefetches destinations for mouse and keyboard users', () => {
   assert.match(header, /on:mouseenter=\{\(\) => prefetch\('leaderboard'\)\}/);
   assert.match(header, /on:focus=\{\(\) => prefetch\('leaderboard'\)\}/);
-  assert.match(header, /on:mouseenter=\{\(\) => prefetch\('shop'\)\}/);
-  assert.match(header, /on:focus=\{\(\) => prefetch\('shop'\)\}/);
+  assert.match(header, /on:mouseenter=\{\(\) => prefetch\('profileSettings'\)\}/);
+  assert.match(header, /on:focus=\{\(\) => prefetch\('profileSettings'\)\}/);
 });

@@ -1,5 +1,5 @@
 <script>
-  import Button from './foundation/Button.svelte';
+  import { onMount } from 'svelte';
   import Surface from './foundation/Surface.svelte';
   import ShopStudioPreview from './ShopStudioPreview.svelte';
   import {
@@ -9,6 +9,7 @@
     profileEntitlements,
     refreshProfileState,
     session,
+    loadShopItems,
     shopItems,
     shopItemsError,
     shopItemsLoading,
@@ -54,6 +55,10 @@
   $: layoutItems = ownedCosmetics.filter(item => item.slot === 'profile_layout');
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: syncEquippedLoadout(equippedKey, $equippedItems);
+
+  onMount(() => {
+    void loadShopItems();
+  });
 
   function syncEquippedLoadout(key, loadout) {
     if (loadingSlot || key === syncedLoadoutKey) return;
@@ -112,7 +117,6 @@
         <h2 id="profile-cosmetics-title">Shape your public identity.</h2>
         <p>Preview your owned expression layers together, then apply each choice through the existing server-authoritative equip flow.</p>
       </div>
-      <Button variant="ghost" href="/shop">Browse the shop ↗</Button>
     </div>
 
     {#if $shopItemsLoading}

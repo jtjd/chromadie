@@ -1,0 +1,29 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+
+test('Studio overview makes profile identity, progression, and editing actions visible together', async () => {
+  const overview = await read('src/lib/ProfileStudioOverview.svelte');
+
+  assert.match(overview, /Your profile is the game/);
+  assert.match(overview, /getRankState/);
+  assert.match(overview, /getProfileStoryUnlocks/);
+  assert.match(overview, /href="#identity"/);
+  assert.match(overview, /href="#collection"/);
+  assert.match(overview, /href="#progression"/);
+  assert.match(overview, /href="#layout"/);
+  assert.match(overview, /timelineEvents\.slice\(0, 3\)/);
+  assert.match(overview, /prefers-reduced-motion/);
+  assert.match(overview, /role="progressbar"/);
+});
+
+test('Studio overview handles new and partial profiles without inventing state', async () => {
+  const overview = await read('src/lib/ProfileStudioOverview.svelte');
+
+  assert.match(overview, /profile \|\| \{\}/);
+  assert.match(overview, /first daily roll/);
+  assert.match(overview, /collectionItems\.length/);
+  assert.match(overview, /unlockedAchievements/);
+});
