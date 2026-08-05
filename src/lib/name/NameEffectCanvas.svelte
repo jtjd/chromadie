@@ -58,6 +58,12 @@
   let composableLoadPromise;
   let requestedFontLoadKey = '';
 
+  // Motion layers intentionally extend beyond the glyphs. Keep that visual
+  // bleed outside the semantic line box so glow, flash, and split entry do not
+  // look like they are trapped in a hard rectangle.
+  const CANVAS_BLEED_X = 18;
+  const CANVAS_BLEED_Y = 12;
+
   function loadoutValue(key, namespacedKey) {
     const input = /** @type {Record<string, any>} */ (loadout && typeof loadout === 'object' ? loadout : {});
     return input[key] ?? input[namespacedKey] ?? '';
@@ -183,7 +189,10 @@
     if (!renderer || !host) return;
     const rect = host.getBoundingClientRect?.() || {};
     syncSemanticMetrics();
-    renderer.resize({ width: rect.width, height: rect.height });
+    renderer.resize({
+      width: (rect.width || 0) + CANVAS_BLEED_X * 2,
+      height: (rect.height || 0) + CANVAS_BLEED_Y * 2
+    });
     renderer.draw(lastDrawTime);
   }
 
@@ -207,7 +216,10 @@
         const entry = entries[0];
         if (!entry || !renderer) return;
         syncSemanticMetrics();
-        renderer.resize({ width: entry.contentRect.width, height: entry.contentRect.height });
+        renderer.resize({
+          width: entry.contentRect.width + CANVAS_BLEED_X * 2,
+          height: entry.contentRect.height + CANVAS_BLEED_Y * 2
+        });
         renderer.draw(lastDrawTime);
       });
       resizeObserver.observe(host);
@@ -275,7 +287,7 @@
      that contract locally or the visual Canvas would measure a tiny default
      heading and render the name at the wrong scale. */
   .name-effect-canvas__semantic.identity-card__name { max-width: 100%; margin: 0; color: rgba(248, 250, 255, 0.98); font: 700 clamp(1.85rem, 3.8vw, 2.55rem) / 0.98 var(--font-display-stack, var(--font-display)); letter-spacing: -0.055em; overflow-wrap: anywhere; }
-  .name-effect-canvas__visual { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; max-width: 100%; pointer-events: none; }
+  .name-effect-canvas__visual { position: absolute; z-index: 0; inset: -12px -18px; display: block; width: calc(100% + 36px); height: calc(100% + 24px); max-width: none; pointer-events: none; }
   .name-effect-canvas--ready .name-effect-canvas__semantic { color: transparent !important; text-shadow: none !important; -webkit-text-fill-color: transparent !important; }
   .name-effect-canvas--fallback .name-effect-canvas__visual { display: none; }
   .name-effect-canvas--fallback .name-effect-canvas__semantic { color: inherit; -webkit-text-fill-color: currentColor; }
