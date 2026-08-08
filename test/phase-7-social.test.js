@@ -119,14 +119,16 @@ test('social settings normalization preserves safe defaults for incomplete RPC d
     guestbookEnabled: true,
     activityVisible: true,
     discoverable: true,
-    socialSummaryVisible: true
+    socialSummaryVisible: true,
+    profileViewsVisible: true
   });
   assert.deepEqual(normalizeProfileSocialSettings({ settings: { activityVisible: false } }), {
     interactionsEnabled: true,
     guestbookEnabled: true,
     activityVisible: false,
     discoverable: true,
-    socialSummaryVisible: true
+    socialSummaryVisible: true,
+    profileViewsVisible: true
   });
 });
 

@@ -3,6 +3,8 @@
   import ProfileRichText from './ProfileRichText.svelte';
 
   export let content = null;
+  /** @type {(entryKey: string) => void} */
+  export let onEntryClick = () => {};
 
   $: visible = getVisibleProfileContent(content);
   $: hasContent = Boolean(visible.about || visible.projects.length);
@@ -15,7 +17,7 @@
         <p class="profile-content__eyebrow">About</p>
         <h2 id="profile-content-heading">{visible.about.heading}</h2>
         {#if visible.about.version === 2 || visible.about.ast}
-          <ProfileRichText ast={visible.about.ast || []} />
+          <ProfileRichText ast={visible.about.ast || []} onLinkClick={onEntryClick} />
         {:else if visible.about.body}<p class="profile-content__body">{visible.about.body}</p>{/if}
       </div>
     {/if}
@@ -24,7 +26,7 @@
         <p class="profile-content__eyebrow" id="profile-content-projects-heading">Projects</p>
         <div class="profile-content__project-list">
           {#each visible.projects as project (project.order)}
-            <a class="profile-content__project" href={project.url} target="_blank" rel="noopener noreferrer">
+            <a class="profile-content__project" href={project.url} target="_blank" rel="noopener noreferrer" on:click={() => onEntryClick(project.key || `project-${project.order}`)}>
               <span>
                 <strong>{project.title}</strong>
                 {#if project.description}<span>{project.description}</span>{/if}

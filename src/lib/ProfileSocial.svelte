@@ -37,16 +37,29 @@
   let notice = '';
   let reportOpen = false;
   let reportEntryKey = null;
+  let reportReplyKey = null;
   let reportReason = 'spam';
   let reportDetails = '';
   let reportLoading = false;
   let settingsLoading = false;
   let settingsDraft = createDefaultProfileSocialSettings();
+  let guestbookSort = 'newest';
+  let sortLoading = false;
+  let replyBodies = {};
 
   $: socialView = normalizeProfileSocial(social);
   $: settingsDraft = normalizeProfileSocialSettings(settings);
   $: canInteract = Boolean(isAuthenticated && !isOwnProfile && !socialView.blocked && socialView.interactionsEnabled);
   $: canWriteGuestbook = Boolean(canInteract && socialView.guestbookEnabled);
+  $: canReplyGuestbook = Boolean(isAuthenticated && !socialView.blocked && socialView.guestbookEnabled && (isOwnProfile || socialView.interactionsEnabled));
+  $: canLikeGuestbook = Boolean(isAuthenticated && !socialView.blocked && (isOwnProfile || socialView.interactionsEnabled));
+  $: sortedGuestbook = [...socialView.guestbook].sort((left, right) => {
+    if (left.isPinned !== right.isPinned) return left.isPinned ? -1 : 1;
+    if (guestbookSort === 'popular' && right.likeCount !== left.likeCount) return right.likeCount - left.likeCount;
+    const leftTime = Date.parse(left.createdAt || '') || 0;
+    const rightTime = Date.parse(right.createdAt || '') || 0;
+    return guestbookSort === 'oldest' ? leftTime - rightTime : rightTime - leftTime;
+  });
 
   function setNotice(message) {
     notice = message;
@@ -120,6 +133,62 @@
     );
   }
 
+  async function createReply(entryKey) {
+    if (!canReplyGuestbook || !entryKey || actionLoading) return;
+    const body = String(replyBodies[entryKey] || '').trim();
+    if (!body || body.length > 240) {
+      addToast('Replies are limited to 240 characters and cannot be empty.', 'error');
+      return;
+    }
+    const succeeded = await runAction(
+      'reply:' + entryKey,
+      'create_profile_guestbook_reply',
+      { p_entry_key: entryKey, p_body: body },
+      'Reply added to the guestbook.'
+    );
+    if (succeeded) replyBodies = { ...replyBodies, [entryKey]: '' };
+  }
+
+  async function deleteReply(replyKey) {
+    if (!replyKey || actionLoading) return;
+    await runAction(
+      'delete-reply:' + replyKey,
+      'delete_profile_guestbook_reply',
+      { p_reply_key: replyKey },
+      'Guestbook reply removed.'
+    );
+  }
+
+  async function toggleEntryLike(entryKey) {
+    if (!canLikeGuestbook || !entryKey || actionLoading) return;
+    await runAction(
+      'like:' + entryKey,
+      'toggle_profile_guestbook_like',
+      { p_entry_key: entryKey },
+      'Guestbook reaction updated.'
+    );
+  }
+
+  async function toggleEntryPin(entryKey) {
+    if (!isOwnProfile || !entryKey || actionLoading) return;
+    await runAction(
+      'pin:' + entryKey,
+      'toggle_profile_guestbook_pin',
+      { p_entry_key: entryKey },
+      'Guestbook pin updated.'
+    );
+  }
+
+  async function chooseGuestbookSort(event) {
+    const nextSort = ['newest', 'oldest', 'popular'].includes(event.currentTarget.value) ? event.currentTarget.value : 'newest';
+    guestbookSort = nextSort;
+    if (!profileId || sortLoading) return;
+    sortLoading = true;
+    const result = await invokeProfileSocialRpc(supabase, 'get_public_profile_social', { p_user_id: profileId, p_sort: nextSort });
+    sortLoading = false;
+    if (!result.error && result.data?.success !== false) social = result.data;
+  }
+
   async function toggleBlock() {
     if (!profileId || !isAuthenticated || isOwnProfile) return;
     await runAction(
@@ -130,8 +199,9 @@
     );
   }
 
-  function openReport(entryKey = null) {
+  function openReport(entryKey = null, replyKey = null) {
     reportEntryKey = entryKey;
+    reportReplyKey = replyKey;
     reportReason = 'spam';
     reportDetails = '';
     reportOpen = true;
@@ -143,6 +213,7 @@
     const result = await invokeProfileSocialRpc(supabase, 'report_profile_social_content', {
       p_target_profile_id: profileId,
       p_entry_key: reportEntryKey,
+      p_reply_key: reportReplyKey,
       p_reason: reportReason,
       p_details: reportDetails.trim()
     });
@@ -152,6 +223,8 @@
       return;
     }
     reportOpen = false;
+    reportEntryKey = null;
+    reportReplyKey = null;
     setNotice(result.data?.action === 'already_reported' ? 'That report is already recorded.' : 'Thanks. The report was recorded for review.');
   }
 
@@ -242,24 +315,52 @@
             {/each}
           </div>
         </div>
+
+        {#if socialView.profileViewsVisible && socialView.publicViewCount > 0}
+          <div class="profile-social__view-count" aria-label="Public profile views">
+            <strong>{socialView.publicViewCount.toLocaleString()}</strong>
+            <span>aggregate public views</span>
+          </div>
+        {/if}
       </div>
 
       <div class="profile-social__guestbook">
         <div class="profile-social__subheading">
-          <strong>Guestbook</strong>
-          <span>{socialView.guestbook.length} visible note{socialView.guestbook.length === 1 ? '' : 's'}</span>
+          <div>
+            <strong>Guestbook</strong>
+            <span>{socialView.guestbook.length} visible note{socialView.guestbook.length === 1 ? '' : 's'}</span>
+          </div>
+          {#if socialView.guestbook.length > 1}
+            <label class="profile-social__sort">Sort
+              <select value={guestbookSort} aria-label="Sort guestbook notes" disabled={sortLoading} on:change={chooseGuestbookSort}>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="popular">Popular</option>
+              </select>
+            </label>
+          {/if}
         </div>
 
         {#if socialView.guestbook.length}
           <div class="profile-social__entries">
-            {#each socialView.guestbook as entry (entry.entryKey)}
+            {#each sortedGuestbook as entry (entry.entryKey)}
               <article class="profile-social__entry">
                 <div class="profile-social__entry-meta">
-                  <strong>{entry.author}</strong>
+                  <div><strong>{entry.author}</strong>{#if entry.isPinned}<span class="profile-social__pin-label">Pinned</span>{/if}</div>
                   {#if entry.createdAt}<time datetime={entry.createdAt}>{formatDate(entry.createdAt)}</time>{/if}
                 </div>
                 <p>{entry.body}</p>
                 <div class="profile-social__entry-actions">
+                  {#if canLikeGuestbook}
+                    <button type="button" class="profile-social__text-button" class:active={entry.viewerLiked} disabled={actionLoading === 'like:' + entry.entryKey} on:click={() => toggleEntryLike(entry.entryKey)} aria-pressed={entry.viewerLiked}>
+                      {entry.viewerLiked ? 'Liked' : 'Like'}{#if socialView.socialSummaryVisible && entry.likeCount > 0} · {entry.likeCount}{/if}
+                    </button>
+                  {:else if socialView.socialSummaryVisible && entry.likeCount > 0}
+                    <span class="profile-social__like-count">{entry.likeCount} like{entry.likeCount === 1 ? '' : 's'}</span>
+                  {/if}
+                  {#if isOwnProfile}
+                    <button type="button" class="profile-social__text-button" disabled={actionLoading === 'pin:' + entry.entryKey} on:click={() => toggleEntryPin(entry.entryKey)}>{entry.isPinned ? 'Unpin' : 'Pin'}</button>
+                  {/if}
                   {#if entry.canDelete}
                     <button type="button" class="profile-social__text-button" disabled={actionLoading === 'delete:' + entry.entryKey} on:click={() => deleteEntry(entry.entryKey)}>Delete</button>
                   {/if}
@@ -267,6 +368,27 @@
                     <button type="button" class="profile-social__text-button" on:click={() => openReport(entry.entryKey)}>Report</button>
                   {/if}
                 </div>
+                {#if entry.replies.length}
+                  <div class="profile-social__replies" aria-label="Replies to this note">
+                    {#each entry.replies as reply (reply.replyKey)}
+                      <div class="profile-social__reply">
+                        <div class="profile-social__entry-meta"><strong>{reply.author}</strong>{#if reply.createdAt}<time datetime={reply.createdAt}>{formatDate(reply.createdAt)}</time>{/if}</div>
+                        <p>{reply.body}</p>
+                        <div class="profile-social__entry-actions">
+                          {#if reply.canDelete}<button type="button" class="profile-social__text-button" disabled={actionLoading === 'delete-reply:' + reply.replyKey} on:click={() => deleteReply(reply.replyKey)}>Delete</button>{/if}
+                          {#if isAuthenticated && !isOwnProfile}<button type="button" class="profile-social__text-button" on:click={() => openReport(entry.entryKey, reply.replyKey)}>Report</button>{/if}
+                        </div>
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
+                {#if canReplyGuestbook}
+                  <form class="profile-social__reply-form" on:submit|preventDefault={() => createReply(entry.entryKey)}>
+                    <label class="sr-only" for={'profile-reply-' + entry.entryKey}>Reply to {entry.author}</label>
+                    <input id={'profile-reply-' + entry.entryKey} maxlength="240" value={replyBodies[entry.entryKey] || ''} placeholder="Reply in one short line…" on:input={(event) => replyBodies = { ...replyBodies, [entry.entryKey]: event.currentTarget.value }} />
+                    <button type="submit" class="profile-social__text-button" disabled={actionLoading === 'reply:' + entry.entryKey}>Reply</button>
+                  </form>
+                {/if}
               </article>
             {/each}
           </div>
@@ -311,7 +433,7 @@
     {#if reportOpen && isAuthenticated && !isOwnProfile}
       <form class="profile-social__report" on:submit|preventDefault={submitReport}>
         <div class="profile-social__subheading">
-          <strong>{reportEntryKey ? 'Report this guestbook note' : 'Report this profile'}</strong>
+          <strong>{reportReplyKey ? 'Report this guestbook reply' : reportEntryKey ? 'Report this guestbook note' : 'Report this profile'}</strong>
           <span>Only moderation staff can see report details.</span>
         </div>
         <label for="profile-report-reason">Reason</label>
@@ -367,6 +489,9 @@
   .profile-social__helper,
   .profile-social__empty { color: var(--color-ink-muted); font-size: var(--type-small); line-height: var(--type-line-body); }
   .profile-social__owner-note { white-space: nowrap; }
+  .profile-social__view-count { display: flex; align-items: baseline; gap: .5rem; padding: .65rem .8rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-panel-soft); }
+  .profile-social__view-count strong { color: var(--color-ink-strong); font: 600 var(--type-h2) / 1 var(--font-display-stack); }
+  .profile-social__view-count span { color: var(--color-ink-muted); font-size: var(--type-label); }
   .profile-social__button { min-height: 2.4rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 60%, transparent); border-radius: var(--radius-pill); padding: 0 var(--space-4); background: color-mix(in srgb, var(--profile-accent) 18%, transparent); color: var(--color-ink-strong); font: 700 var(--type-label) / 1 var(--font-body-stack); cursor: pointer; transition: background-color var(--motion-base) var(--motion-ease-standard), transform var(--motion-fast) var(--motion-ease-standard); }
   .profile-social__button:hover:not(:disabled) { transform: translateY(-1px); background: color-mix(in srgb, var(--profile-accent) 32%, transparent); }
   .profile-social__button:disabled { cursor: wait; opacity: 0.55; }
@@ -390,10 +515,14 @@
   .profile-social__form-row,
   .profile-social__safety-actions { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
   .profile-social__entry-meta strong { color: var(--color-ink-strong); font-size: var(--type-small); }
+  .profile-social__entry-meta > div { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
+  .profile-social__pin-label { color: var(--profile-accent); font: 700 var(--type-label) / 1 var(--font-mono-stack); letter-spacing: .08em; text-transform: uppercase; }
   .profile-social__entry-meta time { color: var(--color-ink-muted); font: 600 var(--type-label) / 1 var(--font-mono-stack); }
   .profile-social__entry p { margin: 0; color: var(--color-ink); line-height: var(--type-line-body); overflow-wrap: anywhere; white-space: pre-wrap; }
   .profile-social__text-button { border: 0; padding: 0; background: transparent; color: var(--color-ink-muted); font: 700 var(--type-label) / 1.2 var(--font-body-stack); cursor: pointer; }
   .profile-social__text-button:hover:not(:disabled) { color: var(--color-ink-strong); text-decoration: underline; text-underline-offset: 0.2em; }
+  .profile-social__text-button.active,
+  .profile-social__like-count { color: var(--profile-accent); }
   .profile-social__text-button:disabled { cursor: wait; opacity: 0.55; }
   .profile-social__form,
   .profile-social__report { display: grid; gap: var(--space-3); }
@@ -409,6 +538,15 @@
   .profile-social input:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
   .profile-social__form-row { color: var(--color-ink-muted); font: 600 var(--type-label) / 1.2 var(--font-mono-stack); }
   .profile-social__form-row .profile-social__button { font-family: var(--font-body-stack); }
+  .profile-social__sort { display: flex; align-items: center; gap: .5rem; color: var(--color-ink-muted); font: 600 var(--type-label) / 1.2 var(--font-body-stack); }
+  .profile-social__sort select { width: auto; min-width: 7rem; padding: .45rem .6rem; }
+  .profile-social__replies { display: grid; gap: .55rem; margin: .35rem 0 0 .8rem; padding-left: .8rem; border-left: 1px solid color-mix(in srgb, var(--profile-accent) 28%, transparent); }
+  .profile-social__reply { display: grid; gap: .25rem; padding: .55rem .65rem; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-panel-soft) 72%, transparent); }
+  .profile-social__reply p { font-size: var(--type-small); }
+  .profile-social__reply-form { display: flex; align-items: center; gap: .55rem; margin-top: .2rem; }
+  .profile-social__reply-form input { min-width: 0; flex: 1; border: 1px solid var(--color-line-strong); border-radius: var(--radius-sm); padding: .55rem .65rem; background: var(--color-canvas-deep); color: var(--color-ink-strong); font: 500 var(--type-small) / 1.3 var(--font-body-stack); }
+  .profile-social__reply-form input:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .profile-social__safety { align-items: flex-start; }
   .profile-social__safety-actions { flex-wrap: wrap; justify-content: flex-end; }
   .profile-social__blocked { display: grid; gap: var(--space-3); padding: var(--space-5); border: 1px solid color-mix(in srgb, var(--color-warning) 42%, transparent); border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-warning) 8%, transparent); }
@@ -431,6 +569,9 @@
     .profile-social__safety { align-items: flex-start; flex-direction: column; }
     .profile-social__safety-actions { justify-content: flex-start; }
     .profile-social__form-row { align-items: flex-start; flex-direction: column; }
+    .profile-social__subheading { align-items: flex-start; }
+    .profile-social__sort { align-self: stretch; justify-content: space-between; }
+    .profile-social__sort select { flex: 1; }
   }
   @media (prefers-reduced-motion: reduce) {
     .profile-social__button { transition: none; }

@@ -1,5 +1,7 @@
 <script>
   export let ast = [];
+  /** @type {(entryKey: string) => void} */
+  export let onLinkClick = () => {};
 
   function safeNodes(value) {
     return Array.isArray(value) ? value : [];
@@ -14,13 +16,13 @@
           {#if node?.type === 'strong'}<strong>{node.children?.[0]?.value || ''}</strong>
           {:else if node?.type === 'emphasis'}<em>{node.children?.[0]?.value || ''}</em>
           {:else if node?.type === 'code'}<code>{node.value || ''}</code>
-          {:else if node?.type === 'link'}<a href={node.url} target="_blank" rel="noopener noreferrer">{node.label || node.url}</a>
+          {:else if node?.type === 'link'}<a href={node.url} target="_blank" rel="noopener noreferrer" on:click={() => onLinkClick('about')}>{node.label || node.url}</a>
           {:else}{node?.value || ''}{/if}
         {/each}
       </p>
     {:else if block?.type === 'list'}
-      {#if block.ordered}<ol>{#each safeNodes(block.items) as item, itemIndex (`item-${itemIndex}`)}<li>{#each safeNodes(item.children) as node, nodeIndex (`item-${itemIndex}-${nodeIndex}`)}{#if node?.type === 'strong'}<strong>{node.children?.[0]?.value || ''}</strong>{:else if node?.type === 'emphasis'}<em>{node.children?.[0]?.value || ''}</em>{:else if node?.type === 'code'}<code>{node.value || ''}</code>{:else if node?.type === 'link'}<a href={node.url} target="_blank" rel="noopener noreferrer">{node.label || node.url}</a>{:else}{node?.value || ''}{/if}{/each}</li>{/each}</ol>
-      {:else}<ul>{#each safeNodes(block.items) as item, itemIndex (`item-${itemIndex}`)}<li>{#each safeNodes(item.children) as node, nodeIndex (`item-${itemIndex}-${nodeIndex}`)}{#if node?.type === 'strong'}<strong>{node.children?.[0]?.value || ''}</strong>{:else if node?.type === 'emphasis'}<em>{node.children?.[0]?.value || ''}</em>{:else if node?.type === 'code'}<code>{node.value || ''}</code>{:else if node?.type === 'link'}<a href={node.url} target="_blank" rel="noopener noreferrer">{node.label || node.url}</a>{:else}{node?.value || ''}{/if}{/each}</li>{/each}</ul>{/if}
+      {#if block.ordered}<ol>{#each safeNodes(block.items) as item, itemIndex (`item-${itemIndex}`)}<li>{#each safeNodes(item.children) as node, nodeIndex (`item-${itemIndex}-${nodeIndex}`)}{#if node?.type === 'strong'}<strong>{node.children?.[0]?.value || ''}</strong>{:else if node?.type === 'emphasis'}<em>{node.children?.[0]?.value || ''}</em>{:else if node?.type === 'code'}<code>{node.value || ''}</code>{:else if node?.type === 'link'}<a href={node.url} target="_blank" rel="noopener noreferrer" on:click={() => onLinkClick('about')}>{node.label || node.url}</a>{:else}{node?.value || ''}{/if}{/each}</li>{/each}</ol>
+      {:else}<ul>{#each safeNodes(block.items) as item, itemIndex (`item-${itemIndex}`)}<li>{#each safeNodes(item.children) as node, nodeIndex (`item-${itemIndex}-${nodeIndex}`)}{#if node?.type === 'strong'}<strong>{node.children?.[0]?.value || ''}</strong>{:else if node?.type === 'emphasis'}<em>{node.children?.[0]?.value || ''}</em>{:else if node?.type === 'code'}<code>{node.value || ''}</code>{:else if node?.type === 'link'}<a href={node.url} target="_blank" rel="noopener noreferrer" on:click={() => onLinkClick('about')}>{node.label || node.url}</a>{:else}{node?.value || ''}{/if}{/each}</li>{/each}</ul>{/if}
     {:else if block?.type === 'code'}
       <pre><code>{block.value || ''}</code></pre>
     {/if}

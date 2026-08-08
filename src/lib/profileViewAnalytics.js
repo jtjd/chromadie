@@ -1,4 +1,5 @@
 import { getProductAnalyticsConsent } from './productAnalytics.js';
+import { recordProfileInsightEvent } from './profileInsightAnalytics.js';
 
 export const PROFILE_VIEW_RECENCY_KEY = 'chromadie-profile-view-recency-v1';
 const MAX_RECENCY_ENTRIES = 100;
@@ -40,15 +41,27 @@ function writeRecency(storage, entries) {
   }
 }
 
-export async function recordPublicProfileView(client, profileUsername, { storage = getStorage(), now = new Date() } = {}) {
+/** @param {{storage?: Storage|null, now?: Date|string, edge?: boolean, fetcher?: Function|null}} options */
+export async function recordPublicProfileView(client, profileUsername, options = {}) {
+  const { storage = getStorage(), now = new Date(), edge = false, fetcher } = options;
   const username = normalizeProfileViewUsername(profileUsername);
   if (!username) return { accepted: false, recorded: false, reason: 'invalid_profile' };
+  if (edge) {
+    const edgeResult = await recordProfileInsightEvent({
+      profileUsername: username,
+      metric: 'view',
+      storage,
+      now,
+      fetcher
+    });
+    if (edgeResult.recorded || !['edge_unavailable', 'not_recorded'].includes(edgeResult.reason)) return edgeResult;
+  }
   if (getProductAnalyticsConsent() !== 'granted') {
     return { accepted: false, recorded: false, reason: 'consent_required' };
   }
   if (!storage) return { accepted: false, recorded: false, reason: 'storage_unavailable' };
 
-  const dateKey = getProfileViewDateKey(now);
+  const dateKey = getProfileViewDateKey(new Date(now));
   if (!dateKey) return { accepted: false, recorded: false, reason: 'invalid_date' };
   const recencyKey = `${dateKey}:${username}`;
   const recency = readRecency(storage);

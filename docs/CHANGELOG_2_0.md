@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Add privacy-safe insights and deeper guestbooks
+
+- Profile Studio now offers private 7/30/90-day views, exploration clicks,
+  device/country/referrer summaries, comparisons, and a downloadable CSV when
+  the owner enables aggregate insights.
+- Visitors must opt in before a view is counted. Only bounded daily totals are
+  retained, and owners can independently hide the aggregate public view count.
+- Guestbooks now support one-level replies, positive likes, newest/oldest/
+  popular sorting, up to three owner pins, deletion, and reply reporting.
+- Owners receive a private grouped inbox for favorites, reactions, guestbook
+  activity, and earned reward events. Private messaging and email notifications
+  are not part of this release.
+
 ## 2026-08-08 — Expand identity, content, providers, and sharing
 
 - Profile Studio now supports optional location, timezone, join-month display,

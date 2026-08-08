@@ -10,6 +10,8 @@
   export let widgets = [];
   export let deferMedia = false;
   export let compact = false;
+  /** @type {(entryKey: string) => void} */
+  export let onEntryClick = () => {};
 
   let loaded = [];
   let failed = [];
@@ -48,7 +50,7 @@
           <span class="profile-widget__type">{widget.type}</span>
         </div>
         {#if widgetKind === 'card'}
-          <a class="profile-widget__provider-card" href={profileWidgetUrl(widget.provider, widget.type, widget.id)} target="_blank" rel="noopener noreferrer">
+          <a class="profile-widget__provider-card" href={profileWidgetUrl(widget.provider, widget.type, widget.id)} target="_blank" rel="noopener noreferrer" on:click={() => onEntryClick(`widget-${widget.provider}`)}>
             <span class="profile-widget__mark" aria-hidden="true">{widget.provider === 'discord' ? '◈' : '↗'}</span>
             <span class="profile-widget__copy"><strong>{label} {widget.type}</strong><span>Open this public {label} profile in a new tab.</span></span>
             <span aria-hidden="true">↗</span>

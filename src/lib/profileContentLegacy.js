@@ -35,11 +35,21 @@ function safeUrl(value) {
   return !url || HTTPS_URL_PATTERN.test(url) ? url : '';
 }
 
+function stableProjectKey(value, fallbackOrder) {
+  const candidate = String(value?.key || '').trim().toLowerCase();
+  if (/^[a-z0-9][a-z0-9_-]{0,31}$/.test(candidate)) return candidate;
+  const text = `${value?.title || ''}|${value?.url || ''}|${fallbackOrder}`;
+  let hash = 2166136261;
+  for (const character of text) hash = Math.imul(hash ^ character.codePointAt(0), 16777619);
+  return `p${(hash >>> 0).toString(36)}`;
+}
+
 /** @param {any} value @param {number} fallbackOrder @param {number} [maximumProjects] */
 function normalizeProject(value, fallbackOrder, maximumProjects = PROFILE_CONTENT_LIMITS.projects) {
   const input = value && typeof value === 'object' ? value : {};
   const order = Number.isInteger(Number(input.order)) ? Number(input.order) : fallbackOrder;
   return {
+    key: stableProjectKey(input, fallbackOrder),
     title: safeText(input.title, PROFILE_CONTENT_LIMITS.projectTitle),
     description: safeText(input.description, PROFILE_CONTENT_LIMITS.projectDescription),
     url: safeUrl(input.url),

@@ -1,5 +1,22 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Keep detailed insights aggregate and social depth one-level
+
+Milestone 12 extends the existing consent-based daily profile view counter
+with bounded view/click dimensions rather than storing event rows. The edge
+derives only device class, country code, and normalized referrer hostname;
+owner reads receive 7/30/90-day summaries and CSV export through an
+authenticated RPC. A separate owner preference controls whether an aggregate
+view count is shown publicly. Analytics are never used for discovery, rank,
+rewards, or badges.
+
+Guestbook replies are intentionally one level, plain text, and rate-limited.
+Likes, up to three owner pins, sorting, deletion, and reply-aware reporting
+add expression and community context without opening private messaging.
+Notifications are service-owned, owner-only, grouped within a bounded window,
+and limited to social/reward signals. Browser roles cannot read or write the
+new tables directly.
+
 ## 2026-08-08 — Make Stripe webhooks the sole commerce entitlement authority
 
 Chromadie Plus is a fixed $7.99 USD lifetime profile-expression purchase. The

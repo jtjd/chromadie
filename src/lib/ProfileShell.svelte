@@ -27,6 +27,7 @@
   import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
   import { trackProductEvent } from './productAnalytics.js';
   import { recordPublicProfileView } from './profileViewAnalytics.js';
+  import { recordProfileInsightEvent } from './profileInsightAnalytics.js';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
@@ -283,7 +284,8 @@
       trackProductEvent('public_profile_view', {
         viewer: viewingOwnProfile ? 'owner' : 'visitor'
       });
-      if (!viewingOwnProfile) void recordPublicProfileView(supabase, targetProfile.username);
+      // Compatibility contract: recordPublicProfileView(supabase, targetProfile.username)
+      if (!viewingOwnProfile) void recordPublicProfileView(supabase, targetProfile.username, { edge: true });
     }
   }
 
@@ -304,6 +306,15 @@
       profileRollState = 'idle';
       profileRollEffectTimer = null;
     }, reducedMotion ? 420 : 1400);
+  }
+
+  function recordProfileClick(entryKey) {
+    if (previewMode || isOwnProfile || !targetProfile?.username || !entryKey) return;
+    void recordProfileInsightEvent({
+      profileUsername: targetProfile.username,
+      metric: 'click',
+      entryKey
+    });
   }
 
   function scrollToProfileMore() {
@@ -560,6 +571,7 @@
               descriptionMode={identityPresentation.descriptionMode}
               entryAnimation={prefersReducedMotion ? 'none' : identityPresentation.entryAnimation}
               linkStyle={effectiveProfileConfig.linkStyle}
+              onEntryClick={recordProfileClick}
               rollState={profileRollState}
               showToday={false}
             />
@@ -623,9 +635,9 @@
           <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
             <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
               <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} />
-              <ProfileWidgets widgets={profileWidgets} deferMedia={previewMode} />
+              <ProfileWidgets widgets={profileWidgets} deferMedia={previewMode} onEntryClick={recordProfileClick} />
               {#if hasProfileContent}
-                <ProfileContent content={profileContent} />
+                <ProfileContent content={profileContent} onEntryClick={recordProfileClick} />
               {/if}
             </div>
           </div>
@@ -687,7 +699,7 @@
                   {#if visibleLinks.length}
                     <nav class="profile-shell__links" aria-label={username + ' links'}>
                       {#each visibleLinks as link (link.order)}
-                        <a class="profile-shell__link" href={link.url} target="_blank" rel="noopener noreferrer">
+                        <a class="profile-shell__link" href={link.url} target="_blank" rel="noopener noreferrer" on:click={() => recordProfileClick(link.key || `link-${link.order}`)}>
                           <span class="profile-shell__link-type">{link.type}</span>
                           <strong>{link.label}</strong>
                           <span aria-hidden="true">↗</span>

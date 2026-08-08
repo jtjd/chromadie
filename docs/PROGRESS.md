@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Competitor parity Milestone 12 implemented — 2026-08-08
+
+- Added privacy-safe dimensional profile insights for views, stable link and
+  project clicks, device class, country, and normalized referrer host, with
+  consent, owner opt-in, 90-day retention, 7/30/90 comparisons, top-entry
+  summaries, and CSV export.
+- Added independent public view-count visibility, edge-derived dimensions, and
+  a same-origin analytics function without viewer identity, IP, raw user agent,
+  exact timestamp, or complete referrer storage.
+- Added one-level guestbook replies, positive likes, popular/oldest/newest
+  sorting, three-note owner pins, deletion, reply reporting, and grouped
+  owner-only notifications for social and authoritative reward events.
+- Added additive migration, source/unit coverage, RLS/RPC security assertions,
+  local schema reset, and database-security validation. Full repository
+  validation remains the milestone completion gate.
+
 ## Competitor parity Milestone 11 implemented — 2026-08-08
 
 - Added the additive `ProfileConfigurationV2` envelope with V1-readable

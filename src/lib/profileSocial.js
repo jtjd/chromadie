@@ -15,6 +15,8 @@ export function createEmptyProfileSocial() {
     guestbookEnabled: true,
     activityVisible: true,
     socialSummaryVisible: true,
+    profileViewsVisible: true,
+    publicViewCount: 0,
     favoriteCount: 0,
     reactionCounts: { spark: 0, glow: 0, cheer: 0 },
     viewerFavorited: false,
@@ -29,7 +31,8 @@ export function createDefaultProfileSocialSettings() {
     guestbookEnabled: true,
     activityVisible: true,
     discoverable: true,
-    socialSummaryVisible: true
+    socialSummaryVisible: true,
+    profileViewsVisible: true
   };
 }
 
@@ -53,7 +56,29 @@ function normalizeEntry(entry) {
     author: author.slice(0, 20),
     body,
     createdAt: entry.createdAt || null,
-    canDelete: entry.canDelete === true
+    canDelete: entry.canDelete === true,
+    isPinned: entry.isPinned === true,
+    likeCount: safeCount(entry.likeCount),
+    viewerLiked: entry.viewerLiked === true,
+    replies: (Array.isArray(entry.replies) ? entry.replies : [])
+      .map(normalizeReply)
+      .filter(Boolean)
+      .slice(0, 5)
+  };
+}
+
+function normalizeReply(reply) {
+  if (!reply || typeof reply !== 'object') return null;
+  const replyKey = String(reply.replyKey || '');
+  const author = String(reply.author || '').trim();
+  const body = String(reply.body || '').trim();
+  if (!UUID_PATTERN.test(replyKey) || !author || !body || body.length > 240) return null;
+  return {
+    replyKey,
+    author: author.slice(0, 20),
+    body,
+    createdAt: reply.createdAt || null,
+    canDelete: reply.canDelete === true
   };
 }
 
@@ -73,6 +98,8 @@ export function normalizeProfileSocial(value) {
     guestbookEnabled: safeBoolean(source.guestbookEnabled, true),
     activityVisible: safeBoolean(source.activityVisible, true),
     socialSummaryVisible: safeBoolean(source.socialSummaryVisible, true),
+    profileViewsVisible: safeBoolean(source.profileViewsVisible, true),
+    publicViewCount: safeCount(source.publicViewCount),
     favoriteCount: safeCount(source.favoriteCount),
     reactionCounts: {
       spark: safeCount(counts.spark),
@@ -99,7 +126,8 @@ export function normalizeProfileSocialSettings(value) {
     guestbookEnabled: safeBoolean(source.guestbookEnabled, true),
     activityVisible: safeBoolean(source.activityVisible, true),
     discoverable: safeBoolean(source.discoverable, true),
-    socialSummaryVisible: safeBoolean(source.socialSummaryVisible, true)
+    socialSummaryVisible: safeBoolean(source.socialSummaryVisible, true),
+    profileViewsVisible: safeBoolean(source.profileViewsVisible, true)
   };
 }
 

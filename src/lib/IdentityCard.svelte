@@ -40,6 +40,8 @@
   export let descriptionMode = 'plain';
   export let entryAnimation = 'none';
   export let linkStyle = null;
+  /** @type {(entryKey: string) => void} */
+  export let onEntryClick = () => {};
 
   let failedAvatarSource = '';
 
@@ -135,7 +137,7 @@
   {#if displayedLinks.length}
     <nav class="identity-card__links" aria-label={safeDisplayName + ' social links'}>
       {#each displayedLinks as link (link.order)}
-        <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')}>
+        <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
           <span class="identity-card__link-glyph" aria-hidden="true"><img src={linkIconSource(link)} alt="" loading="lazy" /></span>
           <strong>{link.label}</strong>
         </a>

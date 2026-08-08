@@ -214,6 +214,57 @@ SELECT pg_temp.audit_assert(
   'profile insights SECURITY DEFINER functions must have a fixed search_path'
 );
 SELECT pg_temp.audit_assert(
+  (SELECT bool_and(relrowsecurity)
+   FROM pg_class
+   WHERE oid IN (
+     'public.profile_insight_daily'::regclass,
+     'public.profile_guestbook_replies'::regclass,
+     'public.profile_guestbook_likes'::regclass,
+     'public.profile_guestbook_pins'::regclass,
+     'public.profile_notifications'::regclass
+   ))
+    AND NOT has_table_privilege('anon', 'public.profile_insight_daily', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_insight_daily', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_guestbook_replies', 'INSERT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_guestbook_likes', 'INSERT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_guestbook_pins', 'INSERT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_notifications', 'SELECT'),
+  'Milestone 12 aggregate and social-depth tables must remain RLS-protected and RPC-only'
+);
+SELECT pg_temp.audit_assert(
+  has_function_privilege('anon', 'public.record_profile_insight(text,text,text,text,text,text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.record_profile_insight(text,text,text,text,text,text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.update_my_profile_view_visibility(boolean)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.get_my_profile_notifications(integer)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.mark_my_profile_notifications_read(uuid[])', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.create_profile_guestbook_reply(uuid,text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.delete_profile_guestbook_reply(uuid)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.toggle_profile_guestbook_like(uuid)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.toggle_profile_guestbook_pin(uuid)', 'EXECUTE')
+    AND has_function_privilege('anon', 'public.get_public_profile_social(uuid,text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.report_profile_social_content(uuid,uuid,uuid,text,text)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.get_my_profile_notifications(integer)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.update_my_profile_view_visibility(boolean)', 'EXECUTE'),
+  'Milestone 12 RPCs must expose recording/public reads separately from owner actions'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT bool_and(p.proconfig @> ARRAY['search_path=public'])
+   FROM pg_proc p
+   WHERE p.oid IN (
+     'public.record_profile_insight(text,text,text,text,text,text)'::regprocedure,
+     'public.update_my_profile_view_visibility(boolean)'::regprocedure,
+     'public.get_my_profile_notifications(integer)'::regprocedure,
+     'public.mark_my_profile_notifications_read(uuid[])'::regprocedure,
+     'public.create_profile_guestbook_reply(uuid,text)'::regprocedure,
+     'public.delete_profile_guestbook_reply(uuid)'::regprocedure,
+     'public.toggle_profile_guestbook_like(uuid)'::regprocedure,
+     'public.toggle_profile_guestbook_pin(uuid)'::regprocedure,
+     'public.get_public_profile_social(uuid,text)'::regprocedure,
+     'public.report_profile_social_content(uuid,uuid,uuid,text,text)'::regprocedure
+   )),
+  'Milestone 12 SECURITY DEFINER functions must have fixed search paths'
+);
+SELECT pg_temp.audit_assert(
   NOT has_table_privilege('anon', 'public.profile_configurations', 'SELECT')
     AND NOT has_table_privilege('authenticated', 'public.profile_configurations', 'SELECT')
     AND NOT has_table_privilege('authenticated', 'public.profile_configurations', 'INSERT')

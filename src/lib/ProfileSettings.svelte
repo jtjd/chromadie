@@ -25,12 +25,14 @@
     'profile-layout': () => import('./ProfileEditor.svelte'),
     'profile-social': () => import('./ProfileSocial.svelte'),
     'profile-insights': () => import('./ProfileInsights.svelte'),
+    'profile-notifications': () => import('./ProfileNotifications.svelte'),
     progression: () => import('./ProfileProgression.svelte')
   });
 
   const SETTINGS_SECTIONS = Object.freeze([
     { id: 'overview', label: 'Overview', groupKey: 'top', icon: '⌂' },
     { id: 'profile-insights', label: 'Insights', groupKey: 'top', icon: '◒' },
+    { id: 'profile-notifications', label: 'Notifications', groupKey: 'top', icon: '◌' },
     { id: 'customize', label: 'Customize', groupKey: 'top', icon: '✦' },
     { id: 'profile-identity', label: 'Identity', groupKey: 'profile', groupLabel: 'Profile', icon: '◌' },
     { id: 'profile-aliases', label: 'Aliases', groupKey: 'profile', groupLabel: 'Profile', icon: '↗' },
@@ -55,6 +57,7 @@
     'profile-layout': 'profile-layout',
     'profile-social': 'profile-social',
     'profile-insights': 'profile-insights',
+    'profile-notifications': 'profile-notifications',
     'profile-collection': 'profile-collection',
     identity: 'profile-identity',
     aliases: 'profile-aliases',
@@ -65,6 +68,7 @@
     layout: 'profile-layout',
     social: 'profile-social',
     insights: 'profile-insights',
+    notifications: 'profile-notifications',
     collection: 'profile-collection',
     progression: 'progression',
     account: 'account'
@@ -426,6 +430,8 @@
           {:else if activeSection === 'profile-social'}
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} isAuthenticated={$isAuthenticated} social={context.social} settings={context.socialSettings} on:socialchange={handleSocialChange} />
           {:else if activeSection === 'profile-insights'}
+            <svelte:component this={sectionComponents[activeSection]} configuration={context.profileConfig} socialSettings={context.socialSettings} on:socialchange={handleSocialChange} />
+          {:else if activeSection === 'profile-notifications'}
             <svelte:component this={sectionComponents[activeSection]} />
           {:else if activeSection === 'progression'}
             <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} />
