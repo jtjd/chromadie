@@ -19,4 +19,7 @@ function optimizeCssAssets() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [svelte(), optimizeCssAssets()],
+  build: {
+    manifest: true
+  }
 })

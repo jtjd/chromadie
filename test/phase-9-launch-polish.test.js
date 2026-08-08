@@ -59,15 +59,20 @@ test('public HTML cache controls remain explicit and security headers stay intac
 });
 
 test('performance budget script defines regression limits instead of hiding the bundle warning', () => {
-  assert.match(budgetSource, /initialJavascript: 450 \* 1024/);
+  assert.match(budgetSource, /initialJavascript: 300 \* 1024/);
   assert.match(budgetSource, /lazyJavascript: 100 \* 1024/);
-  assert.match(budgetSource, /totalJavascript: 700 \* 1024/);
-  assert.match(budgetSource, /initialCss: 200 \* 1024/);
+  assert.match(budgetSource, /initialCss: 100 \* 1024/);
   assert.match(budgetSource, /lazyCss: 75 \* 1024/);
-  assert.match(budgetSource, /totalCss: 380 \* 1024/);
   assert.match(budgetSource, /html: 12 \* 1024/);
+  assert.match(budgetSource, /auth: \{ entries: \['src\/lib\/Auth\.svelte'\], javascript: 300 \* 1024, css: 90 \* 1024 \}/);
+  assert.match(budgetSource, /homepage: \{ entries: \['src\/lib\/HomePage\.svelte'\], javascript: 425 \* 1024, css: 130 \* 1024 \}/);
+  assert.match(budgetSource, /publicProfile: \{ entries: \['src\/lib\/ProfileShell\.svelte'\], javascript: 475 \* 1024, css: 200 \* 1024 \}/);
+  assert.match(budgetSource, /javascript: 800 \* 1024/);
+  assert.match(budgetSource, /css: 400 \* 1024/);
   assert.match(budgetSource, /getInitialAssetNames/);
+  assert.match(budgetSource, /summarizeManifestEntries/);
   assert.match(budgetSource, /Largest lazy JavaScript/);
+  assert.match(budgetSource, /Advisory asset catalog/);
   assert.match(budgetSource, /Performance budget/);
   assert.match(budgetSource, /process\.exitCode = 1/);
 });

@@ -5,19 +5,32 @@ import { fileURLToPath } from 'node:url';
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const distRoot = join(projectRoot, 'dist');
 const assetsRoot = join(distRoot, 'assets');
+const manifestPath = join(distRoot, '.vite', 'manifest.json');
 
-// Initial budgets describe what a visitor needs for the first route. Lazy
-// budgets keep any one destination from becoming a second monolith. Total
-// budgets are transitional regression caps for the complete catalog of chunks;
-// they do not replace the initial and per-route checks.
+// Blocking budgets describe payloads a visitor can actually load. Aggregate
+// totals remain advisory catalog-growth signals because mutually exclusive
+// lazy routes are not downloaded together during a normal page visit.
 const budgets = {
-  initialJavascript: 450 * 1024,
+  initialJavascript: 300 * 1024,
   lazyJavascript: 100 * 1024,
-  totalJavascript: 700 * 1024,
-  initialCss: 200 * 1024,
+  initialCss: 100 * 1024,
   lazyCss: 75 * 1024,
-  totalCss: 380 * 1024,
-  html: 12 * 1024
+  html: 12 * 1024,
+  routes: {
+    auth: { entries: ['src/lib/Auth.svelte'], javascript: 300 * 1024, css: 90 * 1024 },
+    homepage: { entries: ['src/lib/HomePage.svelte'], javascript: 425 * 1024, css: 130 * 1024 },
+    publicProfile: { entries: ['src/lib/ProfileShell.svelte'], javascript: 475 * 1024, css: 200 * 1024 },
+    dashboard: {
+      entries: ['src/lib/ProfileSettings.svelte', 'src/lib/ProfileShell.svelte', 'src/lib/ProfileStudioOverview.svelte'],
+      javascript: 525 * 1024,
+      css: 225 * 1024
+    }
+  }
+};
+
+const advisoryCatalogTargets = {
+  javascript: 800 * 1024,
+  css: 400 * 1024
 };
 
 function formatBytes(bytes) {
@@ -58,20 +71,55 @@ function summarize(files, initialNames) {
   return { total, initialTotal, largestLazy, largest };
 }
 
+async function summarizeManifestEntries(manifest, entries) {
+  const visited = new Set();
+  const javascriptFiles = new Set();
+  const cssFiles = new Set();
+
+  function visit(key) {
+    if (visited.has(key)) return;
+    const item = manifest[key];
+    if (!item) throw new Error(`Performance manifest is missing ${key}`);
+    visited.add(key);
+    if (item.file?.endsWith('.js')) javascriptFiles.add(item.file);
+    for (const cssFile of item.css || []) cssFiles.add(cssFile);
+    for (const importedKey of item.imports || []) visit(importedKey);
+  }
+
+  for (const entry of entries) visit(entry);
+  const totalSize = async files => {
+    const sizes = await Promise.all([...files].map(file => stat(join(distRoot, file))));
+    return sizes.reduce((sum, fileStat) => sum + fileStat.size, 0);
+  };
+
+  return {
+    javascript: await totalSize(javascriptFiles),
+    css: await totalSize(cssFiles)
+  };
+}
+
 try {
   const html = await readFile(join(distRoot, 'index.html'), 'utf8');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   const htmlBytes = Buffer.byteLength(html);
   const initialNames = getInitialAssetNames(html);
   const javascript = summarize(await assetsByExtension('.js'), initialNames);
   const css = summarize(await assetsByExtension('.css'), initialNames);
+  const routeSummaries = await Promise.all(Object.entries(budgets.routes).map(async ([name, routeBudget]) => ({
+    name,
+    budget: routeBudget,
+    ...(await summarizeManifestEntries(manifest, routeBudget.entries))
+  })));
   const checks = [
     ['Initial JavaScript', javascript.initialTotal, budgets.initialJavascript],
     ['Largest lazy JavaScript', javascript.largestLazy?.bytes || 0, budgets.lazyJavascript],
-    ['Total JavaScript', javascript.total, budgets.totalJavascript],
     ['Initial CSS', css.initialTotal, budgets.initialCss],
     ['Largest lazy CSS', css.largestLazy?.bytes || 0, budgets.lazyCss],
-    ['Total CSS', css.total, budgets.totalCss],
-    ['HTML shell', htmlBytes, budgets.html]
+    ['HTML shell', htmlBytes, budgets.html],
+    ...routeSummaries.flatMap(route => [
+      [`${route.name} route JavaScript`, route.javascript, route.budget.javascript],
+      [`${route.name} route CSS`, route.css, route.budget.css]
+    ])
   ];
   const failures = checks.filter(([, actual, budget]) => actual > budget);
 
@@ -83,6 +131,17 @@ try {
   if (javascript.largestLazy) console.log(`Largest lazy JavaScript asset: ${javascript.largestLazy.name} (${formatBytes(javascript.largestLazy.bytes)}).`);
   if (css.largest) console.log(`Largest CSS asset: ${css.largest.name} (${formatBytes(css.largest.bytes)}).`);
   if (css.largestLazy) console.log(`Largest lazy CSS asset: ${css.largestLazy.name} (${formatBytes(css.largestLazy.bytes)}).`);
+  const advisoryOverages = [
+    ['JavaScript catalog', javascript.total, advisoryCatalogTargets.javascript],
+    ['CSS catalog', css.total, advisoryCatalogTargets.css]
+  ].filter(([, actual, target]) => actual > target);
+  console.log(
+    `Advisory asset catalog: JavaScript ${formatBytes(javascript.total)}/${formatBytes(advisoryCatalogTargets.javascript)}; `
+      + `CSS ${formatBytes(css.total)}/${formatBytes(advisoryCatalogTargets.css)}.`
+  );
+  if (advisoryOverages.length) {
+    console.warn(`Advisory catalog targets exceeded: ${advisoryOverages.map(([label]) => label).join(', ')}.`);
+  }
 
   if (failures.length) {
     console.error(`Exceeded budgets: ${failures.map(([label]) => label).join(', ')}.`);

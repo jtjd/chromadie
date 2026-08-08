@@ -2,6 +2,34 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Make route payloads the blocking performance policy
+
+Phase 0 replaces the legacy total-generated-JavaScript release blocker with a
+manifest-backed policy that measures what users can load. Hard gates cover the
+initial shell, largest lazy JavaScript and CSS assets, HTML, and the auth,
+homepage, public-profile, and dashboard route dependency closures. The full
+generated catalog remains visible as an advisory 800 kB JavaScript / 400 kB CSS
+growth target.
+
+Adding every mutually exclusive lazy route is useful for repository trend
+tracking but does not represent a browser navigation. This decision supersedes
+the open aggregate-cap condition recorded in the earlier Milestone 0 checkpoint
+without weakening initial-load, route-load, or lazy-asset regression checks.
+
+## 2026-08-08 — Treat short usernames as identity, not premium inventory
+
+Chromadie will allow available one- and two-character usernames through a
+forward-only broadening of the existing server-authoritative username policy.
+Short names retain case-insensitive uniqueness, exact route reservations,
+moderation, canonical root routing, and transactional signup enforcement. They
+are first-claim identity choices and will not be sold, auctioned, or reserved
+for Premium.
+
+The policy migration ships before the standalone signup page so the new form
+does not launch with a client/database length mismatch. Historical migrations
+remain immutable; active constraints and functions are updated through a new
+additive migration with schema, security, policy-drift, and browser coverage.
+
 ## 2026-08-08 — Replace homepage auth overlays with first-class routes
 
 The dashboard-parity plan will replace the homepage authentication popup with

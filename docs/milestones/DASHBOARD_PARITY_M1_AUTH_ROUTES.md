@@ -1,7 +1,9 @@
-# Dashboard Parity Milestone 1 — Standalone Authentication Routes
+# Dashboard Parity Milestone 1B — Standalone Authentication Routes
 
 Status: planned; do not start until Dashboard Parity Milestone 0 is closed or
-its remaining performance gate is explicitly reclassified.
+its remaining performance gate is explicitly reclassified. Ship after
+Milestone 1A so the new signup page supports one- and two-character usernames
+at launch.
 
 ## Goal
 

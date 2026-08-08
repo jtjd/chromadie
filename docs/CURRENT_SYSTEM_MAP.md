@@ -395,7 +395,11 @@ The Phase 1 prototype has a separate Pages Function at `/prototype/profile`. It 
 - Phase 7 social state is split across seven protected tables and one existing follow table. Any new social action must use the RPC boundary, preserve fixed `search_path`, and add authenticated-owner/other/anonymous tests before being exposed in the client.
 - `get_public_profile_social` includes an opaque guestbook entry reference so an author/profile owner can delete or report a note; it must never be changed to expose author ids, reporter ids, report details, moderation status, or email.
 - Block cleanup currently removes reciprocal follows, favorites, and reactions while guestbook rows remain protected and hidden from the blocked projection. Changing that retention choice affects moderation/deletion semantics and needs a separate decision.
-- The Phase 9 performance budget is a regression guard, not a substitute for code-splitting: it currently allows 650 KiB total JavaScript, 300 KiB CSS, and 12 KiB HTML while Vite still reports the existing >500 kB chunk warning. Lowering the budget requires a measured split/optimization milestone.
+- The Phase 0 performance policy uses the Vite manifest to block regressions in
+  initial assets, the largest lazy assets, HTML, and the auth, homepage, public
+  profile, and dashboard route payloads. The complete generated catalog is an
+  advisory 800 kB JavaScript / 400 kB CSS trend because mutually exclusive lazy
+  routes are not one user-facing download.
 - Route focus is intentionally attached to the app content region after programmatic navigation. New overlays must preserve the existing opener/focus restoration contracts and must not steal focus from an active dialog.
 - `Media.svelte` currently has no user-upload or remote-media backend source. Future media/embeds must retain the local/HTTPS allow-list, load-error fallback, intrinsic layout reservation, CSP review, and entitlement/privacy decision; do not broaden it to arbitrary URLs as a convenience.
 - Cloudflare Web Analytics remains a separate shell-level service, while the optional product-event contract is explicit, redacted, and page-local. There is no product-event sink, retention job, or analytics database; a future provider must preserve consent, deletion, retention, and operational ownership boundaries documented in `docs/ANALYTICS_CONTRACT.md`.

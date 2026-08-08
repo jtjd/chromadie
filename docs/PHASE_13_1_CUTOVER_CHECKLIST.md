@@ -18,9 +18,10 @@ email configuration changed.
 - [x] Canonical origin, profile metadata, share helpers, sitemap, robots,
   server-rendered profile pages, and auth URL helpers remain covered by the
   Phase 13 repository contract.
-- [ ] Current performance budgets pass: initial JavaScript <=450 kB, largest
-  lazy JavaScript <=100 kB, total JavaScript <=700 kB, initial CSS <=200 kB,
-  largest lazy CSS <=75 kB, total CSS <=380 kB, and HTML <=12 kB.
+- [x] Current route-first performance policy passes: initial JavaScript <=300
+  kB, largest lazy JavaScript <=100 kB, initial CSS <=100 kB, largest lazy CSS
+  <=75 kB, HTML <=12 kB, and manifest-backed auth/home/profile/dashboard route
+  limits. The complete generated catalog remains an advisory trend.
 - [ ] Fresh full-browser screenshot evidence for every Phase 13.1 state has
   been captured and human-reviewed in this checkout.
 
