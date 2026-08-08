@@ -151,7 +151,7 @@
 <style>
   /* Atmospheres are authored media plates. They add texture without tinting or
    * dimming the user's uploaded background, and never intercept input. */
-  .profile-atmosphere { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; isolation: isolate; background: transparent; }
+  .profile-atmosphere { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; isolation: auto; background: transparent; }
   .profile-atmosphere--compact { opacity: 1; }
   .profile-atmosphere__video { position: absolute; inset: -6%; width: 112%; height: 112%; object-fit: cover; mix-blend-mode: screen; }
   .profile-atmosphere__video--rain { opacity: .5; filter: drop-shadow(0 0 5px var(--atmosphere-color-2)); }

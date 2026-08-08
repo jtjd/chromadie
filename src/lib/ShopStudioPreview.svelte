@@ -179,7 +179,7 @@
       var(--color-canvas-deep);
   }
   .studio-stage.context-profile { min-height: 300px; }
-  .studio-profile-card :global(.studio-atmosphere-layer) { z-index: 0; opacity: .82; }
+  .studio-profile-card :global(.studio-atmosphere-layer) { z-index: 0; opacity: .82; isolation: auto; }
   .studio-profile-card :global(.studio-cursor-layer) { z-index: 3 !important; }
   .studio-stage > :global(.profile-border-effect) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
   .studio-stage > :global(.profile-border-effect) :global(.profile-border-effect__content) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }

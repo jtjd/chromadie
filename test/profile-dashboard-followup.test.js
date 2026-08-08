@@ -113,18 +113,23 @@ test('preview renders bounded media and never exposes mutations', async () => {
 });
 
 test('appearance controls are consumed by the identity card and fitting-room renderer', async () => {
-  const [appearanceStyle, identityCard, preview, editor, shell] = await Promise.all([
+  const [appearanceStyle, identityCard, preview, editor, shell, atmosphere] = await Promise.all([
     read('src/lib/profileAppearanceStyle.js'),
     read('src/lib/IdentityCard.svelte'),
     read('src/lib/ShopStudioPreview.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
-    read('src/lib/ProfileShell.svelte')
+    read('src/lib/ProfileShell.svelte'),
+    read('src/lib/profile-atmosphere/AtmosphereLayer.svelte')
   ]);
   assert.match(appearanceStyle, /function rgbaFromHex/);
   assert.match(appearanceStyle, /--profile-surface-fill:\$\{rgbaFromHex/);
   assert.match(identityCard, /background: var\(--profile-surface-fill/);
   assert.match(identityCard, /backdrop-filter: blur\(var\(--profile-surface-blur/);
   assert.match(shell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
+  assert.match(shell, /profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ position: fixed; inset: 0; z-index: 0; isolation: auto;/);
+  assert.match(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{ isolation: auto;/);
+  assert.match(preview, /studio-profile-card :global\(\.studio-atmosphere-layer\) \{ z-index: 0; opacity: \.82; isolation: auto; \}/);
+  assert.match(atmosphere, /\.profile-atmosphere \{[^}]*isolation: auto;/);
   assert.match(identityCard, /color: var\(--profile-text/);
   assert.match(identityCard, /color: var\(--profile-highlight/);
   assert.match(preview, /border: var\(--profile-border-width/);

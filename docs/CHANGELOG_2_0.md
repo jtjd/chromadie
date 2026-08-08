@@ -2,6 +2,12 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Make atmosphere visible to surface blur
+
+- Atmosphere layers no longer isolate themselves from the identity surface's
+  backdrop filter, so the blur control has visible feedback over the effect in
+  both the dashboard live preview and public profile.
+
 ## 2026-08-08 — Make surface blur sample the profile canvas
 
 - Profile-card border wrappers no longer block the card surface from sampling

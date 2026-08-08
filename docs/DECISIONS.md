@@ -2,6 +2,13 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Keep effect layers transparent to surface backdrop sampling
+
+Page-wide atmosphere layers and dashboard card-scoped atmosphere layers must
+not create isolated backdrop roots. Their visible pixels remain behind the
+identity surface, allowing the configured blur to sample and soften them in
+both the live preview and the public profile.
+
 ## 2026-08-08 — Let the identity surface sample the page backdrop
 
 The shared border wrapper remains clipped for cosmetic effects, but the public

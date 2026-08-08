@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Blur visibility follow-up — 2026-08-08
+
+- Removed atmosphere-layer isolation in both public and dashboard renderers so
+  the identity surface can sample visible effect pixels with `backdrop-filter`.
+- Added regression coverage for the public page layer, preview card layer, and
+  shared fitting-room selector.
+
 ## Surface compositor follow-up — 2026-08-08
 
 - Removed the extra isolated backdrop root from profile-card border wrappers so
