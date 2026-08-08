@@ -23,6 +23,7 @@
     "check:catalog-drift": "node scripts/check-catalog-drift.mjs",
     "check:scoring-parity": "node scripts/check-scoring-parity.mjs",
     "check:db-security": "node scripts/check-database-security.mjs",
+    "check:profile-certification": "node scripts/check-profile-parity-certification.mjs",
     "simulate:balance": "node scripts/simulate-balance.mjs"
   },
   "devDependencies": {

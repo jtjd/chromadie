@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Certify and stage profile-parity surfaces
+
+- Added three code-owned certification profiles to verify that free, premium
+  media, and creator/provider identities still open as Chromadie profiles with
+  the daily color ritual at the center.
+- M13 surfaces can roll out staff-first, then to internal accounts, a bounded
+  cohort, and all users, with independent rollback switches and V1/image
+  fallbacks.
+- Added an operator dashboard contract for fulfillment, staged-media cleanup,
+  provider adapter health, privacy-safe retention, and moderation report volume.
+
 ## 2026-08-08 — Add privacy-safe insights and deeper guestbooks
 
 - Profile Studio now offers private 7/30/90-day views, exploration clicks,

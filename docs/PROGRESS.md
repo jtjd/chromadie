@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Competitor parity Milestone 13 implemented locally — 2026-08-08
+
+- Added reversible audience rollout flags for commerce, rich media, V2
+  configuration, expanded analytics, and social depth, with staff → internal
+  → cohort → all-user stages and independent pause switches.
+- Preserved the free image/V1 fallback whenever a matching surface is paused;
+  server RPC, entitlement, storage, scoring, and gameplay authority remain
+  unchanged.
+- Added the three-profile parity certification fixture and executable contract
+  check, plus the service-owned operations dashboard/alert contract for Stripe,
+  staged media, provider errors, analytics retention, and social reports.
+- Full validation, local schema lint/reset, and Chromium smoke pass locally;
+  desktop/mobile profile captures are recorded under
+  `/tmp/chromadie-m13-public-0g`. Production enablement remains operator-
+  controlled behind the documented rollout stages.
+
 ## Competitor parity Milestone 12 implemented — 2026-08-08
 
 - Added privacy-safe dimensional profile insights for views, stable link and

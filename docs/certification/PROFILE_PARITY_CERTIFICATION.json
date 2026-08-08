@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "product": "Chromadie",
+  "benchmark": "guns.lol and haunt.gg practical profile expression depth",
+  "profiles": [
+    {
+      "id": "polished-free-default",
+      "tier": "free",
+      "description": "A complete image-first identity with the daily color ritual visible as the center of the profile.",
+      "regions": ["identity", "roll", "expression", "featured"],
+      "capabilities": {
+        "links": 6,
+        "projects": 4,
+        "widgets": 2,
+        "richMedia": false,
+        "analytics": "owner-opt-in",
+        "dailyRoll": true
+      },
+      "viewports": ["1440x900", "1280x720", "390x844"],
+      "conditions": ["slow-network", "media-failure", "reduced-motion", "keyboard-only"]
+    },
+    {
+      "id": "premium-media-identity",
+      "tier": "premium",
+      "description": "A media-led Plus identity that still opens with a quiet, readable Chromadie canvas.",
+      "regions": ["identity", "roll", "expression", "featured"],
+      "capabilities": {
+        "links": 25,
+        "projects": 10,
+        "widgets": 4,
+        "richMedia": true,
+        "audioEntry": "click-unlock",
+        "backgroundVideo": "muted-poster-reduced-motion",
+        "dailyRoll": true
+      },
+      "viewports": ["1440x900", "1280x720", "390x844"],
+      "conditions": ["slow-network", "media-failure", "reduced-motion", "keyboard-only", "audio-entry"]
+    },
+    {
+      "id": "creator-provider",
+      "tier": "premium",
+      "description": "A creator identity using safe provider cards and stable click measurement without becoming a generic link page.",
+      "regions": ["identity", "roll", "expression", "featured"],
+      "capabilities": {
+        "links": 25,
+        "projects": 10,
+        "widgets": 4,
+        "providerCards": ["github", "twitch", "lastfm", "discord", "spotify", "youtube"],
+        "clickTracking": true,
+        "dailyRoll": true
+      },
+      "viewports": ["1440x900", "1280x720", "390x844"],
+      "conditions": ["slow-network", "media-failure", "reduced-motion", "keyboard-only"]
+    }
+  ]
+}

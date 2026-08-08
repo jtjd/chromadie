@@ -6,6 +6,7 @@
   import { loadProfileContext } from './profileData.js';
   import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
   import { normalizeRichMediaConfig } from './profileRichMedia.js';
+  import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
   import { getCanonicalProfilePath } from './routeContract.js';
   import Button from './foundation/Button.svelte';
@@ -74,6 +75,11 @@
     account: 'account'
   });
 
+  const SECTION_FLAGS = Object.freeze({
+    'profile-insights': 'expandedAnalytics',
+    'profile-notifications': 'socialDepth'
+  });
+
   const dispatch = createEventDispatcher();
 
   function createInitialSettingsContext() {
@@ -128,7 +134,16 @@
   $: accountKey = $isAuthenticated && $session?.user?.id ? $session.user.id : '';
   $: if (accountKey) void loadSettings();
   $: profilePath = context?.targetProfile?.username ? getCanonicalProfilePath(context.targetProfile.username) : '/profile';
-  $: activeLabel = SETTINGS_SECTIONS.find(section => section.id === activeSection)?.label || 'Overview';
+  $: featureFlags = resolveProfileFeatureFlags({
+    userId: context?.profileId || $session?.user?.id,
+    isStaff: Boolean(context?.targetProfile?.is_staff || $profile?.is_staff)
+  });
+  $: visibleSettingsSections = SETTINGS_SECTIONS.filter(section => {
+    const flag = SECTION_FLAGS[section.id];
+    return !flag || featureFlags[flag];
+  });
+  $: if (activeSection !== 'overview' && !visibleSettingsSections.some(section => section.id === activeSection)) activeSection = 'overview';
+  $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Overview';
   $: previewProfileConfig = configurationPreview || context?.profileConfig?.draft;
   $: previewProfile = context?.targetProfile
     ? { ...context.targetProfile, equipped_cosmetics: $equippedItems || context.targetProfile.equipped_cosmetics || {} }
@@ -138,7 +153,7 @@
     const getSectionFromLocation = () => {
       const rawHash = window.location.hash.replace(/^#/, '');
       const sectionId = HASH_ALIASES[rawHash] || rawHash;
-      return SETTINGS_SECTIONS.some(section => section.id === sectionId) ? sectionId : 'overview';
+      return visibleSettingsSections.some(section => section.id === sectionId) ? sectionId : 'overview';
     };
     const restoreLocation = () => {
       const nextSection = getSectionFromLocation();
@@ -176,7 +191,7 @@
   });
 
   function setActiveSection(sectionId, { push = true } = {}) {
-    if (!SETTINGS_SECTIONS.some(section => section.id === sectionId)) return;
+    if (!visibleSettingsSections.some(section => section.id === sectionId)) return;
     activeSection = sectionId;
     void loadSectionComponent(sectionId);
     if (typeof window !== 'undefined') {
@@ -388,7 +403,7 @@
 <svelte:window on:keydown={handleDirtyPromptKeydown} />
 
 <ProfileDashboardShell
-  sections={[...SETTINGS_SECTIONS]}
+  sections={[...visibleSettingsSections]}
   {activeSection}
   showPreview={true}
   on:sectionchange={handleDashboardSectionChange}
@@ -428,7 +443,7 @@
           {:else if activeSection === 'profile-layout'}
             <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
           {:else if activeSection === 'profile-social'}
-            <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} isAuthenticated={$isAuthenticated} social={context.social} settings={context.socialSettings} on:socialchange={handleSocialChange} />
+            <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} isAuthenticated={$isAuthenticated} social={context.social} settings={context.socialSettings} socialDepthEnabled={featureFlags.socialDepth} on:socialchange={handleSocialChange} />
           {:else if activeSection === 'profile-insights'}
             <svelte:component this={sectionComponents[activeSection]} configuration={context.profileConfig} socialSettings={context.socialSettings} on:socialchange={handleSocialChange} />
           {:else if activeSection === 'profile-notifications'}

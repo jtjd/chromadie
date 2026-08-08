@@ -3,6 +3,7 @@ import { createDefaultProfileConfig, normalizeProfileConfig } from './profileCon
 import { normalizeProfileStory } from './profileStory.js';
 import { createEmptyProgression, loadMyProgression } from './progressionState.js';
 import { normalizeUsernameSegment } from './routeContract.js';
+import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
 import {
   createDefaultProfileSocialSettings,
   createEmptyProfileSocial,
@@ -238,6 +239,10 @@ export async function loadProfileContext({
     }
 
     const fallbackColor = context.targetProfile?.mood_color || '#8B7CF6';
+    const profileConfigurationV2Enabled = isProfileFeatureEnabled('profileConfigurationV2', {
+      userId: context.profileId,
+      isStaff: Boolean(context.targetProfile?.is_staff)
+    });
     if (configResponse.error || (viewingOwnProfile && configResponse.data?.success === false)) {
       context.dataWarning = context.dataWarning || 'Profile customization is temporarily unavailable.';
       const fallback = createDefaultProfileConfig(fallbackColor);
@@ -245,8 +250,12 @@ export async function loadProfileContext({
         ? { draft: fallback, published: fallback, version: 1 }
         : { draft: null, published: fallback, version: 1 };
     } else if (viewingOwnProfile) {
-      const v2Draft = configResponse.data?.draft_v2 || configResponse.data?.configuration_v2?.draft || null;
-      const v2Published = configResponse.data?.published_v2 || configResponse.data?.configuration_v2?.published || null;
+      const v2Draft = profileConfigurationV2Enabled
+        ? configResponse.data?.draft_v2 || configResponse.data?.configuration_v2?.draft || null
+        : null;
+      const v2Published = profileConfigurationV2Enabled
+        ? configResponse.data?.published_v2 || configResponse.data?.configuration_v2?.published || null
+        : null;
       const normalizedV2Draft = v2Draft ? await normalizeV2Configuration(v2Draft, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) }) : null;
       const normalizedV2Published = v2Published ? await normalizeV2Configuration(v2Published, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) }) : null;
       context.profileConfig = {
@@ -259,7 +268,7 @@ export async function loadProfileContext({
         publishedAt: configResponse.data?.published_at || null
       };
     } else {
-      const v2 = configResponse.data?.version === 2 || configResponse.data?.base
+      const v2 = profileConfigurationV2Enabled && (configResponse.data?.version === 2 || configResponse.data?.base)
         ? await normalizeV2Configuration(configResponse.data, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) })
         : null;
       context.profileConfig = {

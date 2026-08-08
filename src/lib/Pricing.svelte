@@ -1,14 +1,19 @@
 <script>
   import { onMount } from 'svelte';
-  import { authInitialized, isAuthenticated, profileEntitlements, session, fetchProfileEntitlements } from './stores.js';
+  import { authInitialized, isAuthenticated, profile, profileEntitlements, session, fetchProfileEntitlements } from './stores.js';
   import { supabase } from './supabase.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
+  import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
 
   let busy = false;
   let restoreState = 'idle';
   let message = '';
   let returnSessionId = '';
   $: plusActive = hasChromadiePlus($profileEntitlements);
+  $: commerceEnabled = isProfileFeatureEnabled('commerce', {
+    userId: $session?.user?.id,
+    isStaff: Boolean($profile?.is_staff)
+  });
 
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
@@ -36,7 +41,10 @@
   }
 
   async function beginCheckout() {
-    if (busy || plusActive) return;
+    if (busy || plusActive || !commerceEnabled) {
+      if (!commerceEnabled && !plusActive) message = 'Purchases are temporarily paused while this rollout is being verified.';
+      return;
+    }
     if (!$session) {
       window.location.href = '/login?next=%2Fpricing';
       return;
@@ -142,8 +150,8 @@
         <li>Future Plus profile-expression capacity as it launches</li>
         <li>No paid rank, rewards, achievements, or prestige</li>
       </ul>
-      <button type="button" class="pricing-card__primary" on:click={beginCheckout} disabled={busy || plusActive}>
-        {plusActive ? 'Chromadie Plus active' : busy ? 'Opening secure checkout…' : $isAuthenticated ? 'Buy lifetime access' : 'Sign in to buy'}
+      <button type="button" class="pricing-card__primary" on:click={beginCheckout} disabled={busy || plusActive || !commerceEnabled}>
+        {plusActive ? 'Chromadie Plus active' : !commerceEnabled ? 'Purchases temporarily paused' : busy ? 'Opening secure checkout…' : $isAuthenticated ? 'Buy lifetime access' : 'Sign in to buy'}
       </button>
       <p class="pricing-card__fineprint">Secure payment by Stripe. Refunds and chargebacks remove Plus presentation without deleting gameplay history or profile content.</p>
     </article>

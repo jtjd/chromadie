@@ -28,6 +28,7 @@ npm run check:balance-drift
 npm run check:catalog-drift
 npm run check:db-security
 npm run check:scoring-parity
+npm run check:profile-certification
 npm run simulate:balance
 npm run db:push
 npm run db:reset
@@ -42,8 +43,17 @@ Use `.env` or the deployment environment:
 - `VITE_SUPABASE_KEY`
 - `VITE_CLOUDFLARE_SITE_KEY`
 - `VITE_SITE_URL`
+- `VITE_CHROMADIE_ROLLOUT_STAGE` (`staff`, `internal`, `cohort`, or `all`)
+- `VITE_CHROMADIE_INTERNAL_IDS` and `VITE_CHROMADIE_COHORT_PERCENT`
+- `VITE_CHROMADIE_FLAG_COMMERCE`
+- `VITE_CHROMADIE_FLAG_RICH_MEDIA`
+- `VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2`
+- `VITE_CHROMADIE_FLAG_EXPANDED_ANALYTICS`
+- `VITE_CHROMADIE_FLAG_SOCIAL_DEPTH`
 
-Do not commit secrets.
+The rollout values are public build configuration and are safe to place in the
+Pages environment. Do not commit secrets. The server remains authoritative for
+entitlements, storage, analytics writes, social RPCs, and gameplay.
 
 ## Local Development
 

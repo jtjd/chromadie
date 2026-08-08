@@ -20,6 +20,7 @@
   export let isAuthenticated = false;
   export let social = createEmptyProfileSocial();
   export let settings = createDefaultProfileSocialSettings();
+  export let socialDepthEnabled = true;
 
   const dispatch = createEventDispatcher();
   const REPORT_REASONS = [
@@ -49,13 +50,14 @@
 
   $: socialView = normalizeProfileSocial(social);
   $: settingsDraft = normalizeProfileSocialSettings(settings);
+  $: depthEnabled = socialDepthEnabled !== false;
   $: canInteract = Boolean(isAuthenticated && !isOwnProfile && !socialView.blocked && socialView.interactionsEnabled);
   $: canWriteGuestbook = Boolean(canInteract && socialView.guestbookEnabled);
-  $: canReplyGuestbook = Boolean(isAuthenticated && !socialView.blocked && socialView.guestbookEnabled && (isOwnProfile || socialView.interactionsEnabled));
-  $: canLikeGuestbook = Boolean(isAuthenticated && !socialView.blocked && (isOwnProfile || socialView.interactionsEnabled));
+  $: canReplyGuestbook = Boolean(depthEnabled && isAuthenticated && !socialView.blocked && socialView.guestbookEnabled && (isOwnProfile || socialView.interactionsEnabled));
+  $: canLikeGuestbook = Boolean(depthEnabled && isAuthenticated && !socialView.blocked && (isOwnProfile || socialView.interactionsEnabled));
   $: sortedGuestbook = [...socialView.guestbook].sort((left, right) => {
-    if (left.isPinned !== right.isPinned) return left.isPinned ? -1 : 1;
-    if (guestbookSort === 'popular' && right.likeCount !== left.likeCount) return right.likeCount - left.likeCount;
+    if (depthEnabled && left.isPinned !== right.isPinned) return left.isPinned ? -1 : 1;
+    if (depthEnabled && guestbookSort === 'popular' && right.likeCount !== left.likeCount) return right.likeCount - left.likeCount;
     const leftTime = Date.parse(left.createdAt || '') || 0;
     const rightTime = Date.parse(right.createdAt || '') || 0;
     return guestbookSort === 'oldest' ? leftTime - rightTime : rightTime - leftTime;
@@ -170,7 +172,7 @@
   }
 
   async function toggleEntryPin(entryKey) {
-    if (!isOwnProfile || !entryKey || actionLoading) return;
+    if (!depthEnabled || !isOwnProfile || !entryKey || actionLoading) return;
     await runAction(
       'pin:' + entryKey,
       'toggle_profile_guestbook_pin',
@@ -180,6 +182,7 @@
   }
 
   async function chooseGuestbookSort(event) {
+    if (!depthEnabled) return;
     const nextSort = ['newest', 'oldest', 'popular'].includes(event.currentTarget.value) ? event.currentTarget.value : 'newest';
     guestbookSort = nextSort;
     if (!profileId || sortLoading) return;
@@ -330,7 +333,7 @@
             <strong>Guestbook</strong>
             <span>{socialView.guestbook.length} visible note{socialView.guestbook.length === 1 ? '' : 's'}</span>
           </div>
-          {#if socialView.guestbook.length > 1}
+          {#if depthEnabled && socialView.guestbook.length > 1}
             <label class="profile-social__sort">Sort
               <select value={guestbookSort} aria-label="Sort guestbook notes" disabled={sortLoading} on:change={chooseGuestbookSort}>
                 <option value="newest">Newest</option>
@@ -346,7 +349,7 @@
             {#each sortedGuestbook as entry (entry.entryKey)}
               <article class="profile-social__entry">
                 <div class="profile-social__entry-meta">
-                  <div><strong>{entry.author}</strong>{#if entry.isPinned}<span class="profile-social__pin-label">Pinned</span>{/if}</div>
+                  <div><strong>{entry.author}</strong>{#if depthEnabled && entry.isPinned}<span class="profile-social__pin-label">Pinned</span>{/if}</div>
                   {#if entry.createdAt}<time datetime={entry.createdAt}>{formatDate(entry.createdAt)}</time>{/if}
                 </div>
                 <p>{entry.body}</p>
@@ -355,10 +358,10 @@
                     <button type="button" class="profile-social__text-button" class:active={entry.viewerLiked} disabled={actionLoading === 'like:' + entry.entryKey} on:click={() => toggleEntryLike(entry.entryKey)} aria-pressed={entry.viewerLiked}>
                       {entry.viewerLiked ? 'Liked' : 'Like'}{#if socialView.socialSummaryVisible && entry.likeCount > 0} · {entry.likeCount}{/if}
                     </button>
-                  {:else if socialView.socialSummaryVisible && entry.likeCount > 0}
+                  {:else if depthEnabled && socialView.socialSummaryVisible && entry.likeCount > 0}
                     <span class="profile-social__like-count">{entry.likeCount} like{entry.likeCount === 1 ? '' : 's'}</span>
                   {/if}
-                  {#if isOwnProfile}
+                  {#if depthEnabled && isOwnProfile}
                     <button type="button" class="profile-social__text-button" disabled={actionLoading === 'pin:' + entry.entryKey} on:click={() => toggleEntryPin(entry.entryKey)}>{entry.isPinned ? 'Unpin' : 'Pin'}</button>
                   {/if}
                   {#if entry.canDelete}
@@ -368,7 +371,7 @@
                     <button type="button" class="profile-social__text-button" on:click={() => openReport(entry.entryKey)}>Report</button>
                   {/if}
                 </div>
-                {#if entry.replies.length}
+                {#if depthEnabled && entry.replies.length}
                   <div class="profile-social__replies" aria-label="Replies to this note">
                     {#each entry.replies as reply (reply.replyKey)}
                       <div class="profile-social__reply">
@@ -376,7 +379,7 @@
                         <p>{reply.body}</p>
                         <div class="profile-social__entry-actions">
                           {#if reply.canDelete}<button type="button" class="profile-social__text-button" disabled={actionLoading === 'delete-reply:' + reply.replyKey} on:click={() => deleteReply(reply.replyKey)}>Delete</button>{/if}
-                          {#if isAuthenticated && !isOwnProfile}<button type="button" class="profile-social__text-button" on:click={() => openReport(entry.entryKey, reply.replyKey)}>Report</button>{/if}
+                          {#if depthEnabled && isAuthenticated && !isOwnProfile}<button type="button" class="profile-social__text-button" on:click={() => openReport(entry.entryKey, reply.replyKey)}>Report</button>{/if}
                         </div>
                       </div>
                     {/each}

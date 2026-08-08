@@ -38,6 +38,7 @@
   import { getVisibleProfileWidgets } from './profileWidgetsLegacy.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
   import { normalizeRichMediaConfig } from './profileRichMedia.js';
+  import { isProfileFeatureEnabled, resolveProfileFeatureFlags } from './profileFeatureFlags.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -128,7 +129,7 @@
         resetShellState(false);
         const fallbackColor = '#CDD2FF';
         targetProfile = {
-          id: 'profile-studio-preview',
+          id: previewProfile?.id || 'profile-studio-preview',
           username: previewProfile?.username || 'Chromanaut',
           display_name: previewProfile?.display_name ?? null,
           bio: previewProfile?.bio ?? null,
@@ -136,7 +137,7 @@
           longest_streak: Number(previewProfile?.longest_streak) || 0,
           lifetime_ep: Number(previewProfile?.lifetime_ep) || 0,
           total_rolls: Number(previewProfile?.total_rolls) || 0,
-          is_staff: false,
+          is_staff: Boolean(previewProfile?.is_staff),
           equipped_cosmetics: previewProfile?.equipped_cosmetics || {},
           equipped_badges: Array.isArray(previewProfile?.equipped_badges) ? previewProfile.equipped_badges : [],
           mood_color: fallbackColor,
@@ -285,7 +286,13 @@
         viewer: viewingOwnProfile ? 'owner' : 'visitor'
       });
       // Compatibility contract: recordPublicProfileView(supabase, targetProfile.username)
-      if (!viewingOwnProfile) void recordPublicProfileView(supabase, targetProfile.username, { edge: true });
+      if (!viewingOwnProfile) {
+        const expandedAnalyticsEnabled = isProfileFeatureEnabled('expandedAnalytics', {
+          userId: targetProfile?.id,
+          isStaff: Boolean(targetProfile?.is_staff)
+        });
+        void recordPublicProfileView(supabase, targetProfile.username, { edge: expandedAnalyticsEnabled });
+      }
     }
   }
 
@@ -309,7 +316,7 @@
   }
 
   function recordProfileClick(entryKey) {
-    if (previewMode || isOwnProfile || !targetProfile?.username || !entryKey) return;
+    if (previewMode || isOwnProfile || !targetProfile?.username || !entryKey || !expandedAnalyticsEnabled) return;
     void recordProfileInsightEvent({
       profileUsername: targetProfile.username,
       metric: 'click',
@@ -393,6 +400,12 @@
   }
 
   $: username = targetProfile?.username || 'Unknown Player';
+  $: profileFeatureFlags = resolveProfileFeatureFlags({
+    userId: targetProfile?.id,
+    isStaff: Boolean(targetProfile?.is_staff)
+  });
+  $: expandedAnalyticsEnabled = profileFeatureFlags.expandedAnalytics;
+  $: socialDepthEnabled = profileFeatureFlags.socialDepth;
   // profileDisplayName = username is the safe fallback for legacy profiles.
   $: profileDisplayName = targetProfile?.display_name || username;
   $: isOwnProfile = previewMode
@@ -447,7 +460,9 @@
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
   $: audioSrc = getProfileMediaUrl(effectiveProfileConfig.audio_path, mediaCacheKey);
-  $: richMedia = normalizeRichMediaConfig(effectiveProfileConfig);
+  $: richMedia = profileFeatureFlags.richMedia
+    ? normalizeRichMediaConfig(effectiveProfileConfig)
+    : normalizeRichMediaConfig({});
   $: backgroundVideoSrc = getProfileMediaUrl(richMedia.background_video_path, mediaCacheKey);
   $: bannerSrc = getProfileMediaUrl(richMedia.banner_path, mediaCacheKey);
   $: cursorSrc = getProfileMediaUrl(richMedia.cursor_path, mediaCacheKey);
@@ -788,6 +803,7 @@
             isAuthenticated={$isAuthenticated}
             social={social}
             settings={socialSettings}
+            socialDepthEnabled={socialDepthEnabled}
             on:socialchange={handleSocialChange}
           />
           {#if $isAuthenticated}

@@ -26,6 +26,8 @@ jobs:
         run: npm run check
       - name: Test balance boundaries
         run: npm test
+      - name: Check profile parity certification
+        run: npm run check:profile-certification
       - name: Check internal links
         run: npm run check:links
       - name: Check balance drift

@@ -4,6 +4,7 @@
   import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { prepareProfileAudioFile, processProfileImage, validateProfileAudioFile } from './profileMediaProcessing.js';
+  import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
   import ProfileRichMediaEditor from './ProfileRichMediaEditor.svelte';
   import Module from './foundation/Module.svelte';
   import Media from './foundation/Media.svelte';
@@ -57,6 +58,7 @@
   $: backgroundSrc = backgroundPreviewSrc || getProfileMediaUrl(expression.background_path, mediaCacheKey);
   $: audioSrc = audioPreviewSrc || getProfileMediaUrl(expression.audio_path, mediaCacheKey);
   $: audioProgress = audioDuration > 0 ? Math.min(100, (audioCurrentTime / audioDuration) * 100) : 0;
+  $: richMediaEnabled = isProfileFeatureEnabled('richMedia', { userId: profileId, isStaff: staff });
 
   function formatInputLimit(bytes) {
     const megabytes = bytes / (1024 * 1024);
@@ -591,13 +593,20 @@
     </div>
   </div>
 
-  <ProfileRichMediaEditor profileId={profileId} {config} {staff} {entitlements} on:expressionchange={(event) => dispatch('expressionchange', event.detail)} />
+  {#if richMediaEnabled}
+    <ProfileRichMediaEditor profileId={profileId} {config} {staff} {entitlements} on:expressionchange={(event) => dispatch('expressionchange', event.detail)} />
+  {:else}
+    <div class="profile-expression-editor__rollout-notice" role="status">
+      Rich media expression is temporarily paused while this rollout is verified. Your image-based profile remains available.
+    </div>
+  {/if}
 
   {#if error}<p class="profile-expression-editor__message profile-expression-editor__message--error" style="margin:0" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-expression-editor__message" style="margin:0" role="status" aria-live="polite">{status}</p>{/if}
 </Module>
 
 <style>
+  .profile-expression-editor__rollout-notice { margin: 0; padding: .8rem 1rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.45; }
   .profile-expression-editor__asset-loading { margin: 0 0 0.8rem; color: var(--color-ink-muted); font-size: var(--type-small); }
   .profile-expression-editor__asset-library { display: grid; gap: 0.65rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-line-subtle); }
   .profile-expression-editor__asset-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; color: var(--color-ink-strong); font-size: var(--type-small); }

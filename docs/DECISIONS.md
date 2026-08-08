@@ -1,5 +1,21 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Roll out parity surfaces with reversible presentation flags
+
+Milestone 13 uses build-time, audience-scoped flags for commerce, rich media,
+V2 configuration, expanded insights, and social depth. Staff, an explicit
+internal allowlist, a deterministic cohort, and all-users promotion are
+separate release stages; each surface can be paused independently. The flags
+never authorize an RPC, grant an entitlement, alter storage validation, or
+move gameplay authority into the browser. When V2 or rich media is paused,
+the existing V1/image profile remains the compatibility renderer.
+
+Certification is expressed as three code-owned profiles—polished free,
+premium media identity, and creator/provider identity—rather than a generic
+link-page benchmark. Operations use service-owned aggregate panels for
+fulfillment, uploads, providers, retention, and reports; no viewer identity,
+raw media path, provider payload, or report identity enters that dashboard.
+
 ## 2026-08-08 — Keep detailed insights aggregate and social depth one-level
 
 Milestone 12 extends the existing consent-based daily profile view counter
