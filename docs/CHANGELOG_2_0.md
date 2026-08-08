@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Add $7.99 lifetime Chromadie Plus checkout
+
+- `/pricing` now compares Chromadie's complete free identity profile with the
+  extra expression available through Chromadie Plus.
+- Signed-in players can open secure Stripe Checkout for one $7.99 USD lifetime
+  purchase and return to an authenticated fulfillment-status screen.
+- Existing Atelier owners remain compatible. Refunds or chargebacks remove
+  paid presentation access without deleting gameplay progress or profile
+  content.
+
 ## 2026-08-08 — Add bounded profile aliases
 
 - Profile Studio now lets owners create up to three memorable alternate paths.
@@ -2002,3 +2012,14 @@ direct route behavior.
   the daily roll and existing customization boundaries unchanged.
 - Added additive Supabase normalization and section RPC support; raw HTML,
   JavaScript, CSS, and arbitrary embeds are not part of the profile contract.
+
+## 2026-08-08 — Add bounded rich profile media
+
+- Added premium/staff background videos, MP3 playlists, banners, and cursor
+  assets through a staged, owner-scoped, server-verified media library.
+- Added strict per-kind limits, a 150 MB profile quota, cleanup of abandoned
+  uploads, validated reusable selection, and refund-safe public projection.
+- Added muted video poster fallback, reduced-motion behavior, finite Enter-gated
+  audio playback, visible pause/volume/track controls, and media-key handling.
+- Preserved the free image/atmosphere/Spotify/YouTube expression path and all
+  daily-roll, reward, history, and prestige authority boundaries.

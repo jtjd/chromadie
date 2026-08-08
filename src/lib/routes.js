@@ -6,12 +6,12 @@ import {
   normalizeUsernameSegment
 } from './routeContract.js';
 
-export const VALID_VIEWS = Object.freeze(['home', 'game', 'shop', 'leaderboard', 'profile', 'profile-settings', 'prototype'])
+export const VALID_VIEWS = Object.freeze(['home', 'game', 'shop', 'leaderboard', 'profile', 'profile-settings', 'prototype', 'pricing'])
 export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'rivals', 'weekly', 'monthly', 'roll', 'recent', 'rising', 'new', 'random'])
 
 const VALID_VIEW_SET = new Set(VALID_VIEWS)
 const VALID_LEADERBOARD_TAB_SET = new Set(VALID_LEADERBOARD_TABS)
-const CLEAN_APP_PATHS = new Set(['/', '/shop', '/leaderboard', '/profile', '/profile/settings', '/prototype/profile'])
+const CLEAN_APP_PATHS = new Set(['/', '/shop', '/leaderboard', '/profile', '/profile/settings', '/prototype/profile', '/pricing', '/pricing/success'])
 
 function getCleanPathView(pathname) {
   if (pathname === '/') return 'home'
@@ -20,6 +20,7 @@ function getCleanPathView(pathname) {
   if (pathname === '/profile') return 'profile'
   if (pathname === '/profile/settings') return 'profile-settings'
   if (pathname === '/prototype/profile') return 'prototype'
+  if (pathname === '/pricing' || pathname === '/pricing/success') return 'pricing'
   return null
 }
 

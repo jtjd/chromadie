@@ -14,7 +14,8 @@ import { RESERVED_ROUTE_SEGMENTS } from '../src/lib/routeContract.js';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const migrationPaths = [
   'supabase/migrations/20260730100000_username_reservation_policy.sql',
-  'supabase/migrations/20260808120000_short_usernames.sql'
+  'supabase/migrations/20260808120000_short_usernames.sql',
+  'supabase/migrations/20260808200000_lifetime_premium_fulfillment.sql'
 ].map(relativePath => path.join(repoRoot, relativePath));
 const localContainer = process.env.SUPABASE_DB_CONTAINER || 'supabase_db_Chromadie';
 

@@ -72,16 +72,25 @@ Stop the local services with `supabase stop` when finished.
 - SPA routing and production security headers are defined in `public/_redirects` and
   `public/_headers`.
 - Configure all four `VITE_` variables above in the Cloudflare Pages production environment.
-- Deploy both Supabase Edge Functions before the Pages deployment:
+- Deploy Supabase Edge Functions before the Pages deployment:
 
 ```bash
 supabase functions deploy challenge-link --no-verify-jwt
 supabase functions deploy delete-account --no-verify-jwt
+supabase functions deploy create-premium-checkout --no-verify-jwt
+supabase functions deploy restore-premium-checkout --no-verify-jwt
+supabase functions deploy stripe-premium-webhook --no-verify-jwt
 ```
 
-Both functions perform their own token validation. Hosted Supabase supplies `SUPABASE_URL`,
+These functions perform their own token or signature validation. Hosted Supabase supplies `SUPABASE_URL`,
 `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; confirm all three are visible to the
 function runtime without printing their values.
+
+Billing additionally requires Supabase secrets named `SITE_URL` (the canonical
+origin), `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET`. Configure Stripe to
+send `checkout.session.completed`, `charge.refunded`, `refund.created`, and
+`charge.dispute.created` to the deployed webhook. Never expose these values
+through `VITE_` variables.
 
 - In Supabase Auth URL Configuration, set `https://chm.lol` as the Site URL and allow exactly these production transition URLs:
   - `https://chm.lol/auth/callback`
@@ -97,7 +106,7 @@ function runtime without printing their values.
 
 After pushing to `main`, verify the deployed asset bundle changed and smoke-test `/`, `/privacy`,
 `/how-to-play`, `/auth/callback`, `/reset-password`, `/shop`, `/leaderboard`, `/<username>`, `/u/<username>`,
-`/c/<challenge-id>`, both SVG share-card endpoints, account deletion, and a direct refresh of every
+`/c/<challenge-id>`, `/pricing`, `/pricing/success`, both SVG share-card endpoints, account deletion, and a direct refresh of every
 route. Confirm CSP/HSTS headers on both static and Pages Function responses.
 
 ## Auth Flows

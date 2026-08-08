@@ -14,7 +14,8 @@ const loaders = Object.freeze({
   prototype: () => import('./ProfileCanvasPrototype.svelte'),
   privacy: () => import('./PrivacyPolicy.svelte'),
   terms: () => import('./TermsOfService.svelte'),
-  howToPlay: () => import('./FAQ.svelte')
+  howToPlay: () => import('./FAQ.svelte'),
+  pricing: () => import('./Pricing.svelte')
 });
 
 const promiseCache = new Map();

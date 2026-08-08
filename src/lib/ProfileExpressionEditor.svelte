@@ -4,6 +4,7 @@
   import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { prepareProfileAudioFile, processProfileImage, validateProfileAudioFile } from './profileMediaProcessing.js';
+  import ProfileRichMediaEditor from './ProfileRichMediaEditor.svelte';
   import Module from './foundation/Module.svelte';
   import Media from './foundation/Media.svelte';
 
@@ -11,6 +12,7 @@
   export let config = {};
   export let fallbackInitial = '✦';
   export let staff = false;
+  export let entitlements = [];
 
   const dispatch = createEventDispatcher();
   let expression = normalizeProfileExpression();
@@ -588,6 +590,8 @@
       {#if expression.spotify_id}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={() => { spotifyUrl = ''; void saveSpotify(); }}>Remove</button>{/if}
     </div>
   </div>
+
+  <ProfileRichMediaEditor profileId={profileId} {config} {staff} {entitlements} on:expressionchange={(event) => dispatch('expressionchange', event.detail)} />
 
   {#if error}<p class="profile-expression-editor__message profile-expression-editor__message--error" style="margin:0" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-expression-editor__message" style="margin:0" role="status" aria-live="polite">{status}</p>{/if}

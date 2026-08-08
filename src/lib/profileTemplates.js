@@ -1,7 +1,9 @@
+import { CHROMADIE_PLUS_ENTITLEMENT_KEY, hasChromadiePlus } from './premiumEntitlements.js';
+
 export const PROFILE_TEMPLATE_KEYS = Object.freeze(['signal', 'editorial', 'archive', 'atelier', 'custom']);
 export const FREE_PROFILE_TEMPLATE_KEYS = Object.freeze(['signal', 'editorial', 'archive']);
 export const PREMIUM_PROFILE_TEMPLATE_KEYS = Object.freeze(['atelier']);
-export const PREMIUM_EXPRESSION_ENTITLEMENT_KEY = 'atelier_plus';
+export const PREMIUM_EXPRESSION_ENTITLEMENT_KEY = CHROMADIE_PLUS_ENTITLEMENT_KEY;
 
 function freezeModules(modules) {
   return Object.freeze(modules.map(module => Object.freeze({ ...module })));
@@ -105,7 +107,7 @@ export function isPremiumProfileTemplate(value) {
 }
 
 export function isPremiumExpressionUnlocked(entitlements = []) {
-  return Array.isArray(entitlements) && entitlements.includes(PREMIUM_EXPRESSION_ENTITLEMENT_KEY);
+  return hasChromadiePlus(entitlements);
 }
 
 export function createProfileTemplatePatch(value) {

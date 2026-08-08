@@ -1,5 +1,21 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Make Stripe webhooks the sole commerce entitlement authority
+
+Chromadie Plus is a fixed $7.99 USD lifetime profile-expression purchase. The
+browser may create an authenticated Checkout session and restore its status,
+but neither path can grant an entitlement. Only a signature-verified Stripe
+event reaches the service-only, transactional database processor. Its event ID
+primary key makes replays harmless; failed transactions leave no event row so
+Stripe can retry safely.
+
+`chromadie_plus` is canonical. `atelier_plus` remains as a compatibility key
+and is backfilled in both directions needed by deployed configuration code.
+Refunds and chargebacks revoke only Stripe-sourced presentation access and set
+a 30-day media recovery deadline; they do not alter rolls, EP, inventory,
+achievements, history, or profile content. Staff expression remains derived
+from the authoritative `profiles.is_staff` flag.
+
 ## 2026-08-08 — Keep templates composition-only and premium expression entitlement-gated
 
 Profile templates are finite, code-owned composition presets. They may set the
@@ -3428,6 +3444,27 @@ unsafe links. Rendering uses Svelte text interpolation and ordinary safe
 anchors; Chromadie does not accept profile-authored HTML, JavaScript, CSS, or
 arbitrary embeds. This gives profiles more story and exploration value while
 keeping the public acquisition surface fast and safe.
+
+## 2026-08-08 — Rich media is staged, bounded, and entitlement-gated
+
+Profile parity needs practical video, audio, banner, and cursor expression, but
+the public profile cannot become an upload sandbox. Rich assets therefore use a
+separate `profile_media` bucket and an owner-private `profile_media_assets`
+library. A browser first creates a staged row through an authenticated RPC;
+Storage policies require that row, and a verification RPC checks the recorded
+MIME/size before the asset becomes active. Quotas are three 25 MB videos, five
+10 MB MP3 tracks, one WebP banner, two 128×128/128 KB cursor assets, and 150 MB
+total per profile.
+
+Selection writes validated paths and a small audio playlist into additive
+profile-configuration columns. Public projection is conditional on the
+authoritative staff flag or active billing access, so refund/chargeback
+presentation revocation never deletes rolls, history, or private recovery media.
+Free profiles keep the existing image/atmosphere/Spotify expression. Muted
+background video is allowed to autoplay; audio intent is represented by a
+finite Enter profile action and never by a page-wide pointer/keyboard listener.
+Native media remains behind safe structured controls, with poster/reduced-motion
+fallbacks and media-key support.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

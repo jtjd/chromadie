@@ -77,5 +77,16 @@ verify_jwt = false
 [functions.delete-account]
 verify_jwt = false
 
+# Billing functions validate authentication/signatures inside the worker. The
+# webhook must receive Stripe's raw body before any JWT middleware transforms it.
+[functions.create-premium-checkout]
+verify_jwt = false
+
+[functions.restore-premium-checkout]
+verify_jwt = false
+
+[functions.stripe-premium-webhook]
+verify_jwt = false
+
 [analytics]
 enabled = false

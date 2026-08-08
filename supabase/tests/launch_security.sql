@@ -1428,6 +1428,218 @@ SELECT pg_temp.audit_assert(
    FROM audit_results WHERE name = 'config_public_expression'),
   'public profile expression projection was not bounded'
 );
+
+-- Milestone 10 rich media remains staged, quota-accounted, owner-scoped, and
+-- entitlement-aware. A staff flag is sufficient for this fixture; refunded
+-- non-staff accounts are checked below through the public projection.
+SELECT pg_temp.audit_assert(
+  NOT has_table_privilege('authenticated', 'public.profile_media_assets', 'INSERT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_media_assets', 'UPDATE')
+    AND NOT has_table_privilege('authenticated', 'public.profile_media_assets', 'DELETE')
+    AND has_function_privilege('authenticated', 'public.stage_my_profile_media_asset(text,uuid,text,bigint,text,jsonb)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.finalize_my_profile_media_asset(uuid)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.select_my_profile_rich_media(uuid,uuid,uuid,uuid,jsonb)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.stage_my_profile_media_asset(text,uuid,text,bigint,text,jsonb)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.cleanup_staged_profile_media()', 'EXECUTE'),
+  'rich media browser roles crossed the staged upload authority boundary'
+);
+SELECT pg_temp.audit_expect_error(
+  $rich_kind$SELECT public.stage_my_profile_media_asset('background_video', '20000000-0000-0000-0000-000000000002', 'mp3', 1024, 'wrong', '{}'::jsonb)$rich_kind$,
+  'rich media staging accepted a mismatched extension'
+);
+INSERT INTO audit_results VALUES (
+  'rich_stage_video',
+  public.stage_my_profile_media_asset('background_video', '20000000-0000-0000-0000-000000000002', 'mp4', 1024, 'Security video', '{"width":1920,"height":1080}'::jsonb)
+);
+INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
+VALUES (
+  gen_random_uuid(), 'profile_media', '10000000-0000-0000-0000-000000000001/20000000-0000-0000-0000-000000000002.mp4',
+  '10000000-0000-0000-0000-000000000001', '{"mimetype":"video/mp4","size":"1024"}'::jsonb
+);
+INSERT INTO audit_results VALUES (
+  'rich_finalize_video',
+  public.finalize_my_profile_media_asset('20000000-0000-0000-0000-000000000002')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'status' = 'active' FROM audit_results WHERE name = 'rich_finalize_video')
+    AND (SELECT status = 'active' FROM public.profile_media_assets WHERE id = '20000000-0000-0000-0000-000000000002'),
+  'verified rich media did not become active'
+);
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',
+  true
+);
+SELECT pg_temp.audit_expect_error(
+  $rich_cross_owner$SELECT public.select_my_profile_rich_media('20000000-0000-0000-0000-000000000002', NULL, NULL, NULL, '{}'::jsonb)$rich_cross_owner$,
+  'another owner selected a rich media asset by UUID'
+);
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
+  true
+);
+INSERT INTO audit_results VALUES (
+  'rich_select_video',
+  public.select_my_profile_rich_media('20000000-0000-0000-0000-000000000002', NULL, NULL, NULL, '{}'::jsonb)
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'background_video_path' = 'profile_media/10000000-0000-0000-0000-000000000001/20000000-0000-0000-0000-000000000002.mp4' FROM audit_results WHERE name = 'rich_select_video')
+    AND public.get_public_profile_configuration('10000000-0000-0000-0000-000000000001')->>'background_video_path' = 'profile_media/10000000-0000-0000-0000-000000000001/20000000-0000-0000-0000-000000000002.mp4',
+  'active rich media selection was not projected for an authorized profile'
+);
+INSERT INTO audit_results VALUES (
+  'rich_stage_bad_mime',
+  public.stage_my_profile_media_asset('audio', '20000000-0000-0000-0000-000000000003', 'mp3', 1024, 'Bad audio', '{}'::jsonb)
+);
+INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
+VALUES (
+  gen_random_uuid(), 'profile_media', '10000000-0000-0000-0000-000000000001/20000000-0000-0000-0000-000000000003.mp3',
+  '10000000-0000-0000-0000-000000000001', '{"mimetype":"video/mp4","size":"1024"}'::jsonb
+);
+SELECT pg_temp.audit_expect_error(
+  $rich_bad_mime$SELECT public.finalize_my_profile_media_asset('20000000-0000-0000-0000-000000000003')$rich_bad_mime$,
+  'rich media finalization accepted a malformed MIME type'
+);
+SELECT public.delete_my_profile_media_asset('20000000-0000-0000-0000-000000000003');
+SELECT public.delete_my_profile_media_asset('20000000-0000-0000-0000-000000000002');
+SELECT pg_temp.audit_assert(
+  NOT EXISTS (SELECT 1 FROM public.profile_media_assets WHERE id = '20000000-0000-0000-0000-000000000002')
+    AND public.get_public_profile_configuration('10000000-0000-0000-0000-000000000001')->>'background_video_path' IS NULL,
+  'deleting an active rich asset left a public reference behind'
+);
+
+-- Stripe fulfillment is service-owned, transactional, and replay-safe.
+SELECT pg_temp.audit_assert(
+  NOT has_table_privilege('authenticated', 'public.billing_checkout_sessions', 'INSERT')
+    AND NOT has_table_privilege('authenticated', 'public.billing_webhook_events', 'SELECT')
+    AND NOT has_function_privilege('authenticated', 'public.process_stripe_billing_event(jsonb)', 'EXECUTE'),
+  'browser roles received billing or entitlement fulfillment authority'
+);
+INSERT INTO public.billing_checkout_sessions (
+  stripe_checkout_session_id, user_id, status, payment_status
+) VALUES (
+  'cs_test_security1', '10000000-0000-0000-0000-000000000002', 'open', 'unpaid'
+);
+INSERT INTO public.profile_configurations (user_id, draft_config, published_config)
+SELECT
+  '10000000-0000-0000-0000-000000000002',
+  public.profile_default_configuration('#445566') || '{"templateKey":"atelier","layoutVariant":"editorial"}'::jsonb,
+  public.profile_default_configuration('#445566') || '{"templateKey":"atelier","layoutVariant":"editorial"}'::jsonb
+ON CONFLICT (user_id) DO UPDATE SET
+  draft_config = EXCLUDED.draft_config,
+  published_config = EXCLUDED.published_config;
+SELECT pg_temp.audit_expect_error(
+  $billing_retry$SELECT public.process_stripe_billing_event(
+    '{"id":"evt_retry1","type":"checkout.session.completed","created":1800000000,"data":{"object":{"id":"cs_test_security1","mode":"payment","payment_status":"paid","amount_total":700,"currency":"usd","payment_intent":"pi_security1","customer":"cus_security1","metadata":{"user_id":"10000000-0000-0000-0000-000000000002","entitlement":"chromadie_plus"}}}}'::jsonb
+  )$billing_retry$,
+  'malformed checkout amount granted premium'
+);
+SELECT pg_temp.audit_assert(
+  NOT EXISTS (SELECT 1 FROM public.billing_webhook_events WHERE stripe_event_id = 'evt_retry1'),
+  'failed webhook attempt was committed and prevented a safe retry'
+);
+INSERT INTO audit_results VALUES (
+  'billing_complete',
+  public.process_stripe_billing_event(
+    '{"id":"evt_retry1","type":"checkout.session.completed","created":1800000000,"data":{"object":{"id":"cs_test_security1","mode":"payment","payment_status":"paid","amount_total":799,"currency":"usd","payment_intent":"pi_security1","customer":"cus_security1","metadata":{"user_id":"10000000-0000-0000-0000-000000000002","entitlement":"chromadie_plus"}}}}'::jsonb
+  )
+);
+INSERT INTO audit_results VALUES (
+  'billing_duplicate',
+  public.process_stripe_billing_event(
+    '{"id":"evt_retry1","type":"checkout.session.completed","created":1800000000,"data":{"object":{"id":"cs_test_security1","mode":"payment","payment_status":"paid","amount_total":799,"currency":"usd","payment_intent":"pi_security1","customer":"cus_security1","metadata":{"user_id":"10000000-0000-0000-0000-000000000002","entitlement":"chromadie_plus"}}}}'::jsonb
+  )
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'outcome' = 'granted' FROM audit_results WHERE name = 'billing_complete')
+    AND (SELECT payload->>'duplicate' = 'true' FROM audit_results WHERE name = 'billing_duplicate')
+    AND EXISTS (
+      SELECT 1 FROM public.profile_entitlements
+      WHERE user_id = '10000000-0000-0000-0000-000000000002' AND entitlement_key = 'chromadie_plus'
+    )
+    AND public.get_public_profile_configuration('10000000-0000-0000-0000-000000000002')->>'templateKey' = 'atelier',
+  'completed or duplicate checkout handling did not preserve one premium grant'
+);
+INSERT INTO audit_results VALUES (
+  'billing_refund',
+  public.process_stripe_billing_event(
+    '{"id":"evt_refund1","type":"charge.refunded","created":1800000100,"data":{"object":{"id":"ch_security1","payment_intent":"pi_security1"}}}'::jsonb
+  )
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'outcome' = 'revoked' FROM audit_results WHERE name = 'billing_refund')
+    AND NOT EXISTS (
+      SELECT 1 FROM public.profile_entitlements
+      WHERE user_id = '10000000-0000-0000-0000-000000000002' AND entitlement_key IN ('chromadie_plus', 'atelier_plus')
+    )
+    AND EXISTS (
+      SELECT 1 FROM public.billing_premium_access
+      WHERE user_id = '10000000-0000-0000-0000-000000000002'
+        AND active = false AND revoked_reason = 'refund'
+        AND recovery_until BETWEEN now() + interval '29 days' AND now() + interval '31 days'
+    )
+    AND public.get_public_profile_configuration('10000000-0000-0000-0000-000000000002')->>'templateKey' = 'signal',
+  'refund did not revoke presentation with a bounded recovery window'
+);
+INSERT INTO public.billing_checkout_sessions (
+  stripe_checkout_session_id, user_id, status, payment_status
+) VALUES (
+  'cs_test_security2', '10000000-0000-0000-0000-000000000002', 'open', 'unpaid'
+);
+INSERT INTO audit_results VALUES (
+  'billing_early_chargeback',
+  public.process_stripe_billing_event(
+    '{"id":"evt_dispute2","type":"charge.dispute.created","created":1800000200,"data":{"object":{"id":"dp_security2","payment_intent":"pi_security2"}}}'::jsonb
+  )
+);
+INSERT INTO audit_results VALUES (
+  'billing_late_completion',
+  public.process_stripe_billing_event(
+    '{"id":"evt_complete2","type":"checkout.session.completed","created":1800000100,"data":{"object":{"id":"cs_test_security2","mode":"payment","payment_status":"paid","amount_total":799,"currency":"usd","payment_intent":"pi_security2","customer":"cus_security1","metadata":{"user_id":"10000000-0000-0000-0000-000000000002","entitlement":"chromadie_plus"}}}}'::jsonb
+  )
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'outcome' = 'pending' FROM audit_results WHERE name = 'billing_early_chargeback')
+    AND (SELECT payload->>'outcome' = 'revoked' FROM audit_results WHERE name = 'billing_late_completion')
+    AND EXISTS (
+      SELECT 1 FROM public.billing_premium_access
+      WHERE user_id = '10000000-0000-0000-0000-000000000002'
+        AND active = false AND revoked_reason = 'chargeback'
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM public.profile_entitlements
+      WHERE user_id = '10000000-0000-0000-0000-000000000002' AND entitlement_key IN ('chromadie_plus', 'atelier_plus')
+    ),
+  'out-of-order chargeback was lost when checkout completion arrived later'
+);
+-- Expired refund recovery is service-cleaned; the immediate public projection
+-- already omitted the rich selection when the entitlement was revoked.
+UPDATE public.billing_premium_access
+SET recovery_until = now() - interval '1 minute', updated_at = now()
+WHERE user_id = '10000000-0000-0000-0000-000000000002';
+INSERT INTO public.profile_media_assets (id, user_id, kind, storage_path, status, mime_type, byte_size, metadata)
+VALUES (
+  '40000000-0000-0000-0000-000000000004',
+  '10000000-0000-0000-0000-000000000002',
+  'background_video',
+  'profile_media/10000000-0000-0000-0000-000000000002/40000000-0000-0000-0000-000000000004.mp4',
+  'active', 'video/mp4', 1024, '{"width":1920,"height":1080}'::jsonb
+);
+INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
+VALUES (
+  gen_random_uuid(), 'profile_media', '10000000-0000-0000-0000-000000000002/40000000-0000-0000-0000-000000000004.mp4',
+  '10000000-0000-0000-0000-000000000002', '{"mimetype":"video/mp4","size":"1024"}'::jsonb
+);
+UPDATE public.profile_configurations
+SET background_video_path = 'profile_media/10000000-0000-0000-0000-000000000002/40000000-0000-0000-0000-000000000004.mp4'
+WHERE user_id = '10000000-0000-0000-0000-000000000002';
+SELECT public.cleanup_staged_profile_media();
+SELECT pg_temp.audit_assert(
+  NOT EXISTS (SELECT 1 FROM public.profile_media_assets WHERE id = '40000000-0000-0000-0000-000000000004')
+    AND NOT EXISTS (SELECT 1 FROM storage.objects WHERE bucket_id = 'profile_media' AND name LIKE '10000000-0000-0000-0000-000000000002/%'),
+  'expired rich media recovery was not cleaned by the service path'
+);
 SELECT set_config('request.jwt.claims', '{"role":"anon"}', true);
 INSERT INTO audit_results VALUES ('config_anon_owner', public.get_my_profile_configuration());
 SELECT pg_temp.audit_assert(

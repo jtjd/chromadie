@@ -1,0 +1,102 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+import {
+  CHROMADIE_PLUS_AMOUNT,
+  CHROMADIE_PLUS_CURRENCY,
+  verifyStripeSignature
+} from '../supabase/functions/_shared/billing-core.js';
+import {
+  CHROMADIE_PLUS_ENTITLEMENT_KEY,
+  hasChromadiePlus
+} from '../src/lib/premiumEntitlements.js';
+
+const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+
+async function sign(payload, secret, timestamp) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const bytes = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${timestamp}.${payload}`)));
+  return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+test('Chromadie Plus is canonical while atelier holders stay compatible', () => {
+  assert.equal(CHROMADIE_PLUS_ENTITLEMENT_KEY, 'chromadie_plus');
+  assert.equal(hasChromadiePlus(['chromadie_plus']), true);
+  assert.equal(hasChromadiePlus(['atelier_plus']), true);
+  assert.equal(hasChromadiePlus(['other']), false);
+  assert.equal(CHROMADIE_PLUS_AMOUNT, 799);
+  assert.equal(CHROMADIE_PLUS_CURRENCY, 'usd');
+});
+
+test('Stripe signatures reject forgery and stale delivery while accepting retries in tolerance', async () => {
+  const payload = JSON.stringify({ id: 'evt_test', type: 'checkout.session.completed' });
+  const secret = 'whsec_test_secret';
+  const timestamp = 1_800_000_000;
+  const signature = await sign(payload, secret, timestamp);
+  const forgedSignature = `${signature.slice(0, -1)}${signature.endsWith('0') ? '1' : '0'}`;
+
+  assert.equal(await verifyStripeSignature(payload, `t=${timestamp},v1=${signature}`, secret, { nowSeconds: timestamp + 10 }), true);
+  assert.equal(await verifyStripeSignature(payload, `t=${timestamp},v1=${forgedSignature}`, secret, { nowSeconds: timestamp + 10 }), false);
+  assert.equal(await verifyStripeSignature(`${payload} `, `t=${timestamp},v1=${signature}`, secret, { nowSeconds: timestamp + 10 }), false);
+  assert.equal(await verifyStripeSignature(payload, `t=${timestamp},v1=${signature}`, secret, { nowSeconds: timestamp + 301 }), false);
+  assert.equal(await verifyStripeSignature(payload, '', secret, { nowSeconds: timestamp }), false);
+});
+
+test('billing migration makes webhook processing atomic, replay-safe, and service-owned', async () => {
+  const migration = await read('supabase/migrations/20260808200000_lifetime_premium_fulfillment.sql');
+
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.billing_webhook_events/);
+  assert.match(migration, /stripe_event_id text PRIMARY KEY/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.process_stripe_billing_event\(p_event jsonb\)/);
+  assert.match(migration, /ON CONFLICT \(stripe_event_id\) DO NOTHING/);
+  assert.match(migration, /duplicate/);
+  assert.match(migration, /checkout\.session\.completed/);
+  assert.match(migration, /charge\.refunded/);
+  assert.match(migration, /charge\.dispute\.created/);
+  assert.match(migration, /refund\.created/);
+  assert.match(migration, /chromadie_plus/);
+  assert.match(migration, /atelier_plus/);
+  assert.match(migration, /interval '30 days'/);
+  assert.match(migration, /outcome = 'pending'/);
+  assert.match(migration, /Stripe does not guarantee delivery order/);
+  assert.match(migration, /get_public_profile_configuration/);
+  assert.match(migration, /'templateKey', 'signal'/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.process_stripe_billing_event\(jsonb\) FROM PUBLIC, anon, authenticated/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.process_stripe_billing_event\(jsonb\) TO service_role/);
+  assert.match(migration, /REVOKE ALL ON TABLE public\.billing_/);
+});
+
+test('checkout, restore, and webhook endpoints preserve the authority boundary', async () => {
+  const [checkout, restore, webhook, pricing, routes, config] = await Promise.all([
+    read('supabase/functions/create-premium-checkout/index.ts'),
+    read('supabase/functions/restore-premium-checkout/index.ts'),
+    read('supabase/functions/stripe-premium-webhook/index.ts'),
+    read('src/lib/Pricing.svelte'),
+    read('src/lib/routes.js'),
+    read('supabase/config.toml')
+  ]);
+
+  assert.match(checkout, /auth\.getUser/);
+  assert.match(checkout, /unit_amount/);
+  assert.match(checkout, /CHROMADIE_PLUS_AMOUNT/);
+  assert.match(checkout, /success_url/);
+  assert.doesNotMatch(checkout, /grant_profile_entitlement|process_stripe_billing_event/);
+  assert.match(restore, /billing_checkout_sessions/);
+  assert.match(restore, /session_id/);
+  assert.doesNotMatch(restore, /grant_profile_entitlement|process_stripe_billing_event/);
+  assert.match(webhook, /verifyStripeSignature/);
+  assert.match(webhook, /process_stripe_billing_event/);
+  assert.match(pricing, /\$7\.99/);
+  assert.match(pricing, /create-premium-checkout/);
+  assert.match(pricing, /restore-premium-checkout/);
+  assert.doesNotMatch(pricing, /grant_profile_entitlement|profile_entitlements.*insert/s);
+  assert.match(routes, /\/pricing/);
+  assert.match(config, /\[functions\.stripe-premium-webhook\][\s\S]*verify_jwt = false/);
+});

@@ -5,6 +5,7 @@
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData.js';
   import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
+  import { normalizeRichMediaConfig } from './profileRichMedia.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
   import { getCanonicalProfilePath } from './routeContract.js';
   import Button from './foundation/Button.svelte';
@@ -264,7 +265,21 @@
   function preserveExpressionFields(nextConfig, currentConfig) {
     const next = nextConfig || {};
     const current = currentConfig || {};
-    return { ...next, avatar_path: current.avatar_path ?? next.avatar_path ?? null, background_path: current.background_path ?? next.background_path ?? null, audio_path: current.audio_path ?? next.audio_path ?? null, spotify_type: current.spotify_type ?? next.spotify_type ?? null, spotify_id: current.spotify_id ?? next.spotify_id ?? null };
+    const nextRich = normalizeRichMediaConfig(next);
+    const currentRich = normalizeRichMediaConfig(current);
+    return {
+      ...next,
+      avatar_path: current.avatar_path ?? next.avatar_path ?? null,
+      background_path: current.background_path ?? next.background_path ?? null,
+      audio_path: current.audio_path ?? next.audio_path ?? null,
+      spotify_type: current.spotify_type ?? next.spotify_type ?? null,
+      spotify_id: current.spotify_id ?? next.spotify_id ?? null,
+      background_video_path: Object.prototype.hasOwnProperty.call(next, 'background_video_path') ? nextRich.background_video_path : currentRich.background_video_path,
+      banner_path: Object.prototype.hasOwnProperty.call(next, 'banner_path') ? nextRich.banner_path : currentRich.banner_path,
+      cursor_path: Object.prototype.hasOwnProperty.call(next, 'cursor_path') ? nextRich.cursor_path : currentRich.cursor_path,
+      pointer_cursor_path: Object.prototype.hasOwnProperty.call(next, 'pointer_cursor_path') ? nextRich.pointer_cursor_path : currentRich.pointer_cursor_path,
+      audio_playlist: Object.prototype.hasOwnProperty.call(next, 'audio_playlist') ? nextRich.audio_playlist : currentRich.audio_playlist
+    };
   }
 
   async function loadSettings() {
@@ -399,7 +414,7 @@
           {:else if activeSection === 'profile-aliases'}
             <svelte:component this={sectionComponents[activeSection]} />
           {:else if activeSection === 'profile-media'}
-            <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} on:expressionchange={updateExpression} />
+            <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} entitlements={$profileEntitlements} on:expressionchange={updateExpression} />
           {:else if activeSection === 'profile-content'}
             <svelte:component this={sectionComponents[activeSection]} bind:this={contentEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
           {:else if activeSection === 'profile-widgets'}

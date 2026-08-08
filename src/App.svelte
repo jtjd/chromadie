@@ -200,6 +200,12 @@
       return;
     }
 
+    if (view === 'pricing') {
+      const pricingPath = window.location.pathname === '/pricing/success' ? '/pricing/success' : '/pricing';
+      if (window.location.pathname !== pricingPath) window.history.pushState({}, '', pricingPath);
+      return;
+    }
+
     const params = new SvelteURLSearchParams();
     params.set('view', view);
     if (view === 'leaderboard' && leaderboardTab !== 'today') {
@@ -275,7 +281,7 @@
 
     routeMode = 'app';
     if (typeof window !== 'undefined') {
-      const nextPath = nextView === 'profile-settings' ? '/profile/settings' : '/';
+      const nextPath = nextView === 'profile-settings' ? '/profile/settings' : nextView === 'pricing' ? '/pricing' : '/';
       if (window.location.pathname !== nextPath || window.location.search) {
         window.history.pushState({}, '', nextPath);
       }
@@ -543,6 +549,15 @@
       };
     }
 
+    if (currentView === 'pricing') {
+      return {
+        loaderKey: 'pricing',
+        componentKey: 'pricing',
+        componentProps: {},
+        loadingLabel: 'Opening pricing'
+      };
+    }
+
     if (currentView === 'game') {
       return {
         loaderKey: 'game',
@@ -730,6 +745,8 @@
           ? 'Discovery | ChromaDie'
         : routeMode === 'app' && view === 'shop'
           ? 'Decoration Studio | ChromaDie'
+        : routeMode === 'app' && view === 'pricing'
+          ? 'Chromadie Plus — $7.99 lifetime | ChromaDie'
         : routeMode === 'app' && view === 'game' && challengeData
           ? challengeData.error
             ? 'Challenge Unavailable | ChromaDie'
@@ -763,6 +780,8 @@
           ? 'Explore ChromaDie players, public color stories, exceptional rolls, and leaderboard results.'
         : routeMode === 'app' && view === 'shop'
           ? 'Shape a beautiful ChromaDie profile with free foundations, earned cosmetics, and safe premium expression.'
+        : routeMode === 'app' && view === 'pricing'
+          ? 'Compare the complete free profile with Chromadie Plus lifetime profile expression.'
           : 'Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score.';
   $: canonicalPath = routeMode === 'not-found'
     ? '/'
@@ -778,6 +797,8 @@
         ? '/leaderboard'
         : routeMode === 'app' && view === 'profile-settings'
           ? '/profile/settings'
+        : routeMode === 'app' && view === 'pricing'
+          ? '/pricing'
         : routeMode === 'app' && view === 'profile' && selectedProfileUsername
           ? (getCanonicalProfilePath(selectedProfileUsername) || '/')
           : routeMode === 'app' && view === 'prototype'
@@ -787,7 +808,7 @@
           : '/';
   $: pageRobots = routeMode === 'not-found'
     ? 'noindex,follow'
-    : routeMode === 'app' && (legacyProfile || profileRouteKind === 'compatibility' || view === 'game' || view === 'shop' || view === 'profile-settings' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
+    : routeMode === 'app' && (legacyProfile || profileRouteKind === 'compatibility' || view === 'game' || view === 'shop' || view === 'profile-settings' || view === 'pricing' && typeof window !== 'undefined' && window.location.pathname === '/pricing/success' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
     ? 'noindex,follow'
     : routeMode === 'auth' || routeMode === 'auth-callback' || routeMode === 'reset-password'
       ? 'noindex,nofollow'
@@ -995,6 +1016,7 @@
           <a href="/privacy" on:click|preventDefault={() => navigateToPath('/privacy')}>Privacy Policy</a>
           <a href="/terms" on:click|preventDefault={() => navigateToPath('/terms')}>Terms</a>
           <a href="/how-to-play" on:click|preventDefault={() => navigateToPath('/how-to-play')}>How to Play</a>
+          <a href="/pricing" on:click|preventDefault={() => navigateToPath('/pricing')}>Pricing</a>
           <a href="mailto:support@chromadie.com">Support</a>
           <a href="mailto:business@chromadie.com">Business</a>
         </nav>

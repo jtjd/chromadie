@@ -1,4 +1,5 @@
 import { PROFILE_AUDIO_RULES, PROFILE_IMAGE_RULES } from './profileExpression.js';
+import { PROFILE_RICH_MEDIA_RULES, validateRichMediaFile } from './profileRichMedia.js';
 
 export function validateProfileAudioFile(file) {
   if (!file || typeof file !== 'object') return 'Choose an MP3 file first.';
@@ -38,6 +39,8 @@ export function validateProfileImageFile(file, kind) {
   }
   return '';
 }
+
+export { validateRichMediaFile };
 
 function loadImage(source) {
   return new Promise((resolve, reject) => {
@@ -89,6 +92,54 @@ async function boundedWebpFromCanvas(canvas, kind) {
   }
 
   throw new Error(`That image could not be compressed below ${rules.outputLabel}. Try a simpler image.`);
+}
+
+async function boundedRichWebpFromCanvas(canvas, kind) {
+  const rules = PROFILE_RICH_MEDIA_RULES[kind];
+  let candidateCanvas = canvas;
+  let quality = kind === 'banner' ? 0.88 : 0.82;
+  const minimumSide = kind === 'banner' ? 320 : 32;
+
+  for (let attempt = 0; attempt < 14; attempt += 1) {
+    const blob = await blobFromCanvas(candidateCanvas, quality);
+    if (blob.size <= rules.maxOutputBytes) return blob;
+    if (quality > 0.35) {
+      quality = Math.max(0.35, quality - 0.1);
+      continue;
+    }
+    if (Math.min(candidateCanvas.width, candidateCanvas.height) <= minimumSide) break;
+    candidateCanvas = resizeCanvas(candidateCanvas, 0.78);
+    quality = 0.7;
+  }
+  throw new Error(`That image could not be compressed below ${rules.label}. Try a simpler image.`);
+}
+
+/** Convert a banner or cursor image to the bounded WebP representation. */
+export async function processProfileRichImage(file, kind) {
+  const validationError = validateRichMediaFile(file, kind);
+  if (validationError) throw new Error(validationError);
+  if (!['banner', 'cursor', 'pointer_cursor'].includes(kind)) {
+    throw new Error('This rich media type is not an image.');
+  }
+  if (typeof window === 'undefined' || typeof document === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+    throw new Error('Image processing is only available in a browser.');
+  }
+
+  const sourceUrl = URL.createObjectURL(file);
+  try {
+    const image = await loadImage(sourceUrl);
+    const sourceWidth = Math.max(1, image.naturalWidth || image.width);
+    const sourceHeight = Math.max(1, image.naturalHeight || image.height);
+    const rules = PROFILE_RICH_MEDIA_RULES[kind];
+    const scale = Math.min(1, rules.maxWidth ? rules.maxWidth / sourceWidth : 1, rules.maxHeight ? rules.maxHeight / sourceHeight : 1);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+    canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    return await boundedRichWebpFromCanvas(canvas, kind);
+  } finally {
+    URL.revokeObjectURL(sourceUrl);
+  }
 }
 
 /**

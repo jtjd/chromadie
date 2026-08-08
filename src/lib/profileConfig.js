@@ -1,4 +1,5 @@
 import { normalizeProfileExpression } from './profileExpression.js';
+import { createDefaultRichMediaConfig, normalizeRichMediaConfig } from './profileRichMedia.js';
 import { createDefaultProfileContent, normalizeProfileContent } from './profileContent.js';
 import { normalizeProfileWidgets } from './profileWidgets.js';
 import { inferProfileTemplateKey, normalizeProfileTemplateKey } from './profileTemplates.js';
@@ -138,7 +139,8 @@ export function createDefaultProfileConfig(signatureColor = PROFILE_APPEARANCE_D
     background_path: null,
     audio_path: null,
     spotify_type: null,
-    spotify_id: null
+    spotify_id: null,
+    ...createDefaultRichMediaConfig()
   };
 }
 
@@ -203,6 +205,7 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
     links: links.sort((left, right) => left.order - right.order),
     content: normalizeProfileContent(value.content),
     ...normalizeProfileExpression(value),
+    ...normalizeRichMediaConfig(value),
     widgets: normalizeProfileWidgets(value.widgets, value)
   };
   normalized.signatureColor = normalized.appearance.colors.accent;

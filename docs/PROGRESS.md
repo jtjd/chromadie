@@ -1,5 +1,33 @@
 # Chromadie 2.0 Progress
 
+## Competitor parity Milestone 10 implemented — 2026-08-08
+
+- Added bounded premium/staff rich media: three background videos, five MP3
+  tracks, one WebP banner, and normal/pointer cursor assets within a 150 MB
+  profile quota.
+- Added staged owner uploads, Storage MIME verification, reusable selection,
+  deletion, audio trim/order/shuffle/loop/volume controls, refund recovery,
+  reduced-motion handling, and finite Enter-gated playback.
+- Added the additive rich-media migration, browser-authority tests, database
+  security coverage, local schema lint/reset, and the complete validation plus
+  Chromium smoke suite. The inherited aggregate JS/CSS catalog warning remains
+  advisory; all hard route and initial-load budgets pass.
+
+## Competitor parity Milestone 9 implemented — 2026-08-08
+
+- Added the public `/pricing` and authenticated `/pricing/success` surfaces for
+  a fixed $7.99 USD lifetime Chromadie Plus purchase and restore status.
+- Added authenticated checkout/restore Edge Functions and a raw-body Stripe
+  webhook worker. Only the signature-verified webhook can invoke the
+  service-only entitlement processor.
+- Added `20260808200000_lifetime_premium_fulfillment` with private billing
+  records, canonical `chromadie_plus` backfill, `atelier_plus` compatibility,
+  staff synchronization, atomic idempotency, refund/chargeback revocation, and
+  a 30-day recovery marker.
+- Added signature, route, authority, retry, duplicate, refund, and database
+  privilege coverage. Live Stripe test-mode fulfillment remains an operator
+  deployment check requiring hosted secrets and webhook configuration.
+
 ## Dashboard parity Milestone 8 deployed — 2026-08-08
 
 - Added owner-managed Profile Studio aliases with up to three alternate paths
@@ -2459,3 +2487,18 @@ Performance remains over inherited initial/total JS and total CSS budgets.
   deployment pass. The existing browser smoke harness was attempted three
   times but stalled before the content step during authenticated route
   navigation with transient local 401/loader failures.
+
+## 2026-08-08 — Add bounded rich profile media
+
+- Added the additive rich-media library and `profile_media` bucket with staged
+  upload, Storage MIME verification, active selection, deletion, cleanup, and
+  per-kind plus 150 MB quota enforcement.
+- Added premium/staff editor controls for background video, banner, normal and
+  pointer cursors, and a five-track MP3 playlist with ordering, trim points,
+  shuffle, loop, volume, autoplay intent, and visible controls.
+- Added public muted-video/poster rendering, optional banner/cursor variables,
+  reduced-motion suppression, and finite Enter-gated audio with keyboard and
+  track controls. Free image expression remains unchanged.
+- Added Milestone 10 source/unit and database-security coverage. Local schema
+  lint/reset and database-security checks pass; the complete repository suite
+  is run at the milestone boundary.

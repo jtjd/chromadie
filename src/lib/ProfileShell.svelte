@@ -37,6 +37,7 @@
   import { hasVisibleProfileContent } from './profileContent.js';
   import { getVisibleProfileWidgets } from './profileWidgets.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
+  import { normalizeRichMediaConfig } from './profileRichMedia.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -72,6 +73,7 @@
   let refreshing = false;
   let profileMoreActive = false;
   let profilePageElement;
+  let prefersReducedMotion = false;
 
   function resetShellState(nextLoading = false) {
     targetProfile = null;
@@ -161,6 +163,12 @@
   afterUpdate(syncProfileData);
 
   onMount(() => {
+    const motionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)')
+      : null;
+    const syncMotionPreference = () => { prefersReducedMotion = Boolean(motionQuery?.matches); };
+    syncMotionPreference();
+    motionQuery?.addEventListener?.('change', syncMotionPreference);
     const refreshOnReturn = () => {
       if (document.visibilityState !== 'visible' || previewMode || loading || refreshing || !targetProfile) return;
       refreshing = true;
@@ -209,6 +217,7 @@
       window.removeEventListener('pageshow', refreshOnReturn);
       profilePageElement?.removeEventListener('scroll', updateProfileScrollState);
       profilePageElement?.removeEventListener('wheel', handleProfileWheel);
+      motionQuery?.removeEventListener?.('change', syncMotionPreference);
     };
   });
 
@@ -396,11 +405,19 @@
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
   $: audioSrc = getProfileMediaUrl(effectiveProfileConfig.audio_path, mediaCacheKey);
+  $: richMedia = normalizeRichMediaConfig(effectiveProfileConfig);
+  $: backgroundVideoSrc = getProfileMediaUrl(richMedia.background_video_path, mediaCacheKey);
+  $: bannerSrc = getProfileMediaUrl(richMedia.banner_path, mediaCacheKey);
+  $: cursorSrc = getProfileMediaUrl(richMedia.cursor_path, mediaCacheKey);
+  $: pointerCursorSrc = getProfileMediaUrl(richMedia.pointer_cursor_path, mediaCacheKey);
+  $: richAudioPlaylist = richMedia.audio_playlist;
   $: profileContent = effectiveProfileConfig.content;
   $: hasProfileContent = hasVisibleProfileContent(profileContent);
   $: profileWidgets = getVisibleProfileWidgets(effectiveProfileConfig.widgets, effectiveProfileConfig);
   $: hasSpotifyWidget = profileWidgets.some(widget => widget.provider === 'spotify');
   $: showExpression = Boolean(audioSrc)
+    || Boolean(backgroundVideoSrc)
+    || richAudioPlaylist.tracks.length > 0
     || Boolean(effectiveProfileConfig.spotify_type && effectiveProfileConfig.spotify_id)
     || profileWidgets.length > 0
     || PROFILE_MUSIC_ENABLED
@@ -430,16 +447,19 @@
   // appearance values are projected onto the identity card below instead of
   // leaking into the roll surface.
   $: profileCardStyle = getProfileAppearanceStyle(effectiveProfileConfig);
-  $: profilePageStyle = previewMode ? profileShellStyle : `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}`;
+  $: profilePageStyle = `${previewMode ? profileShellStyle : `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}`}${cursorSrc ? `;cursor:url("${cursorSrc}") 16 16, auto` : ''}${pointerCursorSrc ? `;--profile-pointer-cursor:url("${pointerCursorSrc}")` : ''}`;
 
   onDestroy(() => {
     if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
   {#if backgroundSrc && !previewMode}
     <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
+  {/if}
+  {#if backgroundVideoSrc && !previewMode && !prefersReducedMotion}
+    <video class="profile-shell__media-video" src={backgroundVideoSrc} autoplay muted loop playsinline poster={backgroundSrc || undefined} aria-hidden="true"></video>
   {/if}
   {#if atmosphereKey && !previewMode}
     <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__page-atmosphere-layer" />
@@ -471,6 +491,9 @@
             {/if}
             {#if cursorTrailKey && previewMode}
               <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__card-cursor-layer" />
+            {/if}
+            {#if bannerSrc}
+              <img class="profile-shell__rich-banner" src={bannerSrc} alt="" loading="lazy" aria-hidden="true" />
             {/if}
             <IdentityCard
               username={username}
@@ -541,7 +564,7 @@
         {#if showExpression}
           <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
             <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
-              <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} />
+              <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} />
               <ProfileWidgets widgets={profileWidgets} deferMedia={previewMode} />
               {#if hasProfileContent}
                 <ProfileContent content={profileContent} />
@@ -782,9 +805,14 @@
   .profile-shell__media-background,
   .profile-shell__card-media-background { background-position: center; background-size: cover; opacity: 1; filter: none; transform: none; pointer-events: none; }
   .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; }
+  .profile-shell__media-video { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; opacity: .92; pointer-events: none; }
   .profile-shell__card-media-background { position: absolute; inset: 0; z-index: 0; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
   .profile-shell__surface-backdrop { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: var(--profile-background-paint, transparent); pointer-events: none; }
   .profile-shell__surface-media-background { position: absolute; inset: -6%; z-index: 0; background-position: center; background-size: cover; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
+  .profile-shell__rich-banner { display: block; width: 100%; max-height: 13rem; object-fit: cover; border-radius: var(--radius-lg) var(--radius-lg) 0 0; opacity: .94; }
+  .profile-shell-page--rich-pointer :global(a),
+  .profile-shell-page--rich-pointer :global(button),
+  .profile-shell-page--rich-pointer :global([role="button"]) { cursor: var(--profile-pointer-cursor), pointer; }
   :global(.profile-atmosphere.profile-shell__page-atmosphere-layer) { isolation: auto; }
   :global(.profile-atmosphere.profile-shell__card-atmosphere-layer),
   :global(.profile-atmosphere.profile-shell__surface-atmosphere-layer) { isolation: auto; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
@@ -1017,6 +1045,7 @@
     .profile-shell__story-progress span { transition-duration: 0.001ms; }
     .profile-shell__action:hover:not(:disabled) { transform: none; }
     .profile-shell__link:hover { transform: none; }
+    .profile-shell__media-video { display: none; }
   }
   /* Profile composition: one color field, one identity surface. */
   .profile-shell-page {

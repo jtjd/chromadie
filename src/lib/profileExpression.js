@@ -3,7 +3,8 @@ export const PROFILE_EXPRESSION_TYPES = Object.freeze(['track', 'playlist', 'alb
 export const PROFILE_STORAGE_BUCKETS = Object.freeze({
   avatar: 'avatars',
   background: 'backgrounds',
-  audio: 'profile_audio'
+  audio: 'profile_audio',
+  rich: 'profile_media'
 });
 
 const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
@@ -106,6 +107,11 @@ export function getProfileStorageRef(storedPath) {
     ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.audio})/(${UUID_PATTERN})/(profile\\.mp3)$`, 'i'))
     : null;
   if (audioMatch) return { bucket: PROFILE_STORAGE_BUCKETS.audio, objectPath: `${audioMatch[2]}/${audioMatch[3]}` };
+
+  const richMatch = typeof storedPath === 'string'
+    ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.rich})/(${UUID_PATTERN})/(${UUID_PATTERN}\\.(?:mp4|webm|mp3|webp))$`, 'i'))
+    : null;
+  if (richMatch) return { bucket: PROFILE_STORAGE_BUCKETS.rich, objectPath: `${richMatch[2]}/${richMatch[3]}` };
   return null;
 }
 
