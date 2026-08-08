@@ -18,7 +18,9 @@ email configuration changed.
 - [x] Canonical origin, profile metadata, share helpers, sitemap, robots,
   server-rendered profile pages, and auth URL helpers remain covered by the
   Phase 13 repository contract.
-- [x] Performance budgets are JavaScript <=625 kB, CSS <=295 kB, HTML <=12 kB.
+- [ ] Current performance budgets pass: initial JavaScript <=450 kB, largest
+  lazy JavaScript <=100 kB, total JavaScript <=700 kB, initial CSS <=200 kB,
+  largest lazy CSS <=75 kB, total CSS <=380 kB, and HTML <=12 kB.
 - [ ] Fresh full-browser screenshot evidence for every Phase 13.1 state has
   been captured and human-reviewed in this checkout.
 
@@ -40,10 +42,11 @@ email configuration changed.
 ## Supabase
 
 - [x] Phase 13 identity migration is part of the aligned production baseline.
-- [ ] Apply and verify the additive Phase 13.1 reservation migration through
-  the reviewed migration workflow; it has not been pushed by this milestone.
-- [ ] Verify all 171 reservation rows, including the `Admin` grandfather row.
-- [ ] Verify reservation-table and blocklist RLS, browser grants, helper grants,
+- [x] The additive Phase 13.1 reservation migration is present in the linked
+  migration history.
+- [x] All 171 reservation rows, including the `Admin` grandfather row, were
+  verified read-only on 2026-08-08.
+- [x] Reservation-table and blocklist RLS, browser grants, helper grants,
   trigger policy, and direct-write rejection remotely.
 - [ ] Confirm Site URL is `https://chm.lol`.
 - [ ] Confirm only required canonical, legacy-transition, preview, and local

@@ -1,5 +1,22 @@
 # Chromadie 2.0 Progress
 
+## Dashboard parity Milestone 0 checkpoint — 2026-08-08
+
+- Reconciled current migration/catalog truth and separated database readiness
+  from the still-open external launch gates.
+- Added `npm run test:browser`, a loopback-only Chromium smoke for signup,
+  authenticated Profile Studio refresh, inline draft preview, blur and
+  page/card/roll boundaries, mobile keyboard behavior, reduced motion, and
+  canonical public-profile refresh.
+- Lazy-loaded the homepage, narrowed the Supabase browser transport, replaced
+  the Storage SDK route chunk with covered upload/remove requests, removed
+  retired global CSS, and added deterministic CSS asset restructuring.
+- Performance improved to 251.26 kB initial JS, 770.01 kB total JS, 61.88 kB
+  initial CSS, and 375.71 kB total CSS. Initial/lazy/HTML and all CSS gates pass;
+  the unchanged 700 kB aggregate JavaScript gate remains 70.01 kB over.
+- Milestone status remains active. Auth replacement and compatibility-route
+  deletion were rejected as unsafe baseline shortcuts.
+
 ## Compositor-safe blur follow-up — 2026-08-08
 
 - Kept page-wide public backgrounds and atmosphere plates unfiltered outside

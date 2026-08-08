@@ -190,9 +190,10 @@ test('homepage uses optimized reference imagery without embedding mock data', as
 });
 
 test('the application mounts the homepage, signup flow, and global footer', () => {
-  assert.match(app, /import HomePage from '.\/lib\/HomePage\.svelte'/);
+  assert.doesNotMatch(app, /import HomePage from '.\/lib\/HomePage\.svelte'/);
+  assert.match(routeLoaders, /home:\s*\(\) => import\('\.\/HomePage\.svelte'\)/);
   assert.match(app, /currentView === 'home'/);
-  assert.match(app, /staticComponent: HomePage/);
+  assert.match(app, /loaderKey: 'home'/);
   assert.match(app, /on:signup=\{\(\) => openAuthModal\('signup'\)\}/);
   assert.match(app, /<RouteOutlet/);
   assert.match(app, /class:app-shell--home=\{homeModeVisible\}/);

@@ -5,6 +5,14 @@ Branch: `redesign/profile-first-reconciliation`
 HEAD at audit start: `0d275cd2d97d7331784593de449419ac08181aca`
 Linked project: `auuoibdmjylrnekqquku` (`us-east-2`)
 
+> Current-state addendum — 2026-08-08: this report preserves what was true
+> during the Phase 13.1 run. A later read-only baseline verified that
+> `20260730100000_username_reservation_policy.sql` is now present remotely,
+> all 171 reservation rows and the `Admin` grandfathering are active, and local
+> and linked migration histories match through `20260805150000`. Domain,
+> Cloudflare, Auth/email, browser-certification, recovery-owner, and Pages-gate
+> work remains incomplete; public launch is still NO-GO.
+
 ## Recommendation
 
 - Database reservation release: **NO-GO for remote application from this

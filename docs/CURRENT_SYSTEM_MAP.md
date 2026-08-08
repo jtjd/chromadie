@@ -1,6 +1,6 @@
 # Chromadie 2.0 — Current System Map
 
-**Audit date:** 2026-08-02
+**Audit date:** 2026-08-08
 **Application:** Svelte 5 + Vite SPA
 **Backend:** Supabase Auth/Postgres/RPCs/Edge Functions
 **Hosting:** Cloudflare Pages + Pages Functions
@@ -18,7 +18,8 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 
 | URL / input | Client interpretation | Primary owner | Server / metadata behavior | Access notes |
 | --- | --- | --- | --- | --- |
-| `/` | `view = game` | `App.svelte` → `Game.svelte` | `functions/index.js` serves shell metadata | Guest and authenticated play |
+| `/` | `view = home` | `App.svelte` → lazy `HomePage.svelte` | `functions/index.js` serves homepage metadata | Public landing page; signed-in users receive an owner-profile CTA |
+| `/?view=game` | `view = game` | `App.svelte` → `Game.svelte` | Compatibility shell metadata remains canonicalized to `/` | Guest and authenticated daily roll |
 | `/shop` or `/?view=shop` | `view = shop` | `Shop.svelte` → `ShopBrowse.svelte` / `ShopCollection.svelte` / `ShopRail.svelte` / `ShopContextualPreview.svelte` → shared preview components | Shell metadata is canonicalized to `/` by the client for query form; `/shop` title/description identify the Shop | Authenticated account only; guests see `GuestLock`; previews have no permanent equip side effects |
 | `/leaderboard` or `/?view=leaderboard` | `view = leaderboard` | `Leaderboard.svelte` | `functions/leaderboard.js` serves crawler metadata for `/leaderboard` | Public leaderboard reads; rival tab is authenticated |
 | `/leaderboard?tab=today|rivals|weekly|monthly|roll|recent|rising|new|random` | Leaderboard/discovery tab | `Leaderboard.svelte` → `DiscoveryHub.svelte` | Tab is client state; route accepts only the allow-listed values | `rivals` requires an authenticated session; other surfaces are public |
@@ -299,7 +300,7 @@ Svelte text interpolation, with links rejected at the database boundary.
 
 | Domain | Current source | Consumer / hazard |
 | --- | --- | --- |
-| Shop catalog | `public.shop_items` plus `meta.shop_version`; local cache; `supabase/seed.sql` and the lean reset/launch-expansion migrations; 126 active rows | `stores.js` validates Name, Border, Cursor, Avatar, paid Layout, and the 12 authored Profile Atmosphere renderer keys; `Shop.svelte` adds section/filter behavior and explicit access labels |
+| Shop catalog | `public.shop_items` plus `meta.shop_version`; local cache; `supabase/seed.sql` and additive catalog migrations; 97 active rows plus 42 retained legacy rows | `stores.js` validates Name, Border, Cursor, Avatar, paid Layout, and the 12 authored Profile Atmosphere renderer keys; `Shop.svelte` adds section/filter behavior and explicit access labels |
 | Premium expression entitlements | `public.profile_entitlements`, written only by service-role grant code and read through `get_my_profile_entitlements()` | RLS is enabled, browser roles have no table privileges, and `equip_item` rechecks the matching catalog entitlement server-side; no payment provider or client grant path exists in Phase 8 |
 | Cosmetic rendering | Modern Name rows resolve through `src/lib/name/`; nine Profile Border rows resolve through `src/lib/profile-border/`; Cursor Trails, Avatar Effects, and paid Layouts resolve through their finite registries; titles and utility use bounded text | Catalog values select finite code-owned renderers; no catalog CSS, HTML, JavaScript, URLs, or arbitrary effects are accepted |
 | Badges and achievement labels | `src/lib/badgeData.js` for client labels/icons/points; database seeded definitions and SQL achievement checks | Display metadata can drift from server ids; `check:balance-drift` and tests protect the registry/seed relationship |
@@ -322,7 +323,7 @@ Svelte text interpolation, with links rejected at the database boundary.
 4. `_publicPage.js` rewrites the shell's title, description, robots, canonical, Open Graph/Twitter tags, and safe noscript/JSON-LD where needed. It hashes inline scripts for CSP rather than enabling unrestricted inline JavaScript and accepts an explicit cache policy per public route.
 5. `App.svelte` repeats the metadata update after client hydration so in-app navigation keeps document metadata synchronized. This intentional duplication is a migration hazard.
 6. `public/robots.txt`, sitemap index/core files, `site.webmanifest`, icons, and `llms.txt` complete the public acquisition/metadata surface.
-7. Supabase migrations/seed and Edge Functions deploy separately from the Pages bundle. Production currently follows Cloudflare Pages from GitHub `main`; the audit branch is `redesign/profile-first`. The 2026-07-25 linked-project audit found remote migration history ending at `20260712200000_launch_audit_remediation`, with local Phase 4–8 migrations pending; this is a launch blocker until an authorized ordered deployment and post-deploy RPC/catalog verification complete.
+7. Supabase migrations/seed and Edge Functions deploy separately from the Pages bundle. Production follows Cloudflare Pages from GitHub `main`. The 2026-08-08 linked-project audit found local and remote migrations aligned through `20260805150000_profile_progression_rewards.sql`, no public-schema diff, and catalog parity. External Pages/domain/Auth/email/browser/performance gates remain independent launch blockers.
 
 The Phase 4 configuration is intentionally not part of the crawler metadata contract. `/u/<username>` metadata remains username/profile-projection based; the browser fetches one bounded published configuration RPC after hydration. Adding configuration to OG/JSON-LD or the sitemap would couple structured profile editing to the Pages Function metadata path and is deferred.
 
@@ -387,7 +388,7 @@ The Phase 1 prototype has a separate Pages Function at `/prototype/profile`. It 
 - Phase 6 discovery has two public-read contracts: the new `get_public_discovery` projection intentionally omits internal profile ids, while the existing authenticated rivals RPC retains its id only for the pre-existing follow mutation. Do not copy that compatibility exception into new public surfaces.
 - Discovery ordering is split across indexed date/score/profile queries and a bounded deterministic hash order for the random surface. Adding a new surface requires a defined ranking meaning, public-field review, page/response bound, and index or planner check before exposing it.
 - Discovery card cosmetics still resolve through the live catalog and `cosmetics.js`; a card must never render RPC-provided CSS strings directly or treat a public profile card as an authority for follows, rank, scoring, or rewards.
-- The shop catalog is now 126 active rows and has three explicit access tiers. New catalog keys must be added consistently to `shop_items`, the seed, the live migration, renderer registries, cache validation, and drift checks. The retained composable slots include 64 Name layers, nine Borders, 16 Cursor Trails, 18 Avatar Effects, five paid Layouts, and 12 authored video Profile Atmosphere keys. Procedural atmosphere presets were removed rather than kept as inactive catalog baggage.
+- The shop catalog has 97 active rows and 42 retained legacy rows across three explicit access tiers. New catalog keys must be added consistently to `shop_items`, the seed, an additive migration, renderer registries, cache validation, and drift checks. The active retained slots include 35 paid Name rows, nine Borders, 16 Cursor Trails, 18 Avatar Effects, five paid Layouts, and 12 authored Profile Atmosphere keys.
 - `profile_entitlements` is intentionally service-owned. Browser roles have no table grants and the owner client receives only bounded keys through `get_my_profile_entitlements`; introducing payment/webhook integration must preserve the service-role-only grant boundary, account-deletion cascade, and idempotent key upsert.
 - `purchase_item` must continue rejecting premium rows before EP/inventory mutation, while `equip_item` must recheck entitlement server-side. Never model a premium key in browser state as proof of purchase or move grants into `Shop.svelte`.
 - `ShopStudioPreview` must keep its `ProfileShell` preview mode network-free and isolated from social/owner controls. Changes to `ProfileShell` data loading or CSS can accidentally turn a fitting-room preview into a profile mutation/read surface.
@@ -402,7 +403,7 @@ The Phase 1 prototype has a separate Pages Function at `/prototype/profile`. It 
 - `legacy=1` remains the compatibility renderer for mood, pinned badges, rivals, and deletion. Phase 9 launch hardening does not remove it; retiring it requires equivalent owner controls, redirects/canonical behavior, and a rollback plan.
 - Social rate limits are per-account action windows in `profile_social_rate_limits`; they are not a replacement for abuse review, and adding notifications would require deduplication, mute controls, and a new spam audit.
 - Activity privacy gates the bounded recent-score/story/discovery projections. The public profile identity and direct link remain available, so changing the meaning of “private profile” requires a separate route/metadata/sitemap decision.
-- The current branch and linked Supabase project are schema/catalog-drifted: Phase 4–8 RPCs return `PGRST202`/HTTP 404 remotely and the remote catalog lacks `bg_prism_atmosphere` and `name_prism_atelier`. Do not add a client fallback or browser-only catalog exception; reconcile through an authorized migration/seed deployment with backup/PITR and rollback evidence.
+- The current branch and linked Supabase project were read-only verified as schema/catalog aligned on 2026-08-08. Do not add a client fallback or browser-only catalog exception; future drift must still be reconciled through an authorized additive migration/seed deployment with backup/PITR and rollback evidence.
 - `supabase db diff --linked --schema public` is a read-only drift diagnostic only. Its 2026-07-25 output warned about unexpected drops involving Phase 4–8 objects, so generated SQL must not be applied as a rollback plan. Use `supabase migration list --linked` plus the reviewed migration sequence as the deployment boundary.
 
 ## Milestone boundary

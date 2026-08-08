@@ -396,6 +396,12 @@ not public-launch certification.
 
 ## Phase 13.1 final recommendation
 
+> Current-state addendum — 2026-08-08: the reservation migration described
+> below was subsequently applied and verified. This historical recommendation
+> still correctly records the earlier stop point, while the external domain,
+> Auth/email, browser, recovery-owner, and maintenance-gate requirements remain
+> open.
+
 - Database reservation release: **NO-GO** until the additive migration is
   reviewed again against the live collision and release procedure.
 - chm.lol public cutover: **NO-GO** until external DNS, SSL, auth/email,

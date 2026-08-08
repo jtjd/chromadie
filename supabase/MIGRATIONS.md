@@ -118,18 +118,18 @@ Historical Phase D2 composable Name activation:
   reviewed corrective migration if a schema issue is found. Never reset a
   remote project or manually mark the migration applied.
 
-Phase 13.1 local pending migration:
+Phase 13.1 reservation migration:
 
 - `migrations/20260730100000_username_reservation_policy.sql` adds the exact
   normalized `reserved_usernames` policy, authoritative availability and
   profile-write enforcement, grandfathered existing staff identity support,
   the owner-approved ChromaDie collision rename, and RLS on `username_blocklist`
   and `reserved_usernames`.
-- The migration is additive and has passed a fresh local reset, schema lint,
-  username-policy drift check, and database-security check. It is not recorded
-  in the linked production history. Do not edit applied migrations, use
-  migration repair, or push this migration until the Phase 13.1 release gates
-  and the `Admin`/`ChromaDie` collision handling are reviewed.
+- The migration is additive, has passed a fresh local reset, schema lint,
+  username-policy drift check, and database-security check, and is recorded in
+  the linked production history. The 2026-08-08 read-only baseline verified all
+  171 reservations, the grandfathered `Admin` row, and RLS. Do not edit this
+  applied migration, use migration repair, or replay it manually.
 
 Phase 14 migrations:
 

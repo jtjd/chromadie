@@ -2,7 +2,6 @@
   import { session, authUser, profile, authInitialized, authEvent, accountState, guestProgressActive, profileLoading, profileError, selectedUserId, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
   import { signOutCurrentBrowser } from './lib/authSession';
   import { supabase, supabaseError } from './lib/supabase';
-  import HomePage from './lib/HomePage.svelte';
   import SiteModeHeader from './lib/SiteModeHeader.svelte';
   import Toast from './lib/Toast.svelte';
   import GuestLock from './lib/GuestLock.svelte';
@@ -497,8 +496,8 @@
 
     if (currentView === 'home') {
       return {
+        loaderKey: 'home',
         componentKey: 'home',
-        staticComponent: HomePage,
         componentProps: { isAuthenticated: authenticated, accountState: currentAccountState },
         loadingLabel: 'Opening ChromaDie'
       };

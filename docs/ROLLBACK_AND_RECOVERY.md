@@ -1,7 +1,7 @@
 # Chromadie 2.0 — Rollback and Recovery Boundaries
 
-**Status:** Phase 9 launch-audit runbook  
-**Last reviewed:** 2026-07-25  
+**Status:** Milestone 0 launch-safety runbook
+**Last reviewed:** 2026-08-08
 **Release/DB owner:** assign before production schema deployment
 
 This runbook records the safe stop points for the current Cloudflare Pages and
@@ -14,21 +14,18 @@ must remain server-authoritative and recoverable.
 - The browser bundle is deployed separately from Supabase migrations and Edge
   Functions. Cloudflare Pages follows the release commit on `main`; the
   audited branch is `redesign/profile-first`.
-- The linked Supabase project was read-only audited on 2026-07-25. Its remote
-  migration history ends at `20260712200000_launch_audit_remediation`.
-- The local Phase 4–8 migrations remain pending remotely:
-  `20260725100000_profile_configuration.sql`,
-  `20260725110000_profile_story.sql`,
-  `20260725120000_public_discovery.sql`,
-  `20260725130000_social_layer.sql`, and
-  `20260725140000_decoration_entitlements.sql`.
-- The remote catalog comparison also reported `bg_prism_atmosphere` and
-  `name_prism_atelier` missing from remote `shop_items`.
+- The linked Supabase project was read-only audited on 2026-08-08. Local and
+  remote migration histories match through
+  `20260805150000_profile_progression_rewards.sql`, and a linked public-schema
+  diff reports no changes.
+- The remote catalog contains the expected 97 active items plus 42 retained
+  legacy items; catalog drift checks pass.
+- Database alignment does not certify the public launch. The Pages maintenance
+  gate, Cloudflare/domain ownership, Auth callback configuration, email
+  templates, full browser matrix, performance budget, and named recovery owner
+  remain release gates.
 
-Until the migration and catalog drift are reviewed and remediated, the launch
-status is **NO-GO for the current Phase 4–9 feature set**. The frontend must
-not add a compatibility fallback that changes public discovery or privacy
-semantics.
+Launch status remains **NO-GO**, but no database or catalog fallback is needed.
 
 ## Pre-deployment checklist
 

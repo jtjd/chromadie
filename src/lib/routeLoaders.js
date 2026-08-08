@@ -1,4 +1,5 @@
 const loaders = Object.freeze({
+  home: () => import('./HomePage.svelte'),
   auth: () => import('./Auth.svelte'),
   authCallback: () => import('./AuthCallback.svelte'),
   resetPassword: () => import('./ResetPassword.svelte'),

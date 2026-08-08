@@ -2,6 +2,20 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Keep the dashboard baseline incremental while the aggregate JavaScript cap remains open
+
+Milestone 0 narrows the browser transport to the Auth and PostgREST clients,
+implements the two used Storage operations against the documented Storage API,
+lazy-loads the homepage, and restructures emitted CSS without changing route or
+auth behavior. It does not replace the working auth client or delete legacy
+profile, roll, shop, leaderboard, legal, or prototype routes solely to satisfy
+an aggregate bundle metric. The milestone remains active until the unchanged
+total-JavaScript gate has a compatibility-safe resolution.
+
+The executable browser gate may only target loopback Supabase and must cover
+real rendered behavior; source-string assertions remain useful unit contracts
+but are not browser evidence.
+
 ## 2026-08-08 — Give authored media a compositor-safe blur path
 
 The identity surface retains translucent `backdrop-filter` behavior for normal

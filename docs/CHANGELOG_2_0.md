@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Add a real Profile Studio browser gate
+
+- Added a repeatable loopback-only Chromium smoke that verifies the inline live
+  preview, draft blur feedback, public/profile effect boundaries, mobile menu
+  focus, reduced motion, and direct-refresh routing.
+- Reduced initial application JavaScript and the complete CSS catalog without
+  changing profile configuration, gameplay authority, or published routes.
+- This is an active Milestone 0 checkpoint; the aggregate JavaScript budget is
+  still open and the next dashboard-parity milestone has not started.
+
 ## 2026-08-08 — Make blur reliable over authored media
 
 - Surface blur now directly softens uploaded backgrounds and atmosphere plates
