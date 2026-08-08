@@ -9,6 +9,7 @@
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
+  import { getProfileAppearanceStyle } from './profileAppearanceStyle.js';
 
   export let loadout = {};
   export let username = 'Your profile';
@@ -26,7 +27,7 @@
   $: accountUsername = account.username || username || 'You';
   $: accountDisplayName = account.display_name || username || accountUsername;
   $: resolvedNameRendererMode = nameRendererMode || (compact ? 'static-signature' : 'animated');
-  $: previewProfileConfig = profileConfig?.published || profileConfig?.draft || profileConfig || createDefaultProfileConfig(displayColor);
+  $: previewProfileConfig = profileConfig?.draft || profileConfig?.published || profileConfig || createDefaultProfileConfig(displayColor);
   $: previewBadges = (Array.isArray(account.equipped_badges) ? account.equipped_badges : [])
     .filter(id => typeof id === 'string' && id !== 'launch_edition')
     .slice(0, 3)
@@ -37,6 +38,9 @@
     })
     .filter(Boolean);
   $: previewAvatarSrc = getProfileMediaUrl(previewProfileConfig.avatar_path);
+  $: previewBackgroundSrc = getProfileMediaUrl(previewProfileConfig.background_path);
+  $: previewAccentColor = previewProfileConfig.appearance?.colors?.accent || displayColor;
+  $: previewCardStyle = getProfileAppearanceStyle(previewProfileConfig);
   $: nameRendererLoadout = getNameRendererLoadout(loadout);
   $: previewLayout = resolveProfileLayoutVariant(loadout, previewProfileConfig);
   $: cursorKey = getCursorTrailKey(loadout?.cursor_trail);
@@ -68,7 +72,10 @@
       compact={compact}
       animated={resolvedNameRendererMode === 'animated'}
     >
-      <div class={'studio-profile-card studio-profile-card--' + previewLayout}>
+      <div class={'studio-profile-card studio-profile-card--' + previewLayout} style={previewCardStyle}>
+        {#if previewBackgroundSrc}
+          <div class="studio-profile-card__background" style={`background-image: url("${previewBackgroundSrc}");`} aria-hidden="true"></div>
+        {/if}
         <IdentityCard
           username={accountUsername}
           displayName={accountDisplayName}
@@ -78,7 +85,7 @@
           badges={previewBadges}
           founder={Boolean(account.equipped_badges?.includes('launch_edition'))}
           avatarSrc={previewAvatarSrc}
-          accentColor={displayColor}
+          accentColor={previewAccentColor}
           nameRendererLoadout={nameRendererLoadout}
           nameRendererContext={compact ? 'card' : 'profile'}
           nameRendererMode={resolvedNameRendererMode}
@@ -198,10 +205,11 @@
     overflow: hidden;
     border: 1px solid var(--color-line-subtle);
     border-radius: var(--radius-md);
-    background: var(--surface-panel-strong);
+    background: var(--profile-background-paint, var(--surface-panel-strong));
     box-shadow: 0 24px 48px rgba(0,0,0,0.38);
   }
-  .studio-profile-card :global(.identity-card) { z-index: 2; width: 100%; box-sizing: border-box; padding: 1rem; border: 0; border-radius: 17px; }
+  .studio-profile-card__background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; pointer-events: none; }
+  .studio-profile-card :global(.identity-card) { position: relative; z-index: 1; width: 100%; box-sizing: border-box; padding: 1rem; border: 0; border-radius: 17px; }
   .studio-profile-card :global(.identity-card__person) { gap: 0.75rem; }
   .studio-profile-card :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
   .studio-profile-card :global(.identity-card__avatar-letter) { font-size: 1.5rem; }

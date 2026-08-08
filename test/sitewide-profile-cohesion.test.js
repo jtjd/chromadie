@@ -61,9 +61,9 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: none; \}/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__wordmark > span \{ color: #cdd2ff; \}/);
   assert.match(siteHeader, /\{#if isHomeMode \|\| isHomepageStyle\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
-  assert.match(profileShell, /profile-shell-page:not\(\.profile-shell-page--preview\) \.profile-shell__cursor-layer[\s\S]*?position: fixed !important;/);
-  assert.match(profileShell, /profile-shell-page:not\(\.profile-shell-page--preview\) \.profile-shell__atmosphere-layer[\s\S]*?position: fixed !important;/);
-  assert.match(profileShell, /\.profile-shell__media-background \{ position: fixed;/);
+  assert.match(profileShell, /profile-shell__card-cursor-layer/);
+  assert.match(profileShell, /profile-shell__card-atmosphere-layer/);
+  assert.match(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);
 });
 
 test('leaderboard and legal routes share the homepage presentation contract', async () => {

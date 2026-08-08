@@ -14,11 +14,13 @@
     roll: 'Daily roll', stats: 'Progress stats', signature: 'Signature roll', links: 'Social links',
     recent: 'Recent colors', achievements: 'Pinned achievements', boundary: 'Public boundary', explore: 'Explore footer'
   });
+  const EDITABLE_MODULE_IDS = Object.freeze(['stats', 'signature', 'links', 'recent', 'achievements']);
   const LINK_TYPE_LABELS = Object.freeze({
     website: 'Website', youtube: 'YouTube', twitch: 'Twitch', github: 'GitHub', discord: 'Discord',
     twitter: 'X / Twitter', instagram: 'Instagram', tiktok: 'TikTok', other: 'Other'
   });
   const STYLE_LABELS = Object.freeze({ immersive: 'Immersive', editorial: 'Editorial', focus: 'Focused' });
+  const MODULE_SIZE_LABELS = Object.freeze({ wide: 'Wide', medium: 'Medium', narrow: 'Narrow' });
   const VIEW_STATE_NAMESPACE = 'profile-editor';
 
   let draft = normalizeProfileConfig(draftConfig || publishedConfig);
@@ -91,9 +93,13 @@
     updateDraft({ modules: draft.modules.map(module => module.id === id ? { ...module, visible } : module) });
   }
 
+  function setModuleSize(id, size) {
+    updateDraft({ modules: draft.modules.map(module => module.id === id ? { ...module, size } : module) });
+  }
+
   function moveModule(index, direction) {
     const nextIndex = index + direction;
-    const visibleModules = orderedModules.filter(module => module.id !== 'explore');
+    const visibleModules = orderedModules.filter(module => EDITABLE_MODULE_IDS.includes(module.id));
     if (index < 0 || index >= visibleModules.length || nextIndex < 0 || nextIndex >= visibleModules.length) return;
     const nextModules = visibleModules.slice();
     [nextModules[index], nextModules[nextIndex]] = [nextModules[nextIndex], nextModules[index]];
@@ -106,7 +112,7 @@
       error = 'You can add up to 6 links.';
       return;
     }
-    updateDraft({ links: [...draft.links, { type: 'website', label: 'My link', url: 'https://', visible: true, order: draft.links.length }] });
+    updateDraft({ links: [...draft.links, { type: 'website', label: '', url: '', visible: true, order: draft.links.length }] });
   }
 
   function updateLink(index, field, value) {
@@ -117,8 +123,17 @@
     updateDraft({ links: draft.links.filter((_, linkIndex) => linkIndex !== index).map((link, order) => ({ ...link, order })) });
   }
 
+  function validateLinks() {
+    const invalid = draft.links.find(link => !String(link.label || '').trim() || !/^https:\/\/[^\s<>"']+$/.test(String(link.url || '').trim()));
+    if (!invalid) return true;
+    error = 'Complete each link with a label and an HTTPS URL, or remove it.';
+    status = '';
+    return false;
+  }
+
   async function persist(action) {
     if (saving || (action === 'save' && !isDirty) || (action === 'publish' && !isDirty && !hasUnpublishedChanges)) return;
+    if (!validateLinks()) return;
     saving = true;
     status = action === 'publish' ? 'Publishing…' : 'Saving…';
     error = '';
@@ -201,10 +216,19 @@
   </section>
 
   <section class="profile-editor__panel" aria-labelledby="profile-layout-modules-title">
-    <div class="profile-editor__panel-heading"><h3 id="profile-layout-modules-title">Visible sections</h3><span>Reorder with the arrows</span></div>
+    <div class="profile-editor__panel-heading"><h3 id="profile-layout-modules-title">Visible sections</h3><span>Secondary sections only</span></div>
     <ol class="profile-editor__module-list">
-      {#each orderedModules.filter(module => module.id !== 'explore') as module, index (module.id)}
-        <li><label><input type="checkbox" checked={module.visible} on:change={event => setModuleVisible(module.id, event.currentTarget.checked)} /><span>{MODULE_LABELS[module.id] || module.id}</span></label><div class="profile-editor__module-actions"><button type="button" aria-label={`Move ${MODULE_LABELS[module.id] || module.id} up`} disabled={index === 0} on:click={() => moveModule(index, -1)}>↑</button><button type="button" aria-label={`Move ${MODULE_LABELS[module.id] || module.id} down`} disabled={index === orderedModules.filter(item => item.id !== 'explore').length - 1} on:click={() => moveModule(index, 1)}>↓</button></div></li>
+      <li class="profile-editor__module-fixed"><label><input type="checkbox" checked disabled /><span>Daily roll</span></label><span>Fixed system surface</span></li>
+      {#each orderedModules.filter(module => EDITABLE_MODULE_IDS.includes(module.id)) as module, index (module.id)}
+        <li>
+          <label><input type="checkbox" checked={module.visible} on:change={event => setModuleVisible(module.id, event.currentTarget.checked)} /><span>{MODULE_LABELS[module.id] || module.id}</span></label>
+          <div class="profile-editor__module-actions">
+            <select value={module.size} aria-label={`${MODULE_LABELS[module.id] || module.id} size`} on:change={event => setModuleSize(module.id, event.currentTarget.value)}>
+              {#each Object.entries(MODULE_SIZE_LABELS) as [size, label] (size)}<option value={size}>{label}</option>{/each}
+            </select>
+            <button type="button" aria-label={`Move ${MODULE_LABELS[module.id] || module.id} up`} disabled={index === 0} on:click={() => moveModule(index, -1)}>↑</button><button type="button" aria-label={`Move ${MODULE_LABELS[module.id] || module.id} down`} disabled={index === orderedModules.filter(item => EDITABLE_MODULE_IDS.includes(item.id)).length - 1} on:click={() => moveModule(index, 1)}>↓</button>
+          </div>
+        </li>
       {/each}
     </ol>
   </section>
@@ -243,7 +267,10 @@
   .profile-editor__module-list label { display: flex; align-items: center; gap: .55rem; color: var(--site-ink, #f2f0eb); font-size: .72rem; }
   .profile-editor__module-list input { min-height: auto; accent-color: var(--site-accent, #cdd2ff); }
   .profile-editor__module-actions { display: flex; gap: .3rem; }
-  .profile-editor__module-actions button, .profile-editor__text-button, .profile-editor__remove { border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .3rem; padding: .35rem .5rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: .65rem; cursor: pointer; }
+  .profile-editor__module-actions button, .profile-editor__module-actions select, .profile-editor__text-button, .profile-editor__remove { border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .3rem; padding: .35rem .5rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: .65rem; cursor: pointer; }
+  .profile-editor__module-actions select { min-height: 1.9rem; }
+  .profile-editor__module-fixed { color: var(--site-faint, #7d7e87); font-size: .65rem; }
+  .profile-editor__module-fixed input { accent-color: var(--site-accent, #cdd2ff); }
   .profile-editor button:disabled { cursor: not-allowed; opacity: .42; }
   .profile-editor__links { display: grid; gap: .55rem; }
   .profile-editor__link-row { display: grid; grid-template-columns: 8rem minmax(7rem, .7fr) minmax(12rem, 1.5fr) auto; gap: .45rem; }

@@ -1,5 +1,20 @@
 # Chromadie 2.0 Progress
 
+## Customization settings audit — 2026-08-08
+
+- Fixed the Collection fitting room so draft appearance, avatar, and background
+  changes are reflected immediately instead of showing the published theme.
+- Shared the validated appearance-to-CSS projection between the fitting room and
+  the public ProfileShell.
+- Scoped uploaded backgrounds, atmosphere scenes, and cursor trails to the
+  identity-card surface; the daily roll uses fixed system tokens and a fixed
+  wide layout.
+- Exposed existing module-size controls for secondary profile sections and
+  blocked incomplete links before save/publish.
+- Compared the bounded surface with current guns.lol and Haunt offerings. Their
+  template/widget/font/crop/analytics features remain a future structured
+  configuration phase rather than unrestricted user-authored code.
+
 ## Card-only profile customization — 2026-08-08
 
 - Scoped draft profile appearance variables to the identity card in the shared

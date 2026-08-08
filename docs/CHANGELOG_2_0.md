@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Make customization settings reliable
+
+- The Collection fitting room now follows the live draft, including the active
+  profile theme, avatar, and background.
+- Profile backgrounds, atmosphere scenes, and cursor trails now stay inside the
+  identity card instead of reaching the daily roll surface.
+- Layout & links exposes secondary section sizes, keeps the daily roll fixed,
+  and explains incomplete links before they are saved.
+
 ## 2026-08-08 — Scope customization to the profile card
 
 - Profile appearance changes now preview on the identity card without

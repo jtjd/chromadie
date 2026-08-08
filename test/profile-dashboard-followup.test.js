@@ -32,11 +32,12 @@ test('dashboard navigation has one canonical ordered IA and safe mobile drawer b
 });
 
 test('section editors publish only their own contract and preserve conflicts', async () => {
-  const [layout, appearance, migration, sqlTest] = await Promise.all([
+  const [layout, appearance, migration, sqlTest, settings] = await Promise.all([
     read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('supabase/migrations/20260805100000_profile_appearance_dashboard.sql'),
-    read('supabase/tests/launch_security.sql')
+    read('supabase/tests/launch_security.sql'),
+    read('src/lib/ProfileSettings.svelte')
   ]);
   assert.match(layout, /p_section: 'composition'/);
   assert.match(layout, /compositionPatch/);
@@ -66,6 +67,18 @@ test('section editors publish only their own contract and preserve conflicts', a
   assert.match(sqlTest, /config_composition_save/);
   assert.match(sqlTest, /composition save accepted appearance or effect keys/);
   assert.match(sqlTest, /config_composition_publish/);
+  assert.match(layout, /function setModuleSize/);
+  assert.match(layout, /Fixed system surface/);
+  assert.match(layout, /Complete each link with a label and an HTTPS URL/);
+  assert.match(settings, /configurationPreview = configurationPreview/);
+});
+
+test('collection fitting room previews the draft card appearance and media', async () => {
+  const preview = await read('src/lib/ShopStudioPreview.svelte');
+  assert.match(preview, /profileConfig\?\.draft \|\| profileConfig\?\.published/);
+  assert.match(preview, /getProfileAppearanceStyle\(previewProfileConfig\)/);
+  assert.match(preview, /previewBackgroundSrc/);
+  assert.match(preview, /style=\{previewCardStyle\}/);
 });
 
 test('preview renders bounded media and never exposes mutations', async () => {
@@ -82,7 +95,9 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.doesNotMatch(settings, /function openPreview/);
   assert.doesNotMatch(settings, /profile-preview-drawer__backdrop/);
   assert.match(shell, /\{#if backgroundSrc\}/);
-  assert.match(shell, /profile-shell-page--preview \.profile-shell__media-background \{ position: absolute/);
+  assert.match(shell, /profile-shell__card-media-background/);
+  assert.match(shell, /profile-shell__card-atmosphere-layer/);
+  assert.match(shell, /profile-shell__card-cursor-layer/);
   assert.match(shell, /if \(previewMode \|\| !targetProfile\?\.id/);
   assert.match(shell, /\{#if !previewMode && !isOwnProfile\}/);
   assert.match(shell, /deferMedia=\{previewMode\}/);

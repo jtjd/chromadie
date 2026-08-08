@@ -29,6 +29,7 @@
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
+  import { getProfileAppearanceStyle } from './profileAppearanceStyle.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -357,9 +358,6 @@
     '#CDD2FF'
   );
   $: appearance = effectiveProfileConfig.appearance;
-  $: profileBackground = appearance.gradient.enabled
-    ? `linear-gradient(${appearance.gradient.angle}deg, ${appearance.gradient.primary}, ${appearance.gradient.secondary})`
-    : appearance.colors.background;
   $: storyUnlocks = getProfileStoryUnlocks(targetProfile);
   $: latestRoll = targetScores
     .slice()
@@ -372,7 +370,6 @@
   $: cursorTrailKey = getCursorTrailKey(cosmetics?.cursor_trail);
   $: atmosphereKey = cosmetics?.profile_atmosphere || '';
   $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
-  $: profileSurfaceAccent = signatureColor;
   $: profileControlAccent = signatureColor;
   $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
@@ -389,9 +386,11 @@
     hasCollection: collectionItems.length > 0,
     hasTimeline: timelineEvents.length > 0
   });
-  $: activeModules = composition.activeModules;
   $: secondaryModules = composition.secondaryModules;
-  $: rollModule = activeModules.find(module => module.id === 'roll') || { size: 'wide' };
+  // The daily roll is a system surface. Profile layout settings cannot resize,
+  // reorder, or otherwise restyle it while the card customization boundary is
+  // intentionally narrow.
+  const rollModule = Object.freeze({ size: 'wide' });
   $: layoutVariant = resolveProfileLayoutVariant(cosmetics, effectiveProfileConfig);
   $: showRoll = getProfileRollVisible(effectiveProfileConfig);
   $: hasProfileMore = showRoll || showExpression || (getProfileStoryVisible(effectiveProfileConfig) && secondaryModules.length > 0);
@@ -403,34 +402,7 @@
   // Keep the daily roll on the system presentation tokens. Profile-authored
   // appearance values are projected onto the identity card below instead of
   // leaking into the roll surface.
-  $: profileCardStyle = [
-    `--profile-accent:${signatureColor}`,
-    `--profile-surface-accent:${profileSurfaceAccent}`,
-    `--profile-control-accent:${profileControlAccent}`,
-    `--profile-text:${appearance.colors.text}`,
-    `--profile-secondary-text:${appearance.colors.secondaryText}`,
-    `--profile-username:${nameRendererBaseColor}`,
-    `--profile-description:${appearance.colors.description}`,
-    `--profile-background:${appearance.colors.background}`,
-    `--profile-background-paint:${profileBackground}`,
-    `--profile-surface:${appearance.colors.surface}`,
-    `--profile-highlight:${appearance.colors.highlight}`,
-    `--profile-surface-opacity:${appearance.surface.opacity / 100}`,
-    `--profile-surface-blur:${appearance.surface.blur}px`,
-    `--profile-border-color:${appearance.border.color}`,
-    `--profile-border-width:${appearance.border.enabled ? appearance.border.width : 0}px`,
-    `--profile-border-radius:${appearance.border.radius}px`,
-    `--profile-border-opacity:${appearance.border.opacity / 100}`,
-    `--color-ink-strong:${appearance.colors.highlight}`,
-    `--color-ink:${appearance.colors.text}`,
-    `--color-ink-muted:${appearance.colors.secondaryText}`,
-    `--color-ink-faint:${appearance.colors.description}`,
-    `--color-accent:${signatureColor}`,
-    `--color-accent-bright:${appearance.colors.highlight}`,
-    `--surface-panel:${appearance.colors.surface}`,
-    `--surface-inset:${appearance.colors.background}`,
-    `--color-canvas-deep:${appearance.colors.background}`
-  ].join(';');
+  $: profileCardStyle = getProfileAppearanceStyle(effectiveProfileConfig);
 
   onDestroy(() => {
     if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
@@ -438,21 +410,20 @@
 </script>
 
 <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={profileShellStyle} aria-busy={loading}>
-  {#if !loading && targetProfile && cursorTrailKey}
-    <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__cursor-layer" />
-  {/if}
-  {#if backgroundSrc}
-    <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
-  {/if}
-  {#if !loading && targetProfile && atmosphereKey}
-    <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} className="profile-shell__atmosphere-layer" />
-  {/if}
-
   {#if !loading && targetProfile}
     <div class="profile-shell__composition">
     <div class="profile-shell__approved-canvas">
       <div class="profile-shell__approved-main">
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity" style={profileCardStyle}>
+          {#if backgroundSrc}
+            <div class="profile-shell__card-media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
+          {/if}
+          {#if atmosphereKey}
+            <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__card-atmosphere-layer" />
+          {/if}
+          {#if cursorTrailKey}
+            <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__card-cursor-layer" />
+          {/if}
           <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-shell__identity-boundary">
             <IdentityCard
               username={username}
@@ -708,20 +679,6 @@
       var(--color-canvas-deep);
   }
 
-  /* Public-profile visuals belong to the viewport, not the scrolling content.
-   * Keep the editor preview bounded so its effects cannot bleed into settings. */
-  :global(.profile-shell-page:not(.profile-shell-page--preview) .profile-shell__cursor-layer) {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: 0 !important;
-  }
-  :global(.profile-shell-page:not(.profile-shell-page--preview) .profile-shell__atmosphere-layer) {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: 0;
-    opacity: .62;
-  }
-
   .profile-shell__opening,
   .profile-shell__supporting,
   .profile-shell__story-section,
@@ -764,8 +721,7 @@
     100% { transform: scale(1); box-shadow: none; }
   }
 
-  .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
-  .profile-shell-page--preview .profile-shell__media-background { position: absolute; }
+  .profile-shell__card-media-background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
   .profile-shell__opening-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr); align-items: center; gap: clamp(2rem, 6vw, 7rem); width: min(100%, 70rem); margin-inline: auto; }
   .profile-shell__identity { min-width: 0; }
 
@@ -1098,6 +1054,12 @@
     border: 0;
     background: var(--profile-background-paint, transparent);
     box-shadow: none;
+  }
+
+  .profile-shell__opening.profile-shell__approved-opening > :global(.profile-shell__card-atmosphere-layer),
+  .profile-shell__opening.profile-shell__approved-opening > :global(.profile-shell__card-cursor-layer) {
+    position: absolute;
+    inset: 0;
   }
 
   :global(.profile-shell__identity-boundary) {

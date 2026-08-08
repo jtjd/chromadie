@@ -285,7 +285,12 @@
   function updateExpression(event) {
     const fallbackColor = '#CDD2FF';
     const fields = event.detail || {};
-    context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: normalizeProfileConfig({ ...context.profileConfig?.draft, ...fields }, fallbackColor), published: normalizeProfileConfig({ ...context.profileConfig?.published, ...fields }, fallbackColor) } };
+    const nextDraft = normalizeProfileConfig({ ...context.profileConfig?.draft, ...fields }, fallbackColor);
+    const nextPublished = normalizeProfileConfig({ ...context.profileConfig?.published, ...fields }, fallbackColor);
+    configurationPreview = configurationPreview
+      ? normalizeProfileConfig({ ...configurationPreview, ...fields }, fallbackColor)
+      : null;
+    context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: nextDraft, published: nextPublished } };
   }
 
   function updateAppearance(event) {

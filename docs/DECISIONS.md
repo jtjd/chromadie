@@ -2,6 +2,24 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Make customization previews represent the card contract
+
+The customization audit found that the Collection fitting room preferred the
+published appearance over the current draft, and that profile media/effects
+were mounted as page-level layers. The fitting room now uses the draft first
+and shares the validated card-style projection with the public renderer.
+Uploaded backgrounds, atmosphere plates, and cursor trails are scoped to the
+identity-card surface; the daily roll remains on fixed system presentation
+tokens. Layout exposes the existing module-size contract, while the daily roll
+is fixed and cannot be resized or reordered. Empty links are rejected before a
+save instead of being silently normalized away.
+
+The audit also confirmed that guns.lol and Haunt offer a substantially broader
+expression market—templates, widgets, uploaded fonts/cursors, crop controls,
+text motion, and analytics. Those are not added as unrestricted HTML/CSS or a
+second profile model here. A future expansion must use additive, validated
+configuration and explicit storage/entitlement boundaries.
+
 ## 2026-08-08 — Keep profile appearance off the roll surface
 
 Profile-authored appearance tokens now apply to the identity card surface only.
