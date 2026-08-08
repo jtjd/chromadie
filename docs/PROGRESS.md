@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Pricing surface refreshed — 2026-08-08
+
+- Added Pricing to the shared desktop and mobile site navigation with route
+  prefetching and active-state semantics.
+- Recomposed `/pricing` around the homepage's authored canvas: quiet rules,
+  restrained accent color, lifetime value framing, free/Plus comparison, and
+  the earned-color promise.
+- Preserved the secure checkout, restore, entitlement, and staff-authority
+  contracts while keeping the free profile complete and expressive.
+- Full repository validation passed: build, Svelte check, 247 tests, source
+  ESLint, link/CSP/policy/balance/catalog/scoring/performance checks,
+  database-security checks, and parity certification.
+
 ## Competitor parity Milestone 13 implemented locally — 2026-08-08
 
 - Added reversible audience rollout flags for commerce, rich media, V2

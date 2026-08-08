@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Refresh the lifetime pricing surface
+
+- Pricing is now reachable from the shared desktop and mobile header, with a
+  clear active state and route prefetching.
+- `/pricing` follows the homepage's dark authored canvas, thin rules,
+  restrained accent, and story-first composition while keeping the fixed
+  $7.99 USD lifetime Chromadie Plus offer easy to understand.
+- The complete free profile remains the foundation; Plus adds expression and
+  capacity without changing daily rolls, earned progression, or identity.
+
 ## 2026-08-08 — Certify and stage profile-parity surfaces
 
 - Added three code-owned certification profiles to verify that free, premium

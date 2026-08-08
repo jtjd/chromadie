@@ -100,3 +100,19 @@ test('checkout, restore, and webhook endpoints preserve the authority boundary',
   assert.match(routes, /\/pricing/);
   assert.match(config, /\[functions\.stripe-premium-webhook\][\s\S]*verify_jwt = false/);
 });
+
+test('pricing presentation follows the homepage visual language without weakening commerce copy', async () => {
+  const [pricing, header] = await Promise.all([
+    read('src/lib/Pricing.svelte'),
+    read('src/lib/SiteModeHeader.svelte')
+  ]);
+
+  assert.match(header, /activeView === 'pricing'/);
+  assert.match(header, /prefetch\('pricing'\)/);
+  assert.match(pricing, /class="pricing-hero"/);
+  assert.match(pricing, /class="pricing-page__promise"/);
+  assert.match(pricing, /The color stays earned/);
+  assert.match(pricing, /one identity \/ lifetime access/);
+  assert.match(pricing, /prefers-reduced-motion/);
+  assert.match(pricing, /aria-label="Free profile and Chromadie Plus comparison"/);
+});

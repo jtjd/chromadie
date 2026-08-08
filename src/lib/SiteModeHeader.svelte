@@ -38,7 +38,7 @@
 
   function prefetch(view) {
     const loaderKey = view === 'profile' ? 'profileShell' : view;
-    if (['profileShell', 'leaderboard', 'profileSettings'].includes(loaderKey)) {
+    if (['profileShell', 'leaderboard', 'profileSettings', 'pricing'].includes(loaderKey)) {
       void prefetchRouteComponent(loaderKey);
     }
   }
@@ -52,6 +52,8 @@
   {#if !minimalMode}
     <nav class="site-mode-header__nav" aria-label="Primary application navigation">
       <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+      <span aria-hidden="true">/</span>
+      <button type="button" class:active={activeView === 'pricing'} aria-current={activeView === 'pricing' ? 'page' : undefined} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
       {#if isAuthenticated}
         <span aria-hidden="true">/</span>
         <button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Studio</button>
@@ -97,6 +99,7 @@
       {#if !minimalMode}
         <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
           <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+          <button type="button" class:active={activeView === 'pricing'} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
           {#if isAuthenticated}
             <button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Studio</button>
           {/if}

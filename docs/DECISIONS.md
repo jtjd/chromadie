@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Keep pricing inside the profile-first visual language
+
+The `/pricing` surface uses the same authored canvas as the homepage rather
+than switching to generic card-store chrome. The comparison is deliberately
+quiet and editorial: the free profile is presented as complete, while
+Chromadie Plus is framed as optional expression and capacity for the same
+earned identity. Pricing belongs in the shared desktop/mobile site header and
+prefetches like other primary destinations. Checkout, restore, and entitlement
+authority remain unchanged and service-owned.
+
 ## 2026-08-08 — Roll out parity surfaces with reversible presentation flags
 
 Milestone 13 uses build-time, audience-scoped flags for commerce, rich media,

@@ -22,6 +22,8 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /site-mode-header__mobile-primary/);
   assert.match(siteHeader, /\$: minimalMode = isProfileMode;/);
   assert.match(siteHeader, /activeView === 'leaderboard'[\s\S]*>Leaderboard</);
+  assert.match(siteHeader, /activeView === 'pricing'[\s\S]*>Pricing</);
+  assert.match(siteHeader, /site-mode-header__mobile-primary"[\s\S]*activeView === 'pricing'/);
   assert.doesNotMatch(siteHeader, /Explore|How it works|scrollToHomeSection/);
   assert.doesNotMatch(siteHeader, />Profile</);
   assert.match(siteHeader, />Studio</);

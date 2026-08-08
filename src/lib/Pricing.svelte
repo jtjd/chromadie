@@ -104,110 +104,197 @@
 </svelte:head>
 
 <section class="pricing-page" aria-labelledby="pricing-title">
-  <div class="pricing-page__glow" aria-hidden="true"></div>
-  <header class="pricing-page__intro">
-    <p class="pricing-page__eyebrow">Expression, once</p>
-    <h1 id="pricing-title">Make more of your profile.</h1>
-    <p>Chromadie Plus expands the tools around your identity. Daily rolls, rank, achievements, rewards, and prestige stay earned through play.</p>
-  </header>
-
-  {#if message}
-    <div class:pricing-page__notice--success={restoreState === 'active'} class="pricing-page__notice" role="status" aria-live="polite">
-      <span>{message}</span>
-      {#if restoreState === 'processing'}
-        <button type="button" on:click={restoreCheckout} disabled={busy}>{busy ? 'Checking…' : 'Check again'}</button>
-      {/if}
-    </div>
-  {/if}
-
-  <div class="pricing-grid">
-    <article class="pricing-card">
-      <div>
-        <p class="pricing-card__label">Free</p>
-        <h2>A complete identity</h2>
-        <p class="pricing-card__price">$0 <span>forever</span></p>
+  <div class="pricing-page__atmosphere" aria-hidden="true"></div>
+  <div class="pricing-page__shell">
+    <header class="pricing-hero">
+      <div class="pricing-hero__heading">
+        <p class="pricing-page__eyebrow">Chromadie Plus / expression, once</p>
+        <h1 id="pricing-title">Make more <span>of your profile.</span></h1>
       </div>
-      <ul>
-        <li>Polished image-based public profile</li>
-        <li>Daily color ritual, history, and collections</li>
-        <li>Three structured profile templates</li>
-        <li>About, projects, links, and provider widgets</li>
-        <li>Earned cosmetics and profile progression</li>
-      </ul>
-      <a class="pricing-card__secondary" href={$isAuthenticated ? '/profile/settings' : '/signup'}>{$isAuthenticated ? 'Open Profile Studio' : 'Create a free profile'}</a>
-    </article>
-
-    <article class="pricing-card pricing-card--plus">
-      <div>
-        <p class="pricing-card__label">Chromadie Plus</p>
-        <h2>More room for expression</h2>
-        <p class="pricing-card__price">$7.99 <span>USD, lifetime</span></p>
+      <div class="pricing-hero__side">
+        <p>Keep the daily ritual, the color history, and everything you earn. Plus gives the page around your identity more room to become yours.</p>
+        <div class="pricing-hero__signal" aria-label="Lifetime profile expression">
+          <span>01</span>
+          <strong>one identity / lifetime access</strong>
+        </div>
       </div>
-      <ul>
-        <li>Everything in the complete free profile</li>
-        <li>Premium structured templates and expression catalog</li>
-        <li>Lifetime access on one Chromadie identity</li>
-        <li>Future Plus profile-expression capacity as it launches</li>
-        <li>No paid rank, rewards, achievements, or prestige</li>
-      </ul>
-      <button type="button" class="pricing-card__primary" on:click={beginCheckout} disabled={busy || plusActive || !commerceEnabled}>
-        {plusActive ? 'Chromadie Plus active' : !commerceEnabled ? 'Purchases temporarily paused' : busy ? 'Opening secure checkout…' : $isAuthenticated ? 'Buy lifetime access' : 'Sign in to buy'}
-      </button>
-      <p class="pricing-card__fineprint">Secure payment by Stripe. Refunds and chargebacks remove Plus presentation without deleting gameplay history or profile content.</p>
-    </article>
+    </header>
+
+    {#if message}
+      <div class:pricing-page__notice--success={restoreState === 'active'} class="pricing-page__notice" role="status" aria-live="polite">
+        <span>{message}</span>
+        {#if restoreState === 'processing'}
+          <button type="button" on:click={restoreCheckout} disabled={busy}>{busy ? 'Checking…' : 'Check again'}</button>
+        {/if}
+      </div>
+    {/if}
+
+    <section class="pricing-grid" aria-label="Free profile and Chromadie Plus comparison">
+      <article class="pricing-card pricing-card--free">
+        <div class="pricing-card__head">
+          <p class="pricing-card__label"><span>01</span> Free / always</p>
+          <h2>A complete identity.</h2>
+          <p class="pricing-card__price">$0 <span>forever</span></p>
+        </div>
+        <p class="pricing-card__summary">Start with a beautiful public page and let each daily color add another chapter.</p>
+        <ul>
+          <li>Polished image-based public profile</li>
+          <li>Daily color ritual, history, and collections</li>
+          <li>Three structured profile templates</li>
+          <li>About, projects, links, and provider widgets</li>
+          <li>Earned cosmetics and profile progression</li>
+        </ul>
+        <a class="pricing-card__secondary" href={$isAuthenticated ? '/profile/settings' : '/signup'}>{$isAuthenticated ? 'Open Profile Studio' : 'Create a free profile'} <span aria-hidden="true">↗</span></a>
+      </article>
+
+      <article class="pricing-card pricing-card--plus">
+        <div class="pricing-card__head">
+          <p class="pricing-card__label"><span>02</span> Chromadie Plus / lifetime</p>
+          <h2>More room for expression.</h2>
+          <p class="pricing-card__price">$7.99 <span>USD, one time</span></p>
+        </div>
+        <p class="pricing-card__summary">A single purchase for the tools that help your profile hold more of your story.</p>
+        <ul>
+          <li>Everything in the complete free profile</li>
+          <li>Premium structured templates and expression catalog</li>
+          <li>Lifetime access on one Chromadie identity</li>
+          <li>Future Plus profile-expression capacity as it launches</li>
+          <li>No paid rank, rewards, achievements, or prestige</li>
+        </ul>
+        <button type="button" class="pricing-card__primary" on:click={beginCheckout} disabled={busy || plusActive || !commerceEnabled}>
+          <span>{plusActive ? 'Chromadie Plus active' : !commerceEnabled ? 'Purchases temporarily paused' : busy ? 'Opening secure checkout…' : $isAuthenticated ? 'Buy lifetime access' : 'Sign in to buy'}</span>
+          {#if !plusActive && commerceEnabled}<span aria-hidden="true">↗</span>{/if}
+        </button>
+        <p class="pricing-card__fineprint">Secure payment by Stripe. Refunds and chargebacks remove Plus presentation without deleting gameplay history or profile content.</p>
+      </article>
+    </section>
+
+    <section class="pricing-page__promise" aria-labelledby="pricing-promise-title">
+      <div class="pricing-page__promise-heading">
+        <p class="pricing-page__eyebrow">The promise</p>
+        <h2 id="pricing-promise-title">The color stays earned.</h2>
+        <p>Premium changes how much of your identity you can express. It never changes what you have played for.</p>
+      </div>
+      <div class="pricing-page__promise-list">
+        <div>
+          <span>01</span>
+          <p><strong>Play</strong> Daily rolls, rank, rewards, and prestige remain part of the ritual.</p>
+        </div>
+        <div>
+          <span>02</span>
+          <p><strong>Shape</strong> Plus adds creative capacity without making the free profile feel unfinished.</p>
+        </div>
+        <div>
+          <span>03</span>
+          <p><strong>Keep</strong> Your history and profile content stay yours through refunds and chargebacks.</p>
+        </div>
+      </div>
+    </section>
   </div>
 </section>
 
 <style>
   .pricing-page {
+    --pricing-ink: var(--site-ink, #f2f0eb);
+    --pricing-muted: var(--site-muted, #aaa8b0);
+    --pricing-faint: var(--site-faint, #7d7e87);
+    --pricing-line: var(--site-line, rgba(255, 255, 255, 0.075));
+    --pricing-line-strong: var(--site-line-strong, rgba(255, 255, 255, 0.15));
+    --pricing-accent: var(--site-accent, #cdd2ff);
     position: relative;
     isolation: isolate;
-    width: min(100% - 2rem, 70rem);
-    margin: 0 auto;
-    padding: clamp(3rem, 7vw, 7rem) 0 6rem;
-    color: #f4f2ec;
+    min-height: 100%;
+    overflow: hidden;
+    color: var(--pricing-ink);
+    background: linear-gradient(180deg, rgba(18, 20, 25, 0.96) 0%, rgba(13, 15, 19, 0.98) 38%, #090a0d 100%);
+    font-family: var(--site-font, 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif);
   }
-  .pricing-page__glow {
+  .pricing-page::before {
     position: absolute;
     z-index: -1;
-    top: 0;
-    left: 50%;
-    width: min(68rem, 110vw);
-    height: 35rem;
+    inset: 0;
+    content: '';
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.009) 0 1px, transparent 1px 4px);
+    opacity: 0.55;
+  }
+  .pricing-page__atmosphere {
+    position: absolute;
+    z-index: -1;
+    top: -9rem;
+    left: 42%;
+    width: min(60rem, 92vw);
+    height: 42rem;
     transform: translateX(-50%);
-    background: radial-gradient(circle at 62% 25%, rgba(150, 121, 255, 0.14), transparent 48%), radial-gradient(circle at 30% 10%, rgba(86, 208, 197, 0.1), transparent 40%);
+    background: radial-gradient(circle at 61% 25%, color-mix(in srgb, var(--pricing-accent) 15%, transparent), transparent 44%), radial-gradient(circle at 28% 12%, rgba(86, 208, 197, 0.07), transparent 38%);
     pointer-events: none;
   }
-  .pricing-page__intro { max-width: 46rem; margin-bottom: clamp(2.5rem, 5vw, 4.5rem); }
-  .pricing-page__eyebrow, .pricing-card__label { margin: 0 0 0.8rem; color: #a9a5bb; font: 600 0.72rem/1.2 var(--font-mono-stack, ui-monospace, monospace); letter-spacing: 0.14em; text-transform: uppercase; }
-  .pricing-page h1 { max-width: 12ch; margin: 0; font: 500 clamp(3rem, 8vw, 6.5rem)/0.92 var(--font-display-stack, sans-serif); letter-spacing: -0.055em; }
-  .pricing-page__intro > p:last-child { max-width: 42rem; margin: 1.6rem 0 0; color: rgba(240, 240, 246, 0.66); font-size: clamp(1rem, 2vw, 1.18rem); line-height: 1.65; }
-  .pricing-page__notice { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin: -1.5rem 0 2rem; padding: 0.9rem 1rem; border: 1px solid rgba(255,255,255,.12); border-radius: 0.75rem; background: rgba(255,255,255,.045); color: rgba(244,242,236,.8); }
-  .pricing-page__notice--success { border-color: rgba(107, 230, 178, .32); color: #bdf4dc; }
-  .pricing-page__notice button { border: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; }
-  .pricing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid rgba(255,255,255,.12); border-bottom: 1px solid rgba(255,255,255,.12); }
-  .pricing-card { display: flex; flex-direction: column; gap: 2rem; min-width: 0; padding: clamp(1.5rem, 4vw, 3rem); }
-  .pricing-card + .pricing-card { border-left: 1px solid rgba(255,255,255,.12); }
-  .pricing-card--plus { background: linear-gradient(145deg, rgba(153,126,255,.09), rgba(255,255,255,.02) 55%); }
-  .pricing-card h2 { margin: 0; font: 500 clamp(1.5rem, 3vw, 2.2rem)/1.1 var(--font-display-stack, sans-serif); }
-  .pricing-card__price { margin: 1.5rem 0 0; font: 500 clamp(2rem, 5vw, 3.5rem)/1 var(--font-display-stack, sans-serif); }
-  .pricing-card__price span { display: block; margin-top: .5rem; color: rgba(244,242,236,.5); font: 500 .72rem/1.3 var(--font-mono-stack, monospace); letter-spacing: .06em; text-transform: uppercase; }
-  .pricing-card ul { display: grid; gap: .85rem; margin: 0; padding: 0; list-style: none; color: rgba(244,242,236,.68); line-height: 1.45; }
-  .pricing-card li { position: relative; padding-left: 1.2rem; }
-  .pricing-card li::before { content: '—'; position: absolute; left: 0; color: rgba(196,181,255,.75); }
-  .pricing-card__primary, .pricing-card__secondary { display: inline-flex; justify-content: center; align-items: center; min-height: 3rem; margin-top: auto; padding: .75rem 1rem; border-radius: 999px; font: 650 .86rem/1 var(--font-body-stack, sans-serif); text-decoration: none; cursor: pointer; }
-  .pricing-card__primary { border: 1px solid #eeeafc; background: #eeeafc; color: #101016; }
-  .pricing-card__primary:disabled { cursor: default; opacity: .6; }
-  .pricing-card__secondary { border: 1px solid rgba(255,255,255,.16); color: #f4f2ec; }
-  .pricing-card__fineprint { margin: -1rem 0 0; color: rgba(244,242,236,.42); font-size: .74rem; line-height: 1.5; }
-  :global(.pricing-page a:focus-visible), button:focus-visible { outline: 2px solid #c4b5ff; outline-offset: 3px; }
-  @media (max-width: 700px) {
-    .pricing-page { padding-top: 2.5rem; }
-    .pricing-grid { grid-template-columns: 1fr; }
-    .pricing-card + .pricing-card { border-top: 1px solid rgba(255,255,255,.12); border-left: 0; }
+  .pricing-page__shell { width: min(calc(100% - 2.5rem), 86.25rem); margin: 0 auto; padding: clamp(3.2rem, 7vw, 6.5rem) 0 6rem; }
+  .pricing-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 29rem); align-items: end; gap: clamp(2rem, 7vw, 7.5rem); padding-bottom: clamp(3rem, 6vw, 5.25rem); border-bottom: 1px solid var(--pricing-line); }
+  .pricing-hero > * { animation: pricing-enter 0.78s cubic-bezier(0.2, 0.72, 0.2, 1) both; }
+  .pricing-hero > :nth-child(2) { animation-delay: 0.08s; }
+  .pricing-page__eyebrow { margin: 0 0 0.85rem; color: var(--pricing-faint); font: 500 0.68rem / 1 var(--site-mono, 'IBM Plex Mono', ui-monospace, monospace); letter-spacing: 0.13em; text-transform: uppercase; }
+  .pricing-hero h1 { max-width: 12ch; margin: 0; color: var(--pricing-ink); font: 650 clamp(3.15rem, 7.2vw, 6.2rem) / 0.9 var(--site-font, sans-serif); letter-spacing: -0.045em; }
+  .pricing-hero h1 span { color: color-mix(in srgb, var(--pricing-accent) 66%, var(--pricing-ink)); text-shadow: 0 0 2rem color-mix(in srgb, var(--pricing-accent) 22%, transparent); }
+  .pricing-hero__side { align-self: end; }
+  .pricing-hero__side > p { max-width: 27rem; margin: 0 0 1.35rem; color: var(--pricing-muted); font-size: 1rem; line-height: 1.62; }
+  .pricing-hero__signal { display: flex; align-items: center; gap: 0.7rem; color: var(--pricing-faint); font: 500 0.64rem / 1 var(--site-mono, ui-monospace, monospace); letter-spacing: 0.08em; text-transform: uppercase; }
+  .pricing-hero__signal span { color: var(--pricing-accent); }
+  .pricing-hero__signal strong { color: var(--pricing-ink); font-weight: 500; }
+  .pricing-page__notice { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1.35rem 0 0; padding: 0.9rem 1rem; border: 1px solid var(--pricing-line); border-radius: 0.35rem; background: var(--site-surface-soft, rgba(255, 255, 255, 0.035)); color: var(--pricing-muted); font-size: 0.88rem; }
+  .pricing-page__notice--success { border-color: rgba(107, 230, 178, 0.32); color: #bdf4dc; }
+  .pricing-page__notice button { border: 0; background: transparent; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: clamp(2.7rem, 6vw, 5.3rem); border-top: 1px solid var(--pricing-line); border-bottom: 1px solid var(--pricing-line); }
+  .pricing-card { position: relative; display: flex; min-width: 0; flex-direction: column; gap: 1.65rem; padding: clamp(1.5rem, 4vw, 3.25rem) clamp(1rem, 4vw, 3.25rem) clamp(2rem, 4vw, 3.25rem); }
+  .pricing-card + .pricing-card { border-left: 1px solid var(--pricing-line); }
+  .pricing-card--plus { background: linear-gradient(140deg, color-mix(in srgb, var(--pricing-accent) 8%, transparent), transparent 50%); }
+  .pricing-card--plus::before { position: absolute; top: 0; right: 0; width: 6rem; height: 1px; content: ''; background: var(--pricing-accent); box-shadow: 0 0 2rem color-mix(in srgb, var(--pricing-accent) 70%, transparent); }
+  .pricing-card__head { min-height: 12rem; }
+  .pricing-card__label { display: flex; align-items: center; gap: 0.55rem; margin: 0 0 1.6rem; color: var(--pricing-faint); font: 500 0.66rem / 1 var(--site-mono, ui-monospace, monospace); letter-spacing: 0.12em; text-transform: uppercase; }
+  .pricing-card__label span { color: var(--pricing-accent); }
+  .pricing-card h2 { max-width: 12ch; margin: 0; color: var(--pricing-ink); font: 650 clamp(1.8rem, 3.5vw, 3rem) / 0.96 var(--site-font, sans-serif); letter-spacing: -0.04em; }
+  .pricing-card__price { margin: 1.8rem 0 0; color: var(--pricing-ink); font: 650 clamp(2.4rem, 5vw, 4.4rem) / 0.9 var(--site-font, sans-serif); letter-spacing: -0.05em; }
+  .pricing-card__price span { display: inline-block; margin-left: 0.35rem; color: var(--pricing-faint); font: 500 0.66rem / 1 var(--site-mono, ui-monospace, monospace); letter-spacing: 0.09em; text-transform: uppercase; vertical-align: middle; }
+  .pricing-card__summary { max-width: 27rem; min-height: 3.2rem; margin: 0; color: var(--pricing-muted); font-size: 0.93rem; line-height: 1.55; }
+  .pricing-card ul { display: grid; gap: 0.85rem; margin: 0; padding: 1.4rem 0 0; border-top: 1px solid var(--pricing-line); list-style: none; color: var(--pricing-muted); font-size: 0.9rem; line-height: 1.45; }
+  .pricing-card li { position: relative; padding-left: 1.25rem; }
+  .pricing-card li::before { position: absolute; left: 0; content: '—'; color: var(--pricing-accent); }
+  .pricing-card__primary, .pricing-card__secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.65rem; width: fit-content; min-height: 2.9rem; margin-top: 0.4rem; padding: 0.72rem 1rem; border-radius: 0.35rem; font: 650 0.8rem / 1 var(--site-font, sans-serif); text-decoration: none; cursor: pointer; transition: background-color var(--motion-base, 220ms) var(--motion-ease-standard, ease), border-color var(--motion-base, 220ms) var(--motion-ease-standard, ease), transform var(--motion-base, 220ms) var(--motion-ease-standard, ease); }
+  .pricing-card__primary:hover:not(:disabled), .pricing-card__secondary:hover { transform: translateY(-1px); }
+  .pricing-card__primary { border: 1px solid var(--pricing-ink); background: var(--pricing-ink); color: #090a0d; }
+  .pricing-card__primary:hover:not(:disabled) { border-color: #fff; background: #fff; }
+  .pricing-card__primary:disabled { cursor: default; opacity: 0.58; }
+  .pricing-card__secondary { border: 1px solid var(--pricing-line-strong); background: transparent; color: var(--pricing-ink); }
+  .pricing-card__secondary:hover { border-color: var(--pricing-accent); background: color-mix(in srgb, var(--pricing-accent) 9%, transparent); }
+  .pricing-card__fineprint { max-width: 27rem; margin: 0; color: var(--pricing-faint); font-size: 0.72rem; line-height: 1.5; }
+  .pricing-page__promise { display: grid; grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr); gap: clamp(2rem, 8vw, 9rem); padding: clamp(4.5rem, 9vw, 8rem) 0 1rem; }
+  .pricing-page__promise-heading h2 { max-width: 11ch; margin: 0.8rem 0 1.15rem; color: var(--pricing-ink); font: 650 clamp(2.7rem, 5vw, 4.6rem) / 0.94 var(--site-font, sans-serif); letter-spacing: -0.043em; }
+  .pricing-page__promise-heading > p:last-child { max-width: 25rem; margin: 0; color: var(--pricing-muted); font-size: 0.95rem; line-height: 1.62; }
+  .pricing-page__promise-list { border-top: 1px solid var(--pricing-line); }
+  .pricing-page__promise-list > div { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); gap: 0.85rem; padding: 1.35rem 0; border-bottom: 1px solid var(--pricing-line); }
+  .pricing-page__promise-list span { color: var(--pricing-accent); font: 500 0.66rem / 1.4 var(--site-mono, ui-monospace, monospace); }
+  .pricing-page__promise-list p { margin: 0; color: var(--pricing-muted); font-size: 0.92rem; line-height: 1.55; }
+  .pricing-page__promise-list strong { color: var(--pricing-ink); font-weight: 600; }
+  @keyframes pricing-enter { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: none; } }
+  :global(.pricing-page a:focus-visible), :global(.pricing-page button:focus-visible) { outline: 2px solid var(--pricing-accent); outline-offset: 3px; }
+  @media (max-width: 67.5rem) {
+    .pricing-hero { grid-template-columns: 1fr; gap: 1.7rem; }
+    .pricing-hero__side > p { max-width: 36rem; }
+    .pricing-page__promise { gap: 3rem; }
+  }
+  @media (max-width: 48rem) {
+    .pricing-page__shell { width: min(calc(100% - 2rem), 86.25rem); padding-top: 2.25rem; }
+    .pricing-hero h1 { font-size: clamp(2.85rem, 13vw, 4.5rem); }
     .pricing-page__notice { align-items: flex-start; flex-direction: column; }
+    .pricing-grid { grid-template-columns: 1fr; margin-top: 3rem; }
+    .pricing-card + .pricing-card { border-top: 1px solid var(--pricing-line); border-left: 0; }
+    .pricing-card__head { min-height: 0; }
+    .pricing-card__summary { min-height: 0; }
+    .pricing-card__primary, .pricing-card__secondary { width: 100%; }
+    .pricing-page__promise { grid-template-columns: 1fr; gap: 2.4rem; padding-top: 4.5rem; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .pricing-page__glow { background: radial-gradient(circle at 50% 20%, rgba(150,121,255,.1), transparent 52%); }
+    .pricing-hero > * { animation: none; }
+    .pricing-card__primary, .pricing-card__secondary { transition: none; }
   }
 </style>
