@@ -4,9 +4,8 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { createWriteStream as createStream } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tmpdir } from 'node:os';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -394,7 +393,7 @@ export async function startVite({ appPort, environment, evidenceDir }) {
     await waitForHttp(`http://127.0.0.1:${appPort}/`, 30000);
   } catch (error) {
     await terminateProcess(child, 'Vite');
-    throw new Error(`${error.message} See ${logPath}.`);
+    throw new Error(`${error.message} See ${logPath}.`, { cause: error });
   }
   return { child, logPath };
 }

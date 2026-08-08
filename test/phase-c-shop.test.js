@@ -120,7 +120,6 @@ test('inspector purchases reuse the existing confirmation and RPC boundary', asy
 
 test('selection stays in the persistent profile preview without a replacement detail view', async () => {
   const shop = await readProjectFile('src/lib/Shop.svelte');
-  const browse = await readProjectFile('src/lib/ShopBrowse.svelte');
   const contextual = await readProjectFile('src/lib/ShopContextualPreview.svelte');
 
   assert.match(shop, /selectedItem=\{selectedItem\}/);

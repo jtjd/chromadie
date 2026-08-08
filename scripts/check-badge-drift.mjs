@@ -201,12 +201,6 @@ const d2NameBySlot = Object.fromEntries(Object.keys(expectedNameSlotCounts).map(
   const rows = d2NameCatalogRows.filter(row => row.slot === slot);
   return [slot, { count: rows.length, total: rows.reduce((total, row) => total + row.cost, 0) }];
 }));
-const d2NameByRarity = Object.fromEntries([...expectedNameRarities].map(rarity => {
-  const rows = d2NameCatalogRows.filter(row => row.rarity === rarity);
-  return [rarity, { count: rows.length, total: rows.reduce((total, row) => total + row.cost, 0) }];
-}));
-const cheapestD2Name = d2NameCatalogRows.reduce((lowest, row) => row.cost < lowest.cost ? row : lowest);
-const mostExpensiveD2Name = d2NameCatalogRows.reduce((highest, row) => row.cost > highest.cost ? row : highest);
 const borderRows = [...seed.matchAll(
   /^\('(border_[a-z0-9_]+)',\s*'([^']+)',\s*'profile_border',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)'(?:,\s*(?:true|false))?\),?$/gm
 )].map(([, itemKey, name, cost, rendererKey, rarity, description, collection]) => ({

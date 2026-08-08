@@ -111,16 +111,6 @@ function parseCatalog(sql, source) {
   return { columns, catalog };
 }
 
-function mergeCatalog(target, extension) {
-  for (const column of extension.columns) {
-    if (!target.columns.includes(column)) target.columns.push(column);
-  }
-  for (const [itemKey, item] of extension.catalog) {
-    target.catalog.set(itemKey, { ...(target.catalog.get(itemKey) || {}), ...item });
-  }
-  return target;
-}
-
 function applyCostUpdates(sql, catalog, source) {
   const update = sql.match(/UPDATE public\.shop_items\s+SET cost = CASE item_key([\s\S]*?)END;/);
   if (!update) return;
@@ -133,7 +123,7 @@ function applyCostUpdates(sql, catalog, source) {
   }
 }
 
-function applyCatalogStatusUpdates(sql, catalog, source) {
+function applyCatalogStatusUpdates(sql, catalog) {
   const update = sql.match(/UPDATE public\.shop_items\s+SET catalog_status\s*=\s*'([^']+)'\s+WHERE item_key IN\s*\(([^)]+)\);/i);
   if (!update) return;
 
@@ -196,7 +186,7 @@ async function readLocalCatalog(filePath) {
   const sql = await readFile(filePath, 'utf8');
   const parsed = parseCatalog(sql, source);
   applyCostUpdates(sql, parsed.catalog, source);
-  applyCatalogStatusUpdates(sql, parsed.catalog, source);
+  applyCatalogStatusUpdates(sql, parsed.catalog);
   return parsed;
 }
 

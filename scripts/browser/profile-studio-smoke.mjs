@@ -59,7 +59,7 @@ async function step(name, action) {
     const result = { name, status: 'failed', durationMs: Date.now() - started, error: error.message };
     results.steps.push(result);
     console.log(`FAIL (${result.durationMs} ms)`);
-    throw new Error(`${name}: ${error.message}`);
+    throw new Error(`${name}: ${error.message}`, { cause: error });
   }
 }
 
@@ -203,7 +203,7 @@ try {
   });
 
   await step('inline live preview is present, not an overlay', async () => {
-    const state = await page.waitFor(`(() => {
+    await page.waitFor(`(() => {
       const preview = document.querySelector('.profile-settings-preview');
       const canvas = document.querySelector('.profile-settings-preview .profile-shell-page--preview');
       return Boolean(preview && canvas && !preview.closest('[role="dialog"]') && !preview.closest('.auth-modal-overlay'));
