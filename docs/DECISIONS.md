@@ -2,6 +2,19 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Replace homepage auth overlays with first-class routes
+
+The dashboard-parity plan will replace the homepage authentication popup with
+standalone `/login` and `/signup` pages. The new pages reuse the current auth
+form and Supabase client rather than introducing a second authentication path.
+Homepage header actions, guest prompts, and username claims navigate to these
+routes; callback and reset-password links remain compatible.
+
+The route contract permits only validated same-origin return destinations and
+never places credentials, tokens, or private account data in URLs. Modal code
+is removed only after desktop, mobile, keyboard, direct-refresh, signup, login,
+recovery, callback, and authenticated-redirect parity is proven.
+
 ## 2026-08-08 — Keep the dashboard baseline incremental while the aggregate JavaScript cap remains open
 
 Milestone 0 narrows the browser transport to the Auth and PostgREST clients,

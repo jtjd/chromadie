@@ -44,6 +44,7 @@ configuration contract, or production data.
 | Capability | Decision | Chromadie boundary |
 | --- | --- | --- |
 | Reliable inline preview, private drafts, cross-tab editing | Adopt | One shared renderer; preview never publishes or mutates gameplay |
+| Standalone sign-in and sign-up pages | Adopt next | First-class `/login` and `/signup` routes replace the homepage overlay while preserving safe return paths, confirmation, and password recovery |
 | Appearance controls, curated layouts, borders, effects | Adopt | Structured configuration; page/card/roll scopes stay explicit |
 | Reusable image, background, cursor, audio, and video assets | Adapt | Owner-scoped library, server validation, quotas, and staged publishing |
 | About, projects, skills, galleries, custom cards | Adapt | At most four primary public regions; no unrestricted markup |

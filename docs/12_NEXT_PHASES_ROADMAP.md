@@ -117,6 +117,27 @@ objects, Spotify values are bounded provider identifiers, and all management
 controls remain in profile settings. The approved centered identity card and
 full-viewport atmosphere are unchanged. See [`PHASE_14_REPORT.md`](PHASE_14_REPORT.md).
 
+## Dashboard Parity Program
+
+Status: Milestone 0 is active. Later milestones remain planned and must begin
+one at a time.
+
+1. Close the release baseline and explicitly resolve the aggregate JavaScript
+   performance policy in
+   [`milestones/DASHBOARD_PARITY_M0_BASELINE.md`](milestones/DASHBOARD_PARITY_M0_BASELINE.md).
+2. Replace the homepage authentication overlay with standalone `/login` and
+   `/signup` pages while preserving the existing auth implementation, callback,
+   recovery, and safe-return contracts. See
+   [`milestones/DASHBOARD_PARITY_M1_AUTH_ROUTES.md`](milestones/DASHBOARD_PARITY_M1_AUTH_ROUTES.md).
+3. Complete the customization-control contract audit before adding expression
+   features: public page effects remain page-wide, preview effects remain
+   contained, card appearance never recolors the roll UI, and every control has
+   a tested preview and public renderer consumer.
+4. Add reusable owner-scoped media assets, then structured content regions,
+   allowlisted provider widgets, positive moderated social features,
+   privacy-conscious analytics, templates/premium expression, and finally
+   aliases/domains/API access as separately authorized milestones.
+
 ## Deferred themes
 
 Richer expression data, broader discovery, operational
