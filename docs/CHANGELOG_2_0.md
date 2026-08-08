@@ -5,8 +5,8 @@ Document user-visible redesign changes by milestone.
 ## 2026-08-08 — Make blur reliable over authored media
 
 - Surface blur now directly softens uploaded backgrounds and atmosphere plates
-  in the public profile and dashboard live preview, including browsers that do
-  not include video/blend-mode layers in `backdrop-filter` sampling.
+  beneath the identity card in the public profile and dashboard live preview,
+  without blurring the rest of the page.
 
 ## 2026-08-08 — Make atmosphere visible to surface blur
 

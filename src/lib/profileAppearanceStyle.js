@@ -13,10 +13,7 @@ function profileBackgroundPaint(appearance) {
 
 export function getProfileCanvasStyle(config) {
   const { appearance } = normalizeProfileConfig(config);
-  return [
-    `--profile-background-paint:${profileBackgroundPaint(appearance)}`,
-    `--profile-surface-blur:${appearance.surface.blur}px`
-  ].join(';');
+  return `--profile-background-paint:${profileBackgroundPaint(appearance)}`;
 }
 
 /**

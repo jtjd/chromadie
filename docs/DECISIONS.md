@@ -5,10 +5,9 @@ Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 ## 2026-08-08 — Give authored media a compositor-safe blur path
 
 The identity surface retains translucent `backdrop-filter` behavior for normal
-page content, but uploaded backgrounds and authored atmosphere plates also
-consume the validated surface-blur value directly. This keeps the control
-visibly reliable when a browser does not sample video or blend-mode layers as
-part of a backdrop.
+page content, while a card-local copy of uploaded backgrounds and authored
+atmosphere plates consumes the validated surface-blur value directly. This
+keeps the control reliable without blurring the page-wide canvas.
 
 ## 2026-08-08 — Keep effect layers transparent to surface backdrop sampling
 
