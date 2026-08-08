@@ -5,6 +5,17 @@ function rgbaFromHex(hex, alpha) {
   return `rgba(${Number.parseInt(value.slice(0, 2), 16)}, ${Number.parseInt(value.slice(2, 4), 16)}, ${Number.parseInt(value.slice(4, 6), 16)}, ${alpha})`;
 }
 
+function profileBackgroundPaint(appearance) {
+  return appearance.gradient.enabled
+    ? `linear-gradient(${appearance.gradient.angle}deg, ${appearance.gradient.primary}, ${appearance.gradient.secondary})`
+    : appearance.colors.background;
+}
+
+export function getProfileCanvasStyle(config) {
+  const { appearance } = normalizeProfileConfig(config);
+  return `--profile-background-paint:${profileBackgroundPaint(appearance)}`;
+}
+
 /**
  * Return the validated CSS custom properties used by the identity card.
  * Keeping this projection shared prevents a fitting-room preview from
@@ -14,9 +25,7 @@ export function getProfileAppearanceStyle(config) {
   const normalized = normalizeProfileConfig(config);
   const { appearance } = normalized;
   const signatureColor = appearance.colors.accent;
-  const profileBackground = appearance.gradient.enabled
-    ? `linear-gradient(${appearance.gradient.angle}deg, ${appearance.gradient.primary}, ${appearance.gradient.secondary})`
-    : appearance.colors.background;
+  const profileBackground = profileBackgroundPaint(appearance);
 
   return [
     `--profile-accent:${signatureColor}`,

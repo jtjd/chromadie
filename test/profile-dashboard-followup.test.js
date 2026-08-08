@@ -98,11 +98,13 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.doesNotMatch(settings, /profile-preview-drawer__backdrop/);
   assert.match(shell, /\{#if backgroundSrc && !previewMode\}/);
   assert.match(shell, /profile-shell__media-background/);
+  assert.match(shell, /profile-shell__page-atmosphere-layer/);
+  assert.match(shell, /profile-shell__page-cursor-layer/);
   assert.match(shell, /\{#if backgroundSrc && previewMode\}/);
   assert.match(shell, /profile-shell__card-media-background/);
   assert.match(shell, /profile-shell__card-atmosphere-layer/);
   assert.match(shell, /profile-shell__card-cursor-layer/);
-  assert.match(shell, /<ProfileBorderEffect[\s\S]*\{#if atmosphereKey\}/);
+  assert.match(shell, /<ProfileBorderEffect[\s\S]*\{#if atmosphereKey && previewMode\}/);
   assert.match(shell, /if \(previewMode \|\| !targetProfile\?\.id/);
   assert.match(shell, /\{#if !previewMode && !isOwnProfile\}/);
   assert.match(shell, /deferMedia=\{previewMode\}/);

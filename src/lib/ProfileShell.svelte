@@ -29,7 +29,7 @@
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
-  import { getProfileAppearanceStyle } from './profileAppearanceStyle.js';
+  import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -403,15 +403,22 @@
   // appearance values are projected onto the identity card below instead of
   // leaking into the roll surface.
   $: profileCardStyle = getProfileAppearanceStyle(effectiveProfileConfig);
+  $: profilePageStyle = previewMode ? profileShellStyle : `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}`;
 
   onDestroy(() => {
     if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={profileShellStyle} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
   {#if backgroundSrc && !previewMode}
     <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
+  {/if}
+  {#if atmosphereKey && !previewMode}
+    <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__page-atmosphere-layer" />
+  {/if}
+  {#if cursorTrailKey && !previewMode}
+    <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__page-cursor-layer" />
   {/if}
   {#if !loading && targetProfile}
     <div class="profile-shell__composition">
@@ -422,10 +429,10 @@
             <div class="profile-shell__card-media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
           {/if}
           <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-shell__identity-boundary">
-            {#if atmosphereKey}
+            {#if atmosphereKey && previewMode}
               <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__card-atmosphere-layer" />
             {/if}
-            {#if cursorTrailKey}
+            {#if cursorTrailKey && previewMode}
               <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__card-cursor-layer" />
             {/if}
             <IdentityCard
@@ -726,6 +733,8 @@
 
   .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
   .profile-shell__card-media-background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
+  :global(.profile-atmosphere.profile-shell__page-atmosphere-layer) { position: fixed; inset: 0; z-index: 0; }
+  :global(.cursor-trail-layer.profile-shell__page-cursor-layer) { position: fixed; inset: 0; z-index: 6; }
   .profile-shell__opening-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr); align-items: center; gap: clamp(2rem, 6vw, 7rem); width: min(100%, 70rem); margin-inline: auto; }
   .profile-shell__identity { min-width: 0; }
 
@@ -1056,9 +1065,11 @@
     padding: 0;
     overflow: hidden;
     border: 0;
-    background: var(--profile-background-paint, transparent);
+    background: transparent;
     box-shadow: none;
   }
+
+  .profile-shell-page--preview .profile-shell__opening.profile-shell__approved-opening { background: var(--profile-background-paint, transparent); }
 
   :global(.profile-shell__identity-boundary) {
     position: relative;

@@ -7,7 +7,7 @@ import {
   isProfileBorderKey,
 } from '../src/lib/profile-border/profileBorders.js';
 import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
-import { getProfileAppearanceStyle } from '../src/lib/profileAppearanceStyle.js';
+import { getProfileAppearanceStyle, getProfileCanvasStyle } from '../src/lib/profileAppearanceStyle.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -48,12 +48,14 @@ test('profile appearance tokens stay on the identity card and out of the roll UI
 
   assert.match(shell, /const profileShellStyle = '--profile-accent: var\(--color-accent-roll\)/);
   assert.match(shell, /getProfileAppearanceStyle\(effectiveProfileConfig\)/);
-  assert.match(shell, /style=\{profileShellStyle\} aria-busy/);
+  assert.match(shell, /getProfileCanvasStyle\(effectiveProfileConfig\)/);
+  assert.match(shell, /style=\{profilePageStyle\} aria-busy/);
   assert.match(shell, /data-profile-region="identity" style=\{profileCardStyle\}/);
   assert.match(appearanceStyle, /--profile-background-paint/);
   assert.match(appearanceStyle, /function rgbaFromHex/);
   assert.match(appearanceStyle, /--profile-highlight/);
   assert.match(getProfileAppearanceStyle(createDefaultProfileConfig()), /--profile-surface-fill:rgba\(17, 20, 27, 0\.64\)/);
+  assert.match(getProfileCanvasStyle(createDefaultProfileConfig()), /--profile-background-paint:#07080B/);
   assert.match(shell, /const rollModule = Object\.freeze\(\{ size: 'wide' \}\)/);
   assert.doesNotMatch(shell, /<main[\s\S]*?profileBackground/);
 });

@@ -2,10 +2,10 @@
 
 Document user-visible redesign changes by milestone.
 
-## 2026-08-08 — Bound profile effects to the identity card
+## 2026-08-08 — Match public effects to the full profile canvas
 
-- Atmosphere and cursor effects now stay inside the profile card instead of
-  painting across the public profile page.
+- Atmosphere and cursor effects now fill the public profile page while staying
+  card-scoped in the dashboard fitting-room preview.
 - Surface opacity uses a direct RGBA paint value and blur remains attached to
   the translucent identity surface.
 - The dashboard fitting-room preview follows the same effect boundary.
@@ -23,9 +23,8 @@ Document user-visible redesign changes by milestone.
 
 - The Collection fitting room now follows the live draft, including the active
   profile theme, avatar, and background.
-- Atmosphere scenes and cursor trails stay inside the identity card instead of
-  reaching the daily roll surface; public uploaded backgrounds fill the profile
-  page while dashboard previews keep them card-scoped.
+- Atmosphere scenes and cursor trails fill the public profile without changing
+  the roll UI; dashboard previews keep them card-scoped alongside backgrounds.
 - Layout & links exposes secondary section sizes, keeps the daily roll fixed,
   and explains incomplete links before they are saved.
 

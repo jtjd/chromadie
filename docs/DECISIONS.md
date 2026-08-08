@@ -2,21 +2,21 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
-## 2026-08-08 — Bind atmosphere and surface effects to the identity boundary
+## 2026-08-08 — Keep public effects page-wide and preview effects card-scoped
 
-The public profile now mounts atmosphere and cursor layers inside the same
-bounded identity boundary as the card, so those effects cannot paint across
-the page or roll surface. Surface opacity is emitted as validated RGBA and
-the card keeps its backdrop blur, making both controls respond directly to
-the configured values.
+Uploaded backgrounds, atmosphere scenes, and cursor trails fill the public
+profile canvas. The dashboard fitting-room preview keeps those layers inside
+its card for a clean editing surface. The identity card remains the only
+translucent surface, with validated RGBA opacity and backdrop blur revealing
+the page canvas beneath it without recoloring the roll UI.
 
 ## 2026-08-08 — Keep public backgrounds full-page while scoping previews to the card
 
 Uploaded profile backgrounds are a page-level visual on public profiles, so
 they fill the profile viewport behind the identity and supporting content. The
-dashboard fitting-room preview keeps the same media inside its card for a
-cleaner editing surface. Atmosphere and cursor effects remain card-scoped, and
-all authored appearance variables still stop at the identity card boundary.
+dashboard fitting-room preview keeps the same media and effects inside its card
+for a cleaner editing surface. All authored appearance variables still stop at
+the intended public canvas/card boundaries.
 Surface fill, blur, text, and highlight tokens are consumed by the shared card
 and fitting-room renderers rather than being left as configuration-only values.
 
@@ -26,9 +26,9 @@ The customization audit found that the Collection fitting room preferred the
 published appearance over the current draft, and that profile media/effects
 were mounted as page-level layers. The fitting room now uses the draft first
 and shares the validated card-style projection with the public renderer.
-Atmosphere plates and cursor trails are scoped to the identity-card surface;
-public uploaded backgrounds fill the profile page while dashboard previews keep
-them card-scoped. The daily roll remains on fixed system presentation tokens.
+Atmosphere plates and cursor trails fill the public profile while dashboard
+previews keep them card-scoped. Uploaded backgrounds fill the profile page and
+the daily roll remains on fixed system presentation tokens.
 Layout exposes the existing module-size contract, while the daily roll
 is fixed and cannot be resized or reordered. Empty links are rejected before a
 save instead of being silently normalized away.

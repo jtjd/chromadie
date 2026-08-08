@@ -2,8 +2,8 @@
 
 ## Appearance paint-order follow-up — 2026-08-08
 
-- Moved public atmosphere and cursor layers inside the identity boundary so
-  their viewport is the profile card rather than the full page.
+- Moved public atmosphere and cursor layers onto the full profile canvas while
+  keeping dashboard preview layers card-scoped.
 - Emitted the translucent surface as validated RGBA and retained card-level
   backdrop blur, making opacity and blur respond to the stored values.
 - Applied the same bounded effect placement to the dashboard fitting-room
@@ -25,9 +25,9 @@
   changes are reflected immediately instead of showing the published theme.
 - Shared the validated appearance-to-CSS projection between the fitting room and
   the public ProfileShell.
-- Kept atmosphere scenes and cursor trails on the identity-card surface; public
-  uploaded backgrounds fill the page while preview media remains card-scoped.
-  The daily roll uses fixed system tokens and a fixed wide layout.
+- Kept atmosphere scenes and cursor trails page-wide on public profiles while
+  preview media/effects remain card-scoped. The daily roll uses fixed system
+  tokens and a fixed wide layout.
 - Exposed existing module-size controls for secondary profile sections and
   blocked incomplete links before save/publish.
 - Compared the bounded surface with current guns.lol and Haunt offerings. Their
