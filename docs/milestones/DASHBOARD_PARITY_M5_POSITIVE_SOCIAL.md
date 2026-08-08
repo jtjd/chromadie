@@ -49,6 +49,11 @@ or competitive-social product.
 - Local schema lint/reset, database-security checks, and the full validation
   suite pass before deployment.
 
+The post-deployment Chromium smoke was attempted but could not hydrate the
+local homepage because the browser reported repeated `ERR_NETWORK_CHANGED`
+resource failures. This is recorded as an environment gate, not a passing
+browser certification.
+
 ## Boundary
 
 This milestone does not add notifications, messaging, moderation dashboards,

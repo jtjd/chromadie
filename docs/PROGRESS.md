@@ -16,6 +16,10 @@
 - Added public-shell, renderer, normalizer, migration, and safe-text contract
   coverage. Local schema lint has passed; reset and the complete validation
   suite and linked migration deployment pass.
+- The Chromium smoke was attempted after deployment but stopped before the
+  first hydrated homepage step because the local browser reported repeated
+  `ERR_NETWORK_CHANGED` failures; the captured evidence is under
+  `/tmp/chromadie-profile-studio-smoke-Fw9vsM`.
 
 ## Dashboard parity Milestone 4 deployed — 2026-08-08
 
