@@ -18,6 +18,7 @@
   import { getProfileComposition } from './profileComposition.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
+  import ProfileContent from './ProfileContent.svelte';
   import IdentityCard from './IdentityCard.svelte';
   import { getProfileMediaUrl } from './profileMedia.js';
   import TodayColor from './TodayColor.svelte';
@@ -30,6 +31,7 @@
   import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
   import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
+  import { hasVisibleProfileContent } from './profileContent.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -375,10 +377,13 @@
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
   $: audioSrc = getProfileMediaUrl(effectiveProfileConfig.audio_path, mediaCacheKey);
+  $: profileContent = effectiveProfileConfig.content;
+  $: hasProfileContent = hasVisibleProfileContent(profileContent);
   $: showExpression = Boolean(audioSrc)
     || Boolean(effectiveProfileConfig.spotify_type && effectiveProfileConfig.spotify_id)
     || PROFILE_MUSIC_ENABLED
-    || (import.meta.env.DEV && visualFixture === 'music');
+    || (import.meta.env.DEV && visualFixture === 'music')
+    || hasProfileContent;
   $: composition = getProfileComposition(effectiveProfileConfig, {
     isOwner: isOwnProfile,
     hasLinks: visibleLinks.length > 0,
@@ -515,6 +520,9 @@
           <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
             <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
               <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} spotifyType={effectiveProfileConfig.spotify_type} spotifyId={effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} />
+              {#if hasProfileContent}
+                <ProfileContent content={profileContent} />
+              {/if}
             </div>
           </div>
         {/if}

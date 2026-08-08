@@ -1946,3 +1946,13 @@ direct route behavior.
   version reload actions; appearance remains independently publishable.
 - Fixed `#CDD2FF` appearance defaults, bounded owner-data preview behavior, and
   reused account deletion in the legacy Profile route.
+
+## 2026-08-08 — Add structured profile content regions
+
+- Added About & projects editing to Profile Studio with bounded plain text,
+  HTTPS-only project links, owner drafts, publish, conflict reload, and live
+  preview.
+- Added the corresponding public profile continuation region while keeping
+  the daily roll and existing customization boundaries unchanged.
+- Added additive Supabase normalization and section RPC support; raw HTML,
+  JavaScript, CSS, and arbitrary embeds are not part of the profile contract.

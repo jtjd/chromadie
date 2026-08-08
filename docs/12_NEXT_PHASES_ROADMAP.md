@@ -119,7 +119,7 @@ full-viewport atmosphere are unchanged. See [`PHASE_14_REPORT.md`](PHASE_14_REPO
 
 ## Dashboard Parity Program
 
-Status: Milestones 0, 1A, 1B, and 2 are complete locally. Later milestones
+Status: Milestones 0, 1A, 1B, 2, and 3 are complete locally. Later milestones
 remain planned and must begin one at a time.
 
 1. Completed: close the release baseline and replace the aggregate JavaScript
@@ -142,10 +142,12 @@ remain planned and must begin one at a time.
    validated WebP objects, private library RLS, staged registration, and
    selection/deletion in Profile Studio. See
    [`milestones/DASHBOARD_PARITY_M2_MEDIA_LIBRARY.md`](milestones/DASHBOARD_PARITY_M2_MEDIA_LIBRARY.md).
-6. Next: structured content regions, starting with bounded About/Projects
-   configuration, then allowlisted provider widgets, positive moderated social
-   features, privacy-conscious analytics, templates/premium expression, and
-   finally aliases/domains/API access as separately authorized milestones.
+6. Completed locally: structured About/Projects content with bounded plain text,
+   HTTPS links, owner drafts, publishing, conflict handling, and live preview.
+   See [`milestones/DASHBOARD_PARITY_M3_CONTENT_REGIONS.md`](milestones/DASHBOARD_PARITY_M3_CONTENT_REGIONS.md).
+7. Next: allowlisted provider widgets, then positive moderated social features,
+   privacy-conscious analytics, templates/premium expression, and finally
+   aliases/domains/API access as separately authorized milestones.
 
 ## Deferred themes
 

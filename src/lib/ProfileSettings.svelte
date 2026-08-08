@@ -17,6 +17,7 @@
     overview: () => import('./ProfileStudioOverview.svelte'),
     'profile-identity': () => import('./IdentityEditor.svelte'),
     'profile-media': () => import('./ProfileExpressionEditor.svelte'),
+    'profile-content': () => import('./ProfileContentEditor.svelte'),
     'profile-collection': () => import('./ProfileCosmeticsEditor.svelte'),
     'profile-layout': () => import('./ProfileEditor.svelte'),
     'profile-social': () => import('./ProfileSocial.svelte'),
@@ -28,6 +29,7 @@
     { id: 'customize', label: 'Customize', groupKey: 'top', icon: '✦' },
     { id: 'profile-identity', label: 'Identity', groupKey: 'profile', groupLabel: 'Profile', icon: '◌' },
     { id: 'profile-media', label: 'Media', groupKey: 'profile', groupLabel: 'Profile', icon: '▧' },
+    { id: 'profile-content', label: 'About & projects', groupKey: 'profile', groupLabel: 'Profile', icon: '✎' },
     { id: 'profile-layout', label: 'Layout & links', groupKey: 'profile', groupLabel: 'Profile', icon: '⌘' },
     { id: 'profile-social', label: 'Privacy & social', groupKey: 'profile', groupLabel: 'Profile', icon: '◍' },
     { id: 'profile-collection', label: 'Collection', groupKey: 'profile', groupLabel: 'Profile', icon: '◇' },
@@ -40,12 +42,14 @@
     appearance: 'customize',
     'profile-identity': 'profile-identity',
     'profile-media': 'profile-media',
+    'profile-content': 'profile-content',
     'profile-layout': 'profile-layout',
     'profile-social': 'profile-social',
     'profile-collection': 'profile-collection',
     identity: 'profile-identity',
     expression: 'profile-media',
     media: 'profile-media',
+    content: 'profile-content',
     layout: 'profile-layout',
     social: 'profile-social',
     collection: 'profile-collection',
@@ -96,6 +100,7 @@
   let dirtyPromptReturnFocus = null;
   let appearanceEditor = null;
   let layoutEditor = null;
+  let contentEditor = null;
 
   function getEquippedLayout(value) {
     return value && typeof value === 'object' && typeof value.profile_layout === 'string' ? value.profile_layout : '';
@@ -181,6 +186,7 @@
   function resetActiveEditor() {
     if (activeDirtySection === 'customize') appearanceEditor?.resetChanges?.();
     if (activeDirtySection === 'profile-layout') layoutEditor?.resetChanges?.();
+    if (activeDirtySection === 'profile-content') contentEditor?.resetChanges?.();
     activeDirtySection = '';
   }
 
@@ -378,6 +384,8 @@
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} on:identitysaved={updateIdentity} />
           {:else if activeSection === 'profile-media'}
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} on:expressionchange={updateExpression} />
+          {:else if activeSection === 'profile-content'}
+            <svelte:component this={sectionComponents[activeSection]} bind:this={contentEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
           {:else if activeSection === 'profile-collection'}
             <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={context.profileConfig} />
           {:else if activeSection === 'profile-layout'}

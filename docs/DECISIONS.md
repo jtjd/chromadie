@@ -3359,6 +3359,18 @@ modules, and links. New appearance defaults use fixed accent `#CDD2FF`, while
 legacy whole-config saves retain structured appearance values for compatibility.
 The live preview reuses owner-loaded profile data, bounds uploaded media, and
 does not expose social, follow, roll, analytics, or autoplay mutations.
+
+## 2026-08-08 — Keep profile content structured and deliberately small
+
+The first post-media dashboard content slice is a single plain-text About
+region plus at most four HTTPS Projects. Content is stored under the existing
+version-one profile configuration and uses its owner-private draft/publicized
+projection rather than a new public table. Drafts can retain incomplete project
+rows while editing, but the normalized public projection drops incomplete or
+unsafe links. Rendering uses Svelte text interpolation and ordinary safe
+anchors; Chromadie does not accept profile-authored HTML, JavaScript, CSS, or
+arbitrary embeds. This gives profiles more story and exploration value while
+keeping the public acquisition surface fast and safe.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

@@ -2364,4 +2364,17 @@ renderer keys through finite aliases.
   copy.
 - Validation: build, check, ESLint, 199 tests, links, CSP, all drift checks,
   scoring parity, database security, schema lint, and database reset passed.
-  Performance remains over inherited initial/total JS and total CSS budgets.
+Performance remains over inherited initial/total JS and total CSS budgets.
+
+## 2026-08-08 — Add structured About and Projects regions
+
+- Added the bounded `content` profile configuration contract: one plain-text
+  About block and up to four HTTPS Projects.
+- Added the owner About & projects editor with draft/publish, stale-version
+  reload, dirty navigation protection, and live dashboard preview.
+- Added the quiet public continuation renderer; incomplete rows and unsafe
+  URLs never become public links, and no raw markup or arbitrary embeds are
+  accepted.
+- Added the additive content RPC migration and source/unit coverage. Local
+  schema lint/reset and focused checks pass; the full validation suite and
+  deployment are the remaining handoff steps for this milestone.
