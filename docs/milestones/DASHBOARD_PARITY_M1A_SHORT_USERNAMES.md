@@ -1,7 +1,7 @@
 # Dashboard Parity Milestone 1A — One- and Two-Character Usernames
 
-Status: complete locally — 2026-08-08; linked migration deployment remains a
-separately reviewed release step before the standalone authentication routes.
+Status: complete — 2026-08-08; linked migration applied and verified before
+the standalone authentication routes.
 
 ## Implementation result
 
@@ -17,8 +17,8 @@ separately reviewed release step before the standalone authentication routes.
   database security tests, and the real browser smoke. The browser proof
   created a two-character account and refreshed its canonical root profile.
 - Local reset, schema lint, all 206 tests, the complete repository validation
-  suite, and the eight-step Chromium smoke pass. No linked migration was
-  applied by this repository milestone.
+  suite, and the Chromium smoke pass. The linked project now records
+  `20260808120000_short_usernames`; the remote migration history is aligned.
 
 ## Goal
 
@@ -92,4 +92,5 @@ must remain unchanged.
 - Desktop/mobile signup and homepage claim controls expose the new minimum.
 - Local schema reset, schema lint, policy drift, database security, browser
   signup/direct-refresh coverage, and the complete `AGENTS.md` suite pass.
-- Linked deployment remains a separately reviewed step after local acceptance.
+- Linked deployment is applied and verified as part of the reviewed release
+  sequence.

@@ -119,21 +119,21 @@ full-viewport atmosphere are unchanged. See [`PHASE_14_REPORT.md`](PHASE_14_REPO
 
 ## Dashboard Parity Program
 
-Status: Milestones 0 and 1A are complete locally. Milestone 1B is next; later
-milestones remain planned and must begin one at a time.
+Status: Milestones 0, 1A, and 1B are complete. Later milestones remain planned
+and must begin one at a time.
 
 1. Completed: close the release baseline and replace the aggregate JavaScript
    release blocker with a route-first performance policy in
    [`milestones/DASHBOARD_PARITY_M0_BASELINE.md`](milestones/DASHBOARD_PARITY_M0_BASELINE.md).
-2. Completed locally: broaden the authoritative username contract to allow available one- and
-   two-character names without weakening exact route reservations,
-   case-insensitive uniqueness, or moderation. See
+2. Completed and deployed: broaden the authoritative username contract to allow
+   available one- and two-character names without weakening exact route
+   reservations, case-insensitive uniqueness, or moderation. See
    [`milestones/DASHBOARD_PARITY_M1A_SHORT_USERNAMES.md`](milestones/DASHBOARD_PARITY_M1A_SHORT_USERNAMES.md).
-3. Next: replace the homepage authentication overlay with standalone `/login` and
-   `/signup` pages while preserving the existing auth implementation, callback,
-   recovery, and safe-return contracts. See
+3. Completed: replace the homepage authentication overlay with standalone
+   `/login` and `/signup` pages while preserving the existing auth
+   implementation, callback, recovery, and safe-return contracts. See
    [`milestones/DASHBOARD_PARITY_M1_AUTH_ROUTES.md`](milestones/DASHBOARD_PARITY_M1_AUTH_ROUTES.md).
-4. Complete the customization-control contract audit before adding expression
+4. Next: complete the customization-control contract audit before adding expression
    features: public page effects remain page-wide, preview effects remain
    contained, card appearance never recolors the roll UI, and every control has
    a tested preview and public renderer consumer.

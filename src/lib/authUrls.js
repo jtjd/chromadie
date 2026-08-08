@@ -34,16 +34,21 @@ export function getResetPasswordUrl(next) {
   return buildAppUrl('/reset-password', next ? { next } : {})
 }
 
-export function getSafeNextUrl(value) {
-  const fallback = getAppOrigin()
+export function getSafeNextUrl(value, fallback = getAppOrigin()) {
+  let fallbackUrl
+  try {
+    fallbackUrl = new URL(fallback, getAppOrigin())
+  } catch {
+    fallbackUrl = new URL(getAppOrigin())
+  }
   if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) {
-    return fallback
+    return fallbackUrl.toString()
   }
 
   try {
-    const candidate = new URL(value, fallback)
-    return candidate.origin === new URL(fallback).origin ? candidate.toString() : fallback
+    const candidate = new URL(value, fallbackUrl)
+    return candidate.origin === fallbackUrl.origin ? candidate.toString() : fallbackUrl.toString()
   } catch {
-    return fallback
+    return fallbackUrl.toString()
   }
 }

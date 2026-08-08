@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Dashboard parity Milestone 1B complete — 2026-08-08
+
+- Replaced the homepage authentication overlay with standalone `/login` and
+  `/signup` pages using the existing Supabase auth form and callback/recovery
+  contracts.
+- Added safe same-origin return navigation, bounded username carry-over,
+  direct-refresh route metadata, announced errors, initial focus, mobile
+  containment, and reduced-motion behavior.
+- Replaced homepage, header, founder, guest, and claim auth entry points with
+  route navigation and removed the obsolete modal focus/body-scroll machinery.
+- The Chromium smoke covers route navigation, auth route switching, signup,
+  authenticated safe-return redirect, Profile Studio, mobile keyboard behavior,
+  and canonical public-profile refresh.
+
 ## Dashboard parity Milestone 1A complete locally — 2026-08-08
 
 - Added a forward-only migration and shared client policy for available 1–20
@@ -13,8 +27,8 @@
   browser gate created a two-character account and passed canonical profile,
   desktop/mobile, keyboard, preview, and reduced-motion checks.
 - Local reset and schema lint pass; the full required suite passes with 206
-  tests. Linked migration deployment remains pending review. Milestone 1B,
-  standalone authentication routes, remains unstarted.
+  tests. The linked short-username migration is applied and aligned with the
+  local migration history.
 
 ## Dashboard parity Milestone 0 complete — 2026-08-08
 

@@ -10,7 +10,7 @@ alpha systems rather than the removed cosmetic catalog.
 
 ## Runtime shape
 
-`src/main.js` mounts the single `src/App.svelte` component. App owns the browser history bridge, route mode, navigation chrome, auth modal, document metadata, and top-level component selection. The feature surfaces remain Svelte components in `src/lib/` rather than route files in SvelteKit.
+`src/main.js` mounts the single `src/App.svelte` component. App owns the browser history bridge, route mode, navigation chrome, document metadata, and top-level component selection; standalone auth presentation is lazy-loaded as a route-owned page. The feature surfaces remain Svelte components in `src/lib/` rather than route files in SvelteKit.
 
 The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay mutations and account mutations use guarded RPCs or Edge Functions. Public crawlers receive the static shell with route-specific metadata from Cloudflare Pages Functions, then the client loads the interactive state.
 
@@ -29,20 +29,23 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | `/prototype/profile` | `view = prototype` | `App.svelte` → `ProfileCanvasPrototype.svelte` | `functions/prototype/profile.js` serves the fixture shell with `noindex,nofollow` metadata | Phase 1 fixture-only design prototype; no auth or backend data |
 | `/?view=profile&profile=<uuid>` | Profile by id | `ProfileShell.svelte` by default; `Profile.svelte` with `legacy=1` | Client route only; metadata remains client-managed | Allows a public profile lookup without exposing a private owner query |
 | `/c/<id>?from=<username>` | `view = game`, challenge state | `App.svelte` → `Game.svelte` | `functions/c/[[id]].js` and the `challenge-link` Edge Function provide challenge metadata/loading | Challenge lookup is authoritative and expires server-side |
+| `/login` | Auth route, sign-in tab | `App.svelte` → lazy `AuthPage.svelte` → `Auth.svelte` | Non-indexable client metadata; optional bounded `next` destination | Public auth page; authenticated visitors redirect safely |
+| `/signup` | Auth route, sign-up tab | `App.svelte` → lazy `AuthPage.svelte` → `Auth.svelte` | Non-indexable client metadata; optional bounded `next` and username draft | Public account creation; username remains database-authoritative |
 | `/auth/callback` | Auth callback mode | `AuthCallback.svelte` | `functions` shell route is non-indexable | Auth/session handoff |
 | `/reset-password` | Password reset mode | `ResetPassword.svelte` | Non-indexable | Authenticated recovery flow |
 | `/privacy` | Static document mode | `PrivacyPolicy.svelte` | `functions/privacy.js` supplies metadata and fallback text | Public |
 | `/how-to-play` | FAQ/how-to-play mode | `FAQ.svelte` | `functions/how-to-play.js` supplies metadata and fallback text | Public |
 | Any other path | `not-found` | App 404 state | Noindex client metadata | No data load |
 
-`src/lib/routes.js` now contains the pure parser used by App and tested independently. App still owns challenge loading, history mutation, and side effects. `syncRoute()` can also emit the public `/u/<username>` form after an in-app profile navigation.
+`src/lib/routes.js` now contains the pure parser used by App and tested independently. App still owns challenge loading, history mutation, and side effects. `syncRoute()` can also emit the public `/u/<username>` form after an in-app profile navigation. Auth route presentation is lazy-loaded through `AuthPage.svelte`; the shared `Auth.svelte` form remains the single authentication implementation.
 
 ## Component ownership map
 
 | Component / module | Owns | Calls into / depends on |
 | --- | --- | --- |
 | `src/main.js` | SPA mount | `App.svelte` |
-| `src/App.svelte` | Route mode, history, navigation, document title/description/canonical/robots/OG/Twitter metadata, keyboard skip target and route-content focus, auth dialog, mobile menu, global header/footer, challenge loading | Stores, Supabase, `loadChallengeLink`, cosmetics/ranks/a11y, all major surfaces |
+| `src/App.svelte` | Route mode, history, navigation, document title/description/canonical/robots/OG/Twitter metadata, keyboard skip target and route-content focus, mobile menu, global header/footer, challenge loading, lazy auth-route selection | Stores, Supabase, `loadChallengeLink`, cosmetics/ranks/a11y, all major surfaces |
+| `src/lib/AuthPage.svelte` | Standalone login/signup shell, auth-route value proposition, focus, safe authenticated redirect, responsive/reduced-motion presentation | `Auth.svelte`, auth stores, bounded auth URL helpers, canonical profile route contract |
 | `src/lib/Game.svelte` | Guest daily-roll persistence, authenticated daily-roll restoration, readiness, roll animation, canonical result presentation, reroll lock, share text/image, percentile display | `rollService.js`, `roll_die`, `get_my_daily_roll`, `get_score_percentile`, stores, `rollState.js`, `rollPresentation.js`, challenge creation |
 | `src/lib/ProfileShell.svelte` | Live profile-shell rendering, identity hero, owner/visitor presentation, public stats/history/badges/cosmetics, loading/error/empty states, rival CTA, legacy controls CTA, owner roll placement and refresh boundary, configured module/link rendering, timeline/collection composition, social module placement and refresh boundary | `profileData.js`, `ProfileRoll.svelte`, `ProfileEditor.svelte`, `ProfileTimeline.svelte`, `ProfileCollection.svelte`, `ProfileSocial.svelte`, `profileConfig.js`, `profileStory.js`, `profileSocial.js`, foundation components, public profile/social RPCs, profile configuration RPCs, cosmetics/ranks/badge registries, stores |
 | `src/lib/ProfileRoll.svelte` | Authenticated owner restoration, daily-roll readiness, canonical roll presentation, server-reported conditions/rewards, no-navigation profile refresh, reroll UX guard | `rollService.js`, `get_my_daily_roll`, `get_score_percentile`, `roll_die`, `rollState.js`, stores, `RollPreview.svelte` |
@@ -329,7 +332,7 @@ Svelte text interpolation, with links rejected at the database boundary.
 4. `_publicPage.js` rewrites the shell's title, description, robots, canonical, Open Graph/Twitter tags, and safe noscript/JSON-LD where needed. It hashes inline scripts for CSP rather than enabling unrestricted inline JavaScript and accepts an explicit cache policy per public route.
 5. `App.svelte` repeats the metadata update after client hydration so in-app navigation keeps document metadata synchronized. This intentional duplication is a migration hazard.
 6. `public/robots.txt`, sitemap index/core files, `site.webmanifest`, icons, and `llms.txt` complete the public acquisition/metadata surface.
-7. Supabase migrations/seed and Edge Functions deploy separately from the Pages bundle. Production follows Cloudflare Pages from GitHub `main`. The 2026-08-08 linked-project audit found local and remote migrations aligned through `20260805150000_profile_progression_rewards.sql`, no public-schema diff, and catalog parity. External Pages/domain/Auth/email/browser/performance gates remain independent launch blockers.
+7. Supabase migrations/seed and Edge Functions deploy separately from the Pages bundle. Production follows Cloudflare Pages from GitHub `main`. The 2026-08-08 linked-project audit found local and remote migrations aligned through `20260808120000_short_usernames.sql`, with the short-username migration applied before the standalone auth route release. External Pages/domain/Auth/email/browser/performance gates remain independent launch blockers.
 
 The Phase 4 configuration is intentionally not part of the crawler metadata contract. `/u/<username>` metadata remains username/profile-projection based; the browser fetches one bounded published configuration RPC after hydration. Adding configuration to OG/JSON-LD or the sitemap would couple structured profile editing to the Pages Function metadata path and is deferred.
 

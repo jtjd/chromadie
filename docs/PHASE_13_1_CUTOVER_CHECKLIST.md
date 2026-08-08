@@ -47,8 +47,9 @@ email configuration changed.
   migration history.
 - [x] The previously linked 171 reservation rows, including the `Admin`
   grandfather row, were verified read-only on 2026-08-08.
-- [ ] Apply and verify the short-username migration, including the additive
-  `c`, `og`, and `u` reservations, before deploying the 1–20 client policy.
+- [x] Apply and verify the short-username migration, including the additive
+  `c`, `og`, and `u` reservations, before deploying the 1–20 client policy;
+  linked migration history was verified on 2026-08-08.
 - [x] Reservation-table and blocklist RLS, browser grants, helper grants,
   trigger policy, and direct-write rejection remotely.
 - [ ] Confirm Site URL is `https://chm.lol`.

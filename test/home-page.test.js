@@ -194,7 +194,7 @@ test('the application mounts the homepage, signup flow, and global footer', () =
   assert.match(routeLoaders, /home:\s*\(\) => import\('\.\/HomePage\.svelte'\)/);
   assert.match(app, /currentView === 'home'/);
   assert.match(app, /loaderKey: 'home'/);
-  assert.match(app, /on:signup=\{\(\) => openAuthModal\('signup'\)\}/);
+  assert.match(app, /on:signup=\{\(\) => navigateToAuth\('signup'\)\}/);
   assert.match(app, /<RouteOutlet/);
   assert.match(app, /class:app-shell--home=\{homeModeVisible\}/);
   assert.match(app, /<footer class="site-footer">/);

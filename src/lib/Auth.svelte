@@ -5,8 +5,10 @@
   import { onMount } from 'svelte';
 
   export let onClose = () => {};
+  export let standalone = false;
   export let initialTab = 'login';
   export let initialUsername = '';
+  export let next = '';
 
   let tab = initialTab === 'signup' ? 'signup' : 'login'; // 'login', 'signup', or 'forgot'
   let email = '';
@@ -56,6 +58,16 @@
     tab = nextTab;
     error = '';
     notice = '';
+  }
+
+  function getAuthPath(nextTab) {
+    const params = [];
+    if (next) params.push(`next=${encodeURIComponent(String(next).slice(0, 512))}`);
+    if (nextTab === 'signup' && isUsernameShapeValid(username) && !isProtectedUsername(username)) {
+      params.push(`username=${encodeURIComponent(username.trim().slice(0, 20))}`);
+    }
+    const query = params.join('&');
+    return `/${nextTab}${query ? `?${query}` : ''}`;
   }
 
   function getFriendlyAuthError(authError, fallback) {
@@ -207,7 +219,7 @@
         email,
         password,
         options: {
-          emailRedirectTo: getAuthCallbackUrl(),
+          emailRedirectTo: getAuthCallbackUrl(next),
           data: { username: requestedUsername, display_name: requestedUsername },
           ...(captchaToken ? { captchaToken } : {})
         }
@@ -231,7 +243,7 @@
       }
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: getResetPasswordUrl(),
+        redirectTo: getResetPasswordUrl(next),
         ...(captchaToken ? { captchaToken } : {})
       });
 
@@ -258,7 +270,7 @@
         error = getFriendlyAuthError(signInError, 'Could not sign you in.');
         resetCaptcha();
       }
-      // If successful, onAuthStateChange fires, $session updates, App.svelte closes modal.
+      // If successful, onAuthStateChange fires and the route shell handles the redirect.
     }
     loading = false;
   }
@@ -275,18 +287,26 @@
     <div class="auth-heading-group">
       <p class="auth-brand">ChromaDie</p>
       <p class="auth-kicker">{mode.kicker}</p>
+      <h1 id="auth-dialog-title" class="auth-title">{mode.title}</h1>
       <p id="auth-dialog-desc" class="auth-description">
         {mode.description}
       </p>
     </div>
-    <button type="button" class="close-auth-btn" aria-label="Close authentication dialog" on:click={onClose}>
-      ✕
-    </button>
+    {#if !standalone}
+      <button type="button" class="close-auth-btn" aria-label="Close authentication dialog" on:click={onClose}>
+        ✕
+      </button>
+    {/if}
   </div>
 
   <div class="tabs">
-    <button type="button" class={tab === 'login' ? 'active' : ''} on:click={() => setMode('login')}>Sign in</button>
-    <button type="button" class={tab === 'signup' ? 'active' : ''} on:click={() => setMode('signup')}>Create account</button>
+    {#if standalone}
+      <a href={getAuthPath('login')} class:active={tab === 'login'} aria-current={tab === 'login' ? 'page' : undefined}>Sign in</a>
+      <a href={getAuthPath('signup')} class:active={tab === 'signup'} aria-current={tab === 'signup' ? 'page' : undefined}>Create account</a>
+    {:else}
+      <button type="button" class={tab === 'login' ? 'active' : ''} on:click={() => setMode('login')}>Sign in</button>
+      <button type="button" class={tab === 'signup' ? 'active' : ''} on:click={() => setMode('signup')}>Create account</button>
+    {/if}
   </div>
 
   <form on:submit|preventDefault={handleAuth}>
@@ -334,7 +354,7 @@
     {/if}
 
     {#if error}
-      <p class="error">{error}</p>
+      <p class="error" role="alert" aria-live="polite">{error}</p>
     {/if}
 
     {#if tab === 'login'}
@@ -425,6 +445,12 @@
     font-size: 0.96rem;
     max-width: 34ch;
   }
+  .auth-title {
+    margin: 0.35rem 0 0;
+    color: var(--color-ink-strong);
+    font: 650 clamp(1.65rem, 3vw, 2.35rem) / 1 var(--font-display);
+    letter-spacing: -0.045em;
+  }
   .field-group {
     display: flex;
     flex-direction: column;
@@ -480,6 +506,21 @@
     min-height: 42px;
   }
   .tabs button.active {
+    color: var(--color-ink-strong);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    box-shadow: inset 0 -2px 0 var(--color-accent);
+  }
+  .tabs a {
+    flex: 1;
+    color: var(--text-muted);
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.92rem;
+    min-height: 42px;
+    text-align: center;
+  }
+  .tabs a.active {
     color: var(--color-ink-strong);
     background: color-mix(in srgb, var(--color-accent) 12%, transparent);
     box-shadow: inset 0 -2px 0 var(--color-accent);
@@ -656,6 +697,10 @@
       border-radius: 16px;
     }
     .tabs button {
+      min-height: 42px;
+      border-radius: 12px;
+    }
+    .tabs a {
       min-height: 42px;
       border-radius: 12px;
     }

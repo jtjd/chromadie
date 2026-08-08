@@ -2,14 +2,25 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Add standalone sign-in and sign-up pages
+
+- Homepage, header, founder, guest, and username-claim actions now navigate to
+  `/login` or `/signup` instead of opening an authentication overlay.
+- The pages reuse the existing auth implementation, preserve callback and
+  password-recovery behavior, support safe local return destinations, and
+  redirect authenticated visitors to their destination or canonical profile.
+- Auth route switching, direct refresh, initial focus, announced errors,
+  mobile layout, reduced motion, and a real signup flow are covered by the
+  browser smoke.
+
 ## 2026-08-08 — Allow one- and two-character usernames
 
 - Signup, homepage claims, canonical root profiles, compatibility routes, and
   challenge attribution now support available 1–20 character usernames.
 - Existing route, brand, moderation, and ownership protections remain active;
   the newly valid `c`, `og`, and `u` application paths are hard-reserved.
-- The database migration is checked in and locally certified but still needs
-  the separately reviewed linked deployment before the client policy launches.
+- The linked Supabase migration `20260808120000_short_usernames` is deployed
+  and the local/remote migration histories are aligned.
 
 ## 2026-08-08 — Complete the Profile Studio release baseline
 

@@ -16,6 +16,12 @@ import { isProtectedUsername } from '../src/lib/usernamePolicy.js';
 import { onRequestGet as compatibilityRoute } from '../functions/u/[[username]].js';
 import { onRequestGet as rootProfileRoute } from '../functions/[[username]].js';
 
+const [appSource, authPageSource, authSource] = await Promise.all([
+  readFile(new URL('../src/App.svelte', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/AuthPage.svelte', import.meta.url), 'utf8'),
+  readFile(new URL('../src/lib/Auth.svelte', import.meta.url), 'utf8')
+]);
+
 test('root profile routing is case-normalized and /u remains compatible', () => {
   const root = parseRouteLocation('/NeonUser');
   assert.equal(root.routeMode, 'app');
@@ -36,6 +42,26 @@ test('root profile routing is case-normalized and /u remains compatible', () => 
   assert.equal(shortRoot.canonicalProfilePath, '/a');
   assert.equal(getCanonicalProfilePath('A'), '/a');
   assert.equal(getCompatibilityProfilePath('Z7'), '/u/Z7');
+});
+
+test('standalone auth routes carry only bounded, safe presentation state', () => {
+  const login = parseRouteLocation('/login');
+  const signup = parseRouteLocation('/signup', '?next=%2Fprofile%2Fsettings&username=ab');
+  assert.equal(login.routeMode, 'auth');
+  assert.equal(login.view, 'auth');
+  assert.equal(login.authTab, 'login');
+  assert.equal(signup.authTab, 'signup');
+  assert.equal(signup.authNext, '/profile/settings');
+  assert.equal(signup.authUsername, 'ab');
+  assert.equal(parseRouteLocation('/signup', '?username=bad%2Fname').authUsername, '');
+  assert.match(appSource, /loaderKey: 'authPage'/);
+  assert.match(appSource, /navigateToAuth/);
+  assert.doesNotMatch(appSource, /auth-modal-overlay|openAuthModal/);
+  assert.match(authPageSource, /getSafeNextUrl/);
+  assert.match(authPageSource, /profileLoading/);
+  assert.match(authSource, /standalone/);
+  assert.match(authSource, /getAuthCallbackUrl\(next\)/);
+  assert.match(authSource, /getResetPasswordUrl\(next\)/);
 });
 
 test('reserved application and asset paths cannot become usernames', () => {

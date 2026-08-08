@@ -1,8 +1,26 @@
 # Dashboard Parity Milestone 1B — Standalone Authentication Routes
 
-Status: planned; Milestone 1A dependency is complete locally. Apply the linked
-short-username migration in the reviewed release sequence before launching the
-new signup page.
+Status: complete — 2026-08-08. The linked short-username migration was applied
+and verified before this route milestone was completed.
+
+## Implementation result
+
+- Added first-class `/login` and `/signup` routes with direct-refresh metadata,
+  safe bounded return destinations, and a lazy route loader.
+- Reused the existing Supabase-backed `Auth.svelte` form inside a responsive
+  `AuthPage.svelte` shell; callback, recovery, username checks, and session
+  hydration remain on their existing paths.
+- Replaced homepage, header, founder, guest, and claim entry points with route
+  navigation. Removed the auth overlay, focus trap, body-scroll lock, and
+  overlay styling after route coverage was in place.
+- Preserved only bounded username presentation state in signup URLs and added
+  announced errors, initial focus, mobile containment, and reduced-motion
+  behavior.
+- Added routing contracts and a loopback Chromium smoke covering auth route
+  navigation, route switching, signup, authenticated safe-return redirect,
+  Profile Studio refresh, mobile keyboard behavior, and public profile refresh.
+- No new schema migration was required for this milestone; the prerequisite
+  `20260808120000_short_usernames` migration is applied on the linked project.
 
 ## Goal
 

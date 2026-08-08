@@ -31,7 +31,7 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.match(app, /loaderKey: 'home'/);
   assert.match(app, /loaderKey: 'profileSettings'/);
   assert.match(routeLoaders, /profileSettings: \(\) => import\('\.\/ProfileSettings\.svelte'\)/);
-  assert.match(app, /on:signup=\{\(\) => openAuthModal\('signup'\)\}/);
+  assert.match(app, /on:signup=\{\(\) => navigateToAuth\('signup'\)\}/);
   assert.match(header, /Profile/);
   assert.doesNotMatch(header, />Roll</);
   assert.match(header, /navigate\('home'\)/);

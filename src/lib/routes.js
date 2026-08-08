@@ -29,6 +29,7 @@ function getCleanPathView(pathname) {
 export function parseRouteLocation(pathname = '/', search = '') {
   const params = new URLSearchParams(search)
   const rawPath = String(pathname || '/').replace(/\/+$/, '') || '/'
+  const authTab = rawPath === '/signup' ? 'signup' : rawPath === '/login' ? 'login' : null
   const routeView = params.get('view')
   const routeTab = params.get('tab')
   const routeProfileId = params.get('profile')
@@ -48,6 +49,8 @@ export function parseRouteLocation(pathname = '/', search = '') {
   let routeMode = 'not-found'
   if (rawPath === '/auth/callback') {
     routeMode = 'auth-callback'
+  } else if (authTab) {
+    routeMode = 'auth'
   } else if (rawPath === '/reset-password') {
     routeMode = 'reset-password'
   } else if (rawPath === '/privacy') {
@@ -65,7 +68,9 @@ export function parseRouteLocation(pathname = '/', search = '') {
   return {
     rawPath,
     routeMode,
-    view: profileRouteKind
+    view: authTab
+      ? 'auth'
+      : profileRouteKind
       ? 'profile'
       : challengeMatch
         ? 'game'
@@ -79,6 +84,11 @@ export function parseRouteLocation(pathname = '/', search = '') {
     profileId: (profileRouteKind || challengeMatch || routeMode !== 'app') ? null : routeProfileId || null,
     challengeId: challengeMatch ? decodeRouteSegment(challengeMatch[1]) : null,
     challengeFrom: challengeMatch ? routeChallengeFrom || null : null,
-    canonicalProfilePath: profileUsername ? getCanonicalProfilePath(profileUsername) : null
+    canonicalProfilePath: profileUsername ? getCanonicalProfilePath(profileUsername) : null,
+    ...(authTab ? {
+      authTab,
+      authNext: params.get('next')?.slice(0, 512) || '',
+      authUsername: normalizeUsernameSegment(params.get('username')) || ''
+    } : {})
   }
 }

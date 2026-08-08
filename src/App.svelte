@@ -1,5 +1,5 @@
 <script>
-  import { session, authUser, profile, authInitialized, authEvent, accountState, guestProgressActive, profileLoading, profileError, selectedUserId, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
+  import { session, authUser, profile, authInitialized, accountState, guestProgressActive, profileLoading, profileError, selectedUserId, isAuthenticated, clearUserState, clearLocalAccountCache, addToast } from './lib/stores';
   import { signOutCurrentBrowser } from './lib/authSession';
   import { supabase, supabaseError } from './lib/supabase';
   import SiteModeHeader from './lib/SiteModeHeader.svelte';
@@ -12,7 +12,6 @@
   import { prefetchRouteComponent } from './lib/routeLoaders.js';
   import { loadChallengeLink } from './lib/challenges';
   import { getAppOrigin } from './lib/authUrls';
-  import { focusFirstElement, restoreFocus, trapFocus } from './lib/a11y';
   import { VALID_VIEWS, VALID_LEADERBOARD_TABS, parseRouteLocation } from './lib/routes';
   import { getCanonicalProfilePath } from './lib/routeContract.js';
   import { normalizeHexColor } from './lib/utils.js';
@@ -21,18 +20,16 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import { SvelteURLSearchParams } from 'svelte/reactivity';
 
-  const VALID_APP_ROUTES = new Set(['app', 'privacy', 'terms', 'how-to-play', 'auth-callback', 'reset-password']);
+  const VALID_APP_ROUTES = new Set(['app', 'privacy', 'terms', 'how-to-play', 'auth', 'auth-callback', 'reset-password']);
   let view = 'home';
   let leaderboardTab = 'today';
   let routeMode = 'app';
-  let showAuthModal = false;
-  let authInitialTab = 'login';
-  let authInitialUsername = '';
+  let authRouteTab = 'login';
+  let authRouteNext = '';
+  let authRouteUsername = '';
   let logoutInProgress = false;
   let challengeData = null;
   let challengeLoadRequestId = 0;
-  let authDialog = null;
-  let authOpener = null;
   let selectedProfileUsername = null;
   let profileRouteKind = null;
   let legacyProfile = false;
@@ -44,7 +41,6 @@
   let profileVisualFixture = '';
   let cancelIdlePrefetch = null;
   let routeTarget;
-  let authComponentProps;
   let homeActiveColor = '#CDD2FF';
 
   function handleHomeActiveColor(event) {
@@ -79,7 +75,17 @@
     const parsed = parseRouteLocation(window.location.pathname, window.location.search);
     routeMode = parsed.routeMode;
 
-    if (parsed.profileUsername !== null) {
+    if (parsed.routeMode === 'auth') {
+      view = 'auth';
+      authRouteTab = parsed.authTab || 'login';
+      authRouteNext = parsed.authNext || '';
+      authRouteUsername = parsed.authUsername || '';
+      selectedProfileUsername = null;
+      profileRouteKind = null;
+      selectedUserId.set(null);
+      legacyProfile = false;
+      challengeData = null;
+    } else if (parsed.profileUsername !== null) {
       challengeData = null;
       view = 'profile';
       selectedProfileUsername = parsed.profileUsername;
@@ -300,14 +306,11 @@
 
     const nextRoute = parseRouteLocation(nextUrl.pathname, nextUrl.search);
     const isSpaRoute = nextRoute.routeMode === 'app'
+      || nextRoute.routeMode === 'auth'
       || ['privacy', 'terms', 'how-to-play'].includes(nextRoute.routeMode);
     if (!isSpaRoute) return;
 
     event.preventDefault();
-    if (showAuthModal) {
-      showAuthModal = false;
-      authOpener = null;
-    }
     navigateToPath(nextPath);
   }
 
@@ -341,7 +344,7 @@
     window.addEventListener('click', handleInternalLinkClick);
 
     const prefetchCommonRoutes = () => {
-      for (const key of ['game', 'leaderboard', 'profileShell', 'auth']) {
+      for (const key of ['game', 'leaderboard', 'profileShell', 'authPage']) {
         void prefetchRouteComponent(key);
       }
     };
@@ -412,7 +415,6 @@
     selectedUserId.set(null);
     selectedProfileUsername = null;
     challengeData = null;
-    showAuthModal = false;
     routeMode = 'app';
     setRoute('home');
 
@@ -429,40 +431,18 @@
   }
 
   /** @param {any} modeOrEvent */
-  async function openAuthModal(modeOrEvent = 'login') {
+  function navigateToAuth(modeOrEvent = 'login') {
     const eventDetail = typeof modeOrEvent === 'object' && modeOrEvent
       ? modeOrEvent.detail || modeOrEvent
       : null;
     const requestedMode = typeof modeOrEvent === 'string'
       ? modeOrEvent
       : eventDetail?.mode || 'login';
-    authInitialTab = requestedMode === 'signup' ? 'signup' : 'login';
-    authInitialUsername = eventDetail?.username
-      ? String(eventDetail.username).trim().slice(0, 20)
+    const username = eventDetail?.username ? String(eventDetail.username).trim().slice(0, 20) : '';
+    const query = requestedMode === 'signup' && username
+      ? `username=${encodeURIComponent(username)}`
       : '';
-    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    authOpener = activeElement;
-    showAuthModal = true;
-    await tick();
-    focusFirstElement(authDialog) || authDialog?.focus();
-  }
-
-  async function closeAuthModal() {
-    if (!showAuthModal) return;
-    showAuthModal = false;
-    await tick();
-    restoreFocus(authOpener);
-    authOpener = null;
-  }
-
-  function handleAuthModalKeydown(event) {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      void closeAuthModal();
-      return;
-    }
-
-    trapFocus(event, authDialog);
+    navigateToPath(`/${requestedMode === 'signup' ? 'signup' : 'login'}${query ? `?${query}` : ''}`);
   }
 
   function getRouteTarget({
@@ -479,10 +459,22 @@
     currentLegacyProfile,
     visualFixture,
     guestActive,
-    challenge
+    challenge,
+    authTab,
+    authNext,
+    authUsername
   }) {
     if (currentRouteMode === 'not-found') {
       return { componentKey: 'not-found', staticComponent: NotFound, componentProps: {}, loadingLabel: 'Opening page' };
+    }
+
+    if (currentRouteMode === 'auth') {
+      return {
+        loaderKey: 'authPage',
+        componentKey: `auth-page:${authTab}:${authNext}:${authUsername}`,
+        componentProps: { initialTab: authTab, next: authNext, initialUsername: authUsername },
+        loadingLabel: authTab === 'signup' ? 'Opening sign up' : 'Opening sign in'
+      };
     }
 
     if (currentRouteMode === 'privacy' || currentRouteMode === 'terms' || currentRouteMode === 'how-to-play') {
@@ -627,11 +619,6 @@
     clearChallengeState();
   }
 
-  $: authComponentProps = {
-    onClose: closeAuthModal,
-    initialTab: authInitialTab,
-    initialUsername: authInitialUsername
-  };
   $: routeTarget = getRouteTarget({
     routeMode,
     view,
@@ -646,7 +633,10 @@
     currentLegacyProfile: legacyProfile,
     visualFixture: profileVisualFixture,
     guestActive: $guestProgressActive,
-    challenge: challengeData
+    challenge: challengeData,
+    authTab: authRouteTab,
+    authNext: authRouteNext,
+    authUsername: authRouteUsername
   });
 
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
@@ -677,6 +667,8 @@
       ? 'Terms of Service | ChromaDie'
     : routeMode === 'how-to-play'
       ? 'How to Play | ChromaDie'
+    : routeMode === 'auth'
+      ? authRouteTab === 'signup' ? 'Create your account | ChromaDie' : 'Sign in | ChromaDie'
       : routeMode === 'app' && view === 'profile'
         ? `${profileTitle} | ChromaDie`
         : routeMode === 'app' && view === 'profile-settings'
@@ -706,6 +698,10 @@
       ? 'Read the ChromaDie Terms of Service for profiles, uploads, customization, and community safety.'
     : routeMode === 'how-to-play'
       ? 'Learn how ChromaDie works: roll a color every day, discover rarity and traits, earn EP, and compete on the leaderboard.'
+    : routeMode === 'auth'
+      ? authRouteTab === 'signup'
+        ? 'Create a ChromaDie account and keep building your public color identity.'
+        : 'Sign in to keep your ChromaDie profile, rolls, and cosmetics in sync.'
       : routeMode === 'app' && view === 'profile'
         ? `View ${profileTitle}'s public ChromaDie profile, progress, achievements, and recent rolls.`
         : routeMode === 'app' && view === 'profile-settings'
@@ -727,6 +723,8 @@
       ? '/terms'
     : routeMode === 'how-to-play'
       ? '/how-to-play'
+      : routeMode === 'auth'
+        ? `/${authRouteTab}`
       : routeMode === 'app' && view === 'leaderboard'
         ? '/leaderboard'
         : routeMode === 'app' && view === 'profile-settings'
@@ -742,18 +740,10 @@
     ? 'noindex,follow'
     : routeMode === 'app' && (legacyProfile || profileRouteKind === 'compatibility' || view === 'game' || view === 'shop' || view === 'profile-settings' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
     ? 'noindex,follow'
-    : routeMode === 'auth-callback' || routeMode === 'reset-password'
+    : routeMode === 'auth' || routeMode === 'auth-callback' || routeMode === 'reset-password'
       ? 'noindex,nofollow'
       : 'index,follow';
   const errorState = supabaseError;
-
-  $: if (($authEvent === 'SIGNED_IN' || $authEvent === 'USER_UPDATED') && showAuthModal) {
-    void closeAuthModal();
-  }
-
-  $: if (typeof document !== 'undefined') {
-    document.body.style.overflow = showAuthModal ? 'hidden' : '';
-  }
 
   $: if (typeof document !== 'undefined') {
     document.title = pageTitle;
@@ -777,11 +767,6 @@
     syncRoute();
   }
 
-  onDestroy(() => {
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = '';
-    }
-  });
 </script>
 
 <Toast />
@@ -812,31 +797,16 @@
       componentKey="reset-password"
       loadingLabel="Opening password reset"
     />
+  {:else if routeMode === 'auth'}
+    <RouteOutlet
+      loaderKey="authPage"
+      componentKey={routeTarget.componentKey}
+      componentProps={routeTarget.componentProps}
+      loadingLabel={routeTarget.loadingLabel}
+    />
   {:else}
   <div class="app-shell" class:app-shell--home={homeModeVisible}>
   <a class="skip-link" href="#main-content">Skip to main content</a>
-  {#if showAuthModal}
-    <div class="auth-modal-overlay" role="presentation" on:click|self={closeAuthModal}>
-      <div
-        class="auth-modal-content"
-        bind:this={authDialog}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="auth-dialog-title"
-        aria-describedby="auth-dialog-desc"
-        tabindex="-1"
-        on:keydown={handleAuthModalKeydown}
-      >
-        <RouteOutlet
-          loaderKey="auth"
-          componentKey={`auth:${authInitialTab}:${authInitialUsername}`}
-          componentProps={authComponentProps}
-          loadingLabel="Preparing sign in"
-          on:loaded={() => { if (showAuthModal) focusFirstElement(authDialog) || authDialog?.focus(); }}
-        />
-      </div>
-    </div>
-  {/if}
 
   <div id="header-mount">
     {#if !profileModeVisible}
@@ -851,7 +821,7 @@
         isHomepageStyle={!profileModeVisible}
         isOwner={profileModeOwner}
         on:navigate={handleNavigation}
-        on:login={openAuthModal}
+        on:login={navigateToAuth}
         on:logout={handleLogout}
         on:retry={() => window.location.reload()}
         on:edit={handleProfileHeaderEdit}
@@ -868,7 +838,7 @@
             {#if $isAuthenticated}
               Roll during the first month to claim yours.
             {:else}
-              <button type="button" class="founder-inline-link" on:click={openAuthModal}>Sign in</button> and roll during the first month to claim yours.
+              <button type="button" class="founder-inline-link" on:click={() => navigateToAuth('login')}>Sign in</button> and roll during the first month to claim yours.
             {/if}
           </p>
         </div>
@@ -955,13 +925,13 @@
     componentProps={routeTarget.componentProps}
     loadingLabel={routeTarget.loadingLabel}
     on:navigate={handleNavigation}
-    on:promptlogin={openAuthModal}
+    on:promptlogin={navigateToAuth}
     on:accountdeleted={handleAccountDeleted}
-    on:login={openAuthModal}
+    on:login={navigateToAuth}
     on:logout={handleLogout}
     on:retry={() => window.location.reload()}
-    on:signup={() => openAuthModal('signup')}
-    on:claim={event => openAuthModal({ detail: { mode: 'signup', username: event.detail?.username } })}
+    on:signup={() => navigateToAuth('signup')}
+    on:claim={event => navigateToAuth({ detail: { mode: 'signup', username: event.detail?.username } })}
     on:profile={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
     on:roll={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
     on:activecolor={handleHomeActiveColor}
@@ -1087,30 +1057,6 @@
   .bootstrap-error-details {
     font-family: var(--font-mono-stack);
     color: #f9a8d4;
-  }
-
-  .auth-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  .auth-modal-content {
-    width: 100%;
-    max-width: 450px;
-    max-height: calc(100dvh - 2rem);
-    position: relative;
-    z-index: 1;
-    outline: none;
-    display: flex;
-    min-height: 0;
   }
 
   .loading-chip {
@@ -1493,18 +1439,6 @@
   }
 
   @media (max-width: 600px) {
-    .auth-modal-overlay {
-      align-items: flex-start;
-      padding:
-        calc(0.75rem + env(safe-area-inset-top))
-        0.75rem
-        calc(0.75rem + env(safe-area-inset-bottom));
-    }
-    .auth-modal-content {
-      max-height: calc(100dvh - 1.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-      width: 100%;
-      align-self: flex-start;
-    }
     .account-error-banner {
       margin-left: 0;
       margin-right: 0;

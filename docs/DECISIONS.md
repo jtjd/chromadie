@@ -14,7 +14,8 @@ The migration replaces every active embedded 3–20 check across profile and
 challenge constraints, availability, direct-write enforcement, signup,
 recovery, and public projection. The browser remains advisory; the database
 trigger, reservation table, advisory signup lock, and case-insensitive unique
-index remain authoritative. Linked deployment is a separately reviewed step.
+index remain authoritative. The linked migration was applied and verified
+before the standalone signup route was released.
 
 ## 2026-08-08 — Make route payloads the blocking performance policy
 
@@ -56,6 +57,15 @@ The route contract permits only validated same-origin return destinations and
 never places credentials, tokens, or private account data in URLs. Modal code
 is removed only after desktop, mobile, keyboard, direct-refresh, signup, login,
 recovery, callback, and authenticated-redirect parity is proven.
+
+## 2026-08-08 — Keep authentication presentation route-owned
+
+The standalone auth milestone implements the route decision with one shared
+form component and a separate page shell. `/login` and `/signup` own browser
+history, metadata, focus, mobile layout, safe-return state, and authenticated
+redirects; `/auth/callback` and `/reset-password` remain dedicated boundary
+routes. This keeps credentials and tokens out of URLs while removing modal
+focus and body-scroll state from the global application shell.
 
 ## 2026-08-08 — Keep the dashboard baseline incremental while the aggregate JavaScript cap remains open
 

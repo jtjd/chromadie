@@ -147,15 +147,30 @@ try {
 
   await step('create a unique account through the signup UI', async () => {
     await page.clickText('Sign up', { description: 'homepage signup control' });
-    await page.waitFor(`document.querySelector('.auth-container') && document.querySelector('#username-input')`, 'signup form');
+    await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('.auth-container') && document.querySelector('#username-input') && !document.querySelector('.auth-modal-overlay')`, 'standalone signup page');
+    await capture('02-auth-signup');
+    await page.clickText('Sign in', { description: 'auth route switch to sign in' });
+    await page.waitFor(`location.pathname === '/login' && document.querySelector('.auth-page') && document.querySelector('#email-input')`, 'standalone login page');
+    await capture('03-auth-login');
+    await page.clickText('Create account', { description: 'auth route switch to create account' });
+    await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('#username-input')`, 'signup route after auth switch');
     await page.setInputValue('#username-input', canonicalUsername, ['input', 'change']);
     await page.setInputValue('#email-input', email, ['input', 'change']);
     await page.setInputValue('#password-input', password, ['input', 'change']);
     await page.click('.auth-submit', 'signup submit control');
-    await page.waitFor(`!document.querySelector('.auth-container') && Boolean(document.querySelector('.site-mode-header__account-name'))`, 'authenticated session after signup', 30000);
-    const accountName = await page.evaluate('document.querySelector(".site-mode-header__account-name")?.textContent?.trim() || ""');
-    assert(accountName.toLowerCase() === canonicalUsername, `Authenticated header shows ${JSON.stringify(accountName)}, expected ${canonicalUsername}.`);
+    await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page .identity-card') && !document.querySelector('.auth-page')`, 'authenticated session after signup', 30000);
+    const accountName = await page.evaluate('document.querySelector(".identity-card__handle")?.textContent?.trim() || ""');
+    assert(accountName.toLowerCase() === `@${canonicalUsername}` || accountName.toLowerCase() === canonicalUsername, `Authenticated profile shows ${JSON.stringify(accountName)}, expected ${canonicalUsername}.`);
     results.account = { username: canonicalUsername, email, canonicalPath: `/${canonicalUsername}` };
+  });
+
+  await step('authenticated auth route redirects to its safe destination', async () => {
+    await page.navigate(`${appUrl}/login?next=%2Fprofile%2Fsettings`, 'authenticated login route');
+    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('.profile-settings-page') && !document.querySelector('.auth-page')`, 'authenticated auth-route redirect', 30000);
+    const state = await page.evaluate(`(() => ({ path: location.pathname, settings: Boolean(document.querySelector('.profile-settings-page')), authPage: Boolean(document.querySelector('.auth-page')), overlay: Boolean(document.querySelector('.auth-modal-overlay')) }))()`);
+    assert(state.path === '/profile/settings', `Safe auth redirect landed on ${state.path}.`);
+    assert(state.settings && !state.authPage && !state.overlay, 'Authenticated auth route left an auth page or overlay mounted.');
+    return state;
   });
 
   await step('direct-refresh authenticated Profile Studio', async () => {
@@ -164,7 +179,7 @@ try {
     const state = await page.evaluate(`({ path: location.pathname, heading: document.querySelector('.profile-settings-page h1')?.textContent?.trim(), authenticated: Boolean(document.querySelector('.site-mode-header__account-name')) })`);
     assert(state.path === '/profile/settings', `Expected /profile/settings after refresh, got ${state.path}.`);
     assert(state.authenticated, 'Authenticated account control is missing after Profile Studio refresh.');
-    await capture('02-profile-studio');
+    await capture('04-profile-studio');
     return state;
   });
 
@@ -200,7 +215,7 @@ try {
     assert(after.roll.blurVar === '', `Appearance blur leaked into the roll region: ${JSON.stringify(after.roll.blurVar)}.`);
     assert(after.publishDisabled === false, 'Changing Customize did not create an unpublished draft.');
     assert(publishRequestsBefore === publishRequestsAfter, 'Changing Customize unexpectedly called the publish RPC.');
-    await capture('03-customize-draft-blur');
+    await capture('05-customize-draft-blur');
     await page.clickText('Reset', { description: 'Customize reset control' });
     await page.waitFor(`document.querySelector('.appearance-editor__reset')?.disabled === true`, 'Customize reset');
     return { before, zero, after, publishRequests: publishRequestsAfter };
@@ -227,7 +242,7 @@ try {
     const opened = await page.evaluate(`(() => ({ expanded: document.querySelector('.profile-dashboard-shell__mobile-bar button')?.getAttribute('aria-expanded'), focusedInDrawer: Boolean(document.activeElement?.closest('#profile-dashboard-sidebar')) }))()`);
     await page.pressKey('Escape');
     await page.waitFor(`document.querySelector('.profile-dashboard-shell__mobile-bar button')?.getAttribute('aria-expanded') === 'false' && document.activeElement === document.querySelector('.profile-dashboard-shell__mobile-bar button')`, 'mobile menu Escape focus restoration');
-    await capture('04-mobile-dashboard-menu');
+    await capture('06-mobile-dashboard-menu');
     return { closed, opened };
   });
 
@@ -271,7 +286,7 @@ try {
     assert(state.canvas && state.card, 'Public profile did not render its canvas and identity card.');
     assert(state.cardBlur, 'Public profile identity card has no surface blur variable.');
     assert(!state.pageBlur && !state.rollBlur, 'Public appearance variables leaked outside the card surface.');
-    await capture('05-public-profile');
+    await capture('07-public-profile');
     return state;
   });
 } catch (error) {
