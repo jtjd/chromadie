@@ -2375,6 +2375,8 @@ Performance remains over inherited initial/total JS and total CSS budgets.
 - Added the quiet public continuation renderer; incomplete rows and unsafe
   URLs never become public links, and no raw markup or arbitrary embeds are
   accepted.
-- Added the additive content RPC migration and source/unit coverage. Local
-  schema lint/reset and focused checks pass; the full validation suite and
-  deployment are the remaining handoff steps for this milestone.
+- Added the additive content RPC migration and source/unit coverage. The full
+  required validation suite, local schema lint/reset, and remote migration
+  deployment pass. The existing browser smoke harness was attempted three
+  times but stalled before the content step during authenticated route
+  navigation with transient local 401/loader failures.

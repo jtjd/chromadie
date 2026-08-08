@@ -1,6 +1,6 @@
 # Dashboard Parity Milestone 3 — Structured Content Regions
 
-Status: implementation complete locally — 2026-08-08
+Status: deployed — 2026-08-08
 
 ## Goal
 
@@ -37,7 +37,12 @@ continuation of the profile, not a second dashboard or an equal grid of cards.
   states are covered by the editor and renderer contracts.
 - No profile-authored raw HTML, JavaScript, CSS, or arbitrary embed surface is
   introduced.
-- Local schema lint/reset and the full validation suite pass before deployment.
+- The full required validation suite, local schema lint/reset, and remote
+  migration deployment pass.
+- The existing browser smoke harness was attempted three times; it reached
+  homepage/signup but stalled before the content step on local authenticated
+  route navigation with transient 401/loader failures. This remains an
+  environment/harness follow-up, not a content-contract failure.
 
 ## Next handoff
 
