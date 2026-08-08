@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Dashboard parity Milestone 2 complete locally — 2026-08-08
+
+- Restyled standalone `/login` and `/signup` around the shared homepage
+  `SiteModeHeader`, canvas, typography, stage, and responsive/reduced-motion
+  contract; added route regression coverage so future standalone additions do
+  not drift into a separate visual system.
+- Added the owner-scoped `profile_media_assets` library with Storage-bound
+  WebP registration, private RLS reads, owner deletion, selected-reference
+  clearing, and compatibility for legacy single-slot paths.
+- Profile Studio Media now keeps multiple avatar/background assets, previews
+  them, applies a saved asset to the existing expression contract, and removes
+  assets through the server RPC.
+- Local schema lint and reset pass. The next handoff is structured About /
+  Projects content regions; provider widgets and broader social features remain
+  later milestones.
+
 ## Auth hydration regression fix — 2026-08-08
 
 - Fixed the shared Supabase transport so GoTrue initialization and refresh do

@@ -2,6 +2,26 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Keep standalone additions inside the homepage visual contract
+
+Standalone auth routes reuse `SiteModeHeader` and the homepage canvas tokens
+instead of creating a second header, wordmark, or surface language. The auth
+form remains the existing authentication implementation, but its route shell
+uses the same `chm.lol` header, Instrument Sans/IBM Plex Mono pairing,
+quiet-border stage, mobile containment, and reduced-motion behavior as the
+homepage. Future standalone additions must first reuse this shared shell or
+add an explicit design-system component before introducing route-local chrome.
+
+## 2026-08-08 — Keep reusable media owner-scoped and selected by configuration
+
+Avatar and background uploads now enter a private owner library as processed
+WebP objects. Registration derives the owner-shaped path, verifies the Storage
+object and MIME boundary, and writes the library row through a security-
+definer RPC. The public profile still receives only the selected path through
+the existing bounded expression projection; deleting an asset clears a
+selected reference before removing the object. The daily roll, scoring, and
+all gameplay authority remain unchanged.
+
 ## 2026-08-08 — Reserve newly valid short route names atomically
 
 One- and two-character usernames use the existing ASCII, case-insensitive,

@@ -147,7 +147,7 @@ try {
 
   await step('create a unique account through the signup UI', async () => {
     await page.clickText('Sign up', { description: 'homepage signup control' });
-    await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('.auth-container') && document.querySelector('#username-input') && !document.querySelector('.auth-modal-overlay')`, 'standalone signup page');
+    await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('.auth-page .site-mode-header--home') && document.querySelector('.auth-container') && document.querySelector('#username-input') && !document.querySelector('.auth-modal-overlay')`, 'standalone signup page');
     await capture('02-auth-signup');
     await page.clickText('Sign in', { description: 'auth route switch to sign in' });
     await page.waitFor(`location.pathname === '/login' && document.querySelector('.auth-page') && document.querySelector('#email-input')`, 'standalone login page');

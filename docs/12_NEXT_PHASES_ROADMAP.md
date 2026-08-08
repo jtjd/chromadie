@@ -119,8 +119,8 @@ full-viewport atmosphere are unchanged. See [`PHASE_14_REPORT.md`](PHASE_14_REPO
 
 ## Dashboard Parity Program
 
-Status: Milestones 0, 1A, and 1B are complete. Later milestones remain planned
-and must begin one at a time.
+Status: Milestones 0, 1A, 1B, and 2 are complete locally. Later milestones
+remain planned and must begin one at a time.
 
 1. Completed: close the release baseline and replace the aggregate JavaScript
    release blocker with a route-first performance policy in
@@ -133,14 +133,19 @@ and must begin one at a time.
    `/login` and `/signup` pages while preserving the existing auth
    implementation, callback, recovery, and safe-return contracts. See
    [`milestones/DASHBOARD_PARITY_M1_AUTH_ROUTES.md`](milestones/DASHBOARD_PARITY_M1_AUTH_ROUTES.md).
-4. Next: complete the customization-control contract audit before adding expression
-   features: public page effects remain page-wide, preview effects remain
-   contained, card appearance never recolors the roll UI, and every control has
-   a tested preview and public renderer consumer.
-5. Add reusable owner-scoped media assets, then structured content regions,
-   allowlisted provider widgets, positive moderated social features,
-   privacy-conscious analytics, templates/premium expression, and finally
-   aliases/domains/API access as separately authorized milestones.
+4. Completed: the customization-control contract audit. Public page effects
+   remain page-wide, preview effects remain contained, card appearance never
+   recolors the roll UI, and every control has a tested preview and public
+   renderer consumer. See the customization audit and compositor follow-ups in
+   [`PROGRESS.md`](PROGRESS.md).
+5. Completed locally: reusable owner-scoped avatar/background media assets with
+   validated WebP objects, private library RLS, staged registration, and
+   selection/deletion in Profile Studio. See
+   [`milestones/DASHBOARD_PARITY_M2_MEDIA_LIBRARY.md`](milestones/DASHBOARD_PARITY_M2_MEDIA_LIBRARY.md).
+6. Next: structured content regions, starting with bounded About/Projects
+   configuration, then allowlisted provider widgets, positive moderated social
+   features, privacy-conscious analytics, templates/premium expression, and
+   finally aliases/domains/API access as separately authorized milestones.
 
 ## Deferred themes
 

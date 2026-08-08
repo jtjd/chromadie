@@ -1,5 +1,5 @@
 <script>
-  import { onDestroy, createEventDispatcher } from 'svelte';
+  import { onDestroy, onMount, createEventDispatcher } from 'svelte';
   import { supabase } from './supabase.js';
   import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
@@ -30,6 +30,10 @@
   let status = '';
   let error = '';
   let mediaCacheKey = String(Date.now());
+  let avatarAssets = [];
+  let backgroundAssets = [];
+  let assetsLoading = false;
+  let assetLoadRequestId = 0;
   const avatarRules = PROFILE_IMAGE_RULES.avatar;
   const backgroundRules = PROFILE_IMAGE_RULES.background;
   const actionButtonStyle = 'display:inline-flex;align-items:center;justify-content:center;min-height:2.65rem;border:1px solid transparent;border-radius:var(--radius-sm);padding:0 1rem;background:var(--color-ink-strong);color:var(--color-canvas-deep);font:600 var(--type-small)/1 var(--font-body-stack);cursor:pointer';
@@ -75,6 +79,81 @@
   function setFeedback(nextError = '', nextStatus = '') {
     error = nextError;
     status = nextStatus;
+  }
+
+  async function loadAssetLibrary() {
+    if (!profileId) return;
+    const requestId = ++assetLoadRequestId;
+    assetsLoading = true;
+    const { data, error: assetError } = await supabase
+      .from('profile_media_assets')
+      .select('id, kind, storage_path, label, created_at')
+      .eq('user_id', profileId)
+      .order('created_at', { ascending: false });
+    if (requestId !== assetLoadRequestId) return;
+    assetsLoading = false;
+    if (assetError) {
+      setFeedback(assetError.message || 'The media library could not be loaded.');
+      return;
+    }
+    avatarAssets = (data || []).filter(asset => asset.kind === 'avatar');
+    backgroundAssets = (data || []).filter(asset => asset.kind === 'background');
+  }
+
+  function createAssetId() {
+    if (typeof crypto?.randomUUID !== 'function') throw new Error('This browser cannot create a secure media asset ID.');
+    return crypto.randomUUID();
+  }
+
+  async function registerAsset(kind, assetId, label) {
+    const { data, error: registerError } = await supabase.rpc('register_my_profile_media_asset', {
+      p_kind: kind,
+      p_asset_id: assetId,
+      p_label: String(label || '').trim().slice(0, 80)
+    });
+    if (registerError || !data?.success) {
+      throw new Error(registerError?.message || data?.error || 'The media asset could not be added to your library.');
+    }
+    return data;
+  }
+
+  async function selectAsset(kind, storagePath) {
+    if (!storagePath || busy) return;
+    busy = true;
+    setFeedback('', `Applying ${kind}…`);
+    try {
+      await saveExpression({ ...expression, [`${kind}_path`]: storagePath });
+      setFeedback('', `${kind === 'avatar' ? 'Avatar' : 'Background'} applied to your profile.`);
+    } catch (selectionError) {
+      setFeedback(selectionError instanceof Error ? selectionError.message : `The ${kind} could not be applied.`);
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function deleteAsset(asset) {
+    if (!asset?.id || busy) return;
+    busy = true;
+    setFeedback('', 'Removing media asset…');
+    try {
+      const { data, error: deleteError } = await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: asset.id });
+      if (deleteError || !data?.success) {
+        throw new Error(deleteError?.message || data?.error || 'The media asset could not be removed.');
+      }
+      const field = `${asset.kind}_path`;
+      if (expression[field] === asset.storage_path) {
+        expression = normalizeProfileExpression({ ...expression, [field]: null });
+        syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
+        mediaCacheKey = String(Date.now());
+        dispatch('expressionchange', { ...expression });
+      }
+      await loadAssetLibrary();
+      setFeedback('', 'Media asset removed from your library.');
+    } catch (deleteError) {
+      setFeedback(deleteError instanceof Error ? deleteError.message : 'The media asset could not be removed.');
+    } finally {
+      busy = false;
+    }
   }
 
   function formatAudioTime(value) {
@@ -139,7 +218,8 @@
     setFeedback('', 'Preparing the avatar…');
     try {
       const blob = await processProfileImage(file, 'avatar');
-      const storedPath = buildProfileStoragePath('avatar', profileId);
+      const assetId = createAssetId();
+      const storedPath = buildProfileStoragePath('avatar', profileId, assetId);
       const reference = getProfileStorageRef(storedPath);
       if (!reference) throw new Error('The avatar path could not be prepared.');
 
@@ -151,12 +231,14 @@
         .upload(reference.objectPath, blob, {
           cacheControl: '3600',
           contentType: 'image/webp',
-          upsert: true
+          upsert: false
         });
       if (uploadError) throw new Error(uploadError.message || 'The avatar could not be uploaded.');
 
+      await registerAsset('avatar', assetId, file.name);
       await saveExpression({ ...expression, avatar_path: storedPath });
-      setFeedback('', `Avatar saved to your public profile (${formatStoredSize(blob.size)} stored).`);
+      await loadAssetLibrary();
+      setFeedback('', `Avatar saved to your library and profile (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The avatar could not be saved.');
       revokeAvatarPreview();
@@ -198,7 +280,8 @@
     setFeedback('', 'Preparing the background…');
     try {
       const blob = await processProfileImage(file, 'background');
-      const storedPath = buildProfileStoragePath('background', profileId);
+      const assetId = createAssetId();
+      const storedPath = buildProfileStoragePath('background', profileId, assetId);
       const reference = getProfileStorageRef(storedPath);
       if (!reference) throw new Error('The background path could not be prepared.');
 
@@ -210,12 +293,14 @@
         .upload(reference.objectPath, blob, {
           cacheControl: '3600',
           contentType: 'image/webp',
-          upsert: true
+          upsert: false
         });
       if (uploadError) throw new Error(uploadError.message || 'The background could not be uploaded.');
 
+      await registerAsset('background', assetId, file.name);
       await saveExpression({ ...expression, background_path: storedPath });
-      setFeedback('', `Background saved to your public atmosphere (${formatStoredSize(blob.size)} stored).`);
+      await loadAssetLibrary();
+      setFeedback('', `Background saved to your library and public atmosphere (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The background could not be saved.');
       revokeBackgroundPreview();
@@ -342,6 +427,10 @@
     }
   }
 
+  onMount(() => {
+    void loadAssetLibrary();
+  });
+
   onDestroy(() => {
     revokeAvatarPreview();
     revokeBackgroundPreview();
@@ -350,6 +439,7 @@
 </script>
 
 <Module size="wide" tone="quiet" className="profile-expression-editor" title="Media" description="Upload an avatar or background, or connect Spotify.">
+  {#if assetsLoading}<p class="profile-expression-editor__asset-loading" role="status">Loading your saved media…</p>{/if}
   <div class="profile-expression-editor__media-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
     <div class="profile-expression-editor__preview" style="flex:0 0 7rem;width:7rem" aria-label="Avatar preview">
       {#if avatarSrc}
@@ -368,6 +458,28 @@
       </div>
     </div>
   </div>
+
+  {#if avatarAssets.length > 0}
+    <div class="profile-expression-editor__asset-library" aria-label="Saved avatar assets">
+      <div class="profile-expression-editor__asset-heading">
+        <strong>Saved avatars</strong>
+        <span>{avatarAssets.length} in your library</span>
+      </div>
+      <div class="profile-expression-editor__asset-grid">
+        {#each avatarAssets as asset (asset.id)}
+          <div class="profile-expression-editor__asset" class:profile-expression-editor__asset--active={asset.storage_path === expression.avatar_path}>
+            <button type="button" class="profile-expression-editor__asset-select" aria-label={`Use ${asset.label || 'saved avatar'}`} disabled={busy} on:click={() => selectAsset('avatar', asset.storage_path)}>
+              <Media src={getProfileMediaUrl(asset.storage_path, mediaCacheKey)} alt={asset.label || 'Saved avatar'} aspect="square" loading="lazy" className="profile-expression-editor__asset-media" fallbackLabel="Avatar unavailable" />
+            </button>
+            <div class="profile-expression-editor__asset-meta">
+              <span>{asset.storage_path === expression.avatar_path ? 'Active' : (asset.label || 'Saved avatar')}</span>
+              <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Remove</button>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
 
   <div class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
     <div>
@@ -392,6 +504,27 @@
         </div>
       </div>
     </div>
+    {#if backgroundAssets.length > 0}
+      <div class="profile-expression-editor__asset-library" aria-label="Saved background assets">
+        <div class="profile-expression-editor__asset-heading">
+          <strong>Saved backgrounds</strong>
+          <span>{backgroundAssets.length} in your library</span>
+        </div>
+        <div class="profile-expression-editor__asset-grid profile-expression-editor__asset-grid--background">
+          {#each backgroundAssets as asset (asset.id)}
+            <div class="profile-expression-editor__asset" class:profile-expression-editor__asset--active={asset.storage_path === expression.background_path}>
+              <button type="button" class="profile-expression-editor__asset-select" aria-label={`Use ${asset.label || 'saved background'}`} disabled={busy} on:click={() => selectAsset('background', asset.storage_path)}>
+                <Media src={getProfileMediaUrl(asset.storage_path, mediaCacheKey)} alt={asset.label || 'Saved background'} aspect="wide" loading="lazy" className="profile-expression-editor__asset-media" fallbackLabel="Background unavailable" />
+              </button>
+              <div class="profile-expression-editor__asset-meta">
+                <span>{asset.storage_path === expression.background_path ? 'Active' : (asset.label || 'Saved background')}</span>
+                <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Remove</button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   </div>
 
   {#if staff}
@@ -461,6 +594,23 @@
 </Module>
 
 <style>
+  .profile-expression-editor__asset-loading { margin: 0 0 0.8rem; color: var(--color-ink-muted); font-size: var(--type-small); }
+  .profile-expression-editor__asset-library { display: grid; gap: 0.65rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-line-subtle); }
+  .profile-expression-editor__asset-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; color: var(--color-ink-strong); font-size: var(--type-small); }
+  .profile-expression-editor__asset-heading span { color: var(--color-ink-muted); font-size: var(--type-label); }
+  .profile-expression-editor__asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: 0.65rem; max-width: 34rem; }
+  .profile-expression-editor__asset-grid--background { grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); max-width: 42rem; }
+  .profile-expression-editor__asset { min-width: 0; padding: 0.35rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 76%, transparent); }
+  .profile-expression-editor__asset--active { border-color: var(--color-accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent); }
+  .profile-expression-editor__asset-select { display: block; width: 100%; padding: 0; border: 0; border-radius: calc(var(--radius-sm) - 0.15rem); background: transparent; cursor: pointer; }
+  .profile-expression-editor__asset-select:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
+  :global(.profile-expression-editor__asset-media) { width: 100%; overflow: hidden; border-radius: calc(var(--radius-sm) - 0.2rem); }
+  .profile-expression-editor__asset-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.45rem; min-width: 0; padding: 0.35rem 0.15rem 0.1rem; color: var(--color-ink-muted); font-size: var(--type-label); }
+  .profile-expression-editor__asset-meta > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__asset-remove { flex: 0 0 auto; padding: 0; border: 0; background: transparent; color: var(--color-ink-faint); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 0.15em; }
+  .profile-expression-editor__asset-remove:hover:not(:disabled), .profile-expression-editor__asset-remove:focus-visible { color: var(--color-ink-strong); }
+  .profile-expression-editor__asset-remove:disabled { cursor: wait; opacity: 0.55; }
+
   .profile-expression-editor__section--audio {
     display: grid;
     gap: 0.75rem;

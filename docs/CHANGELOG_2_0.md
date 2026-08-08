@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Align standalone auth with the homepage and add reusable media
+
+- `/login` and `/signup` now use the shared homepage header, wordmark, canvas,
+  typography, stage treatment, mobile containment, and reduced-motion rules.
+- Profile Studio Media now supports reusable owner-scoped avatar and background
+  assets: upload once, keep the processed WebP in a private library, switch
+  the selected expression, or remove an asset safely.
+- Existing single-slot avatar/background paths remain compatible, and the daily
+  roll presentation is unchanged.
+
 ## 2026-08-08 — Resolve account hydration after persisted sessions
 
 - Fixed a browser transport deadlock that could leave returning users on

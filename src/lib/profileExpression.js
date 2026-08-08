@@ -12,7 +12,7 @@ const SPOTIFY_ID_PATTERN = /^[A-Za-z0-9]{22}$/;
 function normalizeStoredPath(value, bucket, filename) {
   if (typeof value !== 'string') return null;
   const candidate = value.trim();
-  const pattern = new RegExp(`^${bucket}/${UUID_PATTERN}/${filename}$`, 'i');
+  const pattern = new RegExp(`^${bucket}/${UUID_PATTERN}/(?:${filename}|${UUID_PATTERN}[.]webp)$`, 'i');
   return pattern.test(candidate) ? candidate : null;
 }
 
@@ -69,7 +69,7 @@ export function getSpotifyEmbedUrl(type, id) {
   return `https://open.spotify.com/embed/${type}/${id}?theme=0`;
 }
 
-export function buildProfileStoragePath(kind, userId) {
+export function buildProfileStoragePath(kind, userId, assetId = '') {
   const bucket = kind === 'avatar'
     ? PROFILE_STORAGE_BUCKETS.avatar
     : kind === 'background'
@@ -77,25 +77,29 @@ export function buildProfileStoragePath(kind, userId) {
       : kind === 'audio'
         ? PROFILE_STORAGE_BUCKETS.audio
         : '';
-  const filename = kind === 'avatar'
-    ? 'avatar.webp'
-    : kind === 'background'
-      ? 'background.webp'
-      : kind === 'audio'
-        ? 'profile.mp3'
-        : '';
+  const reusableAsset = ['avatar', 'background'].includes(kind)
+    && new RegExp(`^${UUID_PATTERN}$`, 'i').test(String(assetId || ''));
+  const filename = reusableAsset
+    ? `${String(assetId).toLowerCase()}.webp`
+    : kind === 'avatar'
+      ? 'avatar.webp'
+      : kind === 'background'
+        ? 'background.webp'
+        : kind === 'audio'
+          ? 'profile.mp3'
+          : '';
   if (!bucket || !filename || !new RegExp(`^${UUID_PATTERN}$`, 'i').test(String(userId || ''))) return '';
   return `${bucket}/${String(userId).toLowerCase()}/${filename}`;
 }
 
 export function getProfileStorageRef(storedPath) {
   const avatarMatch = typeof storedPath === 'string'
-    ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.avatar})/(${UUID_PATTERN})/(avatar\\.webp)$`, 'i'))
+    ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.avatar})/(${UUID_PATTERN})/((?:avatar|${UUID_PATTERN})\\.webp)$`, 'i'))
     : null;
   if (avatarMatch) return { bucket: PROFILE_STORAGE_BUCKETS.avatar, objectPath: `${avatarMatch[2]}/${avatarMatch[3]}` };
 
   const backgroundMatch = typeof storedPath === 'string'
-    ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.background})/(${UUID_PATTERN})/(background\\.webp)$`, 'i'))
+    ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.background})/(${UUID_PATTERN})/((?:background|${UUID_PATTERN})\\.webp)$`, 'i'))
     : null;
   if (backgroundMatch) return { bucket: PROFILE_STORAGE_BUCKETS.background, objectPath: `${backgroundMatch[2]}/${backgroundMatch[3]}` };
   const audioMatch = typeof storedPath === 'string'
