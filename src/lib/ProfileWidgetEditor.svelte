@@ -9,16 +9,23 @@
     PROFILE_WIDGET_LIMITS,
     PROFILE_WIDGET_PROVIDERS
   } from './profileWidgets.js';
+  import { hasChromadiePlus } from './premiumEntitlements.js';
   import { clearViewState, readViewState, writeViewState } from './viewState.js';
 
   export let profileId = null;
   export let draftConfig = null;
   export let publishedConfig = null;
   export let updatedAt = null;
+  export let entitlements = [];
+  export let staff = false;
 
   const dispatch = createEventDispatcher();
   const VIEW_STATE_NAMESPACE = 'profile-widget-editor';
   const providerKeys = Object.keys(PROFILE_WIDGET_PROVIDERS);
+
+  $: widgetLimit = staff || hasChromadiePlus(entitlements)
+    ? PROFILE_WIDGET_LIMITS.maxWidgets
+    : PROFILE_WIDGET_LIMITS.freeWidgets;
 
   let widgets = toWidgetDrafts(draftConfig || publishedConfig);
   let baseline = clone(widgets);
@@ -54,7 +61,7 @@
           : null;
       })
       .filter(Boolean)
-      .slice(0, PROFILE_WIDGET_LIMITS.maxWidgets);
+      .slice(0, widgetLimit);
   }
 
   function draftSnapshot(value = widgets) {
@@ -102,8 +109,8 @@
   }
 
   function addWidget() {
-    if (widgets.length >= PROFILE_WIDGET_LIMITS.maxWidgets) {
-      error = `You can add up to ${PROFILE_WIDGET_LIMITS.maxWidgets} widgets.`;
+    if (widgets.length >= widgetLimit) {
+      error = `You can add up to ${widgetLimit} widgets on this profile.`;
       return;
     }
     const provider = providerKeys.find(key => !widgets.some(widget => widget.provider === key)) || providerKeys[0];
@@ -217,7 +224,7 @@
 <section class="profile-widget-editor" aria-labelledby="profile-widget-editor-title">
   <header class="profile-widget-editor__header">
     <div><h2 id="profile-widget-editor-title">Provider widgets</h2><p>Add a small piece of media from an approved provider. Players are lazy and preview loading is always opt-in.</p></div>
-    <span class="profile-widget-editor__version">Up to {PROFILE_WIDGET_LIMITS.maxWidgets} widgets</span>
+    <span class="profile-widget-editor__version">Up to {widgetLimit} widgets</span>
   </header>
 
   {#if widgets.length}
@@ -236,7 +243,7 @@
     <div class="profile-widget-editor__empty"><strong>No provider widgets yet.</strong><span>Keep the profile quiet, or add one focused player for visitors to explore.</span></div>
   {/if}
 
-  <button type="button" class="profile-widget-editor__add" on:click={addWidget} disabled={widgets.length >= PROFILE_WIDGET_LIMITS.maxWidgets}>Add provider widget</button>
+  <button type="button" class="profile-widget-editor__add" on:click={addWidget} disabled={widgets.length >= widgetLimit}>Add provider widget</button>
   <p class="profile-widget-editor__note">Chromadie accepts canonical HTTPS URLs only. Arbitrary embeds, scripts, styles, and autoplay are never accepted.</p>
   {#if conflict}<div class="profile-widget-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{:else if error}<p class="profile-widget-editor__message" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-widget-editor__message" role="status" aria-live="polite">{status}</p>{/if}

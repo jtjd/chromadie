@@ -32,6 +32,14 @@
   export let avatarEffectAnimated = true;
   export let avatarEffectActive = false;
   export let layoutVariant = 'immersive';
+  export let location = '';
+  export let timezone = '';
+  export let joinedLabel = '';
+  export let showJoinDate = false;
+  export let showAvatar = true;
+  export let descriptionMode = 'plain';
+  export let entryAnimation = 'none';
+  export let linkStyle = null;
 
   let failedAvatarSource = '';
 
@@ -44,6 +52,9 @@
     .filter(badge => badge?.id !== 'launch_edition')
     .slice(0, 3);
   $: safeLayoutVariant = isProfileLayoutKey(layoutVariant) ? layoutVariant : 'immersive';
+  /** @type {any} */
+  let safeLinkStyle;
+  $: safeLinkStyle = linkStyle || {};
 
   function linkIconSource(link) {
     const type = String(link?.type || 'link').toLowerCase();
@@ -53,8 +64,9 @@
   }
 </script>
 
-<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + ';'} aria-labelledby={titleId}>
+<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + ' identity-card--entry-' + entryAnimation} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
   <div class="identity-card__person">
+    {#if showAvatar}
     <AvatarEffect
       effectKey={avatarEffectKey}
       accentColor={accentColor}
@@ -72,8 +84,9 @@
         <span class="identity-card__avatar-glow" aria-hidden="true"></span>
         <span class="identity-card__avatar-letter" aria-hidden="true">{safeInitial}</span>
         {#if showAvatarMark}<Media src="/logo-mark.svg" alt="" aspect="square" loading="eager" className="identity-card__avatar-mark" />{/if}
-      {/if}
+    {/if}
     </AvatarEffect>
+    {/if}
 
     <div class="identity-card__copy">
       <div class="identity-card__name-row">
@@ -106,8 +119,15 @@
       <div class="identity-card__handle-row">
         <a class="identity-card__handle" href={profilePath || undefined}>@{username}</a>
       </div>
-      {#if bio}<p class="identity-card__bio">{bio}</p>
+      {#if bio}<p class={'identity-card__bio identity-card__bio--' + descriptionMode}>{bio}</p>
       {:else if bioFallback}<p class="identity-card__bio identity-card__bio--fallback">{bioFallback}</p>{/if}
+      {#if location || timezone || (showJoinDate && joinedLabel)}
+        <div class="identity-card__metadata" aria-label="Profile details">
+          {#if location}<span>{location}</span>{/if}
+          {#if timezone}<span>{timezone}</span>{/if}
+          {#if showJoinDate && joinedLabel}<span>Joined {joinedLabel}</span>{/if}
+        </div>
+      {/if}
     </div>
 
   </div>
@@ -193,10 +213,15 @@
   .identity-card__handle { display: inline-block; color: var(--profile-secondary-text, rgba(220, 230, 248, 0.62)); font: 600 0.75rem / 1.25 var(--font-mono-stack); text-decoration: none; letter-spacing: 0.05em; }
   .identity-card__handle:hover { color: var(--profile-highlight, color-mix(in srgb, var(--identity-accent) 85%, white)); }
   .identity-card__bio { max-width: 28rem; margin: 0.7rem 0 0; color: var(--profile-description, rgba(226, 233, 246, 0.72)); font-size: 0.84rem; line-height: 1.55; overflow-wrap: anywhere; word-break: break-word; }
+  .identity-card__bio--typewriter { overflow: hidden; border-right: 1px solid color-mix(in srgb, var(--identity-accent) 70%, transparent); white-space: nowrap; animation: identity-card-typewriter 2.2s steps(42, end) both, identity-card-caret 0.9s step-end infinite; }
+  .identity-card__metadata { display: flex; flex-wrap: wrap; gap: .35rem .65rem; margin-top: .65rem; color: var(--profile-secondary-text, rgba(220, 230, 248, .58)); font: .62rem / 1.3 var(--font-mono-stack); }
+  .identity-card__metadata span + span::before { content: '·'; margin-right: .65rem; color: color-mix(in srgb, var(--identity-accent) 60%, transparent); }
 
   .identity-card__links { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 0.55rem 1rem; margin-top: 0.95rem; }
   .identity-card__links a { display: inline-flex; align-items: center; gap: 0.38rem; min-height: 2rem; max-width: 100%; padding: 0.25rem 0 0.3rem; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--profile-text, #dce6f8) 30%, transparent); border-radius: 0; background: transparent; color: var(--profile-text, rgba(220, 230, 248, 0.7)); font-size: 0.78rem; text-decoration: none; transition: border-color var(--motion-base) var(--motion-ease-standard), color var(--motion-base) var(--motion-ease-standard), transform var(--motion-fast) var(--motion-ease-standard); }
   .identity-card__links a:hover { transform: translateY(-1px); border-color: var(--profile-highlight, color-mix(in srgb, var(--identity-accent) 72%, white)); color: var(--profile-highlight, rgba(248, 250, 255, 0.96)); }
+  .identity-card__links { justify-content: var(--profile-link-align); }
+  .identity-card__links a { font-size: calc(.78rem * var(--profile-link-size)); box-shadow: 0 0 calc(1rem * var(--profile-link-glow)) color-mix(in srgb, var(--identity-accent) 35%, transparent); }
   .identity-card__link-glyph { display: grid; place-items: center; width: 1rem; height: 1rem; border-radius: 0; background: transparent; color: color-mix(in srgb, var(--identity-accent) 84%, white); font: 700 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0; }
   .identity-card__link-glyph img { display: block; width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.78; }
   .identity-card__links strong { min-width: 0; color: inherit; font-weight: 600; overflow-wrap: anywhere; }
@@ -297,6 +322,15 @@
     40% { transform: scale(0.99); }
     100% { transform: scale(1); }
   }
+  @keyframes identity-card-typewriter { from { max-width: 0; } to { max-width: 28rem; } }
+  @keyframes identity-card-caret { 50% { border-color: transparent; } }
+
+  .identity-card--entry-fade { animation: identity-card-entry-fade .65s var(--motion-ease-standard) both; }
+  .identity-card--entry-rise { animation: identity-card-entry-rise .7s var(--motion-ease-emphasis) both; }
+  .identity-card--entry-focus { animation: identity-card-entry-focus .75s var(--motion-ease-emphasis) both; }
+  @keyframes identity-card-entry-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes identity-card-entry-rise { from { opacity: 0; transform: translateY(.75rem); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes identity-card-entry-focus { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: blur(0); } }
 
   @media (max-width: 36rem) {
     .identity-card { padding: 1.35rem; border-radius: var(--radius-md); }
@@ -332,8 +366,14 @@
     }
 
     .identity-card--roll-settled .identity-card__person,
-    .identity-card--roll-settled .identity-card__today {
+    .identity-card--roll-settled .identity-card__today,
+    .identity-card--entry-fade,
+    .identity-card--entry-rise,
+    .identity-card--entry-focus,
+    .identity-card__bio--typewriter {
       animation: none;
+      max-width: 28rem;
+      border-right-color: transparent;
     }
   }
 </style>

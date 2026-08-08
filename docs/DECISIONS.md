@@ -3465,6 +3465,29 @@ background video is allowed to autoplay; audio intent is represented by a
 finite Enter profile action and never by a page-wide pointer/keyboard listener.
 Native media remains behind safe structured controls, with poster/reduced-motion
 fallbacks and media-key support.
+
+## 2026-08-08 — Make profile parity additive, structured, and shareable
+
+Milestone 11 introduces a versioned `ProfileConfigurationV2` envelope while
+keeping V1 profile rows and rendering readable throughout rollout. Links gain
+stable opaque keys and a 25-entry cap, but only the first six enter the opening
+identity card; the existing secondary links region is the continuation. Free
+profiles remain capped at four projects and two provider widgets, while
+Chromadie Plus and authoritative staff accounts receive ten projects and four
+widgets. Premium changes expression capacity, never rolls, rewards, history,
+or prestige.
+
+About text is a deliberately small Markdown subset parsed into a sanitized AST;
+raw HTML, scripts, CSS, arbitrary embeds, and non-HTTPS targets are discarded.
+GitHub, Twitch, Last.fm, and Discord are fixed provider cards, while Spotify
+and YouTube keep their allowlisted lazy embed path. Identity presentation,
+metadata, and link styling are normalized by owner-only security-definer RPCs.
+
+Sharing uses canonical URLs first, with existing aliases as an optional path,
+code-owned QR generation, and server-rendered title, description, theme color,
+banner, and favicon metadata selected only from validated profile media. V2
+columns and RPCs are additive and can be left dormant to roll back the client
+surface without deleting authored profile data.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

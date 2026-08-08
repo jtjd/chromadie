@@ -1,5 +1,26 @@
 # Chromadie 2.0 Progress
 
+## Competitor parity Milestone 11 implemented — 2026-08-08
+
+- Added the additive `ProfileConfigurationV2` envelope with V1-readable
+  backfill, owner/public RPCs, and normalized identity, metadata, links,
+  content, widgets, and sharing fields.
+- Added finite identity presentation controls, 25 stable-keyed HTTPS links
+  with a quiet six-link opening, safe Markdown AST About content, premium/staff
+  project capacity up to ten, and allowlisted GitHub/Twitch/Last.fm/Discord
+  provider cards with four premium/staff slots.
+- Added canonical/alias share dialog behavior with code-owned QR generation,
+  copy/download actions, and server-rendered structured metadata selected only
+  from validated media.
+- Kept the public profile closure below its blocking route budgets by lazy-
+  loading the optional identity card and QR dialog; aggregate JavaScript/CSS
+  catalog totals remain advisory.
+- Added Milestone 11 source/domain coverage. The complete required build,
+  Svelte check, repository ESLint, 238-test suite, link/CSP/policy/balance/
+  catalog/scoring checks, performance budgets, local schema lint/reset,
+  database-security suite, and Chromium smoke pass. Browser evidence:
+  `/tmp/chromadie-profile-studio-smoke-Cm71kZ`.
+
 ## Competitor parity Milestone 10 implemented — 2026-08-08
 
 - Added bounded premium/staff rich media: three background videos, five MP3

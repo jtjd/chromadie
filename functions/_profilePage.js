@@ -1,4 +1,6 @@
 import { getCanonicalProfilePath, normalizeUsernameSegment } from '../src/lib/routeContract.js';
+import { getProfileStorageRef } from '../src/lib/profileExpression.js';
+import { normalizeProfileMetadata } from '../src/lib/profileMetadata.js';
 import { baseSecurityHeaders, createHtmlHeaders, fetchAppShell, getSiteOrigin } from './_publicPage.js';
 
 function escapeHtml(value) {
@@ -29,9 +31,38 @@ export async function loadPublicProfile(username, env) {
     });
     if (!response.ok) return null;
     const payload = await response.json();
-    return Array.isArray(payload) ? payload[0] || null : payload;
+    const profile = Array.isArray(payload) ? payload[0] || null : payload;
+    if (!profile?.id) return profile;
+    try {
+      const configurationEndpoint = new URL('/rest/v1/rpc/get_public_profile_configuration', supabaseUrl);
+      const configurationResponse = await fetch(configurationEndpoint, {
+        method: 'POST',
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ p_user_id: profile.id })
+      });
+      if (configurationResponse.ok) profile.configuration = await configurationResponse.json();
+    } catch {
+      // Identity metadata remains renderable during additive deployments.
+    }
+    return profile;
   } catch {
     return null;
+  }
+}
+
+function getPublicMediaUrl(storedPath, env) {
+  const reference = getProfileStorageRef(storedPath);
+  const supabaseUrl = env?.VITE_SUPABASE_URL || env?.SUPABASE_URL;
+  if (!reference || !supabaseUrl) return '';
+  try {
+    const origin = new URL(supabaseUrl).origin;
+    return `${origin}/storage/v1/object/public/${reference.bucket}/${reference.objectPath}`;
+  } catch {
+    return '';
   }
 }
 
@@ -51,13 +82,17 @@ export async function renderPublicProfilePage({ request, env, username, legacyPr
   const canonicalPath = getCanonicalProfilePath(canonicalUsername) || `/${encodeURIComponent(normalizedUsername.toLowerCase())}`;
   const canonical = `${origin}${canonicalPath}`;
   const displayName = profile?.display_name || profile?.username || normalizedUsername;
-  const title = profile ? `${displayName} (@${profile.username}) | ChromaDie` : 'Profile Not Found | ChromaDie';
+  const metadata = normalizeProfileMetadata(profile?.configuration?.metadata || profile?.metadata);
+  const title = profile
+    ? (metadata.title || `${displayName} (@${profile.username}) | ChromaDie`)
+    : 'Profile Not Found | ChromaDie';
   const description = profile
-    ? (profile.bio || `View ${displayName}'s public ChromaDie profile, progress, achievements, and recent rolls.`)
+    ? (metadata.description || profile.bio || `View ${displayName}'s public ChromaDie profile, progress, achievements, and recent rolls.`)
     : 'This ChromaDie profile could not be found.';
   const robots = legacyProfile || !profile ? 'noindex,follow' : 'index,follow';
+  const metadataBanner = getPublicMediaUrl(metadata.bannerPath, env);
   const ogImage = profile
-    ? `${origin}/og/profile.svg?username=${encodeURIComponent(profile.username)}`
+    ? (metadataBanner || `${origin}/og/profile.svg?username=${encodeURIComponent(profile.username)}`)
     : `${origin}/og-default-v4.png`;
   const summary = profile
     ? `<section><h1>${escapeHtml(displayName)} (@${escapeHtml(profile.username)}) | ChromaDie</h1><p>${escapeHtml(profile.bio || 'A public color identity shaped by daily rolls.')}</p></section>`
@@ -93,10 +128,14 @@ export async function renderPublicProfilePage({ request, env, username, legacyPr
     .replace(/<meta property="og:description"[^>]*>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`)
     .replace(/<meta property="og:url"[^>]*>/i, `<meta property="og:url" content="${escapeHtml(canonical)}" />`)
     .replace(/<meta property="og:image"[^>]*>/i, `<meta property="og:image" content="${escapeHtml(ogImage)}" />`)
+    .replace(/<meta name="theme-color"[^>]*>/i, `<meta name="theme-color" content="${escapeHtml(metadata.embedColor)}" />`)
     .replace(/<meta name="twitter:title"[^>]*>/i, `<meta name="twitter:title" content="${escapeHtml(title)}" />`)
     .replace(/<meta name="twitter:description"[^>]*>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`)
     .replace(/<meta name="twitter:image"[^>]*>/i, `<meta name="twitter:image" content="${escapeHtml(ogImage)}" />`)
     .replace(/<meta name="twitter:url"[^>]*>/i, `<meta name="twitter:url" content="${escapeHtml(canonical)}" />`)
+    .replace(/<link rel="icon"[^>]*>/i, metadata.faviconPath
+      ? `<link rel="icon" href="${escapeHtml(getPublicMediaUrl(metadata.faviconPath, env))}" />`
+      : '<link rel="icon" type="image/svg+xml" sizes="any" href="/logo-mark.svg" />')
     .replace('<div id="app"></div>', `<div id="app"><noscript>${summary}</noscript></div>`);
 
   return new Response(html, {

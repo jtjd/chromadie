@@ -5,7 +5,7 @@ import {
 } from './profileExpression.js';
 
 export const PROFILE_WIDGET_VERSION = 1;
-export const PROFILE_WIDGET_LIMITS = Object.freeze({ maxWidgets: 2 });
+export const PROFILE_WIDGET_LIMITS = Object.freeze({ freeWidgets: 2, maxWidgets: 4 });
 
 export const PROFILE_WIDGET_PROVIDERS = Object.freeze({
   spotify: Object.freeze({
@@ -17,6 +17,30 @@ export const PROFILE_WIDGET_PROVIDERS = Object.freeze({
     label: 'YouTube',
     types: Object.freeze(['video']),
     help: 'A single public video URL from youtube.com or youtu.be.'
+  }),
+  github: Object.freeze({
+    label: 'GitHub',
+    types: Object.freeze(['user']),
+    kind: 'card',
+    help: 'A public GitHub user profile URL.'
+  }),
+  twitch: Object.freeze({
+    label: 'Twitch',
+    types: Object.freeze(['channel']),
+    kind: 'card',
+    help: 'A public Twitch channel URL. The profile opens on Twitch.'
+  }),
+  lastfm: Object.freeze({
+    label: 'Last.fm',
+    types: Object.freeze(['user']),
+    kind: 'card',
+    help: 'A public Last.fm user URL.'
+  }),
+  discord: Object.freeze({
+    label: 'Discord',
+    types: Object.freeze(['server']),
+    kind: 'card',
+    help: 'A Discord invite URL. Invite codes are shown as a safe card.'
   })
 });
 
@@ -31,7 +55,11 @@ function isValidWidgetId(provider, type, id) {
   if (provider === 'spotify') {
     return PROFILE_EXPRESSION_TYPES.includes(type) && /^[A-Za-z0-9]{22}$/.test(String(id || ''));
   }
-  return provider === 'youtube' && type === 'video' && YOUTUBE_ID_PATTERN.test(String(id || ''));
+  if (provider === 'youtube') return type === 'video' && YOUTUBE_ID_PATTERN.test(String(id || ''));
+  if (provider === 'github') return type === 'user' && /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(String(id || ''));
+  if (provider === 'twitch') return type === 'channel' && /^[A-Za-z0-9_]{4,25}$/.test(String(id || ''));
+  if (provider === 'lastfm') return type === 'user' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,38}$/.test(String(id || ''));
+  return provider === 'discord' && type === 'server' && /^[A-Za-z0-9-]{2,32}$/.test(String(id || ''));
 }
 
 export function parseYouTubeUrl(value) {
@@ -46,19 +74,41 @@ export function parseYouTubeUrl(value) {
 export function parseProfileWidgetUrl(provider, value) {
   if (provider === 'spotify') return parseSpotifyUrl(value);
   if (provider === 'youtube') return parseYouTubeUrl(value);
+  if (typeof value !== 'string' || !value.trim()) return null;
+  let url;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' || url.port || url.search || url.hash) return null;
+  const segments = url.pathname.split('/').filter(Boolean);
+  if (provider === 'github' && url.hostname === 'github.com' && segments.length === 1 && isValidWidgetId(provider, 'user', segments[0])) return { type: 'user', id: segments[0] };
+  if (provider === 'twitch' && (url.hostname === 'twitch.tv' || url.hostname === 'www.twitch.tv') && segments.length === 1 && isValidWidgetId(provider, 'channel', segments[0])) return { type: 'channel', id: segments[0] };
+  if (provider === 'lastfm' && (url.hostname === 'last.fm' || url.hostname === 'www.last.fm') && segments.length === 2 && segments[0] === 'user' && isValidWidgetId(provider, 'user', segments[1])) return { type: 'user', id: segments[1] };
+  if (provider === 'discord' && url.hostname === 'discord.gg' && segments.length === 1 && isValidWidgetId(provider, 'server', segments[0])) return { type: 'server', id: segments[0] };
   return null;
 }
 
 export function profileWidgetUrl(provider, type, id) {
   if (!isValidWidgetId(provider, type, id)) return '';
   if (provider === 'spotify') return spotifyUrlFromParts(type, id);
-  return `https://www.youtube.com/watch?v=${id}`;
+  if (provider === 'youtube') return `https://www.youtube.com/watch?v=${id}`;
+  if (provider === 'github') return `https://github.com/${id}`;
+  if (provider === 'twitch') return `https://www.twitch.tv/${id}`;
+  if (provider === 'lastfm') return `https://www.last.fm/user/${id}`;
+  return `https://discord.gg/${id}`;
 }
 
 export function profileWidgetEmbedUrl(provider, type, id) {
   if (!isValidWidgetId(provider, type, id)) return '';
   if (provider === 'spotify') return `https://open.spotify.com/embed/${type}/${id}?theme=0`;
-  return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`;
+  if (provider === 'youtube') return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`;
+  return '';
+}
+
+export function getProfileWidgetKind(provider) {
+  return PROFILE_WIDGET_PROVIDERS[provider]?.kind || 'embed';
 }
 
 function normalizeWidget(value, fallbackOrder) {
@@ -78,7 +128,7 @@ function normalizeWidget(value, fallbackOrder) {
   };
 }
 
-export function normalizeProfileWidgets(value, legacyExpression = {}) {
+export function normalizeProfileWidgets(value, legacyExpression = {}, options = {}) {
   const input = Array.isArray(value) ? value : [];
   const seenProviders = new Set();
   const widgets = input
@@ -89,7 +139,7 @@ export function normalizeProfileWidgets(value, legacyExpression = {}) {
       return true;
     })
     .sort((left, right) => left.order - right.order)
-    .slice(0, PROFILE_WIDGET_LIMITS.maxWidgets)
+    .slice(0, Math.max(0, Math.min(PROFILE_WIDGET_LIMITS.maxWidgets, Number(options.maxWidgets) || PROFILE_WIDGET_LIMITS.maxWidgets)))
     .map((widget, index) => ({ ...widget, order: index }));
 
   if (widgets.length || !legacyExpression?.spotify_type || !legacyExpression?.spotify_id) return widgets;
@@ -103,8 +153,8 @@ export function normalizeProfileWidgets(value, legacyExpression = {}) {
   return legacy ? [legacy] : [];
 }
 
-export function getVisibleProfileWidgets(value, legacyExpression = {}) {
-  return normalizeProfileWidgets(value, legacyExpression).filter(widget => widget.visible);
+export function getVisibleProfileWidgets(value, legacyExpression = {}, options = {}) {
+  return normalizeProfileWidgets(value, legacyExpression, options).filter(widget => widget.visible);
 }
 
 export function getProfileWidgetLabel(provider) {

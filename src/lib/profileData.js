@@ -10,12 +10,17 @@ import {
   normalizeProfileSocialSettings
 } from './profileSocial.js';
 
-export const PUBLIC_PROFILE_SELECT = 'id, username, display_name, bio, current_streak, longest_streak, lifetime_ep, total_rolls, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff';
+export const PUBLIC_PROFILE_SELECT = 'id, username, display_name, bio, created_at, current_streak, longest_streak, lifetime_ep, total_rolls, equipped_cosmetics, equipped_badges, mood_color, best_roll_score, best_roll_hex, best_roll_rarity, is_staff';
 
 const INVALID_PROFILE_MESSAGE = 'That profile address is invalid.';
 const PROFILE_LOAD_MESSAGE = 'The profile could not be loaded. Please check your connection and retry.';
 let achievementsCache = null;
 let achievementsRequest = null;
+
+async function normalizeV2Configuration(value, fallbackColor, options) {
+  const module = await import('./profileConfigurationV2.js');
+  return module.normalizeProfileConfigurationV2(value, fallbackColor, options);
+}
 
 async function loadAchievements(supabaseClient) {
   if (achievementsCache) return { data: achievementsCache, error: null };
@@ -240,18 +245,28 @@ export async function loadProfileContext({
         ? { draft: fallback, published: fallback, version: 1 }
         : { draft: null, published: fallback, version: 1 };
     } else if (viewingOwnProfile) {
+      const v2Draft = configResponse.data?.draft_v2 || configResponse.data?.configuration_v2?.draft || null;
+      const v2Published = configResponse.data?.published_v2 || configResponse.data?.configuration_v2?.published || null;
+      const normalizedV2Draft = v2Draft ? await normalizeV2Configuration(v2Draft, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) }) : null;
+      const normalizedV2Published = v2Published ? await normalizeV2Configuration(v2Published, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) }) : null;
       context.profileConfig = {
-        version: Number(configResponse.data?.version) || 1,
-        draft: normalizeProfileConfig(configResponse.data?.draft, fallbackColor),
-        published: normalizeProfileConfig(configResponse.data?.published, fallbackColor),
+        version: normalizedV2Draft || normalizedV2Published ? 2 : (Number(configResponse.data?.version) || 1),
+        draft: normalizedV2Draft || normalizeProfileConfig(configResponse.data?.draft, fallbackColor),
+        published: normalizedV2Published || normalizeProfileConfig(configResponse.data?.published, fallbackColor),
+        v2Draft: normalizedV2Draft,
+        v2Published: normalizedV2Published,
         updatedAt: configResponse.data?.updated_at || null,
         publishedAt: configResponse.data?.published_at || null
       };
     } else {
+      const v2 = configResponse.data?.version === 2 || configResponse.data?.base
+        ? await normalizeV2Configuration(configResponse.data, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) })
+        : null;
       context.profileConfig = {
-        version: 1,
+        version: v2 ? 2 : 1,
         draft: null,
-        published: normalizeProfileConfig(configResponse.data, fallbackColor)
+        published: v2 || normalizeProfileConfig(configResponse.data, fallbackColor),
+        v2Published: v2
       };
     }
   }

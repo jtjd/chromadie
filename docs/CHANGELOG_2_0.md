@@ -2,6 +2,20 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Expand identity, content, providers, and sharing
+
+- Profile Studio now supports optional location, timezone, join-month display,
+  avatar visibility, finite description rhythm, and reduced-motion-aware entry
+  animation.
+- Owners can publish up to 25 stable-keyed HTTPS links, with the first six in
+  the identity opening and the remainder continuing in the profile story.
+- About text accepts a small safe Markdown subset, and Chromadie Plus/staff
+  profiles can show up to ten projects. GitHub, Twitch, Last.fm, and Discord
+  join the existing Spotify/YouTube provider set as safe cards.
+- The public share dialog includes canonical/alias paths, copy, downloadable
+  QR, and structured social metadata. Existing V1 profiles remain compatible;
+  the daily roll and earned progression remain unchanged.
+
 ## 2026-08-08 — Add $7.99 lifetime Chromadie Plus checkout
 
 - `/pricing` now compares Chromadie's complete free identity profile with the

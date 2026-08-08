@@ -1,15 +1,19 @@
 <script>
   import {
+    getProfileWidgetKind,
     getProfileWidgetLabel,
+    profileWidgetUrl,
     getVisibleProfileWidgets,
     profileWidgetEmbedUrl
-  } from './profileWidgets.js';
+  } from './profileWidgetsLegacy.js';
 
   export let widgets = [];
   export let deferMedia = false;
   export let compact = false;
 
   let loaded = [];
+  let failed = [];
+  const failureCache = Object.create(null);
 
   $: visibleWidgets = getVisibleProfileWidgets(widgets);
 
@@ -20,6 +24,16 @@
   function isLoaded(widget) {
     return !deferMedia || loaded.includes(widget.order);
   }
+
+  function isFailed(widget) {
+    return failed.includes(widget.order) || Boolean(failureCache[widget.provider + ':' + widget.id]);
+  }
+
+  function markFailed(widget) {
+    const key = widget.provider + ':' + widget.id;
+    failureCache[key] = true;
+    if (!failed.includes(widget.order)) failed = [...failed, widget.order];
+  }
 </script>
 
 {#if visibleWidgets.length}
@@ -27,12 +41,21 @@
     {#each visibleWidgets as widget (widget.provider + ':' + widget.id)}
       {@const label = getProfileWidgetLabel(widget.provider)}
       {@const embedUrl = profileWidgetEmbedUrl(widget.provider, widget.type, widget.id)}
+      {@const widgetKind = getProfileWidgetKind(widget.provider)}
       <section class="profile-widget" data-provider-widget={widget.provider} aria-labelledby={'profile-widget-' + widget.order}>
         <div class="profile-widget__heading">
           <span class="profile-widget__provider" id={'profile-widget-' + widget.order}>{label}</span>
           <span class="profile-widget__type">{widget.type}</span>
         </div>
-        {#if isLoaded(widget)}
+        {#if widgetKind === 'card'}
+          <a class="profile-widget__provider-card" href={profileWidgetUrl(widget.provider, widget.type, widget.id)} target="_blank" rel="noopener noreferrer">
+            <span class="profile-widget__mark" aria-hidden="true">{widget.provider === 'discord' ? '◈' : '↗'}</span>
+            <span class="profile-widget__copy"><strong>{label} {widget.type}</strong><span>Open this public {label} profile in a new tab.</span></span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        {:else if isFailed(widget)}
+          <div class="profile-widget__deferred"><span class="profile-widget__mark" aria-hidden="true">!</span><div class="profile-widget__copy"><strong>{label} unavailable</strong><span>This provider did not respond. The rest of the profile is still available.</span></div></div>
+        {:else if isLoaded(widget)}
           <iframe
             src={embedUrl}
             title={label + ' player'}
@@ -40,6 +63,7 @@
             allow={widget.provider === 'youtube' ? 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share' : 'clipboard-write; encrypted-media; fullscreen; picture-in-picture'}
             referrerpolicy="strict-origin-when-cross-origin"
             allowfullscreen={widget.provider === 'youtube'}
+            on:error={() => markFailed(widget)}
           ></iframe>
         {:else}
           <div class="profile-widget__deferred">
@@ -68,6 +92,9 @@
   .profile-widget__copy span { color: var(--color-ink-muted, rgba(220,230,248,.65)); font-size: .64rem; line-height: 1.35; }
   .profile-widget__deferred button { flex: 0 0 auto; min-height: 2rem; padding: .45rem .65rem; border: 1px solid color-mix(in srgb, var(--profile-accent, #cdd2ff) 58%, transparent); border-radius: .35rem; background: transparent; color: var(--color-ink-strong, #f1f6ff); font-size: .65rem; cursor: pointer; }
   .profile-widget__deferred button:hover, .profile-widget__deferred button:focus-visible { background: color-mix(in srgb, var(--profile-accent, #cdd2ff) 12%, transparent); }
+  .profile-widget__provider-card { display: flex; align-items: center; gap: .7rem; min-height: 5.5rem; padding: .85rem; color: inherit; text-decoration: none; }
+  .profile-widget__provider-card:hover, .profile-widget__provider-card:focus-visible { background: color-mix(in srgb, var(--profile-accent, #cdd2ff) 9%, transparent); }
+  .profile-widget__provider-card > span:last-child { color: var(--profile-accent, #cdd2ff); }
   .profile-widgets--compact .profile-widget__heading { padding: .5rem .65rem; }
   .profile-widgets--compact .profile-widget iframe { min-height: 120px; }
   .profile-widgets--compact .profile-widget[data-provider-widget="youtube"] iframe { min-height: 0; }

@@ -3,6 +3,7 @@ const PROFILE_FIELDS = Object.freeze([
   'username',
   'display_name',
   'bio',
+  'created_at',
   'current_streak',
   'longest_streak',
   'ep_spent',

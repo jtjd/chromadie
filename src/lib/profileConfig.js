@@ -1,7 +1,7 @@
 import { normalizeProfileExpression } from './profileExpression.js';
 import { createDefaultRichMediaConfig, normalizeRichMediaConfig } from './profileRichMedia.js';
-import { createDefaultProfileContent, normalizeProfileContent } from './profileContent.js';
-import { normalizeProfileWidgets } from './profileWidgets.js';
+import { createDefaultProfileContent, normalizeProfileContent } from './profileContentLegacy.js';
+import { normalizeProfileWidgets } from './profileWidgetsLegacy.js';
 import { inferProfileTemplateKey, normalizeProfileTemplateKey } from './profileTemplates.js';
 
 export const PROFILE_CONFIG_VERSION = 1;
@@ -27,8 +27,15 @@ export const PROFILE_LINK_TYPES = Object.freeze([
   'twitter',
   'instagram',
   'tiktok',
+  'linkedin',
+  'bluesky',
+  'mastodon',
+  'kick',
+  'patreon',
   'other'
 ]);
+export const PROFILE_LINK_LIMITS = Object.freeze({ freeLinks: 6, maxLinks: 25, openingLinks: 6 });
+export const PROFILE_LINK_ALIGNMENTS = Object.freeze(['left', 'center', 'right']);
 
 export const PROFILE_APPEARANCE_DEFAULTS = Object.freeze({
   colors: Object.freeze({
@@ -158,7 +165,14 @@ function normalizeModule(value) {
   };
 }
 
-function normalizeLink(value, fallbackOrder) {
+function stableLinkKey(value, fallbackOrder) {
+  const text = `${value?.label || ''}|${value?.url || ''}|${fallbackOrder}`;
+  let hash = 2166136261;
+  for (const character of text) hash = Math.imul(hash ^ character.codePointAt(0), 16777619);
+  return `l${(hash >>> 0).toString(36)}`;
+}
+
+function normalizeLink(value, fallbackOrder, extended = false) {
   if (!value || typeof value !== 'object') return null;
   const type = PROFILE_LINK_TYPES.includes(value.type) ? value.type : 'other';
   const label = String(value.label || '').trim();
@@ -166,8 +180,23 @@ function normalizeLink(value, fallbackOrder) {
   const order = Number.isInteger(Number(value.order)) ? Number(value.order) : fallbackOrder;
   if (!label || label.length > 40 || hasControlCharacters(label)) return null;
   if (!HTTPS_URL_PATTERN.test(url) || url.length > 2048) return null;
-  if (order < 0 || order > 5) return null;
-  return { type, label, url, visible: value.visible !== false, order };
+  if (order < 0 || order > (extended ? PROFILE_LINK_LIMITS.maxLinks - 1 : PROFILE_LINK_LIMITS.freeLinks - 1)) return null;
+  if (!extended && !value.key && !value.alignment && !Object.prototype.hasOwnProperty.call(value, 'monochrome')) {
+    return { type, label, url, visible: value.visible !== false, order };
+  }
+  const keyCandidate = String(value.key || '').trim().toLowerCase();
+  return {
+    key: /^[a-z0-9][a-z0-9_-]{0,31}$/.test(keyCandidate) ? keyCandidate : stableLinkKey(value, fallbackOrder),
+    type,
+    label,
+    url,
+    visible: value.visible !== false,
+    order,
+    alignment: PROFILE_LINK_ALIGNMENTS.includes(value.alignment) ? value.alignment : 'left',
+    monochrome: value.monochrome === true,
+    size: safeInteger(value.size, 1, 0, 2),
+    glow: safeInteger(value.glow, 0, 0, 2)
+  };
 }
 
 /**
@@ -176,6 +205,20 @@ function normalizeLink(value, fallbackOrder) {
  */
 export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
   const fallback = createDefaultProfileConfig(fallbackColor);
+  if (value && typeof value === 'object' && Number(value.version) === 2) {
+    const base = value.base && typeof value.base === 'object' ? value.base : value;
+    return normalizeProfileConfig({
+      ...base,
+      version: 1,
+      links: value.links || base.links,
+      content: value.content || base.content,
+      widgets: value.widgets || base.widgets,
+      identityPresentation: value.identity || base.identityPresentation,
+      metadata: value.metadata || base.metadata,
+      linkStyle: value.linkStyle || base.linkStyle,
+      configurationVersion: 2
+    }, fallbackColor);
+  }
   if (!value || typeof value !== 'object' || Number(value.version || 1) !== PROFILE_CONFIG_VERSION) return fallback;
 
   const modules = Array.isArray(value.modules)
@@ -186,8 +229,10 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
     && moduleIds.size === PROFILE_MODULE_IDS.length;
   if (!hasCompleteModuleSet) return fallback;
 
+  const extendedLinks = Number(value.configurationVersion || value.schemaVersion || value.version) === 2
+    || (Array.isArray(value.links) && value.links.some(link => link && typeof link === 'object' && (link.key || link.alignment || Object.prototype.hasOwnProperty.call(link, 'monochrome'))));
   const links = Array.isArray(value.links)
-    ? value.links.map((link, index) => normalizeLink(link, index)).filter(Boolean).slice(0, 6)
+    ? value.links.map((link, index) => normalizeLink(link, index, extendedLinks)).filter(Boolean).slice(0, extendedLinks ? PROFILE_LINK_LIMITS.maxLinks : PROFILE_LINK_LIMITS.freeLinks)
     : [];
 
   /** @type {Record<string, any>} */
@@ -210,6 +255,19 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
   };
   normalized.signatureColor = normalized.appearance.colors.accent;
   if (typeof value.storyVisible === 'boolean') normalized.storyVisible = value.storyVisible;
+  // Identity and structured preview metadata have their own bounded
+  // normalizers at the V2/RPC boundary. Preserve the validated projection
+  // here without pulling those optional editor modules into public profiles.
+  if (value.identity || value.identityPresentation) normalized.identityPresentation = value.identity || value.identityPresentation;
+  if (value.metadata || value.profileMetadata) normalized.metadata = value.metadata || value.profileMetadata;
+  if (value.linkStyle && typeof value.linkStyle === 'object') {
+    normalized.linkStyle = {
+      alignment: PROFILE_LINK_ALIGNMENTS.includes(value.linkStyle.alignment) ? value.linkStyle.alignment : 'left',
+      monochrome: value.linkStyle.monochrome === true,
+      size: safeInteger(value.linkStyle.size, 1, 0, 2),
+      glow: safeInteger(value.linkStyle.glow, 0, 0, 2)
+    };
+  }
   return normalized;
 }
 
@@ -275,4 +333,12 @@ export function getVisibleProfileModules(config, isOwner = false) {
 
 export function getVisibleProfileLinks(config) {
   return normalizeProfileConfig(config).links.filter(link => link.visible);
+}
+
+export function getProfileOpeningLinks(config) {
+  return getVisibleProfileLinks(config).slice(0, PROFILE_LINK_LIMITS.openingLinks);
+}
+
+export function getProfileContinuationLinks(config) {
+  return getVisibleProfileLinks(config).slice(PROFILE_LINK_LIMITS.openingLinks);
 }

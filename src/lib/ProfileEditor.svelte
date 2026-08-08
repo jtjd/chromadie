@@ -1,7 +1,8 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { supabase } from './supabase';
-  import { normalizeProfileConfig, PROFILE_LAYOUT_VARIANTS, PROFILE_LINK_TYPES } from './profileConfig.js';
+  import { normalizeProfileConfig, PROFILE_LAYOUT_VARIANTS, PROFILE_LINK_LIMITS, PROFILE_LINK_TYPES } from './profileConfig.js';
+  import { hasChromadiePlus } from './premiumEntitlements.js';
   import { createProfileTemplatePatch } from './profileTemplates.js';
   import { clearViewState, readViewState, writeViewState } from './viewState.js';
   import ProfileTemplatePicker from './ProfileTemplatePicker.svelte';
@@ -11,6 +12,7 @@
   export let publishedConfig = null;
   export let updatedAt = null;
   export let entitlements = [];
+  export let staff = false;
 
   const dispatch = createEventDispatcher();
   const MODULE_LABELS = Object.freeze({
@@ -20,7 +22,8 @@
   const EDITABLE_MODULE_IDS = Object.freeze(['stats', 'signature', 'links', 'recent', 'achievements']);
   const LINK_TYPE_LABELS = Object.freeze({
     website: 'Website', youtube: 'YouTube', twitch: 'Twitch', github: 'GitHub', discord: 'Discord',
-    twitter: 'X / Twitter', instagram: 'Instagram', tiktok: 'TikTok', other: 'Other'
+    twitter: 'X / Twitter', instagram: 'Instagram', tiktok: 'TikTok', linkedin: 'LinkedIn', bluesky: 'Bluesky',
+    mastodon: 'Mastodon', kick: 'Kick', patreon: 'Patreon', other: 'Other'
   });
   const STYLE_LABELS = Object.freeze({ immersive: 'Immersive', editorial: 'Editorial', focus: 'Focused' });
   const MODULE_SIZE_LABELS = Object.freeze({ wide: 'Wide', medium: 'Medium', narrow: 'Narrow' });
@@ -46,6 +49,7 @@
   $: incomingKey = JSON.stringify({ profileId, draft: draftConfig, published: publishedConfig, updatedAt });
   $: if (incomingKey !== lastIncomingKey && !saving && !isDirty) syncIncoming();
   $: orderedModules = [...(draft.modules || [])].sort((left, right) => left.order - right.order);
+  $: linkLimit = staff || hasChromadiePlus(entitlements) ? PROFILE_LINK_LIMITS.maxLinks : PROFILE_LINK_LIMITS.freeLinks;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -74,7 +78,9 @@
       templateKey: value.templateKey,
       layoutVariant: value.layoutVariant,
       modules: clone(value.modules || []),
-      links: clone(value.links || [])
+      links: clone(value.links || []),
+      ...(value.linkStyle ? { linkStyle: clone(value.linkStyle) } : {}),
+      ...(value.metadata ? { metadata: clone(value.metadata) } : {})
     };
   }
 
@@ -121,11 +127,11 @@
   }
 
   function addLink() {
-    if (draft.links.length >= 6) {
-      error = 'You can add up to 6 links.';
+    if (draft.links.length >= linkLimit) {
+      error = `You can add up to ${linkLimit} links on this profile.`;
       return;
     }
-    updateDraft({ links: [...draft.links, { type: 'website', label: '', url: '', visible: true, order: draft.links.length }] });
+    updateDraft({ links: [...draft.links, { key: `l${Date.now().toString(36)}${draft.links.length}`, type: 'website', label: '', url: '', visible: true, order: draft.links.length }] });
   }
 
   function updateLink(index, field, value) {
@@ -134,6 +140,14 @@
 
   function removeLink(index) {
     updateDraft({ links: draft.links.filter((_, linkIndex) => linkIndex !== index).map((link, order) => ({ ...link, order })) });
+  }
+
+  function moveLink(index, direction) {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= draft.links.length) return;
+    const links = draft.links.slice();
+    [links[index], links[nextIndex]] = [links[nextIndex], links[index]];
+    updateDraft({ links: links.map((link, order) => ({ ...link, order })) });
   }
 
   function validateLinks() {
@@ -170,22 +184,36 @@
     }
     const nextDraft = normalizeDraft(data?.draft || draft);
     const nextPublished = normalizeDraft(data?.published || publishedConfig || baseline);
+    let presentationData = null;
+    if (draft.linkStyle || draft.metadata) {
+      const presentationResponse = await supabase.rpc('save_profile_configuration_presentation', {
+        p_patch: { linkStyle: draft.linkStyle || null, metadata: draft.metadata || null }
+      });
+      if (presentationResponse.error || presentationResponse.data?.success === false) {
+        error = presentationResponse.error?.message || presentationResponse.data?.error || 'The link presentation could not be saved.';
+        saving = false;
+        return;
+      }
+      presentationData = presentationResponse.data;
+    }
+    const savedDraft = normalizeDraft(presentationData?.draft || nextDraft);
+    const savedPublished = normalizeDraft(presentationData?.published || nextPublished);
     const layoutChanged = layoutChangedSinceSave;
-    draft = nextDraft;
-    baseline = action === 'publish' ? nextDraft : normalizeDraft(data?.draft || draft);
+    draft = savedDraft;
+    baseline = action === 'publish' ? savedDraft : normalizeDraft(presentationData?.draft || data?.draft || draft);
     serverUpdatedAt = data?.updated_at || serverUpdatedAt;
     layoutChangedSinceSave = false;
     conflict = null;
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
     status = action === 'publish' ? 'Published' : 'Draft saved';
     dispatch(action === 'publish' ? 'configpublished' : 'configsaved', {
-      draft: nextDraft,
-      published: nextPublished,
+      draft: savedDraft,
+      published: savedPublished,
       updatedAt: serverUpdatedAt,
       publishedAt: data?.published_at || null,
       layoutChanged
     });
-    dispatch('configpreview', { config: nextDraft });
+    dispatch('configpreview', { config: savedDraft });
     emitDirty(false);
   }
 
@@ -249,15 +277,27 @@
   </section>
 
   <section class="profile-editor__panel" aria-labelledby="profile-layout-links-title">
-    <div class="profile-editor__panel-heading"><h3 id="profile-layout-links-title">Public links</h3><button type="button" class="profile-editor__text-button" on:click={addLink} disabled={draft.links.length >= 6}>Add link</button></div>
+    <div class="profile-editor__panel-heading"><h3 id="profile-layout-links-title">Public links</h3><button type="button" class="profile-editor__text-button" on:click={addLink} disabled={draft.links.length >= linkLimit}>Add link</button></div>
     {#if draft.links.length}
       <div class="profile-editor__links">
         {#each draft.links as link, index (index)}
-          <div class="profile-editor__link-row"><select value={link.type} aria-label="Link type" on:change={event => updateLink(index, 'type', event.currentTarget.value)}>{#each PROFILE_LINK_TYPES as type (type)}<option value={type}>{LINK_TYPE_LABELS[type]}</option>{/each}</select><input value={link.label} maxlength="40" aria-label="Link label" placeholder="Label" on:input={event => updateLink(index, 'label', event.currentTarget.value)} /><input value={link.url} maxlength="2048" inputmode="url" aria-label="Secure link URL" placeholder="https://" on:input={event => updateLink(index, 'url', event.currentTarget.value)} /><button type="button" class="profile-editor__remove" aria-label={`Remove ${link.label || 'link'}`} on:click={() => removeLink(index)}>Remove</button></div>
+          <div class="profile-editor__link-row"><label class="profile-editor__link-visible"><input type="checkbox" checked={link.visible !== false} aria-label={`Show ${link.label || 'link'}`} on:change={event => updateLink(index, 'visible', event.currentTarget.checked)} /> Show</label><select value={link.type} aria-label="Link type" on:change={event => updateLink(index, 'type', event.currentTarget.value)}>{#each PROFILE_LINK_TYPES as type (type)}<option value={type}>{LINK_TYPE_LABELS[type] || type}</option>{/each}</select><input value={link.label} maxlength="40" aria-label="Link label" placeholder="Label" on:input={event => updateLink(index, 'label', event.currentTarget.value)} /><input value={link.url} maxlength="2048" inputmode="url" aria-label="Secure link URL" placeholder="https://" on:input={event => updateLink(index, 'url', event.currentTarget.value)} /><div class="profile-editor__link-actions"><button type="button" aria-label={`Move ${link.label || 'link'} up`} disabled={index === 0} on:click={() => moveLink(index, -1)}>↑</button><button type="button" aria-label={`Move ${link.label || 'link'} down`} disabled={index === draft.links.length - 1} on:click={() => moveLink(index, 1)}>↓</button><button type="button" class="profile-editor__remove" aria-label={`Remove ${link.label || 'link'}`} on:click={() => removeLink(index)}>Remove</button></div></div>
         {/each}
       </div>
     {:else}<p class="profile-editor__empty">No public links.</p>{/if}
-    <p class="profile-editor__helper">Links must use HTTPS.</p>
+    <div class="profile-editor__link-style">
+      <label><span>Alignment</span><select value={draft.linkStyle?.alignment || 'left'} on:change={event => updateDraft({ linkStyle: { ...(draft.linkStyle || {}), alignment: event.currentTarget.value } })}><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+      <label><span>Link size</span><input type="range" min="0" max="2" step="1" value={draft.linkStyle?.size || 0} on:input={event => updateDraft({ linkStyle: { ...(draft.linkStyle || {}), size: Number(event.currentTarget.value) } })} /></label>
+      <label><span>Glow</span><input type="range" min="0" max="2" step="1" value={draft.linkStyle?.glow || 0} on:input={event => updateDraft({ linkStyle: { ...(draft.linkStyle || {}), glow: Number(event.currentTarget.value) } })} /></label>
+      <label class="profile-editor__style-check"><input type="checkbox" checked={draft.linkStyle?.monochrome === true} on:change={event => updateDraft({ linkStyle: { ...(draft.linkStyle || {}), monochrome: event.currentTarget.checked } })} /> Monochrome</label>
+    </div>
+    <div class="profile-editor__metadata">
+      <div><h3>Structured preview metadata</h3><p>Optional premium presentation controls. Unsafe values fall back to the canonical profile metadata.</p></div>
+      <label><span>Share title</span><input maxlength="80" value={draft.metadata?.title || ''} placeholder="Your profile title" on:input={event => updateDraft({ metadata: { ...(draft.metadata || {}), title: event.currentTarget.value } })} /></label>
+      <label><span>Share description</span><textarea maxlength="200" rows="2" value={draft.metadata?.description || ''} placeholder="A short description for social previews." on:input={event => updateDraft({ metadata: { ...(draft.metadata || {}), description: event.currentTarget.value } })}></textarea></label>
+      <label><span>Embed color</span><input type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" value={draft.metadata?.embedColor || '#CDD2FF'} on:input={event => updateDraft({ metadata: { ...(draft.metadata || {}), embedColor: event.currentTarget.value } })} /></label>
+    </div>
+    <p class="profile-editor__helper">Links must use HTTPS. The first six stay in the opening; additional links continue in the profile story.</p>
   </section>
 
   {#if conflict}<div class="profile-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{:else if error}<p class="profile-editor__message" role="alert">{error}</p>{/if}
@@ -288,7 +328,19 @@
   .profile-editor__module-fixed input { accent-color: var(--site-accent, #cdd2ff); }
   .profile-editor button:disabled { cursor: not-allowed; opacity: .42; }
   .profile-editor__links { display: grid; gap: .55rem; }
-  .profile-editor__link-row { display: grid; grid-template-columns: 8rem minmax(7rem, .7fr) minmax(12rem, 1.5fr) auto; gap: .45rem; }
+  .profile-editor__link-style { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: end; gap: .6rem; padding-top: .25rem; }
+  .profile-editor__link-style label { display: grid; gap: .35rem; color: var(--site-muted, #aaa8b0); font-size: .65rem; }
+  .profile-editor__link-style input[type="range"] { width: 100%; accent-color: var(--site-accent, #cdd2ff); }
+  .profile-editor__style-check { display: inline-flex !important; align-items: center; min-height: 2.35rem; white-space: nowrap; }
+  .profile-editor__metadata { display: grid; gap: .65rem; padding-top: .8rem; border-top: 1px solid var(--site-line, rgba(255,255,255,.08)); }
+  .profile-editor__metadata h3 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .78rem; }
+  .profile-editor__metadata p { margin: .25rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .65rem; }
+  .profile-editor__metadata label { display: grid; gap: .35rem; color: var(--site-muted, #aaa8b0); font-size: .65rem; }
+  .profile-editor__metadata :is(input, textarea) { width: 100%; box-sizing: border-box; min-width: 0; padding: .55rem .6rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: var(--site-deep, #090a0d); color: var(--site-ink, #f2f0eb); font: .7rem/1.4 var(--site-font, sans-serif); }
+  .profile-editor__link-row { display: grid; grid-template-columns: auto 8rem minmax(7rem, .7fr) minmax(12rem, 1.5fr) auto; gap: .45rem; align-items: center; }
+  .profile-editor__link-visible { display: inline-flex; align-items: center; gap: .3rem; color: var(--site-muted, #aaa8b0); font-size: .63rem; white-space: nowrap; }
+  .profile-editor__link-actions { display: flex; align-items: center; gap: .25rem; }
+  .profile-editor__link-actions button:not(.profile-editor__remove) { min-width: 1.7rem; padding: .35rem .4rem; }
   .profile-editor__link-row input, .profile-editor__link-row select { width: 100%; }
   .profile-editor__message { margin: 0; color: var(--site-muted, #aaa8b0); font-size: .7rem; }
   .profile-editor__conflict { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .7rem; border: 1px solid rgba(255,157,169,.4); border-radius: .35rem; color: #ffb4bd; font-size: .7rem; }
@@ -296,7 +348,7 @@
   .profile-editor__actions { position: sticky; bottom: .8rem; z-index: 4; justify-content: flex-end; min-height: 3.2rem; padding: .55rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .55rem; background: rgba(17,19,25,.92); box-shadow: 0 1rem 2rem rgba(0,0,0,.18); backdrop-filter: blur(16px); }
   .profile-editor__actions button { min-height: 2rem; padding: .45rem .75rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .68rem; cursor: pointer; }
   .profile-editor__actions .profile-editor__publish { border-color: var(--site-accent, #cdd2ff); background: var(--site-accent, #cdd2ff); color: var(--site-deep, #090a0d); font-weight: 700; }
-  @media (max-width: 48rem) { .profile-editor__header, .profile-editor__panel-heading { align-items: flex-start; flex-direction: column; } .profile-editor__link-row { grid-template-columns: 1fr 1fr; } .profile-editor__link-row input:nth-of-type(2) { grid-column: 1 / -1; } .profile-editor__link-row .profile-editor__remove { grid-column: 2; } }
+  @media (max-width: 48rem) { .profile-editor__header, .profile-editor__panel-heading { align-items: flex-start; flex-direction: column; } .profile-editor__link-row { grid-template-columns: auto 1fr; } .profile-editor__link-row input:nth-of-type(2) { grid-column: 1 / -1; } .profile-editor__link-row .profile-editor__link-actions { grid-column: 2; } .profile-editor__link-style { grid-template-columns: 1fr 1fr; } .profile-editor__style-check { grid-column: 1 / -1; } }
   @media (max-width: 34rem) { .profile-editor__actions { flex-wrap: wrap; } .profile-editor__actions button { flex: 1; } }
   @media (prefers-reduced-motion: reduce) { .profile-editor__actions { scroll-behavior: auto; } }
 </style>

@@ -3,12 +3,15 @@
   import { supabase } from './supabase';
   import { normalizeProfileConfig } from './profileConfig.js';
   import { normalizeProfileContent, PROFILE_CONTENT_LIMITS } from './profileContent.js';
+  import { hasChromadiePlus } from './premiumEntitlements.js';
   import { clearViewState, readViewState, writeViewState } from './viewState.js';
 
   export let profileId = null;
   export let draftConfig = null;
   export let publishedConfig = null;
   export let updatedAt = null;
+  export let entitlements = [];
+  export let staff = false;
 
   const dispatch = createEventDispatcher();
   const VIEW_STATE_NAMESPACE = 'profile-content-editor';
@@ -22,6 +25,8 @@
   let conflict = null;
   let lastIncomingKey = '';
 
+  $: maxProjects = staff || hasChromadiePlus(entitlements) ? PROFILE_CONTENT_LIMITS.premiumProjects : PROFILE_CONTENT_LIMITS.projects;
+
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }
@@ -33,6 +38,7 @@
 
   function contentPatch(value = draft) {
     return {
+      version: value.content?.version || 1,
       about: clone(value.content?.about || {}),
       projects: (value.content?.projects || [])
         .filter(project => project.title || project.description || project.url)
@@ -71,12 +77,16 @@
   }
 
   function updateAbout(field, value) {
+    if (field === 'body') {
+      updateContent({ version: 2, about: { ...draft.content.about, markdown: value, body: undefined } });
+      return;
+    }
     updateContent({ about: { ...draft.content.about, [field]: value } });
   }
 
   function addProject() {
-    if (draft.content.projects.length >= PROFILE_CONTENT_LIMITS.projects) {
-      error = `You can add up to ${PROFILE_CONTENT_LIMITS.projects} projects.`;
+    if (draft.content.projects.length >= maxProjects) {
+      error = `You can add up to ${maxProjects} projects on this profile.`;
       return;
     }
     updateContent({ projects: [...draft.content.projects, { title: '', description: '', url: '', visible: true, order: draft.content.projects.length }] });
@@ -172,20 +182,20 @@
 <section class="profile-content-editor" aria-labelledby="profile-content-title">
   <header class="profile-content-editor__header">
     <div><h2 id="profile-content-title">About & projects</h2><p>Tell visitors what matters to you with plain text and a few focused links.</p></div>
-    <span class="profile-content-editor__version">Up to {PROFILE_CONTENT_LIMITS.projects} projects</span>
+    <span class="profile-content-editor__version">Up to {maxProjects} projects</span>
   </header>
 
   <section class="profile-content-editor__panel" aria-labelledby="profile-content-about-title">
     <div class="profile-content-editor__panel-heading"><h3 id="profile-content-about-title">About</h3><label class="profile-content-editor__switch"><input type="checkbox" checked={draft.content.about.visible} on:change={event => updateAbout('visible', event.currentTarget.checked)} /><span>Visible</span></label></div>
     <div class="profile-content-editor__fields">
       <label><span>Heading</span><input value={draft.content.about.heading} maxlength={PROFILE_CONTENT_LIMITS.aboutHeading} on:input={event => updateAbout('heading', event.currentTarget.value)} /></label>
-      <label><span>Short introduction <output>{draft.content.about.body.length}/{PROFILE_CONTENT_LIMITS.aboutBody}</output></span><textarea rows="5" maxlength={PROFILE_CONTENT_LIMITS.aboutBody} placeholder="A short note about your work, interests, or current chapter." on:input={event => updateAbout('body', event.currentTarget.value)}>{draft.content.about.body}</textarea></label>
+        <label><span>Short introduction <output>{(draft.content.about.markdown || draft.content.about.body || '').length}/{PROFILE_CONTENT_LIMITS.aboutMarkdown}</output></span><textarea rows="5" maxlength={PROFILE_CONTENT_LIMITS.aboutMarkdown} placeholder="A short note about your work, interests, or current chapter." on:input={event => updateAbout('body', event.currentTarget.value)}>{draft.content.about.markdown || draft.content.about.body}</textarea></label>
     </div>
-    <p class="profile-content-editor__helper">Plain text only. Line breaks are preserved; markup and scripts are never accepted.</p>
+    <p class="profile-content-editor__helper">Safe Markdown subset: emphasis, lists, code, and HTTPS links. Plain text only is always safe; raw HTML and scripts are discarded.</p>
   </section>
 
   <section class="profile-content-editor__panel" aria-labelledby="profile-content-projects-title">
-    <div class="profile-content-editor__panel-heading"><div><h3 id="profile-content-projects-title">Projects</h3><p>Show the places, work, or communities you want people to explore.</p></div><button type="button" class="profile-content-editor__text-button" on:click={addProject} disabled={draft.content.projects.length >= PROFILE_CONTENT_LIMITS.projects}>Add project</button></div>
+    <div class="profile-content-editor__panel-heading"><div><h3 id="profile-content-projects-title">Projects</h3><p>Show the places, work, or communities you want people to explore.</p></div><button type="button" class="profile-content-editor__text-button" on:click={addProject} disabled={draft.content.projects.length >= maxProjects}>Add project</button></div>
     {#if draft.content.projects.length}
       <div class="profile-content-editor__projects">
         {#each draft.content.projects as project, index (index)}

@@ -21,7 +21,6 @@
   import ProfileWidgets from './ProfileWidgets.svelte';
   import ProfileContent from './ProfileContent.svelte';
   import ProfileSocial from './ProfileSocial.svelte';
-  import IdentityCard from './IdentityCard.svelte';
   import { getProfileMediaUrl } from './profileMedia.js';
   import TodayColor from './TodayColor.svelte';
   import FeaturedCollection from './FeaturedCollection.svelte';
@@ -34,8 +33,8 @@
   import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
   import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
-  import { hasVisibleProfileContent } from './profileContent.js';
-  import { getVisibleProfileWidgets } from './profileWidgets.js';
+  import { hasVisibleProfileContent } from './profileContentLegacy.js';
+  import { getVisibleProfileWidgets } from './profileWidgetsLegacy.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
   import { normalizeRichMediaConfig } from './profileRichMedia.js';
 
@@ -74,6 +73,30 @@
   let profileMoreActive = false;
   let profilePageElement;
   let prefersReducedMotion = false;
+  let shareDialogOpen = false;
+  let shareDialogComponent = null;
+  let shareDialogRequest = null;
+  let identityCardComponent = null;
+  let identityCardRequest = null;
+
+  function ensureIdentityCard() {
+    if (identityCardComponent || identityCardRequest) return identityCardRequest;
+    identityCardRequest = import('./IdentityCard.svelte')
+      .then(module => { identityCardComponent = module.default; })
+      .catch(() => { identityCardComponent = null; })
+      .finally(() => { identityCardRequest = null; });
+    return identityCardRequest;
+  }
+
+  async function openShareDialog() {
+    shareDialogOpen = true;
+    if (shareDialogComponent || shareDialogRequest) return;
+    shareDialogRequest = import('./ProfileShareDialog.svelte')
+      .then(module => { shareDialogComponent = module.default; })
+      .catch(() => { shareDialogOpen = false; })
+      .finally(() => { shareDialogRequest = null; });
+    await shareDialogRequest;
+  }
 
   function resetShellState(nextLoading = false) {
     targetProfile = null;
@@ -163,6 +186,7 @@
   afterUpdate(syncProfileData);
 
   onMount(() => {
+    void ensureIdentityCard();
     const motionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       ? window.matchMedia('(prefers-reduced-motion: reduce)')
       : null;
@@ -358,7 +382,8 @@
   }
 
   $: username = targetProfile?.username || 'Unknown Player';
-  $: profileDisplayName = username;
+  // profileDisplayName = username is the safe fallback for legacy profiles.
+  $: profileDisplayName = targetProfile?.display_name || username;
   $: isOwnProfile = previewMode
     ? false
     : ['owner', 'pre-roll'].includes(visualFixture)
@@ -394,6 +419,12 @@
     .sort((left, right) => String(right.roll_date || '').localeCompare(String(left.roll_date || '')))[0] || null;
   $: profileBio = typeof targetProfile?.bio === 'string' ? targetProfile.bio.trim().slice(0, 160) : '';
   $: profileBioFallback = profileBio ? '' : 'No bio added yet.';
+  // V2 identity fields arrive through the server-normalized public
+  // configuration; legacy profiles simply use the empty presentation.
+  $: identityPresentation = effectiveProfileConfig.identityPresentation || {};
+  $: joinedLabel = targetProfile?.created_at
+    ? new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(targetProfile.created_at))
+    : '';
   $: signatureColor = colorFor(appearance.colors.accent);
   $: nameRendererBaseColor = colorFor(appearance.colors.username, '#FFFFFF');
   $: nameRendererTodayColor = colorFor(latestRoll?.hex_code || '#8B7CF6');
@@ -492,10 +523,14 @@
             {#if cursorTrailKey && previewMode}
               <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__card-cursor-layer" />
             {/if}
-            {#if bannerSrc}
-              <img class="profile-shell__rich-banner" src={bannerSrc} alt="" loading="lazy" aria-hidden="true" />
+              {#if bannerSrc}
+                <img class="profile-shell__rich-banner" src={bannerSrc} alt="" loading="lazy" aria-hidden="true" />
+              {/if}
+            {#if !previewMode}
+              <button type="button" class="profile-shell__share-button" on:click={openShareDialog}>Share profile</button>
             {/if}
-            <IdentityCard
+            {#if identityCardComponent}
+            <svelte:component this={identityCardComponent}
               username={username}
               displayName={profileDisplayName}
               profilePath={profilePath}
@@ -517,9 +552,20 @@
               avatarEffectMode="profile"
               avatarEffectAnimated={true}
               layoutVariant={layoutVariant}
+              location={identityPresentation.location}
+              timezone={identityPresentation.timezone}
+              joinedLabel={joinedLabel}
+              showJoinDate={identityPresentation.showJoinDate}
+              showAvatar={identityPresentation.showAvatar}
+              descriptionMode={identityPresentation.descriptionMode}
+              entryAnimation={prefersReducedMotion ? 'none' : identityPresentation.entryAnimation}
+              linkStyle={effectiveProfileConfig.linkStyle}
               rollState={profileRollState}
               showToday={false}
             />
+            {:else}
+              <div class="profile-shell__identity-loading" aria-busy="true" aria-label="Identity pending"></div>
+            {/if}
           </ProfileBorderEffect>
         </div>
 
@@ -532,6 +578,18 @@
       </div>
 
     </div>
+
+    {#if !previewMode && shareDialogOpen && shareDialogComponent}
+      <svelte:component this={shareDialogComponent}
+        open={shareDialogOpen}
+        username={username}
+        profilePath={profilePath}
+        isOwner={isOwnProfile}
+        title={profileDisplayName + ' (@' + username + ') | ChromaDie'}
+        description={profileBio || 'A public color identity shaped by daily rolls.'}
+        on:close={() => shareDialogOpen = false}
+      />
+    {/if}
 
     <div id="profile-more" class="profile-shell__more">
         {#if !previewMode && hasProfileMore && profileMoreActive}
@@ -781,6 +839,10 @@
       radial-gradient(circle at 76% 50%, color-mix(in srgb, var(--profile-surface-accent) 14%, transparent), transparent 28rem),
       linear-gradient(110deg, color-mix(in srgb, var(--surface-panel-strong) 76%, transparent), color-mix(in srgb, var(--surface-panel) 34%, transparent));
   }
+
+  .profile-shell__share-button { position: absolute; top: 1rem; right: 1rem; z-index: 3; min-height: 2rem; padding: .45rem .7rem; border: 1px solid color-mix(in srgb, var(--profile-accent, #cdd2ff) 48%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--profile-surface, #11141b) 76%, transparent); color: var(--profile-highlight, #f4f6fb); font: 600 .64rem/1 var(--font-mono-stack, monospace); cursor: pointer; }
+  .profile-shell__share-button:hover, .profile-shell__share-button:focus-visible { border-color: var(--profile-accent, #cdd2ff); background: color-mix(in srgb, var(--profile-accent, #cdd2ff) 14%, transparent); }
+  .profile-shell__identity-loading { min-height: 20rem; border-radius: var(--radius-md, 1rem); background: color-mix(in srgb, var(--profile-surface, #11141b) 70%, transparent); }
 
   .profile-shell__social-section {
     width: min(100%, 46rem);

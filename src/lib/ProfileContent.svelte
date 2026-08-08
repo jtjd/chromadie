@@ -1,5 +1,6 @@
 <script>
-  import { getVisibleProfileContent } from './profileContent.js';
+  import { getVisibleProfileContent } from './profileContentLegacy.js';
+  import ProfileRichText from './ProfileRichText.svelte';
 
   export let content = null;
 
@@ -13,7 +14,9 @@
       <div class="profile-content__about">
         <p class="profile-content__eyebrow">About</p>
         <h2 id="profile-content-heading">{visible.about.heading}</h2>
-        {#if visible.about.body}<p class="profile-content__body">{visible.about.body}</p>{/if}
+        {#if visible.about.version === 2 || visible.about.ast}
+          <ProfileRichText ast={visible.about.ast || []} />
+        {:else if visible.about.body}<p class="profile-content__body">{visible.about.body}</p>{/if}
       </div>
     {/if}
     {#if visible.projects.length}
