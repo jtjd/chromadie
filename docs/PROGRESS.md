@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Card-only profile customization — 2026-08-08
+
+- Scoped draft profile appearance variables to the identity card in the shared
+  profile renderer.
+- Kept the daily roll on the system presentation tokens while preserving the
+  server-authoritative roll and profile data paths.
+- Added a source-contract regression test for the card/roll boundary.
+
 ## Persistent Profile Studio preview — 2026-08-07
 
 - Replaced the temporary live-preview drawer with a persistent named preview

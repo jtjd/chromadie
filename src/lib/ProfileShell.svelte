@@ -41,6 +41,8 @@
   export let previewAllAchievements = [];
   export let visualFixture = '';
 
+  const profileShellStyle = '--profile-accent: var(--color-accent-roll); --profile-surface-accent: var(--color-accent-cyan); --profile-control-accent: var(--color-accent);';
+
   let targetProfile = null;
   let targetScores = [];
   let timelineEvents = [];
@@ -398,13 +400,44 @@
   $: recentScores = targetScores.slice(0, 6);
   $: nameRendererRecentColors = recentScores.map(score => score?.hex_code).filter(Boolean);
   $: profilePath = getCanonicalProfilePath(username) || '/profile';
+  // Keep the daily roll on the system presentation tokens. Profile-authored
+  // appearance values are projected onto the identity card below instead of
+  // leaking into the roll surface.
+  $: profileCardStyle = [
+    `--profile-accent:${signatureColor}`,
+    `--profile-surface-accent:${profileSurfaceAccent}`,
+    `--profile-control-accent:${profileControlAccent}`,
+    `--profile-text:${appearance.colors.text}`,
+    `--profile-secondary-text:${appearance.colors.secondaryText}`,
+    `--profile-username:${nameRendererBaseColor}`,
+    `--profile-description:${appearance.colors.description}`,
+    `--profile-background:${appearance.colors.background}`,
+    `--profile-background-paint:${profileBackground}`,
+    `--profile-surface:${appearance.colors.surface}`,
+    `--profile-highlight:${appearance.colors.highlight}`,
+    `--profile-surface-opacity:${appearance.surface.opacity / 100}`,
+    `--profile-surface-blur:${appearance.surface.blur}px`,
+    `--profile-border-color:${appearance.border.color}`,
+    `--profile-border-width:${appearance.border.enabled ? appearance.border.width : 0}px`,
+    `--profile-border-radius:${appearance.border.radius}px`,
+    `--profile-border-opacity:${appearance.border.opacity / 100}`,
+    `--color-ink-strong:${appearance.colors.highlight}`,
+    `--color-ink:${appearance.colors.text}`,
+    `--color-ink-muted:${appearance.colors.secondaryText}`,
+    `--color-ink-faint:${appearance.colors.description}`,
+    `--color-accent:${signatureColor}`,
+    `--color-accent-bright:${appearance.colors.highlight}`,
+    `--surface-panel:${appearance.colors.surface}`,
+    `--surface-inset:${appearance.colors.background}`,
+    `--color-canvas-deep:${appearance.colors.background}`
+  ].join(';');
 
   onDestroy(() => {
     if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={'--profile-accent: ' + signatureColor + '; --profile-surface-accent: ' + profileSurfaceAccent + '; --profile-control-accent: ' + profileControlAccent + '; --profile-text: ' + appearance.colors.text + '; --profile-secondary-text: ' + appearance.colors.secondaryText + '; --profile-username: ' + nameRendererBaseColor + '; --profile-description: ' + appearance.colors.description + '; --profile-background: ' + appearance.colors.background + '; --profile-background-paint: ' + profileBackground + '; --profile-surface: ' + appearance.colors.surface + '; --profile-highlight: ' + appearance.colors.highlight + '; --profile-surface-opacity: ' + (appearance.surface.opacity / 100) + '; --profile-surface-blur: ' + appearance.surface.blur + 'px; --profile-border-color: ' + appearance.border.color + '; --profile-border-width: ' + (appearance.border.enabled ? appearance.border.width : 0) + 'px; --profile-border-radius: ' + appearance.border.radius + 'px; --profile-border-opacity: ' + (appearance.border.opacity / 100) + '; --color-ink-strong: ' + appearance.colors.highlight + '; --color-ink: ' + appearance.colors.text + '; --color-ink-muted: ' + appearance.colors.secondaryText + '; --color-ink-faint: ' + appearance.colors.description + '; --color-accent: ' + signatureColor + '; --color-accent-bright: ' + appearance.colors.highlight + '; --surface-panel: ' + appearance.colors.surface + '; --surface-inset: ' + appearance.colors.background + '; --color-canvas-deep: ' + appearance.colors.background + ';'} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + ' foundation-page'} style={profileShellStyle} aria-busy={loading}>
   {#if !loading && targetProfile && cursorTrailKey}
     <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__cursor-layer" />
   {/if}
@@ -419,7 +452,7 @@
     <div class="profile-shell__composition">
     <div class="profile-shell__approved-canvas">
       <div class="profile-shell__approved-main">
-        <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity">
+        <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity" style={profileCardStyle}>
           <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-shell__identity-boundary">
             <IdentityCard
               username={username}
@@ -1061,9 +1094,9 @@
     justify-self: center;
     margin: 0 auto;
     padding: 0;
-    overflow: visible;
+    overflow: hidden;
     border: 0;
-    background: transparent;
+    background: var(--profile-background-paint, transparent);
     box-shadow: none;
   }
 

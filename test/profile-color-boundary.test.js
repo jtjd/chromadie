@@ -37,3 +37,14 @@ test('profile color presentation remains bounded and the retained border is shar
   assert.doesNotMatch(border, /@keyframes profile-border-neon[\s\S]*opacity/);
   assert.doesNotMatch(shell + profile + border, /ProfileAtmosphere|profile_bg/);
 });
+
+test('profile appearance tokens stay on the identity card and out of the roll UI', async () => {
+  const shell = await read('src/lib/ProfileShell.svelte');
+
+  assert.match(shell, /const profileShellStyle = '--profile-accent: var\(--color-accent-roll\)/);
+  assert.match(shell, /profileCardStyle = \[/);
+  assert.match(shell, /style=\{profileShellStyle\} aria-busy/);
+  assert.match(shell, /data-profile-region="identity" style=\{profileCardStyle\}/);
+  assert.match(shell, /--profile-background-paint:\$\{profileBackground\}/);
+  assert.doesNotMatch(shell, /<main[\s\S]*?profileBackground/);
+});

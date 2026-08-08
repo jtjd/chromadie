@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Scope customization to the profile card
+
+- Profile appearance changes now preview on the identity card without
+  recoloring or restyling the daily roll UI.
+- The roll continues to use the shared system presentation tokens while card
+  customization remains live in Profile Studio.
+
 ## 2026-08-07 — Keep the Studio preview live
 
 - Profile Studio now keeps the real profile canvas visible beside the dashboard

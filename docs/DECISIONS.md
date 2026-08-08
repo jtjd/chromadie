@@ -2,6 +2,13 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Keep profile appearance off the roll surface
+
+Profile-authored appearance tokens now apply to the identity card surface only.
+The shared profile shell keeps system presentation tokens for the daily roll so
+theme colors, surface values, gradients, and text contrast cannot restyle the
+roll UI while the card customization contract is still being refined.
+
 ## 2026-08-07 — Keep the Profile Studio preview persistent
 
 The authenticated Profile Studio now mounts the existing preview-mode
