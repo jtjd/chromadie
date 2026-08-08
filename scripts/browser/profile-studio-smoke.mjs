@@ -183,6 +183,25 @@ try {
     return state;
   });
 
+  await step('create an alias and resolve its direct-refresh path', async () => {
+    const alias = `alias_${canonicalUsername}`;
+    await page.navigate(`${appUrl}/profile/settings#profile-aliases`, 'Profile aliases');
+    await page.waitFor(`document.querySelector('.aliases-editor') && document.querySelector('#profile-alias')`, 'Profile aliases editor');
+    await page.setInputValue('#profile-alias', alias, ['input', 'change']);
+    await page.click('.aliases-editor__save', 'add alias control');
+    await page.waitFor(`document.querySelector('.aliases-editor__row a')?.getAttribute('href') === ${JSON.stringify(`/a/${alias}`)}`, 'created profile alias');
+    const aliasPath = await page.evaluate('document.querySelector(".aliases-editor__row a")?.getAttribute("href") || ""');
+    assert(aliasPath === `/a/${alias}`, `Alias path was ${aliasPath}, expected /a/${alias}.`);
+    await page.command('Page.navigate', { url: `${appUrl}${aliasPath}` });
+    await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page .identity-card')`, 'canonical profile after alias resolution', 30000);
+    const state = await page.evaluate(`({ path: location.pathname, aliasPath: ${JSON.stringify(aliasPath)}, canonical: Boolean(document.querySelector('.profile-shell-page .identity-card')) })`);
+    assert(state.path === `/${canonicalUsername}`, `Alias resolved to ${state.path} instead of canonical profile.`);
+    assert(state.canonical, 'Canonical profile did not render after alias resolution.');
+    await page.navigate(`${appUrl}/profile/settings`, 'Profile Studio after alias resolution');
+    await page.waitFor('document.querySelector(".profile-settings-page")', 'Profile Studio after alias resolution');
+    return state;
+  });
+
   await step('inline live preview is present, not an overlay', async () => {
     const state = await page.waitFor(`(() => {
       const preview = document.querySelector('.profile-settings-preview');

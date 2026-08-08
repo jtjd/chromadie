@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Dashboard parity Milestone 8 deployed — 2026-08-08
+
+- Added owner-managed Profile Studio aliases with up to three alternate paths
+  per profile. Each `/a/<alias>` path resolves to the existing canonical
+  `/<username>` profile URL.
+- Added the additive `20260808190000_profile_aliases` migration with RPC-only
+  browser access, RLS, username-policy and canonical-collision checks, bounded
+  public resolution, and profile-delete cascade cleanup.
+- Added direct-refresh and Pages redirect coverage, mobile/reduced-motion
+  settings states, and database-security assertions for limits, grants,
+  resolution, deletion, and cleanup.
+- Custom domains, API access, external cutover, and password-gate removal are
+  still separate operator-authorized work.
+
 ## Dashboard parity Milestone 7 deployed — 2026-08-08
 
 - Added three free structured templates—Signal Garden, Editorial, and Color

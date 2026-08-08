@@ -14,6 +14,7 @@
   import { getAppOrigin } from './lib/authUrls';
   import { VALID_VIEWS, VALID_LEADERBOARD_TABS, parseRouteLocation } from './lib/routes';
   import { getCanonicalProfilePath } from './lib/routeContract.js';
+  import { resolveProfileAlias } from './lib/profileAliases.js';
   import { normalizeHexColor } from './lib/utils.js';
   import { trackProductEvent } from './lib/productAnalytics.js';
   import { ACCOUNT_STATES } from './lib/authState';
@@ -32,6 +33,8 @@
   let challengeLoadRequestId = 0;
   let selectedProfileUsername = null;
   let profileRouteKind = null;
+  let aliasResolving = false;
+  let aliasResolutionRequestId = 0;
   let legacyProfile = false;
   let founderLaunchWindowActive = false;
   let routeInitialized = false;
@@ -71,6 +74,8 @@
 
   function parseRoute() {
     challengeLoadRequestId += 1;
+    aliasResolutionRequestId += 1;
+    aliasResolving = false;
     profileVisualFixture = getProfileVisualFixture();
     const parsed = parseRouteLocation(window.location.pathname, window.location.search);
     routeMode = parsed.routeMode;
@@ -85,6 +90,15 @@
       selectedUserId.set(null);
       legacyProfile = false;
       challengeData = null;
+    } else if (parsed.profileAlias) {
+      challengeData = null;
+      view = 'profile';
+      selectedProfileUsername = null;
+      profileRouteKind = 'alias';
+      aliasResolving = true;
+      selectedUserId.set(null);
+      legacyProfile = false;
+      void loadProfileAlias(parsed.profileAlias);
     } else if (parsed.profileUsername !== null) {
       challengeData = null;
       view = 'profile';
@@ -119,8 +133,32 @@
     trackCurrentRoute();
   }
 
+  async function loadProfileAlias(alias) {
+    const requestId = aliasResolutionRequestId;
+    const { profile, error } = await resolveProfileAlias(supabase, alias);
+    if (requestId !== aliasResolutionRequestId) return;
+
+    aliasResolving = false;
+    const canonicalPath = getCanonicalProfilePath(profile?.username);
+    if (error || !canonicalPath) {
+      routeMode = 'not-found';
+      view = 'home';
+      selectedProfileUsername = null;
+      profileRouteKind = null;
+      selectedUserId.set(null);
+      legacyProfile = false;
+      challengeData = null;
+      trackCurrentRoute();
+      return;
+    }
+
+    window.history.replaceState({}, '', `${canonicalPath}${window.location.search}${window.location.hash}`);
+    parseRoute();
+  }
+
   function syncRoute() {
     if (typeof window === 'undefined') return;
+    if (aliasResolving) return;
     if (!VALID_APP_ROUTES.has(routeMode) || routeMode !== 'app') return;
     if (view === 'prototype' && window.location.pathname === '/prototype/profile') return;
 
@@ -462,7 +500,8 @@
     challenge,
     authTab,
     authNext,
-    authUsername
+    authUsername,
+    aliasResolving: resolvingAlias
   }) {
     if (currentRouteMode === 'not-found') {
       return { componentKey: 'not-found', staticComponent: NotFound, componentProps: {}, loadingLabel: 'Opening page' };
@@ -483,6 +522,15 @@
         componentKey: currentRouteMode,
         componentProps: {},
         loadingLabel: 'Opening information'
+      };
+    }
+
+    if (resolvingAlias) {
+      return {
+        componentKey: 'profile-alias-loading',
+        staticComponent: RouteLoading,
+        componentProps: { label: 'Opening profile alias' },
+        loadingLabel: 'Opening profile alias'
       };
     }
 
@@ -636,14 +684,15 @@
     challenge: challengeData,
     authTab: authRouteTab,
     authNext: authRouteNext,
-    authUsername: authRouteUsername
+    authUsername: authRouteUsername,
+    aliasResolving
   });
 
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
   $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
   $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && view !== 'home' && view !== 'profile' && view !== 'profile-settings' && view !== 'shop' && (!$authUser || !$profileLoading);
   $: profileTitle = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || 'Profile';
-  $: profileModeVisible = routeMode === 'app' && view === 'profile' && !legacyProfile;
+  $: profileModeVisible = routeMode === 'app' && view === 'profile' && !legacyProfile && !aliasResolving;
   $: profileSettingsModeVisible = routeMode === 'app' && view === 'profile-settings';
   $: homeModeVisible = routeMode === 'app' && view === 'home';
   $: profileModeUsername = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || '';

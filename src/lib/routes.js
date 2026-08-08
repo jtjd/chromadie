@@ -2,6 +2,7 @@ import {
   decodeRouteSegment,
   getCanonicalProfilePath,
   isReservedRouteSegment,
+  normalizeProfileAliasSegment,
   normalizeUsernameSegment
 } from './routeContract.js';
 
@@ -35,16 +36,20 @@ export function parseRouteLocation(pathname = '/', search = '') {
   const routeProfileId = params.get('profile')
   const routeChallengeFrom = params.get('from')
   const challengeMatch = rawPath.match(/^\/c\/([^/]+)$/)
+  const aliasMatch = rawPath.match(/^\/a\/([^/]+)$/)
   const compatibilityProfileMatch = rawPath.match(/^\/u\/([^/]+)$/)
   const rootProfileMatch = rawPath.match(/^\/([^/]+)$/)
   const compatibilityUsername = compatibilityProfileMatch
     ? normalizeUsernameSegment(compatibilityProfileMatch[1])
     : null
+  const profileAlias = aliasMatch
+    ? normalizeProfileAliasSegment(aliasMatch[1])
+    : null
   const rootUsername = rootProfileMatch && !isReservedRouteSegment(rootProfileMatch[1])
     ? normalizeUsernameSegment(rootProfileMatch[1])
     : null
   const profileUsername = compatibilityUsername || rootUsername
-  const profileRouteKind = compatibilityUsername ? 'compatibility' : rootUsername ? 'root' : null
+  const profileRouteKind = profileAlias ? 'alias' : compatibilityUsername ? 'compatibility' : rootUsername ? 'root' : null
 
   let routeMode = 'not-found'
   if (rawPath === '/auth/callback') {
@@ -85,6 +90,7 @@ export function parseRouteLocation(pathname = '/', search = '') {
     challengeId: challengeMatch ? decodeRouteSegment(challengeMatch[1]) : null,
     challengeFrom: challengeMatch ? routeChallengeFrom || null : null,
     canonicalProfilePath: profileUsername ? getCanonicalProfilePath(profileUsername) : null,
+    ...(profileAlias ? { profileAlias } : {}),
     ...(authTab ? {
       authTab,
       authNext: params.get('next')?.slice(0, 512) || '',

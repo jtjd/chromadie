@@ -77,6 +77,15 @@ export function normalizeUsernameSegment(value) {
   return decoded;
 }
 
+// Aliases use the same deliberately narrow shape as usernames, but their
+// explicit /a/ namespace means a reserved top-level route name is still a
+// valid route segment here only when the database has explicitly granted it.
+export function normalizeProfileAliasSegment(value) {
+  const decoded = decodeRouteSegment(value);
+  if (!decoded || decoded.includes('/') || decoded.includes('\\') || !USERNAME_PATTERN.test(decoded)) return null;
+  return decoded;
+}
+
 export function isValidUsername(value) {
   return Boolean(normalizeUsernameSegment(value));
 }
@@ -89,4 +98,9 @@ export function getCanonicalProfilePath(username) {
 export function getCompatibilityProfilePath(username) {
   const normalized = normalizeUsernameSegment(username);
   return normalized ? `/u/${encodeURIComponent(normalized)}` : null;
+}
+
+export function getProfileAliasPath(alias) {
+  const normalized = normalizeProfileAliasSegment(alias);
+  return normalized ? `/a/${encodeURIComponent(normalized.toLowerCase())}` : null;
 }

@@ -6,6 +6,7 @@ import {
   RESERVED_ROUTE_SEGMENTS,
   getCanonicalProfilePath,
   getCompatibilityProfilePath,
+  getProfileAliasPath,
   isReservedRouteSegment,
   normalizeUsernameSegment
 } from '../src/lib/routeContract.js';
@@ -14,6 +15,7 @@ import { getBrowserPublicOrigin, getServerPublicOrigin } from '../src/lib/siteOr
 import { getSafeNextUrl } from '../src/lib/authUrls.js';
 import { isProtectedUsername } from '../src/lib/usernamePolicy.js';
 import { onRequestGet as compatibilityRoute } from '../functions/u/[[username]].js';
+import { onRequestGet as aliasRoute } from '../functions/a/[[alias]].js';
 import { onRequestGet as rootProfileRoute } from '../functions/[[username]].js';
 
 const [appSource, authPageSource, authSource] = await Promise.all([
@@ -42,6 +44,55 @@ test('root profile routing is case-normalized and /u remains compatible', () => 
   assert.equal(shortRoot.canonicalProfilePath, '/a');
   assert.equal(getCanonicalProfilePath('A'), '/a');
   assert.equal(getCompatibilityProfilePath('Z7'), '/u/Z7');
+});
+
+test('aliases have an explicit route namespace and resolve only to canonical profile paths', async () => {
+  const alias = parseRouteLocation('/a/Neon_Handle');
+  assert.equal(alias.routeMode, 'app');
+  assert.equal(alias.view, 'profile');
+  assert.equal(alias.profileRouteKind, 'alias');
+  assert.equal(alias.profileAlias, 'Neon_Handle');
+  assert.equal(alias.profileUsername, null);
+  assert.equal(getProfileAliasPath('Neon_Handle'), '/a/neon_handle');
+  assert.equal(parseRouteLocation('/a/Neon%252FHandle').routeMode, 'not-found');
+
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    assert.match(String(input), /get_public_profile_alias/);
+    assert.equal(JSON.parse(init.body).p_alias, 'Neon_Handle');
+    return Response.json({ alias: 'neon_handle', username: 'NeonUser' });
+  };
+  try {
+    const response = await aliasRoute({
+      request: new Request('https://chm.lol/a/Neon_Handle?utm_source=test'),
+      env: { VITE_SITE_URL: 'https://chm.lol', VITE_SUPABASE_URL: 'https://project.supabase.co', VITE_SUPABASE_KEY: 'anon-key' }
+    });
+    assert.equal(response.status, 307);
+    assert.equal(response.headers.get('location'), 'https://chm.lol/neonuser?utm_source=test');
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
+test('unknown and unsafe aliases never render a profile page', async () => {
+  const invalid = await aliasRoute({
+    request: new Request('https://chm.lol/a/%25'),
+    env: { VITE_SITE_URL: 'https://chm.lol' }
+  });
+  assert.equal(invalid.status, 404);
+
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json(null);
+  try {
+    const unknown = await aliasRoute({
+      request: new Request('https://chm.lol/a/missing'),
+      env: { VITE_SITE_URL: 'https://chm.lol', VITE_SUPABASE_URL: 'https://project.supabase.co', VITE_SUPABASE_KEY: 'anon-key' }
+    });
+    assert.equal(unknown.status, 404);
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
 });
 
 test('standalone auth routes carry only bounded, safe presentation state', () => {

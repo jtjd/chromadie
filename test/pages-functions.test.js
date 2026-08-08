@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { createHtmlHeaders } from '../functions/_publicPage.js';
 import { onRequest as previewMiddleware } from '../functions/_middleware.js';
 import { onRequestGet as renderProfileRoute } from '../functions/u/[[username]].js';
+import { onRequestGet as renderAliasRoute } from '../functions/a/[[alias]].js';
 import { onRequestGet as renderChallengeRoute } from '../functions/c/[[id]].js';
 import { onRequestGet as renderPrototypeRoute } from '../functions/prototype/profile.js';
 
@@ -90,6 +91,15 @@ test('profile route rejects PostgREST wildcard/filter input without an API reque
   assert.equal(response.headers.get('x-frame-options'), 'DENY');
   const html = await response.text();
   assert.match(html, /Profile not found/);
+});
+
+test('alias route rejects wildcard input before resolving a public profile', async () => {
+  const response = await renderAliasRoute({
+    request: new Request('https://chromadie.com/a/%25'),
+    env
+  });
+  assert.equal(response.status, 404);
+  assert.equal(response.headers.get('x-frame-options'), 'DENY');
 });
 
 test('challenge route rejects invalid identifiers and still serves a protected shell', async () => {

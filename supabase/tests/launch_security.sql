@@ -392,6 +392,36 @@ SELECT pg_temp.audit_assert(
   'public identity projection must exclude private account fields'
 );
 SELECT pg_temp.audit_assert(
+  (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.profile_aliases'::regclass)
+    AND NOT has_table_privilege('anon', 'public.profile_aliases', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_aliases', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_aliases', 'INSERT')
+    AND has_table_privilege('service_role', 'public.profile_aliases', 'SELECT'),
+  'profile aliases must remain RLS-protected and RPC-only'
+);
+SELECT pg_temp.audit_assert(
+  has_function_privilege('authenticated', 'public.get_my_profile_aliases()', 'EXECUTE')
+    AND has_function_privilege('anon', 'public.get_public_profile_alias(text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.get_public_profile_alias(text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.create_profile_alias(text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.delete_profile_alias(text)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.get_my_profile_aliases()', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.create_profile_alias(text)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.delete_profile_alias(text)', 'EXECUTE'),
+  'profile alias RPCs must be available only to their intended browser roles'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT bool_and(p.proconfig @> ARRAY['search_path=public, pg_catalog'])
+   FROM pg_proc p
+   WHERE p.oid IN (
+     'public.get_my_profile_aliases()'::regprocedure,
+     'public.get_public_profile_alias(text)'::regprocedure,
+     'public.create_profile_alias(text)'::regprocedure,
+     'public.delete_profile_alias(text)'::regprocedure
+   )),
+  'profile alias SECURITY DEFINER functions must have fixed search paths'
+);
+SELECT pg_temp.audit_assert(
   (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.username_blocklist'::regclass)
     AND (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.reserved_usernames'::regclass)
     AND NOT has_table_privilege('anon', 'public.username_blocklist', 'SELECT')
@@ -710,6 +740,50 @@ SELECT set_config(
   'request.jwt.claims',
   '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
   true
+);
+INSERT INTO audit_results VALUES ('alias_create', public.create_profile_alias('Neon_Handle'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true' AND payload->>'alias' = 'neon_handle'
+   FROM audit_results WHERE name = 'alias_create'),
+  'owner could not create a normalized profile alias'
+);
+INSERT INTO audit_results VALUES ('alias_repeat', public.create_profile_alias('NEON_HANDLE'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true' FROM audit_results WHERE name = 'alias_repeat'),
+  'profile alias creation was not idempotent'
+);
+INSERT INTO audit_results VALUES ('alias_second', public.create_profile_alias('pixel_room'));
+INSERT INTO audit_results VALUES ('alias_cleanup', public.create_profile_alias('cleanup_alias'));
+INSERT INTO audit_results VALUES ('alias_fourth', public.create_profile_alias('fourth_alias'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'false' AND payload->>'error' = 'You can have up to 3 aliases.'
+   FROM audit_results WHERE name = 'alias_fourth'),
+  'profile alias limit was not enforced'
+);
+INSERT INTO audit_results VALUES ('alias_reserved', public.create_profile_alias('leaderboard'));
+INSERT INTO audit_results VALUES ('alias_canonical', public.create_profile_alias('audit_one'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'false' FROM audit_results WHERE name = 'alias_reserved')
+    AND (SELECT payload->>'success' = 'false' FROM audit_results WHERE name = 'alias_canonical'),
+  'profile aliases bypassed reserved or canonical username protection'
+);
+INSERT INTO audit_results VALUES ('alias_owner', public.get_my_profile_aliases());
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true' AND jsonb_array_length(payload->'aliases') = 3
+   FROM audit_results WHERE name = 'alias_owner'),
+  'owner alias projection did not return the bounded alias set'
+);
+INSERT INTO audit_results VALUES ('alias_public', public.get_public_profile_alias('NEON_HANDLE'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'alias' = 'neon_handle' AND payload->>'username' = 'audit_one'
+   FROM audit_results WHERE name = 'alias_public'),
+  'public alias resolution did not return the canonical username only'
+);
+INSERT INTO audit_results VALUES ('alias_delete', public.delete_profile_alias('pixel_room'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true' FROM audit_results WHERE name = 'alias_delete')
+    AND NOT EXISTS (SELECT 1 FROM public.profile_aliases WHERE alias_key = 'pixel_room'),
+  'owner could not delete a profile alias'
 );
 INSERT INTO audit_results VALUES ('d2_equip_font', public.equip_item('name_font_editorial_serif'));
 SELECT pg_temp.audit_assert(
@@ -1394,6 +1468,13 @@ SELECT pg_temp.audit_assert(
     WHERE user_id = '10000000-0000-0000-0000-000000000001'
   ),
   'profile configuration did not follow account deletion'
+);
+SELECT pg_temp.audit_assert(
+  NOT EXISTS (
+    SELECT 1 FROM public.profile_aliases
+    WHERE user_id = '10000000-0000-0000-0000-000000000001'
+  ),
+  'profile aliases did not follow account deletion'
 );
 SELECT pg_temp.audit_assert(
   NOT EXISTS (

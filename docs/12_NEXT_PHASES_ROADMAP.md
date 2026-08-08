@@ -162,7 +162,12 @@ and must begin one at a time.
     owners can choose three free composition presets, while the existing
     `atelier_plus` entitlement unlocks the optional Atelier expression preset.
     See [`milestones/DASHBOARD_PARITY_M7_TEMPLATES_PREMIUM_EXPRESSION.md`](milestones/DASHBOARD_PARITY_M7_TEMPLATES_PREMIUM_EXPRESSION.md).
-11. Next: aliases, domains, and API access as separately authorized milestones.
+11. Completed and deployed: bounded owner-managed `/a/<alias>` profile paths
+    that redirect to canonical usernames, with no second public renderer. See
+    [`milestones/DASHBOARD_PARITY_M8_PROFILE_ALIASES.md`](milestones/DASHBOARD_PARITY_M8_PROFILE_ALIASES.md).
+12. Next: custom domains and API access remain separately authorized
+    milestones. External cutover and password-gate removal remain governed by
+    the Phase 13.1 certification checklist.
 
 ## Deferred themes
 

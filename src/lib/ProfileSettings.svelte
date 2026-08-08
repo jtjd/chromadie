@@ -16,6 +16,7 @@
   const SECTION_LOADERS = Object.freeze({
     overview: () => import('./ProfileStudioOverview.svelte'),
     'profile-identity': () => import('./IdentityEditor.svelte'),
+    'profile-aliases': () => import('./ProfileAliasesEditor.svelte'),
     'profile-media': () => import('./ProfileExpressionEditor.svelte'),
     'profile-content': () => import('./ProfileContentEditor.svelte'),
     'profile-widgets': () => import('./ProfileWidgetEditor.svelte'),
@@ -31,6 +32,7 @@
     { id: 'profile-insights', label: 'Insights', groupKey: 'top', icon: '◒' },
     { id: 'customize', label: 'Customize', groupKey: 'top', icon: '✦' },
     { id: 'profile-identity', label: 'Identity', groupKey: 'profile', groupLabel: 'Profile', icon: '◌' },
+    { id: 'profile-aliases', label: 'Aliases', groupKey: 'profile', groupLabel: 'Profile', icon: '↗' },
     { id: 'profile-media', label: 'Media', groupKey: 'profile', groupLabel: 'Profile', icon: '▧' },
     { id: 'profile-content', label: 'About & projects', groupKey: 'profile', groupLabel: 'Profile', icon: '✎' },
     { id: 'profile-widgets', label: 'Provider widgets', groupKey: 'profile', groupLabel: 'Profile', icon: '▶' },
@@ -45,6 +47,7 @@
     customize: 'customize',
     appearance: 'customize',
     'profile-identity': 'profile-identity',
+    'profile-aliases': 'profile-aliases',
     'profile-media': 'profile-media',
     'profile-content': 'profile-content',
     'profile-widgets': 'profile-widgets',
@@ -53,6 +56,7 @@
     'profile-insights': 'profile-insights',
     'profile-collection': 'profile-collection',
     identity: 'profile-identity',
+    aliases: 'profile-aliases',
     expression: 'profile-media',
     media: 'profile-media',
     content: 'profile-content',
@@ -392,6 +396,8 @@
             <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} />
           {:else if activeSection === 'profile-identity'}
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} on:identitysaved={updateIdentity} />
+          {:else if activeSection === 'profile-aliases'}
+            <svelte:component this={sectionComponents[activeSection]} />
           {:else if activeSection === 'profile-media'}
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} on:expressionchange={updateExpression} />
           {:else if activeSection === 'profile-content'}

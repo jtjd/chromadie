@@ -49,6 +49,16 @@ public-profile security, CSP, or performance boundary.
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Keep aliases bounded and canonical
+
+Profile aliases use an explicit `/a/` namespace and resolve only to the
+existing canonical `/<username>` profile route. Owners can create at most
+three lowercase ASCII aliases through authenticated RPCs; public resolution
+returns only the alias and canonical username. The alias table is RLS-enabled
+with no browser table grants, and profile deletion cascades aliases. This
+improves shareability and profile memory without adding a second renderer,
+metadata surface, custom-domain contract, or API access model.
+
 ## 2026-08-08 — Keep standalone additions inside the homepage visual contract
 
 Standalone auth routes reuse `SiteModeHeader` and the homepage canvas tokens

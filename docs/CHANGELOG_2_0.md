@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Add bounded profile aliases
+
+- Profile Studio now lets owners create up to three memorable alternate paths.
+- `/a/<alias>` redirects to the canonical public profile URL, so shared links
+  keep one identity and one metadata surface.
+- Aliases use the existing username safety rules and disappear with the
+  profile; custom domains and API access remain future milestones.
+
 ## 2026-08-08 — Add structured profile templates and optional Atelier expression
 
 - Profile Studio now offers Signal Garden, Editorial, and Color Archive as

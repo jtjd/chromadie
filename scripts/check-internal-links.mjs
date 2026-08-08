@@ -23,7 +23,7 @@ for (const file of roots.flatMap(filesIn)) {
   const source = fs.readFileSync(file, 'utf8');
   for (const match of source.matchAll(linkPattern)) {
     const href = match[1];
-    if (!allowedPaths.has(href) && !href.startsWith('/u/') && !href.startsWith('/c/')) {
+    if (!allowedPaths.has(href) && !href.startsWith('/u/') && !href.startsWith('/a/') && !href.startsWith('/c/')) {
       failures.push(`${file}: ${href}`);
     }
   }
