@@ -119,8 +119,9 @@ full-viewport atmosphere are unchanged. See [`PHASE_14_REPORT.md`](PHASE_14_REPO
 
 ## Dashboard Parity Program
 
-Status: Milestones 0, 1A, 1B, 2, and 3 are complete locally. Later milestones
-remain planned and must begin one at a time.
+Status: Milestones 0, 1A, 1B, 2, 3, 4, 5, and 6 are complete and the
+corresponding linked migrations are deployed. Later milestones remain planned
+and must begin one at a time.
 
 1. Completed: close the release baseline and replace the aggregate JavaScript
    release blocker with a route-first performance policy in
@@ -138,11 +139,11 @@ remain planned and must begin one at a time.
    recolors the roll UI, and every control has a tested preview and public
    renderer consumer. See the customization audit and compositor follow-ups in
    [`PROGRESS.md`](PROGRESS.md).
-5. Completed locally: reusable owner-scoped avatar/background media assets with
+5. Completed and deployed: reusable owner-scoped avatar/background media assets with
    validated WebP objects, private library RLS, staged registration, and
    selection/deletion in Profile Studio. See
    [`milestones/DASHBOARD_PARITY_M2_MEDIA_LIBRARY.md`](milestones/DASHBOARD_PARITY_M2_MEDIA_LIBRARY.md).
-6. Completed locally: structured About/Projects content with bounded plain text,
+6. Completed and deployed: structured About/Projects content with bounded plain text,
    HTTPS links, owner drafts, publishing, conflict handling, and live preview.
    See [`milestones/DASHBOARD_PARITY_M3_CONTENT_REGIONS.md`](milestones/DASHBOARD_PARITY_M3_CONTENT_REGIONS.md).
 7. Completed and deployed: allowlisted provider widgets with bounded Spotify
@@ -153,13 +154,17 @@ remain planned and must begin one at a time.
    existing bounded projection, with owner-controlled aggregate-count privacy
    and the existing moderation boundary preserved. See
    [`milestones/DASHBOARD_PARITY_M5_POSITIVE_SOCIAL.md`](milestones/DASHBOARD_PARITY_M5_POSITIVE_SOCIAL.md).
-9. Next: privacy-conscious analytics, templates/premium expression, and
-   finally aliases/domains/API access as separately authorized milestones.
+9. Completed and deployed: privacy-conscious profile insights with explicit
+   visitor consent, owner opt-in, daily aggregate storage, owner-only reads,
+   and 90-day retention. See
+   [`milestones/DASHBOARD_PARITY_M6_PRIVACY_ANALYTICS.md`](milestones/DASHBOARD_PARITY_M6_PRIVACY_ANALYTICS.md).
+10. Next: structured templates and premium expression, followed by aliases,
+    domains, and API access as separately authorized milestones.
 
 ## Deferred themes
 
 Richer expression data, broader discovery, operational
-moderation tooling, analytics ownership and retention, payment/webhook
+moderation tooling, raw analytics ownership and retention, payment/webhook
 entitlement issuance, private messaging, notifications, comparisons, and any
 SvelteKit migration remain separate proposals. Each requires its own scope,
 security review, migration plan, and acceptance gate.

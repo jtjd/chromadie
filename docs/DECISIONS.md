@@ -1,5 +1,16 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Keep profile insights aggregate, consented, and owner-private
+
+Profile insights use two independent opt-ins: the visitor's existing product
+event consent and the profile owner's insights preference. The server stores
+only one bounded daily bucket per profile, with a 90-day retention boundary;
+it does not retain viewer identity, IP address, exact visit time, user agent,
+or raw event rows. Reads and settings writes are authenticated owner RPCs,
+while the public recorder can write only the aggregate counter. This gives the
+profile a personal discovery signal without creating a visitor database or
+coupling analytics to gameplay, social state, or moderation.
+
 ## 2026-08-08 — Keep public social positive, bounded, and owner-controlled
 
 The public profile now renders the existing Phase 7 favorite, reaction,

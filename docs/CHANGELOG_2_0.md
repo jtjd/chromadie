@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Add private aggregate profile insights
+
+- Profile Studio can show owners daily public-view totals and active days when
+  they explicitly enable the feature.
+- A view is counted only when the visitor has granted product-event consent;
+  only daily aggregates are retained, with no visitor identity or exact visit
+  history.
+- The existing profile, social, appearance, and gameplay contracts remain
+  unchanged.
+
 ## 2026-08-08 — Bring positive social into public profiles
 
 - Public profiles now expose bounded favorite, Spark/Glow/Cheer reaction, and

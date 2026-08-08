@@ -1,5 +1,22 @@
 # Chromadie 2.0 Progress
 
+## Dashboard parity Milestone 6 deployed — 2026-08-08
+
+- Added a lazy Profile Studio Insights surface with explicit owner opt-in,
+  aggregate totals, active days, daily view bars, and loading/error/empty,
+  mobile, keyboard, and reduced-motion states.
+- Added a separate consent-aware public-view recorder. It requires the
+  visitor's existing product-event consent and the owner's insights opt-in,
+  then uses a browser-local profile/day key before calling the bounded RPC.
+- Added and deployed `20260808170000_profile_insights`: daily-only aggregate
+  storage, no browser table grants, owner-only reads/settings, a one-million
+  daily bucket cap, and 90-day cleanup. Profile deletion cascades the rows.
+- Product-event measurement remains page-local; this milestone does not add a
+  raw event sink, visitor identity, export, moderation queue, or gameplay
+  coupling. Local reset, schema lint, database-security, targeted contract
+  tests, the linked migration, and the Chromium browser smoke pass. Evidence:
+  `/tmp/chromadie-profile-studio-smoke-InKDJi`.
+
 ## Dashboard parity Milestone 5 deployed — 2026-08-08
 
 - Wired the existing bounded social projection into public profiles so

@@ -165,6 +165,34 @@ SELECT pg_temp.audit_assert(
   'social SECURITY DEFINER RPCs must have a fixed search_path'
 );
 SELECT pg_temp.audit_assert(
+  (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.profile_view_daily'::regclass)
+    AND NOT has_table_privilege('anon', 'public.profile_view_daily', 'SELECT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_view_daily', 'SELECT')
+    AND NOT has_table_privilege('anon', 'public.profile_view_daily', 'INSERT')
+    AND NOT has_table_privilege('authenticated', 'public.profile_view_daily', 'INSERT'),
+  'profile insights aggregate table must remain RLS-protected and service-owned'
+);
+SELECT pg_temp.audit_assert(
+  has_function_privilege('anon', 'public.record_public_profile_view(text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.record_public_profile_view(text)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.get_my_profile_insights(integer)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.update_my_profile_insights_settings(boolean)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.get_my_profile_insights(integer)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.update_my_profile_insights_settings(boolean)', 'EXECUTE'),
+  'profile insights RPCs must expose recording separately from owner reads and settings'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT bool_and(p.proconfig @> ARRAY['search_path=public'])
+   FROM pg_proc p
+   WHERE p.oid IN (
+     'public.record_public_profile_view(text)'::regprocedure,
+     'public.get_my_profile_insights(integer)'::regprocedure,
+     'public.update_my_profile_insights_settings(boolean)'::regprocedure,
+     'public.cleanup_profile_view_daily()'::regprocedure
+   )),
+  'profile insights SECURITY DEFINER functions must have a fixed search_path'
+);
+SELECT pg_temp.audit_assert(
   NOT has_table_privilege('anon', 'public.profile_configurations', 'SELECT')
     AND NOT has_table_privilege('authenticated', 'public.profile_configurations', 'SELECT')
     AND NOT has_table_privilege('authenticated', 'public.profile_configurations', 'INSERT')

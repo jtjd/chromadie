@@ -187,6 +187,22 @@ Public positive social summary visibility:
   visible counts by setting the new field to `true`; it must not remove social
   rows, reports, guestbook notes, or existing settings RPCs.
 
+Privacy-conscious profile insights:
+
+- `migrations/20260808170000_profile_insights.sql` adds the owner-opt-in
+  `profile_insights_enabled` setting and the RLS-protected
+  `profile_view_daily` aggregate table. It exposes only a bounded public
+  recording RPC and authenticated owner read/settings RPCs; `anon` and
+  `authenticated` receive no table grants.
+- The table stores profile/day/count only, caps each bucket at one million,
+  cascades on profile deletion, and is cleaned after 90 days by the versioned
+  pg_cron schedule. The browser adds explicit product-event consent and a
+  local profile/day dedupe key before recording.
+- This migration does not create raw event storage, visitor identity, export,
+  moderation, gameplay, or ranking data. Disable the owner setting to stop new
+  collection; do not remove the aggregate table or RPC boundary during the
+  migration period.
+
 Version-controlled cron schedule:
 
 - `update_cotw()` runs every Monday at `00:00 UTC`.

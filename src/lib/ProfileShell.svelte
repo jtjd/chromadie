@@ -27,6 +27,7 @@
   import FeaturedCollection from './FeaturedCollection.svelte';
   import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
   import { trackProductEvent } from './productAnalytics.js';
+  import { recordPublicProfileView } from './profileViewAnalytics.js';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
@@ -241,13 +242,15 @@
 
     if (targetProfile && activeProfileKey && trackedProfileViewKey !== activeProfileKey) {
       trackedProfileViewKey = activeProfileKey;
-      trackProductEvent('public_profile_view', {
-        viewer: isOwnProfileTarget({
+      const viewingOwnProfile = isOwnProfileTarget({
           isAuthenticated: $isAuthenticated,
           sessionUserId: $session?.user?.id,
           profileId: targetProfile?.id
-        }) ? 'owner' : 'visitor'
+        });
+      trackProductEvent('public_profile_view', {
+        viewer: viewingOwnProfile ? 'owner' : 'visitor'
       });
+      if (!viewingOwnProfile) void recordPublicProfileView(supabase, targetProfile.username);
     }
   }
 

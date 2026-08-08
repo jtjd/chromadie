@@ -12,10 +12,10 @@ Product events are opt-in. The preference is stored only as
 An unknown or denied preference produces no product events.
 
 The current adapter dispatches a redacted `chromadie:product-event`
-`CustomEvent` in the page. It does not call a network endpoint, write to
-Supabase, create cookies, or persist event records. There is no server-side
-event sink, retention job, export path, or visitor-analytics database in this
-slice.
+`CustomEvent` in the page. It does not call a network endpoint, write raw
+product events to Supabase, create cookies, or persist event records. The
+separate owner-opt-in profile-insights boundary below is not a replacement for
+this adapter and does not create a raw product-event sink.
 
 The operational owner for a future production sink is **not assigned**. A
 sink cannot be added until Product, Privacy, and Operations approve the event
@@ -56,6 +56,34 @@ metadata.
   before it is enabled. It must not infer consent from authentication.
 - The event contract must remain useful when consent is absent; product flows
   cannot depend on event delivery.
+
+## Owner profile-insights boundary
+
+The deployed `20260808170000_profile_insights` migration is a deliberately
+separate aggregate recorder for the north-star profile surface. It is enabled
+only when both conditions are true:
+
+- the current visitor has explicitly granted product-event consent; and
+- the profile owner has explicitly enabled aggregate public-view counts.
+
+The browser keeps a bounded local profile/day recency key and calls only
+`record_public_profile_view(p_username text)`. The database retains
+`profile_id`, UTC `view_date`, and a capped `view_count`—never a viewer id,
+username as an event property, IP address, user agent, exact visit time, or raw
+event row. Profile deletion cascades the daily rows, and the scheduled cleanup
+removes buckets older than 90 days.
+
+Only the authenticated owner can call `get_my_profile_insights` or
+`update_my_profile_insights_settings`. The public recorder cannot read the
+aggregate and does not affect profile rendering, social actions, discovery,
+roll eligibility, scoring, rewards, purchases, or moderation. Revoking visitor
+consent prevents future recorder calls; aggregate rows cannot be tied back to
+that visitor.
+
+This is not an analytics export, moderation log, visitor directory, or raw
+event sink. Any broader measurement provider still requires a separate
+Product/Privacy/Operations review of fields, retention, deletion, access, and
+incident ownership.
 
 ## Implementation ownership
 
