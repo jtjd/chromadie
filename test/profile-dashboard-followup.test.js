@@ -76,6 +76,11 @@ test('preview renders bounded media and never exposes mutations', async () => {
   ]);
   assert.match(settings, /previewCollectionItems/);
   assert.match(settings, /previewScores/);
+  assert.match(settings, /previewProfile = context\?\.targetProfile/);
+  assert.match(settings, /void loadPreviewComponent\(\)/);
+  assert.match(settings, /slot="preview"/);
+  assert.doesNotMatch(settings, /function openPreview/);
+  assert.doesNotMatch(settings, /profile-preview-drawer__backdrop/);
   assert.match(shell, /\{#if backgroundSrc\}/);
   assert.match(shell, /profile-shell-page--preview \.profile-shell__media-background \{ position: absolute/);
   assert.match(shell, /if \(previewMode \|\| !targetProfile\?\.id/);

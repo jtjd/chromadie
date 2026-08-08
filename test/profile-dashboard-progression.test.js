@@ -17,12 +17,17 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
   assert.match(app, /componentProps: \{ logoutInProgress \}/);
   assert.match(settings, /<ProfileDashboardShell/);
   assert.match(settings, /on:sectionchange/);
+  assert.match(settings, /showPreview=\{true\}/);
+  assert.match(settings, /slot="preview"/);
+  assert.match(settings, /profile-settings-preview__body/);
+  assert.doesNotMatch(settings, /profile-preview-drawer__backdrop/);
   assert.match(shell, /profile-dashboard-shell__mobile-bar/);
+  assert.match(shell, /profile-dashboard-shell--with-preview/);
+  assert.match(shell, /slot name="preview"/);
   assert.match(shell, /trapFocus\(event, drawer\)/);
   assert.match(shell, /restoreFocus\(menuTrigger\)/);
   assert.match(shell, /prefers-reduced-motion/);
   assert.match(styles, /\.app-main--profile-settings/);
-  assert.doesNotMatch(styles, /\.profile-settings-page__workspace/);
   assert.match(settings, /profile-settings-page__content/);
 });
 

@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Persistent Profile Studio preview — 2026-08-07
+
+- Replaced the temporary live-preview drawer with a persistent named preview
+  pane in the Profile Studio dashboard.
+- Kept the real preview-mode `ProfileShell`, normalized draft configuration,
+  bounded profile context, deferred media behavior, and server-authoritative
+  editor/equip contracts unchanged.
+- Added a responsive wide-screen split layout and a stacked narrow/mobile
+  layout, with the preview continuously mounted while dashboard sections
+  change.
+- Added source-contract coverage for the persistent preview and removal of the
+  old overlay path.
+
 ## Full-page appearance dashboard — 2026-08-05
 
 - Replaced duplicate settings chrome with the shared homepage header and a

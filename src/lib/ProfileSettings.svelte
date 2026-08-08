@@ -1,6 +1,6 @@
 <script>
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import { focusFirstElement, restoreFocus, trapFocus } from './a11y.js';
+  import { createEventDispatcher, onMount } from 'svelte';
+  import { restoreFocus, trapFocus } from './a11y.js';
   import { authUser, equippedItems, isAuthenticated, profile, refreshProfileState, session } from './stores';
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData.js';
@@ -83,11 +83,8 @@
   let requestId = 0;
   let activeSection = 'overview';
   let configurationPreview = null;
-  let previewOpen = false;
   let PreviewComponent = null;
-  let previewTrigger = null;
-  let previewDialog = null;
-  let previousBodyOverflow = '';
+  let previewError = '';
   let sectionComponents = {};
   let sectionLoading = false;
   let sectionRequestId = 0;
@@ -110,7 +107,11 @@
   $: profilePath = context?.targetProfile?.username ? getCanonicalProfilePath(context.targetProfile.username) : '/profile';
   $: activeLabel = SETTINGS_SECTIONS.find(section => section.id === activeSection)?.label || 'Overview';
   $: previewProfileConfig = configurationPreview || context?.profileConfig?.draft;
+  $: previewProfile = context?.targetProfile
+    ? { ...context.targetProfile, equipped_cosmetics: $equippedItems || context.targetProfile.equipped_cosmetics || {} }
+    : null;
   onMount(() => {
+    void loadPreviewComponent();
     const getSectionFromLocation = () => {
       const rawHash = window.location.hash.replace(/^#/, '');
       const sectionId = HASH_ALIASES[rawHash] || rawHash;
@@ -149,10 +150,6 @@
       window.removeEventListener('beforeunload', beforeUnload);
       window.removeEventListener('chromadie:navigation-request', navigationGuard);
     };
-  });
-
-  onDestroy(() => {
-    if (previewOpen && typeof document !== 'undefined') document.body.style.overflow = previousBodyOverflow;
   });
 
   function setActiveSection(sectionId, { push = true } = {}) {
@@ -320,28 +317,15 @@
   function handleSocialChange() { void loadSettings(); }
   function updateIdentity(event) { context = { ...context, targetProfile: { ...context.targetProfile, bio: event.detail?.bio ?? null } }; }
 
-  async function openPreview(event) {
-    previewTrigger = event.currentTarget;
-    if (!PreviewComponent) {
+  async function loadPreviewComponent() {
+    if (PreviewComponent) return;
+    previewError = '';
+    try {
       const module = await import('./ProfileShell.svelte');
       PreviewComponent = module.default;
+    } catch (loadError) {
+      previewError = loadError instanceof Error ? loadError.message : 'The live preview could not be loaded.';
     }
-    previewOpen = true;
-    previousBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(() => focusFirstElement(previewDialog));
-  }
-
-  function closePreview() {
-    previewOpen = false;
-    if (typeof document !== 'undefined') document.body.style.overflow = previousBodyOverflow;
-    requestAnimationFrame(() => restoreFocus(previewTrigger));
-  }
-
-  function handlePreviewKeydown(event) {
-    if (!previewOpen) return;
-    if (event.key === 'Escape') { event.preventDefault(); closePreview(); return; }
-    trapFocus(event, previewDialog);
   }
 
   function handleDirtyPromptKeydown(event) {
@@ -357,11 +341,12 @@
   function handleAccountDeleted(event) { dispatch('accountdeleted', event.detail); }
 </script>
 
-<svelte:window on:keydown={handlePreviewKeydown} on:keydown={handleDirtyPromptKeydown} />
+<svelte:window on:keydown={handleDirtyPromptKeydown} />
 
 <ProfileDashboardShell
   sections={[...SETTINGS_SECTIONS]}
   {activeSection}
+  showPreview={true}
   on:sectionchange={handleDashboardSectionChange}
 >
   <div class="profile-settings-page" aria-busy={loading}>
@@ -372,7 +357,7 @@
     {:else if context}
       <header class="profile-settings-page__toolbar">
         <div><p class="profile-settings-page__breadcrumb">Dashboard <span aria-hidden="true">›</span> {activeLabel}</p><h1>{activeLabel}</h1></div>
-        <div class="profile-settings-page__toolbar-actions"><a href={profilePath} on:click={handleViewProfile}>View profile ↗</a><button type="button" on:click={openPreview}>Live preview</button></div>
+        <div class="profile-settings-page__toolbar-actions"><a href={profilePath} on:click={handleViewProfile}>View profile ↗</a></div>
       </header>
       {#if context.dataWarning}<p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>{/if}
 
@@ -405,6 +390,25 @@
       </div>
     {/if}
   </div>
+
+  <div slot="preview" class="profile-settings-preview">
+    <header class="profile-settings-preview__header">
+      <div>
+        <p class="profile-settings-preview__eyebrow">Profile canvas</p>
+        <h2>Live preview</h2>
+      </div>
+      <span class="profile-settings-preview__status"><span aria-hidden="true"></span> Draft</span>
+    </header>
+    <div class="profile-settings-preview__body">
+      {#if PreviewComponent}
+        <svelte:component this={PreviewComponent} previewMode={true} previewProfile={previewProfile} previewProfileConfig={previewProfileConfig} previewScores={context?.targetScores || []} previewTimelineEvents={context?.timelineEvents || []} previewCollectionItems={context?.collectionItems || []} previewAllAchievements={context?.allAchievements || []} />
+      {:else if previewError}
+        <div class="profile-settings-preview__loading" role="alert"><span aria-hidden="true">!</span><strong>Preview unavailable</strong><p>{previewError}</p><button type="button" on:click={loadPreviewComponent}>Retry preview</button></div>
+      {:else}
+        <div class="profile-settings-preview__loading" role="status" aria-live="polite"><span aria-hidden="true">✦</span> Preparing your live canvas…</div>
+      {/if}
+    </div>
+  </div>
 </ProfileDashboardShell>
 
 {#if showDirtyPrompt}
@@ -413,17 +417,6 @@
       <h2 id="profile-settings-prompt-title">Unsaved changes</h2>
       <p>Stay to keep editing or discard this draft?</p>
       <div><button bind:this={dirtyPromptPrimary} type="button" on:click={stayOnPage}>Stay</button><button type="button" class="profile-settings-prompt__discard" on:click={discardAndContinue}>Discard</button></div>
-    </div>
-  </div>
-{/if}
-
-{#if previewOpen}
-  <div class="profile-preview-drawer__backdrop" role="presentation" on:click|self={closePreview}>
-    <div class="profile-preview-drawer" bind:this={previewDialog} role="dialog" aria-modal="true" aria-labelledby="profile-preview-title">
-      <header class="profile-preview-drawer__header"><h2 id="profile-preview-title">Live preview</h2><button class="profile-preview-drawer__close" type="button" aria-label="Close live preview" on:click={closePreview}>×</button></header>
-      <div class="profile-preview-drawer__body">
-        {#if PreviewComponent}<svelte:component this={PreviewComponent} previewMode={true} previewProfile={context.targetProfile} previewProfileConfig={previewProfileConfig} previewScores={context.targetScores} previewTimelineEvents={context.timelineEvents} previewCollectionItems={context.collectionItems} previewAllAchievements={context.allAchievements} />{/if}
-      </div>
     </div>
   </div>
 {/if}
@@ -440,12 +433,20 @@
   .profile-settings-page__content { min-width: 0; }
   .profile-settings-page__state { display: grid; min-height: 16rem; place-items: center; gap: .6rem; color: var(--site-muted, #aaa8b0); }
   .profile-settings-page__state h1 { margin: 0; font-size: 1.2rem; }
-  .profile-preview-drawer__backdrop { position: fixed; inset: 0; z-index: 100; display: flex; justify-content: flex-end; background: rgba(0,0,0,.58); }
-  .profile-preview-drawer { display: grid; grid-template-rows: auto minmax(0,1fr); width: min(46rem, 50vw); height: 100%; border-left: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); background: var(--site-deep, #090a0d); box-shadow: -1.5rem 0 4rem rgba(0,0,0,.34); }
-  .profile-preview-drawer__header { display: flex; align-items: center; justify-content: space-between; min-height: 3.8rem; padding: .7rem 1rem; border-bottom: 1px solid var(--site-line, rgba(255,255,255,.08)); }
-  .profile-preview-drawer__header h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .85rem; }
-  .profile-preview-drawer__close { width: 2rem; height: 2rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: 1.2rem; cursor: pointer; }
-  .profile-preview-drawer__body { min-height: 0; overflow: auto; }
+  .profile-settings-preview { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; height: 100%; }
+  .profile-settings-preview__header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 4.6rem; padding: .85rem 1rem; border-bottom: 1px solid var(--site-line, rgba(255,255,255,.08)); }
+  .profile-settings-preview__eyebrow { margin: 0 0 .3rem; color: var(--site-faint, #7d7e87); font: .58rem/1 var(--site-mono, monospace); letter-spacing: .12em; text-transform: uppercase; }
+  .profile-settings-preview__header h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .95rem; letter-spacing: -.02em; }
+  .profile-settings-preview__status { display: inline-flex; align-items: center; gap: .4rem; color: var(--site-muted, #aaa8b0); font: .62rem/1 var(--site-mono, monospace); white-space: nowrap; }
+  .profile-settings-preview__status span { width: .42rem; height: .42rem; border-radius: 50%; background: #6de2a4; box-shadow: 0 0 .8rem rgba(109,226,164,.6); }
+  .profile-settings-preview__body { min-height: 0; overflow: auto; padding: .9rem; background: radial-gradient(circle at 50% 0%, rgba(205,210,255,.06), transparent 42%), var(--site-deep, #090a0d); }
+  .profile-settings-preview__body :global(.profile-shell-page--preview) { height: auto; min-height: 100%; overflow: visible; }
+  .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; }
+  .profile-settings-preview__loading { display: grid; place-items: center; min-height: 18rem; gap: .55rem; color: var(--site-muted, #aaa8b0); font-size: .72rem; text-align: center; }
+  .profile-settings-preview__loading span { color: var(--site-accent, #cdd2ff); font-size: 1.2rem; }
+  .profile-settings-preview__loading strong { color: var(--site-ink, #f2f0eb); font-size: .85rem; }
+  .profile-settings-preview__loading p { max-width: 20rem; margin: 0; color: var(--site-faint, #7d7e87); line-height: 1.45; }
+  .profile-settings-preview__loading button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .68rem; cursor: pointer; }
   .profile-settings-prompt__backdrop { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 1rem; background: rgba(0,0,0,.62); }
   .profile-settings-prompt { width: min(24rem, 100%); padding: 1.1rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .55rem; background: var(--site-raised, #111319); box-shadow: 0 1.5rem 4rem rgba(0,0,0,.4); }
   .profile-settings-prompt h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: 1rem; }
@@ -453,6 +454,5 @@
   .profile-settings-prompt > div { display: flex; justify-content: flex-end; gap: .5rem; }
   .profile-settings-prompt button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .68rem; cursor: pointer; }
   .profile-settings-prompt__discard { border-color: #ff9da9 !important; color: #ffb4bd !important; }
-  @media (max-width: 64rem) { .profile-preview-drawer { width: 100%; } }
-  @media (prefers-reduced-motion: reduce) { .profile-preview-drawer__backdrop { scroll-behavior: auto; } }
+  @media (prefers-reduced-motion: reduce) { .profile-settings-preview__body { scroll-behavior: auto; } }
 </style>

@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-07 — Keep the Studio preview live
+
+- Profile Studio now keeps the real profile canvas visible beside the dashboard
+  on wide screens, so appearance and layout changes can be reviewed without
+  opening or closing a temporary overlay.
+- On narrower screens the same preview becomes a dedicated section below the
+  editor, preserving the live relationship without obscuring dashboard work.
+- The preview continues to show normalized draft values while save, publish,
+  equip, roll, reward, and progression actions remain behind their existing
+  authority boundaries.
+
 ## 2026-08-05 — Compact full-page customization dashboard
 
 - `/profile/settings` now uses the homepage header and a grouped sidebar with

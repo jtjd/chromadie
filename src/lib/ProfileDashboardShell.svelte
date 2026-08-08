@@ -5,6 +5,7 @@
   export let activeSection = 'overview';
   /** @type {any[]} */
   export let sections = [];
+  export let showPreview = false;
 
   const dispatch = createEventDispatcher();
   let mobileOpen = false;
@@ -79,7 +80,7 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="profile-dashboard-shell" class:profile-dashboard-shell--drawer-open={mobileOpen}>
+<div class="profile-dashboard-shell" class:profile-dashboard-shell--drawer-open={mobileOpen} class:profile-dashboard-shell--with-preview={showPreview}>
   {#if mobileOpen}
     <button class="profile-dashboard-shell__backdrop" type="button" aria-label="Close dashboard navigation" on:click={closeMobileMenu}></button>
   {/if}
@@ -123,6 +124,12 @@
       <slot />
     </div>
   </div>
+
+  {#if showPreview}
+    <aside class="profile-dashboard-shell__preview" aria-label="Live profile preview">
+      <slot name="preview" />
+    </aside>
+  {/if}
 </div>
 
 <style>
@@ -134,6 +141,7 @@
     color: var(--site-ink, var(--color-ink));
     background: var(--site-deep, var(--color-canvas-deep));
   }
+  .profile-dashboard-shell--with-preview { grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr) minmax(21rem, 34vw); }
   .profile-dashboard-shell__sidebar {
     position: sticky;
     top: 4.1rem;
@@ -162,6 +170,7 @@
   .profile-dashboard-shell__nav button.active .profile-dashboard-shell__nav-icon { color: var(--site-accent, var(--color-accent)); }
   .profile-dashboard-shell__main { min-width: 0; }
   .profile-dashboard-shell__content { width: 100%; min-height: calc(100dvh - 4.1rem); padding: clamp(1rem, 2.4vw, 2.25rem) clamp(.85rem, 2.6vw, 3rem) 4rem; }
+  .profile-dashboard-shell__preview { position: sticky; top: 0; z-index: 10; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; height: calc(100dvh - 4.75rem); overflow: hidden; border-left: 1px solid var(--site-line, var(--color-line-subtle)); background: color-mix(in srgb, var(--site-deep, #090a0d) 94%, transparent); }
   .profile-dashboard-shell__mobile-bar { display: none; }
   .profile-dashboard-shell__backdrop { display: none; }
   @media (max-width: 64rem) {
@@ -175,6 +184,7 @@
     .profile-dashboard-shell__mobile-bar button { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .72rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
     .profile-dashboard-shell__mobile-bar > span { color: var(--site-ink, var(--color-ink-strong)); font-size: .76rem; }
     .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding-top: 1rem; }
+    .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: relative; top: auto; height: min(78dvh, 52rem); min-height: 32rem; border-top: 1px solid var(--site-line, var(--color-line-subtle)); border-left: 0; }
   }
   @media (prefers-reduced-motion: reduce) { .profile-dashboard-shell__sidebar, .profile-dashboard-shell__nav button { transition-duration: .001ms; } }
 </style>

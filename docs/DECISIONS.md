@@ -2,6 +2,17 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-07 — Keep the Profile Studio preview persistent
+
+The authenticated Profile Studio now mounts the existing preview-mode
+`ProfileShell` in a named dashboard preview pane instead of opening it in a
+temporary focus-trapped drawer. Wide layouts keep the editor and preview
+visible together; narrower layouts stack the preview below the editor. The
+preview still receives only normalized draft/profile data and never owns save,
+publish, equip, roll, reward, or progression authority. The previous drawer
+was removed so there is one consistent live-canvas relationship across
+desktop and mobile.
+
 ## 2026-08-05 — Make Profile Studio a full-page dashboard and make progression tangible
 
 The owner experience uses a full-page dashboard shell at `/profile/settings`.
