@@ -3,6 +3,8 @@ import {
   CHROMADIE_PLUS_AMOUNT,
   CHROMADIE_PLUS_CURRENCY,
   CHROMADIE_PLUS_ENTITLEMENT,
+  CHROMADIE_PLUS_TAX_CODE,
+  CHROMADIE_STRIPE_API_VERSION,
   stripeRequest
 } from '../_shared/billing-core.js';
 import { corsHeaders, getBearerToken, getSiteUrl, jsonResponse } from '../_shared/http.ts';
@@ -39,11 +41,13 @@ Deno.serve(async request => {
     const siteUrl = getSiteUrl();
     const body: Record<string, string> = {
       mode: 'payment',
+      'managed_payments[enabled]': 'true',
       'line_items[0][quantity]': '1',
       'line_items[0][price_data][currency]': CHROMADIE_PLUS_CURRENCY,
       'line_items[0][price_data][unit_amount]': String(CHROMADIE_PLUS_AMOUNT),
       'line_items[0][price_data][product_data][name]': 'Chromadie Plus — Lifetime',
       'line_items[0][price_data][product_data][description]': 'Lifetime profile expression features. Gameplay prestige is never sold.',
+      'line_items[0][price_data][product_data][tax_code]': CHROMADIE_PLUS_TAX_CODE,
       client_reference_id: userId,
       'metadata[user_id]': userId,
       'metadata[entitlement]': CHROMADIE_PLUS_ENTITLEMENT,
@@ -55,7 +59,11 @@ Deno.serve(async request => {
     if (customer?.stripe_customer_id) body.customer = customer.stripe_customer_id;
     else body.customer_creation = 'always';
 
-    const checkout = await stripeRequest(stripeSecret, 'checkout/sessions', { method: 'POST', body });
+    const checkout = await stripeRequest(stripeSecret, 'checkout/sessions', {
+      method: 'POST',
+      body,
+      stripeVersion: CHROMADIE_STRIPE_API_VERSION
+    });
     if (!checkout?.id || !checkout?.url) throw new Error('Stripe did not return a checkout session.');
     const { error: insertError } = await service.from('billing_checkout_sessions').insert({
       stripe_checkout_session_id: checkout.id,

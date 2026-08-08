@@ -10,6 +10,13 @@ earned identity. Pricing belongs in the shared desktop/mobile site header and
 prefetches like other primary destinations. Checkout, restore, and entitlement
 authority remain unchanged and service-owned.
 
+The lifetime Checkout session opts into Stripe Managed Payments because the
+product is hosted personal-use SaaS. The server sends the eligible
+`txcd_10103000` tax code and the supported `2025-03-31.basil` API version;
+the browser still cannot create sessions or grant access. Managed Payments
+must be enabled and its terms accepted in Stripe before this function is
+deployed.
+
 ## 2026-08-08 — Roll out parity surfaces with reversible presentation flags
 
 Milestone 13 uses build-time, audience-scoped flags for commerce, rich media,

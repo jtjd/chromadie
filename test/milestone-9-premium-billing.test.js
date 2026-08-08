@@ -5,6 +5,9 @@ import { readFile } from 'node:fs/promises';
 import {
   CHROMADIE_PLUS_AMOUNT,
   CHROMADIE_PLUS_CURRENCY,
+  CHROMADIE_PLUS_TAX_CODE,
+  CHROMADIE_STRIPE_API_VERSION,
+  stripeRequest,
   verifyStripeSignature
 } from '../supabase/functions/_shared/billing-core.js';
 import {
@@ -33,6 +36,8 @@ test('Chromadie Plus is canonical while atelier holders stay compatible', () => 
   assert.equal(hasChromadiePlus(['other']), false);
   assert.equal(CHROMADIE_PLUS_AMOUNT, 799);
   assert.equal(CHROMADIE_PLUS_CURRENCY, 'usd');
+  assert.equal(CHROMADIE_PLUS_TAX_CODE, 'txcd_10103000');
+  assert.equal(CHROMADIE_STRIPE_API_VERSION, '2025-03-31.basil');
 });
 
 test('Stripe signatures reject forgery and stale delivery while accepting retries in tolerance', async () => {
@@ -47,6 +52,20 @@ test('Stripe signatures reject forgery and stale delivery while accepting retrie
   assert.equal(await verifyStripeSignature(`${payload} `, `t=${timestamp},v1=${signature}`, secret, { nowSeconds: timestamp + 10 }), false);
   assert.equal(await verifyStripeSignature(payload, `t=${timestamp},v1=${signature}`, secret, { nowSeconds: timestamp + 301 }), false);
   assert.equal(await verifyStripeSignature(payload, '', secret, { nowSeconds: timestamp }), false);
+});
+
+test('Managed Payments Stripe requests pin the supported API version', async () => {
+  let request;
+  const result = await stripeRequest('sk_test_example', 'checkout/sessions', {
+    stripeVersion: CHROMADIE_STRIPE_API_VERSION,
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return new Response(JSON.stringify({ id: 'cs_test_example' }), { status: 200 });
+    }
+  });
+
+  assert.equal(result.id, 'cs_test_example');
+  assert.equal(request.options.headers['Stripe-Version'], '2025-03-31.basil');
 });
 
 test('billing migration makes webhook processing atomic, replay-safe, and service-owned', async () => {
@@ -86,6 +105,8 @@ test('checkout, restore, and webhook endpoints preserve the authority boundary',
   assert.match(checkout, /auth\.getUser/);
   assert.match(checkout, /unit_amount/);
   assert.match(checkout, /CHROMADIE_PLUS_AMOUNT/);
+  assert.match(checkout, /managed_payments\[enabled\]/);
+  assert.match(checkout, /CHROMADIE_PLUS_TAX_CODE/);
   assert.match(checkout, /success_url/);
   assert.doesNotMatch(checkout, /grant_profile_entitlement|process_stripe_billing_event/);
   assert.match(restore, /billing_checkout_sessions/);

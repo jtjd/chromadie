@@ -11,6 +11,8 @@ Document user-visible redesign changes by milestone.
   $7.99 USD lifetime Chromadie Plus offer easy to understand.
 - The complete free profile remains the foundation; Plus adds expression and
   capacity without changing daily rolls, earned progression, or identity.
+- The lifetime checkout is prepared for Stripe Managed Payments, with hosted
+  SaaS tax classification and Stripe-controlled tax/fraud/dispute handling.
 
 ## 2026-08-08 — Certify and stage profile-parity surfaces
 

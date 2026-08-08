@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { stripeRequest } from '../_shared/billing-core.js';
+import { CHROMADIE_STRIPE_API_VERSION, stripeRequest } from '../_shared/billing-core.js';
 import { corsHeaders, getBearerToken, jsonResponse } from '../_shared/http.ts';
 
 Deno.serve(async request => {
@@ -37,7 +37,7 @@ Deno.serve(async request => {
     if (!storedSession) return jsonResponse({ error: 'Checkout session not found.', code: 'missing_session' }, 404);
 
     const [stripeSession, accessResult] = await Promise.all([
-      stripeRequest(stripeSecret, `checkout/sessions/${encodeURIComponent(sessionId)}`),
+      stripeRequest(stripeSecret, `checkout/sessions/${encodeURIComponent(sessionId)}`, { stripeVersion: CHROMADIE_STRIPE_API_VERSION }),
       service.from('billing_premium_access').select('active, recovery_until').eq('user_id', userData.user.id).maybeSingle()
     ]);
     const active = accessResult.data?.active === true;

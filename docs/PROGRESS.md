@@ -9,6 +9,9 @@
   the earned-color promise.
 - Preserved the secure checkout, restore, entitlement, and staff-authority
   contracts while keeping the free profile complete and expressive.
+- Updated the Checkout slice for Stripe Managed Payments with the supported
+  API version, hosted personal-use SaaS tax code, and explicit merchant-of-
+  record opt-in before production billing deployment.
 - Full repository validation passed: build, Svelte check, 247 tests, source
   ESLint, link/CSP/policy/balance/catalog/scoring/performance checks,
   database-security checks, and parity certification.

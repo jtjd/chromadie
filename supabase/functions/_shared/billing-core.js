@@ -1,6 +1,11 @@
 export const CHROMADIE_PLUS_AMOUNT = 799;
 export const CHROMADIE_PLUS_CURRENCY = 'usd';
 export const CHROMADIE_PLUS_ENTITLEMENT = 'chromadie_plus';
+// Managed Payments requires a supported Stripe API version and an eligible
+// product tax code. Plus is a hosted, personal-use SaaS product rather than a
+// download or physical good.
+export const CHROMADIE_STRIPE_API_VERSION = '2025-03-31.basil';
+export const CHROMADIE_PLUS_TAX_CODE = 'txcd_10103000';
 
 const encoder = new TextEncoder();
 
@@ -59,6 +64,7 @@ export async function stripeRequest(secret, path, options = {}) {
     method: options.method || 'GET',
     headers: {
       Authorization: `Bearer ${secret}`,
+      ...(options.stripeVersion ? { 'Stripe-Version': options.stripeVersion } : {}),
       ...(options.body ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {})
     },
     ...(options.body ? { body: new URLSearchParams(options.body).toString() } : {})
