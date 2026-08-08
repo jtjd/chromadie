@@ -2,12 +2,15 @@
   import { createEventDispatcher } from 'svelte';
   import { supabase } from './supabase';
   import { normalizeProfileConfig, PROFILE_LAYOUT_VARIANTS, PROFILE_LINK_TYPES } from './profileConfig.js';
+  import { createProfileTemplatePatch } from './profileTemplates.js';
   import { clearViewState, readViewState, writeViewState } from './viewState.js';
+  import ProfileTemplatePicker from './ProfileTemplatePicker.svelte';
 
   export let profileId = null;
   export let draftConfig = null;
   export let publishedConfig = null;
   export let updatedAt = null;
+  export let entitlements = [];
 
   const dispatch = createEventDispatcher();
   const MODULE_LABELS = Object.freeze({
@@ -68,6 +71,7 @@
 
   function compositionPatch(value = draft) {
     return {
+      templateKey: value.templateKey,
       layoutVariant: value.layoutVariant,
       modules: clone(value.modules || []),
       links: clone(value.links || [])
@@ -79,7 +83,11 @@
   }
 
   function updateDraft(next) {
-    draft = normalizeDraft({ ...draft, ...next });
+    const compositionFieldChanged = ['layoutVariant', 'modules', 'links'].some(field => Object.prototype.hasOwnProperty.call(next, field));
+    const nextDraft = compositionFieldChanged && !Object.prototype.hasOwnProperty.call(next, 'templateKey')
+      ? { ...next, templateKey: 'custom' }
+      : next;
+    draft = normalizeDraft({ ...draft, ...nextDraft });
     if (Object.prototype.hasOwnProperty.call(next, 'layoutVariant')) layoutChangedSinceSave = true;
     if (profileId) writeViewState(VIEW_STATE_NAMESPACE, profileScope || profileId, { draft });
     status = '';
@@ -87,6 +95,11 @@
     conflict = null;
     emitDirty(true);
     dispatch('configpreview', { config: draft });
+  }
+
+  function applyTemplate(event) {
+    const patch = createProfileTemplatePatch(event.detail?.key || event.detail?.templateKey);
+    if (patch) updateDraft(patch);
   }
 
   function setModuleVisible(id, visible) {
@@ -210,8 +223,10 @@
     <span class="profile-editor__version">Public layout: {STYLE_LABELS[normalizeProfileConfig(publishedConfig).layoutVariant]}</span>
   </header>
 
+  <ProfileTemplatePicker config={draft} {entitlements} on:templatechange={applyTemplate} />
+
   <section class="profile-editor__panel" aria-labelledby="profile-layout-style-title">
-    <h3 id="profile-layout-style-title">Profile layout</h3>
+    <h3 id="profile-layout-style-title">Fine tune the composition</h3>
     <label class="profile-editor__field"><span>Layout style</span><select value={draft.layoutVariant} on:change={event => updateDraft({ layoutVariant: event.currentTarget.value })}>{#each PROFILE_LAYOUT_VARIANTS as variant (variant)}<option value={variant}>{STYLE_LABELS[variant]}</option>{/each}</select></label>
   </section>
 

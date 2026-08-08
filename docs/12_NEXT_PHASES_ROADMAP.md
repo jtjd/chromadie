@@ -158,8 +158,11 @@ and must begin one at a time.
    visitor consent, owner opt-in, daily aggregate storage, owner-only reads,
    and 90-day retention. See
    [`milestones/DASHBOARD_PARITY_M6_PRIVACY_ANALYTICS.md`](milestones/DASHBOARD_PARITY_M6_PRIVACY_ANALYTICS.md).
-10. Next: structured templates and premium expression, followed by aliases,
-    domains, and API access as separately authorized milestones.
+10. Completed and deployed: structured templates and premium expression. Profile
+    owners can choose three free composition presets, while the existing
+    `atelier_plus` entitlement unlocks the optional Atelier expression preset.
+    See [`milestones/DASHBOARD_PARITY_M7_TEMPLATES_PREMIUM_EXPRESSION.md`](milestones/DASHBOARD_PARITY_M7_TEMPLATES_PREMIUM_EXPRESSION.md).
+11. Next: aliases, domains, and API access as separately authorized milestones.
 
 ## Deferred themes
 

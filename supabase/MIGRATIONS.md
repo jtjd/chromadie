@@ -203,6 +203,21 @@ Privacy-conscious profile insights:
   collection; do not remove the aggregate table or RPC boundary during the
   migration period.
 
+Structured profile templates and premium expression:
+
+- `migrations/20260808180000_profile_templates.sql` adds a bounded
+  `templateKey` to the existing profile configuration normalizer and
+  composition RPCs, backfills legacy configurations from their layout variant,
+  and preserves the existing draft/publish contracts.
+- The three free templates and the optional Atelier preset are code-owned
+  composition shapes. Atelier is accepted by the server only for an owner who
+  already has the service-granted `atelier_plus` entitlement; this migration
+  never grants entitlements or changes purchases, rank, rolls, rewards, or
+  equipped cosmetics.
+- Recovery is additive: old JSON remains readable, manual composition remains
+  available as `custom`, and the migration can be followed by a corrective
+  normalizer update without deleting configuration, media, or history.
+
 Version-controlled cron schedule:
 
 - `update_cotw()` runs every Monday at `00:00 UTC`.

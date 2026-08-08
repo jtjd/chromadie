@@ -93,6 +93,27 @@ SELECT pg_temp.audit_assert(
   'profile configuration RPCs must be available only to intended browser roles'
 );
 SELECT pg_temp.audit_assert(
+  has_function_privilege('authenticated', 'public.save_profile_configuration_section(text,jsonb,timestamptz)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.publish_profile_configuration_section(text,jsonb,timestamptz)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.save_profile_configuration_section(text,jsonb,timestamptz)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.publish_profile_configuration_section(text,jsonb,timestamptz)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.profile_composition_patch(jsonb)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.profile_composition_patch(jsonb)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE'),
+  'template composition must remain behind the owner configuration RPC boundary'
+);
+SELECT pg_temp.audit_assert(
+  (SELECT bool_and(p.proconfig @> ARRAY['search_path=public, pg_catalog'])
+   FROM pg_proc p
+   WHERE p.oid IN (
+     'public.profile_composition_patch(jsonb)'::regprocedure,
+     'public.normalize_profile_configuration(jsonb,text)'::regprocedure,
+     'public.save_profile_configuration_section(text,jsonb,timestamptz)'::regprocedure,
+     'public.publish_profile_configuration_section(text,jsonb,timestamptz)'::regprocedure
+   )),
+  'template configuration functions must have fixed search paths'
+);
+SELECT pg_temp.audit_assert(
   has_function_privilege('anon', 'public.get_public_profile_story(uuid)', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.get_public_profile_story(uuid)', 'EXECUTE'),
   'public profile story projection must be available to intended browser roles'
@@ -1205,6 +1226,7 @@ INSERT INTO audit_results VALUES (
   public.save_profile_configuration_section(
     'composition',
     jsonb_build_object(
+      'templateKey', 'atelier',
       'layoutVariant', 'focus',
       'appearance', jsonb_build_object('colors', jsonb_build_object('accent', '#BADBAD')),
       'signatureColor', '#BADBAD',
@@ -1217,11 +1239,28 @@ INSERT INTO audit_results VALUES (
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
       AND payload->'draft'->>'layoutVariant' = 'focus'
+      AND payload->'draft'->>'templateKey' = 'signal'
       AND payload->'draft'->'appearance'->'colors'->>'accent' = '#112233'
       AND payload->'draft'->>'signatureColor' = '#112233'
       AND COALESCE(payload->'draft'->>'colorEffectsEnabled', 'false') = 'false'
    FROM audit_results WHERE name = 'config_composition_save'),
   'composition save accepted appearance or effect keys'
+);
+INSERT INTO public.profile_entitlements (user_id, entitlement_key, source)
+VALUES ('10000000-0000-0000-0000-000000000001', 'atelier_plus', 'security-test');
+INSERT INTO audit_results VALUES (
+  'config_atelier_save',
+  public.save_profile_configuration_section(
+    'composition',
+    jsonb_build_object('templateKey', 'atelier'),
+    NULL
+  )
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->'draft'->>'templateKey' = 'atelier'
+   FROM audit_results WHERE name = 'config_atelier_save'),
+  'an entitled owner could not persist the bounded Atelier template'
 );
 INSERT INTO audit_results VALUES (
   'config_composition_publish',

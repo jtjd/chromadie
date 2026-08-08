@@ -1,6 +1,7 @@
 import { normalizeProfileExpression } from './profileExpression.js';
 import { createDefaultProfileContent, normalizeProfileContent } from './profileContent.js';
 import { normalizeProfileWidgets } from './profileWidgets.js';
+import { inferProfileTemplateKey, normalizeProfileTemplateKey } from './profileTemplates.js';
 
 export const PROFILE_CONFIG_VERSION = 1;
 
@@ -124,6 +125,7 @@ export function createDefaultProfileConfig(signatureColor = PROFILE_APPEARANCE_D
   return {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(signatureColor),
+    templateKey: 'signal',
     colorEffectsEnabled: false,
     appearance,
     layoutVariant: 'immersive',
@@ -188,13 +190,15 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
 
   /** @type {Record<string, any>} */
   const normalizedAppearance = normalizeAppearance(value.appearance, value.signatureColor || fallback.signatureColor);
+  const normalizedLayoutVariant = PROFILE_LAYOUT_VARIANTS.includes(value.layoutVariant) ? value.layoutVariant : fallback.layoutVariant;
   /** @type {any} */
   const normalized = {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(value.signatureColor, fallback.signatureColor),
+    templateKey: normalizeProfileTemplateKey(value.templateKey, inferProfileTemplateKey(normalizedLayoutVariant)),
     colorEffectsEnabled: value.colorEffectsEnabled === true,
     appearance: normalizedAppearance,
-    layoutVariant: PROFILE_LAYOUT_VARIANTS.includes(value.layoutVariant) ? value.layoutVariant : fallback.layoutVariant,
+    layoutVariant: normalizedLayoutVariant,
     modules: modules.sort((left, right) => left.order - right.order),
     links: links.sort((left, right) => left.order - right.order),
     content: normalizeProfileContent(value.content),

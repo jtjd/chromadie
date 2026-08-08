@@ -1,5 +1,20 @@
 # Chromadie 2.0 Progress
 
+## Dashboard parity Milestone 7 deployed — 2026-08-08
+
+- Added three free structured templates—Signal Garden, Editorial, and Color
+  Archive—plus the existing entitlement-gated Atelier expression preset.
+- Template application changes only the validated composition section. Manual
+  layout edits become an explicit custom composition; links, content,
+  appearance, media, widgets, history, cosmetics, and gameplay remain intact.
+- Added `20260808180000_profile_templates`, which backfills a bounded
+  `templateKey`, keeps legacy layout configurations readable, and rejects
+  Atelier persistence unless the authenticated owner already has
+  `atelier_plus`. It does not grant entitlements or add purchase paths.
+- Local reset, schema lint, database security, full validation, browser smoke,
+  and linked migration deployment pass. The next handoff is aliases, domains,
+  and API access as separately scoped work.
+
 ## Dashboard parity Milestone 6 deployed — 2026-08-08
 
 - Added a lazy Profile Studio Insights surface with explicit owner opt-in,

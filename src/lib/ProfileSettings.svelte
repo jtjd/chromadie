@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
   import { restoreFocus, trapFocus } from './a11y.js';
-  import { authUser, equippedItems, isAuthenticated, profile, refreshProfileState, session } from './stores';
+  import { authUser, equippedItems, isAuthenticated, profile, profileEntitlements, refreshProfileState, session } from './stores';
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData.js';
   import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
@@ -401,7 +401,7 @@
           {:else if activeSection === 'profile-collection'}
             <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={context.profileConfig} />
           {:else if activeSection === 'profile-layout'}
-            <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
+            <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
           {:else if activeSection === 'profile-social'}
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} isAuthenticated={$isAuthenticated} social={context.social} settings={context.socialSettings} on:socialchange={handleSocialChange} />
           {:else if activeSection === 'profile-insights'}

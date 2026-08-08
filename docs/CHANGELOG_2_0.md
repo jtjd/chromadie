@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Add structured profile templates and optional Atelier expression
+
+- Profile Studio now offers Signal Garden, Editorial, and Color Archive as
+  free starting compositions, with manual edits preserved as custom work.
+- Existing `atelier_plus` owners can apply the premium Atelier composition;
+  other owners can continue using the complete free templates or explore the
+  existing expression path.
+- Applying a template changes only public section composition. Links, story,
+  appearance, media, widgets, progression, and daily rolls remain unchanged.
+
 ## 2026-08-08 — Add private aggregate profile insights
 
 - Profile Studio can show owners daily public-view totals and active days when

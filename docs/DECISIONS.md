@@ -1,5 +1,19 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Keep templates composition-only and premium expression entitlement-gated
+
+Profile templates are finite, code-owned composition presets. They may set the
+layout variant and validated module order, visibility, and sizing, but never
+copy media, overwrite links/content/appearance/widgets, alter history, or
+grant gameplay prestige. Manual composition edits are marked `custom` so the
+profile remains an authored identity rather than silently losing its intent.
+
+Atelier is an optional premium expression preset behind the existing
+service-granted `atelier_plus` entitlement. The browser can read the owner’s
+bounded entitlement projection, but the composition RPC is the final gate;
+there is no client grant, payment mutation, rank purchase, or new entitlement
+source in this milestone.
+
 ## 2026-08-08 — Keep profile insights aggregate, consented, and owner-private
 
 Profile insights use two independent opt-ins: the visitor's existing product
