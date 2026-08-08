@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Surface compositor follow-up — 2026-08-08
+
+- Removed the extra isolated backdrop root from profile-card border wrappers so
+  `backdrop-filter` can sample page-wide profile media and effects.
+- Kept border clipping and animations intact while making the blur control
+  compositor-visible.
+
 ## Appearance paint-order follow-up — 2026-08-08
 
 - Moved public atmosphere and cursor layers onto the full profile canvas while

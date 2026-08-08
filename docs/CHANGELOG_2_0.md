@@ -2,6 +2,12 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Make surface blur sample the profile canvas
+
+- Profile-card border wrappers no longer block the card surface from sampling
+  the page backdrop, so the configured blur can visibly soften media and
+  atmosphere beneath the translucent surface.
+
 ## 2026-08-08 — Match public effects to the full profile canvas
 
 - Atmosphere and cursor effects now fill the public profile page while staying

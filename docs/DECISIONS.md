@@ -2,6 +2,14 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Let the identity surface sample the page backdrop
+
+The shared border wrapper remains clipped for cosmetic effects, but the public
+identity boundary no longer creates an isolated backdrop root. This preserves
+the border while allowing the card's configured backdrop blur to sample the
+page-wide background, atmosphere, and cursor canvas beneath its translucent
+surface.
+
 ## 2026-08-08 — Keep public effects page-wide and preview effects card-scoped
 
 Uploaded backgrounds, atmosphere scenes, and cursor trails fill the public

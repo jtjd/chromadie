@@ -183,6 +183,7 @@
   .studio-profile-card :global(.studio-cursor-layer) { z-index: 3 !important; }
   .studio-stage > :global(.profile-border-effect) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
   .studio-stage > :global(.profile-border-effect) :global(.profile-border-effect__content) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
+  .studio-stage > :global(.profile-border-effect.studio-profile-border) { isolation: auto; }
 
   .stage-grid {
     position: absolute;

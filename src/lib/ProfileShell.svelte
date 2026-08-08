@@ -1078,6 +1078,10 @@
     isolation: isolate;
   }
 
+  /* The card must sample the page canvas for backdrop-filter. Keep the
+     border wrapper clipped, but do not create a second isolated backdrop root. */
+  :global(.profile-border-effect.profile-shell__identity-boundary) { isolation: auto; }
+
   :global(.profile-shell__identity-boundary) :global(.identity-card) { z-index: 1; }
 
   .profile-shell__approved-game,
