@@ -94,7 +94,9 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(settings, /slot="preview"/);
   assert.doesNotMatch(settings, /function openPreview/);
   assert.doesNotMatch(settings, /profile-preview-drawer__backdrop/);
-  assert.match(shell, /\{#if backgroundSrc\}/);
+  assert.match(shell, /\{#if backgroundSrc && !previewMode\}/);
+  assert.match(shell, /profile-shell__media-background/);
+  assert.match(shell, /\{#if backgroundSrc && previewMode\}/);
   assert.match(shell, /profile-shell__card-media-background/);
   assert.match(shell, /profile-shell__card-atmosphere-layer/);
   assert.match(shell, /profile-shell__card-cursor-layer/);
@@ -103,6 +105,23 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(shell, /deferMedia=\{previewMode\}/);
   assert.match(music, /autoplay=\{!deferMedia\}/);
   assert.match(music, /loading="lazy"/);
+});
+
+test('appearance controls are consumed by the identity card and fitting-room renderer', async () => {
+  const [appearanceStyle, identityCard, preview, editor] = await Promise.all([
+    read('src/lib/profileAppearanceStyle.js'),
+    read('src/lib/IdentityCard.svelte'),
+    read('src/lib/ShopStudioPreview.svelte'),
+    read('src/lib/ProfileAppearanceEditor.svelte')
+  ]);
+  assert.match(appearanceStyle, /--profile-surface-fill:color-mix/);
+  assert.match(identityCard, /background: var\(--profile-surface-fill/);
+  assert.match(identityCard, /backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.match(identityCard, /color: var\(--profile-text/);
+  assert.match(identityCard, /color: var\(--profile-highlight/);
+  assert.match(preview, /border: var\(--profile-border-width/);
+  assert.match(preview, /background: var\(--profile-surface-fill/);
+  assert.match(editor, /Surface opacity controls how much of the background shows through/);
 });
 
 test('dirty prompt is keyboard-complete and editor reload actions remain reachable', async () => {

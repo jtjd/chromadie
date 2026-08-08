@@ -209,17 +209,17 @@
     box-shadow: 0 24px 48px rgba(0,0,0,0.38);
   }
   .studio-profile-card__background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; pointer-events: none; }
-  .studio-profile-card :global(.identity-card) { position: relative; z-index: 1; width: 100%; box-sizing: border-box; padding: 1rem; border: 0; border-radius: 17px; }
+  .studio-profile-card :global(.identity-card) { position: relative; z-index: 1; width: 100%; box-sizing: border-box; padding: 1rem; border: var(--profile-border-width, 1px) solid color-mix(in srgb, var(--profile-border-color, #ffffff) calc(var(--profile-border-opacity, .11) * 100%), transparent); border-radius: var(--profile-border-radius, 17px); background: var(--profile-surface-fill, color-mix(in srgb, var(--profile-surface, #090b0f) calc(var(--profile-surface-opacity, .64) * 100%), transparent)); backdrop-filter: blur(var(--profile-surface-blur, 20px)); -webkit-backdrop-filter: blur(var(--profile-surface-blur, 20px)); }
   .studio-profile-card :global(.identity-card__person) { gap: 0.75rem; }
   .studio-profile-card :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
   .studio-profile-card :global(.identity-card__avatar-letter) { font-size: 1.5rem; }
   .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.8rem, 6.5vw, 2.35rem); line-height: .98; }
   .studio-profile-card :global(.identity-card__bio) { margin-top: 0.45rem; font-size: 0.72rem; }
-  .studio-profile-card--split-signal :global(.identity-card.identity-card--layout-split-signal) { border-left: 2px solid color-mix(in srgb, var(--color-accent-cyan) 56%, transparent); border-radius: 0 17px 17px 0; }
-  .studio-profile-card--archive-index :global(.identity-card.identity-card--layout-archive-index) { border-top: 2px solid color-mix(in srgb, var(--color-accent-bright) 54%, transparent); border-radius: 0; box-shadow: none; }
+  .studio-profile-card--split-signal :global(.identity-card.identity-card--layout-split-signal) { border-left: 2px solid color-mix(in srgb, var(--color-accent-cyan) 56%, transparent); border-radius: var(--profile-border-radius, 0 17px 17px 0); }
+  .studio-profile-card--archive-index :global(.identity-card.identity-card--layout-archive-index) { border-top: 2px solid color-mix(in srgb, var(--color-accent-bright) 54%, transparent); border-radius: var(--profile-border-radius, 0); box-shadow: none; }
   .studio-profile-card--prism-mosaic :global(.identity-card.identity-card--layout-prism-mosaic) { border-color: color-mix(in srgb, var(--color-accent) 36%, var(--color-line-subtle)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent), 0 24px 48px rgba(0,0,0,.28); }
-  .studio-profile-card--night-terminal :global(.identity-card.identity-card--layout-night-terminal) { border-radius: 2px; background: #0b1015; }
-  .studio-profile-card--story-stack :global(.identity-card.identity-card--layout-story-stack) { border-radius: 18px 6px 18px 6px; }
+  .studio-profile-card--night-terminal :global(.identity-card.identity-card--layout-night-terminal) { border-radius: var(--profile-border-radius, 2px); background: var(--profile-surface-fill, #0b1015); }
+  .studio-profile-card--story-stack :global(.identity-card.identity-card--layout-story-stack) { border-radius: var(--profile-border-radius, 18px 6px 18px 6px); }
   .studio-selection {
     display: flex;
     flex-direction: column;

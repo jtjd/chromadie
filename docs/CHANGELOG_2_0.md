@@ -2,12 +2,22 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Make the profile appearance controls visible
+
+- Uploaded backgrounds now fill the public profile page while remaining
+  card-scoped in the dashboard fitting-room preview.
+- Surface color, opacity, blur, text color, and highlight color now flow into
+  the shared identity-card and fitting-room renderers across card layouts.
+- The appearance editor explains that blur is visible through a translucent
+  surface when media or a gradient sits behind it.
+
 ## 2026-08-08 — Make customization settings reliable
 
 - The Collection fitting room now follows the live draft, including the active
   profile theme, avatar, and background.
-- Profile backgrounds, atmosphere scenes, and cursor trails now stay inside the
-  identity card instead of reaching the daily roll surface.
+- Atmosphere scenes and cursor trails stay inside the identity card instead of
+  reaching the daily roll surface; public uploaded backgrounds fill the profile
+  page while dashboard previews keep them card-scoped.
 - Layout & links exposes secondary section sizes, keeps the daily roll fixed,
   and explains incomplete links before they are saved.
 

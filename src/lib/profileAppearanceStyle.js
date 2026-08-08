@@ -24,6 +24,7 @@ export function getProfileAppearanceStyle(config) {
     `--profile-background:${appearance.colors.background}`,
     `--profile-background-paint:${profileBackground}`,
     `--profile-surface:${appearance.colors.surface}`,
+    `--profile-surface-fill:color-mix(in srgb, ${appearance.colors.surface} ${appearance.surface.opacity}%, transparent)`,
     `--profile-highlight:${appearance.colors.highlight}`,
     `--profile-surface-opacity:${appearance.surface.opacity / 100}`,
     `--profile-surface-blur:${appearance.surface.blur}px`,

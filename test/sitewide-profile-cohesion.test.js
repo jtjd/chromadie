@@ -63,6 +63,7 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(siteHeader, /\{#if isHomeMode \|\| isHomepageStyle\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
   assert.match(profileShell, /profile-shell__card-cursor-layer/);
   assert.match(profileShell, /profile-shell__card-atmosphere-layer/);
+  assert.match(profileShell, /\.profile-shell__media-background \{ position: fixed;/);
   assert.match(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);
 });
 

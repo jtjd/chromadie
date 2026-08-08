@@ -1,14 +1,24 @@
 # Chromadie 2.0 Progress
 
+## Appearance renderer follow-up — 2026-08-08
+
+- Public uploaded backgrounds now fill the profile page; dashboard and
+  fitting-room previews keep media inside the identity card for cleanliness.
+- Surface fill, blur, text, and highlight controls now have visible consumers
+  in both shared card renderers, including layout variants that previously
+  overrode the surface.
+- Added editor guidance describing what each surface boundary means and why
+  blur requires a translucent surface with content behind it.
+
 ## Customization settings audit — 2026-08-08
 
 - Fixed the Collection fitting room so draft appearance, avatar, and background
   changes are reflected immediately instead of showing the published theme.
 - Shared the validated appearance-to-CSS projection between the fitting room and
   the public ProfileShell.
-- Scoped uploaded backgrounds, atmosphere scenes, and cursor trails to the
-  identity-card surface; the daily roll uses fixed system tokens and a fixed
-  wide layout.
+- Kept atmosphere scenes and cursor trails on the identity-card surface; public
+  uploaded backgrounds fill the page while preview media remains card-scoped.
+  The daily roll uses fixed system tokens and a fixed wide layout.
 - Exposed existing module-size controls for secondary profile sections and
   blocked incomplete links before save/publish.
 - Compared the bounded surface with current guns.lol and Haunt offerings. Their

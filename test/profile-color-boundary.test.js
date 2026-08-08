@@ -49,6 +49,8 @@ test('profile appearance tokens stay on the identity card and out of the roll UI
   assert.match(shell, /style=\{profileShellStyle\} aria-busy/);
   assert.match(shell, /data-profile-region="identity" style=\{profileCardStyle\}/);
   assert.match(appearanceStyle, /--profile-background-paint/);
+  assert.match(appearanceStyle, /--profile-surface-fill:color-mix/);
+  assert.match(appearanceStyle, /--profile-highlight/);
   assert.match(shell, /const rollModule = Object\.freeze\(\{ size: 'wide' \}\)/);
   assert.doesNotMatch(shell, /<main[\s\S]*?profileBackground/);
 });

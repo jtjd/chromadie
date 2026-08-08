@@ -2,15 +2,26 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Keep public backgrounds full-page while scoping previews to the card
+
+Uploaded profile backgrounds are a page-level visual on public profiles, so
+they fill the profile viewport behind the identity and supporting content. The
+dashboard fitting-room preview keeps the same media inside its card for a
+cleaner editing surface. Atmosphere and cursor effects remain card-scoped, and
+all authored appearance variables still stop at the identity card boundary.
+Surface fill, blur, text, and highlight tokens are consumed by the shared card
+and fitting-room renderers rather than being left as configuration-only values.
+
 ## 2026-08-08 — Make customization previews represent the card contract
 
 The customization audit found that the Collection fitting room preferred the
 published appearance over the current draft, and that profile media/effects
 were mounted as page-level layers. The fitting room now uses the draft first
 and shares the validated card-style projection with the public renderer.
-Uploaded backgrounds, atmosphere plates, and cursor trails are scoped to the
-identity-card surface; the daily roll remains on fixed system presentation
-tokens. Layout exposes the existing module-size contract, while the daily roll
+Atmosphere plates and cursor trails are scoped to the identity-card surface;
+public uploaded backgrounds fill the profile page while dashboard previews keep
+them card-scoped. The daily roll remains on fixed system presentation tokens.
+Layout exposes the existing module-size contract, while the daily roll
 is fixed and cannot be resized or reordered. Empty links are rejected before a
 save instead of being silently normalized away.
 

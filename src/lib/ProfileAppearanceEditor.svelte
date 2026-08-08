@@ -140,6 +140,7 @@
 </script>
 
 <div class="appearance-editor">
+  <p class="appearance-editor__intro">These controls style the identity card. Uploaded backgrounds fill public profile pages; the dashboard preview keeps them inside the fitting-room card. Surface opacity controls how much of the background shows through, while blur only becomes visible when there is something behind that translucent surface.</p>
   <section class="appearance-editor__panel" aria-labelledby="appearance-colors-title">
     <div class="appearance-editor__heading"><h2 id="appearance-colors-title">Theme colors</h2><span>8 colors</span></div>
     <div class="appearance-editor__color-grid">
@@ -193,6 +194,7 @@
 
 <style>
   .appearance-editor { display: grid; gap: 1rem; }
+  .appearance-editor__intro { margin: 0; color: var(--site-muted, #aaa8b0); font-size: .72rem; line-height: 1.55; }
   .appearance-editor__panel { padding: clamp(1rem, 2vw, 1.4rem); border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .55rem; background: var(--site-raised, #111319); }
   .appearance-editor__heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
   .appearance-editor__heading h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: 1rem; letter-spacing: -.02em; }
