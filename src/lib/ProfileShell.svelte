@@ -731,10 +731,13 @@
     100% { transform: scale(1); box-shadow: none; }
   }
 
-  .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
-  .profile-shell__card-media-background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; opacity: 1; filter: none; pointer-events: none; }
-  :global(.profile-atmosphere.profile-shell__page-atmosphere-layer) { position: fixed; inset: 0; z-index: 0; isolation: auto; }
-  :global(.profile-atmosphere.profile-shell__card-atmosphere-layer) { isolation: auto; }
+  .profile-shell__media-background,
+  .profile-shell__card-media-background { background-position: center; background-size: cover; opacity: 1; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; pointer-events: none; }
+  .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; }
+  .profile-shell__card-media-background { position: absolute; inset: 0; z-index: 0; }
+  :global(.profile-atmosphere.profile-shell__page-atmosphere-layer),
+  :global(.profile-atmosphere.profile-shell__card-atmosphere-layer) { isolation: auto; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
+  :global(.profile-atmosphere.profile-shell__page-atmosphere-layer) { position: fixed; inset: 0; z-index: 0; }
   :global(.cursor-trail-layer.profile-shell__page-cursor-layer) { position: fixed; inset: 0; z-index: 6; }
   .profile-shell__opening-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr); align-items: center; gap: clamp(2rem, 6vw, 7rem); width: min(100%, 70rem); margin-inline: auto; }
   .profile-shell__identity { min-width: 0; }

@@ -122,13 +122,16 @@ test('appearance controls are consumed by the identity card and fitting-room ren
     read('src/lib/profile-atmosphere/AtmosphereLayer.svelte')
   ]);
   assert.match(appearanceStyle, /function rgbaFromHex/);
+  assert.match(appearanceStyle, /--profile-surface-blur:\$\{appearance\.surface\.blur\}px/);
   assert.match(appearanceStyle, /--profile-surface-fill:\$\{rgbaFromHex/);
   assert.match(identityCard, /background: var\(--profile-surface-fill/);
   assert.match(identityCard, /backdrop-filter: blur\(var\(--profile-surface-blur/);
   assert.match(shell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
-  assert.match(shell, /profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ position: fixed; inset: 0; z-index: 0; isolation: auto;/);
+  assert.match(shell, /:global\(\.profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ position: fixed; inset: 0; z-index: 0; \}/);
   assert.match(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{ isolation: auto;/);
-  assert.match(preview, /studio-profile-card :global\(\.studio-atmosphere-layer\) \{ z-index: 0; opacity: \.82; isolation: auto; \}/);
+  assert.match(shell, /profile-atmosphere\.profile-shell__page-atmosphere-layer\),[\s\S]*filter: blur\(var\(--profile-surface-blur/);
+  assert.match(preview, /studio-profile-card :global\(\.studio-atmosphere-layer\) \{ z-index: 0; opacity: \.82; isolation: auto; filter: blur\(var\(--profile-surface-blur/);
+  assert.match(preview, /studio-profile-card__background \{ position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; filter: blur\(var\(--profile-surface-blur/);
   assert.match(atmosphere, /\.profile-atmosphere \{[^}]*isolation: auto;/);
   assert.match(identityCard, /color: var\(--profile-text/);
   assert.match(identityCard, /color: var\(--profile-highlight/);

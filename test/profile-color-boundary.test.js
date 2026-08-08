@@ -56,6 +56,7 @@ test('profile appearance tokens stay on the identity card and out of the roll UI
   assert.match(appearanceStyle, /--profile-highlight/);
   assert.match(getProfileAppearanceStyle(createDefaultProfileConfig()), /--profile-surface-fill:rgba\(17, 20, 27, 0\.64\)/);
   assert.match(getProfileCanvasStyle(createDefaultProfileConfig()), /--profile-background-paint:#07080B/);
+  assert.match(getProfileCanvasStyle(createDefaultProfileConfig()), /--profile-surface-blur:20px/);
   assert.match(shell, /const rollModule = Object\.freeze\(\{ size: 'wide' \}\)/);
   assert.doesNotMatch(shell, /<main[\s\S]*?profileBackground/);
 });

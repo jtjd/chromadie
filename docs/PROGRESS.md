@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Compositor-safe blur follow-up — 2026-08-08
+
+- Projected the validated surface-blur value onto the public profile canvas.
+- Applied the blur directly to page-wide/public and card-scoped preview media
+  plates, with scale compensation so blurred edges do not reveal gaps.
+- Kept the identity surface's translucent `backdrop-filter` for ordinary
+  background content and added regression coverage for the media projection.
+
 ## Blur visibility follow-up — 2026-08-08
 
 - Removed atmosphere-layer isolation in both public and dashboard renderers so

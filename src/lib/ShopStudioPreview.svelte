@@ -179,7 +179,7 @@
       var(--color-canvas-deep);
   }
   .studio-stage.context-profile { min-height: 300px; }
-  .studio-profile-card :global(.studio-atmosphere-layer) { z-index: 0; opacity: .82; isolation: auto; }
+  .studio-profile-card :global(.studio-atmosphere-layer) { z-index: 0; opacity: .82; isolation: auto; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
   .studio-profile-card :global(.studio-cursor-layer) { z-index: 3 !important; }
   .studio-stage > :global(.profile-border-effect) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
   .studio-stage > :global(.profile-border-effect) :global(.profile-border-effect__content) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
@@ -209,7 +209,7 @@
     background: var(--profile-background-paint, var(--surface-panel-strong));
     box-shadow: 0 24px 48px rgba(0,0,0,0.38);
   }
-  .studio-profile-card__background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; pointer-events: none; }
+  .studio-profile-card__background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; pointer-events: none; }
   .studio-profile-card :global(.identity-card) { position: relative; z-index: 1; width: 100%; box-sizing: border-box; padding: 1rem; border: var(--profile-border-width, 1px) solid color-mix(in srgb, var(--profile-border-color, #ffffff) calc(var(--profile-border-opacity, .11) * 100%), transparent); border-radius: var(--profile-border-radius, 17px); background: var(--profile-surface-fill, color-mix(in srgb, var(--profile-surface, #090b0f) calc(var(--profile-surface-opacity, .64) * 100%), transparent)); backdrop-filter: blur(var(--profile-surface-blur, 20px)); -webkit-backdrop-filter: blur(var(--profile-surface-blur, 20px)); }
   .studio-profile-card :global(.identity-card__person) { gap: 0.75rem; }
   .studio-profile-card :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
