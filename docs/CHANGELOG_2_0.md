@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Bound profile effects to the identity card
+
+- Atmosphere and cursor effects now stay inside the profile card instead of
+  painting across the public profile page.
+- Surface opacity uses a direct RGBA paint value and blur remains attached to
+  the translucent identity surface.
+- The dashboard fitting-room preview follows the same effect boundary.
+
 ## 2026-08-08 — Make the profile appearance controls visible
 
 - Uploaded backgrounds now fill the public profile page while remaining

@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Appearance paint-order follow-up — 2026-08-08
+
+- Moved public atmosphere and cursor layers inside the identity boundary so
+  their viewport is the profile card rather than the full page.
+- Emitted the translucent surface as validated RGBA and retained card-level
+  backdrop blur, making opacity and blur respond to the stored values.
+- Applied the same bounded effect placement to the dashboard fitting-room
+  preview.
+
 ## Appearance renderer follow-up — 2026-08-08
 
 - Public uploaded backgrounds now fill the profile page; dashboard and

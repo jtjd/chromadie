@@ -2,6 +2,14 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Bind atmosphere and surface effects to the identity boundary
+
+The public profile now mounts atmosphere and cursor layers inside the same
+bounded identity boundary as the card, so those effects cannot paint across
+the page or roll surface. Surface opacity is emitted as validated RGBA and
+the card keeps its backdrop blur, making both controls respond directly to
+the configured values.
+
 ## 2026-08-08 — Keep public backgrounds full-page while scoping previews to the card
 
 Uploaded profile backgrounds are a page-level visual on public profiles, so

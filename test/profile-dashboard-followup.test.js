@@ -79,6 +79,8 @@ test('collection fitting room previews the draft card appearance and media', asy
   assert.match(preview, /getProfileAppearanceStyle\(previewProfileConfig\)/);
   assert.match(preview, /previewBackgroundSrc/);
   assert.match(preview, /style=\{previewCardStyle\}/);
+  assert.match(preview, /studio-profile-card[\s\S]*studio-atmosphere-layer/);
+  assert.match(preview, /studio-profile-card[\s\S]*studio-cursor-layer/);
 });
 
 test('preview renders bounded media and never exposes mutations', async () => {
@@ -100,6 +102,7 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(shell, /profile-shell__card-media-background/);
   assert.match(shell, /profile-shell__card-atmosphere-layer/);
   assert.match(shell, /profile-shell__card-cursor-layer/);
+  assert.match(shell, /<ProfileBorderEffect[\s\S]*\{#if atmosphereKey\}/);
   assert.match(shell, /if \(previewMode \|\| !targetProfile\?\.id/);
   assert.match(shell, /\{#if !previewMode && !isOwnProfile\}/);
   assert.match(shell, /deferMedia=\{previewMode\}/);
@@ -114,7 +117,8 @@ test('appearance controls are consumed by the identity card and fitting-room ren
     read('src/lib/ShopStudioPreview.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte')
   ]);
-  assert.match(appearanceStyle, /--profile-surface-fill:color-mix/);
+  assert.match(appearanceStyle, /function rgbaFromHex/);
+  assert.match(appearanceStyle, /--profile-surface-fill:\$\{rgbaFromHex/);
   assert.match(identityCard, /background: var\(--profile-surface-fill/);
   assert.match(identityCard, /backdrop-filter: blur\(var\(--profile-surface-blur/);
   assert.match(identityCard, /color: var\(--profile-text/);

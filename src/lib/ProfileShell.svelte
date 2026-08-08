@@ -421,13 +421,13 @@
           {#if backgroundSrc && previewMode}
             <div class="profile-shell__card-media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
           {/if}
-          {#if atmosphereKey}
-            <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__card-atmosphere-layer" />
-          {/if}
-          {#if cursorTrailKey}
-            <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__card-cursor-layer" />
-          {/if}
           <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-shell__identity-boundary">
+            {#if atmosphereKey}
+              <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__card-atmosphere-layer" />
+            {/if}
+            {#if cursorTrailKey}
+              <CursorTrailLayer trailKey={cursorTrailKey} recentColors={nameRendererRecentColors} todayColor={nameRendererTodayColor} active={true} className="profile-shell__card-cursor-layer" />
+            {/if}
             <IdentityCard
               username={username}
               displayName={profileDisplayName}
@@ -1058,12 +1058,6 @@
     border: 0;
     background: var(--profile-background-paint, transparent);
     box-shadow: none;
-  }
-
-  .profile-shell__opening.profile-shell__approved-opening > :global(.profile-shell__card-atmosphere-layer),
-  .profile-shell__opening.profile-shell__approved-opening > :global(.profile-shell__card-cursor-layer) {
-    position: absolute;
-    inset: 0;
   }
 
   :global(.profile-shell__identity-boundary) {

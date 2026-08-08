@@ -1,5 +1,10 @@
 import { normalizeProfileConfig } from './profileConfig.js';
 
+function rgbaFromHex(hex, alpha) {
+  const value = String(hex).slice(1);
+  return `rgba(${Number.parseInt(value.slice(0, 2), 16)}, ${Number.parseInt(value.slice(2, 4), 16)}, ${Number.parseInt(value.slice(4, 6), 16)}, ${alpha})`;
+}
+
 /**
  * Return the validated CSS custom properties used by the identity card.
  * Keeping this projection shared prevents a fitting-room preview from
@@ -24,7 +29,7 @@ export function getProfileAppearanceStyle(config) {
     `--profile-background:${appearance.colors.background}`,
     `--profile-background-paint:${profileBackground}`,
     `--profile-surface:${appearance.colors.surface}`,
-    `--profile-surface-fill:color-mix(in srgb, ${appearance.colors.surface} ${appearance.surface.opacity}%, transparent)`,
+    `--profile-surface-fill:${rgbaFromHex(appearance.colors.surface, appearance.surface.opacity / 100)}`,
     `--profile-highlight:${appearance.colors.highlight}`,
     `--profile-surface-opacity:${appearance.surface.opacity / 100}`,
     `--profile-surface-blur:${appearance.surface.blur}px`,

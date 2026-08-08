@@ -60,12 +60,6 @@
 
   <div class="studio-stage context-profile">
     <div class="stage-grid" aria-hidden="true"></div>
-    {#if loadout?.profile_atmosphere}
-      <AtmosphereLayer atmosphereKey={loadout.profile_atmosphere} todayColor={displayColor} mode={compact ? 'compact' : 'preview'} active={true} animated={resolvedNameRendererMode === 'animated'} className="studio-atmosphere-layer" />
-    {/if}
-    {#if cursorKey}
-      <CursorTrailLayer trailKey={cursorKey} todayColor={displayColor} active={true} className="studio-cursor-layer" />
-    {/if}
     <ProfileBorderEffect
       borderKey={loadout?.profile_border}
       className="studio-profile-border"
@@ -75,6 +69,12 @@
       <div class={'studio-profile-card studio-profile-card--' + previewLayout} style={previewCardStyle}>
         {#if previewBackgroundSrc}
           <div class="studio-profile-card__background" style={`background-image: url("${previewBackgroundSrc}");`} aria-hidden="true"></div>
+        {/if}
+        {#if loadout?.profile_atmosphere}
+          <AtmosphereLayer atmosphereKey={loadout.profile_atmosphere} todayColor={displayColor} mode={compact ? 'compact' : 'preview'} active={true} animated={resolvedNameRendererMode === 'animated'} className="studio-atmosphere-layer" />
+        {/if}
+        {#if cursorKey}
+          <CursorTrailLayer trailKey={cursorKey} todayColor={displayColor} active={true} className="studio-cursor-layer" />
         {/if}
         <IdentityCard
           username={accountUsername}
@@ -179,8 +179,8 @@
       var(--color-canvas-deep);
   }
   .studio-stage.context-profile { min-height: 300px; }
-  .studio-stage :global(.studio-atmosphere-layer) { z-index: 0; opacity: .82; }
-  .studio-stage :global(.studio-cursor-layer) { z-index: 3 !important; }
+  .studio-profile-card :global(.studio-atmosphere-layer) { z-index: 0; opacity: .82; }
+  .studio-profile-card :global(.studio-cursor-layer) { z-index: 3 !important; }
   .studio-stage > :global(.profile-border-effect) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
   .studio-stage > :global(.profile-border-effect) :global(.profile-border-effect__content) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
 
