@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Resolve account hydration after persisted sessions
+
+- Fixed a browser transport deadlock that could leave returning users on
+  “Checking your account…” indefinitely.
+- Signed-in account controls, leaderboard rank data, and other authenticated
+  account projections now resume after an expired or refreshable session is
+  recovered.
+
 ## 2026-08-08 — Add standalone sign-in and sign-up pages
 
 - Homepage, header, founder, guest, and username-claim actions now navigate to

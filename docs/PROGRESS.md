@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Auth hydration regression fix — 2026-08-08
+
+- Fixed the shared Supabase transport so GoTrue initialization and refresh do
+  not recursively await `auth.getSession()` through their own fetcher.
+- Persisted or expired sessions now reach a resolved signed-out, authenticated,
+  or profile-error state instead of leaving the header hidden on account
+  loading and blocking account-dependent discovery data.
+- Added a transport regression test; the full suite now passes with 208 tests.
+
 ## Dashboard parity Milestone 1B complete — 2026-08-08
 
 - Replaced the homepage authentication overlay with standalone `/login` and

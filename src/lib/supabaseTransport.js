@@ -2,18 +2,32 @@ import { GoTrueClient } from '@supabase/auth-js';
 import { PostgrestClient } from '@supabase/postgrest-js';
 
 const CLIENT_VERSION = '2.110.1';
-function createAuthFetch({ supabaseKey, authClientRef, globalFetch }) {
+function createAuthFetch({ supabaseKey, authClientRef, authUrl, globalFetch }) {
   const fetchImplementation = globalFetch || globalThis.fetch.bind(globalThis);
 
   return async (input, init) => {
-    const sessionResult = authClientRef.current
-      ? await authClientRef.current.getSession()
-      : { data: { session: null } };
-    const accessToken = sessionResult?.data?.session?.access_token || supabaseKey;
-    const requestHeaders = new Headers(init?.headers);
+    const requestUrl = typeof input === 'string'
+      ? input
+      : input?.url || input?.toString?.() || '';
+    const isAuthRequest = requestUrl.startsWith(authUrl);
+    const requestHeaders = new Headers(typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined);
+    new Headers(init?.headers).forEach((value, key) => requestHeaders.set(key, value));
+
+    // GoTrue uses this fetcher for its own initialize/refresh requests. Calling
+    // getSession() for those requests waits on the same initialize promise and
+    // can deadlock an existing or expired browser session. GoTrue already puts
+    // the correct JWT on authenticated auth requests; only attach the current
+    // session token to PostgREST, Storage, and Functions requests.
+    if (!requestHeaders.has('Authorization') && !isAuthRequest) {
+      const sessionResult = authClientRef.current
+        ? await authClientRef.current.getSession()
+        : { data: { session: null } };
+      const accessToken = sessionResult?.data?.session?.access_token || supabaseKey;
+      requestHeaders.set('Authorization', `Bearer ${accessToken}`);
+    }
 
     if (!requestHeaders.has('apikey')) requestHeaders.set('apikey', supabaseKey);
-    if (!requestHeaders.has('Authorization')) requestHeaders.set('Authorization', `Bearer ${accessToken}`);
+    if (!requestHeaders.has('Authorization')) requestHeaders.set('Authorization', `Bearer ${supabaseKey}`);
 
     return fetchImplementation(input, { ...init, headers: requestHeaders });
   };
@@ -49,7 +63,7 @@ export function createSupabaseTransport({ supabaseUrl, supabaseKey, globalFetch 
     'X-Client-Info': `supabase-js/${CLIENT_VERSION}; runtime=web`
   };
   const authClientRef = { current: null };
-  const fetchWithAuth = createAuthFetch({ supabaseKey, authClientRef, globalFetch });
+  const fetchWithAuth = createAuthFetch({ supabaseKey, authClientRef, authUrl: serviceUrls.auth, globalFetch });
   const storageKey = `sb-${baseUrl.hostname.split('.')[0]}-auth-token`;
 
   const auth = new GoTrueClient({

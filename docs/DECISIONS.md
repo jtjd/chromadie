@@ -67,6 +67,15 @@ redirects; `/auth/callback` and `/reset-password` remain dedicated boundary
 routes. This keeps credentials and tokens out of URLs while removing modal
 focus and body-scroll state from the global application shell.
 
+## 2026-08-08 — Keep GoTrue initialization independent from API auth
+
+The shared browser transport must not call `auth.getSession()` while sending a
+GoTrue request. GoTrue uses the same fetcher during initialization and token
+refresh, so that recursive lookup can leave an existing or expired session
+waiting forever. Auth endpoints preserve GoTrue's own authorization headers;
+the current session token is attached only to PostgREST, Storage, and Functions
+requests.
+
 ## 2026-08-08 — Keep the dashboard baseline incremental while the aggregate JavaScript cap remains open
 
 Milestone 0 narrows the browser transport to the Auth and PostgREST clients,
