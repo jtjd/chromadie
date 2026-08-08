@@ -20,6 +20,7 @@
   import ProfileMusic from './ProfileMusic.svelte';
   import ProfileWidgets from './ProfileWidgets.svelte';
   import ProfileContent from './ProfileContent.svelte';
+  import ProfileSocial from './ProfileSocial.svelte';
   import IdentityCard from './IdentityCard.svelte';
   import { getProfileMediaUrl } from './profileMedia.js';
   import TodayColor from './TodayColor.svelte';
@@ -34,6 +35,7 @@
   import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
   import { hasVisibleProfileContent } from './profileContent.js';
   import { getVisibleProfileWidgets } from './profileWidgets.js';
+  import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -53,6 +55,8 @@
   let timelineEvents = [];
   let collectionItems = [];
   let profileConfig = null;
+  let social = createEmptyProfileSocial();
+  let socialSettings = createDefaultProfileSocialSettings();
   let previewConfig = null;
   let allAchievements = [];
   let loading = true;
@@ -74,6 +78,8 @@
     timelineEvents = [];
     collectionItems = [];
     profileConfig = null;
+    social = createEmptyProfileSocial();
+    socialSettings = createDefaultProfileSocialSettings();
     previewConfig = null;
     allAchievements = [];
     profileRollState = 'idle';
@@ -116,6 +122,8 @@
           fallbackColor
         );
         profileConfig = { draft: null, published: config };
+        social = createEmptyProfileSocial();
+        socialSettings = createDefaultProfileSocialSettings();
         targetScores = Array.isArray(previewScores) ? previewScores : [];
         timelineEvents = Array.isArray(previewTimelineEvents) ? previewTimelineEvents : [];
         collectionItems = Array.isArray(previewCollectionItems) ? previewCollectionItems : [];
@@ -223,6 +231,8 @@
     timelineEvents = context.timelineEvents;
     collectionItems = context.collectionItems;
     profileConfig = context.profileConfig;
+    social = context.social;
+    socialSettings = context.socialSettings;
     mediaCacheKey = String(Date.now());
     previewConfig = null;
     allAchievements = context.allAchievements;
@@ -297,6 +307,10 @@
     followLoading = true;
     await toggleFollow(targetProfile.id);
     followLoading = false;
+  }
+
+  async function handleSocialChange() {
+    await loadProfileData();
   }
 
   function getAchievement(id) {
@@ -671,8 +685,16 @@
 
       {#if !previewMode && !isOwnProfile}
         <section class="profile-shell__social-section" aria-label={username + ' community and safety details'}>
-          <div class="profile-shell__social-tools">
-          {#if !isOwnProfile && $isAuthenticated}
+          <ProfileSocial
+            profileId={targetProfile.id}
+            username={username}
+            isOwnProfile={false}
+            isAuthenticated={$isAuthenticated}
+            social={social}
+            settings={socialSettings}
+            on:socialchange={handleSocialChange}
+          />
+          {#if $isAuthenticated}
             <button
               type="button"
               class="profile-shell__action profile-shell__action--secondary"
@@ -683,7 +705,6 @@
               {followLoading ? 'Updating…' : isFollowed ? 'Remove rival' : 'Add to rivals'}
             </button>
           {/if}
-          </div>
         </section>
       {/if}
   {:else if !loading}
@@ -876,7 +897,6 @@
   .profile-shell__compatibility h3 { margin: var(--space-1) 0 0; color: var(--color-ink-strong); font: 600 var(--type-h3) / 1.1 var(--font-display-stack); }
   .profile-shell__compatibility p:not(.profile-shell__story-eyebrow) { max-width: 42rem; margin: var(--space-2) 0 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
   .profile-shell__compatibility-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
-  .profile-shell__social-tools > .profile-shell__action { justify-self: start; }
   .profile-shell__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
   .profile-shell__stats > div { min-width: 0; padding: var(--space-4); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-inset); }
   .profile-shell__stats strong { display: block; color: var(--color-ink-strong); font: 600 clamp(1.45rem, 3vw, 2.25rem) / 1 var(--font-display-stack); }

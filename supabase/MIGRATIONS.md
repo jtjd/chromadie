@@ -174,6 +174,19 @@ Homepage profile collection:
   the homepage profile specimen. It only upserts catalog metadata and does not
   change inventory, entitlements, equipped loadouts, or gameplay authority.
 
+Public positive social summary visibility:
+
+- `migrations/20260808160000_profile_social_summary_visibility.sql` adds the
+  owner-controlled `social_summary_visible` setting and extends the bounded
+  public social projection so aggregate favorite/reaction counts can be hidden
+  without disabling positive reactions, favorites, guestbook moderation, block,
+  or report behavior. The existing four-argument settings RPC remains intact;
+  the additive five-argument overload is owner-only and defaults the new field
+  to visible for existing and new profiles.
+- The migration is forward-only and non-destructive. A rollback can restore
+  visible counts by setting the new field to `true`; it must not remove social
+  rows, reports, guestbook notes, or existing settings RPCs.
+
 Version-controlled cron schedule:
 
 - `update_cotw()` runs every Monday at `00:00 UTC`.

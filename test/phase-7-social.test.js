@@ -118,13 +118,15 @@ test('social settings normalization preserves safe defaults for incomplete RPC d
     interactionsEnabled: true,
     guestbookEnabled: true,
     activityVisible: true,
-    discoverable: true
+    discoverable: true,
+    socialSummaryVisible: true
   });
   assert.deepEqual(normalizeProfileSocialSettings({ settings: { activityVisible: false } }), {
     interactionsEnabled: true,
     guestbookEnabled: true,
     activityVisible: false,
-    discoverable: true
+    discoverable: true,
+    socialSummaryVisible: true
   });
 });
 
@@ -144,4 +146,27 @@ test('social implementation keeps writes RPC-backed and text rendering safe', as
   assert.match(migration, /consume_profile_social_rate_limit/);
   assert.match(migration, /REVOKE ALL ON TABLE public\.profile_social_settings/);
   assert.match(migration, /get_public_profile_discovery|discoverable/);
+});
+
+test('public social presentation keeps positive signals moderated and owner-controlled', async () => {
+  const [shell, component, migration, social] = await Promise.all([
+    readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileSocial.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../supabase/migrations/20260808160000_profile_social_summary_visibility.sql', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/profileSocial.js', import.meta.url), 'utf8')
+  ]);
+
+  assert.match(shell, /<ProfileSocial[\s\S]*on:socialchange=\{handleSocialChange\}/);
+  assert.match(shell, /social=\{social\}/);
+  assert.match(component, /toggle_profile_reaction/);
+  assert.match(component, /create_profile_guestbook_entry/);
+  assert.match(component, /p_social_summary_visible/);
+  assert.match(component, /Show positive social counts/);
+  assert.match(social, /socialSummaryVisible/);
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS social_summary_visible/);
+  assert.match(migration, /update_my_profile_social_settings\(boolean, boolean, boolean, boolean, boolean\)/);
+  assert.match(migration, /CASE WHEN v_summary_visible THEN/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.update_my_profile_social_settings/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.update_my_profile_social_settings\(boolean, boolean, boolean, boolean, boolean\) TO authenticated/);
+  assert.doesNotMatch(component, /innerHTML|new Function|eval\s*\(/);
 });

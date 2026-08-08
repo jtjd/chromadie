@@ -166,7 +166,8 @@
       p_interactions_enabled: settingsDraft.interactionsEnabled,
       p_guestbook_enabled: settingsDraft.guestbookEnabled,
       p_activity_visible: settingsDraft.activityVisible,
-      p_discoverable: settingsDraft.discoverable
+      p_discoverable: settingsDraft.discoverable,
+      p_social_summary_visible: settingsDraft.socialSummaryVisible
     });
     settingsLoading = false;
     if (result.error || result.data?.success === false) {
@@ -206,7 +207,7 @@
         <div class="profile-social__save">
           <div>
             <strong>Favorite this identity</strong>
-            <span>{socialView.favoriteCount} saved</span>
+            <span>{socialView.socialSummaryVisible ? socialView.favoriteCount + ' saved' : 'Save count is private'}</span>
           </div>
           {#if isOwnProfile}
             <span class="profile-social__owner-note">Your profile</span>
@@ -236,7 +237,7 @@
               >
                 <span aria-hidden="true">{type === 'spark' ? '✦' : type === 'glow' ? '◈' : '✺'}</span>
                 {PROFILE_REACTION_LABELS[type]}
-                <b>{socialView.reactionCounts[type]}</b>
+                {#if socialView.socialSummaryVisible}<b>{socialView.reactionCounts[type]}</b>{/if}
               </button>
             {/each}
           </div>
@@ -336,6 +337,7 @@
         <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.guestbookEnabled} on:change={(event) => updateSetting('guestbookEnabled', event.currentTarget.checked)} /><span><b>Accept guestbook notes</b><small>Existing notes remain visible until you remove them.</small></span></label>
         <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.activityVisible} on:change={(event) => updateSetting('activityVisible', event.currentTarget.checked)} /><span><b>Show recent color activity</b><small>Hides the recent roll timeline and collection story from visitors.</small></span></label>
         <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.discoverable} on:change={(event) => updateSetting('discoverable', event.currentTarget.checked)} /><span><b>Include me in discovery</b><small>Your direct public profile link continues to work when this is off.</small></span></label>
+        <label class="profile-social__check"><input type="checkbox" checked={settingsDraft.socialSummaryVisible} on:change={(event) => updateSetting('socialSummaryVisible', event.currentTarget.checked)} /><span><b>Show positive social counts</b><small>Visitors can still react or save your profile when counts are hidden.</small></span></label>
           <button type="button" class="profile-social__button" disabled={settingsLoading} on:click={saveSettings}>{settingsLoading ? 'Saving…' : 'Save privacy settings'}</button>
         </div>
       </details>

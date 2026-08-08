@@ -14,6 +14,7 @@ export function createEmptyProfileSocial() {
     interactionsEnabled: true,
     guestbookEnabled: true,
     activityVisible: true,
+    socialSummaryVisible: true,
     favoriteCount: 0,
     reactionCounts: { spark: 0, glow: 0, cheer: 0 },
     viewerFavorited: false,
@@ -27,7 +28,8 @@ export function createDefaultProfileSocialSettings() {
     interactionsEnabled: true,
     guestbookEnabled: true,
     activityVisible: true,
-    discoverable: true
+    discoverable: true,
+    socialSummaryVisible: true
   };
 }
 
@@ -70,6 +72,7 @@ export function normalizeProfileSocial(value) {
     interactionsEnabled: safeBoolean(source.interactionsEnabled, true),
     guestbookEnabled: safeBoolean(source.guestbookEnabled, true),
     activityVisible: safeBoolean(source.activityVisible, true),
+    socialSummaryVisible: safeBoolean(source.socialSummaryVisible, true),
     favoriteCount: safeCount(source.favoriteCount),
     reactionCounts: {
       spark: safeCount(counts.spark),
@@ -95,7 +98,8 @@ export function normalizeProfileSocialSettings(value) {
     interactionsEnabled: safeBoolean(source.interactionsEnabled, true),
     guestbookEnabled: safeBoolean(source.guestbookEnabled, true),
     activityVisible: safeBoolean(source.activityVisible, true),
-    discoverable: safeBoolean(source.discoverable, true)
+    discoverable: safeBoolean(source.discoverable, true),
+    socialSummaryVisible: safeBoolean(source.socialSummaryVisible, true)
   };
 }
 

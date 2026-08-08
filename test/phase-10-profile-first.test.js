@@ -50,7 +50,8 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(settings, /import\('\.\/ProfileEditor\.svelte'\)/);
   assert.match(settings, /import\('\.\/ProfileSocial\.svelte'\)/);
   assert.match(shell, /TodayColor result=\{latestRoll\}[^\n]*accentColor=\{signatureColor\}/);
-  assert.doesNotMatch(shell, /<ProfileSocial/);
+  assert.match(shell, /<ProfileSocial[\s\S]*social=\{social\}/);
+  assert.match(shell, /profile-shell__social-section/);
   assert.match(shell, /Add to rivals/);
   assert.match(shell, /getProfileStoryVisible\(effectiveProfileConfig\)/);
   assert.match(shell, /showRoll = getProfileRollVisible/);

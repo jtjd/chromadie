@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Bring positive social into public profiles
+
+- Public profiles now expose bounded favorite, Spark/Glow/Cheer reaction, and
+  moderated guestbook interactions with block and report controls.
+- Anonymous visitors can read allowed social content and see how to sign in;
+  authenticated visitors use the existing rate-limited RPC actions.
+- Profile owners can hide aggregate positive-social counts while continuing to
+  receive reactions and favorites.
+
 ## 2026-08-08 — Add allowlisted provider widgets
 
 - Profile Studio now supports up to two focused provider widgets from Spotify

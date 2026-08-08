@@ -1,5 +1,16 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Keep public social positive, bounded, and owner-controlled
+
+The public profile now renders the existing Phase 7 favorite, reaction,
+guestbook, block, and report surface through its canonical social projection.
+Aggregate favorite/reaction counts are independently hideable with the
+additive `social_summary_visible` setting; hiding counts does not disable
+positive interactions or hide the current viewer's own saved/reaction state.
+No social action changes gameplay, scoring, progression, or discovery rank.
+The new five-argument settings RPC is an additive overload, while the legacy
+four-argument RPC remains available for compatibility.
+
 ## 2026-08-08 — Keep provider expression structured and allowlisted
 
 Provider widgets are stored as a small validated `{ provider, type, id,

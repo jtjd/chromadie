@@ -149,9 +149,12 @@ remain planned and must begin one at a time.
    and YouTube providers, owner drafts, lazy preview/public players, and CSP
    enforcement. See
    [`milestones/DASHBOARD_PARITY_M4_PROVIDER_WIDGETS.md`](milestones/DASHBOARD_PARITY_M4_PROVIDER_WIDGETS.md).
-8. Next: positive moderated social features, privacy-conscious analytics,
-   templates/premium expression, and finally aliases/domains/API access as
-   separately authorized milestones.
+8. Completed and deployed: positive moderated social features now render through the
+   existing bounded projection, with owner-controlled aggregate-count privacy
+   and the existing moderation boundary preserved. See
+   [`milestones/DASHBOARD_PARITY_M5_POSITIVE_SOCIAL.md`](milestones/DASHBOARD_PARITY_M5_POSITIVE_SOCIAL.md).
+9. Next: privacy-conscious analytics, templates/premium expression, and
+   finally aliases/domains/API access as separately authorized milestones.
 
 ## Deferred themes
 

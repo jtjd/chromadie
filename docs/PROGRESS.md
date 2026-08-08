@@ -1,5 +1,22 @@
 # Chromadie 2.0 Progress
 
+## Dashboard parity Milestone 5 deployed — 2026-08-08
+
+- Wired the existing bounded social projection into public profiles so
+  visitors can favorite, send positive reactions, leave moderated guestbook
+  notes, block, and report without a second social implementation.
+- Added owner-controlled positive social count visibility. Hidden counts do
+  not disable reactions or favorites, and the visitor's own state remains
+  available so controls stay understandable.
+- Added the additive
+  `20260808160000_profile_social_summary_visibility` migration with a defaulted
+  setting and owner-only five-argument settings RPC overload. Existing social
+  rows, four-argument callers, reports, and guestbook moderation remain
+  compatible.
+- Added public-shell, renderer, normalizer, migration, and safe-text contract
+  coverage. Local schema lint has passed; reset and the complete validation
+  suite and linked migration deployment pass.
+
 ## Dashboard parity Milestone 4 deployed — 2026-08-08
 
 - Added a bounded `widgets` projection with Spotify and YouTube video support,

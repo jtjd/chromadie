@@ -30,7 +30,8 @@ test('phase 11 visual contract preserves secondary detail and owner boundaries',
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
   assert.match(settings, /import\('\.\/ProfileEditor\.svelte'\)/);
   assert.match(settings, /import\('\.\/ProfileSocial\.svelte'\)/);
-  assert.doesNotMatch(shell, /<ProfileSocial/);
+  assert.match(shell, /<ProfileSocial[\s\S]*on:socialchange=\{handleSocialChange\}/);
+  assert.match(shell, /profile-shell__social-section/);
   assert.match(shell, /Add to rivals/);
   assert.match(roll, /<details class="profile-roll__details"/);
   assert.match(roll, /requestRoll\(supabase, isReroll\)/);

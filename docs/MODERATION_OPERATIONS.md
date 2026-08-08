@@ -41,8 +41,9 @@ email addresses stay out of public JSON.
   follows, favorites, and reactions. Existing guestbook rows remain protected
   for moderation and are hidden across the blocked relationship.
 - Owner settings can disable new interactions, guestbook notes, public recent
-  activity, or discovery inclusion. Disabling discovery does not invalidate a
-  direct public profile URL.
+  activity, discovery inclusion, or aggregate positive-social counts.
+  Disabling discovery does not invalidate a direct public profile URL, and
+  hiding aggregate counts does not disable reactions or favorites.
 - Profile deletion cascades account-owned social rows. Report rows therefore
   do not outlive the reported profile or reporter through this schema.
 
