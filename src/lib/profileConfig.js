@@ -1,5 +1,6 @@
 import { normalizeProfileExpression } from './profileExpression.js';
 import { createDefaultProfileContent, normalizeProfileContent } from './profileContent.js';
+import { normalizeProfileWidgets } from './profileWidgets.js';
 
 export const PROFILE_CONFIG_VERSION = 1;
 
@@ -130,6 +131,7 @@ export function createDefaultProfileConfig(signatureColor = PROFILE_APPEARANCE_D
     modules: defaultModules(),
     links: [],
     content: createDefaultProfileContent(),
+    widgets: [],
     avatar_path: null,
     background_path: null,
     audio_path: null,
@@ -196,7 +198,8 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
     modules: modules.sort((left, right) => left.order - right.order),
     links: links.sort((left, right) => left.order - right.order),
     content: normalizeProfileContent(value.content),
-    ...normalizeProfileExpression(value)
+    ...normalizeProfileExpression(value),
+    widgets: normalizeProfileWidgets(value.widgets, value)
   };
   normalized.signatureColor = normalized.appearance.colors.accent;
   if (typeof value.storyVisible === 'boolean') normalized.storyVisible = value.storyVisible;

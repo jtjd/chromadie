@@ -52,6 +52,13 @@ Catalog source of truth:
 - `npm run check:catalog-drift` detects snapshot/seed drift and checks the remote catalog when
   Supabase credentials are available.
 
+Provider widgets:
+
+- `migrations/20260808150000_profile_provider_widgets.sql` adds the normalized
+  JSONB provider-widget projection and section-scoped owner save/publish
+  support. It keeps legacy Spotify fields readable, stores only bounded
+  provider identifiers, and does not create an arbitrary media/embed table.
+
 Lean alpha cosmetic reset:
 
 - `migrations/20260802110000_lean_cosmetic_catalog_reset.sql` is the single

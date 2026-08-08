@@ -145,9 +145,13 @@ remain planned and must begin one at a time.
 6. Completed locally: structured About/Projects content with bounded plain text,
    HTTPS links, owner drafts, publishing, conflict handling, and live preview.
    See [`milestones/DASHBOARD_PARITY_M3_CONTENT_REGIONS.md`](milestones/DASHBOARD_PARITY_M3_CONTENT_REGIONS.md).
-7. Next: allowlisted provider widgets, then positive moderated social features,
-   privacy-conscious analytics, templates/premium expression, and finally
-   aliases/domains/API access as separately authorized milestones.
+7. Completed and deployed: allowlisted provider widgets with bounded Spotify
+   and YouTube providers, owner drafts, lazy preview/public players, and CSP
+   enforcement. See
+   [`milestones/DASHBOARD_PARITY_M4_PROVIDER_WIDGETS.md`](milestones/DASHBOARD_PARITY_M4_PROVIDER_WIDGETS.md).
+8. Next: positive moderated social features, privacy-conscious analytics,
+   templates/premium expression, and finally aliases/domains/API access as
+   separately authorized milestones.
 
 ## Deferred themes
 

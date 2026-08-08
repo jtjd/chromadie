@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Add allowlisted provider widgets
+
+- Profile Studio now supports up to two focused provider widgets from Spotify
+  and YouTube, with draft, publish, conflict, reset, and live-preview states.
+- Public profiles use fixed provider embed URLs and lazy loading; the dashboard
+  preview keeps external players deferred until the owner clicks Load player.
+- Existing Spotify profile music remains compatible, and YouTube uses the
+  privacy-enhanced `youtube-nocookie.com` frame origin.
+
 ## 2026-08-08 — Align standalone auth with the homepage and add reusable media
 
 - `/login` and `/signup` now use the shared homepage header, wordmark, canvas,

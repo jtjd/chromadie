@@ -3,9 +3,11 @@
   import IdentityCard from './IdentityCard.svelte';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
+  import ProfileWidgets from './ProfileWidgets.svelte';
   import { getBadgeMeta } from './badgeData.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
+  import { getVisibleProfileWidgets } from './profileWidgets.js';
   import { getCanonicalProfilePath } from './routeContract.js';
   import { getLatestHomepageRoll } from './homepageDirectory.js';
   import { normalizeHexColor } from './utils.js';
@@ -39,6 +41,9 @@
   $: backgroundSrc = getProfileMediaUrl(config.background_path, mediaCacheKey);
   $: audioSrc = getProfileMediaUrl(config.audio_path, mediaCacheKey);
   $: hasSpotify = Boolean(config.spotify_type && config.spotify_id);
+  $: profileWidgets = getVisibleProfileWidgets(config.widgets, config);
+  $: hasSpotifyWidget = profileWidgets.some(widget => widget.provider === 'spotify');
+  $: hasProviderWidgets = profileWidgets.length > 0;
   $: hasAudio = Boolean(audioSrc);
   $: latestRoll = getLatestHomepageRoll(context);
   $: latestRollIsToday = latestRoll?.roll_date === new Date().toISOString().slice(0, 10);
@@ -97,16 +102,17 @@
         />
       </ProfileBorderEffect>
 
-      {#if hasAudio || hasSpotify}
+      {#if hasAudio || hasSpotify || hasProviderWidgets}
         <div class="homepage-preview__music">
           <ProfileMusic
             bestRoll={latestRoll}
             accentColor={accentColor}
             audioSrc={audioSrc}
-            spotifyType={config.spotify_type}
-            spotifyId={config.spotify_id}
+            spotifyType={hasSpotifyWidget ? '' : config.spotify_type}
+            spotifyId={hasSpotifyWidget ? '' : config.spotify_id}
             deferMedia={true}
           />
+          <ProfileWidgets widgets={profileWidgets} compact={true} deferMedia={true} />
         </div>
       {/if}
     </div>
@@ -184,6 +190,7 @@
   .homepage-preview__music :global(.profile-music) { width: max-content; max-width: 100%; border-radius: 999px; }
   .homepage-preview__music :global(.profile-music--spotify-deferred) { min-height: 3rem; padding: 0.45rem 0.65rem; }
   .homepage-preview__music :global(.profile-music__copy strong) { font-size: 0.75rem; }
+  .homepage-preview__music :global(.profile-widgets) { margin-top: .7rem; }
   .homepage-preview__footer { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 4.35rem; padding: 0.75rem 0.9rem; border-top: 1px solid rgba(241, 243, 237, 0.12); background: rgba(7, 9, 9, 0.78); }
   .homepage-preview__roll { display: flex; align-items: center; min-width: 0; gap: 0.65rem; }
   .homepage-preview__roll-copy { display: grid; min-width: 0; gap: 0.18rem; }

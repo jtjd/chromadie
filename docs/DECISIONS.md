@@ -1,5 +1,16 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Keep provider expression structured and allowlisted
+
+Provider widgets are stored as a small validated `{ provider, type, id,
+visible, order }` projection rather than user-authored URLs or markup. The
+first contract supports one Spotify item and one YouTube video, with a maximum
+of two provider-unique widgets. The renderer derives fixed official embed
+origins, lazy-loads public frames, and requires an explicit preview action.
+Legacy Spotify fields remain readable during the additive migration. This
+keeps profile expression personal and discoverable without weakening the
+public-profile security, CSP, or performance boundary.
+
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
 ## 2026-08-08 — Keep standalone additions inside the homepage visual contract

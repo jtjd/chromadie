@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Dashboard parity Milestone 4 deployed — 2026-08-08
+
+- Added a bounded `widgets` projection with Spotify and YouTube video support,
+  strict canonical HTTPS parsing, provider uniqueness, and a two-widget cap.
+- Added a lazy Profile Studio Provider widgets editor with draft, publish,
+  conflict reload, reset, validation, and fitting-room preview feedback.
+- Public profiles now generate only fixed official provider embed URLs; public
+  frames are lazy and preview frames require an explicit load action.
+- Existing legacy Spotify configuration remains compatible through normalized
+  projection, and the privacy-enhanced YouTube frame origin is in CSP.
+- The next handoff is positive moderated social features.
+
 ## Dashboard parity Milestone 2 complete locally — 2026-08-08
 
 - Restyled standalone `/login` and `/signup` around the shared homepage

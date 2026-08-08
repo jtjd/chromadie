@@ -29,7 +29,7 @@ const CSP_BASE = [
   "img-src 'self' data: blob: https://*.supabase.co",
   "media-src 'self' blob: https://*.supabase.co",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://cloudflareinsights.com",
-  "frame-src https://challenges.cloudflare.com https://open.spotify.com"
+  "frame-src https://challenges.cloudflare.com https://open.spotify.com https://www.youtube-nocookie.com"
 ];
 
 export const baseSecurityHeaders = Object.freeze({

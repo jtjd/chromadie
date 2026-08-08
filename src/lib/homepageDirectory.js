@@ -17,7 +17,7 @@ function candidateKey(username) {
 
 function hasPublicExpression(context) {
   const config = context?.profileConfig?.published;
-  return Boolean(config?.audio_path || (config?.spotify_type && config?.spotify_id));
+  return Boolean(config?.audio_path || (config?.spotify_type && config?.spotify_id) || config?.widgets?.length);
 }
 
 function hasPublicRoll(context) {
