@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Dashboard parity Milestone 1A complete locally — 2026-08-08
+
+- Added a forward-only migration and shared client policy for available 1–20
+  character ASCII usernames while preserving moderation, exact reservations,
+  case-insensitive uniqueness, pending-account reclaim, and `Admin`
+  grandfathering.
+- Hard-reserved the newly valid `c`, `og`, and `u` application routes and
+  updated profile, challenge, signup/recovery, public projection, route, drift,
+  and database-security contracts together.
+- Signup and homepage claim controls now expose the one-character minimum. The
+  browser gate created a two-character account and passed canonical profile,
+  desktop/mobile, keyboard, preview, and reduced-motion checks.
+- Local reset and schema lint pass; the full required suite passes with 206
+  tests. Linked migration deployment remains pending review. Milestone 1B,
+  standalone authentication routes, remains unstarted.
+
 ## Dashboard parity Milestone 0 complete — 2026-08-08
 
 - Reconciled current migration/catalog truth and separated database readiness

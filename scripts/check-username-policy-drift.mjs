@@ -12,7 +12,10 @@ import {
 import { RESERVED_ROUTE_SEGMENTS } from '../src/lib/routeContract.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const migrationPath = path.join(repoRoot, 'supabase/migrations/20260730100000_username_reservation_policy.sql');
+const migrationPaths = [
+  'supabase/migrations/20260730100000_username_reservation_policy.sql',
+  'supabase/migrations/20260808120000_short_usernames.sql'
+].map(relativePath => path.join(repoRoot, relativePath));
 const localContainer = process.env.SUPABASE_DB_CONTAINER || 'supabase_db_Chromadie';
 
 function fail(message) {
@@ -40,13 +43,15 @@ for (const route of RESERVED_ROUTE_SEGMENTS) {
   assert(entry.releasePolicy === 'never', `route segment is not hard-reserved: ${route}`);
 }
 
-const migration = await readFile(migrationPath, 'utf8');
 const seeded = new Map();
-const rowPattern = /\('([a-z0-9_]{3,20})',\s*'([^']+)',\s*'[^']*',\s*'(never|manual)'\)/g;
-for (const match of migration.matchAll(rowPattern)) {
-  const [, username, category, releasePolicy] = match;
-  assert(!seeded.has(username), `duplicate SQL seed row ${username}`);
-  seeded.set(username, { category, releasePolicy });
+const rowPattern = /\('([a-z0-9_]{1,20})',\s*'([^']+)',\s*'[^']*',\s*'(never|manual)'\)/g;
+for (const migrationPath of migrationPaths) {
+  const migration = await readFile(migrationPath, 'utf8');
+  for (const match of migration.matchAll(rowPattern)) {
+    const [, username, category, releasePolicy] = match;
+    assert(!seeded.has(username), `duplicate SQL seed row ${username}`);
+    seeded.set(username, { category, releasePolicy });
+  }
 }
 
 assert(seeded.size === expected.size, `SQL seed has ${seeded.size} rows; snapshot has ${expected.size}`);

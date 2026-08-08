@@ -8,7 +8,8 @@ moderation, authentication identity, and username ownership.
 
 The checked-in policy is defined in
 [`src/lib/usernamePolicy.js`](../src/lib/usernamePolicy.js), seeded by
-`supabase/migrations/20260730100000_username_reservation_policy.sql`, and
+`supabase/migrations/20260730100000_username_reservation_policy.sql`, extended
+for short route names by `supabase/migrations/20260808120000_short_usernames.sql`, and
 verified by `npm run check:username-policy-drift`. The database is the final
 authority; browser validation is only immediate feedback.
 
@@ -57,7 +58,7 @@ artist
 - `manual`: protected by default. It remains unavailable unless a future
   deliberate, privileged release process changes the reservation row.
 
-The proposed policy contains 131 hard-reserved names and 40 protected/manual
+The policy contains 134 hard-reserved names and 40 protected/manual
 release names. Categories are `route`, `brand`, `official`, `trust`, `system`,
 and `protected`. The migration enforces lowercase normalized keys, the real
 username pattern, valid categories, and valid release policies.
@@ -66,6 +67,8 @@ username pattern, valid categories, and valid release policies.
 
 Both client and server trim surrounding whitespace and normalize case to a
 lowercase key. Malformed values are rejected before reservation lookup.
+Valid usernames contain 1–20 ASCII letters, digits, or underscores. The short
+route segments `c`, `og`, and `u` are exact hard reservations.
 Reservation checks compare only:
 
 ```text

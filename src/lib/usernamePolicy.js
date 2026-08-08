@@ -3,13 +3,13 @@
 
 const HARD_RESERVED_NAMES = Object.freeze([
   'account', 'accounts', 'admin', 'administrator', 'api', 'assets', 'auth',
-  'callback', 'challenge', 'challenges', 'changelog', 'discover', 'docs',
+  'c', 'callback', 'challenge', 'challenges', 'changelog', 'discover', 'docs',
   'documentation', 'edit', 'explore', 'faq', 'featured', 'help', 'home',
   'howtoplay', 'leaderboard', 'legal', 'login', 'logout', 'notifications',
-  'oauth', 'password', 'privacy', 'profile', 'profiles', 'prototype',
+  'oauth', 'og', 'password', 'privacy', 'profile', 'profiles', 'prototype',
   'random', 'rankings', 'recent', 'register', 'resetpassword', 'rising',
   'robots', 'roll', 'search', 'settings', 'shop', 'signup', 'sitemap',
-  'status', 'store', 'studio', 'support', 'terms', 'trending', 'verify',
+  'status', 'store', 'studio', 'support', 'terms', 'trending', 'u', 'verify',
   'verification', 'webhook', 'webhooks',
   'chm', 'chmlol', 'chromadie', 'chromadielol', 'official', 'officialchm',
   'officialchromadie', 'chmofficial', 'chromadieofficial', 'chm_official',
@@ -37,7 +37,7 @@ const MANUAL_RELEASE_NAMES = Object.freeze([
   'facebook'
 ]);
 
-export const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
+export const USERNAME_PATTERN = /^[A-Za-z0-9_]{1,20}$/;
 export const HARD_RESERVED_USERNAMES = HARD_RESERVED_NAMES;
 export const MANUAL_RELEASE_USERNAMES = MANUAL_RELEASE_NAMES;
 export const HARD_RESERVED_USERNAME_SET = new Set(HARD_RESERVED_NAMES);
@@ -58,14 +58,14 @@ export const USERNAME_POLICY_SNAPSHOT = Object.freeze([
 
 function getCategory(username) {
   const routeNames = new Set([
-    'account', 'accounts', 'api', 'assets', 'auth', 'callback', 'challenge',
+    'account', 'accounts', 'api', 'assets', 'auth', 'c', 'callback', 'challenge',
     'challenges', 'changelog', 'discover', 'docs', 'documentation', 'edit',
     'explore', 'faq', 'featured', 'help', 'home', 'howtoplay', 'leaderboard',
-    'legal', 'login', 'logout', 'notifications', 'oauth', 'password', 'privacy',
+    'legal', 'login', 'logout', 'notifications', 'oauth', 'og', 'password', 'privacy',
     'profile', 'profiles', 'prototype', 'random', 'rankings', 'recent',
     'register', 'resetpassword', 'rising', 'robots', 'roll', 'search',
     'settings', 'shop', 'signup', 'sitemap', 'status', 'store', 'studio',
-    'support', 'terms', 'trending', 'verify', 'verification', 'webhook',
+    'support', 'terms', 'trending', 'u', 'verify', 'verification', 'webhook',
     'webhooks'
   ]);
   const brandNames = new Set([

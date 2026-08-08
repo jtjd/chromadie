@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Allow one- and two-character usernames
+
+- Signup, homepage claims, canonical root profiles, compatibility routes, and
+  challenge attribution now support available 1–20 character usernames.
+- Existing route, brand, moderation, and ownership protections remain active;
+  the newly valid `c`, `og`, and `u` application paths are hard-reserved.
+- The database migration is checked in and locally certified but still needs
+  the separately reviewed linked deployment before the client policy launches.
+
 ## 2026-08-08 — Complete the Profile Studio release baseline
 
 - Added a repeatable loopback-only Chromium smoke that verifies the inline live

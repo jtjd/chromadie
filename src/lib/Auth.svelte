@@ -178,7 +178,7 @@
       }
       const requestedUsername = username.trim();
       if (!isUsernameShapeValid(requestedUsername)) {
-        error = 'Username must be 3-20 characters and use only letters, numbers, or underscores.';
+        error = 'Username must be 1-20 characters and use only letters, numbers, or underscores.';
         loading = false;
         return;
       }
@@ -293,7 +293,7 @@
     {#if tab === 'signup'}
       <label class="field-group" for="username-input">
         <span class="field-label">Username</span>
-        <input id="username-input" type="text" class="input-field" bind:value={username} placeholder="Your username" autocomplete="nickname" spellcheck="false" minlength="3" maxlength="20" required />
+        <input id="username-input" type="text" class="input-field" bind:value={username} placeholder="Your username" autocomplete="nickname" spellcheck="false" minlength="1" maxlength="20" required />
         <span class="field-hint">{mode.helper}</span>
       </label>
     {/if}

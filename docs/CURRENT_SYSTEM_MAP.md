@@ -135,6 +135,12 @@ not a Supabase/API write.
 | `stores.js` | `user_follows` query filtered by current user | Followed/rival ids |
 | `stores.js` | `meta.shop_version`, `shop_items` | Versioned catalog fetch and cache invalidation |
 
+The active username shape is 1–20 ASCII letters, digits, or underscores.
+Client checks provide immediate feedback, while the profile trigger,
+case-insensitive `username_key` index, moderation function, reservation table,
+and signup advisory lock remain authoritative. The short application paths
+`c`, `og`, and `u` are hard-reserved.
+
 ### Roll and challenge flow
 
 | Client caller | Surface | Purpose |

@@ -15,6 +15,8 @@ import {
   terminateProcess,
   waitForHttp
 } from './cdp-harness.mjs';
+import { isReservedRouteSegment } from '../../src/lib/routeContract.js';
+import { isProtectedUsername } from '../../src/lib/usernamePolicy.js';
 
 const environment = await loadLocalEnvironment();
 
@@ -117,8 +119,12 @@ try {
   const debugPort = await findAvailablePort(defaultDebugPort);
   results.ports = { appPort, debugPort };
   const appUrl = `http://127.0.0.1:${appPort}`;
-  const canonicalUsername = `smoke${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.slice(0, 20).toLowerCase();
-  const email = `${canonicalUsername}@example.test`;
+  const shortAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789_';
+  let canonicalUsername;
+  do {
+    canonicalUsername = Array.from({ length: 2 }, () => shortAlphabet[Math.floor(Math.random() * shortAlphabet.length)]).join('');
+  } while (isProtectedUsername(canonicalUsername) || isReservedRouteSegment(canonicalUsername));
+  const email = `smoke-${Date.now().toString(36)}-${canonicalUsername}@example.test`;
   const password = `Smoke-${Date.now().toString(36)}-Pass!`;
 
   vite = await startVite({ appPort, environment: { url: supabaseUrl.origin, key: environment.key }, evidenceDir });

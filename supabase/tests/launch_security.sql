@@ -367,14 +367,66 @@ SELECT pg_temp.audit_assert(
 );
 SELECT pg_temp.audit_assert(
   public.is_username_reserved('  ADMIN  ')
+    AND public.is_username_reserved('c')
+    AND public.is_username_reserved('OG')
+    AND public.is_username_reserved('u')
     AND NOT public.is_username_reserved('administratorx')
     AND NOT public.is_username_reserved('myspotifylist')
     AND NOT public.is_username_reserved('chromadiefan')
     AND NOT public.is_username_available('admin')
     AND NOT public.is_username_available('ABOUT')
+    AND NOT public.is_username_available('c')
+    AND public.is_username_available('q')
+    AND public.is_username_available('Q7')
+    AND public.is_username_available('_')
     AND public.is_username_available('supporter')
     AND public.is_username_available('administratorx'),
   'username reservation must use exact normalized equality without substring overblocking'
+);
+
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '10000000-0000-0000-0000-000000000011',
+  'authenticated', 'authenticated', 'short-policy@example.invalid', '', now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"username":"q"}'::jsonb, now(), now()
+);
+SELECT pg_temp.audit_assert(
+  (SELECT username = 'q' AND username_key = 'q'
+   FROM public.profiles
+   WHERE id = '10000000-0000-0000-0000-000000000011')
+    AND NOT public.is_username_available('Q')
+    AND (public.get_public_profile_identity('Q')->>'username') = 'q',
+  'one-character signup, case-insensitive uniqueness, or public projection drifted'
+);
+INSERT INTO public.challenges (sender_user_id, sender_username, target_score, target_hex)
+VALUES ('10000000-0000-0000-0000-000000000011', 'q', 0, '#000000');
+SELECT pg_temp.audit_assert(
+  EXISTS (
+    SELECT 1
+    FROM public.challenges
+    WHERE sender_user_id = '10000000-0000-0000-0000-000000000011'
+      AND sender_username = 'q'
+  ),
+  'challenge storage rejected a one-character authoritative sender username'
+);
+SELECT pg_temp.audit_expect_check(
+  $short_duplicate_signup$
+    INSERT INTO auth.users (
+      instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    ) VALUES (
+      '00000000-0000-0000-0000-000000000000',
+      '10000000-0000-0000-0000-000000000012',
+      'authenticated', 'authenticated', 'short-duplicate@example.invalid', '', now(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      '{"username":"Q"}'::jsonb, now(), now()
+    )
+  $short_duplicate_signup$,
+  'case-insensitive one-character duplicate signup was accepted'
 );
 
 INSERT INTO auth.users (

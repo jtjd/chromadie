@@ -25,6 +25,20 @@ test('username policy snapshot contains the complete exact-match sets', () => {
   }
 });
 
+test('one- and two-character username shapes are valid while short routes stay reserved', () => {
+  for (const username of ['a', 'Z', '7', '_', 'ab', 'A7', '_x']) {
+    assert.equal(isUsernameShapeValid(username), true, username);
+  }
+  for (const username of ['', 'a-', 'é', 'a b', '123456789012345678901']) {
+    assert.equal(isUsernameShapeValid(username), false, username);
+  }
+  for (const route of ['c', 'u', 'og']) {
+    assert.equal(isReservedRouteSegment(route), true, route);
+    assert.equal(isProtectedUsername(route), true, route);
+    assert.equal(normalizeUsernameSegment(route), null, route);
+  }
+});
+
 test('reservation is exact and does not overblock creative usernames', () => {
   for (const username of ['supporter', 'administratorx', 'myspotifylist', 'chromadiefan', 'color', 'blue', 'rose', 'void', 'angel', 'gamer', 'artist']) {
     assert.equal(isProtectedUsername(username), false, username);
@@ -48,18 +62,28 @@ test('route and username policies remain separate for the grandfathered Admin pr
 
 test('username policy is shared by the client and database migration', async () => {
   const auth = await readFile(new URL('../src/lib/Auth.svelte', import.meta.url), 'utf8');
-  const migration = await readFile(new URL('../supabase/migrations/20260730100000_username_reservation_policy.sql', import.meta.url), 'utf8');
+  const homeClaim = await readFile(new URL('../src/lib/HomeUsernameClaim.svelte', import.meta.url), 'utf8');
+  const migration = await readFile(new URL('../supabase/migrations/20260808120000_short_usernames.sql', import.meta.url), 'utf8');
   const driftCheck = await readFile(new URL('../scripts/check-username-policy-drift.mjs', import.meta.url), 'utf8');
 
   assert.match(auth, /isProtectedUsername/);
+  assert.match(auth, /minlength="1"/);
+  assert.match(auth, /1-20 characters/);
+  assert.match(homeClaim, /minlength="1"/);
+  assert.match(homeClaim, /1–20 letters/);
   assert.doesNotMatch(auth, /new Set\(\['guest', 'anon', 'anonymous'\]\)/);
-  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.reserved_usernames/);
-  assert.match(migration, /ALTER TABLE public\.reserved_usernames ENABLE ROW LEVEL SECURITY/);
+  assert.match(migration, /profiles_username_format_check/);
+  assert.match(migration, /challenges_sender_username_check/);
+  assert.match(migration, /reserved_usernames_key_check/);
+  assert.match(migration, /'\^\[A-Za-z0-9_\]\{1,20\}\$'/);
+  assert.match(migration, /\('c', 'route'/);
+  assert.match(migration, /\('og', 'route'/);
+  assert.match(migration, /\('u', 'route'/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.is_username_reserved/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.enforce_username_policy/);
-  assert.match(migration, /grandfathered_profile_id/);
-  assert.match(migration, /profiles\.username_key = 'chromadie'/);
-  assert.match(migration, /Approved ChromaDie remediation/);
-  assert.match(migration, /profiles_username_policy/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.handle_new_user/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.get_my_profile/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.get_public_profile_identity/);
+  assert.match(driftCheck, /\{1,20\}/);
   assert.match(driftCheck, /--linked/);
 });

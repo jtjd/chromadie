@@ -30,6 +30,12 @@ test('root profile routing is case-normalized and /u remains compatible', () => 
   assert.equal(compatibility.profileRouteKind, 'compatibility');
   assert.equal(compatibility.legacyProfile, true);
   assert.equal(compatibility.canonicalProfilePath, '/neonuser');
+
+  const shortRoot = parseRouteLocation('/A');
+  assert.equal(shortRoot.profileUsername, 'A');
+  assert.equal(shortRoot.canonicalProfilePath, '/a');
+  assert.equal(getCanonicalProfilePath('A'), '/a');
+  assert.equal(getCompatibilityProfilePath('Z7'), '/u/Z7');
 });
 
 test('reserved application and asset paths cannot become usernames', () => {

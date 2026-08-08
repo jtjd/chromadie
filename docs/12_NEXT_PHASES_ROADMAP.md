@@ -119,17 +119,17 @@ full-viewport atmosphere are unchanged. See [`PHASE_14_REPORT.md`](PHASE_14_REPO
 
 ## Dashboard Parity Program
 
-Status: Milestone 0 is complete. Milestone 1A is next; later milestones remain
-planned and must begin one at a time.
+Status: Milestones 0 and 1A are complete locally. Milestone 1B is next; later
+milestones remain planned and must begin one at a time.
 
 1. Completed: close the release baseline and replace the aggregate JavaScript
    release blocker with a route-first performance policy in
    [`milestones/DASHBOARD_PARITY_M0_BASELINE.md`](milestones/DASHBOARD_PARITY_M0_BASELINE.md).
-2. Broaden the authoritative username contract to allow available one- and
+2. Completed locally: broaden the authoritative username contract to allow available one- and
    two-character names without weakening exact route reservations,
    case-insensitive uniqueness, or moderation. See
    [`milestones/DASHBOARD_PARITY_M1A_SHORT_USERNAMES.md`](milestones/DASHBOARD_PARITY_M1A_SHORT_USERNAMES.md).
-3. Replace the homepage authentication overlay with standalone `/login` and
+3. Next: replace the homepage authentication overlay with standalone `/login` and
    `/signup` pages while preserving the existing auth implementation, callback,
    recovery, and safe-return contracts. See
    [`milestones/DASHBOARD_PARITY_M1_AUTH_ROUTES.md`](milestones/DASHBOARD_PARITY_M1_AUTH_ROUTES.md).

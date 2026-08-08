@@ -2,6 +2,20 @@
 
 Use `08_DECISION_LOG_TEMPLATE.md` for new entries.
 
+## 2026-08-08 — Reserve newly valid short route names atomically
+
+One- and two-character usernames use the existing ASCII, case-insensitive,
+moderated, first-claim identity contract. Broadening the shape makes three
+existing Pages paths username-shaped: `c`, `og`, and `u`. They are added as
+hard database reservations in the same transaction that lowers the minimum,
+so no deployment window can claim an application route as an identity.
+
+The migration replaces every active embedded 3–20 check across profile and
+challenge constraints, availability, direct-write enforcement, signup,
+recovery, and public projection. The browser remains advisory; the database
+trigger, reservation table, advisory signup lock, and case-insensitive unique
+index remain authoritative. Linked deployment is a separately reviewed step.
+
 ## 2026-08-08 — Make route payloads the blocking performance policy
 
 Phase 0 replaces the legacy total-generated-JavaScript release blocker with a

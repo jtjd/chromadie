@@ -45,8 +45,10 @@ email configuration changed.
 - [x] Phase 13 identity migration is part of the aligned production baseline.
 - [x] The additive Phase 13.1 reservation migration is present in the linked
   migration history.
-- [x] All 171 reservation rows, including the `Admin` grandfather row, were
-  verified read-only on 2026-08-08.
+- [x] The previously linked 171 reservation rows, including the `Admin`
+  grandfather row, were verified read-only on 2026-08-08.
+- [ ] Apply and verify the short-username migration, including the additive
+  `c`, `og`, and `u` reservations, before deploying the 1–20 client policy.
 - [x] Reservation-table and blocklist RLS, browser grants, helper grants,
   trigger policy, and direct-write rejection remotely.
 - [ ] Confirm Site URL is `https://chm.lol`.

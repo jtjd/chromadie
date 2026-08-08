@@ -25,7 +25,7 @@
   function submitClaim() {
     const nextUsername = username.trim();
     if (!isUsernameShapeValid(nextUsername)) {
-      error = 'Use 3–20 letters, numbers, or underscores.';
+      error = 'Use 1–20 letters, numbers, or underscores.';
       return;
     }
     error = '';
@@ -56,7 +56,7 @@
         placeholder="username"
         autocomplete="nickname"
         spellcheck="false"
-        minlength="3"
+        minlength="1"
         maxlength="20"
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${inputId}-error` : showNote ? `${inputId}-hint` : undefined}

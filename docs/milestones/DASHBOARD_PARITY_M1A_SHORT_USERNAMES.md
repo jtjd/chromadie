@@ -1,7 +1,24 @@
 # Dashboard Parity Milestone 1A — One- and Two-Character Usernames
 
-Status: planned; implement after Dashboard Parity Milestone 0 and before the
-standalone authentication-route release.
+Status: complete locally — 2026-08-08; linked migration deployment remains a
+separately reviewed release step before the standalone authentication routes.
+
+## Implementation result
+
+- Broadened the shared browser and database shape to 1–20 ASCII letters,
+  digits, or underscores without changing case-insensitive uniqueness,
+  moderation, reclaim behavior, or the grandfathered `Admin` profile.
+- Added `c`, `og`, and `u` as hard reservations because those existing Pages
+  routes become username-shaped under the new minimum.
+- Added the forward-only `20260808120000_short_usernames.sql` migration across
+  profile, challenge, reservation, availability, trigger, signup/recovery, and
+  public-profile projection boundaries.
+- Updated signup and homepage controls, policy drift detection, route tests,
+  database security tests, and the real browser smoke. The browser proof
+  created a two-character account and refreshed its canonical root profile.
+- Local reset, schema lint, all 206 tests, the complete repository validation
+  suite, and the eight-step Chromium smoke pass. No linked migration was
+  applied by this repository milestone.
 
 ## Goal
 
