@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Unify Profile Studio typography with Manrope — 2026-08-09
+
+- Added a locally bundled Manrope variable font for Profile Studio UI text,
+  headings, labels, controls, and buttons.
+- Kept IBM Plex Mono for technical values, counters, statuses, and hex fields;
+  homepage and public-profile typography remain unchanged.
+
 ## Simplify Profile Studio surface contrast — 2026-08-09
 
 - Replaced the bright large-panel fills with alternating Catppuccin Crust,

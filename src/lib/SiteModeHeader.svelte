@@ -10,6 +10,7 @@
   export let isAuthenticated = false;
   export let logoutInProgress = false;
   export let isProfileMode = false;
+  export let isProfileSettings = false;
   export let isHomeMode = false;
   // Supporting routes use the homepage header language without inheriting
   // homepage-only account behavior (for example, the signup CTA).
@@ -44,7 +45,7 @@
   }
 </script>
 
-<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--home={isHomeMode || isHomepageStyle} style={`--site-header-accent: ${accentColor};`}>
+<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} style={`--site-header-accent: ${accentColor};`}>
   <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
     <span class="site-mode-header__wordmark">chm<span>.lol</span></span>
   </a>
@@ -209,6 +210,8 @@
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
+
+  .site-mode-header--profile-settings { --site-header-font: 'Manrope Variable', 'Manrope', ui-sans-serif, system-ui, sans-serif; }
 
   .site-mode-header--profile .site-mode-header__brand {
     color: #f2f0eb;

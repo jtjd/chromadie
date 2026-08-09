@@ -15,6 +15,8 @@ test('Studio is primary navigation while Shop remains a direct compatibility rou
   assert.match(header, />Studio</);
   assert.doesNotMatch(header, />Shop</);
   assert.match(app, /parseRouteLocation/);
+  assert.match(app, /isProfileSettings=\{profileSettingsModeVisible\}/);
+  assert.match(header, /export let isProfileSettings = false/);
   assert.match(shop, /void loadShopItems\(\)/);
   assert.match(cosmetics, /void loadShopItems\(\)/);
 });

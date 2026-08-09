@@ -819,9 +819,13 @@ body,
   }
 }
 
-/* Profile Studio palette: Catppuccin Mocha. The dashboard keeps its existing
- * layout and component contracts; this scope changes only the color system. */
+/* Profile Studio system: Catppuccin Mocha and Manrope. The dashboard keeps its
+ * existing layout and component contracts; this scope changes visual tokens. */
 .app-main--profile-settings {
+  --site-font: 'Manrope Variable', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-display-stack: var(--site-font);
+  --font-body-stack: var(--site-font);
+  --font-display: var(--site-font);
   --ctp-crust: #11111b;
   --ctp-mantle: #181825;
   --ctp-base: #1e1e2e;

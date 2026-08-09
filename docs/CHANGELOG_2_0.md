@@ -2196,3 +2196,10 @@ direct route behavior.
   backgrounds.
 - Reserved lighter Mocha tones for controls, input fields, borders, and
   semantic accents so the dashboard reads more quietly.
+
+## 2026-08-09 — Unify Profile Studio typography
+
+- Added a local Manrope variable font for Profile Studio UI typography and its
+  dashboard header.
+- Kept IBM Plex Mono for technical values and left homepage/public-profile font
+  contracts unchanged.

@@ -36,6 +36,8 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(settings, /createInitialSettingsContext/);
   assert.match(settings, /loading = !previousContext/);
   assert.match(siteStyles, /\.app-main--profile-settings/);
+  assert.match(siteStyles, /--site-font: 'Manrope Variable'/);
+  assert.match(siteStyles, /--font-body-stack: var\(--site-font\)/);
   assert.match(siteStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 

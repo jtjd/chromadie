@@ -889,6 +889,7 @@
         isProfileMode={profileModeVisible}
         isHomeMode={homeModeVisible}
         isHomepageStyle={!profileModeVisible}
+        isProfileSettings={profileSettingsModeVisible}
         isOwner={profileModeOwner}
         on:navigate={handleNavigation}
         on:login={navigateToAuth}

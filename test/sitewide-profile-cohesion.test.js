@@ -15,6 +15,7 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /isProfileMode \? 'Open profile actions' : isHomeMode \|\| isHomepageStyle \? 'Open account actions'/);
   assert.match(siteHeader, /navigate\('home'\)/);
   assert.match(siteHeader, /class:site-mode-header--profile/);
+  assert.match(siteHeader, /class:site-mode-header--profile-settings/);
   assert.match(siteHeader, /\(isHomeMode \|\| isHomepageStyle \|\| isProfileMode\) && !isAuthenticated/);
   assert.match(siteHeader, /width: 100%;/);
   assert.doesNotMatch(siteHeader, /width: min\(100%, 92rem\)/);
@@ -45,6 +46,7 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /\.app-main--site \.discovery-card/);
   assert.match(siteStyles, /\.app-main--site \.shop-page/);
   assert.match(siteStyles, /--site-font: 'Instrument Sans Variable'/);
+  assert.match(siteStyles, /--site-font: 'Manrope Variable'/);
   assert.match(siteStyles, /--site-accent: #cdd2ff/);
   assert.doesNotMatch(siteStyles, /site-mode-header:not\(\.site-mode-header--home\):not\(\.site-mode-header--profile\)/);
   assert.match(siteHeader, /\.site-mode-header--home \.site-mode-header__brand[\s\S]*font-size: 0\.75rem/);

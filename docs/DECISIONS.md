@@ -3702,6 +3702,15 @@ are reserved for input fills, control borders, and button surfaces, while
 semantic colors remain on headings and status accents. This reduces visual
 busyness without changing the dashboard structure or interaction contract.
 
+## 2026-08-09 — Use one Manrope UI family in Profile Studio
+
+Profile Studio uses the locally bundled Manrope variable family for its
+functional interface typography, including the dashboard header, navigation,
+section headings, labels, inputs, and buttons. IBM Plex Mono remains the
+technical companion for hex values, counters, and status metadata. The font
+override is scoped to Profile Studio so public profile and homepage visual
+contracts remain unchanged.
+
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,
