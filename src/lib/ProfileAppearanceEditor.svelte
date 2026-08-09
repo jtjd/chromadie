@@ -138,7 +138,7 @@
   .appearance-editor__range { margin-top: .95rem; }
   .appearance-editor__range output { color: var(--site-faint, #7d7e87); font: .72rem/1 var(--site-mono, monospace); }
   .appearance-editor__range input { width: 100%; accent-color: var(--site-accent, #cdd2ff); }
-  .appearance-editor__message { margin: 0; color: #ffb4bd; font-size: .78rem; }
+  .appearance-editor__message { margin: 0; color: var(--ctp-red, #f38ba8); font-size: .78rem; }
   .appearance-editor__hint { margin: 0; color: var(--site-faint, #7d7e87); font-size: .75rem; line-height: 1.45; }
   @media (max-width: 64rem) { .appearance-editor__color-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__range-grid { grid-template-columns: minmax(0, 1fr); } }

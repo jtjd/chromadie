@@ -2168,3 +2168,10 @@ direct route behavior.
   profile across Customize and Links.
 - Kept the existing V2 owner RPC authority, validation, conflict handling,
   media boundaries, and profile preview behavior intact.
+
+## 2026-08-09 — Apply Catppuccin Mocha to Profile Studio
+
+- Recolored the dashboard surfaces, typography, borders, controls, accents,
+  and status states with a dashboard-scoped Catppuccin Mocha palette.
+- Kept the existing dashboard layout, navigation, spacing, responsive states,
+  and reduced-motion behavior unchanged.

@@ -818,7 +818,7 @@
   .profile-settings-page__toolbar-actions { display: flex; align-items: center; gap: .55rem; }
   .profile-settings-page__toolbar-actions :is(a, button) { min-height: 2rem; padding: .5rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: .78rem; text-decoration: none; cursor: pointer; }
   .profile-settings-page__toolbar-actions :is(a, button):hover { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
-  .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid rgba(255, 183, 94, .35); border-radius: .35rem; color: #ffc783; font-size: .8rem; }
+  .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--ctp-peach, #fab387) 35%, transparent); border-radius: .35rem; color: var(--ctp-peach, #fab387); font-size: .8rem; }
   .profile-settings-page__content { width: 100%; min-width: 0; }
   .profile-links-page { display: grid; gap: 1rem; min-width: 0; }
   .profile-settings-page__state { display: grid; min-height: 16rem; place-items: center; gap: .6rem; color: var(--site-muted, #aaa8b0); }
@@ -828,10 +828,10 @@
   .profile-settings-preview__eyebrow { margin: 0 0 .3rem; color: var(--site-faint, #7d7e87); font: .68rem/1 var(--site-mono, monospace); letter-spacing: .12em; text-transform: uppercase; }
   .profile-settings-preview__header h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: 1rem; letter-spacing: -.02em; }
   .profile-settings-preview__status { display: inline-flex; align-items: center; gap: .4rem; color: var(--site-muted, #aaa8b0); font: .7rem/1 var(--site-mono, monospace); white-space: nowrap; }
-  .profile-settings-preview__status span { width: .42rem; height: .42rem; border-radius: 50%; background: #6de2a4; box-shadow: 0 0 .8rem rgba(109,226,164,.6); }
+  .profile-settings-preview__status span { width: .42rem; height: .42rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); box-shadow: 0 0 .8rem color-mix(in srgb, var(--ctp-green, #a6e3a1) 60%, transparent); }
   .profile-settings-preview__close { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .4rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: 1.1rem; cursor: pointer; }
   .profile-settings-preview__close:hover, .profile-settings-preview__close:focus-visible { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
-  .profile-settings-preview__body { display: grid; min-height: 0; overflow: auto; place-items: start center; padding: 1.25rem; background: radial-gradient(circle at 50% 0%, rgba(205,210,255,.06), transparent 42%), var(--site-deep, #090a0d); }
+  .profile-settings-preview__body { display: grid; min-height: 0; overflow: auto; place-items: start center; padding: 1.25rem; background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--ctp-lavender, #b4befe) 6%, transparent), transparent 42%), var(--site-deep, #11111b); }
   .profile-settings-preview__body :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: visible; }
   .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-canvas) { min-height: 0; }
   .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; align-items: stretch; justify-content: flex-start; }
@@ -847,6 +847,6 @@
   .profile-settings-prompt p { margin: .5rem 0 1rem; color: var(--site-muted, #aaa8b0); font-size: .75rem; }
   .profile-settings-prompt > div { display: flex; justify-content: flex-end; gap: .5rem; }
   .profile-settings-prompt button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .68rem; cursor: pointer; }
-  .profile-settings-prompt__discard { border-color: #ff9da9 !important; color: #ffb4bd !important; }
+  .profile-settings-prompt__discard { border-color: var(--ctp-red, #f38ba8) !important; color: var(--ctp-red, #f38ba8) !important; }
   @media (prefers-reduced-motion: reduce) { .profile-settings-preview__body { scroll-behavior: auto; } }
 </style>

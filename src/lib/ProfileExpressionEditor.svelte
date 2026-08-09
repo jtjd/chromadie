@@ -750,7 +750,7 @@
   .profile-expression-editor__compact-card--cursor { order: 4; }
   .profile-expression-editor__compact-card--locked { opacity: .72; }
   .profile-expression-editor__compact-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
-  .profile-expression-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: #0b0b0b; color: var(--color-ink-muted); cursor: pointer; }
+  .profile-expression-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: var(--surface-inset); color: var(--color-ink-muted); cursor: pointer; }
   .profile-expression-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .profile-expression-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .profile-expression-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
@@ -767,7 +767,7 @@
   .profile-expression-editor__compact-remove { justify-self: start; padding: 0; border: 0; background: transparent; color: var(--color-ink-faint); font: inherit; font-size: var(--type-label); cursor: pointer; text-decoration: underline; text-underline-offset: .15em; }
   .profile-expression-editor__compact-remove:hover:not(:disabled), .profile-expression-editor__compact-remove:focus-visible { color: var(--color-ink-strong); }
   .profile-expression-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
-  .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; padding: .7rem .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: #0b0b0b; }
+  .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; padding: .7rem .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: var(--surface-inset); }
   .profile-expression-editor__compact-audio-play { display: grid; width: 2.2rem; height: 2.2rem; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--color-ink-strong) 48%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--color-ink-strong) 10%, transparent); color: var(--color-ink-strong); font: 700 .7rem/1 var(--font-body-stack); cursor: pointer; }
   .profile-expression-editor__compact-audio-play:hover, .profile-expression-editor__compact-audio-play:focus-visible { background: color-mix(in srgb, var(--color-ink-strong) 18%, transparent); }
   .profile-expression-editor__compact-audio-play:focus-visible, .profile-expression-editor__compact-audio-replace:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }

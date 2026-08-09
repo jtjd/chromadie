@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Catppuccin Mocha Profile Studio palette — 2026-08-09
+
+- Scoped the Catppuccin Mocha palette to Profile Studio, mapping dashboard
+  surfaces, text, borders, accents, status colors, and inputs to the reference
+  tokens.
+- Kept the existing dashboard layout, navigation, spacing, controls, mobile
+  behavior, and reduced-motion behavior unchanged.
+
 ## Simplified color customization and profile publishing — 2026-08-09
 
 - Reduced Color Customization to the seven profile palette colors plus surface

@@ -197,6 +197,6 @@
   .profile-content-editor__remove { justify-self: start; color: var(--site-muted, #aaa8b0); }
   .profile-content-editor__message { margin: 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; }
   .profile-content-editor__hint { margin: 0; color: var(--site-faint, #7d7e87); font-size: .75rem; line-height: 1.45; }
-  .profile-content-editor__message[role="alert"] { color: #ffb4bd; }
+  .profile-content-editor__message[role="alert"] { color: var(--ctp-red, #f38ba8); }
   @media (max-width: 34rem) { .profile-content-editor__header, .profile-content-editor__panel-heading, .profile-content-editor__project-heading { align-items: stretch; flex-direction: column; } }
 </style>

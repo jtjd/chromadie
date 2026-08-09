@@ -182,13 +182,13 @@
 
 <style>
   .profile-customize-page {
-    --customize-panel: #111111;
-    --customize-inset: #0b0b0b;
-    --customize-line: rgba(255, 255, 255, .075);
-    --customize-line-strong: rgba(255, 255, 255, .14);
-    --customize-muted: #929198;
-    --customize-faint: #696870;
-    --customize-purple: #b45ad6;
+    --customize-panel: var(--ctp-surface0, #313244);
+    --customize-inset: var(--ctp-mantle, #181825);
+    --customize-line: var(--site-line, rgba(108, 112, 134, .42));
+    --customize-line-strong: var(--site-line-strong, rgba(147, 153, 178, .58));
+    --customize-muted: var(--ctp-subtext0, #a6adc8);
+    --customize-faint: var(--ctp-overlay1, #7f849c);
+    --customize-purple: var(--ctp-mauve, #cba6f7);
     display: grid;
     width: 100%;
     gap: .75rem;
@@ -203,15 +203,15 @@
   .profile-customize-page__surface-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-width: 0; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: 1.05rem; letter-spacing: -.03em; }
 
-  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .45rem; min-height: 3.1rem; overflow: hidden; padding: .65rem 3.2rem; border: 1px solid color-mix(in srgb, var(--customize-purple) 42%, var(--customize-line)); border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--customize-purple) 14%, #181019), color-mix(in srgb, var(--customize-purple) 7%, #181019)); color: #d6b1e5; font: 600 .72rem/1.35 var(--site-font, sans-serif); cursor: pointer; }
+  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .45rem; min-height: 3.1rem; overflow: hidden; padding: .65rem 3.2rem; border: 1px solid color-mix(in srgb, var(--customize-purple) 42%, var(--customize-line)); border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--customize-purple) 14%, var(--ctp-mantle, #181825)), color-mix(in srgb, var(--customize-purple) 7%, var(--ctp-mantle, #181825))); color: var(--ctp-lavender, #b4befe); font: 600 .72rem/1.35 var(--site-font, sans-serif); cursor: pointer; }
   .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { position: absolute; color: color-mix(in srgb, var(--customize-purple) 24%, transparent); font-size: 4rem; line-height: 1; pointer-events: none; }
   .profile-customize-page__premium-banner::before { content: '◇'; left: 1.2rem; transform: rotate(-18deg); }
   .profile-customize-page__premium-banner::after { content: '✦'; right: 1.2rem; transform: rotate(18deg); }
-  .profile-customize-page__premium-banner:hover, .profile-customize-page__premium-banner:focus-visible { border-color: color-mix(in srgb, var(--customize-purple) 72%, white); background: linear-gradient(90deg, color-mix(in srgb, var(--customize-purple) 19%, #181019), color-mix(in srgb, var(--customize-purple) 10%, #181019)); }
+  .profile-customize-page__premium-banner:hover, .profile-customize-page__premium-banner:focus-visible { border-color: color-mix(in srgb, var(--customize-purple) 72%, var(--ctp-text, #cdd6f4)); background: linear-gradient(90deg, color-mix(in srgb, var(--customize-purple) 19%, var(--ctp-mantle, #181825)), color-mix(in srgb, var(--customize-purple) 10%, var(--ctp-mantle, #181825))); }
   .profile-customize-page__premium-banner:focus-visible { outline: 2px solid var(--site-accent, #cdd2ff); outline-offset: 3px; }
-  .profile-customize-page__premium-banner strong { color: #d27cf0; }
-  .profile-customize-page__premium-glyph { color: #d27cf0; font-size: .9rem; }
-  .profile-customize-page__premium-arrow { position: absolute; right: 1rem; color: #d27cf0; font-size: .95rem; }
+  .profile-customize-page__premium-banner strong { color: var(--ctp-mauve, #cba6f7); }
+  .profile-customize-page__premium-glyph { color: var(--ctp-mauve, #cba6f7); font-size: .9rem; }
+  .profile-customize-page__premium-arrow { position: absolute; right: 1rem; color: var(--ctp-mauve, #cba6f7); font-size: .95rem; }
 
   .profile-customize-page__control-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; min-width: 0; }
   .profile-customize-page__control-grid--general { grid-template-columns: minmax(0, 1fr); }

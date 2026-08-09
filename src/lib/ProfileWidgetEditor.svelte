@@ -232,7 +232,7 @@
   .profile-widget-editor__empty { display: grid; gap: .35rem; padding: 1.25rem; border: 1px dashed var(--site-line-strong, rgba(255,255,255,.16)); border-radius: .45rem; }
   .profile-widget-editor__empty strong { font-size: .86rem; }
   .profile-widget-editor__message { margin: 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; }
-  .profile-widget-editor__message[role="alert"] { color: #ffb4bd; }
+  .profile-widget-editor__message[role="alert"] { color: var(--ctp-red, #f38ba8); }
   .profile-widget-editor__hint { margin: 0; color: var(--site-faint, #7d7e87); font-size: .75rem; line-height: 1.45; }
   @media (max-width: 34rem) { .profile-widget-editor__header { align-items: stretch; flex-direction: column; } }
 </style>

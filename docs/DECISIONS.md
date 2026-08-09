@@ -3666,6 +3666,16 @@ through the existing owner-authorized `save_profile_configuration_v2` and
 `publish_profile_configuration_v2` RPCs. Media selection, identity bio saves,
 collection ownership, and privacy/social writes remain on their existing
 scoped boundaries.
+
+## 2026-08-09 — Scope Catppuccin Mocha to Profile Studio
+
+Profile Studio now uses the Catppuccin Mocha reference palette for its
+background layers, surfaces, text hierarchy, borders, mauve/lavender accents,
+and semantic status colors. The palette is scoped to the dashboard host so the
+public profile canvas and other site routes keep their existing visual
+contracts. This is a color-only refinement: layout, spacing, navigation,
+component structure, responsive behavior, and accessibility interactions are
+unchanged.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

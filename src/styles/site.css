@@ -818,3 +818,79 @@ body,
     font-size: clamp(2.85rem, 15vw, 4.75rem);
   }
 }
+
+/* Profile Studio palette: Catppuccin Mocha. The dashboard keeps its existing
+ * layout and component contracts; this scope changes only the color system. */
+.app-main--profile-settings {
+  --ctp-crust: #11111b;
+  --ctp-mantle: #181825;
+  --ctp-base: #1e1e2e;
+  --ctp-surface0: #313244;
+  --ctp-surface1: #45475a;
+  --ctp-surface2: #585b70;
+  --ctp-overlay0: #6c7086;
+  --ctp-overlay1: #7f849c;
+  --ctp-overlay2: #9399b2;
+  --ctp-subtext0: #a6adc8;
+  --ctp-subtext1: #bac2de;
+  --ctp-text: #cdd6f4;
+  --ctp-rosewater: #f5e0e6;
+  --ctp-flamingo: #f2cdcd;
+  --ctp-pink: #f5c2e7;
+  --ctp-mauve: #cba6f7;
+  --ctp-red: #f38ba8;
+  --ctp-maroon: #eba0ac;
+  --ctp-peach: #fab387;
+  --ctp-yellow: #f9e2af;
+  --ctp-green: #a6e3a1;
+  --ctp-teal: #94e2d5;
+  --ctp-sky: #89dceb;
+  --ctp-sapphire: #74c7ec;
+  --ctp-blue: #89b4fa;
+  --ctp-lavender: #b4befe;
+
+  --site-canvas: var(--ctp-base);
+  --site-deep: var(--ctp-crust);
+  --site-raised: var(--ctp-surface0);
+  --site-ink: var(--ctp-text);
+  --site-muted: var(--ctp-subtext1);
+  --site-faint: var(--ctp-overlay1);
+  --site-accent: var(--ctp-mauve);
+  --site-accent-bright: var(--ctp-lavender);
+  --site-line: rgba(108, 112, 134, 0.42);
+  --site-line-strong: rgba(147, 153, 178, 0.58);
+  --site-surface: var(--ctp-surface0);
+  --site-surface-soft: rgba(69, 71, 90, 0.42);
+  --color-canvas: var(--ctp-base);
+  --color-canvas-raised: var(--ctp-surface0);
+  --color-canvas-deep: var(--ctp-crust);
+  --color-ink-strong: var(--ctp-text);
+  --color-ink: var(--ctp-subtext1);
+  --color-ink-muted: var(--ctp-subtext0);
+  --color-ink-faint: var(--ctp-overlay1);
+  --color-line-subtle: var(--site-line);
+  --color-line-strong: var(--site-line-strong);
+  --color-accent: var(--ctp-mauve);
+  --color-accent-bright: var(--ctp-lavender);
+  --color-accent-cyan: var(--ctp-teal);
+  --color-accent-roll: var(--ctp-green);
+  --color-success: var(--ctp-green);
+  --color-earned: var(--ctp-peach);
+  --color-warning: var(--ctp-yellow);
+  --color-danger: var(--ctp-red);
+  --surface-panel: var(--ctp-surface0);
+  --surface-panel-strong: var(--ctp-surface1);
+  --surface-panel-soft: var(--site-surface-soft);
+  --surface-inset: var(--ctp-mantle);
+}
+
+.app-main--profile-settings :is(input[type='checkbox'], input[type='radio'], input[type='range']) {
+  accent-color: var(--ctp-mauve);
+}
+
+.app-main--profile-settings select {
+  border-color: var(--site-line-strong);
+  background-color: var(--ctp-mantle);
+  color: var(--ctp-text);
+  color-scheme: dark;
+}

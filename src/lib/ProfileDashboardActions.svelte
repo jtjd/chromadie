@@ -33,14 +33,14 @@
   .profile-dashboard-actions h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .84rem; letter-spacing: -.01em; }
   .profile-dashboard-actions p { margin: .25rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .73rem; line-height: 1.4; }
   .profile-dashboard-actions__state { color: var(--site-faint, #7d7e87); font: .66rem/1 var(--site-mono, monospace); white-space: nowrap; }
-  .profile-dashboard-actions__state--dirty { color: #ffc783; }
+  .profile-dashboard-actions__state--dirty { color: var(--ctp-peach, #fab387); }
   .profile-dashboard-actions__buttons { display: flex; flex: 0 0 auto; gap: .45rem; }
   .profile-dashboard-actions button { min-height: 2.1rem; padding: .45rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .74rem; cursor: pointer; }
   .profile-dashboard-actions button:disabled { cursor: not-allowed; opacity: .42; }
   .profile-dashboard-actions button:focus-visible { outline: 2px solid var(--site-accent, #cdd2ff); outline-offset: 2px; }
   .profile-dashboard-actions__publish { border-color: var(--site-accent, #cdd2ff) !important; background: var(--site-accent, #cdd2ff) !important; color: var(--site-deep, #090a0d) !important; font-weight: 700; }
   .profile-dashboard-actions__message { flex: 1 0 100%; margin: 0 !important; color: var(--site-muted, #aaa8b0); }
-  .profile-dashboard-actions__message[role="alert"] { color: #ffb4bd; }
+  .profile-dashboard-actions__message[role="alert"] { color: var(--ctp-red, #f38ba8); }
   @media (max-width: 38rem) {
     .profile-dashboard-actions { align-items: stretch; flex-direction: column; }
     .profile-dashboard-actions__buttons button { flex: 1; }

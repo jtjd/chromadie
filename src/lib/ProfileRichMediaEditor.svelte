@@ -473,7 +473,7 @@
   .rich-media-editor__compact-card--cursor { order: 4; }
   .rich-media-editor__compact-card--locked { opacity: .72; }
   .rich-media-editor__compact-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
-  .rich-media-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: #0b0b0b; color: var(--color-ink-muted); cursor: pointer; }
+  .rich-media-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: var(--surface-inset); color: var(--color-ink-muted); cursor: pointer; }
   .rich-media-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .rich-media-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
@@ -489,7 +489,7 @@
   .rich-media-editor__upload-grid { display: grid; grid-template-columns: repeat(5, minmax(10rem, 1fr)); gap: .75rem; margin-top: 1rem; }
   .rich-media-editor__upload-card { display: grid; align-content: start; gap: .45rem; min-width: 0; padding: .65rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 72%, transparent); }
   .rich-media-editor__upload-card > strong { display: flex; align-items: center; justify-content: space-between; gap: .5rem; color: var(--color-ink-strong); font-size: var(--type-small); }
-  .rich-media-editor__upload-preview { display: grid; min-height: 5rem; place-items: center; overflow: hidden; border: 1px solid var(--color-line-subtle); border-radius: calc(var(--radius-sm) - .1rem); background: #090b10; color: var(--color-ink-muted); text-align: center; }
+  .rich-media-editor__upload-preview { display: grid; min-height: 5rem; place-items: center; overflow: hidden; border: 1px solid var(--color-line-subtle); border-radius: calc(var(--radius-sm) - .1rem); background: var(--surface-inset); color: var(--color-ink-muted); text-align: center; }
   .rich-media-editor__upload-preview--wide { aspect-ratio: 16 / 7; min-height: 0; }
   .rich-media-editor__upload-preview--cursor { width: 100%; aspect-ratio: 1.7; min-height: 0; }
   .rich-media-editor__upload-preview--audio { align-content: center; gap: .35rem; padding: .4rem; }
@@ -507,7 +507,7 @@
   .rich-media-editor__asset-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .7rem; }
   .rich-media-editor__asset { display: grid; gap: .45rem; min-width: 0; padding: .45rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); }
   .rich-media-editor__asset--active { border-color: var(--color-accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 24%, transparent); }
-  .rich-media-editor__asset img, .rich-media-editor__asset video { width: 100%; aspect-ratio: 16 / 7; object-fit: cover; border-radius: calc(var(--radius-sm) - .15rem); background: #090b10; }
+  .rich-media-editor__asset img, .rich-media-editor__asset video { width: 100%; aspect-ratio: 16 / 7; object-fit: cover; border-radius: calc(var(--radius-sm) - .15rem); background: var(--surface-inset); }
   .rich-media-editor__asset-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
   .rich-media-editor__track { display: grid; grid-template-columns: minmax(8rem, 1fr) repeat(2, minmax(5rem, 7rem)) auto auto auto; align-items: end; gap: .45rem; padding: .55rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); }
   .rich-media-editor__track label { display: grid; gap: .25rem; color: var(--color-ink-muted); font-size: var(--type-label); }
