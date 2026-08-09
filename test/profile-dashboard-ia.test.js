@@ -36,7 +36,8 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(expression, /profile-expression-editor__compact-grid/);
   assert.match(expression, /profile-expression-editor__compact-upload-hint/);
   for (const action of ['Background', 'Audio', 'Profile avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
-  assert.match(expression, /More media controls/);
+  assert.doesNotMatch(expression, /More media controls/);
+  assert.match(expression, /profile-expression-editor__compact-audio-player/);
   assert.match(richMedia, /export let compact = false/);
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);

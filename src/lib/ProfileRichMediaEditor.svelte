@@ -306,6 +306,7 @@
     {#if compact}
       {#if compactKinds.includes('audio')}
         <article class="rich-media-editor__compact-card rich-media-editor__compact-card--audio">
+          <input bind:this={audioInput} class="rich-media-editor__compact-file" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={(event) => uploadFile(event, 'audio')} />
           <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--audio" type="button" disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()} aria-label="Add audio track">
             <ProfileMediaIcon kind="audio" />
             <span class="rich-media-editor__compact-upload-hint">{audioTracks.length >= 5 ? 'Library limit reached' : primaryAudioAsset ? `Click to add · ${audioTracks.length}/5` : 'Click to upload'}</span>
@@ -318,6 +319,7 @@
 
       {#if compactKinds.includes('cursor')}
         <article class="rich-media-editor__compact-card rich-media-editor__compact-card--cursor">
+          <input bind:this={cursorInput} class="rich-media-editor__compact-file" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose custom cursor" on:change={(event) => uploadFile(event, 'cursor')} />
           <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--cursor" type="button" disabled={busy} on:click={() => cursorInput?.click()} aria-label={activeCursor ? 'Replace custom cursor' : 'Upload custom cursor'}>
             {#if activeCursor}
               <img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Custom cursor preview" />
@@ -333,8 +335,8 @@
       {/if}
 
     {/if}
-    <details class:rich-media-editor__advanced={compact} open={!compact}>
-      {#if compact}<summary>More expression controls <span aria-hidden="true">↘</span></summary>{/if}
+    {#if !compact}
+    <details class="rich-media-editor__advanced" open>
     {#if loading}<p class="rich-media-editor__status" role="status">Loading your rich media library…</p>{/if}
     <p class="rich-media-editor__hint">Three muted background videos (MP4/WebM), five MP3 tracks, one banner, and two cursor styles. The library is capped at 150 MB.</p>
 
@@ -433,6 +435,7 @@
     {#if error}<p class="rich-media-editor__message rich-media-editor__message--error" role="alert">{error}</p>{/if}
     {#if status}<p class="rich-media-editor__message" role="status" aria-live="polite">{status}</p>{/if}
     </details>
+    {/if}
   </Module>
 {:else if compact}
   <article class="rich-media-editor__compact-card rich-media-editor__compact-card--audio rich-media-editor__compact-card--locked">
@@ -469,6 +472,7 @@
   .rich-media-editor__compact-card--audio { order: 2; }
   .rich-media-editor__compact-card--cursor { order: 4; }
   .rich-media-editor__compact-card--locked { opacity: .72; }
+  .rich-media-editor__compact-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
   .rich-media-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: #0b0b0b; color: var(--color-ink-muted); cursor: pointer; }
   .rich-media-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .rich-media-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
@@ -480,10 +484,6 @@
   .rich-media-editor__compact-copy strong { display: block; overflow: hidden; color: var(--color-ink-strong); font-size: .78rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__compact-copy small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__advanced { grid-column: 1 / -1; margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
-  .rich-media-editor__advanced summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--color-ink-muted); font-size: var(--type-small); cursor: pointer; list-style: none; }
-  .rich-media-editor__advanced summary::-webkit-details-marker { display: none; }
-  .rich-media-editor__advanced summary span { color: var(--color-accent-bright); font-size: 1rem; transition: transform var(--motion-base) var(--motion-ease-standard); }
-  .rich-media-editor__advanced[open] summary span { transform: rotate(90deg); }
   .rich-media-editor__hint, .rich-media-editor__status, .rich-media-editor__message { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
   .rich-media-editor__message--error { color: var(--color-danger, #ff9eac); }
   .rich-media-editor__upload-grid { display: grid; grid-template-columns: repeat(5, minmax(10rem, 1fr)); gap: .75rem; margin-top: 1rem; }
@@ -517,7 +517,4 @@
   @media (max-width: 78rem) { .rich-media-editor__upload-grid { grid-template-columns: repeat(3, minmax(10rem, 1fr)); } }
   @media (max-width: 42rem) { .rich-media-editor__upload-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rich-media-editor__track { grid-template-columns: 1fr 1fr; } .rich-media-editor__track strong { grid-column: 1 / -1; } }
   @media (max-width: 28rem) { .rich-media-editor__upload-grid { grid-template-columns: minmax(0, 1fr); } }
-  @media (prefers-reduced-motion: reduce) {
-    .rich-media-editor__advanced summary span { transition: none; }
-  }
 </style>

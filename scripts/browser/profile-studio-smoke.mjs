@@ -207,13 +207,13 @@ try {
       return {
         labels: cards.map(card => card.querySelector('strong')?.textContent?.trim() || ''),
         editable: cards.filter(card => card.querySelector('button[type="button"]')).map(card => card.querySelector('strong')?.textContent?.trim() || ''),
-        advancedOpen: Boolean(grid?.parentElement?.querySelector('.profile-expression-editor__advanced')?.open)
+        advancedPresent: Boolean(grid?.parentElement?.querySelector('.profile-expression-editor__advanced'))
       };
     })()`);
     assert(mediaRail.labels.length === 4, `Compact media rail rendered ${mediaRail.labels.length} cards instead of four.`);
     assert(mediaRail.labels.includes('Profile avatar') && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
     assert(mediaRail.editable.includes('Profile avatar') && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
-    assert(mediaRail.advancedOpen === false, 'Advanced media controls should start collapsed.');
+    assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('publish_profile_configuration_section')).length;
     await page.setInputValue('.appearance-editor__range:nth-child(2) input[type="range"]', 40, ['input']);
     await page.waitFor(`document.querySelector('.appearance-editor__range:nth-child(2) output')?.textContent?.trim() === '40px'`, 'blur draft value');

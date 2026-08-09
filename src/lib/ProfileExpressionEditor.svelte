@@ -454,6 +454,7 @@
   {#if compact}
     <div id={compact ? 'profile-media-rich' : undefined} class="profile-expression-editor__compact-grid" aria-label="Profile media uploads">
       <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--avatar">
+        <input bind:this={avatarInput} class="profile-expression-editor__compact-file" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose avatar image" on:change={handleAvatarChange} />
         <button
           class="profile-expression-editor__compact-preview profile-expression-editor__compact-preview--avatar"
           type="button"
@@ -475,6 +476,7 @@
       </article>
 
       <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--background">
+        <input bind:this={backgroundInput} class="profile-expression-editor__compact-file" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose background image" on:change={handleBackgroundChange} />
         <button
           class="profile-expression-editor__compact-preview profile-expression-editor__compact-preview--background"
           type="button"
@@ -497,19 +499,47 @@
 
       {#if staff}
         <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--audio">
-          <button
-            class="profile-expression-editor__compact-preview profile-expression-editor__compact-preview--audio"
-            type="button"
-            disabled={busy}
-            on:click={() => audioInput?.click()}
-            aria-label={expression.audio_path ? 'Replace profile audio' : 'Upload profile audio'}
-          >
-            <ProfileMediaIcon kind="audio" />
-            <span class="profile-expression-editor__compact-upload-hint">{expression.audio_path ? 'Click to replace' : 'Click to upload'}</span>
-          </button>
+          <input bind:this={audioInput} class="profile-expression-editor__compact-file" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={handleAudioChange} />
           <div class="profile-expression-editor__compact-copy">
             <strong>Profile audio</strong>
           </div>
+          {#if audioSrc}
+            {#key audioSrc}
+              <div class="profile-expression-editor__compact-audio-player">
+                <audio
+                  bind:this={audioElement}
+                  class="profile-expression-editor__audio-native"
+                  src={audioSrc}
+                  loop
+                  preload="metadata"
+                  aria-label="Profile audio preview"
+                  on:loadedmetadata={updateAudioMetadata}
+                  on:timeupdate={updateAudioTime}
+                  on:play={() => audioPlaying = true}
+                  on:pause={() => audioPlaying = false}
+                ></audio>
+                <button type="button" class="profile-expression-editor__compact-audio-play" aria-label={audioPlaying ? 'Pause profile audio' : 'Play profile audio'} aria-pressed={audioPlaying} on:click={toggleAudio}>
+                  <span aria-hidden="true">{audioPlaying ? 'Ⅱ' : '▶'}</span>
+                </button>
+                <div class="profile-expression-editor__compact-audio-track">
+                  <div class="profile-expression-editor__compact-audio-meta"><strong>{audioPlaying ? 'Playing' : 'Ready to play'}</strong><time>{formatAudioTime(audioCurrentTime)} / {formatAudioTime(audioDuration)}</time></div>
+                  <input class="profile-expression-editor__audio-range" type="range" min="0" max="100" step="0.1" value={audioProgress} style={`--audio-progress:${audioProgress}%`} aria-label="Seek profile audio" on:input={seekAudio} />
+                </div>
+                <button type="button" class="profile-expression-editor__compact-audio-replace" aria-label="Replace profile audio" on:click={() => audioInput?.click()}><ProfileMediaIcon kind="upload" /></button>
+              </div>
+            {/key}
+          {:else}
+            <button
+              class="profile-expression-editor__compact-preview profile-expression-editor__compact-preview--audio"
+              type="button"
+              disabled={busy}
+              on:click={() => audioInput?.click()}
+              aria-label="Upload profile audio"
+            >
+              <ProfileMediaIcon kind="audio" />
+              <span class="profile-expression-editor__compact-upload-hint">Click to upload</span>
+            </button>
+          {/if}
           {#if expression.audio_path}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAudio}>Remove</button>{/if}
         </article>
       {:else if !richMediaEnabled}
@@ -542,8 +572,8 @@
     </div>
   {/if}
 
-  <details class:profile-expression-editor__advanced={compact} open={!compact}>
-    {#if compact}<summary>More media controls <span aria-hidden="true">↘</span></summary>{/if}
+  {#if !compact}
+  <details class="profile-expression-editor__advanced" open>
   {#if assetsLoading}<p class="profile-expression-editor__asset-loading" role="status">Loading your saved media…</p>{/if}
   <div id="profile-media-avatar" class="profile-expression-editor__media-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
     <div class="profile-expression-editor__preview" style="flex:0 0 7rem;width:7rem" aria-label="Avatar preview">
@@ -705,6 +735,7 @@
   </div>
 
   </details>
+  {/if}
 
   {#if error}<p class="profile-expression-editor__message profile-expression-editor__message--error" style="margin:0" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-expression-editor__message" style="margin:0" role="status" aria-live="polite">{status}</p>{/if}
@@ -718,6 +749,7 @@
   .profile-expression-editor__compact-card--avatar { order: 3; }
   .profile-expression-editor__compact-card--cursor { order: 4; }
   .profile-expression-editor__compact-card--locked { opacity: .72; }
+  .profile-expression-editor__compact-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
   .profile-expression-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: #0b0b0b; color: var(--color-ink-muted); cursor: pointer; }
   .profile-expression-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .profile-expression-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
@@ -731,11 +763,17 @@
   .profile-expression-editor__compact-remove { justify-self: start; padding: 0; border: 0; background: transparent; color: var(--color-ink-faint); font: inherit; font-size: var(--type-label); cursor: pointer; text-decoration: underline; text-underline-offset: .15em; }
   .profile-expression-editor__compact-remove:hover:not(:disabled), .profile-expression-editor__compact-remove:focus-visible { color: var(--color-ink-strong); }
   .profile-expression-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
+  .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; padding: .7rem .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: #0b0b0b; }
+  .profile-expression-editor__compact-audio-play { display: grid; width: 2.2rem; height: 2.2rem; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--color-ink-strong) 48%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--color-ink-strong) 10%, transparent); color: var(--color-ink-strong); font: 700 .7rem/1 var(--font-body-stack); cursor: pointer; }
+  .profile-expression-editor__compact-audio-play:hover, .profile-expression-editor__compact-audio-play:focus-visible { background: color-mix(in srgb, var(--color-ink-strong) 18%, transparent); }
+  .profile-expression-editor__compact-audio-play:focus-visible, .profile-expression-editor__compact-audio-replace:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
+  .profile-expression-editor__compact-audio-track { display: grid; min-width: 0; gap: .35rem; }
+  .profile-expression-editor__compact-audio-meta { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-width: 0; }
+  .profile-expression-editor__compact-audio-meta strong { overflow: hidden; color: var(--color-ink-strong); font-size: .68rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-audio-meta time { flex: 0 0 auto; color: var(--color-ink-muted); font: 600 .58rem/1 var(--font-mono-stack); }
+  .profile-expression-editor__compact-audio-replace { display: grid; width: 1.65rem; height: 1.65rem; place-items: center; padding: 0; border: 1px solid var(--color-line-subtle); border-radius: 50%; background: transparent; color: var(--color-ink-muted); cursor: pointer; }
+  .profile-expression-editor__compact-audio-replace:hover { color: var(--color-ink-strong); }
   .profile-expression-editor__advanced { margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
-  .profile-expression-editor__advanced summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--color-ink-muted); font-size: var(--type-small); cursor: pointer; list-style: none; }
-  .profile-expression-editor__advanced summary::-webkit-details-marker { display: none; }
-  .profile-expression-editor__advanced summary span { color: var(--color-accent-bright); font-size: 1rem; transition: transform var(--motion-base) var(--motion-ease-standard); }
-  .profile-expression-editor__advanced[open] summary span { transform: rotate(90deg); }
   .profile-expression-editor__rollout-notice { margin: 0; padding: .8rem 1rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.45; }
   .profile-expression-editor__asset-loading { margin: 0 0 0.8rem; color: var(--color-ink-muted); font-size: var(--type-small); }
   .profile-expression-editor__asset-library { display: grid; gap: 0.65rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-line-subtle); }
@@ -859,7 +897,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .profile-expression-editor__advanced summary span { transition: none; }
     .profile-expression-editor__audio-play { transition: none; }
     .profile-expression-editor__audio-play:hover { transform: none; }
   }
