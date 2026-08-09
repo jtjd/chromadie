@@ -224,9 +224,9 @@
   .profile-customize-page :global(.identity-editor__fields) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
   .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: span 2; }
   .profile-customize-page :global(.identity-editor__grid) { display: contents; }
-  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: 1 / -1; align-items: center; flex-wrap: wrap; gap: .65rem 1rem; color: var(--customize-muted); font-size: .76rem; }
+  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: span 2; align-self: end; align-items: center; min-height: 2.3rem; flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; color: var(--customize-muted); font-size: .76rem; }
   .profile-customize-page :global(.identity-editor__options label) { display: inline-flex; align-items: center; gap: .35rem; }
-  .profile-customize-page :global(.identity-editor__field) { gap: .35rem; font-size: .78rem; }
+  .profile-customize-page :global(.identity-editor__field) { align-self: start; align-content: start; gap: .35rem; font-size: .78rem; }
   .profile-customize-page :global(.identity-editor__field textarea) { min-height: 4.5rem; }
   .profile-customize-page :global(.identity-editor__field :is(input, textarea, select)) { min-height: 2.3rem; border-radius: .35rem; padding: .55rem .6rem; font-size: .82rem; }
   .profile-customize-page :global(.identity-editor__footer) { grid-column: 1 / -1; align-items: center; margin-top: .05rem; padding-top: .55rem; border-top: 1px solid var(--customize-line); }
@@ -287,6 +287,7 @@
     .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.identity-editor__fields) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: auto; }
+    .profile-customize-page :global(.identity-editor__options) { grid-column: auto; }
     .profile-customize-page :global(.profile-content-editor), .profile-customize-page :global(.profile-widget-editor) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-content-editor__panel:nth-of-type(2)), .profile-customize-page :global(.profile-content-editor__actions), .profile-customize-page :global(.profile-widget-editor__list), .profile-customize-page :global(.profile-widget-editor__actions) { grid-column: auto; }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields), .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
