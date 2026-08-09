@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { hasChromadiePlus } from './premiumEntitlements.js';
+  import ProfileMediaIcon from './ProfileMediaIcon.svelte';
   import { supabase } from './supabase.js';
   import Module from './foundation/Module.svelte';
   import {
@@ -306,13 +307,8 @@
       {#if compactKinds.includes('audio')}
         <article class="rich-media-editor__compact-card">
           <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--audio" type="button" disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()} aria-label="Add audio track">
-            {#if primaryAudioAsset}
-              <span class="rich-media-editor__compact-audio-icon" aria-hidden="true">♫</span>
-              <span class="rich-media-editor__compact-audio-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-            {:else}
-              <span class="rich-media-editor__compact-audio-icon" aria-hidden="true">♫</span>
-            {/if}
-            <span class="rich-media-editor__compact-overlay" aria-hidden="true">↥</span>
+            <ProfileMediaIcon kind="audio" />
+            <span class="rich-media-editor__compact-overlay" aria-hidden="true"><ProfileMediaIcon kind="upload" /></span>
             <span class="rich-media-editor__compact-upload-hint">{audioTracks.length >= 5 ? 'Library limit reached' : primaryAudioAsset ? `Click to add · ${audioTracks.length}/5` : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
@@ -327,9 +323,9 @@
             {#if activeCursor}
               <img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Custom cursor preview" />
             {:else}
-              <span class="rich-media-editor__compact-cursor-glyph" aria-hidden="true">↖</span>
+              <ProfileMediaIcon kind="cursor" />
             {/if}
-            <span class="rich-media-editor__compact-overlay" aria-hidden="true">↥</span>
+            <span class="rich-media-editor__compact-overlay" aria-hidden="true"><ProfileMediaIcon kind="upload" /></span>
             <span class="rich-media-editor__compact-upload-hint">{activeCursor ? 'Click to replace' : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
@@ -443,7 +439,7 @@
 {:else if compact}
   <article class="rich-media-editor__compact-card rich-media-editor__compact-card--locked">
     <div class="rich-media-editor__compact-preview rich-media-editor__compact-preview--locked" aria-hidden="true">
-      <span class="rich-media-editor__compact-lock">♫</span>
+      <ProfileMediaIcon kind="audio" />
       <small>Chromadie Plus</small>
     </div>
     <div class="rich-media-editor__compact-copy">
@@ -453,7 +449,7 @@
   </article>
   <article class="rich-media-editor__compact-card rich-media-editor__compact-card--locked">
     <div class="rich-media-editor__compact-preview rich-media-editor__compact-preview--locked" aria-hidden="true">
-      <span class="rich-media-editor__compact-lock">↖</span>
+      <ProfileMediaIcon kind="cursor" />
       <small>Chromadie Plus</small>
     </div>
     <div class="rich-media-editor__compact-copy">
@@ -480,12 +476,6 @@
   .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
   .rich-media-editor__compact-preview img { width: 4rem; height: 4rem; object-fit: contain; }
   .rich-media-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
-  .rich-media-editor__compact-audio-icon, .rich-media-editor__compact-cursor-glyph { color: var(--color-accent-bright); font-size: 1.7rem; }
-  .rich-media-editor__compact-lock { color: var(--color-accent-bright); font-size: 1.55rem; }
-  .rich-media-editor__compact-audio-bars { display: flex; align-items: center; gap: .17rem; height: 1.3rem; }
-  .rich-media-editor__compact-audio-bars i { display: block; width: .18rem; height: 45%; border-radius: 999px; background: var(--color-accent); }
-  .rich-media-editor__compact-audio-bars i:nth-child(2), .rich-media-editor__compact-audio-bars i:nth-child(4) { height: 85%; }
-  .rich-media-editor__compact-audio-bars i:nth-child(3) { height: 100%; }
   .rich-media-editor__compact-overlay { position: absolute; right: .4rem; bottom: .35rem; display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 1px solid color-mix(in srgb, var(--color-accent-bright) 52%, transparent); border-radius: 50%; background: color-mix(in srgb, #090b10 75%, transparent); color: var(--color-ink-strong); font-size: .85rem; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-standard); }
   .rich-media-editor__compact-preview:hover .rich-media-editor__compact-overlay, .rich-media-editor__compact-preview:focus-visible .rich-media-editor__compact-overlay { opacity: 1; transform: translateY(-1px); }
   .rich-media-editor__compact-upload-hint { position: absolute; bottom: .35rem; left: .4rem; max-width: calc(100% - 2.4rem); overflow: hidden; padding: .18rem .32rem; border-radius: 999px; background: rgba(5, 6, 9, .72); color: var(--color-ink-strong); font-size: var(--type-label); line-height: 1.1; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; }

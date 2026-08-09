@@ -5,6 +5,7 @@
   import { getProfileMediaUrl } from './profileMedia.js';
   import { prepareProfileAudioFile, processProfileImage, validateProfileAudioFile } from './profileMediaProcessing.js';
   import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
+  import ProfileMediaIcon from './ProfileMediaIcon.svelte';
   import ProfileRichMediaEditor from './ProfileRichMediaEditor.svelte';
   import Module from './foundation/Module.svelte';
   import Media from './foundation/Media.svelte';
@@ -463,9 +464,9 @@
           {#if avatarSrc}
             <Media src={avatarSrc} alt="Profile avatar preview" aspect="square" loading="eager" className="profile-expression-editor__compact-media" fallbackLabel="Avatar unavailable" allowLocalPreview={true} />
           {:else}
-            <span class="profile-expression-editor__compact-initial" aria-hidden="true">{fallbackInitial.slice(0, 1).toUpperCase() || '✦'}</span>
+            <ProfileMediaIcon kind="avatar" />
           {/if}
-          <span class="profile-expression-editor__compact-overlay" aria-hidden="true">↥</span>
+          <span class="profile-expression-editor__compact-overlay" aria-hidden="true"><ProfileMediaIcon kind="upload" /></span>
           <span class="profile-expression-editor__compact-upload-hint">{expression.avatar_path ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
@@ -485,9 +486,9 @@
           {#if backgroundSrc}
             <Media src={backgroundSrc} alt="Profile background preview" aspect="wide" loading="eager" className="profile-expression-editor__compact-media" fallbackLabel="Background unavailable" allowLocalPreview={true} />
           {:else}
-            <span class="profile-expression-editor__compact-atmosphere" aria-hidden="true"></span>
+            <ProfileMediaIcon kind="background" />
           {/if}
-          <span class="profile-expression-editor__compact-overlay" aria-hidden="true">↥</span>
+          <span class="profile-expression-editor__compact-overlay" aria-hidden="true"><ProfileMediaIcon kind="upload" /></span>
           <span class="profile-expression-editor__compact-upload-hint">{expression.background_path ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
@@ -505,9 +506,8 @@
             on:click={() => audioInput?.click()}
             aria-label={expression.audio_path ? 'Replace profile audio' : 'Upload profile audio'}
           >
-            <span class="profile-expression-editor__compact-audio-icon" aria-hidden="true">♫</span>
-            <span class="profile-expression-editor__compact-audio-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-            <span class="profile-expression-editor__compact-overlay" aria-hidden="true">↥</span>
+            <ProfileMediaIcon kind="audio" />
+            <span class="profile-expression-editor__compact-overlay" aria-hidden="true"><ProfileMediaIcon kind="upload" /></span>
             <span class="profile-expression-editor__compact-upload-hint">{expression.audio_path ? 'Click to replace' : 'Click to upload'}</span>
           </button>
           <div class="profile-expression-editor__compact-copy">
@@ -518,7 +518,7 @@
       {:else if !richMediaEnabled}
         <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--locked">
           <div class="profile-expression-editor__compact-preview profile-expression-editor__compact-preview--locked" aria-hidden="true">
-            <span class="profile-expression-editor__compact-lock">◇</span>
+            <ProfileMediaIcon kind="audio" />
             <small>Chromadie Plus</small>
           </div>
           <div class="profile-expression-editor__compact-copy">
@@ -533,7 +533,7 @@
       {:else}
         <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--locked">
           <div class="profile-expression-editor__compact-preview profile-expression-editor__compact-preview--locked" aria-hidden="true">
-            <span class="profile-expression-editor__compact-lock">↖</span>
+            <ProfileMediaIcon kind="cursor" />
             <small>Chromadie Plus</small>
           </div>
           <div class="profile-expression-editor__compact-copy">
@@ -724,9 +724,7 @@
   .profile-expression-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
   :global(.profile-expression-editor__compact-media) { width: 100%; height: 100%; aspect-ratio: auto; border: 0; border-radius: 0; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
-  .profile-expression-editor__compact-initial { display: grid; width: 4rem; height: 4rem; place-items: center; border-radius: 50%; background: var(--profile-accent, #a650c4); color: var(--color-ink-strong); font-size: 2.2rem; }
-  .profile-expression-editor__compact-atmosphere { width: 100%; height: 100%; background: radial-gradient(circle at 25% 22%, color-mix(in srgb, var(--profile-accent, #a650c4) 75%, white), transparent 46%), linear-gradient(135deg, color-mix(in srgb, var(--profile-accent, #a650c4) 40%, #090b10), #090b10 72%); }
-  .profile-expression-editor__compact-overlay { position: absolute; right: .4rem; bottom: .35rem; display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 1px solid color-mix(in srgb, var(--color-accent-bright) 52%, transparent); border-radius: 50%; background: color-mix(in srgb, #090b10 75%, transparent); color: var(--color-ink-strong); font-size: .85rem; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-standard); }
+  .profile-expression-editor__compact-overlay { position: absolute; right: .4rem; bottom: .35rem; display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 1px solid color-mix(in srgb, var(--color-accent-bright) 52%, transparent); border-radius: 50%; background: color-mix(in srgb, #090b10 75%, transparent); color: var(--color-ink-strong); opacity: 0; transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-standard); }
   .profile-expression-editor__compact-preview:hover .profile-expression-editor__compact-overlay, .profile-expression-editor__compact-preview:focus-visible .profile-expression-editor__compact-overlay { opacity: 1; transform: translateY(-1px); }
   .profile-expression-editor__compact-upload-hint { position: absolute; bottom: .35rem; left: .4rem; max-width: calc(100% - 2.4rem); overflow: hidden; padding: .18rem .32rem; border-radius: 999px; background: rgba(5, 6, 9, .72); color: var(--color-ink-strong); font-size: var(--type-label); line-height: 1.1; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-copy { display: grid; min-width: 0; gap: .15rem; }
@@ -735,12 +733,6 @@
   .profile-expression-editor__compact-remove { justify-self: start; padding: 0; border: 0; background: transparent; color: var(--color-ink-faint); font: inherit; font-size: var(--type-label); cursor: pointer; text-decoration: underline; text-underline-offset: .15em; }
   .profile-expression-editor__compact-remove:hover:not(:disabled), .profile-expression-editor__compact-remove:focus-visible { color: var(--color-ink-strong); }
   .profile-expression-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
-  .profile-expression-editor__compact-audio-icon { color: var(--color-accent-bright); font-size: 1.7rem; }
-  .profile-expression-editor__compact-audio-bars { display: flex; align-items: center; gap: .17rem; height: 1.3rem; }
-  .profile-expression-editor__compact-audio-bars i { display: block; width: .18rem; height: 45%; border-radius: 999px; background: var(--color-accent); }
-  .profile-expression-editor__compact-audio-bars i:nth-child(2), .profile-expression-editor__compact-audio-bars i:nth-child(4) { height: 85%; }
-  .profile-expression-editor__compact-audio-bars i:nth-child(3) { height: 100%; }
-  .profile-expression-editor__compact-lock { color: var(--color-accent-bright); font-size: 1.55rem; }
   .profile-expression-editor__advanced { margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
   .profile-expression-editor__advanced summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--color-ink-muted); font-size: var(--type-small); cursor: pointer; list-style: none; }
   .profile-expression-editor__advanced summary::-webkit-details-marker { display: none; }
