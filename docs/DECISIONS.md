@@ -2,13 +2,13 @@
 
 ## 2026-08-09 — Let surface blur sample the actual page media
 
-The uploaded background image is rendered as the page's own fixed background
-layer rather than as a separate fixed sibling. The public profile card keeps
-one transparent backdrop-filter layer at the surface boundary; intermediate
-profile layout wrappers do not create an isolated stacking context, so the
-filter samples the already-rendered page canvas, rich background video, and
-authored atmosphere media behind the card. The same page-level media remains
-sharp outside the card.
+The uploaded background image is rendered once as a real page-level media
+element rather than as a CSS background indirection or a card-local copy. The
+public profile card keeps one transparent backdrop-filter layer at the surface
+boundary; intermediate profile layout wrappers do not create an isolated
+stacking context, so the filter samples the already-rendered page media, rich
+background video, and authored atmosphere media behind the card. The same
+page-level media remains sharp outside the card.
 
 This keeps one source of truth for the uploaded image and avoids the
 misleading failure mode where a browser reports a computed `backdrop-filter`

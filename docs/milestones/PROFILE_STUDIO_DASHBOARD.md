@@ -81,9 +81,9 @@ one dashboard Reset / Publish profile bar commits the assembled V2 draft across
 Customize and Links. General Customization now gives Bio the full height of the
 two right-side identity rows, keeps their gap compact, and places visibility
 options below Bio while restoring ordinary flow on tablet and mobile. Profile
-surface blur now samples the actual page background, uploaded image, video, and
-atmosphere media behind the card, so high blur values affect only the
-translucent card while the page outside it stays sharp.
+surface blur now samples the actual page background, one page-level uploaded
+image/video layer, and atmosphere media behind the card, so high blur values
+affect only the translucent card while the page outside it stays sharp.
 
 ## Validation
 
@@ -93,6 +93,6 @@ translucent card while the page outside it stays sharp.
 - `npm run check:performance`: all blocking route and asset budgets pass;
   aggregate JavaScript and CSS catalogs remain advisory overages.
 - `npm run test:browser`: passing for authenticated Studio refresh, aliases,
-  collapsed/open/closed preview, draft-only appearance updates, balanced
-  General Customization geometry, maximum surface blur, mobile
-  drawer, reduced motion, and canonical public profile refresh.
+  collapsed/open/closed preview, published appearance updates, balanced
+  General Customization geometry, maximum surface blur, mobile drawer, reduced
+  motion, and canonical public profile refresh.

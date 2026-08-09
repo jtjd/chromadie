@@ -194,7 +194,7 @@ try {
     return { ...state, closed: true };
   });
 
-  await step('Customize controls stay compact and unpublished', async () => {
+  await step('Customize controls publish the configured surface depth', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize`, 'Customize section');
     await page.waitFor(`document.querySelector('.appearance-editor')`, 'Customize editor');
     await page.waitFor(`document.querySelector('.profile-dashboard-actions')`, 'dashboard profile actions');
@@ -249,12 +249,16 @@ try {
     assert(!draftState.toolbarVisible && !draftState.previewVisible, 'Customize still exposes page-level toolbar or preview chrome.');
     assert(publishRequestsBefore === publishRequestsAfter, 'Changing Customize unexpectedly called the publish RPC.');
     await capture('05-customize-draft-blur');
-    await page.clickText('Reset', { description: 'Customize reset control' });
-    await page.waitFor(`(() => {
-      const reset = [...document.querySelectorAll('.profile-dashboard-actions button')].find(button => button.textContent.trim() === 'Reset');
-      return Boolean(reset && reset.disabled);
-    })()`, 'Customize reset');
-    return { draftState, identityLayout, publishRequests: publishRequestsAfter, mediaRail };
+    await page.clickText('Publish profile', { description: 'publish configured surface depth' });
+    await page.waitFor(`document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() === 'Profile published.'`, 'published profile appearance');
+    const publishedState = await page.evaluate(`({
+      publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,
+      status: document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() || ''
+    })`);
+    const publishRequests = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
+    assert(publishedState.publishDisabled === true, 'Publishing did not clear the dashboard draft state.');
+    assert(publishRequests > publishRequestsAfter, 'Publishing the surface depth did not call the configuration RPCs.');
+    return { draftState, publishedState, identityLayout, publishRequests, mediaRail };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {
@@ -298,10 +302,9 @@ try {
     await page.command('Page.reload', { ignoreCache: true });
     await delay(350);
     await page.waitFor(`document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page .identity-card')`, 'public profile after direct refresh');
-    await page.evaluate(`document.querySelector('.profile-shell-page [data-profile-region="identity"]')?.style.setProperty('--profile-surface-blur', '40px')`);
     // Paint a high-frequency pattern on the page background itself so the
     // visual smoke test exercises the real backdrop-filter source boundary.
-    await page.evaluate(`document.querySelector('.profile-shell-page')?.style.setProperty('--profile-page-media-image', 'repeating-linear-gradient(90deg, #ff5577 0 5px, #5577ff 5px 10px)')`);
+    await page.evaluate(`document.querySelector('.profile-shell-page')?.style.setProperty('background', 'repeating-linear-gradient(90deg, #ff5577 0 5px, #5577ff 5px 10px)')`);
     await delay(100);
     const state = await page.evaluate(`(() => {
       const pageElement = document.querySelector('.profile-shell-page');
@@ -324,12 +327,13 @@ try {
         surfaceBackdropFilter: surfaceBackdropStyle?.backdropFilter || surfaceBackdropStyle?.webkitBackdropFilter || '',
         pageBlur: pageStyle.getPropertyValue('--profile-surface-blur').trim(),
         rollBlur: rollStyle?.getPropertyValue('--profile-surface-blur').trim() || '',
-        pageBackground: pageStyle.backgroundImage || pageStyle.backgroundColor
+        pageBackground: pageStyle.backgroundImage || pageStyle.backgroundColor,
+        pageMediaImage: Boolean(document.querySelector('.profile-shell__media-image'))
       };
     })()`);
     assert(state.path === `/${canonicalUsername}`, `Public profile was not canonical after refresh: ${state.path}.`);
     assert(state.canvas && state.card && state.surfaceBackdrop, 'Public profile did not render its canvas, card, and card backdrop.');
-    assert(state.cardBlur === '40px', `Public profile identity card did not honor max blur: ${state.cardBlur}.`);
+    assert(state.cardBlur === '40px', `Public profile identity card did not honor the published max blur: ${state.cardBlur}.`);
     assert(state.surfaceBackdropFilter.includes('blur('), 'Public profile card backdrop has no computed blur filter.');
     assert(!state.pageBlur && !state.rollBlur, 'Public appearance variables leaked outside the card surface.');
     await capture('07-public-profile');

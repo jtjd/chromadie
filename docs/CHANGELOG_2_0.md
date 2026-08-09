@@ -6,8 +6,9 @@ Document user-visible redesign changes by milestone.
 
 - Fixed high surface-blur values so uploaded backgrounds visibly soften inside
   the profile card.
-- The card now samples and blurs the actual page background, background video,
-  and atmosphere media behind it; page media stays sharp outside the card.
+- The card now samples and blurs the actual page background, one page-level
+  background media layer, and atmosphere media behind it; page media stays
+  sharp outside the card.
 - Removed duplicate card-local media rendering so the public profile has one
   source of truth for its background layers.
 - Kept the existing surface controls, saved configuration, and public profile
