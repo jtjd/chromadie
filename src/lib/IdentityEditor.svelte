@@ -26,6 +26,7 @@
 
   let draftPresentation = presentationFromConfig(profileConfigInput.draft || profileConfigInput);
   let baselinePresentation = draftPresentation;
+  let baselineBio = bio || '';
   let saving = false;
   let status = '';
   let error = '';
@@ -34,7 +35,7 @@
     displayName: username,
     bio: draftBio
   });
-  $: isDirty = draftBio !== (bio || '') || JSON.stringify(draftPresentation) !== JSON.stringify(baselinePresentation);
+  $: isDirty = draftBio !== baselineBio || JSON.stringify(draftPresentation) !== JSON.stringify(baselinePresentation);
 
   function scope() {
     return profileId || 'unknown';
@@ -54,6 +55,7 @@
     const cached = readViewState(VIEW_STATE_NAMESPACE, scope());
     draftBio = typeof cached?.bio === 'string' ? cached.bio : (bio || '');
     draftPresentation = cached?.presentation ? normalizeProfileIdentityPresentation(cached.presentation) : presentationFromConfig(config?.draft || config);
+    baselineBio = bio || '';
     baselinePresentation = presentationFromConfig(config?.published || config);
     status = cached ? 'Unsaved identity draft restored.' : '';
     error = '';
@@ -99,6 +101,7 @@
     }
 
     draftBio = published.bio || '';
+    baselineBio = published.bio || '';
     if (JSON.stringify(draftPresentation) !== JSON.stringify(baselinePresentation)) {
       const { data: configurationData, error: configurationError } = await supabase.rpc('save_profile_identity_presentation', {
         p_patch: { identityPresentation: draftPresentation }

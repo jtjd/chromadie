@@ -279,7 +279,7 @@
   .profile-cosmetics-plus-guide__links a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .12rem .6rem; align-items: center; padding: .55rem .65rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 70%, transparent); color: var(--color-ink-strong); text-decoration: none; }
   .profile-cosmetics-plus-guide__links a:hover, .profile-cosmetics-plus-guide__links a:focus-visible { border-color: var(--color-accent-bright); background: color-mix(in srgb, var(--color-accent-bright) 12%, var(--surface-inset)); }
   .profile-cosmetics-plus-guide__links strong { min-width: 0; font-size: var(--type-small); }
-  .profile-cosmetics-plus-guide__links span { min-width: 0; overflow: hidden; color: var(--color-ink-muted); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-cosmetics-plus-guide__links span { min-width: 0; overflow: hidden; color: var(--color-ink-muted); font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
   .profile-cosmetics-plus-guide__links b { grid-column: 2; grid-row: 1 / span 2; color: var(--color-accent-bright); font: 600 .85rem/1 var(--font-mono-stack); }
   .profile-cosmetics-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(18rem, .85fr); gap: 1rem; align-items: start; }
   .profile-cosmetics-preview { min-width: 0; }

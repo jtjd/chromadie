@@ -185,7 +185,7 @@
   .profile-customize-page__control-heading { display: none; }
   .profile-customize-page__control[data-editor-section="content"], .profile-customize-page__control[data-editor-section="layout"] { grid-column: 1 / -1; }
   .profile-customize-page__editor { min-width: 0; }
-  .profile-customize-page__loading { display: grid; min-height: 7rem; place-items: center; color: var(--customize-muted); font-size: .75rem; }
+  .profile-customize-page__loading { display: grid; min-height: 7rem; place-items: center; color: var(--customize-muted); font-size: .82rem; }
 
   /* The embedded editors keep their domain contracts, but share the compact
    * shell here so the single-page workspace reads like one interface. */
@@ -205,16 +205,16 @@
   .profile-customize-page :global(.profile-expression-editor__section) { padding-top: .9rem !important; border-top-color: var(--customize-line) !important; }
   .profile-customize-page :global(.profile-expression-editor__asset-library) { margin-top: .65rem; padding-top: .75rem; border-top-color: var(--customize-line); }
   .profile-customize-page :global(.profile-expression-editor__asset-grid) { max-width: none; }
-  .profile-customize-page :global(.profile-expression-editor__button) { min-height: 2.25rem !important; border-radius: .35rem !important; font-size: .68rem !important; }
+  .profile-customize-page :global(.profile-expression-editor__button) { min-height: 2.25rem !important; border-radius: .35rem !important; font-size: .76rem !important; }
   .profile-customize-page :global(.profile-expression-editor__button--quiet) { border-color: var(--customize-line-strong) !important; background: transparent !important; color: var(--customize-muted) !important; }
   .profile-customize-page :global(.appearance-editor) { gap: .55rem; }
   .profile-customize-page :global(.appearance-editor__panel) { padding: .25rem 0 .55rem; border: 0; border-bottom: 1px solid var(--customize-line); border-radius: 0; background: transparent; }
   .profile-customize-page :global(.appearance-editor__style-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
   .profile-customize-page :global(.appearance-editor__heading) { margin-bottom: .5rem; }
-  .profile-customize-page :global(.appearance-editor__heading h2) { font-size: .72rem; }
+  .profile-customize-page :global(.appearance-editor__heading h2) { font-size: .82rem; }
   .profile-customize-page :global(.appearance-editor__color-grid) { gap: .55rem .7rem; }
   .profile-customize-page :global(.appearance-editor__field > span),
-  .profile-customize-page :global(.appearance-editor__range > span) { font-size: .65rem; }
+  .profile-customize-page :global(.appearance-editor__range > span) { font-size: .75rem; }
   .profile-customize-page :global(.appearance-editor__actions),
   .profile-customize-page :global(.profile-content-editor__actions),
   .profile-customize-page :global(.profile-widget-editor__actions),
@@ -224,14 +224,14 @@
   .profile-customize-page :global(.identity-editor__fields) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
   .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: span 2; }
   .profile-customize-page :global(.identity-editor__grid) { display: contents; }
-  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: 1 / -1; align-items: center; flex-wrap: wrap; gap: .65rem 1rem; color: var(--customize-muted); font-size: .65rem; }
+  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: 1 / -1; align-items: center; flex-wrap: wrap; gap: .65rem 1rem; color: var(--customize-muted); font-size: .76rem; }
   .profile-customize-page :global(.identity-editor__options label) { display: inline-flex; align-items: center; gap: .35rem; }
-  .profile-customize-page :global(.identity-editor__field) { gap: .35rem; font-size: .67rem; }
+  .profile-customize-page :global(.identity-editor__field) { gap: .35rem; font-size: .78rem; }
   .profile-customize-page :global(.identity-editor__field textarea) { min-height: 4.5rem; }
-  .profile-customize-page :global(.identity-editor__field :is(input, textarea, select)) { min-height: 2.3rem; border-radius: .35rem; padding: .55rem .6rem; font-size: .68rem; }
+  .profile-customize-page :global(.identity-editor__field :is(input, textarea, select)) { min-height: 2.3rem; border-radius: .35rem; padding: .55rem .6rem; font-size: .82rem; }
   .profile-customize-page :global(.identity-editor__footer) { grid-column: 1 / -1; align-items: center; margin-top: .05rem; padding-top: .55rem; border-top: 1px solid var(--customize-line); }
   .profile-customize-page :global(.identity-editor__hint) { display: none; }
-  .profile-customize-page :global(.identity-editor__save) { min-height: 2.25rem; padding-inline: .9rem; font-size: .68rem; }
+  .profile-customize-page :global(.identity-editor__save) { min-height: 2.25rem; padding-inline: .9rem; font-size: .78rem; }
   .profile-customize-page :global(.profile-content-editor),
   .profile-customize-page :global(.profile-widget-editor),
   .profile-customize-page :global(.profile-editor) { gap: .65rem; }

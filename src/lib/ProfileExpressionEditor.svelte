@@ -754,11 +754,12 @@
   .profile-expression-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .profile-expression-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .profile-expression-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
-  :global(.profile-expression-editor__compact-media) { width: 100%; height: 100%; aspect-ratio: auto; border: 0; border-radius: 0; }
+  :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media) { width: 100%; height: 100%; aspect-ratio: auto; border: 0; border-radius: 0; }
+  :global(.profile-expression-editor__compact-preview .foundation-media) { border: 0; border-radius: 0; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
-  .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; color: var(--color-ink-muted); font-size: .68rem; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; color: var(--color-ink-muted); font-size: .76rem; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-copy { display: block; min-width: 0; order: -1; }
-  .profile-expression-editor__compact-copy strong { display: block; overflow: hidden; color: var(--color-ink-strong); font-size: .78rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-copy strong { display: block; overflow: hidden; color: var(--color-ink-strong); font-size: .84rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-copy small, .profile-expression-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-remove { justify-self: start; padding: 0; border: 0; background: transparent; color: var(--color-ink-faint); font: inherit; font-size: var(--type-label); cursor: pointer; text-decoration: underline; text-underline-offset: .15em; }
   .profile-expression-editor__compact-remove:hover:not(:disabled), .profile-expression-editor__compact-remove:focus-visible { color: var(--color-ink-strong); }
@@ -769,8 +770,8 @@
   .profile-expression-editor__compact-audio-play:focus-visible, .profile-expression-editor__compact-audio-replace:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
   .profile-expression-editor__compact-audio-track { display: grid; min-width: 0; gap: .35rem; }
   .profile-expression-editor__compact-audio-meta { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-width: 0; }
-  .profile-expression-editor__compact-audio-meta strong { overflow: hidden; color: var(--color-ink-strong); font-size: .68rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-expression-editor__compact-audio-meta time { flex: 0 0 auto; color: var(--color-ink-muted); font: 600 .58rem/1 var(--font-mono-stack); }
+  .profile-expression-editor__compact-audio-meta strong { overflow: hidden; color: var(--color-ink-strong); font-size: .76rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-audio-meta time { flex: 0 0 auto; color: var(--color-ink-muted); font: 600 .68rem/1 var(--font-mono-stack); }
   .profile-expression-editor__compact-audio-replace { display: grid; width: 1.65rem; height: 1.65rem; place-items: center; padding: 0; border: 1px solid var(--color-line-subtle); border-radius: 50%; background: transparent; color: var(--color-ink-muted); cursor: pointer; }
   .profile-expression-editor__compact-audio-replace:hover { color: var(--color-ink-strong); }
   .profile-expression-editor__advanced { margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }

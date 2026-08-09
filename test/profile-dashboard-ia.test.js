@@ -5,14 +5,15 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate Customize, Links, and Premium destinations', async () => {
-  const [settings, customize, premium, shell, editor, expression, richMedia] = await Promise.all([
+  const [settings, customize, premium, shell, editor, expression, richMedia, identity] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
     read('src/lib/ProfileDashboardShell.svelte'),
     read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
-    read('src/lib/ProfileRichMediaEditor.svelte')
+    read('src/lib/ProfileRichMediaEditor.svelte'),
+    read('src/lib/IdentityEditor.svelte')
   ]);
 
   for (const id of ['customize', 'links', 'premium']) assert.match(settings, new RegExp(`id: '${id}'`));
@@ -22,6 +23,8 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /LEGACY_HASH_ALIASES/);
   assert.match(settings, /import\('\.\/ProfileCustomizePage\.svelte'\)/);
   assert.match(settings, /this=\{sectionComponents\.customize\}/);
+  assert.match(settings, /on:identitysaved=\{updateIdentity\}/);
+  assert.match(identity, /baselineBio/);
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
   for (const section of ['media', 'identity', 'appearance', 'content', 'widgets', 'effects', 'layout']) {
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));
