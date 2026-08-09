@@ -400,7 +400,23 @@
   }
 
   function handleSocialChange() { void loadSettings(); }
-  function updateIdentity(event) { context = { ...context, targetProfile: { ...context.targetProfile, bio: event.detail?.bio ?? null } }; }
+  function updateIdentity(event) {
+    const nextPresentation = event.detail?.identityPresentation;
+    const fallbackColor = '#CDD2FF';
+    const currentConfig = context.profileConfig || {};
+    const nextProfileConfig = nextPresentation
+      ? {
+          ...currentConfig,
+          draft: normalizeProfileConfig({ ...(currentConfig.draft || {}), identityPresentation: nextPresentation }, fallbackColor),
+          published: normalizeProfileConfig({ ...(currentConfig.published || {}), identityPresentation: nextPresentation }, fallbackColor)
+        }
+      : currentConfig;
+    context = {
+      ...context,
+      targetProfile: { ...context.targetProfile, bio: event.detail?.bio ?? null },
+      profileConfig: nextProfileConfig
+    };
+  }
 
   async function loadPreviewComponent() {
     if (PreviewComponent) return;

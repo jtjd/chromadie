@@ -17,14 +17,16 @@
 
   const dispatch = createEventDispatcher();
   const VIEW_STATE_NAMESPACE = 'profile-identity-editor';
-  let restoredProfileId = null;
+  let lastIncomingKey = '';
   let draftBio = '';
-  const profileConfigInput = /** @type {any} */ (config || {});
+  /** @type {any} */
+  let identityConfig = {};
+  const initialConfig = config && typeof config === 'object' ? config : {};
   function presentationFromConfig(value) {
     return normalizeProfileIdentityPresentation(value?.identityPresentation || value?.identity || value?.base?.identityPresentation || value?.base?.identity);
   }
 
-  let draftPresentation = presentationFromConfig(profileConfigInput.draft || profileConfigInput);
+  let draftPresentation = presentationFromConfig(initialConfig.draft || initialConfig);
   let baselinePresentation = draftPresentation;
   let baselineBio = bio || '';
   let saving = false;
@@ -36,6 +38,8 @@
     bio: draftBio
   });
   $: isDirty = draftBio !== baselineBio || JSON.stringify(draftPresentation) !== JSON.stringify(baselinePresentation);
+  $: identityConfig = config && typeof config === 'object' ? config : {};
+  $: incomingKey = JSON.stringify({ profileId, bio: bio || '', draft: identityConfig.draft || null, published: identityConfig.published || null });
 
   function scope() {
     return profileId || 'unknown';
@@ -50,18 +54,21 @@
   }
 
   function restoreDraft() {
-    if (!profileId || profileId === restoredProfileId) return;
-    restoredProfileId = profileId;
+    if (!profileId) return;
+    lastIncomingKey = incomingKey;
     const cached = readViewState(VIEW_STATE_NAMESPACE, scope());
     draftBio = typeof cached?.bio === 'string' ? cached.bio : (bio || '');
-    draftPresentation = cached?.presentation ? normalizeProfileIdentityPresentation(cached.presentation) : presentationFromConfig(config?.draft || config);
+    draftPresentation = cached?.presentation ? normalizeProfileIdentityPresentation(cached.presentation) : presentationFromConfig(identityConfig.draft || identityConfig);
     baselineBio = bio || '';
-    baselinePresentation = presentationFromConfig(config?.published || config);
+    baselinePresentation = presentationFromConfig(identityConfig.published || identityConfig);
     status = cached ? 'Unsaved identity draft restored.' : '';
     error = '';
   }
 
-  $: if (profileId && profileId !== restoredProfileId) restoreDraft();
+  // Hydrate on the first render and whenever the server-backed profile changes.
+  // Once the user has started editing, the local draft remains authoritative
+  // until it is saved or explicitly discarded.
+  $: if (profileId && incomingKey !== lastIncomingKey && (!lastIncomingKey || (!saving && !isDirty))) restoreDraft();
 
   function updateField(field, value) {
     if (field === 'bio') draftBio = value;

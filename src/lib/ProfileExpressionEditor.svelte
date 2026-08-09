@@ -754,8 +754,11 @@
   .profile-expression-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .profile-expression-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .profile-expression-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
-  :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media) { width: 100%; height: 100%; aspect-ratio: auto; border: 0; border-radius: 0; }
-  :global(.profile-expression-editor__compact-preview .foundation-media) { border: 0; border-radius: 0; }
+  .profile-expression-editor__compact-preview--avatar { border-color: transparent; }
+  :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media),
+  :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media img),
+  :global(.profile-expression-editor__compact-preview .foundation-media),
+  :global(.profile-expression-editor__compact-preview .foundation-media img) { width: 100%; height: 100%; aspect-ratio: auto; border: 0 !important; border-radius: 0; outline: 0; box-shadow: none; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
   .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; color: var(--color-ink-muted); font-size: .76rem; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-copy { display: block; min-width: 0; order: -1; }

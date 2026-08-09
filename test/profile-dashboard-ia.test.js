@@ -24,7 +24,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /import\('\.\/ProfileCustomizePage\.svelte'\)/);
   assert.match(settings, /this=\{sectionComponents\.customize\}/);
   assert.match(settings, /on:identitysaved=\{updateIdentity\}/);
+  assert.match(settings, /identityPresentation: nextPresentation/);
   assert.match(identity, /baselineBio/);
+  assert.match(identity, /incomingKey/);
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
   for (const section of ['media', 'identity', 'appearance', 'content', 'widgets', 'effects', 'layout']) {
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));
@@ -41,6 +43,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   for (const action of ['Background', 'Audio', 'Profile avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
   assert.doesNotMatch(expression, /More media controls/);
   assert.match(expression, /profile-expression-editor__compact-audio-player/);
+  assert.match(expression, /compact-preview--avatar \{ border-color: transparent/);
   assert.match(richMedia, /export let compact = false/);
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);
