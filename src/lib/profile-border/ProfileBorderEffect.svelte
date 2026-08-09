@@ -108,11 +108,6 @@
   .profile-border-effect--celestial {
     --border-accent: #a1c4fd;
     --border-shadow: rgba(170, 182, 255, 0.36);
-    background-image:
-      radial-gradient(circle at 8% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
-      radial-gradient(circle at 87% 72%, rgba(185, 242, 255, 0.8) 0 1px, transparent 2px),
-      linear-gradient(rgba(9, 13, 29, 0.82), rgba(9, 13, 29, 0.82));
-    background-size: 46px 46px, 67px 67px, 100% 100%;
     box-shadow: 0 0 35px rgba(161, 196, 253, 0.6), inset 0 0 25px rgba(255, 255, 255, 0.3);
   }
 
@@ -137,8 +132,6 @@
   .profile-border-effect--gold {
     --border-accent: #e4bc68;
     --border-shadow: rgba(228, 188, 104, 0.28);
-    background-image: linear-gradient(110deg, transparent 30%, rgba(255, 248, 194, 0.1) 48%, transparent 66%);
-    background-size: 240% 100%;
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.1);
   }
 
@@ -151,20 +144,12 @@
   .profile-border-effect--prism {
     --border-accent: #cdd2ff;
     --border-shadow: rgba(205, 210, 255, 0.34);
-    border-color: transparent;
-    background-image:
-      linear-gradient(rgba(14, 14, 20, 0.9), rgba(14, 14, 20, 0.9)),
-      linear-gradient(100deg, #fad0c4, #c2e9fb, #d8b4fe, #fff1ba, #fad0c4);
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
-    background-size: 100% 100%, 260% 100%;
     box-shadow: 0 0 15px rgba(194, 233, 251, 0.34);
   }
 
   .profile-border-effect--void {
     --border-accent: #9482d9;
     --border-shadow: rgba(107, 74, 198, 0.34);
-    background-image: radial-gradient(ellipse at center, rgba(11, 7, 20, 0.18), rgba(0, 0, 0, 0.82));
     box-shadow: 0 0 2px rgba(230, 240, 255, 0.82), 0 0 14px rgba(123, 72, 218, 0.48), 0 0 34px rgba(0, 0, 0, 1), inset 0 0 32px rgba(0, 0, 0, 0.98);
   }
 
@@ -175,7 +160,7 @@
   }
 
   .profile-border-effect--celestial:not(.profile-border-effect--static) {
-    animation: profile-border-celestial 4s ease-in-out infinite, profile-border-celestial-stars 16s linear infinite;
+    animation: profile-border-celestial 4s ease-in-out infinite;
   }
 
   .profile-border-effect--chroma:not(.profile-border-effect--static) {
@@ -223,10 +208,6 @@
     50% { box-shadow: 0 0 50px rgba(194, 233, 251, 0.9), inset 0 0 35px rgba(255, 255, 255, 0.5); }
   }
 
-  @keyframes profile-border-celestial-stars {
-    to { background-position: 92px 46px, -67px 67px, 0 0; }
-  }
-
   @keyframes profile-border-chroma {
     0%, 100% {
       border-color: #ff8fca;
@@ -244,13 +225,11 @@
 
   @keyframes profile-border-prism {
     0%, 100% {
-      border-color: transparent;
-      background-position: 0 0, 0 50%;
+      border-color: #cdd2ff;
       box-shadow: 0 0 15px rgba(194, 233, 251, 0.24);
     }
     50% {
-      border-color: transparent;
-      background-position: 0 0, 100% 50%;
+      border-color: #f7b7e2;
       box-shadow: 0 0 24px rgba(247, 183, 226, 0.42);
     }
   }
@@ -282,8 +261,8 @@
   }
 
   @keyframes profile-border-gold {
-    0%, 20% { background-position: 140% 0; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.1); }
-    70%, 100% { background-position: -120% 0; box-shadow: 0 0 28px rgba(255, 235, 164, 0.5), inset 0 0 15px rgba(255, 235, 164, 0.18); }
+    0%, 20% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.1); }
+    70%, 100% { box-shadow: 0 0 28px rgba(255, 235, 164, 0.5), inset 0 0 15px rgba(255, 235, 164, 0.18); }
   }
 
   @keyframes profile-border-neon {
