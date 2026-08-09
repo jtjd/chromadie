@@ -6,8 +6,10 @@ Document user-visible redesign changes by milestone.
 
 - Customize now opens as one compact page with an Assets Uploader rail for
   Background, Audio, Profile avatar, and Custom cursor.
-- Added Quick jump links and direct anchors so common edits are one click away
-  while the existing upload controls remain the source of truth.
+- The media cards are now the upload controls: clicking a card opens the
+  existing validated input and the card previews the current upload in place.
+  Full libraries and advanced media settings remain available under one
+  disclosure, with direct anchors retained for keyboard and deep-link access.
 - Grouped the remaining controls into General, Color, and Other customization
   surfaces and added a quiet Chromadie Plus expression prompt.
 - The redesign is responsive and keeps profile saves, preview drafts, media

@@ -19,6 +19,8 @@
   export let config = {};
   export let staff = false;
   export let entitlements = [];
+  export let compact = false;
+  export let compactKinds = ['audio', 'cursor'];
 
   const dispatch = createEventDispatcher();
   const actionButtonStyle = 'display:inline-flex;align-items:center;justify-content:center;min-height:2.45rem;border:1px solid transparent;border-radius:var(--radius-sm);padding:0 .8rem;background:var(--color-ink-strong);color:var(--color-canvas-deep);font:600 var(--type-small)/1 var(--font-body-stack);cursor:pointer';
@@ -299,7 +301,49 @@
 </script>
 
 {#if hasAccess}
-  <Module size="wide" tone="quiet" title="Rich media" description="Premium expression stays bounded, reusable, and server-verified.">
+  <Module size="wide" tone="quiet" className={compact ? 'rich-media-editor--compact' : ''} title="Rich media" description="Premium expression stays bounded, reusable, and server-verified.">
+    {#if compact}
+      {#if compactKinds.includes('audio')}
+        <article class="rich-media-editor__compact-card">
+          <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--audio" type="button" disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()} aria-label="Add audio track">
+            {#if primaryAudioAsset}
+              <span class="rich-media-editor__compact-audio-icon" aria-hidden="true">♫</span>
+              <span class="rich-media-editor__compact-audio-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              <small>Audio ready · {audioTracks.length}/5</small>
+            {:else}
+              <span class="rich-media-editor__compact-audio-icon" aria-hidden="true">♫</span>
+              <small>Click to upload</small>
+            {/if}
+            <span class="rich-media-editor__compact-overlay" aria-hidden="true">↥</span>
+          </button>
+          <div class="rich-media-editor__compact-copy">
+            <strong>Audio</strong>
+            <small>{audioTracks.length >= 5 ? 'Library limit reached' : primaryAudioAsset ? 'Click to add another' : 'Click to upload'}</small>
+          </div>
+        </article>
+      {/if}
+
+      {#if compactKinds.includes('cursor')}
+        <article class="rich-media-editor__compact-card">
+          <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--cursor" type="button" disabled={busy} on:click={() => cursorInput?.click()} aria-label={activeCursor ? 'Replace custom cursor' : 'Upload custom cursor'}>
+            {#if activeCursor}
+              <img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Custom cursor preview" />
+            {:else}
+              <span class="rich-media-editor__compact-cursor-glyph" aria-hidden="true">↖</span>
+              <small>Click to upload</small>
+            {/if}
+            <span class="rich-media-editor__compact-overlay" aria-hidden="true">↥</span>
+          </button>
+          <div class="rich-media-editor__compact-copy">
+            <strong>Custom cursor</strong>
+            <small>{activeCursor ? 'Click to replace' : 'Click to upload'}</small>
+          </div>
+        </article>
+      {/if}
+
+    {/if}
+    <details class:rich-media-editor__advanced={compact} open={!compact}>
+      {#if compact}<summary>More expression controls <span aria-hidden="true">↘</span></summary>{/if}
     {#if loading}<p class="rich-media-editor__status" role="status">Loading your rich media library…</p>{/if}
     <p class="rich-media-editor__hint">Three muted background videos (MP4/WebM), five MP3 tracks, one banner, and two cursor styles. The library is capped at 150 MB.</p>
 
@@ -397,7 +441,29 @@
 
     {#if error}<p class="rich-media-editor__message rich-media-editor__message--error" role="alert">{error}</p>{/if}
     {#if status}<p class="rich-media-editor__message" role="status" aria-live="polite">{status}</p>{/if}
+    </details>
   </Module>
+{:else if compact}
+  <article class="rich-media-editor__compact-card rich-media-editor__compact-card--locked">
+    <div class="rich-media-editor__compact-preview rich-media-editor__compact-preview--locked" aria-hidden="true">
+      <span class="rich-media-editor__compact-lock">♫</span>
+      <small>Chromadie Plus</small>
+    </div>
+    <div class="rich-media-editor__compact-copy">
+      <strong>Audio</strong>
+      <small>Unlock richer expression</small>
+    </div>
+  </article>
+  <article class="rich-media-editor__compact-card rich-media-editor__compact-card--locked">
+    <div class="rich-media-editor__compact-preview rich-media-editor__compact-preview--locked" aria-hidden="true">
+      <span class="rich-media-editor__compact-lock">↖</span>
+      <small>Chromadie Plus</small>
+    </div>
+    <div class="rich-media-editor__compact-copy">
+      <strong>Custom cursor</strong>
+      <small>Unlock richer expression</small>
+    </div>
+  </article>
 {:else}
   <Module size="wide" tone="quiet" title="Rich media" description="Make the profile yours with a deeper media library.">
     <p class="rich-media-editor__hint">Chromadie Plus adds bounded video, audio, banner, and cursor expression. Your free profile keeps the full image, atmosphere, Spotify, and earned-cosmetic experience.</p>
@@ -405,6 +471,34 @@
 {/if}
 
 <style>
+  :global(.rich-media-editor--compact) { display: contents; }
+  :global(.rich-media-editor--compact > .foundation-module__header) { display: none; }
+  :global(.rich-media-editor--compact > .foundation-module__body) { display: contents; }
+  .rich-media-editor__compact-card { display: grid; align-content: start; gap: .45rem; min-width: 0; padding: .55rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 78%, transparent); }
+  .rich-media-editor__compact-card--locked { opacity: .72; }
+  .rich-media-editor__compact-preview { position: relative; display: grid; width: 100%; min-height: 6.25rem; place-items: center; overflow: hidden; padding: 0; border: 1px solid var(--color-line-subtle); border-radius: calc(var(--radius-sm) - .1rem); background: #090b10; color: var(--color-ink-muted); cursor: pointer; }
+  .rich-media-editor__compact-preview--audio, .rich-media-editor__compact-preview--cursor { aspect-ratio: 16 / 9; }
+  .rich-media-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
+  .rich-media-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
+  .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
+  .rich-media-editor__compact-preview img { width: 4rem; height: 4rem; object-fit: contain; }
+  .rich-media-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-audio-icon, .rich-media-editor__compact-cursor-glyph { color: var(--color-accent-bright); font-size: 1.7rem; }
+  .rich-media-editor__compact-lock { color: var(--color-accent-bright); font-size: 1.55rem; }
+  .rich-media-editor__compact-audio-bars { display: flex; align-items: center; gap: .17rem; height: 1.3rem; }
+  .rich-media-editor__compact-audio-bars i { display: block; width: .18rem; height: 45%; border-radius: 999px; background: var(--color-accent); }
+  .rich-media-editor__compact-audio-bars i:nth-child(2), .rich-media-editor__compact-audio-bars i:nth-child(4) { height: 85%; }
+  .rich-media-editor__compact-audio-bars i:nth-child(3) { height: 100%; }
+  .rich-media-editor__compact-overlay { position: absolute; right: .4rem; bottom: .35rem; display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 1px solid color-mix(in srgb, var(--color-accent-bright) 52%, transparent); border-radius: 50%; background: color-mix(in srgb, #090b10 75%, transparent); color: var(--color-ink-strong); font-size: .85rem; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-standard); }
+  .rich-media-editor__compact-preview:hover .rich-media-editor__compact-overlay, .rich-media-editor__compact-preview:focus-visible .rich-media-editor__compact-overlay { opacity: 1; transform: translateY(-1px); }
+  .rich-media-editor__compact-copy { display: grid; min-width: 0; gap: .15rem; }
+  .rich-media-editor__compact-copy strong { overflow: hidden; color: var(--color-ink-strong); font-size: var(--type-small); text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-copy small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__advanced { grid-column: 1 / -1; margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
+  .rich-media-editor__advanced summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--color-ink-muted); font-size: var(--type-small); cursor: pointer; list-style: none; }
+  .rich-media-editor__advanced summary::-webkit-details-marker { display: none; }
+  .rich-media-editor__advanced summary span { color: var(--color-accent-bright); font-size: 1rem; transition: transform var(--motion-base) var(--motion-ease-standard); }
+  .rich-media-editor__advanced[open] summary span { transform: rotate(90deg); }
   .rich-media-editor__hint, .rich-media-editor__status, .rich-media-editor__message { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
   .rich-media-editor__message--error { color: var(--color-danger, #ff9eac); }
   .rich-media-editor__upload-grid { display: grid; grid-template-columns: repeat(5, minmax(10rem, 1fr)); gap: .75rem; margin-top: 1rem; }
@@ -438,4 +532,7 @@
   @media (max-width: 78rem) { .rich-media-editor__upload-grid { grid-template-columns: repeat(3, minmax(10rem, 1fr)); } }
   @media (max-width: 42rem) { .rich-media-editor__upload-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rich-media-editor__track { grid-template-columns: 1fr 1fr; } .rich-media-editor__track strong { grid-column: 1 / -1; } }
   @media (max-width: 28rem) { .rich-media-editor__upload-grid { grid-template-columns: minmax(0, 1fr); } }
+  @media (prefers-reduced-motion: reduce) {
+    .rich-media-editor__compact-overlay, .rich-media-editor__advanced summary span { transition: none; }
+  }
 </style>

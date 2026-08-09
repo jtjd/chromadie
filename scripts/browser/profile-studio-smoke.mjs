@@ -233,6 +233,22 @@ try {
   await step('Customize control changes the preview without publishing', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize`, 'Customize section');
     await page.waitFor(`document.querySelector('.appearance-editor')`, 'Customize editor');
+    await page.waitFor(`(() => {
+      const grid = document.querySelector('.profile-expression-editor__compact-grid');
+      return Boolean(grid && grid.querySelectorAll('.profile-expression-editor__compact-card, .rich-media-editor__compact-card').length === 4);
+    })()`, 'compact media upload rail');
+    const mediaRail = await page.evaluate(`(() => {
+      const grid = document.querySelector('.profile-expression-editor__compact-grid');
+      const cards = [...(grid?.querySelectorAll(':scope > article') || [])];
+      return {
+        labels: cards.map(card => card.querySelector('strong')?.textContent?.trim() || ''),
+        editable: cards.filter(card => card.querySelector('button[type="button"]')).map(card => card.querySelector('strong')?.textContent?.trim() || ''),
+        advancedOpen: Boolean(grid?.parentElement?.querySelector('.profile-expression-editor__advanced')?.open)
+      };
+    })()`);
+    assert(mediaRail.labels.length === 4, `Compact media rail rendered ${mediaRail.labels.length} cards instead of four.`);
+    assert(mediaRail.labels.includes('Profile avatar') && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
+    assert(mediaRail.advancedOpen === false, 'Advanced media controls should start collapsed.');
     await page.clickText('Preview', { description: 'open Customize live preview' });
     await page.waitFor(`document.querySelector('.profile-settings-preview .identity-card')`, 'Customize preview');
     const before = await page.evaluate(dashboardStateExpression());
@@ -254,7 +270,7 @@ try {
     await capture('05-customize-draft-blur');
     await page.clickText('Reset', { description: 'Customize reset control' });
     await page.waitFor(`document.querySelector('.appearance-editor__reset')?.disabled === true`, 'Customize reset');
-    return { before, zero, after, publishRequests: publishRequestsAfter };
+    return { before, zero, after, publishRequests: publishRequestsAfter, mediaRail };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {

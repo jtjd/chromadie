@@ -5,13 +5,14 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate Customize, Links, and Premium destinations', async () => {
-  const [settings, customize, premium, shell, editor, expression] = await Promise.all([
+  const [settings, customize, premium, shell, editor, expression, richMedia] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
     read('src/lib/ProfileDashboardShell.svelte'),
     read('src/lib/ProfileEditor.svelte'),
-    read('src/lib/ProfileExpressionEditor.svelte')
+    read('src/lib/ProfileExpressionEditor.svelte'),
+    read('src/lib/ProfileRichMediaEditor.svelte')
   ]);
 
   for (const id of ['customize', 'links', 'premium']) assert.match(settings, new RegExp(`id: '${id}'`));
@@ -27,8 +28,13 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   }
   assert.match(customize, /Profile media/);
   assert.match(customize, /Quick jump/);
-  assert.match(customize, /profile-customize-page__asset-grid/);
-  for (const action of ['Background', 'Audio', 'Profile avatar', 'Custom cursor']) assert.match(customize, new RegExp(action));
+  assert.match(customize, /compact=\{true\}/);
+  assert.match(expression, /profile-expression-editor__compact-grid/);
+  for (const action of ['Background', 'Audio', 'Profile avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
+  assert.match(expression, /More media controls/);
+  assert.match(richMedia, /export let compact = false/);
+  assert.match(richMedia, /compactKinds/);
+  assert.match(richMedia, /rich-media-editor__compact-card/);
   assert.match(customize, /Chromadie Plus/);
   assert.doesNotMatch(customize, /role="tablist"/);
   assert.doesNotMatch(customize, /activeCategory/);
@@ -47,7 +53,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(editor, /export let showLinks = true/);
   assert.match(editor, /\{#if showLayout\}/);
   assert.match(editor, /\{#if showLinks\}/);
-  for (const anchor of ['profile-media-avatar', 'profile-media-background', 'profile-media-audio', 'profile-media-music', 'profile-media-rich']) {
+  for (const anchor of ['profile-media-avatar', 'profile-media-background', 'profile-media-audio', 'profile-media-music']) {
     assert.match(expression, new RegExp(`id="${anchor}"`));
   }
+  assert.match(expression, /id=\{compact \? 'profile-media-rich' : undefined\}/);
+  assert.match(expression, /id=\{!compact \? 'profile-media-rich' : undefined\}/);
 });

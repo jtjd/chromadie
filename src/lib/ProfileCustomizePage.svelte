@@ -23,13 +23,6 @@
   $: collectionComponent = components['profile-collection'];
   $: layoutComponent = components['profile-layout'];
 
-  const quickActions = Object.freeze([
-    { label: 'Background', detail: 'Image or atmosphere', icon: '▧', target: 'profile-media-background', fallback: 'media' },
-    { label: 'Audio', detail: 'Sound and music', icon: '♫', target: 'profile-media-audio', fallback: 'profile-media-music' },
-    { label: 'Profile avatar', detail: 'Image or initials', icon: '◉', target: 'profile-media-avatar', fallback: 'media' },
-    { label: 'Custom cursor', detail: 'Premium expression', icon: '↖', target: 'profile-media-rich', fallback: 'media' }
-  ]);
-
   const jumpLinks = Object.freeze([
     { label: 'Assets', target: 'media' },
     { label: 'General', target: 'identity' },
@@ -78,27 +71,14 @@
       <div>
         <p class="profile-customize-page__section-index">01 / Assets uploader</p>
         <h3 id="profile-customize-media-title">Profile media</h3>
-        <p>Jump straight to the visual pieces visitors notice first.</p>
+        <p>Click an asset to upload it and see the result immediately.</p>
       </div>
       <span class="profile-customize-page__surface-note">Profile expression</span>
     </div>
 
-    <div class="profile-customize-page__asset-grid">
-      {#each quickActions as action (action.label)}
-        <button class="profile-customize-page__asset-card" type="button" on:click={() => scrollToTarget(action)}>
-          <span class="profile-customize-page__asset-icon" aria-hidden="true">{action.icon}</span>
-          <span class="profile-customize-page__asset-copy">
-            <strong>{action.label}</strong>
-            <small>{action.detail}</small>
-          </span>
-          <span class="profile-customize-page__asset-action" aria-hidden="true">Open <span>↗</span></span>
-        </button>
-      {/each}
-    </div>
-
     {#if mediaComponent}
       <div class="profile-customize-page__editor profile-customize-page__editor--media">
-        <svelte:component this={mediaComponent} profileId={profileId} config={profileConfig} fallbackInitial={(targetProfile?.username || accountUsername || '✦').slice(0, 1)} {staff} {entitlements} on:expressionchange={forward} />
+        <svelte:component this={mediaComponent} profileId={profileId} config={profileConfig} fallbackInitial={(targetProfile?.username || accountUsername || '✦').slice(0, 1)} {staff} {entitlements} compact={true} on:expressionchange={forward} />
       </div>
     {:else}
       <div class="profile-customize-page__loading" role="status">Loading media controls…</div>
@@ -242,17 +222,6 @@
   .profile-customize-page__surface-heading p:last-child { margin: .3rem 0 0; color: var(--customize-muted); font-size: .74rem; line-height: 1.4; }
   .profile-customize-page__surface-note { flex: 0 0 auto; color: var(--customize-faint); font: .59rem/1 var(--site-mono, monospace); text-transform: uppercase; letter-spacing: .08em; }
 
-  .profile-customize-page__asset-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; }
-  .profile-customize-page__asset-card { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; gap: .28rem .65rem; min-width: 0; min-height: 6.6rem; padding: .8rem; border: 1px solid var(--customize-line); border-radius: .55rem; background: var(--customize-inset); color: var(--site-ink, #f2f0eb); text-align: left; cursor: pointer; transition: border-color .18s ease, background-color .18s ease, transform .18s ease; }
-  .profile-customize-page__asset-card:hover { border-color: color-mix(in srgb, var(--customize-purple) 48%, var(--customize-line-strong)); background: color-mix(in srgb, var(--customize-purple) 7%, var(--customize-inset)); transform: translateY(-1px); }
-  .profile-customize-page__asset-card:focus-visible { outline: 2px solid var(--site-accent, #cdd2ff); outline-offset: 3px; }
-  .profile-customize-page__asset-icon { display: grid; width: 2.05rem; height: 2.05rem; grid-row: 1 / span 2; place-items: center; border: 1px solid var(--customize-line-strong); border-radius: .42rem; background: rgba(255,255,255,.035); color: var(--customize-purple); font-size: 1.05rem; }
-  .profile-customize-page__asset-copy { display: grid; min-width: 0; gap: .22rem; }
-  .profile-customize-page__asset-copy strong { overflow: hidden; font-size: .76rem; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-customize-page__asset-copy small { overflow: hidden; color: var(--customize-muted); font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-customize-page__asset-action { grid-column: 2; color: var(--customize-faint); font: .58rem/1 var(--site-mono, monospace); }
-  .profile-customize-page__asset-action span { color: var(--customize-purple); font-size: .78rem; }
-
   .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .45rem; min-height: 3.1rem; overflow: hidden; padding: .65rem 3.2rem; border: 1px solid color-mix(in srgb, var(--customize-purple) 42%, var(--customize-line)); border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--customize-purple) 14%, #181019), color-mix(in srgb, var(--customize-purple) 7%, #181019)); color: #d6b1e5; font: 600 .72rem/1.35 var(--site-font, sans-serif); cursor: pointer; }
   .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { position: absolute; color: color-mix(in srgb, var(--customize-purple) 24%, transparent); font-size: 4rem; line-height: 1; pointer-events: none; }
   .profile-customize-page__premium-banner::before { content: '◇'; left: 1.2rem; transform: rotate(-18deg); }
@@ -284,6 +253,11 @@
   .profile-customize-page :global(.foundation-module__description) { display: none; }
   .profile-customize-page :global(.foundation-module__body) { padding: 0; }
   .profile-customize-page :global(.profile-expression-editor) { display: grid; gap: .85rem; }
+  .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; }
+  .profile-customize-page :global(.profile-expression-editor__advanced) { margin-top: .1rem; }
+  .profile-customize-page :global(.profile-expression-editor__compact-grid .rich-media-editor--compact),
+  .profile-customize-page :global(.profile-expression-editor__compact-grid .rich-media-editor--compact > .foundation-module__body) { display: contents; }
+  .profile-customize-page :global(.profile-expression-editor__compact-grid .rich-media-editor--compact .rich-media-editor__advanced) { grid-column: 1 / -1; }
   .profile-customize-page :global(.profile-expression-editor__section) { padding-top: .9rem !important; border-top-color: var(--customize-line) !important; }
   .profile-customize-page :global(.profile-expression-editor__asset-library) { margin-top: .65rem; padding-top: .75rem; border-top-color: var(--customize-line); }
   .profile-customize-page :global(.profile-expression-editor__asset-grid) { max-width: none; }
@@ -320,7 +294,7 @@
   .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
   @media (max-width: 72rem) {
-    .profile-customize-page__asset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page :global(.appearance-editor__style-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
@@ -333,8 +307,7 @@
   @media (max-width: 38rem) {
     .profile-customize-page__surface, .profile-customize-page__surface--assets { padding: .8rem; }
     .profile-customize-page__surface-heading { align-items: flex-start; flex-direction: column; }
-    .profile-customize-page__asset-grid { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page__asset-card { min-height: 5.4rem; }
+    .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page__premium-banner { min-height: 3.6rem; padding-inline: 2.5rem; text-align: center; }
     .profile-customize-page__premium-arrow { right: .65rem; }
     .profile-customize-page__control { padding: .75rem; }
@@ -342,7 +315,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .profile-customize-page__asset-card, .profile-customize-page__jumpbar button { transition: none; }
+    .profile-customize-page__jumpbar button { transition: none; }
     .profile-customize-page :global(*) { scroll-behavior: auto; }
   }
 </style>

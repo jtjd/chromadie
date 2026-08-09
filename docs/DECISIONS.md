@@ -5,10 +5,11 @@
 Customize now uses one continuous, screenshot-inspired workspace: a compact
 asset uploader rail for the four highest-frequency media actions, a Plus
 expression banner, and grouped General, Color, and Other customization
-surfaces. The media cards are quick-jump anchors into the existing editor
-controls rather than duplicate upload implementations, so avatar, background,
-audio, music, and rich-media behavior keep their current domain components and
-save contracts.
+surfaces. The media cards are the upload controls themselves: clicking a card
+opens the existing validated input and the card immediately reflects the
+current preview. Full libraries, music settings, and rich-media configuration
+stay behind one disclosure so the fast path does not create duplicate upload
+implementations or separate save contracts.
 
 This is a presentation and information-architecture change. Existing lazy
 editor loading, section-scoped dirty/publish events, entitlement gates, media
