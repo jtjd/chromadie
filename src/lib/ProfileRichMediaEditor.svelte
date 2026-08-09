@@ -305,10 +305,9 @@
   <Module size="wide" tone="quiet" className={compact ? 'rich-media-editor--compact' : ''} title="Rich media" description="Premium expression stays bounded, reusable, and server-verified.">
     {#if compact}
       {#if compactKinds.includes('audio')}
-        <article class="rich-media-editor__compact-card">
+        <article class="rich-media-editor__compact-card rich-media-editor__compact-card--audio">
           <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--audio" type="button" disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()} aria-label="Add audio track">
             <ProfileMediaIcon kind="audio" />
-            <span class="rich-media-editor__compact-overlay" aria-hidden="true"><ProfileMediaIcon kind="upload" /></span>
             <span class="rich-media-editor__compact-upload-hint">{audioTracks.length >= 5 ? 'Library limit reached' : primaryAudioAsset ? `Click to add · ${audioTracks.length}/5` : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
@@ -318,14 +317,13 @@
       {/if}
 
       {#if compactKinds.includes('cursor')}
-        <article class="rich-media-editor__compact-card">
+        <article class="rich-media-editor__compact-card rich-media-editor__compact-card--cursor">
           <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--cursor" type="button" disabled={busy} on:click={() => cursorInput?.click()} aria-label={activeCursor ? 'Replace custom cursor' : 'Upload custom cursor'}>
             {#if activeCursor}
               <img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Custom cursor preview" />
             {:else}
-              <ProfileMediaIcon kind="cursor" />
+              <ProfileMediaIcon kind="image" />
             {/if}
-            <span class="rich-media-editor__compact-overlay" aria-hidden="true"><ProfileMediaIcon kind="upload" /></span>
             <span class="rich-media-editor__compact-upload-hint">{activeCursor ? 'Click to replace' : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
@@ -437,7 +435,7 @@
     </details>
   </Module>
 {:else if compact}
-  <article class="rich-media-editor__compact-card rich-media-editor__compact-card--locked">
+  <article class="rich-media-editor__compact-card rich-media-editor__compact-card--audio rich-media-editor__compact-card--locked">
     <div class="rich-media-editor__compact-preview rich-media-editor__compact-preview--locked" aria-hidden="true">
       <ProfileMediaIcon kind="audio" />
       <small>Chromadie Plus</small>
@@ -447,9 +445,9 @@
       <small>Unlock richer expression</small>
     </div>
   </article>
-  <article class="rich-media-editor__compact-card rich-media-editor__compact-card--locked">
+  <article class="rich-media-editor__compact-card rich-media-editor__compact-card--cursor rich-media-editor__compact-card--locked">
     <div class="rich-media-editor__compact-preview rich-media-editor__compact-preview--locked" aria-hidden="true">
-      <ProfileMediaIcon kind="cursor" />
+      <ProfileMediaIcon kind="image" />
       <small>Chromadie Plus</small>
     </div>
     <div class="rich-media-editor__compact-copy">
@@ -467,20 +465,19 @@
   :global(.rich-media-editor--compact) { display: contents; }
   :global(.rich-media-editor--compact > .foundation-module__header) { display: none; }
   :global(.rich-media-editor--compact > .foundation-module__body) { display: contents; }
-  .rich-media-editor__compact-card { display: grid; align-content: start; gap: .3rem; min-width: 0; padding: .4rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 78%, transparent); }
+  .rich-media-editor__compact-card { display: grid; align-content: start; gap: .55rem; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .rich-media-editor__compact-card--audio { order: 2; }
+  .rich-media-editor__compact-card--cursor { order: 4; }
   .rich-media-editor__compact-card--locked { opacity: .72; }
-  .rich-media-editor__compact-preview { position: relative; display: grid; width: 100%; min-height: 4.5rem; place-items: center; overflow: hidden; padding: 0; border: 1px solid var(--color-line-subtle); border-radius: calc(var(--radius-sm) - .1rem); background: #090b10; color: var(--color-ink-muted); cursor: pointer; }
-  .rich-media-editor__compact-preview--audio, .rich-media-editor__compact-preview--cursor { aspect-ratio: 3 / 1; }
+  .rich-media-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: #0b0b0b; color: var(--color-ink-muted); cursor: pointer; }
   .rich-media-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .rich-media-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
   .rich-media-editor__compact-preview img { width: 4rem; height: 4rem; object-fit: contain; }
   .rich-media-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
-  .rich-media-editor__compact-overlay { position: absolute; right: .4rem; bottom: .35rem; display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 1px solid color-mix(in srgb, var(--color-accent-bright) 52%, transparent); border-radius: 50%; background: color-mix(in srgb, #090b10 75%, transparent); color: var(--color-ink-strong); font-size: .85rem; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-standard); }
-  .rich-media-editor__compact-preview:hover .rich-media-editor__compact-overlay, .rich-media-editor__compact-preview:focus-visible .rich-media-editor__compact-overlay { opacity: 1; transform: translateY(-1px); }
-  .rich-media-editor__compact-upload-hint { position: absolute; bottom: .35rem; left: .4rem; max-width: calc(100% - 2.4rem); overflow: hidden; padding: .18rem .32rem; border-radius: 999px; background: rgba(5, 6, 9, .72); color: var(--color-ink-strong); font-size: var(--type-label); line-height: 1.1; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; }
-  .rich-media-editor__compact-copy { display: grid; min-width: 0; gap: .15rem; }
-  .rich-media-editor__compact-copy strong { overflow: hidden; color: var(--color-ink-strong); font-size: var(--type-small); text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-upload-hint { max-width: 100%; overflow: hidden; color: var(--color-ink-muted); font-size: .68rem; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-copy { display: block; min-width: 0; order: -1; }
+  .rich-media-editor__compact-copy strong { display: block; overflow: hidden; color: var(--color-ink-strong); font-size: .78rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__compact-copy small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__advanced { grid-column: 1 / -1; margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
   .rich-media-editor__advanced summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--color-ink-muted); font-size: var(--type-small); cursor: pointer; list-style: none; }
@@ -521,6 +518,6 @@
   @media (max-width: 42rem) { .rich-media-editor__upload-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rich-media-editor__track { grid-template-columns: 1fr 1fr; } .rich-media-editor__track strong { grid-column: 1 / -1; } }
   @media (max-width: 28rem) { .rich-media-editor__upload-grid { grid-template-columns: minmax(0, 1fr); } }
   @media (prefers-reduced-motion: reduce) {
-    .rich-media-editor__compact-overlay, .rich-media-editor__advanced summary span { transition: none; }
+    .rich-media-editor__advanced summary span { transition: none; }
   }
 </style>
