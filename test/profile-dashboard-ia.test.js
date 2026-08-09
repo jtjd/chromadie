@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate Customize, Links, and Premium destinations', async () => {
-  const [settings, customize, premium, shell, editor, expression, richMedia, identity] = await Promise.all([
+  const [settings, customize, premium, shell, editor, expression, richMedia, identity, appearance] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
@@ -13,7 +13,8 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
     read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ProfileRichMediaEditor.svelte'),
-    read('src/lib/IdentityEditor.svelte')
+    read('src/lib/IdentityEditor.svelte'),
+    read('src/lib/ProfileAppearanceEditor.svelte')
   ]);
 
   for (const id of ['customize', 'links', 'premium']) assert.match(settings, new RegExp(`id: '${id}'`));
@@ -27,6 +28,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /identityPresentation: nextPresentation/);
   assert.match(identity, /baselineBio/);
   assert.match(identity, /incomingKey/);
+  for (const label of ['Profile Text', 'Handle & Metadata', 'Username', 'Bio Text', 'Page Background', 'Profile Surface']) {
+    assert.match(appearance, new RegExp(label.replace(/[&]/g, '\\$&')));
+  }
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
   for (const section of ['media', 'identity', 'appearance', 'content', 'widgets', 'effects', 'layout']) {
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));

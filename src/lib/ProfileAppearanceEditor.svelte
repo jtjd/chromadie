@@ -128,20 +128,20 @@
   }
 
   const colorFields = [
-    ['text', 'Text color'],
-    ['secondaryText', 'Secondary text'],
-    ['username', 'Username color'],
-    ['description', 'Description color'],
-    ['background', 'Background color'],
-    ['surface', 'Surface color'],
-    ['accent', 'Accent color'],
-    ['highlight', 'Highlight color']
+    ['text', 'Profile Text'],
+    ['secondaryText', 'Handle & Metadata'],
+    ['username', 'Username'],
+    ['description', 'Bio Text'],
+    ['background', 'Page Background'],
+    ['surface', 'Profile Surface'],
+    ['accent', 'Accent'],
+    ['highlight', 'Highlight']
   ];
 </script>
 
 <div class="appearance-editor">
   <section class="appearance-editor__panel" aria-labelledby="appearance-colors-title">
-    <div class="appearance-editor__heading"><h2 id="appearance-colors-title">Theme colors</h2><span>8 colors</span></div>
+    <div class="appearance-editor__heading"><h2 id="appearance-colors-title">Profile colors</h2><span>8 colors</span></div>
     <div class="appearance-editor__color-grid">
       {#each colorFields as [key, label] (key)}
         <label class="appearance-editor__field">
