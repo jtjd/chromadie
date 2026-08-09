@@ -28,7 +28,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /identityPresentation: nextPresentation/);
   assert.match(identity, /baselineBio/);
   assert.match(identity, /incomingKey/);
-  for (const label of ['Profile Text', 'Handle & Metadata', 'Username', 'Bio Text', 'Page Background', 'Profile Surface']) {
+  for (const label of ['Profile Text', 'Handle & Metadata', 'Username', 'Bio Text', 'Page Background', 'Profile Surface', 'Accent']) {
     assert.match(appearance, new RegExp(label.replace(/[&]/g, '\\$&')));
   }
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);

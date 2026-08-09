@@ -153,11 +153,12 @@ test('profile context separates owner drafts from the published visitor projecti
 test('profile configuration editor and renderer retain safe draft/publish boundaries', async () => {
   const editor = await readFile(new URL('../src/lib/ProfileEditor.svelte', import.meta.url), 'utf8');
   const profileData = await readFile(new URL('../src/lib/profileData.js', import.meta.url), 'utf8');
+  const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
 
-  assert.match(editor, /save_profile_configuration_section/);
-  assert.match(editor, /publish_profile_configuration_section/);
-  assert.match(editor, /p_section: 'composition'/);
+  assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
+  assert.match(editor, /export function getDraftConfig/);
+  assert.match(editor, /export function validateDraft/);
   assert.match(editor, /configpreview/);
   assert.doesNotMatch(editor, /colorEffectsEnabled/);
   assert.doesNotMatch(editor, /Signature color|Ambient color/);
@@ -165,6 +166,9 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   assert.doesNotMatch(editor, /innerHTML|new Function|eval\s*\(/);
   assert.match(profileData, /get_my_profile_configuration/);
   assert.match(profileData, /get_public_profile_configuration/);
+  assert.match(settings, /save_profile_configuration_v2/);
+  assert.match(settings, /publish_profile_configuration_v2/);
+  assert.match(settings, /ProfileDashboardActions/);
   assert.match(shell, /getProfileComposition/);
   assert.match(shell, /getVisibleProfileLinks/);
   assert.match(shell, /profile-shell-page--/);

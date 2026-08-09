@@ -134,6 +134,10 @@
   let layoutEditor = null;
   let contentEditor = null;
   let widgetEditor = null;
+  let dashboardSaving = false;
+  let dashboardStatus = '';
+  let dashboardError = '';
+  let DashboardActionsComponent = null;
 
   function getEquippedLayout(value) {
     return value && typeof value === 'object' && typeof value.profile_layout === 'string' ? value.profile_layout : '';
@@ -154,11 +158,14 @@
   $: if (!visibleSettingsSections.some(section => section.id === activeSection)) activeSection = 'customize';
   $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Customize';
   $: previewAvailable = activeSection === 'links';
+  $: editorProfileConfig = createEditorProfileConfig(context?.profileConfig);
+  $: dashboardDirty = Boolean(activeDirtySection) || hasServerDraftChanges(context?.profileConfig);
   $: previewProfileConfig = configurationPreview || context?.profileConfig?.draft;
   $: previewProfile = context?.targetProfile
     ? { ...context.targetProfile, equipped_cosmetics: $equippedItems || context.targetProfile.equipped_cosmetics || {} }
     : null;
   onMount(() => {
+    void loadDashboardActions();
     const getSectionFromLocation = () => {
       const rawHash = window.location.hash.replace(/^#/, '');
       const sectionId = HASH_ALIASES[rawHash] || rawHash;
@@ -231,7 +238,18 @@
 
   function handleSectionDirty(event) {
     const isDirty = event.detail?.dirty === true;
-    activeDirtySection = isDirty ? activeSection : (activeDirtySection === activeSection ? '' : activeDirtySection);
+    if (isDirty) {
+      activeDirtySection = activeSection;
+      dashboardError = '';
+      dashboardStatus = '';
+      return;
+    }
+    if (activeDirtySection !== activeSection) return;
+    const localDraft = getDashboardEditor()?.getDraftConfig?.();
+    const serverDraft = editorProfileConfig?.draft;
+    activeDirtySection = localDraft && serverDraft && JSON.stringify(normalizeProfileConfig(localDraft, FALLBACK_PROFILE_COLOR)) !== JSON.stringify(serverDraft)
+      ? activeSection
+      : '';
   }
 
   function resetActiveEditor() {
@@ -299,6 +317,16 @@
     return promise;
   }
 
+  async function loadDashboardActions() {
+    if (DashboardActionsComponent) return;
+    try {
+      const module = await import('./ProfileDashboardActions.svelte');
+      DashboardActionsComponent = module.default;
+    } catch (loadError) {
+      dashboardError = loadError instanceof Error ? loadError.message : 'The dashboard actions could not be loaded.';
+    }
+  }
+
   async function loadCustomizeComponents() {
     await Promise.all(CUSTOMIZE_SECTION_IDS.map(sectionId => loadSectionComponent(sectionId)));
   }
@@ -327,11 +355,188 @@
     };
   }
 
+  const FALLBACK_PROFILE_COLOR = '#CDD2FF';
+
+  function toEditorProfileConfig(value) {
+    const source = value && typeof value === 'object' ? value : {};
+    if (Number(source.version) === 2) {
+      const base = source.base && typeof source.base === 'object' ? source.base : source;
+      return normalizeProfileConfig({
+        ...base,
+        version: 1,
+        configurationVersion: 2,
+        links: source.links || base.links,
+        content: source.content || base.content,
+        widgets: source.widgets || base.widgets,
+        identityPresentation: source.identity || base.identityPresentation,
+        metadata: source.metadata || base.metadata,
+        linkStyle: source.linkStyle || base.linkStyle
+      }, FALLBACK_PROFILE_COLOR);
+    }
+    return normalizeProfileConfig(source, FALLBACK_PROFILE_COLOR);
+  }
+
+  function createEditorProfileConfig(value) {
+    if (!value) return null;
+    return {
+      ...value,
+      draft: toEditorProfileConfig(value.draft),
+      published: toEditorProfileConfig(value.published)
+    };
+  }
+
+  function hasServerDraftChanges(value) {
+    if (!value?.draft || !value?.published) return false;
+    return JSON.stringify(toEditorProfileConfig(value.draft)) !== JSON.stringify(toEditorProfileConfig(value.published));
+  }
+
+  function buildConfigurationV2(editorConfig, reference = context?.profileConfig?.v2Draft) {
+    const base = toEditorProfileConfig(editorConfig);
+    const source = reference && Number(reference.version) === 2 ? reference : {};
+    return {
+      version: 2,
+      base,
+      links: base.links,
+      identity: base.identityPresentation || source.identity,
+      content: base.content,
+      widgets: base.widgets,
+      metadata: base.metadata || source.metadata,
+      sharing: source.sharing || { qrEnabled: true, previewEnabled: true }
+    };
+  }
+
+  function asConfigurationV2(value, fallback) {
+    if (value && Number(value.version) === 2) return value;
+    if (fallback && Number(fallback.version) === 2) return fallback;
+    return buildConfigurationV2(value || context?.profileConfig?.draft);
+  }
+
+  function getDashboardEditor() {
+    if (activeSection === 'customize') return customizePage;
+    if (activeSection === 'links') return layoutEditor;
+    return null;
+  }
+
+  function getDashboardDraft() {
+    const base = toEditorProfileConfig(context?.profileConfig?.draft);
+    const localDraft = getDashboardEditor()?.getDraftConfig?.();
+    return normalizeProfileConfig({ ...base, ...(localDraft || {}) }, FALLBACK_PROFILE_COLOR);
+  }
+
+  function applyDashboardConfiguration({ draft, published, updatedAt, publishedAt }) {
+    const nextDraftV2 = asConfigurationV2(draft, context?.profileConfig?.v2Draft);
+    const nextPublishedV2 = asConfigurationV2(published, context?.profileConfig?.v2Published || nextDraftV2);
+    const nextDraft = toEditorProfileConfig(nextDraftV2);
+    context = {
+      ...context,
+      profileConfig: {
+        ...(context.profileConfig || {}),
+        version: 2,
+        draft: nextDraftV2,
+        published: nextPublishedV2,
+        v2Draft: nextDraftV2,
+        v2Published: nextPublishedV2,
+        updatedAt: updatedAt || context.profileConfig?.updatedAt || null,
+        publishedAt: publishedAt || context.profileConfig?.publishedAt || null
+      }
+    };
+    customizePage?.acceptSaved?.(nextDraft);
+    layoutEditor?.acceptSaved?.(nextDraft);
+    contentEditor?.acceptSaved?.(nextDraft);
+    widgetEditor?.acceptSaved?.(nextDraft);
+    configurationPreview = null;
+    activeDirtySection = '';
+  }
+
+  function responseError(response, fallback) {
+    return response?.error?.message || response?.data?.error || fallback;
+  }
+
+  function isFailedResponse(response) {
+    return Boolean(response?.error || response?.data?.success === false || response?.data?.code === 'conflict');
+  }
+
+  async function publishDashboard() {
+    if (dashboardSaving) return;
+    const editor = getDashboardEditor();
+    if (editor?.validateDraft && !editor.validateDraft()) {
+      dashboardError = 'Finish the highlighted fields before publishing.';
+      dashboardStatus = '';
+      return;
+    }
+    dashboardSaving = true;
+    dashboardError = '';
+    dashboardStatus = 'Saving profile changes…';
+    const editorDraft = getDashboardDraft();
+    const v2Draft = buildConfigurationV2(editorDraft);
+    const saveResponse = await supabase.rpc('save_profile_configuration_v2', {
+      p_draft: v2Draft,
+      p_expected_updated_at: context.profileConfig?.updatedAt || null
+    });
+    if (isFailedResponse(saveResponse)) {
+      dashboardSaving = false;
+      dashboardStatus = '';
+      dashboardError = responseError(saveResponse, 'The profile changes could not be saved.');
+      return;
+    }
+    if (saveResponse.data?.updated_at) {
+      context = { ...context, profileConfig: { ...(context.profileConfig || {}), updatedAt: saveResponse.data.updated_at } };
+    }
+    dashboardStatus = 'Publishing profile…';
+    const publishResponse = await supabase.rpc('publish_profile_configuration_v2', {
+      p_expected_updated_at: saveResponse.data?.updated_at || context.profileConfig?.updatedAt || null
+    });
+    if (isFailedResponse(publishResponse)) {
+      dashboardSaving = false;
+      dashboardStatus = '';
+      dashboardError = responseError(publishResponse, 'The profile could not be published.');
+      return;
+    }
+    applyDashboardConfiguration({
+      draft: publishResponse.data?.draft || saveResponse.data?.draft || v2Draft,
+      published: publishResponse.data?.published || saveResponse.data?.published || v2Draft,
+      updatedAt: saveResponse.data?.updated_at || context.profileConfig?.updatedAt,
+      publishedAt: publishResponse.data?.published_at || context.profileConfig?.publishedAt
+    });
+    dashboardSaving = false;
+    dashboardStatus = 'Profile published.';
+    dashboardError = '';
+  }
+
+  async function resetDashboard() {
+    if (dashboardSaving || !dashboardDirty) return;
+    dashboardSaving = true;
+    dashboardError = '';
+    dashboardStatus = 'Resetting profile changes…';
+    const publishedConfig = toEditorProfileConfig(context?.profileConfig?.published);
+    const v2Draft = buildConfigurationV2(publishedConfig, context?.profileConfig?.v2Published);
+    const response = await supabase.rpc('save_profile_configuration_v2', {
+      p_draft: v2Draft,
+      p_expected_updated_at: context.profileConfig?.updatedAt || null
+    });
+    if (isFailedResponse(response)) {
+      dashboardSaving = false;
+      dashboardStatus = '';
+      dashboardError = responseError(response, 'The profile changes could not be reset.');
+      return;
+    }
+    applyDashboardConfiguration({
+      draft: response.data?.draft || v2Draft,
+      published: response.data?.published || context.profileConfig?.v2Published || v2Draft,
+      updatedAt: response.data?.updated_at || context.profileConfig?.updatedAt,
+      publishedAt: context.profileConfig?.publishedAt
+    });
+    dashboardSaving = false;
+    dashboardStatus = 'Profile changes reset.';
+  }
+
   async function loadSettings() {
     const nextRequestId = ++requestId;
     const previousContext = context;
     loading = !previousContext;
     error = '';
+    dashboardStatus = '';
+    dashboardError = '';
     const nextContext = await loadProfileContext({ supabaseClient: supabase, isAuthenticated: $isAuthenticated, sessionUserId: $session?.user?.id, currentUsername: accountUsername });
     if (nextRequestId !== requestId) return;
     if (nextContext.loadError && previousContext) {
@@ -347,11 +552,30 @@
 
   function updateConfiguration(event) {
     configurationPreview = null;
-    const fallbackColor = '#CDD2FF';
-    const currentDraft = context?.profileConfig?.draft || {};
-    const currentPublished = context?.profileConfig?.published || {};
-    context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: normalizeProfileConfig(preserveExpressionFields(event.detail?.draft, currentDraft), fallbackColor), published: normalizeProfileConfig(preserveExpressionFields(event.detail?.published, currentPublished), fallbackColor), updatedAt: event.detail?.updatedAt || context.profileConfig?.updatedAt, publishedAt: event.detail?.publishedAt || context.profileConfig?.publishedAt } };
-    const savedLayout = normalizeProfileConfig(event.detail?.draft, fallbackColor).layoutVariant;
+    const currentDraft = toEditorProfileConfig(context?.profileConfig?.draft);
+    const currentPublished = toEditorProfileConfig(context?.profileConfig?.published);
+    const nextDraft = normalizeProfileConfig(preserveExpressionFields(event.detail?.draft, currentDraft), FALLBACK_PROFILE_COLOR);
+    const nextPublished = normalizeProfileConfig(preserveExpressionFields(event.detail?.published, currentPublished), FALLBACK_PROFILE_COLOR);
+    if (context.profileConfig?.version === 2 || context.profileConfig?.v2Draft) {
+      const nextDraftV2 = buildConfigurationV2(nextDraft, context.profileConfig?.v2Draft);
+      const nextPublishedV2 = buildConfigurationV2(nextPublished, context.profileConfig?.v2Published);
+      context = {
+        ...context,
+        profileConfig: {
+          ...(context.profileConfig || {}),
+          version: 2,
+          draft: nextDraftV2,
+          published: nextPublishedV2,
+          v2Draft: nextDraftV2,
+          v2Published: nextPublishedV2,
+          updatedAt: event.detail?.updatedAt || context.profileConfig?.updatedAt,
+          publishedAt: event.detail?.publishedAt || context.profileConfig?.publishedAt
+        }
+      };
+    } else {
+      context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: nextDraft, published: nextPublished, updatedAt: event.detail?.updatedAt || context.profileConfig?.updatedAt, publishedAt: event.detail?.publishedAt || context.profileConfig?.publishedAt } };
+    }
+    const savedLayout = nextDraft.layoutVariant;
     if (event.detail?.layoutChanged && ['immersive', 'editorial', 'focus'].includes(savedLayout) && currentEquippedLayout) void clearPaidLayoutOverride();
     activeDirtySection = '';
   }
@@ -363,23 +587,25 @@
   }
 
   function updateExpression(event) {
-    const fallbackColor = '#CDD2FF';
     const fields = event.detail || {};
-    const nextDraft = normalizeProfileConfig({ ...context.profileConfig?.draft, ...fields }, fallbackColor);
-    const nextPublished = normalizeProfileConfig({ ...context.profileConfig?.published, ...fields }, fallbackColor);
+    const nextDraft = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.draft), ...fields }, FALLBACK_PROFILE_COLOR);
+    const nextPublished = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.published), ...fields }, FALLBACK_PROFILE_COLOR);
     configurationPreview = configurationPreview
-      ? normalizeProfileConfig({ ...configurationPreview, ...fields }, fallbackColor)
+      ? normalizeProfileConfig({ ...configurationPreview, ...fields }, FALLBACK_PROFILE_COLOR)
       : null;
-    context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: nextDraft, published: nextPublished } };
+    if (context.profileConfig?.version === 2 || context.profileConfig?.v2Draft) {
+      const nextDraftV2 = buildConfigurationV2(nextDraft, context.profileConfig?.v2Draft);
+      const nextPublishedV2 = buildConfigurationV2(nextPublished, context.profileConfig?.v2Published);
+      context = { ...context, profileConfig: { ...(context.profileConfig || {}), version: 2, draft: nextDraftV2, published: nextPublishedV2, v2Draft: nextDraftV2, v2Published: nextPublishedV2 } };
+    } else {
+      context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: nextDraft, published: nextPublished } };
+    }
   }
 
   function updateAppearance(event) {
-    const fallbackColor = '#CDD2FF';
     const nextAppearance = event.detail?.appearance;
     if (!nextAppearance) return;
-    const nextDraft = normalizeProfileConfig({ ...context.profileConfig?.draft, appearance: nextAppearance, signatureColor: nextAppearance.colors.accent }, fallbackColor);
-    configurationPreview = nextDraft;
-    context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: nextDraft } };
+    configurationPreview = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.draft), appearance: nextAppearance, signatureColor: nextAppearance.colors.accent }, FALLBACK_PROFILE_COLOR);
   }
 
   function handleAppearanceSaved(event) {
@@ -395,22 +621,26 @@
   function updateConfigurationPreview(event) {
     const nextConfig = event.detail?.config;
     if (!nextConfig) { configurationPreview = null; return; }
-    const fallbackColor = '#CDD2FF';
-    configurationPreview = normalizeProfileConfig(nextConfig, fallbackColor);
+    configurationPreview = normalizeProfileConfig(nextConfig, FALLBACK_PROFILE_COLOR);
   }
 
   function handleSocialChange() { void loadSettings(); }
   function updateIdentity(event) {
     const nextPresentation = event.detail?.identityPresentation;
-    const fallbackColor = '#CDD2FF';
     const currentConfig = context.profileConfig || {};
-    const nextProfileConfig = nextPresentation
-      ? {
-          ...currentConfig,
-          draft: normalizeProfileConfig({ ...(currentConfig.draft || {}), identityPresentation: nextPresentation }, fallbackColor),
-          published: normalizeProfileConfig({ ...(currentConfig.published || {}), identityPresentation: nextPresentation }, fallbackColor)
-        }
-      : currentConfig;
+    if (!nextPresentation) {
+      context = { ...context, targetProfile: { ...context.targetProfile, bio: event.detail?.bio ?? null }, profileConfig: currentConfig };
+      return;
+    }
+    const nextDraft = normalizeProfileConfig({ ...toEditorProfileConfig(currentConfig.draft), identityPresentation: nextPresentation }, FALLBACK_PROFILE_COLOR);
+    const nextPublished = normalizeProfileConfig({ ...toEditorProfileConfig(currentConfig.published), identityPresentation: nextPresentation }, FALLBACK_PROFILE_COLOR);
+    const nextProfileConfig = currentConfig.version === 2 || currentConfig.v2Draft
+      ? (() => {
+          const nextDraftV2 = buildConfigurationV2(nextDraft, currentConfig.v2Draft);
+          const nextPublishedV2 = buildConfigurationV2(nextPublished, currentConfig.v2Published);
+          return { ...currentConfig, version: 2, draft: nextDraftV2, published: nextPublishedV2, v2Draft: nextDraftV2, v2Published: nextPublishedV2 };
+        })()
+      : { ...currentConfig, draft: nextDraft, published: nextPublished };
     context = {
       ...context,
       targetProfile: { ...context.targetProfile, bio: event.detail?.bio ?? null },
@@ -466,6 +696,9 @@
         </header>
       {/if}
       {#if context.dataWarning}<p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>{/if}
+      {#if (activeSection === 'customize' || activeSection === 'links') && DashboardActionsComponent}
+        <svelte:component this={DashboardActionsComponent} dirty={dashboardDirty} saving={dashboardSaving} status={dashboardStatus} error={dashboardError} on:reset={resetDashboard} on:publish={publishDashboard} />
+      {/if}
 
       <div class="profile-settings-page__content">
         {#if activeSection === 'customize'}
@@ -477,7 +710,7 @@
               profileId={context.profileId}
               accountUsername={accountUsername}
               targetProfile={context.targetProfile}
-              profileConfig={context.profileConfig}
+              profileConfig={editorProfileConfig}
               entitlements={$profileEntitlements}
               staff={Boolean(context.targetProfile?.is_staff)}
               on:appearancechange={updateAppearance}
@@ -495,7 +728,7 @@
         {:else if activeSection === 'links'}
           <div class="profile-links-page">
             {#if sectionComponents['profile-layout']}
-              <svelte:component this={sectionComponents['profile-layout']} bind:this={layoutEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} showLayout={false} showLinks={true} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
+            <svelte:component this={sectionComponents['profile-layout']} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} showLayout={false} showLinks={true} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
             {:else if sectionLoading}
               <div class="profile-settings-page__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading links</h2></div>
             {/if}
@@ -515,19 +748,19 @@
           {#if activeSection === 'overview'}
             <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} />
           {:else if activeSection === 'profile-identity'}
-            <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} config={context.profileConfig} on:identitysaved={updateIdentity} on:configsaved={updateConfiguration} />
+            <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} config={editorProfileConfig} on:identitysaved={updateIdentity} on:configsaved={updateConfiguration} />
           {:else if activeSection === 'profile-aliases'}
             <svelte:component this={sectionComponents[activeSection]} />
           {:else if activeSection === 'profile-media'}
-            <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={context.profileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} entitlements={$profileEntitlements} on:expressionchange={updateExpression} />
+            <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={editorProfileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} staff={Boolean(context.targetProfile?.is_staff)} entitlements={$profileEntitlements} on:expressionchange={updateExpression} />
           {:else if activeSection === 'profile-content'}
-            <svelte:component this={sectionComponents[activeSection]} bind:this={contentEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
+            <svelte:component this={sectionComponents[activeSection]} bind:this={contentEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
           {:else if activeSection === 'profile-widgets'}
-            <svelte:component this={sectionComponents[activeSection]} bind:this={widgetEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
+            <svelte:component this={sectionComponents[activeSection]} bind:this={widgetEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
           {:else if activeSection === 'profile-collection'}
-            <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={context.profileConfig} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} />
+            <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={editorProfileConfig} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} />
           {:else if activeSection === 'profile-layout'}
-            <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
+            <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
           {:else if activeSection === 'profile-social'}
             <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} isAuthenticated={$isAuthenticated} social={context.social} settings={context.socialSettings} socialDepthEnabled={featureFlags.socialDepth} on:socialchange={handleSocialChange} />
           {:else if activeSection === 'profile-insights'}

@@ -31,36 +31,29 @@ test('dashboard navigation has one canonical ordered IA and safe mobile drawer b
   assert.doesNotMatch(shell, /sidebar-foot|profile-dashboard-shell__account|Sign out|View profile/);
 });
 
-test('section editors publish only their own contract and preserve conflicts', async () => {
-  const [layout, appearance, migration, sqlTest, settings] = await Promise.all([
+test('section editors stage bounded drafts for the aggregate dashboard action', async () => {
+  const [layout, appearance, migration, sqlTest, settings, actions] = await Promise.all([
     read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('supabase/migrations/20260805100000_profile_appearance_dashboard.sql'),
     read('supabase/tests/launch_security.sql'),
-    read('src/lib/ProfileSettings.svelte')
+    read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/ProfileDashboardActions.svelte')
   ]);
-  assert.match(layout, /p_section: 'composition'/);
-  assert.match(layout, /compositionPatch/);
-  assert.match(layout, /Reload server version/);
-  assert.match(layout, /data\?\.code === 'conflict'/);
-  assert.doesNotMatch(layout, /data\?\.error === 'conflict'/);
-  assert.doesNotMatch(layout, /save_profile_configuration['"]/);
-  assert.doesNotMatch(layout, /publish_profile_configuration['"]/);
+  assert.match(layout, /export function getDraftConfig/);
+  assert.match(layout, /export function validateDraft/);
+  assert.doesNotMatch(layout, /Reload server version|save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(layout, /Signature color|Ambient color|colorEffectsEnabled/);
   assert.match(layout, /function hasDraftChanges\(\)/);
   assert.match(layout, /emitDirty\(true\)/);
   assert.match(layout, /emitDirty\(false\)/);
   assert.doesNotMatch(layout, /dispatch\('dirty', \{ dirty: isDirty \}\)/);
-  assert.match(layout, /hasUnpublishedChanges/);
-  assert.match(layout, /disabled=\{saving \|\| \(!isDirty && !hasUnpublishedChanges\)\}/);
   assert.match(appearance, /invalidHex/);
-  assert.match(appearance, /Reload server version/);
-  assert.match(appearance, /data\?\.code === 'conflict'/);
-  assert.doesNotMatch(appearance, /data\?\.error === 'conflict'/);
-  assert.match(appearance, /hasUnpublishedChanges/);
-  assert.match(appearance, /action === 'publish' && !dirty && !hasUnpublishedChanges/);
-  assert.match(appearance, /disabled=\{saving \|\| invalidHex \|\| \(!dirty && !hasUnpublishedChanges\)\}/);
-  assert.match(appearance, /disabled=\{saving \|\| \(!dirty && !invalidHex\)\}/);
+  assert.match(appearance, /export function getDraftAppearance/);
+  assert.doesNotMatch(appearance, /Reload server version|save_profile_configuration_section|publish_profile_configuration_section|profile-appearance-editor__actions/);
+  assert.match(settings, /save_profile_configuration_v2/);
+  assert.match(settings, /publish_profile_configuration_v2/);
+  assert.match(actions, /Publish profile/);
   assert.match(migration, /'draft', v_record\.draft_config/);
   assert.match(migration, /'published', v_record\.published_config/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.profile_composition_patch/);
@@ -141,8 +134,9 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(identityCard, /color: var\(--profile-highlight/);
   assert.match(preview, /border: var\(--profile-border-width/);
   assert.match(preview, /background: var\(--profile-surface-fill/);
-  assert.match(editor, /appearance-editor__style-grid/);
-  assert.match(editor, /grid-template-columns: repeat\(3, minmax\(18rem, 1fr\)\)/);
+  assert.match(editor, /appearance-editor__color-grid/);
+  assert.match(editor, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)/);
+  assert.doesNotMatch(editor, /Highlight|Background gradient|Border color|appearance-editor__style-grid/);
 });
 
 test('dirty prompt is keyboard-complete and editor reload actions remain reachable', async () => {
@@ -157,8 +151,9 @@ test('dirty prompt is keyboard-complete and editor reload actions remain reachab
   assert.match(settings, /event\.key === 'Escape'/);
   assert.match(settings, /stayOnPage\(\)/);
   assert.match(settings, /restoreFocus\(previous\)/);
-  assert.match(appearance, /on:click=\{reloadServerVersion\}/);
-  assert.match(layout, /on:click=\{reloadServerVersion\}/);
+  assert.doesNotMatch(appearance, /reloadServerVersion|on:click=\{reloadServerVersion\}/);
+  assert.doesNotMatch(layout, /reloadServerVersion|on:click=\{reloadServerVersion\}/);
+  assert.match(settings, /on:publish=\{publishDashboard\}/);
 });
 
 test('legacy profile reuses the account deletion contract and mounted editor copy stays functional', async () => {

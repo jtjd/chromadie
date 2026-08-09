@@ -2157,3 +2157,14 @@ direct route behavior.
 - Flattened repeated module headers and kept section save/publish actions next
   to the controls they affect. Existing upload, RLS, entitlement, and
   section-scoped publishing contracts are unchanged.
+
+## 2026-08-09 — Simplify customization and publish the whole profile
+
+- Reduced the color editor to seven profile colors plus surface opacity and
+  blur; removed highlight, border, border-color, and background-gradient
+  controls while preserving legacy stored values for compatibility.
+- Removed repeated Reset, Save draft, and Publish controls from the embedded
+  editors and added one responsive dashboard action bar for Reset and Publish
+  profile across Customize and Links.
+- Kept the existing V2 owner RPC authority, validation, conflict handling,
+  media boundaries, and profile preview behavior intact.

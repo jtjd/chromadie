@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { normalizeProfileConfig } from './profileConfig.js';
   import ProfileAppearanceEditor from './ProfileAppearanceEditor.svelte';
 
   export let components = {};
@@ -29,6 +30,39 @@
 
   function requestPremium() {
     dispatch('premiumrequest', { sectionId: 'premium' });
+  }
+
+  function normalizeDraft(value) {
+    return normalizeProfileConfig(value || profileConfig?.draft || profileConfig?.published);
+  }
+
+  export function getDraftConfig() {
+    const base = normalizeDraft();
+    const appearance = appearanceEditor?.getDraftAppearance?.();
+    const content = contentEditor?.getDraftConfig?.();
+    const widgets = widgetEditor?.getDraftConfig?.();
+    const layout = layoutEditor?.getDraftConfig?.();
+    return normalizeProfileConfig({
+      ...base,
+      ...(layout || {}),
+      appearance: appearance || base.appearance,
+      content: content?.content || base.content,
+      widgets: widgets?.widgets || base.widgets
+    });
+  }
+
+  export function validateDraft() {
+    return [appearanceEditor, contentEditor, widgetEditor, layoutEditor]
+      .filter(Boolean)
+      .every(editor => editor.validateDraft?.() !== false);
+  }
+
+  export function acceptSaved(nextConfig) {
+    const next = normalizeDraft(nextConfig);
+    appearanceEditor?.acceptSaved?.(next.appearance);
+    contentEditor?.acceptSaved?.(next);
+    widgetEditor?.acceptSaved?.(next);
+    layoutEditor?.acceptSaved?.(next);
   }
 
   export function resetChanges() {
@@ -85,7 +119,7 @@
       <h3 id="profile-customize-appearance-title">Color Customization</h3>
     </div>
     <div class="profile-customize-page__editor">
-      <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} on:appearancechange={forward} on:dirty={forward} on:configsaved={forward} on:configreloaded={forward} />
+      <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={forward} on:dirty={forward} />
     </div>
   </section>
 
@@ -209,16 +243,12 @@
   .profile-customize-page :global(.profile-expression-editor__button--quiet) { border-color: var(--customize-line-strong) !important; background: transparent !important; color: var(--customize-muted) !important; }
   .profile-customize-page :global(.appearance-editor) { gap: .55rem; }
   .profile-customize-page :global(.appearance-editor__panel) { padding: .25rem 0 .55rem; border: 0; border-bottom: 1px solid var(--customize-line); border-radius: 0; background: transparent; }
-  .profile-customize-page :global(.appearance-editor__style-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
   .profile-customize-page :global(.appearance-editor__heading) { margin-bottom: .5rem; }
   .profile-customize-page :global(.appearance-editor__heading h2) { font-size: .82rem; }
   .profile-customize-page :global(.appearance-editor__color-grid) { gap: .55rem .7rem; }
+  .profile-customize-page :global(.appearance-editor__range-grid) { gap: .55rem .7rem; }
   .profile-customize-page :global(.appearance-editor__field > span),
   .profile-customize-page :global(.appearance-editor__range > span) { font-size: .75rem; }
-  .profile-customize-page :global(.appearance-editor__actions),
-  .profile-customize-page :global(.profile-content-editor__actions),
-  .profile-customize-page :global(.profile-widget-editor__actions),
-  .profile-customize-page :global(.profile-editor__actions) { position: static; box-shadow: none; backdrop-filter: none; }
   .profile-customize-page :global(.identity-editor .foundation-module__body) { display: block; }
   .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { display: grid; gap: .65rem; }
   .profile-customize-page :global(.identity-editor__fields) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
@@ -247,16 +277,13 @@
   .profile-customize-page :global(.profile-content-editor__project) { gap: .55rem; padding: .65rem; }
   .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
   .profile-customize-page :global(.profile-content-editor__helper) { display: none; }
-  .profile-customize-page :global(.profile-content-editor__actions) { grid-column: 1 / -1; }
   .profile-customize-page :global(.profile-widget-editor) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .65rem; }
   .profile-customize-page :global(.profile-widget-editor__list) { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
   .profile-customize-page :global(.profile-widget-editor__panel) { gap: .55rem; padding: .65rem; }
   .profile-customize-page :global(.profile-widget-editor__add) { grid-column: 1; }
   .profile-customize-page :global(.profile-widget-editor__note) { grid-column: 1 / -1; display: none; }
-  .profile-customize-page :global(.profile-widget-editor__actions) { grid-column: 1 / -1; }
   .profile-customize-page :global(.profile-editor__panel) { gap: .6rem; padding: .5rem 0; }
   .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .profile-customize-page :global(.profile-editor__actions) { margin-top: 0; }
   .profile-customize-page :global(.profile-cosmetics-layout) { grid-template-columns: minmax(0, 1fr); }
   .profile-customize-page :global(.profile-cosmetics-preview) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { display: none; }
@@ -270,7 +297,6 @@
 
   @media (max-width: 72rem) {
     .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .profile-customize-page :global(.appearance-editor__style-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .profile-customize-page :global(.identity-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -278,7 +304,6 @@
 
   @media (max-width: 52rem) {
     .profile-customize-page__control-grid { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.appearance-editor__style-grid) { grid-template-columns: minmax(0, 1fr); }
   }
 
   @media (max-width: 38rem) {
@@ -289,7 +314,7 @@
     .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: auto; }
     .profile-customize-page :global(.identity-editor__options) { grid-column: auto; }
     .profile-customize-page :global(.profile-content-editor), .profile-customize-page :global(.profile-widget-editor) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.profile-content-editor__panel:nth-of-type(2)), .profile-customize-page :global(.profile-content-editor__actions), .profile-customize-page :global(.profile-widget-editor__list), .profile-customize-page :global(.profile-widget-editor__actions) { grid-column: auto; }
+    .profile-customize-page :global(.profile-content-editor__panel:nth-of-type(2)), .profile-customize-page :global(.profile-widget-editor__list) { grid-column: auto; }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields), .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-cosmetics-controls__heading) { grid-column: auto; }

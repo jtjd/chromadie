@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { supabase } from './supabase';
   import { normalizeProfileConfig } from './profileConfig.js';
   import { normalizeProfileContent, PROFILE_CONTENT_LIMITS } from './profileContent.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
@@ -18,11 +17,8 @@
 
   let draft = normalizeDraft(draftConfig || publishedConfig);
   let baseline = draft;
-  let serverUpdatedAt = updatedAt;
-  let saving = false;
   let status = '';
   let error = '';
-  let conflict = null;
   let lastIncomingKey = '';
 
   $: maxProjects = staff || hasChromadiePlus(entitlements) ? PROFILE_CONTENT_LIMITS.premiumProjects : PROFILE_CONTENT_LIMITS.projects;
@@ -36,28 +32,15 @@
     return { ...config, content: normalizeProfileContent(config.content) };
   }
 
-  function contentPatch(value = draft) {
-    return {
-      version: value.content?.version || 1,
-      about: clone(value.content?.about || {}),
-      projects: (value.content?.projects || [])
-        .filter(project => project.title || project.description || project.url)
-        .map((project, index) => ({ ...clone(project), order: index }))
-    };
-  }
-
   $: isDirty = JSON.stringify(draft) !== JSON.stringify(baseline);
-  $: hasUnpublishedChanges = JSON.stringify(contentPatch(draft)) !== JSON.stringify(contentPatch(normalizeDraft(publishedConfig)));
   $: incomingKey = JSON.stringify({ profileId, draft: draftConfig, published: publishedConfig, updatedAt });
-  $: if (incomingKey !== lastIncomingKey && !saving && !isDirty) syncIncoming();
+  $: if (incomingKey !== lastIncomingKey && !isDirty) syncIncoming();
 
   function syncIncoming() {
     lastIncomingKey = incomingKey;
     const cached = profileId ? readViewState(VIEW_STATE_NAMESPACE, profileId) : null;
     draft = normalizeDraft(cached?.draft || draftConfig || publishedConfig);
     baseline = normalizeDraft(draftConfig || publishedConfig);
-    serverUpdatedAt = updatedAt || null;
-    conflict = null;
     error = '';
     status = cached?.draft ? 'Unsaved content restored.' : '';
   }
@@ -71,7 +54,6 @@
     if (profileId) writeViewState(VIEW_STATE_NAMESPACE, profileId, { draft });
     status = '';
     error = '';
-    conflict = null;
     emitDirty(true);
     dispatch('configpreview', { config: draft });
   }
@@ -100,7 +82,7 @@
     updateContent({ projects: draft.content.projects.filter((_, projectIndex) => projectIndex !== index) });
   }
 
-  function validateContent() {
+  export function validateDraft() {
     const invalid = draft.content.projects.find(project => {
       const hasInput = project.title || project.description || project.url;
       return hasInput && (!project.title || !/^https:\/\/[^\s<>"']+$/.test(String(project.url || '').trim()));
@@ -111,51 +93,22 @@
     return false;
   }
 
-  async function persist(action) {
-    if (saving || (action === 'save' && !isDirty) || (action === 'publish' && !isDirty && !hasUnpublishedChanges)) return;
-    if (!validateContent()) return;
-    saving = true;
-    status = action === 'publish' ? 'Publishing…' : 'Saving…';
-    error = '';
-    const rpc = action === 'publish' ? 'publish_profile_configuration_section' : 'save_profile_configuration_section';
-    const { data, error: rpcError } = await supabase.rpc(rpc, {
-      p_section: 'content',
-      p_patch: contentPatch(),
-      p_expected_updated_at: serverUpdatedAt || null
-    });
-    saving = false;
-    if (rpcError || data?.success === false || data?.code === 'conflict') {
-      if (data?.code === 'conflict') {
-        conflict = { draft: data.draft, published: data.published, updatedAt: data.updated_at };
-        error = 'The server version changed. Reload it before saving.';
-      } else {
-        error = rpcError?.message || data?.error || 'The profile content could not be saved.';
-      }
-      status = '';
-      emitDirty();
-      return;
-    }
-    const nextDraft = normalizeDraft(data?.draft || draft);
-    const nextPublished = normalizeDraft(data?.published || publishedConfig || baseline);
-    draft = nextDraft;
-    baseline = action === 'publish' ? nextDraft : normalizeDraft(data?.draft || draft);
-    serverUpdatedAt = data?.updated_at || serverUpdatedAt;
-    conflict = null;
+  export function getDraftConfig() {
+    return clone(draft);
+  }
+
+  export function acceptSaved(nextConfig = draft) {
+    draft = normalizeDraft(nextConfig);
+    baseline = clone(draft);
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
-    status = action === 'publish' ? 'Published' : 'Draft saved';
-    dispatch(action === 'publish' ? 'configpublished' : 'configsaved', {
-      draft: nextDraft,
-      published: nextPublished,
-      updatedAt: serverUpdatedAt,
-      publishedAt: data?.published_at || null
-    });
-    dispatch('configpreview', { config: nextDraft });
+    status = '';
+    error = '';
+    dispatch('configpreview', { config: draft });
     emitDirty(false);
   }
 
-  function resetChanges() {
+  export function resetChanges() {
     draft = clone(baseline);
-    conflict = null;
     status = '';
     error = '';
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
@@ -163,17 +116,12 @@
     emitDirty(false);
   }
 
-  function reloadServerVersion() {
-    if (!conflict?.draft) return;
-    const serverVersion = conflict;
-    draft = normalizeDraft(serverVersion.draft);
-    baseline = draft;
-    serverUpdatedAt = serverVersion.updatedAt || serverUpdatedAt;
-    conflict = null;
+  export function resetTo(nextConfig = publishedConfig) {
+    draft = normalizeDraft(nextConfig);
+    baseline = clone(draft);
     error = '';
-    status = 'Server version loaded';
+    status = '';
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
-    dispatch('configreloaded', { draft, published: serverVersion.published || publishedConfig, updatedAt: serverUpdatedAt });
     dispatch('configpreview', { config: draft });
     emitDirty(false);
   }
@@ -216,14 +164,14 @@
     <p class="profile-content-editor__helper">Projects require a title and HTTPS URL to appear publicly. Empty rows can be removed before saving.</p>
   </section>
 
-  {#if conflict}<div class="profile-content-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{:else if error}<p class="profile-content-editor__message" role="alert">{error}</p>{/if}
+  {#if error}<p class="profile-content-editor__message" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-content-editor__message" role="status" aria-live="polite">{status}</p>{/if}
-  <footer class="profile-content-editor__actions"><button type="button" on:click={resetChanges} disabled={!isDirty || saving}>Reset</button><button type="button" on:click={() => persist('save')} disabled={!isDirty || saving}>Save draft</button><button type="button" class="profile-content-editor__publish" on:click={() => persist('publish')} disabled={saving || (!isDirty && !hasUnpublishedChanges)}>{saving ? 'Publishing…' : 'Publish'}</button></footer>
+  <p class="profile-content-editor__hint">Changes are staged in this workspace. Publish the profile from the dashboard controls.</p>
 </section>
 
 <style>
   .profile-content-editor { display: grid; gap: 1rem; }
-  .profile-content-editor__header, .profile-content-editor__panel-heading, .profile-content-editor__actions, .profile-content-editor__project-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .profile-content-editor__header, .profile-content-editor__panel-heading, .profile-content-editor__project-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
   .profile-content-editor__header h2, .profile-content-editor__panel h3 { margin: 0; color: var(--site-ink, #f2f0eb); letter-spacing: -.02em; }
   .profile-content-editor__header h2 { font-size: 1.05rem; }
   .profile-content-editor__header p, .profile-content-editor__panel-heading p, .profile-content-editor__helper, .profile-content-editor__empty { margin: .35rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; line-height: 1.5; }
@@ -242,18 +190,13 @@
   .profile-content-editor__switch input { accent-color: var(--site-accent, #cdd2ff); }
   .profile-content-editor__text-button, .profile-content-editor__remove { min-height: 2rem; padding: .45rem .65rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .76rem; cursor: pointer; }
   .profile-content-editor__text-button:hover:not(:disabled), .profile-content-editor__remove:hover { border-color: var(--site-accent, #cdd2ff); }
-  .profile-content-editor__text-button:disabled, .profile-content-editor__actions button:disabled { cursor: not-allowed; opacity: .42; }
+  .profile-content-editor__text-button:disabled { cursor: not-allowed; opacity: .42; }
   .profile-content-editor__projects { display: grid; gap: .8rem; }
   .profile-content-editor__project { display: grid; gap: .8rem; padding: .9rem; border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .45rem; background: color-mix(in srgb, var(--site-deep, #090a0d) 60%, transparent); }
   .profile-content-editor__project-heading strong { color: var(--site-ink, #f2f0eb); font-size: .84rem; }
   .profile-content-editor__remove { justify-self: start; color: var(--site-muted, #aaa8b0); }
   .profile-content-editor__message { margin: 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; }
+  .profile-content-editor__hint { margin: 0; color: var(--site-faint, #7d7e87); font-size: .75rem; line-height: 1.45; }
   .profile-content-editor__message[role="alert"] { color: #ffb4bd; }
-  .profile-content-editor__conflict { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .7rem; border: 1px solid rgba(255,157,169,.4); border-radius: .35rem; color: #ffb4bd; font-size: .78rem; }
-  .profile-content-editor__conflict button { border: 1px solid rgba(255,157,169,.5); border-radius: .3rem; padding: .4rem .55rem; background: transparent; color: inherit; cursor: pointer; }
-  .profile-content-editor__actions { position: sticky; bottom: .8rem; z-index: 4; min-height: 3.2rem; padding: .55rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .55rem; background: rgba(17,19,25,.92); box-shadow: 0 1rem 2rem rgba(0,0,0,.18); backdrop-filter: blur(16px); }
-  .profile-content-editor__actions button { min-height: 2rem; padding: .45rem .75rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .76rem; cursor: pointer; }
-  .profile-content-editor__publish { border-color: var(--site-accent, #cdd2ff) !important; background: var(--site-accent, #cdd2ff) !important; color: var(--site-deep, #090a0d) !important; font-weight: 700; }
-  @media (max-width: 34rem) { .profile-content-editor__header, .profile-content-editor__panel-heading, .profile-content-editor__actions, .profile-content-editor__project-heading { align-items: stretch; flex-direction: column; } .profile-content-editor__actions { justify-content: stretch; } .profile-content-editor__actions button { width: 100%; } }
-  @media (prefers-reduced-motion: reduce) { .profile-content-editor__actions { scroll-behavior: auto; } }
+  @media (max-width: 34rem) { .profile-content-editor__header, .profile-content-editor__panel-heading, .profile-content-editor__project-heading { align-items: stretch; flex-direction: column; } }
 </style>

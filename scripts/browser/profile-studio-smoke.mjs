@@ -197,6 +197,7 @@ try {
   await step('Customize controls stay compact and unpublished', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize`, 'Customize section');
     await page.waitFor(`document.querySelector('.appearance-editor')`, 'Customize editor');
+    await page.waitFor(`document.querySelector('.profile-dashboard-actions')`, 'dashboard profile actions');
     await page.waitFor(`(() => {
       const grid = document.querySelector('.profile-expression-editor__compact-grid');
       return Boolean(grid && grid.querySelectorAll('.profile-expression-editor__compact-card, .rich-media-editor__compact-card').length === 4);
@@ -214,12 +215,12 @@ try {
     assert(mediaRail.labels.includes('Profile avatar') && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
     assert(mediaRail.editable.includes('Profile avatar') && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
     assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
-    const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('publish_profile_configuration_section')).length;
+    const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
     await page.setInputValue('.appearance-editor__range:nth-child(2) input[type="range"]', 40, ['input']);
     await page.waitFor(`document.querySelector('.appearance-editor__range:nth-child(2) output')?.textContent?.trim() === '40px'`, 'blur draft value');
-    const publishRequestsAfter = page.requestLog.filter(request => request.url.includes('publish_profile_configuration_section')).length;
+    const publishRequestsAfter = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
     const draftState = await page.evaluate(`({
-      publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish')?.disabled ?? null,
+      publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,
       toolbarVisible: Boolean(document.querySelector('.profile-settings-page__toolbar')),
       previewVisible: Boolean(document.querySelector('.profile-settings-preview'))
     })`);
@@ -228,7 +229,10 @@ try {
     assert(publishRequestsBefore === publishRequestsAfter, 'Changing Customize unexpectedly called the publish RPC.');
     await capture('05-customize-draft-blur');
     await page.clickText('Reset', { description: 'Customize reset control' });
-    await page.waitFor(`document.querySelector('.appearance-editor__reset')?.disabled === true`, 'Customize reset');
+    await page.waitFor(`(() => {
+      const reset = [...document.querySelectorAll('.profile-dashboard-actions button')].find(button => button.textContent.trim() === 'Reset');
+      return Boolean(reset && reset.disabled);
+    })()`, 'Customize reset');
     return { draftState, publishRequests: publishRequestsAfter, mediaRail };
   });
 

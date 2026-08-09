@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { supabase } from './supabase';
   import { normalizeProfileConfig, PROFILE_LAYOUT_VARIANTS, PROFILE_LINK_LIMITS, PROFILE_LINK_TYPES } from './profileConfig.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
   import { createProfileTemplatePatch } from './profileTemplates.js';
@@ -33,23 +32,18 @@
 
   let draft = normalizeProfileConfig(draftConfig || publishedConfig);
   let baseline = draft;
-  let serverUpdatedAt = updatedAt;
   let profileScope = null;
-  let saving = false;
   let status = '';
   let error = '';
-  let conflict = null;
   let lastIncomingKey = '';
-  let layoutChangedSinceSave = false;
 
   function hasDraftChanges() {
     return JSON.stringify(draft) !== JSON.stringify(baseline);
   }
 
   $: isDirty = JSON.stringify(draft) !== JSON.stringify(baseline);
-  $: hasUnpublishedChanges = JSON.stringify(compositionPatch(draft)) !== JSON.stringify(compositionPatch(normalizeProfileConfig(publishedConfig)));
   $: incomingKey = JSON.stringify({ profileId, draft: draftConfig, published: publishedConfig, updatedAt });
-  $: if (incomingKey !== lastIncomingKey && !saving && !isDirty) syncIncoming();
+  $: if (incomingKey !== lastIncomingKey && !isDirty) syncIncoming();
   $: orderedModules = [...(draft.modules || [])].sort((left, right) => left.order - right.order);
   $: linkLimit = staff || hasChromadiePlus(entitlements) ? PROFILE_LINK_LIMITS.maxLinks : PROFILE_LINK_LIMITS.freeLinks;
 
@@ -68,22 +62,8 @@
     const next = normalizeDraft(cached?.draft || draftConfig || publishedConfig);
     draft = next;
     baseline = normalizeDraft(draftConfig || publishedConfig);
-    serverUpdatedAt = updatedAt || null;
-    layoutChangedSinceSave = false;
-    conflict = null;
     error = '';
     status = cached?.draft ? 'Unsaved layout restored.' : '';
-  }
-
-  function compositionPatch(value = draft) {
-    return {
-      templateKey: value.templateKey,
-      layoutVariant: value.layoutVariant,
-      modules: clone(value.modules || []),
-      links: clone(value.links || []),
-      ...(value.linkStyle ? { linkStyle: clone(value.linkStyle) } : {}),
-      ...(value.metadata ? { metadata: clone(value.metadata) } : {})
-    };
   }
 
   function emitDirty(value = null) {
@@ -96,11 +76,9 @@
       ? { ...next, templateKey: 'custom' }
       : next;
     draft = normalizeDraft({ ...draft, ...nextDraft });
-    if (Object.prototype.hasOwnProperty.call(next, 'layoutVariant')) layoutChangedSinceSave = true;
     if (profileId) writeViewState(VIEW_STATE_NAMESPACE, profileScope || profileId, { draft });
     status = '';
     error = '';
-    conflict = null;
     emitDirty(true);
     dispatch('configpreview', { config: draft });
   }
@@ -160,88 +138,39 @@
     return false;
   }
 
-  async function persist(action) {
-    if (saving || (action === 'save' && !isDirty) || (action === 'publish' && !isDirty && !hasUnpublishedChanges)) return;
-    if (!validateLinks()) return;
-    saving = true;
-    status = action === 'publish' ? 'Publishing…' : 'Saving…';
-    error = '';
-    const rpc = action === 'publish' ? 'publish_profile_configuration_section' : 'save_profile_configuration_section';
-    const { data, error: rpcError } = await supabase.rpc(rpc, {
-      p_section: 'composition',
-      p_patch: compositionPatch(),
-      p_expected_updated_at: serverUpdatedAt || null
-    });
-    saving = false;
-    if (rpcError || data?.success === false || data?.code === 'conflict') {
-      if (data?.code === 'conflict') {
-        conflict = { draft: data.draft, published: data.published, updatedAt: data.updated_at };
-        error = 'The server version changed. Reload it before saving.';
-      } else {
-        error = rpcError?.message || data?.error || 'The layout could not be saved.';
-      }
-      status = '';
-      emitDirty();
-      return;
-    }
-    const nextDraft = normalizeDraft(data?.draft || draft);
-    const nextPublished = normalizeDraft(data?.published || publishedConfig || baseline);
-    let presentationData = null;
-    if (draft.linkStyle || draft.metadata) {
-      const presentationResponse = await supabase.rpc('save_profile_configuration_presentation', {
-        p_patch: { linkStyle: draft.linkStyle || null, metadata: draft.metadata || null }
-      });
-      if (presentationResponse.error || presentationResponse.data?.success === false) {
-        error = presentationResponse.error?.message || presentationResponse.data?.error || 'The link presentation could not be saved.';
-        saving = false;
-        return;
-      }
-      presentationData = presentationResponse.data;
-    }
-    const savedDraft = normalizeDraft(presentationData?.draft || nextDraft);
-    const savedPublished = normalizeDraft(presentationData?.published || nextPublished);
-    const layoutChanged = layoutChangedSinceSave;
-    draft = savedDraft;
-    baseline = action === 'publish' ? savedDraft : normalizeDraft(presentationData?.draft || data?.draft || draft);
-    serverUpdatedAt = data?.updated_at || serverUpdatedAt;
-    layoutChangedSinceSave = false;
-    conflict = null;
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
-    status = action === 'publish' ? 'Published' : 'Draft saved';
-    dispatch(action === 'publish' ? 'configpublished' : 'configsaved', {
-      draft: savedDraft,
-      published: savedPublished,
-      updatedAt: serverUpdatedAt,
-      publishedAt: data?.published_at || null,
-      layoutChanged
-    });
-    dispatch('configpreview', { config: savedDraft });
-    emitDirty(false);
+  export function validateDraft() {
+    return validateLinks();
   }
 
-  function resetChanges() {
-    draft = clone(baseline);
-    conflict = null;
+  export function getDraftConfig() {
+    return clone(draft);
+  }
+
+  export function acceptSaved(nextConfig = draft) {
+    draft = normalizeDraft(nextConfig);
+    baseline = clone(draft);
     status = '';
     error = '';
-    layoutChangedSinceSave = false;
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
     dispatch('configpreview', { config: draft });
     emitDirty(false);
   }
 
-  function reloadServerVersion() {
-    if (!conflict?.draft) return;
-    const serverVersion = conflict;
-    draft = normalizeDraft(serverVersion.draft);
-    baseline = draft;
-    serverUpdatedAt = serverVersion.updatedAt || serverUpdatedAt;
-    conflict = null;
+  export function resetChanges() {
+    draft = clone(baseline);
+    status = '';
     error = '';
-    status = 'Server version loaded';
-    layoutChangedSinceSave = false;
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
-    dispatch('configreloaded', { draft, published: serverVersion.published || publishedConfig, updatedAt: serverUpdatedAt });
+    dispatch('configpreview', { config: draft });
+    emitDirty(false);
+  }
+
+  export function resetTo(nextConfig = publishedConfig) {
+    draft = normalizeDraft(nextConfig);
+    baseline = clone(draft);
+    error = '';
+    status = '';
+    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
     dispatch('configpreview', { config: draft });
     emitDirty(false);
   }
@@ -306,18 +235,17 @@
     </section>
   {/if}
 
-  {#if conflict}<div class="profile-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{:else if error}<p class="profile-editor__message" role="alert">{error}</p>{/if}
+  {#if error}<p class="profile-editor__message" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-editor__message" role="status" aria-live="polite">{status}</p>{/if}
-
-  <footer class="profile-editor__actions"><button type="button" on:click={resetChanges} disabled={!isDirty || saving}>Reset</button><button type="button" on:click={() => persist('save')} disabled={!isDirty || saving}>Save draft</button><button type="button" class="profile-editor__publish" on:click={() => persist('publish')} disabled={saving || (!isDirty && !hasUnpublishedChanges)}>{saving ? 'Publishing…' : 'Publish'}</button></footer>
+  <p class="profile-editor__hint">Changes are staged in this workspace. Publish the profile from the dashboard controls.</p>
 </section>
 
 <style>
   .profile-editor { display: grid; gap: 1rem; }
-  .profile-editor__header, .profile-editor__panel-heading, .profile-editor__actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .profile-editor__header, .profile-editor__panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
   .profile-editor__header h2, .profile-editor__panel h3 { margin: 0; color: var(--site-ink, #f2f0eb); letter-spacing: -.02em; }
   .profile-editor__header h2 { font-size: 1.05rem; }
-  .profile-editor__header p, .profile-editor__helper, .profile-editor__empty { margin: .35rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; line-height: 1.5; }
+  .profile-editor__header p, .profile-editor__helper, .profile-editor__empty, .profile-editor__hint { margin: .35rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; line-height: 1.5; }
   .profile-editor__version, .profile-editor__panel-heading > span { color: var(--site-faint, #7d7e87); font: .7rem/1 var(--site-mono, monospace); }
   .profile-editor__panel { display: grid; gap: .9rem; padding: clamp(1rem, 2vw, 1.35rem); border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .55rem; background: var(--site-raised, #111319); }
   .profile-editor__panel h3 { font-size: .95rem; }
@@ -349,12 +277,5 @@
   .profile-editor__link-actions button:not(.profile-editor__remove) { min-width: 1.7rem; padding: .35rem .4rem; }
   .profile-editor__link-row input, .profile-editor__link-row select { width: 100%; }
   .profile-editor__message { margin: 0; color: var(--site-muted, #aaa8b0); font-size: .78rem; }
-  .profile-editor__conflict { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .7rem; border: 1px solid rgba(255,157,169,.4); border-radius: .35rem; color: #ffb4bd; font-size: .78rem; }
-  .profile-editor__conflict button { border: 1px solid rgba(255,157,169,.5); border-radius: .3rem; padding: .4rem .55rem; background: transparent; color: inherit; cursor: pointer; }
-  .profile-editor__actions { position: sticky; bottom: .8rem; z-index: 4; justify-content: flex-end; min-height: 3.2rem; padding: .55rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .55rem; background: rgba(17,19,25,.92); box-shadow: 0 1rem 2rem rgba(0,0,0,.18); backdrop-filter: blur(16px); }
-  .profile-editor__actions button { min-height: 2rem; padding: .45rem .75rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .76rem; cursor: pointer; }
-  .profile-editor__actions .profile-editor__publish { border-color: var(--site-accent, #cdd2ff); background: var(--site-accent, #cdd2ff); color: var(--site-deep, #090a0d); font-weight: 700; }
   @media (max-width: 48rem) { .profile-editor__header, .profile-editor__panel-heading { align-items: flex-start; flex-direction: column; } .profile-editor__link-row { grid-template-columns: auto 1fr; } .profile-editor__link-row input:nth-of-type(2) { grid-column: 1 / -1; } .profile-editor__link-row .profile-editor__link-actions { grid-column: 2; } .profile-editor__link-style { grid-template-columns: 1fr 1fr; } .profile-editor__style-check { grid-column: 1 / -1; } }
-  @media (max-width: 34rem) { .profile-editor__actions { flex-wrap: wrap; } .profile-editor__actions button { flex: 1; } }
-  @media (prefers-reduced-motion: reduce) { .profile-editor__actions { scroll-behavior: auto; } }
 </style>

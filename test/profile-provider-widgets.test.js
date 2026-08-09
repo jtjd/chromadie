@@ -62,7 +62,9 @@ test('provider widget renderer and storage contract remain allowlisted', async (
   assert.match(renderer, /profileWidgetEmbedUrl/);
   assert.match(renderer, /deferMedia/);
   assert.doesNotMatch(renderer, /innerHTML|new Function|eval\s*\(/);
-  assert.match(editor, /p_section: 'widgets'/);
+  assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
+  assert.match(editor, /export function getDraftConfig/);
+  assert.match(editor, /export function validateDraft/);
   assert.match(editor, /PROFILE_WIDGET_LIMITS.maxWidgets/);
   assert.match(editor, /canonical HTTPS URLs only/);
   assert.match(shell, /<ProfileWidgets/);

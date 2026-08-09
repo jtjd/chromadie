@@ -3649,6 +3649,23 @@ bars stay scoped to their existing RPC contracts, but render in place rather
 than competing as floating dashboard elements. The redesign changes only the
 presentation layer; upload validation, entitlement checks, RLS, draft/publish
 boundaries, and profile rendering remain unchanged.
+
+## 2026-08-09 — Publish the assembled profile from one dashboard action bar
+
+Color Customization now exposes only the seven profile palette colors and the
+surface depth controls. Highlight, border, border-color, and background-gradient
+settings are intentionally absent from the editor, while their legacy stored
+values remain readable through the normalizer for historical profiles and safe
+rollback compatibility.
+
+Appearance, content, widgets, and composition editors now stage validated local
+drafts and emit preview/dirty state to Profile Studio. Customize and Links share
+one Reset / Publish profile action bar. Reset stages the published V2
+configuration back into the draft; Publish submits the assembled configuration
+through the existing owner-authorized `save_profile_configuration_v2` and
+`publish_profile_configuration_v2` RPCs. Media selection, identity bio saves,
+collection ownership, and privacy/social writes remain on their existing
+scoped boundaries.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

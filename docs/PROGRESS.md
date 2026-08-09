@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Simplified color customization and profile publishing — 2026-08-09
+
+- Reduced Color Customization to the seven profile palette colors plus surface
+  opacity and blur; highlight, border, border-color, and background-gradient
+  controls are no longer exposed in the dashboard.
+- Kept legacy appearance values readable through the existing normalizers so
+  historical profiles and rollback paths remain safe and compatible.
+- Removed the repeated editor Reset, Save draft, and Publish footers. Customize
+  and Links now share one dashboard action bar whose Reset and Publish profile
+  controls operate on the assembled profile configuration.
+- Publish uses the existing owner-authorized V2 save/publish RPC pair, while
+  media uploads, identity bio saves, collection actions, and privacy settings
+  retain their existing scoped authority boundaries.
+- Added aggregate draft validation, conflict/error feedback, keyboard-safe
+  mobile action layout, and reduced-motion coverage.
+
 ## Compact Customize workspace — 2026-08-09
 
 - Reworked Customize into one continuous dark workspace based on the supplied
@@ -14,7 +30,7 @@
 - Kept anchor targets for avatar, background, audio, Spotify, and rich-media
   controls so keyboard users and deep links can still reach the detailed
   editor without duplicating upload or entitlement logic.
-- Preserved the lazy editor contracts, section-scoped draft/publish behavior,
+- Preserved the lazy editor contracts, aggregate draft/publish behavior,
   media validation and RPC boundaries, and responsive/reduced-motion behavior.
 - Updated focused dashboard coverage and verified the local desktop/mobile
   browser smoke flow plus the complete repository validation suite.

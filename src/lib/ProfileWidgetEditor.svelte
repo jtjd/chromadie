@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { supabase } from './supabase';
   import { normalizeProfileConfig } from './profileConfig.js';
   import {
     getProfileWidgetInputUrl,
@@ -29,11 +28,8 @@
 
   let widgets = toWidgetDrafts(draftConfig || publishedConfig);
   let baseline = clone(widgets);
-  let serverUpdatedAt = updatedAt;
-  let saving = false;
   let status = '';
   let error = '';
-  let conflict = null;
   let lastIncomingKey = '';
 
   function clone(value) {
@@ -74,17 +70,14 @@
   }
 
   $: isDirty = JSON.stringify(draftSnapshot()) !== JSON.stringify(draftSnapshot(baseline));
-  $: hasUnpublishedChanges = JSON.stringify(widgetPatch()) !== JSON.stringify(widgetPatch(toWidgetDrafts(publishedConfig)));
   $: incomingKey = JSON.stringify({ profileId, draft: draftConfig, published: publishedConfig, updatedAt });
-  $: if (incomingKey !== lastIncomingKey && !saving && !isDirty) syncIncoming();
+  $: if (incomingKey !== lastIncomingKey && !isDirty) syncIncoming();
 
   function syncIncoming() {
     lastIncomingKey = incomingKey;
     const cached = profileId ? readViewState(VIEW_STATE_NAMESPACE, profileId) : null;
     widgets = cached?.widgets ? clone(cached.widgets) : toWidgetDrafts(draftConfig || publishedConfig);
     baseline = toWidgetDrafts(draftConfig || publishedConfig);
-    serverUpdatedAt = updatedAt || null;
-    conflict = null;
     error = '';
     status = cached?.widgets ? 'Unsaved widget changes restored.' : '';
   }
@@ -103,7 +96,6 @@
     if (profileId) writeViewState(VIEW_STATE_NAMESPACE, profileId, { widgets });
     status = '';
     error = '';
-    conflict = null;
     emitDirty(true);
     dispatch('configpreview', { config: previewConfig() });
   }
@@ -152,51 +144,26 @@
     return true;
   }
 
-  async function persist(action) {
-    if (saving || (action === 'save' && !isDirty) || (action === 'publish' && !isDirty && !hasUnpublishedChanges)) return;
-    if (!validateWidgets()) return;
-    saving = true;
-    status = action === 'publish' ? 'Publishing…' : 'Saving…';
-    error = '';
-    const rpc = action === 'publish' ? 'publish_profile_configuration_section' : 'save_profile_configuration_section';
-    const { data, error: rpcError } = await supabase.rpc(rpc, {
-      p_section: 'widgets',
-      p_patch: { widgets: widgetPatch() },
-      p_expected_updated_at: serverUpdatedAt || null
-    });
-    saving = false;
-    if (rpcError || data?.success === false || data?.code === 'conflict') {
-      if (data?.code === 'conflict') {
-        conflict = { draft: data.draft, published: data.published, updatedAt: data.updated_at };
-        error = 'The server version changed. Reload it before saving.';
-      } else {
-        error = rpcError?.message || data?.error || 'The profile widgets could not be saved.';
-      }
-      status = '';
-      emitDirty();
-      return;
-    }
-    const nextDraft = normalizeProfileConfig(data?.draft || previewConfig());
-    const nextPublished = normalizeProfileConfig(data?.published || publishedConfig || nextDraft);
-    widgets = toWidgetDrafts(nextDraft);
-    baseline = action === 'publish' ? clone(widgets) : toWidgetDrafts(nextDraft);
-    serverUpdatedAt = data?.updated_at || serverUpdatedAt;
-    conflict = null;
+  export function validateDraft() {
+    return validateWidgets();
+  }
+
+  export function getDraftConfig() {
+    return previewConfig();
+  }
+
+  export function acceptSaved(nextConfig = previewConfig()) {
+    widgets = toWidgetDrafts(nextConfig);
+    baseline = clone(widgets);
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
-    status = action === 'publish' ? 'Published' : 'Draft saved';
-    dispatch(action === 'publish' ? 'configpublished' : 'configsaved', {
-      draft: nextDraft,
-      published: nextPublished,
-      updatedAt: serverUpdatedAt,
-      publishedAt: data?.published_at || null
-    });
-    dispatch('configpreview', { config: nextDraft });
+    status = '';
+    error = '';
+    dispatch('configpreview', { config: previewConfig() });
     emitDirty(false);
   }
 
-  function resetChanges() {
+  export function resetChanges() {
     widgets = clone(baseline);
-    conflict = null;
     status = '';
     error = '';
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
@@ -204,18 +171,12 @@
     emitDirty(false);
   }
 
-  function reloadServerVersion() {
-    if (!conflict?.draft) return;
-    const serverDraft = conflict.draft;
-    const serverPublished = conflict.published;
-    widgets = toWidgetDrafts(serverDraft);
+  export function resetTo(nextConfig = publishedConfig) {
+    widgets = toWidgetDrafts(nextConfig);
     baseline = clone(widgets);
-    serverUpdatedAt = conflict.updatedAt || serverUpdatedAt;
-    conflict = null;
     error = '';
-    status = 'Server version loaded';
+    status = '';
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
-    dispatch('configreloaded', { draft: serverDraft, published: serverPublished || publishedConfig, updatedAt: serverUpdatedAt });
     dispatch('configpreview', { config: previewConfig() });
     emitDirty(false);
   }
@@ -245,14 +206,14 @@
 
   <button type="button" class="profile-widget-editor__add" on:click={addWidget} disabled={widgets.length >= widgetLimit}>Add provider widget</button>
   <p class="profile-widget-editor__note">Chromadie accepts canonical HTTPS URLs only. Arbitrary embeds, scripts, styles, and autoplay are never accepted.</p>
-  {#if conflict}<div class="profile-widget-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{:else if error}<p class="profile-widget-editor__message" role="alert">{error}</p>{/if}
+  {#if error}<p class="profile-widget-editor__message" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-widget-editor__message" role="status" aria-live="polite">{status}</p>{/if}
-  <footer class="profile-widget-editor__actions"><button type="button" on:click={resetChanges} disabled={!isDirty || saving}>Reset</button><button type="button" on:click={() => persist('save')} disabled={!isDirty || saving}>Save draft</button><button type="button" class="profile-widget-editor__publish" on:click={() => persist('publish')} disabled={saving || (!isDirty && !hasUnpublishedChanges)}>{saving ? 'Publishing…' : 'Publish'}</button></footer>
+  <p class="profile-widget-editor__hint">Changes are staged in this workspace. Publish the profile from the dashboard controls.</p>
 </section>
 
 <style>
   .profile-widget-editor { display: grid; gap: 1rem; }
-  .profile-widget-editor__header, .profile-widget-editor__panel-heading, .profile-widget-editor__actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .profile-widget-editor__header, .profile-widget-editor__panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
   .profile-widget-editor__header h2, .profile-widget-editor__panel strong { margin: 0; color: var(--site-ink, #f2f0eb); letter-spacing: -.02em; }
   .profile-widget-editor__header h2 { font-size: 1.05rem; }
   .profile-widget-editor__header p, .profile-widget-editor__helper, .profile-widget-editor__note, .profile-widget-editor__empty span { margin: .35rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; line-height: 1.5; }
@@ -264,18 +225,14 @@
   .profile-widget-editor__panel label > span { color: var(--site-muted, #aaa8b0); font-size: .76rem; }
   .profile-widget-editor__panel :is(input, select) { width: 100%; min-width: 0; box-sizing: border-box; padding: .65rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; outline: 0; background: var(--site-deep, #090a0d); color: var(--site-ink, #f2f0eb); font: .82rem/1.45 var(--site-body, inherit); }
   .profile-widget-editor__panel :is(input, select):focus { border-color: var(--site-accent, #cdd2ff); box-shadow: 0 0 0 2px color-mix(in srgb, var(--site-accent, #cdd2ff) 18%, transparent); }
-  .profile-widget-editor__add, .profile-widget-editor__remove, .profile-widget-editor__actions button, .profile-widget-editor__conflict button { min-height: 2rem; padding: .45rem .65rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .76rem; cursor: pointer; }
+  .profile-widget-editor__add, .profile-widget-editor__remove { min-height: 2rem; padding: .45rem .65rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .76rem; cursor: pointer; }
   .profile-widget-editor__add { justify-self: start; border-color: var(--site-accent, #cdd2ff); }
-  .profile-widget-editor__add:disabled, .profile-widget-editor__actions button:disabled { cursor: not-allowed; opacity: .42; }
+  .profile-widget-editor__add:disabled { cursor: not-allowed; opacity: .42; }
   .profile-widget-editor__remove { justify-self: start; color: var(--site-muted, #aaa8b0); }
   .profile-widget-editor__empty { display: grid; gap: .35rem; padding: 1.25rem; border: 1px dashed var(--site-line-strong, rgba(255,255,255,.16)); border-radius: .45rem; }
   .profile-widget-editor__empty strong { font-size: .86rem; }
-  .profile-widget-editor__conflict { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .7rem; border: 1px solid rgba(255,157,169,.4); border-radius: .35rem; color: #ffb4bd; font-size: .78rem; }
-  .profile-widget-editor__conflict button { border-color: rgba(255,157,169,.5); color: inherit; }
   .profile-widget-editor__message { margin: 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; }
   .profile-widget-editor__message[role="alert"] { color: #ffb4bd; }
-  .profile-widget-editor__actions { position: sticky; bottom: .8rem; z-index: 4; min-height: 3.2rem; padding: .55rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .55rem; background: rgba(17,19,25,.92); box-shadow: 0 1rem 2rem rgba(0,0,0,.18); backdrop-filter: blur(16px); }
-  .profile-widget-editor__publish { border-color: var(--site-accent, #cdd2ff) !important; background: var(--site-accent, #cdd2ff) !important; color: var(--site-deep, #090a0d) !important; font-weight: 700; }
-  @media (max-width: 34rem) { .profile-widget-editor__header, .profile-widget-editor__actions, .profile-widget-editor__conflict { align-items: stretch; flex-direction: column; } .profile-widget-editor__actions button { width: 100%; } }
-  @media (prefers-reduced-motion: reduce) { .profile-widget-editor__actions { scroll-behavior: auto; } }
+  .profile-widget-editor__hint { margin: 0; color: var(--site-faint, #7d7e87); font-size: .75rem; line-height: 1.45; }
+  @media (max-width: 34rem) { .profile-widget-editor__header { align-items: stretch; flex-direction: column; } }
 </style>

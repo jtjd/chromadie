@@ -42,14 +42,15 @@ test('appearance v1 is bounded and independent from daily roll color', () => {
   assert.equal(frame.baseColor, '#F4F6FB');
 });
 
-test('dashboard uses the shared header and section RPC contract', async () => {
-  const [app, settings, appearance, layout, migration, shell] = await Promise.all([
+test('dashboard uses the shared header and aggregate profile action contract', async () => {
+  const [app, settings, appearance, layout, migration, shell, actions] = await Promise.all([
     read('src/App.svelte'),
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileEditor.svelte'),
-    read('supabase/migrations/20260805100000_profile_appearance_dashboard.sql'),
-    read('src/lib/ProfileDashboardShell.svelte')
+    read('supabase/migrations/20260808220000_profile_configuration_v2.sql'),
+    read('src/lib/ProfileDashboardShell.svelte'),
+    read('src/lib/ProfileDashboardActions.svelte')
   ]);
   assert.match(app, /\{#if !profileModeVisible\}/);
   assert.match(settings, /<ProfileAccountSettings/);
@@ -64,22 +65,22 @@ test('dashboard uses the shared header and section RPC contract', async () => {
   assert.match(settings, /history\.pushState/);
   assert.match(settings, /import\('\.\/ProfileShell\.svelte'\)/);
   assert.match(settings, /previewIdentityOnly=\{true\}/);
-  assert.match(appearance, /save_profile_configuration_section/);
-  assert.match(appearance, /publish_profile_configuration_section/);
-  assert.match(layout, /p_section: 'composition'/);
-  assert.match(layout, /save_profile_configuration_section/);
-  assert.match(layout, /publish_profile_configuration_section/);
+  assert.doesNotMatch(appearance, /save_profile_configuration_section|publish_profile_configuration_section/);
+  assert.doesNotMatch(layout, /save_profile_configuration_section|publish_profile_configuration_section/);
+  assert.match(settings, /save_profile_configuration_v2/);
+  assert.match(settings, /publish_profile_configuration_v2/);
+  assert.match(settings, /on:publish=\{publishDashboard\}/);
+  assert.match(actions, /Publish profile/);
+  assert.match(actions, /on:click=\{\(\) => dispatch\('reset'\)\}/);
+  assert.doesNotMatch(appearance, /Highlight|Background gradient|Border color|appearance-gradient|appearance-border/);
   assert.doesNotMatch(layout, /save_profile_configuration['"]/);
   assert.doesNotMatch(layout, /Signature color|Ambient color|colorEffectsEnabled/);
   assert.match(migration, /UPDATE public\.profile_configurations/);
   assert.match(migration, /SECURITY DEFINER/);
   assert.match(migration, /p_expected_updated_at/);
-  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.save_profile_configuration_section/);
-  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.publish_profile_configuration_section/);
-  assert.match(migration, /profile_composition_patch/);
-  assert.match(migration, /'layoutVariant'/);
-  assert.match(migration, /'modules'/);
-  assert.match(migration, /'links'/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.save_profile_configuration_v2/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.publish_profile_configuration_v2/);
+  assert.match(migration, /profile_configuration_v2_from_v1/);
   assert.match(shell, /profile-dashboard-shell__group/);
   assert.match(shell, /inert=/);
   assert.match(shell, /trapFocus\(event, drawer\)/);

@@ -60,8 +60,10 @@ test('template application preserves user-owned expression and premium authority
   assert.match(picker, /createProfileTemplatePatch/);
   assert.match(picker, /Premium expression/);
   assert.match(editor, /ProfileTemplatePicker/);
-  assert.match(editor, /templateKey: value\.templateKey/);
-  assert.match(editor, /p_section: 'composition'/);
+  assert.match(editor, /templateKey/);
+  assert.match(editor, /export function getDraftConfig/);
+  assert.match(settings, /save_profile_configuration_v2/);
+  assert.match(settings, /publish_profile_configuration_v2/);
   assert.match(settings, /entitlements=\{\$profileEntitlements\}/);
   assert.match(migration, /ALTER FUNCTION public\.normalize_profile_configuration\(jsonb, text\)/);
   assert.match(migration, /'templateKey'/);

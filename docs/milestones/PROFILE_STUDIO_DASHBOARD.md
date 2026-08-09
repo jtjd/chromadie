@@ -1,6 +1,6 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; workspace usability refinement implemented 2026-08-08
+Status: implementation complete; workspace usability refinement implemented 2026-08-09
 
 ## Scope
 
@@ -75,12 +75,13 @@ nested interaction model. Customize is now one continuous workspace with direct
 section headings. Active avatar/background media and Plus rich media (video,
 banner, cursors, and audio) appear beside their upload/replace actions, with
 saved assets immediately below for reuse. Repeated module headers are hidden in
-this context and section action bars are placed in the section they save; no
-new upload path or atomic cross-section save is introduced.
+this context. Color Customization now contains only the seven palette colors and
+surface depth controls, and one dashboard Reset / Publish profile bar commits
+the assembled V2 draft across Customize and Links.
 
 ## Validation
 
-- `npm test`: 251 passing.
+- `npm test`: 252 passing.
 - `npm run build`, `npm run check`, `npx eslint .`, links, CSP, username
   policy, balance, catalog, scoring parity, and database security: passing.
 - `npm run check:performance`: all blocking route and asset budgets pass;

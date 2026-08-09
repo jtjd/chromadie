@@ -48,7 +48,9 @@ test('content renderer and editor stay inside the structured public boundary', a
   assert.match(content, /getVisibleProfileContent/);
   assert.match(content, /rel="noopener noreferrer"/);
   assert.doesNotMatch(content, /innerHTML|iframe|new Function|eval\s*\(/);
-  assert.match(editor, /p_section: 'content'/);
+  assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
+  assert.match(editor, /export function getDraftConfig/);
+  assert.match(editor, /export function validateDraft/);
   assert.match(editor, /PROFILE_CONTENT_LIMITS.projects/);
   assert.match(editor, /Plain text only/);
   assert.doesNotMatch(editor, /innerHTML|iframe|new Function|eval\s*\(/);
@@ -59,5 +61,5 @@ test('content renderer and editor stay inside the structured public boundary', a
   assert.match(migration, /normalize_profile_content/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content'\)/);
   assert.match(migration, /profile_content_patch/);
-  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.publish_profile_configuration_section/);
+  assert.match(settings, /publish_profile_configuration_v2/);
 });
