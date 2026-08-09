@@ -75,9 +75,10 @@ nested interaction model. Customize is now one continuous workspace with direct
 section headings. Active avatar/background media and Plus rich media (video,
 banner, cursors, and audio) appear beside their upload/replace actions, with
 saved assets immediately below for reuse. Repeated module headers are hidden in
-this context. Color Customization now contains only the seven palette colors and
-surface depth controls, and one dashboard Reset / Publish profile bar commits
-the assembled V2 draft across Customize and Links.
+this context. Color Customization now contains only the six palette colors and a
+Surface group containing the Profile Surface color plus its depth controls, and
+one dashboard Reset / Publish profile bar commits the assembled V2 draft across
+Customize and Links.
 
 ## Validation
 

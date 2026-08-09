@@ -89,14 +89,13 @@
     ['username', 'Username'],
     ['description', 'Bio Text'],
     ['background', 'Page Background'],
-    ['surface', 'Profile Surface'],
     ['accent', 'Accent']
   ];
 </script>
 
 <div class="appearance-editor">
   <section class="appearance-editor__panel" aria-labelledby="appearance-colors-title">
-    <div class="appearance-editor__heading"><h2 id="appearance-colors-title">Profile colors</h2><span>7 colors</span></div>
+    <div class="appearance-editor__heading"><h2 id="appearance-colors-title">Profile colors</h2><span>6 colors</span></div>
     <div class="appearance-editor__color-grid">
       {#each colorFields as [key, label] (key)}
         <label class="appearance-editor__field">
@@ -112,7 +111,14 @@
 
   <section class="appearance-editor__panel" aria-labelledby="appearance-surface-title">
     <div class="appearance-editor__heading"><h2 id="appearance-surface-title">Surface</h2><span>Card depth</span></div>
-    <div class="appearance-editor__range-grid">
+    <div class="appearance-editor__surface-grid">
+      <label class="appearance-editor__field">
+        <span>Profile Surface</span>
+        <div class="appearance-editor__color-input">
+          <input type="color" value={staged.colors.surface} aria-label="Profile Surface" on:input={event => updateColor(['colors', 'surface'], event)} />
+          <input class="appearance-editor__hex" value={staged.colors.surface} maxlength="7" aria-label="Profile Surface hex" on:change={event => updateColor(['colors', 'surface'], event)} />
+        </div>
+      </label>
       <label class="appearance-editor__range"><span>Opacity <output>{staged.surface.opacity}%</output></span><input type="range" min="0" max="100" step="1" value={staged.surface.opacity} on:input={event => update(['surface', 'opacity'], Number(event.currentTarget.value))} /></label>
       <label class="appearance-editor__range"><span>Blur <output>{staged.surface.blur}px</output></span><input type="range" min="0" max="40" step="1" value={staged.surface.blur} on:input={event => update(['surface', 'blur'], Number(event.currentTarget.value))} /></label>
     </div>
@@ -128,18 +134,19 @@
   .appearance-editor__heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
   .appearance-editor__heading h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: 1rem; letter-spacing: -.02em; }
   .appearance-editor__heading > span { color: var(--site-faint, #7d7e87); font: .7rem/1 var(--site-mono, monospace); }
-  .appearance-editor__color-grid, .appearance-editor__range-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem 1rem; }
-  .appearance-editor__range-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .appearance-editor__color-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem 1rem; }
+  .appearance-editor__surface-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .8rem 1rem; }
   .appearance-editor__field, .appearance-editor__range { display: grid; gap: .42rem; min-width: 0; }
   .appearance-editor__field > span, .appearance-editor__range > span { display: flex; justify-content: space-between; gap: .5rem; color: var(--site-muted, #aaa8b0); font-size: .82rem; }
   .appearance-editor__color-input { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); align-items: center; min-height: 2.5rem; overflow: hidden; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: var(--site-deep, #090a0d); }
   .appearance-editor__color-input input[type="color"] { width: 2.2rem; height: 2.2rem; padding: .25rem; border: 0; background: transparent; cursor: pointer; }
   .appearance-editor__hex { min-width: 0; width: 100%; padding: .55rem .6rem; border: 0; outline: 0; background: transparent; color: var(--site-ink, #f2f0eb); font: .78rem/1 var(--site-mono, monospace); }
   .appearance-editor__range { margin-top: .95rem; }
+  .appearance-editor__surface-grid .appearance-editor__range { margin-top: 0; }
   .appearance-editor__range output { color: var(--site-faint, #7d7e87); font: .72rem/1 var(--site-mono, monospace); }
   .appearance-editor__range input { width: 100%; accent-color: var(--site-accent, #cdd2ff); }
   .appearance-editor__message { margin: 0; color: var(--ctp-red, #f38ba8); font-size: .78rem; }
   .appearance-editor__hint { margin: 0; color: var(--site-faint, #7d7e87); font-size: .75rem; line-height: 1.45; }
   @media (max-width: 64rem) { .appearance-editor__color-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__range-grid { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>

@@ -35,6 +35,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   for (const label of ['Profile Text', 'Handle & Metadata', 'Username', 'Bio Text', 'Page Background', 'Profile Surface', 'Accent']) {
     assert.match(appearance, new RegExp(label.replace(/[&]/g, '\\$&')));
   }
+  assert.match(appearance, /<span>6 colors<\/span>/);
+  assert.match(appearance, /appearance-surface-title[\s\S]*Profile Surface[\s\S]*Opacity[\s\S]*Blur/);
+  assert.doesNotMatch(appearance, /\['surface', 'Profile Surface'\]/);
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
   for (const section of ['media', 'identity', 'appearance', 'content', 'widgets', 'effects', 'layout']) {
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));

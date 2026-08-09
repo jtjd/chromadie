@@ -1,5 +1,18 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-09 — Keep surface color and depth controls together
+
+Profile Surface is now edited in the same Surface group as opacity and blur.
+The editor presents six independent profile colors, then one card-depth group
+containing the surface color and its two linked controls. This keeps the UI
+aligned with the renderer, which uses the surface color as a translucent card
+fill and the blur value to sample the main profile background behind that card.
+
+The public renderer uses a dedicated, transparent card backdrop layer with
+`backdrop-filter`; page background media and the daily roll remain outside that
+layer. The existing validated appearance shape, V2 save/publish RPCs, legacy
+appearance values, and reduced-motion boundaries are unchanged.
+
 ## 2026-08-09 — Consolidate Customize around quick profile edits
 
 Customize now uses one continuous, screenshot-inspired workspace: a compact

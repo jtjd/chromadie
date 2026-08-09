@@ -216,8 +216,8 @@ try {
     assert(mediaRail.editable.includes('Profile avatar') && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
     assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
-    await page.setInputValue('.appearance-editor__range:nth-child(2) input[type="range"]', 40, ['input']);
-    await page.waitFor(`document.querySelector('.appearance-editor__range:nth-child(2) output')?.textContent?.trim() === '40px'`, 'blur draft value');
+    await page.setInputValue('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) input[type="range"]', 40, ['input']);
+    await page.waitFor(`document.querySelector('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) output')?.textContent?.trim() === '40px'`, 'blur draft value');
     const publishRequestsAfter = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
     const draftState = await page.evaluate(`({
       publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,
@@ -280,9 +280,11 @@ try {
     const state = await page.evaluate(`(() => {
       const pageElement = document.querySelector('.profile-shell-page');
       const card = document.querySelector('.profile-shell-page .identity-card');
+      const surfaceBackdrop = document.querySelector('.profile-shell-page .profile-shell__surface-backdrop');
       const roll = document.querySelector('.profile-shell-page [data-profile-region="roll"]');
       const pageStyle = getComputedStyle(pageElement);
       const cardStyle = getComputedStyle(card);
+      const surfaceBackdropStyle = surfaceBackdrop ? getComputedStyle(surfaceBackdrop) : null;
       const rollStyle = roll ? getComputedStyle(roll) : null;
       return {
         path: location.pathname,
@@ -292,14 +294,17 @@ try {
         roll: Boolean(roll),
         cardBlur: cardStyle.getPropertyValue('--profile-surface-blur').trim(),
         cardBackdropFilter: cardStyle.backdropFilter || cardStyle.webkitBackdropFilter || '',
+        surfaceBackdrop: Boolean(surfaceBackdrop),
+        surfaceBackdropFilter: surfaceBackdropStyle?.backdropFilter || surfaceBackdropStyle?.webkitBackdropFilter || '',
         pageBlur: pageStyle.getPropertyValue('--profile-surface-blur').trim(),
         rollBlur: rollStyle?.getPropertyValue('--profile-surface-blur').trim() || '',
         pageBackground: pageStyle.backgroundImage || pageStyle.backgroundColor
       };
     })()`);
     assert(state.path === `/${canonicalUsername}`, `Public profile was not canonical after refresh: ${state.path}.`);
-    assert(state.canvas && state.card, 'Public profile did not render its canvas and identity card.');
+    assert(state.canvas && state.card && state.surfaceBackdrop, 'Public profile did not render its canvas, card, and card backdrop.');
     assert(state.cardBlur, 'Public profile identity card has no surface blur variable.');
+    assert(state.surfaceBackdropFilter.includes('blur('), 'Public profile card backdrop has no computed blur filter.');
     assert(!state.pageBlur && !state.rollBlur, 'Public appearance variables leaked outside the card surface.');
     await capture('07-public-profile');
     return state;

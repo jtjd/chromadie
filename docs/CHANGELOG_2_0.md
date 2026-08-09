@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-09 — Align surface controls with the profile card
+
+- Moved Profile Surface into the Surface section beside Opacity and Blur; the
+  Profile colors group now contains six colors.
+- Fixed surface blur so it applies only within the profile card and blurs the
+  main profile background behind it, leaving the page and daily roll clear.
+- Kept the saved appearance schema, draft/publish authority, and responsive
+  editor behavior unchanged.
+
 ## 2026-08-09 — Make profile customization quick to scan
 
 - Customize now opens as one compact page with a Profile media rail for

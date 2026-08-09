@@ -94,9 +94,8 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(shell, /profile-shell__page-atmosphere-layer/);
   assert.match(shell, /profile-shell__page-cursor-layer/);
   assert.match(shell, /profile-shell-page--preview \.profile-shell__media-background \{ position: absolute; inset: 0; \}/);
-  assert.doesNotMatch(shell, /\{#if backgroundSrc && previewMode\}/);
-  assert.doesNotMatch(shell, /<div class="profile-shell__card-media-background"/);
-  assert.doesNotMatch(shell, /<div class="profile-shell__surface-media-background"/);
+  assert.match(shell, /<div class="profile-shell__surface-backdrop"/);
+  assert.doesNotMatch(shell, /<div class="profile-shell__card-media-background"|<div class="profile-shell__surface-media-background"/);
   assert.match(shell, /profile-shell__card-atmosphere-layer/);
   assert.match(shell, /profile-shell__card-cursor-layer/);
   assert.match(shell, /<ProfileBorderEffect[\s\S]*\{#if atmosphereKey && previewMode\}/);
@@ -123,10 +122,11 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(identityCard, /backdrop-filter: blur\(var\(--profile-surface-blur/);
   assert.match(shell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
   assert.match(shell, /:global\(\.profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ isolation: auto; \}/);
-  assert.match(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\),[\s\S]*profile-atmosphere\.profile-shell__surface-atmosphere-layer\) \{ isolation: auto; filter: blur\(var\(--profile-surface-blur/);
-  assert.match(shell, /profile-shell__surface-backdrop/);
-  assert.match(shell, /profile-shell__surface-media-background \{ position: absolute; inset: -6%; z-index: 0; background-position: center; background-size: cover; filter: blur\(var\(--profile-surface-blur/);
-  assert.match(shell, /profile-atmosphere\.profile-shell__surface-atmosphere-layer\)/);
+  assert.match(shell, /<div class="profile-shell__surface-backdrop" aria-hidden="true"><\/div>/);
+  assert.match(shell, /\.profile-shell__surface-backdrop \{[\s\S]*backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.match(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{ isolation: auto; \}/);
+  assert.doesNotMatch(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer[\s\S]*filter: blur\(var\(--profile-surface-blur/);
+  assert.doesNotMatch(shell, /profile-shell__surface-media-background \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);
   assert.match(preview, /studio-profile-card :global\(\.studio-atmosphere-layer\) \{ z-index: 0; opacity: \.82; isolation: auto; filter: blur\(var\(--profile-surface-blur/);
   assert.match(preview, /studio-profile-card__background \{ position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; filter: blur\(var\(--profile-surface-blur/);
   assert.match(atmosphere, /\.profile-atmosphere \{[^}]*isolation: auto;/);

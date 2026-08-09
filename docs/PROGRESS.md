@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Correct Profile Studio surface controls and card blur — 2026-08-09
+
+- Moved Profile Surface into the Surface group beside its linked opacity and
+  blur controls; the standalone Profile colors group now contains six colors.
+- Added a card-scoped backdrop layer so surface blur samples the main profile
+  background behind the identity card without blurring the page or roll UI.
+- Removed the stale card-media and atmosphere filter paths that could blur the
+  wrong layer; saved appearance data and the existing renderer contracts stay
+  backward-compatible.
+
 ## Rebalance Profile Studio darkness and control contrast — 2026-08-09
 
 - Added a Crust page gutter so the Base/Mantle editor sections read as lifted

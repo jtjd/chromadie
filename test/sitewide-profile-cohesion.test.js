@@ -71,7 +71,8 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(profileShell, /:global\(\.cursor-trail-layer\.profile-shell__page-cursor-layer\) \{ position: fixed;/);
   assert.match(profileShell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
   assert.match(profileShell, /\.profile-shell__media-background \{ position: fixed;/);
-  assert.match(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);
+  assert.match(profileShell, /\.profile-shell__surface-backdrop \{[\s\S]*backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.doesNotMatch(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);
 });
 
 test('leaderboard and legal routes share the homepage presentation contract', async () => {
