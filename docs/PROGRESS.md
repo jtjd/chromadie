@@ -1,12 +1,11 @@
 # Chromadie 2.0 Progress
 
-## Make profile card blur visible across media layers — 2026-08-09
+## Make profile card blur sample the page media — 2026-08-09
 
-- Added a clipped, card-local blur layer for uploaded background images, rich
-  background video, and the authored atmosphere media so the visible profile
-  surface actually softens at high blur values.
-- Kept the page-level background and daily profile surfaces outside that layer;
-  the existing backdrop-filter remains available for other supported surfaces.
+- Fixed the profile card's stacking context so its transparent backdrop-filter
+  samples the already-rendered page background, video, and atmosphere media.
+- Removed the duplicate card-local media copies; page media remains sharp
+  outside the card while the translucent surface softens what is behind it.
 - Extended browser smoke coverage to assert the maximum surface blur variable
   and preserve the card-only media boundary.
 

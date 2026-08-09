@@ -1,18 +1,17 @@
 # Chromadie 2.0 Decisions
 
-## 2026-08-09 — Make surface blur explicit at the card media boundary
+## 2026-08-09 — Let surface blur sample the actual page media
 
-The public profile card keeps a clipped local copy of each media layer that can
-sit behind it: the uploaded background image, rich background video, and the
-authored atmosphere video/poster. Those local copies use the validated surface
-blur value and stay behind the identity contents. The full-page media remains
-sharp outside the card, and the existing `backdrop-filter` remains as a
-fallback for solid or gradient surfaces.
+The public profile card keeps one transparent backdrop-filter layer at the
+surface boundary. Intermediate profile layout wrappers do not create an
+isolated stacking context, so the filter samples the already-rendered uploaded
+background image, rich background video, and authored atmosphere media behind
+the card. The same page-level media remains sharp outside the card.
 
-This avoids relying on a computed `backdrop-filter` value across the profile
-page's nested layout/border stacking contexts, where browsers can report the
-filter while producing no visible change. No media source, configuration
-schema, public URL, or renderer authority boundary changes.
+This keeps one source of truth for media rendering and avoids the misleading
+failure mode where a browser reports a computed `backdrop-filter` while nested
+stacking contexts prevent it from sampling the page canvas. No media source,
+configuration schema, public URL, or renderer authority boundary changes.
 
 ## 2026-08-09 — Let the Bio field own the compact identity column
 

@@ -122,13 +122,10 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(identityCard, /backdrop-filter: blur\(var\(--profile-surface-blur/);
   assert.match(shell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
   assert.match(shell, /:global\(\.profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ isolation: auto; \}/);
-  assert.match(shell, /<div class="profile-shell__surface-backdrop" style=\{backgroundSrc && \(!backgroundVideoSrc/);
-  assert.match(shell, /class="profile-shell__surface-video"/);
-  assert.match(shell, /className="profile-shell__surface-atmosphere-layer"/);
-  assert.match(shell, /\.profile-shell__surface-backdrop \{[\s\S]*backdrop-filter: blur\(var\(--profile-surface-blur/);
-  assert.match(shell, /\.profile-shell__surface-backdrop::before \{[\s\S]*background-image: var\(--profile-surface-media/);
-  assert.match(shell, /\.profile-shell__surface-video \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);
-  assert.match(shell, /profile-atmosphere\.profile-shell__surface-atmosphere-layer\) \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);
+  assert.match(shell, /<div class="profile-shell__surface-backdrop" aria-hidden="true"><\/div>/);
+  assert.match(shell, /\.profile-shell__surface-backdrop \{[\s\S]*background: rgba\(0, 0, 0, 0\.001\);[\s\S]*backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.match(shell, /\.profile-shell__approved-canvas,\s+\.profile-shell__opening\.profile-shell__approved-opening \{ z-index: auto; \}/);
+  assert.doesNotMatch(shell, /profile-shell__surface-media|profile-shell__surface-video|profile-shell__surface-atmosphere-layer|profile-shell__surface-backdrop::before/);
   assert.match(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{ isolation: auto; \}/);
   assert.doesNotMatch(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{[^}]*filter: blur\(var\(--profile-surface-blur/);
   assert.doesNotMatch(shell, /profile-shell__surface-media-background \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);
