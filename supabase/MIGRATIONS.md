@@ -67,6 +67,18 @@ Atelier expression restoration:
   It uses only the finite `haunt-rainbow` and `silk-folds` renderers and bumps
   `shop_version`; the retired raw-CSS slots remain absent.
 
+Rich-media Storage RLS correction:
+
+- `migrations/20260809010000_fix_rich_media_storage_rls.sql` recreates the
+  staged rich-media INSERT/UPDATE/DELETE policies with an explicit
+  `storage.objects.metadata` reference and a single `profile_media/<user>/<asset>`
+  path prefix. The earlier unqualified metadata name became ambiguous when
+  `profile_media_assets.metadata` was added, while the old path expression
+  prefixed the user ID twice; both rejected valid uploads or active-asset
+  replacement/deletion.
+- The migration is additive and does not change quotas, entitlement checks,
+  staged-upload ownership, or the finalize/delete RPC boundaries.
+
 Lean alpha cosmetic reset:
 
 - `migrations/20260802110000_lean_cosmetic_catalog_reset.sql` is the single

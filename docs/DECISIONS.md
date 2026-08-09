@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Qualify the rich-media Storage metadata boundary
+
+The staged `profile_media` Storage policies explicitly read
+`storage.objects.metadata` when matching a staged asset's MIME type and map
+the object name to the full `profile_media/<user>/<asset>` path exactly once.
+The rich-media asset table also has a `metadata` column, and the old path
+expression prefixed the user ID twice; either mismatch can reject a valid
+upload. The correction is an additive policy replacement; entitlement, quota,
+staged ownership, and server-side finalization remain unchanged.
+
 ## 2026-08-08 — Restore Atelier expression through the modern renderer contract
 
 The original `name_prism_atelier` and `bg_prism_atmosphere` identities are

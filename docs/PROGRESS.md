@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Restore rich-media uploads after a Storage policy collision — 2026-08-08
+
+- Corrected the staged `profile_media` INSERT policy to compare the uploaded
+  object's MIME metadata, not the similarly named staged asset JSON column.
+- The correction covers all bounded rich-media kinds—background video, banner,
+  audio, cursor, and pointer cursor—without changing the Plus/staff gate or
+  quota accounting.
+- Added source and database-security regression assertions; remote deployment
+  follows local schema lint/reset and the required validation suite.
+
 ## Atelier expression restoration and dashboard guidance — 2026-08-08
 
 - Restored the two original Atelier expression identities as structured,

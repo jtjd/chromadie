@@ -67,6 +67,7 @@ test('rich media input and config normalization reject unsafe values', () => {
 
 test('rich media migration and renderer preserve ownership and browser safety boundaries', async () => {
   const migration = await read('supabase/migrations/20260808210000_bounded_rich_profile_media.sql');
+  const rlsFix = await read('supabase/migrations/20260809010000_fix_rich_media_storage_rls.sql');
   const editor = await read('src/lib/ProfileRichMediaEditor.svelte');
   const shell = await read('src/lib/ProfileShell.svelte');
   const music = await read('src/lib/ProfileMusic.svelte');
@@ -85,6 +86,10 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   assert.match(migration, /profile_rich_media_access/);
   assert.match(migration, /billing_premium_access/);
   assert.match(migration, /COALESCE\(v_object\.metadata->>'mimetype'/);
+  assert.match(rlsFix, /COALESCE\(storage\.objects\.metadata->>'mimetype', ''\) = a\.mime_type/);
+  assert.match(rlsFix, /a\.storage_path = 'profile_media\/' \|\| name/);
+  assert.doesNotMatch(rlsFix, /a\.storage_path = 'profile_media\/' \|\| auth\.uid\(\)::text \|\| '\/' \|\| name/);
+  assert.doesNotMatch(rlsFix, /COALESCE\(metadata->>'mimetype'/);
   assert.match(migration, /auth\.uid\(\)/);
   assert.match(migration, /REVOKE ALL ON TABLE public\.profile_media_assets/);
   assert.match(migration, /rich_access THEN background_video_path ELSE NULL/);

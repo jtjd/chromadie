@@ -1494,6 +1494,17 @@ SELECT pg_temp.audit_assert(
     AND NOT has_function_privilege('authenticated', 'public.cleanup_staged_profile_media()', 'EXECUTE'),
   'rich media browser roles crossed the staged upload authority boundary'
 );
+SELECT pg_temp.audit_assert(
+  EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'storage'
+      AND tablename = 'objects'
+      AND policyname = 'Owners can stage rich profile media'
+      AND with_check LIKE '%objects.metadata%'
+  ),
+  'rich media Storage INSERT policy did not qualify the uploaded object metadata'
+);
 SELECT pg_temp.audit_expect_error(
   $rich_kind$SELECT public.stage_my_profile_media_asset('background_video', '20000000-0000-0000-0000-000000000002', 'mp3', 1024, 'wrong', '{}'::jsonb)$rich_kind$,
   'rich media staging accepted a mismatched extension'
@@ -1502,11 +1513,16 @@ INSERT INTO audit_results VALUES (
   'rich_stage_video',
   public.stage_my_profile_media_asset('background_video', '20000000-0000-0000-0000-000000000002', 'mp4', 1024, 'Security video', '{"width":1920,"height":1080}'::jsonb)
 );
+-- Exercise the same Storage INSERT boundary used by the browser client. The
+-- surrounding audit runs as postgres so it can inspect protected projections;
+-- this statement deliberately runs as the authenticated role.
+SET LOCAL ROLE authenticated;
 INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
 VALUES (
   gen_random_uuid(), 'profile_media', '10000000-0000-0000-0000-000000000001/20000000-0000-0000-0000-000000000002.mp4',
   '10000000-0000-0000-0000-000000000001', '{"mimetype":"video/mp4","size":"1024"}'::jsonb
 );
+RESET ROLE;
 INSERT INTO audit_results VALUES (
   'rich_finalize_video',
   public.finalize_my_profile_media_asset('20000000-0000-0000-0000-000000000002')

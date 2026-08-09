@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Restore bounded rich-media uploads
+
+- Fixed Plus/staff banner, cursor, pointer-cursor, audio, and background-video
+  uploads that were rejected by Storage RLS before they could be finalized.
+- The staged upload still checks the owner path, MIME type, entitlement, quota,
+  and server-owned finalize step; no profile or gameplay data changes.
+
 ## 2026-08-08 — Make Atelier expression easy to find
 
 - Chromadie Plus owners now see an Atelier expression guide in Studio →
