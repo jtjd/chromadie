@@ -2203,3 +2203,10 @@ direct route behavior.
   dashboard header.
 - Kept IBM Plex Mono for technical values and left homepage/public-profile font
   contracts unchanged.
+
+## 2026-08-09 — Rebalance Profile Studio darkness and control contrast
+
+- Added a Crust canvas gutter and clearer Base/Mantle depth between the
+  existing editor sections.
+- Softened input fills and accent borders so the controls do not read as extra
+  panels.

@@ -147,7 +147,7 @@
     grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr);
     min-height: calc(100dvh - 4.1rem);
     color: var(--site-ink, var(--color-ink));
-    background: var(--ctp-base, var(--site-deep, var(--color-canvas-deep)));
+    background: var(--ctp-crust, var(--site-deep, var(--color-canvas-deep)));
   }
   .profile-dashboard-shell--with-preview { grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr) minmax(20rem, 23vw); }
   .profile-dashboard-shell__sidebar {

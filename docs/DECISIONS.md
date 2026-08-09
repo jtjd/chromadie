@@ -3711,6 +3711,14 @@ technical companion for hex values, counters, and status metadata. The font
 override is scoped to Profile Studio so public profile and homepage visual
 contracts remain unchanged.
 
+## 2026-08-09 — Use depth before brightness for Profile Studio hierarchy
+
+The Profile Studio canvas now uses Crust as the page gutter, with Base and
+Mantle as the alternating large-section surfaces. Input fills are a restrained
+mix of Surface0 and their parent section, and accent borders are less intense.
+This keeps the Mocha contrast legible without letting borders or controls
+become the dominant visual layer.
+
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

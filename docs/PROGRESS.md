@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Rebalance Profile Studio darkness and control contrast — 2026-08-09
+
+- Added a Crust page gutter so the Base/Mantle editor sections read as lifted
+  layers instead of blending into the surrounding canvas.
+- Reduced accent border intensity and softened Surface0 control fills so form
+  fields support the sections rather than becoming competing panels.
+
 ## Unify Profile Studio typography with Manrope — 2026-08-09
 
 - Added a locally bundled Manrope variable font for Profile Studio UI text,

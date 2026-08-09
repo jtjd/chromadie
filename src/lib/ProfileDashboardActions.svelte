@@ -27,7 +27,7 @@
 </section>
 
 <style>
-  .profile-dashboard-actions { --dashboard-action-accent: var(--ctp-teal, #94e2d5); --dashboard-action-surface: var(--ctp-crust, #11111b); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; padding: .75rem .85rem; border: 1px solid color-mix(in srgb, var(--dashboard-action-accent) 42%, var(--site-line-strong, rgba(255,255,255,.14))); border-radius: .55rem; background: var(--dashboard-action-surface); }
+  .profile-dashboard-actions { --dashboard-action-accent: var(--ctp-teal, #94e2d5); --dashboard-action-surface: var(--ctp-mantle, #181825); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; padding: .75rem .85rem; border: 1px solid color-mix(in srgb, var(--dashboard-action-accent) 30%, var(--site-line-strong, rgba(255,255,255,.14))); border-radius: .55rem; background: var(--dashboard-action-surface); }
   .profile-dashboard-actions__copy { min-width: 0; }
   .profile-dashboard-actions__title-row { display: flex; align-items: center; gap: .65rem; }
   .profile-dashboard-actions h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .84rem; letter-spacing: -.01em; }
@@ -35,7 +35,7 @@
   .profile-dashboard-actions__state { color: var(--dashboard-action-accent); font: .66rem/1 var(--site-mono, monospace); white-space: nowrap; }
   .profile-dashboard-actions__state--dirty { color: var(--ctp-peach, #fab387); }
   .profile-dashboard-actions__buttons { display: flex; flex: 0 0 auto; gap: .45rem; }
-  .profile-dashboard-actions button { min-height: 2.1rem; padding: .45rem .7rem; border: 1px solid var(--ctp-surface2, var(--site-line-strong, rgba(255,255,255,.14))); border-radius: .35rem; background: var(--ctp-surface0, var(--site-raised, #111319)); color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: .74rem; cursor: pointer; }
+  .profile-dashboard-actions button { min-height: 2.1rem; padding: .45rem .7rem; border: 1px solid color-mix(in srgb, var(--ctp-surface2, #585b70) 62%, var(--dashboard-action-surface)); border-radius: .35rem; background: color-mix(in srgb, var(--ctp-surface0, #313244) 62%, var(--dashboard-action-surface)); color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: .74rem; cursor: pointer; }
   .profile-dashboard-actions button:disabled { cursor: not-allowed; opacity: .42; }
   .profile-dashboard-actions button:focus-visible { outline: 2px solid var(--site-accent, #cdd2ff); outline-offset: 2px; }
   .profile-dashboard-actions__publish { border-color: var(--site-accent, #cdd2ff) !important; background: var(--site-accent, #cdd2ff) !important; color: var(--site-deep, #090a0d) !important; font-weight: 700; }

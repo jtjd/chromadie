@@ -29,6 +29,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(shell, /data-section=\{section\.id\}/);
   assert.match(shell, /--nav-accent/);
   assert.match(shell, /--ctp-sapphire/);
+  assert.match(shell, /background: var\(--ctp-crust/);
   assert.match(identity, /baselineBio/);
   assert.match(identity, /incomingKey/);
   for (const label of ['Profile Text', 'Handle & Metadata', 'Username', 'Bio Text', 'Page Background', 'Profile Surface', 'Accent']) {
@@ -63,6 +64,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /--customize-section-accent/);
   assert.match(customize, /--customize-section-surface/);
   assert.match(customize, /--customize-section-input/);
+  assert.match(customize, /--customize-section-input-line/);
   assert.match(customize, /--ctp-crust/);
   assert.match(customize, /--ctp-mantle/);
   assert.match(customize, /profile-identity/);
