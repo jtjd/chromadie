@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-09 — Consolidate Customize around quick profile edits
+
+Customize now uses one continuous, screenshot-inspired workspace: a compact
+asset uploader rail for the four highest-frequency media actions, a Plus
+expression banner, and grouped General, Color, and Other customization
+surfaces. The media cards are quick-jump anchors into the existing editor
+controls rather than duplicate upload implementations, so avatar, background,
+audio, music, and rich-media behavior keep their current domain components and
+save contracts.
+
+This is a presentation and information-architecture change. Existing lazy
+editor loading, section-scoped dirty/publish events, entitlement gates, media
+validation, RPC authority, RLS, public rendering, keyboard navigation,
+mobile layout, and reduced-motion behavior remain unchanged.
+
 ## 2026-08-08 — Make public-site access reversible
 
 The temporary Cloudflare Pages rehearsal gate now has an explicit

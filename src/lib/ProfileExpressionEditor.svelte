@@ -444,7 +444,7 @@
 
 <Module size="wide" tone="quiet" className="profile-expression-editor" title="Media" description="Upload an avatar or background, or connect Spotify.">
   {#if assetsLoading}<p class="profile-expression-editor__asset-loading" role="status">Loading your saved media…</p>{/if}
-  <div class="profile-expression-editor__media-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+  <div id="profile-media-avatar" class="profile-expression-editor__media-row" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
     <div class="profile-expression-editor__preview" style="flex:0 0 7rem;width:7rem" aria-label="Avatar preview">
       {#if avatarSrc}
         <Media src={avatarSrc} alt="Avatar preview" aspect="square" loading="eager" className="profile-expression-editor__avatar" fallbackLabel="Avatar unavailable" allowLocalPreview={true} />
@@ -485,7 +485,7 @@
     </div>
   {/if}
 
-  <div class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
+  <div id="profile-media-background" class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
     <div>
       <h3>Use a background image</h3>
       <p class="profile-expression-editor__section-copy">A centered, compressed image behind the existing daily-color atmosphere. A dark overlay keeps the identity readable.</p>
@@ -532,7 +532,7 @@
   </div>
 
   {#if staff}
-    <div class="profile-expression-editor__section profile-expression-editor__section--audio">
+    <div id="profile-media-audio" class="profile-expression-editor__section profile-expression-editor__section--audio">
       <div>
         <p class="profile-expression-editor__eyebrow">Staff audio</p>
         <h3>Profile audio</h3>
@@ -576,7 +576,7 @@
     </div>
   {/if}
 
-  <div class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
+  <div id="profile-media-music" class="profile-expression-editor__section" style="display:grid;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--color-line-subtle)">
     <div>
       <p class="profile-expression-editor__eyebrow">Music</p>
       <h3>Connect a Spotify item</h3>
@@ -593,13 +593,15 @@
     </div>
   </div>
 
-  {#if richMediaEnabled}
-    <ProfileRichMediaEditor profileId={profileId} {config} {staff} {entitlements} on:expressionchange={(event) => dispatch('expressionchange', event.detail)} />
-  {:else}
-    <div class="profile-expression-editor__rollout-notice" role="status">
-      Rich media expression is temporarily paused while this rollout is verified. Your image-based profile remains available.
-    </div>
-  {/if}
+  <div id="profile-media-rich">
+    {#if richMediaEnabled}
+      <ProfileRichMediaEditor profileId={profileId} {config} {staff} {entitlements} on:expressionchange={(event) => dispatch('expressionchange', event.detail)} />
+    {:else}
+      <div class="profile-expression-editor__rollout-notice" role="status">
+        Rich media expression is temporarily paused while this rollout is verified. Your image-based profile remains available.
+      </div>
+    {/if}
+  </div>
 
   {#if error}<p class="profile-expression-editor__message profile-expression-editor__message--error" style="margin:0" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-expression-editor__message" style="margin:0" role="status" aria-live="polite">{status}</p>{/if}

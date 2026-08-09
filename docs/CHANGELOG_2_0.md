@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-09 — Make profile customization quick to scan
+
+- Customize now opens as one compact page with an Assets Uploader rail for
+  Background, Audio, Profile avatar, and Custom cursor.
+- Added Quick jump links and direct anchors so common edits are one click away
+  while the existing upload controls remain the source of truth.
+- Grouped the remaining controls into General, Color, and Other customization
+  surfaces and added a quiet Chromadie Plus expression prompt.
+- The redesign is responsive and keeps profile saves, preview drafts, media
+  safety, and public profile behavior unchanged.
+
 ## 2026-08-08 — Lift the temporary public-site password gate
 
 - Added the reversible `PREVIEW_PROTECTION=off` Cloudflare Pages switch for

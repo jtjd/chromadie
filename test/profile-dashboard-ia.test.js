@@ -5,12 +5,13 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate Customize, Links, and Premium destinations', async () => {
-  const [settings, customize, premium, shell, editor] = await Promise.all([
+  const [settings, customize, premium, shell, editor, expression] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
     read('src/lib/ProfileDashboardShell.svelte'),
-    read('src/lib/ProfileEditor.svelte')
+    read('src/lib/ProfileEditor.svelte'),
+    read('src/lib/ProfileExpressionEditor.svelte')
   ]);
 
   for (const id of ['customize', 'links', 'premium']) assert.match(settings, new RegExp(`id: '${id}'`));
@@ -21,15 +22,17 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /import\('\.\/ProfileCustomizePage\.svelte'\)/);
   assert.match(settings, /this=\{sectionComponents\.customize\}/);
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
-  assert.match(customize, /Customize your profile/);
   for (const section of ['media', 'identity', 'appearance', 'content', 'widgets', 'effects', 'layout']) {
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));
   }
   assert.match(customize, /Profile media/);
-  assert.match(customize, /Upload, replace, and choose/);
+  assert.match(customize, /Quick jump/);
+  assert.match(customize, /profile-customize-page__asset-grid/);
+  for (const action of ['Background', 'Audio', 'Profile avatar', 'Custom cursor']) assert.match(customize, new RegExp(action));
+  assert.match(customize, /Chromadie Plus/);
   assert.doesNotMatch(customize, /role="tablist"/);
   assert.doesNotMatch(customize, /activeCategory/);
-  assert.doesNotMatch(customize, /premiumrequest/);
+  assert.match(customize, /premiumrequest/);
   assert.match(customize, /ProfileAppearanceEditor/);
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);
@@ -44,4 +47,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(editor, /export let showLinks = true/);
   assert.match(editor, /\{#if showLayout\}/);
   assert.match(editor, /\{#if showLinks\}/);
+  for (const anchor of ['profile-media-avatar', 'profile-media-background', 'profile-media-audio', 'profile-media-music', 'profile-media-rich']) {
+    assert.match(expression, new RegExp(`id="${anchor}"`));
+  }
 });

@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Compact Customize workspace — 2026-08-09
+
+- Reworked Customize into one continuous dark workspace based on the supplied
+  dashboard reference: quick-jump asset cards, a Plus expression banner, and
+  compact General, Color, and Other surfaces.
+- Added anchor targets for avatar, background, audio, Spotify, and rich-media
+  controls so the top cards move users directly to the existing editor without
+  duplicating upload or entitlement logic.
+- Preserved the lazy editor contracts, section-scoped draft/publish behavior,
+  media validation and RPC boundaries, and responsive/reduced-motion behavior.
+- Updated focused dashboard coverage and verified the local desktop/mobile
+  browser smoke flow plus the complete repository validation suite.
+
 ## Public site access switch — 2026-08-08
 
 - Added the explicit `PREVIEW_PROTECTION=off` Cloudflare Pages environment
