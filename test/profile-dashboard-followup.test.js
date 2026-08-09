@@ -122,10 +122,15 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(identityCard, /backdrop-filter: blur\(var\(--profile-surface-blur/);
   assert.match(shell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
   assert.match(shell, /:global\(\.profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ isolation: auto; \}/);
-  assert.match(shell, /<div class="profile-shell__surface-backdrop" aria-hidden="true"><\/div>/);
+  assert.match(shell, /<div class="profile-shell__surface-backdrop" style=\{backgroundSrc && \(!backgroundVideoSrc/);
+  assert.match(shell, /class="profile-shell__surface-video"/);
+  assert.match(shell, /className="profile-shell__surface-atmosphere-layer"/);
   assert.match(shell, /\.profile-shell__surface-backdrop \{[\s\S]*backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.match(shell, /\.profile-shell__surface-backdrop::before \{[\s\S]*background-image: var\(--profile-surface-media/);
+  assert.match(shell, /\.profile-shell__surface-video \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);
+  assert.match(shell, /profile-atmosphere\.profile-shell__surface-atmosphere-layer\) \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);
   assert.match(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{ isolation: auto; \}/);
-  assert.doesNotMatch(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer[\s\S]*filter: blur\(var\(--profile-surface-blur/);
+  assert.doesNotMatch(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{[^}]*filter: blur\(var\(--profile-surface-blur/);
   assert.doesNotMatch(shell, /profile-shell__surface-media-background \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);
   assert.match(preview, /studio-profile-card :global\(\.studio-atmosphere-layer\) \{ z-index: 0; opacity: \.82; isolation: auto; filter: blur\(var\(--profile-surface-blur/);
   assert.match(preview, /studio-profile-card__background \{ position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; filter: blur\(var\(--profile-surface-blur/);

@@ -298,6 +298,8 @@ try {
     await page.command('Page.reload', { ignoreCache: true });
     await delay(350);
     await page.waitFor(`document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page .identity-card')`, 'public profile after direct refresh');
+    await page.evaluate(`document.querySelector('.profile-shell-page [data-profile-region="identity"]')?.style.setProperty('--profile-surface-blur', '40px')`);
+    await delay(100);
     const state = await page.evaluate(`(() => {
       const pageElement = document.querySelector('.profile-shell-page');
       const card = document.querySelector('.profile-shell-page .identity-card');
@@ -324,7 +326,7 @@ try {
     })()`);
     assert(state.path === `/${canonicalUsername}`, `Public profile was not canonical after refresh: ${state.path}.`);
     assert(state.canvas && state.card && state.surfaceBackdrop, 'Public profile did not render its canvas, card, and card backdrop.');
-    assert(state.cardBlur, 'Public profile identity card has no surface blur variable.');
+    assert(state.cardBlur === '40px', `Public profile identity card did not honor max blur: ${state.cardBlur}.`);
     assert(state.surfaceBackdropFilter.includes('blur('), 'Public profile card backdrop has no computed blur filter.');
     assert(!state.pageBlur && !state.rollBlur, 'Public appearance variables leaked outside the card surface.');
     await capture('07-public-profile');

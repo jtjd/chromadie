@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Make profile card blur visible across media layers — 2026-08-09
+
+- Added a clipped, card-local blur layer for uploaded background images, rich
+  background video, and the authored atmosphere media so the visible profile
+  surface actually softens at high blur values.
+- Kept the page-level background and daily profile surfaces outside that layer;
+  the existing backdrop-filter remains available for other supported surfaces.
+- Extended browser smoke coverage to assert the maximum surface blur variable
+  and preserve the card-only media boundary.
+
 ## Balance General Customization controls — 2026-08-09
 
 - Made the Bio field span the Location/Timezone and Description/Entry rows so

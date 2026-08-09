@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-09 — Make profile surface blur visible
+
+- Fixed high surface-blur values so uploaded backgrounds visibly soften inside
+  the profile card.
+- Blurred the card-local background video and atmosphere layer as well, while
+  leaving the main page background and daily-roll surface sharp outside it.
+- Kept the existing surface controls, saved configuration, and public profile
+  boundaries unchanged.
+
 ## 2026-08-09 — Balance General Customization identity controls
 
 - Expanded the compact Bio textarea to align with the full stack of
