@@ -513,7 +513,7 @@
 </script>
 
 <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
-  {#if backgroundSrc && !previewMode}
+  {#if backgroundSrc}
     <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
   {/if}
   {#if backgroundVideoSrc && !previewMode && !prefersReducedMotion}
@@ -530,19 +530,6 @@
     <div class="profile-shell__approved-canvas">
       <div class="profile-shell__approved-main">
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity" style={profileCardStyle}>
-          {#if !previewMode && (backgroundSrc || atmosphereKey)}
-            <div class="profile-shell__surface-backdrop" aria-hidden="true">
-              {#if backgroundSrc}
-                <div class="profile-shell__surface-media-background" style={`background-image: url("${backgroundSrc}");`}></div>
-              {/if}
-              {#if atmosphereKey}
-                <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__surface-atmosphere-layer" />
-              {/if}
-            </div>
-          {/if}
-          {#if backgroundSrc && previewMode}
-            <div class="profile-shell__card-media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
-          {/if}
           <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-shell__identity-boundary">
             {#if atmosphereKey && previewMode}
               <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__card-atmosphere-layer" />
@@ -896,6 +883,7 @@
   .profile-shell__media-background,
   .profile-shell__card-media-background { background-position: center; background-size: cover; opacity: 1; filter: none; transform: none; pointer-events: none; }
   .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; }
+  .profile-shell-page--preview .profile-shell__media-background { position: absolute; inset: 0; }
   .profile-shell__media-video { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; opacity: .92; pointer-events: none; }
   .profile-shell__card-media-background { position: absolute; inset: 0; z-index: 0; border-radius: var(--profile-border-radius, var(--radius-lg)); clip-path: inset(0 round var(--profile-border-radius, var(--radius-lg))); filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
   .profile-shell__surface-backdrop { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: var(--profile-background-paint, transparent); pointer-events: none; }
@@ -1243,7 +1231,7 @@
     box-shadow: none;
   }
 
-  .profile-shell-page--preview .profile-shell__opening.profile-shell__approved-opening { background: var(--profile-background-paint, transparent); }
+  .profile-shell-page--preview .profile-shell__opening.profile-shell__approved-opening { background: transparent; }
 
   :global(.profile-shell__identity-boundary) {
     position: relative;
