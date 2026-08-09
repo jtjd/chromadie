@@ -7,21 +7,19 @@ test('profile settings uses a compact grouped dashboard', async () => {
   const siteStyles = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
 
   assert.match(settings, /profile-settings-page__toolbar/);
-  assert.match(settings, /ProfileAppearanceEditor/);
+  assert.match(settings, /ProfileCustomizePage/);
+  assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
+  assert.match(settings, /id: 'links'/);
   assert.match(settings, /Live preview/);
   assert.doesNotMatch(settings, /preview-column/);
   assert.match(settings, /ProfileDashboardShell/);
   assert.match(settings, /setActiveSection\(/);
   assert.doesNotMatch(settings, /Build the profile you keep\./);
   assert.doesNotMatch(settings, /profile-settings-page__profile-link/);
-  assert.doesNotMatch(settings, /Make it unmistakably yours/);
-  assert.match(settings, /Identity/);
+  assert.match(settings, /Customize/);
   assert.match(settings, /Overview/);
-  assert.match(settings, /Media/);
-  assert.match(settings, /Collection/);
-  assert.match(settings, /Layout & links/);
   assert.match(settings, /Privacy & social/);
-  assert.match(settings, /Progression/);
+  assert.match(settings, /Badges & progression/);
 
   assert.match(settings, /import\('\.\/IdentityEditor\.svelte'\)/);
   assert.match(settings, /import\('\.\/ProfileExpressionEditor\.svelte'\)/);

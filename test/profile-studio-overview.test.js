@@ -10,10 +10,9 @@ test('Studio overview makes profile identity, progression, and editing actions v
   assert.match(overview, /Profile overview/);
   assert.match(overview, /getRankState/);
   assert.match(overview, /getProfileStoryUnlocks/);
-  assert.match(overview, /href="#profile-identity"/);
-  assert.match(overview, /href="#profile-collection"/);
+  assert.match(overview, /href="#customize"/);
   assert.match(overview, /href="#progression"/);
-  assert.match(overview, /href="#profile-layout"/);
+  assert.match(overview, /href="#links"/);
   assert.match(overview, /timelineEvents\.slice\(0, 3\)/);
   assert.match(overview, /prefers-reduced-motion/);
   assert.match(overview, /role="progressbar"/);

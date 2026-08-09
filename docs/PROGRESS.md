@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio navigation clarified — 2026-08-08
+
+- Reorganized the owner dashboard around Customize, Links, Premium, and a
+  clearly labeled Account group, with the active destination highlighted in a
+  compact responsive sidebar.
+- Added one expression workspace for identity, appearance, rich media, About,
+  widgets, collection, and layout controls; separated public links, aliases,
+  and sharing into their own destination.
+- Added a Premium status/upsell surface that explains expression-only benefits
+  and links to the existing $7.99 lifetime checkout without granting access.
+- Preserved V1/V2 editor contracts and mapped legacy section hashes to the new
+  destinations. Updated Studio shortcuts and focused navigation coverage.
+
 ## Restore rich-media uploads after a Storage policy collision — 2026-08-08
 
 - Corrected the staged `profile_media` INSERT policy to compare the uploaded

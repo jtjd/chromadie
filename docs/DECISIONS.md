@@ -1,5 +1,19 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Make Profile Studio expression-first and destination-based
+
+The owner dashboard now presents three primary destinations—Customize, Links,
+and Premium—with account, analytics, social, progression, and settings grouped
+under a separate Account section. Customize is an aggregate workspace that
+loads identity, appearance, media, content, widgets, collection, and layout
+controls together; Links owns public links, aliases, and sharing. Premium is a
+read-only status/upsell surface that points to the existing pricing flow.
+
+This is an information-architecture change only. Existing editor components,
+section RPCs, draft/publish boundaries, live preview, and entitlement checks are
+unchanged. Legacy `#profile-*` hashes remain readable and redirect to the
+appropriate aggregate destination so saved dashboard links do not break.
+
 ## 2026-08-08 — Qualify the rich-media Storage metadata boundary
 
 The staged `profile_media` Storage policies explicitly read
@@ -19,8 +33,8 @@ restored as active Chromadie Plus catalog rows, but they now select the finite
 removed, so historical keys cannot bypass the structured renderer boundary.
 The canonical entitlement is `chromadie_plus`; `atelier_plus` remains a
 compatibility entitlement through the existing helper. The Atelier template
-continues to be a composition preset, while Collection now explains the three
-separate actions: name motion, atmosphere, and Layout & links.
+continues to be a composition preset, while Customize now contains the three
+expression controls and Collection explains how to find them.
 
 ## 2026-08-08 — Keep pricing inside the profile-first visual language
 

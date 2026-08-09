@@ -13,6 +13,8 @@
   export let updatedAt = null;
   export let entitlements = [];
   export let staff = false;
+  export let showLayout = true;
+  export let showLinks = true;
 
   const dispatch = createEventDispatcher();
   const MODULE_LABELS = Object.freeze({
@@ -247,36 +249,39 @@
 
 <section class="profile-editor" aria-labelledby="profile-layout-title">
   <header class="profile-editor__header">
-    <div><h2 id="profile-layout-title">Layout & links</h2><p>Arrange public sections and links.</p></div>
+    <div><h2 id="profile-layout-title">{showLayout && showLinks ? 'Layout & links' : showLayout ? 'Layout & templates' : 'Links & sharing'}</h2><p>{showLayout && showLinks ? 'Arrange public sections and links.' : showLayout ? 'Shape the public composition and templates.' : 'Manage the links and share details on your public profile.'}</p></div>
     <span class="profile-editor__version">Public layout: {STYLE_LABELS[normalizeProfileConfig(publishedConfig).layoutVariant]}</span>
   </header>
 
-  <ProfileTemplatePicker config={draft} {entitlements} on:templatechange={applyTemplate} />
+  {#if showLayout}
+    <ProfileTemplatePicker config={draft} {entitlements} on:templatechange={applyTemplate} />
 
-  <section class="profile-editor__panel" aria-labelledby="profile-layout-style-title">
-    <h3 id="profile-layout-style-title">Fine tune the composition</h3>
-    <label class="profile-editor__field"><span>Layout style</span><select value={draft.layoutVariant} on:change={event => updateDraft({ layoutVariant: event.currentTarget.value })}>{#each PROFILE_LAYOUT_VARIANTS as variant (variant)}<option value={variant}>{STYLE_LABELS[variant]}</option>{/each}</select></label>
-  </section>
+    <section class="profile-editor__panel" aria-labelledby="profile-layout-style-title">
+      <h3 id="profile-layout-style-title">Fine tune the composition</h3>
+      <label class="profile-editor__field"><span>Layout style</span><select value={draft.layoutVariant} on:change={event => updateDraft({ layoutVariant: event.currentTarget.value })}>{#each PROFILE_LAYOUT_VARIANTS as variant (variant)}<option value={variant}>{STYLE_LABELS[variant]}</option>{/each}</select></label>
+    </section>
 
-  <section class="profile-editor__panel" aria-labelledby="profile-layout-modules-title">
-    <div class="profile-editor__panel-heading"><h3 id="profile-layout-modules-title">Visible sections</h3><span>Secondary sections only</span></div>
-    <ol class="profile-editor__module-list">
-      <li class="profile-editor__module-fixed"><label><input type="checkbox" checked disabled /><span>Daily roll</span></label><span>Fixed system surface</span></li>
-      {#each orderedModules.filter(module => EDITABLE_MODULE_IDS.includes(module.id)) as module, index (module.id)}
-        <li>
-          <label><input type="checkbox" checked={module.visible} on:change={event => setModuleVisible(module.id, event.currentTarget.checked)} /><span>{MODULE_LABELS[module.id] || module.id}</span></label>
-          <div class="profile-editor__module-actions">
-            <select value={module.size} aria-label={`${MODULE_LABELS[module.id] || module.id} size`} on:change={event => setModuleSize(module.id, event.currentTarget.value)}>
-              {#each Object.entries(MODULE_SIZE_LABELS) as [size, label] (size)}<option value={size}>{label}</option>{/each}
-            </select>
-            <button type="button" aria-label={`Move ${MODULE_LABELS[module.id] || module.id} up`} disabled={index === 0} on:click={() => moveModule(index, -1)}>↑</button><button type="button" aria-label={`Move ${MODULE_LABELS[module.id] || module.id} down`} disabled={index === orderedModules.filter(item => EDITABLE_MODULE_IDS.includes(item.id)).length - 1} on:click={() => moveModule(index, 1)}>↓</button>
-          </div>
-        </li>
-      {/each}
-    </ol>
-  </section>
+    <section class="profile-editor__panel" aria-labelledby="profile-layout-modules-title">
+      <div class="profile-editor__panel-heading"><h3 id="profile-layout-modules-title">Visible sections</h3><span>Secondary sections only</span></div>
+      <ol class="profile-editor__module-list">
+        <li class="profile-editor__module-fixed"><label><input type="checkbox" checked disabled /><span>Daily roll</span></label><span>Fixed system surface</span></li>
+        {#each orderedModules.filter(module => EDITABLE_MODULE_IDS.includes(module.id)) as module, index (module.id)}
+          <li>
+            <label><input type="checkbox" checked={module.visible} on:change={event => setModuleVisible(module.id, event.currentTarget.checked)} /><span>{MODULE_LABELS[module.id] || module.id}</span></label>
+            <div class="profile-editor__module-actions">
+              <select value={module.size} aria-label={`${MODULE_LABELS[module.id] || module.id} size`} on:change={event => setModuleSize(module.id, event.currentTarget.value)}>
+                {#each Object.entries(MODULE_SIZE_LABELS) as [size, label] (size)}<option value={size}>{label}</option>{/each}
+              </select>
+              <button type="button" aria-label={`Move ${MODULE_LABELS[module.id] || module.id} up`} disabled={index === 0} on:click={() => moveModule(index, -1)}>↑</button><button type="button" aria-label={`Move ${MODULE_LABELS[module.id] || module.id} down`} disabled={index === orderedModules.filter(item => EDITABLE_MODULE_IDS.includes(item.id)).length - 1} on:click={() => moveModule(index, 1)}>↓</button>
+            </div>
+          </li>
+        {/each}
+      </ol>
+    </section>
+  {/if}
 
-  <section class="profile-editor__panel" aria-labelledby="profile-layout-links-title">
+  {#if showLinks}
+    <section class="profile-editor__panel" aria-labelledby="profile-layout-links-title">
     <div class="profile-editor__panel-heading"><h3 id="profile-layout-links-title">Public links</h3><button type="button" class="profile-editor__text-button" on:click={addLink} disabled={draft.links.length >= linkLimit}>Add link</button></div>
     {#if draft.links.length}
       <div class="profile-editor__links">
@@ -298,7 +303,8 @@
       <label><span>Embed color</span><input type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" value={draft.metadata?.embedColor || '#CDD2FF'} on:input={event => updateDraft({ metadata: { ...(draft.metadata || {}), embedColor: event.currentTarget.value } })} /></label>
     </div>
     <p class="profile-editor__helper">Links must use HTTPS. The first six stay in the opening; additional links continue in the profile story.</p>
-  </section>
+    </section>
+  {/if}
 
   {#if conflict}<div class="profile-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{:else if error}<p class="profile-editor__message" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-editor__message" role="status" aria-live="polite">{status}</p>{/if}

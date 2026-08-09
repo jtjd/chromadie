@@ -132,7 +132,7 @@
         <nav class="profile-cosmetics-plus-guide__links" aria-label="Atelier expression shortcuts">
           <a href="#cosmetic-name_motion"><strong>Name effect</strong><span>Collection → Name · Motion</span><b aria-hidden="true">↗</b></a>
           <a href="#cosmetic-profile-atmosphere"><strong>Background atmosphere</strong><span>Collection → Atmosphere</span><b aria-hidden="true">↗</b></a>
-          <a href="#profile-layout"><strong>Atelier template</strong><span>Layout &amp; links → Templates</span><b aria-hidden="true">↗</b></a>
+          <a href="#customize"><strong>Atelier template</strong><span>Customize → Templates</span><b aria-hidden="true">↗</b></a>
         </nav>
       </aside>
     {/if}

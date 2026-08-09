@@ -1,20 +1,18 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; validation complete with the repository performance budget exception noted below — 2026-08-05
+Status: implementation complete; navigation refinement validated 2026-08-08
 
 ## Scope
 
-The authenticated profile-settings route is now the Profile Studio dashboard.
-It opens on an Overview surface and keeps deeper editing surfaces behind the
-same validated workspace:
+The authenticated profile-settings route is the Profile Studio dashboard. It
+opens on an aggregate expression workspace and keeps account surfaces separate:
 
-- Overview — live identity, rank/EP progress, recent trace, and next actions.
-- Identity — bio and presence.
-- Expression — avatar, backdrop, and music.
-- Collection — owned expression and server-authoritative equip actions.
-- Layout & links — the public canvas configuration.
-- Privacy & social — visitor and interaction controls.
-- Progression — rolls, streaks, achievements, story collection, and history.
+- Customize — identity, appearance, rich media, About, widgets, collection,
+  templates, and public composition controls.
+- Links — public links, aliases, sharing metadata, and QR actions.
+- Premium — Plus status and a read-only path to the existing pricing flow.
+- Account — overview, analytics, notifications, privacy/social, progression,
+  and account settings.
 
 The primary authenticated header now exposes Studio instead of Shop. Shop is
 still direct-refreshable at `/shop`, but it is not promoted through navigation
@@ -26,8 +24,9 @@ bootstrap; it begins only when Shop or Collection needs it.
 This remains a presentation milestone. The dashboard projects existing
 authoritative profile, story, achievement, inventory, and rank data. It does
 not grant rewards, calculate scores, mutate inventory, or create a new
-currency. Old `#appearance` and `#account` settings hashes map to Collection
-and Progression, and the `/profile?legacy=1` escape hatch remains available.
+currency. Old `#profile-*` and short-form settings hashes map to Customize or
+Links as appropriate, and the `/profile?legacy=1` escape hatch remains
+available.
 
 ## Next progression slice
 

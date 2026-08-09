@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
+  import { SvelteMap } from 'svelte/reactivity';
   import { restoreFocus, trapFocus } from './a11y.js';
   import { authUser, equippedItems, isAuthenticated, profile, profileEntitlements, refreshProfileState, session } from './stores';
   import { supabase } from './supabase';
@@ -11,8 +12,8 @@
   import { getCanonicalProfilePath } from './routeContract.js';
   import Button from './foundation/Button.svelte';
   import Surface from './foundation/Surface.svelte';
-  import ProfileAppearanceEditor from './ProfileAppearanceEditor.svelte';
   import ProfileAccountSettings from './ProfileAccountSettings.svelte';
+  import ProfileCustomizePage from './ProfileCustomizePage.svelte';
   import ProfileDashboardShell from './ProfileDashboardShell.svelte';
 
   const SECTION_LOADERS = Object.freeze({
@@ -24,53 +25,60 @@
     'profile-widgets': () => import('./ProfileWidgetEditor.svelte'),
     'profile-collection': () => import('./ProfileCosmeticsEditor.svelte'),
     'profile-layout': () => import('./ProfileEditor.svelte'),
+    links: () => import('./ProfileEditor.svelte'),
+    premium: () => import('./ProfilePremiumPage.svelte'),
     'profile-social': () => import('./ProfileSocial.svelte'),
     'profile-insights': () => import('./ProfileInsights.svelte'),
     'profile-notifications': () => import('./ProfileNotifications.svelte'),
     progression: () => import('./ProfileProgression.svelte')
   });
 
+  const CUSTOMIZE_SECTION_IDS = Object.freeze([
+    'profile-identity', 'profile-media', 'profile-content', 'profile-widgets', 'profile-collection', 'profile-layout'
+  ]);
+  const LINKS_SECTION_IDS = Object.freeze(['profile-layout', 'profile-aliases']);
+
   const SETTINGS_SECTIONS = Object.freeze([
-    { id: 'overview', label: 'Overview', groupKey: 'top', icon: '⌂' },
-    { id: 'profile-insights', label: 'Insights', groupKey: 'top', icon: '◒' },
-    { id: 'profile-notifications', label: 'Notifications', groupKey: 'top', icon: '◌' },
-    { id: 'customize', label: 'Customize', groupKey: 'top', icon: '✦' },
-    { id: 'profile-identity', label: 'Identity', groupKey: 'profile', groupLabel: 'Profile', icon: '◌' },
-    { id: 'profile-aliases', label: 'Aliases', groupKey: 'profile', groupLabel: 'Profile', icon: '↗' },
-    { id: 'profile-media', label: 'Media', groupKey: 'profile', groupLabel: 'Profile', icon: '▧' },
-    { id: 'profile-content', label: 'About & projects', groupKey: 'profile', groupLabel: 'Profile', icon: '✎' },
-    { id: 'profile-widgets', label: 'Provider widgets', groupKey: 'profile', groupLabel: 'Profile', icon: '▶' },
-    { id: 'profile-layout', label: 'Layout & links', groupKey: 'profile', groupLabel: 'Profile', icon: '⌘' },
-    { id: 'profile-social', label: 'Privacy & social', groupKey: 'profile', groupLabel: 'Profile', icon: '◍' },
-    { id: 'profile-collection', label: 'Collection', groupKey: 'profile', groupLabel: 'Profile', icon: '◇' },
-    { id: 'progression', label: 'Progression', groupKey: 'bottom', icon: '↗' },
-    { id: 'account', label: 'Account', groupKey: 'bottom', icon: '·' }
+    { id: 'customize', label: 'Customize', groupKey: 'primary', icon: '✦' },
+    { id: 'links', label: 'Links', groupKey: 'primary', icon: '↗' },
+    { id: 'premium', label: 'Premium', groupKey: 'primary', icon: '◇' },
+    { id: 'overview', label: 'Overview', groupKey: 'account', groupLabel: 'Account', icon: '⌂' },
+    { id: 'profile-insights', label: 'Analytics', groupKey: 'account', icon: '◒' },
+    { id: 'profile-notifications', label: 'Notifications', groupKey: 'account', icon: '◌' },
+    { id: 'profile-social', label: 'Privacy & social', groupKey: 'account', icon: '◍' },
+    { id: 'progression', label: 'Badges & progression', groupKey: 'account', icon: '↗' },
+    { id: 'account', label: 'Settings', groupKey: 'account', icon: '·' }
   ]);
 
+  // These route records keep old dashboard hashes working while the visible IA stays aggregate.
+  const LEGACY_SECTION_ROUTES = Object.freeze([
+    { id: 'profile-identity', redirect: 'customize' },
+    { id: 'profile-aliases', redirect: 'links' },
+    { id: 'profile-media', redirect: 'customize' },
+    { id: 'profile-content', redirect: 'customize' },
+    { id: 'profile-widgets', redirect: 'customize' },
+    { id: 'profile-layout', redirect: 'links' },
+    { id: 'profile-collection', redirect: 'customize' }
+  ]);
+  const LEGACY_HASH_ALIASES = Object.freeze(Object.fromEntries(LEGACY_SECTION_ROUTES.map(route => [route.id, route.redirect])));
   const HASH_ALIASES = Object.freeze({
     customize: 'customize',
     appearance: 'customize',
-    'profile-identity': 'profile-identity',
-    'profile-aliases': 'profile-aliases',
-    'profile-media': 'profile-media',
-    'profile-content': 'profile-content',
-    'profile-widgets': 'profile-widgets',
-    'profile-layout': 'profile-layout',
+    ...LEGACY_HASH_ALIASES,
     'profile-social': 'profile-social',
     'profile-insights': 'profile-insights',
     'profile-notifications': 'profile-notifications',
-    'profile-collection': 'profile-collection',
-    identity: 'profile-identity',
-    aliases: 'profile-aliases',
-    expression: 'profile-media',
-    media: 'profile-media',
-    content: 'profile-content',
-    widgets: 'profile-widgets',
-    layout: 'profile-layout',
+    identity: 'customize',
+    aliases: 'links',
+    expression: 'customize',
+    media: 'customize',
+    content: 'customize',
+    widgets: 'customize',
+    layout: 'links',
     social: 'profile-social',
     insights: 'profile-insights',
     notifications: 'profile-notifications',
-    collection: 'profile-collection',
+    collection: 'customize',
     progression: 'progression',
     account: 'account'
   });
@@ -108,20 +116,20 @@
   let loading = false;
   let error = '';
   let requestId = 0;
-  let activeSection = 'overview';
+  let activeSection = 'customize';
   let configurationPreview = null;
   let PreviewComponent = null;
   let previewError = '';
   let sectionComponents = {};
   let sectionLoading = false;
-  let sectionRequestId = 0;
+  const sectionLoadPromises = new SvelteMap();
   let activeDirtySection = '';
   let pendingNavigation = null;
   let showDirtyPrompt = false;
   let dirtyPrompt = null;
   let dirtyPromptPrimary = null;
   let dirtyPromptReturnFocus = null;
-  let appearanceEditor = null;
+  let customizePage = null;
   let layoutEditor = null;
   let contentEditor = null;
   let widgetEditor = null;
@@ -142,8 +150,8 @@
     const flag = SECTION_FLAGS[section.id];
     return !flag || featureFlags[flag];
   });
-  $: if (activeSection !== 'overview' && !visibleSettingsSections.some(section => section.id === activeSection)) activeSection = 'overview';
-  $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Overview';
+  $: if (!visibleSettingsSections.some(section => section.id === activeSection)) activeSection = 'customize';
+  $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Customize';
   $: previewProfileConfig = configurationPreview || context?.profileConfig?.draft;
   $: previewProfile = context?.targetProfile
     ? { ...context.targetProfile, equipped_cosmetics: $equippedItems || context.targetProfile.equipped_cosmetics || {} }
@@ -153,7 +161,7 @@
     const getSectionFromLocation = () => {
       const rawHash = window.location.hash.replace(/^#/, '');
       const sectionId = HASH_ALIASES[rawHash] || rawHash;
-      return visibleSettingsSections.some(section => section.id === sectionId) ? sectionId : 'overview';
+      return visibleSettingsSections.some(section => section.id === sectionId) ? sectionId : 'customize';
     };
     const restoreLocation = () => {
       const nextSection = getSectionFromLocation();
@@ -193,7 +201,9 @@
   function setActiveSection(sectionId, { push = true } = {}) {
     if (!visibleSettingsSections.some(section => section.id === sectionId)) return;
     activeSection = sectionId;
-    void loadSectionComponent(sectionId);
+    if (sectionId === 'customize') void loadCustomizeComponents();
+    else if (sectionId === 'links') void loadLinksComponents();
+    else void loadSectionComponent(sectionId);
     if (typeof window !== 'undefined') {
       const url = `${window.location.pathname}${window.location.search}#${sectionId}`;
       if (push) window.history.pushState({ dashboardSection: sectionId }, '', url);
@@ -217,7 +227,8 @@
   }
 
   function resetActiveEditor() {
-    if (activeDirtySection === 'customize') appearanceEditor?.resetChanges?.();
+    if (activeDirtySection === 'customize') customizePage?.resetChanges?.();
+    if (activeDirtySection === 'links') layoutEditor?.resetChanges?.();
     if (activeDirtySection === 'profile-layout') layoutEditor?.resetChanges?.();
     if (activeDirtySection === 'profile-content') contentEditor?.resetChanges?.();
     if (activeDirtySection === 'profile-widgets') widgetEditor?.resetChanges?.();
@@ -267,18 +278,25 @@
     window.location.assign(profilePath);
   }
 
-  async function loadSectionComponent(sectionId) {
+  function loadSectionComponent(sectionId) {
     const loader = SECTION_LOADERS[sectionId];
-    if (!loader || sectionComponents[sectionId]) return;
-    const request = ++sectionRequestId;
+    if (!loader || sectionComponents[sectionId]) return Promise.resolve();
+    if (sectionLoadPromises.has(sectionId)) return sectionLoadPromises.get(sectionId);
     sectionLoading = true;
-    try {
-      const module = await loader();
-      if (request !== sectionRequestId) return;
-      sectionComponents = { ...sectionComponents, [sectionId]: module.default };
-    } finally {
-      if (request === sectionRequestId) sectionLoading = false;
-    }
+    const promise = loader()
+      .then(module => { sectionComponents = { ...sectionComponents, [sectionId]: module.default }; })
+      .catch(loadError => { error = loadError instanceof Error ? loadError.message : 'The dashboard section could not be loaded.'; })
+      .finally(() => { sectionLoadPromises.delete(sectionId); sectionLoading = sectionLoadPromises.size > 0; });
+    sectionLoadPromises.set(sectionId, promise);
+    return promise;
+  }
+
+  async function loadCustomizeComponents() {
+    await Promise.all(CUSTOMIZE_SECTION_IDS.map(sectionId => loadSectionComponent(sectionId)));
+  }
+
+  async function loadLinksComponents() {
+    await Promise.all(LINKS_SECTION_IDS.map(sectionId => loadSectionComponent(sectionId)));
   }
 
   function preserveExpressionFields(nextConfig, currentConfig) {
@@ -422,7 +440,39 @@
 
       <div class="profile-settings-page__content">
         {#if activeSection === 'customize'}
-          <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} on:appearancechange={updateAppearance} on:dirty={handleSectionDirty} on:configsaved={handleAppearanceSaved} on:configreloaded={handleConfigurationReloaded} />
+          <ProfileCustomizePage
+            bind:this={customizePage}
+            components={sectionComponents}
+            profileId={context.profileId}
+            accountUsername={accountUsername}
+            targetProfile={context.targetProfile}
+            profileConfig={context.profileConfig}
+            entitlements={$profileEntitlements}
+            staff={Boolean(context.targetProfile?.is_staff)}
+            on:appearancechange={updateAppearance}
+            on:dirty={handleSectionDirty}
+            on:configsaved={handleAppearanceSaved}
+            on:configpublished={updateConfiguration}
+            on:configreloaded={handleConfigurationReloaded}
+            on:configpreview={updateConfigurationPreview}
+          />
+        {:else if activeSection === 'links'}
+          <div class="profile-links-page">
+            {#if sectionComponents['profile-layout']}
+              <svelte:component this={sectionComponents['profile-layout']} bind:this={layoutEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} showLayout={false} showLinks={true} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
+            {:else if sectionLoading}
+              <div class="profile-settings-page__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading links</h2></div>
+            {/if}
+            {#if sectionComponents['profile-aliases']}
+              <svelte:component this={sectionComponents['profile-aliases']} />
+            {/if}
+          </div>
+        {:else if activeSection === 'premium'}
+          {#if sectionComponents.premium}
+            <svelte:component this={sectionComponents.premium} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} />
+          {:else if sectionLoading}
+            <div class="profile-settings-page__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading Premium</h2></div>
+          {/if}
         {:else if activeSection === 'account'}
           <ProfileAccountSettings on:accountdeleted={handleAccountDeleted} />
         {:else if sectionComponents[activeSection]}
@@ -500,6 +550,7 @@
   .profile-settings-page__toolbar-actions :is(a, button):hover { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
   .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid rgba(255, 183, 94, .35); border-radius: .35rem; color: #ffc783; font-size: .72rem; }
   .profile-settings-page__content { min-width: 0; }
+  .profile-links-page { display: grid; gap: 1rem; min-width: 0; }
   .profile-settings-page__state { display: grid; min-height: 16rem; place-items: center; gap: .6rem; color: var(--site-muted, #aaa8b0); }
   .profile-settings-page__state h1 { margin: 0; font-size: 1.2rem; }
   .profile-settings-preview { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; height: 100%; }

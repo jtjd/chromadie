@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Clarify Profile Studio navigation
+
+- Studio now opens on **Customize**, where identity, appearance, media, About,
+  widgets, collection, templates, and layout controls live together.
+- **Links** is a separate workspace for public links, aliases, and sharing;
+  **Premium** explains Plus capacity and links to pricing. Account tools now
+  live under their own clearly labeled section.
+- Existing saved `#profile-*` dashboard links continue to open the matching
+  aggregate destination, so this redesign does not strand old bookmarks.
+
 ## 2026-08-08 — Restore bounded rich-media uploads
 
 - Fixed Plus/staff banner, cursor, pointer-cursor, audio, and background-video
@@ -16,8 +26,8 @@ Document user-visible redesign changes by milestone.
 - **Prism Atelier Name** is configured under Name → Motion, and **Prism
   Atmosphere** is configured under Atmosphere. Select a layer, preview it,
   and press Apply.
-- The Atelier page composition remains under Layout & links → Templates. An
-  uploaded background remains a separate Media setting.
+- The Atelier page composition remains under Customize → Templates. An
+  uploaded background remains a separate Customize → Media setting.
 
 ## 2026-08-08 — Refresh the lifetime pricing surface
 

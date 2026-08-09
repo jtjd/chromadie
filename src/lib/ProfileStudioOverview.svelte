@@ -79,10 +79,10 @@
     </div>
 
     <nav class="profile-studio-overview__actions" aria-label="Profile studio actions">
-      <a href="#profile-identity"><strong>Identity</strong><span>Bio & presence</span><b aria-hidden="true">→</b></a>
-      <a href="#profile-collection"><strong>Collection</strong><span>Owned expression</span><b aria-hidden="true">→</b></a>
+      <a href="#customize"><strong>Customize</strong><span>Identity & presence</span><b aria-hidden="true">→</b></a>
+      <a href="#customize"><strong>Expression</strong><span>Media & cosmetics</span><b aria-hidden="true">→</b></a>
       <a href="#progression"><strong>Progression</strong><span>Rolls & milestones</span><b aria-hidden="true">→</b></a>
-      <a href="#profile-layout"><strong>Layout</strong><span>Public canvas</span><b aria-hidden="true">→</b></a>
+      <a href="#links"><strong>Links</strong><span>Sharing & aliases</span><b aria-hidden="true">→</b></a>
     </nav>
 
     <div class="profile-studio-overview__lower">

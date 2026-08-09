@@ -10,7 +10,7 @@ test('dashboard navigation has one canonical ordered IA and safe mobile drawer b
     read('src/lib/ProfileDashboardShell.svelte')
   ]);
   const app = await read('src/App.svelte');
-  const ids = ['overview', 'customize', 'profile-identity', 'profile-media', 'profile-layout', 'profile-social', 'profile-collection', 'progression', 'account'];
+  const ids = ['customize', 'links', 'premium', 'overview', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
   let previous = -1;
   for (const id of ids) {
     const index = settings.indexOf("id: '" + id + "'");

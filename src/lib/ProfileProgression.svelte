@@ -129,7 +129,7 @@
 
     <div class="profile-progression-footer">
       <p>Rewards, rank, and history stay server-authoritative.</p>
-      <a href="#profile-collection">Review collection <span aria-hidden="true">→</span></a>
+      <a href="#customize">Review expression <span aria-hidden="true">→</span></a>
     </div>
   </section>
 </Surface>
