@@ -67,10 +67,10 @@
     min-width: 0;
     max-width: 100%;
     padding: 2px;
-    border: 1px solid var(--border-accent);
-    border-radius: inherit;
+    border: 2px solid var(--border-accent);
+    border-radius: var(--profile-border-radius, var(--radius-lg));
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: visible;
     isolation: isolate;
   }
 
@@ -82,17 +82,38 @@
     z-index: 1;
   }
 
+  .profile-border-effect:not(.profile-border-effect--none) .profile-border-effect__content {
+    overflow: hidden;
+  }
+
+  .profile-border-effect:not(.profile-border-effect--none)::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 1.2rem var(--border-shadow);
+    opacity: 0.82;
+    pointer-events: none;
+  }
+
   .profile-border-effect--none {
     padding: 0;
     border: 0;
     border-color: transparent;
     box-shadow: none;
+    overflow: visible;
   }
 
   .profile-border-effect--celestial {
-    --border-accent: #d8dcff;
+    --border-accent: #a1c4fd;
     --border-shadow: rgba(170, 182, 255, 0.36);
-    box-shadow: 0 0 0 1px rgba(235, 239, 255, 0.22), 0 0 18px var(--border-shadow);
+    background-image:
+      radial-gradient(circle at 8% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 2px),
+      radial-gradient(circle at 87% 72%, rgba(185, 242, 255, 0.8) 0 1px, transparent 2px),
+      linear-gradient(rgba(9, 13, 29, 0.82), rgba(9, 13, 29, 0.82));
+    background-size: 46px 46px, 67px 67px, 100% 100%;
+    box-shadow: 0 0 35px rgba(161, 196, 253, 0.6), inset 0 0 25px rgba(255, 255, 255, 0.3);
   }
 
   .profile-border-effect--chroma {
@@ -104,7 +125,7 @@
   .profile-border-effect--crystal {
     --border-accent: #bfeaff;
     --border-shadow: rgba(171, 222, 255, 0.32);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34), 0 0 15px var(--border-shadow);
+    box-shadow: 0 0 15px var(--border-shadow), inset 0 0 10px rgba(185, 242, 255, 0.3);
   }
 
   .profile-border-effect--glitch {
@@ -116,25 +137,35 @@
   .profile-border-effect--gold {
     --border-accent: #e4bc68;
     --border-shadow: rgba(228, 188, 104, 0.28);
-    box-shadow: inset 0 0 0 1px rgba(255, 235, 164, 0.25), 0 0 14px var(--border-shadow);
+    background-image: linear-gradient(110deg, transparent 30%, rgba(255, 248, 194, 0.1) 48%, transparent 66%);
+    background-size: 240% 100%;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.1);
   }
 
   .profile-border-effect--neon {
     --border-accent: #77fff0;
     --border-shadow: rgba(48, 255, 224, 0.34);
-    box-shadow: 0 0 12px var(--border-shadow);
+    box-shadow: 0 0 15px rgba(48, 255, 224, 0.4), inset 0 0 10px rgba(48, 255, 224, 0.1);
   }
 
   .profile-border-effect--prism {
     --border-accent: #cdd2ff;
     --border-shadow: rgba(205, 210, 255, 0.34);
-    box-shadow: 0 0 0 1px rgba(255, 163, 220, 0.2), 0 0 16px var(--border-shadow);
+    border-color: transparent;
+    background-image:
+      linear-gradient(rgba(14, 14, 20, 0.9), rgba(14, 14, 20, 0.9)),
+      linear-gradient(100deg, #fad0c4, #c2e9fb, #d8b4fe, #fff1ba, #fad0c4);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-size: 100% 100%, 260% 100%;
+    box-shadow: 0 0 15px rgba(194, 233, 251, 0.34);
   }
 
   .profile-border-effect--void {
     --border-accent: #9482d9;
     --border-shadow: rgba(107, 74, 198, 0.34);
-    box-shadow: inset 0 0 0 1px rgba(3, 2, 10, 0.5), 0 0 16px var(--border-shadow);
+    background-image: radial-gradient(ellipse at center, rgba(11, 7, 20, 0.18), rgba(0, 0, 0, 0.82));
+    box-shadow: 0 0 2px rgba(230, 240, 255, 0.82), 0 0 14px rgba(123, 72, 218, 0.48), 0 0 34px rgba(0, 0, 0, 1), inset 0 0 32px rgba(0, 0, 0, 0.98);
   }
 
   .profile-border-effect--signal {
@@ -144,7 +175,7 @@
   }
 
   .profile-border-effect--celestial:not(.profile-border-effect--static) {
-    animation: profile-border-celestial 4s ease-in-out infinite;
+    animation: profile-border-celestial 4s ease-in-out infinite, profile-border-celestial-stars 16s linear infinite;
   }
 
   .profile-border-effect--chroma:not(.profile-border-effect--static) {
@@ -188,75 +219,81 @@
   }
 
   @keyframes profile-border-celestial {
-    0%, 100% { box-shadow: 0 0 0 1px rgba(235, 239, 255, 0.2), 0 0 12px var(--border-shadow); }
-    50% { box-shadow: 0 0 0 1px rgba(235, 239, 255, 0.42), 0 0 22px var(--border-shadow); }
+    0%, 100% { box-shadow: 0 0 35px rgba(161, 196, 253, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2); }
+    50% { box-shadow: 0 0 50px rgba(194, 233, 251, 0.9), inset 0 0 35px rgba(255, 255, 255, 0.5); }
+  }
+
+  @keyframes profile-border-celestial-stars {
+    to { background-position: 92px 46px, -67px 67px, 0 0; }
   }
 
   @keyframes profile-border-chroma {
     0%, 100% {
       border-color: #ff8fca;
-      box-shadow: 0 0 0 1px rgba(255, 238, 132, 0.2), 0 0 17px rgba(97, 226, 255, 0.34);
+      box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
     }
     33% {
       border-color: #61e2ff;
-      box-shadow: 0 0 0 1px rgba(255, 143, 202, 0.24), 0 0 21px rgba(97, 226, 255, 0.44);
+      box-shadow: 0 0 15px rgba(46, 211, 201, 0.5);
     }
     66% {
       border-color: #ffe27a;
-      box-shadow: 0 0 0 1px rgba(97, 226, 255, 0.24), 0 0 19px rgba(255, 143, 202, 0.38);
+      box-shadow: 0 0 15px rgba(161, 92, 255, 0.5);
     }
   }
 
   @keyframes profile-border-prism {
     0%, 100% {
-      border-color: #cdd2ff;
-      box-shadow: 0 0 0 1px rgba(255, 163, 220, 0.2), 0 0 14px rgba(205, 210, 255, 0.3);
+      border-color: transparent;
+      background-position: 0 0, 0 50%;
+      box-shadow: 0 0 15px rgba(194, 233, 251, 0.24);
     }
     50% {
-      border-color: #f7b7e2;
-      box-shadow: 0 0 0 1px rgba(205, 210, 255, 0.28), 0 0 24px rgba(247, 183, 226, 0.42);
+      border-color: transparent;
+      background-position: 0 0, 100% 50%;
+      box-shadow: 0 0 24px rgba(247, 183, 226, 0.42);
     }
   }
 
   @keyframes profile-border-crystal {
     0%, 100% {
       border-color: #bfeaff;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), 0 0 12px rgba(171, 222, 255, 0.28);
+      box-shadow: 0 0 15px #b9f2ff, inset 0 0 10px rgba(185, 242, 255, 0.3);
     }
     50% {
       border-color: #ffffff;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.52), 0 0 24px rgba(171, 222, 255, 0.42);
+      box-shadow: 0 0 25px #ffffff, inset 0 0 15px rgba(255, 255, 255, 0.5);
     }
   }
 
   @keyframes profile-border-glitch {
     0%, 82%, 100% {
       border-color: #ff679b;
-      box-shadow: 0 0 0 1px rgba(89, 235, 255, 0.25), 0 0 14px rgba(89, 235, 255, 0.32);
+      box-shadow: 1px 0 10px rgba(255, 0, 193, 0.3), -1px 0 10px rgba(0, 255, 249, 0.3);
     }
     84% {
       border-color: #59ebff;
-      box-shadow: 0 0 0 1px rgba(255, 239, 122, 0.3), 0 0 20px rgba(89, 235, 255, 0.42);
+      box-shadow: 5px 0 #ff00c1, -4px 0 #00fff9;
     }
     87% {
       border-color: #ffef7a;
-      box-shadow: 0 0 0 1px rgba(255, 103, 155, 0.3), 0 0 8px rgba(255, 103, 155, 0.28);
+      box-shadow: -5px 0 #ff00c1, 4px 0 #00fff9;
     }
   }
 
   @keyframes profile-border-gold {
-    0%, 100% { box-shadow: inset 0 0 0 1px rgba(255, 235, 164, 0.18), 0 0 10px var(--border-shadow); }
-    50% { box-shadow: inset 0 0 0 1px rgba(255, 235, 164, 0.42), 0 0 20px var(--border-shadow); }
+    0%, 20% { background-position: 140% 0; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3), inset 0 0 10px rgba(255, 215, 0, 0.1); }
+    70%, 100% { background-position: -120% 0; box-shadow: 0 0 28px rgba(255, 235, 164, 0.5), inset 0 0 15px rgba(255, 235, 164, 0.18); }
   }
 
   @keyframes profile-border-neon {
     0%, 100% {
       border-color: #77fff0;
-      box-shadow: 0 0 8px rgba(48, 255, 224, 0.28);
+      box-shadow: 0 0 15px rgba(145, 70, 255, 0.4), inset 0 0 10px rgba(145, 70, 255, 0.1);
     }
     45% {
       border-color: #b3fff5;
-      box-shadow: 0 0 22px rgba(48, 255, 224, 0.48);
+      box-shadow: 0 0 26px rgba(0, 255, 249, 0.55), inset 0 0 16px rgba(0, 255, 249, 0.18);
     }
     70% {
       border-color: #4fe8d7;
@@ -265,17 +302,18 @@
   }
 
   @keyframes profile-border-void {
-    0%, 100% { box-shadow: inset 0 0 0 1px rgba(3, 2, 10, 0.52), 0 0 10px var(--border-shadow); }
-    50% { box-shadow: inset 0 0 0 1px rgba(3, 2, 10, 0.72), 0 0 20px var(--border-shadow); }
+    0%, 100% { box-shadow: 0 0 2px rgba(230, 240, 255, 0.65), 0 0 12px rgba(123, 72, 218, 0.35), 0 0 32px rgba(0, 0, 0, 1), inset 0 0 28px rgba(0, 0, 0, 0.94); }
+    50% { box-shadow: 0 0 3px rgba(255, 255, 255, 0.95), 0 0 22px rgba(123, 72, 218, 0.72), 0 0 46px rgba(0, 0, 0, 1), inset 0 0 42px rgba(0, 0, 0, 1); }
   }
 
   @keyframes profile-border-signal {
-    0%, 100% { box-shadow: 0 0 0 1px rgba(183, 253, 77, 0.18), 0 0 8px var(--border-shadow); }
-    50% { box-shadow: 0 0 0 1px rgba(183, 253, 77, 0.4), 0 0 16px var(--border-shadow); }
+    0%, 100% { box-shadow: 0 0 0 1px rgba(183, 253, 77, 0.18), 0 0 14px var(--border-shadow), inset 0 0 8px rgba(183, 253, 77, 0.08); }
+    50% { box-shadow: 0 0 0 1px rgba(183, 253, 77, 0.4), 0 0 25px rgba(183, 253, 77, 0.48), inset 0 0 14px rgba(183, 253, 77, 0.16); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .profile-border-effect {
+    .profile-border-effect,
+    .profile-border-effect::before {
       animation: none !important;
     }
   }

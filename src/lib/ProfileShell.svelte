@@ -897,7 +897,7 @@
   .profile-shell__card-media-background { background-position: center; background-size: cover; opacity: 1; filter: none; transform: none; pointer-events: none; }
   .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; }
   .profile-shell__media-video { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; opacity: .92; pointer-events: none; }
-  .profile-shell__card-media-background { position: absolute; inset: 0; z-index: 0; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
+  .profile-shell__card-media-background { position: absolute; inset: 0; z-index: 0; border-radius: var(--profile-border-radius, var(--radius-lg)); clip-path: inset(0 round var(--profile-border-radius, var(--radius-lg))); filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
   .profile-shell__surface-backdrop { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: var(--profile-background-paint, transparent); pointer-events: none; }
   .profile-shell__surface-media-background { position: absolute; inset: -6%; z-index: 0; background-position: center; background-size: cover; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
   .profile-shell__rich-banner { display: block; width: 100%; max-height: 13rem; object-fit: cover; border-radius: var(--radius-lg) var(--radius-lg) 0 0; opacity: .94; }
@@ -1237,7 +1237,7 @@
     justify-self: center;
     margin: 0 auto;
     padding: 0;
-    overflow: hidden;
+    overflow: visible;
     border: 0;
     background: transparent;
     box-shadow: none;
@@ -1248,13 +1248,15 @@
   :global(.profile-shell__identity-boundary) {
     position: relative;
     width: 100%;
-    border-radius: var(--radius-lg);
+    border-radius: var(--profile-border-radius, var(--radius-lg));
     isolation: isolate;
   }
 
   /* The card must sample the page canvas for backdrop-filter. Keep the
      border wrapper clipped, but do not create a second isolated backdrop root. */
   :global(.profile-border-effect.profile-shell__identity-boundary) { isolation: auto; }
+
+  :global(.profile-border-effect--none.profile-shell__identity-boundary) { overflow: hidden; }
 
   :global(.profile-shell__identity-boundary) :global(.identity-card) { z-index: 1; }
 

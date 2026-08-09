@@ -283,6 +283,14 @@
   .identity-card--layout-story-stack .identity-card__links { margin-top: 1.2rem; padding-top: 0.9rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
   .identity-card--layout-story-stack .identity-card__bio { max-width: 34rem; font-size: 1rem; }
 
+  /* An equipped profile border owns the card perimeter. Keep accent styling
+     available for the profile interior, but remove the competing card edge. */
+  :global(.profile-border-effect:not(.profile-border-effect--none) .identity-card) {
+    border: 0;
+    border-radius: inherit;
+    box-shadow: none;
+  }
+
   .identity-card__person,
   .identity-card__links,
   .identity-card__divider,
