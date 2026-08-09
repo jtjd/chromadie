@@ -2123,3 +2123,15 @@ direct route behavior.
   label and control sizing.
 - Reused all existing media managers, entitlement checks, owner RPCs, RLS, and
   draft/publish behavior; this release contains no database migration.
+
+## 2026-08-08 — Make Customize direct and continuous
+
+- Replaced the nested category/entry-point presentation with one continuous
+  Customize workspace containing media, identity, appearance, content,
+  widgets, effects, and layout controls.
+- Kept the current avatar/background visible beside their upload actions and
+  added current previews plus replace actions for rich video, banner, cursor,
+  pointer cursor, and audio assets.
+- Flattened repeated module headers and kept section save/publish actions next
+  to the controls they affect. Existing upload, RLS, entitlement, and
+  section-scoped publishing contracts are unchanged.

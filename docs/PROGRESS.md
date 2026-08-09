@@ -2612,6 +2612,19 @@ Performance remains over inherited initial/total JS and total CSS budgets.
   covers collapsed/open/closed preview behavior, draft-only appearance updates,
   mobile navigation, reduced motion, and canonical public refresh.
 
+## 2026-08-08 — Replace nested Customize navigation with a direct workspace
+
+- Replaced the category-only Customize presentation with one continuous page;
+  media, identity, appearance, content, widgets, effects, and layout are
+  visible in a predictable scroll order.
+- Kept avatar and background previews/actions inline and added active previews
+  with direct replace actions for Plus video, banner, cursor, pointer cursor,
+  and audio assets.
+- Flattened nested module headers and made section action bars render in place,
+  removing a second layer of navigation and reducing competing floating UI.
+- Added source-contract coverage for the continuous sections and inline rich
+  media previews. No database or authority boundary changed.
+
 ## 2026-08-08 — Add structured About and Projects regions
 
 - Added the bounded `content` profile configuration contract: one plain-text

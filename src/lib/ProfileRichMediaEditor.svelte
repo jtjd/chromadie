@@ -62,6 +62,12 @@
   $: cursorAssets = activeAssets.filter(asset => asset.kind === 'cursor');
   $: pointerCursorAssets = activeAssets.filter(asset => asset.kind === 'pointer_cursor');
   $: audioAssets = activeAssets.filter(asset => asset.kind === 'audio');
+  $: activeBackgroundVideo = assetForPath(richConfig.background_video_path);
+  $: activeBanner = assetForPath(richConfig.banner_path);
+  $: activeCursor = assetForPath(richConfig.cursor_path);
+  $: activePointerCursor = assetForPath(richConfig.pointer_cursor_path);
+  $: primaryAudioTrack = audioTracks[0] || null;
+  $: primaryAudioAsset = primaryAudioTrack ? assetForPath(primaryAudioTrack.path) : null;
 
   function syncIncoming(next, key) {
     richConfig = next;
@@ -298,11 +304,46 @@
     <p class="rich-media-editor__hint">Three muted background videos (MP4/WebM), five MP3 tracks, one banner, and two cursor styles. The library is capped at 150 MB.</p>
 
     <div class="rich-media-editor__upload-grid">
-      <div><strong>Background video</strong><small>Up to 25 MB each · autoplay is muted</small><input bind:this={videoInput} type="file" accept="video/mp4,video/webm,.mp4,.webm" on:change={(event) => uploadFile(event, 'background_video')} /><button type="button" style={actionButtonStyle} disabled={busy} on:click={() => videoInput?.click()}>Upload video</button></div>
-      <div><strong>Banner</strong><small>Processed to bounded WebP</small><input bind:this={bannerInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'banner')} /><button type="button" style={actionButtonStyle} disabled={busy} on:click={() => bannerInput?.click()}>Upload banner</button></div>
-      <div><strong>Normal cursor</strong><small>WebP · 128×128 · 128 KB</small><input bind:this={cursorInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'cursor')} /><button type="button" style={actionButtonStyle} disabled={busy} on:click={() => cursorInput?.click()}>Upload cursor</button></div>
-      <div><strong>Pointer cursor</strong><small>WebP · 128×128 · 128 KB</small><input bind:this={pointerCursorInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'pointer_cursor')} /><button type="button" style={actionButtonStyle} disabled={busy} on:click={() => pointerCursorInput?.click()}>Upload pointer</button></div>
-      <div><strong>Audio track</strong><small>MP3 · up to 10 MB · five tracks</small><input bind:this={audioInput} type="file" accept="audio/mpeg,.mp3" on:change={(event) => uploadFile(event, 'audio')} /><button type="button" style={actionButtonStyle} disabled={busy} on:click={() => audioInput?.click()}>Upload MP3</button></div>
+      <div class="rich-media-editor__upload-card">
+        <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--wide">
+          {#if activeBackgroundVideo}<video src={getProfileMediaUrl(activeBackgroundVideo.storage_path, cacheKey)} muted loop autoplay playsinline preload="metadata" aria-label="Active background video"></video>{:else}<span aria-hidden="true">▧</span><small>No video selected</small>{/if}
+        </div>
+        <strong>Background video</strong><small>Up to 25 MB each · autoplay is muted</small>
+        <input bind:this={videoInput} type="file" accept="video/mp4,video/webm,.mp4,.webm" on:change={(event) => uploadFile(event, 'background_video')} />
+        <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => videoInput?.click()}>{activeBackgroundVideo ? 'Replace video' : 'Upload video'}</button>
+      </div>
+      <div class="rich-media-editor__upload-card">
+        <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--wide">
+          {#if activeBanner}<img src={getProfileMediaUrl(activeBanner.storage_path, cacheKey)} alt="Active profile banner" />{:else}<span aria-hidden="true">▬</span><small>No banner selected</small>{/if}
+        </div>
+        <strong>Banner</strong><small>Processed to bounded WebP</small>
+        <input bind:this={bannerInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'banner')} />
+        <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => bannerInput?.click()}>{activeBanner ? 'Replace banner' : 'Upload banner'}</button>
+      </div>
+      <div class="rich-media-editor__upload-card">
+        <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--cursor">
+          {#if activeCursor}<img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Active cursor" />{:else}<span aria-hidden="true">↖</span><small>No cursor selected</small>{/if}
+        </div>
+        <strong>Normal cursor</strong><small>WebP · 128×128 · 128 KB</small>
+        <input bind:this={cursorInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'cursor')} />
+        <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => cursorInput?.click()}>{activeCursor ? 'Replace cursor' : 'Upload cursor'}</button>
+      </div>
+      <div class="rich-media-editor__upload-card">
+        <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--cursor">
+          {#if activePointerCursor}<img src={getProfileMediaUrl(activePointerCursor.storage_path, cacheKey)} alt="Active pointer cursor" />{:else}<span aria-hidden="true">✦</span><small>No pointer selected</small>{/if}
+        </div>
+        <strong>Pointer cursor</strong><small>WebP · 128×128 · 128 KB</small>
+        <input bind:this={pointerCursorInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'pointer_cursor')} />
+        <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => pointerCursorInput?.click()}>{activePointerCursor ? 'Replace pointer' : 'Upload pointer'}</button>
+      </div>
+      <div class="rich-media-editor__upload-card">
+        <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--audio">
+          {#if primaryAudioAsset}<audio src={getProfileMediaUrl(primaryAudioAsset.storage_path, cacheKey)} controls preload="metadata" aria-label="Active profile audio"></audio>{:else}<span aria-hidden="true">♪</span><small>No audio selected</small>{/if}
+        </div>
+        <strong>Audio tracks <span class="rich-media-editor__count">{audioTracks.length}/5</span></strong><small>MP3 · up to 10 MB each</small>
+        <input bind:this={audioInput} type="file" accept="audio/mpeg,.mp3" on:change={(event) => uploadFile(event, 'audio')} />
+        <button type="button" style={actionButtonStyle} disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()}>Add audio</button>
+      </div>
     </div>
 
     {#each [
@@ -366,8 +407,19 @@
 <style>
   .rich-media-editor__hint, .rich-media-editor__status, .rich-media-editor__message { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
   .rich-media-editor__message--error { color: var(--color-danger, #ff9eac); }
-  .rich-media-editor__upload-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .8rem; margin-top: 1rem; }
-  .rich-media-editor__upload-grid > div { display: grid; gap: .45rem; padding: .8rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 72%, transparent); }
+  .rich-media-editor__upload-grid { display: grid; grid-template-columns: repeat(5, minmax(10rem, 1fr)); gap: .75rem; margin-top: 1rem; }
+  .rich-media-editor__upload-card { display: grid; align-content: start; gap: .45rem; min-width: 0; padding: .65rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 72%, transparent); }
+  .rich-media-editor__upload-card > strong { display: flex; align-items: center; justify-content: space-between; gap: .5rem; color: var(--color-ink-strong); font-size: var(--type-small); }
+  .rich-media-editor__upload-preview { display: grid; min-height: 5rem; place-items: center; overflow: hidden; border: 1px solid var(--color-line-subtle); border-radius: calc(var(--radius-sm) - .1rem); background: #090b10; color: var(--color-ink-muted); text-align: center; }
+  .rich-media-editor__upload-preview--wide { aspect-ratio: 16 / 7; min-height: 0; }
+  .rich-media-editor__upload-preview--cursor { width: 100%; aspect-ratio: 1.7; min-height: 0; }
+  .rich-media-editor__upload-preview--audio { align-content: center; gap: .35rem; padding: .4rem; }
+  .rich-media-editor__upload-preview img, .rich-media-editor__upload-preview video { width: 100%; height: 100%; object-fit: cover; }
+  .rich-media-editor__upload-preview--cursor img { width: 4rem; height: 4rem; object-fit: contain; }
+  .rich-media-editor__upload-preview audio { width: 100%; max-width: 100%; }
+  .rich-media-editor__upload-preview > span { color: var(--color-accent-bright); font-size: 1.4rem; }
+  .rich-media-editor__upload-preview small { padding: 0 .3rem; color: var(--color-ink-muted); font-size: var(--type-label); }
+  .rich-media-editor__count { color: var(--color-ink-muted); font: 600 var(--type-label)/1 var(--font-mono-stack); }
   .rich-media-editor__upload-grid small, .rich-media-editor__asset small { color: var(--color-ink-muted); font-size: var(--type-label); }
   .rich-media-editor__upload-grid input[type=file] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
   .rich-media-editor__library { display: grid; gap: .65rem; margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--color-line-subtle); }
@@ -383,5 +435,7 @@
   .rich-media-editor__settings { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; color: var(--color-ink-muted); font-size: var(--type-small); }
   .rich-media-editor__settings label { display: inline-flex; align-items: center; gap: .35rem; }
   .rich-media-editor__track-add { margin-right: .4rem; border: 0; background: transparent; color: var(--color-ink-muted); cursor: pointer; text-decoration: underline; text-underline-offset: .16em; }
-  @media (max-width: 42rem) { .rich-media-editor__track { grid-template-columns: 1fr 1fr; } .rich-media-editor__track strong { grid-column: 1 / -1; } }
+  @media (max-width: 78rem) { .rich-media-editor__upload-grid { grid-template-columns: repeat(3, minmax(10rem, 1fr)); } }
+  @media (max-width: 42rem) { .rich-media-editor__upload-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rich-media-editor__track { grid-template-columns: 1fr 1fr; } .rich-media-editor__track strong { grid-column: 1 / -1; } }
+  @media (max-width: 28rem) { .rich-media-editor__upload-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>

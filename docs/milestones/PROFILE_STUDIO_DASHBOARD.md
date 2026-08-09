@@ -70,6 +70,14 @@ is user-controlled and responsive instead of permanently reducing the editor
 width. This is a presentation-only refinement: it reuses the existing media
 library, entitlement gates, structured configuration, and owner RPCs.
 
+The follow-up correction keeps the same destination but removes the remaining
+nested interaction model. Customize is now one continuous workspace with direct
+section headings. Active avatar/background media and Plus rich media (video,
+banner, cursors, and audio) appear beside their upload/replace actions, with
+saved assets immediately below for reuse. Repeated module headers are hidden in
+this context and section action bars are placed in the section they save; no
+new upload path or atomic cross-section save is introduced.
+
 ## Validation
 
 - `npm test`: 251 passing.

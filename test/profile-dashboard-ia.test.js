@@ -21,18 +21,15 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /import\('\.\/ProfileCustomizePage\.svelte'\)/);
   assert.match(settings, /this=\{sectionComponents\.customize\}/);
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
-  assert.match(customize, /Profile assets/);
-  for (const category of ['Assets', 'Identity', 'Appearance', 'Effects', 'Content', 'Widgets', 'Layout']) {
-    assert.match(customize, new RegExp(`label: '${category}'`));
+  assert.match(customize, /Customize your profile/);
+  for (const section of ['media', 'identity', 'appearance', 'content', 'widgets', 'effects', 'layout']) {
+    assert.match(customize, new RegExp(`data-editor-section="${section}"`));
   }
-  for (const asset of ['Avatar', 'Background', 'Banner', 'Audio', 'Cursors']) {
-    assert.match(customize, new RegExp(`label: '${asset}'`));
-  }
-  assert.match(customize, /role="tablist"/);
-  assert.match(customize, /role="tabpanel"/);
-  assert.match(customize, /hidden=\{activeCategory !== 'appearance'\}/);
-  assert.match(customize, /hasChromadiePlus/);
-  assert.match(customize, /premiumrequest/);
+  assert.match(customize, /Profile media/);
+  assert.match(customize, /Upload, replace, and choose/);
+  assert.doesNotMatch(customize, /role="tablist"/);
+  assert.doesNotMatch(customize, /activeCategory/);
+  assert.doesNotMatch(customize, /premiumrequest/);
   assert.match(customize, /ProfileAppearanceEditor/);
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);

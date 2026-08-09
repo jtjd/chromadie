@@ -100,6 +100,12 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   assert.match(editor, /audioTracks/);
   assert.match(editor, /trim_start_ms/);
   assert.match(editor, /audioShuffle/);
+  assert.match(editor, /rich-media-editor__upload-card/);
+  assert.match(editor, /Active profile banner/);
+  assert.match(editor, /Active profile audio/);
+  assert.match(editor, /Replace video/);
+  assert.match(editor, /Replace banner/);
+  assert.match(editor, /controls preload="metadata"/);
   assert.match(shell, /autoplay muted loop playsinline/);
   assert.match(shell, /poster=\{backgroundSrc/);
   assert.match(shell, /prefersReducedMotion/);

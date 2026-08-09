@@ -3605,6 +3605,23 @@ collapsed by default, docks only where sufficient width exists, overlays at
 ordinary desktop widths, and becomes a bottom sheet on mobile. Quick asset
 tiles are summaries and entry points into the existing media managers; they do
 not create a second upload, entitlement, validation, or RLS path.
+
+## 2026-08-08 — Keep Customize as one continuous, direct-manipulation workspace
+
+The category switcher and quick-entry tiles were too close to a collection of
+small destinations: important controls were still hidden behind another click,
+and the current asset was separated from the action that changed it. Customize
+now uses one continuous page with page-owned section headings. Avatar and
+background controls remain directly visible, and rich-media controls expose the
+active video, banner, cursor, pointer cursor, and audio previews beside their
+upload/replace actions. Saved libraries remain below those controls for reuse.
+
+Child module chrome is intentionally flattened inside this workspace so a user
+does not have to parse nested titles and marketing descriptions. Section action
+bars stay scoped to their existing RPC contracts, but render in place rather
+than competing as floating dashboard elements. The redesign changes only the
+presentation layer; upload validation, entitlement checks, RLS, draft/publish
+boundaries, and profile rendering remain unchanged.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,
