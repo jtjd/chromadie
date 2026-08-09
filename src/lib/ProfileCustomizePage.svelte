@@ -94,7 +94,7 @@
     <span class="profile-customize-page__premium-arrow" aria-hidden="true">↗</span>
   </button>
 
-  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-general-title">
+  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-general-title" data-editor-section="general">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-general-title">General Customization</h3>
     </div>
@@ -198,10 +198,14 @@
 
   .profile-customize-page__control-kicker { display: none; }
 
-  .profile-customize-page__surface { display: grid; gap: .7rem; min-width: 0; padding: .85rem; border: 1px solid var(--customize-line); border-radius: .68rem; background: var(--customize-panel); scroll-margin-top: 5rem; }
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay2, #9399b2); display: grid; gap: .7rem; min-width: 0; padding: .85rem; border: 1px solid color-mix(in srgb, var(--customize-section-accent) 34%, var(--customize-line)); border-radius: .68rem; background: color-mix(in srgb, var(--customize-section-accent) 4%, var(--customize-panel)); scroll-margin-top: 5rem; }
+  .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
+  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
+  .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); }
+  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); }
   .profile-customize-page__surface--assets { padding: 1rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-width: 0; }
-  .profile-customize-page__surface-heading h3 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: 1.05rem; letter-spacing: -.03em; }
+  .profile-customize-page__surface-heading h3 { margin: 0; color: color-mix(in srgb, var(--customize-section-accent) 76%, var(--site-ink, #f2f0eb)); font-size: 1.05rem; letter-spacing: -.03em; }
 
   .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .45rem; min-height: 3.1rem; overflow: hidden; padding: .65rem 3.2rem; border: 1px solid color-mix(in srgb, var(--customize-purple) 42%, var(--customize-line)); border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--customize-purple) 14%, var(--ctp-mantle, #181825)), color-mix(in srgb, var(--customize-purple) 7%, var(--ctp-mantle, #181825))); color: var(--ctp-lavender, #b4befe); font: 600 .72rem/1.35 var(--site-font, sans-serif); cursor: pointer; }
   .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { position: absolute; color: color-mix(in srgb, var(--customize-purple) 24%, transparent); font-size: 4rem; line-height: 1; pointer-events: none; }

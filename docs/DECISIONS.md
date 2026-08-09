@@ -3676,6 +3676,15 @@ public profile canvas and other site routes keep their existing visual
 contracts. This is a color-only refinement: layout, spacing, navigation,
 component structure, responsive behavior, and accessibility interactions are
 unchanged.
+
+## 2026-08-09 — Use semantic accent contrast without changing dashboard structure
+
+The Mocha palette is now used as a restrained role system inside Profile
+Studio: Customize uses Mauve, Links Sapphire, Premium Pink, account sections
+use distinct status-friendly accents, and the existing Customize surfaces use
+Sapphire, Teal, Mauve, and Peach tinting. These are color and token changes
+only; the shell geometry, navigation order, spacing, interactions, responsive
+behavior, and reduced-motion behavior remain unchanged.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

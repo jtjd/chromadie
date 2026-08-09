@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Add semantic Catppuccin contrast to Profile Studio — 2026-08-09
+
+- Kept the dashboard geometry unchanged while assigning the supplied Mauve,
+  Sapphire, Pink, Teal, Green, Yellow, Peach, and Lavender accents to existing
+  navigation, status, and workspace surfaces.
+- Added restrained accent tinting to the media, general, color, and other
+  customization surfaces so the Mocha neutrals have more visual separation.
+
 ## Catppuccin Mocha Profile Studio palette — 2026-08-09
 
 - Scoped the Catppuccin Mocha palette to Profile Studio, mapping dashboard

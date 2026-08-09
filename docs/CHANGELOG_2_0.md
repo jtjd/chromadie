@@ -2175,3 +2175,10 @@ direct route behavior.
   and status states with a dashboard-scoped Catppuccin Mocha palette.
 - Kept the existing dashboard layout, navigation, spacing, responsive states,
   and reduced-motion behavior unchanged.
+
+## 2026-08-09 — Add restrained accent contrast to Profile Studio
+
+- Added semantic Mocha accents to existing navigation states, dashboard status,
+  and Customize surface borders/backgrounds.
+- Kept the change color-only; no dashboard geometry, spacing, or interaction
+  structure changed.
