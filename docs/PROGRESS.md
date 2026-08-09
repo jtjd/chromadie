@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Strengthen Catppuccin surface hierarchy in Profile Studio — 2026-08-09
+
+- Separated the large Customize and dashboard action surfaces with Mocha
+  Surface0/Surface1 roles instead of relying on nearly identical panel fills.
+- Increased the existing semantic accent tint slightly so media, general,
+  appearance, and other sections remain distinct without changing layout.
+
 ## Add semantic Catppuccin contrast to Profile Studio — 2026-08-09
 
 - Kept the dashboard geometry unchanged while assigning the supplied Mauve,

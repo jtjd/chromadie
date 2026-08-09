@@ -27,7 +27,7 @@
 </section>
 
 <style>
-  .profile-dashboard-actions { --dashboard-action-accent: var(--ctp-teal, #94e2d5); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; padding: .75rem .85rem; border: 1px solid color-mix(in srgb, var(--dashboard-action-accent) 42%, var(--site-line-strong, rgba(255,255,255,.14))); border-radius: .55rem; background: color-mix(in srgb, var(--dashboard-action-accent) 6%, var(--site-raised, #111319)); }
+  .profile-dashboard-actions { --dashboard-action-accent: var(--ctp-teal, #94e2d5); --dashboard-action-surface: var(--ctp-surface1, #45475a); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; padding: .75rem .85rem; border: 1px solid color-mix(in srgb, var(--dashboard-action-accent) 48%, var(--site-line-strong, rgba(255,255,255,.14))); border-radius: .55rem; background: color-mix(in srgb, var(--dashboard-action-accent) 9%, var(--dashboard-action-surface)); }
   .profile-dashboard-actions__copy { min-width: 0; }
   .profile-dashboard-actions__title-row { display: flex; align-items: center; gap: .65rem; }
   .profile-dashboard-actions h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .84rem; letter-spacing: -.01em; }

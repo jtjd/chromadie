@@ -2182,3 +2182,10 @@ direct route behavior.
   and Customize surface borders/backgrounds.
 - Kept the change color-only; no dashboard geometry, spacing, or interaction
   structure changed.
+
+## 2026-08-09 — Strengthen Profile Studio surface hierarchy
+
+- Used Catppuccin Surface0 and Surface1 roles to separate the existing large
+  editor panels and dashboard action bar.
+- Increased only the existing accent tint strength; layout, spacing, and
+  interaction structure remain unchanged.

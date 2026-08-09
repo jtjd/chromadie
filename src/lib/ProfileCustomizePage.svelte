@@ -183,6 +183,7 @@
 <style>
   .profile-customize-page {
     --customize-panel: var(--ctp-surface0, #313244);
+    --customize-panel-strong: var(--ctp-surface1, #45475a);
     --customize-inset: var(--ctp-mantle, #181825);
     --customize-line: var(--site-line, rgba(108, 112, 134, .42));
     --customize-line-strong: var(--site-line-strong, rgba(147, 153, 178, .58));
@@ -198,11 +199,11 @@
 
   .profile-customize-page__control-kicker { display: none; }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay2, #9399b2); display: grid; gap: .7rem; min-width: 0; padding: .85rem; border: 1px solid color-mix(in srgb, var(--customize-section-accent) 34%, var(--customize-line)); border-radius: .68rem; background: color-mix(in srgb, var(--customize-section-accent) 4%, var(--customize-panel)); scroll-margin-top: 5rem; }
-  .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
-  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
-  .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); }
-  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); }
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay2, #9399b2); --customize-section-surface: var(--customize-panel); display: grid; gap: .7rem; min-width: 0; padding: .85rem; border: 1px solid color-mix(in srgb, var(--customize-section-accent) 42%, var(--customize-line)); border-radius: .68rem; background: color-mix(in srgb, var(--customize-section-accent) 8%, var(--customize-section-surface)); scroll-margin-top: 5rem; }
+  .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); --customize-section-surface: var(--customize-panel-strong); }
+  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); --customize-section-surface: var(--customize-panel); }
+  .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); --customize-section-surface: var(--customize-panel-strong); }
+  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); --customize-section-surface: var(--customize-panel); }
   .profile-customize-page__surface--assets { padding: 1rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-width: 0; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: color-mix(in srgb, var(--customize-section-accent) 76%, var(--site-ink, #f2f0eb)); font-size: 1.05rem; letter-spacing: -.03em; }

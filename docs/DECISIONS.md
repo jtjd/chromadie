@@ -3685,6 +3685,15 @@ use distinct status-friendly accents, and the existing Customize surfaces use
 Sapphire, Teal, Mauve, and Peach tinting. These are color and token changes
 only; the shell geometry, navigation order, spacing, interactions, responsive
 behavior, and reduced-motion behavior remain unchanged.
+
+## 2026-08-09 — Use Mocha surface levels to separate large editor panels
+
+The large Profile Studio surfaces now alternate between Catppuccin Surface0
+and Surface1 according to their existing editor roles, while the action bar
+uses Surface1 as a higher-emphasis status surface. Accent tinting remains
+restrained and semantic. This improves panel hierarchy through color only;
+layout, spacing, component structure, and interactions remain unchanged.
+
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,
