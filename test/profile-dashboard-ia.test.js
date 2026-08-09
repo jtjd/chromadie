@@ -27,9 +27,14 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));
   }
   assert.match(customize, /Profile media/);
-  assert.match(customize, /Quick jump/);
   assert.match(customize, /compact=\{true\}/);
+  assert.doesNotMatch(customize, /Quick jump/);
+  assert.doesNotMatch(customize, /01 \/ Assets uploader/);
+  assert.doesNotMatch(customize, /Click an asset to upload/);
+  assert.match(settings, /activeSection !== 'customize'/);
+  assert.match(settings, /previewAvailable = activeSection === 'links'/);
   assert.match(expression, /profile-expression-editor__compact-grid/);
+  assert.match(expression, /profile-expression-editor__compact-upload-hint/);
   for (const action of ['Background', 'Audio', 'Profile avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
   assert.match(expression, /More media controls/);
   assert.match(richMedia, /export let compact = false/);

@@ -9,7 +9,8 @@ surfaces. The media cards are the upload controls themselves: clicking a card
 opens the existing validated input and the card immediately reflects the
 current preview. Full libraries, music settings, and rich-media configuration
 stay behind one disclosure so the fast path does not create duplicate upload
-implementations or separate save contracts.
+implementations or separate save contracts. Customize deliberately omits its
+page toolbar and quick-jump rail; Profile media is the first visible heading.
 
 This is a presentation and information-architecture change. Existing lazy
 editor loading, section-scoped dirty/publish events, entitlement gates, media

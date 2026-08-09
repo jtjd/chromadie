@@ -466,10 +466,10 @@
             <span class="profile-expression-editor__compact-initial" aria-hidden="true">{fallbackInitial.slice(0, 1).toUpperCase() || '✦'}</span>
           {/if}
           <span class="profile-expression-editor__compact-overlay" aria-hidden="true">↥</span>
+          <span class="profile-expression-editor__compact-upload-hint">{expression.avatar_path ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
           <strong>Profile avatar</strong>
-          <small>{expression.avatar_path ? 'Click to replace' : 'Click to upload'}</small>
         </div>
         {#if expression.avatar_path}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Remove</button>{/if}
       </article>
@@ -488,10 +488,10 @@
             <span class="profile-expression-editor__compact-atmosphere" aria-hidden="true"></span>
           {/if}
           <span class="profile-expression-editor__compact-overlay" aria-hidden="true">↥</span>
+          <span class="profile-expression-editor__compact-upload-hint">{expression.background_path ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
           <strong>Background</strong>
-          <small>{expression.background_path ? 'Click to replace' : 'Click to upload'}</small>
         </div>
         {#if expression.background_path}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>Remove</button>{/if}
       </article>
@@ -507,12 +507,11 @@
           >
             <span class="profile-expression-editor__compact-audio-icon" aria-hidden="true">♫</span>
             <span class="profile-expression-editor__compact-audio-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-            <small>{expression.audio_path ? 'Audio ready' : 'No audio selected'}</small>
             <span class="profile-expression-editor__compact-overlay" aria-hidden="true">↥</span>
+            <span class="profile-expression-editor__compact-upload-hint">{expression.audio_path ? 'Click to replace' : 'Click to upload'}</span>
           </button>
           <div class="profile-expression-editor__compact-copy">
             <strong>Profile audio</strong>
-            <small>{expression.audio_path ? 'Click to replace' : 'Click to upload'}</small>
           </div>
           {#if expression.audio_path}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAudio}>Remove</button>{/if}
         </article>
@@ -715,12 +714,11 @@
 </Module>
 
 <style>
-  .profile-expression-editor__compact-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; gap: .7rem; }
-  .profile-expression-editor__compact-card { display: grid; align-content: start; gap: .45rem; min-width: 0; padding: .55rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 78%, transparent); }
+  .profile-expression-editor__compact-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; gap: .55rem; }
+  .profile-expression-editor__compact-card { display: grid; align-content: start; gap: .3rem; min-width: 0; padding: .4rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 78%, transparent); }
   .profile-expression-editor__compact-card--locked { opacity: .72; }
-  .profile-expression-editor__compact-preview { position: relative; display: grid; width: 100%; min-height: 6.25rem; place-items: center; overflow: hidden; padding: 0; border: 1px solid var(--color-line-subtle); border-radius: calc(var(--radius-sm) - .1rem); background: #090b10; color: var(--color-ink-muted); cursor: pointer; }
-  .profile-expression-editor__compact-preview--avatar { aspect-ratio: 16 / 9; }
-  .profile-expression-editor__compact-preview--background, .profile-expression-editor__compact-preview--audio { aspect-ratio: 16 / 9; }
+  .profile-expression-editor__compact-preview { position: relative; display: grid; width: 100%; min-height: 4.5rem; place-items: center; overflow: hidden; padding: 0; border: 1px solid var(--color-line-subtle); border-radius: calc(var(--radius-sm) - .1rem); background: #090b10; color: var(--color-ink-muted); cursor: pointer; }
+  .profile-expression-editor__compact-preview--avatar, .profile-expression-editor__compact-preview--background, .profile-expression-editor__compact-preview--audio { aspect-ratio: 3 / 1; }
   .profile-expression-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .profile-expression-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .profile-expression-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
@@ -730,6 +728,7 @@
   .profile-expression-editor__compact-atmosphere { width: 100%; height: 100%; background: radial-gradient(circle at 25% 22%, color-mix(in srgb, var(--profile-accent, #a650c4) 75%, white), transparent 46%), linear-gradient(135deg, color-mix(in srgb, var(--profile-accent, #a650c4) 40%, #090b10), #090b10 72%); }
   .profile-expression-editor__compact-overlay { position: absolute; right: .4rem; bottom: .35rem; display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 1px solid color-mix(in srgb, var(--color-accent-bright) 52%, transparent); border-radius: 50%; background: color-mix(in srgb, #090b10 75%, transparent); color: var(--color-ink-strong); font-size: .85rem; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-standard); }
   .profile-expression-editor__compact-preview:hover .profile-expression-editor__compact-overlay, .profile-expression-editor__compact-preview:focus-visible .profile-expression-editor__compact-overlay { opacity: 1; transform: translateY(-1px); }
+  .profile-expression-editor__compact-upload-hint { position: absolute; bottom: .35rem; left: .4rem; max-width: calc(100% - 2.4rem); overflow: hidden; padding: .18rem .32rem; border-radius: 999px; background: rgba(5, 6, 9, .72); color: var(--color-ink-strong); font-size: var(--type-label); line-height: 1.1; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-copy { display: grid; min-width: 0; gap: .15rem; }
   .profile-expression-editor__compact-copy strong { overflow: hidden; color: var(--color-ink-strong); font-size: var(--type-small); text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-copy small, .profile-expression-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }

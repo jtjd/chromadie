@@ -309,16 +309,14 @@
             {#if primaryAudioAsset}
               <span class="rich-media-editor__compact-audio-icon" aria-hidden="true">♫</span>
               <span class="rich-media-editor__compact-audio-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-              <small>Audio ready · {audioTracks.length}/5</small>
             {:else}
               <span class="rich-media-editor__compact-audio-icon" aria-hidden="true">♫</span>
-              <small>Click to upload</small>
             {/if}
             <span class="rich-media-editor__compact-overlay" aria-hidden="true">↥</span>
+            <span class="rich-media-editor__compact-upload-hint">{audioTracks.length >= 5 ? 'Library limit reached' : primaryAudioAsset ? `Click to add · ${audioTracks.length}/5` : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
             <strong>Audio</strong>
-            <small>{audioTracks.length >= 5 ? 'Library limit reached' : primaryAudioAsset ? 'Click to add another' : 'Click to upload'}</small>
           </div>
         </article>
       {/if}
@@ -330,13 +328,12 @@
               <img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Custom cursor preview" />
             {:else}
               <span class="rich-media-editor__compact-cursor-glyph" aria-hidden="true">↖</span>
-              <small>Click to upload</small>
             {/if}
             <span class="rich-media-editor__compact-overlay" aria-hidden="true">↥</span>
+            <span class="rich-media-editor__compact-upload-hint">{activeCursor ? 'Click to replace' : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
             <strong>Custom cursor</strong>
-            <small>{activeCursor ? 'Click to replace' : 'Click to upload'}</small>
           </div>
         </article>
       {/if}
@@ -474,10 +471,10 @@
   :global(.rich-media-editor--compact) { display: contents; }
   :global(.rich-media-editor--compact > .foundation-module__header) { display: none; }
   :global(.rich-media-editor--compact > .foundation-module__body) { display: contents; }
-  .rich-media-editor__compact-card { display: grid; align-content: start; gap: .45rem; min-width: 0; padding: .55rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 78%, transparent); }
+  .rich-media-editor__compact-card { display: grid; align-content: start; gap: .3rem; min-width: 0; padding: .4rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 78%, transparent); }
   .rich-media-editor__compact-card--locked { opacity: .72; }
-  .rich-media-editor__compact-preview { position: relative; display: grid; width: 100%; min-height: 6.25rem; place-items: center; overflow: hidden; padding: 0; border: 1px solid var(--color-line-subtle); border-radius: calc(var(--radius-sm) - .1rem); background: #090b10; color: var(--color-ink-muted); cursor: pointer; }
-  .rich-media-editor__compact-preview--audio, .rich-media-editor__compact-preview--cursor { aspect-ratio: 16 / 9; }
+  .rich-media-editor__compact-preview { position: relative; display: grid; width: 100%; min-height: 4.5rem; place-items: center; overflow: hidden; padding: 0; border: 1px solid var(--color-line-subtle); border-radius: calc(var(--radius-sm) - .1rem); background: #090b10; color: var(--color-ink-muted); cursor: pointer; }
+  .rich-media-editor__compact-preview--audio, .rich-media-editor__compact-preview--cursor { aspect-ratio: 3 / 1; }
   .rich-media-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .rich-media-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
@@ -491,6 +488,7 @@
   .rich-media-editor__compact-audio-bars i:nth-child(3) { height: 100%; }
   .rich-media-editor__compact-overlay { position: absolute; right: .4rem; bottom: .35rem; display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 1px solid color-mix(in srgb, var(--color-accent-bright) 52%, transparent); border-radius: 50%; background: color-mix(in srgb, #090b10 75%, transparent); color: var(--color-ink-strong); font-size: .85rem; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease-standard), transform var(--motion-base) var(--motion-ease-standard); }
   .rich-media-editor__compact-preview:hover .rich-media-editor__compact-overlay, .rich-media-editor__compact-preview:focus-visible .rich-media-editor__compact-overlay { opacity: 1; transform: translateY(-1px); }
+  .rich-media-editor__compact-upload-hint { position: absolute; bottom: .35rem; left: .4rem; max-width: calc(100% - 2.4rem); overflow: hidden; padding: .18rem .32rem; border-radius: 999px; background: rgba(5, 6, 9, .72); color: var(--color-ink-strong); font-size: var(--type-label); line-height: 1.1; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__compact-copy { display: grid; min-width: 0; gap: .15rem; }
   .rich-media-editor__compact-copy strong { overflow: hidden; color: var(--color-ink-strong); font-size: var(--type-small); text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__compact-copy small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }

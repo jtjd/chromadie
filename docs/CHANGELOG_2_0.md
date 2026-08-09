@@ -4,8 +4,10 @@ Document user-visible redesign changes by milestone.
 
 ## 2026-08-09 — Make profile customization quick to scan
 
-- Customize now opens as one compact page with an Assets Uploader rail for
+- Customize now opens as one compact page with a Profile media rail for
   Background, Audio, Profile avatar, and Custom cursor.
+- Removed the Customize page header, quick-jump rail, Preview, and View profile
+  controls so the media section starts higher in the viewport.
 - The media cards are now the upload controls: clicking a card opens the
   existing validated input and the card previews the current upload in place.
   Full libraries and advanced media settings remain available under one

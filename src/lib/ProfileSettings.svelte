@@ -153,7 +153,7 @@
   });
   $: if (!visibleSettingsSections.some(section => section.id === activeSection)) activeSection = 'customize';
   $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Customize';
-  $: previewAvailable = activeSection === 'customize' || activeSection === 'links';
+  $: previewAvailable = activeSection === 'links';
   $: previewProfileConfig = configurationPreview || context?.profileConfig?.draft;
   $: previewProfile = context?.targetProfile
     ? { ...context.targetProfile, equipped_cosmetics: $equippedItems || context.targetProfile.equipped_cosmetics || {} }
@@ -202,7 +202,7 @@
   function setActiveSection(sectionId, { push = true } = {}) {
     if (!visibleSettingsSections.some(section => section.id === sectionId)) return;
     activeSection = sectionId;
-    if (sectionId !== 'customize' && sectionId !== 'links') previewOpen = false;
+    if (sectionId !== 'links') previewOpen = false;
     if (sectionId === 'customize') void loadCustomizeComponents();
     else if (sectionId === 'links') void loadLinksComponents();
     else void loadSectionComponent(sectionId);
@@ -440,13 +440,15 @@
     {:else if error}
       <div class="profile-settings-page__state" role="alert"><Surface variant="panel" padding="lg"><h1>{error}</h1><Button variant="secondary" href={profilePath}>Back to profile</Button></Surface></div>
     {:else if context}
-      <header class="profile-settings-page__toolbar">
-        <div><p class="profile-settings-page__breadcrumb">Dashboard <span aria-hidden="true">›</span> {activeLabel}</p><h1>{activeLabel}</h1></div>
-        <div class="profile-settings-page__toolbar-actions">
-          {#if previewAvailable}<button type="button" aria-expanded={previewOpen} on:click={togglePreview}>{previewOpen ? 'Hide preview' : 'Preview'}</button>{/if}
-          <a href={profilePath} on:click={handleViewProfile}>View profile ↗</a>
-        </div>
-      </header>
+      {#if activeSection !== 'customize'}
+        <header class="profile-settings-page__toolbar">
+          <div><p class="profile-settings-page__breadcrumb">Dashboard <span aria-hidden="true">›</span> {activeLabel}</p><h1>{activeLabel}</h1></div>
+          <div class="profile-settings-page__toolbar-actions">
+            {#if previewAvailable}<button type="button" aria-expanded={previewOpen} on:click={togglePreview}>{previewOpen ? 'Hide preview' : 'Preview'}</button>{/if}
+            <a href={profilePath} on:click={handleViewProfile}>View profile ↗</a>
+          </div>
+        </header>
+      {/if}
       {#if context.dataWarning}<p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>{/if}
 
       <div class="profile-settings-page__content">

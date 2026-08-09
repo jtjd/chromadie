@@ -78,44 +78,6 @@ async function capture(name) {
   return path;
 }
 
-function dashboardStateExpression() {
-  return `(() => {
-    const preview = document.querySelector('.profile-settings-preview');
-    const page = document.querySelector('.profile-shell-page--preview');
-    const card = document.querySelector('.profile-settings-preview .identity-card');
-    const rollElement = document.querySelector('.profile-settings-preview [data-profile-region="roll"]');
-    const isVisible = element => {
-      if (!element || getComputedStyle(element).display === 'none' || getComputedStyle(element).visibility === 'hidden') return false;
-      const rect = element.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
-    };
-    const roll = isVisible(rollElement) ? rollElement : null;
-    const style = element => element ? getComputedStyle(element) : null;
-    const read = element => {
-      const computed = style(element);
-      if (!computed) return null;
-      return {
-        blurVar: computed.getPropertyValue('--profile-surface-blur').trim(),
-        surfaceVar: computed.getPropertyValue('--profile-surface-fill').trim(),
-        backdropFilter: computed.backdropFilter || computed.webkitBackdropFilter || '',
-        rect: (() => { const rect = element.getBoundingClientRect(); return { width: Math.round(rect.width), height: Math.round(rect.height) }; })()
-      };
-    };
-    return {
-      preview: Boolean(preview),
-      previewRect: preview ? (() => { const rect = preview.getBoundingClientRect(); return { width: Math.round(rect.width), height: Math.round(rect.height) }; })() : null,
-      page: Boolean(page),
-      card: read(card),
-      roll: read(roll),
-      rollHidden: !isVisible(rollElement),
-      publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish')?.disabled ?? null,
-      bodyScrollWidth: document.body.scrollWidth,
-      documentScrollWidth: document.documentElement.scrollWidth,
-      viewportWidth: innerWidth
-    };
-  })()`;
-}
-
 try {
   const authResponse = await waitForHttp(`${supabaseUrl.origin}/auth/v1/settings`, 5000).catch(error => {
     throw new Error(`Local Supabase is not reachable at ${supabaseUrl.origin}. Start local Supabase first. ${error.message}`);
@@ -212,8 +174,10 @@ try {
   });
 
   await step('live preview opens on demand and closes cleanly', async () => {
+    await page.navigate(`${appUrl}/profile/settings#links`, 'Links section for preview');
+    await page.waitFor(`document.querySelector('.profile-links-page') && document.querySelector('.profile-settings-page__toolbar')`, 'Links toolbar');
     const initiallyOpen = await page.evaluate(`Boolean(document.querySelector('.profile-settings-preview'))`);
-    assert(!initiallyOpen, 'Live preview should be collapsed when Profile Studio opens.');
+    assert(!initiallyOpen, 'Live preview should be collapsed when Links opens.');
     await page.clickText('Preview', { description: 'open live preview control' });
     await page.waitFor(`(() => {
       const preview = document.querySelector('.profile-settings-preview');
@@ -230,7 +194,7 @@ try {
     return { ...state, closed: true };
   });
 
-  await step('Customize control changes the preview without publishing', async () => {
+  await step('Customize controls stay compact and unpublished', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize`, 'Customize section');
     await page.waitFor(`document.querySelector('.appearance-editor')`, 'Customize editor');
     await page.waitFor(`(() => {
@@ -248,29 +212,24 @@ try {
     })()`);
     assert(mediaRail.labels.length === 4, `Compact media rail rendered ${mediaRail.labels.length} cards instead of four.`);
     assert(mediaRail.labels.includes('Profile avatar') && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
+    assert(mediaRail.editable.includes('Profile avatar') && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
     assert(mediaRail.advancedOpen === false, 'Advanced media controls should start collapsed.');
-    await page.clickText('Preview', { description: 'open Customize live preview' });
-    await page.waitFor(`document.querySelector('.profile-settings-preview .identity-card')`, 'Customize preview');
-    const before = await page.evaluate(dashboardStateExpression());
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('publish_profile_configuration_section')).length;
-    await page.setInputValue('.appearance-editor__range:nth-child(2) input[type="range"]', 0, ['input']);
-    await page.waitFor(`document.querySelector('.appearance-editor__range:nth-child(2) output')?.textContent?.trim() === '0px'`, 'zero blur preview value');
-    const zero = await page.evaluate(dashboardStateExpression());
     await page.setInputValue('.appearance-editor__range:nth-child(2) input[type="range"]', 40, ['input']);
-    await page.waitFor(`document.querySelector('.appearance-editor__range:nth-child(2) output')?.textContent?.trim() === '40px'`, 'maximum blur preview value');
-    const after = await page.evaluate(dashboardStateExpression());
+    await page.waitFor(`document.querySelector('.appearance-editor__range:nth-child(2) output')?.textContent?.trim() === '40px'`, 'blur draft value');
     const publishRequestsAfter = page.requestLog.filter(request => request.url.includes('publish_profile_configuration_section')).length;
-    assert(before.preview && before.card, 'Preview card was not available.');
-    assert(before.rollHidden && after.rollHidden && !before.roll && !after.roll, 'The identity-only editor preview rendered a visible daily-roll region.');
-    assert(zero.card.blurVar === '0px', `Preview did not apply 0px blur; observed ${JSON.stringify(zero.card.blurVar)}.`);
-    assert(after.card.blurVar === '40px', `Preview did not apply 40px blur; observed ${JSON.stringify(after.card.blurVar)}.`);
-    assert(after.card.backdropFilter.includes('40px'), `Computed card backdrop filter did not reflect 40px blur: ${after.card.backdropFilter || '<empty>'}.`);
-    assert(after.publishDisabled === false, 'Changing Customize did not create an unpublished draft.');
+    const draftState = await page.evaluate(`({
+      publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish')?.disabled ?? null,
+      toolbarVisible: Boolean(document.querySelector('.profile-settings-page__toolbar')),
+      previewVisible: Boolean(document.querySelector('.profile-settings-preview'))
+    })`);
+    assert(draftState.publishDisabled === false, 'Changing Customize did not create an unpublished draft.');
+    assert(!draftState.toolbarVisible && !draftState.previewVisible, 'Customize still exposes page-level toolbar or preview chrome.');
     assert(publishRequestsBefore === publishRequestsAfter, 'Changing Customize unexpectedly called the publish RPC.');
     await capture('05-customize-draft-blur');
     await page.clickText('Reset', { description: 'Customize reset control' });
     await page.waitFor(`document.querySelector('.appearance-editor__reset')?.disabled === true`, 'Customize reset');
-    return { before, zero, after, publishRequests: publishRequestsAfter, mediaRail };
+    return { draftState, publishRequests: publishRequestsAfter, mediaRail };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {

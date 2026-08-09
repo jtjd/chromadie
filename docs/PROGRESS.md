@@ -5,6 +5,8 @@
 - Reworked Customize into one continuous dark workspace based on the supplied
   dashboard reference: inline upload/preview cards, a Plus expression banner,
   and compact General, Color, and Other surfaces.
+- Removed the page-level Customize toolbar and quick-jump rail so Profile media
+  leads the page without redundant navigation chrome.
 - Made the avatar, background, audio, and custom-cursor cards invoke the
   existing validated upload inputs directly and reflect the current media
   preview in place; full libraries and advanced settings remain behind one
