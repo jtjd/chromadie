@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Simplify Profile Studio surface contrast — 2026-08-09
+
+- Replaced the bright large-panel fills with alternating Catppuccin Crust,
+  Mantle, and Base backgrounds.
+- Reserved Surface0/Surface2 and the brighter palette colors for input fields,
+  borders, labels, buttons, and semantic accents.
+
 ## Strengthen Catppuccin surface hierarchy in Profile Studio — 2026-08-09
 
 - Separated the large Customize and dashboard action surfaces with Mocha

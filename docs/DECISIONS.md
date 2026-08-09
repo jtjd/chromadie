@@ -3694,6 +3694,14 @@ uses Surface1 as a higher-emphasis status surface. Accent tinting remains
 restrained and semantic. This improves panel hierarchy through color only;
 layout, spacing, component structure, and interactions remain unchanged.
 
+## 2026-08-09 — Keep large dashboard surfaces dark and controls legible
+
+Large Profile Studio sections use the darkest three Mocha neutrals—Crust,
+Mantle, and Base—in an alternating sequence. Lighter Surface0/Surface2 tones
+are reserved for input fills, control borders, and button surfaces, while
+semantic colors remain on headings and status accents. This reduces visual
+busyness without changing the dashboard structure or interaction contract.
+
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

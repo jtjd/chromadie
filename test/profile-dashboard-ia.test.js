@@ -62,7 +62,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /data-editor-section="general"/);
   assert.match(customize, /--customize-section-accent/);
   assert.match(customize, /--customize-section-surface/);
-  assert.match(customize, /--ctp-surface1/);
+  assert.match(customize, /--customize-section-input/);
+  assert.match(customize, /--ctp-crust/);
+  assert.match(customize, /--ctp-mantle/);
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);
   assert.match(customize, /profile-collection/);

@@ -2189,3 +2189,10 @@ direct route behavior.
   editor panels and dashboard action bar.
 - Increased only the existing accent tint strength; layout, spacing, and
   interaction structure remain unchanged.
+
+## 2026-08-09 — Simplify Profile Studio surface contrast
+
+- Replaced bright large-panel fills with alternating Crust, Mantle, and Base
+  backgrounds.
+- Reserved lighter Mocha tones for controls, input fields, borders, and
+  semantic accents so the dashboard reads more quietly.
