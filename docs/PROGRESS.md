@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Atelier expression restoration and dashboard guidance — 2026-08-08
+
+- Restored the two original Atelier expression identities as structured,
+  premium `chromadie_plus` rows: Prism Atelier Name under Name → Motion and
+  Prism Atmosphere under Atmosphere. No raw CSS or retired catalog slot was
+  reintroduced.
+- Added a Plus-aware Collection guide with direct shortcuts to the name
+  effect, atmosphere, and Atelier template controls. The guide distinguishes
+  an authored atmosphere from an uploaded background in Media.
+- Added additive migration, seed/drift contracts, database-security count
+  updates, and focused source coverage for the catalog and dashboard path.
+
 ## Pricing surface refreshed — 2026-08-08
 
 - Added Pricing to the shared desktop and mobile site navigation with route

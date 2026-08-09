@@ -33,7 +33,7 @@ test('the curated catalog keeps exactly 35 paid Name rows and nine Profile Borde
   ]);
 });
 
-test('the paid Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
+test('the earned Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
   const [seed, labelMigration, fontLabelMigration, motionCurationMigration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
@@ -42,7 +42,8 @@ test('the paid Name catalog uses distinctive labels synchronized with each rende
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
-  )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }));
+  )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }))
+    .filter(row => row.itemKey !== 'name_prism_atelier');
 
   assert.equal(rows.length, 35);
   assert.equal(new Set(rows.map(row => row.name)).size, rows.length);

@@ -19,9 +19,12 @@
   import { trackProductEvent } from './productAnalytics.js';
   import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer } from './name/nameLoadout.js';
   import { SHOP_SLOT_LABELS, createFittingRoom, hasShopEntitlement, isShopCosmetic } from './shopCatalog.js';
+  import { hasChromadiePlus } from './premiumEntitlements.js';
 
   export let accountProfile = null;
   export let profileConfig = null;
+  export let entitlements = [];
+  export let staff = false;
 
   let previewLoadout = /** @type {Record<string, string>} */ ({});
   let selectedItem = null;
@@ -39,6 +42,7 @@
   $: account = { ...($profile || {}), ...(accountProfile || {}) };
   $: username = account.username || 'Chromanaut';
   $: displayColor = account.mood_color || '#7B5CFF';
+  $: plusUnlocked = Boolean(staff || hasChromadiePlus(entitlements));
   $: fittingRoom = createFittingRoom({
     userInventory: $userInventory,
     equippedItems: $equippedItems,
@@ -117,6 +121,21 @@
         <p>Preview and equip owned expression layers.</p>
       </div>
     </div>
+
+    {#if plusUnlocked}
+      <aside class="profile-cosmetics-plus-guide" aria-labelledby="profile-cosmetics-plus-guide-title">
+        <div class="profile-cosmetics-plus-guide__intro">
+          <span class="profile-cosmetics-plus-guide__eyebrow">Chromadie Plus</span>
+          <h3 id="profile-cosmetics-plus-guide-title">Atelier expression is ready</h3>
+          <p>The Atelier name treatment and atmosphere are separate layers. Choose one below, preview it, then press <strong>Apply</strong>.</p>
+        </div>
+        <nav class="profile-cosmetics-plus-guide__links" aria-label="Atelier expression shortcuts">
+          <a href="#cosmetic-name_motion"><strong>Name effect</strong><span>Collection → Name · Motion</span><b aria-hidden="true">↗</b></a>
+          <a href="#cosmetic-profile-atmosphere"><strong>Background atmosphere</strong><span>Collection → Atmosphere</span><b aria-hidden="true">↗</b></a>
+          <a href="#profile-layout"><strong>Atelier template</strong><span>Layout &amp; links → Templates</span><b aria-hidden="true">↗</b></a>
+        </nav>
+      </aside>
+    {/if}
 
     {#if $shopItemsLoading}
       <p role="status">Loading your cosmetic collection…</p>
@@ -251,6 +270,17 @@
   .profile-cosmetics-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .profile-cosmetics-heading h2 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h2) / 1.05 var(--font-display-stack); }
   .profile-cosmetics-heading p { max-width: 42rem; margin: .75rem 0 0; color: var(--color-ink-muted); line-height: 1.55; }
+  .profile-cosmetics-plus-guide { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, .9fr); gap: 1rem; margin: 0 0 1rem; padding: 1rem; border: 1px solid color-mix(in srgb, var(--color-accent-bright) 34%, var(--color-line-subtle)); border-radius: var(--radius-md); background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent-bright) 11%, var(--surface-panel-soft)), var(--surface-panel-soft)); }
+  .profile-cosmetics-plus-guide__intro { display: grid; align-content: start; gap: .35rem; }
+  .profile-cosmetics-plus-guide__eyebrow { color: var(--color-accent-bright); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: .12em; text-transform: uppercase; }
+  .profile-cosmetics-plus-guide h3 { margin: 0; color: var(--color-ink-strong); font: 600 1.2rem / 1.15 var(--font-display-stack); }
+  .profile-cosmetics-plus-guide p { max-width: 38rem; margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
+  .profile-cosmetics-plus-guide__links { display: grid; gap: .45rem; }
+  .profile-cosmetics-plus-guide__links a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .12rem .6rem; align-items: center; padding: .55rem .65rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 70%, transparent); color: var(--color-ink-strong); text-decoration: none; }
+  .profile-cosmetics-plus-guide__links a:hover, .profile-cosmetics-plus-guide__links a:focus-visible { border-color: var(--color-accent-bright); background: color-mix(in srgb, var(--color-accent-bright) 12%, var(--surface-inset)); }
+  .profile-cosmetics-plus-guide__links strong { min-width: 0; font-size: var(--type-small); }
+  .profile-cosmetics-plus-guide__links span { min-width: 0; overflow: hidden; color: var(--color-ink-muted); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-cosmetics-plus-guide__links b { grid-column: 2; grid-row: 1 / span 2; color: var(--color-accent-bright); font: 600 .85rem/1 var(--font-mono-stack); }
   .profile-cosmetics-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(18rem, .85fr); gap: 1rem; align-items: start; }
   .profile-cosmetics-preview { min-width: 0; }
   .profile-cosmetics-controls { display: grid; gap: .75rem; min-width: 0; padding: 1rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-panel-soft); }
@@ -266,5 +296,6 @@
   .profile-cosmetics-slot button:disabled { opacity: .45; cursor: not-allowed; }
   .profile-cosmetics-status { min-height: 1.25rem; margin: 1rem 0 0; color: var(--color-ink-muted); font-size: var(--type-small); }
   .profile-cosmetics-status.error-message { color: var(--color-danger); }
-  @media (max-width: 900px) { .profile-cosmetics-layout { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .profile-cosmetics-layout, .profile-cosmetics-plus-guide { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { .profile-cosmetics-plus-guide__links a { transition: none; } }
 </style>

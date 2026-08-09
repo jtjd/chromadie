@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Make Atelier expression easy to find
+
+- Chromadie Plus owners now see an Atelier expression guide in Studio →
+  Collection.
+- **Prism Atelier Name** is configured under Name → Motion, and **Prism
+  Atmosphere** is configured under Atmosphere. Select a layer, preview it,
+  and press Apply.
+- The Atelier page composition remains under Layout & links → Templates. An
+  uploaded background remains a separate Media setting.
+
 ## 2026-08-08 — Refresh the lifetime pricing surface
 
 - Pricing is now reachable from the shared desktop and mobile header, with a

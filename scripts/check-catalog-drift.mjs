@@ -13,6 +13,7 @@ const expansionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260804
 const atmosphereExpansionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260804210000_atmosphere_expansion.sql');
 const atmosphereCurationMigrationPath = path.join(repoRoot, 'supabase/migrations/20260804223000_curate_atmosphere_catalog.sql');
 const atmosphereReplacementMigrationPath = path.join(repoRoot, 'supabase/migrations/20260804230000_authored_atmosphere_replacements.sql');
+const atelierExpressionMigrationPath = path.join(repoRoot, 'supabase/migrations/20260809000000_atelier_expression_catalog.sql');
 
 function fail(message) {
   console.error(`Catalog drift detected: ${message}`);
@@ -226,7 +227,7 @@ const rendererKeys = Object.freeze({
   profile_layout: new Set(['split-signal', 'archive-index', 'prism-mosaic', 'night-terminal', 'story-stack']),
   profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare'])
 });
-const expectedCounts = Object.freeze({ name_font: 18, name_material: 7, name_motion: 10, profile_border: 9, cursor_trail: 16, avatar_effect: 18, profile_layout: 5, profile_atmosphere: 12 });
+const expectedCounts = Object.freeze({ name_font: 18, name_material: 7, name_motion: 11, profile_border: 9, cursor_trail: 16, avatar_effect: 18, profile_layout: 5, profile_atmosphere: 13 });
 const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0 };
 const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'];
 for (const item of seed.catalog.values()) {
@@ -254,8 +255,8 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 97) {
-  fail(`expected 97 active catalog rows, found ${seed.catalog.size}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 99) {
+  fail(`expected 99 active catalog rows, found ${seed.catalog.size}`);
 }
 if ([...seed.catalog.values()].some(item => obsoleteSlots.includes(item.slot))) {
   fail('the seed still contains an obsolete cosmetic slot');
@@ -303,6 +304,15 @@ if (!nameMotionReferenceMigration.includes("'haunt-glow'")) fail('the Haunt-refe
 if (!nameMotionReferenceMigration.includes('Expected 27 legacy Name Motion rows')) fail('the Haunt-reference motion migration has a stale legacy motion count');
 if (!nameMaterialCurationMigration.includes('Expected 97 active catalog rows')) fail('the Name Material curation migration has a stale active catalog count');
 if (!nameMaterialCurationMigration.includes('Expected 7 active Name Material rows')) fail('the Name Material curation migration has a stale material count');
+const atelierExpressionMigration = await readFile(atelierExpressionMigrationPath, 'utf8');
+if (!atelierExpressionMigration.includes("'name_prism_atelier'") || !atelierExpressionMigration.includes("'bg_prism_atmosphere'")) {
+  fail('the Atelier expression migration does not restore both stable expression keys');
+}
+if (!atelierExpressionMigration.includes("'name_motion'") || !atelierExpressionMigration.includes("'profile_atmosphere'")) {
+  fail('the Atelier expression migration does not use modern renderer slots');
+}
+if (!atelierExpressionMigration.includes("'chromadie_plus'")) fail('the Atelier expression migration does not use the canonical Plus entitlement');
+if (!atelierExpressionMigration.includes('Expected 99 active catalog rows')) fail('the Atelier expression migration has a stale active catalog count');
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_KEY;

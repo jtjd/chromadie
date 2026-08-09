@@ -59,6 +59,14 @@ Provider widgets:
   support. It keeps legacy Spotify fields readable, stores only bounded
   provider identifiers, and does not create an arbitrary media/embed table.
 
+Atelier expression restoration:
+
+- `migrations/20260809000000_atelier_expression_catalog.sql` restores the
+  stable `name_prism_atelier` and `bg_prism_atmosphere` keys as active,
+  entitlement-gated `name_motion` and `profile_atmosphere` renderer rows.
+  It uses only the finite `haunt-rainbow` and `silk-folds` renderers and bumps
+  `shop_version`; the retired raw-CSS slots remain absent.
+
 Lean alpha cosmetic reset:
 
 - `migrations/20260802110000_lean_cosmetic_catalog_reset.sql` is the single

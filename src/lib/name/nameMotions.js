@@ -44,6 +44,9 @@ export const NAME_MOTIONS = Object.freeze({
 // closest curated motion at render time while their shop rows are marked
 // legacy by the catalog migration and are no longer purchasable.
 export const LEGACY_NAME_MOTION_ALIASES = Object.freeze({
+  // Stable Atelier identity from the pre-composable catalog. Keep the key
+  // readable while resolving it through the finite modern motion renderer.
+  'name-prism-atelier': 'haunt-rainbow',
   'fuzzy-signal': 'haunt-fuzzy',
   'chromatic-ripple': 'haunt-rainbow',
   'particle-drift': 'haunt-particles',
@@ -87,7 +90,11 @@ function canonicalMotionKey(motionKey) {
   const prefix = 'name_motion_';
   const namespaced = candidate.startsWith(prefix) ? candidate.slice(prefix.length) : '';
   const normalizedNamespaced = namespaced.replaceAll('_', '-');
-  const normalized = Object.prototype.hasOwnProperty.call(NAME_MOTIONS, candidate) ? candidate : normalizedNamespaced;
+  const normalized = Object.prototype.hasOwnProperty.call(NAME_MOTIONS, candidate)
+    ? candidate
+    : namespaced
+      ? normalizedNamespaced
+      : candidate.replaceAll('_', '-');
   if (Object.prototype.hasOwnProperty.call(NAME_MOTIONS, normalized) && NAME_MOTIONS[normalized].composable) return normalized;
   return LEGACY_NAME_MOTION_ALIASES[normalized] || 'none';
 }

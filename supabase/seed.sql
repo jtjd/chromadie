@@ -201,8 +201,31 @@ ON CONFLICT (item_key) DO UPDATE SET
   entitlement_key = EXCLUDED.entitlement_key,
   catalog_status = EXCLUDED.catalog_status;
 
+-- Original Atelier expression keys are retained as modern, structured Plus
+-- cosmetics. They deliberately reuse finite renderer slots rather than the
+-- retired raw-CSS name_effect/profile_bg contract.
+INSERT INTO public.shop_items (
+  item_key, name, slot, cost, css_type, css_value, available_from, available_until,
+  rarity, description, collection, stackable, access_tier, entitlement_key, catalog_status
+) VALUES
+  ('name_prism_atelier', 'Prism Atelier Name', 'name_motion', 0, 'renderer', 'haunt-rainbow', NULL, NULL, 'Mythic', 'The original Atelier name treatment: a restrained spectral pass across the identity.', 'Atelier Expression', false, 'premium', 'chromadie_plus', 'active'),
+  ('bg_prism_atmosphere', 'Prism Atmosphere', 'profile_atmosphere', 0, 'renderer', 'silk-folds', NULL, NULL, 'Mythic', 'The original Atelier atmosphere: black silk folds with a quiet prismatic sheen behind the profile.', 'Atelier Expression', false, 'premium', 'chromadie_plus', 'active')
+ON CONFLICT (item_key) DO UPDATE SET
+  name = EXCLUDED.name,
+  slot = EXCLUDED.slot,
+  cost = EXCLUDED.cost,
+  css_type = EXCLUDED.css_type,
+  css_value = EXCLUDED.css_value,
+  rarity = EXCLUDED.rarity,
+  description = EXCLUDED.description,
+  collection = EXCLUDED.collection,
+  stackable = EXCLUDED.stackable,
+  access_tier = EXCLUDED.access_tier,
+  entitlement_key = EXCLUDED.entitlement_key,
+  catalog_status = EXCLUDED.catalog_status;
+
 INSERT INTO public.meta (key, value) VALUES
-('shop_version', '2026-08-04T23:00:00Z'),
+('shop_version', '2026-08-09T00:00:00Z'),
 ('cotw_target', '73,114,201'),
 ('official_launch_at', '2026-07-11T00:00:00Z'),
 ('founder_window_ends_at', '2026-08-11T00:00:00Z')

@@ -439,7 +439,7 @@
           {:else if activeSection === 'profile-widgets'}
             <svelte:component this={sectionComponents[activeSection]} bind:this={widgetEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
           {:else if activeSection === 'profile-collection'}
-            <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={context.profileConfig} />
+            <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={context.profileConfig} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} />
           {:else if activeSection === 'profile-layout'}
             <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={context.profileConfig?.draft} publishedConfig={context.profileConfig?.published} updatedAt={context.profileConfig?.updatedAt} entitlements={$profileEntitlements} staff={Boolean(context.targetProfile?.is_staff)} on:dirty={handleSectionDirty} on:configsaved={updateConfiguration} on:configpublished={updateConfiguration} on:configreloaded={handleConfigurationReloaded} on:configpreview={updateConfigurationPreview} />
           {:else if activeSection === 'profile-social'}

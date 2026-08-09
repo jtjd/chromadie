@@ -1,5 +1,17 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Restore Atelier expression through the modern renderer contract
+
+The original `name_prism_atelier` and `bg_prism_atmosphere` identities are
+restored as active Chromadie Plus catalog rows, but they now select the finite
+`name_motion` and `profile_atmosphere` renderers (`haunt-rainbow` and
+`silk-folds`). The retired `name_effect`/`profile_bg` raw-CSS slots remain
+removed, so historical keys cannot bypass the structured renderer boundary.
+The canonical entitlement is `chromadie_plus`; `atelier_plus` remains a
+compatibility entitlement through the existing helper. The Atelier template
+continues to be a composition preset, while Collection now explains the three
+separate actions: name motion, atmosphere, and Layout & links.
+
 ## 2026-08-08 — Keep pricing inside the profile-first visual language
 
 The `/pricing` surface uses the same authored canvas as the homepage rather

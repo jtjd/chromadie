@@ -57,6 +57,11 @@ const normalizedDefinitions = Object.fromEntries(
   Object.entries(definitions).map(([key, definition]) => [key, Object.freeze({ ...definition })])
 );
 
+const LEGACY_PROFILE_ATMOSPHERE_ALIASES = Object.freeze({
+  // Stable Atelier identity from the pre-structured catalog.
+  bg_prism_atmosphere: 'silk-folds'
+});
+
 export const PROFILE_ATMOSPHERE_KEYS = Object.freeze(Object.keys(normalizedDefinitions));
 export const PROFILE_ATMOSPHERE_DEFINITIONS = Object.freeze(normalizedDefinitions);
 
@@ -64,6 +69,7 @@ export function getAtmosphereDefinition(value) {
   if (typeof value !== 'string') return null;
   const candidate = value.trim();
   return PROFILE_ATMOSPHERE_DEFINITIONS[candidate]
+    || PROFILE_ATMOSPHERE_DEFINITIONS[LEGACY_PROFILE_ATMOSPHERE_ALIASES[candidate]]
     || (candidate.startsWith('profile_atmosphere_')
       ? PROFILE_ATMOSPHERE_DEFINITIONS[candidate.slice('profile_atmosphere_'.length).replaceAll('_', '-')]
       : null)
