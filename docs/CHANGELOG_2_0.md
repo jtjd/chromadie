@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Lift the temporary public-site password gate
+
+- Added the reversible `PREVIEW_PROTECTION=off` Cloudflare Pages switch for
+  returning the live site to public access.
+- The existing preview password flow remains the default when the switch is
+  absent, and Supabase account authentication is unchanged.
+
 ## 2026-08-08 — Improve Profile Studio readability
 
 - Enlarged the Studio sidebar and navigation labels and gave the Customize

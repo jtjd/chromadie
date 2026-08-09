@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Make public-site access reversible
+
+The temporary Cloudflare Pages rehearsal gate now has an explicit
+`PREVIEW_PROTECTION=off` bypass. This lets the owner lift the site-wide lock by
+changing one deployment secret without deleting `functions/_middleware.js` or
+removing the signed preview-session implementation. If the switch is absent,
+the existing fail-closed `PREVIEW_PASSWORD` behavior remains active. This
+concerns only browser traffic to Pages; Supabase authentication, RLS, and
+account passwords remain unchanged.
+
 ## 2026-08-08 — Make the Profile Studio editor readable at a glance
 
 The owner editor now gives the navigation and editing canvas most of the

@@ -135,6 +135,13 @@ export async function onRequest(context) {
     return context.next();
   }
 
+  // Keep the rehearsal gate reversible after the public release. The
+  // password flow remains the default unless the Pages environment explicitly
+  // disables it with PREVIEW_PROTECTION=off.
+  if (context.env?.PREVIEW_PROTECTION === "off") {
+    return context.next();
+  }
+
   const password = context.env?.PREVIEW_PASSWORD;
 
   if (typeof password !== "string" || password.length === 0) {

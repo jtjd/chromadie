@@ -154,6 +154,12 @@ branch to the production branch. After reconciliation and smoke tests, remove
 the middleware and redeploy to return the domain to public access. The gate
 protects browser traffic to Pages; it does not change Supabase API/RLS rules.
 
+For a reversible public release, deploy the middleware with
+`PREVIEW_PROTECTION=off` instead. The middleware forwards requests directly
+when that exact flag is present; removing the flag restores the password gate.
+Do not remove `PREVIEW_PASSWORD` before enabling the bypass, because an
+unconfigured gate intentionally returns the maintenance response.
+
 ## Release execution addendum — 2026-07-29
 
 The owner accepted the Free-plan no-recovery risk. The live Pages domain was

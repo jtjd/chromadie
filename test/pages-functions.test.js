@@ -47,6 +47,25 @@ test('preview gate leaves Cloudflare ACME validation reachable without opening t
   assert.equal(normalResponse.status, 503);
 });
 
+test('preview gate can be lifted explicitly for the public release', async () => {
+  let nextCalled = false;
+  const response = await previewMiddleware({
+    request: new Request('https://chm.lol/'),
+    env: {
+      PREVIEW_PROTECTION: 'off',
+      PREVIEW_PASSWORD: 'still-configured'
+    },
+    next: () => {
+      nextCalled = true;
+      return new Response('public site', { status: 200 });
+    }
+  });
+
+  assert.equal(nextCalled, true);
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'public site');
+});
+
 test('authenticated preview HTML is never cached between deployments', async () => {
   const password = 'preview-test-password';
   const loginResponse = await previewMiddleware({

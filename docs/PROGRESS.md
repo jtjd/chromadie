@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Public site access switch — 2026-08-08
+
+- Added the explicit `PREVIEW_PROTECTION=off` Cloudflare Pages environment
+  switch so the temporary site-wide rehearsal gate can be lifted without
+  deleting its middleware or changing Supabase account authentication.
+- Preserved the fail-closed password gate when the switch is absent and added
+  regression coverage for both public-release and protected behavior.
+
 ## Profile Studio readability pass — 2026-08-08
 
 - Widened the desktop navigation and increased label/button sizing so the
