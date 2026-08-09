@@ -138,14 +138,14 @@
 
 <style>
   .profile-dashboard-shell {
-    --dashboard-sidebar-width: 15rem;
+    --dashboard-sidebar-width: 18rem;
     display: grid;
     grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr);
     min-height: calc(100dvh - 4.1rem);
     color: var(--site-ink, var(--color-ink));
     background: var(--site-deep, var(--color-canvas-deep));
   }
-  .profile-dashboard-shell--with-preview { grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr) minmax(21rem, 34vw); }
+  .profile-dashboard-shell--with-preview { grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr) minmax(20rem, 26vw); }
   .profile-dashboard-shell__sidebar {
     position: sticky;
     top: 4.1rem;
@@ -154,40 +154,40 @@
     flex-direction: column;
     height: calc(100dvh - 4.1rem);
     min-width: 0;
-    padding: 1.1rem .8rem .8rem;
+    padding: 1.25rem 1rem 1rem;
     border-right: 1px solid var(--site-line, var(--color-line-subtle));
     background: color-mix(in srgb, var(--site-deep, #090a0d) 96%, transparent);
   }
-  .profile-dashboard-shell__sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: .05rem .45rem 1.15rem; }
+  .profile-dashboard-shell__sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: .05rem .55rem 1.35rem; }
   .profile-dashboard-shell__brand { display: inline-flex; align-items: center; gap: .6rem; min-width: 0; color: var(--site-ink, var(--color-ink-strong)); text-decoration: none; }
-  .profile-dashboard-shell__brand-mark { display: grid; width: 1.7rem; height: 1.7rem; place-items: center; border: 1px solid color-mix(in srgb, var(--site-accent, var(--color-accent)) 42%, transparent); border-radius: .5rem; background: color-mix(in srgb, var(--site-accent, var(--color-accent)) 12%, transparent); color: var(--site-accent, var(--color-accent)); font-size: .85rem; }
+  .profile-dashboard-shell__brand-mark { display: grid; width: 1.9rem; height: 1.9rem; place-items: center; border: 1px solid color-mix(in srgb, var(--site-accent, var(--color-accent)) 42%, transparent); border-radius: .5rem; background: color-mix(in srgb, var(--site-accent, var(--color-accent)) 12%, transparent); color: var(--site-accent, var(--color-accent)); font-size: .95rem; }
   .profile-dashboard-shell__brand span:last-child { display: grid; gap: .18rem; min-width: 0; }
-  .profile-dashboard-shell__brand strong { font: 700 .82rem/1 var(--site-font, var(--font-body-stack)); letter-spacing: -.02em; }
-  .profile-dashboard-shell__brand small { color: var(--site-faint, var(--color-ink-faint)); font: .54rem/1 var(--site-mono, var(--font-mono-stack)); letter-spacing: .1em; text-transform: uppercase; }
-  .profile-dashboard-shell__group-label { color: var(--site-faint, var(--color-ink-faint)); font: 600 .62rem/1 var(--site-mono, var(--font-mono-stack)); letter-spacing: .12em; text-transform: uppercase; }
+  .profile-dashboard-shell__brand strong { font: 700 .98rem/1 var(--site-font, var(--font-body-stack)); letter-spacing: -.02em; }
+  .profile-dashboard-shell__brand small { color: var(--site-faint, var(--color-ink-faint)); font: .62rem/1 var(--site-mono, var(--font-mono-stack)); letter-spacing: .1em; text-transform: uppercase; }
+  .profile-dashboard-shell__group-label { color: var(--site-faint, var(--color-ink-faint)); font: 600 .68rem/1 var(--site-mono, var(--font-mono-stack)); letter-spacing: .12em; text-transform: uppercase; }
   .profile-dashboard-shell__close { display: none; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font-size: 1.2rem; cursor: pointer; }
-  .profile-dashboard-shell__nav { display: grid; gap: 1.25rem; }
+  .profile-dashboard-shell__nav { display: grid; gap: 1.4rem; }
   .profile-dashboard-shell__group { display: grid; gap: .15rem; }
   .profile-dashboard-shell__group.account { padding-top: .75rem; border-top: 1px solid var(--site-line, var(--color-line-subtle)); }
-  .profile-dashboard-shell__group-label { padding: .2rem .55rem .35rem; font-size: .56rem; }
-  .profile-dashboard-shell__group-toggle { display: flex; align-items: center; justify-content: space-between; min-height: 1.8rem; padding: .2rem .55rem .35rem; border: 0; background: transparent; color: var(--site-faint, var(--color-ink-faint)); cursor: pointer; }
+  .profile-dashboard-shell__group-label { padding: .25rem .65rem .45rem; font-size: .68rem; }
+  .profile-dashboard-shell__group-toggle { display: flex; align-items: center; justify-content: space-between; min-height: 2rem; padding: .25rem .65rem .45rem; border: 0; background: transparent; color: var(--site-faint, var(--color-ink-faint)); cursor: pointer; }
   .profile-dashboard-shell__group-toggle > span:last-child { color: var(--site-muted, var(--color-ink-muted)); font: .8rem/1 var(--site-mono, var(--font-mono-stack)); }
-  .profile-dashboard-shell__nav button { display: flex; align-items: center; gap: .55rem; width: 100%; min-height: 2.15rem; padding: .55rem .55rem; border: 1px solid transparent; border-radius: .42rem; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 500 .76rem/1.1 var(--site-font, var(--font-body-stack)); text-align: left; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
+  .profile-dashboard-shell__nav button { display: flex; align-items: center; gap: .65rem; width: 100%; min-height: 2.65rem; padding: .65rem .7rem; border: 1px solid transparent; border-radius: .5rem; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 500 .9rem/1.15 var(--site-font, var(--font-body-stack)); text-align: left; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
   .profile-dashboard-shell__nav button:hover, .profile-dashboard-shell__nav button:focus-visible { border-color: var(--site-line-strong, var(--color-line-strong)); background: var(--site-surface-soft, var(--surface-panel-soft)); color: var(--site-ink, var(--color-ink-strong)); }
   .profile-dashboard-shell__nav button.active { border-color: color-mix(in srgb, var(--site-accent, var(--color-accent)) 46%, var(--site-line)); background: color-mix(in srgb, var(--site-accent, var(--color-accent)) 12%, transparent); color: var(--site-ink, var(--color-ink-strong)); }
   .profile-dashboard-shell__nav button.premium { color: var(--site-accent, var(--color-accent)); }
   .profile-dashboard-shell__nav button.premium.active { border-color: color-mix(in srgb, var(--site-accent, var(--color-accent)) 58%, var(--site-line)); background: color-mix(in srgb, var(--site-accent, var(--color-accent)) 18%, transparent); }
   .profile-dashboard-shell__nav button:focus-visible, .profile-dashboard-shell__group-toggle:focus-visible, .profile-dashboard-shell__mobile-bar button:focus-visible { outline: 2px solid var(--site-accent, var(--color-accent-bright)); outline-offset: 3px; }
-  .profile-dashboard-shell__nav-icon { display: grid; place-items: center; width: 1rem; color: var(--site-faint, var(--color-ink-faint)); font-family: var(--site-mono, var(--font-mono-stack)); }
+  .profile-dashboard-shell__nav-icon { display: grid; place-items: center; width: 1.15rem; color: var(--site-faint, var(--color-ink-faint)); font-family: var(--site-mono, var(--font-mono-stack)); }
   .profile-dashboard-shell__nav button.active .profile-dashboard-shell__nav-icon { color: var(--site-accent, var(--color-accent)); }
   .profile-dashboard-shell__main { min-width: 0; }
-  .profile-dashboard-shell__content { width: 100%; min-height: calc(100dvh - 4.1rem); padding: clamp(1rem, 2.4vw, 2.25rem) clamp(.85rem, 2.6vw, 3rem) 4rem; }
+  .profile-dashboard-shell__content { width: 100%; min-height: calc(100dvh - 4.1rem); padding: clamp(1rem, 2vw, 2rem) clamp(1rem, 2vw, 2.25rem) 3rem; }
   .profile-dashboard-shell__preview { position: sticky; top: 0; z-index: 10; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; height: calc(100dvh - 4.75rem); overflow: hidden; border-left: 1px solid var(--site-line, var(--color-line-subtle)); background: color-mix(in srgb, var(--site-deep, #090a0d) 94%, transparent); }
   .profile-dashboard-shell__mobile-bar { display: none; }
   .profile-dashboard-shell__backdrop { display: none; }
   @media (max-width: 64rem) {
     .profile-dashboard-shell { display: block; }
-    .profile-dashboard-shell__sidebar { position: fixed; inset: 0 auto 0 0; z-index: 60; width: min(86vw, 20rem); height: 100dvh; padding-top: 1rem; transform: translateX(-104%); transition: transform .2s ease; box-shadow: 1rem 0 3rem rgba(0,0,0,.34); }
+    .profile-dashboard-shell__sidebar { position: fixed; inset: 0 auto 0 0; z-index: 60; width: min(88vw, 22rem); height: 100dvh; padding-top: 1rem; transform: translateX(-104%); transition: transform .2s ease; box-shadow: 1rem 0 3rem rgba(0,0,0,.34); }
     .profile-dashboard-shell__sidebar.is-open { transform: translateX(0); }
     .profile-dashboard-shell__sidebar-head { padding-top: .25rem; }
     .profile-dashboard-shell__close { display: block; }
@@ -196,7 +196,7 @@
     .profile-dashboard-shell__mobile-bar button { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .72rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
     .profile-dashboard-shell__mobile-bar > span { color: var(--site-ink, var(--color-ink-strong)); font-size: .76rem; }
     .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding-top: 1rem; }
-    .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: relative; top: auto; height: min(78dvh, 52rem); min-height: 32rem; border-top: 1px solid var(--site-line, var(--color-line-subtle)); border-left: 0; }
+    .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: relative; top: auto; height: auto; min-height: 22rem; max-height: 30rem; border-top: 1px solid var(--site-line, var(--color-line-subtle)); border-left: 0; }
   }
   @media (prefers-reduced-motion: reduce) { .profile-dashboard-shell__sidebar, .profile-dashboard-shell__nav button { transition-duration: .001ms; } }
 </style>

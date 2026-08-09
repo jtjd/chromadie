@@ -249,7 +249,7 @@
 
 <section class="profile-editor" aria-labelledby="profile-layout-title">
   <header class="profile-editor__header">
-    <div><h2 id="profile-layout-title">{showLayout && showLinks ? 'Layout & links' : showLayout ? 'Layout & templates' : 'Links & sharing'}</h2><p>{showLayout && showLinks ? 'Arrange public sections and links.' : showLayout ? 'Shape the public composition and templates.' : 'Manage the links and share details on your public profile.'}</p></div>
+    <div><h2 id="profile-layout-title">{showLayout && showLinks ? 'Layout & links' : showLayout ? 'Layout & templates' : 'Links & sharing'}</h2><p>{showLayout && showLinks ? 'Arrange sections and links.' : showLayout ? 'Choose a template and arrange sections.' : 'Manage links and sharing.'}</p></div>
     <span class="profile-editor__version">Public layout: {STYLE_LABELS[normalizeProfileConfig(publishedConfig).layoutVariant]}</span>
   </header>
 

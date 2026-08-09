@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-08 — Improve Profile Studio readability
+
+- Enlarged the Studio sidebar and navigation labels and gave the Customize
+  editor the full available content width.
+- Replaced long intro copy with direct labels for appearance, surface, layout,
+  and links controls.
+- Made Live preview a compact identity-card panel and removed the daily roll
+  and lower profile regions from the editor preview; the public profile is
+  unchanged.
+
 ## 2026-08-08 — Clarify Profile Studio navigation
 
 - Studio now opens on **Customize**, where identity, appearance, media, About,

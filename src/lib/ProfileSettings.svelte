@@ -513,14 +513,14 @@
   <div slot="preview" class="profile-settings-preview">
     <header class="profile-settings-preview__header">
       <div>
-        <p class="profile-settings-preview__eyebrow">Profile canvas</p>
+        <p class="profile-settings-preview__eyebrow">Preview</p>
         <h2>Live preview</h2>
       </div>
       <span class="profile-settings-preview__status"><span aria-hidden="true"></span> Draft</span>
     </header>
     <div class="profile-settings-preview__body">
       {#if PreviewComponent}
-        <svelte:component this={PreviewComponent} previewMode={true} previewProfile={previewProfile} previewProfileConfig={previewProfileConfig} previewScores={context?.targetScores || []} previewTimelineEvents={context?.timelineEvents || []} previewCollectionItems={context?.collectionItems || []} previewAllAchievements={context?.allAchievements || []} />
+        <svelte:component this={PreviewComponent} previewMode={true} previewIdentityOnly={true} previewProfile={previewProfile} previewProfileConfig={previewProfileConfig} previewScores={context?.targetScores || []} previewTimelineEvents={context?.timelineEvents || []} previewCollectionItems={context?.collectionItems || []} previewAllAchievements={context?.allAchievements || []} />
       {:else if previewError}
         <div class="profile-settings-preview__loading" role="alert"><span aria-hidden="true">!</span><strong>Preview unavailable</strong><p>{previewError}</p><button type="button" on:click={loadPreviewComponent}>Retry preview</button></div>
       {:else}
@@ -541,7 +541,7 @@
 {/if}
 
 <style>
-  .profile-settings-page { min-width: 0; }
+  .profile-settings-page { width: 100%; min-width: 0; }
   .profile-settings-page__toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; padding: .2rem 0 1.45rem; }
   .profile-settings-page__breadcrumb { display: flex; gap: .45rem; margin: 0 0 .55rem; color: var(--site-faint, #7d7e87); font: .62rem/1 var(--site-mono, monospace); }
   .profile-settings-page__toolbar h1 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: clamp(1.5rem, 2.5vw, 2.25rem); letter-spacing: -.05em; }
@@ -549,7 +549,7 @@
   .profile-settings-page__toolbar-actions :is(a, button) { min-height: 2rem; padding: .5rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: .68rem; text-decoration: none; cursor: pointer; }
   .profile-settings-page__toolbar-actions :is(a, button):hover { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
   .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid rgba(255, 183, 94, .35); border-radius: .35rem; color: #ffc783; font-size: .72rem; }
-  .profile-settings-page__content { min-width: 0; }
+  .profile-settings-page__content { width: 100%; min-width: 0; }
   .profile-links-page { display: grid; gap: 1rem; min-width: 0; }
   .profile-settings-page__state { display: grid; min-height: 16rem; place-items: center; gap: .6rem; color: var(--site-muted, #aaa8b0); }
   .profile-settings-page__state h1 { margin: 0; font-size: 1.2rem; }
@@ -559,9 +559,11 @@
   .profile-settings-preview__header h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .95rem; letter-spacing: -.02em; }
   .profile-settings-preview__status { display: inline-flex; align-items: center; gap: .4rem; color: var(--site-muted, #aaa8b0); font: .62rem/1 var(--site-mono, monospace); white-space: nowrap; }
   .profile-settings-preview__status span { width: .42rem; height: .42rem; border-radius: 50%; background: #6de2a4; box-shadow: 0 0 .8rem rgba(109,226,164,.6); }
-  .profile-settings-preview__body { min-height: 0; overflow: auto; padding: .9rem; background: radial-gradient(circle at 50% 0%, rgba(205,210,255,.06), transparent 42%), var(--site-deep, #090a0d); }
-  .profile-settings-preview__body :global(.profile-shell-page--preview) { height: auto; min-height: 100%; overflow: visible; }
-  .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; }
+  .profile-settings-preview__body { display: grid; min-height: 0; overflow: auto; place-items: start center; padding: 1.25rem; background: radial-gradient(circle at 50% 0%, rgba(205,210,255,.06), transparent 42%), var(--site-deep, #090a0d); }
+  .profile-settings-preview__body :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: visible; }
+  .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-canvas) { min-height: 0; }
+  .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; align-items: stretch; justify-content: flex-start; }
+  .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__opening) { min-height: 0; padding: 1.15rem; }
   .profile-settings-preview__loading { display: grid; place-items: center; min-height: 18rem; gap: .55rem; color: var(--site-muted, #aaa8b0); font-size: .72rem; text-align: center; }
   .profile-settings-preview__loading span { color: var(--site-accent, #cdd2ff); font-size: 1.2rem; }
   .profile-settings-preview__loading strong { color: var(--site-ink, #f2f0eb); font-size: .85rem; }

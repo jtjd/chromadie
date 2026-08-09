@@ -43,6 +43,7 @@
   export let profileUsername = null;
   export let userId = null;
   export let previewMode = false;
+  export let previewIdentityOnly = false;
   export let previewProfile = null;
   export let previewProfileConfig = null;
   export let previewScores = [];
@@ -511,7 +512,7 @@
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
   {#if backgroundSrc && !previewMode}
     <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
   {/if}
@@ -1326,6 +1327,7 @@
   }
 
   .profile-shell-page--preview .profile-shell__approved-canvas {
+    width: 100%;
     min-height: 0;
     padding: 0;
   }
@@ -1334,15 +1336,28 @@
     height: auto;
     min-height: 0;
     overflow: hidden;
+    padding: 0;
     scroll-snap-type: none;
   }
 
   .profile-shell-page--preview .profile-shell__approved-main {
+    width: 100%;
+    height: auto;
     min-height: 0;
   }
 
   .profile-shell-page--preview .profile-shell__approved-opening {
     width: 100%;
+  }
+
+  /* The editor preview is an identity check, not a second profile page. Keep
+     the opening card visible while leaving the daily roll and story surfaces
+     in the public renderer untouched. */
+  .profile-shell-page--identity-only .profile-shell__more,
+  .profile-shell-page--identity-only > .profile-shell__story-section,
+  .profile-shell-page--identity-only > .profile-shell__social-section,
+  .profile-shell-page--identity-only .profile-shell__more-cue {
+    display: none;
   }
 
   /* Layouts style the identity card only. The approved identity page and the

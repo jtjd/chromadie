@@ -20,6 +20,7 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
   assert.match(settings, /showPreview=\{true\}/);
   assert.match(settings, /slot="preview"/);
   assert.match(settings, /profile-settings-preview__body/);
+  assert.match(settings, /previewIdentityOnly=\{true\}/);
   assert.doesNotMatch(settings, /profile-preview-drawer__backdrop/);
   assert.match(shell, /profile-dashboard-shell__mobile-bar/);
   assert.match(shell, /profile-dashboard-shell--with-preview/);

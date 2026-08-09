@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-08 — Make the Profile Studio editor readable at a glance
+
+The owner editor now gives the navigation and editing canvas most of the
+viewport. The sidebar uses a wider, readable type scale; Customize controls
+fill the available content column; and editor copy is reduced to direct labels
+instead of explanatory marketing language. The live preview remains powered
+by the same draft renderer, but is a compact identity-card check with daily
+roll, story, and social regions hidden so it does not compete with controls.
+
+This is presentation-only. Public profile composition, daily-roll authority,
+draft/publish RPCs, media entitlement checks, and mobile/reduced-motion
+behavior remain unchanged. The browser smoke contract now verifies that the
+preview has no visible roll region while appearance changes remain unpublished
+until the owner chooses Publish.
+
 ## 2026-08-08 — Make Profile Studio expression-first and destination-based
 
 The owner dashboard now presents three primary destinations—Customize, Links,

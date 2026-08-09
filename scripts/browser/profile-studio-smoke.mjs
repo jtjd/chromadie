@@ -83,7 +83,13 @@ function dashboardStateExpression() {
     const preview = document.querySelector('.profile-settings-preview');
     const page = document.querySelector('.profile-shell-page--preview');
     const card = document.querySelector('.profile-settings-preview .identity-card');
-    const roll = document.querySelector('.profile-settings-preview [data-profile-region="roll"]');
+    const rollElement = document.querySelector('.profile-settings-preview [data-profile-region="roll"]');
+    const isVisible = element => {
+      if (!element || getComputedStyle(element).display === 'none' || getComputedStyle(element).visibility === 'hidden') return false;
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    };
+    const roll = isVisible(rollElement) ? rollElement : null;
     const style = element => element ? getComputedStyle(element) : null;
     const read = element => {
       const computed = style(element);
@@ -101,6 +107,7 @@ function dashboardStateExpression() {
       page: Boolean(page),
       card: read(card),
       roll: read(roll),
+      rollHidden: !isVisible(rollElement),
       publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish')?.disabled ?? null,
       bodyScrollWidth: document.body.scrollWidth,
       documentScrollWidth: document.documentElement.scrollWidth,
@@ -229,11 +236,11 @@ try {
     await page.waitFor(`document.querySelector('.appearance-editor__range:nth-child(2) output')?.textContent?.trim() === '40px'`, 'maximum blur preview value');
     const after = await page.evaluate(dashboardStateExpression());
     const publishRequestsAfter = page.requestLog.filter(request => request.url.includes('publish_profile_configuration_section')).length;
-    assert(before.preview && before.card && before.roll, 'Preview card or roll region was not available.');
+    assert(before.preview && before.card, 'Preview card was not available.');
+    assert(before.rollHidden && after.rollHidden && !before.roll && !after.roll, 'The identity-only editor preview rendered a visible daily-roll region.');
     assert(zero.card.blurVar === '0px', `Preview did not apply 0px blur; observed ${JSON.stringify(zero.card.blurVar)}.`);
     assert(after.card.blurVar === '40px', `Preview did not apply 40px blur; observed ${JSON.stringify(after.card.blurVar)}.`);
     assert(after.card.backdropFilter.includes('40px'), `Computed card backdrop filter did not reflect 40px blur: ${after.card.backdropFilter || '<empty>'}.`);
-    assert(after.roll.blurVar === '', `Appearance blur leaked into the roll region: ${JSON.stringify(after.roll.blurVar)}.`);
     assert(after.publishDisabled === false, 'Changing Customize did not create an unpublished draft.');
     assert(publishRequestsBefore === publishRequestsAfter, 'Changing Customize unexpectedly called the publish RPC.');
     await capture('05-customize-draft-blur');

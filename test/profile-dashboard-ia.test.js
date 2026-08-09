@@ -20,7 +20,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /LEGACY_HASH_ALIASES/);
   assert.match(settings, /<ProfileCustomizePage/);
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
-  assert.match(customize, /Everything that changes how your profile looks and feels lives here/);
+  assert.match(customize, /Identity, colors, media, content, widgets, and layout/);
   assert.match(customize, /ProfileAppearanceEditor/);
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);

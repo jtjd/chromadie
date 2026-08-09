@@ -38,11 +38,11 @@
 <div class="profile-customize-page">
   <section class="profile-customize-page__intro" aria-labelledby="profile-customize-title">
     <div>
-      <p class="profile-customize-page__eyebrow">Profile studio / expression</p>
-      <h2 id="profile-customize-title">Make it unmistakably yours.</h2>
-      <p>Everything that changes how your profile looks and feels lives here. Preview the page as you shape it, then publish when it feels right.</p>
+      <p class="profile-customize-page__eyebrow">Customize</p>
+      <h2 id="profile-customize-title">Profile appearance</h2>
+      <p>Identity, colors, media, content, widgets, and layout.</p>
     </div>
-    <span class="profile-customize-page__count">01 / customize</span>
+    <span class="profile-customize-page__count">Profile</span>
   </section>
 
   <div class="profile-customize-page__stack">
@@ -149,13 +149,14 @@
 </div>
 
 <style>
-  .profile-customize-page { display: grid; gap: 1.35rem; min-width: 0; }
+  .profile-customize-page { display: grid; width: 100%; gap: 1.35rem; min-width: 0; }
   .profile-customize-page__intro { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; padding: 1.35rem 1.4rem; border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .65rem; background: linear-gradient(120deg, color-mix(in srgb, var(--site-accent, #cdd2ff) 8%, var(--site-raised, #111319)), var(--site-raised, #111319)); }
   .profile-customize-page__eyebrow { margin: 0 0 .65rem; color: var(--site-faint, #7d7e87); font: .58rem/1 var(--site-mono, monospace); letter-spacing: .14em; text-transform: uppercase; }
   .profile-customize-page__intro h2 { max-width: 22ch; margin: 0; color: var(--site-ink, #f2f0eb); font-size: clamp(1.45rem, 2.7vw, 2.15rem); letter-spacing: -.045em; }
-  .profile-customize-page__intro p:last-child { max-width: 40rem; margin: .55rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .78rem; line-height: 1.55; }
+  .profile-customize-page__intro p:last-child { max-width: 40rem; margin: .55rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .82rem; line-height: 1.45; }
   .profile-customize-page__count { flex: 0 0 auto; color: var(--site-faint, #7d7e87); font: .6rem/1 var(--site-mono, monospace); letter-spacing: .1em; text-transform: uppercase; }
-  .profile-customize-page__stack { display: grid; gap: 1rem; min-width: 0; }
+  .profile-customize-page__stack { display: flex; width: 100%; flex-direction: column; gap: 1rem; min-width: 0; }
+  .profile-customize-page__stack :global(> *) { width: 100%; min-width: 0; box-sizing: border-box; }
   .profile-customize-page__stack :global(> section) { scroll-margin-top: 1rem; }
   @media (max-width: 48rem) {
     .profile-customize-page__intro { display: grid; gap: 1rem; }

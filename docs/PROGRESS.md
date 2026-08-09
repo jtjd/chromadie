@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio readability pass — 2026-08-08
+
+- Widened the desktop navigation and increased label/button sizing so the
+  dashboard sections are readable without browser zoom; the mobile drawer
+  keeps the same focus trap and inert behavior.
+- Expanded the Customize workspace to the full editor column, simplified
+  appearance/layout copy, and retained section-scoped save/publish controls.
+- Reduced the inline preview to a compact identity card, hid daily-roll/story
+  regions in preview mode, and kept draft appearance updates and public
+  renderer behavior covered by browser smoke.
+- Verified desktop, mobile, keyboard, reduced-motion, direct-refresh, and
+  canonical public-profile smoke paths locally.
+
 ## Profile Studio navigation clarified — 2026-08-08
 
 - Reorganized the owner dashboard around Customize, Links, Premium, and a

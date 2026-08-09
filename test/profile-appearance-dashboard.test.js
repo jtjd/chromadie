@@ -63,6 +63,7 @@ test('dashboard uses the shared header and section RPC contract', async () => {
   assert.match(settings, /popstate/);
   assert.match(settings, /history\.pushState/);
   assert.match(settings, /import\('\.\/ProfileShell\.svelte'\)/);
+  assert.match(settings, /previewIdentityOnly=\{true\}/);
   assert.match(appearance, /save_profile_configuration_section/);
   assert.match(appearance, /publish_profile_configuration_section/);
   assert.match(layout, /p_section: 'composition'/);
