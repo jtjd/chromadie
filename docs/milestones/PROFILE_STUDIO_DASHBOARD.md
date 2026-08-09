@@ -78,15 +78,18 @@ saved assets immediately below for reuse. Repeated module headers are hidden in
 this context. Color Customization now contains only the six palette colors and a
 Surface group containing the Profile Surface color plus its depth controls, and
 one dashboard Reset / Publish profile bar commits the assembled V2 draft across
-Customize and Links.
+Customize and Links. General Customization now gives Bio the full height of the
+two right-side identity rows, keeps their gap compact, and places visibility
+options below Bio while restoring ordinary flow on tablet and mobile.
 
 ## Validation
 
-- `npm test`: 252 passing.
-- `npm run build`, `npm run check`, `npx eslint .`, links, CSP, username
+- `npm test`: 253 passing.
+- `npm run build`, `npm run check`, `npx eslint src/`, links, CSP, username
   policy, balance, catalog, scoring parity, and database security: passing.
 - `npm run check:performance`: all blocking route and asset budgets pass;
   aggregate JavaScript and CSS catalogs remain advisory overages.
 - `npm run test:browser`: passing for authenticated Studio refresh, aliases,
-  collapsed/open/closed preview, draft-only appearance updates, mobile drawer,
-  reduced motion, and canonical public profile refresh.
+  collapsed/open/closed preview, draft-only appearance updates, balanced
+  General Customization geometry, mobile drawer, reduced motion, and canonical
+  public profile refresh.

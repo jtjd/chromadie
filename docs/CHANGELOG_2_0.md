@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-09 — Balance General Customization identity controls
+
+- Expanded the compact Bio textarea to align with the full stack of
+  Location/Timezone and Description rhythm/Entry animation controls.
+- Reduced the vertical gap between the two right-side rows and moved Show join
+  month / Show avatar below Bio for a cleaner visual rhythm.
+- Preserved the stacked tablet/mobile layout and existing identity save flow.
+
 ## 2026-08-09 — Align surface controls with the profile card
 
 - Moved Profile Surface into the Surface section beside Opacity and Blur; the

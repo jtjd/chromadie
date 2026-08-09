@@ -219,6 +219,27 @@ try {
     await page.setInputValue('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) input[type="range"]', 40, ['input']);
     await page.waitFor(`document.querySelector('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) output')?.textContent?.trim() === '40px'`, 'blur draft value');
     const publishRequestsAfter = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
+    const identityLayout = await page.evaluate(`(() => {
+      const field = selector => document.querySelector(selector)?.closest('.identity-editor__field');
+      const rect = element => {
+        const box = element?.getBoundingClientRect();
+        return box ? { top: box.top, bottom: box.bottom, height: box.height } : null;
+      };
+      const bio = rect(field('#profile-bio'));
+      const meta = rect(document.querySelector('.identity-editor__grid--meta .identity-editor__field'));
+      const behavior = rect(document.querySelector('.identity-editor__grid--behavior .identity-editor__field'));
+      const options = rect(document.querySelector('.identity-editor__options'));
+      return {
+        bio,
+        meta,
+        behavior,
+        options,
+        behaviorGap: meta && behavior ? behavior.top - meta.bottom : null
+      };
+    })()`);
+    assert(identityLayout.bio && identityLayout.behavior && identityLayout.bio.bottom >= identityLayout.behavior.bottom - 1, `Bio does not reach the behavior row: ${JSON.stringify(identityLayout)}.`);
+    assert(identityLayout.options && identityLayout.bio && identityLayout.options.top >= identityLayout.bio.bottom - 1, `Visibility options did not move below Bio: ${JSON.stringify(identityLayout)}.`);
+    assert(identityLayout.behaviorGap !== null && identityLayout.behaviorGap <= 20, `Metadata-to-behavior gap is too large: ${JSON.stringify(identityLayout)}.`);
     const draftState = await page.evaluate(`({
       publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,
       toolbarVisible: Boolean(document.querySelector('.profile-settings-page__toolbar')),
@@ -233,7 +254,7 @@ try {
       const reset = [...document.querySelectorAll('.profile-dashboard-actions button')].find(button => button.textContent.trim() === 'Reset');
       return Boolean(reset && reset.disabled);
     })()`, 'Customize reset');
-    return { draftState, publishRequests: publishRequestsAfter, mediaRail };
+    return { draftState, identityLayout, publishRequests: publishRequestsAfter, mediaRail };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {

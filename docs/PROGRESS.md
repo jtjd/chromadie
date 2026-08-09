@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Balance General Customization controls — 2026-08-09
+
+- Made the Bio field span the Location/Timezone and Description/Entry rows so
+  the textarea fills the full left side of the compact desktop editor.
+- Tightened the right-side row gap and moved the visibility checkboxes beneath
+  Bio, keeping the desktop composition balanced without changing save or
+  presentation contracts.
+- Reset the layout to normal flow at tablet and mobile widths so the editor
+  remains readable and usable on narrow screens.
+
 ## Correct Profile Studio surface controls and card blur — 2026-08-09
 
 - Moved Profile Surface into the Surface group beside its linked opacity and

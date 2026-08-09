@@ -256,10 +256,15 @@
   .profile-customize-page :global(.appearance-editor__range > span) { font-size: .75rem; }
   .profile-customize-page :global(.identity-editor .foundation-module__body) { display: block; }
   .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { display: grid; gap: .65rem; }
-  .profile-customize-page :global(.identity-editor__fields) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
-  .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: span 2; }
+  .profile-customize-page :global(.identity-editor__fields) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto auto auto; column-gap: .65rem; row-gap: .4rem; }
+  .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / span 2; grid-row: 1 / span 2; align-self: stretch; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: 100%; min-height: 0; }
   .profile-customize-page :global(.identity-editor__grid) { display: contents; }
-  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: span 2; align-self: end; align-items: center; min-height: 2.3rem; flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; color: var(--customize-muted); font-size: .76rem; }
+  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:first-child) { grid-column: 3; grid-row: 1; }
+  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child) { grid-column: 4; grid-row: 1; }
+  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:first-child) { grid-column: 3; grid-row: 2; }
+  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:last-child) { grid-column: 4; grid-row: 2; }
+  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: 1 / span 2; grid-row: 3; align-self: start; align-items: center; min-height: 2.3rem; flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; color: var(--customize-muted); font-size: .76rem; }
   .profile-customize-page :global(.identity-editor__options label) { display: inline-flex; align-items: center; gap: .35rem; }
   .profile-customize-page :global(.identity-editor__field) { align-self: start; align-content: start; gap: .35rem; font-size: .78rem; }
   .profile-customize-page :global(.identity-editor__field textarea) { min-height: 4.5rem; }
@@ -308,7 +313,12 @@
   @media (max-width: 72rem) {
     .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .profile-customize-page :global(.identity-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .profile-customize-page :global(.identity-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; gap: .55rem; }
+    .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / -1; grid-row: auto; align-self: start; align-content: start; grid-template-rows: none; }
+    .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: auto; min-height: 4.5rem; }
+    .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field),
+    .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field) { grid-column: auto; grid-row: auto; }
+    .profile-customize-page :global(.identity-editor__options) { grid-column: 1 / -1; grid-row: auto; }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 

@@ -1,5 +1,18 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-09 — Let the Bio field own the compact identity column
+
+The compact General Customization editor uses a four-column desktop grid. Bio
+spans the two left columns and both right-side field rows, while Location /
+Timezone and Description rhythm / Entry animation remain explicit two-column
+groups. Visibility checkboxes sit below Bio rather than competing with the
+second right-side row. At tablet and mobile widths the explicit placements are
+cleared and the controls return to normal document flow.
+
+This is a dashboard-only layout refinement. Identity validation, draft restore,
+owner RPCs, presentation normalization, accessibility, and the full-size
+Profile Settings editor remain unchanged.
+
 ## 2026-08-09 — Keep surface color and depth controls together
 
 Profile Surface is now edited in the same Surface group as opacity and blur.

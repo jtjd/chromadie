@@ -170,7 +170,7 @@
           <small id="profile-bio-error" class="identity-editor__error">{validation.fieldErrors.bio}</small>
         {/if}
       </label>
-      <div class="identity-editor__grid">
+      <div class="identity-editor__grid identity-editor__grid--meta">
         <label class="identity-editor__field" for="profile-location"><span>Location <small>optional</small></span><input id="profile-location" maxlength="60" value={draftPresentation.location} disabled={saving} on:input={event => updateField('location', event.currentTarget.value)} /></label>
         <label class="identity-editor__field" for="profile-timezone"><span>Timezone <small>optional</small></span><input id="profile-timezone" maxlength="40" placeholder="America/New_York" value={draftPresentation.timezone} disabled={saving} on:input={event => updateField('timezone', event.currentTarget.value)} /></label>
       </div>
@@ -178,7 +178,7 @@
         <label><input type="checkbox" checked={draftPresentation.showJoinDate} disabled={saving} on:change={event => updateField('showJoinDate', event.currentTarget.checked)} /> Show join month</label>
         <label><input type="checkbox" checked={draftPresentation.showAvatar} disabled={saving} on:change={event => updateField('showAvatar', event.currentTarget.checked)} /> Show avatar</label>
       </div>
-      <div class="identity-editor__grid">
+      <div class="identity-editor__grid identity-editor__grid--behavior">
         <label class="identity-editor__field"><span>Description rhythm</span><select value={draftPresentation.descriptionMode} disabled={saving} on:change={event => updateField('descriptionMode', event.currentTarget.value)}>{#each PROFILE_IDENTITY_DESCRIPTION_MODES as mode (mode)}<option value={mode}>{mode === 'typewriter' ? 'Finite typewriter' : 'Plain text'}</option>{/each}</select></label>
         <label class="identity-editor__field"><span>Entry animation</span><select value={draftPresentation.entryAnimation} disabled={saving} on:change={event => updateField('entryAnimation', event.currentTarget.value)}>{#each PROFILE_IDENTITY_ENTRY_ANIMATIONS as mode (mode)}<option value={mode}>{mode === 'none' ? 'None' : mode[0].toUpperCase() + mode.slice(1)}</option>{/each}</select></label>
       </div>
