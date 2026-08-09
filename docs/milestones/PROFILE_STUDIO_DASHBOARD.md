@@ -1,6 +1,6 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; navigation refinement validated 2026-08-08
+Status: implementation complete; workspace usability refinement implemented 2026-08-08
 
 ## Scope
 
@@ -61,14 +61,22 @@ currency in that slice.
 - Existing route, RPC, RLS, scoring, catalog, and historical-data contracts
   remain intact.
 
+## Workspace usability refinement
+
+Customize now opens with five direct asset-management entries and a persistent
+seven-category switcher. Editors stay mounted to retain local drafts, but only
+the selected category and its section-scoped action bar are displayed. Preview
+is user-controlled and responsive instead of permanently reducing the editor
+width. This is a presentation-only refinement: it reuses the existing media
+library, entitlement gates, structured configuration, and owner RPCs.
+
 ## Validation
 
-- `npm test`: 190 passing.
-- `npm run check`, `npx eslint src/`, and `npm run build`: passing.
-- Links, CSP, username policy, balance, catalog, scoring parity, database
-  security, and direct `/profile/settings` + `/shop` route smoke checks:
-  passing.
-- `npm run check:performance`: repository budget exception remains for
-  initial JavaScript, total JavaScript, and total CSS. The largest lazy asset
-  remains below its configured limit; this milestone did not broaden the
-  performance scope into a separate asset-budget refactor.
+- `npm test`: 251 passing.
+- `npm run build`, `npm run check`, `npx eslint .`, links, CSP, username
+  policy, balance, catalog, scoring parity, and database security: passing.
+- `npm run check:performance`: all blocking route and asset budgets pass;
+  aggregate JavaScript and CSS catalogs remain advisory overages.
+- `npm run test:browser`: passing for authenticated Studio refresh, aliases,
+  collapsed/open/closed preview, draft-only appearance updates, mobile drawer,
+  reduced motion, and canonical public profile refresh.

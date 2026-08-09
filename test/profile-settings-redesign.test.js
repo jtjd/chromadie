@@ -11,6 +11,9 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
   assert.match(settings, /id: 'links'/);
   assert.match(settings, /Live preview/);
+  assert.match(settings, /previewOpen/);
+  assert.match(settings, /togglePreview/);
+  assert.match(settings, /showPreview=\{previewOpen && previewAvailable\}/);
   assert.doesNotMatch(settings, /preview-column/);
   assert.match(settings, /ProfileDashboardShell/);
   assert.match(settings, /setActiveSection\(/);

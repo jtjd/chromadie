@@ -2590,6 +2590,28 @@ renderer keys through finite aliases.
   scoring parity, database security, schema lint, and database reset passed.
 Performance remains over inherited initial/total JS and total CSS budgets.
 
+## 2026-08-08 — Profile Studio usability refinement
+
+- Replaced the aggregate Customize form stack with persistent Assets, Identity,
+  Appearance, Effects, Content, Widgets, and Layout category controls. All
+  editors remain mounted for draft safety, while only one editor and action bar
+  is visible at a time.
+- Added above-the-fold Avatar, Background, Banner, Audio, and Cursors entry
+  tiles that report configured and Plus states and open the existing bounded
+  media manager.
+- Replaced the duplicated Customize introduction with a compact workspace and
+  direct Plus status/upsell strip.
+- Made live preview opt-in. It docks on wide displays, uses an inspector overlay
+  on ordinary desktops, and a bounded bottom sheet on mobile; the daily-roll
+  region remains excluded from the dashboard preview.
+- Reflowed Surface, Gradient, and Borders into responsive control cards and
+  increased field/control legibility without changing appearance data.
+- No schema, Storage policy, RLS, upload, entitlement, profile rendering, or
+  section-scoped draft/publish contract changed.
+- Full validation passes with 251 tests. The Chromium Profile Studio smoke
+  covers collapsed/open/closed preview behavior, draft-only appearance updates,
+  mobile navigation, reduced motion, and canonical public refresh.
+
 ## 2026-08-08 — Add structured About and Projects regions
 
 - Added the bounded `content` profile configuration contract: one plain-text

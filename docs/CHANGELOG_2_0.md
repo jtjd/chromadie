@@ -2110,3 +2110,16 @@ direct route behavior.
   audio playback, visible pause/volume/track controls, and media-key handling.
 - Preserved the free image/atmosphere/Spotify/YouTube expression path and all
   daily-roll, reward, history, and prestige authority boundaries.
+
+## 2026-08-08 — Make Profile Studio easier to scan and operate
+
+- Added a quick asset row for avatar, background, banner, audio, and cursor
+  management, including configured and Plus states.
+- Added keyboard-accessible Customize categories so profile settings no longer
+  appear as one long page with several competing save bars.
+- Made live preview an on-demand responsive inspector and kept the compact
+  identity-only preview free of daily-roll dashboard content.
+- Grouped appearance controls into denser responsive cards and improved field
+  label and control sizing.
+- Reused all existing media managers, entitlement checks, owner RPCs, RLS, and
+  draft/publish behavior; this release contains no database migration.

@@ -139,7 +139,8 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(identityCard, /color: var\(--profile-highlight/);
   assert.match(preview, /border: var\(--profile-border-width/);
   assert.match(preview, /background: var\(--profile-surface-fill/);
-  assert.match(editor, /Colors, surface, gradient, and borders/);
+  assert.match(editor, /appearance-editor__style-grid/);
+  assert.match(editor, /grid-template-columns: repeat\(3, minmax\(18rem, 1fr\)\)/);
 });
 
 test('dirty prompt is keyboard-complete and editor reload actions remain reachable', async () => {

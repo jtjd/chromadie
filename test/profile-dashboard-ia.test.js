@@ -18,9 +18,21 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /CUSTOMIZE_SECTION_IDS/);
   assert.match(settings, /LINKS_SECTION_IDS/);
   assert.match(settings, /LEGACY_HASH_ALIASES/);
-  assert.match(settings, /<ProfileCustomizePage/);
+  assert.match(settings, /import\('\.\/ProfileCustomizePage\.svelte'\)/);
+  assert.match(settings, /this=\{sectionComponents\.customize\}/);
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
-  assert.match(customize, /Identity, colors, media, content, widgets, and layout/);
+  assert.match(customize, /Profile assets/);
+  for (const category of ['Assets', 'Identity', 'Appearance', 'Effects', 'Content', 'Widgets', 'Layout']) {
+    assert.match(customize, new RegExp(`label: '${category}'`));
+  }
+  for (const asset of ['Avatar', 'Background', 'Banner', 'Audio', 'Cursors']) {
+    assert.match(customize, new RegExp(`label: '${asset}'`));
+  }
+  assert.match(customize, /role="tablist"/);
+  assert.match(customize, /role="tabpanel"/);
+  assert.match(customize, /hidden=\{activeCategory !== 'appearance'\}/);
+  assert.match(customize, /hasChromadiePlus/);
+  assert.match(customize, /premiumrequest/);
   assert.match(customize, /ProfileAppearanceEditor/);
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);
@@ -30,6 +42,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(premium, /Premium buys expression\. Gameplay earns prestige\./);
   assert.match(shell, /profile-dashboard-shell__brand/);
   assert.match(shell, /class:premium=\{section\.id === 'premium'\}/);
+  assert.match(shell, /max-width: 90rem/);
   assert.match(editor, /export let showLayout = true/);
   assert.match(editor, /export let showLinks = true/);
   assert.match(editor, /\{#if showLayout\}/);

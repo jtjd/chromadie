@@ -3589,6 +3589,22 @@ code-owned QR generation, and server-rendered title, description, theme color,
 banner, and favicon metadata selected only from validated profile media. V2
 columns and RPCs are additive and can be left dormant to roll back the client
 surface without deleting authored profile data.
+
+## 2026-08-08 — Make Profile Studio task-oriented and keep publishing section-scoped
+
+Customize presents existing profile capabilities through a compact asset row
+and seven keyboard-accessible categories rather than one uninterrupted editor
+stack. Inactive editors stay mounted so category changes do not discard local
+draft state, but only the active editor and its existing section-owned action
+bar are visible. This preserves the current appearance, content, widget, and
+composition RPC boundaries instead of implying an atomic cross-section save.
+
+The live profile preview remains the real bounded preview renderer, but it is
+now an explicit inspector rather than a permanent dashboard column. It is
+collapsed by default, docks only where sufficient width exists, overlays at
+ordinary desktop widths, and becomes a bottom sheet on mobile. Quick asset
+tiles are summaries and entry points into the existing media managers; they do
+not create a second upload, entitlement, validation, or RLS path.
 ## 2026-08-04 — Keep only authored atmosphere plates in the launch shop
 
 Atmospheres are a high-salience profile surface, so thin procedural SVG lines,

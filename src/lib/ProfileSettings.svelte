@@ -13,10 +13,10 @@
   import Button from './foundation/Button.svelte';
   import Surface from './foundation/Surface.svelte';
   import ProfileAccountSettings from './ProfileAccountSettings.svelte';
-  import ProfileCustomizePage from './ProfileCustomizePage.svelte';
   import ProfileDashboardShell from './ProfileDashboardShell.svelte';
 
   const SECTION_LOADERS = Object.freeze({
+    customize: () => import('./ProfileCustomizePage.svelte'),
     overview: () => import('./ProfileStudioOverview.svelte'),
     'profile-identity': () => import('./IdentityEditor.svelte'),
     'profile-aliases': () => import('./ProfileAliasesEditor.svelte'),
@@ -34,7 +34,7 @@
   });
 
   const CUSTOMIZE_SECTION_IDS = Object.freeze([
-    'profile-identity', 'profile-media', 'profile-content', 'profile-widgets', 'profile-collection', 'profile-layout'
+    'customize', 'profile-identity', 'profile-media', 'profile-content', 'profile-widgets', 'profile-collection', 'profile-layout'
   ]);
   const LINKS_SECTION_IDS = Object.freeze(['profile-layout', 'profile-aliases']);
 
@@ -120,6 +120,7 @@
   let configurationPreview = null;
   let PreviewComponent = null;
   let previewError = '';
+  let previewOpen = false;
   let sectionComponents = {};
   let sectionLoading = false;
   const sectionLoadPromises = new SvelteMap();
@@ -152,12 +153,12 @@
   });
   $: if (!visibleSettingsSections.some(section => section.id === activeSection)) activeSection = 'customize';
   $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Customize';
+  $: previewAvailable = activeSection === 'customize' || activeSection === 'links';
   $: previewProfileConfig = configurationPreview || context?.profileConfig?.draft;
   $: previewProfile = context?.targetProfile
     ? { ...context.targetProfile, equipped_cosmetics: $equippedItems || context.targetProfile.equipped_cosmetics || {} }
     : null;
   onMount(() => {
-    void loadPreviewComponent();
     const getSectionFromLocation = () => {
       const rawHash = window.location.hash.replace(/^#/, '');
       const sectionId = HASH_ALIASES[rawHash] || rawHash;
@@ -201,6 +202,7 @@
   function setActiveSection(sectionId, { push = true } = {}) {
     if (!visibleSettingsSections.some(section => section.id === sectionId)) return;
     activeSection = sectionId;
+    if (sectionId !== 'customize' && sectionId !== 'links') previewOpen = false;
     if (sectionId === 'customize') void loadCustomizeComponents();
     else if (sectionId === 'links') void loadLinksComponents();
     else void loadSectionComponent(sectionId);
@@ -219,6 +221,12 @@
       return;
     }
     setActiveSection(sectionId);
+  }
+
+  function togglePreview() {
+    if (!previewAvailable) return;
+    previewOpen = !previewOpen;
+    if (previewOpen) void loadPreviewComponent();
   }
 
   function handleSectionDirty(event) {
@@ -423,7 +431,7 @@
 <ProfileDashboardShell
   sections={[...visibleSettingsSections]}
   {activeSection}
-  showPreview={true}
+  showPreview={previewOpen && previewAvailable}
   on:sectionchange={handleDashboardSectionChange}
 >
   <div class="profile-settings-page" aria-busy={loading}>
@@ -434,28 +442,37 @@
     {:else if context}
       <header class="profile-settings-page__toolbar">
         <div><p class="profile-settings-page__breadcrumb">Dashboard <span aria-hidden="true">›</span> {activeLabel}</p><h1>{activeLabel}</h1></div>
-        <div class="profile-settings-page__toolbar-actions"><a href={profilePath} on:click={handleViewProfile}>View profile ↗</a></div>
+        <div class="profile-settings-page__toolbar-actions">
+          {#if previewAvailable}<button type="button" aria-expanded={previewOpen} on:click={togglePreview}>{previewOpen ? 'Hide preview' : 'Preview'}</button>{/if}
+          <a href={profilePath} on:click={handleViewProfile}>View profile ↗</a>
+        </div>
       </header>
       {#if context.dataWarning}<p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>{/if}
 
       <div class="profile-settings-page__content">
         {#if activeSection === 'customize'}
-          <ProfileCustomizePage
-            bind:this={customizePage}
-            components={sectionComponents}
-            profileId={context.profileId}
-            accountUsername={accountUsername}
-            targetProfile={context.targetProfile}
-            profileConfig={context.profileConfig}
-            entitlements={$profileEntitlements}
-            staff={Boolean(context.targetProfile?.is_staff)}
-            on:appearancechange={updateAppearance}
-            on:dirty={handleSectionDirty}
-            on:configsaved={handleAppearanceSaved}
-            on:configpublished={updateConfiguration}
-            on:configreloaded={handleConfigurationReloaded}
-            on:configpreview={updateConfigurationPreview}
-          />
+          {#if sectionComponents.customize}
+            <svelte:component
+              this={sectionComponents.customize}
+              bind:this={customizePage}
+              components={sectionComponents}
+              profileId={context.profileId}
+              accountUsername={accountUsername}
+              targetProfile={context.targetProfile}
+              profileConfig={context.profileConfig}
+              entitlements={$profileEntitlements}
+              staff={Boolean(context.targetProfile?.is_staff)}
+              on:appearancechange={updateAppearance}
+              on:dirty={handleSectionDirty}
+              on:configsaved={handleAppearanceSaved}
+              on:configpublished={updateConfiguration}
+              on:configreloaded={handleConfigurationReloaded}
+              on:configpreview={updateConfigurationPreview}
+              on:premiumrequest={handleDashboardSectionChange}
+            />
+          {:else if sectionLoading}
+            <div class="profile-settings-page__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading Customize</h2></div>
+          {/if}
         {:else if activeSection === 'links'}
           <div class="profile-links-page">
             {#if sectionComponents['profile-layout']}
@@ -517,6 +534,7 @@
         <h2>Live preview</h2>
       </div>
       <span class="profile-settings-preview__status"><span aria-hidden="true"></span> Draft</span>
+      <button class="profile-settings-preview__close" type="button" aria-label="Close live preview" on:click={togglePreview}>×</button>
     </header>
     <div class="profile-settings-preview__body">
       {#if PreviewComponent}
@@ -559,6 +577,8 @@
   .profile-settings-preview__header h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .95rem; letter-spacing: -.02em; }
   .profile-settings-preview__status { display: inline-flex; align-items: center; gap: .4rem; color: var(--site-muted, #aaa8b0); font: .62rem/1 var(--site-mono, monospace); white-space: nowrap; }
   .profile-settings-preview__status span { width: .42rem; height: .42rem; border-radius: 50%; background: #6de2a4; box-shadow: 0 0 .8rem rgba(109,226,164,.6); }
+  .profile-settings-preview__close { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .4rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: 1.1rem; cursor: pointer; }
+  .profile-settings-preview__close:hover, .profile-settings-preview__close:focus-visible { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
   .profile-settings-preview__body { display: grid; min-height: 0; overflow: auto; place-items: start center; padding: 1.25rem; background: radial-gradient(circle at 50% 0%, rgba(205,210,255,.06), transparent 42%), var(--site-deep, #090a0d); }
   .profile-settings-preview__body :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: visible; }
   .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-canvas) { min-height: 0; }

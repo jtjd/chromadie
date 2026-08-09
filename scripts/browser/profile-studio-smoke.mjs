@@ -211,22 +211,30 @@ try {
     return state;
   });
 
-  await step('inline live preview is present, not an overlay', async () => {
+  await step('live preview opens on demand and closes cleanly', async () => {
+    const initiallyOpen = await page.evaluate(`Boolean(document.querySelector('.profile-settings-preview'))`);
+    assert(!initiallyOpen, 'Live preview should be collapsed when Profile Studio opens.');
+    await page.clickText('Preview', { description: 'open live preview control' });
     await page.waitFor(`(() => {
       const preview = document.querySelector('.profile-settings-preview');
       const canvas = document.querySelector('.profile-settings-preview .profile-shell-page--preview');
-      return Boolean(preview && canvas && !preview.closest('[role="dialog"]') && !preview.closest('.auth-modal-overlay'));
-    })()`, 'inline live preview');
-    return await page.evaluate(`(() => ({
-      inline: Boolean(document.querySelector('.profile-settings-preview')),
+      return Boolean(preview && canvas && !preview.closest('.auth-modal-overlay'));
+    })()`, 'on-demand live preview');
+    const state = await page.evaluate(`(() => ({
+      open: Boolean(document.querySelector('.profile-settings-preview')),
       previewCanvas: Boolean(document.querySelector('.profile-settings-preview .profile-shell-page--preview')),
-      overlay: Boolean(document.querySelector('.profile-settings-preview')?.closest('[role="dialog"], .auth-modal-overlay'))
+      authOverlay: Boolean(document.querySelector('.profile-settings-preview')?.closest('.auth-modal-overlay'))
     }))()`);
+    await page.click('.profile-settings-preview__close', 'close live preview control');
+    await page.waitFor(`!document.querySelector('.profile-settings-preview')`, 'closed live preview');
+    return { ...state, closed: true };
   });
 
   await step('Customize control changes the preview without publishing', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize`, 'Customize section');
-    await page.waitFor(`document.querySelector('.appearance-editor') && document.querySelector('.profile-settings-preview .identity-card')`, 'Customize editor and preview');
+    await page.waitFor(`document.querySelector('.appearance-editor')`, 'Customize editor');
+    await page.clickText('Preview', { description: 'open Customize live preview' });
+    await page.waitFor(`document.querySelector('.profile-settings-preview .identity-card')`, 'Customize preview');
     const before = await page.evaluate(dashboardStateExpression());
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('publish_profile_configuration_section')).length;
     await page.setInputValue('.appearance-editor__range:nth-child(2) input[type="range"]', 0, ['input']);

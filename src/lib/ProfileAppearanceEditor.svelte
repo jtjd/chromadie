@@ -140,7 +140,6 @@
 </script>
 
 <div class="appearance-editor">
-  <p class="appearance-editor__intro">Colors, surface, gradient, and borders.</p>
   <section class="appearance-editor__panel" aria-labelledby="appearance-colors-title">
     <div class="appearance-editor__heading"><h2 id="appearance-colors-title">Theme colors</h2><span>8 colors</span></div>
     <div class="appearance-editor__color-grid">
@@ -156,32 +155,34 @@
     </div>
   </section>
 
-  <section class="appearance-editor__panel" aria-labelledby="appearance-surface-title">
-    <div class="appearance-editor__heading"><h2 id="appearance-surface-title">Surface</h2></div>
-    <div class="appearance-editor__range-grid">
-      <label class="appearance-editor__range"><span>Opacity <output>{staged.surface.opacity}%</output></span><input type="range" min="0" max="100" step="1" value={staged.surface.opacity} on:input={event => update(['surface', 'opacity'], Number(event.currentTarget.value))} /></label>
-      <label class="appearance-editor__range"><span>Blur <output>{staged.surface.blur}px</output></span><input type="range" min="0" max="40" step="1" value={staged.surface.blur} on:input={event => update(['surface', 'blur'], Number(event.currentTarget.value))} /></label>
-    </div>
-  </section>
+  <div class="appearance-editor__style-grid">
+    <section class="appearance-editor__panel" aria-labelledby="appearance-surface-title">
+      <div class="appearance-editor__heading"><h2 id="appearance-surface-title">Surface</h2></div>
+      <div class="appearance-editor__range-grid">
+        <label class="appearance-editor__range"><span>Opacity <output>{staged.surface.opacity}%</output></span><input type="range" min="0" max="100" step="1" value={staged.surface.opacity} on:input={event => update(['surface', 'opacity'], Number(event.currentTarget.value))} /></label>
+        <label class="appearance-editor__range"><span>Blur <output>{staged.surface.blur}px</output></span><input type="range" min="0" max="40" step="1" value={staged.surface.blur} on:input={event => update(['surface', 'blur'], Number(event.currentTarget.value))} /></label>
+      </div>
+    </section>
 
-  <section class="appearance-editor__panel" aria-labelledby="appearance-gradient-title">
-    <div class="appearance-editor__heading"><h2 id="appearance-gradient-title">Background gradient</h2><label class="appearance-editor__switch"><input type="checkbox" checked={staged.gradient.enabled} on:change={event => update(['gradient', 'enabled'], event.currentTarget.checked)} /><span>Enabled</span></label></div>
-    <div class="appearance-editor__color-grid appearance-editor__color-grid--gradient">
-      <label class="appearance-editor__field"><span>Primary color</span><div class="appearance-editor__color-input"><input type="color" value={staged.gradient.primary} aria-label="Gradient primary color" on:input={event => updateColor(['gradient', 'primary'], event)} /><input class="appearance-editor__hex" value={staged.gradient.primary} maxlength="7" aria-label="Gradient primary hex" on:change={event => updateColor(['gradient', 'primary'], event)} /></div></label>
-      <label class="appearance-editor__field"><span>Secondary color</span><div class="appearance-editor__color-input"><input type="color" value={staged.gradient.secondary} aria-label="Gradient secondary color" on:input={event => updateColor(['gradient', 'secondary'], event)} /><input class="appearance-editor__hex" value={staged.gradient.secondary} maxlength="7" aria-label="Gradient secondary hex" on:change={event => updateColor(['gradient', 'secondary'], event)} /></div></label>
-    </div>
-    <label class="appearance-editor__range"><span>Angle <output>{staged.gradient.angle}°</output></span><input type="range" min="0" max="360" step="1" value={staged.gradient.angle} on:input={event => update(['gradient', 'angle'], Number(event.currentTarget.value))} /></label>
-  </section>
+    <section class="appearance-editor__panel" aria-labelledby="appearance-gradient-title">
+      <div class="appearance-editor__heading"><h2 id="appearance-gradient-title">Background gradient</h2><label class="appearance-editor__switch"><input type="checkbox" checked={staged.gradient.enabled} on:change={event => update(['gradient', 'enabled'], event.currentTarget.checked)} /><span>Enabled</span></label></div>
+      <div class="appearance-editor__color-grid appearance-editor__color-grid--gradient">
+        <label class="appearance-editor__field"><span>Primary color</span><div class="appearance-editor__color-input"><input type="color" value={staged.gradient.primary} aria-label="Gradient primary color" on:input={event => updateColor(['gradient', 'primary'], event)} /><input class="appearance-editor__hex" value={staged.gradient.primary} maxlength="7" aria-label="Gradient primary hex" on:change={event => updateColor(['gradient', 'primary'], event)} /></div></label>
+        <label class="appearance-editor__field"><span>Secondary color</span><div class="appearance-editor__color-input"><input type="color" value={staged.gradient.secondary} aria-label="Gradient secondary color" on:input={event => updateColor(['gradient', 'secondary'], event)} /><input class="appearance-editor__hex" value={staged.gradient.secondary} maxlength="7" aria-label="Gradient secondary hex" on:change={event => updateColor(['gradient', 'secondary'], event)} /></div></label>
+      </div>
+      <label class="appearance-editor__range"><span>Angle <output>{staged.gradient.angle}°</output></span><input type="range" min="0" max="360" step="1" value={staged.gradient.angle} on:input={event => update(['gradient', 'angle'], Number(event.currentTarget.value))} /></label>
+    </section>
 
-  <section class="appearance-editor__panel" aria-labelledby="appearance-border-title">
-    <div class="appearance-editor__heading"><h2 id="appearance-border-title">Borders</h2><label class="appearance-editor__switch"><input type="checkbox" checked={staged.border.enabled} on:change={event => update(['border', 'enabled'], event.currentTarget.checked)} /><span>Enabled</span></label></div>
-    <div class="appearance-editor__color-grid appearance-editor__color-grid--border">
-      <label class="appearance-editor__field"><span>Border color</span><div class="appearance-editor__color-input"><input type="color" value={staged.border.color} aria-label="Border color" on:input={event => updateColor(['border', 'color'], event)} /><input class="appearance-editor__hex" value={staged.border.color} maxlength="7" aria-label="Border hex" on:change={event => updateColor(['border', 'color'], event)} /></div></label>
-      <label class="appearance-editor__range"><span>Width <output>{staged.border.width}px</output></span><input type="range" min="0" max="4" step="1" value={staged.border.width} on:input={event => update(['border', 'width'], Number(event.currentTarget.value))} /></label>
-      <label class="appearance-editor__range"><span>Radius <output>{staged.border.radius}px</output></span><input type="range" min="0" max="48" step="1" value={staged.border.radius} on:input={event => update(['border', 'radius'], Number(event.currentTarget.value))} /></label>
-      <label class="appearance-editor__range"><span>Opacity <output>{staged.border.opacity}%</output></span><input type="range" min="0" max="100" step="1" value={staged.border.opacity} on:input={event => update(['border', 'opacity'], Number(event.currentTarget.value))} /></label>
-    </div>
-  </section>
+    <section class="appearance-editor__panel" aria-labelledby="appearance-border-title">
+      <div class="appearance-editor__heading"><h2 id="appearance-border-title">Borders</h2><label class="appearance-editor__switch"><input type="checkbox" checked={staged.border.enabled} on:change={event => update(['border', 'enabled'], event.currentTarget.checked)} /><span>Enabled</span></label></div>
+      <div class="appearance-editor__color-grid appearance-editor__color-grid--border">
+        <label class="appearance-editor__field"><span>Border color</span><div class="appearance-editor__color-input"><input type="color" value={staged.border.color} aria-label="Border color" on:input={event => updateColor(['border', 'color'], event)} /><input class="appearance-editor__hex" value={staged.border.color} maxlength="7" aria-label="Border hex" on:change={event => updateColor(['border', 'color'], event)} /></div></label>
+        <label class="appearance-editor__range"><span>Width <output>{staged.border.width}px</output></span><input type="range" min="0" max="4" step="1" value={staged.border.width} on:input={event => update(['border', 'width'], Number(event.currentTarget.value))} /></label>
+        <label class="appearance-editor__range"><span>Radius <output>{staged.border.radius}px</output></span><input type="range" min="0" max="48" step="1" value={staged.border.radius} on:input={event => update(['border', 'radius'], Number(event.currentTarget.value))} /></label>
+        <label class="appearance-editor__range"><span>Opacity <output>{staged.border.opacity}%</output></span><input type="range" min="0" max="100" step="1" value={staged.border.opacity} on:input={event => update(['border', 'opacity'], Number(event.currentTarget.value))} /></label>
+      </div>
+    </section>
+  </div>
 
   {#if conflict}<div class="appearance-editor__conflict" role="alert"><span>{error}</span><button type="button" on:click={reloadServerVersion}>Reload server version</button></div>{/if}
   <footer class="appearance-editor__actions" aria-live="polite">
@@ -194,16 +195,16 @@
 
 <style>
   .appearance-editor { display: grid; width: 100%; gap: 1rem; }
-  .appearance-editor__intro { margin: 0; color: var(--site-muted, #aaa8b0); font-size: .72rem; line-height: 1.55; }
   .appearance-editor__panel { padding: clamp(1rem, 2vw, 1.4rem); border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .55rem; background: var(--site-raised, #111319); }
+  .appearance-editor__style-grid { display: grid; grid-template-columns: repeat(3, minmax(18rem, 1fr)); gap: 1rem; }
   .appearance-editor__heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
   .appearance-editor__heading h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: 1rem; letter-spacing: -.02em; }
   .appearance-editor__heading > span { color: var(--site-faint, #7d7e87); font: .62rem/1 var(--site-mono, monospace); }
   .appearance-editor__color-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem 1rem; }
   .appearance-editor__color-grid--gradient, .appearance-editor__color-grid--border { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .appearance-editor__field, .appearance-editor__range { display: grid; gap: .42rem; min-width: 0; }
-  .appearance-editor__field > span, .appearance-editor__range > span { display: flex; justify-content: space-between; gap: .5rem; color: var(--site-muted, #aaa8b0); font-size: .68rem; }
-  .appearance-editor__color-input { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); align-items: center; min-height: 2.2rem; overflow: hidden; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: var(--site-deep, #090a0d); }
+  .appearance-editor__field > span, .appearance-editor__range > span { display: flex; justify-content: space-between; gap: .5rem; color: var(--site-muted, #aaa8b0); font-size: .75rem; }
+  .appearance-editor__color-input { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); align-items: center; min-height: 2.5rem; overflow: hidden; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: var(--site-deep, #090a0d); }
   .appearance-editor__color-input input[type="color"] { width: 2.2rem; height: 2.2rem; padding: .25rem; border: 0; background: transparent; cursor: pointer; }
   .appearance-editor__hex { min-width: 0; width: 100%; padding: .55rem .6rem; border: 0; outline: 0; background: transparent; color: var(--site-ink, #f2f0eb); font: .7rem/1 var(--site-mono, monospace); }
   .appearance-editor__range { margin-top: .95rem; }
@@ -220,6 +221,7 @@
   .appearance-editor__actions button:hover:not(:disabled) { border-color: var(--site-accent, #cdd2ff); }
   .appearance-editor__actions button:disabled { cursor: not-allowed; opacity: .42; }
   .appearance-editor__publish { border-color: var(--site-accent, #cdd2ff) !important; background: var(--site-accent, #cdd2ff) !important; color: var(--site-deep, #090a0d) !important; font-weight: 700; }
+  @media (max-width: 96rem) { .appearance-editor__style-grid { grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); } }
   @media (max-width: 64rem) { .appearance-editor__color-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__color-grid--gradient, .appearance-editor__color-grid--border { grid-template-columns: minmax(0, 1fr); } .appearance-editor__actions { flex-wrap: wrap; justify-content: stretch; } .appearance-editor__status { flex-basis: 100%; } .appearance-editor__actions button { flex: 1; } }
   @media (prefers-reduced-motion: reduce) { .appearance-editor__actions { scroll-behavior: auto; } }

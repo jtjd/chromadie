@@ -17,7 +17,7 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
   assert.match(app, /componentProps: \{ logoutInProgress \}/);
   assert.match(settings, /<ProfileDashboardShell/);
   assert.match(settings, /on:sectionchange/);
-  assert.match(settings, /showPreview=\{true\}/);
+  assert.match(settings, /showPreview=\{previewOpen && previewAvailable\}/);
   assert.match(settings, /slot="preview"/);
   assert.match(settings, /profile-settings-preview__body/);
   assert.match(settings, /previewIdentityOnly=\{true\}/);
