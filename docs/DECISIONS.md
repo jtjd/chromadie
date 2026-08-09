@@ -2,16 +2,19 @@
 
 ## 2026-08-09 — Let surface blur sample the actual page media
 
-The public profile card keeps one transparent backdrop-filter layer at the
-surface boundary. Intermediate profile layout wrappers do not create an
-isolated stacking context, so the filter samples the already-rendered uploaded
-background image, rich background video, and authored atmosphere media behind
-the card. The same page-level media remains sharp outside the card.
+The uploaded background image is rendered as the page's own fixed background
+layer rather than as a separate fixed sibling. The public profile card keeps
+one transparent backdrop-filter layer at the surface boundary; intermediate
+profile layout wrappers do not create an isolated stacking context, so the
+filter samples the already-rendered page canvas, rich background video, and
+authored atmosphere media behind the card. The same page-level media remains
+sharp outside the card.
 
-This keeps one source of truth for media rendering and avoids the misleading
-failure mode where a browser reports a computed `backdrop-filter` while nested
-stacking contexts prevent it from sampling the page canvas. No media source,
-configuration schema, public URL, or renderer authority boundary changes.
+This keeps one source of truth for the uploaded image and avoids the
+misleading failure mode where a browser reports a computed `backdrop-filter`
+while fixed media siblings or nested stacking contexts prevent it from
+sampling the page canvas. No media source, configuration schema, public URL,
+or renderer authority boundary changes.
 
 ## 2026-08-09 — Let the Bio field own the compact identity column
 

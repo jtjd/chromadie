@@ -299,6 +299,9 @@ try {
     await delay(350);
     await page.waitFor(`document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page .identity-card')`, 'public profile after direct refresh');
     await page.evaluate(`document.querySelector('.profile-shell-page [data-profile-region="identity"]')?.style.setProperty('--profile-surface-blur', '40px')`);
+    // Paint a high-frequency pattern on the page background itself so the
+    // visual smoke test exercises the real backdrop-filter source boundary.
+    await page.evaluate(`document.querySelector('.profile-shell-page')?.style.setProperty('--profile-page-media-image', 'repeating-linear-gradient(90deg, #ff5577 0 5px, #5577ff 5px 10px)')`);
     await delay(100);
     const state = await page.evaluate(`(() => {
       const pageElement = document.querySelector('.profile-shell-page');

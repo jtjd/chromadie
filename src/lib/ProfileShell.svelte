@@ -505,7 +505,8 @@
   // appearance values are projected onto the identity card below instead of
   // leaking into the roll surface.
   $: profileCardStyle = getProfileAppearanceStyle(effectiveProfileConfig);
-  $: profilePageStyle = `${previewMode ? profileShellStyle : `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}`}${cursorSrc ? `;cursor:url("${cursorSrc}") 16 16, auto` : ''}${pointerCursorSrc ? `;--profile-pointer-cursor:url("${pointerCursorSrc}")` : ''}`;
+  $: profilePageMediaStyle = backgroundSrc ? `;--profile-page-media-image:url("${backgroundSrc}")` : '';
+  $: profilePageStyle = `${previewMode ? profileShellStyle : `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}`}${profilePageMediaStyle}${cursorSrc ? `;cursor:url("${cursorSrc}") 16 16, auto` : ''}${pointerCursorSrc ? `;--profile-pointer-cursor:url("${pointerCursorSrc}")` : ''}`;
 
   onDestroy(() => {
     if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
@@ -513,9 +514,6 @@
 </script>
 
 <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
-  {#if backgroundSrc}
-    <div class="profile-shell__media-background" style={`background-image: url("${backgroundSrc}");`} aria-hidden="true"></div>
-  {/if}
   {#if backgroundVideoSrc && !previewMode && !prefersReducedMotion}
     <video class="profile-shell__media-video" src={backgroundVideoSrc} autoplay muted loop playsinline poster={backgroundSrc || undefined} aria-hidden="true"></video>
   {/if}
@@ -881,9 +879,6 @@
     100% { transform: scale(1); box-shadow: none; }
   }
 
-  .profile-shell__media-background { background-position: center; background-size: cover; opacity: 1; filter: none; transform: none; pointer-events: none; }
-  .profile-shell__media-background { position: fixed; inset: 0; z-index: 0; }
-  .profile-shell-page--preview .profile-shell__media-background { position: absolute; inset: 0; }
   .profile-shell__media-video { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; opacity: .92; pointer-events: none; }
   .profile-shell__surface-backdrop { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: var(--profile-border-radius, var(--radius-lg)); background: rgba(0, 0, 0, 0.001); backdrop-filter: blur(var(--profile-surface-blur, 0px)); -webkit-backdrop-filter: blur(var(--profile-surface-blur, 0px)); pointer-events: none; }
   .profile-shell__rich-banner { display: block; width: 100%; max-height: 13rem; object-fit: cover; border-radius: var(--radius-lg) var(--radius-lg) 0 0; opacity: .94; }
@@ -1130,7 +1125,9 @@
     overflow-x: hidden;
     overflow-y: auto;
     padding: 0 clamp(0.9rem, 3vw, 2.5rem) 1.5rem;
-    background: var(--profile-background-paint, var(--color-canvas-deep));
+    background: var(--profile-page-media-image, none) center / cover no-repeat,
+      var(--profile-background-paint, var(--color-canvas-deep));
+    background-attachment: fixed, scroll;
     isolation: isolate;
     overscroll-behavior-y: contain;
     scroll-snap-type: y mandatory;

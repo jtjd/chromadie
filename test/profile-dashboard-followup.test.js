@@ -89,11 +89,12 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(settings, /slot="preview"/);
   assert.doesNotMatch(settings, /function openPreview/);
   assert.doesNotMatch(settings, /profile-preview-drawer__backdrop/);
-  assert.match(shell, /\{#if backgroundSrc\}/);
-  assert.match(shell, /profile-shell__media-background/);
+  assert.match(shell, /\$: backgroundSrc = getProfileMediaUrl/);
+  assert.match(shell, /profilePageMediaStyle = backgroundSrc \? `;--profile-page-media-image:url/);
+  assert.doesNotMatch(shell, /profile-shell__media-background/);
   assert.match(shell, /profile-shell__page-atmosphere-layer/);
   assert.match(shell, /profile-shell__page-cursor-layer/);
-  assert.match(shell, /profile-shell-page--preview \.profile-shell__media-background \{ position: absolute; inset: 0; \}/);
+  assert.match(shell, /background: var\(--profile-page-media-image, none\) center \/ cover no-repeat,/);
   assert.match(shell, /<div class="profile-shell__surface-backdrop"/);
   assert.doesNotMatch(shell, /<div class="profile-shell__card-media-background"|<div class="profile-shell__surface-media-background"/);
   assert.match(shell, /profile-shell__card-atmosphere-layer/);

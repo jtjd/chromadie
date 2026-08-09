@@ -81,9 +81,9 @@ one dashboard Reset / Publish profile bar commits the assembled V2 draft across
 Customize and Links. General Customization now gives Bio the full height of the
 two right-side identity rows, keeps their gap compact, and places visibility
 options below Bio while restoring ordinary flow on tablet and mobile. Profile
-surface blur now samples the actual uploaded image, video, and atmosphere media
-behind the card, so high blur values affect only the translucent card while the
-page outside it stays sharp.
+surface blur now samples the actual page background, uploaded image, video, and
+atmosphere media behind the card, so high blur values affect only the
+translucent card while the page outside it stays sharp.
 
 ## Validation
 

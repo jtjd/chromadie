@@ -2,10 +2,11 @@
 
 ## Make profile card blur sample the page media — 2026-08-09
 
-- Fixed the profile card's stacking context so its transparent backdrop-filter
-  samples the already-rendered page background, video, and atmosphere media.
-- Removed the duplicate card-local media copies; page media remains sharp
-  outside the card while the translucent surface softens what is behind it.
+- Rendered the uploaded background as the page's own fixed background layer so
+  the card's transparent backdrop-filter samples the real page canvas.
+- Removed the separate fixed image element and all duplicate card-local media
+  copies; page media remains sharp outside the card while the translucent
+  surface softens what is behind it.
 - Extended browser smoke coverage to assert the maximum surface blur variable
   and preserve the card-only media boundary.
 
