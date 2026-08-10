@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Focused default profile and live picker marker — 2026-08-10
+
+- Fixed the HSV picker dependency so the saturation/brightness marker and hue
+  handle react immediately to palette, hex, native color, keyboard, and drag
+  edits without waiting for a role switch.
+- Changed the new-profile Signal default to the focused identity composition:
+  blue starfield canvas, avatar above the name, metadata and bio in the center,
+  and structured links anchored in a compact footer.
+- Kept authored backgrounds, atmospheres, saved layout variants, and server
+  configuration authority unchanged; the default starfield is opt-in only
+  while those custom surfaces are absent.
+- Added source and contract coverage for picker marker positions and the
+  default profile presentation.
+
 ## Recess Studio controls and wire the selected color picker — 2026-08-10
 
 - Aligned the aggregate Customize profile action bar and Appearance/Media/

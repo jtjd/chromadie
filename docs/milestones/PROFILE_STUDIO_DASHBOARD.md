@@ -1,6 +1,6 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, and functional profile-color editing implemented 2026-08-10
+Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, and the focused default profile presentation implemented 2026-08-10
 
 ## Scope
 
@@ -87,9 +87,8 @@ affect only the translucent card while the page outside it stays sharp.
 
 ## Validation
 
-- `npm test`: 253 passing.
-- Follow-up reference validation: `npm test` 259 passing, including shared
-  profile-color role/HSV picker coverage.
+- `npm test`: 262 passing, including shared profile-color role/HSV picker and
+  focused default-profile presentation coverage.
 - `npm run build`, `npm run check`, `npx eslint src/`, links, CSP, username
   policy, balance, catalog, scoring parity, and database security: passing.
 - `npm run check:performance`: all blocking route and asset budgets pass;
@@ -97,4 +96,11 @@ affect only the translucent card while the page outside it stays sharp.
 - `npm run test:browser`: passing for authenticated Studio refresh, aliases,
   collapsed/open/closed preview, published appearance updates, balanced
   General Customization geometry, maximum surface blur, mobile drawer, reduced
-  motion, and canonical public profile refresh.
+  motion, canonical public profile refresh, and the default blue-starfield
+  identity card with avatar-first focus composition.
+
+The latest presentation pass remains additive and schema-free. The picker
+marker is derived from the same selected-role HSV value as its controls, and
+the public shell applies the blue default only to untouched Signal defaults;
+authored media, backgrounds, atmospheres, links, content, and saved layouts
+continue to win.

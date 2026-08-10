@@ -4,9 +4,9 @@
   import {
     PROFILE_APPEARANCE_COLOR_FIELDS,
     PROFILE_APPEARANCE_COLOR_PALETTE,
-    getHueColor,
     getProfileAppearanceColorField,
     getProfileAppearanceColorValue,
+    getProfileAppearancePickerStyle,
     hexToHsv,
     hsvToHex
   } from './profileAppearanceColors.js';
@@ -73,12 +73,12 @@
     return getProfileAppearanceColorField(key);
   }
 
-  function fieldValue(key) {
-    return getProfileAppearanceColorValue(staged, key);
+  function fieldValue(key, appearance = staged) {
+    return getProfileAppearanceColorValue(appearance, key);
   }
 
-  function hexInputValue(key) {
-    return Object.prototype.hasOwnProperty.call(hexDrafts, key) ? hexDrafts[key] : fieldValue(key);
+  function hexInputValue(key, appearance = staged, drafts = hexDrafts) {
+    return Object.prototype.hasOwnProperty.call(drafts, key) ? drafts[key] : fieldValue(key, appearance);
   }
 
   function chooseColor(key) {
@@ -210,9 +210,9 @@
 
   $: activeColorField = fieldFor(activeColor);
   $: activeColorLabel = activeColorField.label;
-  $: activeColorValue = fieldValue(activeColor);
+  $: activeColorValue = fieldValue(activeColor, staged);
   $: activeColorHsv = hexToHsv(activeColorValue);
-  $: activeHueColor = getHueColor(activeColorValue);
+  $: activePickerStyle = getProfileAppearancePickerStyle(activeColorValue);
 </script>
 
 <div class="appearance-editor">
@@ -227,10 +227,10 @@
           {@const key = field.key}
           {@const label = field.label}
           <label class="appearance-editor__field" class:active={activeColor === key} data-color-role={key} on:pointerdown={() => chooseColor(key)}>
-            <span><button type="button" class="appearance-editor__color-dot" style={`--dot-color:${fieldValue(key)}`} aria-label={`Edit ${label}`} on:click={() => chooseColor(key)}></button>{label}</span>
+            <span><button type="button" class="appearance-editor__color-dot" style={`--dot-color:${fieldValue(key, staged)}`} aria-label={`Edit ${label}`} on:click={() => chooseColor(key)}></button>{label}</span>
             <div class="appearance-editor__color-input">
-              <input type="color" value={fieldValue(key)} aria-label={label} on:focus={() => chooseColor(key)} on:input={event => updateColor(fieldFor(key).path, event)} />
-              <input class="appearance-editor__hex" value={hexInputValue(key)} maxlength="7" aria-label={`${label} hex`} on:focus={() => chooseColor(key)} on:input={event => updateHex(key, event)} on:change={event => updateHex(key, event)} />
+              <input type="color" value={fieldValue(key, staged)} aria-label={label} on:focus={() => chooseColor(key)} on:input={event => updateColor(fieldFor(key).path, event)} />
+              <input class="appearance-editor__hex" value={hexInputValue(key, staged, hexDrafts)} maxlength="7" aria-label={`${label} hex`} on:focus={() => chooseColor(key)} on:input={event => updateHex(key, event)} on:change={event => updateHex(key, event)} />
             </div>
           </label>
         {/each}
@@ -247,7 +247,7 @@
             aria-valuemax="100"
             aria-valuenow={Math.round(activeColorHsv.v * 100)}
             aria-valuetext={`${Math.round(activeColorHsv.s * 100)}% saturation, ${Math.round(activeColorHsv.v * 100)}% brightness`}
-            style={`--picker-hue-color:${activeHueColor}; --picker-x:${activeColorHsv.s * 100}%; --picker-y:${(1 - activeColorHsv.v) * 100}%`}
+            style={`--picker-hue-color:${activePickerStyle.hueColor}; --picker-x:${activePickerStyle.x}; --picker-y:${activePickerStyle.y}`}
             on:pointerdown={handleSquarePointerDown}
             on:pointermove={handleSquarePointerMove}
             on:keydown={handleSquareKeydown}
@@ -260,7 +260,7 @@
             aria-valuemin="0"
             aria-valuemax="360"
             aria-valuenow={Math.round(activeColorHsv.h)}
-            style={`--hue-position:${activeColorHsv.h / 360 * 100}%`}
+            style={`--hue-position:${activePickerStyle.huePosition}`}
             on:pointerdown={handleHuePointerDown}
             on:pointermove={handleHuePointerMove}
             on:keydown={handleHueKeydown}

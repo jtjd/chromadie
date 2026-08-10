@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Add a focused default profile composition
+
+- Fixed the color picker’s visible saturation/brightness dot and hue handle so
+  they move with every selected-color edit.
+- New Signal profiles now open with a simple blue starry background, a centered
+  avatar above the name, readable profile details, and links in a bottom row.
+- Existing custom backgrounds, atmospheres, layouts, and published profile
+  configuration remain unchanged.
+
 ## 2026-08-10 — Align Studio controls and activate the profile color picker
 
 - Aligned the Customize profile action bar and four-tab row with the editor

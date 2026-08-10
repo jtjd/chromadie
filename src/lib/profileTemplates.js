@@ -14,8 +14,8 @@ const TEMPLATE_DEFINITIONS = {
     key: 'signal',
     label: 'Signal Garden',
     tier: 'free',
-    layoutVariant: 'immersive',
-    description: 'The polished default: roll first, then a quiet trail of identity and story.',
+    layoutVariant: 'focus',
+    description: 'The polished default: a quiet starfield identity card with the color story waiting below.',
     modules: freezeModules([
       { id: 'roll', visible: true, order: 0, size: 'wide' },
       { id: 'stats', visible: true, order: 1, size: 'wide' },
@@ -98,7 +98,10 @@ export function normalizeProfileTemplateKey(value, fallback = 'signal') {
 
 export function inferProfileTemplateKey(layoutVariant) {
   if (layoutVariant === 'editorial') return 'editorial';
-  if (layoutVariant === 'focus') return 'archive';
+  // Focus is now the safe Signal default. Archive remains selectable through
+  // its explicit template marker, so malformed/missing markers do not turn a
+  // new profile into a history-first template by accident.
+  if (layoutVariant === 'focus') return 'signal';
   return 'signal';
 }
 

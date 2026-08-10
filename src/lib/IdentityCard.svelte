@@ -32,6 +32,7 @@
   export let avatarEffectAnimated = true;
   export let avatarEffectActive = false;
   export let layoutVariant = 'immersive';
+  export let defaultPresentation = false;
   export let location = '';
   export let timezone = '';
   export let joinedLabel = '';
@@ -66,7 +67,7 @@
   }
 </script>
 
-<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + ' identity-card--entry-' + entryAnimation} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
+<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + (defaultPresentation ? ' identity-card--default' : '') + ' identity-card--entry-' + entryAnimation} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
   <div class="identity-card__person">
     {#if showAvatar}
     <AvatarEffect
@@ -250,6 +251,70 @@
   .identity-card--layout-focus .identity-card__handle-row { justify-content: center; }
   .identity-card--layout-focus .identity-card__bio { margin-inline: auto; }
   .identity-card--layout-focus .identity-card__links { justify-content: center; width: 100%; margin-top: 1.25rem; padding-top: 0.9rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
+
+  /* The first profile should feel like a finished identity, not an empty
+     template. Keep this presentation opt-in so authored layouts retain their
+     own surface and link treatment. */
+  .identity-card--default {
+    min-height: 18rem;
+    padding: 1.55rem 1.25rem 1.05rem;
+    border-color: color-mix(in srgb, #89b4fa 58%, rgba(255, 255, 255, 0.18));
+    background-color: #08172e;
+    background-image:
+      radial-gradient(circle at 9% 18%, rgba(137, 180, 250, 0.72) 0 0.07rem, transparent 0.11rem),
+      radial-gradient(circle at 24% 72%, rgba(186, 214, 255, 0.52) 0 0.06rem, transparent 0.1rem),
+      radial-gradient(circle at 43% 34%, rgba(137, 220, 235, 0.48) 0 0.06rem, transparent 0.1rem),
+      radial-gradient(circle at 69% 14%, rgba(203, 166, 247, 0.62) 0 0.07rem, transparent 0.11rem),
+      radial-gradient(circle at 86% 64%, rgba(137, 180, 250, 0.48) 0 0.06rem, transparent 0.1rem),
+      radial-gradient(circle at 78% 88%, rgba(166, 227, 161, 0.42) 0 0.05rem, transparent 0.09rem);
+    background-size: 8rem 8rem, 11rem 10rem, 13rem 12rem, 9rem 11rem, 12rem 13rem, 10rem 9rem;
+    box-shadow: 0 1.6rem 3rem rgba(2, 9, 24, 0.42), inset 0 1px 0 rgba(196, 220, 255, 0.12);
+  }
+
+  .identity-card--default .identity-card__person { flex: 1 1 auto; }
+  .identity-card--default .identity-card__copy { display: flex; flex-direction: column; align-items: center; }
+  .identity-card--default .identity-card__name-row { order: 1; }
+  .identity-card--default .identity-card__handle-row { order: 2; }
+  .identity-card--default .identity-card__metadata { order: 3; }
+  .identity-card--default .identity-card__bio { order: 4; }
+  .identity-card--default .identity-card__metadata { justify-content: center; margin-top: 0.7rem; }
+  .identity-card--default .identity-card__links {
+    align-self: stretch;
+    justify-content: center;
+    width: auto;
+    margin-top: auto;
+    padding-top: 0.9rem;
+    border-top: 1px solid rgba(186, 214, 255, 0.18);
+  }
+  .identity-card--default .identity-card__links a {
+    position: relative;
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    min-height: 2.25rem;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(186, 214, 255, 0.22);
+    border-radius: 50%;
+    background: rgba(7, 20, 43, 0.58);
+  }
+  .identity-card--default .identity-card__links a:hover,
+  .identity-card--default .identity-card__links a:focus-visible {
+    border-color: #89b4fa;
+    background: rgba(137, 180, 250, 0.16);
+  }
+  .identity-card--default .identity-card__links strong {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .identity-card--default .identity-card__link-glyph { width: 1.05rem; height: 1.05rem; }
 
   .identity-card--layout-split-signal { display: grid; grid-template-columns: minmax(6rem, 0.38fr) minmax(0, 0.62fr); grid-template-rows: auto auto; column-gap: 1.5rem; border-left: 2px solid color-mix(in srgb, var(--identity-accent) 58%, rgba(255, 255, 255, 0.12)); border-radius: var(--profile-border-radius, 0 var(--radius-lg) var(--radius-lg) 0); }
   .identity-card--layout-split-signal .identity-card__person,

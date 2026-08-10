@@ -1,5 +1,19 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Make the first profile identity-first without overriding authors
+
+The Signal template and new-profile fallback now use the free Focus composition.
+Its identity card uses a restrained blue night starfield, centers the avatar
+above the name, and reserves the lower edge for profile details and structured
+links. This is a finite renderer change, not user CSS or an arbitrary template
+payload.
+
+The public shell adds the default treatment only when the normalized Signal
+defaults have no authored background media, video, atmosphere, or custom page
+background. Existing saved layout variants and media therefore continue to
+render as authored. The picker remains draft-only and its marker styles derive
+from the same selected-role HSV value used by the input handlers.
+
 ## 2026-08-10 — Make cursor expression uploadable and align the Studio header
 
 The Plus upsell copy is larger, the sidebar brand begins on the same top

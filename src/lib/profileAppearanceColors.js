@@ -99,3 +99,18 @@ export function getHueColor(value) {
   const { h } = hexToHsv(value);
   return hsvToHex({ h, s: 1, v: 1 });
 }
+
+/**
+ * Derive the picker marker positions from the active role's current value.
+ * The editor consumes this object as one reactive value so role switches and
+ * staged edits both invalidate the marker styles.
+ */
+export function getProfileAppearancePickerStyle(value) {
+  const hsv = hexToHsv(value);
+  return {
+    hueColor: getHueColor(value),
+    x: `${hsv.s * 100}%`,
+    y: `${(1 - hsv.v) * 100}%`,
+    huePosition: `${hsv.h / 360 * 100}%`
+  };
+}

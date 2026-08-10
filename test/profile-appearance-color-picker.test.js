@@ -5,6 +5,7 @@ import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
 import {
   getProfileAppearanceColorField,
   getProfileAppearanceColorValue,
+  getProfileAppearancePickerStyle,
   hexToHsv,
   hsvToHex,
   setProfileAppearanceColor
@@ -39,6 +40,17 @@ test('square and hue picker values update only the selected role', () => {
   assert.equal(afterHue.colors.text, appearance.colors.text);
 });
 
+test('picker marker styles change when the active role value changes', () => {
+  const initial = getProfileAppearancePickerStyle('#CDD2FF');
+  const next = getProfileAppearancePickerStyle('#12ABEF');
+
+  assert.notDeepEqual(next, initial);
+  assert.equal(initial.x, '19.6078431372549%');
+  assert.equal(initial.y, '0%');
+  assert.equal(next.huePosition, '55.128205128205124%');
+  assert.equal(next.hueColor, '#00B1FF');
+});
+
 test('appearance editor wires all picker controls through the selected role', async () => {
   const editor = await read('src/lib/ProfileAppearanceEditor.svelte');
 
@@ -48,4 +60,7 @@ test('appearance editor wires all picker controls through the selected role', as
   assert.match(editor, /on:click=\{\(\) => applyPalette\(value\)\}/);
   assert.match(editor, /on:input=\{event => updateHex\(key, event\)\}/);
   assert.match(editor, /data-color-role=\{key\}/);
+  assert.match(editor, /fieldValue\(key, staged\)/);
+  assert.match(editor, /activePickerStyle\.x/);
+  assert.match(editor, /activePickerStyle\.huePosition/);
 });

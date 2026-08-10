@@ -136,7 +136,9 @@ export function createDefaultProfileConfig(signatureColor = PROFILE_APPEARANCE_D
     templateKey: 'signal',
     colorEffectsEnabled: false,
     appearance,
-    layoutVariant: 'immersive',
+    // New profiles open with the calm, identity-first composition. Existing
+    // saved configurations keep their own layoutVariant when normalized.
+    layoutVariant: 'focus',
     storyVisible: false,
     modules: defaultModules(),
     links: [],

@@ -14,7 +14,7 @@
   import ProfileTimeline from './ProfileTimeline.svelte';
   import ProfileCollection from './ProfileCollection.svelte';
   import { getProfileStoryUnlocks } from './profileStory.js';
-  import { createDefaultProfileConfig, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
+  import { createDefaultProfileConfig, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig, PROFILE_APPEARANCE_DEFAULTS } from './profileConfig.js';
   import { getProfileComposition } from './profileComposition.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
@@ -53,6 +53,16 @@
   export let visualFixture = '';
 
   const profileShellStyle = '--profile-accent: var(--color-accent-roll); --profile-surface-accent: var(--color-accent-cyan); --profile-control-accent: var(--color-accent);';
+  const DEFAULT_SIGNAL_MODULES = Object.freeze([
+    ['roll', true, 0, 'wide'],
+    ['stats', true, 1, 'wide'],
+    ['signature', true, 2, 'medium'],
+    ['links', true, 3, 'medium'],
+    ['recent', true, 4, 'medium'],
+    ['achievements', true, 5, 'medium'],
+    ['boundary', true, 6, 'medium'],
+    ['explore', true, 7, 'wide']
+  ]);
 
   let targetProfile = null;
   let targetScores = [];
@@ -81,6 +91,27 @@
   let shareDialogRequest = null;
   let identityCardComponent = null;
   let identityCardRequest = null;
+
+  function hasDefaultSignalModules(modules) {
+    return Array.isArray(modules)
+      && modules.length === DEFAULT_SIGNAL_MODULES.length
+      && modules.every((module, index) => {
+        const expected = DEFAULT_SIGNAL_MODULES[index];
+        return module?.id === expected[0]
+          && module?.visible !== false === expected[1]
+          && Number(module?.order) === expected[2]
+          && module?.size === expected[3];
+      });
+  }
+
+  function hasAuthoredProfileContent(content) {
+    const about = content?.about || {};
+    const aboutText = String(about.body || about.markdown || '').trim();
+    const projects = Array.isArray(content?.projects)
+      ? content.projects.some(project => String(project?.title || '').trim() && String(project?.url || '').trim())
+      : false;
+    return Boolean(aboutText || projects);
+  }
 
   function ensureIdentityCard() {
     if (identityCardComponent || identityCardRequest) return identityCardRequest;
@@ -504,6 +535,18 @@
   // Keep the daily roll on the system presentation tokens. Profile-authored
   // appearance values are projected onto the identity card below instead of
   // leaking into the roll surface.
+  $: defaultProfilePresentation = effectiveProfileConfig.templateKey === 'signal'
+    && (effectiveProfileConfig.layoutVariant === 'focus' || effectiveProfileConfig.layoutVariant === 'immersive')
+    && hasDefaultSignalModules(effectiveProfileConfig.modules)
+    && effectiveProfileConfig.links.length === 0
+    && !hasAuthoredProfileContent(effectiveProfileConfig.content)
+    && !backgroundSrc
+    && !backgroundVideoSrc
+    && !atmosphereKey
+    && appearance.colors.background === PROFILE_APPEARANCE_DEFAULTS.colors.background;
+  // Legacy Signal defaults were stored as Immersive. Treat that untouched
+  // payload as the new default presentation without rewriting saved config.
+  $: profilePresentationLayoutVariant = defaultProfilePresentation ? 'focus' : layoutVariant;
   $: profileCardStyle = getProfileAppearanceStyle(effectiveProfileConfig);
   $: profilePageStyle = `${previewMode ? profileShellStyle : `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}`}${cursorSrc ? `;cursor:url("${cursorSrc}") 16 16, auto` : ''}${pointerCursorSrc ? `;--profile-pointer-cursor:url("${pointerCursorSrc}")` : ''}`;
 
@@ -512,7 +555,7 @@
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + layoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (defaultProfilePresentation ? ' profile-shell-page--default' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
   {#if backgroundSrc}
     <img class="profile-shell__media-image" src={backgroundSrc} alt="" loading="eager" decoding="async" aria-hidden="true" />
   {/if}
@@ -566,7 +609,8 @@
               avatarEffectKey={cosmetics?.avatar_effect}
               avatarEffectMode="profile"
               avatarEffectAnimated={true}
-              layoutVariant={layoutVariant}
+              layoutVariant={profilePresentationLayoutVariant}
+              defaultPresentation={defaultProfilePresentation}
               location={identityPresentation.location}
               timezone={identityPresentation.timezone}
               joinedLabel={joinedLabel}
@@ -833,6 +877,19 @@
       radial-gradient(circle at 8% 12%, color-mix(in srgb, var(--profile-surface-accent) 14%, transparent), transparent 28rem),
       radial-gradient(circle at 94% 76%, color-mix(in srgb, var(--color-accent-cyan) 9%, transparent), transparent 30rem),
       var(--color-canvas-deep);
+  }
+
+  /* A fresh profile gets a quiet blue night canvas. This class is only added
+     when the validated Signal defaults are still active and no authored media
+     or atmosphere is present, so a saved background always wins. */
+  .profile-shell-page.profile-shell-page--default {
+    background-color: #07152c;
+    background-image:
+      radial-gradient(circle at 12% 16%, rgba(137, 180, 250, 0.42) 0 0.07rem, transparent 0.11rem),
+      radial-gradient(circle at 34% 74%, rgba(186, 214, 255, 0.3) 0 0.06rem, transparent 0.1rem),
+      radial-gradient(circle at 67% 22%, rgba(203, 166, 247, 0.34) 0 0.07rem, transparent 0.11rem),
+      radial-gradient(circle at 86% 68%, rgba(137, 220, 235, 0.28) 0 0.06rem, transparent 0.1rem);
+    background-size: 10rem 11rem, 13rem 12rem, 11rem 13rem, 14rem 10rem;
   }
 
   .profile-shell__opening,
