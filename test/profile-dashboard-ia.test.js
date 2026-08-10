@@ -83,6 +83,12 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /--customize-section-input-line/);
   assert.match(customize, /--ctp-base/);
   assert.match(customize, /--ctp-mantle/);
+  assert.match(customize, /--customize-accent-add: var\(--ctp-peach/);
+  assert.match(customize, /--customize-accent-save: var\(--ctp-green/);
+  assert.match(customize, /--customize-focus: var\(--ctp-lavender/);
+  assert.match(customize, /profile-customize-page__surface-note/);
+  assert.match(customize, /projects need a title and HTTPS URL/);
+  assert.match(customize, /profile-customize-page :global\(\.profile-cosmetics-apply\) \{ min-height: var\(--customize-primary-height/);
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);
   assert.match(customize, /profile-collection/);

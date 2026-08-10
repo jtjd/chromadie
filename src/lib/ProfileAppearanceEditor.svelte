@@ -139,7 +139,9 @@
   .appearance-editor__field, .appearance-editor__range { display: grid; gap: .42rem; min-width: 0; }
   .appearance-editor__field > span, .appearance-editor__range > span { display: flex; justify-content: space-between; gap: .5rem; color: var(--site-muted, #aaa8b0); font-size: .82rem; }
   .appearance-editor__color-input { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); align-items: center; min-height: 2.5rem; overflow: hidden; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: var(--site-deep, #090a0d); }
+  .appearance-editor__color-input:focus-within { border-color: var(--ctp-lavender, #b4befe); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ctp-lavender, #b4befe) 42%, transparent); }
   .appearance-editor__color-input input[type="color"] { width: 2.2rem; height: 2.2rem; padding: .25rem; border: 0; background: transparent; cursor: pointer; }
+  .appearance-editor__color-input input[type="color"]:focus-visible, .appearance-editor__hex:focus-visible { outline: 0; }
   .appearance-editor__hex { min-width: 0; width: 100%; padding: .55rem .6rem; border: 0; outline: 0; background: transparent; color: var(--site-ink, #f2f0eb); font: .78rem/1 var(--site-mono, monospace); }
   .appearance-editor__range { margin-top: .95rem; }
   .appearance-editor__surface-grid .appearance-editor__range { margin-top: 0; }

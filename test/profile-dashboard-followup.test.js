@@ -54,6 +54,9 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(settings, /save_profile_configuration_v2/);
   assert.match(settings, /publish_profile_configuration_v2/);
   assert.match(actions, /Publish profile/);
+  assert.match(actions, /--dashboard-action-save: var\(--ctp-green/);
+  assert.match(actions, /profile-dashboard-actions__publish \{[^}]*var\(--dashboard-action-save/);
+  assert.match(appearance, /appearance-editor__color-input:focus-within/);
   assert.match(migration, /'draft', v_record\.draft_config/);
   assert.match(migration, /'published', v_record\.published_config/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.profile_composition_patch/);
