@@ -38,5 +38,8 @@ test('Plus Collection explains where the Atelier layers are configured', async (
   assert.match(editor, /cosmetic-name_motion/);
   assert.match(editor, /cosmetic-profile-atmosphere/);
   assert.match(editor, /profile-layout/);
+  assert.match(editor, /async function applyChanges/);
+  assert.match(editor, /class="profile-cosmetics-apply"/);
+  assert.doesNotMatch(editor, /applySlot/);
   assert.match(settings, /entitlements=\{\$profileEntitlements\} staff=\{Boolean\(context\.targetProfile\?\.is_staff\)\}/);
 });

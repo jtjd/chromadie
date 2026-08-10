@@ -141,30 +141,6 @@
         {/if}
       </section>
 
-      <section class="profile-customize-page__control" aria-labelledby="profile-customize-widgets-title" data-editor-section="widgets" id="customize-widgets">
-        <div class="profile-customize-page__control-heading">
-          <div><span class="profile-customize-page__control-kicker">Connected services</span><h4 id="profile-customize-widgets-title">Provider widgets</h4></div>
-          <span aria-hidden="true">03</span>
-        </div>
-        {#if widgetComponent}
-          <svelte:component this={widgetComponent} bind:this={widgetEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
-        {:else}
-          <div class="profile-customize-page__loading" role="status">Loading widget controls…</div>
-        {/if}
-      </section>
-
-      <section class="profile-customize-page__control" aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
-        <div class="profile-customize-page__control-heading">
-          <div><span class="profile-customize-page__control-kicker">Collection</span><h4 id="profile-customize-effects-title">Effects and collection</h4></div>
-          <span aria-hidden="true">04</span>
-        </div>
-        {#if collectionComponent}
-          <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} />
-        {:else}
-          <div class="profile-customize-page__loading" role="status">Loading effects controls…</div>
-        {/if}
-      </section>
-
       <section class="profile-customize-page__control" aria-labelledby="profile-customize-layout-title" data-editor-section="layout" id="customize-layout">
         <div class="profile-customize-page__control-heading">
           <div><span class="profile-customize-page__control-kicker">Composition</span><h4 id="profile-customize-layout-title">Layout and templates</h4></div>
@@ -176,6 +152,32 @@
           <div class="profile-customize-page__loading" role="status">Loading layout controls…</div>
         {/if}
       </section>
+    </div>
+  </section>
+
+  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-widgets-title" data-editor-section="widgets" id="customize-widgets">
+    <div class="profile-customize-page__surface-heading">
+      <h3 id="profile-customize-widgets-title">Provider Widgets</h3>
+    </div>
+    <div class="profile-customize-page__editor">
+      {#if widgetComponent}
+        <svelte:component this={widgetComponent} bind:this={widgetEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+      {:else}
+        <div class="profile-customize-page__loading" role="status">Loading widget controls…</div>
+      {/if}
+    </div>
+  </section>
+
+  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
+    <div class="profile-customize-page__surface-heading">
+      <h3 id="profile-customize-effects-title">Effects Customization</h3>
+    </div>
+    <div class="profile-customize-page__editor">
+      {#if collectionComponent}
+        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} />
+      {:else}
+        <div class="profile-customize-page__loading" role="status">Loading effects controls…</div>
+      {/if}
     </div>
   </section>
 </div>
@@ -204,6 +206,8 @@
   .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); --customize-section-surface: var(--ctp-mantle, #181825); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); --customize-section-surface: var(--ctp-base, #1e1e2e); }
   .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); --customize-section-surface: var(--ctp-base, #1e1e2e); }
+  .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); --customize-section-surface: var(--ctp-mantle, #181825); }
+  .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); --customize-section-surface: var(--ctp-base, #1e1e2e); }
   .profile-customize-page__surface--assets { padding: 1rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-width: 0; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: color-mix(in srgb, var(--customize-section-accent) 76%, var(--site-ink, #f2f0eb)); font-size: 1.05rem; letter-spacing: -.03em; }
@@ -311,7 +315,7 @@
   .profile-customize-page :global(.profile-cosmetics-layout) { grid-template-columns: minmax(0, 1fr); }
   .profile-customize-page :global(.profile-cosmetics-preview) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { display: none; }
-  .profile-customize-page :global(.profile-cosmetics-controls) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem .65rem; padding: .25rem 0 0; border: 0; background: transparent; }
+  .profile-customize-page :global(.profile-cosmetics-controls) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .45rem .65rem; padding: .25rem 0 0; border: 0; background: transparent; }
   .profile-customize-page :global(.profile-cosmetics-controls__heading) { grid-column: 1 / -1; margin-top: .25rem; padding-top: .65rem; }
   .profile-customize-page :global(.profile-cosmetics-controls__heading:first-child) { margin-top: 0; padding-top: 0; }
   .profile-customize-page :global(.profile-cosmetics-controls__heading p) { display: none; }
@@ -329,6 +333,7 @@
     .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field) { grid-column: auto; grid-row: auto; }
     .profile-customize-page :global(.identity-editor__options) { grid-column: 1 / -1; grid-row: auto; }
     .profile-customize-page :global(.identity-editor__footer) { grid-column: 1 / -1; grid-row: auto; }
+    .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 

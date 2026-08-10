@@ -38,6 +38,14 @@
     name_material: 'Plain material',
     name_motion: 'Still motion'
   });
+  const COSMETIC_SLOTS = Object.freeze([
+    ...NAME_COMPOSABLE_SLOTS,
+    'profile_border',
+    'avatar_effect',
+    'cursor_trail',
+    'profile_layout',
+    'profile_atmosphere'
+  ]);
 
   $: account = { ...($profile || {}), ...(accountProfile || {}) };
   $: username = account.username || 'Chromanaut';
@@ -57,6 +65,7 @@
   $: cursorItems = ownedCosmetics.filter(item => item.slot === 'cursor_trail');
   $: atmosphereItems = ownedCosmetics.filter(item => item.slot === 'profile_atmosphere');
   $: layoutItems = ownedCosmetics.filter(item => item.slot === 'profile_layout');
+  $: hasPendingChanges = COSMETIC_SLOTS.some(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: syncEquippedLoadout(equippedKey, $equippedItems);
 
@@ -82,26 +91,29 @@
     trackProductEvent('shop_try_on', { slot, context: 'profile' });
   }
 
-  async function applySlot(slot) {
-    if (loadingSlot) return;
-    const item = previewLoadout[slot] ? $shopItems[previewLoadout[slot]] : null;
-    loadingSlot = slot;
+  async function applyChanges() {
+    if (loadingSlot || !hasPendingChanges) return;
+    const changedSlots = COSMETIC_SLOTS.filter(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
+    loadingSlot = 'all';
     error = '';
-    status = item ? `Equipping ${item.name}…` : `Clearing ${SHOP_SLOT_LABELS[slot]}…`;
+    status = `Applying ${changedSlots.length} appearance ${changedSlots.length === 1 ? 'change' : 'changes'}…`;
 
     try {
-      const { data, error: rpcError } = item
-        ? await supabase.rpc('equip_item', { p_item_key: item.item_key })
-        : await supabase.rpc('unequip_item', { p_slot: slot });
-      if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The appearance change could not be saved.');
+      for (const slot of changedSlots) {
+        const item = previewLoadout[slot] ? $shopItems[previewLoadout[slot]] : null;
+        const { data, error: rpcError } = item
+          ? await supabase.rpc('equip_item', { p_item_key: item.item_key })
+          : await supabase.rpc('unequip_item', { p_slot: slot });
+        if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The appearance change could not be saved.');
+        if (item) trackProductEvent('shop_equip', { slot, context: 'profile' });
+      }
 
       const userId = $session?.user?.id;
       const refreshedProfile = userId ? await refreshProfileState(userId) : null;
       if (!refreshedProfile) throw new Error('The change saved, but the profile could not be refreshed.');
       previewLoadout = { ...(refreshedProfile.equipped_cosmetics || {}) };
       syncedLoadoutKey = JSON.stringify(previewLoadout);
-      status = item ? `${item.name} is now equipped.` : `${SHOP_SLOT_LABELS[slot]} cleared.`;
-      if (item) trackProductEvent('shop_equip', { slot, context: 'profile' });
+      status = `${changedSlots.length} appearance ${changedSlots.length === 1 ? 'change' : 'changes'} applied.`;
       addToast(status, 'success');
     } catch (actionError) {
       previewLoadout = { ...$equippedItems };
@@ -127,7 +139,7 @@
         <div class="profile-cosmetics-plus-guide__intro">
           <span class="profile-cosmetics-plus-guide__eyebrow">Chromadie Plus</span>
           <h3 id="profile-cosmetics-plus-guide-title">Atelier expression is ready</h3>
-          <p>The Atelier name treatment and atmosphere are separate layers. Choose one below, preview it, then press <strong>Apply</strong>.</p>
+          <p>The Atelier name treatment and atmosphere are separate layers. Choose your expression below, preview it, then press <strong>Apply changes</strong>.</p>
         </div>
         <nav class="profile-cosmetics-plus-guide__links" aria-label="Atelier expression shortcuts">
           <a href="#cosmetic-name_motion"><strong>Name effect</strong><span>Collection → Name · Motion</span><b aria-hidden="true">↗</b></a>
@@ -156,9 +168,9 @@
 
         <div class="profile-cosmetics-controls">
           <div class="profile-cosmetics-controls__heading">
-            <span>Name</span>
-            <strong>Three independent layers</strong>
-            <p>Defaults are always available. Changing one layer preserves the other two.</p>
+            <span>Expression</span>
+            <strong>Profile effects</strong>
+            <p>Preview each layer, then apply the complete expression together.</p>
           </div>
 
           {#each NAME_COMPOSABLE_SLOTS as slot (slot)}
@@ -172,15 +184,9 @@
                   {/each}
                 </select>
               </div>
-              <button type="button" disabled={!!loadingSlot || (previewLoadout[slot] || '') === ($equippedItems[slot] || '')} on:click={() => applySlot(slot)}>{loadingSlot === slot ? 'Saving…' : 'Apply'}</button>
             </div>
           {/each}
 
-          <div class="profile-cosmetics-controls__heading profile-cosmetics-controls__heading--border">
-            <span>Border</span>
-            <strong>Profile Border</strong>
-            <p>One shared border renderer is used on profiles, discovery, and shop previews.</p>
-          </div>
           <div class="profile-cosmetics-slot">
             <div>
               <label for="cosmetic-profile-border">Profile Border</label>
@@ -191,14 +197,8 @@
                 {/each}
               </select>
             </div>
-            <button type="button" disabled={!!loadingSlot || (previewLoadout['profile_border'] || '') === ($equippedItems['profile_border'] || '')} on:click={() => applySlot('profile_border')}>{loadingSlot === 'profile_border' ? 'Saving…' : 'Apply'}</button>
           </div>
 
-          <div class="profile-cosmetics-controls__heading profile-cosmetics-controls__heading--border">
-            <span>Portrait</span>
-            <strong>Avatar effect</strong>
-            <p>Decorates the portrait locally and stays quiet in compact cards.</p>
-          </div>
           <div class="profile-cosmetics-slot">
             <div>
               <label for="cosmetic-avatar-effect">Avatar effect</label>
@@ -207,14 +207,8 @@
                 {#each avatarItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
               </select>
             </div>
-            <button type="button" disabled={!!loadingSlot || (previewLoadout['avatar_effect'] || '') === ($equippedItems['avatar_effect'] || '')} on:click={() => applySlot('avatar_effect')}>{loadingSlot === 'avatar_effect' ? 'Saving…' : 'Apply'}</button>
           </div>
 
-          <div class="profile-cosmetics-controls__heading profile-cosmetics-controls__heading--border">
-            <span>Pointer</span>
-            <strong>Cursor trail</strong>
-            <p>Only appears on public profiles and this preview surface.</p>
-          </div>
           <div class="profile-cosmetics-slot">
             <div>
               <label for="cosmetic-cursor-trail">Cursor trail</label>
@@ -223,14 +217,8 @@
                 {#each cursorItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
               </select>
             </div>
-            <button type="button" disabled={!!loadingSlot || (previewLoadout['cursor_trail'] || '') === ($equippedItems['cursor_trail'] || '')} on:click={() => applySlot('cursor_trail')}>{loadingSlot === 'cursor_trail' ? 'Saving…' : 'Apply'}</button>
           </div>
 
-          <div class="profile-cosmetics-controls__heading profile-cosmetics-controls__heading--border">
-            <span>Composition</span>
-            <strong>Paid profile layout</strong>
-            <p>Free layouts remain in Layout & links. An owned paid layout overrides the saved free fallback until cleared.</p>
-          </div>
           <div class="profile-cosmetics-slot">
             <div>
               <label for="cosmetic-profile-layout">Paid layout</label>
@@ -239,14 +227,8 @@
                 {#each layoutItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
               </select>
             </div>
-            <button type="button" disabled={!!loadingSlot || (previewLoadout['profile_layout'] || '') === ($equippedItems['profile_layout'] || '')} on:click={() => applySlot('profile_layout')}>{loadingSlot === 'profile_layout' ? 'Saving…' : 'Apply'}</button>
           </div>
 
-          <div class="profile-cosmetics-controls__heading profile-cosmetics-controls__heading--border">
-            <span>Atmosphere</span>
-            <strong>Profile atmosphere</strong>
-            <p>Authored scene lighting sits behind the identity card. Uploaded backgrounds stay independent.</p>
-          </div>
           <div class="profile-cosmetics-slot">
             <div>
               <label for="cosmetic-profile-atmosphere">Profile atmosphere</label>
@@ -255,8 +237,9 @@
                 {#each atmosphereItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
               </select>
             </div>
-            <button type="button" disabled={!!loadingSlot || (previewLoadout['profile_atmosphere'] || '') === ($equippedItems['profile_atmosphere'] || '')} on:click={() => applySlot('profile_atmosphere')}>{loadingSlot === 'profile_atmosphere' ? 'Saving…' : 'Apply'}</button>
           </div>
+
+          <button type="button" class="profile-cosmetics-apply" disabled={!!loadingSlot || !hasPendingChanges} on:click={applyChanges}>{loadingSlot ? 'Applying…' : 'Apply changes'}</button>
         </div>
       </div>
 
@@ -285,15 +268,14 @@
   .profile-cosmetics-preview { min-width: 0; }
   .profile-cosmetics-controls { display: grid; gap: .75rem; min-width: 0; padding: 1rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-panel-soft); }
   .profile-cosmetics-controls__heading { display: grid; gap: .35rem; padding-bottom: .25rem; }
-  .profile-cosmetics-controls__heading--border { margin-top: .5rem; padding-top: 1rem; border-top: 1px solid var(--color-line-subtle); }
   .profile-cosmetics-controls__heading span { color: var(--color-accent-bright); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: .12em; text-transform: uppercase; }
   .profile-cosmetics-controls__heading strong { color: var(--color-ink-strong); font-size: 1.05rem; }
   .profile-cosmetics-controls__heading p { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.45; }
-  .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .55rem .7rem; align-items: end; padding-top: .8rem; border-top: 1px solid var(--color-line-subtle); }
+  .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr); gap: .55rem .7rem; align-items: end; padding-top: .8rem; border-top: 1px solid var(--color-line-subtle); }
   .profile-cosmetics-slot label { display: block; margin-bottom: .4rem; color: var(--color-ink-strong); font-weight: 650; font-size: var(--type-small); }
   .profile-cosmetics-slot select { width: 100%; min-height: 2.65rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); padding: 0 .7rem; background: var(--surface-inset); color: var(--color-ink-strong); font: 500 var(--type-small) / 1 var(--font-body-stack); }
-  .profile-cosmetics-slot button { min-height: 2.65rem; padding: 0 .8rem; border: 0; border-radius: var(--radius-sm); background: var(--color-ink-strong); color: var(--color-canvas-deep); font-weight: 700; cursor: pointer; white-space: nowrap; }
-  .profile-cosmetics-slot button:disabled { opacity: .45; cursor: not-allowed; }
+  .profile-cosmetics-apply { grid-column: 1 / -1; justify-self: end; min-height: 2.65rem; padding: 0 1rem; border: 0; border-radius: var(--radius-sm); background: var(--color-ink-strong); color: var(--color-canvas-deep); font-weight: 700; cursor: pointer; }
+  .profile-cosmetics-apply:disabled { opacity: .45; cursor: not-allowed; }
   .profile-cosmetics-status { min-height: 1.25rem; margin: 1rem 0 0; color: var(--color-ink-muted); font-size: var(--type-small); }
   .profile-cosmetics-status.error-message { color: var(--color-danger); }
   @media (max-width: 900px) { .profile-cosmetics-layout, .profile-cosmetics-plus-guide { grid-template-columns: 1fr; } }
