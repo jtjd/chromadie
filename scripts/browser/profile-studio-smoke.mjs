@@ -225,9 +225,9 @@ try {
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
     await page.evaluate(`(async () => {
       const { userInventory } = await import('/src/lib/stores.js');
-      userInventory.update(items => [...new Set([...(Array.isArray(items) ? items : []), 'name_font_marker_tag', 'border_celestial'])]);
+      userInventory.update(items => [...new Set([...(Array.isArray(items) ? items : []), 'name_font_marker_tag', 'border_celestial', 'profile_atmosphere_rain_window', 'profile_atmosphere_silk_folds'])]);
     })()`);
-    await page.waitFor(`document.querySelector('#cosmetic-name_font option[value="name_font_marker_tag"]') && document.querySelector('#cosmetic-profile-border option[value="border_celestial"]')`, 'owned cosmetic preview fixtures');
+    await page.waitFor(`document.querySelector('#cosmetic-name_font option[value="name_font_marker_tag"]') && document.querySelector('#cosmetic-profile-border option[value="border_celestial"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_rain_window"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_silk_folds"]')`, 'owned cosmetic preview fixtures');
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-name_font');
       select.value = 'name_font_marker_tag';
@@ -249,10 +249,22 @@ try {
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
     await page.waitFor(`document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('.profile-settings-preview [data-profile-border="celestial"]')`, 'border renderer in card and live preview');
+    await page.evaluate(`(() => {
+      const select = document.querySelector('#cosmetic-profile-atmosphere');
+      select.value = 'profile_atmosphere_rain_window';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`);
+    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]') && document.querySelector('.profile-settings-preview [data-atmosphere="rain-window"]')`, 'atmosphere renderer in card and live preview');
+    await page.evaluate(`(() => {
+      const select = document.querySelector('#cosmetic-profile-atmosphere');
+      select.value = 'profile_atmosphere_silk_folds';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`);
+    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]') && document.querySelector('.profile-settings-preview [data-atmosphere="silk-folds"]') && [...document.querySelectorAll('[data-atmosphere="silk-folds"] video')].every(video => video.currentSrc.includes('/atmospheres/silk-folds/'))`, 'atmosphere renderer changes in card and live preview');
     await page.evaluate(`document.querySelector('#customize-effects')?.scrollIntoView({ block: 'start' })`);
     await capture('05-effects-live-preview');
     await page.evaluate(`(() => {
-      for (const id of ['cosmetic-name_font', 'cosmetic-profile-border']) {
+      for (const id of ['cosmetic-name_font', 'cosmetic-profile-border', 'cosmetic-profile-atmosphere']) {
         const select = document.getElementById(id);
         select.value = '';
         select.dispatchEvent(new Event('change', { bubbles: true }));

@@ -4000,3 +4000,12 @@ row follows the supplied reference instead of inheriting the catalog's large
 success copy are delivered through the existing toast/error channels rather
 than leaving a status paragraph in the layout. This is presentation-only and
 does not change cosmetic entitlement or equip RPC behavior.
+
+## 2026-08-10 — Keep cosmetic drafts on one preview event path
+
+Collection preview events must be forwarded through Customize before they
+reach the persistent Profile Studio preview. Atmosphere media is keyed by its
+allow-listed renderer key so switching scenes replaces the finite video/poster
+element instead of mutating a stale `<source>` node. Name previews keep the
+same production renderer but use a larger, vertically centered control-side
+sample. No saved configuration or equip authority changes.

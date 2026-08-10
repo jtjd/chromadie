@@ -332,11 +332,12 @@
   .profile-cosmetics-visual-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; }
   .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr); gap: .35rem .7rem; align-items: end; padding-top: .15rem; border-top: 0; }
   .profile-cosmetics-name-control { position: relative; min-width: 0; }
-  .profile-cosmetics-name-preview { position: absolute; right: .65rem; top: 50%; width: min(42%, 8rem); height: 1.7rem; overflow: hidden; pointer-events: none; transform: translateY(-50%); }
-  .profile-cosmetics-name-preview > span { display: grid; height: 100%; place-items: center end; overflow: hidden; color: var(--ctp-lavender, #b4befe); font: 700 .82rem/1 var(--cosmetics-body); text-overflow: ellipsis; white-space: nowrap; }
-  .profile-cosmetics-name-preview :global(.shop-preview-area) { width: 100%; height: 100%; min-height: 0; aspect-ratio: auto; padding: 0; border-radius: 0; background: transparent; }
-  .profile-cosmetics-name-preview :global(.shop-preview-text) { height: 100%; padding: 0; justify-content: flex-end; }
-  .profile-cosmetics-name-preview :global(.name-effect-canvas__semantic) { font-size: .82rem !important; line-height: 1 !important; }
+  .profile-cosmetics-name-preview { position: absolute; right: .75rem; top: 50%; display: flex; width: min(44%, 10rem); height: 2rem; align-items: center; justify-content: flex-end; overflow: hidden; pointer-events: none; transform: translateY(-50%); }
+  .profile-cosmetics-name-preview > span { display: grid; height: 100%; place-items: center end; overflow: hidden; color: var(--ctp-lavender, #b4befe); font: 700 1rem/1.1 var(--cosmetics-body); text-overflow: ellipsis; white-space: nowrap; }
+  .profile-cosmetics-name-preview :global(.shop-preview-area) { display: flex; width: 100%; height: 100%; min-height: 0; align-items: center; justify-content: flex-end; aspect-ratio: auto; padding: 0; border-radius: 0; background: transparent; }
+  .profile-cosmetics-name-preview :global(.shop-preview-text) { display: flex; width: 100%; height: 100%; align-items: center; justify-content: flex-end; padding: 0; }
+  .profile-cosmetics-name-preview :global(.name-effect-canvas) { display: flex; width: 100%; height: 100%; align-items: center; justify-content: flex-end; text-align: right; }
+  .profile-cosmetics-name-preview :global(.name-effect-canvas__semantic) { font-size: 1rem !important; line-height: 1.1 !important; }
   .profile-cosmetics-name-control select { padding-right: 5rem; }
   .profile-cosmetics-visual-preview { position: relative; display: grid; width: 100%; height: 4.25rem; min-height: 4.25rem; place-items: stretch; overflow: hidden; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--ctp-mantle, #181825); }
   .profile-cosmetics-visual-preview :global(.shop-preview-area) { width: 100% !important; height: 100% !important; min-height: 0 !important; aspect-ratio: auto !important; padding: .35rem !important; border-radius: 0; }

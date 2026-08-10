@@ -2965,3 +2965,9 @@ avatar, border, cursor, and atmosphere renderers are clipped to a short preview
 stage, and the normal “Preview only. Apply the change” helper is removed. The
 Apply changes button remains the only inline commit action; failures remain
 announced accessibly and successful equips continue to use the existing toast.
+
+The follow-up interaction pass forwards Collection cosmetic events through the
+Customize shell, so atmosphere drafts now update the persistent Live preview as
+well as their own card. Atmosphere renderer keys remount the finite media plate
+when a scene changes, and name samples are larger and vertically centered in
+their controls.

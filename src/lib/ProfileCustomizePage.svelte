@@ -130,7 +130,7 @@
   <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-label="Visual effects" data-editor-section="effects" id="customize-effects">
     <div class="profile-customize-page__editor">
       {#if collectionComponent}
-        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} on:cosmeticpreview />
+        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} on:cosmeticpreview={forward} />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading effects controls…</div>
       {/if}

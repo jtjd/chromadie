@@ -93,6 +93,7 @@ test('reference workspace composition stays explicit', async () => {
   }
   assert.match(cosmetics, /NAME_COMPOSABLE_SLOTS[\s\S]*previewSlot\(slot/);
   assert.match(customize, /dispatch\('customizepreview'/);
+  assert.match(customize, /on:cosmeticpreview=\{forward\}/);
   assert.match(settings, /on:identitypreview=\{updateIdentityPreview\}/);
   assert.match(settings, /on:cosmeticpreview=\{updateCosmeticPreview\}/);
   assert.match(settings, /on:customizepreview=\{updateConfigurationPreview\}/);

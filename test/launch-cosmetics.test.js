@@ -70,6 +70,7 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.match(atmosphereSource, /prefers-reduced-motion/);
   assert.match(atmosphereSource, /visibilitychange/);
   assert.match(atmosphereSource, /data-atmosphere=\{definition\.key\}/);
+  assert.match(atmosphereSource, /#key definition\.key/);
   assert.match(atmosphereSource, /mode === 'card' \|\| mode === 'compact'/);
   assert.match(atmosphereSource, /background: transparent/);
   assert.match(atmosphereSource, /rain-window-loop-v2\.webm/);

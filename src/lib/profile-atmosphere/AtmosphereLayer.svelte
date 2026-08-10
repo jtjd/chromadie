@@ -89,7 +89,6 @@
   let reducedMotion = false;
   let visible = true;
   let mediaQuery;
-  let mounted = false;
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: media = definition ? MEDIA[definition.key] : null;
@@ -122,7 +121,6 @@
   }
 
   onMount(() => {
-    mounted = true;
     mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     updateReducedMotion();
     mediaQuery?.addEventListener?.('change', updateReducedMotion);
@@ -130,21 +128,22 @@
     return () => {
       mediaQuery?.removeEventListener?.('change', updateReducedMotion);
       document.removeEventListener('visibilitychange', updateVisibility);
-      mounted = false;
     };
   });
 </script>
 
-{#if mounted && definition && media}
+{#if definition && media}
   <div class={classes} style={style} aria-hidden="true" data-atmosphere={definition.key}>
-    {#if motionActive}
-      <video class={`profile-atmosphere__video profile-atmosphere__video--${media.className}`} autoplay muted loop playsinline preload="metadata" poster={media.poster}>
-        <source src={media.video} type="video/webm" />
-        <source src={media.fallback} type="video/mp4" />
-      </video>
-    {:else}
-      <img class={`profile-atmosphere__video profile-atmosphere__video--${media.className} profile-atmosphere__video--poster`} src={media.poster} alt="" />
-    {/if}
+    {#key definition.key}
+      {#if motionActive}
+        <video class={`profile-atmosphere__video profile-atmosphere__video--${media.className}`} autoplay muted loop playsinline poster={media.poster}>
+          <source src={media.video} type="video/webm" />
+          <source src={media.fallback} type="video/mp4" />
+        </video>
+      {:else}
+        <img class={`profile-atmosphere__video profile-atmosphere__video--${media.className} profile-atmosphere__video--poster`} src={media.poster} alt="" />
+      {/if}
+    {/key}
   </div>
 {/if}
 

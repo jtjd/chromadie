@@ -2405,3 +2405,11 @@ direct route behavior.
   atmosphere renderers.
 - Removed the inline “Preview only. Apply the change” status copy while keeping
   Apply changes, accessible errors, toast feedback, and existing equip behavior.
+
+## 2026-08-10 — Repair cosmetic preview propagation
+
+- Forwarded Collection fitting-room events through the Customize shell so
+  atmosphere selections update the persistent Live preview immediately.
+- Keyed atmosphere media by its validated renderer key so switching scenes
+  replaces the video/poster element instead of retaining the prior source.
+- Increased and vertically centered the name-effect samples beside each select.

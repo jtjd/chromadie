@@ -137,3 +137,9 @@ renderer into a short, reference-sized viewport. The editor no longer renders
 the “Preview only. Apply the change” helper paragraph; Apply changes remains
 the single inline commit affordance, with failures announced as alerts and
 successful changes reported through the existing toast system.
+
+Collection cosmetic events now flow through the Customize shell into the
+persistent preview, including atmosphere drafts. AtmosphereLayer keys its
+finite media plate by the validated scene key so selecting a different scene
+updates both the fitting-room card and Live preview. Name-effect samples use a
+larger centered control-side treatment for readable alignment.
