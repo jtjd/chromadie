@@ -34,11 +34,13 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(identity, /incomingKey/);
   assert.match(identity, /identity-editor__grid--meta/);
   assert.match(identity, /identity-editor__grid--behavior/);
-  assert.match(customize, /identity-editor__fields\) \{ display: grid; grid-template-columns: repeat\(4/);
+  assert.match(customize, /identity-editor__fields\) \{ display: contents; \}/);
   assert.match(customize, /identity-editor__field\[for="profile-bio"\]\) \{ grid-column: 1 \/ span 2; grid-row: 1 \/ span 2;/);
   assert.match(customize, /identity-editor__options\) \{ display: flex; grid-column: 1 \/ span 2; grid-row: 3;/);
   assert.match(customize, /identity-editor__grid--meta \.identity-editor__field:first-child/);
   assert.match(customize, /identity-editor__grid--behavior \.identity-editor__field:first-child/);
+  assert.match(customize, /profile-customize-page__control-grid--other/);
+  assert.match(customize, /profile-content-editor__panel:first-of-type \.profile-content-editor__fields/);
   for (const label of ['Profile Text', 'Handle & Metadata', 'Username', 'Bio Text', 'Page Background', 'Profile Surface', 'Accent']) {
     assert.match(appearance, new RegExp(label.replace(/[&]/g, '\\$&')));
   }

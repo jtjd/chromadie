@@ -128,7 +128,7 @@
       <h3 id="profile-customize-other-title">Other Customization</h3>
     </div>
 
-    <div class="profile-customize-page__control-grid">
+    <div class="profile-customize-page__control-grid profile-customize-page__control-grid--other">
       <section class="profile-customize-page__control" aria-labelledby="profile-customize-content-title" data-editor-section="content" id="customize-content">
         <div class="profile-customize-page__control-heading">
           <div><span class="profile-customize-page__control-kicker">Content</span><h4 id="profile-customize-content-title">About and projects</h4></div>
@@ -220,6 +220,7 @@
 
   .profile-customize-page__control-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; min-width: 0; }
   .profile-customize-page__control-grid--general { grid-template-columns: minmax(0, 1fr); }
+  .profile-customize-page__control-grid--other { align-items: start; gap: .55rem .7rem; }
   .profile-customize-page__control { display: block; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; scroll-margin-top: 5rem; }
   .profile-customize-page__control-heading { display: none; }
   .profile-customize-page__control[data-editor-section="content"], .profile-customize-page__control[data-editor-section="layout"] { grid-column: 1 / -1; }
@@ -286,15 +287,23 @@
   .profile-customize-page :global(.profile-cosmetics-surface) { padding: .65rem 0; border: 0; border-top: 1px solid var(--customize-line); border-radius: 0; background: transparent; }
   .profile-customize-page :global(.profile-content-editor) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
   .profile-customize-page :global(.profile-content-editor__panel) { padding: .45rem 0; }
+  .profile-customize-page :global(.profile-content-editor__panel:first-of-type) { grid-column: 1 / -1; }
   .profile-customize-page :global(.profile-content-editor__panel:nth-of-type(2)) { grid-column: 1 / -1; }
   .profile-customize-page :global(.profile-content-editor__panel-heading) { margin-bottom: .55rem; }
   .profile-customize-page :global(.profile-content-editor__fields) { gap: .55rem; }
+  .profile-customize-page :global(.profile-content-editor__panel:first-of-type .profile-content-editor__fields) { grid-template-columns: minmax(10rem, .65fr) minmax(0, 1.35fr); align-items: start; }
   .profile-customize-page :global(.profile-content-editor__project) { gap: .55rem; padding: .65rem; }
   .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
-  .profile-customize-page :global(.profile-content-editor__helper) { display: none; }
+  .profile-customize-page :global(.profile-content-editor__helper),
+  .profile-customize-page :global(.profile-content-editor__hint),
+  .profile-customize-page :global(.profile-widget-editor__hint),
+  .profile-customize-page :global(.profile-editor__hint) { display: none; }
   .profile-customize-page :global(.profile-widget-editor) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .65rem; }
   .profile-customize-page :global(.profile-widget-editor__list) { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
-  .profile-customize-page :global(.profile-widget-editor__panel) { gap: .55rem; padding: .65rem; }
+  .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; padding: .55rem; }
+  .profile-customize-page :global(.profile-widget-editor__panel-heading),
+  .profile-customize-page :global(.profile-widget-editor__helper),
+  .profile-customize-page :global(.profile-widget-editor__remove) { grid-column: 1 / -1; }
   .profile-customize-page :global(.profile-widget-editor__add) { grid-column: 1; }
   .profile-customize-page :global(.profile-widget-editor__note) { grid-column: 1 / -1; display: none; }
   .profile-customize-page :global(.profile-editor__panel) { gap: .6rem; padding: .5rem 0; }
@@ -302,11 +311,11 @@
   .profile-customize-page :global(.profile-cosmetics-layout) { grid-template-columns: minmax(0, 1fr); }
   .profile-customize-page :global(.profile-cosmetics-preview) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { display: none; }
-  .profile-customize-page :global(.profile-cosmetics-controls) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem .75rem; padding: 0; border: 0; background: transparent; }
+  .profile-customize-page :global(.profile-cosmetics-controls) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem .65rem; padding: .25rem 0 0; border: 0; background: transparent; }
   .profile-customize-page :global(.profile-cosmetics-controls__heading) { grid-column: 1 / -1; margin-top: .25rem; padding-top: .65rem; }
   .profile-customize-page :global(.profile-cosmetics-controls__heading:first-child) { margin-top: 0; padding-top: 0; }
   .profile-customize-page :global(.profile-cosmetics-controls__heading p) { display: none; }
-  .profile-customize-page :global(.profile-cosmetics-slot) { padding-top: .5rem; }
+  .profile-customize-page :global(.profile-cosmetics-slot) { padding-top: .45rem; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { grid-template-columns: 1fr; }
   .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
@@ -331,12 +340,14 @@
     .profile-customize-page__surface, .profile-customize-page__surface--assets { padding: .8rem; }
     .profile-customize-page__surface-heading { align-items: flex-start; flex-direction: column; }
     .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: minmax(0, 1fr); }
+    .profile-customize-page :global(.profile-content-editor__panel:first-of-type .profile-content-editor__fields) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: auto; }
     .profile-customize-page :global(.identity-editor__options) { grid-column: auto; }
     .profile-customize-page :global(.profile-content-editor), .profile-customize-page :global(.profile-widget-editor) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-content-editor__panel:nth-of-type(2)), .profile-customize-page :global(.profile-widget-editor__list) { grid-column: auto; }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields), .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
+    .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-cosmetics-controls__heading) { grid-column: auto; }
     .profile-customize-page__premium-banner { min-height: 3.6rem; padding-inline: 2.5rem; text-align: center; }
