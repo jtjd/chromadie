@@ -13,6 +13,8 @@ Document user-visible redesign changes by milestone.
   perimeter like the reference.
 - Removed the preview-only shell border and forced height so the live preview
   has one identity-card frame with no empty canvas below it.
+- Removed the blue default-page backdrop from the embedded Studio preview;
+  the generated starfield now belongs only to the profile card.
 - Existing custom backgrounds, atmospheres, layouts, and published profile
   configuration remain unchanged.
 

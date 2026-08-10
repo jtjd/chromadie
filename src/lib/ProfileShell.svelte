@@ -1155,6 +1155,9 @@
     padding: 0;
     background: transparent;
   }
+  .profile-shell-page.profile-shell-page--default.profile-shell-page--preview {
+    background: transparent;
+  }
   :global(.profile-shell-page--preview) .profile-shell__opening { width: 100%; margin: 0; border-radius: 16px; box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.28); }
   :global(.profile-shell-page--preview) .profile-shell__opening-content { grid-template-columns: 1fr; }
   :global(.profile-shell-page--preview) .profile-shell__identity-row { gap: var(--space-4); }

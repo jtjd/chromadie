@@ -15,6 +15,8 @@
 - Removed the live-preview-only shell frame and fixed-height canvas so the
   generated identity card ends with its content instead of an empty second
   panel beneath it.
+- Made the fresh-profile page canvas transparent inside Profile Studio so the
+  generated starfield card no longer sits on a visible blue rectangle.
 - Kept authored backgrounds, atmospheres, saved layout variants, and server
   configuration authority unchanged; the default starfield is opt-in only
   while those custom surfaces are absent.
