@@ -97,8 +97,12 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(widgets, /--widget-add: var\(--customize-accent-add/);
   assert.match(cosmetics, /--cosmetics-save: var\(--customize-accent-save/);
   assert.match(editor, /--editor-add: var\(--customize-accent-add/);
-  assert.match(customize, /profile-customize-page__surface-note/);
-  assert.match(customize, /projects need a title and HTTPS URL/);
+  assert.doesNotMatch(customize, /profile-customize-page__surface-note/);
+  assert.doesNotMatch(customize, /Shape the profile canvas|Set your bio and choose|Preview your palette here|Preview owned expression layers|Choose the profile structure|Tell more of your story|Use official HTTPS provider URLs/);
+  assert.doesNotMatch(expression, /Unlock richer expression/);
+  assert.doesNotMatch(richMedia, /Unlock richer expression/);
+  assert.match(expression, /Chromadie Plus/);
+  assert.match(richMedia, /Chromadie Plus/);
   assert.match(customize, /profile-customize-page :global\(\.profile-cosmetics-apply\) \{ min-height: var\(--customize-primary-height/);
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);

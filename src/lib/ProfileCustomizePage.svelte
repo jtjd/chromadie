@@ -76,10 +76,7 @@
 <div class="profile-customize-page">
   <section class="profile-customize-page__surface profile-customize-page__surface--assets" aria-labelledby="profile-customize-media-title" data-editor-section="media">
     <div class="profile-customize-page__surface-heading">
-      <div>
-        <h3 id="profile-customize-media-title">Profile media</h3>
-        <p class="profile-customize-page__surface-note">Shape the profile canvas with media visitors can explore.</p>
-      </div>
+      <h3 id="profile-customize-media-title">Profile media</h3>
     </div>
 
     {#if mediaComponent}
@@ -99,10 +96,7 @@
 
   <section class="profile-customize-page__surface" aria-labelledby="profile-customize-general-title" data-editor-section="general">
     <div class="profile-customize-page__surface-heading">
-      <div>
-        <h3 id="profile-customize-general-title">General Customization</h3>
-        <p class="profile-customize-page__surface-note">Set your bio and choose the identity details visitors can see.</p>
-      </div>
+      <h3 id="profile-customize-general-title">General Customization</h3>
     </div>
 
     <div class="profile-customize-page__control-grid profile-customize-page__control-grid--general">
@@ -122,10 +116,7 @@
 
   <section class="profile-customize-page__surface" aria-labelledby="profile-customize-appearance-title" data-editor-section="appearance" id="customize-appearance">
     <div class="profile-customize-page__surface-heading">
-      <div>
-        <h3 id="profile-customize-appearance-title">Color Customization</h3>
-        <p class="profile-customize-page__surface-note">Preview your palette here; publish the profile when it is ready.</p>
-      </div>
+      <h3 id="profile-customize-appearance-title">Color Customization</h3>
     </div>
     <div class="profile-customize-page__editor">
       <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={forward} on:dirty={forward} />
@@ -134,10 +125,7 @@
 
   <section class="profile-customize-page__surface" aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
     <div class="profile-customize-page__surface-heading">
-      <div>
-        <h3 id="profile-customize-effects-title">Effects Customization</h3>
-        <p class="profile-customize-page__surface-note">Preview owned expression layers, then apply the look you want to keep.</p>
-      </div>
+      <h3 id="profile-customize-effects-title">Effects Customization</h3>
     </div>
     <div class="profile-customize-page__editor">
       {#if collectionComponent}
@@ -150,10 +138,7 @@
 
   <section class="profile-customize-page__surface" aria-labelledby="profile-customize-templates-title" data-editor-section="layout" id="customize-layout">
     <div class="profile-customize-page__surface-heading">
-      <div>
-        <h3 id="profile-customize-templates-title">Templates</h3>
-        <p class="profile-customize-page__surface-note">Choose the profile structure visitors will see; changes stay staged until publish.</p>
-      </div>
+      <h3 id="profile-customize-templates-title">Templates</h3>
     </div>
     <div class="profile-customize-page__editor">
       {#if layoutComponent}
@@ -166,10 +151,7 @@
 
   <section class="profile-customize-page__surface" aria-labelledby="profile-customize-other-title" data-editor-section="other" id="customize-other">
     <div class="profile-customize-page__surface-heading">
-      <div>
-        <h3 id="profile-customize-other-title">Other Customization</h3>
-        <p class="profile-customize-page__surface-note">Tell more of your story with a short bio or projects; projects need a title and HTTPS URL.</p>
-      </div>
+      <h3 id="profile-customize-other-title">Other Customization</h3>
     </div>
 
     <div class="profile-customize-page__control-grid profile-customize-page__control-grid--other">
@@ -190,10 +172,7 @@
 
   <section class="profile-customize-page__surface" aria-labelledby="profile-customize-widgets-title" data-editor-section="widgets" id="customize-widgets">
     <div class="profile-customize-page__surface-heading">
-      <div>
-        <h3 id="profile-customize-widgets-title">Provider Widgets</h3>
-        <p class="profile-customize-page__surface-note">Use official HTTPS provider URLs only; arbitrary embeds and scripts are never accepted.</p>
-      </div>
+      <h3 id="profile-customize-widgets-title">Provider Widgets</h3>
     </div>
     <div class="profile-customize-page__editor">
       {#if widgetComponent}
@@ -209,15 +188,17 @@
 <style>
   .profile-customize-page {
     --customize-surface: var(--ctp-base, #1e1e2e);
+    --customize-surface-alt: var(--ctp-mantle, #181825);
     --customize-surface-raised: var(--ctp-surface0, #313244);
     --customize-surface-inset: var(--ctp-mantle, #181825);
+    --customize-surface-deep: var(--ctp-crust, #11111b);
     --customize-text-primary: var(--ctp-text, #cdd6f4);
     --customize-text-secondary: var(--ctp-subtext1, #bac2de);
     --customize-text-muted: var(--ctp-subtext0, #a6adc8);
-    --customize-text-faint: var(--ctp-overlay2, #9399b2);
-    --customize-border: color-mix(in srgb, var(--ctp-overlay0, #6c7086) 38%, transparent);
-    --customize-border-strong: color-mix(in srgb, var(--ctp-overlay1, #7f849c) 58%, transparent);
-    --customize-border-subtle: color-mix(in srgb, var(--ctp-overlay0, #6c7086) 27%, transparent);
+    --customize-text-faint: var(--ctp-overlay1, #7f849c);
+    --customize-border: var(--ctp-overlay0, #6c7086);
+    --customize-border-strong: var(--ctp-surface2, #585b70);
+    --customize-border-subtle: color-mix(in srgb, var(--ctp-overlay0, #6c7086) 54%, transparent);
     --customize-focus: var(--ctp-lavender, #b4befe);
     --customize-accent-primary: var(--ctp-teal, #94e2d5);
     --customize-accent-secondary: var(--ctp-sky, #89dceb);
@@ -234,13 +215,7 @@
     --customize-secondary-height: 2.15rem;
     --customize-primary-height: 2.4rem;
     --customize-radius: .38rem;
-    --customize-panel: var(--customize-surface-raised);
     --customize-section-input: var(--customize-surface-raised);
-    --customize-inset: var(--customize-surface-inset);
-    --customize-line: var(--customize-border);
-    --customize-line-strong: var(--customize-border-strong);
-    --customize-muted: var(--customize-text-muted);
-    --customize-faint: var(--customize-text-faint);
     display: grid;
     width: 100%;
     gap: .75rem;
@@ -253,7 +228,7 @@
     /* Embedded editors consume these aliases. Keeping them here makes the
      * Customize page a coherent visual surface without changing their APIs. */
     --site-canvas: var(--customize-surface);
-    --site-deep: var(--customize-surface-inset);
+    --site-deep: var(--customize-surface-deep);
     --site-raised: var(--customize-surface-raised);
     --site-ink: var(--customize-text-primary);
     --site-muted: var(--customize-text-secondary);
@@ -263,10 +238,10 @@
     --site-line: var(--customize-border-subtle);
     --site-line-strong: var(--customize-border-strong);
     --site-surface: var(--customize-surface-raised);
-    --site-surface-soft: color-mix(in srgb, var(--customize-surface-raised) 42%, transparent);
+    --site-surface-soft: var(--customize-surface-inset);
     --color-canvas: var(--customize-surface);
     --color-canvas-raised: var(--customize-surface-raised);
-    --color-canvas-deep: var(--customize-surface-inset);
+    --color-canvas-deep: var(--customize-surface-deep);
     --color-ink-strong: var(--customize-text-primary);
     --color-ink: var(--customize-text-secondary);
     --color-ink-muted: var(--customize-text-muted);
@@ -283,30 +258,29 @@
     --color-danger: var(--customize-accent-danger);
     --surface-panel: var(--customize-surface-raised);
     --surface-panel-strong: var(--ctp-surface1, #45475a);
-    --surface-panel-soft: color-mix(in srgb, var(--customize-surface-raised) 42%, transparent);
+    --surface-panel-soft: var(--customize-surface-inset);
     --surface-inset: var(--customize-surface-inset);
   }
 
   .profile-customize-page__control-kicker { display: none; }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay2, #9399b2); --customize-section-surface: color-mix(in srgb, var(--customize-section-accent) 3%, var(--customize-surface)); --customize-section-input: color-mix(in srgb, var(--customize-surface-raised) 58%, var(--customize-section-surface)); --customize-section-input-line: color-mix(in srgb, var(--ctp-surface2, #585b70) 48%, var(--customize-section-surface)); --site-accent: var(--customize-section-accent); --site-deep: var(--customize-section-input); --site-raised: var(--customize-section-surface); --site-surface: var(--customize-section-surface); --site-line: var(--customize-border-subtle); --site-line-strong: var(--customize-section-input-line); --surface-inset: var(--customize-section-input); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border-subtle); --color-line-strong: var(--customize-section-input-line); display: grid; gap: .7rem; min-width: 0; padding: .85rem; border: 1px solid var(--customize-border); border-top-color: color-mix(in srgb, var(--customize-section-accent) 48%, var(--customize-border)); border-radius: .68rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--customize-surface); --customize-section-input: var(--customize-surface-raised); --customize-section-input-line: var(--customize-border-strong); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-surface-raised); --site-surface: var(--customize-surface-raised); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-surface-inset); --surface-inset: var(--customize-surface-inset); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-surface-raised); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-surface-raised); --surface-panel-strong: var(--ctp-surface1, #45475a); --surface-panel-soft: var(--customize-surface-inset); display: grid; gap: .7rem; min-width: 0; padding: .85rem; border: 1px solid var(--customize-border); border-top-color: color-mix(in srgb, var(--customize-section-accent) 68%, var(--customize-border)); border-radius: .68rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
   .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
-  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); --customize-section-surface: color-mix(in srgb, var(--ctp-teal, #94e2d5) 3%, var(--customize-surface-inset)); }
+  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); --customize-section-surface: var(--customize-surface-alt); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
-  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); }
-  .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-green, #a6e3a1); --customize-section-surface: color-mix(in srgb, var(--ctp-green, #a6e3a1) 3%, var(--customize-surface-inset)); }
-  .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); }
-  .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: var(--ctp-pink, #f5c2e7); --customize-section-surface: color-mix(in srgb, var(--ctp-pink, #f5c2e7) 3%, var(--customize-surface-inset)); }
+  .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); --customize-section-surface: var(--customize-surface-alt); }
+  .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: var(--ctp-pink, #f5c2e7); }
+  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); --customize-section-surface: var(--customize-surface-alt); }
+  .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-green, #a6e3a1); }
   .profile-customize-page__surface--assets { padding: 1rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
-  .profile-customize-page__surface-heading h3 { margin: 0; color: color-mix(in srgb, var(--customize-section-accent) 76%, var(--customize-text-primary)); font-size: var(--customize-section-heading-size); line-height: 1.2; letter-spacing: -.03em; }
-  .profile-customize-page__surface-note { max-width: 52rem; margin: .25rem 0 0; color: var(--customize-text-muted); font-size: .78rem; line-height: 1.45; }
+  .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-section-accent); font-size: var(--customize-section-heading-size); line-height: 1.2; letter-spacing: -.03em; }
 
-  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.55rem; overflow: hidden; padding: .5rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 28%, var(--customize-border)); border-radius: .55rem; background: color-mix(in srgb, var(--customize-accent-premium) 5%, var(--customize-surface-inset)); color: var(--customize-text-muted); font: 600 .78rem/1.35 var(--customize-font-body); cursor: pointer; }
+  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.55rem; overflow: hidden; padding: .5rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 48%, var(--customize-border)); border-radius: .55rem; background: var(--customize-surface-deep); color: var(--customize-text-muted); font: 600 .78rem/1.35 var(--customize-font-body); cursor: pointer; }
   .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { position: absolute; color: color-mix(in srgb, var(--customize-accent-premium) 12%, transparent); font-size: 2.7rem; line-height: 1; pointer-events: none; }
   .profile-customize-page__premium-banner::before { content: '◇'; left: 1rem; transform: rotate(-18deg); }
   .profile-customize-page__premium-banner::after { content: '✦'; right: 1rem; transform: rotate(18deg); }
-  .profile-customize-page__premium-banner:hover, .profile-customize-page__premium-banner:focus-visible { border-color: color-mix(in srgb, var(--customize-accent-premium) 48%, var(--customize-border)); background: color-mix(in srgb, var(--customize-accent-premium) 8%, var(--customize-surface-inset)); }
+  .profile-customize-page__premium-banner:hover, .profile-customize-page__premium-banner:focus-visible { border-color: var(--customize-accent-premium); background: var(--customize-surface-inset); }
   .profile-customize-page__premium-banner:focus-visible { outline: 2px solid var(--customize-focus); outline-offset: 3px; }
   .profile-customize-page__premium-banner strong { color: var(--customize-accent-premium); }
   .profile-customize-page__premium-glyph { color: var(--customize-accent-premium); font-size: .9rem; }
@@ -340,7 +314,7 @@
   .profile-customize-page :global(.profile-expression-editor__asset-library) { margin-top: .65rem; padding-top: .75rem; border-top-color: var(--customize-border-subtle); }
   .profile-customize-page :global(.profile-expression-editor__asset-grid) { max-width: none; }
   .profile-customize-page :global(.profile-expression-editor__button) { min-height: var(--customize-secondary-height) !important; border-radius: var(--customize-radius) !important; font-size: var(--customize-label-size) !important; }
-  .profile-customize-page :global(.profile-expression-editor__button--quiet) { border-color: var(--customize-line-strong) !important; background: transparent !important; color: var(--customize-muted) !important; }
+  .profile-customize-page :global(.profile-expression-editor__button--quiet) { border-color: var(--customize-border-strong) !important; background: transparent !important; color: var(--customize-text-muted) !important; }
   .profile-customize-page :global(.appearance-editor) { gap: .55rem; }
   .profile-customize-page :global(.appearance-editor__panel) { padding: .25rem 0 .55rem; border: 0; border-bottom: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
   .profile-customize-page :global(.appearance-editor__heading) { margin-bottom: .55rem; }
@@ -463,7 +437,7 @@
   .profile-customize-page :global(.profile-content-editor__panel-heading) { margin-bottom: .55rem; }
   .profile-customize-page :global(.profile-content-editor__fields) { gap: .55rem; }
   .profile-customize-page :global(.profile-content-editor__panel:first-of-type .profile-content-editor__fields) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
-  .profile-customize-page :global(.profile-content-editor__project) { gap: .55rem; padding: .65rem; border-color: var(--customize-border-subtle) !important; border-radius: var(--customize-radius); background: color-mix(in srgb, var(--customize-section-input) 58%, transparent); }
+  .profile-customize-page :global(.profile-content-editor__project) { gap: .55rem; padding: .65rem; border-color: var(--customize-border-subtle) !important; border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
   .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
   .profile-customize-page :global(.profile-content-editor__helper),
   .profile-customize-page :global(.profile-content-editor__hint),
@@ -471,7 +445,7 @@
   .profile-customize-page :global(.profile-editor__hint) { display: none; }
   .profile-customize-page :global(.profile-widget-editor) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .65rem; }
   .profile-customize-page :global(.profile-widget-editor__list) { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
-  .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; padding: .55rem; border-color: var(--customize-border-subtle) !important; border-radius: var(--customize-radius); background: color-mix(in srgb, var(--customize-section-input) 58%, transparent); }
+  .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; padding: .55rem; border-color: var(--customize-border-subtle) !important; border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
   .profile-customize-page :global(.profile-widget-editor__panel-heading),
   .profile-customize-page :global(.profile-widget-editor__helper),
   .profile-customize-page :global(.profile-widget-editor__remove) { grid-column: 1 / -1; }
@@ -488,13 +462,20 @@
   .profile-customize-page :global(.profile-cosmetics-controls__heading p) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-slot) { padding-top: .45rem; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { grid-template-columns: 1fr; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card),
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card) { grid-template-rows: minmax(1.05rem, auto) minmax(6.6rem, auto) auto; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-copy),
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-copy) { min-height: 1.05rem; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-preview),
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-audio-player),
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-preview) { align-self: start; }
   .profile-customize-page :global(.rich-media-editor__compact-preview),
   .profile-customize-page :global(.rich-media-editor__upload-card),
   .profile-customize-page :global(.rich-media-editor__upload-preview),
   .profile-customize-page :global(.rich-media-editor__asset),
   .profile-customize-page :global(.rich-media-editor__track),
   .profile-customize-page :global(.profile-editor__module-list li) { border-color: var(--customize-border-subtle) !important; }
-  .profile-customize-page :global(.profile-widget-editor__empty) { border-color: var(--customize-border-strong) !important; background: color-mix(in srgb, var(--customize-section-input) 42%, transparent); }
+  .profile-customize-page :global(.profile-widget-editor__empty) { border-color: var(--customize-border-strong) !important; background: var(--customize-surface-deep); }
   .profile-customize-page :global(.profile-content-editor__message),
   .profile-customize-page :global(.profile-widget-editor__message),
   .profile-customize-page :global(.rich-media-editor__message),

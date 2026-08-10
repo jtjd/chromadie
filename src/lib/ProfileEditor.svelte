@@ -286,7 +286,7 @@
   .profile-editor textarea { min-height: 4.5rem; resize: vertical; }
   .profile-editor :is(select, textarea, input:not([type="checkbox"]):not([type="range"])):focus-visible { border-color: var(--editor-focus); outline: 0; box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-focus) 24%, transparent); }
   .profile-editor__module-list { display: grid; gap: .4rem; margin: 0; padding: 0; list-style: none; }
-  .profile-editor__module-list li { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .5rem .6rem; border: 1px solid var(--editor-border); border-radius: var(--editor-radius); background: color-mix(in srgb, var(--editor-input) 36%, transparent); }
+  .profile-editor__module-list li { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .5rem .6rem; border: 1px solid var(--editor-border); border-radius: var(--editor-radius); background: var(--editor-inset); }
   .profile-editor__module-list label { display: flex; align-items: center; gap: .5rem; color: var(--editor-text); font-size: var(--editor-label-size); }
   .profile-editor__module-list input, .profile-editor__module-fixed input { min-height: auto; accent-color: var(--editor-primary); }
   .profile-editor__module-actions { display: flex; gap: .3rem; }

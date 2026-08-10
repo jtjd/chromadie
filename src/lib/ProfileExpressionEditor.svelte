@@ -550,7 +550,6 @@
           </div>
           <div class="profile-expression-editor__compact-copy">
             <strong>Audio</strong>
-            <small>Unlock richer expression</small>
           </div>
         </article>
       {/if}
@@ -565,7 +564,6 @@
           </div>
           <div class="profile-expression-editor__compact-copy">
             <strong>Custom cursor</strong>
-            <small>Unlock richer expression</small>
           </div>
         </article>
       {/if}
@@ -745,6 +743,7 @@
   .profile-expression-editor__compact-grid {
     --media-surface: var(--customize-surface, var(--ctp-base, #1e1e2e));
     --media-surface-inset: var(--customize-surface-inset, var(--ctp-mantle, #181825));
+    --media-surface-deep: var(--customize-surface-deep, var(--ctp-crust, #11111b));
     --media-text-primary: var(--customize-text-primary, var(--ctp-text, #cdd6f4));
     --media-text-secondary: var(--customize-text-secondary, var(--ctp-subtext1, #bac2de));
     --media-text-muted: var(--customize-text-muted, var(--ctp-subtext0, #a6adc8));
@@ -797,7 +796,7 @@
     padding: .6rem .65rem;
     border: 1px solid color-mix(in srgb, var(--media-card-accent) 30%, var(--media-line));
     border-radius: .35rem;
-    background: color-mix(in srgb, var(--media-card-accent) 4%, var(--media-surface-inset));
+    background: var(--media-surface-inset);
     color: var(--media-text-secondary);
     font: inherit;
     line-height: 1.2;
@@ -806,10 +805,10 @@
 
   .profile-expression-editor__compact-preview:hover:not(:disabled) {
     border-color: color-mix(in srgb, var(--media-card-accent) 60%, var(--media-line-strong));
-    background: color-mix(in srgb, var(--media-card-accent) 8%, var(--media-surface-inset));
+    background: var(--media-surface-inset);
   }
 
-  .profile-expression-editor__compact-preview--locked { align-content: center; gap: .35rem; padding: .6rem; border-color: color-mix(in srgb, var(--media-premium) 38%, var(--media-line)); background: color-mix(in srgb, var(--media-premium) 7%, var(--media-surface-inset)); cursor: default; }
+  .profile-expression-editor__compact-preview--locked { align-content: center; gap: .35rem; padding: .6rem; border-color: color-mix(in srgb, var(--media-premium) 38%, var(--media-line)); background: var(--media-surface-deep); cursor: default; }
   .profile-expression-editor__compact-preview:disabled { cursor: wait; opacity: .72; }
   .profile-expression-editor__compact-preview:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
   .profile-expression-editor__compact-preview--avatar { border-color: transparent; }
@@ -818,17 +817,16 @@
   :global(.profile-expression-editor__compact-preview .foundation-media),
   :global(.profile-expression-editor__compact-preview .foundation-media img) { width: 100%; height: 100%; aspect-ratio: auto; border: 0 !important; border-radius: 0; outline: 0; box-shadow: none; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
-  .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; padding: .18rem .35rem; border-radius: .25rem; background: color-mix(in srgb, var(--media-surface-inset) 86%, transparent); color: var(--media-text-secondary); font-size: .78rem; font-weight: 500; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .78rem; font-weight: 500; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-copy { display: block; min-width: 0; order: -1; }
   .profile-expression-editor__compact-copy strong { display: block; overflow: hidden; color: var(--media-text-primary); font-size: .85rem; font-weight: 600; letter-spacing: -.01em; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-expression-editor__compact-copy small, .profile-expression-editor__compact-preview small { overflow: hidden; color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-expression-editor__compact-card--locked .profile-expression-editor__compact-copy small { color: color-mix(in srgb, var(--media-premium) 76%, var(--media-text-secondary)); }
+  .profile-expression-editor__compact-preview small { overflow: hidden; color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-preview--locked small { color: var(--media-premium); font-weight: 600; }
   .profile-expression-editor__compact-remove { justify-self: start; padding: 0; border: 0; border-radius: .2rem; background: transparent; color: color-mix(in srgb, var(--media-red) 78%, var(--media-text-secondary)); font: 600 .75rem/1.2 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; text-decoration: underline; text-underline-offset: .15em; }
   .profile-expression-editor__compact-remove:hover:not(:disabled) { color: var(--media-red); }
   .profile-expression-editor__compact-remove:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 3px; color: var(--media-red); }
   .profile-expression-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
-  .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; padding: .6rem .65rem; border: 1px solid color-mix(in srgb, var(--media-card-accent) 34%, var(--media-line)); border-radius: .35rem; background: color-mix(in srgb, var(--media-card-accent) 6%, var(--media-surface-inset)); }
+  .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; padding: .6rem .65rem; border: 1px solid color-mix(in srgb, var(--media-card-accent) 34%, var(--media-line)); border-radius: .35rem; background: var(--media-surface-inset); }
   .profile-expression-editor__compact-audio-play { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--media-card-accent) 58%, var(--media-line-strong)); border-radius: 50%; background: color-mix(in srgb, var(--media-card-accent) 13%, transparent); color: var(--media-text-primary); font: 700 .72rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
   .profile-expression-editor__compact-audio-play:hover { border-color: var(--media-card-accent); background: color-mix(in srgb, var(--media-card-accent) 24%, transparent); }
   .profile-expression-editor__compact-audio-play:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
@@ -869,7 +867,7 @@
     padding: .6rem .65rem;
     border: 1px solid color-mix(in srgb, var(--media-card-accent) 30%, var(--media-line));
     border-radius: .35rem;
-    background: color-mix(in srgb, var(--media-card-accent) 4%, var(--media-surface-inset));
+    background: var(--media-surface-inset);
     color: var(--media-text-secondary);
     font: inherit;
     line-height: 1.2;
@@ -877,21 +875,21 @@
 
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview:hover:not(:disabled)) {
     border-color: color-mix(in srgb, var(--media-card-accent) 60%, var(--media-line-strong));
-    background: color-mix(in srgb, var(--media-card-accent) 8%, var(--media-surface-inset));
+    background: var(--media-surface-inset);
   }
 
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview--locked) {
     gap: .35rem;
     padding: .6rem;
     border-color: color-mix(in srgb, var(--media-premium) 38%, var(--media-line));
-    background: color-mix(in srgb, var(--media-premium) 7%, var(--media-surface-inset));
+    background: var(--media-surface-deep);
   }
 
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview:disabled) { opacity: .72; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview:focus-visible) { outline: 2px solid var(--media-focus); outline-offset: 2px; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview small) { color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview--locked small) { color: var(--media-premium); font-weight: 600; }
-  .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-upload-hint) { max-width: 100%; padding: .18rem .35rem; border-radius: .25rem; background: color-mix(in srgb, var(--media-surface-inset) 86%, transparent); color: var(--media-text-secondary); font-size: .78rem; font-weight: 500; line-height: 1.2; }
+  .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-upload-hint) { max-width: 100%; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .78rem; font-weight: 500; line-height: 1.2; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-copy strong) { color: var(--media-text-primary); font-size: .85rem; font-weight: 600; letter-spacing: -.01em; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-copy small) { color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-card--locked .rich-media-editor__compact-copy small) { color: color-mix(in srgb, var(--media-premium) 76%, var(--media-text-secondary)); }
