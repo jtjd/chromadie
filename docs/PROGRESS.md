@@ -2849,8 +2849,19 @@ Performance remains over inherited initial/total JS and total CSS budgets.
   profile links, and all owner-authorized RPC boundaries.
 - Preserved rich-media uploads and animated `.ani` cursor support without schema
   or Storage-policy changes.
-- Validation: build, Svelte check, ESLint, 255 unit/source tests, links, CSP,
+- Validation: build, Svelte check, ESLint, 256 unit/source tests, links, CSP,
   performance, username/balance/catalog drift, scoring parity, database
   security, and the authenticated desktop/mobile/reduced-motion browser smoke
   pass. The aggregate JavaScript/CSS catalogs remain advisory overages; every
   blocking route and asset budget passes.
+
+The follow-up reference-convergence pass now places the aggregate action bar in
+the shell top row, aligns editor and preview columns to the supplied desktop
+references, and adds the preview device switcher and Plus card. Appearance
+colors now include a selected-color picker/palette, while media, effects, and
+layout use the same compact card geometry as the supplied tab screenshots.
+
+The final visual pass also changed the action status to the reference's dot
+indicator, kept disabled actions legible, broadened browser ANI MIME detection,
+and kept the dashboard route under its explicit 528 kB blocking JavaScript
+ceiling.

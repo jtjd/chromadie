@@ -470,7 +470,7 @@
           <span class="profile-expression-editor__compact-upload-hint">{expression.avatar_path ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
-          <strong>Profile avatar</strong>
+          <strong>Avatar</strong>
         </div>
         {#if expression.avatar_path}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Remove</button>{/if}
       </article>
@@ -549,7 +549,7 @@
             <small>Chromadie Plus</small>
           </div>
           <div class="profile-expression-editor__compact-copy">
-            <strong>Audio</strong>
+            <strong>Profile audio</strong>
           </div>
         </article>
       {/if}
@@ -567,6 +567,8 @@
           </div>
         </article>
       {/if}
+
+      <slot name="background-options" />
     </div>
   {/if}
 

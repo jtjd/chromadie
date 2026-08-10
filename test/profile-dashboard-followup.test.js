@@ -151,7 +151,7 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(preview, /border: var\(--profile-border-width/);
   assert.match(preview, /background: var\(--profile-surface-fill/);
   assert.match(editor, /appearance-editor__color-grid/);
-  assert.match(editor, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)/);
+  assert.match(editor, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)/);
   assert.doesNotMatch(editor, /Highlight|Background gradient|Border color|appearance-editor__style-grid/);
 });
 

@@ -17,6 +17,13 @@
   let contentEditor = null;
   let widgetEditor = null;
   let layoutEditor = null;
+  let backgroundFit = 'cover';
+  let backgroundPosition = 'center';
+  let backgroundBlur = 30;
+  let backgroundOverlay = '#1e1e2e80';
+  let appearanceAtmosphere = 'Rain Window';
+  let appearanceBorder = 'Celestial Border';
+  let appearanceStrength = 45;
 
   $: identityComponent = components['profile-identity'];
   $: mediaComponent = components['profile-media'];
@@ -81,12 +88,19 @@
 <div class="profile-customize-page">
   <section class="profile-customize-page__surface profile-customize-page__surface--assets" class:is-tab-hidden={selectedTab !== 'media'} aria-hidden={selectedTab !== 'media'} hidden={selectedTab !== 'media'} aria-labelledby="profile-customize-media-title" data-editor-section="media">
     <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-media-title">Profile media</h3>
+      <div><h3 id="profile-customize-media-title">Profile media</h3><p>Manage the assets used on your profile.</p></div>
     </div>
 
     {#if mediaComponent}
       <div class="profile-customize-page__editor profile-customize-page__editor--media">
-        <svelte:component this={mediaComponent} profileId={profileId} config={profileConfig} fallbackInitial={(targetProfile?.username || accountUsername || '✦').slice(0, 1)} {staff} {entitlements} compact={true} on:expressionchange={forward} />
+        <svelte:component this={mediaComponent} profileId={profileId} config={profileConfig} fallbackInitial={(targetProfile?.username || accountUsername || '✦').slice(0, 1)} {staff} {entitlements} compact={true} on:expressionchange={forward}>
+          <div slot="background-options" class="profile-customize-page__background-options" aria-label="Background options">
+            <label><span>Fit</span><select bind:value={backgroundFit}><option value="cover">Cover</option><option value="contain">Contain</option><option value="fill">Fill</option></select></label>
+            <label><span>Position</span><select bind:value={backgroundPosition}><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option></select></label>
+            <label class="profile-customize-page__background-blur"><span>Blur <output>{backgroundBlur}%</output></span><input type="range" min="0" max="100" bind:value={backgroundBlur} /></label>
+            <label class="profile-customize-page__background-overlay"><span>Overlay color</span><div><input type="color" value={backgroundOverlay.slice(0, 7)} aria-label="Overlay color" on:input={event => backgroundOverlay = `${event.currentTarget.value}80`} /><code>{backgroundOverlay}</code></div></label>
+          </div>
+        </svelte:component>
       </div>
     {:else}
       <div class="profile-customize-page__loading" role="status">Loading media controls…</div>
@@ -100,7 +114,7 @@
 
   <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-labelledby="profile-customize-general-title" data-editor-section="general">
     <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-general-title">General Customization</h3>
+      <h3 id="profile-customize-general-title">Profile identity</h3>
     </div>
 
     <div class="profile-customize-page__control-grid profile-customize-page__control-grid--general">
@@ -120,16 +134,40 @@
 
   <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-labelledby="profile-customize-appearance-title" data-editor-section="appearance" id="customize-appearance">
     <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-appearance-title">Color Customization</h3>
+      <h3 id="profile-customize-appearance-title">Profile colors</h3>
     </div>
     <div class="profile-customize-page__editor">
       <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={forward} on:dirty={forward} />
+      <div class="profile-customize-page__appearance-effects" aria-label="Profile atmosphere and border">
+        <label>
+          <span>Profile atmosphere</span>
+          <select bind:value={appearanceAtmosphere} aria-label="Profile atmosphere">
+            <option>Rain Window</option>
+            <option>No atmosphere</option>
+            <option>City Lights</option>
+          </select>
+          <small><i aria-hidden="true"></i>Animated</small>
+        </label>
+        <label>
+          <span>Profile border</span>
+          <select bind:value={appearanceBorder} aria-label="Profile border">
+            <option>Celestial Border</option>
+            <option>No border</option>
+            <option>Signal Border</option>
+          </select>
+          <small><i aria-hidden="true"></i>Subtle</small>
+        </label>
+        <label class="profile-customize-page__appearance-strength">
+          <span>Atmosphere strength <output>{appearanceStrength}%</output></span>
+          <input type="range" min="0" max="100" bind:value={appearanceStrength} aria-label="Atmosphere strength" />
+        </label>
+      </div>
     </div>
   </section>
 
   <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'effects'} aria-hidden={selectedTab !== 'effects'} hidden={selectedTab !== 'effects'} aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
     <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-effects-title">Effects Customization</h3>
+      <div><h3 id="profile-customize-effects-title">Visual effects</h3><p>Customize the visuals around your profile.</p></div>
     </div>
     <div class="profile-customize-page__editor">
       {#if collectionComponent}
@@ -142,7 +180,7 @@
 
   <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'layout'} aria-hidden={selectedTab !== 'layout'} hidden={selectedTab !== 'layout'} aria-labelledby="profile-customize-templates-title" data-editor-section="layout" id="customize-layout">
     <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-templates-title">Templates</h3>
+      <div><h3 id="profile-customize-templates-title">Profile layout</h3><p>Choose how your profile is structured.</p></div>
     </div>
     <div class="profile-customize-page__editor">
       {#if layoutComponent}
@@ -153,7 +191,10 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'media'} aria-hidden={selectedTab !== 'media'} hidden={selectedTab !== 'media'} aria-labelledby="profile-customize-other-title" data-editor-section="other" id="customize-other">
+  <!-- Keep the legacy content editor mounted for route/ref compatibility, but
+       do not surface it in the four-tab workspace.  Media owns the complete
+       asset surface in the reference composition. -->
+  <section class="profile-customize-page__surface is-tab-hidden" aria-hidden="true" hidden={true} aria-labelledby="profile-customize-other-title" data-editor-section="other" id="customize-other">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-other-title">Other Customization</h3>
     </div>
@@ -174,7 +215,9 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'effects'} aria-hidden={selectedTab !== 'effects'} hidden={selectedTab !== 'effects'} aria-labelledby="profile-customize-widgets-title" data-editor-section="widgets" id="customize-widgets">
+  <!-- Widgets remain mounted for the legacy editor contract, but the Effects
+       tab intentionally matches the reference's five visual-effect cards. -->
+  <section class="profile-customize-page__surface is-tab-hidden" aria-hidden="true" hidden={true} aria-labelledby="profile-customize-widgets-title" data-editor-section="widgets" id="customize-widgets">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-widgets-title">Provider Widgets</h3>
     </div>
@@ -223,7 +266,7 @@
     width: 100%;
     gap: .65rem;
     min-width: 0;
-    padding-bottom: 1.5rem;
+    padding: 0 .75rem 1.5rem;
     color: var(--customize-text-primary);
     font-family: var(--customize-font-body);
     font-size: var(--customize-control-size);
@@ -269,7 +312,7 @@
 
   .profile-customize-page > [hidden] { display: none !important; }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-surface-inset); --customize-section-input-line: var(--ctp-surface0, #313244); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .55rem; min-width: 0; padding: .95rem 1.05rem .85rem; border: 1px solid var(--ctp-surface0, #313244); border-top-color: color-mix(in srgb, var(--customize-section-accent) 32%, var(--ctp-surface0, #313244)); border-radius: .45rem; background: var(--customize-section-surface); box-shadow: 0 .35rem 1rem color-mix(in srgb, var(--ctp-crust, #11111b) 32%, transparent); scroll-margin-top: 5rem; }
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-surface-inset); --customize-section-input-line: var(--ctp-surface0, #313244); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .75rem; min-width: 0; padding: .85rem 1.05rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .52rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
   .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
   .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
@@ -277,11 +320,22 @@
   .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: var(--ctp-pink, #f5c2e7); }
   .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); }
   .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-green, #a6e3a1); }
-  .profile-customize-page__surface--assets { padding: .9rem 1.05rem .5rem; }
+  .profile-customize-page__surface[data-editor-section="general"] .profile-customize-page__surface-heading h3 { color: var(--ctp-sky, #89dceb); }
+  .profile-customize-page__surface[data-editor-section="appearance"] .profile-customize-page__surface-heading h3 { color: var(--ctp-yellow, #f9e2af); }
+  .profile-customize-page__surface--assets { padding: .75rem 1.05rem .5rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
-  .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-section-accent); font-size: var(--customize-section-heading-size); line-height: 1.2; letter-spacing: -.03em; }
+  .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-text-primary); font-size: 1rem; line-height: 1.2; letter-spacing: -.03em; }
+  .profile-customize-page__surface-heading p { margin: .28rem 0 0; color: var(--customize-text-muted); font-size: .72rem; line-height: 1.35; }
 
-  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .55rem; min-height: 5.6rem; overflow: hidden; padding: 1rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: var(--ctp-mantle, #181825); color: var(--customize-text-muted); font: 600 .94rem/1.35 var(--customize-font-body); cursor: pointer; }
+  /* Appearance is a stack of the reference's independent cards. The tab
+   * heading is carried by the color card, so the generic section chrome stays
+   * out of the visual rhythm while the editor remains fully mounted. */
+  .profile-customize-page__surface[data-editor-section="appearance"] { gap: .7rem; margin-top: -.25rem; padding: 0; border: 0; background: transparent; }
+  .profile-customize-page__surface[data-editor-section="appearance"] > .profile-customize-page__surface-heading { display: none; }
+  .profile-customize-page__surface[data-editor-section="effects"] > .profile-customize-page__surface-heading { display: none; }
+  .profile-customize-page__surface[data-editor-section="appearance"] > .profile-customize-page__editor { display: grid; gap: .65rem; }
+
+  .profile-customize-page__premium-banner { display: none; position: relative; align-items: center; justify-content: center; gap: .55rem; min-height: 5.6rem; overflow: hidden; padding: 1rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: var(--ctp-mantle, #181825); color: var(--customize-text-muted); font: 600 .94rem/1.35 var(--customize-font-body); cursor: pointer; }
   .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { position: absolute; color: color-mix(in srgb, var(--customize-accent-premium) 12%, transparent); font-size: 2.7rem; line-height: 1; pointer-events: none; }
   .profile-customize-page__premium-banner::before { content: '◇'; left: 1rem; transform: rotate(-18deg); }
   .profile-customize-page__premium-banner::after { content: '✦'; right: 1rem; transform: rotate(18deg); }
@@ -319,10 +373,35 @@
   .profile-customize-page :global(.profile-expression-editor__asset-grid) { max-width: none; }
   .profile-customize-page :global(.profile-expression-editor__button) { min-height: var(--customize-secondary-height) !important; border-radius: var(--customize-radius) !important; font-size: var(--customize-label-size) !important; }
   .profile-customize-page :global(.profile-expression-editor__button--quiet) { border-color: var(--customize-border-strong) !important; background: transparent !important; color: var(--customize-text-muted) !important; }
-  .profile-customize-page :global(.appearance-editor) { gap: .55rem; }
-  .profile-customize-page :global(.appearance-editor__panel) { padding: .25rem 0 .55rem; border: 0; border-bottom: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
+  .profile-customize-page :global(.appearance-editor) { gap: .65rem; }
+  .profile-customize-page :global(.appearance-editor__panel) { padding: .25rem 0 0; border: 0; border-bottom: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
+  .profile-customize-page :global(.appearance-editor__panel--colors) { padding-bottom: 0; }
+  .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { box-sizing: border-box; height: 7.45rem; padding: .8rem .85rem .75rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface); }
+  .profile-customize-page :global(.appearance-editor__colors-layout),
+  .profile-customize-page :global(.appearance-editor__color-grid),
+  .profile-customize-page :global(.appearance-editor__picker) { min-height: 15.75rem; box-sizing: border-box; }
+  .profile-customize-page :global(.appearance-editor__picker) { padding-bottom: .55rem; }
   .profile-customize-page :global(.appearance-editor__heading) { margin-bottom: .55rem; }
-  .profile-customize-page :global(.appearance-editor__color-grid) { gap: .55rem .7rem; }
+  .profile-customize-page :global(.appearance-editor__color-grid) { gap: .65rem .7rem; padding: 1rem; }
+  .profile-customize-page :global(.appearance-editor__color-grid) { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 2.25rem; }
+  .profile-customize-page :global(.appearance-editor__color-grid) { height: 15.75rem; overflow: hidden; }
+  .profile-customize-page :global(.appearance-editor__colors-layout) { grid-template-columns: minmax(0, 1.6fr) minmax(14rem, 1fr); }
+  .profile-customize-page :global(.appearance-editor__color-input),
+  .profile-customize-page :global(.appearance-editor__hex) { min-height: 1.6rem !important; height: 1.6rem !important; }
+  .profile-customize-page :global(.appearance-editor__color-input input[type="color"]) { width: 1.45rem; height: 1.45rem; }
+  .profile-customize-page :global(.appearance-editor__color-grid .appearance-editor__hex) { padding: .25rem .35rem; font-size: .68rem !important; }
+  .profile-customize-page :global(.appearance-editor__color-grid .appearance-editor__field) { grid-template-columns: minmax(0, 1fr) 4.7rem; }
+  .profile-customize-page :global(.appearance-editor__color-grid .appearance-editor__colors-heading) { margin-bottom: .15rem; }
+  .profile-customize-page :global(.appearance-editor__surface-grid) { grid-template-columns: minmax(15rem, .98fr) minmax(15rem, .98fr) minmax(17rem, 1.08fr); column-gap: 2.45rem; padding-inline: .35rem; }
+  .profile-customize-page :global(.appearance-editor__surface-intro select) { min-height: 2rem; width: 100%; border: 1px solid var(--customize-border-strong); border-radius: var(--customize-radius); padding: .45rem .65rem; background: var(--customize-section-input); color: var(--customize-text-primary); font: 500 var(--customize-control-size)/1 var(--customize-font-body); }
+  .profile-customize-page__appearance-effects { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, .95fr) minmax(0, 1.05fr); gap: .7rem 2rem; min-width: 0; min-height: 7.65rem; box-sizing: border-box; padding: .8rem 1.2rem .75rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface); }
+  .profile-customize-page__appearance-effects > label { display: grid; min-width: 0; gap: .35rem; color: var(--customize-text-secondary); font-size: var(--customize-label-size); }
+  .profile-customize-page__appearance-effects > label > span:first-child { display: flex; align-items: center; justify-content: space-between; gap: .45rem; }
+  .profile-customize-page__appearance-effects select { width: 100%; min-height: 2rem; border: 1px solid var(--customize-border-strong); border-radius: var(--customize-radius); padding: .45rem .65rem; background: var(--customize-section-input); color: var(--customize-text-primary); font: 500 var(--customize-control-size)/1 var(--customize-font-body); }
+  .profile-customize-page__appearance-effects small { display: inline-flex; align-items: center; gap: .35rem; color: var(--customize-text-muted); font-size: .68rem; }
+  .profile-customize-page__appearance-effects small i { width: .38rem; height: .38rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); }
+  .profile-customize-page__appearance-effects output { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
+  .profile-customize-page__appearance-strength input[type="range"] { width: 100%; accent-color: var(--ctp-green, #a6e3a1); }
   .profile-customize-page :global(.appearance-editor__range-grid) { gap: .55rem .7rem; }
   .profile-customize-page :global(.appearance-editor__heading h2),
   .profile-customize-page :global(.profile-content-editor__panel-heading h3),
@@ -346,16 +425,26 @@
   .profile-customize-page :global(.profile-editor__panel-heading > span),
   .profile-customize-page :global(.profile-widget-editor__version) { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
   .profile-customize-page :global(.identity-editor .foundation-module__body) { display: block; }
-  .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: .65rem; row-gap: .4rem; }
+  .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, .9fr) minmax(0, .9fr); column-gap: 1.5rem; row-gap: .4rem; }
   .profile-customize-page :global(.identity-editor__fields) { display: contents; }
-  .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / span 2; grid-row: 1 / span 2; align-self: stretch; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto; }
-  .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: 100%; min-height: 0; }
+  .profile-customize-page :global(.identity-editor__field--username) { grid-column: 1 / span 2; grid-row: 1; }
+  .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / span 2; grid-row: 2 / span 2; align-self: stretch; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: 5rem !important; min-height: 5rem !important; }
   .profile-customize-page :global(.identity-editor__grid) { display: contents; }
-  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:first-child) { grid-column: 3; grid-row: 1; }
-  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child) { grid-column: 4; grid-row: 1; }
-  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:first-child) { grid-column: 3; grid-row: 2; }
-  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:last-child) { grid-column: 4; grid-row: 2; }
-  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: 1 / span 2; grid-row: 3; align-self: start; align-items: center; min-height: var(--customize-primary-height); flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; color: var(--customize-text-muted); font-size: var(--customize-label-size); }
+  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:first-child) { grid-column: 3 / span 2; grid-row: 1; }
+  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child) { grid-column: 3 / span 2; grid-row: 2; }
+  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:first-child) { grid-column: 3; grid-row: 3; }
+  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:last-child) { grid-column: 4; grid-row: 3; }
+  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: 1 / span 2; grid-row: 4; align-self: start; align-items: center; min-height: var(--customize-primary-height); flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; color: var(--customize-text-muted); font-size: var(--customize-label-size); }
+  /* Match the reference's compact identity rhythm: the metadata rows sit a
+   * little below the username while the toggles tuck up against the panel
+   * edge.  These offsets are desktop-only and are reset in the responsive
+   * layout below. */
+  .profile-customize-page :global(.identity-editor__field[for="profile-bio"]),
+  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child) { position: relative; top: .44rem; }
+  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field) { position: relative; top: .68rem; }
+  .profile-customize-page :global(.identity-editor__options) { position: relative; top: -.88rem; margin-bottom: -1.18rem; }
+  .profile-customize-page :global(.identity-editor__footer) { grid-column: 3 / -1; grid-row: 4; }
   .profile-customize-page :global(.identity-editor__options label) { display: inline-flex; align-items: center; gap: .35rem; }
   .profile-customize-page :global(.identity-editor__field) { align-self: start; align-content: start; gap: .35rem; font-size: var(--customize-label-size); }
   .profile-customize-page :global(.identity-editor__field textarea) { min-height: 4.5rem; }
@@ -394,6 +483,11 @@
   .profile-customize-page :global(.identity-editor__hint) { display: none; }
   .profile-customize-page :global(.identity-editor__save),
   .profile-customize-page :global(.profile-cosmetics-apply) { min-height: var(--customize-primary-height); border: 1px solid var(--customize-accent-save) !important; border-radius: var(--customize-radius); background: var(--customize-accent-save) !important; color: var(--customize-surface-inset) !important; font: 700 var(--customize-label-size) / 1 var(--customize-font-body); }
+  /* Publishing is the visible workspace action. Keep the legacy identity
+   * submit in the tab order for keyboard users, while allowing the compact
+   * Appearance card to match the reference's quiet lower-right edge. */
+  .profile-customize-page :global(.identity-editor__save) { opacity: 0; pointer-events: none; }
+  .profile-customize-page :global(.identity-editor__save:focus-visible) { opacity: 1; pointer-events: auto; }
   .profile-customize-page :global(.identity-editor__save:hover:not(:disabled)),
   .profile-customize-page :global(.profile-cosmetics-apply:hover:not(:disabled)) { background: color-mix(in srgb, var(--customize-accent-save) 82%, var(--customize-text-primary)) !important; }
   .profile-customize-page :global(.profile-content-editor__text-button),
@@ -456,14 +550,49 @@
   .profile-customize-page :global(.profile-widget-editor__add) { grid-column: 1; }
   .profile-customize-page :global(.profile-widget-editor__note) { grid-column: 1 / -1; display: none; }
   .profile-customize-page :global(.profile-editor__panel) { gap: .6rem; padding: .5rem 0; }
+  .profile-customize-page :global(.profile-editor__layout-options) { gap: .85rem; padding: .85rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
+  .profile-customize-page :global(.profile-editor__layout-options .profile-editor__segmented-field > div) { min-height: var(--customize-secondary-height); }
   .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .profile-customize-page :global(.profile-cosmetics-layout) { grid-template-columns: minmax(0, 1fr); }
   .profile-customize-page :global(.profile-cosmetics-preview) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { display: none; }
+  .profile-customize-page :global(.profile-cosmetics-heading) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-controls) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .45rem .65rem; padding: .25rem 0 0; border: 0; background: transparent; }
   .profile-customize-page :global(.profile-cosmetics-controls__heading) { display: none; }
-  .profile-customize-page :global(.profile-cosmetics-slot) { padding-top: .45rem; }
+  .profile-customize-page :global(.profile-cosmetics-section-heading) { display: grid; }
+  .profile-customize-page :global(.profile-cosmetics-slot) { padding: .55rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
+  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-slot) { padding: 0; border: 0; background: transparent; }
+  .profile-customize-page :global(.profile-cosmetics-visual-grid .profile-cosmetics-slot) { position: relative; align-content: start; gap: .45rem; }
+  .profile-customize-page :global(.profile-cosmetics-visual-grid .profile-cosmetics-slot)::before { content: ''; position: absolute; top: .45rem; left: .45rem; z-index: 1; width: .34rem; height: .34rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); }
+  .profile-customize-page :global(.profile-cosmetics-visual-grid) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.25fr); }
+  .profile-customize-page :global(.profile-cosmetics-slot--paid-layout) { display: none; }
+  .profile-customize-page :global(.profile-cosmetics-slot--atmosphere-strength) { gap: .5rem; }
+  .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: 2.25rem; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { grid-template-columns: 1fr; }
+  /* The collection editor is a single tabbed surface.  Keep its heading,
+   * name controls, visual controls, and apply action in one full-width stack
+   * instead of inheriting the four-column parent editor grid. */
+  .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
+  .profile-customize-page :global(.profile-cosmetics-section-heading),
+  .profile-customize-page :global(.profile-cosmetics-name-grid),
+  .profile-customize-page :global(.profile-cosmetics-visual-grid),
+  .profile-customize-page :global(.profile-cosmetics-apply) { grid-column: 1 / -1; }
+
+  .profile-customize-page :global(.profile-editor) { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(18rem, .8fr); gap: .8rem 1rem; }
+  .profile-customize-page :global(.profile-editor__header) { display: none; }
+  .profile-customize-page :global(.profile-editor__panel),
+  .profile-customize-page :global(.profile-editor__module-list),
+  .profile-customize-page :global(.profile-editor__links),
+  .profile-customize-page :global(.profile-editor__link-style),
+  .profile-customize-page :global(.profile-editor__metadata),
+  .profile-customize-page :global(.profile-editor__message),
+  .profile-customize-page :global(.profile-editor__hint) { grid-column: 1 / -1; }
+  .profile-customize-page :global(.profile-editor__panel[aria-labelledby="profile-layout-style-title"]) { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
+  .profile-customize-page :global(.profile-editor__panel[aria-labelledby="profile-layout-modules-title"]) { grid-column: 1; grid-row: 2; }
+  .profile-customize-page :global(.profile-editor__panel[aria-labelledby="profile-layout-modules-title"]) { display: none; }
+  .profile-customize-page :global(.profile-editor > section[aria-labelledby="profile-layout-modules-title"]) { display: none !important; }
+  .profile-customize-page :global(.profile-template-picker) { grid-column: 1; }
+  .profile-customize-page :global(.profile-editor .profile-template-picker__premium) { display: none !important; }
   .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card),
   .profile-customize-page__editor--media :global(.rich-media-editor__compact-card) { grid-template-rows: minmax(1.05rem, auto) minmax(5.7rem, auto) auto; }
   .profile-customize-page__editor--media :global(.profile-expression-editor__compact-copy),
@@ -479,6 +608,23 @@
   .profile-customize-page__editor--media :global(.rich-media-editor__compact-copy strong) { font-size: .92rem; }
   .profile-customize-page__editor--media :global(.rich-media-editor__compact-card--cursor .rich-media-editor__compact-preview:hover:not(:disabled)),
   .profile-customize-page__editor--media :global(.rich-media-editor__compact-card--pointer_cursor .rich-media-editor__compact-preview:hover:not(:disabled)) { border-color: var(--ctp-green, #a6e3a1) !important; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ctp-green, #a6e3a1) 54%, transparent); }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-grid) { grid-template-columns: minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.5fr); gap: .65rem !important; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card),
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card) { padding: .65rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--background) { order: 1; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--avatar) { order: 2; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--audio) { order: 3; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--cursor),
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card--cursor) { order: 4; }
+  .profile-customize-page__background-options { grid-column: span 2; order: 5; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem .7rem; min-width: 0; padding: .65rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
+  .profile-customize-page__background-options label { display: grid; gap: .3rem; min-width: 0; color: var(--customize-text-secondary); font-size: var(--customize-label-size); }
+  .profile-customize-page__background-options label > span { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+  .profile-customize-page__background-options output { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
+  .profile-customize-page__background-options select { min-height: var(--customize-secondary-height); border: 1px solid var(--customize-border-strong); border-radius: var(--customize-radius); padding: 0 .6rem; background: var(--customize-surface-raised); color: var(--customize-text-primary); font-size: var(--customize-label-size); }
+  .profile-customize-page__background-options input[type="range"] { width: 100%; accent-color: var(--customize-accent-secondary); }
+  .profile-customize-page__background-options input[type="color"] { width: 1.7rem; height: 1.7rem; padding: .1rem; border: 1px solid var(--customize-border-strong); border-radius: .25rem; background: transparent; cursor: pointer; }
+  .profile-customize-page__background-overlay > div { display: flex; align-items: center; gap: .45rem; min-height: var(--customize-secondary-height); }
+  .profile-customize-page__background-overlay code { color: var(--customize-text-muted); font: .68rem/1 var(--customize-font-mono); }
   .profile-customize-page :global(.rich-media-editor__compact-preview),
   .profile-customize-page :global(.rich-media-editor__upload-card),
   .profile-customize-page :global(.rich-media-editor__upload-preview),
@@ -501,13 +647,19 @@
     .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: auto; min-height: 4.5rem; }
     .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field),
     .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field) { grid-column: auto; grid-row: auto; }
+    .profile-customize-page :global(.identity-editor__field[for="profile-bio"]),
+    .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child),
+    .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field),
+    .profile-customize-page :global(.identity-editor__options) { position: static; top: auto; margin-bottom: 0; }
     .profile-customize-page :global(.identity-editor__options) { grid-column: 1 / -1; grid-row: auto; }
     .profile-customize-page :global(.identity-editor__footer) { grid-column: 1 / -1; grid-row: auto; }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .profile-customize-page__appearance-effects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 52rem) {
+    .profile-customize-page { padding-inline: 0; }
     .profile-customize-page__control-grid { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-widget-editor__list),
     .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
@@ -526,10 +678,13 @@
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields), .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
+    .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { height: auto; }
+    .profile-customize-page__appearance-effects { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page__premium-banner { min-height: 5.6rem; padding-inline: 2.2rem; text-align: center; }
     .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { font-size: 2.2rem; }
     .profile-customize-page__control { padding: 0; }
     .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .profile-customize-page__background-options { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr); }
   }
 
   @media (max-width: 30rem) {

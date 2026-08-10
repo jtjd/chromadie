@@ -35,4 +35,35 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
   assert.match(shell, /profile-dashboard-shell--light/);
   assert.doesNotMatch(shell, /gradient/i);
   assert.doesNotMatch(settings, /gradient/i);
+  assert.match(shell, /profile-dashboard-shell__topbar/);
+  assert.match(shell, /grid-template-rows: auto minmax\(0, 1fr\)/);
+  assert.match(shell, /profile-dashboard-shell__mode-copy/);
+});
+
+test('reference workspace composition stays explicit', async () => {
+  const [settings, actions, appearance, cosmetics, customize] = await Promise.all([
+    read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/ProfileDashboardActions.svelte'),
+    read('src/lib/ProfileAppearanceEditor.svelte'),
+    read('src/lib/ProfileCosmeticsEditor.svelte'),
+    read('src/lib/ProfileCustomizePage.svelte')
+  ]);
+
+  assert.match(actions, /Customize profile/);
+  assert.match(actions, /All changes saved/);
+  assert.match(actions, /profile-dashboard-actions__publish/);
+  assert.match(settings, /slot="topbar"/);
+  assert.match(settings, /profile-settings-preview__devices/);
+  assert.match(settings, /Unlock more with Chromadie Plus/);
+  assert.match(settings, /profile-settings-preview__canvas\.profile-settings-preview__canvas--appearance/);
+  assert.match(appearance, /appearance-editor__picker-surface/);
+  assert.match(appearance, /appearance-editor__palette/);
+  for (const label of ['Profile text', 'Handle & metadata', 'Profile surface', 'Surface tint', 'Border', 'Page background']) {
+    assert.match(appearance, new RegExp(label));
+  }
+  assert.match(customize, /profile-customize-page__appearance-effects/);
+  assert.match(customize, /profile-editor \.profile-template-picker__premium\) \{ display: none !important; \}/);
+  assert.match(cosmetics, /Name effects/);
+  assert.match(cosmetics, /Visual effects/);
+  assert.match(customize, /profile-expression-editor__compact-grid\) \{ grid-template-columns: minmax\(0, \.9fr\)/);
 });

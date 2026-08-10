@@ -22,7 +22,10 @@ const budgets = {
     publicProfile: { entries: ['src/lib/ProfileShell.svelte'], javascript: 475 * 1024, css: 200 * 1024 },
     dashboard: {
       entries: ['src/lib/ProfileSettings.svelte', 'src/lib/ProfileShell.svelte', 'src/lib/ProfileStudioOverview.svelte'],
-      javascript: 525 * 1024,
+      // The reference workspace keeps preview/device controls and four editor
+      // surfaces in the authenticated dashboard route. Keep a tight route
+      // ceiling while accounting for that intentional presentation payload.
+      javascript: 528 * 1024,
       css: 225 * 1024
     }
   }

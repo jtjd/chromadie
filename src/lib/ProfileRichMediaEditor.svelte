@@ -341,7 +341,7 @@
             <span class="rich-media-editor__compact-upload-hint">{audioTracks.length >= 5 ? 'Library limit reached' : primaryAudioAsset ? `Click to add · ${audioTracks.length}/5` : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
-            <strong>Audio</strong>
+            <strong>Profile audio</strong>
           </div>
         </article>
       {/if}
@@ -474,7 +474,7 @@
       <small>Chromadie Plus</small>
     </div>
     <div class="rich-media-editor__compact-copy">
-      <strong>Audio</strong>
+      <strong>Profile audio</strong>
     </div>
   </article>
   <article class="rich-media-editor__compact-card rich-media-editor__compact-card--cursor rich-media-editor__compact-card--locked">

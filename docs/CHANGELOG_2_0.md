@@ -2311,3 +2311,23 @@ direct route behavior.
   accent treatment, and added a compact dark/light icon switch.
 - Kept existing draft publishing, direct routes, media uploads, cursor uploads,
   and `.ani` animated cursor support intact.
+
+## 2026-08-10 — Converge Studio layout with the supplied references
+
+- Moved the aggregate action bar into a shell-wide top row and matched the
+  reference editor/preview column geometry.
+- Replaced descriptive tab cards with the compact Appearance / Media / Effects /
+  Layout underline row used by the reference dashboard.
+- Added bordered Live preview framing, Desktop/Mobile controls, and the
+  Chromadie Plus callout; expanded Appearance colors with a picker and palette.
+- Recomposed media, effects, and layout controls into reference-style cards
+  without changing their persistence or authority contracts.
+
+## 2026-08-10 — Final reference polish
+
+- Matched the action-bar Published indicator and disabled-control contrast to
+  the supplied dashboard, while preserving the Manrope/Mocha token system.
+- Kept Profile audio naming consistent across the compact media rail and made
+  ANI MIME detection tolerant of browser-specific cursor file types.
+- Recorded the measured dashboard route ceiling for the intentional persistent
+  preview and editor composition payload.

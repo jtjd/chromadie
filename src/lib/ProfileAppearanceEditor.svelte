@@ -11,6 +11,7 @@
   let baselineKey = '';
   let error = '';
   let invalidHex = false;
+  let activeColor = 'accent';
 
   $: incomingKey = JSON.stringify(draftConfig?.appearance || draftConfig?.signatureColor || '');
 
@@ -51,6 +52,35 @@
     update(path, value.toUpperCase());
   }
 
+  const colorFields = [
+    { key: 'text', label: 'Profile text', path: ['colors', 'text'] },
+    { key: 'accent', label: 'Accent', path: ['colors', 'accent'] },
+    { key: 'secondaryText', label: 'Handle & metadata', path: ['colors', 'secondaryText'] },
+    { key: 'surface', label: 'Profile surface', path: ['colors', 'surface'] },
+    { key: 'username', label: 'Username', path: ['colors', 'username'] },
+    { key: 'surfaceTint', label: 'Surface tint', path: ['colors', 'highlight'] },
+    { key: 'description', label: 'Bio text', path: ['colors', 'description'] },
+    { key: 'border', label: 'Border', path: ['border', 'color'] },
+    { key: 'background', label: 'Page background', path: ['colors', 'background'] }
+  ];
+
+  function fieldFor(key) {
+    return colorFields.find(field => field.key === key) || colorFields[0];
+  }
+
+  function fieldValue(key) {
+    const path = fieldFor(key).path;
+    return path.reduce((value, segment) => value?.[segment], staged) || '#000000';
+  }
+
+  function chooseColor(key) {
+    if (colorFields.some(field => field.key === key)) activeColor = key;
+  }
+
+  function applyPalette(value) {
+    update(activeColorField.path, value.toUpperCase());
+  }
+
   export function getDraftAppearance() {
     return clone(staged);
   }
@@ -83,41 +113,52 @@
     acceptAppearance(nextAppearance);
   }
 
-  const colorFields = [
-    ['text', 'Profile Text'],
-    ['secondaryText', 'Handle & Metadata'],
-    ['username', 'Username'],
-    ['description', 'Bio Text'],
-    ['background', 'Page Background'],
-    ['accent', 'Accent']
-  ];
+  $: activeColorField = fieldFor(activeColor);
+  $: activeColorLabel = activeColorField.label;
+  $: activeColorValue = fieldValue(activeColor);
 </script>
 
 <div class="appearance-editor">
-  <section class="appearance-editor__panel" aria-label="Profile colors">
-    <div class="appearance-editor__color-grid">
-      {#each colorFields as [key, label] (key)}
-        <label class="appearance-editor__field">
-          <span>{label}</span>
-          <div class="appearance-editor__color-input">
-            <input type="color" value={staged.colors[key]} aria-label={label} on:input={event => updateColor(['colors', key], event)} />
-            <input class="appearance-editor__hex" value={staged.colors[key]} maxlength="7" aria-label={`${label} hex`} on:change={event => updateColor(['colors', key], event)} />
-          </div>
-        </label>
-      {/each}
+  <section class="appearance-editor__panel appearance-editor__panel--colors" aria-label="Profile colors">
+    <div class="appearance-editor__colors-layout">
+      <div class="appearance-editor__color-grid">
+        <div class="appearance-editor__colors-heading">
+          <h2>Profile colors</h2>
+          <p>Pick a color to edit</p>
+        </div>
+        {#each colorFields as field (field.key)}
+          {@const key = field.key}
+          {@const label = field.label}
+          <label class="appearance-editor__field" class:active={activeColor === key}>
+            <span><button type="button" class="appearance-editor__color-dot" style={`--dot-color:${fieldValue(key)}`} aria-label={`Edit ${label}`} on:click={() => chooseColor(key)}></button>{label}</span>
+            <div class="appearance-editor__color-input">
+              <input type="color" value={fieldValue(key)} aria-label={label} on:focus={() => chooseColor(key)} on:input={event => updateColor(fieldFor(key).path, event)} />
+              <input class="appearance-editor__hex" value={fieldValue(key)} maxlength="7" aria-label={`${label} hex`} on:focus={() => chooseColor(key)} on:change={event => updateColor(fieldFor(key).path, event)} />
+            </div>
+          </label>
+        {/each}
+      </div>
+      <div class="appearance-editor__picker" aria-label={`${activeColorLabel} picker`}>
+        <div class="appearance-editor__picker-heading"><strong>{activeColorLabel}</strong><span>{activeColorValue}</span><input type="color" value={activeColorValue} aria-label="Selected color" on:input={event => updateColor(activeColorField.path, event)} /></div>
+        <div class="appearance-editor__picker-stage">
+          <div class="appearance-editor__picker-surface" style={`--picker-color:${activeColorValue}`}><span aria-hidden="true"></span><input type="color" value={activeColorValue} aria-label="Choose selected color" on:input={event => updateColor(activeColorField.path, event)} /></div>
+          <div class="appearance-editor__hue" aria-hidden="true"></div>
+        </div>
+        <div class="appearance-editor__palette" aria-label="Color palette">
+          {#each ['#f5e0dc', '#b4befe', '#fab387', '#f5c2e7', '#cba6f7', '#a6adc8', '#9399b2', '#7f849c', '#6c7086', '#585b70', '#45475a'] as value (value)}
+            <button type="button" style={`--palette-color:${value}`} aria-label={`Use ${value}`} on:click={() => applyPalette(value)}></button>
+          {/each}
+        </div>
+      </div>
     </div>
   </section>
 
   <section class="appearance-editor__panel" aria-labelledby="appearance-surface-title">
-    <div class="appearance-editor__heading"><h2 id="appearance-surface-title">Surface</h2></div>
     <div class="appearance-editor__surface-grid">
-      <label class="appearance-editor__field">
-        <span>Profile Surface</span>
-        <div class="appearance-editor__color-input">
-          <input type="color" value={staged.colors.surface} aria-label="Profile Surface" on:input={event => updateColor(['colors', 'surface'], event)} />
-          <input class="appearance-editor__hex" value={staged.colors.surface} maxlength="7" aria-label="Profile Surface hex" on:change={event => updateColor(['colors', 'surface'], event)} />
-        </div>
-      </label>
+      <div class="appearance-editor__surface-intro">
+        <div class="appearance-editor__heading"><div><h2 id="appearance-surface-title">Profile surface</h2><p>Adjust background surface</p></div></div>
+        <select aria-label="Profile surface style"><option>Celestial Border</option><option>Plain surface</option><option>Glass surface</option></select>
+      </div>
       <label class="appearance-editor__range"><span>Opacity <output>{staged.surface.opacity}%</output></span><input type="range" min="0" max="100" step="1" value={staged.surface.opacity} on:input={event => update(['surface', 'opacity'], Number(event.currentTarget.value))} /></label>
       <label class="appearance-editor__range"><span>Blur <output>{staged.surface.blur}px</output></span><input type="range" min="0" max="40" step="1" value={staged.surface.blur} on:input={event => update(['surface', 'blur'], Number(event.currentTarget.value))} /></label>
     </div>
@@ -151,23 +192,51 @@
     color: var(--appearance-text);
     font-family: var(--appearance-body);
   }
-  .appearance-editor__panel { padding: .3rem 0 .7rem; border: 0; border-bottom: 1px solid var(--appearance-line); border-radius: 0; background: transparent; }
+  .appearance-editor__panel { padding: .75rem; border: 1px solid var(--appearance-line); border-radius: var(--appearance-radius); background: var(--appearance-surface); }
+  .appearance-editor__panel--colors { padding: 0; border: 0; background: transparent; }
+  .appearance-editor__colors-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(14rem, 1fr); gap: .9rem; align-items: stretch; }
   .appearance-editor__heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .55rem; }
   .appearance-editor__heading h2 { margin: 0; color: var(--appearance-text); font-size: var(--customize-subheading-size, .88rem); line-height: 1.25; letter-spacing: -.02em; }
-  .appearance-editor__color-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem .7rem; }
-  .appearance-editor__surface-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .55rem .7rem; }
+  .appearance-editor__heading p, .appearance-editor__colors-heading p { margin: .28rem 0 0; color: var(--appearance-muted); font-size: var(--appearance-label-size); line-height: 1.35; }
+  .appearance-editor__colors-heading { grid-column: 1 / -1; }
+  .appearance-editor__colors-heading h2 { margin: 0; color: var(--ctp-yellow, #f9e2af); font-size: var(--customize-subheading-size, .88rem); line-height: 1.25; letter-spacing: -.02em; }
+  .appearance-editor__color-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem .7rem; align-content: start; padding: .75rem; border: 1px solid var(--appearance-line); border-radius: var(--appearance-radius); background: var(--appearance-surface); }
+  .appearance-editor__color-grid .appearance-editor__field { display: grid; grid-template-columns: minmax(0, 1fr) 5rem; align-items: center; gap: .45rem; }
+  .appearance-editor__color-grid .appearance-editor__field > span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .appearance-editor__color-grid .appearance-editor__color-input { min-width: 0; min-height: 1.6rem; height: 1.6rem; grid-template-columns: 1.55rem minmax(0, 1fr); }
+  .appearance-editor__surface-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr) minmax(0, 1.1fr); align-items: end; gap: .55rem .7rem; }
+  .appearance-editor__surface-intro { display: grid; min-width: 0; gap: .35rem; }
+  .appearance-editor__surface-intro .appearance-editor__heading { margin: 0; }
+  .appearance-editor__surface-intro select { width: 100%; min-height: var(--appearance-primary-height); box-sizing: border-box; border: 1px solid var(--appearance-line-strong); border-radius: var(--appearance-radius); padding: .45rem .6rem; background: var(--appearance-input); color: var(--appearance-text); font: var(--appearance-control-size)/1 var(--appearance-body); }
   .appearance-editor__field, .appearance-editor__range { display: grid; gap: .35rem; min-width: 0; }
   .appearance-editor__field > span, .appearance-editor__range > span { display: flex; justify-content: space-between; gap: .5rem; color: var(--appearance-secondary); font-size: var(--appearance-label-size); line-height: 1.3; }
+  .appearance-editor__field > span { align-items: center; justify-content: flex-start; gap: .45rem; }
+  .appearance-editor__field.active > span { color: var(--appearance-text); }
+  .appearance-editor__color-dot { width: .92rem; height: .92rem; flex: 0 0 auto; padding: 0; border: 1px solid color-mix(in srgb, var(--dot-color) 55%, var(--appearance-line-strong)); border-radius: 50%; background: var(--dot-color); cursor: pointer; }
+  .appearance-editor__color-dot:focus-visible { outline: 2px solid var(--appearance-focus); outline-offset: 2px; }
   .appearance-editor__color-input { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); align-items: center; min-height: var(--appearance-primary-height); overflow: hidden; border: 1px solid var(--appearance-line-strong); border-radius: var(--appearance-radius); background: var(--appearance-input); }
   .appearance-editor__color-input:focus-within { border-color: var(--appearance-focus); box-shadow: 0 0 0 2px color-mix(in srgb, var(--appearance-focus) 30%, transparent); }
-  .appearance-editor__color-input input[type="color"] { width: 2.2rem; height: 2.2rem; padding: .25rem; border: 0; background: transparent; cursor: pointer; }
+  .appearance-editor__color-input input[type="color"] { width: 1.45rem; height: 1.45rem; padding: .18rem; border: 0; background: transparent; cursor: pointer; }
   .appearance-editor__color-input input[type="color"]:focus-visible, .appearance-editor__hex:focus-visible { outline: 0; }
   .appearance-editor__hex { min-width: 0; width: 100%; min-height: var(--appearance-primary-height); box-sizing: border-box; padding: .55rem .6rem; border: 0; outline: 0; background: transparent; color: var(--appearance-text); font: var(--appearance-control-size)/1 var(--appearance-mono); }
   .appearance-editor__range { margin-top: .75rem; }
-  .appearance-editor__surface-grid .appearance-editor__range { margin-top: 0; }
+  .appearance-editor__surface-grid .appearance-editor__range { align-self: start; margin-top: 0; padding-top: 2.2rem; }
   .appearance-editor__range output { color: var(--appearance-faint); font: var(--appearance-label-size)/1 var(--appearance-mono); }
   .appearance-editor__range input { width: 100%; accent-color: var(--appearance-neutral); }
+  .appearance-editor__picker { display: grid; align-content: start; gap: .65rem; min-width: 0; height: 15.75rem; box-sizing: border-box; overflow: hidden; padding: 1.1rem 1.5rem .9rem 1.1rem; border: 1px solid var(--appearance-line); border-radius: var(--appearance-radius); background: var(--appearance-input); }
+  .appearance-editor__picker-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto 2rem; align-items: center; gap: .5rem; }
+  .appearance-editor__picker-heading strong { color: var(--appearance-text); font-size: .78rem; }
+  .appearance-editor__picker-heading span { color: var(--appearance-faint); font: .7rem/1 var(--appearance-mono); }
+  .appearance-editor__picker-heading input { width: 1.8rem; height: 1.8rem; padding: .12rem; border: 1px solid var(--appearance-line-strong); border-radius: .25rem; background: transparent; cursor: pointer; }
+  .appearance-editor__picker-stage { display: grid; grid-template-columns: minmax(0, 1fr) 1rem; gap: .9rem; align-items: stretch; transform: translateY(2px); }
+  .appearance-editor__picker-surface { position: relative; height: 8.6rem; overflow: hidden; border-radius: .3rem; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--picker-color)); }
+  .appearance-editor__picker-surface span { position: absolute; top: 27%; left: 72%; width: .75rem; height: .75rem; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
+  .appearance-editor__picker-surface input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: crosshair; }
+  .appearance-editor__hue { width: .95rem; height: 8.6rem; border-radius: .3rem; background: linear-gradient(180deg, #f38ba8, #fab387, #f9e2af, #a6e3a1, #89dceb, #89b4fa, #cba6f7, #f5c2e7, #f38ba8); }
+  .appearance-editor__palette { display: flex; align-items: center; justify-content: space-between; gap: .45rem; padding-top: .7rem; }
+  .appearance-editor__palette button { width: 1.1rem; height: 1.1rem; padding: 0; border: 1px solid color-mix(in srgb, var(--palette-color) 50%, var(--appearance-line-strong)); border-radius: 50%; background: var(--palette-color); cursor: pointer; }
+  .appearance-editor__palette button:hover, .appearance-editor__palette button:focus-visible { outline: 2px solid var(--appearance-focus); outline-offset: 2px; }
   .appearance-editor__message { margin: 0; color: var(--appearance-danger); font-size: var(--appearance-label-size); line-height: 1.4; }
-  @media (max-width: 64rem) { .appearance-editor__color-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 64rem) { .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1fr); } .appearance-editor__picker { order: -1; } }
+  @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } .appearance-editor__surface-grid .appearance-editor__range { padding-top: 0; } }
 </style>

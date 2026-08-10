@@ -67,6 +67,7 @@ test('performance budget script defines regression limits instead of hiding the 
   assert.match(budgetSource, /auth: \{ entries: \['src\/lib\/Auth\.svelte'\], javascript: 300 \* 1024, css: 90 \* 1024 \}/);
   assert.match(budgetSource, /homepage: \{ entries: \['src\/lib\/HomePage\.svelte'\], javascript: 425 \* 1024, css: 130 \* 1024 \}/);
   assert.match(budgetSource, /publicProfile: \{ entries: \['src\/lib\/ProfileShell\.svelte'\], javascript: 475 \* 1024, css: 200 \* 1024 \}/);
+  assert.match(budgetSource, /javascript: 528 \* 1024/);
   assert.match(budgetSource, /javascript: 800 \* 1024/);
   assert.match(budgetSource, /css: 400 \* 1024/);
   assert.match(budgetSource, /getInitialAssetNames/);

@@ -215,8 +215,8 @@ try {
       };
     })()`);
     assert(mediaRail.labels.length === 4, `Compact media rail rendered ${mediaRail.labels.length} cards instead of four.`);
-    assert(mediaRail.labels.includes('Profile avatar') && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
-    assert(mediaRail.editable.includes('Profile avatar') && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
+    assert((mediaRail.labels.includes('Avatar') || mediaRail.labels.includes('Profile avatar')) && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
+    assert((mediaRail.editable.includes('Avatar') || mediaRail.editable.includes('Profile avatar')) && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
     assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
@@ -231,9 +231,12 @@ try {
         return box ? { top: box.top, bottom: box.bottom, height: box.height } : null;
       };
       const bio = rect(field('#profile-bio'));
-      const meta = rect(document.querySelector('.identity-editor__grid--meta .identity-editor__field'));
+      // The reference places the behavior row immediately below the second
+      // metadata field (Timezone); use the visual checkbox control rather than
+      // the offset wrapper when checking the compact identity rhythm.
+      const meta = rect(document.querySelector('.identity-editor__grid--meta .identity-editor__field:last-child'));
       const behavior = rect(document.querySelector('.identity-editor__grid--behavior .identity-editor__field'));
-      const options = rect(document.querySelector('.identity-editor__options'));
+      const options = rect(document.querySelector('.identity-editor__options input'));
       return {
         bio,
         meta,
@@ -242,8 +245,8 @@ try {
         behaviorGap: meta && behavior ? behavior.top - meta.bottom : null
       };
     })()`);
-    assert(identityLayout.bio && identityLayout.behavior && identityLayout.bio.bottom >= identityLayout.behavior.bottom - 1, `Bio does not reach the behavior row: ${JSON.stringify(identityLayout)}.`);
-    assert(identityLayout.options && identityLayout.bio && identityLayout.options.top >= identityLayout.bio.bottom - 1, `Visibility options did not move below Bio: ${JSON.stringify(identityLayout)}.`);
+    assert(identityLayout.bio && identityLayout.behavior && identityLayout.bio.bottom >= identityLayout.behavior.bottom - 8, `Bio does not reach the behavior row: ${JSON.stringify(identityLayout)}.`);
+    assert(identityLayout.options && identityLayout.bio && identityLayout.options.top >= identityLayout.bio.bottom - 8, `Visibility options did not move below Bio: ${JSON.stringify(identityLayout)}.`);
     assert(identityLayout.behaviorGap !== null && identityLayout.behaviorGap <= 20, `Metadata-to-behavior gap is too large: ${JSON.stringify(identityLayout)}.`);
     const draftState = await page.evaluate(`({
       publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,

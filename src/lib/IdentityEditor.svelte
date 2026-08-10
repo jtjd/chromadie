@@ -152,6 +152,10 @@
 >
   <form class="identity-editor__form" on:submit|preventDefault={saveIdentity}>
     <div class="identity-editor__fields">
+      <label class="identity-editor__field identity-editor__field--username" for="profile-username">
+        <span>Username</span>
+        <input id="profile-username" value={username} readonly aria-readonly="true" />
+      </label>
       <label class="identity-editor__field" for="profile-bio">
         <span class="identity-editor__label-row">
           <span>Bio</span>
@@ -230,6 +234,7 @@
   .identity-editor__field { display: grid; gap: .35rem; min-width: 0; color: var(--identity-text-secondary); font-size: var(--identity-label-size); line-height: 1.35; }
   .identity-editor__label-row { display: flex; align-items: baseline; justify-content: space-between; gap: .65rem; }
   .identity-editor__field small { color: var(--identity-text-muted); font-size: .9em; }
+  .identity-editor__field > span > small { margin-left: .18rem; }
   .identity-editor__counter { color: var(--identity-text-faint); font: .72rem/1 var(--identity-font-mono); white-space: nowrap; }
   .identity-editor__field :is(input, textarea, select) {
     width: 100%;

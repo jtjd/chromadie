@@ -11,38 +11,41 @@
 
 <section class="profile-dashboard-actions" aria-labelledby="profile-dashboard-actions-title">
   <div class="profile-dashboard-actions__summary">
-    <span class="profile-dashboard-actions__status-icon" class:is-dirty={dirty} aria-hidden="true">{dirty ? '!' : '✓'}</span>
     <div class="profile-dashboard-actions__copy">
       <div class="profile-dashboard-actions__title-row">
-        <h2 id="profile-dashboard-actions-title">Profile changes</h2>
+        <h2 id="profile-dashboard-actions-title">Customize profile</h2>
         <span class:profile-dashboard-actions__state--dirty={dirty} class="profile-dashboard-actions__state">
           {#if saving} Saving…{:else if dirty} Unpublished changes{:else} Published{/if}
         </span>
+        <span class="profile-dashboard-actions__divider" aria-hidden="true"></span>
+        <span class="profile-dashboard-actions__saved">{dirty ? 'Unsaved changes' : 'All changes saved'}</span>
       </div>
-      <p>{dirty ? 'Your changes are staged in this dashboard.' : 'Your profile is up to date.'}</p>
     </div>
   </div>
   <div class="profile-dashboard-actions__buttons">
-    <button type="button" on:click={() => dispatch('reset')} disabled={!dirty || saving}>Reset</button>
-    <button type="button" class="profile-dashboard-actions__publish" on:click={() => dispatch('publish')} disabled={!dirty || saving}>{saving ? 'Publishing…' : 'Publish profile'}</button>
+    <button type="button" on:click={() => dispatch('reset')} disabled={!dirty || saving}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.35-5.65L4 8.7M4 4v4.7h4.7"></path></svg><span>Reset</span></button>
+    <button type="button" class="profile-dashboard-actions__publish" on:click={() => dispatch('publish')} disabled={!dirty || saving}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L7.5 7.5M12 3l4.5 4.5M5 14v5h14v-5"></path></svg><span>{saving ? 'Publishing…' : 'Publish profile'}</span></button>
   </div>
   {#if error}<p class="profile-dashboard-actions__message" role="alert">{error}</p>{:else if status}<p class="profile-dashboard-actions__message" role="status" aria-live="polite">{status}</p>{/if}
 </section>
 
 <style>
-  .profile-dashboard-actions { --dashboard-action-accent: var(--ctp-blue, #89b4fa); --dashboard-action-save: var(--ctp-green, #a6e3a1); --dashboard-action-focus: var(--ctp-lavender, #b4befe); --dashboard-action-surface: var(--studio-panel, color-mix(in srgb, var(--ctp-sapphire, #74c7ec) 5%, var(--ctp-crust, #11111b))); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: .55rem; padding: .82rem 1.65rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .5rem; background: var(--dashboard-action-surface); box-shadow: 0 .55rem 1.6rem color-mix(in srgb, var(--ctp-crust, #11111b) 48%, transparent); }
-  .profile-dashboard-actions__summary { display: flex; align-items: center; gap: .8rem; min-width: 0; }
-  .profile-dashboard-actions__status-icon { display: grid; width: 1.75rem; height: 1.75rem; flex: 0 0 auto; place-items: center; border: 2px solid var(--dashboard-action-accent); border-radius: 50%; color: var(--dashboard-action-accent); font: 700 .72rem/1 var(--site-font, sans-serif); box-shadow: 0 0 1.1rem color-mix(in srgb, var(--dashboard-action-accent) 18%, transparent); }
-  .profile-dashboard-actions__status-icon.is-dirty { border-color: var(--ctp-peach, #fab387); color: var(--ctp-peach, #fab387); }
+  .profile-dashboard-actions { --dashboard-action-accent: var(--ctp-blue, #89b4fa); --dashboard-action-save: var(--ctp-green, #a6e3a1); --dashboard-action-focus: var(--ctp-lavender, #b4befe); --dashboard-action-surface: var(--ctp-mantle, #181825); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; min-height: 4.05rem; padding: .72rem 1.05rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .52rem; background: var(--dashboard-action-surface); }
+  .profile-dashboard-actions__summary { display: flex; align-items: center; gap: .75rem; min-width: 0; }
   .profile-dashboard-actions__copy { min-width: 0; }
-  .profile-dashboard-actions__title-row { display: flex; align-items: center; gap: .65rem; }
-  .profile-dashboard-actions h2 { margin: 0; color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: .84rem; letter-spacing: -.01em; }
-  .profile-dashboard-actions p { margin: .25rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .73rem; line-height: 1.4; }
-  .profile-dashboard-actions__state { padding: .2rem .38rem; border-radius: .25rem; background: color-mix(in srgb, var(--ctp-green, #a6e3a1) 14%, var(--ctp-base, #1e1e2e)); color: var(--ctp-green, #a6e3a1); font: 650 .63rem/1 var(--site-font, sans-serif); white-space: nowrap; }
-  .profile-dashboard-actions__state--dirty { background: color-mix(in srgb, var(--ctp-peach, #fab387) 14%, var(--ctp-base, #1e1e2e)); color: var(--ctp-peach, #fab387); }
+  .profile-dashboard-actions__title-row { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
+  .profile-dashboard-actions__title-row > .profile-dashboard-actions__state { margin-left: .8rem; }
+  .profile-dashboard-actions h2 { margin: 0; color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: 1rem; letter-spacing: -.02em; }
+  .profile-dashboard-actions__state { display: inline-flex; align-items: center; gap: .35rem; padding: 0; color: var(--ctp-green, #a6e3a1); font: 650 .72rem/1 var(--site-font, sans-serif); white-space: nowrap; }
+  .profile-dashboard-actions__state::before { width: .45rem; height: .45rem; flex: 0 0 auto; border-radius: 50%; background: currentColor; content: ''; }
+  .profile-dashboard-actions__state--dirty { color: var(--ctp-peach, #fab387); }
+  .profile-dashboard-actions__divider { width: 1px; height: 1.1rem; background: var(--ctp-surface0, #313244); }
+  .profile-dashboard-actions__saved { color: var(--ctp-subtext0, #a6adc8); font-size: .75rem; }
   .profile-dashboard-actions__buttons { display: flex; flex: 0 0 auto; gap: .45rem; }
-  .profile-dashboard-actions button { min-height: 2.25rem; padding: .48rem .8rem; border: 1px solid var(--ctp-surface1, #45475a); border-radius: .4rem; background: var(--ctp-mantle, #181825); color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: .74rem; cursor: pointer; }
-  .profile-dashboard-actions button:disabled { cursor: not-allowed; opacity: .42; }
+  .profile-dashboard-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 2.3rem; padding: .48rem .78rem; border: 1px solid var(--ctp-surface1, #45475a); border-radius: .42rem; background: transparent; color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: .76rem; cursor: pointer; }
+  .profile-dashboard-actions button svg { width: .92rem; height: .92rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+  .profile-dashboard-actions button:disabled { cursor: default; opacity: 1; }
+  .profile-dashboard-actions__publish:disabled { cursor: default; opacity: 1; }
   .profile-dashboard-actions button:focus-visible { outline: 2px solid var(--dashboard-action-focus); outline-offset: 2px; }
   .profile-dashboard-actions__publish { border-color: var(--dashboard-action-save) !important; background: var(--dashboard-action-save) !important; color: var(--site-deep, #090a0d) !important; font-weight: 700; }
   .profile-dashboard-actions__publish:hover:not(:disabled) { border-color: color-mix(in srgb, var(--dashboard-action-save) 82%, var(--site-ink, #f2f0eb)) !important; background: color-mix(in srgb, var(--dashboard-action-save) 82%, var(--site-ink, #f2f0eb)) !important; }

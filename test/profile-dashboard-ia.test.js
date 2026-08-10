@@ -42,38 +42,39 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   }
   assert.match(shell, /--nav-accent/);
   assert.match(shell, /--dashboard-sidebar-width: 14rem/);
-  assert.match(shell, /min-height: 2\.2rem/);
+  assert.match(shell, /min-height: 2\.45rem/);
   assert.match(shell, /--ctp-sapphire/);
   assert.match(shell, /var\(--studio-canvas\)/);
-  assert.match(shell, /padding: \.7rem \.75rem \.85rem/);
+  assert.match(shell, /padding: 1\.2rem \.75rem 2\.15rem/);
   assert.doesNotMatch(shell, /profile-dashboard-shell__sidebar\s*\{[^}]*border-right/);
   assert.doesNotMatch(shell, /gradient/);
-  assert.match(shell, /profile-dashboard-shell__main \{ min-width: 0; background: transparent/);
+  assert.match(shell, /\.profile-dashboard-shell__main \{[^}]*min-width: 0; background: transparent/);
   assert.match(shell, /profile-dashboard-shell__content \{ --surface-panel: var\(--studio-panel/);
   assert.match(identity, /baselineBio/);
   assert.match(identity, /incomingKey/);
   assert.match(identity, /identity-editor__grid--meta/);
   assert.match(identity, /identity-editor__grid--behavior/);
   assert.match(customize, /identity-editor__fields\) \{ display: contents; \}/);
-  assert.match(customize, /identity-editor__field\[for="profile-bio"\]\) \{ grid-column: 1 \/ span 2; grid-row: 1 \/ span 2;/);
-  assert.match(customize, /identity-editor__options\) \{ display: flex; grid-column: 1 \/ span 2; grid-row: 3;/);
+  assert.match(customize, /identity-editor__field--username/);
+  assert.match(customize, /identity-editor__field\[for="profile-bio"\]\) \{ grid-column: 1 \/ span 2; grid-row: 2 \/ span 2;/);
+  assert.match(customize, /identity-editor__options\) \{ display: flex; grid-column: 1 \/ span 2; grid-row: 4;/);
   assert.match(customize, /identity-editor__grid--meta \.identity-editor__field:first-child/);
   assert.match(customize, /identity-editor__grid--behavior \.identity-editor__field:first-child/);
   assert.match(customize, /profile-customize-page__control-grid--other/);
   assert.match(customize, /profile-content-editor__panel:first-of-type \.profile-content-editor__fields/);
-  for (const label of ['Profile Text', 'Handle & Metadata', 'Username', 'Bio Text', 'Page Background', 'Profile Surface', 'Accent']) {
+  for (const label of ['Profile text', 'Handle & metadata', 'Username', 'Bio text', 'Page background', 'Profile surface', 'Accent', 'Surface tint', 'Border']) {
     assert.match(appearance, new RegExp(label.replace(/[&]/g, '\\$&')));
   }
   assert.doesNotMatch(appearance, /6 colors|Card depth|Colors update the profile preview/);
-  assert.match(appearance, /appearance-surface-title[\s\S]*Profile Surface[\s\S]*Opacity[\s\S]*Blur/);
-  assert.doesNotMatch(appearance, />Profile colors</);
+  assert.match(appearance, /appearance-surface-title[\s\S]*Profile surface[\s\S]*Opacity[\s\S]*Blur/);
+  assert.match(appearance, /Profile colors/);
   assert.doesNotMatch(appearance, /\['surface', 'Profile Surface'\]/);
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
   for (const section of ['media', 'identity', 'appearance', 'content', 'widgets', 'effects', 'layout']) {
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));
   }
   assert.match(customize, /id="customize-widgets"[\s\S]*Provider Widgets/);
-  assert.match(customize, /id="customize-effects"[\s\S]*Effects Customization/);
+  assert.match(customize, /id="customize-effects"[\s\S]*Visual effects/);
   assert.match(customize, /profile-cosmetics-controls\) \{ display: grid; grid-template-columns: repeat\(4/);
   assert.match(customize, /id="customize-effects"[\s\S]*id="customize-layout"/);
   assert.match(customize, /Profile media/);
@@ -85,7 +86,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /previewAvailable = activeSection === 'links'/);
   assert.match(expression, /profile-expression-editor__compact-grid/);
   assert.match(expression, /profile-expression-editor__compact-upload-hint/);
-  for (const action of ['Background', 'Audio', 'Profile avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
+  for (const action of ['Background', 'Profile audio', 'Avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
   assert.doesNotMatch(expression, /More media controls/);
   assert.match(expression, /profile-expression-editor__compact-audio-player/);
   assert.match(expression, /compact-preview--avatar \{ border-color: var\(--media-line\)/);

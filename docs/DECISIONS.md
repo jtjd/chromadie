@@ -3880,3 +3880,21 @@ layouts retain the existing mobile navigation and bounded preview behavior.
 Rich-media validation, staged uploads, entitlement checks, RLS, and public
 projection are unchanged. In particular, custom cursor and pointer-cursor
 uploads continue to accept the existing bounded WebP and ANI formats.
+
+## 2026-08-10 — Match the reference workspace composition
+
+The supplied dashboard references are treated as a structural contract, not a
+loose color reference. The action bar now spans the editor and preview columns,
+the tab row is a compact underline navigation, and the desktop preview is a
+bordered card with device controls and the Plus callout beneath it. Appearance
+colors expose a selected-color picker and palette while existing editor APIs
+remain the source of truth. Media, Effects, and Layout retain their domain
+editors but are recomposed into the reference card grids. These changes remain
+presentation-only and preserve draft/publish, RLS, and rich-media boundaries.
+
+## 2026-08-10 — Keep the reference workspace inside a measured route budget
+
+The persistent preview, device switcher, picker, Plus callout, and four
+reference-style editor surfaces add a small intentional payload to the
+authenticated dashboard. Its blocking JavaScript ceiling is therefore 528 kB
+(measured at 526.52 kB); the other route and asset ceilings remain unchanged.

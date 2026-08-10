@@ -170,6 +170,7 @@
   let PreviewComponent = null;
   let previewError = '';
   let previewOpen = false;
+  let previewDevice = 'desktop';
   let previewLoadPromise = null;
   let sectionComponents = {};
   let sectionLoading = false;
@@ -356,6 +357,10 @@
     if (!previewAvailable && !customizePreviewAvailable) return;
     previewOpen = !previewOpen;
     if (previewOpen) void loadPreviewComponent();
+  }
+
+  function setPreviewDevice(device) {
+    if (device === 'desktop' || device === 'mobile') previewDevice = device;
   }
 
   function handleSectionDirty(event) {
@@ -811,6 +816,12 @@
   showPreview={showDashboardPreview}
   on:sectionchange={handleDashboardSectionChange}
 >
+  <div slot="topbar">
+    {#if context && !loading && (activeSection === 'customize' || activeSection === 'links') && DashboardActionsComponent}
+      <svelte:component this={DashboardActionsComponent} dirty={dashboardDirty} saving={dashboardSaving} status={dashboardStatus} error={dashboardError} on:reset={resetDashboard} on:publish={publishDashboard} />
+    {/if}
+  </div>
+
   <div class="profile-settings-page" aria-busy={loading}>
     {#if loading}
       <div class="profile-settings-page__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h1>Loading</h1></div>
@@ -827,23 +838,12 @@
         </header>
       {/if}
       {#if context.dataWarning}<p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>{/if}
-      {#if (activeSection === 'customize' || activeSection === 'links') && DashboardActionsComponent}
-        <svelte:component this={DashboardActionsComponent} dirty={dashboardDirty} saving={dashboardSaving} status={dashboardStatus} error={dashboardError} on:reset={resetDashboard} on:publish={publishDashboard} />
-      {/if}
-
       {#if activeSection === 'customize'}
         <div class="profile-settings-page__customize-tabs">
-          <div class="profile-settings-page__customize-tabs-heading">
-            <div>
-              <p class="profile-settings-page__breadcrumb">Dashboard <span aria-hidden="true">›</span> Customize</p>
-              <h1>Customize</h1>
-            </div>
-            <div class="profile-settings-page__toolbar-actions">
-              {#if isMobileViewport}
-                <button type="button" aria-expanded={previewOpen} on:click={togglePreview}>{previewOpen ? 'Hide preview' : 'Preview'}</button>
-              {/if}
-              <a href={profilePath} on:click={handleViewProfile}>View profile ↗</a>
-            </div>
+          <div class="profile-settings-page__customize-tabs-actions">
+            {#if isMobileViewport}
+              <button type="button" aria-expanded={previewOpen} on:click={togglePreview}>{previewOpen ? 'Hide preview' : 'Preview'}</button>
+            {/if}
           </div>
           <div class="profile-settings-page__tablist" role="tablist" aria-label="Customize profile">
             {#each CUSTOMIZE_TABS as tab (tab.id)}
@@ -859,7 +859,6 @@
                 on:keydown={handleCustomizeTabKeydown}
               >
                 <span>{tab.label}</span>
-                <small>{tab.description}</small>
               </button>
             {/each}
           </div>
@@ -949,22 +948,36 @@
   <div slot="preview" class="profile-settings-preview">
     <header class="profile-settings-preview__header">
       <div>
-        <p class="profile-settings-preview__eyebrow">Preview</p>
         <h2>Live preview</h2>
+        <p>This is how your profile looks</p>
       </div>
-      <span class="profile-settings-preview__status"><span aria-hidden="true"></span> Draft</span>
       {#if isMobileViewport || activeSection === 'links'}
         <button class="profile-settings-preview__close" type="button" aria-label="Close live preview" on:click={togglePreview}>×</button>
       {/if}
     </header>
     <div class="profile-settings-preview__body">
-      {#if PreviewComponent}
-        <svelte:component this={PreviewComponent} previewMode={true} previewIdentityOnly={true} previewProfile={previewProfile} previewProfileConfig={previewProfileConfig} previewScores={context?.targetScores || []} previewTimelineEvents={context?.timelineEvents || []} previewCollectionItems={context?.collectionItems || []} previewAllAchievements={context?.allAchievements || []} />
-      {:else if previewError}
-        <div class="profile-settings-preview__loading" role="alert"><span aria-hidden="true">!</span><strong>Preview unavailable</strong><p>{previewError}</p><button type="button" on:click={loadPreviewComponent}>Retry preview</button></div>
-      {:else}
-        <div class="profile-settings-preview__loading" role="status" aria-live="polite"><span aria-hidden="true">✦</span> Preparing your live canvas…</div>
-      {/if}
+      <div class="profile-settings-preview__canvas" class:profile-settings-preview__canvas--mobile={previewDevice === 'mobile'} class:profile-settings-preview__canvas--appearance={activeSection === 'customize' && activeCustomizeTab === 'appearance'}>
+        {#if PreviewComponent}
+          <svelte:component this={PreviewComponent} previewMode={true} previewIdentityOnly={true} previewProfile={previewProfile} previewProfileConfig={previewProfileConfig} previewScores={context?.targetScores || []} previewTimelineEvents={context?.timelineEvents || []} previewCollectionItems={context?.collectionItems || []} previewAllAchievements={context?.allAchievements || []} />
+        {:else if previewError}
+          <div class="profile-settings-preview__loading" role="alert"><span aria-hidden="true">!</span><strong>Preview unavailable</strong><p>{previewError}</p><button type="button" on:click={loadPreviewComponent}>Retry preview</button></div>
+        {:else}
+          <div class="profile-settings-preview__loading" role="status" aria-live="polite"><span aria-hidden="true">✦</span> Preparing your live canvas…</div>
+        {/if}
+      </div>
+      <div class="profile-settings-preview__device-panel" class:profile-settings-preview__device-panel--appearance={activeSection === 'customize' && activeCustomizeTab === 'appearance'}>
+        <div class="profile-settings-preview__devices" role="group" aria-label="Preview device">
+          <button type="button" class:active={previewDevice === 'desktop'} aria-pressed={previewDevice === 'desktop'} on:click={() => setPreviewDevice('desktop')}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"></rect><path d="M8 20h8M12 17v3"></path></svg>Desktop</button>
+          <button type="button" class:active={previewDevice === 'mobile'} aria-pressed={previewDevice === 'mobile'} on:click={() => setPreviewDevice('mobile')}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"></rect><path d="M11 18h2"></path></svg>Mobile</button>
+        </div>
+        {#if activeSection === 'customize' && activeCustomizeTab === 'appearance'}
+          <div class="profile-settings-preview__device-sample" aria-label="Desktop preview sample"></div>
+        {/if}
+      </div>
+      <aside class="profile-settings-preview__plus-card" aria-label="Chromadie Plus">
+        <div class="profile-settings-preview__plus-icon" aria-hidden="true">♔</div>
+        <div><h3>Unlock more with Chromadie Plus</h3><p>Get access to premium effects, animated cursors, unique borders and more.</p><a href="#premium" on:click={() => dispatch('sectionchange', { sectionId: 'premium' })}>View premium features <span aria-hidden="true">→</span></a></div>
+      </aside>
     </div>
   </div>
 </ProfileDashboardShell>
@@ -987,15 +1000,14 @@
   .profile-settings-page__toolbar-actions { display: flex; align-items: center; gap: .55rem; }
   .profile-settings-page__toolbar-actions :is(a, button) { min-height: 2rem; padding: .5rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: .78rem; text-decoration: none; cursor: pointer; }
   .profile-settings-page__toolbar-actions :is(a, button):hover { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
-  .profile-settings-page__customize-tabs { display: grid; gap: 1rem; margin-bottom: 1rem; }
-  .profile-settings-page__customize-tabs-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; }
-  .profile-settings-page__customize-tabs-heading h1 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: clamp(1.5rem, 2.5vw, 2.25rem); letter-spacing: -.05em; }
-  .profile-settings-page__tablist { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .45rem; padding: .35rem; border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .55rem; background: color-mix(in srgb, var(--site-deep, #11111b) 76%, var(--site-surface, #1e1e2e)); }
-  .profile-settings-page__tablist button { display: grid; gap: .28rem; min-width: 0; min-height: 3.3rem; padding: .65rem .72rem; border: 1px solid transparent; border-radius: .4rem; background: transparent; color: var(--site-muted, #aaa8b0); font: 650 .8rem/1.1 var(--site-font, sans-serif); text-align: left; cursor: pointer; }
-  .profile-settings-page__tablist button small { overflow: hidden; color: var(--site-faint, #7d7e87); font: 500 .64rem/1.2 var(--site-mono, monospace); text-overflow: ellipsis; white-space: nowrap; }
-  .profile-settings-page__tablist button:hover, .profile-settings-page__tablist button:focus-visible { border-color: color-mix(in srgb, var(--site-accent, #cdd2ff) 44%, var(--site-line-strong, rgba(255,255,255,.14))); background: color-mix(in srgb, var(--site-accent, #cdd2ff) 8%, transparent); color: var(--site-ink, #f2f0eb); }
-  .profile-settings-page__tablist button.active { border-color: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 48%, var(--site-line-strong, rgba(255,255,255,.14))); background: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 12%, var(--site-deep, #11111b)); color: var(--site-ink, #f2f0eb); }
-  .profile-settings-page__tablist button.active small { color: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 76%, var(--site-muted, #aaa8b0)); }
+  .profile-settings-page__customize-tabs { position: relative; display: grid; margin-bottom: .45rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .5rem; background: var(--ctp-mantle, #181825); }
+  .profile-settings-page__customize-tabs-actions { position: absolute; top: .45rem; right: .6rem; z-index: 1; display: none; gap: .45rem; }
+  .profile-settings-page__customize-tabs-actions :is(a, button) { min-height: 1.9rem; padding: .4rem .6rem; border: 1px solid var(--ctp-surface1, #45475a); border-radius: .32rem; background: transparent; color: var(--ctp-subtext1, #bac2de); font-size: .7rem; text-decoration: none; cursor: pointer; }
+  .profile-settings-page__customize-tabs-actions :is(a, button):hover, .profile-settings-page__customize-tabs-actions :is(a, button):focus-visible { border-color: var(--ctp-lavender, #b4befe); color: var(--ctp-text, #cdd6f4); }
+  .profile-settings-page__tablist { display: flex; align-items: stretch; gap: 0; min-height: 3.05rem; padding: 0 .4rem; }
+  .profile-settings-page__tablist button { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 7rem; min-height: 3.05rem; padding: .55rem .9rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--ctp-subtext1, #bac2de); font: 600 .78rem/1 var(--site-font, sans-serif); cursor: pointer; }
+  .profile-settings-page__tablist button:hover, .profile-settings-page__tablist button:focus-visible { color: var(--ctp-text, #cdd6f4); }
+  .profile-settings-page__tablist button.active { border-bottom-color: var(--ctp-blue, #89b4fa); color: var(--ctp-blue, #89b4fa); }
   .profile-settings-page__tablist button:focus-visible { outline: 2px solid var(--site-accent, #cdd2ff); outline-offset: 2px; }
   .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--ctp-peach, #fab387) 35%, transparent); border-radius: .35rem; color: var(--ctp-peach, #fab387); font-size: .8rem; }
   .profile-settings-page__content { width: 100%; min-width: 0; }
@@ -1003,18 +1015,38 @@
   .profile-settings-page__state { display: grid; min-height: 16rem; place-items: center; gap: .6rem; color: var(--site-muted, #aaa8b0); }
   .profile-settings-page__state h1 { margin: 0; font-size: 1.2rem; }
   .profile-settings-preview { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; height: 100%; }
-  .profile-settings-preview__header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 4.6rem; padding: .85rem 1rem; border-bottom: 1px solid var(--site-line, rgba(255,255,255,.08)); }
-  .profile-settings-preview__eyebrow { margin: 0 0 .3rem; color: var(--site-faint, #7d7e87); font: .68rem/1 var(--site-mono, monospace); letter-spacing: .12em; text-transform: uppercase; }
-  .profile-settings-preview__header h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: 1rem; letter-spacing: -.02em; }
-  .profile-settings-preview__status { display: inline-flex; align-items: center; gap: .4rem; color: var(--site-muted, #aaa8b0); font: .7rem/1 var(--site-mono, monospace); white-space: nowrap; }
-  .profile-settings-preview__status span { width: .42rem; height: .42rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); box-shadow: 0 0 .8rem color-mix(in srgb, var(--ctp-green, #a6e3a1) 60%, transparent); }
+  .profile-settings-preview__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; min-height: 5.1rem; padding: 1.1rem 1rem .7rem; }
+  .profile-settings-preview__header h2 { margin: 0; color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: 1.05rem; letter-spacing: -.02em; }
+  .profile-settings-preview__header p { margin: .35rem 0 0; color: var(--ctp-subtext0, var(--site-muted, #a6adc8)); font-size: .74rem; }
   .profile-settings-preview__close { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .4rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: 1.1rem; cursor: pointer; }
   .profile-settings-preview__close:hover, .profile-settings-preview__close:focus-visible { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
-  .profile-settings-preview__body { display: grid; min-height: 0; overflow: auto; place-items: start center; padding: 1.25rem; background: var(--site-deep, #11111b); }
-  .profile-settings-preview__body :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: visible; }
-  .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-canvas) { min-height: 0; }
-  .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; align-items: stretch; justify-content: flex-start; }
-  .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__opening) { min-height: 0; padding: 1.15rem; }
+  .profile-settings-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem 1rem; background: var(--ctp-mantle, var(--site-deep, #11111b)); }
+  .profile-settings-preview__canvas { display: grid; width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; }
+  .profile-settings-preview__canvas--appearance { min-height: 24rem; margin-bottom: .6rem; }
+  .profile-settings-preview__canvas :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: visible; border: 1px solid color-mix(in srgb, var(--ctp-lavender, #b4befe) 72%, var(--ctp-surface1, #45475a)); border-radius: .85rem; }
+  .profile-settings-preview__canvas.profile-settings-preview__canvas--appearance :global(.profile-shell-page--preview) { height: 24rem !important; min-height: 24rem !important; overflow: hidden; }
+  .profile-settings-preview__canvas--mobile :global(.profile-shell-page--preview) { width: min(19rem, 76%); }
+  .profile-settings-preview__canvas :global(.profile-shell-page--preview .profile-shell__approved-canvas) { min-height: 0; }
+  .profile-settings-preview__canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; align-items: stretch; justify-content: flex-start; }
+  .profile-settings-preview__canvas :global(.profile-shell-page--preview .profile-shell__opening) { min-height: 0; padding: 1.15rem; }
+  .profile-settings-preview__device-panel { min-width: 0; }
+  .profile-settings-preview__device-panel--appearance { display: grid; min-height: 13.2rem; overflow: hidden; border: 1px solid var(--ctp-surface0, #313244); border-radius: .55rem; background: var(--ctp-base, #1e1e2e); }
+  .profile-settings-preview__devices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 3rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .55rem; background: var(--ctp-base, #1e1e2e); }
+  .profile-settings-preview__device-panel--appearance .profile-settings-preview__devices { border: 0; border-bottom: 1px solid var(--ctp-surface0, #313244); border-radius: 0; }
+  .profile-settings-preview__devices button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--ctp-subtext1, #bac2de); font: 600 .74rem/1 var(--site-font, sans-serif); cursor: pointer; }
+  .profile-settings-preview__devices button.active { border-bottom-color: var(--ctp-blue, #89b4fa); color: var(--ctp-blue, #89b4fa); }
+  .profile-settings-preview__devices button:focus-visible { outline: 2px solid var(--ctp-lavender, #b4befe); outline-offset: -2px; }
+  .profile-settings-preview__devices svg { width: .9rem; height: .9rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+  .profile-settings-preview__device-sample { position: relative; min-height: 8.8rem; margin: .7rem; padding: .7rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .5rem; background: var(--ctp-base, #1e1e2e); }
+  .profile-settings-preview__device-sample::before { position: absolute; top: .8rem; right: .9rem; left: .9rem; height: .8rem; border-bottom: 1px solid var(--ctp-surface0, #313244); background: var(--ctp-lavender, #b4befe); content: ''; opacity: .9; }
+  .profile-settings-preview__device-sample::after { position: absolute; top: 2.25rem; right: .7rem; bottom: .7rem; left: .7rem; border: 1px solid var(--ctp-surface1, #45475a); border-radius: .35rem; background: var(--ctp-mantle, #181825); box-shadow: inset 3rem 1rem 0 -2.55rem var(--ctp-surface1, #45475a), inset 4.7rem 2.55rem 0 -4.25rem var(--ctp-text, #cdd6f4), inset 4.7rem 3.3rem 0 -4.25rem var(--ctp-overlay1, #7f849c), inset 4.7rem 4.05rem 0 -4.25rem var(--ctp-overlay1, #7f849c); content: ''; }
+  .profile-settings-preview__device-panel--appearance + .profile-settings-preview__plus-card { margin-top: .9rem; }
+  .profile-settings-preview__plus-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .7rem; padding: .85rem; border: 1px solid color-mix(in srgb, var(--ctp-mauve, #cba6f7) 30%, var(--ctp-surface0, #313244)); border-radius: .55rem; background: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 5%, var(--ctp-mantle, #181825)); }
+  .profile-settings-preview__plus-icon { display: grid; width: 1.5rem; height: 1.5rem; place-items: center; color: var(--ctp-mauve, #cba6f7); font-size: 1.25rem; }
+  .profile-settings-preview__plus-card h3 { margin: 0; color: var(--ctp-mauve, #cba6f7); font-size: .82rem; }
+  .profile-settings-preview__plus-card p { margin: .35rem 0 .65rem; color: var(--ctp-subtext1, #bac2de); font-size: .7rem; line-height: 1.4; }
+  .profile-settings-preview__plus-card a { color: var(--ctp-mauve, #cba6f7); font-size: .72rem; font-weight: 650; text-decoration: none; }
+  .profile-settings-preview__plus-card a:hover { text-decoration: underline; }
   .profile-settings-preview__loading { display: grid; place-items: center; min-height: 18rem; gap: .55rem; color: var(--site-muted, #aaa8b0); font-size: .8rem; text-align: center; }
   .profile-settings-preview__loading span { color: var(--site-accent, #cdd2ff); font-size: 1.2rem; }
   .profile-settings-preview__loading strong { color: var(--site-ink, #f2f0eb); font-size: .92rem; }
@@ -1028,12 +1060,12 @@
   .profile-settings-prompt button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .68rem; cursor: pointer; }
   .profile-settings-prompt__discard { border-color: var(--ctp-red, #f38ba8) !important; color: var(--ctp-red, #f38ba8) !important; }
   @media (max-width: 52rem) {
-    .profile-settings-page__customize-tabs-heading { align-items: flex-start; flex-direction: column; gap: .85rem; }
-    .profile-settings-page__customize-tabs-heading .profile-settings-page__toolbar-actions { width: 100%; justify-content: flex-end; }
+    .profile-settings-page__customize-tabs-actions { position: static; justify-content: flex-end; padding: .45rem .55rem 0; }
     .profile-settings-page__tablist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 30rem) {
-    .profile-settings-page__tablist { grid-template-columns: minmax(0, 1fr); }
+    .profile-settings-page__tablist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .profile-settings-page__tablist button { width: 100%; }
     .profile-settings-page__tablist button { min-height: 2.8rem; }
   }
   @media (prefers-reduced-motion: reduce) { .profile-settings-preview__body { scroll-behavior: auto; } }

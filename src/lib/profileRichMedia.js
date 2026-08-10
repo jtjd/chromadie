@@ -8,7 +8,10 @@ export const PROFILE_RICH_MEDIA_BUCKET = 'profile_media';
 export const PROFILE_ANIMATED_CURSOR_MIME = 'application/x-navi-animation';
 export const PROFILE_ANIMATED_CURSOR_MIME_TYPES = Object.freeze([
   PROFILE_ANIMATED_CURSOR_MIME,
-  'application/octet-stream'
+  'application/octet-stream',
+  'application/x-ani',
+  'image/x-ani',
+  'application/vnd.microsoft.ani'
 ]);
 export const PROFILE_RICH_MEDIA_KINDS = Object.freeze([
   'background_video',
