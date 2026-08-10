@@ -6,8 +6,11 @@ Document user-visible redesign changes by milestone.
 
 - Fixed the color picker’s visible saturation/brightness dot and hue handle so
   they move with every selected-color edit.
-- New Signal profiles now open with a simple blue starry background, a centered
-  avatar above the name, readable profile details, and links in a bottom row.
+- New Signal profiles now open with a generated deep-blue nebula/starfield
+  background, a centered avatar above the name, readable profile details, and
+  links in a bottom row without a redundant handle line.
+- Removed the extra default border wrapper so the profile card has one clean
+  perimeter like the reference.
 - Existing custom backgrounds, atmospheres, layouts, and published profile
   configuration remain unchanged.
 

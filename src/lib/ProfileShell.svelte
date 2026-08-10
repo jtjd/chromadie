@@ -574,7 +574,7 @@
       <div class="profile-shell__approved-main">
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity" style={profileCardStyle}>
           <div class="profile-shell__surface-backdrop" aria-hidden="true"></div>
-          <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-shell__identity-boundary">
+          <ProfileBorderEffect borderKey={defaultProfilePresentation ? '' : cosmetics?.profile_border} className="profile-shell__identity-boundary">
             {#if atmosphereKey && previewMode}
               <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__card-atmosphere-layer" />
             {/if}
@@ -884,12 +884,7 @@
      or atmosphere is present, so a saved background always wins. */
   .profile-shell-page.profile-shell-page--default {
     background-color: #07152c;
-    background-image:
-      radial-gradient(circle at 12% 16%, rgba(137, 180, 250, 0.42) 0 0.07rem, transparent 0.11rem),
-      radial-gradient(circle at 34% 74%, rgba(186, 214, 255, 0.3) 0 0.06rem, transparent 0.1rem),
-      radial-gradient(circle at 67% 22%, rgba(203, 166, 247, 0.34) 0 0.07rem, transparent 0.11rem),
-      radial-gradient(circle at 86% 68%, rgba(137, 220, 235, 0.28) 0 0.06rem, transparent 0.1rem);
-    background-size: 10rem 11rem, 13rem 12rem, 11rem 13rem, 14rem 10rem;
+    background-image: none;
   }
 
   .profile-shell__opening,

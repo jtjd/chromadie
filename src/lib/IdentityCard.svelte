@@ -260,21 +260,16 @@
     padding: 1.55rem 1.25rem 1.05rem;
     border-color: color-mix(in srgb, #89b4fa 58%, rgba(255, 255, 255, 0.18));
     background-color: #08172e;
-    background-image:
-      radial-gradient(circle at 9% 18%, rgba(137, 180, 250, 0.72) 0 0.07rem, transparent 0.11rem),
-      radial-gradient(circle at 24% 72%, rgba(186, 214, 255, 0.52) 0 0.06rem, transparent 0.1rem),
-      radial-gradient(circle at 43% 34%, rgba(137, 220, 235, 0.48) 0 0.06rem, transparent 0.1rem),
-      radial-gradient(circle at 69% 14%, rgba(203, 166, 247, 0.62) 0 0.07rem, transparent 0.11rem),
-      radial-gradient(circle at 86% 64%, rgba(137, 180, 250, 0.48) 0 0.06rem, transparent 0.1rem),
-      radial-gradient(circle at 78% 88%, rgba(166, 227, 161, 0.42) 0 0.05rem, transparent 0.09rem);
-    background-size: 8rem 8rem, 11rem 10rem, 13rem 12rem, 9rem 11rem, 12rem 13rem, 10rem 9rem;
+    background-image: url('/profile-default/starfield-blue.webp');
+    background-position: center;
+    background-size: cover;
     box-shadow: 0 1.6rem 3rem rgba(2, 9, 24, 0.42), inset 0 1px 0 rgba(196, 220, 255, 0.12);
   }
 
   .identity-card--default .identity-card__person { flex: 1 1 auto; }
   .identity-card--default .identity-card__copy { display: flex; flex-direction: column; align-items: center; }
   .identity-card--default .identity-card__name-row { order: 1; }
-  .identity-card--default .identity-card__handle-row { order: 2; }
+  .identity-card--default .identity-card__handle-row { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .identity-card--default .identity-card__metadata { order: 3; }
   .identity-card--default .identity-card__bio { order: 4; }
   .identity-card--default .identity-card__metadata { justify-content: center; margin-top: 0.7rem; }

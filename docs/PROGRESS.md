@@ -6,8 +6,12 @@
   handle react immediately to palette, hex, native color, keyboard, and drag
   edits without waiting for a role switch.
 - Changed the new-profile Signal default to the focused identity composition:
-  blue starfield canvas, avatar above the name, metadata and bio in the center,
-  and structured links anchored in a compact footer.
+  a generated deep-blue nebula/starfield texture, avatar above the name,
+  metadata and bio in the center, and structured links anchored in a compact
+  footer without a visible handle line.
+- Removed the nested default border wrapper so the focused profile has one
+  perimeter, matching the reference card instead of stacking an equipped
+  border around the identity surface.
 - Kept authored backgrounds, atmospheres, saved layout variants, and server
   configuration authority unchanged; the default starfield is opt-in only
   while those custom surfaces are absent.
