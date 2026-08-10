@@ -20,6 +20,10 @@
 - Refined the compact cosmetic fitting room as a nested card with larger,
   readable controls and context-owned name preview sizing, overflow, and
   centering; browser smoke now guards those geometry bounds.
+- Matched effect-card surfaces to the Mocha inset instead of the catalog
+  canvas, normalized all name-control text metrics, and added a bounded Pixel
+  Wake dotted route; browser smoke now exercises all three name layers and all
+  four visual-effect renderers together.
 - No database migration or authority-boundary change was required.
 
 ## Replace cosmetic placeholders with live previews — 2026-08-10

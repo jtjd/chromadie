@@ -12,6 +12,9 @@ Document user-visible redesign changes by milestone.
   keyboard-aware tabs, mobile navigation, and reduced-motion support preserved.
 - The compact cosmetic fitting room now reads as a nested card, with larger
   name/effect controls and centered, uncropped name previews.
+- Effect previews now share the surrounding Mocha surface instead of showing
+  an unrelated black catalog canvas; Pixel Wake uses a curved dotted preview
+  and name-layer controls keep one consistent type scale.
 
 ## 2026-08-10 — Render real effect previews
 

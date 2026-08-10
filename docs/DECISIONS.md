@@ -30,6 +30,11 @@ The name renderer also resets the legacy catalog text margin in the
 upward while fallback text remains centered. The change is presentation-only;
 temporary try-ons and the existing Apply/equip RPC boundary are unchanged.
 
+Effect cards use a transparent renderer stage so the fitting-room inset owns
+the background. Catalog previews retain their dark catalog canvas. Pixel Wake
+uses a deterministic bounded dotted route in the card, while the real cursor
+trail renderer remains the authority for public profile behavior.
+
 ## 2026-08-10 — Effect controls render the real catalog implementation
 
 The Appearance fitting room must not represent renderer-backed cosmetics with

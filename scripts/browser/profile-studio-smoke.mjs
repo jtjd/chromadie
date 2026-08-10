@@ -238,9 +238,9 @@ try {
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
     await page.evaluate(`(async () => {
       const { userInventory } = await import('/src/lib/stores.js');
-      userInventory.update(items => [...new Set([...(Array.isArray(items) ? items : []), 'name_font_marker_tag', 'border_celestial', 'profile_atmosphere_rain_window', 'profile_atmosphere_silk_folds'])]);
+      userInventory.update(items => [...new Set([...(Array.isArray(items) ? items : []), 'name_font_marker_tag', 'name_material_blueprint_ink', 'name_motion_typewriter_name', 'avatar_effect_ghost_double', 'border_celestial', 'cursor_trail_pixel_wake', 'profile_atmosphere_rain_window', 'profile_atmosphere_silk_folds'])]);
     })()`);
-    await page.waitFor(`document.querySelector('#cosmetic-name_font option[value="name_font_marker_tag"]') && document.querySelector('#cosmetic-profile-border option[value="border_celestial"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_rain_window"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_silk_folds"]')`, 'owned cosmetic preview fixtures');
+    await page.waitFor(`document.querySelector('#cosmetic-name_font option[value="name_font_marker_tag"]') && document.querySelector('#cosmetic-name_material option[value="name_material_blueprint_ink"]') && document.querySelector('#cosmetic-name_motion option[value="name_motion_typewriter_name"]') && document.querySelector('#cosmetic-avatar-effect option[value="avatar_effect_ghost_double"]') && document.querySelector('#cosmetic-profile-border option[value="border_celestial"]') && document.querySelector('#cosmetic-cursor-trail option[value="cursor_trail_pixel_wake"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_rain_window"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_silk_folds"]')`, 'owned cosmetic preview fixtures');
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-name_font');
       select.value = 'name_font_marker_tag';
@@ -256,6 +256,21 @@ try {
       selected: document.querySelector('#cosmetic-name_font')?.value || ''
     }))()`);
     assert(fontCardState.preview && fontCardState.renderer, `Font card did not mount the production renderer: ${JSON.stringify(fontCardState)}.`);
+    await page.evaluate(`(() => {
+      for (const [id, value] of [
+        ['cosmetic-name_material', 'name_material_blueprint_ink'],
+        ['cosmetic-name_motion', 'name_motion_typewriter_name'],
+        ['cosmetic-avatar-effect', 'avatar_effect_ghost_double'],
+        ['cosmetic-profile-border', 'border_celestial'],
+        ['cosmetic-cursor-trail', 'cursor_trail_pixel_wake'],
+        ['cosmetic-profile-atmosphere', 'profile_atmosphere_rain_window']
+      ]) {
+        const select = document.getElementById(id);
+        select.value = value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    })()`);
+    await page.waitFor(`document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length === 3 && document.querySelector('[aria-label="Avatar effect preview"] .avatar-effect--ghost-double') && document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('[aria-label="Cursor trail preview"] .shop-cursor-preview--pixel-wake') && document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]')`, 'all cosmetic renderers in the fitting room');
     const nameEffectsLayout = await page.evaluate(`(() => {
       const grid = document.querySelector('.profile-cosmetics-name-grid');
       const rect = element => {
@@ -268,6 +283,8 @@ try {
         previews: [...(grid?.querySelectorAll('.profile-cosmetics-name-preview') || [])].map(preview => ({
           box: rect(preview),
           semantic: rect(preview.querySelector('.name-effect-canvas__semantic')),
+          fontSize: getComputedStyle(preview.querySelector('.name-effect-canvas__semantic')).fontSize,
+          lineHeight: getComputedStyle(preview.querySelector('.name-effect-canvas__semantic')).lineHeight,
           fallback: rect(preview.querySelector(':scope > span')),
           centerDelta: (() => {
             const box = preview.getBoundingClientRect();
@@ -280,7 +297,25 @@ try {
     })()`);
     assert(JSON.stringify(nameEffectsLayout.labels) === JSON.stringify(['Font', 'Material', 'Motion']), `Name effect labels do not match the compact reference: ${JSON.stringify(nameEffectsLayout)}.`);
     assert(nameEffectsLayout.controls.length === 3 && nameEffectsLayout.controls.every(height => height >= 36 && height <= 44), `Name effect controls are outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
-    assert(nameEffectsLayout.previews.length === 3 && nameEffectsLayout.previews.every(({ box, semantic, fallback, centerDelta }) => (box?.height || 0) >= 28 && ((semantic?.height || 0) >= 16 || (fallback?.height || 0) >= 16) && (centerDelta ?? 99) <= 4), `Name effect previews are not centered and bounded: ${JSON.stringify(nameEffectsLayout)}.`);
+    assert(nameEffectsLayout.previews.length === 3 && nameEffectsLayout.previews.every(({ box, semantic, centerDelta }) => (box?.height || 0) >= 28 && (semantic?.height || 0) >= 16 && (centerDelta ?? 99) <= 4), `Name effect previews are not centered and bounded: ${JSON.stringify(nameEffectsLayout)}.`);
+    assert(new Set(nameEffectsLayout.previews.map(({ fontSize, lineHeight }) => `${fontSize}/${lineHeight}`)).size === 1, `Name effect preview text formatting changes between slots: ${JSON.stringify(nameEffectsLayout)}.`);
+    const visualPreviewState = await page.evaluate(`(() => [...document.querySelectorAll('.profile-cosmetics-visual-preview')].map(preview => {
+      const stage = preview.querySelector('.shop-preview-area');
+      const avatar = preview.querySelector('.avatar-effect');
+      const atmosphere = preview.querySelector('.shop-atmosphere-preview');
+      const cursorRoute = preview.querySelector('.shop-cursor-preview__pixel-route');
+      return {
+        label: preview.getAttribute('aria-label') || '',
+        stageBackground: stage ? getComputedStyle(stage).backgroundColor : '',
+        avatarBackground: avatar ? getComputedStyle(avatar).backgroundColor : '',
+        atmosphereBackground: atmosphere ? getComputedStyle(atmosphere).backgroundColor : '',
+        cursorRoute: cursorRoute ? getComputedStyle(cursorRoute).display : ''
+      };
+    }))()`);
+    assert(visualPreviewState.length === 4 && visualPreviewState.every(({ stageBackground }) => stageBackground === 'rgba(0, 0, 0, 0)'), `Effect cards inherited a catalog background: ${JSON.stringify(visualPreviewState)}.`);
+    assert(visualPreviewState.find(({ label }) => label === 'Avatar effect preview')?.avatarBackground === 'rgba(0, 0, 0, 0)', `Avatar effect preview has an opaque background: ${JSON.stringify(visualPreviewState)}.`);
+    assert(visualPreviewState.find(({ label }) => label === 'Profile atmosphere preview')?.atmosphereBackground === 'rgba(0, 0, 0, 0)', `Atmosphere preview has an opaque background: ${JSON.stringify(visualPreviewState)}.`);
+    assert(visualPreviewState.find(({ label }) => label === 'Cursor trail preview')?.cursorRoute === 'block', `Pixel Wake cursor preview did not mount its dotted route: ${JSON.stringify(visualPreviewState)}.`);
     assert((nameEffectsLayout.grid?.height || 0) >= 80 && (nameEffectsLayout.grid?.height || 0) <= 104, `Name effect row is outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-profile-border');
@@ -303,7 +338,7 @@ try {
     await page.evaluate(`document.querySelector('#customize-effects')?.scrollIntoView({ block: 'start' })`);
     await capture('05-effects-live-preview');
     await page.evaluate(`(() => {
-      for (const id of ['cosmetic-name_font', 'cosmetic-profile-border', 'cosmetic-profile-atmosphere']) {
+      for (const id of ['cosmetic-name_font', 'cosmetic-name_material', 'cosmetic-name_motion', 'cosmetic-avatar-effect', 'cosmetic-profile-border', 'cosmetic-cursor-trail', 'cosmetic-profile-atmosphere']) {
         const select = document.getElementById(id);
         select.value = '';
         select.dispatchEvent(new Event('change', { bubbles: true }));
