@@ -54,6 +54,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /id="customize-widgets"[\s\S]*Provider Widgets/);
   assert.match(customize, /id="customize-effects"[\s\S]*Effects Customization/);
   assert.match(customize, /profile-cosmetics-controls\) \{ display: grid; grid-template-columns: repeat\(4/);
+  assert.match(customize, /id="customize-effects"[\s\S]*id="customize-layout"/);
   assert.match(customize, /Profile media/);
   assert.match(customize, /compact=\{true\}/);
   assert.doesNotMatch(customize, /Quick jump/);

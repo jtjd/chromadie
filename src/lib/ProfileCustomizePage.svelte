@@ -123,6 +123,32 @@
     </div>
   </section>
 
+  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
+    <div class="profile-customize-page__surface-heading">
+      <h3 id="profile-customize-effects-title">Effects Customization</h3>
+    </div>
+    <div class="profile-customize-page__editor">
+      {#if collectionComponent}
+        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} />
+      {:else}
+        <div class="profile-customize-page__loading" role="status">Loading effects controls…</div>
+      {/if}
+    </div>
+  </section>
+
+  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-templates-title" data-editor-section="layout" id="customize-layout">
+    <div class="profile-customize-page__surface-heading">
+      <h3 id="profile-customize-templates-title">Templates</h3>
+    </div>
+    <div class="profile-customize-page__editor">
+      {#if layoutComponent}
+        <svelte:component this={layoutComponent} bind:this={layoutEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} showLinks={false} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+      {:else}
+        <div class="profile-customize-page__loading" role="status">Loading template controls…</div>
+      {/if}
+    </div>
+  </section>
+
   <section class="profile-customize-page__surface" aria-labelledby="profile-customize-other-title" data-editor-section="other" id="customize-other">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-other-title">Other Customization</h3>
@@ -141,17 +167,6 @@
         {/if}
       </section>
 
-      <section class="profile-customize-page__control" aria-labelledby="profile-customize-layout-title" data-editor-section="layout" id="customize-layout">
-        <div class="profile-customize-page__control-heading">
-          <div><span class="profile-customize-page__control-kicker">Composition</span><h4 id="profile-customize-layout-title">Layout and templates</h4></div>
-          <span aria-hidden="true">05</span>
-        </div>
-        {#if layoutComponent}
-          <svelte:component this={layoutComponent} bind:this={layoutEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} showLinks={false} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
-        {:else}
-          <div class="profile-customize-page__loading" role="status">Loading layout controls…</div>
-        {/if}
-      </section>
     </div>
   </section>
 
@@ -168,18 +183,6 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
-    <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-effects-title">Effects Customization</h3>
-    </div>
-    <div class="profile-customize-page__editor">
-      {#if collectionComponent}
-        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} />
-      {:else}
-        <div class="profile-customize-page__loading" role="status">Loading effects controls…</div>
-      {/if}
-    </div>
-  </section>
 </div>
 
 <style>
@@ -208,6 +211,7 @@
   .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); --customize-section-surface: var(--ctp-base, #1e1e2e); }
   .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); --customize-section-surface: var(--ctp-mantle, #181825); }
   .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); --customize-section-surface: var(--ctp-base, #1e1e2e); }
+  .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: var(--ctp-lavender, #b4befe); --customize-section-surface: var(--ctp-mantle, #181825); }
   .profile-customize-page__surface--assets { padding: 1rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-width: 0; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: color-mix(in srgb, var(--customize-section-accent) 76%, var(--site-ink, #f2f0eb)); font-size: 1.05rem; letter-spacing: -.03em; }
@@ -227,7 +231,7 @@
   .profile-customize-page__control-grid--other { align-items: start; gap: .55rem .7rem; }
   .profile-customize-page__control { display: block; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; scroll-margin-top: 5rem; }
   .profile-customize-page__control-heading { display: none; }
-  .profile-customize-page__control[data-editor-section="content"], .profile-customize-page__control[data-editor-section="layout"] { grid-column: 1 / -1; }
+  .profile-customize-page__control[data-editor-section="content"] { grid-column: 1 / -1; }
   .profile-customize-page__editor { min-width: 0; }
   .profile-customize-page__loading { display: grid; min-height: 7rem; place-items: center; color: var(--customize-muted); font-size: .82rem; }
 
