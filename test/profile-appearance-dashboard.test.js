@@ -43,28 +43,34 @@ test('appearance v1 is bounded and independent from daily roll color', () => {
 });
 
 test('dashboard uses its self-contained shell and aggregate profile action contract', async () => {
-  const [app, settings, appearance, layout, migration, shell, actions] = await Promise.all([
+  const [app, settings, contract, registry, workspace, preview, header, appearance, layout, migration, shell, actions] = await Promise.all([
     read('src/App.svelte'),
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/dashboardContract.js'),
+    read('src/lib/profile-studio/sectionRegistry.js'),
+    read('src/lib/ProfileStudioWorkspace.svelte'),
+    read('src/lib/ProfileStudioPreview.svelte'),
+    read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileEditor.svelte'),
     read('supabase/migrations/20260808220000_profile_configuration_v2.sql'),
     read('src/lib/ProfileDashboardShell.svelte'),
     read('src/lib/ProfileDashboardActions.svelte')
   ]);
+  const studio = [settings, contract, registry, workspace, preview, header].join('\n');
   assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible\}/);
-  assert.match(settings, /<ProfileAccountSettings/);
-  assert.match(settings, /id: 'customize'/);
-  assert.match(settings, /id: 'links'/);
-  assert.match(settings, /id: 'premium'/);
-  assert.match(settings, /groupLabel: 'Account'/);
-  assert.match(settings, /customize: 'customize'/);
-  assert.match(settings, /LEGACY_SECTION_ROUTES/);
-  assert.match(settings, /id: 'profile-social'/);
-  assert.match(settings, /popstate/);
-  assert.match(settings, /history\.pushState/);
-  assert.match(settings, /import\('\.\/ProfileShell\.svelte'\)/);
-  assert.match(settings, /previewIdentityOnly=\{true\}/);
+  assert.match(registry, /id: 'account', destination: 'account',[\s\S]*ProfileAccountSettings\.svelte/);
+  assert.match(studio, /id: 'customize'/);
+  assert.match(studio, /id: 'links'/);
+  assert.match(studio, /id: 'premium'/);
+  assert.match(studio, /groupLabel: 'Account'/);
+  assert.match(studio, /customize: 'customize'/);
+  assert.match(studio, /LEGACY_SECTION_ROUTES/);
+  assert.match(studio, /id: 'profile-social'/);
+  assert.match(studio, /popstate/);
+  assert.match(studio, /history\.pushState/);
+  assert.match(studio, /import\('\.\/ProfileShell\.svelte'\)/);
+  assert.match(studio, /previewIdentityOnly=\{true\}/);
   assert.doesNotMatch(appearance, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(layout, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.match(settings, /save_profile_configuration_v2/);

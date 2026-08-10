@@ -1,5 +1,23 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Make Profile Studio component-owned
+
+Profile Studio is now organized as a route/state adapter around explicit
+dashboard owners: shell/navigation, header/actions, destination workspace,
+persistent Live preview, and the dirty-state prompt. `ProfileSettings.svelte`
+keeps route compatibility, draft state, and the existing save/publish/upload,
+equip, and account mutation boundaries; it no longer owns the dashboard's
+destination markup or presentation CSS.
+
+The dashboard contract normalizes canonical destinations while preserving
+legacy hashes and direct-refresh behavior. A section registry describes
+destination ownership and lazy editor loading, and one draft projection
+composes identity, appearance, content, media, layout, and cosmetic try-ons for
+immediate Live preview updates. Preview renderers receive explicit
+`live-profile`, `catalog`, `effect-card`, or `name-control` contexts so compact
+fitting-room geometry cannot inherit catalog sizing. No schema, RLS, RPC, or
+public-profile authority boundary changes are part of this refactor.
+
 ## 2026-08-10 — Effect controls render the real catalog implementation
 
 The Appearance fitting room must not represent renderer-backed cosmetics with

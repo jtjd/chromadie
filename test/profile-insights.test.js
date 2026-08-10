@@ -116,11 +116,13 @@ test('denied or malformed profile views never invoke the recorder', async () => 
 });
 
 test('profile insights preserve the privacy and dashboard boundaries', async () => {
-  const [recorder, shell, component, settings, migration] = await Promise.all([
+  const [recorder, shell, component, settings, registry, contract, migration] = await Promise.all([
     read('src/lib/profileViewAnalytics.js'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileInsights.svelte'),
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/sectionRegistry.js'),
+    read('src/lib/profile-studio/dashboardContract.js'),
     read('supabase/migrations/20260808170000_profile_insights.sql')
   ]);
 
@@ -131,9 +133,9 @@ test('profile insights preserve the privacy and dashboard boundaries', async () 
   assert.match(component, /update_my_profile_insights_settings/);
   assert.match(component, /Visitor identities, IP addresses, and exact visit times are never stored/);
   assert.match(component, /prefers-reduced-motion/);
-  assert.match(settings, /'profile-insights': \(\) => import\('\.\/ProfileInsights\.svelte'\)/);
-  assert.match(settings, /id: 'profile-insights'/);
-  assert.match(settings, /insights: 'profile-insights'/);
+  assert.match(registry, /id: 'profile-insights'/);
+  assert.match(registry, /ProfileInsights\.svelte/);
+  assert.match(contract, /insights: 'profile-insights'/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.profile_view_daily/);
   assert.match(migration, /ALTER TABLE public\.profile_view_daily ENABLE ROW LEVEL SECURITY/);
   assert.match(migration, /REVOKE ALL ON TABLE public\.profile_view_daily FROM PUBLIC, anon, authenticated/);

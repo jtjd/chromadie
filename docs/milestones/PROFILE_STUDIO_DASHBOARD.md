@@ -28,6 +28,24 @@ currency. Old `#profile-*` and short-form settings hashes map to Customize or
 Links as appropriate, and the `/profile?legacy=1` escape hatch remains
 available.
 
+## Architecture refactor follow-up
+
+The dashboard is now an incremental component-owned architecture. The route
+adapter retains navigation restoration, draft state, compatibility aliases,
+before-unload handling, and the existing server mutation calls. Shell/sidebar,
+header/actions, destination workspace, persistent Live preview, and dirty-state
+prompt each own their markup and presentation boundaries.
+
+The dashboard contract and section registry centralize destination/hash
+normalization and editor ownership. A draft projection composes identity,
+appearance, content, media, layout, and cosmetic drafts into the preview model.
+Renderer contexts explicitly distinguish `live-profile`, `catalog`,
+`effect-card`, and `name-control` geometry. Customize-specific layout rules now
+live with the editor that owns the corresponding surface; standalone Links and
+catalog rendering retain their existing contexts. The refactor is schema-free
+and leaves save, publish, upload, equip, account RPCs, RLS, and public profile
+rendering contracts intact.
+
 ## Next progression slice
 
 The next backend change should extend the existing transactional roll path,
@@ -87,17 +105,20 @@ affect only the translucent card while the page outside it stays sharp.
 
 ## Validation
 
-- `npm test`: 262 passing, including shared profile-color role/HSV picker and
+- `npm test`: 266 passing, including routing, draft aggregation, renderer
+  context, dashboard ownership, shared profile-color role/HSV picker, and
   focused default-profile presentation coverage.
 - `npm run build`, `npm run check`, `npx eslint src/`, links, CSP, username
   policy, balance, catalog, scoring parity, and database security: passing.
 - `npm run check:performance`: all blocking route and asset budgets pass;
-  aggregate JavaScript and CSS catalogs remain advisory overages.
+  dashboard JavaScript is 526.81 kB/528.00 kB; aggregate JavaScript and CSS
+  catalogs remain advisory overages.
 - `npm run test:browser`: passing for authenticated Studio refresh, aliases,
   collapsed/open/closed preview, published appearance updates, balanced
-  General Customization geometry, maximum surface blur, mobile drawer, reduced
-  motion, canonical public profile refresh, and the default blue-starfield
-  identity card with avatar-first focus composition.
+  General Customization geometry, Layout workspace geometry, maximum surface
+  blur, mobile drawer and focus restoration, reduced motion, canonical public
+  profile refresh, and the default blue-starfield identity card with
+  avatar-first focus composition.
 
 The latest presentation pass remains additive and schema-free. The picker
 marker is derived from the same selected-role HSV value as its controls, and

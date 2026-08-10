@@ -496,7 +496,7 @@
   :global(.rich-media-editor--compact) { display: contents; }
   :global(.rich-media-editor--compact > .foundation-module__header) { display: none; }
   :global(.rich-media-editor--compact > .foundation-module__body) { display: contents; }
-  .rich-media-editor__compact-card { display: grid; align-content: start; gap: .55rem; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .rich-media-editor__compact-card { display: grid; grid-template-rows: minmax(1.05rem, auto) minmax(5.7rem, auto) auto; align-content: start; gap: .55rem; min-width: 0; padding: .65rem; border: 1px solid color-mix(in srgb, var(--customize-border, var(--color-line-subtle)) 66%, transparent); border-radius: var(--customize-radius, .38rem); background: var(--customize-surface-inset, var(--surface-inset)); }
   .rich-media-editor__compact-card--audio { order: 2; }
   .rich-media-editor__compact-card--cursor { order: 4; }
   .rich-media-editor__compact-card--locked { opacity: .72; }
@@ -505,6 +505,7 @@
   .rich-media-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .rich-media-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
+  .rich-media-editor__compact-preview:hover:not(:disabled) { border-color: var(--ctp-green, #a6e3a1); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ctp-green, #a6e3a1) 54%, transparent); }
   .rich-media-editor__compact-preview img { width: 4rem; height: 4rem; object-fit: contain; }
   .rich-media-editor__cursor-badge { display: grid; width: 4rem; height: 4rem; place-items: center; border: 1px solid color-mix(in srgb, var(--ctp-green, #a6e3a1) 58%, var(--color-line-subtle)); border-radius: .45rem; background: color-mix(in srgb, var(--ctp-green, #a6e3a1) 12%, var(--surface-inset)); color: var(--ctp-green, #a6e3a1); font: 750 .76rem/1 var(--customize-font-mono, var(--font-mono-stack, monospace)); letter-spacing: .08em; }
   .rich-media-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }

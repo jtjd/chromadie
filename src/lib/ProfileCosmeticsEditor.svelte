@@ -2,6 +2,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import Surface from './foundation/Surface.svelte';
   import ShopItemPreview from './ShopItemPreview.svelte';
+  import { PROFILE_RENDER_CONTEXTS } from './profile-studio/previewContexts.js';
   import {
     addToast,
     equippedItems,
@@ -27,6 +28,7 @@
   export let profileConfig = null;
   export let entitlements = [];
   export let staff = false;
+  export let compact = false;
 
   const dispatch = createEventDispatcher();
   let previewLoadout = /** @type {Record<string, string>} */ ({});
@@ -142,7 +144,7 @@
   }
 </script>
 
-<Surface variant="panel" padding="lg" className="profile-cosmetics-surface">
+<Surface variant="panel" padding="lg" className={compact ? 'profile-cosmetics-surface profile-cosmetics-surface--compact' : 'profile-cosmetics-surface'}>
   <section aria-labelledby="profile-cosmetics-title">
     <div class="profile-cosmetics-heading">
       <div>
@@ -199,7 +201,7 @@
                     </select>
                     <div class="profile-cosmetics-name-preview" aria-label={`${NAME_SLOT_LABELS[slot]} preview`}>
                       {#if previewItems[slot]}
-                        <ShopItemPreview item={previewItems[slot]} {username} {displayColor} {avatarSrc} active={true} />
+                        <ShopItemPreview item={previewItems[slot]} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.NAME_CONTROL} />
                       {:else}
                         <span>{username}</span>
                       {/if}
@@ -218,7 +220,7 @@
           <div class="profile-cosmetics-visual-grid">
             <div class="profile-cosmetics-slot">
               <div class="profile-cosmetics-visual-preview" aria-label="Avatar effect preview">
-                {#if previewItems.avatar_effect}<ShopItemPreview item={previewItems.avatar_effect} {username} {displayColor} {avatarSrc} active={true} />{:else}<span class="profile-cosmetics-empty-preview">No effect</span>{/if}
+                {#if previewItems.avatar_effect}<ShopItemPreview item={previewItems.avatar_effect} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.EFFECT_CARD} />{:else}<span class="profile-cosmetics-empty-preview">No effect</span>{/if}
               </div>
               <div>
                 <label for="cosmetic-avatar-effect">Avatar effect</label>
@@ -231,7 +233,7 @@
 
             <div class="profile-cosmetics-slot">
               <div class="profile-cosmetics-visual-preview" aria-label="Profile border preview">
-                {#if previewItems.profile_border}<ShopItemPreview item={previewItems.profile_border} {username} {displayColor} {avatarSrc} active={true} />{:else}<span class="profile-cosmetics-empty-preview">No border</span>{/if}
+                {#if previewItems.profile_border}<ShopItemPreview item={previewItems.profile_border} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.EFFECT_CARD} />{:else}<span class="profile-cosmetics-empty-preview">No border</span>{/if}
               </div>
               <div>
                 <label for="cosmetic-profile-border">Profile border</label>
@@ -246,7 +248,7 @@
 
             <div class="profile-cosmetics-slot">
               <div class="profile-cosmetics-visual-preview" aria-label="Cursor trail preview">
-                {#if previewItems.cursor_trail}<ShopItemPreview item={previewItems.cursor_trail} {username} {displayColor} {avatarSrc} active={true} />{:else}<span class="profile-cosmetics-empty-preview">No trail</span>{/if}
+                {#if previewItems.cursor_trail}<ShopItemPreview item={previewItems.cursor_trail} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.EFFECT_CARD} />{:else}<span class="profile-cosmetics-empty-preview">No trail</span>{/if}
               </div>
               <div>
                 <label for="cosmetic-cursor-trail">Cursor trail</label>
@@ -259,7 +261,7 @@
 
             <div class="profile-cosmetics-slot">
               <div class="profile-cosmetics-visual-preview" aria-label="Profile atmosphere preview">
-                {#if previewItems.profile_atmosphere}<ShopItemPreview item={previewItems.profile_atmosphere} {username} {displayColor} {avatarSrc} active={true} />{:else}<span class="profile-cosmetics-empty-preview">No atmosphere</span>{/if}
+                {#if previewItems.profile_atmosphere}<ShopItemPreview item={previewItems.profile_atmosphere} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.EFFECT_CARD} />{:else}<span class="profile-cosmetics-empty-preview">No atmosphere</span>{/if}
               </div>
               <div>
                 <label for="cosmetic-profile-atmosphere">Profile atmosphere</label>
@@ -308,6 +310,23 @@
     width: 100%;
     box-sizing: border-box;
   }
+  :global(.profile-cosmetics-surface--compact) { padding: .65rem 0; border: 0; border-top: 1px solid var(--cosmetics-border); border-radius: 0; background: transparent; box-shadow: none; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-heading { display: none; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-plus-guide { display: none; grid-template-columns: 1fr; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-controls { grid-template-columns: minmax(0, 1fr); gap: .45rem .65rem; padding: .25rem 0 0; border: 0; background: transparent; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-controls__heading { display: none; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-slot { padding: .55rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--cosmetics-inset); }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid .profile-cosmetics-slot { padding: 0; border: 0; background: transparent; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-slot { position: relative; align-content: start; gap: .45rem; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-slot::before { content: ''; position: absolute; top: .45rem; left: .45rem; z-index: 1; width: .34rem; height: .34rem; border-radius: 50%; background: var(--cosmetics-save); }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-slot select { min-height: 2.25rem; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid .profile-cosmetics-slot label { margin-bottom: .15rem; font-size: .6rem; line-height: 1.1; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid .profile-cosmetics-name-preview { height: 1.4rem; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-section-heading,
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid,
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid,
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-apply { grid-column: 1 / -1; }
   .profile-cosmetics-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .profile-cosmetics-heading h2 { margin: 0; color: var(--cosmetics-text); font: 600 var(--customize-subheading-size, .88rem) / 1.25 var(--cosmetics-body); }
   .profile-cosmetics-heading p { max-width: 42rem; margin: .35rem 0 0; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); line-height: 1.45; }
@@ -342,14 +361,14 @@
   .profile-cosmetics-name-control { position: relative; min-width: 0; }
   .profile-cosmetics-name-preview { position: absolute; right: .55rem; top: 50%; display: flex; width: min(42%, 7.5rem); height: 1.55rem; align-items: center; justify-content: flex-end; overflow: hidden; pointer-events: none; transform: translateY(-50%); }
   .profile-cosmetics-name-preview > span { display: grid; height: 100%; place-items: center end; overflow: hidden; color: var(--ctp-lavender, #b4befe); font: 700 .86rem/1.1 var(--cosmetics-body); text-overflow: ellipsis; white-space: nowrap; }
-  .profile-cosmetics-name-preview :global(.shop-preview-area) { display: flex; width: 100%; height: 100%; min-height: 0; align-items: center; justify-content: flex-end; aspect-ratio: auto; padding: 0; border-radius: 0; background: transparent; }
+  .profile-cosmetics-name-preview :global(.shop-preview-area[data-render-context="name-control"]) { display: flex; width: 100%; height: 100%; min-height: 0; align-items: center; justify-content: flex-end; }
   .profile-cosmetics-name-preview :global(.shop-preview-text) { display: flex; width: 100%; height: 100%; align-items: center; justify-content: flex-end; padding: 0; }
   .profile-cosmetics-name-preview :global(.name-effect-canvas) { display: flex; width: 100%; height: 100%; align-items: center; justify-content: flex-end; text-align: right; }
-  .profile-cosmetics-name-preview :global(.name-effect-canvas__semantic) { font-size: .86rem !important; line-height: 1.1 !important; }
   .profile-cosmetics-name-control select { padding-right: 4.5rem; }
+  .profile-cosmetics-name-grid .profile-cosmetics-slot select { height: 1.65rem; min-height: 1.65rem; padding: .2rem 4.5rem .2rem .55rem; font-size: .72rem; line-height: 1; }
   .profile-cosmetics-name-grid .profile-cosmetics-slot + .profile-cosmetics-slot { margin-left: .45rem; padding-left: .55rem; border-left: 1px solid var(--cosmetics-border); }
   .profile-cosmetics-visual-preview { position: relative; display: grid; width: 100%; height: 4.25rem; min-height: 4.25rem; place-items: stretch; overflow: hidden; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--ctp-mantle, #181825); }
-  .profile-cosmetics-visual-preview :global(.shop-preview-area) { width: 100% !important; height: 100% !important; min-height: 0 !important; aspect-ratio: auto !important; padding: .35rem !important; border-radius: 0; }
+  .profile-cosmetics-visual-preview :global(.shop-preview-area[data-render-context="effect-card"]) { width: 100%; height: 100%; min-height: 0; }
   .profile-cosmetics-visual-preview :global(.shop-avatar-preview) { width: 3.8rem; height: 3.8rem; }
   .profile-cosmetics-visual-preview :global(.shop-avatar-preview .avatar-effect) { width: 3.2rem; height: 3.2rem; }
   .profile-cosmetics-visual-preview :global(.shop-cursor-preview) { width: 92%; height: 100%; min-height: 0; }

@@ -14,6 +14,7 @@
   export let staff = false;
   export let showLayout = true;
   export let showLinks = true;
+  export let studio = false;
 
   const dispatch = createEventDispatcher();
   const MODULE_LABELS = Object.freeze({
@@ -180,7 +181,7 @@
   }
 </script>
 
-<section class="profile-editor" aria-labelledby="profile-layout-title">
+<section class="profile-editor" class:profile-editor--studio={studio} aria-labelledby="profile-layout-title">
   <header class="profile-editor__header">
     <div><h2 id="profile-layout-title">{showLayout && showLinks ? 'Layout & links' : showLayout ? 'Layout & templates' : 'Links & sharing'}</h2><p>{showLayout && showLinks ? 'Arrange sections and links.' : showLayout ? 'Choose a template and arrange sections.' : 'Manage links and sharing.'}</p></div>
     <span class="profile-editor__version">Public layout: {STYLE_LABELS[normalizeProfileConfig(publishedConfig).layoutVariant]}</span>
@@ -339,6 +340,26 @@
   .profile-editor__message[role="alert"] { color: var(--editor-danger); }
   .profile-editor__message[role="status"] { color: var(--editor-primary); }
 
+  /* Layout is also used by Links. Keep the reference two-column composition
+   * opt-in so this editor remains a stable standalone destination there. */
+  .profile-editor--studio { grid-template-columns: minmax(0, 1.6fr) minmax(18rem, .8fr); gap: .8rem 1rem; }
+  .profile-editor--studio .profile-editor__header { display: none; }
+  .profile-editor--studio .profile-editor__panel,
+  .profile-editor--studio .profile-editor__module-list,
+  .profile-editor--studio .profile-editor__links,
+  .profile-editor--studio .profile-editor__link-style,
+  .profile-editor--studio .profile-editor__metadata,
+  .profile-editor--studio .profile-editor__message,
+  .profile-editor--studio .profile-editor__hint { grid-column: 1 / -1; }
+  .profile-editor--studio .profile-editor__panel { gap: .6rem; padding: .5rem 0; }
+  .profile-editor--studio .profile-editor__layout-options { gap: .85rem; padding: .85rem; border: 1px solid var(--editor-border); border-radius: var(--editor-radius); background: var(--editor-inset); }
+  .profile-editor--studio .profile-editor__layout-options[aria-labelledby="profile-layout-style-title"] { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
+  .profile-editor--studio .profile-editor__panel[aria-labelledby="profile-layout-modules-title"] { display: none; }
+  .profile-editor--studio > section[aria-labelledby="profile-layout-modules-title"] { display: none; }
+  .profile-editor--studio .profile-editor__module-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .profile-editor--studio :global(.profile-template-picker) { grid-column: 1; }
+  .profile-editor--studio :global(.profile-template-picker__premium) { display: none; }
+
   .profile-editor :global(.profile-template-picker) { display: grid; gap: .65rem; padding: .45rem 0 .75rem; border: 0; border-bottom: 1px solid var(--editor-border); border-radius: 0; background: transparent; font-family: var(--editor-body); }
   .profile-editor :global(.profile-template-picker__heading) { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
   .profile-editor :global(.profile-template-picker h3) { margin: 0; color: var(--editor-text); font: 600 var(--editor-heading-size)/1.25 var(--editor-body); }
@@ -371,5 +392,9 @@
     .profile-editor :global(.profile-template-picker__grid) { grid-template-columns: 1fr; }
     .profile-editor :global(.profile-template-picker__card small) { min-height: 0; }
     .profile-editor :global(.profile-template-picker__premium) { align-items: flex-start; flex-direction: column; }
+  }
+  @media (max-width: 72rem) {
+    .profile-editor--studio { grid-template-columns: minmax(0, 1fr); }
+    .profile-editor--studio .profile-editor__layout-options[aria-labelledby="profile-layout-style-title"] { grid-column: 1; grid-row: auto; }
   }
 </style>

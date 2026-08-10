@@ -5,8 +5,13 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate Customize, Links, and Premium destinations', async () => {
-  const [settings, customize, premium, shell, dashboardIcon, editor, expression, richMedia, identity, appearance, appearanceColors, content, widgets, cosmetics] = await Promise.all([
+  const [settings, contract, registry, workspace, header, preview, customize, premium, shell, dashboardIcon, editor, expression, richMedia, identity, appearance, appearanceColors, content, widgets, cosmetics] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/dashboardContract.js'),
+    read('src/lib/profile-studio/sectionRegistry.js'),
+    read('src/lib/ProfileStudioWorkspace.svelte'),
+    read('src/lib/ProfileStudioHeader.svelte'),
+    read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
     read('src/lib/ProfileDashboardShell.svelte'),
@@ -21,16 +26,17 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
     read('src/lib/ProfileWidgetEditor.svelte'),
     read('src/lib/ProfileCosmeticsEditor.svelte')
   ]);
+  const studio = [settings, contract, registry, workspace, header, preview].join('\n');
 
-  for (const id of ['customize', 'links', 'premium']) assert.match(settings, new RegExp(`id: '${id}'`));
-  assert.match(settings, /groupLabel: 'Account'/);
-  assert.match(settings, /CUSTOMIZE_SECTION_IDS/);
-  assert.match(settings, /LINKS_SECTION_IDS/);
-  assert.match(settings, /LEGACY_HASH_ALIASES/);
-  assert.match(settings, /import\('\.\/ProfileCustomizePage\.svelte'\)/);
-  assert.match(settings, /this=\{sectionComponents\.customize\}/);
+  for (const id of ['customize', 'links', 'premium']) assert.match(studio, new RegExp(`id: '${id}'`));
+  assert.match(studio, /groupLabel: 'Account'/);
+  assert.match(studio, /CUSTOMIZE_SECTION_IDS/);
+  assert.match(studio, /LINKS_SECTION_IDS/);
+  assert.match(studio, /LEGACY_HASH_ALIASES/);
+  assert.match(studio, /PROFILE_STUDIO_SECTION_LOADERS/);
+  assert.match(studio, /this=\{sectionComponents\.customize\}/);
   assert.match(settings, /on:identitysaved=\{updateIdentity\}/);
-  assert.match(settings, /identityPresentation: nextPresentation/);
+  assert.match(studio, /identityPresentation: nextPresentation/);
   assert.match(shell, /data-section=\{section\.id\}/);
   assert.match(shell, /ProfileDashboardIcon name=\{section\.id\}/);
   assert.match(shell, /profile-dashboard-shell__owner/);
@@ -55,12 +61,13 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(identity, /incomingKey/);
   assert.match(identity, /identity-editor__grid--meta/);
   assert.match(identity, /identity-editor__grid--behavior/);
-  assert.match(customize, /identity-editor__fields\) \{ display: contents; \}/);
-  assert.match(customize, /identity-editor__field--username/);
-  assert.match(customize, /identity-editor__field\[for="profile-bio"\]\) \{ grid-column: 1 \/ span 2; grid-row: 2 \/ span 2;/);
-  assert.match(customize, /identity-editor__options\) \{ display: flex; grid-column: 1 \/ span 2; grid-row: 4;/);
-  assert.match(customize, /identity-editor__grid--meta \.identity-editor__field:first-child/);
-  assert.match(customize, /identity-editor__grid--behavior \.identity-editor__field:first-child/);
+  assert.match(identity, /identity-editor--studio/);
+  assert.match(identity, /identity-editor__fields\) \{ display: contents; \}/);
+  assert.match(identity, /identity-editor__field--username/);
+  assert.match(identity, /identity-editor__field\[for="profile-bio"\]\) \{ grid-column: 1 \/ span 2; grid-row: 2 \/ span 2;/);
+  assert.match(identity, /identity-editor__options\) \{ display: flex; grid-column: 1 \/ span 2; grid-row: 4;/);
+  assert.match(identity, /identity-editor__grid--meta \.identity-editor__field:first-child/);
+  assert.match(identity, /identity-editor__grid--behavior \.identity-editor__field:first-child/);
   assert.match(customize, /profile-customize-page__control-grid--other/);
   assert.match(customize, /profile-content-editor__panel:first-of-type \.profile-content-editor__fields/);
   for (const label of ['Profile text', 'Handle & metadata', 'Username', 'Bio text', 'Page background', 'Profile surface', 'Accent']) {
@@ -75,20 +82,20 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(appearance, /appearance-surface-title[\s\S]*Profile surface[\s\S]*Opacity[\s\S]*Blur/);
   assert.match(appearance, /Profile colors/);
   assert.doesNotMatch(appearance, /\['surface', 'Profile Surface'\]/);
-  assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
+  assert.match(studio, /ProfilePremiumPage\.svelte/);
   for (const section of ['media', 'identity', 'appearance', 'content', 'widgets', 'effects', 'layout']) {
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));
   }
   assert.match(customize, /id="customize-widgets"[\s\S]*Provider Widgets/);
   assert.match(customize, /aria-label="Visual effects"[^>]*id="customize-effects"/);
-  assert.match(customize, /profile-cosmetics-controls\) \{ display: grid; grid-template-columns: repeat\(4/);
+  assert.match(cosmetics, /profile-cosmetics-surface--compact/);
   assert.match(customize, /id="customize-effects"[\s\S]*id="customize-layout"/);
   assert.match(customize, /Profile media/);
   assert.match(customize, /compact=\{true\}/);
   assert.doesNotMatch(customize, /Quick jump/);
   assert.doesNotMatch(customize, /01 \/ Assets uploader/);
   assert.doesNotMatch(customize, /Click an asset to upload/);
-  assert.match(settings, /activeSection !== 'customize'/);
+  assert.match(header, /activeSection !== 'customize'/);
   assert.match(settings, /previewAvailable = activeSection === 'links'/);
   assert.match(expression, /profile-expression-editor__compact-grid/);
   assert.match(expression, /profile-expression-editor__compact-upload-hint/);
@@ -97,15 +104,15 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(expression, /profile-expression-editor__compact-audio-player/);
   assert.match(expression, /compact-preview--avatar \{ border-color: var\(--media-line\)/);
   assert.match(expression, /compact-preview[\s\S]*border: 1px solid var\(--media-line\)/);
-  assert.match(customize, /profile-cosmetics-controls__heading\) \{ display: none; \}/);
+  assert.match(cosmetics, /\.profile-cosmetics-controls__heading \{ display: none; \}/);
   assert.match(richMedia, /export let compact = false/);
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);
   assert.match(customize, /Chromadie Plus/);
-  assert.match(settings, /role="tablist" aria-label="Customize profile"/);
-  assert.match(settings, /Appearance[\s\S]*Media[\s\S]*Layout/);
-  assert.doesNotMatch(settings, /\{ id: 'effects', label: 'Effects'/);
-  assert.match(settings, /'customize-effects': 'appearance'/);
+  assert.match(studio, /role="tablist" aria-label="Customize profile"/);
+  assert.match(studio, /Appearance[\s\S]*Media[\s\S]*Layout/);
+  assert.doesNotMatch(studio, /\{ id: 'effects', label: 'Effects'/);
+  assert.match(studio, /'customize-effects': 'appearance'/);
   assert.match(customize, /export let activeTab = 'appearance'/);
   assert.match(customize, /premiumrequest/);
   assert.match(customize, /ProfileAppearanceEditor/);
@@ -115,19 +122,18 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /--customize-section-surface: var\(--studio-panel/);
   assert.match(customize, /--customize-section-input: var\(--customize-control-surface\)/);
   assert.match(customize, /--customize-primary-height: 2\.25rem/);
-  assert.match(customize, /profile-expression-editor__compact-grid.*gap: 1\.75rem/);
+  assert.match(expression, /profile-expression-editor__compact-grid[\s\S]*grid-template-columns: minmax\(0, \.9fr\)[\s\S]*gap: \.65rem/);
   assert.doesNotMatch(customize, /gradient/);
   assert.match(customize, /min-height: 5\.6rem/);
   assert.match(customize, /font: 600 \.94rem\/1\.35/);
   assert.doesNotMatch(customize, /premium-arrow/);
-  assert.match(customize, /profile-media-icon\) \{ width: 2\.35rem; height: 2\.35rem/);
-  assert.match(expression, /gap: 1\.75rem !important/);
+  assert.match(expression, /profile-media-icon\) \{ width: 2\.35rem; height: 2\.35rem/);
   assert.match(expression, /min-height: 5\.7rem/);
   assert.match(expression, /font-size: \.92rem/);
   assert.match(richMedia, /async function removeCursor/);
   assert.match(richMedia, /saveSelection\(\{ cursor_id: null \}\)/);
   assert.match(richMedia, /rich-media-editor__compact-remove/);
-  assert.match(customize, /rich-media-editor__compact-card--cursor \.rich-media-editor__compact-preview:hover:not\(:disabled\)/);
+  assert.match(richMedia, /rich-media-editor__compact-preview:hover:not\(:disabled\)/);
   assert.doesNotMatch(customize, /--customize-section-surface: var\(--customize-surface-alt\)/);
   assert.match(customize, /--customize-section-input/);
   assert.match(customize, /--customize-section-input-line/);
@@ -150,7 +156,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.doesNotMatch(richMedia, /Unlock richer expression/);
   assert.match(expression, /Chromadie Plus/);
   assert.match(richMedia, /Chromadie Plus/);
-  assert.match(customize, /profile-customize-page :global\(\.profile-cosmetics-apply\) \{ min-height: var\(--customize-primary-height/);
+  assert.match(cosmetics, /\.profile-cosmetics-apply \{ grid-column: 1 \/ -1; \}/);
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);
   assert.match(customize, /profile-collection/);
@@ -160,7 +166,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(shell, /profile-dashboard-shell__brand/);
   assert.match(settings, /ownerUsername=\{accountUsername\}/);
   assert.match(settings, /ownerAvatarSrc=\{sidebarAvatarSrc\}/);
-  assert.match(settings, /id: 'overview', label: 'Overview', groupKey: 'primary', groupLabel: 'Customize'/);
+  assert.match(studio, /id: 'overview', label: 'Overview', groupKey: 'primary', groupLabel: 'Customize'/);
   assert.match(shell, /class:premium=\{section\.id === 'premium'\}/);
   assert.match(shell, /max-width: 90rem/);
   assert.match(editor, /export let showLayout = true/);

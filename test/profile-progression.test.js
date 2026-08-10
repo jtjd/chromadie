@@ -6,7 +6,11 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('progression is a dashboard surface backed by existing profile history', async () => {
   const progression = await read('src/lib/ProfileProgression.svelte');
-  const settings = await read('src/lib/ProfileSettings.svelte');
+  const [settings, registry, workspace] = await Promise.all([
+    read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/sectionRegistry.js'),
+    read('src/lib/ProfileStudioWorkspace.svelte')
+  ]);
 
   assert.match(progression, /getRankState/);
   assert.match(progression, /getProfileStoryUnlocks/);
@@ -15,8 +19,8 @@ test('progression is a dashboard surface backed by existing profile history', as
   assert.match(progression, /timelineEvents\.slice\(0, 3\)/);
   assert.match(progression, /server-authoritative/);
   assert.match(progression, /prefers-reduced-motion/);
-  assert.match(settings, /activeSection === 'progression'/);
-  assert.match(settings, /import\('\.\/ProfileProgression\.svelte'\)/);
+  assert.match(registry, /ProfileProgression\.svelte/);
+  assert.match(workspace, /activeSection === 'progression'/);
 });
 
 test('collection remains the owned expression surface while Shop stays acquisition-only', async () => {

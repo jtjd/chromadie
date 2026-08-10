@@ -5,20 +5,22 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
 test('dashboard navigation has one canonical ordered IA and safe mobile drawer behavior', async () => {
-  const [settings, shell] = await Promise.all([
+  const [settings, contract, shell] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/dashboardContract.js'),
     read('src/lib/ProfileDashboardShell.svelte')
   ]);
+  const studio = [contract, settings].join('\n');
   const app = await read('src/App.svelte');
   const ids = ['overview', 'customize', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
   let previous = -1;
   for (const id of ids) {
-    const index = settings.indexOf("id: '" + id + "'");
+    const index = studio.indexOf("id: '" + id + "'");
     assert.ok(index > previous, id + ' should follow the previous dashboard section');
     previous = index;
   }
   for (const alias of ['identity', 'expression', 'layout', 'social', 'collection', 'appearance']) {
-    assert.match(settings, new RegExp(alias + ": '[^']+'"));
+    assert.match(studio, new RegExp(alias + ": '[^']+'"));
   }
   assert.match(settings, /history\.pushState/);
   assert.match(settings, /popstate/);
@@ -84,18 +86,20 @@ test('collection fitting room previews the draft card appearance and media', asy
 });
 
 test('preview renders bounded media and never exposes mutations', async () => {
-  const [settings, shell, music] = await Promise.all([
+  const [settings, preview, shell, music] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileMusic.svelte')
   ]);
-  assert.match(settings, /previewCollectionItems/);
-  assert.match(settings, /previewScores/);
-  assert.match(settings, /previewProfile = context\?\.targetProfile/);
+  const studioPreview = [settings, preview].join('\n');
+  assert.match(studioPreview, /previewCollectionItems/);
+  assert.match(studioPreview, /previewScores/);
+  assert.match(settings, /createProfileStudioPreviewModel/);
   assert.match(settings, /void loadPreviewComponent\(\)/);
   assert.match(settings, /slot="preview"/);
   assert.doesNotMatch(settings, /function openPreview/);
-  assert.doesNotMatch(settings, /profile-preview-drawer__backdrop/);
+  assert.doesNotMatch(studioPreview, /profile-preview-drawer__backdrop/);
   assert.match(shell, /\$: backgroundSrc = getProfileMediaUrl/);
   assert.match(shell, /<img class="profile-shell__media-image" src=\{backgroundSrc\}/);
   assert.doesNotMatch(shell, /profilePageMediaStyle|profile-page-media-image/);
@@ -156,14 +160,16 @@ test('appearance controls are consumed by the identity card and fitting-room ren
 });
 
 test('dirty prompt is keyboard-complete and editor reload actions remain reachable', async () => {
-  const [settings, appearance, layout] = await Promise.all([
+  const [settings, dirtyPrompt, appearance, layout] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/ProfileStudioDirtyPrompt.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileEditor.svelte')
   ]);
-  assert.match(settings, /dirtyPromptPrimary/);
-  assert.match(settings, /requestAnimationFrame\(\(\) => dirtyPromptPrimary\?\.focus\(\)\)/);
-  assert.match(settings, /trapFocus\(event, dirtyPrompt\)/);
+  const dirtySource = [settings, dirtyPrompt].join('\n');
+  assert.match(dirtySource, /focusPrimary/);
+  assert.match(dirtySource, /requestAnimationFrame\(\(\) => dirtyPromptComponent\?\.focusPrimary\?\.\(\)\)/);
+  assert.match(settings, /trapFocus\(event, dirtyPromptComponent\?\.getDialog\?\.\(\)\)/);
   assert.match(settings, /event\.key === 'Escape'/);
   assert.match(settings, /stayOnPage\(\)/);
   assert.match(settings, /restoreFocus\(previous\)/);

@@ -14,6 +14,7 @@
   export let username = '';
   export let bio = '';
   export let config = null;
+  export let studio = false;
 
   const dispatch = createEventDispatcher();
   const VIEW_STATE_NAMESPACE = 'profile-identity-editor';
@@ -148,7 +149,7 @@
 <Module
   size="wide"
   tone="quiet"
-  className="identity-editor"
+  className={studio ? 'identity-editor identity-editor--studio' : 'identity-editor'}
   title="Identity"
   description="Your bio and optional presentation details are visible on your public profile."
 >
@@ -286,9 +287,43 @@
   .identity-editor__save:focus-visible { outline: 2px solid var(--identity-focus); outline-offset: 2px; }
   .identity-editor__save:disabled { cursor: not-allowed; opacity: .45; }
 
+  /* Profile Studio owns the identity composition. The editor keeps the
+   * legacy standalone form untouched while opting into the dashboard grid
+   * only when the Customize workspace mounts it. */
+  :global(.identity-editor--studio .foundation-module__body) { display: block; padding: 0; }
+  :global(.identity-editor--studio .foundation-module__body > .identity-editor__form) { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, .9fr) minmax(0, .9fr); column-gap: 1.5rem; row-gap: .4rem; }
+  :global(.identity-editor--studio .identity-editor__fields) { display: contents; }
+  :global(.identity-editor--studio .identity-editor__field--username) { grid-column: 1 / span 2; grid-row: 1; }
+  :global(.identity-editor--studio .identity-editor__field[for="profile-bio"]) { grid-column: 1 / span 2; grid-row: 2 / span 2; align-self: stretch; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto; position: relative; top: .44rem; }
+  :global(.identity-editor--studio .identity-editor__field[for="profile-bio"] textarea) { height: 5rem; min-height: 5rem; }
+  :global(.identity-editor--studio .identity-editor__grid) { display: contents; }
+  :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field:first-child) { grid-column: 3 / span 2; grid-row: 1; }
+  :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field:last-child) { grid-column: 3 / span 2; grid-row: 2; position: relative; top: .44rem; }
+  :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field:first-child) { grid-column: 3; grid-row: 3; position: relative; top: .68rem; }
+  :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field:last-child) { grid-column: 4; grid-row: 3; position: relative; top: .68rem; }
+  :global(.identity-editor--studio .identity-editor__options) { display: flex; grid-column: 1 / span 2; grid-row: 4; align-self: start; align-items: center; min-height: var(--identity-primary-height); flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; position: relative; top: -.88rem; margin-bottom: -1.18rem; }
+  :global(.identity-editor--studio .identity-editor__footer) { grid-column: 3 / -1; grid-row: 3; align-items: center; justify-content: flex-end; align-self: end; margin-top: 0; padding-top: 0; border-top: 0; }
+  :global(.identity-editor--studio .identity-editor__hint) { display: none; }
+  :global(.identity-editor--studio .identity-editor__save) { opacity: 0; pointer-events: none; }
+  :global(.identity-editor--studio .identity-editor__save:focus-visible) { opacity: 1; pointer-events: auto; }
+
   @media (max-width: 34rem) {
     .identity-editor__grid { grid-template-columns: minmax(0, 1fr); }
     .identity-editor__footer { align-items: stretch; flex-direction: column; }
     .identity-editor__save { align-self: flex-start; }
+  }
+  @media (max-width: 72rem) {
+    :global(.identity-editor--studio .foundation-module__body > .identity-editor__form) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+    :global(.identity-editor--studio .identity-editor__field[for="profile-bio"]) { grid-column: 1 / -1; grid-row: auto; align-self: start; align-content: start; grid-template-rows: none; position: static; }
+    :global(.identity-editor--studio .identity-editor__field[for="profile-bio"] textarea) { height: auto; min-height: 4.5rem; }
+    :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field),
+    :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field) { grid-column: auto; grid-row: auto; position: static; }
+    :global(.identity-editor--studio .identity-editor__options) { position: static; top: auto; margin-bottom: 0; grid-column: 1 / -1; grid-row: auto; }
+    :global(.identity-editor--studio .identity-editor__footer) { grid-column: 1 / -1; grid-row: auto; }
+  }
+  @media (max-width: 38rem) {
+    :global(.identity-editor--studio .foundation-module__body > .identity-editor__form) { grid-template-columns: minmax(0, 1fr); }
+    :global(.identity-editor--studio .identity-editor__field[for="profile-bio"]) { grid-column: auto; }
+    :global(.identity-editor--studio .identity-editor__options) { grid-column: auto; }
   }
 </style>

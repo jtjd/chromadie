@@ -5,9 +5,10 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Customize tabs preserve mounted editors while switching visible groups', async () => {
-  const [customize, settings] = await Promise.all([
+  const [customize, settings, contract] = await Promise.all([
     read('src/lib/ProfileCustomizePage.svelte'),
-    read('src/lib/ProfileSettings.svelte')
+    read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/dashboardContract.js')
   ]);
 
   assert.match(customize, /export let activeTab = 'appearance'/);
@@ -20,10 +21,11 @@ test('Customize tabs preserve mounted editors while switching visible groups', a
   assert.match(customize, /profile-collection/);
   assert.match(customize, /profile-widgets/);
   assert.match(customize, /profile-layout/);
-  assert.match(settings, /content: 'media'/);
-  assert.match(settings, /widgets: 'appearance'/);
-  assert.match(settings, /'customize-effects': 'appearance'/);
-  assert.doesNotMatch(settings, /\{ id: 'effects', label: 'Effects'/);
+  const studio = [settings, contract].join('\n');
+  assert.match(studio, /content: 'media'/);
+  assert.match(studio, /widgets: 'appearance'/);
+  assert.match(studio, /'customize-effects': 'appearance'/);
+  assert.doesNotMatch(studio, /\{ id: 'effects', label: 'Effects'/);
 });
 
 test('Profile Studio mode control is keyboard-labelled and stays gradient-free', async () => {
@@ -44,27 +46,33 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
 });
 
 test('reference workspace composition stays explicit', async () => {
-  const [settings, actions, appearance, appearanceColors, cosmetics, customize, profileShell] = await Promise.all([
+  const [settings, header, preview, draftModel, actions, appearance, appearanceColors, cosmetics, customize, profileShell, editor, expression] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/ProfileStudioHeader.svelte'),
+    read('src/lib/ProfileStudioPreview.svelte'),
+    read('src/lib/profile-studio/draftModel.js'),
     read('src/lib/ProfileDashboardActions.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/profileAppearanceColors.js'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
-    read('src/lib/ProfileShell.svelte')
+    read('src/lib/ProfileShell.svelte'),
+    read('src/lib/ProfileEditor.svelte'),
+    read('src/lib/ProfileExpressionEditor.svelte')
   ]);
+  const studio = [settings, header, preview, draftModel].join('\n');
 
   assert.match(actions, /Customize profile/);
   assert.match(actions, /All changes saved/);
   assert.match(actions, /profile-dashboard-actions__publish/);
   assert.match(actions, /margin-inline: \.75rem/);
   assert.match(settings, /slot="topbar"/);
-  assert.match(settings, /profile-settings-page__customize-tabs \{[^}]*margin: 0 \.75rem \.45rem/);
-  assert.match(settings, /profile-settings-preview__devices/);
-  assert.match(settings, /Unlock more with Chromadie Plus/);
-  assert.match(settings, /profile-settings-preview__canvas\.profile-settings-preview__canvas--appearance/);
-  assert.match(settings, /profile-settings-preview__canvas :global\(\.profile-shell-page--preview\)[\s\S]*border: 0; border-radius: 0/);
-  assert.match(settings, /profile-settings-preview__canvas\.profile-settings-preview__canvas--appearance :global\(\.profile-shell-page--preview\) \{ height: auto !important; min-height: 0 !important/);
+  assert.match(header, /profile-studio-header__customize-tabs \{[^}]*margin: 0 \.75rem \.45rem/);
+  assert.match(preview, /profile-studio-preview__devices/);
+  assert.match(preview, /Unlock more with Chromadie Plus/);
+  assert.match(preview, /profile-studio-preview__canvas--appearance/);
+  assert.match(preview, /profile-studio-preview__canvas :global\(\.profile-shell-page--preview\)[\s\S]*border: 0; border-radius: 0/);
+  assert.doesNotMatch(preview, /!important/);
   assert.match(appearance, /appearance-editor__picker-surface/);
   assert.match(appearance, /appearance-editor__palette/);
   for (const label of ['Profile text', 'Handle & metadata', 'Profile surface', 'Bio text', 'Page background']) {
@@ -74,7 +82,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.doesNotMatch(customize, /profile-customize-page__appearance-effects|Overlay color|Atmosphere strength|Restart animations/);
   assert.match(customize, /--customize-control-surface: var\(--ctp-crust/);
   assert.match(customize, /background: var\(--customize-control-surface\) !important/);
-  assert.match(customize, /profile-editor \.profile-template-picker__premium\) \{ display: none !important; \}/);
+  assert.match(editor, /profile-editor--studio[\s\S]*profile-template-picker__premium\) \{ display: none; \}/);
   assert.match(cosmetics, /Name effects/);
   assert.match(cosmetics, /name_font: 'Font'/);
   assert.match(cosmetics, /name_material: 'Material'/);
@@ -86,7 +94,7 @@ test('reference workspace composition stays explicit', async () => {
     assert.match(cosmetics, new RegExp(`aria-label="${role} preview"[\\s\\S]*<ShopItemPreview`));
   }
   assert.match(cosmetics, /height: 4\.25rem; min-height: 4\.25rem/);
-  assert.match(cosmetics, /aspect-ratio: auto !important/);
+  assert.match(cosmetics, /renderContext=\{PROFILE_RENDER_CONTEXTS\.EFFECT_CARD\}/);
   assert.doesNotMatch(cosmetics, /Preview only\. Apply the change when the look feels right/);
   assert.doesNotMatch(cosmetics, /let status = ''/);
   assert.doesNotMatch(cosmetics, /profile-cosmetics-visual-preview--(?:avatar|border|cursor|atmosphere)/);
@@ -100,11 +108,11 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(settings, /on:identitypreview=\{updateIdentityPreview\}/);
   assert.match(settings, /on:cosmeticpreview=\{updateCosmeticPreview\}/);
   assert.match(settings, /on:customizepreview=\{updateConfigurationPreview\}/);
-  assert.match(settings, /equipped_cosmetics: cosmeticPreviewLoadout \|\| \$equippedItems/);
+  assert.match(draftModel, /equipped_cosmetics: cosmeticPreviewLoadout \|\| equippedCosmetics/);
   assert.match(profileShell, /getNameRendererLoadout\(cosmetics\)/);
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
   assert.match(profileShell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\}/);
-  assert.match(customize, /profile-expression-editor__compact-grid\) \{ grid-template-columns: minmax\(0, \.9fr\)/);
-  assert.match(customize, /profile-cosmetics-name-grid \.profile-cosmetics-slot select\) \{ height: 1\.65rem !important; min-height: 1\.65rem !important/);
-  assert.match(customize, /profile-cosmetics-name-grid \.profile-cosmetics-slot label\) \{ margin-bottom: \.15rem; font-size: \.6rem/);
+  assert.match(expression, /\.profile-expression-editor__compact-grid \{[\s\S]*grid-template-columns: minmax\(0, \.9fr\) minmax\(0, \.9fr\) minmax\(0, 1\.5fr\)/);
+  assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot select \{ height: 1\.65rem; min-height: 1\.65rem;/);
+  assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot label \{ margin-bottom: \.15rem; font-size: \.6rem/);
 });

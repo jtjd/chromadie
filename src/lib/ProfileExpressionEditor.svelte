@@ -759,12 +759,17 @@
     --media-red: var(--customize-accent-danger, var(--ctp-red, #f38ba8));
     --media-premium: var(--customize-accent-premium, var(--ctp-mauve, #cba6f7));
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.5fr);
     align-items: start;
-    gap: 1.75rem !important;
+    gap: .65rem;
     color: var(--media-text-primary);
     font-family: var(--customize-font-body, var(--font-body-stack, sans-serif));
   }
+
+  :global(.profile-expression-editor) { display: grid; gap: .65rem; }
+  .profile-expression-editor__compact-grid :global(.rich-media-editor--compact),
+  .profile-expression-editor__compact-grid :global(.rich-media-editor--compact > .foundation-module__body) { display: contents; }
+  .profile-expression-editor__compact-grid :global(.rich-media-editor--compact .rich-media-editor__advanced) { grid-column: 1 / -1; order: 5; }
 
   .profile-expression-editor__compact-card {
     --media-card-accent: var(--media-teal);
@@ -772,10 +777,11 @@
     align-content: start;
     gap: .45rem;
     min-width: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
+    grid-template-rows: minmax(1.05rem, auto) minmax(5.7rem, auto) auto;
+    padding: .65rem;
+    border: 1px solid var(--media-line);
+    border-radius: var(--media-radius, .38rem);
+    background: var(--media-surface-inset);
   }
 
   .profile-expression-editor__compact-card--background { order: 1; --media-card-accent: var(--media-sky); }
@@ -819,6 +825,7 @@
   :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media img),
   :global(.profile-expression-editor__compact-preview .foundation-media),
   :global(.profile-expression-editor__compact-preview .foundation-media img) { width: 100%; height: 100%; aspect-ratio: auto; border: 0 !important; border-radius: 0; outline: 0; box-shadow: none; }
+  :global(.profile-expression-editor__compact-preview .profile-media-icon) { width: 2.35rem; height: 2.35rem; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
   .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .84rem; font-weight: 500; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-copy { display: block; min-width: 0; order: -1; }

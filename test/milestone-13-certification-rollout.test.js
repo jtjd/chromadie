@@ -72,10 +72,12 @@ test('M13 rollout flags are audience-scoped and independently reversible', () =>
 });
 
 test('M13 client surfaces retain reversible gates and V1 fallbacks', async () => {
-  const [pricing, expression, settings, shell, data, social, env, operations, milestone] = await Promise.all([
+  const [pricing, expression, settings, contract, workspace, shell, data, social, env, operations, milestone] = await Promise.all([
     read('src/lib/Pricing.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/dashboardContract.js'),
+    read('src/lib/ProfileStudioWorkspace.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/profileData.js'),
     read('src/lib/ProfileSocial.svelte'),
@@ -87,9 +89,9 @@ test('M13 client surfaces retain reversible gates and V1 fallbacks', async () =>
   assert.match(pricing, /Purchases temporarily paused/);
   assert.match(expression, /isProfileFeatureEnabled\('richMedia'/);
   assert.match(expression, /image-based profile remains available/);
-  assert.match(settings, /SECTION_FLAGS/);
+  assert.match(contract, /SECTION_FLAGS/);
   assert.match(settings, /visibleSettingsSections/);
-  assert.match(settings, /socialDepthEnabled={featureFlags\.socialDepth}/);
+  assert.match(workspace, /socialDepthEnabled={featureFlags\.socialDepth}/);
   assert.match(shell, /isProfileFeatureEnabled\('expandedAnalytics'/);
   assert.match(shell, /profileFeatureFlags\.richMedia/);
   assert.match(shell, /id: previewProfile\?\.id \|\| 'profile-studio-preview'/);

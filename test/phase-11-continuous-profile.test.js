@@ -24,12 +24,13 @@ test('phase 11 profile composition uses one opening canvas and quiet supporting 
 test('phase 11 visual contract preserves secondary detail and owner boundaries', async () => {
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
+  const registry = await readFile(new URL('../src/lib/profile-studio/sectionRegistry.js', import.meta.url), 'utf8');
   const roll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
 
   assert.match(shell, /getProfileStoryVisible/);
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
-  assert.match(settings, /import\('\.\/ProfileEditor\.svelte'\)/);
-  assert.match(settings, /import\('\.\/ProfileSocial\.svelte'\)/);
+  assert.match(registry, /ProfileEditor\.svelte/);
+  assert.match(registry, /ProfileSocial\.svelte/);
   assert.match(shell, /<ProfileSocial[\s\S]*on:socialchange=\{handleSocialChange\}/);
   assert.match(shell, /profile-shell__social-section/);
   assert.match(shell, /Add to rivals/);

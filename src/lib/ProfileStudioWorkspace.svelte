@@ -1,0 +1,173 @@
+<script>
+  import { createEventDispatcher } from 'svelte';
+  import Surface from './foundation/Surface.svelte';
+  import { getProfileStudioSectionRegistration } from './profile-studio/sectionRegistry.js';
+
+  export let activeSection = 'customize';
+  export let activeCustomizeTab = 'appearance';
+  /** @type {any} */
+  export let context = null;
+  /** @type {any} */
+  export let editorProfileConfig = null;
+  /** @type {any} */
+  export let sectionComponents = {};
+  export let sectionLoading = false;
+  export let loading = false;
+  export let error = '';
+  export let profilePath = '/profile';
+  export let accountUsername = '';
+  export let entitlements = [];
+  export let staff = false;
+  export let isAuthenticated = false;
+  export let featureFlags = {};
+
+  const dispatch = createEventDispatcher();
+  let customizePage = null;
+  let layoutEditor = null;
+  let contentEditor = null;
+  let widgetEditor = null;
+
+  $: isCustomize = activeSection === 'customize';
+  $: activeRegistration = getProfileStudioSectionRegistration(activeSection);
+
+  function forward(event) {
+    dispatch(event.type, event.detail);
+  }
+
+  export function getDraftConfig() {
+    if (activeSection === 'customize') return customizePage?.getDraftConfig?.() || null;
+    if (activeSection === 'links') return layoutEditor?.getDraftConfig?.() || null;
+    if (activeSection === 'profile-content') return contentEditor?.getDraftConfig?.() || null;
+    if (activeSection === 'profile-widgets') return widgetEditor?.getDraftConfig?.() || null;
+    if (activeSection === 'profile-layout') return layoutEditor?.getDraftConfig?.() || null;
+    return null;
+  }
+
+  export function validateDraft() {
+    if (activeSection === 'customize') return customizePage?.validateDraft?.() !== false;
+    if (activeSection === 'links') return layoutEditor?.validateDraft?.() !== false;
+    if (activeSection === 'profile-content') return contentEditor?.validateDraft?.() !== false;
+    if (activeSection === 'profile-widgets') return widgetEditor?.validateDraft?.() !== false;
+    if (activeSection === 'profile-layout') return layoutEditor?.validateDraft?.() !== false;
+    return true;
+  }
+
+  export function acceptSaved(nextConfig) {
+    customizePage?.acceptSaved?.(nextConfig);
+    layoutEditor?.acceptSaved?.(nextConfig);
+    contentEditor?.acceptSaved?.(nextConfig);
+    widgetEditor?.acceptSaved?.(nextConfig);
+  }
+
+  export function resetChanges(sectionId = activeSection) {
+    if (sectionId === 'customize') customizePage?.resetChanges?.();
+    if (sectionId === 'links' || sectionId === 'profile-layout') layoutEditor?.resetChanges?.();
+    if (sectionId === 'profile-content') contentEditor?.resetChanges?.();
+    if (sectionId === 'profile-widgets') widgetEditor?.resetChanges?.();
+  }
+</script>
+
+<div class="profile-studio-workspace" data-section-owner={activeRegistration?.owner || 'dashboard'} data-section-destination={activeRegistration?.destination || 'unknown'} aria-busy={loading}>
+  {#if loading}
+    <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h1>Loading</h1></div>
+  {:else if error}
+    <div class="profile-studio-workspace__state" role="alert"><Surface variant="panel" padding="lg"><h1>{error}</h1><a class="profile-studio-workspace__back" href={profilePath}>Back to profile</a></Surface></div>
+  {:else if context}
+    <div class="profile-studio-workspace__content" id={isCustomize ? 'profile-customize-tabpanel' : undefined} role={isCustomize ? 'tabpanel' : undefined} aria-labelledby={isCustomize ? `profile-customize-tab-${activeCustomizeTab}` : undefined}>
+      {#if isCustomize}
+        {#if sectionComponents.customize}
+          <svelte:component
+            this={sectionComponents.customize}
+            bind:this={customizePage}
+            components={sectionComponents}
+            profileId={context.profileId}
+            accountUsername={accountUsername}
+            targetProfile={context.targetProfile}
+            profileConfig={editorProfileConfig}
+            activeTab={activeCustomizeTab}
+            {entitlements}
+            {staff}
+            on:appearancechange={forward}
+            on:customizepreview={forward}
+            on:identitypreview={forward}
+            on:cosmeticpreview={forward}
+            on:dirty={forward}
+            on:identitysaved={forward}
+            on:configsaved={forward}
+            on:configpublished={forward}
+            on:configreloaded={forward}
+            on:configpreview={forward}
+            on:premiumrequest={forward}
+          />
+        {:else if sectionLoading}
+          <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading Customize</h2></div>
+        {/if}
+      {:else if activeSection === 'links'}
+        <div class="profile-links-page">
+          {#if sectionComponents['profile-layout']}
+            <svelte:component this={sectionComponents['profile-layout']} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} showLayout={false} showLinks={true} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+          {:else if sectionLoading}
+            <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading links</h2></div>
+          {/if}
+          {#if sectionComponents['profile-aliases']}
+            <svelte:component this={sectionComponents['profile-aliases']} />
+          {/if}
+        </div>
+      {:else if activeSection === 'premium'}
+        {#if sectionComponents.premium}
+          <svelte:component this={sectionComponents.premium} {entitlements} {staff} />
+        {:else if sectionLoading}
+          <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading Premium</h2></div>
+        {/if}
+      {:else if activeSection === 'account'}
+        {#if sectionComponents.account}
+          <svelte:component this={sectionComponents.account} on:accountdeleted={forward} />
+        {:else if sectionLoading}
+          <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading Account</h2></div>
+        {/if}
+      {:else if sectionComponents[activeSection]}
+        {#if activeSection === 'overview'}
+          <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} />
+        {:else if activeSection === 'profile-identity'}
+          <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} config={editorProfileConfig} on:identitysaved={forward} on:configsaved={forward} />
+        {:else if activeSection === 'profile-aliases'}
+          <svelte:component this={sectionComponents[activeSection]} />
+        {:else if activeSection === 'profile-media'}
+          <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={editorProfileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} {staff} {entitlements} on:expressionchange={forward} />
+        {:else if activeSection === 'profile-content'}
+          <svelte:component this={sectionComponents[activeSection]} bind:this={contentEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+        {:else if activeSection === 'profile-widgets'}
+          <svelte:component this={sectionComponents[activeSection]} bind:this={widgetEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+        {:else if activeSection === 'profile-collection'}
+          <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={editorProfileConfig} {entitlements} {staff} />
+        {:else if activeSection === 'profile-layout'}
+          <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+        {:else if activeSection === 'profile-social'}
+          <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} {isAuthenticated} social={context.social} settings={context.socialSettings} socialDepthEnabled={featureFlags.socialDepth} on:socialchange={forward} />
+        {:else if activeSection === 'profile-insights'}
+          <svelte:component this={sectionComponents[activeSection]} configuration={context.profileConfig} socialSettings={context.socialSettings} on:socialchange={forward} />
+        {:else if activeSection === 'profile-notifications'}
+          <svelte:component this={sectionComponents[activeSection]} />
+        {:else if activeSection === 'progression'}
+          <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} />
+        {/if}
+      {:else if sectionLoading}
+        <div class="profile-studio-workspace__state" role="status"><h2>Loading</h2></div>
+      {:else}
+        <div class="profile-studio-workspace__state" role="status"><h2>Section unavailable</h2></div>
+      {/if}
+    </div>
+  {/if}
+</div>
+
+<style>
+  .profile-studio-workspace { width: 100%; min-width: 0; }
+  .profile-studio-workspace__content { width: 100%; min-width: 0; }
+  .profile-studio-workspace__state { display: grid; min-height: 16rem; place-items: center; gap: .6rem; color: var(--studio-muted, #bac2de); }
+  .profile-studio-workspace__state h1, .profile-studio-workspace__state h2 { margin: 0; color: var(--studio-text, #cdd6f4); font-size: 1.2rem; }
+  .profile-studio-workspace__state :global(.surface) { max-width: 42rem; }
+  .profile-studio-workspace__back { display: inline-flex; min-height: 2.25rem; align-items: center; justify-content: center; margin-top: .8rem; padding: .45rem .75rem; border: 1px solid var(--studio-border-strong, #45475a); border-radius: .35rem; color: var(--studio-text, #cdd6f4); font-size: .8rem; font-weight: 650; text-decoration: none; }
+  .profile-studio-workspace__back:hover, .profile-studio-workspace__back:focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-focus, #b4befe); }
+  .profile-links-page { display: grid; gap: 1rem; min-width: 0; }
+  @media (prefers-reduced-motion: reduce) { .profile-studio-workspace { scroll-behavior: auto; } }
+</style>

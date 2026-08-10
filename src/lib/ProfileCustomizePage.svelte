@@ -113,7 +113,7 @@
           <span aria-hidden="true">01</span>
         </div>
         {#if identityComponent}
-          <svelte:component this={identityComponent} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} on:identitypreview={forward} on:identitysaved={forward} on:configsaved={forward} />
+          <svelte:component this={identityComponent} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} studio={true} on:identitypreview={forward} on:identitysaved={forward} on:configsaved={forward} />
         {:else}
           <div class="profile-customize-page__loading" role="status">Loading identity controls…</div>
         {/if}
@@ -130,7 +130,7 @@
   <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-label="Visual effects" data-editor-section="effects" id="customize-effects">
     <div class="profile-customize-page__editor">
       {#if collectionComponent}
-        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} on:cosmeticpreview={forward} />
+        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} compact={true} on:cosmeticpreview={forward} />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading effects controls…</div>
       {/if}
@@ -143,7 +143,7 @@
     </div>
     <div class="profile-customize-page__editor">
       {#if layoutComponent}
-        <svelte:component this={layoutComponent} bind:this={layoutEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} showLinks={false} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+        <svelte:component this={layoutComponent} bind:this={layoutEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} studio={true} showLinks={false} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading template controls…</div>
       {/if}
@@ -325,37 +325,6 @@
   .profile-customize-page :global(.profile-cosmetics-heading) { display: none; }
   .profile-customize-page :global(.foundation-module__description) { display: none; }
   .profile-customize-page :global(.foundation-module__body) { padding: 0; }
-  .profile-customize-page :global(.profile-expression-editor) { display: grid; gap: .65rem; }
-  .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.75rem; }
-  .profile-customize-page :global(.profile-expression-editor__compact-grid .rich-media-editor--compact),
-  .profile-customize-page :global(.profile-expression-editor__compact-grid .rich-media-editor--compact > .foundation-module__body) { display: contents; }
-  .profile-customize-page :global(.profile-expression-editor__compact-grid .rich-media-editor--compact .rich-media-editor__advanced) { grid-column: 1 / -1; order: 5; }
-  .profile-customize-page :global(.profile-expression-editor__section) { padding-top: .85rem !important; border-top-color: var(--customize-border-subtle) !important; }
-  .profile-customize-page :global(.profile-expression-editor__asset-library) { margin-top: .65rem; padding-top: .75rem; border-top-color: var(--customize-border-subtle); }
-  .profile-customize-page :global(.profile-expression-editor__asset-grid) { max-width: none; }
-  .profile-customize-page :global(.profile-expression-editor__button) { min-height: var(--customize-secondary-height) !important; border-radius: var(--customize-radius) !important; font-size: var(--customize-label-size) !important; }
-  .profile-customize-page :global(.profile-expression-editor__button--quiet) { border-color: var(--customize-border-strong) !important; background: transparent !important; color: var(--customize-text-muted) !important; }
-  .profile-customize-page :global(.appearance-editor) { gap: .65rem; }
-  .profile-customize-page :global(.appearance-editor__panel) { padding: .25rem 0 0; border: 0; border-bottom: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
-  .profile-customize-page :global(.appearance-editor__panel--colors) { padding-bottom: 0; }
-  .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { box-sizing: border-box; min-height: 7.45rem; padding: .8rem .85rem .75rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-section-surface); }
-  .profile-customize-page :global(.appearance-editor__colors-layout),
-  .profile-customize-page :global(.appearance-editor__color-grid),
-  .profile-customize-page :global(.appearance-editor__picker) { min-height: 15.75rem; box-sizing: border-box; }
-  .profile-customize-page :global(.appearance-editor__picker) { padding-bottom: .55rem; }
-  .profile-customize-page :global(.appearance-editor__heading) { margin-bottom: .55rem; }
-  .profile-customize-page :global(.appearance-editor__color-grid) { gap: .65rem .7rem; padding: 1rem; }
-  .profile-customize-page :global(.appearance-editor__color-grid) { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 2.25rem; }
-  .profile-customize-page :global(.appearance-editor__color-grid) { height: 15.75rem; overflow: hidden; }
-  .profile-customize-page :global(.appearance-editor__colors-layout) { grid-template-columns: minmax(0, 1.6fr) minmax(14rem, 1fr); }
-  .profile-customize-page :global(.appearance-editor__color-input),
-  .profile-customize-page :global(.appearance-editor__hex) { min-height: 1.6rem !important; height: 1.6rem !important; }
-  .profile-customize-page :global(.appearance-editor__color-input input[type="color"]) { width: 1.45rem; height: 1.45rem; }
-  .profile-customize-page :global(.appearance-editor__color-grid .appearance-editor__hex) { padding: .25rem .35rem; font-size: .68rem !important; }
-  .profile-customize-page :global(.appearance-editor__color-grid .appearance-editor__field) { grid-template-columns: minmax(0, 1fr) 4.7rem; }
-  .profile-customize-page :global(.appearance-editor__color-grid .appearance-editor__colors-heading) { margin-bottom: .15rem; }
-  .profile-customize-page :global(.appearance-editor__surface-grid) { grid-template-columns: minmax(15rem, .98fr) minmax(15rem, .98fr) minmax(17rem, 1.08fr); column-gap: 2.45rem; padding-inline: .35rem; }
-  .profile-customize-page :global(.appearance-editor__range-grid) { gap: .55rem .7rem; }
   .profile-customize-page :global(.appearance-editor__heading h2),
   .profile-customize-page :global(.profile-content-editor__panel-heading h3),
   .profile-customize-page :global(.profile-widget-editor__panel-heading strong),
@@ -377,32 +346,6 @@
   .profile-customize-page :global(.profile-editor__version),
   .profile-customize-page :global(.profile-editor__panel-heading > span),
   .profile-customize-page :global(.profile-widget-editor__version) { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
-  .profile-customize-page :global(.identity-editor .foundation-module__body) { display: block; }
-  .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, .9fr) minmax(0, .9fr); column-gap: 1.5rem; row-gap: .4rem; }
-  .profile-customize-page :global(.identity-editor__fields) { display: contents; }
-  .profile-customize-page :global(.identity-editor__field--username) { grid-column: 1 / span 2; grid-row: 1; }
-  .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / span 2; grid-row: 2 / span 2; align-self: stretch; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto; }
-  .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: 5rem !important; min-height: 5rem !important; }
-  .profile-customize-page :global(.identity-editor__grid) { display: contents; }
-  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:first-child) { grid-column: 3 / span 2; grid-row: 1; }
-  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child) { grid-column: 3 / span 2; grid-row: 2; }
-  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:first-child) { grid-column: 3; grid-row: 3; }
-  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:last-child) { grid-column: 4; grid-row: 3; }
-  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: 1 / span 2; grid-row: 4; align-self: start; align-items: center; min-height: var(--customize-primary-height); flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; color: var(--customize-text-muted); font-size: var(--customize-label-size); }
-  /* Match the reference's compact identity rhythm: the metadata rows sit a
-   * little below the username while the toggles tuck up against the panel
-   * edge.  These offsets are desktop-only and are reset in the responsive
-   * layout below. */
-  .profile-customize-page :global(.identity-editor__field[for="profile-bio"]),
-  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child) { position: relative; top: .44rem; }
-  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field) { position: relative; top: .68rem; }
-  .profile-customize-page :global(.identity-editor__options) { position: relative; top: -.88rem; margin-bottom: -1.18rem; }
-  .profile-customize-page :global(.identity-editor__footer) { grid-column: 3 / -1; grid-row: 4; }
-  .profile-customize-page :global(.identity-editor__options label) { display: inline-flex; align-items: center; gap: .35rem; }
-  .profile-customize-page :global(.identity-editor__field) { align-self: start; align-content: start; gap: .35rem; font-size: var(--customize-label-size); }
-  .profile-customize-page :global(.identity-editor__field textarea) { min-height: 4.5rem; }
-  .profile-customize-page :global(.identity-editor__field :is(input, textarea, select)) { min-height: 2rem; border-radius: var(--customize-radius); padding: .45rem .65rem; font-size: var(--customize-control-size); font-family: var(--customize-font-body); }
-  .profile-customize-page :global(.identity-editor__field :is(input, textarea, select)),
   .profile-customize-page :global(.profile-editor :is(input[type="text"], input[type="url"], input[type="email"], input[type="search"], input[type="number"], textarea, select)),
   .profile-customize-page :global(.appearance-editor__color-input),
   .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)),
@@ -428,26 +371,14 @@
   .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea):focus),
   .profile-customize-page :global(.profile-widget-editor__panel :is(input, select):focus),
   .profile-customize-page :global(.profile-cosmetics-slot select:focus-visible),
-  .profile-customize-page :global(.profile-editor :is(input, textarea, select):focus-visible),
-  .profile-customize-page :global(.identity-editor__field :is(input, textarea, select):focus-visible) { border-color: var(--customize-focus) !important; box-shadow: 0 0 0 2px color-mix(in srgb, var(--customize-focus) 24%, transparent); }
+  .profile-customize-page :global(.profile-editor :is(input, textarea, select):focus-visible) { border-color: var(--customize-focus) !important; box-shadow: 0 0 0 2px color-mix(in srgb, var(--customize-focus) 24%, transparent); }
   .profile-customize-page :global(.appearance-editor__hex) { color: var(--customize-text-primary) !important; font: 500 var(--customize-control-size) / 1 var(--customize-font-mono) !important; }
-  .profile-customize-page :global(.identity-editor__field :is(input, textarea)::placeholder),
   .profile-customize-page :global(.profile-editor :is(input, textarea)::placeholder),
   .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)::placeholder),
   .profile-customize-page :global(.profile-widget-editor__panel :is(input)::placeholder) { color: var(--customize-text-faint); }
-  .profile-customize-page :global(.identity-editor__field small),
   .profile-customize-page :global(.profile-content-editor__fields label small),
   .profile-customize-page :global(.profile-widget-editor__panel label small) { color: var(--customize-text-faint); font-size: .74rem; }
-  .profile-customize-page :global(.identity-editor__footer) { grid-column: 3 / -1; grid-row: 3; align-items: center; justify-content: flex-end; align-self: end; margin-top: 0; padding-top: 0; border-top: 0; }
-  .profile-customize-page :global(.identity-editor__hint) { display: none; }
-  .profile-customize-page :global(.identity-editor__save),
   .profile-customize-page :global(.profile-cosmetics-apply) { min-height: var(--customize-primary-height); border: 1px solid var(--customize-accent-save) !important; border-radius: var(--customize-radius); background: var(--customize-accent-save) !important; color: var(--customize-surface-inset) !important; font: 700 var(--customize-label-size) / 1 var(--customize-font-body); }
-  /* Publishing is the visible workspace action. Keep the legacy identity
-   * submit in the tab order for keyboard users, while allowing the compact
-   * Appearance card to match the reference's quiet lower-right edge. */
-  .profile-customize-page :global(.identity-editor__save) { opacity: 0; pointer-events: none; }
-  .profile-customize-page :global(.identity-editor__save:focus-visible) { opacity: 1; pointer-events: auto; }
-  .profile-customize-page :global(.identity-editor__save:hover:not(:disabled)),
   .profile-customize-page :global(.profile-cosmetics-apply:hover:not(:disabled)) { background: color-mix(in srgb, var(--customize-accent-save) 82%, var(--customize-text-primary)) !important; }
   .profile-customize-page :global(.profile-content-editor__text-button),
   .profile-customize-page :global(.profile-content-editor__remove),
@@ -476,17 +407,14 @@
   .profile-customize-page :global(.profile-editor__remove:hover) { border-color: var(--customize-accent-danger) !important; background: color-mix(in srgb, var(--customize-accent-danger) 9%, transparent) !important; color: var(--customize-accent-danger) !important; }
   .profile-customize-page :global(.profile-content-editor__text-button:disabled),
   .profile-customize-page :global(.profile-widget-editor__add:disabled),
-  .profile-customize-page :global(.profile-cosmetics-apply:disabled),
-  .profile-customize-page :global(.identity-editor__save:disabled) { cursor: not-allowed; opacity: .45; }
-  .profile-customize-page :global(.identity-editor__save:focus-visible),
+  .profile-customize-page :global(.profile-cosmetics-apply:disabled) { cursor: not-allowed; opacity: .45; }
   .profile-customize-page :global(.profile-cosmetics-apply:focus-visible) { outline: 2px solid var(--customize-focus); outline-offset: 2px; }
   .profile-customize-page :global(.profile-content-editor),
   .profile-customize-page :global(.profile-widget-editor),
   .profile-customize-page :global(.profile-editor) { gap: .65rem; }
   .profile-customize-page :global(.profile-content-editor__panel),
   .profile-customize-page :global(.profile-widget-editor__panel),
-  .profile-customize-page :global(.profile-editor__panel),
-  .profile-customize-page :global(.profile-cosmetics-surface) { padding: .65rem 0; border: 0; border-top: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
+  .profile-customize-page :global(.profile-editor__panel) { padding: .65rem 0; border: 0; border-top: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
   .profile-customize-page :global(.profile-content-editor) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
   .profile-customize-page :global(.profile-content-editor__panel) { padding: .45rem 0; }
   .profile-customize-page :global(.profile-content-editor__panel:first-of-type) { grid-column: 1 / -1; }
@@ -512,75 +440,6 @@
   .profile-customize-page :global(.profile-editor__layout-options) { gap: .85rem; padding: .85rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
   .profile-customize-page :global(.profile-editor__layout-options .profile-editor__segmented-field > div) { min-height: var(--customize-secondary-height); }
   .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .profile-customize-page :global(.profile-cosmetics-layout) { grid-template-columns: minmax(0, 1fr); }
-  .profile-customize-page :global(.profile-cosmetics-plus-guide) { display: none; }
-  .profile-customize-page :global(.profile-cosmetics-heading) { display: none; }
-  .profile-customize-page :global(.profile-cosmetics-controls) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .45rem .65rem; padding: .25rem 0 0; border: 0; background: transparent; }
-  .profile-customize-page :global(.profile-cosmetics-controls__heading) { display: none; }
-  .profile-customize-page :global(.profile-cosmetics-section-heading) { display: grid; }
-  .profile-customize-page :global(.profile-cosmetics-slot) { padding: .55rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
-  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-slot) { padding: 0; border: 0; background: transparent; }
-  .profile-customize-page :global(.profile-cosmetics-visual-grid .profile-cosmetics-slot) { position: relative; align-content: start; gap: .45rem; }
-  .profile-customize-page :global(.profile-cosmetics-visual-grid .profile-cosmetics-slot)::before { content: ''; position: absolute; top: .45rem; left: .45rem; z-index: 1; width: .34rem; height: .34rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); }
-  .profile-customize-page :global(.profile-cosmetics-visual-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: 2.25rem; }
-  /* Name effects use the compact fitting-room rhythm from the reference:
-   * small slot labels, short controls, and a right-aligned renderer sample
-   * inside each select well. Keep this override here because the page-level
-   * control contract otherwise expands every cosmetic select to the primary
-   * action height. */
-  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-slot label) { margin-bottom: .15rem; font-size: .6rem; line-height: 1.1; }
-  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-slot select) { height: 1.65rem !important; min-height: 1.65rem !important; padding: .2rem 4.5rem .2rem .55rem; font-size: .72rem; line-height: 1; }
-  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-name-preview) { height: 1.4rem; }
-  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-name-preview .name-effect-canvas__semantic) { font-size: .82rem !important; line-height: 1.05 !important; }
-  .profile-customize-page :global(.profile-cosmetics-plus-guide) { grid-template-columns: 1fr; }
-  /* The collection editor is a single tabbed surface.  Keep its heading,
-   * name controls, visual controls, and apply action in one full-width stack
-   * instead of inheriting the four-column parent editor grid. */
-  .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
-  .profile-customize-page :global(.profile-cosmetics-section-heading),
-  .profile-customize-page :global(.profile-cosmetics-name-grid),
-  .profile-customize-page :global(.profile-cosmetics-visual-grid),
-  .profile-customize-page :global(.profile-cosmetics-apply) { grid-column: 1 / -1; }
-
-  .profile-customize-page :global(.profile-editor) { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(18rem, .8fr); gap: .8rem 1rem; }
-  .profile-customize-page :global(.profile-editor__header) { display: none; }
-  .profile-customize-page :global(.profile-editor__panel),
-  .profile-customize-page :global(.profile-editor__module-list),
-  .profile-customize-page :global(.profile-editor__links),
-  .profile-customize-page :global(.profile-editor__link-style),
-  .profile-customize-page :global(.profile-editor__metadata),
-  .profile-customize-page :global(.profile-editor__message),
-  .profile-customize-page :global(.profile-editor__hint) { grid-column: 1 / -1; }
-  .profile-customize-page :global(.profile-editor__panel[aria-labelledby="profile-layout-style-title"]) { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
-  .profile-customize-page :global(.profile-editor__panel[aria-labelledby="profile-layout-modules-title"]) { grid-column: 1; grid-row: 2; }
-  .profile-customize-page :global(.profile-editor__panel[aria-labelledby="profile-layout-modules-title"]) { display: none; }
-  .profile-customize-page :global(.profile-editor > section[aria-labelledby="profile-layout-modules-title"]) { display: none !important; }
-  .profile-customize-page :global(.profile-template-picker) { grid-column: 1; }
-  .profile-customize-page :global(.profile-editor .profile-template-picker__premium) { display: none !important; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card),
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card) { grid-template-rows: minmax(1.05rem, auto) minmax(5.7rem, auto) auto; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-copy),
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-copy) { min-height: 1.05rem; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-preview),
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-audio-player),
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-preview) { align-self: start; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-preview .profile-media-icon),
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-preview .profile-media-icon) { width: 2.35rem; height: 2.35rem; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-upload-hint),
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-upload-hint) { font-size: .84rem; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-copy strong),
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-copy strong) { font-size: .92rem; }
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card--cursor .rich-media-editor__compact-preview:hover:not(:disabled)),
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card--pointer_cursor .rich-media-editor__compact-preview:hover:not(:disabled)) { border-color: var(--ctp-green, #a6e3a1) !important; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ctp-green, #a6e3a1) 54%, transparent); }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-grid) { grid-template-columns: minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.5fr); gap: .65rem !important; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card),
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card) { padding: .65rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--background) { order: 1; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--avatar) { order: 2; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--audio) { order: 3; }
-  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--cursor),
-  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card--cursor) { order: 4; }
   .profile-customize-page :global(.rich-media-editor__compact-preview),
   .profile-customize-page :global(.rich-media-editor__upload-card),
   .profile-customize-page :global(.rich-media-editor__upload-preview),
@@ -596,19 +455,7 @@
   .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
   @media (max-width: 72rem) {
-    .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
-    .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / -1; grid-row: auto; align-self: start; align-content: start; grid-template-rows: none; }
-    .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: auto; min-height: 4.5rem; }
-    .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field),
-    .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field) { grid-column: auto; grid-row: auto; }
-    .profile-customize-page :global(.identity-editor__field[for="profile-bio"]),
-    .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child),
-    .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field),
-    .profile-customize-page :global(.identity-editor__options) { position: static; top: auto; margin-bottom: 0; }
-    .profile-customize-page :global(.identity-editor__options) { grid-column: 1 / -1; grid-row: auto; }
-    .profile-customize-page :global(.identity-editor__footer) { grid-column: 1 / -1; grid-row: auto; }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
@@ -623,11 +470,7 @@
   @media (max-width: 38rem) {
     .profile-customize-page__surface, .profile-customize-page__surface--assets { padding: .75rem; }
     .profile-customize-page__surface-heading { align-items: flex-start; flex-direction: column; }
-    .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-content-editor__panel:first-of-type .profile-content-editor__fields) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: auto; }
-    .profile-customize-page :global(.identity-editor__options) { grid-column: auto; }
     .profile-customize-page :global(.profile-content-editor), .profile-customize-page :global(.profile-widget-editor) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-content-editor__panel:nth-of-type(2)), .profile-customize-page :global(.profile-widget-editor__list) { grid-column: auto; }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields), .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }

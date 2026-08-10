@@ -6,12 +6,16 @@ import { MILESTONE_MANIFEST, normalizeNewMilestones, normalizeProgressionData } 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio is a full-page dashboard with a responsive owner shell', async () => {
-  const [app, settings, shell, styles] = await Promise.all([
+  const [app, settings, registry, workspace, preview, shell, styles] = await Promise.all([
     read('src/App.svelte'),
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/sectionRegistry.js'),
+    read('src/lib/ProfileStudioWorkspace.svelte'),
+    read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileDashboardShell.svelte'),
     read('src/styles/site.css')
   ]);
+  const studio = [settings, registry, workspace, preview].join('\n');
 
   assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible\}/);
   assert.match(app, /componentProps: \{ logoutInProgress \}/);
@@ -20,9 +24,9 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
   assert.match(settings, /showPreview=\{showDashboardPreview\}/);
   assert.match(settings, /customizePreviewAvailable && \(!isMobileViewport \|\| previewOpen\)/);
   assert.match(settings, /slot="preview"/);
-  assert.match(settings, /profile-settings-preview__body/);
-  assert.match(settings, /previewIdentityOnly=\{true\}/);
-  assert.doesNotMatch(settings, /profile-preview-drawer__backdrop/);
+  assert.match(studio, /profile-studio-preview__body/);
+  assert.match(studio, /previewIdentityOnly=\{true\}/);
+  assert.doesNotMatch(studio, /profile-preview-drawer__backdrop/);
   assert.match(shell, /profile-dashboard-shell__mobile-bar/);
   assert.match(shell, /profile-dashboard-shell--with-preview/);
   assert.match(shell, /slot name="preview"/);
@@ -30,7 +34,7 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
   assert.match(shell, /restoreFocus\(menuTrigger\)/);
   assert.match(shell, /prefers-reduced-motion/);
   assert.match(styles, /\.app-main--profile-settings/);
-  assert.match(settings, /profile-settings-page__content/);
+  assert.match(studio, /profile-studio-workspace__content/);
 });
 
 test('progression manifest is a small, stable expression track', () => {

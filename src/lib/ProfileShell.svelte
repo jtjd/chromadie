@@ -51,6 +51,10 @@
   export let previewCollectionItems = [];
   export let previewAllAchievements = [];
   export let visualFixture = '';
+  // The dashboard preview passes an explicit renderer context. Public profile
+  // callers keep the historical default while compact catalog controls can
+  // use the same renderer without inheriting profile-page geometry.
+  export let renderContext = 'profile';
 
   const profileShellStyle = '--profile-accent: var(--color-accent-roll); --profile-surface-accent: var(--color-accent-cyan); --profile-control-accent: var(--color-accent);';
   const DEFAULT_SIGNAL_MODULES = Object.freeze([
@@ -555,7 +559,7 @@
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (defaultProfilePresentation ? ' profile-shell-page--default' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (defaultProfilePresentation ? ' profile-shell-page--default' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} data-render-context={renderContext} style={profilePageStyle} aria-busy={loading}>
   {#if backgroundSrc}
     <img class="profile-shell__media-image" src={backgroundSrc} alt="" loading="eager" decoding="async" aria-hidden="true" />
   {/if}

@@ -49,11 +49,12 @@ test('provider widgets are bounded, unique, visible-aware, and legacy compatible
 });
 
 test('provider widget renderer and storage contract remain allowlisted', async () => {
-  const [renderer, editor, shell, settings, migration, headers, pageFunction] = await Promise.all([
+  const [renderer, editor, shell, settings, registry, migration, headers, pageFunction] = await Promise.all([
     read('src/lib/ProfileWidgets.svelte'),
     read('src/lib/ProfileWidgetEditor.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/sectionRegistry.js'),
     read('supabase/migrations/20260808150000_profile_provider_widgets.sql'),
     read('public/_headers'),
     read('functions/_publicPage.js')
@@ -68,8 +69,8 @@ test('provider widget renderer and storage contract remain allowlisted', async (
   assert.match(editor, /PROFILE_WIDGET_LIMITS.maxWidgets/);
   assert.match(editor, /canonical HTTPS URLs only/);
   assert.match(shell, /<ProfileWidgets/);
-  assert.match(settings, /id: 'profile-widgets'/);
-  assert.match(settings, /import\('\.\/ProfileWidgetEditor\.svelte'\)/);
+  assert.match(registry, /id: 'profile-widgets'/);
+  assert.match(registry, /ProfileWidgetEditor\.svelte/);
   assert.match(migration, /normalize_profile_widgets/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content', 'widgets'\)/);
   assert.match(migration, /SECURITY DEFINER/);

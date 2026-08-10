@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Stabilize Profile Studio workspace ownership
+
+- Profile Studio now uses a stable dashboard shell with dedicated Customize,
+  Links, Premium, and Account destinations and a persistent Live preview.
+- Draft edits remain visible while moving between sections and update the
+  preview immediately; Reset and Publish retain their existing behavior.
+- The dashboard keeps legacy hashes and direct-refresh links working, with
+  keyboard-aware tabs, mobile navigation, and reduced-motion support preserved.
+
 ## 2026-08-10 — Render real effect previews
 
 - Name and visual-effect controls now show their selected production renderer

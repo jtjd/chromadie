@@ -1,5 +1,24 @@
 # Chromadie 2.0 Progress
 
+## Component-owned Profile Studio dashboard — 2026-08-10
+
+- Reduced `ProfileSettings.svelte` to the route/state adapter while preserving
+  legacy hashes, direct refresh, save/publish, upload, equip, and account
+  boundaries.
+- Added owned shell/header, destination workspace, persistent Live preview,
+  and dirty-prompt components, with a section registry for dashboard routing
+  and lazy editor ownership.
+- Added one internal draft/preview projection for identity, configuration,
+  media, layout, and cosmetic drafts so editor changes reach Live preview
+  immediately without invoking save or publish RPCs.
+- Added explicit renderer contexts for live profiles, catalog cards, effect
+  cards, and compact name controls; moved Customize-specific geometry into the
+  owning editors while preserving standalone editor layouts.
+- Added behavior/source contracts for routing, draft aggregation, renderer
+  geometry, ownership boundaries, keyboard navigation, and preview composition;
+  browser smoke now includes the Layout workspace geometry check.
+- No database migration or authority-boundary change was required.
+
 ## Replace cosmetic placeholders with live previews — 2026-08-10
 
 - Replaced the four decorative effect sketches with selected catalog-item

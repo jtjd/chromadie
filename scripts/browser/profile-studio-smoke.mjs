@@ -176,28 +176,28 @@ try {
 
   await step('live preview opens on demand and closes cleanly', async () => {
     await page.navigate(`${appUrl}/profile/settings#links`, 'Links section for preview');
-    await page.waitFor(`document.querySelector('.profile-links-page') && document.querySelector('.profile-settings-page__toolbar')`, 'Links toolbar');
-    const initiallyOpen = await page.evaluate(`Boolean(document.querySelector('.profile-settings-preview'))`);
+    await page.waitFor(`document.querySelector('.profile-links-page') && document.querySelector('.profile-studio-header__toolbar')`, 'Links toolbar');
+    const initiallyOpen = await page.evaluate(`Boolean(document.querySelector('.profile-studio-preview'))`);
     assert(!initiallyOpen, 'Live preview should be collapsed when Links opens.');
     await page.clickText('Preview', { description: 'open live preview control' });
     await page.waitFor(`(() => {
-      const preview = document.querySelector('.profile-settings-preview');
-      const canvas = document.querySelector('.profile-settings-preview .profile-shell-page--preview');
+      const preview = document.querySelector('.profile-studio-preview');
+      const canvas = document.querySelector('.profile-studio-preview .profile-shell-page--preview');
       return Boolean(preview && canvas && !preview.closest('.auth-modal-overlay'));
     })()`, 'on-demand live preview');
     const state = await page.evaluate(`(() => ({
-      open: Boolean(document.querySelector('.profile-settings-preview')),
-      previewCanvas: Boolean(document.querySelector('.profile-settings-preview .profile-shell-page--preview')),
-      authOverlay: Boolean(document.querySelector('.profile-settings-preview')?.closest('.auth-modal-overlay'))
+      open: Boolean(document.querySelector('.profile-studio-preview')),
+      previewCanvas: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page--preview')),
+      authOverlay: Boolean(document.querySelector('.profile-studio-preview')?.closest('.auth-modal-overlay'))
     }))()`);
-    await page.click('.profile-settings-preview__close', 'close live preview control');
-    await page.waitFor(`!document.querySelector('.profile-settings-preview')`, 'closed live preview');
+    await page.click('.profile-studio-preview__close', 'close live preview control');
+    await page.waitFor(`!document.querySelector('.profile-studio-preview')`, 'closed live preview');
     return { ...state, closed: true };
   });
 
   await step('Customize controls publish the configured surface depth', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize-effects`, 'legacy Effects destination');
-    await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-settings-preview .profile-shell-page--preview')`, 'Customize tab workspace and persistent preview');
+    await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-studio-preview .profile-shell-page--preview')`, 'Customize tab workspace and persistent preview');
     await page.waitFor(`document.querySelector('.profile-dashboard-actions')`, 'dashboard profile actions');
     const customizeTabs = await page.evaluate(`[...document.querySelectorAll('[role="tablist"][aria-label="Customize profile"] [role="tab"]')].map(tab => tab.textContent.trim())`);
     assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Layout']), `Customize tabs did not collapse Effects into Appearance: ${JSON.stringify(customizeTabs)}.`);
@@ -221,6 +221,19 @@ try {
     assert((mediaRail.labels.includes('Avatar') || mediaRail.labels.includes('Profile avatar')) && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
     assert((mediaRail.editable.includes('Avatar') || mediaRail.editable.includes('Profile avatar')) && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
     assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
+    await page.click('#profile-customize-tab-layout', 'Layout customize tab');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, 'visible Layout editor');
+    const layoutState = await page.evaluate(`(() => {
+      const editor = document.querySelector('[data-editor-section="layout"]');
+      const workspace = document.querySelector('.profile-studio-workspace');
+      const rect = element => {
+        const box = element?.getBoundingClientRect();
+        return box ? { width: Math.round(box.width), height: Math.round(box.height), top: Math.round(box.top), bottom: Math.round(box.bottom) } : null;
+      };
+      return { editor: rect(editor), workspace: rect(workspace), viewport: { width: innerWidth, height: innerHeight } };
+    })()`);
+    assert((layoutState.editor?.width || 0) > 0 && (layoutState.editor?.height || 0) > 0, `Layout editor has no visible geometry: ${JSON.stringify(layoutState)}.`);
+    assert((layoutState.workspace?.width || 0) > 0 && (layoutState.workspace?.bottom || 0) <= layoutState.viewport.height + 2, `Layout workspace escapes the viewport: ${JSON.stringify(layoutState)}.`);
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
     await page.evaluate(`(async () => {
@@ -234,7 +247,7 @@ try {
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
     await page.waitFor(`(() => {
-      const liveName = document.querySelector('.profile-settings-preview .name-effect-canvas__semantic');
+      const liveName = document.querySelector('.profile-studio-preview .name-effect-canvas__semantic');
       return liveName?.getAttribute('style')?.includes('Permanent Marker');
     })()`, 'font renderer in live preview');
     const fontCardState = await page.evaluate(`(() => ({
@@ -263,19 +276,19 @@ try {
       select.value = 'border_celestial';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
-    await page.waitFor(`document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('.profile-settings-preview [data-profile-border="celestial"]')`, 'border renderer in card and live preview');
+    await page.waitFor(`document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('.profile-studio-preview [data-profile-border="celestial"]')`, 'border renderer in card and live preview');
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-profile-atmosphere');
       select.value = 'profile_atmosphere_rain_window';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
-    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]') && document.querySelector('.profile-settings-preview [data-atmosphere="rain-window"]')`, 'atmosphere renderer in card and live preview');
+    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]') && document.querySelector('.profile-studio-preview [data-atmosphere="rain-window"]')`, 'atmosphere renderer in card and live preview');
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-profile-atmosphere');
       select.value = 'profile_atmosphere_silk_folds';
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
-    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]') && document.querySelector('.profile-settings-preview [data-atmosphere="silk-folds"]') && [...document.querySelectorAll('[data-atmosphere="silk-folds"] video')].every(video => video.currentSrc.includes('/atmospheres/silk-folds/'))`, 'atmosphere renderer changes in card and live preview');
+    await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]') && document.querySelector('.profile-studio-preview [data-atmosphere="silk-folds"]') && [...document.querySelectorAll('[data-atmosphere="silk-folds"] video')].every(video => video.currentSrc.includes('/atmospheres/silk-folds/'))`, 'atmosphere renderer changes in card and live preview');
     await page.evaluate(`document.querySelector('#customize-effects')?.scrollIntoView({ block: 'start' })`);
     await capture('05-effects-live-preview');
     await page.evaluate(`(() => {
@@ -288,15 +301,15 @@ try {
     })()`);
     const originalBio = await page.evaluate(`document.querySelector('#profile-bio')?.value || ''`);
     await page.setInputValue('#profile-bio', 'Live preview draft', ['input']);
-    await page.waitFor(`document.querySelector('.profile-settings-preview .identity-card__bio')?.textContent?.trim() === 'Live preview draft'`, 'identity draft in live preview');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() === 'Live preview draft'`, 'identity draft in live preview');
     await page.setInputValue('#profile-bio', originalBio, ['input']);
     const originalTextColor = await page.evaluate(`document.querySelector('[data-color-role="text"] .appearance-editor__hex')?.value || '#F4F6FB'`);
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', '#12ABEF', ['input']);
-    await page.waitFor(`getComputedStyle(document.querySelector('.profile-settings-preview .profile-shell__approved-opening')).getPropertyValue('--profile-text').trim().toUpperCase() === '#12ABEF'`, 'color draft in live preview');
+    await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell__approved-opening')).getPropertyValue('--profile-text').trim().toUpperCase() === '#12ABEF'`, 'color draft in live preview');
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', originalTextColor, ['input']);
     const originalBackgroundColor = await page.evaluate(`document.querySelector('[data-color-role="background"] .appearance-editor__hex')?.value || '#07080B'`);
     await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', '#123456', ['input']);
-    await page.waitFor(`getComputedStyle(document.querySelector('.profile-settings-preview .profile-shell-page--preview')).backgroundColor === 'rgb(18, 52, 86)'`, 'page background draft in live preview');
+    await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell-page--preview')).backgroundColor === 'rgb(18, 52, 86)'`, 'page background draft in live preview');
     await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', originalBackgroundColor, ['input']);
     const originalSurfaceColor = await page.evaluate(`document.querySelector('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex')?.value || '#11141B'`);
     const surfacePlacement = await page.evaluate(`({
@@ -305,7 +318,7 @@ try {
     })`);
     assert(!surfacePlacement.inColorMatrix && surfacePlacement.inSurfaceSection, `Profile surface color is not grouped with surface depth: ${JSON.stringify(surfacePlacement)}.`);
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', '#234567', ['input']);
-    await page.waitFor(`getComputedStyle(document.querySelector('.profile-settings-preview .profile-shell__approved-opening')).getPropertyValue('--profile-surface').trim().toUpperCase() === '#234567'`, 'surface color draft in live preview');
+    await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell__approved-opening')).getPropertyValue('--profile-surface').trim().toUpperCase() === '#234567'`, 'surface color draft in live preview');
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', originalSurfaceColor, ['input']);
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
     await page.setInputValue('.appearance-editor__surface-grid .appearance-editor__range:nth-child(4) input[type="range"]', 40, ['input']);
@@ -337,8 +350,8 @@ try {
     assert(identityLayout.behaviorGap !== null && identityLayout.behaviorGap <= 20, `Metadata-to-behavior gap is too large: ${JSON.stringify(identityLayout)}.`);
     const draftState = await page.evaluate(`({
       publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,
-      toolbarVisible: Boolean(document.querySelector('.profile-settings-page__toolbar')),
-      previewVisible: Boolean(document.querySelector('.profile-settings-preview'))
+      toolbarVisible: Boolean(document.querySelector('.profile-studio-header__toolbar')),
+      previewVisible: Boolean(document.querySelector('.profile-studio-preview'))
     })`);
     assert(draftState.publishDisabled === false, 'Changing Customize did not create an unpublished draft.');
     assert(!draftState.toolbarVisible && draftState.previewVisible, 'Customize did not keep its persistent desktop preview beside the tabbed editor.');

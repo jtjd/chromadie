@@ -3,38 +3,42 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 test('profile settings uses a compact grouped dashboard', async () => {
-  const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
+  const [settings, contract, registry, header, workspace, preview] = await Promise.all([
+    readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/profile-studio/dashboardContract.js', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/profile-studio/sectionRegistry.js', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileStudioHeader.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileStudioWorkspace.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileStudioPreview.svelte', import.meta.url), 'utf8')
+  ]);
+  const studio = [settings, contract, registry, header, workspace, preview].join('\n');
   const siteStyles = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
 
-  assert.match(settings, /profile-settings-page__toolbar/);
-  assert.match(settings, /ProfileCustomizePage/);
-  assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
-  assert.match(settings, /id: 'links'/);
-  assert.match(settings, /Live preview/);
+  assert.match(header, /profile-studio-header__toolbar/);
+  assert.match(studio, /ProfileCustomizePage/);
+  assert.match(studio, /ProfilePremiumPage/);
+  assert.match(studio, /id: 'links'/);
+  assert.match(preview, /Live preview/);
   assert.match(settings, /previewOpen/);
   assert.match(settings, /togglePreview/);
   assert.match(settings, /showPreview=\{showDashboardPreview\}/);
   assert.match(settings, /customizePreviewAvailable && \(!isMobileViewport \|\| previewOpen\)/);
-  assert.match(settings, /role="tablist" aria-label="Customize profile"/);
+  assert.match(header, /role="tablist" aria-label="Customize profile"/);
   assert.doesNotMatch(settings, /preview-column/);
   assert.match(settings, /ProfileDashboardShell/);
   assert.match(settings, /setActiveSection\(/);
   assert.doesNotMatch(settings, /Build the profile you keep\./);
   assert.doesNotMatch(settings, /profile-settings-page__profile-link/);
   assert.match(settings, /Customize/);
-  assert.match(settings, /Overview/);
-  assert.match(settings, /Privacy & social/);
-  assert.match(settings, /Badges & progression/);
+  assert.match(studio, /Overview/);
+  assert.match(studio, /Privacy & social/);
+  assert.match(studio, /Badges & progression/);
 
-  assert.match(settings, /import\('\.\/IdentityEditor\.svelte'\)/);
-  assert.match(settings, /import\('\.\/ProfileExpressionEditor\.svelte'\)/);
-  assert.match(settings, /import\('\.\/ProfileCosmeticsEditor\.svelte'\)/);
-  assert.match(settings, /import\('\.\/ProfileStudioOverview\.svelte'\)/);
-  assert.match(settings, /import\('\.\/ProfileProgression\.svelte'\)/);
-  assert.match(settings, /import\('\.\/ProfileEditor\.svelte'\)/);
-  assert.match(settings, /import\('\.\/ProfileSocial\.svelte'\)/);
-  assert.match(settings, /<svelte:component/);
-  assert.match(settings, /ProfileAccountSettings/);
+  for (const component of ['IdentityEditor', 'ProfileExpressionEditor', 'ProfileCosmeticsEditor', 'ProfileStudioOverview', 'ProfileProgression', 'ProfileEditor', 'ProfileSocial']) {
+    assert.match(registry, new RegExp(component + '\\.svelte'));
+  }
+  assert.match(workspace, /<svelte:component/);
+  assert.match(registry, /id: 'account',[\s\S]*ProfileAccountSettings\.svelte/);
   assert.match(settings, /createInitialSettingsContext/);
   assert.match(settings, /loading = !previousContext/);
   assert.match(siteStyles, /\.app-main--profile-settings/);

@@ -29,9 +29,9 @@ test('Atelier expression is restored as two canonical Plus renderer rows', async
 });
 
 test('Plus Collection explains where the Atelier layers are configured', async () => {
-  const [editor, settings] = await Promise.all([
+  const [editor, workspace] = await Promise.all([
     read('src/lib/ProfileCosmeticsEditor.svelte'),
-    read('src/lib/ProfileSettings.svelte')
+    read('src/lib/ProfileStudioWorkspace.svelte')
   ]);
 
   assert.match(editor, /Atelier expression is ready/);
@@ -41,5 +41,5 @@ test('Plus Collection explains where the Atelier layers are configured', async (
   assert.match(editor, /async function applyChanges/);
   assert.match(editor, /class="profile-cosmetics-apply"/);
   assert.doesNotMatch(editor, /applySlot/);
-  assert.match(settings, /entitlements=\{\$profileEntitlements\} staff=\{Boolean\(context\.targetProfile\?\.is_staff\)\}/);
+  assert.match(workspace, /\{entitlements\} \{staff\}/);
 });

@@ -37,6 +37,7 @@ test('the landing route stays separate from explicit roll and profile routes', (
 test('profile settings keeps secondary features available away from the public canvas', async () => {
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
+  const registry = await readFile(new URL('../src/lib/profile-studio/sectionRegistry.js', import.meta.url), 'utf8');
   const roll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
   const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
 
@@ -47,8 +48,8 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(shell, /data-profile-region="featured"/);
   assert.match(shell, /getProfileStoryVisible/);
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
-  assert.match(settings, /import\('\.\/ProfileEditor\.svelte'\)/);
-  assert.match(settings, /import\('\.\/ProfileSocial\.svelte'\)/);
+  assert.match(registry, /ProfileEditor\.svelte/);
+  assert.match(registry, /ProfileSocial\.svelte/);
   assert.match(shell, /TodayColor result=\{latestRoll\}[^\n]*accentColor=\{signatureColor\}/);
   assert.match(shell, /<ProfileSocial[\s\S]*social=\{social\}/);
   assert.match(shell, /profile-shell__social-section/);

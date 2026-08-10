@@ -38,11 +38,12 @@ test('profile content is bounded, structured, and safe by default', () => {
 });
 
 test('content renderer and editor stay inside the structured public boundary', async () => {
-  const [content, editor, shell, settings, migration] = await Promise.all([
+  const [content, editor, shell, settings, registry, migration] = await Promise.all([
     read('src/lib/ProfileContent.svelte'),
     read('src/lib/ProfileContentEditor.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/profile-studio/sectionRegistry.js'),
     read('supabase/migrations/20260808140000_profile_content_regions.sql')
   ]);
   assert.match(content, /getVisibleProfileContent/);
@@ -59,8 +60,8 @@ test('content renderer and editor stay inside the structured public boundary', a
   assert.doesNotMatch(editor, /innerHTML|iframe|new Function|eval\s*\(/);
   assert.match(shell, /<ProfileContent/);
   assert.match(shell, /hasVisibleProfileContent/);
-  assert.match(settings, /id: 'profile-content'/);
-  assert.match(settings, /import\('\.\/ProfileContentEditor\.svelte'\)/);
+  assert.match(registry, /id: 'profile-content'/);
+  assert.match(registry, /ProfileContentEditor\.svelte/);
   assert.match(migration, /normalize_profile_content/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content'\)/);
   assert.match(migration, /profile_content_patch/);

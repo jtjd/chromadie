@@ -201,6 +201,16 @@
     --studio-canvas: var(--ctp-crust, #11111b);
     --studio-panel: var(--ctp-mantle, #181825);
     --studio-inset: var(--ctp-base, #1e1e2e);
+    --studio-font: var(--site-font, var(--font-body-stack, sans-serif));
+    --studio-mono: var(--site-mono, var(--font-mono-stack, monospace));
+    --studio-text: var(--ctp-text, #cdd6f4);
+    --studio-muted: var(--ctp-subtext1, #bac2de);
+    --studio-faint: var(--ctp-overlay1, #7f849c);
+    --studio-border: var(--ctp-surface0, #313244);
+    --studio-border-strong: var(--ctp-surface1, #45475a);
+    --studio-focus: var(--ctp-lavender, #b4befe);
+    --studio-accent: var(--ctp-blue, #89b4fa);
+    --studio-radius: .42rem;
     --type-body: 1rem;
     --type-small: .9rem;
     --type-label: .78rem;

@@ -5,6 +5,7 @@
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { getProfileLayoutLabel } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
+  import { PROFILE_RENDER_CONTEXTS, resolveProfileRenderContext } from './profile-studio/previewContexts.js';
 
   export let item;
   export let username = 'You';
@@ -12,6 +13,8 @@
   export let avatarSrc = '';
   export let mode = 'animated';
   export let active = false;
+  /** @type {any} */
+  export let renderContext = PROFILE_RENDER_CONTEXTS.CATALOG;
 
   const COLLECTION_TONES = Object.freeze({
     Signal: '#B7FD4D',
@@ -55,6 +58,10 @@
                   : 'utility';
   $: previewClasses = `shop-preview-area shop-preview-area--${previewType}`;
   $: previewStyle = `--preview-accent:${previewAccent}; --preview-surface:${PREVIEW_SURFACE};`;
+  $: resolvedRenderContext = resolveProfileRenderContext(renderContext, PROFILE_RENDER_CONTEXTS.CATALOG);
+  $: nameRendererContext = resolvedRenderContext === PROFILE_RENDER_CONTEXTS.EFFECT_CARD || resolvedRenderContext === PROFILE_RENDER_CONTEXTS.NAME_CONTROL
+    ? 'card'
+    : 'profile';
 
   let cursorPoint = { x: 50, y: 50 };
   let hovered = false;
@@ -68,7 +75,7 @@
   }
 </script>
 
-<div class={previewClasses} style={previewStyle} data-preview-source={displayColor} role="presentation" on:pointerenter={() => hovered = true} on:pointerleave={() => hovered = false}>
+<div class={previewClasses} style={previewStyle} data-preview-source={displayColor} data-render-context={resolvedRenderContext} role="presentation" on:pointerenter={() => hovered = true} on:pointerleave={() => hovered = false}>
   {#if item?.slot === 'profile_border'}
     <ProfileBorderEffect borderKey={item.css_value} compact={true} animated={mode === 'animated'} className="preview-border-shell">
       <span class="preview-border-space" aria-hidden="true"></span>
@@ -79,7 +86,7 @@
         text={username}
         loadout={nameLayerLoadout}
         todayColor={previewAccent}
-        context="profile"
+        context={nameRendererContext}
         compact={false}
         {mode}
         semanticClass="shop-item-name"
@@ -136,6 +143,11 @@
 
 <style>
   .shop-preview-area { position:relative; aspect-ratio:16 / 9; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 0; border-radius: 12px; background: var(--preview-surface, #020306); overflow: hidden; }
+  .shop-preview-area[data-render-context="effect-card"] { aspect-ratio: auto; height: 4.25rem; min-height: 4.25rem; padding: .35rem; border-radius: 0; }
+  .shop-preview-area[data-render-context="name-control"] { aspect-ratio: auto; height: 100%; min-height: 2.9rem; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
+  .shop-preview-area[data-render-context="live-profile"] { aspect-ratio: auto; min-height: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
+  .shop-preview-area[data-render-context="name-control"] .shop-preview-text--name :global(.name-effect-canvas__semantic) { font-size: .86rem; line-height: 1.1; }
+  .shop-preview-area[data-render-context="effect-card"] .shop-preview-text--name :global(.name-effect-canvas__semantic) { font-size: clamp(1rem, 4vw, 1.7rem); line-height: 1.05; }
   .shop-preview-area :global(.preview-border-shell) { width: min(82%, 22rem); height: 78%; }
   .preview-border-space { display: block; width: 100%; height: 100%; min-height: 0; }
   .shop-preview-text { width: 100%; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 8px; text-align: center; box-sizing: border-box; }
@@ -193,6 +205,7 @@
   .shop-layout-preview--story-stack .shop-layout-preview__hero { left:9%; right:9%; height:31%; }
   .shop-layout-preview--story-stack .shop-layout-preview__module { left:9%; right:9%; width:auto; }
   .shop-atmosphere-preview { position:relative; width:100%; height:100%; min-height:7.5rem; overflow:hidden; border-radius:5px; background:#070a10; }
+  .shop-preview-area[data-render-context="effect-card"] .shop-atmosphere-preview { min-height: 100%; }
   .shop-atmosphere-preview :global(.profile-atmosphere) { inset:0; width:100%; height:100%; opacity:.9; }
   .shop-atmosphere-preview :global(.profile-atmosphere__video) { inset:0; width:100%; height:100%; display:block; object-fit:cover; transform:scale(1.08); transform-origin:center; filter:none !important; }
   .shop-atmosphere-preview :global(.profile-atmosphere__video--poster) { opacity:.42; }
