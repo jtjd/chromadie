@@ -187,17 +187,17 @@
 
 <style>
   .profile-customize-page {
-    --customize-surface: var(--ctp-base, #1e1e2e);
-    --customize-surface-raised: var(--ctp-surface0, #313244);
-    --customize-surface-inset: var(--ctp-mantle, #181825);
+    --customize-surface: var(--ctp-crust, #11111b);
+    --customize-surface-raised: var(--ctp-base, #1e1e2e);
+    --customize-surface-inset: var(--studio-inset, color-mix(in srgb, var(--ctp-crust, #11111b) 74%, #04132b));
     --customize-surface-deep: var(--ctp-crust, #11111b);
     --customize-text-primary: var(--ctp-text, #cdd6f4);
     --customize-text-secondary: var(--ctp-subtext1, #bac2de);
     --customize-text-muted: var(--ctp-subtext0, #a6adc8);
     --customize-text-faint: var(--ctp-overlay1, #7f849c);
-    --customize-border: var(--ctp-surface1, #45475a);
-    --customize-border-strong: var(--ctp-surface2, #585b70);
-    --customize-border-subtle: color-mix(in srgb, var(--ctp-overlay0, #6c7086) 54%, transparent);
+    --customize-border: var(--ctp-surface0, #313244);
+    --customize-border-strong: var(--ctp-surface1, #45475a);
+    --customize-border-subtle: color-mix(in srgb, var(--ctp-surface0, #313244) 66%, transparent);
     --customize-focus: var(--ctp-lavender, #b4befe);
     --customize-accent-primary: var(--ctp-teal, #94e2d5);
     --customize-accent-secondary: var(--ctp-sky, #89dceb);
@@ -211,13 +211,13 @@
     --customize-subheading-size: .92rem;
     --customize-label-size: .8rem;
     --customize-control-size: .84rem;
-    --customize-secondary-height: 2.15rem;
-    --customize-primary-height: 2.4rem;
+    --customize-secondary-height: 1.95rem;
+    --customize-primary-height: 2.25rem;
     --customize-radius: .38rem;
     --customize-section-input: var(--customize-surface-inset);
     display: grid;
     width: 100%;
-    gap: .75rem;
+    gap: .5rem;
     min-width: 0;
     padding-bottom: 1.5rem;
     color: var(--customize-text-primary);
@@ -263,7 +263,7 @@
 
   .profile-customize-page__control-kicker { display: none; }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--customize-surface); --customize-section-input: var(--customize-surface-inset); --customize-section-input-line: var(--ctp-surface1, #45475a); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-surface-inset); --site-surface: var(--customize-surface-inset); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-surface-inset); --surface-inset: var(--customize-surface-inset); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-surface-inset); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-surface-inset); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-surface-inset); display: grid; gap: .7rem; min-width: 0; padding: .9rem 1rem; border: 1px solid color-mix(in srgb, var(--ctp-surface1, #45475a) 78%, transparent); border-top-color: color-mix(in srgb, var(--customize-section-accent) 48%, var(--ctp-surface1, #45475a)); border-radius: .52rem; background: linear-gradient(135deg, color-mix(in srgb, var(--ctp-surface0, #313244) 27%, var(--ctp-base, #1e1e2e)), var(--ctp-base, #1e1e2e) 56%, color-mix(in srgb, var(--ctp-mantle, #181825) 48%, var(--ctp-base, #1e1e2e))); box-shadow: 0 .55rem 1.5rem color-mix(in srgb, var(--ctp-crust, #11111b) 46%, transparent); scroll-margin-top: 5rem; }
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--customize-surface); --customize-section-input: var(--customize-surface-inset); --customize-section-input-line: var(--ctp-surface0, #313244); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .4rem; min-width: 0; padding: .9rem 1rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-top-color: color-mix(in srgb, var(--customize-section-accent) 38%, var(--ctp-surface0, #313244)); border-radius: .52rem; background: radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--ctp-sapphire, #74c7ec) 4%, transparent), transparent 28rem), linear-gradient(135deg, color-mix(in srgb, var(--ctp-sapphire, #74c7ec) 7%, var(--ctp-crust, #11111b)), var(--ctp-crust, #11111b) 58%, color-mix(in srgb, var(--ctp-blue, #89b4fa) 4%, var(--ctp-crust, #11111b))); box-shadow: 0 .55rem 1.5rem color-mix(in srgb, var(--ctp-crust, #11111b) 46%, transparent); scroll-margin-top: 5rem; }
   .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
   .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
@@ -271,11 +271,11 @@
   .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: var(--ctp-pink, #f5c2e7); }
   .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); }
   .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-green, #a6e3a1); }
-  .profile-customize-page__surface--assets { padding: 1rem; }
+  .profile-customize-page__surface--assets { padding: .85rem 1rem .4rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-section-accent); font-size: var(--customize-section-heading-size); line-height: 1.2; letter-spacing: -.03em; }
 
-  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.55rem; overflow: hidden; padding: .5rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: linear-gradient(100deg, var(--ctp-mantle, #181825), color-mix(in srgb, var(--customize-accent-premium) 4%, var(--ctp-base, #1e1e2e)), var(--ctp-mantle, #181825)); color: var(--customize-text-muted); font: 600 .78rem/1.35 var(--customize-font-body); cursor: pointer; }
+  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.8rem; overflow: hidden; padding: .5rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: linear-gradient(100deg, var(--ctp-mantle, #181825), color-mix(in srgb, var(--customize-accent-premium) 4%, var(--ctp-base, #1e1e2e)), var(--ctp-mantle, #181825)); color: var(--customize-text-muted); font: 600 .78rem/1.35 var(--customize-font-body); cursor: pointer; }
   .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { position: absolute; color: color-mix(in srgb, var(--customize-accent-premium) 12%, transparent); font-size: 2.7rem; line-height: 1; pointer-events: none; }
   .profile-customize-page__premium-banner::before { content: '◇'; left: 1rem; transform: rotate(-18deg); }
   .profile-customize-page__premium-banner::after { content: '✦'; right: 1rem; transform: rotate(18deg); }
@@ -305,7 +305,7 @@
   .profile-customize-page :global(.foundation-module__description) { display: none; }
   .profile-customize-page :global(.foundation-module__body) { padding: 0; }
   .profile-customize-page :global(.profile-expression-editor) { display: grid; gap: .65rem; }
-  .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+  .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.75rem; }
   .profile-customize-page :global(.profile-expression-editor__compact-grid .rich-media-editor--compact),
   .profile-customize-page :global(.profile-expression-editor__compact-grid .rich-media-editor--compact > .foundation-module__body) { display: contents; }
   .profile-customize-page :global(.profile-expression-editor__compact-grid .rich-media-editor--compact .rich-media-editor__advanced) { grid-column: 1 / -1; order: 5; }
@@ -354,7 +354,7 @@
   .profile-customize-page :global(.identity-editor__options label) { display: inline-flex; align-items: center; gap: .35rem; }
   .profile-customize-page :global(.identity-editor__field) { align-self: start; align-content: start; gap: .35rem; font-size: var(--customize-label-size); }
   .profile-customize-page :global(.identity-editor__field textarea) { min-height: 4.5rem; }
-  .profile-customize-page :global(.identity-editor__field :is(input, textarea, select)) { min-height: var(--customize-primary-height); border-radius: var(--customize-radius); padding: .55rem .65rem; font-size: var(--customize-control-size); font-family: var(--customize-font-body); }
+  .profile-customize-page :global(.identity-editor__field :is(input, textarea, select)) { min-height: 2rem; border-radius: var(--customize-radius); padding: .45rem .65rem; font-size: var(--customize-control-size); font-family: var(--customize-font-body); }
   .profile-customize-page :global(.identity-editor__field :is(input, textarea, select)),
   .profile-customize-page :global(.profile-editor :is(input[type="text"], input[type="url"], input[type="email"], input[type="search"], input[type="number"], textarea, select)),
   .profile-customize-page :global(.appearance-editor__color-input),
@@ -364,7 +364,7 @@
   .profile-customize-page :global(.profile-editor :is(input[type="text"], input[type="url"], input[type="email"], input[type="search"], input[type="number"], textarea, select)),
   .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)),
   .profile-customize-page :global(.profile-widget-editor__panel :is(input, select)),
-  .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: var(--customize-primary-height); font-family: var(--customize-font-body); }
+  .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: 2rem; font-family: var(--customize-font-body); }
   .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)),
   .profile-customize-page :global(.profile-widget-editor__panel :is(input, select)) { padding: .5rem .65rem; font: 500 var(--customize-control-size) / 1.35 var(--customize-font-body); }
   .profile-customize-page :global(.profile-cosmetics-slot select) { padding-inline: .65rem; font: 500 var(--customize-control-size) / 1 var(--customize-font-body); }

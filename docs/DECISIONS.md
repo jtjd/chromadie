@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Tune Studio proportions to the reference viewport
+
+The reference-led Studio shell uses a 14rem navigation rail, a 1rem editor
+gutter, compact non-active navigation rows, and a taller active row so the
+Customize and Account groups land at the same visual rhythm. Media wells use
+the available width with a bounded 5.7rem minimum and a wider desktop gap;
+editor fields use the darker recessed layer and compact two-rem control height.
+
+Large surfaces stay within the Catppuccin Mocha family while using restrained
+blue-black mixes of Crust for the workspace canvas and input wells. This keeps
+the supplied reference contrast at wide desktop widths without exposing
+user-authored profile colors as dashboard chrome. Responsive drawer behavior,
+keyboard focus restoration, reduced motion, and all save/publish boundaries
+remain unchanged.
+
 ## 2026-08-09 — Give Profile Studio a self-contained Mocha workspace
 
 Profile Studio now owns its full viewport instead of sitting beneath the

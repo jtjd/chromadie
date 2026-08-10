@@ -40,10 +40,12 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
     assert.match(dashboardIcon, new RegExp(`name === '${icon}'`));
   }
   assert.match(shell, /--nav-accent/);
+  assert.match(shell, /--dashboard-sidebar-width: 14rem/);
+  assert.match(shell, /min-height: 2\.2rem/);
   assert.match(shell, /--ctp-sapphire/);
-  assert.match(shell, /var\(--ctp-crust, var\(--site-deep/);
+  assert.match(shell, /var\(--studio-canvas\)/);
   assert.match(shell, /profile-dashboard-shell__main \{ min-width: 0; background: transparent/);
-  assert.match(shell, /profile-dashboard-shell__content \{ --surface-panel: color-mix\(in srgb, var\(--ctp-surface0/);
+  assert.match(shell, /profile-dashboard-shell__content \{ --surface-panel: var\(--studio-panel/);
   assert.match(shell, /radial-gradient\(circle at 82% 4%/);
   assert.match(identity, /baselineBio/);
   assert.match(identity, /incomingKey/);
@@ -98,7 +100,11 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /--customize-section-surface/);
   assert.match(customize, /--customize-section-surface: var\(--customize-surface\)/);
   assert.match(customize, /--customize-section-input: var\(--customize-surface-inset\)/);
+  assert.match(customize, /--customize-primary-height: 2\.25rem/);
+  assert.match(customize, /profile-expression-editor__compact-grid.*gap: 1\.75rem/);
   assert.match(customize, /linear-gradient\(135deg/);
+  assert.match(expression, /gap: 1\.75rem !important/);
+  assert.match(expression, /min-height: 5\.7rem/);
   assert.doesNotMatch(customize, /--customize-section-surface: var\(--customize-surface-alt\)/);
   assert.match(customize, /--customize-section-input/);
   assert.match(customize, /--customize-section-input-line/);

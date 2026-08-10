@@ -471,7 +471,7 @@
   .rich-media-editor__compact-card--cursor { order: 4; }
   .rich-media-editor__compact-card--locked { opacity: .72; }
   .rich-media-editor__compact-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
-  .rich-media-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: var(--surface-inset); color: var(--color-ink-muted); cursor: pointer; }
+  .rich-media-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 5.7rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: var(--surface-inset); color: var(--color-ink-muted); cursor: pointer; }
   .rich-media-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
   .rich-media-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }

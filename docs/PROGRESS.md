@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Tune Studio proportions and recessed controls — 2026-08-10
+
+- Matched the reference’s 14rem sidebar, compact navigation rhythm, one-rem
+  editor gutter, and wider media-card spacing.
+- Darkened the workspace and controls with Crust-derived blue-black mixes and
+  kept section borders on the supplied Surface0/S1 tokens.
+- Reduced media well minimums and editor control heights so General, Color,
+  and Effects sections keep the reference’s compact vertical cadence.
+- Rechecked authenticated direct refresh, publishing, mobile drawer focus, and
+  reduced-motion browser behavior.
+
 ## Match Profile Studio to the Mocha dashboard reference — 2026-08-09
 
 - Rebuilt the Studio frame as a full-height Catppuccin Mocha workspace with a

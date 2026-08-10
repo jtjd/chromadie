@@ -760,7 +760,7 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: start;
-    gap: .85rem !important;
+    gap: 1.75rem !important;
     color: var(--media-text-primary);
     font-family: var(--customize-font-body, var(--font-body-stack, sans-serif));
   }
@@ -790,7 +790,7 @@
     justify-items: center;
     gap: .5rem;
     width: 100%;
-    min-height: 6.6rem;
+    min-height: 5.7rem;
     aspect-ratio: 10 / 3;
     overflow: hidden;
     padding: .6rem .65rem;
@@ -828,7 +828,7 @@
   .profile-expression-editor__compact-remove:hover:not(:disabled) { color: var(--media-red); }
   .profile-expression-editor__compact-remove:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 3px; color: var(--media-red); }
   .profile-expression-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
-  .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; padding: .6rem .65rem; border: 1px solid var(--media-line); border-radius: .35rem; background: var(--media-surface-inset); }
+  .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; width: 100%; min-height: 5.7rem; aspect-ratio: 10 / 3; padding: .6rem .65rem; border: 1px solid var(--media-line); border-radius: .35rem; background: var(--media-surface-inset); }
   .profile-expression-editor__compact-audio-play { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--media-card-accent) 58%, var(--media-line-strong)); border-radius: 50%; background: color-mix(in srgb, var(--media-card-accent) 13%, transparent); color: var(--media-text-primary); font: 700 .72rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
   .profile-expression-editor__compact-audio-play:hover { border-color: var(--media-card-accent); background: color-mix(in srgb, var(--media-card-accent) 24%, transparent); }
   .profile-expression-editor__compact-audio-play:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
@@ -865,7 +865,7 @@
 
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview) {
     gap: .5rem;
-    min-height: 6.6rem;
+    min-height: 5.7rem;
     padding: .6rem .65rem;
     border: 1px solid var(--media-line);
     border-radius: .35rem;

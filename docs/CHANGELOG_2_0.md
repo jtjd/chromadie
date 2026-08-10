@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Tighten the Mocha dashboard proportions
+
+- Narrowed the Studio rail to the reference 14rem footprint and tuned the
+  active/inactive navigation row rhythm without changing destinations.
+- Added a wider desktop media gap, bounded media wells, and compact two-rem
+  form controls so the editor remains dense at the supplied viewport size.
+- Shifted the workspace, panels, and input wells toward the darker Crust
+  layers while retaining Catppuccin semantic accents and readable borders.
+- Kept the owner card, omitted theme switcher, mobile drawer, preview, and
+  draft/publish behavior intact.
+
 ## 2026-08-09 — Redesign Profile Studio as a focused Mocha dashboard
 
 - Profile Studio now fills the viewport with a dedicated Catppuccin Mocha
