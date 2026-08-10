@@ -63,4 +63,6 @@ test('appearance editor wires all picker controls through the selected role', as
   assert.match(editor, /fieldValue\(key, staged\)/);
   assert.match(editor, /activePickerStyle\.x/);
   assert.match(editor, /activePickerStyle\.huePosition/);
+  assert.match(editor, /PROFILE_COLOR_MATRIX_FIELDS = PROFILE_APPEARANCE_COLOR_FIELDS\.filter\(field => field\.key !== 'surface'\)/);
+  assert.match(editor, /appearance-surface-title[\s\S]*data-color-role="surface"[\s\S]*Opacity[\s\S]*Blur/);
 });

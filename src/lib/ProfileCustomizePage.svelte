@@ -347,7 +347,7 @@
   .profile-customize-page :global(.appearance-editor) { gap: .65rem; }
   .profile-customize-page :global(.appearance-editor__panel) { padding: .25rem 0 0; border: 0; border-bottom: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
   .profile-customize-page :global(.appearance-editor__panel--colors) { padding-bottom: 0; }
-  .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { box-sizing: border-box; height: 7.45rem; padding: .8rem .85rem .75rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-section-surface); }
+  .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { box-sizing: border-box; min-height: 7.45rem; padding: .8rem .85rem .75rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-section-surface); }
   .profile-customize-page :global(.appearance-editor__colors-layout),
   .profile-customize-page :global(.appearance-editor__color-grid),
   .profile-customize-page :global(.appearance-editor__picker) { min-height: 15.75rem; box-sizing: border-box; }

@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Group and preview profile appearance controls
+
+- Moved Profile surface color beside Profile surface opacity and blur.
+- The surface swatch, hex field, and shared color picker continue updating the
+  Live preview immediately.
+- Font, material, motion, avatar, border, cursor-trail, and atmosphere choices
+  continue updating the persistent profile preview while they are tried on.
+
 ## 2026-08-10 — Merge Effects into Appearance
 
 - Removed the separate Effects tab from Customize.

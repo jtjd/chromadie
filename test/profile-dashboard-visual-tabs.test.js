@@ -44,13 +44,14 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
 });
 
 test('reference workspace composition stays explicit', async () => {
-  const [settings, actions, appearance, appearanceColors, cosmetics, customize] = await Promise.all([
+  const [settings, actions, appearance, appearanceColors, cosmetics, customize, profileShell] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileDashboardActions.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/profileAppearanceColors.js'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),
-    read('src/lib/ProfileCustomizePage.svelte')
+    read('src/lib/ProfileCustomizePage.svelte'),
+    read('src/lib/ProfileShell.svelte')
   ]);
 
   assert.match(actions, /Customize profile/);
@@ -77,9 +78,16 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(cosmetics, /Name effects/);
   assert.match(cosmetics, /Visual effects/);
   assert.match(cosmetics, /dispatch\('cosmeticpreview'/);
+  for (const slot of ['avatar_effect', 'profile_border', 'cursor_trail', 'profile_atmosphere']) {
+    assert.match(cosmetics, new RegExp(`previewSlot\\('${slot}'`));
+  }
+  assert.match(cosmetics, /NAME_COMPOSABLE_SLOTS[\s\S]*previewSlot\(slot/);
   assert.match(customize, /dispatch\('customizepreview'/);
   assert.match(settings, /on:identitypreview=\{updateIdentityPreview\}/);
   assert.match(settings, /on:cosmeticpreview=\{updateCosmeticPreview\}/);
   assert.match(settings, /on:customizepreview=\{updateConfigurationPreview\}/);
+  assert.match(settings, /equipped_cosmetics: cosmeticPreviewLoadout \|\| \$equippedItems/);
+  assert.match(profileShell, /getNameRendererLoadout\(cosmetics\)/);
+  assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
   assert.match(customize, /profile-expression-editor__compact-grid\) \{ grid-template-columns: minmax\(0, \.9fr\)/);
 });

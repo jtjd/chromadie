@@ -1,6 +1,6 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, the Customize control audit, and the three-tab Customize IA implemented 2026-08-10
+Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, the Customize control audit, three-tab Customize IA, and linked surface/effect preview controls implemented 2026-08-10
 
 ## Scope
 
@@ -118,3 +118,10 @@ contains identity, renderer-backed colors and surface depth, and the existing
 visual-effect fitting room. The old Effects tab and its hashes remain routing
 aliases to Appearance; cosmetic preview, entitlement checks, and equip RPCs
 retain their existing authority boundaries.
+
+Profile surface color now sits with opacity and blur because those three
+values feed the same normalized identity-card surface. Its color input remains
+connected to the shared HSV picker and immediate Live preview. Cosmetic font,
+material, motion, avatar, border, cursor, and atmosphere selection continues
+to project a temporary fitting-room loadout into the persistent production
+profile preview; only Apply changes invokes the existing equip RPCs.

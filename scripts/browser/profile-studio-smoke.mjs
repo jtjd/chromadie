@@ -235,9 +235,18 @@ try {
     await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', '#123456', ['input']);
     await page.waitFor(`getComputedStyle(document.querySelector('.profile-settings-preview .profile-shell-page--preview')).backgroundColor === 'rgb(18, 52, 86)'`, 'page background draft in live preview');
     await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', originalBackgroundColor, ['input']);
+    const originalSurfaceColor = await page.evaluate(`document.querySelector('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex')?.value || '#11141B'`);
+    const surfacePlacement = await page.evaluate(`({
+      inColorMatrix: Boolean(document.querySelector('.appearance-editor__color-grid [data-color-role="surface"]')),
+      inSurfaceSection: Boolean(document.querySelector('.appearance-editor__surface-grid [data-color-role="surface"]'))
+    })`);
+    assert(!surfacePlacement.inColorMatrix && surfacePlacement.inSurfaceSection, `Profile surface color is not grouped with surface depth: ${JSON.stringify(surfacePlacement)}.`);
+    await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', '#234567', ['input']);
+    await page.waitFor(`getComputedStyle(document.querySelector('.profile-settings-preview .profile-shell__approved-opening')).getPropertyValue('--profile-surface').trim().toUpperCase() === '#234567'`, 'surface color draft in live preview');
+    await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', originalSurfaceColor, ['input']);
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
-    await page.setInputValue('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) input[type="range"]', 40, ['input']);
-    await page.waitFor(`document.querySelector('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) output')?.textContent?.trim() === '40px'`, 'blur draft value');
+    await page.setInputValue('.appearance-editor__surface-grid .appearance-editor__range:nth-child(4) input[type="range"]', 40, ['input']);
+    await page.waitFor(`document.querySelector('.appearance-editor__surface-grid .appearance-editor__range:nth-child(4) output')?.textContent?.trim() === '40px'`, 'blur draft value');
     const publishRequestsAfter = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
     const identityLayout = await page.evaluate(`(() => {
       const field = selector => document.querySelector(selector)?.closest('.identity-editor__field');

@@ -15,6 +15,7 @@
   export let draftConfig = null;
 
   const dispatch = createEventDispatcher();
+  const PROFILE_COLOR_MATRIX_FIELDS = PROFILE_APPEARANCE_COLOR_FIELDS.filter(field => field.key !== 'surface');
   let staged = normalizeProfileAppearance(draftConfig?.appearance, draftConfig?.signatureColor);
   let saved = normalizeProfileAppearance(draftConfig?.appearance, draftConfig?.signatureColor);
   let baselineKey = '';
@@ -223,7 +224,7 @@
           <h2>Profile colors</h2>
           <p>Pick a color to edit</p>
         </div>
-        {#each PROFILE_APPEARANCE_COLOR_FIELDS as field (field.key)}
+        {#each PROFILE_COLOR_MATRIX_FIELDS as field (field.key)}
           {@const key = field.key}
           {@const label = field.label}
           <label class="appearance-editor__field" class:active={activeColor === key} data-color-role={key} on:pointerdown={() => chooseColor(key)}>
@@ -280,6 +281,13 @@
       <div class="appearance-editor__surface-intro">
         <div class="appearance-editor__heading"><div><h2 id="appearance-surface-title">Profile surface</h2><p>Adjust the profile card</p></div></div>
       </div>
+      <label class="appearance-editor__field appearance-editor__surface-color" class:active={activeColor === 'surface'} data-color-role="surface" on:pointerdown={() => chooseColor('surface')}>
+        <span><button type="button" class="appearance-editor__color-dot" style={`--dot-color:${fieldValue('surface', staged)}`} aria-label="Edit Profile surface" on:click={() => chooseColor('surface')}></button>Profile surface</span>
+        <div class="appearance-editor__color-input">
+          <input type="color" value={fieldValue('surface', staged)} aria-label="Profile surface" on:focus={() => chooseColor('surface')} on:input={event => updateColor(fieldFor('surface').path, event)} />
+          <input class="appearance-editor__hex" value={hexInputValue('surface', staged, hexDrafts)} maxlength="7" aria-label="Profile surface hex" on:focus={() => chooseColor('surface')} on:input={event => updateHex('surface', event)} on:change={event => updateHex('surface', event)} />
+        </div>
+      </label>
       <label class="appearance-editor__range"><span>Opacity <output>{staged.surface.opacity}%</output></span><input type="range" min="0" max="100" step="1" value={staged.surface.opacity} on:input={event => update(['surface', 'opacity'], Number(event.currentTarget.value))} /></label>
       <label class="appearance-editor__range"><span>Blur <output>{staged.surface.blur}px</output></span><input type="range" min="0" max="40" step="1" value={staged.surface.blur} on:input={event => update(['surface', 'blur'], Number(event.currentTarget.value))} /></label>
     </div>
@@ -326,8 +334,9 @@
   .appearance-editor__color-grid .appearance-editor__field > span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .appearance-editor__color-grid .appearance-editor__color-input { min-width: 0; min-height: 1.6rem; height: 1.6rem; grid-template-columns: 1.55rem minmax(0, 1fr); }
   .appearance-editor__surface-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr) minmax(0, 1.1fr); align-items: end; gap: .55rem .7rem; }
-  .appearance-editor__surface-intro { display: grid; min-width: 0; gap: .35rem; }
+  .appearance-editor__surface-intro { display: grid; grid-column: 1 / -1; min-width: 0; gap: .35rem; }
   .appearance-editor__surface-intro .appearance-editor__heading { margin: 0; }
+  .appearance-editor__surface-color { align-self: start; grid-template-columns: minmax(0, 1fr) minmax(7rem, 1fr); align-items: center; gap: .55rem; }
   .appearance-editor__field, .appearance-editor__range { display: grid; gap: .35rem; min-width: 0; }
   .appearance-editor__field > span, .appearance-editor__range > span { display: flex; justify-content: space-between; gap: .5rem; color: var(--appearance-secondary); font-size: var(--appearance-label-size); line-height: 1.3; }
   .appearance-editor__field > span { align-items: center; justify-content: flex-start; gap: .45rem; }
@@ -340,7 +349,7 @@
   .appearance-editor__color-input input[type="color"]:focus-visible, .appearance-editor__hex:focus-visible { outline: 0; }
   .appearance-editor__hex { min-width: 0; width: 100%; min-height: var(--appearance-primary-height); box-sizing: border-box; padding: .55rem .6rem; border: 0; outline: 0; background: transparent; color: var(--appearance-text); font: var(--appearance-control-size)/1 var(--appearance-mono); }
   .appearance-editor__range { margin-top: .75rem; }
-  .appearance-editor__surface-grid .appearance-editor__range { align-self: start; margin-top: 0; padding-top: 2.2rem; }
+  .appearance-editor__surface-grid .appearance-editor__range { align-self: start; margin-top: 0; }
   .appearance-editor__range output { color: var(--appearance-faint); font: var(--appearance-label-size)/1 var(--appearance-mono); }
   .appearance-editor__range input { width: 100%; accent-color: var(--appearance-neutral); }
   .appearance-editor__picker { display: grid; align-content: start; gap: .65rem; min-width: 0; height: 15.75rem; box-sizing: border-box; overflow: hidden; padding: 1.1rem 1.5rem .9rem 1.1rem; border: 1px solid var(--appearance-line); border-radius: var(--appearance-radius); background: var(--appearance-input); }

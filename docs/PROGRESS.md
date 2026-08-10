@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Link Profile surface controls and effect preview — 2026-08-10
+
+- Moved Profile surface color out of the general color matrix and placed its
+  swatch, native picker, and hex input beside opacity and blur.
+- Kept the surface role connected to the shared HSV picker and immediate
+  configuration preview path.
+- Verified that name font/material/motion and every visible visual-effect
+  selector dispatch a temporary cosmetic loadout to the persistent Live
+  preview before Apply changes.
+- Added authenticated browser coverage for surface placement and immediate
+  surface-color rendering, plus source contracts for the complete effect path.
+
 ## Merge Effects into Appearance — 2026-08-10
 
 - Reduced Customize to Appearance, Media, and Layout.

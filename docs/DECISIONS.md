@@ -1,5 +1,18 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Group surface paint with surface depth
+
+Profile surface color belongs with Profile surface opacity and blur rather
+than the general profile-color matrix. All three values describe the same
+renderer-backed card layer, so the editor presents them as one control group.
+The surface swatch and hex input still select the shared HSV picker role and
+stage through the existing appearance configuration.
+
+Cosmetic choices continue to use the persistent profile renderer as their
+fitting room. Font, material, motion, avatar effect, profile border, cursor
+trail, and atmosphere selections dispatch one temporary loadout immediately;
+Apply changes remains the only path that invokes equip or unequip RPCs.
+
 ## 2026-08-10 — Fold visual effects into Appearance
 
 Customize uses three primary tabs: Appearance, Media, and Layout. Visual
