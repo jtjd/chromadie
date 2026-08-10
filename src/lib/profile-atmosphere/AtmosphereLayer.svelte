@@ -88,12 +88,28 @@
 
   let reducedMotion = false;
   let visible = true;
+  let inViewport = true;
   let mediaQuery;
+  let host;
+  let videoElement;
+  let intersectionObserver;
+  let recovery;
+  let renderedDefinitionKey = '';
+  let mounted = false;
+  let posterFallback = false;
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: media = definition ? MEDIA[definition.key] : null;
   $: compact = mode === 'card' || mode === 'compact';
-  $: motionActive = Boolean(active && animated && visible && !reducedMotion && !compact && media);
+  $: if ((definition?.key || '') !== renderedDefinitionKey) {
+    // This value is consumed on the next reactive pass to detect a scene
+    // change; ESLint cannot model Svelte's reactive scheduling here.
+    // eslint-disable-next-line no-useless-assignment
+    renderedDefinitionKey = definition?.key || '';
+    posterFallback = false;
+    recovery?.ready();
+  }
+  $: motionActive = Boolean(active && animated && visible && inViewport && !reducedMotion && !compact && media && !posterFallback);
   $: colors = [todayColor, ...(Array.isArray(recentColors) ? recentColors : []), ...FALLBACK_COLORS]
     .map(color => /^#[0-9a-f]{6}$/i.test(String(color || '')) ? String(color).toUpperCase() : null)
     .filter(Boolean)
@@ -118,25 +134,65 @@
 
   function updateVisibility() {
     visible = document.visibilityState === 'visible';
+    if (visible && inViewport) recoverVideo();
+  }
+
+  function recoverVideo() {
+    recovery?.recover();
+  }
+
+  function handleVideoReady() {
+    recovery?.ready();
+  }
+
+  function handleVideoStall() {
+    if (motionActive) recovery?.stalled();
   }
 
   onMount(() => {
+    mounted = true;
     mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     updateReducedMotion();
     mediaQuery?.addEventListener?.('change', updateReducedMotion);
     document.addEventListener('visibilitychange', updateVisibility);
+    window.addEventListener('pageshow', recoverVideo);
+    import('./atmosphereRecovery.js').then(({ createAtmosphereRecovery }) => {
+      if (!mounted) return;
+      recovery = createAtmosphereRecovery({
+        canRecover: () => Boolean(mounted && media && active && animated && !compact && !reducedMotion && visible && inViewport),
+        getVideo: () => videoElement,
+        setPosterFallback: value => { posterFallback = value; }
+      });
+      if (media && active && animated && !reducedMotion && !compact) recovery.recover();
+    }).catch(() => {
+      // Atmosphere is decorative; a failed recovery helper must not break the
+      // profile shell or the rest of the live preview.
+      recovery = null;
+    });
+    if ('IntersectionObserver' in window && host) {
+      intersectionObserver = new IntersectionObserver(entries => {
+        inViewport = entries.some(entry => entry.isIntersecting && entry.intersectionRatio > 0);
+        if (inViewport) recoverVideo();
+      }, { rootMargin: '160px' });
+      intersectionObserver.observe(host);
+    }
     return () => {
+      mounted = false;
+      recovery?.destroy();
+      recovery = null;
+      intersectionObserver?.disconnect();
       mediaQuery?.removeEventListener?.('change', updateReducedMotion);
       document.removeEventListener('visibilitychange', updateVisibility);
+      window.removeEventListener('pageshow', recoverVideo);
     };
   });
 </script>
 
 {#if definition && media}
-  <div class={classes} style={style} aria-hidden="true" data-atmosphere={definition.key}>
+  <div bind:this={host} class={classes} style={style} aria-hidden="true" data-atmosphere={definition.key} data-atmosphere-state={motionActive ? 'animated' : 'poster'}>
     {#key definition.key}
       {#if motionActive}
-        <video class={`profile-atmosphere__video profile-atmosphere__video--${media.className}`} autoplay muted loop playsinline poster={media.poster}>
+        <video bind:this={videoElement} class={`profile-atmosphere__video profile-atmosphere__video--${media.className}`} autoplay muted loop playsinline poster={media.poster} on:canplay={handleVideoReady} on:playing={handleVideoReady} on:stalled={handleVideoStall} on:waiting={handleVideoStall} on:error={handleVideoStall}>
           <source src={media.video} type="video/webm" />
           <source src={media.fallback} type="video/mp4" />
         </video>

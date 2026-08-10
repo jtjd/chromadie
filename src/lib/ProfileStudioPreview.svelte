@@ -62,6 +62,7 @@
           previewTimelineEvents={previewTimelineEvents}
           previewCollectionItems={previewCollectionItems}
           previewAllAchievements={previewAllAchievements}
+          {previewDevice}
           renderContext={liveProfileContext}
         />
       {:else if previewError}
@@ -96,11 +97,13 @@
   .profile-studio-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem 1rem; background: var(--ctp-mantle, var(--site-deep, #11111b)); }
   .profile-studio-preview__canvas { display: grid; width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; }
   .profile-studio-preview__canvas--appearance { min-height: 0; margin-bottom: .6rem; }
-  .profile-studio-preview__canvas :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: visible; border: 0; border-radius: 0; }
-  .profile-studio-preview__canvas--mobile :global(.profile-shell-page--preview) { width: min(19rem, 76%); }
+  .profile-studio-preview__canvas :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: transparent; box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
+  .profile-studio-preview__canvas--mobile { padding: .65rem 0 1rem; }
+  .profile-studio-preview__canvas--mobile :global(.profile-shell-page--preview) { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: 22rem; max-height: calc(100dvh - 10rem); overflow: auto; border-radius: 1.25rem; }
   .profile-studio-preview__canvas :global(.profile-shell-page--preview .profile-shell__approved-canvas) { min-height: 0; }
   .profile-studio-preview__canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; align-items: stretch; justify-content: flex-start; }
   .profile-studio-preview__canvas :global(.profile-shell-page--preview .profile-shell__opening) { min-height: 0; padding: 1.15rem; }
+  .profile-studio-preview__canvas--mobile :global(.profile-shell-page--preview .profile-shell__opening) { padding: .85rem; border-radius: 1rem; }
   .profile-studio-preview__device-panel { min-width: 0; }
   .profile-studio-preview__device-panel--appearance { display: grid; min-height: 13.2rem; overflow: hidden; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }
   .profile-studio-preview__devices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 3rem; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }

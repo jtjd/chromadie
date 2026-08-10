@@ -88,6 +88,7 @@
             {entitlements}
             {staff}
             on:appearancechange={forward}
+            on:expressionchange={forward}
             on:customizepreview={forward}
             on:identitypreview={forward}
             on:cosmeticpreview={forward}

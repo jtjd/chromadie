@@ -41,6 +41,7 @@
   export let descriptionMode = 'plain';
   export let entryAnimation = 'none';
   export let linkStyle = null;
+  export let previewDevice = 'desktop';
   /** @type {(entryKey: string) => void} */
   export let onEntryClick = () => {};
 
@@ -67,7 +68,7 @@
   }
 </script>
 
-<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + (defaultPresentation ? ' identity-card--default' : '') + ' identity-card--entry-' + entryAnimation} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
+<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + (defaultPresentation ? ' identity-card--default' : '') + (previewDevice === 'mobile' ? ' identity-card--preview-mobile' : '') + ' identity-card--entry-' + entryAnimation} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
   <div class="identity-card__person">
     {#if showAvatar}
     <AvatarEffect
@@ -346,6 +347,18 @@
   .identity-card--layout-story-stack .identity-card__copy { width: 100%; padding-top: 0; }
   .identity-card--layout-story-stack .identity-card__links { margin-top: 1.2rem; padding-top: 0.9rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
   .identity-card--layout-story-stack .identity-card__bio { max-width: 34rem; font-size: 1rem; }
+
+  /* Explicitly stack the card when rendered inside the dashboard phone. The
+     canvas can be narrow while the browser viewport remains desktop-sized. */
+  .identity-card--preview-mobile { display: flex; width: 100%; box-sizing: border-box; flex-direction: column; align-items: stretch; gap: 1rem; padding: 1.1rem; }
+  .identity-card--preview-mobile .identity-card__person { display: flex; flex-direction: column; align-items: stretch; gap: 1rem; width: 100%; }
+  .identity-card--preview-mobile :global(.identity-card__avatar) { align-self: center; justify-self: auto; flex-basis: 5.2rem; width: 5.2rem; }
+  .identity-card--preview-mobile .identity-card__copy,
+  .identity-card--preview-mobile .identity-card__links { grid-column: auto; grid-row: auto; width: 100%; box-sizing: border-box; padding-left: 0; border-left: 0; }
+  .identity-card--preview-mobile .identity-card__copy { padding-top: 0; }
+  .identity-card--preview-mobile .identity-card__name-row { align-items: flex-start; }
+  .identity-card--preview-mobile .identity-card__name { font-size: clamp(1.55rem, 9vw, 2.2rem); line-height: 1; }
+  .identity-card--preview-mobile .identity-card__links { margin-top: .9rem; padding-top: .8rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, .12)); }
 
   /* An equipped profile border owns the card perimeter. Keep accent styling
      available for the profile interior, but remove the competing card edge. */

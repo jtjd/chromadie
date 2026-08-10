@@ -65,20 +65,20 @@
   const CANVAS_BLEED_X = 18;
   const CANVAS_BLEED_Y = 12;
 
-  function loadoutValue(key, namespacedKey) {
-    const input = /** @type {Record<string, any>} */ (loadout && typeof loadout === 'object' ? loadout : {});
+  function loadoutValue(inputValue, key, namespacedKey) {
+    const input = /** @type {Record<string, any>} */ (inputValue && typeof inputValue === 'object' ? inputValue : {});
     return input[key] ?? input[namespacedKey] ?? '';
   }
 
   $: explicitFontKey = typeof fontKey === 'string' && fontKey.trim()
     ? fontKey
-    : loadoutValue('fontKey', 'name_font');
+    : loadoutValue(loadout, 'fontKey', 'name_font');
   $: explicitMaterialKey = typeof materialKey === 'string' && materialKey.trim()
     ? materialKey
-    : loadoutValue('materialKey', 'name_material');
+    : loadoutValue(loadout, 'materialKey', 'name_material');
   $: explicitMotionKey = typeof motionKey === 'string' && motionKey.trim()
     ? motionKey
-    : loadoutValue('motionKey', 'name_motion');
+    : loadoutValue(loadout, 'motionKey', 'name_motion');
   $: hasComposableKeys = hasComposableNameInput({
     fontKey: explicitFontKey,
     materialKey: explicitMaterialKey,
@@ -272,7 +272,14 @@
   });
 </script>
 
-<div bind:this={host} class={'name-effect-canvas name-effect-canvas--' + (canvasReady ? 'ready' : 'fallback')} data-name-renderer={safeRendererKey}>
+<div
+  bind:this={host}
+  class={'name-effect-canvas name-effect-canvas--' + (canvasReady ? 'ready' : 'fallback')}
+  data-name-renderer={safeRendererKey}
+  data-name-font={activeFontKey}
+  data-name-material={explicitMaterialKey}
+  data-name-motion={explicitMotionKey}
+>
   {#if safeSemanticTag === 'a'}
     <a bind:this={semantic} id={titleId || undefined} class={'name-effect-canvas__semantic ' + safeSemanticClass} style={semanticStyle} href={href || undefined} title={title || undefined} on:click={semanticOnClick}>{text}</a>
   {:else}

@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { normalizeProfileConfig } from './profileConfig.js';
   import ProfileAppearanceEditor from './ProfileAppearanceEditor.svelte';
+  import ProfileBackgroundTreatment from './ProfileBackgroundTreatment.svelte';
 
   export let components = {};
   export let profileId = null;
@@ -14,6 +15,7 @@
 
   const dispatch = createEventDispatcher();
   let appearanceEditor = null;
+  let backgroundTreatmentEditor = null;
   let contentEditor = null;
   let widgetEditor = null;
   let layoutEditor = null;
@@ -46,14 +48,15 @@
 
   export function getDraftConfig() {
     const base = normalizeDraft();
-    const appearance = appearanceEditor?.getDraftAppearance?.();
+    const appearance = appearanceEditor?.getDraftAppearance?.() || base.appearance;
+    const background = backgroundTreatmentEditor?.getDraftBackground?.();
     const content = contentEditor?.getDraftConfig?.();
     const widgets = widgetEditor?.getDraftConfig?.();
     const layout = layoutEditor?.getDraftConfig?.();
     return normalizeProfileConfig({
       ...base,
       ...(layout || {}),
-      appearance: appearance || base.appearance,
+      appearance: background ? { ...appearance, background } : appearance,
       content: content?.content || base.content,
       widgets: widgets?.widgets || base.widgets
     });
@@ -68,6 +71,7 @@
   export function acceptSaved(nextConfig) {
     const next = normalizeDraft(nextConfig);
     appearanceEditor?.acceptSaved?.(next.appearance);
+    backgroundTreatmentEditor?.acceptSaved?.(next.appearance);
     contentEditor?.acceptSaved?.(next);
     widgetEditor?.acceptSaved?.(next);
     layoutEditor?.acceptSaved?.(next);
@@ -75,6 +79,7 @@
 
   export function resetChanges() {
     appearanceEditor?.resetChanges?.();
+    backgroundTreatmentEditor?.resetChanges?.();
     contentEditor?.resetChanges?.();
     widgetEditor?.resetChanges?.();
     layoutEditor?.resetChanges?.();
@@ -90,6 +95,7 @@
     {#if mediaComponent}
       <div class="profile-customize-page__editor profile-customize-page__editor--media">
         <svelte:component this={mediaComponent} profileId={profileId} config={profileConfig} fallbackInitial={(targetProfile?.username || accountUsername || '✦').slice(0, 1)} {staff} {entitlements} compact={true} on:expressionchange={forward} />
+        <ProfileBackgroundTreatment bind:this={backgroundTreatmentEditor} draftAppearance={profileConfig?.draft?.appearance} on:appearancechange={forward} on:dirty={forward} />
       </div>
     {:else}
       <div class="profile-customize-page__loading" role="status">Loading media controls…</div>

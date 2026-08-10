@@ -11,9 +11,21 @@ function profileBackgroundPaint(appearance) {
     : appearance.colors.background;
 }
 
+function profileBackgroundTreatment(appearance) {
+  return [
+    `--profile-background-image-opacity:${appearance.background.imageOpacity / 100}`,
+    `--profile-background-blur:${appearance.background.blur}px`,
+    `--profile-background-overlay:${rgbaFromHex(appearance.background.overlayColor, 1)}`,
+    `--profile-background-overlay-opacity:${appearance.background.overlayOpacity / 100}`
+  ];
+}
+
 export function getProfileCanvasStyle(config) {
   const { appearance } = normalizeProfileConfig(config);
-  return `--profile-background-paint:${profileBackgroundPaint(appearance)}`;
+  return [
+    `--profile-background-paint:${profileBackgroundPaint(appearance)}`,
+    ...profileBackgroundTreatment(appearance)
+  ].join(';');
 }
 
 /**
@@ -37,6 +49,7 @@ export function getProfileAppearanceStyle(config) {
     `--profile-description:${appearance.colors.description}`,
     `--profile-background:${appearance.colors.background}`,
     `--profile-background-paint:${profileBackground}`,
+    ...profileBackgroundTreatment(appearance),
     `--profile-surface:${appearance.colors.surface}`,
     `--profile-surface-fill:${rgbaFromHex(appearance.colors.surface, appearance.surface.opacity / 100)}`,
     `--profile-highlight:${appearance.colors.highlight}`,

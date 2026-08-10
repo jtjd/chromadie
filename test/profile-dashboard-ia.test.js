@@ -131,7 +131,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(expression, /min-height: 5\.7rem/);
   assert.match(expression, /font-size: \.92rem/);
   assert.match(richMedia, /async function removeCursor/);
-  assert.match(richMedia, /saveSelection\(\{ cursor_id: null \}\)/);
+  assert.match(richMedia, /await removeAsset\(activeCursor\)/);
   assert.match(richMedia, /rich-media-editor__compact-remove/);
   assert.match(richMedia, /rich-media-editor__compact-preview:hover:not\(:disabled\)/);
   assert.doesNotMatch(customize, /--customize-section-surface: var\(--customize-surface-alt\)/);

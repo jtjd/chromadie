@@ -9,6 +9,7 @@
   import ProfileRichMediaEditor from './ProfileRichMediaEditor.svelte';
   import Module from './foundation/Module.svelte';
   import Media from './foundation/Media.svelte';
+  import ProfileAudioWaveform from './ProfileAudioWaveform.svelte';
 
   export let profileId = null;
   export let config = {};
@@ -523,6 +524,7 @@
                 </button>
                 <div class="profile-expression-editor__compact-audio-track">
                   <div class="profile-expression-editor__compact-audio-meta"><strong>{audioPlaying ? 'Playing' : 'Ready to play'}</strong><time>{formatAudioTime(audioCurrentTime)} / {formatAudioTime(audioDuration)}</time></div>
+                  <ProfileAudioWaveform src={audioSrc} progress={audioProgress} accent="var(--media-card-accent)" />
                   <input class="profile-expression-editor__audio-range" type="range" min="0" max="100" step="0.1" value={audioProgress} style={`--audio-progress:${audioProgress}%`} aria-label="Seek profile audio" on:input={seekAudio} />
                 </div>
                 <button type="button" class="profile-expression-editor__compact-audio-replace" aria-label="Replace profile audio" on:click={() => audioInput?.click()}><ProfileMediaIcon kind="upload" /></button>
@@ -785,8 +787,8 @@
   }
 
   .profile-expression-editor__compact-card--background { order: 1; --media-card-accent: var(--media-sky); }
-  .profile-expression-editor__compact-card--audio { order: 2; --media-card-accent: var(--media-peach); }
-  .profile-expression-editor__compact-card--avatar { order: 3; --media-card-accent: var(--media-teal); }
+  .profile-expression-editor__compact-card--avatar { order: 2; --media-card-accent: var(--media-teal); }
+  .profile-expression-editor__compact-card--audio { order: 3; --media-card-accent: var(--media-peach); }
   .profile-expression-editor__compact-card--cursor { order: 4; --media-card-accent: var(--media-green); }
   .profile-expression-editor__compact-card--locked { --media-card-accent: var(--media-premium); opacity: 1; }
   .profile-expression-editor__compact-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
@@ -821,10 +823,13 @@
   :global(.profile-expression-editor__compact-preview .profile-media-icon) { color: var(--media-card-accent); }
   :global(.profile-expression-editor__compact-preview--locked .profile-media-icon) { color: var(--media-premium); }
   .profile-expression-editor__compact-preview--avatar { border-color: var(--media-line); }
+  .profile-expression-editor__compact-card--avatar .profile-expression-editor__compact-preview { aspect-ratio: 1; min-height: 5.7rem; }
   :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media),
   :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media img),
   :global(.profile-expression-editor__compact-preview .foundation-media),
   :global(.profile-expression-editor__compact-preview .foundation-media img) { width: 100%; height: 100%; aspect-ratio: auto; border: 0 !important; border-radius: 0; outline: 0; box-shadow: none; }
+  :global(.profile-expression-editor__compact-preview--avatar .foundation-media),
+  :global(.profile-expression-editor__compact-preview--avatar .foundation-media img) { width: 4.6rem !important; height: 4.6rem !important; aspect-ratio: 1; border-radius: 50% !important; object-fit: cover; }
   :global(.profile-expression-editor__compact-preview .profile-media-icon) { width: 2.35rem; height: 2.35rem; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
   .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .84rem; font-weight: 500; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
@@ -860,10 +865,10 @@
     align-content: start;
     gap: .45rem;
     min-width: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
+    padding: .65rem;
+    border: 1px solid var(--media-line);
+    border-radius: var(--media-radius, .38rem);
+    background: var(--media-surface-inset);
     opacity: 1;
   }
 

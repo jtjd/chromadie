@@ -1,5 +1,28 @@
 # Chromadie 2.0 Progress
 
+## Stabilize Profile Studio previews and media — 2026-08-10
+
+- Flattened the compact name/visual fitting room into its owning Appearance
+  surface and normalized the three name controls around one progressive
+  production loadout path. The canvas now tracks the incoming loadout
+  reactively, so Font, Material, and Motion previews do not become stale after
+  the dashboard has been open or after a sibling control changes.
+- Replaced the cursor-card sketch with the production cursor-trail renderer in
+  deterministic demo mode, retained transparent effect-card stages, and made
+  avatar media wells round without changing stored media paths.
+- Added bounded atmosphere recovery with lazy loading, visibility and viewport
+  checks, retry limits, and poster fallback. This addresses long-lived tabs
+  where a decorative atmosphere video stalls or a changed scene remains stuck.
+- Added normalized background treatment controls for blur, image opacity,
+  overlay color, and overlay opacity. The controls feed the existing draft
+  projection and update Live preview without save/publish RPCs.
+- Added a waveform-based compact audio player, balanced media-card order, and
+  cursor replacement transactions that stage a new cursor before committing it
+  and deleting the old storage object.
+- Live preview now clips page background paint to a rounded profile card and
+  gives mobile mode an explicit bounded phone/card geometry. Reduced-motion
+  behavior remains respected by both atmosphere and cursor renderers.
+
 ## Component-owned Profile Studio dashboard — 2026-08-10
 
 - Reduced `ProfileSettings.svelte` to the route/state adapter while preserving
@@ -17,14 +40,16 @@
 - Added behavior/source contracts for routing, draft aggregation, renderer
   geometry, ownership boundaries, keyboard navigation, and preview composition;
   browser smoke now includes the Layout workspace geometry check.
-- Refined the compact cosmetic fitting room as a nested card with larger,
-  readable controls and context-owned name preview sizing, overflow, and
-  centering; browser smoke now guards those geometry bounds.
+- Refined the compact cosmetic fitting room with larger, readable controls
+  and context-owned name preview sizing, overflow, and centering; the later
+  stabilization flattened its extra card surface while retaining the owning
+  Appearance card.
 - Matched effect-card surfaces to the Mocha inset instead of the catalog
-  canvas, normalized all name-control text metrics, and added a bounded Pixel
-  Wake dotted route; browser smoke now exercises all three name layers and all
-  four visual-effect renderers together.
-- No database migration or authority-boundary change was required.
+  canvas, normalized all name-control text metrics, and replaced the earlier
+  bounded Pixel Wake sketch with the production cursor-trail demo renderer.
+- The initial pass required no database migration; the stabilization adds only
+  the additive normalized background fields and owner-authorized cursor
+  replacement RPCs documented above.
 
 ## Replace cosmetic placeholders with live previews — 2026-08-10
 
@@ -66,9 +91,11 @@
 - Audited every visible Customize control against normalized configuration,
   public rendering, media persistence, or cosmetic equip contracts.
 - Removed local-only Surface tint and Border color roles, the fake Celestial/
-  Plain/Glass surface selector, background fit/position/blur/overlay controls,
+  Plain/Glass surface selector, unsupported background fit/position controls,
   atmosphere-strength and animation controls, and layout width/navigation/
-  mobile controls that had no saved or rendered effect.
+  mobile controls that had no saved or rendered effect. Persisted blur,
+  image-opacity, overlay-color, and overlay-opacity treatment was subsequently
+  restored as the normalized Background options group.
 - Kept legacy normalized fields intact for backward compatibility while
   removing only their unsupported editor affordances.
 - Made Profile colors and Profile surface use the same section surface as

@@ -72,7 +72,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(preview, /profile-studio-preview__devices/);
   assert.match(preview, /Unlock more with Chromadie Plus/);
   assert.match(preview, /profile-studio-preview__canvas--appearance/);
-  assert.match(preview, /profile-studio-preview__canvas :global\(\.profile-shell-page--preview\)[\s\S]*border: 0; border-radius: 0/);
+  assert.match(preview, /profile-studio-preview__canvas :global\(\.profile-shell-page--preview\)[\s\S]*overflow: hidden; border: 1px[\s\S]*border-radius: 1rem/);
   assert.doesNotMatch(preview, /!important/);
   assert.match(appearance, /appearance-editor__picker-surface/);
   assert.match(appearance, /appearance-editor__palette/);
@@ -91,7 +91,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(cosmetics, /Visual effects/);
   assert.match(cosmetics, /import ShopItemPreview from '\.\/ShopItemPreview\.svelte'/);
   assert.match(cosmetics, /profile-cosmetics-name-preview[\s\S]*<ShopItemPreview/);
-  assert.match(cosmetics, /<ShopItemPreview item=\{previewItems\[slot\]\} nameLoadout=\{previewLoadout\}/);
+  assert.match(cosmetics, /<ShopItemPreview item=\{previewItems\[slot\]\} nameLoadout=\{getNamePreviewLoadoutForSlot\(previewLoadout, slot\)\}/);
   for (const role of ['Avatar effect', 'Profile border', 'Cursor trail', 'Profile atmosphere']) {
     assert.match(cosmetics, new RegExp(`aria-label="${role} preview"[\\s\\S]*<ShopItemPreview`));
   }
@@ -115,7 +115,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
   assert.match(profileShell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(expression, /\.profile-expression-editor__compact-grid \{[\s\S]*grid-template-columns: minmax\(0, \.9fr\) minmax\(0, \.9fr\) minmax\(0, 1\.5fr\)/);
-  assert.match(cosmetics, /profile-cosmetics-surface--compact\) \{ padding: 1\.1rem 1\.15rem 1\.2rem; border: 1px solid var\(--cosmetics-border\);/);
+  assert.match(cosmetics, /profile-cosmetics-surface--compact\) \{ padding: 0; border: 0; border-radius: 0; background: transparent/);
   assert.match(cosmetics, /profile-cosmetics-name-preview[^\n]*overflow: visible/);
   assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot select \{ height: 2\.5rem; min-height: 2\.5rem;/);
   assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot label \{ margin-bottom: \.3rem; font-size: \.72rem/);
@@ -125,6 +125,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(shopPreview, /previewAccent = isNamePreview \? displayColor/);
   assert.match(shopPreview, /nameRendererMode = resolvedRenderContext === PROFILE_RENDER_CONTEXTS\.NAME_CONTROL \? 'static-signature' : mode/);
   assert.match(shopPreview, /previewSurface = resolvedRenderContext === PROFILE_RENDER_CONTEXTS\.CATALOG \? PREVIEW_SURFACE : 'transparent'/);
-  assert.match(shopPreview, /shop-cursor-preview__pixel-route/);
-  assert.match(shopPreview, /shop-atmosphere-preview \{[^}]*background:var\(--preview-surface/);
+  assert.match(shopPreview, /<CursorTrailLayer[\s\S]*inputMode="demo"/);
+  assert.doesNotMatch(shopPreview, /shop-cursor-preview__pixel-route|shop-cursor-preview__trail--near/);
+  assert.match(shopPreview, /shop-atmosphere-preview \{[^}]*background:transparent/);
 });

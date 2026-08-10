@@ -1,5 +1,31 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Stabilize Profile Studio media and preview lifecycles
+
+The Profile Studio stabilization pass keeps the dashboard's existing route,
+draft, save, publish, upload, equip, RLS, and public-profile boundaries while
+making renderer and media lifecycles explicit. Compact name controls compose
+their loadout progressively: Font owns only font, Material adds material, and
+Motion owns the complete three-layer selection. `NameEffectCanvas` must read
+the incoming loadout as a reactive dependency so changing a sibling select
+cannot leave a stale canvas mounted.
+
+Effect-card stages are transparent and context-owned, while catalog previews
+retain their catalog canvas. Cursor-trail cards use the production
+`CursorTrailLayer` with a deterministic demo input path, so the card previews
+the selected recipe rather than a generic dotted sketch. Atmosphere recovery
+is lazy, visibility/viewport-aware, bounded, and poster-safe so a stalled
+decorative video cannot degrade a long-lived dashboard session.
+
+Media drafts continue to use the compatibility `expressionchange` path and
+update the persistent Live preview immediately. Background treatment is a
+small normalized configuration group (blur, image opacity, overlay color, and
+overlay opacity), and cursor replacement uses additive owner-authorized stage
+and commit RPCs so an occupied media slot can be replaced atomically without
+loosening quota or RLS rules. The live profile preview clips page background
+paint to its rounded profile card and gives mobile preview an explicit bounded
+phone context.
+
 ## 2026-08-10 — Make Profile Studio component-owned
 
 Profile Studio is now organized as a route/state adapter around explicit

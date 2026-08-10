@@ -55,3 +55,30 @@ export function getNameItemPreviewLoadout(item, baseLoadout = {}) {
   }
   return applyNamePreviewLayer(baseLoadout, item.slot, item.css_value || item.item_key);
 }
+
+/**
+ * Return the progressive fitting-room composition for one name control.
+ *
+ * Each control owns the layers at or before it: the font control demonstrates
+ * the selected font with the plain/still baseline, material adds its selected
+ * material, and motion completes the stack. This keeps the three previews
+ * comparable while still showing the effect that belongs to each field.
+ */
+export function getNamePreviewLoadoutForSlot(loadout = {}, slot) {
+  /** @type {Record<string, any>} */
+  const input = loadout && typeof loadout === 'object' ? loadout : {};
+  const next = {
+    fontKey: typeof input.fontKey === 'string' ? input.fontKey : (typeof input.name_font === 'string' ? input.name_font : ''),
+    materialKey: typeof input.materialKey === 'string' ? input.materialKey : (typeof input.name_material === 'string' ? input.name_material : ''),
+    motionKey: typeof input.motionKey === 'string' ? input.motionKey : (typeof input.name_motion === 'string' ? input.name_motion : '')
+  };
+
+  if (slot === 'name_font') {
+    return { fontKey: next.fontKey, materialKey: '', motionKey: '' };
+  }
+  if (slot === 'name_material') {
+    return { fontKey: next.fontKey, materialKey: next.materialKey, motionKey: '' };
+  }
+  if (slot === 'name_motion') return next;
+  return next;
+}

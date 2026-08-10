@@ -2,6 +2,21 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Stabilize effect previews, media, and mobile Live preview
+
+- Name previews now compose Font, Material, and Motion progressively while
+  keeping one consistent control-side type treatment.
+- Visual-effect cards use transparent effect stages and the real cursor-trail
+  recipe; atmosphere media recovers from visibility changes and bounded stalls
+  without taking down the dashboard.
+- Background and avatar changes propagate to Live preview immediately. Media
+  now includes blur/opacity/overlay treatment, a waveform audio player, a
+  circular avatar well, and transactional cursor replacement including `.ani`
+  assets.
+- The profile preview keeps background paint inside the rounded profile card,
+  and mobile preview uses a bounded phone context instead of letting the card
+  collapse into a narrow column.
+
 ## 2026-08-10 — Stabilize Profile Studio workspace ownership
 
 - Profile Studio now uses a stable dashboard shell with dedicated Customize,
@@ -10,11 +25,11 @@ Document user-visible redesign changes by milestone.
   preview immediately; Reset and Publish retain their existing behavior.
 - The dashboard keeps legacy hashes and direct-refresh links working, with
   keyboard-aware tabs, mobile navigation, and reduced-motion support preserved.
-- The compact cosmetic fitting room now reads as a nested card, with larger
-  name/effect controls and centered, uncropped name previews.
+- The compact cosmetic fitting room now uses the owning Appearance surface,
+  with larger name/effect controls and centered, uncropped name previews.
 - Effect previews now share the surrounding Mocha surface instead of showing
-  an unrelated black catalog canvas; Pixel Wake uses a curved dotted preview
-  and name-layer controls keep one consistent type scale.
+  an unrelated black catalog canvas; Pixel Wake uses the production cursor
+  renderer in demo mode and name-layer controls keep one consistent type scale.
 
 ## 2026-08-10 — Render real effect previews
 
@@ -45,8 +60,9 @@ Document user-visible redesign changes by milestone.
 
 - Removed Customize options that appeared editable but were not saved or
   rendered, including Surface tint, Border color, the Celestial Border surface
-  selector, background overlay controls, atmosphere strength, animation
-  restart, content width, navigation style, and mobile layout.
+  selector, unsupported background fit/position controls, atmosphere strength,
+  animation restart, content width, navigation style, and mobile layout. The
+  persisted background treatment controls were later restored in Media.
 - Matched the Profile colors and Profile surface card backgrounds to Profile
   identity while retaining darker input wells for contrast.
 - Removed the “Unsaved identity draft” status message.

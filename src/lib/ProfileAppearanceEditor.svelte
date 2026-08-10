@@ -373,20 +373,18 @@
   .appearance-editor__panel { padding: .25rem 0 0; border: 0; border-bottom: 1px solid var(--appearance-line); border-radius: 0; background: transparent; }
   .appearance-editor__panel--colors { padding-bottom: 0; }
   .appearance-editor__panel:not(.appearance-editor__panel--colors) { box-sizing: border-box; min-height: 7.45rem; padding: .8rem .85rem .75rem; border: 1px solid var(--appearance-line); border-radius: var(--appearance-radius); background: var(--appearance-surface); }
-  .appearance-editor__colors-layout,
-  .appearance-editor__color-grid,
-  .appearance-editor__picker { box-sizing: border-box; min-height: 15.75rem; }
-  .appearance-editor__picker { padding-bottom: .55rem; }
+  .appearance-editor__colors-layout { box-sizing: border-box; align-items: start; }
+  .appearance-editor__picker { box-sizing: border-box; height: 14rem; min-height: 0; padding-bottom: .55rem; }
   .appearance-editor__heading { margin-bottom: .55rem; }
-  .appearance-editor__color-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 2.25rem; gap: .65rem .7rem; height: 15.75rem; overflow: hidden; padding: 1rem; }
+  .appearance-editor__color-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 1.25rem; gap: .65rem .7rem; height: auto; min-height: 0; align-self: start; overflow: visible; padding: .9rem; }
   .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1.6fr) minmax(14rem, 1fr); }
   .appearance-editor__color-input,
   .appearance-editor__hex { min-height: 1.6rem; height: 1.6rem; }
   .appearance-editor__color-input input[type="color"] { width: 1.45rem; height: 1.45rem; }
   .appearance-editor__color-grid .appearance-editor__hex { padding: .25rem .35rem; font-size: .68rem; }
-  .appearance-editor__color-grid .appearance-editor__field { grid-template-columns: minmax(0, 1fr) 4.7rem; }
+  .appearance-editor__color-grid .appearance-editor__field { grid-template-columns: minmax(0, 1fr) minmax(6rem, auto); }
   .appearance-editor__color-grid .appearance-editor__colors-heading { margin-bottom: .15rem; }
-  .appearance-editor__surface-grid { grid-template-columns: minmax(15rem, .98fr) minmax(15rem, .98fr) minmax(17rem, 1.08fr); column-gap: 2.45rem; padding-inline: .35rem; }
+  .appearance-editor__surface-grid { grid-template-columns: minmax(14rem, 1.1fr) repeat(2, minmax(10rem, 1fr)); column-gap: 1.1rem; padding: .1rem .35rem .2rem; }
   @media (max-width: 64rem) { .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1fr); } .appearance-editor__picker { order: -1; } }
   @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } .appearance-editor__surface-grid .appearance-editor__range { padding-top: 0; } }
 </style>

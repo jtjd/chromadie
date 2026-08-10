@@ -18,7 +18,7 @@
   } from './stores';
   import { supabase } from './supabase';
   import { trackProductEvent } from './productAnalytics.js';
-  import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer } from './name/nameLoadout.js';
+  import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer, getNamePreviewLoadoutForSlot } from './name/nameLoadout.js';
   import { SHOP_SLOT_LABELS, createFittingRoom, hasShopEntitlement, isShopCosmetic } from './shopCatalog.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
   import { getProfileMediaUrl } from './profileMedia.js';
@@ -200,7 +200,7 @@
                       {/each}
                     </select>
                     <div class="profile-cosmetics-name-preview" aria-label={`${NAME_SLOT_LABELS[slot]} preview`}>
-                      <ShopItemPreview item={previewItems[slot]} nameLoadout={previewLoadout} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.NAME_CONTROL} />
+                      <ShopItemPreview item={previewItems[slot]} nameLoadout={getNamePreviewLoadoutForSlot(previewLoadout, slot)} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.NAME_CONTROL} />
                     </div>
                   </div>
                 </div>
@@ -306,14 +306,15 @@
     width: 100%;
     box-sizing: border-box;
   }
-  :global(.profile-cosmetics-surface--compact) { padding: 1.1rem 1.15rem 1.2rem; border: 1px solid var(--cosmetics-border); border-radius: .65rem; background: var(--cosmetics-surface); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--cosmetics-border-strong) 35%, transparent), 0 .35rem 1rem rgba(0, 0, 0, .16); }
+  :global(.profile-cosmetics-surface.profile-cosmetics-surface--compact) { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-heading { display: none; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-plus-guide { display: none; grid-template-columns: 1fr; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-controls { grid-template-columns: minmax(0, 1fr); gap: .8rem; padding: .1rem 0 0; border: 0; background: transparent; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-controls__heading { display: none; }
-  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-slot { padding: .75rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--cosmetics-inset); }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-slot { padding: .75rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: transparent; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid .profile-cosmetics-slot { padding: .35rem .55rem; border: 0; background: transparent; }
-  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-slot { position: relative; align-content: start; gap: .6rem; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid { padding: .35rem 0; border: 0; background: transparent; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-slot { position: relative; align-content: start; gap: .6rem; background: transparent; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-slot::before { content: ''; position: absolute; top: .55rem; left: .55rem; z-index: 1; width: .4rem; height: .4rem; border-radius: 50%; background: var(--cosmetics-save); }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-slot select { min-height: 2.5rem; }
@@ -351,7 +352,7 @@
   .profile-cosmetics-section-heading button:hover, .profile-cosmetics-section-heading button:focus-visible { border-color: var(--cosmetics-focus); color: var(--cosmetics-text); }
   .profile-cosmetics-section-heading button:focus-visible { outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
   .profile-cosmetics-section-heading--visual { margin-top: .3rem; }
-  .profile-cosmetics-name-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: .55rem .6rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--cosmetics-inset); }
+  .profile-cosmetics-name-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: .55rem .6rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: transparent; }
   .profile-cosmetics-visual-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; }
   .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr); gap: .35rem .7rem; align-items: end; padding-top: .15rem; border-top: 0; }
   .profile-cosmetics-name-control { position: relative; min-width: 0; }
@@ -362,7 +363,7 @@
   .profile-cosmetics-name-control select { padding-right: 6.5rem; }
   .profile-cosmetics-name-grid .profile-cosmetics-slot select { height: 2.5rem; min-height: 2.5rem; padding: .35rem 6.5rem .35rem .7rem; font-size: .82rem; line-height: 1; }
   .profile-cosmetics-name-grid .profile-cosmetics-slot + .profile-cosmetics-slot { margin-left: .5rem; padding-left: .75rem; border-left: 1px solid var(--cosmetics-border); }
-  .profile-cosmetics-visual-preview { position: relative; display: grid; width: 100%; height: 5.5rem; min-height: 5.5rem; place-items: stretch; overflow: hidden; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--ctp-mantle, #181825); }
+  .profile-cosmetics-visual-preview { position: relative; display: grid; width: 100%; height: 5.5rem; min-height: 5.5rem; place-items: stretch; overflow: hidden; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: transparent; }
   .profile-cosmetics-visual-preview :global(.shop-preview-area[data-render-context="effect-card"]) { width: 100%; height: 100%; min-height: 0; }
   .profile-cosmetics-visual-preview :global(.shop-avatar-preview) { width: 4.8rem; height: 4.8rem; }
   .profile-cosmetics-visual-preview :global(.shop-avatar-preview .avatar-effect) { width: 4rem; height: 4rem; }

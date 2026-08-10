@@ -7,6 +7,10 @@
   export let todayColor = '#8B7CF6';
   export let active = true;
   export let className = '';
+  // Live profiles listen to the window pointer. Compact fitting-room cards
+  // use the same renderer with a deterministic demo path so a card never
+  // invents a second, CSS-only version of an effect.
+  export let inputMode = 'window';
 
   let host;
   let canvas;
@@ -25,10 +29,13 @@
   let pointer = null;
   let history = [];
   let particles = [];
+  let mounted = false;
+  let demoCycle = 0;
 
   $: resolvedKey = getCursorTrailKey(trailKey);
-  $: isRunning = Boolean(resolvedKey && active && visible && !touchOnly);
-  $: classList = ['cursor-trail-layer', className, isRunning ? 'cursor-trail-layer--active' : '', reducedMotion ? 'cursor-trail-layer--reduced' : ''].filter(Boolean).join(' ');
+  $: resolvedInputMode = inputMode === 'demo' ? 'demo' : 'window';
+  $: isRunning = Boolean(resolvedKey && active && visible && (resolvedInputMode === 'demo' || !touchOnly));
+  $: classList = ['cursor-trail-layer', className, `cursor-trail-layer--${resolvedInputMode}`, isRunning ? 'cursor-trail-layer--active' : '', reducedMotion ? 'cursor-trail-layer--reduced' : ''].filter(Boolean).join(' ');
 
   const FALLBACK_COLORS = ['#8B7CF6', '#8DDCFF', '#B7FD4D', '#F7B7E2'];
 
@@ -45,6 +52,14 @@
 
   function updateReducedMotion(event) {
     reducedMotion = Boolean(event?.matches ?? mediaQuery?.matches);
+    if (!mounted) return;
+    if (reducedMotion) {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+      if (resolvedInputMode === 'demo') drawDemoFrame(performance.now(), true);
+    } else if (resolvedInputMode === 'demo') {
+      startLoop();
+    }
   }
 
   function updateInputMode() {
@@ -115,7 +130,40 @@
   }
 
   function startLoop() {
-    if (!frame && isRunning) frame = requestAnimationFrame(animate);
+    if (!frame && isRunning && !reducedMotion) frame = requestAnimationFrame(animate);
+  }
+
+  function demoPoint(timestamp) {
+    const cycleDuration = 4600;
+    const normalized = ((timestamp % cycleDuration) + cycleDuration) / cycleDuration;
+    const phase = normalized * Math.PI * 2;
+    const travel = (1 - Math.cos(phase)) / 2;
+    const eased = travel * travel * (3 - 2 * travel);
+    return {
+      x: width * (0.12 + eased * 0.76),
+      y: height * (0.76 - eased * 0.52 + Math.sin(phase * 2) * 0.035),
+      speed: 1.1 + Math.abs(Math.sin(phase)) * 0.8,
+      time: timestamp
+    };
+  }
+
+  function updateDemoPoint(timestamp) {
+    const point = demoPoint(timestamp);
+    pointer = point;
+    history.push(point);
+    if (history.length > 28) history.shift();
+    if (resolvedKey === 'pixel-wake' || resolvedKey === 'glass-shards' || resolvedKey === 'ember-ash' || resolvedKey === 'gold-fleck' || resolvedKey === 'solar-sparks') {
+      if (Math.floor(timestamp / 90) !== demoCycle) {
+        demoCycle = Math.floor(timestamp / 90);
+        addParticle(point, resolvedKey);
+      }
+    }
+  }
+
+  function drawDemoFrame(timestamp, staticFrame = false) {
+    if (!context || !resolvedKey) return;
+    updateDemoPoint(staticFrame ? 0 : timestamp);
+    drawFrame(staticFrame ? 0 : 1, staticFrame);
   }
 
   function animate(timestamp) {
@@ -123,8 +171,9 @@
     if (!isRunning) return;
     const delta = Math.min(40, Math.max(0, timestamp - (lastTime || timestamp)));
     lastTime = timestamp;
+    if (resolvedInputMode === 'demo') updateDemoPoint(timestamp);
     drawFrame(delta / 16.67, false);
-    if (history.length || particles.length || pointer) frame = requestAnimationFrame(animate);
+    if (resolvedInputMode === 'demo' || history.length || particles.length || pointer) frame = requestAnimationFrame(animate);
   }
 
   function clear() {
@@ -223,10 +272,14 @@
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
       clear();
-    } else if (pointer && isRunning) startLoop();
+    } else if (isRunning) {
+      if (resolvedInputMode === 'demo' && reducedMotion) drawDemoFrame(performance.now(), true);
+      else if (resolvedInputMode === 'demo' || pointer) startLoop();
+    }
   }
 
   onMount(() => {
+    mounted = true;
     context = canvas?.getContext('2d', { alpha: true });
     updateInputMode();
     mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -242,7 +295,12 @@
       observer.observe(host);
     }
     updateSize();
+    if (resolvedInputMode === 'demo') {
+      if (reducedMotion) drawDemoFrame(performance.now(), true);
+      else startLoop();
+    }
     return () => {
+      mounted = false;
       window.removeEventListener('resize', updateInputMode);
       window.removeEventListener('pointermove', handlePointerMove);
       document.removeEventListener('visibilitychange', resetOnVisibility);
@@ -257,7 +315,7 @@
   onDestroy(() => { if (frame) cancelAnimationFrame(frame); });
 </script>
 
-<div bind:this={host} class={classList} aria-hidden="true">
+<div bind:this={host} class={classList} data-input-mode={resolvedInputMode} data-trail-key={resolvedKey} aria-hidden="true">
   <canvas bind:this={canvas}></canvas>
 </div>
 

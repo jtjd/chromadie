@@ -32,7 +32,7 @@
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
-  import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
+  import AtmosphereLayer from './profile-atmosphere/LazyAtmosphereLayer.svelte';
   import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
   import { hasVisibleProfileContent } from './profileContentLegacy.js';
   import { getVisibleProfileWidgets } from './profileWidgetsLegacy.js';
@@ -55,6 +55,7 @@
   // callers keep the historical default while compact catalog controls can
   // use the same renderer without inheriting profile-page geometry.
   export let renderContext = 'profile';
+  export let previewDevice = 'desktop';
 
   const profileShellStyle = '--profile-accent: var(--color-accent-roll); --profile-surface-accent: var(--color-accent-cyan); --profile-control-accent: var(--color-accent);';
   const DEFAULT_SIGNAL_MODULES = Object.freeze([
@@ -559,9 +560,12 @@
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (defaultProfilePresentation ? ' profile-shell-page--default' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} data-render-context={renderContext} style={profilePageStyle} aria-busy={loading}>
-  {#if backgroundSrc}
+  <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (defaultProfilePresentation ? ' profile-shell-page--default' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} data-render-context={renderContext} data-preview-device={previewMode ? previewDevice : undefined} style={profilePageStyle} aria-busy={loading}>
+  {#if backgroundSrc && !previewMode}
     <img class="profile-shell__media-image" src={backgroundSrc} alt="" loading="eager" decoding="async" aria-hidden="true" />
+  {/if}
+  {#if backgroundSrc && !previewMode}
+    <div class="profile-shell__media-overlay" aria-hidden="true"></div>
   {/if}
   {#if backgroundVideoSrc && !previewMode && !prefersReducedMotion}
     <video class="profile-shell__media-video" src={backgroundVideoSrc} autoplay muted loop playsinline poster={backgroundSrc || undefined} aria-hidden="true"></video>
@@ -579,6 +583,13 @@
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity" style={profileCardStyle}>
           <div class="profile-shell__surface-backdrop" aria-hidden="true"></div>
           <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-shell__identity-boundary">
+            {#if previewMode && backgroundSrc}
+              <img class="profile-shell__card-media-image" src={backgroundSrc} alt="" loading="eager" decoding="async" aria-hidden="true" />
+              <div class="profile-shell__card-media-overlay" aria-hidden="true"></div>
+            {/if}
+            {#if previewMode && backgroundVideoSrc && !prefersReducedMotion}
+              <video class="profile-shell__card-media-video" src={backgroundVideoSrc} autoplay muted loop playsinline poster={backgroundSrc || undefined} aria-hidden="true"></video>
+            {/if}
             {#if atmosphereKey && previewMode}
               <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__card-atmosphere-layer" />
             {/if}
@@ -626,6 +637,7 @@
               onEntryClick={recordProfileClick}
               rollState={profileRollState}
               showToday={false}
+              previewDevice={previewMode ? previewDevice : 'desktop'}
             />
             {:else}
               <div class="profile-shell__identity-loading" aria-busy="true" aria-label="Identity pending"></div>
@@ -941,6 +953,14 @@
   .profile-shell__media-video { position: fixed; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
   .profile-shell__media-video { opacity: .92; }
   .profile-shell-page--preview .profile-shell__media-image { position: absolute; }
+  .profile-shell-page--preview .profile-shell__media-video { position: absolute; }
+  .profile-shell__media-image,
+  .profile-shell__media-video { opacity: var(--profile-background-image-opacity, 1); filter: blur(var(--profile-background-blur, 0px)); transform: scale(1.04); }
+  .profile-shell__media-overlay { position: absolute; inset: 0; z-index: 0; background: var(--profile-background-overlay, transparent); opacity: var(--profile-background-overlay-opacity, 0); pointer-events: none; }
+  .profile-shell__card-media-image,
+  .profile-shell__card-media-video { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; opacity: var(--profile-background-image-opacity, 1); filter: blur(var(--profile-background-blur, 0px)); transform: scale(1.04); pointer-events: none; }
+  .profile-shell__card-media-video { opacity: calc(var(--profile-background-image-opacity, 1) * .92); }
+  .profile-shell__card-media-overlay { position: absolute; inset: 0; z-index: 0; border-radius: inherit; background: var(--profile-background-overlay, transparent); opacity: var(--profile-background-overlay-opacity, 0); pointer-events: none; }
   .profile-shell__surface-backdrop { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: var(--profile-border-radius, var(--radius-lg)); background: rgba(0, 0, 0, 0.001); backdrop-filter: blur(var(--profile-surface-blur, 0px)); -webkit-backdrop-filter: blur(var(--profile-surface-blur, 0px)); pointer-events: none; }
   @supports (backdrop-filter: blur(0)) {
     .profile-shell__surface-backdrop { backdrop-filter: blur(var(--profile-surface-blur, 0px)); }
@@ -1158,13 +1178,12 @@
     overflow: hidden;
     padding: 0;
     background: transparent;
+    border-radius: var(--profile-border-radius, 16px);
   }
   .profile-shell-page.profile-shell-page--default.profile-shell-page--preview {
     background: transparent;
   }
-  .profile-shell-page--preview:not(.profile-shell-page--default) {
-    background: var(--profile-background-paint, transparent);
-  }
+  .profile-shell-page--preview:not(.profile-shell-page--default) { background: transparent; }
   :global(.profile-shell-page--preview) .profile-shell__opening { width: 100%; margin: 0; border-radius: 16px; box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.28); }
   :global(.profile-shell-page--preview) .profile-shell__opening-content { grid-template-columns: 1fr; }
   :global(.profile-shell-page--preview) .profile-shell__identity-row { gap: var(--space-4); }
@@ -1391,6 +1410,7 @@
     overflow: hidden;
     padding: 0;
     scroll-snap-type: none;
+    background: transparent;
   }
 
   .profile-shell-page--preview .profile-shell__approved-main {
@@ -1402,6 +1422,14 @@
   .profile-shell-page--preview .profile-shell__approved-opening {
     width: 100%;
   }
+
+  /* The embedded phone is narrower than the browser viewport, so the normal
+     viewport media query cannot be the responsive signal. IdentityCard owns
+     this explicit render context instead. */
+  .profile-shell-page--preview-mobile .profile-shell__approved-main,
+  .profile-shell-page--preview-mobile .profile-shell__approved-canvas,
+  .profile-shell-page--preview-mobile .profile-shell__approved-opening { width: 100%; min-width: 0; }
+  .profile-shell-page--preview-mobile .profile-shell__approved-canvas { min-height: 0; }
 
   /* The editor preview is an identity check, not a second profile page. Keep
      the opening card visible while leaving the daily roll and story surfaces

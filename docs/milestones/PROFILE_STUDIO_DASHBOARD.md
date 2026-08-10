@@ -1,6 +1,6 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, the Customize control audit, three-tab Customize IA, linked surface/effect preview controls, and renderer-backed cosmetic cards implemented 2026-08-10
+Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, the Customize control audit, three-tab Customize IA, linked surface/effect preview controls, renderer-backed cosmetic cards, media lifecycle recovery, and bounded mobile Live preview implemented 2026-08-10
 
 ## Scope
 
@@ -24,9 +24,12 @@ bootstrap; it begins only when Shop or Collection needs it.
 This remains a presentation milestone. The dashboard projects existing
 authoritative profile, story, achievement, inventory, and rank data. It does
 not grant rewards, calculate scores, mutate inventory, or create a new
-currency. Old `#profile-*` and short-form settings hashes map to Customize or
-Links as appropriate, and the `/profile?legacy=1` escape hatch remains
-available.
+currency. The stabilization adds normalized background-treatment fields and
+two owner-authorized cursor-replacement RPCs; these preserve the existing
+media quota, RLS, and storage authority and do not change authentication,
+progression, economy, or public-profile authority. Old `#profile-*` and
+short-form settings hashes map to Customize or Links as appropriate, and the
+`/profile?legacy=1` escape hatch remains available.
 
 ## Architecture refactor follow-up
 
@@ -36,15 +39,16 @@ before-unload handling, and the existing server mutation calls. Shell/sidebar,
 header/actions, destination workspace, persistent Live preview, and dirty-state
 prompt each own their markup and presentation boundaries.
 
-The dashboard contract and section registry centralize destination/hash
+The initial refactor established a dashboard contract and section registry to centralize destination/hash
 normalization and editor ownership. A draft projection composes identity,
 appearance, content, media, layout, and cosmetic drafts into the preview model.
 Renderer contexts explicitly distinguish `live-profile`, `catalog`,
 `effect-card`, and `name-control` geometry. Customize-specific layout rules now
 live with the editor that owns the corresponding surface; standalone Links and
-catalog rendering retain their existing contexts. The refactor is schema-free
-and leaves save, publish, upload, equip, account RPCs, RLS, and public profile
-rendering contracts intact.
+catalog rendering retain their existing contexts. The follow-up stabilization
+is additive: it normalizes background treatment and adds owner-authorized
+cursor replacement while leaving save, publish, upload, equip, account RPCs,
+RLS, and public profile rendering contracts intact.
 
 ## Next progression slice
 
@@ -105,26 +109,38 @@ affect only the translucent card while the page outside it stays sharp.
 
 ## Validation
 
-- `npm test`: 266 passing, including routing, draft aggregation, renderer
+- `npm test`: 269 passing, including routing, draft aggregation, renderer
   context, dashboard ownership, shared profile-color role/HSV picker, and
-  focused default-profile presentation coverage.
+  focused default-profile presentation, media lifecycle, and mobile preview
+  coverage.
 - `npm run build`, `npm run check`, `npx eslint src/`, links, CSP, username
   policy, balance, catalog, scoring parity, and database security: passing.
+- `supabase db lint --local --level warning --fail-on warning` and
+  `supabase db reset`: passing after the additive appearance/media migration.
 - `npm run check:performance`: all blocking route and asset budgets pass;
-  dashboard JavaScript is 526.81 kB/528.00 kB; aggregate JavaScript and CSS
+  dashboard JavaScript is 525.32 kB/528.00 kB; aggregate JavaScript and CSS
   catalogs remain advisory overages.
 - `npm run test:browser`: passing for authenticated Studio refresh, aliases,
   collapsed/open/closed preview, published appearance updates, balanced
-  General Customization geometry, Layout workspace geometry, maximum surface
-  blur, mobile drawer and focus restoration, reduced motion, canonical public
-  profile refresh, and the default blue-starfield identity card with
-  avatar-first focus composition.
+  General Customization geometry, Media and Layout workspace geometry,
+  progressive name renderers, production cursor-trail fitting-room previews,
+  atmosphere recovery and switching, rounded-card background containment,
+  maximum surface blur, mobile drawer and focus restoration, reduced motion,
+  canonical public profile refresh, and the default blue-starfield identity
+  card with avatar-first focus composition. Evidence captures include the
+  Media, Layout, Effects/Live Preview, and mobile workspaces.
 
-The latest presentation pass remains additive and schema-free. The picker
-marker is derived from the same selected-role HSV value as its controls, and
+The latest stabilization remains additive. The picker marker is derived from
+the same selected-role HSV value as its controls, and
 the public shell applies the blue default only to untouched Signal defaults;
 authored media, backgrounds, atmospheres, links, content, and saved layouts
 continue to win.
+
+Background treatment is now a normalized, renderer-backed draft with blur,
+image opacity, and overlay controls. Cursor replacement uses two
+owner-authorized transactional RPCs so an occupied cursor slot can be
+replaced without weakening quota, RLS, storage, or authenticated ownership
+boundaries.
 
 The Customize audit removes controls that had no configuration, persistence,
 or renderer consumer while preserving old normalized fields for compatibility.

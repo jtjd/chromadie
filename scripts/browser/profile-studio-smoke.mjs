@@ -221,6 +221,8 @@ try {
     assert((mediaRail.labels.includes('Avatar') || mediaRail.labels.includes('Profile avatar')) && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
     assert((mediaRail.editable.includes('Avatar') || mediaRail.editable.includes('Profile avatar')) && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
     assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
+    await page.evaluate(`document.querySelector('[data-editor-section="media"]')?.scrollIntoView({ block: 'start' })`);
+    await capture('04-media-workspace');
     await page.click('#profile-customize-tab-layout', 'Layout customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, 'visible Layout editor');
     const layoutState = await page.evaluate(`(() => {
@@ -234,6 +236,8 @@ try {
     })()`);
     assert((layoutState.editor?.width || 0) > 0 && (layoutState.editor?.height || 0) > 0, `Layout editor has no visible geometry: ${JSON.stringify(layoutState)}.`);
     assert((layoutState.workspace?.width || 0) > 0 && (layoutState.workspace?.bottom || 0) <= layoutState.viewport.height + 2, `Layout workspace escapes the viewport: ${JSON.stringify(layoutState)}.`);
+    await page.evaluate(`document.querySelector('[data-editor-section="layout"]')?.scrollIntoView({ block: 'start' })`);
+    await capture('04-layout-workspace');
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
     await page.evaluate(`(async () => {
@@ -277,7 +281,24 @@ try {
         select.dispatchEvent(new Event('change', { bubbles: true }));
       }
     })()`);
-    await page.waitFor(`document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length === 3 && document.querySelector('[aria-label="Avatar effect preview"] .avatar-effect--ghost-double') && document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('[aria-label="Cursor trail preview"] .shop-cursor-preview--pixel-wake') && document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]')`, 'all cosmetic renderers in the fitting room');
+    await page.waitFor(`document.querySelector('#cosmetic-name_material')?.value === 'name_material_blueprint_ink' && document.querySelector('#cosmetic-name_motion')?.value === 'name_motion_typewriter_name' && document.querySelector('#cosmetic-avatar-effect')?.value === 'avatar_effect_ghost_double' && document.querySelector('#cosmetic-profile-border')?.value === 'border_celestial' && document.querySelector('#cosmetic-cursor-trail')?.value === 'cursor_trail_pixel_wake' && document.querySelector('#cosmetic-profile-atmosphere')?.value === 'profile_atmosphere_rain_window' && document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length === 3 && document.querySelector('[aria-label="Avatar effect preview"] .avatar-effect--ghost-double') && document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer[data-input-mode="demo"][data-trail-key="pixel-wake"]') && document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="rain-window"]')`, 'all cosmetic renderers in the fitting room');
+    await page.waitFor(`(() => {
+      const previews = [...document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas')];
+      return previews.length === 3
+        && previews[0]?.getAttribute('data-name-font') === 'name_font_marker_tag'
+        && previews[1]?.getAttribute('data-name-material') === 'name_material_blueprint_ink'
+        && previews[2]?.getAttribute('data-name-motion') === 'name_motion_typewriter_name';
+    })()`, 'progressive name composition');
+    const progressiveNameState = await page.evaluate(`(() => [...document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas')].map(node => ({
+      font: node.getAttribute('data-name-font') || '',
+      material: node.getAttribute('data-name-material') || '',
+      motion: node.getAttribute('data-name-motion') || '',
+    })))()`);
+    assert(JSON.stringify(progressiveNameState) === JSON.stringify([
+      { font: 'name_font_marker_tag', material: '', motion: '' },
+      { font: 'name_font_marker_tag', material: 'name_material_blueprint_ink', motion: '' },
+      { font: 'name_font_marker_tag', material: 'name_material_blueprint_ink', motion: 'name_motion_typewriter_name' }
+    ]), `Name controls did not use progressive composition: ${JSON.stringify(progressiveNameState)}.`);
     const nameEffectsLayout = await page.evaluate(`(() => {
       const grid = document.querySelector('.profile-cosmetics-name-grid');
       const rect = element => {
@@ -312,19 +333,21 @@ try {
       const stage = preview.querySelector('.shop-preview-area');
       const avatar = preview.querySelector('.avatar-effect');
       const atmosphere = preview.querySelector('.shop-atmosphere-preview');
-      const cursorRoute = preview.querySelector('.shop-cursor-preview__pixel-route');
+      const cursorLayer = preview.querySelector('.cursor-trail-layer');
       return {
         label: preview.getAttribute('aria-label') || '',
         stageBackground: stage ? getComputedStyle(stage).backgroundColor : '',
         avatarBackground: avatar ? getComputedStyle(avatar).backgroundColor : '',
         atmosphereBackground: atmosphere ? getComputedStyle(atmosphere).backgroundColor : '',
-        cursorRoute: cursorRoute ? getComputedStyle(cursorRoute).display : ''
+        cursorInputMode: cursorLayer?.getAttribute('data-input-mode') || '',
+        cursorKey: cursorLayer?.getAttribute('data-trail-key') || ''
       };
     }))()`);
     assert(visualPreviewState.length === 4 && visualPreviewState.every(({ stageBackground }) => stageBackground === 'rgba(0, 0, 0, 0)'), `Effect cards inherited a catalog background: ${JSON.stringify(visualPreviewState)}.`);
     assert(visualPreviewState.find(({ label }) => label === 'Avatar effect preview')?.avatarBackground === 'rgba(0, 0, 0, 0)', `Avatar effect preview has an opaque background: ${JSON.stringify(visualPreviewState)}.`);
     assert(visualPreviewState.find(({ label }) => label === 'Profile atmosphere preview')?.atmosphereBackground === 'rgba(0, 0, 0, 0)', `Atmosphere preview has an opaque background: ${JSON.stringify(visualPreviewState)}.`);
-    assert(visualPreviewState.find(({ label }) => label === 'Cursor trail preview')?.cursorRoute === 'block', `Pixel Wake cursor preview did not mount its dotted route: ${JSON.stringify(visualPreviewState)}.`);
+    const cursorPreviewState = visualPreviewState.find(({ label }) => label === 'Cursor trail preview');
+    assert(cursorPreviewState?.cursorInputMode === 'demo' && cursorPreviewState.cursorKey === 'pixel-wake', `Pixel Wake cursor preview did not mount the production demo renderer: ${JSON.stringify(visualPreviewState)}.`);
     assert((nameEffectsLayout.grid?.height || 0) >= 80 && (nameEffectsLayout.grid?.height || 0) <= 104, `Name effect row is outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-profile-border');
@@ -364,7 +387,12 @@ try {
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', originalTextColor, ['input']);
     const originalBackgroundColor = await page.evaluate(`document.querySelector('[data-color-role="background"] .appearance-editor__hex')?.value || '#07080B'`);
     await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', '#123456', ['input']);
-    await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell-page--preview')).backgroundColor === 'rgb(18, 52, 86)'`, 'page background draft in live preview');
+    await page.waitFor(`(() => {
+      const pageElement = document.querySelector('.profile-studio-preview .profile-shell-page--preview');
+      const opening = document.querySelector('.profile-studio-preview .profile-shell__approved-opening');
+      return getComputedStyle(opening).getPropertyValue('--profile-background').trim().toUpperCase() === '#123456'
+        && getComputedStyle(pageElement).backgroundColor !== 'rgb(18, 52, 86)';
+    })()`, 'rounded profile background draft in live preview');
     await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', originalBackgroundColor, ['input']);
     const originalSurfaceColor = await page.evaluate(`document.querySelector('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex')?.value || '#11141B'`);
     const surfacePlacement = await page.evaluate(`({
@@ -426,6 +454,38 @@ try {
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {
     await page.setViewport(390, 844);
+    await page.waitFor(`document.querySelector('.profile-studio-preview__devices button:nth-child(2)')`, 'live preview device controls');
+    await page.click('.profile-studio-preview__devices button:nth-child(2)', 'mobile live preview device');
+    await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview-mobile[data-preview-device="mobile"]')`, 'bounded mobile live preview');
+    const mobilePreview = await page.evaluate(`(() => {
+      const phone = document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview-mobile');
+      const card = phone?.querySelector('.identity-card');
+      const name = card?.querySelector('.identity-card__name');
+      const rect = element => {
+        const box = element?.getBoundingClientRect();
+        return box ? { left: Math.round(box.left), right: Math.round(box.right), width: Math.round(box.width), height: Math.round(box.height) } : null;
+      };
+      const phoneRect = rect(phone);
+      const overflow = [...(phone?.querySelectorAll('*') || [])]
+        .map(element => ({ element, box: element.getBoundingClientRect() }))
+        .filter(({ box }) => box.width > 0 && box.height > 0 && (box.right > (phoneRect?.right || 0) + 1 || box.left < (phoneRect?.left || 0) - 1))
+        .slice(0, 5)
+        .map(({ element, box }) => ({ tag: element.tagName, className: element.className, left: Math.round(box.left), right: Math.round(box.right) }));
+      return {
+        device: phone?.getAttribute('data-preview-device') || '',
+        phone: phoneRect,
+        card: rect(card),
+        name: rect(name),
+        nameScrollWidth: name?.scrollWidth || 0,
+        nameClientWidth: name?.clientWidth || 0,
+        overflow,
+        phoneScrollWidth: phone?.scrollWidth || 0,
+        phoneClientWidth: phone?.clientWidth || 0
+      };
+    })()`);
+    assert(mobilePreview.device === 'mobile', `Mobile live preview did not activate: ${JSON.stringify(mobilePreview)}.`);
+    assert((mobilePreview.phone?.width || 0) <= 322 && (mobilePreview.card?.width || 0) > 200, `Mobile live preview is not a bounded phone canvas: ${JSON.stringify(mobilePreview)}.`);
+    assert(!mobilePreview.overflow.length && mobilePreview.phoneScrollWidth <= mobilePreview.phoneClientWidth + 1 && mobilePreview.nameScrollWidth <= mobilePreview.nameClientWidth + 1, `Mobile live preview has horizontal content overflow: ${JSON.stringify(mobilePreview)}.`);
     await page.waitFor(`document.querySelector('.profile-dashboard-shell__mobile-bar button')`, 'mobile dashboard menu');
     const closed = await page.evaluate(`(() => {
       const trigger = document.querySelector('.profile-dashboard-shell__mobile-bar button');
@@ -446,7 +506,7 @@ try {
     await page.pressKey('Escape');
     await page.waitFor(`document.querySelector('.profile-dashboard-shell__mobile-bar button')?.getAttribute('aria-expanded') === 'false' && document.activeElement === document.querySelector('.profile-dashboard-shell__mobile-bar button')`, 'mobile menu Escape focus restoration');
     await capture('06-mobile-dashboard-menu');
-    return { closed, opened };
+    return { mobilePreview, closed, opened };
   });
 
   await step('reduced-motion media query is honored', async () => {

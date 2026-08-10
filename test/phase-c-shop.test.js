@@ -181,14 +181,15 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(itemPreview, /avatarSrc/);
   assert.doesNotMatch(itemPreview, /mara-dog-v1/);
   assert.match(itemPreview, /shop-avatar-preview__fallback/);
-  assert.match(itemPreview, /shop-cursor-preview__pointer/);
-  assert.match(itemPreview, /shop-cursor-preview__trail--near/);
+  assert.match(itemPreview, /<CursorTrailLayer/);
+  assert.match(itemPreview, /inputMode="demo"/);
+  assert.doesNotMatch(itemPreview, /shop-cursor-preview__pointer|shop-cursor-preview__trail--near/);
   assert.match(itemPreview, /filter:none !important/);
   assert.doesNotMatch(itemPreview, /border specimen/);
   assert.doesNotMatch(itemPreview, /preview-profile-name/);
   assert.match(itemPreview, /preview-border-space/);
   assert.doesNotMatch(itemPreview, /profile atmosphere/);
-  assert.match(itemPreview, /background: var\(--preview-surface/);
+  assert.match(itemPreview, /background:transparent/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area \{[^}]*border: 1px/);
   assert.doesNotMatch(itemPreview, /\.shop-preview-area::after/);
   assert.doesNotMatch(itemPreview, /preview-profile-card|shop-atmosphere-preview__card/);

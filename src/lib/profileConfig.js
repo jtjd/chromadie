@@ -49,6 +49,7 @@ export const PROFILE_APPEARANCE_DEFAULTS = Object.freeze({
     highlight: '#FFFFFF'
   }),
   surface: Object.freeze({ opacity: 64, blur: 20 }),
+  background: Object.freeze({ blur: 0, imageOpacity: 100, overlayColor: '#000000', overlayOpacity: 0 }),
   gradient: Object.freeze({ enabled: false, primary: '#07080B', secondary: '#171A22', angle: 135 }),
   border: Object.freeze({ enabled: true, color: '#FFFFFF', width: 1, radius: 24, opacity: 11 })
 });
@@ -72,6 +73,7 @@ function normalizeAppearance(value, fallbackAccent = String(PROFILE_APPEARANCE_D
   const input = value && typeof value === 'object' ? value : {};
   const colors = input.colors && typeof input.colors === 'object' ? input.colors : {};
   const surface = input.surface && typeof input.surface === 'object' ? input.surface : {};
+  const background = input.background && typeof input.background === 'object' ? input.background : {};
   const gradient = input.gradient && typeof input.gradient === 'object' ? input.gradient : {};
   const border = input.border && typeof input.border === 'object' ? input.border : {};
   const defaults = PROFILE_APPEARANCE_DEFAULTS;
@@ -90,6 +92,12 @@ function normalizeAppearance(value, fallbackAccent = String(PROFILE_APPEARANCE_D
     surface: {
       opacity: safeInteger(surface.opacity, defaults.surface.opacity, 0, 100),
       blur: safeInteger(surface.blur, defaults.surface.blur, 0, 40)
+    },
+    background: {
+      blur: safeInteger(background.blur, defaults.background.blur, 0, 40),
+      imageOpacity: safeInteger(background.imageOpacity, defaults.background.imageOpacity, 0, 100),
+      overlayColor: safeColor(background.overlayColor, defaults.background.overlayColor),
+      overlayOpacity: safeInteger(background.overlayOpacity, defaults.background.overlayOpacity, 0, 100)
     },
     gradient: {
       enabled: gradient.enabled === true,
