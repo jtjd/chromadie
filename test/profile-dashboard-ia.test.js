@@ -47,7 +47,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   for (const label of ['Profile Text', 'Handle & Metadata', 'Username', 'Bio Text', 'Page Background', 'Profile Surface', 'Accent']) {
     assert.match(appearance, new RegExp(label.replace(/[&]/g, '\\$&')));
   }
-  assert.match(appearance, /<span>6 colors<\/span>/);
+  assert.doesNotMatch(appearance, /6 colors|Card depth|Colors update the profile preview/);
   assert.match(appearance, /appearance-surface-title[\s\S]*Profile Surface[\s\S]*Opacity[\s\S]*Blur/);
   assert.doesNotMatch(appearance, /\['surface', 'Profile Surface'\]/);
   assert.match(settings, /import\('\.\/ProfilePremiumPage\.svelte'\)/);
@@ -70,7 +70,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   for (const action of ['Background', 'Audio', 'Profile avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
   assert.doesNotMatch(expression, /More media controls/);
   assert.match(expression, /profile-expression-editor__compact-audio-player/);
-  assert.match(expression, /compact-preview--avatar \{ border-color: transparent/);
+  assert.match(expression, /compact-preview--avatar \{ border-color: var\(--media-line\)/);
+  assert.match(expression, /compact-preview[\s\S]*border: 1px solid var\(--media-line\)/);
+  assert.match(customize, /profile-cosmetics-controls__heading\) \{ display: none; \}/);
   assert.match(richMedia, /export let compact = false/);
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);

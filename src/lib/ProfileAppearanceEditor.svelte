@@ -95,7 +95,7 @@
 
 <div class="appearance-editor">
   <section class="appearance-editor__panel" aria-labelledby="appearance-colors-title">
-    <div class="appearance-editor__heading"><h2 id="appearance-colors-title">Profile colors</h2><span>6 colors</span></div>
+    <div class="appearance-editor__heading"><h2 id="appearance-colors-title">Profile colors</h2></div>
     <div class="appearance-editor__color-grid">
       {#each colorFields as [key, label] (key)}
         <label class="appearance-editor__field">
@@ -110,7 +110,7 @@
   </section>
 
   <section class="appearance-editor__panel" aria-labelledby="appearance-surface-title">
-    <div class="appearance-editor__heading"><h2 id="appearance-surface-title">Surface</h2><span>Card depth</span></div>
+    <div class="appearance-editor__heading"><h2 id="appearance-surface-title">Surface</h2></div>
     <div class="appearance-editor__surface-grid">
       <label class="appearance-editor__field">
         <span>Profile Surface</span>
@@ -125,7 +125,6 @@
   </section>
 
   {#if error}<p class="appearance-editor__message" role="alert">{error}</p>{/if}
-  <p class="appearance-editor__hint">Colors update the profile preview. Publish the dashboard when the profile is ready.</p>
 </div>
 
 <style>
@@ -156,7 +155,6 @@
   .appearance-editor__panel { padding: .3rem 0 .7rem; border: 0; border-bottom: 1px solid var(--appearance-line); border-radius: 0; background: transparent; }
   .appearance-editor__heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .55rem; }
   .appearance-editor__heading h2 { margin: 0; color: var(--appearance-text); font-size: var(--customize-subheading-size, .88rem); line-height: 1.25; letter-spacing: -.02em; }
-  .appearance-editor__heading > span { color: var(--appearance-faint); font: var(--appearance-label-size)/1 var(--appearance-mono); }
   .appearance-editor__color-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem .7rem; }
   .appearance-editor__surface-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .55rem .7rem; }
   .appearance-editor__field, .appearance-editor__range { display: grid; gap: .35rem; min-width: 0; }
@@ -171,7 +169,6 @@
   .appearance-editor__range output { color: var(--appearance-faint); font: var(--appearance-label-size)/1 var(--appearance-mono); }
   .appearance-editor__range input { width: 100%; accent-color: var(--appearance-neutral); }
   .appearance-editor__message { margin: 0; color: var(--appearance-danger); font-size: var(--appearance-label-size); line-height: 1.4; }
-  .appearance-editor__hint { margin: 0; color: var(--appearance-muted); font-size: var(--appearance-label-size); line-height: 1.45; }
   @media (max-width: 64rem) { .appearance-editor__color-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>

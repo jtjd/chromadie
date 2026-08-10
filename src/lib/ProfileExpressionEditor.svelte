@@ -794,7 +794,7 @@
     aspect-ratio: 10 / 3;
     overflow: hidden;
     padding: .6rem .65rem;
-    border: 1px solid color-mix(in srgb, var(--media-card-accent) 30%, var(--media-line));
+    border: 1px solid var(--media-line);
     border-radius: .35rem;
     background: var(--media-surface-inset);
     color: var(--media-text-secondary);
@@ -808,12 +808,12 @@
     background: var(--media-surface-inset);
   }
 
-  .profile-expression-editor__compact-preview--locked { align-content: center; gap: .35rem; padding: .6rem; border-color: color-mix(in srgb, var(--media-premium) 38%, var(--media-line)); background: var(--media-surface-deep); cursor: default; }
+  .profile-expression-editor__compact-preview--locked { align-content: center; gap: .35rem; padding: .6rem; border-color: var(--media-line); background: var(--media-surface-deep); cursor: default; }
   .profile-expression-editor__compact-preview:disabled { cursor: wait; opacity: .72; }
   .profile-expression-editor__compact-preview:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
   :global(.profile-expression-editor__compact-preview .profile-media-icon) { color: var(--media-card-accent); }
   :global(.profile-expression-editor__compact-preview--locked .profile-media-icon) { color: var(--media-premium); }
-  .profile-expression-editor__compact-preview--avatar { border-color: transparent; }
+  .profile-expression-editor__compact-preview--avatar { border-color: var(--media-line); }
   :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media),
   :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media img),
   :global(.profile-expression-editor__compact-preview .foundation-media),
@@ -828,7 +828,7 @@
   .profile-expression-editor__compact-remove:hover:not(:disabled) { color: var(--media-red); }
   .profile-expression-editor__compact-remove:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 3px; color: var(--media-red); }
   .profile-expression-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
-  .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; padding: .6rem .65rem; border: 1px solid color-mix(in srgb, var(--media-card-accent) 34%, var(--media-line)); border-radius: .35rem; background: var(--media-surface-inset); }
+  .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; width: 100%; min-height: 6.6rem; aspect-ratio: 10 / 3; padding: .6rem .65rem; border: 1px solid var(--media-line); border-radius: .35rem; background: var(--media-surface-inset); }
   .profile-expression-editor__compact-audio-play { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--media-card-accent) 58%, var(--media-line-strong)); border-radius: 50%; background: color-mix(in srgb, var(--media-card-accent) 13%, transparent); color: var(--media-text-primary); font: 700 .72rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
   .profile-expression-editor__compact-audio-play:hover { border-color: var(--media-card-accent); background: color-mix(in srgb, var(--media-card-accent) 24%, transparent); }
   .profile-expression-editor__compact-audio-play:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
@@ -867,7 +867,7 @@
     gap: .5rem;
     min-height: 6.6rem;
     padding: .6rem .65rem;
-    border: 1px solid color-mix(in srgb, var(--media-card-accent) 30%, var(--media-line));
+    border: 1px solid var(--media-line);
     border-radius: .35rem;
     background: var(--media-surface-inset);
     color: var(--media-text-secondary);
@@ -883,7 +883,7 @@
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview--locked) {
     gap: .35rem;
     padding: .6rem;
-    border-color: color-mix(in srgb, var(--media-premium) 38%, var(--media-line));
+    border-color: var(--media-line);
     background: var(--media-surface-deep);
   }
 

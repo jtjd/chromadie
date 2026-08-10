@@ -457,9 +457,7 @@
   .profile-customize-page :global(.profile-cosmetics-preview) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-controls) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .45rem .65rem; padding: .25rem 0 0; border: 0; background: transparent; }
-  .profile-customize-page :global(.profile-cosmetics-controls__heading) { grid-column: 1 / -1; margin-top: .25rem; padding-top: .65rem; }
-  .profile-customize-page :global(.profile-cosmetics-controls__heading:first-child) { margin-top: 0; padding-top: 0; }
-  .profile-customize-page :global(.profile-cosmetics-controls__heading p) { display: none; }
+  .profile-customize-page :global(.profile-cosmetics-controls__heading) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-slot) { padding-top: .45rem; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { grid-template-columns: 1fr; }
   .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card),
@@ -516,7 +514,6 @@
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields), .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.profile-cosmetics-controls__heading) { grid-column: auto; }
     .profile-customize-page__premium-banner { min-height: 3rem; padding-inline: 2.2rem; text-align: center; }
     .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { font-size: 2.2rem; }
     .profile-customize-page__premium-arrow { right: .65rem; }
