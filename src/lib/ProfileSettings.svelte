@@ -7,6 +7,7 @@
   import { loadProfileContext } from './profileData.js';
   import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
   import { normalizeRichMediaConfig } from './profileRichMedia.js';
+  import { getProfileMediaUrl } from './profileMedia.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
   import { getCanonicalProfilePath } from './routeContract.js';
@@ -39,15 +40,15 @@
   const LINKS_SECTION_IDS = Object.freeze(['profile-layout', 'profile-aliases']);
 
   const SETTINGS_SECTIONS = Object.freeze([
-    { id: 'customize', label: 'Customize', groupKey: 'primary', icon: '✦' },
-    { id: 'links', label: 'Links', groupKey: 'primary', icon: '↗' },
-    { id: 'premium', label: 'Premium', groupKey: 'primary', icon: '◇' },
-    { id: 'overview', label: 'Overview', groupKey: 'account', groupLabel: 'Account', icon: '⌂' },
-    { id: 'profile-insights', label: 'Analytics', groupKey: 'account', icon: '◒' },
-    { id: 'profile-notifications', label: 'Notifications', groupKey: 'account', icon: '◌' },
-    { id: 'profile-social', label: 'Privacy & social', groupKey: 'account', icon: '◍' },
-    { id: 'progression', label: 'Badges & progression', groupKey: 'account', icon: '↗' },
-    { id: 'account', label: 'Settings', groupKey: 'account', icon: '·' }
+    { id: 'overview', label: 'Overview', groupKey: 'primary', groupLabel: 'Customize', icon: 'overview' },
+    { id: 'customize', label: 'Customize', groupKey: 'primary', icon: 'customize' },
+    { id: 'links', label: 'Links', groupKey: 'primary', icon: 'links' },
+    { id: 'premium', label: 'Premium', groupKey: 'primary', icon: 'premium' },
+    { id: 'profile-insights', label: 'Analytics', groupKey: 'account', groupLabel: 'Account', icon: 'profile-insights' },
+    { id: 'profile-notifications', label: 'Notifications', groupKey: 'account', icon: 'profile-notifications' },
+    { id: 'profile-social', label: 'Privacy & social', groupKey: 'account', icon: 'profile-social' },
+    { id: 'progression', label: 'Badges & progression', groupKey: 'account', icon: 'progression' },
+    { id: 'account', label: 'Settings', groupKey: 'account', icon: 'account' }
   ]);
 
   // These route records keep old dashboard hashes working while the visible IA stays aggregate.
@@ -159,6 +160,7 @@
   $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Customize';
   $: previewAvailable = activeSection === 'links';
   $: editorProfileConfig = createEditorProfileConfig(context?.profileConfig);
+  $: sidebarAvatarSrc = getProfileMediaUrl(editorProfileConfig?.draft?.avatar_path || editorProfileConfig?.published?.avatar_path);
   $: dashboardDirty = Boolean(activeDirtySection) || hasServerDraftChanges(context?.profileConfig);
   $: previewProfileConfig = configurationPreview || context?.profileConfig?.draft;
   $: previewProfile = context?.targetProfile
@@ -677,6 +679,9 @@
 <ProfileDashboardShell
   sections={[...visibleSettingsSections]}
   {activeSection}
+  ownerUsername={accountUsername}
+  ownerProfilePath={profilePath}
+  ownerAvatarSrc={sidebarAvatarSrc}
   showPreview={previewOpen && previewAvailable}
   on:sectionchange={handleDashboardSectionChange}
 >

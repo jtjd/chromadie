@@ -13,7 +13,7 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
     read('src/styles/site.css')
   ]);
 
-  assert.match(app, /\{#if !profileModeVisible\}/);
+  assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible\}/);
   assert.match(app, /componentProps: \{ logoutInProgress \}/);
   assert.match(settings, /<ProfileDashboardShell/);
   assert.match(settings, /on:sectionchange/);

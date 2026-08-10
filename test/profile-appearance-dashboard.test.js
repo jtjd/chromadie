@@ -42,7 +42,7 @@ test('appearance v1 is bounded and independent from daily roll color', () => {
   assert.equal(frame.baseColor, '#F4F6FB');
 });
 
-test('dashboard uses the shared header and aggregate profile action contract', async () => {
+test('dashboard uses its self-contained shell and aggregate profile action contract', async () => {
   const [app, settings, appearance, layout, migration, shell, actions] = await Promise.all([
     read('src/App.svelte'),
     read('src/lib/ProfileSettings.svelte'),
@@ -52,7 +52,7 @@ test('dashboard uses the shared header and aggregate profile action contract', a
     read('src/lib/ProfileDashboardShell.svelte'),
     read('src/lib/ProfileDashboardActions.svelte')
   ]);
-  assert.match(app, /\{#if !profileModeVisible\}/);
+  assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible\}/);
   assert.match(settings, /<ProfileAccountSettings/);
   assert.match(settings, /id: 'customize'/);
   assert.match(settings, /id: 'links'/);

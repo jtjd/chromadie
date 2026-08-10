@@ -5,11 +5,12 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate Customize, Links, and Premium destinations', async () => {
-  const [settings, customize, premium, shell, editor, expression, richMedia, identity, appearance, content, widgets, cosmetics] = await Promise.all([
+  const [settings, customize, premium, shell, dashboardIcon, editor, expression, richMedia, identity, appearance, content, widgets, cosmetics] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
     read('src/lib/ProfileDashboardShell.svelte'),
+    read('src/lib/ProfileDashboardIcon.svelte'),
     read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ProfileRichMediaEditor.svelte'),
@@ -30,11 +31,20 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /on:identitysaved=\{updateIdentity\}/);
   assert.match(settings, /identityPresentation: nextPresentation/);
   assert.match(shell, /data-section=\{section\.id\}/);
+  assert.match(shell, /ProfileDashboardIcon name=\{section\.id\}/);
+  assert.match(shell, /profile-dashboard-shell__owner/);
+  assert.match(shell, /View profile/);
+  assert.doesNotMatch(shell, /Theme|theme switch/i);
+  assert.match(dashboardIcon, /viewBox="0 0 24 24"/);
+  for (const icon of ['overview', 'customize', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account']) {
+    assert.match(dashboardIcon, new RegExp(`name === '${icon}'`));
+  }
   assert.match(shell, /--nav-accent/);
   assert.match(shell, /--ctp-sapphire/);
-  assert.match(shell, /background: var\(--ctp-crust/);
-  assert.match(shell, /profile-dashboard-shell__main \{ min-width: 0; background: var\(--ctp-crust/);
-  assert.match(shell, /profile-dashboard-shell__content \{ --surface-panel: var\(--ctp-surface0/);
+  assert.match(shell, /var\(--ctp-crust, var\(--site-deep/);
+  assert.match(shell, /profile-dashboard-shell__main \{ min-width: 0; background: transparent/);
+  assert.match(shell, /profile-dashboard-shell__content \{ --surface-panel: color-mix\(in srgb, var\(--ctp-surface0/);
+  assert.match(shell, /radial-gradient\(circle at 82% 4%/);
   assert.match(identity, /baselineBio/);
   assert.match(identity, /incomingKey/);
   assert.match(identity, /identity-editor__grid--meta/);
@@ -86,8 +96,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /data-editor-section="general"/);
   assert.match(customize, /--customize-section-accent/);
   assert.match(customize, /--customize-section-surface/);
-  assert.match(customize, /--customize-section-surface: var\(--customize-surface-raised\)/);
-  assert.match(customize, /--customize-section-input: var\(--customize-surface\)/);
+  assert.match(customize, /--customize-section-surface: var\(--customize-surface\)/);
+  assert.match(customize, /--customize-section-input: var\(--customize-surface-inset\)/);
+  assert.match(customize, /linear-gradient\(135deg/);
   assert.doesNotMatch(customize, /--customize-section-surface: var\(--customize-surface-alt\)/);
   assert.match(customize, /--customize-section-input/);
   assert.match(customize, /--customize-section-input-line/);
@@ -118,6 +129,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(premium, /\$7\.99 lifetime/);
   assert.match(premium, /Premium buys expression\. Gameplay earns prestige\./);
   assert.match(shell, /profile-dashboard-shell__brand/);
+  assert.match(settings, /ownerUsername=\{accountUsername\}/);
+  assert.match(settings, /ownerAvatarSrc=\{sidebarAvatarSrc\}/);
+  assert.match(settings, /id: 'overview', label: 'Overview', groupKey: 'primary', groupLabel: 'Customize'/);
   assert.match(shell, /class:premium=\{section\.id === 'premium'\}/);
   assert.match(shell, /max-width: 90rem/);
   assert.match(editor, /export let showLayout = true/);

@@ -1,5 +1,21 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-09 — Give Profile Studio a self-contained Mocha workspace
+
+Profile Studio now owns its full viewport instead of sitting beneath the
+site-wide header. Its persistent sidebar contains the Studio identity,
+Customize and Account navigation groups, and an owner profile card; the theme
+switcher is deliberately omitted. The global site header remains unchanged on
+every non-Studio route.
+
+The visual hierarchy follows Catppuccin Mocha rather than user-authored profile
+colors: Crust frames the workspace, Base and Mantle form layered section
+surfaces, recessed controls use the darker neutral steps, and semantic palette
+colors are reserved for status, focus, and section cues. This gives the editor
+predictable contrast while preserving structured profile customization,
+responsive navigation, reduced-motion behavior, and all existing publish and
+preview authority boundaries.
+
 ## 2026-08-09 — Invert Studio depth so sections lead controls
 
 The live Crust-section pass left only one small neutral step between the Base

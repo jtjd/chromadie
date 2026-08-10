@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-09 — Redesign Profile Studio as a focused Mocha dashboard
+
+- Profile Studio now fills the viewport with a dedicated Catppuccin Mocha
+  sidebar and editing canvas, matching the supplied dashboard reference.
+- Added grouped line-icon navigation and a bottom owner profile card, moved
+  Overview into Customize, and removed the redundant Studio theme switcher.
+- Removed the site-wide header from Studio while leaving it intact everywhere
+  else, giving the editor more usable space on desktop and mobile.
+- Reworked panels, upload wells, inputs, status badges, and actions into a
+  stronger Crust/Base/Mantle hierarchy with accessible semantic accents.
+- Preserved profile drafts, publishing, preview rendering, account navigation,
+  direct-refresh routing, mobile focus handling, and reduced-motion behavior.
+
 ## 2026-08-09 — Make Studio sections visually decisive
 
 - Inverted the Studio depth hierarchy after live review: Crust now forms the

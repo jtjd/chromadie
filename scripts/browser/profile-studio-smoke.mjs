@@ -146,10 +146,11 @@ try {
 
   await step('direct-refresh authenticated Profile Studio', async () => {
     await page.navigate(`${appUrl}/profile/settings`, 'authenticated Profile Studio');
-    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-settings-page h1')`, 'Profile Studio');
-    const state = await page.evaluate(`({ path: location.pathname, heading: document.querySelector('.profile-settings-page h1')?.textContent?.trim(), authenticated: Boolean(document.querySelector('.site-mode-header__account-name')) })`);
+    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-dashboard-shell__owner')`, 'Profile Studio');
+    const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-dashboard-shell__nav button.active')?.textContent?.trim(), authenticated: Boolean(document.querySelector('.profile-dashboard-shell__owner')), globalHeader: Boolean(document.querySelector('.site-mode-header')) })`);
     assert(state.path === '/profile/settings', `Expected /profile/settings after refresh, got ${state.path}.`);
-    assert(state.authenticated, 'Authenticated account control is missing after Profile Studio refresh.');
+    assert(state.authenticated, 'Authenticated owner card is missing after Profile Studio refresh.');
+    assert(!state.globalHeader, 'Profile Studio mounted the redundant global site header.');
     await capture('04-profile-studio');
     return state;
   });

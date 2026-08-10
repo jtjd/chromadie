@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Match Profile Studio to the Mocha dashboard reference — 2026-08-09
+
+- Rebuilt the Studio frame as a full-height Catppuccin Mocha workspace with a
+  dedicated brand area, grouped line-icon navigation, and an owner profile card.
+- Removed the redundant global header from Studio only, moved Overview into the
+  Customize group, and omitted the theme switcher requested for this layout.
+- Restyled action, media, general, color, and effects regions as layered
+  Base/Mantle surfaces with recessed inputs, clearer borders, and restrained
+  semantic status colors.
+- Verified direct refresh, draft publishing, live preview, mobile drawer and
+  focus behavior, reduced motion, and public-profile refresh in browser smoke.
+
 ## Invert Profile Studio depth for decisive contrast — 2026-08-09
 
 - Moved the workspace to Catppuccin Crust and raised every large Studio section

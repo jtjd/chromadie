@@ -10,7 +10,7 @@ test('dashboard navigation has one canonical ordered IA and safe mobile drawer b
     read('src/lib/ProfileDashboardShell.svelte')
   ]);
   const app = await read('src/App.svelte');
-  const ids = ['customize', 'links', 'premium', 'overview', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
+  const ids = ['overview', 'customize', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
   let previous = -1;
   for (const id of ids) {
     const index = settings.indexOf("id: '" + id + "'");
@@ -28,7 +28,9 @@ test('dashboard navigation has one canonical ordered IA and safe mobile drawer b
   assert.match(shell, /profileGroupExpanded/);
   assert.match(shell, /inert=/);
   assert.match(shell, /bodyOverflowBeforeDrawer/);
-  assert.doesNotMatch(shell, /sidebar-foot|profile-dashboard-shell__account|Sign out|View profile/);
+  assert.match(shell, /profile-dashboard-shell__owner/);
+  assert.match(shell, /View profile/);
+  assert.doesNotMatch(shell, /Sign out|Theme|theme switch/i);
 });
 
 test('section editors stage bounded drafts for the aggregate dashboard action', async () => {

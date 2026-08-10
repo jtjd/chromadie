@@ -879,7 +879,7 @@
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div id="header-mount">
-    {#if !profileModeVisible}
+    {#if !profileModeVisible && !profileSettingsModeVisible}
       <SiteModeHeader
         activeView={routeMode === 'app' ? view : routeMode}
         accountState={$accountState}
