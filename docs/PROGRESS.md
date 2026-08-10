@@ -2836,3 +2836,21 @@ Performance remains over inherited initial/total JS and total CSS budgets.
 - Added Milestone 10 source/unit and database-security coverage. Local schema
   lint/reset and database-security checks pass; the complete repository suite
   is run at the milestone boundary.
+## 2026-08-10 — Profile Studio reference-dashboard convergence
+
+- Reorganized Customize into Appearance, Media, Effects, and Layout tabs while
+  keeping all child editors mounted for draft continuity.
+- Made the real-renderer Live preview a persistent desktop companion and kept a
+  responsive bounded preview treatment for smaller screens.
+- Refined the dashboard shell with restrained Mocha panels and spacing, retained
+  Manrope, avoided gradient accents, and added an accessible browser-local
+  dark/light icon switch.
+- Preserved aggregate Reset / Publish profile behavior, legacy hashes, direct
+  profile links, and all owner-authorized RPC boundaries.
+- Preserved rich-media uploads and animated `.ani` cursor support without schema
+  or Storage-policy changes.
+- Validation: build, Svelte check, ESLint, 255 unit/source tests, links, CSP,
+  performance, username/balance/catalog drift, scoring parity, database
+  security, and the authenticated desktop/mobile/reduced-motion browser smoke
+  pass. The aggregate JavaScript/CSS catalogs remain advisory overages; every
+  blocking route and asset budget passes.

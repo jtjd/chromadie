@@ -197,8 +197,10 @@ try {
 
   await step('Customize controls publish the configured surface depth', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize`, 'Customize section');
-    await page.waitFor(`document.querySelector('.appearance-editor')`, 'Customize editor');
+    await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-settings-preview .profile-shell-page--preview')`, 'Customize tab workspace and persistent preview');
     await page.waitFor(`document.querySelector('.profile-dashboard-actions')`, 'dashboard profile actions');
+    await page.click('#profile-customize-tab-media', 'Media customize tab');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="media"]')?.hidden`, 'visible Media editor');
     await page.waitFor(`(() => {
       const grid = document.querySelector('.profile-expression-editor__compact-grid');
       return Boolean(grid && grid.querySelectorAll('.profile-expression-editor__compact-card, .rich-media-editor__compact-card').length === 4);
@@ -216,6 +218,8 @@ try {
     assert(mediaRail.labels.includes('Profile avatar') && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
     assert(mediaRail.editable.includes('Profile avatar') && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
     assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
+    await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
     await page.setInputValue('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) input[type="range"]', 40, ['input']);
     await page.waitFor(`document.querySelector('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) output')?.textContent?.trim() === '40px'`, 'blur draft value');
@@ -247,7 +251,7 @@ try {
       previewVisible: Boolean(document.querySelector('.profile-settings-preview'))
     })`);
     assert(draftState.publishDisabled === false, 'Changing Customize did not create an unpublished draft.');
-    assert(!draftState.toolbarVisible && !draftState.previewVisible, 'Customize still exposes page-level toolbar or preview chrome.');
+    assert(!draftState.toolbarVisible && draftState.previewVisible, 'Customize did not keep its persistent desktop preview beside the tabbed editor.');
     assert(publishRequestsBefore === publishRequestsAfter, 'Changing Customize unexpectedly called the publish RPC.');
     await capture('05-customize-draft-blur');
     await page.clickText('Publish profile', { description: 'publish configured surface depth' });

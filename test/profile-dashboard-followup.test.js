@@ -30,7 +30,9 @@ test('dashboard navigation has one canonical ordered IA and safe mobile drawer b
   assert.match(shell, /bodyOverflowBeforeDrawer/);
   assert.match(shell, /profile-dashboard-shell__owner/);
   assert.match(shell, /View profile/);
-  assert.doesNotMatch(shell, /Sign out|Theme|theme switch/i);
+  assert.doesNotMatch(shell, /Sign out|Theme selector/i);
+  assert.match(shell, /profile-dashboard-shell__mode-toggle/);
+  assert.match(shell, /aria-label=\{colorMode === 'dark' \? 'Use light mode' : 'Use dark mode'\}/);
 });
 
 test('section editors stage bounded drafts for the aggregate dashboard action', async () => {

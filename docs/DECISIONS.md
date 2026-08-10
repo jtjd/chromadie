@@ -3863,3 +3863,20 @@ glass, light, ink, and snow plates. We removed the seven procedural presets and
 their catalog/inventory/equipped records instead of presenting them as legacy
 choices. The slot now contains five finite video-backed renderers; new scenes
 must meet that authored-media bar before being added.
+## 2026-08-10 — Make Profile Studio a tabbed editing workspace
+
+Customize now uses four task-oriented tabs—Appearance, Media, Effects, and
+Layout—with the real profile renderer held beside the editor as a persistent
+draft preview on desktop. The tabs change presentation only: child editors
+remain mounted so local drafts survive tab changes, and Reset / Publish profile
+continues through the existing validated V2 owner RPC boundary.
+
+Profile Studio keeps its scoped Manrope and restrained Mocha visual language,
+without gradient accents. Its former theme-selector footprint is represented by
+one accessible dark/light icon switch whose preference is local to the browser;
+it does not alter the saved public-profile appearance configuration. Responsive
+layouts retain the existing mobile navigation and bounded preview behavior.
+
+Rich-media validation, staged uploads, entitlement checks, RLS, and public
+projection are unchanged. In particular, custom cursor and pointer-cursor
+uploads continue to accept the existing bounded WebP and ANI formats.

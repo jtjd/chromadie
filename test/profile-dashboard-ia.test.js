@@ -34,7 +34,8 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(shell, /ProfileDashboardIcon name=\{section\.id\}/);
   assert.match(shell, /profile-dashboard-shell__owner/);
   assert.match(shell, /View profile/);
-  assert.doesNotMatch(shell, /Theme|theme switch/i);
+  assert.doesNotMatch(shell, /Theme selector/i);
+  assert.match(shell, /profile-dashboard-shell__mode-toggle/);
   assert.match(dashboardIcon, /viewBox="0 0 24 24"/);
   for (const icon of ['overview', 'customize', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account']) {
     assert.match(dashboardIcon, new RegExp(`name === '${icon}'`));
@@ -94,8 +95,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);
   assert.match(customize, /Chromadie Plus/);
-  assert.doesNotMatch(customize, /role="tablist"/);
-  assert.doesNotMatch(customize, /activeCategory/);
+  assert.match(settings, /role="tablist" aria-label="Customize profile"/);
+  assert.match(settings, /Appearance[\s\S]*Media[\s\S]*Effects[\s\S]*Layout/);
+  assert.match(customize, /export let activeTab = 'appearance'/);
   assert.match(customize, /premiumrequest/);
   assert.match(customize, /ProfileAppearanceEditor/);
   assert.match(customize, /data-editor-section="general"/);

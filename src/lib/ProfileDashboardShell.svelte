@@ -18,6 +18,9 @@
   let isMobileViewport = false;
   let bodyOverflowBeforeDrawer = '';
   let mediaQuery = null;
+  let colorMode = 'dark';
+
+  const COLOR_MODE_STORAGE_KEY = 'chromadie-profile-studio-color-mode';
 
   $: activeLabel = sections.find(section => section.id === activeSection)?.label || 'Overview';
   $: groupedSections = sections.reduce((groups, section) => {
@@ -40,6 +43,15 @@
 
   function toggleProfileGroup() {
     profileExpanded = !profileExpanded;
+  }
+
+  function toggleColorMode() {
+    colorMode = colorMode === 'dark' ? 'light' : 'dark';
+    try {
+      window.localStorage.setItem(COLOR_MODE_STORAGE_KEY, colorMode);
+    } catch {
+      // Private browsing and hardened storage should not block the control.
+    }
   }
 
   function openMobileMenu(event) {
@@ -73,6 +85,12 @@
     mediaQuery = window.matchMedia('(max-width: 64rem)');
     const updateViewport = () => { isMobileViewport = mediaQuery.matches; if (!isMobileViewport && mobileOpen) closeMobileMenu(); };
     updateViewport();
+    try {
+      const storedMode = window.localStorage.getItem(COLOR_MODE_STORAGE_KEY);
+      if (storedMode === 'light' || storedMode === 'dark') colorMode = storedMode;
+    } catch {
+      // Use the dark default when storage is unavailable.
+    }
     mediaQuery.addEventListener?.('change', updateViewport);
     return () => mediaQuery?.removeEventListener?.('change', updateViewport);
   });
@@ -84,7 +102,7 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="profile-dashboard-shell" class:profile-dashboard-shell--drawer-open={mobileOpen} class:profile-dashboard-shell--with-preview={showPreview}>
+<div class="profile-dashboard-shell" class:profile-dashboard-shell--drawer-open={mobileOpen} class:profile-dashboard-shell--with-preview={showPreview} class:profile-dashboard-shell--light={colorMode === 'light'}>
   {#if mobileOpen}
     <button class="profile-dashboard-shell__backdrop" type="button" aria-label="Close dashboard navigation" on:click={closeMobileMenu}></button>
   {/if}
@@ -121,14 +139,32 @@
       {/each}
     </nav>
 
-    {#if ownerUsername}
-      <a class="profile-dashboard-shell__owner" href={ownerProfilePath}>
-        <span class="profile-dashboard-shell__owner-avatar" aria-hidden="true">
-          {#if ownerAvatarSrc}<img src={ownerAvatarSrc} alt="" />{:else}{ownerUsername.slice(0, 1).toUpperCase()}{/if}
-        </span>
-        <span><strong>{ownerUsername}</strong><small>View profile <span aria-hidden="true">↗</span></small></span>
-      </a>
-    {/if}
+    <div class="profile-dashboard-shell__sidebar-foot">
+      {#if ownerUsername}
+        <a class="profile-dashboard-shell__owner" href={ownerProfilePath}>
+          <span class="profile-dashboard-shell__owner-avatar" aria-hidden="true">
+            {#if ownerAvatarSrc}<img src={ownerAvatarSrc} alt="" />{:else}{ownerUsername.slice(0, 1).toUpperCase()}{/if}
+          </span>
+          <span><strong>{ownerUsername}</strong><small>View profile <span aria-hidden="true">↗</span></small></span>
+        </a>
+      {/if}
+
+      <button
+        class="profile-dashboard-shell__mode-toggle"
+        type="button"
+        aria-label={colorMode === 'dark' ? 'Use light mode' : 'Use dark mode'}
+        aria-pressed={colorMode === 'light'}
+        title={colorMode === 'dark' ? 'Use light mode' : 'Use dark mode'}
+        on:click={toggleColorMode}
+      >
+        {#if colorMode === 'dark'}
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+        {:else}
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.5 15.1A8.5 8.5 0 0 1 8.9 3.5 8.5 8.5 0 1 0 20.5 15.1Z"></path></svg>
+        {/if}
+        <span class="profile-dashboard-shell__sr-only">{colorMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}</span>
+      </button>
+    </div>
   </aside>
 
   <div class="profile-dashboard-shell__main">
@@ -153,9 +189,9 @@
 <style>
   .profile-dashboard-shell {
     --dashboard-sidebar-width: 14rem;
-    --studio-canvas: color-mix(in srgb, var(--ctp-crust, #11111b) 70%, #061226);
-    --studio-panel: color-mix(in srgb, var(--ctp-sapphire, #74c7ec) 5%, var(--ctp-crust, #11111b));
-    --studio-inset: color-mix(in srgb, var(--ctp-crust, #11111b) 74%, #04132b);
+    --studio-canvas: var(--ctp-crust, #11111b);
+    --studio-panel: var(--ctp-mantle, #181825);
+    --studio-inset: var(--ctp-base, #1e1e2e);
     --type-body: 1rem;
     --type-small: .9rem;
     --type-label: .78rem;
@@ -165,6 +201,70 @@
     color: var(--site-ink, var(--color-ink));
     background: var(--studio-canvas);
   }
+  .profile-dashboard-shell--light {
+    --ctp-crust: #eff1f5;
+    --ctp-mantle: #e6e9ef;
+    --ctp-base: #dce0e8;
+    --ctp-surface0: #ccd0da;
+    --ctp-surface1: #bcc0cc;
+    --ctp-surface2: #acb0be;
+    --ctp-overlay0: #9ca0b0;
+    --ctp-overlay1: #8c8fa1;
+    --ctp-overlay2: #7c7f93;
+    --ctp-subtext0: #6c6f85;
+    --ctp-subtext1: #5c5f77;
+    --ctp-text: #4c4f69;
+    --ctp-pink: #ea76cb;
+    --ctp-mauve: #8839ef;
+    --ctp-red: #d20f39;
+    --ctp-peach: #fe640b;
+    --ctp-yellow: #df8e1d;
+    --ctp-green: #40a02b;
+    --ctp-teal: #179299;
+    --ctp-sky: #04a5e5;
+    --ctp-sapphire: #209fb5;
+    --ctp-blue: #1e66f5;
+    --ctp-lavender: #7287fd;
+    --studio-canvas: var(--ctp-crust);
+    --studio-panel: var(--ctp-mantle);
+    --studio-inset: var(--ctp-base);
+    --site-canvas: var(--ctp-base);
+    --site-deep: var(--ctp-crust);
+    --site-raised: var(--ctp-surface0);
+    --site-ink: var(--ctp-text);
+    --site-muted: var(--ctp-subtext1);
+    --site-faint: var(--ctp-overlay1);
+    --site-accent: var(--ctp-mauve);
+    --site-accent-bright: var(--ctp-lavender);
+    --site-line: rgba(76, 79, 105, .2);
+    --site-line-strong: rgba(76, 79, 105, .38);
+    --site-surface: var(--ctp-surface0);
+    --site-surface-soft: var(--ctp-mantle);
+    --color-canvas: var(--ctp-base);
+    --color-canvas-raised: var(--ctp-surface0);
+    --color-canvas-deep: var(--ctp-crust);
+    --color-ink-strong: var(--ctp-text);
+    --color-ink: var(--ctp-subtext1);
+    --color-ink-muted: var(--ctp-subtext0);
+    --color-ink-faint: var(--ctp-overlay1);
+    --color-line-subtle: var(--site-line);
+    --color-line-strong: var(--site-line-strong);
+    --color-accent: var(--ctp-mauve);
+    --color-accent-bright: var(--ctp-lavender);
+    --color-accent-cyan: var(--ctp-teal);
+    --color-accent-roll: var(--ctp-green);
+    --color-success: var(--ctp-green);
+    --color-earned: var(--ctp-peach);
+    --color-warning: var(--ctp-yellow);
+    --color-danger: var(--ctp-red);
+    --surface-panel: var(--ctp-surface0);
+    --surface-panel-strong: var(--ctp-surface1);
+    --surface-panel-soft: var(--ctp-mantle);
+    --surface-inset: var(--ctp-mantle);
+    color-scheme: light;
+  }
+  .profile-dashboard-shell:not(.profile-dashboard-shell--light) { color-scheme: dark; }
+  :global(.profile-dashboard-shell--light select) { color-scheme: light; }
   .profile-dashboard-shell--with-preview { grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr) minmax(20rem, 23vw); }
   .profile-dashboard-shell__sidebar {
     position: sticky;
@@ -178,21 +278,21 @@
     padding: .7rem .75rem .85rem;
     background: var(--studio-canvas);
   }
-  .profile-dashboard-shell__sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: .05rem .45rem 2.4rem; }
+  .profile-dashboard-shell__sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: .05rem .45rem 2.15rem; }
   .profile-dashboard-shell__brand { display: inline-flex; align-items: center; gap: .6rem; min-width: 0; color: var(--site-ink, var(--color-ink-strong)); text-decoration: none; }
-  .profile-dashboard-shell__brand-mark { width: 1.05rem; height: 1.05rem; margin-inline: .3rem .2rem; border: 2px solid var(--ctp-mauve, var(--site-accent, var(--color-accent))); transform: rotate(45deg); box-shadow: 0 0 1.2rem color-mix(in srgb, var(--ctp-mauve, #cba6f7) 24%, transparent); }
+  .profile-dashboard-shell__brand-mark { width: 1rem; height: 1rem; margin-inline: .3rem .2rem; border: 2px solid var(--ctp-mauve, var(--site-accent, var(--color-accent))); transform: rotate(45deg); }
   .profile-dashboard-shell__brand span:last-child { display: grid; gap: .18rem; min-width: 0; }
   .profile-dashboard-shell__brand strong { font: 750 1rem/1 var(--site-font, var(--font-body-stack)); letter-spacing: -.02em; }
   .profile-dashboard-shell__brand small { color: var(--ctp-overlay1, var(--site-faint, var(--color-ink-faint))); font: 600 .62rem/1 var(--site-mono, var(--font-mono-stack)); letter-spacing: .14em; text-transform: uppercase; }
   .profile-dashboard-shell__group-label { color: var(--ctp-subtext0, var(--site-faint, var(--color-ink-faint))); font: 600 .66rem/1 var(--site-font, var(--font-body-stack)); letter-spacing: .04em; text-transform: uppercase; }
   .profile-dashboard-shell__close { display: none; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font-size: 1.2rem; cursor: pointer; }
-  .profile-dashboard-shell__nav { display: grid; gap: 1rem; }
+  .profile-dashboard-shell__nav { display: grid; gap: .9rem; }
   .profile-dashboard-shell__group { display: grid; gap: .18rem; }
-  .profile-dashboard-shell__group.account { padding-top: 1rem; border-top: 1px solid color-mix(in srgb, var(--ctp-surface0, #313244) 66%, transparent); }
+  .profile-dashboard-shell__group.account { padding-top: .85rem; border-top: 1px solid var(--ctp-surface0, #313244); }
   .profile-dashboard-shell__group-label { padding: .2rem .55rem .45rem; }
   .profile-dashboard-shell__group-toggle { display: flex; align-items: center; justify-content: space-between; min-height: 2rem; padding: .25rem .65rem .45rem; border: 0; background: transparent; color: var(--site-faint, var(--color-ink-faint)); cursor: pointer; }
   .profile-dashboard-shell__group-toggle > span:last-child { color: var(--site-muted, var(--color-ink-muted)); font: .8rem/1 var(--site-mono, var(--font-mono-stack)); }
-  .profile-dashboard-shell__nav button { --nav-accent: var(--site-accent, var(--color-accent)); display: flex; align-items: center; gap: .68rem; width: 100%; min-height: 2.2rem; padding: .45rem .65rem; border: 1px solid transparent; border-radius: .45rem; background: transparent; color: var(--ctp-subtext1, var(--site-muted, var(--color-ink-muted))); font: 550 .86rem/1.15 var(--site-font, var(--font-body-stack)); text-align: left; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
+  .profile-dashboard-shell__nav button { --nav-accent: var(--site-accent, var(--color-accent)); display: flex; align-items: center; gap: .68rem; width: 100%; min-height: 2.2rem; padding: .45rem .65rem; border: 1px solid transparent; border-radius: .38rem; background: transparent; color: var(--ctp-subtext1, var(--site-muted, var(--color-ink-muted))); font: 550 .83rem/1.15 var(--site-font, var(--font-body-stack)); text-align: left; cursor: pointer; transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
   .profile-dashboard-shell__nav button[data-section="customize"] { --nav-accent: var(--ctp-mauve, var(--site-accent, var(--color-accent))); }
   .profile-dashboard-shell__nav button[data-section="links"] { --nav-accent: var(--ctp-sapphire, var(--site-accent, var(--color-accent))); }
   .profile-dashboard-shell__nav button[data-section="premium"] { --nav-accent: var(--ctp-pink, var(--site-accent, var(--color-accent))); }
@@ -202,13 +302,14 @@
   .profile-dashboard-shell__nav button[data-section="profile-social"] { --nav-accent: var(--ctp-green, var(--site-accent, var(--color-accent))); }
   .profile-dashboard-shell__nav button[data-section="progression"] { --nav-accent: var(--ctp-peach, var(--site-accent, var(--color-accent))); }
   .profile-dashboard-shell__nav button[data-section="account"] { --nav-accent: var(--ctp-lavender, var(--site-accent, var(--color-accent))); }
-  .profile-dashboard-shell__nav button:hover, .profile-dashboard-shell__nav button:focus-visible { border-color: color-mix(in srgb, var(--nav-accent) 42%, var(--ctp-surface0, #313244)); background: color-mix(in srgb, var(--nav-accent) 7%, var(--ctp-base, #1e1e2e)); color: var(--ctp-text, var(--site-ink, var(--color-ink-strong))); }
-  .profile-dashboard-shell__nav button.active { min-height: 2.55rem; border-color: color-mix(in srgb, var(--nav-accent) 42%, var(--ctp-surface1, #45475a)); background: color-mix(in srgb, var(--nav-accent) 10%, var(--ctp-base, #1e1e2e)); color: var(--ctp-text, var(--site-ink, var(--color-ink-strong))); }
+  .profile-dashboard-shell__nav button:hover, .profile-dashboard-shell__nav button:focus-visible { border-color: color-mix(in srgb, var(--nav-accent) 35%, var(--ctp-surface0, #313244)); background: color-mix(in srgb, var(--nav-accent) 6%, var(--ctp-base, #1e1e2e)); color: var(--ctp-text, var(--site-ink, var(--color-ink-strong))); }
+  .profile-dashboard-shell__nav button.active { min-height: 2.45rem; border-color: color-mix(in srgb, var(--nav-accent) 38%, var(--ctp-surface1, #45475a)); background: color-mix(in srgb, var(--nav-accent) 9%, var(--ctp-base, #1e1e2e)); color: var(--ctp-text, var(--site-ink, var(--color-ink-strong))); }
   .profile-dashboard-shell__nav button.premium { color: var(--nav-accent); }
   .profile-dashboard-shell__nav button:focus-visible, .profile-dashboard-shell__group-toggle:focus-visible, .profile-dashboard-shell__mobile-bar button:focus-visible { outline: 2px solid var(--site-accent, var(--color-accent-bright)); outline-offset: 3px; }
   .profile-dashboard-shell__nav-icon { display: grid; place-items: center; width: 1.15rem; color: color-mix(in srgb, var(--nav-accent) 72%, var(--ctp-subtext1, #bac2de)); }
   .profile-dashboard-shell__nav button.active .profile-dashboard-shell__nav-icon { color: var(--nav-accent, var(--site-accent, var(--color-accent))); }
-  .profile-dashboard-shell__owner { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .65rem; margin-top: auto; padding: .62rem; border: 1px solid color-mix(in srgb, var(--ctp-surface0, #313244) 66%, transparent); border-radius: .48rem; background: color-mix(in srgb, var(--ctp-base, #1e1e2e) 44%, var(--ctp-crust, #11111b)); color: var(--ctp-text, #cdd6f4); text-decoration: none; }
+  .profile-dashboard-shell__sidebar-foot { display: grid; gap: .65rem; margin-top: auto; padding-top: 1.25rem; }
+  .profile-dashboard-shell__owner { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .65rem; padding: .62rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .42rem; background: var(--ctp-mantle, #181825); color: var(--ctp-text, #cdd6f4); text-decoration: none; }
   .profile-dashboard-shell__owner:hover, .profile-dashboard-shell__owner:focus-visible { border-color: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 45%, var(--ctp-surface1, #45475a)); }
   .profile-dashboard-shell__owner:focus-visible { outline: 2px solid var(--ctp-lavender, #b4befe); outline-offset: 3px; }
   .profile-dashboard-shell__owner-avatar { display: grid; width: 2.15rem; height: 2.15rem; overflow: hidden; place-items: center; border: 1px solid var(--ctp-surface1, #45475a); border-radius: 50%; background: var(--ctp-base, #1e1e2e); color: var(--ctp-mauve, #cba6f7); font-weight: 700; }
@@ -216,9 +317,14 @@
   .profile-dashboard-shell__owner > span:last-child { display: grid; gap: .2rem; min-width: 0; }
   .profile-dashboard-shell__owner strong { overflow: hidden; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
   .profile-dashboard-shell__owner small { color: var(--ctp-subtext0, #a6adc8); font-size: .68rem; }
+  .profile-dashboard-shell__mode-toggle { display: inline-grid; width: 2rem; height: 2rem; place-items: center; align-self: start; padding: 0; border: 1px solid var(--ctp-surface0, #313244); border-radius: .38rem; background: transparent; color: var(--ctp-subtext1, #bac2de); cursor: pointer; transition: border-color .18s ease, background-color .18s ease, color .18s ease; }
+  .profile-dashboard-shell__mode-toggle:hover, .profile-dashboard-shell__mode-toggle:focus-visible { border-color: var(--ctp-lavender, #b4befe); background: color-mix(in srgb, var(--ctp-lavender, #b4befe) 10%, var(--ctp-mantle, #181825)); color: var(--ctp-text, #cdd6f4); }
+  .profile-dashboard-shell__mode-toggle:focus-visible { outline: 2px solid var(--ctp-lavender, #b4befe); outline-offset: 3px; }
+  .profile-dashboard-shell__mode-toggle svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+  .profile-dashboard-shell__sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; padding: 0; border: 0; margin: -1px; clip: rect(0, 0, 0, 0); white-space: nowrap; }
   .profile-dashboard-shell__main { min-width: 0; background: transparent; }
-  .profile-dashboard-shell__content { --surface-panel: var(--studio-panel); --surface-panel-strong: var(--ctp-mantle, #181825); --surface-panel-soft: var(--studio-panel); --surface-inset: var(--studio-inset); width: 100%; min-height: 100dvh; padding: .7rem 1rem 2rem; }
-  .profile-dashboard-shell__preview { position: sticky; top: 0; z-index: 10; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; height: 100dvh; overflow: hidden; border-left: 1px solid var(--site-line, var(--color-line-subtle)); background: var(--ctp-mantle, color-mix(in srgb, var(--site-deep, #090a0d) 94%, transparent)); }
+  .profile-dashboard-shell__content { --surface-panel: var(--studio-panel); --surface-panel-strong: var(--ctp-mantle, #181825); --surface-panel-soft: var(--studio-panel); --surface-inset: var(--studio-inset); width: 100%; min-height: 100dvh; padding: 1.1rem clamp(1rem, 2.2vw, 2rem) 2.5rem; }
+  .profile-dashboard-shell__preview { position: sticky; top: 0; z-index: 10; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; height: 100dvh; overflow: hidden; border-left: 1px solid var(--ctp-surface0, #313244); background: var(--ctp-mantle, #181825); }
   .profile-dashboard-shell__mobile-bar { display: none; }
   .profile-dashboard-shell__backdrop { display: none; }
   @media (max-width: 90rem) and (min-width: 64.01rem) {
@@ -232,11 +338,11 @@
     .profile-dashboard-shell__sidebar-head { padding-top: .25rem; padding-bottom: 1.45rem; }
     .profile-dashboard-shell__close { display: block; }
     .profile-dashboard-shell__backdrop { position: fixed; inset: 0; z-index: 55; display: block; border: 0; background: rgba(0,0,0,.58); cursor: pointer; }
-    .profile-dashboard-shell__mobile-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 2.9rem; padding: .45rem .85rem; border-bottom: 1px solid var(--site-line, var(--color-line-subtle)); background: color-mix(in srgb, var(--site-deep, #090a0d) 90%, transparent); backdrop-filter: blur(14px); }
+    .profile-dashboard-shell__mobile-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 2.9rem; padding: .45rem .85rem; border-bottom: 1px solid var(--ctp-surface0, #313244); background: var(--ctp-crust, #11111b); }
     .profile-dashboard-shell__mobile-bar button { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .8rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
     .profile-dashboard-shell__mobile-bar > span { color: var(--site-ink, var(--color-ink-strong)); font-size: .84rem; }
     .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding-top: 1rem; }
     .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: fixed; inset: auto 0 0; z-index: 45; width: 100%; height: min(70dvh, 36rem); min-height: 20rem; max-height: none; border-top: 1px solid var(--site-line-strong, var(--color-line-strong)); border-left: 0; box-shadow: 0 -1.25rem 3rem rgba(0,0,0,.34); }
   }
-  @media (prefers-reduced-motion: reduce) { .profile-dashboard-shell__sidebar, .profile-dashboard-shell__nav button { transition-duration: .001ms; } }
+  @media (prefers-reduced-motion: reduce) { .profile-dashboard-shell__sidebar, .profile-dashboard-shell__nav button, .profile-dashboard-shell__mode-toggle { transition-duration: .001ms; } }
 </style>

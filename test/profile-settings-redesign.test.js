@@ -13,7 +13,9 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(settings, /Live preview/);
   assert.match(settings, /previewOpen/);
   assert.match(settings, /togglePreview/);
-  assert.match(settings, /showPreview=\{previewOpen && previewAvailable\}/);
+  assert.match(settings, /showPreview=\{showDashboardPreview\}/);
+  assert.match(settings, /customizePreviewAvailable && \(!isMobileViewport \|\| previewOpen\)/);
+  assert.match(settings, /role="tablist" aria-label="Customize profile"/);
   assert.doesNotMatch(settings, /preview-column/);
   assert.match(settings, /ProfileDashboardShell/);
   assert.match(settings, /setActiveSection\(/);

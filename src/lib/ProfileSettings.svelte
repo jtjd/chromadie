@@ -39,6 +39,45 @@
   ]);
   const LINKS_SECTION_IDS = Object.freeze(['profile-layout', 'profile-aliases']);
 
+  // Customize keeps one canonical destination while exposing the four editing
+  // surfaces people use to shape their profile. The tab ids deliberately stay
+  // independent from the legacy section ids so old links can keep resolving.
+  const CUSTOMIZE_TABS = Object.freeze([
+    { id: 'appearance', label: 'Appearance', description: 'Color, identity, and presence' },
+    { id: 'media', label: 'Media', description: 'Avatar, background, music, and uploads' },
+    { id: 'effects', label: 'Effects', description: 'Atmosphere, collection, and widgets' },
+    { id: 'layout', label: 'Layout', description: 'Templates and profile structure' }
+  ]);
+  const CUSTOMIZE_TAB_IDS = Object.freeze(CUSTOMIZE_TABS.map(tab => tab.id));
+  const CUSTOMIZE_TAB_HASHES = Object.freeze({
+    appearance: 'customize-appearance',
+    media: 'customize-media',
+    effects: 'customize-effects',
+    layout: 'customize-layout'
+  });
+  const CUSTOMIZE_TAB_ALIASES = Object.freeze({
+    customize: 'appearance',
+    appearance: 'appearance',
+    'customize-appearance': 'appearance',
+    identity: 'appearance',
+    'profile-identity': 'appearance',
+    media: 'media',
+    expression: 'media',
+    'customize-media': 'media',
+    'profile-media': 'media',
+    effects: 'effects',
+    'customize-effects': 'effects',
+    collection: 'effects',
+    'profile-collection': 'effects',
+    content: 'media',
+    widgets: 'effects',
+    'customize-content': 'media',
+    'customize-widgets': 'effects',
+    layout: 'layout',
+    templates: 'layout',
+    'customize-layout': 'layout'
+  });
+
   const SETTINGS_SECTIONS = Object.freeze([
     { id: 'overview', label: 'Overview', groupKey: 'primary', groupLabel: 'Customize', icon: 'overview' },
     { id: 'customize', label: 'Customize', groupKey: 'primary', icon: 'customize' },
@@ -65,6 +104,12 @@
   const HASH_ALIASES = Object.freeze({
     customize: 'customize',
     appearance: 'customize',
+    effects: 'customize',
+    'customize-appearance': 'customize',
+    'customize-media': 'customize',
+    'customize-effects': 'customize',
+    'customize-layout': 'customize',
+    templates: 'customize',
     ...LEGACY_HASH_ALIASES,
     'profile-social': 'profile-social',
     'profile-insights': 'profile-insights',
@@ -118,10 +163,14 @@
   let error = '';
   let requestId = 0;
   let activeSection = 'customize';
+  let activeCustomizeTab = 'appearance';
+  let isMobileViewport = false;
+  let previewMediaQuery = null;
   let configurationPreview = null;
   let PreviewComponent = null;
   let previewError = '';
   let previewOpen = false;
+  let previewLoadPromise = null;
   let sectionComponents = {};
   let sectionLoading = false;
   const sectionLoadPromises = new SvelteMap();
@@ -159,6 +208,10 @@
   $: if (!visibleSettingsSections.some(section => section.id === activeSection)) activeSection = 'customize';
   $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Customize';
   $: previewAvailable = activeSection === 'links';
+  $: customizePreviewAvailable = activeSection === 'customize';
+  $: showDashboardPreview = previewAvailable
+    ? previewOpen
+    : customizePreviewAvailable && (!isMobileViewport || previewOpen);
   $: editorProfileConfig = createEditorProfileConfig(context?.profileConfig);
   $: sidebarAvatarSrc = getProfileMediaUrl(editorProfileConfig?.draft?.avatar_path || editorProfileConfig?.published?.avatar_path);
   $: dashboardDirty = Boolean(activeDirtySection) || hasServerDraftChanges(context?.profileConfig);
@@ -168,22 +221,56 @@
     : null;
   onMount(() => {
     void loadDashboardActions();
-    const getSectionFromLocation = () => {
+    previewMediaQuery = window.matchMedia('(max-width: 64rem)');
+    const updatePreviewViewport = () => {
+      isMobileViewport = previewMediaQuery.matches;
+      if (!isMobileViewport && activeSection === 'customize') {
+        previewOpen = true;
+        void loadPreviewComponent();
+      }
+    };
+    updatePreviewViewport();
+    previewMediaQuery.addEventListener?.('change', updatePreviewViewport);
+
+    const getLocationState = () => {
       const rawHash = window.location.hash.replace(/^#/, '');
       const sectionId = HASH_ALIASES[rawHash] || rawHash;
-      return visibleSettingsSections.some(section => section.id === sectionId) ? sectionId : 'customize';
+      const validSection = visibleSettingsSections.some(section => section.id === sectionId);
+      return {
+        rawHash,
+        sectionId: validSection ? sectionId : 'customize',
+        customizeTab: CUSTOMIZE_TAB_ALIASES[rawHash] || null
+      };
     };
     const restoreLocation = () => {
-      const nextSection = getSectionFromLocation();
-      if (nextSection === activeSection) return;
-      if (activeDirtySection) {
-        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}#${activeSection}`);
-        openDirtyPrompt({ type: 'section', value: nextSection });
+      const nextLocation = getLocationState();
+      const nextSection = nextLocation.sectionId;
+      if (nextSection === activeSection) {
+        if (nextSection === 'customize' && nextLocation.customizeTab) activeCustomizeTab = nextLocation.customizeTab;
         return;
       }
-      setActiveSection(nextSection, { push: false });
+      if (activeDirtySection) {
+        const currentHash = activeSection === 'customize' ? CUSTOMIZE_TAB_HASHES[activeCustomizeTab] : activeSection;
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}#${currentHash}`);
+        openDirtyPrompt({ type: 'section', value: nextSection, customizeTab: nextLocation.customizeTab });
+        return;
+      }
+      setActiveSection(nextSection, {
+        push: false,
+        customizeTab: nextLocation.customizeTab,
+        hash: nextLocation.rawHash && (HASH_ALIASES[nextLocation.rawHash] || visibleSettingsSections.some(section => section.id === nextLocation.rawHash))
+          ? nextLocation.rawHash
+          : null
+      });
     };
-    setActiveSection(getSectionFromLocation(), { push: false });
+    const initialLocation = getLocationState();
+    setActiveSection(initialLocation.sectionId, {
+      push: false,
+      customizeTab: initialLocation.customizeTab,
+      hash: initialLocation.rawHash && (HASH_ALIASES[initialLocation.rawHash] || visibleSettingsSections.some(section => section.id === initialLocation.rawHash))
+        ? initialLocation.rawHash
+        : null
+    });
     window.addEventListener('hashchange', restoreLocation);
     window.addEventListener('popstate', restoreLocation);
     const beforeUnload = event => {
@@ -205,20 +292,28 @@
       window.removeEventListener('popstate', restoreLocation);
       window.removeEventListener('beforeunload', beforeUnload);
       window.removeEventListener('chromadie:navigation-request', navigationGuard);
+      previewMediaQuery?.removeEventListener?.('change', updatePreviewViewport);
     };
   });
 
-  function setActiveSection(sectionId, { push = true } = {}) {
+  function setActiveSection(sectionId, { push = true, customizeTab = null, hash = null } = {}) {
     if (!visibleSettingsSections.some(section => section.id === sectionId)) return;
+    if (sectionId === 'customize' && CUSTOMIZE_TAB_IDS.includes(customizeTab)) activeCustomizeTab = customizeTab;
     activeSection = sectionId;
-    if (sectionId !== 'links') previewOpen = false;
+    if (sectionId === 'customize') {
+      if (!isMobileViewport) {
+        previewOpen = true;
+        void loadPreviewComponent();
+      }
+    } else previewOpen = false;
     if (sectionId === 'customize') void loadCustomizeComponents();
     else if (sectionId === 'links') void loadLinksComponents();
     else void loadSectionComponent(sectionId);
     if (typeof window !== 'undefined') {
-      const url = `${window.location.pathname}${window.location.search}#${sectionId}`;
+      const nextHash = hash || (sectionId === 'customize' && customizeTab ? CUSTOMIZE_TAB_HASHES[activeCustomizeTab] : sectionId);
+      const url = `${window.location.pathname}${window.location.search}#${nextHash}`;
       if (push) window.history.pushState({ dashboardSection: sectionId }, '', url);
-      else if (window.location.hash !== `#${sectionId}`) window.history.replaceState({ dashboardSection: sectionId }, '', url);
+      else if (window.location.hash !== `#${nextHash}`) window.history.replaceState({ dashboardSection: sectionId }, '', url);
     }
   }
 
@@ -232,8 +327,33 @@
     setActiveSection(sectionId);
   }
 
+  function selectCustomizeTab(tabId, { push = true, focus = false } = {}) {
+    if (!CUSTOMIZE_TAB_IDS.includes(tabId)) return;
+    activeCustomizeTab = tabId;
+    if (typeof window !== 'undefined') {
+      const nextHash = CUSTOMIZE_TAB_HASHES[tabId];
+      const url = `${window.location.pathname}${window.location.search}#${nextHash}`;
+      if (push) window.history.pushState({ dashboardSection: 'customize', customizeTab: tabId }, '', url);
+      else if (window.location.hash !== `#${nextHash}`) window.history.replaceState({ dashboardSection: 'customize', customizeTab: tabId }, '', url);
+    }
+    if (focus && typeof document !== 'undefined') requestAnimationFrame(() => document.getElementById(`profile-customize-tab-${tabId}`)?.focus());
+  }
+
+  function handleCustomizeTabKeydown(event) {
+    const currentIndex = CUSTOMIZE_TAB_IDS.indexOf(activeCustomizeTab);
+    if (currentIndex < 0) return;
+    let nextIndex;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % CUSTOMIZE_TAB_IDS.length;
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (currentIndex - 1 + CUSTOMIZE_TAB_IDS.length) % CUSTOMIZE_TAB_IDS.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = CUSTOMIZE_TAB_IDS.length - 1;
+    else return;
+    event.preventDefault();
+    selectCustomizeTab(CUSTOMIZE_TAB_IDS[nextIndex], { focus: true });
+  }
+
   function togglePreview() {
-    if (!previewAvailable) return;
+    if (!previewAvailable && !customizePreviewAvailable) return;
     previewOpen = !previewOpen;
     if (previewOpen) void loadPreviewComponent();
   }
@@ -288,7 +408,7 @@
     pendingNavigation = null;
     closeDirtyPrompt();
     if (!next) return;
-    if (next.type === 'section') setActiveSection(next.value);
+    if (next.type === 'section') setActiveSection(next.value, { customizeTab: next.customizeTab || null });
     else if (next.type === 'route') window.location.assign(next.value);
     else if (next.type === 'navigate') dispatch('navigate', next.value);
     else if (next.type === 'path') {
@@ -651,14 +771,20 @@
   }
 
   async function loadPreviewComponent() {
-    if (PreviewComponent) return;
+    if (PreviewComponent) return PreviewComponent;
+    if (previewLoadPromise) return previewLoadPromise;
     previewError = '';
-    try {
-      const module = await import('./ProfileShell.svelte');
-      PreviewComponent = module.default;
-    } catch (loadError) {
-      previewError = loadError instanceof Error ? loadError.message : 'The live preview could not be loaded.';
-    }
+    previewLoadPromise = import('./ProfileShell.svelte')
+      .then(module => {
+        PreviewComponent = module.default;
+        return PreviewComponent;
+      })
+      .catch(loadError => {
+        previewError = loadError instanceof Error ? loadError.message : 'The live preview could not be loaded.';
+        return null;
+      })
+      .finally(() => { previewLoadPromise = null; });
+    return previewLoadPromise;
   }
 
   function handleDirtyPromptKeydown(event) {
@@ -682,7 +808,7 @@
   ownerUsername={accountUsername}
   ownerProfilePath={profilePath}
   ownerAvatarSrc={sidebarAvatarSrc}
-  showPreview={previewOpen && previewAvailable}
+  showPreview={showDashboardPreview}
   on:sectionchange={handleDashboardSectionChange}
 >
   <div class="profile-settings-page" aria-busy={loading}>
@@ -705,7 +831,42 @@
         <svelte:component this={DashboardActionsComponent} dirty={dashboardDirty} saving={dashboardSaving} status={dashboardStatus} error={dashboardError} on:reset={resetDashboard} on:publish={publishDashboard} />
       {/if}
 
-      <div class="profile-settings-page__content">
+      {#if activeSection === 'customize'}
+        <div class="profile-settings-page__customize-tabs">
+          <div class="profile-settings-page__customize-tabs-heading">
+            <div>
+              <p class="profile-settings-page__breadcrumb">Dashboard <span aria-hidden="true">›</span> Customize</p>
+              <h1>Customize</h1>
+            </div>
+            <div class="profile-settings-page__toolbar-actions">
+              {#if isMobileViewport}
+                <button type="button" aria-expanded={previewOpen} on:click={togglePreview}>{previewOpen ? 'Hide preview' : 'Preview'}</button>
+              {/if}
+              <a href={profilePath} on:click={handleViewProfile}>View profile ↗</a>
+            </div>
+          </div>
+          <div class="profile-settings-page__tablist" role="tablist" aria-label="Customize profile">
+            {#each CUSTOMIZE_TABS as tab (tab.id)}
+              <button
+                id={`profile-customize-tab-${tab.id}`}
+                type="button"
+                role="tab"
+                aria-selected={activeCustomizeTab === tab.id}
+                aria-controls="profile-customize-tabpanel"
+                tabindex={activeCustomizeTab === tab.id ? 0 : -1}
+                class:active={activeCustomizeTab === tab.id}
+                on:click={() => selectCustomizeTab(tab.id)}
+                on:keydown={handleCustomizeTabKeydown}
+              >
+                <span>{tab.label}</span>
+                <small>{tab.description}</small>
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
+
+      <div class="profile-settings-page__content" id={activeSection === 'customize' ? 'profile-customize-tabpanel' : undefined} role={activeSection === 'customize' ? 'tabpanel' : undefined} aria-labelledby={activeSection === 'customize' ? `profile-customize-tab-${activeCustomizeTab}` : undefined}>
         {#if activeSection === 'customize'}
           {#if sectionComponents.customize}
             <svelte:component
@@ -716,6 +877,7 @@
               accountUsername={accountUsername}
               targetProfile={context.targetProfile}
               profileConfig={editorProfileConfig}
+              activeTab={activeCustomizeTab}
               entitlements={$profileEntitlements}
               staff={Boolean(context.targetProfile?.is_staff)}
               on:appearancechange={updateAppearance}
@@ -791,7 +953,9 @@
         <h2>Live preview</h2>
       </div>
       <span class="profile-settings-preview__status"><span aria-hidden="true"></span> Draft</span>
-      <button class="profile-settings-preview__close" type="button" aria-label="Close live preview" on:click={togglePreview}>×</button>
+      {#if isMobileViewport || activeSection === 'links'}
+        <button class="profile-settings-preview__close" type="button" aria-label="Close live preview" on:click={togglePreview}>×</button>
+      {/if}
     </header>
     <div class="profile-settings-preview__body">
       {#if PreviewComponent}
@@ -823,6 +987,16 @@
   .profile-settings-page__toolbar-actions { display: flex; align-items: center; gap: .55rem; }
   .profile-settings-page__toolbar-actions :is(a, button) { min-height: 2rem; padding: .5rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: .78rem; text-decoration: none; cursor: pointer; }
   .profile-settings-page__toolbar-actions :is(a, button):hover { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
+  .profile-settings-page__customize-tabs { display: grid; gap: 1rem; margin-bottom: 1rem; }
+  .profile-settings-page__customize-tabs-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; }
+  .profile-settings-page__customize-tabs-heading h1 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: clamp(1.5rem, 2.5vw, 2.25rem); letter-spacing: -.05em; }
+  .profile-settings-page__tablist { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .45rem; padding: .35rem; border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .55rem; background: color-mix(in srgb, var(--site-deep, #11111b) 76%, var(--site-surface, #1e1e2e)); }
+  .profile-settings-page__tablist button { display: grid; gap: .28rem; min-width: 0; min-height: 3.3rem; padding: .65rem .72rem; border: 1px solid transparent; border-radius: .4rem; background: transparent; color: var(--site-muted, #aaa8b0); font: 650 .8rem/1.1 var(--site-font, sans-serif); text-align: left; cursor: pointer; }
+  .profile-settings-page__tablist button small { overflow: hidden; color: var(--site-faint, #7d7e87); font: 500 .64rem/1.2 var(--site-mono, monospace); text-overflow: ellipsis; white-space: nowrap; }
+  .profile-settings-page__tablist button:hover, .profile-settings-page__tablist button:focus-visible { border-color: color-mix(in srgb, var(--site-accent, #cdd2ff) 44%, var(--site-line-strong, rgba(255,255,255,.14))); background: color-mix(in srgb, var(--site-accent, #cdd2ff) 8%, transparent); color: var(--site-ink, #f2f0eb); }
+  .profile-settings-page__tablist button.active { border-color: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 48%, var(--site-line-strong, rgba(255,255,255,.14))); background: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 12%, var(--site-deep, #11111b)); color: var(--site-ink, #f2f0eb); }
+  .profile-settings-page__tablist button.active small { color: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 76%, var(--site-muted, #aaa8b0)); }
+  .profile-settings-page__tablist button:focus-visible { outline: 2px solid var(--site-accent, #cdd2ff); outline-offset: 2px; }
   .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--ctp-peach, #fab387) 35%, transparent); border-radius: .35rem; color: var(--ctp-peach, #fab387); font-size: .8rem; }
   .profile-settings-page__content { width: 100%; min-width: 0; }
   .profile-links-page { display: grid; gap: 1rem; min-width: 0; }
@@ -836,7 +1010,7 @@
   .profile-settings-preview__status span { width: .42rem; height: .42rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); box-shadow: 0 0 .8rem color-mix(in srgb, var(--ctp-green, #a6e3a1) 60%, transparent); }
   .profile-settings-preview__close { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .4rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: 1.1rem; cursor: pointer; }
   .profile-settings-preview__close:hover, .profile-settings-preview__close:focus-visible { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
-  .profile-settings-preview__body { display: grid; min-height: 0; overflow: auto; place-items: start center; padding: 1.25rem; background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--ctp-lavender, #b4befe) 6%, transparent), transparent 42%), var(--site-deep, #11111b); }
+  .profile-settings-preview__body { display: grid; min-height: 0; overflow: auto; place-items: start center; padding: 1.25rem; background: var(--site-deep, #11111b); }
   .profile-settings-preview__body :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: visible; }
   .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-canvas) { min-height: 0; }
   .profile-settings-preview__body :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; align-items: stretch; justify-content: flex-start; }
@@ -853,5 +1027,14 @@
   .profile-settings-prompt > div { display: flex; justify-content: flex-end; gap: .5rem; }
   .profile-settings-prompt button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .68rem; cursor: pointer; }
   .profile-settings-prompt__discard { border-color: var(--ctp-red, #f38ba8) !important; color: var(--ctp-red, #f38ba8) !important; }
+  @media (max-width: 52rem) {
+    .profile-settings-page__customize-tabs-heading { align-items: flex-start; flex-direction: column; gap: .85rem; }
+    .profile-settings-page__customize-tabs-heading .profile-settings-page__toolbar-actions { width: 100%; justify-content: flex-end; }
+    .profile-settings-page__tablist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 30rem) {
+    .profile-settings-page__tablist { grid-template-columns: minmax(0, 1fr); }
+    .profile-settings-page__tablist button { min-height: 2.8rem; }
+  }
   @media (prefers-reduced-motion: reduce) { .profile-settings-preview__body { scroll-behavior: auto; } }
 </style>

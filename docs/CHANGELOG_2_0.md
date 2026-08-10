@@ -2302,3 +2302,12 @@ direct route behavior.
   existing editor sections.
 - Softened input fills and accent borders so the controls do not read as extra
   panels.
+## 2026-08-10 — Redesign the Profile Studio workspace
+
+- Added Appearance, Media, Effects, and Layout tabs to Customize.
+- Kept a live draft profile preview beside the editor on desktop, with responsive
+  preview behavior on smaller screens.
+- Refined Mocha-inspired panels and spacing, retained Manrope, removed gradient
+  accent treatment, and added a compact dark/light icon switch.
+- Kept existing draft publishing, direct routes, media uploads, cursor uploads,
+  and `.ani` animated cursor support intact.

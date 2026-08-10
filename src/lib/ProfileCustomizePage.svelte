@@ -10,6 +10,7 @@
   export let profileConfig = {};
   export let entitlements = [];
   export let staff = false;
+  export let activeTab = 'appearance';
 
   const dispatch = createEventDispatcher();
   let appearanceEditor = null;
@@ -23,7 +24,11 @@
   $: widgetComponent = components['profile-widgets'];
   $: collectionComponent = components['profile-collection'];
   $: layoutComponent = components['profile-layout'];
+  $: selectedTab = ['appearance', 'media', 'effects', 'layout'].includes(activeTab) ? activeTab : 'appearance';
 
+  // Tab visibility is intentionally presentation-only. Every editor stays
+  // mounted so staged drafts, media previews, and child editor refs survive
+  // switching tabs before the dashboard publish action runs.
   function forward(event) {
     dispatch(event.type, event.detail);
   }
@@ -74,7 +79,7 @@
 </script>
 
 <div class="profile-customize-page">
-  <section class="profile-customize-page__surface profile-customize-page__surface--assets" aria-labelledby="profile-customize-media-title" data-editor-section="media">
+  <section class="profile-customize-page__surface profile-customize-page__surface--assets" class:is-tab-hidden={selectedTab !== 'media'} aria-hidden={selectedTab !== 'media'} hidden={selectedTab !== 'media'} aria-labelledby="profile-customize-media-title" data-editor-section="media">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-media-title">Profile media</h3>
     </div>
@@ -88,12 +93,12 @@
     {/if}
   </section>
 
-  <button class="profile-customize-page__premium-banner" type="button" on:click={requestPremium}>
+  <button class="profile-customize-page__premium-banner" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} type="button" on:click={requestPremium}>
     <span class="profile-customize-page__premium-glyph" aria-hidden="true">◇</span>
     <span>Want more expression? Unlock more with <strong>Chromadie Plus</strong></span>
   </button>
 
-  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-general-title" data-editor-section="general">
+  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-labelledby="profile-customize-general-title" data-editor-section="general">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-general-title">General Customization</h3>
     </div>
@@ -113,7 +118,7 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-appearance-title" data-editor-section="appearance" id="customize-appearance">
+  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-labelledby="profile-customize-appearance-title" data-editor-section="appearance" id="customize-appearance">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-appearance-title">Color Customization</h3>
     </div>
@@ -122,7 +127,7 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
+  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'effects'} aria-hidden={selectedTab !== 'effects'} hidden={selectedTab !== 'effects'} aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-effects-title">Effects Customization</h3>
     </div>
@@ -135,7 +140,7 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-templates-title" data-editor-section="layout" id="customize-layout">
+  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'layout'} aria-hidden={selectedTab !== 'layout'} hidden={selectedTab !== 'layout'} aria-labelledby="profile-customize-templates-title" data-editor-section="layout" id="customize-layout">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-templates-title">Templates</h3>
     </div>
@@ -148,7 +153,7 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-other-title" data-editor-section="other" id="customize-other">
+  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'media'} aria-hidden={selectedTab !== 'media'} hidden={selectedTab !== 'media'} aria-labelledby="profile-customize-other-title" data-editor-section="other" id="customize-other">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-other-title">Other Customization</h3>
     </div>
@@ -169,7 +174,7 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" aria-labelledby="profile-customize-widgets-title" data-editor-section="widgets" id="customize-widgets">
+  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'effects'} aria-hidden={selectedTab !== 'effects'} hidden={selectedTab !== 'effects'} aria-labelledby="profile-customize-widgets-title" data-editor-section="widgets" id="customize-widgets">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-widgets-title">Provider Widgets</h3>
     </div>
@@ -187,8 +192,8 @@
 <style>
   .profile-customize-page {
     --customize-surface: var(--ctp-crust, #11111b);
-    --customize-surface-raised: var(--ctp-base, #1e1e2e);
-    --customize-surface-inset: var(--studio-inset, color-mix(in srgb, var(--ctp-crust, #11111b) 74%, #04132b));
+    --customize-surface-raised: var(--ctp-mantle, #181825);
+    --customize-surface-inset: var(--studio-inset, var(--ctp-base, #1e1e2e));
     --customize-surface-deep: var(--ctp-crust, #11111b);
     --customize-text-primary: var(--ctp-text, #cdd6f4);
     --customize-text-secondary: var(--ctp-subtext1, #bac2de);
@@ -216,7 +221,7 @@
     --customize-section-input: var(--customize-surface-inset);
     display: grid;
     width: 100%;
-    gap: .5rem;
+    gap: .65rem;
     min-width: 0;
     padding-bottom: 1.5rem;
     color: var(--customize-text-primary);
@@ -262,7 +267,9 @@
 
   .profile-customize-page__control-kicker { display: none; }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-surface-inset); --customize-section-input-line: var(--ctp-surface0, #313244); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .4rem; min-width: 0; padding: .9rem 1rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-top-color: color-mix(in srgb, var(--customize-section-accent) 38%, var(--ctp-surface0, #313244)); border-radius: .52rem; background: var(--customize-section-surface); box-shadow: 0 .55rem 1.5rem color-mix(in srgb, var(--ctp-crust, #11111b) 46%, transparent); scroll-margin-top: 5rem; }
+  .profile-customize-page > [hidden] { display: none !important; }
+
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-surface-inset); --customize-section-input-line: var(--ctp-surface0, #313244); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .55rem; min-width: 0; padding: .95rem 1.05rem .85rem; border: 1px solid var(--ctp-surface0, #313244); border-top-color: color-mix(in srgb, var(--customize-section-accent) 32%, var(--ctp-surface0, #313244)); border-radius: .45rem; background: var(--customize-section-surface); box-shadow: 0 .35rem 1rem color-mix(in srgb, var(--ctp-crust, #11111b) 32%, transparent); scroll-margin-top: 5rem; }
   .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
   .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
@@ -270,7 +277,7 @@
   .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: var(--ctp-pink, #f5c2e7); }
   .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); }
   .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-green, #a6e3a1); }
-  .profile-customize-page__surface--assets { padding: .85rem 1rem .4rem; }
+  .profile-customize-page__surface--assets { padding: .9rem 1.05rem .5rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-section-accent); font-size: var(--customize-section-heading-size); line-height: 1.2; letter-spacing: -.03em; }
 
