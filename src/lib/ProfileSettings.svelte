@@ -225,7 +225,7 @@
     ? {
         ...context.targetProfile,
         bio: identityPreview ? identityPreview.bio : context.targetProfile.bio,
-        equipped_cosmetics: cosmeticPreviewLoadout || $equippedItems || context.targetProfile.equipped_cosmetics || {}
+        equipped_cosmetics: cosmeticPreviewLoadout || $equippedItems
       }
     : null;
   onMount(() => {

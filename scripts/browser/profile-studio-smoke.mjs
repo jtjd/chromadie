@@ -223,6 +223,42 @@ try {
     assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
+    await page.evaluate(`(async () => {
+      const { userInventory } = await import('/src/lib/stores.js');
+      userInventory.update(items => [...new Set([...(Array.isArray(items) ? items : []), 'name_font_marker_tag', 'border_celestial'])]);
+    })()`);
+    await page.waitFor(`document.querySelector('#cosmetic-name_font option[value="name_font_marker_tag"]') && document.querySelector('#cosmetic-profile-border option[value="border_celestial"]')`, 'owned cosmetic preview fixtures');
+    await page.evaluate(`(() => {
+      const select = document.querySelector('#cosmetic-name_font');
+      select.value = 'name_font_marker_tag';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`);
+    await page.waitFor(`(() => {
+      const liveName = document.querySelector('.profile-settings-preview .name-effect-canvas__semantic');
+      return liveName?.getAttribute('style')?.includes('Permanent Marker');
+    })()`, 'font renderer in live preview');
+    const fontCardState = await page.evaluate(`(() => ({
+      preview: Boolean(document.querySelector('.profile-cosmetics-name-preview')),
+      renderer: Boolean(document.querySelector('.profile-cosmetics-name-preview .name-effect-canvas')),
+      selected: document.querySelector('#cosmetic-name_font')?.value || ''
+    }))()`);
+    assert(fontCardState.preview && fontCardState.renderer, `Font card did not mount the production renderer: ${JSON.stringify(fontCardState)}.`);
+    await page.evaluate(`(() => {
+      const select = document.querySelector('#cosmetic-profile-border');
+      select.value = 'border_celestial';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`);
+    await page.waitFor(`document.querySelector('[aria-label="Profile border preview"] [data-profile-border="celestial"]') && document.querySelector('.profile-settings-preview [data-profile-border="celestial"]')`, 'border renderer in card and live preview');
+    await page.evaluate(`document.querySelector('#customize-effects')?.scrollIntoView({ block: 'start' })`);
+    await capture('05-effects-live-preview');
+    await page.evaluate(`(() => {
+      for (const id of ['cosmetic-name_font', 'cosmetic-profile-border']) {
+        const select = document.getElementById(id);
+        select.value = '';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      document.querySelector('[data-editor-section="general"]')?.scrollIntoView({ block: 'start' });
+    })()`);
     const originalBio = await page.evaluate(`document.querySelector('#profile-bio')?.value || ''`);
     await page.setInputValue('#profile-bio', 'Live preview draft', ['input']);
     await page.waitFor(`document.querySelector('.profile-settings-preview .identity-card__bio')?.textContent?.trim() === 'Live preview draft'`, 'identity draft in live preview');

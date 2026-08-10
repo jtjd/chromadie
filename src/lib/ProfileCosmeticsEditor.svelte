@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
   import Surface from './foundation/Surface.svelte';
-  import ShopStudioPreview from './ShopStudioPreview.svelte';
+  import ShopItemPreview from './ShopItemPreview.svelte';
   import {
     addToast,
     equippedItems,
@@ -20,15 +20,16 @@
   import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer } from './name/nameLoadout.js';
   import { SHOP_SLOT_LABELS, createFittingRoom, hasShopEntitlement, isShopCosmetic } from './shopCatalog.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
+  import { getProfileMediaUrl } from './profileMedia.js';
 
   export let accountProfile = null;
+  /** @type {any} */
   export let profileConfig = null;
   export let entitlements = [];
   export let staff = false;
 
   const dispatch = createEventDispatcher();
   let previewLoadout = /** @type {Record<string, string>} */ ({});
-  let selectedItem = null;
   let loadingSlot = '';
   let status = '';
   let error = '';
@@ -51,6 +52,7 @@
   $: account = { ...($profile || {}), ...(accountProfile || {}) };
   $: username = account.username || 'Chromanaut';
   $: displayColor = account.mood_color || '#7B5CFF';
+  $: avatarSrc = getProfileMediaUrl((profileConfig && (profileConfig.draft?.avatar_path || profileConfig.published?.avatar_path)) || '');
   $: plusUnlocked = Boolean(staff || hasChromadiePlus(entitlements));
   $: fittingRoom = createFittingRoom({
     userInventory: $userInventory,
@@ -65,7 +67,7 @@
   $: avatarItems = ownedCosmetics.filter(item => item.slot === 'avatar_effect');
   $: cursorItems = ownedCosmetics.filter(item => item.slot === 'cursor_trail');
   $: atmosphereItems = ownedCosmetics.filter(item => item.slot === 'profile_atmosphere');
-  $: layoutItems = ownedCosmetics.filter(item => item.slot === 'profile_layout');
+  $: previewItems = Object.fromEntries(COSMETIC_SLOTS.map(slot => [slot, $shopItems[previewLoadout[slot]] || null]));
   $: hasPendingChanges = COSMETIC_SLOTS.some(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: syncEquippedLoadout(equippedKey, $equippedItems);
@@ -86,7 +88,6 @@
       ? applyNamePreviewLayer(previewLoadout, slot, item?.item_key || '')
       : { ...previewLoadout, ...(item ? { [slot]: item.item_key } : {}) };
     if (!item && !NAME_COMPOSABLE_SLOTS.includes(slot)) delete previewLoadout[slot];
-    selectedItem = item;
     error = '';
     status = 'Preview only. Apply the change when the look feels right.';
     dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
@@ -98,7 +99,6 @@
       ...previewLoadout,
       ...Object.fromEntries(NAME_COMPOSABLE_SLOTS.map(slot => [slot, $equippedItems?.[slot] || '']))
     };
-    selectedItem = null;
     error = '';
     status = 'Name effects reset to the equipped profile.';
     dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
@@ -170,17 +170,6 @@
       <p role="alert">{$shopItemsError}</p>
     {:else}
       <div class="profile-cosmetics-layout">
-        <div class="profile-cosmetics-preview">
-          <ShopStudioPreview
-            loadout={previewLoadout}
-            {username}
-            displayColor={displayColor}
-            accountProfile={account}
-            profileConfig={profileConfig}
-            selectedItem={selectedItem}
-          />
-        </div>
-
         <div class="profile-cosmetics-controls">
           <div class="profile-cosmetics-controls__heading">
             <span>Expression</span>
@@ -206,7 +195,13 @@
                         <option value={item.item_key}>{item.name}</option>
                       {/each}
                     </select>
-                    <span aria-hidden="true">{username}</span>
+                    <div class="profile-cosmetics-name-preview" aria-label={`${SHOP_SLOT_LABELS[slot]} preview`}>
+                      {#if previewItems[slot]}
+                        <ShopItemPreview item={previewItems[slot]} {username} {displayColor} {avatarSrc} active={true} />
+                      {:else}
+                        <span>{username}</span>
+                      {/if}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -220,7 +215,9 @@
 
           <div class="profile-cosmetics-visual-grid">
             <div class="profile-cosmetics-slot">
-              <div class="profile-cosmetics-visual-preview profile-cosmetics-visual-preview--avatar" aria-hidden="true"><span>✦</span></div>
+              <div class="profile-cosmetics-visual-preview" aria-label="Avatar effect preview">
+                {#if previewItems.avatar_effect}<ShopItemPreview item={previewItems.avatar_effect} {username} {displayColor} {avatarSrc} active={true} />{:else}<span class="profile-cosmetics-empty-preview">No effect</span>{/if}
+              </div>
               <div>
                 <label for="cosmetic-avatar-effect">Avatar effect</label>
                 <select id="cosmetic-avatar-effect" value={previewLoadout['avatar_effect'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('avatar_effect', event.currentTarget.value)}>
@@ -231,7 +228,9 @@
             </div>
 
             <div class="profile-cosmetics-slot">
-              <div class="profile-cosmetics-visual-preview profile-cosmetics-visual-preview--border" aria-hidden="true"><span></span><b></b><i></i></div>
+              <div class="profile-cosmetics-visual-preview" aria-label="Profile border preview">
+                {#if previewItems.profile_border}<ShopItemPreview item={previewItems.profile_border} {username} {displayColor} {avatarSrc} active={true} />{:else}<span class="profile-cosmetics-empty-preview">No border</span>{/if}
+              </div>
               <div>
                 <label for="cosmetic-profile-border">Profile border</label>
                 <select id="cosmetic-profile-border" value={previewLoadout['profile_border'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_border', event.currentTarget.value)}>
@@ -244,7 +243,9 @@
             </div>
 
             <div class="profile-cosmetics-slot">
-              <div class="profile-cosmetics-visual-preview profile-cosmetics-visual-preview--cursor" aria-hidden="true"><span>·</span><i>·</i><b>·</b><em>·</em></div>
+              <div class="profile-cosmetics-visual-preview" aria-label="Cursor trail preview">
+                {#if previewItems.cursor_trail}<ShopItemPreview item={previewItems.cursor_trail} {username} {displayColor} {avatarSrc} active={true} />{:else}<span class="profile-cosmetics-empty-preview">No trail</span>{/if}
+              </div>
               <div>
                 <label for="cosmetic-cursor-trail">Cursor trail</label>
                 <select id="cosmetic-cursor-trail" value={previewLoadout['cursor_trail'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('cursor_trail', event.currentTarget.value)}>
@@ -254,19 +255,10 @@
               </div>
             </div>
 
-            <div class="profile-cosmetics-slot profile-cosmetics-slot--paid-layout">
-              <div class="profile-cosmetics-visual-preview profile-cosmetics-visual-preview--layout" aria-hidden="true"><span></span><i></i><b></b></div>
-              <div>
-                <label for="cosmetic-profile-layout">Paid layout</label>
-                <select id="cosmetic-profile-layout" value={previewLoadout['profile_layout'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_layout', event.currentTarget.value)}>
-                  <option value="">Use saved free layout</option>
-                  {#each layoutItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
-                </select>
-              </div>
-            </div>
-
             <div class="profile-cosmetics-slot">
-              <div class="profile-cosmetics-visual-preview profile-cosmetics-visual-preview--atmosphere" aria-hidden="true"><span></span><i></i><b></b></div>
+              <div class="profile-cosmetics-visual-preview" aria-label="Profile atmosphere preview">
+                {#if previewItems.profile_atmosphere}<ShopItemPreview item={previewItems.profile_atmosphere} {username} {displayColor} {avatarSrc} active={true} />{:else}<span class="profile-cosmetics-empty-preview">No atmosphere</span>{/if}
+              </div>
               <div>
                 <label for="cosmetic-profile-atmosphere">Profile atmosphere</label>
                 <select id="cosmetic-profile-atmosphere" value={previewLoadout['profile_atmosphere'] || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_atmosphere', event.currentTarget.value)}>
@@ -327,8 +319,7 @@
   .profile-cosmetics-plus-guide__links strong { min-width: 0; font-size: var(--cosmetics-label-size); }
   .profile-cosmetics-plus-guide__links span { min-width: 0; overflow: hidden; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); text-overflow: ellipsis; white-space: nowrap; }
   .profile-cosmetics-plus-guide__links b { grid-column: 2; grid-row: 1 / span 2; color: var(--cosmetics-expression); font: 600 var(--cosmetics-label-size)/1 var(--cosmetics-mono); }
-  .profile-cosmetics-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(18rem, .85fr); gap: 1rem; align-items: start; }
-  .profile-cosmetics-preview { min-width: 0; }
+  .profile-cosmetics-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
   .profile-cosmetics-controls { display: grid; gap: .65rem; min-width: 0; padding: .25rem 0; border: 0; border-radius: 0; background: transparent; font-family: var(--cosmetics-body); }
   .profile-cosmetics-controls__heading { display: grid; gap: .3rem; padding-bottom: .15rem; }
   .profile-cosmetics-controls__heading span { color: var(--cosmetics-expression); font: 700 var(--cosmetics-label-size) / 1.2 var(--cosmetics-mono); letter-spacing: .12em; text-transform: uppercase; }
@@ -342,30 +333,18 @@
   .profile-cosmetics-section-heading button:focus-visible { outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
   .profile-cosmetics-section-heading--visual { margin-top: .3rem; }
   .profile-cosmetics-name-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; padding: .65rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--cosmetics-inset); }
-  .profile-cosmetics-visual-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; }
+  .profile-cosmetics-visual-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; }
   .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr); gap: .35rem .7rem; align-items: end; padding-top: .15rem; border-top: 0; }
   .profile-cosmetics-name-control { position: relative; min-width: 0; }
-  .profile-cosmetics-name-control span { position: absolute; right: .65rem; top: 50%; max-width: 42%; overflow: hidden; color: var(--ctp-lavender, #b4befe); font: 700 .82rem/1 var(--cosmetics-body); pointer-events: none; text-overflow: ellipsis; transform: translateY(-50%); white-space: nowrap; }
+  .profile-cosmetics-name-preview { position: absolute; right: .65rem; top: 50%; width: min(42%, 8rem); height: 1.7rem; overflow: hidden; pointer-events: none; transform: translateY(-50%); }
+  .profile-cosmetics-name-preview > span { display: grid; height: 100%; place-items: center end; overflow: hidden; color: var(--ctp-lavender, #b4befe); font: 700 .82rem/1 var(--cosmetics-body); text-overflow: ellipsis; white-space: nowrap; }
+  .profile-cosmetics-name-preview :global(.shop-preview-area) { width: 100%; height: 100%; min-height: 0; aspect-ratio: auto; padding: 0; border-radius: 0; background: transparent; }
+  .profile-cosmetics-name-preview :global(.shop-preview-text) { height: 100%; padding: 0; justify-content: flex-end; }
+  .profile-cosmetics-name-preview :global(.name-effect-canvas__semantic) { font-size: .82rem !important; line-height: 1 !important; }
   .profile-cosmetics-name-control select { padding-right: 5rem; }
-  .profile-cosmetics-visual-preview { position: relative; display: grid; min-height: 4.25rem; place-items: center; overflow: hidden; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--ctp-mantle, #181825); }
-  .profile-cosmetics-visual-preview--border { grid-template-columns: 2.4rem minmax(0, 1fr); gap: .35rem; padding: .45rem; }
-  .profile-cosmetics-visual-preview--border span { width: 2rem; height: 2rem; border: 1px solid var(--ctp-lavender, #b4befe); border-radius: 50%; background: var(--ctp-surface1, #45475a); }
-  .profile-cosmetics-visual-preview--border b, .profile-cosmetics-visual-preview--border i { display: block; width: 80%; height: .34rem; border-radius: .2rem; background: var(--ctp-text, #cdd6f4); }
-  .profile-cosmetics-visual-preview--border i { width: 60%; margin-top: .35rem; opacity: .5; }
-  .profile-cosmetics-visual-preview--avatar span { display: grid; width: 2.45rem; height: 2.45rem; place-items: center; border: 1px solid var(--ctp-mauve, #cba6f7); border-radius: 50%; color: var(--ctp-mauve, #cba6f7); box-shadow: 0 0 0 .22rem color-mix(in srgb, var(--ctp-mauve, #cba6f7) 20%, transparent); }
-  .profile-cosmetics-visual-preview--cursor { display: flex; gap: .45rem; color: var(--ctp-lavender, #b4befe); font-size: 1.4rem; }
-  .profile-cosmetics-visual-preview--cursor i { opacity: .7; }
-  .profile-cosmetics-visual-preview--cursor b { opacity: .48; }
-  .profile-cosmetics-visual-preview--cursor em { opacity: .25; }
-  .profile-cosmetics-visual-preview--layout { align-content: center; gap: .45rem; padding: .6rem; }
-  .profile-cosmetics-visual-preview--layout span, .profile-cosmetics-visual-preview--layout i, .profile-cosmetics-visual-preview--layout b { display: block; height: .38rem; border-radius: .2rem; background: var(--ctp-sapphire, #74c7ec); }
-  .profile-cosmetics-visual-preview--layout span { width: 75%; }
-  .profile-cosmetics-visual-preview--layout i { width: 58%; opacity: .7; }
-  .profile-cosmetics-visual-preview--layout b { width: 85%; opacity: .45; }
-  .profile-cosmetics-visual-preview--atmosphere { align-content: center; gap: .4rem; padding: .6rem; background: var(--ctp-surface0, #313244); }
-  .profile-cosmetics-visual-preview--atmosphere span, .profile-cosmetics-visual-preview--atmosphere i, .profile-cosmetics-visual-preview--atmosphere b { display: block; width: 90%; height: .2rem; border-radius: .15rem; background: var(--ctp-sky, #89dceb); opacity: .75; transform: rotate(-10deg); }
-  .profile-cosmetics-visual-preview--atmosphere i { width: 70%; opacity: .45; }
-  .profile-cosmetics-visual-preview--atmosphere b { width: 82%; opacity: .3; }
+  .profile-cosmetics-visual-preview { position: relative; display: grid; min-height: 4.25rem; place-items: stretch; overflow: hidden; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--ctp-mantle, #181825); }
+  .profile-cosmetics-visual-preview :global(.shop-preview-area) { min-height: 4.25rem; aspect-ratio: auto; border-radius: 0; }
+  .profile-cosmetics-empty-preview { display: grid; min-height: 4.25rem; place-items: center; color: var(--cosmetics-faint); font: 600 .7rem/1 var(--cosmetics-body); }
   .profile-cosmetics-slot label { display: block; margin-bottom: .3rem; color: var(--cosmetics-secondary); font-weight: 600; font-size: var(--cosmetics-label-size); line-height: 1.3; }
   .profile-cosmetics-slot select { width: 100%; min-height: var(--cosmetics-primary-height); box-sizing: border-box; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); padding: 0 .65rem; background: var(--cosmetics-raised); color: var(--cosmetics-text); font: 500 var(--cosmetics-control-size) / 1 var(--cosmetics-body); }
   .profile-cosmetics-slot select:focus-visible { border-color: var(--cosmetics-focus); outline: 2px solid var(--cosmetics-focus); outline-offset: 1px; }

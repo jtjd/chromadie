@@ -27,7 +27,7 @@ test('default profile presentation keeps the blue starfield and footer links bou
   assert.match(shell, /profile-shell-page--default/);
   assert.match(shell, /\.profile-shell-page\.profile-shell-page--default\.profile-shell-page--preview\s*\{\s*background: transparent;/);
   assert.match(shell, /#07152c/);
-  assert.match(shell, /borderKey=\{defaultProfilePresentation \? '' : cosmetics\?\.profile_border\}/);
+  assert.match(shell, /borderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(card, /identity-card--default/);
   assert.match(card, /#08172e/);
   assert.match(card, /starfield-blue\.webp/);

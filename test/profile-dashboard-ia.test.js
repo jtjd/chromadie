@@ -80,7 +80,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));
   }
   assert.match(customize, /id="customize-widgets"[\s\S]*Provider Widgets/);
-  assert.match(customize, /id="customize-effects"[\s\S]*Visual effects/);
+  assert.match(customize, /aria-label="Visual effects"[^>]*id="customize-effects"/);
   assert.match(customize, /profile-cosmetics-controls\) \{ display: grid; grid-template-columns: repeat\(4/);
   assert.match(customize, /id="customize-effects"[\s\S]*id="customize-layout"/);
   assert.match(customize, /Profile media/);

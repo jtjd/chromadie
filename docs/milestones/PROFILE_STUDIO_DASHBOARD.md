@@ -1,6 +1,6 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, the Customize control audit, three-tab Customize IA, and linked surface/effect preview controls implemented 2026-08-10
+Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, the Customize control audit, three-tab Customize IA, linked surface/effect preview controls, and renderer-backed cosmetic cards implemented 2026-08-10
 
 ## Scope
 
@@ -125,3 +125,8 @@ connected to the shared HSV picker and immediate Live preview. Cosmetic font,
 material, motion, avatar, border, cursor, and atmosphere selection continues
 to project a temporary fitting-room loadout into the persistent production
 profile preview; only Apply changes invokes the existing equip RPCs.
+
+Cosmetic cards now use the same finite production preview renderers as the
+catalog instead of CSS stand-ins. The temporary loadout is forwarded to the
+persistent ProfileShell immediately, including on untouched default profiles;
+paid layouts remain exclusively in the Layout surface.

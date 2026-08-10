@@ -37,7 +37,7 @@ test('Plus Collection explains where the Atelier layers are configured', async (
   assert.match(editor, /Atelier expression is ready/);
   assert.match(editor, /cosmetic-name_motion/);
   assert.match(editor, /cosmetic-profile-atmosphere/);
-  assert.match(editor, /profile-layout/);
+  assert.doesNotMatch(editor, /cosmetic-profile-layout/);
   assert.match(editor, /async function applyChanges/);
   assert.match(editor, /class="profile-cosmetics-apply"/);
   assert.doesNotMatch(editor, /applySlot/);

@@ -77,6 +77,12 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(customize, /profile-editor \.profile-template-picker__premium\) \{ display: none !important; \}/);
   assert.match(cosmetics, /Name effects/);
   assert.match(cosmetics, /Visual effects/);
+  assert.match(cosmetics, /import ShopItemPreview from '\.\/ShopItemPreview\.svelte'/);
+  assert.match(cosmetics, /profile-cosmetics-name-preview[\s\S]*<ShopItemPreview/);
+  for (const role of ['Avatar effect', 'Profile border', 'Cursor trail', 'Profile atmosphere']) {
+    assert.match(cosmetics, new RegExp(`aria-label="${role} preview"[\\s\\S]*<ShopItemPreview`));
+  }
+  assert.doesNotMatch(cosmetics, /profile-cosmetics-visual-preview--(?:avatar|border|cursor|atmosphere)/);
   assert.match(cosmetics, /dispatch\('cosmeticpreview'/);
   for (const slot of ['avatar_effect', 'profile_border', 'cursor_trail', 'profile_atmosphere']) {
     assert.match(cosmetics, new RegExp(`previewSlot\\('${slot}'`));
@@ -89,5 +95,6 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(settings, /equipped_cosmetics: cosmeticPreviewLoadout \|\| \$equippedItems/);
   assert.match(profileShell, /getNameRendererLoadout\(cosmetics\)/);
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
+  assert.match(profileShell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(customize, /profile-expression-editor__compact-grid\) \{ grid-template-columns: minmax\(0, \.9fr\)/);
 });

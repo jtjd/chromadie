@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Render real effect previews
+
+- Name and visual-effect controls now show their selected production renderer
+  rather than a generic placeholder sketch.
+- Font and effect selections update the persistent Live preview immediately;
+  Apply changes remains the save boundary.
+- Profile borders now remain visible while previewing an otherwise-default
+  profile.
+- Removed the duplicate paid-layout control from visual effects.
+
 ## 2026-08-10 — Group and preview profile appearance controls
 
 - Moved Profile surface color beside Profile surface opacity and blur.

@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Replace cosmetic placeholders with live previews — 2026-08-10
+
+- Replaced the four decorative effect sketches with selected catalog-item
+  previews backed by the production Name, Avatar, Border, Cursor, and
+  Atmosphere renderers.
+- Added compact renderer output inside each Name selector.
+- Removed the duplicate paid-layout selector from effects; Layout owns it.
+- Fixed default-profile border suppression and kept every try-on temporary
+  until Apply changes.
+- Added authenticated browser proof that Permanent Marker and Celestial Border
+  update both their cards and the persistent Live preview before saving.
+
 ## Link Profile surface controls and effect preview — 2026-08-10
 
 - Moved Profile surface color out of the general color matrix and placed its

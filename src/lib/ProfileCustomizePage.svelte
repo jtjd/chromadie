@@ -121,22 +121,16 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-labelledby="profile-customize-appearance-title" data-editor-section="appearance" id="customize-appearance">
-    <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-appearance-title">Profile colors</h3>
-    </div>
+  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-label="Profile appearance" data-editor-section="appearance" id="customize-appearance">
     <div class="profile-customize-page__editor">
       <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={forward} on:dirty={forward} />
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
-    <div class="profile-customize-page__surface-heading">
-      <div><h3 id="profile-customize-effects-title">Visual effects</h3><p>Customize the visuals around your profile.</p></div>
-    </div>
+  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-label="Visual effects" data-editor-section="effects" id="customize-effects">
     <div class="profile-customize-page__editor">
       {#if collectionComponent}
-        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} on:cosmeticpreview={forward} />
+        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} on:cosmeticpreview />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading effects controls…</div>
       {/if}
@@ -292,7 +286,6 @@
   .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); }
   .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-green, #a6e3a1); }
   .profile-customize-page__surface[data-editor-section="general"] .profile-customize-page__surface-heading h3 { color: var(--ctp-sky, #89dceb); }
-  .profile-customize-page__surface[data-editor-section="appearance"] .profile-customize-page__surface-heading h3 { color: var(--ctp-yellow, #f9e2af); }
   .profile-customize-page__surface--assets { padding: .75rem 1.05rem .5rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-text-primary); font-size: 1rem; line-height: 1.2; letter-spacing: -.03em; }
@@ -302,8 +295,6 @@
    * heading is carried by the color card, so the generic section chrome stays
    * out of the visual rhythm while the editor remains fully mounted. */
   .profile-customize-page__surface[data-editor-section="appearance"] { gap: .7rem; margin-top: -.25rem; padding: 0; border: 0; background: transparent; }
-  .profile-customize-page__surface[data-editor-section="appearance"] > .profile-customize-page__surface-heading { display: none; }
-  .profile-customize-page__surface[data-editor-section="effects"] > .profile-customize-page__surface-heading { display: none; }
   .profile-customize-page__surface[data-editor-section="appearance"] > .profile-customize-page__editor { display: grid; gap: .65rem; }
 
   .profile-customize-page__premium-banner { display: none; position: relative; align-items: center; justify-content: center; gap: .55rem; min-height: 5.6rem; overflow: hidden; padding: 1rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: var(--ctp-mantle, #181825); color: var(--customize-text-muted); font: 600 .94rem/1.35 var(--customize-font-body); cursor: pointer; }
@@ -522,7 +513,6 @@
   .profile-customize-page :global(.profile-editor__layout-options .profile-editor__segmented-field > div) { min-height: var(--customize-secondary-height); }
   .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .profile-customize-page :global(.profile-cosmetics-layout) { grid-template-columns: minmax(0, 1fr); }
-  .profile-customize-page :global(.profile-cosmetics-preview) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-heading) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-controls) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .45rem .65rem; padding: .25rem 0 0; border: 0; background: transparent; }
@@ -533,7 +523,6 @@
   .profile-customize-page :global(.profile-cosmetics-visual-grid .profile-cosmetics-slot) { position: relative; align-content: start; gap: .45rem; }
   .profile-customize-page :global(.profile-cosmetics-visual-grid .profile-cosmetics-slot)::before { content: ''; position: absolute; top: .45rem; left: .45rem; z-index: 1; width: .34rem; height: .34rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); }
   .profile-customize-page :global(.profile-cosmetics-visual-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .profile-customize-page :global(.profile-cosmetics-slot--paid-layout) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: 2.25rem; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { grid-template-columns: 1fr; }
   /* The collection editor is a single tabbed surface.  Keep its heading,

@@ -574,7 +574,7 @@
       <div class="profile-shell__approved-main">
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity" style={profileCardStyle}>
           <div class="profile-shell__surface-backdrop" aria-hidden="true"></div>
-          <ProfileBorderEffect borderKey={defaultProfilePresentation ? '' : cosmetics?.profile_border} className="profile-shell__identity-boundary">
+          <ProfileBorderEffect borderKey={cosmetics?.profile_border} className="profile-shell__identity-boundary">
             {#if atmosphereKey && previewMode}
               <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__card-atmosphere-layer" />
             {/if}

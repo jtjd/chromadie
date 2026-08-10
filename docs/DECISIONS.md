@@ -1,5 +1,18 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Effect controls render the real catalog implementation
+
+The Appearance fitting room must not represent renderer-backed cosmetics with
+generic CSS sketches. Name, avatar, border, cursor-trail, and atmosphere cards
+mount the same bounded `ShopItemPreview` production renderers used by the
+catalog. The persistent Live preview receives the temporary item-key loadout
+through an explicitly forwarded component event; applying remains a separate
+RPC-backed action.
+
+Paid layouts stay in Layout rather than being duplicated among visual effects.
+Default-profile presentation may not suppress an explicitly previewed Profile
+Border.
+
 ## 2026-08-10 — Group surface paint with surface depth
 
 Profile surface color belongs with Profile surface opacity and blur rather
