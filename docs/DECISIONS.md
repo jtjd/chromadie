@@ -16,6 +16,11 @@ background. Existing saved layout variants and media therefore continue to
 render as authored. The picker remains draft-only and its marker styles derive
 from the same selected-role HSV value used by the input handlers.
 
+The Profile Studio live preview owns the surrounding pane chrome; the embedded
+profile renderer must not add another frame or fixed-height canvas. Preview
+mode therefore leaves the identity card as the only profile-surface perimeter
+and sizes the pane to the card's content.
+
 ## 2026-08-10 — Make cursor expression uploadable and align the Studio header
 
 The Plus upsell copy is larger, the sidebar brand begins on the same top

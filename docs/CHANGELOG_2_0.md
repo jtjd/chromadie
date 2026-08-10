@@ -11,6 +11,8 @@ Document user-visible redesign changes by milestone.
   links in a bottom row without a redundant handle line.
 - Removed the extra default border wrapper so the profile card has one clean
   perimeter like the reference.
+- Removed the preview-only shell border and forced height so the live preview
+  has one identity-card frame with no empty canvas below it.
 - Existing custom backgrounds, atmospheres, layouts, and published profile
   configuration remain unchanged.
 

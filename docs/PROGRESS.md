@@ -12,6 +12,9 @@
 - Removed the nested default border wrapper so the focused profile has one
   perimeter, matching the reference card instead of stacking an equipped
   border around the identity surface.
+- Removed the live-preview-only shell frame and fixed-height canvas so the
+  generated identity card ends with its content instead of an empty second
+  panel beneath it.
 - Kept authored backgrounds, atmospheres, saved layout variants, and server
   configuration authority unchanged; the default starfield is opt-in only
   while those custom surfaces are absent.

@@ -59,6 +59,8 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(settings, /profile-settings-preview__devices/);
   assert.match(settings, /Unlock more with Chromadie Plus/);
   assert.match(settings, /profile-settings-preview__canvas\.profile-settings-preview__canvas--appearance/);
+  assert.match(settings, /profile-settings-preview__canvas :global\(\.profile-shell-page--preview\)[\s\S]*border: 0; border-radius: 0/);
+  assert.match(settings, /profile-settings-preview__canvas\.profile-settings-preview__canvas--appearance :global\(\.profile-shell-page--preview\) \{ height: auto !important; min-height: 0 !important/);
   assert.match(appearance, /appearance-editor__picker-surface/);
   assert.match(appearance, /appearance-editor__palette/);
   for (const label of ['Profile text', 'Handle & metadata', 'Profile surface', 'Surface tint', 'Border', 'Page background']) {
