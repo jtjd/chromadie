@@ -2397,3 +2397,11 @@ direct route behavior.
   ANI MIME detection tolerant of browser-specific cursor file types.
 - Recorded the measured dashboard route ceiling for the intentional persistent
   preview and editor composition payload.
+
+## 2026-08-10 — Compact the Effects fitting room
+
+- Constrained each real visual-effect preview to the compact card height used
+  by the reference Effects workspace, including avatar, border, cursor, and
+  atmosphere renderers.
+- Removed the inline “Preview only. Apply the change” status copy while keeping
+  Apply changes, accessible errors, toast feedback, and existing equip behavior.

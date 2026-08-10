@@ -31,7 +31,6 @@
   const dispatch = createEventDispatcher();
   let previewLoadout = /** @type {Record<string, string>} */ ({});
   let loadingSlot = '';
-  let status = '';
   let error = '';
   let syncedLoadoutKey = '';
 
@@ -89,7 +88,6 @@
       : { ...previewLoadout, ...(item ? { [slot]: item.item_key } : {}) };
     if (!item && !NAME_COMPOSABLE_SLOTS.includes(slot)) delete previewLoadout[slot];
     error = '';
-    status = 'Preview only. Apply the change when the look feels right.';
     dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
     trackProductEvent('shop_try_on', { slot, context: 'profile' });
   }
@@ -100,7 +98,6 @@
       ...Object.fromEntries(NAME_COMPOSABLE_SLOTS.map(slot => [slot, $equippedItems?.[slot] || '']))
     };
     error = '';
-    status = 'Name effects reset to the equipped profile.';
     dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
   }
 
@@ -109,7 +106,6 @@
     const changedSlots = COSMETIC_SLOTS.filter(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
     loadingSlot = 'all';
     error = '';
-    status = `Applying ${changedSlots.length} appearance ${changedSlots.length === 1 ? 'change' : 'changes'}…`;
 
     try {
       for (const slot of changedSlots) {
@@ -127,13 +123,11 @@
       previewLoadout = { ...(refreshedProfile.equipped_cosmetics || {}) };
       syncedLoadoutKey = JSON.stringify(previewLoadout);
       dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
-      status = `${changedSlots.length} appearance ${changedSlots.length === 1 ? 'change' : 'changes'} applied.`;
-      addToast(status, 'success');
+      addToast(`${changedSlots.length} appearance ${changedSlots.length === 1 ? 'change' : 'changes'} applied.`, 'success');
     } catch (actionError) {
       previewLoadout = { ...$equippedItems };
       dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
       error = actionError instanceof Error ? actionError.message : 'The appearance change could not be saved.';
-      status = '';
     } finally {
       loadingSlot = '';
     }
@@ -274,7 +268,9 @@
         </div>
       </div>
 
-      <p role={error ? 'alert' : 'status'} aria-live="polite" class:error-message={Boolean(error)} class="profile-cosmetics-status">{error || status}</p>
+      {#if error}
+        <p role="alert" aria-live="polite" class="profile-cosmetics-status error-message">{error}</p>
+      {/if}
     {/if}
   </section>
 </Surface>
@@ -342,9 +338,13 @@
   .profile-cosmetics-name-preview :global(.shop-preview-text) { height: 100%; padding: 0; justify-content: flex-end; }
   .profile-cosmetics-name-preview :global(.name-effect-canvas__semantic) { font-size: .82rem !important; line-height: 1 !important; }
   .profile-cosmetics-name-control select { padding-right: 5rem; }
-  .profile-cosmetics-visual-preview { position: relative; display: grid; min-height: 4.25rem; place-items: stretch; overflow: hidden; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--ctp-mantle, #181825); }
-  .profile-cosmetics-visual-preview :global(.shop-preview-area) { min-height: 4.25rem; aspect-ratio: auto; border-radius: 0; }
-  .profile-cosmetics-empty-preview { display: grid; min-height: 4.25rem; place-items: center; color: var(--cosmetics-faint); font: 600 .7rem/1 var(--cosmetics-body); }
+  .profile-cosmetics-visual-preview { position: relative; display: grid; width: 100%; height: 4.25rem; min-height: 4.25rem; place-items: stretch; overflow: hidden; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--ctp-mantle, #181825); }
+  .profile-cosmetics-visual-preview :global(.shop-preview-area) { width: 100% !important; height: 100% !important; min-height: 0 !important; aspect-ratio: auto !important; padding: .35rem !important; border-radius: 0; }
+  .profile-cosmetics-visual-preview :global(.shop-avatar-preview) { width: 3.8rem; height: 3.8rem; }
+  .profile-cosmetics-visual-preview :global(.shop-avatar-preview .avatar-effect) { width: 3.2rem; height: 3.2rem; }
+  .profile-cosmetics-visual-preview :global(.shop-cursor-preview) { width: 92%; height: 100%; min-height: 0; }
+  .profile-cosmetics-visual-preview :global(.shop-atmosphere-preview) { min-height: 0; }
+  .profile-cosmetics-empty-preview { display: grid; width: 100%; height: 100%; min-height: 0; place-items: center; color: var(--cosmetics-faint); font: 600 .7rem/1 var(--cosmetics-body); }
   .profile-cosmetics-slot label { display: block; margin-bottom: .3rem; color: var(--cosmetics-secondary); font-weight: 600; font-size: var(--cosmetics-label-size); line-height: 1.3; }
   .profile-cosmetics-slot select { width: 100%; min-height: var(--cosmetics-primary-height); box-sizing: border-box; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); padding: 0 .65rem; background: var(--cosmetics-raised); color: var(--cosmetics-text); font: 500 var(--cosmetics-control-size) / 1 var(--cosmetics-body); }
   .profile-cosmetics-slot select:focus-visible { border-color: var(--cosmetics-focus); outline: 2px solid var(--cosmetics-focus); outline-offset: 1px; }

@@ -2959,3 +2959,9 @@ The final visual pass also changed the action status to the reference's dot
 indicator, kept disabled actions legible, broadened browser ANI MIME detection,
 and kept the dashboard route under its explicit 528 kB blocking JavaScript
 ceiling.
+
+The Effects fitting room now matches the compact reference geometry: real
+avatar, border, cursor, and atmosphere renderers are clipped to a short preview
+stage, and the normal “Preview only. Apply the change” helper is removed. The
+Apply changes button remains the only inline commit action; failures remain
+announced accessibly and successful equips continue to use the existing toast.

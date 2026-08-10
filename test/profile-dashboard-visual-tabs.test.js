@@ -82,6 +82,10 @@ test('reference workspace composition stays explicit', async () => {
   for (const role of ['Avatar effect', 'Profile border', 'Cursor trail', 'Profile atmosphere']) {
     assert.match(cosmetics, new RegExp(`aria-label="${role} preview"[\\s\\S]*<ShopItemPreview`));
   }
+  assert.match(cosmetics, /height: 4\.25rem; min-height: 4\.25rem/);
+  assert.match(cosmetics, /aspect-ratio: auto !important/);
+  assert.doesNotMatch(cosmetics, /Preview only\. Apply the change when the look feels right/);
+  assert.doesNotMatch(cosmetics, /let status = ''/);
   assert.doesNotMatch(cosmetics, /profile-cosmetics-visual-preview--(?:avatar|border|cursor|atmosphere)/);
   assert.match(cosmetics, /dispatch\('cosmeticpreview'/);
   for (const slot of ['avatar_effect', 'profile_border', 'cursor_trail', 'profile_atmosphere']) {

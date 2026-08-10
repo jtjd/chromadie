@@ -130,3 +130,10 @@ Cosmetic cards now use the same finite production preview renderers as the
 catalog instead of CSS stand-ins. The temporary loadout is forwarded to the
 persistent ProfileShell immediately, including on untouched default profiles;
 paid layouts remain exclusively in the Layout surface.
+
+The Effects fitting room is now compact by construction: its four visual cards
+override the catalog preview stage's intrinsic aspect ratio and clip the
+renderer into a short, reference-sized viewport. The editor no longer renders
+the “Preview only. Apply the change” helper paragraph; Apply changes remains
+the single inline commit affordance, with failures announced as alerts and
+successful changes reported through the existing toast system.

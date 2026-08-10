@@ -3990,3 +3990,13 @@ picker, palette swatches, hex fields, and HSV saturation/brightness and hue
 controls all resolve through one allow-listed role/path contract. Changes
 continue through the existing `appearancechange`/`dirty` events and aggregate
 Reset / Publish profile flow; no profile or server authority boundary changed.
+
+## 2026-08-10 — Keep the Effects fitting room compact and action-led
+
+Effects previews use the finite `ShopItemPreview` renderers, but the fitting
+room constrains each visual stage to a compact fixed height so the four-card
+row follows the supplied reference instead of inheriting the catalog's large
+16:9 stages. The editor exposes one Apply changes action; preview guidance and
+success copy are delivered through the existing toast/error channels rather
+than leaving a status paragraph in the layout. This is presentation-only and
+does not change cosmetic entitlement or equip RPC behavior.
