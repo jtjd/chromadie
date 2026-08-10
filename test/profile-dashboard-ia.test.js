@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate Customize, Links, and Premium destinations', async () => {
-  const [settings, customize, premium, shell, editor, expression, richMedia, identity, appearance] = await Promise.all([
+  const [settings, customize, premium, shell, editor, expression, richMedia, identity, appearance, content, widgets, cosmetics] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
@@ -14,7 +14,10 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ProfileRichMediaEditor.svelte'),
     read('src/lib/IdentityEditor.svelte'),
-    read('src/lib/ProfileAppearanceEditor.svelte')
+    read('src/lib/ProfileAppearanceEditor.svelte'),
+    read('src/lib/ProfileContentEditor.svelte'),
+    read('src/lib/ProfileWidgetEditor.svelte'),
+    read('src/lib/ProfileCosmeticsEditor.svelte')
   ]);
 
   for (const id of ['customize', 'links', 'premium']) assert.match(settings, new RegExp(`id: '${id}'`));
@@ -86,6 +89,14 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /--customize-accent-add: var\(--ctp-peach/);
   assert.match(customize, /--customize-accent-save: var\(--ctp-green/);
   assert.match(customize, /--customize-focus: var\(--ctp-lavender/);
+  assert.match(customize, /--customize-border-subtle:/);
+  assert.match(identity, /--identity-save: var\(--customize-accent-save/);
+  assert.match(expression, /--media-card-accent:/);
+  assert.match(appearance, /--appearance-focus: var\(--customize-focus/);
+  assert.match(content, /--content-add: var\(--customize-accent-add/);
+  assert.match(widgets, /--widget-add: var\(--customize-accent-add/);
+  assert.match(cosmetics, /--cosmetics-save: var\(--customize-accent-save/);
+  assert.match(editor, /--editor-add: var\(--customize-accent-add/);
   assert.match(customize, /profile-customize-page__surface-note/);
   assert.match(customize, /projects need a title and HTTPS URL/);
   assert.match(customize, /profile-customize-page :global\(\.profile-cosmetics-apply\) \{ min-height: var\(--customize-primary-height/);

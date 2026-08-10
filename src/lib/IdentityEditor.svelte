@@ -196,3 +196,92 @@
     </div>
   </form>
 </Module>
+
+<style>
+  .identity-editor__form {
+    --identity-surface: var(--customize-surface, var(--site-deep, #090a0d));
+    --identity-surface-raised: var(--customize-section-input, var(--customize-surface-raised, var(--site-raised, #111319)));
+    --identity-surface-inset: var(--customize-surface-inset, var(--site-deep, #090a0d));
+    --identity-text: var(--customize-text-primary, var(--site-ink, #f2f0eb));
+    --identity-text-secondary: var(--customize-text-secondary, var(--site-muted, #aaa8b0));
+    --identity-text-muted: var(--customize-text-muted, var(--site-muted, #aaa8b0));
+    --identity-text-faint: var(--customize-text-faint, var(--site-faint, #7d7e87));
+    --identity-border: var(--customize-border, var(--site-line, rgba(255, 255, 255, .08)));
+    --identity-border-strong: var(--customize-section-input-line, var(--customize-border-strong, var(--site-line-strong, rgba(255, 255, 255, .14))));
+    --identity-focus: var(--customize-focus, var(--ctp-lavender, #b4befe));
+    --identity-neutral: var(--customize-accent-primary, var(--ctp-teal, #94e2d5));
+    --identity-save: var(--customize-accent-save, var(--ctp-green, #a6e3a1));
+    --identity-danger: var(--customize-accent-danger, var(--ctp-red, #f38ba8));
+    --identity-font-body: var(--customize-font-body, var(--site-body, sans-serif));
+    --identity-font-mono: var(--customize-font-mono, var(--site-mono, ui-monospace, SFMono-Regular, Menlo, monospace));
+    --identity-label-size: var(--customize-label-size, .76rem);
+    --identity-control-size: var(--customize-control-size, .82rem);
+    --identity-secondary-height: var(--customize-secondary-height, 2.1rem);
+    --identity-primary-height: var(--customize-primary-height, 2.35rem);
+    --identity-radius: var(--customize-radius, .35rem);
+    display: grid;
+    gap: .7rem;
+    min-width: 0;
+    color: var(--identity-text);
+    font-family: var(--identity-font-body);
+  }
+
+  .identity-editor__fields { display: grid; gap: .7rem; min-width: 0; }
+  .identity-editor__field { display: grid; gap: .35rem; min-width: 0; color: var(--identity-text-secondary); font-size: var(--identity-label-size); line-height: 1.35; }
+  .identity-editor__label-row { display: flex; align-items: baseline; justify-content: space-between; gap: .65rem; }
+  .identity-editor__field small { color: var(--identity-text-muted); font-size: .9em; }
+  .identity-editor__counter { color: var(--identity-text-faint); font: .72rem/1 var(--identity-font-mono); white-space: nowrap; }
+  .identity-editor__field :is(input, textarea, select) {
+    width: 100%;
+    min-width: 0;
+    min-height: var(--identity-primary-height);
+    box-sizing: border-box;
+    padding: .55rem .65rem;
+    border: 1px solid var(--identity-border-strong);
+    border-radius: var(--identity-radius);
+    outline: 0;
+    background: var(--identity-surface-raised);
+    color: var(--identity-text);
+    font: 500 var(--identity-control-size) / 1.35 var(--identity-font-body);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .identity-editor__field textarea { min-height: 6rem; resize: vertical; }
+  .identity-editor__field :is(input, textarea, select)::placeholder { color: var(--identity-text-faint); }
+  .identity-editor__field :is(input, textarea, select):focus-visible {
+    border-color: var(--identity-focus);
+    outline: 2px solid var(--identity-focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--identity-focus) 24%, transparent);
+  }
+  .identity-editor__field :is(input, textarea, select)[aria-invalid="true"] { border-color: var(--identity-danger); }
+  .identity-editor__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; min-width: 0; }
+  .identity-editor__options { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem 1rem; color: var(--identity-text-secondary); font-size: var(--identity-label-size); }
+  .identity-editor__options label { display: inline-flex; align-items: center; gap: .35rem; cursor: pointer; }
+  .identity-editor__options input { accent-color: var(--identity-neutral); }
+  .identity-editor__footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .1rem; padding-top: .7rem; border-top: 1px solid var(--identity-border); }
+  .identity-editor__message,
+  .identity-editor__hint { margin: 0; color: var(--identity-text-muted); font-size: .78rem; line-height: 1.45; }
+  .identity-editor__message--error,
+  .identity-editor__error { color: var(--identity-danger); }
+  .identity-editor__error { display: block; font-size: .74rem; line-height: 1.4; }
+  .identity-editor__save {
+    min-height: var(--identity-primary-height);
+    padding: .55rem .8rem;
+    border: 1px solid var(--identity-save);
+    border-radius: var(--identity-radius);
+    background: var(--identity-save);
+    color: var(--identity-surface-inset);
+    font: 700 var(--identity-label-size) / 1 var(--identity-font-body);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .identity-editor__save:hover:not(:disabled) { background: color-mix(in srgb, var(--identity-save) 82%, var(--identity-text)); }
+  .identity-editor__save:focus-visible { outline: 2px solid var(--identity-focus); outline-offset: 2px; }
+  .identity-editor__save:disabled { cursor: not-allowed; opacity: .45; }
+
+  @media (max-width: 34rem) {
+    .identity-editor__grid { grid-template-columns: minmax(0, 1fr); }
+    .identity-editor__footer { align-items: stretch; flex-direction: column; }
+    .identity-editor__save { align-self: flex-start; }
+  }
+</style>

@@ -249,35 +249,63 @@
 </Surface>
 
 <style>
-  :global(.profile-cosmetics-surface) { width: 100%; box-sizing: border-box; }
+  :global(.profile-cosmetics-surface) {
+    --cosmetics-surface: var(--customize-surface, #1e1e2e);
+    --cosmetics-raised: var(--customize-section-input, var(--customize-surface-raised, #313244));
+    --cosmetics-inset: var(--customize-surface-inset, #181825);
+    --cosmetics-text: var(--customize-text-primary, #cdd6f4);
+    --cosmetics-secondary: var(--customize-text-secondary, #bac2de);
+    --cosmetics-muted: var(--customize-text-muted, #a6adc8);
+    --cosmetics-faint: var(--customize-text-faint, #7f849c);
+    --cosmetics-border: var(--customize-border, rgba(166, 173, 200, .24));
+    --cosmetics-border-strong: var(--customize-border-strong, rgba(166, 173, 200, .48));
+    --cosmetics-focus: var(--customize-focus, #b4befe);
+    --cosmetics-neutral: var(--customize-accent-secondary, #89dceb);
+    --cosmetics-save: var(--customize-accent-save, #a6e3a1);
+    --cosmetics-danger: var(--customize-accent-danger, #f38ba8);
+    --cosmetics-expression: var(--customize-accent-premium, #cba6f7);
+    --cosmetics-body: var(--customize-font-body, var(--font-body-stack, var(--site-font, sans-serif)));
+    --cosmetics-mono: var(--customize-font-mono, var(--font-mono-stack, var(--site-mono, monospace)));
+    --cosmetics-label-size: var(--customize-label-size, .76rem);
+    --cosmetics-control-size: var(--customize-control-size, .82rem);
+    --cosmetics-primary-height: var(--customize-primary-height, 2.35rem);
+    --cosmetics-radius: var(--customize-radius, .35rem);
+    width: 100%;
+    box-sizing: border-box;
+  }
   .profile-cosmetics-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-  .profile-cosmetics-heading h2 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h2) / 1.05 var(--font-display-stack); }
-  .profile-cosmetics-heading p { max-width: 42rem; margin: .75rem 0 0; color: var(--color-ink-muted); line-height: 1.55; }
-  .profile-cosmetics-plus-guide { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, .9fr); gap: 1rem; margin: 0 0 1rem; padding: 1rem; border: 1px solid color-mix(in srgb, var(--color-accent-bright) 34%, var(--color-line-subtle)); border-radius: var(--radius-md); background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent-bright) 11%, var(--surface-panel-soft)), var(--surface-panel-soft)); }
+  .profile-cosmetics-heading h2 { margin: 0; color: var(--cosmetics-text); font: 600 var(--customize-subheading-size, .88rem) / 1.25 var(--cosmetics-body); }
+  .profile-cosmetics-heading p { max-width: 42rem; margin: .35rem 0 0; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); line-height: 1.45; }
+  .profile-cosmetics-plus-guide { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, .9fr); gap: 1rem; margin: 0 0 1rem; padding: .8rem; border: 1px solid color-mix(in srgb, var(--cosmetics-expression) 30%, var(--cosmetics-border)); border-radius: var(--cosmetics-radius); background: color-mix(in srgb, var(--cosmetics-expression) 7%, var(--cosmetics-surface)); font-family: var(--cosmetics-body); }
   .profile-cosmetics-plus-guide__intro { display: grid; align-content: start; gap: .35rem; }
-  .profile-cosmetics-plus-guide__eyebrow { color: var(--color-accent-bright); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: .12em; text-transform: uppercase; }
-  .profile-cosmetics-plus-guide h3 { margin: 0; color: var(--color-ink-strong); font: 600 1.2rem / 1.15 var(--font-display-stack); }
-  .profile-cosmetics-plus-guide p { max-width: 38rem; margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
+  .profile-cosmetics-plus-guide__eyebrow { color: var(--cosmetics-expression); font: 700 var(--cosmetics-label-size) / 1.2 var(--cosmetics-mono); letter-spacing: .12em; text-transform: uppercase; }
+  .profile-cosmetics-plus-guide h3 { margin: 0; color: var(--cosmetics-text); font: 600 var(--customize-subheading-size, .88rem) / 1.25 var(--cosmetics-body); }
+  .profile-cosmetics-plus-guide p { max-width: 38rem; margin: 0; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); line-height: 1.5; }
   .profile-cosmetics-plus-guide__links { display: grid; gap: .45rem; }
-  .profile-cosmetics-plus-guide__links a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .12rem .6rem; align-items: center; padding: .55rem .65rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-inset) 70%, transparent); color: var(--color-ink-strong); text-decoration: none; }
-  .profile-cosmetics-plus-guide__links a:hover, .profile-cosmetics-plus-guide__links a:focus-visible { border-color: var(--color-accent-bright); background: color-mix(in srgb, var(--color-accent-bright) 12%, var(--surface-inset)); }
-  .profile-cosmetics-plus-guide__links strong { min-width: 0; font-size: var(--type-small); }
-  .profile-cosmetics-plus-guide__links span { min-width: 0; overflow: hidden; color: var(--color-ink-muted); font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-cosmetics-plus-guide__links b { grid-column: 2; grid-row: 1 / span 2; color: var(--color-accent-bright); font: 600 .85rem/1 var(--font-mono-stack); }
+  .profile-cosmetics-plus-guide__links a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .12rem .6rem; align-items: center; padding: .55rem .65rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--cosmetics-inset); color: var(--cosmetics-text); font-family: var(--cosmetics-body); text-decoration: none; }
+  .profile-cosmetics-plus-guide__links a:hover { border-color: var(--cosmetics-neutral); background: color-mix(in srgb, var(--cosmetics-neutral) 9%, var(--cosmetics-inset)); }
+  .profile-cosmetics-plus-guide__links a:focus-visible { border-color: var(--cosmetics-focus); outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
+  .profile-cosmetics-plus-guide__links strong { min-width: 0; font-size: var(--cosmetics-label-size); }
+  .profile-cosmetics-plus-guide__links span { min-width: 0; overflow: hidden; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); text-overflow: ellipsis; white-space: nowrap; }
+  .profile-cosmetics-plus-guide__links b { grid-column: 2; grid-row: 1 / span 2; color: var(--cosmetics-expression); font: 600 var(--cosmetics-label-size)/1 var(--cosmetics-mono); }
   .profile-cosmetics-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(18rem, .85fr); gap: 1rem; align-items: start; }
   .profile-cosmetics-preview { min-width: 0; }
-  .profile-cosmetics-controls { display: grid; gap: .75rem; min-width: 0; padding: 1rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-panel-soft); }
-  .profile-cosmetics-controls__heading { display: grid; gap: .35rem; padding-bottom: .25rem; }
-  .profile-cosmetics-controls__heading span { color: var(--color-accent-bright); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: .12em; text-transform: uppercase; }
-  .profile-cosmetics-controls__heading strong { color: var(--color-ink-strong); font-size: 1.05rem; }
-  .profile-cosmetics-controls__heading p { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.45; }
-  .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr); gap: .55rem .7rem; align-items: end; padding-top: .8rem; border-top: 1px solid var(--color-line-subtle); }
-  .profile-cosmetics-slot label { display: block; margin-bottom: .4rem; color: var(--color-ink-strong); font-weight: 650; font-size: var(--type-small); }
-  .profile-cosmetics-slot select { width: 100%; min-height: 2.65rem; border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); padding: 0 .7rem; background: var(--surface-inset); color: var(--color-ink-strong); font: 500 var(--type-small) / 1 var(--font-body-stack); }
-  .profile-cosmetics-apply { grid-column: 1 / -1; justify-self: end; min-height: 2.65rem; padding: 0 1rem; border: 0; border-radius: var(--radius-sm); background: var(--color-ink-strong); color: var(--color-canvas-deep); font-weight: 700; cursor: pointer; }
+  .profile-cosmetics-controls { display: grid; gap: .65rem; min-width: 0; padding: .25rem 0; border: 0; border-radius: 0; background: transparent; font-family: var(--cosmetics-body); }
+  .profile-cosmetics-controls__heading { display: grid; gap: .3rem; padding-bottom: .15rem; }
+  .profile-cosmetics-controls__heading span { color: var(--cosmetics-expression); font: 700 var(--cosmetics-label-size) / 1.2 var(--cosmetics-mono); letter-spacing: .12em; text-transform: uppercase; }
+  .profile-cosmetics-controls__heading strong { color: var(--cosmetics-text); font-size: var(--customize-subheading-size, .88rem); line-height: 1.25; }
+  .profile-cosmetics-controls__heading p { margin: 0; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); line-height: 1.45; }
+  .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr); gap: .35rem .7rem; align-items: end; padding-top: .15rem; border-top: 0; }
+  .profile-cosmetics-slot label { display: block; margin-bottom: .3rem; color: var(--cosmetics-secondary); font-weight: 600; font-size: var(--cosmetics-label-size); line-height: 1.3; }
+  .profile-cosmetics-slot select { width: 100%; min-height: var(--cosmetics-primary-height); box-sizing: border-box; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); padding: 0 .65rem; background: var(--cosmetics-raised); color: var(--cosmetics-text); font: 500 var(--cosmetics-control-size) / 1 var(--cosmetics-body); }
+  .profile-cosmetics-slot select:focus-visible { border-color: var(--cosmetics-focus); outline: 2px solid var(--cosmetics-focus); outline-offset: 1px; }
+  .profile-cosmetics-slot select:disabled { cursor: not-allowed; opacity: .58; }
+  .profile-cosmetics-apply { grid-column: 1 / -1; justify-self: end; min-height: var(--cosmetics-primary-height); padding: 0 1rem; border: 1px solid var(--cosmetics-save); border-radius: var(--cosmetics-radius); background: var(--cosmetics-save); color: var(--cosmetics-inset); font: 700 var(--cosmetics-label-size) / 1 var(--cosmetics-body); cursor: pointer; }
+  .profile-cosmetics-apply:hover:not(:disabled) { background: color-mix(in srgb, var(--cosmetics-save) 82%, var(--cosmetics-text)); }
+  .profile-cosmetics-apply:focus-visible { outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
   .profile-cosmetics-apply:disabled { opacity: .45; cursor: not-allowed; }
-  .profile-cosmetics-status { min-height: 1.25rem; margin: 1rem 0 0; color: var(--color-ink-muted); font-size: var(--type-small); }
-  .profile-cosmetics-status.error-message { color: var(--color-danger); }
+  .profile-cosmetics-status { min-height: 1.25rem; margin: .65rem 0 0; color: var(--cosmetics-muted); font: var(--cosmetics-label-size)/1.45 var(--cosmetics-body); }
+  .profile-cosmetics-status.error-message { color: var(--cosmetics-danger); }
   @media (max-width: 900px) { .profile-cosmetics-layout, .profile-cosmetics-plus-guide { grid-template-columns: 1fr; } }
   @media (prefers-reduced-motion: reduce) { .profile-cosmetics-plus-guide__links a { transition: none; } }
 </style>
