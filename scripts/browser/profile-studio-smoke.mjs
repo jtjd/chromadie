@@ -260,17 +260,28 @@ try {
       const grid = document.querySelector('.profile-cosmetics-name-grid');
       const rect = element => {
         const box = element?.getBoundingClientRect();
-        return box ? { width: Math.round(box.width), height: Math.round(box.height) } : null;
+        return box ? { width: Math.round(box.width), height: Math.round(box.height), top: Math.round(box.top), bottom: Math.round(box.bottom) } : null;
       };
       return {
         labels: [...(grid?.querySelectorAll('label') || [])].map(label => label.textContent?.trim() || ''),
         controls: [...(grid?.querySelectorAll('select') || [])].map(select => rect(select)?.height || 0),
+        previews: [...(grid?.querySelectorAll('.profile-cosmetics-name-preview') || [])].map(preview => ({
+          box: rect(preview),
+          semantic: rect(preview.querySelector('.name-effect-canvas__semantic')),
+          fallback: rect(preview.querySelector(':scope > span')),
+          centerDelta: (() => {
+            const box = preview.getBoundingClientRect();
+            const content = preview.querySelector('.name-effect-canvas__semantic, :scope > span')?.getBoundingClientRect();
+            return content ? Math.round(Math.abs((content.top + content.height / 2) - (box.top + box.height / 2))) : null;
+          })()
+        })),
         grid: rect(grid)
       };
     })()`);
     assert(JSON.stringify(nameEffectsLayout.labels) === JSON.stringify(['Font', 'Material', 'Motion']), `Name effect labels do not match the compact reference: ${JSON.stringify(nameEffectsLayout)}.`);
-    assert(nameEffectsLayout.controls.length === 3 && nameEffectsLayout.controls.every(height => height <= 32), `Name effect controls are not compact: ${JSON.stringify(nameEffectsLayout)}.`);
-    assert((nameEffectsLayout.grid?.height || 0) <= 80, `Name effect row is too tall: ${JSON.stringify(nameEffectsLayout)}.`);
+    assert(nameEffectsLayout.controls.length === 3 && nameEffectsLayout.controls.every(height => height >= 36 && height <= 44), `Name effect controls are outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
+    assert(nameEffectsLayout.previews.length === 3 && nameEffectsLayout.previews.every(({ box, semantic, fallback, centerDelta }) => (box?.height || 0) >= 28 && ((semantic?.height || 0) >= 16 || (fallback?.height || 0) >= 16) && (centerDelta ?? 99) <= 4), `Name effect previews are not centered and bounded: ${JSON.stringify(nameEffectsLayout)}.`);
+    assert((nameEffectsLayout.grid?.height || 0) >= 80 && (nameEffectsLayout.grid?.height || 0) <= 104, `Name effect row is outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-profile-border');
       select.value = 'border_celestial';

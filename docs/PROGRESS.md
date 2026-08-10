@@ -17,6 +17,9 @@
 - Added behavior/source contracts for routing, draft aggregation, renderer
   geometry, ownership boundaries, keyboard navigation, and preview composition;
   browser smoke now includes the Layout workspace geometry check.
+- Refined the compact cosmetic fitting room as a nested card with larger,
+  readable controls and context-owned name preview sizing, overflow, and
+  centering; browser smoke now guards those geometry bounds.
 - No database migration or authority-boundary change was required.
 
 ## Replace cosmetic placeholders with live previews — 2026-08-10

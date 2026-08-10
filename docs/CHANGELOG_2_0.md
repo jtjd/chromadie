@@ -10,6 +10,8 @@ Document user-visible redesign changes by milestone.
   preview immediately; Reset and Publish retain their existing behavior.
 - The dashboard keeps legacy hashes and direct-refresh links working, with
   keyboard-aware tabs, mobile navigation, and reduced-motion support preserved.
+- The compact cosmetic fitting room now reads as a nested card, with larger
+  name/effect controls and centered, uncropped name previews.
 
 ## 2026-08-10 — Render real effect previews
 

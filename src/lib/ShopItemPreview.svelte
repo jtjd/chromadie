@@ -144,9 +144,12 @@
 <style>
   .shop-preview-area { position:relative; aspect-ratio:16 / 9; width: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; align-self: stretch; padding: 12px; box-sizing: border-box; border: 0; border-radius: 12px; background: var(--preview-surface, #020306); overflow: hidden; }
   .shop-preview-area[data-render-context="effect-card"] { aspect-ratio: auto; height: 4.25rem; min-height: 4.25rem; padding: .35rem; border-radius: 0; }
-  .shop-preview-area[data-render-context="name-control"] { aspect-ratio: auto; height: 100%; min-height: 2.9rem; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
+  .shop-preview-area[data-render-context="name-control"] { aspect-ratio: auto; height: 100%; min-height: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
   .shop-preview-area[data-render-context="live-profile"] { aspect-ratio: auto; min-height: 0; padding: 0; border-radius: 0; background: transparent; overflow: visible; }
-  .shop-preview-area[data-render-context="name-control"] .shop-preview-text--name :global(.name-effect-canvas__semantic) { font-size: .86rem; line-height: 1.1; }
+  .shop-preview-area[data-render-context="name-control"] .shop-preview-text { height: 100%; margin: 0; }
+  .shop-preview-area[data-render-context="name-control"] .shop-preview-text--name :global(.name-effect-canvas) { display: flex; height: 100%; min-height: 0; align-items: center; justify-content: flex-end; overflow: visible; }
+  .shop-preview-area[data-render-context="name-control"] .shop-preview-text--name :global(.name-effect-canvas__semantic) { font-size: 1.05rem; line-height: 1; }
+  .shop-preview-area[data-render-context="name-control"] .shop-preview-text--name :global(.name-effect-canvas__visual) { inset: -.45rem -.65rem; width: calc(100% + 1.3rem); height: calc(100% + .9rem); }
   .shop-preview-area[data-render-context="effect-card"] .shop-preview-text--name :global(.name-effect-canvas__semantic) { font-size: clamp(1rem, 4vw, 1.7rem); line-height: 1.05; }
   .shop-preview-area :global(.preview-border-shell) { width: min(82%, 22rem); height: 78%; }
   .preview-border-space { display: block; width: 100%; height: 100%; min-height: 0; }

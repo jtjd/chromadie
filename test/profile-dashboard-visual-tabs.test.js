@@ -46,7 +46,7 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
 });
 
 test('reference workspace composition stays explicit', async () => {
-  const [settings, header, preview, draftModel, actions, appearance, appearanceColors, cosmetics, customize, profileShell, editor, expression] = await Promise.all([
+  const [settings, header, preview, draftModel, actions, appearance, appearanceColors, cosmetics, customize, profileShell, editor, expression, shopPreview] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
@@ -58,7 +58,8 @@ test('reference workspace composition stays explicit', async () => {
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileEditor.svelte'),
-    read('src/lib/ProfileExpressionEditor.svelte')
+    read('src/lib/ProfileExpressionEditor.svelte'),
+    read('src/lib/ShopItemPreview.svelte')
   ]);
   const studio = [settings, header, preview, draftModel].join('\n');
 
@@ -93,7 +94,7 @@ test('reference workspace composition stays explicit', async () => {
   for (const role of ['Avatar effect', 'Profile border', 'Cursor trail', 'Profile atmosphere']) {
     assert.match(cosmetics, new RegExp(`aria-label="${role} preview"[\\s\\S]*<ShopItemPreview`));
   }
-  assert.match(cosmetics, /height: 4\.25rem; min-height: 4\.25rem/);
+  assert.match(cosmetics, /height: 5\.5rem; min-height: 5\.5rem/);
   assert.match(cosmetics, /renderContext=\{PROFILE_RENDER_CONTEXTS\.EFFECT_CARD\}/);
   assert.doesNotMatch(cosmetics, /Preview only\. Apply the change when the look feels right/);
   assert.doesNotMatch(cosmetics, /let status = ''/);
@@ -113,6 +114,9 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
   assert.match(profileShell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(expression, /\.profile-expression-editor__compact-grid \{[\s\S]*grid-template-columns: minmax\(0, \.9fr\) minmax\(0, \.9fr\) minmax\(0, 1\.5fr\)/);
-  assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot select \{ height: 1\.65rem; min-height: 1\.65rem;/);
-  assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot label \{ margin-bottom: \.15rem; font-size: \.6rem/);
+  assert.match(cosmetics, /profile-cosmetics-surface--compact\) \{ padding: 1\.1rem 1\.15rem 1\.2rem; border: 1px solid var\(--cosmetics-border\);/);
+  assert.match(cosmetics, /profile-cosmetics-name-preview[^\n]*overflow: visible/);
+  assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot select \{ height: 2\.5rem; min-height: 2\.5rem;/);
+  assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot label \{ margin-bottom: \.3rem; font-size: \.72rem/);
+  assert.match(shopPreview, /shop-preview-area\[data-render-context="name-control"\][\s\S]*font-size: 1\.05rem; line-height: 1;/);
 });

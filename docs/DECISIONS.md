@@ -18,6 +18,18 @@ immediate Live preview updates. Preview renderers receive explicit
 fitting-room geometry cannot inherit catalog sizing. No schema, RLS, RPC, or
 public-profile authority boundary changes are part of this refactor.
 
+## 2026-08-10 — Keep the compact fitting room nested and renderer-safe
+
+The compact cosmetic collection keeps its own bordered Mocha surface inside
+the Customize workspace instead of flattening into the parent editor. Name and
+visual controls use readable compact dimensions, and the name-control preview
+stage explicitly owns its overflow, font scale, and vertical alignment.
+
+The name renderer also resets the legacy catalog text margin in the
+`name-control` context. This prevents canvas-backed previews from drifting
+upward while fallback text remains centered. The change is presentation-only;
+temporary try-ons and the existing Apply/equip RPC boundary are unchanged.
+
 ## 2026-08-10 — Effect controls render the real catalog implementation
 
 The Appearance fitting room must not represent renderer-backed cosmetics with
