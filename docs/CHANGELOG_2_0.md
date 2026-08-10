@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-09 — Make Studio sections visually decisive
+
+- Inverted the Studio depth hierarchy after live review: Crust now forms the
+  workspace, while large sections use Surface0.
+- Moved form fields and media wells onto Base and Mantle, with Surface1 and
+  Surface2 borders, so controls sit inside their sections instead of visually
+  overpowering them.
+- Retained the existing Mocha semantic accents, layout, navigation, preview,
+  and save behavior.
+
 ## 2026-08-09 — Increase Studio section contrast with Crust
 
 - Changed the Studio workspace to Catppuccin Base and its large section cards

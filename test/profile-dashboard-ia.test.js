@@ -33,8 +33,8 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(shell, /--nav-accent/);
   assert.match(shell, /--ctp-sapphire/);
   assert.match(shell, /background: var\(--ctp-crust/);
-  assert.match(shell, /profile-dashboard-shell__main \{ min-width: 0; background: var\(--ctp-base/);
-  assert.match(shell, /profile-dashboard-shell__content \{ --surface-panel: var\(--ctp-crust/);
+  assert.match(shell, /profile-dashboard-shell__main \{ min-width: 0; background: var\(--ctp-crust/);
+  assert.match(shell, /profile-dashboard-shell__content \{ --surface-panel: var\(--ctp-surface0/);
   assert.match(identity, /baselineBio/);
   assert.match(identity, /incomingKey/);
   assert.match(identity, /identity-editor__grid--meta/);
@@ -86,7 +86,8 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /data-editor-section="general"/);
   assert.match(customize, /--customize-section-accent/);
   assert.match(customize, /--customize-section-surface/);
-  assert.match(customize, /--customize-section-surface: var\(--customize-surface-deep\)/);
+  assert.match(customize, /--customize-section-surface: var\(--customize-surface-raised\)/);
+  assert.match(customize, /--customize-section-input: var\(--customize-surface\)/);
   assert.doesNotMatch(customize, /--customize-section-surface: var\(--customize-surface-alt\)/);
   assert.match(customize, /--customize-section-input/);
   assert.match(customize, /--customize-section-input-line/);

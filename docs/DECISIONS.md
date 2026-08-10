@@ -1,5 +1,18 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-09 — Invert Studio depth so sections lead controls
+
+The live Crust-section pass left only one small neutral step between the Base
+workspace and its large cards, while Surface0 inputs became the strongest
+rectangles on the page. Profile Studio now uses Crust for the workspace,
+Surface0 for major sections, Base and Mantle for editable and nested controls,
+and Surface1/Surface2 for their respective borders. Semantic colors remain
+limited to headings, top edges, focus, and status states.
+
+This is the stronger Catppuccin Mocha hierarchy: page, section, control, and
+border each occupy a distinct palette level. It changes no layout, responsive
+behavior, preview contract, saved profile data, or server authority boundary.
+
 ## 2026-08-09 — Set Studio sections into a Crust workspace layer
 
 Profile Studio uses Base for the editor workspace and Crust for each large

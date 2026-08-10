@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Invert Profile Studio depth for decisive contrast — 2026-08-09
+
+- Moved the workspace to Catppuccin Crust and raised every large Studio section
+  to Surface0 so section boundaries are visible before individual controls.
+- Recessed inputs and media wells to Base and Mantle, with Surface1/Surface2
+  borders and restrained semantic top edges.
+- Kept the established Studio geometry, mobile layout, focus behavior, preview,
+  and publishing flows intact.
+
 ## Give every Studio section a Crust surface — 2026-08-09
 
 - Set the dashboard workspace to Catppuccin Base and every large section to
