@@ -189,26 +189,43 @@
   </header>
 
   {#if widgets.length}
+    <div class="profile-widget-editor__active-heading">
+      <div class="profile-widget-editor__active-copy">
+        <strong>Connected widgets</strong>
+        <span>{widgets.length} of {widgetLimit} slots used</span>
+      </div>
+      <button type="button" class="profile-widget-editor__add" on:click={addWidget} disabled={widgets.length >= widgetLimit}>Add provider widget</button>
+    </div>
     <div class="profile-widget-editor__list">
       {#each widgets as widget, index (index)}
         <article class="profile-widget-editor__panel">
-          <div class="profile-widget-editor__panel-heading"><strong>Widget {index + 1}</strong><label><input type="checkbox" checked={widget.visible} on:change={event => updateWidget(index, 'visible', event.currentTarget.checked)} /> Visible</label></div>
+          <div class="profile-widget-editor__panel-heading">
+            <div class="profile-widget-editor__panel-title">
+              <span class="profile-widget-editor__panel-index" aria-hidden="true">0{index + 1}</span>
+              <div><strong>{getProfileWidgetLabel(widget.provider)}</strong><span>Widget {index + 1} · approved player</span></div>
+            </div>
+            <div class="profile-widget-editor__panel-actions">
+              <label><input type="checkbox" checked={widget.visible} on:change={event => updateWidget(index, 'visible', event.currentTarget.checked)} /> Visible</label>
+              <button type="button" class="profile-widget-editor__remove" on:click={() => removeWidget(index)}>Remove widget</button>
+            </div>
+          </div>
           <label><span>Provider</span><select value={widget.provider} on:change={event => updateWidget(index, 'provider', event.currentTarget.value)}>{#each providerKeys as provider (provider)}<option value={provider}>{getProfileWidgetLabel(provider)}</option>{/each}</select></label>
           <label><span>{getProfileWidgetLabel(widget.provider)} URL</span><input value={widget.url} inputmode="url" autocomplete="off" placeholder={widget.provider === 'youtube' ? 'https://www.youtube.com/watch?v=…' : 'https://open.spotify.com/track/…'} on:input={event => updateWidget(index, 'url', event.currentTarget.value)} /></label>
           <p class="profile-widget-editor__helper">{PROFILE_WIDGET_PROVIDERS[widget.provider].help} Only the provider’s official player can load.</p>
-          <button type="button" class="profile-widget-editor__remove" on:click={() => removeWidget(index)}>Remove widget</button>
         </article>
       {/each}
     </div>
   {:else}
-    <div class="profile-widget-editor__empty"><strong>No provider widgets yet.</strong><span>Keep the profile quiet, or add one focused player for visitors to explore.</span></div>
+    <div class="profile-widget-editor__empty">
+      <div class="profile-widget-editor__empty-copy"><strong>No provider widgets yet.</strong><span>Add one approved player to give visitors a focused media moment.</span></div>
+      <button type="button" class="profile-widget-editor__add" on:click={addWidget} disabled={widgets.length >= widgetLimit}>Add provider widget</button>
+    </div>
   {/if}
 
-  <button type="button" class="profile-widget-editor__add" on:click={addWidget} disabled={widgets.length >= widgetLimit}>Add provider widget</button>
   <p class="profile-widget-editor__note">Chromadie accepts canonical HTTPS URLs only. Arbitrary embeds, scripts, styles, and autoplay are never accepted.</p>
   {#if error}<p class="profile-widget-editor__message" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-widget-editor__message" role="status" aria-live="polite">{status}</p>{/if}
-  <p class="profile-widget-editor__hint">Changes are staged in this workspace. Publish the profile from the dashboard controls.</p>
+  <p class="profile-widget-editor__hint">Changes are previewed here and remain unpublished until you choose “Publish profile” in the dashboard.</p>
 </section>
 
 <style>
@@ -241,29 +258,39 @@
     color: var(--widget-text);
     font-family: var(--widget-font-body);
   }
-  .profile-widget-editor__header, .profile-widget-editor__panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .profile-widget-editor__header, .profile-widget-editor__panel-heading, .profile-widget-editor__active-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
   .profile-widget-editor__header h2, .profile-widget-editor__panel strong { margin: 0; color: var(--widget-text); letter-spacing: -.02em; }
   .profile-widget-editor__header h2 { font-size: var(--customize-section-heading-size, 1rem); line-height: 1.2; }
-  .profile-widget-editor__header p, .profile-widget-editor__helper, .profile-widget-editor__note, .profile-widget-editor__empty span { margin: .3rem 0 0; color: var(--widget-text-muted); font-size: .78rem; line-height: 1.5; }
+  .profile-widget-editor__header p, .profile-widget-editor__helper, .profile-widget-editor__note, .profile-widget-editor__empty span, .profile-widget-editor__active-copy span, .profile-widget-editor__panel-title > div > span { margin: .3rem 0 0; color: var(--widget-text-muted); font-size: .78rem; line-height: 1.5; }
   .profile-widget-editor__version { color: var(--widget-text-faint); font: .72rem/1 var(--widget-font-mono); }
+  .profile-widget-editor__active-heading { grid-column: 1 / -1; min-width: 0; padding: .65rem .75rem; border: 1px solid var(--widget-border); border-radius: var(--widget-radius); background: var(--widget-surface-inset); }
+  .profile-widget-editor__active-copy, .profile-widget-editor__empty-copy { display: grid; gap: .15rem; min-width: 0; }
+  .profile-widget-editor__active-copy strong { color: var(--widget-text); font-size: var(--widget-heading-size); line-height: 1.25; }
+  .profile-widget-editor__active-copy span, .profile-widget-editor__empty-copy span, .profile-widget-editor__panel-title > div > span { margin: 0; color: var(--widget-text-muted); font-size: .72rem; line-height: 1.4; }
   .profile-widget-editor__list { display: grid; gap: .65rem; }
-  .profile-widget-editor__panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; min-width: 0; padding: .7rem; border: 1px solid color-mix(in srgb, var(--widget-border) 72%, transparent); border-radius: var(--widget-radius); background: color-mix(in srgb, var(--widget-surface-inset) 56%, transparent); }
+  .profile-widget-editor__panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; min-width: 0; padding: .7rem; border: 1px solid var(--widget-border); border-radius: var(--widget-radius); background: var(--widget-surface-inset); }
   .profile-widget-editor__panel-heading { grid-column: 1 / -1; }
-  .profile-widget-editor__panel-heading label { display: inline-flex; align-items: center; gap: .4rem; color: var(--widget-text-secondary); font-size: var(--widget-label-size); cursor: pointer; }
-  .profile-widget-editor__panel-heading input { accent-color: var(--widget-neutral); }
+  .profile-widget-editor__panel-title { display: flex; align-items: center; gap: .55rem; min-width: 0; }
+  .profile-widget-editor__panel-title > div { display: grid; gap: .15rem; min-width: 0; }
+  .profile-widget-editor__panel-title strong { font-size: var(--widget-heading-size); line-height: 1.2; }
+  .profile-widget-editor__panel-index { display: grid; flex: 0 0 auto; width: 1.6rem; height: 1.6rem; place-items: center; border: 1px solid var(--widget-border); border-radius: var(--widget-radius); background: var(--widget-surface); color: var(--widget-neutral); font: .65rem/1 var(--widget-font-mono); }
+  .profile-widget-editor__panel-actions { display: flex; align-items: center; justify-content: flex-end; gap: .65rem; flex: 0 0 auto; }
+  .profile-widget-editor__panel-actions label { display: inline-flex; align-items: center; gap: .4rem; color: var(--widget-text-secondary); font-size: var(--widget-label-size); cursor: pointer; }
+  .profile-widget-editor__panel-actions input[type="checkbox"] { width: 1rem !important; min-width: 1rem; min-height: 1rem !important; margin: 0; padding: 0 !important; border: 0 !important; border-radius: 0; background: transparent !important; box-shadow: none !important; accent-color: var(--widget-neutral); }
+  .profile-widget-editor__panel-actions input[type="checkbox"]:focus-visible { outline: 2px solid var(--widget-focus); outline-offset: 2px; }
   .profile-widget-editor__panel > label { display: grid; gap: .35rem; min-width: 0; color: var(--widget-text-secondary); font-size: var(--widget-label-size); line-height: 1.35; }
   .profile-widget-editor__panel label > span { color: inherit; }
-  .profile-widget-editor__panel :is(input, select) { width: 100%; min-width: 0; min-height: var(--widget-primary-height); box-sizing: border-box; padding: .5rem .65rem; border: 1px solid var(--widget-border-strong); border-radius: var(--widget-radius); outline: 0; background: var(--widget-surface-raised); color: var(--widget-text); font: 500 var(--widget-control-size) / 1.35 var(--widget-font-body); transition: border-color .15s ease, box-shadow .15s ease; }
+  .profile-widget-editor__panel :is(input:not([type="checkbox"]), select) { width: 100%; min-width: 0; min-height: var(--widget-primary-height); box-sizing: border-box; padding: .5rem .65rem; border: 1px solid var(--widget-border-strong); border-radius: var(--widget-radius); outline: 0; background: var(--widget-surface-raised); color: var(--widget-text); font: 500 var(--widget-control-size) / 1.35 var(--widget-font-body); transition: border-color .15s ease, box-shadow .15s ease; }
   .profile-widget-editor__panel :is(input)::placeholder { color: var(--widget-text-faint); }
-  .profile-widget-editor__panel :is(input, select):focus-visible { border-color: var(--widget-focus); outline: 2px solid var(--widget-focus); outline-offset: 2px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--widget-focus) 24%, transparent); }
-  .profile-widget-editor__add, .profile-widget-editor__remove { min-height: var(--widget-secondary-height); padding: .5rem .7rem; border: 1px solid; border-radius: var(--widget-radius); font: 600 var(--widget-label-size) / 1 var(--widget-font-body); cursor: pointer; }
+  .profile-widget-editor__panel :is(input:not([type="checkbox"]), select):focus-visible { border-color: var(--widget-focus); outline: 2px solid var(--widget-focus); outline-offset: 2px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--widget-focus) 24%, transparent); }
+  .profile-widget-editor__add, .profile-widget-editor__remove { min-height: var(--widget-secondary-height); padding: .5rem .7rem; border: 1px solid; border-radius: var(--widget-radius); font: 600 var(--widget-label-size) / 1 var(--widget-font-body); cursor: pointer; white-space: nowrap; }
   .profile-widget-editor__add { justify-self: start; border-color: var(--widget-add); background: color-mix(in srgb, var(--widget-add) 10%, transparent); color: var(--widget-add); }
   .profile-widget-editor__add:hover:not(:disabled) { background: color-mix(in srgb, var(--widget-add) 18%, transparent); }
   .profile-widget-editor__remove { justify-self: start; border-color: var(--widget-border-strong); background: transparent; color: var(--widget-danger); }
   .profile-widget-editor__remove:hover { border-color: var(--widget-danger); background: color-mix(in srgb, var(--widget-danger) 12%, transparent); }
   .profile-widget-editor__add:focus-visible, .profile-widget-editor__remove:focus-visible { outline: 2px solid var(--widget-focus); outline-offset: 2px; }
   .profile-widget-editor__add:disabled { cursor: not-allowed; opacity: .45; }
-  .profile-widget-editor__empty { display: grid; gap: .35rem; padding: .9rem; border: 1px dashed color-mix(in srgb, var(--widget-neutral-hover) 42%, var(--widget-border)); border-radius: var(--widget-radius); background: color-mix(in srgb, var(--widget-surface-inset) 32%, transparent); }
+  .profile-widget-editor__empty { display: flex; align-items: center; justify-content: space-between; grid-column: 1 / -1; gap: 1rem; min-width: 0; padding: .7rem .75rem; border: 1px solid var(--widget-border); border-radius: var(--widget-radius); background: var(--widget-surface-inset); }
   .profile-widget-editor__empty strong { color: var(--widget-text); font-size: var(--widget-heading-size); line-height: 1.25; }
   .profile-widget-editor__message { margin: 0; color: var(--widget-text-muted); font-size: .78rem; line-height: 1.45; }
   .profile-widget-editor__message[role="status"] { color: var(--widget-neutral); }
@@ -271,7 +298,10 @@
   .profile-widget-editor__hint { margin: 0; color: var(--widget-text-muted); font-size: .76rem; line-height: 1.45; }
   @media (max-width: 34rem) {
     .profile-widget-editor__header { align-items: stretch; flex-direction: column; }
+    .profile-widget-editor__active-heading, .profile-widget-editor__empty { align-items: stretch; flex-direction: column; }
+    .profile-widget-editor__active-heading .profile-widget-editor__add, .profile-widget-editor__empty .profile-widget-editor__add { width: 100%; }
     .profile-widget-editor__panel { grid-template-columns: minmax(0, 1fr); }
-    .profile-widget-editor__panel-heading { grid-column: auto; }
+    .profile-widget-editor__panel-heading { align-items: stretch; flex-direction: column; grid-column: auto; }
+    .profile-widget-editor__panel-actions { justify-content: space-between; }
   }
 </style>

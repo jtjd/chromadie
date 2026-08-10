@@ -122,7 +122,7 @@
       dispatch('configsaved', configurationData);
     }
     clearViewState(VIEW_STATE_NAMESPACE, scope());
-    status = 'Identity saved.';
+    status = 'Identity details saved.';
     dispatch('identitysaved', {
       bio: published.bio,
       username: data.username || null,
@@ -188,10 +188,10 @@
       <div aria-live="polite">
         {#if error}<p class="identity-editor__message identity-editor__message--error" role="alert">{error}</p>
         {:else if status}<p class="identity-editor__message">{status}</p>
-        {:else}<p class="identity-editor__hint">Your username is fixed as your display name. Optional presentation controls stay finite and accessible.</p>{/if}
+        {:else}<p class="identity-editor__hint">Identity details save here; profile publishing stays separate.</p>{/if}
       </div>
       <button type="submit" class="identity-editor__save" disabled={saving || !validation.valid} aria-busy={saving ? 'true' : 'false'}>
-        {saving ? 'Saving…' : 'Save bio'}
+        {saving ? 'Saving identity…' : 'Save identity'}
       </button>
     </div>
   </form>
@@ -214,23 +214,23 @@
     --identity-danger: var(--customize-accent-danger, var(--ctp-red, #f38ba8));
     --identity-font-body: var(--customize-font-body, var(--site-body, sans-serif));
     --identity-font-mono: var(--customize-font-mono, var(--site-mono, ui-monospace, SFMono-Regular, Menlo, monospace));
-    --identity-label-size: var(--customize-label-size, .76rem);
-    --identity-control-size: var(--customize-control-size, .82rem);
+    --identity-label-size: var(--customize-label-size, .8rem);
+    --identity-control-size: var(--customize-control-size, .84rem);
     --identity-secondary-height: var(--customize-secondary-height, 2.1rem);
     --identity-primary-height: var(--customize-primary-height, 2.35rem);
     --identity-radius: var(--customize-radius, .35rem);
     display: grid;
-    gap: .7rem;
+    gap: .65rem;
     min-width: 0;
     color: var(--identity-text);
     font-family: var(--identity-font-body);
   }
 
-  .identity-editor__fields { display: grid; gap: .7rem; min-width: 0; }
-  .identity-editor__field { display: grid; gap: .35rem; min-width: 0; color: var(--identity-text-secondary); font-size: var(--identity-label-size); line-height: 1.35; }
+  .identity-editor__fields { display: grid; gap: .65rem; min-width: 0; }
+  .identity-editor__field { display: grid; gap: .4rem; min-width: 0; color: var(--identity-text-secondary); font-size: var(--identity-label-size); line-height: 1.4; }
   .identity-editor__label-row { display: flex; align-items: baseline; justify-content: space-between; gap: .65rem; }
-  .identity-editor__field small { color: var(--identity-text-muted); font-size: .9em; }
-  .identity-editor__counter { color: var(--identity-text-faint); font: .72rem/1 var(--identity-font-mono); white-space: nowrap; }
+  .identity-editor__field small { color: var(--identity-text-secondary); font-size: .9em; }
+  .identity-editor__counter { color: var(--identity-text-muted); font: 500 .72rem/1 var(--identity-font-mono); white-space: nowrap; }
   .identity-editor__field :is(input, textarea, select) {
     width: 100%;
     min-width: 0;
@@ -254,18 +254,19 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--identity-focus) 24%, transparent);
   }
   .identity-editor__field :is(input, textarea, select)[aria-invalid="true"] { border-color: var(--identity-danger); }
-  .identity-editor__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; min-width: 0; }
-  .identity-editor__options { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem 1rem; color: var(--identity-text-secondary); font-size: var(--identity-label-size); }
+  .identity-editor__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; min-width: 0; }
+  .identity-editor__options { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem 1rem; color: var(--identity-text-secondary); font-size: var(--identity-label-size); line-height: 1.35; }
   .identity-editor__options label { display: inline-flex; align-items: center; gap: .35rem; cursor: pointer; }
   .identity-editor__options input { accent-color: var(--identity-neutral); }
-  .identity-editor__footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .1rem; padding-top: .7rem; border-top: 1px solid var(--identity-border); }
+  .identity-editor__footer { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin-top: .1rem; padding-top: .6rem; border-top: 1px solid var(--identity-border); }
   .identity-editor__message,
-  .identity-editor__hint { margin: 0; color: var(--identity-text-muted); font-size: .78rem; line-height: 1.45; }
+  .identity-editor__hint { margin: 0; color: var(--identity-text-secondary); font-size: .8rem; line-height: 1.45; }
   .identity-editor__message--error,
   .identity-editor__error { color: var(--identity-danger); }
   .identity-editor__error { display: block; font-size: .74rem; line-height: 1.4; }
   .identity-editor__save {
     min-height: var(--identity-primary-height);
+    min-width: 8.5rem;
     padding: .55rem .8rem;
     border: 1px solid var(--identity-save);
     border-radius: var(--identity-radius);
@@ -279,9 +280,21 @@
   .identity-editor__save:focus-visible { outline: 2px solid var(--identity-focus); outline-offset: 2px; }
   .identity-editor__save:disabled { cursor: not-allowed; opacity: .45; }
 
-  @media (max-width: 34rem) {
+  /* Keep this section action distinct from the page-level Publish control. */
+  :global(.profile-customize-page) .identity-editor__save {
+    border-color: var(--identity-border-strong) !important;
+    background: transparent !important;
+    color: var(--identity-text-secondary) !important;
+  }
+  :global(.profile-customize-page) .identity-editor__save:hover:not(:disabled) {
+    border-color: var(--identity-neutral) !important;
+    background: color-mix(in srgb, var(--identity-neutral) 9%, transparent) !important;
+    color: var(--identity-text) !important;
+  }
+
+  @media (max-width: 38rem) {
     .identity-editor__grid { grid-template-columns: minmax(0, 1fr); }
     .identity-editor__footer { align-items: stretch; flex-direction: column; }
-    .identity-editor__save { align-self: flex-start; }
+    .identity-editor__save { width: 100%; }
   }
 </style>
