@@ -203,7 +203,7 @@
   .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); --customize-section-surface: var(--ctp-base, #1e1e2e); }
   .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); --customize-section-surface: var(--ctp-mantle, #181825); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); --customize-section-surface: var(--ctp-base, #1e1e2e); }
-  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); --customize-section-surface: var(--ctp-crust, #11111b); }
+  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); --customize-section-surface: var(--ctp-base, #1e1e2e); }
   .profile-customize-page__surface--assets { padding: 1rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-width: 0; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: color-mix(in srgb, var(--customize-section-accent) 76%, var(--site-ink, #f2f0eb)); font-size: 1.05rem; letter-spacing: -.03em; }
@@ -291,7 +291,7 @@
   .profile-customize-page :global(.profile-content-editor__panel:nth-of-type(2)) { grid-column: 1 / -1; }
   .profile-customize-page :global(.profile-content-editor__panel-heading) { margin-bottom: .55rem; }
   .profile-customize-page :global(.profile-content-editor__fields) { gap: .55rem; }
-  .profile-customize-page :global(.profile-content-editor__panel:first-of-type .profile-content-editor__fields) { grid-template-columns: minmax(10rem, .65fr) minmax(0, 1.35fr); align-items: start; }
+  .profile-customize-page :global(.profile-content-editor__panel:first-of-type .profile-content-editor__fields) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
   .profile-customize-page :global(.profile-content-editor__project) { gap: .55rem; padding: .65rem; }
   .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
   .profile-customize-page :global(.profile-content-editor__helper),

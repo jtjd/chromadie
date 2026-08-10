@@ -52,6 +52,9 @@ test('content renderer and editor stay inside the structured public boundary', a
   assert.match(editor, /export function getDraftConfig/);
   assert.match(editor, /export function validateDraft/);
   assert.match(editor, /PROFILE_CONTENT_LIMITS.projects/);
+  assert.match(editor, /profile-content-editor__project--empty/);
+  assert.match(editor, /profile-project-placeholder-title/);
+  assert.match(editor, /updateEmptyProject/);
   assert.match(editor, /Plain text only/);
   assert.doesNotMatch(editor, /innerHTML|iframe|new Function|eval\s*\(/);
   assert.match(shell, /<ProfileContent/);

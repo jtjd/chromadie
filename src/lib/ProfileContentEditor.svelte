@@ -14,9 +14,11 @@
 
   const dispatch = createEventDispatcher();
   const VIEW_STATE_NAMESPACE = 'profile-content-editor';
+  const EMPTY_PROJECT = Object.freeze({ title: '', description: '', url: '', visible: true });
 
   let draft = normalizeDraft(draftConfig || publishedConfig);
   let baseline = draft;
+  let emptyProject = { ...EMPTY_PROJECT };
   let status = '';
   let error = '';
   let lastIncomingKey = '';
@@ -41,6 +43,7 @@
     const cached = profileId ? readViewState(VIEW_STATE_NAMESPACE, profileId) : null;
     draft = normalizeDraft(cached?.draft || draftConfig || publishedConfig);
     baseline = normalizeDraft(draftConfig || publishedConfig);
+    emptyProject = { ...EMPTY_PROJECT };
     error = '';
     status = cached?.draft ? 'Unsaved content restored.' : '';
   }
@@ -51,6 +54,7 @@
 
   function updateContent(next) {
     draft = normalizeDraft({ ...draft, content: { ...draft.content, ...next } });
+    if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     if (profileId) writeViewState(VIEW_STATE_NAMESPACE, profileId, { draft });
     status = '';
     error = '';
@@ -67,11 +71,23 @@
   }
 
   function addProject() {
+    if (!draft.content.projects.length) {
+      document.getElementById('profile-project-placeholder-title')?.focus();
+      return;
+    }
     if (draft.content.projects.length >= maxProjects) {
       error = `You can add up to ${maxProjects} projects on this profile.`;
       return;
     }
     updateContent({ projects: [...draft.content.projects, { title: '', description: '', url: '', visible: true, order: draft.content.projects.length }] });
+  }
+
+  function updateEmptyProject(field, value) {
+    const next = { ...emptyProject, [field]: value };
+    emptyProject = next;
+    if (next.title.trim() || next.description.trim() || next.url.trim()) {
+      updateContent({ projects: [{ ...next, order: 0 }] });
+    }
   }
 
   function updateProject(index, field, value) {
@@ -100,6 +116,7 @@
   export function acceptSaved(nextConfig = draft) {
     draft = normalizeDraft(nextConfig);
     baseline = clone(draft);
+    if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
     status = '';
     error = '';
@@ -109,6 +126,7 @@
 
   export function resetChanges() {
     draft = clone(baseline);
+    if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     status = '';
     error = '';
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
@@ -119,6 +137,7 @@
   export function resetTo(nextConfig = publishedConfig) {
     draft = normalizeDraft(nextConfig);
     baseline = clone(draft);
+    if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     error = '';
     status = '';
     if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
@@ -159,7 +178,15 @@
         {/each}
       </div>
     {:else}
-      <p class="profile-content-editor__empty">No projects added yet.</p>
+      <article class="profile-content-editor__project profile-content-editor__project--empty">
+        <div class="profile-content-editor__project-heading"><strong>Project 1</strong><label class="profile-content-editor__switch"><input type="checkbox" checked={emptyProject.visible} on:change={event => updateEmptyProject('visible', event.currentTarget.checked)} /><span>Visible</span></label></div>
+        <div class="profile-content-editor__fields">
+          <label><span>Title</span><input id="profile-project-placeholder-title" value={emptyProject.title} maxlength={PROFILE_CONTENT_LIMITS.projectTitle} placeholder="Project name" on:input={event => updateEmptyProject('title', event.currentTarget.value)} /></label>
+          <label><span>Description <output>{emptyProject.description.length}/{PROFILE_CONTENT_LIMITS.projectDescription}</output></span><textarea rows="3" maxlength={PROFILE_CONTENT_LIMITS.projectDescription} placeholder="What is it?" on:input={event => updateEmptyProject('description', event.currentTarget.value)}>{emptyProject.description}</textarea></label>
+          <label><span>HTTPS URL</span><input value={emptyProject.url} maxlength={PROFILE_CONTENT_LIMITS.projectUrl} inputmode="url" placeholder="https://" on:input={event => updateEmptyProject('url', event.currentTarget.value)} /></label>
+        </div>
+        <p class="profile-content-editor__placeholder-hint">Add a title and HTTPS URL to show this project publicly.</p>
+      </article>
     {/if}
     <p class="profile-content-editor__helper">Projects require a title and HTTPS URL to appear publicly. Empty rows can be removed before saving.</p>
   </section>
@@ -174,7 +201,7 @@
   .profile-content-editor__header, .profile-content-editor__panel-heading, .profile-content-editor__project-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
   .profile-content-editor__header h2, .profile-content-editor__panel h3 { margin: 0; color: var(--site-ink, #f2f0eb); letter-spacing: -.02em; }
   .profile-content-editor__header h2 { font-size: 1.05rem; }
-  .profile-content-editor__header p, .profile-content-editor__panel-heading p, .profile-content-editor__helper, .profile-content-editor__empty { margin: .35rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; line-height: 1.5; }
+  .profile-content-editor__header p, .profile-content-editor__panel-heading p, .profile-content-editor__helper { margin: .35rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; line-height: 1.5; }
   .profile-content-editor__version { color: var(--site-faint, #7d7e87); font: .7rem/1 var(--site-mono, monospace); }
   .profile-content-editor__panel { padding: clamp(1rem, 2vw, 1.4rem); border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .55rem; background: var(--site-raised, #111319); }
   .profile-content-editor__panel-heading { align-items: flex-start; margin-bottom: 1rem; }
@@ -193,8 +220,10 @@
   .profile-content-editor__text-button:disabled { cursor: not-allowed; opacity: .42; }
   .profile-content-editor__projects { display: grid; gap: .8rem; }
   .profile-content-editor__project { display: grid; gap: .8rem; padding: .9rem; border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .45rem; background: color-mix(in srgb, var(--site-deep, #090a0d) 60%, transparent); }
+  .profile-content-editor__project--empty { border-style: dashed; }
   .profile-content-editor__project-heading strong { color: var(--site-ink, #f2f0eb); font-size: .84rem; }
   .profile-content-editor__remove { justify-self: start; color: var(--site-muted, #aaa8b0); }
+  .profile-content-editor__placeholder-hint { margin: 0; color: var(--site-faint, #7d7e87); font-size: .74rem; line-height: 1.45; }
   .profile-content-editor__message { margin: 0; color: var(--site-muted, #aaa8b0); font-size: .8rem; }
   .profile-content-editor__hint { margin: 0; color: var(--site-faint, #7d7e87); font-size: .75rem; line-height: 1.45; }
   .profile-content-editor__message[role="alert"] { color: var(--ctp-red, #f38ba8); }
