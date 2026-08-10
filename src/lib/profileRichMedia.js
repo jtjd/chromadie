@@ -84,7 +84,7 @@ export function isAnimatedCursorFile(file) {
   if (!file || typeof file !== 'object') return false;
   const name = String((/** @type {any} */ (file))?.name || '').trim().toLowerCase();
   const type = String((/** @type {any} */ (file))?.type || '').trim().toLowerCase();
-  return name.endsWith('.ani') || PROFILE_ANIMATED_CURSOR_MIME_TYPES.includes(type);
+  return name.endsWith('.ani') || type === PROFILE_ANIMATED_CURSOR_MIME;
 }
 
 function safeInteger(value, fallback = 0, minimum = 0, maximum = Number.MAX_SAFE_INTEGER) {

@@ -42,6 +42,7 @@ test('rich media paths and quotas are exact and bounded', () => {
   const aniPath = buildRichMediaStoragePath('cursor', userId, assetId, 'ani');
   assert.equal(extensionForRichMedia('cursor', { name: 'cursor.ani', type: 'application/octet-stream' }), 'ani');
   assert.equal(isAnimatedCursorFile({ name: 'cursor.ani', type: 'application/octet-stream' }), true);
+  assert.equal(isAnimatedCursorFile({ name: 'cursor.bin', type: 'application/octet-stream' }), false);
   assert.equal(validateRichMediaFile({ name: 'cursor.ani', type: 'application/x-navi-animation', size: 1024 }, 'cursor'), '');
   assert.match(validateRichMediaFile({ name: 'cursor.ani', type: 'application/x-navi-animation', size: 131073 }, 'cursor'), /128 KB/);
   assert.deepEqual(getRichMediaStorageRef(aniPath), { bucket: 'profile_media', objectPath: `${userId}/${assetId}.ani`, extension: 'ani', kind: null });
