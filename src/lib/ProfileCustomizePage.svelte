@@ -255,8 +255,8 @@
   .profile-customize-page :global(.appearance-editor__field > span),
   .profile-customize-page :global(.appearance-editor__range > span) { font-size: .75rem; }
   .profile-customize-page :global(.identity-editor .foundation-module__body) { display: block; }
-  .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { display: grid; gap: .65rem; }
-  .profile-customize-page :global(.identity-editor__fields) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto auto auto; column-gap: .65rem; row-gap: .4rem; }
+  .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: .65rem; row-gap: .4rem; }
+  .profile-customize-page :global(.identity-editor__fields) { display: contents; }
   .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / span 2; grid-row: 1 / span 2; align-self: stretch; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto; }
   .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: 100%; min-height: 0; }
   .profile-customize-page :global(.identity-editor__grid) { display: contents; }
@@ -274,7 +274,7 @@
   .profile-customize-page :global(.appearance-editor__color-input) { border-color: var(--customize-section-input-line) !important; background: var(--customize-section-input) !important; color: var(--ctp-text, #cdd6f4) !important; }
   .profile-customize-page :global(.identity-editor__field :is(input, textarea)::placeholder),
   .profile-customize-page :global(.profile-editor :is(input, textarea)::placeholder) { color: var(--ctp-overlay1, #7f849c); }
-  .profile-customize-page :global(.identity-editor__footer) { grid-column: 1 / -1; align-items: center; margin-top: .05rem; padding-top: .55rem; border-top: 1px solid var(--customize-line); }
+  .profile-customize-page :global(.identity-editor__footer) { grid-column: 3 / -1; grid-row: 3; align-items: center; justify-content: flex-end; align-self: end; margin-top: 0; padding-top: 0; border-top: 0; }
   .profile-customize-page :global(.identity-editor__hint) { display: none; }
   .profile-customize-page :global(.identity-editor__save) { min-height: 2.25rem; padding-inline: .9rem; font-size: .78rem; }
   .profile-customize-page :global(.profile-content-editor),
@@ -313,12 +313,13 @@
   @media (max-width: 72rem) {
     .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .profile-customize-page :global(.identity-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; gap: .55rem; }
+    .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
     .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / -1; grid-row: auto; align-self: start; align-content: start; grid-template-rows: none; }
     .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: auto; min-height: 4.5rem; }
     .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field),
     .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field) { grid-column: auto; grid-row: auto; }
     .profile-customize-page :global(.identity-editor__options) { grid-column: 1 / -1; grid-row: auto; }
+    .profile-customize-page :global(.identity-editor__footer) { grid-column: 1 / -1; grid-row: auto; }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
@@ -330,7 +331,7 @@
     .profile-customize-page__surface, .profile-customize-page__surface--assets { padding: .8rem; }
     .profile-customize-page__surface-heading { align-items: flex-start; flex-direction: column; }
     .profile-customize-page :global(.profile-expression-editor__compact-grid) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.identity-editor__fields) { grid-template-columns: minmax(0, 1fr); }
+    .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: auto; }
     .profile-customize-page :global(.identity-editor__options) { grid-column: auto; }
     .profile-customize-page :global(.profile-content-editor), .profile-customize-page :global(.profile-widget-editor) { grid-template-columns: minmax(0, 1fr); }
