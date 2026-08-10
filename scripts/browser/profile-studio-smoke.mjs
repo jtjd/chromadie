@@ -241,6 +241,13 @@ try {
       userInventory.update(items => [...new Set([...(Array.isArray(items) ? items : []), 'name_font_marker_tag', 'name_material_blueprint_ink', 'name_motion_typewriter_name', 'avatar_effect_ghost_double', 'border_celestial', 'cursor_trail_pixel_wake', 'profile_atmosphere_rain_window', 'profile_atmosphere_silk_folds'])]);
     })()`);
     await page.waitFor(`document.querySelector('#cosmetic-name_font option[value="name_font_marker_tag"]') && document.querySelector('#cosmetic-name_material option[value="name_material_blueprint_ink"]') && document.querySelector('#cosmetic-name_motion option[value="name_motion_typewriter_name"]') && document.querySelector('#cosmetic-avatar-effect option[value="avatar_effect_ghost_double"]') && document.querySelector('#cosmetic-profile-border option[value="border_celestial"]') && document.querySelector('#cosmetic-cursor-trail option[value="cursor_trail_pixel_wake"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_rain_window"]') && document.querySelector('#cosmetic-profile-atmosphere option[value="profile_atmosphere_silk_folds"]')`, 'owned cosmetic preview fixtures');
+    await page.waitFor(`document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length === 3 && document.querySelectorAll('.profile-cosmetics-name-preview > span').length === 0`, 'composed default name previews');
+    const defaultNamePreviewState = await page.evaluate(`(() => ({
+      renderers: document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas').length,
+      fallbackPreviews: document.querySelectorAll('.profile-cosmetics-name-preview > span').length,
+      rendererKeys: [...document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas')].map(node => node.getAttribute('data-name-renderer'))
+    }))()`);
+    assert(defaultNamePreviewState.renderers === 3 && defaultNamePreviewState.fallbackPreviews === 0 && new Set(defaultNamePreviewState.rendererKeys).size === 1, `Default name previews are not using one composed renderer: ${JSON.stringify(defaultNamePreviewState)}.`);
     await page.evaluate(`(() => {
       const select = document.querySelector('#cosmetic-name_font');
       select.value = 'name_font_marker_tag';
@@ -285,6 +292,8 @@ try {
           semantic: rect(preview.querySelector('.name-effect-canvas__semantic')),
           fontSize: getComputedStyle(preview.querySelector('.name-effect-canvas__semantic')).fontSize,
           lineHeight: getComputedStyle(preview.querySelector('.name-effect-canvas__semantic')).lineHeight,
+          fontFamily: getComputedStyle(preview.querySelector('.name-effect-canvas__semantic')).fontFamily,
+          renderer: preview.querySelector('.name-effect-canvas')?.getAttribute('data-name-renderer') || '',
           fallback: rect(preview.querySelector(':scope > span')),
           centerDelta: (() => {
             const box = preview.getBoundingClientRect();
@@ -298,7 +307,7 @@ try {
     assert(JSON.stringify(nameEffectsLayout.labels) === JSON.stringify(['Font', 'Material', 'Motion']), `Name effect labels do not match the compact reference: ${JSON.stringify(nameEffectsLayout)}.`);
     assert(nameEffectsLayout.controls.length === 3 && nameEffectsLayout.controls.every(height => height >= 36 && height <= 44), `Name effect controls are outside the readable compact range: ${JSON.stringify(nameEffectsLayout)}.`);
     assert(nameEffectsLayout.previews.length === 3 && nameEffectsLayout.previews.every(({ box, semantic, centerDelta }) => (box?.height || 0) >= 28 && (semantic?.height || 0) >= 16 && (centerDelta ?? 99) <= 4), `Name effect previews are not centered and bounded: ${JSON.stringify(nameEffectsLayout)}.`);
-    assert(new Set(nameEffectsLayout.previews.map(({ fontSize, lineHeight }) => `${fontSize}/${lineHeight}`)).size === 1, `Name effect preview text formatting changes between slots: ${JSON.stringify(nameEffectsLayout)}.`);
+    assert(new Set(nameEffectsLayout.previews.map(({ fontSize, lineHeight, fontFamily, renderer }) => `${fontSize}/${lineHeight}/${fontFamily}/${renderer}`)).size === 1, `Name effect preview text formatting changes between slots: ${JSON.stringify(nameEffectsLayout)}.`);
     const visualPreviewState = await page.evaluate(`(() => [...document.querySelectorAll('.profile-cosmetics-visual-preview')].map(preview => {
       const stage = preview.querySelector('.shop-preview-area');
       const avatar = preview.querySelector('.avatar-effect');

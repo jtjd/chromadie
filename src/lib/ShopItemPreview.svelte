@@ -15,6 +15,8 @@
   export let active = false;
   /** @type {any} */
   export let renderContext = PROFILE_RENDER_CONTEXTS.CATALOG;
+  /** @type {Record<string, string> | null} */
+  export let nameLoadout = null;
 
   const COLLECTION_TONES = Object.freeze({
     Signal: '#B7FD4D',
@@ -26,20 +28,24 @@
   });
   const PREVIEW_SURFACE = '#020306';
 
-  $: nameLayerLoadout = item?.slot === 'name_font'
+  $: itemNameLayerLoadout = item?.slot === 'name_font'
     ? { fontKey: item.css_value }
     : item?.slot === 'name_material'
       ? { materialKey: item.css_value }
         : item?.slot === 'name_motion'
           ? { motionKey: item.css_value }
           : null;
+  $: isNamePreview = Boolean(nameLoadout && typeof nameLoadout === 'object');
+  $: nameLayerLoadout = isNamePreview ? nameLoadout : itemNameLayerLoadout;
   $: isAvatar = item?.slot === 'avatar_effect';
   $: isCursor = item?.slot === 'cursor_trail';
   $: isLayout = item?.slot === 'profile_layout';
   $: isAtmosphere = item?.slot === 'profile_atmosphere';
   $: cursorPreviewKey = getCursorTrailKey(item?.css_value);
-  $: previewAccent = COLLECTION_TONES[item?.collection] || '#C7B4FF';
-  $: previewType = item?.slot === 'name_font'
+  $: previewAccent = isNamePreview ? displayColor : COLLECTION_TONES[item?.collection] || '#C7B4FF';
+  $: previewType = isNamePreview
+    ? 'name'
+    : item?.slot === 'name_font'
     ? 'font'
     : item?.slot === 'name_material'
       ? 'material'
@@ -63,6 +69,7 @@
   $: nameRendererContext = resolvedRenderContext === PROFILE_RENDER_CONTEXTS.EFFECT_CARD || resolvedRenderContext === PROFILE_RENDER_CONTEXTS.NAME_CONTROL
     ? 'card'
     : 'profile';
+  $: nameRendererMode = resolvedRenderContext === PROFILE_RENDER_CONTEXTS.NAME_CONTROL ? 'static-signature' : mode;
 
   let cursorPoint = { x: 50, y: 50 };
   let hovered = false;
@@ -89,7 +96,7 @@
         todayColor={previewAccent}
         context={nameRendererContext}
         compact={false}
-        {mode}
+        mode={nameRendererMode}
         semanticClass="shop-item-name"
       />
     </div>

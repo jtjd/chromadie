@@ -91,6 +91,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(cosmetics, /Visual effects/);
   assert.match(cosmetics, /import ShopItemPreview from '\.\/ShopItemPreview\.svelte'/);
   assert.match(cosmetics, /profile-cosmetics-name-preview[\s\S]*<ShopItemPreview/);
+  assert.match(cosmetics, /<ShopItemPreview item=\{previewItems\[slot\]\} nameLoadout=\{previewLoadout\}/);
   for (const role of ['Avatar effect', 'Profile border', 'Cursor trail', 'Profile atmosphere']) {
     assert.match(cosmetics, new RegExp(`aria-label="${role} preview"[\\s\\S]*<ShopItemPreview`));
   }
@@ -119,6 +120,10 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot select \{ height: 2\.5rem; min-height: 2\.5rem;/);
   assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot label \{ margin-bottom: \.3rem; font-size: \.72rem/);
   assert.match(shopPreview, /shop-preview-area\[data-render-context="name-control"\][\s\S]*font-size: 1\.05rem; line-height: 1;/);
+  assert.match(shopPreview, /export let nameLoadout = null/);
+  assert.match(shopPreview, /nameLayerLoadout = isNamePreview \? nameLoadout : itemNameLayerLoadout/);
+  assert.match(shopPreview, /previewAccent = isNamePreview \? displayColor/);
+  assert.match(shopPreview, /nameRendererMode = resolvedRenderContext === PROFILE_RENDER_CONTEXTS\.NAME_CONTROL \? 'static-signature' : mode/);
   assert.match(shopPreview, /previewSurface = resolvedRenderContext === PROFILE_RENDER_CONTEXTS\.CATALOG \? PREVIEW_SURFACE : 'transparent'/);
   assert.match(shopPreview, /shop-cursor-preview__pixel-route/);
   assert.match(shopPreview, /shop-atmosphere-preview \{[^}]*background:var\(--preview-surface/);

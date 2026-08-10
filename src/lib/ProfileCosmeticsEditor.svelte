@@ -200,11 +200,7 @@
                       {/each}
                     </select>
                     <div class="profile-cosmetics-name-preview" aria-label={`${NAME_SLOT_LABELS[slot]} preview`}>
-                      {#if previewItems[slot]}
-                        <ShopItemPreview item={previewItems[slot]} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.NAME_CONTROL} />
-                      {:else}
-                        <span>{username}</span>
-                      {/if}
+                      <ShopItemPreview item={previewItems[slot]} nameLoadout={previewLoadout} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.NAME_CONTROL} />
                     </div>
                   </div>
                 </div>
@@ -360,7 +356,6 @@
   .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr); gap: .35rem .7rem; align-items: end; padding-top: .15rem; border-top: 0; }
   .profile-cosmetics-name-control { position: relative; min-width: 0; }
   .profile-cosmetics-name-preview { position: absolute; right: .7rem; top: 50%; display: flex; width: min(42%, 8.5rem); height: 2rem; align-items: center; justify-content: flex-end; overflow: visible; pointer-events: none; transform: translateY(-50%); }
-  .profile-cosmetics-name-preview > span { display: grid; height: 100%; place-items: center end; overflow: visible; color: var(--ctp-lavender, #b4befe); font: 700 1.05rem/1 var(--cosmetics-body); text-overflow: ellipsis; white-space: nowrap; }
   .profile-cosmetics-name-preview :global(.shop-preview-area[data-render-context="name-control"]) { display: flex; width: 100%; height: 100%; min-height: 0; align-items: center; justify-content: flex-end; overflow: visible; }
   .profile-cosmetics-name-preview :global(.shop-preview-text) { display: flex; width: 100%; height: 100%; align-items: center; justify-content: flex-end; padding: 0; }
   .profile-cosmetics-name-preview :global(.name-effect-canvas) { display: flex; width: 100%; height: 100%; min-height: 0; align-items: center; justify-content: flex-end; overflow: visible; text-align: right; }
