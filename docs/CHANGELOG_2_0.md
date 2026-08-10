@@ -16,6 +16,9 @@ Document user-visible redesign changes by milestone.
 - The profile preview keeps background paint inside the rounded profile card,
   and mobile preview uses a bounded phone context instead of letting the card
   collapse into a narrow column.
+- Motion controls now preview the selected motion recipe instead of its item
+  key, and animated Name/cursor/atmosphere previews resume after switching
+  away from and back to a Customize tab.
 
 ## 2026-08-10 — Stabilize Profile Studio workspace ownership
 

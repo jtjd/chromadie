@@ -285,9 +285,9 @@ try {
     await page.waitFor(`(() => {
       const previews = [...document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas')];
       return previews.length === 3
-        && previews[0]?.getAttribute('data-name-font') === 'name_font_marker_tag'
-        && previews[1]?.getAttribute('data-name-material') === 'name_material_blueprint_ink'
-        && previews[2]?.getAttribute('data-name-motion') === 'name_motion_typewriter_name';
+        && previews[0]?.getAttribute('data-name-font') === 'marker-tag'
+        && previews[1]?.getAttribute('data-name-material') === 'blueprint-ink'
+        && previews[2]?.getAttribute('data-name-motion') === 'typewriter-name';
     })()`, 'progressive name composition');
     const progressiveNameState = await page.evaluate(`(() => [...document.querySelectorAll('.profile-cosmetics-name-preview .name-effect-canvas')].map(node => ({
       font: node.getAttribute('data-name-font') || '',
@@ -295,9 +295,9 @@ try {
       motion: node.getAttribute('data-name-motion') || '',
     })))()`);
     assert(JSON.stringify(progressiveNameState) === JSON.stringify([
-      { font: 'name_font_marker_tag', material: '', motion: '' },
-      { font: 'name_font_marker_tag', material: 'name_material_blueprint_ink', motion: '' },
-      { font: 'name_font_marker_tag', material: 'name_material_blueprint_ink', motion: 'name_motion_typewriter_name' }
+      { font: 'marker-tag', material: '', motion: '' },
+      { font: 'marker-tag', material: 'blueprint-ink', motion: '' },
+      { font: 'marker-tag', material: 'blueprint-ink', motion: 'typewriter-name' }
     ]), `Name controls did not use progressive composition: ${JSON.stringify(progressiveNameState)}.`);
     const nameEffectsLayout = await page.evaluate(`(() => {
       const grid = document.querySelector('.profile-cosmetics-name-grid');
@@ -367,7 +367,57 @@ try {
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
     await page.waitFor(`document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]') && document.querySelector('.profile-studio-preview [data-atmosphere="silk-folds"]') && [...document.querySelectorAll('[data-atmosphere="silk-folds"] video')].every(video => video.currentSrc.includes('/atmospheres/silk-folds/'))`, 'atmosphere renderer changes in card and live preview');
+    const beforeTabSwitch = await page.evaluate(`(() => {
+      const cursorCanvas = document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer canvas');
+      const atmosphere = document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]');
+      const video = atmosphere?.querySelector('video');
+      return {
+        cursorFrame: cursorCanvas?.toDataURL() || '',
+        atmosphereState: atmosphere?.getAttribute('data-atmosphere-state') || '',
+        videoTime: video?.currentTime || 0,
+        videoPaused: video?.paused ?? true
+      };
+    })()`);
+    await page.click('#profile-customize-tab-media', 'Media tab before animation resume check');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('[data-editor-section="media"]')?.hidden === false`, 'visible Media during animation resume check');
+    await page.click('#profile-customize-tab-layout', 'Layout tab before animation resume check');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && document.querySelector('[data-editor-section="layout"]')?.hidden === false`, 'visible Layout during animation resume check');
+    await page.click('#profile-customize-tab-appearance', 'Appearance tab after animation resume check');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('#customize-effects')?.hidden`, 'effects after tab switching');
     await page.evaluate(`document.querySelector('#customize-effects')?.scrollIntoView({ block: 'start' })`);
+    try {
+      await page.waitFor(`document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer[data-input-mode="demo"]') && document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"][data-atmosphere-state="animated"]')`, 'cosmetic animations resumed after tab switching');
+    } catch (error) {
+      const animationState = await page.evaluate(`(() => {
+        const cursor = document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer');
+        const atmospheres = [...document.querySelectorAll('[data-atmosphere="silk-folds"]')].map(node => ({
+          state: node.getAttribute('data-atmosphere-state') || '',
+          classes: node.className || '',
+          video: node.querySelector('video') ? {
+            readyState: node.querySelector('video').readyState,
+            paused: node.querySelector('video').paused,
+            currentTime: node.querySelector('video').currentTime,
+            error: node.querySelector('video').error?.message || ''
+          } : null
+        }));
+        return { cursor: cursor ? { className: cursor.className, canvas: Boolean(cursor.querySelector('canvas')) } : null, atmospheres };
+      })()`);
+      throw new Error(`${error.message} State: ${JSON.stringify(animationState)}`);
+    }
+    await delay(180);
+    const afterTabSwitch = await page.evaluate(`(() => {
+      const cursorCanvas = document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer canvas');
+      const atmosphere = document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"]');
+      const video = atmosphere?.querySelector('video');
+      return {
+        cursorFrame: cursorCanvas?.toDataURL() || '',
+        atmosphereState: atmosphere?.getAttribute('data-atmosphere-state') || '',
+        videoTime: video?.currentTime || 0,
+        videoPaused: video?.paused ?? true
+      };
+    })()`);
+    assert(afterTabSwitch.atmosphereState === 'animated' && !afterTabSwitch.videoPaused, `Atmosphere did not resume after tab switching: ${JSON.stringify({ beforeTabSwitch, afterTabSwitch })}.`);
+    assert(afterTabSwitch.cursorFrame && afterTabSwitch.cursorFrame !== beforeTabSwitch.cursorFrame, 'Cursor trail demo frame did not advance after tab switching.');
     await capture('05-effects-live-preview');
     await page.evaluate(`(() => {
       for (const id of ['cosmetic-name_font', 'cosmetic-name_material', 'cosmetic-name_motion', 'cosmetic-avatar-effect', 'cosmetic-profile-border', 'cosmetic-cursor-trail', 'cosmetic-profile-atmosphere']) {

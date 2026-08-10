@@ -21,7 +21,6 @@ export function createAtmosphereRecovery({ canRecover, getVideo, setPosterFallba
     }
 
     retryCount += 1;
-    setPosterFallback(true);
     clear();
     retryTimer = window.setTimeout(() => {
       retryTimer = null;

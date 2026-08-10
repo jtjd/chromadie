@@ -77,6 +77,11 @@
   $: cursorItems = ownedCosmetics.filter(item => item.slot === 'cursor_trail');
   $: atmosphereItems = ownedCosmetics.filter(item => item.slot === 'profile_atmosphere');
   $: previewItems = Object.fromEntries(COSMETIC_SLOTS.map(slot => [slot, $shopItems[previewLoadout[slot]] || null]));
+  $: namePreviewLayerValues = {
+    name_font: previewItems.name_font?.css_value || '',
+    name_material: previewItems.name_material?.css_value || '',
+    name_motion: previewItems.name_motion?.css_value || ''
+  };
   $: hasPendingChanges = COSMETIC_SLOTS.some(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: syncEquippedLoadout(equippedKey, $equippedItems);
@@ -200,7 +205,7 @@
                       {/each}
                     </select>
                     <div class="profile-cosmetics-name-preview" aria-label={`${NAME_SLOT_LABELS[slot]} preview`}>
-                      <ShopItemPreview item={previewItems[slot]} nameLoadout={getNamePreviewLoadoutForSlot(previewLoadout, slot)} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.NAME_CONTROL} />
+                      <ShopItemPreview item={previewItems[slot]} nameLoadout={getNamePreviewLoadoutForSlot(previewLoadout, slot, previewItems[slot]?.css_value || '', namePreviewLayerValues)} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.NAME_CONTROL} />
                     </div>
                   </div>
                 </div>

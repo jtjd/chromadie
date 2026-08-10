@@ -28,6 +28,11 @@ test('name fitting-room previews compose progressively from one baseline', () =>
     materialKey: loadout.name_material,
     motionKey: loadout.name_motion
   });
+  assert.deepEqual(getNamePreviewLoadoutForSlot(loadout, 'name_motion', 'haunt-rainbow'), {
+    fontKey: loadout.name_font,
+    materialKey: loadout.name_material,
+    motionKey: 'haunt-rainbow'
+  });
 });
 
 test('background treatment is normalized and projected to both profile renderers', () => {
@@ -80,12 +85,21 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(cursor, /inputMode = 'window'/);
   assert.match(cursor, /inputMode === 'demo'/);
   assert.match(cursor, /function demoPoint/);
+  assert.match(cursor, /resolvedInputMode === 'demo' && !reducedMotion\) startLoop/);
+  assert.match(cursor, /function updateHostVisibility/);
   assert.match(atmosphere, /IntersectionObserver/);
   assert.match(atmosphere, /pageshow/);
   assert.match(atmosphere, /on:stalled=\{handleVideoStall\}/);
+  assert.match(atmosphere, /mounted && motionActive && videoElement/);
+  assert.match(atmosphere, /function updateHostVisibility/);
+  assert.match(atmosphere, /resizeObserver = new ResizeObserver/);
+  assert.match(atmosphere, /video\?\.currentTime === 0 && video\?\.readyState < 3/);
   assert.match(nameCanvas, /loadoutValue\(loadout, 'fontKey'/);
   assert.match(nameCanvas, /loadoutValue\(loadout, 'materialKey'/);
   assert.match(nameCanvas, /loadoutValue\(loadout, 'motionKey'/);
+  assert.match(nameCanvas, /function updateHostVisibility/);
+  assert.match(nameCanvas, /updateVisibility\(entry\.contentRect\.width > 0 && entry\.contentRect\.height > 0\)/);
+  assert.match(await read('src/lib/ShopItemPreview.svelte'), /item\?\.slot === 'name_motion' \? 'animated'/);
   assert.match(richMedia, /stage_my_profile_media_replacement/);
   assert.match(richMedia, /commit_my_profile_media_replacement/);
   assert.match(richMedia, /await removeAsset\(activeCursor\)/);

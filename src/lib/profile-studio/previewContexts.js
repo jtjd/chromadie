@@ -26,7 +26,7 @@ export function getProfileRenderGeometry(context) {
     return { aspectRatio: 'auto', minHeight: '4.25rem', bleed: 'contained', motion: 'preview' };
   }
   if (resolved === PROFILE_RENDER_CONTEXTS.NAME_CONTROL) {
-    return { aspectRatio: 'auto', minHeight: '2.9rem', bleed: 'visible', motion: 'static-signature' };
+    return { aspectRatio: 'auto', minHeight: '2.9rem', bleed: 'visible', motion: 'slot-owned' };
   }
   return { aspectRatio: 'auto', minHeight: '0', bleed: 'visible', motion: 'profile' };
 }

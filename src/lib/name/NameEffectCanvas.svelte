@@ -164,6 +164,12 @@
     syncAnimationLoop();
   }
 
+  function updateHostVisibility() {
+    if (!host) return;
+    const rect = host.getBoundingClientRect?.() || {};
+    updateVisibility(Boolean(rect.width > 0 && rect.height > 0));
+  }
+
   function updateReducedMotion(nextValue) {
     reducedMotion = Boolean(nextValue);
     syncAnimationLoop();
@@ -217,6 +223,7 @@
       resizeObserver = new ResizeObserver(entries => {
         const entry = entries[0];
         if (!entry || !renderer) return;
+        updateVisibility(entry.contentRect.width > 0 && entry.contentRect.height > 0);
         syncSemanticMetrics();
         renderer.resize({
           width: entry.contentRect.width + CANVAS_BLEED_X * 2,
@@ -228,6 +235,7 @@
     } else {
       observeResize();
     }
+    updateHostVisibility();
 
     if (typeof globalThis.matchMedia === 'function') {
       mediaQuery = globalThis.matchMedia('(prefers-reduced-motion: reduce)');

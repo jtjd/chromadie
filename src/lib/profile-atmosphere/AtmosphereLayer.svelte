@@ -93,10 +93,12 @@
   let host;
   let videoElement;
   let intersectionObserver;
+  let resizeObserver;
   let recovery;
   let renderedDefinitionKey = '';
   let mounted = false;
   let posterFallback = false;
+  let resumeFrame = 0;
 
   $: definition = getAtmosphereDefinition(atmosphereKey);
   $: media = definition ? MEDIA[definition.key] : null;
@@ -138,16 +140,52 @@
   }
 
   function recoverVideo() {
-    recovery?.recover();
+    if (!mounted || !media || !active || !animated || compact || reducedMotion || !visible || !inViewport) return;
+    if (recovery) {
+      recovery.recover();
+      return;
+    }
+    // A hidden tab can leave the recovery controller holding the poster state
+    // while its video node is gone. Clear that presentation state before the
+    // next render creates a fresh video element.
+    posterFallback = false;
+    if (resumeFrame) window.cancelAnimationFrame(resumeFrame);
+    resumeFrame = window.requestAnimationFrame(() => {
+      resumeFrame = 0;
+      videoElement?.play?.().catch?.(() => {});
+    });
+  }
+
+  function updateHostVisibility() {
+    if (!host) return;
+    const rect = host.getBoundingClientRect();
+    const nextInViewport = rect.width > 0 && rect.height > 0;
+    inViewport = nextInViewport;
+    if (nextInViewport) recoverVideo();
+    else if (videoElement) videoElement.pause?.();
   }
 
   function handleVideoReady() {
     recovery?.ready();
   }
 
-  function handleVideoStall() {
-    if (motionActive) recovery?.stalled();
+  function handleVideoStall(event) {
+    if (!motionActive) return;
+    const video = event?.currentTarget || videoElement;
+    // `waiting` is expected while a newly selected local plate buffers. Keep
+    // the video node mounted during that first wait; replacing it with the
+    // poster immediately can strand the renderer in a static state.
+    if (['waiting', 'stalled'].includes(event?.type) && video?.currentTime === 0 && video?.readyState < 3) {
+      recoverVideo();
+      return;
+    }
+    recovery?.stalled();
   }
+
+  // Hidden Customize tabs keep the renderer mounted but can pause both the
+  // video element and its observers. Re-entering the viewport must explicitly
+  // resume the decorative media after Svelte has restored the video node.
+  $: if (mounted && motionActive && videoElement) recoverVideo();
 
   onMount(() => {
     mounted = true;
@@ -163,7 +201,7 @@
         getVideo: () => videoElement,
         setPosterFallback: value => { posterFallback = value; }
       });
-      if (media && active && animated && !reducedMotion && !compact) recovery.recover();
+      if (media && active && animated && !reducedMotion && !compact) recoverVideo();
     }).catch(() => {
       // Atmosphere is decorative; a failed recovery helper must not break the
       // profile shell or the rest of the live preview.
@@ -176,11 +214,21 @@
       }, { rootMargin: '160px' });
       intersectionObserver.observe(host);
     }
+    if ('ResizeObserver' in window && host) {
+      resizeObserver = new ResizeObserver(() => {
+        updateHostVisibility();
+      });
+      resizeObserver.observe(host);
+    }
+    updateHostVisibility();
     return () => {
       mounted = false;
       recovery?.destroy();
       recovery = null;
+      if (resumeFrame) window.cancelAnimationFrame(resumeFrame);
+      resumeFrame = 0;
       intersectionObserver?.disconnect();
+      resizeObserver?.disconnect();
       mediaQuery?.removeEventListener?.('change', updateReducedMotion);
       document.removeEventListener('visibilitychange', updateVisibility);
       window.removeEventListener('pageshow', recoverVideo);

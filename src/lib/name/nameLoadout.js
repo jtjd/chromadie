@@ -64,7 +64,7 @@ export function getNameItemPreviewLoadout(item, baseLoadout = {}) {
  * material, and motion completes the stack. This keeps the three previews
  * comparable while still showing the effect that belongs to each field.
  */
-export function getNamePreviewLoadoutForSlot(loadout = {}, slot) {
+export function getNamePreviewLoadoutForSlot(loadout = {}, slot, slotValue = '', layerValues = {}) {
   /** @type {Record<string, any>} */
   const input = loadout && typeof loadout === 'object' ? loadout : {};
   const next = {
@@ -72,6 +72,22 @@ export function getNamePreviewLoadoutForSlot(loadout = {}, slot) {
     materialKey: typeof input.materialKey === 'string' ? input.materialKey : (typeof input.name_material === 'string' ? input.name_material : ''),
     motionKey: typeof input.motionKey === 'string' ? input.motionKey : (typeof input.name_motion === 'string' ? input.name_motion : '')
   };
+
+  // Dashboard loadouts retain shop item keys for equip/publish RPCs. The
+  // renderer may need each item's css_value instead (notably the historical
+  // Prism Atelier row), so the fitting room can provide those code-owned
+  // values at the presentation boundary without changing persisted data.
+  const values = /** @type {Record<string, unknown>} */ (
+    layerValues && typeof layerValues === 'object' ? layerValues : {}
+  );
+  if (typeof values.name_font === 'string' && values.name_font.trim()) next.fontKey = values.name_font;
+  if (typeof values.name_material === 'string' && values.name_material.trim()) next.materialKey = values.name_material;
+  if (typeof values.name_motion === 'string' && values.name_motion.trim()) next.motionKey = values.name_motion;
+  if (typeof slotValue === 'string' && slotValue.trim()) {
+    if (slot === 'name_font') next.fontKey = slotValue;
+    if (slot === 'name_material') next.materialKey = slotValue;
+    if (slot === 'name_motion') next.motionKey = slotValue;
+  }
 
   if (slot === 'name_font') {
     return { fontKey: next.fontKey, materialKey: '', motionKey: '' };

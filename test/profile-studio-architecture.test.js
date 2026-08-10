@@ -95,7 +95,7 @@ test('renderer contexts keep catalog, effect-card, name-control, and live-profil
     aspectRatio: 'auto', minHeight: '4.25rem', bleed: 'contained', motion: 'preview'
   });
   assert.deepEqual(getProfileRenderGeometry(PROFILE_RENDER_CONTEXTS.NAME_CONTROL), {
-    aspectRatio: 'auto', minHeight: '2.9rem', bleed: 'visible', motion: 'static-signature'
+    aspectRatio: 'auto', minHeight: '2.9rem', bleed: 'visible', motion: 'slot-owned'
   });
   assert.deepEqual(getProfileRenderGeometry(PROFILE_RENDER_CONTEXTS.LIVE_PROFILE), {
     aspectRatio: 'auto', minHeight: '0', bleed: 'visible', motion: 'profile'

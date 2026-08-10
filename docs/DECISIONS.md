@@ -26,6 +26,16 @@ loosening quota or RLS rules. The live profile preview clips page background
 paint to its rounded profile card and gives mobile preview an explicit bounded
 phone context.
 
+The follow-up lifecycle fix keeps catalog item keys at the equip/publish
+boundary but projects each selected Name item's code-owned `css_value` into
+the renderer. Only the Motion name control opts into an animated canvas;
+Font and Material remain still comparison previews. Cursor, Name, and
+Atmosphere renderers also observe zero-size restoration explicitly, because a
+mounted editor can cross a `display:none` tab boundary without a reliable
+IntersectionObserver callback. Atmosphere recovery keeps the video mounted
+during transient buffering and uses the poster only after bounded recovery
+failure or a genuinely hidden/unsupported state.
+
 ## 2026-08-10 — Make Profile Studio component-owned
 
 Profile Studio is now organized as a route/state adapter around explicit

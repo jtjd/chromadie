@@ -36,6 +36,11 @@
   $: resolvedInputMode = inputMode === 'demo' ? 'demo' : 'window';
   $: isRunning = Boolean(resolvedKey && active && visible && (resolvedInputMode === 'demo' || !touchOnly));
   $: classList = ['cursor-trail-layer', className, `cursor-trail-layer--${resolvedInputMode}`, isRunning ? 'cursor-trail-layer--active' : '', reducedMotion ? 'cursor-trail-layer--reduced' : ''].filter(Boolean).join(' ');
+  // A fitting-room card remains mounted while its parent tab is hidden. The
+  // browser can pause its observers during that display:none interval, so a
+  // demo trail must be able to restart from the reactive visible/running
+  // boundary as well as from the IntersectionObserver callback.
+  $: if (mounted && visible && isRunning && resolvedInputMode === 'demo' && !reducedMotion) startLoop();
 
   const FALLBACK_COLORS = ['#8B7CF6', '#8DDCFF', '#B7FD4D', '#F7B7E2'];
 
@@ -273,9 +278,24 @@
       frame = 0;
       clear();
     } else if (isRunning) {
+      updateSize();
       if (resolvedInputMode === 'demo' && reducedMotion) drawDemoFrame(performance.now(), true);
       else if (resolvedInputMode === 'demo' || pointer) startLoop();
     }
+  }
+
+  function updateHostVisibility() {
+    if (!host) return;
+    const rect = host.getBoundingClientRect();
+    visible = rect.width > 0 && rect.height > 0;
+    if (!visible) {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+      clear();
+      return;
+    }
+    updateSize();
+    if (resolvedInputMode === 'demo' || pointer) startLoop();
   }
 
   onMount(() => {
@@ -288,13 +308,24 @@
     window.addEventListener('resize', updateInputMode, { passive: true });
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
     document.addEventListener('visibilitychange', resetOnVisibility);
-    resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver = new ResizeObserver(updateHostVisibility);
     if (host) resizeObserver.observe(host);
     if ('IntersectionObserver' in window && host) {
-      observer = new IntersectionObserver(entries => { visible = entries.some(entry => entry.isIntersecting); if (!visible) clear(); else if (pointer) startLoop(); }, { rootMargin: '160px' });
+      observer = new IntersectionObserver(entries => {
+        visible = entries.some(entry => entry.isIntersecting);
+        if (!visible) {
+          if (frame) cancelAnimationFrame(frame);
+          frame = 0;
+          clear();
+        } else {
+          updateSize();
+          if (resolvedInputMode === 'demo' || pointer) startLoop();
+        }
+      }, { rootMargin: '160px' });
       observer.observe(host);
     }
     updateSize();
+    updateHostVisibility();
     if (resolvedInputMode === 'demo') {
       if (reducedMotion) drawDemoFrame(performance.now(), true);
       else startLoop();

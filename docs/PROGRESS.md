@@ -22,6 +22,11 @@
 - Live preview now clips page background paint to a rounded profile card and
   gives mobile mode an explicit bounded phone/card geometry. Reduced-motion
   behavior remains respected by both atmosphere and cursor renderers.
+- Fixed the Motion fitting-room preview to use the selected catalog `css_value`
+  and its actual animated Name renderer, while keeping Font and Material still
+  for comparison. Name, cursor, and atmosphere renderers now explicitly
+  resume after hidden Customize tabs restore their geometry; transient video
+  buffering no longer immediately strands an atmosphere on its poster.
 
 ## Component-owned Profile Studio dashboard — 2026-08-10
 

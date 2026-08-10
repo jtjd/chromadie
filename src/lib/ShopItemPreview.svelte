@@ -70,7 +70,13 @@
   $: nameRendererContext = resolvedRenderContext === PROFILE_RENDER_CONTEXTS.EFFECT_CARD || resolvedRenderContext === PROFILE_RENDER_CONTEXTS.NAME_CONTROL
     ? 'card'
     : 'profile';
-  $: nameRendererMode = resolvedRenderContext === PROFILE_RENDER_CONTEXTS.NAME_CONTROL ? 'static-signature' : mode;
+  // Font and material controls stay still for easy comparison. The Motion
+  // control owns the only animated name-control canvas, so selecting a motion
+  // visibly demonstrates the actual movement instead of showing a static
+  // material-colored signature.
+  $: nameRendererMode = resolvedRenderContext === PROFILE_RENDER_CONTEXTS.NAME_CONTROL
+    ? (item?.slot === 'name_motion' ? 'animated' : 'static-signature')
+    : mode;
 
   let hovered = false;
 </script>

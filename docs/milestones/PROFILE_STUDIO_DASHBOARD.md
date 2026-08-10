@@ -2,6 +2,11 @@
 
 Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, the Customize control audit, three-tab Customize IA, linked surface/effect preview controls, renderer-backed cosmetic cards, media lifecycle recovery, and bounded mobile Live preview implemented 2026-08-10
 
+The latest renderer follow-up also projects catalog CSS values at the preview
+boundary, gives Motion its animated Name renderer, and explicitly resumes
+Name, cursor, and atmosphere media when mounted editors return from a hidden
+Customize tab.
+
 ## Scope
 
 The authenticated profile-settings route is the Profile Studio dashboard. It
