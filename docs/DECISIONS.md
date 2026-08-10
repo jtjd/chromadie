@@ -4007,5 +4007,6 @@ Collection preview events must be forwarded through Customize before they
 reach the persistent Profile Studio preview. Atmosphere media is keyed by its
 allow-listed renderer key so switching scenes replaces the finite video/poster
 element instead of mutating a stale `<source>` node. Name previews keep the
-same production renderer but use a larger, vertically centered control-side
-sample. No saved configuration or equip authority changes.
+same production renderer, but the fitting-room row uses terse Font/Material/
+Motion labels and compact reference control geometry. No saved configuration
+or equip authority changes.

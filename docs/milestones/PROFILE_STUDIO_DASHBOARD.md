@@ -142,4 +142,5 @@ Collection cosmetic events now flow through the Customize shell into the
 persistent preview, including atmosphere drafts. AtmosphereLayer keys its
 finite media plate by the validated scene key so selecting a different scene
 updates both the fitting-room card and Live preview. Name-effect samples use a
-larger centered control-side treatment for readable alignment.
+compact, right-aligned control-side treatment with terse Font/Material/Motion
+labels and fixed row geometry matching the supplied fitting-room reference.

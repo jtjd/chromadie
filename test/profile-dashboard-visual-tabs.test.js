@@ -76,6 +76,9 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(customize, /background: var\(--customize-control-surface\) !important/);
   assert.match(customize, /profile-editor \.profile-template-picker__premium\) \{ display: none !important; \}/);
   assert.match(cosmetics, /Name effects/);
+  assert.match(cosmetics, /name_font: 'Font'/);
+  assert.match(cosmetics, /name_material: 'Material'/);
+  assert.match(cosmetics, /name_motion: 'Motion'/);
   assert.match(cosmetics, /Visual effects/);
   assert.match(cosmetics, /import ShopItemPreview from '\.\/ShopItemPreview\.svelte'/);
   assert.match(cosmetics, /profile-cosmetics-name-preview[\s\S]*<ShopItemPreview/);
@@ -102,4 +105,6 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
   assert.match(profileShell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(customize, /profile-expression-editor__compact-grid\) \{ grid-template-columns: minmax\(0, \.9fr\)/);
+  assert.match(customize, /profile-cosmetics-name-grid \.profile-cosmetics-slot select\) \{ height: 1\.65rem !important; min-height: 1\.65rem !important/);
+  assert.match(customize, /profile-cosmetics-name-grid \.profile-cosmetics-slot label\) \{ margin-bottom: \.15rem; font-size: \.6rem/);
 });

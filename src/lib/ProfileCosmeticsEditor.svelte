@@ -39,6 +39,14 @@
     name_material: 'Plain material',
     name_motion: 'Still motion'
   });
+  // The fitting-room row is intentionally terse.  The surrounding heading
+  // already establishes that these controls apply to the username, so the
+  // reference layout uses the slot names on their own.
+  const NAME_SLOT_LABELS = Object.freeze({
+    name_font: 'Font',
+    name_material: 'Material',
+    name_motion: 'Motion'
+  });
   const COSMETIC_SLOTS = Object.freeze([
     ...NAME_COMPOSABLE_SLOTS,
     'profile_border',
@@ -181,7 +189,7 @@
             {#each NAME_COMPOSABLE_SLOTS as slot (slot)}
               <div class="profile-cosmetics-slot">
                 <div>
-                  <label for={`cosmetic-${slot}`}>{SHOP_SLOT_LABELS[slot]}</label>
+                  <label for={`cosmetic-${slot}`}>{NAME_SLOT_LABELS[slot]}</label>
                   <div class="profile-cosmetics-name-control">
                     <select id={`cosmetic-${slot}`} value={previewLoadout[slot] || ''} disabled={!!loadingSlot} on:change={event => previewSlot(slot, event.currentTarget.value)}>
                       <option value="">{NAME_DEFAULT_LABELS[slot]}</option>
@@ -189,7 +197,7 @@
                         <option value={item.item_key}>{item.name}</option>
                       {/each}
                     </select>
-                    <div class="profile-cosmetics-name-preview" aria-label={`${SHOP_SLOT_LABELS[slot]} preview`}>
+                    <div class="profile-cosmetics-name-preview" aria-label={`${NAME_SLOT_LABELS[slot]} preview`}>
                       {#if previewItems[slot]}
                         <ShopItemPreview item={previewItems[slot]} {username} {displayColor} {avatarSrc} active={true} />
                       {:else}
@@ -321,24 +329,25 @@
   .profile-cosmetics-controls__heading span { color: var(--cosmetics-expression); font: 700 var(--cosmetics-label-size) / 1.2 var(--cosmetics-mono); letter-spacing: .12em; text-transform: uppercase; }
   .profile-cosmetics-controls__heading strong { color: var(--cosmetics-text); font-size: var(--customize-subheading-size, .88rem); line-height: 1.25; }
   .profile-cosmetics-controls__heading p { margin: 0; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); line-height: 1.45; }
-  .profile-cosmetics-section-heading { position: relative; display: grid; gap: .25rem; padding: .35rem 0 .1rem; border-bottom: 1px solid var(--cosmetics-border); }
-  .profile-cosmetics-section-heading h3 { margin: 0; color: var(--cosmetics-text); font-size: .88rem; }
-  .profile-cosmetics-section-heading p { margin: 0 0 .3rem; color: var(--cosmetics-muted); font-size: .7rem; }
-  .profile-cosmetics-section-heading button { position: absolute; top: .1rem; right: 0; min-height: var(--cosmetics-primary-height); padding: .4rem .65rem; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); background: transparent; color: var(--cosmetics-secondary); font: 600 var(--cosmetics-label-size)/1 var(--cosmetics-body); cursor: pointer; }
+  .profile-cosmetics-section-heading { position: relative; display: grid; gap: .1rem; padding: .2rem 0 .08rem; border-bottom: 1px solid var(--cosmetics-border); }
+  .profile-cosmetics-section-heading h3 { margin: 0; color: var(--cosmetics-text); font-size: .72rem; line-height: 1.15; }
+  .profile-cosmetics-section-heading p { margin: 0 0 .15rem; color: var(--cosmetics-muted); font-size: .56rem; line-height: 1.25; }
+  .profile-cosmetics-section-heading button { position: absolute; top: 0; right: 0; min-height: 1.5rem; padding: .2rem .5rem; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); background: transparent; color: var(--cosmetics-secondary); font: 600 .58rem/1 var(--cosmetics-body); cursor: pointer; }
   .profile-cosmetics-section-heading button:hover, .profile-cosmetics-section-heading button:focus-visible { border-color: var(--cosmetics-focus); color: var(--cosmetics-text); }
   .profile-cosmetics-section-heading button:focus-visible { outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
   .profile-cosmetics-section-heading--visual { margin-top: .3rem; }
-  .profile-cosmetics-name-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; padding: .65rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--cosmetics-inset); }
+  .profile-cosmetics-name-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: .35rem .45rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--cosmetics-inset); }
   .profile-cosmetics-visual-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; }
   .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr); gap: .35rem .7rem; align-items: end; padding-top: .15rem; border-top: 0; }
   .profile-cosmetics-name-control { position: relative; min-width: 0; }
-  .profile-cosmetics-name-preview { position: absolute; right: .75rem; top: 50%; display: flex; width: min(44%, 10rem); height: 2rem; align-items: center; justify-content: flex-end; overflow: hidden; pointer-events: none; transform: translateY(-50%); }
-  .profile-cosmetics-name-preview > span { display: grid; height: 100%; place-items: center end; overflow: hidden; color: var(--ctp-lavender, #b4befe); font: 700 1rem/1.1 var(--cosmetics-body); text-overflow: ellipsis; white-space: nowrap; }
+  .profile-cosmetics-name-preview { position: absolute; right: .55rem; top: 50%; display: flex; width: min(42%, 7.5rem); height: 1.55rem; align-items: center; justify-content: flex-end; overflow: hidden; pointer-events: none; transform: translateY(-50%); }
+  .profile-cosmetics-name-preview > span { display: grid; height: 100%; place-items: center end; overflow: hidden; color: var(--ctp-lavender, #b4befe); font: 700 .86rem/1.1 var(--cosmetics-body); text-overflow: ellipsis; white-space: nowrap; }
   .profile-cosmetics-name-preview :global(.shop-preview-area) { display: flex; width: 100%; height: 100%; min-height: 0; align-items: center; justify-content: flex-end; aspect-ratio: auto; padding: 0; border-radius: 0; background: transparent; }
   .profile-cosmetics-name-preview :global(.shop-preview-text) { display: flex; width: 100%; height: 100%; align-items: center; justify-content: flex-end; padding: 0; }
   .profile-cosmetics-name-preview :global(.name-effect-canvas) { display: flex; width: 100%; height: 100%; align-items: center; justify-content: flex-end; text-align: right; }
-  .profile-cosmetics-name-preview :global(.name-effect-canvas__semantic) { font-size: 1rem !important; line-height: 1.1 !important; }
-  .profile-cosmetics-name-control select { padding-right: 5rem; }
+  .profile-cosmetics-name-preview :global(.name-effect-canvas__semantic) { font-size: .86rem !important; line-height: 1.1 !important; }
+  .profile-cosmetics-name-control select { padding-right: 4.5rem; }
+  .profile-cosmetics-name-grid .profile-cosmetics-slot + .profile-cosmetics-slot { margin-left: .45rem; padding-left: .55rem; border-left: 1px solid var(--cosmetics-border); }
   .profile-cosmetics-visual-preview { position: relative; display: grid; width: 100%; height: 4.25rem; min-height: 4.25rem; place-items: stretch; overflow: hidden; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--ctp-mantle, #181825); }
   .profile-cosmetics-visual-preview :global(.shop-preview-area) { width: 100% !important; height: 100% !important; min-height: 0 !important; aspect-ratio: auto !important; padding: .35rem !important; border-radius: 0; }
   .profile-cosmetics-visual-preview :global(.shop-avatar-preview) { width: 3.8rem; height: 3.8rem; }

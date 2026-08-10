@@ -2969,5 +2969,11 @@ announced accessibly and successful equips continue to use the existing toast.
 The follow-up interaction pass forwards Collection cosmetic events through the
 Customize shell, so atmosphere drafts now update the persistent Live preview as
 well as their own card. Atmosphere renderer keys remount the finite media plate
-when a scene changes, and name samples are larger and vertically centered in
-their controls.
+when a scene changes, and name samples are right-aligned and vertically
+centered in their controls.
+
+The name-effects fitting-room row now follows the supplied compact reference:
+it uses Font, Material, and Motion labels, short select controls, aligned
+renderer samples, and separators between the three composable slots. Browser
+smoke asserts the labels and rendered control heights so the row cannot regress
+into the expanded dashboard control rhythm.

@@ -2413,3 +2413,12 @@ direct route behavior.
 - Keyed atmosphere media by its validated renderer key so switching scenes
   replaces the video/poster element instead of retaining the prior source.
 - Increased and vertically centered the name-effect samples beside each select.
+
+## 2026-08-10 — Match compact name-effect formatting
+
+- Shortened the composable slot labels to Font, Material, and Motion, matching
+  the reference fitting-room row while retaining the full heading context.
+- Reduced the heading, reset action, labels, and select heights to the compact
+  reference rhythm and added slot separators with right-aligned renderer samples.
+- Added browser smoke coverage for the three labels and bounded control/row
+  heights; no cosmetic persistence or equip authority changed.

@@ -524,6 +524,15 @@
   .profile-customize-page :global(.profile-cosmetics-visual-grid .profile-cosmetics-slot)::before { content: ''; position: absolute; top: .45rem; left: .45rem; z-index: 1; width: .34rem; height: .34rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); }
   .profile-customize-page :global(.profile-cosmetics-visual-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: 2.25rem; }
+  /* Name effects use the compact fitting-room rhythm from the reference:
+   * small slot labels, short controls, and a right-aligned renderer sample
+   * inside each select well. Keep this override here because the page-level
+   * control contract otherwise expands every cosmetic select to the primary
+   * action height. */
+  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-slot label) { margin-bottom: .15rem; font-size: .6rem; line-height: 1.1; }
+  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-slot select) { height: 1.65rem !important; min-height: 1.65rem !important; padding: .2rem 4.5rem .2rem .55rem; font-size: .72rem; line-height: 1; }
+  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-name-preview) { height: 1.4rem; }
+  .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-name-preview .name-effect-canvas__semantic) { font-size: .82rem !important; line-height: 1.05 !important; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { grid-template-columns: 1fr; }
   /* The collection editor is a single tabbed surface.  Keep its heading,
    * name controls, visual controls, and apply action in one full-width stack
