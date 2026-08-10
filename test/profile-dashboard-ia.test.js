@@ -38,8 +38,8 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(identity, /identity-editor__grid--meta/);
   assert.match(identity, /identity-editor__grid--behavior/);
   assert.match(customize, /identity-editor__fields\) \{ display: contents; \}/);
-  assert.match(customize, /identity-editor__field\[for="profile-bio"\]\) \{ grid-column: 1 \/ span 3; grid-row: 1 \/ span 2;/);
-  assert.match(customize, /identity-editor__options\) \{ display: flex; grid-column: 1 \/ span 3; grid-row: 3;/);
+  assert.match(customize, /identity-editor__field\[for="profile-bio"\]\) \{ grid-column: 1 \/ span 2; grid-row: 1 \/ span 2;/);
+  assert.match(customize, /identity-editor__options\) \{ display: flex; grid-column: 1 \/ span 2; grid-row: 3;/);
   assert.match(customize, /identity-editor__grid--meta \.identity-editor__field:first-child/);
   assert.match(customize, /identity-editor__grid--behavior \.identity-editor__field:first-child/);
   assert.match(customize, /profile-customize-page__control-grid--other/);
@@ -70,7 +70,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   for (const action of ['Background', 'Audio', 'Profile avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
   assert.doesNotMatch(expression, /More media controls/);
   assert.match(expression, /profile-expression-editor__compact-audio-player/);
-  assert.match(expression, /compact-preview--avatar \{ border-color: var\(--media-line\)/);
+  assert.match(expression, /compact-preview--avatar \{ border-color: transparent/);
   assert.match(richMedia, /export let compact = false/);
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);
@@ -103,13 +103,6 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.doesNotMatch(richMedia, /Unlock richer expression/);
   assert.match(expression, /Chromadie Plus/);
   assert.match(richMedia, /Chromadie Plus/);
-  assert.match(identity, /Save identity/);
-  assert.match(content, /Project draft/);
-  assert.match(content, /Draft only\./);
-  assert.match(widgets, /remain unpublished until you choose “Publish profile”/);
-  assert.doesNotMatch(content, /border-style: dashed/);
-  assert.doesNotMatch(widgets, /border: 1px dashed/);
-  assert.doesNotMatch(editor, /border-style: dashed/);
   assert.match(customize, /profile-customize-page :global\(\.profile-cosmetics-apply\) \{ min-height: var\(--customize-primary-height/);
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);

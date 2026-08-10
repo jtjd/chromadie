@@ -45,7 +45,7 @@
     baseline = normalizeDraft(draftConfig || publishedConfig);
     emptyProject = { ...EMPTY_PROJECT };
     error = '';
-    status = cached?.draft ? 'Unsaved content draft restored.' : '';
+    status = cached?.draft ? 'Unsaved content restored.' : '';
   }
 
   function emitDirty(value = null) {
@@ -153,52 +153,47 @@
   </header>
 
   <section class="profile-content-editor__panel" aria-labelledby="profile-content-about-title">
-    <div class="profile-content-editor__panel-heading"><div class="profile-content-editor__panel-heading-copy"><h3 id="profile-content-about-title">About</h3></div><label class="profile-content-editor__switch"><input type="checkbox" checked={draft.content.about.visible} on:change={event => updateAbout('visible', event.currentTarget.checked)} /><span>Visible</span></label></div>
-    <div class="profile-content-editor__fields profile-content-editor__about-fields">
-      <label><span>Heading <output>{draft.content.about.heading.length}/{PROFILE_CONTENT_LIMITS.aboutHeading}</output></span><input value={draft.content.about.heading} maxlength={PROFILE_CONTENT_LIMITS.aboutHeading} on:input={event => updateAbout('heading', event.currentTarget.value)} /></label>
-      <label><span>Short introduction <output>{(draft.content.about.markdown || draft.content.about.body || '').length}/{PROFILE_CONTENT_LIMITS.aboutMarkdown}</output></span><textarea rows="5" maxlength={PROFILE_CONTENT_LIMITS.aboutMarkdown} placeholder="A short note about your work, interests, or current chapter." on:input={event => updateAbout('body', event.currentTarget.value)}>{draft.content.about.markdown || draft.content.about.body}</textarea></label>
+    <div class="profile-content-editor__panel-heading"><h3 id="profile-content-about-title">About</h3><label class="profile-content-editor__switch"><input type="checkbox" checked={draft.content.about.visible} on:change={event => updateAbout('visible', event.currentTarget.checked)} /><span>Visible</span></label></div>
+    <div class="profile-content-editor__fields">
+      <label><span>Heading</span><input value={draft.content.about.heading} maxlength={PROFILE_CONTENT_LIMITS.aboutHeading} on:input={event => updateAbout('heading', event.currentTarget.value)} /></label>
+        <label><span>Short introduction <output>{(draft.content.about.markdown || draft.content.about.body || '').length}/{PROFILE_CONTENT_LIMITS.aboutMarkdown}</output></span><textarea rows="5" maxlength={PROFILE_CONTENT_LIMITS.aboutMarkdown} placeholder="A short note about your work, interests, or current chapter." on:input={event => updateAbout('body', event.currentTarget.value)}>{draft.content.about.markdown || draft.content.about.body}</textarea></label>
     </div>
-    <p class="profile-content-editor__helper">Plain text only is always safe. The safe Markdown subset supports emphasis, lists, code, and HTTPS links; raw HTML and scripts are removed.</p>
+    <p class="profile-content-editor__helper">Safe Markdown subset: emphasis, lists, code, and HTTPS links. Plain text only is always safe; raw HTML and scripts are discarded.</p>
   </section>
 
   <section class="profile-content-editor__panel" aria-labelledby="profile-content-projects-title">
-    <div class="profile-content-editor__panel-heading"><div class="profile-content-editor__panel-heading-copy"><h3 id="profile-content-projects-title">Projects</h3><p>Show the places, work, or communities you want people to explore.</p></div></div>
+    <div class="profile-content-editor__panel-heading"><div><h3 id="profile-content-projects-title">Projects</h3><p>Show the places, work, or communities you want people to explore.</p></div><button type="button" class="profile-content-editor__text-button" on:click={addProject} disabled={draft.content.projects.length >= maxProjects}>Add project</button></div>
     {#if draft.content.projects.length}
       <div class="profile-content-editor__projects">
         {#each draft.content.projects as project, index (index)}
-          <article class="profile-content-editor__project" class:profile-content-editor__project--draft={!project.title || !project.url}>
-            <div class="profile-content-editor__project-heading"><strong>Project {index + 1}{#if !project.title || !project.url}<span class="profile-content-editor__project-status">Draft</span>{/if}</strong><label class="profile-content-editor__switch"><input type="checkbox" checked={project.visible} on:change={event => updateProject(index, 'visible', event.currentTarget.checked)} /><span>{project.title && project.url ? 'Visible' : 'Visible when complete'}</span></label></div>
+          <article class="profile-content-editor__project">
+            <div class="profile-content-editor__project-heading"><strong>Project {index + 1}</strong><label class="profile-content-editor__switch"><input type="checkbox" checked={project.visible} on:change={event => updateProject(index, 'visible', event.currentTarget.checked)} /><span>Visible</span></label></div>
             <div class="profile-content-editor__fields">
-              <label><span>Title <output>{project.title.length}/{PROFILE_CONTENT_LIMITS.projectTitle}</output></span><input value={project.title} maxlength={PROFILE_CONTENT_LIMITS.projectTitle} placeholder="Project name" on:input={event => updateProject(index, 'title', event.currentTarget.value)} /></label>
+              <label><span>Title</span><input value={project.title} maxlength={PROFILE_CONTENT_LIMITS.projectTitle} placeholder="Project name" on:input={event => updateProject(index, 'title', event.currentTarget.value)} /></label>
               <label><span>Description <output>{project.description.length}/{PROFILE_CONTENT_LIMITS.projectDescription}</output></span><textarea rows="3" maxlength={PROFILE_CONTENT_LIMITS.projectDescription} placeholder="What is it?" on:input={event => updateProject(index, 'description', event.currentTarget.value)}>{project.description}</textarea></label>
               <label><span>HTTPS URL</span><input value={project.url} maxlength={PROFILE_CONTENT_LIMITS.projectUrl} inputmode="url" placeholder="https://" on:input={event => updateProject(index, 'url', event.currentTarget.value)} /></label>
             </div>
-            {#if !project.title || !project.url}<p class="profile-content-editor__placeholder-hint"><strong>Draft only.</strong> Add a title and HTTPS URL before this project can appear publicly.</p>{/if}
             <button type="button" class="profile-content-editor__remove" on:click={() => removeProject(index)}>Remove project</button>
           </article>
         {/each}
       </div>
     {:else}
       <article class="profile-content-editor__project profile-content-editor__project--empty">
-        <div class="profile-content-editor__project-heading"><strong>Project draft</strong><label class="profile-content-editor__switch"><input type="checkbox" checked={emptyProject.visible} on:change={event => updateEmptyProject('visible', event.currentTarget.checked)} /><span>Visible when complete</span></label></div>
+        <div class="profile-content-editor__project-heading"><strong>Project 1</strong><label class="profile-content-editor__switch"><input type="checkbox" checked={emptyProject.visible} on:change={event => updateEmptyProject('visible', event.currentTarget.checked)} /><span>Visible</span></label></div>
         <div class="profile-content-editor__fields">
-          <label><span>Title <output>{emptyProject.title.length}/{PROFILE_CONTENT_LIMITS.projectTitle}</output></span><input id="profile-project-placeholder-title" value={emptyProject.title} maxlength={PROFILE_CONTENT_LIMITS.projectTitle} placeholder="Project name" on:input={event => updateEmptyProject('title', event.currentTarget.value)} /></label>
+          <label><span>Title</span><input id="profile-project-placeholder-title" value={emptyProject.title} maxlength={PROFILE_CONTENT_LIMITS.projectTitle} placeholder="Project name" on:input={event => updateEmptyProject('title', event.currentTarget.value)} /></label>
           <label><span>Description <output>{emptyProject.description.length}/{PROFILE_CONTENT_LIMITS.projectDescription}</output></span><textarea rows="3" maxlength={PROFILE_CONTENT_LIMITS.projectDescription} placeholder="What is it?" on:input={event => updateEmptyProject('description', event.currentTarget.value)}>{emptyProject.description}</textarea></label>
           <label><span>HTTPS URL</span><input value={emptyProject.url} maxlength={PROFILE_CONTENT_LIMITS.projectUrl} inputmode="url" placeholder="https://" on:input={event => updateEmptyProject('url', event.currentTarget.value)} /></label>
         </div>
-        <p class="profile-content-editor__placeholder-hint"><strong>Draft only.</strong> Add a title and HTTPS URL before this project can appear publicly.</p>
+        <p class="profile-content-editor__placeholder-hint">Add a title and HTTPS URL to show this project publicly.</p>
       </article>
     {/if}
-    <div class="profile-content-editor__project-actions">
-      <button type="button" class="profile-content-editor__text-button" on:click={addProject} disabled={draft.content.projects.length >= maxProjects}>Add project</button>
-      <span class="profile-content-editor__project-count">{draft.content.projects.length}/{maxProjects} project slots used</span>
-    </div>
-    <p class="profile-content-editor__helper">Only completed projects are public. Each project needs a title and HTTPS URL; incomplete drafts stay private until you finish them.</p>
+    <p class="profile-content-editor__helper">Projects require a title and HTTPS URL to appear publicly. Empty rows can be removed before saving.</p>
   </section>
 
   {#if error}<p class="profile-content-editor__message" role="alert">{error}</p>{/if}
   {#if status}<p class="profile-content-editor__message" role="status" aria-live="polite">{status}</p>{/if}
-  <p class="profile-content-editor__hint">Changes are staged in this editor until you publish. Use the dashboard controls when you are ready.</p>
+  <p class="profile-content-editor__hint">Changes are staged in this workspace. Publish the profile from the dashboard controls.</p>
 </section>
 
 <style>
@@ -232,7 +227,6 @@
     font-family: var(--content-font-body);
   }
   .profile-content-editor__header, .profile-content-editor__panel-heading, .profile-content-editor__project-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .profile-content-editor__header > div, .profile-content-editor__panel-heading-copy { min-width: 0; }
   .profile-content-editor__header h2, .profile-content-editor__panel h3 { margin: 0; color: var(--content-text); letter-spacing: -.02em; }
   .profile-content-editor__header h2 { font-size: var(--customize-section-heading-size, 1rem); line-height: 1.2; }
   .profile-content-editor__header p, .profile-content-editor__panel-heading p, .profile-content-editor__helper { margin: .3rem 0 0; color: var(--content-text-muted); font-size: .78rem; line-height: 1.5; }
@@ -243,7 +237,7 @@
   .profile-content-editor__panel-heading h3 { font-size: var(--content-heading-size); line-height: 1.25; }
   .profile-content-editor__fields { display: grid; gap: .65rem; min-width: 0; }
   .profile-content-editor__fields label { display: grid; gap: .35rem; min-width: 0; color: var(--content-text-secondary); font-size: var(--content-label-size); line-height: 1.35; }
-  .profile-content-editor__fields label > span { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; color: inherit; }
+  .profile-content-editor__fields label > span { display: flex; justify-content: space-between; gap: .5rem; color: inherit; }
   .profile-content-editor__fields output { color: var(--content-text-faint); font: .72rem/1 var(--content-font-mono); white-space: nowrap; }
   .profile-content-editor__fields :is(input, textarea) { width: 100%; min-width: 0; min-height: var(--content-primary-height); box-sizing: border-box; padding: .5rem .65rem; border: 1px solid var(--content-border-strong); border-radius: var(--content-radius); outline: 0; background: var(--content-surface-raised); color: var(--content-text); font: 500 var(--content-control-size) / 1.35 var(--content-font-body); transition: border-color .15s ease, box-shadow .15s ease; }
   .profile-content-editor__fields textarea { min-height: 5rem; resize: vertical; }
@@ -258,24 +252,14 @@
   .profile-content-editor__remove:hover { border-color: var(--content-danger); background: color-mix(in srgb, var(--content-danger) 12%, transparent); }
   .profile-content-editor__text-button:focus-visible, .profile-content-editor__remove:focus-visible { outline: 2px solid var(--content-focus); outline-offset: 2px; }
   .profile-content-editor__text-button:disabled { cursor: not-allowed; opacity: .45; }
-  .profile-content-editor__about-fields { grid-template-columns: minmax(8rem, .75fr) minmax(0, 1.25fr) !important; align-items: start; }
   .profile-content-editor__projects { display: grid; gap: .65rem; }
-  .profile-content-editor__project { display: grid; gap: .65rem; min-width: 0; padding: .7rem; border: 1px solid var(--content-border-strong); border-radius: var(--content-radius); background: var(--content-surface-inset) !important; }
-  .profile-content-editor__project--empty { border-style: solid; }
+  .profile-content-editor__project { display: grid; gap: .65rem; min-width: 0; padding: .7rem; border: 1px solid color-mix(in srgb, var(--content-border) 72%, transparent); border-radius: var(--content-radius); background: color-mix(in srgb, var(--content-surface-inset) 56%, transparent); }
+  .profile-content-editor__project--empty { border-style: dashed; border-color: color-mix(in srgb, var(--content-add) 42%, var(--content-border)); }
   .profile-content-editor__project-heading strong { color: var(--content-text); font-size: var(--content-heading-size); line-height: 1.25; }
-  .profile-content-editor__project-status { margin-left: .45rem; color: var(--content-text-faint); font: .68rem/1 var(--content-font-mono); letter-spacing: .06em; text-transform: uppercase; }
   .profile-content-editor__placeholder-hint { margin: 0; color: var(--content-text-muted); font-size: .76rem; line-height: 1.45; }
-  .profile-content-editor__placeholder-hint strong { color: var(--content-text-secondary); font-weight: 600; }
-  .profile-content-editor__project-actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
-  .profile-content-editor__project-count { color: var(--content-text-faint); font: .72rem/1 var(--content-font-mono); white-space: nowrap; }
   .profile-content-editor__message { margin: 0; color: var(--content-text-muted); font-size: .78rem; line-height: 1.45; }
   .profile-content-editor__message[role="status"] { color: var(--content-neutral); }
   .profile-content-editor__message[role="alert"] { color: var(--content-danger); }
   .profile-content-editor__hint { margin: 0; color: var(--content-text-muted); font-size: .76rem; line-height: 1.45; }
-  @media (max-width: 38rem) { .profile-content-editor__about-fields { grid-template-columns: minmax(0, 1fr) !important; } }
-  @media (max-width: 34rem) {
-    .profile-content-editor__header, .profile-content-editor__panel-heading, .profile-content-editor__project-heading { align-items: stretch; flex-direction: column; }
-    .profile-content-editor__project-actions { align-items: stretch; flex-direction: column; }
-    .profile-content-editor__text-button { width: 100%; }
-  }
+  @media (max-width: 34rem) { .profile-content-editor__header, .profile-content-editor__panel-heading, .profile-content-editor__project-heading { align-items: stretch; flex-direction: column; } }
 </style>

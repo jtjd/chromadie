@@ -64,7 +64,7 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(sqlTest, /composition save accepted appearance or effect keys/);
   assert.match(sqlTest, /config_composition_publish/);
   assert.match(layout, /function setModuleSize/);
-  assert.match(layout, /Always visible · fixed order/);
+  assert.match(layout, /Fixed system surface/);
   assert.match(layout, /Complete each link with a label and an HTTPS URL/);
   assert.match(settings, /configurationPreview = configurationPreview/);
 });

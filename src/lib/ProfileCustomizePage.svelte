@@ -196,9 +196,9 @@
     --customize-text-secondary: var(--ctp-subtext1, #bac2de);
     --customize-text-muted: var(--ctp-subtext0, #a6adc8);
     --customize-text-faint: var(--ctp-overlay1, #7f849c);
-    --customize-border: color-mix(in srgb, var(--ctp-overlay0, #6c7086) 68%, transparent);
+    --customize-border: var(--ctp-overlay0, #6c7086);
     --customize-border-strong: var(--ctp-surface2, #585b70);
-    --customize-border-subtle: color-mix(in srgb, var(--ctp-overlay0, #6c7086) 38%, transparent);
+    --customize-border-subtle: color-mix(in srgb, var(--ctp-overlay0, #6c7086) 54%, transparent);
     --customize-focus: var(--ctp-lavender, #b4befe);
     --customize-accent-primary: var(--ctp-teal, #94e2d5);
     --customize-accent-secondary: var(--ctp-sky, #89dceb);
@@ -342,16 +342,16 @@
   .profile-customize-page :global(.profile-editor__panel-heading > span),
   .profile-customize-page :global(.profile-widget-editor__version) { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
   .profile-customize-page :global(.identity-editor .foundation-module__body) { display: block; }
-  .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: .65rem; row-gap: .4rem; }
+  .profile-customize-page :global(.identity-editor .foundation-module__body > .identity-editor__form) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: .65rem; row-gap: .4rem; }
   .profile-customize-page :global(.identity-editor__fields) { display: contents; }
-  .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / span 3; grid-row: 1 / span 2; align-self: stretch; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .profile-customize-page :global(.identity-editor__field[for="profile-bio"]) { grid-column: 1 / span 2; grid-row: 1 / span 2; align-self: stretch; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto; }
   .profile-customize-page :global(.identity-editor__field[for="profile-bio"] textarea) { height: 100%; min-height: 0; }
   .profile-customize-page :global(.identity-editor__grid) { display: contents; }
-  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:first-child) { grid-column: 4; grid-row: 1; }
-  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child) { grid-column: 5; grid-row: 1; }
-  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:first-child) { grid-column: 4; grid-row: 2; }
-  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:last-child) { grid-column: 5; grid-row: 2; }
-  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: 1 / span 3; grid-row: 3; align-self: start; align-items: center; min-height: var(--customize-primary-height); flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; color: var(--customize-text-muted); font-size: var(--customize-label-size); }
+  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:first-child) { grid-column: 3; grid-row: 1; }
+  .profile-customize-page :global(.identity-editor__grid--meta .identity-editor__field:last-child) { grid-column: 4; grid-row: 1; }
+  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:first-child) { grid-column: 3; grid-row: 2; }
+  .profile-customize-page :global(.identity-editor__grid--behavior .identity-editor__field:last-child) { grid-column: 4; grid-row: 2; }
+  .profile-customize-page :global(.identity-editor__options) { display: flex; grid-column: 1 / span 2; grid-row: 3; align-self: start; align-items: center; min-height: var(--customize-primary-height); flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; color: var(--customize-text-muted); font-size: var(--customize-label-size); }
   .profile-customize-page :global(.identity-editor__options label) { display: inline-flex; align-items: center; gap: .35rem; }
   .profile-customize-page :global(.identity-editor__field) { align-self: start; align-content: start; gap: .35rem; font-size: var(--customize-label-size); }
   .profile-customize-page :global(.identity-editor__field textarea) { min-height: 4.5rem; }
@@ -386,8 +386,11 @@
   .profile-customize-page :global(.identity-editor__field small),
   .profile-customize-page :global(.profile-content-editor__fields label small),
   .profile-customize-page :global(.profile-widget-editor__panel label small) { color: var(--customize-text-faint); font-size: .74rem; }
-  .profile-customize-page :global(.identity-editor__footer) { grid-column: 4 / -1; grid-row: 3; align-items: center; justify-content: flex-end; align-self: end; margin-top: 0; padding-top: 0; border-top: 0; }
+  .profile-customize-page :global(.identity-editor__footer) { grid-column: 3 / -1; grid-row: 3; align-items: center; justify-content: flex-end; align-self: end; margin-top: 0; padding-top: 0; border-top: 0; }
+  .profile-customize-page :global(.identity-editor__hint) { display: none; }
+  .profile-customize-page :global(.identity-editor__save),
   .profile-customize-page :global(.profile-cosmetics-apply) { min-height: var(--customize-primary-height); border: 1px solid var(--customize-accent-save) !important; border-radius: var(--customize-radius); background: var(--customize-accent-save) !important; color: var(--customize-surface-inset) !important; font: 700 var(--customize-label-size) / 1 var(--customize-font-body); }
+  .profile-customize-page :global(.identity-editor__save:hover:not(:disabled)),
   .profile-customize-page :global(.profile-cosmetics-apply:hover:not(:disabled)) { background: color-mix(in srgb, var(--customize-accent-save) 82%, var(--customize-text-primary)) !important; }
   .profile-customize-page :global(.profile-content-editor__text-button),
   .profile-customize-page :global(.profile-content-editor__remove),
@@ -436,8 +439,10 @@
   .profile-customize-page :global(.profile-content-editor__panel:first-of-type .profile-content-editor__fields) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
   .profile-customize-page :global(.profile-content-editor__project) { gap: .55rem; padding: .65rem; border-color: var(--customize-border-subtle) !important; border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
   .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
+  .profile-customize-page :global(.profile-content-editor__helper),
   .profile-customize-page :global(.profile-content-editor__hint),
-  .profile-customize-page :global(.profile-widget-editor__hint) { grid-column: 1 / -1; }
+  .profile-customize-page :global(.profile-widget-editor__hint),
+  .profile-customize-page :global(.profile-editor__hint) { display: none; }
   .profile-customize-page :global(.profile-widget-editor) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .65rem; }
   .profile-customize-page :global(.profile-widget-editor__list) { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
   .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; padding: .55rem; border-color: var(--customize-border-subtle) !important; border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
@@ -447,7 +452,7 @@
   .profile-customize-page :global(.profile-widget-editor__add) { grid-column: 1; }
   .profile-customize-page :global(.profile-widget-editor__note) { grid-column: 1 / -1; display: none; }
   .profile-customize-page :global(.profile-editor__panel) { gap: .6rem; padding: .5rem 0; }
-  .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
+  .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .profile-customize-page :global(.profile-cosmetics-layout) { grid-template-columns: minmax(0, 1fr); }
   .profile-customize-page :global(.profile-cosmetics-preview) { display: none; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { display: none; }
@@ -455,7 +460,7 @@
   .profile-customize-page :global(.profile-cosmetics-controls__heading) { grid-column: 1 / -1; margin-top: .25rem; padding-top: .65rem; }
   .profile-customize-page :global(.profile-cosmetics-controls__heading:first-child) { margin-top: 0; padding-top: 0; }
   .profile-customize-page :global(.profile-cosmetics-controls__heading p) { display: none; }
-  .profile-customize-page :global(.profile-cosmetics-slot) { padding: .55rem .6rem .6rem; border: 0; background: var(--customize-surface-inset); }
+  .profile-customize-page :global(.profile-cosmetics-slot) { padding-top: .45rem; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { grid-template-columns: 1fr; }
   .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card),
   .profile-customize-page__editor--media :global(.rich-media-editor__compact-card) { grid-template-rows: minmax(1.05rem, auto) minmax(6.6rem, auto) auto; }
@@ -468,7 +473,8 @@
   .profile-customize-page :global(.rich-media-editor__upload-card),
   .profile-customize-page :global(.rich-media-editor__upload-preview),
   .profile-customize-page :global(.rich-media-editor__asset),
-  .profile-customize-page :global(.rich-media-editor__track) { border-color: var(--customize-border-subtle) !important; }
+  .profile-customize-page :global(.rich-media-editor__track),
+  .profile-customize-page :global(.profile-editor__module-list li) { border-color: var(--customize-border-subtle) !important; }
   .profile-customize-page :global(.profile-widget-editor__empty) { border-color: var(--customize-border-strong) !important; background: var(--customize-surface-deep); }
   .profile-customize-page :global(.profile-content-editor__message),
   .profile-customize-page :global(.profile-widget-editor__message),
