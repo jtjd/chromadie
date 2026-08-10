@@ -261,6 +261,8 @@
     --customize-secondary-height: 1.95rem;
     --customize-primary-height: 2.25rem;
     --customize-radius: .38rem;
+    --customize-control-surface: var(--ctp-crust, #11111b);
+    --customize-control-line: var(--ctp-surface1, #45475a);
     --customize-section-input: var(--customize-surface-inset);
     display: grid;
     width: 100%;
@@ -312,7 +314,11 @@
 
   .profile-customize-page > [hidden] { display: none !important; }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-surface-inset); --customize-section-input-line: var(--ctp-surface0, #313244); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .75rem; min-width: 0; padding: .85rem 1.05rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .52rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
+  /* Catppuccin's light palette inverts the depth order: Base is the darker
+   * control well there, while Crust remains the deepest dark-mode token. */
+  :global(.profile-dashboard-shell--light) .profile-customize-page { --customize-control-surface: var(--ctp-base, #dce0e8); }
+
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-control-surface); --customize-section-input-line: var(--customize-control-line); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .75rem; min-width: 0; padding: .85rem 1.05rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .52rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
   .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
   .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
@@ -462,6 +468,12 @@
   .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)),
   .profile-customize-page :global(.profile-widget-editor__panel :is(input, select)) { padding: .5rem .65rem; font: 500 var(--customize-control-size) / 1.35 var(--customize-font-body); }
   .profile-customize-page :global(.profile-cosmetics-slot select) { padding-inline: .65rem; font: 500 var(--customize-control-size) / 1 var(--customize-font-body); }
+  /* Keep every text-like editor control darker than its section surface. The
+   * media/color contracts stay untouched: range, swatch, file, and native
+   * toggle inputs retain their editor-specific treatment. */
+  .profile-customize-page :global(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"])),
+  .profile-customize-page :global(textarea),
+  .profile-customize-page :global(select) { border-color: var(--customize-control-line) !important; background: var(--customize-control-surface) !important; color: var(--customize-text-primary) !important; }
   .profile-customize-page :global(.appearance-editor__range input),
   .profile-customize-page :global(.profile-editor__link-style input[type="range"]) { accent-color: var(--customize-accent-secondary); }
   .profile-customize-page :global(input[type="checkbox"]),

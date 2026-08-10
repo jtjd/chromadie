@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Recess Studio controls and wire the selected color picker — 2026-08-10
+
+- Aligned the aggregate Customize profile action bar and Appearance/Media/
+  Effects/Layout tab row with the editor-card gutter on desktop, with the
+  existing mobile reset preserved.
+- Recessed text inputs, selects, and textareas onto Catppuccin Crust while
+  keeping range, color, file, checkbox, and radio affordances component-owned.
+- Added one shared allow-listed profile-color role contract and functional
+  HSV saturation/brightness, hue, palette, native color, and hex editing for
+  the selected role, including keyboard controls and invalid-hex validation.
+- Draft preview, dirty navigation, aggregate publish/reset, RLS, and profile
+  rendering boundaries remain unchanged.
+- Validation: 259 tests, build, Svelte check, ESLint, links, CSP, performance,
+  username/balance/catalog drift, scoring parity, database security, and
+  authenticated desktop/mobile/reduced-motion browser smoke all pass.
+
 ## Align Studio header and support animated cursors — 2026-08-10
 
 - Increased the Chromadie Plus upsell text size and aligned the sidebar brand

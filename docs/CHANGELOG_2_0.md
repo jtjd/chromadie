@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Align Studio controls and activate the profile color picker
+
+- Aligned the Customize profile action bar and four-tab row with the editor
+  sections so the workspace shares one desktop gutter and remains responsive
+  on mobile.
+- Darkened text inputs, selects, and textareas to Catppuccin Crust for the
+  recessed contrast shown in the reference while preserving native media and
+  toggle controls.
+- Made the selected profile-color picker functional: click a role, then use
+  the saturation/brightness square, hue rail, palette, native color control,
+  or hex field to update that role's draft color before publishing.
+
 ## 2026-08-10 — Refine Studio header and cursor uploads
 
 - Increased the Chromadie Plus upsell copy and aligned the sidebar brand with

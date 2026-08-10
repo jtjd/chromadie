@@ -41,10 +41,11 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
 });
 
 test('reference workspace composition stays explicit', async () => {
-  const [settings, actions, appearance, cosmetics, customize] = await Promise.all([
+  const [settings, actions, appearance, appearanceColors, cosmetics, customize] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileDashboardActions.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
+    read('src/lib/profileAppearanceColors.js'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/ProfileCustomizePage.svelte')
   ]);
@@ -52,16 +53,20 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(actions, /Customize profile/);
   assert.match(actions, /All changes saved/);
   assert.match(actions, /profile-dashboard-actions__publish/);
+  assert.match(actions, /margin-inline: \.75rem/);
   assert.match(settings, /slot="topbar"/);
+  assert.match(settings, /profile-settings-page__customize-tabs \{[^}]*margin: 0 \.75rem \.45rem/);
   assert.match(settings, /profile-settings-preview__devices/);
   assert.match(settings, /Unlock more with Chromadie Plus/);
   assert.match(settings, /profile-settings-preview__canvas\.profile-settings-preview__canvas--appearance/);
   assert.match(appearance, /appearance-editor__picker-surface/);
   assert.match(appearance, /appearance-editor__palette/);
   for (const label of ['Profile text', 'Handle & metadata', 'Profile surface', 'Surface tint', 'Border', 'Page background']) {
-    assert.match(appearance, new RegExp(label));
+    assert.match(appearanceColors, new RegExp(label));
   }
   assert.match(customize, /profile-customize-page__appearance-effects/);
+  assert.match(customize, /--customize-control-surface: var\(--ctp-crust/);
+  assert.match(customize, /background: var\(--customize-control-surface\) !important/);
   assert.match(customize, /profile-editor \.profile-template-picker__premium\) \{ display: none !important; \}/);
   assert.match(cosmetics, /Name effects/);
   assert.match(cosmetics, /Visual effects/);

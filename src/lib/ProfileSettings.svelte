@@ -1000,7 +1000,7 @@
   .profile-settings-page__toolbar-actions { display: flex; align-items: center; gap: .55rem; }
   .profile-settings-page__toolbar-actions :is(a, button) { min-height: 2rem; padding: .5rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-muted, #aaa8b0); font-size: .78rem; text-decoration: none; cursor: pointer; }
   .profile-settings-page__toolbar-actions :is(a, button):hover { border-color: var(--site-accent, #cdd2ff); color: var(--site-ink, #f2f0eb); }
-  .profile-settings-page__customize-tabs { position: relative; display: grid; margin-bottom: .45rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .5rem; background: var(--ctp-mantle, #181825); }
+  .profile-settings-page__customize-tabs { position: relative; display: grid; margin: 0 .75rem .45rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .5rem; background: var(--ctp-mantle, #181825); }
   .profile-settings-page__customize-tabs-actions { position: absolute; top: .45rem; right: .6rem; z-index: 1; display: none; gap: .45rem; }
   .profile-settings-page__customize-tabs-actions :is(a, button) { min-height: 1.9rem; padding: .4rem .6rem; border: 1px solid var(--ctp-surface1, #45475a); border-radius: .32rem; background: transparent; color: var(--ctp-subtext1, #bac2de); font-size: .7rem; text-decoration: none; cursor: pointer; }
   .profile-settings-page__customize-tabs-actions :is(a, button):hover, .profile-settings-page__customize-tabs-actions :is(a, button):focus-visible { border-color: var(--ctp-lavender, #b4befe); color: var(--ctp-text, #cdd6f4); }
@@ -1060,6 +1060,7 @@
   .profile-settings-prompt button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--site-line-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--site-ink, #f2f0eb); font-size: .68rem; cursor: pointer; }
   .profile-settings-prompt__discard { border-color: var(--ctp-red, #f38ba8) !important; color: var(--ctp-red, #f38ba8) !important; }
   @media (max-width: 52rem) {
+    .profile-settings-page__customize-tabs { margin-inline: 0; }
     .profile-settings-page__customize-tabs-actions { position: static; justify-content: flex-end; padding: .45rem .55rem 0; }
     .profile-settings-page__tablist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }

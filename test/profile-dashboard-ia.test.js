@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate Customize, Links, and Premium destinations', async () => {
-  const [settings, customize, premium, shell, dashboardIcon, editor, expression, richMedia, identity, appearance, content, widgets, cosmetics] = await Promise.all([
+  const [settings, customize, premium, shell, dashboardIcon, editor, expression, richMedia, identity, appearance, appearanceColors, content, widgets, cosmetics] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
@@ -16,6 +16,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
     read('src/lib/ProfileRichMediaEditor.svelte'),
     read('src/lib/IdentityEditor.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
+    read('src/lib/profileAppearanceColors.js'),
     read('src/lib/ProfileContentEditor.svelte'),
     read('src/lib/ProfileWidgetEditor.svelte'),
     read('src/lib/ProfileCosmeticsEditor.svelte')
@@ -63,7 +64,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /profile-customize-page__control-grid--other/);
   assert.match(customize, /profile-content-editor__panel:first-of-type \.profile-content-editor__fields/);
   for (const label of ['Profile text', 'Handle & metadata', 'Username', 'Bio text', 'Page background', 'Profile surface', 'Accent', 'Surface tint', 'Border']) {
-    assert.match(appearance, new RegExp(label.replace(/[&]/g, '\\$&')));
+    assert.match(appearanceColors, new RegExp(label.replace(/[&]/g, '\\$&')));
   }
   assert.doesNotMatch(appearance, /6 colors|Card depth|Colors update the profile preview/);
   assert.match(appearance, /appearance-surface-title[\s\S]*Profile surface[\s\S]*Opacity[\s\S]*Blur/);
@@ -105,7 +106,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /--customize-section-accent/);
   assert.match(customize, /--customize-section-surface/);
   assert.match(customize, /--customize-section-surface: var\(--studio-panel/);
-  assert.match(customize, /--customize-section-input: var\(--customize-surface-inset\)/);
+  assert.match(customize, /--customize-section-input: var\(--customize-control-surface\)/);
   assert.match(customize, /--customize-primary-height: 2\.25rem/);
   assert.match(customize, /profile-expression-editor__compact-grid.*gap: 1\.75rem/);
   assert.doesNotMatch(customize, /gradient/);

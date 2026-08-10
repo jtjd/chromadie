@@ -3898,3 +3898,18 @@ The persistent preview, device switcher, picker, Plus callout, and four
 reference-style editor surfaces add a small intentional payload to the
 authenticated dashboard. Its blocking JavaScript ceiling is therefore 528 kB
 (measured at 526.52 kB); the other route and asset ceilings remain unchanged.
+
+## 2026-08-10 — Recess dashboard controls and make the palette picker real
+
+The reference workspace uses nested editor insets: the action bar and tab row
+share the same horizontal gutter as the editor cards, while text-like inputs
+and selects sit on Catppuccin Crust (`#11111b`) beneath their Mantle section
+surfaces. Range, color, file, checkbox, and radio inputs keep their native or
+component-specific treatment so media and accessibility affordances remain
+clear.
+
+Profile color selection is a draft-only interaction. The matrix, selected
+picker, palette swatches, hex fields, and HSV saturation/brightness and hue
+controls all resolve through one allow-listed role/path contract. Changes
+continue through the existing `appearancechange`/`dirty` events and aggregate
+Reset / Publish profile flow; no profile or server authority boundary changed.

@@ -1,6 +1,6 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; workspace usability, Catppuccin Mocha contrast, and Profile Studio typography refinement implemented 2026-08-09
+Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, and functional profile-color editing implemented 2026-08-10
 
 ## Scope
 
@@ -88,6 +88,8 @@ affect only the translucent card while the page outside it stays sharp.
 ## Validation
 
 - `npm test`: 253 passing.
+- Follow-up reference validation: `npm test` 259 passing, including shared
+  profile-color role/HSV picker coverage.
 - `npm run build`, `npm run check`, `npx eslint src/`, links, CSP, username
   policy, balance, catalog, scoring parity, and database security: passing.
 - `npm run check:performance`: all blocking route and asset budgets pass;

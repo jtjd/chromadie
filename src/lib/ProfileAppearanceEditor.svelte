@@ -1,6 +1,15 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { normalizeProfileAppearance } from './profileConfig.js';
+  import {
+    PROFILE_APPEARANCE_COLOR_FIELDS,
+    PROFILE_APPEARANCE_COLOR_PALETTE,
+    getHueColor,
+    getProfileAppearanceColorField,
+    getProfileAppearanceColorValue,
+    hexToHsv,
+    hsvToHex
+  } from './profileAppearanceColors.js';
 
   /** @type {any} */
   export let draftConfig = null;
@@ -12,6 +21,7 @@
   let error = '';
   let invalidHex = false;
   let activeColor = 'accent';
+  let hexDrafts = {};
 
   $: incomingKey = JSON.stringify(draftConfig?.appearance || draftConfig?.signatureColor || '');
 
@@ -40,8 +50,8 @@
     dispatch('dirty', { dirty: true });
   }
 
-  function updateColor(path, event) {
-    const value = String(event.currentTarget.value || '').trim();
+  function updateColorValue(path, rawValue) {
+    const value = String(rawValue || '').trim();
     if (!/^#[0-9A-Fa-f]{6}$/.test(value)) {
       invalidHex = true;
       error = 'Enter a 6-digit hex color, for example #CDD2FF.';
@@ -49,36 +59,120 @@
       dispatch('dirty', { dirty: true });
       return;
     }
+    const field = PROFILE_APPEARANCE_COLOR_FIELDS.find(candidate => candidate.path.length === path.length && candidate.path.every((segment, index) => segment === path[index]));
+    if (field) clearHexDraft(field.key);
     update(path, value.toUpperCase());
+    return true;
   }
 
-  const colorFields = [
-    { key: 'text', label: 'Profile text', path: ['colors', 'text'] },
-    { key: 'accent', label: 'Accent', path: ['colors', 'accent'] },
-    { key: 'secondaryText', label: 'Handle & metadata', path: ['colors', 'secondaryText'] },
-    { key: 'surface', label: 'Profile surface', path: ['colors', 'surface'] },
-    { key: 'username', label: 'Username', path: ['colors', 'username'] },
-    { key: 'surfaceTint', label: 'Surface tint', path: ['colors', 'highlight'] },
-    { key: 'description', label: 'Bio text', path: ['colors', 'description'] },
-    { key: 'border', label: 'Border', path: ['border', 'color'] },
-    { key: 'background', label: 'Page background', path: ['colors', 'background'] }
-  ];
+  function updateColor(path, event) {
+    return updateColorValue(path, event.currentTarget.value);
+  }
 
   function fieldFor(key) {
-    return colorFields.find(field => field.key === key) || colorFields[0];
+    return getProfileAppearanceColorField(key);
   }
 
   function fieldValue(key) {
-    const path = fieldFor(key).path;
-    return path.reduce((value, segment) => value?.[segment], staged) || '#000000';
+    return getProfileAppearanceColorValue(staged, key);
+  }
+
+  function hexInputValue(key) {
+    return Object.prototype.hasOwnProperty.call(hexDrafts, key) ? hexDrafts[key] : fieldValue(key);
   }
 
   function chooseColor(key) {
-    if (colorFields.some(field => field.key === key)) activeColor = key;
+    if (PROFILE_APPEARANCE_COLOR_FIELDS.some(field => field.key === key)) activeColor = key;
+  }
+
+  function clearHexDraft(key) {
+    if (!Object.prototype.hasOwnProperty.call(hexDrafts, key)) return;
+    const next = { ...hexDrafts };
+    delete next[key];
+    hexDrafts = next;
+  }
+
+  function updateHex(key, event) {
+    const value = String(event.currentTarget.value || '').trim();
+    if (!/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      hexDrafts = { ...hexDrafts, [key]: value };
+      invalidHex = true;
+      error = 'Enter a 6-digit hex color, for example #CDD2FF.';
+      dispatch('appearancechange', { appearance: staged, dirty: true });
+      dispatch('dirty', { dirty: true });
+      return;
+    }
+    clearHexDraft(key);
+    updateColorValue(fieldFor(key).path, value);
   }
 
   function applyPalette(value) {
-    update(activeColorField.path, value.toUpperCase());
+    updateColorValue(activeColorField.path, value);
+  }
+
+  function updateActiveColor(value) {
+    updateColorValue(activeColorField.path, value);
+  }
+
+  function clampUnit(value) {
+    return Math.min(1, Math.max(0, Number(value) || 0));
+  }
+
+  function updateSquareFromPoint(event) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    const saturation = clampUnit((event.clientX - bounds.left) / bounds.width);
+    const brightness = clampUnit(1 - ((event.clientY - bounds.top) / bounds.height));
+    updateActiveColor(hsvToHex({ h: activeColorHsv.h, s: saturation, v: brightness }));
+  }
+
+  function handleSquarePointerDown(event) {
+    if (event.button !== 0) return;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    updateSquareFromPoint(event);
+  }
+
+  function handleSquarePointerMove(event) {
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) updateSquareFromPoint(event);
+  }
+
+  function handleSquareKeydown(event) {
+    const step = event.shiftKey ? .1 : .02;
+    let saturation = activeColorHsv.s;
+    let brightness = activeColorHsv.v;
+    if (event.key === 'ArrowLeft') saturation -= step;
+    else if (event.key === 'ArrowRight') saturation += step;
+    else if (event.key === 'ArrowDown') brightness -= step;
+    else if (event.key === 'ArrowUp') brightness += step;
+    else return;
+    event.preventDefault();
+    updateActiveColor(hsvToHex({ h: activeColorHsv.h, s: clampUnit(saturation), v: clampUnit(brightness) }));
+  }
+
+  function updateHueFromPoint(event) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    if (!bounds.height) return;
+    const hue = clampUnit((event.clientY - bounds.top) / bounds.height) * 360;
+    updateActiveColor(hsvToHex({ h: hue, s: activeColorHsv.s, v: activeColorHsv.v }));
+  }
+
+  function handleHuePointerDown(event) {
+    if (event.button !== 0) return;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    updateHueFromPoint(event);
+  }
+
+  function handleHuePointerMove(event) {
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) updateHueFromPoint(event);
+  }
+
+  function handleHueKeydown(event) {
+    let nextHue = activeColorHsv.h;
+    if (event.key === 'ArrowUp' || event.key === 'ArrowRight') nextHue += event.shiftKey ? 15 : 2;
+    else if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') nextHue -= event.shiftKey ? 15 : 2;
+    else return;
+    event.preventDefault();
+    updateActiveColor(hsvToHex({ h: nextHue, s: activeColorHsv.s, v: activeColorHsv.v }));
   }
 
   export function getDraftAppearance() {
@@ -97,6 +191,7 @@
     baselineKey = JSON.stringify(staged);
     error = '';
     invalidHex = false;
+    hexDrafts = {};
     dispatch('appearancechange', { appearance: staged, dirty: false });
     dispatch('dirty', { dirty: false });
   }
@@ -116,6 +211,8 @@
   $: activeColorField = fieldFor(activeColor);
   $: activeColorLabel = activeColorField.label;
   $: activeColorValue = fieldValue(activeColor);
+  $: activeColorHsv = hexToHsv(activeColorValue);
+  $: activeHueColor = getHueColor(activeColorValue);
 </script>
 
 <div class="appearance-editor">
@@ -126,14 +223,14 @@
           <h2>Profile colors</h2>
           <p>Pick a color to edit</p>
         </div>
-        {#each colorFields as field (field.key)}
+        {#each PROFILE_APPEARANCE_COLOR_FIELDS as field (field.key)}
           {@const key = field.key}
           {@const label = field.label}
-          <label class="appearance-editor__field" class:active={activeColor === key}>
+          <label class="appearance-editor__field" class:active={activeColor === key} data-color-role={key} on:pointerdown={() => chooseColor(key)}>
             <span><button type="button" class="appearance-editor__color-dot" style={`--dot-color:${fieldValue(key)}`} aria-label={`Edit ${label}`} on:click={() => chooseColor(key)}></button>{label}</span>
             <div class="appearance-editor__color-input">
               <input type="color" value={fieldValue(key)} aria-label={label} on:focus={() => chooseColor(key)} on:input={event => updateColor(fieldFor(key).path, event)} />
-              <input class="appearance-editor__hex" value={fieldValue(key)} maxlength="7" aria-label={`${label} hex`} on:focus={() => chooseColor(key)} on:change={event => updateColor(fieldFor(key).path, event)} />
+              <input class="appearance-editor__hex" value={hexInputValue(key)} maxlength="7" aria-label={`${label} hex`} on:focus={() => chooseColor(key)} on:input={event => updateHex(key, event)} on:change={event => updateHex(key, event)} />
             </div>
           </label>
         {/each}
@@ -141,11 +238,36 @@
       <div class="appearance-editor__picker" aria-label={`${activeColorLabel} picker`}>
         <div class="appearance-editor__picker-heading"><strong>{activeColorLabel}</strong><span>{activeColorValue}</span><input type="color" value={activeColorValue} aria-label="Selected color" on:input={event => updateColor(activeColorField.path, event)} /></div>
         <div class="appearance-editor__picker-stage">
-          <div class="appearance-editor__picker-surface" style={`--picker-color:${activeColorValue}`}><span aria-hidden="true"></span><input type="color" value={activeColorValue} aria-label="Choose selected color" on:input={event => updateColor(activeColorField.path, event)} /></div>
-          <div class="appearance-editor__hue" aria-hidden="true"></div>
+          <div
+            class="appearance-editor__picker-surface"
+            role="slider"
+            tabindex={0}
+            aria-label={`Choose ${activeColorLabel} saturation and brightness`}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow={Math.round(activeColorHsv.v * 100)}
+            aria-valuetext={`${Math.round(activeColorHsv.s * 100)}% saturation, ${Math.round(activeColorHsv.v * 100)}% brightness`}
+            style={`--picker-hue-color:${activeHueColor}; --picker-x:${activeColorHsv.s * 100}%; --picker-y:${(1 - activeColorHsv.v) * 100}%`}
+            on:pointerdown={handleSquarePointerDown}
+            on:pointermove={handleSquarePointerMove}
+            on:keydown={handleSquareKeydown}
+          ><span aria-hidden="true"></span></div>
+          <div
+            class="appearance-editor__hue"
+            role="slider"
+            tabindex={0}
+            aria-label={`Choose ${activeColorLabel} hue`}
+            aria-valuemin="0"
+            aria-valuemax="360"
+            aria-valuenow={Math.round(activeColorHsv.h)}
+            style={`--hue-position:${activeColorHsv.h / 360 * 100}%`}
+            on:pointerdown={handleHuePointerDown}
+            on:pointermove={handleHuePointerMove}
+            on:keydown={handleHueKeydown}
+          ></div>
         </div>
         <div class="appearance-editor__palette" aria-label="Color palette">
-          {#each ['#f5e0dc', '#b4befe', '#fab387', '#f5c2e7', '#cba6f7', '#a6adc8', '#9399b2', '#7f849c', '#6c7086', '#585b70', '#45475a'] as value (value)}
+          {#each PROFILE_APPEARANCE_COLOR_PALETTE as value (value)}
             <button type="button" style={`--palette-color:${value}`} aria-label={`Use ${value}`} on:click={() => applyPalette(value)}></button>
           {/each}
         </div>
@@ -229,10 +351,11 @@
   .appearance-editor__picker-heading span { color: var(--appearance-faint); font: .7rem/1 var(--appearance-mono); }
   .appearance-editor__picker-heading input { width: 1.8rem; height: 1.8rem; padding: .12rem; border: 1px solid var(--appearance-line-strong); border-radius: .25rem; background: transparent; cursor: pointer; }
   .appearance-editor__picker-stage { display: grid; grid-template-columns: minmax(0, 1fr) 1rem; gap: .9rem; align-items: stretch; transform: translateY(2px); }
-  .appearance-editor__picker-surface { position: relative; height: 8.6rem; overflow: hidden; border-radius: .3rem; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--picker-color)); }
-  .appearance-editor__picker-surface span { position: absolute; top: 27%; left: 72%; width: .75rem; height: .75rem; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
-  .appearance-editor__picker-surface input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: crosshair; }
-  .appearance-editor__hue { width: .95rem; height: 8.6rem; border-radius: .3rem; background: linear-gradient(180deg, #f38ba8, #fab387, #f9e2af, #a6e3a1, #89dceb, #89b4fa, #cba6f7, #f5c2e7, #f38ba8); }
+  .appearance-editor__picker-surface { position: relative; height: 8.6rem; overflow: hidden; border-radius: .3rem; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--picker-hue-color)); cursor: crosshair; touch-action: none; }
+  .appearance-editor__picker-surface span { position: absolute; top: var(--picker-y); left: var(--picker-x); width: .75rem; height: .75rem; box-sizing: border-box; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); transform: translate(-50%, -50%); pointer-events: none; }
+  .appearance-editor__picker-surface:focus-visible, .appearance-editor__hue:focus-visible { outline: 2px solid var(--appearance-focus); outline-offset: 2px; }
+  .appearance-editor__hue { position: relative; width: .95rem; height: 8.6rem; border-radius: .3rem; background: linear-gradient(180deg, #f38ba8, #fab387, #f9e2af, #a6e3a1, #89dceb, #89b4fa, #cba6f7, #f5c2e7, #f38ba8); cursor: pointer; touch-action: none; }
+  .appearance-editor__hue::before { position: absolute; top: var(--hue-position); left: -.18rem; width: 1.31rem; height: .2rem; border: 1px solid var(--appearance-text); border-radius: .2rem; background: var(--appearance-input); box-shadow: 0 0 0 1px rgba(0,0,0,.38); content: ''; transform: translateY(-50%); pointer-events: none; }
   .appearance-editor__palette { display: flex; align-items: center; justify-content: space-between; gap: .45rem; padding-top: .7rem; }
   .appearance-editor__palette button { width: 1.1rem; height: 1.1rem; padding: 0; border: 1px solid color-mix(in srgb, var(--palette-color) 50%, var(--appearance-line-strong)); border-radius: 50%; background: var(--palette-color); cursor: pointer; }
   .appearance-editor__palette button:hover, .appearance-editor__palette button:focus-visible { outline: 2px solid var(--appearance-focus); outline-offset: 2px; }
