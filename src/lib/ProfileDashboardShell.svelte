@@ -163,10 +163,7 @@
     grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr);
     min-height: 100dvh;
     color: var(--site-ink, var(--color-ink));
-    background:
-      radial-gradient(circle at 82% 4%, color-mix(in srgb, var(--ctp-sapphire, #74c7ec) 5%, transparent), transparent 34rem),
-      radial-gradient(circle at 36% 92%, color-mix(in srgb, var(--ctp-mauve, #cba6f7) 3%, transparent), transparent 30rem),
-      var(--studio-canvas);
+    background: var(--studio-canvas);
   }
   .profile-dashboard-shell--with-preview { grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr) minmax(20rem, 23vw); }
   .profile-dashboard-shell__sidebar {
@@ -179,11 +176,7 @@
     min-width: 0;
     overflow-y: auto;
     padding: 1.1rem .75rem .85rem;
-    border-right: 1px solid color-mix(in srgb, var(--ctp-surface0, #313244) 66%, transparent);
-    background:
-      radial-gradient(circle at 15% 5%, color-mix(in srgb, var(--ctp-sapphire, #74c7ec) 4%, transparent), transparent 15rem),
-      radial-gradient(circle at 35% 92%, color-mix(in srgb, var(--ctp-mauve, #cba6f7) 3%, transparent), transparent 14rem),
-      var(--studio-canvas);
+    background: var(--studio-canvas);
   }
   .profile-dashboard-shell__sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: .05rem .45rem 2.4rem; }
   .profile-dashboard-shell__brand { display: inline-flex; align-items: center; gap: .6rem; min-width: 0; color: var(--site-ink, var(--color-ink-strong)); text-decoration: none; }
@@ -210,7 +203,7 @@
   .profile-dashboard-shell__nav button[data-section="progression"] { --nav-accent: var(--ctp-peach, var(--site-accent, var(--color-accent))); }
   .profile-dashboard-shell__nav button[data-section="account"] { --nav-accent: var(--ctp-lavender, var(--site-accent, var(--color-accent))); }
   .profile-dashboard-shell__nav button:hover, .profile-dashboard-shell__nav button:focus-visible { border-color: color-mix(in srgb, var(--nav-accent) 42%, var(--ctp-surface0, #313244)); background: color-mix(in srgb, var(--nav-accent) 7%, var(--ctp-base, #1e1e2e)); color: var(--ctp-text, var(--site-ink, var(--color-ink-strong))); }
-  .profile-dashboard-shell__nav button.active { min-height: 2.55rem; border-color: color-mix(in srgb, var(--nav-accent) 42%, var(--ctp-surface1, #45475a)); background: linear-gradient(105deg, color-mix(in srgb, var(--nav-accent) 13%, var(--ctp-base, #1e1e2e)), color-mix(in srgb, var(--ctp-surface0, #313244) 36%, var(--ctp-base, #1e1e2e))); color: var(--ctp-text, var(--site-ink, var(--color-ink-strong))); }
+  .profile-dashboard-shell__nav button.active { min-height: 2.55rem; border-color: color-mix(in srgb, var(--nav-accent) 42%, var(--ctp-surface1, #45475a)); background: color-mix(in srgb, var(--nav-accent) 10%, var(--ctp-base, #1e1e2e)); color: var(--ctp-text, var(--site-ink, var(--color-ink-strong))); }
   .profile-dashboard-shell__nav button.premium { color: var(--nav-accent); }
   .profile-dashboard-shell__nav button:focus-visible, .profile-dashboard-shell__group-toggle:focus-visible, .profile-dashboard-shell__mobile-bar button:focus-visible { outline: 2px solid var(--site-accent, var(--color-accent-bright)); outline-offset: 3px; }
   .profile-dashboard-shell__nav-icon { display: grid; place-items: center; width: 1.15rem; color: color-mix(in srgb, var(--nav-accent) 72%, var(--ctp-subtext1, #bac2de)); }

@@ -299,6 +299,20 @@
     }
   }
 
+  async function removeCursor() {
+    if (!activeCursor || busy) return;
+    busy = true;
+    setFeedback('', 'Removing custom cursor…');
+    try {
+      await saveSelection({ cursor_id: null });
+      setFeedback('', 'Custom cursor removed.');
+    } catch (removeError) {
+      setFeedback(removeError instanceof Error ? removeError.message : 'The custom cursor could not be removed.');
+    } finally {
+      busy = false;
+    }
+  }
+
 </script>
 
 {#if hasAccess}
@@ -331,6 +345,7 @@
           <div class="rich-media-editor__compact-copy">
             <strong>Custom cursor</strong>
           </div>
+          {#if activeCursor}<button type="button" class="rich-media-editor__compact-remove" disabled={busy} on:click={removeCursor}>Remove</button>{/if}
         </article>
       {/if}
 
@@ -477,9 +492,13 @@
   .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
   .rich-media-editor__compact-preview img { width: 4rem; height: 4rem; object-fit: contain; }
   .rich-media-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
-  .rich-media-editor__compact-upload-hint { max-width: 100%; overflow: hidden; color: var(--color-ink-muted); font-size: .76rem; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-upload-hint { max-width: 100%; overflow: hidden; color: var(--color-ink-muted); font-size: .84rem; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__compact-copy { display: block; min-width: 0; order: -1; }
-  .rich-media-editor__compact-copy strong { display: block; overflow: hidden; color: var(--color-ink-strong); font-size: .84rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-copy strong { display: block; overflow: hidden; color: var(--color-ink-strong); font-size: .92rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-remove { justify-self: start; padding: 0; border: 0; border-radius: .2rem; background: transparent; color: var(--ctp-red, #f38ba8); font: 600 .75rem/1.2 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; text-decoration: underline; text-underline-offset: .15em; }
+  .rich-media-editor__compact-remove:hover:not(:disabled) { color: var(--ctp-text, #cdd6f4); }
+  .rich-media-editor__compact-remove:focus-visible { outline: 2px solid var(--ctp-lavender, #b4befe); outline-offset: 3px; }
+  .rich-media-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
   .rich-media-editor__advanced { grid-column: 1 / -1; margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
   .rich-media-editor__hint, .rich-media-editor__status, .rich-media-editor__message { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
   .rich-media-editor__message--error { color: var(--color-danger, #ff9eac); }

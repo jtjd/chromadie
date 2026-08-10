@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Simplify Studio accents and media controls
+
+- Removed the sidebar divider and decorative gradients for a flatter Mocha
+  workspace; Studio typography remains Manrope.
+- Increased Profile media icon and label sizing for clearer upload targets.
+- Added a Remove action for an active custom cursor that clears the profile
+  selection while preserving the private asset library.
+- Removed the visible Profile colors heading, doubled the Chromadie Plus
+  banner height, and removed its trailing arrow.
+
 ## 2026-08-10 — Tighten the Mocha dashboard proportions
 
 - Narrowed the Studio rail to the reference 14rem footprint and tuned the

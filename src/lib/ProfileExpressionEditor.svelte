@@ -819,9 +819,9 @@
   :global(.profile-expression-editor__compact-preview .foundation-media),
   :global(.profile-expression-editor__compact-preview .foundation-media img) { width: 100%; height: 100%; aspect-ratio: auto; border: 0 !important; border-radius: 0; outline: 0; box-shadow: none; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
-  .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .78rem; font-weight: 500; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .84rem; font-weight: 500; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-copy { display: block; min-width: 0; order: -1; }
-  .profile-expression-editor__compact-copy strong { display: block; overflow: hidden; color: var(--media-text-primary); font-size: .85rem; font-weight: 600; letter-spacing: -.01em; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-copy strong { display: block; overflow: hidden; color: var(--media-text-primary); font-size: .92rem; font-weight: 600; letter-spacing: -.01em; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-preview small { overflow: hidden; color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-preview--locked small { color: var(--media-premium); font-weight: 600; }
   .profile-expression-editor__compact-remove { justify-self: start; padding: 0; border: 0; border-radius: .2rem; background: transparent; color: color-mix(in srgb, var(--media-red) 78%, var(--media-text-secondary)); font: 600 .75rem/1.2 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; text-decoration: underline; text-underline-offset: .15em; }
@@ -893,8 +893,8 @@
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview--locked .profile-media-icon) { color: var(--media-premium); }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview small) { color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview--locked small) { color: var(--media-premium); font-weight: 600; }
-  .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-upload-hint) { max-width: 100%; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .78rem; font-weight: 500; line-height: 1.2; }
-  .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-copy strong) { color: var(--media-text-primary); font-size: .85rem; font-weight: 600; letter-spacing: -.01em; }
+  .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-upload-hint) { max-width: 100%; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .84rem; font-weight: 500; line-height: 1.2; }
+  .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-copy strong) { color: var(--media-text-primary); font-size: .92rem; font-weight: 600; letter-spacing: -.01em; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-copy small) { color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-card--locked .rich-media-editor__compact-copy small) { color: color-mix(in srgb, var(--media-premium) 76%, var(--media-text-secondary)); }
   .profile-expression-editor__advanced { margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
@@ -937,7 +937,7 @@
     padding: 0.7rem 0.8rem;
     border: 1px solid var(--color-line-subtle);
     border-radius: var(--radius-md);
-    background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 12%, var(--surface-inset)), var(--surface-inset));
+    background: var(--surface-inset);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 

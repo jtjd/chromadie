@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Flatten and simplify the Studio controls
+
+The Studio keeps the existing Catppuccin Mocha tokens and Manrope typography,
+but removes the sidebar-to-canvas divider and decorative gradient fills so the
+workspace reads as one quiet surface. The media rail now gives its upload icons
+and labels more room, while the Plus banner uses a flat Mantle fill, twice the
+previous height, and no trailing arrow.
+
+Custom cursor selection remains server-authoritative: the compact cursor card
+now exposes a Remove action that sends a null cursor selection through the
+existing rich-media RPC. Removing a selection does not delete the asset from
+the private library, so it can be reused later. The Color editor keeps an
+accessible section label while omitting the redundant visible “Profile colors”
+heading.
+
 ## 2026-08-10 — Tune Studio proportions to the reference viewport
 
 The reference-led Studio shell uses a 14rem navigation rail, a 1rem editor

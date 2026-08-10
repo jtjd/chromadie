@@ -91,7 +91,6 @@
   <button class="profile-customize-page__premium-banner" type="button" on:click={requestPremium}>
     <span class="profile-customize-page__premium-glyph" aria-hidden="true">◇</span>
     <span>Want more expression? Unlock more with <strong>Chromadie Plus</strong></span>
-    <span class="profile-customize-page__premium-arrow" aria-hidden="true">↗</span>
   </button>
 
   <section class="profile-customize-page__surface" aria-labelledby="profile-customize-general-title" data-editor-section="general">
@@ -263,7 +262,7 @@
 
   .profile-customize-page__control-kicker { display: none; }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--customize-surface); --customize-section-input: var(--customize-surface-inset); --customize-section-input-line: var(--ctp-surface0, #313244); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .4rem; min-width: 0; padding: .9rem 1rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-top-color: color-mix(in srgb, var(--customize-section-accent) 38%, var(--ctp-surface0, #313244)); border-radius: .52rem; background: radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--ctp-sapphire, #74c7ec) 4%, transparent), transparent 28rem), linear-gradient(135deg, color-mix(in srgb, var(--ctp-sapphire, #74c7ec) 7%, var(--ctp-crust, #11111b)), var(--ctp-crust, #11111b) 58%, color-mix(in srgb, var(--ctp-blue, #89b4fa) 4%, var(--ctp-crust, #11111b))); box-shadow: 0 .55rem 1.5rem color-mix(in srgb, var(--ctp-crust, #11111b) 46%, transparent); scroll-margin-top: 5rem; }
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-surface-inset); --customize-section-input-line: var(--ctp-surface0, #313244); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .4rem; min-width: 0; padding: .9rem 1rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-top-color: color-mix(in srgb, var(--customize-section-accent) 38%, var(--ctp-surface0, #313244)); border-radius: .52rem; background: var(--customize-section-surface); box-shadow: 0 .55rem 1.5rem color-mix(in srgb, var(--ctp-crust, #11111b) 46%, transparent); scroll-margin-top: 5rem; }
   .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
   .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
@@ -275,7 +274,7 @@
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-section-accent); font-size: var(--customize-section-heading-size); line-height: 1.2; letter-spacing: -.03em; }
 
-  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .45rem; min-height: 2.8rem; overflow: hidden; padding: .5rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: linear-gradient(100deg, var(--ctp-mantle, #181825), color-mix(in srgb, var(--customize-accent-premium) 4%, var(--ctp-base, #1e1e2e)), var(--ctp-mantle, #181825)); color: var(--customize-text-muted); font: 600 .78rem/1.35 var(--customize-font-body); cursor: pointer; }
+  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .55rem; min-height: 5.6rem; overflow: hidden; padding: 1rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: var(--ctp-mantle, #181825); color: var(--customize-text-muted); font: 600 .78rem/1.35 var(--customize-font-body); cursor: pointer; }
   .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { position: absolute; color: color-mix(in srgb, var(--customize-accent-premium) 12%, transparent); font-size: 2.7rem; line-height: 1; pointer-events: none; }
   .profile-customize-page__premium-banner::before { content: '◇'; left: 1rem; transform: rotate(-18deg); }
   .profile-customize-page__premium-banner::after { content: '✦'; right: 1rem; transform: rotate(18deg); }
@@ -283,7 +282,6 @@
   .profile-customize-page__premium-banner:focus-visible { outline: 2px solid var(--customize-focus); outline-offset: 3px; }
   .profile-customize-page__premium-banner strong { color: var(--customize-accent-premium); }
   .profile-customize-page__premium-glyph { color: var(--customize-accent-premium); font-size: .9rem; }
-  .profile-customize-page__premium-arrow { position: absolute; right: 1rem; color: var(--customize-accent-premium); font-size: .95rem; }
 
   .profile-customize-page__control-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; min-width: 0; }
   .profile-customize-page__control-grid--general { grid-template-columns: minmax(0, 1fr); }
@@ -466,6 +464,12 @@
   .profile-customize-page__editor--media :global(.profile-expression-editor__compact-preview),
   .profile-customize-page__editor--media :global(.profile-expression-editor__compact-audio-player),
   .profile-customize-page__editor--media :global(.rich-media-editor__compact-preview) { align-self: start; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-preview .profile-media-icon),
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-preview .profile-media-icon) { width: 2.35rem; height: 2.35rem; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-upload-hint),
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-upload-hint) { font-size: .84rem; }
+  .profile-customize-page__editor--media :global(.profile-expression-editor__compact-copy strong),
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-copy strong) { font-size: .92rem; }
   .profile-customize-page :global(.rich-media-editor__compact-preview),
   .profile-customize-page :global(.rich-media-editor__upload-card),
   .profile-customize-page :global(.rich-media-editor__upload-preview),
@@ -513,9 +517,8 @@
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields), .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page__premium-banner { min-height: 3rem; padding-inline: 2.2rem; text-align: center; }
+    .profile-customize-page__premium-banner { min-height: 5.6rem; padding-inline: 2.2rem; text-align: center; }
     .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { font-size: 2.2rem; }
-    .profile-customize-page__premium-arrow { right: .65rem; }
     .profile-customize-page__control { padding: 0; }
     .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }

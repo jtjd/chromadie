@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Simplify Studio accents and cursor controls — 2026-08-10
+
+- Removed the desktop sidebar divider and decorative dashboard gradients while
+  retaining flat Catppuccin Mocha surfaces and the existing Manrope font.
+- Enlarged Profile media icons, upload hints, and card labels for easier
+  scanning.
+- Added a server-authorized Remove action for an active custom cursor without
+  deleting its reusable library asset.
+- Removed the visible Profile colors heading, doubled the Plus banner height,
+  and removed its trailing arrow.
+
 ## Tune Studio proportions and recessed controls — 2026-08-10
 
 - Matched the reference’s 14rem sidebar, compact navigation rhythm, one-rem

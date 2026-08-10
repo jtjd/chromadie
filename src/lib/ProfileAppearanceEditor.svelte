@@ -94,8 +94,7 @@
 </script>
 
 <div class="appearance-editor">
-  <section class="appearance-editor__panel" aria-labelledby="appearance-colors-title">
-    <div class="appearance-editor__heading"><h2 id="appearance-colors-title">Profile colors</h2></div>
+  <section class="appearance-editor__panel" aria-label="Profile colors">
     <div class="appearance-editor__color-grid">
       {#each colorFields as [key, label] (key)}
         <label class="appearance-editor__field">

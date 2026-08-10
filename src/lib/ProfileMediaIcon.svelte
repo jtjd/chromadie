@@ -20,6 +20,6 @@
 {/if}
 
 <style>
-  .profile-media-icon { display: block; width: 2rem; height: 2rem; color: var(--color-ink-strong); }
+  .profile-media-icon { display: block; width: 2.35rem; height: 2.35rem; color: var(--color-ink-strong); }
   .profile-media-icon--upload { width: 1rem; height: 1rem; color: var(--color-ink-strong); }
 </style>
