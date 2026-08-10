@@ -1,5 +1,18 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Make cursor expression uploadable and align the Studio header
+
+The Plus upsell copy is larger, the sidebar brand begins on the same top
+rhythm as the Profile changes bar, and cursor wells use the same hover outline
+as the other media wells. Profile Studio continues to use Catppuccin Mocha
+tokens and Manrope.
+
+Cursor uploads keep their existing server-authoritative staging and finalize
+flow. WebP cursors remain canvas-bounded; `.ani` files are accepted only for
+cursor kinds, capped at 128 KB, stored with the registered ANI MIME type, and
+projected through the same owner-shaped public path contract. The UI shows a
+small ANI badge instead of attempting to decode the format as an image.
+
 ## 2026-08-10 — Flatten and simplify the Studio controls
 
 The Studio keeps the existing Catppuccin Mocha tokens and Manrope typography,

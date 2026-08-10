@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Refine Studio header and cursor uploads
+
+- Increased the Chromadie Plus upsell copy and aligned the sidebar brand with
+  the Profile changes bar.
+- Added the missing custom-cursor hover outline so its upload target matches
+  the other Profile media options.
+- Fixed rich cursor URL handling and added bounded `.ani` animated cursor
+  uploads for normal and pointer cursor slots, with a safe ANI preview badge.
+
 ## 2026-08-10 — Simplify Studio accents and media controls
 
 - Removed the sidebar divider and decorative gradients for a flatter Mocha

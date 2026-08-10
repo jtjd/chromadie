@@ -44,6 +44,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(shell, /min-height: 2\.2rem/);
   assert.match(shell, /--ctp-sapphire/);
   assert.match(shell, /var\(--studio-canvas\)/);
+  assert.match(shell, /padding: \.7rem \.75rem \.85rem/);
   assert.doesNotMatch(shell, /profile-dashboard-shell__sidebar\s*\{[^}]*border-right/);
   assert.doesNotMatch(shell, /gradient/);
   assert.match(shell, /profile-dashboard-shell__main \{ min-width: 0; background: transparent/);
@@ -106,6 +107,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /profile-expression-editor__compact-grid.*gap: 1\.75rem/);
   assert.doesNotMatch(customize, /gradient/);
   assert.match(customize, /min-height: 5\.6rem/);
+  assert.match(customize, /font: 600 \.94rem\/1\.35/);
   assert.doesNotMatch(customize, /premium-arrow/);
   assert.match(customize, /profile-media-icon\) \{ width: 2\.35rem; height: 2\.35rem/);
   assert.match(expression, /gap: 1\.75rem !important/);
@@ -114,6 +116,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(richMedia, /async function removeCursor/);
   assert.match(richMedia, /saveSelection\(\{ cursor_id: null \}\)/);
   assert.match(richMedia, /rich-media-editor__compact-remove/);
+  assert.match(customize, /rich-media-editor__compact-card--cursor \.rich-media-editor__compact-preview:hover:not\(:disabled\)/);
   assert.doesNotMatch(customize, /--customize-section-surface: var\(--customize-surface-alt\)/);
   assert.match(customize, /--customize-section-input/);
   assert.match(customize, /--customize-section-input-line/);

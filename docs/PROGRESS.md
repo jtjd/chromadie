@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Align Studio header and support animated cursors — 2026-08-10
+
+- Increased the Chromadie Plus upsell text size and aligned the sidebar brand
+  with the Profile changes action bar's top rhythm.
+- Restored a visible Catppuccin-green hover outline for the custom cursor well
+  after the dashboard's scoped border override masked it.
+- Fixed cursor media URL parsing and added bounded `.ani` support for normal
+  and pointer cursors, including Storage MIME/policy and profile path updates.
+- ANI assets stay server-authoritative, use the existing 128 KB cursor limit,
+  and receive a safe preview badge when browsers cannot render ANI as an image.
+
 ## Simplify Studio accents and cursor controls — 2026-08-10
 
 - Removed the desktop sidebar divider and decorative dashboard gradients while

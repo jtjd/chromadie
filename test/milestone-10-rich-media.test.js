@@ -4,11 +4,14 @@ import { readFile } from 'node:fs/promises';
 
 import {
   PROFILE_RICH_MEDIA_BUCKET,
+  PROFILE_ANIMATED_CURSOR_MIME,
   PROFILE_RICH_MEDIA_KINDS,
   PROFILE_RICH_MEDIA_MAX_TOTAL_BYTES,
   PROFILE_RICH_MEDIA_RULES,
   buildRichMediaStoragePath,
+  extensionForRichMedia,
   getRichMediaStorageRef,
+  isAnimatedCursorFile,
   normalizeRichAudioPlaylist,
   normalizeRichMediaConfig,
   validateRichMediaFile
@@ -30,10 +33,18 @@ test('rich media paths and quotas are exact and bounded', () => {
   assert.equal(PROFILE_RICH_MEDIA_RULES.audio.maxCount, 5);
   assert.equal(PROFILE_RICH_MEDIA_RULES.audio.maxInputBytes, 10 * 1024 * 1024);
   assert.equal(PROFILE_RICH_MEDIA_RULES.cursor.maxOutputBytes, 128 * 1024);
+  assert.equal(PROFILE_ANIMATED_CURSOR_MIME, 'application/x-navi-animation');
+  assert.deepEqual(PROFILE_RICH_MEDIA_RULES.cursor.extensions, ['webp', 'ani']);
   assert.equal(videoPath, `profile_media/${userId}/${assetId}.mp4`);
   assert.equal(audioPath, `profile_media/${userId}/${assetId}.mp3`);
   assert.deepEqual(getRichMediaStorageRef(cursorPath), { bucket: 'profile_media', objectPath: `${userId}/${assetId}.webp`, extension: 'webp', kind: null });
   assert.equal(buildRichMediaStoragePath('audio', userId, assetId, 'wav'), '');
+  const aniPath = buildRichMediaStoragePath('cursor', userId, assetId, 'ani');
+  assert.equal(extensionForRichMedia('cursor', { name: 'cursor.ani', type: 'application/octet-stream' }), 'ani');
+  assert.equal(isAnimatedCursorFile({ name: 'cursor.ani', type: 'application/octet-stream' }), true);
+  assert.equal(validateRichMediaFile({ name: 'cursor.ani', type: 'application/x-navi-animation', size: 1024 }, 'cursor'), '');
+  assert.match(validateRichMediaFile({ name: 'cursor.ani', type: 'application/x-navi-animation', size: 131073 }, 'cursor'), /128 KB/);
+  assert.deepEqual(getRichMediaStorageRef(aniPath), { bucket: 'profile_media', objectPath: `${userId}/${assetId}.ani`, extension: 'ani', kind: null });
   assert.equal(getRichMediaStorageRef(`profile_media/${userId}/../../secret.mp3`), null);
 });
 
@@ -41,7 +52,7 @@ test('rich media input and config normalization reject unsafe values', () => {
   assert.equal(validateRichMediaFile({ type: 'video/mp4', size: 1024 }, 'background_video'), '');
   assert.match(validateRichMediaFile({ type: 'video/quicktime', size: 1024 }, 'background_video'), /MP4 or WebM/);
   assert.match(validateRichMediaFile({ type: 'audio/mpeg', size: 10 * 1024 * 1024 + 1 }, 'audio'), /10 MB/);
-  assert.match(validateRichMediaFile({ type: 'image/svg+xml', size: 1024 }, 'cursor'), /JPEG, PNG, or WebP/);
+  assert.match(validateRichMediaFile({ type: 'image/svg+xml', size: 1024 }, 'cursor'), /JPEG, PNG, WebP, or ANI/);
 
   const path = `profile_media/${userId}/${assetId}.mp3`;
   assert.deepEqual(normalizeRichAudioPlaylist({
@@ -63,6 +74,7 @@ test('rich media input and config normalization reject unsafe values', () => {
     controls: false
   });
   assert.equal(normalizeRichMediaConfig({ banner_path: 'https://evil.test/banner.webp' }).banner_path, null);
+  assert.equal(normalizeRichMediaConfig({ banner_path: `profile_media/${userId}/${assetId}.ani` }).banner_path, null);
 });
 
 test('rich media migration and renderer preserve ownership and browser safety boundaries', async () => {
@@ -84,6 +96,10 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   assert.match(migration, /recovery_until < now\(\)/);
   assert.match(migration, /refund hides rich presentation immediately/);
   assert.match(migration, /profile_rich_media_access/);
+  const animatedMigration = await read('supabase/migrations/20260810100000_animated_profile_cursors.sql');
+  assert.match(animatedMigration, /application\/x-navi-animation/);
+  assert.match(animatedMigration, /\(webp\|ani\)/);
+  assert.match(animatedMigration, /stage_my_profile_media_asset/);
   assert.match(migration, /billing_premium_access/);
   assert.match(migration, /COALESCE\(v_object\.metadata->>'mimetype'/);
   assert.match(rlsFix, /COALESCE\(storage\.objects\.metadata->>'mimetype', ''\) = a\.mime_type/);
@@ -97,6 +113,9 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   assert.match(editor, /finalize_my_profile_media_asset/);
   assert.match(editor, /delete_my_profile_media_asset/);
   assert.match(editor, /select_my_profile_rich_media/);
+  assert.match(editor, /application\/x-navi-animation/);
+  assert.match(editor, /\.ani/);
+  assert.match(editor, /PROFILE_ANIMATED_CURSOR_MIME/);
   assert.match(editor, /audioTracks/);
   assert.match(editor, /trim_start_ms/);
   assert.match(editor, /audioShuffle/);

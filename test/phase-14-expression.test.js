@@ -37,12 +37,14 @@ test('expression paths are exact, owner-shaped, and bounded', () => {
   const avatarPath = buildProfileStoragePath('avatar', userId);
   const backgroundPath = buildProfileStoragePath('background', userId);
   const audioPath = buildProfileStoragePath('audio', userId);
+  const animatedCursorPath = `profile_media/${userId}/20000000-0000-0000-0000-000000000002.ani`;
   assert.equal(avatarPath, `avatars/${userId}/avatar.webp`);
   assert.equal(backgroundPath, `backgrounds/${userId}/background.webp`);
   assert.equal(audioPath, `profile_audio/${userId}/profile.mp3`);
   assert.deepEqual(getProfileStorageRef(avatarPath), { bucket: 'avatars', objectPath: `${userId}/avatar.webp` });
   assert.deepEqual(getProfileStorageRef(backgroundPath), { bucket: 'backgrounds', objectPath: `${userId}/background.webp` });
   assert.deepEqual(getProfileStorageRef(audioPath), { bucket: 'profile_audio', objectPath: `${userId}/profile.mp3` });
+  assert.deepEqual(getProfileStorageRef(animatedCursorPath), { bucket: 'profile_media', objectPath: `${userId}/20000000-0000-0000-0000-000000000002.ani` });
   assert.equal(buildProfileStoragePath('avatar', 'not-a-user'), '');
   assert.equal(getProfileStorageRef(`avatars/${userId}/avatar.svg`), null);
   assert.deepEqual(normalizeProfileExpression({

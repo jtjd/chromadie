@@ -109,7 +109,7 @@ export function getProfileStorageRef(storedPath) {
   if (audioMatch) return { bucket: PROFILE_STORAGE_BUCKETS.audio, objectPath: `${audioMatch[2]}/${audioMatch[3]}` };
 
   const richMatch = typeof storedPath === 'string'
-    ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.rich})/(${UUID_PATTERN})/(${UUID_PATTERN}\\.(?:mp4|webm|mp3|webp))$`, 'i'))
+    ? storedPath.match(new RegExp(`^(${PROFILE_STORAGE_BUCKETS.rich})/(${UUID_PATTERN})/(${UUID_PATTERN}\\.(?:mp4|webm|mp3|webp|ani))$`, 'i'))
     : null;
   if (richMatch) return { bucket: PROFILE_STORAGE_BUCKETS.rich, objectPath: `${richMatch[2]}/${richMatch[3]}` };
   return null;

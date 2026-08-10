@@ -5,6 +5,11 @@
  */
 
 export const PROFILE_RICH_MEDIA_BUCKET = 'profile_media';
+export const PROFILE_ANIMATED_CURSOR_MIME = 'application/x-navi-animation';
+export const PROFILE_ANIMATED_CURSOR_MIME_TYPES = Object.freeze([
+  PROFILE_ANIMATED_CURSOR_MIME,
+  'application/octet-stream'
+]);
 export const PROFILE_RICH_MEDIA_KINDS = Object.freeze([
   'background_video',
   'banner',
@@ -49,9 +54,9 @@ export const PROFILE_RICH_MEDIA_RULES = Object.freeze({
     maxOutputBytes: 128 * 1024,
     maxWidth: 128,
     maxHeight: 128,
-    accept: Object.freeze(['image/jpeg', 'image/png', 'image/webp']),
-    extensions: Object.freeze(['webp']),
-    label: '128 KB WebP'
+    accept: Object.freeze(['image/jpeg', 'image/png', 'image/webp', ...PROFILE_ANIMATED_CURSOR_MIME_TYPES]),
+    extensions: Object.freeze(['webp', 'ani']),
+    label: '128 KB WebP or ANI'
   }),
   pointer_cursor: Object.freeze({
     maxCount: 1,
@@ -59,9 +64,9 @@ export const PROFILE_RICH_MEDIA_RULES = Object.freeze({
     maxOutputBytes: 128 * 1024,
     maxWidth: 128,
     maxHeight: 128,
-    accept: Object.freeze(['image/jpeg', 'image/png', 'image/webp']),
-    extensions: Object.freeze(['webp']),
-    label: '128 KB WebP'
+    accept: Object.freeze(['image/jpeg', 'image/png', 'image/webp', ...PROFILE_ANIMATED_CURSOR_MIME_TYPES]),
+    extensions: Object.freeze(['webp', 'ani']),
+    label: '128 KB WebP or ANI'
   })
 });
 
@@ -71,8 +76,16 @@ const KIND_BY_EXTENSION = Object.freeze({
   mp4: 'background_video',
   webm: 'background_video',
   mp3: 'audio',
-  webp: null
+  webp: null,
+  ani: null
 });
+
+export function isAnimatedCursorFile(file) {
+  if (!file || typeof file !== 'object') return false;
+  const name = String((/** @type {any} */ (file))?.name || '').trim().toLowerCase();
+  const type = String((/** @type {any} */ (file))?.type || '').trim().toLowerCase();
+  return name.endsWith('.ani') || PROFILE_ANIMATED_CURSOR_MIME_TYPES.includes(type);
+}
 
 function safeInteger(value, fallback = 0, minimum = 0, maximum = Number.MAX_SAFE_INTEGER) {
   const candidate = Number(value);
@@ -99,10 +112,15 @@ function safeLabel(value, fallback = 'Untitled track') {
 export function extensionForRichMedia(kind, fileOrMime = '') {
   const rules = PROFILE_RICH_MEDIA_RULES[kind];
   if (!rules) return '';
-  const value = fileOrMime && typeof fileOrMime === 'object'
-    ? String((/** @type {any} */ (fileOrMime))?.type || '')
+  const objectValue = fileOrMime && typeof fileOrMime === 'object' ? /** @type {any} */ (fileOrMime) : null;
+  const filename = String(objectValue?.name || '').toLowerCase();
+  const filenameExtension = filename.match(/\.([a-z0-9]+)$/)?.[1] || '';
+  if (['cursor', 'pointer_cursor'].includes(kind) && filenameExtension === 'ani') return 'ani';
+  const value = objectValue
+    ? String(objectValue?.type || '').toLowerCase()
     : String(fileOrMime || '').toLowerCase().replace(/^\./, '');
   if (rules.extensions.includes(value)) return value;
+  if (['cursor', 'pointer_cursor'].includes(kind) && PROFILE_ANIMATED_CURSOR_MIME_TYPES.includes(value)) return 'ani';
   if (value === 'video/mp4') return 'mp4';
   if (value === 'video/webm') return 'webm';
   if (value === 'audio/mpeg' || value === 'audio/mp3') return 'mp3';
@@ -122,7 +140,7 @@ export function buildRichMediaStoragePath(kind, userId, assetId, extension = '')
 
 export function getRichMediaStorageRef(storedPath) {
   if (typeof storedPath !== 'string') return null;
-  const match = storedPath.trim().match(new RegExp(`^${PROFILE_RICH_MEDIA_BUCKET}/(${UUID_PATTERN})/(${UUID_PATTERN})\\.(mp4|webm|mp3|webp)$`, 'i'));
+  const match = storedPath.trim().match(new RegExp(`^${PROFILE_RICH_MEDIA_BUCKET}/(${UUID_PATTERN})/(${UUID_PATTERN})\\.(mp4|webm|mp3|webp|ani)$`, 'i'));
   if (!match) return null;
   const extension = match[3].toLowerCase();
   const kind = KIND_BY_EXTENSION[extension];
@@ -139,7 +157,8 @@ export function getRichMediaKindFromPath(storedPath, expectedKind = '') {
   if (!reference) return null;
   if (expectedKind === 'background_video' && ['mp4', 'webm'].includes(reference.extension)) return expectedKind;
   if (expectedKind === 'audio' && reference.extension === 'mp3') return expectedKind;
-  if (['banner', 'cursor', 'pointer_cursor'].includes(expectedKind) && reference.extension === 'webp') return expectedKind;
+  if (expectedKind === 'banner' && reference.extension === 'webp') return expectedKind;
+  if (['cursor', 'pointer_cursor'].includes(expectedKind) && ['webp', 'ani'].includes(reference.extension)) return expectedKind;
   return reference.kind;
 }
 
@@ -147,8 +166,16 @@ export function validateRichMediaFile(file, kind) {
   const rules = PROFILE_RICH_MEDIA_RULES[kind];
   if (!rules) return 'This rich media type is not supported.';
   if (!file || typeof file !== 'object') return 'Choose a file first.';
-  if (!rules.accept.includes(String(file.type || '').toLowerCase())) {
-    return kind === 'background_video' ? 'Use an MP4 or WebM video.' : kind === 'audio' ? 'Use an MP3 audio file.' : 'Use a JPEG, PNG, or WebP image.';
+  const type = String(file.type || '').toLowerCase();
+  const animatedCursor = ['cursor', 'pointer_cursor'].includes(kind) && isAnimatedCursorFile(file);
+  const accepted = animatedCursor
+    ? PROFILE_ANIMATED_CURSOR_MIME_TYPES.includes(type) || type === ''
+    : rules.accept.includes(type) && !PROFILE_ANIMATED_CURSOR_MIME_TYPES.includes(type);
+  if (!accepted) {
+    return kind === 'background_video' ? 'Use an MP4 or WebM video.' : kind === 'audio' ? 'Use an MP3 audio file.' : 'Use a JPEG, PNG, WebP, or ANI cursor.';
+  }
+  if (animatedCursor && Number.isFinite(file.size) && file.size > rules.maxOutputBytes) {
+    return 'That ANI cursor is too large. Keep it under 128 KB.';
   }
   if (!Number.isFinite(file.size) || file.size <= 0 || file.size > rules.maxInputBytes) {
     return `That file is too large. Keep it under ${rules.label} input.`;
@@ -225,7 +252,12 @@ export function normalizeRichMediaConfig(value = {}) {
   ]) {
     const path = typeof source[field] === 'string' ? source[field].trim() : '';
     const reference = getRichMediaStorageRef(path);
-    if (reference && ((kind === 'background_video' && ['mp4', 'webm'].includes(reference.extension)) || (kind !== 'background_video' && reference.extension === 'webp'))) {
+    const validPath = kind === 'background_video'
+      ? ['mp4', 'webm'].includes(reference?.extension)
+      : kind === 'banner'
+        ? reference?.extension === 'webp'
+        : ['webp', 'ani'].includes(reference?.extension);
+    if (reference && validPath) {
       output[field] = path;
     }
   }

@@ -274,7 +274,7 @@
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
   .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-section-accent); font-size: var(--customize-section-heading-size); line-height: 1.2; letter-spacing: -.03em; }
 
-  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .55rem; min-height: 5.6rem; overflow: hidden; padding: 1rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: var(--ctp-mantle, #181825); color: var(--customize-text-muted); font: 600 .78rem/1.35 var(--customize-font-body); cursor: pointer; }
+  .profile-customize-page__premium-banner { position: relative; display: flex; align-items: center; justify-content: center; gap: .55rem; min-height: 5.6rem; overflow: hidden; padding: 1rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: var(--ctp-mantle, #181825); color: var(--customize-text-muted); font: 600 .94rem/1.35 var(--customize-font-body); cursor: pointer; }
   .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { position: absolute; color: color-mix(in srgb, var(--customize-accent-premium) 12%, transparent); font-size: 2.7rem; line-height: 1; pointer-events: none; }
   .profile-customize-page__premium-banner::before { content: '◇'; left: 1rem; transform: rotate(-18deg); }
   .profile-customize-page__premium-banner::after { content: '✦'; right: 1rem; transform: rotate(18deg); }
@@ -470,6 +470,8 @@
   .profile-customize-page__editor--media :global(.rich-media-editor__compact-upload-hint) { font-size: .84rem; }
   .profile-customize-page__editor--media :global(.profile-expression-editor__compact-copy strong),
   .profile-customize-page__editor--media :global(.rich-media-editor__compact-copy strong) { font-size: .92rem; }
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card--cursor .rich-media-editor__compact-preview:hover:not(:disabled)),
+  .profile-customize-page__editor--media :global(.rich-media-editor__compact-card--pointer_cursor .rich-media-editor__compact-preview:hover:not(:disabled)) { border-color: var(--ctp-green, #a6e3a1) !important; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ctp-green, #a6e3a1) 54%, transparent); }
   .profile-customize-page :global(.rich-media-editor__compact-preview),
   .profile-customize-page :global(.rich-media-editor__upload-card),
   .profile-customize-page :global(.rich-media-editor__upload-preview),

@@ -5,11 +5,13 @@
   import { supabase } from './supabase.js';
   import Module from './foundation/Module.svelte';
   import {
+    PROFILE_ANIMATED_CURSOR_MIME,
     PROFILE_RICH_MEDIA_KINDS,
     buildRichMediaStoragePath,
     extensionForRichMedia,
     formatRichMediaBytes,
     getRichMediaStorageRef,
+    isAnimatedCursorFile,
     normalizeRichMediaConfig,
     validateRichMediaFile
   } from './profileRichMedia.js';
@@ -114,6 +116,10 @@
 
   function assetForPath(path) {
     return assets.find(asset => asset.storage_path === path) || null;
+  }
+
+  function animatedCursorAsset(asset) {
+    return Boolean(asset && (isAnimatedCursorFile(asset) || /\.ani$/i.test(String(asset.storage_path || '')) || asset.mime_type === PROFILE_ANIMATED_CURSOR_MIME));
   }
 
   function readMediaDuration(file, kind) {
@@ -229,7 +235,15 @@
       let blob = file;
       let extension = extensionForRichMedia(kind, file);
       const metadata = {};
-      if (['banner', 'cursor', 'pointer_cursor'].includes(kind)) {
+      const animatedCursor = ['cursor', 'pointer_cursor'].includes(kind) && isAnimatedCursorFile(file);
+      if (animatedCursor) {
+        // ANI files are already packaged cursor frames. Keep the bounded
+        // source instead of sending it through canvas/WebP conversion.
+        blob = file;
+        extension = 'ani';
+        metadata.width = 128;
+        metadata.height = 128;
+      } else if (['banner', 'cursor', 'pointer_cursor'].includes(kind)) {
         blob = await processProfileRichImage(file, kind);
         extension = 'webp';
         if (kind !== 'banner') {
@@ -255,7 +269,8 @@
         p_metadata: metadata
       });
       if (stageError || !staged?.success) throw new Error(stageError?.message || staged?.error || 'The server could not stage this media.');
-      const { error: uploadError } = await supabase.storage.from(reference.bucket).upload(reference.objectPath, blob, { contentType: blob.type || file.type, cacheControl: '31536000', upsert: false });
+      const contentType = reference.extension === 'ani' ? PROFILE_ANIMATED_CURSOR_MIME : blob.type || file.type;
+      const { error: uploadError } = await supabase.storage.from(reference.bucket).upload(reference.objectPath, blob, { contentType, cacheControl: '31536000', upsert: false });
       if (uploadError) {
         await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: staged.id });
         throw new Error(uploadError.message || 'The media upload failed.');
@@ -333,10 +348,10 @@
 
       {#if compactKinds.includes('cursor')}
         <article class="rich-media-editor__compact-card rich-media-editor__compact-card--cursor">
-          <input bind:this={cursorInput} class="rich-media-editor__compact-file" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose custom cursor" on:change={(event) => uploadFile(event, 'cursor')} />
+          <input bind:this={cursorInput} class="rich-media-editor__compact-file" type="file" accept="image/jpeg,image/png,image/webp,application/x-navi-animation,application/octet-stream,.ani" aria-label="Choose custom cursor" on:change={(event) => uploadFile(event, 'cursor')} />
           <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--cursor" type="button" disabled={busy} on:click={() => cursorInput?.click()} aria-label={activeCursor ? 'Replace custom cursor' : 'Upload custom cursor'}>
             {#if activeCursor}
-              <img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Custom cursor preview" />
+              {#if animatedCursorAsset(activeCursor)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Custom cursor preview" />{/if}
             {:else}
               <ProfileMediaIcon kind="image" />
             {/if}
@@ -374,18 +389,18 @@
       </div>
       <div class="rich-media-editor__upload-card">
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--cursor">
-          {#if activeCursor}<img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Active cursor" />{:else}<span aria-hidden="true">↖</span><small>No cursor selected</small>{/if}
+          {#if activeCursor}{#if animatedCursorAsset(activeCursor)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Active cursor" />{/if}{:else}<span aria-hidden="true">↖</span><small>No cursor selected</small>{/if}
         </div>
-        <strong>Normal cursor</strong><small>WebP · 128×128 · 128 KB</small>
-        <input bind:this={cursorInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'cursor')} />
+        <strong>Normal cursor</strong><small>WebP or ANI · 128×128 · 128 KB</small>
+        <input bind:this={cursorInput} type="file" accept="image/jpeg,image/png,image/webp,application/x-navi-animation,application/octet-stream,.ani" on:change={(event) => uploadFile(event, 'cursor')} />
         <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => cursorInput?.click()}>{activeCursor ? 'Replace cursor' : 'Upload cursor'}</button>
       </div>
       <div class="rich-media-editor__upload-card">
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--cursor">
-          {#if activePointerCursor}<img src={getProfileMediaUrl(activePointerCursor.storage_path, cacheKey)} alt="Active pointer cursor" />{:else}<span aria-hidden="true">✦</span><small>No pointer selected</small>{/if}
+          {#if activePointerCursor}{#if animatedCursorAsset(activePointerCursor)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={getProfileMediaUrl(activePointerCursor.storage_path, cacheKey)} alt="Active pointer cursor" />{/if}{:else}<span aria-hidden="true">✦</span><small>No pointer selected</small>{/if}
         </div>
-        <strong>Pointer cursor</strong><small>WebP · 128×128 · 128 KB</small>
-        <input bind:this={pointerCursorInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'pointer_cursor')} />
+        <strong>Pointer cursor</strong><small>WebP or ANI · 128×128 · 128 KB</small>
+        <input bind:this={pointerCursorInput} type="file" accept="image/jpeg,image/png,image/webp,application/x-navi-animation,application/octet-stream,.ani" on:change={(event) => uploadFile(event, 'pointer_cursor')} />
         <button type="button" style={actionButtonStyle} disabled={busy} on:click={() => pointerCursorInput?.click()}>{activePointerCursor ? 'Replace pointer' : 'Upload pointer'}</button>
       </div>
       <div class="rich-media-editor__upload-card">
@@ -410,7 +425,7 @@
           <div class="rich-media-editor__asset-row">
             {#each group[2] as asset (asset.id)}
               <article class:rich-media-editor__asset--active={richConfig[group[3]] === asset.storage_path} class="rich-media-editor__asset">
-                {#if group[0] === 'background_video'}<video src={getProfileMediaUrl(asset.storage_path, cacheKey)} muted loop playsinline preload="metadata" aria-label={asset.label || 'Background video'}></video>{:else}<img src={getProfileMediaUrl(asset.storage_path, cacheKey)} alt={asset.label || group[1]} loading="lazy" />{/if}
+                {#if group[0] === 'background_video'}<video src={getProfileMediaUrl(asset.storage_path, cacheKey)} muted loop playsinline preload="metadata" aria-label={asset.label || 'Background video'}></video>{:else if animatedCursorAsset(asset)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={getProfileMediaUrl(asset.storage_path, cacheKey)} alt={asset.label || group[1]} loading="lazy" />{/if}
                 <div><strong>{asset.label || 'Untitled asset'}</strong><small>{formatRichMediaBytes(asset.byte_size)}</small></div>
                 <div class="rich-media-editor__asset-actions"><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => selectAsset(group[0], asset)}>{richConfig[group[3]] === asset.storage_path ? 'Active' : 'Use'}</button><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => removeAsset(asset)}>Remove</button></div>
               </article>
@@ -491,6 +506,7 @@
   .rich-media-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
   .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
   .rich-media-editor__compact-preview img { width: 4rem; height: 4rem; object-fit: contain; }
+  .rich-media-editor__cursor-badge { display: grid; width: 4rem; height: 4rem; place-items: center; border: 1px solid color-mix(in srgb, var(--ctp-green, #a6e3a1) 58%, var(--color-line-subtle)); border-radius: .45rem; background: color-mix(in srgb, var(--ctp-green, #a6e3a1) 12%, var(--surface-inset)); color: var(--ctp-green, #a6e3a1); font: 750 .76rem/1 var(--customize-font-mono, var(--font-mono-stack, monospace)); letter-spacing: .08em; }
   .rich-media-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__compact-upload-hint { max-width: 100%; overflow: hidden; color: var(--color-ink-muted); font-size: .84rem; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__compact-copy { display: block; min-width: 0; order: -1; }
@@ -511,6 +527,7 @@
   .rich-media-editor__upload-preview--audio { align-content: center; gap: .35rem; padding: .4rem; }
   .rich-media-editor__upload-preview img, .rich-media-editor__upload-preview video { width: 100%; height: 100%; object-fit: cover; }
   .rich-media-editor__upload-preview--cursor img { width: 4rem; height: 4rem; object-fit: contain; }
+  .rich-media-editor__upload-preview--cursor .rich-media-editor__cursor-badge { width: 4rem; height: 4rem; }
   .rich-media-editor__upload-preview audio { width: 100%; max-width: 100%; }
   .rich-media-editor__upload-preview > span { color: var(--color-accent-bright); font-size: 1.4rem; }
   .rich-media-editor__upload-preview small { padding: 0 .3rem; color: var(--color-ink-muted); font-size: var(--type-label); }

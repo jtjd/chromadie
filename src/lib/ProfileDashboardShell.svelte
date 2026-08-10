@@ -175,7 +175,7 @@
     height: 100dvh;
     min-width: 0;
     overflow-y: auto;
-    padding: 1.1rem .75rem .85rem;
+    padding: .7rem .75rem .85rem;
     background: var(--studio-canvas);
   }
   .profile-dashboard-shell__sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: .05rem .45rem 2.4rem; }
