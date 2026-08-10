@@ -1,5 +1,17 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Fold visual effects into Appearance
+
+Customize uses three primary tabs: Appearance, Media, and Layout. Visual
+effects are part of how a profile looks, so the real cosmetic fitting-room
+controls now follow identity, colors, and surface controls in Appearance
+instead of occupying a separate tab.
+
+The removed tab is an information-architecture change only. Effect selection,
+entitlements, temporary preview, and equip RPCs are unchanged. Existing
+`#effects`, `#customize-effects`, Collection, and Widgets destinations resolve
+to Appearance so direct refreshes and old bookmarks remain compatible.
+
 ## 2026-08-10 — Require a real contract for every Customize control
 
 Profile Studio may expose a control only when it maps to normalized profile

@@ -40,20 +40,18 @@
   const LINKS_SECTION_IDS = Object.freeze(['profile-layout', 'profile-aliases']);
   const FALLBACK_PROFILE_COLOR = '#CDD2FF';
 
-  // Customize keeps one canonical destination while exposing the four editing
+  // Customize keeps one canonical destination while exposing three editing
   // surfaces people use to shape their profile. The tab ids deliberately stay
   // independent from the legacy section ids so old links can keep resolving.
   const CUSTOMIZE_TABS = Object.freeze([
     { id: 'appearance', label: 'Appearance', description: 'Color, identity, and presence' },
     { id: 'media', label: 'Media', description: 'Avatar, background, music, and uploads' },
-    { id: 'effects', label: 'Effects', description: 'Atmosphere, collection, and widgets' },
     { id: 'layout', label: 'Layout', description: 'Templates and profile structure' }
   ]);
   const CUSTOMIZE_TAB_IDS = Object.freeze(CUSTOMIZE_TABS.map(tab => tab.id));
   const CUSTOMIZE_TAB_HASHES = Object.freeze({
     appearance: 'customize-appearance',
     media: 'customize-media',
-    effects: 'customize-effects',
     layout: 'customize-layout'
   });
   const CUSTOMIZE_TAB_ALIASES = Object.freeze({
@@ -66,14 +64,14 @@
     expression: 'media',
     'customize-media': 'media',
     'profile-media': 'media',
-    effects: 'effects',
-    'customize-effects': 'effects',
-    collection: 'effects',
-    'profile-collection': 'effects',
+    effects: 'appearance',
+    'customize-effects': 'appearance',
+    collection: 'appearance',
+    'profile-collection': 'appearance',
     content: 'media',
-    widgets: 'effects',
+    widgets: 'appearance',
     'customize-content': 'media',
-    'customize-widgets': 'effects',
+    'customize-widgets': 'appearance',
     layout: 'layout',
     templates: 'layout',
     'customize-layout': 'layout'

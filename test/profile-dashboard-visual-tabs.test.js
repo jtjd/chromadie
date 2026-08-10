@@ -11,16 +11,19 @@ test('Customize tabs preserve mounted editors while switching visible groups', a
   ]);
 
   assert.match(customize, /export let activeTab = 'appearance'/);
-  assert.match(customize, /selectedTab = \['appearance', 'media', 'effects', 'layout'\]/);
+  assert.match(customize, /selectedTab = \['appearance', 'media', 'layout'\]/);
   assert.match(customize, /hidden=\{selectedTab !== 'media'\}/);
   assert.match(customize, /hidden=\{selectedTab !== 'appearance'\}/);
-  assert.match(customize, /hidden=\{selectedTab !== 'effects'\}/);
+  assert.match(customize, /class:is-tab-hidden=\{selectedTab !== 'appearance'\}[^>]*id="customize-effects"/);
+  assert.match(customize, /data-editor-section="effects"/);
   assert.match(customize, /hidden=\{selectedTab !== 'layout'\}/);
   assert.match(customize, /profile-collection/);
   assert.match(customize, /profile-widgets/);
   assert.match(customize, /profile-layout/);
   assert.match(settings, /content: 'media'/);
-  assert.match(settings, /widgets: 'effects'/);
+  assert.match(settings, /widgets: 'appearance'/);
+  assert.match(settings, /'customize-effects': 'appearance'/);
+  assert.doesNotMatch(settings, /\{ id: 'effects', label: 'Effects'/);
 });
 
 test('Profile Studio mode control is keyboard-labelled and stays gradient-free', async () => {

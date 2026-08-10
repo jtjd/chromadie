@@ -24,7 +24,7 @@
   $: widgetComponent = components['profile-widgets'];
   $: collectionComponent = components['profile-collection'];
   $: layoutComponent = components['profile-layout'];
-  $: selectedTab = ['appearance', 'media', 'effects', 'layout'].includes(activeTab) ? activeTab : 'appearance';
+  $: selectedTab = ['appearance', 'media', 'layout'].includes(activeTab) ? activeTab : 'appearance';
 
   // Tab visibility is intentionally presentation-only. Every editor stays
   // mounted so staged drafts, media previews, and child editor refs survive
@@ -130,7 +130,7 @@
     </div>
   </section>
 
-  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'effects'} aria-hidden={selectedTab !== 'effects'} hidden={selectedTab !== 'effects'} aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
+  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-labelledby="profile-customize-effects-title" data-editor-section="effects" id="customize-effects">
     <div class="profile-customize-page__surface-heading">
       <div><h3 id="profile-customize-effects-title">Visual effects</h3><p>Customize the visuals around your profile.</p></div>
     </div>
@@ -157,7 +157,7 @@
   </section>
 
   <!-- Keep the legacy content editor mounted for route/ref compatibility, but
-       do not surface it in the four-tab workspace.  Media owns the complete
+       do not surface it in the three-tab workspace.  Media owns the complete
        asset surface in the reference composition. -->
   <section class="profile-customize-page__surface is-tab-hidden" aria-hidden="true" hidden={true} aria-labelledby="profile-customize-other-title" data-editor-section="other" id="customize-other">
     <div class="profile-customize-page__surface-heading">
@@ -180,8 +180,8 @@
     </div>
   </section>
 
-  <!-- Widgets remain mounted for the legacy editor contract, but the Effects
-       tab intentionally matches the reference's five visual-effect cards. -->
+  <!-- Widgets remain mounted for the legacy editor contract while Appearance
+       owns the visible, renderer-backed visual-effect cards. -->
   <section class="profile-customize-page__surface is-tab-hidden" aria-hidden="true" hidden={true} aria-labelledby="profile-customize-widgets-title" data-editor-section="widgets" id="customize-widgets">
     <div class="profile-customize-page__surface-heading">
       <h3 id="profile-customize-widgets-title">Provider Widgets</h3>

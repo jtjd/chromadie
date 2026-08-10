@@ -103,7 +103,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(richMedia, /rich-media-editor__compact-card/);
   assert.match(customize, /Chromadie Plus/);
   assert.match(settings, /role="tablist" aria-label="Customize profile"/);
-  assert.match(settings, /Appearance[\s\S]*Media[\s\S]*Effects[\s\S]*Layout/);
+  assert.match(settings, /Appearance[\s\S]*Media[\s\S]*Layout/);
+  assert.doesNotMatch(settings, /\{ id: 'effects', label: 'Effects'/);
+  assert.match(settings, /'customize-effects': 'appearance'/);
   assert.match(customize, /export let activeTab = 'appearance'/);
   assert.match(customize, /premiumrequest/);
   assert.match(customize, /ProfileAppearanceEditor/);

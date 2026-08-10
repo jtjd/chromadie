@@ -196,9 +196,12 @@ try {
   });
 
   await step('Customize controls publish the configured surface depth', async () => {
-    await page.navigate(`${appUrl}/profile/settings#customize`, 'Customize section');
+    await page.navigate(`${appUrl}/profile/settings#customize-effects`, 'legacy Effects destination');
     await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-settings-preview .profile-shell-page--preview')`, 'Customize tab workspace and persistent preview');
     await page.waitFor(`document.querySelector('.profile-dashboard-actions')`, 'dashboard profile actions');
+    const customizeTabs = await page.evaluate(`[...document.querySelectorAll('[role="tablist"][aria-label="Customize profile"] [role="tab"]')].map(tab => tab.textContent.trim())`);
+    assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Layout']), `Customize tabs did not collapse Effects into Appearance: ${JSON.stringify(customizeTabs)}.`);
+    await page.waitFor(`!document.querySelector('#customize-effects')?.hidden`, 'visual effects inside Appearance');
     await page.click('#profile-customize-tab-media', 'Media customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="media"]')?.hidden`, 'visible Media editor');
     await page.waitFor(`(() => {

@@ -1,6 +1,6 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, and the Customize control audit implemented 2026-08-10
+Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, the Customize control audit, and the three-tab Customize IA implemented 2026-08-10
 
 ## Scope
 
@@ -112,3 +112,9 @@ bio input, appearance colors and depth, structured content/widgets/layout,
 media selections, and temporary cosmetic loadouts update immediately without
 changing the existing save, publish, upload, equip, RLS, or RPC authority
 boundaries.
+
+Customize now presents three tabs: Appearance, Media, and Layout. Appearance
+contains identity, renderer-backed colors and surface depth, and the existing
+visual-effect fitting room. The old Effects tab and its hashes remain routing
+aliases to Appearance; cosmetic preview, entitlement checks, and equip RPCs
+retain their existing authority boundaries.

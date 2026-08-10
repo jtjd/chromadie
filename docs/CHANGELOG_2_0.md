@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Merge Effects into Appearance
+
+- Removed the separate Effects tab from Customize.
+- Visual-effect controls now appear directly in Appearance with identity,
+  profile colors, and profile surface controls.
+- Existing Effects links continue opening the correct controls in Appearance.
+
 ## 2026-08-10 — Remove nonfunctional Customize controls
 
 - Removed Customize options that appeared editable but were not saved or

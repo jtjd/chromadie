@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Merge Effects into Appearance — 2026-08-10
+
+- Reduced Customize to Appearance, Media, and Layout.
+- Moved the renderer-backed visual-effect collection into Appearance beneath
+  identity, profile colors, and surface controls.
+- Preserved temporary cosmetic preview, Apply changes, entitlements, and the
+  existing server-authoritative equip/unequip RPCs.
+- Redirected legacy Effects, Collection, and Widgets hashes to Appearance.
+- Added source and authenticated browser coverage for the three-tab contract
+  and the visible effect controls inside Appearance.
+
 ## Audit Customize controls and unify live preview — 2026-08-10
 
 - Audited every visible Customize control against normalized configuration,
