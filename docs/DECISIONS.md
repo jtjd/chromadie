@@ -1,5 +1,23 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Require a real contract for every Customize control
+
+Profile Studio may expose a control only when it maps to normalized profile
+configuration, an owner-authorized media operation, or an equipped-cosmetic
+RPC and is consumed by the public renderer. Decorative controls that changed
+only component-local variables were removed rather than promoted into new
+schema without a product requirement. Existing stored compatibility fields
+remain normalized and render-safe; this decision removes only unsupported
+editor affordances.
+
+Customize preview state is composed across mounted editors. Identity drafts,
+appearance and layout configuration, structured content and widgets, media,
+and cosmetic try-ons can no longer replace one another with isolated preview
+snapshots. The persistent Live preview receives the composed configuration,
+draft identity, and temporary equipped loadout immediately, while publishing
+and permanent cosmetic changes retain their existing server-authoritative
+boundaries.
+
 ## 2026-08-10 — Make the first profile identity-first without overriding authors
 
 The Signal template and new-profile fallback now use the free Focus composition.

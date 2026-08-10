@@ -9,9 +9,7 @@ export const PROFILE_APPEARANCE_COLOR_FIELDS = Object.freeze([
   Object.freeze({ key: 'secondaryText', label: 'Handle & metadata', path: Object.freeze(['colors', 'secondaryText']) }),
   Object.freeze({ key: 'surface', label: 'Profile surface', path: Object.freeze(['colors', 'surface']) }),
   Object.freeze({ key: 'username', label: 'Username', path: Object.freeze(['colors', 'username']) }),
-  Object.freeze({ key: 'surfaceTint', label: 'Surface tint', path: Object.freeze(['colors', 'highlight']) }),
   Object.freeze({ key: 'description', label: 'Bio text', path: Object.freeze(['colors', 'description']) }),
-  Object.freeze({ key: 'border', label: 'Border', path: Object.freeze(['border', 'color']) }),
   Object.freeze({ key: 'background', label: 'Page background', path: Object.freeze(['colors', 'background']) })
 ]);
 

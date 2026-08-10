@@ -568,7 +568,6 @@
         </article>
       {/if}
 
-      <slot name="background-options" />
     </div>
   {/if}
 

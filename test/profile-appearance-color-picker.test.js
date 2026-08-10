@@ -15,27 +15,27 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('selecting a matrix role resolves the active picker label, path, and value', () => {
   const appearance = createDefaultProfileConfig().appearance;
-  const field = getProfileAppearanceColorField('surfaceTint');
+  const field = getProfileAppearanceColorField('description');
 
-  assert.equal(field.label, 'Surface tint');
-  assert.deepEqual(field.path, ['colors', 'highlight']);
-  assert.equal(getProfileAppearanceColorValue(appearance, 'surfaceTint'), '#FFFFFF');
+  assert.equal(field.label, 'Bio text');
+  assert.deepEqual(field.path, ['colors', 'description']);
+  assert.equal(getProfileAppearanceColorValue(appearance, 'description'), '#CBD1DC');
 
-  const next = setProfileAppearanceColor(appearance, 'surfaceTint', '#12abef');
-  assert.equal(getProfileAppearanceColorValue(next, 'surfaceTint'), '#12ABEF');
-  assert.equal(getProfileAppearanceColorValue(appearance, 'surfaceTint'), '#FFFFFF');
+  const next = setProfileAppearanceColor(appearance, 'description', '#12abef');
+  assert.equal(getProfileAppearanceColorValue(next, 'description'), '#12ABEF');
+  assert.equal(getProfileAppearanceColorValue(appearance, 'description'), '#CBD1DC');
 });
 
 test('square and hue picker values update only the selected role', () => {
   const appearance = createDefaultProfileConfig().appearance;
-  const original = appearance.colors.highlight;
+  const original = appearance.colors.description;
   const hsv = hexToHsv(original);
   const squareValue = hsvToHex({ h: hsv.h, s: .35, v: .72 });
-  const afterSquare = setProfileAppearanceColor(appearance, 'surfaceTint', squareValue);
-  const afterHue = setProfileAppearanceColor(afterSquare, 'surfaceTint', hsvToHex({ h: hsv.h + 60, s: .35, v: .72 }));
+  const afterSquare = setProfileAppearanceColor(appearance, 'description', squareValue);
+  const afterHue = setProfileAppearanceColor(afterSquare, 'description', hsvToHex({ h: hsv.h + 60, s: .35, v: .72 }));
 
-  assert.equal(getProfileAppearanceColorValue(afterSquare, 'surfaceTint'), squareValue);
-  assert.equal(getProfileAppearanceColorValue(afterHue, 'surfaceTint'), hsvToHex({ h: hsv.h + 60, s: .35, v: .72 }));
+  assert.equal(getProfileAppearanceColorValue(afterSquare, 'description'), squareValue);
+  assert.equal(getProfileAppearanceColorValue(afterHue, 'description'), hsvToHex({ h: hsv.h + 60, s: .35, v: .72 }));
   assert.equal(afterHue.colors.accent, appearance.colors.accent);
   assert.equal(afterHue.colors.text, appearance.colors.text);
 });

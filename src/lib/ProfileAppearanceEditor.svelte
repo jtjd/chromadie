@@ -278,8 +278,7 @@
   <section class="appearance-editor__panel" aria-labelledby="appearance-surface-title">
     <div class="appearance-editor__surface-grid">
       <div class="appearance-editor__surface-intro">
-        <div class="appearance-editor__heading"><div><h2 id="appearance-surface-title">Profile surface</h2><p>Adjust background surface</p></div></div>
-        <select aria-label="Profile surface style"><option>Celestial Border</option><option>Plain surface</option><option>Glass surface</option></select>
+        <div class="appearance-editor__heading"><div><h2 id="appearance-surface-title">Profile surface</h2><p>Adjust the profile card</p></div></div>
       </div>
       <label class="appearance-editor__range"><span>Opacity <output>{staged.surface.opacity}%</output></span><input type="range" min="0" max="100" step="1" value={staged.surface.opacity} on:input={event => update(['surface', 'opacity'], Number(event.currentTarget.value))} /></label>
       <label class="appearance-editor__range"><span>Blur <output>{staged.surface.blur}px</output></span><input type="range" min="0" max="40" step="1" value={staged.surface.blur} on:input={event => update(['surface', 'blur'], Number(event.currentTarget.value))} /></label>
@@ -291,7 +290,7 @@
 
 <style>
   .appearance-editor {
-    --appearance-surface: var(--customize-surface, #1e1e2e);
+    --appearance-surface: var(--customize-section-surface, var(--customize-surface, #1e1e2e));
     --appearance-input: var(--customize-section-input, var(--customize-surface-raised, #313244));
     --appearance-line: var(--customize-border, rgba(166, 173, 200, .24));
     --appearance-line-strong: var(--customize-border-strong, rgba(166, 173, 200, .48));
@@ -329,7 +328,6 @@
   .appearance-editor__surface-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr) minmax(0, 1.1fr); align-items: end; gap: .55rem .7rem; }
   .appearance-editor__surface-intro { display: grid; min-width: 0; gap: .35rem; }
   .appearance-editor__surface-intro .appearance-editor__heading { margin: 0; }
-  .appearance-editor__surface-intro select { width: 100%; min-height: var(--appearance-primary-height); box-sizing: border-box; border: 1px solid var(--appearance-line-strong); border-radius: var(--appearance-radius); padding: .45rem .6rem; background: var(--appearance-input); color: var(--appearance-text); font: var(--appearance-control-size)/1 var(--appearance-body); }
   .appearance-editor__field, .appearance-editor__range { display: grid; gap: .35rem; min-width: 0; }
   .appearance-editor__field > span, .appearance-editor__range > span { display: flex; justify-content: space-between; gap: .5rem; color: var(--appearance-secondary); font-size: var(--appearance-label-size); line-height: 1.3; }
   .appearance-editor__field > span { align-items: center; justify-content: flex-start; gap: .45rem; }

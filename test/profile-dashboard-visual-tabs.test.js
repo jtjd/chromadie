@@ -63,14 +63,20 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(settings, /profile-settings-preview__canvas\.profile-settings-preview__canvas--appearance :global\(\.profile-shell-page--preview\) \{ height: auto !important; min-height: 0 !important/);
   assert.match(appearance, /appearance-editor__picker-surface/);
   assert.match(appearance, /appearance-editor__palette/);
-  for (const label of ['Profile text', 'Handle & metadata', 'Profile surface', 'Surface tint', 'Border', 'Page background']) {
+  for (const label of ['Profile text', 'Handle & metadata', 'Profile surface', 'Bio text', 'Page background']) {
     assert.match(appearanceColors, new RegExp(label));
   }
-  assert.match(customize, /profile-customize-page__appearance-effects/);
+  assert.doesNotMatch(appearanceColors, /Surface tint|label: 'Border'/);
+  assert.doesNotMatch(customize, /profile-customize-page__appearance-effects|Overlay color|Atmosphere strength|Restart animations/);
   assert.match(customize, /--customize-control-surface: var\(--ctp-crust/);
   assert.match(customize, /background: var\(--customize-control-surface\) !important/);
   assert.match(customize, /profile-editor \.profile-template-picker__premium\) \{ display: none !important; \}/);
   assert.match(cosmetics, /Name effects/);
   assert.match(cosmetics, /Visual effects/);
+  assert.match(cosmetics, /dispatch\('cosmeticpreview'/);
+  assert.match(customize, /dispatch\('customizepreview'/);
+  assert.match(settings, /on:identitypreview=\{updateIdentityPreview\}/);
+  assert.match(settings, /on:cosmeticpreview=\{updateCosmeticPreview\}/);
+  assert.match(settings, /on:customizepreview=\{updateConfigurationPreview\}/);
   assert.match(customize, /profile-expression-editor__compact-grid\) \{ grid-template-columns: minmax\(0, \.9fr\)/);
 });

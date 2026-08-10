@@ -61,8 +61,9 @@
     draftPresentation = cached?.presentation ? normalizeProfileIdentityPresentation(cached.presentation) : presentationFromConfig(identityConfig.draft || identityConfig);
     baselineBio = bio || '';
     baselinePresentation = presentationFromConfig(identityConfig.published || identityConfig);
-    status = cached ? 'Unsaved identity draft restored.' : '';
+    status = '';
     error = '';
+    dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
   }
 
   // Hydrate on the first render and whenever the server-backed profile changes.
@@ -76,6 +77,7 @@
     persistDraft();
     status = '';
     error = '';
+    dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
   }
 
   async function saveIdentity() {

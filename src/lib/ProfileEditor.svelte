@@ -36,9 +36,6 @@
   let status = '';
   let error = '';
   let lastIncomingKey = '';
-  let contentWidth = 70;
-  let profileNavigation = 'icons';
-  let mobileLayout = 'automatic';
 
   function hasDraftChanges() {
     return JSON.stringify(draft) !== JSON.stringify(baseline);
@@ -193,8 +190,7 @@
     <ProfileTemplatePicker config={draft} {entitlements} on:templatechange={applyTemplate} />
 
     <section class="profile-editor__panel profile-editor__layout-options" aria-labelledby="profile-layout-style-title">
-      <div class="profile-editor__layout-options-heading"><h3 id="profile-layout-style-title">Layout options</h3></div>
-      <label class="profile-editor__range-field"><span>Content width <output>{contentWidth}%</output></span><input type="range" min="50" max="100" step="1" bind:value={contentWidth} /></label>
+      <div class="profile-editor__layout-options-heading"><h3 id="profile-layout-style-title">Link alignment</h3></div>
       <fieldset class="profile-editor__segmented-field">
         <legend>Alignment</legend>
         <div role="group" aria-label="Profile alignment">
@@ -203,15 +199,6 @@
           {/each}
         </div>
       </fieldset>
-      <fieldset class="profile-editor__segmented-field profile-editor__segmented-field--short">
-        <legend>Profile navigation</legend>
-        <div role="group" aria-label="Profile navigation style">
-          {#each [['icons', 'Icons'], ['text', 'Text']] as [value, label] (value)}
-            <button type="button" class:active={profileNavigation === value} aria-pressed={profileNavigation === value} on:click={() => profileNavigation = value}>{label}</button>
-          {/each}
-        </div>
-      </fieldset>
-      <label class="profile-editor__field profile-editor__mobile-layout"><span>Mobile layout</span><select bind:value={mobileLayout}><option value="automatic">Automatic</option><option value="stacked">Stacked</option><option value="scroll">Horizontal scroll</option></select></label>
     </section>
 
     <section class="profile-editor__panel" aria-labelledby="profile-layout-modules-title">
@@ -303,22 +290,15 @@
   .profile-editor__version, .profile-editor__panel-heading > span { color: var(--editor-faint); font: var(--editor-label-size)/1 var(--editor-mono); }
   .profile-editor__panel { display: grid; gap: .65rem; padding: .45rem 0 .7rem; border: 0; border-bottom: 1px solid var(--editor-border); border-radius: 0; background: transparent; }
   .profile-editor__panel h3 { font-size: var(--editor-heading-size); line-height: 1.25; }
-  .profile-editor__field { display: grid; gap: .35rem; color: var(--editor-secondary); font-size: var(--editor-label-size); line-height: 1.3; }
   .profile-editor__layout-options { align-content: start; gap: .85rem; padding: .85rem; border: 1px solid var(--editor-border); border-radius: var(--editor-radius); background: var(--editor-inset); }
   .profile-editor__layout-options-heading { display: flex; align-items: center; justify-content: space-between; }
-  .profile-editor__range-field { display: grid; gap: .35rem; color: var(--editor-secondary); font-size: var(--editor-label-size); }
-  .profile-editor__range-field > span { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
-  .profile-editor__range-field output { color: var(--editor-faint); font: var(--editor-label-size)/1 var(--editor-mono); }
-  .profile-editor__range-field input { width: 100%; accent-color: var(--editor-primary); }
   .profile-editor__segmented-field { display: grid; gap: .35rem; min-width: 0; padding: 0; border: 0; }
   .profile-editor__segmented-field legend { padding: 0; color: var(--editor-secondary); font-size: var(--editor-label-size); }
   .profile-editor__segmented-field > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-height: var(--editor-secondary-height); overflow: hidden; border: 1px solid var(--editor-border-strong); border-radius: var(--editor-radius); }
-  .profile-editor__segmented-field--short > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .profile-editor__segmented-field button { min-width: 0; border: 0; border-right: 1px solid var(--editor-border-strong); background: transparent; color: var(--editor-secondary); font: 600 var(--editor-label-size)/1 var(--editor-body); cursor: pointer; }
   .profile-editor__segmented-field button:last-child { border-right: 0; }
   .profile-editor__segmented-field button.active, .profile-editor__segmented-field button:hover { background: color-mix(in srgb, var(--editor-primary) 12%, transparent); color: var(--editor-text); }
   .profile-editor__segmented-field button:focus-visible { outline: 2px solid var(--editor-focus); outline-offset: -2px; }
-  .profile-editor__mobile-layout select { min-height: var(--editor-secondary-height); }
   .profile-editor select,
   .profile-editor input:not([type="checkbox"]):not([type="range"]),
   .profile-editor textarea { min-height: var(--editor-primary-height); min-width: 0; box-sizing: border-box; border: 1px solid var(--editor-border-strong); border-radius: var(--editor-radius); padding: .55rem .6rem; background: var(--editor-input); color: var(--editor-text); font: 500 var(--editor-control-size)/1.3 var(--editor-body); }

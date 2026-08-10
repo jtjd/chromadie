@@ -38,6 +38,7 @@
     'customize', 'profile-identity', 'profile-media', 'profile-content', 'profile-widgets', 'profile-collection', 'profile-layout'
   ]);
   const LINKS_SECTION_IDS = Object.freeze(['profile-layout', 'profile-aliases']);
+  const FALLBACK_PROFILE_COLOR = '#CDD2FF';
 
   // Customize keeps one canonical destination while exposing the four editing
   // surfaces people use to shape their profile. The tab ids deliberately stay
@@ -167,6 +168,8 @@
   let isMobileViewport = false;
   let previewMediaQuery = null;
   let configurationPreview = null;
+  let identityPreview = null;
+  let cosmeticPreviewLoadout = null;
   let PreviewComponent = null;
   let previewError = '';
   let previewOpen = false;
@@ -216,9 +219,16 @@
   $: editorProfileConfig = createEditorProfileConfig(context?.profileConfig);
   $: sidebarAvatarSrc = getProfileMediaUrl(editorProfileConfig?.draft?.avatar_path || editorProfileConfig?.published?.avatar_path);
   $: dashboardDirty = Boolean(activeDirtySection) || hasServerDraftChanges(context?.profileConfig);
-  $: previewProfileConfig = configurationPreview || context?.profileConfig?.draft;
+  $: previewProfileConfigBase = configurationPreview || toEditorProfileConfig(context?.profileConfig?.draft);
+  $: previewProfileConfig = identityPreview?.identityPresentation
+    ? { ...previewProfileConfigBase, identityPresentation: identityPreview.identityPresentation }
+    : previewProfileConfigBase;
   $: previewProfile = context?.targetProfile
-    ? { ...context.targetProfile, equipped_cosmetics: $equippedItems || context.targetProfile.equipped_cosmetics || {} }
+    ? {
+        ...context.targetProfile,
+        bio: identityPreview ? identityPreview.bio : context.targetProfile.bio,
+        equipped_cosmetics: cosmeticPreviewLoadout || $equippedItems || context.targetProfile.equipped_cosmetics || {}
+      }
     : null;
   onMount(() => {
     void loadDashboardActions();
@@ -482,8 +492,6 @@
     };
   }
 
-  const FALLBACK_PROFILE_COLOR = '#CDD2FF';
-
   function toEditorProfileConfig(value) {
     const source = value && typeof value === 'object' ? value : {};
     if (Number(source.version) === 2) {
@@ -572,6 +580,8 @@
     contentEditor?.acceptSaved?.(nextDraft);
     widgetEditor?.acceptSaved?.(nextDraft);
     configurationPreview = null;
+    identityPreview = null;
+    cosmeticPreviewLoadout = null;
     activeDirtySection = '';
   }
 
@@ -672,6 +682,9 @@
       return;
     }
     context = nextContext;
+    configurationPreview = null;
+    identityPreview = null;
+    cosmeticPreviewLoadout = null;
     loading = false;
     if (nextContext.loadError) error = nextContext.loadError;
     else if (!nextContext.viewingOwnProfile) error = 'Profile settings are available only for your own profile.';
@@ -751,8 +764,17 @@
     configurationPreview = normalizeProfileConfig(nextConfig, FALLBACK_PROFILE_COLOR);
   }
 
+  function updateIdentityPreview(event) {
+    identityPreview = event.detail || null;
+  }
+
+  function updateCosmeticPreview(event) {
+    cosmeticPreviewLoadout = event.detail?.loadout || null;
+  }
+
   function handleSocialChange() { void loadSettings(); }
   function updateIdentity(event) {
+    identityPreview = null;
     const nextPresentation = event.detail?.identityPresentation;
     const currentConfig = context.profileConfig || {};
     if (!nextPresentation) {
@@ -880,6 +902,9 @@
               entitlements={$profileEntitlements}
               staff={Boolean(context.targetProfile?.is_staff)}
               on:appearancechange={updateAppearance}
+              on:customizepreview={updateConfigurationPreview}
+              on:identitypreview={updateIdentityPreview}
+              on:cosmeticpreview={updateCosmeticPreview}
               on:dirty={handleSectionDirty}
               on:identitysaved={updateIdentity}
               on:configsaved={handleAppearanceSaved}

@@ -63,9 +63,14 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /identity-editor__grid--behavior \.identity-editor__field:first-child/);
   assert.match(customize, /profile-customize-page__control-grid--other/);
   assert.match(customize, /profile-content-editor__panel:first-of-type \.profile-content-editor__fields/);
-  for (const label of ['Profile text', 'Handle & metadata', 'Username', 'Bio text', 'Page background', 'Profile surface', 'Accent', 'Surface tint', 'Border']) {
+  for (const label of ['Profile text', 'Handle & metadata', 'Username', 'Bio text', 'Page background', 'Profile surface', 'Accent']) {
     assert.match(appearanceColors, new RegExp(label.replace(/[&]/g, '\\$&')));
   }
+  assert.doesNotMatch(appearanceColors, /Surface tint|label: 'Border'/);
+  assert.doesNotMatch(appearance, /Celestial Border|Plain surface|Glass surface/);
+  assert.doesNotMatch(editor, /Content width|Profile navigation|Mobile layout/);
+  assert.doesNotMatch(cosmetics, /Atmosphere strength|Restart animations/);
+  assert.doesNotMatch(identity, /Unsaved identity draft/);
   assert.doesNotMatch(appearance, /6 colors|Card depth|Colors update the profile preview/);
   assert.match(appearance, /appearance-surface-title[\s\S]*Profile surface[\s\S]*Opacity[\s\S]*Blur/);
   assert.match(appearance, /Profile colors/);

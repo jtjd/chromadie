@@ -220,6 +220,18 @@ try {
     assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
+    const originalBio = await page.evaluate(`document.querySelector('#profile-bio')?.value || ''`);
+    await page.setInputValue('#profile-bio', 'Live preview draft', ['input']);
+    await page.waitFor(`document.querySelector('.profile-settings-preview .identity-card__bio')?.textContent?.trim() === 'Live preview draft'`, 'identity draft in live preview');
+    await page.setInputValue('#profile-bio', originalBio, ['input']);
+    const originalTextColor = await page.evaluate(`document.querySelector('[data-color-role="text"] .appearance-editor__hex')?.value || '#F4F6FB'`);
+    await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', '#12ABEF', ['input']);
+    await page.waitFor(`getComputedStyle(document.querySelector('.profile-settings-preview .profile-shell__approved-opening')).getPropertyValue('--profile-text').trim().toUpperCase() === '#12ABEF'`, 'color draft in live preview');
+    await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', originalTextColor, ['input']);
+    const originalBackgroundColor = await page.evaluate(`document.querySelector('[data-color-role="background"] .appearance-editor__hex')?.value || '#07080B'`);
+    await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', '#123456', ['input']);
+    await page.waitFor(`getComputedStyle(document.querySelector('.profile-settings-preview .profile-shell-page--preview')).backgroundColor === 'rgb(18, 52, 86)'`, 'page background draft in live preview');
+    await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', originalBackgroundColor, ['input']);
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
     await page.setInputValue('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) input[type="range"]', 40, ['input']);
     await page.waitFor(`document.querySelector('.appearance-editor__surface-grid .appearance-editor__range:nth-child(3) output')?.textContent?.trim() === '40px'`, 'blur draft value');

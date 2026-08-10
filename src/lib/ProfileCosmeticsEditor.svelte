@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import Surface from './foundation/Surface.svelte';
   import ShopStudioPreview from './ShopStudioPreview.svelte';
   import {
@@ -26,14 +26,13 @@
   export let entitlements = [];
   export let staff = false;
 
+  const dispatch = createEventDispatcher();
   let previewLoadout = /** @type {Record<string, string>} */ ({});
   let selectedItem = null;
   let loadingSlot = '';
   let status = '';
   let error = '';
   let syncedLoadoutKey = '';
-  let atmosphereStrength = 45;
-  let animationsEnabled = true;
 
   const NAME_DEFAULT_LABELS = Object.freeze({
     name_font: 'Platform default font',
@@ -90,6 +89,7 @@
     selectedItem = item;
     error = '';
     status = 'Preview only. Apply the change when the look feels right.';
+    dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
     trackProductEvent('shop_try_on', { slot, context: 'profile' });
   }
 
@@ -101,6 +101,7 @@
     selectedItem = null;
     error = '';
     status = 'Name effects reset to the equipped profile.';
+    dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
   }
 
   async function applyChanges() {
@@ -125,10 +126,12 @@
       if (!refreshedProfile) throw new Error('The change saved, but the profile could not be refreshed.');
       previewLoadout = { ...(refreshedProfile.equipped_cosmetics || {}) };
       syncedLoadoutKey = JSON.stringify(previewLoadout);
+      dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
       status = `${changedSlots.length} appearance ${changedSlots.length === 1 ? 'change' : 'changes'} applied.`;
       addToast(status, 'success');
     } catch (actionError) {
       previewLoadout = { ...$equippedItems };
+      dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
       error = actionError instanceof Error ? actionError.message : 'The appearance change could not be saved.';
       status = '';
     } finally {
@@ -273,13 +276,6 @@
               </div>
             </div>
 
-            <div class="profile-cosmetics-slot profile-cosmetics-slot--atmosphere-strength">
-              <div class="profile-cosmetics-visual-preview profile-cosmetics-visual-preview--strength" aria-hidden="true"><span style={`--strength:${atmosphereStrength}%`}></span></div>
-              <label class="profile-cosmetics-strength-label" for="cosmetic-atmosphere-strength"><span>Atmosphere strength</span><output>{atmosphereStrength}%</output></label>
-              <input id="cosmetic-atmosphere-strength" class="profile-cosmetics-strength" type="range" min="0" max="100" bind:value={atmosphereStrength} />
-              <label class="profile-cosmetics-animations"><span>Animations</span><span class="profile-cosmetics-animations__state">{animationsEnabled ? 'On' : 'Off'} <input type="checkbox" bind:checked={animationsEnabled} /></span></label>
-              <button type="button" class="profile-cosmetics-restart" on:click={() => animationsEnabled = true}>Restart animations</button>
-            </div>
           </div>
 
           <button type="button" class="profile-cosmetics-apply" disabled={!!loadingSlot || !hasPendingChanges} on:click={applyChanges}>{loadingSlot ? 'Applying…' : 'Apply changes'}</button>
@@ -370,16 +366,6 @@
   .profile-cosmetics-visual-preview--atmosphere span, .profile-cosmetics-visual-preview--atmosphere i, .profile-cosmetics-visual-preview--atmosphere b { display: block; width: 90%; height: .2rem; border-radius: .15rem; background: var(--ctp-sky, #89dceb); opacity: .75; transform: rotate(-10deg); }
   .profile-cosmetics-visual-preview--atmosphere i { width: 70%; opacity: .45; }
   .profile-cosmetics-visual-preview--atmosphere b { width: 82%; opacity: .3; }
-  .profile-cosmetics-visual-preview--strength { display: block; min-height: 2.7rem; padding: .65rem; background: var(--ctp-mantle, #181825); }
-  .profile-cosmetics-visual-preview--strength span { display: block; width: var(--strength, 45%); height: .4rem; border-radius: .2rem; background: var(--ctp-green, #a6e3a1); }
-  .profile-cosmetics-strength-label, .profile-cosmetics-animations { display: flex; align-items: center; justify-content: space-between; gap: .4rem; color: var(--cosmetics-secondary); font-size: var(--cosmetics-label-size); }
-  .profile-cosmetics-slot .profile-cosmetics-strength-label,
-  .profile-cosmetics-slot .profile-cosmetics-animations { display: flex; margin-bottom: 0; }
-  .profile-cosmetics-strength-label output { color: var(--cosmetics-faint); font-family: var(--cosmetics-mono); }
-  .profile-cosmetics-strength { width: 100%; accent-color: var(--ctp-green, #a6e3a1); }
-  .profile-cosmetics-animations__state { display: inline-flex; align-items: center; gap: .35rem; color: var(--cosmetics-text); }
-  .profile-cosmetics-animations input { accent-color: var(--ctp-green, #a6e3a1); }
-  .profile-cosmetics-restart { min-height: 1.8rem; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); background: transparent; color: var(--cosmetics-secondary); font: 600 var(--cosmetics-label-size)/1 var(--cosmetics-body); cursor: pointer; }
   .profile-cosmetics-slot label { display: block; margin-bottom: .3rem; color: var(--cosmetics-secondary); font-weight: 600; font-size: var(--cosmetics-label-size); line-height: 1.3; }
   .profile-cosmetics-slot select { width: 100%; min-height: var(--cosmetics-primary-height); box-sizing: border-box; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); padding: 0 .65rem; background: var(--cosmetics-raised); color: var(--cosmetics-text); font: 500 var(--cosmetics-control-size) / 1 var(--cosmetics-body); }
   .profile-cosmetics-slot select:focus-visible { border-color: var(--cosmetics-focus); outline: 2px solid var(--cosmetics-focus); outline-offset: 1px; }

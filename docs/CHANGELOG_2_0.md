@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Remove nonfunctional Customize controls
+
+- Removed Customize options that appeared editable but were not saved or
+  rendered, including Surface tint, Border color, the Celestial Border surface
+  selector, background overlay controls, atmosphere strength, animation
+  restart, content width, navigation style, and mobile layout.
+- Matched the Profile colors and Profile surface card backgrounds to Profile
+  identity while retaining darker input wells for contrast.
+- Removed the “Unsaved identity draft” status message.
+- Identity, color, surface, structured layout, and cosmetic previews now update
+  the persistent Live preview immediately without losing staged changes from
+  another Customize tab.
+
 ## 2026-08-10 — Add a focused default profile composition
 
 - Fixed the color picker’s visible saturation/brightness dot and hue handle so

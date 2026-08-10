@@ -17,13 +17,6 @@
   let contentEditor = null;
   let widgetEditor = null;
   let layoutEditor = null;
-  let backgroundFit = 'cover';
-  let backgroundPosition = 'center';
-  let backgroundBlur = 30;
-  let backgroundOverlay = '#1e1e2e80';
-  let appearanceAtmosphere = 'Rain Window';
-  let appearanceBorder = 'Celestial Border';
-  let appearanceStrength = 45;
 
   $: identityComponent = components['profile-identity'];
   $: mediaComponent = components['profile-media'];
@@ -38,6 +31,9 @@
   // switching tabs before the dashboard publish action runs.
   function forward(event) {
     dispatch(event.type, event.detail);
+    if (event.type === 'appearancechange' || event.type === 'configpreview') {
+      dispatch('customizepreview', { config: getDraftConfig() });
+    }
   }
 
   function requestPremium() {
@@ -93,14 +89,7 @@
 
     {#if mediaComponent}
       <div class="profile-customize-page__editor profile-customize-page__editor--media">
-        <svelte:component this={mediaComponent} profileId={profileId} config={profileConfig} fallbackInitial={(targetProfile?.username || accountUsername || '✦').slice(0, 1)} {staff} {entitlements} compact={true} on:expressionchange={forward}>
-          <div slot="background-options" class="profile-customize-page__background-options" aria-label="Background options">
-            <label><span>Fit</span><select bind:value={backgroundFit}><option value="cover">Cover</option><option value="contain">Contain</option><option value="fill">Fill</option></select></label>
-            <label><span>Position</span><select bind:value={backgroundPosition}><option value="center">Center</option><option value="top">Top</option><option value="bottom">Bottom</option></select></label>
-            <label class="profile-customize-page__background-blur"><span>Blur <output>{backgroundBlur}%</output></span><input type="range" min="0" max="100" bind:value={backgroundBlur} /></label>
-            <label class="profile-customize-page__background-overlay"><span>Overlay color</span><div><input type="color" value={backgroundOverlay.slice(0, 7)} aria-label="Overlay color" on:input={event => backgroundOverlay = `${event.currentTarget.value}80`} /><code>{backgroundOverlay}</code></div></label>
-          </div>
-        </svelte:component>
+        <svelte:component this={mediaComponent} profileId={profileId} config={profileConfig} fallbackInitial={(targetProfile?.username || accountUsername || '✦').slice(0, 1)} {staff} {entitlements} compact={true} on:expressionchange={forward} />
       </div>
     {:else}
       <div class="profile-customize-page__loading" role="status">Loading media controls…</div>
@@ -124,7 +113,7 @@
           <span aria-hidden="true">01</span>
         </div>
         {#if identityComponent}
-          <svelte:component this={identityComponent} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} on:identitysaved={forward} on:configsaved={forward} />
+          <svelte:component this={identityComponent} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} on:identitypreview={forward} on:identitysaved={forward} on:configsaved={forward} />
         {:else}
           <div class="profile-customize-page__loading" role="status">Loading identity controls…</div>
         {/if}
@@ -138,30 +127,6 @@
     </div>
     <div class="profile-customize-page__editor">
       <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={forward} on:dirty={forward} />
-      <div class="profile-customize-page__appearance-effects" aria-label="Profile atmosphere and border">
-        <label>
-          <span>Profile atmosphere</span>
-          <select bind:value={appearanceAtmosphere} aria-label="Profile atmosphere">
-            <option>Rain Window</option>
-            <option>No atmosphere</option>
-            <option>City Lights</option>
-          </select>
-          <small><i aria-hidden="true"></i>Animated</small>
-        </label>
-        <label>
-          <span>Profile border</span>
-          <select bind:value={appearanceBorder} aria-label="Profile border">
-            <option>Celestial Border</option>
-            <option>No border</option>
-            <option>Signal Border</option>
-          </select>
-          <small><i aria-hidden="true"></i>Subtle</small>
-        </label>
-        <label class="profile-customize-page__appearance-strength">
-          <span>Atmosphere strength <output>{appearanceStrength}%</output></span>
-          <input type="range" min="0" max="100" bind:value={appearanceStrength} aria-label="Atmosphere strength" />
-        </label>
-      </div>
     </div>
   </section>
 
@@ -171,7 +136,7 @@
     </div>
     <div class="profile-customize-page__editor">
       {#if collectionComponent}
-        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} />
+        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} on:cosmeticpreview={forward} />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading effects controls…</div>
       {/if}
@@ -382,7 +347,7 @@
   .profile-customize-page :global(.appearance-editor) { gap: .65rem; }
   .profile-customize-page :global(.appearance-editor__panel) { padding: .25rem 0 0; border: 0; border-bottom: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
   .profile-customize-page :global(.appearance-editor__panel--colors) { padding-bottom: 0; }
-  .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { box-sizing: border-box; height: 7.45rem; padding: .8rem .85rem .75rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface); }
+  .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { box-sizing: border-box; height: 7.45rem; padding: .8rem .85rem .75rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-section-surface); }
   .profile-customize-page :global(.appearance-editor__colors-layout),
   .profile-customize-page :global(.appearance-editor__color-grid),
   .profile-customize-page :global(.appearance-editor__picker) { min-height: 15.75rem; box-sizing: border-box; }
@@ -399,15 +364,6 @@
   .profile-customize-page :global(.appearance-editor__color-grid .appearance-editor__field) { grid-template-columns: minmax(0, 1fr) 4.7rem; }
   .profile-customize-page :global(.appearance-editor__color-grid .appearance-editor__colors-heading) { margin-bottom: .15rem; }
   .profile-customize-page :global(.appearance-editor__surface-grid) { grid-template-columns: minmax(15rem, .98fr) minmax(15rem, .98fr) minmax(17rem, 1.08fr); column-gap: 2.45rem; padding-inline: .35rem; }
-  .profile-customize-page :global(.appearance-editor__surface-intro select) { min-height: 2rem; width: 100%; border: 1px solid var(--customize-border-strong); border-radius: var(--customize-radius); padding: .45rem .65rem; background: var(--customize-section-input); color: var(--customize-text-primary); font: 500 var(--customize-control-size)/1 var(--customize-font-body); }
-  .profile-customize-page__appearance-effects { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, .95fr) minmax(0, 1.05fr); gap: .7rem 2rem; min-width: 0; min-height: 7.65rem; box-sizing: border-box; padding: .8rem 1.2rem .75rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface); }
-  .profile-customize-page__appearance-effects > label { display: grid; min-width: 0; gap: .35rem; color: var(--customize-text-secondary); font-size: var(--customize-label-size); }
-  .profile-customize-page__appearance-effects > label > span:first-child { display: flex; align-items: center; justify-content: space-between; gap: .45rem; }
-  .profile-customize-page__appearance-effects select { width: 100%; min-height: 2rem; border: 1px solid var(--customize-border-strong); border-radius: var(--customize-radius); padding: .45rem .65rem; background: var(--customize-section-input); color: var(--customize-text-primary); font: 500 var(--customize-control-size)/1 var(--customize-font-body); }
-  .profile-customize-page__appearance-effects small { display: inline-flex; align-items: center; gap: .35rem; color: var(--customize-text-muted); font-size: .68rem; }
-  .profile-customize-page__appearance-effects small i { width: .38rem; height: .38rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); }
-  .profile-customize-page__appearance-effects output { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
-  .profile-customize-page__appearance-strength input[type="range"] { width: 100%; accent-color: var(--ctp-green, #a6e3a1); }
   .profile-customize-page :global(.appearance-editor__range-grid) { gap: .55rem .7rem; }
   .profile-customize-page :global(.appearance-editor__heading h2),
   .profile-customize-page :global(.profile-content-editor__panel-heading h3),
@@ -576,9 +532,8 @@
   .profile-customize-page :global(.profile-cosmetics-name-grid .profile-cosmetics-slot) { padding: 0; border: 0; background: transparent; }
   .profile-customize-page :global(.profile-cosmetics-visual-grid .profile-cosmetics-slot) { position: relative; align-content: start; gap: .45rem; }
   .profile-customize-page :global(.profile-cosmetics-visual-grid .profile-cosmetics-slot)::before { content: ''; position: absolute; top: .45rem; left: .45rem; z-index: 1; width: .34rem; height: .34rem; border-radius: 50%; background: var(--ctp-green, #a6e3a1); }
-  .profile-customize-page :global(.profile-cosmetics-visual-grid) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.25fr); }
+  .profile-customize-page :global(.profile-cosmetics-visual-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .profile-customize-page :global(.profile-cosmetics-slot--paid-layout) { display: none; }
-  .profile-customize-page :global(.profile-cosmetics-slot--atmosphere-strength) { gap: .5rem; }
   .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: 2.25rem; }
   .profile-customize-page :global(.profile-cosmetics-plus-guide) { grid-template-columns: 1fr; }
   /* The collection editor is a single tabbed surface.  Keep its heading,
@@ -628,15 +583,6 @@
   .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--audio) { order: 3; }
   .profile-customize-page__editor--media :global(.profile-expression-editor__compact-card--cursor),
   .profile-customize-page__editor--media :global(.rich-media-editor__compact-card--cursor) { order: 4; }
-  .profile-customize-page__background-options { grid-column: span 2; order: 5; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem .7rem; min-width: 0; padding: .65rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
-  .profile-customize-page__background-options label { display: grid; gap: .3rem; min-width: 0; color: var(--customize-text-secondary); font-size: var(--customize-label-size); }
-  .profile-customize-page__background-options label > span { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
-  .profile-customize-page__background-options output { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
-  .profile-customize-page__background-options select { min-height: var(--customize-secondary-height); border: 1px solid var(--customize-border-strong); border-radius: var(--customize-radius); padding: 0 .6rem; background: var(--customize-surface-raised); color: var(--customize-text-primary); font-size: var(--customize-label-size); }
-  .profile-customize-page__background-options input[type="range"] { width: 100%; accent-color: var(--customize-accent-secondary); }
-  .profile-customize-page__background-options input[type="color"] { width: 1.7rem; height: 1.7rem; padding: .1rem; border: 1px solid var(--customize-border-strong); border-radius: .25rem; background: transparent; cursor: pointer; }
-  .profile-customize-page__background-overlay > div { display: flex; align-items: center; gap: .45rem; min-height: var(--customize-secondary-height); }
-  .profile-customize-page__background-overlay code { color: var(--customize-text-muted); font: .68rem/1 var(--customize-font-mono); }
   .profile-customize-page :global(.rich-media-editor__compact-preview),
   .profile-customize-page :global(.rich-media-editor__upload-card),
   .profile-customize-page :global(.rich-media-editor__upload-preview),
@@ -667,7 +613,6 @@
     .profile-customize-page :global(.identity-editor__footer) { grid-column: 1 / -1; grid-row: auto; }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .profile-customize-page__appearance-effects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 52rem) {
@@ -691,12 +636,10 @@
     .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { height: auto; }
-    .profile-customize-page__appearance-effects { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page__premium-banner { min-height: 5.6rem; padding-inline: 2.2rem; text-align: center; }
     .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { font-size: 2.2rem; }
     .profile-customize-page__control { padding: 0; }
     .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .profile-customize-page__background-options { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr); }
   }
 
   @media (max-width: 30rem) {

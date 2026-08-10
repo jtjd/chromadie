@@ -1,5 +1,25 @@
 # Chromadie 2.0 Progress
 
+## Audit Customize controls and unify live preview — 2026-08-10
+
+- Audited every visible Customize control against normalized configuration,
+  public rendering, media persistence, or cosmetic equip contracts.
+- Removed local-only Surface tint and Border color roles, the fake Celestial/
+  Plain/Glass surface selector, background fit/position/blur/overlay controls,
+  atmosphere-strength and animation controls, and layout width/navigation/
+  mobile controls that had no saved or rendered effect.
+- Kept legacy normalized fields intact for backward compatibility while
+  removing only their unsupported editor affordances.
+- Made Profile colors and Profile surface use the same section surface as
+  Profile identity, while inputs remain on the darker recessed layer.
+- Removed the restored-draft status copy and made identity edits update the
+  Live preview on input.
+- Composed appearance, content, widget, layout, identity, and cosmetic try-on
+  drafts into the persistent Live preview so one editor no longer overwrites
+  another editor's staged state.
+- Added browser coverage for immediate bio and profile-color preview updates,
+  plus source-contract coverage preventing removed controls from returning.
+
 ## Focused default profile and live picker marker — 2026-08-10
 
 - Fixed the HSV picker dependency so the saturation/brightness marker and hue

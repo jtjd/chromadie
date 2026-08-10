@@ -548,7 +548,7 @@
   // payload as the new default presentation without rewriting saved config.
   $: profilePresentationLayoutVariant = defaultProfilePresentation ? 'focus' : layoutVariant;
   $: profileCardStyle = getProfileAppearanceStyle(effectiveProfileConfig);
-  $: profilePageStyle = `${previewMode ? profileShellStyle : `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}`}${cursorSrc ? `;cursor:url("${cursorSrc}") 16 16, auto` : ''}${pointerCursorSrc ? `;--profile-pointer-cursor:url("${pointerCursorSrc}")` : ''}`;
+  $: profilePageStyle = `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}${cursorSrc ? `;cursor:url("${cursorSrc}") 16 16, auto` : ''}${pointerCursorSrc ? `;--profile-pointer-cursor:url("${pointerCursorSrc}")` : ''}`;
 
   onDestroy(() => {
     if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
@@ -1157,6 +1157,9 @@
   }
   .profile-shell-page.profile-shell-page--default.profile-shell-page--preview {
     background: transparent;
+  }
+  .profile-shell-page--preview:not(.profile-shell-page--default) {
+    background: var(--profile-background-paint, transparent);
   }
   :global(.profile-shell-page--preview) .profile-shell__opening { width: 100%; margin: 0; border-radius: 16px; box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.28); }
   :global(.profile-shell-page--preview) .profile-shell__opening-content { grid-template-columns: 1fr; }

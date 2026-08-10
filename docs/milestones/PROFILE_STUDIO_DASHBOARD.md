@@ -1,6 +1,6 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, and the focused default profile presentation implemented 2026-08-10
+Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, and the Customize control audit implemented 2026-08-10
 
 ## Scope
 
@@ -75,8 +75,8 @@ nested interaction model. Customize is now one continuous workspace with direct
 section headings. Active avatar/background media and Plus rich media (video,
 banner, cursors, and audio) appear beside their upload/replace actions, with
 saved assets immediately below for reuse. Repeated module headers are hidden in
-this context. Color Customization now contains only the six palette colors and a
-Surface group containing the Profile Surface color plus its depth controls, and
+this context. Color Customization now contains only renderer-backed color roles
+and a Surface group containing its real depth controls, and
 one dashboard Reset / Publish profile bar commits the assembled V2 draft across
 Customize and Links. General Customization now gives Bio the full height of the
 two right-side identity rows, keeps their gap compact, and places visibility
@@ -104,3 +104,11 @@ marker is derived from the same selected-role HSV value as its controls, and
 the public shell applies the blue default only to untouched Signal defaults;
 authored media, backgrounds, atmospheres, links, content, and saved layouts
 continue to win.
+
+The Customize audit removes controls that had no configuration, persistence,
+or renderer consumer while preserving old normalized fields for compatibility.
+Mounted editors now project one composed draft into Live preview: identity and
+bio input, appearance colors and depth, structured content/widgets/layout,
+media selections, and temporary cosmetic loadouts update immediately without
+changing the existing save, publish, upload, equip, RLS, or RPC authority
+boundaries.
