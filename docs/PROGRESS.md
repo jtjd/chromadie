@@ -7,6 +7,9 @@
 - Removed the CSS background indirection and all duplicate card-local media
   copies; page media remains sharp outside the card while the translucent
   surface softens what is behind it.
+- Preserved the standards-track backdrop filter through Vite's production CSS
+  minification with a feature-query fallback, keeping the deployed card blur
+  reliable without disabling the route performance optimizer.
 - Extended browser smoke coverage to publish the maximum blur value, reload the
   public profile, and assert the card-only media boundary.
 

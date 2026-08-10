@@ -11,6 +11,8 @@ Document user-visible redesign changes by milestone.
   sharp outside the card.
 - Removed duplicate card-local media rendering so the public profile has one
   source of truth for its background layers.
+- Kept the standards-track and WebKit backdrop-filter paths intact through
+  production CSS minification so deployed profile cards retain visible blur.
 - Kept the existing surface controls, saved configuration, and public profile
   boundaries unchanged.
 

@@ -110,23 +110,27 @@ test('preview renders bounded media and never exposes mutations', async () => {
 });
 
 test('appearance controls are consumed by the identity card and fitting-room renderer', async () => {
-  const [appearanceStyle, identityCard, preview, editor, shell, atmosphere] = await Promise.all([
+  const [appearanceStyle, identityCard, preview, editor, shell, atmosphere, viteConfig] = await Promise.all([
     read('src/lib/profileAppearanceStyle.js'),
     read('src/lib/IdentityCard.svelte'),
     read('src/lib/ShopStudioPreview.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/profile-atmosphere/AtmosphereLayer.svelte')
+    read('src/lib/profile-atmosphere/AtmosphereLayer.svelte'),
+    read('vite.config.js')
   ]);
   assert.match(appearanceStyle, /function rgbaFromHex/);
   assert.match(appearanceStyle, /--profile-surface-blur:\$\{appearance\.surface\.blur\}px/);
   assert.match(appearanceStyle, /--profile-surface-fill:\$\{rgbaFromHex/);
   assert.match(identityCard, /background: var\(--profile-surface-fill/);
   assert.match(identityCard, /backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.match(identityCard, /@supports \(backdrop-filter: blur\(0\)\) \{[\s\S]*\.identity-card \{ backdrop-filter: blur\(var\(--profile-surface-blur/);
   assert.match(shell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
   assert.match(shell, /:global\(\.profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ isolation: auto; \}/);
   assert.match(shell, /<div class="profile-shell__surface-backdrop" aria-hidden="true"><\/div>/);
   assert.match(shell, /\.profile-shell__surface-backdrop \{[\s\S]*background: rgba\(0, 0, 0, 0\.001\);[\s\S]*backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.match(shell, /@supports \(backdrop-filter: blur\(0\)\) \{[\s\S]*\.profile-shell__surface-backdrop \{ backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.match(viteConfig, /restructure: false/);
   assert.match(shell, /\.profile-shell__approved-canvas,\s+\.profile-shell__opening\.profile-shell__approved-opening \{ z-index: auto; \}/);
   assert.doesNotMatch(shell, /profile-shell__surface-media|profile-shell__surface-video|profile-shell__surface-atmosphere-layer|profile-shell__surface-backdrop::before/);
   assert.match(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{ isolation: auto; \}/);

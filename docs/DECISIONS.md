@@ -16,6 +16,16 @@ while fixed media siblings or nested stacking contexts prevent it from
 sampling the page canvas. No media source, configuration schema, public URL,
 or renderer authority boundary changes.
 
+## 2026-08-09 — Preserve profile blur through production CSS minification
+
+Vite 8's Lightning CSS pass can collapse a standards-track
+`backdrop-filter` when an equivalent `-webkit-backdrop-filter` declaration is
+in the same rule. The production bundle keeps the prefixed declaration in its
+base rule and places the standards-track declaration in a bounded
+`@supports (backdrop-filter: blur(0))` block. The final CSSO pass leaves
+restructuring disabled so both browser paths survive without disabling CSS
+minification or exceeding route budgets.
+
 ## 2026-08-09 — Let the Bio field own the compact identity column
 
 The compact General Customization editor uses a four-column desktop grid. Bio

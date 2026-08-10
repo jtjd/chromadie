@@ -886,6 +886,9 @@
   .profile-shell__media-video { opacity: .92; }
   .profile-shell-page--preview .profile-shell__media-image { position: absolute; }
   .profile-shell__surface-backdrop { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: var(--profile-border-radius, var(--radius-lg)); background: rgba(0, 0, 0, 0.001); backdrop-filter: blur(var(--profile-surface-blur, 0px)); -webkit-backdrop-filter: blur(var(--profile-surface-blur, 0px)); pointer-events: none; }
+  @supports (backdrop-filter: blur(0)) {
+    .profile-shell__surface-backdrop { backdrop-filter: blur(var(--profile-surface-blur, 0px)); }
+  }
   .profile-shell__rich-banner { display: block; width: 100%; max-height: 13rem; object-fit: cover; border-radius: var(--radius-lg) var(--radius-lg) 0 0; opacity: .94; }
   .profile-shell-page--rich-pointer :global(a),
   .profile-shell-page--rich-pointer :global(button),

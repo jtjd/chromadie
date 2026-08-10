@@ -10,7 +10,9 @@ function optimizeCssAssets() {
     generateBundle(_options, bundle) {
       for (const asset of Object.values(bundle)) {
         if (asset.type !== 'asset' || !asset.fileName.endsWith('.css')) continue
-        asset.source = minifyCss(String(asset.source), { restructure: true }).css
+        // Preserve feature-query fallbacks used by translucent profile
+        // surfaces while keeping the rest of the CSS compact.
+        asset.source = minifyCss(String(asset.source), { restructure: false }).css
       }
     }
   }

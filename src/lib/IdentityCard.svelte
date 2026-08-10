@@ -169,6 +169,10 @@
     -webkit-backdrop-filter: blur(var(--profile-surface-blur, 20px));
   }
 
+  @supports (backdrop-filter: blur(0)) {
+    .identity-card { backdrop-filter: blur(var(--profile-surface-blur, 20px)); }
+  }
+
   .identity-card__name-row,
   .identity-card__links,
   .identity-card__today { min-width: 0; }
