@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Give every Studio section a Crust surface — 2026-08-09
+
+- Set the dashboard workspace to Catppuccin Base and every large section to
+  Catppuccin Crust for one consistent, clearly separated depth layer.
+- Kept Mantle and Surface0 for nested panels and form controls so inputs remain
+  easy to identify against the darker section backgrounds.
+- Preserved all dashboard layout, responsive, preview, and publishing behavior.
+
 ## Make profile card blur sample the page media — 2026-08-09
 
 - Rendered the uploaded background as one real page-level image layer so the

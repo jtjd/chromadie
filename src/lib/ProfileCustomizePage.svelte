@@ -188,7 +188,6 @@
 <style>
   .profile-customize-page {
     --customize-surface: var(--ctp-base, #1e1e2e);
-    --customize-surface-alt: var(--ctp-mantle, #181825);
     --customize-surface-raised: var(--ctp-surface0, #313244);
     --customize-surface-inset: var(--ctp-mantle, #181825);
     --customize-surface-deep: var(--ctp-crust, #11111b);
@@ -264,13 +263,13 @@
 
   .profile-customize-page__control-kicker { display: none; }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--customize-surface); --customize-section-input: var(--customize-surface-raised); --customize-section-input-line: var(--customize-border-strong); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-surface-raised); --site-surface: var(--customize-surface-raised); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-surface-inset); --surface-inset: var(--customize-surface-inset); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-surface-raised); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-surface-raised); --surface-panel-strong: var(--ctp-surface1, #45475a); --surface-panel-soft: var(--customize-surface-inset); display: grid; gap: .7rem; min-width: 0; padding: .85rem; border: 1px solid var(--customize-border); border-top-color: color-mix(in srgb, var(--customize-section-accent) 68%, var(--customize-border)); border-radius: .68rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--customize-surface-deep); --customize-section-input: var(--customize-surface-raised); --customize-section-input-line: var(--customize-border-strong); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-surface-raised); --site-surface: var(--customize-surface-raised); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-surface-inset); --surface-inset: var(--customize-surface-inset); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-surface-raised); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-surface-raised); --surface-panel-strong: var(--ctp-surface1, #45475a); --surface-panel-soft: var(--customize-surface-inset); display: grid; gap: .7rem; min-width: 0; padding: .85rem; border: 1px solid var(--customize-border); border-top-color: color-mix(in srgb, var(--customize-section-accent) 68%, var(--customize-border)); border-radius: .68rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
   .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
-  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); --customize-section-surface: var(--customize-surface-alt); }
+  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
-  .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); --customize-section-surface: var(--customize-surface-alt); }
+  .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); }
   .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: var(--ctp-pink, #f5c2e7); }
-  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); --customize-section-surface: var(--customize-surface-alt); }
+  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); }
   .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-green, #a6e3a1); }
   .profile-customize-page__surface--assets { padding: 1rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }

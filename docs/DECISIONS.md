@@ -1,5 +1,17 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-09 — Set Studio sections into a Crust workspace layer
+
+Profile Studio uses Base for the editor workspace and Crust for each large
+section surface, including the shared dashboard action bar. Mantle and Surface0
+remain nested-control layers. This follows the exact Catppuccin Mocha palette
+and gives the section boundaries consistent depth without adding brighter
+fills, new geometry, or stronger decorative effects.
+
+The change is presentation-only. Dashboard navigation, responsive behavior,
+draft/publish handling, profile preview behavior, and authority boundaries are
+unchanged.
+
 ## 2026-08-09 — Let surface blur sample the actual page media
 
 The uploaded background image is rendered once as a real page-level media

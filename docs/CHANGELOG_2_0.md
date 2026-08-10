@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-09 — Increase Studio section contrast with Crust
+
+- Changed the Studio workspace to Catppuccin Base and its large section cards
+  to Catppuccin Crust (`#11111b`).
+- Kept nested controls on Mantle and Surface0 so the darker cards remain easy
+  to scan and edit on desktop and mobile.
+- Left dashboard structure, navigation, preview, and save behavior unchanged.
+
 ## 2026-08-09 — Make profile surface blur visible
 
 - Fixed high surface-blur values so uploaded backgrounds visibly soften inside

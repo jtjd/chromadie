@@ -27,7 +27,7 @@
 </section>
 
 <style>
-  .profile-dashboard-actions { --dashboard-action-accent: var(--ctp-teal, #94e2d5); --dashboard-action-save: var(--ctp-green, #a6e3a1); --dashboard-action-focus: var(--ctp-lavender, #b4befe); --dashboard-action-surface: var(--ctp-mantle, #181825); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; padding: .75rem .85rem; border: 1px solid color-mix(in srgb, var(--dashboard-action-accent) 30%, var(--site-line-strong, rgba(255,255,255,.14))); border-radius: .55rem; background: var(--dashboard-action-surface); }
+  .profile-dashboard-actions { --dashboard-action-accent: var(--ctp-teal, #94e2d5); --dashboard-action-save: var(--ctp-green, #a6e3a1); --dashboard-action-focus: var(--ctp-lavender, #b4befe); --dashboard-action-surface: var(--ctp-crust, #11111b); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; padding: .75rem .85rem; border: 1px solid color-mix(in srgb, var(--dashboard-action-accent) 30%, var(--site-line-strong, rgba(255,255,255,.14))); border-radius: .55rem; background: var(--dashboard-action-surface); }
   .profile-dashboard-actions__copy { min-width: 0; }
   .profile-dashboard-actions__title-row { display: flex; align-items: center; gap: .65rem; }
   .profile-dashboard-actions h2 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .84rem; letter-spacing: -.01em; }

@@ -192,8 +192,8 @@
   .profile-dashboard-shell__nav button:focus-visible, .profile-dashboard-shell__group-toggle:focus-visible, .profile-dashboard-shell__mobile-bar button:focus-visible { outline: 2px solid var(--site-accent, var(--color-accent-bright)); outline-offset: 3px; }
   .profile-dashboard-shell__nav-icon { display: grid; place-items: center; width: 1.15rem; color: var(--nav-accent, var(--site-faint, var(--color-ink-faint))); font-family: var(--site-mono, var(--font-mono-stack)); }
   .profile-dashboard-shell__nav button.active .profile-dashboard-shell__nav-icon { color: var(--nav-accent, var(--site-accent, var(--color-accent))); }
-  .profile-dashboard-shell__main { min-width: 0; }
-  .profile-dashboard-shell__content { width: 100%; min-height: calc(100dvh - 4.1rem); padding: clamp(1rem, 2vw, 2rem) clamp(1rem, 2vw, 2.25rem) 3rem; }
+  .profile-dashboard-shell__main { min-width: 0; background: var(--ctp-base, var(--color-canvas)); }
+  .profile-dashboard-shell__content { --surface-panel: var(--ctp-crust, var(--color-canvas-deep)); --surface-panel-strong: var(--ctp-mantle, var(--color-canvas)); --surface-panel-soft: var(--ctp-mantle, var(--surface-inset)); width: 100%; min-height: calc(100dvh - 4.1rem); padding: clamp(1rem, 2vw, 2rem) clamp(1rem, 2vw, 2.25rem) 3rem; }
   .profile-dashboard-shell__preview { position: sticky; top: 0; z-index: 10; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; height: calc(100dvh - 4.75rem); overflow: hidden; border-left: 1px solid var(--site-line, var(--color-line-subtle)); background: var(--ctp-mantle, color-mix(in srgb, var(--site-deep, #090a0d) 94%, transparent)); }
   .profile-dashboard-shell__mobile-bar { display: none; }
   .profile-dashboard-shell__backdrop { display: none; }
