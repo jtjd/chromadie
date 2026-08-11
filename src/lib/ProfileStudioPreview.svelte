@@ -88,14 +88,14 @@
 </div>
 
 <style>
-  .profile-studio-preview { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; height: 100%; }
+  .profile-studio-preview { display: grid; grid-template-rows: auto minmax(0, 1fr); width: 100%; max-width: 100%; min-width: 0; min-height: 0; height: 100%; overflow: hidden; }
   .profile-studio-preview__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; min-height: 5.1rem; padding: 1.1rem 1rem .7rem; }
   .profile-studio-preview__header h2 { margin: 0; color: var(--studio-text, var(--site-ink, #f2f0eb)); font-size: 1.05rem; letter-spacing: -.02em; }
   .profile-studio-preview__header p { margin: .35rem 0 0; color: var(--studio-faint, var(--site-muted, #a6adc8)); font-size: .74rem; }
   .profile-studio-preview__close { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .4rem; background: transparent; color: var(--studio-muted, #bac2de); font-size: 1.1rem; cursor: pointer; }
   .profile-studio-preview__close:hover, .profile-studio-preview__close:focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-text, #cdd6f4); }
   .profile-studio-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem 1rem; background: var(--ctp-mantle, var(--site-deep, #11111b)); }
-  .profile-studio-preview__canvas { display: grid; width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; }
+  .profile-studio-preview__canvas { display: grid; container: profile-preview / inline-size; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; overflow-x: hidden; }
   .profile-studio-preview__canvas--appearance { min-height: 0; margin-bottom: .6rem; }
   .profile-studio-preview__canvas :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: transparent; box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
   .profile-studio-preview__canvas--mobile { padding: .65rem 0 1rem; }
@@ -127,5 +127,15 @@
   .profile-studio-preview__loading strong { color: var(--studio-text, #cdd6f4); font-size: .92rem; }
   .profile-studio-preview__loading p { max-width: 20rem; margin: 0; color: var(--studio-faint, #7f849c); line-height: 1.45; }
   .profile-studio-preview__loading button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--studio-text, #cdd6f4); font-size: .78rem; cursor: pointer; }
+  @container profile-preview (max-width: 31rem) {
+    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card) { display: flex; width: 100%; box-sizing: border-box; flex-direction: column; align-items: stretch; gap: 1rem; padding: 1.1rem; }
+    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__person) { display: flex; flex-direction: column; align-items: stretch; gap: 1rem; width: 100%; }
+    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__avatar) { align-self: center; justify-self: auto; flex-basis: 5.2rem; width: 5.2rem; }
+    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__copy),
+    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__links) { grid-column: auto; grid-row: auto; width: 100%; box-sizing: border-box; padding-left: 0; border-left: 0; }
+    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__copy) { padding-top: 0; }
+    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__name-row) { align-items: flex-start; }
+    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__links) { margin-top: .9rem; padding-top: .8rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, .12)); }
+  }
   @media (prefers-reduced-motion: reduce) { .profile-studio-preview__body { scroll-behavior: auto; } }
 </style>

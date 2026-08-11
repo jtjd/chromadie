@@ -7,6 +7,13 @@ boundary, gives Motion its animated Name renderer, and explicitly resumes
 Name, cursor, and atmosphere media when mounted editors return from a hidden
 Customize tab.
 
+The responsive composition correction now reserves a real preview rail at
+narrow desktop and browser-zoom widths, stacks Appearance controls before
+they can collide with that rail, and uses the preview canvas's actual width to
+stack embedded identity cards. At 414×896, the preview is a full-width bottom
+drawer and the navigation sidebar remains hidden until the Menu control opens
+it.
+
 The Media workspace follow-up now gives the compact editor an explicit owner
 for reference geometry. Background, Avatar, and Profile audio share one
 aligned desktop row; Custom cursor and Background options share the row below;

@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Correct Profile Studio small-screen composition
+
+- Narrow desktop and browser-zoom layouts now reserve space for Live preview
+  instead of letting it cover the Appearance editor.
+- Phone and tablet preview uses a bounded bottom drawer, with the navigation
+  remaining closed until the Menu control is used.
+- Embedded profile cards stack to their actual preview width so names, bios,
+  and links remain readable on small screens.
+
 ## 2026-08-10 — Fit Profile Studio on smaller screens
 
 - Appearance controls now stack before intermediate tablet widths force hex

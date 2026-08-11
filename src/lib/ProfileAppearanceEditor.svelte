@@ -391,6 +391,7 @@
   .appearance-editor__color-grid .appearance-editor__colors-heading { margin-bottom: .15rem; }
   .appearance-editor__surface-grid { grid-template-columns: minmax(14rem, 1.1fr) repeat(2, minmax(10rem, 1fr)); column-gap: 1.1rem; padding: .1rem .35rem .2rem; }
   @media (max-width: 64rem) { .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1fr); } .appearance-editor__picker { order: -1; } }
+  @media (max-width: 72rem) { .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1fr); } .appearance-editor__picker { order: -1; } .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } }
   @media (max-width: 40rem) { .appearance-editor__color-grid, .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } }
   @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } .appearance-editor__surface-grid .appearance-editor__range { padding-top: 0; } }
 </style>

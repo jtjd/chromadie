@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Correct small-screen Profile Studio composition — 2026-08-10
+
+- Reproduced the dashboard at the supplied 414×896 phone size and a 1100px
+  narrow-desktop/zoom-width equivalent instead of checking viewport bounds
+  alone.
+- Moved the narrow-desktop Live preview into a reserved grid rail so the
+  appearance editor and color picker no longer sit underneath it.
+- Added a 72rem Appearance fallback for the surface controls and a preview
+  container-query fallback that stacks identity cards inside narrow docks.
+- Kept the mobile navigation hidden until opened and verified the full-width
+  preview drawer, sidebar state, profile card, and editor at 414×896.
+- Captured authenticated browser evidence for the narrow-desktop and phone
+  compositions alongside the existing destination and reduced-motion checks.
+
 ## Audit Profile Studio on smaller screens — 2026-08-10
 
 - Audited Customize Appearance, Media, and Layout at 320, 360, 390, 600,

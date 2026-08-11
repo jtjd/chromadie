@@ -46,20 +46,27 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
 });
 
 test('Profile Studio responsive boundaries keep controls and preview drawers inside the viewport', async () => {
-  const [shell, header, appearance, smoke] = await Promise.all([
+  const [shell, header, appearance, preview, smoke] = await Promise.all([
     read('src/lib/ProfileDashboardShell.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
+    read('src/lib/ProfileStudioPreview.svelte'),
     read('scripts/browser/profile-studio-smoke.mjs')
   ]);
 
   assert.match(header, /@media \(max-width: 52rem\)[\s\S]*customize-tabs-actions \{ position: static; display: flex;/);
   assert.match(shell, /with-preview \.profile-dashboard-shell__preview \{[^}]*box-sizing: border-box; margin: 0;/);
+  assert.match(shell, /@media \(max-width: 90rem\) and \(min-width: 64\.01rem\)[\s\S]*with-preview \{ grid-template-columns: var\(--dashboard-sidebar-width\) minmax\(0, 1fr\) minmax\(19rem, 24rem\);/);
+  assert.match(shell, /@media \(max-width: 64rem\)[\s\S]*sidebar \{ position: fixed;[^}]*visibility: hidden; pointer-events: none;/);
   assert.match(appearance, /\.appearance-editor \{[\s\S]*width: 100%;[\s\S]*min-width: 0;[\s\S]*box-sizing: border-box;/);
   assert.match(appearance, /\.appearance-editor__panel \{ width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;/);
+  assert.match(appearance, /@media \(max-width: 72rem\)[\s\S]*appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
   assert.match(appearance, /@media \(max-width: 40rem\)[\s\S]*appearance-editor__color-grid, \.appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(preview, /container: profile-preview \/ inline-size;/);
+  assert.match(preview, /@container profile-preview \(max-width: 31rem\)[\s\S]*identity-card__person/);
   assert.match(smoke, /responsive dashboard geometry fits phone, tablet, and narrow desktop widths/);
-  assert.match(smoke, /const widths = \[320, 360, 390, 600, 768, 1024, 1100, 1280\]/);
+  assert.match(smoke, /const widths = \[320, 360, 390, 414, 600, 768, 1024, 1100, 1280\]/);
+  assert.match(smoke, /09-mobile-preview-414/);
   assert.match(smoke, /const destinations = \['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'\]/);
 });
 

@@ -1,5 +1,16 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Reserve responsive preview space and adapt embedded cards
+
+The Profile Studio preview owns a real grid rail from narrow desktop through
+the zoomed desktop range instead of floating over the editor. At phone and
+tablet widths it becomes a border-box bottom drawer, while the navigation
+sidebar stays a hidden, focusable drawer until explicitly opened. The preview
+canvas also owns a container-query fallback: identity cards stack when their
+actual dock width is narrow, even if the browser viewport still reports a
+desktop width. This keeps the editor, live preview, and profile renderer
+readable without changing routes, drafts, RPCs, or public profile data.
+
 ## 2026-08-10 — Make Profile Studio geometry viewport-owned
 
 Responsive dashboard rules must be owned by the shell or editor that can

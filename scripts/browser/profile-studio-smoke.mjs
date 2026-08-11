@@ -586,7 +586,7 @@ try {
       await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed preview for responsive geometry audit');
     }
 
-    const widths = [320, 360, 390, 600, 768, 1024, 1100, 1280];
+    const widths = [320, 360, 390, 414, 600, 768, 1024, 1100, 1280];
     const measurements = [];
     const customizeTabs = ['appearance', 'media', 'layout'];
     const rect = element => {
@@ -604,6 +604,10 @@ try {
     for (const width of widths) {
       await page.setViewport(width, width <= 1024 ? 844 : 900);
       await page.waitFor(`document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-header__customize-tabs')`, `Customize at ${width}px`);
+      if (width > 1024) {
+        await page.waitFor('document.querySelector(".profile-studio-preview__devices button")', `narrow-desktop preview at ${width}px`);
+        await page.click('.profile-studio-preview__devices button:first-child', `desktop preview mode at ${width}px`);
+      }
       for (const tab of customizeTabs) {
         await page.click(`#profile-customize-tab-${tab}`, `${tab} tab at ${width}px`);
         await page.waitFor(`document.querySelector('#profile-customize-tab-${tab}')?.getAttribute('aria-selected') === 'true' && document.querySelector('[data-editor-section="${tab === 'appearance' ? 'appearance' : tab}"]')?.hidden === false`, `${tab} panel at ${width}px`);
@@ -635,6 +639,14 @@ try {
             .slice(0, 8)
             .map(({ element, box }) => ({ selector: element.className || element.tagName, tag: element.tagName, type: element.getAttribute('type') || '', aria: element.getAttribute('aria-label') || '', parent: element.parentElement?.className || '', left: Math.round(box.left), right: Math.round(box.right), width: Math.round(box.width) }));
           const activePanel = document.querySelector('[data-editor-section="${tab === 'appearance' ? 'appearance' : tab}"]');
+          const preview = document.querySelector('.profile-dashboard-shell__preview');
+          const previewBox = preview?.getBoundingClientRect();
+          const activeBox = activePanel?.getBoundingClientRect();
+          const previewCanvas = preview?.querySelector('.profile-studio-preview__canvas');
+          const previewCard = preview?.querySelector('.profile-shell-page--preview .identity-card');
+          const previewCopy = previewCard?.querySelector('.identity-card__copy');
+          const previewCanvasBox = previewCanvas?.getBoundingClientRect();
+          const previewCardBox = previewCard?.getBoundingClientRect();
           const pageWidth = document.documentElement.scrollWidth;
           const bodyWidth = document.body.scrollWidth;
           return {
@@ -647,19 +659,35 @@ try {
             tabs: [...document.querySelectorAll('.profile-studio-header__tablist [role="tab"]')].map(rect),
             actions: rect(document.querySelector('.profile-dashboard-actions')),
             activePanel: rect(activePanel),
-            panelBottom: activePanel ? Math.round(activePanel.getBoundingClientRect().bottom) : null
+            panelBottom: activePanel ? Math.round(activePanel.getBoundingClientRect().bottom) : null,
+            preview: rect(preview),
+            previewOverlap: Boolean(previewBox && activeBox && activeBox.right > previewBox.left + 1 && activeBox.left < previewBox.right - 1 && activeBox.bottom > previewBox.top + 1 && activeBox.top < previewBox.bottom - 1),
+            previewLayout: previewCard && previewCanvas ? {
+              display: getComputedStyle(previewCard).display,
+              canvasWidth: Math.round(previewCanvasBox?.width || 0),
+              cardWidth: Math.round(previewCardBox?.width || 0),
+              cardScrollWidth: previewCard.scrollWidth,
+              cardClientWidth: previewCard.clientWidth,
+              copyScrollWidth: previewCopy?.scrollWidth || 0,
+              copyClientWidth: previewCopy?.clientWidth || 0
+            } : null
           };
         })()`);
         assert(state.contained && !state.overflow.length, `Dashboard overflows at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         assert(state.tabs.length === 3 && state.tabs.every(tabRect => tabRect && tabRect.left >= -1 && tabRect.right <= width + 1), `Customize tabs escape the viewport at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         assert((state.activePanel?.width || 0) > 0, `Customize panel has no width at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+        assert(!state.previewOverlap, `Live preview overlaps the editor at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+        if (width > 1024) {
+          assert(state.previewLayout?.display === 'flex' && state.previewLayout.cardWidth <= state.previewLayout.canvasWidth + 1 && state.previewLayout.cardScrollWidth <= state.previewLayout.cardClientWidth + 1 && state.previewLayout.copyScrollWidth <= state.previewLayout.copyClientWidth + 1, `Narrow desktop preview card is not readable at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+        }
+        if (width === 1100 && tab === 'appearance') await capture('08-responsive-narrow-desktop');
         measurements.push({ width, tab, ...state });
       }
     }
 
-    await page.setViewport(320, 844);
+    await page.setViewport(414, 896);
     await page.click('#profile-customize-tab-appearance', 'Appearance before narrow mobile drawer audit');
-    await page.waitFor('document.querySelector(".profile-customize-page")', 'Appearance at 320px');
+    await page.waitFor('document.querySelector(".profile-customize-page")', 'Appearance at 414px');
     await page.click('.profile-dashboard-shell__mobile-bar button', 'open narrow mobile drawer');
     await page.waitFor('document.querySelector(".profile-dashboard-shell__sidebar.is-open")', 'open narrow mobile drawer state');
     await delay(240);
@@ -676,7 +704,7 @@ try {
         contained: Boolean(rect && rect.left >= -1 && rect.right <= innerWidth + 1)
       };
     })()`);
-    assert(drawer.contained && drawer.buttons >= 4, `Narrow mobile drawer is not usable at 320px: ${JSON.stringify(drawer)}.`);
+    assert(drawer.contained && drawer.buttons >= 4, `Narrow mobile drawer is not usable at 414px: ${JSON.stringify(drawer)}.`);
     await page.pressKey('Escape');
     await page.waitFor('document.querySelector(".profile-dashboard-shell__sidebar")?.getAttribute("aria-hidden") === "true"', 'close narrow mobile drawer');
 
@@ -725,6 +753,34 @@ try {
     await page.click('.profile-studio-preview__close', 'close tablet preview drawer');
     await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed tablet preview drawer');
 
+    await page.setViewport(414, 896);
+    await page.waitFor('document.querySelector(".profile-studio-header__customize-tabs-actions button")', 'phone preview toggle');
+    await page.click('.profile-studio-header__customize-tabs-actions button', 'open phone preview drawer');
+    await page.waitFor('document.querySelector(".profile-studio-preview")', 'phone preview drawer');
+    await delay(240);
+    const phonePreview = await page.evaluate(`(() => {
+      const preview = document.querySelector('.profile-dashboard-shell__preview');
+      const previewBox = preview?.getBoundingClientRect();
+      const canvas = preview?.querySelector('.profile-studio-preview__canvas');
+      const card = preview?.querySelector('.profile-shell-page--preview .identity-card');
+      const copy = card?.querySelector('.identity-card__copy');
+      const sidebar = document.querySelector('.profile-dashboard-shell__sidebar');
+      return {
+        viewport: innerWidth,
+        preview: previewBox ? { left: Math.round(previewBox.left), right: Math.round(previewBox.right), top: Math.round(previewBox.top), bottom: Math.round(previewBox.bottom), width: Math.round(previewBox.width), height: Math.round(previewBox.height) } : null,
+        card: card ? { display: getComputedStyle(card).display, width: Math.round(card.getBoundingClientRect().width), scrollWidth: card.scrollWidth, clientWidth: card.clientWidth } : null,
+        canvasWidth: Math.round(canvas?.getBoundingClientRect().width || 0),
+        copy: copy ? { scrollWidth: copy.scrollWidth, clientWidth: copy.clientWidth } : null,
+        sidebarHidden: sidebar?.getAttribute('aria-hidden') === 'true' && sidebar?.hasAttribute('inert'),
+        contained: Boolean(previewBox && previewBox.left >= -1 && previewBox.right <= innerWidth + 1 && previewBox.top >= -1 && previewBox.bottom <= innerHeight + 1),
+        pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
+      };
+    })()`);
+    assert(phonePreview.contained && phonePreview.pageContained && phonePreview.sidebarHidden && phonePreview.card?.display === 'flex' && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 1 && phonePreview.copy?.scrollWidth <= phonePreview.copy.clientWidth + 1, `Phone live preview is not a readable bounded drawer: ${JSON.stringify(phonePreview)}.`);
+    await capture('09-mobile-preview-414');
+    await page.click('.profile-studio-preview__close', 'close phone preview drawer');
+    await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed phone preview drawer');
+
     const destinationWidths = [320, 600, 768];
     const destinations = ['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
     const destinationMeasurements = [];
@@ -767,7 +823,7 @@ try {
       }
     }
 
-    return { widths, measurements, drawer, tabletToggle, tabletPreview, destinationMeasurements };
+    return { widths, measurements, drawer, tabletToggle, tabletPreview, phonePreview, destinationMeasurements };
   });
 
   await step('reduced-motion media query is honored', async () => {
