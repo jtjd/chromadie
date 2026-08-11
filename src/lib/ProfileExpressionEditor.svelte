@@ -464,7 +464,9 @@
           aria-label={expression.avatar_path ? 'Replace profile avatar' : 'Upload profile avatar'}
         >
           {#if avatarSrc}
-            <Media src={avatarSrc} alt="Profile avatar preview" aspect="square" loading="eager" className="profile-expression-editor__compact-media" fallbackLabel="Avatar unavailable" allowLocalPreview={true} />
+            <div class="profile-expression-editor__compact-avatar-frame">
+              <Media src={avatarSrc} alt="Profile avatar preview" aspect="square" loading="eager" className="profile-expression-editor__compact-media" fallbackLabel="Avatar unavailable" allowLocalPreview={true} />
+            </div>
           {:else}
             <ProfileMediaIcon kind="avatar" />
           {/if}
@@ -838,6 +840,38 @@
   :global(.profile-expression-editor__compact-preview--locked .profile-media-icon) { color: var(--media-premium); }
   .profile-expression-editor__compact-preview--avatar { border-color: var(--media-line); }
   .profile-expression-editor__compact-card--avatar .profile-expression-editor__compact-preview { aspect-ratio: 1; min-height: 5.7rem; }
+  .profile-expression-editor__compact-avatar-frame {
+    width: 4.6rem;
+    height: 4.6rem;
+    flex: 0 0 4.6rem;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border: 1px solid var(--media-line-strong);
+    border-radius: 50%;
+    background: var(--media-surface-deep);
+  }
+  :global(.profile-expression-editor__compact-avatar-frame .foundation-media) {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0;
+    min-height: 0;
+    aspect-ratio: 1;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: transparent;
+  }
+  :global(.profile-expression-editor__compact-avatar-frame .foundation-media img) {
+    width: 100% !important;
+    height: 100% !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    object-fit: cover;
+  }
+  :global(.profile-expression-editor__compact-avatar-frame .foundation-media__fallback) {
+    min-height: 0;
+    border: 0;
+    border-radius: 50%;
+  }
   :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media),
   :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media img),
   :global(.profile-expression-editor__compact-preview .foundation-media),

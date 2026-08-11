@@ -374,7 +374,10 @@
   .appearance-editor__panel--colors { padding-bottom: 0; }
   .appearance-editor__panel:not(.appearance-editor__panel--colors) { box-sizing: border-box; min-height: 7.45rem; padding: .8rem .85rem .75rem; border: 1px solid var(--appearance-line); border-radius: var(--appearance-radius); background: var(--appearance-surface); }
   .appearance-editor__colors-layout { box-sizing: border-box; align-items: start; }
-  .appearance-editor__picker { box-sizing: border-box; height: 14rem; min-height: 0; padding-bottom: .55rem; }
+  /* Let the palette determine the picker height. The old fixed height plus
+   * overflow clipping hid the bottom of the palette at normal dashboard
+   * zoom, especially when the native color control increased the heading. */
+  .appearance-editor__picker { box-sizing: border-box; height: auto; min-height: 14rem; overflow: visible; padding-bottom: .55rem; }
   .appearance-editor__heading { margin-bottom: .55rem; }
   .appearance-editor__color-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 1.25rem; gap: .65rem .7rem; height: auto; min-height: 0; align-self: start; overflow: visible; padding: .9rem; }
   .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1.6fr) minmax(14rem, 1fr); }
