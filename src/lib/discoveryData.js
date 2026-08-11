@@ -81,8 +81,10 @@ function normalizeHex(value) {
 }
 
 function normalizeAvatarPath(value) {
-  return typeof value === 'string' && AVATAR_PATH_PATTERN.test(value.trim())
-    ? value.trim().toLowerCase()
+  const candidate = typeof value === 'string' ? value.trim() : '';
+  const isLegacyAvatar = AVATAR_PATH_PATTERN.test(candidate);
+  return isProfileMediaPathForKind(candidate, 'avatar') && (isLegacyAvatar || candidate.endsWith('.webp'))
+    ? candidate.toLowerCase()
     : null;
 }
 
@@ -196,3 +198,4 @@ export function isDiscoveryRarity(value) {
   return value === '' || RARITIES.has(value);
 }
 import { getCanonicalProfilePath, normalizeUsernameSegment } from './routeContract.js';
+import { isProfileMediaPathForKind } from './profileExpression.js';

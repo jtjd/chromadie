@@ -2561,3 +2561,16 @@ direct route behavior.
 - Added authenticated browser geometry coverage and a mobile editor capture at
   414px, while retaining the existing 320px, tablet, narrow-desktop, keyboard,
   reduced-motion, routing, and preview checks.
+
+## 2026-08-11 — Harden Discovery and reusable profile media
+
+- Fixed public Discovery avatar projection and normalization for registered
+  UUID-backed avatar assets while preserving legacy avatar paths.
+- Made avatar/background removal safe for the reusable media library, verified
+  persisted upload URLs before completing Studio saves, and cleaned failed
+  uploads and owner-scoped media during account deletion.
+- Repaired the Leaderboard route shell's legacy 500px cap and moved layout
+  ownership to explicit Discovery grid items plus a leaderboard card variant.
+- Kept live Profile Studio preview state mounted for ordinary configuration
+  changes and added production-browser Discovery geometry/avatar coverage across
+  mobile, tablet, and desktop viewports.

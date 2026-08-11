@@ -52,6 +52,20 @@ test('discovery normalization keeps public card fields bounded and drops interna
   assert.equal(item.equippedCosmetics.unsafe, undefined);
   assert.equal('user_id' in item, false);
   assert.equal(normalizeDiscoveryItem({ ...publicItem, avatarPath: 'avatars/not-a-user/avatar.webp' }).avatarPath, null);
+  assert.equal(
+    normalizeDiscoveryItem({
+      ...publicItem,
+      avatarPath: 'avatars/10000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000002.webp'
+    }).avatarPath,
+    'avatars/10000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000002.webp'
+  );
+  assert.equal(
+    normalizeDiscoveryItem({
+      ...publicItem,
+      avatarPath: 'avatars/10000000-0000-4000-8000-000000000001/not-an-asset.webp'
+    }).avatarPath,
+    null
+  );
   assert.equal(normalizeDiscoveryItem({ username: '%' }), null);
 });
 
@@ -106,6 +120,7 @@ test('discovery implementation uses public RPC projections, profile CTAs, sharin
   const entry = await readFile(new URL('../src/lib/Leaderboard.svelte', import.meta.url), 'utf8');
   const migration = await readFile(new URL('../supabase/migrations/20260725120000_public_discovery.sql', import.meta.url), 'utf8');
   const previewMigration = await readFile(new URL('../supabase/migrations/20260801090000_discovery_profile_preview.sql', import.meta.url), 'utf8');
+  const hardeningMigration = await readFile(new URL('../supabase/migrations/20260811130000_discovery_avatar_contract_and_media_cleanup.sql', import.meta.url), 'utf8');
 
   assert.match(hub, /get_public_discovery/);
   assert.match(hub, /Load more profiles/);
@@ -135,4 +150,11 @@ test('discovery implementation uses public RPC projections, profile CTAs, sharin
   assert.match(previewMigration, /profile_configurations/);
   assert.match(previewMigration, /REVOKE ALL ON FUNCTION public\.get_public_discovery_base/);
   assert.doesNotMatch(previewMigration, /'email'|'ep_spent'|'reroll_shards'/);
+  assert.match(hardeningMigration, /profile_media_assets/);
+  assert.match(hardeningMigration, /asset\.status = 'active'/);
+  assert.match(hardeningMigration, /name LIKE OLD\.id::text \|\| '\/%'/);
+  assert.match(hub, /discovery-grid__item/);
+  assert.match(hub, /presentation="leaderboard"/);
+  assert.doesNotMatch(hub, /<main class="container discovery-hub">/);
+  assert.match(card, /discovery-card--leaderboard/);
 });

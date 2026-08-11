@@ -1,0 +1,135 @@
+-- Discovery/media hardening.
+-- Reusable avatar assets use avatars/{owner}/{asset UUID}.webp. Keep the
+-- legacy avatar.webp slot compatible, but only project reusable paths that
+-- belong to the public profile's registered active asset.
+
+BEGIN;
+
+CREATE OR REPLACE FUNCTION public.get_public_discovery(
+  p_surface text DEFAULT 'today',
+  p_rarity text DEFAULT NULL,
+  p_query text DEFAULT NULL,
+  p_page integer DEFAULT 0,
+  p_limit integer DEFAULT 12
+)
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+  WITH base AS (
+    SELECT public.get_public_discovery_base(
+      p_surface,
+      p_rarity,
+      p_query,
+      p_page,
+      p_limit
+    ) AS payload
+  ),
+  projected AS (
+    SELECT
+      base.payload,
+      entries.item,
+      entries.item_order,
+      p.id AS profile_id,
+      p.display_name,
+      p.bio,
+      p.mood_color,
+      c.avatar_path
+    FROM base
+    LEFT JOIN LATERAL jsonb_array_elements(
+      COALESCE(base.payload->'items', '[]'::jsonb)
+    ) WITH ORDINALITY AS entries(item, item_order) ON true
+    LEFT JOIN public.profiles p
+      ON p.username_key = lower(entries.item->>'username')
+    LEFT JOIN public.profile_configurations c
+      ON c.user_id = p.id
+  ),
+  rebuilt AS (
+    SELECT
+      payload,
+      COALESCE(
+        jsonb_agg(
+          item || jsonb_build_object(
+            'displayName', left(display_name, 40),
+            'bio', left(bio, 160),
+            'profileAccent', CASE
+              WHEN mood_color ~ '^#[0-9A-Fa-f]{6}$' THEN upper(mood_color)
+              ELSE NULL
+            END,
+            'avatarPath', CASE
+              WHEN avatar_path = 'avatars/' || profile_id::text || '/avatar.webp'
+                OR EXISTS (
+                  SELECT 1
+                  FROM public.profile_media_assets asset
+                  WHERE asset.user_id = profile_id
+                    AND asset.kind = 'avatar'
+                    AND asset.status = 'active'
+                    AND asset.storage_path = avatar_path
+                )
+              THEN avatar_path
+              ELSE NULL
+            END
+          ) ORDER BY item_order
+        ) FILTER (WHERE item IS NOT NULL),
+        '[]'::jsonb
+      ) AS items
+    FROM projected
+    GROUP BY payload
+  ),
+  stats AS (
+    SELECT count(*) AS today_roll_count
+    FROM public.scores s
+    JOIN public.profiles p ON p.id = s.user_id
+    WHERE s.roll_date = public.game_utc_date()
+  )
+  SELECT jsonb_set(
+    jsonb_set(payload, '{items}', items, true),
+    '{todayRollCount}',
+    to_jsonb(stats.today_roll_count),
+    true
+  )
+  FROM rebuilt
+  CROSS JOIN stats;
+$function$;
+
+COMMENT ON FUNCTION public.get_public_discovery(text, text, text, integer, integer) IS
+  'Bounded public discovery projection with validated legacy and reusable public avatar paths.';
+
+REVOKE ALL ON FUNCTION public.get_public_discovery(text, text, text, integer, integer) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_public_discovery(text, text, text, integer, integer) TO anon, authenticated;
+
+-- Older Profile Studio removes deleted the Storage object directly and left
+-- its private library row behind. Remove only rows that point at no object;
+-- valid reusable assets remain available for re-equipping.
+DELETE FROM public.profile_media_assets asset
+WHERE asset.kind IN ('avatar', 'background')
+  AND NOT EXISTS (
+    SELECT 1
+    FROM storage.objects object
+    WHERE object.bucket_id = split_part(asset.storage_path, '/', 1)
+      AND object.name = regexp_replace(asset.storage_path, '^[^/]+/', '')
+  );
+
+-- Account deletion must remove every owner-scoped legacy and reusable image.
+CREATE OR REPLACE FUNCTION public.delete_profile_expression_media()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO public, storage, pg_temp
+AS $function$
+BEGIN
+  PERFORM set_config('storage.allow_delete_query', 'true', true);
+  DELETE FROM storage.objects
+  WHERE (bucket_id = 'avatars' AND name LIKE OLD.id::text || '/%')
+     OR (bucket_id = 'backgrounds' AND name LIKE OLD.id::text || '/%')
+     OR (bucket_id = 'profile_audio' AND name LIKE OLD.id::text || '/%')
+     OR (bucket_id = 'profile_media' AND name LIKE OLD.id::text || '/%');
+  RETURN OLD;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.delete_profile_expression_media() FROM PUBLIC, anon, authenticated;
+
+COMMIT;

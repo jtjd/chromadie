@@ -82,6 +82,7 @@
   let loadError = '';
   let loadRequestId = 0;
   let activeProfileKey = null;
+  let activePreviewConfigKey = '';
   let trackedProfileViewKey = null;
   let followLoading = false;
   let profileRollState = 'idle';
@@ -159,9 +160,21 @@
 
   function syncProfileData() {
     if (previewMode) {
-      const nextPreviewKey = 'profile-preview:' + JSON.stringify({ profile: previewProfile, config: previewProfileConfig, scores: previewScores, timeline: previewTimelineEvents, collection: previewCollectionItems });
+      // Configuration changes are ordinary editor updates. Keep the live
+      // preview shell mounted so sliders, media and cosmetics do not reset
+      // roll/social state or timers on every keystroke. Only a change to the
+      // preview's identity/data context warrants a full reconstruction.
+      const nextPreviewKey = 'profile-preview:' + JSON.stringify({
+        profile: previewProfile,
+        scores: previewScores,
+        timeline: previewTimelineEvents,
+        collection: previewCollectionItems,
+        achievements: previewAllAchievements
+      });
+      const nextPreviewConfigKey = JSON.stringify(previewProfileConfig || null);
       if (nextPreviewKey !== activeProfileKey) {
         activeProfileKey = nextPreviewKey;
+        activePreviewConfigKey = nextPreviewConfigKey;
         loadRequestId += 1;
         resetShellState(false);
         const fallbackColor = '#CDD2FF';
@@ -194,6 +207,17 @@
         collectionItems = Array.isArray(previewCollectionItems) ? previewCollectionItems : [];
         allAchievements = Array.isArray(previewAllAchievements) ? previewAllAchievements : [];
         loading = false;
+      } else if (nextPreviewConfigKey !== activePreviewConfigKey) {
+        activePreviewConfigKey = nextPreviewConfigKey;
+        previewConfig = null;
+        profileConfig = {
+          draft: null,
+          published: normalizeProfileConfig(
+            previewProfileConfig || createDefaultProfileConfig(),
+            '#CDD2FF'
+          )
+        };
+        mediaCacheKey = String(Date.now());
       }
       return;
     }

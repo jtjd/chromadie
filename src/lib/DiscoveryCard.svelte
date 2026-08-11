@@ -15,6 +15,7 @@
 
   export let item;
   export let featured = false;
+  export let presentation = 'card';
   export let showFollow = false;
   export let isFollowed = false;
   export let canFollow = false;
@@ -93,7 +94,7 @@
 </script>
 
 <ProfileBorderEffect borderKey={item?.equippedCosmetics?.profile_border} compact={true} className="discovery-card-border">
-<article class={'discovery-card' + (featured ? ' discovery-card--featured' : '')} style={cardStyle}>
+<article class={'discovery-card' + (featured ? ' discovery-card--featured' : '') + (presentation === 'leaderboard' ? ' discovery-card--leaderboard' : '')} style={cardStyle}>
   <div class="discovery-card__topline">
     <div class="discovery-card__rank-lockup">
       <span class="discovery-card__rank">{item?.rank ? `#${item.rank}` : 'Profile'}</span>
@@ -209,7 +210,7 @@
 
   .discovery-card::before { position: absolute; inset: 0 auto auto 0; width: 32%; height: 1px; background: linear-gradient(90deg, var(--discovery-profile-accent), transparent); content: ''; opacity: 0.86; }
   .discovery-card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--discovery-profile-accent) 54%, var(--color-line-subtle)); box-shadow: 0 1.8rem 3.4rem rgba(0, 0, 0, 0.24); }
-  .discovery-card--featured { grid-column: span 2; padding: 1.35rem; border-color: color-mix(in srgb, var(--discovery-profile-accent) 48%, var(--color-line-subtle)); background: linear-gradient(115deg, color-mix(in srgb, var(--discovery-profile-accent) 13%, var(--surface-panel)), var(--surface-panel) 52%, color-mix(in srgb, var(--discovery-roll-color) 8%, var(--surface-panel))); }
+  .discovery-card--featured { padding: 1.35rem; border-color: color-mix(in srgb, var(--discovery-profile-accent) 48%, var(--color-line-subtle)); background: linear-gradient(115deg, color-mix(in srgb, var(--discovery-profile-accent) 13%, var(--surface-panel)), var(--surface-panel) 52%, color-mix(in srgb, var(--discovery-roll-color) 8%, var(--surface-panel))); }
 
   .discovery-card__topline,
   .discovery-card__rank-lockup,
@@ -308,6 +309,18 @@
     box-shadow: none;
   }
 
+  .discovery-card--leaderboard {
+    min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    transform: none;
+    background: var(--surface-inset);
+  }
+  .discovery-card--leaderboard:hover { transform: none; box-shadow: none; background: color-mix(in srgb, var(--surface-panel) 78%, transparent); }
+
   .discovery-card::before {
     inset: 0 0 auto;
     width: 100%;
@@ -323,7 +336,7 @@
     box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.18);
   }
 
-  .discovery-card__topline { font-size: 0.55rem; letter-spacing: 0.075em; }
+  .discovery-card__topline { font-size: 0.62rem; letter-spacing: 0.075em; }
   .discovery-card__rank { color: var(--color-accent-bright); }
   .discovery-card__surface-label { color: var(--color-ink-muted); font-weight: 500; }
   .discovery-card__avatar {
@@ -335,24 +348,24 @@
   }
   .discovery-card__avatar-accent { right: 0.25rem; bottom: 0.25rem; width: 0.46rem; height: 0.46rem; }
   .discovery-card__name { font-size: 1.04rem; }
-  .discovery-card__handle { margin-top: 0.24rem; font-size: 0.58rem; }
-  .discovery-card__bio { margin-top: 0.34rem; font-size: 0.7rem; line-height: 1.35; }
+  .discovery-card__handle { margin-top: 0.24rem; font-size: 0.68rem; }
+  .discovery-card__bio { margin-top: 0.34rem; font-size: 0.78rem; line-height: 1.4; }
   .discovery-card__score { min-width: 6.8rem; gap: 0.24rem; }
   .discovery-card__score strong { color: var(--color-ink-strong); font-size: 0.92rem; }
-  .discovery-card__score span { color: var(--color-ink-muted); font-size: 0.5rem; }
+  .discovery-card__score span { color: var(--color-ink-muted); font-size: 0.58rem; }
   .discovery-card__roll { gap: 0.58rem; padding-top: 0.68rem; border-top-color: color-mix(in srgb, var(--color-line-subtle) 76%, transparent); }
   .discovery-card__roll-copy { gap: 0.16rem; }
-  .discovery-card__roll-copy > span { color: var(--color-ink-muted); font-size: 0.5rem; letter-spacing: 0.08em; }
-  .discovery-card__roll-copy strong { font-size: 0.74rem; }
-  .discovery-card__roll-copy small { font-size: 0.5rem; }
-  .discovery-card__stats { gap: 0.4rem 0.72rem; padding-top: 0.62rem; border-top-color: color-mix(in srgb, var(--color-line-subtle) 76%, transparent); font-size: 0.58rem; }
+  .discovery-card__roll-copy > span { color: var(--color-ink-muted); font-size: 0.56rem; letter-spacing: 0.08em; }
+  .discovery-card__roll-copy strong { font-size: 0.8rem; }
+  .discovery-card__roll-copy small { font-size: 0.58rem; }
+  .discovery-card__stats { gap: 0.4rem 0.72rem; padding-top: 0.62rem; border-top-color: color-mix(in srgb, var(--color-line-subtle) 76%, transparent); font-size: 0.64rem; }
   .discovery-card__hex { color: var(--color-ink-muted); }
   .discovery-card__actions { gap: 0.6rem; }
-  .discovery-card__cta { color: var(--color-accent-bright); font: 700 0.62rem/1 var(--font-mono-stack); letter-spacing: 0.03em; text-transform: uppercase; }
+  .discovery-card__cta { color: var(--color-accent-bright); font: 700 0.7rem/1 var(--font-mono-stack); letter-spacing: 0.03em; text-transform: uppercase; }
   .discovery-card__share,
-  .discovery-card__icon-button { min-height: 1.75rem; border-color: transparent; font-size: 0.58rem; }
-  .discovery-card__share { padding: 0.35rem 0; }
-  .discovery-card__icon-button { width: 1.75rem; }
+  .discovery-card__icon-button { min-height: 2.25rem; border-color: transparent; font-size: 0.64rem; }
+  .discovery-card__share { padding: 0.35rem 0.45rem; }
+  .discovery-card__icon-button { width: 2.25rem; }
   .discovery-card__share:hover,
   .discovery-card__icon-button:hover,
   .discovery-card__icon-button.active { border-color: transparent; background: transparent; color: var(--color-ink-strong); }

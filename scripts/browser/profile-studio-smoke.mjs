@@ -950,6 +950,80 @@ try {
     return { widths, measurements, drawer, tabletToggle, tabletPreview, phonePreview, destinationMeasurements };
   });
 
+  await step('production Discovery keeps its route shell and card geometry bounded', async () => {
+    const viewports = [
+      [390, 844],
+      [524, 900],
+      [768, 1024],
+      [1024, 768],
+      [1440, 900],
+      [1746, 896]
+    ];
+    const measurements = [];
+
+    for (const [width, height] of viewports) {
+      await page.setViewport(width, height);
+      await page.navigate(`${appUrl}/leaderboard`, `Discovery at ${width}x${height}`);
+      await page.waitFor(`location.pathname === '/leaderboard' && document.querySelector('.discovery-hub')`, `Discovery shell at ${width}px`, 30000);
+      await page.clickText('New', { description: `Discovery New profiles tab at ${width}px` });
+      await page.waitFor('document.querySelector(".discovery-card, .discovery-empty")', `Discovery results at ${width}px`, 30000);
+      await delay(120);
+      const state = await page.evaluate(`(() => {
+        const rect = element => {
+          const box = element?.getBoundingClientRect();
+          return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
+        };
+        const intersects = (left, right) => Boolean(left && right && left.left < right.right - 1 && right.left < left.right - 1 && left.top < right.bottom - 1 && right.top < left.bottom - 1);
+        const shell = document.querySelector('.discovery-hub');
+        const grid = document.querySelector('.discovery-grid');
+        const items = [...document.querySelectorAll('.discovery-grid__item')];
+        const cards = [...document.querySelectorAll('.discovery-card')];
+        const heading = document.querySelector('.discovery-heading');
+        const headingCopy = heading?.firstElementChild;
+        const filters = document.querySelector('.discovery-filters');
+        const visible = element => {
+          if (!element) return false;
+          const style = getComputedStyle(element);
+          const box = element.getBoundingClientRect();
+          return style.display !== 'none' && style.visibility !== 'hidden' && box.width > 0 && box.height > 0;
+        };
+        const avatarStates = cards.map(card => {
+          const image = card.querySelector('.discovery-card__avatar img');
+          const fallback = card.querySelector('.discovery-card__avatar-initial');
+          return { imageLoaded: Boolean(image?.complete && image.naturalWidth > 0), fallback: visible(fallback) };
+        });
+        const outOfShell = [...document.querySelectorAll('.discovery-grid__item, .discovery-card__avatar, .discovery-card__cta, .discovery-filters input, .discovery-filters select, .discovery-filter-button')]
+          .map(element => ({ element, box: element.getBoundingClientRect() }))
+          .filter(({ box }) => box.left < shell?.getBoundingClientRect().left - 1 || box.right > shell?.getBoundingClientRect().right + 1)
+          .slice(0, 8)
+          .map(({ element, box }) => ({ selector: element.className || element.tagName, left: box.left, right: box.right }));
+        return {
+          viewport: [innerWidth, innerHeight],
+          shell: rect(shell),
+          grid: rect(grid),
+          gridColumns: grid ? getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).filter(Boolean).length : 0,
+          items: items.map(item => ({ box: rect(item), columnStart: getComputedStyle(item).gridColumnStart, columnEnd: getComputedStyle(item).gridColumnEnd, featured: item.classList.contains('discovery-grid__item--featured') })),
+          cards: cards.map(card => rect(card)),
+          heading: rect(heading),
+          filters: rect(filters),
+          headingFiltersOverlap: visible(filters) && intersects(headingCopy?.getBoundingClientRect(), filters?.getBoundingClientRect()),
+          avatarStates,
+          outOfShell
+        };
+      })()`);
+      assert(state.shell && state.shell.width >= Math.min(width - 16, 900), `Discovery shell is still constrained at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.grid && state.gridColumns === 1, `Discovery grid has competing column ownership at ${width}px: ${JSON.stringify(state)}.`);
+      assert(!state.outOfShell.length && !state.headingFiltersOverlap, `Discovery controls escape or overlap at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.items.every(item => item.box && item.box.left >= state.shell.left - 1 && item.box.right <= state.shell.right + 1), `Discovery card wrapper escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.items.every(item => !item.featured || (item.columnStart === '1' && (item.columnEnd === '-1' || item.columnEnd === '2'))), `Featured Discovery wrapper does not own its grid placement at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.avatarStates.every(avatar => avatar.imageLoaded || avatar.fallback), `Discovery contains an unloaded avatar without a fallback at ${width}px: ${JSON.stringify(state)}.`);
+      measurements.push({ width, height, ...state });
+    }
+
+    await capture('11-discovery-responsive');
+    return { viewports, measurements };
+  });
+
   await step('reduced-motion media query is honored', async () => {
     await page.setReducedMotion(true);
     const reduced = await page.waitFor(`matchMedia('(prefers-reduced-motion: reduce)').matches`, 'reduced-motion media query');

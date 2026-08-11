@@ -115,6 +115,24 @@ export function getProfileStorageRef(storedPath) {
   return null;
 }
 
+/**
+ * Validate the shared public path contract without making a storage or
+ * database request. The database remains authoritative for ownership and
+ * registration; consumers use this helper to accept both the legacy slot and
+ * reusable UUID asset formats consistently.
+ */
+export function isProfileMediaPathForKind(storedPath, kind) {
+  const reference = getProfileStorageRef(storedPath);
+  const expectedBucket = kind === 'avatar'
+    ? PROFILE_STORAGE_BUCKETS.avatar
+    : kind === 'background'
+      ? PROFILE_STORAGE_BUCKETS.background
+      : kind === 'audio'
+        ? PROFILE_STORAGE_BUCKETS.audio
+        : '';
+  return Boolean(reference && expectedBucket && reference.bucket === expectedBucket);
+}
+
 export const PROFILE_IMAGE_RULES = Object.freeze({
   avatar: Object.freeze({
     maxInputBytes: 5 * 1024 * 1024,

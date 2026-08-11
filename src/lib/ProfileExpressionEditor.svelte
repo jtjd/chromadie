@@ -83,6 +83,57 @@
     backgroundPreviewSrc = '';
   }
 
+  function preloadImage(source) {
+    if (!source || typeof window === 'undefined' || typeof window.Image !== 'function') {
+      return Promise.reject(new Error('The persisted image could not be verified in this browser.'));
+    }
+
+    return new Promise((resolve, reject) => {
+      const image = new window.Image();
+      const timeout = window.setTimeout(() => {
+        image.src = '';
+        reject(new Error('The persisted image took too long to load.'));
+      }, 10000);
+      image.onload = () => {
+        window.clearTimeout(timeout);
+        resolve(source);
+      };
+      image.onerror = () => {
+        window.clearTimeout(timeout);
+        reject(new Error('The uploaded image could not be loaded from its saved public URL.'));
+      };
+      image.src = source;
+    });
+  }
+
+  async function verifyPersistedImage(storedPath) {
+    const source = getProfileMediaUrl(storedPath, `verify-${Date.now()}`);
+    return preloadImage(source);
+  }
+
+  async function cleanupFailedImageUpload(reference, assetId = '') {
+    if (!reference) return;
+    if (assetId) {
+      const { data, error: deleteError } = await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: assetId });
+      if (!deleteError && data?.success) return;
+      // A registered row is intentionally not removed directly from Storage if
+      // its owner-authorized cleanup RPC failed; deleting the object alone
+      // would recreate the stale-library bug this lifecycle is preventing.
+      return;
+    }
+    await supabase.storage.from(reference.bucket).remove([reference.objectPath]);
+  }
+
+  function setPersistedAvatarPreview(source) {
+    if (avatarPreviewSrc && avatarPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(avatarPreviewSrc);
+    avatarPreviewSrc = source;
+  }
+
+  function setPersistedBackgroundPreview(source) {
+    if (backgroundPreviewSrc && backgroundPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(backgroundPreviewSrc);
+    backgroundPreviewSrc = source;
+  }
+
   function setFeedback(nextError = '', nextStatus = '') {
     error = nextError;
     status = nextStatus;
@@ -94,7 +145,7 @@
     assetsLoading = true;
     const { data, error: assetError } = await supabase
       .from('profile_media_assets')
-      .select('id, kind, storage_path, label, created_at')
+      .select('id, kind, storage_path, label, created_at, status')
       .eq('user_id', profileId)
       .order('created_at', { ascending: false });
     if (requestId !== assetLoadRequestId) return;
@@ -103,8 +154,8 @@
       setFeedback(assetError.message || 'The media library could not be loaded.');
       return;
     }
-    avatarAssets = (data || []).filter(asset => asset.kind === 'avatar');
-    backgroundAssets = (data || []).filter(asset => asset.kind === 'background');
+    avatarAssets = (data || []).filter(asset => asset.kind === 'avatar' && (!asset.status || asset.status === 'active'));
+    backgroundAssets = (data || []).filter(asset => asset.kind === 'background' && (!asset.status || asset.status === 'active'));
   }
 
   function createAssetId() {
@@ -223,12 +274,16 @@
 
     busy = true;
     setFeedback('', 'Preparing the avatar…');
+    let uploadedReference = null;
+    let registeredAssetId = '';
+    let persisted = false;
     try {
       const blob = await processProfileImage(file, 'avatar');
       const assetId = createAssetId();
       const storedPath = buildProfileStoragePath('avatar', profileId, assetId);
       const reference = getProfileStorageRef(storedPath);
       if (!reference) throw new Error('The avatar path could not be prepared.');
+      uploadedReference = reference;
 
       const objectUrl = URL.createObjectURL(blob);
       revokeAvatarPreview();
@@ -242,11 +297,18 @@
         });
       if (uploadError) throw new Error(uploadError.message || 'The avatar could not be uploaded.');
 
-      await registerAsset('avatar', assetId, file.name);
+      const registered = await registerAsset('avatar', assetId, file.name);
+      registeredAssetId = registered?.id || '';
+      const persistedSrc = await verifyPersistedImage(storedPath);
       await saveExpression({ ...expression, avatar_path: storedPath });
+      persisted = true;
+      setPersistedAvatarPreview(persistedSrc);
       await loadAssetLibrary();
       setFeedback('', `Avatar saved to your library and profile (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
+      if (!persisted) {
+        await cleanupFailedImageUpload(uploadedReference, registeredAssetId).catch(() => {});
+      }
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The avatar could not be saved.');
       revokeAvatarPreview();
     } finally {
@@ -256,23 +318,13 @@
 
   async function removeAvatar() {
     if (!expression.avatar_path || busy) return;
-    const previousPath = expression.avatar_path;
     busy = true;
     setFeedback('', 'Removing the avatar…');
     try {
       const next = await saveExpression({ ...expression, avatar_path: null });
-      const reference = getProfileStorageRef(previousPath);
-      if (reference) {
-        const { error: removeError } = await supabase.storage.from(reference.bucket).remove([reference.objectPath]);
-        if (removeError) {
-          revokeAvatarPreview();
-          setFeedback('', 'Avatar removed from the profile. The old file can be cleaned up later.');
-          return;
-        }
-      }
       expression = next;
       revokeAvatarPreview();
-      setFeedback('', 'Avatar removed. Your initials fallback is active.');
+      setFeedback('', 'Avatar removed. Your initials fallback is active; the saved asset remains in your library.');
     } catch (removeError) {
       setFeedback(removeError instanceof Error ? removeError.message : 'The avatar could not be removed.');
     } finally {
@@ -287,12 +339,16 @@
 
     busy = true;
     setFeedback('', 'Preparing the background…');
+    let uploadedReference = null;
+    let registeredAssetId = '';
+    let persisted = false;
     try {
       const blob = await processProfileImage(file, 'background');
       const assetId = createAssetId();
       const storedPath = buildProfileStoragePath('background', profileId, assetId);
       const reference = getProfileStorageRef(storedPath);
       if (!reference) throw new Error('The background path could not be prepared.');
+      uploadedReference = reference;
 
       const objectUrl = URL.createObjectURL(blob);
       revokeBackgroundPreview();
@@ -306,11 +362,18 @@
         });
       if (uploadError) throw new Error(uploadError.message || 'The background could not be uploaded.');
 
-      await registerAsset('background', assetId, file.name);
+      const registered = await registerAsset('background', assetId, file.name);
+      registeredAssetId = registered?.id || '';
+      const persistedSrc = await verifyPersistedImage(storedPath);
       await saveExpression({ ...expression, background_path: storedPath });
+      persisted = true;
+      setPersistedBackgroundPreview(persistedSrc);
       await loadAssetLibrary();
       setFeedback('', `Background saved to your library and public atmosphere (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
+      if (!persisted) {
+        await cleanupFailedImageUpload(uploadedReference, registeredAssetId).catch(() => {});
+      }
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The background could not be saved.');
       revokeBackgroundPreview();
     } finally {
@@ -320,23 +383,13 @@
 
   async function removeBackground() {
     if (!expression.background_path || busy) return;
-    const previousPath = expression.background_path;
     busy = true;
     setFeedback('', 'Removing the background…');
     try {
       const next = await saveExpression({ ...expression, background_path: null });
-      const reference = getProfileStorageRef(previousPath);
-      if (reference) {
-        const { error: removeError } = await supabase.storage.from(reference.bucket).remove([reference.objectPath]);
-        if (removeError) {
-          revokeBackgroundPreview();
-          setFeedback('', 'Background removed from the profile. The old file can be cleaned up later.');
-          return;
-        }
-      }
       expression = next;
       revokeBackgroundPreview();
-      setFeedback('', 'Background removed. The generated color atmosphere is active.');
+      setFeedback('', 'Background removed. The generated color atmosphere is active; the saved asset remains in your library.');
     } catch (removeError) {
       setFeedback(removeError instanceof Error ? removeError.message : 'The background could not be removed.');
     } finally {

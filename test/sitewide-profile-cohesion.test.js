@@ -84,10 +84,12 @@ test('leaderboard and legal routes share the homepage presentation contract', as
   const terms = await read('src/lib/TermsOfService.svelte');
 
   assert.match(discoveryHub, /<div class="discovery-grid">/);
-  assert.match(siteStyles, /.app-main--site \.discovery-grid {/);
-  assert.match(siteStyles, /grid-template-columns: minmax\(0, 1fr\);/);
-  assert.match(siteStyles, /\.app-main--site \.discovery-card__main \{/);
-  assert.match(siteStyles, /grid-template-columns: minmax\(0, 1fr\) minmax\(14rem, auto\) auto;/);
+  assert.match(discoveryHub, /discovery-grid__item/);
+  assert.match(discoveryHub, /presentation="leaderboard"/);
+  assert.match(siteStyles, /\.app-main--site \.discovery-hub \{/);
+  assert.match(siteStyles, /\.app-main--site \.discovery-card/);
+  assert.doesNotMatch(siteStyles, /\.app-main--site \.discovery-grid > \.discovery-card/);
+  assert.doesNotMatch(siteStyles, /\.app-main--site \.discovery-card__main \{/);
   assert.match(privacy, /class="container site-document legal-page"/);
   assert.match(terms, /class="site-document terms"/);
   assert.match(siteStyles, /Privacy and Terms are the same kind of quiet product document/);

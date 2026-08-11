@@ -124,4 +124,7 @@ test('browser smoke can run against the production preview and checks the phone 
   assert.match(browserSmoke, /site-mode-header__mobile-menu/);
   assert.match(browserSmoke, /authenticated Profile Studio shell/);
   assert.match(browserSmoke, /Persistent mobile customize tabs are not reachable/);
+  assert.match(browserSmoke, /production Discovery keeps its route shell and card geometry bounded/);
+  assert.match(browserSmoke, /discovery-grid__item/);
+  assert.match(browserSmoke, /avatarStates/);
 });

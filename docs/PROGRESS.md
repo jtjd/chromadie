@@ -3203,3 +3203,23 @@ identity field and control at 414px and captures the resulting editor surface.
 Validation for this pass: `npm run check`, `npm test` (274 passing), and the
 authenticated browser smoke pass. The complete required validation list remains
 the milestone handoff gate.
+
+## 2026-08-11 — Discovery and reusable-media hardening
+
+- Repaired the avatar contract across Studio, public Discovery normalization,
+  and `get_public_discovery` for both legacy and UUID-backed media paths.
+- Made ordinary avatar/background removal an unequip operation, verified
+  persisted upload URLs before success, cleaned failed uploads, and expanded
+  owner-prefix account cleanup for reusable media.
+- Removed the legacy Discovery width cap and consolidated leaderboard geometry
+  around route-owned grid items and an explicit card presentation variant.
+- Changed Profile Studio preview config updates to preserve the mounted shell
+  for ordinary edits while keeping full resets for profile-context changes.
+- Added Discovery production-browser geometry/avatar smoke coverage at phone,
+  tablet, narrow desktop, and wide desktop viewports.
+
+Validation: production build, Svelte check, ESLint, 287 unit/source tests,
+links, CSP, performance, drift/parity checks, database security, local schema
+lint/reset, and production browser smoke pass. Live deployment verification and
+remote catalog/database checks remain environment-dependent; the Shop was not
+audited.

@@ -4245,3 +4245,26 @@ document flow, and Live preview is a bottom sheet. This keeps the desktop
 reference geometry intact while giving narrow screens one owner for each layout
 decision. The route, hashes, draft model, save/publish RPCs, and public profile
 renderer remain unchanged.
+
+## 2026-08-11 — Keep reusable media, public discovery, and preview state on one contract
+
+Reusable avatar and background assets use the shared owner-scoped storage-path
+contract. The additive discovery migration accepts legacy `avatar.webp` paths
+and registered UUID asset paths, while account cleanup removes every object in
+the owner's media prefixes. Removing an avatar or background from the profile
+now unequips it without deleting its reusable library record; permanent removal
+continues through the owner-authorized media-delete RPC.
+
+Studio upload success is not final until the persisted public asset URL has been
+preloaded. Temporary blob previews are revoked after that verification, and
+failed uploads use compensating storage/database cleanup. Live preview config
+changes update the mounted profile shell incrementally instead of reconstructing
+the entire shell for every appearance or media edit.
+
+## 2026-08-11 — Give Discovery one layout owner
+
+Discovery owns its route width and leaderboard grid, and each card participates
+through an explicit grid-item wrapper. The card receives a leaderboard
+presentation variant for its internal geometry. Global site styles no longer
+reach through the component wrapper to rearrange card internals, and Discovery
+does not inherit the legacy 500px `.container` contract.

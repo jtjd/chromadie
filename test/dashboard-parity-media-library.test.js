@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import {
   buildProfileStoragePath,
   getProfileStorageRef,
+  isProfileMediaPathForKind,
   normalizeProfileExpression
 } from '../src/lib/profileExpression.js';
 
@@ -19,6 +20,9 @@ test('reusable profile assets keep the same bounded bucket/path contract', () =>
   assert.equal(backgroundPath, `backgrounds/${userId}/${assetId}.webp`);
   assert.deepEqual(getProfileStorageRef(avatarPath), { bucket: 'avatars', objectPath: `${userId}/${assetId}.webp` });
   assert.deepEqual(getProfileStorageRef(backgroundPath), { bucket: 'backgrounds', objectPath: `${userId}/${assetId}.webp` });
+  assert.equal(isProfileMediaPathForKind(avatarPath, 'avatar'), true);
+  assert.equal(isProfileMediaPathForKind(`avatars/${userId}/avatar.webp`, 'avatar'), true);
+  assert.equal(isProfileMediaPathForKind(backgroundPath, 'avatar'), false);
   assert.equal(normalizeProfileExpression({ avatar_path: avatarPath, background_path: backgroundPath }).avatar_path, avatarPath);
   assert.equal(normalizeProfileExpression({ avatar_path: 'avatars/other-user/not-an-asset.webp' }).avatar_path, null);
 });
@@ -36,6 +40,12 @@ test('media library migration keeps registration and deletion owner-scoped', asy
   assert.match(editor, /profile_media_assets/);
   assert.match(editor, /register_my_profile_media_asset/);
   assert.match(editor, /delete_my_profile_media_asset/);
+  const avatarRemove = editor.match(/async function removeAvatar\(\)[\s\S]*?(?=\n  async function)/)?.[0] || '';
+  const backgroundRemove = editor.match(/async function removeBackground\(\)[\s\S]*?(?=\n  async function)/)?.[0] || '';
+  assert.doesNotMatch(avatarRemove, /storage\.from\(reference\.bucket\)\.remove/);
+  assert.doesNotMatch(backgroundRemove, /storage\.from\(reference\.bucket\)\.remove/);
+  assert.match(editor, /verifyPersistedImage/);
+  assert.match(editor, /cleanupFailedImageUpload/);
   assert.match(editor, /Saved avatars/);
   assert.match(editor, /Saved backgrounds/);
 });

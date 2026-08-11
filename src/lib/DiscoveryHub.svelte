@@ -204,7 +204,7 @@
   });
 </script>
 
-<main class="container discovery-hub">
+<main class="discovery-hub">
   <section class="discovery-hub__intro" aria-labelledby="discovery-title">
     <div>
       <p class="discovery-hub__kicker">Public spectrum</p>
@@ -269,17 +269,21 @@
       {#if isFiltered}<button type="button" class="discovery-clear-button" on:click={clearFilters}>Clear filters</button>{/if}
     </section>
   {:else}
-    <div class="discovery-grid">
+      <div class="discovery-grid">
       {#each visibleItems as item, index (`${item.username}:${item.rollDate || item.profileCreatedAt || 'profile'}:${item.hexCode || index}`)}
-        <DiscoveryCard
-          item={item}
-          featured={activeTab === 'today' && index === 0}
-          showFollow={activeTab === 'rivals'}
-          isFollowed={Boolean(item.userId && $followedUsers.includes(item.userId))}
-          canFollow={canFollow(item)}
-          onToggleFollow={handleFollow}
-          on:navigate={forwardNavigation}
-        />
+        {@const featured = activeTab === 'today' && index === 0}
+        <div class={'discovery-grid__item' + (featured ? ' discovery-grid__item--featured' : '')}>
+          <DiscoveryCard
+            item={item}
+            featured={featured}
+            presentation="leaderboard"
+            showFollow={activeTab === 'rivals'}
+            isFollowed={Boolean(item.userId && $followedUsers.includes(item.userId))}
+            canFollow={canFollow(item)}
+            onToggleFollow={handleFollow}
+            on:navigate={forwardNavigation}
+          />
+        </div>
       {/each}
     </div>
 
@@ -299,7 +303,7 @@
 </main>
 
 <style>
-  .discovery-hub { padding-top: 1.6rem; padding-bottom: 3.4rem; }
+  .discovery-hub { box-sizing: border-box; width: min(calc(100% - 2rem), 72rem); max-width: 72rem; margin-inline: auto; padding-top: 1.6rem; padding-bottom: 3.4rem; text-align: left; }
   .discovery-hub__intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.4rem; }
   .discovery-hub__kicker, .discovery-heading__eyebrow { margin: 0 0 0.45rem; color: var(--color-accent-bright); font: 700 0.68rem/1.2 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: lowercase; }
   .discovery-hub h1 { max-width: 13ch; margin: 0; color: #f5f6ff; font-size: clamp(2rem, 5vw, 3.8rem); line-height: 0.98; letter-spacing: -0.06em; }
@@ -322,7 +326,11 @@
   .discovery-filters input { width: 11rem; }
   .discovery-filters input::placeholder { color: #68738f; }
   .discovery-clear-button { border-color: transparent; background: transparent; }
-  .discovery-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+  .discovery-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; overflow: hidden; border: 1px solid var(--color-line-subtle); border-radius: 0.5rem; background: var(--surface-inset); }
+  .discovery-grid__item { min-width: 0; border-top: 1px solid var(--color-line-subtle); }
+  .discovery-grid__item:first-child { border-top: 0; }
+  .discovery-grid__item--featured { grid-column: 1 / -1; }
+  :global(.discovery-grid__item > .discovery-card-border) { display: block; height: 100%; }
   .discovery-empty { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 9rem; padding: 1.3rem; border: 1px dashed rgba(157,166,194,0.3); border-radius: 1rem; color: var(--text-muted); }
   .discovery-empty p { margin: 0; line-height: 1.5; }
   .discovery-skeleton { min-height: 14rem; border: 1px solid rgba(157,166,194,0.13); border-radius: 1.15rem; background: linear-gradient(110deg, rgba(255,255,255,0.035) 25%, rgba(255,255,255,0.08) 37%, rgba(255,255,255,0.035) 63%); background-size: 300% 100%; animation: discovery-shimmer 1.4s ease-in-out infinite; }
@@ -339,7 +347,6 @@
     .discovery-filters { justify-content: flex-start; width: 100%; }
   }
   @media (max-width: 620px) {
-    .discovery-grid { grid-template-columns: 1fr; }
     .discovery-tabs__group + .discovery-tabs__group { padding-top: 0.65rem; padding-left: 0; border-top: 1px solid rgba(157,166,194,0.18); border-left: 0; }
   }
   @media (max-width: 440px) {
@@ -352,6 +359,9 @@
     :global(.discovery-card__stats) { display: none; }
     :global(.discovery-card__cta) { display: inline-flex; min-height: 2.75rem; align-items: center; }
     :global(.discovery-card__share), :global(.discovery-card__icon-button) { min-height: 2.75rem; }
+  }
+  @media (max-width: 48rem) {
+    .discovery-hub { width: calc(100% - 1rem); }
   }
   @media (prefers-reduced-motion: reduce) {
     .discovery-tabs button, .discovery-filter-button, .discovery-clear-button { transition: none; }
