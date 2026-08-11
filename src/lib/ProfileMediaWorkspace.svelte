@@ -101,14 +101,53 @@
   .profile-media-workspace :global(.profile-background-treatment) {
     grid-column: 2 / -1;
     grid-row: 2;
-    align-self: stretch;
-    box-sizing: border-box;
+    align-self: start;
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-card),
   .profile-media-workspace :global(.rich-media-editor__compact-card) {
     grid-template-rows: minmax(1.05rem, auto) minmax(0, auto) auto;
     min-height: 0;
+  }
+
+  /* Cursor media is a small asset/action row, not a second image well. */
+  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(1.05rem, auto) auto;
+    align-items: center;
+  }
+
+  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor .rich-media-editor__compact-copy) {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor .rich-media-editor__compact-preview) {
+    grid-column: 1;
+    grid-row: 2;
+    min-height: 4rem;
+    height: 4rem;
+    aspect-ratio: auto;
+    padding: .4rem;
+  }
+
+  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor.rich-media-editor__compact-card--locked .rich-media-editor__compact-preview) {
+    grid-column: 1 / -1;
+    height: auto;
+    min-height: 4.75rem;
+  }
+
+  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor .rich-media-editor__compact-preview img),
+  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor .rich-media-editor__cursor-badge) {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor .rich-media-editor__compact-actions) {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-preview),
@@ -172,8 +211,8 @@
       grid-row: 2;
     }
 
-    .profile-media-workspace :global(.profile-expression-editor__compact-card--cursor),
-    .profile-media-workspace :global(.rich-media-editor__compact-card--cursor) {
+  .profile-media-workspace :global(.profile-expression-editor__compact-card--cursor),
+  .profile-media-workspace :global(.rich-media-editor__compact-card--cursor) {
       grid-column: 2;
       grid-row: 2;
     }

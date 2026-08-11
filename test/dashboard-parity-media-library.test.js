@@ -74,13 +74,16 @@ test('cursor uploads refresh the owner library before choosing the staging bound
   assert.match(recovery, /v_selected_path IS NOT NULL AND v_selected_path IS DISTINCT FROM v_old\.storage_path/);
 });
 
-test('media second-row cards share geometry and keep treatment copy concise', async () => {
+test('media second-row controls stay compact and keep treatment copy concise', async () => {
   const [workspace, treatment] = await Promise.all([
     read('src/lib/ProfileMediaWorkspace.svelte'),
     read('src/lib/ProfileBackgroundTreatment.svelte')
   ]);
 
-  assert.match(workspace, /profile-background-treatment[\s\S]*grid-row: 2;[\s\S]*align-self: stretch/);
+  assert.match(workspace, /rich-media-editor__compact-card--cursor[\s\S]*grid-template-columns: minmax\(0, 1fr\) auto/);
+  assert.match(workspace, /rich-media-editor__compact-card--cursor \.rich-media-editor__compact-preview[\s\S]*min-height: 4rem;[\s\S]*height: 4rem/);
+  assert.match(workspace, /rich-media-editor__compact-card--cursor\.rich-media-editor__compact-card--locked[\s\S]*height: auto;[\s\S]*min-height: 4\.75rem/);
+  assert.match(workspace, /profile-background-treatment[\s\S]*grid-row: 2;[\s\S]*align-self: start/);
   assert.match(treatment, /<h3 id="profile-background-treatment-title">Background options<\/h3>/);
   assert.doesNotMatch(treatment, /Shape the uploaded atmosphere|MEDIA \/ 02/);
 });

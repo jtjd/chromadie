@@ -22,11 +22,12 @@ and public profile rendering remain unchanged.
 
 ## 2026-08-10 — Balance the Media second row
 
-The Media workspace owns the second-row geometry: Background options stretches
-to the Custom cursor card's grid-row height, while its child keeps only the
-control labels needed to edit the uploaded background. Decorative `MEDIA / 02`
-metadata and explanatory copy are removed so the reference layout remains
-quiet without changing any draft or persistence behavior.
+The Media workspace owns the second-row geometry: the Custom cursor uses a
+compact asset/action row, while Background options keeps its natural control
+height. Its child keeps only the control labels needed to edit the uploaded
+background. Decorative `MEDIA / 02` metadata and explanatory copy are removed
+so the reference layout remains quiet without changing any draft or
+persistence behavior.
 
 ## 2026-08-10 — Give the Media workspace explicit reference geometry
 

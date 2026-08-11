@@ -9,8 +9,8 @@
   storage deletion guard required by Supabase's protected storage tables.
 - Force compact avatar media to fill a fixed circular frame while preserving
   the existing uploaded asset path and object-fit behavior.
-- Stretch the Background options panel to the Custom cursor card's row height
-  and remove decorative panel metadata and explanatory copy.
+- Compact the Custom cursor into an asset/action row and let Background options
+  keep its natural control height without decorative panel metadata or copy.
 
 ## Align the Profile Studio Media workspace — 2026-08-10
 
