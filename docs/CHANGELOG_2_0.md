@@ -2583,3 +2583,14 @@ direct route behavior.
 - Added regression coverage so a saved UUID-backed avatar survives Studio
   reload and remains available to the public profile, Homepage, and Leaderboard
   renderers.
+
+## 2026-08-11 — Preserve avatars in dynamic homepage embeds
+
+- Distinguished the static homepage hero artwork from the data-driven Today’s
+  Color and leaderboard embeds.
+- Added a hydrated-profile fallback for discovery rows whose avatar projection
+  is temporarily absent during additive database rollout.
+- Made profile hydration backfill missing expression fields from the legacy
+  owner/public read when an older V2 RPC is still deployed.
+- Added regression coverage for the Studio preview projection and homepage
+  discovery-row avatar propagation.

@@ -14,7 +14,7 @@ import {
 } from '../src/lib/profileConfig.js';
 import { loadProfileContext } from '../src/lib/profileData.js';
 
-function createConfigSupabase({ profile, draft, published }) {
+function createConfigSupabase({ profile, draft, published, v2Draft = null, v2Published = null, publicV2 = null }) {
   const calls = [];
 
   function from(table) {
@@ -51,7 +51,11 @@ function createConfigSupabase({ profile, draft, published }) {
       if (name === 'get_my_profile_configuration') {
         return { data: { success: true, version: 1, draft, published }, error: null };
       }
+      if (name === 'get_my_profile_configuration_v2' && v2Draft) {
+        return { data: { success: true, version: 2, draft: v2Draft, published: v2Published || v2Draft }, error: null };
+      }
       if (name === 'get_public_profile_configuration') return { data: published, error: null };
+      if (name === 'get_public_profile_configuration_v2' && publicV2) return { data: publicV2, error: null };
       return { data: null, error: null };
     }
   };
@@ -148,6 +152,114 @@ test('profile context separates owner drafts from the published visitor projecti
     { p_user_id: 'user-2' }
   );
   assert.equal(visitor.targetProfile.email, undefined);
+});
+
+test('profile context uses the media-aware V2 read contract for owner and public previews', async () => {
+  const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
+  const draft = { ...createDefaultProfileConfig('#112233'), avatar_path: avatarPath };
+  const v2 = {
+    version: 2,
+    base: draft,
+    links: draft.links,
+    identity: {},
+    content: draft.content,
+    widgets: draft.widgets
+  };
+  const ownerSupabase = createConfigSupabase({
+    profile: { id: 'user-1', username: 'NeonUser', mood_color: '#778899', total_rolls: 3 },
+    draft,
+    published: draft,
+    v2Draft: v2,
+    v2Published: v2
+  });
+  const owner = await loadProfileContext({
+    supabaseClient: ownerSupabase,
+    isAuthenticated: true,
+    sessionUserId: 'user-1',
+    currentUsername: 'NeonUser',
+    profileUsername: 'neonuser'
+  });
+
+  assert.equal(owner.profileConfig.draft.base.avatar_path, avatarPath);
+  assert.equal(ownerSupabase.calls.some(call => call.name === 'get_my_profile_configuration_v2'), true);
+
+  const visitorSupabase = createConfigSupabase({
+    profile: { id: 'user-2', username: 'OtherUser', mood_color: '#778899', total_rolls: 3 },
+    draft,
+    published: draft,
+    publicV2: v2
+  });
+  const visitor = await loadProfileContext({
+    supabaseClient: visitorSupabase,
+    isAuthenticated: false,
+    profileUsername: 'OtherUser'
+  });
+
+  assert.equal(visitor.profileConfig.published.base.avatar_path, avatarPath);
+  assert.equal(visitorSupabase.calls.some(call => call.name === 'get_public_profile_configuration_v2'), true);
+});
+
+test('profile context backfills expression media from the legacy read during a partial V2 rollout', async () => {
+  const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
+  const legacyConfig = { ...createDefaultProfileConfig('#112233'), avatar_path: avatarPath };
+  const baseWithoutAvatar = Object.fromEntries(
+    Object.entries(legacyConfig).filter(([key]) => key !== 'avatar_path')
+  );
+  const v2WithoutExpression = {
+    version: 2,
+    base: baseWithoutAvatar,
+    links: legacyConfig.links,
+    identity: {},
+    content: legacyConfig.content,
+    widgets: legacyConfig.widgets
+  };
+  const supabaseClient = createConfigSupabase({
+    profile: { id: 'user-1', username: 'NeonUser', mood_color: '#778899', total_rolls: 3 },
+    draft: legacyConfig,
+    published: legacyConfig,
+    v2Draft: v2WithoutExpression,
+    v2Published: v2WithoutExpression
+  });
+
+  const owner = await loadProfileContext({
+    supabaseClient,
+    isAuthenticated: true,
+    sessionUserId: 'user-1',
+    currentUsername: 'NeonUser',
+    profileUsername: 'neonuser'
+  });
+
+  assert.equal(owner.profileConfig.draft.avatar_path, avatarPath);
+  assert.equal(supabaseClient.calls.some(call => call.name === 'get_my_profile_configuration'), true);
+});
+
+test('public profile context falls back when the deployed V2 envelope omits expression media', async () => {
+  const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
+  const published = { ...createDefaultProfileConfig('#112233'), avatar_path: avatarPath };
+  const v2WithoutExpression = {
+    version: 2,
+    base: Object.fromEntries(Object.entries(published).filter(([key]) => key !== 'avatar_path')),
+    links: published.links,
+    identity: {},
+    content: published.content,
+    widgets: published.widgets
+  };
+  const supabaseClient = createConfigSupabase({
+    profile: { id: 'user-2', username: 'OtherUser', mood_color: '#778899', total_rolls: 3 },
+    draft: published,
+    published,
+    publicV2: v2WithoutExpression
+  });
+
+  const visitor = await loadProfileContext({
+    supabaseClient,
+    isAuthenticated: false,
+    profileUsername: 'OtherUser'
+  });
+
+  assert.equal(visitor.profileConfig.published.avatar_path, avatarPath);
+  assert.equal(supabaseClient.calls.some(call => call.name === 'get_public_profile_configuration_v2'), true);
+  assert.equal(supabaseClient.calls.some(call => call.name === 'get_public_profile_configuration'), true);
 });
 
 test('profile configuration editor and renderer retain safe draft/publish boundaries', async () => {

@@ -3228,3 +3228,10 @@ Follow-up defect found during live review: the V2 configuration read contract
 omitted dedicated expression columns. An additive migration and client
 compatibility merge now preserve avatar/background paths through Studio reload,
 public profile rendering, Homepage Discovery, and Leaderboard consumers.
+
+The follow-up render audit clarified that the homepage hero profile artwork is
+static, while Today’s Color and homepage leaderboard are dynamic embeds. The
+dynamic rows now recover a missing discovery avatar from the hydrated public
+profile, and V2 hydration backfills expression fields from the legacy read
+during a partial database rollout. Regression coverage covers the V2 owner and
+public paths, Studio preview projection, and homepage discovery-row merge.

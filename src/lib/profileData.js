@@ -18,6 +18,27 @@ const PROFILE_LOAD_MESSAGE = 'The profile could not be loaded. Please check your
 let achievementsCache = null;
 let achievementsRequest = null;
 
+/**
+ * V2 owns the expression-aware read contract. Keep the legacy read as a
+ * compatibility fallback while older deployments finish applying the additive
+ * RPC migration; this prevents a partial rollout from turning a valid avatar
+ * into the initials fallback.
+ */
+async function loadProfileConfiguration(supabaseClient, { viewingOwnProfile, profileId, useV2 }) {
+  const legacyName = viewingOwnProfile
+    ? 'get_my_profile_configuration'
+    : 'get_public_profile_configuration';
+  const legacyArgs = viewingOwnProfile ? {} : { p_user_id: profileId };
+  if (!useV2) return supabaseClient.rpc(legacyName, legacyArgs);
+
+  const v2Response = await supabaseClient.rpc(
+    viewingOwnProfile ? 'get_my_profile_configuration_v2' : 'get_public_profile_configuration_v2',
+    legacyArgs
+  );
+  if (v2Response.data?.base?.avatar_path || v2Response.data?.draft?.base?.avatar_path) return v2Response;
+  return supabaseClient.rpc(legacyName, legacyArgs);
+}
+
 async function normalizeV2Configuration(value, fallbackColor, options) {
   const module = await import('./profileConfigurationV2.js');
   return module.normalizeProfileConfigurationV2(value, fallbackColor, options);
@@ -169,9 +190,14 @@ export async function loadProfileContext({
     const storyRequest = supabaseClient.rpc('get_public_profile_story', {
       p_user_id: context.profileId
     });
-    const configRequest = viewingOwnProfile
-      ? supabaseClient.rpc('get_my_profile_configuration')
-      : supabaseClient.rpc('get_public_profile_configuration', { p_user_id: context.profileId });
+    const configRequest = loadProfileConfiguration(supabaseClient, {
+      viewingOwnProfile,
+      profileId: context.profileId,
+      useV2: isProfileFeatureEnabled('profileConfigurationV2', {
+        userId: context.profileId,
+        isStaff: Boolean(context.targetProfile?.is_staff)
+      })
+    });
     const achievementsRequestForProfile = loadAchievements(supabaseClient);
     const progressionRequest = viewingOwnProfile
       ? loadMyProgression(supabaseClient, context.profileId)
@@ -251,10 +277,14 @@ export async function loadProfileContext({
         : { draft: null, published: fallback, version: 1 };
     } else if (viewingOwnProfile) {
       const v2Draft = profileConfigurationV2Enabled
-        ? configResponse.data?.draft_v2 || configResponse.data?.configuration_v2?.draft || null
+        ? configResponse.data?.draft_v2
+          || configResponse.data?.configuration_v2?.draft
+          || (Number(configResponse.data?.draft?.version) === 2 ? configResponse.data.draft : null)
         : null;
       const v2Published = profileConfigurationV2Enabled
-        ? configResponse.data?.published_v2 || configResponse.data?.configuration_v2?.published || null
+        ? configResponse.data?.published_v2
+          || configResponse.data?.configuration_v2?.published
+          || (Number(configResponse.data?.published?.version) === 2 ? configResponse.data.published : null)
         : null;
       const normalizedV2Draft = v2Draft ? await normalizeV2Configuration(v2Draft, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) }) : null;
       const normalizedV2Published = v2Published ? await normalizeV2Configuration(v2Published, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) }) : null;

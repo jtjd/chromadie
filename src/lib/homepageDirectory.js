@@ -1,4 +1,5 @@
 import { normalizeDiscoveryResponse } from './discoveryData.js';
+import { normalizeProfileConfig } from './profileConfig.js';
 import { getCanonicalProfilePath } from './routeContract.js';
 
 // Neutral while the live discovery endpoint is resolving; it must not read as
@@ -16,8 +17,39 @@ function candidateKey(username) {
 }
 
 function hasPublicExpression(context) {
-  const config = context?.profileConfig?.published;
+  const config = getPublishedConfig(context);
   return Boolean(config?.audio_path || (config?.spotify_type && config?.spotify_id) || config?.widgets?.length);
+}
+
+export function getHomepagePublishedConfig(context) {
+  const profile = context?.targetProfile;
+  return normalizeProfileConfig(
+    context?.profileConfig?.published,
+    profile?.mood_color || '#8B7CF6'
+  );
+}
+
+function getPublishedConfig(context) {
+  return getHomepagePublishedConfig(context);
+}
+
+/**
+ * Discovery is intentionally a fast, bounded projection. During a rolling
+ * database deployment it can arrive without expression media even though the
+ * hydrated public profile already contains it. Use the hydrated profile as a
+ * safe presentation fallback without changing the discovery contract.
+ */
+export function mergeHomepageDiscoveryProfile(item, context) {
+  if (!item || !context) return item;
+  const profile = context.targetProfile;
+  const config = getHomepagePublishedConfig(context);
+  return {
+    ...item,
+    displayName: item.displayName || profile?.display_name || '',
+    bio: item.bio || profile?.bio || '',
+    profileAccent: item.profileAccent || config?.signatureColor || profile?.mood_color || null,
+    avatarPath: item.avatarPath || config?.avatar_path || null
+  };
 }
 
 function hasPublicRoll(context) {
@@ -27,7 +59,7 @@ function hasPublicRoll(context) {
 function profileRichness(model) {
   const context = model?.context;
   const profile = context?.targetProfile;
-  const config = context?.profileConfig?.published;
+  const config = getPublishedConfig(context);
   return [
     profile?.is_staff,
     Boolean(config?.background_path),
@@ -86,7 +118,7 @@ export function buildHomepageFeaturedProfiles(models = [], limit = 3) {
     .map(model => {
       const context = model.context;
       const profile = context.targetProfile;
-      const config = context.profileConfig?.published;
+      const config = getPublishedConfig(context);
       const latestRoll = getLatestHomepageRoll(context);
       const profilePath = getCanonicalProfilePath(profile.username);
       if (!profilePath) return null;

@@ -3,15 +3,18 @@ import assert from 'node:assert/strict';
 
 import {
   buildHomepageFeaturedProfiles,
-  getLatestHomepageRoll
+  getLatestHomepageRoll,
+  mergeHomepageDiscoveryProfile
 } from '../src/lib/homepageDirectory.js';
+import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
 
 function profileModel({
   username,
   displayName = '',
   isStaff = false,
   profilePath = `/${username.toLowerCase()}`,
-  scores = []
+  scores = [],
+  publishedConfig = null
 }) {
   return {
     profilePath,
@@ -30,7 +33,8 @@ function profileModel({
       },
       targetScores: scores,
       profileConfig: {
-        published: {
+        published: publishedConfig || {
+          ...createDefaultProfileConfig('#8B7CF6'),
           signatureColor: '#8B7CF6',
           avatar_path: 'avatars/10000000-0000-4000-8000-000000000001/avatar.webp',
           links: [{ label: 'Site', url: 'https://example.com' }]
@@ -75,4 +79,42 @@ test('homepage featured profiles reject invalid profile paths and retain best-ro
   assert.equal(featured[0].hexCode, '#112233');
   assert.equal(featured[0].score, 1200);
   assert.equal(getLatestHomepageRoll(valid.context), null);
+});
+
+test('homepage featured profiles project expression media from V2 envelopes', () => {
+  const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
+  const base = { ...createDefaultProfileConfig('#8B7CF6'), avatar_path: avatarPath };
+  const featured = buildHomepageFeaturedProfiles([
+    profileModel({
+      username: 'V2Player',
+      publishedConfig: {
+        version: 2,
+        base,
+        links: [],
+        identity: {},
+        content: {},
+        widgets: []
+      }
+    })
+  ], 1);
+
+  assert.equal(featured[0].avatarPath, avatarPath);
+});
+
+test('homepage discovery rows recover media from the hydrated public profile', () => {
+  const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
+  const context = profileModel({
+    username: 'HydratedPlayer',
+    publishedConfig: {
+      version: 2,
+      base: { ...createDefaultProfileConfig('#8B7CF6'), avatar_path: avatarPath },
+      links: [],
+      identity: {},
+      content: {},
+      widgets: []
+    }
+  }).context;
+  const merged = mergeHomepageDiscoveryProfile({ username: 'HydratedPlayer', avatarPath: null }, context);
+
+  assert.equal(merged.avatarPath, avatarPath);
 });

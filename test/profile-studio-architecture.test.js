@@ -12,6 +12,7 @@ import {
   createProfileStudioDraftState,
   createProfileStudioPreviewModel
 } from '../src/lib/profile-studio/draftModel.js';
+import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
 import {
   PROFILE_RENDER_CONTEXTS,
   getProfileRenderGeometry,
@@ -84,6 +85,16 @@ test('the draft model composes identity, configuration, and cosmetic previews wi
   assert.equal(configurationV2.version, 2);
   assert.equal(configurationV2.base.version, 1);
   assert.deepEqual(configurationV2.sharing, { qrEnabled: false });
+
+  const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
+  const mediaConfig = { ...createDefaultProfileConfig('#112233'), avatar_path: avatarPath };
+  const mediaV2 = buildConfigurationV2(mediaConfig);
+  const mediaPreview = createProfileStudioPreviewModel({
+    targetProfile,
+    profileConfig: { version: 2, draft: mediaV2, published: mediaV2 },
+    equippedCosmetics: targetProfile.equipped_cosmetics
+  });
+  assert.equal(mediaPreview.profileConfig.avatar_path, avatarPath);
 });
 
 test('renderer contexts keep catalog, effect-card, name-control, and live-profile geometry distinct', () => {

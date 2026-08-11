@@ -12,7 +12,8 @@
     collectHomepageCandidates,
     collectHomepageRollEvents,
     HOMEPAGE_LOADING_COLOR,
-    KNOWN_STAFF_SHOWCASE_USERNAMES
+    KNOWN_STAFF_SHOWCASE_USERNAMES,
+    mergeHomepageDiscoveryProfile
   } from './homepageDirectory.js';
 
   const DISCOVERY_SURFACES = ['today', 'recent', 'new', 'all_time'];
@@ -163,7 +164,11 @@
           .filter(Boolean)
           .slice(0, 3);
       const hydratedByUsername = new Map(hydrated.map(model => [model.discoveryItem.username.toLowerCase(), model]));
-      const heroRoll = leaderboard[0] || null;
+      const hydratedLeaderboard = leaderboard.map(item => mergeHomepageDiscoveryProfile(
+        item,
+        hydratedByUsername.get(item.username.toLowerCase())?.context
+      ));
+      const heroRoll = hydratedLeaderboard[0] || null;
       const heroModel = heroRoll ? hydratedByUsername.get(heroRoll.username.toLowerCase()) || null : null;
       const tickerEvents = collectHomepageRollEvents(hydrated);
       const featuredProfiles = buildHomepageFeaturedProfiles(hydrated, 3);
@@ -175,7 +180,7 @@
         loading: false,
         error,
         tickerEvents,
-        leaderboard,
+        leaderboard: hydratedLeaderboard,
         featuredProfiles,
         heroRoll,
         heroModel,

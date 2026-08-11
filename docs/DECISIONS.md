@@ -4276,3 +4276,14 @@ dedicated `profile_configurations` columns. The V2 owner/public read functions
 now merge those columns into both the V2 `base` payload and its compatibility
 envelope, so a V2 read cannot silently erase an avatar that was saved through
 the expression RPC.
+
+## 2026-08-11 — Keep dynamic homepage embeds resilient during media rollout
+
+The homepage hero artwork is a static reference image and is not used as
+evidence for profile media rendering. Today’s Color and leaderboard rows are
+data-driven discovery projections, so they now merge a missing avatar from the
+already-hydrated public profile configuration before rendering. Profile
+hydration also falls back to the established owner/public read contract when
+an older V2 RPC exists without the dedicated expression fields. The database
+remains authoritative; these client fallbacks only bridge additive migration
+rollout and do not broaden public data access.
