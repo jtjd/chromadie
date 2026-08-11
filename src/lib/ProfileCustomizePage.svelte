@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { normalizeProfileConfig } from './profileConfig.js';
   import ProfileAppearanceEditor from './ProfileAppearanceEditor.svelte';
-  import ProfileBackgroundTreatment from './ProfileBackgroundTreatment.svelte';
+  import ProfileMediaWorkspace from './ProfileMediaWorkspace.svelte';
 
   export let components = {};
   export let profileId = null;
@@ -15,7 +15,7 @@
 
   const dispatch = createEventDispatcher();
   let appearanceEditor = null;
-  let backgroundTreatmentEditor = null;
+  let mediaWorkspaceEditor = null;
   let contentEditor = null;
   let widgetEditor = null;
   let layoutEditor = null;
@@ -49,7 +49,7 @@
   export function getDraftConfig() {
     const base = normalizeDraft();
     const appearance = appearanceEditor?.getDraftAppearance?.() || base.appearance;
-    const background = backgroundTreatmentEditor?.getDraftBackground?.();
+    const background = mediaWorkspaceEditor?.getDraftBackground?.();
     const content = contentEditor?.getDraftConfig?.();
     const widgets = widgetEditor?.getDraftConfig?.();
     const layout = layoutEditor?.getDraftConfig?.();
@@ -71,7 +71,7 @@
   export function acceptSaved(nextConfig) {
     const next = normalizeDraft(nextConfig);
     appearanceEditor?.acceptSaved?.(next.appearance);
-    backgroundTreatmentEditor?.acceptSaved?.(next.appearance);
+    mediaWorkspaceEditor?.acceptSaved?.(next.appearance);
     contentEditor?.acceptSaved?.(next);
     widgetEditor?.acceptSaved?.(next);
     layoutEditor?.acceptSaved?.(next);
@@ -79,7 +79,7 @@
 
   export function resetChanges() {
     appearanceEditor?.resetChanges?.();
-    backgroundTreatmentEditor?.resetChanges?.();
+    mediaWorkspaceEditor?.resetChanges?.();
     contentEditor?.resetChanges?.();
     widgetEditor?.resetChanges?.();
     layoutEditor?.resetChanges?.();
@@ -94,8 +94,7 @@
 
     {#if mediaComponent}
       <div class="profile-customize-page__editor profile-customize-page__editor--media">
-        <svelte:component this={mediaComponent} profileId={profileId} config={profileConfig} fallbackInitial={(targetProfile?.username || accountUsername || '✦').slice(0, 1)} {staff} {entitlements} compact={true} on:expressionchange={forward} />
-        <ProfileBackgroundTreatment bind:this={backgroundTreatmentEditor} draftAppearance={profileConfig?.draft?.appearance} on:appearancechange={forward} on:dirty={forward} />
+        <ProfileMediaWorkspace bind:this={mediaWorkspaceEditor} {mediaComponent} {profileId} {accountUsername} {targetProfile} {profileConfig} {staff} {entitlements} on:expressionchange={forward} on:appearancechange={forward} on:dirty={forward} />
       </div>
     {:else}
       <div class="profile-customize-page__loading" role="status">Loading media controls…</div>
@@ -458,10 +457,7 @@
   .profile-customize-page :global(.rich-media-editor__message),
   .profile-customize-page :global(.appearance-editor__message) { color: var(--customize-text-muted); font-size: var(--customize-label-size); }
   .profile-customize-page :global([role="alert"]) { color: var(--customize-accent-danger); }
-  .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
   @media (max-width: 72rem) {
-    .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
@@ -486,11 +482,9 @@
     .profile-customize-page__premium-banner { min-height: 5.6rem; padding-inline: 2.2rem; text-align: center; }
     .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { font-size: 2.2rem; }
     .profile-customize-page__control { padding: 0; }
-    .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 30rem) {
-    .profile-customize-page__editor--media :global(.rich-media-editor__upload-grid) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page__premium-banner::before { left: .45rem; }
     .profile-customize-page__premium-banner::after { right: .45rem; }
   }

@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Align Profile Studio Media with the reference workspace
+
+- Media now uses a compact three-column top row for Background, Avatar, and
+  Profile audio, with Custom cursor and Background options sharing the second
+  row.
+- Active media cards use bounded circular/preview wells and explicit
+  Replace/Remove actions, reducing the large empty card heights while keeping
+  existing uploads, removal, waveform playback, and background controls.
+- Tablet and mobile layouts preserve the same ownership order without allowing
+  the media workspace to overflow its editor column.
+
 ## 2026-08-10 — Stabilize effect previews, media, and mobile Live preview
 
 - Name previews now compose Font, Material, and Motion progressively while

@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Align the Profile Studio Media workspace — 2026-08-10
+
+- Added a component-owned `ProfileMediaWorkspace` that flattens only the
+  compact editor presentation into a stable reference grid: Background,
+  Avatar, and Profile audio across the first row, with Custom cursor beside
+  Background options on the second row.
+- Replaced the oversized square avatar and width-driven media wells with
+  bounded preview heights, circular avatar fitting, compact status dots, and
+  reference-style Replace/Remove action rows for active assets.
+- Added authenticated browser geometry assertions for row alignment, order,
+  second-row pairing, and workspace bounds at the existing smoke viewport;
+  upload, remove, waveform, treatment, draft, and RPC contracts remain in the
+  existing child components.
+
 ## Stabilize Profile Studio previews and media — 2026-08-10
 
 - Flattened the compact name/visual fitting room into its owning Appearance

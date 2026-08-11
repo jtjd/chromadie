@@ -7,6 +7,13 @@ boundary, gives Motion its animated Name renderer, and explicitly resumes
 Name, cursor, and atmosphere media when mounted editors return from a hidden
 Customize tab.
 
+The Media workspace follow-up now gives the compact editor an explicit owner
+for reference geometry. Background, Avatar, and Profile audio share one
+aligned desktop row; Custom cursor and Background options share the row below;
+tablet and mobile use bounded fallbacks. Active assets expose compact
+Replace/Remove actions while retaining the existing child editor and server
+mutation contracts.
+
 ## Scope
 
 The authenticated profile-settings route is the Profile Studio dashboard. It

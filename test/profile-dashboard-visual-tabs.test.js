@@ -46,7 +46,7 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
 });
 
 test('reference workspace composition stays explicit', async () => {
-  const [settings, header, preview, draftModel, actions, appearance, appearanceColors, cosmetics, customize, profileShell, editor, expression, shopPreview] = await Promise.all([
+  const [settings, header, preview, draftModel, actions, appearance, appearanceColors, cosmetics, customize, mediaWorkspace, profileShell, editor, expression, shopPreview] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
@@ -56,6 +56,7 @@ test('reference workspace composition stays explicit', async () => {
     read('src/lib/profileAppearanceColors.js'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
+    read('src/lib/ProfileMediaWorkspace.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
@@ -115,6 +116,10 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
   assert.match(profileShell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(expression, /\.profile-expression-editor__compact-grid \{[\s\S]*grid-template-columns: minmax\(0, \.9fr\) minmax\(0, \.9fr\) minmax\(0, 1\.5fr\)/);
+  assert.match(mediaWorkspace, /data-media-workspace-layout="reference"/);
+  assert.match(mediaWorkspace, /grid-column: 1;[\s\S]*grid-row: 1;[\s\S]*compact-card--background/);
+  assert.match(mediaWorkspace, /profile-background-treatment[\s\S]*grid-column: 2 \/ -1/);
+  assert.match(mediaWorkspace, /@media \(max-width: 52rem\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)/);
   assert.match(cosmetics, /profile-cosmetics-surface--compact\) \{ padding: 0; border: 0; border-radius: 0; background: transparent/);
   assert.match(cosmetics, /profile-cosmetics-name-preview[^\n]*overflow: visible/);
   assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot select \{ height: 2\.5rem; min-height: 2\.5rem;/);

@@ -211,16 +211,35 @@ try {
     const mediaRail = await page.evaluate(`(() => {
       const grid = document.querySelector('.profile-expression-editor__compact-grid');
       const cards = [...(grid?.querySelectorAll(':scope > article') || [])];
+      const workspace = document.querySelector('.profile-media-workspace');
+      const rect = element => {
+        const box = element?.getBoundingClientRect();
+        return box ? { left: Math.round(box.left), right: Math.round(box.right), top: Math.round(box.top), bottom: Math.round(box.bottom), width: Math.round(box.width), height: Math.round(box.height) } : null;
+      };
+      const cardGeometry = Object.fromEntries(cards.map(card => [card.querySelector('strong')?.textContent?.trim() || '', rect(card)]));
+      const options = rect(workspace?.querySelector('.profile-background-treatment'));
       return {
         labels: cards.map(card => card.querySelector('strong')?.textContent?.trim() || ''),
         editable: cards.filter(card => card.querySelector('button[type="button"]')).map(card => card.querySelector('strong')?.textContent?.trim() || ''),
-        advancedPresent: Boolean(grid?.parentElement?.querySelector('.profile-expression-editor__advanced'))
+        advancedPresent: Boolean(grid?.parentElement?.querySelector('.profile-expression-editor__advanced')),
+        workspace: rect(workspace),
+        cardGeometry,
+        options
       };
     })()`);
     assert(mediaRail.labels.length === 4, `Compact media rail rendered ${mediaRail.labels.length} cards instead of four.`);
     assert((mediaRail.labels.includes('Avatar') || mediaRail.labels.includes('Profile avatar')) && mediaRail.labels.includes('Background'), 'Compact media rail is missing the core image upload cards.');
     assert((mediaRail.editable.includes('Avatar') || mediaRail.editable.includes('Profile avatar')) && mediaRail.editable.includes('Background'), 'Core media cards are not clickable upload controls.');
     assert(mediaRail.advancedPresent === false, 'Redundant advanced media controls are still visible.');
+    const background = mediaRail.cardGeometry.Background;
+    const avatar = mediaRail.cardGeometry.Avatar;
+    const audio = mediaRail.cardGeometry['Profile audio'];
+    const cursor = mediaRail.cardGeometry['Custom cursor'];
+    assert(mediaRail.workspace?.width > 0 && mediaRail.workspace?.right >= (mediaRail.options?.right || 0) - 2, `Media workspace overflows its own bounds: ${JSON.stringify(mediaRail)}.`);
+    assert(background && avatar && audio && cursor && mediaRail.options, `Media reference geometry is incomplete: ${JSON.stringify(mediaRail)}.`);
+    assert(Math.abs(background.top - avatar.top) <= 2 && Math.abs(avatar.top - audio.top) <= 2, `Media top row is not aligned: ${JSON.stringify(mediaRail)}.`);
+    assert(background.left < avatar.left && avatar.left < audio.left, `Media top row order is not Background, Avatar, Audio: ${JSON.stringify(mediaRail)}.`);
+    assert(cursor.top > background.top && Math.abs(cursor.top - mediaRail.options.top) <= 2 && cursor.left < mediaRail.options.left, `Media second row does not pair Custom cursor with Background options: ${JSON.stringify(mediaRail)}.`);
     await page.evaluate(`document.querySelector('[data-editor-section="media"]')?.scrollIntoView({ block: 'start' })`);
     await capture('04-media-workspace');
     await page.click('#profile-customize-tab-layout', 'Layout customize tab');

@@ -1,5 +1,16 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Give the Media workspace explicit reference geometry
+
+The compact Media editor keeps upload, removal, waveform, background-treatment,
+and cursor replacement behavior in their existing components, but the dashboard
+composition belongs to a dedicated `ProfileMediaWorkspace`. Its desktop grid
+places Background, Avatar, and Profile audio in one aligned row, then pairs
+Custom cursor with Background options in the second row. Tablet and mobile
+collapse those same owned items into two and one columns. Active media uses
+bounded Replace/Remove action rows so the card controls match the reference
+without changing any server mutation or media-slot authority boundary.
+
 ## 2026-08-10 — Stabilize Profile Studio media and preview lifecycles
 
 The Profile Studio stabilization pass keeps the dashboard's existing route,

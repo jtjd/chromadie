@@ -56,7 +56,7 @@ test('background treatment is normalized and projected to both profile renderers
 });
 
 test('Profile Studio stabilization keeps preview and media mutations on explicit boundaries', async () => {
-  const [workspace, preview, shell, identity, cursor, atmosphere, nameCanvas, richMedia, customize, settings, migration] = await Promise.all([
+  const [workspace, preview, shell, identity, cursor, atmosphere, nameCanvas, richMedia, customize, mediaWorkspace, settings, migration] = await Promise.all([
     read('src/lib/ProfileStudioWorkspace.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileShell.svelte'),
@@ -66,6 +66,7 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
     read('src/lib/name/NameEffectCanvas.svelte'),
     read('src/lib/ProfileRichMediaEditor.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
+    read('src/lib/ProfileMediaWorkspace.svelte'),
     read('src/lib/ProfileSettings.svelte'),
     read('supabase/migrations/20260810120000_profile_studio_stabilization.sql')
   ]);
@@ -103,7 +104,10 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(richMedia, /stage_my_profile_media_replacement/);
   assert.match(richMedia, /commit_my_profile_media_replacement/);
   assert.match(richMedia, /await removeAsset\(activeCursor\)/);
-  assert.match(customize, /ProfileBackgroundTreatment/);
+  assert.match(customize, /ProfileMediaWorkspace/);
+  assert.match(mediaWorkspace, /data-media-workspace-layout="reference"/);
+  assert.match(mediaWorkspace, /grid-template-columns: minmax\(12rem, \.9fr\) minmax\(12rem, \.9fr\) minmax\(0, 1\.5fr\)/);
+  assert.match(mediaWorkspace, /profile-background-treatment[\s\S]*grid-column: 2 \/ -1/);
   assert.match(migration, /normalize_profile_appearance/);
   assert.match(migration, /stage_my_profile_media_replacement/);
   assert.match(migration, /commit_my_profile_media_replacement/);

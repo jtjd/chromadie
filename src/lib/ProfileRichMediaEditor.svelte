@@ -377,12 +377,17 @@
             {:else}
               <ProfileMediaIcon kind="image" />
             {/if}
-            <span class="rich-media-editor__compact-upload-hint">{activeCursor ? 'Click to replace' : 'Click to upload'}</span>
+            <span class="rich-media-editor__compact-upload-hint" class:rich-media-editor__compact-upload-hint--active={Boolean(activeCursor)}>{activeCursor ? 'Click to replace' : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
             <strong>Custom cursor</strong>
           </div>
-          {#if activeCursor}<button type="button" class="rich-media-editor__compact-remove" disabled={busy} on:click={removeCursor}>Remove</button>{/if}
+          {#if activeCursor}
+            <div class="rich-media-editor__compact-actions">
+              <button type="button" class="rich-media-editor__compact-replace" disabled={busy} on:click={() => cursorInput?.click()}>Replace</button>
+              <button type="button" class="rich-media-editor__compact-remove" disabled={busy} on:click={removeCursor}>Remove</button>
+            </div>
+          {/if}
         </article>
       {/if}
 
@@ -532,11 +537,21 @@
   .rich-media-editor__cursor-badge { display: grid; width: 4rem; height: 4rem; place-items: center; border: 1px solid color-mix(in srgb, var(--ctp-green, #a6e3a1) 58%, var(--color-line-subtle)); border-radius: .45rem; background: color-mix(in srgb, var(--ctp-green, #a6e3a1) 12%, var(--surface-inset)); color: var(--ctp-green, #a6e3a1); font: 750 .76rem/1 var(--customize-font-mono, var(--font-mono-stack, monospace)); letter-spacing: .08em; }
   .rich-media-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
   .rich-media-editor__compact-upload-hint { max-width: 100%; overflow: hidden; color: var(--color-ink-muted); font-size: .84rem; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-upload-hint--active { display: none; }
   .rich-media-editor__compact-copy { display: block; min-width: 0; order: -1; }
-  .rich-media-editor__compact-copy strong { display: block; overflow: hidden; color: var(--color-ink-strong); font-size: .92rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-  .rich-media-editor__compact-remove { justify-self: start; padding: 0; border: 0; border-radius: .2rem; background: transparent; color: var(--ctp-red, #f38ba8); font: 600 .75rem/1.2 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; text-decoration: underline; text-underline-offset: .15em; }
-  .rich-media-editor__compact-remove:hover:not(:disabled) { color: var(--ctp-text, #cdd6f4); }
-  .rich-media-editor__compact-remove:focus-visible { outline: 2px solid var(--ctp-lavender, #b4befe); outline-offset: 3px; }
+  .rich-media-editor__compact-copy strong { display: flex; align-items: center; gap: .38rem; overflow: hidden; color: var(--color-ink-strong); font-size: .92rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-copy strong::before { display: block; width: .42rem; height: .42rem; flex: 0 0 auto; border-radius: 50%; background: var(--ctp-green, #a6e3a1); content: ''; }
+  .rich-media-editor__compact-actions { display: flex; flex-wrap: wrap; gap: .4rem; min-width: 0; }
+  .rich-media-editor__compact-replace,
+  .rich-media-editor__compact-remove { min-height: 1.8rem; padding: .28rem .65rem; border: 1px solid var(--customize-border-strong, var(--color-line-subtle)); border-radius: .28rem; background: transparent; color: var(--color-ink-muted); font: 600 .75rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
+  .rich-media-editor__compact-replace:hover:not(:disabled),
+  .rich-media-editor__compact-replace:focus-visible { border-color: var(--ctp-green, #a6e3a1); background: color-mix(in srgb, var(--ctp-green, #a6e3a1) 10%, transparent); color: var(--color-ink-strong); }
+  .rich-media-editor__compact-remove { border-color: color-mix(in srgb, var(--ctp-red, #f38ba8) 55%, var(--color-line-subtle)); color: var(--ctp-red, #f38ba8); }
+  .rich-media-editor__compact-remove:hover:not(:disabled),
+  .rich-media-editor__compact-remove:focus-visible { border-color: var(--ctp-red, #f38ba8); background: color-mix(in srgb, var(--ctp-red, #f38ba8) 10%, transparent); color: var(--ctp-red, #f38ba8); }
+  .rich-media-editor__compact-replace:focus-visible,
+  .rich-media-editor__compact-remove:focus-visible { outline: 2px solid var(--ctp-lavender, #b4befe); outline-offset: 2px; }
+  .rich-media-editor__compact-replace:disabled,
   .rich-media-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
   .rich-media-editor__advanced { grid-column: 1 / -1; margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }
   .rich-media-editor__hint, .rich-media-editor__status, .rich-media-editor__message { margin: 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }

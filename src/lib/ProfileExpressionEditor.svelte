@@ -468,12 +468,17 @@
           {:else}
             <ProfileMediaIcon kind="avatar" />
           {/if}
-          <span class="profile-expression-editor__compact-upload-hint">{expression.avatar_path ? 'Click to replace' : 'Click to upload'}</span>
+          <span class="profile-expression-editor__compact-upload-hint" class:profile-expression-editor__compact-upload-hint--active={Boolean(avatarSrc)}>{expression.avatar_path ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
           <strong>Avatar</strong>
         </div>
-        {#if expression.avatar_path}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Remove</button>{/if}
+        {#if expression.avatar_path}
+          <div class="profile-expression-editor__compact-actions">
+            <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => avatarInput?.click()}>Replace</button>
+            <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Remove</button>
+          </div>
+        {/if}
       </article>
 
       <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--background">
@@ -490,12 +495,17 @@
           {:else}
             <ProfileMediaIcon kind="image" />
           {/if}
-          <span class="profile-expression-editor__compact-upload-hint">{expression.background_path ? 'Click to replace' : 'Click to upload'}</span>
+          <span class="profile-expression-editor__compact-upload-hint" class:profile-expression-editor__compact-upload-hint--active={Boolean(backgroundSrc)}>{expression.background_path ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
           <strong>Background</strong>
         </div>
-        {#if expression.background_path}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>Remove</button>{/if}
+        {#if expression.background_path}
+          <div class="profile-expression-editor__compact-actions">
+            <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => backgroundInput?.click()}>Replace</button>
+            <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>Remove</button>
+          </div>
+        {/if}
       </article>
 
       {#if staff}
@@ -527,7 +537,6 @@
                   <ProfileAudioWaveform src={audioSrc} progress={audioProgress} accent="var(--media-card-accent)" />
                   <input class="profile-expression-editor__audio-range" type="range" min="0" max="100" step="0.1" value={audioProgress} style={`--audio-progress:${audioProgress}%`} aria-label="Seek profile audio" on:input={seekAudio} />
                 </div>
-                <button type="button" class="profile-expression-editor__compact-audio-replace" aria-label="Replace profile audio" on:click={() => audioInput?.click()}><ProfileMediaIcon kind="upload" /></button>
               </div>
             {/key}
           {:else}
@@ -542,7 +551,12 @@
               <span class="profile-expression-editor__compact-upload-hint">Click to upload</span>
             </button>
           {/if}
-          {#if expression.audio_path}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAudio}>Remove</button>{/if}
+          {#if expression.audio_path}
+            <div class="profile-expression-editor__compact-actions">
+              <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => audioInput?.click()}>Replace</button>
+              <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAudio}>Remove</button>
+            </div>
+          {/if}
         </article>
       {:else if !richMediaEnabled}
         <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--audio profile-expression-editor__compact-card--locked">
@@ -833,13 +847,23 @@
   :global(.profile-expression-editor__compact-preview .profile-media-icon) { width: 2.35rem; height: 2.35rem; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
   .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .84rem; font-weight: 500; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-upload-hint--active { display: none; }
   .profile-expression-editor__compact-copy { display: block; min-width: 0; order: -1; }
-  .profile-expression-editor__compact-copy strong { display: block; overflow: hidden; color: var(--media-text-primary); font-size: .92rem; font-weight: 600; letter-spacing: -.01em; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-copy strong { display: flex; align-items: center; gap: .38rem; overflow: hidden; color: var(--media-text-primary); font-size: .92rem; font-weight: 600; letter-spacing: -.01em; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-copy strong::before { display: block; width: .42rem; height: .42rem; flex: 0 0 auto; border-radius: 50%; background: var(--media-card-accent); content: ''; }
   .profile-expression-editor__compact-preview small { overflow: hidden; color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-preview--locked small { color: var(--media-premium); font-weight: 600; }
-  .profile-expression-editor__compact-remove { justify-self: start; padding: 0; border: 0; border-radius: .2rem; background: transparent; color: color-mix(in srgb, var(--media-red) 78%, var(--media-text-secondary)); font: 600 .75rem/1.2 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; text-decoration: underline; text-underline-offset: .15em; }
-  .profile-expression-editor__compact-remove:hover:not(:disabled) { color: var(--media-red); }
-  .profile-expression-editor__compact-remove:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 3px; color: var(--media-red); }
+  .profile-expression-editor__compact-actions { display: flex; flex-wrap: wrap; gap: .4rem; min-width: 0; }
+  .profile-expression-editor__compact-replace,
+  .profile-expression-editor__compact-remove { min-height: 1.8rem; padding: .28rem .65rem; border: 1px solid var(--media-line-strong); border-radius: .28rem; background: transparent; color: var(--media-text-secondary); font: 600 .75rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
+  .profile-expression-editor__compact-replace:hover:not(:disabled),
+  .profile-expression-editor__compact-replace:focus-visible { border-color: var(--media-card-accent); background: color-mix(in srgb, var(--media-card-accent) 10%, transparent); color: var(--media-text-primary); }
+  .profile-expression-editor__compact-remove { border-color: color-mix(in srgb, var(--media-red) 55%, var(--media-line)); color: color-mix(in srgb, var(--media-red) 84%, var(--media-text-secondary)); }
+  .profile-expression-editor__compact-remove:hover:not(:disabled),
+  .profile-expression-editor__compact-remove:focus-visible { border-color: var(--media-red); background: color-mix(in srgb, var(--media-red) 10%, transparent); color: var(--media-red); }
+  .profile-expression-editor__compact-replace:focus-visible,
+  .profile-expression-editor__compact-remove:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
+  .profile-expression-editor__compact-replace:disabled,
   .profile-expression-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
   .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; width: 100%; min-height: 5.7rem; aspect-ratio: 10 / 3; padding: .6rem .65rem; border: 1px solid var(--media-line); border-radius: .35rem; background: var(--media-surface-inset); }
   .profile-expression-editor__compact-audio-play { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--media-card-accent) 58%, var(--media-line-strong)); border-radius: 50%; background: color-mix(in srgb, var(--media-card-accent) 13%, transparent); color: var(--media-text-primary); font: 700 .72rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
@@ -849,9 +873,6 @@
   .profile-expression-editor__compact-audio-meta { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-width: 0; }
   .profile-expression-editor__compact-audio-meta strong { overflow: hidden; color: color-mix(in srgb, var(--media-card-accent) 76%, var(--media-text-primary)); font-size: .78rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-audio-meta time { flex: 0 0 auto; color: var(--media-text-muted); font: 600 .72rem/1 var(--customize-font-mono, var(--font-mono-stack, ui-monospace, monospace)); }
-  .profile-expression-editor__compact-audio-replace { display: grid; width: 1.75rem; height: 1.75rem; place-items: center; padding: 0; border: 1px solid color-mix(in srgb, var(--media-sky) 48%, var(--media-line)); border-radius: 50%; background: transparent; color: var(--media-sky); cursor: pointer; }
-  .profile-expression-editor__compact-audio-replace:hover { border-color: var(--media-sky); background: color-mix(in srgb, var(--media-sky) 10%, transparent); color: var(--media-text-primary); }
-  .profile-expression-editor__compact-audio-replace:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
   .profile-expression-editor__compact-audio-player .profile-expression-editor__audio-range::-webkit-slider-runnable-track { background: linear-gradient(to right, var(--media-card-accent) var(--audio-progress), color-mix(in srgb, var(--media-text-muted) 26%, transparent) var(--audio-progress)); }
   .profile-expression-editor__compact-audio-player .profile-expression-editor__audio-range::-moz-range-track { background: color-mix(in srgb, var(--media-text-muted) 26%, transparent); }
   .profile-expression-editor__compact-audio-player .profile-expression-editor__audio-range::-moz-range-progress { background: var(--media-card-accent); }
