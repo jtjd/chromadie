@@ -41,12 +41,17 @@ test('media library migration keeps registration and deletion owner-scoped', asy
 });
 
 test('compact avatar previews render inside a fixed circular frame', async () => {
-  const editor = await read('src/lib/ProfileExpressionEditor.svelte');
+  const [editor, workspace] = await Promise.all([
+    read('src/lib/ProfileExpressionEditor.svelte'),
+    read('src/lib/ProfileMediaWorkspace.svelte')
+  ]);
 
   assert.match(editor, /profile-expression-editor__compact-avatar-frame/);
   assert.match(editor, /\.profile-expression-editor__compact-avatar-frame \{[\s\S]*width: 5\.5rem;[\s\S]*height: 5\.5rem;[\s\S]*border-radius: 50%;/);
   assert.match(editor, /compact-avatar-frame \.foundation-media[\s\S]*width: 100% !important;[\s\S]*height: 100% !important;[\s\S]*border-radius: 50% !important/);
   assert.match(editor, /compact-avatar-frame \.foundation-media img[\s\S]*object-fit: cover/);
+  assert.doesNotMatch(editor, /compact-preview--avatar \.foundation-media[\s\S]*4\.6rem/);
+  assert.doesNotMatch(workspace, /compact-preview--avatar \.foundation-media[\s\S]*max-width/);
 });
 
 test('appearance picker keeps its palette inside the visible panel', async () => {

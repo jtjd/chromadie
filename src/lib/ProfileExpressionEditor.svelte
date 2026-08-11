@@ -882,8 +882,7 @@
   :global(.profile-expression-editor__compact-preview .profile-expression-editor__compact-media.foundation-media img),
   :global(.profile-expression-editor__compact-preview .foundation-media),
   :global(.profile-expression-editor__compact-preview .foundation-media img) { width: 100%; height: 100%; aspect-ratio: auto; border: 0 !important; border-radius: 0; outline: 0; box-shadow: none; }
-  :global(.profile-expression-editor__compact-preview--avatar .foundation-media),
-  :global(.profile-expression-editor__compact-preview--avatar .foundation-media img) { width: 4.6rem !important; height: 4.6rem !important; aspect-ratio: 1; border-radius: 50% !important; object-fit: cover; }
+  /* The circular avatar frame above owns avatar media geometry. */
   :global(.profile-expression-editor__compact-preview .profile-media-icon) { width: 2.35rem; height: 2.35rem; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
   .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .84rem; font-weight: 500; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }

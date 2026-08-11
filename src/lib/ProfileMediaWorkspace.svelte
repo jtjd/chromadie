@@ -137,12 +137,6 @@
     max-height: 100%;
   }
 
-  .profile-media-workspace :global(.profile-expression-editor__compact-preview--avatar .foundation-media),
-  .profile-media-workspace :global(.profile-expression-editor__compact-preview--avatar .foundation-media img) {
-    max-width: min(4.6rem, 58%);
-    max-height: min(4.6rem, 78%);
-  }
-
   .profile-media-workspace :global(.profile-background-treatment) {
     gap: .55rem;
     padding: .65rem;
