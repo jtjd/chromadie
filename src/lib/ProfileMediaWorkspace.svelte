@@ -101,7 +101,8 @@
   .profile-media-workspace :global(.profile-background-treatment) {
     grid-column: 2 / -1;
     grid-row: 2;
-    align-self: start;
+    align-self: stretch;
+    box-sizing: border-box;
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-card),

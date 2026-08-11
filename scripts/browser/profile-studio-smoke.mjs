@@ -240,6 +240,7 @@ try {
     assert(Math.abs(background.top - avatar.top) <= 2 && Math.abs(avatar.top - audio.top) <= 2, `Media top row is not aligned: ${JSON.stringify(mediaRail)}.`);
     assert(background.left < avatar.left && avatar.left < audio.left, `Media top row order is not Background, Avatar, Audio: ${JSON.stringify(mediaRail)}.`);
     assert(cursor.top > background.top && Math.abs(cursor.top - mediaRail.options.top) <= 2 && cursor.left < mediaRail.options.left, `Media second row does not pair Custom cursor with Background options: ${JSON.stringify(mediaRail)}.`);
+    assert(Math.abs(cursor.height - mediaRail.options.height) <= 2, `Media second row cards are not equal height: ${JSON.stringify(mediaRail)}.`);
     await page.evaluate(`document.querySelector('[data-editor-section="media"]')?.scrollIntoView({ block: 'start' })`);
     await capture('04-media-workspace');
     await page.click('#profile-customize-tab-layout', 'Layout customize tab');

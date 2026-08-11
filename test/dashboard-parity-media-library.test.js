@@ -73,3 +73,14 @@ test('cursor uploads refresh the owner library before choosing the staging bound
   assert.match(recovery, /status = 'staged'[\s\S]*cleanup_at IS NOT NULL[\s\S]*cleanup_at < now\(\)/);
   assert.match(recovery, /v_selected_path IS NOT NULL AND v_selected_path IS DISTINCT FROM v_old\.storage_path/);
 });
+
+test('media second-row cards share geometry and keep treatment copy concise', async () => {
+  const [workspace, treatment] = await Promise.all([
+    read('src/lib/ProfileMediaWorkspace.svelte'),
+    read('src/lib/ProfileBackgroundTreatment.svelte')
+  ]);
+
+  assert.match(workspace, /profile-background-treatment[\s\S]*grid-row: 2;[\s\S]*align-self: stretch/);
+  assert.match(treatment, /<h3 id="profile-background-treatment-title">Background options<\/h3>/);
+  assert.doesNotMatch(treatment, /Shape the uploaded atmosphere|MEDIA \/ 02/);
+});

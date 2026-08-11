@@ -54,11 +54,7 @@
 
 <section class="profile-background-treatment" aria-labelledby="profile-background-treatment-title">
   <div class="profile-background-treatment__heading">
-    <div>
-      <h3 id="profile-background-treatment-title">Background options</h3>
-      <p>Shape the uploaded atmosphere without adding another layout system.</p>
-    </div>
-    <span aria-hidden="true">MEDIA / 02</span>
+    <h3 id="profile-background-treatment-title">Background options</h3>
   </div>
 
   <div class="profile-background-treatment__controls">
@@ -83,10 +79,8 @@
 
 <style>
   .profile-background-treatment { display: grid; gap: .8rem; min-width: 0; padding: .8rem; border: 1px solid var(--customize-border, #313244); border-radius: var(--customize-radius, .38rem); background: transparent; color: var(--customize-text-primary, #cdd6f4); }
-  .profile-background-treatment__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .profile-background-treatment__heading { display: block; }
   .profile-background-treatment__heading h3 { margin: 0; font-size: .9rem; }
-  .profile-background-treatment__heading p { margin: .25rem 0 0; color: var(--customize-text-muted, #a6adc8); font-size: .72rem; }
-  .profile-background-treatment__heading > span { color: var(--customize-text-faint, #7f849c); font: 700 .62rem/1 var(--customize-font-mono, monospace); letter-spacing: .1em; white-space: nowrap; }
   .profile-background-treatment__controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem 1rem; align-items: end; }
   .profile-background-treatment label { display: grid; gap: .35rem; min-width: 0; }
   .profile-background-treatment label > span { display: flex; justify-content: space-between; gap: .5rem; color: var(--customize-text-secondary, #bac2de); font-size: .74rem; }
@@ -96,5 +90,5 @@
   .profile-background-treatment__color input[type="color"] { width: 1.55rem; height: 1.55rem; padding: .12rem; border: 0; background: transparent; }
   .profile-background-treatment code { color: var(--customize-text-primary, #cdd6f4); font: .74rem/1 var(--customize-font-mono, monospace); }
   @media (max-width: 52rem) { .profile-background-treatment__controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 30rem) { .profile-background-treatment__controls { grid-template-columns: minmax(0, 1fr); } .profile-background-treatment__heading { flex-direction: column; } }
+  @media (max-width: 30rem) { .profile-background-treatment__controls { grid-template-columns: minmax(0, 1fr); } }
 </style>

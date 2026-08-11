@@ -18,6 +18,8 @@ Document user-visible redesign changes by milestone.
   boundaries.
 - Compact avatar previews force the source media to fill their circular frame,
   including when an uploaded image has a non-square source ratio.
+- The Custom cursor and Background options now share the same second-row
+  height, and the treatment panel keeps only its useful control labels.
 
 ## 2026-08-10 — Stabilize effect previews, media, and mobile Live preview
 
