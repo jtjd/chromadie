@@ -15,6 +15,11 @@ const dashboard = await read('src/lib/ProfileDashboardShell.svelte');
 const dashboardActions = await read('src/lib/ProfileDashboardActions.svelte');
 const preview = await read('src/lib/ProfileStudioPreview.svelte');
 const identity = await read('src/lib/IdentityCard.svelte');
+const identityEditor = await read('src/lib/IdentityEditor.svelte');
+const settings = await read('src/lib/ProfileSettings.svelte');
+const customize = await read('src/lib/ProfileCustomizePage.svelte');
+const cosmetics = await read('src/lib/ProfileCosmeticsEditor.svelte');
+const mediaWorkspace = await read('src/lib/ProfileMediaWorkspace.svelte');
 const header = await read('src/lib/SiteModeHeader.svelte');
 const studioHeader = await read('src/lib/ProfileStudioHeader.svelte');
 const shareDialog = await read('src/lib/ProfileShareDialog.svelte');
@@ -80,6 +85,28 @@ test('Discovery reduces mobile card density and enlarges touch controls', () => 
   assert.match(discovery, /:global\(\.discovery-card__share\), :global\(\.discovery-card__icon-button\) \{ min-height: 2\.75rem/);
 });
 
+test('Profile Studio keeps draft publishing and narrow editor surfaces usable', () => {
+  assert.match(identityEditor, /export function getDraftIdentity/);
+  assert.match(identityEditor, /dispatch\('identitypreview',[\s\S]*dispatch\('dirty', \{ dirty: draftIsDirty\(\) \}\)/);
+  assert.match(identityEditor, /typeof nextConfig\?\.bio === 'string'/);
+  assert.match(identityEditor, /if \(studio\) \{[\s\S]*dispatch\('dirty'/);
+  assert.match(customize, /bind:this=\{identityEditor\}/);
+  assert.match(customize, /identityPresentation: identity\.identityPresentation/);
+  assert.match(settings, /update_my_profile_identity/);
+  assert.match(settings, /bio: context\?\.targetProfile\?\.bio \|\| ''/);
+  assert.match(settings, /mobilePreviewAvailable=\{previewAvailable \|\| customizePreviewAvailable\}/);
+  assert.match(dashboard, /profile-dashboard-shell__mobile-actions/);
+  assert.match(dashboard, /aria-controls="profile-dashboard-preview"/);
+  assert.match(studioHeader, /profile-studio-header__customize-tabs \{ position: sticky; top: 3\.8rem/);
+  assert.match(cosmetics, /container: profile-cosmetics \/ inline-size/);
+  assert.match(cosmetics, /profile-cosmetics-surface\.profile-cosmetics-surface--compact\)[\s\S]*profile-cosmetics-visual-grid \{ grid-template-columns: repeat\(2/);
+  assert.match(cosmetics, /@container profile-cosmetics \(max-width: 26rem\)[\s\S]*grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(cosmetics, /profile-cosmetics-name-preview \{ position: static/);
+  assert.match(mediaWorkspace, /container: profile-media \/ inline-size/);
+  assert.match(mediaWorkspace, /@container profile-media \(max-width: 34rem\)/);
+  assert.match(mediaWorkspace, /compact-actions button\)[\s\S]*min-height: 2\.5rem/);
+});
+
 test('production builds retain responsive CSS and do not run the incompatible CSSO pass', () => {
   assert.doesNotMatch(viteConfig, /csso|optimizeCssAssets/);
   assert.equal(packageManifest.devDependencies.csso, undefined);
@@ -95,4 +122,5 @@ test('browser smoke can run against the production preview and checks the phone 
   assert.match(browserSmoke, /smokeMode/);
   assert.match(browserSmoke, /compiled homepage keeps its phone layout/);
   assert.match(browserSmoke, /site-mode-header__mobile-menu/);
+  assert.match(browserSmoke, /Persistent mobile customize tabs are not reachable/);
 });

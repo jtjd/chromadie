@@ -1,5 +1,28 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio responsive and draft hardening — 2026-08-11
+
+- Integrated the Customize Identity editor with the aggregate Studio draft:
+  preview changes now mark the dashboard dirty, validate with the other
+  editors, survive Reset, and publish through the existing owner-scoped
+  identity boundary alongside the V2 profile configuration.
+- Fixed compact Visual Effects specificity so the phone layout can override
+  the four-column desktop grid. The grid uses two columns in narrow editors,
+  horizontal rows on very small phones, and separate name-effect previews
+  beside native selects.
+- Added named inline-size containers to Appearance, Cosmetics, and Media so a
+  narrow editor pane inside a desktop/tablet viewport receives the same useful
+  layout as a narrow phone. Media action controls also meet a larger touch
+  minimum.
+- Added a persistent mobile Studio title and sticky tab row, Preview control, and
+  conditional Publish bar with safe-area spacing; the preview gets an explicit
+  relationship to its control and clears space above the publish bar.
+- Extended source and browser-smoke coverage for identity publish requests,
+  persistent mobile tab navigation, narrow effects/media geometry, and the
+  480–576px container boundary class of regressions.
+- No schema, migration, RLS, authentication, roll-authority, or commerce
+  contracts changed.
+
 ## Restore responsive CSS in production builds — 2026-08-11
 
 - Removed the incompatible post-build CSSO pass that deleted Vite's compiled

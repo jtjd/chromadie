@@ -9,7 +9,6 @@
   export let activeCustomizeTab = 'appearance';
   export let activeLabel = 'Customize';
   export let profilePath = '/profile';
-  export let isMobileViewport = false;
   export let previewAvailable = false;
   export let previewOpen = false;
 
@@ -58,11 +57,6 @@
   </header>
 {:else}
   <div class="profile-studio-header__customize-tabs">
-    <div class="profile-studio-header__customize-tabs-actions">
-      {#if isMobileViewport}
-        <button type="button" aria-expanded={previewOpen} on:click={togglePreview}>{previewOpen ? 'Hide preview' : 'Preview'}</button>
-      {/if}
-    </div>
     <div class="profile-studio-header__tablist" role="tablist" aria-label="Customize profile">
       {#each PROFILE_STUDIO_CUSTOMIZE_TABS as tab (tab.id)}
         <button
@@ -91,18 +85,13 @@
   .profile-studio-header__toolbar-actions :is(a, button) { min-height: 2rem; padding: .5rem .7rem; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--studio-muted, #bac2de); font-size: .78rem; text-decoration: none; cursor: pointer; }
   .profile-studio-header__toolbar-actions :is(a, button):hover, .profile-studio-header__toolbar-actions :is(a, button):focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-text, #cdd6f4); }
   .profile-studio-header__customize-tabs { position: relative; display: grid; margin: 0 .75rem .45rem; border: 1px solid var(--studio-border, #313244); border-radius: .5rem; background: var(--studio-panel, #181825); }
-  .profile-studio-header__customize-tabs-actions { position: absolute; top: .45rem; right: .6rem; z-index: 1; display: none; gap: .45rem; }
-  .profile-studio-header__customize-tabs-actions button { min-height: 1.9rem; padding: .4rem .6rem; border: 1px solid var(--studio-border-strong, #45475a); border-radius: .32rem; background: transparent; color: var(--studio-muted, #bac2de); font-size: .7rem; text-decoration: none; cursor: pointer; }
-  .profile-studio-header__customize-tabs-actions button:hover, .profile-studio-header__customize-tabs-actions button:focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-text, #cdd6f4); }
   .profile-studio-header__tablist { display: flex; align-items: stretch; gap: 0; min-height: 3.05rem; padding: 0 .4rem; }
   .profile-studio-header__tablist button { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 7rem; min-height: 3.05rem; padding: .55rem .9rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--studio-muted, #bac2de); font: 600 .78rem/1 var(--studio-font, var(--site-font, sans-serif)); cursor: pointer; }
   .profile-studio-header__tablist button:hover, .profile-studio-header__tablist button:focus-visible { color: var(--studio-text, #cdd6f4); }
   .profile-studio-header__tablist button.active { border-bottom-color: var(--studio-accent, #89b4fa); color: var(--studio-accent, #89b4fa); }
   .profile-studio-header__tablist button:focus-visible { outline: 2px solid var(--studio-focus, #b4befe); outline-offset: 2px; }
   @media (max-width: 52rem) {
-    .profile-studio-header__customize-tabs { margin-inline: 0; }
-    .profile-studio-header__customize-tabs-actions { position: static; display: flex; justify-content: stretch; padding: .55rem .65rem .15rem; }
-    .profile-studio-header__customize-tabs-actions button { width: 100%; min-height: 2.25rem; }
+    .profile-studio-header__customize-tabs { position: sticky; top: 3.8rem; z-index: 25; margin-inline: 0; background: var(--studio-panel, #181825); box-shadow: 0 .55rem .9rem rgba(0,0,0,.16); }
     .profile-studio-header__tablist { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-width: 0; padding-inline: .25rem; }
     .profile-studio-header__tablist button { width: 100%; min-width: 0; padding-inline: .35rem; }
     .profile-studio-header__toolbar { align-items: stretch; flex-direction: column; gap: .85rem; padding-bottom: .9rem; }

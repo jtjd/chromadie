@@ -311,7 +311,7 @@
     width: 100%;
     box-sizing: border-box;
   }
-  :global(.profile-cosmetics-surface.profile-cosmetics-surface--compact) { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  :global(.profile-cosmetics-surface.profile-cosmetics-surface--compact) { container: profile-cosmetics / inline-size; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-heading { display: none; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-plus-guide { display: none; grid-template-columns: 1fr; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-controls { grid-template-columns: minmax(0, 1fr); gap: .8rem; padding: .1rem 0 0; border: 0; background: transparent; }
@@ -386,6 +386,26 @@
   .profile-cosmetics-status { min-height: 1.25rem; margin: .65rem 0 0; color: var(--cosmetics-muted); font: var(--cosmetics-label-size)/1.45 var(--cosmetics-body); }
   .profile-cosmetics-status.error-message { color: var(--cosmetics-danger); }
   @media (max-width: 900px) { .profile-cosmetics-layout, .profile-cosmetics-plus-guide { grid-template-columns: 1fr; } .profile-cosmetics-name-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .profile-cosmetics-visual-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  @media (max-width: 42rem) { .profile-cosmetics-name-grid, .profile-cosmetics-visual-grid { grid-template-columns: minmax(0, 1fr); } .profile-cosmetics-section-heading button { position: static; justify-self: start; } }
+
+  @container profile-cosmetics (max-width: 42rem) {
+    .profile-cosmetics-name-grid { grid-template-columns: minmax(0, 1fr); }
+    :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid .profile-cosmetics-slot + .profile-cosmetics-slot { margin-top: .55rem; margin-left: 0; padding-top: .55rem; padding-left: 0; border-top: 1px solid var(--cosmetics-border); border-left: 0; }
+    .profile-cosmetics-name-control { display: grid; grid-template-columns: minmax(0, 1fr) minmax(7rem, 9rem); align-items: center; gap: .55rem; }
+    .profile-cosmetics-name-grid .profile-cosmetics-slot select { padding-right: .7rem !important; }
+    .profile-cosmetics-name-preview { position: static; width: 100%; height: 2.5rem; transform: none; justify-content: flex-start; }
+    .profile-cosmetics-name-preview :global(.shop-preview-area[data-render-context="name-control"]),
+    .profile-cosmetics-name-preview :global(.shop-preview-text),
+    .profile-cosmetics-name-preview :global(.name-effect-canvas) { justify-content: flex-start; text-align: left; }
+    :global(.profile-cosmetics-surface--compact) .profile-cosmetics-section-heading button { position: static; justify-self: start; min-height: 2.5rem; }
+    .profile-cosmetics-apply { width: 100%; min-height: 2.75rem; }
+  }
+
+  @container profile-cosmetics (max-width: 26rem) {
+    :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid { grid-template-columns: minmax(0, 1fr); }
+    :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-slot { grid-template-columns: 5rem minmax(0, 1fr); align-items: center; gap: .35rem .7rem; padding: .55rem; }
+    :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-visual-preview { grid-row: 1 / span 2; width: 5rem; height: 4.5rem; min-height: 4.5rem; }
+    .profile-cosmetics-name-control { grid-template-columns: minmax(0, 1fr); }
+  }
   @media (prefers-reduced-motion: reduce) { .profile-cosmetics-plus-guide__links a { transition: none; } }
 </style>

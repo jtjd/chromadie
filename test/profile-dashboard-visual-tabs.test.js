@@ -55,7 +55,10 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
     read('scripts/browser/profile-studio-smoke.mjs')
   ]);
 
-  assert.match(header, /@media \(max-width: 52rem\)[\s\S]*customize-tabs-actions \{ position: static; display: flex;/);
+  assert.doesNotMatch(header, /customize-tabs-actions/);
+  assert.match(shell, /profile-dashboard-shell__mobile-preview/);
+  assert.match(shell, /profile-dashboard-shell__mobile-actions/);
+  assert.match(shell, /profile-dashboard-shell--dirty/);
   assert.match(shell, /with-preview \.profile-dashboard-shell__preview \{[^}]*box-sizing: border-box; margin: 0;/);
   assert.match(shell, /@media \(max-width: 90rem\) and \(min-width: 64\.01rem\)[\s\S]*with-preview \{ grid-template-columns: var\(--dashboard-sidebar-width\) minmax\(0, 1fr\) minmax\(19rem, 24rem\);/);
   assert.match(shell, /@media \(max-width: 64rem\)[\s\S]*sidebar \{ position: fixed;[^}]*visibility: hidden; pointer-events: none;/);
@@ -68,7 +71,7 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(preview, /container: profile-preview \/ inline-size;/);
   assert.match(preview, /@container profile-preview \(max-width: 31rem\)[\s\S]*identity-card__person/);
   assert.match(smoke, /responsive dashboard geometry fits phone, tablet, and narrow desktop widths/);
-  assert.match(smoke, /const widths = \[320, 360, 390, 414, 600, 768, 1024, 1100, 1280\]/);
+  assert.match(smoke, /const widths = \[320, 360, 390, 414, 480, 520, 524, 544, 576, 600, 768, 1024, 1100, 1280\]/);
   assert.match(smoke, /09-mobile-preview-414/);
   assert.match(smoke, /10-mobile-editor-414/);
   assert.match(smoke, /profile-dashboard-shell--mobile/);
@@ -150,7 +153,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(mediaWorkspace, /grid-column: 1;[\s\S]*grid-row: 1;[\s\S]*compact-card--background/);
   assert.match(mediaWorkspace, /profile-background-treatment[\s\S]*grid-column: 2 \/ -1/);
   assert.match(mediaWorkspace, /@media \(max-width: 52rem\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)/);
-  assert.match(cosmetics, /profile-cosmetics-surface--compact\) \{ padding: 0; border: 0; border-radius: 0; background: transparent/);
+  assert.match(cosmetics, /profile-cosmetics-surface--compact\) \{[^}]*padding: 0; border: 0; border-radius: 0; background: transparent/);
   assert.match(cosmetics, /profile-cosmetics-name-preview[^\n]*overflow: visible/);
   assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot select \{ height: 2\.5rem; min-height: 2\.5rem;/);
   assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot label \{ margin-bottom: \.3rem; font-size: \.72rem/);

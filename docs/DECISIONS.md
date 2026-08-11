@@ -1,5 +1,28 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-11 — Make Profile Studio identity part of the aggregate draft
+
+The Customize identity editor now stages bio and bounded identity-presentation
+fields in the same local draft as Appearance, Media, and Layout. Profile Studio
+therefore has one visible Publish profile action: identity preview changes emit
+the normal dirty state, participate in draft navigation protection, and are
+sent through the existing owner-authorized identity RPC during publish. The
+standalone Identity destination keeps its existing immediate-save behavior for
+backward compatibility. No client-authoritative profile or security boundary
+was introduced; server validation remains in the existing RPCs.
+
+## 2026-08-11 — Let narrow Studio surfaces own their responsive state
+
+Profile Studio editor regions use named inline-size containers for Appearance,
+Cosmetics, and Media. The editor's rendered width—not only the browser
+viewport—now determines when color/surface controls, effect cards, name
+previews, and media cards stack. Compact Visual Effects uses two columns in a
+narrow editor and switches to horizontal single-column rows at very small
+widths; native name selects no longer have an animated renderer overlaid on
+their text at those widths. The shell keeps a sticky mobile tab row,
+Preview action, and conditional Publish action reachable while the editor is
+scrolled.
+
 ## 2026-08-11 — Treat compiled CSS as the responsive source of truth
 
 The build must not run a second CSS optimizer over Vite's generated CSS unless

@@ -43,6 +43,11 @@
     return null;
   }
 
+  export function getDraftIdentity() {
+    if (activeSection === 'customize') return customizePage?.getDraftIdentity?.() || null;
+    return null;
+  }
+
   export function validateDraft() {
     if (activeSection === 'customize') return customizePage?.validateDraft?.() !== false;
     if (activeSection === 'links') return layoutEditor?.validateDraft?.() !== false;

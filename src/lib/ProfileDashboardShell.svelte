@@ -10,6 +10,11 @@
   export let ownerUsername = '';
   export let ownerProfilePath = '/profile';
   export let ownerAvatarSrc = '';
+  export let mobileTitle = '';
+  export let mobilePreviewAvailable = false;
+  export let mobilePreviewOpen = false;
+  export let mobileDirty = false;
+  export let mobileSaving = false;
 
   const dispatch = createEventDispatcher();
   let mobileOpen = false;
@@ -102,7 +107,7 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="profile-dashboard-shell" class:profile-dashboard-shell--drawer-open={mobileOpen} class:profile-dashboard-shell--mobile={isMobileViewport} class:profile-dashboard-shell--with-preview={showPreview} class:profile-dashboard-shell--light={colorMode === 'light'}>
+<div class="profile-dashboard-shell" class:profile-dashboard-shell--drawer-open={mobileOpen} class:profile-dashboard-shell--mobile={isMobileViewport} class:profile-dashboard-shell--with-preview={showPreview} class:profile-dashboard-shell--dirty={isMobileViewport && mobileDirty} class:profile-dashboard-shell--light={colorMode === 'light'}>
   {#if mobileOpen}
     <button class="profile-dashboard-shell__backdrop" type="button" aria-label="Close dashboard navigation" on:click={closeMobileMenu}></button>
   {/if}
@@ -181,7 +186,12 @@
       <button type="button" aria-expanded={mobileOpen} aria-controls="profile-dashboard-sidebar" on:click={openMobileMenu}>
         <span aria-hidden="true">☰</span> Menu
       </button>
-      <span>{activeLabel}</span>
+      <span class="profile-dashboard-shell__mobile-title">{mobileTitle || activeLabel}</span>
+      {#if mobilePreviewAvailable}
+        <button class="profile-dashboard-shell__mobile-preview" type="button" aria-controls="profile-dashboard-preview" aria-expanded={mobilePreviewOpen} on:click={() => dispatch('previewtoggle')}>
+          {mobilePreviewOpen ? 'Close preview' : 'Preview'}
+        </button>
+      {/if}
     </div>
     <div class="profile-dashboard-shell__content" id="profile-dashboard-content" role="region" aria-label="Profile dashboard content">
       <slot />
@@ -189,9 +199,16 @@
   </div>
 
   {#if showPreview}
-    <aside class="profile-dashboard-shell__preview" aria-label="Live profile preview">
+    <aside id="profile-dashboard-preview" class="profile-dashboard-shell__preview" aria-label="Live profile preview">
       <slot name="preview" />
     </aside>
+  {/if}
+
+  {#if isMobileViewport && mobileDirty}
+    <div class="profile-dashboard-shell__mobile-actions" role="region" aria-label="Unpublished profile changes">
+      <span>Unpublished changes</span>
+      <button type="button" on:click={() => dispatch('publish')} disabled={mobileSaving}>{mobileSaving ? 'Publishing…' : 'Publish profile'}</button>
+    </div>
   {/if}
 </div>
 
@@ -362,6 +379,7 @@
   .profile-dashboard-shell__content { --surface-panel: var(--studio-panel); --surface-panel-strong: var(--ctp-mantle, #181825); --surface-panel-soft: var(--studio-panel); --surface-inset: var(--studio-inset); box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; min-height: calc(100dvh - 5.6rem); padding: .05rem .55rem 1.25rem; }
   .profile-dashboard-shell__preview { grid-column: 3; grid-row: 2; position: sticky; top: .9rem; z-index: 10; display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; height: calc(100dvh - 1.8rem); margin: 0 .95rem .9rem .15rem; overflow: hidden; border: 1px solid var(--ctp-surface0, #313244); border-radius: .55rem; background: var(--ctp-mantle, #181825); }
   .profile-dashboard-shell__mobile-bar { display: none; }
+  .profile-dashboard-shell__mobile-actions { display: none; }
   .profile-dashboard-shell__backdrop { display: none; }
   @media (max-width: 90rem) and (min-width: 64.01rem) {
     .profile-dashboard-shell--with-preview { grid-template-columns: var(--dashboard-sidebar-width) minmax(0, 1fr) minmax(19rem, 24rem); }
@@ -377,6 +395,8 @@
     .profile-dashboard-shell__mobile-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 2.9rem; padding: .45rem .85rem; border-bottom: 1px solid var(--ctp-surface0, #313244); background: var(--ctp-crust, #11111b); }
     .profile-dashboard-shell__mobile-bar button { display: inline-flex; min-height: 2.75rem; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .8rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
     .profile-dashboard-shell__mobile-bar > span { color: var(--site-ink, var(--color-ink-strong)); font-size: .84rem; }
+    .profile-dashboard-shell__mobile-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+    .profile-dashboard-shell__mobile-preview { min-height: 2.75rem; padding: .45rem .2rem; border: 0; background: transparent; color: var(--site-accent, var(--color-accent)); font: 650 .78rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
     .profile-dashboard-shell__topbar { min-width: 0; padding: .6rem .85rem .2rem; }
     .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding: .4rem .85rem 1.5rem; }
     .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: fixed; inset: auto 0 0; z-index: 45; width: 100%; height: min(70dvh, 36rem); min-height: min(20rem, calc(100dvh - 5rem)); max-height: none; box-sizing: border-box; margin: 0; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--site-line-strong, var(--color-line-strong)); border-left: 0; box-shadow: 0 -1.25rem 3rem rgba(0,0,0,.34); }
@@ -397,6 +417,13 @@
   .profile-dashboard-shell--mobile .profile-dashboard-shell__main { width: 100%; max-width: 100%; }
   .profile-dashboard-shell--mobile .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding: .4rem .85rem 1.5rem; }
   .profile-dashboard-shell--mobile.profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: fixed; inset: auto 0 0; z-index: 45; width: 100%; height: min(70dvh, 36rem); min-height: min(20rem, calc(100dvh - 5rem)); max-height: none; box-sizing: border-box; margin: 0; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--site-line-strong, var(--color-line-strong)); border-left: 0; box-shadow: 0 -1.25rem 3rem rgba(0,0,0,.34); }
+  .profile-dashboard-shell--mobile.profile-dashboard-shell--dirty .profile-dashboard-shell__content { padding-bottom: calc(5.25rem + env(safe-area-inset-bottom)); }
+  .profile-dashboard-shell--mobile.profile-dashboard-shell--with-preview.profile-dashboard-shell--dirty .profile-dashboard-shell__preview { bottom: calc(4.1rem + env(safe-area-inset-bottom)); }
+  .profile-dashboard-shell__mobile-actions { position: fixed; inset: auto 0 0; z-index: 70; display: flex; align-items: center; justify-content: space-between; gap: .8rem; min-height: 4.1rem; box-sizing: border-box; padding: .65rem .85rem calc(.65rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--ctp-surface0, #313244); background: color-mix(in srgb, var(--ctp-crust, #11111b) 94%, transparent); box-shadow: 0 -.8rem 2rem rgba(0,0,0,.22); }
+  .profile-dashboard-shell__mobile-actions span { min-width: 0; color: var(--ctp-peach, #fab387); font-size: .78rem; font-weight: 650; }
+  .profile-dashboard-shell__mobile-actions button { min-height: 2.75rem; padding: .5rem .8rem; border: 1px solid var(--ctp-green, #a6e3a1); border-radius: .42rem; background: var(--ctp-green, #a6e3a1); color: var(--ctp-crust, #11111b); font: 700 .78rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
+  .profile-dashboard-shell__mobile-actions button:disabled { cursor: wait; opacity: .7; }
+  .profile-dashboard-shell__mobile-actions button:focus-visible { outline: 2px solid var(--ctp-lavender, #b4befe); outline-offset: 2px; }
   @media (max-height: 32rem) and (max-width: 64rem) {
     .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { height: min(56dvh, 28rem); min-height: min(16rem, calc(100dvh - 4rem)); }
   }

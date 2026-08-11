@@ -503,10 +503,9 @@ try {
       }
       document.querySelector('[data-editor-section="general"]')?.scrollIntoView({ block: 'start' });
     })()`);
-    const originalBio = await page.evaluate(`document.querySelector('#profile-bio')?.value || ''`);
     await page.setInputValue('#profile-bio', 'Live preview draft', ['input']);
     await page.waitFor(`document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() === 'Live preview draft'`, 'identity draft in live preview');
-    await page.setInputValue('#profile-bio', originalBio, ['input']);
+    const identityRequestsBefore = page.requestLog.filter(request => request.url.includes('update_my_profile_identity')).length;
     const originalTextColor = await page.evaluate(`document.querySelector('[data-color-role="text"] .appearance-editor__hex')?.value || '#F4F6FB'`);
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', '#12ABEF', ['input']);
     await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell__approved-opening')).getPropertyValue('--profile-text').trim().toUpperCase() === '#12ABEF'`, 'color draft in live preview');
@@ -573,9 +572,11 @@ try {
       status: document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() || ''
     })`);
     const publishRequests = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
+    const identityRequests = page.requestLog.filter(request => request.url.includes('update_my_profile_identity')).length;
     assert(publishedState.publishDisabled === true, 'Publishing did not clear the dashboard draft state.');
     assert(publishRequests > publishRequestsAfter, 'Publishing the surface depth did not call the configuration RPCs.');
-    return { draftState, publishedState, identityLayout, publishRequests, mediaRail };
+    assert(identityRequests > identityRequestsBefore, 'Publishing an Identity draft did not call the identity RPC.');
+    return { draftState, publishedState, identityLayout, publishRequests, identityRequests, mediaRail };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {
@@ -643,7 +644,7 @@ try {
       await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed preview for responsive geometry audit');
     }
 
-    const widths = [320, 360, 390, 414, 600, 768, 1024, 1100, 1280];
+    const widths = [320, 360, 390, 414, 480, 520, 524, 544, 576, 600, 768, 1024, 1100, 1280];
     const measurements = [];
     const customizeTabs = ['appearance', 'media', 'layout'];
 
@@ -693,6 +694,12 @@ try {
           const previewCopy = previewCard?.querySelector('.identity-card__copy');
           const previewCanvasBox = previewCanvas?.getBoundingClientRect();
           const previewCardBox = previewCard?.getBoundingClientRect();
+          const visualGrid = document.querySelector('.profile-cosmetics-visual-grid');
+          const visualCards = [...(visualGrid?.querySelectorAll(':scope > .profile-cosmetics-slot') || [])];
+          const namePreview = document.querySelector('.profile-cosmetics-name-preview');
+          const cosmeticsSurface = document.querySelector('.profile-cosmetics-surface--compact');
+          const cosmeticsControls = document.querySelector('.profile-cosmetics-surface--compact .profile-cosmetics-controls');
+          const nameGrid = document.querySelector('.profile-cosmetics-name-grid');
           const pageWidth = document.documentElement.scrollWidth;
           const bodyWidth = document.body.scrollWidth;
           return {
@@ -716,6 +723,22 @@ try {
               cardClientWidth: previewCard.clientWidth,
               copyScrollWidth: previewCopy?.scrollWidth || 0,
               copyClientWidth: previewCopy?.clientWidth || 0
+            } : null,
+            effects: visualGrid ? {
+              columns: new Set(visualCards.map(card => Math.round(card.getBoundingClientRect().left))).size,
+              cardWidths: visualCards.map(card => Math.round(card.getBoundingClientRect().width)),
+              cardBoxes: visualCards.map(card => rect(card)),
+              namePreviewPosition: namePreview ? getComputedStyle(namePreview).position : '',
+              gridStyle: {
+                columns: getComputedStyle(visualGrid).gridTemplateColumns,
+                rows: getComputedStyle(visualGrid).gridTemplateRows,
+                autoFlow: getComputedStyle(visualGrid).gridAutoFlow,
+                justifyItems: getComputedStyle(visualGrid).justifyItems
+              },
+              gridBox: rect(visualGrid),
+              surfaceBox: rect(cosmeticsSurface),
+              controlsBox: rect(cosmeticsControls),
+              nameGridBox: rect(nameGrid)
             } : null
           };
         })()`);
@@ -723,6 +746,12 @@ try {
         assert(state.tabs.length === 3 && state.tabs.every(tabRect => tabRect && tabRect.left >= -1 && tabRect.right <= width + 1), `Customize tabs escape the viewport at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         assert((state.activePanel?.width || 0) > 0, `Customize panel has no width at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         assert(!state.previewOverlap, `Live preview overlaps the editor at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+        if (tab === 'appearance' && width === 524) {
+          assert(state.effects?.columns === 2 && state.effects.cardWidths.every(cardWidth => cardWidth >= 140) && state.effects.namePreviewPosition === 'static', `Visual Effects remains compressed at the 524px breakpoint: ${JSON.stringify(state.effects)}.`);
+        }
+        if (tab === 'appearance' && width === 390) {
+          assert(state.effects?.columns === 1 && state.effects.cardWidths.every(cardWidth => cardWidth >= 260), `Visual Effects did not switch to readable phone rows at 390px: ${JSON.stringify(state.effects)}.`);
+        }
         if (width > 1024) {
           assert(state.previewLayout?.display === 'flex' && state.previewLayout.cardWidth <= state.previewLayout.canvasWidth + 1 && state.previewLayout.cardScrollWidth <= state.previewLayout.cardClientWidth + 1 && state.previewLayout.copyScrollWidth <= state.previewLayout.copyClientWidth + 1, `Narrow desktop preview card is not readable at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         }
@@ -755,17 +784,17 @@ try {
     await page.waitFor('document.querySelector(".profile-dashboard-shell__sidebar")?.getAttribute("aria-hidden") === "true"', 'close narrow mobile drawer');
 
     await page.setViewport(600, 844);
-    await page.waitFor(`matchMedia('(max-width: 64rem)').matches && document.querySelector('.profile-studio-header__customize-tabs-actions button')`, 'tablet mobile viewport state');
+    await page.waitFor(`matchMedia('(max-width: 64rem)').matches && document.querySelector('.profile-dashboard-shell__mobile-preview')`, 'tablet mobile viewport state');
     if (await page.evaluate('Boolean(document.querySelector(".profile-studio-preview"))')) {
       await page.click('.profile-studio-preview__close', 'close preview before tablet preview drawer audit');
       await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed preview before tablet preview drawer audit');
     }
     await page.click('#profile-customize-tab-appearance', 'Appearance before preview drawer audit');
-    await page.waitFor('document.querySelector(".profile-studio-header__customize-tabs-actions button")', 'mobile preview toggle');
-    await page.click('.profile-studio-header__customize-tabs-actions button', 'open tablet preview drawer');
+    await page.waitFor('document.querySelector(".profile-dashboard-shell__mobile-preview")', 'mobile preview toggle');
+    await page.click('.profile-dashboard-shell__mobile-preview', 'open tablet preview drawer');
     await delay(100);
     const tabletToggle = await page.evaluate(`(() => {
-      const button = document.querySelector('.profile-studio-header__customize-tabs-actions button');
+      const button = document.querySelector('.profile-dashboard-shell__mobile-preview');
       return {
         ariaExpanded: button?.getAttribute('aria-expanded') || '',
         text: button?.textContent?.trim() || '',
@@ -800,8 +829,8 @@ try {
     await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed tablet preview drawer');
 
     await page.setViewport(414, 896);
-    await page.waitFor('document.querySelector(".profile-studio-header__customize-tabs-actions button")', 'phone preview toggle');
-    await page.click('.profile-studio-header__customize-tabs-actions button', 'open phone preview drawer');
+    await page.waitFor('document.querySelector(".profile-dashboard-shell__mobile-preview")', 'phone preview toggle');
+    await page.click('.profile-dashboard-shell__mobile-preview', 'open phone preview drawer');
     await page.waitFor('document.querySelector(".profile-studio-preview")', 'phone preview drawer');
     await delay(240);
     const phonePreview = await page.evaluate(`(() => {
@@ -859,6 +888,18 @@ try {
     assert(mobileEditor.mobileClass && mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 3 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
     assert(mobileEditor.pageContained && (mobileEditor.actions?.right || 0) <= 415, `Mobile editor or actions escape the 414px composition: ${JSON.stringify(mobileEditor)}.`);
     await capture('10-mobile-editor-414');
+
+    const stickyTabs = await page.evaluate(`(() => {
+      const tabbar = document.querySelector('.profile-studio-header__customize-tabs');
+      const tabs = [...document.querySelectorAll('.profile-studio-header__tablist [role="tab"]')];
+      const box = tabbar?.getBoundingClientRect();
+      return {
+        position: tabbar ? getComputedStyle(tabbar).position : '',
+        top: box ? Math.round(box.top) : null,
+        labels: tabs.map(tab => tab.textContent.trim())
+      };
+    })()`);
+    assert(stickyTabs.position === 'sticky' && (stickyTabs.top || 0) >= 0 && stickyTabs.labels.join('|') === 'Appearance|Media|Layout', `Persistent mobile customize tabs are not reachable while scrolling: ${JSON.stringify(stickyTabs)}.`);
 
     const destinationWidths = [320, 600, 768];
     const destinations = ['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];

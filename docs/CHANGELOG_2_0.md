@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-11 — Harden Profile Studio on narrow editors
+
+- Identity edits in Customize now join the Profile Studio draft and publish
+  with the profile instead of relying on a hidden standalone Save action.
+- Visual Effects cards adapt from a narrow two-column comparison to readable
+  phone rows, while Name Effect previews stay separate from native selects.
+- Appearance, Cosmetics, and Media respond to their actual editor width, not
+  only the full browser width.
+- Mobile Studio keeps the current Customize tab, Preview, and Publish actions
+  reachable while scrolling, including safe-area spacing for fixed actions.
+
 ## 2026-08-11 — Restore responsive CSS in production output
 
 - Production bundles now retain the authored responsive layout rules across

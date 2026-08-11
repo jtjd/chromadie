@@ -49,6 +49,7 @@
   const CUSTOMIZE_TAB_HASHES = PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES;
   const SETTINGS_SECTIONS = PROFILE_STUDIO_SECTIONS;
   const HASH_ALIASES = PROFILE_STUDIO_HASH_ALIASES;
+  const CUSTOMIZE_TAB_LABELS = Object.freeze({ appearance: 'Appearance', media: 'Media', layout: 'Layout' });
 
   const dispatch = createEventDispatcher();
 
@@ -124,6 +125,7 @@
   $: visibleSettingsSections = getVisibleProfileStudioSections(featureFlags, SETTINGS_SECTIONS);
   $: if (!visibleSettingsSections.some(section => section.id === activeSection)) activeSection = 'customize';
   $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Customize';
+  $: mobileStudioTitle = activeSection === 'customize' ? (CUSTOMIZE_TAB_LABELS[activeCustomizeTab] || activeLabel) : activeLabel;
   $: previewAvailable = activeSection === 'links';
   $: customizePreviewAvailable = activeSection === 'customize';
   $: showDashboardPreview = previewAvailable
@@ -400,7 +402,10 @@
         publishedAt: publishedAt || context.profileConfig?.publishedAt || null
       }
     };
-    workspace?.acceptSaved?.(nextDraft);
+    workspace?.acceptSaved?.({
+      ...nextDraft,
+      bio: context?.targetProfile?.bio || ''
+    });
     configurationPreview = null;
     identityPreview = null;
     cosmeticPreviewLoadout = null;
@@ -427,6 +432,7 @@
     dashboardError = '';
     dashboardStatus = 'Saving profile changes…';
     const editorDraft = getDashboardDraft();
+    const identityDraft = editor?.getDraftIdentity?.();
     const v2Draft = buildConfigurationV2(editorDraft);
     const saveResponse = await supabase.rpc('save_profile_configuration_v2', {
       p_draft: v2Draft,
@@ -440,6 +446,19 @@
     }
     if (saveResponse.data?.updated_at) {
       context = { ...context, profileConfig: { ...(context.profileConfig || {}), updatedAt: saveResponse.data.updated_at } };
+    }
+    if (identityDraft?.dirty) {
+      const identityResponse = await supabase.rpc('update_my_profile_identity', {
+        p_display_name: accountUsername || null,
+        p_bio: identityDraft.bio || null
+      });
+      if (isFailedResponse(identityResponse)) {
+        dashboardSaving = false;
+        dashboardStatus = '';
+        dashboardError = responseError(identityResponse, 'The identity changes could not be saved.');
+        return;
+      }
+      context = { ...context, targetProfile: { ...context.targetProfile, bio: identityResponse.data?.bio ?? identityDraft.bio } };
     }
     dashboardStatus = 'Publishing profile…';
     const publishResponse = await supabase.rpc('publish_profile_configuration_v2', {
@@ -675,8 +694,15 @@
   ownerUsername={accountUsername}
   ownerProfilePath={profilePath}
   ownerAvatarSrc={sidebarAvatarSrc}
+  mobileTitle={mobileStudioTitle}
+  mobilePreviewAvailable={previewAvailable || customizePreviewAvailable}
+  mobilePreviewOpen={showDashboardPreview}
+  mobileDirty={dashboardDirty}
+  mobileSaving={dashboardSaving}
   showPreview={showDashboardPreview}
   on:sectionchange={handleDashboardSectionChange}
+  on:previewtoggle={togglePreview}
+  on:publish={publishDashboard}
 >
   <div slot="topbar">
     {#if context && !loading && (activeSection === 'customize' || activeSection === 'links') && DashboardActionsComponent}
@@ -692,7 +718,6 @@
         {activeCustomizeTab}
         {activeLabel}
         {profilePath}
-        {isMobileViewport}
         {previewAvailable}
         {previewOpen}
         on:tabchange={event => selectCustomizeTab(event.detail?.tabId, { focus: event.detail?.focus })}

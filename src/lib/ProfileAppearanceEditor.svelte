@@ -316,6 +316,7 @@
     --appearance-primary-height: var(--customize-primary-height, 2.35rem);
     --appearance-radius: var(--customize-radius, .35rem);
     display: grid;
+    container: profile-appearance / inline-size;
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
@@ -394,4 +395,18 @@
   @media (max-width: 72rem) { .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1fr); } .appearance-editor__picker { order: -1; } .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } }
   @media (max-width: 40rem) { .appearance-editor__color-grid, .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } }
   @media (max-width: 34rem) { .appearance-editor__color-grid, .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); } .appearance-editor__surface-grid .appearance-editor__range { padding-top: 0; } }
+  @container profile-appearance (max-width: 44rem) {
+    .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1fr); }
+    .appearance-editor__picker { order: -1; }
+    .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  @container profile-appearance (max-width: 30rem) {
+    .appearance-editor__color-grid { grid-template-columns: minmax(0, 1fr); }
+    .appearance-editor__color-dot { width: 1.5rem; height: 1.5rem; }
+    .appearance-editor__palette { justify-content: flex-start; flex-wrap: wrap; gap: .45rem; }
+    .appearance-editor__palette button { width: 1.75rem; height: 1.75rem; }
+    .appearance-editor__hue { width: 1.35rem; }
+    .appearance-editor__hue::before { left: -.22rem; width: 1.8rem; }
+    .appearance-editor__range input { min-height: 2.25rem; }
+  }
 </style>

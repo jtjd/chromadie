@@ -14,6 +14,7 @@
   export let activeTab = 'appearance';
 
   const dispatch = createEventDispatcher();
+  let identityEditor = null;
   let appearanceEditor = null;
   let mediaWorkspaceEditor = null;
   let contentEditor = null;
@@ -33,7 +34,7 @@
   // switching tabs before the dashboard publish action runs.
   function forward(event) {
     dispatch(event.type, event.detail);
-    if (event.type === 'appearancechange' || event.type === 'configpreview') {
+    if (event.type === 'appearancechange' || event.type === 'configpreview' || event.type === 'identitypreview') {
       dispatch('customizepreview', { config: getDraftConfig() });
     }
   }
@@ -48,6 +49,7 @@
 
   export function getDraftConfig() {
     const base = normalizeDraft();
+    const identity = identityEditor?.getDraftIdentity?.();
     const appearance = appearanceEditor?.getDraftAppearance?.() || base.appearance;
     const background = mediaWorkspaceEditor?.getDraftBackground?.();
     const content = contentEditor?.getDraftConfig?.();
@@ -58,17 +60,23 @@
       ...(layout || {}),
       appearance: background ? { ...appearance, background } : appearance,
       content: content?.content || base.content,
-      widgets: widgets?.widgets || base.widgets
+      widgets: widgets?.widgets || base.widgets,
+      ...(identity?.identityPresentation ? { identityPresentation: identity.identityPresentation } : {})
     });
   }
 
+  export function getDraftIdentity() {
+    return identityEditor?.getDraftIdentity?.() || null;
+  }
+
   export function validateDraft() {
-    return [appearanceEditor, contentEditor, widgetEditor, layoutEditor]
+    return [identityEditor, appearanceEditor, contentEditor, widgetEditor, layoutEditor]
       .filter(Boolean)
       .every(editor => editor.validateDraft?.() !== false);
   }
 
   export function acceptSaved(nextConfig) {
+    identityEditor?.acceptSaved?.(nextConfig);
     const next = normalizeDraft(nextConfig);
     appearanceEditor?.acceptSaved?.(next.appearance);
     mediaWorkspaceEditor?.acceptSaved?.(next.appearance);
@@ -78,6 +86,7 @@
   }
 
   export function resetChanges() {
+    identityEditor?.resetChanges?.();
     appearanceEditor?.resetChanges?.();
     mediaWorkspaceEditor?.resetChanges?.();
     contentEditor?.resetChanges?.();
@@ -118,7 +127,7 @@
           <span aria-hidden="true">01</span>
         </div>
         {#if identityComponent}
-          <svelte:component this={identityComponent} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} studio={true} on:identitypreview={forward} on:identitysaved={forward} on:configsaved={forward} />
+          <svelte:component this={identityComponent} bind:this={identityEditor} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} studio={true} on:identitypreview={forward} on:identitysaved={forward} on:configsaved={forward} on:dirty={forward} />
         {:else}
           <div class="profile-customize-page__loading" role="status">Loading identity controls…</div>
         {/if}
@@ -318,7 +327,7 @@
   .profile-customize-page__control { display: block; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; scroll-margin-top: 5rem; }
   .profile-customize-page__control-heading { display: none; }
   .profile-customize-page__control[data-editor-section="content"] { grid-column: 1 / -1; }
-  .profile-customize-page__editor { min-width: 0; }
+  .profile-customize-page__editor { min-width: 0; container-type: inline-size; container-name: profile-customize-editor; }
   .profile-customize-page__loading { display: grid; min-height: 7rem; place-items: center; color: var(--customize-text-muted); font-size: var(--customize-control-size); }
 
   /* The embedded editors keep their domain contracts, but share the compact

@@ -65,6 +65,7 @@
     status = '';
     error = '';
     dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
+    dispatch('dirty', { dirty: draftIsDirty() });
   }
 
   // Hydrate on the first render and whenever the server-backed profile changes.
@@ -79,6 +80,11 @@
     status = '';
     error = '';
     dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
+    dispatch('dirty', { dirty: draftIsDirty() });
+  }
+
+  function draftIsDirty() {
+    return draftBio !== baselineBio || JSON.stringify(draftPresentation) !== JSON.stringify(baselinePresentation);
   }
 
   async function saveIdentity() {
@@ -86,6 +92,15 @@
     if (!validation.valid) {
       error = validation.errors[0] || 'Check the identity fields and try again.';
       status = '';
+      return;
+    }
+
+    // Profile Studio owns one draft and one publish action. The standalone
+    // identity destination keeps its existing immediate-save contract, while
+    // Studio only emits the staged identity to its parent publisher.
+    if (studio) {
+      dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
+      dispatch('dirty', { dirty: draftIsDirty() });
       return;
     }
 
@@ -132,6 +147,45 @@
       identityPresentation: draftPresentation
     });
     saving = false;
+  }
+
+  export function getDraftIdentity() {
+    return {
+      bio: validation.valid ? validation.bio : draftBio,
+      identityPresentation: normalizeProfileIdentityPresentation(draftPresentation),
+      dirty: draftIsDirty(),
+      valid: validation.valid
+    };
+  }
+
+  export function validateDraft() {
+    if (validation.valid) return true;
+    error = validation.errors[0] || 'Check the identity fields and try again.';
+    return false;
+  }
+
+  export function acceptSaved(nextConfig = {}) {
+    const nextIdentity = presentationFromConfig(nextConfig);
+    const nextBio = typeof nextConfig?.bio === 'string' ? nextConfig.bio : draftBio;
+    draftBio = nextBio;
+    baselineBio = nextBio;
+    draftPresentation = normalizeProfileIdentityPresentation(nextIdentity);
+    baselinePresentation = normalizeProfileIdentityPresentation(nextIdentity);
+    clearViewState(VIEW_STATE_NAMESPACE, scope());
+    status = '';
+    error = '';
+    dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
+    dispatch('dirty', { dirty: false });
+  }
+
+  export function resetChanges() {
+    draftBio = baselineBio;
+    draftPresentation = normalizeProfileIdentityPresentation(baselinePresentation);
+    clearViewState(VIEW_STATE_NAMESPACE, scope());
+    status = '';
+    error = '';
+    dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
+    dispatch('dirty', { dirty: false });
   }
 
   function handleBeforeUnload(event) {
@@ -195,6 +249,7 @@
       <div aria-live="polite">
         {#if error}<p class="identity-editor__message identity-editor__message--error" role="alert">{error}</p>
         {:else if status}<p class="identity-editor__message">{status}</p>
+        {:else if studio}<p class="identity-editor__hint">Identity changes join the Profile Studio draft and publish with your profile.</p>
         {:else}<p class="identity-editor__hint">Your username is fixed as your display name. Optional presentation controls stay finite and accessible.</p>{/if}
       </div>
       <button type="submit" class="identity-editor__save" disabled={saving || !validation.valid} aria-busy={saving ? 'true' : 'false'}>

@@ -56,6 +56,7 @@
 <style>
   .profile-media-workspace {
     display: grid;
+    container: profile-media / inline-size;
     grid-template-columns: minmax(12rem, .9fr) minmax(12rem, .9fr) minmax(0, 1.5fr);
     grid-auto-rows: max-content;
     align-items: start;
@@ -192,6 +193,11 @@
     gap: .55rem .8rem;
   }
 
+  .profile-media-workspace :global(.profile-expression-editor__compact-actions button),
+  .profile-media-workspace :global(.rich-media-editor__compact-actions button) {
+    min-height: 2.5rem;
+  }
+
   .profile-media-workspace__loading {
     grid-column: 1 / -1;
     display: grid;
@@ -224,6 +230,23 @@
   }
 
   @media (max-width: 30rem) {
+    .profile-media-workspace {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .profile-media-workspace :global(.profile-expression-editor__compact-card--background),
+    .profile-media-workspace :global(.profile-expression-editor__compact-card--avatar),
+    .profile-media-workspace :global(.profile-expression-editor__compact-card--audio),
+    .profile-media-workspace :global(.rich-media-editor__compact-card--audio),
+    .profile-media-workspace :global(.profile-expression-editor__compact-card--cursor),
+    .profile-media-workspace :global(.rich-media-editor__compact-card--cursor),
+    .profile-media-workspace :global(.profile-background-treatment) {
+      grid-column: 1;
+      grid-row: auto;
+    }
+  }
+
+  @container profile-media (max-width: 34rem) {
     .profile-media-workspace {
       grid-template-columns: minmax(0, 1fr);
     }
