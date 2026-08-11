@@ -1,5 +1,37 @@
 # Chromadie 2.0 Progress
 
+## Responsive and usability hardening — 2026-08-11
+
+- Reworked the homepage Today's Color medium-width composition so the roll
+  visual, result identity, and statistics keep usable columns from tablet
+  through narrow desktop widths, with the existing one-column phone fallback
+  preserved.
+- Returned public-profile wheel and trackpad scrolling to normal browser
+  behavior by removing the wheel interceptor and changing profile section
+  snapping from mandatory to proximity.
+- Made Profile Studio's mobile preview height-aware on short landscape
+  screens, added safe-area padding to fixed preview surfaces and share dialogs,
+  and enlarged key mobile controls.
+- Added container-query stacking for narrow paid identity layouts and disabled
+  the typewriter clipping treatment when the card cannot support a narrow
+  single-line rail.
+- Reduced Discovery's phone cards to the identity, latest color, score, and
+  profile action hierarchy; lower-value streak/roll metadata is kept for the
+  full profile, while filters, tabs, sharing, and profile actions gain larger
+  touch targets.
+- Simplified profile-mode mobile navigation by keeping Edit visible while
+  moving account actions into the existing menu, and standardized editable
+  mobile controls around a readable 1rem text size.
+- Added source-contract coverage in `test/responsive-hardening.test.js` for
+  the homepage, profile scroll behavior, Studio short-height bounds, identity
+  cards, mobile header, share-dialog focus management, and mobile form sizing.
+- No data, migration, RPC, RLS, authentication, roll-authority, or commerce
+  contracts changed.
+- Final validation passed: Svelte check, production build, ESLint, 282 Node
+  tests, 8 responsive contract tests, local Profile Studio browser smoke,
+  link/CSP/performance, policy-drift, catalog, scoring-parity, and database
+  security checks.
+
 ## Correct small-screen Profile Studio composition — 2026-08-10
 
 - Reproduced the dashboard at the supplied 414×896 phone size and a 1100px

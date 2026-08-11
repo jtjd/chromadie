@@ -159,6 +159,7 @@
 <style>
   .identity-card {
     position: relative;
+    container: identity-card / inline-size;
     width: 100%;
     margin: 0 auto;
     padding: clamp(1.5rem, 3.5vw, 2.25rem);
@@ -347,6 +348,71 @@
   .identity-card--layout-story-stack .identity-card__copy { width: 100%; padding-top: 0; }
   .identity-card--layout-story-stack .identity-card__links { margin-top: 1.2rem; padding-top: 0.9rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
   .identity-card--layout-story-stack .identity-card__bio { max-width: 34rem; font-size: 1rem; }
+
+  /* Paid layouts can be rendered inside public cards, Studio previews, or
+     other narrow hosts. Adapt to the card's actual width instead of keeping
+     a two-column identity rail until its text has nowhere left to go. */
+  @container identity-card (max-width: 24rem) {
+    .identity-card--layout-split-signal,
+    .identity-card--layout-archive-index,
+    .identity-card--layout-prism-mosaic,
+    .identity-card--layout-night-terminal {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+    }
+
+    .identity-card--layout-split-signal .identity-card__person,
+    .identity-card--layout-archive-index .identity-card__person,
+    .identity-card--layout-prism-mosaic .identity-card__person,
+    .identity-card--layout-night-terminal .identity-card__person {
+      display: flex;
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+    }
+
+    .identity-card--layout-split-signal :global(.identity-card__avatar),
+    .identity-card--layout-archive-index :global(.identity-card__avatar),
+    .identity-card--layout-prism-mosaic :global(.identity-card__avatar),
+    .identity-card--layout-night-terminal :global(.identity-card__avatar) {
+      align-self: center;
+      justify-self: auto;
+    }
+
+    .identity-card--layout-split-signal .identity-card__copy,
+    .identity-card--layout-split-signal .identity-card__links,
+    .identity-card--layout-archive-index .identity-card__copy,
+    .identity-card--layout-archive-index .identity-card__links,
+    .identity-card--layout-prism-mosaic .identity-card__copy,
+    .identity-card--layout-prism-mosaic .identity-card__links,
+    .identity-card--layout-night-terminal .identity-card__copy,
+    .identity-card--layout-night-terminal .identity-card__links {
+      width: 100%;
+      box-sizing: border-box;
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .identity-card--layout-split-signal .identity-card__links,
+    .identity-card--layout-archive-index .identity-card__links,
+    .identity-card--layout-prism-mosaic .identity-card__links,
+    .identity-card--layout-night-terminal .identity-card__links {
+      margin-top: .9rem;
+      padding-top: .8rem;
+      border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, .12));
+    }
+
+    .identity-card__bio--typewriter {
+      max-width: 100%;
+      overflow: visible;
+      border-right-color: transparent;
+      white-space: normal;
+      animation: none;
+    }
+  }
 
   /* Explicitly stack the card when rendered inside the dashboard phone. The
      canvas can be narrow while the browser viewport remains desktop-sized. */

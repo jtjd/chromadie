@@ -347,6 +347,12 @@
     .discovery-filters input, .discovery-filters select { width: 100%; }
     .discovery-filters .discovery-filter-button, .discovery-filters .discovery-clear-button { align-self: end; }
   }
+  @media (max-width: 36rem) {
+    .discovery-tabs button, .discovery-filter-button, .discovery-clear-button { min-height: 2.75rem; }
+    :global(.discovery-card__stats) { display: none; }
+    :global(.discovery-card__cta) { display: inline-flex; min-height: 2.75rem; align-items: center; }
+    :global(.discovery-card__share), :global(.discovery-card__icon-button) { min-height: 2.75rem; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .discovery-tabs button, .discovery-filter-button, .discovery-clear-button { transition: none; }
     .discovery-skeleton { animation: none; }

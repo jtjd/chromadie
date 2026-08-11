@@ -2,6 +2,27 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-11 — Harden responsive and mobile usability behavior
+
+- Today's Color now keeps its roll result readable across tablet and
+  intermediate-width layouts instead of compressing the result into a narrow
+  column.
+- Public profiles now follow normal wheel and trackpad scrolling while
+  retaining the explicit More/back controls and gentle section proximity snap.
+- Profile Studio's mobile Live preview adapts to short landscape screens and
+  respects device safe-area space; important mobile controls use larger touch
+  targets.
+- Narrow profile identity layouts stack based on their rendered card width,
+  keeping long names, bios, and links readable in both public profiles and
+  embedded previews.
+- Mobile profile headers keep Edit accessible and place account actions in the
+  existing menu; editable mobile fields use a readable text size.
+- Discovery cards on phones prioritize identity, latest color, score, and the
+  profile action while retaining lower-value history on the full profile;
+  filters and card actions are easier to tap.
+- Share dialogs now trap keyboard focus, restore focus on close, lock the page
+  while open, and respect mobile safe areas.
+
 ## 2026-08-10 — Correct Profile Studio small-screen composition
 
 - Narrow desktop and browser-zoom layouts now reserve space for Live preview

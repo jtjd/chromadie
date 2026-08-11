@@ -1,5 +1,28 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-11 — Prefer browser scrolling and container-owned responsive adaptation
+
+Public profile pages keep their immersive two-section composition, but normal
+wheel and precision-trackpad input must remain browser-controlled. Mandatory
+scroll snapping and a JavaScript wheel interceptor made small user movements
+jump between sections, so profile pages now use proximity snapping and retain
+the explicit More/back controls as the cinematic affordance.
+
+Responsive profile identity layouts adapt to the rendered card rather than
+only the viewport. A named container query stacks the paid two-column layouts
+when the card is narrow, and the typewriter bio falls back to readable wrapped
+text there. This preserves the same structured, code-owned configuration in
+public profiles, Studio previews, and other embedded hosts.
+
+Fixed mobile surfaces must account for height as well as width. Profile Studio
+preview drawers use a viewport-aware minimum and a shorter landscape rule,
+while preview and share surfaces include safe-area padding. Editable mobile
+controls use a 1rem baseline and important actions use larger touch targets;
+Discovery cards also demote streak, roll-count, and hex metadata on phones so
+identity, latest color, score, and the profile action form the scan path. These
+are presentation-only changes and do not alter profile, roll, or account
+authority boundaries.
+
 ## 2026-08-10 — Reserve responsive preview space and adapt embedded cards
 
 The Profile Studio preview owns a real grid rail from narrow desktop through

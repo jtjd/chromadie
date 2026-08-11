@@ -108,7 +108,7 @@
     .profile-studio-header__toolbar { align-items: stretch; flex-direction: column; gap: .85rem; padding-bottom: .9rem; }
     .profile-studio-header__toolbar h1 { font-size: 1.45rem; }
     .profile-studio-header__toolbar-actions { justify-content: stretch; width: 100%; }
-    .profile-studio-header__toolbar-actions :is(a, button) { flex: 1 1 0; text-align: center; }
+    .profile-studio-header__toolbar-actions :is(a, button) { flex: 1 1 0; min-height: 2.75rem; text-align: center; }
   }
   @media (max-width: 30rem) {
     .profile-studio-header__tablist button { min-height: 2.8rem; font-size: .74rem; }

@@ -418,8 +418,12 @@
     .site-mode-header__nav,
     .site-mode-header__right { display: none; }
     .site-mode-header__mobile-menu { display: block; justify-self: end; }
-    .site-mode-header--profile .site-mode-header__right { display: flex; }
-    .site-mode-header--profile .site-mode-header__mobile-menu { display: none; }
+    .site-mode-header--profile .site-mode-header__right { display: flex; gap: .25rem; }
+    .site-mode-header--profile .site-mode-header__account { display: none; }
+    .site-mode-header--profile .site-mode-header__mobile-menu { display: block; }
+    .site-mode-header--profile .site-mode-header__mobile-context { display: none; }
+    .site-mode-header--profile .site-mode-header__context button,
+    .site-mode-header--profile .site-mode-header__mobile-menu summary { min-height: 2.75rem; }
   }
 
   @media (max-width: 36rem) {

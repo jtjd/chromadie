@@ -175,10 +175,12 @@
   @keyframes home-panel-sheen { 0%, 74% { transform: translateX(-120%); } 88%, 100% { transform: translateX(120%); } }
   @media (max-width: 67.5rem) {
     .home-daily { min-height: 15.5rem; padding-top: 1.1rem; }
-    .home-daily__body { display: grid; grid-template-columns: 8rem minmax(0, 1fr); align-items: center; gap: 1rem; }
-    .home-daily__main { display: grid; grid-template-columns: 7rem minmax(0, 1fr); align-items: center; gap: 0.45rem 0.85rem; padding: 0.85rem 0; }
+    .home-daily__body { display: grid; grid-template-columns: minmax(16rem, 1fr) minmax(12rem, 0.8fr); align-items: center; gap: 1rem; }
+    .home-daily__main { display: grid; grid-template-columns: 7rem minmax(0, 1fr); align-items: center; gap: 0.45rem 0.85rem; padding: 0.85rem 0; text-align: left; }
     .home-daily__effect-wrap { grid-row: 1 / span 3; width: 7rem; margin: 0; }
     .home-daily h2, .home-daily__hex { grid-column: 2; }
+    .home-daily__readout { justify-items: start; }
+    .home-daily__identity-row, .home-daily__profile-link { justify-content: flex-start; }
     .home-daily__stats { margin-top: 0; }
     .home-daily__empty { min-height: 8rem; }
     .home-daily--compact { right: 0.75rem; bottom: 0.75rem; left: 0.75rem; }

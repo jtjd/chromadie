@@ -1,5 +1,6 @@
 <script>
-  import { createEventDispatcher, onDestroy } from 'svelte';
+  import { createEventDispatcher, onDestroy, tick } from 'svelte';
+  import { focusFirstElement, restoreFocus, trapFocus } from './a11y.js';
   import { supabase } from './supabase';
   import { getProfileAliasPath } from './routeContract.js';
   import { getBrowserPublicOrigin } from './siteOrigin.js';
@@ -20,6 +21,10 @@
   let error = '';
   let qrRequest = 0;
   let keyListenerAttached = false;
+  let dialog = null;
+  let dialogState = false;
+  let opener = null;
+  let bodyOverflowBefore = '';
 
   const origin = getBrowserPublicOrigin({ configuredOrigin: import.meta.env.VITE_SITE_URL || '', currentOrigin: typeof window !== 'undefined' ? window.location.origin : '' });
   $: canonicalUrl = profilePath ? new URL(profilePath, origin).toString() : origin;
@@ -92,7 +97,35 @@
   }
 
   function handleKeydown(event) {
-    if (event.key === 'Escape') close();
+    if (!open) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      close();
+    }
+    else trapFocus(event, dialog);
+  }
+
+  function restoreDialogState() {
+    if (typeof document !== 'undefined') document.body.style.overflow = bodyOverflowBefore;
+    const previous = opener;
+    opener = null;
+    dialogState = false;
+    void tick().then(() => restoreFocus(previous));
+  }
+
+  $: if (typeof document !== 'undefined' && open !== dialogState) {
+    if (open) {
+      opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      bodyOverflowBefore = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      dialogState = true;
+      void tick().then(() => {
+        if (!open) return;
+        focusFirstElement(dialog) || dialog?.focus();
+      });
+    } else {
+      restoreDialogState();
+    }
   }
 
   $: if (typeof window !== 'undefined' && open !== keyListenerAttached) {
@@ -102,12 +135,16 @@
   }
   onDestroy(() => {
     if (typeof window !== 'undefined' && keyListenerAttached) window.removeEventListener('keydown', handleKeydown);
+    if (dialogState || opener) {
+      if (typeof document !== 'undefined') document.body.style.overflow = bodyOverflowBefore;
+      restoreFocus(opener);
+    }
   });
 </script>
 
 {#if open}
   <div class="share-dialog__backdrop" role="presentation" on:click|self={close}>
-    <div class="share-dialog" role="dialog" aria-modal="true" aria-labelledby="share-dialog-title">
+    <div bind:this={dialog} class="share-dialog" role="dialog" aria-modal="true" aria-labelledby="share-dialog-title" tabindex="-1">
       <header class="share-dialog__header">
         <div><p class="share-dialog__eyebrow">Share identity</p><h2 id="share-dialog-title">{title || username || 'Profile'}</h2><p>{description || 'A public ChromaDie profile shaped by daily rolls.'}</p></div>
         <button type="button" class="share-dialog__close" aria-label="Close share dialog" on:click={close}>×</button>
@@ -132,13 +169,13 @@
 {/if}
 
 <style>
-  .share-dialog__backdrop { position: fixed; inset: 0; z-index: 160; display: grid; place-items: center; padding: 1rem; background: rgba(0,0,0,.7); }
+  .share-dialog__backdrop { position: fixed; inset: 0; z-index: 160; display: grid; place-items: center; padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); background: rgba(0,0,0,.7); }
   .share-dialog { width: min(30rem, 100%); max-height: min(90vh, 44rem); overflow: auto; padding: 1.2rem; border: 1px solid rgba(255,255,255,.14); border-radius: .8rem; background: #11141b; color: #f4f6fb; box-shadow: 0 2rem 5rem rgba(0,0,0,.5); }
   .share-dialog__header { display: flex; justify-content: space-between; gap: 1rem; }
   .share-dialog__eyebrow { margin: 0 0 .3rem; color: #cdd2ff; font: .6rem/1 var(--font-mono-stack, monospace); letter-spacing: .13em; text-transform: uppercase; }
   .share-dialog h2 { margin: 0; font-size: 1.15rem; }
   .share-dialog__header p:last-child { margin: .4rem 0 0; color: rgba(220,230,248,.68); font-size: .72rem; line-height: 1.45; }
-  .share-dialog__close { flex: 0 0 auto; width: 2rem; height: 2rem; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; background: transparent; color: inherit; font-size: 1.2rem; cursor: pointer; }
+  .share-dialog__close { display: grid; flex: 0 0 auto; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; background: transparent; color: inherit; font-size: 1.2rem; cursor: pointer; }
   .share-dialog__field { display: grid; gap: .4rem; margin-top: 1rem; color: rgba(220,230,248,.7); font-size: .68rem; }
   .share-dialog__field select, .share-dialog__url { min-height: 2.3rem; border: 1px solid rgba(255,255,255,.14); border-radius: .35rem; padding: .55rem .6rem; background: #090a0d; color: #f4f6fb; font: .7rem/1 var(--font-mono-stack, monospace); }
   .share-dialog__preview { display: flex; align-items: center; gap: .7rem; margin-top: 1rem; padding: .7rem; border: 1px solid rgba(205,210,255,.2); border-radius: .45rem; background: rgba(205,210,255,.06); }
@@ -154,6 +191,9 @@
   .share-dialog__actions button, .share-dialog__download { min-height: 2.2rem; padding: .55rem .7rem; border: 1px solid #cdd2ff; border-radius: .35rem; background: #cdd2ff; color: #11141b; font-size: .68rem; font-weight: 700; text-decoration: none; cursor: pointer; }
   .share-dialog__actions .share-dialog__secondary { border-color: rgba(255,255,255,.16); background: transparent; color: #f4f6fb; }
   .share-dialog__error { margin: .7rem 0 0; color: #ffb4bd; font-size: .68rem; }
+  @media (max-width: 48rem) {
+    .share-dialog__actions button, .share-dialog__download { min-height: 2.75rem; font-size: .8rem; }
+  }
   @media (max-width: 34rem) { .share-dialog__actions > * { flex: 1 1 8rem; text-align: center; } }
   @media (prefers-reduced-motion: reduce) { .share-dialog__backdrop { scroll-behavior: auto; } }
 </style>

@@ -26,3 +26,16 @@
     white-space: nowrap;
     border: 0;
 }
+
+/* Prevent mobile browsers from zooming editable fields and keep text that
+ * users need to read or enter at a comfortable size. Binary controls retain
+ * their native sizing and visual affordance. */
+@media (max-width: 48rem) {
+    :where(
+        input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+        textarea,
+        select
+    ) {
+        font-size: 1rem !important;
+    }
+}

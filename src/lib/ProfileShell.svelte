@@ -255,31 +255,10 @@
       profileMoreActive = profilePageElement.scrollTop >= moreTop - profilePageElement.clientHeight * 0.45;
     };
     profilePageElement?.addEventListener('scroll', updateProfileScrollState, { passive: true });
-    const handleProfileWheel = event => {
-      if (!profilePageElement || previewMode || !hasProfileMore || event.ctrlKey || Math.abs(event.deltaY) < 8) return;
-      if (event.target?.closest?.('.profile-audio-control, input, button, a')) return;
-
-      const more = document.getElementById('profile-more');
-      if (!more) return;
-      const moreTop = getProfileOffsetTop(more);
-      const currentY = profilePageElement.scrollTop;
-      const nearHero = currentY < moreTop - profilePageElement.clientHeight * 0.35;
-      const nearMoreTop = currentY >= moreTop - 48 && currentY <= moreTop + profilePageElement.clientHeight * 0.35;
-
-      if (event.deltaY > 0 && nearHero) {
-        event.preventDefault();
-        scrollToProfileMore();
-      } else if (event.deltaY < 0 && nearMoreTop) {
-        event.preventDefault();
-        scrollToProfileHero();
-      }
-    };
-    profilePageElement?.addEventListener('wheel', handleProfileWheel, { passive: false });
     return () => {
       document.removeEventListener('visibilitychange', refreshOnReturn);
       window.removeEventListener('pageshow', refreshOnReturn);
       profilePageElement?.removeEventListener('scroll', updateProfileScrollState);
-      profilePageElement?.removeEventListener('wheel', handleProfileWheel);
       motionQuery?.removeEventListener?.('change', syncMotionPreference);
     };
   });
@@ -1217,7 +1196,7 @@
     background: var(--profile-background-paint, var(--color-canvas-deep));
     isolation: isolate;
     overscroll-behavior-y: contain;
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: y proximity;
     scroll-padding-block: 0;
   }
 
@@ -1228,7 +1207,7 @@
     min-height: calc(100dvh - 4.75rem);
     padding: 0;
     scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
   }
 
   .profile-shell__approved-main {
@@ -1275,7 +1254,7 @@
     gap: 1.25rem;
     padding: clamp(4rem, 12vh, 8rem) 0 clamp(4rem, 10vh, 7rem);
     scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
   }
 
   .profile-shell__more-back {
@@ -1464,6 +1443,7 @@
 
   @media (max-width: 36rem) {
     .profile-shell-page { height: calc(100dvh - 3.85rem); min-height: calc(100dvh - 3.85rem); padding-inline: 1.5rem; padding-bottom: 0; }
+    .profile-shell__share-button { min-height: 2.75rem; }
     .profile-shell__approved-canvas { display: block; min-height: calc(100dvh - 3.85rem); padding: 0; }
     .profile-shell__approved-main { width: 100%; flex: 0 0 auto; }
     .profile-shell__opening.profile-shell__approved-opening { align-self: stretch; }

@@ -94,12 +94,12 @@
   .profile-studio-preview__header p { margin: .35rem 0 0; color: var(--studio-faint, var(--site-muted, #a6adc8)); font-size: .74rem; }
   .profile-studio-preview__close { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .4rem; background: transparent; color: var(--studio-muted, #bac2de); font-size: 1.1rem; cursor: pointer; }
   .profile-studio-preview__close:hover, .profile-studio-preview__close:focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-text, #cdd6f4); }
-  .profile-studio-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem 1rem; background: var(--ctp-mantle, var(--site-deep, #11111b)); }
+  .profile-studio-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem calc(1rem + env(safe-area-inset-bottom)); background: var(--ctp-mantle, var(--site-deep, #11111b)); }
   .profile-studio-preview__canvas { display: grid; container: profile-preview / inline-size; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; overflow-x: hidden; }
   .profile-studio-preview__canvas--appearance { min-height: 0; margin-bottom: .6rem; }
   .profile-studio-preview__canvas :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: transparent; box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
   .profile-studio-preview__canvas--mobile { padding: .65rem 0 1rem; }
-  .profile-studio-preview__canvas--mobile :global(.profile-shell-page--preview) { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: 22rem; max-height: calc(100dvh - 10rem); overflow: auto; border-radius: 1.25rem; }
+  .profile-studio-preview__canvas--mobile :global(.profile-shell-page--preview) { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: min(22rem, calc(100dvh - 12rem)); max-height: calc(100dvh - 10rem); overflow: auto; border-radius: 1.25rem; }
   .profile-studio-preview__canvas :global(.profile-shell-page--preview .profile-shell__approved-canvas) { min-height: 0; }
   .profile-studio-preview__canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; align-items: stretch; justify-content: flex-start; }
   .profile-studio-preview__canvas :global(.profile-shell-page--preview .profile-shell__opening) { min-height: 0; padding: 1.15rem; }

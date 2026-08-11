@@ -59,7 +59,7 @@
     .profile-dashboard-actions__divider { display: none; }
     .profile-dashboard-actions__saved { grid-column: 1 / -1; }
     .profile-dashboard-actions__buttons { width: 100%; }
-    .profile-dashboard-actions__buttons button { flex: 1 1 0; min-width: 0; }
+    .profile-dashboard-actions__buttons button { flex: 1 1 0; min-width: 0; min-height: 2.75rem; }
     .profile-dashboard-actions__message { flex-basis: auto; width: 100%; }
   }
   @media (prefers-reduced-motion: reduce) { .profile-dashboard-actions { scroll-behavior: auto; } }

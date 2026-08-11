@@ -316,7 +316,7 @@
   .profile-dashboard-shell__brand strong { font: 750 1rem/1 var(--site-font, var(--font-body-stack)); letter-spacing: -.02em; }
   .profile-dashboard-shell__brand small { color: var(--ctp-overlay1, var(--site-faint, var(--color-ink-faint))); font: 600 .62rem/1 var(--site-mono, var(--font-mono-stack)); letter-spacing: .14em; text-transform: uppercase; }
   .profile-dashboard-shell__group-label { color: var(--ctp-subtext0, var(--site-faint, var(--color-ink-faint))); font: 600 .66rem/1 var(--site-font, var(--font-body-stack)); letter-spacing: .04em; text-transform: uppercase; }
-  .profile-dashboard-shell__close { display: none; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font-size: 1.2rem; cursor: pointer; }
+  .profile-dashboard-shell__close { display: none; min-width: 2.75rem; min-height: 2.75rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font-size: 1.2rem; cursor: pointer; }
   .profile-dashboard-shell__nav { display: grid; gap: .9rem; margin-inline: .2rem; }
   .profile-dashboard-shell__group { display: grid; gap: .25rem; }
   .profile-dashboard-shell__group.account { padding-top: .85rem; border-top: 1px solid var(--ctp-surface0, #313244); }
@@ -375,11 +375,11 @@
     .profile-dashboard-shell__close { display: block; }
     .profile-dashboard-shell__backdrop { position: fixed; inset: 0; z-index: 55; display: block; border: 0; background: rgba(0,0,0,.58); cursor: pointer; }
     .profile-dashboard-shell__mobile-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 2.9rem; padding: .45rem .85rem; border-bottom: 1px solid var(--ctp-surface0, #313244); background: var(--ctp-crust, #11111b); }
-    .profile-dashboard-shell__mobile-bar button { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .8rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
+    .profile-dashboard-shell__mobile-bar button { display: inline-flex; min-height: 2.75rem; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .8rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
     .profile-dashboard-shell__mobile-bar > span { color: var(--site-ink, var(--color-ink-strong)); font-size: .84rem; }
     .profile-dashboard-shell__topbar { min-width: 0; padding: .6rem .85rem .2rem; }
     .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding: .4rem .85rem 1.5rem; }
-    .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: fixed; inset: auto 0 0; z-index: 45; width: 100%; height: min(70dvh, 36rem); min-height: 20rem; max-height: none; box-sizing: border-box; margin: 0; border-top: 1px solid var(--site-line-strong, var(--color-line-strong)); border-left: 0; box-shadow: 0 -1.25rem 3rem rgba(0,0,0,.34); }
+    .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: fixed; inset: auto 0 0; z-index: 45; width: 100%; height: min(70dvh, 36rem); min-height: min(20rem, calc(100dvh - 5rem)); max-height: none; box-sizing: border-box; margin: 0; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--site-line-strong, var(--color-line-strong)); border-left: 0; box-shadow: 0 -1.25rem 3rem rgba(0,0,0,.34); }
   }
   /* Keep the phone composition explicit after hydration and during
    * orientation changes. The media query above remains the first-paint
@@ -391,11 +391,14 @@
   .profile-dashboard-shell--mobile .profile-dashboard-shell__close { display: block; }
   .profile-dashboard-shell--mobile .profile-dashboard-shell__backdrop { position: fixed; inset: 0; z-index: 55; display: block; border: 0; background: rgba(0,0,0,.58); cursor: pointer; }
   .profile-dashboard-shell--mobile .profile-dashboard-shell__mobile-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 2.9rem; padding: .45rem .85rem; border-bottom: 1px solid var(--ctp-surface0, #313244); background: var(--ctp-crust, #11111b); }
-  .profile-dashboard-shell--mobile .profile-dashboard-shell__mobile-bar button { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .8rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__mobile-bar button { display: inline-flex; min-height: 2.75rem; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .8rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
   .profile-dashboard-shell--mobile .profile-dashboard-shell__mobile-bar > span { color: var(--site-ink, var(--color-ink-strong)); font-size: .84rem; }
   .profile-dashboard-shell--mobile .profile-dashboard-shell__topbar { min-width: 0; padding: .6rem .85rem .2rem; }
   .profile-dashboard-shell--mobile .profile-dashboard-shell__main { width: 100%; max-width: 100%; }
   .profile-dashboard-shell--mobile .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding: .4rem .85rem 1.5rem; }
-  .profile-dashboard-shell--mobile.profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: fixed; inset: auto 0 0; z-index: 45; width: 100%; height: min(70dvh, 36rem); min-height: 20rem; max-height: none; box-sizing: border-box; margin: 0; border-top: 1px solid var(--site-line-strong, var(--color-line-strong)); border-left: 0; box-shadow: 0 -1.25rem 3rem rgba(0,0,0,.34); }
+  .profile-dashboard-shell--mobile.profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: fixed; inset: auto 0 0; z-index: 45; width: 100%; height: min(70dvh, 36rem); min-height: min(20rem, calc(100dvh - 5rem)); max-height: none; box-sizing: border-box; margin: 0; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--site-line-strong, var(--color-line-strong)); border-left: 0; box-shadow: 0 -1.25rem 3rem rgba(0,0,0,.34); }
+  @media (max-height: 32rem) and (max-width: 64rem) {
+    .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { height: min(56dvh, 28rem); min-height: min(16rem, calc(100dvh - 4rem)); }
+  }
   @media (prefers-reduced-motion: reduce) { .profile-dashboard-shell__sidebar, .profile-dashboard-shell__nav button, .profile-dashboard-shell__mode-toggle { transition-duration: .001ms; } }
 </style>
