@@ -42,7 +42,7 @@
   .profile-dashboard-actions__divider { width: 1px; height: 1.1rem; background: var(--ctp-surface0, #313244); }
   .profile-dashboard-actions__saved { color: var(--ctp-subtext0, #a6adc8); font-size: .75rem; }
   .profile-dashboard-actions__buttons { display: flex; flex: 0 0 auto; gap: .45rem; }
-  .profile-dashboard-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 2.3rem; padding: .48rem .78rem; border: 1px solid var(--ctp-surface1, #45475a); border-radius: .42rem; background: transparent; color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: .76rem; cursor: pointer; }
+  .profile-dashboard-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 2.3rem; padding: .48rem .78rem; border: 1px solid var(--ctp-surface1, #45475a); border-radius: .42rem; background: transparent; color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: .76rem; white-space: nowrap; cursor: pointer; }
   .profile-dashboard-actions button svg { width: .92rem; height: .92rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
   .profile-dashboard-actions button:disabled { cursor: default; opacity: 1; }
   .profile-dashboard-actions__publish:disabled { cursor: default; opacity: 1; }
@@ -51,13 +51,16 @@
   .profile-dashboard-actions__publish:hover:not(:disabled) { border-color: color-mix(in srgb, var(--dashboard-action-save) 82%, var(--site-ink, #f2f0eb)) !important; background: color-mix(in srgb, var(--dashboard-action-save) 82%, var(--site-ink, #f2f0eb)) !important; }
   .profile-dashboard-actions__message { flex: 1 0 100%; margin: 0 !important; color: var(--site-muted, #aaa8b0); }
   .profile-dashboard-actions__message[role="alert"] { color: var(--ctp-red, #f38ba8); }
-  @media (max-width: 38rem) {
-    .profile-dashboard-actions { align-items: stretch; flex-direction: column; }
-    .profile-dashboard-actions__summary { align-items: flex-start; }
-    .profile-dashboard-actions__buttons button { flex: 1; }
-  }
   @media (max-width: 52rem) {
-    .profile-dashboard-actions { margin-inline: 0; }
+    .profile-dashboard-actions { align-items: stretch; flex-direction: column; gap: .75rem; margin-inline: 0; padding: .8rem .85rem; }
+    .profile-dashboard-actions__summary { align-items: flex-start; width: 100%; }
+    .profile-dashboard-actions__title-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .45rem .6rem; width: 100%; }
+    .profile-dashboard-actions__title-row > .profile-dashboard-actions__state { grid-column: 1 / -1; margin-left: 0; }
+    .profile-dashboard-actions__divider { display: none; }
+    .profile-dashboard-actions__saved { grid-column: 1 / -1; }
+    .profile-dashboard-actions__buttons { width: 100%; }
+    .profile-dashboard-actions__buttons button { flex: 1 1 0; min-width: 0; }
+    .profile-dashboard-actions__message { flex-basis: auto; width: 100%; }
   }
   @media (prefers-reduced-motion: reduce) { .profile-dashboard-actions { scroll-behavior: auto; } }
 </style>

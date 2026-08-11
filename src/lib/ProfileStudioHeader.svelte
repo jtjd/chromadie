@@ -84,10 +84,10 @@
 {/if}
 
 <style>
-  .profile-studio-header__toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; padding: .2rem 0 1.45rem; }
+  .profile-studio-header__toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; min-width: 0; padding: .2rem 0 1.45rem; }
   .profile-studio-header__breadcrumb { display: flex; gap: .45rem; margin: 0 0 .55rem; color: var(--studio-faint, #7f849c); font: .7rem/1 var(--studio-mono, var(--site-mono, monospace)); }
   .profile-studio-header__toolbar h1 { margin: 0; color: var(--studio-text, #cdd6f4); font-size: clamp(1.5rem, 2.5vw, 2.25rem); letter-spacing: -.05em; }
-  .profile-studio-header__toolbar-actions { display: flex; align-items: center; gap: .55rem; }
+  .profile-studio-header__toolbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: .55rem; min-width: 0; }
   .profile-studio-header__toolbar-actions :is(a, button) { min-height: 2rem; padding: .5rem .7rem; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--studio-muted, #bac2de); font-size: .78rem; text-decoration: none; cursor: pointer; }
   .profile-studio-header__toolbar-actions :is(a, button):hover, .profile-studio-header__toolbar-actions :is(a, button):focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-text, #cdd6f4); }
   .profile-studio-header__customize-tabs { position: relative; display: grid; margin: 0 .75rem .45rem; border: 1px solid var(--studio-border, #313244); border-radius: .5rem; background: var(--studio-panel, #181825); }
@@ -101,12 +101,17 @@
   .profile-studio-header__tablist button:focus-visible { outline: 2px solid var(--studio-focus, #b4befe); outline-offset: 2px; }
   @media (max-width: 52rem) {
     .profile-studio-header__customize-tabs { margin-inline: 0; }
-    .profile-studio-header__customize-tabs-actions { position: static; display: flex; justify-content: flex-end; padding: .45rem .55rem 0; }
-    .profile-studio-header__tablist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .profile-studio-header__customize-tabs-actions { position: static; display: flex; justify-content: stretch; padding: .55rem .65rem .15rem; }
+    .profile-studio-header__customize-tabs-actions button { width: 100%; min-height: 2.25rem; }
+    .profile-studio-header__tablist { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-width: 0; padding-inline: .25rem; }
+    .profile-studio-header__tablist button { width: 100%; min-width: 0; padding-inline: .35rem; }
+    .profile-studio-header__toolbar { align-items: stretch; flex-direction: column; gap: .85rem; padding-bottom: .9rem; }
+    .profile-studio-header__toolbar h1 { font-size: 1.45rem; }
+    .profile-studio-header__toolbar-actions { justify-content: stretch; width: 100%; }
+    .profile-studio-header__toolbar-actions :is(a, button) { flex: 1 1 0; text-align: center; }
   }
   @media (max-width: 30rem) {
-    .profile-studio-header__tablist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .profile-studio-header__tablist button { width: 100%; min-height: 2.8rem; }
+    .profile-studio-header__tablist button { min-height: 2.8rem; font-size: .74rem; }
   }
   @media (prefers-reduced-motion: reduce) { .profile-studio-header__toolbar-actions :is(a, button) { transition-duration: .001ms; } }
 </style>

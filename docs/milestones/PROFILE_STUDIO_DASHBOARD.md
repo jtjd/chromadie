@@ -206,3 +206,14 @@ finite media plate by the validated scene key so selecting a different scene
 updates both the fitting-room card and Live preview. Name-effect samples use a
 compact, right-aligned control-side treatment with terse Font/Material/Motion
 labels and fixed row geometry matching the supplied fitting-room reference.
+
+## Mobile composition follow-up
+
+Profile Studio now switches explicitly to a phone-owned composition at the
+mobile breakpoint. The desktop sidebar becomes an inert drawer, the action bar
+and Customize tabs reflow into full-width mobile controls, and the identity
+editor abandons its desktop placement grid for one normal-flow field per row.
+The existing bounded Live preview remains a bottom sheet. Browser smoke covers
+the 320px–414px phone widths, drawer focus behavior, preview containment, all
+Customize tabs, and a dedicated 414px identity geometry assertion. No route,
+hash, draft, publish, upload, RLS, RPC, or public-profile contract changed.

@@ -2493,3 +2493,15 @@ direct route behavior.
   reference rhythm and added slot separators with right-aligned renderer samples.
 - Added browser smoke coverage for the three labels and bounded control/row
   heights; no cosmetic persistence or equip authority changed.
+
+## 2026-08-10 — Give Profile Studio a dedicated mobile composition
+
+- Made the authenticated dashboard shell switch explicitly to a phone layout:
+  the permanent sidebar becomes an inert drawer, the action bar and tabs use
+  full-width mobile rows, and Live preview remains a bounded bottom sheet.
+- Replaced the desktop identity placement grid below the mobile breakpoint with
+  one normal-flow field per row, preventing metadata and behavior controls from
+  overlapping on narrow screens.
+- Added authenticated browser geometry coverage and a mobile editor capture at
+  414px, while retaining the existing 320px, tablet, narrow-desktop, keyboard,
+  reduced-motion, routing, and preview checks.

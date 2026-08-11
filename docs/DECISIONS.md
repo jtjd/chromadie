@@ -4144,3 +4144,15 @@ element instead of mutating a stale `<source>` node. Name previews keep the
 same production renderer, but the fitting-room row uses terse Font/Material/
 Motion labels and compact reference control geometry. No saved configuration
 or equip authority changes.
+
+## 2026-08-10 — Treat mobile Profile Studio as its own composition
+
+The desktop dashboard cannot be made reliable on a phone by shrinking its
+sidebar, action row, tabs, and editor grids independently. At the mobile
+breakpoint Profile Studio therefore switches to a single-column composition:
+navigation is an inert drawer, actions stack into full-width controls, the
+Customize tabs become a three-column bounded rail, identity fields use normal
+document flow, and Live preview is a bottom sheet. This keeps the desktop
+reference geometry intact while giving narrow screens one owner for each layout
+decision. The route, hashes, draft model, save/publish RPCs, and public profile
+renderer remain unchanged.

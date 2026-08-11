@@ -326,4 +326,28 @@
     :global(.identity-editor--studio .identity-editor__field[for="profile-bio"]) { grid-column: auto; }
     :global(.identity-editor--studio .identity-editor__options) { grid-column: auto; }
   }
+  /* Phone layout is a separate composition from the desktop placement grid.
+   * Keep every control in normal document flow so labels and fields cannot
+   * overlap when the dashboard is opened on a narrow device. */
+  @media (max-width: 52rem) {
+    :global(.identity-editor--studio .foundation-module__body > .identity-editor__form) { display: grid; grid-template-columns: minmax(0, 1fr); gap: .8rem; }
+    :global(.identity-editor--studio .identity-editor__fields) { display: grid; gap: .8rem; }
+    :global(.identity-editor--studio .identity-editor__field),
+    :global(.identity-editor--studio .identity-editor__field[for="profile-bio"]),
+    :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field),
+    :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field) { grid-column: auto; grid-row: auto; position: static; top: auto; align-self: auto; align-content: normal; grid-template-rows: none; }
+    :global(.identity-editor--studio .identity-editor__field--username),
+    :global(.identity-editor--studio .identity-editor__field[for="profile-bio"]),
+    :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field:first-child),
+    :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field:last-child),
+    :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field:first-child),
+    :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field:last-child) { grid-column: 1 / -1; grid-row: auto; }
+    :global(.identity-editor--studio .identity-editor__grid),
+    :global(.identity-editor--studio .identity-editor__grid--meta),
+    :global(.identity-editor--studio .identity-editor__grid--behavior) { display: grid; grid-template-columns: minmax(0, 1fr); gap: .8rem; }
+    :global(.identity-editor--studio .identity-editor__field[for="profile-bio"] textarea) { height: auto; min-height: 7rem; }
+    :global(.identity-editor--studio .identity-editor__options) { display: grid; grid-column: auto; grid-row: auto; min-height: 0; gap: .65rem; position: static; top: auto; margin: 0; padding: .1rem 0 0; }
+    :global(.identity-editor--studio .identity-editor__footer) { display: block; grid-column: auto; grid-row: auto; margin-top: .05rem; padding-top: .8rem; }
+    :global(.identity-editor--studio .identity-editor__hint) { display: none; }
+  }
 </style>

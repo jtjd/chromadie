@@ -46,11 +46,12 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
 });
 
 test('Profile Studio responsive boundaries keep controls and preview drawers inside the viewport', async () => {
-  const [shell, header, appearance, preview, smoke] = await Promise.all([
+  const [shell, header, appearance, preview, identity, smoke] = await Promise.all([
     read('src/lib/ProfileDashboardShell.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
+    read('src/lib/IdentityEditor.svelte'),
     read('scripts/browser/profile-studio-smoke.mjs')
   ]);
 
@@ -62,11 +63,15 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(appearance, /\.appearance-editor__panel \{ width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;/);
   assert.match(appearance, /@media \(max-width: 72rem\)[\s\S]*appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
   assert.match(appearance, /@media \(max-width: 40rem\)[\s\S]*appearance-editor__color-grid, \.appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(identity, /@media \(max-width: 52rem\)[\s\S]*identity-editor__fields\) \{ display: grid; gap: \.8rem;[\s\S]*identity-editor__grid--behavior \.identity-editor__field:last-child\)/);
+  assert.match(identity, /identity-editor__grid--meta \.identity-editor__field:first-child[\s\S]*grid-column: 1 \/ -1/);
   assert.match(preview, /container: profile-preview \/ inline-size;/);
   assert.match(preview, /@container profile-preview \(max-width: 31rem\)[\s\S]*identity-card__person/);
   assert.match(smoke, /responsive dashboard geometry fits phone, tablet, and narrow desktop widths/);
   assert.match(smoke, /const widths = \[320, 360, 390, 414, 600, 768, 1024, 1100, 1280\]/);
   assert.match(smoke, /09-mobile-preview-414/);
+  assert.match(smoke, /10-mobile-editor-414/);
+  assert.match(smoke, /profile-dashboard-shell--mobile/);
   assert.match(smoke, /const destinations = \['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'\]/);
 });
 

@@ -781,6 +781,39 @@ try {
     await page.click('.profile-studio-preview__close', 'close phone preview drawer');
     await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed phone preview drawer');
 
+    await page.evaluate(`document.querySelector('#customize-identity')?.scrollIntoView({ block: 'start' })`);
+    await page.waitFor('document.querySelector("#customize-identity .identity-editor--studio #profile-username")', 'mobile identity editor');
+    const mobileEditor = await page.evaluate(`(() => {
+      const rect = element => {
+        const box = element?.getBoundingClientRect();
+        return box ? { left: Math.round(box.left), right: Math.round(box.right), top: Math.round(box.top), bottom: Math.round(box.bottom), width: Math.round(box.width), height: Math.round(box.height) } : null;
+      };
+      const fields = [...document.querySelectorAll('#customize-identity .identity-editor--studio .identity-editor__field')];
+      const fieldGeometry = fields.map(field => ({
+        label: field.querySelector(':scope > span')?.textContent?.trim() || '',
+        box: rect(field),
+        control: rect(field.querySelector('input, textarea, select'))
+      }));
+      const overlaps = fieldGeometry.flatMap((current, index) => fieldGeometry.slice(index + 1).filter(next => current.box && next.box && current.box.top < next.box.bottom - 1 && next.box.top < current.box.bottom - 1).map(next => [current.label, next.label]));
+      const outOfBounds = fieldGeometry.filter(({ box, control }) => [box, control].some(item => item && (item.left < -1 || item.right > innerWidth + 1)));
+      const shell = document.querySelector('.profile-dashboard-shell');
+      const tabs = [...document.querySelectorAll('.profile-studio-header__tablist [role="tab"]')].map(rect);
+      const actions = rect(document.querySelector('.profile-dashboard-actions'));
+      return {
+        viewport: innerWidth,
+        mobileClass: shell?.classList.contains('profile-dashboard-shell--mobile'),
+        fieldGeometry,
+        overlaps,
+        outOfBounds,
+        tabs,
+        actions,
+        pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
+      };
+    })()`);
+    assert(mobileEditor.mobileClass && mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 3 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
+    assert(mobileEditor.pageContained && (mobileEditor.actions?.right || 0) <= 415, `Mobile editor or actions escape the 414px composition: ${JSON.stringify(mobileEditor)}.`);
+    await capture('10-mobile-editor-414');
+
     const destinationWidths = [320, 600, 768];
     const destinations = ['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
     const destinationMeasurements = [];

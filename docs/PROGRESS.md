@@ -3089,3 +3089,16 @@ it uses Font, Material, and Motion labels, short select controls, aligned
 renderer samples, and separators between the three composable slots. Browser
 smoke asserts the labels and rendered control heights so the row cannot regress
 into the expanded dashboard control rhythm.
+
+## 2026-08-10 — Mobile Profile Studio composition
+
+The phone layout now has an explicit shell state instead of depending only on
+desktop grid collapse. The sidebar is hidden and inert until opened as a
+keyboard-safe drawer; the action bar, Customize tabs, editor surfaces, and
+identity controls are bounded to the viewport; and the persistent preview uses
+the existing bottom-sheet treatment. Browser smoke now measures every mobile
+identity field and control at 414px and captures the resulting editor surface.
+
+Validation for this pass: `npm run check`, `npm test` (274 passing), and the
+authenticated browser smoke pass. The complete required validation list remains
+the milestone handoff gate.

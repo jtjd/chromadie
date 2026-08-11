@@ -102,7 +102,7 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="profile-dashboard-shell" class:profile-dashboard-shell--drawer-open={mobileOpen} class:profile-dashboard-shell--with-preview={showPreview} class:profile-dashboard-shell--light={colorMode === 'light'}>
+<div class="profile-dashboard-shell" class:profile-dashboard-shell--drawer-open={mobileOpen} class:profile-dashboard-shell--mobile={isMobileViewport} class:profile-dashboard-shell--with-preview={showPreview} class:profile-dashboard-shell--light={colorMode === 'light'}>
   {#if mobileOpen}
     <button class="profile-dashboard-shell__backdrop" type="button" aria-label="Close dashboard navigation" on:click={closeMobileMenu}></button>
   {/if}
@@ -381,5 +381,21 @@
     .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding: .4rem .85rem 1.5rem; }
     .profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: fixed; inset: auto 0 0; z-index: 45; width: 100%; height: min(70dvh, 36rem); min-height: 20rem; max-height: none; box-sizing: border-box; margin: 0; border-top: 1px solid var(--site-line-strong, var(--color-line-strong)); border-left: 0; box-shadow: 0 -1.25rem 3rem rgba(0,0,0,.34); }
   }
+  /* Keep the phone composition explicit after hydration and during
+   * orientation changes. The media query above remains the first-paint
+   * fallback for browsers that have not yet reported their viewport. */
+  .profile-dashboard-shell--mobile { display: block; width: 100%; max-width: 100vw; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__sidebar { position: fixed; inset: 0 auto 0 0; z-index: 60; width: min(88vw, 22rem); height: 100dvh; padding-top: 1rem; visibility: hidden; pointer-events: none; transform: translateX(-104%); transition: transform .2s ease, visibility 0s linear .2s; box-shadow: 1rem 0 3rem rgba(0,0,0,.34); }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__sidebar.is-open { visibility: visible; pointer-events: auto; transform: translateX(0); transition-delay: 0s; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__sidebar-head { padding-top: .25rem; padding-bottom: 1.45rem; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__close { display: block; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__backdrop { position: fixed; inset: 0; z-index: 55; display: block; border: 0; background: rgba(0,0,0,.58); cursor: pointer; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__mobile-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 2.9rem; padding: .45rem .85rem; border-bottom: 1px solid var(--ctp-surface0, #313244); background: var(--ctp-crust, #11111b); }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__mobile-bar button { display: inline-flex; align-items: center; gap: .4rem; border: 0; background: transparent; color: var(--site-muted, var(--color-ink-muted)); font: 600 .8rem/1 var(--site-font, var(--font-body-stack)); cursor: pointer; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__mobile-bar > span { color: var(--site-ink, var(--color-ink-strong)); font-size: .84rem; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__topbar { min-width: 0; padding: .6rem .85rem .2rem; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__main { width: 100%; max-width: 100%; }
+  .profile-dashboard-shell--mobile .profile-dashboard-shell__content { min-height: calc(100dvh - 7rem); padding: .4rem .85rem 1.5rem; }
+  .profile-dashboard-shell--mobile.profile-dashboard-shell--with-preview .profile-dashboard-shell__preview { position: fixed; inset: auto 0 0; z-index: 45; width: 100%; height: min(70dvh, 36rem); min-height: 20rem; max-height: none; box-sizing: border-box; margin: 0; border-top: 1px solid var(--site-line-strong, var(--color-line-strong)); border-left: 0; box-shadow: 0 -1.25rem 3rem rgba(0,0,0,.34); }
   @media (prefers-reduced-motion: reduce) { .profile-dashboard-shell__sidebar, .profile-dashboard-shell__nav button, .profile-dashboard-shell__mode-toggle { transition-duration: .001ms; } }
 </style>

@@ -229,6 +229,7 @@
     --customize-control-line: var(--ctp-surface1, #45475a);
     --customize-section-input: var(--customize-surface-inset);
     display: grid;
+    box-sizing: border-box;
     width: 100%;
     gap: .65rem;
     min-width: 0;
@@ -282,7 +283,7 @@
    * control well there, while Crust remains the deepest dark-mode token. */
   :global(.profile-dashboard-shell--light) .profile-customize-page { --customize-control-surface: var(--ctp-base, #dce0e8); }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-control-surface); --customize-section-input-line: var(--customize-control-line); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; gap: .75rem; min-width: 0; padding: .85rem 1.05rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .52rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
+  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-control-surface); --customize-section-input-line: var(--customize-control-line); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; box-sizing: border-box; width: 100%; max-width: 100%; gap: .75rem; min-width: 0; padding: .85rem 1.05rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .52rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
   .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
   .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
@@ -463,10 +464,15 @@
   }
 
   @media (max-width: 52rem) {
-    .profile-customize-page { padding-inline: 0; }
+    .profile-customize-page { padding-inline: 0; overflow-x: clip; }
     .profile-customize-page__control-grid { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-widget-editor__list),
-    .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
+    .profile-customize-page :global(.profile-editor__module-list),
+    .profile-customize-page :global(.profile-content-editor__fields),
+    .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields),
+    .profile-customize-page :global(.profile-widget-editor__panel),
+    .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
+    .profile-customize-page__surface { padding-inline: .75rem; }
   }
 
   @media (max-width: 38rem) {
