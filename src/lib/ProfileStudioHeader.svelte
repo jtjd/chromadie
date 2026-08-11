@@ -101,7 +101,7 @@
   .profile-studio-header__tablist button:focus-visible { outline: 2px solid var(--studio-focus, #b4befe); outline-offset: 2px; }
   @media (max-width: 52rem) {
     .profile-studio-header__customize-tabs { margin-inline: 0; }
-    .profile-studio-header__customize-tabs-actions { position: static; justify-content: flex-end; padding: .45rem .55rem 0; }
+    .profile-studio-header__customize-tabs-actions { position: static; display: flex; justify-content: flex-end; padding: .45rem .55rem 0; }
     .profile-studio-header__tablist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 30rem) {

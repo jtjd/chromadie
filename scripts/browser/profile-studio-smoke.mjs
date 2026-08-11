@@ -578,6 +578,198 @@ try {
     return { mobilePreview, closed, opened };
   });
 
+  await step('responsive dashboard geometry fits phone, tablet, and narrow desktop widths', async () => {
+    await page.pressKey('Escape');
+    await page.setViewport(390, 844);
+    if (await page.evaluate('Boolean(document.querySelector(".profile-studio-preview__close"))')) {
+      await page.click('.profile-studio-preview__close', 'close preview before responsive geometry audit');
+      await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed preview for responsive geometry audit');
+    }
+
+    const widths = [320, 360, 390, 600, 768, 1024, 1100, 1280];
+    const measurements = [];
+    const customizeTabs = ['appearance', 'media', 'layout'];
+    const rect = element => {
+      const box = element?.getBoundingClientRect();
+      return box ? {
+        left: Math.round(box.left),
+        right: Math.round(box.right),
+        top: Math.round(box.top),
+        bottom: Math.round(box.bottom),
+        width: Math.round(box.width),
+        height: Math.round(box.height)
+      } : null;
+    };
+
+    for (const width of widths) {
+      await page.setViewport(width, width <= 1024 ? 844 : 900);
+      await page.waitFor(`document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-header__customize-tabs')`, `Customize at ${width}px`);
+      for (const tab of customizeTabs) {
+        await page.click(`#profile-customize-tab-${tab}`, `${tab} tab at ${width}px`);
+        await page.waitFor(`document.querySelector('#profile-customize-tab-${tab}')?.getAttribute('aria-selected') === 'true' && document.querySelector('[data-editor-section="${tab === 'appearance' ? 'appearance' : tab}"]')?.hidden === false`, `${tab} panel at ${width}px`);
+        const state = await page.evaluate(`(() => {
+          const visible = element => {
+            if (!element) return false;
+            const style = getComputedStyle(element);
+            const box = element.getBoundingClientRect();
+            return style.display !== 'none' && style.visibility !== 'hidden' && box.width > 0 && box.height > 0;
+          };
+          const rect = element => {
+            const box = element?.getBoundingClientRect();
+            return box ? {
+              left: Math.round(box.left),
+              right: Math.round(box.right),
+              top: Math.round(box.top),
+              bottom: Math.round(box.bottom),
+              width: Math.round(box.width),
+              height: Math.round(box.height)
+            } : null;
+          };
+          const sidebar = document.querySelector('.profile-dashboard-shell__sidebar');
+          const inClosedSidebar = element => element.closest('.profile-dashboard-shell__sidebar') && (sidebar?.hasAttribute('inert') || sidebar?.getAttribute('aria-hidden') === 'true');
+          const candidates = [...document.querySelectorAll('.profile-studio-header__customize-tabs, .profile-studio-header__customize-tabs [role="tab"], .profile-dashboard-actions, [data-editor-section]:not([hidden]), input, select, textarea, [role="slider"]')]
+            .filter(element => visible(element) && !inClosedSidebar(element));
+          const overflow = candidates
+            .map(element => ({ element, box: element.getBoundingClientRect() }))
+            .filter(({ box }) => box.left < -1 || box.right > innerWidth + 1)
+            .slice(0, 8)
+            .map(({ element, box }) => ({ selector: element.className || element.tagName, tag: element.tagName, type: element.getAttribute('type') || '', aria: element.getAttribute('aria-label') || '', parent: element.parentElement?.className || '', left: Math.round(box.left), right: Math.round(box.right), width: Math.round(box.width) }));
+          const activePanel = document.querySelector('[data-editor-section="${tab === 'appearance' ? 'appearance' : tab}"]');
+          const pageWidth = document.documentElement.scrollWidth;
+          const bodyWidth = document.body.scrollWidth;
+          return {
+            viewport: innerWidth,
+            pageWidth,
+            bodyWidth,
+            contained: pageWidth <= innerWidth + 1 && bodyWidth <= innerWidth + 1,
+            overflow,
+            tablist: rect(document.querySelector('.profile-studio-header__tablist')),
+            tabs: [...document.querySelectorAll('.profile-studio-header__tablist [role="tab"]')].map(rect),
+            actions: rect(document.querySelector('.profile-dashboard-actions')),
+            activePanel: rect(activePanel),
+            panelBottom: activePanel ? Math.round(activePanel.getBoundingClientRect().bottom) : null
+          };
+        })()`);
+        assert(state.contained && !state.overflow.length, `Dashboard overflows at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+        assert(state.tabs.length === 3 && state.tabs.every(tabRect => tabRect && tabRect.left >= -1 && tabRect.right <= width + 1), `Customize tabs escape the viewport at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+        assert((state.activePanel?.width || 0) > 0, `Customize panel has no width at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+        measurements.push({ width, tab, ...state });
+      }
+    }
+
+    await page.setViewport(320, 844);
+    await page.click('#profile-customize-tab-appearance', 'Appearance before narrow mobile drawer audit');
+    await page.waitFor('document.querySelector(".profile-customize-page")', 'Appearance at 320px');
+    await page.click('.profile-dashboard-shell__mobile-bar button', 'open narrow mobile drawer');
+    await page.waitFor('document.querySelector(".profile-dashboard-shell__sidebar.is-open")', 'open narrow mobile drawer state');
+    await delay(240);
+    const drawer = await page.evaluate(`(() => {
+      const sidebar = document.querySelector('.profile-dashboard-shell__sidebar.is-open');
+      const rect = sidebar?.getBoundingClientRect();
+      const visibleButtons = [...(sidebar?.querySelectorAll('button') || [])].filter(button => getComputedStyle(button).display !== 'none' && button.getBoundingClientRect().height > 0);
+      return {
+        viewport: innerWidth,
+        left: rect ? Math.round(rect.left) : null,
+        right: rect ? Math.round(rect.right) : null,
+        width: rect ? Math.round(rect.width) : null,
+        buttons: visibleButtons.length,
+        contained: Boolean(rect && rect.left >= -1 && rect.right <= innerWidth + 1)
+      };
+    })()`);
+    assert(drawer.contained && drawer.buttons >= 4, `Narrow mobile drawer is not usable at 320px: ${JSON.stringify(drawer)}.`);
+    await page.pressKey('Escape');
+    await page.waitFor('document.querySelector(".profile-dashboard-shell__sidebar")?.getAttribute("aria-hidden") === "true"', 'close narrow mobile drawer');
+
+    await page.setViewport(600, 844);
+    await page.waitFor(`matchMedia('(max-width: 64rem)').matches && document.querySelector('.profile-studio-header__customize-tabs-actions button')`, 'tablet mobile viewport state');
+    if (await page.evaluate('Boolean(document.querySelector(".profile-studio-preview"))')) {
+      await page.click('.profile-studio-preview__close', 'close preview before tablet preview drawer audit');
+      await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed preview before tablet preview drawer audit');
+    }
+    await page.click('#profile-customize-tab-appearance', 'Appearance before preview drawer audit');
+    await page.waitFor('document.querySelector(".profile-studio-header__customize-tabs-actions button")', 'mobile preview toggle');
+    await page.click('.profile-studio-header__customize-tabs-actions button', 'open tablet preview drawer');
+    await delay(100);
+    const tabletToggle = await page.evaluate(`(() => {
+      const button = document.querySelector('.profile-studio-header__customize-tabs-actions button');
+      return {
+        ariaExpanded: button?.getAttribute('aria-expanded') || '',
+        text: button?.textContent?.trim() || '',
+        disabled: Boolean(button?.disabled),
+        outerHTML: button?.outerHTML || '',
+        activeSection: document.querySelector('.profile-dashboard-shell__nav button.active')?.getAttribute('data-section') || '',
+        selectedTab: document.querySelector('.profile-studio-header__tablist [role="tab"][aria-selected="true"]')?.id || '',
+        customizePanel: Boolean(document.querySelector('#profile-customize-tabpanel')),
+        preview: Boolean(document.querySelector('.profile-studio-preview'))
+      };
+    })()`);
+    assert(tabletToggle.ariaExpanded === 'true', `Tablet preview toggle did not open: ${JSON.stringify(tabletToggle)}.`);
+    await page.waitFor('document.querySelector(".profile-studio-preview")', 'tablet preview drawer');
+    await delay(240);
+    const tabletPreview = await page.evaluate(`(() => {
+      const preview = document.querySelector('.profile-dashboard-shell__preview');
+      const box = preview?.getBoundingClientRect();
+      return {
+        viewport: innerWidth,
+        left: box ? Math.round(box.left) : null,
+        right: box ? Math.round(box.right) : null,
+        top: box ? Math.round(box.top) : null,
+        bottom: box ? Math.round(box.bottom) : null,
+        width: box ? Math.round(box.width) : null,
+        height: box ? Math.round(box.height) : null,
+        contained: Boolean(box && box.left >= -1 && box.right <= innerWidth + 1 && box.top >= -1 && box.bottom <= innerHeight + 1),
+        pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
+      };
+    })()`);
+    assert(tabletPreview.contained && tabletPreview.pageContained, `Tablet live preview escapes its drawer bounds: ${JSON.stringify(tabletPreview)}.`);
+    await page.click('.profile-studio-preview__close', 'close tablet preview drawer');
+    await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed tablet preview drawer');
+
+    const destinationWidths = [320, 600, 768];
+    const destinations = ['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
+    const destinationMeasurements = [];
+    for (const width of destinationWidths) {
+      await page.setViewport(width, 844);
+      for (const destination of destinations) {
+        await page.navigate(`${appUrl}/profile/settings#${destination}`, `${destination} at ${width}px`);
+        await page.waitFor(`document.querySelector('.profile-dashboard-shell__nav button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace')`, `${destination} destination at ${width}px`, 30000);
+        await delay(80);
+        const state = await page.evaluate(`(() => {
+          const visible = element => {
+            if (!element) return false;
+            const style = getComputedStyle(element);
+            const box = element.getBoundingClientRect();
+            return style.display !== 'none' && style.visibility !== 'hidden' && box.width > 0 && box.height > 0;
+          };
+          const sidebar = document.querySelector('.profile-dashboard-shell__sidebar');
+          const inClosedSidebar = element => element.closest('.profile-dashboard-shell__sidebar') && (sidebar?.hasAttribute('inert') || sidebar?.getAttribute('aria-hidden') === 'true');
+          const workspace = document.querySelector('.profile-studio-workspace');
+          const box = workspace?.getBoundingClientRect();
+          const overflow = [...document.querySelectorAll('.profile-studio-workspace, .profile-studio-workspace *')]
+            .filter(element => visible(element) && !inClosedSidebar(element))
+            .map(element => ({ element, box: element.getBoundingClientRect() }))
+            .filter(({ box }) => box.left < -1 || box.right > innerWidth + 1)
+            .slice(0, 8)
+            .map(({ element, box }) => ({ selector: element.className || element.tagName, left: Math.round(box.left), right: Math.round(box.right), width: Math.round(box.width) }));
+          return {
+            viewport: innerWidth,
+            pageWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth,
+            contained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1,
+            workspace: box ? { left: Math.round(box.left), right: Math.round(box.right), width: Math.round(box.width), height: Math.round(box.height) } : null,
+            destination: workspace?.getAttribute('data-section-destination') || '',
+            overflow
+          };
+        })()`);
+        assert(state.contained && !state.overflow.length, `Dashboard destination overflows at ${width}px on ${destination}: ${JSON.stringify(state)}.`);
+        assert((state.workspace?.width || 0) > 0 && (state.workspace?.right || 0) <= width + 1, `Dashboard destination is not bounded at ${width}px on ${destination}: ${JSON.stringify(state)}.`);
+        destinationMeasurements.push({ width, destination, ...state });
+      }
+    }
+
+    return { widths, measurements, drawer, tabletToggle, tabletPreview, destinationMeasurements };
+  });
+
   await step('reduced-motion media query is honored', async () => {
     await page.setReducedMotion(true);
     const reduced = await page.waitFor(`matchMedia('(prefers-reduced-motion: reduce)').matches`, 'reduced-motion media query');

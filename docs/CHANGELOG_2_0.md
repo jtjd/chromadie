@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-10 — Fit Profile Studio on smaller screens
+
+- Appearance controls now stack before intermediate tablet widths force hex
+  fields, color-picker rails, or surface sliders outside the editor.
+- Customize tabs keep a visible Preview action on mobile, and the fixed Live
+  preview drawer now stays exactly within the viewport.
+- Overview, Links, Premium, and Account destinations retain bounded layouts at
+  phone and tablet widths, with the mobile navigation drawer remaining usable.
+
 ## 2026-08-10 — Align Profile Studio Media with the reference workspace
 
 - Media now uses a compact three-column top row for Background, Avatar, and

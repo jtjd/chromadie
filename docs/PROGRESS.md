@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Audit Profile Studio on smaller screens — 2026-08-10
+
+- Audited Customize Appearance, Media, and Layout at 320, 360, 390, 600,
+  768, 1024, 1100, and 1280px, including visible controls and nested editor
+  bounds.
+- Audited Overview, Links, Premium, Analytics, Notifications, Privacy &
+  social, Badges & progression, and Settings at phone and tablet widths.
+- Fixed Appearance's intrinsic grid sizing so hex fields, picker rails, and
+  surface sliders stay inside the editor at intermediate tablet widths.
+- Kept the mobile Preview action available and bounded the fixed preview drawer
+  to the viewport after inherited desktop margins are removed.
+- Added authenticated browser geometry coverage for the width matrix,
+  destination surfaces, mobile drawer, preview drawer, and document overflow.
+
 ## Recover cursor staging and avatar fitting — 2026-08-10
 
 - Refresh the private rich-media library before cursor uploads choose between

@@ -1,5 +1,17 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Make Profile Studio geometry viewport-owned
+
+Responsive dashboard rules must be owned by the shell or editor that can
+bound the overflowing surface. Appearance's nested grids therefore use
+explicit `min-width: 0`, border-box sizing, and a 40rem fallback that stacks
+the color and surface controls before they reach phone widths. The mobile
+Customize header keeps its Preview action visible so closing a preview does
+not remove the only way to reopen it. The fixed tablet/mobile preview resets
+desktop rail margins and is border-box sized to the viewport. These are
+presentation-only changes; routes, drafts, RPCs, and preview data contracts
+remain unchanged.
+
 ## 2026-08-10 — Recover cursor uploads at the staging boundary
 
 Cursor uploads must resolve the current owner asset library before deciding

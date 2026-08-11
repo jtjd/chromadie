@@ -45,6 +45,24 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
   assert.match(shell, /profile-dashboard-shell__mode-copy/);
 });
 
+test('Profile Studio responsive boundaries keep controls and preview drawers inside the viewport', async () => {
+  const [shell, header, appearance, smoke] = await Promise.all([
+    read('src/lib/ProfileDashboardShell.svelte'),
+    read('src/lib/ProfileStudioHeader.svelte'),
+    read('src/lib/ProfileAppearanceEditor.svelte'),
+    read('scripts/browser/profile-studio-smoke.mjs')
+  ]);
+
+  assert.match(header, /@media \(max-width: 52rem\)[\s\S]*customize-tabs-actions \{ position: static; display: flex;/);
+  assert.match(shell, /with-preview \.profile-dashboard-shell__preview \{[^}]*box-sizing: border-box; margin: 0;/);
+  assert.match(appearance, /\.appearance-editor \{[\s\S]*width: 100%;[\s\S]*min-width: 0;[\s\S]*box-sizing: border-box;/);
+  assert.match(appearance, /\.appearance-editor__panel \{ width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;/);
+  assert.match(appearance, /@media \(max-width: 40rem\)[\s\S]*appearance-editor__color-grid, \.appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(smoke, /responsive dashboard geometry fits phone, tablet, and narrow desktop widths/);
+  assert.match(smoke, /const widths = \[320, 360, 390, 600, 768, 1024, 1100, 1280\]/);
+  assert.match(smoke, /const destinations = \['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'\]/);
+});
+
 test('reference workspace composition stays explicit', async () => {
   const [settings, header, preview, draftModel, actions, appearance, appearanceColors, cosmetics, customize, mediaWorkspace, profileShell, editor, expression, shopPreview] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
