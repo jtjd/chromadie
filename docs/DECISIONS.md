@@ -1,5 +1,25 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-10 — Recover cursor uploads at the staging boundary
+
+Cursor uploads must resolve the current owner asset library before deciding
+whether the request is an initial stage or a single-slot replacement. The
+client therefore clears expired staged rows and reloads active assets before
+calling the existing RPC boundary. The additive recovery migration also
+allows an owner-authorized replacement to repair an active orphan cursor when
+the profile reference is null, while rejecting a replacement for a different
+selected cursor. Storage-object cleanup keeps the protected storage-table
+guard enabled through the existing transaction boundary. This preserves
+ownership, quota, RLS, and public-profile contracts while making a long-lived
+dashboard recover from stale library state.
+
+## 2026-08-10 — Keep compact avatar media circular
+
+Compact avatar previews own a fixed square frame and force both the media
+wrapper and its image to fill that frame with a circular clip and `cover`
+fitting. The change is presentation-only: uploaded paths, avatar processing,
+and public profile rendering remain unchanged.
+
 ## 2026-08-10 — Give the Media workspace explicit reference geometry
 
 The compact Media editor keeps upload, removal, waveform, background-treatment,

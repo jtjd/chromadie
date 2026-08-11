@@ -44,7 +44,7 @@ test('compact avatar previews render inside a fixed circular frame', async () =>
   const editor = await read('src/lib/ProfileExpressionEditor.svelte');
 
   assert.match(editor, /profile-expression-editor__compact-avatar-frame/);
-  assert.match(editor, /\.profile-expression-editor__compact-avatar-frame \{[\s\S]*width: 4\.6rem;[\s\S]*height: 4\.6rem;[\s\S]*border-radius: 50%;/);
+  assert.match(editor, /\.profile-expression-editor__compact-avatar-frame \{[\s\S]*width: 5\.5rem;[\s\S]*height: 5\.5rem;[\s\S]*border-radius: 50%;/);
   assert.match(editor, /compact-avatar-frame \.foundation-media[\s\S]*width: 100% !important;[\s\S]*height: 100% !important;[\s\S]*border-radius: 50% !important/);
   assert.match(editor, /compact-avatar-frame \.foundation-media img[\s\S]*object-fit: cover/);
 });
@@ -53,4 +53,18 @@ test('appearance picker keeps its palette inside the visible panel', async () =>
   const editor = await read('src/lib/ProfileAppearanceEditor.svelte');
 
   assert.match(editor, /\.appearance-editor__picker \{ box-sizing: border-box; height: auto; min-height: 14rem; overflow: visible;/);
+});
+
+test('cursor uploads refresh the owner library before choosing the staging boundary', async () => {
+  const [editor, recovery] = await Promise.all([
+    read('src/lib/ProfileRichMediaEditor.svelte'),
+    read('supabase/migrations/20260810130000_cursor_upload_recovery.sql')
+  ]);
+
+  assert.match(editor, /await clearExpiredStagedAssets\(\);[\s\S]*await loadAssets\(\);[\s\S]*replacementAssetId\(kind\)/);
+  assert.match(editor, /cleanup_my_profile_staged_media/);
+  assert.match(editor, /return \(kind === 'cursor' \? cursorAssets : pointerCursorAssets\)\[0\]\?\.id \|\| null/);
+  assert.match(recovery, /CREATE OR REPLACE FUNCTION public\.cleanup_my_profile_staged_media\(\)/);
+  assert.match(recovery, /status = 'staged'[\s\S]*cleanup_at IS NOT NULL[\s\S]*cleanup_at < now\(\)/);
+  assert.match(recovery, /v_selected_path IS NOT NULL AND v_selected_path IS DISTINCT FROM v_old\.storage_path/);
 });

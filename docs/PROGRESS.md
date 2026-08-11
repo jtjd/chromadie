@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Recover cursor staging and avatar fitting — 2026-08-10
+
+- Refresh the private rich-media library before cursor uploads choose between
+  initial staging and transactional replacement, preventing an in-flight asset
+  query from producing a false full-slot error.
+- Remove expired staged rows before enforcing the cursor slot and retain the
+  storage deletion guard required by Supabase's protected storage tables.
+- Force compact avatar media to fill a fixed circular frame while preserving
+  the existing uploaded asset path and object-fit behavior.
+
 ## Align the Profile Studio Media workspace — 2026-08-10
 
 - Added a component-owned `ProfileMediaWorkspace` that flattens only the

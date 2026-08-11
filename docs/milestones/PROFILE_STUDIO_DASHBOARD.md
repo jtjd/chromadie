@@ -14,6 +14,12 @@ tablet and mobile use bounded fallbacks. Active assets expose compact
 Replace/Remove actions while retaining the existing child editor and server
 mutation contracts.
 
+The cursor recovery follow-up refreshes the owner library before upload
+staging, clears expired staged assets, and safely repairs an orphaned active
+cursor through the existing replacement RPC boundary. Compact avatar previews
+also force uploaded media to fill their circular frame without changing stored
+paths or public rendering.
+
 ## Scope
 
 The authenticated profile-settings route is the Profile Studio dashboard. It

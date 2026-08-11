@@ -12,6 +12,12 @@ Document user-visible redesign changes by milestone.
   existing uploads, removal, waveform playback, and background controls.
 - Tablet and mobile layouts preserve the same ownership order without allowing
   the media workspace to overflow its editor column.
+- Cursor uploads now refresh the owner asset library before choosing the
+  single-slot staging path, clear expired staged rows, and can repair an
+  orphaned active cursor without weakening the existing owner and storage
+  boundaries.
+- Compact avatar previews force the source media to fill their circular frame,
+  including when an uploaded image has a non-square source ratio.
 
 ## 2026-08-10 — Stabilize effect previews, media, and mobile Live preview
 

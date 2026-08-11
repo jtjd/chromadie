@@ -91,7 +91,7 @@
   }
 
   async function loadAssets(requestKey = '') {
-    if (!profileId || !hasAccess) return;
+    if (!profileId || !hasAccess) return false;
     if (requestKey) loadedAssetKey = requestKey;
     loading = true;
     const { data, error: loadError } = await supabase
@@ -103,10 +103,11 @@
     loading = false;
     if (loadError) {
       setFeedback(loadError.message || 'The rich media library could not be loaded.');
-      return;
+      return false;
     }
     assets = (data || []).filter(asset => asset.status === 'active');
     syncIncoming(incomingConfig, nextIncomingKey);
+    return true;
   }
 
   function createAssetId() {
@@ -145,6 +146,22 @@
   function selectedAssetId(kind) {
     const field = kind === 'background_video' ? 'background_video_path' : `${kind}_path`;
     return assetForPath(richConfig[field])?.id || null;
+  }
+
+  function replacementAssetId(kind) {
+    const selected = selectedAssetId(kind);
+    if (selected) return selected;
+    // Repair an active single-slot asset that was uploaded successfully but
+    // never became the selected profile reference. The server still verifies
+    // ownership and refuses to replace a different selected cursor.
+    return (kind === 'cursor' ? cursorAssets : pointerCursorAssets)[0]?.id || null;
+  }
+
+  async function clearExpiredStagedAssets() {
+    const { data, error: cleanupError } = await supabase.rpc('cleanup_my_profile_staged_media');
+    if (cleanupError || !data?.success) {
+      throw new Error(cleanupError?.message || data?.error || 'The pending media uploads could not be cleared.');
+    }
   }
 
   function audioConfigPayload() {
@@ -259,7 +276,15 @@
       if (['audio', 'background_video'].includes(kind)) metadata.duration_ms = await readMediaDuration(file, kind);
       if (!extension) throw new Error('That file type is not supported.');
       const assetId = createAssetId();
-      const replacingAssetId = ['cursor', 'pointer_cursor'].includes(kind) ? selectedAssetId(kind) : null;
+      if (['cursor', 'pointer_cursor'].includes(kind)) {
+        // The asset query is lazy and can still be in flight when the user
+        // opens the file picker. Refresh it before deciding whether this is
+        // an initial upload or a single-slot replacement.
+        await clearExpiredStagedAssets();
+        const assetsLoaded = await loadAssets();
+        if (!assetsLoaded) throw new Error('The cursor library could not be loaded. Refresh and try again.');
+      }
+      const replacingAssetId = ['cursor', 'pointer_cursor'].includes(kind) ? replacementAssetId(kind) : null;
       const storedPath = buildRichMediaStoragePath(kind, profileId, assetId, extension);
       const reference = getRichMediaStorageRef(storedPath);
       if (!reference) throw new Error('The rich media path could not be prepared.');

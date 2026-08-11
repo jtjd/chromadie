@@ -841,9 +841,10 @@
   .profile-expression-editor__compact-preview--avatar { border-color: var(--media-line); }
   .profile-expression-editor__compact-card--avatar .profile-expression-editor__compact-preview { aspect-ratio: 1; min-height: 5.7rem; }
   .profile-expression-editor__compact-avatar-frame {
-    width: 4.6rem;
-    height: 4.6rem;
-    flex: 0 0 4.6rem;
+    display: block;
+    width: 5.5rem;
+    height: 5.5rem;
+    flex: 0 0 5.5rem;
     overflow: hidden;
     aspect-ratio: 1;
     border: 1px solid var(--media-line-strong);
@@ -853,6 +854,8 @@
   :global(.profile-expression-editor__compact-avatar-frame .foundation-media) {
     width: 100% !important;
     height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
     min-width: 0;
     min-height: 0;
     aspect-ratio: 1;
@@ -863,6 +866,9 @@
   :global(.profile-expression-editor__compact-avatar-frame .foundation-media img) {
     width: 100% !important;
     height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    display: block;
     border: 0 !important;
     border-radius: 50% !important;
     object-fit: cover;
