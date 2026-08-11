@@ -64,6 +64,31 @@ test('V1 profiles upgrade into a bounded V2 envelope without losing the opening 
   assert.match(expanded.links[0].key, /^[a-z0-9][a-z0-9_-]{0,31}$/);
 });
 
+test('V2 profile reads preserve dedicated expression media at either response level', () => {
+  const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
+  const base = upgradeProfileConfigurationV1({
+    version: 1,
+    avatar_path: avatarPath,
+    signatureColor: '#AABBCC',
+    modules: [
+      { id: 'roll', visible: true, order: 0, size: 'wide' },
+      { id: 'stats', visible: true, order: 1, size: 'wide' },
+      { id: 'signature', visible: true, order: 2, size: 'medium' },
+      { id: 'links', visible: true, order: 3, size: 'medium' },
+      { id: 'recent', visible: true, order: 4, size: 'medium' },
+      { id: 'achievements', visible: true, order: 5, size: 'medium' },
+      { id: 'boundary', visible: true, order: 6, size: 'medium' },
+      { id: 'explore', visible: true, order: 7, size: 'wide' }
+    ]
+  });
+  const envelopeOnly = normalizeProfileConfigurationV2({
+    ...base,
+    base: { ...base.base, avatar_path: null },
+    avatar_path: avatarPath
+  });
+  assert.equal(envelopeOnly.base.avatar_path, avatarPath);
+});
+
 test('identity and metadata controls are finite, sanitized, and media-path scoped', () => {
   const identity = normalizeProfileIdentityPresentation({
     location: 'Brooklyn\u0000, NY',
@@ -142,8 +167,9 @@ test('expanded provider cards remain allowlisted and capacity-limited', () => {
 });
 
 test('V2 migration and share rendering preserve server authority and crawler-safe metadata', async () => {
-  const [migration, share, richText, page] = await Promise.all([
+  const [migration, expressionMigration, share, richText, page] = await Promise.all([
     read('supabase/migrations/20260808220000_profile_configuration_v2.sql'),
+    read('supabase/migrations/20260811140000_profile_configuration_v2_expression_contract.sql'),
     read('src/lib/ProfileShareDialog.svelte'),
     read('src/lib/ProfileRichText.svelte'),
     read('functions/_profilePage.js')
@@ -158,6 +184,10 @@ test('V2 migration and share rendering preserve server authority and crawler-saf
   assert.match(migration, /v_project_limit integer := 4/);
   assert.match(migration, /profile_entitlements/);
   assert.match(migration, /v_widget_limit/);
+  assert.match(expressionMigration, /profile_configuration_v2_with_expression/);
+  assert.match(expressionMigration, /v_record.avatar_path/);
+  assert.match(expressionMigration, /get_public_profile_configuration\(p_user_id\)/);
+  assert.match(expressionMigration, /GRANT EXECUTE ON FUNCTION public\.get_public_profile_configuration_v2/);
   assert.match(share, /QRCode\.toDataURL/);
   assert.match(share, /download=/);
   assert.match(share, /get_my_profile_aliases/);

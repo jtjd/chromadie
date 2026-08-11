@@ -2574,3 +2574,12 @@ direct route behavior.
 - Kept live Profile Studio preview state mounted for ordinary configuration
   changes and added production-browser Discovery geometry/avatar coverage across
   mobile, tablet, and desktop viewports.
+
+## 2026-08-11 — Preserve expression media through V2 configuration reads
+
+- Merged dedicated avatar/background expression columns into owner and public
+  V2 configuration payloads at both the normalized base and compatibility
+  envelope levels.
+- Added regression coverage so a saved UUID-backed avatar survives Studio
+  reload and remains available to the public profile, Homepage, and Leaderboard
+  renderers.

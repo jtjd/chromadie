@@ -3223,3 +3223,8 @@ links, CSP, performance, drift/parity checks, database security, local schema
 lint/reset, and production browser smoke pass. Live deployment verification and
 remote catalog/database checks remain environment-dependent; the Shop was not
 audited.
+
+Follow-up defect found during live review: the V2 configuration read contract
+omitted dedicated expression columns. An additive migration and client
+compatibility merge now preserve avatar/background paths through Studio reload,
+public profile rendering, Homepage Discovery, and Leaderboard consumers.

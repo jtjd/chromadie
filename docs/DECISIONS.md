@@ -4268,3 +4268,11 @@ through an explicit grid-item wrapper. The card receives a leaderboard
 presentation variant for its internal geometry. Global site styles no longer
 reach through the component wrapper to rearrange card internals, and Discovery
 does not inherit the legacy 500px `.container` contract.
+
+## 2026-08-11 — Merge dedicated expression columns into V2 reads
+
+Avatar, background, and related expression media remain owner-RPC writes in
+dedicated `profile_configurations` columns. The V2 owner/public read functions
+now merge those columns into both the V2 `base` payload and its compatibility
+envelope, so a V2 read cannot silently erase an avatar that was saved through
+the expression RPC.

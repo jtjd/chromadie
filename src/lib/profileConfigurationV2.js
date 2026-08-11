@@ -61,7 +61,28 @@ export function normalizeProfileConfigurationV2(value, fallbackColor = '#CDD2FF'
     ? input
     : { ...createDefaultProfileConfigurationV2(fallbackColor), base: input };
   const baseInput = source.base && typeof source.base === 'object' ? source.base : source;
-  const base = normalizeProfileConfig({ ...baseInput, version: 1 }, fallbackColor);
+  // Expression media is historically stored in dedicated columns and older
+  // V2 RPC responses may expose those columns at the envelope level. Merge
+  // both representations before normalizing so a profile cannot lose its
+  // persisted avatar/background merely because the V2 envelope was returned.
+  const expressionFields = [
+    'avatar_path',
+    'background_path',
+    'audio_path',
+    'spotify_type',
+    'spotify_id',
+    'background_video_path',
+    'banner_path',
+    'cursor_path',
+    'pointer_cursor_path',
+    'audio_playlist'
+  ];
+  const envelopeExpression = Object.fromEntries(
+    expressionFields
+      .filter(field => Object.prototype.hasOwnProperty.call(source, field))
+      .map(field => [field, source[field]])
+  );
+  const base = normalizeProfileConfig({ ...baseInput, ...envelopeExpression, version: 1 }, fallbackColor);
   const rawLinks = Array.isArray(source.links) ? source.links : base.links;
   const links = rawLinks.map(normalizeV2Link).filter(Boolean).sort((left, right) => left.order - right.order).slice(0, PROFILE_CONFIGURATION_V2_LIMITS.maxLinks).map((link, index) => ({ ...link, order: index }));
   const maxProjects = premium || staff ? PROFILE_CONFIGURATION_V2_LIMITS.premiumProjects : PROFILE_CONFIGURATION_V2_LIMITS.freeProjects;
