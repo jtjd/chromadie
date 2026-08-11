@@ -10,8 +10,10 @@
     "preview": "vite preview",
     "test": "node --test",
     "test:browser": "node scripts/browser/profile-studio-smoke.mjs",
+    "test:browser:production": "node scripts/browser/production-profile-studio-smoke.mjs",
     "check:links": "node scripts/check-internal-links.mjs",
     "check:csp": "node scripts/check-csp.mjs",
+    "check:responsive-build": "node scripts/check-responsive-build.mjs",
     "check:performance": "node scripts/check-performance-budget.mjs",
     "check:username-policy-drift": "node scripts/check-username-policy-drift.mjs",
     "db:pull": "supabase db pull",
@@ -29,7 +31,6 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
-    "csso": "^5.0.5",
     "eslint": "^10.6.0",
     "eslint-plugin-svelte": "^3.20.0",
     "globals": "^17.7.0",

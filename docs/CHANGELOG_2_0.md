@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-11 — Restore responsive CSS in production output
+
+- Production bundles now retain the authored responsive layout rules across
+  homepage, authentication, Discovery, Game, Pricing, profiles, and Studio.
+- Removed the incompatible extra CSS optimization pass; the build now checks
+  compiled CSS for the expected responsive media-query families before it can
+  pass CI.
+- Added a production-preview responsive smoke path so built output is checked
+  separately from the development server.
+
 ## 2026-08-11 — Harden responsive and mobile usability behavior
 
 - Today's Color now keeps its roll result readable across tablet and

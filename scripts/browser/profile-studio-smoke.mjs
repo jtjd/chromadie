@@ -12,6 +12,7 @@ import {
   loadLocalEnvironment,
   startChromium,
   startVite,
+  startVitePreview,
   terminateProcess,
   waitForHttp
 } from './cdp-harness.mjs';
@@ -27,9 +28,11 @@ if (!environment?.url || !environment?.key) {
 }
 const supabaseUrl = assertLocalSupabaseUrl(environment.url);
 const evidenceDir = await mkdtemp(join(tmpdir(), 'chromadie-profile-studio-smoke-'));
+const smokeMode = process.env.PROFILE_STUDIO_SMOKE_MODE === 'preview' ? 'preview' : 'dev';
 
 const results = {
   status: 'running',
+  serverMode: smokeMode,
   evidenceDir,
   screenshots: [],
   steps: [],
@@ -96,8 +99,9 @@ try {
   const email = `smoke-${Date.now().toString(36)}-${canonicalUsername}@example.test`;
   const password = `Smoke-${Date.now().toString(36)}-Pass!`;
 
-  vite = await startVite({ appPort, environment: { url: supabaseUrl.origin, key: environment.key }, evidenceDir });
-  chromium = await startChromium({ appUrl, debugPort, evidenceDir });
+  const startAppServer = smokeMode === 'preview' ? startVitePreview : startVite;
+  vite = await startAppServer({ appPort, environment: { url: supabaseUrl.origin, key: environment.key }, evidenceDir });
+  chromium = await startChromium({ appUrl, debugPort, evidenceDir, ignoreCertificateErrors: smokeMode === 'preview' });
   page = chromium.page;
 
   await step('open local homepage', async () => {
@@ -114,6 +118,46 @@ try {
     await capture('01-homepage');
   });
 
+  await step('compiled homepage keeps its phone layout', async () => {
+    await page.setViewport(402, 874);
+    await page.waitFor(`document.querySelector('.home-hero__intro') && document.querySelector('.home-hero__stage')`, 'homepage phone layout');
+    const state = await page.evaluate(`(() => {
+      const select = selector => document.querySelector(selector);
+      const rect = element => {
+        const box = element?.getBoundingClientRect();
+        return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
+      };
+      const nav = select('.site-mode-header__nav');
+      const right = select('.site-mode-header__right');
+      const mobileMenu = select('.site-mode-header__mobile-menu');
+      const intro = select('.home-hero__intro');
+      const stage = select('.home-hero__stage');
+      const title = select('#home-title');
+      const side = select('.home-hero__side');
+      const introStyle = getComputedStyle(intro);
+      const stageStyle = getComputedStyle(stage);
+      const titleBox = rect(title);
+      const sideBox = rect(side);
+      return {
+        headerNav: nav ? getComputedStyle(nav).display : '',
+        headerRight: right ? getComputedStyle(right).display : '',
+        mobileMenu: mobileMenu ? getComputedStyle(mobileMenu).display : '',
+        introColumns: introStyle.gridTemplateColumns,
+        stageColumns: stageStyle.gridTemplateColumns,
+        title: titleBox,
+        side: sideBox,
+        stacked: Boolean(titleBox && sideBox && sideBox.top >= titleBox.bottom - 1),
+        contained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
+      };
+    })()`);
+    assert(state.headerNav === 'none' && state.headerRight === 'none' && state.mobileMenu !== 'none', `Production header did not switch to its mobile state: ${JSON.stringify(state)}.`);
+    assert(state.introColumns.split(' ').length === 1 && state.stageColumns.split(' ').length === 1, `Production homepage retained multi-column phone geometry: ${JSON.stringify(state)}.`);
+    assert(state.stacked && state.contained, `Production homepage phone layout is not contained: ${JSON.stringify(state)}.`);
+    await capture('01-homepage-mobile');
+    await page.setViewport(1440, 1000);
+    return state;
+  });
+
   await step('create a unique account through the signup UI', async () => {
     await page.clickText('Sign up', { description: 'homepage signup control' });
     await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('.auth-page .site-mode-header--home') && document.querySelector('.auth-container') && document.querySelector('#username-input') && !document.querySelector('.auth-modal-overlay')`, 'standalone signup page');
@@ -123,6 +167,12 @@ try {
     await capture('03-auth-login');
     await page.clickText('Create account', { description: 'auth route switch to create account' });
     await page.waitFor(`location.pathname === '/signup' && document.querySelector('.auth-page') && document.querySelector('#username-input')`, 'signup route after auth switch');
+    if (smokeMode === 'preview') {
+      await page.waitFor(`(() => {
+        const response = document.querySelector('[name="cf-turnstile-response"]');
+        return Boolean(response?.value);
+      })()`, 'production Turnstile test token', 30000);
+    }
     await page.setInputValue('#username-input', canonicalUsername, ['input', 'change']);
     await page.setInputValue('#email-input', email, ['input', 'change']);
     await page.setInputValue('#password-input', password, ['input', 'change']);
@@ -257,6 +307,13 @@ try {
     assert((layoutState.workspace?.width || 0) > 0 && (layoutState.workspace?.bottom || 0) <= layoutState.viewport.height + 2, `Layout workspace escapes the viewport: ${JSON.stringify(layoutState)}.`);
     await page.evaluate(`document.querySelector('[data-editor-section="layout"]')?.scrollIntoView({ block: 'start' })`);
     await capture('04-layout-workspace');
+    if (smokeMode === 'preview') {
+      // The remaining cosmetic fixture setup intentionally uses a Vite dev
+      // module import to grant test-only inventory. Production preview must
+      // not expose that source path, so its smoke pass continues with the
+      // real account defaults after validating the built editor geometry.
+      return { layoutState, mediaRail, productionPreview: true };
+    }
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
     await page.evaluate(`(async () => {
@@ -421,7 +478,7 @@ try {
         }));
         return { cursor: cursor ? { className: cursor.className, canvas: Boolean(cursor.querySelector('canvas')) } : null, atmospheres };
       })()`);
-      throw new Error(`${error.message} State: ${JSON.stringify(animationState)}`);
+      throw new Error(`${error.message} State: ${JSON.stringify(animationState)}`, { cause: error });
     }
     await delay(180);
     const afterTabSwitch = await page.evaluate(`(() => {
@@ -589,17 +646,6 @@ try {
     const widths = [320, 360, 390, 414, 600, 768, 1024, 1100, 1280];
     const measurements = [];
     const customizeTabs = ['appearance', 'media', 'layout'];
-    const rect = element => {
-      const box = element?.getBoundingClientRect();
-      return box ? {
-        left: Math.round(box.left),
-        right: Math.round(box.right),
-        top: Math.round(box.top),
-        bottom: Math.round(box.bottom),
-        width: Math.round(box.width),
-        height: Math.round(box.height)
-      } : null;
-    };
 
     for (const width of widths) {
       await page.setViewport(width, width <= 1024 ? 844 : 900);
@@ -906,7 +952,8 @@ try {
     })()`);
     assert(state.path === `/${canonicalUsername}`, `Public profile was not canonical after refresh: ${state.path}.`);
     assert(state.canvas && state.card && state.surfaceBackdrop, 'Public profile did not render its canvas, card, and card backdrop.');
-    assert(state.cardBlur === '40px', `Public profile identity card did not honor the published max blur: ${state.cardBlur}.`);
+    const expectedCardBlur = smokeMode === 'preview' ? '20px' : '40px';
+    assert(state.cardBlur === expectedCardBlur, `Public profile identity card did not honor the expected max blur: ${state.cardBlur} (expected ${expectedCardBlur}).`);
     assert(state.surfaceBackdropFilter.includes('blur('), 'Public profile card backdrop has no computed blur filter.');
     assert(!state.pageBlur && !state.rollBlur, 'Public appearance variables leaked outside the card surface.');
     await capture('07-public-profile');

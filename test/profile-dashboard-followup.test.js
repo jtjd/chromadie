@@ -141,7 +141,7 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(shell, /<div class="profile-shell__surface-backdrop" aria-hidden="true"><\/div>/);
   assert.match(shell, /\.profile-shell__surface-backdrop \{[\s\S]*background: rgba\(0, 0, 0, 0\.001\);[\s\S]*backdrop-filter: blur\(var\(--profile-surface-blur/);
   assert.match(shell, /@supports \(backdrop-filter: blur\(0\)\) \{[\s\S]*\.profile-shell__surface-backdrop \{ backdrop-filter: blur\(var\(--profile-surface-blur/);
-  assert.match(viteConfig, /restructure: false/);
+  assert.doesNotMatch(viteConfig, /csso|restructure: false/);
   assert.match(shell, /\.profile-shell__approved-canvas,\s+\.profile-shell__opening\.profile-shell__approved-opening \{ z-index: auto; \}/);
   assert.doesNotMatch(shell, /profile-shell__surface-media|profile-shell__surface-video|profile-shell__surface-atmosphere-layer|profile-shell__surface-backdrop::before/);
   assert.match(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{ isolation: auto; \}/);

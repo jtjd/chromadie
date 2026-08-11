@@ -43,6 +43,8 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
           VITE_CLOUDFLARE_SITE_KEY: ${{ secrets.VITE_CLOUDFLARE_SITE_KEY }}
+      - name: Check compiled responsive CSS
+        run: npm run check:responsive-build
       - name: Check built CSP hashes
         run: npm run check:csp
 

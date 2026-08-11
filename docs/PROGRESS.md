@@ -1,5 +1,29 @@
 # Chromadie 2.0 Progress
 
+## Restore responsive CSS in production builds — 2026-08-11
+
+- Removed the incompatible post-build CSSO pass that deleted Vite's compiled
+  `width <= ...` and `height <= ...` responsive media queries; Vite's built-in
+  CSS minification remains enabled.
+- Removed CSSO from the manifest and lockfile, and added
+  `npm run check:responsive-build`, which requires the compiled width/height
+  query families and a safety-floor count across `dist` CSS assets.
+- Added a production-preview browser mode that builds, serves, and tests the
+  bundle rather than relying only on the Vite development server. It verifies
+  the 402×874 homepage header/hero geometry, authentication, Profile Studio
+  geometry across phone/tablet/narrow-desktop widths, reduced motion, and a
+  public-profile direct refresh.
+- Added the compiled CSS gate to CI. The local preview harness uses a temporary
+  loopback HTTPS proxy for local Supabase so production URL validation stays
+  intact and no real credentials or certificates enter the repository.
+- Final validation passed: production build, compiled responsive CSS gate (129
+  width/height queries across 64 assets), Svelte check, 284 Node tests, ESLint
+  with 0 errors, development and production-preview browser smoke, links, CSP,
+  performance budgets, policy/balance/catalog drift, scoring parity, database
+  security, and lockfile dry-run. The performance check retains its existing
+  non-failing asset-catalog advisory. No data, migration, RPC, RLS,
+  authentication, roll-authority, or commerce contracts were changed.
+
 ## Responsive and usability hardening — 2026-08-11
 
 - Reworked the homepage Today's Color medium-width composition so the roll

@@ -331,11 +331,11 @@ export class CdpPage {
   }
 }
 
-export async function startChromium({ appUrl, debugPort, evidenceDir, width = 1440, height = 1000 }) {
+export async function startChromium({ appUrl, debugPort, evidenceDir, width = 1440, height = 1000, ignoreCertificateErrors = false }) {
   const userDataDir = await mkdtemp(join(evidenceDir, 'chromium-profile-'));
   const logPath = join(evidenceDir, 'chromium.log');
   const output = createStream(logPath, { flags: 'a' });
-  const child = spawn(chromiumPath, [
+  const chromiumArguments = [
     '--headless=new',
     '--no-sandbox',
     '--disable-gpu',
@@ -347,8 +347,10 @@ export async function startChromium({ appUrl, debugPort, evidenceDir, width = 14
     `--remote-debugging-port=${debugPort}`,
     `--user-data-dir=${userDataDir}`,
     `--window-size=${width},${height}`,
+    ...(ignoreCertificateErrors ? ['--ignore-certificate-errors'] : []),
     appUrl
-  ], { detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  ];
+  const child = spawn(chromiumPath, chromiumArguments, { detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
   captureProcessOutput(child, output);
   try {
     const started = Date.now();
@@ -393,6 +395,24 @@ export async function startVite({ appPort, environment, evidenceDir }) {
     await waitForHttp(`http://127.0.0.1:${appPort}/`, 30000);
   } catch (error) {
     await terminateProcess(child, 'Vite');
+    throw new Error(`${error.message} See ${logPath}.`, { cause: error });
+  }
+  return { child, logPath };
+}
+
+export async function startVitePreview({ appPort, evidenceDir }) {
+  const logPath = join(evidenceDir, 'vite-preview.log');
+  const output = createStream(logPath, { flags: 'a' });
+  const child = spawn('npm', ['run', 'preview', '--', '--host', '127.0.0.1', '--port', String(appPort), '--strictPort'], {
+    cwd: projectRoot,
+    detached: true,
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  captureProcessOutput(child, output);
+  try {
+    await waitForHttp(`http://127.0.0.1:${appPort}/`, 30000);
+  } catch (error) {
+    await terminateProcess(child, 'Vite preview');
     throw new Error(`${error.message} See ${logPath}.`, { cause: error });
   }
   return { child, logPath };

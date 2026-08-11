@@ -1,5 +1,23 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-11 — Treat compiled CSS as the responsive source of truth
+
+The build must not run a second CSS optimizer over Vite's generated CSS unless
+that optimizer is verified against Vite's modern media-query range syntax. The
+previous CSSO 5 pass removed the generated `width <= ...` and `height <= ...`
+queries while leaving reduced-motion queries behind, so source-level responsive
+tests and Vite development screenshots gave false confidence. Vite's built-in
+CSS minification is now the only CSS optimization step and CSSO is no longer a
+project dependency.
+
+The production build now has a compiled-CSS gate that checks the generated
+assets for a minimum responsive-query count and required width/height cases.
+The browser smoke command builds and serves a production bundle through
+`vite preview`; its loopback-only HTTPS proxy exists only to exercise the
+production URL validation against local Supabase without weakening that
+validation in the application. No authentication, RLS, RPC, roll-authority,
+or data contracts changed.
+
 ## 2026-08-11 — Prefer browser scrolling and container-owned responsive adaptation
 
 Public profile pages keep their immersive two-section composition, but normal

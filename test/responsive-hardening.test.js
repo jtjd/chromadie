@@ -4,6 +4,11 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
+const packageManifest = JSON.parse(await read('package.json'));
+const viteConfig = await read('vite.config.js');
+const responsiveBuildCheck = await read('scripts/check-responsive-build.mjs');
+const browserHarness = await read('scripts/browser/cdp-harness.mjs');
+const browserSmoke = await read('scripts/browser/profile-studio-smoke.mjs');
 const daily = await read('src/lib/HomeDailyResult.svelte');
 const profileShell = await read('src/lib/ProfileShell.svelte');
 const dashboard = await read('src/lib/ProfileDashboardShell.svelte');
@@ -73,4 +78,21 @@ test('Discovery reduces mobile card density and enlarges touch controls', () => 
   assert.match(discovery, /:global\(\.discovery-card__stats\) \{ display: none/);
   assert.match(discovery, /:global\(\.discovery-card__cta\) \{ display: inline-flex; min-height: 2\.75rem/);
   assert.match(discovery, /:global\(\.discovery-card__share\), :global\(\.discovery-card__icon-button\) \{ min-height: 2\.75rem/);
+});
+
+test('production builds retain responsive CSS and do not run the incompatible CSSO pass', () => {
+  assert.doesNotMatch(viteConfig, /csso|optimizeCssAssets/);
+  assert.equal(packageManifest.devDependencies.csso, undefined);
+  assert.equal(packageManifest.scripts['check:responsive-build'], 'node scripts/check-responsive-build.mjs');
+  assert.match(responsiveBuildCheck, /responsiveQueries\.length < 100/);
+  assert.match(responsiveBuildCheck, /width\\s\*<=\\s\*48rem/);
+  assert.match(responsiveBuildCheck, /height\\s\*<=\\s\*32rem/);
+});
+
+test('browser smoke can run against the production preview and checks the phone homepage', () => {
+  assert.equal(packageManifest.scripts['test:browser:production'], 'node scripts/browser/production-profile-studio-smoke.mjs');
+  assert.match(browserHarness, /startVitePreview/);
+  assert.match(browserSmoke, /smokeMode/);
+  assert.match(browserSmoke, /compiled homepage keeps its phone layout/);
+  assert.match(browserSmoke, /site-mode-header__mobile-menu/);
 });
