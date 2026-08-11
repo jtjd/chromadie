@@ -58,7 +58,7 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(appearance, /export function getDraftAppearance/);
   assert.doesNotMatch(appearance, /Reload server version|save_profile_configuration_section|publish_profile_configuration_section|profile-appearance-editor__actions/);
   assert.match(settings, /save_profile_configuration_v2/);
-  assert.match(settings, /publish_profile_configuration_v2/);
+  assert.match(settings, /publish_profile_studio_v2/);
   assert.match(actions, /Publish profile/);
   assert.match(actions, /--dashboard-action-save: var\(--ctp-green/);
   assert.match(actions, /profile-dashboard-actions__publish \{[^}]*var\(--dashboard-action-save/);

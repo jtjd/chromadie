@@ -167,7 +167,7 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   assert.match(profileData, /get_my_profile_configuration/);
   assert.match(profileData, /get_public_profile_configuration/);
   assert.match(settings, /save_profile_configuration_v2/);
-  assert.match(settings, /publish_profile_configuration_v2/);
+  assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /ProfileDashboardActions/);
   assert.match(shell, /getProfileComposition/);
   assert.match(shell, /getVisibleProfileLinks/);

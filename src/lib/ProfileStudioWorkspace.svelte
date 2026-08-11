@@ -34,6 +34,10 @@
     dispatch(event.type, event.detail);
   }
 
+  function forwardDirty(source, event) {
+    dispatch('dirty', { ...(event.detail || {}), source });
+  }
+
   export function getDraftConfig() {
     if (activeSection === 'customize') return customizePage?.getDraftConfig?.() || null;
     if (activeSection === 'links') return layoutEditor?.getDraftConfig?.() || null;
@@ -111,7 +115,7 @@
       {:else if activeSection === 'links'}
         <div class="profile-links-page">
           {#if sectionComponents['profile-layout']}
-            <svelte:component this={sectionComponents['profile-layout']} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} showLayout={false} showLinks={true} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+            <svelte:component this={sectionComponents['profile-layout']} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} showLayout={false} showLinks={true} on:dirty={event => forwardDirty('links', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
           {:else if sectionLoading}
             <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading links</h2></div>
           {/if}
@@ -141,13 +145,13 @@
         {:else if activeSection === 'profile-media'}
           <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={editorProfileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} {staff} {entitlements} on:expressionchange={forward} />
         {:else if activeSection === 'profile-content'}
-          <svelte:component this={sectionComponents[activeSection]} bind:this={contentEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+          <svelte:component this={sectionComponents[activeSection]} bind:this={contentEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('profile-content', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
         {:else if activeSection === 'profile-widgets'}
-          <svelte:component this={sectionComponents[activeSection]} bind:this={widgetEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+          <svelte:component this={sectionComponents[activeSection]} bind:this={widgetEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('profile-widgets', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
         {:else if activeSection === 'profile-collection'}
           <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={editorProfileConfig} {entitlements} {staff} />
         {:else if activeSection === 'profile-layout'}
-          <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+          <svelte:component this={sectionComponents[activeSection]} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('profile-layout', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
         {:else if activeSection === 'profile-social'}
           <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} isOwnProfile={true} {isAuthenticated} social={context.social} settings={context.socialSettings} socialDepthEnabled={featureFlags.socialDepth} on:socialchange={forward} />
         {:else if activeSection === 'profile-insights'}

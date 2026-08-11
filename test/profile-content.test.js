@@ -65,5 +65,5 @@ test('content renderer and editor stay inside the structured public boundary', a
   assert.match(migration, /normalize_profile_content/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content'\)/);
   assert.match(migration, /profile_content_patch/);
-  assert.match(settings, /publish_profile_configuration_v2/);
+  assert.match(settings, /publish_profile_studio_v2/);
 });

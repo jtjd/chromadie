@@ -1,5 +1,30 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-11 — Make Studio publish and dirty state one atomic boundary
+
+Profile Studio dirty state is now keyed by editor source rather than held as a
+single Customize flag. A clean event from Appearance, Media, Identity, or a
+sibling editor cannot clear another editor's unsaved draft, and Appearance
+reports clean when a user restores the saved value. Studio no longer exposes a
+misleading hidden Identity Save action; the visible contract is the aggregate
+Publish profile action.
+
+An additive, fixed-search-path `publish_profile_studio_v2` RPC now composes the
+V2 configuration save, owner-authorized identity update, and publication inside
+one rollback-safe server transaction. The existing RPCs remain available for
+compatibility, but Studio uses the new boundary so a failed publish cannot
+leave identity and configuration partially committed. Database security tests
+cover privileges and the failed-identity rollback path.
+
+## 2026-08-11 — Keep mobile editor controls usable without changing authority
+
+The narrow Appearance editor can collapse its full picker until requested and
+also exposes ordinary saturation/brightness range controls. Cosmetics now
+labels equipment changes as immediate, media actions and Roll secondary
+actions have larger hit areas, and disabled desktop Publish is visibly
+disabled. These are presentation and interaction changes only; the existing
+owner-scoped RPCs continue to validate assets, cosmetics, and profile data.
+
 ## 2026-08-11 — Make Profile Studio identity part of the aggregate draft
 
 The Customize identity editor now stages bio and bounded identity-presentation

@@ -42,10 +42,10 @@
   .profile-dashboard-actions__divider { width: 1px; height: 1.1rem; background: var(--ctp-surface0, #313244); }
   .profile-dashboard-actions__saved { color: var(--ctp-subtext0, #a6adc8); font-size: .75rem; }
   .profile-dashboard-actions__buttons { display: flex; flex: 0 0 auto; gap: .45rem; }
-  .profile-dashboard-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 2.3rem; padding: .48rem .78rem; border: 1px solid var(--ctp-surface1, #45475a); border-radius: .42rem; background: transparent; color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: .76rem; white-space: nowrap; cursor: pointer; }
+  .profile-dashboard-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 2.75rem; padding: .48rem .78rem; border: 1px solid var(--ctp-surface1, #45475a); border-radius: .42rem; background: transparent; color: var(--ctp-text, var(--site-ink, #f2f0eb)); font-size: .76rem; white-space: nowrap; cursor: pointer; }
   .profile-dashboard-actions button svg { width: .92rem; height: .92rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
-  .profile-dashboard-actions button:disabled { cursor: default; opacity: 1; }
-  .profile-dashboard-actions__publish:disabled { cursor: default; opacity: 1; }
+  .profile-dashboard-actions button:disabled { cursor: default; opacity: .5; }
+  .profile-dashboard-actions__publish:disabled { border-color: var(--ctp-surface1, #45475a) !important; background: var(--ctp-surface1, #45475a) !important; color: var(--ctp-overlay2, #9399b2) !important; opacity: .72; }
   .profile-dashboard-actions button:focus-visible { outline: 2px solid var(--dashboard-action-focus); outline-offset: 2px; }
   .profile-dashboard-actions__publish { border-color: var(--dashboard-action-save) !important; background: var(--dashboard-action-save) !important; color: var(--site-deep, #090a0d) !important; font-weight: 700; }
   .profile-dashboard-actions__publish:hover:not(:disabled) { border-color: color-mix(in srgb, var(--dashboard-action-save) 82%, var(--site-ink, #f2f0eb)) !important; background: color-mix(in srgb, var(--dashboard-action-save) 82%, var(--site-ink, #f2f0eb)) !important; }

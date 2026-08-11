@@ -198,6 +198,17 @@
     min-height: 2.5rem;
   }
 
+  .profile-media-workspace :global(.profile-expression-editor__compact-remove),
+  .profile-media-workspace :global(.rich-media-editor__compact-remove) {
+    min-height: 2.5rem;
+    padding-inline: .8rem;
+  }
+
+  .profile-media-workspace :global(.profile-expression-editor__compact-audio-play) {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
   .profile-media-workspace__loading {
     grid-column: 1 / -1;
     display: grid;

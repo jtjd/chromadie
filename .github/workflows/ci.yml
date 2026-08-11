@@ -45,6 +45,8 @@ jobs:
           VITE_CLOUDFLARE_SITE_KEY: ${{ secrets.VITE_CLOUDFLARE_SITE_KEY }}
       - name: Check compiled responsive CSS
         run: npm run check:responsive-build
+      - name: Check route performance budgets
+        run: npm run check:performance
       - name: Check built CSP hashes
         run: npm run check:csp
 
@@ -69,3 +71,28 @@ jobs:
         run: npm run check:db-security
       - name: Check SQL and JavaScript scoring parity
         run: npm run check:scoring-parity
+      - name: Install Chromium for production browser smoke
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes chromium
+      - name: Export local Supabase browser credentials
+        shell: bash
+        run: |
+          npx supabase status -o env > /tmp/chromadie-supabase-status.env
+          api_url=$(awk -F= '$1 == "API_URL" { print $2 }' /tmp/chromadie-supabase-status.env | tr -d "'\"")
+          anon_key=$(awk -F= '$1 == "ANON_KEY" { print $2 }' /tmp/chromadie-supabase-status.env | tr -d "'\"")
+          test -n "$api_url"
+          test -n "$anon_key"
+          {
+            echo "VITE_SUPABASE_URL=$api_url"
+            echo "VITE_SUPABASE_KEY=$anon_key"
+          } >> "$GITHUB_ENV"
+      - name: Run production browser smoke
+        run: npm run test:browser:production
+      - name: Upload production browser smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-browser-smoke-evidence
+          path: /tmp/chromadie-profile-studio-smoke-*
+          if-no-files-found: ignore

@@ -163,7 +163,7 @@
         <div class="profile-cosmetics-plus-guide__intro">
           <span class="profile-cosmetics-plus-guide__eyebrow">Chromadie Plus</span>
           <h3 id="profile-cosmetics-plus-guide-title">Atelier expression is ready</h3>
-          <p>The Atelier name treatment and atmosphere are separate layers. Choose your expression below, preview it, then press <strong>Apply changes</strong>.</p>
+          <p>The Atelier name treatment and atmosphere are separate layers. Choose your expression below, preview it, then update the equipped effects. These changes apply immediately.</p>
         </div>
         <nav class="profile-cosmetics-plus-guide__links" aria-label="Atelier expression shortcuts">
           <a href="#cosmetic-name_motion"><strong>Name effect</strong><span>Collection → Name · Motion</span><b aria-hidden="true">↗</b></a>
@@ -275,7 +275,7 @@
 
           </div>
 
-          <button type="button" class="profile-cosmetics-apply" disabled={!!loadingSlot || !hasPendingChanges} on:click={applyChanges}>{loadingSlot ? 'Applying…' : 'Apply changes'}</button>
+          <button type="button" class="profile-cosmetics-apply" disabled={!!loadingSlot || !hasPendingChanges} on:click={applyChanges}>{loadingSlot ? 'Updating…' : 'Update equipped effects'}</button>
         </div>
       </div>
 
@@ -353,7 +353,7 @@
   .profile-cosmetics-section-heading { position: relative; display: grid; gap: .1rem; padding: .2rem 0 .08rem; border-bottom: 1px solid var(--cosmetics-border); }
   .profile-cosmetics-section-heading h3 { margin: 0; color: var(--cosmetics-text); font-size: .84rem; line-height: 1.2; }
   .profile-cosmetics-section-heading p { margin: .1rem 0 .25rem; color: var(--cosmetics-muted); font-size: .68rem; line-height: 1.35; }
-  .profile-cosmetics-section-heading button { position: absolute; top: -.1rem; right: 0; min-height: 1.9rem; padding: .35rem .65rem; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); background: transparent; color: var(--cosmetics-secondary); font: 600 .7rem/1 var(--cosmetics-body); cursor: pointer; }
+  .profile-cosmetics-section-heading button { position: absolute; top: -.1rem; right: 0; min-height: 2.5rem; padding: .55rem .7rem; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); background: transparent; color: var(--cosmetics-secondary); font: 600 .7rem/1 var(--cosmetics-body); cursor: pointer; }
   .profile-cosmetics-section-heading button:hover, .profile-cosmetics-section-heading button:focus-visible { border-color: var(--cosmetics-focus); color: var(--cosmetics-text); }
   .profile-cosmetics-section-heading button:focus-visible { outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
   .profile-cosmetics-section-heading--visual { margin-top: .3rem; }
@@ -376,10 +376,10 @@
   .profile-cosmetics-visual-preview :global(.shop-atmosphere-preview) { min-height: 0; }
   .profile-cosmetics-empty-preview { display: grid; width: 100%; height: 100%; min-height: 0; place-items: center; color: var(--cosmetics-faint); font: 600 .7rem/1 var(--cosmetics-body); }
   .profile-cosmetics-slot label { display: block; margin-bottom: .3rem; color: var(--cosmetics-secondary); font-weight: 600; font-size: var(--cosmetics-label-size); line-height: 1.3; }
-  .profile-cosmetics-slot select { width: 100%; min-height: var(--cosmetics-primary-height); box-sizing: border-box; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); padding: 0 .65rem; background: var(--cosmetics-raised); color: var(--cosmetics-text); font: 500 var(--cosmetics-control-size) / 1 var(--cosmetics-body); }
+  .profile-cosmetics-slot select { width: 100%; min-height: max(var(--cosmetics-primary-height), 2.5rem); box-sizing: border-box; border: 1px solid var(--cosmetics-border-strong); border-radius: var(--cosmetics-radius); padding: 0 .65rem; background: var(--cosmetics-raised); color: var(--cosmetics-text); font: 500 var(--cosmetics-control-size) / 1 var(--cosmetics-body); }
   .profile-cosmetics-slot select:focus-visible { border-color: var(--cosmetics-focus); outline: 2px solid var(--cosmetics-focus); outline-offset: 1px; }
   .profile-cosmetics-slot select:disabled { cursor: not-allowed; opacity: .58; }
-  .profile-cosmetics-apply { grid-column: 1 / -1; justify-self: end; min-height: var(--cosmetics-primary-height); padding: 0 1rem; border: 1px solid var(--cosmetics-save); border-radius: var(--cosmetics-radius); background: var(--cosmetics-save); color: var(--cosmetics-inset); font: 700 var(--cosmetics-label-size) / 1 var(--cosmetics-body); cursor: pointer; }
+  .profile-cosmetics-apply { grid-column: 1 / -1; justify-self: end; min-height: max(var(--cosmetics-primary-height), 2.75rem); padding: 0 1rem; border: 1px solid var(--cosmetics-save); border-radius: var(--cosmetics-radius); background: var(--cosmetics-save); color: var(--cosmetics-inset); font: 700 var(--cosmetics-label-size) / 1 var(--cosmetics-body); cursor: pointer; }
   .profile-cosmetics-apply:hover:not(:disabled) { background: color-mix(in srgb, var(--cosmetics-save) 82%, var(--cosmetics-text)); }
   .profile-cosmetics-apply:focus-visible { outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
   .profile-cosmetics-apply:disabled { opacity: .45; cursor: not-allowed; }

@@ -794,7 +794,7 @@
   .profile-roll__empty { padding: var(--space-4); border: 1px dashed var(--color-line-subtle); border-radius: var(--radius-sm); color: var(--color-ink-muted); font-size: var(--type-small); }
   .profile-roll__result-actions { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-2); }
   .profile-roll__details { display: grid; gap: var(--space-4); }
-  .profile-roll__details summary { color: color-mix(in srgb, var(--profile-accent) 48%, white); cursor: pointer; font: 700 0.68rem / 1.2 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
+  .profile-roll__details summary { display: inline-flex; align-items: center; width: fit-content; min-height: 2.5rem; box-sizing: border-box; padding: .65rem .25rem; color: color-mix(in srgb, var(--profile-accent) 48%, white); cursor: pointer; font: 700 0.68rem / 1.2 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
   .profile-roll__details summary:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 4px; border-radius: var(--radius-sm); }
   .profile-roll__details-body { display: grid; gap: var(--space-5); padding-top: var(--space-2); }
   :global(.profile-roll--compact) :global(.foundation-module__description) { display: none; }
@@ -886,7 +886,7 @@
   .profile-roll__rolling-conditions { display: grid; gap: 0.45rem; margin-top: 0.9rem; }
   .profile-roll__rolling-conditions .profile-roll__eyebrow { margin: 0; }
   .profile-roll__condition--revealing { opacity: 0; transform: translateY(0.35rem) scale(0.96); animation: profile-roll-condition-reveal 0.42s var(--motion-ease-emphasis) var(--condition-delay, 0s) both; }
-  .profile-roll__skip { display: inline-flex; margin-top: 1rem; padding: 0; border: 0; background: transparent; color: var(--color-ink-faint); font: 600 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: color var(--motion-base) var(--motion-ease-standard); }
+  .profile-roll__skip { display: inline-flex; align-items: center; min-height: 2.5rem; margin-top: 1rem; padding: .65rem .25rem; border: 0; background: transparent; color: var(--color-ink-faint); font: 600 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: color var(--motion-base) var(--motion-ease-standard); }
   .profile-roll__skip:hover { color: var(--color-ink-strong); }
   .profile-roll__skip:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 4px; border-radius: 0.25rem; }
 

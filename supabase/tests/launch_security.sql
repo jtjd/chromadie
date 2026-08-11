@@ -425,6 +425,14 @@ SELECT pg_temp.audit_assert(
   'identity RPCs must be available only to their intended browser roles'
 );
 SELECT pg_temp.audit_assert(
+  has_function_privilege('authenticated', 'public.publish_profile_studio_v2(jsonb,text,text,timestamptz)', 'EXECUTE')
+    AND NOT has_function_privilege('anon', 'public.publish_profile_studio_v2(jsonb,text,text,timestamptz)', 'EXECUTE')
+    AND (SELECT p.proconfig @> ARRAY['search_path=public, pg_catalog']
+         FROM pg_proc p
+         WHERE p.oid = 'public.publish_profile_studio_v2(jsonb,text,text,timestamptz)'::regprocedure),
+  'Profile Studio publish must be an authenticated fixed-search-path RPC'
+);
+SELECT pg_temp.audit_assert(
   (SELECT bool_and(p.proconfig @> ARRAY['search_path=public'])
    FROM pg_proc p
    WHERE p.oid IN (
@@ -1345,6 +1353,35 @@ SELECT pg_temp.audit_assert(
       AND payload->'published'->>'signatureColor' = '#112233'
    FROM audit_results WHERE name = 'config_publish'),
   'profile configuration publish did not promote the saved draft'
+);
+
+-- Profile Studio must not leave a configuration draft or public identity half
+-- updated when one part of the aggregate publish fails.
+CREATE TEMP TABLE profile_studio_snapshot AS
+SELECT p.bio, c.draft_config_v2, c.published_config_v2, c.updated_at
+FROM public.profiles p
+JOIN public.profile_configurations c ON c.user_id = p.id
+WHERE p.id = '10000000-0000-0000-0000-000000000001';
+
+INSERT INTO audit_results VALUES (
+  'profile_studio_atomic_failure',
+  public.publish_profile_studio_v2(
+    jsonb_set(public.get_my_profile_configuration_v2()->'draft', '{base,signatureColor}', '"#ABC123"'::jsonb, true),
+    NULL,
+    repeat('x', 161),
+    (SELECT updated_at FROM profile_studio_snapshot)
+  )
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'false' FROM audit_results WHERE name = 'profile_studio_atomic_failure')
+    AND (SELECT p.bio IS NOT DISTINCT FROM s.bio
+              AND c.draft_config_v2 IS NOT DISTINCT FROM s.draft_config_v2
+              AND c.published_config_v2 IS NOT DISTINCT FROM s.published_config_v2
+              AND c.updated_at IS NOT DISTINCT FROM s.updated_at
+         FROM profile_studio_snapshot s
+         JOIN public.profiles p ON p.id = '10000000-0000-0000-0000-000000000001'
+         JOIN public.profile_configurations c ON c.user_id = p.id),
+  'Profile Studio publish partially committed before identity validation failed'
 );
 INSERT INTO audit_results VALUES (
   'config_composition_save',

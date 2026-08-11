@@ -252,9 +252,11 @@
         {:else if studio}<p class="identity-editor__hint">Identity changes join the Profile Studio draft and publish with your profile.</p>
         {:else}<p class="identity-editor__hint">Your username is fixed as your display name. Optional presentation controls stay finite and accessible.</p>{/if}
       </div>
-      <button type="submit" class="identity-editor__save" disabled={saving || !validation.valid} aria-busy={saving ? 'true' : 'false'}>
-        {saving ? 'Saving…' : 'Save bio'}
-      </button>
+      {#if !studio}
+        <button type="submit" class="identity-editor__save" disabled={saving || !validation.valid} aria-busy={saving ? 'true' : 'false'}>
+          {saving ? 'Saving…' : 'Save bio'}
+        </button>
+      {/if}
     </div>
   </form>
 </Module>
@@ -359,8 +361,6 @@
   :global(.identity-editor--studio .identity-editor__options) { display: flex; grid-column: 1 / span 2; grid-row: 4; align-self: start; align-items: center; min-height: var(--identity-primary-height); flex-wrap: wrap; gap: .65rem 1rem; padding-bottom: .1rem; position: relative; top: -.88rem; margin-bottom: -1.18rem; }
   :global(.identity-editor--studio .identity-editor__footer) { grid-column: 3 / -1; grid-row: 3; align-items: center; justify-content: flex-end; align-self: end; margin-top: 0; padding-top: 0; border-top: 0; }
   :global(.identity-editor--studio .identity-editor__hint) { display: none; }
-  :global(.identity-editor--studio .identity-editor__save) { opacity: 0; pointer-events: none; }
-  :global(.identity-editor--studio .identity-editor__save:focus-visible) { opacity: 1; pointer-events: auto; }
 
   @media (max-width: 34rem) {
     .identity-editor__grid { grid-template-columns: minmax(0, 1fr); }

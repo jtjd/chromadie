@@ -23,6 +23,7 @@
   let invalidHex = false;
   let activeColor = 'accent';
   let hexDrafts = {};
+  let pickerOpen = false;
 
   $: incomingKey = JSON.stringify(draftConfig?.appearance || draftConfig?.signatureColor || '');
 
@@ -39,6 +40,11 @@
   $: dirty = JSON.stringify(staged) !== JSON.stringify(saved);
   $: syncIncoming(incomingKey);
 
+  function emitAppearanceChange(nextDirty = dirty || invalidHex || Object.keys(hexDrafts).length > 0) {
+    dispatch('appearancechange', { appearance: staged, dirty: nextDirty });
+    dispatch('dirty', { dirty: nextDirty });
+  }
+
   function update(path, value) {
     const next = clone(staged);
     let cursor = next;
@@ -47,8 +53,7 @@
     staged = normalizeProfileAppearance(next, next.colors.accent);
     error = '';
     invalidHex = false;
-    dispatch('appearancechange', { appearance: staged, dirty: true });
-    dispatch('dirty', { dirty: true });
+    emitAppearanceChange(JSON.stringify(staged) !== JSON.stringify(saved));
   }
 
   function updateColorValue(path, rawValue) {
@@ -56,8 +61,7 @@
     if (!/^#[0-9A-Fa-f]{6}$/.test(value)) {
       invalidHex = true;
       error = 'Enter a 6-digit hex color, for example #CDD2FF.';
-      dispatch('appearancechange', { appearance: staged, dirty: true });
-      dispatch('dirty', { dirty: true });
+      emitAppearanceChange(true);
       return;
     }
     const field = PROFILE_APPEARANCE_COLOR_FIELDS.find(candidate => candidate.path.length === path.length && candidate.path.every((segment, index) => segment === path[index]));
@@ -83,7 +87,10 @@
   }
 
   function chooseColor(key) {
-    if (PROFILE_APPEARANCE_COLOR_FIELDS.some(field => field.key === key)) activeColor = key;
+    if (PROFILE_APPEARANCE_COLOR_FIELDS.some(field => field.key === key)) {
+      activeColor = key;
+      pickerOpen = true;
+    }
   }
 
   function clearHexDraft(key) {
@@ -99,8 +106,7 @@
       hexDrafts = { ...hexDrafts, [key]: value };
       invalidHex = true;
       error = 'Enter a 6-digit hex color, for example #CDD2FF.';
-      dispatch('appearancechange', { appearance: staged, dirty: true });
-      dispatch('dirty', { dirty: true });
+      emitAppearanceChange(true);
       return;
     }
     clearHexDraft(key);
@@ -180,6 +186,10 @@
     return clone(staged);
   }
 
+  export function isDirty() {
+    return dirty || invalidHex || Object.keys(hexDrafts).length > 0;
+  }
+
   export function validateDraft() {
     if (!invalidHex) return true;
     error = 'Enter a 6-digit hex color, for example #CDD2FF.';
@@ -216,13 +226,19 @@
   $: activePickerStyle = getProfileAppearancePickerStyle(activeColorValue);
 </script>
 
-<div class="appearance-editor">
+<div class="appearance-editor" class:appearance-editor--picker-open={pickerOpen}>
   <section class="appearance-editor__panel appearance-editor__panel--colors" aria-label="Profile colors">
     <div class="appearance-editor__colors-layout">
       <div class="appearance-editor__color-grid">
         <div class="appearance-editor__colors-heading">
-          <h2>Profile colors</h2>
-          <p>Pick a color to edit</p>
+          <div><h2>Profile colors</h2><p>Pick a color to edit</p></div>
+          <button
+            type="button"
+            class="appearance-editor__picker-toggle"
+            aria-expanded={pickerOpen ? 'true' : 'false'}
+            aria-controls="appearance-color-picker"
+            on:click={() => pickerOpen = !pickerOpen}
+          >{pickerOpen ? 'Close picker' : 'Open picker'}</button>
         </div>
         {#each PROFILE_COLOR_MATRIX_FIELDS as field (field.key)}
           {@const key = field.key}
@@ -236,23 +252,19 @@
           </label>
         {/each}
       </div>
-      <div class="appearance-editor__picker" aria-label={`${activeColorLabel} picker`}>
+      <div id="appearance-color-picker" class="appearance-editor__picker" aria-label={`${activeColorLabel} picker`}>
         <div class="appearance-editor__picker-heading"><strong>{activeColorLabel}</strong><span>{activeColorValue}</span><input type="color" value={activeColorValue} aria-label="Selected color" on:input={event => updateColor(activeColorField.path, event)} /></div>
         <div class="appearance-editor__picker-stage">
-          <div
+          <button
+            type="button"
             class="appearance-editor__picker-surface"
-            role="slider"
-            tabindex={0}
             aria-label={`Choose ${activeColorLabel} saturation and brightness`}
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-valuenow={Math.round(activeColorHsv.v * 100)}
-            aria-valuetext={`${Math.round(activeColorHsv.s * 100)}% saturation, ${Math.round(activeColorHsv.v * 100)}% brightness`}
+            aria-describedby="appearance-picker-keyboard-help"
             style={`--picker-hue-color:${activePickerStyle.hueColor}; --picker-x:${activePickerStyle.x}; --picker-y:${activePickerStyle.y}`}
             on:pointerdown={handleSquarePointerDown}
             on:pointermove={handleSquarePointerMove}
             on:keydown={handleSquareKeydown}
-          ><span aria-hidden="true"></span></div>
+          ><span aria-hidden="true"></span></button>
           <div
             class="appearance-editor__hue"
             role="slider"
@@ -266,6 +278,11 @@
             on:pointermove={handleHuePointerMove}
             on:keydown={handleHueKeydown}
           ></div>
+        </div>
+        <span id="appearance-picker-keyboard-help" class="appearance-editor__sr-only">Use the pointer on the color surface, or use the accessible saturation and brightness controls below.</span>
+        <div class="appearance-editor__picker-accessibility" aria-label="Accessible color controls">
+          <label>Saturation <input type="range" min="0" max="100" step="1" value={Math.round(activeColorHsv.s * 100)} aria-label={`${activeColorLabel} saturation`} on:input={event => updateActiveColor(hsvToHex({ h: activeColorHsv.h, s: Number(event.currentTarget.value) / 100, v: activeColorHsv.v }))} /></label>
+          <label>Brightness <input type="range" min="0" max="100" step="1" value={Math.round(activeColorHsv.v * 100)} aria-label={`${activeColorLabel} brightness`} on:input={event => updateActiveColor(hsvToHex({ h: activeColorHsv.h, s: activeColorHsv.s, v: Number(event.currentTarget.value) / 100 }))} /></label>
         </div>
         <div class="appearance-editor__palette" aria-label="Color palette">
           {#each PROFILE_APPEARANCE_COLOR_PALETTE as value (value)}
@@ -330,8 +347,11 @@
   .appearance-editor__heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .55rem; }
   .appearance-editor__heading h2 { margin: 0; color: var(--appearance-text); font-size: var(--customize-subheading-size, .88rem); line-height: 1.25; letter-spacing: -.02em; }
   .appearance-editor__heading p, .appearance-editor__colors-heading p { margin: .28rem 0 0; color: var(--appearance-muted); font-size: var(--appearance-label-size); line-height: 1.35; }
-  .appearance-editor__colors-heading { grid-column: 1 / -1; }
+  .appearance-editor__colors-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; grid-column: 1 / -1; min-width: 0; }
   .appearance-editor__colors-heading h2 { margin: 0; color: var(--ctp-yellow, #f9e2af); font-size: var(--customize-subheading-size, .88rem); line-height: 1.25; letter-spacing: -.02em; }
+  .appearance-editor__picker-toggle { display: none; flex: 0 0 auto; min-height: 2.5rem; padding: .55rem .7rem; border: 1px solid var(--appearance-line-strong); border-radius: var(--appearance-radius); background: transparent; color: var(--appearance-secondary); font: 600 .7rem/1 var(--appearance-body); cursor: pointer; }
+  .appearance-editor__picker-toggle:hover, .appearance-editor__picker-toggle:focus-visible { border-color: var(--appearance-focus); color: var(--appearance-text); }
+  .appearance-editor__picker-toggle:focus-visible { outline: 2px solid var(--appearance-focus); outline-offset: 2px; }
   .appearance-editor__color-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem .7rem; align-content: start; width: 100%; max-width: 100%; min-width: 0; padding: .75rem; border: 1px solid var(--appearance-line); border-radius: var(--appearance-radius); background: var(--appearance-surface); }
   .appearance-editor__color-grid .appearance-editor__field { display: grid; grid-template-columns: minmax(0, 1fr) 5rem; align-items: center; gap: .45rem; }
   .appearance-editor__color-grid .appearance-editor__field > span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -361,7 +381,7 @@
   .appearance-editor__picker-heading span { color: var(--appearance-faint); font: .7rem/1 var(--appearance-mono); }
   .appearance-editor__picker-heading input { width: 1.8rem; height: 1.8rem; padding: .12rem; border: 1px solid var(--appearance-line-strong); border-radius: .25rem; background: transparent; cursor: pointer; }
   .appearance-editor__picker-stage { display: grid; grid-template-columns: minmax(0, 1fr) 1rem; gap: .9rem; align-items: stretch; transform: translateY(2px); }
-  .appearance-editor__picker-surface { position: relative; height: 8.6rem; overflow: hidden; border-radius: .3rem; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--picker-hue-color)); cursor: crosshair; touch-action: none; }
+  .appearance-editor__picker-surface { position: relative; display: block; width: 100%; height: 8.6rem; min-width: 0; padding: 0; overflow: hidden; border: 0; border-radius: .3rem; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, var(--picker-hue-color)); cursor: crosshair; touch-action: none; }
   .appearance-editor__picker-surface span { position: absolute; top: var(--picker-y); left: var(--picker-x); width: .75rem; height: .75rem; box-sizing: border-box; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.45); transform: translate(-50%, -50%); pointer-events: none; }
   .appearance-editor__picker-surface:focus-visible, .appearance-editor__hue:focus-visible { outline: 2px solid var(--appearance-focus); outline-offset: 2px; }
   .appearance-editor__hue { position: relative; width: .95rem; height: 8.6rem; border-radius: .3rem; background: linear-gradient(180deg, #f38ba8, #fab387, #f9e2af, #a6e3a1, #89dceb, #89b4fa, #cba6f7, #f5c2e7, #f38ba8); cursor: pointer; touch-action: none; }
@@ -369,6 +389,10 @@
   .appearance-editor__palette { display: flex; align-items: center; justify-content: space-between; gap: .45rem; padding-top: .7rem; }
   .appearance-editor__palette button { width: 1.1rem; height: 1.1rem; padding: 0; border: 1px solid color-mix(in srgb, var(--palette-color) 50%, var(--appearance-line-strong)); border-radius: 50%; background: var(--palette-color); cursor: pointer; }
   .appearance-editor__palette button:hover, .appearance-editor__palette button:focus-visible { outline: 2px solid var(--appearance-focus); outline-offset: 2px; }
+  .appearance-editor__picker-accessibility { display: grid; gap: .45rem; }
+  .appearance-editor__picker-accessibility label { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--appearance-secondary); font-size: var(--appearance-label-size); }
+  .appearance-editor__picker-accessibility input { width: min(12rem, 55%); accent-color: var(--appearance-neutral); }
+  .appearance-editor__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
   .appearance-editor__message { margin: 0; color: var(--appearance-danger); font-size: var(--appearance-label-size); line-height: 1.4; }
   /* Studio geometry belongs to the appearance editor so the same bounded
    * picker remains stable when this editor is mounted outside Customize. */
@@ -399,6 +423,16 @@
     .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1fr); }
     .appearance-editor__picker { order: -1; }
     .appearance-editor__surface-grid { grid-template-columns: minmax(0, 1fr); }
+    .appearance-editor__picker-toggle { display: inline-flex; align-items: center; justify-content: center; }
+    .appearance-editor:not(.appearance-editor--picker-open) .appearance-editor__picker { display: none; }
+    .appearance-editor__color-grid .appearance-editor__field { min-height: 2.75rem; }
+    .appearance-editor__color-input,
+    .appearance-editor__hex { min-height: 2.5rem; height: 2.5rem; }
+    .appearance-editor__color-input input[type="color"] { width: 2.2rem; height: 2.2rem; }
+    .appearance-editor__surface-grid .appearance-editor__range input { min-height: 2.5rem; }
+  }
+  @container profile-appearance (max-width: 34rem) {
+    .appearance-editor__color-grid { grid-template-columns: minmax(0, 1fr); }
   }
   @container profile-appearance (max-width: 30rem) {
     .appearance-editor__color-grid { grid-template-columns: minmax(0, 1fr); }

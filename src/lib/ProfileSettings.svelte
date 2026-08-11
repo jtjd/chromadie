@@ -37,6 +37,12 @@
     preserveExpressionFields,
     toEditorProfileConfig
   } from './profile-studio/draftModel.js';
+  import {
+    clearDirtySourcesForSection,
+    dirtySourceForEvent,
+    hasDirtySources,
+    updateDirtySource
+  } from './profile-studio/dirtyState.js';
 
   const SECTION_LOADERS = PROFILE_STUDIO_SECTION_LOADERS;
 
@@ -98,7 +104,7 @@
   let sectionComponents = {};
   let sectionLoading = false;
   const sectionLoadPromises = new SvelteMap();
-  let activeDirtySection = '';
+  let dirtySources = {};
   let pendingNavigation = null;
   let showDirtyPrompt = false;
   let dirtyPromptComponent = null;
@@ -133,7 +139,7 @@
     : customizePreviewAvailable && (!isMobileViewport || previewOpen);
   $: editorProfileConfig = createEditorProfileConfig(context?.profileConfig);
   $: sidebarAvatarSrc = getProfileMediaUrl(editorProfileConfig?.draft?.avatar_path || editorProfileConfig?.published?.avatar_path);
-  $: dashboardDirty = Boolean(activeDirtySection) || hasServerDraftChanges(context?.profileConfig);
+  $: dashboardDirty = hasDirtySources(dirtySources) || hasServerDraftChanges(context?.profileConfig);
   $: previewModel = createProfileStudioPreviewModel({
     targetProfile: context?.targetProfile,
     profileConfig: context?.profileConfig,
@@ -168,7 +174,7 @@
         if (nextSection === 'customize' && nextLocation.customizeTab) activeCustomizeTab = nextLocation.customizeTab;
         return;
       }
-      if (activeDirtySection) {
+      if (dashboardDirty) {
         const currentHash = getProfileStudioHash(activeSection, activeCustomizeTab);
         window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}#${currentHash}`);
         openDirtyPrompt({ type: 'section', value: nextSection, customizeTab: nextLocation.customizeTab });
@@ -193,12 +199,12 @@
     window.addEventListener('hashchange', restoreLocation);
     window.addEventListener('popstate', restoreLocation);
     const beforeUnload = event => {
-      if (!activeDirtySection) return;
+      if (!dashboardDirty) return;
       event.preventDefault();
       event.returnValue = '';
     };
     const navigationGuard = event => {
-      if (!activeDirtySection) return;
+      if (!dashboardDirty) return;
       event.preventDefault();
       openDirtyPrompt(event.detail?.navigation
         ? { type: 'navigate', value: event.detail.navigation }
@@ -239,7 +245,7 @@
   function handleDashboardSectionChange(event) {
     const sectionId = event.detail?.sectionId;
     if (!sectionId || sectionId === activeSection) return;
-    if (activeDirtySection) {
+    if (dashboardDirty) {
       openDirtyPrompt({ type: 'section', value: sectionId });
       return;
     }
@@ -273,23 +279,17 @@
 
   function handleSectionDirty(event) {
     const isDirty = event.detail?.dirty === true;
+    const source = dirtySourceForEvent(event.detail, activeSection);
+    dirtySources = updateDirtySource(dirtySources, source, isDirty);
     if (isDirty) {
-      activeDirtySection = activeSection;
       dashboardError = '';
       dashboardStatus = '';
-      return;
     }
-    if (activeDirtySection !== activeSection) return;
-    const localDraft = workspace?.getDraftConfig?.();
-    const serverDraft = editorProfileConfig?.draft;
-    activeDirtySection = localDraft && serverDraft && JSON.stringify(normalizeProfileConfig(localDraft, FALLBACK_PROFILE_COLOR)) !== JSON.stringify(serverDraft)
-      ? activeSection
-      : '';
   }
 
   function resetActiveEditor() {
-    workspace?.resetChanges?.(activeDirtySection);
-    activeDirtySection = '';
+    workspace?.resetChanges?.(activeSection);
+    dirtySources = clearDirtySourcesForSection(dirtySources, activeSection);
   }
 
   function openDirtyPrompt(next) {
@@ -329,7 +329,7 @@
   function handleViewProfile(event) {
     const originalEvent = event.detail?.event || event;
     originalEvent.preventDefault?.();
-    if (activeDirtySection) {
+    if (dashboardDirty) {
       openDirtyPrompt({ type: 'route', value: profilePath });
       return;
     }
@@ -409,7 +409,7 @@
     configurationPreview = null;
     identityPreview = null;
     cosmeticPreviewLoadout = null;
-    activeDirtySection = '';
+    dirtySources = {};
   }
 
   function responseError(response, fallback) {
@@ -430,39 +430,15 @@
     }
     dashboardSaving = true;
     dashboardError = '';
-    dashboardStatus = 'Saving profile changes…';
+    dashboardStatus = 'Publishing profile…';
     const editorDraft = getDashboardDraft();
     const identityDraft = editor?.getDraftIdentity?.();
     const v2Draft = buildConfigurationV2(editorDraft);
-    const saveResponse = await supabase.rpc('save_profile_configuration_v2', {
+    const publishResponse = await supabase.rpc('publish_profile_studio_v2', {
       p_draft: v2Draft,
+      p_display_name: accountUsername || null,
+      p_bio: identityDraft?.bio ?? context?.targetProfile?.bio ?? null,
       p_expected_updated_at: context.profileConfig?.updatedAt || null
-    });
-    if (isFailedResponse(saveResponse)) {
-      dashboardSaving = false;
-      dashboardStatus = '';
-      dashboardError = responseError(saveResponse, 'The profile changes could not be saved.');
-      return;
-    }
-    if (saveResponse.data?.updated_at) {
-      context = { ...context, profileConfig: { ...(context.profileConfig || {}), updatedAt: saveResponse.data.updated_at } };
-    }
-    if (identityDraft?.dirty) {
-      const identityResponse = await supabase.rpc('update_my_profile_identity', {
-        p_display_name: accountUsername || null,
-        p_bio: identityDraft.bio || null
-      });
-      if (isFailedResponse(identityResponse)) {
-        dashboardSaving = false;
-        dashboardStatus = '';
-        dashboardError = responseError(identityResponse, 'The identity changes could not be saved.');
-        return;
-      }
-      context = { ...context, targetProfile: { ...context.targetProfile, bio: identityResponse.data?.bio ?? identityDraft.bio } };
-    }
-    dashboardStatus = 'Publishing profile…';
-    const publishResponse = await supabase.rpc('publish_profile_configuration_v2', {
-      p_expected_updated_at: saveResponse.data?.updated_at || context.profileConfig?.updatedAt || null
     });
     if (isFailedResponse(publishResponse)) {
       dashboardSaving = false;
@@ -470,10 +446,12 @@
       dashboardError = responseError(publishResponse, 'The profile could not be published.');
       return;
     }
+    const nextBio = publishResponse.data?.identity?.bio ?? identityDraft?.bio ?? context?.targetProfile?.bio ?? null;
+    context = { ...context, targetProfile: { ...context.targetProfile, bio: nextBio } };
     applyDashboardConfiguration({
-      draft: publishResponse.data?.draft || saveResponse.data?.draft || v2Draft,
-      published: publishResponse.data?.published || saveResponse.data?.published || v2Draft,
-      updatedAt: saveResponse.data?.updated_at || context.profileConfig?.updatedAt,
+      draft: publishResponse.data?.draft || v2Draft,
+      published: publishResponse.data?.published || v2Draft,
+      updatedAt: publishResponse.data?.updated_at || context.profileConfig?.updatedAt,
       publishedAt: publishResponse.data?.published_at || context.profileConfig?.publishedAt
     });
     dashboardSaving = false;
@@ -558,7 +536,6 @@
     }
     const savedLayout = nextDraft.layoutVariant;
     if (event.detail?.layoutChanged && ['immersive', 'editorial', 'focus'].includes(savedLayout) && currentEquippedLayout) void clearPaidLayoutOverride();
-    activeDirtySection = '';
   }
 
   async function clearPaidLayoutOverride() {

@@ -1,5 +1,26 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio hardening — 2026-08-11
+
+- Replaced the single Customize dirty flag with source-aware aggregate state,
+  including a clean-on-revert Appearance signal and explicit Identity, Media,
+  Layout, Links, Content, and Widgets sources. Studio no longer leaves a
+  focusable hidden Save bio action in the aggregate workflow.
+- Added the authenticated `publish_profile_studio_v2` transaction boundary so
+  configuration, identity, and publication roll back together. Existing
+  compatibility RPCs remain available; the new migration uses fixed search
+  path, least-privilege execution, and database tests cover a failed publish.
+- Reduced narrow-editor density by making the full Appearance picker
+  collapsible, adding accessible saturation/brightness controls, clarifying
+  immediately applied cosmetic equipment, and increasing common media and
+  Roll interaction hit areas. Nested Background Treatment now responds to its
+  own inline-size container.
+- Added the performance budget and production-preview browser smoke to CI.
+  Local production-preview smoke, build, checks, lint, unit tests, database
+  reset/lint/security, scoring parity, links, CSP, and drift checks pass. The
+  Dashboard remains within its current budget with limited headroom, so no
+  budget increase was made.
+
 ## Profile Studio responsive and draft hardening — 2026-08-11
 
 - Integrated the Customize Identity editor with the aggregate Studio draft:
@@ -20,8 +41,9 @@
 - Extended source and browser-smoke coverage for identity publish requests,
   persistent mobile tab navigation, narrow effects/media geometry, and the
   480–576px container boundary class of regressions.
-- No schema, migration, RLS, authentication, roll-authority, or commerce
-  contracts changed.
+- The follow-up hardening adds one additive Studio publish migration and
+  security coverage; gameplay, roll-authority, authentication, RLS boundaries,
+  and commerce contracts remain unchanged.
 
 ## Restore responsive CSS in production builds — 2026-08-11
 

@@ -39,6 +39,10 @@
     }
   }
 
+  function forwardDirty(source, event) {
+    dispatch('dirty', { ...(event.detail || {}), source });
+  }
+
   function requestPremium() {
     dispatch('premiumrequest', { sectionId: 'premium' });
   }
@@ -103,7 +107,7 @@
 
     {#if mediaComponent}
       <div class="profile-customize-page__editor profile-customize-page__editor--media">
-        <ProfileMediaWorkspace bind:this={mediaWorkspaceEditor} {mediaComponent} {profileId} {accountUsername} {targetProfile} {profileConfig} {staff} {entitlements} on:expressionchange={forward} on:appearancechange={forward} on:dirty={forward} />
+        <ProfileMediaWorkspace bind:this={mediaWorkspaceEditor} {mediaComponent} {profileId} {accountUsername} {targetProfile} {profileConfig} {staff} {entitlements} on:expressionchange={forward} on:appearancechange={forward} on:dirty={event => forwardDirty('customize:media', event)} />
       </div>
     {:else}
       <div class="profile-customize-page__loading" role="status">Loading media controls…</div>
@@ -127,7 +131,7 @@
           <span aria-hidden="true">01</span>
         </div>
         {#if identityComponent}
-          <svelte:component this={identityComponent} bind:this={identityEditor} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} studio={true} on:identitypreview={forward} on:identitysaved={forward} on:configsaved={forward} on:dirty={forward} />
+          <svelte:component this={identityComponent} bind:this={identityEditor} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} studio={true} on:identitypreview={forward} on:identitysaved={forward} on:configsaved={forward} on:dirty={event => forwardDirty('customize:identity', event)} />
         {:else}
           <div class="profile-customize-page__loading" role="status">Loading identity controls…</div>
         {/if}
@@ -137,7 +141,7 @@
 
   <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-label="Profile appearance" data-editor-section="appearance" id="customize-appearance">
     <div class="profile-customize-page__editor">
-      <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={forward} on:dirty={forward} />
+      <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={forward} on:dirty={event => forwardDirty('customize:appearance', event)} />
     </div>
   </section>
 
@@ -157,7 +161,7 @@
     </div>
     <div class="profile-customize-page__editor">
       {#if layoutComponent}
-        <svelte:component this={layoutComponent} bind:this={layoutEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} studio={true} showLinks={false} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+        <svelte:component this={layoutComponent} bind:this={layoutEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} studio={true} showLinks={false} on:dirty={event => forwardDirty('customize:layout', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading template controls…</div>
       {/if}
@@ -179,7 +183,7 @@
           <span aria-hidden="true">02</span>
         </div>
         {#if contentComponent}
-          <svelte:component this={contentComponent} bind:this={contentEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+          <svelte:component this={contentComponent} bind:this={contentEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('customize:content', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
         {:else}
           <div class="profile-customize-page__loading" role="status">Loading content controls…</div>
         {/if}
@@ -196,7 +200,7 @@
     </div>
     <div class="profile-customize-page__editor">
       {#if widgetComponent}
-        <svelte:component this={widgetComponent} bind:this={widgetEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={forward} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+        <svelte:component this={widgetComponent} bind:this={widgetEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('customize:widgets', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading widget controls…</div>
       {/if}
@@ -372,7 +376,7 @@
   .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: 2rem; font-family: var(--customize-font-body); }
   .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)),
   .profile-customize-page :global(.profile-widget-editor__panel :is(input, select)) { padding: .5rem .65rem; font: 500 var(--customize-control-size) / 1.35 var(--customize-font-body); }
-  .profile-customize-page :global(.profile-cosmetics-slot select) { padding-inline: .65rem; font: 500 var(--customize-control-size) / 1 var(--customize-font-body); }
+  .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: max(var(--customize-secondary-height), 2.5rem); padding-inline: .65rem; font: 500 var(--customize-control-size) / 1 var(--customize-font-body); }
   /* Keep every text-like editor control darker than its section surface. The
    * media/color contracts stay untouched: range, swatch, file, and native
    * toggle inputs retain their editor-specific treatment. */
@@ -393,7 +397,7 @@
   .profile-customize-page :global(.profile-widget-editor__panel :is(input)::placeholder) { color: var(--customize-text-faint); }
   .profile-customize-page :global(.profile-content-editor__fields label small),
   .profile-customize-page :global(.profile-widget-editor__panel label small) { color: var(--customize-text-faint); font-size: .74rem; }
-  .profile-customize-page :global(.profile-cosmetics-apply) { min-height: var(--customize-primary-height); border: 1px solid var(--customize-accent-save) !important; border-radius: var(--customize-radius); background: var(--customize-accent-save) !important; color: var(--customize-surface-inset) !important; font: 700 var(--customize-label-size) / 1 var(--customize-font-body); }
+  .profile-customize-page :global(.profile-cosmetics-apply) { min-height: max(var(--customize-primary-height), 2.75rem); border: 1px solid var(--customize-accent-save) !important; border-radius: var(--customize-radius); background: var(--customize-accent-save) !important; color: var(--customize-surface-inset) !important; font: 700 var(--customize-label-size) / 1 var(--customize-font-body); }
   .profile-customize-page :global(.profile-cosmetics-apply:hover:not(:disabled)) { background: color-mix(in srgb, var(--customize-accent-save) 82%, var(--customize-text-primary)) !important; }
   .profile-customize-page :global(.profile-content-editor__text-button),
   .profile-customize-page :global(.profile-content-editor__remove),

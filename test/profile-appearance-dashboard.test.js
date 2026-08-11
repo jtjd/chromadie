@@ -74,7 +74,7 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
   assert.doesNotMatch(appearance, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(layout, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.match(settings, /save_profile_configuration_v2/);
-  assert.match(settings, /publish_profile_configuration_v2/);
+  assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /on:publish=\{publishDashboard\}/);
   assert.match(actions, /Publish profile/);
   assert.match(actions, /on:click=\{\(\) => dispatch\('reset'\)\}/);

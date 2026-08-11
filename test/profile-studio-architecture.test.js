@@ -114,7 +114,7 @@ test('dashboard ownership keeps routing, rendering, and dirty-state boundaries s
   ]);
 
   assert.match(settings, /save_profile_configuration_v2/);
-  assert.match(settings, /publish_profile_configuration_v2/);
+  assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /resolveProfileStudioLocation/);
   assert.match(settings, /createProfileStudioPreviewModel/);
   for (const presentationalComponent of [header, workspace, preview, dirtyPrompt]) {

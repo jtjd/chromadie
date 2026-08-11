@@ -92,7 +92,7 @@ test('Profile Studio keeps draft publishing and narrow editor surfaces usable', 
   assert.match(identityEditor, /if \(studio\) \{[\s\S]*dispatch\('dirty'/);
   assert.match(customize, /bind:this=\{identityEditor\}/);
   assert.match(customize, /identityPresentation: identity\.identityPresentation/);
-  assert.match(settings, /update_my_profile_identity/);
+  assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /bio: context\?\.targetProfile\?\.bio \|\| ''/);
   assert.match(settings, /mobilePreviewAvailable=\{previewAvailable \|\| customizePreviewAvailable\}/);
   assert.match(dashboard, /profile-dashboard-shell__mobile-actions/);
@@ -122,5 +122,6 @@ test('browser smoke can run against the production preview and checks the phone 
   assert.match(browserSmoke, /smokeMode/);
   assert.match(browserSmoke, /compiled homepage keeps its phone layout/);
   assert.match(browserSmoke, /site-mode-header__mobile-menu/);
+  assert.match(browserSmoke, /authenticated Profile Studio shell/);
   assert.match(browserSmoke, /Persistent mobile customize tabs are not reachable/);
 });

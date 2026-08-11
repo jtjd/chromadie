@@ -188,6 +188,10 @@ try {
     // URL, so wait on the destination rather than the source URL prefix.
     await page.command('Page.navigate', { url: `${appUrl}/login?next=%2Fprofile%2Fsettings` });
     await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('.profile-settings-page') && !document.querySelector('.auth-page')`, 'authenticated auth-route redirect', 30000);
+    // Let the first authenticated hydration settle before the next step
+    // deliberately performs a direct refresh. This keeps local Supabase auth
+    // token propagation from racing the refresh assertion in CI.
+    await page.waitFor('document.querySelector(".profile-dashboard-shell__owner")', 'authenticated Profile Studio shell', 30000);
     const state = await page.evaluate(`(() => ({ path: location.pathname, settings: Boolean(document.querySelector('.profile-settings-page')), authPage: Boolean(document.querySelector('.auth-page')), overlay: Boolean(document.querySelector('.auth-modal-overlay')) }))()`);
     assert(state.path === '/profile/settings', `Safe auth redirect landed on ${state.path}.`);
     assert(state.settings && !state.authPage && !state.overlay, 'Authenticated auth route left an auth page or overlay mounted.');

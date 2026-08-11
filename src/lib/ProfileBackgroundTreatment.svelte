@@ -89,6 +89,7 @@
   .profile-background-treatment__color > div { display: flex; align-items: center; gap: .5rem; min-height: 2.1rem; padding: .2rem .45rem; border: 1px solid var(--customize-border-strong, #45475a); border-radius: var(--customize-radius, .38rem); background: var(--customize-control-surface, #11111b); }
   .profile-background-treatment__color input[type="color"] { width: 1.55rem; height: 1.55rem; padding: .12rem; border: 0; background: transparent; }
   .profile-background-treatment code { color: var(--customize-text-primary, #cdd6f4); font: .74rem/1 var(--customize-font-mono, monospace); }
-  @media (max-width: 52rem) { .profile-background-treatment__controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 30rem) { .profile-background-treatment__controls { grid-template-columns: minmax(0, 1fr); } }
+  .profile-background-treatment { container: profile-background-treatment / inline-size; }
+  @container profile-background-treatment (max-width: 52rem) { .profile-background-treatment__controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @container profile-background-treatment (max-width: 30rem) { .profile-background-treatment__controls { grid-template-columns: minmax(0, 1fr); } }
 </style>

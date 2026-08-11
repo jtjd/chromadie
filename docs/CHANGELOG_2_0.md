@@ -2,6 +2,20 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-11 — Harden Profile Studio publishing and mobile editing
+
+- Profile Studio now tracks unsaved work per editor and publishes identity,
+  configuration, and publication through one rollback-safe server action.
+- The hidden Studio Save bio control is gone; the visible workflow is Preview,
+  then Publish profile. Cosmetic equipment is labeled as an immediate update
+  so its separate behavior is clear.
+- Narrow Appearance can keep the full color picker closed until needed, with
+  accessible saturation/brightness controls. Common media, Roll, and Studio
+  actions have larger touch hit areas, and inactive desktop Publish is visibly
+  disabled.
+- Production-preview browser smoke and performance budgets are now CI gates,
+  extending validation beyond source-level responsive checks.
+
 ## 2026-08-11 — Harden Profile Studio on narrow editors
 
 - Identity edits in Customize now join the Profile Studio draft and publish
