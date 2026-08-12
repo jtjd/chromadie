@@ -41,15 +41,16 @@ test('profile color presentation remains bounded and the retained border is shar
 });
 
 test('profile appearance tokens stay on the identity card and out of the roll UI', async () => {
-  const [shell, appearanceStyle] = await Promise.all([
+  const [shell, appearanceStyle, renderModel] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/profileAppearanceStyle.js')
+    read('src/lib/profileAppearanceStyle.js'),
+    read('src/lib/profileRenderModel.js')
   ]);
 
   assert.match(shell, /const profileShellStyle = '--profile-accent: var\(--color-accent-roll\)/);
-  assert.match(shell, /getProfileAppearanceStyle\(effectiveProfileConfig\)/);
-  assert.match(shell, /getProfileCanvasStyle\(effectiveProfileConfig\)/);
-  assert.match(shell, /style=\{profilePageStyle\} aria-busy/);
+  assert.match(renderModel, /getProfileAppearanceStyle\(configuration\)/);
+  assert.match(renderModel, /getProfileCanvasStyle\(configuration\)/);
+  assert.match(shell, /style=\{profilePageStyle\} data-profile-render-model="v1"/);
   assert.match(shell, /data-profile-region="identity" style=\{profileCardStyle\}/);
   assert.match(appearanceStyle, /--profile-background-paint/);
   assert.match(appearanceStyle, /function rgbaFromHex/);

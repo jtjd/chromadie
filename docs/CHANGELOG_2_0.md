@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-12 — Stabilize public profile and Studio render parity
+
+- Public profiles and Studio Live Preview now resolve one complete profile
+  snapshot before rendering, keeping layout, appearance, media, cosmetics,
+  links, Daily Color, and continuation content aligned through edits and
+  publication.
+- Studio keeps the current readable physical preview host and explicit desktop
+  or mobile context; it no longer mounts a second identity-only approximation
+  while preview state is incomplete.
+- Media selection and deletion continue to use their existing immediate-save
+  flow, with selected-state concurrency tokens synchronized and unused asset
+  deletion kept outside the profile configuration timestamp.
+
 ## 2026-08-12 — Polish compact profile readability and continuation content
 
 - Owner Daily Color stays within its compact presentation instead of allowing

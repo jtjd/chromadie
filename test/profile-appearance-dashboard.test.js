@@ -70,7 +70,7 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
   assert.match(studio, /popstate/);
   assert.match(studio, /history\.pushState/);
   assert.match(studio, /import\('\.\/ProfileShell\.svelte'\)/);
-  assert.match(studio, /previewIdentityOnly=\{true\}/);
+  assert.match(studio, /renderSnapshot=\{previewRenderSnapshot\}/);
   assert.doesNotMatch(appearance, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(layout, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.match(settings, /save_profile_configuration_v2/);

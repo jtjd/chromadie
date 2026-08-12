@@ -142,10 +142,18 @@
     configurationPreview,
     identityPreview,
     cosmeticPreviewLoadout,
-    fallbackColor: FALLBACK_PROFILE_COLOR
+    fallbackColor: FALLBACK_PROFILE_COLOR,
+    previewDevice,
+    featureFlags,
+    previewScores: context?.targetScores || [],
+    previewTimelineEvents: context?.timelineEvents || [],
+    previewCollectionItems: context?.collectionItems || [],
+    previewAllAchievements: context?.allAchievements || [],
+    dev: import.meta.env.DEV
   });
   $: previewProfile = previewModel.profile;
   $: previewProfileConfig = previewModel.profileConfig;
+  $: previewRenderSnapshot = previewModel.snapshot;
 
   onMount(() => {
     void loadDashboardActions();
@@ -756,6 +764,7 @@
         {previewError}
         {previewProfile}
         {previewProfileConfig}
+        previewRenderSnapshot={previewRenderSnapshot}
         previewScores={context?.targetScores || []}
         previewTimelineEvents={context?.timelineEvents || []}
         previewCollectionItems={context?.collectionItems || []}

@@ -254,6 +254,56 @@ function summarizeV2Draft(value) {
   };
 }
 
+async function readRenderParityState(selector) {
+  return page.evaluate(`(() => {
+    const root = document.querySelector(${JSON.stringify(selector)});
+    const opening = root?.querySelector('.profile-shell__opening');
+    const identity = root?.querySelector('.identity-card');
+    const avatar = identity?.querySelector('.identity-card__avatar-media');
+    const background = root?.querySelector('.profile-shell__media-image');
+    const surface = opening ? getComputedStyle(opening) : null;
+    const path = value => {
+      try { return value ? new URL(value, location.href).pathname : ''; } catch { return value || ''; }
+    };
+    return {
+      model: root?.dataset.profileRenderModel || '',
+      mode: root?.dataset.profileRenderMode || '',
+      layout: root?.dataset.profileLayout || '',
+      avatar: path(avatar?.currentSrc || avatar?.src),
+      background: path(background?.currentSrc || background?.src),
+      surface: surface ? {
+        fill: surface.getPropertyValue('--profile-surface-fill').trim(),
+        opacity: surface.getPropertyValue('--profile-surface-opacity').trim(),
+        blur: surface.getPropertyValue('--profile-surface-blur').trim(),
+        radius: surface.getPropertyValue('--profile-border-radius').trim(),
+        borderColor: surface.getPropertyValue('--profile-border-color').trim()
+      } : null,
+      nameRenderer: identity?.querySelector('.name-effect-canvas')?.getAttribute('data-name-renderer') || '',
+      avatarEffect: [...(identity?.querySelector('.avatar-effect')?.classList || [])].find(value => value.startsWith('avatar-effect--')) || '',
+      border: root?.querySelector('[data-profile-border]')?.getAttribute('data-profile-border') || '',
+      atmosphere: root?.querySelector('[data-atmosphere]')?.getAttribute('data-atmosphere') || '',
+      opening: (() => {
+        const box = opening?.getBoundingClientRect();
+        return box ? { left: box.left, top: box.top, width: box.width, height: box.height } : null;
+      })()
+    };
+  })()`);
+}
+
+function parityFields(state) {
+  return {
+    model: state?.model || '',
+    layout: state?.layout || '',
+    avatar: state?.avatar || '',
+    background: state?.background || '',
+    surface: state?.surface || null,
+    nameRenderer: state?.nameRenderer || '',
+    avatarEffect: state?.avatarEffect || '',
+    border: state?.border || '',
+    atmosphere: state?.atmosphere || ''
+  };
+}
+
 async function seedRichProfileFixture() {
   const sessionState = await page.evaluate(`(() => {
     const candidate = Object.values(localStorage)
@@ -475,6 +525,7 @@ async function capturePublishedLayouts() {
     await waitForStudioLayoutPicker(`${layout} public evidence picker`);
     await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview[aria-busy="false"]')`, `${layout} stable Studio preview`);
     await waitForRichStudioOpeningLinks(`${layout} hydrated opening links`);
+    let studioParityState;
     const serverConfigBefore = await callAuthenticatedRpc('get_my_profile_configuration_v2');
     const serverBeforeDraft = serverConfigBefore?.draft || serverConfigBefore?.configuration_v2?.draft;
     const serverBeforeSummary = summarizeV2Draft(serverBeforeDraft);
@@ -495,9 +546,20 @@ async function capturePublishedLayouts() {
       const serverConfigAfter = await callAuthenticatedRpc('get_my_profile_configuration_v2');
       serverAfterDraft = serverConfigAfter?.draft || serverConfigAfter?.configuration_v2?.draft;
     }
+    studioParityState = await readRenderParityState('.profile-studio-preview .profile-shell-page--preview');
+    await delay(180);
+    const settledStudioParityState = await readRenderParityState('.profile-studio-preview .profile-shell-page--preview');
+    assert(JSON.stringify(parityFields(settledStudioParityState)) === JSON.stringify(parityFields(studioParityState)), `${layout} Studio render snapshot changed after the preview settled: ${JSON.stringify({ before: studioParityState, after: settledStudioParityState })}.`);
+    assert(studioParityState.model === 'v1' && studioParityState.layout === layout && studioParityState.mode === 'studio', `${layout} Studio did not expose the canonical render snapshot boundary: ${JSON.stringify(studioParityState)}.`);
     const serverAfterSummary = summarizeV2Draft(serverAfterDraft);
     await page.navigate(`${appUrl}/${canonicalUsername}`, `${layout} public evidence desktop`);
     await waitForPublicLayout(layout, `${layout} public desktop profile`);
+    if (studioParityState.atmosphere) {
+      await page.waitFor(
+        `document.querySelector(${JSON.stringify(`.profile-shell-page [data-atmosphere="${studioParityState.atmosphere}"]`)})`,
+        `${layout} public settled atmosphere`
+      );
+    }
     if (smokeMode === 'dev') {
       await page.waitFor(`document.querySelector('.profile-shell-page [data-atmosphere="rain-window"]')`, `${layout} public atmosphere renderer`);
     }
@@ -561,6 +623,9 @@ async function capturePublishedLayouts() {
         ,publishPayload: ${JSON.stringify(publishPayload)}
       };
     })()`);
+    const publicParityState = await readRenderParityState('.profile-shell-page');
+    assert(JSON.stringify(parityFields(publicParityState)) === JSON.stringify(parityFields(studioParityState)), `${layout} public render diverged from the Studio snapshot: ${JSON.stringify({ studio: studioParityState, public: publicParityState })}.`);
+    assert(publicParityState.mode === 'public' && publicParityState.model === 'v1', `${layout} public profile did not use the canonical render snapshot boundary: ${JSON.stringify(publicParityState)}.`);
     assert(publicGeometry.shell && Math.abs(publicGeometry.shell.width - 1440) <= 1 && Math.abs(publicGeometry.shell.height - 900) <= 1, `${layout} public profile does not fill the desktop viewport: ${JSON.stringify(publicGeometry)}.`);
     if (publicGeometry.background) {
       assert(publicGeometry.background.complete && publicGeometry.background.naturalWidth > 0 && publicGeometry.background.position === 'fixed' && publicGeometry.background.objectFit === 'cover' && (publicGeometry.background.box?.width || 0) >= 1439 && (publicGeometry.background.box?.height || 0) >= 899, `${layout} public uploaded background is not viewport-bound: ${JSON.stringify(publicGeometry)}.`);
@@ -624,7 +689,7 @@ async function capturePublishedLayouts() {
     })()`);
     assert(mobileGeometry.shell && Math.abs(mobileGeometry.shell.width - 390) <= 1 && mobileGeometry.background && mobileGeometry.background.position === 'fixed' && mobileGeometry.background.objectFit === 'cover' && mobileGeometry.background.width >= 389 && mobileGeometry.background.height >= 843, `${layout} public mobile environment is not covered: ${JSON.stringify(mobileGeometry)}.`);
     await capture(`public-${layout}-mobile`);
-    evidence.push({ layout, desktop: publicGeometry, mobile: mobileGeometry });
+    evidence.push({ layout, studioParityState, publicParityState, desktop: publicGeometry, mobile: mobileGeometry });
   }
   await page.setViewport(1440, 900);
   await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore Compact after public evidence');

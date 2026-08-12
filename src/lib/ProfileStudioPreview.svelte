@@ -7,6 +7,7 @@
   export let previewError = '';
   export let previewProfile = null;
   export let previewProfileConfig = null;
+  export let previewRenderSnapshot = null;
   export let previewScores = [];
   export let previewTimelineEvents = [];
   export let previewCollectionItems = [];
@@ -24,7 +25,12 @@
   let previewResizeObserver = null;
   let previewMutationObserver = null;
 
+  function hasRenderablePreview(value) {
+    return Boolean(value && typeof value === 'object' && value.profile);
+  }
+
   $: isAppearancePreview = activeSection === 'customize' && activeCustomizeTab === 'appearance';
+  $: previewReady = Boolean(previewComponent && hasRenderablePreview(previewRenderSnapshot));
 
   function updatePreviewScrollState() {
     const shell = previewStage?.querySelector('.profile-shell-page--preview');
@@ -32,6 +38,9 @@
       if (observedPreviewShell) previewResizeObserver?.unobserve(observedPreviewShell);
       observedPreviewShell = shell;
       previewResizeObserver?.observe(shell);
+    } else if (!shell && observedPreviewShell) {
+      previewResizeObserver?.unobserve(observedPreviewShell);
+      observedPreviewShell = null;
     }
     const nextContentOverflow = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
     const opening = shell?.querySelector('.profile-shell__approved-opening');
@@ -106,7 +115,7 @@
   </header>
   <div class="profile-studio-preview__body">
     <div class="profile-studio-preview__canvas" class:profile-studio-preview__canvas--mobile={previewDevice === 'mobile'} class:profile-studio-preview__canvas--appearance={isAppearancePreview}>
-      {#if previewComponent}
+      {#if previewReady}
         <div class="profile-studio-preview__viewport" data-preview-device={previewDevice}>
           <div
             bind:this={previewStage}
@@ -117,9 +126,9 @@
             <svelte:component
               this={previewComponent}
               previewMode={true}
-              previewIdentityOnly={true}
               previewProfile={previewProfile}
               previewProfileConfig={previewProfileConfig}
+              renderSnapshot={previewRenderSnapshot}
               previewScores={previewScores}
               previewTimelineEvents={previewTimelineEvents}
               previewCollectionItems={previewCollectionItems}

@@ -1,9 +1,9 @@
 import { createLazyStorageClient, createUnavailableStorageClient } from './supabaseStorage.js';
 import { createSupabaseTransport, createUnavailableSupabaseTransport } from './supabaseTransport.js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY
-const envName = import.meta.env.DEV ? 'development' : 'production'
+const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env?.VITE_SUPABASE_KEY
+const envName = import.meta.env?.DEV ? 'development' : 'production'
 const missingVars = []
 
 function createUnavailableSupabaseClient(message) {
@@ -53,7 +53,7 @@ if (missingVars.length > 0) {
 }
 
 if (supabaseError) {
-  if (import.meta.env.DEV) {
+  if (import.meta.env?.DEV) {
     console.error(`[Chromadie] Supabase bootstrap failed in ${envName}:`, supabaseError)
   }
   supabaseClient ??= createUnavailableSupabaseClient(supabaseError.details)

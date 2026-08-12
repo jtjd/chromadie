@@ -1,5 +1,30 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-12 — Resolve profile state once, then share the renderer
+
+`buildProfileRenderSnapshot()` is now the canonical boundary between profile
+data and profile presentation. Studio resolves configuration as
+preview/draft/published/default, public profiles resolve published before any
+legacy draft fallback, current expression selections override the selected
+configuration, and cosmetic preview loadouts override equipped cosmetics. The
+resolved snapshot carries identity, layout, surface, environment media,
+cosmetics, links, modules, roll state, and permissions into the existing
+`ProfileShell` renderer.
+
+`ProfileSettings` and public profile loading now feed the same renderer path;
+Studio only supplies a host/device context and retains editor draft state. The
+preview no longer reconstructs a second identity-only profile or mounts a
+default shell while the canonical snapshot is still loading. The snapshot
+boundary is marked in rendered DOM as model version `v1` so browser parity
+checks can compare public and Studio results without treating host geometry as
+profile state.
+
+The immediate rich-media save model remains unchanged. Media RPCs still update
+the configuration token when selected state changes, while unused library
+asset deletion leaves that token untouched; standalone selected audio now
+remains selected if it is also found in the playlist check. Continuation
+modules keep natural source order rather than relying on a stale grid row.
+
 ## 2026-08-12 — Keep compact profile polish inside existing ownership boundaries
 
 Owner and visitor Daily Color presentations constrain both the preview frame

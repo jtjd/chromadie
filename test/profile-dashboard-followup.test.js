@@ -102,7 +102,7 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(settings, /slot="preview"/);
   assert.doesNotMatch(settings, /function openPreview/);
   assert.doesNotMatch(studioPreview, /profile-preview-drawer__backdrop/);
-  assert.match(shell, /\$: backgroundSrc = getProfileMediaUrl/);
+  assert.match(shell, /profileRenderSnapshot\?\.environment\?\.backgroundImageUrl/);
   assert.match(shell, /<img class="profile-shell__media-image" src=\{backgroundSrc\}/);
   assert.doesNotMatch(shell, /profilePageMediaStyle|profile-page-media-image/);
   assert.doesNotMatch(shell, /profile-shell__media-background/);

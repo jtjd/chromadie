@@ -267,6 +267,7 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   const profileData = await readFile(new URL('../src/lib/profileData.js', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
+  const renderModel = await readFile(new URL('../src/lib/profileRenderModel.js', import.meta.url), 'utf8');
 
   assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.match(editor, /export function getDraftConfig/);
@@ -281,8 +282,8 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   assert.match(settings, /save_profile_configuration_v2/);
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /ProfileDashboardActions/);
-  assert.match(shell, /getProfileComposition/);
-  assert.match(shell, /getVisibleProfileLinks/);
+  assert.match(renderModel, /getProfileComposition/);
+  assert.match(renderModel, /getVisibleProfileLinks/);
   assert.match(shell, /profile-shell-page--/);
 });
 

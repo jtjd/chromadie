@@ -2,8 +2,6 @@
   import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { authUser, followedUsers, isAuthenticated, profile, session, toggleFollow } from './stores';
   import { supabase } from './supabase';
-  import { getBadgeMeta } from './badgeData';
-  import { getRank, getRankState } from './ranks';
   import { loadProfileContext } from './profileData';
   import { isOwnProfileTarget } from './profileContract';
   import { formatCount, normalizeHexColor } from './utils';
@@ -14,40 +12,31 @@
   import ProfileTimeline from './ProfileTimeline.svelte';
   import ProfileCollection from './ProfileCollection.svelte';
   import { getProfileStoryUnlocks } from './profileStory.js';
-  import { createDefaultProfileConfig, getProfileLayoutLinkPartitions, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, hasProfileMoreContent, normalizeProfileConfig } from './profileConfig.js';
-  import { getProfileComposition } from './profileComposition.js';
+  import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileLayoutFrame from './ProfileLayoutFrame.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
   import ProfileWidgets from './ProfileWidgets.svelte';
   import ProfileContent from './ProfileContent.svelte';
-  import { getProfileMediaUrl } from './profileMedia.js';
   import TodayColor from './TodayColor.svelte';
   import ProfileDailyRoll from './ProfileDailyRoll.svelte';
   import FeaturedCollection from './FeaturedCollection.svelte';
-  import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
   import { trackProductEvent } from './productAnalytics.js';
   import { recordPublicProfileView } from './profileViewAnalytics.js';
   import { recordProfileInsightEvent } from './profileInsightAnalytics.js';
-  import { getNameRendererLoadout } from './name/nameLoadout.js';
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
-  import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
-  import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
-  import { getProfileLinkDefinition, isProfileSocialLink } from './profileLinkTypes.js';
+  import { getProfileLinkDefinition } from './profileLinkTypes.js';
   import AtmosphereLayer from './profile-atmosphere/LazyAtmosphereLayer.svelte';
-  import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
-  import { hasVisibleProfileContent } from './profileContentLegacy.js';
-  import { getVisibleProfileWidgets } from './profileWidgetsLegacy.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
-  import { normalizeRichMediaConfig } from './profileRichMedia.js';
   import { isProfileFeatureEnabled, resolveProfileFeatureFlags } from './profileFeatureFlags.js';
+  import { buildProfileRenderSnapshot } from './profileRenderModel.js';
 
   export let profileUsername = null;
   export let userId = null;
   export let previewMode = false;
-  export let previewIdentityOnly = false;
   export let previewProfile = null;
   export let previewProfileConfig = null;
+  export let renderSnapshot = null;
   export let previewScores = [];
   export let previewTimelineEvents = [];
   export let previewCollectionItems = [];
@@ -68,13 +57,11 @@
   let profileConfig = null;
   let social = createEmptyProfileSocial();
   let socialSettings = createDefaultProfileSocialSettings();
-  let previewConfig = null;
   let allAchievements = [];
   let loading = true;
   let loadError = '';
   let loadRequestId = 0;
   let activeProfileKey = null;
-  let activePreviewConfigKey = '';
   let trackedProfileViewKey = null;
   let followLoading = false;
   let profileRollState = 'idle';
@@ -114,7 +101,6 @@
     profileConfig = null;
     social = createEmptyProfileSocial();
     socialSettings = createDefaultProfileSocialSettings();
-    previewConfig = null;
     allAchievements = [];
     profileRollState = 'idle';
     mediaCacheKey = '';
@@ -139,33 +125,40 @@
         collection: previewCollectionItems,
         achievements: previewAllAchievements
       });
-      const nextPreviewConfigKey = JSON.stringify(previewProfileConfig || null);
+      const resolvedPreviewProfile = previewProfile || profileRenderSnapshot?.profile || null;
+      if (!resolvedPreviewProfile) {
+        if (nextPreviewKey !== activeProfileKey) {
+          activeProfileKey = nextPreviewKey;
+          loadRequestId += 1;
+          resetShellState(true);
+        }
+        return;
+      }
       if (nextPreviewKey !== activeProfileKey) {
         activeProfileKey = nextPreviewKey;
-        activePreviewConfigKey = nextPreviewConfigKey;
         loadRequestId += 1;
         resetShellState(false);
-        const fallbackColor = '#CDD2FF';
         targetProfile = {
-          id: previewProfile?.id || 'profile-studio-preview',
-          username: previewProfile?.username || 'Chromanaut',
-          display_name: previewProfile?.display_name ?? null,
-          bio: previewProfile?.bio ?? null,
-          current_streak: Number(previewProfile?.current_streak) || 0,
-          longest_streak: Number(previewProfile?.longest_streak) || 0,
-          lifetime_ep: Number(previewProfile?.lifetime_ep) || 0,
-          total_rolls: Number(previewProfile?.total_rolls) || 0,
-          is_staff: Boolean(previewProfile?.is_staff),
-          equipped_cosmetics: previewProfile?.equipped_cosmetics || {},
-          equipped_badges: Array.isArray(previewProfile?.equipped_badges) ? previewProfile.equipped_badges : [],
-          mood_color: fallbackColor,
-          best_roll_score: previewProfile?.best_roll_score ?? null,
-          best_roll_hex: previewProfile?.best_roll_hex ?? null,
-          best_roll_rarity: previewProfile?.best_roll_rarity ?? null
+          ...resolvedPreviewProfile,
+          id: resolvedPreviewProfile.id || 'profile-studio-preview',
+          username: resolvedPreviewProfile.username || 'Chromanaut',
+          display_name: resolvedPreviewProfile.display_name ?? null,
+          bio: resolvedPreviewProfile.bio ?? null,
+          current_streak: Number(resolvedPreviewProfile.current_streak) || 0,
+          longest_streak: Number(resolvedPreviewProfile.longest_streak) || 0,
+          lifetime_ep: Number(resolvedPreviewProfile.lifetime_ep) || 0,
+          total_rolls: Number(resolvedPreviewProfile.total_rolls) || 0,
+          is_staff: Boolean(resolvedPreviewProfile.is_staff),
+          equipped_cosmetics: resolvedPreviewProfile.equipped_cosmetics || {},
+          equipped_badges: Array.isArray(resolvedPreviewProfile.equipped_badges) ? resolvedPreviewProfile.equipped_badges : [],
+          mood_color: resolvedPreviewProfile.mood_color || '#CDD2FF',
+          best_roll_score: resolvedPreviewProfile.best_roll_score ?? null,
+          best_roll_hex: resolvedPreviewProfile.best_roll_hex ?? null,
+          best_roll_rarity: resolvedPreviewProfile.best_roll_rarity ?? null
         };
         const config = normalizeProfileConfig(
-          previewProfileConfig || createDefaultProfileConfig(),
-          fallbackColor
+          previewProfileConfig || profileRenderSnapshot?.configuration || createDefaultProfileConfig(),
+          resolvedPreviewProfile.mood_color || '#CDD2FF'
         );
         profileConfig = { draft: null, published: config };
         social = createEmptyProfileSocial();
@@ -175,17 +168,6 @@
         collectionItems = Array.isArray(previewCollectionItems) ? previewCollectionItems : [];
         allAchievements = Array.isArray(previewAllAchievements) ? previewAllAchievements : [];
         loading = false;
-      } else if (nextPreviewConfigKey !== activePreviewConfigKey) {
-        activePreviewConfigKey = nextPreviewConfigKey;
-        previewConfig = null;
-        profileConfig = {
-          draft: null,
-          published: normalizeProfileConfig(
-            previewProfileConfig || createDefaultProfileConfig(),
-            '#CDD2FF'
-          )
-        };
-        mediaCacheKey = String(Date.now());
       }
       return;
     }
@@ -278,7 +260,6 @@
     social = context.social;
     socialSettings = context.socialSettings;
     mediaCacheKey = String(Date.now());
-    previewConfig = null;
     allAchievements = context.allAchievements;
     loadError = context.loadError;
     loading = false;
@@ -375,26 +356,6 @@
     await loadProfileData();
   }
 
-  function getAchievement(id) {
-    const safeId = String(id || '');
-    if (safeId === 'launch_edition') {
-      return {
-        id: safeId,
-        name: 'Launch Edition',
-        icon: '✦',
-        description: 'A founding color identity from the launch window.'
-      };
-    }
-    const record = allAchievements.find(achievement => achievement.id === safeId);
-    const fallback = getBadgeMeta(safeId);
-    return {
-      id: safeId,
-      name: record?.name || fallback.name || safeId,
-      icon: record?.icon || fallback.symbol || '✦',
-      description: record?.description || fallback.desc || 'A pinned color achievement.'
-    };
-  }
-
   function colorFor(value, fallback = '#8B7CF6') {
     return normalizeHexColor(value, fallback);
   }
@@ -417,16 +378,7 @@
     return (Number(value) || 0).toLocaleString();
   }
 
-  $: username = targetProfile?.username || 'Unknown Player';
-  $: profileFeatureFlags = resolveProfileFeatureFlags({
-    userId: targetProfile?.id,
-    isStaff: Boolean(targetProfile?.is_staff)
-  });
-  $: expandedAnalyticsEnabled = profileFeatureFlags.expandedAnalytics;
-  $: socialDepthEnabled = profileFeatureFlags.socialDepth;
-  // profileDisplayName = username is the safe fallback for legacy profiles.
-  $: profileDisplayName = targetProfile?.display_name || username;
-  $: isOwnProfile = previewMode
+  $: profileOwnerContext = previewMode
     ? false
     : ['owner', 'pre-roll'].includes(visualFixture)
       ? true
@@ -435,117 +387,99 @@
         sessionUserId: $session?.user?.id,
         profileId: targetProfile?.id
       });
+  $: profileRenderSnapshot = renderSnapshot || buildProfileRenderSnapshot({
+    profile: previewMode ? (previewProfile || targetProfile) : targetProfile,
+    profileConfig,
+    configuration: previewMode ? previewProfileConfig : null,
+    scores: targetScores,
+    timelineEvents,
+    collectionItems,
+    allAchievements,
+    fallbackColor: '#CDD2FF',
+    featureFlags: resolveProfileFeatureFlags({
+      userId: targetProfile?.id,
+      isStaff: Boolean(targetProfile?.is_staff)
+    }),
+    previewMode,
+    previewDevice,
+    mode: previewMode ? 'studio' : 'public',
+    isOwner: profileOwnerContext,
+    rollState: profileRollState,
+    mediaCacheKey,
+    visualFixture,
+    dev: import.meta.env.DEV
+  });
+  $: renderProfile = profileRenderSnapshot?.profile || targetProfile;
+  $: username = profileRenderSnapshot?.identity?.username || 'Unknown Player';
+  $: profileFeatureFlags = profileRenderSnapshot?.featureFlags || {};
+  $: expandedAnalyticsEnabled = profileFeatureFlags.expandedAnalytics === true;
+  $: socialDepthEnabled = profileFeatureFlags.socialDepth === true;
+  $: profileDisplayName = profileRenderSnapshot?.identity?.displayName || username;
+  $: isOwnProfile = profileRenderSnapshot?.permissions?.isOwner ?? profileOwnerContext;
   $: if (!previewMode && targetProfile && !isOwnProfile) void ensureProfileSocial();
-  $: cosmetics = targetProfile?.equipped_cosmetics || {};
-  $: nameRendererLoadout = getNameRendererLoadout(cosmetics);
-  $: rank = targetProfile ? getRank(targetProfile.lifetime_ep || 0) : null;
-  $: rankState = targetProfile ? getRankState(targetProfile.lifetime_ep || 0) : null;
-  $: bestRoll = targetScores.length > 0
-    ? targetScores.reduce((max, score) => score.score > max.score ? score : max, targetScores[0])
-    : null;
-  $: profileBestRoll = targetProfile?.best_roll_score !== null && targetProfile?.best_roll_score !== undefined
-    ? {
-        score: targetProfile.best_roll_score,
-        hex_code: targetProfile.best_roll_hex,
-        rarity: targetProfile.best_roll_rarity
-      }
-    : null;
-  $: displayBestRoll = profileBestRoll || bestRoll;
-  $: effectiveProfileConfig = normalizeProfileConfig(
-    previewConfig || profileConfig?.published,
-    '#CDD2FF'
-  );
-  $: appearance = effectiveProfileConfig.appearance;
-  $: storyUnlocks = getProfileStoryUnlocks(targetProfile);
-  $: latestRoll = targetScores
-    .slice()
-    .sort((left, right) => String(right.roll_date || '').localeCompare(String(left.roll_date || '')))[0] || null;
-  $: profileBio = typeof targetProfile?.bio === 'string' ? targetProfile.bio.trim().slice(0, 160) : '';
-  // V2 identity fields arrive through the server-normalized public
-  // configuration; legacy profiles simply use the empty presentation.
-  $: identityPresentation = effectiveProfileConfig.identityPresentation || {};
-  $: joinedLabel = targetProfile?.created_at
-    ? new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(targetProfile.created_at))
-    : '';
-  $: signatureColor = colorFor(appearance.colors.accent);
-  $: nameRendererBaseColor = colorFor(appearance.colors.username, '#FFFFFF');
-  $: nameRendererTodayColor = colorFor(latestRoll?.hex_code || '#8B7CF6');
-  $: cursorTrailKey = getCursorTrailKey(cosmetics?.cursor_trail);
-  $: atmosphereKey = cosmetics?.profile_atmosphere || '';
-  $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
+  $: cosmetics = profileRenderSnapshot?.cosmetics?.loadout || {};
+  $: nameRendererLoadout = profileRenderSnapshot?.cosmetics?.name || null;
+  $: rank = profileRenderSnapshot?.story?.rank || null;
+  $: rankState = profileRenderSnapshot?.story?.rankState || null;
+  $: bestRoll = profileRenderSnapshot?.roll?.best || null;
+  $: displayBestRoll = bestRoll;
+  $: effectiveProfileConfig = profileRenderSnapshot?.configuration || normalizeProfileConfig(null, '#CDD2FF');
+  $: appearance = profileRenderSnapshot?.appearance || effectiveProfileConfig.appearance;
+  $: storyUnlocks = profileRenderSnapshot?.story?.unlocks || getProfileStoryUnlocks(targetProfile);
+  $: latestRoll = profileRenderSnapshot?.roll?.latest || null;
+  $: profileBio = profileRenderSnapshot?.identity?.bio || '';
+  $: identityPresentation = profileRenderSnapshot?.identity?.presentation || {};
+  $: joinedLabel = profileRenderSnapshot?.identity?.joinedLabel || '';
+  $: signatureColor = colorFor(profileRenderSnapshot?.colors?.signature || appearance.colors.accent);
+  $: nameRendererBaseColor = colorFor(profileRenderSnapshot?.colors?.nameBase || appearance.colors.username, '#FFFFFF');
+  $: nameRendererTodayColor = colorFor(profileRenderSnapshot?.colors?.nameToday || '#8B7CF6');
+  $: cursorTrailKey = profileRenderSnapshot?.environment?.cursorTrailKey || '';
+  $: atmosphereKey = profileRenderSnapshot?.environment?.atmosphereKey || '';
+  $: colorEffectsEnabled = profileRenderSnapshot?.colors?.colorEffectsEnabled === true;
   $: profileControlAccent = signatureColor;
-  $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
-  $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
-  $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
-  $: audioSrc = getProfileMediaUrl(effectiveProfileConfig.audio_path, mediaCacheKey);
-  $: richMedia = profileFeatureFlags.richMedia
-    ? normalizeRichMediaConfig(effectiveProfileConfig)
-    : normalizeRichMediaConfig({});
-  $: backgroundVideoSrc = getProfileMediaUrl(richMedia.background_video_path, mediaCacheKey);
-  $: bannerSrc = getProfileMediaUrl(richMedia.banner_path, mediaCacheKey);
-  $: cursorSrc = getProfileMediaUrl(richMedia.cursor_path, mediaCacheKey);
-  $: pointerCursorSrc = getProfileMediaUrl(richMedia.pointer_cursor_path, mediaCacheKey);
-  $: richAudioPlaylist = richMedia.audio_playlist;
-  $: profileContent = effectiveProfileConfig.content;
-  $: hasProfileContent = hasVisibleProfileContent(profileContent);
-  $: profileWidgets = getVisibleProfileWidgets(effectiveProfileConfig.widgets, effectiveProfileConfig);
-  $: hasSpotifyWidget = profileWidgets.some(widget => widget.provider === 'spotify');
-  $: hasProfileMusic = Boolean(audioSrc)
-    || richAudioPlaylist.tracks.length > 0
-    || Boolean(effectiveProfileConfig.spotify_type && effectiveProfileConfig.spotify_id)
-    || (import.meta.env.DEV && visualFixture === 'music');
-  // Background media belongs to the page environment. Only modules rendered
-  // inside the lower profile composition may create profile-more.
-  $: hasLowerExpression = hasProfileMusic
-    || PROFILE_MUSIC_ENABLED
-    || profileWidgets.length > 0
-    || hasProfileContent;
-  $: composition = getProfileComposition(effectiveProfileConfig, {
-    isOwner: isOwnProfile,
-    hasLinks: visibleLinks.length > 0,
-    hasPinnedAchievements: pinnedAchievements.length > 0,
-    hasCollection: collectionItems.length > 0,
-    hasTimeline: timelineEvents.length > 0
-  });
-  $: secondaryModules = composition.secondaryModules;
-  $: storyModules = secondaryModules.filter(module => module.id !== 'links');
+  $: avatarSrc = profileRenderSnapshot?.media?.avatarUrl || '';
+  $: backgroundSrc = profileRenderSnapshot?.environment?.backgroundImageUrl || '';
+  $: audioSrc = profileRenderSnapshot?.media?.audioUrl || '';
+  $: backgroundVideoSrc = profileRenderSnapshot?.environment?.backgroundVideoUrl || '';
+  $: bannerSrc = profileRenderSnapshot?.media?.bannerUrl || '';
+  $: pointerCursorSrc = profileRenderSnapshot?.environment?.pointerCursorUrl || '';
+  $: richAudioPlaylist = profileRenderSnapshot?.media?.playlist || { tracks: [] };
+  $: profileContent = profileRenderSnapshot?.modules?.content || effectiveProfileConfig.content;
+  $: hasProfileContent = profileRenderSnapshot?.modules?.hasContent === true;
+  $: profileWidgets = profileRenderSnapshot?.modules?.widgets || [];
+  $: hasSpotifyWidget = profileRenderSnapshot?.modules?.hasSpotifyWidget === true;
+  $: hasProfileMusic = profileRenderSnapshot?.modules?.hasMusic === true;
+  $: composition = profileRenderSnapshot?.modules?.composition || { secondaryModules: [] };
+  $: secondaryModules = composition.secondaryModules || [];
+  $: storyModules = profileRenderSnapshot?.modules?.storyModules || secondaryModules.filter(module => module.id !== 'links');
   const rollModule = Object.freeze({ size: 'wide' });
-  $: layoutVariant = resolveProfileLayoutVariant(effectiveProfileConfig);
-  $: layoutLinkPartitions = getProfileLayoutLinkPartitions(effectiveProfileConfig, layoutVariant);
-  $: openingLinks = layoutLinkPartitions.opening;
-  $: continuationLinks = layoutLinkPartitions.continuation;
-  $: continuationSocialLinks = continuationLinks.filter(link => isProfileSocialLink(link.type));
-  $: continuationNavigationLinks = continuationLinks.filter(link => !isProfileSocialLink(link.type));
-  $: showRoll = getProfileRollVisible(effectiveProfileConfig);
-  $: showLowerExpression = hasLowerExpression && (layoutVariant !== 'sleek' || profileWidgets.length > 0 || hasProfileContent);
-  $: hasBelowFoldRoll = showRoll && layoutVariant === 'portfolio';
-  $: hasProfileStory = getProfileStoryVisible(effectiveProfileConfig) && Boolean((rank && rankState) || storyModules.length);
-  $: hasProfileMore = hasProfileMoreContent({
-    continuationCount: continuationLinks.length,
-    hasBelowFoldRoll,
-    showLowerExpression,
-    hasProfileStory
-  });
-  // Compact Studio shows the real continuation-link surface, while the
-  // heavier story/expression sections remain intentionally identity-only.
-  $: renderProfileMore = previewIdentityOnly ? continuationLinks.length > 0 : hasProfileMore;
+  $: layoutVariant = profileRenderSnapshot?.layout?.variant || 'compact';
+  $: openingLinks = profileRenderSnapshot?.links?.opening || [];
+  $: continuationLinks = profileRenderSnapshot?.links?.continuation || [];
+  $: continuationSocialLinks = profileRenderSnapshot?.links?.continuationSocial || [];
+  $: continuationNavigationLinks = profileRenderSnapshot?.links?.continuationNavigation || [];
+  $: showRoll = profileRenderSnapshot?.roll?.show === true;
+  $: showLowerExpression = profileRenderSnapshot?.modules?.showLowerExpression === true;
+  $: hasProfileStory = profileRenderSnapshot?.modules?.hasProfileStory === true;
+  $: hasProfileMore = profileRenderSnapshot?.visibility?.hasProfileMore === true;
+  $: renderProfileMore = profileRenderSnapshot?.visibility?.renderProfileMore === true;
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
-  $: pinnedAchievements = (targetProfile?.equipped_badges || []).map(getAchievement);
-  $: recentScores = targetScores.slice(0, 6);
-  $: nameRendererRecentColors = recentScores.map(score => score?.hex_code).filter(Boolean);
+  $: pinnedAchievements = profileRenderSnapshot?.identity?.badges || [];
+  $: recentScores = profileRenderSnapshot?.story?.recentScores || [];
+  $: nameRendererRecentColors = profileRenderSnapshot?.colors?.nameRecent || [];
   $: profilePath = getCanonicalProfilePath(username) || '/profile';
   // Layout is structure only. Keep the default class off the renderer so a
   // new Compact profile never receives a baked-in starfield or color theme.
   $: profilePresentationLayoutVariant = layoutVariant;
-  $: profileCardStyle = getProfileAppearanceStyle(effectiveProfileConfig);
-  $: profilePageStyle = `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}${cursorSrc ? `;cursor:url("${cursorSrc}") 16 16, auto` : ''}${pointerCursorSrc ? `;--profile-pointer-cursor:url("${pointerCursorSrc}")` : ''}`;
+  $: profileCardStyle = profileRenderSnapshot?.surface?.style || '';
+  $: profilePageStyle = `${profileShellStyle};${profileRenderSnapshot?.styles?.page || ''}`;
 
   onDestroy(() => {
     if (profileRollEffectTimer) clearTimeout(profileRollEffectTimer);
   });
 </script>
 
-  <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
+  <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} data-profile-render-model="v1" data-profile-layout={profilePresentationLayoutVariant} data-profile-render-mode={profileRenderSnapshot?.mode || (previewMode ? 'studio' : 'public')} aria-busy={loading}>
   {#if backgroundSrc}
     <img class="profile-shell__media-image" src={backgroundSrc} alt="" loading="eager" decoding="async" aria-hidden="true" />
   {/if}
@@ -581,9 +515,9 @@
                       bio={profileBio}
                       links={openingLinks}
                       badges={pinnedAchievements}
-                      staff={Boolean(targetProfile?.is_staff)}
+                      staff={Boolean(renderProfile?.is_staff)}
                       avatarSrc={avatarSrc}
-                      founder={targetProfile.equipped_badges?.includes('launch_edition')}
+                      founder={Boolean(renderProfile?.equipped_badges?.includes('launch_edition'))}
                       accentColor={signatureColor}
                       nameRendererLoadout={nameRendererLoadout}
                       nameRendererContext="profile"
@@ -655,7 +589,7 @@
           </button>
         {/if}
         <div class="profile-shell__continuation-column">
-        {#if !previewIdentityOnly && showRoll && !refreshing && profilePresentationLayoutVariant === 'portfolio'}
+        {#if showRoll && !refreshing && profilePresentationLayoutVariant === 'portfolio'}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
               <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} presentation={profilePresentationLayoutVariant} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} />
@@ -665,7 +599,7 @@
           </div>
         {/if}
 
-        {#if !previewIdentityOnly && hasProfileStory}
+        {#if hasProfileStory}
           <div class="profile-shell__approved-featured" data-profile-region="featured" aria-label={username + ' color archive'}>
             <FeaturedCollection
               items={collectionItems}
@@ -677,7 +611,7 @@
             />
           </div>
         {/if}
-        {#if !previewIdentityOnly && showLowerExpression}
+        {#if showLowerExpression}
           <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
             <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
               {#if profilePresentationLayoutVariant !== 'sleek'}
@@ -718,7 +652,7 @@
           </section>
         {/if}
 
-      {#if !previewIdentityOnly && hasProfileStory}
+      {#if hasProfileStory}
         <section class="profile-shell__story-section" aria-labelledby="profile-story-title">
           <div class="profile-shell__story-heading">
             <div>
@@ -746,10 +680,10 @@
               {#if module.id === 'stats'}
                 <Module size={module.size} tone="quiet" eyebrow="Progress" title="A record of color" description="The milestones behind this identity.">
                   <div class="profile-shell__stats" aria-label="Profile statistics">
-                    <div><strong>{formatStat(targetProfile.current_streak)}</strong><span>Current streak</span></div>
-                    <div><strong>{formatStat(targetProfile.longest_streak)}</strong><span>Longest streak</span></div>
-                    <div><strong>{formatStat(targetProfile.lifetime_ep)}</strong><span>Lifetime EP</span></div>
-                    <div><strong>{formatStat(targetProfile.total_rolls)}</strong><span>Total rolls</span></div>
+                    <div><strong>{formatStat(renderProfile?.current_streak)}</strong><span>Current streak</span></div>
+                    <div><strong>{formatStat(renderProfile?.longest_streak)}</strong><span>Longest streak</span></div>
+                    <div><strong>{formatStat(renderProfile?.lifetime_ep)}</strong><span>Lifetime EP</span></div>
+                    <div><strong>{formatStat(renderProfile?.total_rolls)}</strong><span>Total rolls</span></div>
                   </div>
                 </Module>
               {:else if module.id === 'signature'}
@@ -1233,7 +1167,6 @@
   .profile-shell__approved-supporting {
     display: grid;
     grid-template-columns: 1fr;
-    grid-row: 2;
     width: 100%;
     margin: 0;
     padding: 0;
@@ -1260,14 +1193,6 @@
     color: var(--color-ink-strong);
     font: 600 clamp(1.2rem, 2.5vw, 1.45rem) / 1.15 var(--font-display-stack);
     letter-spacing: -.025em;
-  }
-
-  /* The editor preview keeps the real continuation-link surface visible while
-     leaving heavy story/expression regions to the public renderer. */
-  .profile-shell-page--identity-only .profile-shell__story-section,
-  .profile-shell-page--identity-only > .profile-shell__social-section,
-  .profile-shell-page--identity-only .profile-shell__more-cue {
-    display: none;
   }
 
   /* Layout frames own the relationship between identity, roll and expression.

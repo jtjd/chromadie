@@ -1,5 +1,26 @@
 # Chromadie 2.0 Progress
 
+## Renderer consolidation — 2026-08-12
+
+- Added `buildProfileRenderSnapshot()` as the single resolved profile model for
+  public rendering and Studio Live Preview. It centralizes draft/published,
+  expression-media, identity-preview, and cosmetic-preview precedence while
+  preserving the current five layout renderer.
+- Routed Studio and public `ProfileShell` instances through the same snapshot
+  contract. Studio now waits for a complete renderable snapshot instead of
+  briefly mounting a fallback profile, while keeping the readable physical
+  desktop/mobile preview host and opening-centering behavior.
+- Added unit/source contracts for rich public/Studio parity, public published
+  precedence, incomplete V2 media envelopes, explicit media overrides, stable
+  partial edits, and empty-profile continuation behavior.
+- Extended production browser smoke to compare canonical render markers,
+  layout/media/surface/name/cosmetic state, and opening geometry between Studio
+  and public profile hosts. Fresh production evidence completed for the rich
+  five-layout fixture.
+- Corrected standalone audio deletion selection logic and verified unused
+  asset deletion does not bump the profile configuration token. Local DB lint,
+  reset, and security audit pass on the clean migration state.
+
 ## Focused profile polish — 2026-08-12
 
 - Compact owner/visitor Daily Color now bounds the actual rendered color, not

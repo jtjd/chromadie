@@ -128,6 +128,7 @@ test('dashboard ownership keeps routing, rendering, and dirty-state boundaries s
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /resolveProfileStudioLocation/);
   assert.match(settings, /createProfileStudioPreviewModel/);
+  assert.match(settings, /previewRenderSnapshot/);
   for (const presentationalComponent of [header, workspace, preview, dirtyPrompt]) {
     assert.doesNotMatch(presentationalComponent, /supabase\.rpc|save_profile_configuration_v2|publish_profile_configuration_v2/);
   }
@@ -137,6 +138,7 @@ test('dashboard ownership keeps routing, rendering, and dirty-state boundaries s
   assert.match(workspace, /export function getDraftConfig/);
   assert.match(workspace, /export function resetChanges/);
   assert.match(preview, /PROFILE_RENDER_CONTEXTS\.LIVE_PROFILE/);
+  assert.match(preview, /renderSnapshot=\{previewRenderSnapshot\}/);
   assert.match(preview, /renderContext=\{liveProfileContext\}/);
   assert.match(dirtyPrompt, /dispatch\('stay'\)/);
   assert.match(dirtyPrompt, /dispatch\('discard'\)/);

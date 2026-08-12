@@ -36,6 +36,7 @@ test('the landing route stays separate from explicit roll and profile routes', (
 
 test('profile settings keeps secondary features available away from the public canvas', async () => {
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
+  const renderModel = await readFile(new URL('../src/lib/profileRenderModel.js', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
   const registry = await readFile(new URL('../src/lib/profile-studio/sectionRegistry.js', import.meta.url), 'utf8');
   const roll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
@@ -46,7 +47,7 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(shell, /data-profile-region="roll"/);
   assert.match(shell, /data-profile-region="expression"/);
   assert.match(shell, /data-profile-region="featured"/);
-  assert.match(shell, /getProfileStoryVisible/);
+  assert.match(renderModel, /getProfileStoryVisible/);
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
   assert.match(registry, /ProfileEditor\.svelte/);
   assert.match(registry, /ProfileSocial\.svelte/);
@@ -54,11 +55,11 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(shell, /this=\{profileSocialComponent\}[\s\S]*social=\{social\}/);
   assert.match(shell, /profile-shell__social-section/);
   assert.match(shell, /Add to rivals/);
-  assert.match(shell, /getProfileStoryVisible\(effectiveProfileConfig\)/);
-  assert.match(shell, /showRoll = getProfileRollVisible/);
+  assert.match(renderModel, /getProfileStoryVisible\(configuration\)/);
+  assert.match(renderModel, /showRoll = getProfileRollVisible/);
   assert.match(shell, /visibilitychange/);
   assert.match(settings, /Profile settings/);
-  assert.match(shell, /A founding color identity/);
+  assert.match(renderModel, /A founding color identity/);
   assert.doesNotMatch(shell, /Public boundary|What visitors can see/);
   assert.match(roll, /<details class="profile-roll__details"/);
   assert.doesNotMatch(roll, /Style in shop|View leaderboard/);

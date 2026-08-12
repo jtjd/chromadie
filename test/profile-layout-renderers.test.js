@@ -207,7 +207,7 @@ test('editor, renderer, and public icon files consume one link service registry'
 });
 
 test('layout renderer composes the shared roll through distinct presentation regions', async () => {
-  const [frame, dailyRoll, shell, preview, customize, settings, roll, content, widgets] = await Promise.all([
+  const [frame, dailyRoll, shell, preview, customize, settings, roll, content, widgets, renderModel] = await Promise.all([
     read('src/lib/ProfileLayoutFrame.svelte'),
     read('src/lib/ProfileDailyRoll.svelte'),
     read('src/lib/ProfileShell.svelte'),
@@ -216,7 +216,8 @@ test('layout renderer composes the shared roll through distinct presentation reg
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileRoll.svelte'),
     read('src/lib/ProfileContent.svelte'),
-    read('src/lib/ProfileWidgets.svelte')
+    read('src/lib/ProfileWidgets.svelte'),
+    read('src/lib/profileRenderModel.js')
   ]);
   assert.match(shell, /profile-layout-frame__identity/);
   assert.match(shell, /profile-layout-frame__roll/);
@@ -234,12 +235,16 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(shell, /compact=\{true\}/);
   assert.match(shell, /links=\{openingLinks\}/);
   assert.match(shell, /continuationLinks/);
-  assert.match(shell, /getProfileLayoutLinkPartitions/);
-  assert.match(shell, /continuationSocialLinks/);
-  assert.match(shell, /continuationNavigationLinks/);
-  assert.match(shell, /hasBelowFoldRoll = showRoll && layoutVariant === 'portfolio'/);
+  assert.match(shell, /buildProfileRenderSnapshot/);
+  assert.match(renderModel, /getProfileLayoutLinkPartitions/);
+  assert.match(renderModel, /continuationSocialLinks/);
+  assert.match(renderModel, /continuationNavigationLinks/);
+  assert.match(renderModel, /hasBelowFoldRoll = showRoll[\s\S]*layoutVariant === 'portfolio'/);
   assert.match(shell, /\{#if renderProfileMore\}[\s\S]*<div id="profile-more"/);
-  assert.match(shell, /hasLowerExpression = hasProfileMusic/);
+  assert.match(renderModel, /hasLowerExpression = hasProfileMusic/);
+  const mediaDeleteMigration = await read('supabase/migrations/20260812160000_profile_media_delete_token_guard.sql');
+  assert.match(mediaDeleteMigration, /v_selected := v_selected OR EXISTS/);
+  assert.doesNotMatch(mediaDeleteMigration, /v_selected := EXISTS/);
   assert.match(shell, /profilePresentationLayoutVariant === 'portfolio' \? 'Explore profile' : \(continuationLinks\.length \? 'Links' : 'More'\)/);
   assert.match(shell, /profile-shell__more-cue--continuation/);
   assert.match(frame, /profile-shell-page--minimal\) \.profile-layout-frame \{ --profile-layout-width: 280px; \}/);
@@ -266,6 +271,8 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(preview, /previewContentOverflow/);
   assert.match(preview, /previewOpeningOverflow/);
   assert.match(shell, /data-preview-opening-overflow/);
+  assert.match(preview, /renderSnapshot=\{previewRenderSnapshot\}/);
+  assert.doesNotMatch(preview, /previewIdentityOnly/);
   assert.match(customize, /showLinks=\{false\}/);
   assert.match(customize, /layoutDraft = layout[\s\S]*templateKey: layout\.templateKey[\s\S]*layoutVariant: layout\.layoutVariant[\s\S]*modules: layout\.modules[\s\S]*links: base\.links/);
   assert.doesNotMatch(customize, /layoutDraft = layout[\s\S]*appearance: layout\.appearance/);

@@ -80,7 +80,7 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
 });
 
 test('reference workspace composition stays explicit', async () => {
-  const [settings, header, preview, draftModel, actions, appearance, appearanceColors, cosmetics, customize, mediaWorkspace, profileShell, editor, expression, shopPreview] = await Promise.all([
+  const [settings, header, preview, draftModel, actions, appearance, appearanceColors, cosmetics, customize, mediaWorkspace, profileShell, editor, expression, shopPreview, renderModel] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
@@ -94,7 +94,8 @@ test('reference workspace composition stays explicit', async () => {
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
-    read('src/lib/ShopItemPreview.svelte')
+    read('src/lib/ShopItemPreview.svelte'),
+    read('src/lib/profileRenderModel.js')
   ]);
   assert.match(actions, /Customize profile/);
   assert.match(actions, /All changes saved/);
@@ -145,7 +146,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(settings, /on:cosmeticpreview=\{updateCosmeticPreview\}/);
   assert.match(settings, /on:customizepreview=\{updateConfigurationPreview\}/);
   assert.match(draftModel, /equipped_cosmetics: cosmeticPreviewLoadout \|\| equippedCosmetics/);
-  assert.match(profileShell, /getNameRendererLoadout\(cosmetics\)/);
+  assert.match(renderModel, /getNameRendererLoadout\(cosmetics\)/);
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
   assert.match(profileShell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(expression, /\.profile-expression-editor__compact-grid \{[\s\S]*grid-template-columns: minmax\(0, \.9fr\) minmax\(0, \.9fr\) minmax\(0, 1\.5fr\)/);

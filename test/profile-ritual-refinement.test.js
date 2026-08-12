@@ -7,6 +7,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('the profile identity surface stays sparse and keeps the archive outside the card', async () => {
   const identity = await read('src/lib/IdentityCard.svelte');
   const shell = await read('src/lib/ProfileShell.svelte');
+  const renderModel = await read('src/lib/profileRenderModel.js');
 
   assert.doesNotMatch(identity, /identity-card__handle-row|identity-card__handle/);
   assert.match(identity, /identity-card__link-glyph/);
@@ -25,8 +26,8 @@ test('the profile identity surface stays sparse and keeps the archive outside th
   assert.match(shell, /profile-shell__approved-game/);
   assert.match(shell, /profile-shell__approved-featured/);
   assert.match(shell, /badges=\{pinnedAchievements\}/);
-  assert.match(shell, /staff=\{Boolean\(targetProfile\?\.is_staff\)\}/);
-  assert.match(shell, /profileDisplayName = username/);
+  assert.match(shell, /staff=\{Boolean\(renderProfile\?\.is_staff\)\}/);
+  assert.match(renderModel, /profileDisplayName = profile\?\.display_name \|\| profileName/);
   assert.match(shell, /showToday=\{false\}/);
   assert.match(shell, /quiet=\{true\}/);
   assert.match(shell, /data-profile-region="featured"/);

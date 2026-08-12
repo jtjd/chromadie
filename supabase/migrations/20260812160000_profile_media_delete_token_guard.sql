@@ -76,7 +76,7 @@ BEGIN
         ),
         '[]'::jsonb
       );
-      v_selected := EXISTS (
+      v_selected := v_selected OR EXISTS (
         SELECT 1
         FROM jsonb_array_elements(COALESCE(v_audio_playlist->'tracks', '[]'::jsonb)) track
         WHERE track->>'path' = v_asset.storage_path

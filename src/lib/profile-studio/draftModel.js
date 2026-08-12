@@ -1,5 +1,6 @@
 import { normalizeRichMediaConfig } from '../profileRichMedia.js';
 import { createDefaultProfileConfig, normalizeProfileConfig } from '../profileConfig.js';
+import { buildProfileRenderSnapshot } from '../profileRenderModel.js';
 
 export const PROFILE_STUDIO_FALLBACK_COLOR = '#CDD2FF';
 
@@ -145,7 +146,9 @@ export function createProfileStudioPreviewModel(options = {}) {
     configurationPreview = null,
     identityPreview = null,
     cosmeticPreviewLoadout = null,
-    fallbackColor = PROFILE_STUDIO_FALLBACK_COLOR
+    fallbackColor = PROFILE_STUDIO_FALLBACK_COLOR,
+    previewDevice = 'desktop',
+    featureFlags = null
   } = options;
   const previewProfileConfigBase = configurationPreview || toEditorProfileConfig(profileConfig?.draft, fallbackColor);
   const previewProfileConfig = identityPreview?.identityPresentation
@@ -157,14 +160,36 @@ export function createProfileStudioPreviewModel(options = {}) {
         bio: identityPreview ? identityPreview.bio : targetProfile.bio,
         equipped_cosmetics: cosmeticPreviewLoadout || equippedCosmetics || {}
       }
-    : null;
+      : null;
+
+  const snapshot = buildProfileRenderSnapshot({
+    profile: targetProfile,
+    profileConfig,
+    configurationPreview,
+    identityPreview,
+    equippedCosmetics,
+    cosmeticPreviewLoadout,
+    scores: options.previewScores || [],
+    timelineEvents: options.previewTimelineEvents || [],
+    collectionItems: options.previewCollectionItems || [],
+    allAchievements: options.previewAllAchievements || [],
+    fallbackColor,
+    featureFlags,
+    previewDevice,
+    previewMode: true,
+    mode: 'studio',
+    isOwner: false,
+    dev: options.dev === true,
+    visualFixture: options.visualFixture || ''
+  });
 
   return Object.freeze({
     profile: previewProfile,
     profileConfig: previewProfileConfig,
     identity: identityPreview,
     cosmetics: cosmeticPreviewLoadout,
-    configuration: configurationPreview
+    configuration: configurationPreview,
+    snapshot
   });
 }
 
