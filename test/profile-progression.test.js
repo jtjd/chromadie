@@ -6,8 +6,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('progression is a dashboard surface backed by existing profile history', async () => {
   const progression = await read('src/lib/ProfileProgression.svelte');
-  const [settings, registry, workspace] = await Promise.all([
-    read('src/lib/ProfileSettings.svelte'),
+  const [registry, workspace] = await Promise.all([
     read('src/lib/profile-studio/sectionRegistry.js'),
     read('src/lib/ProfileStudioWorkspace.svelte')
   ]);

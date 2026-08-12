@@ -40,8 +40,8 @@ test('media library migration keeps registration and deletion owner-scoped', asy
   assert.match(editor, /profile_media_assets/);
   assert.match(editor, /register_my_profile_media_asset/);
   assert.match(editor, /delete_my_profile_media_asset/);
-  const avatarRemove = editor.match(/async function removeAvatar\(\)[\s\S]*?(?=\n  async function)/)?.[0] || '';
-  const backgroundRemove = editor.match(/async function removeBackground\(\)[\s\S]*?(?=\n  async function)/)?.[0] || '';
+  const avatarRemove = editor.match(/async function removeAvatar\(\)[\s\S]*?(?=\n\x20{2}async function)/)?.[0] || '';
+  const backgroundRemove = editor.match(/async function removeBackground\(\)[\s\S]*?(?=\n\x20{2}async function)/)?.[0] || '';
   assert.doesNotMatch(avatarRemove, /storage\.from\(reference\.bucket\)\.remove/);
   assert.doesNotMatch(backgroundRemove, /storage\.from\(reference\.bucket\)\.remove/);
   assert.match(editor, /verifyPersistedImage/);

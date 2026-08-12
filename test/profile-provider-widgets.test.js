@@ -49,11 +49,10 @@ test('provider widgets are bounded, unique, visible-aware, and legacy compatible
 });
 
 test('provider widget renderer and storage contract remain allowlisted', async () => {
-  const [renderer, editor, shell, settings, registry, migration, headers, pageFunction] = await Promise.all([
+  const [renderer, editor, shell, registry, migration, headers, pageFunction] = await Promise.all([
     read('src/lib/ProfileWidgets.svelte'),
     read('src/lib/ProfileWidgetEditor.svelte'),
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
     read('supabase/migrations/20260808150000_profile_provider_widgets.sql'),
     read('public/_headers'),

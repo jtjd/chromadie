@@ -127,8 +127,6 @@ test('profile shell route parser preserves the public path and legacy controls e
 
 test('profile shell is live-data based and keeps roll authority in the owner-only module', async () => {
   const source = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
-  const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
-  const workspace = await readFile(new URL('../src/lib/ProfileStudioWorkspace.svelte', import.meta.url), 'utf8');
   const registry = await readFile(new URL('../src/lib/profile-studio/sectionRegistry.js', import.meta.url), 'utf8');
   assert.match(source, /loadProfileContext/);
   assert.match(registry, /id: 'account',[\s\S]*ProfileAccountSettings\.svelte/);

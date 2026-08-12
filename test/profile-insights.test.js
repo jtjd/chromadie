@@ -116,11 +116,10 @@ test('denied or malformed profile views never invoke the recorder', async () => 
 });
 
 test('profile insights preserve the privacy and dashboard boundaries', async () => {
-  const [recorder, shell, component, settings, registry, contract, migration] = await Promise.all([
+  const [recorder, shell, component, registry, contract, migration] = await Promise.all([
     read('src/lib/profileViewAnalytics.js'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileInsights.svelte'),
-    read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
     read('src/lib/profile-studio/dashboardContract.js'),
     read('supabase/migrations/20260808170000_profile_insights.sql')
