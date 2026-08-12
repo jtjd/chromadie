@@ -1,44 +1,9 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { addToast } from './stores';
-  import { trackProductEvent } from './productAnalytics.js';
 
-  export let username = '';
-  export let shareUrl = '';
   export let isOwner = false;
 
   const dispatch = createEventDispatcher();
-  let shareInProgress = false;
-
-  async function shareProfile() {
-    if (shareInProgress) return;
-    shareInProgress = true;
-    const url = shareUrl || (typeof window !== 'undefined' ? window.location.href : '');
-
-    try {
-      let method = '';
-      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-        await navigator.share({
-          title: username ? `${username} | chm.lol` : 'A ChromaDie profile',
-          text: username ? `See ${username}'s color identity.` : 'See this color identity.',
-          url
-        });
-        method = 'native';
-      } else if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-        method = 'clipboard';
-      } else {
-        throw new Error('Share is unavailable.');
-      }
-
-      trackProductEvent('profile_shared', { surface: 'profile', method });
-      addToast(method === 'clipboard' ? 'Profile link copied.' : 'Profile shared.', 'success');
-    } catch (error) {
-      if (error?.name !== 'AbortError') addToast('Could not share this profile.', 'error');
-    } finally {
-      shareInProgress = false;
-    }
-  }
 </script>
 
 <header class="profile-mode-header">
@@ -49,10 +14,6 @@
 
   <nav class="profile-mode-header__nav" aria-label="Profile navigation">
     <a href="/leaderboard" on:click|preventDefault={() => dispatch('discover')}>Discover</a>
-    <span aria-hidden="true">/</span>
-    <button type="button" on:click={shareProfile} disabled={shareInProgress}>
-      {shareInProgress ? 'Sharing…' : 'Share'}
-    </button>
     {#if isOwner}
       <span aria-hidden="true">/</span>
       <button type="button" on:click={() => dispatch('edit')}>Edit</button>

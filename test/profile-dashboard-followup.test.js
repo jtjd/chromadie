@@ -74,7 +74,8 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(layout, /Shared data, layout-controlled presentation/);
   assert.match(layout, /Complete each link with a label and a valid HTTPS URL/);
   assert.match(layout, /return showLinks \? validateLinks\(\) : true/);
-  assert.match(settings, /configurationPreview = normalizeProfileConfig\(/);
+  assert.match(settings, /let studioDraft = null/);
+  assert.match(settings, /applyProfileStudioDraftPatch/);
 });
 
 test('collection fitting room previews the draft card appearance and media', async () => {

@@ -17,6 +17,27 @@ const PROFILE_EXPRESSION_FIELDS = Object.freeze([
   'audio_playlist'
 ]);
 
+const PROFILE_LAYOUT_DRAFT_FIELDS = Object.freeze([
+  'templateKey',
+  'layoutVariant',
+  'modules',
+  'linkStyle'
+]);
+
+function hasOwn(value, key) {
+  return Object.prototype.hasOwnProperty.call(value || {}, key);
+}
+
+function scopedConfig(detail) {
+  return detail?.config && typeof detail.config === 'object' ? detail.config : {};
+}
+
+function pickFields(source, fields) {
+  return Object.fromEntries(fields
+    .filter(field => hasOwn(source, field))
+    .map(field => [field, source[field]]));
+}
+
 /**
  * Convert both the original V1 editor shape and the V2 envelope into the
  * bounded shape consumed by the existing editors.  V2 remains the server
@@ -133,9 +154,71 @@ export function mergeDraftConfig(currentConfig, nextConfig, fallbackColor = PROF
 }
 
 /**
- * Compose the one internal preview model.  Child editors can continue to emit
- * their legacy event payloads; the adapter turns each payload into this one
- * projection before it reaches the live renderer.
+ * Apply one editor-owned patch to the complete Studio draft.  Editors may
+ * retain their own input/cache state, but they only contribute the fields
+ * named by their scope.  This prevents a hidden editor's stale normalized
+ * config from replacing appearance, media, identity, or another editor's
+ * current draft.
+ */
+/** @param {any} currentConfig @param {{scope?: string, detail?: any}} patch */
+export function applyProfileStudioDraftPatch(currentConfig, patch = {}, fallbackColor = PROFILE_STUDIO_FALLBACK_COLOR) {
+  const { scope, detail } = patch;
+  const current = toEditorProfileConfig(currentConfig, fallbackColor);
+  const payload = detail && typeof detail === 'object' ? detail : {};
+  const config = scopedConfig(payload);
+
+  if (scope === 'appearance' && payload.appearance) {
+    return normalizeProfileConfig({
+      ...current,
+      appearance: payload.appearance,
+      signatureColor: payload.appearance.colors?.accent || current.signatureColor
+    }, fallbackColor);
+  }
+
+  if (scope === 'media') {
+    const mediaFields = pickFields(payload, PROFILE_EXPRESSION_FIELDS);
+    return Object.keys(mediaFields).length
+      ? normalizeProfileConfig({ ...current, ...mediaFields }, fallbackColor)
+      : current;
+  }
+
+  if (scope === 'layout') {
+    return normalizeProfileConfig({ ...current, ...pickFields(config, PROFILE_LAYOUT_DRAFT_FIELDS) }, fallbackColor);
+  }
+
+  if (scope === 'links') {
+    return normalizeProfileConfig({
+      ...current,
+      ...pickFields(config, ['links', 'linkStyle', 'metadata'])
+    }, fallbackColor);
+  }
+
+  if (scope === 'content' && hasOwn(config, 'content')) {
+    return normalizeProfileConfig({ ...current, content: config.content }, fallbackColor);
+  }
+
+  if (scope === 'widgets' && hasOwn(config, 'widgets')) {
+    return normalizeProfileConfig({ ...current, widgets: config.widgets }, fallbackColor);
+  }
+
+  return current;
+}
+
+export function applyProfileStudioIdentityPatch(currentIdentity = {}, detail = {}) {
+  const current = /** @type {any} */ (currentIdentity);
+  const payload = /** @type {any} */ (detail && typeof detail === 'object' ? detail : {});
+  return {
+    ...(current && typeof current === 'object' ? current : {}),
+    ...(hasOwn(payload, 'bio') ? { bio: payload.bio } : {}),
+    ...(hasOwn(payload, 'identityPresentation') ? { identityPresentation: payload.identityPresentation } : {})
+  };
+}
+
+/**
+ * Compose the one internal preview model. Child editors may retain local
+ * editing/cache state, but only the complete Studio draft and identity draft
+ * reach this function. The renderer never receives editor-owned whole-config
+ * replacements.
  */
 /** @param {any} options */
 export function createProfileStudioPreviewModel(options = {}) {
@@ -143,21 +226,21 @@ export function createProfileStudioPreviewModel(options = {}) {
     targetProfile,
     profileConfig,
     equippedCosmetics,
-    configurationPreview = null,
-    identityPreview = null,
+    studioDraft = null,
+    studioIdentityDraft = null,
     cosmeticPreviewLoadout = null,
     fallbackColor = PROFILE_STUDIO_FALLBACK_COLOR,
     previewDevice = 'desktop',
     featureFlags = null
   } = options;
-  const previewProfileConfigBase = configurationPreview || toEditorProfileConfig(profileConfig?.draft, fallbackColor);
-  const previewProfileConfig = identityPreview?.identityPresentation
-    ? { ...previewProfileConfigBase, identityPresentation: identityPreview.identityPresentation }
+  const previewProfileConfigBase = studioDraft || toEditorProfileConfig(profileConfig?.draft, fallbackColor);
+  const previewProfileConfig = studioIdentityDraft?.identityPresentation
+    ? { ...previewProfileConfigBase, identityPresentation: studioIdentityDraft.identityPresentation }
     : previewProfileConfigBase;
   const previewProfile = targetProfile
     ? {
         ...targetProfile,
-        bio: identityPreview ? identityPreview.bio : targetProfile.bio,
+        bio: studioIdentityDraft && Object.prototype.hasOwnProperty.call(studioIdentityDraft, 'bio') ? studioIdentityDraft.bio : targetProfile.bio,
         equipped_cosmetics: cosmeticPreviewLoadout || equippedCosmetics || {}
       }
       : null;
@@ -165,8 +248,8 @@ export function createProfileStudioPreviewModel(options = {}) {
   const snapshot = buildProfileRenderSnapshot({
     profile: targetProfile,
     profileConfig,
-    configurationPreview,
-    identityPreview,
+    studioDraft,
+    studioIdentityDraft,
     equippedCosmetics,
     cosmeticPreviewLoadout,
     scores: options.previewScores || [],
@@ -186,21 +269,25 @@ export function createProfileStudioPreviewModel(options = {}) {
   return Object.freeze({
     profile: previewProfile,
     profileConfig: previewProfileConfig,
-    identity: identityPreview,
-    cosmetics: cosmeticPreviewLoadout,
-    configuration: configurationPreview,
+    identity: studioIdentityDraft,
+    cosmetics: snapshot.cosmetics?.loadout || {},
+    configuration: previewProfileConfig,
     snapshot
   });
 }
 
 /** @param {any} options */
 export function createProfileStudioDraftState({ profileConfig, targetProfile, equippedCosmetics } = /** @type {any} */ ({})) {
+  const editorProfileConfig = createEditorProfileConfig(profileConfig) || createEmptyEditorProfileConfig();
   return {
-    profileConfig: createEditorProfileConfig(profileConfig) || createEmptyEditorProfileConfig(),
+    profileConfig: editorProfileConfig,
     targetProfile: targetProfile || {},
     equippedCosmetics: equippedCosmetics || {},
-    configurationPreview: null,
-    identityPreview: null,
+    studioDraft: toEditorProfileConfig(editorProfileConfig.draft),
+    studioIdentityDraft: {
+      bio: targetProfile?.bio || '',
+      identityPresentation: toEditorProfileConfig(editorProfileConfig.draft).identityPresentation
+    },
     cosmeticPreviewLoadout: null
   };
 }

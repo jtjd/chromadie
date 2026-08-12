@@ -2723,3 +2723,17 @@ direct route behavior.
 - Removed public “No bio added yet.” filler and legacy handle CSS; added
   structural layout assertions and fresh desktop/mobile capture paths to the
   browser smoke script.
+
+## 2026-08-12 — Stabilize the canonical Profile Studio draft
+
+- Profile Studio now resolves one complete draft from field-scoped editor
+  patches instead of allowing hidden editors to replace unrelated preview
+  state.
+- Removed the duplicate `customizepreview` event path and kept restored editor
+  caches scoped to their owning fields.
+- Applied surface appearance directly to the shared profile surface owner and
+  added computed-color/opacity/blur regression coverage.
+- Removed timing-dependent opening-overflow alignment state while retaining
+  readable physical desktop/mobile preview behavior.
+- Accepted structurally valid V2 configuration envelopes even when optional
+  expression media is absent.

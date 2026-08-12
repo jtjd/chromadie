@@ -49,9 +49,9 @@ test('Profile Studio routing keeps canonical destinations and legacy hashes comp
 test('the draft model composes identity, configuration, and cosmetic previews without a server mutation', () => {
   const editorConfig = createEmptyEditorProfileConfig();
   const targetProfile = { id: 'profile-1', username: 'chromadie', bio: 'published bio', equipped_cosmetics: { name_font: 'name_font_default' } };
-  const configurationPreview = { ...editorConfig.draft, bio: 'configuration draft' };
+  const studioDraft = { ...editorConfig.draft, bio: 'configuration draft' };
   const cosmeticPreviewLoadout = { name_font: 'name_font_marker_tag', profile_border: 'border_celestial' };
-  const identityPreview = {
+  const studioIdentityDraft = {
     bio: 'identity draft',
     identityPresentation: { avatarPosition: 'top', showHandle: false }
   };
@@ -60,16 +60,19 @@ test('the draft model composes identity, configuration, and cosmetic previews wi
     targetProfile,
     profileConfig: editorConfig,
     equippedCosmetics: targetProfile.equipped_cosmetics,
-    configurationPreview,
-    identityPreview,
+    studioDraft,
+    studioIdentityDraft,
     cosmeticPreviewLoadout
   });
 
   assert.equal(preview.profile.bio, 'identity draft');
   assert.equal(preview.profile.equipped_cosmetics, cosmeticPreviewLoadout);
-  assert.equal(preview.profileConfig.bio, configurationPreview.bio);
-  assert.deepEqual(preview.profileConfig.identityPresentation, identityPreview.identityPresentation);
-  assert.equal(preview.configuration, configurationPreview);
+  assert.equal(preview.profileConfig.bio, studioDraft.bio);
+  assert.deepEqual(preview.profileConfig.identityPresentation, studioIdentityDraft.identityPresentation);
+  assert.deepEqual(preview.configuration, {
+    ...studioDraft,
+    identityPresentation: studioIdentityDraft.identityPresentation
+  });
   assert.equal(preview.cosmetics, cosmeticPreviewLoadout);
 
   const state = createProfileStudioDraftState({
@@ -77,8 +80,8 @@ test('the draft model composes identity, configuration, and cosmetic previews wi
     targetProfile,
     equippedCosmetics: targetProfile.equipped_cosmetics
   });
-  assert.equal(state.configurationPreview, null);
-  assert.equal(state.identityPreview, null);
+  assert.deepEqual(state.studioDraft, editorConfig.draft);
+  assert.equal(state.studioIdentityDraft.bio, targetProfile.bio);
   assert.deepEqual(state.equippedCosmetics, targetProfile.equipped_cosmetics);
 
   const configurationV2 = buildConfigurationV2(editorConfig.draft, { version: 2, sharing: { qrEnabled: false } });
@@ -145,4 +148,8 @@ test('dashboard ownership keeps routing, rendering, and dirty-state boundaries s
   assert.match(registry, /PROFILE_STUDIO_SECTION_REGISTRY/);
   assert.match(registry, /getProfileStudioSectionLoader/);
   assert.match(shell, /slot name="preview"/);
+  const customize = await read('src/lib/ProfileCustomizePage.svelte');
+  assert.match(customize, /dispatch\('studiopatch'/);
+  assert.doesNotMatch(customize, /customizepreview/);
+  assert.doesNotMatch(settings, /configurationPreview|identityPreview/);
 });

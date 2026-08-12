@@ -43,13 +43,8 @@
       observedPreviewShell = null;
     }
     const nextContentOverflow = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
-    const opening = shell?.querySelector('.profile-shell__approved-opening');
-    const openingBox = opening?.getBoundingClientRect();
-    const nextOpeningOverflow = Boolean(shell && openingBox && openingBox.height > shell.clientHeight + 4);
     const nextContentOverflowValue = nextContentOverflow ? 'true' : 'false';
-    const nextOpeningOverflowValue = nextOpeningOverflow ? 'true' : 'false';
     if (shell && shell.dataset.previewContentOverflow !== nextContentOverflowValue) shell.dataset.previewContentOverflow = nextContentOverflowValue;
-    if (shell && shell.dataset.previewOpeningOverflow !== nextOpeningOverflowValue) shell.dataset.previewOpeningOverflow = nextOpeningOverflowValue;
     if (nextContentOverflow !== previewScrollNeeded) previewScrollNeeded = nextContentOverflow;
   }
 

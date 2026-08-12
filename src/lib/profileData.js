@@ -18,6 +18,15 @@ const PROFILE_LOAD_MESSAGE = 'The profile could not be loaded. Please check your
 let achievementsCache = null;
 let achievementsRequest = null;
 
+function isValidV2ConfigurationResponse(response) {
+  const value = response?.data;
+  if (response?.error || !value || typeof value !== 'object' || value.success === false) return false;
+  return Number(value.version) === 2
+    || Number(value.draft?.version) === 2
+    || Number(value.published?.version) === 2
+    || Boolean(value.base && typeof value.base === 'object');
+}
+
 /**
  * V2 owns the expression-aware read contract. Keep the legacy read as a
  * compatibility fallback while older deployments finish applying the additive
@@ -35,7 +44,7 @@ async function loadProfileConfiguration(supabaseClient, { viewingOwnProfile, pro
     viewingOwnProfile ? 'get_my_profile_configuration_v2' : 'get_public_profile_configuration_v2',
     legacyArgs
   );
-  if (v2Response.data?.base?.avatar_path || v2Response.data?.draft?.base?.avatar_path) return v2Response;
+  if (isValidV2ConfigurationResponse(v2Response)) return v2Response;
   return supabaseClient.rpc(legacyName, legacyArgs);
 }
 

@@ -261,7 +261,8 @@ async function readRenderParityState(selector) {
     const identity = root?.querySelector('.identity-card');
     const avatar = identity?.querySelector('.identity-card__avatar-media');
     const background = root?.querySelector('.profile-shell__media-image');
-    const surface = opening ? getComputedStyle(opening) : null;
+    const boundary = root?.querySelector('[data-profile-surface="true"]');
+    const surface = boundary ? getComputedStyle(boundary) : null;
     const path = value => {
       try { return value ? new URL(value, location.href).pathname : ''; } catch { return value || ''; }
     };
@@ -276,7 +277,9 @@ async function readRenderParityState(selector) {
         opacity: surface.getPropertyValue('--profile-surface-opacity').trim(),
         blur: surface.getPropertyValue('--profile-surface-blur').trim(),
         radius: surface.getPropertyValue('--profile-border-radius').trim(),
-        borderColor: surface.getPropertyValue('--profile-border-color').trim()
+        borderColor: surface.getPropertyValue('--profile-border-color').trim(),
+        backgroundColor: surface.backgroundColor,
+        backdropFilter: surface.backdropFilter || surface.webkitBackdropFilter || 'none'
       } : null,
       nameRenderer: identity?.querySelector('.name-effect-canvas')?.getAttribute('data-name-renderer') || '',
       avatarEffect: [...(identity?.querySelector('.avatar-effect')?.classList || [])].find(value => value.startsWith('avatar-effect--')) || '',
@@ -1094,7 +1097,7 @@ try {
             return { position: style.position, width: style.width, height: style.height, objectFit: style.objectFit };
           });
           const contentOverflow = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
-          const openingFits = Boolean(shell && openingBox && openingBox.height <= shell.clientHeight + 4);
+          const openingFits = Boolean(stage && openingBox && openingBox.height <= stage.clientHeight + 4);
           const frameCenterX = frameBox ? frameBox.left + frameBox.width / 2 : null;
           const frameCenterY = frameBox ? frameBox.top + frameBox.height / 2 : null;
           const stageCenterX = stageBox ? stageBox.left + stageBox.width / 2 : null;
@@ -1137,7 +1140,7 @@ try {
             previewScrollable: stage?.getAttribute('data-preview-scrollable') === 'true',
             contentOverflow,
             openingFits,
-            openingOverflow: shell?.dataset.previewOpeningOverflow === 'true',
+            openingOverflow: Boolean(stage && openingBox && openingBox.height > stage.clientHeight + 4),
             frameCenterDeltaX: frameCenterX !== null && stageCenterX !== null ? Math.abs(frameCenterX - stageCenterX) : null,
             frameCenterDeltaY: frameCenterY !== null && stageCenterY !== null ? Math.abs(frameCenterY - stageCenterY) : null,
             scrollCue: Boolean(canvas?.querySelector('.profile-studio-preview__scroll-cue')),
@@ -1519,7 +1522,44 @@ try {
     })`);
     assert(!surfacePlacement.inColorMatrix && surfacePlacement.inSurfaceSection, `Profile surface color is not grouped with surface depth: ${JSON.stringify(surfacePlacement)}.`);
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', '#234567', ['input']);
-    await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell__approved-opening')).getPropertyValue('--profile-surface').trim().toUpperCase() === '#234567'`, 'surface color draft in live preview');
+    await page.waitFor(`(() => {
+      const boundary = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
+      const style = boundary ? getComputedStyle(boundary) : null;
+      return style?.getPropertyValue('--profile-surface').trim().toUpperCase() === '#234567'
+        && /35,\\s*69,\\s*103/.test(style?.backgroundColor || '')
+        && (style?.backdropFilter || style?.webkitBackdropFilter || '').includes('blur(');
+    })()`, 'surface color, opacity, and blur in the actual profile boundary');
+    const surfaceBeforeUnrelatedEdit = await page.evaluate(`(() => {
+      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
+      const style = surface ? getComputedStyle(surface) : null;
+      return style ? {
+        backgroundColor: style.backgroundColor,
+        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
+        fill: style.getPropertyValue('--profile-surface-fill').trim(),
+        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
+        blur: style.getPropertyValue('--profile-surface-blur').trim()
+      } : null;
+    })()`);
+    const unrelatedTextColor = await page.evaluate(`document.querySelector('[data-color-role="text"] .appearance-editor__hex')?.value || '#F4F6FB'`);
+    await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', '#12ABEF', ['input']);
+    await page.waitFor(`(() => {
+      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
+      const style = surface ? getComputedStyle(surface) : null;
+      return style?.getPropertyValue('--profile-surface').trim().toUpperCase() === '#234567';
+    })()`, 'surface survives unrelated appearance edit');
+    const surfaceAfterUnrelatedEdit = await page.evaluate(`(() => {
+      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
+      const style = surface ? getComputedStyle(surface) : null;
+      return style ? {
+        backgroundColor: style.backgroundColor,
+        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
+        fill: style.getPropertyValue('--profile-surface-fill').trim(),
+        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
+        blur: style.getPropertyValue('--profile-surface-blur').trim()
+      } : null;
+    })()`);
+    assert(JSON.stringify(surfaceAfterUnrelatedEdit) === JSON.stringify(surfaceBeforeUnrelatedEdit), `Unrelated text edit changed the rendered profile surface: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterUnrelatedEdit })}.`);
+    await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', unrelatedTextColor, ['input']);
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', originalSurfaceColor, ['input']);
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2') || request.url.includes('publish_profile_studio_v2')).length;
     await page.setInputValue('.appearance-editor__surface-grid .appearance-editor__range:nth-child(4) input[type="range"]', 40, ['input']);

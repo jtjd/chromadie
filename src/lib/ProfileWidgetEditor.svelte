@@ -80,6 +80,7 @@
     baseline = toWidgetDrafts(draftConfig || publishedConfig);
     error = '';
     status = cached?.widgets ? 'Unsaved widget changes restored.' : '';
+    if (cached?.widgets) dispatch('configpreview', { config: previewConfig() });
   }
 
   function emitDirty(value = null) {

@@ -72,10 +72,12 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
     read('scripts/browser/profile-studio-smoke.mjs')
   ]);
 
-  assert.match(workspace, /on:expressionchange=\{forward\}/);
-  assert.match(customize, /on:expressionchange=\{forward\}/);
+  assert.match(workspace, /on:studiopatch=\{forward\}/);
+  assert.match(customize, /forwardPatch\('media'/);
   assert.match(settings, /function updateExpression\(event\)/);
-  assert.match(settings, /configurationPreview = normalizeProfileConfig\(/);
+  assert.match(settings, /let studioDraft = null/);
+  assert.match(settings, /function applyStudioPatch\(event\)/);
+  assert.doesNotMatch(settings, /configurationPreview|updateConfigurationPreview/);
   assert.match(preview, /\{previewDevice\}/);
   assert.match(preview, /canvas--mobile[\s\S]*height: min\(42rem/);
   assert.match(preview, /profile-studio-preview__stage/);

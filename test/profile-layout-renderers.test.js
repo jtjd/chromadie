@@ -269,15 +269,15 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(preview, /height: clamp\(24rem, 54vh, 32rem\)/);
   assert.match(preview, /profile-studio-preview__scroll-cue/);
   assert.match(preview, /previewContentOverflow/);
-  assert.match(preview, /previewOpeningOverflow/);
-  assert.match(shell, /data-preview-opening-overflow/);
+  assert.doesNotMatch(preview, /previewOpeningOverflow/);
+  assert.doesNotMatch(shell, /data-preview-opening-overflow/);
   assert.match(preview, /renderSnapshot=\{previewRenderSnapshot\}/);
   assert.doesNotMatch(preview, /previewIdentityOnly/);
   assert.match(customize, /showLinks=\{false\}/);
   assert.match(customize, /layoutDraft = layout[\s\S]*templateKey: layout\.templateKey[\s\S]*layoutVariant: layout\.layoutVariant[\s\S]*modules: layout\.modules[\s\S]*links: base\.links/);
   assert.doesNotMatch(customize, /layoutDraft = layout[\s\S]*appearance: layout\.appearance/);
-  assert.match(settings, /const layoutFields = localDraft[\s\S]*modules: Array\.isArray\(localDraft\.modules\)[\s\S]*activeSection === 'links' \|\| activeSection === 'profile-layout'/);
-  assert.match(settings, /activeSection === 'customize'[\s\S]*links: base\.links/);
+  assert.match(settings, /function getDashboardDraft\(\)[\s\S]*studioDraft \|\| toEditorProfileConfig/);
+  assert.match(settings, /applyProfileStudioDraftPatch/);
 });
 
 test('Studio media mutations return the profile concurrency token', async () => {

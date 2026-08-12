@@ -6,6 +6,7 @@
   export let className = '';
   export let compact = false;
   export let animated = true;
+  export let surfaceStyle = '';
 
   let host;
   let visible = true;
@@ -53,7 +54,7 @@
   });
 </script>
 
-<div bind:this={host} class={hostClass} data-profile-border={resolvedKey || 'none'}>
+<div bind:this={host} class={hostClass} style={surfaceStyle} data-profile-border={resolvedKey || 'none'} data-profile-surface="true">
   <div class="profile-border-effect__content">
     <slot />
   </div>

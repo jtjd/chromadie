@@ -199,7 +199,7 @@ test('profile context uses the media-aware V2 read contract for owner and public
   assert.equal(visitorSupabase.calls.some(call => call.name === 'get_public_profile_configuration_v2'), true);
 });
 
-test('profile context backfills expression media from the legacy read during a partial V2 rollout', async () => {
+test('profile context accepts a structurally valid V2 envelope without an avatar', async () => {
   const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
   const legacyConfig = { ...createDefaultProfileConfig('#112233'), avatar_path: avatarPath };
   const baseWithoutAvatar = Object.fromEntries(
@@ -229,11 +229,12 @@ test('profile context backfills expression media from the legacy read during a p
     profileUsername: 'neonuser'
   });
 
-  assert.equal(owner.profileConfig.draft.avatar_path, avatarPath);
-  assert.equal(supabaseClient.calls.some(call => call.name === 'get_my_profile_configuration'), true);
+  assert.equal(owner.profileConfig.draft.avatar_path ?? null, null);
+  assert.equal(owner.profileConfig.version, 2);
+  assert.equal(supabaseClient.calls.some(call => call.name === 'get_my_profile_configuration'), false);
 });
 
-test('public profile context falls back when the deployed V2 envelope omits expression media', async () => {
+test('public profile context does not switch contracts based on missing expression media', async () => {
   const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
   const published = { ...createDefaultProfileConfig('#112233'), avatar_path: avatarPath };
   const v2WithoutExpression = {
@@ -257,9 +258,9 @@ test('public profile context falls back when the deployed V2 envelope omits expr
     profileUsername: 'OtherUser'
   });
 
-  assert.equal(visitor.profileConfig.published.avatar_path, avatarPath);
+  assert.equal(visitor.profileConfig.published.avatar_path ?? null, null);
   assert.equal(supabaseClient.calls.some(call => call.name === 'get_public_profile_configuration_v2'), true);
-  assert.equal(supabaseClient.calls.some(call => call.name === 'get_public_profile_configuration'), true);
+  assert.equal(supabaseClient.calls.some(call => call.name === 'get_public_profile_configuration'), false);
 });
 
 test('profile configuration editor and renderer retain safe draft/publish boundaries', async () => {

@@ -4469,8 +4469,25 @@ the sole long-term authority. The legacy `equipped_cosmetics.profile_layout`
 slot remains available for historical inventory compatibility, but selecting a
 layout in Studio is draft-only and never unequips a server item.
 
-Studio preview renders the profile environment at page level inside a logical
-1440×900 desktop canvas (or an explicit phone canvas), so media and effects sit
-around the identity surface rather than inside its boundary. A canonical
+Studio preview renders the profile environment at page level inside a
+desktop-like physical stage (or an explicit phone stage), so media and effects
+sit around the identity surface rather than inside its boundary. A canonical
 profile-link registry now supplies editor labels, URL validation, and public
 icons from one allow-listed definition set.
+
+## 2026-08-12 — Make Studio preview state field-scoped and surface-owned
+
+Profile Studio now keeps one complete `studioDraft` and one identity draft in
+`ProfileSettings`. Appearance, media, layout, links, content, widgets, and
+identity editors emit scoped patches; no editor may replace the complete
+preview configuration. The render-model builder consumes that draft together
+with the resolved cosmetic loadout and remains the single precedence boundary
+for the public renderer and Live Preview.
+
+The resolved surface style is applied directly to `ProfileBorderEffect`, the
+actual visual surface owner, so computed color, opacity, blur, radius, and
+border values do not depend on inheritance through the geometry wrapper.
+Preview alignment no longer uses an opening-overflow data attribute; the
+physical preview shell and auto margins center a fitting opening while keeping
+an oversized opening top-accessible. V2 configuration reads are accepted based
+on a valid V2 envelope rather than whether an unrelated avatar field exists.

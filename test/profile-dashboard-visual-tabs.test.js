@@ -140,11 +140,11 @@ test('reference workspace composition stays explicit', async () => {
     assert.match(cosmetics, new RegExp(`previewSlot\\('${slot}'`));
   }
   assert.match(cosmetics, /NAME_COMPOSABLE_SLOTS[\s\S]*previewSlot\(slot/);
-  assert.match(customize, /dispatch\('customizepreview'/);
+  assert.match(customize, /dispatch\('studiopatch'/);
   assert.match(customize, /on:cosmeticpreview=\{forward\}/);
-  assert.match(settings, /on:identitypreview=\{updateIdentityPreview\}/);
   assert.match(settings, /on:cosmeticpreview=\{updateCosmeticPreview\}/);
-  assert.match(settings, /on:customizepreview=\{updateConfigurationPreview\}/);
+  assert.match(settings, /on:studiopatch=\{applyStudioPatch\}/);
+  assert.doesNotMatch(settings, /configurationPreview|identityPreview|customizepreview|updateConfigurationPreview/);
   assert.match(draftModel, /equipped_cosmetics: cosmeticPreviewLoadout \|\| equippedCosmetics/);
   assert.match(renderModel, /getNameRendererLoadout\(cosmetics\)/);
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);

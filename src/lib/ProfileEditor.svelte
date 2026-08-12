@@ -62,6 +62,9 @@
     baseline = nextBaseline;
     error = '';
     status = cached?.draft && !areProfileConfigsEqual(next, nextBaseline) ? 'Unsaved layout restored.' : '';
+    if (cached?.draft && !areProfileConfigsEqual(next, nextBaseline)) {
+      dispatch('configpreview', { config: draft });
+    }
   }
 
   function emitDirty(value = null) {

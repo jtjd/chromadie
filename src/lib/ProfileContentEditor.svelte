@@ -46,6 +46,7 @@
     emptyProject = { ...EMPTY_PROJECT };
     error = '';
     status = cached?.draft ? 'Unsaved content restored.' : '';
+    if (cached?.draft) dispatch('configpreview', { config: draft });
   }
 
   function emitDirty(value = null) {

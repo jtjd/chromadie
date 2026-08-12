@@ -34,15 +34,10 @@
   // switching tabs before the dashboard publish action runs.
   function forward(event) {
     dispatch(event.type, event.detail);
-    if (event.type === 'appearancechange' || event.type === 'configpreview' || event.type === 'identitypreview' || event.type === 'expressionchange') {
-      const draft = getDraftConfig();
-      const expression = event.type === 'expressionchange' && event.detail && typeof event.detail === 'object'
-        ? event.detail
-        : {};
-      dispatch('customizepreview', {
-        config: normalizeProfileConfig({ ...draft, ...expression })
-      });
-    }
+  }
+
+  function forwardPatch(scope, event) {
+    dispatch('studiopatch', { scope, detail: event.detail || {} });
   }
 
   function forwardDirty(source, event) {
@@ -129,7 +124,7 @@
 
     {#if mediaComponent}
       <div class="profile-customize-page__editor profile-customize-page__editor--media">
-        <ProfileMediaWorkspace bind:this={mediaWorkspaceEditor} {mediaComponent} {profileId} {accountUsername} {targetProfile} {profileConfig} {staff} {entitlements} on:expressionchange={forward} on:appearancechange={forward} on:dirty={event => forwardDirty('customize:media', event)} />
+        <ProfileMediaWorkspace bind:this={mediaWorkspaceEditor} {mediaComponent} {profileId} {accountUsername} {targetProfile} {profileConfig} {staff} {entitlements} on:expressionchange={event => forwardPatch('media', event)} on:appearancechange={event => forwardPatch('appearance', event)} on:dirty={event => forwardDirty('customize:media', event)} />
       </div>
     {:else}
       <div class="profile-customize-page__loading" role="status">Loading media controls…</div>
@@ -153,7 +148,7 @@
           <span aria-hidden="true">01</span>
         </div>
         {#if identityComponent}
-          <svelte:component this={identityComponent} bind:this={identityEditor} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} studio={true} on:identitypreview={forward} on:identitysaved={forward} on:configsaved={forward} on:dirty={event => forwardDirty('customize:identity', event)} />
+          <svelte:component this={identityComponent} bind:this={identityEditor} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} studio={true} on:identitypreview={event => forwardPatch('identity', event)} on:identitysaved={forward} on:configsaved={forward} on:dirty={event => forwardDirty('customize:identity', event)} />
         {:else}
           <div class="profile-customize-page__loading" role="status">Loading identity controls…</div>
         {/if}
@@ -163,7 +158,7 @@
 
   <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-label="Profile appearance" data-editor-section="appearance" id="customize-appearance">
     <div class="profile-customize-page__editor">
-      <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={forward} on:dirty={event => forwardDirty('customize:appearance', event)} />
+      <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={event => forwardPatch('appearance', event)} on:dirty={event => forwardDirty('customize:appearance', event)} />
     </div>
   </section>
 
@@ -183,7 +178,7 @@
     </div>
     <div class="profile-customize-page__editor">
       {#if layoutComponent}
-        <svelte:component this={layoutComponent} bind:this={layoutEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} studio={true} showLinks={false} on:dirty={event => forwardDirty('customize:layout', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+        <svelte:component this={layoutComponent} bind:this={layoutEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} studio={true} showLinks={false} on:dirty={event => forwardDirty('customize:layout', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardPatch('layout', event)} />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading template controls…</div>
       {/if}
@@ -205,7 +200,7 @@
           <span aria-hidden="true">02</span>
         </div>
         {#if contentComponent}
-          <svelte:component this={contentComponent} bind:this={contentEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('customize:content', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+          <svelte:component this={contentComponent} bind:this={contentEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('customize:content', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardPatch('content', event)} />
         {:else}
           <div class="profile-customize-page__loading" role="status">Loading content controls…</div>
         {/if}
@@ -222,7 +217,7 @@
     </div>
     <div class="profile-customize-page__editor">
       {#if widgetComponent}
-        <svelte:component this={widgetComponent} bind:this={widgetEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('customize:widgets', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={forward} />
+        <svelte:component this={widgetComponent} bind:this={widgetEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('customize:widgets', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardPatch('widgets', event)} />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading widget controls…</div>
       {/if}

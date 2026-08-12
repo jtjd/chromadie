@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildProfileRenderSnapshot } from '../src/lib/profileRenderModel.js';
 import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
+import { applyProfileStudioDraftPatch } from '../src/lib/profile-studio/draftModel.js';
 
 const MEDIA = Object.freeze({
   avatar: 'avatars/11111111-1111-4111-8111-111111111111/avatar.webp',
@@ -106,7 +107,7 @@ test('public and Studio hosts resolve one rich profile to the same render state'
   const studioSnapshot = buildProfileRenderSnapshot({
     ...input,
     profileConfig: { draft: configuration, published: configuration },
-    configurationPreview: configuration,
+    studioDraft: configuration,
     cosmeticPreviewLoadout: profile.equipped_cosmetics,
     previewMode: true,
     mode: 'studio',
@@ -130,8 +131,8 @@ test('draft, media, identity, and cosmetic precedence is resolved before renderi
   const snapshot = buildProfileRenderSnapshot({
     profile: { id: 'profile-2', username: 'draft-user', bio: 'published bio', equipped_cosmetics: currentCosmetics },
     profileConfig: { draft, published },
-    configurationPreview: { ...draft, layoutVariant: 'modern', appearance: { ...draft.appearance, surface: { opacity: 82, blur: 8 } } },
-    identityPreview: { bio: 'draft bio', identityPresentation: { location: 'Brooklyn, NY' } },
+    studioDraft: { ...draft, layoutVariant: 'modern', appearance: { ...draft.appearance, surface: { opacity: 82, blur: 8 } } },
+    studioIdentityDraft: { bio: 'draft bio', identityPresentation: { location: 'Brooklyn, NY' } },
     cosmeticPreviewLoadout: previewCosmetics,
     featureFlags: FLAGS,
     mediaResolver,
@@ -186,7 +187,7 @@ test('dedicated expression fields survive an incomplete draft envelope', () => {
       draft,
       published: { version: 2, base: published }
     },
-    configurationPreview: draft,
+    studioDraft: draft,
     featureFlags: FLAGS,
     mediaResolver,
     previewMode: true,
@@ -204,7 +205,7 @@ test('current expression selections override the selected configuration atomical
   const snapshot = buildProfileRenderSnapshot({
     profile: { id: 'profile-expression', username: 'expression-stable' },
     profileConfig: { draft: { ...published, layoutVariant: 'sleek' }, published },
-    configurationPreview: { ...published, layoutVariant: 'modern' },
+    studioDraft: { ...published, layoutVariant: 'modern' },
     expression: { avatar_path: null, background_path: 'backgrounds/22222222-2222-4222-8222-222222222222/background.webp' },
     featureFlags: FLAGS,
     mediaResolver,
@@ -238,7 +239,7 @@ test('partial appearance edits retain unrelated media, layout, and cosmetics', (
   const next = buildProfileRenderSnapshot({
     profile: { id: 'profile-3', username: 'stable', equipped_cosmetics: { profile_border: 'border_celestial' } },
     profileConfig: { draft: published, published },
-    configurationPreview: edited,
+    studioDraft: edited,
     featureFlags: FLAGS,
     mediaResolver,
     previewMode: true,
@@ -282,4 +283,41 @@ test('an empty default profile does not manufacture a continuation section', () 
   assert.equal(snapshot.modules.hasContent, false);
   assert.equal(snapshot.modules.showLowerExpression, false);
   assert.equal(snapshot.visibility.hasProfileMore, false);
+});
+
+test('Studio patches update only the editor-owned slice of the canonical draft', () => {
+  const base = createRichConfiguration();
+  const staleEditorConfig = {
+    ...createDefaultProfileConfig('#090B0F'),
+    layoutVariant: 'sleek',
+    appearance: {
+      ...createDefaultProfileConfig('#090B0F').appearance,
+      colors: { ...createDefaultProfileConfig('#090B0F').appearance.colors, surface: '#090B0F' }
+    }
+  };
+
+  const afterLayout = applyProfileStudioDraftPatch(base, {
+    scope: 'layout',
+    detail: { config: staleEditorConfig }
+  });
+  assert.equal(afterLayout.layoutVariant, 'sleek');
+  assert.equal(afterLayout.appearance.colors.surface, base.appearance.colors.surface);
+  assert.equal(afterLayout.avatar_path, base.avatar_path);
+  assert.equal(afterLayout.background_path, base.background_path);
+
+  const afterAppearance = applyProfileStudioDraftPatch(afterLayout, {
+    scope: 'appearance',
+    detail: {
+      appearance: {
+        ...afterLayout.appearance,
+        colors: { ...afterLayout.appearance.colors, surface: '#6A2E9A' },
+        surface: { ...afterLayout.appearance.surface, opacity: 93, blur: 10 }
+      }
+    }
+  });
+  assert.equal(afterAppearance.appearance.colors.surface, '#6A2E9A');
+  assert.equal(afterAppearance.appearance.surface.opacity, 93);
+  assert.equal(afterAppearance.appearance.surface.blur, 10);
+  assert.equal(afterAppearance.layoutVariant, 'sleek');
+  assert.equal(afterAppearance.background_path, base.background_path);
 });

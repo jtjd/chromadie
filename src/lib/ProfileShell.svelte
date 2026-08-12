@@ -390,7 +390,7 @@
   $: profileRenderSnapshot = renderSnapshot || buildProfileRenderSnapshot({
     profile: previewMode ? (previewProfile || targetProfile) : targetProfile,
     profileConfig,
-    configuration: previewMode ? previewProfileConfig : null,
+    studioDraft: previewMode ? previewProfileConfig : null,
     scores: targetScores,
     timelineEvents,
     collectionItems,
@@ -499,11 +499,11 @@
     <div class="profile-shell__composition">
     <div class="profile-shell__approved-canvas">
       <div class="profile-shell__approved-main">
-        <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity" style={profileCardStyle}>
+        <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity">
           <ProfileLayoutFrame
             >
               <div class="profile-shell__layout-identity profile-layout-frame__identity">
-                <ProfileBorderEffect borderKey={cosmetics?.profile_border} className={'profile-shell__identity-boundary' + (profilePresentationLayoutVariant === 'minimal' || profilePresentationLayoutVariant === 'portfolio' ? ' profile-border-effect--content' : '')}>
+                <ProfileBorderEffect borderKey={cosmetics?.profile_border} surfaceStyle={profileCardStyle} className={'profile-shell__identity-boundary' + (profilePresentationLayoutVariant === 'minimal' || profilePresentationLayoutVariant === 'portfolio' ? ' profile-border-effect--content' : '')}>
                   {#if bannerSrc}
                     <img class="profile-shell__rich-banner" src={bannerSrc} alt="" loading="lazy" aria-hidden="true" />
                   {/if}
@@ -1332,23 +1332,18 @@
     width: 100%;
     height: 100%;
     min-height: 100%;
+    box-sizing: border-box;
   }
 
   .profile-shell-page--preview .profile-shell__approved-canvas { padding: 0; }
 
   .profile-shell-page--preview .profile-shell__approved-main {
     align-items: center;
-    justify-content: center;
-  }
-
-  :global(.profile-shell-page--preview[data-preview-opening-overflow="true"] .profile-shell__approved-canvas),
-  :global(.profile-shell-page--preview[data-preview-opening-overflow="true"] .profile-shell__approved-main) {
-    height: auto;
-    min-height: 100%;
-  }
-
-  :global(.profile-shell-page--preview:not(.profile-shell-page--preview-mobile)[data-preview-opening-overflow="true"] .profile-shell__approved-main) {
     justify-content: flex-start;
+  }
+
+  .profile-shell-page--preview .profile-shell__opening.profile-shell__approved-opening {
+    margin-block: auto;
   }
 
   /* Device context wins over browser-width rules. Keep the mobile stage
@@ -1363,11 +1358,14 @@
   .profile-shell-page--preview-mobile { overflow-y: auto; }
   .profile-shell-page--preview-mobile .profile-shell__approved-canvas,
   .profile-shell-page--preview-mobile .profile-shell__approved-main {
-    height: auto;
+    height: 100%;
     min-height: 100%;
   }
   .profile-shell-page--preview-mobile .profile-shell__approved-main {
     align-items: stretch;
     justify-content: flex-start;
+  }
+  .profile-shell-page--preview-mobile .profile-shell__opening.profile-shell__approved-opening {
+    margin-block: auto;
   }
 </style>

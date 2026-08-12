@@ -29,6 +29,8 @@
   import { PROFILE_STUDIO_SECTION_LOADERS } from './profile-studio/sectionRegistry.js';
   import {
     asConfigurationV2 as asConfigurationV2Model,
+    applyProfileStudioDraftPatch,
+    applyProfileStudioIdentityPatch,
     buildConfigurationV2 as buildConfigurationV2Model,
     createEditorProfileConfig,
     createEmptyEditorProfileConfig,
@@ -89,8 +91,8 @@
   let activeCustomizeTab = 'appearance';
   let isMobileViewport = false;
   let previewMediaQuery = null;
-  let configurationPreview = null;
-  let identityPreview = null;
+  let studioDraft = null;
+  let studioIdentityDraft = null;
   let cosmeticPreviewLoadout = null;
   let PreviewComponent = null;
   let previewError = '';
@@ -139,8 +141,8 @@
     targetProfile: context?.targetProfile,
     profileConfig: context?.profileConfig,
     equippedCosmetics: $equippedItems,
-    configurationPreview,
-    identityPreview,
+    studioDraft,
+    studioIdentityDraft,
     cosmeticPreviewLoadout,
     fallbackColor: FALLBACK_PROFILE_COLOR,
     previewDevice,
@@ -383,26 +385,14 @@
   }
 
   function getDashboardDraft() {
-    const base = toEditorProfileConfig(context?.profileConfig?.draft);
-    const localDraft = getDashboardEditor()?.getDraftConfig?.();
-    const layoutFields = localDraft
-      ? {
-          templateKey: localDraft.templateKey || base.templateKey,
-          layoutVariant: localDraft.layoutVariant || base.layoutVariant,
-          modules: Array.isArray(localDraft.modules) ? localDraft.modules : base.modules,
-          linkStyle: localDraft.linkStyle || base.linkStyle,
-          links: Array.isArray(localDraft.links) ? localDraft.links : base.links
-        }
-      : null;
-    const merged = activeSection === 'links' || activeSection === 'profile-layout'
-      ? normalizeProfileConfig({ ...base, ...(layoutFields || {}) }, FALLBACK_PROFILE_COLOR)
-      : normalizeProfileConfig({ ...base, ...(localDraft || {}) }, FALLBACK_PROFILE_COLOR);
-    // Customize owns layout presentation only. The Links surface is the sole
-    // editor for the canonical collection, so a mounted layout editor with an
-    // older cached link array must never erase links while publishing a layout.
-    return activeSection === 'customize'
-      ? normalizeProfileConfig({ ...merged, links: base.links }, FALLBACK_PROFILE_COLOR)
-      : merged;
+    return normalizeProfileConfig(
+      studioDraft || toEditorProfileConfig(context?.profileConfig?.draft),
+      FALLBACK_PROFILE_COLOR
+    );
+  }
+
+  function getDashboardIdentity() {
+    return studioIdentityDraft || getDashboardEditor()?.getDraftIdentity?.() || null;
   }
 
   function applyDashboardConfiguration({ draft, published, updatedAt, publishedAt }) {
@@ -422,12 +412,22 @@
         publishedAt: publishedAt || context.profileConfig?.publishedAt || null
       }
     };
+    studioDraft = nextDraft;
+    studioIdentityDraft = {
+      bio: context?.targetProfile?.bio || '',
+      identityPresentation: nextDraft.identityPresentation
+    };
     workspace?.acceptSaved?.({
       ...nextDraft,
       bio: context?.targetProfile?.bio || ''
     });
-    configurationPreview = null;
-    identityPreview = null;
+    // acceptSaved lets mounted editors clear their local view-state caches.
+    // Its scoped preview events cannot replace this complete server result.
+    studioDraft = nextDraft;
+    studioIdentityDraft = {
+      bio: context?.targetProfile?.bio || '',
+      identityPresentation: nextDraft.identityPresentation
+    };
     cosmeticPreviewLoadout = null;
     dirtySources = {};
   }
@@ -452,7 +452,7 @@
     dashboardError = '';
     dashboardStatus = 'Publishing profile…';
     const editorDraft = getDashboardDraft();
-    const identityDraft = editor?.getDraftIdentity?.();
+    const identityDraft = getDashboardIdentity();
     const v2Draft = buildConfigurationV2(editorDraft);
     const publishResponse = await supabase.rpc('publish_profile_studio_v2', {
       p_draft: v2Draft,
@@ -521,8 +521,11 @@
       return;
     }
     context = nextContext;
-    configurationPreview = null;
-    identityPreview = null;
+    studioDraft = toEditorProfileConfig(nextContext.profileConfig?.draft, FALLBACK_PROFILE_COLOR);
+    studioIdentityDraft = {
+      bio: nextContext.targetProfile?.bio || '',
+      identityPresentation: studioDraft.identityPresentation
+    };
     cosmeticPreviewLoadout = null;
     loading = false;
     if (nextContext.loadError) error = nextContext.loadError;
@@ -530,7 +533,6 @@
   }
 
   function updateConfiguration(event) {
-    configurationPreview = null;
     const currentDraft = toEditorProfileConfig(context?.profileConfig?.draft);
     const currentPublished = toEditorProfileConfig(context?.profileConfig?.published);
     const nextDraft = normalizeProfileConfig(preserveExpressionFields(event.detail?.draft, currentDraft), FALLBACK_PROFILE_COLOR);
@@ -554,6 +556,11 @@
     } else {
       context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: nextDraft, published: nextPublished, updatedAt: event.detail?.updatedAt || context.profileConfig?.updatedAt, publishedAt: event.detail?.publishedAt || context.profileConfig?.publishedAt } };
     }
+    studioDraft = nextDraft;
+    studioIdentityDraft = {
+      ...(studioIdentityDraft || {}),
+      identityPresentation: nextDraft.identityPresentation
+    };
   }
 
   function updateExpression(event) {
@@ -562,10 +569,11 @@
     const nextDraft = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.draft), ...fields }, FALLBACK_PROFILE_COLOR);
     const nextPublished = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.published), ...fields }, FALLBACK_PROFILE_COLOR);
     // Media edits are saved through the expression RPC before they reach this
-    // adapter. Keep the preview on the same draft projection immediately so a
-    // persisted upload is visible without waiting for a full dashboard reload.
-    configurationPreview = normalizeProfileConfig(
-      { ...(configurationPreview || nextDraft), ...fields },
+    // adapter. Project only those returned fields into the one Studio draft so
+    // a persisted upload is visible without waiting for a full reload.
+    studioDraft = applyProfileStudioDraftPatch(
+      studioDraft || nextDraft,
+      { scope: 'media', detail: fields },
       FALLBACK_PROFILE_COLOR
     );
     if (context.profileConfig?.version === 2 || context.profileConfig?.v2Draft) {
@@ -578,33 +586,49 @@
   }
 
   function updateAppearance(event) {
-    const nextAppearance = event.detail?.appearance;
-    if (!nextAppearance) return;
-    configurationPreview = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.draft), appearance: nextAppearance, signatureColor: nextAppearance.colors.accent }, FALLBACK_PROFILE_COLOR);
-  }
-
-  function handleAppearanceSaved(event) {
-    updateConfiguration({ detail: event.detail });
-    configurationPreview = event.detail?.draft || null;
-  }
-
-  function handleConfigurationReloaded(event) {
-    updateConfiguration({ detail: event.detail });
-    configurationPreview = event.detail?.draft || null;
-  }
-
-  function updateConfigurationPreview(event) {
-    const nextConfig = event.detail?.config;
-    if (!nextConfig) { configurationPreview = null; return; }
-    const currentConfig = configurationPreview || toEditorProfileConfig(context.profileConfig?.draft);
-    configurationPreview = normalizeProfileConfig(
-      preserveExpressionFields(nextConfig, currentConfig),
+    studioDraft = applyProfileStudioDraftPatch(
+      studioDraft || context.profileConfig?.draft,
+      { scope: 'appearance', detail: event.detail || {} },
       FALLBACK_PROFILE_COLOR
     );
   }
 
-  function updateIdentityPreview(event) {
-    identityPreview = event.detail || null;
+  function handleAppearanceSaved(event) {
+    updateConfiguration({ detail: event.detail });
+  }
+
+  function handleConfigurationReloaded(event) {
+    updateConfiguration({ detail: event.detail });
+  }
+
+  function applyStudioPatch(event) {
+    const patch = event.detail || {};
+    const scope = patch.scope;
+    const detail = patch.detail || {};
+    if (!scope) return;
+    if (scope === 'media') {
+      updateExpression({ detail });
+      return;
+    }
+    if (scope === 'appearance') {
+      updateAppearance({ detail });
+      return;
+    }
+    if (scope === 'identity') {
+      studioIdentityDraft = applyProfileStudioIdentityPatch(studioIdentityDraft, detail);
+      if (Object.prototype.hasOwnProperty.call(detail, 'identityPresentation')) {
+        studioDraft = normalizeProfileConfig({
+          ...(studioDraft || toEditorProfileConfig(context.profileConfig?.draft)),
+          identityPresentation: detail.identityPresentation
+        }, FALLBACK_PROFILE_COLOR);
+      }
+      return;
+    }
+    studioDraft = applyProfileStudioDraftPatch(
+      studioDraft || context.profileConfig?.draft,
+      { scope, detail },
+      FALLBACK_PROFILE_COLOR
+    );
   }
 
   function updateCosmeticPreview(event) {
@@ -614,11 +638,11 @@
   function handleSocialChange() { void loadSettings(); }
 
   function updateIdentity(event) {
-    identityPreview = null;
     const nextPresentation = event.detail?.identityPresentation;
     const currentConfig = context.profileConfig || {};
     if (!nextPresentation) {
       context = { ...context, targetProfile: { ...context.targetProfile, bio: event.detail?.bio ?? null }, profileConfig: currentConfig };
+      studioIdentityDraft = applyProfileStudioIdentityPatch(studioIdentityDraft, event.detail || {});
       return;
     }
     const nextDraft = normalizeProfileConfig({ ...toEditorProfileConfig(currentConfig.draft), identityPresentation: nextPresentation }, FALLBACK_PROFILE_COLOR);
@@ -635,6 +659,14 @@
       targetProfile: { ...context.targetProfile, bio: event.detail?.bio ?? null },
       profileConfig: nextProfileConfig
     };
+    // The server response is authoritative for the persisted identity fields,
+    // but it must not replace unrelated staged Studio fields. Project only the
+    // identity slice into the canonical draft used by the renderer.
+    studioDraft = normalizeProfileConfig({
+      ...(studioDraft || toEditorProfileConfig(currentConfig.draft)),
+      identityPresentation: nextPresentation
+    }, FALLBACK_PROFILE_COLOR);
+    studioIdentityDraft = applyProfileStudioIdentityPatch(studioIdentityDraft, event.detail || {});
   }
 
   async function loadPreviewComponent() {
@@ -739,17 +771,13 @@
       staff={Boolean(context?.targetProfile?.is_staff)}
       isAuthenticated={$isAuthenticated}
       {featureFlags}
-      on:appearancechange={updateAppearance}
-      on:customizepreview={updateConfigurationPreview}
-      on:identitypreview={updateIdentityPreview}
+      on:studiopatch={applyStudioPatch}
       on:cosmeticpreview={updateCosmeticPreview}
       on:dirty={handleSectionDirty}
       on:identitysaved={updateIdentity}
       on:configsaved={handleAppearanceSaved}
       on:configpublished={updateConfiguration}
       on:configreloaded={handleConfigurationReloaded}
-      on:configpreview={updateConfigurationPreview}
-      on:expressionchange={updateExpression}
       on:socialchange={handleSocialChange}
       on:premiumrequest={handleDashboardSectionChange}
       on:accountdeleted={handleAccountDeleted}

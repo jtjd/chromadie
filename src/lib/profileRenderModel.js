@@ -60,7 +60,7 @@ function pickConfigurationSource(input) {
   const profileConfig = asObject(input.profileConfig);
   const studio = Boolean(input.previewMode || input.mode === 'studio');
   if (studio) {
-    return input.configurationPreview
+    return input.studioDraft
       || input.draft
       || profileConfig.draft
       || profileConfig.published
@@ -173,8 +173,8 @@ function bestScore(scores, profile) {
  *
  * Precedence is intentionally kept here, and nowhere in ProfileShell:
  *
- * Studio configuration: configurationPreview -> draft -> published -> defaults.
- * Studio identity: identityPreview -> profile identity.
+ * Studio configuration: studioDraft -> draft -> published -> defaults.
+ * Studio identity: studioIdentityDraft -> profile identity.
  * Studio cosmetics: cosmeticPreviewLoadout -> equipped cosmetics.
  * Expression media: an explicit current field -> the selected configuration
  * field -> the persisted configuration field. Explicit nulls are preserved.
@@ -199,10 +199,10 @@ export function buildProfileRenderSnapshot(input = {}) {
     input.expression,
     input.media
   );
-  const identityPreview = asObject(input.identityPreview);
+  const identityDraft = asObject(input.studioIdentityDraft);
   const configurationInput = {
     ...configurationWithExpressions,
-    ...(identityPreview.identityPresentation ? { identityPresentation: identityPreview.identityPresentation } : {})
+    ...(identityDraft.identityPresentation ? { identityPresentation: identityDraft.identityPresentation } : {})
   };
   const configuration = normalizeProfileConfig(configurationInput, fallbackColor);
 
@@ -215,7 +215,7 @@ export function buildProfileRenderSnapshot(input = {}) {
   const profile = sourceProfile
     ? {
         ...sourceProfile,
-        bio: hasOwn(identityPreview, 'bio') ? identityPreview.bio : sourceProfile.bio,
+        bio: hasOwn(identityDraft, 'bio') ? identityDraft.bio : sourceProfile.bio,
         equipped_cosmetics: equippedCosmetics
       }
     : null;

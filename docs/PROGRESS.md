@@ -3411,3 +3411,22 @@ performance, username/balance/catalog drift, scoring parity, database security,
 schema lint/reset, and the authenticated desktop/mobile/reduced-motion browser
 smoke all pass. The advisory aggregate JavaScript/CSS catalogs remain over
 target, while every blocking route budget passes.
+
+## 2026-08-12 — Consolidate Profile Studio draft ownership
+
+- Replaced competing whole-configuration preview writes with one canonical
+  `studioDraft` plus scoped editor patches for appearance, media, layout,
+  links, content, widgets, and identity.
+- Removed the duplicate `customizepreview` forwarding path and projected
+  restored hidden-editor view state only into its owned fields.
+- Applied resolved surface variables directly to the profile border/surface
+  owner and strengthened browser assertions to inspect computed background and
+  blur there, including persistence through unrelated edits.
+- Simplified preview alignment by removing the timing-dependent opening
+  overflow attribute; continuation scroll state remains an affordance only.
+- Made V2 read selection depend on structural response validity rather than
+  avatar presence.
+
+The previous renderer-consolidation snapshot builder remains the shared path
+for public profiles and Studio. This pass reduces Studio render-state writers
+without changing the five layouts or the physical-size preview architecture.
