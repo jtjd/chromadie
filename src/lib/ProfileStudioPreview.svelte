@@ -29,13 +29,19 @@
   function updatePreviewScrollState() {
     const shell = previewStage?.querySelector('.profile-shell-page--preview');
     if (shell && shell !== observedPreviewShell) {
+      if (observedPreviewShell) previewResizeObserver?.unobserve(observedPreviewShell);
       observedPreviewShell = shell;
       previewResizeObserver?.observe(shell);
     }
-    const next = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
-    const nextOverflowValue = next ? 'true' : 'false';
-    if (shell && shell.dataset.previewContentOverflow !== nextOverflowValue) shell.dataset.previewContentOverflow = nextOverflowValue;
-    if (next !== previewScrollNeeded) previewScrollNeeded = next;
+    const nextContentOverflow = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
+    const opening = shell?.querySelector('.profile-shell__approved-opening');
+    const openingBox = opening?.getBoundingClientRect();
+    const nextOpeningOverflow = Boolean(shell && openingBox && openingBox.height > shell.clientHeight + 4);
+    const nextContentOverflowValue = nextContentOverflow ? 'true' : 'false';
+    const nextOpeningOverflowValue = nextOpeningOverflow ? 'true' : 'false';
+    if (shell && shell.dataset.previewContentOverflow !== nextContentOverflowValue) shell.dataset.previewContentOverflow = nextContentOverflowValue;
+    if (shell && shell.dataset.previewOpeningOverflow !== nextOpeningOverflowValue) shell.dataset.previewOpeningOverflow = nextOpeningOverflowValue;
+    if (nextContentOverflow !== previewScrollNeeded) previewScrollNeeded = nextContentOverflow;
   }
 
   function ensurePreviewObservers() {
@@ -46,7 +52,10 @@
     }
     if (!previewMutationObserver && typeof MutationObserver !== 'undefined') {
       previewMutationObserver = new MutationObserver(updatePreviewScrollState);
-      previewMutationObserver.observe(previewStage, { childList: true, subtree: true, attributes: true });
+      // ResizeObserver covers layout changes. Avoid observing the data
+      // attributes this component owns, otherwise each measurement can feed
+      // back through MutationObserver while the preview is settling.
+      previewMutationObserver.observe(previewStage, { childList: true, subtree: true });
     }
   }
 

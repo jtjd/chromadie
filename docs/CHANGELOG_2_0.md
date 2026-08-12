@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-12 — Finish Studio media token and preview correctness
+
+- Immediate Studio media mutations now keep the optimistic Publish timestamp
+  synchronized, preventing false same-tab concurrency conflicts.
+- Live Preview keeps a fitting opening centered even when continuation content
+  makes the full profile scrollable; only oversized openings top-align.
+- Continuation cues now say `Links ↓` for actual links and `More ↓` for other
+  lower profile content.
+
 ## 2026-08-12 — Harden profile publication and continuation links
 
 - Publishing a Studio profile now keeps avatar, background, and expression

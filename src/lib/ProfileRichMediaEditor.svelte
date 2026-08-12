@@ -192,7 +192,7 @@
     richConfig = normalizeRichMediaConfig(data);
     incomingKey = `${profileId || ''}:${JSON.stringify(richConfig)}`;
     cacheKey = String(Date.now());
-    dispatch('expressionchange', richConfig);
+    dispatch('expressionchange', { ...richConfig, updatedAt: data.updated_at || null });
     return data;
   }
 
@@ -231,7 +231,7 @@
       await loadAssets();
       const field = asset.kind === 'background_video' ? 'background_video_path' : `${asset.kind}_path`;
       if (richConfig[field] === asset.storage_path) richConfig = { ...richConfig, [field]: null };
-      dispatch('expressionchange', richConfig);
+      dispatch('expressionchange', { ...richConfig, updatedAt: data.updated_at || null });
       setFeedback('', 'Rich media removed from your library.');
     } catch (removeError) {
       setFeedback(removeError instanceof Error ? removeError.message : 'The media asset could not be removed.');
@@ -327,7 +327,7 @@
         // refresh.
         richConfig = { ...richConfig, [field]: replacementPath };
         incomingKey = `${profileId || ''}:${JSON.stringify(richConfig)}`;
-        dispatch('expressionchange', richConfig);
+        dispatch('expressionchange', { ...richConfig, updatedAt: committed.updated_at || null });
       } else {
         await loadAssets();
         const created = { id: staged.id, kind, storage_path: storedPath, label: file.name.replace(/\.[^.]+$/, '').slice(0, 80), duration_ms: metadata.duration_ms || 0 };

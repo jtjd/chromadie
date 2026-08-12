@@ -60,3 +60,12 @@ test('Profile Studio publishes identity and the complete expression-aware config
   assert.match(ci, /npm run check:performance/);
   assert.match(ci, /npm run test:browser:production/);
 });
+
+test('media mutation RPCs preserve the optimistic publish token contract', async () => {
+  const migration = await read('supabase/migrations/20260812150000_profile_media_updated_at_contract.sql');
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.update_my_profile_audio/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.select_my_profile_rich_media/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.delete_my_profile_media_asset/);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION public\.commit_my_profile_media_replacement/);
+  assert.equal((migration.match(/'updated_at', v_updated_at/g) || []).length, 4);
+});

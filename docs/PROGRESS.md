@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Final profile correctness pass — 2026-08-12
+
+- Immediate audio, rich-media selection/deletion, and cursor replacement RPCs
+  now return the `profile_configurations.updated_at` token they changed.
+- Existing Studio expression events propagate that token into the next
+  optimistic Publish request, covering media mutation followed by a layout
+  change without weakening conflict detection.
+- Live Preview separates opening overflow from continuation overflow, keeping
+  fitting openings centered while preserving top access for genuinely tall
+  openings.
+- Public continuation cues distinguish `Links ↓` from generic `More ↓` lower
+  content, and focused browser coverage exercises media mutation followed by
+  Publish.
+
 ## Profile publish and continuation correctness — 2026-08-12
 
 - The Studio publish RPC now re-reads and returns the complete expression-aware

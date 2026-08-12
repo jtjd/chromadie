@@ -388,6 +388,11 @@ async function publishRichProfileDraft() {
 }
 
 async function assertPublishedExpressionVisible(description) {
+  await page.waitFor(`(() => {
+    const avatar = document.querySelector('.profile-studio-preview .identity-card__avatar-media');
+    const background = document.querySelector('.profile-studio-preview .profile-shell__media-image');
+    return Boolean(avatar?.complete && avatar.naturalWidth > 0 && background?.complete && background.naturalWidth > 0);
+  })()`, `${description} media load`, 15000);
   const state = await page.evaluate(`(() => {
     const avatar = document.querySelector('.profile-studio-preview .identity-card__avatar-media');
     const background = document.querySelector('.profile-studio-preview .profile-shell__media-image');
@@ -827,6 +832,21 @@ try {
     const avatarUpload = await uploadGeneratedImage('input[aria-label="Choose avatar image"]', { ...RICH_PROFILE_FIXTURE.avatar, kind: 'avatar' });
     await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Avatar saved'))`, 'persisted uploaded avatar');
     await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .identity-card__avatar-media'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded avatar in live preview');
+    // Exercise the real immediate-media -> staged-layout -> publish boundary
+    // before any later fixture RPC can refresh the concurrency token for us.
+    await page.click('#profile-customize-tab-layout', 'layout tab after media mutation');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, 'layout editor after media mutation');
+    await page.evaluate(`(() => {
+      const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim() === 'Sleek');
+      card?.click();
+    })()`);
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-sleek')`, 'layout staged after media mutation');
+    await page.clickText('Publish profile', { description: 'publish after immediate media mutation' });
+    await page.waitFor(`document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() === 'Profile published.'`, 'publish after immediate media mutation');
+    const mediaPublishExpression = await assertPublishedExpressionVisible('media mutation publish');
+    const mediaPublishConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+    assert(mediaPublishConfiguration?.updated_at && mediaPublishExpression.expression.avatar && mediaPublishExpression.expression.background, `Media mutation publish did not preserve the current token and expression: ${JSON.stringify({ mediaPublishExpression, mediaPublishConfiguration })}`);
+    const mediaPublishRegression = { upload: { background: backgroundUpload, avatar: avatarUpload }, expression: mediaPublishExpression.expression, updatedAt: mediaPublishConfiguration.updated_at };
     const musicInputAvailable = await page.evaluate(`Boolean(document.querySelector('#profile-media-music input[type="url"]'))`);
     if (musicInputAvailable) {
       await page.setInputValue('#profile-media-music input[type="url"]', RICH_PROFILE_FIXTURE.musicUrl, ['input', 'change']);
@@ -913,6 +933,7 @@ try {
           const viewport = canvas?.querySelector('.profile-studio-preview__viewport');
           const stage = canvas?.querySelector('.profile-studio-preview__stage');
           const frame = shell?.querySelector('.profile-layout-frame');
+          const opening = shell?.querySelector('.profile-shell__approved-opening');
           const identityRegion = frame?.querySelector('.profile-shell__layout-identity');
           const boundary = shell?.querySelector('.profile-shell__identity-boundary');
           const card = shell?.querySelector('.identity-card');
@@ -927,6 +948,7 @@ try {
           const viewportBox = rect(viewport);
           const cardBox = rect(card);
           const frameBox = rect(frame);
+          const openingBox = rect(opening);
           const identityBox = rect(identityRegion);
           const stageBox = rect(stage);
           const boundaryBox = rect(boundary);
@@ -955,6 +977,7 @@ try {
             return { position: style.position, width: style.width, height: style.height, objectFit: style.objectFit };
           });
           const contentOverflow = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
+          const openingFits = Boolean(shell && openingBox && openingBox.height <= shell.clientHeight + 4);
           const frameCenterX = frameBox ? frameBox.left + frameBox.width / 2 : null;
           const frameCenterY = frameBox ? frameBox.top + frameBox.height / 2 : null;
           const stageCenterX = stageBox ? stageBox.left + stageBox.width / 2 : null;
@@ -965,6 +988,7 @@ try {
             viewport: viewportBox,
             stage: stageBox,
             frame: frameBox,
+            opening: openingBox,
             identityRegion: identityBox,
             boundary: boundaryBox,
             card: cardBox,
@@ -995,6 +1019,8 @@ try {
             shellTransform: shellStyle?.transform || 'none',
             previewScrollable: stage?.getAttribute('data-preview-scrollable') === 'true',
             contentOverflow,
+            openingFits,
+            openingOverflow: shell?.dataset.previewOpeningOverflow === 'true',
             frameCenterDeltaX: frameCenterX !== null && stageCenterX !== null ? Math.abs(frameCenterX - stageCenterX) : null,
             frameCenterDeltaY: frameCenterY !== null && stageCenterY !== null ? Math.abs(frameCenterY - stageCenterY) : null,
             scrollCue: Boolean(canvas?.querySelector('.profile-studio-preview__scroll-cue')),
@@ -1014,8 +1040,11 @@ try {
         assert(state.shellTransform === 'none' && state.card?.width >= 220 && state.card.width <= 360, `${layout} profile surface is microscopic or no longer compact: ${JSON.stringify(state)}.`);
         assert((state.viewport?.height || 0) >= 360 && (!state.previewScrollable || state.scrollCue), `${layout} desktop preview is too short or hides its continuation affordance: ${JSON.stringify(state)}.`);
         assert(state.card?.top >= (state.shell?.top || 0) - 1 && state.shellScrollHeight >= (state.card?.bottom || 0) - (state.shell?.top || 0) - 1, `${layout} desktop preview vertically clips the readable profile surface: ${JSON.stringify(state)}.`);
-        if (!state.contentOverflow && layout !== 'minimal') {
+        if (state.openingFits && layout !== 'minimal') {
           assert((state.frameCenterDeltaX ?? 99) <= 4 && (state.frameCenterDeltaY ?? 99) <= 6, `${layout} fitting desktop preview frame is not centered in its environment: ${JSON.stringify(state)}.`);
+        }
+        if (!state.openingFits && layout !== 'minimal') {
+          assert((state.frame?.top || 0) >= (state.shell?.top || 0) - 1, `${layout} oversized preview opening is not top-accessible: ${JSON.stringify(state)}.`);
         }
         const minimumNameWidth = Math.max(8, Math.min(20, state.nameTextLength * 6));
         assert(state.nameFontSize >= 12 && state.nameWidth >= minimumNameWidth && (!state.nameCanvas || (state.nameCanvas.width <= 2048 && state.nameCanvas.height <= 512)), `${layout} username geometry is not legible or sane: ${JSON.stringify(state)}.`);
@@ -1448,7 +1477,7 @@ try {
     }))()`);
     assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount && visitorPreviewState.continuationLinks === compactContinuationLinkCount && visitorPreviewState.profileMore, `Visitor preview did not use the lightweight roll/link opening path: ${JSON.stringify(visitorPreviewState)}.`);
     const publicEvidence = await capturePublishedLayouts();
-    return { draftState, publishedState, immediatePublishedMedia, identityLayout, publishRequests, mediaRail, studioNameEffect, richFixture, richPublished, publicEvidence };
+    return { draftState, publishedState, immediatePublishedMedia, mediaPublishRegression, identityLayout, publishRequests, mediaRail, studioNameEffect, richFixture, richPublished, publicEvidence };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {

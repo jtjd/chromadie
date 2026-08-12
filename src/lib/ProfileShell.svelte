@@ -629,7 +629,7 @@
 
       {#if !previewMode && hasProfileMore && !profileMoreActive}
         <button type="button" class={'profile-shell__more-cue' + (profilePresentationLayoutVariant === 'portfolio' ? '' : ' profile-shell__more-cue--continuation')} aria-controls="profile-more" on:click={scrollToProfileMore}>
-          <span class="profile-shell__more-cue-label">{profilePresentationLayoutVariant === 'portfolio' ? 'Explore profile' : 'Links'}</span>
+          <span class="profile-shell__more-cue-label">{profilePresentationLayoutVariant === 'portfolio' ? 'Explore profile' : (continuationLinks.length ? 'Links' : 'More')}</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
         </button>
       {/if}
@@ -1388,13 +1388,13 @@
     justify-content: center;
   }
 
-  :global(.profile-shell-page--preview[data-preview-content-overflow="true"] .profile-shell__approved-canvas),
-  :global(.profile-shell-page--preview[data-preview-content-overflow="true"] .profile-shell__approved-main) {
+  :global(.profile-shell-page--preview[data-preview-opening-overflow="true"] .profile-shell__approved-canvas),
+  :global(.profile-shell-page--preview[data-preview-opening-overflow="true"] .profile-shell__approved-main) {
     height: auto;
     min-height: 100%;
   }
 
-  :global(.profile-shell-page--preview:not(.profile-shell-page--preview-mobile)[data-preview-content-overflow="true"] .profile-shell__approved-main) {
+  :global(.profile-shell-page--preview:not(.profile-shell-page--preview-mobile)[data-preview-opening-overflow="true"] .profile-shell__approved-main) {
     justify-content: flex-start;
   }
 

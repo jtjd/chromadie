@@ -203,7 +203,7 @@
         expression = normalizeProfileExpression({ ...expression, [field]: null });
         syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
         mediaCacheKey = String(Date.now());
-        dispatch('expressionchange', { ...expression });
+        dispatch('expressionchange', { ...expression, updatedAt: data.updated_at || null });
       }
       await loadAssetLibrary();
       setFeedback('', 'Media asset removed from your library.');
@@ -456,7 +456,7 @@
       expression = normalizeProfileExpression({ ...expression, audio_path: data.audio_path });
       syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
       mediaCacheKey = String(Date.now());
-      dispatch('expressionchange', { ...expression });
+      dispatch('expressionchange', { ...expression, updatedAt: data.updated_at || null });
       setFeedback('', `Profile audio saved. It will autoplay when the browser permits (${Math.round(blob.size / 1024)} KB).`);
     } catch (audioError) {
       setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be saved.');
@@ -485,7 +485,7 @@
       mediaCacheKey = String(Date.now());
       if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
       audioPreviewSrc = '';
-      dispatch('expressionchange', { ...expression });
+      dispatch('expressionchange', { ...expression, updatedAt: data.updated_at || null });
       setFeedback('', 'Profile audio removed.');
     } catch (audioError) {
       setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be removed.');

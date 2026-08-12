@@ -1,5 +1,19 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-12 — Keep immediate Studio media saves on the publish token
+
+Rich-media selection, audio, deletion, and cursor replacement remain
+immediate RPC saves, but every RPC that updates `profile_configurations` now
+returns the resulting `updated_at`. The existing Studio expression event path
+feeds that token into the same optimistic publish state; no second draft-media
+model is introduced.
+
+Preview scrollability is measured separately from opening fit. Continuation
+content can make the physical preview scroll while the opening remains
+centered; only an opening taller than the stage switches to top alignment.
+Public continuation cues say `Links` only when links are below and use `More`
+for non-link lower content.
+
 ## 2026-08-12 — Treat Studio publish and continuation composition as one profile contract
 
 `publish_profile_studio_v2` now returns the same expression-aware V2

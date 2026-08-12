@@ -237,7 +237,7 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(shell, /hasBelowFoldRoll = showRoll && layoutVariant === 'portfolio'/);
   assert.match(shell, /\{#if renderProfileMore\}[\s\S]*<div id="profile-more"/);
   assert.match(shell, /hasLowerExpression = hasProfileMusic/);
-  assert.match(shell, /profilePresentationLayoutVariant === 'portfolio' \? 'Explore profile' : 'Links'/);
+  assert.match(shell, /profilePresentationLayoutVariant === 'portfolio' \? 'Explore profile' : \(continuationLinks\.length \? 'Links' : 'More'\)/);
   assert.match(shell, /profile-shell__more-cue--continuation/);
   assert.match(frame, /profile-shell-page--minimal\) \.profile-layout-frame \{ --profile-layout-width: 280px; \}/);
   assert.doesNotMatch(frame, /profile-shell-page--minimal\)[^{]*\{[^}]*margin-left/);
@@ -254,11 +254,43 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(preview, /height: clamp\(24rem, 54vh, 32rem\)/);
   assert.match(preview, /profile-studio-preview__scroll-cue/);
   assert.match(preview, /previewContentOverflow/);
+  assert.match(preview, /previewOpeningOverflow/);
+  assert.match(shell, /data-preview-opening-overflow/);
   assert.match(customize, /showLinks=\{false\}/);
   assert.match(customize, /layoutDraft = layout[\s\S]*templateKey: layout\.templateKey[\s\S]*layoutVariant: layout\.layoutVariant[\s\S]*modules: layout\.modules[\s\S]*links: base\.links/);
   assert.doesNotMatch(customize, /layoutDraft = layout[\s\S]*appearance: layout\.appearance/);
   assert.match(settings, /const layoutFields = localDraft[\s\S]*modules: Array\.isArray\(localDraft\.modules\)[\s\S]*activeSection === 'links' \|\| activeSection === 'profile-layout'/);
   assert.match(settings, /activeSection === 'customize'[\s\S]*links: base\.links/);
+});
+
+test('Studio media mutations return the profile concurrency token', async () => {
+  const [migration, expressionEditor, richMediaEditor, settings] = await Promise.all([
+    read('supabase/migrations/20260812150000_profile_media_updated_at_contract.sql'),
+    read('src/lib/ProfileExpressionEditor.svelte'),
+    read('src/lib/ProfileRichMediaEditor.svelte'),
+    read('src/lib/ProfileSettings.svelte')
+  ]);
+
+  for (const functionName of [
+    'update_my_profile_audio',
+    'select_my_profile_rich_media',
+    'delete_my_profile_media_asset',
+    'commit_my_profile_media_replacement'
+  ]) {
+    const functionStart = migration.indexOf(`CREATE OR REPLACE FUNCTION public.${functionName}`);
+    const nextFunction = migration.indexOf('CREATE OR REPLACE FUNCTION public.', functionStart + 1);
+    const functionBody = migration.slice(functionStart, nextFunction === -1 ? migration.length : nextFunction);
+    assert(functionStart >= 0, `${functionName} is missing from the media token migration.`);
+    assert.match(functionBody, /updated_at = now\(\)/);
+    assert.match(functionBody, /RETURNING updated_at INTO v_updated_at/);
+    assert.match(functionBody, /'updated_at', v_updated_at/);
+  }
+  assert.match(expressionEditor, /updatedAt: data\.updated_at/);
+  const deletionHandlerStart = expressionEditor.indexOf('async function deleteAsset');
+  const deletionHandler = expressionEditor.slice(deletionHandlerStart, expressionEditor.indexOf('function formatAudioTime', deletionHandlerStart));
+  assert.match(deletionHandler, /dispatch\('expressionchange', \{ \.\.\.expression, updatedAt: data\.updated_at/);
+  assert.match(richMediaEditor, /updatedAt: data\.updated_at/);
+  assert.match(settings, /fields\.updatedAt \|\| fields\.updated_at/);
 });
 
 test('public viewport and compact roll contracts do not inherit legacy offsets', async () => {
