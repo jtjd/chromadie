@@ -52,7 +52,8 @@ test('narrow identity cards use container-aware stacked layouts and readable bio
   assert.match(identity, /container: identity-card \/ inline-size/);
   assert.match(identity, /@container identity-card \(max-width: 24rem\)/);
   assert.match(identity, /\.identity-card__bio--typewriter[^}]*white-space: normal/);
-  assert.match(identity, /\.identity-card--layout-split-signal[^}]*flex-direction: column/);
+  assert.match(identity, /\.identity-card--layout-(?:compact|sleek|minimal|modern|portfolio)/);
+  assert.doesNotMatch(identity, /identity-card--layout-(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)/);
 });
 
 test('profile mobile header keeps edit visible and moves account actions into the menu', () => {

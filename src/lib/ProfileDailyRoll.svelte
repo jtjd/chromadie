@@ -1,0 +1,58 @@
+<script>
+  import { createEventDispatcher } from 'svelte';
+  import ProfileRoll from './ProfileRoll.svelte';
+  import TodayColor from './TodayColor.svelte';
+
+  export let isOwner = false;
+  export let result = null;
+  export let accentColor = '#8B7CF6';
+  export let variant = 'compact';
+  export let visualFixture = '';
+
+  const dispatch = createEventDispatcher();
+
+  function forward(event) {
+    dispatch(event.type, event.detail);
+  }
+</script>
+
+<div class={'profile-daily-roll profile-daily-roll--' + variant} data-profile-roll-variant={variant} aria-label={isOwner ? 'Today’s color roll' : 'Latest color'}>
+  {#if isOwner}
+    <ProfileRoll
+      moduleSize="wide"
+      compact={true}
+      integrated={true}
+      quiet={true}
+      {visualFixture}
+      fixtureResult={result}
+      on:rollstart={forward}
+      on:rollcancel={forward}
+      on:rollcomplete={forward}
+    />
+  {:else}
+    <TodayColor result={result} quiet={true} accentColor={accentColor} />
+  {/if}
+</div>
+
+<style>
+  .profile-daily-roll { width: 100%; min-width: 0; }
+  .profile-daily-roll :global(.profile-roll--integrated),
+  .profile-daily-roll :global(.today-color) { width: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .profile-daily-roll :global(.profile-roll--integrated .foundation-module__body) { padding: 0; }
+  .profile-daily-roll :global(.today-color__result-head) { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .65rem; }
+  .profile-daily-roll :global(.today-color__preview),
+  .profile-daily-roll :global(.today-color__preview .roll-preview-frame),
+  .profile-daily-roll :global(.today-color__preview .final-color-display) { width: 2.25rem; height: 2.25rem; }
+  .profile-daily-roll :global(.today-color__copy strong) { font-size: .92rem; }
+  .profile-daily-roll :global(.today-color__label) { font-size: .55rem; }
+  .profile-daily-roll :global(.today-color__score) { margin-top: .2rem; font-size: .75rem; }
+  .profile-daily-roll :global(.today-color__rarity),
+  .profile-daily-roll :global(.today-color__condition-rail),
+  .profile-daily-roll :global(.today-color__details) { display: none; }
+  .profile-daily-roll :global(.profile-roll__description),
+  .profile-daily-roll :global(.profile-roll__percentile),
+  .profile-daily-roll :global(.profile-roll__details) { display: none; }
+  .profile-daily-roll :global(.profile-roll__button),
+  .profile-daily-roll :global(.profile-roll__reveal-button) { min-height: 2.35rem; }
+  @media (prefers-reduced-motion: reduce) { .profile-daily-roll :global(*) { scroll-behavior: auto; } }
+</style>

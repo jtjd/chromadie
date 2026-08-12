@@ -152,11 +152,11 @@ INSERT INTO public.shop_items (
   ('avatar_effect_night_frame', 'Night Frame', 'avatar_effect', 220000, 'renderer', 'night-frame', NULL, NULL, 'Rare', 'A dark precision mount with pale corner cuts gives the avatar editorial weight.', 'Nocturne', false, 'earned', NULL, 'active'),
   ('avatar_effect_daily_aura', 'Daily Aura', 'avatar_effect', 400000, 'renderer', 'daily-aura', NULL, NULL, 'Epic', 'A readable aura derived from the current daily color surrounds the avatar.', 'Prism', false, 'earned', NULL, 'active'),
   ('avatar_effect_color_archive', 'Color Archive', 'avatar_effect', 720000, 'renderer', 'color-archive', NULL, NULL, 'Mythic', 'Recent roll colors form four animated archival segments around the portrait.', 'Prism', false, 'earned', NULL, 'active'),
-  ('profile_layout_split_signal', 'Split Signal', 'profile_layout', 320000, 'renderer', 'split-signal', NULL, NULL, 'Rare', 'A persistent identity rail sits left while profile modules compose on the right and stack on mobile.', 'Signal', false, 'earned', NULL, 'active'),
-  ('profile_layout_archive_index', 'Archive Index', 'profile_layout', 300000, 'renderer', 'archive-index', NULL, NULL, 'Rare', 'Numbered editorial sections, thin rules, and a strong chronological reading path.', 'Archive', false, 'earned', NULL, 'active'),
-  ('profile_layout_prism_mosaic', 'Prism Mosaic', 'profile_layout', 450000, 'renderer', 'prism-mosaic', NULL, NULL, 'Epic', 'A balanced modular grid uses meaningful wide and narrow spans driven by the daily color.', 'Prism', false, 'earned', NULL, 'active'),
-  ('profile_layout_night_terminal', 'Night Terminal', 'profile_layout', 480000, 'renderer', 'night-terminal', NULL, NULL, 'Epic', 'A compact technical composition uses metadata rails and precise labels without hacker-green clichés.', 'Nocturne', false, 'earned', NULL, 'active'),
-  ('profile_layout_story_stack', 'Story Stack', 'profile_layout', 600000, 'renderer', 'story-stack', NULL, NULL, 'Anomaly', 'A vertical narrative composition emphasizes identity, today’s roll, history, and achievements in sequence.', 'Ember', false, 'earned', NULL, 'active')
+  ('profile_layout_compact', 'Compact', 'profile_layout', 0, 'renderer', 'compact', NULL, NULL, 'Uncommon', 'A small centered identity surface that leaves the user background in charge.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_layout_sleek', 'Sleek', 'profile_layout', 0, 'renderer', 'sleek', NULL, NULL, 'Uncommon', 'A compact identity card with small detached presence and music strips.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_layout_minimal', 'Minimal', 'profile_layout', 0, 'renderer', 'minimal', NULL, NULL, 'Uncommon', 'A free-floating identity treatment with almost no structural container.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_layout_modern', 'Modern', 'profile_layout', 0, 'renderer', 'modern', NULL, NULL, 'Uncommon', 'A compact identity surface with a quiet secondary widget treatment.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_layout_portfolio', 'Portfolio', 'profile_layout', 0, 'renderer', 'portfolio', NULL, NULL, 'Uncommon', 'A restrained landing view that opens into a longer personal profile story.', 'Layouts', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,

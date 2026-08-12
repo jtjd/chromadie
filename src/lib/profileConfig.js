@@ -3,10 +3,11 @@ import { createDefaultRichMediaConfig, normalizeRichMediaConfig } from './profil
 import { createDefaultProfileContent, normalizeProfileContent } from './profileContentLegacy.js';
 import { normalizeProfileWidgets } from './profileWidgetsLegacy.js';
 import { inferProfileTemplateKey, normalizeProfileTemplateKey } from './profileTemplates.js';
+import { normalizeProfileLayoutKey, PROFILE_LAYOUT_KEYS } from './profile-layout/profileLayouts.js';
 
 export const PROFILE_CONFIG_VERSION = 1;
 
-export const PROFILE_LAYOUT_VARIANTS = Object.freeze(['immersive', 'editorial', 'focus']);
+export const PROFILE_LAYOUT_VARIANTS = PROFILE_LAYOUT_KEYS;
 export const PROFILE_MODULE_IDS = Object.freeze([
   'roll',
   'stats',
@@ -141,12 +142,13 @@ export function createDefaultProfileConfig(signatureColor = PROFILE_APPEARANCE_D
   return {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(signatureColor),
-    templateKey: 'signal',
+    templateKey: 'compact',
     colorEffectsEnabled: false,
     appearance,
-    // New profiles open with the calm, identity-first composition. Existing
-    // saved configurations keep their own layoutVariant when normalized.
-    layoutVariant: 'focus',
+    // Compact is the small, background-first default. Existing saved
+    // configurations are mapped to the new catalog during normalization and
+    // by the additive database migration.
+    layoutVariant: 'compact',
     storyVisible: false,
     modules: defaultModules(),
     links: [],
@@ -247,7 +249,7 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
 
   /** @type {Record<string, any>} */
   const normalizedAppearance = normalizeAppearance(value.appearance, value.signatureColor || fallback.signatureColor);
-  const normalizedLayoutVariant = PROFILE_LAYOUT_VARIANTS.includes(value.layoutVariant) ? value.layoutVariant : fallback.layoutVariant;
+  const normalizedLayoutVariant = normalizeProfileLayoutKey(value.layoutVariant, fallback.layoutVariant);
   /** @type {any} */
   const normalized = {
     version: PROFILE_CONFIG_VERSION,

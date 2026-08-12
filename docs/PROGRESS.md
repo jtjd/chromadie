@@ -1,5 +1,24 @@
 # Chromadie 2.0 Progress
 
+## Public profile layout replacement — 2026-08-11
+
+- Replaced the active novelty layout catalog with five compact structural
+  renderers: Compact, Sleek, Minimal, Modern, and Portfolio. Compact is the
+  safe default and no layout is entitlement-gated.
+- Reused the public ProfileShell and Studio live preview renderer, with a
+  shared IdentityCard and density-aware ProfileDailyRoll. Layouts leave the
+  user-controlled background and equipped effects responsible for personality.
+- Added monochrome allowlisted SVG service icons with accessible labels and
+  removed the redundant `@username` identity line.
+- Added additive migration
+  `20260811150000_profile_layout_catalog_replacement.sql`, including legacy
+  mapping, safe inventory quantity merging, equipped-layout migration, active
+  catalog replacement, and configuration normalization. Historical layout rows
+  remain retired rather than being deleted.
+- Added five-layout Studio picker and production-browser assertions for shared
+  bounded rendering, readable identity geometry, daily-roll presence, no
+  redundant handle, and no clipped content.
+
 ## Profile Studio hardening — 2026-08-11
 
 - Replaced the single Customize dirty flag with source-aware aggregate state,

@@ -8,7 +8,7 @@ import { resolveNameMotionKey } from './name/nameMotions.js'
 import { isProfileBorderKey } from './profile-border/profileBorders.js'
 import { getCursorTrailKey } from './cursor-trail/cursorTrails.js'
 import { isAvatarEffectKey } from './avatar-effect/avatarEffects.js'
-import { isPaidProfileLayoutKey } from './profile-layout/profileLayouts.js'
+import { isProfileLayoutKey } from './profile-layout/profileLayouts.js'
 import { isAtmosphereKey } from './profile-atmosphere/atmospheres.js'
 
 // --- Auth & Profile State ---
@@ -130,10 +130,10 @@ function normalizeShopItem(item) {
                     ? resolveNameMotionKey(rendererKey)
                     : item.slot === 'cursor_trail'
                         ? getCursorTrailKey(rendererKey)
-                        : item.slot === 'avatar_effect'
+                            : item.slot === 'avatar_effect'
                             ? (isAvatarEffectKey(rendererKey) ? rendererKey : '')
                             : item.slot === 'profile_layout'
-                                ? isPaidProfileLayoutKey(rendererKey) ? rendererKey : ''
+                                ? isProfileLayoutKey(rendererKey) ? rendererKey : ''
                                 : isAtmosphereKey(rendererKey) ? rendererKey : ''
         if (resolvedKey !== rendererKey || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(rendererKey)) return null
     } else if (NAME_RENDERER_SLOTS.has(item.slot)) {

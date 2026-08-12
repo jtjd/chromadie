@@ -27,7 +27,7 @@
     twitter: 'X / Twitter', instagram: 'Instagram', tiktok: 'TikTok', linkedin: 'LinkedIn', bluesky: 'Bluesky',
     mastodon: 'Mastodon', kick: 'Kick', patreon: 'Patreon', other: 'Other'
   });
-  const STYLE_LABELS = Object.freeze({ immersive: 'Immersive', editorial: 'Editorial', focus: 'Focused' });
+  const STYLE_LABELS = Object.freeze({ compact: 'Compact', sleek: 'Sleek', minimal: 'Minimal', modern: 'Modern', portfolio: 'Portfolio' });
   const MODULE_SIZE_LABELS = Object.freeze({ wide: 'Wide', medium: 'Medium', narrow: 'Narrow' });
   const VIEW_STATE_NAMESPACE = 'profile-editor';
 
@@ -73,6 +73,8 @@
 
   function updateDraft(next) {
     const compositionFieldChanged = ['layoutVariant', 'modules', 'links'].some(field => Object.prototype.hasOwnProperty.call(next, field));
+    const layoutChanged = Object.prototype.hasOwnProperty.call(next, 'layoutVariant')
+      && normalizeProfileConfig({ ...draft, layoutVariant: next.layoutVariant }).layoutVariant !== draft.layoutVariant;
     const nextDraft = compositionFieldChanged && !Object.prototype.hasOwnProperty.call(next, 'templateKey')
       ? { ...next, templateKey: 'custom' }
       : next;
@@ -81,7 +83,7 @@
     status = '';
     error = '';
     emitDirty(true);
-    dispatch('configpreview', { config: draft });
+    dispatch('configpreview', { config: draft, layoutChanged });
   }
 
   function applyTemplate(event) {
@@ -188,7 +190,7 @@
   </header>
 
   {#if showLayout}
-    <ProfileTemplatePicker config={draft} {entitlements} on:templatechange={applyTemplate} />
+    <ProfileTemplatePicker config={draft} on:templatechange={applyTemplate} />
 
     <section class="profile-editor__panel profile-editor__layout-options" aria-labelledby="profile-layout-style-title">
       <div class="profile-editor__layout-options-heading"><h3 id="profile-layout-style-title">Link alignment</h3></div>
@@ -358,14 +360,13 @@
   .profile-editor--studio > section[aria-labelledby="profile-layout-modules-title"] { display: none; }
   .profile-editor--studio .profile-editor__module-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .profile-editor--studio :global(.profile-template-picker) { grid-column: 1; }
-  .profile-editor--studio :global(.profile-template-picker__premium) { display: none; }
 
   .profile-editor :global(.profile-template-picker) { display: grid; gap: .65rem; padding: .45rem 0 .75rem; border: 0; border-bottom: 1px solid var(--editor-border); border-radius: 0; background: transparent; font-family: var(--editor-body); }
   .profile-editor :global(.profile-template-picker__heading) { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
   .profile-editor :global(.profile-template-picker h3) { margin: 0; color: var(--editor-text); font: 600 var(--editor-heading-size)/1.25 var(--editor-body); }
   .profile-editor :global(.profile-template-picker p) { max-width: 42rem; margin: .3rem 0 0; color: var(--editor-muted); font-size: var(--editor-label-size); line-height: 1.45; }
   .profile-editor :global(.profile-template-picker__current) { flex: 0 0 auto; color: var(--editor-primary); font: var(--editor-label-size)/1 var(--editor-mono); }
-  .profile-editor :global(.profile-template-picker__grid) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; }
+  .profile-editor :global(.profile-template-picker__grid) { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; }
   .profile-editor :global(.profile-template-picker__card) { display: grid; gap: .35rem; min-width: 0; padding: .65rem; border: 1px solid var(--editor-border); border-radius: var(--editor-radius); background: var(--editor-inset); color: var(--editor-text); cursor: pointer; text-align: left; }
   .profile-editor :global(.profile-template-picker__card:hover) { border-color: var(--editor-neutral); background: color-mix(in srgb, var(--editor-neutral) 7%, var(--editor-inset)); }
   .profile-editor :global(.profile-template-picker__card:focus-visible) { border-color: var(--editor-focus); outline: 2px solid var(--editor-focus); outline-offset: 2px; }
@@ -374,13 +375,6 @@
   .profile-editor :global(.profile-template-picker__card small), .profile-editor :global(.profile-template-picker__action) { display: none; }
   .profile-editor :global(.profile-template-picker__swatch) { border-color: var(--editor-border); border-radius: var(--editor-radius); background: var(--editor-inset); }
   .profile-editor :global(.profile-template-picker__swatch i) { background: var(--editor-neutral); }
-  .profile-editor :global(.profile-template-picker__premium) { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .7rem; border: 1px solid color-mix(in srgb, var(--editor-premium) 26%, var(--editor-border)); border-radius: var(--editor-radius); background: color-mix(in srgb, var(--editor-premium) 6%, var(--editor-surface)); }
-  .profile-editor :global(.profile-template-picker__premium.is-unlocked) { border-color: color-mix(in srgb, var(--editor-premium) 44%, var(--editor-border)); }
-  .profile-editor :global(.profile-template-picker__premium strong) { display: block; margin-top: .2rem; color: var(--editor-text); font: 600 var(--editor-control-size)/1.25 var(--editor-body); }
-  .profile-editor :global(.profile-template-picker__eyebrow) { color: var(--editor-premium); font: 700 var(--editor-label-size)/1 var(--editor-mono); letter-spacing: .12em; text-transform: uppercase; }
-  .profile-editor :global(.profile-template-picker__premium-button) { flex: 0 0 auto; min-height: var(--editor-secondary-height); padding: .45rem .7rem; border: 1px solid color-mix(in srgb, var(--editor-premium) 48%, var(--editor-border-strong)); border-radius: var(--editor-radius); background: transparent; color: var(--editor-premium); font: 600 var(--editor-label-size)/1 var(--editor-body); text-decoration: none; cursor: pointer; }
-  .profile-editor :global(.profile-template-picker__premium-button:hover), .profile-editor :global(.profile-template-picker__premium-button.is-active) { background: color-mix(in srgb, var(--editor-premium) 12%, transparent); }
-  .profile-editor :global(.profile-template-picker__premium-button:focus-visible) { border-color: var(--editor-focus); outline: 2px solid var(--editor-focus); outline-offset: 2px; }
 
   @media (max-width: 48rem) {
     .profile-editor__header, .profile-editor__panel-heading { align-items: flex-start; flex-direction: column; }
@@ -391,7 +385,6 @@
     .profile-editor__style-check { grid-column: 1 / -1; }
     .profile-editor :global(.profile-template-picker__grid) { grid-template-columns: 1fr; }
     .profile-editor :global(.profile-template-picker__card small) { min-height: 0; }
-    .profile-editor :global(.profile-template-picker__premium) { align-items: flex-start; flex-direction: column; }
   }
   @media (max-width: 72rem) {
     .profile-editor--studio { grid-template-columns: minmax(0, 1fr); }

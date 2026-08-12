@@ -111,9 +111,9 @@ test('profile configuration normalization rejects incomplete structure and drops
 
 test('profile context separates owner drafts from the published visitor projection', async () => {
   const draft = createDefaultProfileConfig('#112233');
-  draft.layoutVariant = 'focus';
+  draft.layoutVariant = 'minimal';
   const published = createDefaultProfileConfig('#445566');
-  published.layoutVariant = 'editorial';
+  published.layoutVariant = 'sleek';
 
   const ownerSupabase = createConfigSupabase({
     profile: { id: 'user-1', username: 'NeonUser', mood_color: '#778899', total_rolls: 3 },
@@ -128,8 +128,8 @@ test('profile context separates owner drafts from the published visitor projecti
     profileUsername: 'neonuser'
   });
 
-  assert.equal(owner.profileConfig.draft.layoutVariant, 'focus');
-  assert.equal(owner.profileConfig.published.layoutVariant, 'editorial');
+  assert.equal(owner.profileConfig.draft.layoutVariant, 'minimal');
+  assert.equal(owner.profileConfig.published.layoutVariant, 'sleek');
   assert.equal(ownerSupabase.calls.some(call => call.type === 'rpc' && call.name === 'get_my_profile_configuration'), true);
   assert.equal(ownerSupabase.calls.some(call => call.type === 'rpc' && call.name === 'get_public_profile_configuration'), false);
 
@@ -145,7 +145,7 @@ test('profile context separates owner drafts from the published visitor projecti
   });
 
   assert.equal(visitor.profileConfig.draft, null);
-  assert.equal(visitor.profileConfig.published.layoutVariant, 'editorial');
+  assert.equal(visitor.profileConfig.published.layoutVariant, 'sleek');
   assert.equal(visitorSupabase.calls.some(call => call.type === 'rpc' && call.name === 'get_my_profile_configuration'), false);
   assert.deepEqual(
     visitorSupabase.calls.find(call => call.type === 'rpc' && call.name === 'get_public_profile_configuration').args,

@@ -1,5 +1,26 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-11 — Replace novelty profile layouts with five small structural layouts
+
+The active public-profile catalog is now exactly Compact, Sleek, Minimal,
+Modern, and Portfolio. Compact is the default and all five layouts are free;
+layout selection controls geometry and reading order only. Backgrounds, media,
+name/avatar effects, borders, atmosphere, cursor, music, links, badges, and
+daily-roll data remain shared cosmetic/content systems.
+
+The compatibility map is immersive → Compact, focus/signal → Compact,
+editorial → Sleek, archive → Portfolio, atelier → Modern, split-signal →
+Sleek, archive-index → Portfolio, prism-mosaic → Modern, night-terminal →
+Minimal, and story-stack → Portfolio. Migration
+`20260811150000_profile_layout_catalog_replacement.sql` keeps historical shop
+rows retired for auditability, merges owned inventory safely into replacement
+keys, maps equipped references, normalizes stored configuration, and publishes
+only the five active free catalog rows.
+
+Public profiles and Profile Studio use the same ProfileShell, IdentityCard, and
+shared daily-roll presentation. Service-link glyphs use allowlisted SVG assets
+with accessible labels; the redundant `@username` line is not rendered.
+
 ## 2026-08-11 — Make Studio publish and dirty state one atomic boundary
 
 Profile Studio dirty state is now keyed by editor source rather than held as a

@@ -14,7 +14,7 @@
   import ProfileTimeline from './ProfileTimeline.svelte';
   import ProfileCollection from './ProfileCollection.svelte';
   import { getProfileStoryUnlocks } from './profileStory.js';
-  import { createDefaultProfileConfig, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig, PROFILE_APPEARANCE_DEFAULTS } from './profileConfig.js';
+  import { createDefaultProfileConfig, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
   import { getProfileComposition } from './profileComposition.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
@@ -23,6 +23,7 @@
   import ProfileSocial from './ProfileSocial.svelte';
   import { getProfileMediaUrl } from './profileMedia.js';
   import TodayColor from './TodayColor.svelte';
+  import ProfileDailyRoll from './ProfileDailyRoll.svelte';
   import FeaturedCollection from './FeaturedCollection.svelte';
   import { PROFILE_MUSIC_ENABLED } from './profileFeatures.js';
   import { trackProductEvent } from './productAnalytics.js';
@@ -58,17 +59,6 @@
   export let previewDevice = 'desktop';
 
   const profileShellStyle = '--profile-accent: var(--color-accent-roll); --profile-surface-accent: var(--color-accent-cyan); --profile-control-accent: var(--color-accent);';
-  const DEFAULT_SIGNAL_MODULES = Object.freeze([
-    ['roll', true, 0, 'wide'],
-    ['stats', true, 1, 'wide'],
-    ['signature', true, 2, 'medium'],
-    ['links', true, 3, 'medium'],
-    ['recent', true, 4, 'medium'],
-    ['achievements', true, 5, 'medium'],
-    ['boundary', true, 6, 'medium'],
-    ['explore', true, 7, 'wide']
-  ]);
-
   let targetProfile = null;
   let targetScores = [];
   let timelineEvents = [];
@@ -97,27 +87,7 @@
   let shareDialogRequest = null;
   let identityCardComponent = null;
   let identityCardRequest = null;
-
-  function hasDefaultSignalModules(modules) {
-    return Array.isArray(modules)
-      && modules.length === DEFAULT_SIGNAL_MODULES.length
-      && modules.every((module, index) => {
-        const expected = DEFAULT_SIGNAL_MODULES[index];
-        return module?.id === expected[0]
-          && module?.visible !== false === expected[1]
-          && Number(module?.order) === expected[2]
-          && module?.size === expected[3];
-      });
-  }
-
-  function hasAuthoredProfileContent(content) {
-    const about = content?.about || {};
-    const aboutText = String(about.body || about.markdown || '').trim();
-    const projects = Array.isArray(content?.projects)
-      ? content.projects.some(project => String(project?.title || '').trim() && String(project?.url || '').trim())
-      : false;
-    return Boolean(aboutText || projects);
-  }
+  const defaultProfilePresentation = false;
 
   function ensureIdentityCard() {
     if (identityCardComponent || identityCardRequest) return identityCardRequest;
@@ -540,21 +510,9 @@
   $: recentScores = targetScores.slice(0, 6);
   $: nameRendererRecentColors = recentScores.map(score => score?.hex_code).filter(Boolean);
   $: profilePath = getCanonicalProfilePath(username) || '/profile';
-  // Keep the daily roll on the system presentation tokens. Profile-authored
-  // appearance values are projected onto the identity card below instead of
-  // leaking into the roll surface.
-  $: defaultProfilePresentation = effectiveProfileConfig.templateKey === 'signal'
-    && (effectiveProfileConfig.layoutVariant === 'focus' || effectiveProfileConfig.layoutVariant === 'immersive')
-    && hasDefaultSignalModules(effectiveProfileConfig.modules)
-    && effectiveProfileConfig.links.length === 0
-    && !hasAuthoredProfileContent(effectiveProfileConfig.content)
-    && !backgroundSrc
-    && !backgroundVideoSrc
-    && !atmosphereKey
-    && appearance.colors.background === PROFILE_APPEARANCE_DEFAULTS.colors.background;
-  // Legacy Signal defaults were stored as Immersive. Treat that untouched
-  // payload as the new default presentation without rewriting saved config.
-  $: profilePresentationLayoutVariant = defaultProfilePresentation ? 'focus' : layoutVariant;
+  // Layout is structure only. Keep the default class off the renderer so a
+  // new Compact profile never receives a baked-in starfield or color theme.
+  $: profilePresentationLayoutVariant = layoutVariant;
   $: profileCardStyle = getProfileAppearanceStyle(effectiveProfileConfig);
   $: profilePageStyle = `${profileShellStyle};${getProfileCanvasStyle(effectiveProfileConfig)}${cursorSrc ? `;cursor:url("${cursorSrc}") 16 16, auto` : ''}${pointerCursorSrc ? `;--profile-pointer-cursor:url("${pointerCursorSrc}")` : ''}`;
 
@@ -646,9 +604,21 @@
               <div class="profile-shell__identity-loading" aria-busy="true" aria-label="Identity pending"></div>
             {/if}
           </ProfileBorderEffect>
+          {#if profilePresentationLayoutVariant !== 'portfolio' && showRoll && !refreshing}
+            <ProfileDailyRoll
+              isOwner={isOwnProfile}
+              result={latestRoll}
+              accentColor={signatureColor}
+              variant={profilePresentationLayoutVariant}
+              {visualFixture}
+              on:rollstart={handleRollStart}
+              on:rollcancel={handleRollCancel}
+              on:rollcomplete={handleRollComplete}
+            />
+          {/if}
         </div>
 
-      {#if !previewMode && hasProfileMore && !profileMoreActive}
+      {#if !previewMode && hasProfileMore && profilePresentationLayoutVariant === 'portfolio' && !profileMoreActive}
         <button type="button" class="profile-shell__more-cue" aria-controls="profile-more" on:click={scrollToProfileMore}>
           <span class="profile-shell__more-cue-label">Explore profile</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
@@ -676,7 +646,7 @@
             <span aria-hidden="true">↑</span>
           </button>
         {/if}
-        {#if showRoll && !refreshing}
+        {#if showRoll && !refreshing && profilePresentationLayoutVariant === 'portfolio'}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
               <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} />
@@ -976,78 +946,11 @@
   :global(.profile-atmosphere.profile-shell__card-atmosphere-layer) { isolation: auto; }
   :global(.profile-atmosphere.profile-shell__page-atmosphere-layer) { position: fixed; inset: 0; z-index: 0; }
   :global(.cursor-trail-layer.profile-shell__page-cursor-layer) { position: fixed; inset: 0; z-index: 6; }
-  .profile-shell__opening-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr); align-items: center; gap: clamp(2rem, 6vw, 7rem); width: min(100%, 70rem); margin-inline: auto; }
   .profile-shell__identity { min-width: 0; }
-
-  .profile-shell__ambient {
-    position: absolute;
-    width: 30rem;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    pointer-events: none;
-    opacity: 0.18;
-    filter: blur(0.3rem);
-    background: radial-gradient(circle, color-mix(in srgb, var(--profile-surface-accent) 42%, transparent), transparent 68%);
-  }
-
-  .profile-shell__ambient--one { top: 12rem; left: -18rem; }
-  .profile-shell__ambient--two { right: -17rem; bottom: 10rem; background: radial-gradient(circle, color-mix(in srgb, var(--color-accent-cyan) 34%, transparent), transparent 68%); }
-
-  .profile-shell__identity-row,
-  .profile-shell__name-row,
   .profile-shell__rank-row {
     display: flex;
     align-items: center;
   }
-
-  .profile-shell__section-label,
-  .profile-shell__eyebrow,
-  .profile-shell__mode,
-  .profile-shell__rank-label,
-  .profile-shell__rank-next,
-  .profile-shell__mood,
-  .profile-shell__staff,
-  .profile-shell__launch {
-    font: 700 var(--type-label) / 1.2 var(--font-mono-stack);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .profile-shell__section-label,
-  .profile-shell__eyebrow { margin: 0; color: var(--profile-accent); }
-  .profile-shell__mode { color: var(--color-ink-muted); }
-
-  .profile-shell__section-label { font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.13em; text-transform: uppercase; }
-  .profile-shell__identity-row { align-items: flex-start; gap: clamp(var(--space-4), 3vw, var(--space-8)); }
-  .profile-shell__avatar {
-    position: relative;
-    flex: 0 0 6.5rem;
-    width: 6.5rem;
-    aspect-ratio: 1;
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--profile-surface-accent) 65%, white 10%);
-    border-radius: var(--radius-xl);
-    background: radial-gradient(circle at 28% 22%, color-mix(in srgb, var(--profile-surface-accent) 75%, white), var(--profile-surface-accent) 45%, #08090d 100%);
-    box-shadow: 0 1.25rem 2.5rem color-mix(in srgb, var(--profile-surface-accent) 30%, transparent);
-  }
-
-  .profile-shell__avatar-letter { position: relative; z-index: 1; color: white; font: 600 3rem / 1 var(--font-display-stack); text-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.4); }
-  :global(.profile-shell__avatar-mark) { position: absolute; right: 0.4rem; bottom: 0.4rem; width: 1.5rem; opacity: 0.75; border: 0; border-radius: var(--radius-sm); }
-
-  .profile-shell__identity-copy { min-width: 0; flex: 1; }
-  .profile-shell__title { margin: 0 0 var(--space-2); color: var(--profile-accent); font: 700 var(--type-small) / 1.3 var(--font-mono-stack); }
-  .profile-shell__name-row { flex-wrap: wrap; gap: var(--space-3); }
-  .profile-shell__name { max-width: 100%; margin: 0; color: var(--color-ink-strong); font: 600 clamp(3.1rem, 8vw, 7rem) / 0.9 var(--font-display-stack); letter-spacing: -0.075em; overflow-wrap: anywhere; }
-  .profile-shell__staff { color: var(--color-accent-cyan); }
-  .profile-shell__launch { color: var(--color-warning); letter-spacing: 0.04em; }
-  .profile-shell__subline { margin: var(--space-4) 0 0; color: var(--color-ink-muted); font-size: var(--type-body); }
-  .profile-shell__mood { display: inline-flex; align-items: center; gap: var(--space-2); margin: var(--space-5) 0 0; color: var(--color-ink-muted); letter-spacing: 0.08em; }
-  .profile-shell__mood span { display: inline-block; width: 0.75rem; height: 0.75rem; border-radius: 50%; box-shadow: 0 0 1rem var(--profile-accent); }
-
-  .profile-shell__opening-roll { min-width: 0; padding-left: clamp(1.5rem, 4vw, 4.5rem); border-left: 1px solid color-mix(in srgb, var(--profile-accent) 32%, var(--color-line-subtle)); }
-  .profile-shell__opening-roll > :global(*) { width: 100%; }
 
   .profile-shell__action { display: inline-flex; align-items: center; justify-content: center; min-height: 2.35rem; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 0 var(--space-4); color: var(--color-ink-strong); font: 600 var(--type-label) / 1 var(--font-body-stack); cursor: pointer; transition: transform var(--motion-fast) var(--motion-ease-standard), background-color var(--motion-base) var(--motion-ease-standard), border-color var(--motion-base) var(--motion-ease-standard); }
   .profile-shell__action:hover:not(:disabled) { transform: translateY(-2px); }
@@ -1066,7 +969,6 @@
 
   .profile-shell__supporting { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(2rem, 6vw, 7rem); margin-top: clamp(2rem, 5vw, 4.5rem); padding: 0 clamp(1.25rem, 5vw, 5rem) clamp(1rem, 3vw, 2rem); }
   .profile-shell__supporting-region { min-width: 0; }
-  .profile-shell__supporting-region--featured { padding-left: clamp(1.5rem, 4vw, 4.5rem); border-left: 1px solid var(--color-line-subtle); }
   .profile-latest { min-width: 0; }
   .profile-latest__content { display: grid; grid-template-columns: clamp(7rem, 10vw, 10rem) minmax(0, 1fr); align-items: center; gap: clamp(var(--space-4), 3vw, var(--space-8)); }
   .profile-latest__color { display: block; width: clamp(7rem, 10vw, 10rem); aspect-ratio: 1; border-radius: 50%; box-shadow: 0 0 3.5rem color-mix(in srgb, var(--profile-accent) 34%, transparent), inset 0 0 0 1px rgba(255,255,255,0.22); }
@@ -1080,12 +982,6 @@
   .profile-shell__details-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--module-gap); padding-bottom: var(--space-6); }
   .profile-shell__details-grid :global(.foundation-module) { grid-column: span 6; }
   .profile-shell__details-grid :global(.foundation-module--wide) { grid-column: span 12; }
-  .profile-shell__owner-tools,
-  .profile-shell__social-tools { display: grid; gap: var(--module-gap); padding-bottom: var(--space-6); }
-  .profile-shell__compatibility { display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); padding: var(--space-5); border-top: 1px solid var(--color-line-subtle); }
-  .profile-shell__compatibility h3 { margin: var(--space-1) 0 0; color: var(--color-ink-strong); font: 600 var(--type-h3) / 1.1 var(--font-display-stack); }
-  .profile-shell__compatibility p:not(.profile-shell__story-eyebrow) { max-width: 42rem; margin: var(--space-2) 0 0; color: var(--color-ink-muted); font-size: var(--type-small); line-height: 1.5; }
-  .profile-shell__compatibility-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
   .profile-shell__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
   .profile-shell__stats > div { min-width: 0; padding: var(--space-4); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-md); background: var(--surface-inset); }
   .profile-shell__stats strong { display: block; color: var(--color-ink-strong); font: 600 clamp(1.45rem, 3vw, 2.25rem) / 1 var(--font-display-stack); }
@@ -1134,25 +1030,15 @@
   .profile-shell-warning { margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid color-mix(in srgb, var(--color-warning) 40%, transparent); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-warning) 8%, transparent); color: var(--color-warning); font-size: var(--type-small); }
 
   @media (max-width: 64rem) {
-    .profile-shell__opening-content { gap: var(--space-8); }
-    .profile-shell__opening-roll { padding-left: var(--space-6); }
+    .profile-shell__supporting { gap: var(--space-8); }
   }
 
   @media (max-width: 48rem) {
     .profile-shell__opening { padding: var(--space-8) var(--space-5); }
-    .profile-shell__opening-content { grid-template-columns: 1fr; gap: var(--space-8); }
-    .profile-shell__opening-roll { padding-top: var(--space-8); padding-left: 0; border-top: 1px solid color-mix(in srgb, var(--profile-surface-accent) 32%, var(--color-line-subtle)); border-left: 0; }
-    .profile-shell__identity-row { gap: var(--space-4); }
-    .profile-shell__avatar { flex-basis: 4.75rem; width: 4.75rem; border-radius: var(--radius-lg); }
-    .profile-shell__avatar-letter { font-size: 2.25rem; }
-    .profile-shell__name { font-size: clamp(2.25rem, 12vw, 4rem); }
     .profile-shell__supporting { grid-template-columns: 1fr; gap: var(--space-8); margin-top: var(--space-8); padding: 0 var(--space-5) var(--space-5); }
-    .profile-shell__supporting-region--featured { padding-top: var(--space-8); padding-left: 0; border-top: 1px solid var(--color-line-subtle); border-left: 0; }
     .profile-shell__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-shell__details-grid :global(.foundation-module),
     .profile-shell__details-grid :global(.foundation-module--wide) { grid-column: 1 / -1; }
-    .profile-shell__compatibility { align-items: flex-start; flex-direction: column; }
-    .profile-shell__compatibility-actions { justify-content: flex-start; }
     .profile-shell__story-heading { align-items: flex-start; flex-direction: column; gap: var(--space-2); }
     .profile-shell__story-heading > span { text-align: left; }
   }
@@ -1160,11 +1046,6 @@
   @media (max-width: 36rem) {
     .profile-shell-page { padding: var(--space-3); }
     .profile-shell__opening { padding: var(--space-6) var(--space-4); }
-    .profile-shell__opening-content { gap: var(--space-6); }
-    .profile-shell__identity-row { align-items: center; }
-    .profile-shell__identity-copy { flex-basis: calc(100% - 5.75rem); }
-    .profile-shell__subline { font-size: var(--type-small); }
-    .profile-shell__mood { margin-top: var(--space-4); font-size: 0.6rem; }
     .profile-shell__supporting { margin-top: var(--space-6); padding-inline: var(--space-4); }
     .profile-latest__content { grid-template-columns: 5.5rem minmax(0, 1fr); gap: var(--space-4); }
     .profile-latest__color { width: 5.5rem; }
@@ -1188,18 +1069,10 @@
   }
   .profile-shell-page--preview:not(.profile-shell-page--default) { background: transparent; }
   :global(.profile-shell-page--preview) .profile-shell__opening { width: 100%; margin: 0; border-radius: 16px; box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.28); }
-  :global(.profile-shell-page--preview) .profile-shell__opening-content { grid-template-columns: 1fr; }
-  :global(.profile-shell-page--preview) .profile-shell__identity-row { gap: var(--space-4); }
-  :global(.profile-shell-page--preview) .profile-shell__avatar { flex-basis: 4.25rem; width: 4.25rem; border-radius: var(--radius-lg); }
-  :global(.profile-shell-page--preview) .profile-shell__avatar-letter { font-size: 1.9rem; }
-  :global(.profile-shell-page--preview) .profile-shell__name { font-size: clamp(1.45rem, 5vw, 2.7rem); }
-  :global(.profile-shell-page--preview) .profile-shell__subline { margin-top: var(--space-2); font-size: var(--type-small); }
-  :global(.profile-shell-page--preview) .profile-shell__mood { margin-top: var(--space-2); font-size: 0.58rem; }
   :global(.profile-shell-page--preview) .profile-shell__rank-row { gap: var(--space-2) var(--space-3); margin-top: var(--space-4); padding-top: var(--space-3); }
   :global(.profile-shell-page--preview) .profile-shell__rank-label,
   :global(.profile-shell-page--preview) .profile-shell__rank-next { font-size: 0.54rem; }
   :global(.profile-shell-page--preview) .profile-shell__rank-value { font-size: 0.62rem; }
-  .profile-shell__preview-label { color: var(--profile-accent); font: 700 0.58rem / 1.2 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; }
 
   @media (prefers-reduced-motion: reduce) {
     .profile-shell__action,
@@ -1494,5 +1367,55 @@
     .profile-shell-page--roll-settled .profile-shell__opening.profile-shell__approved-opening {
       animation: none;
     }
+  }
+
+  /* Active profile layouts are intentionally small. The page remains the
+     user's environment; the identity surface is an object placed into it. */
+  .profile-shell-page--compact .profile-shell__opening.profile-shell__approved-opening { width: min(300px, calc(100% - 1rem)); }
+  .profile-shell-page--sleek .profile-shell__opening.profile-shell__approved-opening { width: min(335px, calc(100% - 1rem)); }
+  .profile-shell-page--minimal .profile-shell__opening.profile-shell__approved-opening { width: min(300px, calc(100% - 1rem)); }
+  .profile-shell-page--modern .profile-shell__opening.profile-shell__approved-opening { width: min(310px, calc(100% - 1rem)); }
+  .profile-shell-page--portfolio .profile-shell__opening.profile-shell__approved-opening { width: min(320px, calc(100% - 1rem)); }
+
+  .profile-shell-page--compact .profile-shell__approved-main,
+  .profile-shell-page--sleek .profile-shell__approved-main,
+  .profile-shell-page--minimal .profile-shell__approved-main,
+  .profile-shell-page--modern .profile-shell__approved-main { justify-content: center; }
+  .profile-shell-page--minimal .profile-shell__surface-backdrop,
+  .profile-shell-page--minimal :global(.profile-shell__identity-boundary.profile-border-effect--none) { background: transparent; }
+  .profile-shell-page--minimal :global(.profile-shell__identity-boundary.profile-border-effect--none) { overflow: visible; }
+
+  .profile-shell-page--compact :global(.profile-daily-roll),
+  .profile-shell-page--sleek :global(.profile-daily-roll),
+  .profile-shell-page--minimal :global(.profile-daily-roll),
+  .profile-shell-page--modern :global(.profile-daily-roll) { margin-top: .55rem; padding: .6rem .7rem 0; border-top: 1px solid color-mix(in srgb, var(--profile-control-accent) 22%, var(--color-line-subtle)); }
+  .profile-shell-page--sleek :global(.profile-daily-roll) { margin-top: .75rem; padding-top: .7rem; }
+  .profile-shell-page--minimal :global(.profile-daily-roll) { border-top-color: color-mix(in srgb, var(--profile-control-accent) 18%, transparent); }
+  .profile-shell-page--modern :global(.profile-daily-roll) { margin-top: .7rem; }
+
+  .profile-shell-page--compact .profile-shell__more,
+  .profile-shell-page--sleek .profile-shell__more,
+  .profile-shell-page--minimal .profile-shell__more,
+  .profile-shell-page--modern .profile-shell__more { min-height: 0; justify-content: flex-start; padding: 2.5rem 0 4rem; }
+  .profile-shell-page--compact .profile-shell__more-cue,
+  .profile-shell-page--sleek .profile-shell__more-cue,
+  .profile-shell-page--minimal .profile-shell__more-cue,
+  .profile-shell-page--modern .profile-shell__more-cue,
+  .profile-shell-page--compact .profile-shell__more-back,
+  .profile-shell-page--sleek .profile-shell__more-back,
+  .profile-shell-page--minimal .profile-shell__more-back,
+  .profile-shell-page--modern .profile-shell__more-back { display: none; }
+  .profile-shell-page--portfolio .profile-shell__more { align-items: center; }
+
+  .profile-shell-page--preview .profile-shell__opening.profile-shell__approved-opening { width: 100%; }
+  .profile-shell-page--preview :global(.profile-daily-roll) { box-sizing: border-box; }
+
+  @media (max-width: 36rem) {
+    .profile-shell-page--compact .profile-shell__opening.profile-shell__approved-opening,
+    .profile-shell-page--sleek .profile-shell__opening.profile-shell__approved-opening,
+    .profile-shell-page--minimal .profile-shell__opening.profile-shell__approved-opening,
+    .profile-shell-page--modern .profile-shell__opening.profile-shell__approved-opening,
+    .profile-shell-page--portfolio .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 320px); }
+    .profile-shell-page--minimal .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 300px); }
   }
 </style>

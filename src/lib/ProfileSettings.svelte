@@ -5,7 +5,7 @@
   import { authUser, equippedItems, isAuthenticated, profile, profileEntitlements, refreshProfileState, session } from './stores';
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData.js';
-  import { normalizeProfileConfig } from './profileConfig.js';
+  import { normalizeProfileConfig, PROFILE_LAYOUT_VARIANTS } from './profileConfig.js';
   import { getProfileMediaUrl } from './profileMedia.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
@@ -535,7 +535,7 @@
       context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: nextDraft, published: nextPublished, updatedAt: event.detail?.updatedAt || context.profileConfig?.updatedAt, publishedAt: event.detail?.publishedAt || context.profileConfig?.publishedAt } };
     }
     const savedLayout = nextDraft.layoutVariant;
-    if (event.detail?.layoutChanged && ['immersive', 'editorial', 'focus'].includes(savedLayout) && currentEquippedLayout) void clearPaidLayoutOverride();
+    if (event.detail?.layoutChanged && PROFILE_LAYOUT_VARIANTS.includes(savedLayout) && currentEquippedLayout) void clearPaidLayoutOverride();
   }
 
   async function clearPaidLayoutOverride() {
@@ -580,6 +580,16 @@
     const nextConfig = event.detail?.config;
     if (!nextConfig) { configurationPreview = null; return; }
     configurationPreview = normalizeProfileConfig(nextConfig, FALLBACK_PROFILE_COLOR);
+    if (event.detail?.layoutChanged && PROFILE_LAYOUT_VARIANTS.includes(configurationPreview.layoutVariant) && currentEquippedLayout) {
+      // A Studio layout selection is the structural source of truth. Remove a
+      // previously equipped layout from the preview immediately while the
+      // compatibility unequip RPC completes, so the preview never continues
+      // rendering the old cosmetic override for one or more frames.
+      const nextLoadout = /** @type {Record<string, string>} */ ({ ...($equippedItems || {}) });
+      delete nextLoadout.profile_layout;
+      cosmeticPreviewLoadout = nextLoadout;
+      void clearPaidLayoutOverride();
+    }
   }
 
   function updateIdentityPreview(event) {

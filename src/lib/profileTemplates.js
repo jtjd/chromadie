@@ -1,112 +1,88 @@
 import { CHROMADIE_PLUS_ENTITLEMENT_KEY, hasChromadiePlus } from './premiumEntitlements.js';
+import { LEGACY_PROFILE_LAYOUT_MAP, PROFILE_LAYOUT_DEFINITIONS, PROFILE_LAYOUT_KEYS, normalizeProfileLayoutKey } from './profile-layout/profileLayouts.js';
 
-export const PROFILE_TEMPLATE_KEYS = Object.freeze(['signal', 'editorial', 'archive', 'atelier', 'custom']);
-export const FREE_PROFILE_TEMPLATE_KEYS = Object.freeze(['signal', 'editorial', 'archive']);
-export const PREMIUM_PROFILE_TEMPLATE_KEYS = Object.freeze(['atelier']);
+/**
+ * Templates are the Studio-facing names for the five structural layout
+ * renderers. They do not carry a theme or cosmetic loadout.
+ */
+export const PROFILE_TEMPLATE_KEYS = PROFILE_LAYOUT_KEYS;
+export const FREE_PROFILE_TEMPLATE_KEYS = PROFILE_LAYOUT_KEYS;
+export const PREMIUM_PROFILE_TEMPLATE_KEYS = Object.freeze([]);
+// Kept for callers that still import the old expression entitlement constant;
+// no layout is gated behind it.
 export const PREMIUM_EXPRESSION_ENTITLEMENT_KEY = CHROMADIE_PLUS_ENTITLEMENT_KEY;
 
 function freezeModules(modules) {
   return Object.freeze(modules.map(module => Object.freeze({ ...module })));
 }
 
-const TEMPLATE_DEFINITIONS = {
-  signal: {
-    key: 'signal',
-    label: 'Signal Garden',
-    tier: 'free',
-    layoutVariant: 'focus',
-    description: 'The polished default: a quiet starfield identity card with the color story waiting below.',
-    modules: freezeModules([
-      { id: 'roll', visible: true, order: 0, size: 'wide' },
-      { id: 'stats', visible: true, order: 1, size: 'wide' },
-      { id: 'signature', visible: true, order: 2, size: 'medium' },
-      { id: 'links', visible: true, order: 3, size: 'medium' },
-      { id: 'recent', visible: true, order: 4, size: 'medium' },
-      { id: 'achievements', visible: true, order: 5, size: 'medium' },
-      { id: 'boundary', visible: true, order: 6, size: 'medium' },
-      { id: 'explore', visible: true, order: 7, size: 'wide' }
-    ])
-  },
-  editorial: {
-    key: 'editorial',
-    label: 'Editorial',
-    tier: 'free',
-    layoutVariant: 'editorial',
-    description: 'A calmer reading order that lets links, voice, and selected work lead.',
-    modules: freezeModules([
-      { id: 'roll', visible: true, order: 0, size: 'wide' },
-      { id: 'signature', visible: true, order: 1, size: 'wide' },
-      { id: 'links', visible: true, order: 2, size: 'medium' },
-      { id: 'recent', visible: true, order: 3, size: 'medium' },
-      { id: 'achievements', visible: true, order: 4, size: 'wide' },
-      { id: 'stats', visible: true, order: 5, size: 'medium' },
-      { id: 'boundary', visible: true, order: 6, size: 'medium' },
-      { id: 'explore', visible: true, order: 7, size: 'wide' }
-    ])
-  },
-  archive: {
-    key: 'archive',
-    label: 'Color Archive',
-    tier: 'free',
-    layoutVariant: 'focus',
-    description: 'A history-forward composition for players whose rolls tell the story.',
-    modules: freezeModules([
-      { id: 'roll', visible: true, order: 0, size: 'wide' },
-      { id: 'recent', visible: true, order: 1, size: 'wide' },
-      { id: 'achievements', visible: true, order: 2, size: 'wide' },
-      { id: 'signature', visible: true, order: 3, size: 'medium' },
-      { id: 'stats', visible: true, order: 4, size: 'medium' },
-      { id: 'links', visible: true, order: 5, size: 'medium' },
-      { id: 'boundary', visible: true, order: 6, size: 'medium' },
-      { id: 'explore', visible: true, order: 7, size: 'wide' }
-    ])
-  },
-  atelier: {
-    key: 'atelier',
-    label: 'Atelier',
-    tier: 'premium',
-    requiresEntitlement: PREMIUM_EXPRESSION_ENTITLEMENT_KEY,
-    layoutVariant: 'editorial',
-    description: 'A premium expression preset with a more authored, exhibition-like rhythm.',
-    modules: freezeModules([
-      { id: 'roll', visible: true, order: 0, size: 'wide' },
-      { id: 'signature', visible: true, order: 1, size: 'wide' },
-      { id: 'achievements', visible: true, order: 2, size: 'wide' },
-      { id: 'links', visible: true, order: 3, size: 'medium' },
-      { id: 'recent', visible: true, order: 4, size: 'medium' },
-      { id: 'stats', visible: true, order: 5, size: 'medium' },
-      { id: 'boundary', visible: true, order: 6, size: 'medium' },
-      { id: 'explore', visible: true, order: 7, size: 'wide' }
-    ])
-  }
-};
+const MODULE_ORDER = Object.freeze({
+  compact: ['roll', 'stats', 'links', 'signature', 'recent', 'achievements', 'boundary', 'explore'],
+  sleek: ['roll', 'links', 'stats', 'signature', 'recent', 'achievements', 'boundary', 'explore'],
+  minimal: ['roll', 'links', 'signature', 'stats', 'recent', 'achievements', 'boundary', 'explore'],
+  modern: ['roll', 'stats', 'links', 'signature', 'achievements', 'recent', 'boundary', 'explore'],
+  portfolio: ['roll', 'signature', 'links', 'recent', 'achievements', 'stats', 'boundary', 'explore']
+});
+
+const MODULE_SIZES = Object.freeze({
+  roll: 'wide',
+  stats: 'medium',
+  signature: 'medium',
+  links: 'medium',
+  recent: 'wide',
+  achievements: 'wide',
+  boundary: 'medium',
+  explore: 'wide'
+});
+
+function modulesFor(key) {
+  return freezeModules((MODULE_ORDER[key] || MODULE_ORDER.compact).map((id, order) => ({
+    id,
+    visible: true,
+    order,
+    size: MODULE_SIZES[id] || 'medium'
+  })));
+}
+
+const TEMPLATE_DEFINITIONS = Object.fromEntries(
+  PROFILE_LAYOUT_KEYS.map(key => {
+    const layout = PROFILE_LAYOUT_DEFINITIONS[key];
+    return [key, {
+      key,
+      label: layout.label,
+      tier: 'free',
+      layoutVariant: key,
+      description: layout.description,
+      modules: modulesFor(key)
+    }];
+  })
+);
 
 export const PROFILE_TEMPLATE_DEFINITIONS = Object.freeze(
   Object.fromEntries(Object.entries(TEMPLATE_DEFINITIONS).map(([key, definition]) => [key, Object.freeze(definition)]))
 );
 
 export function getProfileTemplateDefinition(value) {
-  return PROFILE_TEMPLATE_DEFINITIONS[String(value || '').trim()] || null;
+  return PROFILE_TEMPLATE_DEFINITIONS[String(value || '').trim().toLowerCase()] || null;
 }
 
-export function normalizeProfileTemplateKey(value, fallback = 'signal') {
-  const candidate = value === 'custom' ? 'custom' : getProfileTemplateDefinition(value)?.key;
-  if (candidate) return candidate;
-  if (fallback === 'custom') return 'custom';
-  return getProfileTemplateDefinition(fallback)?.key || 'signal';
+export function normalizeProfileTemplateKey(value, fallback = 'compact') {
+  const candidate = String(value || '').trim().toLowerCase();
+  if (getProfileTemplateDefinition(candidate)) return candidate;
+
+  // Preserve an explicitly selected new layout when an old editor marks a
+  // composition as "custom". Historical template names are mapped to the
+  // nearest structural replacement instead of remaining active catalog keys.
+  if (candidate === 'custom') return normalizeProfileLayoutKey(fallback, 'compact');
+  return normalizeProfileLayoutKey(candidate, normalizeProfileLayoutKey(fallback, 'compact'));
 }
 
 export function inferProfileTemplateKey(layoutVariant) {
-  if (layoutVariant === 'editorial') return 'editorial';
-  // Focus is now the safe Signal default. Archive remains selectable through
-  // its explicit template marker, so malformed/missing markers do not turn a
-  // new profile into a history-first template by accident.
-  if (layoutVariant === 'focus') return 'signal';
-  return 'signal';
+  return normalizeProfileLayoutKey(layoutVariant, 'compact');
 }
 
 export function isPremiumProfileTemplate(value) {
-  return getProfileTemplateDefinition(value)?.tier === 'premium';
+  return Boolean(getProfileTemplateDefinition(value)?.tier === 'premium');
 }
 
 export function isPremiumExpressionUnlocked(entitlements = []) {
@@ -114,11 +90,15 @@ export function isPremiumExpressionUnlocked(entitlements = []) {
 }
 
 export function createProfileTemplatePatch(value) {
-  const definition = getProfileTemplateDefinition(value);
-  if (!definition || definition.key === 'custom') return null;
+  const normalizedKey = normalizeProfileTemplateKey(value, 'compact');
+  const definition = getProfileTemplateDefinition(normalizedKey);
+  if (!definition) return null;
   return {
     templateKey: definition.key,
-    layoutVariant: definition.layoutVariant,
-    modules: definition.modules.map(module => ({ ...module }))
+    layoutVariant: definition.layoutVariant
   };
 }
+
+// Exported for migration/contract tests without making the legacy catalog
+// active again.
+export { LEGACY_PROFILE_LAYOUT_MAP };

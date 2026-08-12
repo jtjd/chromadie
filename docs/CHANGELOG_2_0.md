@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-11 — Introduce five compact public profile layouts
+
+- Replaced the novelty profile-layout choices with Compact, Sleek, Minimal,
+  Modern, and Portfolio. Compact is the default.
+- Kept the profile surface intentionally small so the user's background,
+  avatar, media, effects, music, links, and daily color remain the visual
+  focus. Portfolio adds depth only after an intentional scroll.
+- Added lightweight monochrome service icons for supported social links,
+  accessible labels/tooltips, and one clear primary username identity.
+- Studio layout selection now previews the same structural renderer used by
+  the public profile, and existing layout ownership/configuration is migrated
+  to the nearest replacement without removing cosmetics or entitlements.
+
 ## 2026-08-11 — Harden Profile Studio publishing and mobile editing
 
 - Profile Studio now tracks unsaved work per editor and publishes identity,

@@ -71,7 +71,7 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(preview, /container: profile-preview \/ inline-size;/);
   assert.match(preview, /@container profile-preview \(max-width: 31rem\)[\s\S]*identity-card__person/);
   assert.match(smoke, /responsive dashboard geometry fits phone, tablet, and narrow desktop widths/);
-  assert.match(smoke, /const widths = \[320, 360, 390, 414, 480, 520, 524, 544, 576, 600, 768, 1024, 1100, 1280\]/);
+  assert.match(smoke, /const viewports = \[[\s\S]*\[320, 568\][\s\S]*\[667, 375\][\s\S]*\[1920, 1080\]/);
   assert.match(smoke, /09-mobile-preview-414/);
   assert.match(smoke, /10-mobile-editor-414/);
   assert.match(smoke, /profile-dashboard-shell--mobile/);
@@ -117,7 +117,8 @@ test('reference workspace composition stays explicit', async () => {
   assert.doesNotMatch(customize, /profile-customize-page__appearance-effects|Overlay color|Atmosphere strength|Restart animations/);
   assert.match(customize, /--customize-control-surface: var\(--ctp-crust/);
   assert.match(customize, /background: var\(--customize-control-surface\) !important/);
-  assert.match(editor, /profile-editor--studio[\s\S]*profile-template-picker__premium\) \{ display: none; \}/);
+  assert.match(editor, /profile-template-picker__grid[^}]*repeat\(5/);
+  assert.doesNotMatch(editor, /profile-template-picker__premium/);
   assert.match(cosmetics, /Name effects/);
   assert.match(cosmetics, /name_font: 'Font'/);
   assert.match(cosmetics, /name_material: 'Material'/);

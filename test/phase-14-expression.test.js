@@ -131,9 +131,9 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(audioMigration, /profile_audio\/.*profile[.]mp3/);
   assert.match(settings, /export let staff = false/);
   assert.match(identity, /slice\(0, 6\)/);
-  assert.match(identity, /'\/instagram'/);
-  assert.match(identity, /'\/tiktok'/);
-  assert.match(identity, /'\/twitch'/);
+  assert.match(identity, /instagram: 'instagram'/);
+  assert.match(identity, /tiktok: 'tiktok'/);
+  assert.match(identity, /twitch: 'twitch'/);
   assert.match(instagramIcon, /<svg/);
   assert.match(instagramIcon, /currentColor/);
   assert.match(tiktokIcon, /<svg/);

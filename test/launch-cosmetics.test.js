@@ -7,6 +7,7 @@ import { AVATAR_EFFECT_KEYS, AVATAR_EFFECT_DEFINITIONS, isAvatarEffectKey } from
 import {
   FREE_PROFILE_LAYOUTS,
   PAID_PROFILE_LAYOUT_KEYS,
+  PROFILE_LAYOUT_KEYS,
   getProfileLayoutLabel,
   resolveProfileLayoutVariant
 } from '../src/lib/profile-layout/profileLayouts.js';
@@ -18,15 +19,16 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('launch renderer registries contain exactly the requested finite keys', () => {
   assert.equal(CURSOR_TRAIL_KEYS.length, 16);
   assert.equal(AVATAR_EFFECT_KEYS.length, 18);
-  assert.equal(PAID_PROFILE_LAYOUT_KEYS.length, 5);
+  assert.equal(PAID_PROFILE_LAYOUT_KEYS.length, 0);
   assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 12);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
   assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 18);
-  assert.equal(new Set(PAID_PROFILE_LAYOUT_KEYS).size, 5);
-  assert.deepEqual(FREE_PROFILE_LAYOUTS, ['immersive', 'editorial', 'focus']);
+  assert.equal(new Set(PAID_PROFILE_LAYOUT_KEYS).size, 0);
+  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'sleek', 'minimal', 'modern', 'portfolio']);
+  assert.deepEqual(FREE_PROFILE_LAYOUTS, PROFILE_LAYOUT_KEYS);
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
   assert.equal(isAvatarEffectKey('avatar_effect_color_archive'), true);
-  assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Story Stack');
+  assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Portfolio');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_color_memory'), null);
   assert.equal(getAtmosphereDefinition('profile_atmosphere_signal_garden'), null);
   assert.equal(getAtmosphereDefinition('profile_atmosphere_droplets_glass')?.key, 'droplets-glass');
@@ -128,10 +130,10 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
 });
 
 test('paid layout resolution preserves the free fallback and supports temporary previews', () => {
-  assert.equal(resolveProfileLayoutVariant({}, { layoutVariant: 'editorial' }), 'editorial');
-  assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'editorial' }), 'split-signal');
-  assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'editorial', layoutOverride: 'focus' }), 'focus');
-  assert.equal(resolveProfileLayoutVariant({ profile_layout: 'not-real' }, { layoutVariant: 'not-real' }), 'immersive');
+  assert.equal(resolveProfileLayoutVariant({}, { layoutVariant: 'sleek' }), 'sleek');
+  assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'sleek' }), 'sleek');
+  assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'sleek', layoutOverride: 'focus' }), 'compact');
+  assert.equal(resolveProfileLayoutVariant({ profile_layout: 'not-real' }, { layoutVariant: 'not-real' }), 'compact');
 });
 
 test('profile layouts stay on the identity card and cannot recompose the roll page', async () => {
@@ -139,13 +141,12 @@ test('profile layouts stay on the identity card and cannot recompose the roll pa
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/IdentityCard.svelte')
   ]);
-  assert.match(card, /identity-card--layout-split-signal/);
-  assert.match(card, /identity-card--layout-editorial/);
-  assert.match(card, /identity-card--layout-focus/);
-  assert.match(card, /identity-card--layout-story-stack/);
+  for (const layout of ['compact', 'sleek', 'minimal', 'modern', 'portfolio']) {
+    assert.match(card, new RegExp(`identity-card--layout-${layout}`));
+  }
+  assert.match(shell, /ProfileDailyRoll/);
   assert.match(shell, /layoutVariant=\{profilePresentationLayoutVariant\}/);
-  assert.doesNotMatch(shell, /profile-shell-page--(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)[^\n]*profile-shell__more/);
-  assert.doesNotMatch(shell, /profile-shell-page--(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)[^\n]*profile-shell__approved-(?:game|featured|supporting)/);
+  assert.doesNotMatch(card, /identity-card--layout-(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)/);
 });
 
 test('new catalog slots filter independently and fitting-room selection preserves other slots', () => {
@@ -153,7 +154,7 @@ test('new catalog slots filter independently and fitting-room selection preserve
     { item_key: 'cursor_trail_signal_trace', slot: 'cursor_trail', cost: 160000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
     { item_key: 'avatar_effect_signal_ring', slot: 'avatar_effect', cost: 180000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
     { item_key: 'profile_atmosphere_rain_window', slot: 'profile_atmosphere', cost: 260000, rarity: 'Rare', collection: 'Nocturne', catalog_status: 'active' },
-    { item_key: 'profile_layout_split_signal', slot: 'profile_layout', cost: 320000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' }
+    { item_key: 'profile_layout_sleek', slot: 'profile_layout', cost: 0, rarity: 'Uncommon', collection: 'Layouts', catalog_status: 'active' }
   ];
   for (const section of ['avatar', 'atmosphere', 'cursor', 'layouts']) {
     assert.equal(SHOP_SECTIONS.some(entry => entry.id === section), true);

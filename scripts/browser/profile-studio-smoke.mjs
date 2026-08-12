@@ -178,8 +178,8 @@ try {
     await page.setInputValue('#password-input', password, ['input', 'change']);
     await page.click('.auth-submit', 'signup submit control');
     await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page .identity-card') && !document.querySelector('.auth-page')`, 'authenticated session after signup', 30000);
-    const accountName = await page.evaluate('document.querySelector(".identity-card__handle")?.textContent?.trim() || ""');
-    assert(accountName.toLowerCase() === `@${canonicalUsername}` || accountName.toLowerCase() === canonicalUsername, `Authenticated profile shows ${JSON.stringify(accountName)}, expected ${canonicalUsername}.`);
+    const accountPath = await page.evaluate('document.querySelector(".identity-card")?.getAttribute("data-profile-path") || ""');
+    assert(accountPath === `/${canonicalUsername}`, `Authenticated profile resolved to ${JSON.stringify(accountPath)}, expected /${canonicalUsername}.`);
     results.account = { username: canonicalUsername, email, canonicalPath: `/${canonicalUsername}` };
   });
 
@@ -311,11 +311,90 @@ try {
     assert((layoutState.workspace?.width || 0) > 0 && (layoutState.workspace?.bottom || 0) <= layoutState.viewport.height + 2, `Layout workspace escapes the viewport: ${JSON.stringify(layoutState)}.`);
     await page.evaluate(`document.querySelector('[data-editor-section="layout"]')?.scrollIntoView({ block: 'start' })`);
     await capture('04-layout-workspace');
+    await step('all five profile layouts use the shared bounded renderer', async () => {
+      const layouts = ['compact', 'sleek', 'minimal', 'modern', 'portfolio'];
+      const pickerLabels = await page.evaluate(`([...document.querySelectorAll('.profile-template-picker__card strong')]).map(node => node.textContent.trim())`);
+      assert(JSON.stringify(pickerLabels) === JSON.stringify(['Compact', 'Sleek', 'Minimal', 'Modern', 'Portfolio']), `Profile Studio layout catalog is not the five-layout set: ${JSON.stringify(pickerLabels)}.`);
+
+      const measurements = [];
+      for (const layout of layouts) {
+        const clicked = await page.evaluate(`(() => {
+          const wanted = ${JSON.stringify(layout)};
+          const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim().toLowerCase() === wanted);
+          if (!card) return false;
+          card.scrollIntoView({ block: 'center', inline: 'nearest' });
+          card.click();
+          return true;
+        })()`);
+        assert(clicked, `Could not select ${layout} in Profile Studio.`);
+        await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} live preview layout`);
+        const state = await page.evaluate(`(() => {
+          const canvas = document.querySelector('.profile-studio-preview__canvas');
+          const shell = canvas?.querySelector('.profile-shell-page--preview');
+          const card = shell?.querySelector('.identity-card');
+          const avatar = card?.querySelector('.identity-card__avatar');
+          const name = card?.querySelector('.identity-card__name');
+          const rect = element => {
+            const box = element?.getBoundingClientRect();
+            return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
+          };
+          const shellBox = rect(shell);
+          const cardBox = rect(card);
+          const avatarBox = rect(avatar);
+          const nameBox = rect(name);
+          const overflow = [...(shell?.querySelectorAll('*') || [])]
+            .map(element => ({ element, box: element.getBoundingClientRect() }))
+            .filter(({ box }) => box.width > 0 && box.height > 0 && shellBox && (box.left < shellBox.left - 1 || box.right > shellBox.right + 1))
+            .slice(0, 4)
+            .map(({ element, box }) => ({ tag: element.tagName, className: element.className, left: Math.round(box.left), right: Math.round(box.right) }));
+          const avatarNameOverlap = Boolean(avatarBox && nameBox && avatarBox.left < nameBox.right - 1 && nameBox.left < avatarBox.right - 1 && avatarBox.top < nameBox.bottom - 1 && nameBox.top < avatarBox.bottom - 1);
+          return {
+            shell: shellBox,
+            card: cardBox,
+            cardClass: card?.className || '',
+            avatar: avatarBox,
+            name: nameBox,
+            avatarNameOverlap,
+            hasDailyRoll: Boolean(shell?.querySelector('.profile-daily-roll')),
+            iconCount: card?.querySelectorAll('.identity-card__link-glyph img').length || 0,
+            hasRedundantHandle: Boolean(card?.querySelector('.identity-card__handle, .identity-card__handle-row')),
+            overflow
+          };
+        })()`);
+        assert(state.card?.width > 0 && state.card.width <= 360, `${layout} profile surface is no longer compact: ${JSON.stringify(state)}.`);
+        assert(state.card?.right <= (state.shell?.right || 0) + 1 && state.card?.left >= (state.shell?.left || 0) - 1, `${layout} profile surface escapes the preview shell: ${JSON.stringify(state)}.`);
+        assert(!state.avatarNameOverlap && !state.overflow.length, `${layout} preview has identity collision or clipping: ${JSON.stringify(state)}.`);
+        assert(state.hasDailyRoll || layout === 'portfolio', `${layout} preview lost the shared daily-roll presentation.`);
+        assert(!state.hasRedundantHandle, `${layout} preview still renders a redundant @username handle.`);
+        measurements.push({ layout, ...state });
+      }
+
+      await page.evaluate(`(() => {
+        const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim() === 'Compact');
+        card?.click();
+      })()`);
+      await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-compact')`, 'restore Compact preview layout');
+      // Layout selection is intentionally a real draft update. Reset it before
+      // the later route/viewport checks so navigation is testing geometry rather
+      // than being intercepted by the unsaved-changes guard.
+      const layoutResetPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions button')].find(button => button.textContent.trim() === 'Reset' && !button.disabled))`);
+      if (layoutResetPending) {
+        await page.click('.profile-dashboard-actions button:not(.profile-dashboard-actions__publish)', 'reset layout smoke draft');
+        await page.waitFor(`([...document.querySelectorAll('.profile-dashboard-actions button')].find(button => button.textContent.trim() === 'Reset'))?.disabled === true`, 'reset layout smoke draft');
+      }
+      return { pickerLabels, measurements };
+    });
     if (smokeMode === 'preview') {
       // The remaining cosmetic fixture setup intentionally uses a Vite dev
       // module import to grant test-only inventory. Production preview must
-      // not expose that source path, so its smoke pass continues with the
-      // real account defaults after validating the built editor geometry.
+      // not expose that source path, so publish the layout draft and continue
+      // with the real account defaults after validating the built editor
+      // geometry.
+      const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
+      if (publishPending) {
+        await page.click('.profile-dashboard-actions__publish', 'publish layout smoke draft');
+        await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, 'publish layout smoke draft');
+      }
       return { layoutState, mediaRail, productionPreview: true };
     }
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
@@ -648,12 +727,17 @@ try {
       await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed preview for responsive geometry audit');
     }
 
-    const widths = [320, 360, 390, 414, 480, 520, 524, 544, 576, 600, 768, 1024, 1100, 1280];
+    const viewports = [
+      [320, 568], [360, 640], [390, 844], [414, 896], [430, 932],
+      [480, 900], [520, 900], [524, 900], [544, 900], [576, 900],
+      [600, 960], [667, 375], [768, 1024], [1024, 768], [1100, 700],
+      [1280, 720], [1366, 768], [1440, 900], [1920, 1080]
+    ];
     const measurements = [];
     const customizeTabs = ['appearance', 'media', 'layout'];
 
-    for (const width of widths) {
-      await page.setViewport(width, width <= 1024 ? 844 : 900);
+    for (const [width, height] of viewports) {
+      await page.setViewport(width, height);
       await page.waitFor(`document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-header__customize-tabs')`, `Customize at ${width}px`);
       if (width > 1024) {
         await page.waitFor('document.querySelector(".profile-studio-preview__devices button")', `narrow-desktop preview at ${width}px`);
@@ -911,7 +995,16 @@ try {
     for (const width of destinationWidths) {
       await page.setViewport(width, 844);
       for (const destination of destinations) {
-        await page.navigate(`${appUrl}/profile/settings#${destination}`, `${destination} at ${width}px`);
+        const destinationUrl = `${appUrl}/profile/settings#${destination}`;
+        // A previous editor assertion may intentionally leave a draft source
+        // dirty even after the layout draft was published. Navigate through
+        // the real production guard and discard that disposable smoke draft if
+        // it appears, rather than allowing the guard to turn into a timeout.
+        await page.command('Page.navigate', { url: destinationUrl });
+        await page.waitFor(`Boolean(document.querySelector('.profile-studio-dirty-prompt')) || (document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-dashboard-shell__nav button.active[data-section="${destination}"]'))`, `${destination} navigation request at ${width}px`, 30000);
+        if (await page.evaluate('Boolean(document.querySelector(".profile-studio-dirty-prompt"))')) {
+          await page.click('.profile-studio-dirty-prompt__discard', `${destination} discard smoke draft`);
+        }
         await page.waitFor(`document.querySelector('.profile-dashboard-shell__nav button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace')`, `${destination} destination at ${width}px`, 30000);
         await delay(80);
         const state = await page.evaluate(`(() => {
@@ -947,7 +1040,7 @@ try {
       }
     }
 
-    return { widths, measurements, drawer, tabletToggle, tabletPreview, phonePreview, destinationMeasurements };
+    return { viewports, measurements, drawer, tabletToggle, tabletPreview, phonePreview, destinationMeasurements };
   });
 
   await step('production Discovery keeps its route shell and card geometry bounded', async () => {
@@ -1055,7 +1148,7 @@ try {
       const rollStyle = roll ? getComputedStyle(roll) : null;
       return {
         path: location.pathname,
-        username: document.querySelector('.identity-card__handle')?.textContent?.trim() || '',
+        username: document.querySelector('.identity-card')?.getAttribute('data-profile-path')?.slice(1) || '',
         canvas: Boolean(pageElement),
         card: Boolean(card),
         roll: Boolean(roll),

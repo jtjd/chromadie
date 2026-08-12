@@ -243,15 +243,16 @@ if (borderRows.length !== 9 || borderKeySet.size !== 9 || borderInvalidRows.leng
   process.exit(1);
 }
 const launchRows = [...seed.matchAll(
-  /^\s*\('((?:cursor_trail|avatar_effect|profile_layout|profile_atmosphere)_[a-z0-9_]+)',\s*'[^']+',\s*'(cursor_trail|avatar_effect|profile_layout|profile_atmosphere)',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)',\s*false,\s*'earned',\s*NULL,\s*'active'\),?$/gm
-)].map(([, itemKey, slot, cost, rendererKey, rarity, description, collection]) => ({
+  /^\s*\('((?:cursor_trail|avatar_effect|profile_layout|profile_atmosphere)_[a-z0-9_]+)',\s*'[^']+',\s*'(cursor_trail|avatar_effect|profile_layout|profile_atmosphere)',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)',\s*false,\s*'(earned|free)',\s*NULL,\s*'active'\),?$/gm
+)].map(([, itemKey, slot, cost, rendererKey, rarity, description, collection, accessTier]) => ({
   itemKey,
   slot,
   cost: Number(cost),
   rendererKey,
   rarity,
   description,
-  collection
+  collection,
+  accessTier
 }));
 const launchExpectedCosts = Object.freeze({
   cursor_trail_signal_trace: 160000, cursor_trail_pixel_wake: 180000, cursor_trail_chroma_ribbon: 340000,
@@ -265,8 +266,8 @@ const launchExpectedCosts = Object.freeze({
   avatar_effect_ink_stamp: 220000, avatar_effect_paper_tear: 350000, avatar_effect_static_offset: 340000,
   avatar_effect_pixel_satellites: 240000, avatar_effect_crt_scan: 330000, avatar_effect_void_eclipse: 560000,
   avatar_effect_ghost_double: 350000, avatar_effect_night_frame: 220000, avatar_effect_daily_aura: 400000,
-  avatar_effect_color_archive: 720000, profile_layout_split_signal: 320000, profile_layout_archive_index: 300000,
-  profile_layout_prism_mosaic: 450000, profile_layout_night_terminal: 480000, profile_layout_story_stack: 600000,
+  avatar_effect_color_archive: 720000, profile_layout_compact: 0, profile_layout_sleek: 0,
+  profile_layout_minimal: 0, profile_layout_modern: 0, profile_layout_portfolio: 0,
   profile_atmosphere_rain_window: 260000, profile_atmosphere_droplets_glass: 240000,
   profile_atmosphere_dust_light: 280000, profile_atmosphere_ink_bloom: 520000,
   profile_atmosphere_snowfall: 300000, profile_atmosphere_silk_folds: 320000,
@@ -277,16 +278,17 @@ const launchExpectedCosts = Object.freeze({
 const launchExpectedRenderers = new Set([
   ...cursorTrails.CURSOR_TRAIL_KEYS.map(key => `cursor_trail_${key.replaceAll('-', '_')}`),
   ...avatarEffects.AVATAR_EFFECT_KEYS.map(key => `avatar_effect_${key.replaceAll('-', '_')}`),
-  ...profileLayouts.PAID_PROFILE_LAYOUT_KEYS.map(key => `profile_layout_${key.replaceAll('-', '_')}`),
+  ...profileLayouts.PROFILE_LAYOUT_KEYS.map(key => `profile_layout_${key.replaceAll('-', '_')}`),
   ...profileAtmospheres.PROFILE_ATMOSPHERE_KEYS.map(key => `profile_atmosphere_${key.replaceAll('-', '_')}`)
 ]);
 const launchInvalidRows = launchRows.filter(row => (
   !launchExpectedRenderers.has(row.itemKey)
-    || launchExpectedCosts[row.itemKey] !== row.cost
-    || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.rendererKey)
-    || !expectedNameRarities.has(row.rarity)
-    || !row.description.trim()
-    || !row.collection.trim()
+  || launchExpectedCosts[row.itemKey] !== row.cost
+  || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.rendererKey)
+  || !expectedNameRarities.has(row.rarity)
+  || !row.description.trim()
+  || !row.collection.trim()
+  || row.accessTier !== (row.slot === 'profile_layout' ? 'free' : 'earned')
 ));
 const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'].map(slot => [
   slot,
@@ -328,5 +330,5 @@ console.log(
     `the complete border set is ${daysFor(borderTotalCost)} days.\n` +
     `Launch cosmetics: ${launchRows.length} rows / ${launchTotalCost.toLocaleString()} EP; ` +
     `Cursor ${launchCounts.cursor_trail}, Avatar ${launchCounts.avatar_effect}, ` +
-    `paid Layout ${launchCounts.profile_layout}, Atmosphere ${launchCounts.profile_atmosphere}.`
+    `structural Layout ${launchCounts.profile_layout}, Atmosphere ${launchCounts.profile_atmosphere}.`
 );

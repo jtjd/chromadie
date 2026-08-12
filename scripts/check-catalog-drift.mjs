@@ -224,7 +224,7 @@ const rendererKeys = Object.freeze({
   name_motion: new Set(['haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles', 'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal', 'haunt-split', 'haunt-flash']),
   cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing']),
   avatar_effect: new Set(['signal-ring', 'neon-halo', 'prism-orbit', 'crystal-aperture', 'chroma-arc', 'ember-crown', 'ashfall', 'gold-laurel', 'ink-stamp', 'paper-tear', 'static-offset', 'pixel-satellites', 'crt-scan', 'void-eclipse', 'ghost-double', 'night-frame', 'daily-aura', 'color-archive']),
-  profile_layout: new Set(['split-signal', 'archive-index', 'prism-mosaic', 'night-terminal', 'story-stack']),
+  profile_layout: new Set(['compact', 'sleek', 'minimal', 'modern', 'portfolio']),
   profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare'])
 });
 const expectedCounts = Object.freeze({ name_font: 18, name_material: 7, name_motion: 11, profile_border: 9, cursor_trail: 16, avatar_effect: 18, profile_layout: 5, profile_atmosphere: 13 });
@@ -322,12 +322,12 @@ if (supabaseUrl && supabaseKey) {
   compareCatalogs(seed, remote, 'remote shop_items');
   console.log(
     `Catalog drift check passed: seed and remote match (${seed.catalog.size} items; ` +
-      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} paid Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres).`
+      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} structural Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres).`
   );
 } else {
   console.log(
     `Catalog drift check passed locally: final seed is valid (${seed.catalog.size} items; ` +
-      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} paid Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres). ` +
+      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} structural Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres). ` +
       'Set SUPABASE_URL and SUPABASE_ANON_KEY to include the remote catalog.'
   );
 }

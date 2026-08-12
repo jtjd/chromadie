@@ -355,7 +355,7 @@ SELECT pg_temp.audit_assert(
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
   )
   AND NOT EXISTS (SELECT 1 FROM public.shop_items WHERE slot IN ('name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'))
-  AND (SELECT bool_and(catalog_status IN ('active', 'legacy')) FROM public.shop_items),
+  AND (SELECT bool_and(catalog_status IN ('active', 'legacy', 'retired')) FROM public.shop_items),
   'lean catalog status and slot counts are not valid'
 );
 SELECT pg_temp.audit_assert(
@@ -786,7 +786,7 @@ VALUES
   ('10000000-0000-0000-0000-000000000001', 'border_signal', 1),
   ('10000000-0000-0000-0000-000000000001', 'cursor_trail_signal_trace', 1),
   ('10000000-0000-0000-0000-000000000001', 'avatar_effect_signal_ring', 1),
-  ('10000000-0000-0000-0000-000000000001', 'profile_layout_split_signal', 1);
+  ('10000000-0000-0000-0000-000000000001', 'profile_layout_sleek', 1);
 UPDATE public.profiles
 SET equipped_cosmetics = jsonb_build_object(
   'profile_border', 'border_signal',
@@ -881,13 +881,13 @@ SELECT pg_temp.audit_assert(
    FROM audit_results WHERE name = 'launch_equip_avatar'),
   'equipping an Avatar Effect did not preserve the Cursor Trail slot'
 );
-INSERT INTO audit_results VALUES ('launch_equip_layout', public.equip_item('profile_layout_split_signal'));
+INSERT INTO audit_results VALUES ('launch_equip_layout', public.equip_item('profile_layout_sleek'));
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
-      AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_split_signal'
+      AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_sleek'
       AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_signal_ring'
    FROM audit_results WHERE name = 'launch_equip_layout'),
-  'equipping a paid Profile Layout did not preserve Avatar Effect state'
+  'equipping a structural Profile Layout did not preserve Avatar Effect state'
 );
 INSERT INTO audit_results VALUES ('launch_wrong_slot', public.equip_item('streak_freeze'));
 SELECT pg_temp.audit_assert(
@@ -900,7 +900,7 @@ SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
       AND NOT (payload->'cosmetics' ? 'cursor_trail')
       AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_signal_ring'
-      AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_split_signal'
+      AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_sleek'
    FROM audit_results WHERE name = 'launch_unequip_cursor'),
   'unequipping Cursor Trail cleared unrelated new slots'
 );
@@ -1400,8 +1400,8 @@ INSERT INTO audit_results VALUES (
 );
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
-      AND payload->'draft'->>'layoutVariant' = 'focus'
-      AND payload->'draft'->>'templateKey' = 'signal'
+      AND payload->'draft'->>'layoutVariant' = 'compact'
+      AND payload->'draft'->>'templateKey' = 'modern'
       AND payload->'draft'->'appearance'->'colors'->>'accent' = '#112233'
       AND payload->'draft'->>'signatureColor' = '#112233'
       AND COALESCE(payload->'draft'->>'colorEffectsEnabled', 'false') = 'false'
@@ -1420,9 +1420,9 @@ INSERT INTO audit_results VALUES (
 );
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
-      AND payload->'draft'->>'templateKey' = 'atelier'
+      AND payload->'draft'->>'templateKey' = 'modern'
    FROM audit_results WHERE name = 'config_atelier_save'),
-  'an entitled owner could not persist the bounded Atelier template'
+  'a legacy Atelier layout did not normalize to the active Modern layout'
 );
 INSERT INTO audit_results VALUES (
   'config_composition_publish',
@@ -1440,7 +1440,8 @@ INSERT INTO audit_results VALUES (
 );
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
-      AND payload->'published'->>'layoutVariant' = 'focus'
+      AND payload->'published'->>'layoutVariant' = 'compact'
+      AND payload->'published'->>'templateKey' = 'compact'
       AND payload->'published'->'appearance'->'colors'->>'accent' = '#112233'
       AND payload->'published'->>'signatureColor' = '#112233'
       AND COALESCE(payload->'published'->>'colorEffectsEnabled', 'false') = 'false'

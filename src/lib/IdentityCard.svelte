@@ -31,7 +31,7 @@
   export let avatarEffectMode = 'profile';
   export let avatarEffectAnimated = true;
   export let avatarEffectActive = false;
-  export let layoutVariant = 'immersive';
+  export let layoutVariant = 'compact';
   export let defaultPresentation = false;
   export let location = '';
   export let timezone = '';
@@ -55,20 +55,32 @@
   $: displayedBadges = (Array.isArray(badges) ? badges : [])
     .filter(badge => badge?.id !== 'launch_edition')
     .slice(0, 3);
-  $: safeLayoutVariant = isProfileLayoutKey(layoutVariant) ? layoutVariant : 'immersive';
+  $: safeLayoutVariant = isProfileLayoutKey(layoutVariant) ? layoutVariant : 'compact';
   /** @type {any} */
   let safeLinkStyle;
   $: safeLinkStyle = linkStyle || {};
 
   function linkIconSource(link) {
     const type = String(link?.type || 'link').toLowerCase();
-    return ['/github', '/instagram', '/tiktok', '/twitch', '/youtube'].includes('/' + type)
-      ? '/link-icons/' + type + '.svg'
-      : '/link-icons/link.svg';
+    const iconTypes = {
+      discord: 'discord',
+      github: 'github',
+      instagram: 'instagram',
+      kick: 'kick',
+      spotify: 'spotify',
+      steam: 'steam',
+      tiktok: 'tiktok',
+      twitch: 'twitch',
+      twitter: 'x',
+      x: 'x',
+      youtube: 'youtube'
+    };
+    const icon = iconTypes[type] || 'link';
+    return '/link-icons/' + icon + '.svg';
   }
 </script>
 
-<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + (defaultPresentation ? ' identity-card--default' : '') + (previewDevice === 'mobile' ? ' identity-card--preview-mobile' : '') + ' identity-card--entry-' + entryAnimation} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
+<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + (defaultPresentation ? ' identity-card--default' : '') + (previewDevice === 'mobile' ? ' identity-card--preview-mobile' : '') + ' identity-card--entry-' + entryAnimation} data-profile-path={profilePath || undefined} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
   <div class="identity-card__person">
     {#if showAvatar}
     <AvatarEffect
@@ -120,9 +132,6 @@
           </div>
         {/if}
       </div>
-      <div class="identity-card__handle-row">
-        <a class="identity-card__handle" href={profilePath || undefined}>@{username}</a>
-      </div>
       {#if bio}<p class={'identity-card__bio identity-card__bio--' + descriptionMode}>{bio}</p>
       {:else if bioFallback}<p class="identity-card__bio identity-card__bio--fallback">{bioFallback}</p>{/if}
       {#if location || timezone || (showJoinDate && joinedLabel)}
@@ -137,7 +146,7 @@
   </div>
 
   {#if displayedLinks.length}
-    <nav class="identity-card__links" aria-label={safeDisplayName + ' social links'}>
+    <nav class={'identity-card__links' + (safeLayoutVariant === 'minimal' ? ' identity-card__links--labeled' : '')} aria-label={safeDisplayName + ' social links'}>
       {#each displayedLinks as link (link.order)}
         <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
           <span class="identity-card__link-glyph" aria-hidden="true"><img src={linkIconSource(link)} alt="" loading="lazy" /></span>
@@ -240,178 +249,11 @@
   .identity-card__divider { height: 1px; margin: 1.65rem 0 1.45rem; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--identity-accent) 22%, rgba(230, 238, 255, 0.16)), transparent); }
   .identity-card__today :global(.profile-roll--integrated) { width: 100%; }
 
-  /* Profile layouts are card compositions. They deliberately never reach the
-     profile shell's roll/page containers. */
-  .identity-card--layout-editorial { border-radius: var(--profile-border-radius, 0); border-top: 2px solid color-mix(in srgb, var(--identity-accent) 58%, rgba(255, 255, 255, 0.12)); background: linear-gradient(105deg, color-mix(in srgb, var(--identity-accent) 8%, var(--profile-surface-fill, rgba(9, 11, 15, 0.72))), var(--profile-surface-fill, rgba(9, 11, 15, 0.64)) 62%); box-shadow: none; }
-  .identity-card--layout-editorial .identity-card__person { gap: 1.35rem; }
-  .identity-card--layout-editorial .identity-card__links { padding-top: 0.8rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 28%, rgba(255, 255, 255, 0.12)); }
-
-  .identity-card--layout-focus { display: flex; flex-direction: column; align-items: center; text-align: center; border-color: color-mix(in srgb, var(--identity-accent) 44%, rgba(255, 255, 255, 0.14)); border-radius: var(--profile-border-radius, var(--radius-lg)); background: radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--identity-accent) 14%, transparent), var(--profile-surface-fill, rgba(9, 11, 15, 0.68)) 48%); }
-  .identity-card--layout-focus .identity-card__person { flex-direction: column; align-items: center; gap: 1.1rem; width: 100%; }
-  .identity-card--layout-focus .identity-card__copy { width: 100%; text-align: center; }
-  .identity-card--layout-focus .identity-card__name-row,
-  .identity-card--layout-focus .identity-card__handle-row { justify-content: center; }
-  .identity-card--layout-focus .identity-card__bio { margin-inline: auto; }
-  .identity-card--layout-focus .identity-card__links { justify-content: center; width: 100%; margin-top: 1.25rem; padding-top: 0.9rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
-
-  /* The first profile should feel like a finished identity, not an empty
-     template. Keep this presentation opt-in so authored layouts retain their
-     own surface and link treatment. */
-  .identity-card--default {
-    min-height: 18rem;
-    padding: 1.55rem 1.25rem 1.05rem;
-    border-color: color-mix(in srgb, #89b4fa 58%, rgba(255, 255, 255, 0.18));
-    background-color: #08172e;
-    background-image: url('/profile-default/starfield-blue.webp');
-    background-position: center;
-    background-size: cover;
-    box-shadow: 0 1.6rem 3rem rgba(2, 9, 24, 0.42), inset 0 1px 0 rgba(196, 220, 255, 0.12);
-  }
-
-  .identity-card--default .identity-card__person { flex: 1 1 auto; }
-  .identity-card--default .identity-card__copy { display: flex; flex-direction: column; align-items: center; }
-  .identity-card--default .identity-card__name-row { order: 1; }
-  .identity-card--default .identity-card__handle-row { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-  .identity-card--default .identity-card__metadata { order: 3; }
-  .identity-card--default .identity-card__bio { order: 4; }
-  .identity-card--default .identity-card__metadata { justify-content: center; margin-top: 0.7rem; }
-  .identity-card--default .identity-card__links {
-    align-self: stretch;
-    justify-content: center;
-    width: auto;
-    margin-top: auto;
-    padding-top: 0.9rem;
-    border-top: 1px solid rgba(186, 214, 255, 0.18);
-  }
-  .identity-card--default .identity-card__links a {
-    position: relative;
-    display: grid;
-    width: 2.25rem;
-    height: 2.25rem;
-    min-height: 2.25rem;
-    place-items: center;
-    padding: 0;
-    border: 1px solid rgba(186, 214, 255, 0.22);
-    border-radius: 50%;
-    background: rgba(7, 20, 43, 0.58);
-  }
-  .identity-card--default .identity-card__links a:hover,
-  .identity-card--default .identity-card__links a:focus-visible {
-    border-color: #89b4fa;
-    background: rgba(137, 180, 250, 0.16);
-  }
-  .identity-card--default .identity-card__links strong {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-  .identity-card--default .identity-card__link-glyph { width: 1.05rem; height: 1.05rem; }
-
-  .identity-card--layout-split-signal { display: grid; grid-template-columns: minmax(6rem, 0.38fr) minmax(0, 0.62fr); grid-template-rows: auto auto; column-gap: 1.5rem; border-left: 2px solid color-mix(in srgb, var(--identity-accent) 58%, rgba(255, 255, 255, 0.12)); border-radius: var(--profile-border-radius, 0 var(--radius-lg) var(--radius-lg) 0); }
-  .identity-card--layout-split-signal .identity-card__person,
-  .identity-card--layout-archive-index .identity-card__person,
-  .identity-card--layout-prism-mosaic .identity-card__person,
-  .identity-card--layout-night-terminal .identity-card__person { display: contents; }
-  .identity-card--layout-split-signal :global(.identity-card__avatar) { grid-column: 1; grid-row: 1 / span 2; align-self: center; justify-self: center; }
-  .identity-card--layout-split-signal .identity-card__copy { grid-column: 2; grid-row: 1; padding-left: 1.25rem; border-left: 1px solid color-mix(in srgb, var(--identity-accent) 28%, rgba(255, 255, 255, 0.12)); }
-  .identity-card--layout-split-signal .identity-card__links { grid-column: 2; grid-row: 2; padding: 0.9rem 0 0 1.25rem; border-left: 1px solid color-mix(in srgb, var(--identity-accent) 28%, rgba(255, 255, 255, 0.12)); }
-
-  .identity-card--layout-archive-index { display: grid; grid-template-columns: minmax(4.75rem, 0.3fr) minmax(0, 0.7fr); grid-template-rows: auto auto auto; column-gap: 1.35rem; border-radius: var(--profile-border-radius, 0); box-shadow: none; }
-  .identity-card--layout-archive-index::before { content: '01 / IDENTITY'; grid-column: 1 / -1; display: block; margin-bottom: 1rem; color: color-mix(in srgb, var(--identity-accent) 82%, white); font: 700 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0.14em; }
-  .identity-card--layout-archive-index :global(.identity-card__avatar) { grid-column: 1; grid-row: 2 / span 2; align-self: start; justify-self: center; }
-  .identity-card--layout-archive-index .identity-card__copy { grid-column: 2; grid-row: 2; padding-top: 0; }
-  .identity-card--layout-archive-index .identity-card__links { grid-column: 2; grid-row: 3; padding-top: 0.7rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
-
-  .identity-card--layout-prism-mosaic { display: grid; grid-template-columns: minmax(7rem, 0.46fr) minmax(0, 0.54fr); grid-template-rows: auto auto; column-gap: 1.4rem; border-color: color-mix(in srgb, var(--identity-accent) 45%, rgba(255, 255, 255, 0.14)); box-shadow: 0 1.5rem 3rem color-mix(in srgb, var(--identity-accent) 12%, transparent), inset 0 1px 0 color-mix(in srgb, var(--identity-accent) 22%, transparent); }
-  .identity-card--layout-prism-mosaic :global(.identity-card__avatar) { grid-column: 1; grid-row: 1 / span 2; align-self: center; justify-self: center; }
-  .identity-card--layout-prism-mosaic .identity-card__copy { grid-column: 2; grid-row: 1; padding: 0 0 0 1rem; border-left: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
-  .identity-card--layout-prism-mosaic .identity-card__name-row { padding-bottom: 0.7rem; border-bottom: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
-  .identity-card--layout-prism-mosaic .identity-card__links { grid-column: 2; grid-row: 2; padding: 0.8rem 0 0 1rem; border-left: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
-
-  .identity-card--layout-night-terminal { display: grid; grid-template-columns: minmax(4.5rem, 0.28fr) minmax(0, 0.72fr); grid-template-rows: auto auto auto; column-gap: 1rem; border: 1px solid color-mix(in srgb, var(--identity-accent) 38%, rgba(255, 255, 255, 0.12)); border-radius: var(--profile-border-radius, 2px); background: var(--profile-surface-fill, rgba(3, 8, 12, 0.84)); }
-  .identity-card--layout-night-terminal::before { content: 'PROFILE / LIVE'; grid-column: 1 / -1; display: block; margin-bottom: 1rem; color: color-mix(in srgb, var(--identity-accent) 82%, white); font: 700 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0.14em; }
-  .identity-card--layout-night-terminal :global(.identity-card__avatar) { grid-column: 1; grid-row: 2; align-self: start; justify-self: center; }
-  .identity-card--layout-night-terminal .identity-card__copy { grid-column: 2; grid-row: 2; font-family: var(--font-mono-stack); }
-  .identity-card--layout-night-terminal .identity-card__links { grid-column: 1 / -1; grid-row: 3; gap: 0.4rem 0.75rem; padding-top: 0.8rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); font-family: var(--font-mono-stack); }
-  .identity-card--layout-night-terminal .identity-card__handle { font-family: var(--font-mono-stack); }
-  .identity-card--layout-night-terminal .identity-card__name { letter-spacing: -0.04em; }
-
-  .identity-card--layout-story-stack { padding-block: clamp(2rem, 5vw, 3.5rem); border-radius: var(--radius-xl) var(--radius-md) var(--radius-xl) var(--radius-md); }
-  .identity-card--layout-story-stack .identity-card__person { flex-direction: column; align-items: stretch; gap: 1.4rem; }
-  .identity-card--layout-story-stack :global(.identity-card__avatar) { flex-basis: clamp(6.5rem, 12vw, 8rem); width: clamp(6.5rem, 12vw, 8rem); }
-  .identity-card--layout-story-stack .identity-card__copy { width: 100%; padding-top: 0; }
-  .identity-card--layout-story-stack .identity-card__links { margin-top: 1.2rem; padding-top: 0.9rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, 0.12)); }
-  .identity-card--layout-story-stack .identity-card__bio { max-width: 34rem; font-size: 1rem; }
-
-  /* Paid layouts can be rendered inside public cards, Studio previews, or
-     other narrow hosts. Adapt to the card's actual width instead of keeping
-     a two-column identity rail until its text has nowhere left to go. */
-  @container identity-card (max-width: 24rem) {
-    .identity-card--layout-split-signal,
-    .identity-card--layout-archive-index,
-    .identity-card--layout-prism-mosaic,
-    .identity-card--layout-night-terminal {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 1rem;
-    }
-
-    .identity-card--layout-split-signal .identity-card__person,
-    .identity-card--layout-archive-index .identity-card__person,
-    .identity-card--layout-prism-mosaic .identity-card__person,
-    .identity-card--layout-night-terminal .identity-card__person {
-      display: flex;
-      width: 100%;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 1rem;
-    }
-
-    .identity-card--layout-split-signal :global(.identity-card__avatar),
-    .identity-card--layout-archive-index :global(.identity-card__avatar),
-    .identity-card--layout-prism-mosaic :global(.identity-card__avatar),
-    .identity-card--layout-night-terminal :global(.identity-card__avatar) {
-      align-self: center;
-      justify-self: auto;
-    }
-
-    .identity-card--layout-split-signal .identity-card__copy,
-    .identity-card--layout-split-signal .identity-card__links,
-    .identity-card--layout-archive-index .identity-card__copy,
-    .identity-card--layout-archive-index .identity-card__links,
-    .identity-card--layout-prism-mosaic .identity-card__copy,
-    .identity-card--layout-prism-mosaic .identity-card__links,
-    .identity-card--layout-night-terminal .identity-card__copy,
-    .identity-card--layout-night-terminal .identity-card__links {
-      width: 100%;
-      box-sizing: border-box;
-      padding-left: 0;
-      border-left: 0;
-    }
-
-    .identity-card--layout-split-signal .identity-card__links,
-    .identity-card--layout-archive-index .identity-card__links,
-    .identity-card--layout-prism-mosaic .identity-card__links,
-    .identity-card--layout-night-terminal .identity-card__links {
-      margin-top: .9rem;
-      padding-top: .8rem;
-      border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, .12));
-    }
-
-    .identity-card__bio--typewriter {
-      max-width: 100%;
-      overflow: visible;
-      border-right-color: transparent;
-      white-space: normal;
-      animation: none;
-    }
+  .identity-card__bio--typewriter {
+    max-width: 100%;
+    overflow: visible;
+    border-right-color: transparent;
+    white-space: normal;
   }
 
   /* Explicitly stack the card when rendered inside the dashboard phone. The
@@ -492,19 +334,6 @@
     .identity-card__bio { font-size: 0.875rem; }
     .identity-card__links { margin-top: 0.8rem; }
 
-    .identity-card--layout-editorial { border-radius: var(--profile-border-radius, 0); }
-    .identity-card--layout-focus { border-radius: var(--profile-border-radius, var(--radius-md)); }
-    .identity-card--layout-split-signal,
-    .identity-card--layout-archive-index,
-    .identity-card--layout-prism-mosaic,
-    .identity-card--layout-night-terminal { grid-template-columns: minmax(4.5rem, 0.33fr) minmax(0, 0.67fr); column-gap: 0.85rem; }
-    .identity-card--layout-split-signal .identity-card__copy,
-    .identity-card--layout-split-signal .identity-card__links,
-    .identity-card--layout-prism-mosaic .identity-card__copy,
-    .identity-card--layout-prism-mosaic .identity-card__links { padding-left: 0.8rem; }
-    .identity-card--layout-archive-index::before,
-    .identity-card--layout-night-terminal::before { margin-bottom: 0.75rem; }
-    .identity-card--layout-story-stack { padding-block: 1.8rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -528,5 +357,119 @@
       max-width: 28rem;
       border-right-color: transparent;
     }
+  }
+
+  /* The active catalog is intentionally small and background-first. These
+     rules are kept together so the five layouts share the same identity,
+     social-link and cosmetic renderers without importing theme-specific
+     geometry. */
+  .identity-card--default {
+    min-height: 0;
+    background-color: var(--profile-surface-fill, rgba(9, 11, 15, .64));
+    background-image: none;
+    box-shadow: 0 .9rem 2.5rem rgba(0, 0, 0, .24);
+  }
+
+  .identity-card--layout-compact,
+  .identity-card--layout-sleek,
+  .identity-card--layout-minimal,
+  .identity-card--layout-modern,
+  .identity-card--layout-portfolio {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 1.1rem;
+  }
+
+  .identity-card--layout-compact { max-width: 300px; }
+  .identity-card--layout-sleek { max-width: 335px; padding: 1rem; }
+  .identity-card--layout-modern { max-width: 310px; padding: 1rem; }
+  .identity-card--layout-portfolio { max-width: 320px; padding: 1rem; background: color-mix(in srgb, var(--profile-surface-fill, rgba(9, 11, 15, .64)) 42%, transparent); box-shadow: none; }
+  .identity-card--layout-minimal { max-width: 300px; padding: .25rem 0; border-color: transparent; background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+  .identity-card--layout-compact .identity-card__person,
+  .identity-card--layout-minimal .identity-card__person,
+  .identity-card--layout-portfolio .identity-card__person { flex-direction: column; align-items: center; gap: .7rem; }
+  .identity-card--layout-compact .identity-card__copy,
+  .identity-card--layout-minimal .identity-card__copy,
+  .identity-card--layout-portfolio .identity-card__copy { width: 100%; padding-top: 0; text-align: center; }
+  .identity-card--layout-compact .identity-card__name-row,
+  .identity-card--layout-minimal .identity-card__name-row,
+  .identity-card--layout-portfolio .identity-card__name-row,
+  .identity-card--layout-compact .identity-card__metadata,
+  .identity-card--layout-minimal .identity-card__metadata,
+  .identity-card--layout-portfolio .identity-card__metadata { justify-content: center; }
+  .identity-card--layout-compact .identity-card__bio,
+  .identity-card--layout-minimal .identity-card__bio,
+  .identity-card--layout-portfolio .identity-card__bio { margin-inline: auto; }
+
+  .identity-card--layout-sleek .identity-card__person,
+  .identity-card--layout-modern .identity-card__person { gap: .8rem; }
+  .identity-card--layout-sleek :global(.identity-card__avatar),
+  .identity-card--layout-modern :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
+  .identity-card--layout-compact :global(.identity-card__avatar),
+  .identity-card--layout-minimal :global(.identity-card__avatar) { flex-basis: 3.4rem; width: 3.4rem; }
+  .identity-card--layout-portfolio :global(.identity-card__avatar) { flex-basis: 4.5rem; width: 4.5rem; }
+  .identity-card--layout-compact :global(.identity-card__avatar-letter),
+  .identity-card--layout-sleek :global(.identity-card__avatar-letter),
+  .identity-card--layout-modern :global(.identity-card__avatar-letter) { font-size: 1.9rem; }
+  .identity-card--layout-portfolio :global(.identity-card__avatar-letter) { font-size: 2.4rem; }
+
+  .identity-card--layout-compact .identity-card__name,
+  .identity-card--layout-modern .identity-card__name { font-size: clamp(1.35rem, 6vw, 1.55rem); line-height: 1; }
+  .identity-card--layout-sleek .identity-card__name { font-size: clamp(1.4rem, 6vw, 1.7rem); line-height: 1; }
+  .identity-card--layout-minimal .identity-card__name { font-size: clamp(1.65rem, 7vw, 1.95rem); line-height: 1; }
+  .identity-card--layout-portfolio .identity-card__name { font-size: clamp(1.55rem, 7vw, 1.8rem); line-height: 1; }
+  .identity-card--layout-compact .identity-card__bio,
+  .identity-card--layout-sleek .identity-card__bio,
+  .identity-card--layout-modern .identity-card__bio,
+  .identity-card--layout-portfolio .identity-card__bio { margin-top: .5rem; font-size: .78rem; line-height: 1.45; }
+  .identity-card--layout-minimal .identity-card__bio { margin-top: .45rem; font-size: .86rem; line-height: 1.5; }
+  .identity-card--layout-compact .identity-card__metadata,
+  .identity-card--layout-sleek .identity-card__metadata,
+  .identity-card--layout-modern .identity-card__metadata,
+  .identity-card--layout-portfolio .identity-card__metadata { margin-top: .5rem; font-size: .58rem; }
+
+  .identity-card--layout-compact .identity-card__links,
+  .identity-card--layout-sleek .identity-card__links,
+  .identity-card--layout-modern .identity-card__links,
+  .identity-card--layout-portfolio .identity-card__links { justify-content: center; gap: .25rem; margin-top: .7rem; padding-top: .65rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 22%, rgba(255,255,255,.1)); }
+  .identity-card--layout-minimal .identity-card__links { display: grid; gap: .25rem; margin-top: .8rem; }
+  .identity-card--layout-compact .identity-card__links a,
+  .identity-card--layout-sleek .identity-card__links a,
+  .identity-card--layout-modern .identity-card__links a,
+  .identity-card--layout-portfolio .identity-card__links a { display: grid; width: 2.25rem; height: 2.25rem; min-height: 2.25rem; place-items: center; padding: 0; border: 0; border-radius: 50%; }
+  .identity-card--layout-compact .identity-card__links a:hover,
+  .identity-card--layout-sleek .identity-card__links a:hover,
+  .identity-card--layout-modern .identity-card__links a:hover,
+  .identity-card--layout-portfolio .identity-card__links a:hover { background: color-mix(in srgb, var(--identity-accent) 12%, transparent); transform: none; }
+  .identity-card--layout-compact .identity-card__links strong,
+  .identity-card--layout-sleek .identity-card__links strong,
+  .identity-card--layout-modern .identity-card__links strong,
+  .identity-card--layout-portfolio .identity-card__links strong { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .identity-card--layout-compact .identity-card__link-glyph,
+  .identity-card--layout-sleek .identity-card__link-glyph,
+  .identity-card--layout-minimal .identity-card__link-glyph,
+  .identity-card--layout-modern .identity-card__link-glyph,
+  .identity-card--layout-portfolio .identity-card__link-glyph { width: 1.05rem; height: 1.05rem; }
+  .identity-card--layout-minimal .identity-card__links--labeled a { display: flex; width: 100%; height: auto; min-height: 2.25rem; justify-content: space-between; padding: .25rem .35rem; border-bottom: 1px solid color-mix(in srgb, var(--identity-accent) 18%, transparent); border-radius: 0; }
+  .identity-card--layout-minimal .identity-card__links--labeled strong { position: static; width: auto; height: auto; overflow: visible; clip: auto; clip-path: none; color: inherit; font-size: .72rem; white-space: normal; }
+  .identity-card--layout-minimal .identity-card__links--labeled a:hover { background: color-mix(in srgb, var(--identity-accent) 8%, transparent); transform: none; }
+  .identity-card__badge { width: 1.1rem; height: 1.1rem; font-size: .62rem; }
+  .identity-card__badge--staff { min-width: 3.25rem; font-size: .5rem; }
+  .identity-card__handle-row { display: none; }
+
+  @container identity-card (max-width: 24rem) {
+    .identity-card--layout-sleek,
+    .identity-card--layout-modern { padding: .9rem; }
+    .identity-card--layout-sleek .identity-card__person,
+    .identity-card--layout-modern .identity-card__person { align-items: flex-start; }
+  }
+
+  @media (max-width: 36rem) {
+    .identity-card--layout-compact,
+    .identity-card--layout-sleek,
+    .identity-card--layout-modern,
+    .identity-card--layout-portfolio { padding: .95rem; }
+    .identity-card--layout-minimal { padding-inline: 0; }
   }
 </style>

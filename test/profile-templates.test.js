@@ -18,10 +18,9 @@ import {
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('template registry is finite, structured, and preserves the free foundation', () => {
-  assert.deepEqual(FREE_PROFILE_TEMPLATE_KEYS, ['signal', 'editorial', 'archive']);
-  assert.equal(PROFILE_TEMPLATE_DEFINITIONS.atelier.tier, 'premium');
-  assert.equal(PROFILE_TEMPLATE_DEFINITIONS.atelier.requiresEntitlement, PREMIUM_EXPRESSION_ENTITLEMENT_KEY);
-  assert.equal(Object.keys(PROFILE_TEMPLATE_DEFINITIONS).length, 4);
+  assert.deepEqual(FREE_PROFILE_TEMPLATE_KEYS, ['compact', 'sleek', 'minimal', 'modern', 'portfolio']);
+  assert.equal(Object.keys(PROFILE_TEMPLATE_DEFINITIONS).length, 5);
+  assert.equal(Object.values(PROFILE_TEMPLATE_DEFINITIONS).every(definition => definition.tier === 'free'), true);
 
   for (const definition of Object.values(PROFILE_TEMPLATE_DEFINITIONS)) {
     assert.equal(definition.modules.length, 8);
@@ -29,23 +28,23 @@ test('template registry is finite, structured, and preserves the free foundation
     assert.equal(definition.modules.every(module => ['wide', 'medium', 'narrow'].includes(module.size)), true);
   }
 
-  const patch = createProfileTemplatePatch('editorial');
-  assert.equal(patch.templateKey, 'editorial');
-  assert.equal(patch.layoutVariant, 'editorial');
+  const patch = createProfileTemplatePatch('sleek');
+  assert.equal(patch.templateKey, 'sleek');
+  assert.equal(patch.layoutVariant, 'sleek');
   assert.equal('links' in patch, false);
   assert.equal('appearance' in patch, false);
-  assert.equal(normalizeProfileTemplateKey('not-real'), 'signal');
-  assert.equal(normalizeProfileTemplateKey('custom', 'custom'), 'custom');
+  assert.equal(normalizeProfileTemplateKey('not-real'), 'compact');
+  assert.equal(normalizeProfileTemplateKey('editorial'), 'sleek');
   assert.equal(isPremiumExpressionUnlocked(['other']), false);
   assert.equal(isPremiumExpressionUnlocked([PREMIUM_EXPRESSION_ENTITLEMENT_KEY]), true);
 });
 
 test('profile config carries a backward-compatible template marker without changing safe defaults', () => {
   const defaults = createDefaultProfileConfig('#123456');
-  assert.equal(defaults.templateKey, 'signal');
-  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'archive', layoutVariant: 'focus' }).templateKey, 'archive');
-  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'unsafe-template' }).templateKey, 'signal');
-  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'custom' }).templateKey, 'custom');
+  assert.equal(defaults.templateKey, 'compact');
+  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'sleek', layoutVariant: 'sleek' }).templateKey, 'sleek');
+  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'unsafe-template' }).templateKey, 'compact');
+  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'custom', layoutVariant: 'modern' }).templateKey, 'modern');
 });
 
 test('template application preserves user-owned expression and premium authority', async () => {
@@ -58,7 +57,9 @@ test('template application preserves user-owned expression and premium authority
   ]);
 
   assert.match(picker, /createProfileTemplatePatch/);
-  assert.match(picker, /Premium expression/);
+  assert.match(picker, /Compact/);
+  assert.match(picker, /Portfolio/);
+  assert.doesNotMatch(picker, /Premium expression/);
   assert.match(editor, /ProfileTemplatePicker/);
   assert.match(editor, /templateKey/);
   assert.match(editor, /export function getDraftConfig/);
