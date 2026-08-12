@@ -142,7 +142,11 @@
   }
 
   export function validateDraft() {
-    return validateLinks();
+    // The layout-only editor is mounted in Customize with its link controls
+    // hidden. Do not let an unrelated incomplete link prevent a layout draft
+    // from being published; the dedicated Links editor still validates the
+    // complete link collection before publishing.
+    return showLinks ? validateLinks() : true;
   }
 
   export function getDraftConfig() {

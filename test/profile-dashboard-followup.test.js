@@ -72,6 +72,7 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(layout, /function setModuleSize/);
   assert.match(layout, /Shared data, layout-controlled presentation/);
   assert.match(layout, /Complete each link with a label and a valid HTTPS URL/);
+  assert.match(layout, /return showLinks \? validateLinks\(\) : true/);
   assert.match(settings, /configurationPreview = configurationPreview/);
 });
 
