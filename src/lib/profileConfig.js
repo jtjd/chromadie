@@ -350,14 +350,17 @@ export function getProfileContinuationLinks(config) {
  */
 export function getProfileLayoutLinkPartitions(config, layoutVariant = 'compact') {
   const visibleLinks = getVisibleProfileLinks(config);
-  const openingCandidates = visibleLinks.slice(0, PROFILE_LINK_LIMITS.openingLinks);
   const normalizedLayout = normalizeProfileLayoutKey(layoutVariant, 'compact');
+  const openingSocial = visibleLinks
+    .filter(link => isProfileSocialLink(link.type))
+    .slice(0, PROFILE_LINK_LIMITS.openingLinks);
   const customOpeningLimit = normalizedLayout === 'minimal' ? 2 : 0;
-  const customOpening = openingCandidates
+  const customOpeningSlots = Math.max(0, PROFILE_LINK_LIMITS.openingLinks - openingSocial.length);
+  const customOpening = visibleLinks
     .filter(link => !isProfileSocialLink(link.type))
-    .slice(0, customOpeningLimit);
+    .slice(0, Math.min(customOpeningLimit, customOpeningSlots));
   const openingSelection = new Set([
-    ...openingCandidates.filter(link => isProfileSocialLink(link.type)),
+    ...openingSocial,
     ...customOpening
   ]);
 

@@ -58,15 +58,12 @@ function assert(condition, message) {
 }
 
 function expectedLayoutLinks(layout) {
-  let customOpeningCount = 0;
-  const opening = RICH_PROFILE_FIXTURE.links.slice(0, 6).filter(link => {
-    if (isProfileSocialLink(link.type)) return true;
-    if (layout === 'minimal' && customOpeningCount < 2) {
-      customOpeningCount += 1;
-      return true;
-    }
-    return false;
-  });
+  const openingSocial = RICH_PROFILE_FIXTURE.links.filter(link => isProfileSocialLink(link.type)).slice(0, 6);
+  const customOpeningLimit = layout === 'minimal' ? 2 : 0;
+  const customOpening = RICH_PROFILE_FIXTURE.links
+    .filter(link => !isProfileSocialLink(link.type))
+    .slice(0, Math.min(customOpeningLimit, 6 - openingSocial.length));
+  const opening = [...openingSocial, ...customOpening];
   const openingSet = new Set(opening);
   return {
     opening: RICH_PROFILE_FIXTURE.links.filter(link => openingSet.has(link)),
@@ -384,7 +381,29 @@ async function publishRichProfileDraft() {
     // than weakening the publication check or using a null token.
     await delay(750);
   }
+  const publishedExpression = published?.published?.base || published?.published || {};
+  assert(publishedExpression.avatar_path && publishedExpression.background_path, `Publish response omitted persisted avatar/background expression fields: ${JSON.stringify(published)}`);
+  assert(Array.isArray(published?.published?.links) && published.published.links.length >= links.length, `Publish response omitted the complete V2 link projection: ${JSON.stringify(published)}`);
   return { links: links.length, updatedAt: published?.updated_at || expectedUpdatedAt };
+}
+
+async function assertPublishedExpressionVisible(description) {
+  const state = await page.evaluate(`(() => {
+    const avatar = document.querySelector('.profile-studio-preview .identity-card__avatar-media');
+    const background = document.querySelector('.profile-studio-preview .profile-shell__media-image');
+    const video = document.querySelector('.profile-studio-preview .profile-shell__media-video');
+    return {
+      avatar: avatar ? { complete: avatar.complete, naturalWidth: avatar.naturalWidth, src: avatar.currentSrc || avatar.src } : null,
+      background: background ? { complete: background.complete, naturalWidth: background.naturalWidth, src: background.currentSrc || background.src } : null,
+      video: video ? { readyState: video.readyState, src: video.currentSrc || video.src } : null
+    };
+  })()`);
+  const configuration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+  const published = configuration?.published || configuration?.configuration_v2?.published;
+  const expression = published?.base || published || {};
+  assert(state.avatar?.complete && state.avatar.naturalWidth > 0 && state.background?.complete && state.background.naturalWidth > 0, `${description} lost avatar/background in the live preview: ${JSON.stringify({ state, expression })}`);
+  assert(expression.avatar_path && expression.background_path, `${description} response/read projection lost avatar/background paths: ${JSON.stringify({ state, expression })}`);
+  return { state, expression: { avatar: expression.avatar_path, background: expression.background_path, video: expression.background_video_path || null, audio: expression.audio_path || null, cursor: expression.cursor_path || null } };
 }
 
 async function waitForPublicLayout(layout, description) {
@@ -422,6 +441,25 @@ async function waitForStudioLayoutPicker(description) {
   }
 }
 
+async function waitForRichStudioOpeningLinks(description) {
+  const selector = '.profile-studio-preview .identity-card__links a';
+  const minimum = RICH_PROFILE_FIXTURE.links.filter(link => isProfileSocialLink(link.type)).length;
+  const condition = `document.querySelectorAll(${JSON.stringify(selector)}).length >= ${minimum}`;
+  try {
+    await page.waitFor(condition, description);
+  } catch {
+    // The authenticated Studio route can first paint its empty bootstrap
+    // context before the V2 owner projection arrives. Retry the same route
+    // once rather than allowing a transient empty draft to be published.
+    const state = await page.evaluate(`({ openingLinks: document.querySelectorAll(${JSON.stringify(selector)}).length, picker: Boolean(document.querySelector('.profile-template-picker__card')), shell: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page--preview')) })`).catch(() => null);
+    if (state?.openingLinks >= minimum) return;
+    await page.command('Page.reload', { ignoreCache: true });
+    await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`);
+    await waitForStudioLayoutPicker(`${description} retry picker`);
+    await page.waitFor(condition, `${description} retry`);
+  }
+}
+
 async function capturePublishedLayouts() {
   const publicLayouts = ['compact', 'sleek', 'minimal', 'modern', 'portfolio'];
   const evidence = [];
@@ -430,6 +468,7 @@ async function capturePublishedLayouts() {
     await page.navigate(`${appUrl}/profile/settings#customize-layout`, `${layout} public evidence Studio`);
     await waitForStudioLayoutPicker(`${layout} public evidence picker`);
     await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview[aria-busy="false"]')`, `${layout} stable Studio preview`);
+    await waitForRichStudioOpeningLinks(`${layout} hydrated opening links`);
     const serverConfigBefore = await callAuthenticatedRpc('get_my_profile_configuration_v2');
     const serverBeforeDraft = serverConfigBefore?.draft || serverConfigBefore?.configuration_v2?.draft;
     const serverBeforeSummary = summarizeV2Draft(serverBeforeDraft);
@@ -445,6 +484,7 @@ async function capturePublishedLayouts() {
     if (layoutPublishPending) {
       await page.click('.profile-dashboard-actions__publish', `${layout} public evidence publish`);
       await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, `${layout} public evidence published`);
+      await assertPublishedExpressionVisible(`${layout} Studio publish`);
       publishPayload = await latestRpcPayload('publish_profile_studio_v2');
       const serverConfigAfter = await callAuthenticatedRpc('get_my_profile_configuration_v2');
       serverAfterDraft = serverConfigAfter?.draft || serverConfigAfter?.configuration_v2?.draft;
@@ -476,6 +516,8 @@ async function capturePublishedLayouts() {
         openingNavigationLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links--labeled a')].map(link => link.href),
         continuationSocialLinks: [...document.querySelectorAll('.profile-shell__continuation-links .profile-shell__links--social a')].map(link => link.href),
         continuationNavigationLinks: [...document.querySelectorAll('.profile-shell__continuation-links .profile-shell__links--navigation a')].map(link => link.href),
+        continuationCue: Boolean(document.querySelector('.profile-shell__more-cue')),
+        subtleContinuationCue: Boolean(document.querySelector('.profile-shell__more-cue--continuation')),
         ownerRoll: Boolean(document.querySelector('.profile-shell-page .profile-roll')),
         atmosphere: document.querySelector('[data-atmosphere]')?.getAttribute('data-atmosphere') || '',
         avatarEffect: [...(document.querySelector('.profile-shell__opening .avatar-effect')?.classList || [])].find(value => value.startsWith('avatar-effect--')) || '',
@@ -494,6 +536,9 @@ async function capturePublishedLayouts() {
     }
     const expectedLinks = expectedLayoutLinks(layout);
     assert(JSON.stringify(publicGeometry.openingLinks) === JSON.stringify(expectedLinks.opening.map(link => link.url)) && JSON.stringify(publicGeometry.continuationLinks) === JSON.stringify(expectedLinks.continuation.map(link => link.url)) && new Set([...publicGeometry.openingLinks, ...publicGeometry.continuationLinks]).size === RICH_PROFILE_FIXTURE.links.length, `${layout} public opening/continuation links are duplicated or reordered: ${JSON.stringify(publicGeometry)}.`);
+    if (expectedLinks.continuation.length) {
+      assert(publicGeometry.continuationCue && (layout === 'portfolio' || publicGeometry.subtleContinuationCue), `${layout} lower links have no continuation affordance: ${JSON.stringify(publicGeometry)}.`);
+    }
     assert(publicGeometry.openingSocialLinks.length === expectedLinks.opening.filter(link => isProfileSocialLink(link.type)).length && publicGeometry.continuationSocialLinks.length === expectedLinks.continuation.filter(link => isProfileSocialLink(link.type)).length && publicGeometry.openingNavigationLinks.length === expectedLinks.opening.filter(link => !isProfileSocialLink(link.type)).length && publicGeometry.continuationNavigationLinks.length === expectedLinks.continuation.filter(link => !isProfileSocialLink(link.type)).length, `${layout} social/custom link treatments are not partitioned by layout: ${JSON.stringify(publicGeometry)}.`);
     assert(publicGeometry.ownerRoll, `${layout} owner public profile did not mount the interactive shared roll path: ${JSON.stringify(publicGeometry)}.`);
     if (smokeMode === 'dev') {
@@ -528,6 +573,7 @@ async function capturePublishedLayouts() {
   await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore Compact after public evidence');
   await waitForStudioLayoutPicker('restore Compact picker');
   await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview[aria-busy="false"]')`, 'restore Compact stable Studio preview');
+  await waitForRichStudioOpeningLinks('restore Compact hydrated opening links');
   await page.evaluate(`(() => {
     const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim() === 'Compact');
     card?.click();
@@ -908,6 +954,11 @@ try {
             const style = getComputedStyle(element);
             return { position: style.position, width: style.width, height: style.height, objectFit: style.objectFit };
           });
+          const contentOverflow = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
+          const frameCenterX = frameBox ? frameBox.left + frameBox.width / 2 : null;
+          const frameCenterY = frameBox ? frameBox.top + frameBox.height / 2 : null;
+          const stageCenterX = stageBox ? stageBox.left + stageBox.width / 2 : null;
+          const stageCenterY = stageBox ? stageBox.top + stageBox.height / 2 : null;
           return {
             shell: shellBox,
             shellScrollHeight: shell?.scrollHeight || 0,
@@ -943,6 +994,9 @@ try {
             previewDevice: shell?.classList.contains('profile-shell-page--preview-mobile') ? 'mobile' : (shell?.classList.contains('profile-shell-page--preview') ? 'desktop' : ''),
             shellTransform: shellStyle?.transform || 'none',
             previewScrollable: stage?.getAttribute('data-preview-scrollable') === 'true',
+            contentOverflow,
+            frameCenterDeltaX: frameCenterX !== null && stageCenterX !== null ? Math.abs(frameCenterX - stageCenterX) : null,
+            frameCenterDeltaY: frameCenterY !== null && stageCenterY !== null ? Math.abs(frameCenterY - stageCenterY) : null,
             scrollCue: Boolean(canvas?.querySelector('.profile-studio-preview__scroll-cue')),
             nameFontSize: Number.parseFloat(nameStyle?.fontSize || '0'),
             nameWidth: nameBox?.width || 0,
@@ -960,6 +1014,9 @@ try {
         assert(state.shellTransform === 'none' && state.card?.width >= 220 && state.card.width <= 360, `${layout} profile surface is microscopic or no longer compact: ${JSON.stringify(state)}.`);
         assert((state.viewport?.height || 0) >= 360 && (!state.previewScrollable || state.scrollCue), `${layout} desktop preview is too short or hides its continuation affordance: ${JSON.stringify(state)}.`);
         assert(state.card?.top >= (state.shell?.top || 0) - 1 && state.shellScrollHeight >= (state.card?.bottom || 0) - (state.shell?.top || 0) - 1, `${layout} desktop preview vertically clips the readable profile surface: ${JSON.stringify(state)}.`);
+        if (!state.contentOverflow && layout !== 'minimal') {
+          assert((state.frameCenterDeltaX ?? 99) <= 4 && (state.frameCenterDeltaY ?? 99) <= 6, `${layout} fitting desktop preview frame is not centered in its environment: ${JSON.stringify(state)}.`);
+        }
         const minimumNameWidth = Math.max(8, Math.min(20, state.nameTextLength * 6));
         assert(state.nameFontSize >= 12 && state.nameWidth >= minimumNameWidth && (!state.nameCanvas || (state.nameCanvas.width <= 2048 && state.nameCanvas.height <= 512)), `${layout} username geometry is not legible or sane: ${JSON.stringify(state)}.`);
         assert(state.card?.right <= (state.shell?.right || 0) + 1 && state.card?.left >= (state.shell?.left || 0) - 1, `${layout} profile surface escapes the preview shell: ${JSON.stringify(state)}.`);
@@ -1044,6 +1101,7 @@ try {
       if (publishPending) {
         await page.click('.profile-dashboard-actions__publish', 'publish layout smoke draft');
         await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, 'publish layout smoke draft');
+        await assertPublishedExpressionVisible('layout smoke publish');
       }
 
       await publishRichProfileDraft();
@@ -1356,6 +1414,7 @@ try {
     await capture('05-customize-draft-blur');
     await page.clickText('Publish profile', { description: 'publish configured surface depth' });
     await page.waitFor(`document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() === 'Profile published.'`, 'published profile appearance');
+    const immediatePublishedMedia = await assertPublishedExpressionVisible('surface publish');
     const publishedState = await page.evaluate(`({
       publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,
       status: document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() || ''
@@ -1378,14 +1437,18 @@ try {
     // the visitor-path assertion cannot sample that intentional loading state.
     const compactOpeningLinkCount = expectedLayoutLinks('compact').opening.length;
     await page.waitFor(`document.querySelectorAll('.profile-studio-preview .identity-card__links a').length === ${compactOpeningLinkCount}`, 'rehydrated rich opening links');
+    const compactContinuationLinkCount = expectedLayoutLinks('compact').continuation.length;
+    await page.waitFor(`document.querySelectorAll('.profile-studio-preview .profile-shell__continuation-links a').length === ${compactContinuationLinkCount}`, 'rehydrated rich continuation links');
     const visitorPreviewState = await page.evaluate(`(() => ({
       todayColor: Boolean(document.querySelector('.profile-studio-preview .profile-daily-roll .today-color')),
       ownerRoll: Boolean(document.querySelector('.profile-studio-preview .profile-daily-roll .profile-roll')),
-      links: document.querySelectorAll('.profile-studio-preview .identity-card__links a').length
+      links: document.querySelectorAll('.profile-studio-preview .identity-card__links a').length,
+      continuationLinks: document.querySelectorAll('.profile-studio-preview .profile-shell__continuation-links a').length,
+      profileMore: Boolean(document.querySelector('.profile-studio-preview #profile-more'))
     }))()`);
-    assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount, `Visitor preview did not use the lightweight roll/link opening path: ${JSON.stringify(visitorPreviewState)}.`);
+    assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount && visitorPreviewState.continuationLinks === compactContinuationLinkCount && visitorPreviewState.profileMore, `Visitor preview did not use the lightweight roll/link opening path: ${JSON.stringify(visitorPreviewState)}.`);
     const publicEvidence = await capturePublishedLayouts();
-    return { draftState, publishedState, identityLayout, publishRequests, mediaRail, studioNameEffect, richFixture, richPublished, publicEvidence };
+    return { draftState, publishedState, immediatePublishedMedia, identityLayout, publishRequests, mediaRail, studioNameEffect, richFixture, richPublished, publicEvidence };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {

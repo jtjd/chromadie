@@ -1,5 +1,23 @@
 # Chromadie 2.0 Progress
 
+## Profile publish and continuation correctness — 2026-08-12
+
+- The Studio publish RPC now re-reads and returns the complete expression-aware
+  V2 draft/published projection before the client clears preview overlays, so
+  avatar/background and related media remain visible immediately after publish.
+- Physical Studio preview centering now distinguishes fitting content from
+  overflow; tall profiles remain top-accessible and scrollable without a
+  virtual viewport or DOM transform.
+- Studio shows the real continuation links for compact previews, and public
+  compact layouts expose a quiet `Links ↓` cue only when lower content exists.
+- Link partitioning classifies services before filling the bounded opening, so
+  social links ordered after custom destinations still render in the opening.
+- Background video is excluded from lower-content existence checks, preventing
+  an empty `profile-more` region.
+- Focused tests and the local dev browser smoke cover the publish boundary,
+  media retention, continuation links/cues, category-first ordering, preview
+  scrolling/centering, and the five-layout rich fixture.
+
 ## Focused profile-layout cleanup — 2026-08-12
 
 - Draft layout edits now compare normalized state with the published baseline,

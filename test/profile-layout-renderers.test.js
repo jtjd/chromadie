@@ -17,6 +17,10 @@ import {
   hasProfileMoreContent,
   normalizeProfileConfig
 } from '../src/lib/profileConfig.js';
+import {
+  buildConfigurationV2,
+  mergeConfigurationV2ExpressionFields
+} from '../src/lib/profile-studio/draftModel.js';
 import { createProfileTemplatePatch } from '../src/lib/profileTemplates.js';
 import { PROFILE_LINK_DEFINITIONS, PROFILE_LINK_TYPES, isProfileSocialLink } from '../src/lib/profileLinkTypes.js';
 import { RICH_PROFILE_FIXTURE } from '../scripts/browser/profile-rich-fixture.mjs';
@@ -85,6 +89,62 @@ test('layout link partitions keep compact openings quiet while allowing minimal 
   for (const partition of [compact, minimal]) {
     assert.equal(new Set([...partition.opening, ...partition.continuation].map(link => link.url)).size, 10);
   }
+});
+
+test('layout link partitions keep later social services in the opening', () => {
+  const config = normalizeProfileConfig({
+    ...createDefaultProfileConfig(),
+    configurationVersion: 2,
+    links: [
+      ['Website', 'website', 'https://example.com'],
+      ['Portfolio', 'other', 'https://example.com/portfolio'],
+      ['Blog', 'other', 'https://example.com/blog'],
+      ['Project', 'other', 'https://example.com/project'],
+      ['Store', 'other', 'https://example.com/store'],
+      ['Contact', 'other', 'https://example.com/contact'],
+      ['GitHub', 'github', 'https://github.com/chromadie'],
+      ['YouTube', 'youtube', 'https://youtube.com/@chromadie'],
+      ['Twitch', 'twitch', 'https://twitch.tv/chromadie']
+    ].map(([label, type, url], order) => ({ label, type, url, order, visible: true }))
+  });
+  const compact = getProfileLayoutLinkPartitions(config, 'compact');
+  const minimal = getProfileLayoutLinkPartitions(config, 'minimal');
+
+  assert.deepEqual(compact.opening.map(link => link.label), ['GitHub', 'YouTube', 'Twitch']);
+  assert.deepEqual(compact.continuation.map(link => link.label), ['Website', 'Portfolio', 'Blog', 'Project', 'Store', 'Contact']);
+  assert.deepEqual(minimal.opening.map(link => link.label), ['Website', 'Portfolio', 'GitHub', 'YouTube', 'Twitch']);
+  assert.equal(new Set([...compact.opening, ...compact.continuation].map(link => link.url)).size, 9);
+});
+
+test('an incomplete publish envelope preserves dedicated expression fields defensively', () => {
+  const fallback = buildConfigurationV2({
+    ...createDefaultProfileConfig(),
+    avatar_path: 'avatars/00000000-0000-0000-0000-000000000001/avatar.webp',
+    background_path: 'backgrounds/00000000-0000-0000-0000-000000000001/background.webp',
+    background_video_path: 'profile_media/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002.mp4',
+    audio_path: 'profile_audio/00000000-0000-0000-0000-000000000001/profile.mp3',
+    cursor_path: 'profile_media/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000003.webp'
+  });
+  const incomplete = {
+    ...fallback,
+    base: { ...fallback.base, layoutVariant: 'sleek' }
+  };
+  for (const field of ['avatar_path', 'background_path', 'background_video_path', 'audio_path', 'cursor_path']) {
+    delete incomplete.base[field];
+    delete incomplete[field];
+  }
+  const merged = mergeConfigurationV2ExpressionFields(incomplete, fallback);
+  assert.equal(merged.base.avatar_path, 'avatars/00000000-0000-0000-0000-000000000001/avatar.webp');
+  assert.equal(merged.base.background_path, 'backgrounds/00000000-0000-0000-0000-000000000001/background.webp');
+  assert.equal(merged.base.background_video_path, 'profile_media/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002.mp4');
+  assert.equal(merged.base.audio_path, 'profile_audio/00000000-0000-0000-0000-000000000001/profile.mp3');
+  assert.equal(merged.cursor_path, 'profile_media/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000003.webp');
+
+  const explicitNull = mergeConfigurationV2ExpressionFields({
+    ...incomplete,
+    base: { ...incomplete.base, avatar_path: null }
+  }, fallback);
+  assert.equal(explicitNull.base.avatar_path, null);
 });
 
 test('a layout template round trip returns the normalized draft to its published baseline', () => {
@@ -175,7 +235,10 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(shell, /continuationSocialLinks/);
   assert.match(shell, /continuationNavigationLinks/);
   assert.match(shell, /hasBelowFoldRoll = showRoll && layoutVariant === 'portfolio'/);
-  assert.match(shell, /\{#if hasProfileMore\}[\s\S]*<div id="profile-more"/);
+  assert.match(shell, /\{#if renderProfileMore\}[\s\S]*<div id="profile-more"/);
+  assert.match(shell, /hasLowerExpression = hasProfileMusic/);
+  assert.match(shell, /profilePresentationLayoutVariant === 'portfolio' \? 'Explore profile' : 'Links'/);
+  assert.match(shell, /profile-shell__more-cue--continuation/);
   assert.match(frame, /profile-shell-page--minimal\) \.profile-layout-frame \{ --profile-layout-width: 280px; \}/);
   assert.doesNotMatch(frame, /profile-shell-page--minimal\)[^{]*\{[^}]*margin-left/);
   assert.doesNotMatch(shell, /links=\{visibleLinks\}/);
@@ -190,6 +253,7 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(dailyRoll, /presentation=\{variant\}/);
   assert.match(preview, /height: clamp\(24rem, 54vh, 32rem\)/);
   assert.match(preview, /profile-studio-preview__scroll-cue/);
+  assert.match(preview, /previewContentOverflow/);
   assert.match(customize, /showLinks=\{false\}/);
   assert.match(customize, /layoutDraft = layout[\s\S]*templateKey: layout\.templateKey[\s\S]*layoutVariant: layout\.layoutVariant[\s\S]*modules: layout\.modules[\s\S]*links: base\.links/);
   assert.doesNotMatch(customize, /layoutDraft = layout[\s\S]*appearance: layout\.appearance/);

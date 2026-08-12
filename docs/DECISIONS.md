@@ -1,5 +1,23 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-12 — Treat Studio publish and continuation composition as one profile contract
+
+`publish_profile_studio_v2` now returns the same expression-aware V2
+projection as `get_my_profile_configuration_v2`, including the dedicated
+avatar, background, audio, cursor, playlist, and other rich-media fields.
+The client still defensively preserves missing legacy expression fields while
+older deployments drain, but a complete server response remains authoritative.
+
+Studio preview marks actual overflow on the physical profile shell: fitting
+profiles center inside the environment, while taller profiles top-align and
+scroll. Identity-only preview reuses the public continuation-link region and
+does not mount heavy story/expression sections.
+
+Opening links are selected after classification, so recognized social services
+remain eligible for the bounded opening even when custom links precede them.
+Background video is page-environment media and cannot by itself create
+`profile-more`; only actual lower profile content does.
+
 ## 2026-08-12 — Keep layout cleanup scoped to state, placement, and content ownership
 
 Layout draft dirtiness is derived from normalized draft/baseline equality, so

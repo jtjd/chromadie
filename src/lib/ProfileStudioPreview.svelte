@@ -33,6 +33,8 @@
       previewResizeObserver?.observe(shell);
     }
     const next = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
+    const nextOverflowValue = next ? 'true' : 'false';
+    if (shell && shell.dataset.previewContentOverflow !== nextOverflowValue) shell.dataset.previewContentOverflow = nextOverflowValue;
     if (next !== previewScrollNeeded) previewScrollNeeded = next;
   }
 

@@ -3,6 +3,19 @@ import { createDefaultProfileConfig, normalizeProfileConfig } from '../profileCo
 
 export const PROFILE_STUDIO_FALLBACK_COLOR = '#CDD2FF';
 
+const PROFILE_EXPRESSION_FIELDS = Object.freeze([
+  'avatar_path',
+  'background_path',
+  'audio_path',
+  'spotify_type',
+  'spotify_id',
+  'background_video_path',
+  'banner_path',
+  'cursor_path',
+  'pointer_cursor_path',
+  'audio_playlist'
+]);
+
 /**
  * Convert both the original V1 editor shape and the V2 envelope into the
  * bounded shape consumed by the existing editors.  V2 remains the server
@@ -81,8 +94,32 @@ export function buildConfigurationV2(editorConfig, reference = null, fallbackCol
   };
 }
 
+/**
+ * Older publish boundaries returned the structured V2 envelope without the
+ * dedicated expression columns. Keep the client safe while those deployments
+ * are still possible, but preserve explicit nulls from a complete response.
+ */
+export function mergeConfigurationV2ExpressionFields(value, fallback = null) {
+  if (!value || Number(value.version) !== 2 || !fallback || Number(fallback.version) !== 2) return value;
+  const valueBase = value.base && typeof value.base === 'object' ? value.base : {};
+  const fallbackBase = fallback.base && typeof fallback.base === 'object' ? fallback.base : {};
+  const base = { ...fallbackBase, ...valueBase };
+  const next = { ...fallback, ...value, base };
+  for (const field of PROFILE_EXPRESSION_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(valueBase, field) && Object.prototype.hasOwnProperty.call(value, field)) {
+      base[field] = value[field];
+    }
+    if (!Object.prototype.hasOwnProperty.call(base, field) && Object.prototype.hasOwnProperty.call(fallback, field)) {
+      base[field] = fallback[field];
+    }
+    if (!Object.prototype.hasOwnProperty.call(base, field)) continue;
+    if (!Object.prototype.hasOwnProperty.call(next, field)) next[field] = base[field];
+  }
+  return next;
+}
+
 export function asConfigurationV2(value, fallback = null, fallbackColor = PROFILE_STUDIO_FALLBACK_COLOR) {
-  if (value && Number(value.version) === 2) return value;
+  if (value && Number(value.version) === 2) return mergeConfigurationV2ExpressionFields(value, fallback);
   if (fallback && Number(fallback.version) === 2) return fallback;
   return buildConfigurationV2(value || createDefaultProfileConfig(fallbackColor), fallback, fallbackColor);
 }

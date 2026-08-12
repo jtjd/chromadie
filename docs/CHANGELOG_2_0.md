@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-12 — Harden profile publication and continuation links
+
+- Publishing a Studio profile now keeps avatar, background, and expression
+  media present immediately, matching the post-refresh configuration.
+- Live Preview centers profiles that fit and keeps taller profiles accessible
+  from the top with internal scrolling, without scaling the profile down.
+- Custom continuation links remain visible in Studio and gain a quiet public
+  continuation cue when lower content exists.
+- Social services remain eligible for the opening even when custom links are
+  ordered before them; page background video no longer creates an empty lower
+  profile section.
+
 ## 2026-08-12 — Finish focused five-layout cleanup
 
 - Layout edits now return to a clean Studio state when the draft matches the

@@ -480,18 +480,16 @@
   $: hasProfileContent = hasVisibleProfileContent(profileContent);
   $: profileWidgets = getVisibleProfileWidgets(effectiveProfileConfig.widgets, effectiveProfileConfig);
   $: hasSpotifyWidget = profileWidgets.some(widget => widget.provider === 'spotify');
-  $: showExpression = Boolean(audioSrc)
-    || Boolean(backgroundVideoSrc)
-    || richAudioPlaylist.tracks.length > 0
-    || Boolean(effectiveProfileConfig.spotify_type && effectiveProfileConfig.spotify_id)
-    || profileWidgets.length > 0
-    || PROFILE_MUSIC_ENABLED
-    || (import.meta.env.DEV && visualFixture === 'music')
-    || hasProfileContent;
   $: hasProfileMusic = Boolean(audioSrc)
     || richAudioPlaylist.tracks.length > 0
     || Boolean(effectiveProfileConfig.spotify_type && effectiveProfileConfig.spotify_id)
     || (import.meta.env.DEV && visualFixture === 'music');
+  // Background media belongs to the page environment. Only modules rendered
+  // inside the lower profile composition may create profile-more.
+  $: hasLowerExpression = hasProfileMusic
+    || PROFILE_MUSIC_ENABLED
+    || profileWidgets.length > 0
+    || hasProfileContent;
   $: composition = getProfileComposition(effectiveProfileConfig, {
     isOwner: isOwnProfile,
     hasLinks: visibleLinks.length > 0,
@@ -509,7 +507,7 @@
   $: continuationSocialLinks = continuationLinks.filter(link => isProfileSocialLink(link.type));
   $: continuationNavigationLinks = continuationLinks.filter(link => !isProfileSocialLink(link.type));
   $: showRoll = getProfileRollVisible(effectiveProfileConfig);
-  $: showLowerExpression = showExpression && (layoutVariant !== 'sleek' || profileWidgets.length > 0 || hasProfileContent);
+  $: showLowerExpression = hasLowerExpression && (layoutVariant !== 'sleek' || profileWidgets.length > 0 || hasProfileContent);
   $: hasBelowFoldRoll = showRoll && layoutVariant === 'portfolio';
   $: hasProfileStory = getProfileStoryVisible(effectiveProfileConfig) && Boolean((rank && rankState) || storyModules.length);
   $: hasProfileMore = hasProfileMoreContent({
@@ -518,6 +516,9 @@
     showLowerExpression,
     hasProfileStory
   });
+  // Compact Studio shows the real continuation-link surface, while the
+  // heavier story/expression sections remain intentionally identity-only.
+  $: renderProfileMore = previewIdentityOnly ? continuationLinks.length > 0 : hasProfileMore;
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
   $: pinnedAchievements = (targetProfile?.equipped_badges || []).map(getAchievement);
   $: recentScores = targetScores.slice(0, 6);
@@ -626,9 +627,9 @@
           </ProfileLayoutFrame>
         </div>
 
-      {#if !previewMode && hasProfileMore && profilePresentationLayoutVariant === 'portfolio' && !profileMoreActive}
-        <button type="button" class="profile-shell__more-cue" aria-controls="profile-more" on:click={scrollToProfileMore}>
-          <span class="profile-shell__more-cue-label">Explore profile</span>
+      {#if !previewMode && hasProfileMore && !profileMoreActive}
+        <button type="button" class={'profile-shell__more-cue' + (profilePresentationLayoutVariant === 'portfolio' ? '' : ' profile-shell__more-cue--continuation')} aria-controls="profile-more" on:click={scrollToProfileMore}>
+          <span class="profile-shell__more-cue-label">{profilePresentationLayoutVariant === 'portfolio' ? 'Explore profile' : 'Links'}</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
         </button>
       {/if}
@@ -636,14 +637,14 @@
 
     </div>
 
-    {#if hasProfileMore}
+    {#if renderProfileMore}
     <div id="profile-more" class="profile-shell__more">
         {#if !previewMode && hasProfileMore && profileMoreActive}
           <button type="button" class="profile-shell__more-back" aria-label="Return to profile top" on:click={scrollToProfileHero}>
             <span aria-hidden="true">↑</span>
           </button>
         {/if}
-        {#if showRoll && !refreshing && profilePresentationLayoutVariant === 'portfolio'}
+        {#if !previewIdentityOnly && showRoll && !refreshing && profilePresentationLayoutVariant === 'portfolio'}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
               <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} />
@@ -653,7 +654,7 @@
           </div>
         {/if}
 
-        {#if hasProfileStory}
+        {#if !previewIdentityOnly && hasProfileStory}
           <div class="profile-shell__approved-featured" data-profile-region="featured" aria-label={username + ' color archive'}>
             <FeaturedCollection
               items={collectionItems}
@@ -665,7 +666,7 @@
             />
           </div>
         {/if}
-        {#if showLowerExpression}
+        {#if !previewIdentityOnly && showLowerExpression}
           <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
             <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
               {#if profilePresentationLayoutVariant !== 'sleek'}
@@ -704,7 +705,7 @@
           </section>
         {/if}
 
-      {#if hasProfileStory}
+      {#if !previewIdentityOnly && hasProfileStory}
         <section class="profile-shell__story-section" aria-labelledby="profile-story-title">
           <div class="profile-shell__story-heading">
             <div>
@@ -1079,6 +1080,33 @@
   .profile-shell__more-cue:focus-visible { outline: 2px solid var(--profile-control-accent); outline-offset: 4px; border-radius: var(--radius-sm); }
   .profile-shell__more-cue-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .profile-shell__more-cue-arrow { font-size: 1.35rem; line-height: 1; }
+  .profile-shell__more-cue--continuation {
+    width: auto;
+    height: auto;
+    min-height: 1.75rem;
+    gap: .3rem;
+    padding: .25rem .45rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-canvas-deep) 42%, transparent);
+    box-shadow: none;
+    color: color-mix(in srgb, var(--profile-control-accent) 72%, var(--color-ink-muted));
+    font: 600 .62rem / 1 var(--font-mono-stack);
+    letter-spacing: .08em;
+    text-transform: lowercase;
+  }
+  .profile-shell__more-cue--continuation .profile-shell__more-cue-label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
+  }
+  .profile-shell__more-cue--continuation .profile-shell__more-cue-arrow { font-size: .9rem; }
+  .profile-shell__more-cue--continuation:hover { background: color-mix(in srgb, var(--profile-control-accent) 9%, transparent); transform: translate(-50%, .15rem); }
   .profile-shell__more {
     position: relative;
     display: flex;
@@ -1206,10 +1234,8 @@
     padding: 0 0.5rem;
   }
 
-  /* The editor preview is an identity check, not a second profile page. Keep
-     the opening card visible while leaving the daily roll and story surfaces
-     in the public renderer untouched. */
-  .profile-shell-page--identity-only .profile-shell__more,
+  /* The editor preview keeps the real continuation-link surface visible while
+     leaving heavy story/expression regions to the public renderer. */
   .profile-shell-page--identity-only .profile-shell__story-section,
   .profile-shell-page--identity-only > .profile-shell__social-section,
   .profile-shell-page--identity-only .profile-shell__more-cue {
@@ -1284,10 +1310,6 @@
   .profile-shell-page--sleek .profile-shell__more,
   .profile-shell-page--minimal .profile-shell__more,
   .profile-shell-page--modern .profile-shell__more { min-height: 0; justify-content: flex-start; padding: 2.5rem 0 4rem; }
-  .profile-shell-page--compact .profile-shell__more-cue,
-  .profile-shell-page--sleek .profile-shell__more-cue,
-  .profile-shell-page--minimal .profile-shell__more-cue,
-  .profile-shell-page--modern .profile-shell__more-cue,
   .profile-shell-page--compact .profile-shell__more-back,
   .profile-shell-page--sleek .profile-shell__more-back,
   .profile-shell-page--minimal .profile-shell__more-back,
@@ -1355,7 +1377,7 @@
   .profile-shell-page--preview .profile-shell__approved-canvas,
   .profile-shell-page--preview .profile-shell__approved-main {
     width: 100%;
-    height: auto;
+    height: 100%;
     min-height: 100%;
   }
 
@@ -1364,6 +1386,16 @@
   .profile-shell-page--preview .profile-shell__approved-main {
     align-items: center;
     justify-content: center;
+  }
+
+  :global(.profile-shell-page--preview[data-preview-content-overflow="true"] .profile-shell__approved-canvas),
+  :global(.profile-shell-page--preview[data-preview-content-overflow="true"] .profile-shell__approved-main) {
+    height: auto;
+    min-height: 100%;
+  }
+
+  :global(.profile-shell-page--preview:not(.profile-shell-page--preview-mobile)[data-preview-content-overflow="true"] .profile-shell__approved-main) {
+    justify-content: flex-start;
   }
 
   /* Device context wins over browser-width rules. Keep the mobile stage

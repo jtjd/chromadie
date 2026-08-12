@@ -20,8 +20,8 @@ test('source-aware dirty state keeps sibling editor drafts independent', () => {
   assert.equal(hasDirtySources(clearDirtySourcesForSection(sources, 'customize')), false);
 });
 
-test('Profile Studio publishes identity and configuration through one server boundary', async () => {
-  const [settings, customize, workspace, appearance, identity, cosmetics, media, migration, security, ci] = await Promise.all([
+test('Profile Studio publishes identity and the complete expression-aware configuration through one server boundary', async () => {
+  const [settings, customize, workspace, appearance, identity, cosmetics, media, migration, expressionPublishMigration, security, ci] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileStudioWorkspace.svelte'),
@@ -30,6 +30,7 @@ test('Profile Studio publishes identity and configuration through one server bou
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/ProfileMediaWorkspace.svelte'),
     read('supabase/migrations/20260811100000_profile_studio_publish_atomic.sql'),
+    read('supabase/migrations/20260812140000_profile_studio_publish_expression_contract.sql'),
     read('supabase/tests/launch_security.sql'),
     read('.github/workflows/ci.yml')
   ]);
@@ -50,6 +51,10 @@ test('Profile Studio publishes identity and configuration through one server bou
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.publish_profile_studio_v2/);
   assert.match(migration, /update_my_profile_identity\(p_display_name, p_bio\)/);
   assert.match(migration, /EXCEPTION WHEN OTHERS/);
+  assert.match(expressionPublishMigration, /v_complete jsonb/);
+  assert.match(expressionPublishMigration, /get_my_profile_configuration_v2\(\)/);
+  assert.match(expressionPublishMigration, /'draft', v_complete->'draft'/);
+  assert.match(expressionPublishMigration, /'published', v_complete->'published'/);
   assert.match(security, /profile_studio_atomic_failure/);
   assert.match(security, /publish_profile_studio_v2\(jsonb,text,text,timestamptz\)/);
   assert.match(ci, /npm run check:performance/);
