@@ -4,7 +4,7 @@ import { createDefaultProfileContent, normalizeProfileContent } from './profileC
 import { normalizeProfileWidgets } from './profileWidgetsLegacy.js';
 import { inferProfileTemplateKey, normalizeProfileTemplateKey } from './profileTemplates.js';
 import { normalizeProfileLayoutKey, PROFILE_LAYOUT_KEYS } from './profile-layout/profileLayouts.js';
-import { PROFILE_LINK_TYPES, isProfileLinkUrlValid } from './profileLinkTypes.js';
+import { PROFILE_LINK_TYPES, isProfileLinkUrlValid, isProfileSocialLink } from './profileLinkTypes.js';
 
 export const PROFILE_CONFIG_VERSION = 1;
 
@@ -340,4 +340,37 @@ export function getProfileOpeningLinks(config) {
 
 export function getProfileContinuationLinks(config) {
   return getVisibleProfileLinks(config).slice(PROFILE_LINK_LIMITS.openingLinks);
+}
+
+/**
+ * Keep the opening identity surface compact without changing the stored link
+ * order. Social services remain in the opening; custom destinations continue
+ * below it except for Minimal, which can show two labeled destinations beside
+ * its intentionally sparse identity treatment.
+ */
+export function getProfileLayoutLinkPartitions(config, layoutVariant = 'compact') {
+  const visibleLinks = getVisibleProfileLinks(config);
+  const openingCandidates = visibleLinks.slice(0, PROFILE_LINK_LIMITS.openingLinks);
+  const normalizedLayout = normalizeProfileLayoutKey(layoutVariant, 'compact');
+  const customOpeningLimit = normalizedLayout === 'minimal' ? 2 : 0;
+  const customOpening = openingCandidates
+    .filter(link => !isProfileSocialLink(link.type))
+    .slice(0, customOpeningLimit);
+  const openingSelection = new Set([
+    ...openingCandidates.filter(link => isProfileSocialLink(link.type)),
+    ...customOpening
+  ]);
+
+  return {
+    opening: visibleLinks.filter(link => openingSelection.has(link)),
+    continuation: visibleLinks.filter(link => !openingSelection.has(link))
+  };
+}
+
+export function areProfileConfigsEqual(left, right) {
+  return JSON.stringify(normalizeProfileConfig(left)) === JSON.stringify(normalizeProfileConfig(right));
+}
+
+export function hasProfileMoreContent({ continuationCount = 0, hasBelowFoldRoll = false, showLowerExpression = false, hasProfileStory = false } = {}) {
+  return Number(continuationCount) > 0 || Boolean(hasBelowFoldRoll || showLowerExpression || hasProfileStory);
 }

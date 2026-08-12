@@ -455,7 +455,8 @@
   .identity-card--layout-compact .identity-card__metadata,
   .identity-card--layout-sleek .identity-card__metadata,
   .identity-card--layout-modern .identity-card__metadata,
-  .identity-card--layout-portfolio .identity-card__metadata { margin-top: .5rem; font-size: .58rem; }
+  .identity-card--layout-portfolio .identity-card__metadata { margin-top: .5rem; font-size: .62rem; }
+  .identity-card--layout-minimal .identity-card__metadata { font-size: .66rem; }
 
   .identity-card--layout-compact .identity-card__links,
   .identity-card--layout-sleek .identity-card__links,

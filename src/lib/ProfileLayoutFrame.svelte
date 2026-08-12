@@ -14,7 +14,7 @@
 
   :global(.profile-shell-page--compact) .profile-layout-frame { --profile-layout-width: 300px; }
   :global(.profile-shell-page--sleek) .profile-layout-frame { --profile-layout-width: 335px; }
-  :global(.profile-shell-page--minimal) .profile-layout-frame { --profile-layout-width: 280px; margin-left: 8.5%; }
+  :global(.profile-shell-page--minimal) .profile-layout-frame { --profile-layout-width: 280px; }
   :global(.profile-shell-page--modern) .profile-layout-frame { --profile-layout-width: 310px; }
   :global(.profile-shell-page--portfolio) .profile-layout-frame { --profile-layout-width: 320px; }
   :global(.profile-shell-page--preview-mobile.profile-shell-page--minimal) .profile-layout-frame { margin-inline: auto; }

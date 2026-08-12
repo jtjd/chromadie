@@ -1,5 +1,23 @@
 # Chromadie 2.0 Progress
 
+## Focused profile-layout cleanup — 2026-08-12
+
+- Draft layout edits now compare normalized state with the published baseline,
+  so reverting layout or alignment changes returns Studio to clean state.
+- Minimal page placement is owned by ProfileShell only, and empty lower profile
+  sections are omitted unless real continuation/story/expression content or a
+  Portfolio below-fold roll exists.
+- Studio desktop preview has a taller, scrollable desktop-like stage with a
+  visible continuation affordance; the physical readable preview and portrait
+  mobile mode remain unchanged.
+- Compact, Sleek, Modern, and Portfolio keep custom navigation links below the
+  opening while social services remain icon-first; Minimal permits only a
+  small opening custom-link set. Important profile metadata is slightly more
+  readable without enlarging the profile surface.
+- Added focused unit/source and browser-smoke assertions for dirty state,
+  Minimal offsets, empty lower content, preview geometry, link partitioning,
+  and duplicate prevention.
+
 ## Final profile-layout hardening — 2026-08-12
 
 - Split the opening six links from continuation links and prevented cached

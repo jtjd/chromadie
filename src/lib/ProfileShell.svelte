@@ -14,7 +14,7 @@
   import ProfileTimeline from './ProfileTimeline.svelte';
   import ProfileCollection from './ProfileCollection.svelte';
   import { getProfileStoryUnlocks } from './profileStory.js';
-  import { createDefaultProfileConfig, getProfileContinuationLinks, getProfileOpeningLinks, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
+  import { createDefaultProfileConfig, getProfileLayoutLinkPartitions, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, hasProfileMoreContent, normalizeProfileConfig } from './profileConfig.js';
   import { getProfileComposition } from './profileComposition.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileLayoutFrame from './ProfileLayoutFrame.svelte';
@@ -33,6 +33,7 @@
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
+  import { getProfileLinkDefinition, isProfileSocialLink } from './profileLinkTypes.js';
   import AtmosphereLayer from './profile-atmosphere/LazyAtmosphereLayer.svelte';
   import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
   import { hasVisibleProfileContent } from './profileContentLegacy.js';
@@ -464,8 +465,6 @@
   $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
   $: profileControlAccent = signatureColor;
   $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
-  $: openingLinks = getProfileOpeningLinks(effectiveProfileConfig);
-  $: continuationLinks = getProfileContinuationLinks(effectiveProfileConfig);
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
   $: audioSrc = getProfileMediaUrl(effectiveProfileConfig.audio_path, mediaCacheKey);
@@ -504,12 +503,21 @@
   $: storyModules = secondaryModules.filter(module => module.id !== 'links');
   const rollModule = Object.freeze({ size: 'wide' });
   $: layoutVariant = resolveProfileLayoutVariant(effectiveProfileConfig);
+  $: layoutLinkPartitions = getProfileLayoutLinkPartitions(effectiveProfileConfig, layoutVariant);
+  $: openingLinks = layoutLinkPartitions.opening;
+  $: continuationLinks = layoutLinkPartitions.continuation;
+  $: continuationSocialLinks = continuationLinks.filter(link => isProfileSocialLink(link.type));
+  $: continuationNavigationLinks = continuationLinks.filter(link => !isProfileSocialLink(link.type));
   $: showRoll = getProfileRollVisible(effectiveProfileConfig);
   $: showLowerExpression = showExpression && (layoutVariant !== 'sleek' || profileWidgets.length > 0 || hasProfileContent);
-  $: hasProfileMore = continuationLinks.length > 0
-    || showRoll
-    || showLowerExpression
-    || (getProfileStoryVisible(effectiveProfileConfig) && (rank && rankState || storyModules.length > 0));
+  $: hasBelowFoldRoll = showRoll && layoutVariant === 'portfolio';
+  $: hasProfileStory = getProfileStoryVisible(effectiveProfileConfig) && Boolean((rank && rankState) || storyModules.length);
+  $: hasProfileMore = hasProfileMoreContent({
+    continuationCount: continuationLinks.length,
+    hasBelowFoldRoll,
+    showLowerExpression,
+    hasProfileStory
+  });
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
   $: pinnedAchievements = (targetProfile?.equipped_badges || []).map(getAchievement);
   $: recentScores = targetScores.slice(0, 6);
@@ -628,6 +636,7 @@
 
     </div>
 
+    {#if hasProfileMore}
     <div id="profile-more" class="profile-shell__more">
         {#if !previewMode && hasProfileMore && profileMoreActive}
           <button type="button" class="profile-shell__more-back" aria-label="Return to profile top" on:click={scrollToProfileHero}>
@@ -644,7 +653,7 @@
           </div>
         {/if}
 
-        {#if getProfileStoryVisible(effectiveProfileConfig)}
+        {#if hasProfileStory}
           <div class="profile-shell__approved-featured" data-profile-region="featured" aria-label={username + ' color archive'}>
             <FeaturedCollection
               items={collectionItems}
@@ -671,21 +680,31 @@
         {/if}
         {#if continuationLinks.length}
           <section class="profile-shell__continuation-links" data-profile-region="links" aria-label={username + ' additional links'}>
-            <nav class="profile-shell__links" aria-label={username + ' additional links'}>
-              {#each continuationLinks as link (link.order)}
-                <a class="profile-shell__link" href={link.url} target="_blank" rel="noopener noreferrer" on:click={() => recordProfileClick(link.key || `link-${link.order}`)}>
-                  <span class="profile-shell__link-type">{link.type}</span>
-                  <strong>{link.label}</strong>
-                  <span aria-hidden="true">↗</span>
-                </a>
-              {/each}
-            </nav>
+            {#if continuationSocialLinks.length}
+              <nav class="profile-shell__links profile-shell__links--social" aria-label={username + ' additional social links'}>
+                {#each continuationSocialLinks as link (link.order)}
+                  <a class="profile-shell__link profile-shell__link--social" href={link.url} target="_blank" rel="noopener noreferrer" aria-label={link.label} title={link.label} on:click={() => recordProfileClick(link.key || `link-${link.order}`)}>
+                    <span class="profile-shell__link-glyph" aria-hidden="true"><img src={'/link-icons/' + getProfileLinkDefinition(link.type).icon + '.svg'} alt="" loading="lazy" /></span>
+                    <strong class="profile-shell__link-label">{link.label}</strong>
+                  </a>
+                {/each}
+              </nav>
+            {/if}
+            {#if continuationNavigationLinks.length}
+              <nav class="profile-shell__links profile-shell__links--navigation" aria-label={username + ' additional navigation links'}>
+                {#each continuationNavigationLinks as link (link.order)}
+                  <a class="profile-shell__link" href={link.url} target="_blank" rel="noopener noreferrer" on:click={() => recordProfileClick(link.key || `link-${link.order}`)}>
+                    <span class="profile-shell__link-type">{link.type}</span>
+                    <strong>{link.label}</strong>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                {/each}
+              </nav>
+            {/if}
           </section>
         {/if}
-    </div>
-    </div>
 
-      {#if getProfileStoryVisible(effectiveProfileConfig) && (rank && rankState || storyModules.length)}
+      {#if hasProfileStory}
         <section class="profile-shell__story-section" aria-labelledby="profile-story-title">
           <div class="profile-shell__story-heading">
             <div>
@@ -802,6 +821,9 @@
           </div>
         </section>
       {/if}
+    </div>
+    {/if}
+    </div>
 
       {#if !previewMode && !isOwnProfile}
         <section class="profile-shell__social-section" aria-label={username + ' community and safety details'}>
@@ -923,6 +945,12 @@
   .profile-shell__color-dot { width: 1.25rem; height: 1.25rem; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 50%; }
   .profile-shell__links { display: grid; gap: var(--space-2); }
   .profile-shell__link { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-3); min-width: 0; padding: var(--space-3); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); color: var(--color-ink); text-decoration: none; transition: transform var(--motion-fast) var(--motion-ease-standard), border-color var(--motion-base) var(--motion-ease-standard), background-color var(--motion-base) var(--motion-ease-standard); }
+  .profile-shell__links--social { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
+  .profile-shell__link--social { display: grid; width: 2.5rem; height: 2.5rem; min-height: 2.5rem; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; }
+  .profile-shell__link--social:hover { transform: none; background: color-mix(in srgb, var(--profile-accent) 12%, transparent); }
+  .profile-shell__link--social .profile-shell__link-glyph { display: grid; width: 1.05rem; height: 1.05rem; place-items: center; }
+  .profile-shell__link--social .profile-shell__link-glyph img { display: block; width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); opacity: .78; }
+  .profile-shell__link--social .profile-shell__link-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   .profile-shell__link:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--profile-accent) 55%, var(--color-line-subtle)); background: color-mix(in srgb, var(--profile-accent) 8%, var(--surface-inset)); }
   .profile-shell__link:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
   .profile-shell__link-type { color: var(--profile-accent); font: 700 0.625rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
@@ -1171,6 +1199,8 @@
   .profile-shell__continuation-links {
     position: relative;
     z-index: 2;
+    display: grid;
+    gap: .8rem;
     width: min(100%, 46rem);
     margin: 1.5rem auto 0;
     padding: 0 0.5rem;
@@ -1180,7 +1210,7 @@
      the opening card visible while leaving the daily roll and story surfaces
      in the public renderer untouched. */
   .profile-shell-page--identity-only .profile-shell__more,
-  .profile-shell-page--identity-only > .profile-shell__story-section,
+  .profile-shell-page--identity-only .profile-shell__story-section,
   .profile-shell-page--identity-only > .profile-shell__social-section,
   .profile-shell-page--identity-only .profile-shell__more-cue {
     display: none;
@@ -1217,7 +1247,7 @@
     .profile-shell__approved-game { margin-top: 1.75rem; padding-inline: 0.25rem; }
     .profile-shell__approved-featured { margin-top: 1.25rem; padding-inline: 0.25rem; }
     .profile-shell__approved-supporting { margin-top: clamp(3rem, 8vh, 4.5rem); }
-    .profile-shell-page > .profile-shell__story-section { margin-top: 0.75rem; }
+    .profile-shell-page .profile-shell__story-section { margin-top: 0.75rem; }
   }
 
   @media (min-width: 36.01rem) and (max-height: 47.5rem) {

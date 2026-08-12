@@ -20,6 +20,7 @@ import {
 } from './cdp-harness.mjs';
 import { isReservedRouteSegment } from '../../src/lib/routeContract.js';
 import { isProtectedUsername } from '../../src/lib/usernamePolicy.js';
+import { isProfileSocialLink } from '../../src/lib/profileLinkTypes.js';
 import { RICH_PROFILE_FIXTURE } from './profile-rich-fixture.mjs';
 
 const environment = await loadLocalEnvironment();
@@ -54,6 +55,23 @@ let localServiceRoleKey = '';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function expectedLayoutLinks(layout) {
+  let customOpeningCount = 0;
+  const opening = RICH_PROFILE_FIXTURE.links.slice(0, 6).filter(link => {
+    if (isProfileSocialLink(link.type)) return true;
+    if (layout === 'minimal' && customOpeningCount < 2) {
+      customOpeningCount += 1;
+      return true;
+    }
+    return false;
+  });
+  const openingSet = new Set(opening);
+  return {
+    opening: RICH_PROFILE_FIXTURE.links.filter(link => openingSet.has(link)),
+    continuation: RICH_PROFILE_FIXTURE.links.filter(link => !openingSet.has(link))
+  };
 }
 
 async function step(name, action) {
@@ -454,6 +472,10 @@ async function capturePublishedLayouts() {
         name: canvas && semantic ? { canvas: { width: canvas.width, height: canvas.height, cssWidth: canvasBox?.width || 0, cssHeight: canvasBox?.height || 0 }, semantic: { left: semanticBox?.left || 0, top: semanticBox?.top || 0, width: semanticBox?.width || 0, height: semanticBox?.height || 0 }, fontSize: getComputedStyle(semantic).fontSize } : null,
         openingLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links a')].map(link => link.href),
         continuationLinks: [...document.querySelectorAll('.profile-shell__continuation-links a')].map(link => link.href),
+        openingSocialLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links--social a')].map(link => link.href),
+        openingNavigationLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links--labeled a')].map(link => link.href),
+        continuationSocialLinks: [...document.querySelectorAll('.profile-shell__continuation-links .profile-shell__links--social a')].map(link => link.href),
+        continuationNavigationLinks: [...document.querySelectorAll('.profile-shell__continuation-links .profile-shell__links--navigation a')].map(link => link.href),
         ownerRoll: Boolean(document.querySelector('.profile-shell-page .profile-roll')),
         atmosphere: document.querySelector('[data-atmosphere]')?.getAttribute('data-atmosphere') || '',
         avatarEffect: [...(document.querySelector('.profile-shell__opening .avatar-effect')?.classList || [])].find(value => value.startsWith('avatar-effect--')) || '',
@@ -470,8 +492,9 @@ async function capturePublishedLayouts() {
     if (publicGeometry.name) {
       assert(publicGeometry.name.canvas.width <= 2048 && publicGeometry.name.canvas.height <= 512 && publicGeometry.name.canvas.cssWidth < 360 && publicGeometry.name.canvas.cssHeight < 100 && Number.parseFloat(publicGeometry.name.fontSize) >= 12, `${layout} effected username canvas is not sane: ${JSON.stringify(publicGeometry)}.`);
     }
-    assert(publicGeometry.openingLinks.length === 6 && publicGeometry.continuationLinks.length === Math.max(0, RICH_PROFILE_FIXTURE.links.length - 6), `${layout} public link partition is incomplete: ${JSON.stringify(publicGeometry)}.`);
-    assert(JSON.stringify(publicGeometry.openingLinks) === JSON.stringify(RICH_PROFILE_FIXTURE.links.slice(0, 6).map(link => link.url)) && JSON.stringify(publicGeometry.continuationLinks) === JSON.stringify(RICH_PROFILE_FIXTURE.links.slice(6).map(link => link.url)) && new Set([...publicGeometry.openingLinks, ...publicGeometry.continuationLinks]).size === RICH_PROFILE_FIXTURE.links.length, `${layout} public opening/continuation links are duplicated or reordered: ${JSON.stringify(publicGeometry)}.`);
+    const expectedLinks = expectedLayoutLinks(layout);
+    assert(JSON.stringify(publicGeometry.openingLinks) === JSON.stringify(expectedLinks.opening.map(link => link.url)) && JSON.stringify(publicGeometry.continuationLinks) === JSON.stringify(expectedLinks.continuation.map(link => link.url)) && new Set([...publicGeometry.openingLinks, ...publicGeometry.continuationLinks]).size === RICH_PROFILE_FIXTURE.links.length, `${layout} public opening/continuation links are duplicated or reordered: ${JSON.stringify(publicGeometry)}.`);
+    assert(publicGeometry.openingSocialLinks.length === expectedLinks.opening.filter(link => isProfileSocialLink(link.type)).length && publicGeometry.continuationSocialLinks.length === expectedLinks.continuation.filter(link => isProfileSocialLink(link.type)).length && publicGeometry.openingNavigationLinks.length === expectedLinks.opening.filter(link => !isProfileSocialLink(link.type)).length && publicGeometry.continuationNavigationLinks.length === expectedLinks.continuation.filter(link => !isProfileSocialLink(link.type)).length, `${layout} social/custom link treatments are not partitioned by layout: ${JSON.stringify(publicGeometry)}.`);
     assert(publicGeometry.ownerRoll, `${layout} owner public profile did not mount the interactive shared roll path: ${JSON.stringify(publicGeometry)}.`);
     if (smokeMode === 'dev') {
       assert(publicGeometry.name, `${layout} public profile did not mount the active NameEffectCanvas after publish and refresh.`);
@@ -919,6 +942,8 @@ try {
             shellBackground: shellStyle?.backgroundColor || '',
             previewDevice: shell?.classList.contains('profile-shell-page--preview-mobile') ? 'mobile' : (shell?.classList.contains('profile-shell-page--preview') ? 'desktop' : ''),
             shellTransform: shellStyle?.transform || 'none',
+            previewScrollable: stage?.getAttribute('data-preview-scrollable') === 'true',
+            scrollCue: Boolean(canvas?.querySelector('.profile-studio-preview__scroll-cue')),
             nameFontSize: Number.parseFloat(nameStyle?.fontSize || '0'),
             nameWidth: nameBox?.width || 0,
             nameTextLength: name?.textContent?.trim().length || 0,
@@ -933,6 +958,7 @@ try {
         assert(state.frameVariant === layout, `${layout} preview mounted the wrong frame variant: ${JSON.stringify(state)}.`);
         assert(state.previewDevice === 'desktop' && state.shell && state.stage && Math.abs(state.shell.left - state.stage.left) <= 3 && Math.abs(state.shell.top - state.stage.top) <= 3 && Math.abs(state.shell.width - state.stage.width) <= 3 && Math.abs(state.shell.height - state.stage.height) <= 3, `${layout} desktop preview page does not fill its physical environment: ${JSON.stringify(state)}.`);
         assert(state.shellTransform === 'none' && state.card?.width >= 220 && state.card.width <= 360, `${layout} profile surface is microscopic or no longer compact: ${JSON.stringify(state)}.`);
+        assert((state.viewport?.height || 0) >= 360 && (!state.previewScrollable || state.scrollCue), `${layout} desktop preview is too short or hides its continuation affordance: ${JSON.stringify(state)}.`);
         assert(state.card?.top >= (state.shell?.top || 0) - 1 && state.shellScrollHeight >= (state.card?.bottom || 0) - (state.shell?.top || 0) - 1, `${layout} desktop preview vertically clips the readable profile surface: ${JSON.stringify(state)}.`);
         const minimumNameWidth = Math.max(8, Math.min(20, state.nameTextLength * 6));
         assert(state.nameFontSize >= 12 && state.nameWidth >= minimumNameWidth && (!state.nameCanvas || (state.nameCanvas.width <= 2048 && state.nameCanvas.height <= 512)), `${layout} username geometry is not legible or sane: ${JSON.stringify(state)}.`);
@@ -1350,13 +1376,14 @@ try {
     // The route first paints the empty editor context, then replaces it with
     // the authenticated V2 draft. Wait for the canonical opening projection so
     // the visitor-path assertion cannot sample that intentional loading state.
-    await page.waitFor(`document.querySelectorAll('.profile-studio-preview .identity-card__links a').length === 6`, 'rehydrated rich opening links');
+    const compactOpeningLinkCount = expectedLayoutLinks('compact').opening.length;
+    await page.waitFor(`document.querySelectorAll('.profile-studio-preview .identity-card__links a').length === ${compactOpeningLinkCount}`, 'rehydrated rich opening links');
     const visitorPreviewState = await page.evaluate(`(() => ({
       todayColor: Boolean(document.querySelector('.profile-studio-preview .profile-daily-roll .today-color')),
       ownerRoll: Boolean(document.querySelector('.profile-studio-preview .profile-daily-roll .profile-roll')),
       links: document.querySelectorAll('.profile-studio-preview .identity-card__links a').length
     }))()`);
-    assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === 6, `Visitor preview did not use the lightweight roll/link opening path: ${JSON.stringify(visitorPreviewState)}.`);
+    assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount, `Visitor preview did not use the lightweight roll/link opening path: ${JSON.stringify(visitorPreviewState)}.`);
     const publicEvidence = await capturePublishedLayouts();
     return { draftState, publishedState, identityLayout, publishRequests, mediaRail, studioNameEffect, richFixture, richPublished, publicEvidence };
   });

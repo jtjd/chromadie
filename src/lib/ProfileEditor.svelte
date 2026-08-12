@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { normalizeProfileConfig, PROFILE_LINK_LIMITS } from './profileConfig.js';
+  import { areProfileConfigsEqual, normalizeProfileConfig, PROFILE_LINK_LIMITS } from './profileConfig.js';
   import { PROFILE_LINK_DEFINITIONS, isProfileLinkUrlValid } from './profileLinkTypes.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
   import { createProfileTemplatePatch } from './profileTemplates.js';
@@ -35,10 +35,10 @@
   let lastIncomingKey = '';
 
   function hasDraftChanges() {
-    return JSON.stringify(draft) !== JSON.stringify(baseline);
+    return !areProfileConfigsEqual(draft, baseline);
   }
 
-  $: isDirty = JSON.stringify(draft) !== JSON.stringify(baseline);
+  $: isDirty = !areProfileConfigsEqual(draft, baseline);
   $: incomingKey = JSON.stringify({ profileId, draft: draftConfig, published: publishedConfig, updatedAt });
   $: if (incomingKey !== lastIncomingKey && !isDirty) syncIncoming();
   $: orderedModules = [...(draft.modules || [])].sort((left, right) => left.order - right.order);
@@ -56,11 +56,12 @@
     lastIncomingKey = incomingKey;
     profileScope = profileId || null;
     const cached = profileId ? readViewState(VIEW_STATE_NAMESPACE, profileId) : null;
-    const next = normalizeDraft(cached?.draft || draftConfig || publishedConfig);
+    const nextBaseline = normalizeDraft(draftConfig || publishedConfig);
+    const next = normalizeDraft(cached?.draft || nextBaseline);
     draft = next;
-    baseline = normalizeDraft(draftConfig || publishedConfig);
+    baseline = nextBaseline;
     error = '';
-    status = cached?.draft ? 'Unsaved layout restored.' : '';
+    status = cached?.draft && !areProfileConfigsEqual(next, nextBaseline) ? 'Unsaved layout restored.' : '';
   }
 
   function emitDirty(value = null) {
@@ -78,7 +79,7 @@
     if (profileId) writeViewState(VIEW_STATE_NAMESPACE, profileScope || profileId, { draft });
     status = '';
     error = '';
-    emitDirty(true);
+    emitDirty();
     dispatch('configpreview', { config: draft, layoutChanged });
   }
 
@@ -245,7 +246,7 @@
       <label><span>Share description</span><textarea maxlength="200" rows="2" value={draft.metadata?.description || ''} placeholder="A short description for social previews." on:input={event => updateDraft({ metadata: { ...(draft.metadata || {}), description: event.currentTarget.value } })}></textarea></label>
       <label><span>Embed color</span><input type="text" maxlength="7" pattern="#[0-9A-Fa-f]{6}" value={draft.metadata?.embedColor || '#CDD2FF'} on:input={event => updateDraft({ metadata: { ...(draft.metadata || {}), embedColor: event.currentTarget.value } })} /></label>
     </div>
-    <p class="profile-editor__helper">Links must use HTTPS. The first six stay in the opening; additional links continue in the profile story.</p>
+    <p class="profile-editor__helper">Links must use HTTPS. Social services stay in the opening; custom destinations continue below according to the selected layout.</p>
     </section>
   {/if}
 

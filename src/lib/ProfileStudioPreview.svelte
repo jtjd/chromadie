@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { afterUpdate, createEventDispatcher, onMount } from 'svelte';
   import { PROFILE_RENDER_CONTEXTS } from './profile-studio/previewContexts.js';
 
   /** @type {any} */
@@ -18,8 +18,52 @@
 
   const dispatch = createEventDispatcher();
   const liveProfileContext = PROFILE_RENDER_CONTEXTS.LIVE_PROFILE;
+  let previewStage;
+  let previewScrollNeeded = false;
+  let observedPreviewShell = null;
+  let previewResizeObserver = null;
+  let previewMutationObserver = null;
 
   $: isAppearancePreview = activeSection === 'customize' && activeCustomizeTab === 'appearance';
+
+  function updatePreviewScrollState() {
+    const shell = previewStage?.querySelector('.profile-shell-page--preview');
+    if (shell && shell !== observedPreviewShell) {
+      observedPreviewShell = shell;
+      previewResizeObserver?.observe(shell);
+    }
+    const next = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
+    if (next !== previewScrollNeeded) previewScrollNeeded = next;
+  }
+
+  function ensurePreviewObservers() {
+    if (!previewStage) return;
+    if (!previewResizeObserver && typeof ResizeObserver !== 'undefined') {
+      previewResizeObserver = new ResizeObserver(updatePreviewScrollState);
+      previewResizeObserver.observe(previewStage);
+    }
+    if (!previewMutationObserver && typeof MutationObserver !== 'undefined') {
+      previewMutationObserver = new MutationObserver(updatePreviewScrollState);
+      previewMutationObserver.observe(previewStage, { childList: true, subtree: true, attributes: true });
+    }
+  }
+
+  afterUpdate(() => {
+    ensurePreviewObservers();
+    if (previewStage) requestAnimationFrame(updatePreviewScrollState);
+  });
+
+  onMount(() => {
+    ensurePreviewObservers();
+    updatePreviewScrollState();
+    return () => {
+      previewResizeObserver?.disconnect();
+      previewMutationObserver?.disconnect();
+      previewResizeObserver = null;
+      previewMutationObserver = null;
+      observedPreviewShell = null;
+    };
+  });
 
   function togglePreview() {
     dispatch('toggle');
@@ -54,8 +98,10 @@
       {#if previewComponent}
         <div class="profile-studio-preview__viewport" data-preview-device={previewDevice}>
           <div
+            bind:this={previewStage}
             class="profile-studio-preview__stage"
             data-preview-device={previewDevice}
+            data-preview-scrollable={previewScrollNeeded ? 'true' : 'false'}
           >
             <svelte:component
               this={previewComponent}
@@ -70,6 +116,9 @@
               {previewDevice}
               renderContext={liveProfileContext}
             />
+            {#if previewScrollNeeded}
+              <div class="profile-studio-preview__scroll-cue" aria-hidden="true"><span>Scroll to explore</span><span>↓</span></div>
+            {/if}
           </div>
         </div>
       {:else if previewError}
@@ -101,8 +150,10 @@
   .profile-studio-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem calc(1rem + env(safe-area-inset-bottom)); background: var(--ctp-mantle, var(--site-deep, #11111b)); }
   .profile-studio-preview__canvas { display: grid; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; overflow-x: hidden; }
   .profile-studio-preview__canvas--appearance { min-height: 0; margin-bottom: .6rem; }
-  .profile-studio-preview__viewport { position: relative; width: 100%; min-height: 0; aspect-ratio: 16 / 10; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: var(--color-canvas-deep, #07080b); box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
+  .profile-studio-preview__viewport { position: relative; width: 100%; height: clamp(24rem, 54vh, 32rem); min-height: 0; aspect-ratio: 16 / 10; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: var(--color-canvas-deep, #07080b); box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
   .profile-studio-preview__stage { position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+  .profile-studio-preview__scroll-cue { position: absolute; right: .7rem; bottom: .7rem; z-index: 8; display: inline-flex; align-items: center; gap: .35rem; padding: .35rem .5rem; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 38%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--studio-inset, #1e1e2e) 82%, transparent); color: var(--studio-muted, #bac2de); font: 600 .62rem/1 var(--studio-font, var(--site-font, sans-serif)); pointer-events: none; }
+  .profile-studio-preview__scroll-cue span:last-child { color: var(--studio-focus, #b4befe); font-size: .8rem; }
   .profile-studio-preview__canvas--mobile { padding: .65rem 0 1rem; }
   .profile-studio-preview__canvas--mobile .profile-studio-preview__viewport { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: min(24rem, calc(100dvh - 12rem)); aspect-ratio: auto; border-radius: 1.25rem; }
   .profile-studio-preview__canvas--mobile .profile-studio-preview__stage { min-height: 100%; }

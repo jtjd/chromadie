@@ -10,8 +10,11 @@ import {
 } from '../src/lib/profile-layout/profileLayouts.js';
 import {
   createDefaultProfileConfig,
+  areProfileConfigsEqual,
   getProfileContinuationLinks,
+  getProfileLayoutLinkPartitions,
   getProfileOpeningLinks,
+  hasProfileMoreContent,
   normalizeProfileConfig
 } from '../src/lib/profileConfig.js';
 import { createProfileTemplatePatch } from '../src/lib/profileTemplates.js';
@@ -64,6 +67,42 @@ test('opening and continuation link helpers partition a rich profile without ove
   assert.deepEqual(openingUrls, Array.from({ length: 6 }, (_, index) => `https://example.com/fixture-${index + 1}`));
   assert.deepEqual(continuationUrls, Array.from({ length: 4 }, (_, index) => `https://example.com/fixture-${index + 7}`));
   assert.equal(new Set([...openingUrls, ...continuationUrls]).size, 10);
+});
+
+test('layout link partitions keep compact openings quiet while allowing minimal labels', () => {
+  const config = normalizeProfileConfig({
+    ...createDefaultProfileConfig(),
+    configurationVersion: 2,
+    links: RICH_PROFILE_FIXTURE.links.map((link, order) => ({ ...link, key: `layout-link-${order}`, order, visible: true }))
+  });
+  const compact = getProfileLayoutLinkPartitions(config, 'compact');
+  const minimal = getProfileLayoutLinkPartitions(config, 'minimal');
+
+  assert.deepEqual(compact.opening.map(link => link.label), ['GitHub', 'YouTube', 'Twitch', 'Instagram']);
+  assert.deepEqual(compact.continuation.map(link => link.label), ['Personal site', 'Portfolio', 'Project notes', 'Now playing', 'Field guide', 'Contact']);
+  assert.deepEqual(minimal.opening.map(link => link.label), ['GitHub', 'YouTube', 'Twitch', 'Instagram', 'Personal site', 'Portfolio']);
+  assert.deepEqual(minimal.continuation.map(link => link.label), ['Project notes', 'Now playing', 'Field guide', 'Contact']);
+  for (const partition of [compact, minimal]) {
+    assert.equal(new Set([...partition.opening, ...partition.continuation].map(link => link.url)).size, 10);
+  }
+});
+
+test('a layout template round trip returns the normalized draft to its published baseline', () => {
+  const published = normalizeProfileConfig({
+    ...createDefaultProfileConfig(),
+    ...createProfileTemplatePatch('compact')
+  });
+  const sleek = normalizeProfileConfig({ ...published, ...createProfileTemplatePatch('sleek') });
+  const compactAgain = normalizeProfileConfig({ ...sleek, ...createProfileTemplatePatch('compact') });
+
+  assert.equal(areProfileConfigsEqual(sleek, published), false);
+  assert.equal(areProfileConfigsEqual(compactAgain, published), true);
+});
+
+test('compact profiles do not create an empty below-fold region from roll data alone', () => {
+  assert.equal(hasProfileMoreContent({ continuationCount: 0, hasBelowFoldRoll: false, showLowerExpression: false, hasProfileStory: false }), false);
+  assert.equal(hasProfileMoreContent({ continuationCount: 0, hasBelowFoldRoll: true }), true);
+  assert.equal(hasProfileMoreContent({ continuationCount: 1 }), true);
 });
 
 test('the canonical browser fixture contains the rich renderer coverage data', () => {
@@ -132,6 +171,13 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(shell, /compact=\{true\}/);
   assert.match(shell, /links=\{openingLinks\}/);
   assert.match(shell, /continuationLinks/);
+  assert.match(shell, /getProfileLayoutLinkPartitions/);
+  assert.match(shell, /continuationSocialLinks/);
+  assert.match(shell, /continuationNavigationLinks/);
+  assert.match(shell, /hasBelowFoldRoll = showRoll && layoutVariant === 'portfolio'/);
+  assert.match(shell, /\{#if hasProfileMore\}[\s\S]*<div id="profile-more"/);
+  assert.match(frame, /profile-shell-page--minimal\) \.profile-layout-frame \{ --profile-layout-width: 280px; \}/);
+  assert.doesNotMatch(frame, /profile-shell-page--minimal\)[^{]*\{[^}]*margin-left/);
   assert.doesNotMatch(shell, /links=\{visibleLinks\}/);
   assert.match(shell, /profile-border-effect--content/);
   assert.match(dailyRoll, /profile-daily-roll--' \+ variant/);
@@ -142,6 +188,8 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(preview, /aspect-ratio: 16 \/ 10/);
   assert.doesNotMatch(preview, /device-sample/);
   assert.match(dailyRoll, /presentation=\{variant\}/);
+  assert.match(preview, /height: clamp\(24rem, 54vh, 32rem\)/);
+  assert.match(preview, /profile-studio-preview__scroll-cue/);
   assert.match(customize, /showLinks=\{false\}/);
   assert.match(customize, /layoutDraft = layout[\s\S]*templateKey: layout\.templateKey[\s\S]*layoutVariant: layout\.layoutVariant[\s\S]*modules: layout\.modules[\s\S]*links: base\.links/);
   assert.doesNotMatch(customize, /layoutDraft = layout[\s\S]*appearance: layout\.appearance/);
@@ -163,6 +211,7 @@ test('public viewport and compact roll contracts do not inherit legacy offsets',
   assert.match(identity, /identity-card__links--labeled/);
   assert.match(identity, /socialLinks/);
   assert.match(identity, /navigationLinks/);
+  assert.match(identity, /identity-card--layout-minimal \.identity-card__metadata \{ font-size: \.66rem; \}/);
   assert.match(music, /profile-music--compact profile-music--spotify-compact/);
   const compactMusicBranch = music.split('{:else if spotifyEmbedSrc && compact}')[1]?.split('{:else if spotifyEmbedSrc && (!deferMedia')[0] || '';
   assert.doesNotMatch(compactMusicBranch, /<iframe/);

@@ -51,7 +51,8 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.doesNotMatch(layout, /Reload server version|save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(layout, /Signature color|Ambient color|colorEffectsEnabled/);
   assert.match(layout, /function hasDraftChanges\(\)/);
-  assert.match(layout, /emitDirty\(true\)/);
+  assert.match(layout, /emitDirty\(\);/);
+  assert.match(layout, /areProfileConfigsEqual/);
   assert.match(layout, /emitDirty\(false\)/);
   assert.doesNotMatch(layout, /dispatch\('dirty', \{ dirty: isDirty \}\)/);
   assert.match(appearance, /invalidHex/);

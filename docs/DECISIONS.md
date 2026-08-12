@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-12 — Keep layout cleanup scoped to state, placement, and content ownership
+
+Layout draft dirtiness is derived from normalized draft/baseline equality, so
+returning a draft to its published layout and alignment clears the dirty state.
+ProfileShell remains the sole owner of Minimal page placement; the frame only
+defines profile geometry. The lower profile region is rendered only when it
+contains continuation, story, expression, or layout-specific below-fold roll
+content.
+
+Compact layouts keep recognized services in the opening icon row and move
+custom navigation destinations into continuation content, with Minimal as the
+only layout allowed a small labeled custom-link allowance in its opening.
+Studio keeps a readable physical profile and gains vertical room plus a small
+scroll affordance rather than reintroducing a virtual viewport or DOM scale.
+
 ## 2026-08-12 — Make the final layout hardening pass data-safe and evidence-driven
 
 Opening links and continuation links are separate render inputs: the first

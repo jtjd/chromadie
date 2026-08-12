@@ -2,6 +2,20 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-12 — Finish focused five-layout cleanup
+
+- Layout edits now return to a clean Studio state when the draft matches the
+  published layout and alignment again.
+- Minimal no longer receives a second horizontal placement offset, and public
+  profiles no longer render an empty lower section when there is no lower
+  content.
+- Studio desktop preview provides a taller readable environment with scrolling
+  guidance while preserving its physical-size, non-scaled profile rendering.
+- Custom navigation links remain identifiable below compact openings, while
+  recognized services retain compact icon treatment.
+- Essential profile metadata is modestly more readable without expanding the
+  compact profile footprint.
+
 ## 2026-08-12 — Complete final five-layout hardening
 
 - Opening links no longer repeat in the continuation story; the first six are
