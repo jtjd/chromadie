@@ -967,12 +967,14 @@
     gap: .5rem;
   }
   :global(.profile-roll--presentation) .profile-roll__rolling .profile-roll__preview { width: 2.25rem; min-width: 2.25rem; height: 2.25rem; }
-  :global(.profile-roll--presentation) .profile-roll__rolling .profile-roll__preview :global(.roll-preview-frame) { width: 2.25rem; height: 2.25rem; }
+  :global(.profile-roll--presentation) .profile-roll__rolling .profile-roll__preview :global(.roll-preview-frame),
+  :global(.profile-roll--presentation) .profile-roll__rolling .profile-roll__preview :global(.final-color-display) { width: 2.25rem; height: 2.25rem; }
 
   :global(.profile-roll--presentation) .profile-roll__result { gap: .45rem; padding: .35rem 0 0; }
   :global(.profile-roll--presentation) .profile-roll__result-head { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .5rem; }
   :global(.profile-roll--presentation) .profile-roll__result .profile-roll__preview { min-width: 2.25rem; width: 2.25rem; height: 2.25rem; }
-  :global(.profile-roll--presentation) .profile-roll__result .profile-roll__preview :global(.roll-preview-frame) { width: 2.25rem; height: 2.25rem; transform: none; }
+  :global(.profile-roll--presentation) .profile-roll__result .profile-roll__preview :global(.roll-preview-frame),
+  :global(.profile-roll--presentation) .profile-roll__result .profile-roll__preview :global(.final-color-display) { width: 2.25rem; height: 2.25rem; transform: none; }
   :global(.profile-roll--presentation) .profile-roll__score-row strong { font-size: 1rem; }
   :global(.profile-roll--presentation) .profile-roll__condition-rail,
   :global(.profile-roll--presentation) .profile-roll__details,

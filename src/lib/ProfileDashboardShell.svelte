@@ -150,7 +150,7 @@
           <span class="profile-dashboard-shell__owner-avatar" aria-hidden="true">
             {#if ownerAvatarSrc}<img src={ownerAvatarSrc} alt="" />{:else}{ownerUsername.slice(0, 1).toUpperCase()}{/if}
           </span>
-          <span><strong>{ownerUsername}</strong><small>View profile <span aria-hidden="true">↗</span></small></span>
+          <span><strong>{ownerUsername}</strong><small>View profile</small></span>
         </a>
       {/if}
 

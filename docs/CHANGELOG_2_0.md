@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-12 — Polish compact profile readability and continuation content
+
+- Owner Daily Color stays within its compact presentation instead of allowing
+  the full-size color orb to cover nearby profile content.
+- Compact profile identity surfaces have modestly larger avatars, clearer
+  essential text, and more visible monochrome social glyphs.
+- Below-fold About, Projects, Links, and integrations now align in one quiet,
+  centered continuation column; project and custom-link UI no longer uses the
+  decorative northeast-arrow character.
+
 ## 2026-08-12 — Finish Studio media token and preview correctness
 
 - Immediate Studio media mutations now keep the optimistic Publish timestamp

@@ -52,7 +52,7 @@
       {#if previewAvailable}
         <button type="button" aria-expanded={previewOpen} on:click={togglePreview}>{previewOpen ? 'Hide preview' : 'Preview'}</button>
       {/if}
-      <a href={profilePath} on:click={handleViewProfile}>View profile ↗</a>
+      <a href={profilePath} on:click={handleViewProfile}>View profile</a>
     </div>
   </header>
 {:else}

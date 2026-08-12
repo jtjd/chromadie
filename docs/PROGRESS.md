@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Focused profile polish — 2026-08-12
+
+- Compact owner/visitor Daily Color now bounds the actual rendered color, not
+  only its outer preview frame.
+- Avatar, username, bio, metadata, and visible social glyph sizing received a
+  modest readability pass without changing the five-layout footprint.
+- About, Projects, custom Links, and rich integrations now share a centered
+  continuation column with consistent quiet surfaces; custom links have no
+  decorative northeast-arrow glyphs.
+- Unused saved-media deletion no longer bumps the profile configuration token;
+  selected media still clears its reference and returns the new token.
+
 ## Final profile correctness pass — 2026-08-12
 
 - Immediate audio, rich-media selection/deletion, and cursor replacement RPCs

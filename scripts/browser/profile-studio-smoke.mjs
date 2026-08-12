@@ -359,8 +359,9 @@ async function publishRichProfileDraft() {
     published = await callAuthenticatedRpc('publish_profile_studio_v2', {
       p_draft: {
         ...draft,
-        base: { ...(draft.base || {}), links: links.slice(0, 6) },
+        base: { ...(draft.base || {}), links: links.slice(0, 6), content: RICH_PROFILE_FIXTURE.content },
         links,
+        content: RICH_PROFILE_FIXTURE.content,
         identity: {
           ...(draft.identity || {}),
           location: RICH_PROFILE_FIXTURE.location,
@@ -500,6 +501,14 @@ async function capturePublishedLayouts() {
     if (smokeMode === 'dev') {
       await page.waitFor(`document.querySelector('.profile-shell-page [data-atmosphere="rain-window"]')`, `${layout} public atmosphere renderer`);
     }
+    if (layout === 'compact') {
+      await page.waitFor(`document.querySelector('.profile-shell__opening .profile-roll__result .final-color-display') || document.querySelector('.profile-shell__opening .profile-roll__reveal-button:not(:disabled)')`, 'owner Daily Color state', 15000);
+      const canRevealOwnerColor = await page.evaluate(`Boolean(document.querySelector('.profile-shell__opening .profile-roll__reveal-button:not(:disabled)'))`);
+      if (canRevealOwnerColor) {
+        await page.click('.profile-shell__opening .profile-roll__reveal-button', 'reveal owner Daily Color');
+        await page.waitFor(`document.querySelector('.profile-shell__opening .profile-roll__result .final-color-display')`, 'owner Daily Color result');
+      }
+    }
     const publicGeometry = await page.evaluate(`(() => {
       const shell = document.querySelector('.profile-shell-page');
       const image = document.querySelector('.profile-shell__media-image');
@@ -510,17 +519,37 @@ async function capturePublishedLayouts() {
       const imageStyle = image ? getComputedStyle(image) : null;
       const canvasBox = canvas?.getBoundingClientRect();
       const semanticBox = semantic?.getBoundingClientRect();
+      const ownerColor = document.querySelector('.profile-shell__opening .profile-roll .final-color-display, .profile-shell__more .profile-roll .final-color-display');
+      const ownerColorBox = ownerColor?.getBoundingClientRect();
+      const avatar = document.querySelector('.profile-shell__opening .identity-card__avatar');
+      const avatarBox = avatar?.getBoundingClientRect();
+      const socialGlyph = document.querySelector('.profile-shell__opening .identity-card__link-glyph');
+      const socialGlyphBox = socialGlyph?.getBoundingClientRect();
+      const continuationColumn = document.querySelector('.profile-shell__continuation-column');
+      const continuationColumnBox = continuationColumn?.getBoundingClientRect();
+      const continuationModules = [...document.querySelectorAll('.profile-shell__continuation-column > *')].map(node => {
+        const box = node.getBoundingClientRect();
+        return { left: box.left, right: box.right, width: box.width };
+      });
       return {
         viewport: [innerWidth, innerHeight],
         shell: shellBox ? { width: shellBox.width, height: shellBox.height } : null,
         background: image ? { complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight, position: imageStyle.position, objectFit: imageStyle.objectFit, box: imageBox ? { left: imageBox.left, top: imageBox.top, width: imageBox.width, height: imageBox.height } : null } : null,
         name: canvas && semantic ? { canvas: { width: canvas.width, height: canvas.height, cssWidth: canvasBox?.width || 0, cssHeight: canvasBox?.height || 0 }, semantic: { left: semanticBox?.left || 0, top: semanticBox?.top || 0, width: semanticBox?.width || 0, height: semanticBox?.height || 0 }, fontSize: getComputedStyle(semantic).fontSize } : null,
+        ownerColor: ownerColorBox ? { width: ownerColorBox.width, height: ownerColorBox.height } : null,
+        avatar: avatarBox ? { width: avatarBox.width, height: avatarBox.height } : null,
+        socialGlyph: socialGlyphBox ? { width: socialGlyphBox.width, height: socialGlyphBox.height } : null,
+        continuationColumn: continuationColumnBox ? { left: continuationColumnBox.left, right: continuationColumnBox.right, width: continuationColumnBox.width } : null,
+        continuationModules,
+        northeastArrow: Boolean(document.querySelector('.profile-shell-page')?.innerHTML.includes('↗')),
         openingLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links a')].map(link => link.href),
         continuationLinks: [...document.querySelectorAll('.profile-shell__continuation-links a')].map(link => link.href),
         openingSocialLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links--social a')].map(link => link.href),
         openingNavigationLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links--labeled a')].map(link => link.href),
         continuationSocialLinks: [...document.querySelectorAll('.profile-shell__continuation-links .profile-shell__links--social a')].map(link => link.href),
         continuationNavigationLinks: [...document.querySelectorAll('.profile-shell__continuation-links .profile-shell__links--navigation a')].map(link => link.href),
+        continuationAbout: document.querySelector('.profile-content__about')?.textContent?.trim() || '',
+        continuationProjects: [...document.querySelectorAll('.profile-content__project')].map(project => project.textContent.trim()),
         continuationCue: Boolean(document.querySelector('.profile-shell__more-cue')),
         subtleContinuationCue: Boolean(document.querySelector('.profile-shell__more-cue--continuation')),
         ownerRoll: Boolean(document.querySelector('.profile-shell-page .profile-roll')),
@@ -539,6 +568,22 @@ async function capturePublishedLayouts() {
     if (publicGeometry.name) {
       assert(publicGeometry.name.canvas.width <= 2048 && publicGeometry.name.canvas.height <= 512 && publicGeometry.name.canvas.cssWidth < 360 && publicGeometry.name.canvas.cssHeight < 100 && Number.parseFloat(publicGeometry.name.fontSize) >= 12, `${layout} effected username canvas is not sane: ${JSON.stringify(publicGeometry)}.`);
     }
+    if (publicGeometry.ownerColor) {
+      assert(publicGeometry.ownerColor.width <= 48 && publicGeometry.ownerColor.height <= 48, `${layout} owner Daily Color escaped its compact presentation: ${JSON.stringify(publicGeometry)}.`);
+    }
+    if (layout === 'compact') {
+      assert(publicGeometry.ownerColor, `Compact owner Daily Color did not reach a revealed result state: ${JSON.stringify(publicGeometry)}.`);
+    }
+    const minimumAvatar = layout === 'compact' ? 60 : layout === 'sleek' || layout === 'modern' ? 56 : 76;
+    assert((publicGeometry.avatar?.width || 0) >= minimumAvatar && (publicGeometry.avatar?.height || 0) >= minimumAvatar, `${layout} avatar did not reach the readable compact size: ${JSON.stringify(publicGeometry)}.`);
+    if (publicGeometry.openingSocialLinks.length) {
+      assert((publicGeometry.socialGlyph?.width || 0) >= 18 && (publicGeometry.socialGlyph?.height || 0) >= 18, `${layout} social glyph is visually too small: ${JSON.stringify(publicGeometry)}.`);
+    }
+    assert(!publicGeometry.northeastArrow, `${layout} profile renderer still contains a decorative northeast arrow glyph.`);
+    assert(publicGeometry.continuationAbout.includes('About me') && publicGeometry.continuationAbout.includes(RICH_PROFILE_FIXTURE.content.about.body) && publicGeometry.continuationProjects.length === RICH_PROFILE_FIXTURE.content.projects.length, `${layout} rich continuation content did not render through the public profile path: ${JSON.stringify(publicGeometry)}.`);
+    if (publicGeometry.continuationColumn) {
+      assert(publicGeometry.continuationColumn.width <= 850 && publicGeometry.continuationModules.every(module => module.left >= publicGeometry.continuationColumn.left - 1 && module.right <= publicGeometry.continuationColumn.right + 1), `${layout} continuation modules escaped the shared centered column: ${JSON.stringify(publicGeometry)}.`);
+    }
     const expectedLinks = expectedLayoutLinks(layout);
     assert(JSON.stringify(publicGeometry.openingLinks) === JSON.stringify(expectedLinks.opening.map(link => link.url)) && JSON.stringify(publicGeometry.continuationLinks) === JSON.stringify(expectedLinks.continuation.map(link => link.url)) && new Set([...publicGeometry.openingLinks, ...publicGeometry.continuationLinks]).size === RICH_PROFILE_FIXTURE.links.length, `${layout} public opening/continuation links are duplicated or reordered: ${JSON.stringify(publicGeometry)}.`);
     if (expectedLinks.continuation.length) {
@@ -551,6 +596,13 @@ async function capturePublishedLayouts() {
       assert(publicGeometry.atmosphere === 'rain-window' && publicGeometry.avatarEffect === 'avatar-effect--ghost-double' && publicGeometry.border === 'celestial', `${layout} public cosmetic boundary fixture did not survive publish: ${JSON.stringify(publicGeometry)}.`);
     }
     await capture(`public-${layout}-desktop`);
+    if (layout === 'compact') {
+      await captureRegion('compact-owner-daily-color', '.profile-shell__opening .profile-roll');
+      await page.evaluate(`(() => { const shell = document.querySelector('.profile-shell-page'); shell?.scrollTo({ top: shell.scrollHeight, behavior: 'instant' }); })()`);
+      await delay(120);
+      await capture('compact-continuation-desktop');
+      await page.evaluate(`(() => { const shell = document.querySelector('.profile-shell-page'); shell?.scrollTo({ top: 0, behavior: 'instant' }); })()`);
+    }
     await page.setViewport(390, 844);
     // Navigate to a cache-busted public URL for per-layout evidence. The
     // dedicated direct-refresh step below still exercises Page.reload; using a

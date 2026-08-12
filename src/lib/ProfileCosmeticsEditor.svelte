@@ -165,9 +165,9 @@
           <p>The Atelier name treatment and atmosphere are separate layers. Choose your expression below, preview it, then update the equipped effects. These changes apply immediately.</p>
         </div>
         <nav class="profile-cosmetics-plus-guide__links" aria-label="Atelier expression shortcuts">
-          <a href="#cosmetic-name_motion"><strong>Name effect</strong><span>Collection → Name · Motion</span><b aria-hidden="true">↗</b></a>
-          <a href="#cosmetic-profile-atmosphere"><strong>Background atmosphere</strong><span>Collection → Atmosphere</span><b aria-hidden="true">↗</b></a>
-          <a href="#customize"><strong>Atelier template</strong><span>Customize → Templates</span><b aria-hidden="true">↗</b></a>
+          <a href="#cosmetic-name_motion"><strong>Name effect</strong><span>Collection → Name · Motion</span></a>
+          <a href="#cosmetic-profile-atmosphere"><strong>Background atmosphere</strong><span>Collection → Atmosphere</span></a>
+          <a href="#customize"><strong>Atelier template</strong><span>Customize → Templates</span></a>
         </nav>
       </aside>
     {/if}
@@ -342,7 +342,6 @@
   .profile-cosmetics-plus-guide__links a:focus-visible { border-color: var(--cosmetics-focus); outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
   .profile-cosmetics-plus-guide__links strong { min-width: 0; font-size: var(--cosmetics-label-size); }
   .profile-cosmetics-plus-guide__links span { min-width: 0; overflow: hidden; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); text-overflow: ellipsis; white-space: nowrap; }
-  .profile-cosmetics-plus-guide__links b { grid-column: 2; grid-row: 1 / span 2; color: var(--cosmetics-expression); font: 600 var(--cosmetics-label-size)/1 var(--cosmetics-mono); }
   .profile-cosmetics-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
   .profile-cosmetics-controls { display: grid; gap: .65rem; min-width: 0; padding: .25rem 0; border: 0; border-radius: 0; background: transparent; font-family: var(--cosmetics-body); }
   .profile-cosmetics-controls__heading { display: grid; gap: .3rem; padding-bottom: .15rem; }

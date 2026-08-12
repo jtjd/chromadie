@@ -51,9 +51,8 @@
         </div>
         {#if widgetKind === 'card'}
           <a class="profile-widget__provider-card" href={profileWidgetUrl(widget.provider, widget.type, widget.id)} target="_blank" rel="noopener noreferrer" on:click={() => onEntryClick(`widget-${widget.provider}`)}>
-            <span class="profile-widget__mark" aria-hidden="true">{widget.provider === 'discord' ? '◈' : '↗'}</span>
+            <span class="profile-widget__mark" aria-hidden="true">◈</span>
             <span class="profile-widget__copy"><strong>{label} {widget.type}</strong><span>Open this public {label} profile in a new tab.</span></span>
-            <span aria-hidden="true">↗</span>
           </a>
         {:else if isFailed(widget)}
           <div class="profile-widget__deferred"><span class="profile-widget__mark" aria-hidden="true">!</span><div class="profile-widget__copy"><strong>{label} unavailable</strong><span>This provider did not respond. The rest of the profile is still available.</span></div></div>
@@ -96,7 +95,6 @@
   .profile-widget__deferred button:hover, .profile-widget__deferred button:focus-visible { background: color-mix(in srgb, var(--profile-accent, #cdd2ff) 12%, transparent); }
   .profile-widget__provider-card { display: flex; align-items: center; gap: .7rem; min-height: 5.5rem; padding: .85rem; color: inherit; text-decoration: none; }
   .profile-widget__provider-card:hover, .profile-widget__provider-card:focus-visible { background: color-mix(in srgb, var(--profile-accent, #cdd2ff) 9%, transparent); }
-  .profile-widget__provider-card > span:last-child { color: var(--profile-accent, #cdd2ff); }
   .profile-widgets--compact .profile-widget__heading { padding: .5rem .65rem; }
   .profile-widgets--compact .profile-widget iframe { min-height: 120px; }
   .profile-widgets--compact .profile-widget[data-provider-widget="youtube"] iframe { min-height: 0; }

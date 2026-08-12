@@ -31,7 +31,7 @@
       on:rollcomplete={forward}
     />
   {:else}
-    <TodayColor result={result} quiet={true} accentColor={accentColor} />
+    <TodayColor result={result} quiet={true} accentColor={accentColor} presentation={variant} />
   {/if}
 </div>
 

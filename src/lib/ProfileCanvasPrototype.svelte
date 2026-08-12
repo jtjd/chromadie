@@ -21,7 +21,7 @@
 
   <header class="prototype-header">
     <p class="prototype-kicker"><span class="prototype-kicker__dot"></span>Phase 1 · Profile canvas</p>
-    <a class="prototype-exit" href="/">Exit preview <span aria-hidden="true">↗</span></a>
+    <a class="prototype-exit" href="/">Exit preview</a>
   </header>
 
   <main class="prototype-main">
@@ -133,7 +133,6 @@
           {#each profile.links as link (link.href)}
             <a href={link.href}>
               <span>{link.label}</span>
-              <span aria-hidden="true">↗</span>
             </a>
           {/each}
         </nav>

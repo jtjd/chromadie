@@ -34,6 +34,8 @@ test('profile content is bounded, structured, and safe by default', () => {
   assert.equal(normalized.about.body, 'Line one\nLine two');
   assert.equal(normalized.projects.length, PROFILE_CONTENT_LIMITS.projects);
   assert.equal(normalized.projects[1].url, '');
+  assert.deepEqual(normalized.projects.map(project => project.order), [0, 1, 2, 3]);
+  assert.ok(normalized.projects.every(project => Number.isFinite(project.order)));
   assert.deepEqual(getVisibleProfileContent(normalized).projects.map(project => project.title), ['Chromadie', 'Too many', 'Four']);
 });
 
@@ -66,4 +68,11 @@ test('content renderer and editor stay inside the structured public boundary', a
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content'\)/);
   assert.match(migration, /profile_content_patch/);
   assert.match(settings, /publish_profile_studio_v2/);
+});
+
+test('content renderer omits the default empty About surface', async () => {
+  const content = await read('src/lib/ProfileContent.svelte');
+  assert.match(content, /hasAboutContent/);
+  assert.match(content, /visible\.about\.body \|\| visible\.about\.markdown \|\| visible\.about\.ast/);
+  assert.match(content, /About me/);
 });

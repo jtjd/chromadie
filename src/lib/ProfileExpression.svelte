@@ -23,7 +23,6 @@
         <a class="profile-expression__link" href={link.url} target="_blank" rel="noopener noreferrer">
           <span>{link.type}</span>
           <strong>{link.label}</strong>
-          <span aria-hidden="true">↗</span>
         </a>
       {/each}
     </nav>

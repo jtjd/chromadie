@@ -207,13 +207,16 @@ test('editor, renderer, and public icon files consume one link service registry'
 });
 
 test('layout renderer composes the shared roll through distinct presentation regions', async () => {
-  const [frame, dailyRoll, shell, preview, customize, settings] = await Promise.all([
+  const [frame, dailyRoll, shell, preview, customize, settings, roll, content, widgets] = await Promise.all([
     read('src/lib/ProfileLayoutFrame.svelte'),
     read('src/lib/ProfileDailyRoll.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
-    read('src/lib/ProfileSettings.svelte')
+    read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/ProfileRoll.svelte'),
+    read('src/lib/ProfileContent.svelte'),
+    read('src/lib/ProfileWidgets.svelte')
   ]);
   assert.match(shell, /profile-layout-frame__identity/);
   assert.match(shell, /profile-layout-frame__roll/);
@@ -251,6 +254,13 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(preview, /aspect-ratio: 16 \/ 10/);
   assert.doesNotMatch(preview, /device-sample/);
   assert.match(dailyRoll, /presentation=\{variant\}/);
+  assert.match(roll, /profile-roll--presentation[\s\S]*final-color-display/);
+  assert.match(dailyRoll, /final-color-display/);
+  assert.match(shell, /profile-shell__continuation-column/);
+  assert.match(shell, /formatLinkDestination/);
+  assert.match(content, /About me/);
+  assert.doesNotMatch(content, /↗/);
+  assert.doesNotMatch(widgets, /↗/);
   assert.match(preview, /height: clamp\(24rem, 54vh, 32rem\)/);
   assert.match(preview, /profile-studio-preview__scroll-cue/);
   assert.match(preview, /previewContentOverflow/);
@@ -264,8 +274,9 @@ test('layout renderer composes the shared roll through distinct presentation reg
 });
 
 test('Studio media mutations return the profile concurrency token', async () => {
-  const [migration, expressionEditor, richMediaEditor, settings] = await Promise.all([
+  const [migration, deleteMigration, expressionEditor, richMediaEditor, settings] = await Promise.all([
     read('supabase/migrations/20260812150000_profile_media_updated_at_contract.sql'),
+    read('supabase/migrations/20260812160000_profile_media_delete_token_guard.sql'),
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ProfileRichMediaEditor.svelte'),
     read('src/lib/ProfileSettings.svelte')
@@ -274,7 +285,6 @@ test('Studio media mutations return the profile concurrency token', async () => 
   for (const functionName of [
     'update_my_profile_audio',
     'select_my_profile_rich_media',
-    'delete_my_profile_media_asset',
     'commit_my_profile_media_replacement'
   ]) {
     const functionStart = migration.indexOf(`CREATE OR REPLACE FUNCTION public.${functionName}`);
@@ -285,6 +295,16 @@ test('Studio media mutations return the profile concurrency token', async () => 
     assert.match(functionBody, /RETURNING updated_at INTO v_updated_at/);
     assert.match(functionBody, /'updated_at', v_updated_at/);
   }
+  const deleteFunctionStart = deleteMigration.indexOf('CREATE OR REPLACE FUNCTION public.delete_my_profile_media_asset');
+  assert(deleteFunctionStart >= 0, 'The guarded media deletion function is missing.');
+  const deleteFunction = deleteMigration.slice(deleteFunctionStart);
+  assert.match(deleteFunction, /v_selected boolean/);
+  assert.match(deleteFunction, /v_audio_path/);
+  assert.match(deleteFunction, /v_asset\.kind = 'audio'[\s\S]*v_audio_path IS NOT DISTINCT FROM v_asset\.storage_path/);
+  assert.match(deleteFunction, /audio_path = CASE WHEN v_asset\.kind = 'audio' AND v_audio_path IS NOT DISTINCT FROM v_asset\.storage_path THEN NULL ELSE audio_path END/);
+  assert.match(deleteFunction, /IF v_selected THEN[\s\S]*UPDATE public\.profile_configurations/);
+  assert.match(deleteFunction, /'configuration_changed', v_selected/);
+  assert.match(deleteFunction, /storage\.allow_delete_query/);
   assert.match(expressionEditor, /updatedAt: data\.updated_at/);
   const deletionHandlerStart = expressionEditor.indexOf('async function deleteAsset');
   const deletionHandler = expressionEditor.slice(deletionHandlerStart, expressionEditor.indexOf('function formatAudioTime', deletionHandlerStart));
@@ -307,7 +327,9 @@ test('public viewport and compact roll contracts do not inherit legacy offsets',
   assert.match(identity, /identity-card__links--labeled/);
   assert.match(identity, /socialLinks/);
   assert.match(identity, /navigationLinks/);
-  assert.match(identity, /identity-card--layout-minimal \.identity-card__metadata \{ font-size: \.66rem; \}/);
+  assert.match(identity, /identity-card--layout-minimal \.identity-card__metadata \{ font-size: \.7rem; \}/);
+  assert.match(identity, /identity-card--layout-compact :global\(\.identity-card__avatar\).*64px/);
+  assert.match(identity, /identity-card--layout-minimal :global\(\.identity-card__avatar\).*82px/);
   assert.match(music, /profile-music--compact profile-music--spotify-compact/);
   const compactMusicBranch = music.split('{:else if spotifyEmbedSrc && compact}')[1]?.split('{:else if spotifyEmbedSrc && (!deferMedia')[0] || '';
   assert.doesNotMatch(compactMusicBranch, /<iframe/);

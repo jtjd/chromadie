@@ -12,6 +12,18 @@ export const RICH_PROFILE_FIXTURE = Object.freeze({
   background: Object.freeze({ width: 637, height: 311, filename: 'qa-background-637x311.png' }),
   avatar: Object.freeze({ width: 151, height: 151, filename: 'qa-avatar-151x151.png' }),
   musicUrl: 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC',
+  content: Object.freeze({
+    version: 1,
+    about: Object.freeze({
+      visible: true,
+      heading: 'About',
+      body: 'A small public notebook for daily colors, tools, and the projects that make this identity feel lived in.'
+    }),
+    projects: Object.freeze([
+      Object.freeze({ title: 'Chromadie', description: 'A daily color identity game.', url: 'https://chromadie.example/chromadie', visible: true, order: 0 }),
+      Object.freeze({ title: 'Weather notes', description: 'A quiet field guide for strange skies.', url: 'https://chromadie.example/weather', visible: true, order: 1 })
+    ])
+  }),
   effects: Object.freeze({
     nameFont: 'name_font_marker_tag',
     nameMaterial: 'name_material_blueprint_ink',

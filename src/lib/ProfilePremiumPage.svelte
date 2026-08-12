@@ -26,7 +26,7 @@
         <h3>One identity. More expression.</h3>
         <p>Premium adds creative capacity without changing rolls, rank, rewards, or earned prestige.</p>
       </div>
-      <a href="/pricing">See Plus · $7.99 lifetime <span aria-hidden="true">↗</span></a>
+      <a href="/pricing">See Plus · $7.99 lifetime</a>
     </div>
   {/if}
 
@@ -50,7 +50,7 @@
 
   <footer class="profile-premium-page__footer">
     <span>Premium buys expression. Gameplay earns prestige.</span>
-    <a href="/pricing">Compare Free and Plus <span aria-hidden="true">↗</span></a>
+    <a href="/pricing">Compare Free and Plus</a>
   </footer>
 </section>
 

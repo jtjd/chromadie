@@ -399,6 +399,16 @@
     return normalizeHexColor(value, fallback);
   }
 
+  function formatLinkDestination(value) {
+    try {
+      const url = new URL(String(value || ''));
+      const path = url.pathname && url.pathname !== '/' ? url.pathname : '';
+      return url.hostname.replace(/^www\./, '') + path;
+    } catch {
+      return String(value || '');
+    }
+  }
+
   function formatStat(value) {
     return formatCount(Number(value) || 0);
   }
@@ -644,12 +654,13 @@
             <span aria-hidden="true">↑</span>
           </button>
         {/if}
+        <div class="profile-shell__continuation-column">
         {#if !previewIdentityOnly && showRoll && !refreshing && profilePresentationLayoutVariant === 'portfolio'}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
-              <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} />
+              <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} presentation={profilePresentationLayoutVariant} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} />
             {:else}
-              <TodayColor result={latestRoll} quiet={true} accentColor={signatureColor} />
+              <TodayColor result={latestRoll} quiet={true} accentColor={signatureColor} presentation={profilePresentationLayoutVariant} />
             {/if}
           </div>
         {/if}
@@ -681,6 +692,7 @@
         {/if}
         {#if continuationLinks.length}
           <section class="profile-shell__continuation-links" data-profile-region="links" aria-label={username + ' additional links'}>
+            <h2 class="profile-shell__continuation-heading">Links</h2>
             {#if continuationSocialLinks.length}
               <nav class="profile-shell__links profile-shell__links--social" aria-label={username + ' additional social links'}>
                 {#each continuationSocialLinks as link (link.order)}
@@ -694,10 +706,11 @@
             {#if continuationNavigationLinks.length}
               <nav class="profile-shell__links profile-shell__links--navigation" aria-label={username + ' additional navigation links'}>
                 {#each continuationNavigationLinks as link (link.order)}
-                  <a class="profile-shell__link" href={link.url} target="_blank" rel="noopener noreferrer" on:click={() => recordProfileClick(link.key || `link-${link.order}`)}>
-                    <span class="profile-shell__link-type">{link.type}</span>
-                    <strong>{link.label}</strong>
-                    <span aria-hidden="true">↗</span>
+                  <a class="profile-shell__link" href={link.url} target="_blank" rel="noopener noreferrer" aria-label={link.label + ': ' + formatLinkDestination(link.url)} on:click={() => recordProfileClick(link.key || `link-${link.order}`)}>
+                    <span class="profile-shell__link-copy">
+                      <strong>{link.label}</strong>
+                      <small>{formatLinkDestination(link.url)}</small>
+                    </span>
                   </a>
                 {/each}
               </nav>
@@ -822,6 +835,7 @@
           </div>
         </section>
       {/if}
+        </div>
     </div>
     {/if}
     </div>
@@ -945,18 +959,19 @@
   .profile-shell__color-entry strong { color: var(--color-ink-strong); font-weight: 600; }
   .profile-shell__color-dot { width: 1.25rem; height: 1.25rem; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 50%; }
   .profile-shell__links { display: grid; gap: var(--space-2); }
+  .profile-shell__links--navigation .profile-shell__link { grid-template-columns: minmax(0, 1fr); }
   .profile-shell__link { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-3); min-width: 0; padding: var(--space-3); border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm); background: var(--surface-inset); color: var(--color-ink); text-decoration: none; transition: transform var(--motion-fast) var(--motion-ease-standard), border-color var(--motion-base) var(--motion-ease-standard), background-color var(--motion-base) var(--motion-ease-standard); }
   .profile-shell__links--social { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
   .profile-shell__link--social { display: grid; width: 2.5rem; height: 2.5rem; min-height: 2.5rem; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; }
   .profile-shell__link--social:hover { transform: none; background: color-mix(in srgb, var(--profile-accent) 12%, transparent); }
-  .profile-shell__link--social .profile-shell__link-glyph { display: grid; width: 1.05rem; height: 1.05rem; place-items: center; }
+  .profile-shell__link--social .profile-shell__link-glyph { display: grid; width: 1.22rem; height: 1.22rem; place-items: center; }
   .profile-shell__link--social .profile-shell__link-glyph img { display: block; width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); opacity: .78; }
   .profile-shell__link--social .profile-shell__link-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   .profile-shell__link:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--profile-accent) 55%, var(--color-line-subtle)); background: color-mix(in srgb, var(--profile-accent) 8%, var(--surface-inset)); }
   .profile-shell__link:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 3px; }
-  .profile-shell__link-type { color: var(--profile-accent); font: 700 0.625rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
-  .profile-shell__link strong { min-width: 0; overflow-wrap: anywhere; font-size: var(--type-small); }
-  .profile-shell__link > span:last-child { color: var(--color-ink-muted); font-size: 1rem; }
+  .profile-shell__link-copy { display: grid; min-width: 0; gap: .2rem; }
+  .profile-shell__link-copy strong { min-width: 0; overflow-wrap: anywhere; font-size: .92rem; }
+  .profile-shell__link-copy small { min-width: 0; overflow: hidden; color: var(--color-ink-muted); font-size: .78rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 
   .profile-shell__achievement-list { display: grid; gap: var(--space-3); }
   .profile-shell__achievement { display: grid; grid-template-columns: auto 1fr; gap: var(--space-3); align-items: start; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--surface-inset); }
@@ -1025,7 +1040,7 @@
   .profile-shell__social-section {
     position: relative;
     z-index: 2;
-    width: min(100%, 46rem);
+    width: min(100%, 52rem);
     margin-inline: auto;
   }
 
@@ -1120,6 +1135,14 @@
     scroll-snap-stop: normal;
   }
 
+  .profile-shell__continuation-column {
+    display: grid;
+    width: min(100%, 52rem);
+    min-width: 0;
+    margin-inline: auto;
+    gap: clamp(1.15rem, 2.8vw, 1.8rem);
+  }
+
   .profile-shell__more-back {
     position: absolute;
     top: 1.25rem;
@@ -1172,7 +1195,7 @@
   .profile-shell__approved-featured { min-width: 0; }
 
   .profile-shell__approved-game {
-    width: min(100%, 46rem);
+    width: 100%;
     margin-top: clamp(1.5rem, 4vw, 2.5rem);
     padding: 1.25rem 0.5rem 0;
     border-top: 1px solid color-mix(in srgb, var(--profile-control-accent) 24%, var(--color-line-subtle));
@@ -1183,7 +1206,7 @@
   }
 
   .profile-shell__more .profile-shell__approved-game :global(.today-color) {
-    width: min(100%, 46rem);
+    width: 100%;
     margin: 0 auto;
     padding: 1.25rem 1.5rem;
     border: 0;
@@ -1191,8 +1214,6 @@
     background: transparent;
     box-shadow: none;
   }
-
-  .profile-shell__more > .profile-shell__approved-game:first-child { margin-top: 0; }
 
   .profile-shell__approved-game :global(.profile-roll--integrated) {
     padding: 0;
@@ -1204,9 +1225,9 @@
   .profile-shell__approved-game :global(.profile-roll--integrated .foundation-module__body) { padding: 0; }
 
   .profile-shell__approved-featured {
-    width: min(100%, 46rem);
-    margin-top: 1.5rem;
-    padding: 0 0.5rem;
+    width: 100%;
+    margin-top: 0;
+    padding: 0;
   }
 
   .profile-shell__approved-supporting {
@@ -1229,9 +1250,16 @@
     z-index: 2;
     display: grid;
     gap: .8rem;
-    width: min(100%, 46rem);
-    margin: 1.5rem auto 0;
-    padding: 0 0.5rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .profile-shell__continuation-heading {
+    margin: 0 0 .65rem;
+    color: var(--color-ink-strong);
+    font: 600 clamp(1.2rem, 2.5vw, 1.45rem) / 1.15 var(--font-display-stack);
+    letter-spacing: -.025em;
   }
 
   /* The editor preview keeps the real continuation-link surface visible while

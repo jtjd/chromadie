@@ -7,6 +7,7 @@
   export let result = null;
   export let quiet = false;
   export let accentColor = '#8B7CF6';
+  export let presentation = '';
 
   let detailsOpen = true;
 
@@ -32,7 +33,7 @@
   $: headlineConditions = conditionSource.slice(0, 3);
 </script>
 
-<div class={'today-color' + (quiet ? ' today-color--quiet' : '')} aria-label={result ? 'Latest canonical color' : 'No color rolled yet'}>
+<div class={'today-color' + (quiet ? ' today-color--quiet' : '') + (presentation ? ' today-color--presentation today-color--presentation-' + presentation : '')} aria-label={result ? 'Latest canonical color' : 'No color rolled yet'}>
   {#if result}
     <div class="today-color__result-head">
       <div class="today-color__preview" aria-hidden="true">
@@ -154,5 +155,20 @@
   .today-color__empty { padding: var(--space-4); border: 1px dashed var(--color-line-subtle); border-radius: var(--radius-sm); }
   .today-color__empty-state { display: grid; grid-template-columns: 8rem minmax(0, 1fr); align-items: center; gap: 1.5rem; }
   .today-color__next { margin: 0.5rem 0 0; color: rgba(220,230,248,0.56); font-size: 0.875rem; line-height: 1.4; }
+  .today-color--presentation { gap: .45rem; }
+  .today-color--presentation .today-color__result-head { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .5rem; }
+  .today-color--presentation .today-color__preview,
+  .today-color--presentation .today-color__preview :global(.roll-preview-frame),
+  .today-color--presentation .today-color__preview :global(.final-color-display) { width: 2.25rem; height: 2.25rem; }
+  .today-color--presentation .today-color__copy strong { font-size: .95rem; }
+  .today-color--presentation .today-color__label { font-size: .55rem; }
+  .today-color--presentation .today-color__score { margin-top: .2rem; font-size: .78rem; }
+  .today-color--presentation .today-color__rarity,
+  .today-color--presentation .today-color__condition-rail,
+  .today-color--presentation .today-color__details { display: none; }
+  .today-color--presentation .today-color__empty-state { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .5rem; }
+  .today-color--presentation .today-color__empty-state .today-color__preview,
+  .today-color--presentation .today-color__empty-state .today-color__preview :global(.roll-preview-frame),
+  .today-color--presentation .today-color__empty-state .today-color__preview :global(.final-color-display) { width: 2.25rem; height: 2.25rem; }
   @media (max-width: 36rem) { .today-color__result-head { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.85rem; } .today-color__preview, .today-color__preview :global(.roll-preview-frame), .today-color__preview :global(.final-color-display) { width: 5.5rem; height: 5.5rem; } .today-color__copy strong { font-size: 1.35rem; } .today-color__condition-chip strong { max-width: 8rem; } .today-color__empty-state { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 0.85rem; } .today-color__condition-record { grid-template-columns: auto 1fr; } .today-color__condition-record small { grid-column: 2; } }
 </style>

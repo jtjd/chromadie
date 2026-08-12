@@ -148,7 +148,6 @@
         {#each navigationLinks as link (link.order)}
           <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
             <strong>{link.label}</strong>
-            <span class="identity-card__link-arrow" aria-hidden="true">↗</span>
           </a>
         {/each}
       </nav>
@@ -169,7 +168,6 @@
         {#each navigationLinks as link (link.order)}
           <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
             <strong>{link.label}</strong>
-            <span class="identity-card__link-arrow" aria-hidden="true">↗</span>
           </a>
         {/each}
       </nav>
@@ -251,7 +249,7 @@
   .identity-card__badge--staff { display: inline-flex; width: auto; min-width: 3.85rem; gap: 0.22rem; padding: 0 0.42rem; border-color: color-mix(in srgb, var(--color-accent-cyan) 72%, transparent); border-radius: 0.42rem; background: color-mix(in srgb, var(--color-accent-cyan) 18%, transparent); color: var(--color-accent-cyan); font: 700 0.56rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; }
   .identity-card__bio { max-width: 28rem; margin: 0.7rem 0 0; color: var(--profile-description, rgba(226, 233, 246, 0.72)); font-size: 0.84rem; line-height: 1.55; overflow-wrap: anywhere; word-break: break-word; }
   .identity-card__bio--typewriter { overflow: hidden; border-right: 1px solid color-mix(in srgb, var(--identity-accent) 70%, transparent); white-space: nowrap; animation: identity-card-typewriter 2.2s steps(42, end) both, identity-card-caret 0.9s step-end infinite; }
-  .identity-card__metadata { display: flex; flex-wrap: wrap; gap: .35rem .65rem; margin-top: .65rem; color: var(--profile-secondary-text, rgba(220, 230, 248, .58)); font: .62rem / 1.3 var(--font-mono-stack); }
+  .identity-card__metadata { display: flex; flex-wrap: wrap; gap: .35rem .65rem; margin-top: .65rem; color: var(--profile-secondary-text, rgba(220, 230, 248, .7)); font: .68rem / 1.3 var(--font-mono-stack); }
   .identity-card__metadata span + span::before { content: '·'; margin-right: .65rem; color: color-mix(in srgb, var(--identity-accent) 60%, transparent); }
 
   .identity-card__links { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 0.55rem 1rem; margin-top: 0.95rem; }
@@ -430,11 +428,11 @@
 
   .identity-card--layout-sleek .identity-card__person,
   .identity-card--layout-modern .identity-card__person { gap: .8rem; }
-  .identity-card--layout-compact :global(.identity-card__avatar) { flex-basis: 54px; width: 54px; height: 54px; }
-  .identity-card--layout-sleek :global(.identity-card__avatar) { flex-basis: 52px; width: 52px; height: 52px; border-radius: 14px; }
-  .identity-card--layout-modern :global(.identity-card__avatar) { flex-basis: 50px; width: 50px; height: 50px; border-radius: 13px; }
-  .identity-card--layout-minimal :global(.identity-card__avatar) { flex-basis: 74px; width: 74px; height: 74px; }
-  .identity-card--layout-portfolio :global(.identity-card__avatar) { flex-basis: 72px; width: 72px; height: 72px; }
+  .identity-card--layout-compact :global(.identity-card__avatar) { flex-basis: 64px; width: 64px; height: 64px; }
+  .identity-card--layout-sleek :global(.identity-card__avatar) { flex-basis: 60px; width: 60px; height: 60px; border-radius: 14px; }
+  .identity-card--layout-modern :global(.identity-card__avatar) { flex-basis: 60px; width: 60px; height: 60px; border-radius: 13px; }
+  .identity-card--layout-minimal :global(.identity-card__avatar) { flex-basis: 82px; width: 82px; height: 82px; }
+  .identity-card--layout-portfolio :global(.identity-card__avatar) { flex-basis: 82px; width: 82px; height: 82px; }
   .identity-card--layout-sleek :global(.identity-card__avatar-media),
   .identity-card--layout-modern :global(.identity-card__avatar-media) { border-radius: inherit; clip-path: none; }
   .identity-card--layout-compact :global(.identity-card__avatar-letter),
@@ -442,21 +440,21 @@
   .identity-card--layout-modern :global(.identity-card__avatar-letter) { font-size: 1.9rem; }
   .identity-card--layout-portfolio :global(.identity-card__avatar-letter) { font-size: 2.4rem; }
 
-  .identity-card--layout-compact { --identity-name-size: clamp(1.25rem, 5vw, 1.45rem); --identity-name-line-height: 1; }
-  .identity-card--layout-modern { --identity-name-size: clamp(1.3rem, 5vw, 1.5rem); --identity-name-line-height: 1; }
-  .identity-card--layout-sleek { --identity-name-size: clamp(1.4rem, 6vw, 1.7rem); --identity-name-line-height: 1; }
-  .identity-card--layout-minimal { --identity-name-size: clamp(1.65rem, 7vw, 1.95rem); --identity-name-line-height: 1; }
-  .identity-card--layout-portfolio { --identity-name-size: clamp(1.55rem, 7vw, 1.8rem); --identity-name-line-height: 1; }
+  .identity-card--layout-compact { --identity-name-size: clamp(1.38rem, 5vw, 1.6rem); --identity-name-line-height: 1; }
+  .identity-card--layout-modern { --identity-name-size: clamp(1.42rem, 5vw, 1.65rem); --identity-name-line-height: 1; }
+  .identity-card--layout-sleek { --identity-name-size: clamp(1.5rem, 6vw, 1.82rem); --identity-name-line-height: 1; }
+  .identity-card--layout-minimal { --identity-name-size: clamp(1.8rem, 7vw, 2.1rem); --identity-name-line-height: 1; }
+  .identity-card--layout-portfolio { --identity-name-size: clamp(1.7rem, 7vw, 2rem); --identity-name-line-height: 1; }
   .identity-card--layout-compact .identity-card__bio,
   .identity-card--layout-sleek .identity-card__bio,
   .identity-card--layout-modern .identity-card__bio,
-  .identity-card--layout-portfolio .identity-card__bio { margin-top: .5rem; font-size: .78rem; line-height: 1.45; }
-  .identity-card--layout-minimal .identity-card__bio { margin-top: .45rem; font-size: .86rem; line-height: 1.5; }
+  .identity-card--layout-portfolio .identity-card__bio { margin-top: .5rem; font-size: .84rem; line-height: 1.48; }
+  .identity-card--layout-minimal .identity-card__bio { margin-top: .45rem; font-size: .9rem; line-height: 1.5; }
   .identity-card--layout-compact .identity-card__metadata,
   .identity-card--layout-sleek .identity-card__metadata,
   .identity-card--layout-modern .identity-card__metadata,
-  .identity-card--layout-portfolio .identity-card__metadata { margin-top: .5rem; font-size: .62rem; }
-  .identity-card--layout-minimal .identity-card__metadata { font-size: .66rem; }
+  .identity-card--layout-portfolio .identity-card__metadata { margin-top: .5rem; font-size: .68rem; }
+  .identity-card--layout-minimal .identity-card__metadata { font-size: .7rem; }
 
   .identity-card--layout-compact .identity-card__links,
   .identity-card--layout-sleek .identity-card__links,
@@ -481,7 +479,7 @@
   .identity-card--layout-sleek .identity-card__link-glyph,
   .identity-card--layout-minimal .identity-card__link-glyph,
   .identity-card--layout-modern .identity-card__link-glyph,
-  .identity-card--layout-portfolio .identity-card__link-glyph { width: 1.05rem; height: 1.05rem; }
+  .identity-card--layout-portfolio .identity-card__link-glyph { width: 1.22rem; height: 1.22rem; }
   .identity-card--layout-minimal .identity-card__links--labeled a { display: flex; width: 100%; height: auto; min-height: 2.5rem; justify-content: space-between; padding: .25rem .35rem; border-bottom: 1px solid color-mix(in srgb, var(--identity-accent) 18%, transparent); border-radius: 0; }
   .identity-card--layout-minimal .identity-card__links--labeled strong { position: static; width: auto; height: auto; overflow: visible; clip: auto; clip-path: none; color: inherit; font-size: .72rem; white-space: normal; }
   .identity-card--layout-minimal .identity-card__links--labeled a:hover { background: color-mix(in srgb, var(--identity-accent) 8%, transparent); transform: none; }
@@ -515,7 +513,6 @@
   .identity-card--layout-minimal .identity-card__links--labeled a:hover,
   .identity-card--layout-modern .identity-card__links--labeled a:hover,
   .identity-card--layout-portfolio .identity-card__links--labeled a:hover { background: color-mix(in srgb, var(--identity-accent) 8%, transparent); transform: none; }
-  .identity-card__link-arrow { flex: 0 0 auto; color: color-mix(in srgb, var(--identity-accent) 72%, white); font-size: .95rem; line-height: 1; }
   .identity-card__badge { width: 1.1rem; height: 1.1rem; font-size: .62rem; }
   .identity-card__badge--staff { min-width: 3.25rem; font-size: .5rem; }
 

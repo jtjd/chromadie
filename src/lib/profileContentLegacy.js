@@ -124,7 +124,7 @@ export function normalizeProfileContent(value) {
   if (Number(value.version || 1) !== PROFILE_CONTENT_VERSION) return fallback;
   const about = value.about && typeof value.about === 'object' ? value.about : {};
   const projects = Array.isArray(value.projects)
-    ? value.projects.slice(0, PROFILE_CONTENT_LIMITS.projects).map(normalizeProject)
+    ? value.projects.slice(0, PROFILE_CONTENT_LIMITS.projects).map((project, index) => normalizeProject(project, index))
     : [];
   return {
     version: PROFILE_CONTENT_VERSION,

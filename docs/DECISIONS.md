@@ -1,5 +1,16 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-12 — Keep compact profile polish inside existing ownership boundaries
+
+Owner and visitor Daily Color presentations constrain both the preview frame
+and the rendered color element, while `ProfileShell` continues to own page
+placement and the lower profile now shares one centered continuation column.
+Social glyph hit targets remain unchanged as their visible icons become more
+legible; custom continuation links use labels and destinations without
+decorative northeast arrows. Unused media-library deletion removes storage
+objects without changing `profile_configurations.updated_at` unless the asset
+was selected by the profile.
+
 ## 2026-08-12 — Keep immediate Studio media saves on the publish token
 
 Rich-media selection, audio, deletion, and cursor replacement remain
