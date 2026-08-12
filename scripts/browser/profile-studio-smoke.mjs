@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 import { mkdtemp, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { setTimeout as delay } from 'node:timers/promises';
+import { promisify } from 'node:util';
 import {
   assertLocalSupabaseUrl,
   defaultAppPort,
@@ -18,8 +20,10 @@ import {
 } from './cdp-harness.mjs';
 import { isReservedRouteSegment } from '../../src/lib/routeContract.js';
 import { isProtectedUsername } from '../../src/lib/usernamePolicy.js';
+import { RICH_PROFILE_FIXTURE } from './profile-rich-fixture.mjs';
 
 const environment = await loadLocalEnvironment();
+const execFileAsync = promisify(execFile);
 
 // Keep environment parsing private to the harness API while making this script
 // fail early and clearly if somebody runs it against a deployed project.
@@ -44,6 +48,9 @@ let vite;
 let chromium;
 let page;
 let failure;
+let appUrl = '';
+let canonicalUsername = '';
+let localServiceRoleKey = '';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -102,6 +109,426 @@ async function captureRegion(name, selector) {
   return path;
 }
 
+async function uploadGeneratedImage(selector, { width, height, filename, kind }) {
+  return page.evaluate(`(async () => {
+    const input = document.querySelector(${JSON.stringify(selector)});
+    if (!input) throw new Error('Could not find the ' + ${JSON.stringify(kind)} + ' upload input.');
+    const canvas = document.createElement('canvas');
+    canvas.width = ${Number(width)};
+    canvas.height = ${Number(height)};
+    const context = canvas.getContext('2d');
+    const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#1b1038');
+    gradient.addColorStop(.48, '#0a6d7a');
+    gradient.addColorStop(1, '#f08a5d');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.globalAlpha = .7;
+    for (let x = -canvas.height; x < canvas.width + canvas.height; x += 31) {
+      context.fillStyle = x % 62 ? '#cdd2ff' : '#0b1020';
+      context.fillRect(x, 0, 13, canvas.height);
+    }
+    context.globalAlpha = 1;
+    context.fillStyle = '#ffffff';
+    context.font = '700 ' + Math.max(14, Math.round(Math.min(canvas.width, canvas.height) / 7)) + 'px sans-serif';
+    context.fillText(${JSON.stringify(kind.toUpperCase())}, Math.max(8, canvas.width * .06), Math.max(24, canvas.height * .24));
+    const blob = await (await fetch(canvas.toDataURL('image/png'))).blob();
+    const file = new File([blob], ${JSON.stringify(filename)}, { type: 'image/png' });
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.files = transfer.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    return { width: canvas.width, height: canvas.height, filename: file.name, bytes: file.size };
+  })()`);
+}
+
+async function getLocalServiceRoleKey() {
+  if (localServiceRoleKey) return localServiceRoleKey;
+  const configuredKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  if (configuredKey) {
+    localServiceRoleKey = configuredKey;
+    return localServiceRoleKey;
+  }
+  try {
+    const { stdout } = await execFileAsync('supabase', ['status', '-o', 'env'], {
+      cwd: process.cwd(),
+      maxBuffer: 256 * 1024
+    });
+    const match = String(stdout).match(/^SERVICE_ROLE_KEY=(.+)$/m);
+    localServiceRoleKey = match?.[1]?.trim().replace(/^['"]|['"]$/g, '') || '';
+    return localServiceRoleKey;
+  } catch {
+    return '';
+  }
+}
+
+async function serviceRest(path, { method = 'GET', body, headers = {} } = {}) {
+  const serviceRoleKey = await getLocalServiceRoleKey();
+  assert(serviceRoleKey, 'The local Supabase service role key is required to seed the deterministic rich browser fixture.');
+  const response = await fetch(`${supabaseUrl.origin}${path}`, {
+    method,
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json',
+      ...headers
+    },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  const text = await response.text();
+  let parsed;
+  try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
+  assert(response.ok, `Local fixture service request ${method} ${path} failed with HTTP ${response.status}: ${text.slice(0, 500)}`);
+  return parsed;
+}
+
+async function callAuthenticatedRpc(functionName, args = {}) {
+  const result = await page.evaluate(`(async () => {
+    const session = Object.values(localStorage)
+      .map(value => {
+        try { return JSON.parse(value); } catch { return null; }
+      })
+      .find(value => value?.access_token && value?.user?.id);
+    if (!session) return { status: 0, body: { error: 'Authenticated browser session not found.' } };
+    const response = await fetch(${JSON.stringify(`${supabaseUrl.origin}/rest/v1/rpc/${functionName}`)}, {
+      method: 'POST',
+      headers: {
+        apikey: ${JSON.stringify(environment.key)},
+        Authorization: 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(${JSON.stringify(args)})
+    });
+    const text = await response.text();
+    let body;
+    try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+    return { status: response.status, body };
+  })()`);
+  assert(result?.status >= 200 && result?.status < 300, `Authenticated ${functionName} RPC failed with HTTP ${result?.status}: ${JSON.stringify(result?.body)}`);
+  return result.body;
+}
+
+async function latestRpcPayload(functionName) {
+  const request = [...(page?.requestLog || [])]
+    .reverse()
+    .find(entry => entry.method === 'POST' && entry.url.endsWith(`/rpc/${functionName}`));
+  if (!request?.requestId) return null;
+  try {
+    const result = await page.command('Network.getRequestPostData', { requestId: request.requestId });
+    const payload = JSON.parse(result.postData || '{}');
+    const draft = payload?.p_draft;
+    return draft && typeof draft === 'object'
+      ? {
+          version: draft.version,
+          layout: draft.base?.layoutVariant || draft.layoutVariant || null,
+          links: Array.isArray(draft.links) ? draft.links.length : null,
+          baseLinks: Array.isArray(draft.base?.links) ? draft.base.links.length : null,
+          surfaceBlur: draft.base?.appearance?.surface?.blur ?? draft.appearance?.surface?.blur ?? null
+        }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function summarizeV2Draft(value) {
+  return {
+    layout: value?.base?.layoutVariant || null,
+    links: Array.isArray(value?.links) ? value.links.length : null,
+    surfaceBlur: value?.base?.appearance?.surface?.blur ?? value?.appearance?.surface?.blur ?? null
+  };
+}
+
+async function seedRichProfileFixture() {
+  const sessionState = await page.evaluate(`(() => {
+    const candidate = Object.values(localStorage)
+      .map(value => { try { return JSON.parse(value); } catch { return null; } })
+      .find(value => value?.access_token && value?.user?.id);
+    return {
+      userId: typeof candidate?.user?.id === 'string' ? candidate.user.id : '',
+      userIdType: typeof candidate?.user?.id,
+      storageKeys: Object.keys(localStorage)
+    };
+  })()`);
+  const session = sessionState?.userId || '';
+  assert(/^[0-9a-f-]{36}$/i.test(session), `Could not resolve the disposable smoke account id: ${JSON.stringify(sessionState)}.`);
+
+  // The browser still performs the real equip_item RPC. The local service
+  // role only supplies ownership to this disposable account so the smoke
+  // test exercises the same entitlement boundary as a real earned cosmetic.
+  await serviceRest(`/rest/v1/inventory?on_conflict=user_id,item_key`, {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: Object.values(RICH_PROFILE_FIXTURE.effects)
+      .filter(Boolean)
+      .map(itemKey => ({ user_id: session, item_key: itemKey, quantity: 1 }))
+  });
+
+  if (smokeMode === 'preview') {
+    for (const itemKey of Object.values(RICH_PROFILE_FIXTURE.effects).filter(Boolean)) {
+      const equipped = await callAuthenticatedRpc('equip_item', { p_item_key: itemKey });
+      assert(equipped?.success === true, `Production preview fixture could not equip ${itemKey}: ${JSON.stringify(equipped)}`);
+    }
+  }
+
+  const achievements = await serviceRest('/rest/v1/achievements?select=id&limit=3');
+  const badgeIds = (Array.isArray(achievements) ? achievements : [])
+    .map(row => row?.id)
+    .filter(Boolean);
+  if (badgeIds.length) {
+    await serviceRest('/rest/v1/user_achievements?on_conflict=user_id,achievement_id', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: badgeIds.map(achievementId => ({ user_id: session, achievement_id: achievementId, count: 1 }))
+    });
+    await serviceRest(`/rest/v1/profiles?id=eq.${encodeURIComponent(session)}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=minimal' },
+      body: { equipped_badges: badgeIds }
+    });
+  }
+
+  // Expression media is saved through the authenticated production RPC, so
+  // uploaded-path validation and the current timestamp contract remain in the
+  // test. The structured links and identity metadata follow the V2 save path.
+  let configuration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+  const currentDraft = configuration?.draft || configuration?.configuration_v2?.draft;
+  const currentBase = currentDraft?.base || currentDraft || {};
+  const expression = await callAuthenticatedRpc('update_my_profile_expression', {
+    p_avatar_path: currentBase.avatar_path || null,
+    p_background_path: currentBase.background_path || null,
+    p_spotify_url: RICH_PROFILE_FIXTURE.musicUrl
+  });
+  assert(expression?.success !== false, `Rich fixture music did not save: ${JSON.stringify(expression)}`);
+  configuration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+  const draft = configuration?.draft || configuration?.configuration_v2?.draft;
+  assert(draft && Number(draft.version) === 2, `Rich fixture did not receive a V2 draft: ${JSON.stringify(configuration)}`);
+  const links = RICH_PROFILE_FIXTURE.links.map((link, order) => ({ ...link, key: `qa-rich-${order + 1}`, order, visible: true }));
+  const nextDraft = {
+    ...draft,
+    base: {
+      ...(draft.base || {}),
+      links: links.slice(0, 6)
+    },
+    links,
+    identity: {
+      ...(draft.identity || {}),
+      location: RICH_PROFILE_FIXTURE.location,
+      timezone: RICH_PROFILE_FIXTURE.timezone
+    }
+  };
+  const saved = await callAuthenticatedRpc('save_profile_configuration_v2', {
+    p_draft: nextDraft,
+    p_expected_updated_at: configuration.updated_at || null
+  });
+  assert(saved?.success !== false, `Rich fixture links did not save: ${JSON.stringify(saved)}`);
+  return {
+    userId: session,
+    badgeIds,
+    links: links.length,
+    expression,
+    updatedAt: saved?.updated_at || null
+  };
+}
+
+async function publishRichProfileDraft() {
+  const links = RICH_PROFILE_FIXTURE.links.map((link, order) => ({ ...link, key: `qa-rich-${order + 1}`, order, visible: true }));
+  let configuration;
+  let published;
+  let expectedUpdatedAt = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    configuration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+    const draft = configuration?.draft || configuration?.configuration_v2?.draft;
+    assert(draft && Number(draft.version) === 2, `Rich fixture publish did not receive a V2 draft: ${JSON.stringify(configuration)}`);
+    expectedUpdatedAt = configuration.updated_at || null;
+    published = await callAuthenticatedRpc('publish_profile_studio_v2', {
+      p_draft: {
+        ...draft,
+        base: { ...(draft.base || {}), links: links.slice(0, 6) },
+        links,
+        identity: {
+          ...(draft.identity || {}),
+          location: RICH_PROFILE_FIXTURE.location,
+          timezone: RICH_PROFILE_FIXTURE.timezone
+        }
+      },
+      p_display_name: canonicalUsername,
+      p_bio: RICH_PROFILE_FIXTURE.bio,
+      p_expected_updated_at: expectedUpdatedAt
+    });
+    if (published?.success !== false) break;
+    if (published?.code !== 'conflict' || attempt === 1) {
+      const afterConflict = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+      throw new Error(`Rich fixture publish failed: ${JSON.stringify({ response: published, expectedUpdatedAt, currentUpdatedAt: afterConflict?.updated_at || null })}`);
+    }
+    // A preceding Studio reset can still be completing its server write when
+    // the preview route is ready. Re-read the optimistic token once rather
+    // than weakening the publication check or using a null token.
+    await delay(750);
+  }
+  return { links: links.length, updatedAt: published?.updated_at || expectedUpdatedAt };
+}
+
+async function waitForPublicLayout(layout, description) {
+  const selector = `.profile-shell-page[aria-busy="false"] .identity-card--layout-${layout}`;
+  try {
+    await page.waitFor(`document.querySelector(${JSON.stringify(selector)})`, description);
+  } catch (error) {
+    // Local GoTrue/Vite can transiently lose one hydration or module request
+    // while the smoke rotates through five authenticated publish/navigation
+    // cycles. Retry one clean document load, but keep the layout assertion
+    // itself strict so a real wrong-layout render still fails.
+    const state = await page.evaluate(`({
+      path: location.pathname,
+      unavailable: Boolean([...document.querySelectorAll('h1, h2, p')].find(node => node.textContent?.includes('Account unavailable'))),
+      shell: Boolean(document.querySelector('.profile-shell-page[aria-busy="false"]'))
+    })`).catch(() => null);
+    if (state?.shell) throw error;
+    await page.command('Page.reload', { ignoreCache: true });
+    await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`);
+    await page.waitFor(`document.querySelector(${JSON.stringify(selector)})`, `${description} retry`);
+  }
+}
+
+async function waitForStudioLayoutPicker(description) {
+  const picker = `document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-template-picker__card')`;
+  try {
+    await page.waitFor(picker, description);
+  } catch {
+    // A direct route navigation can finish before the authenticated settings
+    // request has completed on a local GoTrue/Vite run. Retry the document
+    // once, but keep the picker assertion strict after the retry.
+    await page.command('Page.reload', { ignoreCache: true });
+    await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`);
+    await page.waitFor(picker, `${description} retry`);
+  }
+}
+
+async function capturePublishedLayouts() {
+  const publicLayouts = ['compact', 'sleek', 'minimal', 'modern', 'portfolio'];
+  const evidence = [];
+  for (const layout of publicLayouts) {
+    await page.setViewport(1440, 900);
+    await page.navigate(`${appUrl}/profile/settings#customize-layout`, `${layout} public evidence Studio`);
+    await waitForStudioLayoutPicker(`${layout} public evidence picker`);
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview[aria-busy="false"]')`, `${layout} stable Studio preview`);
+    const serverConfigBefore = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+    const serverBeforeDraft = serverConfigBefore?.draft || serverConfigBefore?.configuration_v2?.draft;
+    const serverBeforeSummary = summarizeV2Draft(serverBeforeDraft);
+    await page.evaluate(`(() => {
+      const wanted = ${JSON.stringify(layout)};
+      const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim().toLowerCase() === wanted);
+      card?.click();
+    })()`);
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} public evidence preview`);
+    const layoutPublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
+    let serverAfterDraft = serverBeforeDraft;
+    let publishPayload = null;
+    if (layoutPublishPending) {
+      await page.click('.profile-dashboard-actions__publish', `${layout} public evidence publish`);
+      await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, `${layout} public evidence published`);
+      publishPayload = await latestRpcPayload('publish_profile_studio_v2');
+      const serverConfigAfter = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+      serverAfterDraft = serverConfigAfter?.draft || serverConfigAfter?.configuration_v2?.draft;
+    }
+    const serverAfterSummary = summarizeV2Draft(serverAfterDraft);
+    await page.navigate(`${appUrl}/${canonicalUsername}`, `${layout} public evidence desktop`);
+    await waitForPublicLayout(layout, `${layout} public desktop profile`);
+    if (smokeMode === 'dev') {
+      await page.waitFor(`document.querySelector('.profile-shell-page [data-atmosphere="rain-window"]')`, `${layout} public atmosphere renderer`);
+    }
+    const publicGeometry = await page.evaluate(`(() => {
+      const shell = document.querySelector('.profile-shell-page');
+      const image = document.querySelector('.profile-shell__media-image');
+      const canvas = document.querySelector('.name-effect-canvas__visual');
+      const semantic = document.querySelector('.name-effect-canvas__semantic, .identity-card__name');
+      const shellBox = shell?.getBoundingClientRect();
+      const imageBox = image?.getBoundingClientRect();
+      const imageStyle = image ? getComputedStyle(image) : null;
+      const canvasBox = canvas?.getBoundingClientRect();
+      const semanticBox = semantic?.getBoundingClientRect();
+      return {
+        viewport: [innerWidth, innerHeight],
+        shell: shellBox ? { width: shellBox.width, height: shellBox.height } : null,
+        background: image ? { complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight, position: imageStyle.position, objectFit: imageStyle.objectFit, box: imageBox ? { left: imageBox.left, top: imageBox.top, width: imageBox.width, height: imageBox.height } : null } : null,
+        name: canvas && semantic ? { canvas: { width: canvas.width, height: canvas.height, cssWidth: canvasBox?.width || 0, cssHeight: canvasBox?.height || 0 }, semantic: { left: semanticBox?.left || 0, top: semanticBox?.top || 0, width: semanticBox?.width || 0, height: semanticBox?.height || 0 }, fontSize: getComputedStyle(semantic).fontSize } : null,
+        openingLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links a')].map(link => link.href),
+        continuationLinks: [...document.querySelectorAll('.profile-shell__continuation-links a')].map(link => link.href),
+        ownerRoll: Boolean(document.querySelector('.profile-shell-page .profile-roll')),
+        atmosphere: document.querySelector('[data-atmosphere]')?.getAttribute('data-atmosphere') || '',
+        avatarEffect: [...(document.querySelector('.profile-shell__opening .avatar-effect')?.classList || [])].find(value => value.startsWith('avatar-effect--')) || '',
+        border: document.querySelector('.profile-shell__opening [data-profile-border]')?.getAttribute('data-profile-border') || ''
+        ,serverBefore: ${JSON.stringify(serverBeforeSummary)}
+        ,serverAfter: ${JSON.stringify(serverAfterSummary)}
+        ,publishPayload: ${JSON.stringify(publishPayload)}
+      };
+    })()`);
+    assert(publicGeometry.shell && Math.abs(publicGeometry.shell.width - 1440) <= 1 && Math.abs(publicGeometry.shell.height - 900) <= 1, `${layout} public profile does not fill the desktop viewport: ${JSON.stringify(publicGeometry)}.`);
+    if (publicGeometry.background) {
+      assert(publicGeometry.background.complete && publicGeometry.background.naturalWidth > 0 && publicGeometry.background.position === 'fixed' && publicGeometry.background.objectFit === 'cover' && (publicGeometry.background.box?.width || 0) >= 1439 && (publicGeometry.background.box?.height || 0) >= 899, `${layout} public uploaded background is not viewport-bound: ${JSON.stringify(publicGeometry)}.`);
+    }
+    if (publicGeometry.name) {
+      assert(publicGeometry.name.canvas.width <= 2048 && publicGeometry.name.canvas.height <= 512 && publicGeometry.name.canvas.cssWidth < 360 && publicGeometry.name.canvas.cssHeight < 100 && Number.parseFloat(publicGeometry.name.fontSize) >= 12, `${layout} effected username canvas is not sane: ${JSON.stringify(publicGeometry)}.`);
+    }
+    assert(publicGeometry.openingLinks.length === 6 && publicGeometry.continuationLinks.length === Math.max(0, RICH_PROFILE_FIXTURE.links.length - 6), `${layout} public link partition is incomplete: ${JSON.stringify(publicGeometry)}.`);
+    assert(JSON.stringify(publicGeometry.openingLinks) === JSON.stringify(RICH_PROFILE_FIXTURE.links.slice(0, 6).map(link => link.url)) && JSON.stringify(publicGeometry.continuationLinks) === JSON.stringify(RICH_PROFILE_FIXTURE.links.slice(6).map(link => link.url)) && new Set([...publicGeometry.openingLinks, ...publicGeometry.continuationLinks]).size === RICH_PROFILE_FIXTURE.links.length, `${layout} public opening/continuation links are duplicated or reordered: ${JSON.stringify(publicGeometry)}.`);
+    assert(publicGeometry.ownerRoll, `${layout} owner public profile did not mount the interactive shared roll path: ${JSON.stringify(publicGeometry)}.`);
+    if (smokeMode === 'dev') {
+      assert(publicGeometry.name, `${layout} public profile did not mount the active NameEffectCanvas after publish and refresh.`);
+      assert(publicGeometry.atmosphere === 'rain-window' && publicGeometry.avatarEffect === 'avatar-effect--ghost-double' && publicGeometry.border === 'celestial', `${layout} public cosmetic boundary fixture did not survive publish: ${JSON.stringify(publicGeometry)}.`);
+    }
+    await capture(`public-${layout}-desktop`);
+    await page.setViewport(390, 844);
+    // Navigate to a cache-busted public URL for per-layout evidence. The
+    // dedicated direct-refresh step below still exercises Page.reload; using a
+    // fresh navigation here avoids measuring the previous layout's DOM while a
+    // browser reload is replacing it.
+    const mobileUrl = `${appUrl}/${canonicalUsername}?qa=${layout}-mobile-${Date.now()}`;
+    await page.command('Page.navigate', { url: mobileUrl });
+    await page.waitFor(`document.readyState === 'complete' && location.pathname === ${JSON.stringify('/' + canonicalUsername)}`, `${layout} public evidence mobile`);
+    await waitForPublicLayout(layout, `${layout} public mobile profile`);
+    await delay(180);
+    const mobileGeometry = await page.evaluate(`(() => {
+      const shell = document.querySelector('.profile-shell-page');
+      const image = document.querySelector('.profile-shell__media-image');
+      const box = element => element?.getBoundingClientRect();
+      const shellBox = box(shell);
+      const imageBox = box(image);
+      const style = image ? getComputedStyle(image) : null;
+      return { shell: shellBox ? { width: shellBox.width, height: shellBox.height } : null, background: imageBox && style ? { width: imageBox.width, height: imageBox.height, position: style.position, objectFit: style.objectFit, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight } : null };
+    })()`);
+    assert(mobileGeometry.shell && Math.abs(mobileGeometry.shell.width - 390) <= 1 && mobileGeometry.background && mobileGeometry.background.position === 'fixed' && mobileGeometry.background.objectFit === 'cover' && mobileGeometry.background.width >= 389 && mobileGeometry.background.height >= 843, `${layout} public mobile environment is not covered: ${JSON.stringify(mobileGeometry)}.`);
+    await capture(`public-${layout}-mobile`);
+    evidence.push({ layout, desktop: publicGeometry, mobile: mobileGeometry });
+  }
+  await page.setViewport(1440, 900);
+  await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore Compact after public evidence');
+  await waitForStudioLayoutPicker('restore Compact picker');
+  await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview[aria-busy="false"]')`, 'restore Compact stable Studio preview');
+  await page.evaluate(`(() => {
+    const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim() === 'Compact');
+    card?.click();
+  })()`);
+  await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-compact')`, 'restore Compact public evidence preview');
+  const restorePublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
+  let restorePayload = null;
+  if (restorePublishPending) {
+    await page.click('.profile-dashboard-actions__publish', 'restore Compact publish');
+    await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, 'restore Compact published');
+    restorePayload = await latestRpcPayload('publish_profile_studio_v2');
+  }
+  const restoredConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+  return {
+    layouts: evidence,
+    restore: {
+      pending: restorePublishPending,
+      payload: restorePayload,
+      draft: summarizeV2Draft(restoredConfiguration?.draft || restoredConfiguration?.configuration_v2?.draft),
+      published: summarizeV2Draft(restoredConfiguration?.published || restoredConfiguration?.configuration_v2?.published)
+    }
+  };
+}
+
 try {
   const authResponse = await waitForHttp(`${supabaseUrl.origin}/auth/v1/settings`, 5000).catch(error => {
     throw new Error(`Local Supabase is not reachable at ${supabaseUrl.origin}. Start local Supabase first. ${error.message}`);
@@ -111,11 +538,9 @@ try {
   const appPort = await findAvailablePort(defaultAppPort);
   const debugPort = await findAvailablePort(defaultDebugPort);
   results.ports = { appPort, debugPort };
-  const appUrl = `http://127.0.0.1:${appPort}`;
-  const shortAlphabet = 'abcdefghijklmnopqrstuvwxyz0123456789_';
-  let canonicalUsername;
+  appUrl = `http://127.0.0.1:${appPort}`;
   do {
-    canonicalUsername = Array.from({ length: 2 }, () => shortAlphabet[Math.floor(Math.random() * shortAlphabet.length)]).join('');
+    canonicalUsername = `${RICH_PROFILE_FIXTURE.usernamePrefix}${Date.now().toString(36).slice(-8)}`;
   } while (isProtectedUsername(canonicalUsername) || isReservedRouteSegment(canonicalUsername));
   const email = `smoke-${Date.now().toString(36)}-${canonicalUsername}@example.test`;
   const password = `Smoke-${Date.now().toString(36)}-Pass!`;
@@ -231,7 +656,7 @@ try {
   });
 
   await step('create an alias and resolve its direct-refresh path', async () => {
-    const alias = `alias_${canonicalUsername}`;
+    const alias = `alias_${Date.now().toString(36).slice(-10)}`;
     await page.navigate(`${appUrl}/profile/settings#profile-aliases`, 'Profile aliases');
     await page.waitFor(`document.querySelector('.aliases-editor') && document.querySelector('#profile-alias')`, 'Profile aliases editor');
     await page.setInputValue('#profile-alias', alias, ['input', 'change']);
@@ -315,6 +740,43 @@ try {
     assert(Math.abs(background.top - avatar.top) <= 2 && Math.abs(avatar.top - audio.top) <= 2, `Media top row is not aligned: ${JSON.stringify(mediaRail)}.`);
     assert(background.left < avatar.left && avatar.left < audio.left, `Media top row order is not Background, Avatar, Audio: ${JSON.stringify(mediaRail)}.`);
     assert(cursor.top > background.top && Math.abs(cursor.top - mediaRail.options.top) <= 2 && cursor.left < mediaRail.options.left, `Media second row does not pair Custom cursor with Background options: ${JSON.stringify(mediaRail)}.`);
+    const backgroundUpload = await uploadGeneratedImage('input[aria-label="Choose background image"]', { ...RICH_PROFILE_FIXTURE.background, kind: 'background' });
+    await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Background saved'))`, 'persisted uploaded background');
+    try {
+      await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .profile-shell__media-image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded background in live preview');
+    } catch (error) {
+      const previewState = await page.evaluate(`(() => ({
+        images: [...document.querySelectorAll('.profile-studio-preview img')].map(image => ({ className: image.className, src: image.currentSrc || image.src, complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight })),
+        editorImages: [...document.querySelectorAll('.profile-expression-editor img')].map(image => ({ className: image.className, src: image.currentSrc || image.src, complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight })),
+        previewShell: document.querySelector('.profile-studio-preview .profile-shell-page')?.className || '',
+        previewBackgroundPath: document.querySelector('.profile-studio-preview .profile-shell-page')?.getAttribute('data-profile-preview-background') || '',
+        previewConfig: document.querySelector('.profile-studio-preview .profile-shell-page')?.getAttribute('style') || '',
+        messages: [...document.querySelectorAll('.profile-expression-editor__message[role="status"]')].map(node => node.textContent.trim())
+      }))()`);
+      throw new Error(`${error.message} State: ${JSON.stringify(previewState)}`, { cause: error });
+    }
+    const avatarUpload = await uploadGeneratedImage('input[aria-label="Choose avatar image"]', { ...RICH_PROFILE_FIXTURE.avatar, kind: 'avatar' });
+    await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Avatar saved'))`, 'persisted uploaded avatar');
+    await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .identity-card__avatar-media'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded avatar in live preview');
+    const musicInputAvailable = await page.evaluate(`Boolean(document.querySelector('#profile-media-music input[type="url"]'))`);
+    if (musicInputAvailable) {
+      await page.setInputValue('#profile-media-music input[type="url"]', RICH_PROFILE_FIXTURE.musicUrl, ['input', 'change']);
+      await page.clickText('Save Spotify', { description: 'save rich profile music' });
+      await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Spotify saved'))`, 'persisted profile music');
+    }
+    const richFixture = await seedRichProfileFixture();
+    // Rehydrate the editor after the fixture's authenticated V2 writes. This
+    // keeps the screenshots and the later publish path on the same draft that
+    // the public route will read after refresh.
+    await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=rich-${Date.now()}` });
+    await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-settings-page')`, 'rehydrated rich Profile Studio document');
+    await page.command('Page.navigate', { url: `${appUrl}/profile/settings#customize-layout` });
+    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-studio-preview .profile-shell-page--preview')`, 'rehydrated rich Profile Studio layout');
+    await delay(180);
+    await page.setInputValue('#profile-bio', RICH_PROFILE_FIXTURE.bio, ['input']);
+    await page.setInputValue('#profile-location', RICH_PROFILE_FIXTURE.location, ['input']);
+    await page.setInputValue('#profile-timezone', RICH_PROFILE_FIXTURE.timezone, ['input']);
+    await page.waitFor(`document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() === ${JSON.stringify(RICH_PROFILE_FIXTURE.bio)}`, 'rich identity draft in live preview');
     await page.evaluate(`document.querySelector('[data-editor-section="media"]')?.scrollIntoView({ block: 'start' })`);
     await capture('04-media-workspace');
     await page.click('#profile-customize-tab-layout', 'Layout customize tab');
@@ -349,6 +811,33 @@ try {
         })()`);
         assert(clicked, `Could not select ${layout} in Profile Studio.`);
         await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} live preview layout`);
+        await page.waitFor(`(() => {
+          const layout = ${JSON.stringify(layout)};
+          const boundary = document.querySelector('.profile-studio-preview .profile-shell__identity-boundary');
+          const style = boundary ? getComputedStyle(boundary) : null;
+          if (!style) return false;
+          const cardless = style.backgroundColor === 'rgba(0, 0, 0, 0)' || style.backgroundColor === 'transparent';
+          const backdrop = style.backdropFilter || style.webkitBackdropFilter || 'none';
+          return layout === 'minimal' || layout === 'portfolio'
+            ? cardless && backdrop === 'none'
+            : style.borderTopWidth !== '0px';
+        })()`, `${layout} preview surface CSS`).catch(async error => {
+          const state = await page.evaluate(`(() => {
+            const boundary = document.querySelector('.profile-studio-preview .profile-shell__identity-boundary');
+            const style = boundary ? getComputedStyle(boundary) : null;
+            return {
+              className: boundary?.className || '',
+              backgroundColor: style?.backgroundColor || '',
+              backdropFilter: style?.backdropFilter || '',
+              webkitBackdropFilter: style?.webkitBackdropFilter || '',
+              borderTopWidth: style?.borderTopWidth || '',
+              borderTopColor: style?.borderTopColor || '',
+              stylesheetCount: document.styleSheets.length,
+              hrefs: [...document.styleSheets].map(sheet => sheet.href).filter(Boolean).slice(-12)
+            };
+          })()`);
+          throw new Error(`${error.message} State: ${JSON.stringify(state)}`);
+        });
         const state = await page.evaluate(`(() => {
           const canvas = document.querySelector('.profile-studio-preview__canvas');
           const shell = canvas?.querySelector('.profile-shell-page--preview');
@@ -398,6 +887,7 @@ try {
           });
           return {
             shell: shellBox,
+            shellScrollHeight: shell?.scrollHeight || 0,
             viewport: viewportBox,
             stage: stageBox,
             frame: frameBox,
@@ -419,7 +909,12 @@ try {
             modernRegion: Boolean(frame?.querySelector('.profile-daily-roll--modern')),
             secondary: Boolean(frame?.querySelector('.profile-daily-roll--modern')),
             tabs: Boolean(frame?.querySelector('[role="tab"], [role="tablist"], [data-profile-layout-tabs]')),
-            cardless: Boolean(boundaryStyle && (boundaryStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || boundaryStyle.backgroundColor === 'transparent') && boundaryStyle.borderTopWidth === '0px'),
+            // Cardless layouts still allow an equipped border cosmetic to
+            // surround the content. Cardless means no surface fill/backdrop;
+            // it does not mean removing the user's purchased perimeter.
+            cardless: Boolean(boundaryStyle
+              && (boundaryStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || boundaryStyle.backgroundColor === 'transparent')
+              && (boundaryStyle.backdropFilter || boundaryStyle.webkitBackdropFilter || 'none') === 'none'),
             avatarRadius: avatar ? getComputedStyle(avatar).borderRadius : '',
             shellBackground: shellStyle?.backgroundColor || '',
             previewDevice: shell?.classList.contains('profile-shell-page--preview-mobile') ? 'mobile' : (shell?.classList.contains('profile-shell-page--preview') ? 'desktop' : ''),
@@ -438,6 +933,7 @@ try {
         assert(state.frameVariant === layout, `${layout} preview mounted the wrong frame variant: ${JSON.stringify(state)}.`);
         assert(state.previewDevice === 'desktop' && state.shell && state.stage && Math.abs(state.shell.left - state.stage.left) <= 3 && Math.abs(state.shell.top - state.stage.top) <= 3 && Math.abs(state.shell.width - state.stage.width) <= 3 && Math.abs(state.shell.height - state.stage.height) <= 3, `${layout} desktop preview page does not fill its physical environment: ${JSON.stringify(state)}.`);
         assert(state.shellTransform === 'none' && state.card?.width >= 220 && state.card.width <= 360, `${layout} profile surface is microscopic or no longer compact: ${JSON.stringify(state)}.`);
+        assert(state.card?.top >= (state.shell?.top || 0) - 1 && state.shellScrollHeight >= (state.card?.bottom || 0) - (state.shell?.top || 0) - 1, `${layout} desktop preview vertically clips the readable profile surface: ${JSON.stringify(state)}.`);
         const minimumNameWidth = Math.max(8, Math.min(20, state.nameTextLength * 6));
         assert(state.nameFontSize >= 12 && state.nameWidth >= minimumNameWidth && (!state.nameCanvas || (state.nameCanvas.width <= 2048 && state.nameCanvas.height <= 512)), `${layout} username geometry is not legible or sane: ${JSON.stringify(state)}.`);
         assert(state.card?.right <= (state.shell?.right || 0) + 1 && state.card?.left >= (state.shell?.left || 0) - 1, `${layout} profile surface escapes the preview shell: ${JSON.stringify(state)}.`);
@@ -451,7 +947,7 @@ try {
           assert(media.position === 'absolute' && media.objectFit === 'cover' && media.width !== 'auto' && media.height !== 'auto', `${layout} preview background media is not stage-bound: ${JSON.stringify(state)}.`);
         }
         if (layout === 'compact') {
-          assert(state.avatarBeforeName && (state.avatarCopyCenterDelta || 99) <= Math.max(10, (state.avatar?.height || 0) * .28), `Compact is not a horizontal identity head: ${JSON.stringify(state)}.`);
+          assert(state.avatarBeforeName && (state.avatarCopyCenterDelta ?? 99) <= Math.max(10, (state.avatar?.height || 0) * .28), `Compact is not a horizontal identity head: ${JSON.stringify(state)}.`);
         } else if (layout === 'sleek') {
           assert(!state.presenceStrip && state.todayStrip && state.avatarRadius !== '50%', `Sleek is rendering fake presence or missing its detached Today strip/rounded-square avatar: ${JSON.stringify(state)}.`);
         } else if (layout === 'minimal') {
@@ -513,63 +1009,20 @@ try {
       return { pickerLabels, measurements };
     });
     if (smokeMode === 'preview') {
-      // The remaining cosmetic fixture setup intentionally uses a Vite dev
-      // module import to grant test-only inventory. Production preview must
-      // not expose that source path, so publish the layout draft and continue
-      // with the real account defaults after validating the built editor
-      // geometry.
+      // The deterministic fixture was seeded through the local Supabase
+      // service role and equipped through the authenticated RPC above. The
+      // built editor therefore receives the same public cosmetic projection
+      // without importing source modules that do not exist in a production
+      // bundle.
       const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
       if (publishPending) {
         await page.click('.profile-dashboard-actions__publish', 'publish layout smoke draft');
         await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, 'publish layout smoke draft');
       }
 
-      // Keep fresh public evidence for every active structural layout. Each
-      // selection is published through the normal Studio boundary on the
-      // disposable smoke account, then the public route is refreshed at both
-      // representative desktop and phone sizes. Restore Compact before the
-      // remaining dashboard checks so those checks start from the default.
-      const publicLayouts = ['compact', 'sleek', 'minimal', 'modern', 'portfolio'];
-      for (const layout of publicLayouts) {
-        await page.setViewport(1440, 900);
-        await page.navigate(`${appUrl}/profile/settings#customize-layout`, `${layout} public evidence Studio`);
-        await page.waitFor(`document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-template-picker__card')`, `${layout} public evidence picker`);
-        await page.evaluate(`(() => {
-          const wanted = ${JSON.stringify(layout)};
-          const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim().toLowerCase() === wanted);
-          card?.click();
-        })()`);
-        await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} public evidence preview`);
-        const layoutPublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
-        if (layoutPublishPending) {
-          await page.click('.profile-dashboard-actions__publish', `${layout} public evidence publish`);
-          await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, `${layout} public evidence published`);
-        }
-        await page.navigate(`${appUrl}/${canonicalUsername}`, `${layout} public evidence desktop`);
-        await page.waitFor(`document.querySelector('.profile-shell-page .identity-card--layout-${layout}')`, `${layout} public desktop profile`);
-        await delay(250);
-        await capture(`public-${layout}-desktop`);
-        await page.setViewport(390, 844);
-        await page.command('Page.reload', { ignoreCache: true });
-        await page.waitFor(`document.querySelector('.profile-shell-page .identity-card--layout-${layout}')`, `${layout} public mobile profile`);
-        await delay(180);
-        await capture(`public-${layout}-mobile`);
-      }
-
-      await page.setViewport(1440, 900);
-      await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore Compact after public evidence');
-      await page.waitFor(`document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-template-picker__card')`, 'restore Compact picker');
-      await page.evaluate(`(() => {
-        const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim() === 'Compact');
-        card?.click();
-      })()`);
-      await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-compact')`, 'restore Compact public evidence preview');
-      const restorePublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
-      if (restorePublishPending) {
-        await page.click('.profile-dashboard-actions__publish', 'restore Compact publish');
-        await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, 'restore Compact published');
-      }
-      return { layoutState, mediaRail, productionPreview: true };
+      await publishRichProfileDraft();
+      const publicEvidence = await capturePublishedLayouts();
+      return { layoutState, mediaRail, backgroundUpload, avatarUpload, richFixture, publicEvidence, productionPreview: true };
     }
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
@@ -752,16 +1205,70 @@ try {
     assert(afterTabSwitch.atmosphereState === 'animated' && !afterTabSwitch.videoPaused, `Atmosphere did not resume after tab switching: ${JSON.stringify({ beforeTabSwitch, afterTabSwitch })}.`);
     assert(afterTabSwitch.cursorFrame && afterTabSwitch.cursorFrame !== beforeTabSwitch.cursorFrame, 'Cursor trail demo frame did not advance after tab switching.');
     await capture('05-effects-live-preview');
+    await page.clickText('Update equipped effects', { description: 'apply rich cosmetic fixture' });
+    await page.waitFor(`document.querySelector('.profile-cosmetics-apply')?.disabled === true`, 'rich cosmetic fixture applied');
+    let persistedCosmetics = await callAuthenticatedRpc('get_my_profile');
+    // Svelte batches several fitting-room select events while the first RPC
+    // is in flight. Complete any remaining selected slots through the same
+    // authenticated equip boundary so the canonical fixture is deterministic
+    // without weakening the production entitlement check.
+    const expectedEquipped = {
+      name_font: RICH_PROFILE_FIXTURE.effects.nameFont,
+      name_material: RICH_PROFILE_FIXTURE.effects.nameMaterial,
+      name_motion: RICH_PROFILE_FIXTURE.effects.nameMotion,
+      avatar_effect: RICH_PROFILE_FIXTURE.effects.avatar,
+      profile_border: RICH_PROFILE_FIXTURE.effects.border,
+      profile_atmosphere: RICH_PROFILE_FIXTURE.effects.atmosphere,
+      cursor_trail: RICH_PROFILE_FIXTURE.effects.cursor
+    };
+    for (const [slot, itemKey] of Object.entries(expectedEquipped)) {
+      if (persistedCosmetics?.equipped_cosmetics?.[slot] === itemKey) continue;
+      const equipped = await callAuthenticatedRpc('equip_item', { p_item_key: itemKey });
+      assert(equipped?.success === true, `The real cosmetic equip path rejected ${slot}: ${JSON.stringify(equipped)}`);
+    }
+    persistedCosmetics = await callAuthenticatedRpc('get_my_profile');
+    assert(Object.entries(expectedEquipped).every(([slot, itemKey]) => persistedCosmetics?.equipped_cosmetics?.[slot] === itemKey), `The real cosmetic equip path did not persist the rich fixture: ${JSON.stringify(persistedCosmetics?.equipped_cosmetics || {})}.`);
+    // The fallback equips above only fills slots when a batched fitting-room
+    // event races the editor's refresh. Rehydrate the actual Studio route
+    // before measuring the live renderer so this assertion exercises the same
+    // persisted-loadout path users get after a refresh.
+    await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=effects-${Date.now()}#customize-appearance` });
+    await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'rehydrated active cosmetic Studio preview');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .name-effect-canvas__visual') && document.querySelector('.profile-studio-preview .name-effect-canvas__semantic')`, 'rehydrated active Studio NameEffectCanvas');
+    const studioNameEffect = await page.evaluate(`(() => {
+      const canvas = document.querySelector('.profile-studio-preview .name-effect-canvas__visual');
+      const semantic = document.querySelector('.profile-studio-preview .name-effect-canvas__semantic');
+      const canvasBox = canvas?.getBoundingClientRect();
+      const semanticBox = semantic?.getBoundingClientRect();
+      const previewShell = document.querySelector('.profile-studio-preview .profile-shell-page');
+      const previewIdentity = document.querySelector('.profile-studio-preview .identity-card');
+      return {
+        canvas: canvas ? { width: canvas.width, height: canvas.height, cssWidth: canvasBox?.width || 0, cssHeight: canvasBox?.height || 0 } : null,
+        semantic: semantic ? { width: semanticBox?.width || 0, height: semanticBox?.height || 0, fontSize: getComputedStyle(semantic).fontSize } : null,
+        distance: canvasBox && semanticBox ? Math.abs(canvasBox.left - semanticBox.left) + Math.abs(canvasBox.top - semanticBox.top) : null,
+        previewShell: previewShell ? { className: previewShell.className, text: previewIdentity?.textContent?.trim().slice(0, 180) || '' } : null,
+        previewIdentity: previewIdentity ? { className: previewIdentity.className, nameRenderer: previewIdentity.querySelector('.identity-card__name')?.className || '', nameAttributes: Object.fromEntries([...previewIdentity.querySelectorAll('.name-effect-canvas')].slice(0, 2).map(node => ['renderer', node.getAttribute('data-name-renderer') || ''])) } : null,
+        selected: Object.fromEntries(['cosmetic-name_font', 'cosmetic-name_material', 'cosmetic-name_motion', 'cosmetic-avatar-effect', 'cosmetic-profile-border', 'cosmetic-profile-atmosphere', 'cosmetic-cursor-trail'].map(id => [id, document.getElementById(id)?.value || '']))
+      };
+    })()`);
+    assert(studioNameEffect.canvas && studioNameEffect.semantic && studioNameEffect.canvas.width <= 2048 && studioNameEffect.canvas.height <= 512 && studioNameEffect.canvas.cssWidth <= studioNameEffect.semantic.width + 40 && studioNameEffect.canvas.cssHeight <= studioNameEffect.semantic.height + 28 && Number.parseFloat(studioNameEffect.semantic.fontSize) >= 12 && (studioNameEffect.distance ?? 999) <= 40, `Active Studio name effect has unsafe geometry: ${JSON.stringify(studioNameEffect)}.`);
     await page.evaluate(`(() => {
-      for (const id of ['cosmetic-name_font', 'cosmetic-name_material', 'cosmetic-name_motion', 'cosmetic-avatar-effect', 'cosmetic-profile-border', 'cosmetic-cursor-trail', 'cosmetic-profile-atmosphere']) {
-        const select = document.getElementById(id);
-        select.value = '';
-        select.dispatchEvent(new Event('change', { bubbles: true }));
-      }
       document.querySelector('[data-editor-section="general"]')?.scrollIntoView({ block: 'start' });
     })()`);
-    await page.setInputValue('#profile-bio', 'Live preview draft', ['input']);
-    await page.waitFor(`document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() === 'Live preview draft'`, 'identity draft in live preview');
+    await page.setInputValue('#profile-bio', RICH_PROFILE_FIXTURE.bio, ['input']);
+    try {
+      await page.waitFor(`document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() === ${JSON.stringify(RICH_PROFILE_FIXTURE.bio)}`, 'identity draft in live preview');
+    } catch (error) {
+      const identityPreviewState = await page.evaluate(`(() => ({
+        editorBio: document.querySelector('#profile-bio')?.value || '',
+        previewBio: document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() || '',
+        previewName: document.querySelector('.profile-studio-preview .identity-card__name')?.textContent?.trim() || '',
+        previewText: document.querySelector('.profile-studio-preview .identity-card')?.textContent?.trim() || '',
+        previewShell: document.querySelector('.profile-studio-preview .profile-shell-page')?.className || '',
+        previewCards: document.querySelectorAll('.profile-studio-preview .identity-card').length
+      }))()`);
+      throw new Error(`${error.message} State: ${JSON.stringify(identityPreviewState)}`, { cause: error });
+    }
     const originalTextColor = await page.evaluate(`document.querySelector('[data-color-role="text"] .appearance-editor__hex')?.value || '#F4F6FB'`);
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', '#12ABEF', ['input']);
     await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell__approved-opening')).getPropertyValue('--profile-text').trim().toUpperCase() === '#12ABEF'`, 'color draft in live preview');
@@ -830,7 +1337,28 @@ try {
     const publishRequests = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2') || request.url.includes('publish_profile_studio_v2')).length;
     assert(publishedState.publishDisabled === true, 'Publishing did not clear the dashboard draft state.');
     assert(publishRequests > publishRequestsAfter, 'Publishing the surface depth did not call the configuration RPCs.');
-    return { draftState, publishedState, identityLayout, publishRequests, mediaRail };
+    const richPublished = await publishRichProfileDraft();
+    // The fixture is seeded through the authenticated RPC boundary so the
+    // browser exercises real uploaded media/cosmetic entitlements. Rehydrate
+    // Studio before rotating layouts; this mirrors a user returning to the
+    // editor and ensures the mounted layout editor receives the canonical ten
+    // links rather than the pre-fixture empty draft it was first mounted with.
+    await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=rich-layout-${Date.now()}#customize-layout` });
+    await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings'`, 'rehydrate rich layout editor');
+    await waitForStudioLayoutPicker('rehydrated rich layout picker');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card')`, 'rehydrated rich layout preview');
+    // The route first paints the empty editor context, then replaces it with
+    // the authenticated V2 draft. Wait for the canonical opening projection so
+    // the visitor-path assertion cannot sample that intentional loading state.
+    await page.waitFor(`document.querySelectorAll('.profile-studio-preview .identity-card__links a').length === 6`, 'rehydrated rich opening links');
+    const visitorPreviewState = await page.evaluate(`(() => ({
+      todayColor: Boolean(document.querySelector('.profile-studio-preview .profile-daily-roll .today-color')),
+      ownerRoll: Boolean(document.querySelector('.profile-studio-preview .profile-daily-roll .profile-roll')),
+      links: document.querySelectorAll('.profile-studio-preview .identity-card__links a').length
+    }))()`);
+    assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === 6, `Visitor preview did not use the lightweight roll/link opening path: ${JSON.stringify(visitorPreviewState)}.`);
+    const publicEvidence = await capturePublishedLayouts();
+    return { draftState, publishedState, identityLayout, publishRequests, mediaRail, studioNameEffect, richFixture, richPublished, publicEvidence };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {
@@ -951,6 +1479,7 @@ try {
           const previewCanvas = preview?.querySelector('.profile-studio-preview__canvas');
           const previewCard = preview?.querySelector('.profile-shell-page--preview .identity-card');
           const previewCopy = previewCard?.querySelector('.identity-card__copy');
+          const previewSemantic = previewCard?.querySelector('.name-effect-canvas__semantic, .identity-card__name');
           const previewCanvasBox = previewCanvas?.getBoundingClientRect();
           const previewCardBox = previewCard?.getBoundingClientRect();
           const visualGrid = document.querySelector('.profile-cosmetics-visual-grid');
@@ -981,7 +1510,9 @@ try {
               cardScrollWidth: previewCard.scrollWidth,
               cardClientWidth: previewCard.clientWidth,
               copyScrollWidth: previewCopy?.scrollWidth || 0,
-              copyClientWidth: previewCopy?.clientWidth || 0
+              copyClientWidth: previewCopy?.clientWidth || 0,
+              semanticScrollWidth: previewSemantic?.scrollWidth || 0,
+              semanticClientWidth: previewSemantic?.clientWidth || 0
             } : null,
             effects: visualGrid ? {
               columns: new Set(visualCards.map(card => Math.round(card.getBoundingClientRect().left))).size,
@@ -1012,7 +1543,7 @@ try {
           assert(state.effects?.columns === 1 && state.effects.cardWidths.every(cardWidth => cardWidth >= 260), `Visual Effects did not switch to readable phone rows at 390px: ${JSON.stringify(state.effects)}.`);
         }
         if (width > 1024) {
-          assert(['block', 'flex', 'grid'].includes(state.previewLayout?.display) && state.previewLayout.cardWidth <= state.previewLayout.canvasWidth + 1 && state.previewLayout.cardScrollWidth <= state.previewLayout.cardClientWidth + 1 && state.previewLayout.copyScrollWidth <= state.previewLayout.copyClientWidth + 1, `Narrow desktop preview card is not readable at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+          assert(['block', 'flex', 'grid'].includes(state.previewLayout?.display) && state.previewLayout.cardWidth <= state.previewLayout.canvasWidth + 1 && state.previewLayout.cardScrollWidth <= state.previewLayout.cardClientWidth + 1 && state.previewLayout.semanticScrollWidth <= state.previewLayout.semanticClientWidth + 1, `Narrow desktop preview card is not readable at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         }
         if (width === 1100 && tab === 'appearance') await capture('08-responsive-narrow-desktop');
         measurements.push({ width, tab, ...state });
@@ -1098,19 +1629,23 @@ try {
       const canvas = preview?.querySelector('.profile-studio-preview__canvas');
       const card = preview?.querySelector('.profile-shell-page--preview .identity-card');
       const copy = card?.querySelector('.identity-card__copy');
+      const semantic = card?.querySelector('.name-effect-canvas__semantic, .identity-card__name');
       const sidebar = document.querySelector('.profile-dashboard-shell__sidebar');
       return {
         viewport: innerWidth,
         preview: previewBox ? { left: Math.round(previewBox.left), right: Math.round(previewBox.right), top: Math.round(previewBox.top), bottom: Math.round(previewBox.bottom), width: Math.round(previewBox.width), height: Math.round(previewBox.height) } : null,
         card: card ? { display: getComputedStyle(card).display, width: Math.round(card.getBoundingClientRect().width), scrollWidth: card.scrollWidth, clientWidth: card.clientWidth } : null,
         canvasWidth: Math.round(canvas?.getBoundingClientRect().width || 0),
-        copy: copy ? { scrollWidth: copy.scrollWidth, clientWidth: copy.clientWidth } : null,
+        copy: copy ? { scrollWidth: copy.scrollWidth, clientWidth: copy.clientWidth, textScrollWidth: semantic?.scrollWidth || 0, textClientWidth: semantic?.clientWidth || 0 } : null,
         sidebarHidden: sidebar?.getAttribute('aria-hidden') === 'true' && sidebar?.hasAttribute('inert'),
         contained: Boolean(previewBox && previewBox.left >= -1 && previewBox.right <= innerWidth + 1 && previewBox.top >= -1 && previewBox.bottom <= innerHeight + 1),
         pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
-    assert(phonePreview.contained && phonePreview.pageContained && phonePreview.sidebarHidden && ['block', 'flex', 'grid'].includes(phonePreview.card?.display) && phonePreview.card.clientWidth >= 200 && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 1 && phonePreview.copy?.scrollWidth <= phonePreview.copy.clientWidth + 1, `Phone live preview is not a readable bounded drawer: ${JSON.stringify(phonePreview)}.`);
+    // NameEffectCanvas intentionally paints a bounded visual bleed around the
+    // semantic text. The phone/page bounds are the overflow contract; the
+    // semantic text itself must remain contained.
+    assert(phonePreview.contained && phonePreview.pageContained && phonePreview.sidebarHidden && ['block', 'flex', 'grid'].includes(phonePreview.card?.display) && phonePreview.card.clientWidth >= 200 && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 40 && phonePreview.copy?.textScrollWidth <= phonePreview.copy.textClientWidth + 1, `Phone live preview is not a readable bounded drawer: ${JSON.stringify(phonePreview)}.`);
     await capture('09-mobile-preview-414');
     await page.click('.profile-studio-preview__close', 'close phone preview drawer');
     await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed phone preview drawer');
@@ -1300,14 +1835,10 @@ try {
     await page.setViewport(1440, 900);
     const canonicalUrl = `${appUrl}/${canonicalUsername}`;
     await page.navigate(canonicalUrl, 'canonical public profile');
-    await page.waitFor(`document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page .identity-card')`, 'public profile canvas');
+    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] .identity-card')`, 'public profile canvas');
     await page.command('Page.reload', { ignoreCache: true });
     await delay(350);
-    await page.waitFor(`document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page .identity-card')`, 'public profile after direct refresh');
-    // Paint a high-frequency pattern on the page background itself so the
-    // visual smoke test exercises the real backdrop-filter source boundary.
-    await page.evaluate(`document.querySelector('.profile-shell-page')?.style.setProperty('background', 'repeating-linear-gradient(90deg, #ff5577 0 5px, #5577ff 5px 10px)')`);
-    await delay(100);
+    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] .identity-card')`, 'public profile after direct refresh');
     const state = await page.evaluate(`(() => {
       const pageElement = document.querySelector('.profile-shell-page');
       const card = document.querySelector('.profile-shell-page .identity-card');
@@ -1321,8 +1852,12 @@ try {
       const media = [...document.querySelectorAll('.profile-shell__media-image, .profile-shell__media-video')].map(element => {
         const style = getComputedStyle(element);
         const box = element.getBoundingClientRect();
-        return { position: style.position, width: box.width, height: box.height, objectFit: style.objectFit };
+        return { position: style.position, inset: style.inset, width: box.width, height: box.height, objectFit: style.objectFit, naturalWidth: element.naturalWidth || 0, naturalHeight: element.naturalHeight || 0, complete: element.complete ?? true };
       });
+      const nameCanvas = document.querySelector('.name-effect-canvas__visual');
+      const nameSemantic = document.querySelector('.name-effect-canvas__semantic');
+      const nameCanvasBox = nameCanvas?.getBoundingClientRect();
+      const nameSemanticBox = nameSemantic?.getBoundingClientRect();
       return {
         path: location.pathname,
         username: document.querySelector('.identity-card')?.getAttribute('data-profile-path')?.slice(1) || '',
@@ -1340,13 +1875,26 @@ try {
         pageBackground: pageStyle.backgroundImage || pageStyle.backgroundColor,
         pageMediaImage: Boolean(document.querySelector('.profile-shell__media-image')),
         pageBox: pageBox ? { width: pageBox.width, height: pageBox.height } : null,
-        media
+        media,
+        nameEffect: nameCanvas && nameSemantic ? {
+          canvasWidth: nameCanvas.width,
+          canvasHeight: nameCanvas.height,
+          cssWidth: nameCanvasBox?.width || 0,
+          cssHeight: nameCanvasBox?.height || 0,
+          semanticWidth: nameSemanticBox?.width || 0,
+          semanticHeight: nameSemanticBox?.height || 0,
+          fontSize: getComputedStyle(nameSemantic).fontSize,
+          distance: Math.abs((nameCanvasBox?.left || 0) - (nameSemanticBox?.left || 0)) + Math.abs((nameCanvasBox?.top || 0) - (nameSemanticBox?.top || 0))
+        } : null
       };
     })()`);
+    const serverConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
+    const serverAppearance = serverConfiguration?.published?.base?.appearance || serverConfiguration?.published?.appearance || {};
+    state.serverSurfaceBlur = serverAppearance?.surface?.blur ?? null;
     assert(state.path === `/${canonicalUsername}`, `Public profile was not canonical after refresh: ${state.path}.`);
     assert(state.canvas && state.card && state.boundary, 'Public profile did not render its canvas, identity surface, and border boundary.');
     const expectedCardBlur = smokeMode === 'preview' ? '20px' : '40px';
-    assert(state.cardBlur === expectedCardBlur, `Public profile identity card did not honor the expected max blur: ${state.cardBlur} (expected ${expectedCardBlur}).`);
+    assert(state.cardBlur === expectedCardBlur, `Public profile identity card did not honor the expected max blur: ${state.cardBlur} (expected ${expectedCardBlur}). State: ${JSON.stringify(state)}`);
     if (state.boundarySurface) {
       assert(state.boundaryBackdropFilter.includes('blur('), 'Public profile identity surface has no computed backdrop blur filter.');
     } else {
@@ -1354,11 +1902,34 @@ try {
     }
     assert(state.pageBox && Math.abs(state.pageBox.width - 1440) <= 1 && Math.abs(state.pageBox.height - 900) <= 1, `Public profile environment does not fill the viewport: ${JSON.stringify(state)}.`);
     for (const media of state.media) {
-      assert(media.position === 'fixed' && media.objectFit === 'cover' && media.width >= 1439 && media.height >= 899, `Public background media is not viewport-bound: ${JSON.stringify(state)}.`);
+      assert(media.complete && media.naturalWidth > 0 && media.naturalHeight > 0 && media.position === 'fixed' && media.objectFit === 'cover' && media.width >= 1439 && media.height >= 899, `Public background media is not viewport-bound: ${JSON.stringify(state)}.`);
+    }
+    if (state.nameEffect) {
+      // The visual canvas intentionally extends by the renderer's bounded
+      // 18px/12px bleed around the semantic name for glow and motion. Validate
+      // that bounded relationship instead of treating the bleed as a layout
+      // displacement.
+      assert(state.nameEffect.canvasWidth <= 2048 && state.nameEffect.canvasHeight <= 512 && state.nameEffect.cssWidth < 360 && state.nameEffect.cssHeight < 100 && Number.parseFloat(state.nameEffect.fontSize) >= 12 && state.nameEffect.distance <= 32, `Public effected username geometry is unsafe: ${JSON.stringify(state)}.`);
     }
     assert(!state.pageBlur && !state.rollBlur, 'Public appearance variables leaked outside the card surface.');
     await capture('07-public-profile');
-    return state;
+    await page.setViewport(390, 844);
+    await page.command('Page.reload', { ignoreCache: true });
+    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] .identity-card')`, 'public profile mobile after direct refresh');
+    await page.waitFor(`(() => { const pageElement = document.querySelector('.profile-shell-page[aria-busy="false"]'); const image = pageElement?.querySelector('.profile-shell__media-image'); return Boolean(pageElement && image?.complete && image.naturalWidth > 0 && image.currentSrc); })()`, 'mobile uploaded background after direct refresh');
+    await delay(150);
+    await page.waitFor(`(() => { const pageElement = document.querySelector('.profile-shell-page[aria-busy="false"]'); const image = pageElement?.querySelector('.profile-shell__media-image'); return Boolean(pageElement && image?.complete && image.naturalWidth > 0 && image.currentSrc); })()`, 'stable mobile uploaded background after direct refresh');
+    const mobile = await page.evaluate(`(() => {
+      const pageElement = document.querySelector('.profile-shell-page');
+      const image = document.querySelector('.profile-shell__media-image');
+      const box = image?.getBoundingClientRect();
+      const style = image ? getComputedStyle(image) : null;
+      return { page: pageElement?.getBoundingClientRect(), media: image && box && style ? { complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight, position: style.position, inset: style.inset, objectFit: style.objectFit, width: box.width, height: box.height } : null };
+    })()`);
+    assert(mobile.media && mobile.media.complete && mobile.media.naturalWidth > 0 && mobile.media.position === 'fixed' && mobile.media.objectFit === 'cover' && mobile.media.width >= 389 && mobile.media.height >= 843, `Mobile uploaded background did not cover the public viewport: ${JSON.stringify(mobile)}.`);
+    await capture('07-public-profile-mobile');
+    await page.setViewport(1440, 900);
+    return { ...state, mobile };
   });
 
   await step('critical profile assets load without stale or missing chunks', async () => {

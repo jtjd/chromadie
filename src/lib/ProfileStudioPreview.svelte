@@ -83,9 +83,6 @@
         <button type="button" class:active={previewDevice === 'desktop'} aria-pressed={previewDevice === 'desktop'} on:click={() => setPreviewDevice('desktop')}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"></rect><path d="M8 20h8M12 17v3"></path></svg>Desktop</button>
         <button type="button" class:active={previewDevice === 'mobile'} aria-pressed={previewDevice === 'mobile'} on:click={() => setPreviewDevice('mobile')}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"></rect><path d="M11 18h2"></path></svg>Mobile</button>
       </div>
-      {#if isAppearancePreview}
-        <div class="profile-studio-preview__device-sample" aria-label="Desktop preview sample"></div>
-      {/if}
     </div>
     <aside class="profile-studio-preview__plus-card" aria-label="Chromadie Plus">
       <div class="profile-studio-preview__plus-icon" aria-hidden="true">♔</div>
@@ -104,23 +101,19 @@
   .profile-studio-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem calc(1rem + env(safe-area-inset-bottom)); background: var(--ctp-mantle, var(--site-deep, #11111b)); }
   .profile-studio-preview__canvas { display: grid; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; overflow-x: hidden; }
   .profile-studio-preview__canvas--appearance { min-height: 0; margin-bottom: .6rem; }
-  .profile-studio-preview__viewport { position: relative; width: 100%; min-height: 24rem; aspect-ratio: 4 / 5; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: var(--color-canvas-deep, #07080b); box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
-  .profile-studio-preview__stage { position: relative; width: 100%; height: 100%; min-height: 24rem; overflow: hidden; }
+  .profile-studio-preview__viewport { position: relative; width: 100%; min-height: 0; aspect-ratio: 16 / 10; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: var(--color-canvas-deep, #07080b); box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
+  .profile-studio-preview__stage { position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
   .profile-studio-preview__canvas--mobile { padding: .65rem 0 1rem; }
   .profile-studio-preview__canvas--mobile .profile-studio-preview__viewport { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: min(24rem, calc(100dvh - 12rem)); aspect-ratio: auto; border-radius: 1.25rem; }
   .profile-studio-preview__canvas--mobile .profile-studio-preview__stage { min-height: 100%; }
   .profile-studio-preview__device-panel { min-width: 0; }
-  .profile-studio-preview__device-panel--appearance { display: grid; min-height: 13.2rem; overflow: hidden; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }
+  .profile-studio-preview__device-panel--appearance { min-height: 0; overflow: hidden; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }
   .profile-studio-preview__devices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 3rem; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }
   .profile-studio-preview__device-panel--appearance .profile-studio-preview__devices { border: 0; border-bottom: 1px solid var(--studio-border, #313244); border-radius: 0; }
   .profile-studio-preview__devices button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--studio-muted, #bac2de); font: 600 .74rem/1 var(--studio-font, var(--site-font, sans-serif)); cursor: pointer; }
   .profile-studio-preview__devices button.active { border-bottom-color: var(--studio-accent, #89b4fa); color: var(--studio-accent, #89b4fa); }
   .profile-studio-preview__devices button:focus-visible { outline: 2px solid var(--studio-focus, #b4befe); outline-offset: -2px; }
   .profile-studio-preview__devices svg { width: .9rem; height: .9rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
-  .profile-studio-preview__device-sample { position: relative; min-height: 8.8rem; margin: .7rem; padding: .7rem; border: 1px solid var(--studio-border, #313244); border-radius: .5rem; background: var(--studio-inset, #1e1e2e); }
-  .profile-studio-preview__device-sample::before { position: absolute; top: .8rem; right: .9rem; left: .9rem; height: .8rem; border-bottom: 1px solid var(--studio-border, #313244); background: var(--studio-focus, #b4befe); content: ''; opacity: .9; }
-  .profile-studio-preview__device-sample::after { position: absolute; top: 2.25rem; right: .7rem; bottom: .7rem; left: .7rem; border: 1px solid var(--studio-border-strong, #45475a); border-radius: .35rem; background: var(--studio-panel, #181825); box-shadow: inset 3rem 1rem 0 -2.55rem var(--studio-border-strong, #45475a), inset 4.7rem 2.55rem 0 -4.25rem var(--studio-text, #cdd6f4), inset 4.7rem 3.3rem 0 -4.25rem var(--studio-faint, #7f849c), inset 4.7rem 4.05rem 0 -4.25rem var(--studio-faint, #7f849c); content: ''; }
-  .profile-studio-preview__device-panel--appearance + .profile-studio-preview__plus-card { margin-top: .9rem; }
   .profile-studio-preview__plus-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .7rem; padding: .85rem; border: 1px solid color-mix(in srgb, var(--ctp-mauve, #cba6f7) 30%, var(--ctp-surface0, #313244)); border-radius: .55rem; background: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 5%, var(--ctp-mantle, #181825)); }
   .profile-studio-preview__plus-icon { display: grid; width: 1.5rem; height: 1.5rem; place-items: center; color: var(--ctp-mauve, #cba6f7); font-size: 1.25rem; }
   .profile-studio-preview__plus-card h3 { margin: 0; color: var(--ctp-mauve, #cba6f7); font-size: .82rem; }

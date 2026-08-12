@@ -14,14 +14,13 @@
   import ProfileTimeline from './ProfileTimeline.svelte';
   import ProfileCollection from './ProfileCollection.svelte';
   import { getProfileStoryUnlocks } from './profileStory.js';
-  import { createDefaultProfileConfig, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
+  import { createDefaultProfileConfig, getProfileContinuationLinks, getProfileOpeningLinks, getProfileRollVisible, getProfileStoryVisible, getVisibleProfileLinks, normalizeProfileConfig } from './profileConfig.js';
   import { getProfileComposition } from './profileComposition.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileLayoutFrame from './ProfileLayoutFrame.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
   import ProfileWidgets from './ProfileWidgets.svelte';
   import ProfileContent from './ProfileContent.svelte';
-  import ProfileSocial from './ProfileSocial.svelte';
   import { getProfileMediaUrl } from './profileMedia.js';
   import TodayColor from './TodayColor.svelte';
   import ProfileDailyRoll from './ProfileDailyRoll.svelte';
@@ -86,8 +85,8 @@
   let prefersReducedMotion = false;
   let identityCardComponent = null;
   let identityCardRequest = null;
-  const defaultProfilePresentation = false;
-
+  let profileSocialComponent = null;
+  let profileSocialRequest = null;
   function ensureIdentityCard() {
     if (identityCardComponent || identityCardRequest) return identityCardRequest;
     identityCardRequest = import('./IdentityCard.svelte')
@@ -95,6 +94,15 @@
       .catch(() => { identityCardComponent = null; })
       .finally(() => { identityCardRequest = null; });
     return identityCardRequest;
+  }
+
+  function ensureProfileSocial() {
+    if (profileSocialComponent || profileSocialRequest) return profileSocialRequest;
+    profileSocialRequest = import('./ProfileSocial.svelte')
+      .then(module => { profileSocialComponent = module.default; })
+      .catch(() => { profileSocialComponent = null; })
+      .finally(() => { profileSocialRequest = null; });
+    return profileSocialRequest;
   }
 
   function resetShellState(nextLoading = false) {
@@ -416,6 +424,7 @@
         sessionUserId: $session?.user?.id,
         profileId: targetProfile?.id
       });
+  $: if (!previewMode && targetProfile && !isOwnProfile) void ensureProfileSocial();
   $: cosmetics = targetProfile?.equipped_cosmetics || {};
   $: nameRendererLoadout = getNameRendererLoadout(cosmetics);
   $: rank = targetProfile ? getRank(targetProfile.lifetime_ep || 0) : null;
@@ -455,6 +464,8 @@
   $: colorEffectsEnabled = effectiveProfileConfig.colorEffectsEnabled === true;
   $: profileControlAccent = signatureColor;
   $: visibleLinks = getVisibleProfileLinks(effectiveProfileConfig);
+  $: openingLinks = getProfileOpeningLinks(effectiveProfileConfig);
+  $: continuationLinks = getProfileContinuationLinks(effectiveProfileConfig);
   $: avatarSrc = getProfileMediaUrl(effectiveProfileConfig.avatar_path, mediaCacheKey);
   $: backgroundSrc = getProfileMediaUrl(effectiveProfileConfig.background_path, mediaCacheKey);
   $: audioSrc = getProfileMediaUrl(effectiveProfileConfig.audio_path, mediaCacheKey);
@@ -490,11 +501,15 @@
     hasTimeline: timelineEvents.length > 0
   });
   $: secondaryModules = composition.secondaryModules;
+  $: storyModules = secondaryModules.filter(module => module.id !== 'links');
   const rollModule = Object.freeze({ size: 'wide' });
   $: layoutVariant = resolveProfileLayoutVariant(effectiveProfileConfig);
   $: showRoll = getProfileRollVisible(effectiveProfileConfig);
   $: showLowerExpression = showExpression && (layoutVariant !== 'sleek' || profileWidgets.length > 0 || hasProfileContent);
-  $: hasProfileMore = showRoll || showLowerExpression || (getProfileStoryVisible(effectiveProfileConfig) && secondaryModules.length > 0);
+  $: hasProfileMore = continuationLinks.length > 0
+    || showRoll
+    || showLowerExpression
+    || (getProfileStoryVisible(effectiveProfileConfig) && (rank && rankState || storyModules.length > 0));
   $: isFollowed = Boolean(targetProfile?.id && $followedUsers.includes(targetProfile.id));
   $: pinnedAchievements = (targetProfile?.equipped_badges || []).map(getAchievement);
   $: recentScores = targetScores.slice(0, 6);
@@ -511,7 +526,7 @@
   });
 </script>
 
-  <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (defaultProfilePresentation ? ' profile-shell-page--default' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
+  <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (previewIdentityOnly ? ' profile-shell-page--identity-only' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} aria-busy={loading}>
   {#if backgroundSrc}
     <img class="profile-shell__media-image" src={backgroundSrc} alt="" loading="eager" decoding="async" aria-hidden="true" />
   {/if}
@@ -545,7 +560,7 @@
                       displayName={profileDisplayName}
                       profilePath={profilePath}
                       bio={profileBio}
-                      links={visibleLinks}
+                      links={openingLinks}
                       badges={pinnedAchievements}
                       staff={Boolean(targetProfile?.is_staff)}
                       avatarSrc={avatarSrc}
@@ -654,10 +669,23 @@
             </div>
           </div>
         {/if}
+        {#if continuationLinks.length}
+          <section class="profile-shell__continuation-links" data-profile-region="links" aria-label={username + ' additional links'}>
+            <nav class="profile-shell__links" aria-label={username + ' additional links'}>
+              {#each continuationLinks as link (link.order)}
+                <a class="profile-shell__link" href={link.url} target="_blank" rel="noopener noreferrer" on:click={() => recordProfileClick(link.key || `link-${link.order}`)}>
+                  <span class="profile-shell__link-type">{link.type}</span>
+                  <strong>{link.label}</strong>
+                  <span aria-hidden="true">↗</span>
+                </a>
+              {/each}
+            </nav>
+          </section>
+        {/if}
     </div>
     </div>
 
-      {#if getProfileStoryVisible(effectiveProfileConfig) && (rank && rankState || secondaryModules.length)}
+      {#if getProfileStoryVisible(effectiveProfileConfig) && (rank && rankState || storyModules.length)}
         <section class="profile-shell__story-section" aria-labelledby="profile-story-title">
           <div class="profile-shell__story-heading">
             <div>
@@ -681,7 +709,7 @@
               </Module>
             {/if}
 
-            {#each secondaryModules as module (module.id)}
+            {#each storyModules as module (module.id)}
               {#if module.id === 'stats'}
                 <Module size={module.size} tone="quiet" eyebrow="Progress" title="A record of color" description="The milestones behind this identity.">
                   <div class="profile-shell__stats" aria-label="Profile statistics">
@@ -704,22 +732,6 @@
                     </div>
                   {:else}
                     <div class="profile-shell__empty">No rolls yet. The first color will give this profile its opening note.</div>
-                  {/if}
-                </Module>
-              {:else if module.id === 'links'}
-                <Module size={module.size} eyebrow="Personal links" title="A few places to find me" description="Structured links remain available as part of this profile’s expression.">
-                  {#if visibleLinks.length}
-                    <nav class="profile-shell__links" aria-label={username + ' links'}>
-                      {#each visibleLinks as link (link.order)}
-                        <a class="profile-shell__link" href={link.url} target="_blank" rel="noopener noreferrer" on:click={() => recordProfileClick(link.key || `link-${link.order}`)}>
-                          <span class="profile-shell__link-type">{link.type}</span>
-                          <strong>{link.label}</strong>
-                          <span aria-hidden="true">↗</span>
-                        </a>
-                      {/each}
-                    </nav>
-                  {:else}
-                    <div class="profile-shell__empty">No public links yet.</div>
                   {/if}
                 </Module>
               {:else if module.id === 'recent'}
@@ -793,16 +805,19 @@
 
       {#if !previewMode && !isOwnProfile}
         <section class="profile-shell__social-section" aria-label={username + ' community and safety details'}>
-          <ProfileSocial
-            profileId={targetProfile.id}
-            username={username}
-            isOwnProfile={false}
-            isAuthenticated={$isAuthenticated}
-            social={social}
-            settings={socialSettings}
-            socialDepthEnabled={socialDepthEnabled}
-            on:socialchange={handleSocialChange}
-          />
+          {#if profileSocialComponent}
+            <svelte:component
+              this={profileSocialComponent}
+              profileId={targetProfile.id}
+              username={username}
+              isOwnProfile={false}
+              isAuthenticated={$isAuthenticated}
+              social={social}
+              settings={socialSettings}
+              socialDepthEnabled={socialDepthEnabled}
+              on:socialchange={handleSocialChange}
+            />
+          {/if}
           {#if $isAuthenticated}
             <button
               type="button"
@@ -831,54 +846,7 @@
 </main>
 
 <style>
-  .profile-shell-page {
-    position: relative;
-    min-height: 100%;
-    overflow: hidden;
-    padding: clamp(var(--space-4), 3vw, var(--space-8));
-    color: var(--profile-text, var(--color-ink));
-    background:
-      radial-gradient(circle at 8% 12%, color-mix(in srgb, var(--profile-surface-accent) 14%, transparent), transparent 28rem),
-      radial-gradient(circle at 94% 76%, color-mix(in srgb, var(--color-accent-cyan) 9%, transparent), transparent 30rem),
-      var(--color-canvas-deep);
-  }
-
-  /* A fresh profile gets a quiet blue night canvas. This class is only added
-     when the validated Signal defaults are still active and no authored media
-     or atmosphere is present, so a saved background always wins. */
-  .profile-shell-page.profile-shell-page--default {
-    background-color: #07152c;
-    background-image: none;
-  }
-
-  .profile-shell__opening,
-  .profile-shell__supporting,
-  .profile-shell__story-section,
-  .profile-shell__social-section,
-  .profile-shell-warning {
-    position: relative;
-    z-index: 1;
-    width: min(100%, var(--content-profile));
-    margin-inline: auto;
-  }
-
-  .profile-shell__opening {
-    position: relative;
-    overflow: hidden;
-    padding: clamp(2rem, 5vw, 5rem) clamp(1.25rem, 5vw, 5rem);
-    border-top: 1px solid var(--color-line-subtle);
-    border-bottom: 1px solid var(--color-line-subtle);
-    background:
-      radial-gradient(circle at 76% 50%, color-mix(in srgb, var(--profile-surface-accent) 14%, transparent), transparent 28rem),
-      linear-gradient(110deg, color-mix(in srgb, var(--surface-panel-strong) 76%, transparent), color-mix(in srgb, var(--surface-panel) 34%, transparent));
-  }
-
   .profile-shell__identity-loading { min-height: 20rem; border-radius: var(--radius-md, 1rem); background: color-mix(in srgb, var(--profile-surface, #11141b) 70%, transparent); }
-
-  .profile-shell__social-section {
-    width: min(100%, 46rem);
-    margin-top: var(--space-6);
-  }
 
   .profile-shell-page--roll-rolling .profile-shell__opening.profile-shell__approved-opening {
     border-color: var(--color-line-strong);
@@ -914,7 +882,6 @@
   :global(.cursor-trail-layer.profile-shell__page-cursor-layer) { position: fixed; inset: 0; z-index: 6; }
   :global(.profile-shell-page--preview .profile-atmosphere.profile-shell__page-atmosphere-layer) { position: absolute; inset: 0; }
   :global(.profile-shell-page--preview .cursor-trail-layer.profile-shell__page-cursor-layer) { position: absolute; inset: 0; }
-  .profile-shell__identity { min-width: 0; }
   .profile-shell__rank-row {
     display: flex;
     align-items: center;
@@ -935,18 +902,7 @@
   .profile-shell__rank-track span { display: block; height: 100%; border-radius: inherit; transition: width var(--motion-slow) var(--motion-ease-emphasis); }
   .profile-shell__rank-next { color: var(--color-ink-muted); letter-spacing: 0.04em; }
 
-  .profile-shell__supporting { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(2rem, 6vw, 7rem); margin-top: clamp(2rem, 5vw, 4.5rem); padding: 0 clamp(1.25rem, 5vw, 5rem) clamp(1rem, 3vw, 2rem); }
   .profile-shell__supporting-region { min-width: 0; }
-  .profile-latest { min-width: 0; }
-  .profile-latest__content { display: grid; grid-template-columns: clamp(7rem, 10vw, 10rem) minmax(0, 1fr); align-items: center; gap: clamp(var(--space-4), 3vw, var(--space-8)); }
-  .profile-latest__color { display: block; width: clamp(7rem, 10vw, 10rem); aspect-ratio: 1; border-radius: 50%; box-shadow: 0 0 3.5rem color-mix(in srgb, var(--profile-accent) 34%, transparent), inset 0 0 0 1px rgba(255,255,255,0.22); }
-  .profile-latest__date { margin: var(--space-2) 0 0; color: var(--color-ink-faint); font: 600 var(--type-label) / 1.2 var(--font-mono-stack); }
-  .profile-latest__value { display: grid; gap: var(--space-1); margin-top: var(--space-5); }
-  .profile-latest__value strong { color: var(--color-ink-strong); font: 600 var(--type-body) / 1 var(--font-mono-stack); letter-spacing: 0.04em; }
-  .profile-latest__value span { color: var(--color-ink-muted); font-size: var(--type-label); line-height: 1.45; }
-  .profile-latest__empty { display: grid; gap: var(--space-3); }
-  .profile-latest__empty p:last-child { max-width: 20rem; color: var(--color-ink-muted); line-height: 1.5; }
-  .profile-shell__story-section { margin-top: var(--space-4); border-top: 1px solid var(--color-line-subtle); }
   .profile-shell__details-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--module-gap); padding-bottom: var(--space-6); }
   .profile-shell__details-grid :global(.foundation-module) { grid-column: span 6; }
   .profile-shell__details-grid :global(.foundation-module--wide) { grid-column: span 12; }
@@ -995,15 +951,7 @@
   .profile-shell-state h1 { margin: 0; color: var(--color-ink-strong); font: 600 var(--type-h1) / var(--type-line-tight) var(--font-display-stack); }
   .profile-shell-state p:not(.profile-shell-state__eyebrow) { color: var(--color-ink-muted); line-height: 1.6; }
   .profile-shell-state__eyebrow { margin: 0 0 var(--space-3); color: var(--profile-accent); font: 700 var(--type-label) / 1.2 var(--font-mono-stack); letter-spacing: 0.14em; text-transform: uppercase; }
-  .profile-shell-warning { margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid color-mix(in srgb, var(--color-warning) 40%, transparent); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-warning) 8%, transparent); color: var(--color-warning); font-size: var(--type-small); }
-
-  @media (max-width: 64rem) {
-    .profile-shell__supporting { gap: var(--space-8); }
-  }
-
   @media (max-width: 48rem) {
-    .profile-shell__opening { padding: var(--space-8) var(--space-5); }
-    .profile-shell__supporting { grid-template-columns: 1fr; gap: var(--space-8); margin-top: var(--space-8); padding: 0 var(--space-5) var(--space-5); }
     .profile-shell__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .profile-shell__details-grid :global(.foundation-module),
     .profile-shell__details-grid :global(.foundation-module--wide) { grid-column: 1 / -1; }
@@ -1012,11 +960,6 @@
   }
 
   @media (max-width: 36rem) {
-    .profile-shell-page { padding: var(--space-3); }
-    .profile-shell__opening { padding: var(--space-6) var(--space-4); }
-    .profile-shell__supporting { margin-top: var(--space-6); padding-inline: var(--space-4); }
-    .profile-latest__content { grid-template-columns: 5.5rem minmax(0, 1fr); gap: var(--space-4); }
-    .profile-latest__color { width: 5.5rem; }
     .profile-shell__rank-row { align-items: flex-start; flex-direction: column; gap: var(--space-2); }
     .profile-shell__rank-track { width: 100%; }
     .profile-shell__rank-next { font-size: 0.625rem; }
@@ -1024,23 +967,6 @@
     .profile-shell__best-color { min-height: 5.5rem; }
     .profile-shell__story-heading h3 { font-size: var(--type-h3); }
   }
-
-  .profile-shell-page--preview {
-    min-height: 0;
-    overflow: hidden;
-    padding: 0;
-    background: transparent;
-    border-radius: var(--profile-border-radius, 16px);
-  }
-  .profile-shell-page.profile-shell-page--default.profile-shell-page--preview {
-    background: transparent;
-  }
-  .profile-shell-page--preview:not(.profile-shell-page--default) { background: transparent; }
-  :global(.profile-shell-page--preview) .profile-shell__opening { width: 100%; margin: 0; border-radius: 16px; box-shadow: 0 1rem 2.5rem rgba(0,0,0,0.28); }
-  :global(.profile-shell-page--preview) .profile-shell__rank-row { gap: var(--space-2) var(--space-3); margin-top: var(--space-4); padding-top: var(--space-3); }
-  :global(.profile-shell-page--preview) .profile-shell__rank-label,
-  :global(.profile-shell-page--preview) .profile-shell__rank-next { font-size: 0.54rem; }
-  :global(.profile-shell-page--preview) .profile-shell__rank-value { font-size: 0.62rem; }
 
   @media (prefers-reduced-motion: reduce) {
     .profile-shell__action,
@@ -1053,6 +979,7 @@
   }
   /* Profile composition: one color field, one identity surface. */
   .profile-shell-page {
+    --profile-viewport-offset: 0px;
     min-height: 100dvh;
     height: 100dvh;
     overflow-x: hidden;
@@ -1065,11 +992,26 @@
     scroll-padding-block: 0;
   }
 
+  .profile-shell__story-section,
+  .profile-shell__social-section {
+    position: relative;
+    z-index: 2;
+    width: min(100%, 46rem);
+    margin-inline: auto;
+  }
+
+  .profile-shell__story-section {
+    margin-top: 1rem;
+    border-top: 1px solid var(--color-line-subtle);
+  }
+
+  .profile-shell__social-section { margin-top: var(--space-6); }
+
   .profile-shell__approved-canvas {
     position: relative;
     z-index: 1;
     display: block;
-    min-height: calc(100dvh - 4.75rem);
+    min-height: calc(100dvh - var(--profile-viewport-offset, 0px));
     padding: 0;
     scroll-snap-align: start;
     scroll-snap-stop: normal;
@@ -1078,8 +1020,8 @@
   .profile-shell__approved-main {
     position: relative;
     display: flex;
-    height: calc(100dvh - 4.75rem);
-    min-height: calc(100dvh - 4.75rem);
+    height: calc(100dvh - var(--profile-viewport-offset, 0px));
+    min-height: calc(100dvh - var(--profile-viewport-offset, 0px));
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -1112,7 +1054,7 @@
   .profile-shell__more {
     position: relative;
     display: flex;
-    min-height: calc(100dvh - 4.75rem);
+    min-height: calc(100dvh - var(--profile-viewport-offset, 0px));
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -1155,8 +1097,6 @@
     background: transparent;
     box-shadow: none;
   }
-
-  .profile-shell-page--preview .profile-shell__opening.profile-shell__approved-opening { background: transparent; }
 
   :global(.profile-shell__identity-boundary) {
     position: relative;
@@ -1228,55 +1168,13 @@
     border: 0;
   }
 
-  .profile-shell-page > .profile-shell__story-section {
+  .profile-shell__continuation-links {
+    position: relative;
     z-index: 2;
-    margin-top: 1rem;
+    width: min(100%, 46rem);
+    margin: 1.5rem auto 0;
+    padding: 0 0.5rem;
   }
-
-  .profile-shell__owner-status {
-    margin: 0;
-    padding: 0 var(--space-5) var(--space-5);
-    color: var(--color-ink-faint);
-    font-size: var(--type-label);
-  }
-
-  .profile-shell-page--preview .profile-shell__approved-canvas {
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-    padding: 0;
-  }
-
-  .profile-shell-page--preview {
-    height: 100%;
-    min-height: 100%;
-    overflow: hidden;
-    padding: 0;
-    scroll-snap-type: none;
-    background: transparent;
-  }
-
-  .profile-shell-page--preview .profile-shell__approved-main {
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .profile-shell-page--preview .profile-shell__approved-opening {
-    width: 100%;
-  }
-
-  /* The embedded phone is narrower than the browser viewport, so the normal
-     viewport media query cannot be the responsive signal. IdentityCard owns
-     this explicit render context instead. */
-  .profile-shell-page--preview-mobile .profile-shell__approved-main,
-  .profile-shell-page--preview-mobile .profile-shell__approved-canvas,
-  .profile-shell-page--preview-mobile .profile-shell__approved-opening { width: 100%; min-width: 0; }
-  .profile-shell-page--preview-mobile { overflow-y: auto; }
-  .profile-shell-page--preview-mobile .profile-shell__approved-canvas { height: auto; min-height: 100%; }
-  .profile-shell-page--preview-mobile .profile-shell__approved-main { height: auto; min-height: 100%; align-items: stretch; justify-content: flex-start; }
 
   /* The editor preview is an identity check, not a second profile page. Keep
      the opening card visible while leaving the daily roll and story surfaces
@@ -1417,32 +1315,43 @@
   .profile-shell-page--preview {
     height: 100%;
     min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
     padding: 0;
+    scroll-snap-type: none;
+    background: transparent;
   }
 
   .profile-shell-page--preview .profile-shell__approved-canvas,
   .profile-shell-page--preview .profile-shell__approved-main {
-    height: 100%;
+    width: 100%;
+    height: auto;
     min-height: 100%;
   }
+
+  .profile-shell-page--preview .profile-shell__approved-canvas { padding: 0; }
 
   .profile-shell-page--preview .profile-shell__approved-main {
     align-items: center;
     justify-content: center;
   }
 
-  .profile-shell-page--preview-mobile {
-    overflow-y: auto;
+  /* Device context wins over browser-width rules. Keep the mobile stage
+     scrollable for rich profiles without restoring desktop stacking rules. */
+  .profile-shell-page--preview-mobile,
+  .profile-shell-page--preview-mobile .profile-shell__approved-main,
+  .profile-shell-page--preview-mobile .profile-shell__approved-canvas,
+  .profile-shell-page--preview-mobile .profile-shell__approved-opening {
+    width: 100%;
+    min-width: 0;
   }
-
-  .profile-shell-page--preview-mobile .profile-shell__approved-canvas {
-    height: auto;
-    min-height: 100%;
-  }
-
+  .profile-shell-page--preview-mobile { overflow-y: auto; }
+  .profile-shell-page--preview-mobile .profile-shell__approved-canvas,
   .profile-shell-page--preview-mobile .profile-shell__approved-main {
     height: auto;
     min-height: 100%;
+  }
+  .profile-shell-page--preview-mobile .profile-shell__approved-main {
     align-items: stretch;
     justify-content: flex-start;
   }

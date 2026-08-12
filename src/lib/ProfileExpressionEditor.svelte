@@ -263,8 +263,9 @@
     expression = normalizeProfileExpression({ ...expression, ...data });
     syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
     mediaCacheKey = String(Date.now());
-    dispatch('expressionchange', { ...expression });
-    return expression;
+    const nextResult = { ...expression, updatedAt: data.updated_at || null };
+    dispatch('expressionchange', nextResult);
+    return nextResult;
   }
 
   async function handleAvatarChange(event) {

@@ -68,10 +68,27 @@
     dispatch('dirty', { dirty: draftIsDirty() });
   }
 
+  function retainDraftForIncomingChange(nextKey) {
+    lastIncomingKey = nextKey;
+    return lastIncomingKey === nextKey;
+  }
+
   // Hydrate on the first render and whenever the server-backed profile changes.
   // Once the user has started editing, the local draft remains authoritative
-  // until it is saved or explicitly discarded.
-  $: if (profileId && incomingKey !== lastIncomingKey && (!lastIncomingKey || (!saving && !isDirty))) restoreDraft();
+  // until it is saved or explicitly discarded. Even in that dirty case, emit
+  // the retained draft again: a parent route refresh clears its transient
+  // preview projection, and the live canvas must not fall back to stale public
+  // identity data while the editor still visibly holds the user's draft.
+  $: if (profileId && incomingKey !== lastIncomingKey) {
+    if (!lastIncomingKey || (!saving && !isDirty)) {
+      restoreDraft();
+    } else {
+      if (retainDraftForIncomingChange(incomingKey)) {
+        dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
+        dispatch('dirty', { dirty: draftIsDirty() });
+      }
+    }
+  }
 
   function updateField(field, value) {
     if (field === 'bio') draftBio = value;

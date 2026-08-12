@@ -2,6 +2,25 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-12 — Complete final five-layout hardening
+
+- Opening links no longer repeat in the continuation story; the first six are
+  reserved for the identity opening and later links continue below.
+- Headerless public profiles now use the full first viewport, and compact owner
+  roll/music treatments stay within the intentionally small profile footprint.
+- Studio desktop preview now uses a readable desktop-like environment without
+  transform scaling. Mobile remains an intentional portrait preview, and the
+  extra fake device sample is removed.
+- Rich-profile regression coverage now exercises a real uploaded background,
+  active name effects, cosmetics, social services, custom links, music, and
+  roll data through publish and direct refresh for all five layouts.
+- Recognized social services remain icon-first; custom navigation destinations
+  stay identifiable with labeled treatments. Sleek copy describes optional
+  detached modules without promising synthetic presence data.
+- Cardless Minimal/Portfolio surfaces now reliably clear the compiled backdrop
+  blur, and Studio publication keeps its optimistic-concurrency token inside
+  the database transaction.
+
 ## 2026-08-12 — Stabilize the five-layout renderer and Studio preview
 
 - Profile Studio now shows a readable physical profile stage instead of a tiny

@@ -53,8 +53,8 @@
   $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
   $: activeAvatarSource = avatarSrc && failedAvatarSource !== avatarSrc ? avatarSrc : '';
   $: displayedLinks = (Array.isArray(links) ? links : []).slice(0, 6);
-  $: minimalSocialLinks = displayedLinks.filter(link => getProfileLinkDefinition(link?.type).social);
-  $: minimalNavigationLinks = displayedLinks.filter(link => !getProfileLinkDefinition(link?.type).social);
+  $: socialLinks = displayedLinks.filter(link => getProfileLinkDefinition(link?.type).social);
+  $: navigationLinks = displayedLinks.filter(link => !getProfileLinkDefinition(link?.type).social);
   $: displayedBadges = (Array.isArray(badges) ? badges : [])
     .filter(badge => badge?.id !== 'launch_edition')
     .slice(0, 3);
@@ -133,9 +133,9 @@
   </div>
 
   {#if safeLayoutVariant === 'minimal'}
-    {#if minimalSocialLinks.length}
+    {#if socialLinks.length}
       <nav class="identity-card__links identity-card__links--social" aria-label={safeDisplayName + ' social links'}>
-        {#each minimalSocialLinks as link (link.order)}
+        {#each socialLinks as link (link.order)}
           <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
             <span class="identity-card__link-glyph" aria-hidden="true"><img src={linkIconSource(link)} alt="" loading="lazy" /></span>
             <strong>{link.label}</strong>
@@ -143,9 +143,20 @@
         {/each}
       </nav>
     {/if}
-    {#if minimalNavigationLinks.length}
+    {#if navigationLinks.length}
       <nav class="identity-card__links identity-card__links--labeled" aria-label={safeDisplayName + ' navigation links'}>
-        {#each minimalNavigationLinks as link (link.order)}
+        {#each navigationLinks as link (link.order)}
+          <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
+            <strong>{link.label}</strong>
+            <span class="identity-card__link-arrow" aria-hidden="true">↗</span>
+          </a>
+        {/each}
+      </nav>
+    {/if}
+  {:else}
+    {#if socialLinks.length}
+      <nav class="identity-card__links identity-card__links--social" aria-label={safeDisplayName + ' social links'}>
+        {#each socialLinks as link (link.order)}
           <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
             <span class="identity-card__link-glyph" aria-hidden="true"><img src={linkIconSource(link)} alt="" loading="lazy" /></span>
             <strong>{link.label}</strong>
@@ -153,15 +164,16 @@
         {/each}
       </nav>
     {/if}
-  {:else if displayedLinks.length}
-    <nav class="identity-card__links" aria-label={safeDisplayName + ' social links'}>
-      {#each displayedLinks as link (link.order)}
-        <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
-          <span class="identity-card__link-glyph" aria-hidden="true"><img src={linkIconSource(link)} alt="" loading="lazy" /></span>
-          <strong>{link.label}</strong>
-        </a>
-      {/each}
-    </nav>
+    {#if navigationLinks.length}
+      <nav class="identity-card__links identity-card__links--labeled" aria-label={safeDisplayName + ' navigation links'}>
+        {#each navigationLinks as link (link.order)}
+          <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
+            <strong>{link.label}</strong>
+            <span class="identity-card__link-arrow" aria-hidden="true">↗</span>
+          </a>
+        {/each}
+      </nav>
+    {/if}
   {/if}
 
   {#if showToday}
@@ -230,7 +242,9 @@
 
   .identity-card__copy { min-width: 0; flex: 1; padding-top: 0.15rem; text-align: left; color: var(--profile-text, rgba(244, 246, 251, 0.92)); }
   .identity-card__name-row { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 0.45rem 0.55rem; }
-  .identity-card__name { max-width: 100%; margin: 0; color: var(--identity-base-color, var(--profile-username, rgba(248, 250, 255, 0.98))); font: 700 var(--identity-name-size, clamp(1.85rem, 3.8vw, 2.55rem)) / var(--identity-name-line-height, .98) var(--font-display-stack); letter-spacing: -0.055em; overflow-wrap: anywhere; }
+  .identity-card__name { flex: 1 1 auto; min-width: 0; max-width: 100%; margin: 0; color: var(--identity-base-color, var(--profile-username, rgba(248, 250, 255, 0.98))); font: 700 var(--identity-name-size, clamp(1.85rem, 3.8vw, 2.55rem)) / var(--identity-name-line-height, .98) var(--font-display-stack); letter-spacing: -0.055em; overflow-wrap: anywhere; word-break: break-word; }
+  .identity-card__name-row :global(.name-effect-canvas) { flex: 1 1 auto; min-width: 0; width: auto; }
+  .identity-card__name-row :global(.name-effect-canvas__semantic) { display: block; width: 100%; overflow-wrap: anywhere; word-break: break-word; }
   .identity-card__badges { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.28rem; }
   .identity-card__badge { display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border: 1px solid color-mix(in srgb, var(--identity-accent) 42%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--identity-accent) 14%, rgba(255, 255, 255, 0.06)); color: color-mix(in srgb, var(--identity-accent) 82%, white); font-size: 0.72rem; line-height: 1; }
   .identity-card__badge--founder { background: color-mix(in srgb, var(--identity-accent) 22%, transparent); }
@@ -470,6 +484,37 @@
   .identity-card--layout-minimal .identity-card__links--labeled a { display: flex; width: 100%; height: auto; min-height: 2.5rem; justify-content: space-between; padding: .25rem .35rem; border-bottom: 1px solid color-mix(in srgb, var(--identity-accent) 18%, transparent); border-radius: 0; }
   .identity-card--layout-minimal .identity-card__links--labeled strong { position: static; width: auto; height: auto; overflow: visible; clip: auto; clip-path: none; color: inherit; font-size: .72rem; white-space: normal; }
   .identity-card--layout-minimal .identity-card__links--labeled a:hover { background: color-mix(in srgb, var(--identity-accent) 8%, transparent); transform: none; }
+  .identity-card--layout-compact .identity-card__links--social strong,
+  .identity-card--layout-sleek .identity-card__links--social strong,
+  .identity-card--layout-minimal .identity-card__links--social strong,
+  .identity-card--layout-modern .identity-card__links--social strong,
+  .identity-card--layout-portfolio .identity-card__links--social strong { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .identity-card--layout-compact .identity-card__links--social a,
+  .identity-card--layout-sleek .identity-card__links--social a,
+  .identity-card--layout-minimal .identity-card__links--social a,
+  .identity-card--layout-modern .identity-card__links--social a,
+  .identity-card--layout-portfolio .identity-card__links--social a { display: grid; width: 2.5rem; height: 2.5rem; min-height: 2.5rem; place-items: center; padding: 0; border: 0; border-radius: 50%; }
+  .identity-card--layout-compact .identity-card__links--labeled,
+  .identity-card--layout-sleek .identity-card__links--labeled,
+  .identity-card--layout-minimal .identity-card__links--labeled,
+  .identity-card--layout-modern .identity-card__links--labeled,
+  .identity-card--layout-portfolio .identity-card__links--labeled { display: grid; width: 100%; gap: .15rem; justify-content: stretch; }
+  .identity-card--layout-compact .identity-card__links--labeled a,
+  .identity-card--layout-sleek .identity-card__links--labeled a,
+  .identity-card--layout-minimal .identity-card__links--labeled a,
+  .identity-card--layout-modern .identity-card__links--labeled a,
+  .identity-card--layout-portfolio .identity-card__links--labeled a { display: flex; width: 100%; height: auto; min-height: 2.5rem; align-items: center; justify-content: space-between; padding: .25rem .35rem; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--identity-accent) 18%, transparent); border-radius: 0; }
+  .identity-card--layout-compact .identity-card__links--labeled strong,
+  .identity-card--layout-sleek .identity-card__links--labeled strong,
+  .identity-card--layout-minimal .identity-card__links--labeled strong,
+  .identity-card--layout-modern .identity-card__links--labeled strong,
+  .identity-card--layout-portfolio .identity-card__links--labeled strong { position: static; width: auto; height: auto; overflow: visible; clip: auto; clip-path: none; color: inherit; font-size: .72rem; white-space: normal; }
+  .identity-card--layout-compact .identity-card__links--labeled a:hover,
+  .identity-card--layout-sleek .identity-card__links--labeled a:hover,
+  .identity-card--layout-minimal .identity-card__links--labeled a:hover,
+  .identity-card--layout-modern .identity-card__links--labeled a:hover,
+  .identity-card--layout-portfolio .identity-card__links--labeled a:hover { background: color-mix(in srgb, var(--identity-accent) 8%, transparent); transform: none; }
+  .identity-card__link-arrow { flex: 0 0 auto; color: color-mix(in srgb, var(--identity-accent) 72%, white); font-size: .95rem; line-height: 1; }
   .identity-card__badge { width: 1.1rem; height: 1.1rem; font-size: .62rem; }
   .identity-card__badge--staff { min-width: 3.25rem; font-size: .5rem; }
 

@@ -256,7 +256,10 @@
    * dimming the user's uploaded background, and never intercept input. */
   .profile-atmosphere { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; isolation: auto; background: transparent; }
   .profile-atmosphere--compact { opacity: 1; }
-  .profile-atmosphere__video { position: absolute; inset: -6%; width: 112%; height: 112%; object-fit: cover; mix-blend-mode: screen; }
+  /* object-fit: cover already handles the crop. Keep the media plate inside
+   * its environment bounds so a narrow Studio device cannot acquire a hidden
+   * horizontal scroll region from decorative overscan. */
+  .profile-atmosphere__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; mix-blend-mode: screen; }
   .profile-atmosphere__video--rain { opacity: .5; filter: drop-shadow(0 0 5px var(--atmosphere-color-2)); }
   .profile-atmosphere__video--droplets { opacity: .34; filter: sepia(.2) saturate(1.15) drop-shadow(0 0 7px var(--atmosphere-color-1)); }
   .profile-atmosphere__video--dust { opacity: .24; filter: grayscale(1) contrast(1.12) brightness(1.08) drop-shadow(0 0 6px var(--atmosphere-color-1)); }

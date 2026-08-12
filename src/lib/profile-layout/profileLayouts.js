@@ -17,7 +17,7 @@ const PROFILE_LAYOUTS = {
   sleek: {
     key: 'sleek',
     label: 'Sleek',
-    description: 'A stacked identity card with detached presence and music strips.',
+    description: 'A compact identity card with detached media and status modules when available.',
     footprint: 'small',
     structure: Object.freeze({ identity: 'stacked', roll: 'detached', surface: 'card-with-strips' })
   },

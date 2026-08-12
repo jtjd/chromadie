@@ -34,8 +34,14 @@
   // switching tabs before the dashboard publish action runs.
   function forward(event) {
     dispatch(event.type, event.detail);
-    if (event.type === 'appearancechange' || event.type === 'configpreview' || event.type === 'identitypreview') {
-      dispatch('customizepreview', { config: getDraftConfig() });
+    if (event.type === 'appearancechange' || event.type === 'configpreview' || event.type === 'identitypreview' || event.type === 'expressionchange') {
+      const draft = getDraftConfig();
+      const expression = event.type === 'expressionchange' && event.detail && typeof event.detail === 'object'
+        ? event.detail
+        : {};
+      dispatch('customizepreview', {
+        config: normalizeProfileConfig({ ...draft, ...expression })
+      });
     }
   }
 
@@ -59,9 +65,25 @@
     const content = contentEditor?.getDraftConfig?.();
     const widgets = widgetEditor?.getDraftConfig?.();
     const layout = layoutEditor?.getDraftConfig?.();
+    // The Layout tab intentionally hides link editing. Its mounted editor can
+    // still hold an older cached draft, so never let that presentation-only
+    // editor replace the canonical link collection while publishing a layout
+    // change. Link edits remain owned by the Links surface.
+    const layoutDraft = layout
+      ? {
+          // ProfileEditor keeps a cached normalized draft for layout changes.
+          // Project only the fields this tab owns so an older cached draft
+          // cannot overwrite appearance, media, identity, or content edits.
+          templateKey: layout.templateKey,
+          layoutVariant: layout.layoutVariant,
+          modules: layout.modules,
+          linkStyle: layout.linkStyle,
+          links: base.links
+        }
+      : null;
     return normalizeProfileConfig({
       ...base,
-      ...(layout || {}),
+      ...(layoutDraft || {}),
       appearance: background ? { ...appearance, background } : appearance,
       content: content?.content || base.content,
       widgets: widgets?.widgets || base.widgets,

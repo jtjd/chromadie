@@ -99,6 +99,15 @@
     -webkit-backdrop-filter: none;
   }
 
+  /* Keep the unprefixed reset inside the same feature query as the base
+     surface rule. Some production CSS transforms otherwise retain the base
+     blur while dropping this unprefixed declaration. */
+  @supports (backdrop-filter: blur(0)) {
+    .profile-border-effect--content {
+      backdrop-filter: none;
+    }
+  }
+
   .profile-border-effect__content {
     min-width: 0;
     max-width: 100%;

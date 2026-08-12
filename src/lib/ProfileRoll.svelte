@@ -999,22 +999,22 @@
     .profile-roll__scan-field { opacity: 0.45; }
   }
 
-  :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__ready {
+  :global(.profile-roll--quiet.profile-roll--compact:not(.profile-roll--presentation)) .profile-roll__ready {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.75rem 1rem;
     min-height: 0;
   }
-  :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__ready .profile-roll__copy,
-  :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__percentile { display: none; }
-  :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__reveal-button { width: auto; min-width: 12rem; min-height: 3.25rem; }
-  :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__reveal-swatch { width: 2.55rem; height: 2.55rem; }
-  :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__reveal-swatch::before { inset: 0.45rem; }
-  :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__details { margin-top: 0; padding-top: 0.7rem; border-top: 1px solid var(--color-line-subtle); }
+  :global(.profile-roll--quiet.profile-roll--compact:not(.profile-roll--presentation)) .profile-roll__ready .profile-roll__copy,
+  :global(.profile-roll--quiet.profile-roll--compact:not(.profile-roll--presentation)) .profile-roll__percentile { display: none; }
+  :global(.profile-roll--quiet.profile-roll--compact:not(.profile-roll--presentation)) .profile-roll__reveal-button { width: auto; min-width: 12rem; min-height: 3.25rem; }
+  :global(.profile-roll--quiet.profile-roll--compact:not(.profile-roll--presentation)) .profile-roll__reveal-swatch { width: 2.55rem; height: 2.55rem; }
+  :global(.profile-roll--quiet.profile-roll--compact:not(.profile-roll--presentation)) .profile-roll__reveal-swatch::before { inset: 0.45rem; }
+  :global(.profile-roll--quiet.profile-roll--compact:not(.profile-roll--presentation)) .profile-roll__details { margin-top: 0; padding-top: 0.7rem; border-top: 1px solid var(--color-line-subtle); }
 
   @media (max-width: 48rem) {
-    :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__ready { grid-template-columns: 1fr; }
-    :global(.profile-roll--quiet.profile-roll--compact) .profile-roll__reveal-button { width: 100%; }
+    :global(.profile-roll--quiet.profile-roll--compact:not(.profile-roll--presentation)) .profile-roll__ready { grid-template-columns: 1fr; }
+    :global(.profile-roll--quiet.profile-roll--compact:not(.profile-roll--presentation)) .profile-roll__reveal-button { width: 100%; }
   }
 </style>

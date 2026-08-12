@@ -20,7 +20,7 @@ test('default profile presentation does not inject a theme or redundant handle',
     read('src/lib/IdentityCard.svelte')
   ]);
 
-  assert.match(shell, /defaultProfilePresentation/);
+  assert.doesNotMatch(shell, /defaultProfilePresentation/);
   assert.match(shell, /profilePresentationLayoutVariant/);
   assert.match(shell, /borderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(card, /background-image: none/);

@@ -56,7 +56,7 @@ test('background treatment is normalized and projected to both profile renderers
 });
 
 test('Profile Studio stabilization keeps preview and media mutations on explicit boundaries', async () => {
-  const [workspace, preview, shell, identity, cursor, atmosphere, nameCanvas, richMedia, customize, mediaWorkspace, settings, migration] = await Promise.all([
+  const [workspace, preview, shell, identity, cursor, atmosphere, nameCanvas, richMedia, customize, mediaWorkspace, settings, migration, smoke] = await Promise.all([
     read('src/lib/ProfileStudioWorkspace.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileShell.svelte'),
@@ -68,17 +68,20 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileMediaWorkspace.svelte'),
     read('src/lib/ProfileSettings.svelte'),
-    read('supabase/migrations/20260810120000_profile_studio_stabilization.sql')
+    read('supabase/migrations/20260810120000_profile_studio_stabilization.sql'),
+    read('scripts/browser/profile-studio-smoke.mjs')
   ]);
 
   assert.match(workspace, /on:expressionchange=\{forward\}/);
   assert.match(customize, /on:expressionchange=\{forward\}/);
   assert.match(settings, /function updateExpression\(event\)/);
-  assert.match(settings, /configurationPreview = configurationPreview/);
+  assert.match(settings, /configurationPreview = normalizeProfileConfig\(/);
   assert.match(preview, /\{previewDevice\}/);
   assert.match(preview, /canvas--mobile[\s\S]*height: min\(42rem/);
   assert.match(preview, /profile-studio-preview__stage/);
   assert.doesNotMatch(preview, /logical-canvas|1440|previewScale|transform: scale/);
+  assert.match(smoke, /profile-shell-page\[aria-busy="false"\]/);
+  assert.match(smoke, /stable mobile uploaded background after direct refresh/);
   assert.match(shell, /profile-shell-page--preview-mobile/);
   assert.match(shell, /profile-shell__media-overlay/);
   assert.match(shell, /profile-shell__media-image/);

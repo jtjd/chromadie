@@ -1,5 +1,29 @@
 # Chromadie 2.0 Progress
 
+## Final profile-layout hardening — 2026-08-12
+
+- Split the opening six links from continuation links and prevented cached
+  layout drafts from publishing stale appearance/media/identity fields.
+- Removed the default public-profile header reservation, scoped legacy quiet
+  owner-roll rules away from compact profile presentation, and kept compact
+  music from embedding the full Spotify surface.
+- Added deterministic rich-profile browser coverage with a real uploaded
+  637×311 background and active composed name effects across public and Studio
+  paths, including direct refresh checks and owner/visitor roll coverage.
+- Changed the Studio desktop environment to a readable 16:10 physical stage,
+  kept mobile preview portrait-oriented, and removed the fake secondary device
+  sample. Custom navigation links remain labeled while canonical social
+  services use icon-first treatment.
+- Consolidated superseded ProfileShell contracts and deferred nonessential
+  below-fold social rendering so the Dashboard bundle retains measurable
+  headroom without changing performance budgets.
+- Hardened production surface CSS so cardless layouts do not retain the base
+  backdrop blur after CSS compilation, and made the atomic Studio publish RPC
+  use the exact locked-row timestamp rather than a JSON timestamp round trip.
+- Fresh dev and production browser smoke both completed all 15 steps; each
+  produced the five-layout public/Studio screenshot set from the same rich
+  fixture.
+
 ## Profile layout renderer stabilization — 2026-08-12
 
 - Removed the transformed 1440×900 Studio canvas. Live preview now uses a

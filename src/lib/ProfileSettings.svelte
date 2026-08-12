@@ -377,7 +377,24 @@
   function getDashboardDraft() {
     const base = toEditorProfileConfig(context?.profileConfig?.draft);
     const localDraft = getDashboardEditor()?.getDraftConfig?.();
-    return normalizeProfileConfig({ ...base, ...(localDraft || {}) }, FALLBACK_PROFILE_COLOR);
+    const layoutFields = localDraft
+      ? {
+          templateKey: localDraft.templateKey || base.templateKey,
+          layoutVariant: localDraft.layoutVariant || base.layoutVariant,
+          modules: Array.isArray(localDraft.modules) ? localDraft.modules : base.modules,
+          linkStyle: localDraft.linkStyle || base.linkStyle,
+          links: Array.isArray(localDraft.links) ? localDraft.links : base.links
+        }
+      : null;
+    const merged = activeSection === 'links' || activeSection === 'profile-layout'
+      ? normalizeProfileConfig({ ...base, ...(layoutFields || {}) }, FALLBACK_PROFILE_COLOR)
+      : normalizeProfileConfig({ ...base, ...(localDraft || {}) }, FALLBACK_PROFILE_COLOR);
+    // Customize owns layout presentation only. The Links surface is the sole
+    // editor for the canonical collection, so a mounted layout editor with an
+    // older cached link array must never erase links while publishing a layout.
+    return activeSection === 'customize'
+      ? normalizeProfileConfig({ ...merged, links: base.links }, FALLBACK_PROFILE_COLOR)
+      : merged;
   }
 
   function applyDashboardConfiguration({ draft, published, updatedAt, publishedAt }) {
@@ -533,17 +550,22 @@
 
   function updateExpression(event) {
     const fields = event.detail || {};
+    const updatedAt = fields.updatedAt || fields.updated_at || context.profileConfig?.updatedAt || null;
     const nextDraft = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.draft), ...fields }, FALLBACK_PROFILE_COLOR);
     const nextPublished = normalizeProfileConfig({ ...toEditorProfileConfig(context.profileConfig?.published), ...fields }, FALLBACK_PROFILE_COLOR);
-    configurationPreview = configurationPreview
-      ? normalizeProfileConfig({ ...configurationPreview, ...fields }, FALLBACK_PROFILE_COLOR)
-      : null;
+    // Media edits are saved through the expression RPC before they reach this
+    // adapter. Keep the preview on the same draft projection immediately so a
+    // persisted upload is visible without waiting for a full dashboard reload.
+    configurationPreview = normalizeProfileConfig(
+      { ...(configurationPreview || nextDraft), ...fields },
+      FALLBACK_PROFILE_COLOR
+    );
     if (context.profileConfig?.version === 2 || context.profileConfig?.v2Draft) {
       const nextDraftV2 = buildConfigurationV2(nextDraft, context.profileConfig?.v2Draft);
       const nextPublishedV2 = buildConfigurationV2(nextPublished, context.profileConfig?.v2Published);
-      context = { ...context, profileConfig: { ...(context.profileConfig || {}), version: 2, draft: nextDraftV2, published: nextPublishedV2, v2Draft: nextDraftV2, v2Published: nextPublishedV2 } };
+      context = { ...context, profileConfig: { ...(context.profileConfig || {}), version: 2, draft: nextDraftV2, published: nextPublishedV2, v2Draft: nextDraftV2, v2Published: nextPublishedV2, updatedAt } };
     } else {
-      context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: nextDraft, published: nextPublished } };
+      context = { ...context, profileConfig: { ...(context.profileConfig || {}), draft: nextDraft, published: nextPublished, updatedAt } };
     }
   }
 
@@ -566,7 +588,11 @@
   function updateConfigurationPreview(event) {
     const nextConfig = event.detail?.config;
     if (!nextConfig) { configurationPreview = null; return; }
-    configurationPreview = normalizeProfileConfig(nextConfig, FALLBACK_PROFILE_COLOR);
+    const currentConfig = configurationPreview || toEditorProfileConfig(context.profileConfig?.draft);
+    configurationPreview = normalizeProfileConfig(
+      preserveExpressionFields(nextConfig, currentConfig),
+      FALLBACK_PROFILE_COLOR
+    );
   }
 
   function updateIdentityPreview(event) {

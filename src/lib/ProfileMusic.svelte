@@ -173,7 +173,7 @@
     {/key}
   </div>
 {:else if spotifyEmbedSrc && compact}
-  <div class="profile-music profile-music--spotify-compact" data-music-state="spotify-compact" aria-label="Spotify profile music">
+  <div class="profile-music profile-music--compact profile-music--spotify-compact" data-music-state="spotify-compact" aria-label="Spotify profile music">
     <span class="profile-music__mark" style={'--music-accent: ' + safeColor + ';'} aria-hidden="true">♪</span>
     <div class="profile-music__copy"><span>Profile music</span><strong>Spotify {spotifyType}</strong></div>
     <a class="profile-music__open" href={spotifyEmbedSrc} target="_blank" rel="noopener noreferrer">Open</a>

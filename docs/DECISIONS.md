@@ -1,5 +1,34 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-12 — Make the final layout hardening pass data-safe and evidence-driven
+
+Opening links and continuation links are separate render inputs: the first
+six belong to the opening identity surface and links after that belong only to
+the story/continuation surface. Layout drafts also project only layout-owned
+fields before publishing, so a cached editor draft cannot overwrite newer
+appearance, media, identity, or content changes. The structural authority
+remains `configuration.layoutVariant`.
+
+Headerless public profiles use a zero default viewport offset and fill the
+intended `100dvh`. Owner roll presentation is explicitly compact inside the
+small profile surfaces, while visitor and owner paths continue to share roll
+data and logic. Custom navigation links remain labeled across compact layouts;
+only entries recognized by the canonical social-service registry use the
+minimal icon treatment.
+
+Regression evidence uses one deterministic rich profile with an uploaded
+637×311 background, composed name effects, avatar/border/atmosphere/cursor
+cosmetics, services, custom links, roll data, and music. Studio uses a readable
+physical stage with a desktop-like 16:10 environment and a portrait mobile
+environment; it does not recreate or scale a virtual desktop document.
+
+The content-only profile perimeter resets the unprefixed backdrop blur inside
+the same feature query as the base surface rule, preventing the production CSS
+transform from retaining a hidden blur on Minimal and Portfolio. The atomic
+Studio publish boundary reads its optimistic-concurrency token directly from
+the locked configuration row, and browser fixture publication retries once
+only after a real concurrent-token conflict.
+
 ## 2026-08-12 — Keep profile preview physical and let the environment own the viewport
 
 Profile Studio renders a real, readable profile stage instead of a transformed

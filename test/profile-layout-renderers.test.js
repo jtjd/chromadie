@@ -8,9 +8,15 @@ import {
   resolveProfileLayoutPreviewVariant,
   resolveProfileLayoutVariant
 } from '../src/lib/profile-layout/profileLayouts.js';
-import { createDefaultProfileConfig } from '../src/lib/profileConfig.js';
+import {
+  createDefaultProfileConfig,
+  getProfileContinuationLinks,
+  getProfileOpeningLinks,
+  normalizeProfileConfig
+} from '../src/lib/profileConfig.js';
 import { createProfileTemplatePatch } from '../src/lib/profileTemplates.js';
 import { PROFILE_LINK_DEFINITIONS, PROFILE_LINK_TYPES, isProfileSocialLink } from '../src/lib/profileLinkTypes.js';
+import { RICH_PROFILE_FIXTURE } from '../scripts/browser/profile-rich-fixture.mjs';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -33,6 +39,43 @@ test('public layout authority comes from profile configuration, with a separate 
   assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_modern', layoutVariant: 'not-real' }), 'compact');
   assert.equal(resolveProfileLayoutPreviewVariant({ profile_layout: 'profile_layout_modern' }, { layoutVariant: 'sleek' }), 'modern');
   assert.equal(resolveProfileLayoutPreviewVariant({}, { layoutVariant: 'portfolio' }), 'portfolio');
+});
+
+test('opening and continuation link helpers partition a rich profile without overlap', () => {
+  const config = normalizeProfileConfig({
+    ...createDefaultProfileConfig(),
+    configurationVersion: 2,
+    links: Array.from({ length: 10 }, (_, index) => ({
+      key: `fixture-link-${index}`,
+      type: index < 6 ? 'github' : 'website',
+      label: `Fixture link ${index + 1}`,
+      url: `https://example.com/fixture-${index + 1}`,
+      visible: true,
+      order: index
+    }))
+  });
+  const opening = getProfileOpeningLinks(config);
+  const continuation = getProfileContinuationLinks(config);
+  const openingUrls = opening.map(link => link.url);
+  const continuationUrls = continuation.map(link => link.url);
+
+  assert.equal(opening.length, 6);
+  assert.equal(continuation.length, 4);
+  assert.deepEqual(openingUrls, Array.from({ length: 6 }, (_, index) => `https://example.com/fixture-${index + 1}`));
+  assert.deepEqual(continuationUrls, Array.from({ length: 4 }, (_, index) => `https://example.com/fixture-${index + 7}`));
+  assert.equal(new Set([...openingUrls, ...continuationUrls]).size, 10);
+});
+
+test('the canonical browser fixture contains the rich renderer coverage data', () => {
+  assert.match(RICH_PROFILE_FIXTURE.usernamePrefix, /[a-z]+/);
+  assert(RICH_PROFILE_FIXTURE.bio.length > 40);
+  assert.equal(RICH_PROFILE_FIXTURE.background.width, 637);
+  assert.equal(RICH_PROFILE_FIXTURE.background.height, 311);
+  assert.equal(RICH_PROFILE_FIXTURE.links.length, 10);
+  assert(RICH_PROFILE_FIXTURE.links.slice(0, 4).every(link => isProfileSocialLink(link.type)));
+  assert(RICH_PROFILE_FIXTURE.links.slice(4).every(link => !isProfileSocialLink(link.type)));
+  assert(RICH_PROFILE_FIXTURE.links.every(link => /^https:\/\//.test(link.url)));
+  assert(RICH_PROFILE_FIXTURE.effects.nameFont && RICH_PROFILE_FIXTURE.effects.nameMaterial && RICH_PROFILE_FIXTURE.effects.nameMotion);
 });
 
 test('template selection applies the authored module order while remaining bounded', () => {
@@ -65,11 +108,13 @@ test('editor, renderer, and public icon files consume one link service registry'
 });
 
 test('layout renderer composes the shared roll through distinct presentation regions', async () => {
-  const [frame, dailyRoll, shell, preview] = await Promise.all([
+  const [frame, dailyRoll, shell, preview, customize, settings] = await Promise.all([
     read('src/lib/ProfileLayoutFrame.svelte'),
     read('src/lib/ProfileDailyRoll.svelte'),
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/ProfileStudioPreview.svelte')
+    read('src/lib/ProfileStudioPreview.svelte'),
+    read('src/lib/ProfileCustomizePage.svelte'),
+    read('src/lib/ProfileSettings.svelte')
   ]);
   assert.match(shell, /profile-layout-frame__identity/);
   assert.match(shell, /profile-layout-frame__roll/);
@@ -85,12 +130,42 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(dailyRoll, /profile-daily-roll--modern/);
   assert.match(shell, /isOwner=\{isOwnProfile\}/);
   assert.match(shell, /compact=\{true\}/);
+  assert.match(shell, /links=\{openingLinks\}/);
+  assert.match(shell, /continuationLinks/);
+  assert.doesNotMatch(shell, /links=\{visibleLinks\}/);
   assert.match(shell, /profile-border-effect--content/);
   assert.match(dailyRoll, /profile-daily-roll--' \+ variant/);
   assert.match(preview, /profile-studio-preview__stage/);
   assert.doesNotMatch(preview, /logical-canvas|1440|previewScale|transform: scale/);
   assert.doesNotMatch(frame, /role="tab"|presenceLabel|daily color profile/);
   assert.doesNotMatch(preview, /@container profile-preview \(max-width: 31rem\)/);
+  assert.match(preview, /aspect-ratio: 16 \/ 10/);
+  assert.doesNotMatch(preview, /device-sample/);
+  assert.match(dailyRoll, /presentation=\{variant\}/);
+  assert.match(customize, /showLinks=\{false\}/);
+  assert.match(customize, /layoutDraft = layout[\s\S]*templateKey: layout\.templateKey[\s\S]*layoutVariant: layout\.layoutVariant[\s\S]*modules: layout\.modules[\s\S]*links: base\.links/);
+  assert.doesNotMatch(customize, /layoutDraft = layout[\s\S]*appearance: layout\.appearance/);
+  assert.match(settings, /const layoutFields = localDraft[\s\S]*modules: Array\.isArray\(localDraft\.modules\)[\s\S]*activeSection === 'links' \|\| activeSection === 'profile-layout'/);
+  assert.match(settings, /activeSection === 'customize'[\s\S]*links: base\.links/);
+});
+
+test('public viewport and compact roll contracts do not inherit legacy offsets', async () => {
+  const [shell, roll, identity, music] = await Promise.all([
+    read('src/lib/ProfileShell.svelte'),
+    read('src/lib/ProfileRoll.svelte'),
+    read('src/lib/IdentityCard.svelte'),
+    read('src/lib/ProfileMusic.svelte')
+  ]);
+  assert.doesNotMatch(shell, /4\.75rem/);
+  assert.match(shell, /--profile-viewport-offset: 0px/);
+  assert.match(shell, /calc\(100dvh - var\(--profile-viewport-offset/);
+  assert.match(roll, /profile-roll--quiet\.profile-roll--compact:not\(\.profile-roll--presentation\)/);
+  assert.match(identity, /identity-card__links--labeled/);
+  assert.match(identity, /socialLinks/);
+  assert.match(identity, /navigationLinks/);
+  assert.match(music, /profile-music--compact profile-music--spotify-compact/);
+  const compactMusicBranch = music.split('{:else if spotifyEmbedSrc && compact}')[1]?.split('{:else if spotifyEmbedSrc && (!deferMedia')[0] || '';
+  assert.doesNotMatch(compactMusicBranch, /<iframe/);
 });
 
 test('surface and canvas ownership stay bounded at the renderer boundaries', async () => {

@@ -158,7 +158,7 @@ test('public social presentation keeps positive signals moderated and owner-cont
     readFile(new URL('../src/lib/profileSocial.js', import.meta.url), 'utf8')
   ]);
 
-  assert.match(shell, /<ProfileSocial[\s\S]*on:socialchange=\{handleSocialChange\}/);
+  assert.match(shell, /this=\{profileSocialComponent\}[\s\S]*on:socialchange=\{handleSocialChange\}/);
   assert.match(shell, /social=\{social\}/);
   assert.match(component, /toggle_profile_reaction/);
   assert.match(component, /create_profile_guestbook_entry/);
