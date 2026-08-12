@@ -2,6 +2,23 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-12 — Stabilize the five-layout renderer and Studio preview
+
+- Profile Studio now shows a readable physical profile stage instead of a tiny
+  scaled desktop page. Desktop and mobile preview controls request their
+  intended compositions explicitly, while the background and atmosphere fill
+  the surrounding preview environment.
+- Public profiles keep full-viewport backgrounds and compact profile surfaces.
+  Border effects own the visible perimeter, and Minimal/Portfolio remain
+  intentionally cardless rather than gaining an extra wrapper surface.
+- Compact, Sleek, Minimal, Modern, and Portfolio retain distinct identity,
+  roll, secondary-region, and below-fold behavior. Sleek no longer invents
+  presence copy; Modern no longer exposes nonfunctional tabs; Minimal shows
+  recognized services as an icon row and custom links as labeled rows.
+- Name effects use the layout's effective type size and bounded canvas
+  measurement in both public profiles and Studio. Compact roll/music
+  presentations remain small enough for the profile footprint.
+
 ## 2026-08-11 — Remove the standalone public-profile Share control
 
 - Public profiles no longer render a separate Share profile button over the

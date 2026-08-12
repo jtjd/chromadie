@@ -66,12 +66,37 @@
     position: relative;
     min-width: 0;
     max-width: 100%;
-    padding: 2px;
+    padding: 1px;
     border: 2px solid var(--border-accent);
     border-radius: var(--profile-border-radius, var(--radius-lg));
     box-sizing: border-box;
     overflow: visible;
     isolation: isolate;
+  }
+
+  .profile-border-effect,
+  .profile-border-effect--surface {
+    border-width: var(--profile-border-width, 1px);
+    border-color: color-mix(in srgb, var(--profile-border-color, #ffffff) calc(var(--profile-border-opacity, .11) * 100%), var(--border-accent));
+    background: var(--profile-surface-fill, color-mix(in srgb, var(--profile-surface, #090b0f) calc(var(--profile-surface-opacity, .64) * 100%), transparent));
+    box-shadow: 0 2rem 5rem rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .045);
+    backdrop-filter: blur(var(--profile-surface-blur, 20px));
+    -webkit-backdrop-filter: blur(var(--profile-surface-blur, 20px));
+  }
+
+  @supports ((-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))) {
+    .profile-border-effect,
+    .profile-border-effect--surface {
+      -webkit-backdrop-filter: blur(var(--profile-surface-blur, 20px));
+      backdrop-filter: blur(var(--profile-surface-blur, 20px));
+    }
+  }
+
+  .profile-border-effect--content {
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .profile-border-effect__content {
@@ -82,9 +107,7 @@
     z-index: 1;
   }
 
-  .profile-border-effect:not(.profile-border-effect--none) .profile-border-effect__content {
-    overflow: hidden;
-  }
+  .profile-border-effect__content { overflow: visible; }
 
   .profile-border-effect:not(.profile-border-effect--none)::before {
     content: '';
@@ -97,12 +120,16 @@
     pointer-events: none;
   }
 
-  .profile-border-effect--none {
+  .profile-border-effect--none.profile-border-effect--content {
     padding: 0;
     border: 0;
     border-color: transparent;
     box-shadow: none;
     overflow: visible;
+  }
+
+  .profile-border-effect--content:not(.profile-border-effect--none) {
+    padding: 2px;
   }
 
   .profile-border-effect--celestial {

@@ -131,6 +131,7 @@ export class CdpPage {
     this.pending = new Map();
     this.listeners = new Map();
     this.requestLog = [];
+    this.requestEntries = new Map();
     this.consoleLog = [];
   }
 
@@ -153,7 +154,22 @@ export class CdpPage {
     await this.command('Network.enable');
     await this.command('Log.enable');
     this.on('Network.requestWillBeSent', event => {
-      if (event.request?.url) this.requestLog.push({ method: event.request.method, url: event.request.url });
+      if (!event.request?.url) return;
+      const entry = { requestId: event.requestId, method: event.request.method, url: event.request.url };
+      this.requestLog.push(entry);
+      this.requestEntries.set(event.requestId, entry);
+    });
+    this.on('Network.responseReceived', event => {
+      const entry = this.requestEntries.get(event.requestId);
+      if (!entry) return;
+      entry.status = event.response?.status;
+      entry.mimeType = event.response?.mimeType || '';
+    });
+    this.on('Network.loadingFailed', event => {
+      const entry = this.requestEntries.get(event.requestId);
+      if (!entry) return;
+      entry.failed = true;
+      entry.errorText = event.errorText || 'Network request failed';
     });
     this.on('Runtime.consoleAPICalled', event => {
       const text = (event.args || []).map(arg => arg.value ?? arg.description ?? '').join(' ');

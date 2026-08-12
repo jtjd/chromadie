@@ -25,6 +25,7 @@
   export let compact = false;
   export let integrated = false;
   export let quiet = false;
+  export let presentation = '';
   export let visualFixture = '';
   /** @type {Record<string, any> | null} */
   export let fixtureResult = null;
@@ -488,7 +489,7 @@
   });
 </script>
 
-<Module size={moduleSize} tone="accent" className={'profile-roll' + (compact ? ' profile-roll--compact' : '') + (integrated ? ' profile-roll--integrated' : '') + (quiet ? ' profile-roll--quiet' : '')} eyebrow={integrated ? '' : 'Today’s living event'} title={integrated ? '' : 'Roll the next chapter'} description={integrated ? '' : 'Your daily color arrives here, then becomes part of the profile visitors remember.'}>
+<Module size={moduleSize} tone="accent" className={'profile-roll' + (compact ? ' profile-roll--compact' : '') + (integrated ? ' profile-roll--integrated' : '') + (quiet ? ' profile-roll--quiet' : '') + (presentation ? ' profile-roll--presentation' : '')} eyebrow={integrated ? '' : 'Today’s living event'} title={integrated ? '' : 'Roll the next chapter'} description={integrated ? '' : 'Your daily color arrives here, then becomes part of the profile visitors remember.'}>
   {#if phase === 'loading'}
     <div class="profile-roll__state" role="status" aria-live="polite">
       <span class="profile-roll__pulse" aria-hidden="true"></span>
@@ -934,6 +935,48 @@
     .profile-roll__actions :global(.foundation-button),
     .profile-roll__actions .profile-roll__button { flex: 1 1 12rem; }
   }
+
+  /* Compact profile layouts share this owner roll implementation, but their
+     narrow containers need a bounded presentation independent of the browser
+     viewport. The roll state, eligibility and server events remain shared. */
+  :global(.profile-roll--presentation) {
+    font-size: .78rem;
+  }
+
+  :global(.profile-roll--presentation) .profile-roll__ready {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .5rem;
+    min-height: 0;
+    padding: .35rem 0;
+  }
+
+  :global(.profile-roll--presentation) .profile-roll__ready-copy { gap: .2rem; }
+  :global(.profile-roll--presentation) .profile-roll__ready-copy h3 { font-size: .88rem; }
+  :global(.profile-roll--presentation) .profile-roll__ready .profile-roll__copy,
+  :global(.profile-roll--presentation) .profile-roll__availability { display: none; }
+  :global(.profile-roll--presentation) .profile-roll__reveal-button { min-width: 0; min-height: 2.3rem; padding: .3rem .45rem; gap: .35rem; }
+  :global(.profile-roll--presentation) .profile-roll__reveal-swatch { width: 1.7rem; height: 1.7rem; }
+  :global(.profile-roll--presentation) .profile-roll__reveal-swatch::before { inset: .3rem; }
+  :global(.profile-roll--presentation) .profile-roll__reveal-copy strong { font-size: .68rem; }
+  :global(.profile-roll--presentation) .profile-roll__reveal-copy small { display: none; }
+
+  :global(.profile-roll--presentation) .profile-roll__rolling {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    min-height: 5.25rem;
+    gap: .5rem;
+  }
+  :global(.profile-roll--presentation) .profile-roll__rolling .profile-roll__preview { width: 2.25rem; min-width: 2.25rem; height: 2.25rem; }
+  :global(.profile-roll--presentation) .profile-roll__rolling .profile-roll__preview :global(.roll-preview-frame) { width: 2.25rem; height: 2.25rem; }
+
+  :global(.profile-roll--presentation) .profile-roll__result { gap: .45rem; padding: .35rem 0 0; }
+  :global(.profile-roll--presentation) .profile-roll__result-head { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .5rem; }
+  :global(.profile-roll--presentation) .profile-roll__result .profile-roll__preview { min-width: 2.25rem; width: 2.25rem; height: 2.25rem; }
+  :global(.profile-roll--presentation) .profile-roll__result .profile-roll__preview :global(.roll-preview-frame) { width: 2.25rem; height: 2.25rem; transform: none; }
+  :global(.profile-roll--presentation) .profile-roll__score-row strong { font-size: 1rem; }
+  :global(.profile-roll--presentation) .profile-roll__condition-rail,
+  :global(.profile-roll--presentation) .profile-roll__details,
+  :global(.profile-roll--presentation) .profile-roll__result-actions { display: none; }
 
   @media (prefers-reduced-motion: reduce) {
     .profile-roll__pulse { animation: none; }

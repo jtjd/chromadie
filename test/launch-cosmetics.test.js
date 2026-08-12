@@ -148,13 +148,14 @@ test('profile layouts compose shared roll data through distinct presentation reg
     assert.match(card, new RegExp(`identity-card--layout-${layout}`));
   }
   assert.match(shell, /ProfileDailyRoll/);
-  assert.match(shell, /profileLayoutFrameComponent/);
-  assert.match(shell, /slot="identity"/);
-  assert.match(shell, /slot="roll"/);
-  assert.match(shell, /slot="music"/);
-  assert.match(frame, /data-profile-layout-region="modern"/);
-  assert.match(frame, /data-profile-layout-strip="presence"/);
-  assert.match(dailyRoll, /data-profile-roll-presentation/);
+  assert.match(shell, /<ProfileLayoutFrame/);
+  assert.match(shell, /profile-layout-frame__identity/);
+  assert.match(shell, /profile-layout-frame__roll/);
+  assert.match(shell, /profile-layout-frame__strip/);
+  assert.match(dailyRoll, /profile-daily-roll--sleek/);
+  assert.match(dailyRoll, /profile-daily-roll--modern/);
+  assert.doesNotMatch(frame, /data-profile-layout-strip="presence"|role="tab"/);
+  assert.match(dailyRoll, /profile-daily-roll--' \+ variant/);
   assert.match(shell, /layoutVariant=\{profilePresentationLayoutVariant\}/);
   assert.doesNotMatch(card, /identity-card--layout-(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)/);
 });

@@ -58,6 +58,7 @@
   let removeFontListener;
   let composableLoadPromise;
   let requestedFontLoadKey = '';
+  let lastHostSize = { width: 220, height: 44 };
 
   // Motion layers intentionally extend beyond the glyphs. Keep that visual
   // bleed outside the semantic line box so glow, flash, and split entry do not
@@ -183,9 +184,7 @@
 
   function isIntrinsicName() {
     if (!host || !semantic) return false;
-    const hostRect = host.getBoundingClientRect?.() || {};
-    const semanticRect = semantic.getBoundingClientRect?.() || {};
-    return Math.abs((hostRect.width || 0) - (semanticRect.width || 0)) < 1;
+    return Math.abs((host.clientWidth || 0) - (semantic.offsetWidth || 0)) < 1;
   }
 
   function syncSemanticMetrics() {
@@ -193,13 +192,29 @@
     renderer.setOptions({ fontSize: getSemanticFontSize(), inline: isIntrinsicName() });
   }
 
-  function observeResize() {
+  function getLogicalHostSize(measured = {}) {
+    const measuredWidth = Number(measured.width);
+    const measuredHeight = Number(measured.height);
+    const width = Number.isFinite(measuredWidth) && measuredWidth > 0
+      ? measuredWidth
+      : Number(host?.clientWidth) || lastHostSize.width;
+    const height = Number.isFinite(measuredHeight) && measuredHeight > 0
+      ? measuredHeight
+      : Number(host?.clientHeight) || lastHostSize.height;
+    lastHostSize = {
+      width: Math.min(1024, Math.max(1, width)),
+      height: Math.min(256, Math.max(1, height))
+    };
+    return lastHostSize;
+  }
+
+  function applyResize(measured = {}) {
     if (!renderer || !host) return;
-    const rect = host.getBoundingClientRect?.() || {};
+    const size = getLogicalHostSize(measured);
     syncSemanticMetrics();
     renderer.resize({
-      width: (rect.width || 0) + CANVAS_BLEED_X * 2,
-      height: (rect.height || 0) + CANVAS_BLEED_Y * 2
+      width: size.width + CANVAS_BLEED_X * 2,
+      height: size.height + CANVAS_BLEED_Y * 2
     });
     renderer.draw(lastDrawTime);
   }
@@ -208,7 +223,7 @@
     mounted = true;
     renderer = createNameCanvasRenderer(canvas, rendererOptions);
     canvasReady = renderer.supported;
-    observeResize();
+    applyResize();
     requestedFontLoadKey = '';
 
     if (typeof IntersectionObserver === 'function') {
@@ -224,16 +239,11 @@
         const entry = entries[0];
         if (!entry || !renderer) return;
         updateVisibility(entry.contentRect.width > 0 && entry.contentRect.height > 0);
-        syncSemanticMetrics();
-        renderer.resize({
-          width: entry.contentRect.width + CANVAS_BLEED_X * 2,
-          height: entry.contentRect.height + CANVAS_BLEED_Y * 2
-        });
-        renderer.draw(lastDrawTime);
+        applyResize(entry.contentRect);
       });
       resizeObserver.observe(host);
     } else {
-      observeResize();
+      applyResize();
     }
     updateHostVisibility();
 
@@ -252,7 +262,7 @@
 
     if (typeof document !== 'undefined' && document.fonts?.addEventListener) {
       const fontListener = () => {
-        observeResize();
+        applyResize();
         renderer?.draw(lastDrawTime);
       };
       document.fonts.addEventListener('loadingdone', fontListener);
@@ -303,7 +313,7 @@
      semantic node lives here when the Canvas renderer is active, so mirror
      that contract locally or the visual Canvas would measure a tiny default
      heading and render the name at the wrong scale. */
-  .name-effect-canvas__semantic.identity-card__name { max-width: 100%; margin: 0; color: var(--identity-base-color, var(--profile-username, rgba(248, 250, 255, 0.98))); font: 700 clamp(1.85rem, 3.8vw, 2.55rem) / 0.98 var(--font-display-stack, var(--font-display)); letter-spacing: -0.055em; overflow-wrap: anywhere; }
+  .name-effect-canvas__semantic.identity-card__name { max-width: 100%; margin: 0; color: var(--identity-base-color, var(--profile-username, rgba(248, 250, 255, 0.98))); font-family: var(--font-display-stack, var(--font-display)); font-size: var(--identity-name-size, 1em); font-weight: 700; line-height: var(--identity-name-line-height, 1); letter-spacing: -0.055em; overflow-wrap: anywhere; }
   .name-effect-canvas__visual { position: absolute; z-index: 0; inset: -12px -18px; display: block; width: calc(100% + 36px); height: calc(100% + 24px); max-width: none; pointer-events: none; }
   .name-effect-canvas--ready .name-effect-canvas__semantic { color: transparent !important; text-shadow: none !important; -webkit-text-fill-color: transparent !important; }
   .name-effect-canvas--fallback .name-effect-canvas__visual { display: none; }

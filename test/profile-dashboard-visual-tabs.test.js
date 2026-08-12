@@ -68,8 +68,8 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(appearance, /@media \(max-width: 40rem\)[\s\S]*appearance-editor__color-grid, \.appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
   assert.match(identity, /@media \(max-width: 52rem\)[\s\S]*identity-editor__fields\) \{ display: grid; gap: \.8rem;[\s\S]*identity-editor__grid--behavior \.identity-editor__field:last-child\)/);
   assert.match(identity, /identity-editor__grid--meta \.identity-editor__field:first-child[\s\S]*grid-column: 1 \/ -1/);
-  assert.match(preview, /profile-studio-preview__logical-canvas/);
-  assert.match(preview, /1440/);
+  assert.match(preview, /profile-studio-preview__stage/);
+  assert.doesNotMatch(preview, /logical-canvas|1440|previewScale|transform: scale/);
   assert.doesNotMatch(preview, /@container profile-preview \(max-width: 31rem\)[\s\S]*identity-card__person/);
   assert.match(smoke, /responsive dashboard geometry fits phone, tablet, and narrow desktop widths/);
   assert.match(smoke, /const viewports = \[[\s\S]*\[320, 568\][\s\S]*\[667, 375\][\s\S]*\[1920, 1080\]/);

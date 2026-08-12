@@ -13,9 +13,9 @@
   const dispatch = createEventDispatcher();
   const TEMPLATE_CARD_COPY = Object.freeze({
     compact: { label: 'Compact', description: 'Horizontal identity head with a tiny integrated roll.' },
-    sleek: { label: 'Sleek', description: 'Stacked card with detached presence and music strips.' },
+    sleek: { label: 'Sleek', description: 'Stacked card with detached music and Today strips when available.' },
     minimal: { label: 'Minimal', description: 'Offset, cardless identity with an inline indicator.' },
-    modern: { label: 'Modern', description: 'Compact identity with PROFILE/WIDGETS and a roll widget.' },
+    modern: { label: 'Modern', description: 'Compact identity with a small secondary roll widget.' },
     portfolio: { label: 'Portfolio', description: 'Cardless centered hero with Today below the fold.' }
   });
 

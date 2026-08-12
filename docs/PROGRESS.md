@@ -1,5 +1,25 @@
 # Chromadie 2.0 Progress
 
+## Profile layout renderer stabilization — 2026-08-12
+
+- Removed the transformed 1440×900 Studio canvas. Live preview now uses a
+  readable physical stage with explicit desktop/mobile rendering context and
+  keeps the background/effects around the compact profile surface.
+- Statically imported ProfileLayoutFrame and separated geometry ownership from
+  ProfileBorderEffect surface ownership. Public profile pages and mobile
+  layouts now retain full viewport height, while cardless Minimal/Portfolio
+  avoid decorative card surfaces.
+- Bounded NameEffectCanvas measurement to one logical coordinate system and
+  shared layout-controlled name sizing. Compact owner rolls and compact music
+  avoid browser-viewport desktop geometry and oversized Spotify embeds.
+- Removed fake Sleek presence and Modern tab semantics, split Minimal social
+  services from custom navigation links, and made mobile preview precedence
+  explicit after layout-specific desktop rules.
+- Added production browser assertions for physical preview size, structural
+  layout differences, background bounds, computed public surface behavior,
+  critical hashed CSS/JS failures, sane name canvases, and no stale 1440/scale
+  preview path.
+
 ## Remove public-profile Share control — 2026-08-11
 
 - Removed the standalone Share profile button and its lazy dialog mount from

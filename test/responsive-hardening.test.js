@@ -51,7 +51,7 @@ test('Profile Studio preview is bounded on short-height screens and respects saf
   assert.match(dashboard, /@media \(max-height: 32rem\)/);
   assert.match(dashboard, /env\(safe-area-inset-bottom\)/);
   assert.match(preview, /env\(safe-area-inset-bottom\)/);
-  assert.match(preview, /min-height: min\(22rem, calc\(100dvh - 12rem\)\)/);
+  assert.match(preview, /min-height: min\(24rem, calc\(100dvh - 12rem\)\)/);
 });
 
 test('narrow identity cards use container-aware stacked layouts and readable bios', () => {

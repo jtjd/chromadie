@@ -353,8 +353,10 @@ try {
           const canvas = document.querySelector('.profile-studio-preview__canvas');
           const shell = canvas?.querySelector('.profile-shell-page--preview');
           const viewport = canvas?.querySelector('.profile-studio-preview__viewport');
+          const stage = canvas?.querySelector('.profile-studio-preview__stage');
           const frame = shell?.querySelector('.profile-layout-frame');
-          const identityRegion = frame?.querySelector('[data-profile-layout-region="identity"]');
+          const identityRegion = frame?.querySelector('.profile-shell__layout-identity');
+          const boundary = shell?.querySelector('.profile-shell__identity-boundary');
           const card = shell?.querySelector('.identity-card');
           const avatar = card?.querySelector('.identity-card__avatar');
           const name = card?.querySelector('.identity-card__name');
@@ -368,6 +370,8 @@ try {
           const cardBox = rect(card);
           const frameBox = rect(frame);
           const identityBox = rect(identityRegion);
+          const stageBox = rect(stage);
+          const boundaryBox = rect(boundary);
           const avatarBox = rect(avatar);
           const nameBox = rect(name);
           const copyBox = rect(copy);
@@ -384,13 +388,21 @@ try {
             .map(element => ({ selector: element.className?.baseVal || element.className || element.tagName, box: rect(element) }))
             .filter(item => item.box);
           const shellStyle = shell ? getComputedStyle(shell) : null;
-          const identityStyle = identityRegion ? getComputedStyle(identityRegion) : null;
+          const boundaryStyle = boundary ? getComputedStyle(boundary) : null;
           const cardStyle = card ? getComputedStyle(card) : null;
+          const nameStyle = name ? getComputedStyle(name) : null;
+          const nameCanvas = card?.querySelector('.name-effect-canvas__visual');
+          const mediaStyles = [...(shell?.querySelectorAll('.profile-shell__media-image, .profile-shell__media-video') || [])].map(element => {
+            const style = getComputedStyle(element);
+            return { position: style.position, width: style.width, height: style.height, objectFit: style.objectFit };
+          });
           return {
             shell: shellBox,
             viewport: viewportBox,
+            stage: stageBox,
             frame: frameBox,
             identityRegion: identityBox,
+            boundary: boundaryBox,
             card: cardBox,
             cardClass: card?.className || '',
             avatar: avatarBox,
@@ -400,16 +412,23 @@ try {
             avatarCopyCenterDelta,
             avatarBeforeName: Boolean(avatarBox && nameBox && avatarBox.left < nameBox.left),
             hasDailyRoll: Boolean(shell?.querySelector('.profile-daily-roll')),
-            frameVariant: frame?.getAttribute('data-profile-layout') || '',
+            frameVariant: ['compact', 'sleek', 'minimal', 'modern', 'portfolio'].find(layoutKey => shell?.classList.contains('profile-shell-page--' + layoutKey)) || '',
             presenceStrip: Boolean(frame?.querySelector('[data-profile-layout-strip="presence"]')),
-            musicStrip: Boolean(frame?.querySelector('[data-profile-layout-strip="music"]')),
-            todayStrip: Boolean(frame?.querySelector('[data-profile-layout-strip="today"]')),
-            modernRegion: Boolean(frame?.querySelector('[data-profile-layout-region="modern"]')),
-            tabs: Boolean(frame?.querySelector('[data-profile-layout-tabs]')),
-            widget: Boolean(frame?.querySelector('[data-profile-layout-widget]')),
-            cardless: Boolean(identityStyle && (identityStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || identityStyle.backgroundColor === 'transparent') && identityStyle.borderTopWidth === '0px'),
+            musicStrip: Boolean(frame?.querySelector('.profile-layout-frame__strip .profile-music')),
+            todayStrip: Boolean(frame?.querySelector('.profile-daily-roll--sleek')),
+            modernRegion: Boolean(frame?.querySelector('.profile-daily-roll--modern')),
+            secondary: Boolean(frame?.querySelector('.profile-daily-roll--modern')),
+            tabs: Boolean(frame?.querySelector('[role="tab"], [role="tablist"], [data-profile-layout-tabs]')),
+            cardless: Boolean(boundaryStyle && (boundaryStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || boundaryStyle.backgroundColor === 'transparent') && boundaryStyle.borderTopWidth === '0px'),
             avatarRadius: avatar ? getComputedStyle(avatar).borderRadius : '',
             shellBackground: shellStyle?.backgroundColor || '',
+            previewDevice: shell?.classList.contains('profile-shell-page--preview-mobile') ? 'mobile' : (shell?.classList.contains('profile-shell-page--preview') ? 'desktop' : ''),
+            shellTransform: shellStyle?.transform || 'none',
+            nameFontSize: Number.parseFloat(nameStyle?.fontSize || '0'),
+            nameWidth: nameBox?.width || 0,
+            nameTextLength: name?.textContent?.trim().length || 0,
+            nameCanvas: nameCanvas ? { width: nameCanvas.width, height: nameCanvas.height } : null,
+            mediaStyles,
             backgroundBounds,
             iconCount: card?.querySelectorAll('.identity-card__link-glyph img').length || 0,
             hasRedundantHandle: Boolean(card?.querySelector('.identity-card__handle, .identity-card__handle-row')),
@@ -417,8 +436,10 @@ try {
           };
         })()`);
         assert(state.frameVariant === layout, `${layout} preview mounted the wrong frame variant: ${JSON.stringify(state)}.`);
-        assert(state.shell && state.viewport && Math.abs(state.shell.left - state.viewport.left) <= 3 && Math.abs(state.shell.top - state.viewport.top) <= 3 && Math.abs(state.shell.width - state.viewport.width) <= 3 && Math.abs(state.shell.height - state.viewport.height) <= 3, `${layout} preview page does not fill the profile viewport: ${JSON.stringify(state)}.`);
-        assert(state.card?.width > 0 && state.card.width <= 360, `${layout} profile surface is no longer compact: ${JSON.stringify(state)}.`);
+        assert(state.previewDevice === 'desktop' && state.shell && state.stage && Math.abs(state.shell.left - state.stage.left) <= 3 && Math.abs(state.shell.top - state.stage.top) <= 3 && Math.abs(state.shell.width - state.stage.width) <= 3 && Math.abs(state.shell.height - state.stage.height) <= 3, `${layout} desktop preview page does not fill its physical environment: ${JSON.stringify(state)}.`);
+        assert(state.shellTransform === 'none' && state.card?.width >= 220 && state.card.width <= 360, `${layout} profile surface is microscopic or no longer compact: ${JSON.stringify(state)}.`);
+        const minimumNameWidth = Math.max(8, Math.min(20, state.nameTextLength * 6));
+        assert(state.nameFontSize >= 12 && state.nameWidth >= minimumNameWidth && (!state.nameCanvas || (state.nameCanvas.width <= 2048 && state.nameCanvas.height <= 512)), `${layout} username geometry is not legible or sane: ${JSON.stringify(state)}.`);
         assert(state.card?.right <= (state.shell?.right || 0) + 1 && state.card?.left >= (state.shell?.left || 0) - 1, `${layout} profile surface escapes the preview shell: ${JSON.stringify(state)}.`);
         assert(!state.avatarNameOverlap && !state.overflow.length, `${layout} preview has identity collision or clipping: ${JSON.stringify(state)}.`);
         assert(state.hasDailyRoll || layout === 'portfolio', `${layout} preview lost the shared daily-roll presentation.`);
@@ -426,14 +447,17 @@ try {
         for (const media of state.backgroundBounds) {
           assert(Math.abs(media.box.left - state.shell.left) <= 1 && Math.abs(media.box.top - state.shell.top) <= 1 && Math.abs(media.box.width - state.shell.width) <= 1 && Math.abs(media.box.height - state.shell.height) <= 1, `${layout} page-level media/effects do not bound to the profile viewport: ${JSON.stringify(state)}.`);
         }
+        for (const media of state.mediaStyles) {
+          assert(media.position === 'absolute' && media.objectFit === 'cover' && media.width !== 'auto' && media.height !== 'auto', `${layout} preview background media is not stage-bound: ${JSON.stringify(state)}.`);
+        }
         if (layout === 'compact') {
           assert(state.avatarBeforeName && (state.avatarCopyCenterDelta || 99) <= Math.max(10, (state.avatar?.height || 0) * .28), `Compact is not a horizontal identity head: ${JSON.stringify(state)}.`);
         } else if (layout === 'sleek') {
-          assert(state.presenceStrip && state.todayStrip && state.avatarRadius !== '50%', `Sleek is missing its detached strip composition or rounded-square avatar: ${JSON.stringify(state)}.`);
+          assert(!state.presenceStrip && state.todayStrip && state.avatarRadius !== '50%', `Sleek is rendering fake presence or missing its detached Today strip/rounded-square avatar: ${JSON.stringify(state)}.`);
         } else if (layout === 'minimal') {
           assert(state.cardless && state.identityRegion?.left < state.shell.left + state.shell.width / 2 - 10, `Minimal is not a cardless offset identity: ${JSON.stringify(state)}.`);
         } else if (layout === 'modern') {
-          assert(state.modernRegion && state.tabs && state.widget, `Modern is missing its secondary tab/widget region: ${JSON.stringify(state)}.`);
+          assert(state.modernRegion && state.secondary && !state.tabs, `Modern is missing its valid secondary region: ${JSON.stringify(state)}.`);
         } else if (layout === 'portfolio') {
           assert(state.cardless && !state.hasDailyRoll, `Portfolio still presents the hero as a card or keeps Today in the opening: ${JSON.stringify(state)}.`);
         }
@@ -454,10 +478,20 @@ try {
         await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile') && document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview')`, `${layout} mobile preview canvas`);
         const mobileBounds = await page.evaluate(`(() => {
           const viewport = document.querySelector('.profile-studio-preview__canvas--mobile .profile-studio-preview__viewport')?.getBoundingClientRect();
+          const stage = document.querySelector('.profile-studio-preview__canvas--mobile .profile-studio-preview__stage')?.getBoundingClientRect();
           const shell = document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview')?.getBoundingClientRect();
-          return viewport && shell ? { viewport: { left: viewport.left, top: viewport.top, width: viewport.width, height: viewport.height }, shell: { left: shell.left, top: shell.top, width: shell.width, height: shell.height } } : null;
+          const card = document.querySelector('.profile-studio-preview__canvas--mobile .identity-card');
+          const name = card?.querySelector('.identity-card__name');
+          const cardStyle = card ? getComputedStyle(card) : null;
+          const personStyle = card?.querySelector('.identity-card__person') ? getComputedStyle(card.querySelector('.identity-card__person')) : null;
+          const box = element => {
+            const rect = element?.getBoundingClientRect();
+            return rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : null;
+          };
+          return viewport && stage && shell ? { viewport: box({ getBoundingClientRect: () => viewport }), stage: box({ getBoundingClientRect: () => stage }), shell: box({ getBoundingClientRect: () => shell }), card: box(card), name: box(name), nameTextLength: name?.textContent?.trim().length || 0, nameFontSize: Number.parseFloat(name ? getComputedStyle(name).fontSize : '0') || 0, mobileClass: card?.classList.contains('identity-card--preview-mobile'), display: cardStyle?.display || '', personDirection: personStyle?.flexDirection || '' } : null;
         })()`);
-        assert(mobileBounds && Math.abs(mobileBounds.shell.left - mobileBounds.viewport.left) <= 3 && Math.abs(mobileBounds.shell.top - mobileBounds.viewport.top) <= 3 && Math.abs(mobileBounds.shell.width - mobileBounds.viewport.width) <= 3, `${layout} mobile preview page is offset inside the phone viewport: ${JSON.stringify(mobileBounds)}.`);
+        const minimumMobileNameWidth = Math.max(8, Math.min(20, (mobileBounds?.nameTextLength || 1) * 6));
+        assert(mobileBounds && Math.abs(mobileBounds.shell.left - mobileBounds.stage.left) <= 3 && Math.abs(mobileBounds.shell.top - mobileBounds.stage.top) <= 3 && Math.abs(mobileBounds.shell.width - mobileBounds.stage.width) <= 3 && mobileBounds.mobileClass && mobileBounds.personDirection === 'column' && mobileBounds.card.width >= 200 && mobileBounds.name.width >= minimumMobileNameWidth && mobileBounds.name.height >= 14 && mobileBounds.nameFontSize >= 12, `${layout} mobile preview is not an intentional readable mobile composition: ${JSON.stringify(mobileBounds)}.`);
         await captureRegion(`${layout}-mobile`, '.profile-studio-preview__viewport');
         await page.click('.profile-studio-preview__devices button:nth-child(1)', `${layout} desktop preview control`);
         await page.waitFor(`!document.querySelector('.profile-studio-preview__canvas--mobile')`, `${layout} desktop preview canvas`);
@@ -488,6 +522,52 @@ try {
       if (publishPending) {
         await page.click('.profile-dashboard-actions__publish', 'publish layout smoke draft');
         await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, 'publish layout smoke draft');
+      }
+
+      // Keep fresh public evidence for every active structural layout. Each
+      // selection is published through the normal Studio boundary on the
+      // disposable smoke account, then the public route is refreshed at both
+      // representative desktop and phone sizes. Restore Compact before the
+      // remaining dashboard checks so those checks start from the default.
+      const publicLayouts = ['compact', 'sleek', 'minimal', 'modern', 'portfolio'];
+      for (const layout of publicLayouts) {
+        await page.setViewport(1440, 900);
+        await page.navigate(`${appUrl}/profile/settings#customize-layout`, `${layout} public evidence Studio`);
+        await page.waitFor(`document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-template-picker__card')`, `${layout} public evidence picker`);
+        await page.evaluate(`(() => {
+          const wanted = ${JSON.stringify(layout)};
+          const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim().toLowerCase() === wanted);
+          card?.click();
+        })()`);
+        await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} public evidence preview`);
+        const layoutPublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
+        if (layoutPublishPending) {
+          await page.click('.profile-dashboard-actions__publish', `${layout} public evidence publish`);
+          await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, `${layout} public evidence published`);
+        }
+        await page.navigate(`${appUrl}/${canonicalUsername}`, `${layout} public evidence desktop`);
+        await page.waitFor(`document.querySelector('.profile-shell-page .identity-card--layout-${layout}')`, `${layout} public desktop profile`);
+        await delay(250);
+        await capture(`public-${layout}-desktop`);
+        await page.setViewport(390, 844);
+        await page.command('Page.reload', { ignoreCache: true });
+        await page.waitFor(`document.querySelector('.profile-shell-page .identity-card--layout-${layout}')`, `${layout} public mobile profile`);
+        await delay(180);
+        await capture(`public-${layout}-mobile`);
+      }
+
+      await page.setViewport(1440, 900);
+      await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore Compact after public evidence');
+      await page.waitFor(`document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-template-picker__card')`, 'restore Compact picker');
+      await page.evaluate(`(() => {
+        const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim() === 'Compact');
+        card?.click();
+      })()`);
+      await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-compact')`, 'restore Compact public evidence preview');
+      const restorePublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
+      if (restorePublishPending) {
+        await page.click('.profile-dashboard-actions__publish', 'restore Compact publish');
+        await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, 'restore Compact published');
       }
       return { layoutState, mediaRail, productionPreview: true };
     }
@@ -757,7 +837,7 @@ try {
     await page.setViewport(390, 844);
     await page.waitFor(`document.querySelector('.profile-studio-preview__devices button:nth-child(2)')`, 'live preview device controls');
     await page.click('.profile-studio-preview__devices button:nth-child(2)', 'mobile live preview device');
-    await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview-mobile[data-preview-device="mobile"]')`, 'bounded mobile live preview');
+    await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview-mobile')`, 'bounded mobile live preview');
     const mobilePreview = await page.evaluate(`(() => {
       const phone = document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview-mobile');
       const card = phone?.querySelector('.identity-card');
@@ -773,7 +853,7 @@ try {
         .slice(0, 5)
         .map(({ element, box }) => ({ tag: element.tagName, className: element.className, left: Math.round(box.left), right: Math.round(box.right) }));
       return {
-        device: phone?.getAttribute('data-preview-device') || '',
+        device: phone?.classList.contains('profile-shell-page--preview-mobile') ? 'mobile' : (phone?.classList.contains('profile-shell-page--preview') ? 'desktop' : ''),
         phone: phoneRect,
         card: rect(card),
         name: rect(name),
@@ -1231,12 +1311,18 @@ try {
     const state = await page.evaluate(`(() => {
       const pageElement = document.querySelector('.profile-shell-page');
       const card = document.querySelector('.profile-shell-page .identity-card');
-      const surfaceBackdrop = document.querySelector('.profile-shell-page .profile-shell__surface-backdrop');
+      const boundary = document.querySelector('.profile-shell-page .profile-shell__identity-boundary');
       const roll = document.querySelector('.profile-shell-page [data-profile-region="roll"]');
       const pageStyle = getComputedStyle(pageElement);
       const cardStyle = getComputedStyle(card);
-      const surfaceBackdropStyle = surfaceBackdrop ? getComputedStyle(surfaceBackdrop) : null;
+      const boundaryStyle = boundary ? getComputedStyle(boundary) : null;
       const rollStyle = roll ? getComputedStyle(roll) : null;
+      const pageBox = pageElement?.getBoundingClientRect();
+      const media = [...document.querySelectorAll('.profile-shell__media-image, .profile-shell__media-video')].map(element => {
+        const style = getComputedStyle(element);
+        const box = element.getBoundingClientRect();
+        return { position: style.position, width: box.width, height: box.height, objectFit: style.objectFit };
+      });
       return {
         path: location.pathname,
         username: document.querySelector('.identity-card')?.getAttribute('data-profile-path')?.slice(1) || '',
@@ -1245,22 +1331,56 @@ try {
         roll: Boolean(roll),
         cardBlur: cardStyle.getPropertyValue('--profile-surface-blur').trim(),
         cardBackdropFilter: cardStyle.backdropFilter || cardStyle.webkitBackdropFilter || '',
-        surfaceBackdrop: Boolean(surfaceBackdrop),
-        surfaceBackdropFilter: surfaceBackdropStyle?.backdropFilter || surfaceBackdropStyle?.webkitBackdropFilter || '',
+        boundary: Boolean(boundary),
+        boundaryBackdropFilter: boundaryStyle?.backdropFilter || boundaryStyle?.webkitBackdropFilter || '',
+        boundarySurface: Boolean(boundaryStyle && (boundaryStyle.backdropFilter || boundaryStyle.webkitBackdropFilter) !== 'none'),
+        boundaryBox: boundary ? { width: boundary.getBoundingClientRect().width, height: boundary.getBoundingClientRect().height } : null,
         pageBlur: pageStyle.getPropertyValue('--profile-surface-blur').trim(),
         rollBlur: rollStyle?.getPropertyValue('--profile-surface-blur').trim() || '',
         pageBackground: pageStyle.backgroundImage || pageStyle.backgroundColor,
-        pageMediaImage: Boolean(document.querySelector('.profile-shell__media-image'))
+        pageMediaImage: Boolean(document.querySelector('.profile-shell__media-image')),
+        pageBox: pageBox ? { width: pageBox.width, height: pageBox.height } : null,
+        media
       };
     })()`);
     assert(state.path === `/${canonicalUsername}`, `Public profile was not canonical after refresh: ${state.path}.`);
-    assert(state.canvas && state.card && state.surfaceBackdrop, 'Public profile did not render its canvas, card, and card backdrop.');
+    assert(state.canvas && state.card && state.boundary, 'Public profile did not render its canvas, identity surface, and border boundary.');
     const expectedCardBlur = smokeMode === 'preview' ? '20px' : '40px';
     assert(state.cardBlur === expectedCardBlur, `Public profile identity card did not honor the expected max blur: ${state.cardBlur} (expected ${expectedCardBlur}).`);
-    assert(state.surfaceBackdropFilter.includes('blur('), 'Public profile card backdrop has no computed blur filter.');
+    if (state.boundarySurface) {
+      assert(state.boundaryBackdropFilter.includes('blur('), 'Public profile identity surface has no computed backdrop blur filter.');
+    } else {
+      assert(!state.boundaryBackdropFilter || state.boundaryBackdropFilter === 'none', `Cardless public layout unexpectedly owns a backdrop filter: ${state.boundaryBackdropFilter}.`);
+    }
+    assert(state.pageBox && Math.abs(state.pageBox.width - 1440) <= 1 && Math.abs(state.pageBox.height - 900) <= 1, `Public profile environment does not fill the viewport: ${JSON.stringify(state)}.`);
+    for (const media of state.media) {
+      assert(media.position === 'fixed' && media.objectFit === 'cover' && media.width >= 1439 && media.height >= 899, `Public background media is not viewport-bound: ${JSON.stringify(state)}.`);
+    }
     assert(!state.pageBlur && !state.rollBlur, 'Public appearance variables leaked outside the card surface.');
     await capture('07-public-profile');
     return state;
+  });
+
+  await step('critical profile assets load without stale or missing chunks', async () => {
+    if (smokeMode !== 'preview') {
+      return { developmentMode: true, hashedAssetCheck: 'production-only' };
+    }
+    const failedAssets = page.requestLog.filter(request => {
+      const isAsset = /\/assets\/|\.(?:css|js)(?:\?|$)/i.test(request.url);
+      return isAsset && (request.failed || Number(request.status) >= 400);
+    });
+    assert(!failedAssets.length, `Profile build requested missing or failed assets: ${JSON.stringify(failedAssets.slice(0, 8))}.`);
+    const state = await page.evaluate(`(() => {
+      const sheets = [...document.styleSheets].map(sheet => sheet.href || '').filter(Boolean);
+      return { sheets, missing: ['ProfileShell-', 'NameEffectCanvas-'].filter(prefix => !sheets.some(href => href.includes(prefix))) };
+    })()`);
+    const studioPreviewCss = page.requestLog.filter(request => request.url.includes('/assets/ProfileStudioPreview-') && !request.failed && Number(request.status) < 400);
+    assert(!state.missing.length && studioPreviewCss.length > 0, `Critical profile CSS was not active or did not load during Studio: ${JSON.stringify({ ...state, studioPreviewCss })}.`);
+    return {
+      failedAssets,
+      activePublicSheets: state.sheets.filter(href => /ProfileShell-|NameEffectCanvas-/.test(href)),
+      studioPreviewCss: studioPreviewCss.map(request => ({ url: request.url, status: request.status }))
+    };
   });
 } catch (error) {
   failure = error;

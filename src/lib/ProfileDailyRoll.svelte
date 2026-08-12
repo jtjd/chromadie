@@ -16,13 +16,14 @@
   }
 </script>
 
-<div class={'profile-daily-roll profile-daily-roll--' + variant} data-profile-roll-variant={variant} data-profile-roll-presentation={variant} aria-label={isOwner ? 'Today’s color roll' : 'Latest color'}>
+<div class={'profile-daily-roll profile-daily-roll--' + variant} aria-label={isOwner ? 'Today’s color roll' : 'Latest color'}>
   {#if isOwner}
     <ProfileRoll
       moduleSize="wide"
       compact={true}
       integrated={true}
       quiet={true}
+      presentation={variant}
       {visualFixture}
       fixtureResult={result}
       on:rollstart={forward}
@@ -64,7 +65,12 @@
 
   .profile-daily-roll--sleek {
     min-height: 3rem;
-    padding: .2rem .7rem;
+    padding: .2rem .55rem;
+    border: 1px solid color-mix(in srgb, var(--profile-border-color, #ffffff) 14%, transparent);
+    border-radius: .72rem;
+    background: color-mix(in srgb, var(--profile-surface, #090b0f) 52%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .profile-daily-roll--minimal {
@@ -78,7 +84,10 @@
   .profile-daily-roll--minimal :global(.profile-roll__result) { max-width: 15rem; }
 
   .profile-daily-roll--modern {
-    padding: .3rem .15rem .15rem;
+    padding: .3rem .55rem .15rem;
+    border: 1px solid color-mix(in srgb, var(--profile-border-color, #ffffff) 11%, transparent);
+    border-radius: .72rem;
+    background: color-mix(in srgb, var(--profile-surface, #090b0f) 42%, transparent);
   }
 
   .profile-daily-roll--modern :global(.today-color__result-head),

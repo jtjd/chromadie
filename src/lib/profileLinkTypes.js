@@ -1,5 +1,5 @@
 const PROFILE_LINK_ROWS = [
-  ['website', 'Website', 'link'],
+  ['website', 'Website', 'link', false],
   ['youtube', 'YouTube', 'youtube', 'youtube.com', 'youtu.be'],
   ['twitch', 'Twitch', 'twitch', 'twitch.tv'],
   ['github', 'GitHub', 'github', 'github.com'],
@@ -14,7 +14,7 @@ const PROFILE_LINK_ROWS = [
   ['patreon', 'Patreon', 'patreon', 'patreon.com'],
   ['spotify', 'Spotify', 'spotify', 'open.spotify.com'],
   ['steam', 'Steam', 'steam', 'steamcommunity.com', 'store.steampowered.com'],
-  ['other', 'Other', 'link']
+  ['other', 'Other', 'link', false]
 ];
 
 /**
@@ -23,12 +23,9 @@ const PROFILE_LINK_ROWS = [
  * historical HTTPS links readable; the stricter host metadata is used by the
  * editor when a player changes or adds a service link.
  */
-export const PROFILE_LINK_DEFINITIONS = Object.freeze(PROFILE_LINK_ROWS.map(([key, label, icon, ...hosts]) => ({
-  key,
-  label,
-  icon,
-  urlValidation: hosts
-})));
+export const PROFILE_LINK_DEFINITIONS = Object.freeze(PROFILE_LINK_ROWS.map(([key, label, icon, ...values]) => {
+  return { key, label, icon, social: key !== 'website' && key !== 'other', urlValidation: values };
+}));
 
 export const PROFILE_LINK_TYPES = Object.freeze(PROFILE_LINK_DEFINITIONS.map(definition => definition.key));
 
@@ -38,6 +35,10 @@ const PROFILE_LINK_DEFINITION_MAP = Object.fromEntries(
 
 export function getProfileLinkDefinition(value) {
   return PROFILE_LINK_DEFINITION_MAP[String(value || '').trim().toLowerCase()] || PROFILE_LINK_DEFINITION_MAP.other;
+}
+
+export function isProfileSocialLink(value) {
+  return Boolean(getProfileLinkDefinition(value).social);
 }
 
 export function isProfileLinkUrlValid(type, value) {

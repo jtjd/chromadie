@@ -13,13 +13,10 @@ export const FEATURE_FLAG_KEYS = Object.freeze([
   'socialDepth'
 ]);
 
-export const FEATURE_FLAG_ENV_KEYS = Object.freeze({
-  commerce: 'VITE_CHROMADIE_FLAG_COMMERCE',
-  richMedia: 'VITE_CHROMADIE_FLAG_RICH_MEDIA',
-  profileConfigurationV2: 'VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2',
-  expandedAnalytics: 'VITE_CHROMADIE_FLAG_EXPANDED_ANALYTICS',
-  socialDepth: 'VITE_CHROMADIE_FLAG_SOCIAL_DEPTH'
-});
+const FEATURE_FLAG_ENV_SUFFIXES = ['COMMERCE', 'RICH_MEDIA', 'PROFILE_CONFIGURATION_V2', 'EXPANDED_ANALYTICS', 'SOCIAL_DEPTH'];
+export const FEATURE_FLAG_ENV_KEYS = Object.freeze(Object.fromEntries(
+  FEATURE_FLAG_KEYS.map((key, index) => [key, `VITE_CHROMADIE_FLAG_${FEATURE_FLAG_ENV_SUFFIXES[index]}`])
+));
 
 export const FEATURE_FLAG_DEFAULTS = Object.freeze({
   commerce: true,
@@ -31,11 +28,20 @@ export const FEATURE_FLAG_DEFAULTS = Object.freeze({
 
 export const ROLLOUT_STAGES = Object.freeze(['off', 'staff', 'internal', 'cohort', 'all']);
 
-const BUILD_ENV = typeof import.meta !== 'undefined'
-  && import.meta.env
-  && typeof import.meta.env === 'object'
-  ? import.meta.env
-  : {};
+/* Read only the rollout variables. Keeping this allow-list explicit prevents
+ * unrelated Vite environment values from entering every profile route chunk. */
+const BUILD_ENV = {
+  stage: import.meta.env?.VITE_CHROMADIE_ROLLOUT_STAGE,
+  internalIds: import.meta.env?.VITE_CHROMADIE_INTERNAL_IDS,
+  cohortPercent: import.meta.env?.VITE_CHROMADIE_COHORT_PERCENT,
+  flags: [
+    import.meta.env?.VITE_CHROMADIE_FLAG_COMMERCE,
+    import.meta.env?.VITE_CHROMADIE_FLAG_RICH_MEDIA,
+    import.meta.env?.VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2,
+    import.meta.env?.VITE_CHROMADIE_FLAG_EXPANDED_ANALYTICS,
+    import.meta.env?.VITE_CHROMADIE_FLAG_SOCIAL_DEPTH
+  ]
+};
 
 function parseBoolean(value, fallback) {
   if (typeof value === 'boolean') return value;
@@ -104,10 +110,10 @@ function resolveAudience({ stage, userId, isStaff, internalIds, cohortPercent })
  * @param {{env?: Record<string, unknown>, userId?: string, isStaff?: boolean, internalIds?: string[], cohortPercent?: number}} options
  */
 export function resolveProfileFeatureFlags(options = {}) {
-  const env = options.env && typeof options.env === 'object' ? options.env : BUILD_ENV;
-  const stage = normalizeRolloutStage(env.VITE_CHROMADIE_ROLLOUT_STAGE);
+  const env = options.env && typeof options.env === 'object' ? options.env : null;
+  const stage = normalizeRolloutStage(env?.VITE_CHROMADIE_ROLLOUT_STAGE ?? BUILD_ENV.stage);
   const internalIds = [
-    ...parseInternalIds(env.VITE_CHROMADIE_INTERNAL_IDS),
+    ...parseInternalIds(env?.VITE_CHROMADIE_INTERNAL_IDS ?? BUILD_ENV.internalIds),
     ...parseInternalIds(options.internalIds)
   ];
   const audience = resolveAudience({
@@ -115,7 +121,7 @@ export function resolveProfileFeatureFlags(options = {}) {
     userId: options.userId,
     isStaff: options.isStaff,
     internalIds,
-    cohortPercent: options.cohortPercent ?? env.VITE_CHROMADIE_COHORT_PERCENT
+    cohortPercent: options.cohortPercent ?? env?.VITE_CHROMADIE_COHORT_PERCENT ?? BUILD_ENV.cohortPercent
   });
   const flags = {
     commerce: false,
@@ -124,10 +130,9 @@ export function resolveProfileFeatureFlags(options = {}) {
     expandedAnalytics: false,
     socialDepth: false
   };
-  for (const key of FEATURE_FLAG_KEYS) {
-    const envKey = FEATURE_FLAG_ENV_KEYS[key];
+  for (const [index, key] of FEATURE_FLAG_KEYS.entries()) {
     const defaultValue = FEATURE_FLAG_DEFAULTS[key];
-    const configured = parseFeatureFlag(env[envKey], defaultValue);
+    const configured = parseFeatureFlag(env ? env[FEATURE_FLAG_ENV_KEYS[key]] : BUILD_ENV.flags[index], defaultValue);
     flags[key] = Boolean(audience.eligible && configured);
   }
   return Object.freeze({ ...flags, rolloutStage: audience.stage, audience });

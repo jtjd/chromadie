@@ -17,6 +17,8 @@ export const NAME_RENDER_MODES = Object.freeze({
 
 const DEFAULT_TODAY_COLOR = '#8B7CF6';
 const MAX_RECENT_COLORS = 8;
+const MAX_CANVAS_WIDTH = 1024;
+const MAX_CANVAS_HEIGHT = 256;
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -338,9 +340,13 @@ export function createNameCanvasRenderer(canvas, options = {}) {
   /** @param {{ width?: number, height?: number, dpr?: number }} [size] */
   function resize({ width: nextWidth, height: nextHeight, dpr: nextDpr } = {}) {
     if (destroyed) return;
-    const measured = canvas.getBoundingClientRect?.() || {};
-    width = clamp(finite(nextWidth, finite(measured.width, width)), 1, 4096);
-    height = clamp(finite(nextHeight, finite(measured.height, height)), 1, 1024);
+    const measured = typeof canvas?.getBoundingClientRect === 'function'
+      ? canvas.getBoundingClientRect()
+      : {};
+    const measuredWidth = finite(canvas?.clientWidth, finite(measured.width, width));
+    const measuredHeight = finite(canvas?.clientHeight, finite(measured.height, height));
+    width = clamp(finite(nextWidth, measuredWidth), 1, MAX_CANVAS_WIDTH);
+    height = clamp(finite(nextHeight, measuredHeight), 1, MAX_CANVAS_HEIGHT);
     const browserRatio = typeof globalThis !== 'undefined' ? finite(globalThis.devicePixelRatio, 1) : 1;
     const deviceRatio = finite(nextDpr, browserRatio);
     dpr = clamp(deviceRatio, 1, 2);

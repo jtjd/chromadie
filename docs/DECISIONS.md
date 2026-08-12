@@ -1,5 +1,29 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-12 — Keep profile preview physical and let the environment own the viewport
+
+Profile Studio renders a real, readable profile stage instead of a transformed
+1440×900 document. The stage explicitly requests desktop or mobile composition,
+so a narrow dashboard rail does not become a responsive breakpoint and does
+not make the identity microscopic. ProfileShell remains the page-level owner
+of background media, atmosphere, and cursor effects; those layers fill the
+preview stage and public viewport rather than being clipped inside the
+identity surface.
+
+ProfileLayoutFrame is statically imported and owns placement/reading order
+only. ProfileBorderEffect owns the actual perceived surface perimeter, while
+IdentityCard owns identity content. Cardless Minimal and Portfolio therefore
+do not receive a second decorative frame, and equipped border effects remain
+able to surround identity/name/avatar effects without an overflow clip.
+
+Compact roll, Sleek/Modern detached roll regions, compact music, and the
+below-fold Portfolio roll are presentation variants over shared roll and media
+logic. Owner and visitor paths keep their existing server/data authority. The
+NameEffectCanvas uses stable logical host dimensions, a shared
+`--identity-name-size` contract, device-pixel-ratio backing resolution, and
+bounded canvas dimensions so transformed or invalid measurements cannot create
+giant glyphs.
+
 ## 2026-08-11 — Keep public profile identity surfaces free of redundant Share chrome
 
 The public profile already has canonical URLs and remains reachable from

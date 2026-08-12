@@ -73,7 +73,8 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(profileShell, /<img class="profile-shell__media-image" src=\{backgroundSrc\}/);
   assert.match(profileShell, /\.profile-shell__media-image,[\s\S]*\.profile-shell__media-video/);
   assert.doesNotMatch(profileShell, /profile-shell__media-background/);
-  assert.match(profileShell, /\.profile-shell__surface-backdrop \{[\s\S]*backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.match(profileShell, /<ProfileBorderEffect/);
+  assert.doesNotMatch(profileShell, /profile-shell__surface-backdrop/);
   assert.doesNotMatch(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);
 });
 

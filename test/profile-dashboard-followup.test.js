@@ -108,7 +108,7 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(shell, /profile-shell__page-cursor-layer/);
   assert.match(shell, /background: var\(--profile-background-paint, var\(--color-canvas-deep\)\);/);
   assert.match(shell, /\.profile-shell__media-image,[\s\S]*\.profile-shell__media-video/);
-  assert.match(shell, /<div class="profile-shell__surface-backdrop"/);
+  assert.match(shell, /profile-border-effect--content/);
   assert.doesNotMatch(shell, /<div class="profile-shell__card-media-background"|<div class="profile-shell__surface-media-background"/);
   assert.match(shell, /profile-shell__page-atmosphere-layer/);
   assert.match(shell, /profile-shell__page-cursor-layer/);
@@ -117,7 +117,7 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(shell, /if \(previewMode \|\| !targetProfile\?\.id/);
   assert.match(shell, /\{#if !previewMode && !isOwnProfile\}/);
   assert.match(shell, /deferMedia=\{previewMode\}/);
-  assert.match(music, /autoplay=\{!deferMedia\}/);
+  assert.match(music, /autoplay=\{false\}/);
   assert.match(music, /loading="lazy"/);
 });
 
@@ -139,9 +139,8 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(identityCard, /@supports \(backdrop-filter: blur\(0\)\) \{[\s\S]*\.identity-card \{ backdrop-filter: blur\(var\(--profile-surface-blur/);
   assert.match(shell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
   assert.match(shell, /:global\(\.profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ isolation: auto; \}/);
-  assert.match(shell, /<div class="profile-shell__surface-backdrop" aria-hidden="true"><\/div>/);
-  assert.match(shell, /\.profile-shell__surface-backdrop \{[\s\S]*background: rgba\(0, 0, 0, 0\.001\);[\s\S]*backdrop-filter: blur\(var\(--profile-surface-blur/);
-  assert.match(shell, /@supports \(backdrop-filter: blur\(0\)\) \{[\s\S]*\.profile-shell__surface-backdrop \{ backdrop-filter: blur\(var\(--profile-surface-blur/);
+  assert.match(shell, /<ProfileBorderEffect/);
+  assert.doesNotMatch(shell, /profile-shell__surface-backdrop/);
   assert.doesNotMatch(viteConfig, /csso|restructure: false/);
   assert.match(shell, /\.profile-shell__approved-canvas,\s+\.profile-shell__opening\.profile-shell__approved-opening \{ z-index: auto; \}/);
   assert.doesNotMatch(shell, /profile-shell__surface-media|profile-shell__surface-video|profile-shell__surface-atmosphere-layer|profile-shell__surface-backdrop::before/);

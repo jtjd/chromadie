@@ -42,6 +42,7 @@
   export let entryAnimation = 'none';
   export let linkStyle = null;
   export let previewDevice = 'desktop';
+  export let surface = true;
   /** @type {(entryKey: string) => void} */
   export let onEntryClick = () => {};
 
@@ -52,6 +53,8 @@
   $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
   $: activeAvatarSource = avatarSrc && failedAvatarSource !== avatarSrc ? avatarSrc : '';
   $: displayedLinks = (Array.isArray(links) ? links : []).slice(0, 6);
+  $: minimalSocialLinks = displayedLinks.filter(link => getProfileLinkDefinition(link?.type).social);
+  $: minimalNavigationLinks = displayedLinks.filter(link => !getProfileLinkDefinition(link?.type).social);
   $: displayedBadges = (Array.isArray(badges) ? badges : [])
     .filter(badge => badge?.id !== 'launch_edition')
     .slice(0, 3);
@@ -65,7 +68,7 @@
   }
 </script>
 
-<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + (defaultPresentation ? ' identity-card--default' : '') + (previewDevice === 'mobile' ? ' identity-card--preview-mobile' : '') + ' identity-card--entry-' + entryAnimation} data-profile-path={profilePath || undefined} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
+<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + (surface ? '' : ' identity-card--content-only') + (defaultPresentation ? ' identity-card--default' : '') + (previewDevice === 'mobile' ? ' identity-card--preview-mobile' : '') + ' identity-card--entry-' + entryAnimation} data-profile-path={profilePath || undefined} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
   <div class="identity-card__person">
     {#if showAvatar}
     <AvatarEffect
@@ -129,8 +132,29 @@
 
   </div>
 
-  {#if displayedLinks.length}
-    <nav class={'identity-card__links' + (safeLayoutVariant === 'minimal' ? ' identity-card__links--labeled' : '')} aria-label={safeDisplayName + ' social links'}>
+  {#if safeLayoutVariant === 'minimal'}
+    {#if minimalSocialLinks.length}
+      <nav class="identity-card__links identity-card__links--social" aria-label={safeDisplayName + ' social links'}>
+        {#each minimalSocialLinks as link (link.order)}
+          <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
+            <span class="identity-card__link-glyph" aria-hidden="true"><img src={linkIconSource(link)} alt="" loading="lazy" /></span>
+            <strong>{link.label}</strong>
+          </a>
+        {/each}
+      </nav>
+    {/if}
+    {#if minimalNavigationLinks.length}
+      <nav class="identity-card__links identity-card__links--labeled" aria-label={safeDisplayName + ' navigation links'}>
+        {#each minimalNavigationLinks as link (link.order)}
+          <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
+            <span class="identity-card__link-glyph" aria-hidden="true"><img src={linkIconSource(link)} alt="" loading="lazy" /></span>
+            <strong>{link.label}</strong>
+          </a>
+        {/each}
+      </nav>
+    {/if}
+  {:else if displayedLinks.length}
+    <nav class="identity-card__links" aria-label={safeDisplayName + ' social links'}>
       {#each displayedLinks as link (link.order)}
         <a href={link.url} target="_blank" rel="noopener noreferrer" aria-label={String(link.type || 'Link') + ': ' + link.label} title={String(link.type || 'Link')} on:click={() => onEntryClick(link.key || `link-${link.order}`)}>
           <span class="identity-card__link-glyph" aria-hidden="true"><img src={linkIconSource(link)} alt="" loading="lazy" /></span>
@@ -206,7 +230,7 @@
 
   .identity-card__copy { min-width: 0; flex: 1; padding-top: 0.15rem; text-align: left; color: var(--profile-text, rgba(244, 246, 251, 0.92)); }
   .identity-card__name-row { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 0.45rem 0.55rem; }
-  .identity-card__name { max-width: 100%; margin: 0; color: var(--identity-base-color, var(--profile-username, rgba(248, 250, 255, 0.98))); font: 700 clamp(1.85rem, 3.8vw, 2.55rem) / 0.98 var(--font-display-stack); letter-spacing: -0.055em; overflow-wrap: anywhere; }
+  .identity-card__name { max-width: 100%; margin: 0; color: var(--identity-base-color, var(--profile-username, rgba(248, 250, 255, 0.98))); font: 700 var(--identity-name-size, clamp(1.85rem, 3.8vw, 2.55rem)) / var(--identity-name-line-height, .98) var(--font-display-stack); letter-spacing: -0.055em; overflow-wrap: anywhere; }
   .identity-card__badges { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.28rem; }
   .identity-card__badge { display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border: 1px solid color-mix(in srgb, var(--identity-accent) 42%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--identity-accent) 14%, rgba(255, 255, 255, 0.06)); color: color-mix(in srgb, var(--identity-accent) 82%, white); font-size: 0.72rem; line-height: 1; }
   .identity-card__badge--founder { background: color-mix(in srgb, var(--identity-accent) 22%, transparent); }
@@ -238,14 +262,14 @@
 
   /* Explicitly stack the card when rendered inside the dashboard phone. The
      canvas can be narrow while the browser viewport remains desktop-sized. */
-  .identity-card--preview-mobile { display: flex; width: 100%; box-sizing: border-box; flex-direction: column; align-items: stretch; gap: 1rem; padding: 1.1rem; }
+  .identity-card--preview-mobile { --identity-name-size: clamp(1.55rem, 9vw, 2.2rem); --identity-name-line-height: 1; display: flex; width: 100%; box-sizing: border-box; flex-direction: column; align-items: stretch; gap: 1rem; padding: 1.1rem; }
   .identity-card--preview-mobile .identity-card__person { display: flex; flex-direction: column; align-items: stretch; gap: 1rem; width: 100%; }
-  .identity-card--preview-mobile :global(.identity-card__avatar) { align-self: center; justify-self: auto; flex-basis: 5.2rem; width: 5.2rem; }
+  .identity-card--preview-mobile :global(.identity-card__avatar) { align-self: center; justify-self: auto; flex-basis: 5.2rem; width: 5.2rem; height: 5.2rem; }
   .identity-card--preview-mobile .identity-card__copy,
   .identity-card--preview-mobile .identity-card__links { grid-column: auto; grid-row: auto; width: 100%; box-sizing: border-box; padding-left: 0; border-left: 0; }
   .identity-card--preview-mobile .identity-card__copy { padding-top: 0; }
   .identity-card--preview-mobile .identity-card__name-row { align-items: flex-start; }
-  .identity-card--preview-mobile .identity-card__name { font-size: clamp(1.55rem, 9vw, 2.2rem); line-height: 1; }
+  .identity-card--preview-mobile .identity-card__name { font-size: var(--identity-name-size); line-height: var(--identity-name-line-height); }
   .identity-card--preview-mobile .identity-card__links { margin-top: .9rem; padding-top: .8rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, .12)); }
 
   /* An equipped profile border owns the card perimeter. Keep accent styling
@@ -309,7 +333,7 @@
 
   @media (max-width: 36rem) {
     .identity-card { padding: 1.35rem; border-radius: var(--radius-md); }
-    :global(.identity-card__avatar) { flex-basis: 4.75rem; width: 4.75rem; }
+    :global(.identity-card__avatar) { flex-basis: 4.75rem; width: 4.75rem; height: 4.75rem; }
     .identity-card__name { font-size: clamp(1.75rem, 9vw, 2.35rem); }
     .identity-card__bio { font-size: 0.875rem; }
     .identity-card__links { margin-top: 0.8rem; }
@@ -359,6 +383,15 @@
     padding: 1.1rem;
   }
 
+  .identity-card--content-only {
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
   .identity-card--layout-compact { max-width: 300px; }
   .identity-card--layout-sleek { max-width: 335px; padding: 1rem; }
   .identity-card--layout-modern { max-width: 310px; padding: 1rem; }
@@ -383,11 +416,11 @@
 
   .identity-card--layout-sleek .identity-card__person,
   .identity-card--layout-modern .identity-card__person { gap: .8rem; }
-  .identity-card--layout-compact :global(.identity-card__avatar) { flex-basis: 54px; width: 54px; }
-  .identity-card--layout-sleek :global(.identity-card__avatar) { flex-basis: 52px; width: 52px; border-radius: 14px; }
-  .identity-card--layout-modern :global(.identity-card__avatar) { flex-basis: 50px; width: 50px; border-radius: 13px; }
-  .identity-card--layout-minimal :global(.identity-card__avatar) { flex-basis: 74px; width: 74px; }
-  .identity-card--layout-portfolio :global(.identity-card__avatar) { flex-basis: 72px; width: 72px; }
+  .identity-card--layout-compact :global(.identity-card__avatar) { flex-basis: 54px; width: 54px; height: 54px; }
+  .identity-card--layout-sleek :global(.identity-card__avatar) { flex-basis: 52px; width: 52px; height: 52px; border-radius: 14px; }
+  .identity-card--layout-modern :global(.identity-card__avatar) { flex-basis: 50px; width: 50px; height: 50px; border-radius: 13px; }
+  .identity-card--layout-minimal :global(.identity-card__avatar) { flex-basis: 74px; width: 74px; height: 74px; }
+  .identity-card--layout-portfolio :global(.identity-card__avatar) { flex-basis: 72px; width: 72px; height: 72px; }
   .identity-card--layout-sleek :global(.identity-card__avatar-media),
   .identity-card--layout-modern :global(.identity-card__avatar-media) { border-radius: inherit; clip-path: none; }
   .identity-card--layout-compact :global(.identity-card__avatar-letter),
@@ -395,11 +428,11 @@
   .identity-card--layout-modern :global(.identity-card__avatar-letter) { font-size: 1.9rem; }
   .identity-card--layout-portfolio :global(.identity-card__avatar-letter) { font-size: 2.4rem; }
 
-  .identity-card--layout-compact .identity-card__name { font-size: clamp(1.25rem, 5vw, 1.45rem); line-height: 1; }
-  .identity-card--layout-modern .identity-card__name { font-size: clamp(1.3rem, 5vw, 1.5rem); line-height: 1; }
-  .identity-card--layout-sleek .identity-card__name { font-size: clamp(1.4rem, 6vw, 1.7rem); line-height: 1; }
-  .identity-card--layout-minimal .identity-card__name { font-size: clamp(1.65rem, 7vw, 1.95rem); line-height: 1; }
-  .identity-card--layout-portfolio .identity-card__name { font-size: clamp(1.55rem, 7vw, 1.8rem); line-height: 1; }
+  .identity-card--layout-compact { --identity-name-size: clamp(1.25rem, 5vw, 1.45rem); --identity-name-line-height: 1; }
+  .identity-card--layout-modern { --identity-name-size: clamp(1.3rem, 5vw, 1.5rem); --identity-name-line-height: 1; }
+  .identity-card--layout-sleek { --identity-name-size: clamp(1.4rem, 6vw, 1.7rem); --identity-name-line-height: 1; }
+  .identity-card--layout-minimal { --identity-name-size: clamp(1.65rem, 7vw, 1.95rem); --identity-name-line-height: 1; }
+  .identity-card--layout-portfolio { --identity-name-size: clamp(1.55rem, 7vw, 1.8rem); --identity-name-line-height: 1; }
   .identity-card--layout-compact .identity-card__bio,
   .identity-card--layout-sleek .identity-card__bio,
   .identity-card--layout-modern .identity-card__bio,
@@ -414,7 +447,9 @@
   .identity-card--layout-sleek .identity-card__links,
   .identity-card--layout-modern .identity-card__links,
   .identity-card--layout-portfolio .identity-card__links { justify-content: center; gap: .25rem; margin-top: .7rem; padding-top: .65rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 22%, rgba(255,255,255,.1)); }
-  .identity-card--layout-minimal .identity-card__links { display: grid; gap: .25rem; margin-top: .8rem; }
+  .identity-card--layout-minimal .identity-card__links { gap: .25rem; margin-top: .8rem; }
+  .identity-card--layout-minimal .identity-card__links--social { display: flex; justify-content: center; }
+  .identity-card--layout-minimal .identity-card__links--labeled { display: grid; }
   .identity-card--layout-compact .identity-card__links a,
   .identity-card--layout-sleek .identity-card__links a,
   .identity-card--layout-modern .identity-card__links a,
@@ -451,5 +486,39 @@
     .identity-card--layout-modern,
     .identity-card--layout-portfolio { padding: .95rem; }
     .identity-card--layout-minimal { padding-inline: 0; }
+  }
+
+  /* The preview device is an explicit rendering context. Keep it authoritative
+     after the catalog-specific desktop geometry so a narrow Studio stage does
+     not accidentally restore a horizontal layout. */
+  .identity-card--preview-mobile .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-compact .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-sleek .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-minimal .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-modern .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-portfolio .identity-card__person {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .identity-card--preview-mobile.identity-card--layout-compact .identity-card__copy,
+  .identity-card--preview-mobile.identity-card--layout-sleek .identity-card__copy,
+  .identity-card--preview-mobile.identity-card--layout-minimal .identity-card__copy,
+  .identity-card--preview-mobile.identity-card--layout-modern .identity-card__copy,
+  .identity-card--preview-mobile.identity-card--layout-portfolio .identity-card__copy {
+    width: 100%;
+    padding-top: 0;
+    text-align: left;
+  }
+
+  .identity-card--preview-mobile.identity-card--layout-compact .identity-card__name-row,
+  .identity-card--preview-mobile.identity-card--layout-sleek .identity-card__name-row,
+  .identity-card--preview-mobile.identity-card--layout-minimal .identity-card__name-row,
+  .identity-card--preview-mobile.identity-card--layout-modern .identity-card__name-row,
+  .identity-card--preview-mobile.identity-card--layout-portfolio .identity-card__name-row {
+    justify-content: flex-start;
   }
 </style>

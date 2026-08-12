@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { PROFILE_RENDER_CONTEXTS } from './profile-studio/previewContexts.js';
 
   /** @type {any} */
@@ -18,11 +18,6 @@
 
   const dispatch = createEventDispatcher();
   const liveProfileContext = PROFILE_RENDER_CONTEXTS.LIVE_PROFILE;
-  const DESKTOP_PREVIEW_WIDTH = 1440;
-  const DESKTOP_PREVIEW_HEIGHT = 900;
-  let previewViewport;
-  let previewScale = 0.28;
-  let previewResizeObserver;
 
   $: isAppearancePreview = activeSection === 'customize' && activeCustomizeTab === 'appearance';
 
@@ -33,33 +28,6 @@
   function setPreviewDevice(device) {
     if (device === 'desktop' || device === 'mobile') dispatch('devicechange', device);
   }
-
-  function syncPreviewScale() {
-    if (!previewViewport || previewDevice === 'mobile') {
-      previewScale = 1;
-      return;
-    }
-    previewScale = Math.min(
-      previewViewport.clientWidth / DESKTOP_PREVIEW_WIDTH,
-      previewViewport.clientHeight / DESKTOP_PREVIEW_HEIGHT
-    );
-  }
-
-  $: if (previewDevice && previewResizeObserver) requestAnimationFrame(syncPreviewScale);
-
-  onMount(() => {
-    syncPreviewScale();
-    if (typeof ResizeObserver !== 'undefined' && previewViewport) {
-      previewResizeObserver = new ResizeObserver(syncPreviewScale);
-      previewResizeObserver.observe(previewViewport);
-    }
-    window.addEventListener('resize', syncPreviewScale);
-    return () => {
-      previewResizeObserver?.disconnect();
-      previewResizeObserver = null;
-      window.removeEventListener('resize', syncPreviewScale);
-    };
-  });
 
   function retryPreview() {
     dispatch('retry');
@@ -84,10 +52,10 @@
   <div class="profile-studio-preview__body">
     <div class="profile-studio-preview__canvas" class:profile-studio-preview__canvas--mobile={previewDevice === 'mobile'} class:profile-studio-preview__canvas--appearance={isAppearancePreview}>
       {#if previewComponent}
-        <div class="profile-studio-preview__viewport" bind:this={previewViewport}>
+        <div class="profile-studio-preview__viewport" data-preview-device={previewDevice}>
           <div
-            class="profile-studio-preview__logical-canvas"
-            style={`--preview-scale: ${previewScale}; --preview-logical-width: ${DESKTOP_PREVIEW_WIDTH}px; --preview-logical-height: ${DESKTOP_PREVIEW_HEIGHT}px;`}
+            class="profile-studio-preview__stage"
+            data-preview-device={previewDevice}
           >
             <svelte:component
               this={previewComponent}
@@ -136,27 +104,11 @@
   .profile-studio-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem calc(1rem + env(safe-area-inset-bottom)); background: var(--ctp-mantle, var(--site-deep, #11111b)); }
   .profile-studio-preview__canvas { display: grid; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; overflow-x: hidden; }
   .profile-studio-preview__canvas--appearance { min-height: 0; margin-bottom: .6rem; }
-  .profile-studio-preview__viewport { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: var(--color-canvas-deep, #07080b); box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
-  .profile-studio-preview__logical-canvas { position: relative; width: 100%; height: 100%; overflow: hidden; }
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview) { position: absolute; top: 0; left: 50%; width: var(--preview-logical-width); height: var(--preview-logical-height); min-height: var(--preview-logical-height); max-height: none; overflow: hidden; border-radius: 0; background: transparent; box-shadow: none; transform: translateX(-50%) scale(var(--preview-scale)); transform-origin: top center; }
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-canvas),
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { width: 100%; height: var(--preview-logical-height); min-height: var(--preview-logical-height); }
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { align-items: center; justify-content: center; }
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__opening) { min-height: 0; }
-  /* The canvas is a real desktop viewport, so the profile object must keep
-     its layout width instead of inheriting the old full-column preview rule. */
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--compact .profile-shell__approved-opening) { width: 300px; }
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--sleek .profile-shell__approved-opening) { width: 335px; }
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--minimal .profile-shell__approved-opening) { width: 300px; align-self: flex-start; margin-left: 8.5vw; margin-right: 0; }
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--modern .profile-shell__approved-opening) { width: 310px; }
-  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--portfolio .profile-shell__approved-opening) { width: 320px; }
+  .profile-studio-preview__viewport { position: relative; width: 100%; min-height: 24rem; aspect-ratio: 4 / 5; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: var(--color-canvas-deep, #07080b); box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
+  .profile-studio-preview__stage { position: relative; width: 100%; height: 100%; min-height: 24rem; overflow: hidden; }
   .profile-studio-preview__canvas--mobile { padding: .65rem 0 1rem; }
-  .profile-studio-preview__canvas--mobile .profile-studio-preview__viewport { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: min(22rem, calc(100dvh - 12rem)); aspect-ratio: auto; border-radius: 1.25rem; }
-  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview) { top: 0; left: 0; width: 100%; height: 100%; min-height: 100%; transform: none; border-radius: 1.25rem; overflow: auto; }
-  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-canvas),
-  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 100%; }
-  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { align-items: stretch; justify-content: flex-start; }
-  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-opening) { width: 100%; margin-inline: 0; align-self: stretch; }
+  .profile-studio-preview__canvas--mobile .profile-studio-preview__viewport { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: min(24rem, calc(100dvh - 12rem)); aspect-ratio: auto; border-radius: 1.25rem; }
+  .profile-studio-preview__canvas--mobile .profile-studio-preview__stage { min-height: 100%; }
   .profile-studio-preview__device-panel { min-width: 0; }
   .profile-studio-preview__device-panel--appearance { display: grid; min-height: 13.2rem; overflow: hidden; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }
   .profile-studio-preview__devices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 3rem; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }

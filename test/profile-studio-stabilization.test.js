@@ -77,7 +77,8 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(settings, /configurationPreview = configurationPreview/);
   assert.match(preview, /\{previewDevice\}/);
   assert.match(preview, /canvas--mobile[\s\S]*height: min\(42rem/);
-  assert.match(preview, /profile-studio-preview__logical-canvas :global\(\.profile-shell-page--preview\)[\s\S]*background: transparent/);
+  assert.match(preview, /profile-studio-preview__stage/);
+  assert.doesNotMatch(preview, /logical-canvas|1440|previewScale|transform: scale/);
   assert.match(shell, /profile-shell-page--preview-mobile/);
   assert.match(shell, /profile-shell__media-overlay/);
   assert.match(shell, /profile-shell__media-image/);
@@ -99,6 +100,8 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(nameCanvas, /loadoutValue\(loadout, 'materialKey'/);
   assert.match(nameCanvas, /loadoutValue\(loadout, 'motionKey'/);
   assert.match(nameCanvas, /function updateHostVisibility/);
+  assert.match(nameCanvas, /function getLogicalHostSize/);
+  assert.match(nameCanvas, /renderer\.resize\([\s\S]*size\.width/);
   assert.match(nameCanvas, /updateVisibility\(entry\.contentRect\.width > 0 && entry\.contentRect\.height > 0\)/);
   assert.match(await read('src/lib/ShopItemPreview.svelte'), /item\?\.slot === 'name_motion' \? 'animated'/);
   assert.match(richMedia, /stage_my_profile_media_replacement/);

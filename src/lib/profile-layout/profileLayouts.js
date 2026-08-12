@@ -31,9 +31,9 @@ const PROFILE_LAYOUTS = {
   modern: {
     key: 'modern',
     label: 'Modern',
-    description: 'A compact identity surface with PROFILE/WIDGETS and a secondary roll widget.',
+    description: 'A compact identity surface with a small secondary roll widget.',
     footprint: 'small',
-    structure: Object.freeze({ identity: 'tabs', roll: 'widget', surface: 'card-with-region' })
+    structure: Object.freeze({ identity: 'compact', roll: 'widget', surface: 'card-with-region' })
   },
   portfolio: {
     key: 'portfolio',
