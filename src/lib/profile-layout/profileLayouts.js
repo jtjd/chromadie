@@ -10,32 +10,37 @@ const PROFILE_LAYOUTS = {
   compact: {
     key: 'compact',
     label: 'Compact',
-    description: 'A small centered identity surface with room for your background to lead.',
-    footprint: 'small'
+    description: 'A horizontal identity head with a tiny integrated daily roll.',
+    footprint: 'small',
+    structure: Object.freeze({ identity: 'horizontal', roll: 'integrated', surface: 'card' })
   },
   sleek: {
     key: 'sleek',
     label: 'Sleek',
-    description: 'A compact identity card with restrained strips for presence and music.',
-    footprint: 'small'
+    description: 'A stacked identity card with detached presence and music strips.',
+    footprint: 'small',
+    structure: Object.freeze({ identity: 'stacked', roll: 'detached', surface: 'card-with-strips' })
   },
   minimal: {
     key: 'minimal',
     label: 'Minimal',
-    description: 'A free-floating identity treatment that leaves most of the canvas open.',
-    footprint: 'floating'
+    description: 'A free-floating, offset identity with an inline daily indicator.',
+    footprint: 'floating',
+    structure: Object.freeze({ identity: 'offset', roll: 'inline', surface: 'cardless' })
   },
   modern: {
     key: 'modern',
     label: 'Modern',
-    description: 'A compact profile surface with a quiet secondary widget treatment.',
-    footprint: 'small'
+    description: 'A compact identity surface with PROFILE/WIDGETS and a secondary roll widget.',
+    footprint: 'small',
+    structure: Object.freeze({ identity: 'tabs', roll: 'widget', surface: 'card-with-region' })
   },
   portfolio: {
     key: 'portfolio',
     label: 'Portfolio',
-    description: 'A restrained identity landing view that opens into a longer profile story.',
-    footprint: 'longform'
+    description: 'A cardless centered identity landing that opens into a longer profile story.',
+    footprint: 'longform',
+    structure: Object.freeze({ identity: 'hero', roll: 'below-fold', surface: 'cardless' })
   }
 };
 
@@ -100,14 +105,25 @@ export function isProfileLayoutKey(value) {
   return PROFILE_LAYOUT_KEYS.includes(normalizeCandidate(value));
 }
 
-export function resolveProfileLayoutVariant(equippedCosmetics = {}, profileConfig = {}) {
-  const layoutOverride = profileConfig?.layoutOverride;
-  if (layoutOverride) return normalizeProfileLayoutKey(layoutOverride);
-
-  const equippedLayout = equippedCosmetics?.profile_layout;
-  if (equippedLayout) return normalizeProfileLayoutKey(equippedLayout);
-
+/**
+ * Resolve the public renderer from the published/profile configuration.
+ * Legacy equipped profile_layout rows remain readable for ownership and
+ * migration history, but never override the structural profile setting.
+ */
+export function resolveProfileLayoutVariant(profileConfig = {}) {
   return normalizeProfileLayoutKey(profileConfig?.layoutVariant, 'compact');
+}
+
+/**
+ * Resolve a temporary fitting-room preview. This is intentionally separate
+ * from the public resolver so selecting a shop item cannot mutate or silently
+ * replace the saved profile configuration.
+ */
+export function resolveProfileLayoutPreviewVariant(previewLoadout = {}, profileConfig = {}) {
+  return normalizeProfileLayoutKey(
+    previewLoadout?.profile_layout || profileConfig?.layoutVariant,
+    'compact'
+  );
 }
 
 export function getProfileLayoutLabel(value) {

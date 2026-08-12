@@ -9,6 +9,7 @@ import {
   PAID_PROFILE_LAYOUT_KEYS,
   PROFILE_LAYOUT_KEYS,
   getProfileLayoutLabel,
+  resolveProfileLayoutPreviewVariant,
   resolveProfileLayoutVariant
 } from '../src/lib/profile-layout/profileLayouts.js';
 import { filterShopItems, SHOP_SECTIONS, tryOnShopItem } from '../src/lib/shopCatalog.js';
@@ -129,22 +130,31 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.doesNotMatch(atmosphereSource, /RAIN_WINDOW_TEXTURE/);
 });
 
-test('paid layout resolution preserves the free fallback and supports temporary previews', () => {
-  assert.equal(resolveProfileLayoutVariant({}, { layoutVariant: 'sleek' }), 'sleek');
-  assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'sleek' }), 'sleek');
-  assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'sleek', layoutOverride: 'focus' }), 'compact');
-  assert.equal(resolveProfileLayoutVariant({ profile_layout: 'not-real' }, { layoutVariant: 'not-real' }), 'compact');
+test('public layout resolution is config-only and fitting-room previews stay temporary', () => {
+  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'sleek', profile_layout: 'profile_layout_split_signal' }), 'sleek');
+  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'sleek', layoutOverride: 'focus', profile_layout: 'profile_layout_split_signal' }), 'sleek');
+  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'not-real', profile_layout: 'profile_layout_split_signal' }), 'compact');
+  assert.equal(resolveProfileLayoutPreviewVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'sleek' }), 'sleek');
 });
 
-test('profile layouts stay on the identity card and cannot recompose the roll page', async () => {
-  const [shell, card] = await Promise.all([
+test('profile layouts compose shared roll data through distinct presentation regions', async () => {
+  const [shell, card, frame, dailyRoll] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/IdentityCard.svelte')
+    read('src/lib/IdentityCard.svelte'),
+    read('src/lib/ProfileLayoutFrame.svelte'),
+    read('src/lib/ProfileDailyRoll.svelte')
   ]);
   for (const layout of ['compact', 'sleek', 'minimal', 'modern', 'portfolio']) {
     assert.match(card, new RegExp(`identity-card--layout-${layout}`));
   }
   assert.match(shell, /ProfileDailyRoll/);
+  assert.match(shell, /profileLayoutFrameComponent/);
+  assert.match(shell, /slot="identity"/);
+  assert.match(shell, /slot="roll"/);
+  assert.match(shell, /slot="music"/);
+  assert.match(frame, /data-profile-layout-region="modern"/);
+  assert.match(frame, /data-profile-layout-strip="presence"/);
+  assert.match(dailyRoll, /data-profile-roll-presentation/);
   assert.match(shell, /layoutVariant=\{profilePresentationLayoutVariant\}/);
   assert.doesNotMatch(card, /identity-card--layout-(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)/);
 });

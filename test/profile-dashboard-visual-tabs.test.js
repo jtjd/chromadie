@@ -68,8 +68,9 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(appearance, /@media \(max-width: 40rem\)[\s\S]*appearance-editor__color-grid, \.appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
   assert.match(identity, /@media \(max-width: 52rem\)[\s\S]*identity-editor__fields\) \{ display: grid; gap: \.8rem;[\s\S]*identity-editor__grid--behavior \.identity-editor__field:last-child\)/);
   assert.match(identity, /identity-editor__grid--meta \.identity-editor__field:first-child[\s\S]*grid-column: 1 \/ -1/);
-  assert.match(preview, /container: profile-preview \/ inline-size;/);
-  assert.match(preview, /@container profile-preview \(max-width: 31rem\)[\s\S]*identity-card__person/);
+  assert.match(preview, /profile-studio-preview__logical-canvas/);
+  assert.match(preview, /1440/);
+  assert.doesNotMatch(preview, /@container profile-preview \(max-width: 31rem\)[\s\S]*identity-card__person/);
   assert.match(smoke, /responsive dashboard geometry fits phone, tablet, and narrow desktop widths/);
   assert.match(smoke, /const viewports = \[[\s\S]*\[320, 568\][\s\S]*\[667, 375\][\s\S]*\[1920, 1080\]/);
   assert.match(smoke, /09-mobile-preview-414/);
@@ -95,8 +96,6 @@ test('reference workspace composition stays explicit', async () => {
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ShopItemPreview.svelte')
   ]);
-  const studio = [settings, header, preview, draftModel].join('\n');
-
   assert.match(actions, /Customize profile/);
   assert.match(actions, /All changes saved/);
   assert.match(actions, /profile-dashboard-actions__publish/);
@@ -106,7 +105,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(preview, /profile-studio-preview__devices/);
   assert.match(preview, /Unlock more with Chromadie Plus/);
   assert.match(preview, /profile-studio-preview__canvas--appearance/);
-  assert.match(preview, /profile-studio-preview__canvas :global\(\.profile-shell-page--preview\)[\s\S]*overflow: hidden; border: 1px[\s\S]*border-radius: 1rem/);
+  assert.match(preview, /profile-studio-preview__viewport[\s\S]*overflow: hidden; border: 1px[\s\S]*border-radius: 1rem/);
   assert.doesNotMatch(preview, /!important/);
   assert.match(appearance, /appearance-editor__picker-surface/);
   assert.match(appearance, /appearance-editor__palette/);

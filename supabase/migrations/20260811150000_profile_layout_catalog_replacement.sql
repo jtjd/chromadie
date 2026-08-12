@@ -299,7 +299,7 @@ WITH legacy_inventory AS (
       WHEN 'profile_layout_archive_index' THEN 'profile_layout_portfolio'
       WHEN 'profile_layout_prism_mosaic' THEN 'profile_layout_modern'
       WHEN 'profile_layout_night_terminal' THEN 'profile_layout_minimal'
-      WHEN 'profile_layout_story_stack' THEN 'profile_layout_compact'
+      WHEN 'profile_layout_story_stack' THEN 'profile_layout_portfolio'
     END AS replacement_key,
     sum(quantity)::integer AS replacement_quantity
   FROM public.inventory

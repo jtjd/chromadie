@@ -54,7 +54,6 @@
     'profile_border',
     'avatar_effect',
     'cursor_trail',
-    'profile_layout',
     'profile_atmosphere'
   ]);
 

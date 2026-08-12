@@ -16,7 +16,7 @@
   }
 </script>
 
-<div class={'profile-daily-roll profile-daily-roll--' + variant} data-profile-roll-variant={variant} aria-label={isOwner ? 'Today’s color roll' : 'Latest color'}>
+<div class={'profile-daily-roll profile-daily-roll--' + variant} data-profile-roll-variant={variant} data-profile-roll-presentation={variant} aria-label={isOwner ? 'Today’s color roll' : 'Latest color'}>
   {#if isOwner}
     <ProfileRoll
       moduleSize="wide"
@@ -54,5 +54,39 @@
   .profile-daily-roll :global(.profile-roll__details) { display: none; }
   .profile-daily-roll :global(.profile-roll__button),
   .profile-daily-roll :global(.profile-roll__reveal-button) { min-height: 2.35rem; }
+
+  /* These are presentation contracts, not separate roll implementations.
+     ProfileRoll and TodayColor still own eligibility, data and events. */
+  .profile-daily-roll--compact {
+    padding: .55rem .7rem .65rem;
+    border-top: 1px solid color-mix(in srgb, var(--profile-control-accent, #8B7CF6) 22%, transparent);
+  }
+
+  .profile-daily-roll--sleek {
+    min-height: 3rem;
+    padding: .2rem .7rem;
+  }
+
+  .profile-daily-roll--minimal {
+    width: auto;
+    max-width: 100%;
+    padding: .25rem 0;
+    border-top: 1px solid color-mix(in srgb, var(--profile-control-accent, #8B7CF6) 18%, transparent);
+  }
+
+  .profile-daily-roll--minimal :global(.today-color__result-head),
+  .profile-daily-roll--minimal :global(.profile-roll__result) { max-width: 15rem; }
+
+  .profile-daily-roll--modern {
+    padding: .3rem .15rem .15rem;
+  }
+
+  .profile-daily-roll--modern :global(.today-color__result-head),
+  .profile-daily-roll--modern :global(.profile-roll__result) { max-width: 17rem; }
+
+  .profile-daily-roll--portfolio {
+    padding: .5rem 0;
+  }
+
   @media (prefers-reduced-motion: reduce) { .profile-daily-roll :global(*) { scroll-behavior: auto; } }
 </style>

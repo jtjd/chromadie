@@ -81,6 +81,27 @@ async function capture(name) {
   return path;
 }
 
+async function captureRegion(name, selector) {
+  const box = await page.evaluate(`(() => {
+    const element = document.querySelector(${JSON.stringify(selector)});
+    const rect = element?.getBoundingClientRect();
+    return rect && rect.width > 0 && rect.height > 0
+      ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+      : null;
+  })()`);
+  assert(box, `Could not capture visible region ${selector}.`);
+  const result = await page.command('Page.captureScreenshot', {
+    format: 'png',
+    fromSurface: true,
+    captureBeyondViewport: false,
+    clip: { ...box, scale: 1 }
+  });
+  const path = join(evidenceDir, `${name}.png`);
+  await writeFile(path, Buffer.from(result.data, 'base64'));
+  results.screenshots.push(path);
+  return path;
+}
+
 try {
   const authResponse = await waitForHttp(`${supabaseUrl.origin}/auth/v1/settings`, 5000).catch(error => {
     throw new Error(`Local Supabase is not reachable at ${supabaseUrl.origin}. Start local Supabase first. ${error.message}`);
@@ -311,7 +332,7 @@ try {
     assert((layoutState.workspace?.width || 0) > 0 && (layoutState.workspace?.bottom || 0) <= layoutState.viewport.height + 2, `Layout workspace escapes the viewport: ${JSON.stringify(layoutState)}.`);
     await page.evaluate(`document.querySelector('[data-editor-section="layout"]')?.scrollIntoView({ block: 'start' })`);
     await capture('04-layout-workspace');
-    await step('all five profile layouts use the shared bounded renderer', async () => {
+    await step('all five profile layouts use distinct structural renderers', async () => {
       const layouts = ['compact', 'sleek', 'minimal', 'modern', 'portfolio'];
       const pickerLabels = await page.evaluate(`([...document.querySelectorAll('.profile-template-picker__card strong')]).map(node => node.textContent.trim())`);
       assert(JSON.stringify(pickerLabels) === JSON.stringify(['Compact', 'Sleek', 'Minimal', 'Modern', 'Portfolio']), `Profile Studio layout catalog is not the five-layout set: ${JSON.stringify(pickerLabels)}.`);
@@ -331,42 +352,115 @@ try {
         const state = await page.evaluate(`(() => {
           const canvas = document.querySelector('.profile-studio-preview__canvas');
           const shell = canvas?.querySelector('.profile-shell-page--preview');
+          const viewport = canvas?.querySelector('.profile-studio-preview__viewport');
+          const frame = shell?.querySelector('.profile-layout-frame');
+          const identityRegion = frame?.querySelector('[data-profile-layout-region="identity"]');
           const card = shell?.querySelector('.identity-card');
           const avatar = card?.querySelector('.identity-card__avatar');
           const name = card?.querySelector('.identity-card__name');
+          const copy = card?.querySelector('.identity-card__copy');
           const rect = element => {
             const box = element?.getBoundingClientRect();
             return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
           };
           const shellBox = rect(shell);
+          const viewportBox = rect(viewport);
           const cardBox = rect(card);
+          const frameBox = rect(frame);
+          const identityBox = rect(identityRegion);
           const avatarBox = rect(avatar);
           const nameBox = rect(name);
+          const copyBox = rect(copy);
           const overflow = [...(shell?.querySelectorAll('*') || [])]
             .map(element => ({ element, box: element.getBoundingClientRect() }))
             .filter(({ box }) => box.width > 0 && box.height > 0 && shellBox && (box.left < shellBox.left - 1 || box.right > shellBox.right + 1))
             .slice(0, 4)
             .map(({ element, box }) => ({ tag: element.tagName, className: element.className, left: Math.round(box.left), right: Math.round(box.right) }));
           const avatarNameOverlap = Boolean(avatarBox && nameBox && avatarBox.left < nameBox.right - 1 && nameBox.left < avatarBox.right - 1 && avatarBox.top < nameBox.bottom - 1 && nameBox.top < avatarBox.bottom - 1);
+          const avatarCopyCenterDelta = avatarBox && copyBox
+            ? Math.abs((avatarBox.top + avatarBox.height / 2) - (copyBox.top + copyBox.height / 2))
+            : null;
+          const backgroundBounds = [...(shell?.querySelectorAll('.profile-shell__media-image, .profile-shell__media-overlay, .profile-shell__media-video, .profile-shell__page-atmosphere-layer, .profile-shell__page-cursor-layer') || [])]
+            .map(element => ({ selector: element.className?.baseVal || element.className || element.tagName, box: rect(element) }))
+            .filter(item => item.box);
+          const shellStyle = shell ? getComputedStyle(shell) : null;
+          const identityStyle = identityRegion ? getComputedStyle(identityRegion) : null;
+          const cardStyle = card ? getComputedStyle(card) : null;
           return {
             shell: shellBox,
+            viewport: viewportBox,
+            frame: frameBox,
+            identityRegion: identityBox,
             card: cardBox,
             cardClass: card?.className || '',
             avatar: avatarBox,
             name: nameBox,
+            copy: copyBox,
             avatarNameOverlap,
+            avatarCopyCenterDelta,
+            avatarBeforeName: Boolean(avatarBox && nameBox && avatarBox.left < nameBox.left),
             hasDailyRoll: Boolean(shell?.querySelector('.profile-daily-roll')),
+            frameVariant: frame?.getAttribute('data-profile-layout') || '',
+            presenceStrip: Boolean(frame?.querySelector('[data-profile-layout-strip="presence"]')),
+            musicStrip: Boolean(frame?.querySelector('[data-profile-layout-strip="music"]')),
+            todayStrip: Boolean(frame?.querySelector('[data-profile-layout-strip="today"]')),
+            modernRegion: Boolean(frame?.querySelector('[data-profile-layout-region="modern"]')),
+            tabs: Boolean(frame?.querySelector('[data-profile-layout-tabs]')),
+            widget: Boolean(frame?.querySelector('[data-profile-layout-widget]')),
+            cardless: Boolean(identityStyle && (identityStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || identityStyle.backgroundColor === 'transparent') && identityStyle.borderTopWidth === '0px'),
+            avatarRadius: avatar ? getComputedStyle(avatar).borderRadius : '',
+            shellBackground: shellStyle?.backgroundColor || '',
+            backgroundBounds,
             iconCount: card?.querySelectorAll('.identity-card__link-glyph img').length || 0,
             hasRedundantHandle: Boolean(card?.querySelector('.identity-card__handle, .identity-card__handle-row')),
             overflow
           };
         })()`);
+        assert(state.frameVariant === layout, `${layout} preview mounted the wrong frame variant: ${JSON.stringify(state)}.`);
+        assert(state.shell && state.viewport && Math.abs(state.shell.left - state.viewport.left) <= 3 && Math.abs(state.shell.top - state.viewport.top) <= 3 && Math.abs(state.shell.width - state.viewport.width) <= 3 && Math.abs(state.shell.height - state.viewport.height) <= 3, `${layout} preview page does not fill the profile viewport: ${JSON.stringify(state)}.`);
         assert(state.card?.width > 0 && state.card.width <= 360, `${layout} profile surface is no longer compact: ${JSON.stringify(state)}.`);
         assert(state.card?.right <= (state.shell?.right || 0) + 1 && state.card?.left >= (state.shell?.left || 0) - 1, `${layout} profile surface escapes the preview shell: ${JSON.stringify(state)}.`);
         assert(!state.avatarNameOverlap && !state.overflow.length, `${layout} preview has identity collision or clipping: ${JSON.stringify(state)}.`);
         assert(state.hasDailyRoll || layout === 'portfolio', `${layout} preview lost the shared daily-roll presentation.`);
         assert(!state.hasRedundantHandle, `${layout} preview still renders a redundant @username handle.`);
+        for (const media of state.backgroundBounds) {
+          assert(Math.abs(media.box.left - state.shell.left) <= 1 && Math.abs(media.box.top - state.shell.top) <= 1 && Math.abs(media.box.width - state.shell.width) <= 1 && Math.abs(media.box.height - state.shell.height) <= 1, `${layout} page-level media/effects do not bound to the profile viewport: ${JSON.stringify(state)}.`);
+        }
+        if (layout === 'compact') {
+          assert(state.avatarBeforeName && (state.avatarCopyCenterDelta || 99) <= Math.max(10, (state.avatar?.height || 0) * .28), `Compact is not a horizontal identity head: ${JSON.stringify(state)}.`);
+        } else if (layout === 'sleek') {
+          assert(state.presenceStrip && state.todayStrip && state.avatarRadius !== '50%', `Sleek is missing its detached strip composition or rounded-square avatar: ${JSON.stringify(state)}.`);
+        } else if (layout === 'minimal') {
+          assert(state.cardless && state.identityRegion?.left < state.shell.left + state.shell.width / 2 - 10, `Minimal is not a cardless offset identity: ${JSON.stringify(state)}.`);
+        } else if (layout === 'modern') {
+          assert(state.modernRegion && state.tabs && state.widget, `Modern is missing its secondary tab/widget region: ${JSON.stringify(state)}.`);
+        } else if (layout === 'portfolio') {
+          assert(state.cardless && !state.hasDailyRoll, `Portfolio still presents the hero as a card or keeps Today in the opening: ${JSON.stringify(state)}.`);
+        }
+        await captureRegion(`${layout}-desktop`, '.profile-studio-preview__viewport');
         measurements.push({ layout, ...state });
+      }
+
+      for (const layout of layouts) {
+        const clicked = await page.evaluate(`(() => {
+          const wanted = ${JSON.stringify(layout)};
+          const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim().toLowerCase() === wanted);
+          card?.click();
+          return Boolean(card);
+        })()`);
+        assert(clicked, `Could not restore ${layout} for the mobile evidence capture.`);
+        await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} mobile evidence layout`);
+        await page.click('.profile-studio-preview__devices button:nth-child(2)', `${layout} mobile preview control`);
+        await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile') && document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview')`, `${layout} mobile preview canvas`);
+        const mobileBounds = await page.evaluate(`(() => {
+          const viewport = document.querySelector('.profile-studio-preview__canvas--mobile .profile-studio-preview__viewport')?.getBoundingClientRect();
+          const shell = document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview')?.getBoundingClientRect();
+          return viewport && shell ? { viewport: { left: viewport.left, top: viewport.top, width: viewport.width, height: viewport.height }, shell: { left: shell.left, top: shell.top, width: shell.width, height: shell.height } } : null;
+        })()`);
+        assert(mobileBounds && Math.abs(mobileBounds.shell.left - mobileBounds.viewport.left) <= 3 && Math.abs(mobileBounds.shell.top - mobileBounds.viewport.top) <= 3 && Math.abs(mobileBounds.shell.width - mobileBounds.viewport.width) <= 3, `${layout} mobile preview page is offset inside the phone viewport: ${JSON.stringify(mobileBounds)}.`);
+        await captureRegion(`${layout}-mobile`, '.profile-studio-preview__viewport');
+        await page.click('.profile-studio-preview__devices button:nth-child(1)', `${layout} desktop preview control`);
+        await page.waitFor(`!document.querySelector('.profile-studio-preview__canvas--mobile')`, `${layout} desktop preview canvas`);
       }
 
       await page.evaluate(`(() => {
@@ -588,7 +682,6 @@ try {
     })()`);
     await page.setInputValue('#profile-bio', 'Live preview draft', ['input']);
     await page.waitFor(`document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() === 'Live preview draft'`, 'identity draft in live preview');
-    const identityRequestsBefore = page.requestLog.filter(request => request.url.includes('update_my_profile_identity')).length;
     const originalTextColor = await page.evaluate(`document.querySelector('[data-color-role="text"] .appearance-editor__hex')?.value || '#F4F6FB'`);
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', '#12ABEF', ['input']);
     await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell__approved-opening')).getPropertyValue('--profile-text').trim().toUpperCase() === '#12ABEF'`, 'color draft in live preview');
@@ -611,10 +704,10 @@ try {
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', '#234567', ['input']);
     await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell__approved-opening')).getPropertyValue('--profile-surface').trim().toUpperCase() === '#234567'`, 'surface color draft in live preview');
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', originalSurfaceColor, ['input']);
-    const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
+    const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2') || request.url.includes('publish_profile_studio_v2')).length;
     await page.setInputValue('.appearance-editor__surface-grid .appearance-editor__range:nth-child(4) input[type="range"]', 40, ['input']);
     await page.waitFor(`document.querySelector('.appearance-editor__surface-grid .appearance-editor__range:nth-child(4) output')?.textContent?.trim() === '40px'`, 'blur draft value');
-    const publishRequestsAfter = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
+    const publishRequestsAfter = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2') || request.url.includes('publish_profile_studio_v2')).length;
     const identityLayout = await page.evaluate(`(() => {
       const field = selector => document.querySelector(selector)?.closest('.identity-editor__field');
       const rect = element => {
@@ -654,12 +747,10 @@ try {
       publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,
       status: document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() || ''
     })`);
-    const publishRequests = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2')).length;
-    const identityRequests = page.requestLog.filter(request => request.url.includes('update_my_profile_identity')).length;
+    const publishRequests = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2') || request.url.includes('publish_profile_studio_v2')).length;
     assert(publishedState.publishDisabled === true, 'Publishing did not clear the dashboard draft state.');
     assert(publishRequests > publishRequestsAfter, 'Publishing the surface depth did not call the configuration RPCs.');
-    assert(identityRequests > identityRequestsBefore, 'Publishing an Identity draft did not call the identity RPC.');
-    return { draftState, publishedState, identityLayout, publishRequests, identityRequests, mediaRail };
+    return { draftState, publishedState, identityLayout, publishRequests, mediaRail };
   });
 
   await step('narrow mobile layout contains the dashboard and restores keyboard focus', async () => {
@@ -841,7 +932,7 @@ try {
           assert(state.effects?.columns === 1 && state.effects.cardWidths.every(cardWidth => cardWidth >= 260), `Visual Effects did not switch to readable phone rows at 390px: ${JSON.stringify(state.effects)}.`);
         }
         if (width > 1024) {
-          assert(state.previewLayout?.display === 'flex' && state.previewLayout.cardWidth <= state.previewLayout.canvasWidth + 1 && state.previewLayout.cardScrollWidth <= state.previewLayout.cardClientWidth + 1 && state.previewLayout.copyScrollWidth <= state.previewLayout.copyClientWidth + 1, `Narrow desktop preview card is not readable at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+          assert(['block', 'flex', 'grid'].includes(state.previewLayout?.display) && state.previewLayout.cardWidth <= state.previewLayout.canvasWidth + 1 && state.previewLayout.cardScrollWidth <= state.previewLayout.cardClientWidth + 1 && state.previewLayout.copyScrollWidth <= state.previewLayout.copyClientWidth + 1, `Narrow desktop preview card is not readable at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         }
         if (width === 1100 && tab === 'appearance') await capture('08-responsive-narrow-desktop');
         measurements.push({ width, tab, ...state });
@@ -939,7 +1030,7 @@ try {
         pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
-    assert(phonePreview.contained && phonePreview.pageContained && phonePreview.sidebarHidden && phonePreview.card?.display === 'flex' && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 1 && phonePreview.copy?.scrollWidth <= phonePreview.copy.clientWidth + 1, `Phone live preview is not a readable bounded drawer: ${JSON.stringify(phonePreview)}.`);
+    assert(phonePreview.contained && phonePreview.pageContained && phonePreview.sidebarHidden && ['block', 'flex', 'grid'].includes(phonePreview.card?.display) && phonePreview.card.clientWidth >= 200 && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 1 && phonePreview.copy?.scrollWidth <= phonePreview.copy.clientWidth + 1, `Phone live preview is not a readable bounded drawer: ${JSON.stringify(phonePreview)}.`);
     await capture('09-mobile-preview-414');
     await page.click('.profile-studio-preview__close', 'close phone preview drawer');
     await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed phone preview drawer');

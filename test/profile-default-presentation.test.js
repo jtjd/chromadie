@@ -25,6 +25,6 @@ test('default profile presentation does not inject a theme or redundant handle',
   assert.match(shell, /defaultPresentation=\{defaultProfilePresentation\}/);
   assert.match(shell, /borderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(card, /background-image: none/);
-  assert.match(card, /\.identity-card__handle-row \{ display: none; \}/);
+  assert.doesNotMatch(card, /identity-card__handle-row|identity-card__handle/);
   assert.doesNotMatch(card, /starfield-blue\.webp/);
 });

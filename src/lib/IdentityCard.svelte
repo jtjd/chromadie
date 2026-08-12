@@ -3,12 +3,12 @@
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
   import { isProfileLayoutKey } from './profile-layout/profileLayouts.js';
+  import { getProfileLinkDefinition } from './profileLinkTypes.js';
 
   export let username = 'Unknown Player';
   export let displayName = '';
   export let profilePath = '';
   export let bio = '';
-  export let bioFallback = '';
   export let links = [];
   export let badges = [];
   export let staff = false;
@@ -61,22 +61,7 @@
   $: safeLinkStyle = linkStyle || {};
 
   function linkIconSource(link) {
-    const type = String(link?.type || 'link').toLowerCase();
-    const iconTypes = {
-      discord: 'discord',
-      github: 'github',
-      instagram: 'instagram',
-      kick: 'kick',
-      spotify: 'spotify',
-      steam: 'steam',
-      tiktok: 'tiktok',
-      twitch: 'twitch',
-      twitter: 'x',
-      x: 'x',
-      youtube: 'youtube'
-    };
-    const icon = iconTypes[type] || 'link';
-    return '/link-icons/' + icon + '.svg';
+    return '/link-icons/' + getProfileLinkDefinition(link?.type).icon + '.svg';
   }
 </script>
 
@@ -132,8 +117,7 @@
           </div>
         {/if}
       </div>
-      {#if bio}<p class={'identity-card__bio identity-card__bio--' + descriptionMode}>{bio}</p>
-      {:else if bioFallback}<p class="identity-card__bio identity-card__bio--fallback">{bioFallback}</p>{/if}
+      {#if bio}<p class={'identity-card__bio identity-card__bio--' + descriptionMode}>{bio}</p>{/if}
       {#if location || timezone || (showJoinDate && joinedLabel)}
         <div class="identity-card__metadata" aria-label="Profile details">
           {#if location}<span>{location}</span>{/if}
@@ -227,9 +211,6 @@
   .identity-card__badge { display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border: 1px solid color-mix(in srgb, var(--identity-accent) 42%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--identity-accent) 14%, rgba(255, 255, 255, 0.06)); color: color-mix(in srgb, var(--identity-accent) 82%, white); font-size: 0.72rem; line-height: 1; }
   .identity-card__badge--founder { background: color-mix(in srgb, var(--identity-accent) 22%, transparent); }
   .identity-card__badge--staff { display: inline-flex; width: auto; min-width: 3.85rem; gap: 0.22rem; padding: 0 0.42rem; border-color: color-mix(in srgb, var(--color-accent-cyan) 72%, transparent); border-radius: 0.42rem; background: color-mix(in srgb, var(--color-accent-cyan) 18%, transparent); color: var(--color-accent-cyan); font: 700 0.56rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; }
-  .identity-card__handle-row { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 0.6rem 0.8rem; margin-top: 0.38rem; }
-  .identity-card__handle { display: inline-block; color: var(--profile-secondary-text, rgba(220, 230, 248, 0.62)); font: 600 0.75rem / 1.25 var(--font-mono-stack); text-decoration: none; letter-spacing: 0.05em; }
-  .identity-card__handle:hover { color: var(--profile-highlight, color-mix(in srgb, var(--identity-accent) 85%, white)); }
   .identity-card__bio { max-width: 28rem; margin: 0.7rem 0 0; color: var(--profile-description, rgba(226, 233, 246, 0.72)); font-size: 0.84rem; line-height: 1.55; overflow-wrap: anywhere; word-break: break-word; }
   .identity-card__bio--typewriter { overflow: hidden; border-right: 1px solid color-mix(in srgb, var(--identity-accent) 70%, transparent); white-space: nowrap; animation: identity-card-typewriter 2.2s steps(42, end) both, identity-card-caret 0.9s step-end infinite; }
   .identity-card__metadata { display: flex; flex-wrap: wrap; gap: .35rem .65rem; margin-top: .65rem; color: var(--profile-secondary-text, rgba(220, 230, 248, .58)); font: .62rem / 1.3 var(--font-mono-stack); }
@@ -243,8 +224,7 @@
   .identity-card__link-glyph { display: grid; place-items: center; width: 1rem; height: 1rem; border-radius: 0; background: transparent; color: color-mix(in srgb, var(--identity-accent) 84%, white); font: 700 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0; }
   .identity-card__link-glyph img { display: block; width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.78; }
   .identity-card__links strong { min-width: 0; color: inherit; font-weight: 600; overflow-wrap: anywhere; }
-  .identity-card__links a:focus-visible,
-  .identity-card__handle:focus-visible { outline: 2px solid var(--profile-highlight, var(--color-accent-bright)); outline-offset: 4px; border-radius: 0.25rem; }
+  .identity-card__links a:focus-visible { outline: 2px solid var(--profile-highlight, var(--color-accent-bright)); outline-offset: 4px; border-radius: 0.25rem; }
 
   .identity-card__divider { height: 1px; margin: 1.65rem 0 1.45rem; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--identity-accent) 22%, rgba(230, 238, 255, 0.16)), transparent); }
   .identity-card__today :global(.profile-roll--integrated) { width: 100%; }
@@ -337,8 +317,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .identity-card__links a,
-    .identity-card__handle { transition-duration: 0.001ms; }
+    .identity-card__links a { transition-duration: 0.001ms; }
 
     .identity-card__person,
     .identity-card__links,
@@ -383,13 +362,13 @@
   .identity-card--layout-compact { max-width: 300px; }
   .identity-card--layout-sleek { max-width: 335px; padding: 1rem; }
   .identity-card--layout-modern { max-width: 310px; padding: 1rem; }
-  .identity-card--layout-portfolio { max-width: 320px; padding: 1rem; background: color-mix(in srgb, var(--profile-surface-fill, rgba(9, 11, 15, .64)) 42%, transparent); box-shadow: none; }
-  .identity-card--layout-minimal { max-width: 300px; padding: .25rem 0; border-color: transparent; background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .identity-card--layout-portfolio { max-width: 320px; padding: 1rem; background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .identity-card--layout-minimal { max-width: 280px; padding: .25rem 0; border-color: transparent; background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 
-  .identity-card--layout-compact .identity-card__person,
+  .identity-card--layout-compact .identity-card__person { flex-direction: row; align-items: center; gap: .75rem; }
   .identity-card--layout-minimal .identity-card__person,
   .identity-card--layout-portfolio .identity-card__person { flex-direction: column; align-items: center; gap: .7rem; }
-  .identity-card--layout-compact .identity-card__copy,
+  .identity-card--layout-compact .identity-card__copy { width: auto; padding-top: 0; text-align: left; }
   .identity-card--layout-minimal .identity-card__copy,
   .identity-card--layout-portfolio .identity-card__copy { width: 100%; padding-top: 0; text-align: center; }
   .identity-card--layout-compact .identity-card__name-row,
@@ -404,18 +383,20 @@
 
   .identity-card--layout-sleek .identity-card__person,
   .identity-card--layout-modern .identity-card__person { gap: .8rem; }
-  .identity-card--layout-sleek :global(.identity-card__avatar),
-  .identity-card--layout-modern :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
-  .identity-card--layout-compact :global(.identity-card__avatar),
-  .identity-card--layout-minimal :global(.identity-card__avatar) { flex-basis: 3.4rem; width: 3.4rem; }
-  .identity-card--layout-portfolio :global(.identity-card__avatar) { flex-basis: 4.5rem; width: 4.5rem; }
+  .identity-card--layout-compact :global(.identity-card__avatar) { flex-basis: 54px; width: 54px; }
+  .identity-card--layout-sleek :global(.identity-card__avatar) { flex-basis: 52px; width: 52px; border-radius: 14px; }
+  .identity-card--layout-modern :global(.identity-card__avatar) { flex-basis: 50px; width: 50px; border-radius: 13px; }
+  .identity-card--layout-minimal :global(.identity-card__avatar) { flex-basis: 74px; width: 74px; }
+  .identity-card--layout-portfolio :global(.identity-card__avatar) { flex-basis: 72px; width: 72px; }
+  .identity-card--layout-sleek :global(.identity-card__avatar-media),
+  .identity-card--layout-modern :global(.identity-card__avatar-media) { border-radius: inherit; clip-path: none; }
   .identity-card--layout-compact :global(.identity-card__avatar-letter),
   .identity-card--layout-sleek :global(.identity-card__avatar-letter),
   .identity-card--layout-modern :global(.identity-card__avatar-letter) { font-size: 1.9rem; }
   .identity-card--layout-portfolio :global(.identity-card__avatar-letter) { font-size: 2.4rem; }
 
-  .identity-card--layout-compact .identity-card__name,
-  .identity-card--layout-modern .identity-card__name { font-size: clamp(1.35rem, 6vw, 1.55rem); line-height: 1; }
+  .identity-card--layout-compact .identity-card__name { font-size: clamp(1.25rem, 5vw, 1.45rem); line-height: 1; }
+  .identity-card--layout-modern .identity-card__name { font-size: clamp(1.3rem, 5vw, 1.5rem); line-height: 1; }
   .identity-card--layout-sleek .identity-card__name { font-size: clamp(1.4rem, 6vw, 1.7rem); line-height: 1; }
   .identity-card--layout-minimal .identity-card__name { font-size: clamp(1.65rem, 7vw, 1.95rem); line-height: 1; }
   .identity-card--layout-portfolio .identity-card__name { font-size: clamp(1.55rem, 7vw, 1.8rem); line-height: 1; }
@@ -437,7 +418,7 @@
   .identity-card--layout-compact .identity-card__links a,
   .identity-card--layout-sleek .identity-card__links a,
   .identity-card--layout-modern .identity-card__links a,
-  .identity-card--layout-portfolio .identity-card__links a { display: grid; width: 2.25rem; height: 2.25rem; min-height: 2.25rem; place-items: center; padding: 0; border: 0; border-radius: 50%; }
+  .identity-card--layout-portfolio .identity-card__links a { display: grid; width: 2.5rem; height: 2.5rem; min-height: 2.5rem; place-items: center; padding: 0; border: 0; border-radius: 50%; }
   .identity-card--layout-compact .identity-card__links a:hover,
   .identity-card--layout-sleek .identity-card__links a:hover,
   .identity-card--layout-modern .identity-card__links a:hover,
@@ -451,12 +432,11 @@
   .identity-card--layout-minimal .identity-card__link-glyph,
   .identity-card--layout-modern .identity-card__link-glyph,
   .identity-card--layout-portfolio .identity-card__link-glyph { width: 1.05rem; height: 1.05rem; }
-  .identity-card--layout-minimal .identity-card__links--labeled a { display: flex; width: 100%; height: auto; min-height: 2.25rem; justify-content: space-between; padding: .25rem .35rem; border-bottom: 1px solid color-mix(in srgb, var(--identity-accent) 18%, transparent); border-radius: 0; }
+  .identity-card--layout-minimal .identity-card__links--labeled a { display: flex; width: 100%; height: auto; min-height: 2.5rem; justify-content: space-between; padding: .25rem .35rem; border-bottom: 1px solid color-mix(in srgb, var(--identity-accent) 18%, transparent); border-radius: 0; }
   .identity-card--layout-minimal .identity-card__links--labeled strong { position: static; width: auto; height: auto; overflow: visible; clip: auto; clip-path: none; color: inherit; font-size: .72rem; white-space: normal; }
   .identity-card--layout-minimal .identity-card__links--labeled a:hover { background: color-mix(in srgb, var(--identity-accent) 8%, transparent); transform: none; }
   .identity-card__badge { width: 1.1rem; height: 1.1rem; font-size: .62rem; }
   .identity-card__badge--staff { min-width: 3.25rem; font-size: .5rem; }
-  .identity-card__handle-row { display: none; }
 
   @container identity-card (max-width: 24rem) {
     .identity-card--layout-sleek,

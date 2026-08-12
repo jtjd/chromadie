@@ -2,6 +2,12 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-11 — Remove the standalone public-profile Share control
+
+- Public profiles no longer render a separate Share profile button over the
+  identity surface. Canonical profile URLs and existing discovery/roll share
+  behavior remain available.
+
 ## 2026-08-11 — Introduce five compact public profile layouts
 
 - Replaced the novelty profile-layout choices with Compact, Sleek, Minimal,
@@ -2607,3 +2613,19 @@ direct route behavior.
   owner/public read when an older V2 RPC is still deployed.
 - Added regression coverage for the Studio preview projection and homepage
   discovery-row avatar propagation.
+
+## 2026-08-11 — Make the five profile layouts genuinely distinct
+
+- Replaced width-and-spacing variants of `IdentityCard` with structural layout
+  frames for Compact, Sleek, Minimal, Modern, and Portfolio.
+- Added layout-specific roll presentation using shared daily-roll logic, plus
+  detached Sleek strips, Modern tabs/widget structure, and Portfolio's
+  below-fold Today placement.
+- Rebuilt Studio preview around a logical profile viewport so page-level
+  backgrounds, atmosphere, cursor, and media remain visible around the card.
+- Made layout selection draft-only, corrected Story Stack → Portfolio inventory
+  migration, applied template module ordering, and unified social-service
+  metadata/icons/validation.
+- Removed public “No bio added yet.” filler and legacy handle CSS; added
+  structural layout assertions and fresh desktop/mobile capture paths to the
+  browser smoke script.

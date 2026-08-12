@@ -31,7 +31,7 @@ test('template registry is finite, structured, and preserves the free foundation
   const patch = createProfileTemplatePatch('sleek');
   assert.equal(patch.templateKey, 'sleek');
   assert.equal(patch.layoutVariant, 'sleek');
-  assert.equal('links' in patch, false);
+  assert.deepEqual(patch.modules.map(module => module.id), ['roll', 'links', 'stats', 'signature', 'recent', 'achievements', 'boundary', 'explore']);
   assert.equal('appearance' in patch, false);
   assert.equal(normalizeProfileTemplateKey('not-real'), 'compact');
   assert.equal(normalizeProfileTemplateKey('editorial'), 'sleek');

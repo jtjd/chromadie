@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Remove public-profile Share control — 2026-08-11
+
+- Removed the standalone Share profile button and its lazy dialog mount from
+  the public ProfileShell. Existing public profile URLs and discovery/roll
+  sharing contracts remain unchanged.
+- Removed the unused legacy profile-header Share action as well, and added a
+  source contract preventing the profile renderer from reintroducing the
+  standalone control.
+
 ## Public profile layout replacement — 2026-08-11
 
 - Replaced the active novelty layout catalog with five compact structural
@@ -3254,3 +3263,24 @@ dynamic rows now recover a missing discovery avatar from the hydrated public
 profile, and V2 hydration backfills expression fields from the legacy read
 during a partial database rollout. Regression coverage covers the V2 owner and
 public paths, Studio preview projection, and homepage discovery-row merge.
+
+## 2026-08-11 — Replace layout names with layout renderers
+
+- Implemented distinct structural frames for Compact, Sleek, Minimal, Modern,
+  and Portfolio while keeping roll state, eligibility, scoring, and events in
+  shared components.
+- Made Studio preview background-first with a logical desktop viewport and an
+  explicit mobile canvas; removed the narrow-preview rule that stacked every
+  layout into the same identity card.
+- Made `layoutVariant` config-only for public rendering and removed preview-time
+  `profile_layout` unequip mutations. Corrected Story Stack inventory migration
+  to Portfolio and applied template module ordering when selecting a template.
+- Added canonical service definitions/icons, removed public filler bio copy and
+  dead handle styles, and expanded browser smoke assertions plus per-layout
+  desktop/mobile screenshot capture.
+
+Validation: build, Svelte check, ESLint, `npm test` (301 passing), links, CSP,
+performance, username/balance/catalog drift, scoring parity, database security,
+schema lint/reset, and the authenticated desktop/mobile/reduced-motion browser
+smoke all pass. The advisory aggregate JavaScript/CSS catalogs remain over
+target, while every blocking route budget passes.

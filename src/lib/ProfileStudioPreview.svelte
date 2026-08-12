@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { PROFILE_RENDER_CONTEXTS } from './profile-studio/previewContexts.js';
 
   /** @type {any} */
@@ -18,6 +18,11 @@
 
   const dispatch = createEventDispatcher();
   const liveProfileContext = PROFILE_RENDER_CONTEXTS.LIVE_PROFILE;
+  const DESKTOP_PREVIEW_WIDTH = 1440;
+  const DESKTOP_PREVIEW_HEIGHT = 900;
+  let previewViewport;
+  let previewScale = 0.28;
+  let previewResizeObserver;
 
   $: isAppearancePreview = activeSection === 'customize' && activeCustomizeTab === 'appearance';
 
@@ -28,6 +33,33 @@
   function setPreviewDevice(device) {
     if (device === 'desktop' || device === 'mobile') dispatch('devicechange', device);
   }
+
+  function syncPreviewScale() {
+    if (!previewViewport || previewDevice === 'mobile') {
+      previewScale = 1;
+      return;
+    }
+    previewScale = Math.min(
+      previewViewport.clientWidth / DESKTOP_PREVIEW_WIDTH,
+      previewViewport.clientHeight / DESKTOP_PREVIEW_HEIGHT
+    );
+  }
+
+  $: if (previewDevice && previewResizeObserver) requestAnimationFrame(syncPreviewScale);
+
+  onMount(() => {
+    syncPreviewScale();
+    if (typeof ResizeObserver !== 'undefined' && previewViewport) {
+      previewResizeObserver = new ResizeObserver(syncPreviewScale);
+      previewResizeObserver.observe(previewViewport);
+    }
+    window.addEventListener('resize', syncPreviewScale);
+    return () => {
+      previewResizeObserver?.disconnect();
+      previewResizeObserver = null;
+      window.removeEventListener('resize', syncPreviewScale);
+    };
+  });
 
   function retryPreview() {
     dispatch('retry');
@@ -52,19 +84,26 @@
   <div class="profile-studio-preview__body">
     <div class="profile-studio-preview__canvas" class:profile-studio-preview__canvas--mobile={previewDevice === 'mobile'} class:profile-studio-preview__canvas--appearance={isAppearancePreview}>
       {#if previewComponent}
-        <svelte:component
-          this={previewComponent}
-          previewMode={true}
-          previewIdentityOnly={true}
-          previewProfile={previewProfile}
-          previewProfileConfig={previewProfileConfig}
-          previewScores={previewScores}
-          previewTimelineEvents={previewTimelineEvents}
-          previewCollectionItems={previewCollectionItems}
-          previewAllAchievements={previewAllAchievements}
-          {previewDevice}
-          renderContext={liveProfileContext}
-        />
+        <div class="profile-studio-preview__viewport" bind:this={previewViewport}>
+          <div
+            class="profile-studio-preview__logical-canvas"
+            style={`--preview-scale: ${previewScale}; --preview-logical-width: ${DESKTOP_PREVIEW_WIDTH}px; --preview-logical-height: ${DESKTOP_PREVIEW_HEIGHT}px;`}
+          >
+            <svelte:component
+              this={previewComponent}
+              previewMode={true}
+              previewIdentityOnly={true}
+              previewProfile={previewProfile}
+              previewProfileConfig={previewProfileConfig}
+              previewScores={previewScores}
+              previewTimelineEvents={previewTimelineEvents}
+              previewCollectionItems={previewCollectionItems}
+              previewAllAchievements={previewAllAchievements}
+              {previewDevice}
+              renderContext={liveProfileContext}
+            />
+          </div>
+        </div>
       {:else if previewError}
         <div class="profile-studio-preview__loading" role="alert"><span aria-hidden="true">!</span><strong>Preview unavailable</strong><p>{previewError}</p><button type="button" on:click={retryPreview}>Retry preview</button></div>
       {:else}
@@ -95,15 +134,29 @@
   .profile-studio-preview__close { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .4rem; background: transparent; color: var(--studio-muted, #bac2de); font-size: 1.1rem; cursor: pointer; }
   .profile-studio-preview__close:hover, .profile-studio-preview__close:focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-text, #cdd6f4); }
   .profile-studio-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem calc(1rem + env(safe-area-inset-bottom)); background: var(--ctp-mantle, var(--site-deep, #11111b)); }
-  .profile-studio-preview__canvas { display: grid; container: profile-preview / inline-size; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; overflow-x: hidden; }
+  .profile-studio-preview__canvas { display: grid; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; overflow-x: hidden; }
   .profile-studio-preview__canvas--appearance { min-height: 0; margin-bottom: .6rem; }
-  .profile-studio-preview__canvas :global(.profile-shell-page--preview) { width: min(100%, 34rem); height: auto; min-height: 0; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: transparent; box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
+  .profile-studio-preview__viewport { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: var(--color-canvas-deep, #07080b); box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
+  .profile-studio-preview__logical-canvas { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview) { position: absolute; top: 0; left: 50%; width: var(--preview-logical-width); height: var(--preview-logical-height); min-height: var(--preview-logical-height); max-height: none; overflow: hidden; border-radius: 0; background: transparent; box-shadow: none; transform: translateX(-50%) scale(var(--preview-scale)); transform-origin: top center; }
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-canvas),
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { width: 100%; height: var(--preview-logical-height); min-height: var(--preview-logical-height); }
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { align-items: center; justify-content: center; }
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__opening) { min-height: 0; }
+  /* The canvas is a real desktop viewport, so the profile object must keep
+     its layout width instead of inheriting the old full-column preview rule. */
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--compact .profile-shell__approved-opening) { width: 300px; }
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--sleek .profile-shell__approved-opening) { width: 335px; }
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--minimal .profile-shell__approved-opening) { width: 300px; align-self: flex-start; margin-left: 8.5vw; margin-right: 0; }
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--modern .profile-shell__approved-opening) { width: 310px; }
+  .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview.profile-shell-page--portfolio .profile-shell__approved-opening) { width: 320px; }
   .profile-studio-preview__canvas--mobile { padding: .65rem 0 1rem; }
-  .profile-studio-preview__canvas--mobile :global(.profile-shell-page--preview) { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: min(22rem, calc(100dvh - 12rem)); max-height: calc(100dvh - 10rem); overflow: auto; border-radius: 1.25rem; }
-  .profile-studio-preview__canvas :global(.profile-shell-page--preview .profile-shell__approved-canvas) { min-height: 0; }
-  .profile-studio-preview__canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 0; align-items: stretch; justify-content: flex-start; }
-  .profile-studio-preview__canvas :global(.profile-shell-page--preview .profile-shell__opening) { min-height: 0; padding: 1.15rem; }
-  .profile-studio-preview__canvas--mobile :global(.profile-shell-page--preview .profile-shell__opening) { padding: .85rem; border-radius: 1rem; }
+  .profile-studio-preview__canvas--mobile .profile-studio-preview__viewport { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: min(22rem, calc(100dvh - 12rem)); aspect-ratio: auto; border-radius: 1.25rem; }
+  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview) { top: 0; left: 0; width: 100%; height: 100%; min-height: 100%; transform: none; border-radius: 1.25rem; overflow: auto; }
+  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-canvas),
+  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { height: auto; min-height: 100%; }
+  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-main) { align-items: stretch; justify-content: flex-start; }
+  .profile-studio-preview__canvas--mobile .profile-studio-preview__logical-canvas :global(.profile-shell-page--preview .profile-shell__approved-opening) { width: 100%; margin-inline: 0; align-self: stretch; }
   .profile-studio-preview__device-panel { min-width: 0; }
   .profile-studio-preview__device-panel--appearance { display: grid; min-height: 13.2rem; overflow: hidden; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }
   .profile-studio-preview__devices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 3rem; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }
@@ -127,15 +180,5 @@
   .profile-studio-preview__loading strong { color: var(--studio-text, #cdd6f4); font-size: .92rem; }
   .profile-studio-preview__loading p { max-width: 20rem; margin: 0; color: var(--studio-faint, #7f849c); line-height: 1.45; }
   .profile-studio-preview__loading button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--studio-text, #cdd6f4); font-size: .78rem; cursor: pointer; }
-  @container profile-preview (max-width: 31rem) {
-    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card) { display: flex; width: 100%; box-sizing: border-box; flex-direction: column; align-items: stretch; gap: 1rem; padding: 1.1rem; }
-    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__person) { display: flex; flex-direction: column; align-items: stretch; gap: 1rem; width: 100%; }
-    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__avatar) { align-self: center; justify-self: auto; flex-basis: 5.2rem; width: 5.2rem; }
-    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__copy),
-    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__links) { grid-column: auto; grid-row: auto; width: 100%; box-sizing: border-box; padding-left: 0; border-left: 0; }
-    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__copy) { padding-top: 0; }
-    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__name-row) { align-items: flex-start; }
-    .profile-studio-preview__canvas :global(.profile-shell-page--preview .identity-card__links) { margin-top: .9rem; padding-top: .8rem; border-top: 1px solid color-mix(in srgb, var(--identity-accent) 30%, rgba(255, 255, 255, .12)); }
-  }
   @media (prefers-reduced-motion: reduce) { .profile-studio-preview__body { scroll-behavior: auto; } }
 </style>

@@ -95,7 +95,8 @@ export function createProfileTemplatePatch(value) {
   if (!definition) return null;
   return {
     templateKey: definition.key,
-    layoutVariant: definition.layoutVariant
+    layoutVariant: definition.layoutVariant,
+    modules: definition.modules.map(module => ({ ...module }))
   };
 }
 

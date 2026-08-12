@@ -65,10 +65,10 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: none; \}/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__wordmark > span \{ color: #cdd2ff; \}/);
   assert.match(siteHeader, /\{#if isHomeMode \|\| isHomepageStyle\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
-  assert.match(profileShell, /profile-shell__card-cursor-layer/);
-  assert.match(profileShell, /profile-shell__card-atmosphere-layer/);
   assert.match(profileShell, /:global\(\.profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ position: fixed;/);
   assert.match(profileShell, /:global\(\.cursor-trail-layer\.profile-shell__page-cursor-layer\) \{ position: fixed;/);
+  assert.match(profileShell, /profile-shell-page--preview \.profile-atmosphere\.profile-shell__page-atmosphere-layer/);
+  assert.match(profileShell, /profile-shell-page--preview \.cursor-trail-layer\.profile-shell__page-cursor-layer/);
   assert.match(profileShell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
   assert.match(profileShell, /<img class="profile-shell__media-image" src=\{backgroundSrc\}/);
   assert.match(profileShell, /\.profile-shell__media-image,[\s\S]*\.profile-shell__media-video/);

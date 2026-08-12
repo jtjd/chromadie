@@ -12,11 +12,11 @@
 
   const dispatch = createEventDispatcher();
   const TEMPLATE_CARD_COPY = Object.freeze({
-    compact: { label: 'Compact', description: 'A small centered identity surface with generous background space.' },
-    sleek: { label: 'Sleek', description: 'A compact card with small detached presence and music strips.' },
-    minimal: { label: 'Minimal', description: 'A free-floating identity treatment with almost no container.' },
-    modern: { label: 'Modern', description: 'A compact identity surface with a quiet widget treatment.' },
-    portfolio: { label: 'Portfolio', description: 'A restrained landing view that opens into your story below.' }
+    compact: { label: 'Compact', description: 'Horizontal identity head with a tiny integrated roll.' },
+    sleek: { label: 'Sleek', description: 'Stacked card with detached presence and music strips.' },
+    minimal: { label: 'Minimal', description: 'Offset, cardless identity with an inline indicator.' },
+    modern: { label: 'Modern', description: 'Compact identity with PROFILE/WIDGETS and a roll widget.' },
+    portfolio: { label: 'Portfolio', description: 'Cardless centered hero with Today below the fold.' }
   });
 
   $: currentTemplateKey = normalizeProfileTemplateKey(config?.templateKey, config?.layoutVariant || 'compact');
@@ -77,11 +77,29 @@
   .profile-template-picker__swatch--sleek i:nth-child(1) { height: 54%; }
   .profile-template-picker__swatch--sleek i:nth-child(2) { height: 62%; }
   .profile-template-picker__swatch--sleek::after { width: 28%; }
+  /* Keep the picker sketches literal: each thumbnail previews the same
+     structural relationship the public renderer will use. */
+  .profile-template-picker__swatch--compact { align-items: center; }
+  .profile-template-picker__swatch--compact i { position: absolute; left: 2.25rem; width: 34%; height: .22rem; border-radius: .15rem; }
+  .profile-template-picker__swatch--compact i:nth-child(1) { top: 1.25rem; }
+  .profile-template-picker__swatch--compact i:nth-child(2) { top: 1.7rem; width: 25%; }
+  .profile-template-picker__swatch--compact i:nth-child(3) { display: none; }
+  .profile-template-picker__swatch--compact::before { top: 50%; left: .62rem; width: 1.2rem; height: 1.2rem; transform: translateY(-50%); }
+  .profile-template-picker__swatch--compact::after { display: none; }
+  .profile-template-picker__swatch--sleek { display: grid; align-content: start; gap: .28rem; }
+  .profile-template-picker__swatch--sleek i { position: absolute; left: .6rem; width: 35%; height: .2rem; }
+  .profile-template-picker__swatch--sleek i:nth-child(1) { top: .78rem; left: 2.2rem; }
+  .profile-template-picker__swatch--sleek i:nth-child(2) { top: 1.16rem; left: 2.2rem; width: 28%; }
+  .profile-template-picker__swatch--sleek i:nth-child(3) { right: .55rem; bottom: .52rem; left: .55rem; width: auto; height: .22rem; border-radius: .2rem; }
+  .profile-template-picker__swatch--sleek::before { top: .58rem; left: .62rem; width: 1.2rem; height: 1.2rem; border-radius: .3rem; }
+  .profile-template-picker__swatch--sleek::after { right: .55rem; bottom: .93rem; left: .55rem; width: auto; height: .22rem; box-shadow: none; }
   .profile-template-picker__swatch--minimal { background: transparent; border-color: transparent; }
-  .profile-template-picker__swatch--minimal::before { left: 1rem; }
-  .profile-template-picker__swatch--minimal::after { right: 1rem; width: 30%; }
-  .profile-template-picker__swatch--modern i:nth-child(2) { height: 48%; }
-  .profile-template-picker__swatch--modern::after { width: 56%; }
+  .profile-template-picker__swatch--minimal i { display: none; }
+  .profile-template-picker__swatch--minimal::before { top: .62rem; left: 1rem; width: 1.15rem; height: 1.15rem; }
+  .profile-template-picker__swatch--minimal::after { top: 2.05rem; right: 1rem; width: 38%; height: .22rem; box-shadow: 0 .48rem 0 color-mix(in srgb, var(--site-accent, #cdd2ff) 38%, #45475a); }
+  .profile-template-picker__swatch--modern i { display: none; }
+  .profile-template-picker__swatch--modern::before { top: .68rem; left: .62rem; width: 1.15rem; height: 1.15rem; border-radius: .3rem; }
+  .profile-template-picker__swatch--modern::after { right: .55rem; bottom: .62rem; width: 58%; height: .22rem; box-shadow: 0 -.68rem 0 color-mix(in srgb, var(--site-accent, #cdd2ff) 38%, #45475a), 0 -1.25rem 0 color-mix(in srgb, var(--site-accent, #cdd2ff) 18%, #45475a); }
   .profile-template-picker__swatch--portfolio { align-items: center; justify-content: center; }
   .profile-template-picker__swatch--portfolio i { width: 68%; flex: 0 0 68%; height: .22rem; }
   .profile-template-picker__swatch--portfolio i:nth-child(2) { width: 52%; flex-basis: 52%; height: .22rem; }

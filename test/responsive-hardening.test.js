@@ -40,6 +40,12 @@ test('public profiles leave wheel scrolling to the browser', () => {
   assert.doesNotMatch(profileShell, /addEventListener\('wheel'/);
 });
 
+test('public profiles do not render a standalone Share profile control', () => {
+  assert.doesNotMatch(profileShell, /Share profile/);
+  assert.doesNotMatch(profileShell, /profile-shell__share-button/);
+  assert.doesNotMatch(profileShell, /ProfileShareDialog/);
+});
+
 test('Profile Studio preview is bounded on short-height screens and respects safe areas', () => {
   assert.match(dashboard, /min-height: min\(20rem, calc\(100dvh - 5rem\)\)/);
   assert.match(dashboard, /@media \(max-height: 32rem\)/);

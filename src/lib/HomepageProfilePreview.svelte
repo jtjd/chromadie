@@ -83,7 +83,6 @@
           displayName={displayName}
           profilePath={profilePath}
           bio={typeof profile.bio === 'string' ? profile.bio.trim().slice(0, 160) : ''}
-          bioFallback="No bio added yet."
           links={visibleLinks}
           badges={badges}
           staff={profile.is_staff === true}

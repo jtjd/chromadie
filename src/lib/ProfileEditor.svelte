@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { normalizeProfileConfig, PROFILE_LINK_LIMITS, PROFILE_LINK_TYPES } from './profileConfig.js';
+  import { normalizeProfileConfig, PROFILE_LINK_LIMITS } from './profileConfig.js';
+  import { PROFILE_LINK_DEFINITIONS, isProfileLinkUrlValid } from './profileLinkTypes.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
   import { createProfileTemplatePatch } from './profileTemplates.js';
   import { clearViewState, readViewState, writeViewState } from './viewState.js';
@@ -22,11 +23,6 @@
     recent: 'Recent colors', achievements: 'Pinned achievements', boundary: 'Public boundary', explore: 'Explore footer'
   });
   const EDITABLE_MODULE_IDS = Object.freeze(['stats', 'signature', 'links', 'recent', 'achievements']);
-  const LINK_TYPE_LABELS = Object.freeze({
-    website: 'Website', youtube: 'YouTube', twitch: 'Twitch', github: 'GitHub', discord: 'Discord',
-    twitter: 'X / Twitter', instagram: 'Instagram', tiktok: 'TikTok', linkedin: 'LinkedIn', bluesky: 'Bluesky',
-    mastodon: 'Mastodon', kick: 'Kick', patreon: 'Patreon', other: 'Other'
-  });
   const STYLE_LABELS = Object.freeze({ compact: 'Compact', sleek: 'Sleek', minimal: 'Minimal', modern: 'Modern', portfolio: 'Portfolio' });
   const MODULE_SIZE_LABELS = Object.freeze({ wide: 'Wide', medium: 'Medium', narrow: 'Narrow' });
   const VIEW_STATE_NAMESPACE = 'profile-editor';
@@ -138,9 +134,9 @@
   }
 
   function validateLinks() {
-    const invalid = draft.links.find(link => !String(link.label || '').trim() || !/^https:\/\/[^\s<>"']+$/.test(String(link.url || '').trim()));
+    const invalid = draft.links.find(link => !String(link.label || '').trim() || !isProfileLinkUrlValid(link.type, link.url));
     if (!invalid) return true;
-    error = 'Complete each link with a label and an HTTPS URL, or remove it.';
+    error = 'Complete each link with a label and a valid HTTPS URL for its selected service, or remove it.';
     status = '';
     return false;
   }
@@ -207,7 +203,7 @@
     <section class="profile-editor__panel" aria-labelledby="profile-layout-modules-title">
       <div class="profile-editor__panel-heading"><h3 id="profile-layout-modules-title">Visible sections</h3><span>Secondary sections only</span></div>
       <ol class="profile-editor__module-list">
-        <li class="profile-editor__module-fixed"><label><input type="checkbox" checked disabled /><span>Daily roll</span></label><span>Fixed system surface</span></li>
+        <li class="profile-editor__module-fixed"><label><input type="checkbox" checked disabled /><span>Daily roll</span></label><span>Shared data, layout-controlled presentation</span></li>
         {#each orderedModules.filter(module => EDITABLE_MODULE_IDS.includes(module.id)) as module, index (module.id)}
           <li>
             <label><input type="checkbox" checked={module.visible} on:change={event => setModuleVisible(module.id, event.currentTarget.checked)} /><span>{MODULE_LABELS[module.id] || module.id}</span></label>
@@ -229,7 +225,7 @@
     {#if draft.links.length}
       <div class="profile-editor__links">
         {#each draft.links as link, index (index)}
-          <div class="profile-editor__link-row"><label class="profile-editor__link-visible"><input type="checkbox" checked={link.visible !== false} aria-label={`Show ${link.label || 'link'}`} on:change={event => updateLink(index, 'visible', event.currentTarget.checked)} /> Show</label><select value={link.type} aria-label="Link type" on:change={event => updateLink(index, 'type', event.currentTarget.value)}>{#each PROFILE_LINK_TYPES as type (type)}<option value={type}>{LINK_TYPE_LABELS[type] || type}</option>{/each}</select><input value={link.label} maxlength="40" aria-label="Link label" placeholder="Label" on:input={event => updateLink(index, 'label', event.currentTarget.value)} /><input value={link.url} maxlength="2048" inputmode="url" aria-label="Secure link URL" placeholder="https://" on:input={event => updateLink(index, 'url', event.currentTarget.value)} /><div class="profile-editor__link-actions"><button type="button" aria-label={`Move ${link.label || 'link'} up`} disabled={index === 0} on:click={() => moveLink(index, -1)}>↑</button><button type="button" aria-label={`Move ${link.label || 'link'} down`} disabled={index === draft.links.length - 1} on:click={() => moveLink(index, 1)}>↓</button><button type="button" class="profile-editor__remove" aria-label={`Remove ${link.label || 'link'}`} on:click={() => removeLink(index)}>Remove</button></div></div>
+          <div class="profile-editor__link-row"><label class="profile-editor__link-visible"><input type="checkbox" checked={link.visible !== false} aria-label={`Show ${link.label || 'link'}`} on:change={event => updateLink(index, 'visible', event.currentTarget.checked)} /> Show</label><select value={link.type} aria-label="Link type" on:change={event => updateLink(index, 'type', event.currentTarget.value)}>{#each PROFILE_LINK_DEFINITIONS as definition (definition.key)}<option value={definition.key}>{definition.label}</option>{/each}</select><input value={link.label} maxlength="40" aria-label="Link label" placeholder="Label" on:input={event => updateLink(index, 'label', event.currentTarget.value)} /><input value={link.url} maxlength="2048" inputmode="url" aria-label="Secure link URL" placeholder="https://" on:input={event => updateLink(index, 'url', event.currentTarget.value)} /><div class="profile-editor__link-actions"><button type="button" aria-label={`Move ${link.label || 'link'} up`} disabled={index === 0} on:click={() => moveLink(index, -1)}>↑</button><button type="button" aria-label={`Move ${link.label || 'link'} down`} disabled={index === draft.links.length - 1} on:click={() => moveLink(index, 1)}>↓</button><button type="button" class="profile-editor__remove" aria-label={`Remove ${link.label || 'link'}`} on:click={() => removeLink(index)}>Remove</button></div></div>
         {/each}
       </div>
     {:else}<p class="profile-editor__empty">No public links.</p>{/if}

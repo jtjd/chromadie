@@ -77,11 +77,11 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(settings, /configurationPreview = configurationPreview/);
   assert.match(preview, /\{previewDevice\}/);
   assert.match(preview, /canvas--mobile[\s\S]*height: min\(42rem/);
-  assert.match(preview, /canvas :global\(\.profile-shell-page--preview\)[\s\S]*background: transparent/);
+  assert.match(preview, /profile-studio-preview__logical-canvas :global\(\.profile-shell-page--preview\)[\s\S]*background: transparent/);
   assert.match(shell, /profile-shell-page--preview-mobile/);
   assert.match(shell, /profile-shell__media-overlay/);
-  assert.match(shell, /profile-shell__card-media-image/);
-  assert.match(shell, /profile-shell__card-media-overlay/);
+  assert.match(shell, /profile-shell__media-image/);
+  assert.match(shell, /profile-shell__media-overlay/);
   assert.match(identity, /identity-card--preview-mobile/);
   assert.match(cursor, /inputMode = 'window'/);
   assert.match(cursor, /inputMode === 'demo'/);

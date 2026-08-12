@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-11 — Keep public profile identity surfaces free of redundant Share chrome
+
+The public profile already has canonical URLs and remains reachable from
+discovery and direct navigation. A standalone Share profile button competed
+with the compact identity composition, so ProfileShell no longer mounts the
+share dialog or renders that control. Discovery-card and daily-roll sharing
+remain separate, context-appropriate actions; this is a presentation change
+and does not alter routes, metadata, analytics contracts, or stored profile
+data.
+
 ## 2026-08-11 — Replace novelty profile layouts with five small structural layouts
 
 The active public-profile catalog is now exactly Compact, Sleek, Minimal,
@@ -4308,3 +4318,23 @@ hydration also falls back to the established owner/public read contract when
 an older V2 RPC exists without the dedicated expression fields. The database
 remains authoritative; these client fallbacks only bridge additive migration
 rollout and do not broaden public data access.
+
+## 2026-08-11 — Make layout variants structural and draft-safe
+
+The five profile layouts now use one shared roll/data path with distinct
+presentation frames: Compact is a horizontal identity head with an integrated
+roll, Sleek owns detached presence/music strips, Minimal is an offset cardless
+identity, Modern owns a PROFILE/WIDGETS region, and Portfolio is a cardless hero
+with Today below the fold. Layouts may compose shared roll data differently;
+they are not limited to styling one IdentityCard.
+
+Public layout resolution now reads `profile_configurations.layoutVariant` as
+the sole long-term authority. The legacy `equipped_cosmetics.profile_layout`
+slot remains available for historical inventory compatibility, but selecting a
+layout in Studio is draft-only and never unequips a server item.
+
+Studio preview renders the profile environment at page level inside a logical
+1440×900 desktop canvas (or an explicit phone canvas), so media and effects sit
+around the identity surface rather than inside its boundary. A canonical
+profile-link registry now supplies editor labels, URL validation, and public
+icons from one allow-listed definition set.

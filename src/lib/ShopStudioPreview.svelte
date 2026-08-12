@@ -7,7 +7,7 @@
   import { getNameRendererLoadout } from './name/nameLoadout.js';
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
-  import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
+  import { resolveProfileLayoutPreviewVariant } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
   import { getProfileAppearanceStyle } from './profileAppearanceStyle.js';
 
@@ -42,7 +42,7 @@
   $: previewAccentColor = previewProfileConfig.appearance?.colors?.accent || displayColor;
   $: previewCardStyle = getProfileAppearanceStyle(previewProfileConfig);
   $: nameRendererLoadout = getNameRendererLoadout(loadout);
-  $: previewLayout = resolveProfileLayoutVariant(loadout, previewProfileConfig);
+  $: previewLayout = resolveProfileLayoutPreviewVariant(loadout, previewProfileConfig);
   $: cursorKey = getCursorTrailKey(loadout?.cursor_trail);
 </script>
 
@@ -80,7 +80,6 @@
           username={accountUsername}
           displayName={accountDisplayName}
           bio={account.bio || ''}
-          bioFallback="No bio added yet."
           {links}
           badges={previewBadges}
           founder={Boolean(account.equipped_badges?.includes('launch_edition'))}

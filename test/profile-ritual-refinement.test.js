@@ -8,7 +8,7 @@ test('the profile identity surface stays sparse and keeps the archive outside th
   const identity = await read('src/lib/IdentityCard.svelte');
   const shell = await read('src/lib/ProfileShell.svelte');
 
-  assert.match(identity, /identity-card__handle-row/);
+  assert.doesNotMatch(identity, /identity-card__handle-row|identity-card__handle/);
   assert.match(identity, /identity-card__link-glyph/);
   assert.match(identity, /identity-card__badges/);
   assert.match(identity, /identity-card__badge--staff/);

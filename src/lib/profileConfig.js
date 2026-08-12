@@ -4,6 +4,7 @@ import { createDefaultProfileContent, normalizeProfileContent } from './profileC
 import { normalizeProfileWidgets } from './profileWidgetsLegacy.js';
 import { inferProfileTemplateKey, normalizeProfileTemplateKey } from './profileTemplates.js';
 import { normalizeProfileLayoutKey, PROFILE_LAYOUT_KEYS } from './profile-layout/profileLayouts.js';
+import { PROFILE_LINK_TYPES, isProfileLinkUrlValid } from './profileLinkTypes.js';
 
 export const PROFILE_CONFIG_VERSION = 1;
 
@@ -19,22 +20,6 @@ export const PROFILE_MODULE_IDS = Object.freeze([
   'explore'
 ]);
 export const PROFILE_MODULE_SIZES = Object.freeze(['wide', 'medium', 'narrow']);
-export const PROFILE_LINK_TYPES = Object.freeze([
-  'website',
-  'youtube',
-  'twitch',
-  'github',
-  'discord',
-  'twitter',
-  'instagram',
-  'tiktok',
-  'linkedin',
-  'bluesky',
-  'mastodon',
-  'kick',
-  'patreon',
-  'other'
-]);
 export const PROFILE_LINK_LIMITS = Object.freeze({ freeLinks: 6, maxLinks: 25, openingLinks: 6 });
 export const PROFILE_LINK_ALIGNMENTS = Object.freeze(['left', 'center', 'right']);
 
@@ -300,6 +285,8 @@ export function withProfileAppearance(config, appearance) {
 export function getProfileModule(config, id) {
   return normalizeProfileConfig(config).modules.find(module => module.id === id) || null;
 }
+
+export { PROFILE_LINK_TYPES, isProfileLinkUrlValid };
 
 export function getProfileRollVisible(config) {
   return getProfileModule(config, 'roll')?.visible !== false;

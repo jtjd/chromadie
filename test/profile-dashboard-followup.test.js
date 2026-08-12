@@ -70,8 +70,8 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(sqlTest, /composition save accepted appearance or effect keys/);
   assert.match(sqlTest, /config_composition_publish/);
   assert.match(layout, /function setModuleSize/);
-  assert.match(layout, /Fixed system surface/);
-  assert.match(layout, /Complete each link with a label and an HTTPS URL/);
+  assert.match(layout, /Shared data, layout-controlled presentation/);
+  assert.match(layout, /Complete each link with a label and a valid HTTPS URL/);
   assert.match(settings, /configurationPreview = configurationPreview/);
 });
 
@@ -110,9 +110,10 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(shell, /\.profile-shell__media-image,[\s\S]*\.profile-shell__media-video/);
   assert.match(shell, /<div class="profile-shell__surface-backdrop"/);
   assert.doesNotMatch(shell, /<div class="profile-shell__card-media-background"|<div class="profile-shell__surface-media-background"/);
-  assert.match(shell, /profile-shell__card-atmosphere-layer/);
-  assert.match(shell, /profile-shell__card-cursor-layer/);
-  assert.match(shell, /<ProfileBorderEffect[\s\S]*\{#if atmosphereKey && previewMode\}/);
+  assert.match(shell, /profile-shell__page-atmosphere-layer/);
+  assert.match(shell, /profile-shell__page-cursor-layer/);
+  assert.doesNotMatch(shell, /profile-shell__card-atmosphere-layer|profile-shell__card-cursor-layer/);
+  assert.doesNotMatch(shell, /<ProfileBorderEffect[\s\S]*\{#if atmosphereKey && previewMode\}/);
   assert.match(shell, /if \(previewMode \|\| !targetProfile\?\.id/);
   assert.match(shell, /\{#if !previewMode && !isOwnProfile\}/);
   assert.match(shell, /deferMedia=\{previewMode\}/);
@@ -144,8 +145,8 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.doesNotMatch(viteConfig, /csso|restructure: false/);
   assert.match(shell, /\.profile-shell__approved-canvas,\s+\.profile-shell__opening\.profile-shell__approved-opening \{ z-index: auto; \}/);
   assert.doesNotMatch(shell, /profile-shell__surface-media|profile-shell__surface-video|profile-shell__surface-atmosphere-layer|profile-shell__surface-backdrop::before/);
-  assert.match(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{ isolation: auto; \}/);
-  assert.doesNotMatch(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer\) \{[^}]*filter: blur\(var\(--profile-surface-blur/);
+  assert.match(shell, /profile-shell-page--preview \.profile-atmosphere\.profile-shell__page-atmosphere-layer/);
+  assert.doesNotMatch(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer/);
   assert.doesNotMatch(shell, /profile-shell__surface-media-background \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);
   assert.match(preview, /studio-profile-card :global\(\.studio-atmosphere-layer\) \{ z-index: 0; opacity: \.82; isolation: auto; filter: blur\(var\(--profile-surface-blur/);
   assert.match(preview, /studio-profile-card__background \{ position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; filter: blur\(var\(--profile-surface-blur/);
