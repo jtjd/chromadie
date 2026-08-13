@@ -12,6 +12,7 @@
   export let entitlements = [];
   export let staff = false;
   export let activeTab = 'appearance';
+  export let layoutVariant = 'compact';
 
   const dispatch = createEventDispatcher();
   let identityEditor = null;
@@ -50,40 +51,6 @@
 
   function normalizeDraft(value) {
     return normalizeProfileConfig(value || profileConfig?.draft || profileConfig?.published);
-  }
-
-  export function getDraftConfig() {
-    const base = normalizeDraft();
-    const identity = identityEditor?.getDraftIdentity?.();
-    const appearance = appearanceEditor?.getDraftAppearance?.() || base.appearance;
-    const background = mediaWorkspaceEditor?.getDraftBackground?.();
-    const content = contentEditor?.getDraftConfig?.();
-    const widgets = widgetEditor?.getDraftConfig?.();
-    const layout = layoutEditor?.getDraftConfig?.();
-    // The Layout tab intentionally hides link editing. Its mounted editor can
-    // still hold an older cached draft, so never let that presentation-only
-    // editor replace the canonical link collection while publishing a layout
-    // change. Link edits remain owned by the Links surface.
-    const layoutDraft = layout
-      ? {
-          // ProfileEditor keeps a cached normalized draft for layout changes.
-          // Project only the fields this tab owns so an older cached draft
-          // cannot overwrite appearance, media, identity, or content edits.
-          templateKey: layout.templateKey,
-          layoutVariant: layout.layoutVariant,
-          modules: layout.modules,
-          linkStyle: layout.linkStyle,
-          links: base.links
-        }
-      : null;
-    return normalizeProfileConfig({
-      ...base,
-      ...(layoutDraft || {}),
-      appearance: background ? { ...appearance, background } : appearance,
-      content: content?.content || base.content,
-      widgets: widgets?.widgets || base.widgets,
-      ...(identity?.identityPresentation ? { identityPresentation: identity.identityPresentation } : {})
-    });
   }
 
   export function getDraftIdentity() {
@@ -158,7 +125,7 @@
 
   <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-label="Profile appearance" data-editor-section="appearance" id="customize-appearance">
     <div class="profile-customize-page__editor">
-      <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} on:appearancechange={event => forwardPatch('appearance', event)} on:dirty={event => forwardDirty('customize:appearance', event)} />
+      <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} {layoutVariant} on:appearancechange={event => forwardPatch('appearance', event)} on:dirty={event => forwardDirty('customize:appearance', event)} />
     </div>
   </section>
 

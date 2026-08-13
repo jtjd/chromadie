@@ -349,3 +349,31 @@ test('Studio patches update only the editor-owned slice of the canonical draft',
   assert.equal(afterStaleAppearance.appearance.surface.opacity, 64);
   assert.equal(afterStaleAppearance.appearance.surface.blur, 20);
 });
+
+test('layout patches own only link alignment while Links owns the remaining style', () => {
+  const base = createDefaultProfileConfig('#123456');
+  base.linkStyle = { alignment: 'left', size: 2, glow: 2, monochrome: true };
+
+  const afterLayout = applyProfileStudioDraftPatch(base, {
+    scope: 'layout',
+    detail: {
+      config: {
+        ...base,
+        layoutVariant: 'minimal',
+        linkStyle: { alignment: 'center', size: 0, glow: 0, monochrome: false }
+      }
+    }
+  });
+  assert.deepEqual(afterLayout.linkStyle, { alignment: 'center', size: 2, glow: 2, monochrome: true });
+
+  const afterLinks = applyProfileStudioDraftPatch(afterLayout, {
+    scope: 'links',
+    detail: {
+      config: {
+        ...afterLayout,
+        linkStyle: { alignment: 'center', size: 1, glow: 0, monochrome: false }
+      }
+    }
+  });
+  assert.deepEqual(afterLinks.linkStyle, { alignment: 'center', size: 1, glow: 0, monochrome: false });
+});

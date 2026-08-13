@@ -98,7 +98,7 @@ test('Profile Studio keeps draft publishing and narrow editor surfaces usable', 
   assert.match(identityEditor, /typeof nextConfig\?\.bio === 'string'/);
   assert.match(identityEditor, /if \(studio\) \{[\s\S]*dispatch\('dirty'/);
   assert.match(customize, /bind:this=\{identityEditor\}/);
-  assert.match(customize, /identityPresentation: identity\.identityPresentation/);
+  assert.match(customize, /on:identitypreview=\{event => forwardPatch\('identity', event\)\}/);
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /bio: context\?\.targetProfile\?\.bio \|\| ''/);
   assert.match(settings, /mobilePreviewAvailable=\{previewAvailable \|\| customizePreviewAvailable\}/);

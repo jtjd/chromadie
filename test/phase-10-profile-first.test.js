@@ -45,7 +45,7 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(shell, /data-profile-region="identity"/);
   assert.match(shell, /profile-shell__identity-boundary/);
   assert.match(shell, /data-profile-region="roll"/);
-  assert.match(shell, /data-profile-region="expression"/);
+  assert.match(shell, /data-profile-continuation="content"/);
   assert.match(shell, /data-profile-region="featured"/);
   assert.match(renderModel, /getProfileStoryVisible/);
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);

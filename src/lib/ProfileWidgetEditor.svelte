@@ -149,10 +149,6 @@
     return validateWidgets();
   }
 
-  export function getDraftConfig() {
-    return previewConfig();
-  }
-
   export function acceptSaved(nextConfig = previewConfig()) {
     widgets = toWidgetDrafts(nextConfig);
     baseline = clone(widgets);

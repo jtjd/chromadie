@@ -138,7 +138,7 @@ test('dashboard ownership keeps routing, rendering, and dirty-state boundaries s
   assert.match(header, /handleTabKeydown/);
   assert.match(header, /role="tablist"/);
   assert.match(workspace, /getProfileStudioSectionRegistration/);
-  assert.match(workspace, /export function getDraftConfig/);
+  assert.doesNotMatch(workspace, /export function getDraftConfig/);
   assert.match(workspace, /export function resetChanges/);
   assert.match(preview, /PROFILE_RENDER_CONTEXTS\.LIVE_PROFILE/);
   assert.match(preview, /renderSnapshot=\{previewRenderSnapshot\}/);

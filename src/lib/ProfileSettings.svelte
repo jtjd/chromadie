@@ -775,6 +775,7 @@
       {error}
       {profilePath}
       {accountUsername}
+      {previewRenderSnapshot}
       entitlements={$profileEntitlements}
       staff={Boolean(context?.targetProfile?.is_staff)}
       isAuthenticated={$isAuthenticated}

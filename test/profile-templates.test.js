@@ -62,7 +62,7 @@ test('template application preserves user-owned expression and premium authority
   assert.doesNotMatch(picker, /Premium expression/);
   assert.match(editor, /ProfileTemplatePicker/);
   assert.match(editor, /templateKey/);
-  assert.match(editor, /export function getDraftConfig/);
+  assert.doesNotMatch(editor, /export function getDraftConfig/);
   assert.match(settings, /save_profile_configuration_v2/);
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /entitlements=\{\$profileEntitlements\}/);

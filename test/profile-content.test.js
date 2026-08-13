@@ -53,7 +53,7 @@ test('content renderer and editor stay inside the structured public boundary', a
   assert.match(content, /rel="noopener noreferrer"/);
   assert.doesNotMatch(content, /innerHTML|iframe|new Function|eval\s*\(/);
   assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
-  assert.match(editor, /export function getDraftConfig/);
+  assert.doesNotMatch(editor, /export function getDraftConfig/);
   assert.match(editor, /export function validateDraft/);
   assert.match(editor, /PROFILE_CONTENT_LIMITS.projects/);
   assert.match(editor, /profile-content-editor__project--empty/);

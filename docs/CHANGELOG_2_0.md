@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-12 — Finish Studio layout and continuation cleanup
+
+- Layout alignment changes no longer reset unrelated Link Style settings.
+- Cardless Minimal and Portfolio layouts now explain and disable surface-only
+  controls while preserving the saved configuration for surfaced layouts.
+- Continuation content follows an intentional About/Projects → Links → Media
+  order without changing the existing compact visual treatment.
+
 ## 2026-08-12 — Isolate Studio background-treatment edits
 
 - Media Background Treatment edits now update only page-background treatment

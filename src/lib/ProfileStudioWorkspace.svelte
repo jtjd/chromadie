@@ -20,6 +20,8 @@
   export let staff = false;
   export let isAuthenticated = false;
   export let featureFlags = {};
+  /** @type {any} */
+  export let previewRenderSnapshot = null;
 
   const dispatch = createEventDispatcher();
   let customizePage = null;
@@ -40,15 +42,6 @@
 
   function forwardDirty(source, event) {
     dispatch('dirty', { ...(event.detail || {}), source });
-  }
-
-  export function getDraftConfig() {
-    if (activeSection === 'customize') return customizePage?.getDraftConfig?.() || null;
-    if (activeSection === 'links') return layoutEditor?.getDraftConfig?.() || null;
-    if (activeSection === 'profile-content') return contentEditor?.getDraftConfig?.() || null;
-    if (activeSection === 'profile-widgets') return widgetEditor?.getDraftConfig?.() || null;
-    if (activeSection === 'profile-layout') return layoutEditor?.getDraftConfig?.() || null;
-    return null;
   }
 
   export function getDraftIdentity() {
@@ -98,6 +91,7 @@
             targetProfile={context.targetProfile}
             profileConfig={editorProfileConfig}
             activeTab={activeCustomizeTab}
+            layoutVariant={previewRenderSnapshot?.layout?.variant || editorProfileConfig?.draft?.layoutVariant || 'compact'}
             {entitlements}
             {staff}
             on:studiopatch={forward}

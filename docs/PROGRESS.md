@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Studio ownership cleanup — 2026-08-12
+
+- Layout patches preserve all Link Style fields except alignment, preventing
+  layout changes from resetting Link editor settings in either direction.
+- Minimal and Portfolio disable surface color, opacity, and blur controls
+  without clearing the configured values used when a surfaced layout returns.
+- Removed unused whole-configuration editor getters, made continuation DOM
+  order explicit (About/Projects → Links → Media), and removed the accidental
+  root terminal-help output file.
+
 ## Studio appearance ownership hardening — 2026-08-12
 
 - Split Media Background Treatment from the general Appearance patch scope;

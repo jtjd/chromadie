@@ -1,5 +1,14 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-12 — Finish the small Studio ownership cleanup
+
+Layout patches now own only the alignment field inside `linkStyle`; the Links
+editor remains authoritative for the rest of that object. Minimal and
+Portfolio keep their saved surface values but disable card-surface controls
+with a concise cardless-layout explanation. Continuation modules have an
+intentional content → links → media source order, and obsolete whole-config
+editor draft getters were removed after confirming they had no callers.
+
 ## 2026-08-12 — Give Background Treatment its own Studio patch scope
 
 Appearance surface controls and Media background treatment are separate

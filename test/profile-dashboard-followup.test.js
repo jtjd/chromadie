@@ -46,7 +46,7 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileDashboardActions.svelte')
   ]);
-  assert.match(layout, /export function getDraftConfig/);
+  assert.doesNotMatch(layout, /export function getDraftConfig/);
   assert.match(layout, /export function validateDraft/);
   assert.doesNotMatch(layout, /Reload server version|save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(layout, /Signature color|Ambient color|colorEffectsEnabled/);

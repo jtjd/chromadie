@@ -522,6 +522,7 @@ async function waitForRichStudioOpeningLinks(description) {
 async function capturePublishedLayouts() {
   const publicLayouts = ['compact', 'sleek', 'minimal', 'modern', 'portfolio'];
   const evidence = [];
+  let compactSurfaceValues = null;
   for (const layout of publicLayouts) {
     await page.setViewport(1440, 900);
     await page.navigate(`${appUrl}/profile/settings#customize-layout`, `${layout} public evidence Studio`);
@@ -538,6 +539,40 @@ async function capturePublishedLayouts() {
       card?.click();
     })()`);
     await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} public evidence preview`);
+    if (layout === 'compact') {
+      await page.click('#profile-customize-tab-appearance', 'inspect Compact surface controls');
+      await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Compact Appearance editor');
+      compactSurfaceValues = await page.evaluate(`(() => {
+        const panel = document.querySelector('.appearance-editor__surface-grid')?.closest('.appearance-editor__panel');
+        const hex = panel?.querySelector('.appearance-editor__surface-color .appearance-editor__hex');
+        const ranges = [...(panel?.querySelectorAll('.appearance-editor__range input[type="range"]') || [])];
+        return { color: hex?.value || '', opacity: ranges[0]?.value || '', blur: ranges[1]?.value || '' };
+      })()`);
+      await page.click('#profile-customize-tab-layout', 'restore Layout editor after Compact surface inspection');
+      await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, 'visible Compact Layout editor');
+    }
+    if (layout === 'minimal' || layout === 'portfolio') {
+      await page.click('#profile-customize-tab-appearance', `inspect ${layout} cardless surface controls`);
+      await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, `${layout} Appearance editor`);
+      const cardlessControls = await page.evaluate(`(() => {
+        const panel = document.querySelector('.appearance-editor__surface-grid')?.closest('.appearance-editor__panel');
+        const controls = [...(panel?.querySelectorAll('.appearance-editor__surface-color input, .appearance-editor__surface-color button, .appearance-editor__range input') || [])];
+        const hex = panel?.querySelector('.appearance-editor__surface-color .appearance-editor__hex');
+        const ranges = [...(panel?.querySelectorAll('.appearance-editor__range input[type="range"]') || [])];
+        return {
+          cardless: Boolean(panel?.classList.contains('appearance-editor__panel--cardless')),
+          disabled: controls.every(control => control.disabled),
+          note: panel?.textContent?.includes('This layout does not use a profile card surface.') || false,
+          values: { color: hex?.value || '', opacity: ranges[0]?.value || '', blur: ranges[1]?.value || '' }
+        };
+      })()`);
+      assert(cardlessControls.cardless && cardlessControls.disabled && cardlessControls.note, `${layout} did not communicate that profile surface controls are unavailable: ${JSON.stringify(cardlessControls)}.`);
+      if (compactSurfaceValues) {
+        assert(JSON.stringify(cardlessControls.values) === JSON.stringify(compactSurfaceValues), `${layout} changed saved surface values while cardless: ${JSON.stringify({ before: compactSurfaceValues, after: cardlessControls.values })}.`);
+      }
+      await page.click('#profile-customize-tab-layout', `restore Layout editor after ${layout} surface inspection`);
+      await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, `${layout} Layout editor`);
+    }
     const layoutPublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
     let serverAfterDraft = serverBeforeDraft;
     let publishPayload = null;
@@ -596,6 +631,8 @@ async function capturePublishedLayouts() {
         const box = node.getBoundingClientRect();
         return { left: box.left, right: box.right, width: box.width };
       });
+      const continuationOrder = [...document.querySelectorAll('.profile-shell__continuation-column [data-profile-continuation]')]
+        .map(node => node.getAttribute('data-profile-continuation'));
       return {
         viewport: [innerWidth, innerHeight],
         shell: shellBox ? { width: shellBox.width, height: shellBox.height } : null,
@@ -606,6 +643,7 @@ async function capturePublishedLayouts() {
         socialGlyph: socialGlyphBox ? { width: socialGlyphBox.width, height: socialGlyphBox.height } : null,
         continuationColumn: continuationColumnBox ? { left: continuationColumnBox.left, right: continuationColumnBox.right, width: continuationColumnBox.width } : null,
         continuationModules,
+        continuationOrder,
         northeastArrow: Boolean(document.querySelector('.profile-shell-page')?.innerHTML.includes('↗')),
         openingLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links a')].map(link => link.href),
         continuationLinks: [...document.querySelectorAll('.profile-shell__continuation-links a')].map(link => link.href),
@@ -649,6 +687,11 @@ async function capturePublishedLayouts() {
     }
     assert(!publicGeometry.northeastArrow, `${layout} profile renderer still contains a decorative northeast arrow glyph.`);
     assert(publicGeometry.continuationAbout.includes('About me') && publicGeometry.continuationAbout.includes(RICH_PROFILE_FIXTURE.content.about.body) && publicGeometry.continuationProjects.length === RICH_PROFILE_FIXTURE.content.projects.length, `${layout} rich continuation content did not render through the public profile path: ${JSON.stringify(publicGeometry)}.`);
+    const continuationOrder = publicGeometry.continuationOrder;
+    const contentOrder = continuationOrder.indexOf('content');
+    const linksOrder = continuationOrder.indexOf('links');
+    const mediaOrder = continuationOrder.indexOf('media');
+    assert(contentOrder < linksOrder && linksOrder < mediaOrder, `${layout} continuation content is not ordered About/Projects → Links → Media: ${JSON.stringify(publicGeometry)}.`);
     if (publicGeometry.continuationColumn) {
       assert(publicGeometry.continuationColumn.width <= 850 && publicGeometry.continuationModules.every(module => module.left >= publicGeometry.continuationColumn.left - 1 && module.right <= publicGeometry.continuationColumn.right + 1), `${layout} continuation modules escaped the shared centered column: ${JSON.stringify(publicGeometry)}.`);
     }

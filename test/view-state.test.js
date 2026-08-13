@@ -36,7 +36,7 @@ test('editable views persist state without making it server authority', async ()
   assert.match(editor, /writeViewState/);
   assert.match(editor, /clearViewState/);
   assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
-  assert.match(editor, /export function getDraftConfig/);
+  assert.doesNotMatch(editor, /export function getDraftConfig/);
   assert.doesNotMatch(editor, /save_profile_configuration['"]/);
   assert.match(discovery, /VIEW_STATE_NAMESPACE = 'discovery'/);
   assert.match(shop, /VIEW_STATE_NAMESPACE = 'shop'/);

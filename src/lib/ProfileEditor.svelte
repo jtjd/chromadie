@@ -153,10 +153,6 @@
     return showLinks ? validateLinks() : true;
   }
 
-  export function getDraftConfig() {
-    return clone(draft);
-  }
-
   export function acceptSaved(nextConfig = draft) {
     draft = normalizeDraft(nextConfig);
     baseline = clone(draft);

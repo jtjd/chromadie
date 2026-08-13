@@ -13,6 +13,7 @@
 
   /** @type {any} */
   export let draftConfig = null;
+  export let layoutVariant = 'compact';
 
   const dispatch = createEventDispatcher();
   const PROFILE_COLOR_MATRIX_FIELDS = PROFILE_APPEARANCE_COLOR_FIELDS.filter(field => field.key !== 'surface');
@@ -26,6 +27,8 @@
   let pickerOpen = false;
 
   $: incomingKey = JSON.stringify(draftConfig?.appearance || draftConfig?.signatureColor || '');
+  $: cardlessLayout = layoutVariant === 'minimal' || layoutVariant === 'portfolio';
+  $: if (cardlessLayout && activeColor === 'surface') activeColor = 'accent';
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -87,6 +90,7 @@
   }
 
   function chooseColor(key) {
+    if (key === 'surface' && cardlessLayout) return;
     if (PROFILE_APPEARANCE_COLOR_FIELDS.some(field => field.key === key)) {
       activeColor = key;
       pickerOpen = true;
@@ -293,20 +297,20 @@
     </div>
   </section>
 
-  <section class="appearance-editor__panel" aria-labelledby="appearance-surface-title">
+  <section class="appearance-editor__panel" class:appearance-editor__panel--cardless={cardlessLayout} aria-labelledby="appearance-surface-title">
     <div class="appearance-editor__surface-grid">
       <div class="appearance-editor__surface-intro">
-        <div class="appearance-editor__heading"><div><h2 id="appearance-surface-title">Profile surface</h2><p>Adjust the profile card</p></div></div>
+        <div class="appearance-editor__heading"><div><h2 id="appearance-surface-title">Profile surface</h2><p>Adjust the profile card</p>{#if cardlessLayout}<p class="appearance-editor__cardless-note">This layout does not use a profile card surface.</p>{/if}</div></div>
       </div>
       <label class="appearance-editor__field appearance-editor__surface-color" class:active={activeColor === 'surface'} data-color-role="surface" on:pointerdown={() => chooseColor('surface')}>
-        <span><button type="button" class="appearance-editor__color-dot" style={`--dot-color:${fieldValue('surface', staged)}`} aria-label="Edit Profile surface" on:click={() => chooseColor('surface')}></button>Profile surface</span>
+        <span><button type="button" class="appearance-editor__color-dot" disabled={cardlessLayout} style={`--dot-color:${fieldValue('surface', staged)}`} aria-label="Edit Profile surface" on:click={() => chooseColor('surface')}></button>Profile surface</span>
         <div class="appearance-editor__color-input">
-          <input type="color" value={fieldValue('surface', staged)} aria-label="Profile surface" on:focus={() => chooseColor('surface')} on:input={event => updateColor(fieldFor('surface').path, event)} />
-          <input class="appearance-editor__hex" value={hexInputValue('surface', staged, hexDrafts)} maxlength="7" aria-label="Profile surface hex" on:focus={() => chooseColor('surface')} on:input={event => updateHex('surface', event)} on:change={event => updateHex('surface', event)} />
+          <input type="color" disabled={cardlessLayout} value={fieldValue('surface', staged)} aria-label="Profile surface" on:focus={() => chooseColor('surface')} on:input={event => updateColor(fieldFor('surface').path, event)} />
+          <input class="appearance-editor__hex" disabled={cardlessLayout} value={hexInputValue('surface', staged, hexDrafts)} maxlength="7" aria-label="Profile surface hex" on:focus={() => chooseColor('surface')} on:input={event => updateHex('surface', event)} on:change={event => updateHex('surface', event)} />
         </div>
       </label>
-      <label class="appearance-editor__range"><span>Opacity <output>{staged.surface.opacity}%</output></span><input type="range" min="0" max="100" step="1" value={staged.surface.opacity} on:input={event => update(['surface', 'opacity'], Number(event.currentTarget.value))} /></label>
-      <label class="appearance-editor__range"><span>Blur <output>{staged.surface.blur}px</output></span><input type="range" min="0" max="40" step="1" value={staged.surface.blur} on:input={event => update(['surface', 'blur'], Number(event.currentTarget.value))} /></label>
+      <label class="appearance-editor__range"><span>Opacity <output>{staged.surface.opacity}%</output></span><input type="range" disabled={cardlessLayout} min="0" max="100" step="1" value={staged.surface.opacity} on:input={event => update(['surface', 'opacity'], Number(event.currentTarget.value))} /></label>
+      <label class="appearance-editor__range"><span>Blur <output>{staged.surface.blur}px</output></span><input type="range" disabled={cardlessLayout} min="0" max="40" step="1" value={staged.surface.blur} on:input={event => update(['surface', 'blur'], Number(event.currentTarget.value))} /></label>
     </div>
   </section>
 
@@ -358,6 +362,9 @@
   .appearance-editor__color-grid .appearance-editor__color-input { min-width: 0; min-height: 1.6rem; height: 1.6rem; grid-template-columns: 1.55rem minmax(0, 1fr); }
   .appearance-editor__surface-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr) minmax(0, 1.1fr); align-items: end; gap: .55rem .7rem; width: 100%; max-width: 100%; min-width: 0; }
   .appearance-editor__surface-intro { display: grid; grid-column: 1 / -1; min-width: 0; gap: .35rem; }
+  .appearance-editor__panel--cardless { opacity: .62; }
+  .appearance-editor__cardless-note { margin: .3rem 0 0; color: var(--appearance-secondary); font-size: var(--appearance-label-size); line-height: 1.35; }
+  .appearance-editor__panel--cardless input:disabled, .appearance-editor__panel--cardless button:disabled { cursor: not-allowed; }
   .appearance-editor__surface-intro .appearance-editor__heading { margin: 0; }
   .appearance-editor__surface-color { align-self: start; grid-template-columns: minmax(0, 1fr) minmax(7rem, 1fr); align-items: center; gap: .55rem; }
   .appearance-editor__field, .appearance-editor__range { display: grid; gap: .35rem; min-width: 0; }

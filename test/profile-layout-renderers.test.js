@@ -262,6 +262,7 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(roll, /profile-roll--presentation[\s\S]*final-color-display/);
   assert.match(dailyRoll, /final-color-display/);
   assert.match(shell, /profile-shell__continuation-column/);
+  assert.match(shell, /data-profile-continuation="content"[\s\S]*data-profile-continuation="links"[\s\S]*data-profile-continuation="media"/);
   assert.match(shell, /formatLinkDestination/);
   assert.match(content, /About me/);
   assert.doesNotMatch(content, /↗/);
@@ -274,8 +275,8 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(preview, /renderSnapshot=\{previewRenderSnapshot\}/);
   assert.doesNotMatch(preview, /previewIdentityOnly/);
   assert.match(customize, /showLinks=\{false\}/);
-  assert.match(customize, /layoutDraft = layout[\s\S]*templateKey: layout\.templateKey[\s\S]*layoutVariant: layout\.layoutVariant[\s\S]*modules: layout\.modules[\s\S]*links: base\.links/);
-  assert.doesNotMatch(customize, /layoutDraft = layout[\s\S]*appearance: layout\.appearance/);
+  assert.doesNotMatch(customize, /export function getDraftConfig/);
+  assert.match(customize, /<ProfileAppearanceEditor[\s\S]*\{layoutVariant\}/);
   assert.match(settings, /function getDashboardDraft\(\)[\s\S]*studioDraft \|\| toEditorProfileConfig/);
   assert.match(settings, /applyProfileStudioDraftPatch/);
 });

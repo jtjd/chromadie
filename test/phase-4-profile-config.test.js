@@ -271,7 +271,7 @@ test('profile configuration editor and renderer retain safe draft/publish bounda
   const renderModel = await readFile(new URL('../src/lib/profileRenderModel.js', import.meta.url), 'utf8');
 
   assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
-  assert.match(editor, /export function getDraftConfig/);
+  assert.doesNotMatch(editor, /export function getDraftConfig/);
   assert.match(editor, /export function validateDraft/);
   assert.match(editor, /configpreview/);
   assert.doesNotMatch(editor, /colorEffectsEnabled/);

@@ -20,8 +20,7 @@ const PROFILE_EXPRESSION_FIELDS = Object.freeze([
 const PROFILE_LAYOUT_DRAFT_FIELDS = Object.freeze([
   'templateKey',
   'layoutVariant',
-  'modules',
-  'linkStyle'
+  'modules'
 ]);
 
 function hasOwn(value, key) {
@@ -205,7 +204,17 @@ export function applyProfileStudioDraftPatch(currentConfig, patch = {}, fallback
   }
 
   if (scope === 'layout') {
-    return normalizeProfileConfig({ ...current, ...pickFields(config, PROFILE_LAYOUT_DRAFT_FIELDS) }, fallbackColor);
+    const next = {
+      ...current,
+      ...pickFields(config, PROFILE_LAYOUT_DRAFT_FIELDS),
+      linkStyle: { ...current.linkStyle }
+    };
+    // Layout only exposes alignment. Keep size, glow, monochrome, and any
+    // future link-style fields owned by the Links editor.
+    if (hasOwn(config.linkStyle, 'alignment')) {
+      next.linkStyle.alignment = config.linkStyle.alignment;
+    }
+    return normalizeProfileConfig(next, fallbackColor);
   }
 
   if (scope === 'links') {

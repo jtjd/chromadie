@@ -611,21 +611,15 @@
             />
           </div>
         {/if}
-        {#if showLowerExpression}
-          <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition aria-label={username + ' expression'}>
-            <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="expression">
-              {#if profilePresentationLayoutVariant !== 'sleek'}
-                <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} />
-              {/if}
-              <ProfileWidgets widgets={profileWidgets} deferMedia={previewMode} onEntryClick={recordProfileClick} />
-              {#if hasProfileContent}
-                <ProfileContent content={profileContent} onEntryClick={recordProfileClick} />
-              {/if}
+        {#if showLowerExpression && hasProfileContent}
+          <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition data-profile-continuation="content" aria-label={username + ' expression'}>
+            <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="content">
+              <ProfileContent content={profileContent} onEntryClick={recordProfileClick} />
             </div>
           </div>
         {/if}
         {#if continuationLinks.length}
-          <section class="profile-shell__continuation-links" data-profile-region="links" aria-label={username + ' additional links'}>
+          <section class="profile-shell__continuation-links" data-profile-region="links" data-profile-continuation="links" aria-label={username + ' additional links'}>
             <h2 class="profile-shell__continuation-heading">Links</h2>
             {#if continuationSocialLinks.length}
               <nav class="profile-shell__links profile-shell__links--social" aria-label={username + ' additional social links'}>
@@ -650,6 +644,19 @@
               </nav>
             {/if}
           </section>
+        {/if}
+
+        {#if showLowerExpression && ((profilePresentationLayoutVariant !== 'sleek' && hasProfileMusic) || profileWidgets.length)}
+          <div class="profile-shell__supporting profile-shell__approved-supporting" data-profile-composition data-profile-continuation="media" aria-label={username + ' media and integrations'}>
+            <div class="profile-shell__supporting-region profile-shell__supporting-region--expression" data-profile-region="media-integrations">
+              {#if profilePresentationLayoutVariant !== 'sleek' && hasProfileMusic}
+                <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} />
+              {/if}
+              {#if profileWidgets.length}
+                <ProfileWidgets widgets={profileWidgets} deferMedia={previewMode} onEntryClick={recordProfileClick} />
+              {/if}
+            </div>
+          </div>
         {/if}
 
       {#if hasProfileStory}
