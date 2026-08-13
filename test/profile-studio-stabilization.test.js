@@ -56,7 +56,7 @@ test('background treatment is normalized and projected to both profile renderers
 });
 
 test('Profile Studio stabilization keeps preview and media mutations on explicit boundaries', async () => {
-  const [workspace, preview, shell, identity, cursor, atmosphere, nameCanvas, richMedia, customize, mediaWorkspace, settings, migration, smoke] = await Promise.all([
+  const [workspace, preview, shell, identity, cursor, atmosphere, nameCanvas, richMedia, customize, mediaWorkspace, backgroundTreatment, settings, migration, smoke] = await Promise.all([
     read('src/lib/ProfileStudioWorkspace.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileShell.svelte'),
@@ -67,6 +67,7 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
     read('src/lib/ProfileRichMediaEditor.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileMediaWorkspace.svelte'),
+    read('src/lib/ProfileBackgroundTreatment.svelte'),
     read('src/lib/ProfileSettings.svelte'),
     read('supabase/migrations/20260810120000_profile_studio_stabilization.sql'),
     read('scripts/browser/profile-studio-smoke.mjs')
@@ -74,6 +75,11 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
 
   assert.match(workspace, /on:studiopatch=\{forward\}/);
   assert.match(customize, /forwardPatch\('media'/);
+  assert.match(customize, /forwardPatch\('appearance-background'/);
+  assert.match(mediaWorkspace, /on:backgroundchange=\{forward\}/);
+  assert.match(backgroundTreatment, /dispatch\('backgroundchange'/);
+  assert.doesNotMatch(backgroundTreatment, /dispatch\('appearancechange'/);
+  assert.match(settings, /scope === 'appearance-background'/);
   assert.match(settings, /function updateExpression\(event\)/);
   assert.match(settings, /let studioDraft = null/);
   assert.match(settings, /function applyStudioPatch\(event\)/);

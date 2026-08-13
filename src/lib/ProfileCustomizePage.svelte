@@ -124,7 +124,7 @@
 
     {#if mediaComponent}
       <div class="profile-customize-page__editor profile-customize-page__editor--media">
-        <ProfileMediaWorkspace bind:this={mediaWorkspaceEditor} {mediaComponent} {profileId} {accountUsername} {targetProfile} {profileConfig} {staff} {entitlements} on:expressionchange={event => forwardPatch('media', event)} on:appearancechange={event => forwardPatch('appearance', event)} on:dirty={event => forwardDirty('customize:media', event)} />
+        <ProfileMediaWorkspace bind:this={mediaWorkspaceEditor} {mediaComponent} {profileId} {accountUsername} {targetProfile} {profileConfig} {staff} {entitlements} on:expressionchange={event => forwardPatch('media', event)} on:backgroundchange={event => forwardPatch('appearance-background', event)} on:dirty={event => forwardDirty('customize:media', event)} />
       </div>
     {:else}
       <div class="profile-customize-page__loading" role="status">Loading media controls…</div>

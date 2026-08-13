@@ -168,10 +168,32 @@ export function applyProfileStudioDraftPatch(currentConfig, patch = {}, fallback
   const config = scopedConfig(payload);
 
   if (scope === 'appearance' && payload.appearance) {
+    const currentAppearance = current.appearance;
+    const incomingAppearance = payload.appearance;
     return normalizeProfileConfig({
       ...current,
-      appearance: payload.appearance,
-      signatureColor: payload.appearance.colors?.accent || current.signatureColor
+      appearance: {
+        ...currentAppearance,
+        ...incomingAppearance,
+        colors: { ...currentAppearance.colors, ...incomingAppearance.colors },
+        surface: { ...currentAppearance.surface, ...incomingAppearance.surface },
+        gradient: { ...currentAppearance.gradient, ...incomingAppearance.gradient },
+        border: { ...currentAppearance.border, ...incomingAppearance.border },
+        // Background treatment is a separate mounted editor and patch scope.
+        // Never let the appearance editor's cached complete object replace it.
+        background: currentAppearance.background
+      },
+      signatureColor: incomingAppearance.colors?.accent || current.signatureColor
+    }, fallbackColor);
+  }
+
+  if (scope === 'appearance-background' && payload.background) {
+    return normalizeProfileConfig({
+      ...current,
+      appearance: {
+        ...current.appearance,
+        background: payload.background
+      }
     }, fallbackColor);
   }
 

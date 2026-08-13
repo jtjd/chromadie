@@ -1,5 +1,16 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-12 — Give Background Treatment its own Studio patch scope
+
+Appearance surface controls and Media background treatment are separate
+mounted editors, so they must not exchange complete cached appearance
+objects. `ProfileBackgroundTreatment` now emits only its normalized
+background slice through `appearance-background`; the canonical draft patcher
+merges that slice without touching surface color, opacity, blur, radius, or
+text colors. Appearance patches likewise preserve the current background
+treatment. This keeps the existing one-draft/one-snapshot renderer intact
+while removing the last overlapping appearance writer.
+
 ## 2026-08-12 — Resolve profile state once, then share the renderer
 
 `buildProfileRenderSnapshot()` is now the canonical boundary between profile

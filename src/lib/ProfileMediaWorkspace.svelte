@@ -45,7 +45,7 @@
     <ProfileBackgroundTreatment
       bind:this={backgroundTreatmentEditor}
       draftAppearance={profileConfig?.draft?.appearance}
-      on:appearancechange={forward}
+      on:backgroundchange={forward}
       on:dirty={forward}
     />
   {:else}

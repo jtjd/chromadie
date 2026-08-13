@@ -614,6 +614,14 @@
       updateAppearance({ detail });
       return;
     }
+    if (scope === 'appearance-background') {
+      studioDraft = applyProfileStudioDraftPatch(
+        studioDraft || context.profileConfig?.draft,
+        { scope, detail },
+        FALLBACK_PROFILE_COLOR
+      );
+      return;
+    }
     if (scope === 'identity') {
       studioIdentityDraft = applyProfileStudioIdentityPatch(studioIdentityDraft, detail);
       if (Object.prototype.hasOwnProperty.call(detail, 'identityPresentation')) {

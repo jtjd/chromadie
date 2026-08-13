@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Studio appearance ownership hardening — 2026-08-12
+
+- Split Media Background Treatment from the general Appearance patch scope;
+  it now emits only background-treatment fields.
+- The canonical Studio draft projector merges background treatment into the
+  existing appearance without allowing stale surface color, opacity, blur,
+  radius, or text values to overwrite it, and general Appearance patches keep
+  the current background slice intact.
+- Added a production browser regression crossing Appearance → Media →
+  Appearance and checking the actual profile boundary's color, opacity, blur,
+  and background-treatment state.
+
 ## Renderer consolidation — 2026-08-12
 
 - Added `buildProfileRenderSnapshot()` as the single resolved profile model for

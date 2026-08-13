@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-12 — Isolate Studio background-treatment edits
+
+- Media Background Treatment edits now update only page-background treatment
+  state, so stale editor values cannot reset the profile card's color,
+  opacity, blur, radius, or text colors.
+- Appearance and Media transitions are covered by a production browser smoke
+  regression that inspects the rendered profile surface and both editors'
+  state.
+
 ## 2026-08-12 — Stabilize public profile and Studio render parity
 
 - Public profiles and Studio Live Preview now resolve one complete profile

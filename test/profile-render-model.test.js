@@ -320,4 +320,32 @@ test('Studio patches update only the editor-owned slice of the canonical draft',
   assert.equal(afterAppearance.appearance.surface.blur, 10);
   assert.equal(afterAppearance.layoutVariant, 'sleek');
   assert.equal(afterAppearance.background_path, base.background_path);
+
+  const afterBackground = applyProfileStudioDraftPatch(afterAppearance, {
+    scope: 'appearance-background',
+    detail: {
+      background: { ...base.appearance.background, blur: 32, overlayOpacity: 58 }
+    }
+  });
+  assert.equal(afterBackground.appearance.background.blur, 32);
+  assert.equal(afterBackground.appearance.background.overlayOpacity, 58);
+  assert.equal(afterBackground.appearance.colors.surface, '#6A2E9A');
+  assert.equal(afterBackground.appearance.surface.opacity, 93);
+  assert.equal(afterBackground.appearance.surface.blur, 10);
+
+  const staleAppearance = {
+    ...afterBackground.appearance,
+    colors: { ...afterBackground.appearance.colors, surface: '#11141B' },
+    surface: { ...afterBackground.appearance.surface, opacity: 64, blur: 20 },
+    background: { ...base.appearance.background, blur: 0, overlayOpacity: 0 }
+  };
+  const afterStaleAppearance = applyProfileStudioDraftPatch(afterBackground, {
+    scope: 'appearance',
+    detail: { appearance: staleAppearance }
+  });
+  assert.equal(afterStaleAppearance.appearance.background.blur, 32);
+  assert.equal(afterStaleAppearance.appearance.background.overlayOpacity, 58);
+  assert.equal(afterStaleAppearance.appearance.colors.surface, '#11141B');
+  assert.equal(afterStaleAppearance.appearance.surface.opacity, 64);
+  assert.equal(afterStaleAppearance.appearance.surface.blur, 20);
 });

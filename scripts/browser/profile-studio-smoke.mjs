@@ -1559,6 +1559,63 @@ try {
       } : null;
     })()`);
     assert(JSON.stringify(surfaceAfterUnrelatedEdit) === JSON.stringify(surfaceBeforeUnrelatedEdit), `Unrelated text edit changed the rendered profile surface: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterUnrelatedEdit })}.`);
+    const originalBackgroundBlur = await page.evaluate(`document.querySelector('.profile-background-treatment input[type="range"]')?.value || '0'`);
+    await page.click('#profile-customize-tab-media', 'switch to Media background treatment');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="media"]')?.hidden`, 'visible Media background treatment');
+    await page.setInputValue('.profile-background-treatment input[type="range"]', 27, ['input']);
+    await page.waitFor(`document.querySelector('.profile-background-treatment output')?.textContent?.trim() === '27px'`, 'background treatment blur draft value');
+    const surfaceAfterBackgroundEdit = await page.evaluate(`(() => {
+      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
+      const style = surface ? getComputedStyle(surface) : null;
+      const pageStyle = document.querySelector('.profile-studio-preview .profile-shell-page--preview') ? getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell-page--preview')) : null;
+      return style ? {
+        backgroundColor: style.backgroundColor,
+        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
+        fill: style.getPropertyValue('--profile-surface-fill').trim(),
+        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
+        blur: style.getPropertyValue('--profile-surface-blur').trim(),
+        backgroundBlur: pageStyle?.getPropertyValue('--profile-background-blur').trim() || ''
+      } : null;
+    })()`);
+    assert(surfaceAfterBackgroundEdit.backgroundBlur === '27px', `Background treatment did not update its own render field: ${JSON.stringify(surfaceAfterBackgroundEdit)}.`);
+    assert(
+      ['backgroundColor', 'backdropFilter', 'fill', 'opacity', 'blur'].every(field => surfaceAfterBackgroundEdit[field] === surfaceBeforeUnrelatedEdit[field]),
+      `Background treatment changed the card surface fields it does not own: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterBackgroundEdit })}.`
+    );
+    const surfaceFieldsBeforeCrossEditor = { ...surfaceAfterBackgroundEdit };
+    await page.click('#profile-customize-tab-appearance', 'switch back to Appearance');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor after Media');
+    await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', '#345678', ['input']);
+    await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview [data-profile-surface="true"]')).getPropertyValue('--profile-surface').trim().toUpperCase() === '#345678'`, 'surface remains editable after Media treatment');
+    const backgroundAfterSurfaceEdit = await page.evaluate(`(() => {
+      const pageStyle = document.querySelector('.profile-studio-preview .profile-shell-page--preview') ? getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell-page--preview')) : null;
+      const treatment = document.querySelector('.profile-background-treatment input[type="range"]');
+      return { blur: pageStyle?.getPropertyValue('--profile-background-blur').trim() || '', input: treatment?.value || '' };
+    })()`);
+    assert(backgroundAfterSurfaceEdit.blur === surfaceFieldsBeforeCrossEditor.backgroundBlur && backgroundAfterSurfaceEdit.input === '27', `Appearance edit overwrote Media background treatment: ${JSON.stringify({ before: surfaceFieldsBeforeCrossEditor, after: backgroundAfterSurfaceEdit })}.`);
+    const surfaceAfterCrossEditor = await page.evaluate(`(() => {
+      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
+      const style = surface ? getComputedStyle(surface) : null;
+      return style ? {
+        backgroundColor: style.backgroundColor,
+        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
+        fill: style.getPropertyValue('--profile-surface-fill').trim(),
+        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
+        blur: style.getPropertyValue('--profile-surface-blur').trim()
+      } : null;
+    })()`);
+    assert(
+      surfaceAfterCrossEditor.backgroundColor !== surfaceBeforeUnrelatedEdit.backgroundColor
+        && surfaceAfterCrossEditor.backdropFilter === surfaceBeforeUnrelatedEdit.backdropFilter
+        && surfaceAfterCrossEditor.opacity === surfaceBeforeUnrelatedEdit.opacity
+        && surfaceAfterCrossEditor.blur === surfaceBeforeUnrelatedEdit.blur,
+      `Cross-editor surface state was not isolated: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterCrossEditor })}.`
+    );
+    await page.click('#profile-customize-tab-media', 'restore Media background treatment');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true'`, 'Media restore tab');
+    await page.setInputValue('.profile-background-treatment input[type="range"]', Number(originalBackgroundBlur), ['input']);
+    await page.click('#profile-customize-tab-appearance', 'restore Appearance tab');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true'`, 'Appearance restore tab');
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', unrelatedTextColor, ['input']);
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', originalSurfaceColor, ['input']);
     const publishRequestsBefore = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2') || request.url.includes('publish_profile_studio_v2')).length;

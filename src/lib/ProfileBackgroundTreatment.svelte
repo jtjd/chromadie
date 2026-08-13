@@ -5,14 +5,15 @@
   export let draftAppearance = null;
 
   const dispatch = createEventDispatcher();
-  let staged = normalizeProfileAppearance(draftAppearance);
-  let baselineKey = JSON.stringify(staged.background);
-  let incomingKey = '';
+  const backgroundFrom = value => ({ ...normalizeProfileAppearance(value).background });
+  let staged = backgroundFrom(draftAppearance);
+  let baselineKey = JSON.stringify(staged);
+  let incomingKey = baselineKey;
 
-  $: incoming = normalizeProfileAppearance(draftAppearance);
-  $: nextIncomingKey = JSON.stringify(incoming.background);
-  $: if (nextIncomingKey !== incomingKey && nextIncomingKey !== JSON.stringify(staged.background)) {
-    staged = { ...staged, background: { ...incoming.background } };
+  $: incoming = backgroundFrom(draftAppearance);
+  $: nextIncomingKey = JSON.stringify(incoming);
+  $: if (nextIncomingKey !== incomingKey && nextIncomingKey !== JSON.stringify(staged)) {
+    staged = { ...incoming };
     baselineKey = nextIncomingKey;
     // The key is intentionally retained across reactive updates so a local
     // slider edit is not mistaken for a new parent draft.
@@ -20,33 +21,33 @@
     incomingKey = nextIncomingKey;
   }
 
-  function emitChange(nextDirty = JSON.stringify(staged.background) !== baselineKey) {
-    dispatch('appearancechange', { appearance: staged, dirty: nextDirty });
+  function emitChange(nextDirty = JSON.stringify(staged) !== baselineKey) {
+    dispatch('backgroundchange', { background: { ...staged }, dirty: nextDirty });
     dispatch('dirty', { dirty: nextDirty });
   }
 
   function update(key, value) {
-    const next = { ...staged, background: { ...staged.background, [key]: value } };
+    const next = { ...staged, [key]: value };
     staged = next;
-    emitChange(JSON.stringify(next.background) !== baselineKey);
+    emitChange(JSON.stringify(next) !== baselineKey);
   }
 
   export function getDraftBackground() {
-    return { ...staged.background };
+    return { ...staged };
   }
 
-  export function acceptSaved(nextAppearance = staged) {
-    const next = normalizeProfileAppearance(nextAppearance);
+  export function acceptSaved(nextAppearance = draftAppearance) {
+    const next = backgroundFrom(nextAppearance);
     staged = next;
-    baselineKey = JSON.stringify(next.background);
+    baselineKey = JSON.stringify(next);
     incomingKey = baselineKey;
     emitChange(false);
   }
 
   export function resetChanges() {
-    const next = normalizeProfileAppearance(draftAppearance);
-    staged = { ...staged, background: { ...next.background } };
-    baselineKey = JSON.stringify(next.background);
+    const next = backgroundFrom(draftAppearance);
+    staged = next;
+    baselineKey = JSON.stringify(next);
     incomingKey = baselineKey;
     emitChange(false);
   }
@@ -59,20 +60,20 @@
 
   <div class="profile-background-treatment__controls">
     <label>
-      <span>Blur <output>{staged.background.blur}px</output></span>
-      <input type="range" min="0" max="40" step="1" value={staged.background.blur} on:input={event => update('blur', Number(event.currentTarget.value))} />
+      <span>Blur <output>{staged.blur}px</output></span>
+      <input type="range" min="0" max="40" step="1" value={staged.blur} on:input={event => update('blur', Number(event.currentTarget.value))} />
     </label>
     <label>
-      <span>Image opacity <output>{staged.background.imageOpacity}%</output></span>
-      <input type="range" min="0" max="100" step="1" value={staged.background.imageOpacity} on:input={event => update('imageOpacity', Number(event.currentTarget.value))} />
+      <span>Image opacity <output>{staged.imageOpacity}%</output></span>
+      <input type="range" min="0" max="100" step="1" value={staged.imageOpacity} on:input={event => update('imageOpacity', Number(event.currentTarget.value))} />
     </label>
     <label class="profile-background-treatment__color">
       <span>Overlay color</span>
-      <div><input type="color" value={staged.background.overlayColor} aria-label="Background overlay color" on:input={event => update('overlayColor', event.currentTarget.value)} /><code>{staged.background.overlayColor}</code></div>
+      <div><input type="color" value={staged.overlayColor} aria-label="Background overlay color" on:input={event => update('overlayColor', event.currentTarget.value)} /><code>{staged.overlayColor}</code></div>
     </label>
     <label>
-      <span>Overlay opacity <output>{staged.background.overlayOpacity}%</output></span>
-      <input type="range" min="0" max="100" step="1" value={staged.background.overlayOpacity} on:input={event => update('overlayOpacity', Number(event.currentTarget.value))} />
+      <span>Overlay opacity <output>{staged.overlayOpacity}%</output></span>
+      <input type="range" min="0" max="100" step="1" value={staged.overlayOpacity} on:input={event => update('overlayOpacity', Number(event.currentTarget.value))} />
     </label>
   </div>
 </section>
