@@ -22,6 +22,8 @@
   export let featureFlags = {};
   /** @type {any} */
   export let previewRenderSnapshot = null;
+  /** @type {any} */
+  export let studioIdentityDraft = null;
 
   const dispatch = createEventDispatcher();
   let customizePage = null;
@@ -90,6 +92,7 @@
             accountUsername={accountUsername}
             targetProfile={context.targetProfile}
             profileConfig={editorProfileConfig}
+            {studioIdentityDraft}
             activeTab={activeCustomizeTab}
             layoutVariant={previewRenderSnapshot?.layout?.variant || editorProfileConfig?.draft?.layoutVariant || 'compact'}
             {entitlements}

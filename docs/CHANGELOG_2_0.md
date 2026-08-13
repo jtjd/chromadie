@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-13 — Close the Profile Studio session-state side door
+
+- Profile Studio no longer restores unpublished profile drafts from
+  per-editor session storage after a refresh.
+- Appearance, media, identity, and layout controls continue to read the
+  canonical Studio draft, while hidden legacy Content/Widget editors are no
+  longer mounted inside Customize.
+- Dashboard clean/published state now remains aligned with the refreshed
+  canonical preview instead of being changed by stale editor caches.
+
 ## 2026-08-12 — Finish Studio layout and continuation cleanup
 
 - Layout alignment changes no longer reset unrelated Link Style settings.

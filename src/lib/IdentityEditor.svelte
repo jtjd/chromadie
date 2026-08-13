@@ -7,7 +7,6 @@
     normalizePublicIdentity
   } from './profileIdentity.js';
   import { normalizeProfileIdentityPresentation, PROFILE_IDENTITY_DESCRIPTION_MODES, PROFILE_IDENTITY_ENTRY_ANIMATIONS } from './profileIdentityPresentation.js';
-  import { clearViewState, readViewState, writeViewState } from './viewState.js';
   import Module from './foundation/Module.svelte';
 
   export let profileId = null;
@@ -15,9 +14,9 @@
   export let bio = '';
   export let config = null;
   export let studio = false;
+  export let publishedBio = null;
 
   const dispatch = createEventDispatcher();
-  const VIEW_STATE_NAMESPACE = 'profile-identity-editor';
   let lastIncomingKey = '';
   let draftBio = '';
   /** @type {any} */
@@ -40,60 +39,26 @@
   });
   $: isDirty = draftBio !== baselineBio || JSON.stringify(draftPresentation) !== JSON.stringify(baselinePresentation);
   $: identityConfig = config && typeof config === 'object' ? config : {};
-  $: incomingKey = JSON.stringify({ profileId, bio: bio || '', draft: identityConfig.draft || null, published: identityConfig.published || null });
+  $: incomingKey = JSON.stringify({ profileId, bio: bio || '', publishedBio: publishedBio ?? null, draft: identityConfig.draft || null, published: identityConfig.published || null });
 
-  function scope() {
-    return profileId || 'unknown';
-  }
-
-  function persistDraft() {
-    if (!profileId) return;
-    writeViewState(VIEW_STATE_NAMESPACE, scope(), {
-      bio: draftBio,
-      presentation: draftPresentation
-    });
-  }
-
-  function restoreDraft() {
-    if (!profileId) return;
+  function syncIncoming() {
     lastIncomingKey = incomingKey;
-    const cached = readViewState(VIEW_STATE_NAMESPACE, scope());
-    draftBio = typeof cached?.bio === 'string' ? cached.bio : (bio || '');
-    draftPresentation = cached?.presentation ? normalizeProfileIdentityPresentation(cached.presentation) : presentationFromConfig(identityConfig.draft || identityConfig);
-    baselineBio = bio || '';
+    draftBio = bio || '';
+    draftPresentation = presentationFromConfig(identityConfig.draft || identityConfig);
+    baselineBio = publishedBio ?? bio ?? '';
     baselinePresentation = presentationFromConfig(identityConfig.published || identityConfig);
     status = '';
     error = '';
-    dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
-    dispatch('dirty', { dirty: draftIsDirty() });
   }
 
-  function retainDraftForIncomingChange(nextKey) {
-    lastIncomingKey = nextKey;
-    return lastIncomingKey === nextKey;
-  }
-
-  // Hydrate on the first render and whenever the server-backed profile changes.
-  // Once the user has started editing, the local draft remains authoritative
-  // until it is saved or explicitly discarded. Even in that dirty case, emit
-  // the retained draft again: a parent route refresh clears its transient
-  // preview projection, and the live canvas must not fall back to stale public
-  // identity data while the editor still visibly holds the user's draft.
-  $: if (profileId && incomingKey !== lastIncomingKey) {
-    if (!lastIncomingKey || (!saving && !isDirty)) {
-      restoreDraft();
-    } else {
-      if (retainDraftForIncomingChange(incomingKey)) {
-        dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
-        dispatch('dirty', { dirty: draftIsDirty() });
-      }
-    }
-  }
+  // Server/canonical draft changes hydrate this editor. There is deliberately
+  // no session restore or mount-time preview dispatch: ProfileSettings owns
+  // the unsaved Studio identity draft.
+  $: if (profileId && incomingKey !== lastIncomingKey && !saving && !isDirty) syncIncoming();
 
   function updateField(field, value) {
     if (field === 'bio') draftBio = value;
     else draftPresentation = normalizeProfileIdentityPresentation({ ...draftPresentation, [field]: value });
-    persistDraft();
     status = '';
     error = '';
     dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
@@ -156,7 +121,6 @@
       baselinePresentation = normalizeProfileIdentityPresentation(configurationData?.draft?.identityPresentation || draftPresentation);
       dispatch('configsaved', configurationData);
     }
-    clearViewState(VIEW_STATE_NAMESPACE, scope());
     status = 'Identity saved.';
     dispatch('identitysaved', {
       bio: published.bio,
@@ -188,7 +152,6 @@
     baselineBio = nextBio;
     draftPresentation = normalizeProfileIdentityPresentation(nextIdentity);
     baselinePresentation = normalizeProfileIdentityPresentation(nextIdentity);
-    clearViewState(VIEW_STATE_NAMESPACE, scope());
     status = '';
     error = '';
     dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });
@@ -198,7 +161,6 @@
   export function resetChanges() {
     draftBio = baselineBio;
     draftPresentation = normalizeProfileIdentityPresentation(baselinePresentation);
-    clearViewState(VIEW_STATE_NAMESPACE, scope());
     status = '';
     error = '';
     dispatch('identitypreview', { bio: draftBio, identityPresentation: draftPresentation });

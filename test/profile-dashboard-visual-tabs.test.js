@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS } from '../src/lib/profile-studio/dashboardContract.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Customize tabs preserve mounted editors while switching visible groups', async () => {
+test('Customize tabs mount only the supported visible editor groups', async () => {
   const [customize, settings, contract] = await Promise.all([
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileSettings.svelte'),
@@ -19,11 +20,12 @@ test('Customize tabs preserve mounted editors while switching visible groups', a
   assert.match(customize, /data-editor-section="effects"/);
   assert.match(customize, /hidden=\{selectedTab !== 'layout'\}/);
   assert.match(customize, /profile-collection/);
-  assert.match(customize, /profile-widgets/);
+  assert.doesNotMatch(customize, /contentComponent|widgetComponent|id="customize-content"|id="customize-widgets"/);
   assert.match(customize, /profile-layout/);
   const studio = [settings, contract].join('\n');
   assert.match(studio, /content: 'media'/);
   assert.match(studio, /widgets: 'appearance'/);
+  assert.deepEqual(PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS, ['customize', 'profile-identity', 'profile-media', 'profile-collection', 'profile-layout']);
   assert.match(studio, /'customize-effects': 'appearance'/);
   assert.doesNotMatch(studio, /\{ id: 'effects', label: 'Effects'/);
 });

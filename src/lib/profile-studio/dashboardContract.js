@@ -61,8 +61,6 @@ export const PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS = Object.freeze([
   'customize',
   'profile-identity',
   'profile-media',
-  'profile-content',
-  'profile-widgets',
   'profile-collection',
   'profile-layout'
 ]);

@@ -134,7 +134,12 @@
   $: showDashboardPreview = previewAvailable
     ? previewOpen
     : customizePreviewAvailable && (!isMobileViewport || previewOpen);
-  $: editorProfileConfig = createEditorProfileConfig(context?.profileConfig);
+  function createStudioEditorProfileConfig(value) {
+    const base = createEditorProfileConfig(value);
+    return base && studioDraft ? { ...base, draft: studioDraft } : base;
+  }
+
+  $: editorProfileConfig = createStudioEditorProfileConfig(context?.profileConfig);
   $: sidebarAvatarSrc = getProfileMediaUrl(editorProfileConfig?.draft?.avatar_path || editorProfileConfig?.published?.avatar_path);
   $: dashboardDirty = hasDirtySources(dirtySources) || hasServerDraftChanges(context?.profileConfig);
   $: previewModel = createProfileStudioPreviewModel({
@@ -421,8 +426,6 @@
       ...nextDraft,
       bio: context?.targetProfile?.bio || ''
     });
-    // acceptSaved lets mounted editors clear their local view-state caches.
-    // Its scoped preview events cannot replace this complete server result.
     studioDraft = nextDraft;
     studioIdentityDraft = {
       bio: context?.targetProfile?.bio || '',
@@ -775,6 +778,7 @@
       {error}
       {profilePath}
       {accountUsername}
+      {studioIdentityDraft}
       {previewRenderSnapshot}
       entitlements={$profileEntitlements}
       staff={Boolean(context?.targetProfile?.is_staff)}

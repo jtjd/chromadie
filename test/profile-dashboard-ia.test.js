@@ -68,8 +68,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(identity, /identity-editor__options\) \{ display: flex; grid-column: 1 \/ span 2; grid-row: 4;/);
   assert.match(identity, /identity-editor__grid--meta \.identity-editor__field:first-child/);
   assert.match(identity, /identity-editor__grid--behavior \.identity-editor__field:first-child/);
-  assert.match(customize, /profile-customize-page__control-grid--other/);
-  assert.match(customize, /profile-content-editor__panel:first-of-type \.profile-content-editor__fields/);
+  assert.doesNotMatch(customize, /id="customize-other"|id="customize-content"|id="customize-widgets"|contentComponent|widgetComponent/);
   for (const label of ['Profile text', 'Handle & metadata', 'Username', 'Bio text', 'Page background', 'Profile surface', 'Accent']) {
     assert.match(appearanceColors, new RegExp(label.replace(/[&]/g, '\\$&')));
   }
@@ -83,10 +82,9 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(appearance, /Profile colors/);
   assert.doesNotMatch(appearance, /\['surface', 'Profile Surface'\]/);
   assert.match(studio, /ProfilePremiumPage\.svelte/);
-  for (const section of ['media', 'identity', 'appearance', 'content', 'widgets', 'effects', 'layout']) {
+  for (const section of ['media', 'identity', 'appearance', 'effects', 'layout']) {
     assert.match(customize, new RegExp(`data-editor-section="${section}"`));
   }
-  assert.match(customize, /id="customize-widgets"[\s\S]*Provider Widgets/);
   assert.match(customize, /aria-label="Visual effects"[^>]*id="customize-effects"/);
   assert.match(cosmetics, /profile-cosmetics-surface--compact/);
   assert.match(customize, /id="customize-effects"[\s\S]*id="customize-layout"/);

@@ -3,7 +3,6 @@
   import { normalizeProfileConfig } from './profileConfig.js';
   import { normalizeProfileContent, PROFILE_CONTENT_LIMITS } from './profileContent.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
-  import { clearViewState, readViewState, writeViewState } from './viewState.js';
 
   export let profileId = null;
   export let draftConfig = null;
@@ -13,7 +12,6 @@
   export let staff = false;
 
   const dispatch = createEventDispatcher();
-  const VIEW_STATE_NAMESPACE = 'profile-content-editor';
   const EMPTY_PROJECT = Object.freeze({ title: '', description: '', url: '', visible: true });
 
   let draft = normalizeDraft(draftConfig || publishedConfig);
@@ -40,13 +38,11 @@
 
   function syncIncoming() {
     lastIncomingKey = incomingKey;
-    const cached = profileId ? readViewState(VIEW_STATE_NAMESPACE, profileId) : null;
-    draft = normalizeDraft(cached?.draft || draftConfig || publishedConfig);
+    draft = normalizeDraft(draftConfig || publishedConfig);
     baseline = normalizeDraft(draftConfig || publishedConfig);
     emptyProject = { ...EMPTY_PROJECT };
     error = '';
-    status = cached?.draft ? 'Unsaved content restored.' : '';
-    if (cached?.draft) dispatch('configpreview', { config: draft });
+    status = '';
   }
 
   function emitDirty(value = null) {
@@ -56,7 +52,6 @@
   function updateContent(next) {
     draft = normalizeDraft({ ...draft, content: { ...draft.content, ...next } });
     if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
-    if (profileId) writeViewState(VIEW_STATE_NAMESPACE, profileId, { draft });
     status = '';
     error = '';
     emitDirty(true);
@@ -114,7 +109,6 @@
     draft = normalizeDraft(nextConfig);
     baseline = clone(draft);
     if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
     status = '';
     error = '';
     dispatch('configpreview', { config: draft });
@@ -126,7 +120,6 @@
     if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     status = '';
     error = '';
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
     dispatch('configpreview', { config: draft });
     emitDirty(false);
   }
@@ -137,7 +130,6 @@
     if (!draft.content.projects.length) emptyProject = { ...EMPTY_PROJECT };
     error = '';
     status = '';
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
     dispatch('configpreview', { config: draft });
     emitDirty(false);
   }

@@ -9,6 +9,7 @@ import {
   readViewState,
   writeViewState
 } from '../src/lib/viewState.js';
+import { PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS } from '../src/lib/profile-studio/dashboardContract.js';
 
 test('view state is scoped and survives component remounts in memory', () => {
   clearAllViewState();
@@ -23,23 +24,37 @@ test('view state is scoped and survives component remounts in memory', () => {
   assert.equal(readViewState('profile-editor', 'user-1'), null);
 });
 
-test('editable views persist state without making it server authority', async () => {
-  const [editor, discovery, shop, stores, workspace] = await Promise.all([
+test('only UI-only views persist session state; Profile Studio profile data does not', async () => {
+  const [editor, content, widgets, identity, discovery, shop, stores, settings, customize, contract, workspace] = await Promise.all([
     readFile(new URL('../src/lib/ProfileEditor.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileContentEditor.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileWidgetEditor.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/IdentityEditor.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/DiscoveryHub.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/Shop.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/stores.js', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileCustomizePage.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/profile-studio/dashboardContract.js', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileStudioWorkspace.svelte', import.meta.url), 'utf8')
   ]);
 
-  assert.match(editor, /readViewState/);
-  assert.match(editor, /writeViewState/);
-  assert.match(editor, /clearViewState/);
+  for (const profileEditor of [editor, content, widgets, identity]) {
+    assert.doesNotMatch(profileEditor, /readViewState|writeViewState|clearViewState/);
+    assert.doesNotMatch(profileEditor, /Unsaved (layout|content|widget|identity) restored/);
+  }
   assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(editor, /export function getDraftConfig/);
   assert.doesNotMatch(editor, /save_profile_configuration['"]/);
   assert.match(discovery, /VIEW_STATE_NAMESPACE = 'discovery'/);
   assert.match(shop, /VIEW_STATE_NAMESPACE = 'shop'/);
   assert.match(stores, /clearAllViewState/);
+  assert.match(settings, /function createStudioEditorProfileConfig/);
+  assert.match(settings, /return base && studioDraft \? \{ \.\.\.base, draft: studioDraft \} : base/);
+  assert.match(customize, /identityDraft\?\.bio/);
+  assert.doesNotMatch(customize, /contentComponent|widgetComponent|id="customize-content"|id="customize-widgets"/);
+  assert.deepEqual(PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS, ['customize', 'profile-identity', 'profile-media', 'profile-collection', 'profile-layout']);
+  assert.match(contract, /PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS/);
   assert.match(workspace, /profileId=\{context\.profileId\}/);
+  assert.match(workspace, /studioIdentityDraft/);
 });

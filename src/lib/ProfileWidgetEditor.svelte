@@ -9,7 +9,6 @@
     PROFILE_WIDGET_PROVIDERS
   } from './profileWidgets.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
-  import { clearViewState, readViewState, writeViewState } from './viewState.js';
 
   export let profileId = null;
   export let draftConfig = null;
@@ -19,7 +18,6 @@
   export let staff = false;
 
   const dispatch = createEventDispatcher();
-  const VIEW_STATE_NAMESPACE = 'profile-widget-editor';
   const providerKeys = Object.keys(PROFILE_WIDGET_PROVIDERS);
 
   $: widgetLimit = staff || hasChromadiePlus(entitlements)
@@ -75,12 +73,10 @@
 
   function syncIncoming() {
     lastIncomingKey = incomingKey;
-    const cached = profileId ? readViewState(VIEW_STATE_NAMESPACE, profileId) : null;
-    widgets = cached?.widgets ? clone(cached.widgets) : toWidgetDrafts(draftConfig || publishedConfig);
+    widgets = toWidgetDrafts(draftConfig || publishedConfig);
     baseline = toWidgetDrafts(draftConfig || publishedConfig);
     error = '';
-    status = cached?.widgets ? 'Unsaved widget changes restored.' : '';
-    if (cached?.widgets) dispatch('configpreview', { config: previewConfig() });
+    status = '';
   }
 
   function emitDirty(value = null) {
@@ -94,7 +90,6 @@
 
   function updateWidgets(next) {
     widgets = next.map((widget, index) => ({ ...widget, order: index }));
-    if (profileId) writeViewState(VIEW_STATE_NAMESPACE, profileId, { widgets });
     status = '';
     error = '';
     emitDirty(true);
@@ -152,7 +147,6 @@
   export function acceptSaved(nextConfig = previewConfig()) {
     widgets = toWidgetDrafts(nextConfig);
     baseline = clone(widgets);
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
     status = '';
     error = '';
     dispatch('configpreview', { config: previewConfig() });
@@ -163,7 +157,6 @@
     widgets = clone(baseline);
     status = '';
     error = '';
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
     dispatch('configpreview', { config: previewConfig() });
     emitDirty(false);
   }
@@ -173,7 +166,6 @@
     baseline = clone(widgets);
     error = '';
     status = '';
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileId);
     dispatch('configpreview', { config: previewConfig() });
     emitDirty(false);
   }

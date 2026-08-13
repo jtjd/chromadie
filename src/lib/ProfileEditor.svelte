@@ -4,7 +4,6 @@
   import { PROFILE_LINK_DEFINITIONS, isProfileLinkUrlValid } from './profileLinkTypes.js';
   import { hasChromadiePlus } from './premiumEntitlements.js';
   import { createProfileTemplatePatch } from './profileTemplates.js';
-  import { clearViewState, readViewState, writeViewState } from './viewState.js';
   import ProfileTemplatePicker from './ProfileTemplatePicker.svelte';
 
   export let profileId = null;
@@ -25,11 +24,8 @@
   const EDITABLE_MODULE_IDS = Object.freeze(['stats', 'signature', 'links', 'recent', 'achievements']);
   const STYLE_LABELS = Object.freeze({ compact: 'Compact', sleek: 'Sleek', minimal: 'Minimal', modern: 'Modern', portfolio: 'Portfolio' });
   const MODULE_SIZE_LABELS = Object.freeze({ wide: 'Wide', medium: 'Medium', narrow: 'Narrow' });
-  const VIEW_STATE_NAMESPACE = 'profile-editor';
-
   let draft = normalizeProfileConfig(draftConfig || publishedConfig);
   let baseline = draft;
-  let profileScope = null;
   let status = '';
   let error = '';
   let lastIncomingKey = '';
@@ -54,17 +50,11 @@
 
   function syncIncoming() {
     lastIncomingKey = incomingKey;
-    profileScope = profileId || null;
-    const cached = profileId ? readViewState(VIEW_STATE_NAMESPACE, profileId) : null;
     const nextBaseline = normalizeDraft(draftConfig || publishedConfig);
-    const next = normalizeDraft(cached?.draft || nextBaseline);
-    draft = next;
-    baseline = nextBaseline;
+    draft = clone(nextBaseline);
+    baseline = clone(nextBaseline);
     error = '';
-    status = cached?.draft && !areProfileConfigsEqual(next, nextBaseline) ? 'Unsaved layout restored.' : '';
-    if (cached?.draft && !areProfileConfigsEqual(next, nextBaseline)) {
-      dispatch('configpreview', { config: draft });
-    }
+    status = '';
   }
 
   function emitDirty(value = null) {
@@ -79,7 +69,6 @@
       ? { ...next, templateKey: 'custom' }
       : next;
     draft = normalizeDraft({ ...draft, ...nextDraft });
-    if (profileId) writeViewState(VIEW_STATE_NAMESPACE, profileScope || profileId, { draft });
     status = '';
     error = '';
     emitDirty();
@@ -158,7 +147,6 @@
     baseline = clone(draft);
     status = '';
     error = '';
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
     dispatch('configpreview', { config: draft });
     emitDirty(false);
   }
@@ -167,7 +155,6 @@
     draft = clone(baseline);
     status = '';
     error = '';
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
     dispatch('configpreview', { config: draft });
     emitDirty(false);
   }
@@ -177,7 +164,6 @@
     baseline = clone(draft);
     error = '';
     status = '';
-    if (profileId) clearViewState(VIEW_STATE_NAMESPACE, profileScope || profileId);
     dispatch('configpreview', { config: draft });
     emitDirty(false);
   }

@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { normalizeProfileConfig } from './profileConfig.js';
   import ProfileAppearanceEditor from './ProfileAppearanceEditor.svelte';
   import ProfileMediaWorkspace from './ProfileMediaWorkspace.svelte';
 
@@ -13,26 +12,24 @@
   export let staff = false;
   export let activeTab = 'appearance';
   export let layoutVariant = 'compact';
+  /** @type {any} */
+  export let identityDraft = null;
 
   const dispatch = createEventDispatcher();
   let identityEditor = null;
   let appearanceEditor = null;
   let mediaWorkspaceEditor = null;
-  let contentEditor = null;
-  let widgetEditor = null;
   let layoutEditor = null;
 
   $: identityComponent = components['profile-identity'];
   $: mediaComponent = components['profile-media'];
-  $: contentComponent = components['profile-content'];
-  $: widgetComponent = components['profile-widgets'];
   $: collectionComponent = components['profile-collection'];
   $: layoutComponent = components['profile-layout'];
   $: selectedTab = ['appearance', 'media', 'layout'].includes(activeTab) ? activeTab : 'appearance';
 
-  // Tab visibility is intentionally presentation-only. Every editor stays
-  // mounted so staged drafts, media previews, and child editor refs survive
-  // switching tabs before the dashboard publish action runs.
+  // The parent owns the canonical Studio draft. These three editors can keep
+  // ephemeral control state while mounted, but they never restore profile
+  // data from a session cache or submit a complete replacement draft.
   function forward(event) {
     dispatch(event.type, event.detail);
   }
@@ -49,36 +46,28 @@
     dispatch('premiumrequest', { sectionId: 'premium' });
   }
 
-  function normalizeDraft(value) {
-    return normalizeProfileConfig(value || profileConfig?.draft || profileConfig?.published);
-  }
-
   export function getDraftIdentity() {
     return identityEditor?.getDraftIdentity?.() || null;
   }
 
   export function validateDraft() {
-    return [identityEditor, appearanceEditor, contentEditor, widgetEditor, layoutEditor]
+    return [identityEditor, appearanceEditor, layoutEditor]
       .filter(Boolean)
       .every(editor => editor.validateDraft?.() !== false);
   }
 
   export function acceptSaved(nextConfig) {
     identityEditor?.acceptSaved?.(nextConfig);
-    const next = normalizeDraft(nextConfig);
-    appearanceEditor?.acceptSaved?.(next.appearance);
-    mediaWorkspaceEditor?.acceptSaved?.(next.appearance);
-    contentEditor?.acceptSaved?.(next);
-    widgetEditor?.acceptSaved?.(next);
-    layoutEditor?.acceptSaved?.(next);
+    const nextAppearance = nextConfig?.appearance || nextConfig;
+    appearanceEditor?.acceptSaved?.(nextAppearance);
+    mediaWorkspaceEditor?.acceptSaved?.(nextAppearance);
+    layoutEditor?.acceptSaved?.(nextConfig);
   }
 
   export function resetChanges() {
     identityEditor?.resetChanges?.();
     appearanceEditor?.resetChanges?.();
     mediaWorkspaceEditor?.resetChanges?.();
-    contentEditor?.resetChanges?.();
-    widgetEditor?.resetChanges?.();
     layoutEditor?.resetChanges?.();
   }
 </script>
@@ -115,7 +104,7 @@
           <span aria-hidden="true">01</span>
         </div>
         {#if identityComponent}
-          <svelte:component this={identityComponent} bind:this={identityEditor} profileId={profileId} username={targetProfile?.username || accountUsername} bio={targetProfile?.bio || ''} config={profileConfig} studio={true} on:identitypreview={event => forwardPatch('identity', event)} on:identitysaved={forward} on:configsaved={forward} on:dirty={event => forwardDirty('customize:identity', event)} />
+          <svelte:component this={identityComponent} bind:this={identityEditor} profileId={profileId} username={targetProfile?.username || accountUsername} bio={identityDraft?.bio ?? targetProfile?.bio ?? ''} publishedBio={targetProfile?.bio ?? ''} config={profileConfig} studio={true} on:identitypreview={event => forwardPatch('identity', event)} on:identitysaved={forward} on:configsaved={forward} on:dirty={event => forwardDirty('customize:identity', event)} />
         {:else}
           <div class="profile-customize-page__loading" role="status">Loading identity controls…</div>
         {/if}
@@ -148,45 +137,6 @@
         <svelte:component this={layoutComponent} bind:this={layoutEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} studio={true} showLinks={false} on:dirty={event => forwardDirty('customize:layout', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardPatch('layout', event)} />
       {:else}
         <div class="profile-customize-page__loading" role="status">Loading template controls…</div>
-      {/if}
-    </div>
-  </section>
-
-  <!-- Keep the legacy content editor mounted for route/ref compatibility, but
-       do not surface it in the three-tab workspace.  Media owns the complete
-       asset surface in the reference composition. -->
-  <section class="profile-customize-page__surface is-tab-hidden" aria-hidden="true" hidden={true} aria-labelledby="profile-customize-other-title" data-editor-section="other" id="customize-other">
-    <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-other-title">Other Customization</h3>
-    </div>
-
-    <div class="profile-customize-page__control-grid profile-customize-page__control-grid--other">
-      <section class="profile-customize-page__control" aria-labelledby="profile-customize-content-title" data-editor-section="content" id="customize-content">
-        <div class="profile-customize-page__control-heading">
-          <div><span class="profile-customize-page__control-kicker">Content</span><h4 id="profile-customize-content-title">About and projects</h4></div>
-          <span aria-hidden="true">02</span>
-        </div>
-        {#if contentComponent}
-          <svelte:component this={contentComponent} bind:this={contentEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('customize:content', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardPatch('content', event)} />
-        {:else}
-          <div class="profile-customize-page__loading" role="status">Loading content controls…</div>
-        {/if}
-      </section>
-
-    </div>
-  </section>
-
-  <!-- Widgets remain mounted for the legacy editor contract while Appearance
-       owns the visible, renderer-backed visual-effect cards. -->
-  <section class="profile-customize-page__surface is-tab-hidden" aria-hidden="true" hidden={true} aria-labelledby="profile-customize-widgets-title" data-editor-section="widgets" id="customize-widgets">
-    <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-widgets-title">Provider Widgets</h3>
-    </div>
-    <div class="profile-customize-page__editor">
-      {#if widgetComponent}
-        <svelte:component this={widgetComponent} bind:this={widgetEditor} profileId={profileId} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} updatedAt={profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('customize:widgets', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardPatch('widgets', event)} />
-      {:else}
-        <div class="profile-customize-page__loading" role="status">Loading widget controls…</div>
       {/if}
     </div>
   </section>
@@ -286,8 +236,6 @@
   .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
   .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); }
   .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: var(--ctp-pink, #f5c2e7); }
-  .profile-customize-page__surface[data-editor-section="other"] { --customize-section-accent: var(--ctp-peach, #fab387); }
-  .profile-customize-page__surface[data-editor-section="widgets"] { --customize-section-accent: var(--ctp-green, #a6e3a1); }
   .profile-customize-page__surface[data-editor-section="general"] .profile-customize-page__surface-heading h3 { color: var(--ctp-sky, #89dceb); }
   .profile-customize-page__surface--assets { padding: .75rem 1.05rem .5rem; }
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
@@ -311,10 +259,8 @@
 
   .profile-customize-page__control-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; min-width: 0; }
   .profile-customize-page__control-grid--general { grid-template-columns: minmax(0, 1fr); }
-  .profile-customize-page__control-grid--other { align-items: start; gap: .55rem .7rem; }
   .profile-customize-page__control { display: block; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; scroll-margin-top: 5rem; }
   .profile-customize-page__control-heading { display: none; }
-  .profile-customize-page__control[data-editor-section="content"] { grid-column: 1 / -1; }
   .profile-customize-page__editor { min-width: 0; container-type: inline-size; container-name: profile-customize-editor; }
   .profile-customize-page__loading { display: grid; min-height: 7rem; place-items: center; color: var(--customize-text-muted); font-size: var(--customize-control-size); }
 
@@ -322,44 +268,28 @@
    * shell here so the single-page workspace reads like one interface. */
   .profile-customize-page :global(.foundation-module) { width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
   .profile-customize-page :global(.foundation-module__header),
-  .profile-customize-page :global(.profile-content-editor__header),
-  .profile-customize-page :global(.profile-widget-editor__header),
   .profile-customize-page :global(.profile-editor__header),
   .profile-customize-page :global(.profile-cosmetics-heading) { display: none; }
   .profile-customize-page :global(.foundation-module__description) { display: none; }
   .profile-customize-page :global(.foundation-module__body) { padding: 0; }
   .profile-customize-page :global(.appearance-editor__heading h2),
-  .profile-customize-page :global(.profile-content-editor__panel-heading h3),
-  .profile-customize-page :global(.profile-widget-editor__panel-heading strong),
   .profile-customize-page :global(.profile-editor__panel h3),
   .profile-customize-page :global(.profile-cosmetics-controls__heading strong) { color: var(--customize-text-primary); font-size: var(--customize-subheading-size); line-height: 1.25; }
   .profile-customize-page :global(.appearance-editor__field > span),
   .profile-customize-page :global(.appearance-editor__range > span),
-  .profile-customize-page :global(.profile-content-editor__fields label > span),
-  .profile-customize-page :global(.profile-content-editor__switch),
-  .profile-customize-page :global(.profile-widget-editor__panel label > span),
-  .profile-customize-page :global(.profile-widget-editor__panel-heading label),
   .profile-customize-page :global(.profile-editor__field),
   .profile-customize-page :global(.profile-editor__link-style label),
   .profile-customize-page :global(.profile-editor__metadata label),
   .profile-customize-page :global(.profile-cosmetics-slot label) { color: var(--customize-text-secondary); font-size: var(--customize-label-size); }
   .profile-customize-page :global(.appearance-editor__heading > span),
   .profile-customize-page :global(.appearance-editor__range output),
-  .profile-customize-page :global(.profile-content-editor__fields output),
   .profile-customize-page :global(.profile-editor__version),
-  .profile-customize-page :global(.profile-editor__panel-heading > span),
-  .profile-customize-page :global(.profile-widget-editor__version) { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
+  .profile-customize-page :global(.profile-editor__panel-heading > span) { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
   .profile-customize-page :global(.profile-editor :is(input[type="text"], input[type="url"], input[type="email"], input[type="search"], input[type="number"], textarea, select)),
   .profile-customize-page :global(.appearance-editor__color-input),
-  .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)),
-  .profile-customize-page :global(.profile-widget-editor__panel :is(input, select)),
   .profile-customize-page :global(.profile-cosmetics-slot select) { border-color: var(--customize-section-input-line) !important; background: var(--customize-section-input) !important; color: var(--customize-text-primary) !important; font-size: var(--customize-control-size); }
   .profile-customize-page :global(.profile-editor :is(input[type="text"], input[type="url"], input[type="email"], input[type="search"], input[type="number"], textarea, select)),
-  .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)),
-  .profile-customize-page :global(.profile-widget-editor__panel :is(input, select)),
   .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: 2rem; font-family: var(--customize-font-body); }
-  .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)),
-  .profile-customize-page :global(.profile-widget-editor__panel :is(input, select)) { padding: .5rem .65rem; font: 500 var(--customize-control-size) / 1.35 var(--customize-font-body); }
   .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: max(var(--customize-secondary-height), 2.5rem); padding-inline: .65rem; font: 500 var(--customize-control-size) / 1 var(--customize-font-body); }
   /* Keep every text-like editor control darker than its section surface. The
    * media/color contracts stay untouched: range, swatch, file, and native
@@ -371,74 +301,28 @@
   .profile-customize-page :global(.profile-editor__link-style input[type="range"]) { accent-color: var(--customize-accent-secondary); }
   .profile-customize-page :global(input[type="checkbox"]),
   .profile-customize-page :global(input[type="radio"]) { accent-color: var(--customize-accent-primary); }
-  .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea):focus),
-  .profile-customize-page :global(.profile-widget-editor__panel :is(input, select):focus),
   .profile-customize-page :global(.profile-cosmetics-slot select:focus-visible),
   .profile-customize-page :global(.profile-editor :is(input, textarea, select):focus-visible) { border-color: var(--customize-focus) !important; box-shadow: 0 0 0 2px color-mix(in srgb, var(--customize-focus) 24%, transparent); }
   .profile-customize-page :global(.appearance-editor__hex) { color: var(--customize-text-primary) !important; font: 500 var(--customize-control-size) / 1 var(--customize-font-mono) !important; }
-  .profile-customize-page :global(.profile-editor :is(input, textarea)::placeholder),
-  .profile-customize-page :global(.profile-content-editor__fields :is(input, textarea)::placeholder),
-  .profile-customize-page :global(.profile-widget-editor__panel :is(input)::placeholder) { color: var(--customize-text-faint); }
-  .profile-customize-page :global(.profile-content-editor__fields label small),
-  .profile-customize-page :global(.profile-widget-editor__panel label small) { color: var(--customize-text-faint); font-size: .74rem; }
+  .profile-customize-page :global(.profile-editor :is(input, textarea)::placeholder) { color: var(--customize-text-faint); }
   .profile-customize-page :global(.profile-cosmetics-apply) { min-height: max(var(--customize-primary-height), 2.75rem); border: 1px solid var(--customize-accent-save) !important; border-radius: var(--customize-radius); background: var(--customize-accent-save) !important; color: var(--customize-surface-inset) !important; font: 700 var(--customize-label-size) / 1 var(--customize-font-body); }
   .profile-customize-page :global(.profile-cosmetics-apply:hover:not(:disabled)) { background: color-mix(in srgb, var(--customize-accent-save) 82%, var(--customize-text-primary)) !important; }
-  .profile-customize-page :global(.profile-content-editor__text-button),
-  .profile-customize-page :global(.profile-content-editor__remove),
-  .profile-customize-page :global(.profile-widget-editor__add),
-  .profile-customize-page :global(.profile-widget-editor__remove),
   .profile-customize-page :global(.profile-editor__text-button),
   .profile-customize-page :global(.profile-editor__remove),
   .profile-customize-page :global(.profile-editor__module-actions button),
   .profile-customize-page :global(.profile-editor__module-actions select),
   .profile-customize-page :global(.profile-expression-editor__button) { min-height: var(--customize-secondary-height) !important; border-radius: var(--customize-radius) !important; border-color: var(--customize-border-strong) !important; background: transparent !important; color: var(--customize-text-secondary) !important; font: 600 var(--customize-label-size) / 1 var(--customize-font-body) !important; }
-  .profile-customize-page :global(.profile-content-editor__text-button:hover:not(:disabled)),
-  .profile-customize-page :global(.profile-content-editor__remove:hover),
-  .profile-customize-page :global(.profile-widget-editor__add:hover:not(:disabled)),
-  .profile-customize-page :global(.profile-widget-editor__remove:hover),
   .profile-customize-page :global(.profile-editor__text-button:hover:not(:disabled)),
   .profile-customize-page :global(.profile-editor__remove:hover),
   .profile-customize-page :global(.profile-editor__module-actions button:hover:not(:disabled)),
   .profile-customize-page :global(.profile-editor__module-actions select:hover:not(:disabled)),
   .profile-customize-page :global(.profile-expression-editor__button:hover:not(:disabled)) { border-color: var(--customize-accent-secondary) !important; background: color-mix(in srgb, var(--customize-accent-secondary) 9%, transparent) !important; color: var(--customize-text-primary) !important; }
-  .profile-customize-page :global(.profile-content-editor__text-button),
-  .profile-customize-page :global(.profile-widget-editor__add) { border-color: color-mix(in srgb, var(--customize-accent-add) 62%, var(--customize-border-strong)) !important; color: var(--customize-accent-add) !important; }
-  .profile-customize-page :global(.profile-content-editor__text-button:hover:not(:disabled)),
-  .profile-customize-page :global(.profile-widget-editor__add:hover:not(:disabled)) { border-color: var(--customize-accent-add) !important; background: color-mix(in srgb, var(--customize-accent-add) 10%, transparent) !important; }
-  .profile-customize-page :global(.profile-content-editor__remove:hover),
-  .profile-customize-page :global(.profile-widget-editor__remove:hover),
   .profile-customize-page :global(.profile-editor__remove:hover) { border-color: var(--customize-accent-danger) !important; background: color-mix(in srgb, var(--customize-accent-danger) 9%, transparent) !important; color: var(--customize-accent-danger) !important; }
-  .profile-customize-page :global(.profile-content-editor__text-button:disabled),
-  .profile-customize-page :global(.profile-widget-editor__add:disabled),
   .profile-customize-page :global(.profile-cosmetics-apply:disabled) { cursor: not-allowed; opacity: .45; }
   .profile-customize-page :global(.profile-cosmetics-apply:focus-visible) { outline: 2px solid var(--customize-focus); outline-offset: 2px; }
-  .profile-customize-page :global(.profile-content-editor),
-  .profile-customize-page :global(.profile-widget-editor),
   .profile-customize-page :global(.profile-editor) { gap: .65rem; }
-  .profile-customize-page :global(.profile-content-editor__panel),
-  .profile-customize-page :global(.profile-widget-editor__panel),
   .profile-customize-page :global(.profile-editor__panel) { padding: .65rem 0; border: 0; border-top: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
-  .profile-customize-page :global(.profile-content-editor) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
-  .profile-customize-page :global(.profile-content-editor__panel) { padding: .45rem 0; }
-  .profile-customize-page :global(.profile-content-editor__panel:first-of-type) { grid-column: 1 / -1; }
-  .profile-customize-page :global(.profile-content-editor__panel:nth-of-type(2)) { grid-column: 1 / -1; }
-  .profile-customize-page :global(.profile-content-editor__panel-heading) { margin-bottom: .55rem; }
-  .profile-customize-page :global(.profile-content-editor__fields) { gap: .55rem; }
-  .profile-customize-page :global(.profile-content-editor__panel:first-of-type .profile-content-editor__fields) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
-  .profile-customize-page :global(.profile-content-editor__project) { gap: .55rem; padding: .65rem; border-color: var(--customize-border-subtle) !important; border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
-  .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; }
-  .profile-customize-page :global(.profile-content-editor__helper),
-  .profile-customize-page :global(.profile-content-editor__hint),
-  .profile-customize-page :global(.profile-widget-editor__hint),
   .profile-customize-page :global(.profile-editor__hint) { display: none; }
-  .profile-customize-page :global(.profile-widget-editor) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .65rem; }
-  .profile-customize-page :global(.profile-widget-editor__list) { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
-  .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; padding: .55rem; border-color: var(--customize-border-subtle) !important; border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
-  .profile-customize-page :global(.profile-widget-editor__panel-heading),
-  .profile-customize-page :global(.profile-widget-editor__helper),
-  .profile-customize-page :global(.profile-widget-editor__remove) { grid-column: 1 / -1; }
-  .profile-customize-page :global(.profile-widget-editor__add) { grid-column: 1; }
-  .profile-customize-page :global(.profile-widget-editor__note) { grid-column: 1 / -1; display: none; }
   .profile-customize-page :global(.profile-editor__panel) { gap: .6rem; padding: .5rem 0; }
   .profile-customize-page :global(.profile-editor__layout-options) { gap: .85rem; padding: .85rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
   .profile-customize-page :global(.profile-editor__layout-options .profile-editor__segmented-field > div) { min-height: var(--customize-secondary-height); }
@@ -449,25 +333,17 @@
   .profile-customize-page :global(.rich-media-editor__asset),
   .profile-customize-page :global(.rich-media-editor__track),
   .profile-customize-page :global(.profile-editor__module-list li) { border-color: var(--customize-border-subtle) !important; }
-  .profile-customize-page :global(.profile-widget-editor__empty) { border-color: var(--customize-border-strong) !important; background: var(--customize-surface-deep); }
-  .profile-customize-page :global(.profile-content-editor__message),
-  .profile-customize-page :global(.profile-widget-editor__message),
   .profile-customize-page :global(.rich-media-editor__message),
   .profile-customize-page :global(.appearance-editor__message) { color: var(--customize-text-muted); font-size: var(--customize-label-size); }
   .profile-customize-page :global([role="alert"]) { color: var(--customize-accent-danger); }
   @media (max-width: 72rem) {
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 52rem) {
     .profile-customize-page { padding-inline: 0; overflow-x: clip; }
     .profile-customize-page__control-grid { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.profile-widget-editor__list),
     .profile-customize-page :global(.profile-editor__module-list),
-    .profile-customize-page :global(.profile-content-editor__fields),
-    .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields),
-    .profile-customize-page :global(.profile-widget-editor__panel),
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page__surface { padding-inline: .75rem; }
   }
@@ -475,11 +351,7 @@
   @media (max-width: 38rem) {
     .profile-customize-page__surface, .profile-customize-page__surface--assets { padding: .75rem; }
     .profile-customize-page__surface-heading { align-items: flex-start; flex-direction: column; }
-    .profile-customize-page :global(.profile-content-editor__panel:first-of-type .profile-content-editor__fields) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.profile-content-editor), .profile-customize-page :global(.profile-widget-editor) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.profile-content-editor__panel:nth-of-type(2)), .profile-customize-page :global(.profile-widget-editor__list) { grid-column: auto; }
-    .profile-customize-page :global(.profile-content-editor__project .profile-content-editor__fields), .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.profile-widget-editor__panel) { grid-template-columns: minmax(0, 1fr); }
+    .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
     .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { height: auto; }
     .profile-customize-page__premium-banner { min-height: 5.6rem; padding-inline: 2.2rem; text-align: center; }

@@ -1,5 +1,19 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-13 — Keep Profile Studio draft state canonical across refreshes
+
+Profile Studio editors no longer persist or restore profile-data drafts through
+session/view state. Identity, Layout, Content, and Widget editors initialize
+from the parent-owned `studioDraft` (and `studioIdentityDraft` where relevant)
+and emit only their existing scoped user-edit patches. Session state remains
+available for UI-only surfaces such as Discovery filters and Shop navigation.
+
+Customize now mounts only its supported Appearance, Media, Layout, collection,
+and identity controls; legacy Content and Widget editors remain available to
+their explicit routes but are not loaded invisibly, validated, or allowed to
+change Studio state during Customize mount. A hard refresh intentionally
+discards unpublished local edits and reloads the server-backed draft.
+
 ## 2026-08-12 — Finish the small Studio ownership cleanup
 
 Layout patches now own only the alignment field inside `linkStyle`; the Links

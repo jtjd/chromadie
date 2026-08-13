@@ -892,6 +892,81 @@ try {
     return state;
   });
 
+  await step('Profile Studio ignores stale per-editor session drafts after refresh', async () => {
+    await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-surface="true"]')`, 'initial Studio profile surface before stale-session test');
+    const baselineSurface = await page.evaluate(`(() => {
+      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
+      const style = surface ? getComputedStyle(surface) : null;
+      return style ? {
+        backgroundColor: style.backgroundColor,
+        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
+        surface: style.getPropertyValue('--profile-surface').trim(),
+        fill: style.getPropertyValue('--profile-surface-fill').trim(),
+        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
+        blur: style.getPropertyValue('--profile-surface-blur').trim()
+      } : null;
+    })()`);
+    assert(baselineSurface, 'Could not read the saved Studio profile surface before stale-session test.');
+    const injected = await page.evaluate(`(() => {
+      const session = Object.values(localStorage)
+        .map(value => { try { return JSON.parse(value); } catch { return null; } })
+        .find(value => value?.access_token && value?.user?.id);
+      const scope = session?.user?.id || '';
+      if (!scope) return { scope: '', keys: [] };
+      const prefix = 'chromadie-view-state:';
+      const staleDraft = JSON.stringify({
+        draft: {
+          layoutVariant: 'modern',
+          appearance: { surface: { color: '#111111', opacity: 12, blur: 40 } }
+        }
+      });
+      const staleIdentity = JSON.stringify({ bio: 'stale session identity', presentation: { avatarPosition: 'side' } });
+      const staleWidgets = JSON.stringify({ widgets: [{ provider: 'youtube', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', visible: true, order: 0 }] });
+      const entries = [
+        ['profile-editor', staleDraft],
+        ['profile-content-editor', staleDraft],
+        ['profile-widget-editor', staleWidgets],
+        ['profile-identity-editor', staleIdentity]
+      ];
+      entries.forEach(([namespace, value]) => sessionStorage.setItem(prefix + namespace + ':' + scope, value));
+      return { scope, keys: entries.map(([namespace]) => prefix + namespace + ':' + scope) };
+    })()`);
+    assert(injected.scope && injected.keys.length === 4, `Could not seed stale Studio session state: ${JSON.stringify(injected)}.`);
+
+    await page.command('Page.reload', { ignoreCache: true });
+    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-preview .profile-shell-page--preview') && document.querySelector('.profile-dashboard-actions')`, 'stale-session Studio hydration');
+    await delay(300);
+    const state = await page.evaluate(`(() => {
+      const shell = document.querySelector('.profile-studio-preview .profile-shell-page--preview');
+      const actions = document.querySelector('.profile-dashboard-actions');
+      return {
+        layout: shell?.dataset.profileLayout || '',
+        dirty: Boolean(actions?.querySelector('.profile-dashboard-actions__state--dirty')),
+        saved: actions?.querySelector('.profile-dashboard-actions__saved')?.textContent?.trim() || '',
+        hiddenLegacyEditors: document.querySelectorAll('.profile-content-editor, .profile-widget-editor').length,
+        surface: (() => {
+          const boundary = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
+          const style = boundary ? getComputedStyle(boundary) : null;
+          return style ? {
+            backgroundColor: style.backgroundColor,
+            backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
+            surface: style.getPropertyValue('--profile-surface').trim(),
+            fill: style.getPropertyValue('--profile-surface-fill').trim(),
+            opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
+            blur: style.getPropertyValue('--profile-surface-blur').trim()
+          } : null;
+        })(),
+        preview: Boolean(shell)
+      };
+    })()`);
+    assert(state.preview && state.layout === 'compact', `Stale editor session state changed the initial Studio layout: ${JSON.stringify(state)}.`);
+    assert(!state.dirty && state.saved === 'All changes saved', `Stale editor session state changed dirty status: ${JSON.stringify(state)}.`);
+    assert(state.hiddenLegacyEditors === 0, `Hidden legacy editors still mounted in Customize: ${JSON.stringify(state)}.`);
+    assert(JSON.stringify(state.surface) === JSON.stringify(baselineSurface), `Stale editor session state changed the saved surface: ${JSON.stringify({ baseline: baselineSurface, afterRefresh: state.surface })}.`);
+    await page.evaluate(`(() => ${JSON.stringify(injected.keys)}.forEach(key => sessionStorage.removeItem(key)))()`);
+    return state;
+  });
+
   await step('create an alias and resolve its direct-refresh path', async () => {
     const alias = `alias_${Date.now().toString(36).slice(-10)}`;
     await page.navigate(`${appUrl}/profile/settings#profile-aliases`, 'Profile aliases');

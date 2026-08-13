@@ -1,5 +1,18 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio lifecycle cleanup — 2026-08-13
+
+- Removed whole-profile session/view-state persistence and mount-time restores
+  from Identity, Layout, Content, and Widget editors.
+- ProfileSettings now passes the live canonical `studioDraft` into editor
+  configuration props, while identity controls receive `studioIdentityDraft`;
+  editor-local state cannot resurrect unpublished profile data after refresh.
+- Customize no longer loads or mounts hidden legacy Content/Widget editors, so
+  their stale state cannot make the preview dirty or block Publish invisibly.
+- Retained view state only for UI preferences in Discovery and Shop. Added
+  source and production-browser regressions for stale session injection,
+  delayed mount stability, clean-state parity, and hidden-editor absence.
+
 ## Studio ownership cleanup — 2026-08-12
 
 - Layout patches preserve all Link Style fields except alignment, preventing
