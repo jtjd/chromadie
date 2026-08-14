@@ -9,6 +9,12 @@ Document user-visible redesign changes by milestone.
 - Kept the rehearsal gate on browser routes while allowing only the authenticated
   cleanup scheduler request to reach its server-only endpoint.
 
+## 2026-08-14 — Isolate the first R2 media canary
+
+- Added an R2-only UUID allowlist so the first production media canary does not
+  require changing the general M13 rollout stage.
+- Users outside the explicit allowlist continue using the existing media path.
+
 ## 2026-08-13 — Add modern Supabase key compatibility
 
 - Browser configuration prefers `VITE_SUPABASE_PUBLISHABLE_KEY`.

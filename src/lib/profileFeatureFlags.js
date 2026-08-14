@@ -37,6 +37,7 @@ export const ROLLOUT_STAGES = Object.freeze(['off', 'staff', 'internal', 'cohort
 const BUILD_ENV = {
   stage: import.meta.env?.VITE_CHROMADIE_ROLLOUT_STAGE,
   internalIds: import.meta.env?.VITE_CHROMADIE_INTERNAL_IDS,
+  profileMediaR2CanaryIds: import.meta.env?.VITE_PROFILE_MEDIA_R2_CANARY_IDS,
   cohortPercent: import.meta.env?.VITE_CHROMADIE_COHORT_PERCENT,
   flags: [
     import.meta.env?.VITE_CHROMADIE_FLAG_COMMERCE,
@@ -121,6 +122,10 @@ export function resolveProfileFeatureFlags(options = {}) {
     ...parseInternalIds(env?.VITE_CHROMADIE_INTERNAL_IDS ?? BUILD_ENV.internalIds),
     ...parseInternalIds(options.internalIds)
   ];
+  const profileMediaR2CanaryIds = parseInternalIds(
+    env?.VITE_PROFILE_MEDIA_R2_CANARY_IDS ?? BUILD_ENV.profileMediaR2CanaryIds
+  );
+  const profileMediaR2CanarySet = new Set(profileMediaR2CanaryIds);
   const audience = resolveAudience({
     stage,
     userId: options.userId,
@@ -139,7 +144,10 @@ export function resolveProfileFeatureFlags(options = {}) {
   for (const [index, key] of FEATURE_FLAG_KEYS.entries()) {
     const defaultValue = FEATURE_FLAG_DEFAULTS[key];
     const configured = parseFeatureFlag(env ? env[FEATURE_FLAG_ENV_KEYS[key]] : BUILD_ENV.flags[index], defaultValue);
-    flags[key] = Boolean(audience.eligible && configured);
+    const eligible = key === 'profileMediaR2' && profileMediaR2CanarySet.size > 0
+      ? profileMediaR2CanarySet.has(audience.userId)
+      : audience.eligible;
+    flags[key] = Boolean(eligible && configured);
   }
   return Object.freeze({ ...flags, rolloutStage: audience.stage, audience });
 }

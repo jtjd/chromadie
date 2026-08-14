@@ -3525,6 +3525,14 @@ retirement remain disabled pending external Cloudflare/R2 and network audits.
 - Normal live route smoke is still blocked by the existing maintenance gate, so
   the single-account canary remains a separate next step.
 
+## 2026-08-14 — Add the isolated R2 production canary gate
+
+- Added `VITE_PROFILE_MEDIA_R2_CANARY_IDS` as an R2-only UUID allowlist.
+- With the allowlist populated, only the exact listed Auth UUID receives the
+  R2 media path; the general rollout stage and unrelated flags are unchanged.
+- Added regressions for disabled, allowlisted, non-allowlisted, anonymous, and
+  unrelated-feature behavior.
+
 ## 2026-08-13 — Final R2 correctness gate
 
 - Guarded every legacy-path selection comparison with a non-NULL asset path and

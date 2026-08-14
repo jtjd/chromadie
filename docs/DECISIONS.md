@@ -4583,6 +4583,15 @@ is therefore allowed through the gate only for a POST carrying the configured
 cleanup secret; the cleanup handler performs the same authorization check
 again. Invalid or browser-originated requests remain behind the gate, and no
 profile-media rollout flag is enabled by this exception.
+
+## 2026-08-14 — Use an R2-specific UUID canary instead of the global rollout stage
+
+The general M13 rollout stage controls multiple unrelated profile features, so
+it is not safe for the first production R2 canary. When
+`VITE_PROFILE_MEDIA_R2_CANARY_IDS` is non-empty, `profileMediaR2` requires an
+exact normalized Auth UUID from that list while all other feature flags keep
+using the existing audience resolver. An empty list preserves the existing
+general rollout behavior for a later intentional broad rollout.
 ## 2026-08-13 — Gate R2 media enablement on control-plane hardening
 
 R2 profile-media uploads remain disabled until deterministic SigV4 coverage and

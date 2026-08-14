@@ -101,7 +101,11 @@ The control-plane endpoints are:
 
 The feature flag `VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2` keeps new browser
 uploads opt-in while the provider-neutral resolver can already read promoted
-R2 assets. The existing Studio state contract is unchanged:
+R2 assets. For a narrow canary, set
+`VITE_PROFILE_MEDIA_R2_CANARY_IDS` to a comma-separated list of explicit Auth
+UUIDs; when that list is non-empty, only those UUIDs can receive the R2 path.
+This is R2-specific and does not change the general rollout stage or unrelated
+feature flags. The existing Studio state contract is unchanged:
 
 ```text
 scoped editor patch → canonical studioDraft → render snapshot → ProfileShell

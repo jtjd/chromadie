@@ -71,6 +71,30 @@ test('M13 rollout flags are audience-scoped and independently reversible', () =>
   assert.deepEqual(FEATURE_FLAG_KEYS, ['commerce', 'richMedia', 'profileMediaR2', 'profileConfigurationV2', 'expandedAnalytics', 'socialDepth']);
 });
 
+test('R2 media can be enabled for one UUID without changing unrelated rollout flags', () => {
+  const canaryId = 'c177316f-415a-48ad-8e4e-901fc6766693';
+  const canaryEnv = {
+    VITE_CHROMADIE_ROLLOUT_STAGE: 'all',
+    VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2: 'true',
+    VITE_PROFILE_MEDIA_R2_CANARY_IDS: canaryId
+  };
+
+  assert.equal(resolveProfileFeatureFlags({
+    env: { ...canaryEnv, VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2: 'false' },
+    userId: canaryId
+  }).profileMediaR2, false);
+  assert.equal(resolveProfileFeatureFlags({ env: canaryEnv, userId: canaryId }).profileMediaR2, true);
+  assert.equal(resolveProfileFeatureFlags({ env: canaryEnv, userId: 'not-the-canary' }).profileMediaR2, false);
+  assert.equal(resolveProfileFeatureFlags({ env: canaryEnv }).profileMediaR2, false);
+
+  const unrelated = resolveProfileFeatureFlags({ env: canaryEnv, userId: canaryId });
+  assert.equal(unrelated.commerce, true);
+  assert.equal(unrelated.richMedia, true);
+  assert.equal(unrelated.profileConfigurationV2, true);
+  assert.equal(unrelated.expandedAnalytics, true);
+  assert.equal(unrelated.socialDepth, true);
+});
+
 test('M13 client surfaces retain reversible gates and V1 fallbacks', async () => {
   const [pricing, expression, settings, contract, workspace, shell, renderModel, data, social, env, operations, milestone] = await Promise.all([
     read('src/lib/Pricing.svelte'),
@@ -101,7 +125,7 @@ test('M13 client surfaces retain reversible gates and V1 fallbacks', async () =>
   assert.match(data, /normalizeProfileConfig\(configResponse\.data/);
   assert.match(social, /export let socialDepthEnabled = true/);
   assert.match(social, /depthEnabled/);
-  for (const key of ['VITE_CHROMADIE_ROLLOUT_STAGE', 'VITE_CHROMADIE_FLAG_COMMERCE', 'VITE_CHROMADIE_FLAG_RICH_MEDIA', 'VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2', 'VITE_CHROMADIE_FLAG_EXPANDED_ANALYTICS', 'VITE_CHROMADIE_FLAG_SOCIAL_DEPTH']) {
+  for (const key of ['VITE_CHROMADIE_ROLLOUT_STAGE', 'VITE_CHROMADIE_FLAG_COMMERCE', 'VITE_CHROMADIE_FLAG_RICH_MEDIA', 'VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2', 'VITE_PROFILE_MEDIA_R2_CANARY_IDS', 'VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2', 'VITE_CHROMADIE_FLAG_EXPANDED_ANALYTICS', 'VITE_CHROMADIE_FLAG_SOCIAL_DEPTH']) {
     assert.match(env, new RegExp(key));
   }
   for (const table of ['billing_webhook_events', 'profile_media_assets', 'profile_insight_daily', 'profile_reports']) {
