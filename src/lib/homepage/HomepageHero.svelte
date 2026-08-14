@@ -9,10 +9,14 @@
   export let accountUnavailable = false;
 
   const dispatch = createEventDispatcher();
-  const PROFILE_TILT_MAX_Y = 12;
-  const PROFILE_TILT_MAX_X = 7;
-  const PREVIEW_ROLL_TICK_MS = 90;
-  const PREVIEW_ROLL_TICKS = 7;
+  const PROFILE_TILT_RESTING = Object.freeze({ x: 4, y: -8 });
+  const PROFILE_TILT_MAX_Y = 14;
+  const PROFILE_TILT_MAX_X = 8;
+  const PROFILE_TILT_LERP = 0.19;
+  const PREVIEW_ROLL_DELAYS = Object.freeze([76, 78, 82, 88, 100, 116, 136]);
+  const PREVIEW_ROLL_TICKS = PREVIEW_ROLL_DELAYS.length + 1;
+  const LAND_DURATION_MS = 36;
+  const IMPACT_DURATION_MS = 1120;
   const PREVIEW_ROLLS = Object.freeze([
     Object.freeze({ hex_code: '#D8A6FF', score: 74231, rarity: 'Rare', identity: 'Soft Electric Orchid' }),
     Object.freeze({ hex_code: '#78DCCA', score: 38642, rarity: 'Uncommon', identity: 'Luminous Mint Tide' }),
@@ -23,64 +27,88 @@
     Object.freeze({ hex_code: '#C99CFF', score: 68415, rarity: 'Rare', identity: 'Vivid Violet Haze' })
   ]);
   const PROFILE_PARTICLES = Object.freeze([
-    [-118, -96, 0], [-72, -132, 35], [-18, -118, 70], [52, -128, 20], [112, -82, 60],
-    [132, -14, 10], [108, 74, 55], [42, 118, 25], [-32, 124, 65], [-102, 82, 40], [-132, 12, 75]
+    Object.freeze({ x: -142, y: -116, size: 7, delay: 0, bright: true }),
+    Object.freeze({ x: -118, y: -46, size: 5, delay: 32, bright: false }),
+    Object.freeze({ x: -102, y: 82, size: 8, delay: 58, bright: false }),
+    Object.freeze({ x: -72, y: -142, size: 4, delay: 84, bright: true }),
+    Object.freeze({ x: -54, y: 126, size: 6, delay: 112, bright: false }),
+    Object.freeze({ x: -18, y: -128, size: 9, delay: 142, bright: true }),
+    Object.freeze({ x: 12, y: 148, size: 5, delay: 176, bright: false }),
+    Object.freeze({ x: 46, y: -138, size: 6, delay: 204, bright: false }),
+    Object.freeze({ x: 72, y: 126, size: 8, delay: 236, bright: true }),
+    Object.freeze({ x: 104, y: -98, size: 5, delay: 264, bright: false }),
+    Object.freeze({ x: 132, y: -30, size: 7, delay: 292, bright: true }),
+    Object.freeze({ x: 148, y: 54, size: 4, delay: 324, bright: false }),
+    Object.freeze({ x: 118, y: 98, size: 6, delay: 348, bright: false }),
+    Object.freeze({ x: 84, y: 154, size: 9, delay: 378, bright: true }),
+    Object.freeze({ x: 32, y: 112, size: 5, delay: 406, bright: false }),
+    Object.freeze({ x: -2, y: -156, size: 6, delay: 438, bright: false }),
+    Object.freeze({ x: -86, y: -104, size: 8, delay: 468, bright: true }),
+    Object.freeze({ x: -136, y: 28, size: 5, delay: 496, bright: false }),
+    Object.freeze({ x: -126, y: 134, size: 7, delay: 524, bright: false }),
+    Object.freeze({ x: 58, y: 72, size: 4, delay: 556, bright: true })
   ]);
   let fixtureIndex = 0;
   let profileTiltEnabled = false;
   let prefersReducedMotion = false;
+  let profileTiltReturning = false;
   let profileTiltStyle = '';
+  let tiltFrame;
+  let tiltReturnTimer;
+  let targetTiltX = PROFILE_TILT_RESTING.x;
+  let targetTiltY = PROFILE_TILT_RESTING.y;
+  let currentTiltX = PROFILE_TILT_RESTING.x;
+  let currentTiltY = PROFILE_TILT_RESTING.y;
   let previewRoll = null;
   let previewRollTimer;
+  let impactTimer;
   let previewRollCount = 0;
-  let isPreviewRolling = false;
+  let rollPhase = 'idle';
   let hasPreviewRolled = false;
-  let profilePopActive = false;
-  let particleBurstActive = false;
-  let profilePopTimer;
-  let particleBurstTimer;
 
   $: fixture = HOMEPAGE_FIXTURES[fixtureIndex];
   $: exampleNumber = String(fixtureIndex + 1).padStart(2, '0');
   $: latestRoll = previewRoll || fixture.scores[0];
-  $: previewRollButtonLabel = isPreviewRolling ? 'Rolling…' : hasPreviewRolled ? 'Roll again' : 'Preview a roll';
+  $: isPreviewRolling = rollPhase !== 'idle';
+  $: previewRollButtonLabel = rollPhase === 'spin' ? 'Rolling…' : hasPreviewRolled ? 'Roll again' : 'Preview a roll';
+  $: profileImpactActive = rollPhase === 'impact';
+  $: particleBurstActive = rollPhase === 'impact';
 
   function clearPreviewRollTimers() {
     clearTimeout(previewRollTimer);
-    clearTimeout(profilePopTimer);
-    clearTimeout(particleBurstTimer);
+    clearTimeout(impactTimer);
     previewRollTimer = undefined;
-    profilePopTimer = undefined;
-    particleBurstTimer = undefined;
+    impactTimer = undefined;
   }
 
-  function setPreviewRoll(result) {
+  function setLocalPreviewRoll(result) {
     previewRoll = result;
-    dispatch('accentpreview', { accent: result.hex_code });
   }
 
   function finishPreviewRoll() {
     const finalRoll = PREVIEW_ROLLS[(previewRollCount * 3 + 4) % PREVIEW_ROLLS.length];
     previewRollCount += 1;
-    setPreviewRoll(finalRoll);
-    isPreviewRolling = false;
+    setLocalPreviewRoll(finalRoll);
     hasPreviewRolled = true;
+    rollPhase = 'land';
+    dispatch('accentpreview', { accent: finalRoll.hex_code });
 
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion) {
+      rollPhase = 'idle';
+      return;
+    }
 
-    profilePopActive = true;
-    particleBurstActive = true;
-    profilePopTimer = setTimeout(() => { profilePopActive = false; }, 420);
-    particleBurstTimer = setTimeout(() => { particleBurstActive = false; }, 720);
+    impactTimer = setTimeout(() => {
+      rollPhase = 'impact';
+      impactTimer = setTimeout(() => { rollPhase = 'idle'; }, IMPACT_DURATION_MS);
+    }, LAND_DURATION_MS);
   }
 
   function previewDailyRoll() {
     if (isPreviewRolling) return;
 
     clearPreviewRollTimers();
-    isPreviewRolling = true;
-    profilePopActive = false;
-    particleBurstActive = false;
+    rollPhase = 'spin';
 
     if (prefersReducedMotion) {
       finishPreviewRoll();
@@ -88,7 +116,7 @@
     }
 
     let tick = 0;
-    setPreviewRoll(PREVIEW_ROLLS[previewRollCount % PREVIEW_ROLLS.length]);
+    setLocalPreviewRoll(PREVIEW_ROLLS[previewRollCount % PREVIEW_ROLLS.length]);
     function advancePreviewRoll() {
       tick += 1;
       if (tick >= PREVIEW_ROLL_TICKS) {
@@ -96,19 +124,17 @@
         finishPreviewRoll();
         return;
       }
-      setPreviewRoll(PREVIEW_ROLLS[(previewRollCount + tick) % PREVIEW_ROLLS.length]);
-      previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_TICK_MS);
+      setLocalPreviewRoll(PREVIEW_ROLLS[(previewRollCount + tick) % PREVIEW_ROLLS.length]);
+      previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_DELAYS[tick]);
     }
-    previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_TICK_MS);
+    previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_DELAYS[0]);
   }
 
   function moveFixture(direction) {
     clearPreviewRollTimers();
     previewRoll = null;
-    isPreviewRolling = false;
+    rollPhase = 'idle';
     hasPreviewRolled = false;
-    profilePopActive = false;
-    particleBurstActive = false;
     fixtureIndex = (fixtureIndex + direction + HOMEPAGE_FIXTURES.length) % HOMEPAGE_FIXTURES.length;
     dispatch('fixturechange', { fixture: HOMEPAGE_FIXTURES[fixtureIndex] });
   }
@@ -117,21 +143,67 @@
     dispatch(event.type, event.detail);
   }
 
-  function handleHeroPointerMove(event) {
+  function writeTiltStyle() {
+    const shadowX = (-currentTiltY * 0.65).toFixed(2);
+    const shadowY = (currentTiltX * 0.35).toFixed(2);
+    const highlightX = (50 + currentTiltY * 1.7).toFixed(2);
+    const highlightY = (28 - currentTiltX * 1.25).toFixed(2);
+    profileTiltStyle = `--profile-tilt-y: ${currentTiltY.toFixed(2)}deg; --profile-tilt-x: ${currentTiltX.toFixed(2)}deg; --profile-shadow-x: ${shadowX}px; --profile-shadow-y: ${shadowY}px; --profile-highlight-x: ${highlightX}%; --profile-highlight-y: ${highlightY}%;`;
+  }
+
+  function animateTilt() {
+    tiltFrame = undefined;
+    currentTiltX += (targetTiltX - currentTiltX) * PROFILE_TILT_LERP;
+    currentTiltY += (targetTiltY - currentTiltY) * PROFILE_TILT_LERP;
+    writeTiltStyle();
+
+    if (Math.abs(targetTiltX - currentTiltX) > 0.02 || Math.abs(targetTiltY - currentTiltY) > 0.02) {
+      tiltFrame = requestAnimationFrame(animateTilt);
+    }
+  }
+
+  function scheduleTiltFrame() {
+    if (tiltFrame === undefined) tiltFrame = requestAnimationFrame(animateTilt);
+  }
+
+  function handleViewportPointerMove(event) {
     if (!profileTiltEnabled || event.pointerType === 'touch') return;
 
-    const bounds = event.currentTarget.getBoundingClientRect();
-    if (!bounds.width || !bounds.height) return;
+    clearTimeout(tiltReturnTimer);
+    profileTiltReturning = false;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    if (!viewportWidth || !viewportHeight) return;
 
-    const pointerX = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
-    const pointerY = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
-    const rotateY = ((pointerX - 0.5) * PROFILE_TILT_MAX_Y * 2).toFixed(2);
-    const rotateX = ((0.5 - pointerY) * PROFILE_TILT_MAX_X * 2).toFixed(2);
-    profileTiltStyle = `transform: rotateY(${rotateY}deg) rotateX(${rotateX}deg);`;
+    const pointerX = Math.max(-0.5, Math.min(0.5, event.clientX / viewportWidth - 0.5));
+    const pointerY = Math.max(-0.5, Math.min(0.5, event.clientY / viewportHeight - 0.5));
+    targetTiltY = pointerX * PROFILE_TILT_MAX_Y * 2;
+    targetTiltX = -pointerY * PROFILE_TILT_MAX_X * 2;
+    scheduleTiltFrame();
+  }
+
+  function handleViewportPointerOut(event) {
+    if (!event.relatedTarget) resetProfileTilt();
   }
 
   function resetProfileTilt() {
-    profileTiltStyle = '';
+    if (!profileTiltEnabled) return;
+    clearTimeout(tiltReturnTimer);
+    if (tiltFrame !== undefined) {
+      cancelAnimationFrame(tiltFrame);
+      tiltFrame = undefined;
+    }
+    targetTiltX = PROFILE_TILT_RESTING.x;
+    targetTiltY = PROFILE_TILT_RESTING.y;
+    currentTiltX = PROFILE_TILT_RESTING.x;
+    currentTiltY = PROFILE_TILT_RESTING.y;
+    profileTiltStyle = `--profile-tilt-y: ${PROFILE_TILT_RESTING.y}deg; --profile-tilt-x: ${PROFILE_TILT_RESTING.x}deg; --profile-shadow-x: 0px; --profile-shadow-y: 0px; --profile-highlight-x: 50%; --profile-highlight-y: 28%;`;
+    profileTiltReturning = true;
+    tiltReturnTimer = setTimeout(() => {
+      profileTiltReturning = false;
+      profileTiltStyle = '';
+      tiltReturnTimer = undefined;
+    }, 560);
   }
 
   onMount(() => {
@@ -142,16 +214,30 @@
     function updateTiltAvailability() {
       prefersReducedMotion = reducedMotion.matches;
       profileTiltEnabled = finePointer.matches && desktopHero.matches && !reducedMotion.matches;
-      if (!profileTiltEnabled) resetProfileTilt();
+      if (!profileTiltEnabled) {
+        clearTimeout(tiltReturnTimer);
+        if (tiltFrame !== undefined) cancelAnimationFrame(tiltFrame);
+        tiltFrame = undefined;
+        profileTiltReturning = false;
+        profileTiltStyle = '';
+      }
     }
 
     updateTiltAvailability();
+    window.addEventListener('pointermove', handleViewportPointerMove, { passive: true });
+    window.addEventListener('pointerout', handleViewportPointerOut, { passive: true });
+    window.addEventListener('blur', resetProfileTilt);
     finePointer.addEventListener('change', updateTiltAvailability);
     desktopHero.addEventListener('change', updateTiltAvailability);
     reducedMotion.addEventListener('change', updateTiltAvailability);
 
     return () => {
       clearPreviewRollTimers();
+      clearTimeout(tiltReturnTimer);
+      if (tiltFrame !== undefined) cancelAnimationFrame(tiltFrame);
+      window.removeEventListener('pointermove', handleViewportPointerMove);
+      window.removeEventListener('pointerout', handleViewportPointerOut);
+      window.removeEventListener('blur', resetProfileTilt);
       finePointer.removeEventListener('change', updateTiltAvailability);
       desktopHero.removeEventListener('change', updateTiltAvailability);
       reducedMotion.removeEventListener('change', updateTiltAvailability);
@@ -163,8 +249,7 @@
   class="homepage-hero homepage-shell"
   id="top"
   aria-labelledby="homepage-title"
-  on:pointermove={handleHeroPointerMove}
-  on:pointerleave={resetProfileTilt}
+  style={`--homepage-roll-accent: ${latestRoll.hex_code}; --homepage-roll-accent-glow: color-mix(in srgb, ${latestRoll.hex_code} 28%, transparent);`}
 >
   <div class="homepage-hero__copy">
     <div class="homepage-eyebrow">A profile that changes every day</div>
@@ -199,17 +284,21 @@
       <button class="homepage-theme-button homepage-theme-button--prev" type="button" aria-label="Previous profile example" on:click={() => moveFixture(-1)}>‹</button>
       <div
         class="homepage-profile-wrap"
+        class:homepage-profile-wrap--returning={profileTiltReturning}
         role="presentation"
         style={profileTiltStyle}
       >
-        <div class="homepage-profile-pop" class:homepage-profile-pop--active={profilePopActive}>
-          <HomepageProfileDemo fixture={fixture} {previewRoll} />
+        <div class="homepage-profile-pop" class:homepage-profile-pop--active={profileImpactActive}>
+          <HomepageProfileDemo fixture={fixture} {previewRoll} impactActive={profileImpactActive} />
         </div>
       </div>
       {#if particleBurstActive}
         <div class="homepage-roll-particles" aria-hidden="true">
           {#each PROFILE_PARTICLES as particle (particle)}
-            <span style={`--particle-x: ${particle[0]}px; --particle-y: ${particle[1]}px; --particle-delay: ${particle[2]}ms;`}></span>
+            <span
+              class:homepage-roll-particle--bright={particle.bright}
+              style={`--particle-x: ${particle.x}px; --particle-y: ${particle.y}px; --particle-size: ${particle.size}px; --particle-delay: ${particle.delay}ms;`}
+            ></span>
           {/each}
         </div>
       {/if}
@@ -280,7 +369,7 @@
     text-shadow: 0 8px 40px rgba(0, 0, 0, 0.55);
   }
 
-  .homepage-hero h1 span { display: block; color: var(--homepage-accent); }
+  .homepage-hero h1 span { display: block; color: var(--homepage-roll-accent, var(--homepage-accent)); }
 
   .homepage-hero__lede {
     max-width: 330px;
@@ -302,7 +391,7 @@
   .homepage-roll-compact__top strong { display: block; color: var(--homepage-text); font: 600 0.82rem / 1.1 'Clash Display', sans-serif; }
   .homepage-roll-compact__top span:not(.homepage-roll-compact__dot) { display: block; max-width: 220px; margin-top: 3px; color: var(--homepage-muted); font: 400 0.72rem / 1.35 'Inter', sans-serif; }
   .homepage-roll-compact__result { display: flex; align-items: center; gap: 7px; color: var(--homepage-muted); font: 500 0.68rem / 1 'Clash Display', sans-serif; }
-  .homepage-roll-compact__dot { width: 9px; height: 9px; border-radius: 999px; box-shadow: 0 0 12px var(--homepage-accent-glow); }
+  .homepage-roll-compact__dot { width: 9px; height: 9px; border-radius: 999px; box-shadow: 0 0 12px var(--homepage-roll-accent-glow, var(--homepage-accent-glow)); }
   .homepage-roll-compact__meta { display: flex; justify-content: space-between; gap: 14px; margin-top: 12px; color: var(--homepage-muted); font: 400 0.68rem / 1.2 'Inter', sans-serif; }
   .homepage-roll-compact__meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .homepage-roll-compact__meta strong { color: rgba(245, 245, 247, 0.7); font-weight: 500; white-space: nowrap; }
@@ -338,11 +427,18 @@
     align-items: center;
     gap: 18px;
     justify-self: center;
-    perspective: 1400px;
+    perspective: 1150px;
   }
 
   .homepage-profile-stage { position: relative; width: 440px; min-width: 0; padding: 0 28px; outline: none; }
-  .homepage-profile-wrap { width: 100%; transform: rotateY(-8deg) rotateX(4deg); transform-style: preserve-3d; transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s ease; }
+  .homepage-profile-wrap {
+    width: 100%;
+    transform: rotateY(var(--profile-tilt-y, -8deg)) rotateX(var(--profile-tilt-x, 4deg));
+    transform-style: preserve-3d;
+    transition: none;
+    will-change: transform;
+  }
+  .homepage-profile-wrap--returning { transition: transform 0.56s cubic-bezier(0.16, 1, 0.3, 1); }
   .homepage-profile-pop { width: 100%; transform-origin: center; }
   .homepage-profile-pop--active { animation: homepage-profile-pop 0.38s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .homepage-profile-stage:focus-visible { border-radius: 24px; outline: 2px solid var(--homepage-accent); outline-offset: 5px; }
@@ -357,25 +453,33 @@
 
   .homepage-roll-particles span {
     position: absolute;
-    top: 52%;
+    top: 50%;
     left: 50%;
-    width: 6px;
-    height: 6px;
+    width: var(--particle-size);
+    height: var(--particle-size);
     border-radius: 999px;
-    background: var(--homepage-accent);
-    box-shadow: 0 0 12px var(--homepage-accent-glow);
+    background: var(--homepage-roll-accent);
+    box-shadow: 0 0 12px var(--homepage-roll-accent-glow);
     opacity: 0;
-    animation: homepage-roll-particle 0.68s cubic-bezier(0.2, 0.75, 0.25, 1) var(--particle-delay) forwards;
+    animation: homepage-roll-particle 1.08s cubic-bezier(0.16, 0.8, 0.24, 1) var(--particle-delay) forwards;
+  }
+
+  .homepage-roll-particles span.homepage-roll-particle--bright {
+    background: color-mix(in srgb, var(--homepage-roll-accent) 58%, white);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--homepage-roll-accent) 74%, white), 0 0 28px var(--homepage-roll-accent-glow);
   }
 
   @keyframes homepage-profile-pop {
-    0%, 100% { transform: scale(1); }
-    48% { transform: scale(1.035); }
+    0% { transform: scale(1); }
+    28% { transform: scale(1.06); }
+    62% { transform: scale(0.985); }
+    100% { transform: scale(1); }
   }
 
   @keyframes homepage-roll-particle {
     0% { opacity: 0; transform: translate(-50%, -50%) scale(0.35); }
-    18% { opacity: 0.9; }
+    14% { opacity: 0.95; }
+    48% { opacity: 0.72; }
     100% { opacity: 0; transform: translate(calc(-50% + var(--particle-x)), calc(-50% + var(--particle-y))) scale(0); }
   }
 
@@ -431,7 +535,7 @@
     .homepage-roll-compact { max-width: 420px; }
     .homepage-hero__product { grid-column: 1; width: 100%; max-width: 470px; }
     .homepage-profile-stage { width: 100%; max-width: 440px; }
-    .homepage-profile-wrap { transform: none; }
+    .homepage-profile-wrap { transform: none; transition: none; }
     .homepage-hero__context { display: none; }
   }
 

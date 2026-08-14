@@ -50,8 +50,12 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
   assert.match(hero, /'Preview a roll'/);
   assert.match(hero, /Rolling…/);
   assert.match(hero, /Roll again/);
-  assert.match(hero, /on:pointermove=\{handleHeroPointerMove\}/);
-  assert.match(hero, /class:homepage-profile-pop--active=\{profilePopActive\}/);
+  assert.match(hero, /window\.addEventListener\('pointermove', handleViewportPointerMove/);
+  assert.match(hero, /requestAnimationFrame\(animateTilt\)/);
+  assert.match(hero, /class:homepage-profile-pop--active=\{profileImpactActive\}/);
+  assert.match(hero, /rollPhase = 'spin'/);
+  assert.match(hero, /rollPhase = 'land'/);
+  assert.match(hero, /rollPhase = 'impact'/);
   assert.match(hero, /homepage-roll-particles/);
   assert.match(hero, /dispatch\('accentpreview'/);
   assert.doesNotMatch(hero, /ProfileShell|HomepageProfileRenderer|layoutLabel|random|discovery|roll_die|supabase|\.rpc\(/);
@@ -61,7 +65,6 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
 test('the homepage specimen owns the approved profile anatomy', () => {
   for (const selector of [
     'homepage-profile-demo--hero',
-    'homepage-profile-demo__head',
     'homepage-profile-demo__avatar-shell',
     'homepage-profile-demo__name',
     'homepage-profile-demo__bio',
@@ -71,7 +74,8 @@ test('the homepage specimen owns the approved profile anatomy', () => {
   assert.match(demo, /repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(demo, /border-radius: 22px/);
   assert.match(demo, /backdrop-filter: blur\(32px\)/);
-  assert.doesNotMatch(demo, /Views|views|↗/);
+  assert.match(demo, /export let impactActive = false/);
+  assert.doesNotMatch(demo, /Profile preview|homepage-profile-demo__head|@\{fixture\.username\}|Views|views|↗/);
 });
 
 test('homepage fixtures are local, deterministic, scored, and outside production data feeds', async () => {

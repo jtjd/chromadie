@@ -4,6 +4,7 @@
   export let variant = 'hero';
   /** @type {any} */
   export let previewRoll = null;
+  export let impactActive = false;
 
   $: latestRoll = previewRoll || fixture?.scores?.[0] || null;
   $: links = (fixture?.links || []).slice(0, variant === 'showcase' ? 2 : 4);
@@ -43,16 +44,12 @@
     <article
       class="homepage-profile-demo homepage-profile-demo--hero"
       class:homepage-profile-demo--has-secondary={secondaryLine}
+      class:homepage-profile-demo--impact={impactActive}
       style={demoStyle}
       data-homepage-profile-specimen="hero"
       data-homepage-fixture={fixture.id}
       aria-label={profileLabel}
     >
-      <div class="homepage-profile-demo__head">
-        <span>Profile preview</span>
-        <strong>@{fixture.username}</strong>
-      </div>
-
       <div class="homepage-profile-demo__avatar-shell">
         <div class="homepage-profile-demo__avatar" role="img" aria-label={`${fixture.displayName} avatar`}></div>
       </div>
@@ -92,13 +89,13 @@
 
   .homepage-profile-demo--hero {
     width: 100%;
-    padding: 29px 28px;
+    padding: 51px 28px 29px;
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 22px;
     background: rgba(10, 10, 13, 0.52);
     box-shadow:
-      0 34px 80px rgba(0, 0, 0, 0.5),
+      var(--profile-shadow-x, 0px) calc(34px + var(--profile-shadow-y, 0px)) 80px rgba(0, 0, 0, 0.5),
       0 0 54px color-mix(in srgb, var(--homepage-demo-accent) 12%, transparent);
     backdrop-filter: blur(32px) saturate(160%);
     -webkit-backdrop-filter: blur(32px) saturate(160%);
@@ -106,7 +103,7 @@
   }
 
   /* Keep the authored secondary line within the established card footprint. */
-  .homepage-profile-demo--hero.homepage-profile-demo--has-secondary { padding-block: 26.5px; }
+  .homepage-profile-demo--hero.homepage-profile-demo--has-secondary { padding-top: 51px; padding-bottom: 26.5px; }
 
   .homepage-profile-demo--hero::before {
     position: absolute;
@@ -121,22 +118,19 @@
     pointer-events: none;
   }
 
-  .homepage-profile-demo__head {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    color: rgba(245, 245, 247, 0.4);
-    font: 400 0.67rem / 1.2 'Clash Display', sans-serif;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+  .homepage-profile-demo--hero::after {
+    z-index: 0;
+    position: absolute;
+    inset: 0;
+    content: '';
+    background: radial-gradient(circle at var(--profile-highlight-x, 50%) var(--profile-highlight-y, 28%), rgba(255, 255, 255, 0.1), transparent 34%);
+    opacity: 0.34;
+    pointer-events: none;
   }
 
-  .homepage-profile-demo__head strong { color: rgba(245, 245, 247, 0.72); font-weight: 600; }
+  .homepage-profile-demo--impact {
+    animation: homepage-profile-accent-pulse 0.52s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 
   .homepage-profile-demo__avatar-shell {
     position: relative;
@@ -147,6 +141,10 @@
     border-radius: 50%;
     background: conic-gradient(from 20deg, var(--homepage-demo-accent), transparent 30%, var(--homepage-demo-accent) 70%, transparent 92%, var(--homepage-demo-accent));
     box-shadow: 0 0 28px color-mix(in srgb, var(--homepage-demo-accent) 28%, transparent);
+  }
+
+  .homepage-profile-demo--impact .homepage-profile-demo__avatar-shell {
+    animation: homepage-avatar-accent-pulse 0.52s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .homepage-profile-demo__avatar {
@@ -255,6 +253,24 @@
     box-shadow: 0 0 22px color-mix(in srgb, var(--homepage-demo-accent) 28%, transparent);
   }
 
+  @keyframes homepage-profile-accent-pulse {
+    0%, 100% {
+      box-shadow:
+        var(--profile-shadow-x, 0px) calc(34px + var(--profile-shadow-y, 0px)) 80px rgba(0, 0, 0, 0.5),
+        0 0 54px color-mix(in srgb, var(--homepage-demo-accent) 12%, transparent);
+    }
+    32% {
+      box-shadow:
+        var(--profile-shadow-x, 0px) calc(34px + var(--profile-shadow-y, 0px)) 80px rgba(0, 0, 0, 0.5),
+        0 0 96px color-mix(in srgb, var(--homepage-demo-accent) 48%, transparent);
+    }
+  }
+
+  @keyframes homepage-avatar-accent-pulse {
+    0%, 100% { box-shadow: 0 0 28px color-mix(in srgb, var(--homepage-demo-accent) 28%, transparent); }
+    32% { box-shadow: 0 0 58px color-mix(in srgb, var(--homepage-demo-accent) 62%, transparent); }
+  }
+
   .homepage-profile-demo--showcase { position: absolute; inset: 0; z-index: 2; }
 
   .homepage-profile-demo__mini-profile {
@@ -310,8 +326,8 @@
   .homepage-profile-demo__mini-links a:focus-visible { outline: 2px solid var(--homepage-demo-accent); outline-offset: 2px; }
 
   @media (max-width: 460px) {
-    .homepage-profile-demo--hero { padding: 21px 18px; border-radius: 18px; }
-    .homepage-profile-demo--hero.homepage-profile-demo--has-secondary { padding-block: 18.5px; }
+    .homepage-profile-demo--hero { padding: 38px 18px 21px; border-radius: 18px; }
+    .homepage-profile-demo--hero.homepage-profile-demo--has-secondary { padding-top: 38px; padding-bottom: 18.5px; }
     .homepage-profile-demo__avatar-shell { width: 90px; height: 90px; }
     .homepage-profile-demo__name { font-size: 1.75rem; }
   }

@@ -161,12 +161,12 @@ try {
     });
     await delay(60);
     const active = await page.evaluate(`(() => ({
-      transform: document.querySelector('.homepage-profile-wrap')?.style.transform || '',
+      tiltY: document.querySelector('.homepage-profile-wrap')?.style.getPropertyValue('--profile-tilt-y') || '',
+      tiltX: document.querySelector('.homepage-profile-wrap')?.style.getPropertyValue('--profile-tilt-x') || '',
       claimTransform: getComputedStyle(document.querySelector('.homepage-claim__field')).transform,
       prevTransform: getComputedStyle(document.querySelector('.homepage-theme-button--prev')).transform
     }))()`);
-    const rotations = active.transform.match(/rotateY\((-?[\d.]+)deg\) rotateX\((-?[\d.]+)deg\)/);
-    assert(rotations && Number(rotations[1]) > 10 && Number(rotations[2]) > 5,
+    assert(Number.parseFloat(active.tiltY) > 10 && Number.parseFloat(active.tiltX) > 5,
       `Hero-wide pointer movement did not produce the requested visible tilt: ${JSON.stringify(active)}.`);
     assert(active.claimTransform === 'none', `Claim bar moved with the profile card: ${JSON.stringify(active)}.`);
 
@@ -177,25 +177,39 @@ try {
       buttons: 0,
       pointerType: 'mouse'
     });
-    await delay(60);
-    const resting = await page.evaluate('document.querySelector(".homepage-profile-wrap")?.style.transform || ""');
-    assert(resting === '', `Profile did not return to its resting CSS tilt: ${JSON.stringify({ active, resting })}.`);
+    await delay(620);
+    const resting = await page.evaluate(`(() => ({
+      style: document.querySelector('.homepage-profile-wrap')?.getAttribute('style') || '',
+      transform: getComputedStyle(document.querySelector('.homepage-profile-wrap')).transform
+    }))()`);
+    assert(resting.style === '' && resting.transform !== 'none', `Profile did not return to its resting CSS tilt: ${JSON.stringify({ active, resting })}.`);
     return { active, resting };
   });
 
   await check('preview roll animates locally and honors reduced motion', async () => {
     const networkBefore = homepageNetworkSnapshot();
     const initialHex = await page.evaluate('document.querySelector(".homepage-profile-demo__roll strong")?.textContent?.trim() || ""');
+    const globalAccentBefore = await page.evaluate('getComputedStyle(document.querySelector(".homepage-reference")).getPropertyValue("--homepage-accent").trim()');
     await page.click('.homepage-roll-compact__button', 'animated homepage preview roll');
     const rollingLabel = await page.evaluate('document.querySelector(".homepage-roll-compact__button")?.textContent?.trim() || ""');
     assert(rollingLabel === 'Rolling…', `Preview roll did not enter its disabled rolling state: ${JSON.stringify(rollingLabel)}.`);
+    await delay(125);
+    const duringSpin = await page.evaluate(`(() => ({
+      globalAccent: getComputedStyle(document.querySelector('.homepage-reference')).getPropertyValue('--homepage-accent').trim(),
+      localAccent: getComputedStyle(document.querySelector('.homepage-hero')).getPropertyValue('--homepage-roll-accent').trim(),
+      cardHex: document.querySelector('.homepage-profile-demo__roll strong')?.textContent?.trim() || ''
+    }))()`);
+    assert(duringSpin.globalAccent === globalAccentBefore && duringSpin.localAccent !== globalAccentBefore && duringSpin.cardHex !== initialHex,
+      `SPIN changed the global accent or failed to update local roll visuals: ${JSON.stringify({ globalAccentBefore, duringSpin })}.`);
     await page.waitFor('document.querySelector(".homepage-roll-compact__button")?.textContent?.trim() === "Roll again"', 'animated homepage preview roll result');
+    await page.waitFor('document.querySelectorAll(".homepage-roll-particles span").length > 0', 'homepage roll impact phase');
     const animated = await page.evaluate(`(() => {
       const dot = document.querySelector('.homepage-roll-compact__dot');
       const swatch = document.querySelector('.homepage-profile-demo__roll-swatch');
       const headline = document.querySelector('.homepage-hero h1 span');
       return {
         accent: getComputedStyle(document.querySelector('.homepage-reference')).getPropertyValue('--homepage-accent').trim(),
+        localAccent: getComputedStyle(document.querySelector('.homepage-hero')).getPropertyValue('--homepage-roll-accent').trim(),
         leftHex: document.querySelector('.homepage-roll-compact__result span:last-child')?.textContent?.trim() || '',
         cardHex: document.querySelector('.homepage-profile-demo__roll strong')?.textContent?.trim() || '',
         dotColor: dot ? getComputedStyle(dot).backgroundColor : '',
@@ -205,13 +219,13 @@ try {
         pop: document.querySelector('.homepage-profile-pop')?.classList.contains('homepage-profile-pop--active') || false
       };
     })()`);
-    assert(animated.cardHex !== initialHex && animated.leftHex === animated.cardHex && animated.accent === animated.cardHex,
+    assert(animated.cardHex !== initialHex && animated.leftHex === animated.cardHex && animated.accent === animated.cardHex && animated.localAccent === animated.cardHex,
       `Preview roll did not update the complete accent and roll state: ${JSON.stringify({ initialHex, animated })}.`);
     assert(animated.dotColor === animated.swatchColor && animated.dotColor === animated.headlineColor,
       `Preview roll color consumers diverged: ${JSON.stringify(animated)}.`);
     assert(animated.particles > 0 && animated.pop, `Animated roll omitted the profile response: ${JSON.stringify(animated)}.`);
 
-    await delay(800);
+    await page.waitFor('document.querySelector(".homepage-roll-compact__button")?.disabled === false', 'homepage impact phase completion');
     await page.setReducedMotion(true);
     await page.click('.homepage-roll-compact__button', 'reduced-motion homepage preview roll');
     await delay(60);
