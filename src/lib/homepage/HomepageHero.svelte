@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import HomepageClaim from './HomepageClaim.svelte';
   import HomepageProfileDemo from './HomepageProfileDemo.svelte';
   import { HOMEPAGE_FIXTURES } from './homepageFixtures.js';
@@ -10,6 +10,8 @@
 
   const dispatch = createEventDispatcher();
   let fixtureIndex = 0;
+  let profileTiltEnabled = false;
+  let profileTiltStyle = '';
 
   $: fixture = HOMEPAGE_FIXTURES[fixtureIndex];
   $: exampleNumber = String(fixtureIndex + 1).padStart(2, '0');
@@ -23,6 +25,42 @@
   function forward(event) {
     dispatch(event.type, event.detail);
   }
+
+  function handleProfilePointerMove(event) {
+    if (!profileTiltEnabled || event.pointerType === 'touch') return;
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+
+    const pointerX = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+    const pointerY = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
+    const rotateY = (-4 + ((pointerX - 0.5) * 6)).toFixed(2);
+    const rotateX = (2 + ((0.5 - pointerY) * 6)).toFixed(2);
+    profileTiltStyle = `transform: rotateY(${rotateY}deg) rotateX(${rotateX}deg);`;
+  }
+
+  function resetProfileTilt() {
+    profileTiltStyle = '';
+  }
+
+  onMount(() => {
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function updateTiltAvailability() {
+      profileTiltEnabled = finePointer.matches && !reducedMotion.matches;
+      if (!profileTiltEnabled) resetProfileTilt();
+    }
+
+    updateTiltAvailability();
+    finePointer.addEventListener('change', updateTiltAvailability);
+    reducedMotion.addEventListener('change', updateTiltAvailability);
+
+    return () => {
+      finePointer.removeEventListener('change', updateTiltAvailability);
+      reducedMotion.removeEventListener('change', updateTiltAvailability);
+    };
+  });
 </script>
 
 <section
@@ -60,7 +98,13 @@
       aria-label="Profile examples"
     >
       <button class="homepage-theme-button homepage-theme-button--prev" type="button" aria-label="Previous profile example" on:click={() => moveFixture(-1)}>‹</button>
-      <div class="homepage-profile-wrap">
+      <div
+        class="homepage-profile-wrap"
+        role="presentation"
+        style={profileTiltStyle}
+        on:pointermove={handleProfilePointerMove}
+        on:pointerleave={resetProfileTilt}
+      >
         <HomepageProfileDemo fixture={fixture} />
       </div>
       <button class="homepage-theme-button homepage-theme-button--next" type="button" aria-label="Next profile example" on:click={() => moveFixture(1)}>›</button>
@@ -170,7 +214,7 @@
   }
 
   .homepage-profile-stage { position: relative; width: 440px; min-width: 0; padding: 0 28px; outline: none; }
-  .homepage-profile-wrap { width: 100%; transform: rotateY(-4deg) rotateX(2deg); transform-style: preserve-3d; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease; }
+  .homepage-profile-wrap { width: 100%; transform: rotateY(-4deg) rotateX(2deg); transform-style: preserve-3d; transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s ease; }
   .homepage-profile-stage:focus-visible { border-radius: 24px; outline: 2px solid var(--homepage-accent); outline-offset: 5px; }
 
   .homepage-theme-button {
@@ -238,7 +282,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .homepage-profile-wrap,
+    .homepage-profile-wrap { transform: none; transition: none; }
     .homepage-theme-button,
     .homepage-context-dot { transition: none; }
   }

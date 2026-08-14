@@ -13,7 +13,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('homepage fixtures share one direct specimen composition', () => {
   assert.deepEqual(HOMEPAGE_FIXTURES.map(fixture => fixture.id), [
-    'compact-tjz',
+    'meilin-horizon',
     'sleek-arcade',
     'minimal-mono',
     'portfolio-void'
@@ -44,6 +44,17 @@ test('fixture lookup is bounded and never falls back to live profile data', () =
   assert.equal(getHomepageFixture(), null);
 });
 
+test('the first homepage fixture is the authored Meilin profile example', () => {
+  const fixture = HOMEPAGE_FIXTURES[0];
+  assert.equal(fixture.username, 'meilin');
+  assert.equal(fixture.displayName, 'meilin');
+  assert.equal(fixture.bio, 'daydreamer · pixel artist · music lover');
+  assert.equal(fixture.secondaryLine, 'somewhere between here and the horizon');
+  assert.deepEqual(fixture.links.map(link => link.label), ['Website', 'Spotify', 'Discord', 'Archive']);
+  assert.equal(fixture.media.background, '/homepage/fixtures/compact-background.png');
+  assert.equal(fixture.media.avatar, '/homepage/fixtures/sleek-avatar.png');
+});
+
 test('the direct homepage specimen and carousel contain no production profile renderer seam', async () => {
   const [hero, demo, showcase] = await Promise.all([
     read('src/lib/homepage/HomepageHero.svelte'),
@@ -53,6 +64,19 @@ test('the direct homepage specimen and carousel contain no production profile re
   const source = `${hero}\n${demo}\n${showcase}`;
   assert.doesNotMatch(source, /ProfileShell|ProfileLayoutFrame|profileRenderModel|HomepageProfileRenderer|profile-shell/);
   assert.match(source, /HomepageProfileDemo/);
+  assert.match(hero, /on:pointermove=\{handleProfilePointerMove\}/);
+  assert.match(hero, /on:pointerleave=\{resetProfileTilt\}/);
+  assert.match(hero, /matchMedia\('\(hover: hover\) and \(pointer: fine\)'\)/);
+  assert.match(hero, /prefers-reduced-motion/);
+  assert.match(hero, /event\.pointerType === 'touch'/);
+  assert.match(hero, /event\.clientX - bounds\.left/);
+  assert.match(hero, /event\.clientY - bounds\.top/);
+  assert.match(hero, /perspective:\s*1400px/);
+  assert.match(hero, /transform:\s*rotateY\(-4deg\) rotateX\(2deg\)/);
+  assert.match(hero, /transform-style:\s*preserve-3d/);
+  assert.match(hero, /transition: transform 0\.3s cubic-bezier\(0\.23, 1, 0\.32, 1\)/);
+  assert.match(demo, /fixture\?\.media\?\.avatar/);
+  assert.match(demo, /homepage-profile-demo__secondary/);
 });
 
 test('the live community surface remains isolated from homepage fixtures', async () => {

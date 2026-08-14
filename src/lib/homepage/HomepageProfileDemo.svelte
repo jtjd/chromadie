@@ -6,8 +6,10 @@
   $: latestRoll = fixture?.scores?.[0] || null;
   $: links = (fixture?.links || []).slice(0, variant === 'showcase' ? 2 : 4);
   $: profileLabel = fixture ? `${fixture.displayName}'s profile example` : 'Profile example';
+  $: avatarSource = fixture?.media?.avatar || '';
+  $: secondaryLine = fixture?.secondaryLine || '';
   $: demoStyle = fixture
-    ? `--homepage-demo-accent: ${fixture.accent}; --homepage-demo-avatar: url("${fixture.avatar}");`
+    ? `--homepage-demo-accent: ${fixture.accent}; --homepage-demo-avatar: url("${avatarSource}");`
     : '';
 </script>
 
@@ -38,6 +40,7 @@
   {:else}
     <article
       class="homepage-profile-demo homepage-profile-demo--hero"
+      class:homepage-profile-demo--has-secondary={secondaryLine}
       style={demoStyle}
       data-homepage-profile-specimen="hero"
       data-homepage-fixture={fixture.id}
@@ -54,6 +57,9 @@
 
       <h2 class="homepage-profile-demo__name">{fixture.displayName}</h2>
       <p class="homepage-profile-demo__bio">{fixture.bio}</p>
+      {#if secondaryLine}
+        <p class="homepage-profile-demo__secondary">{secondaryLine}</p>
+      {/if}
 
       <nav class="homepage-profile-demo__links" aria-label={`${fixture.displayName} profile links`}>
         {#each links as link (link.url)}
@@ -88,14 +94,17 @@
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 22px;
-    background: rgba(10, 10, 13, 0.6);
+    background: rgba(10, 10, 13, 0.52);
     box-shadow:
       0 34px 80px rgba(0, 0, 0, 0.5),
-      0 0 54px color-mix(in srgb, var(--homepage-demo-accent) 18%, transparent);
+      0 0 54px color-mix(in srgb, var(--homepage-demo-accent) 12%, transparent);
     backdrop-filter: blur(32px) saturate(160%);
     -webkit-backdrop-filter: blur(32px) saturate(160%);
     text-align: center;
   }
+
+  /* Keep the authored secondary line within the established card footprint. */
+  .homepage-profile-demo--hero.homepage-profile-demo--has-secondary { padding-block: 26.5px; }
 
   .homepage-profile-demo--hero::before {
     position: absolute;
@@ -165,6 +174,15 @@
     font: 400 0.84rem / 1.3 'Inter', sans-serif;
   }
 
+  .homepage-profile-demo__secondary {
+    position: relative;
+    z-index: 1;
+    margin: 3px 0 0;
+    color: rgba(245, 245, 247, 0.42);
+    font: 400 0.72rem / 1.2 'Inter', sans-serif;
+    font-style: italic;
+  }
+
   .homepage-profile-demo__links {
     position: relative;
     z-index: 1;
@@ -173,6 +191,8 @@
     gap: 8px;
     margin-top: 22px;
   }
+
+  .homepage-profile-demo--has-secondary .homepage-profile-demo__links { margin-top: 10px; }
 
   .homepage-profile-demo__links a {
     display: flex;
@@ -289,6 +309,7 @@
 
   @media (max-width: 460px) {
     .homepage-profile-demo--hero { padding: 21px 18px; border-radius: 18px; }
+    .homepage-profile-demo--hero.homepage-profile-demo--has-secondary { padding-block: 18.5px; }
     .homepage-profile-demo__avatar-shell { width: 90px; height: 90px; }
     .homepage-profile-demo__name { font-size: 1.75rem; }
   }

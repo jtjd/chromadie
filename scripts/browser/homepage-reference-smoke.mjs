@@ -95,6 +95,7 @@ try {
       const stage = document.querySelector('.homepage-profile-stage');
       const card = document.querySelector('.homepage-profile-demo--hero');
       const background = document.querySelector('.homepage-background');
+      const avatar = card?.querySelector('.homepage-profile-demo__avatar');
       const headlineStyle = getComputedStyle(document.querySelector('.homepage-hero h1'));
       const profileNameStyle = getComputedStyle(document.querySelector('.homepage-profile-demo__name'));
       const bodyStyle = getComputedStyle(document.querySelector('.homepage-hero__lede'));
@@ -102,6 +103,7 @@ try {
         stage: rect(stage),
         card: rect(card),
         backgroundImage: getComputedStyle(background).backgroundImage,
+        avatarImage: avatar ? getComputedStyle(avatar).backgroundImage : '',
         claim: Boolean(document.querySelector('#claim .homepage-claim__field')),
         avatar: Boolean(card?.querySelector('.homepage-profile-demo__avatar')),
         name: Boolean(card?.querySelector('.homepage-profile-demo__name')),
@@ -131,6 +133,7 @@ try {
       && state.fonts.profileName.includes('Clash Display')
       && state.fonts.body.includes('Inter'), `Homepage typography is not rendering the approved font faces: ${JSON.stringify(state.fonts)}.`);
     assert(state.backgroundImage.includes('compact-background.png'), `Homepage background is not photographic fixture one: ${JSON.stringify(state)}.`);
+    assert(state.avatarImage.includes('sleek-avatar.png'), `Homepage fixture one is not using its real local avatar: ${JSON.stringify(state)}.`);
     assert(state.stage && Math.abs((state.stage.left + state.stage.right) / 2 - 720) <= 2, `Hero stage is not centered: ${JSON.stringify(state)}.`);
     assert(state.card && state.card.width >= 370 && state.card.width <= 395 && state.card.height >= 420 && state.card.height <= 490, `Hero card drifted from reference proportions: ${JSON.stringify(state)}.`);
     await capture('homepage-1440x900');
@@ -154,11 +157,11 @@ try {
       background: getComputedStyle(document.querySelector('.homepage-background')).backgroundImage,
       roll: document.querySelector('.homepage-profile-demo__roll strong')?.textContent?.trim() || ''
     }))()`);
-    assert(before.fixture === 'compact-tjz' && after.fixture === 'sleek-arcade', `Carousel fixture state is not deterministic: ${JSON.stringify({ before, after })}.`);
+    assert(before.fixture === 'meilin-horizon' && after.fixture === 'sleek-arcade', `Carousel fixture state is not deterministic: ${JSON.stringify({ before, after })}.`);
     assert(before.name !== after.name && before.background !== after.background && before.roll !== after.roll, `Carousel did not update the complete environment: ${JSON.stringify({ before, after })}.`);
     await page.evaluate('document.querySelector(".homepage-theme-button--prev")?.focus()');
     await pressEnter();
-    await page.waitFor('document.querySelector(".homepage-profile-demo--hero")?.dataset.homepageFixture === "compact-tjz"', 'previous deterministic homepage fixture');
+    await page.waitFor('document.querySelector(".homepage-profile-demo--hero")?.dataset.homepageFixture === "meilin-horizon"', 'previous deterministic homepage fixture');
     const networkAfter = homepageNetworkSnapshot();
     assert(networkAfter.discoveryCount === networkBefore.discoveryCount
       && networkAfter.profileHydrationCount === networkBefore.profileHydrationCount

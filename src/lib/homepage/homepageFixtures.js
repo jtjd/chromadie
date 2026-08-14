@@ -64,6 +64,7 @@ function createFixture({
   username,
   displayName,
   bio,
+  secondaryLine = '',
   accent,
   background,
   avatar,
@@ -79,6 +80,7 @@ function createFixture({
     username,
     displayName,
     bio,
+    secondaryLine,
     accent,
     media: Object.freeze({ background, avatar }),
     links: Object.freeze(links.map(link => Object.freeze({ ...link }))),
@@ -91,25 +93,26 @@ function createFixture({
 
 export const HOMEPAGE_FIXTURES = Object.freeze([
   createFixture({
-    id: 'compact-tjz',
-    username: 'Tjz',
-    displayName: 'Tjz',
-    bio: 'Software developer · Tokyo',
-    accent: '#00FFB3',
+    id: 'meilin-horizon',
+    username: 'meilin',
+    displayName: 'meilin',
+    bio: 'daydreamer · pixel artist · music lover',
+    secondaryLine: 'somewhere between here and the horizon',
+    accent: '#D8A6FF',
     background: '/homepage/fixtures/compact-background.png',
-    avatar: '/homepage/fixtures/compact-avatar.png',
-    effects: 'compact',
+    avatar: '/homepage/fixtures/sleek-avatar.png',
+    effects: 'portfolio',
     showcasePosition: 'bottom',
     links: [
       { type: 'website', label: 'Website', url: 'https://chm.lol/', order: 0 },
-      { type: 'github', label: 'GitHub', url: 'https://github.com/', order: 1 },
+      { type: 'spotify', label: 'Spotify', url: 'https://open.spotify.com/', order: 1 },
       { type: 'discord', label: 'Discord', url: 'https://discord.com/', order: 2 },
-      { type: 'other', label: 'Archive', url: 'https://example.com/', order: 3 }
+      { type: 'other', label: 'Archive', url: 'https://example.com/archive', order: 3 }
     ],
     scores: [
-      { hex_code: '#00FFB3', score: 326203, rarity: 'Epic', identity: 'Balanced Electric Emerald', condition_ids: ['sum_even', 'hue_family_emerald', 'temperature_cool', 'mixed_channel_rhythm'] },
-      { hex_code: '#4E7CFF', score: 307989, rarity: 'Epic', identity: 'Bright Electric Azure', condition_ids: ['sum_odd', 'hue_family_azure', 'temperature_cool', 'mixed_channel_rhythm'] },
-      { hex_code: '#FF5C8A', score: 60083, rarity: 'Rare', identity: 'Bright Electric Rose', condition_ids: ['sum_odd', 'hue_family_rose', 'temperature_warm', 'mixed_channel_rhythm'] }
+      { hex_code: '#D8A6FF', score: 74231, rarity: 'Rare', identity: 'Soft Electric Orchid', condition_ids: ['sum_odd', 'hue_family_violet', 'temperature_cool', 'mixed_channel_rhythm'] },
+      { hex_code: '#F3B7D8', score: 61804, rarity: 'Rare', identity: 'Bright Soft Rose', condition_ids: ['sum_even', 'hue_family_rose', 'temperature_warm', 'mixed_channel_rhythm'] },
+      { hex_code: '#9BCBFF', score: 38416, rarity: 'Uncommon', identity: 'Soft Luminous Azure', condition_ids: ['sum_even', 'hue_family_azure', 'temperature_cool', 'mixed_channel_rhythm'] }
     ]
   }),
   createFixture({
