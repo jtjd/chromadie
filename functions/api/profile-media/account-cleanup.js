@@ -1,6 +1,7 @@
 import {
   callSupabaseRpc,
   controlPlaneError,
+  deleteSupabaseStorageObject,
   getR2Config,
   jsonResponse,
   optionsResponse,
@@ -44,12 +45,7 @@ export async function onRequestPost({ request, env }) {
       for (const object of parseObjectKeys(job.object_keys)) {
         if (object.bucket === 'supabase') {
           try {
-            const legacyCleanup = await callSupabaseRpc(env, 'delete_profile_media_legacy_storage_object', {
-              p_storage_path: object.key
-            }, { service: true });
-            if (!legacyCleanup?.success) {
-              failures.push({ operation: 'legacy_storage_delete', key: object.key, error: legacyCleanup?.error || 'Legacy Supabase Storage deletion failed.' });
-            }
+            await deleteSupabaseStorageObject(env, object.key);
           } catch (legacyError) {
             failures.push({ operation: 'legacy_storage_delete', key: object.key, error: legacyError.message });
           }
@@ -102,26 +98,23 @@ export async function onRequestPost({ request, env }) {
     for (const asset of deletedAssets) {
       const keys = [...new Set([asset.r2_private_key, asset.r2_public_key].filter(Boolean))];
       const failures = [];
-      for (const key of keys) {
-        for (const bucket of [config.privateBucket, config.publicBucket]) {
-          const response = await requestR2Object(env, { method: 'DELETE', bucket, key });
-          if (!response.ok && response.status !== 404) failures.push({ bucket, key, status: response.status });
+      if (asset.storage_provider === 'r2') {
+        for (const key of keys) {
+          for (const bucket of [config.privateBucket, config.publicBucket]) {
+            const response = await requestR2Object(env, { method: 'DELETE', bucket, key });
+            if (!response.ok && response.status !== 404) failures.push({ bucket, key, status: response.status });
+          }
         }
       }
       if (asset.storage_path) {
         try {
-          const legacyCleanup = await callSupabaseRpc(env, 'delete_profile_media_legacy_storage_object', {
-            p_storage_path: asset.storage_path
-          }, { service: true });
-          if (!legacyCleanup?.success) {
-            failures.push({ operation: 'legacy_storage_delete', key: asset.storage_path, error: legacyCleanup?.error || 'Legacy Supabase Storage deletion failed.' });
-          }
+          await deleteSupabaseStorageObject(env, asset.storage_path);
         } catch (legacyError) {
           failures.push({ operation: 'legacy_storage_delete', key: asset.storage_path, error: legacyError.message });
         }
       }
       let purgeSuccess = !asset.cache_purge_required || asset.cache_purge_status === 'completed';
-      if (asset.cache_purge_required && asset.cache_purge_status !== 'completed' && asset.r2_public_key) {
+      if (asset.storage_provider === 'r2' && asset.cache_purge_required && asset.cache_purge_status !== 'completed' && asset.r2_public_key) {
         try {
           await purgePublicMediaKey(env, asset.r2_public_key);
           purgeSuccess = true;

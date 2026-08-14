@@ -119,8 +119,9 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(nameCanvas, /renderer\.resize\([\s\S]*size\.width/);
   assert.match(nameCanvas, /updateVisibility\(entry\.contentRect\.width > 0 && entry\.contentRect\.height > 0\)/);
   assert.match(await read('src/lib/ShopItemPreview.svelte'), /item\?\.slot === 'name_motion' \? 'animated'/);
-  assert.match(richMedia, /stage_my_profile_media_replacement/);
-  assert.match(richMedia, /commit_my_profile_media_replacement/);
+  assert.match(richMedia, /uploadProfileMediaToR2/);
+  assert.match(richMedia, /deleteProfileMediaAsset/);
+  assert.doesNotMatch(richMedia, /stage_my_profile_media_replacement|commit_my_profile_media_replacement|supabase\.storage[\s\S]*\.upload/);
   assert.match(richMedia, /await removeAsset\(activeCursor\)/);
   assert.match(customize, /ProfileMediaWorkspace/);
   assert.match(mediaWorkspace, /data-media-workspace-layout="reference"/);

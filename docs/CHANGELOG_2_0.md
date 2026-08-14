@@ -2839,3 +2839,15 @@ direct route behavior.
 - Added database security regressions for migrated-asset deletion and durable
   account queue capture. No production canary, backfill, or legacy-storage
   retirement was run.
+
+## 2026-08-14 — Global R2 new-upload rollout complete
+
+- Removed all normal Profile Studio profile-media upload fallbacks to
+  Supabase Storage; new supported uploads use direct private-R2 upload,
+  server verification, promotion, and immutable `media.chm.lol` delivery.
+- Added exact-path legacy Supabase Storage API cleanup in the server control
+  plane. Tombstones retain provider identifiers until external deletion and
+  retries are safe for missing or temporarily unavailable objects.
+- Kept legacy provider-neutral reads during reconciliation. Four active legacy
+  Supabase assets and three expired staged rows remain in the current inventory;
+  active media is not deleted or backfilled without owner confirmation.

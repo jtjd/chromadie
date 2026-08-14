@@ -186,6 +186,47 @@ export async function getSupabaseAssets(env, userId, { statuses = [], kinds = []
   return Array.isArray(payload) ? payload : [];
 }
 
+const LEGACY_PROFILE_MEDIA_BUCKETS = new Set(['avatars', 'backgrounds', 'profile_audio', 'profile_media']);
+
+export function parseLegacyProfileMediaPath(value) {
+  const storagePath = String(value || '').trim().replace(/^\/+/, '');
+  const separator = storagePath.indexOf('/');
+  if (separator <= 0) return null;
+  const bucket = storagePath.slice(0, separator);
+  const objectPath = storagePath.slice(separator + 1);
+  if (!LEGACY_PROFILE_MEDIA_BUCKETS.has(bucket) || !objectPath || objectPath.length > 1024) return null;
+  if (objectPath.split('/').some(segment => !segment || segment === '.' || segment === '..')) return null;
+  return { bucket, objectPath, storagePath: `${bucket}/${objectPath}` };
+}
+
+/**
+ * Remove one exact legacy Supabase Storage object through Storage's supported
+ * API. Database metadata is deliberately not modified here; callers retain
+ * the path until this operation succeeds and then finalize the tombstone.
+ */
+export async function deleteSupabaseStorageObject(env, storagePath) {
+  const reference = parseLegacyProfileMediaPath(storagePath);
+  if (!reference) throw new Error('The legacy profile media path is invalid.');
+  const credentials = getSupabaseCredentials(env);
+  if (!credentials.url || !credentials.secretKey) throw new Error('Supabase Storage cleanup is not configured.');
+
+  const response = await fetch(`${credentials.url}/storage/v1/object/${encodeURIComponent(reference.bucket)}`, {
+    method: 'POST',
+    headers: {
+      ...createSupabaseHeaders({ apiKey: credentials.secretKey, projectKeyIsLegacy: credentials.secretKeyIsLegacy }),
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ prefixes: [reference.objectPath] })
+  });
+  const payload = await response.json().catch(() => null);
+  if (response.ok || response.status === 404) {
+    return { success: true, deleted: response.ok, storage_path: reference.storagePath };
+  }
+  const error = new Error(payload?.message || payload?.error || 'The legacy Supabase Storage object could not be deleted.');
+  error.status = response.status;
+  throw error;
+}
+
 async function signingKey(secret, dateStamp, region = 'auto', service = 's3') {
   const dateKey = await hmac(encoder.encode(`AWS4${secret}`), dateStamp);
   const regionKey = await hmac(dateKey, region);

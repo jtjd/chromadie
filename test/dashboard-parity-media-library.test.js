@@ -38,14 +38,15 @@ test('media library migration keeps registration and deletion owner-scoped', asy
   assert.match(migration, /auth\.uid\(\)/);
   assert.match(migration, /COALESCE\(v_object\.metadata->>'mimetype', ''\) <> 'image\/webp'/);
   assert.match(editor, /profile_media_assets/);
-  assert.match(editor, /register_my_profile_media_asset/);
-  assert.match(editor, /delete_my_profile_media_asset/);
+  assert.doesNotMatch(editor, /register_my_profile_media_asset/);
+  assert.match(editor, /deleteProfileMediaAsset/);
   const avatarRemove = editor.match(/async function removeAvatar\(\)[\s\S]*?(?=\n\x20{2}async function)/)?.[0] || '';
   const backgroundRemove = editor.match(/async function removeBackground\(\)[\s\S]*?(?=\n\x20{2}async function)/)?.[0] || '';
   assert.doesNotMatch(avatarRemove, /storage\.from\(reference\.bucket\)\.remove/);
   assert.doesNotMatch(backgroundRemove, /storage\.from\(reference\.bucket\)\.remove/);
   assert.match(editor, /verifyPersistedImage/);
-  assert.match(editor, /cleanupFailedImageUpload/);
+  assert.doesNotMatch(editor, /cleanupFailedImageUpload/);
+  assert.doesNotMatch(editor, /supabase\.storage[\s\S]*\.upload/);
   assert.match(editor, /Saved avatars/);
   assert.match(editor, /Saved backgrounds/);
 });
@@ -70,15 +71,15 @@ test('appearance picker keeps its palette inside the visible panel', async () =>
   assert.match(editor, /\.appearance-editor__picker \{ box-sizing: border-box; height: auto; min-height: 14rem; overflow: visible;/);
 });
 
-test('cursor uploads refresh the owner library before choosing the staging boundary', async () => {
+test('cursor uploads use the R2 control plane instead of the legacy staging boundary', async () => {
   const [editor, recovery] = await Promise.all([
     read('src/lib/ProfileRichMediaEditor.svelte'),
     read('supabase/migrations/20260810130000_cursor_upload_recovery.sql')
   ]);
 
-  assert.match(editor, /await clearExpiredStagedAssets\(\);[\s\S]*await loadAssets\(\);[\s\S]*replacementAssetId\(kind\)/);
-  assert.match(editor, /cleanup_my_profile_staged_media/);
-  assert.match(editor, /return \(kind === 'cursor' \? cursorAssets : pointerCursorAssets\)\[0\]\?\.id \|\| null/);
+  assert.match(editor, /uploadProfileMediaToR2/);
+  assert.doesNotMatch(editor, /stage_my_profile_media_asset|stage_my_profile_media_replacement/);
+  assert.doesNotMatch(editor, /supabase\.storage[\s\S]*\.upload/);
   assert.match(recovery, /CREATE OR REPLACE FUNCTION public\.cleanup_my_profile_staged_media\(\)/);
   assert.match(recovery, /status = 'staged'[\s\S]*cleanup_at IS NOT NULL[\s\S]*cleanup_at < now\(\)/);
   assert.match(recovery, /v_selected_path IS NOT NULL AND v_selected_path IS DISTINCT FROM v_old\.storage_path/);

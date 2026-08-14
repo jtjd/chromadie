@@ -4616,3 +4616,24 @@ per-kind pending assets, and keeps failed upload, deletion, purge, and account
 cleanup work retryable. Public deletion purges only the exact immutable media
 URL; unequip and replacement do not purge. R2 Standard remains the only
 allowed storage class, with no Infrequent Access lifecycle transition.
+
+## 2026-08-14 — Make R2 the only new profile-media write path
+
+Global R2 new-upload rollout is production-verified. Profile-media editors no
+longer fall back to browser uploads into Supabase Storage when R2 is disabled
+or unavailable; they fail explicitly while Supabase remains the authority for
+auth, configuration, ownership, RPCs, and asset metadata. Provider-neutral
+legacy reads remain while the final legacy inventory is reconciled.
+
+The current reconciliation still shows four active Supabase-backed assets and
+three expired staged Supabase rows. Active legacy assets are intentionally
+preserved until their owning profiles are confirmed safe to remove; only
+expired staging is eligible for targeted cleanup. This is not a generalized
+backfill decision: no active legacy media is silently migrated or deleted.
+
+Physical legacy deletion is now a Pages control-plane operation through the
+Supabase Storage API. Database functions tombstone rows and retain exact
+bucket/path identifiers; they never treat `DELETE FROM storage.objects` as a
+physical file delete. The control plane deletes the exact object, treats a
+missing object as idempotent success, and finalizes the row only after external
+cleanup succeeds.

@@ -88,12 +88,16 @@ export function promoteProfileMediaR2(assetId) {
   });
 }
 
-export function deleteProfileMediaR2(assetId) {
+export function deleteProfileMediaAsset(assetId) {
   return requestControlPlane('/api/profile-media/delete', {
     method: 'POST',
     body: JSON.stringify({ asset_id: assetId })
   });
 }
+
+// Kept as a compatibility alias for existing callers while the endpoint now
+// handles both native R2 assets and retained legacy Supabase assets.
+export const deleteProfileMediaR2 = deleteProfileMediaAsset;
 
 export function isR2MediaAsset(asset) {
   return String(asset?.storage_provider || '').toLowerCase() === 'r2';

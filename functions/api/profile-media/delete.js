@@ -1,6 +1,7 @@
 import {
   callSupabaseRpc,
   controlPlaneError,
+  deleteSupabaseStorageObject,
   getR2Config,
   getSupabaseAsset,
   jsonResponse,
@@ -26,42 +27,37 @@ export async function onRequestPost({ request, env }) {
   try {
     const asset = await getSupabaseAsset(env, auth.user.id, assetId);
     if (!asset) return jsonResponse({ success: false, error: 'Media asset not found.' }, 404, request);
-    if (asset.storage_provider !== 'r2') {
-      const result = await callSupabaseRpc(env, 'delete_my_profile_media_asset', { p_asset_id: asset.id }, { token: auth.token });
-      return jsonResponse(result || { success: false, error: 'The media asset could not be removed.' }, 200, request);
-    }
-
     const result = await callSupabaseRpc(env, 'delete_my_profile_media_asset', { p_asset_id: asset.id }, { token: auth.token });
     if (!result?.success) return jsonResponse(result || { success: false, error: 'The media asset could not be removed.' }, 422, request);
-    const config = getR2Config(env);
-    if (!config) return jsonResponse({ success: false, error: 'R2 media deletion is not configured.' }, 503, request);
-    const keys = [...new Set([asset.r2_private_key, asset.r2_public_key].filter(Boolean))];
+    const provider = result.storage_provider || asset.storage_provider || 'supabase';
+    const config = provider === 'r2' ? getR2Config(env) : null;
+    if (provider === 'r2' && !config) return jsonResponse({ success: false, error: 'R2 media deletion is not configured.' }, 503, request);
+    const keys = [...new Set([result.r2_private_key || asset.r2_private_key, result.r2_public_key || asset.r2_public_key].filter(Boolean))];
     const cleanup = [];
-    for (const key of keys) {
-      for (const bucket of [config.privateBucket, config.publicBucket]) {
-        const response = await requestR2Object(env, { method: 'DELETE', bucket, key });
-        if (!response.ok && response.status !== 404) cleanup.push({ bucket, key, status: response.status });
+    if (provider === 'r2') {
+      for (const key of keys) {
+        for (const bucket of [config.privateBucket, config.publicBucket]) {
+          const response = await requestR2Object(env, { method: 'DELETE', bucket, key });
+          if (!response.ok && response.status !== 404) cleanup.push({ bucket, key, status: response.status });
+        }
       }
     }
-    if (asset.storage_path) {
+    const storagePath = result.storage_path || asset.storage_path;
+    if (storagePath) {
       try {
-        const legacyCleanup = await callSupabaseRpc(env, 'delete_profile_media_legacy_storage_object', {
-          p_storage_path: asset.storage_path
-        }, { service: true });
-        if (!legacyCleanup?.success) {
-          cleanup.push({ operation: 'legacy_storage_delete', storage_path: asset.storage_path, error: legacyCleanup?.error || 'Legacy Supabase Storage deletion failed.' });
-        }
+        await deleteSupabaseStorageObject(env, storagePath);
       } catch (legacyError) {
-        cleanup.push({ operation: 'legacy_storage_delete', storage_path: asset.storage_path, error: legacyError.message });
+        cleanup.push({ operation: 'legacy_storage_delete', storage_path: storagePath, error: legacyError.message });
       }
     }
     let purgeSuccess = true;
-    if (asset.ever_public && asset.r2_public_key) {
+    const publicKey = result.r2_public_key || asset.r2_public_key;
+    if (provider === 'r2' && (result.ever_public ?? asset.ever_public) && publicKey) {
       try {
-        await purgePublicMediaKey(env, asset.r2_public_key);
+        await purgePublicMediaKey(env, publicKey);
       } catch (purgeError) {
         purgeSuccess = false;
-        cleanup.push({ operation: 'cache_purge', key: asset.r2_public_key, error: purgeError.message });
+        cleanup.push({ operation: 'cache_purge', key: publicKey, error: purgeError.message });
       }
     }
     const objectDeleteSuccess = cleanup.every(entry => entry.operation === 'cache_purge');

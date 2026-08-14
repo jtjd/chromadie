@@ -111,9 +111,10 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   assert.match(migration, /auth\.uid\(\)/);
   assert.match(migration, /REVOKE ALL ON TABLE public\.profile_media_assets/);
   assert.match(migration, /rich_access THEN background_video_path ELSE NULL/);
-  assert.match(editor, /stage_my_profile_media_asset/);
-  assert.match(editor, /finalize_my_profile_media_asset/);
-  assert.match(editor, /delete_my_profile_media_asset/);
+  assert.match(editor, /uploadProfileMediaToR2/);
+  assert.match(editor, /deleteProfileMediaAsset/);
+  assert.doesNotMatch(editor, /stage_my_profile_media_asset|stage_my_profile_media_replacement|finalize_my_profile_media_asset/);
+  assert.doesNotMatch(editor, /supabase\.storage[\s\S]*\.upload/);
   assert.match(editor, /select_my_profile_rich_media/);
   assert.match(editor, /application\/x-navi-animation/);
   assert.match(editor, /\.ani/);

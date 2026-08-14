@@ -3563,3 +3563,17 @@ created.
   responsive, drift, parity, and performance gates pass. The live R2 smoke was
   skipped because no R2 credentials were configured, so the production canary
   remains externally unverified.
+
+## Global R2 new-upload rollout complete — 2026-08-14
+
+- Production has verified direct R2 uploads, promotion, `media.chm.lol`
+  delivery, and physical library deletion for native R2 profile media.
+- Removed the remaining browser profile-media upload fallbacks to Supabase
+  Storage. New avatar, background, audio, banner, cursor, and pointer-cursor
+  uploads now use the existing R2 control plane or fail explicitly.
+- Added the supported Supabase Storage API cleanup boundary for retained legacy
+  paths. SQL retains exact identifiers and durable tombstones; it no longer
+  performs a metadata-only `storage.objects` deletion.
+- Reconciliation found four active legacy Supabase assets plus three expired
+  staged rows. Active rows remain pending owner-level disposition; no
+  generalized production backfill or destructive active-media cleanup was run.

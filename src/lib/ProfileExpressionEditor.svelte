@@ -1,9 +1,9 @@
 <script>
   import { onDestroy, onMount, createEventDispatcher } from 'svelte';
   import { supabase } from './supabase.js';
-  import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
+  import { getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import { deleteProfileMediaR2, isR2MediaAsset, promoteProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
+  import { deleteProfileMediaAsset, isR2MediaAsset, promoteProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
   import { prepareProfileAudioFile, processProfileImage, validateProfileAudioFile } from './profileMediaProcessing.js';
   import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
   import ProfileMediaIcon from './ProfileMediaIcon.svelte';
@@ -118,19 +118,6 @@
     return preloadImage(source);
   }
 
-  async function cleanupFailedImageUpload(reference, assetId = '') {
-    if (!reference) return;
-    if (assetId) {
-      const { data, error: deleteError } = await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: assetId });
-      if (!deleteError && data?.success) return;
-      // A registered row is intentionally not removed directly from Storage if
-      // its owner-authorized cleanup RPC failed; deleting the object alone
-      // would recreate the stale-library bug this lifecycle is preventing.
-      return;
-    }
-    await supabase.storage.from(reference.bucket).remove([reference.objectPath]);
-  }
-
   function setPersistedAvatarPreview(source) {
     if (avatarPreviewSrc && avatarPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(avatarPreviewSrc);
     avatarPreviewSrc = source;
@@ -163,23 +150,6 @@
     }
     avatarAssets = (data || []).filter(asset => asset.kind === 'avatar' && (!asset.status || asset.status === 'active'));
     backgroundAssets = (data || []).filter(asset => asset.kind === 'background' && (!asset.status || asset.status === 'active'));
-  }
-
-  function createAssetId() {
-    if (typeof crypto?.randomUUID !== 'function') throw new Error('This browser cannot create a secure media asset ID.');
-    return crypto.randomUUID();
-  }
-
-  async function registerAsset(kind, assetId, label) {
-    const { data, error: registerError } = await supabase.rpc('register_my_profile_media_asset', {
-      p_kind: kind,
-      p_asset_id: assetId,
-      p_label: String(label || '').trim().slice(0, 80)
-    });
-    if (registerError || !data?.success) {
-      throw new Error(registerError?.message || data?.error || 'The media asset could not be added to your library.');
-    }
-    return data;
   }
 
   async function selectR2ExpressionAsset(kind, assetId, { clear = false } = {}) {
@@ -236,13 +206,10 @@
     busy = true;
     setFeedback('', 'Removing media asset…');
     try {
-      // Existing R2 assets must always use the control plane for permanent
-      // deletion, even when the user-facing R2 upload flag is rolled back.
-      // The flag gates new R2 media behavior; it must not route an R2 row
-      // through the legacy Supabase-only deletion RPC.
-      const data = isR2MediaAsset(asset)
-        ? await deleteProfileMediaR2(asset.id)
-        : (await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: asset.id })).data;
+      // All permanent library deletion goes through the server control plane.
+      // It owns both R2 deletion and the retained legacy Storage compatibility
+      // path, so a provider cannot be forgotten by a browser-side RPC.
+      const data = await deleteProfileMediaAsset(asset.id);
       if (!data?.success) {
         throw new Error(data?.error || 'The media asset could not be removed.');
       }
@@ -322,67 +289,30 @@
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = '';
     if (!file || !profileId || busy) return;
+    if (!r2MediaEnabled) {
+      setFeedback('Profile media uploads are temporarily unavailable.');
+      return;
+    }
 
     busy = true;
     setFeedback('', 'Preparing the avatar…');
-    let uploadedReference = null;
-    let registeredAssetId = '';
     let r2AssetId = '';
     let persisted = false;
     try {
       const blob = await processProfileImage(file, 'avatar');
-      if (r2MediaEnabled) {
-        const uploaded = await uploadProfileMediaToR2({
-          kind: 'avatar',
-          blob,
-          extension: 'webp',
-          mimeType: 'image/webp',
-          label: file.name
-        });
-        const assetId = uploaded.asset_id || uploaded.asset?.id;
-        if (!assetId) throw new Error('The R2 upload did not return a media asset.');
-        r2AssetId = assetId;
-        const promoted = await promoteProfileMediaR2(assetId);
-        const publicReference = { r2_public_key: promoted.r2_public_key };
-        const persistedSrc = await verifyPersistedImage(publicReference);
-        await selectR2ExpressionAsset('avatar', assetId);
-        persisted = true;
-        setPersistedAvatarPreview(persistedSrc);
-        await loadAssetLibrary();
-        setFeedback('', `Avatar saved to your R2 library and profile (${formatStoredSize(blob.size)} stored).`);
-        return;
-      }
-      const assetId = createAssetId();
-      const storedPath = buildProfileStoragePath('avatar', profileId, assetId);
-      const reference = getProfileStorageRef(storedPath);
-      if (!reference) throw new Error('The avatar path could not be prepared.');
-      uploadedReference = reference;
-
-      const objectUrl = URL.createObjectURL(blob);
-      revokeAvatarPreview();
-      avatarPreviewSrc = objectUrl;
-      const { error: uploadError } = await supabase.storage
-        .from(reference.bucket)
-        .upload(reference.objectPath, blob, {
-          cacheControl: '3600',
-          contentType: 'image/webp',
-          upsert: false
-        });
-      if (uploadError) throw new Error(uploadError.message || 'The avatar could not be uploaded.');
-
-      const registered = await registerAsset('avatar', assetId, file.name);
-      registeredAssetId = registered?.id || '';
-      const persistedSrc = await verifyPersistedImage(storedPath);
-      await saveExpression({ ...expression, avatar_path: storedPath });
+      const uploaded = await uploadProfileMediaToR2({ kind: 'avatar', blob, extension: 'webp', mimeType: 'image/webp', label: file.name });
+      const assetId = uploaded.asset_id || uploaded.asset?.id;
+      if (!assetId) throw new Error('The R2 upload did not return a media asset.');
+      r2AssetId = assetId;
+      const promoted = await promoteProfileMediaR2(assetId);
+      const persistedSrc = await verifyPersistedImage({ r2_public_key: promoted.r2_public_key });
+      await selectR2ExpressionAsset('avatar', assetId);
       persisted = true;
       setPersistedAvatarPreview(persistedSrc);
       await loadAssetLibrary();
-      setFeedback('', `Avatar saved to your library and profile (${formatStoredSize(blob.size)} stored).`);
+      setFeedback('', `Avatar saved to your R2 library and profile (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
-      if (!persisted) {
-        if (r2AssetId) await deleteProfileMediaR2(r2AssetId).catch(() => {});
-        await cleanupFailedImageUpload(uploadedReference, registeredAssetId).catch(() => {});
-      }
+      if (!persisted && r2AssetId) await deleteProfileMediaAsset(r2AssetId).catch(() => {});
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The avatar could not be saved.');
       revokeAvatarPreview();
     } finally {
@@ -412,66 +342,30 @@
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = '';
     if (!file || !profileId || busy) return;
+    if (!r2MediaEnabled) {
+      setFeedback('Profile media uploads are temporarily unavailable.');
+      return;
+    }
 
     busy = true;
     setFeedback('', 'Preparing the background…');
-    let uploadedReference = null;
-    let registeredAssetId = '';
     let r2AssetId = '';
     let persisted = false;
     try {
       const blob = await processProfileImage(file, 'background');
-      if (r2MediaEnabled) {
-        const uploaded = await uploadProfileMediaToR2({
-          kind: 'background',
-          blob,
-          extension: 'webp',
-          mimeType: 'image/webp',
-          label: file.name
-        });
-        const assetId = uploaded.asset_id || uploaded.asset?.id;
-        if (!assetId) throw new Error('The R2 upload did not return a media asset.');
-        r2AssetId = assetId;
-        const promoted = await promoteProfileMediaR2(assetId);
-        const persistedSrc = await verifyPersistedImage({ r2_public_key: promoted.r2_public_key });
-        await selectR2ExpressionAsset('background', assetId);
-        persisted = true;
-        setPersistedBackgroundPreview(persistedSrc);
-        await loadAssetLibrary();
-        setFeedback('', `Background saved to your R2 library and public atmosphere (${formatStoredSize(blob.size)} stored).`);
-        return;
-      }
-      const assetId = createAssetId();
-      const storedPath = buildProfileStoragePath('background', profileId, assetId);
-      const reference = getProfileStorageRef(storedPath);
-      if (!reference) throw new Error('The background path could not be prepared.');
-      uploadedReference = reference;
-
-      const objectUrl = URL.createObjectURL(blob);
-      revokeBackgroundPreview();
-      backgroundPreviewSrc = objectUrl;
-      const { error: uploadError } = await supabase.storage
-        .from(reference.bucket)
-        .upload(reference.objectPath, blob, {
-          cacheControl: '3600',
-          contentType: 'image/webp',
-          upsert: false
-        });
-      if (uploadError) throw new Error(uploadError.message || 'The background could not be uploaded.');
-
-      const registered = await registerAsset('background', assetId, file.name);
-      registeredAssetId = registered?.id || '';
-      const persistedSrc = await verifyPersistedImage(storedPath);
-      await saveExpression({ ...expression, background_path: storedPath });
+      const uploaded = await uploadProfileMediaToR2({ kind: 'background', blob, extension: 'webp', mimeType: 'image/webp', label: file.name });
+      const assetId = uploaded.asset_id || uploaded.asset?.id;
+      if (!assetId) throw new Error('The R2 upload did not return a media asset.');
+      r2AssetId = assetId;
+      const promoted = await promoteProfileMediaR2(assetId);
+      const persistedSrc = await verifyPersistedImage({ r2_public_key: promoted.r2_public_key });
+      await selectR2ExpressionAsset('background', assetId);
       persisted = true;
       setPersistedBackgroundPreview(persistedSrc);
       await loadAssetLibrary();
-      setFeedback('', `Background saved to your library and public atmosphere (${formatStoredSize(blob.size)} stored).`);
+      setFeedback('', `Background saved to your R2 library and public atmosphere (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
-      if (!persisted) {
-        if (r2AssetId) await deleteProfileMediaR2(r2AssetId).catch(() => {});
-        await cleanupFailedImageUpload(uploadedReference, registeredAssetId).catch(() => {});
-      }
+      if (!persisted && r2AssetId) await deleteProfileMediaAsset(r2AssetId).catch(() => {});
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The background could not be saved.');
       revokeBackgroundPreview();
     } finally {
@@ -526,6 +420,10 @@
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = '';
     if (!file || !profileId || !staff || busy) return;
+    if (!r2MediaEnabled) {
+      setFeedback('Profile media uploads are temporarily unavailable.');
+      return;
+    }
 
     busy = true;
     setFeedback('', 'Checking the audio…');
@@ -534,56 +432,19 @@
     try {
       const validationError = validateProfileAudioFile(file);
       if (validationError) throw new Error(validationError);
-
-      const storedPath = buildProfileStoragePath('audio', profileId);
-      const reference = getProfileStorageRef(storedPath);
-      if (!reference) throw new Error('The audio path could not be prepared.');
-
       const blob = await prepareProfileAudioFile(file);
-      if (r2MediaEnabled) {
-        const uploaded = await uploadProfileMediaToR2({
-          kind: 'audio',
-          blob,
-          extension: 'mp3',
-          mimeType: 'audio/mpeg',
-          label: file.name
-        });
-        const assetId = uploaded.asset_id || uploaded.asset?.id;
-        if (!assetId) throw new Error('The R2 audio upload did not return a media asset.');
-        r2AssetId = assetId;
-        const promoted = await promoteProfileMediaR2(assetId);
-        await selectR2ExpressionAsset('audio', assetId);
-        expressionMediaReferences = {
-          ...expressionMediaReferences,
-          audio: { r2_public_key: promoted.r2_public_key }
-        };
-        persisted = true;
-        setFeedback('', `Profile audio saved to R2 (${Math.round(blob.size / 1024)} KB).`);
-        return;
-      }
-      const objectUrl = URL.createObjectURL(blob);
-      if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
-      audioPreviewSrc = objectUrl;
-      const { error: uploadError } = await supabase.storage
-        .from(reference.bucket)
-        .upload(reference.objectPath, blob, {
-          cacheControl: '3600',
-          contentType: 'audio/mpeg',
-          upsert: true
-        });
-      if (uploadError) throw new Error(uploadError.message || 'The audio could not be uploaded.');
-
-      const { data, error: rpcError } = await supabase.rpc('update_my_profile_audio', { p_audio_path: storedPath });
-      if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The audio could not be saved.');
-      expression = normalizeProfileExpression({ ...expression, audio_path: data.audio_path });
-      syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
-      mediaCacheKey = String(Date.now());
-      dispatch('expressionchange', { ...expression, updatedAt: data.updated_at || null });
+      const uploaded = await uploadProfileMediaToR2({ kind: 'audio', blob, extension: 'mp3', mimeType: 'audio/mpeg', label: file.name });
+      const assetId = uploaded.asset_id || uploaded.asset?.id;
+      if (!assetId) throw new Error('The R2 audio upload did not return a media asset.');
+      r2AssetId = assetId;
+      const promoted = await promoteProfileMediaR2(assetId);
+      await selectR2ExpressionAsset('audio', assetId);
+      expressionMediaReferences = { ...expressionMediaReferences, audio: { r2_public_key: promoted.r2_public_key } };
       persisted = true;
-      setFeedback('', `Profile audio saved. It will autoplay when the browser permits (${Math.round(blob.size / 1024)} KB).`);
+      setFeedback('', `Profile audio saved to R2 (${Math.round(blob.size / 1024)} KB).`);
     } catch (audioError) {
       setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be saved.');
-      if (r2AssetId && !persisted) await deleteProfileMediaR2(r2AssetId).catch(() => {});
+      if (r2AssetId && !persisted) await deleteProfileMediaAsset(r2AssetId).catch(() => {});
       if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
       audioPreviewSrc = '';
     } finally {

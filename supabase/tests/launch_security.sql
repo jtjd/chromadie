@@ -1608,6 +1608,12 @@ SELECT pg_temp.audit_expect_error(
 );
 SELECT public.delete_my_profile_media_asset('20000000-0000-0000-0000-000000000003');
 SELECT public.delete_my_profile_media_asset('20000000-0000-0000-0000-000000000002');
+-- The authenticated RPC creates durable tombstones. The Pages control plane
+-- performs the physical Storage API delete before this service-owned
+-- finalization step; simulate that external success in the SQL audit.
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
+SELECT public.complete_profile_media_deleted_cleanup_v2('20000000-0000-0000-0000-000000000003', true, true, NULL);
+SELECT public.complete_profile_media_deleted_cleanup_v2('20000000-0000-0000-0000-000000000002', true, true, NULL);
 SELECT pg_temp.audit_assert(
   NOT EXISTS (SELECT 1 FROM public.profile_media_assets WHERE id = '20000000-0000-0000-0000-000000000002')
     AND public.get_public_profile_configuration('10000000-0000-0000-0000-000000000001')->>'background_video_path' IS NULL,
@@ -1828,35 +1834,37 @@ INSERT INTO audit_results VALUES (
   public.delete_profile_media_legacy_storage_object('avatars/10000000-0000-0000-0000-000000000001/migrated.webp')
 );
 SELECT pg_temp.audit_assert(
-  (SELECT payload->>'success' = 'true' AND payload->>'deleted' = 'true'
+  (SELECT payload->>'success' = 'false'
+      AND payload->>'deferred' = 'true'
+      AND payload->>'storage_path' = 'avatars/10000000-0000-0000-0000-000000000001/migrated.webp'
    FROM audit_results WHERE name = 'legacy_avatar_cleanup')
-    AND NOT EXISTS (
+    AND EXISTS (
       SELECT 1 FROM storage.objects
       WHERE bucket_id = 'avatars'
         AND name = '10000000-0000-0000-0000-000000000001/migrated.webp'
     ),
-  'exact legacy Supabase Storage object was not deleted'
+  'database compatibility RPC claimed to delete a physical legacy object'
 );
 INSERT INTO audit_results VALUES (
   'legacy_avatar_cleanup_retry',
   public.delete_profile_media_legacy_storage_object('avatars/10000000-0000-0000-0000-000000000001/migrated.webp')
 );
 SELECT pg_temp.audit_assert(
-  (SELECT payload->>'success' = 'true' AND payload->>'deleted' = 'false'
+  (SELECT payload->>'success' = 'false' AND payload->>'deferred' = 'true'
    FROM audit_results WHERE name = 'legacy_avatar_cleanup_retry'),
-  'repeating legacy Supabase Storage deletion was not idempotent'
-);
-SELECT public.delete_profile_media_legacy_storage_object(
-  'avatars/10000000-0000-0000-0000-000000000001/migrated-sibling.webp'
+  'legacy Storage cleanup compatibility RPC did not remain deferred and safe'
 );
 SELECT pg_temp.audit_assert(
-  NOT EXISTS (
+  EXISTS (
     SELECT 1 FROM storage.objects
     WHERE bucket_id = 'avatars'
       AND name = '10000000-0000-0000-0000-000000000001/migrated-sibling.webp'
   ),
-  'exact legacy cleanup removed the wrong object or left the test sibling behind'
+  'database compatibility cleanup touched the unrelated legacy sibling'
 );
+-- The Pages control plane performs the physical Storage API deletion. Simulate
+-- that successful external operation here, then verify the tombstone can
+-- finalize; the surrounding transaction rollback leaves fixture objects intact.
 INSERT INTO audit_results VALUES (
   'legacy_avatar_cleanup_finalize',
   public.complete_profile_media_deleted_cleanup_v2(
@@ -1868,7 +1876,7 @@ SELECT pg_temp.audit_assert(
     SELECT 1 FROM public.profile_media_assets
     WHERE id = '30000000-0000-0000-0000-000000000009'
   ),
-  'migrated R2 tombstone was not finalized after legacy cleanup'
+  'migrated R2 tombstone was not finalized after control-plane cleanup'
 );
 
 -- Account deletion captures migrated legacy paths before profile/media rows

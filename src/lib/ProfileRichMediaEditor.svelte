@@ -7,17 +7,15 @@
   import {
     PROFILE_ANIMATED_CURSOR_MIME,
     PROFILE_RICH_MEDIA_KINDS,
-    buildRichMediaStoragePath,
     extensionForRichMedia,
     formatRichMediaBytes,
-    getRichMediaStorageRef,
     isAnimatedCursorFile,
     normalizeRichMediaConfig,
     validateRichMediaFile
   } from './profileRichMedia.js';
   import { prepareProfileAudioFile, processProfileRichImage } from './profileMediaProcessing.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import { deleteProfileMediaR2, isR2MediaAsset, promoteProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
+  import { deleteProfileMediaAsset, isR2MediaAsset, promoteProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
   import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
 
   export let profileId = null;
@@ -113,11 +111,6 @@
     return true;
   }
 
-  function createAssetId() {
-    if (typeof crypto?.randomUUID !== 'function') throw new Error('This browser cannot create a secure media asset ID.');
-    return crypto.randomUUID();
-  }
-
   function assetForPath(path, assetId = '') {
     return assets.find(asset => (assetId && asset.id === assetId) || (path && asset.storage_path === path)) || null;
   }
@@ -154,22 +147,6 @@
     const idField = kind === 'background_video' ? 'background_video_asset_id' : `${kind}_asset_id`;
     const field = kind === 'background_video' ? 'background_video_path' : `${kind}_path`;
     return richConfig[idField] || assetForPath(richConfig[field])?.id || null;
-  }
-
-  function replacementAssetId(kind) {
-    const selected = selectedAssetId(kind);
-    if (selected) return selected;
-    // Repair an active single-slot asset that was uploaded successfully but
-    // never became the selected profile reference. The server still verifies
-    // ownership and refuses to replace a different selected cursor.
-    return (kind === 'cursor' ? cursorAssets : pointerCursorAssets)[0]?.id || null;
-  }
-
-  async function clearExpiredStagedAssets() {
-    const { data, error: cleanupError } = await supabase.rpc('cleanup_my_profile_staged_media');
-    if (cleanupError || !data?.success) {
-      throw new Error(cleanupError?.message || data?.error || 'The pending media uploads could not be cleared.');
-    }
   }
 
   function audioConfigPayload() {
@@ -238,11 +215,10 @@
     busy = true;
     setFeedback('', 'Removing rich media…');
     try {
-      // Deletion is provider-owned, not rollout-owned. An R2 asset remains
-      // deletable through the R2 control plane after a canary rollback.
-      const data = isR2MediaAsset(asset)
-        ? await deleteProfileMediaR2(asset.id)
-        : (await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: asset.id })).data;
+      // Permanent deletion is provider-owned by the control plane. This also
+      // handles retained legacy Supabase paths without exposing deletion
+      // authority to the browser RPC path.
+      const data = await deleteProfileMediaAsset(asset.id);
       if (!data?.success) throw new Error(data?.error || 'The media asset could not be removed.');
       audioTracks = audioTracks.filter(track => track.asset_id !== asset.id);
       await loadAssets();
@@ -263,6 +239,10 @@
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = '';
     if (!file || !profileId || busy) return;
+    if (!r2MediaEnabled) {
+      setFeedback('Profile media uploads are temporarily unavailable.');
+      return;
+    }
     const inputError = validateRichMediaFile(file, kind);
     if (inputError) { setFeedback(inputError); return; }
     busy = true;
@@ -295,104 +275,42 @@
       if (['audio', 'background_video'].includes(kind)) metadata.duration_ms = await readMediaDuration(file, kind);
       if (!extension) throw new Error('That file type is not supported.');
 
-      if (r2MediaEnabled) {
-        const replacingAssetId = ['banner', 'cursor', 'pointer_cursor'].includes(kind)
-          ? selectedAssetId(kind)
-          : null;
-        const uploaded = await uploadProfileMediaToR2({
-          kind,
-          blob,
-          extension,
-          mimeType: blob.type || file.type || (extension === 'ani' ? PROFILE_ANIMATED_CURSOR_MIME : ''),
-          label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
-          metadata,
-          replaceAssetId: replacingAssetId
-        });
-        stagedAssetId = uploaded.asset_id || uploaded.asset?.id;
-        if (!stagedAssetId) throw new Error('The R2 upload did not return a media asset.');
-        const promoted = await promoteProfileMediaR2(stagedAssetId);
-        await loadAssets();
-        const created = {
-          id: stagedAssetId,
-          kind,
-          storage_provider: 'r2',
-          r2_public_key: promoted.r2_public_key,
-          ever_public: true,
-          storage_path: null,
-          label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
-          duration_ms: metadata.duration_ms || 0,
-          mime_type: blob.type || file.type
-        };
-        await selectAsset(kind, created, true);
-        if (replacingAssetId && replacingAssetId !== stagedAssetId) {
-          await deleteProfileMediaR2(replacingAssetId).catch(() => {});
-        }
-        replacementCommitted = true;
-        setFeedback('', `${kind.replace('_', ' ')} uploaded and selected.`);
-        return;
-      }
-      const assetId = createAssetId();
-      if (['cursor', 'pointer_cursor'].includes(kind)) {
-        // The asset query is lazy and can still be in flight when the user
-        // opens the file picker. Refresh it before deciding whether this is
-        // an initial upload or a single-slot replacement.
-        await clearExpiredStagedAssets();
-        const assetsLoaded = await loadAssets();
-        if (!assetsLoaded) throw new Error('The cursor library could not be loaded. Refresh and try again.');
-      }
-      const replacingAssetId = ['cursor', 'pointer_cursor'].includes(kind) ? replacementAssetId(kind) : null;
-      const storedPath = buildRichMediaStoragePath(kind, profileId, assetId, extension);
-      const reference = getRichMediaStorageRef(storedPath);
-      if (!reference) throw new Error('The rich media path could not be prepared.');
-      const stageRpc = replacingAssetId ? 'stage_my_profile_media_replacement' : 'stage_my_profile_media_asset';
-      const stageParams = {
-        p_kind: kind,
-        p_asset_id: assetId,
-        p_extension: extension,
-        p_byte_size: blob.size,
-        p_label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
-        p_metadata: metadata,
-        ...(replacingAssetId ? { p_replace_asset_id: replacingAssetId } : {})
+      const replacingAssetId = ['banner', 'cursor', 'pointer_cursor'].includes(kind)
+        ? selectedAssetId(kind)
+        : null;
+      const uploaded = await uploadProfileMediaToR2({
+        kind,
+        blob,
+        extension,
+        mimeType: blob.type || file.type || (extension === 'ani' ? PROFILE_ANIMATED_CURSOR_MIME : ''),
+        label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
+        metadata,
+        replaceAssetId: replacingAssetId
+      });
+      stagedAssetId = uploaded.asset_id || uploaded.asset?.id;
+      if (!stagedAssetId) throw new Error('The R2 upload did not return a media asset.');
+      const promoted = await promoteProfileMediaR2(stagedAssetId);
+      await loadAssets();
+      const created = {
+        id: stagedAssetId,
+        kind,
+        storage_provider: 'r2',
+        r2_public_key: promoted.r2_public_key,
+        ever_public: true,
+        storage_path: null,
+        label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
+        duration_ms: metadata.duration_ms || 0,
+        mime_type: blob.type || file.type
       };
-      const { data: staged, error: stageError } = await supabase.rpc(stageRpc, stageParams);
-      if (stageError || !staged?.success) throw new Error(stageError?.message || staged?.error || 'The server could not stage this media.');
-      stagedAssetId = staged.id;
-      const contentType = reference.extension === 'ani' ? PROFILE_ANIMATED_CURSOR_MIME : blob.type || file.type;
-      const { error: uploadError } = await supabase.storage.from(reference.bucket).upload(reference.objectPath, blob, { contentType, cacheControl: '31536000', upsert: false });
-      if (uploadError) {
-        await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: staged.id });
-        throw new Error(uploadError.message || 'The media upload failed.');
+      await selectAsset(kind, created, true);
+      if (replacingAssetId && replacingAssetId !== stagedAssetId) {
+        await deleteProfileMediaAsset(replacingAssetId).catch(() => {});
       }
-      const { data: finalized, error: finalizeError } = await supabase.rpc('finalize_my_profile_media_asset', { p_asset_id: staged.id });
-      if (finalizeError || !finalized?.success) throw new Error(finalizeError?.message || finalized?.error || 'The server could not verify this media.');
-      if (replacingAssetId) {
-        const { data: committed, error: commitError } = await supabase.rpc('commit_my_profile_media_replacement', {
-          p_kind: kind,
-          p_old_asset_id: replacingAssetId,
-          p_new_asset_id: staged.id
-        });
-        if (commitError || !committed?.success) throw new Error(commitError?.message || committed?.error || 'The cursor replacement could not be committed.');
-        replacementCommitted = true;
-        const field = kind === 'cursor' ? 'cursor_path' : 'pointer_cursor_path';
-        const replacementPath = committed.storage_path || storedPath;
-        cacheKey = String(Date.now());
-        await loadAssets();
-        // loadAssets reprojects the last parent config while the parent event
-        // is still in flight. Re-apply the committed path before forwarding
-        // the local preview so replacement never appears to revert until a
-        // refresh.
-        richConfig = { ...richConfig, [field]: replacementPath };
-        incomingKey = `${profileId || ''}:${JSON.stringify(richConfig)}`;
-        dispatch('expressionchange', { ...richConfig, updatedAt: committed.updated_at || null });
-      } else {
-        await loadAssets();
-        const created = { id: staged.id, kind, storage_path: storedPath, label: file.name.replace(/\.[^.]+$/, '').slice(0, 80), duration_ms: metadata.duration_ms || 0 };
-        await selectAsset(kind, created, true);
-      }
+      replacementCommitted = true;
       setFeedback('', `${kind.replace('_', ' ')} uploaded and selected.`);
     } catch (uploadError) {
       if (stagedAssetId && !replacementCommitted) {
-        await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: stagedAssetId });
+        await deleteProfileMediaAsset(stagedAssetId).catch(() => {});
       }
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The rich media upload failed.');
     } finally {

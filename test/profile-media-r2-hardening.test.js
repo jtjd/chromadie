@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 import {
   buildSignature,
   createPresignedUrl,
+  deleteSupabaseStorageObject,
+  parseLegacyProfileMediaPath,
   purgePublicMediaUrl,
   validateProfileMediaSignature
 } from '../functions/_profileMediaControl.js';
@@ -98,6 +100,34 @@ test('exact public media purge is scoped to the immutable media URL', async () =
   }
 });
 
+test('legacy Supabase cleanup uses the exact Storage API path without database-row deletion', async () => {
+  assert.deepEqual(parseLegacyProfileMediaPath('avatars/user-id/avatar.webp'), {
+    bucket: 'avatars',
+    objectPath: 'user-id/avatar.webp',
+    storagePath: 'avatars/user-id/avatar.webp'
+  });
+  assert.equal(parseLegacyProfileMediaPath('avatars/../other.webp'), null);
+  const previousFetch = globalThis.fetch;
+  const requests = [];
+  globalThis.fetch = async (url, options) => {
+    requests.push({ url, options });
+    return new Response('{}', { status: 200 });
+  };
+  try {
+    await deleteSupabaseStorageObject({
+      VITE_SUPABASE_URL: 'https://example.supabase.co',
+      SUPABASE_SECRET_KEY: 'sb_secret_fake_example'
+    }, 'avatars/user-id/avatar.webp');
+    assert.equal(requests[0].url, 'https://example.supabase.co/storage/v1/object/avatars');
+    assert.equal(requests[0].options.method, 'POST');
+    assert.equal(requests[0].options.headers.apikey, 'sb_secret_fake_example');
+    assert.equal(requests[0].options.headers.Authorization, undefined);
+    assert.deepEqual(JSON.parse(requests[0].options.body), { prefixes: ['user-id/avatar.webp'] });
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});
+
 test('R2 hardening keeps audio migration targets distinct and cleanup retryable', async () => {
   const migration = await read('scripts/migrate-profile-media-to-r2.mjs');
   const migrationModel = await read('scripts/profile-media-migration-model.mjs');
@@ -167,7 +197,8 @@ test('R2 control plane does not expose private object keys to browser responses'
 test('R2 final correctness keeps deletion operation state and scheduler control-plane-only', async () => {
   const deletion = await read('functions/api/profile-media/delete.js');
   const lifecycle = await read('supabase/migrations/20260813230000_profile_media_r2_final_correctness.sql');
-  const legacyCleanup = await read('supabase/migrations/20260813235900_profile_media_r2_legacy_storage_cleanup.sql');
+  const legacyCleanup = await read('supabase/migrations/20260814000000_profile_media_legacy_storage_api_cleanup.sql');
+  const accountQueue = await read('supabase/migrations/20260813235900_profile_media_r2_legacy_storage_cleanup.sql');
   const accountCleanup = await read('functions/api/profile-media/account-cleanup.js');
   const completion = await read('functions/api/profile-media/complete.js');
   const promotion = await read('functions/api/profile-media/promote.js');
@@ -183,14 +214,14 @@ test('R2 final correctness keeps deletion operation state and scheduler control-
   assert.match(promotion, /asset\.r2_public_key \|\| asset\.r2_private_key/);
   assert.match(promotion, /status === 404/);
   assert.match(lifecycle, /already_public/);
-  assert.match(deletion, /delete_profile_media_legacy_storage_object/);
+  assert.match(deletion, /deleteSupabaseStorageObject/);
   assert.match(deletion, /asset\.storage_path/);
-  assert.match(legacyCleanup, /storage\.objects/);
+  assert.doesNotMatch(legacyCleanup, /DELETE FROM storage\.objects/);
   assert.match(legacyCleanup, /v_bucket NOT IN \('avatars', 'backgrounds', 'profile_audio', 'profile_media'\)/);
   assert.match(legacyCleanup, /storage_path text/);
-  assert.match(legacyCleanup, /'supabase'::text AS bucket/);
+  assert.match(accountQueue, /'supabase'::text AS bucket/);
   assert.match(accountCleanup, /\['private', 'public', 'supabase'\]/);
-  assert.match(accountCleanup, /delete_profile_media_legacy_storage_object/);
+  assert.match(accountCleanup, /deleteSupabaseStorageObject/);
   assert.match(scheduler, /R2_ACCOUNT_CLEANUP_SECRET/);
   assert.match(scheduler, /Authorization: `Bearer \$\{secret\}`/);
   assert.match(scheduler, /CLEANUP_ENDPOINT_URL/);
@@ -201,8 +232,8 @@ test('R2 final correctness keeps deletion operation state and scheduler control-
 test('permanent R2 library deletion stays on the provider control plane after rollback', async () => {
   const expressionEditor = await read('src/lib/ProfileExpressionEditor.svelte');
   const richMediaEditor = await read('src/lib/ProfileRichMediaEditor.svelte');
-  assert.match(expressionEditor, /const data = isR2MediaAsset\(asset\)\s*\n\s*\? await deleteProfileMediaR2\(asset\.id\)/);
-  assert.match(richMediaEditor, /const data = isR2MediaAsset\(asset\)\s*\n\s*\? await deleteProfileMediaR2\(asset\.id\)/);
+  assert.match(expressionEditor, /const data = await deleteProfileMediaAsset\(asset\.id\)/);
+  assert.match(richMediaEditor, /const data = await deleteProfileMediaAsset\(asset\.id\)/);
   assert.match(expressionEditor, /Avatar unequipped\.[\s\S]*saved asset remains in your library/);
   assert.match(expressionEditor, /Background unequipped\.[\s\S]*saved asset remains in your library/);
   assert.match(expressionEditor, /profile-expression-editor__compact-library/);
@@ -212,20 +243,22 @@ test('permanent R2 library deletion stays on the provider control plane after ro
 });
 
 test('legacy Supabase media cleanup is exact-path, retryable, and NULL-safe', async () => {
-  const migration = await read('supabase/migrations/20260813235900_profile_media_r2_legacy_storage_cleanup.sql');
+  const migration = await read('supabase/migrations/20260814000000_profile_media_legacy_storage_api_cleanup.sql');
   const sqlTests = await read('supabase/tests/launch_security.sql');
   const deletion = await read('functions/api/profile-media/delete.js');
   const cleanup = await read('functions/api/profile-media/account-cleanup.js');
-  assert.match(migration, /v_storage_path text := NULLIF\(p_storage_path, ''\)/);
+  assert.match(migration, /v_storage_path text := NULLIF\(btrim\(p_storage_path\), ''\)/);
   assert.match(migration, /v_object_path ~/);
-  assert.match(migration, /DELETE FROM storage\.objects[\s\S]*WHERE bucket_id = v_bucket[\s\S]*AND name = v_object_path/);
+  assert.doesNotMatch(migration, /DELETE FROM storage\.objects/);
+  assert.match(migration, /status = 'deleted'/);
+  assert.match(migration, /storage_provider text/);
   assert.match(migration, /asset\.storage_path/);
   assert.match(sqlTests, /r2_delete_migrated_avatar/);
   assert.match(sqlTests, /legacy_avatar_cleanup/);
   assert.match(sqlTests, /account deletion did not durably capture the retained legacy Supabase path/);
-  assert.match(deletion, /p_storage_path: asset\.storage_path/);
-  assert.match(cleanup, /p_storage_path: object\.key/);
-  assert.match(cleanup, /p_storage_path: asset\.storage_path/);
+  assert.match(deletion, /deleteSupabaseStorageObject\(env, storagePath\)/);
+  assert.match(cleanup, /deleteSupabaseStorageObject\(env, object\.key\)/);
+  assert.match(cleanup, /deleteSupabaseStorageObject\(env, asset\.storage_path\)/);
   assert.match(cleanup, /const objectDeleteSuccess = failures\.every\(entry => entry\.operation === 'cache_purge'\)/);
 });
 
