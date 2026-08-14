@@ -92,10 +92,6 @@
     dispatch('retry');
   }
 
-  function openPremium(event) {
-    event.preventDefault();
-    dispatch('premiumrequest');
-  }
 </script>
 
 <div class="profile-studio-preview">
@@ -149,10 +145,6 @@
         <button type="button" class:active={previewDevice === 'mobile'} aria-pressed={previewDevice === 'mobile'} on:click={() => setPreviewDevice('mobile')}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"></rect><path d="M11 18h2"></path></svg>Mobile</button>
       </div>
     </div>
-    <aside class="profile-studio-preview__plus-card" aria-label="Chromadie Plus">
-      <div class="profile-studio-preview__plus-icon" aria-hidden="true">♔</div>
-      <div><h3>Unlock more with Chromadie Plus</h3><p>Get access to premium effects, animated cursors, unique borders and more.</p><a href="#premium" on:click={openPremium}>View premium features <span aria-hidden="true">→</span></a></div>
-    </aside>
   </div>
 </div>
 
@@ -181,12 +173,6 @@
   .profile-studio-preview__devices button.active { border-bottom-color: var(--studio-accent, #89b4fa); color: var(--studio-accent, #89b4fa); }
   .profile-studio-preview__devices button:focus-visible { outline: 2px solid var(--studio-focus, #b4befe); outline-offset: -2px; }
   .profile-studio-preview__devices svg { width: .9rem; height: .9rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
-  .profile-studio-preview__plus-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .7rem; padding: .85rem; border: 1px solid color-mix(in srgb, var(--ctp-mauve, #cba6f7) 30%, var(--ctp-surface0, #313244)); border-radius: .55rem; background: color-mix(in srgb, var(--ctp-mauve, #cba6f7) 5%, var(--ctp-mantle, #181825)); }
-  .profile-studio-preview__plus-icon { display: grid; width: 1.5rem; height: 1.5rem; place-items: center; color: var(--ctp-mauve, #cba6f7); font-size: 1.25rem; }
-  .profile-studio-preview__plus-card h3 { margin: 0; color: var(--ctp-mauve, #cba6f7); font-size: .82rem; }
-  .profile-studio-preview__plus-card p { margin: .35rem 0 .65rem; color: var(--ctp-subtext1, #bac2de); font-size: .7rem; line-height: 1.4; }
-  .profile-studio-preview__plus-card a { color: var(--ctp-mauve, #cba6f7); font-size: .72rem; font-weight: 650; text-decoration: none; }
-  .profile-studio-preview__plus-card a:hover { text-decoration: underline; }
   .profile-studio-preview__loading { display: grid; place-items: center; min-height: 18rem; gap: .55rem; color: var(--studio-muted, #bac2de); font-size: .8rem; text-align: center; }
   .profile-studio-preview__loading span { color: var(--studio-focus, #b4befe); font-size: 1.2rem; }
   .profile-studio-preview__loading strong { color: var(--studio-text, #cdd6f4); font-size: .92rem; }

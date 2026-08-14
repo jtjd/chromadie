@@ -589,12 +589,12 @@ async function capturePublishedLayouts() {
       await page.click('#profile-customize-tab-layout', `restore Layout editor after ${layout} surface inspection`);
       await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, `${layout} Layout editor`);
     }
-    const layoutPublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
+    const layoutPublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-actions__publish')].find(button => !button.disabled))`);
     let serverAfterDraft = serverBeforeDraft;
     let publishPayload = null;
     if (layoutPublishPending) {
-      await page.click('.profile-dashboard-actions__publish', `${layout} public evidence publish`);
-      await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, `${layout} public evidence published`);
+      await page.click('.profile-studio-actions__publish', `${layout} public evidence publish`);
+      await page.waitFor(`document.querySelector('.profile-studio-actions__publish')?.disabled === true`, `${layout} public evidence published`);
       await assertPublishedExpressionVisible(`${layout} Studio publish`);
       publishPayload = await latestRpcPayload('publish_profile_studio_v2');
       const serverConfigAfter = await callAuthenticatedRpc('get_my_profile_configuration_v2');
@@ -767,11 +767,11 @@ async function capturePublishedLayouts() {
     card?.click();
   })()`);
   await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-compact')`, 'restore Compact public evidence preview');
-  const restorePublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
+  const restorePublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-actions__publish')].find(button => !button.disabled))`);
   let restorePayload = null;
   if (restorePublishPending) {
-    await page.click('.profile-dashboard-actions__publish', 'restore Compact publish');
-    await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, 'restore Compact published');
+    await page.click('.profile-studio-actions__publish', 'restore Compact publish');
+    await page.waitFor(`document.querySelector('.profile-studio-actions__publish')?.disabled === true`, 'restore Compact published');
     restorePayload = await latestRpcPayload('publish_profile_studio_v2');
   }
   const restoredConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
@@ -880,7 +880,7 @@ try {
     // Let the first authenticated hydration settle before the next step
     // deliberately performs a direct refresh. This keeps local Supabase auth
     // token propagation from racing the refresh assertion in CI.
-    await page.waitFor('document.querySelector(".profile-dashboard-shell__owner")', 'authenticated Profile Studio shell', 30000);
+    await page.waitFor('document.querySelector(".profile-studio-shell__brand")', 'authenticated Profile Studio shell', 30000);
     const state = await page.evaluate(`(() => ({ path: location.pathname, settings: Boolean(document.querySelector('.profile-settings-page')), authPage: Boolean(document.querySelector('.auth-page')), overlay: Boolean(document.querySelector('.auth-modal-overlay')) }))()`);
     assert(state.path === '/profile/settings', `Safe auth redirect landed on ${state.path}.`);
     assert(state.settings && !state.authPage && !state.overlay, 'Authenticated auth route left an auth page or overlay mounted.');
@@ -889,8 +889,8 @@ try {
 
   await step('direct-refresh authenticated Profile Studio', async () => {
     await page.navigate(`${appUrl}/profile/settings`, 'authenticated Profile Studio');
-    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-dashboard-shell__owner')`, 'Profile Studio');
-    const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-dashboard-shell__nav button.active')?.textContent?.trim(), authenticated: Boolean(document.querySelector('.profile-dashboard-shell__owner')), globalHeader: Boolean(document.querySelector('.site-mode-header')) })`);
+    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-shell__brand')`, 'Profile Studio');
+    const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-studio-shell__primary-nav button.active')?.textContent?.trim(), authenticated: Boolean(document.querySelector('.profile-studio-shell__brand')), globalHeader: Boolean(document.querySelector('.site-mode-header')) })`);
     assert(state.path === '/profile/settings', `Expected /profile/settings after refresh, got ${state.path}.`);
     assert(state.authenticated, 'Authenticated owner card is missing after Profile Studio refresh.');
     assert(!state.globalHeader, 'Profile Studio mounted the redundant global site header.');
@@ -939,16 +939,17 @@ try {
     })()`);
     assert(injected.scope && injected.keys.length === 4, `Could not seed stale Studio session state: ${JSON.stringify(injected)}.`);
 
+    await page.evaluate('window.__profileStudioSmokeReloadToken = "pending"');
     await page.command('Page.reload', { ignoreCache: true });
-    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-preview .profile-shell-page--preview') && document.querySelector('.profile-dashboard-actions')`, 'stale-session Studio hydration');
+    await page.waitFor(`window.__profileStudioSmokeReloadToken === undefined && document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-preview .profile-shell-page--preview') && document.querySelector('.profile-studio-actions')`, 'stale-session Studio hydration');
     await delay(300);
     const state = await page.evaluate(`(() => {
       const shell = document.querySelector('.profile-studio-preview .profile-shell-page--preview');
-      const actions = document.querySelector('.profile-dashboard-actions');
+      const actions = document.querySelector('.profile-studio-actions');
       return {
         layout: shell?.dataset.profileLayout || '',
-        dirty: Boolean(actions?.querySelector('.profile-dashboard-actions__state--dirty')),
-        saved: actions?.querySelector('.profile-dashboard-actions__saved')?.textContent?.trim() || '',
+        dirty: Boolean(actions?.querySelector('.profile-studio-actions__state--dirty')),
+        saved: actions?.querySelector('.profile-studio-actions__state')?.textContent?.trim() || '',
         hiddenLegacyEditors: document.querySelectorAll('.profile-content-editor, .profile-widget-editor').length,
         surface: (() => {
           const boundary = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
@@ -966,7 +967,7 @@ try {
       };
     })()`);
     assert(state.preview && state.layout === 'compact', `Stale editor session state changed the initial Studio layout: ${JSON.stringify(state)}.`);
-    assert(!state.dirty && state.saved === 'All changes saved', `Stale editor session state changed dirty status: ${JSON.stringify(state)}.`);
+    assert(!state.dirty && state.saved === 'Published', `Stale editor session state changed dirty status: ${JSON.stringify(state)}.`);
     assert(state.hiddenLegacyEditors === 0, `Hidden legacy editors still mounted in Customize: ${JSON.stringify(state)}.`);
     assert(JSON.stringify(state.surface) === JSON.stringify(baselineSurface), `Stale editor session state changed the saved surface: ${JSON.stringify({ baseline: baselineSurface, afterRefresh: state.surface })}.`);
     await page.evaluate(`(() => ${JSON.stringify(injected.keys)}.forEach(key => sessionStorage.removeItem(key)))()`);
@@ -1016,7 +1017,7 @@ try {
   await step('Customize controls publish the configured surface depth', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize-effects`, 'legacy Effects destination');
     await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-studio-preview .profile-shell-page--preview')`, 'Customize tab workspace and persistent preview');
-    await page.waitFor(`document.querySelector('.profile-dashboard-actions')`, 'dashboard profile actions');
+    await page.waitFor(`document.querySelector('.profile-studio-actions')`, 'Studio profile actions');
     const customizeTabs = await page.evaluate(`[...document.querySelectorAll('[role="tablist"][aria-label="Customize profile"] [role="tab"]')].map(tab => tab.textContent.trim())`);
     assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Layout']), `Customize tabs did not collapse Effects into Appearance: ${JSON.stringify(customizeTabs)}.`);
     await page.waitFor(`!document.querySelector('#customize-effects')?.hidden`, 'visual effects inside Appearance');
@@ -1102,7 +1103,7 @@ try {
       === JSON.stringify(mediaSourcesBeforeDraftChange.filter(source => /media\.chm\.lol|r2\.cloudflarestorage\.com/.test(source))),
     `Studio draft changed media identity: ${JSON.stringify({ before: mediaSourcesBeforeDraftChange, after: mediaSourcesAfterDraftChange })}.`);
     await page.clickText('Publish profile', { description: 'publish after immediate media mutation' });
-    await page.waitFor(`document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() === 'Profile published.'`, 'publish after immediate media mutation');
+    await page.waitFor(`document.querySelector('.profile-studio-actions__message')?.textContent?.trim() === 'Profile published.'`, 'publish after immediate media mutation');
     const mediaPublishExpression = await assertPublishedExpressionVisible('media mutation publish');
     const mediaPublishConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
     assert(mediaPublishConfiguration?.updated_at && mediaPublishExpression.expression.avatar && mediaPublishExpression.expression.background, `Media mutation publish did not preserve the current token and expression: ${JSON.stringify({ mediaPublishExpression, mediaPublishConfiguration })}`);
@@ -1373,10 +1374,10 @@ try {
       // Layout selection is intentionally a real draft update. Reset it before
       // the later route/viewport checks so navigation is testing geometry rather
       // than being intercepted by the unsaved-changes guard.
-      const layoutResetPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions button')].find(button => button.textContent.trim() === 'Reset' && !button.disabled))`);
+      const layoutResetPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-actions button')].find(button => button.textContent.trim() === 'Reset' && !button.disabled))`);
       if (layoutResetPending) {
-        await page.click('.profile-dashboard-actions button:not(.profile-dashboard-actions__publish)', 'reset layout smoke draft');
-        await page.waitFor(`([...document.querySelectorAll('.profile-dashboard-actions button')].find(button => button.textContent.trim() === 'Reset'))?.disabled === true`, 'reset layout smoke draft');
+        await page.click('.profile-studio-actions button:not(.profile-studio-actions__publish)', 'reset layout smoke draft');
+        await page.waitFor(`([...document.querySelectorAll('.profile-studio-actions button')].find(button => button.textContent.trim() === 'Reset'))?.disabled === true`, 'reset layout smoke draft');
       }
       return { pickerLabels, measurements };
     });
@@ -1386,10 +1387,10 @@ try {
       // built editor therefore receives the same public cosmetic projection
       // without importing source modules that do not exist in a production
       // bundle.
-      const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-dashboard-actions__publish')].find(button => !button.disabled))`);
+      const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-actions__publish')].find(button => !button.disabled))`);
       if (publishPending) {
-        await page.click('.profile-dashboard-actions__publish', 'publish layout smoke draft');
-        await page.waitFor(`document.querySelector('.profile-dashboard-actions__publish')?.disabled === true`, 'publish layout smoke draft');
+        await page.click('.profile-studio-actions__publish', 'publish layout smoke draft');
+        await page.waitFor(`document.querySelector('.profile-studio-actions__publish')?.disabled === true`, 'publish layout smoke draft');
         await assertPublishedExpressionVisible('layout smoke publish');
       }
 
@@ -1796,11 +1797,11 @@ try {
     assert(publishRequestsBefore === publishRequestsAfter, 'Changing Customize unexpectedly called the publish RPC.');
     await capture('05-customize-draft-blur');
     await page.clickText('Publish profile', { description: 'publish configured surface depth' });
-    await page.waitFor(`document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() === 'Profile published.'`, 'published profile appearance');
+    await page.waitFor(`document.querySelector('.profile-studio-actions__message')?.textContent?.trim() === 'Profile published.'`, 'published profile appearance');
     const immediatePublishedMedia = await assertPublishedExpressionVisible('surface publish');
     const publishedState = await page.evaluate(`({
       publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,
-      status: document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() || ''
+      status: document.querySelector('.profile-studio-actions__message')?.textContent?.trim() || ''
     })`);
     const publishRequests = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2') || request.url.includes('publish_profile_studio_v2')).length;
     assert(publishedState.publishDisabled === true, 'Publishing did not clear the dashboard draft state.');
@@ -1868,25 +1869,24 @@ try {
     assert(mobilePreview.device === 'mobile', `Mobile live preview did not activate: ${JSON.stringify(mobilePreview)}.`);
     assert((mobilePreview.phone?.width || 0) <= 322 && (mobilePreview.card?.width || 0) > 200, `Mobile live preview is not a bounded phone canvas: ${JSON.stringify(mobilePreview)}.`);
     assert(!mobilePreview.overflow.length && mobilePreview.phoneScrollWidth <= mobilePreview.phoneClientWidth + 1 && mobilePreview.nameScrollWidth <= mobilePreview.nameClientWidth + 1, `Mobile live preview has horizontal content overflow: ${JSON.stringify(mobilePreview)}.`);
-    await page.waitFor(`document.querySelector('.profile-dashboard-shell__mobile-bar button')`, 'mobile dashboard menu');
+    await page.waitFor(`document.querySelector('.profile-studio-shell__more-nav > button')`, 'Profile Studio More menu');
     const closed = await page.evaluate(`(() => {
-      const trigger = document.querySelector('.profile-dashboard-shell__mobile-bar button');
-      const sidebar = document.querySelector('#profile-dashboard-sidebar');
+      const trigger = document.querySelector('.profile-studio-shell__more-nav > button');
       return {
         visible: Boolean(trigger && trigger.getBoundingClientRect().width > 0),
         contained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1,
-        sidebarHidden: sidebar?.getAttribute('aria-hidden') === 'true' || sidebar?.hasAttribute('inert'),
+        menuHidden: !document.querySelector('.profile-studio-shell__more-menu'),
         expanded: trigger?.getAttribute('aria-expanded')
       };
     })()`);
-    assert(closed.visible, 'Mobile dashboard menu trigger is not visible.');
-    assert(closed.contained, `Mobile dashboard overflows horizontally (${closed.documentScrollWidth}px document / ${closed.viewportWidth}px viewport).`);
-    assert(closed.sidebarHidden, 'Closed mobile dashboard sidebar is not inert/hidden.');
-    await page.click('.profile-dashboard-shell__mobile-bar button', 'mobile dashboard menu trigger');
-    await page.waitFor(`document.querySelector('.profile-dashboard-shell__mobile-bar button')?.getAttribute('aria-expanded') === 'true' && document.activeElement?.closest('#profile-dashboard-sidebar')`, 'opened mobile menu focus');
-    const opened = await page.evaluate(`(() => ({ expanded: document.querySelector('.profile-dashboard-shell__mobile-bar button')?.getAttribute('aria-expanded'), focusedInDrawer: Boolean(document.activeElement?.closest('#profile-dashboard-sidebar')) }))()`);
+    assert(closed.visible, 'Profile Studio More menu trigger is not visible.');
+    assert(closed.contained, 'Profile Studio overflows horizontally on mobile.');
+    assert(closed.menuHidden && closed.expanded === 'false', `Profile Studio More menu is not initially closed: ${JSON.stringify(closed)}.`);
+    await page.click('.profile-studio-shell__more-nav > button', 'Profile Studio More menu trigger');
+    await page.waitFor(`document.querySelector('.profile-studio-shell__more-nav > button')?.getAttribute('aria-expanded') === 'true' && document.activeElement?.closest('.profile-studio-shell__more-menu')`, 'opened Profile Studio More menu focus');
+    const opened = await page.evaluate(`(() => ({ expanded: document.querySelector('.profile-studio-shell__more-nav > button')?.getAttribute('aria-expanded'), focusedInMenu: Boolean(document.activeElement?.closest('.profile-studio-shell__more-menu')), items: document.querySelectorAll('.profile-studio-shell__more-menu [role="menuitem"]').length }))()`);
     await page.pressKey('Escape');
-    await page.waitFor(`document.querySelector('.profile-dashboard-shell__mobile-bar button')?.getAttribute('aria-expanded') === 'false' && document.activeElement === document.querySelector('.profile-dashboard-shell__mobile-bar button')`, 'mobile menu Escape focus restoration');
+    await page.waitFor(`document.querySelector('.profile-studio-shell__more-nav > button')?.getAttribute('aria-expanded') === 'false' && document.activeElement === document.querySelector('.profile-studio-shell__more-nav > button')`, 'More menu Escape focus restoration');
     await capture('06-mobile-dashboard-menu');
     return { mobilePreview, closed, opened };
   });
@@ -1936,17 +1936,15 @@ try {
               height: Math.round(box.height)
             } : null;
           };
-          const sidebar = document.querySelector('.profile-dashboard-shell__sidebar');
-          const inClosedSidebar = element => element.closest('.profile-dashboard-shell__sidebar') && (sidebar?.hasAttribute('inert') || sidebar?.getAttribute('aria-hidden') === 'true');
-          const candidates = [...document.querySelectorAll('.profile-studio-header__customize-tabs, .profile-studio-header__customize-tabs [role="tab"], .profile-dashboard-actions, [data-editor-section]:not([hidden]), input, select, textarea, [role="slider"]')]
-            .filter(element => visible(element) && !inClosedSidebar(element));
+          const candidates = [...document.querySelectorAll('.profile-studio-header__customize-tabs, .profile-studio-header__customize-tabs [role="tab"], .profile-studio-actions, [data-editor-section]:not([hidden]), input, select, textarea, [role="slider"]')]
+            .filter(visible);
           const overflow = candidates
             .map(element => ({ element, box: element.getBoundingClientRect() }))
             .filter(({ box }) => box.left < -1 || box.right > innerWidth + 1)
             .slice(0, 8)
             .map(({ element, box }) => ({ selector: element.className || element.tagName, tag: element.tagName, type: element.getAttribute('type') || '', aria: element.getAttribute('aria-label') || '', parent: element.parentElement?.className || '', left: Math.round(box.left), right: Math.round(box.right), width: Math.round(box.width) }));
           const activePanel = document.querySelector('[data-editor-section="${tab === 'appearance' ? 'appearance' : tab}"]');
-          const preview = document.querySelector('.profile-dashboard-shell__preview');
+          const preview = document.querySelector('#profile-studio-preview');
           const previewBox = preview?.getBoundingClientRect();
           const activeBox = activePanel?.getBoundingClientRect();
           const previewCanvas = preview?.querySelector('.profile-studio-preview__canvas');
@@ -1971,7 +1969,7 @@ try {
             overflow,
             tablist: rect(document.querySelector('.profile-studio-header__tablist')),
             tabs: [...document.querySelectorAll('.profile-studio-header__tablist [role="tab"]')].map(rect),
-            actions: rect(document.querySelector('.profile-dashboard-actions')),
+            actions: rect(document.querySelector('.profile-studio-actions')),
             activePanel: rect(activePanel),
             panelBottom: activePanel ? Math.round(activePanel.getBoundingClientRect().bottom) : null,
             preview: rect(preview),
@@ -2024,56 +2022,61 @@ try {
     }
 
     await page.setViewport(414, 896);
-    await page.click('#profile-customize-tab-appearance', 'Appearance before narrow mobile drawer audit');
+    await page.click('#profile-customize-tab-appearance', 'Appearance before narrow mobile navigation audit');
     await page.waitFor('document.querySelector(".profile-customize-page")', 'Appearance at 414px');
-    await page.click('.profile-dashboard-shell__mobile-bar button', 'open narrow mobile drawer');
-    await page.waitFor('document.querySelector(".profile-dashboard-shell__sidebar.is-open")', 'open narrow mobile drawer state');
-    await delay(240);
     const drawer = await page.evaluate(`(() => {
-      const sidebar = document.querySelector('.profile-dashboard-shell__sidebar.is-open');
-      const rect = sidebar?.getBoundingClientRect();
-      const visibleButtons = [...(sidebar?.querySelectorAll('button') || [])].filter(button => getComputedStyle(button).display !== 'none' && button.getBoundingClientRect().height > 0);
+      const shell = document.querySelector('.profile-studio-shell');
+      const nav = document.querySelector('.profile-studio-shell__destination-nav');
+      const more = document.querySelector('.profile-studio-shell__more-nav > button');
       return {
         viewport: innerWidth,
-        left: rect ? Math.round(rect.left) : null,
-        right: rect ? Math.round(rect.right) : null,
-        width: rect ? Math.round(rect.width) : null,
-        buttons: visibleButtons.length,
-        contained: Boolean(rect && rect.left >= -1 && rect.right <= innerWidth + 1)
+        left: nav ? Math.round(nav.getBoundingClientRect().left) : null,
+        right: nav ? Math.round(nav.getBoundingClientRect().right) : null,
+        buttons: shell?.querySelectorAll('.profile-studio-shell__primary-nav button, .profile-studio-shell__more-nav > button').length || 0,
+        contained: Boolean(nav && nav.getBoundingClientRect().left >= -1 && nav.getBoundingClientRect().right <= innerWidth + 1),
+        moreClosed: more?.getAttribute('aria-expanded') === 'false'
       };
     })()`);
-    assert(drawer.contained && drawer.buttons >= 4, `Narrow mobile drawer is not usable at 414px: ${JSON.stringify(drawer)}.`);
+    assert(drawer.contained && drawer.buttons >= 5 && drawer.moreClosed, `Narrow mobile navigation is not usable at 414px: ${JSON.stringify(drawer)}.`);
+    await page.click('.profile-studio-shell__more-nav > button', 'open narrow mobile More menu');
+    await page.waitFor('document.querySelector(".profile-studio-shell__more-menu")', 'open narrow mobile More menu state');
+    const mobileMore = await page.evaluate(`(() => {
+      const menu = document.querySelector('.profile-studio-shell__more-menu');
+      const box = menu?.getBoundingClientRect();
+      return { items: menu?.querySelectorAll('[role="menuitem"]').length || 0, contained: Boolean(box && box.left >= -1 && box.right <= innerWidth + 1) };
+    })()`);
+    assert(mobileMore.contained && mobileMore.items >= 4, `Narrow mobile More menu is not usable at 414px: ${JSON.stringify(mobileMore)}.`);
     await page.pressKey('Escape');
-    await page.waitFor('document.querySelector(".profile-dashboard-shell__sidebar")?.getAttribute("aria-hidden") === "true"', 'close narrow mobile drawer');
+    await page.waitFor('!document.querySelector(".profile-studio-shell__more-menu")', 'close narrow mobile More menu');
 
     await page.setViewport(600, 844);
-    await page.waitFor(`matchMedia('(max-width: 64rem)').matches && document.querySelector('.profile-dashboard-shell__mobile-preview')`, 'tablet mobile viewport state');
+    await page.waitFor(`matchMedia('(max-width: 64rem)').matches && document.querySelector('.profile-studio-shell__mobile-tools button')`, 'tablet mobile viewport state');
     if (await page.evaluate('Boolean(document.querySelector(".profile-studio-preview"))')) {
       await page.click('.profile-studio-preview__close', 'close preview before tablet preview drawer audit');
       await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed preview before tablet preview drawer audit');
     }
     await page.click('#profile-customize-tab-appearance', 'Appearance before preview drawer audit');
-    await page.waitFor('document.querySelector(".profile-dashboard-shell__mobile-preview")', 'mobile preview toggle');
-    await page.click('.profile-dashboard-shell__mobile-preview', 'open tablet preview drawer');
+    await page.waitFor('document.querySelector(".profile-studio-shell__mobile-tools button")', 'mobile preview toggle');
+    await page.click('.profile-studio-shell__mobile-tools button', 'open tablet live preview');
     await delay(100);
     const tabletToggle = await page.evaluate(`(() => {
-      const button = document.querySelector('.profile-dashboard-shell__mobile-preview');
+      const button = document.querySelector('.profile-studio-shell__mobile-tools button');
       return {
         ariaExpanded: button?.getAttribute('aria-expanded') || '',
         text: button?.textContent?.trim() || '',
         disabled: Boolean(button?.disabled),
         outerHTML: button?.outerHTML || '',
-        activeSection: document.querySelector('.profile-dashboard-shell__nav button.active')?.getAttribute('data-section') || '',
+        activeSection: document.querySelector('[data-section].active')?.getAttribute('data-section') || '',
         selectedTab: document.querySelector('.profile-studio-header__tablist [role="tab"][aria-selected="true"]')?.id || '',
         customizePanel: Boolean(document.querySelector('#profile-customize-tabpanel')),
         preview: Boolean(document.querySelector('.profile-studio-preview'))
       };
     })()`);
     assert(tabletToggle.ariaExpanded === 'true', `Tablet preview toggle did not open: ${JSON.stringify(tabletToggle)}.`);
-    await page.waitFor('document.querySelector(".profile-studio-preview")', 'tablet preview drawer');
+    await page.waitFor('document.querySelector("#profile-studio-preview")', 'tablet live preview');
     await delay(240);
     const tabletPreview = await page.evaluate(`(() => {
-      const preview = document.querySelector('.profile-dashboard-shell__preview');
+      const preview = document.querySelector('#profile-studio-preview');
       const box = preview?.getBoundingClientRect();
       return {
         viewport: innerWidth,
@@ -2088,29 +2091,27 @@ try {
       };
     })()`);
     assert(tabletPreview.contained && tabletPreview.pageContained, `Tablet live preview escapes its drawer bounds: ${JSON.stringify(tabletPreview)}.`);
-    await page.click('.profile-studio-preview__close', 'close tablet preview drawer');
-    await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed tablet preview drawer');
+    await page.click('.profile-studio-preview__close', 'close tablet live preview');
+    await page.waitFor('!document.querySelector("#profile-studio-preview")', 'closed tablet live preview');
 
     await page.setViewport(414, 896);
-    await page.waitFor('document.querySelector(".profile-dashboard-shell__mobile-preview")', 'phone preview toggle');
-    await page.click('.profile-dashboard-shell__mobile-preview', 'open phone preview drawer');
-    await page.waitFor('document.querySelector(".profile-studio-preview")', 'phone preview drawer');
+    await page.waitFor('document.querySelector(".profile-studio-shell__mobile-tools button")', 'phone preview toggle');
+    await page.click('.profile-studio-shell__mobile-tools button', 'open phone live preview');
+    await page.waitFor('document.querySelector("#profile-studio-preview")', 'phone live preview');
     await delay(240);
     const phonePreview = await page.evaluate(`(() => {
-      const preview = document.querySelector('.profile-dashboard-shell__preview');
+      const preview = document.querySelector('#profile-studio-preview');
       const previewBox = preview?.getBoundingClientRect();
       const canvas = preview?.querySelector('.profile-studio-preview__canvas');
       const card = preview?.querySelector('.profile-shell-page--preview .identity-card');
       const copy = card?.querySelector('.identity-card__copy');
       const semantic = card?.querySelector('.name-effect-canvas__semantic, .identity-card__name');
-      const sidebar = document.querySelector('.profile-dashboard-shell__sidebar');
       return {
         viewport: innerWidth,
         preview: previewBox ? { left: Math.round(previewBox.left), right: Math.round(previewBox.right), top: Math.round(previewBox.top), bottom: Math.round(previewBox.bottom), width: Math.round(previewBox.width), height: Math.round(previewBox.height) } : null,
         card: card ? { display: getComputedStyle(card).display, width: Math.round(card.getBoundingClientRect().width), scrollWidth: card.scrollWidth, clientWidth: card.clientWidth } : null,
         canvasWidth: Math.round(canvas?.getBoundingClientRect().width || 0),
         copy: copy ? { scrollWidth: copy.scrollWidth, clientWidth: copy.clientWidth, textScrollWidth: semantic?.scrollWidth || 0, textClientWidth: semantic?.clientWidth || 0 } : null,
-        sidebarHidden: sidebar?.getAttribute('aria-hidden') === 'true' && sidebar?.hasAttribute('inert'),
         contained: Boolean(previewBox && previewBox.left >= -1 && previewBox.right <= innerWidth + 1 && previewBox.top >= -1 && previewBox.bottom <= innerHeight + 1),
         pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
@@ -2118,10 +2119,10 @@ try {
     // NameEffectCanvas intentionally paints a bounded visual bleed around the
     // semantic text. The phone/page bounds are the overflow contract; the
     // semantic text itself must remain contained.
-    assert(phonePreview.contained && phonePreview.pageContained && phonePreview.sidebarHidden && ['block', 'flex', 'grid'].includes(phonePreview.card?.display) && phonePreview.card.clientWidth >= 200 && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 40 && phonePreview.copy?.textScrollWidth <= phonePreview.copy.textClientWidth + 1, `Phone live preview is not a readable bounded drawer: ${JSON.stringify(phonePreview)}.`);
+    assert(phonePreview.contained && phonePreview.pageContained && ['block', 'flex', 'grid'].includes(phonePreview.card?.display) && phonePreview.card.clientWidth >= 200 && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 40 && phonePreview.copy?.textScrollWidth <= phonePreview.copy.textClientWidth + 1, `Phone live preview is not a readable bounded surface: ${JSON.stringify(phonePreview)}.`);
     await capture('09-mobile-preview-414');
     await page.click('.profile-studio-preview__close', 'close phone preview drawer');
-    await page.waitFor('!document.querySelector(".profile-studio-preview")', 'closed phone preview drawer');
+    await page.waitFor('!document.querySelector("#profile-studio-preview")', 'closed phone live preview');
 
     await page.evaluate(`document.querySelector('#customize-identity')?.scrollIntoView({ block: 'start' })`);
     await page.waitFor('document.querySelector("#customize-identity .identity-editor--studio #profile-username")', 'mobile identity editor');
@@ -2138,12 +2139,12 @@ try {
       }));
       const overlaps = fieldGeometry.flatMap((current, index) => fieldGeometry.slice(index + 1).filter(next => current.box && next.box && current.box.top < next.box.bottom - 1 && next.box.top < current.box.bottom - 1).map(next => [current.label, next.label]));
       const outOfBounds = fieldGeometry.filter(({ box, control }) => [box, control].some(item => item && (item.left < -1 || item.right > innerWidth + 1)));
-      const shell = document.querySelector('.profile-dashboard-shell');
+      const shell = document.querySelector('.profile-studio-shell');
       const tabs = [...document.querySelectorAll('.profile-studio-header__tablist [role="tab"]')].map(rect);
-      const actions = rect(document.querySelector('.profile-dashboard-actions'));
+      const actions = rect(document.querySelector('.profile-studio-actions'));
       return {
         viewport: innerWidth,
-        mobileClass: shell?.classList.contains('profile-dashboard-shell--mobile'),
+        mobileClass: shell?.classList.contains('profile-studio-shell--mobile'),
         fieldGeometry,
         overlaps,
         outOfBounds,
@@ -2180,11 +2181,19 @@ try {
         // the real production guard and discard that disposable smoke draft if
         // it appears, rather than allowing the guard to turn into a timeout.
         await page.command('Page.navigate', { url: destinationUrl });
-        await page.waitFor(`Boolean(document.querySelector('.profile-studio-dirty-prompt')) || (document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-dashboard-shell__nav button.active[data-section="${destination}"]'))`, `${destination} navigation request at ${width}px`, 30000);
+        const moreDestination = !['overview', 'customize', 'links', 'premium'].includes(destination);
+        await page.waitFor(`Boolean(document.querySelector('.profile-studio-dirty-prompt')) || (document.readyState === 'complete' && location.pathname === '/profile/settings' && (document.querySelector('.profile-studio-shell__primary-nav button.active[data-section="${destination}"]') || (${moreDestination} && document.querySelector('.profile-studio-shell__more-nav > button.active'))))`, `${destination} navigation request at ${width}px`, 30000);
         if (await page.evaluate('Boolean(document.querySelector(".profile-studio-dirty-prompt"))')) {
           await page.click('.profile-studio-dirty-prompt__discard', `${destination} discard smoke draft`);
         }
-        await page.waitFor(`document.querySelector('.profile-dashboard-shell__nav button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace')`, `${destination} destination at ${width}px`, 30000);
+        if (moreDestination) {
+          if (await page.evaluate('document.querySelector(".profile-studio-shell__more-nav > button")?.getAttribute("aria-expanded") !== "true"')) {
+            await page.click('.profile-studio-shell__more-nav > button', `${destination} More menu`);
+          }
+          await page.waitFor(`document.querySelector('.profile-studio-shell__more-menu button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace')`, `${destination} destination at ${width}px`, 30000);
+        } else {
+          await page.waitFor(`document.querySelector('.profile-studio-shell__primary-nav button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace')`, `${destination} destination at ${width}px`, 30000);
+        }
         await delay(80);
         const state = await page.evaluate(`(() => {
           const visible = element => {
@@ -2193,12 +2202,10 @@ try {
             const box = element.getBoundingClientRect();
             return style.display !== 'none' && style.visibility !== 'hidden' && box.width > 0 && box.height > 0;
           };
-          const sidebar = document.querySelector('.profile-dashboard-shell__sidebar');
-          const inClosedSidebar = element => element.closest('.profile-dashboard-shell__sidebar') && (sidebar?.hasAttribute('inert') || sidebar?.getAttribute('aria-hidden') === 'true');
           const workspace = document.querySelector('.profile-studio-workspace');
           const box = workspace?.getBoundingClientRect();
           const overflow = [...document.querySelectorAll('.profile-studio-workspace, .profile-studio-workspace *')]
-            .filter(element => visible(element) && !inClosedSidebar(element))
+            .filter(element => visible(element))
             .map(element => ({ element, box: element.getBoundingClientRect() }))
             .filter(({ box }) => box.left < -1 || box.right > innerWidth + 1)
             .slice(0, 8)

@@ -57,6 +57,21 @@ export const PROFILE_STUDIO_SECTIONS = Object.freeze([
   { id: 'account', label: 'Settings', groupKey: 'account', icon: 'account' }
 ]);
 
+export const PROFILE_STUDIO_PRIMARY_SECTION_IDS = Object.freeze([
+  'overview',
+  'customize',
+  'links',
+  'premium'
+]);
+
+export function getProfileStudioNavigation(sections = PROFILE_STUDIO_SECTIONS) {
+  const primaryIds = new Set(PROFILE_STUDIO_PRIMARY_SECTION_IDS);
+  return {
+    primary: sections.filter(section => primaryIds.has(section.id)),
+    more: sections.filter(section => !primaryIds.has(section.id))
+  };
+}
+
 export const PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS = Object.freeze([
   'customize',
   'profile-identity',

@@ -124,7 +124,7 @@ test('dashboard ownership keeps routing, rendering, and dirty-state boundaries s
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileStudioDirtyPrompt.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
-    read('src/lib/ProfileDashboardShell.svelte')
+    read('src/lib/ProfileStudioShell.svelte')
   ]);
 
   assert.match(settings, /save_profile_configuration_v2/);

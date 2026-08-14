@@ -25,7 +25,7 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(settings, /customizePreviewAvailable && \(!isMobileViewport \|\| previewOpen\)/);
   assert.match(header, /role="tablist" aria-label="Customize profile"/);
   assert.doesNotMatch(settings, /preview-column/);
-  assert.match(settings, /ProfileDashboardShell/);
+  assert.match(settings, /ProfileStudioShell/);
   assert.match(settings, /setActiveSection\(/);
   assert.doesNotMatch(settings, /Build the profile you keep\./);
   assert.doesNotMatch(settings, /profile-settings-page__profile-link/);
@@ -42,46 +42,21 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(settings, /createInitialSettingsContext/);
   assert.match(settings, /loading = !previousContext/);
   assert.match(siteStyles, /\.app-main--profile-settings/);
-  assert.match(siteStyles, /--site-font: 'Manrope Variable'/);
-  assert.match(siteStyles, /--font-body-stack: var\(--site-font\)/);
+  assert.match(siteStyles, /--site-font: 'Inter'/);
+  assert.match(siteStyles, /--font-display-stack: 'Clash Display'/);
+  assert.match(siteStyles, /--font-body-stack: 'Inter'/);
   assert.match(siteStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
-test('Profile Studio scopes the Catppuccin Mocha palette without changing its layout contract', async () => {
+test('Profile Studio scopes the approved dark reference palette without changing its layout contract', async () => {
   const siteStyles = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
-  const palette = {
-    crust: '#11111b',
-    mantle: '#181825',
-    base: '#1e1e2e',
-    surface0: '#313244',
-    surface1: '#45475a',
-    surface2: '#585b70',
-    overlay0: '#6c7086',
-    overlay1: '#7f849c',
-    overlay2: '#9399b2',
-    subtext0: '#a6adc8',
-    subtext1: '#bac2de',
-    text: '#cdd6f4',
-    rosewater: '#f5e0e6',
-    flamingo: '#f2cdcd',
-    pink: '#f5c2e7',
-    mauve: '#cba6f7',
-    red: '#f38ba8',
-    maroon: '#eba0ac',
-    peach: '#fab387',
-    yellow: '#f9e2af',
-    green: '#a6e3a1',
-    teal: '#94e2d5',
-    sky: '#89dceb',
-    sapphire: '#74c7ec',
-    blue: '#89b4fa',
-    lavender: '#b4befe'
-  };
-
   assert.match(siteStyles, /\.app-main--profile-settings\s*\{/);
-  for (const [name, value] of Object.entries(palette)) {
-    assert.match(siteStyles, new RegExp(`--ctp-${name}: ${value.replace('#', '\\#')};`));
-  }
+  assert.match(siteStyles, /--ctp-crust: \#050506;/);
+  assert.match(siteStyles, /--ctp-mantle: \#0c0c0f;/);
+  assert.match(siteStyles, /--ctp-text: \#f8f8f8;/);
+  assert.match(siteStyles, /--ctp-mauve: \#00ffb3;/);
+  assert.match(siteStyles, /--ctp-red: \#ff5578;/);
+  assert.match(siteStyles, /--ctp-peach: \#f5c26f;/);
   assert.match(siteStyles, /--site-accent: var\(--ctp-mauve\)/);
   assert.match(siteStyles, /--site-raised: var\(--ctp-surface0\)/);
   assert.match(siteStyles, /--color-danger: var\(--ctp-red\)/);

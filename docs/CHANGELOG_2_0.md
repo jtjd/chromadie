@@ -2910,3 +2910,16 @@ direct route behavior.
 - Added homepage idle/request-budget coverage, shared media URL stability
   guards, active database Storage-function lockdown, and R2-only account
   cleanup assertions.
+
+## 2026-08-14 — Replace the Profile Studio presentation
+
+- Replaced the obsolete sidebar/dashboard presentation with the approved dark
+  Profile Studio shell and compact primary/More navigation.
+- Restyled Customize around the reference editor surface while preserving the
+  real Appearance, Media, Layout, draft/publish, and sticky live-preview
+  contracts.
+- Removed obsolete sidebar, mobile drawer, duplicate action, owner-card, and
+  preview-promotion presentation code after import/reference verification.
+- Updated browser smoke and focused regression coverage for the new shell,
+  mobile Preview control, More-menu focus behavior, responsive containment, and
+  all existing Studio destinations.

@@ -6,11 +6,10 @@
   import { supabase } from './supabase';
   import { loadProfileContext } from './profileData.js';
   import { normalizeProfileConfig } from './profileConfig.js';
-  import { getProfileMediaUrl } from './profileMedia.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
   import { getCanonicalProfilePath } from './routeContract.js';
-  import ProfileDashboardShell from './ProfileDashboardShell.svelte';
+  import ProfileStudioShell from './ProfileStudioShell.svelte';
   import ProfileStudioHeader from './ProfileStudioHeader.svelte';
   import ProfileStudioWorkspace from './ProfileStudioWorkspace.svelte';
   import ProfileStudioDirtyPrompt from './ProfileStudioDirtyPrompt.svelte';
@@ -115,7 +114,7 @@
   let dashboardSaving = false;
   let dashboardStatus = '';
   let dashboardError = '';
-  let DashboardActionsComponent = null;
+  let StudioActionsComponent = null;
 
   $: accountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
   $: accountKey = $isAuthenticated && $session?.user?.id ? $session.user.id : '';
@@ -140,12 +139,6 @@
   }
 
   $: editorProfileConfig = createStudioEditorProfileConfig(context?.profileConfig);
-  $: sidebarAvatarSrc = getProfileMediaUrl(
-    editorProfileConfig?.draft?.media_references?.avatar
-      || editorProfileConfig?.published?.media_references?.avatar
-      || editorProfileConfig?.draft?.avatar_path
-      || editorProfileConfig?.published?.avatar_path
-  );
   $: dashboardDirty = hasDirtySources(dirtySources) || hasServerDraftChanges(context?.profileConfig);
   $: previewModel = createProfileStudioPreviewModel({
     targetProfile: context?.targetProfile,
@@ -341,16 +334,6 @@
     }
   }
 
-  function handleViewProfile(event) {
-    const originalEvent = event.detail?.event || event;
-    originalEvent.preventDefault?.();
-    if (dashboardDirty) {
-      openDirtyPrompt({ type: 'route', value: profilePath });
-      return;
-    }
-    window.location.assign(profilePath);
-  }
-
   function loadSectionComponent(sectionId) {
     const loader = SECTION_LOADERS[sectionId];
     if (!loader || sectionComponents[sectionId]) return Promise.resolve();
@@ -365,10 +348,10 @@
   }
 
   async function loadDashboardActions() {
-    if (DashboardActionsComponent) return;
+    if (StudioActionsComponent) return;
     try {
-      const module = await import('./ProfileDashboardActions.svelte');
-      DashboardActionsComponent = module.default;
+      const module = await import('./ProfileStudioActions.svelte');
+      StudioActionsComponent = module.default;
     } catch (loadError) {
       dashboardError = loadError instanceof Error ? loadError.message : 'The dashboard actions could not be loaded.';
     }
@@ -734,12 +717,10 @@
 
 <svelte:window on:keydown={handleDirtyPromptKeydown} />
 
-<ProfileDashboardShell
+<ProfileStudioShell
   sections={[...visibleSettingsSections]}
   {activeSection}
-  ownerUsername={accountUsername}
   ownerProfilePath={profilePath}
-  ownerAvatarSrc={sidebarAvatarSrc}
   mobileTitle={mobileStudioTitle}
   mobilePreviewAvailable={previewAvailable || customizePreviewAvailable}
   mobilePreviewOpen={showDashboardPreview}
@@ -750,11 +731,11 @@
   on:previewtoggle={togglePreview}
   on:publish={publishDashboard}
 >
-  <div slot="topbar">
-    {#if context && !loading && (activeSection === 'customize' || activeSection === 'links') && DashboardActionsComponent}
-      <svelte:component this={DashboardActionsComponent} dirty={dashboardDirty} saving={dashboardSaving} status={dashboardStatus} error={dashboardError} on:reset={resetDashboard} on:publish={publishDashboard} />
+  <svelte:fragment slot="topbar">
+    {#if context && !loading && (activeSection === 'customize' || activeSection === 'links') && StudioActionsComponent}
+      <svelte:component this={StudioActionsComponent} dirty={dashboardDirty} saving={dashboardSaving} status={dashboardStatus} error={dashboardError} on:reset={resetDashboard} on:publish={publishDashboard} />
     {/if}
-  </div>
+  </svelte:fragment>
 
   <div class="profile-settings-page" data-dashboard-adapter="profile-studio" aria-busy={loading}>
     {#if context?.dataWarning}<p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>{/if}
@@ -763,12 +744,12 @@
         {activeSection}
         {activeCustomizeTab}
         {activeLabel}
-        {profilePath}
         {previewAvailable}
         {previewOpen}
+        dirty={dashboardDirty}
+        saving={dashboardSaving}
         on:tabchange={event => selectCustomizeTab(event.detail?.tabId, { focus: event.detail?.focus })}
         on:previewtoggle={togglePreview}
-        on:viewprofile={handleViewProfile}
       />
     {/if}
     <ProfileStudioWorkspace
@@ -828,7 +809,7 @@
       <div class="profile-settings-page__preview-error" role="alert">{previewDockError}</div>
     {/if}
   </svelte:fragment>
-</ProfileDashboardShell>
+</ProfileStudioShell>
 
 <ProfileStudioDirtyPrompt bind:this={dirtyPromptComponent} open={showDirtyPrompt} on:stay={stayOnPage} on:discard={discardAndContinue} />
 

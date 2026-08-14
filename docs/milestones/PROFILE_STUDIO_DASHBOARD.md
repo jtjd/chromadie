@@ -1,18 +1,17 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; workspace usability, Catppuccin Mocha contrast, reference geometry, functional profile-color editing, focused default profile presentation, the Customize control audit, three-tab Customize IA, linked surface/effect preview controls, renderer-backed cosmetic cards, media lifecycle recovery, and bounded mobile Live preview implemented 2026-08-10
+Status: implementation complete; the approved dark Profile Studio reference shell, compact navigation, two-column Customize workspace, persistent live preview, and responsive/mobile treatment implemented 2026-08-14
 
 The latest renderer follow-up also projects catalog CSS values at the preview
 boundary, gives Motion its animated Name renderer, and explicitly resumes
 Name, cursor, and atmosphere media when mounted editors return from a hidden
 Customize tab.
 
-The responsive composition correction now reserves a real preview rail at
-narrow desktop and browser-zoom widths, stacks Appearance controls before
-they can collide with that rail, and uses the preview canvas's actual width to
-stack embedded identity cards. At 414×896, the preview is a full-width bottom
-drawer and the navigation sidebar remains hidden until the Menu control opens
-it.
+The reference composition now reserves a real sticky preview rail at desktop
+widths, stacks the editor and preview at narrower widths, and uses the preview
+canvas's actual width to keep embedded identity cards readable. Mobile uses the
+same top navigation and an explicit Preview control; no sidebar or drawer
+presentation remains.
 
 The Media workspace follow-up now gives the compact editor an explicit owner
 for reference geometry. Background, Avatar, and Profile audio share one
@@ -60,9 +59,11 @@ short-form settings hashes map to Customize or Links as appropriate, and the
 
 The dashboard is now an incremental component-owned architecture. The route
 adapter retains navigation restoration, draft state, compatibility aliases,
-before-unload handling, and the existing server mutation calls. Shell/sidebar,
-header/actions, destination workspace, persistent Live preview, and dirty-state
-prompt each own their markup and presentation boundaries.
+before-unload handling, and the existing server mutation calls. The reference
+shell, compact destination navigation, header/actions, destination workspace,
+persistent Live preview, and dirty-state prompt each own their markup and
+presentation boundaries. The obsolete sidebar shell and dashboard action
+presentation were removed after import/reference checks.
 
 The initial refactor established a dashboard contract and section registry to centralize destination/hash
 normalization and editor ownership. A draft projection composes identity,
@@ -134,26 +135,25 @@ affect only the translucent card while the page outside it stays sharp.
 
 ## Validation
 
-- `npm test`: 269 passing, including routing, draft aggregation, renderer
+- `npm test`: 376 passing, including routing, draft aggregation, renderer
   context, dashboard ownership, shared profile-color role/HSV picker, and
   focused default-profile presentation, media lifecycle, and mobile preview
   coverage.
 - `npm run build`, `npm run check`, `npx eslint src/`, links, CSP, username
   policy, balance, catalog, scoring parity, and database security: passing.
-- `supabase db lint --local --level warning --fail-on warning` and
-  `supabase db reset`: passing after the additive appearance/media migration.
+- `npm run check:profile-media-cutover`: passing with no runtime findings;
+  this presentation milestone made no schema or media-infrastructure changes.
 - `npm run check:performance`: all blocking route and asset budgets pass;
-  dashboard JavaScript is 525.32 kB/528.00 kB; aggregate JavaScript and CSS
+  dashboard JavaScript is 522.23 kB/528.00 kB; aggregate JavaScript and CSS
   catalogs remain advisory overages.
-- `npm run test:browser`: passing for authenticated Studio refresh, aliases,
-  collapsed/open/closed preview, published appearance updates, balanced
-  General Customization geometry, Media and Layout workspace geometry,
-  progressive name renderers, production cursor-trail fitting-room previews,
-  atmosphere recovery and switching, rounded-card background containment,
-  maximum surface blur, mobile drawer and focus restoration, reduced motion,
-  canonical public profile refresh, and the default blue-starfield identity
-  card with avatar-first focus composition. Evidence captures include the
-  Media, Layout, Effects/Live Preview, and mobile workspaces.
+- `npm run test:browser:production`: the production build passed and the smoke
+  passed homepage, auth, direct Studio refresh, stale-session protection,
+  aliases, and live-preview open/close before stopping at the pre-existing
+  persisted-upload fixture (`Timed out waiting for persisted uploaded
+  background`) in the local R2 setup. Dev-mode retries also encountered
+  intermittent headless Chromium `ERR_INSUFFICIENT_RESOURCES` failures before
+  Studio assertions. The focused static/browser-selector coverage remains
+  green.
 
 The latest stabilization remains additive. The picker marker is derived from
 the same selected-role HSV value as its controls, and
@@ -207,13 +207,20 @@ updates both the fitting-room card and Live preview. Name-effect samples use a
 compact, right-aligned control-side treatment with terse Font/Material/Motion
 labels and fixed row geometry matching the supplied fitting-room reference.
 
-## Mobile composition follow-up
+## Reference shell replacement — 2026-08-14
 
-Profile Studio now switches explicitly to a phone-owned composition at the
-mobile breakpoint. The desktop sidebar becomes an inert drawer, the action bar
-and Customize tabs reflow into full-width mobile controls, and the identity
-editor abandons its desktop placement grid for one normal-flow field per row.
-The existing bounded Live preview remains a bottom sheet. Browser smoke covers
-the 320px–414px phone widths, drawer focus behavior, preview containment, all
-Customize tabs, and a dedicated 414px identity geometry assertion. No route,
-hash, draft, publish, upload, RLS, RPC, or public-profile contract changed.
+Profile Studio now uses the approved dark reference presentation as its single
+authenticated shell. Overview, Customize, Links, and Premium are direct
+destinations; Analytics, Notifications, Privacy & social, Badges & progression,
+and Settings are grouped under an accessible More menu. Customize keeps the
+Appearance, Media, and Layout tabs and the real persistent ProfileShell preview
+in a sticky right-hand rail on desktop. The route adapter, editor contracts,
+draft/publish state, media lifecycle, auth, and destination behavior remain
+unchanged.
+
+The previous sidebar, mobile drawer, owner-card presentation, duplicate
+dashboard action bar, and preview promotion panel were removed rather than
+retained as compatibility branches. Browser smoke now checks the compact More
+menu, mobile Preview control, bounded editor/preview geometry, all destination
+routes, and the existing dirty/publish flows across phone, tablet, and desktop
+widths.

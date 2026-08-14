@@ -4,11 +4,11 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
-test('dashboard navigation has one canonical ordered IA and safe mobile drawer behavior', async () => {
+test('Studio navigation has one canonical ordered IA and safe compact menu behavior', async () => {
   const [settings, contract, shell] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/dashboardContract.js'),
-    read('src/lib/ProfileDashboardShell.svelte')
+    read('src/lib/ProfileStudioShell.svelte')
   ]);
   const studio = [contract, settings].join('\n');
   const app = await read('src/App.svelte');
@@ -27,14 +27,12 @@ test('dashboard navigation has one canonical ordered IA and safe mobile drawer b
   assert.match(settings, /beforeunload/);
   assert.match(settings, /chromadie:navigation-request/);
   assert.match(app, /chromadie:navigation-request/);
-  assert.match(shell, /profileGroupExpanded/);
-  assert.match(shell, /inert=/);
-  assert.match(shell, /bodyOverflowBeforeDrawer/);
-  assert.match(shell, /profile-dashboard-shell__owner/);
+  assert.match(contract, /PROFILE_STUDIO_PRIMARY_SECTION_IDS/);
+  assert.match(shell, /getProfileStudioNavigation/);
+  assert.match(shell, /profile-studio-shell__more-menu/);
+  assert.match(shell, /aria-haspopup="menu"/);
   assert.match(shell, /View profile/);
-  assert.doesNotMatch(shell, /Sign out|Theme selector/i);
-  assert.match(shell, /profile-dashboard-shell__mode-toggle/);
-  assert.match(shell, /aria-label=\{colorMode === 'dark' \? 'Use light mode' : 'Use dark mode'\}/);
+  assert.doesNotMatch(shell, /Sign out|Theme selector|colorMode|sidebar|drawer/i);
 });
 
 test('section editors stage bounded drafts for the aggregate dashboard action', async () => {
@@ -44,7 +42,7 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
     read('supabase/migrations/20260805100000_profile_appearance_dashboard.sql'),
     read('supabase/tests/launch_security.sql'),
     read('src/lib/ProfileSettings.svelte'),
-    read('src/lib/ProfileDashboardActions.svelte')
+    read('src/lib/ProfileStudioActions.svelte')
   ]);
   assert.doesNotMatch(layout, /export function getDraftConfig/);
   assert.match(layout, /export function validateDraft/);
@@ -61,8 +59,8 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(settings, /save_profile_configuration_v2/);
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(actions, /Publish profile/);
-  assert.match(actions, /--dashboard-action-save: var\(--ctp-green/);
-  assert.match(actions, /profile-dashboard-actions__publish \{[^}]*var\(--dashboard-action-save/);
+  assert.match(actions, /profile-studio-actions__publish/);
+  assert.match(actions, /--studio-accent/);
   assert.match(appearance, /appearance-editor__color-input:focus-within/);
   assert.match(migration, /'draft', v_record\.draft_config/);
   assert.match(migration, /'published', v_record\.published_config/);

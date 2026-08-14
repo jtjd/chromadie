@@ -8,9 +8,10 @@
   export let activeSection = 'customize';
   export let activeCustomizeTab = 'appearance';
   export let activeLabel = 'Customize';
-  export let profilePath = '/profile';
   export let previewAvailable = false;
   export let previewOpen = false;
+  export let dirty = false;
+  export let saving = false;
 
   const dispatch = createEventDispatcher();
 
@@ -36,26 +37,29 @@
     dispatch('previewtoggle');
   }
 
-  function handleViewProfile(event) {
-    event.preventDefault();
-    dispatch('viewprofile', { event });
-  }
 </script>
 
 {#if activeSection !== 'customize'}
   <header class="profile-studio-header__toolbar">
     <div>
-      <p class="profile-studio-header__breadcrumb">Dashboard <span aria-hidden="true">›</span> {activeLabel}</p>
       <h1>{activeLabel}</h1>
+      <div class="profile-studio-header__save-state"><i class:dirty={dirty}></i><span>{saving ? 'Saving changes' : dirty ? 'Unpublished changes' : 'All changes saved'}</span></div>
     </div>
+    <span class="profile-studio-header__published" class:dirty>{dirty ? 'Draft' : 'Published'}</span>
     <div class="profile-studio-header__toolbar-actions">
       {#if previewAvailable}
         <button type="button" aria-expanded={previewOpen} on:click={togglePreview}>{previewOpen ? 'Hide preview' : 'Preview'}</button>
       {/if}
-      <a href={profilePath} on:click={handleViewProfile}>View profile</a>
     </div>
   </header>
 {:else}
+  <header class="profile-studio-header__editor-header">
+    <div>
+      <h1>Customize profile</h1>
+      <div class="profile-studio-header__save-state"><i class:dirty={dirty}></i><span>{saving ? 'Saving changes' : dirty ? 'Unpublished changes' : 'All changes saved'}</span></div>
+    </div>
+    <span class="profile-studio-header__published" class:dirty>{dirty ? 'Draft' : 'Published'}</span>
+  </header>
   <div class="profile-studio-header__customize-tabs">
     <div class="profile-studio-header__tablist" role="tablist" aria-label="Customize profile">
       {#each PROFILE_STUDIO_CUSTOMIZE_TABS as tab (tab.id)}
@@ -78,29 +82,35 @@
 {/if}
 
 <style>
-  .profile-studio-header__toolbar { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; min-width: 0; padding: .2rem 0 1.45rem; }
-  .profile-studio-header__breadcrumb { display: flex; gap: .45rem; margin: 0 0 .55rem; color: var(--studio-faint, #7f849c); font: .7rem/1 var(--studio-mono, var(--site-mono, monospace)); }
-  .profile-studio-header__toolbar h1 { margin: 0; color: var(--studio-text, #cdd6f4); font-size: clamp(1.5rem, 2.5vw, 2.25rem); letter-spacing: -.05em; }
+  .profile-studio-header__toolbar,
+  .profile-studio-header__editor-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; margin-bottom: 1.2rem; }
+  .profile-studio-header__toolbar h1,
+  .profile-studio-header__editor-header h1 { margin: 0; color: var(--studio-text, #f8f8f8); font: 600 clamp(1.75rem, 3vw, 2.15rem)/1 'Clash Display', var(--font-display-stack, sans-serif); letter-spacing: -.045em; }
+  .profile-studio-header__save-state { display: flex; align-items: center; gap: .45rem; margin-top: .55rem; color: var(--studio-muted, #8f9099); font: 500 .68rem/1 'Inter', var(--font-body-stack, sans-serif); }
+  .profile-studio-header__save-state i { width: .42rem; height: .42rem; border-radius: 50%; background: var(--studio-accent, #00ffb3); box-shadow: 0 0 8px var(--studio-accent-glow, rgba(0,255,179,.24)); }
+  .profile-studio-header__save-state i.dirty { background: #f5c26f; box-shadow: none; }
+  .profile-studio-header__published { flex: 0 0 auto; margin-top: .15rem; padding: .38rem .6rem; border: 1px solid color-mix(in srgb, var(--studio-accent, #00ffb3) 58%, transparent); border-radius: 999px; color: var(--studio-accent, #00ffb3); font: 600 .62rem/1 'Clash Display', var(--font-display-stack, sans-serif); }
+  .profile-studio-header__published.dirty { border-color: rgba(245,194,111,.58); color: #f5c26f; }
   .profile-studio-header__toolbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: .55rem; min-width: 0; }
-  .profile-studio-header__toolbar-actions :is(a, button) { min-height: 2rem; padding: .5rem .7rem; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--studio-muted, #bac2de); font-size: .78rem; text-decoration: none; cursor: pointer; }
-  .profile-studio-header__toolbar-actions :is(a, button):hover, .profile-studio-header__toolbar-actions :is(a, button):focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-text, #cdd6f4); }
-  .profile-studio-header__customize-tabs { position: relative; display: grid; margin: 0 .75rem .45rem; border: 1px solid var(--studio-border, #313244); border-radius: .5rem; background: var(--studio-panel, #181825); }
-  .profile-studio-header__tablist { display: flex; align-items: stretch; gap: 0; min-height: 3.05rem; padding: 0 .4rem; }
-  .profile-studio-header__tablist button { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 7rem; min-height: 3.05rem; padding: .55rem .9rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--studio-muted, #bac2de); font: 600 .78rem/1 var(--studio-font, var(--site-font, sans-serif)); cursor: pointer; }
-  .profile-studio-header__tablist button:hover, .profile-studio-header__tablist button:focus-visible { color: var(--studio-text, #cdd6f4); }
-  .profile-studio-header__tablist button.active { border-bottom-color: var(--studio-accent, #89b4fa); color: var(--studio-accent, #89b4fa); }
-  .profile-studio-header__tablist button:focus-visible { outline: 2px solid var(--studio-focus, #b4befe); outline-offset: 2px; }
-  @media (max-width: 52rem) {
-    .profile-studio-header__customize-tabs { position: sticky; top: 3.8rem; z-index: 25; margin-inline: 0; background: var(--studio-panel, #181825); box-shadow: 0 .55rem .9rem rgba(0,0,0,.16); }
-    .profile-studio-header__tablist { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-width: 0; padding-inline: .25rem; }
-    .profile-studio-header__tablist button { width: 100%; min-width: 0; padding-inline: .35rem; }
-    .profile-studio-header__toolbar { align-items: stretch; flex-direction: column; gap: .85rem; padding-bottom: .9rem; }
-    .profile-studio-header__toolbar h1 { font-size: 1.45rem; }
-    .profile-studio-header__toolbar-actions { justify-content: stretch; width: 100%; }
-    .profile-studio-header__toolbar-actions :is(a, button) { flex: 1 1 0; min-height: 2.75rem; text-align: center; }
+  .profile-studio-header__toolbar-actions button { min-height: 2.35rem; padding: .5rem .75rem; border: 1px solid var(--studio-border, rgba(255,255,255,.1)); border-radius: .45rem; background: transparent; color: var(--studio-muted, #8f9099); font: 500 .72rem/1 'Inter', var(--font-body-stack, sans-serif); cursor: pointer; }
+  .profile-studio-header__toolbar-actions button:hover, .profile-studio-header__toolbar-actions button:focus-visible { border-color: var(--studio-border-hover, rgba(255,255,255,.2)); color: var(--studio-text, #f8f8f8); }
+  .profile-studio-header__customize-tabs { position: relative; display: grid; margin-bottom: 1rem; border-bottom: 1px solid var(--studio-border, rgba(255,255,255,.1)); }
+  .profile-studio-header__tablist { display: flex; align-items: stretch; gap: 1.6rem; min-height: 2.8rem; }
+  .profile-studio-header__tablist button { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 2.8rem; padding: .55rem 0; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--studio-muted, #8f9099); font: 500 .78rem/1 'Inter', var(--font-body-stack, sans-serif); cursor: pointer; }
+  .profile-studio-header__tablist button:hover, .profile-studio-header__tablist button:focus-visible { color: var(--studio-text, #f8f8f8); }
+  .profile-studio-header__tablist button.active { border-bottom-color: var(--studio-accent, #00ffb3); color: var(--studio-text, #f8f8f8); }
+  .profile-studio-header__tablist button:focus-visible { outline: 2px solid var(--studio-accent, #00ffb3); outline-offset: 3px; }
+  @media (max-width: 700px) {
+    .profile-studio-header__toolbar,
+    .profile-studio-header__editor-header { gap: .7rem; margin-bottom: .95rem; }
+    .profile-studio-header__toolbar h1,
+    .profile-studio-header__editor-header h1 { font-size: 1.65rem; }
+    .profile-studio-header__published { padding-inline: .5rem; }
+    .profile-studio-header__toolbar-actions { flex-wrap: wrap; justify-content: flex-start; width: 100%; }
+    .profile-studio-header__toolbar { flex-wrap: wrap; }
+    .profile-studio-header__toolbar-actions button { flex: 1 1 0; text-align: center; }
+    .profile-studio-header__toolbar > .profile-studio-header__toolbar-actions { flex-basis: 100%; }
+    .profile-studio-header__tablist { gap: 1rem; }
+    .profile-studio-header__tablist button { flex: 1 1 0; min-width: 0; }
   }
-  @media (max-width: 30rem) {
-    .profile-studio-header__tablist button { min-height: 2.8rem; font-size: .74rem; }
-  }
-  @media (prefers-reduced-motion: reduce) { .profile-studio-header__toolbar-actions :is(a, button) { transition-duration: .001ms; } }
 </style>

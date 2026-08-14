@@ -12,14 +12,14 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
     read('src/lib/profile-studio/sectionRegistry.js'),
     read('src/lib/ProfileStudioWorkspace.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
-    read('src/lib/ProfileDashboardShell.svelte'),
+    read('src/lib/ProfileStudioShell.svelte'),
     read('src/styles/site.css')
   ]);
   const studio = [settings, registry, workspace, preview].join('\n');
 
   assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible && !homeModeVisible\}/);
   assert.match(app, /componentProps: \{ logoutInProgress \}/);
-  assert.match(settings, /<ProfileDashboardShell/);
+  assert.match(settings, /<ProfileStudioShell/);
   assert.match(settings, /on:sectionchange/);
   assert.match(settings, /showPreview=\{showDashboardPreview\}/);
   assert.match(settings, /customizePreviewAvailable && \(!isMobileViewport \|\| previewOpen\)/);
@@ -27,11 +27,10 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
   assert.match(studio, /profile-studio-preview__body/);
   assert.match(studio, /renderSnapshot=\{previewRenderSnapshot\}/);
   assert.doesNotMatch(studio, /profile-preview-drawer__backdrop/);
-  assert.match(shell, /profile-dashboard-shell__mobile-bar/);
-  assert.match(shell, /profile-dashboard-shell--with-preview/);
+  assert.match(shell, /profile-studio-shell__mobile-tools/);
+  assert.match(shell, /profile-studio-shell--with-preview/);
   assert.match(shell, /slot name="preview"/);
-  assert.match(shell, /trapFocus\(event, drawer\)/);
-  assert.match(shell, /restoreFocus\(menuTrigger\)/);
+  assert.match(shell, /profile-studio-shell__more-menu/);
   assert.match(shell, /prefers-reduced-motion/);
   assert.match(styles, /\.app-main--profile-settings/);
   assert.match(studio, /profile-studio-workspace__content/);

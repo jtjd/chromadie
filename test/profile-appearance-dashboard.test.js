@@ -54,8 +54,8 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileEditor.svelte'),
     read('supabase/migrations/20260808220000_profile_configuration_v2.sql'),
-    read('src/lib/ProfileDashboardShell.svelte'),
-    read('src/lib/ProfileDashboardActions.svelte')
+    read('src/lib/ProfileStudioShell.svelte'),
+    read('src/lib/ProfileStudioActions.svelte')
   ]);
   const studio = [settings, contract, registry, workspace, preview, header].join('\n');
   assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible && !homeModeVisible\}/);
@@ -87,7 +87,9 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.save_profile_configuration_v2/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.publish_profile_configuration_v2/);
   assert.match(migration, /profile_configuration_v2_from_v1/);
-  assert.match(shell, /profile-dashboard-shell__group/);
-  assert.match(shell, /inert=/);
-  assert.match(shell, /trapFocus\(event, drawer\)/);
+  assert.match(shell, /profile-studio-shell__primary-nav/);
+  assert.match(shell, /profile-studio-shell__more-menu/);
+  assert.match(shell, /aria-haspopup="menu"/);
+  assert.match(shell, /slot name="preview"/);
+  assert.match(shell, /prefers-reduced-motion/);
 });

@@ -4714,3 +4714,16 @@ surfaces use viewport input, while the Studio preview passes its stage as the
 container surface. The renderer keeps the supplied `/60` pointer formula
 unchanged, disables on coarse/reduced-motion surfaces, and leaves card-local
 roll scale animations on an inner wrapper.
+
+## 2026-08-14 — Replace the Profile Studio presentation with the approved shell
+
+Profile Studio now has one reference-first presentation shell: compact top
+navigation, a More menu for secondary destinations, and a dark two-column
+Customize workspace with the real persistent preview on the right. The route
+adapter and existing editor/preview contracts remain authoritative; the old
+sidebar, mobile drawer, duplicate action presentation, and preview promotion
+panel are obsolete presentation code and were removed after dependency checks.
+
+This is a presentation replacement, not a compatibility layer. Existing
+destination hashes, dirty guards, draft/publish orchestration, auth, RPC/RLS,
+R2 media, and production ProfileShell behavior remain unchanged.

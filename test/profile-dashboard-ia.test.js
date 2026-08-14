@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Profile Studio exposes aggregate Customize, Links, and Premium destinations', async () => {
-  const [settings, contract, registry, workspace, header, preview, customize, premium, shell, dashboardIcon, editor, expression, richMedia, identity, appearance, appearanceColors, content, widgets, cosmetics] = await Promise.all([
+test('Profile Studio exposes aggregate destinations through the reference shell', async () => {
+  const [settings, contract, registry, workspace, header, preview, customize, premium, shell, editor, expression, richMedia, identity, appearance, appearanceColors, content, widgets, cosmetics] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/dashboardContract.js'),
     read('src/lib/profile-studio/sectionRegistry.js'),
@@ -14,8 +14,7 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
-    read('src/lib/ProfileDashboardShell.svelte'),
-    read('src/lib/ProfileDashboardIcon.svelte'),
+    read('src/lib/ProfileStudioShell.svelte'),
     read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ProfileRichMediaEditor.svelte'),
@@ -38,25 +37,13 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(settings, /on:identitysaved=\{updateIdentity\}/);
   assert.match(studio, /identityPresentation: nextPresentation/);
   assert.match(shell, /data-section=\{section\.id\}/);
-  assert.match(shell, /ProfileDashboardIcon name=\{section\.id\}/);
-  assert.match(shell, /profile-dashboard-shell__owner/);
+  assert.match(shell, /profile-studio-shell__primary-nav/);
+  assert.match(shell, /profile-studio-shell__more-menu/);
   assert.match(shell, /View profile/);
-  assert.doesNotMatch(shell, /Theme selector/i);
-  assert.match(shell, /profile-dashboard-shell__mode-toggle/);
-  assert.match(dashboardIcon, /viewBox="0 0 24 24"/);
-  for (const icon of ['overview', 'customize', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account']) {
-    assert.match(dashboardIcon, new RegExp(`name === '${icon}'`));
-  }
-  assert.match(shell, /--nav-accent/);
-  assert.match(shell, /--dashboard-sidebar-width: 14rem/);
-  assert.match(shell, /min-height: 2\.45rem/);
-  assert.match(shell, /--ctp-sapphire/);
-  assert.match(shell, /var\(--studio-canvas\)/);
-  assert.match(shell, /padding: 1\.2rem \.75rem 2\.15rem/);
-  assert.doesNotMatch(shell, /profile-dashboard-shell__sidebar\s*\{[^}]*border-right/);
-  assert.doesNotMatch(shell, /gradient/);
-  assert.match(shell, /\.profile-dashboard-shell__main \{[^}]*min-width: 0; background: transparent/);
-  assert.match(shell, /profile-dashboard-shell__content \{ --surface-panel: var\(--studio-panel/);
+  assert.doesNotMatch(shell, /sidebar|ProfileDashboardIcon|colorMode|gradient/i);
+  assert.match(shell, /grid-template-columns: minmax\(540px, 640px\) minmax\(400px, 1fr\)/);
+  assert.match(shell, /width: min\(calc\(100% - 48px\), 1440px\)/);
+  assert.match(shell, /slot name="preview"/);
   assert.match(identity, /baselineBio/);
   assert.match(identity, /incomingKey/);
   assert.match(identity, /identity-editor__grid--meta/);
@@ -161,12 +148,11 @@ test('Profile Studio exposes aggregate Customize, Links, and Premium destination
   assert.match(customize, /showLinks=\{false\}/);
   assert.match(premium, /\$7\.99 lifetime/);
   assert.match(premium, /Premium buys expression\. Gameplay earns prestige\./);
-  assert.match(shell, /profile-dashboard-shell__brand/);
-  assert.match(settings, /ownerUsername=\{accountUsername\}/);
-  assert.match(settings, /ownerAvatarSrc=\{sidebarAvatarSrc\}/);
+  assert.match(shell, /profile-studio-shell__brand/);
   assert.match(studio, /id: 'overview', label: 'Overview', groupKey: 'primary', groupLabel: 'Customize'/);
-  assert.match(shell, /class:premium=\{section\.id === 'premium'\}/);
-  assert.match(shell, /max-width: 90rem/);
+  assert.match(contract, /PROFILE_STUDIO_PRIMARY_SECTION_IDS/);
+  assert.match(shell, /getProfileStudioNavigation/);
+  assert.match(shell, /profile-studio-shell__more-menu/);
   assert.match(editor, /export let showLayout = true/);
   assert.match(editor, /export let showLinks = true/);
   assert.match(editor, /\{#if showLayout\}/);

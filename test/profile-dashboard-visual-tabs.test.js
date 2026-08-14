@@ -32,24 +32,23 @@ test('Customize tabs mount only the supported visible editor groups', async () =
 
 test('Profile Studio mode control is keyboard-labelled and stays gradient-free', async () => {
   const [shell, settings] = await Promise.all([
-    read('src/lib/ProfileDashboardShell.svelte'),
+    read('src/lib/ProfileStudioShell.svelte'),
     read('src/lib/ProfileSettings.svelte')
   ]);
 
-  assert.match(shell, /profile-dashboard-shell__mode-toggle/);
-  assert.match(shell, /aria-label=\{colorMode === 'dark' \? 'Use light mode' : 'Use dark mode'\}/);
-  assert.match(shell, /aria-pressed=\{colorMode === 'light'\}/);
-  assert.match(shell, /profile-dashboard-shell--light/);
+  assert.match(shell, /profile-studio-shell__primary-nav/);
+  assert.match(shell, /profile-studio-shell__more-menu/);
+  assert.match(shell, /aria-haspopup="menu"/);
+  assert.doesNotMatch(shell, /colorMode|mode-toggle|profile-dashboard-shell--light/);
   assert.doesNotMatch(shell, /gradient/i);
   assert.doesNotMatch(settings, /gradient/i);
-  assert.match(shell, /profile-dashboard-shell__topbar/);
-  assert.match(shell, /grid-template-rows: auto minmax\(0, 1fr\)/);
-  assert.match(shell, /profile-dashboard-shell__mode-copy/);
+  assert.match(shell, /profile-studio-shell__header/);
+  assert.match(shell, /grid-template-columns: minmax\(540px, 640px\) minmax\(400px, 1fr\)/);
 });
 
 test('Profile Studio responsive boundaries keep controls and preview drawers inside the viewport', async () => {
   const [shell, header, appearance, preview, identity, smoke] = await Promise.all([
-    read('src/lib/ProfileDashboardShell.svelte'),
+    read('src/lib/ProfileStudioShell.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
@@ -58,12 +57,14 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   ]);
 
   assert.doesNotMatch(header, /customize-tabs-actions/);
-  assert.match(shell, /profile-dashboard-shell__mobile-preview/);
-  assert.match(shell, /profile-dashboard-shell__mobile-actions/);
-  assert.match(shell, /profile-dashboard-shell--dirty/);
-  assert.match(shell, /with-preview \.profile-dashboard-shell__preview \{[^}]*box-sizing: border-box; margin: 0;/);
-  assert.match(shell, /@media \(max-width: 90rem\) and \(min-width: 64\.01rem\)[\s\S]*with-preview \{ grid-template-columns: var\(--dashboard-sidebar-width\) minmax\(0, 1fr\) minmax\(19rem, 24rem\);/);
-  assert.match(shell, /@media \(max-width: 64rem\)[\s\S]*sidebar \{ position: fixed;[^}]*visibility: hidden; pointer-events: none;/);
+  assert.match(shell, /profile-studio-shell__mobile-tools/);
+  assert.match(shell, /profile-studio-shell__mobile-actions/);
+  assert.match(shell, /profile-studio-shell--dirty/);
+  assert.match(shell, /\.profile-studio-shell__preview \{ position: sticky/);
+  assert.match(shell, /profile-studio-shell--with-preview \.profile-studio-shell__workspace/);
+  assert.match(shell, /@media \(max-width: 1100px\)[\s\S]*grid-template-columns: minmax\(0, 760px\)/);
+  assert.match(shell, /@media \(max-width: 700px\)/);
+  assert.doesNotMatch(shell, /sidebar|drawer|profile-dashboard-shell/i);
   assert.match(appearance, /\.appearance-editor \{[\s\S]*width: 100%;[\s\S]*min-width: 0;[\s\S]*box-sizing: border-box;/);
   assert.match(appearance, /\.appearance-editor__panel \{ width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;/);
   assert.match(appearance, /@media \(max-width: 72rem\)[\s\S]*appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
@@ -77,7 +78,7 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(smoke, /const viewports = \[[\s\S]*\[320, 568\][\s\S]*\[667, 375\][\s\S]*\[1920, 1080\]/);
   assert.match(smoke, /09-mobile-preview-414/);
   assert.match(smoke, /10-mobile-editor-414/);
-  assert.match(smoke, /profile-dashboard-shell--mobile/);
+  assert.match(smoke, /profile-studio-shell__mobile-tools/);
   assert.match(smoke, /const destinations = \['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'\]/);
 });
 
@@ -87,7 +88,7 @@ test('reference workspace composition stays explicit', async () => {
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/profile-studio/draftModel.js'),
-    read('src/lib/ProfileDashboardActions.svelte'),
+    read('src/lib/ProfileStudioActions.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/profileAppearanceColors.js'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),
@@ -99,14 +100,13 @@ test('reference workspace composition stays explicit', async () => {
     read('src/lib/ShopItemPreview.svelte'),
     read('src/lib/profileRenderModel.js')
   ]);
-  assert.match(actions, /Customize profile/);
-  assert.match(actions, /All changes saved/);
-  assert.match(actions, /profile-dashboard-actions__publish/);
-  assert.match(actions, /margin-inline: \.75rem/);
+  assert.match(actions, /Publish profile/);
+  assert.match(actions, /profile-studio-actions__publish/);
+  assert.doesNotMatch(actions, /Customize profile|All changes saved|margin-inline: \.75rem/);
   assert.match(settings, /slot="topbar"/);
-  assert.match(header, /profile-studio-header__customize-tabs \{[^}]*margin: 0 \.75rem \.45rem/);
+  assert.match(header, /profile-studio-header__customize-tabs/);
   assert.match(preview, /profile-studio-preview__devices/);
-  assert.match(preview, /Unlock more with Chromadie Plus/);
+  assert.doesNotMatch(preview, /Unlock more with Chromadie Plus/);
   assert.match(preview, /profile-studio-preview__canvas--appearance/);
   assert.match(preview, /profile-studio-preview__viewport[\s\S]*overflow: hidden; border: 1px[\s\S]*border-radius: 1rem/);
   assert.doesNotMatch(preview, /!important/);

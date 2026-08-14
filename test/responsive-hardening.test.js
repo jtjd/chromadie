@@ -14,8 +14,8 @@ const homepageStyles = await read('src/lib/homepage/homepage-reference.css');
 const homepageHero = await read('src/lib/homepage/HomepageHero.svelte');
 const homepageSmoke = await read('scripts/browser/homepage-reference-smoke.mjs');
 const profileShell = await read('src/lib/ProfileShell.svelte');
-const dashboard = await read('src/lib/ProfileDashboardShell.svelte');
-const dashboardActions = await read('src/lib/ProfileDashboardActions.svelte');
+const dashboard = await read('src/lib/ProfileStudioShell.svelte');
+const dashboardActions = await read('src/lib/ProfileStudioActions.svelte');
 const preview = await read('src/lib/ProfileStudioPreview.svelte');
 const identity = await read('src/lib/IdentityCard.svelte');
 const identityEditor = await read('src/lib/IdentityEditor.svelte');
@@ -54,8 +54,8 @@ test('public profiles do not render a standalone Share profile control', () => {
 });
 
 test('Profile Studio preview is bounded on short-height screens and respects safe areas', () => {
-  assert.match(dashboard, /min-height: min\(20rem, calc\(100dvh - 5rem\)\)/);
-  assert.match(dashboard, /@media \(max-height: 32rem\)/);
+  assert.match(dashboard, /min-height: 100dvh/);
+  assert.match(dashboard, /@media \(max-width: 700px\)/);
   assert.match(dashboard, /env\(safe-area-inset-bottom\)/);
   assert.match(preview, /env\(safe-area-inset-bottom\)/);
   assert.match(preview, /min-height: min\(24rem, calc\(100dvh - 12rem\)\)/);
@@ -73,8 +73,8 @@ test('profile mobile header keeps edit visible and moves account actions into th
   assert.match(header, /\.site-mode-header--profile \.site-mode-header__account \{ display: none/);
   assert.match(header, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: block/);
   assert.match(header, /\.site-mode-header--profile \.site-mode-header__mobile-context \{ display: none/);
-  assert.match(studioHeader, /\.profile-studio-header__toolbar-actions :is\(a, button\) \{ flex: 1 1 0; min-height: 2\.75rem/);
-  assert.match(dashboardActions, /\.profile-dashboard-actions__buttons button \{ flex: 1 1 0; min-width: 0; min-height: 2\.75rem/);
+  assert.match(studioHeader, /\.profile-studio-header__toolbar-actions button \{ flex: 1 1 0; text-align: center;/);
+  assert.match(dashboardActions, /\.profile-studio-actions__buttons button \{ min-height: 2\.5rem/);
 });
 
 test('share dialog has the same focus and scroll management contract as other dialogs', () => {
@@ -109,9 +109,9 @@ test('Profile Studio keeps draft publishing and narrow editor surfaces usable', 
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /bio: context\?\.targetProfile\?\.bio \|\| ''/);
   assert.match(settings, /mobilePreviewAvailable=\{previewAvailable \|\| customizePreviewAvailable\}/);
-  assert.match(dashboard, /profile-dashboard-shell__mobile-actions/);
-  assert.match(dashboard, /aria-controls="profile-dashboard-preview"/);
-  assert.match(studioHeader, /profile-studio-header__customize-tabs \{ position: sticky; top: 3\.8rem/);
+  assert.match(dashboard, /profile-studio-shell__mobile-actions/);
+  assert.match(dashboard, /aria-controls="profile-studio-preview"/);
+  assert.match(studioHeader, /profile-studio-header__customize-tabs/);
   assert.match(cosmetics, /container: profile-cosmetics \/ inline-size/);
   assert.match(cosmetics, /profile-cosmetics-surface\.profile-cosmetics-surface--compact\)[\s\S]*profile-cosmetics-visual-grid \{ grid-template-columns: repeat\(2/);
   assert.match(cosmetics, /@container profile-cosmetics \(max-width: 26rem\)[\s\S]*grid-template-columns: minmax\(0, 1fr\)/);
