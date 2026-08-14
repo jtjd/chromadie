@@ -1,213 +1,109 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, stat } from 'node:fs/promises';
+import { stat, readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const home = await read('src/lib/HomePage.svelte');
-const directory = await read('src/lib/HomepageProfileDirectory.svelte');
-const ticker = await read('src/lib/HomepageLiveTicker.svelte');
-const directoryData = await read('src/lib/homepageDirectory.js');
-const hero = await read('src/lib/HomeHero.svelte');
-const product = await read('src/lib/HomeProductView.svelte');
-const dailyResult = await read('src/lib/HomeDailyResult.svelte');
-const howItWorks = await read('src/lib/HomeHowItWorks.svelte');
-const leaderboard = await read('src/lib/HomeLeaderboard.svelte');
-const claim = await read('src/lib/HomeUsernameClaim.svelte');
-const header = await read('src/lib/SiteModeHeader.svelte');
-const imageLightbox = await read('src/lib/HomeImageLightbox.svelte');
-const referenceRollGlyph = await read('src/lib/HomeReferenceRollGlyph.svelte');
-const compactRollPreview = await read('src/lib/CompactRollPreview.svelte');
-const rollPreview = await read('src/lib/RollPreview.svelte');
-const shopItemPreview = await read('src/lib/ShopItemPreview.svelte');
-const discoveryPreviewMigration = await read('supabase/migrations/20260801090000_discovery_profile_preview.sql');
-const discoveryStatsMigration = await read('supabase/migrations/20260801130000_discovery_roll_count.sql');
-const app = await read('src/App.svelte');
-const routeLoaders = await read('src/lib/routeLoaders.js');
-const main = await read('src/main.js');
-const guestProfile = await read('src/lib/GuestProfileOnboarding.svelte');
 
-test('the homepage explains the daily identity loop with a direct claim action', () => {
-  assert.match(hero, /A public profile that <span>changes every day\.<\/span>/);
-  assert.match(hero, /Add your background, avatar, music, links, and effects/);
-  assert.match(hero, /Each daily color becomes part of your public history/);
-  assert.match(hero, /HomeUsernameClaim/);
-  assert.match(hero, /buttonLabel="Claim page"/);
-  assert.match(hero, /home-hero__stage--profile-only/);
-  assert.match(hero, /home-browser__bar/);
-  assert.match(hero, /chm\.lol\/tjz/);
-  assert.match(hero, /home-browser__navigation/);
-  assert.match(hero, /home-browser__privacy/);
-  assert.match(hero, /home-browser__reload/);
-  assert.match(hero, /home-browser__actions/);
-  assert.doesNotMatch(hero, /home-browser__escape/);
-  assert.doesNotMatch(hero, /↗/);
-  assert.doesNotMatch(hero, /home-browser__state/);
-  assert.match(hero, /compactUnavailable=\{true\}/);
-  assert.match(hero, /rollIsPreview/);
-  assert.match(hero, /loading=\{loading\}/);
-  assert.match(hero, /--home-hero-color/);
-  assert.match(hero, /color-mix\(in srgb, var\(--home-hero-color\)/);
-  assert.match(claim, /dispatch\('claim'/);
-  assert.match(claim, /chm\.lol\//);
-  assert.match(claim, /export let buttonLabel = 'Claim'/);
-  assert.match(product, /Every roll leaves something behind/);
-  assert.match(product, /Daily play becomes identity, history/);
-  assert.match(product, /HomeImageLightbox/);
-  assert.match(product, /home-product \.home-product__image-trigger/);
-  assert.match(product, /height: 18\.5rem/);
-  assert.match(product, /transform: scale\(2\.56\)/);
-  assert.match(product, /<i>01<\/i> The page people share/);
-  assert.match(product, /<i>02<\/i> Today’s chapter/);
-  assert.doesNotMatch(product, /home-reveal/);
-  assert.match(howItWorks, /One color\. A page that keeps becoming yours/);
-  assert.match(howItWorks, /Receive one color each day/);
-  assert.match(howItWorks, /Let the page remember it/);
-  assert.match(howItWorks, /Find the person behind the color/);
-  assert.match(howItWorks, /HomeImageLightbox/);
-  assert.match(howItWorks, /<ol class="home-how__steps">/);
-  assert.doesNotMatch(howItWorks, /role="tablist"|aria-selected|ArrowRight|setTimeout|HomeLeaderboard/);
-  assert.match(leaderboard, /Today.s colors lead to real profiles/);
-  assert.match(leaderboard, /Profiles worth exploring/);
-  assert.match(leaderboard, /featuredProfiles/);
-  assert.match(leaderboard, /aria-busy/);
-  assert.doesNotMatch(leaderboard, /home-leaderboard__loading/);
-  assert.match(leaderboard, /Profiles couldn’t be loaded/);
-  assert.match(leaderboard, /No public profiles are available yet/);
-  assert.match(leaderboard, /home-leaderboard h2/);
-  assert.match(leaderboard, /#94959e/);
-  assert.doesNotMatch(leaderboard, /Public rolls are still forming/);
-  assert.match(home, /Claim the page that changes with you/);
-  assert.match(home, /Free to begin\. One color each day/);
-  assert.match(home, /HomeHowItWorks/);
-  assert.match(home, /HomeLeaderboard/);
-  assert.match(home, /HomepageProfileDirectory/);
-  assert.match(home, /--home-active-color/);
-  assert.match(home, /normalizeHexColor/);
-  assert.match(home, /on:activecolor/);
-  assert.match(home, /accountReady/);
-  assert.match(home, /HOMEPAGE_LOADING_COLOR/);
-  assert.match(directory, /dispatch\('activecolor'/);
-  assert.match(directory, /HOMEPAGE_LOADING_COLOR/);
-  assert.match(directory, /todayEndpointReady/);
-  assert.match(directory, /localPreviewForEmptyEndpoint/);
-  assert.match(directory, /todayResponse\.error \|\| todayItems\.length/);
-  assert.match(app, /on:activecolor=\{handleHomeActiveColor\}/);
-  assert.match(app, /componentKey: 'home'/);
-  assert.match(app, /accountState: currentAccountState/);
-  assert.match(claim, /accountReady/);
-  assert.match(app, /accentColor=\{homeModeVisible \? homeActiveColor/);
-  assert.match(home, /prefers-reduced-motion/);
-  assert.match(main, /@fontsource-variable\/instrument-sans/);
-  assert.match(main, /@fontsource-variable\/spline-sans/);
-  assert.match(main, /@fontsource\/ibm-plex-mono/);
-  assert.match(directory, /get_public_discovery/);
-  assert.match(directory, /loadProfileContext/);
-  assert.match(directory, /normalizeDiscoveryResponse/);
-  assert.match(directory, /HomepageLiveTicker/);
-  assert.doesNotMatch(directory, /HomepageScreenshotShowcase|HomepageProfilePreview|HomepageRollSummary/);
-  assert.match(directory, /leaderboard/);
-  assert.match(directory, /featuredProfiles/);
-  assert.match(directory, /buildHomepageFeaturedProfiles/);
-  assert.match(directory, /heroRoll/);
-  assert.match(directory, /initialLeaderboard/);
-  assert.match(directory, /richer profile hydration pass/);
-  assert.match(directory, /home_preview/);
-  assert.match(directory, /home_preview.*empty/);
-  assert.match(directory, /guestRollFixture/);
-  assert.match(directory, /previewRoll/);
-  assert.match(ticker, /\{#if events\.length\}/);
-  assert.doesNotMatch(ticker, /Waiting for today’s public rolls|Loading recent public rolls/);
-  assert.match(ticker, /prefers-reduced-motion/);
-  assert.match(ticker, /focus-within/);
-  assert.match(ticker, /ticker-distance/);
-  assert.match(ticker, /firstGroup/);
-  assert.match(ticker, /ResizeObserver/);
-  assert.match(ticker, /document\.fonts/);
-  assert.match(dailyResult, /CompactRollPreview/);
-  assert.match(dailyResult, /facetedGlyph/);
-  assert.match(dailyResult, /Today’s color/);
-  assert.doesNotMatch(dailyResult, /Featured daily roll|>Daily roll</);
-  assert.match(dailyResult, /Current streak/);
-  assert.match(dailyResult, /home-daily__rarity/);
-  assert.match(dailyResult, /Highest roll today/);
-  assert.match(dailyResult, /profilePath/);
-  assert.match(dailyResult, /home-daily__profile-link/);
-  assert.match(dailyResult, /Open \$\{featuredName\}'s public profile/);
-  assert.match(dailyResult, /See today.s top rolls/);
-  assert.doesNotMatch(dailyResult, /See today.s public rolls/);
-  assert.doesNotMatch(dailyResult, /Example daily color|Roll score|Position|View today.s profiles|Explore public profiles|Public today|View profile|Rarity earned/);
-  assert.match(dailyResult, /home-daily--compact/);
-  assert.match(dailyResult, /export let loading = false/);
-  assert.match(dailyResult, /Loading today’s color/);
-  assert.match(dailyResult, /Today’s public rolls are still forming/);
-  assert.match(dailyResult, /Show a roll in this panel/);
-  assert.doesNotMatch(dailyResult, /A new color joins the profile/);
-  assert.match(dailyResult, /\.home-daily__main \{ padding: .*text-align: center/);
-  assert.match(dailyResult, /place-items: center/);
-  assert.match(dailyResult, /grid-template-rows: auto minmax\(0, 1fr\) auto/);
-  assert.match(dailyResult, /\.home-daily__body \{ display: grid; align-content: center/);
-  assert.match(leaderboard, /slice\(0, 3\)/);
-  assert.match(leaderboard, /getProfileMediaUrl/);
-  assert.match(leaderboard, /CompactRollPreview/);
-  assert.match(leaderboard, /facetedGlyph/);
-  assert.match(referenceRollGlyph, /linearGradient/);
-  assert.match(referenceRollGlyph, /polygon points="60,10 103,91 60,109 17,91"/);
-  assert.match(referenceRollGlyph, /home-reference-glyph-float/);
-  assert.doesNotMatch(compactRollPreview, /orbCls|effectCls|effectStyle|referenceShape/);
-  assert.match(compactRollPreview, /<div class="roll-preview-frame">/);
-  assert.doesNotMatch(rollPreview, /orb-shape-|HomeReferenceRollGlyph/);
-  assert.doesNotMatch(shopItemPreview, /HomeReferenceRollGlyph/);
-  assert.match(imageLightbox, /aria-modal="true"/);
-  assert.match(imageLightbox, /event\.key === 'Escape'/);
-  assert.match(imageLightbox, /View larger image/);
-  assert.match(dailyResult, /scrollIntoView/);
-  assert.match(header, />Leaderboard</);
-  assert.doesNotMatch(header, /Explore|scrollToHomeSection|How it works/);
-  assert.match(directoryData, /KNOWN_STAFF_SHOWCASE_USERNAMES/);
-  assert.match(directoryData, /buildHomepageFeaturedProfiles/);
-  assert.match(discoveryPreviewMigration, /get_public_discovery/);
-  assert.match(discoveryStatsMigration, /todayRollCount/);
-});
+const [home, hero, renderer, fixtures, community, claim, header, app, routeLoaders, main, fonts, homepageStyles, guestProfile] = await Promise.all([
+  read('src/lib/HomePage.svelte'),
+  read('src/lib/homepage/HomepageHero.svelte'),
+  read('src/lib/homepage/HomepageProfileRenderer.svelte'),
+  read('src/lib/homepage/homepageFixtures.js'),
+  read('src/lib/homepage/HomepageCommunity.svelte'),
+  read('src/lib/homepage/HomepageClaim.svelte'),
+  read('src/lib/homepage/HomepageHeader.svelte'),
+  read('src/App.svelte'),
+  read('src/lib/routeLoaders.js'),
+  read('src/main.js'),
+  read('src/styles/fonts.css'),
+  read('src/lib/homepage/homepage-reference.css'),
+  read('src/lib/GuestProfileOnboarding.svelte')
+]);
 
-test('homepage uses optimized reference imagery without embedding mock data', async () => {
-  const imagePaths = [
-    '/homepage/admin-profile-desktop.png',
-    '/homepage/bfr-profile.webp',
-    '/homepage/daily-roll-full.webp',
-    '/homepage/daily-roll-result.webp',
-    '/homepage/daily-roll-progress.webp'
-  ];
-  for (const imagePath of imagePaths) {
-    const imageStats = await stat(new URL(`../public${imagePath}`, import.meta.url));
-    assert.ok(imageStats.size > 1000, `${imagePath} should contain an optimized reference capture`);
+test('the homepage is a single reference-first composition', () => {
+  for (const component of ['HomepageHeader', 'HomepageHero', 'HomepageLoop', 'HomepageShowcase', 'HomepageCommunity']) {
+    assert.match(home, new RegExp(component));
   }
-  assert.doesNotMatch(hero, /data:image/);
-  assert.match(hero, /src="\/homepage\/admin-profile-desktop\.png"/);
-  assert.match(hero, /width="2553" height="1379"/);
-  assert.doesNotMatch(dailyResult, /<svg/);
+  assert.match(home, /homepage-reference\.css/);
+  assert.match(home, /accountState/);
+  assert.match(home, /logoutInProgress/);
+  assert.doesNotMatch(home, /HomeHero|HomeLeaderboard|HomepageProfileDirectory|SiteModeHeader|activecolor/);
+  assert.match(home, /on:claim={forwardAction}/);
+  assert.match(home, /on:login={forwardAction}/);
+  assert.match(home, /on:logout={forwardAction}/);
+  assert.match(home, /<footer class="homepage-footer">/);
 });
 
-test('the application mounts the homepage, signup flow, and global footer', () => {
-  assert.doesNotMatch(app, /import HomePage from '.\/lib\/HomePage\.svelte'/);
+test('the hero carousel renders deterministic fixture models through ProfileShell', () => {
+  assert.match(hero, /HOMEPAGE_FIXTURES/);
+  assert.match(hero, /Previous profile example/);
+  assert.match(hero, /Next profile example/);
+  assert.match(hero, /<HomepageProfileRenderer fixture={fixture}/);
+  assert.match(hero, /class="homepage-profile-stage"/);
+  assert.match(hero, /id="claim"/);
+  assert.doesNotMatch(hero, /Preview a roll|Roll now|fake|random|discovery/);
+  assert.match(renderer, /<ProfileShell/);
+  assert.match(renderer, /previewMode={true}/);
+  for (const prop of ['previewProfile', 'previewProfileConfig', 'previewScores', 'previewTimelineEvents', 'previewCollectionItems', 'previewAllAchievements', 'visualFixture', 'renderContext', 'previewDevice']) {
+    assert.match(renderer, new RegExp(prop));
+  }
+  assert.doesNotMatch(renderer, /renderSnapshot/);
+});
+
+test('homepage fixtures are local, deterministic, and outside production data feeds', async () => {
+  assert.match(fixtures, /createDefaultProfileConfig/);
+  assert.match(fixtures, /normalizeProfileConfig/);
+  assert.match(fixtures, /homepage-fixture-/);
+  assert.doesNotMatch(fixtures, /supabase|rpc\(|get_public_discovery|KNOWN_STAFF_SHOWCASE_USERNAMES/);
+
+  const assetPaths = [
+    'compact-background.png', 'compact-avatar.png',
+    'sleek-background.png', 'sleek-avatar.png',
+    'minimal-background.png', 'minimal-avatar.png',
+    'portfolio-background.png', 'portfolio-avatar.png'
+  ];
+  for (const filename of assetPaths) {
+    const image = await stat(new URL(`../public/homepage/fixtures/${filename}`, import.meta.url));
+    assert.ok(image.size > 1000, `${filename} should be a real local fixture asset`);
+  }
+});
+
+test('homepage community is the only live profile feed on the new homepage', () => {
+  assert.match(community, /supabase\.rpc\('get_public_discovery'/);
+  assert.match(community, /normalizeDiscoveryResponse/);
+  assert.match(community, /getCanonicalProfilePath/);
+  assert.match(community, /p_surface: 'today'/);
+  assert.match(community, /slice\(0, COMMUNITY_LIMIT\)/);
+  assert.doesNotMatch(community, /HOMEPAGE_FIXTURES|getHomepageFixture|loadProfileContext/);
+  assert.match(home, /<HomepageCommunity \/>/);
+});
+
+test('claim behavior stays on the shared username and auth routes', () => {
+  assert.match(claim, /isUsernameShapeValid/);
+  assert.match(claim, /1–20 letters, numbers, or underscores/);
+  assert.match(claim, /dispatch\('claim', \{ username: nextUsername \}\)/);
+  assert.match(claim, /dispatch\('profile'\)/);
+  assert.match(claim, /username_claim_started/);
+  assert.match(claim, /username_claim_completed/);
+  assert.match(claim, /accountUnavailable/);
+  assert.match(header, /dispatch\('login'/);
+  assert.match(header, /dispatch\('logout'/);
+  assert.match(header, /dispatch\('retry'/);
+});
+
+test('the root route mounts the homepage without changing other route contracts', () => {
   assert.match(routeLoaders, /home:\s*\(\) => import\('\.\/HomePage\.svelte'\)/);
-  assert.match(app, /currentView === 'home'/);
   assert.match(app, /loaderKey: 'home'/);
-  assert.match(app, /on:signup=\{\(\) => navigateToAuth\('signup'\)\}/);
-  assert.match(app, /<RouteOutlet/);
-  assert.match(app, /class:app-shell--home=\{homeModeVisible\}/);
-  assert.match(app, /<footer class="site-footer">/);
-  assert.match(app, /Privacy Policy/);
-  assert.match(app, /How to Play/);
-});
-
-test('the signed-out profile route opens the guest onboarding roll', () => {
-  assert.match(routeLoaders, /guestProfile: \(\) => import\('\.\/GuestProfileOnboarding\.svelte'\)/);
-  assert.match(app, /loaderKey: 'guestProfile'/);
-  assert.match(app, /componentProps: \{ guestActive \}/);
+  assert.match(app, /accountState: currentAccountState/);
+  assert.match(app, /username: currentUsername/);
+  assert.match(app, /logoutInProgress: currentLogoutInProgress/);
+  assert.doesNotMatch(app, /handleHomeActiveColor|on:activecolor/);
+  assert.match(main, /@fontsource-variable\/inter/);
+  assert.match(fonts, /Clash Display/);
+  assert.match(homepageStyles, /--homepage-bg: #050506/);
+  assert.match(homepageStyles, /--homepage-radius: 18px/);
+  assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
+  assert.match(hero, /width: 440px; height: 470px/);
+  assert.match(claim, /backdrop-filter: blur\(20px\)/);
   assert.match(guestProfile, /This could be your profile/);
-  assert.match(guestProfile, /See today’s roll/);
-  assert.match(guestProfile, /guest-onboarding/);
-  assert.match(guestProfile, /IdentityCard/);
-  assert.match(guestProfile, /ProfileRoll/);
-  assert.match(guestProfile, /Create your profile/);
 });

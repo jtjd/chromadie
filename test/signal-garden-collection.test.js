@@ -4,20 +4,22 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the homepage uses the original hero source and keeps live discovery data authoritative', async () => {
-  const [hero, directory, daily, leaderboard] = await Promise.all([
-    read('src/lib/HomeHero.svelte'),
-    read('src/lib/HomepageProfileDirectory.svelte'),
-    read('src/lib/HomeDailyResult.svelte'),
-    read('src/lib/HomeLeaderboard.svelte')
+test('the homepage showcase uses local fixture environments and the production profile renderer', async () => {
+  const [hero, renderer, showcase, fixtures, community] = await Promise.all([
+    read('src/lib/homepage/HomepageHero.svelte'),
+    read('src/lib/homepage/HomepageProfileRenderer.svelte'),
+    read('src/lib/homepage/HomepageShowcase.svelte'),
+    read('src/lib/homepage/homepageFixtures.js'),
+    read('src/lib/homepage/HomepageCommunity.svelte')
   ]);
 
-  assert.match(hero, /admin-profile-desktop\.png/);
-  assert.match(hero, /width="2553" height="1379"/);
-  assert.match(hero, /home-browser__viewport/);
-  assert.match(directory, /supabase\.rpc\('get_public_discovery'/);
-  assert.match(directory, /collectHomepageRollEvents/);
-  assert.match(daily, /CompactRollPreview/);
-  assert.match(leaderboard, /getProfileMediaUrl/);
-  assert.doesNotMatch(hero, /data:image/);
+  assert.match(hero, /homepage-hero-background/);
+  assert.match(hero, /HomepageProfileRenderer/);
+  assert.match(renderer, /ProfileShell/);
+  assert.match(renderer, /previewProfileConfig/);
+  assert.match(showcase, /getHomepageShowcaseFixtures/);
+  assert.match(showcase, /homepage-profile-renderer--showcase/);
+  assert.match(fixtures, /\/homepage\/fixtures\/.*background\.png/);
+  assert.doesNotMatch(fixtures, /supabase|KNOWN_STAFF_SHOWCASE_USERNAMES/);
+  assert.match(community, /get_public_discovery/);
 });

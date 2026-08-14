@@ -1,0 +1,133 @@
+.homepage-reference {
+  --homepage-bg: #050506;
+  --homepage-panel: rgba(13, 13, 16, 0.66);
+  --homepage-panel-heavy: rgba(8, 8, 10, 0.82);
+  --homepage-border: rgba(255, 255, 255, 0.11);
+  --homepage-border-strong: rgba(255, 255, 255, 0.18);
+  --homepage-text: #f5f5f7;
+  --homepage-muted: #95959f;
+  --homepage-muted-2: #6f6f79;
+  --homepage-accent: #00ffb3;
+  --homepage-accent-soft: rgba(0, 255, 179, 0.12);
+  --homepage-accent-glow: rgba(0, 255, 179, 0.28);
+  --homepage-radius: 18px;
+  position: relative;
+  min-width: 320px;
+  min-height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--homepage-bg);
+  color: var(--homepage-text);
+  font-family: 'Inter', sans-serif;
+}
+
+.homepage-reference *,
+.homepage-reference *::before,
+.homepage-reference *::after { box-sizing: border-box; }
+.homepage-reference a { color: inherit; }
+.homepage-reference button,
+.homepage-reference input { font: inherit; }
+.homepage-reference h1,
+.homepage-reference h2,
+.homepage-reference h3 { font-family: 'Clash Display', sans-serif; }
+
+.homepage-shell { width: min(1480px, calc(100% - 64px)); margin-inline: auto; }
+.homepage-section__inner,
+.homepage-section { width: min(1160px, calc(100% - 48px)); margin-inline: auto; }
+.homepage-content { position: relative; z-index: 3; background: var(--homepage-bg); }
+
+.homepage-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--homepage-text);
+  color: #08080a;
+  font: 600 0.88rem / 1 'Clash Display', sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.homepage-button:hover { transform: translateY(-1px); background: var(--homepage-accent); }
+.homepage-button:focus-visible { outline: 2px solid var(--homepage-accent); outline-offset: 4px; }
+
+.homepage-section-kicker {
+  margin-bottom: 14px;
+  color: var(--homepage-accent);
+  font: 700 0.72rem / 1.2 'Inter', sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.homepage-section-heading {
+  max-width: 780px;
+  margin: 0;
+  color: var(--homepage-text);
+  font: 600 clamp(3rem, 5vw, 5.25rem) / 0.94 'Clash Display', sans-serif;
+  letter-spacing: -0.048em;
+}
+
+.homepage-section-heading span { color: var(--homepage-accent); }
+
+.homepage-section-sub {
+  max-width: 590px;
+  margin: 20px 0 0;
+  color: var(--homepage-muted);
+  font: 400 1.05rem / 1.65 'Inter', sans-serif;
+}
+
+.homepage-fade-to-content {
+  position: relative;
+  z-index: 2;
+  height: 180px;
+  margin-top: -120px;
+  background: linear-gradient(to bottom, transparent, rgba(5, 5, 6, 0.82) 55%, var(--homepage-bg));
+  pointer-events: none;
+}
+
+.homepage-final {
+  padding-top: 118px;
+  padding-bottom: 52px;
+  border-top: 1px solid var(--homepage-border);
+  text-align: center;
+}
+
+.homepage-final h2 { margin: 0; color: var(--homepage-text); font: 600 clamp(3.6rem, 6vw, 6rem) / 0.9 'Clash Display', sans-serif; letter-spacing: -0.05em; }
+.homepage-final p { max-width: 500px; margin: 18px auto 34px; color: var(--homepage-muted); font: 400 1rem / 1.6 'Inter', sans-serif; }
+.homepage-final .homepage-button { min-height: 58px; padding-inline: 30px; font-size: 1rem; }
+
+.homepage-footer {
+  display: flex;
+  width: min(1160px, calc(100% - 48px));
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-inline: auto;
+  padding: 28px 0 36px;
+  border-top: 1px solid var(--homepage-border);
+  color: var(--homepage-muted-2);
+  font: 400 0.76rem / 1.4 'Inter', sans-serif;
+}
+
+@media (max-width: 1100px) {
+  .homepage-shell { width: min(calc(100% - 40px), 980px); }
+}
+
+@media (max-width: 780px) {
+  .homepage-shell { width: calc(100% - 30px); }
+  .homepage-section,
+  .homepage-section__inner { width: calc(100% - 30px); }
+  .homepage-fade-to-content { height: 120px; margin-top: -80px; }
+  .homepage-section-heading { font-size: clamp(2.9rem, 13vw, 4rem); }
+  .homepage-final { padding-top: 88px; padding-bottom: 48px; }
+  .homepage-footer { width: calc(100% - 30px); align-items: flex-start; flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homepage-reference { scroll-behavior: auto; }
+  .homepage-button { transition: none; }
+}

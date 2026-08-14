@@ -58,7 +58,7 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
     read('src/lib/ProfileDashboardActions.svelte')
   ]);
   const studio = [settings, contract, registry, workspace, preview, header].join('\n');
-  assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible\}/);
+  assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible && !homeModeVisible\}/);
   assert.match(registry, /id: 'account', destination: 'account',[\s\S]*ProfileAccountSettings\.svelte/);
   assert.match(studio, /id: 'customize'/);
   assert.match(studio, /id: 'links'/);

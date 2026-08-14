@@ -16,12 +16,13 @@ test('route loading keeps the shell and previous page mounted until a destinatio
   assert.match(app, /prefetchRouteComponent/);
   assert.match(outlet, /activeComponent/);
   assert.match(outlet, /activeProps/);
-  assert.match(outlet, /activeProps = target\.componentProps/);
+  assert.match(outlet, /activeProps = componentProps/);
+  assert.match(outlet, /current route props/);
   assert.match(outlet, /await loadRouteComponent\(target\.loaderKey\)/);
   assert.match(outlet, /if \(target\.staticComponent\)/);
   assert.match(outlet, /role="status"/);
   assert.match(outlet, /prefers-reduced-motion/);
-  assert.match(outlet, /on:activecolor=\{event => forward\('activecolor', event\)\}/);
+  assert.doesNotMatch(outlet, /activecolor/);
 });
 
 test('route loaders use explicit split points and cache prefetched modules', () => {

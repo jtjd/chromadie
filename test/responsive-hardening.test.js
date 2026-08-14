@@ -9,7 +9,10 @@ const viteConfig = await read('vite.config.js');
 const responsiveBuildCheck = await read('scripts/check-responsive-build.mjs');
 const browserHarness = await read('scripts/browser/cdp-harness.mjs');
 const browserSmoke = await read('scripts/browser/profile-studio-smoke.mjs');
-const daily = await read('src/lib/HomeDailyResult.svelte');
+const homepage = await read('src/lib/HomePage.svelte');
+const homepageStyles = await read('src/lib/homepage/homepage-reference.css');
+const homepageHero = await read('src/lib/homepage/HomepageHero.svelte');
+const homepageSmoke = await read('scripts/browser/homepage-reference-smoke.mjs');
 const profileShell = await read('src/lib/ProfileShell.svelte');
 const dashboard = await read('src/lib/ProfileDashboardShell.svelte');
 const dashboardActions = await read('src/lib/ProfileDashboardActions.svelte');
@@ -26,11 +29,15 @@ const shareDialog = await read('src/lib/ProfileShareDialog.svelte');
 const discovery = await read('src/lib/DiscoveryHub.svelte');
 const foundations = await read('src/styles/foundations.css');
 
-test('homepage daily result gives the medium-width roll and readout enough room', () => {
-  assert.match(daily, /grid-template-columns: minmax\(16rem, 1fr\) minmax\(12rem, 0\.8fr\)/);
-  assert.doesNotMatch(daily, /grid-template-columns: 8rem minmax\(0, 1fr\)/);
-  assert.match(daily, /@media \(max-width: 36rem\)/);
-  assert.match(daily, /\.home-daily__readout \{[^}]*justify-items: start/);
+test('the replacement homepage has explicit desktop, tablet, and phone containment rules', () => {
+  assert.match(homepage, /HomepageProfileRenderer|HomepageHero/);
+  assert.match(homepageStyles, /@media \(max-width: 780px\)/);
+  assert.match(homepageHero, /@media \(max-width: 930px\)[\s\S]*grid-template-columns: 1fr/);
+  assert.match(homepageHero, /@media \(max-width: 460px\)/);
+  assert.match(homepageSmoke, /1440, 1000/);
+  assert.match(homepageSmoke, /1024, 900/);
+  assert.match(homepageSmoke, /390, 844/);
+  assert.match(homepageSmoke, /scrollWidth <= width \+ 1/);
 });
 
 test('public profiles leave wheel scrolling to the browser', () => {
@@ -128,7 +135,9 @@ test('browser smoke can run against the production preview and checks the phone 
   assert.match(browserHarness, /startVitePreview/);
   assert.match(browserSmoke, /smokeMode/);
   assert.match(browserSmoke, /compiled homepage keeps its phone layout/);
-  assert.match(browserSmoke, /site-mode-header__mobile-menu/);
+  assert.match(browserSmoke, /homepage-profile-renderer--hero/);
+  assert.match(browserSmoke, /homepage-profile-stage/);
+  assert.match(browserSmoke, /oldHeader/);
   assert.match(browserSmoke, /authenticated Profile Studio shell/);
   assert.match(browserSmoke, /Persistent mobile customize tabs are not reachable/);
   assert.match(browserSmoke, /production Discovery keeps its route shell and card geometry bounded/);

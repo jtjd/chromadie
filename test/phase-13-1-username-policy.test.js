@@ -62,7 +62,7 @@ test('route and username policies remain separate for the grandfathered Admin pr
 
 test('username policy is shared by the client and database migration', async () => {
   const auth = await readFile(new URL('../src/lib/Auth.svelte', import.meta.url), 'utf8');
-  const homeClaim = await readFile(new URL('../src/lib/HomeUsernameClaim.svelte', import.meta.url), 'utf8');
+  const homeClaim = await readFile(new URL('../src/lib/homepage/HomepageClaim.svelte', import.meta.url), 'utf8');
   const migration = await readFile(new URL('../supabase/migrations/20260808120000_short_usernames.sql', import.meta.url), 'utf8');
   const driftCheck = await readFile(new URL('../scripts/check-username-policy-drift.mjs', import.meta.url), 'utf8');
 

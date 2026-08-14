@@ -13,9 +13,7 @@ const publicConsumers = [
   'src/lib/ProfileShell.svelte',
   'src/lib/ProfileMusic.svelte',
   'src/lib/DiscoveryCard.svelte',
-  'src/lib/HomepageProfilePreview.svelte',
-  'src/lib/HomeLeaderboard.svelte',
-  'src/lib/HomeDailyResult.svelte',
+  'src/lib/homepage/HomepageProfileRenderer.svelte',
   'src/lib/ShopStudioPreview.svelte'
 ];
 const forbidden = [

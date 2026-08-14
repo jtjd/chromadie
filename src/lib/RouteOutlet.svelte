@@ -53,8 +53,11 @@
       if (requestId !== loadRequestId) return;
 
       activeComponent = component;
-      activeProps = target.componentProps;
-      activeKey = target.componentKey;
+      // The route can finish loading after reactive props (for example auth
+      // state) have changed. Use the current route props so the first mounted
+      // component does not remain stuck with the loading-state snapshot.
+      activeProps = componentProps;
+      activeKey = componentKey;
       loading = false;
       dispatch('loaded', { loaderKey: target.loaderKey, componentKey: target.componentKey });
     } catch (error) {
@@ -98,7 +101,6 @@
         on:claim={event => forward('claim', event)}
         on:profile={event => forward('profile', event)}
         on:roll={event => forward('roll', event)}
-        on:activecolor={event => forward('activecolor', event)}
       />
     {/key}
   {:else if errorMessage}

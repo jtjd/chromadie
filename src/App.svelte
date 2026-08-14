@@ -15,7 +15,6 @@
   import { VALID_VIEWS, VALID_LEADERBOARD_TABS, parseRouteLocation } from './lib/routes';
   import { getCanonicalProfilePath } from './lib/routeContract.js';
   import { resolveProfileAlias } from './lib/profileAliases.js';
-  import { normalizeHexColor } from './lib/utils.js';
   import { trackProductEvent } from './lib/productAnalytics.js';
   import { ACCOUNT_STATES } from './lib/authState';
   import { onMount, onDestroy, tick } from 'svelte';
@@ -44,12 +43,6 @@
   let profileVisualFixture = '';
   let cancelIdlePrefetch = null;
   let routeTarget;
-  let homeActiveColor = '#CDD2FF';
-
-  function handleHomeActiveColor(event) {
-    homeActiveColor = normalizeHexColor(event.detail?.color, '#CDD2FF');
-  }
-
   function getProfileVisualFixture() {
     if (!import.meta.env.DEV || typeof window === 'undefined' || window.location.hostname !== '127.0.0.1') return '';
     const value = new URLSearchParams(window.location.search).get('profile_fixture');
@@ -507,7 +500,9 @@
     authTab,
     authNext,
     authUsername,
-    aliasResolving: resolvingAlias
+    aliasResolving: resolvingAlias,
+    username: currentUsername,
+    logoutInProgress: currentLogoutInProgress
   }) {
     if (currentRouteMode === 'not-found') {
       return { componentKey: 'not-found', staticComponent: NotFound, componentProps: {}, loadingLabel: 'Opening page' };
@@ -544,7 +539,12 @@
       return {
         loaderKey: 'home',
         componentKey: 'home',
-        componentProps: { isAuthenticated: authenticated, accountState: currentAccountState },
+        componentProps: {
+          isAuthenticated: authenticated,
+          accountState: currentAccountState,
+          username: currentUsername,
+          logoutInProgress: currentLogoutInProgress
+        },
         loadingLabel: 'Opening ChromaDie'
       };
     }
@@ -700,7 +700,9 @@
     authTab: authRouteTab,
     authNext: authRouteNext,
     authUsername: authRouteUsername,
-    aliasResolving
+    aliasResolving,
+    username: headerUsername,
+    logoutInProgress
   });
 
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
@@ -879,7 +881,7 @@
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div id="header-mount">
-    {#if !profileModeVisible && !profileSettingsModeVisible}
+    {#if !profileModeVisible && !profileSettingsModeVisible && !homeModeVisible}
       <SiteModeHeader
         activeView={routeMode === 'app' ? view : routeMode}
         accountState={$accountState}
@@ -896,7 +898,7 @@
         on:logout={handleLogout}
         on:retry={() => window.location.reload()}
         on:edit={handleProfileHeaderEdit}
-        accentColor={homeModeVisible ? homeActiveColor : '#cdd2ff'}
+        accentColor="#cdd2ff"
       />
     {/if}
 
@@ -1005,11 +1007,10 @@
     on:claim={event => navigateToAuth({ detail: { mode: 'signup', username: event.detail?.username } })}
     on:profile={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
     on:roll={() => setRoute('profile', { username: $profile?.username || $authUser?.user_metadata?.username || null })}
-    on:activecolor={handleHomeActiveColor}
   />
   </div>
 
-  {#if view !== 'profile' && !profileSettingsModeVisible}
+  {#if view !== 'profile' && !profileSettingsModeVisible && !homeModeVisible}
     <footer class="site-footer">
       <div class="site-footer-inner">
         <p>ChromaDie</p>

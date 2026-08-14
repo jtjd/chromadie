@@ -17,7 +17,7 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
   ]);
   const studio = [settings, registry, workspace, preview].join('\n');
 
-  assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible\}/);
+  assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible && !homeModeVisible\}/);
   assert.match(app, /componentProps: \{ logoutInProgress \}/);
   assert.match(settings, /<ProfileDashboardShell/);
   assert.match(settings, /on:sectionchange/);

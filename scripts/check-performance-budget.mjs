@@ -18,7 +18,10 @@ const budgets = {
   html: 12 * 1024,
   routes: {
     auth: { entries: ['src/lib/Auth.svelte'], javascript: 300 * 1024, css: 90 * 1024 },
-    homepage: { entries: ['src/lib/HomePage.svelte'], javascript: 425 * 1024, css: 130 * 1024 },
+    // The reference homepage intentionally mounts the production ProfileShell
+    // for its hero and photographic showcase, so this route includes the
+    // shared renderer payload in addition to the homepage shell.
+    homepage: { entries: ['src/lib/HomePage.svelte'], javascript: 500 * 1024, css: 220 * 1024 },
     publicProfile: { entries: ['src/lib/ProfileShell.svelte'], javascript: 475 * 1024, css: 200 * 1024 },
     dashboard: {
       entries: ['src/lib/ProfileSettings.svelte', 'src/lib/ProfileShell.svelte', 'src/lib/ProfileStudioOverview.svelte'],
@@ -79,11 +82,21 @@ async function summarizeManifestEntries(manifest, entries) {
   const javascriptFiles = new Set();
   const cssFiles = new Set();
 
+  function resolveManifestKey(key) {
+    if (manifest[key]) return key;
+    const sourceName = String(key).split('/').pop()?.replace(/\.[^.]+$/, '');
+    const candidates = Object.entries(manifest)
+      .filter(([, item]) => item?.name === sourceName && item.file?.endsWith('.js'))
+      .map(([candidate]) => candidate);
+    if (candidates.length === 1) return candidates[0];
+    throw new Error(`Performance manifest is missing ${key}`);
+  }
+
   function visit(key) {
-    if (visited.has(key)) return;
-    const item = manifest[key];
-    if (!item) throw new Error(`Performance manifest is missing ${key}`);
-    visited.add(key);
+    const resolvedKey = resolveManifestKey(key);
+    if (visited.has(resolvedKey)) return;
+    const item = manifest[resolvedKey];
+    visited.add(resolvedKey);
     if (item.file?.endsWith('.js')) javascriptFiles.add(item.file);
     for (const cssFile of item.css || []) cssFiles.add(cssFile);
     for (const importedKey of item.imports || []) visit(importedKey);

@@ -1,6 +1,7 @@
 import './styles/fonts.css'
 import '@fontsource-variable/instrument-sans/wght.css'
 import '@fontsource-variable/instrument-sans/wght-italic.css'
+import '@fontsource-variable/inter/wght.css'
 import '@fontsource-variable/manrope/wght.css'
 import '@fontsource-variable/spline-sans/wght.css'
 import '@fontsource/ibm-plex-mono/latin-400.css'

@@ -36,8 +36,7 @@
     'profile-username-large',
     'discovery-card__name',
     'lb-username',
-    'studio-player-name',
-    'home-leaderboard__username'
+    'studio-player-name'
   ]);
   const RENDER_MODES = new Set(['animated', 'paused', 'static', 'static-signature', 'reduced-motion']);
 

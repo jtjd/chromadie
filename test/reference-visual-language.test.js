@@ -4,56 +4,45 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('reference typography is a shared, non-Google font contract', async () => {
-  const [fonts, tokens, index, main] = await Promise.all([
+test('the approved homepage typography is bundled and authoritative', async () => {
+  const [fonts, main, index, homepage, header, claim] = await Promise.all([
     read('src/styles/fonts.css'),
-    read('src/styles/tokens.css'),
+    read('src/main.js'),
     read('index.html'),
-    read('src/main.js')
+    read('src/lib/homepage/homepage-reference.css'),
+    read('src/lib/homepage/HomepageHeader.svelte'),
+    read('src/lib/homepage/HomepageClaim.svelte')
   ]);
 
-  assert.match(tokens, /--font-body-stack: 'Spline Sans Variable'/);
-  assert.match(tokens, /--font-display-stack: 'Spline Sans Variable'/);
-  assert.match(tokens, /--font-mono-stack: 'IBM Plex Mono'/);
-  assert.match(tokens, /--color-accent: #dbe7ef/);
-  assert.match(tokens, /--color-accent-cyan: #8ddcff/);
-  assert.match(tokens, /--color-accent-roll: #b7fd4d/);
-  assert.match(main, /@fontsource-variable\/instrument-sans/);
-  assert.match(main, /@fontsource-variable\/spline-sans/);
-  assert.match(main, /@fontsource\/ibm-plex-mono/);
-  assert.match(fonts, /font-family: 'Satoshi'/);
+  assert.match(fonts, /font-family: 'Clash Display'/);
+  assert.match(fonts, /font-weight: 400/);
+  assert.match(main, /@fontsource-variable\/inter\/wght\.css/);
   assert.doesNotMatch(index, /fonts\.googleapis|fonts\.gstatic/);
+  assert.match(homepage, /font-family: 'Inter'/);
+  assert.match(homepage, /font-family: 'Clash Display'/);
+  assert.match(header, /'Clash Display'/);
+  assert.match(claim, /'Inter'/);
 });
 
-test('quiet reference surfaces and reduced-motion behavior are encoded', async () => {
-  const [header, home, directory, dailyResult, how, site] = await Promise.all([
-    read('src/lib/SiteModeHeader.svelte'),
-    read('src/lib/HomePage.svelte'),
-    read('src/lib/HomepageProfileDirectory.svelte'),
-    read('src/lib/HomeDailyResult.svelte'),
-    read('src/lib/HomeHowItWorks.svelte'),
-    read('src/styles/site.css')
+test('the homepage shell preserves the frozen reference geometry and treatment', async () => {
+  const [styles, hero, showcase, loop] = await Promise.all([
+    read('src/lib/homepage/homepage-reference.css'),
+    read('src/lib/homepage/HomepageHero.svelte'),
+    read('src/lib/homepage/HomepageShowcase.svelte'),
+    read('src/lib/homepage/HomepageLoop.svelte')
   ]);
 
-  assert.match(header, /background: rgba\(7, 8, 11, 0\.52\)/);
-  assert.match(header, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);
-  assert.match(header, /\.site-mode-header--home \{[\s\S]*position: sticky;/);
-  assert.match(header, /--site-header-font: 'Satoshi'/);
-  assert.match(header, /font: 600 0\.72rem \/ 1 var\(--site-header-font\)/);
-  assert.match(header, /color: var\(--color-accent-cyan\)/);
-  assert.match(header, /export let accentColor = '#cdd2ff'/);
-  assert.match(header, /--site-header-accent/);
-  assert.match(header, /color-mix\(in srgb, var\(--site-header-accent/);
-  assert.match(home, /--home-canvas: #0d0f13/);
-  assert.match(home, /--home-font: 'Instrument Sans Variable'/);
-  assert.match(home, /--home-mono: 'IBM Plex Mono'/);
-  assert.doesNotMatch(home, /rgba\(139,124,246|radial-gradient\(circle at 85%/);
-  assert.match(directory, /HomepageLiveTicker/);
-  assert.match(dailyResult, /place-items: center/);
-  assert.match(dailyResult, /prefers-reduced-motion/);
-  assert.match(how, /prefers-reduced-motion/);
-  assert.match(how, /<ol class="home-how__steps">/);
-  assert.doesNotMatch(how, /role="tablist"|aria-selected|setTimeout/);
-  assert.match(site, /background-color: var\(--color-canvas\)/);
-  assert.match(site, /--site-accent: var\(--color-accent\)/);
+  assert.match(styles, /--homepage-bg: #050506/);
+  assert.match(styles, /--homepage-border: rgba\(255, 255, 255, 0\.11\)/);
+  assert.match(styles, /--homepage-radius: 18px/);
+  assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
+  assert.match(hero, /min-height: calc\(100svh - 88px\)/);
+  assert.match(hero, /width: 440px; height: 470px/);
+  assert.match(hero, /background-image: var\(--homepage-hero-background\)/);
+  assert.match(hero, /backdrop-filter: blur\(16px\)/);
+  assert.match(showcase, /homepage-profile-renderer--showcase/);
+  assert.match(showcase, /profile-shell-page/);
+  for (const step of ['Roll', 'Build', 'Be seen']) assert.match(loop, new RegExp(`<h3>${step}</h3>`));
+  assert.match(styles, /prefers-reduced-motion/);
+  assert.doesNotMatch(`${styles}${hero}${showcase}${loop}`, /blob|orb|dashboard statistic|illustration/i);
 });

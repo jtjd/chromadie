@@ -796,13 +796,11 @@ try {
 
   await step('open local homepage', async () => {
     await page.waitFor(`(() => {
-      const image = document.querySelector('.home-browser img');
-      const stage = document.querySelector('.home-hero__stage');
-      return Boolean(document.querySelector('.site-mode-header')
-        && document.querySelector('.home-page #home-title')
-        && image?.complete
-        && image.naturalWidth > 0
-        && Number.parseFloat(getComputedStyle(stage).opacity || '1') > 0.99);
+      const environment = document.querySelector('.homepage-hero__environment');
+      return Boolean(document.querySelector('.homepage-reference')
+        && document.querySelector('.homepage-profile-renderer--hero .profile-shell-page[data-profile-render-model="v1"]')
+        && environment
+        && getComputedStyle(environment).backgroundImage !== 'none');
     })()`, 'hydrated homepage');
     assert((await page.evaluate('location.hostname')) === '127.0.0.1', 'Homepage did not load on loopback.');
     await capture('01-homepage');
@@ -810,39 +808,27 @@ try {
 
   await step('compiled homepage keeps its phone layout', async () => {
     await page.setViewport(402, 874);
-    await page.waitFor(`document.querySelector('.home-hero__intro') && document.querySelector('.home-hero__stage')`, 'homepage phone layout');
+    await page.waitFor(`document.querySelector('.homepage-hero') && document.querySelector('.homepage-profile-stage')`, 'homepage phone layout');
     const state = await page.evaluate(`(() => {
       const select = selector => document.querySelector(selector);
       const rect = element => {
         const box = element?.getBoundingClientRect();
         return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
       };
-      const nav = select('.site-mode-header__nav');
-      const right = select('.site-mode-header__right');
-      const mobileMenu = select('.site-mode-header__mobile-menu');
-      const intro = select('.home-hero__intro');
-      const stage = select('.home-hero__stage');
-      const title = select('#home-title');
-      const side = select('.home-hero__side');
-      const introStyle = getComputedStyle(intro);
-      const stageStyle = getComputedStyle(stage);
-      const titleBox = rect(title);
-      const sideBox = rect(side);
+      const hero = select('.homepage-hero');
+      const stage = select('.homepage-profile-stage');
+      const heroStyle = getComputedStyle(hero);
+      const stageBox = rect(stage);
       return {
-        headerNav: nav ? getComputedStyle(nav).display : '',
-        headerRight: right ? getComputedStyle(right).display : '',
-        mobileMenu: mobileMenu ? getComputedStyle(mobileMenu).display : '',
-        introColumns: introStyle.gridTemplateColumns,
-        stageColumns: stageStyle.gridTemplateColumns,
-        title: titleBox,
-        side: sideBox,
-        stacked: Boolean(titleBox && sideBox && sideBox.top >= titleBox.bottom - 1),
+        oldHeader: Boolean(select('.site-mode-header')),
+        heroColumns: heroStyle.gridTemplateColumns,
+        stage: stageBox,
         contained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
-    assert(state.headerNav === 'none' && state.headerRight === 'none' && state.mobileMenu !== 'none', `Production header did not switch to its mobile state: ${JSON.stringify(state)}.`);
-    assert(state.introColumns.split(' ').length === 1 && state.stageColumns.split(' ').length === 1, `Production homepage retained multi-column phone geometry: ${JSON.stringify(state)}.`);
-    assert(state.stacked && state.contained, `Production homepage phone layout is not contained: ${JSON.stringify(state)}.`);
+    assert(!state.oldHeader, `Legacy homepage header remains mounted: ${JSON.stringify(state)}.`);
+    assert(state.heroColumns.trim().split(' ').length === 1, `Production homepage retained multi-column phone geometry: ${JSON.stringify(state)}.`);
+    assert(state.stage && state.stage.left >= 0 && state.stage.right <= 402 && state.contained, `Production homepage phone layout is not contained: ${JSON.stringify(state)}.`);
     await capture('01-homepage-mobile');
     await page.setViewport(1440, 1000);
     return state;
