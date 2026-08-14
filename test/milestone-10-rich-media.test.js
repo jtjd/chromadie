@@ -128,7 +128,7 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   assert.match(editor, /Replace banner/);
   assert.match(editor, /controls preload="metadata"/);
   assert.match(shell, /autoplay muted loop playsinline/);
-  assert.match(shell, /poster=\{backgroundSrc/);
+  assert.doesNotMatch(shell, /poster=\{backgroundSrc/);
   assert.match(shell, /prefersReducedMotion/);
   assert.match(shell, /--profile-pointer-cursor/);
   assert.match(music, /Enter profile/);

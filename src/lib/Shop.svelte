@@ -127,7 +127,11 @@
   $: previewUsername = $profile?.display_name || $profile?.username || 'You';
   $: previewColor = normalizeHexColor(currentRoll?.hex_code || $profile?.mood_color, '#8B7CF6');
   $: previewProfileConfig = profileConfig?.published || profileConfig?.draft || profileConfig || {};
-  $: previewAvatarSrc = getProfileMediaUrl(previewProfileConfig.avatar_path);
+  $: previewAvatarSrc = getProfileMediaUrl(
+    previewProfileConfig.media_references?.avatar
+      || previewProfileConfig.mediaReferences?.avatar
+      || previewProfileConfig.avatar_path
+  );
   $: previewLoadout = selectedItem?.slot
     ? ['name_font', 'name_material', 'name_motion'].includes(selectedItem.slot)
       ? getNameItemPreviewLoadout(selectedItem, $equippedItems)

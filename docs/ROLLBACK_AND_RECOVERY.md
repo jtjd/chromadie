@@ -132,7 +132,7 @@ These checks do not deploy or mutate application data:
 
 ```bash
 supabase migration list --linked
-SUPABASE_URL="$VITE_SUPABASE_URL" SUPABASE_ANON_KEY="$VITE_SUPABASE_KEY" npm run check:catalog-drift
+SUPABASE_URL="$VITE_SUPABASE_URL" VITE_SUPABASE_PUBLISHABLE_KEY="$VITE_SUPABASE_PUBLISHABLE_KEY" npm run check:catalog-drift
 supabase db diff --linked --schema public
 ```
 

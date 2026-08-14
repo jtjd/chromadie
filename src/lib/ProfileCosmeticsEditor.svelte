@@ -60,7 +60,14 @@
   $: account = { ...($profile || {}), ...(accountProfile || {}) };
   $: username = account.username || 'Chromanaut';
   $: displayColor = account.mood_color || '#7B5CFF';
-  $: avatarSrc = getProfileMediaUrl((profileConfig && (profileConfig.draft?.avatar_path || profileConfig.published?.avatar_path)) || '');
+  $: avatarSrc = getProfileMediaUrl(
+    (profileConfig && (
+      profileConfig.draft?.media_references?.avatar
+      || profileConfig.published?.media_references?.avatar
+      || profileConfig.draft?.avatar_path
+      || profileConfig.published?.avatar_path
+    )) || ''
+  );
   $: plusUnlocked = Boolean(staff || hasChromadiePlus(entitlements));
   $: fittingRoom = createFittingRoom({
     userInventory: $userInventory,

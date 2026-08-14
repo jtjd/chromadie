@@ -1,14 +1,22 @@
-import { normalizeMediaSource } from './mediaSafety.js';
 import { getProfileStorageRef } from './profileExpression.js';
+import { DEFAULT_PROFILE_MEDIA_ORIGIN, resolveProfileMediaReference } from './profileMediaResolver.js';
 import { supabase } from './supabase.js';
 
-export function getProfileMediaUrl(storedPath, cacheKey = '') {
-  const reference = getProfileStorageRef(storedPath);
-  if (!reference || !supabase?.storage) return '';
-  const publicUrl = supabase.storage.from(reference.bucket).getPublicUrl(reference.objectPath)?.data?.publicUrl || '';
-  const safeUrl = normalizeMediaSource(publicUrl);
-  if (!safeUrl || !cacheKey) return safeUrl;
+function getConfiguredMediaOrigin() {
+  return import.meta.env?.VITE_PROFILE_MEDIA_ORIGIN || DEFAULT_PROFILE_MEDIA_ORIGIN;
+}
 
-  const separator = safeUrl.includes('?') ? '&' : '?';
-  return `${safeUrl}${separator}v=${encodeURIComponent(String(cacheKey))}`;
+export function getProfileMediaUrl(mediaReference, cacheKey = '', { preview = Boolean(cacheKey) } = {}) {
+  const legacyResolver = storedPath => {
+    const reference = getProfileStorageRef(storedPath);
+    if (!reference || !supabase?.storage) return '';
+    return supabase.storage.from(reference.bucket).getPublicUrl(reference.objectPath)?.data?.publicUrl || '';
+  };
+
+  return resolveProfileMediaReference(mediaReference, {
+    publicOrigin: getConfiguredMediaOrigin(),
+    legacyResolver,
+    cacheKey,
+    allowLegacyCacheBust: preview
+  });
 }

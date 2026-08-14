@@ -2,7 +2,7 @@ import { GoTrueClient } from '@supabase/auth-js';
 import { PostgrestClient } from '@supabase/postgrest-js';
 
 const CLIENT_VERSION = '2.110.1';
-function createAuthFetch({ supabaseKey, authClientRef, authUrl, globalFetch }) {
+function createAuthFetch({ supabaseKey, projectKeyIsLegacy, authClientRef, authUrl, globalFetch }) {
   const fetchImplementation = globalFetch || globalThis.fetch.bind(globalThis);
 
   return async (input, init) => {
@@ -22,12 +22,14 @@ function createAuthFetch({ supabaseKey, authClientRef, authUrl, globalFetch }) {
       const sessionResult = authClientRef.current
         ? await authClientRef.current.getSession()
         : { data: { session: null } };
-      const accessToken = sessionResult?.data?.session?.access_token || supabaseKey;
-      requestHeaders.set('Authorization', `Bearer ${accessToken}`);
+      const accessToken = sessionResult?.data?.session?.access_token || '';
+      if (accessToken) requestHeaders.set('Authorization', `Bearer ${accessToken}`);
     }
 
     if (!requestHeaders.has('apikey')) requestHeaders.set('apikey', supabaseKey);
-    if (!requestHeaders.has('Authorization')) requestHeaders.set('Authorization', `Bearer ${supabaseKey}`);
+    if (!requestHeaders.has('Authorization') && projectKeyIsLegacy) {
+      requestHeaders.set('Authorization', `Bearer ${supabaseKey}`);
+    }
 
     return fetchImplementation(input, { ...init, headers: requestHeaders });
   };
@@ -51,7 +53,12 @@ function createLazyFunctionsClient({ functionsUrl, headers, fetch, unavailableMe
   };
 }
 
-export function createSupabaseTransport({ supabaseUrl, supabaseKey, globalFetch = null }) {
+export function createSupabaseTransport({
+  supabaseUrl,
+  supabaseKey,
+  projectKeyIsLegacy = !String(supabaseKey || '').startsWith('sb_publishable_'),
+  globalFetch = null
+}) {
   const baseUrl = new URL(supabaseUrl.endsWith('/') ? supabaseUrl : `${supabaseUrl}/`);
   const serviceUrls = {
     auth: new URL('auth/v1', baseUrl).href,
@@ -63,14 +70,14 @@ export function createSupabaseTransport({ supabaseUrl, supabaseKey, globalFetch 
     'X-Client-Info': `supabase-js/${CLIENT_VERSION}; runtime=web`
   };
   const authClientRef = { current: null };
-  const fetchWithAuth = createAuthFetch({ supabaseKey, authClientRef, authUrl: serviceUrls.auth, globalFetch });
+  const fetchWithAuth = createAuthFetch({ supabaseKey, projectKeyIsLegacy, authClientRef, authUrl: serviceUrls.auth, globalFetch });
   const storageKey = `sb-${baseUrl.hostname.split('.')[0]}-auth-token`;
 
   const auth = new GoTrueClient({
     url: serviceUrls.auth,
     headers: {
-      Authorization: `Bearer ${supabaseKey}`,
       apikey: supabaseKey,
+      ...(projectKeyIsLegacy ? { Authorization: `Bearer ${supabaseKey}` } : {}),
       ...globalHeaders
     },
     storageKey,

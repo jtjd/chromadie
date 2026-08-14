@@ -112,6 +112,11 @@ function safeLabel(value, fallback = 'Untitled track') {
   return (label || fallback).slice(0, 80);
 }
 
+function normalizeAssetId(value) {
+  const candidate = String(value || '').trim();
+  return UUID_RE.test(candidate) ? candidate.toLowerCase() : null;
+}
+
 export function extensionForRichMedia(kind, fileOrMime = '') {
   const rules = PROFILE_RICH_MEDIA_RULES[kind];
   if (!rules) return '';
@@ -208,11 +213,12 @@ function normalizeTrack(value, index) {
   const path = getRichMediaStorageRef(value.path || value.storage_path)?.objectPath
     ? String(value.path || value.storage_path).trim()
     : '';
-  if (!path || getRichMediaStorageRef(path)?.extension !== 'mp3') return null;
+  const assetId = normalizeAssetId(value.asset_id);
+  if ((!path && !assetId) || (path && getRichMediaStorageRef(path)?.extension !== 'mp3')) return null;
   const durationMs = safeInteger(value.duration_ms, 0, 0, 24 * 60 * 60 * 1000);
   const startMs = safeInteger(value.trim_start_ms, 0, 0, durationMs || 24 * 60 * 60 * 1000);
   const endMs = safeInteger(value.trim_end_ms, durationMs, startMs, durationMs || 24 * 60 * 60 * 1000);
-  return {
+  const track = {
     path,
     label: safeLabel(value.label, `Track ${index + 1}`),
     duration_ms: durationMs,
@@ -220,6 +226,11 @@ function normalizeTrack(value, index) {
     trim_end_ms: endMs,
     order: safeInteger(value.order, index, 0, 4)
   };
+  if (assetId) track.asset_id = assetId;
+  if (value.media_reference && typeof value.media_reference === 'object') {
+    track.media_reference = value.media_reference;
+  }
+  return track;
 }
 
 export function normalizeRichAudioPlaylist(value) {
@@ -229,8 +240,9 @@ export function normalizeRichAudioPlaylist(value) {
     : [];
   const seenPaths = new Set();
   const uniqueTracks = tracks.filter(track => {
-    if (seenPaths.has(track.path)) return false;
-    seenPaths.add(track.path);
+    const identity = track.asset_id || track.path;
+    if (seenPaths.has(identity)) return false;
+    seenPaths.add(identity);
     return true;
   }).sort((left, right) => left.order - right.order).map((track, index) => ({ ...track, order: index }));
   return {
@@ -262,6 +274,10 @@ export function normalizeRichMediaConfig(value = {}) {
         : ['webp', 'ani'].includes(reference?.extension);
     if (reference && validPath) {
       output[field] = path;
+    }
+    const assetField = `${kind}_asset_id`;
+    if (Object.prototype.hasOwnProperty.call(source, assetField)) {
+      output[assetField] = normalizeAssetId(source[assetField]);
     }
   }
   output.audio_playlist = normalizeRichAudioPlaylist(source.audio_playlist);

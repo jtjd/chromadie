@@ -7,14 +7,22 @@ export const PROFILE_STUDIO_FALLBACK_COLOR = '#CDD2FF';
 const PROFILE_EXPRESSION_FIELDS = Object.freeze([
   'avatar_path',
   'background_path',
+  'avatar_asset_id',
+  'background_asset_id',
   'audio_path',
+  'audio_asset_id',
   'spotify_type',
   'spotify_id',
   'background_video_path',
+  'background_video_asset_id',
   'banner_path',
+  'banner_asset_id',
   'cursor_path',
+  'cursor_asset_id',
   'pointer_cursor_path',
-  'audio_playlist'
+  'pointer_cursor_asset_id',
+  'audio_playlist',
+  'media_references'
 ]);
 
 const PROFILE_LAYOUT_DRAFT_FIELDS = Object.freeze([
@@ -80,19 +88,40 @@ export function preserveExpressionFields(nextConfig, currentConfig) {
   const current = currentConfig || {};
   const nextRich = normalizeRichMediaConfig(next);
   const currentRich = normalizeRichMediaConfig(current);
-  return {
+  const preserved = {
     ...next,
     avatar_path: current.avatar_path ?? next.avatar_path ?? null,
     background_path: current.background_path ?? next.background_path ?? null,
+    avatar_asset_id: current.avatar_asset_id ?? next.avatar_asset_id ?? null,
+    background_asset_id: current.background_asset_id ?? next.background_asset_id ?? null,
     audio_path: current.audio_path ?? next.audio_path ?? null,
+    audio_asset_id: current.audio_asset_id ?? next.audio_asset_id ?? null,
     spotify_type: current.spotify_type ?? next.spotify_type ?? null,
     spotify_id: current.spotify_id ?? next.spotify_id ?? null,
     background_video_path: Object.prototype.hasOwnProperty.call(next, 'background_video_path') ? nextRich.background_video_path : currentRich.background_video_path,
+    background_video_asset_id: Object.prototype.hasOwnProperty.call(next, 'background_video_asset_id') ? nextRich.background_video_asset_id : currentRich.background_video_asset_id,
     banner_path: Object.prototype.hasOwnProperty.call(next, 'banner_path') ? nextRich.banner_path : currentRich.banner_path,
+    banner_asset_id: Object.prototype.hasOwnProperty.call(next, 'banner_asset_id') ? nextRich.banner_asset_id : currentRich.banner_asset_id,
     cursor_path: Object.prototype.hasOwnProperty.call(next, 'cursor_path') ? nextRich.cursor_path : currentRich.cursor_path,
+    cursor_asset_id: Object.prototype.hasOwnProperty.call(next, 'cursor_asset_id') ? nextRich.cursor_asset_id : currentRich.cursor_asset_id,
     pointer_cursor_path: Object.prototype.hasOwnProperty.call(next, 'pointer_cursor_path') ? nextRich.pointer_cursor_path : currentRich.pointer_cursor_path,
+    pointer_cursor_asset_id: Object.prototype.hasOwnProperty.call(next, 'pointer_cursor_asset_id') ? nextRich.pointer_cursor_asset_id : currentRich.pointer_cursor_asset_id,
     audio_playlist: Object.prototype.hasOwnProperty.call(next, 'audio_playlist') ? nextRich.audio_playlist : currentRich.audio_playlist
   };
+  for (const field of [
+    'avatar_asset_id',
+    'background_asset_id',
+    'audio_asset_id',
+    'background_video_asset_id',
+    'banner_asset_id',
+    'cursor_asset_id',
+    'pointer_cursor_asset_id'
+  ]) {
+    if (!Object.prototype.hasOwnProperty.call(next, field) && !Object.prototype.hasOwnProperty.call(current, field)) {
+      delete preserved[field];
+    }
+  }
+  return preserved;
 }
 
 export function hasServerDraftChanges(value) {

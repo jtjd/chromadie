@@ -1,7 +1,9 @@
 import { getCanonicalProfilePath, normalizeUsernameSegment } from '../src/lib/routeContract.js';
 import { getProfileStorageRef } from '../src/lib/profileExpression.js';
+import { resolveProfileMediaReference } from '../src/lib/profileMediaResolver.js';
 import { normalizeProfileMetadata } from '../src/lib/profileMetadata.js';
 import { baseSecurityHeaders, createHtmlHeaders, fetchAppShell, getSiteOrigin } from './_publicPage.js';
+import { getSupabaseCredentials, getSupabasePublicHeaders } from './_supabaseApi.js';
 
 function escapeHtml(value) {
   return String(value)
@@ -14,17 +16,16 @@ function escapeHtml(value) {
 
 export async function loadPublicProfile(username, env) {
   const normalizedUsername = normalizeUsernameSegment(username);
-  const supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
-  const supabaseKey = env.VITE_SUPABASE_KEY || env.SUPABASE_ANON_KEY;
-  if (!normalizedUsername || !supabaseUrl || !supabaseKey) return null;
+  const supabase = getSupabaseCredentials(env);
+  const supabaseUrl = supabase.url;
+  if (!normalizedUsername || !supabaseUrl || !supabase.publishableKey) return null;
 
   try {
     const endpoint = new URL('/rest/v1/rpc/get_public_profile_identity', supabaseUrl);
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
+        ...getSupabasePublicHeaders(env),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ p_username: normalizedUsername })
@@ -38,8 +39,7 @@ export async function loadPublicProfile(username, env) {
       const configurationResponse = await fetch(configurationEndpoint, {
         method: 'POST',
         headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
+          ...getSupabasePublicHeaders(env),
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ p_user_id: profile.id })
@@ -54,16 +54,23 @@ export async function loadPublicProfile(username, env) {
   }
 }
 
-function getPublicMediaUrl(storedPath, env) {
-  const reference = getProfileStorageRef(storedPath);
+function getPublicMediaUrl(mediaReference, env) {
   const supabaseUrl = env?.VITE_SUPABASE_URL || env?.SUPABASE_URL;
-  if (!reference || !supabaseUrl) return '';
-  try {
-    const origin = new URL(supabaseUrl).origin;
-    return `${origin}/storage/v1/object/public/${reference.bucket}/${reference.objectPath}`;
-  } catch {
-    return '';
-  }
+  const legacyResolver = storedPath => {
+    if (!supabaseUrl) return '';
+    try {
+      const legacyReference = getProfileStorageRef(storedPath);
+      if (!legacyReference) return '';
+      const origin = new URL(supabaseUrl).origin;
+      return `${origin}/storage/v1/object/public/${legacyReference.bucket}/${legacyReference.objectPath}`;
+    } catch {
+      return '';
+    }
+  };
+  return resolveProfileMediaReference(mediaReference, {
+    publicOrigin: env?.MEDIA_PUBLIC_ORIGIN || 'https://media.chm.lol',
+    legacyResolver
+  });
 }
 
 export function getProfileCacheControl(profile, legacyProfile = false) {
@@ -90,7 +97,7 @@ export async function renderPublicProfilePage({ request, env, username, legacyPr
     ? (metadata.description || profile.bio || `View ${displayName}'s public ChromaDie profile, progress, achievements, and recent rolls.`)
     : 'This ChromaDie profile could not be found.';
   const robots = legacyProfile || !profile ? 'noindex,follow' : 'index,follow';
-  const metadataBanner = getPublicMediaUrl(metadata.bannerPath, env);
+  const metadataBanner = getPublicMediaUrl(profile?.configuration?.media_references?.banner || metadata.bannerPath, env);
   const ogImage = profile
     ? (metadataBanner || `${origin}/og/profile.svg?username=${encodeURIComponent(profile.username)}`)
     : `${origin}/og-default-v4.png`;

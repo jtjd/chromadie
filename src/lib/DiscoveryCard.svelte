@@ -32,7 +32,7 @@
   $: displayName = item?.displayName || item?.username || 'Unknown player';
   $: profileAccent = item?.profileAccent || '#8B7CF6';
   $: rollColor = item?.hexCode || profileAccent;
-  $: avatarSrc = getProfileMediaUrl(item?.avatarPath);
+  $: avatarSrc = getProfileMediaUrl(item?.avatarReference || item?.avatarPath);
   $: if (avatarSrc && avatarSrc !== failedAvatarSource) failedAvatarSource = '';
   $: scoreLabel = item?.score === null || item?.score === undefined ? 'No roll yet' : `${item.score.toLocaleString()} EP`;
   $: rollLabel = item?.score === null || item?.score === undefined

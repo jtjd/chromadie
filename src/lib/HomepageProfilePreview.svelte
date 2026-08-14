@@ -17,7 +17,6 @@
   /** @type {Record<string, any> | null} */
   export let model = null;
   export let variant = 'directory';
-  export let mediaCacheKey = '';
   export let emptyMessage = 'No public profiles available yet.';
   export let emptyDetail = 'Profiles will appear here after players publish and roll.';
 
@@ -37,9 +36,10 @@
     .slice(0, 8)
     .map(score => score?.hex_code)
     .filter(Boolean);
-  $: avatarSrc = getProfileMediaUrl(config.avatar_path, mediaCacheKey);
-  $: backgroundSrc = getProfileMediaUrl(config.background_path, mediaCacheKey);
-  $: audioSrc = getProfileMediaUrl(config.audio_path, mediaCacheKey);
+  $: mediaReferences = config.media_references || config.mediaReferences || {};
+  $: avatarSrc = getProfileMediaUrl(mediaReferences.avatar || config.avatar_path);
+  $: backgroundSrc = getProfileMediaUrl(mediaReferences.background || config.background_path);
+  $: audioSrc = getProfileMediaUrl(mediaReferences.audio || config.audio_path);
   $: hasSpotify = Boolean(config.spotify_type && config.spotify_id);
   $: profileWidgets = getVisibleProfileWidgets(config.widgets, config);
   $: hasSpotifyWidget = profileWidgets.some(widget => widget.provider === 'spotify');

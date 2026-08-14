@@ -1,13 +1,14 @@
 import { baseSecurityHeaders, getSiteOrigin } from './_publicPage.js';
 import { getCanonicalProfilePath, normalizeUsernameSegment } from '../src/lib/routeContract.js';
+import { getSupabaseCredentials, getSupabasePublicHeaders } from './_supabaseApi.js';
 
 const PAGE_SIZE = 1000;
 
 export async function onRequestGet({ request, env }) {
-  const supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
-  const supabaseKey = env.VITE_SUPABASE_KEY || env.SUPABASE_ANON_KEY;
+  const supabase = getSupabaseCredentials(env);
+  const supabaseUrl = supabase.url;
 
-  if (!supabaseUrl || !supabaseKey) {
+  if (!supabaseUrl || !supabase.publishableKey) {
     return new Response('Profile sitemap is not configured.', { status: 503, headers: baseSecurityHeaders });
   }
 
@@ -26,8 +27,7 @@ export async function onRequestGet({ request, env }) {
 
       const response = await fetch(query, {
         headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`
+          ...getSupabasePublicHeaders(env)
         }
       });
 

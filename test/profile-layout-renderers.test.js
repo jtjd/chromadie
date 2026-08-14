@@ -316,7 +316,7 @@ test('Studio media mutations return the profile concurrency token', async () => 
   assert.match(expressionEditor, /updatedAt: data\.updated_at/);
   const deletionHandlerStart = expressionEditor.indexOf('async function deleteAsset');
   const deletionHandler = expressionEditor.slice(deletionHandlerStart, expressionEditor.indexOf('function formatAudioTime', deletionHandlerStart));
-  assert.match(deletionHandler, /dispatch\('expressionchange', \{ \.\.\.expression, updatedAt: data\.updated_at/);
+  assert.match(deletionHandler, /dispatch\('expressionchange', \{ \.\.\.expression, media_references: nextReferences, updatedAt: data\.updated_at/);
   assert.match(richMediaEditor, /updatedAt: data\.updated_at/);
   assert.match(settings, /fields\.updatedAt \|\| fields\.updated_at/);
 });

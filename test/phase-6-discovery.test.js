@@ -48,6 +48,7 @@ test('discovery normalization keeps public card fields bounded and drops interna
   assert.equal(item.bio, 'Collecting colors and building a public profile.');
   assert.equal(item.profileAccent, '#8B7CF6');
   assert.equal(item.avatarPath, 'avatars/10000000-0000-4000-8000-000000000001/avatar.webp');
+  assert.equal(item.avatarReference, null);
   assert.deepEqual(item.equippedBadges, ['launch_edition']);
   assert.equal(item.equippedCosmetics.unsafe, undefined);
   assert.equal('user_id' in item, false);
@@ -67,6 +68,25 @@ test('discovery normalization keeps public card fields bounded and drops interna
     null
   );
   assert.equal(normalizeDiscoveryItem({ username: '%' }), null);
+});
+
+test('discovery accepts the provider-neutral R2 avatar reference without trusting an unsafe key', () => {
+  const item = normalizeDiscoveryItem({
+    ...publicItem,
+    avatarPath: null,
+    avatarReference: {
+      asset_id: '10000000-0000-4000-8000-000000000001',
+      storage_provider: 'r2',
+      r2_public_key: 'profiles/10000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000002/abc.webp',
+      mime_type: 'image/webp',
+      byte_size: 1200
+    }
+  });
+
+  assert.equal(item.avatarPath, null);
+  assert.equal(item.avatarReference.storage_provider, 'r2');
+  assert.match(item.avatarReference.r2_public_key, /^profiles\//);
+  assert.equal(normalizeDiscoveryItem({ ...publicItem, avatarReference: { storage_provider: 'r2', r2_public_key: '../private.webp' } }).avatarReference, null);
 });
 
 test('discovery response pagination is bounded and surface names stay allow-listed', () => {
@@ -121,6 +141,7 @@ test('discovery implementation uses public RPC projections, profile CTAs, sharin
   const migration = await readFile(new URL('../supabase/migrations/20260725120000_public_discovery.sql', import.meta.url), 'utf8');
   const previewMigration = await readFile(new URL('../supabase/migrations/20260801090000_discovery_profile_preview.sql', import.meta.url), 'utf8');
   const hardeningMigration = await readFile(new URL('../supabase/migrations/20260811130000_discovery_avatar_contract_and_media_cleanup.sql', import.meta.url), 'utf8');
+  const r2Migration = await readFile(new URL('../supabase/migrations/20260813140000_profile_media_r2_discovery.sql', import.meta.url), 'utf8');
 
   assert.match(hub, /get_public_discovery/);
   assert.match(hub, /Load more profiles/);
@@ -153,6 +174,8 @@ test('discovery implementation uses public RPC projections, profile CTAs, sharin
   assert.match(hardeningMigration, /profile_media_assets/);
   assert.match(hardeningMigration, /asset\.status = 'active'/);
   assert.match(hardeningMigration, /name LIKE OLD\.id::text \|\| '\/%'/);
+  assert.match(r2Migration, /'avatarReference'/);
+  assert.match(r2Migration, /profile_media_public_reference/);
   assert.match(hub, /discovery-grid__item/);
   assert.match(hub, /presentation="leaderboard"/);
   assert.doesNotMatch(hub, /<main class="container discovery-hub">/);

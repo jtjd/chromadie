@@ -1614,6 +1614,218 @@ SELECT pg_temp.audit_assert(
   'deleting an active rich asset left a public reference behind'
 );
 
+-- R2 deletion must use typed asset IDs when available. A provider-native row
+-- has no legacy storage_path; two NULL paths are not evidence that an unused
+-- row is selected. This exercises avatar, background, video, and cursor rows
+-- as well as the selected-asset updated_at contract.
+INSERT INTO public.profile_media_assets (
+  id, user_id, kind, storage_path, storage_provider, r2_public_key,
+  status, delivery_status, ever_public, mime_type, byte_size, label
+) VALUES
+  ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'avatar', NULL, 'r2', 'profiles/a-unused.webp', 'active', 'ready', true, 'image/webp', 1, 'Unused avatar'),
+  ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'avatar', NULL, 'r2', 'profiles/a-selected.webp', 'active', 'ready', true, 'image/webp', 1, 'Selected avatar'),
+  ('30000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'background', NULL, 'r2', 'profiles/b-unused.webp', 'active', 'ready', true, 'image/webp', 1, 'Unused background'),
+  ('30000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', 'background', NULL, 'r2', 'profiles/b-selected.webp', 'active', 'ready', true, 'image/webp', 1, 'Selected background'),
+  ('30000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'background_video', NULL, 'r2', 'profiles/v-unused.mp4', 'active', 'ready', true, 'video/mp4', 1, 'Unused video'),
+  ('30000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000001', 'background_video', NULL, 'r2', 'profiles/v-selected.mp4', 'active', 'ready', true, 'video/mp4', 1, 'Selected video'),
+  ('30000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000001', 'cursor', NULL, 'r2', 'profiles/c-unused.webp', 'active', 'ready', true, 'image/webp', 1, 'Unused cursor'),
+  ('30000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000001', 'cursor', NULL, 'r2', 'profiles/c-selected.webp', 'active', 'ready', true, 'image/webp', 1, 'Selected cursor');
+UPDATE public.profile_configurations
+SET avatar_asset_id = '30000000-0000-0000-0000-000000000002',
+    background_asset_id = '30000000-0000-0000-0000-000000000004',
+    background_video_asset_id = '30000000-0000-0000-0000-000000000006',
+    cursor_asset_id = '30000000-0000-0000-0000-000000000008',
+    avatar_path = NULL,
+    background_path = NULL,
+    background_video_path = NULL,
+    cursor_path = NULL,
+    updated_at = clock_timestamp()
+WHERE user_id = '10000000-0000-0000-0000-000000000001';
+CREATE TEMP TABLE profile_media_delete_state AS
+SELECT user_id, updated_at
+FROM public.profile_configurations
+WHERE user_id = '10000000-0000-0000-0000-000000000001';
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
+  true
+);
+INSERT INTO audit_results VALUES ('r2_delete_unused_avatar', public.delete_my_profile_media_asset('30000000-0000-0000-0000-000000000001'));
+INSERT INTO audit_results VALUES ('r2_delete_unused_background', public.delete_my_profile_media_asset('30000000-0000-0000-0000-000000000003'));
+INSERT INTO audit_results VALUES ('r2_delete_unused_video', public.delete_my_profile_media_asset('30000000-0000-0000-0000-000000000005'));
+INSERT INTO audit_results VALUES ('r2_delete_unused_cursor', public.delete_my_profile_media_asset('30000000-0000-0000-0000-000000000007'));
+SELECT pg_temp.audit_assert(
+  (SELECT bool_and(payload->>'success' = 'true' AND payload->>'configuration_changed' = 'false' AND payload->>'updated_at' IS NULL)
+   FROM audit_results
+   WHERE name IN ('r2_delete_unused_avatar', 'r2_delete_unused_background', 'r2_delete_unused_video', 'r2_delete_unused_cursor'))
+    AND (SELECT avatar_asset_id = '30000000-0000-0000-0000-000000000002'
+                AND background_asset_id = '30000000-0000-0000-0000-000000000004'
+                AND background_video_asset_id = '30000000-0000-0000-0000-000000000006'
+                AND cursor_asset_id = '30000000-0000-0000-0000-000000000008'
+                AND updated_at = (SELECT updated_at FROM profile_media_delete_state)
+         FROM public.profile_configurations
+         WHERE user_id = '10000000-0000-0000-0000-000000000001'),
+  'deleting an unused R2 asset with a NULL legacy path changed the selected profile state'
+);
+INSERT INTO audit_results VALUES ('r2_delete_selected_avatar', public.delete_my_profile_media_asset('30000000-0000-0000-0000-000000000002'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->>'configuration_changed' = 'true'
+      AND payload->>'cleared_reference' = 'avatar'
+      AND payload->>'updated_at' IS NOT NULL
+   FROM audit_results WHERE name = 'r2_delete_selected_avatar')
+    AND (SELECT avatar_asset_id IS NULL
+                AND updated_at <> (SELECT updated_at FROM profile_media_delete_state)
+         FROM public.profile_configurations
+         WHERE user_id = '10000000-0000-0000-0000-000000000001'),
+  'deleting a selected R2 asset did not clear its typed reference and return the new token'
+);
+
+-- A migrated R2 asset can retain its precise legacy Supabase path during the
+-- rollback window. The authenticated delete only tombstones it; the service
+-- cleanup RPC then removes that exact Storage object before the tombstone is
+-- finalized. Native R2 assets continue to use NULL and never enter this path.
+INSERT INTO public.profile_media_assets (
+  id, user_id, kind, storage_path, storage_provider, r2_public_key,
+  status, delivery_status, ever_public, mime_type, byte_size, label
+) VALUES (
+  '30000000-0000-0000-0000-000000000009',
+  '10000000-0000-0000-0000-000000000001',
+  'avatar',
+  'avatars/10000000-0000-0000-0000-000000000001/migrated.webp',
+  'r2',
+  'profiles/10000000-0000-0000-0000-000000000001/migrated.webp',
+  'active', 'ready', true, 'image/webp', 1, 'Migrated avatar'
+);
+INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
+VALUES (
+  gen_random_uuid(),
+  'avatars',
+  '10000000-0000-0000-0000-000000000001/migrated.webp',
+  '10000000-0000-0000-0000-000000000001',
+  '{"mimetype":"image/webp"}'::jsonb
+), (
+  gen_random_uuid(),
+  'avatars',
+  '10000000-0000-0000-0000-000000000001/migrated-sibling.webp',
+  '10000000-0000-0000-0000-000000000001',
+  '{"mimetype":"image/webp"}'::jsonb
+);
+UPDATE public.profile_configurations
+SET avatar_asset_id = '30000000-0000-0000-0000-000000000009',
+    avatar_path = NULL,
+    updated_at = clock_timestamp()
+WHERE user_id = '10000000-0000-0000-0000-000000000001';
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
+  true
+);
+INSERT INTO audit_results VALUES (
+  'r2_delete_migrated_avatar',
+  public.delete_my_profile_media_asset('30000000-0000-0000-0000-000000000009')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true' AND payload->>'configuration_changed' = 'true'
+   FROM audit_results WHERE name = 'r2_delete_migrated_avatar')
+    AND EXISTS (
+      SELECT 1 FROM public.profile_media_assets
+      WHERE id = '30000000-0000-0000-0000-000000000009' AND status = 'deleted'
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM public.profile_configurations
+      WHERE user_id = '10000000-0000-0000-0000-000000000001'
+        AND avatar_asset_id = '30000000-0000-0000-0000-000000000009'
+    )
+    AND EXISTS (
+      SELECT 1 FROM storage.objects
+      WHERE bucket_id = 'avatars'
+        AND name = '10000000-0000-0000-0000-000000000001/migrated.webp'
+    )
+    AND EXISTS (
+      SELECT 1 FROM storage.objects
+      WHERE bucket_id = 'avatars'
+        AND name = '10000000-0000-0000-0000-000000000001/migrated-sibling.webp'
+    ),
+  'migrated R2 deletion did not retain the legacy cleanup identifier until control-plane cleanup'
+);
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
+INSERT INTO audit_results VALUES (
+  'legacy_avatar_cleanup',
+  public.delete_profile_media_legacy_storage_object('avatars/10000000-0000-0000-0000-000000000001/migrated.webp')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true' AND payload->>'deleted' = 'true'
+   FROM audit_results WHERE name = 'legacy_avatar_cleanup')
+    AND NOT EXISTS (
+      SELECT 1 FROM storage.objects
+      WHERE bucket_id = 'avatars'
+        AND name = '10000000-0000-0000-0000-000000000001/migrated.webp'
+    ),
+  'exact legacy Supabase Storage object was not deleted'
+);
+INSERT INTO audit_results VALUES (
+  'legacy_avatar_cleanup_retry',
+  public.delete_profile_media_legacy_storage_object('avatars/10000000-0000-0000-0000-000000000001/migrated.webp')
+);
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true' AND payload->>'deleted' = 'false'
+   FROM audit_results WHERE name = 'legacy_avatar_cleanup_retry'),
+  'repeating legacy Supabase Storage deletion was not idempotent'
+);
+SELECT public.delete_profile_media_legacy_storage_object(
+  'avatars/10000000-0000-0000-0000-000000000001/migrated-sibling.webp'
+);
+SELECT pg_temp.audit_assert(
+  NOT EXISTS (
+    SELECT 1 FROM storage.objects
+    WHERE bucket_id = 'avatars'
+      AND name = '10000000-0000-0000-0000-000000000001/migrated-sibling.webp'
+  ),
+  'exact legacy cleanup removed the wrong object or left the test sibling behind'
+);
+INSERT INTO audit_results VALUES (
+  'legacy_avatar_cleanup_finalize',
+  public.complete_profile_media_deleted_cleanup_v2(
+    '30000000-0000-0000-0000-000000000009', true, true, NULL
+  )
+);
+SELECT pg_temp.audit_assert(
+  NOT EXISTS (
+    SELECT 1 FROM public.profile_media_assets
+    WHERE id = '30000000-0000-0000-0000-000000000009'
+  ),
+  'migrated R2 tombstone was not finalized after legacy cleanup'
+);
+
+-- Account deletion captures migrated legacy paths before profile/media rows
+-- disappear, alongside native R2 keys. This is the durable retry boundary.
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
+  true
+);
+INSERT INTO public.profile_media_assets (
+  id, user_id, kind, storage_path, storage_provider, r2_public_key,
+  status, delivery_status, ever_public, mime_type, byte_size, label
+) VALUES (
+  '40000000-0000-0000-0000-000000000005',
+  '10000000-0000-0000-0000-000000000001',
+  'background_video',
+  'profile_media/10000000-0000-0000-0000-000000000001/account-migrated.mp4',
+  'r2',
+  'profiles/10000000-0000-0000-0000-000000000001/account-migrated.mp4',
+  'active', 'ready', true, 'video/mp4', 1, 'Account cleanup video'
+);
+INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
+VALUES (
+  gen_random_uuid(),
+  'profile_media',
+  '10000000-0000-0000-0000-000000000001/account-migrated.mp4',
+  '10000000-0000-0000-0000-000000000001',
+  '{"mimetype":"video/mp4"}'::jsonb
+);
+
 -- Stripe fulfillment is service-owned, transactional, and replay-safe.
 SELECT pg_temp.audit_assert(
   NOT has_table_privilege('authenticated', 'public.billing_checkout_sessions', 'INSERT')
@@ -1768,6 +1980,18 @@ SELECT set_config(
 INSERT INTO audit_results VALUES (
   'delete_first',
   public.delete_account_data('10000000-0000-0000-0000-000000000001')
+);
+SELECT pg_temp.audit_assert(
+  EXISTS (
+    SELECT 1
+    FROM public.profile_media_account_cleanup_jobs
+    WHERE user_id = '10000000-0000-0000-0000-000000000001'
+      AND object_keys @> jsonb_build_array(jsonb_build_object(
+        'bucket', 'supabase',
+        'key', 'profile_media/10000000-0000-0000-0000-000000000001/account-migrated.mp4'
+      ))
+  ),
+  'account deletion did not durably capture the retained legacy Supabase path'
 );
 INSERT INTO audit_results VALUES (
   'delete_second',

@@ -35,7 +35,7 @@
   $: playlist = normalizeRichAudioPlaylist(audioPlaylist || {});
   $: tracks = playlist.tracks;
   $: activeTrack = tracks[activeTrackIndex] || tracks[0] || null;
-  $: activeTrackSrc = activeTrack ? getProfileMediaUrl(activeTrack.path) : audioSrc;
+  $: activeTrackSrc = activeTrack ? getProfileMediaUrl(activeTrack.media_reference || activeTrack.path) : audioSrc;
   $: hasAudio = Boolean(activeTrackSrc);
   $: entryRequired = Boolean(hasAudio && playlist.autoplay && !entryActivated && !deferMedia);
   $: showAudioControls = playlist.controls !== false;

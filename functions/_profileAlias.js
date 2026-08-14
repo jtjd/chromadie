@@ -1,18 +1,18 @@
 import { normalizeProfileAliasSegment } from '../src/lib/routeContract.js';
+import { getSupabaseCredentials, getSupabasePublicHeaders } from './_supabaseApi.js';
 
 export async function loadPublicProfileAlias(alias, env) {
   const normalizedAlias = normalizeProfileAliasSegment(alias);
-  const supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
-  const supabaseKey = env.VITE_SUPABASE_KEY || env.SUPABASE_ANON_KEY;
-  if (!normalizedAlias || !supabaseUrl || !supabaseKey) return null;
+  const supabase = getSupabaseCredentials(env);
+  const supabaseUrl = supabase.url;
+  if (!normalizedAlias || !supabaseUrl || !supabase.publishableKey) return null;
 
   try {
     const endpoint = new URL('/rest/v1/rpc/get_public_profile_alias', supabaseUrl);
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
+        ...getSupabasePublicHeaders(env),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ p_alias: normalizedAlias })

@@ -17,6 +17,8 @@
   } from './profileRichMedia.js';
   import { prepareProfileAudioFile, processProfileRichImage } from './profileMediaProcessing.js';
   import { getProfileMediaUrl } from './profileMedia.js';
+  import { deleteProfileMediaR2, isR2MediaAsset, promoteProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
+  import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
 
   export let profileId = null;
   export let config = {};
@@ -52,6 +54,7 @@
   let audioInput;
 
   $: hasAccess = staff || hasChromadiePlus(entitlements);
+  $: r2MediaEnabled = isProfileFeatureEnabled('profileMediaR2', { userId: profileId, isStaff: staff });
   $: assetAccessKey = `${profileId || ''}:${hasAccess ? 'rich' : 'free'}`;
   // Entitlements can arrive after the lazy Media section mounts. Load the
   // private library when access becomes authoritative, not only on mount.
@@ -67,12 +70,12 @@
   $: cursorAssets = activeAssets.filter(asset => asset.kind === 'cursor');
   $: pointerCursorAssets = activeAssets.filter(asset => asset.kind === 'pointer_cursor');
   $: audioAssets = activeAssets.filter(asset => asset.kind === 'audio');
-  $: activeBackgroundVideo = assetForPath(richConfig.background_video_path);
-  $: activeBanner = assetForPath(richConfig.banner_path);
-  $: activeCursor = assetForPath(richConfig.cursor_path);
-  $: activePointerCursor = assetForPath(richConfig.pointer_cursor_path);
+  $: activeBackgroundVideo = assetForPath(richConfig.background_video_path, richConfig.background_video_asset_id);
+  $: activeBanner = assetForPath(richConfig.banner_path, richConfig.banner_asset_id);
+  $: activeCursor = assetForPath(richConfig.cursor_path, richConfig.cursor_asset_id);
+  $: activePointerCursor = assetForPath(richConfig.pointer_cursor_path, richConfig.pointer_cursor_asset_id);
   $: primaryAudioTrack = audioTracks[0] || null;
-  $: primaryAudioAsset = primaryAudioTrack ? assetForPath(primaryAudioTrack.path) : null;
+  $: primaryAudioAsset = primaryAudioTrack ? assetForPath(primaryAudioTrack.path, primaryAudioTrack.asset_id) : null;
 
   function syncIncoming(next, key) {
     richConfig = next;
@@ -81,7 +84,7 @@
     audioAutoplay = next.audio_playlist.autoplay;
     audioVolume = next.audio_playlist.volume;
     audioControls = next.audio_playlist.controls;
-    audioTracks = next.audio_playlist.tracks.map(track => ({ ...track, asset_id: assets.find(asset => asset.storage_path === track.path)?.id || '' }));
+    audioTracks = next.audio_playlist.tracks.map(track => ({ ...track, asset_id: track.asset_id || assets.find(asset => asset.storage_path === track.path)?.id || '' }));
     incomingKey = key;
   }
 
@@ -96,7 +99,7 @@
     loading = true;
     const { data, error: loadError } = await supabase
       .from('profile_media_assets')
-      .select('id, kind, storage_path, label, status, mime_type, byte_size, duration_ms, width, height, metadata, created_at')
+      .select('id, kind, storage_path, storage_provider, r2_public_key, label, status, delivery_status, ever_public, mime_type, byte_size, duration_ms, width, height, metadata, created_at')
       .eq('user_id', profileId)
       .in('kind', PROFILE_RICH_MEDIA_KINDS)
       .order('created_at', { ascending: false });
@@ -115,8 +118,12 @@
     return crypto.randomUUID();
   }
 
-  function assetForPath(path) {
-    return assets.find(asset => asset.storage_path === path) || null;
+  function assetForPath(path, assetId = '') {
+    return assets.find(asset => (assetId && asset.id === assetId) || (path && asset.storage_path === path)) || null;
+  }
+
+  function assetMediaUrl(asset) {
+    return getProfileMediaUrl(asset?.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : asset?.storage_path, cacheKey);
   }
 
   function animatedCursorAsset(asset) {
@@ -144,8 +151,9 @@
   }
 
   function selectedAssetId(kind) {
+    const idField = kind === 'background_video' ? 'background_video_asset_id' : `${kind}_asset_id`;
     const field = kind === 'background_video' ? 'background_video_path' : `${kind}_path`;
-    return assetForPath(richConfig[field])?.id || null;
+    return richConfig[idField] || assetForPath(richConfig[field])?.id || null;
   }
 
   function replacementAssetId(kind) {
@@ -181,7 +189,8 @@
   }
 
   async function saveSelection(next = {}) {
-    const { data, error: rpcError } = await supabase.rpc('select_my_profile_rich_media', {
+    const rpcName = r2MediaEnabled ? 'select_my_profile_r2_media' : 'select_my_profile_rich_media';
+    const { data, error: rpcError } = await supabase.rpc(rpcName, {
       p_background_video_id: next.background_video_id === undefined ? selectedAssetId('background_video') : next.background_video_id,
       p_banner_id: next.banner_id === undefined ? selectedAssetId('banner') : next.banner_id,
       p_cursor_id: next.cursor_id === undefined ? selectedAssetId('cursor') : next.cursor_id,
@@ -201,6 +210,10 @@
     busy = true;
     setFeedback('', `Applying ${asset.label || kind.replace('_', ' ')}…`);
     try {
+      if (r2MediaEnabled && isR2MediaAsset(asset) && !asset.ever_public) {
+        await promoteProfileMediaR2(asset.id);
+        asset = { ...asset, ever_public: true };
+      }
       if (kind === 'audio') {
         if (audioTracks.some(track => track.asset_id === asset.id)) return;
         if (audioTracks.length >= 5) throw new Error('You can select up to five audio tracks.');
@@ -209,7 +222,7 @@
       } else {
         const field = kind === 'background_video' ? 'background_video_path' : `${kind}_path`;
         const idField = kind === 'background_video' ? 'background_video_id' : `${kind}_id`;
-        richConfig = { ...richConfig, [field]: asset.storage_path };
+        richConfig = { ...richConfig, [field]: asset.storage_path, [`${kind}_asset_id`]: asset.id };
         await saveSelection({ [field]: asset.storage_path, [idField]: asset.id });
       }
       setFeedback('', `${kind === 'audio' ? 'Track' : kind.replace('_', ' ')} applied.`);
@@ -225,12 +238,16 @@
     busy = true;
     setFeedback('', 'Removing rich media…');
     try {
-      const { data, error: deleteError } = await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: asset.id });
-      if (deleteError || !data?.success) throw new Error(deleteError?.message || data?.error || 'The media asset could not be removed.');
+      const data = r2MediaEnabled && isR2MediaAsset(asset)
+        ? await deleteProfileMediaR2(asset.id)
+        : (await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: asset.id })).data;
+      if (!data?.success) throw new Error(data?.error || 'The media asset could not be removed.');
       audioTracks = audioTracks.filter(track => track.asset_id !== asset.id);
       await loadAssets();
       const field = asset.kind === 'background_video' ? 'background_video_path' : `${asset.kind}_path`;
-      if (richConfig[field] === asset.storage_path) richConfig = { ...richConfig, [field]: null };
+      if (richConfig[field] === asset.storage_path || richConfig[`${asset.kind}_asset_id`] === asset.id) {
+        richConfig = { ...richConfig, [field]: null, [`${asset.kind}_asset_id`]: null };
+      }
       dispatch('expressionchange', { ...richConfig, updatedAt: data.updated_at || null });
       setFeedback('', 'Rich media removed from your library.');
     } catch (removeError) {
@@ -275,6 +292,43 @@
       }
       if (['audio', 'background_video'].includes(kind)) metadata.duration_ms = await readMediaDuration(file, kind);
       if (!extension) throw new Error('That file type is not supported.');
+
+      if (r2MediaEnabled) {
+        const replacingAssetId = ['banner', 'cursor', 'pointer_cursor'].includes(kind)
+          ? selectedAssetId(kind)
+          : null;
+        const uploaded = await uploadProfileMediaToR2({
+          kind,
+          blob,
+          extension,
+          mimeType: blob.type || file.type || (extension === 'ani' ? PROFILE_ANIMATED_CURSOR_MIME : ''),
+          label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
+          metadata,
+          replaceAssetId: replacingAssetId
+        });
+        stagedAssetId = uploaded.asset_id || uploaded.asset?.id;
+        if (!stagedAssetId) throw new Error('The R2 upload did not return a media asset.');
+        const promoted = await promoteProfileMediaR2(stagedAssetId);
+        await loadAssets();
+        const created = {
+          id: stagedAssetId,
+          kind,
+          storage_provider: 'r2',
+          r2_public_key: promoted.r2_public_key,
+          ever_public: true,
+          storage_path: null,
+          label: file.name.replace(/\.[^.]+$/, '').slice(0, 80),
+          duration_ms: metadata.duration_ms || 0,
+          mime_type: blob.type || file.type
+        };
+        await selectAsset(kind, created, true);
+        if (replacingAssetId && replacingAssetId !== stagedAssetId) {
+          await deleteProfileMediaR2(replacingAssetId).catch(() => {});
+        }
+        replacementCommitted = true;
+        setFeedback('', `${kind.replace('_', ' ')} uploaded and selected.`);
+        return;
+      }
       const assetId = createAssetId();
       if (['cursor', 'pointer_cursor'].includes(kind)) {
         // The asset query is lazy and can still be in flight when the user
@@ -398,7 +452,7 @@
           <input bind:this={cursorInput} class="rich-media-editor__compact-file" type="file" accept="image/jpeg,image/png,image/webp,application/x-navi-animation,application/octet-stream,.ani" aria-label="Choose custom cursor" on:change={(event) => uploadFile(event, 'cursor')} />
           <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--cursor" type="button" disabled={busy} on:click={() => cursorInput?.click()} aria-label={activeCursor ? 'Replace custom cursor' : 'Upload custom cursor'}>
             {#if activeCursor}
-              {#if animatedCursorAsset(activeCursor)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Custom cursor preview" />{/if}
+              {#if animatedCursorAsset(activeCursor)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={assetMediaUrl(activeCursor)} alt="Custom cursor preview" />{/if}
             {:else}
               <ProfileMediaIcon kind="image" />
             {/if}
@@ -425,7 +479,7 @@
     <div class="rich-media-editor__upload-grid">
       <div class="rich-media-editor__upload-card">
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--wide">
-          {#if activeBackgroundVideo}<video src={getProfileMediaUrl(activeBackgroundVideo.storage_path, cacheKey)} muted loop autoplay playsinline preload="metadata" aria-label="Active background video"></video>{:else}<span aria-hidden="true">▧</span><small>No video selected</small>{/if}
+          {#if activeBackgroundVideo}<video src={assetMediaUrl(activeBackgroundVideo)} muted loop autoplay playsinline preload="metadata" aria-label="Active background video"></video>{:else}<span aria-hidden="true">▧</span><small>No video selected</small>{/if}
         </div>
         <strong>Background video</strong><small>Up to 25 MB each · autoplay is muted</small>
         <input bind:this={videoInput} type="file" accept="video/mp4,video/webm,.mp4,.webm" on:change={(event) => uploadFile(event, 'background_video')} />
@@ -433,7 +487,7 @@
       </div>
       <div class="rich-media-editor__upload-card">
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--wide">
-          {#if activeBanner}<img src={getProfileMediaUrl(activeBanner.storage_path, cacheKey)} alt="Active profile banner" />{:else}<span aria-hidden="true">▬</span><small>No banner selected</small>{/if}
+          {#if activeBanner}<img src={assetMediaUrl(activeBanner)} alt="Active profile banner" />{:else}<span aria-hidden="true">▬</span><small>No banner selected</small>{/if}
         </div>
         <strong>Banner</strong><small>Processed to bounded WebP</small>
         <input bind:this={bannerInput} type="file" accept="image/jpeg,image/png,image/webp" on:change={(event) => uploadFile(event, 'banner')} />
@@ -441,7 +495,7 @@
       </div>
       <div class="rich-media-editor__upload-card">
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--cursor">
-          {#if activeCursor}{#if animatedCursorAsset(activeCursor)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={getProfileMediaUrl(activeCursor.storage_path, cacheKey)} alt="Active cursor" />{/if}{:else}<span aria-hidden="true">↖</span><small>No cursor selected</small>{/if}
+          {#if activeCursor}{#if animatedCursorAsset(activeCursor)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={assetMediaUrl(activeCursor)} alt="Active cursor" />{/if}{:else}<span aria-hidden="true">↖</span><small>No cursor selected</small>{/if}
         </div>
         <strong>Normal cursor</strong><small>WebP or ANI · 128×128 · 128 KB</small>
         <input bind:this={cursorInput} type="file" accept="image/jpeg,image/png,image/webp,application/x-navi-animation,application/octet-stream,.ani" on:change={(event) => uploadFile(event, 'cursor')} />
@@ -449,7 +503,7 @@
       </div>
       <div class="rich-media-editor__upload-card">
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--cursor">
-          {#if activePointerCursor}{#if animatedCursorAsset(activePointerCursor)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={getProfileMediaUrl(activePointerCursor.storage_path, cacheKey)} alt="Active pointer cursor" />{/if}{:else}<span aria-hidden="true">✦</span><small>No pointer selected</small>{/if}
+          {#if activePointerCursor}{#if animatedCursorAsset(activePointerCursor)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={assetMediaUrl(activePointerCursor)} alt="Active pointer cursor" />{/if}{:else}<span aria-hidden="true">✦</span><small>No pointer selected</small>{/if}
         </div>
         <strong>Pointer cursor</strong><small>WebP or ANI · 128×128 · 128 KB</small>
         <input bind:this={pointerCursorInput} type="file" accept="image/jpeg,image/png,image/webp,application/x-navi-animation,application/octet-stream,.ani" on:change={(event) => uploadFile(event, 'pointer_cursor')} />
@@ -457,7 +511,7 @@
       </div>
       <div class="rich-media-editor__upload-card">
         <div class="rich-media-editor__upload-preview rich-media-editor__upload-preview--audio">
-          {#if primaryAudioAsset}<audio src={getProfileMediaUrl(primaryAudioAsset.storage_path, cacheKey)} controls preload="metadata" aria-label="Active profile audio"></audio>{:else}<span aria-hidden="true">♪</span><small>No audio selected</small>{/if}
+          {#if primaryAudioAsset}<audio src={assetMediaUrl(primaryAudioAsset)} controls preload="metadata" aria-label="Active profile audio"></audio>{:else}<span aria-hidden="true">♪</span><small>No audio selected</small>{/if}
         </div>
         <strong>Audio tracks <span class="rich-media-editor__count">{audioTracks.length}/5</span></strong><small>MP3 · up to 10 MB each</small>
         <input bind:this={audioInput} type="file" accept="audio/mpeg,.mp3" on:change={(event) => uploadFile(event, 'audio')} />
@@ -477,7 +531,7 @@
           <div class="rich-media-editor__asset-row">
             {#each group[2] as asset (asset.id)}
               <article class:rich-media-editor__asset--active={richConfig[group[3]] === asset.storage_path} class="rich-media-editor__asset">
-                {#if group[0] === 'background_video'}<video src={getProfileMediaUrl(asset.storage_path, cacheKey)} muted loop playsinline preload="metadata" aria-label={asset.label || 'Background video'}></video>{:else if animatedCursorAsset(asset)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={getProfileMediaUrl(asset.storage_path, cacheKey)} alt={asset.label || group[1]} loading="lazy" />{/if}
+                {#if group[0] === 'background_video'}<video src={assetMediaUrl(asset)} muted loop playsinline preload="metadata" aria-label={asset.label || 'Background video'}></video>{:else if animatedCursorAsset(asset)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={assetMediaUrl(asset)} alt={asset.label || group[1]} loading="lazy" />{/if}
                 <div><strong>{asset.label || 'Untitled asset'}</strong><small>{formatRichMediaBytes(asset.byte_size)}</small></div>
                 <div class="rich-media-editor__asset-actions"><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => selectAsset(group[0], asset)}>{richConfig[group[3]] === asset.storage_path ? 'Active' : 'Use'}</button><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => removeAsset(asset)}>Remove</button></div>
               </article>

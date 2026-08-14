@@ -1,5 +1,30 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-13 — Adopt Supabase publishable and secret key names compatibly
+
+Browser clients prefer `VITE_SUPABASE_PUBLISHABLE_KEY`, and trusted server
+consumers prefer `SUPABASE_SECRET_KEY`. The legacy `VITE_SUPABASE_KEY` and
+`SUPABASE_SERVICE_ROLE_KEY` names remain temporary fallbacks until production
+configuration is migrated and verified. Modern `sb_publishable_` and
+`sb_secret_` values are sent as Supabase `apikey` credentials only; a bearer
+`Authorization` header is reserved for an authenticated user JWT. No server
+secret is exposed through a `VITE_*` variable or bundled into client code.
+
+## 2026-08-13 — Move profile-media bytes to R2 Standard with temporary promotion
+
+Profile-media bytes are migrating from Supabase Storage to two Cloudflare R2
+Standard buckets: private uploads and public delivery through `media.chm.lol`.
+The private copy exists only until first public selection is verified; it is
+then removed. `ever_public` is permanent for the asset lifecycle: unequip
+clears selection but does not privatize the object, while explicit deletion
+removes it. Asset-ID normalization remains compatible with legacy `*_path`
+fields so storage cutover does not wait for a profile-schema rewrite.
+
+R2 Infrequent Access is explicitly not used, and no lifecycle rule may
+transition profile objects to it. Account deletion captures R2 keys in a
+durable retry queue before profile rows cascade, so a temporary Cloudflare
+failure cannot block Auth deletion.
+
 ## 2026-08-13 — Keep Profile Studio draft state canonical across refreshes
 
 Profile Studio editors no longer persist or restore profile-data drafts through
@@ -4525,3 +4550,36 @@ Preview alignment no longer uses an opening-overflow data attribute; the
 physical preview shell and auto margins center a fitting opening while keeping
 an oversized opening top-accessible. V2 configuration reads are accepted based
 on a valid V2 envelope rather than whether an unrelated avatar field exists.
+
+## 2026-08-13 — Keep R2 canary blocked until the byte boundary and cleanup scheduler are real
+
+The R2 control plane signs the exact upload `Content-Length`, preserves media
+operation tokens through deletion responses, clears temporary private keys only
+after an idempotent delete/404, and allows completion/publication retries after
+the private copy is gone. Provider-native deletion never treats two NULL legacy
+paths as a selected asset. A standalone Cloudflare Worker Cron trigger invokes
+the existing cleanup endpoint every 15 minutes; it does not proxy public media.
+
+R2 integration remains environment-gated. Without a disposable R2 credential
+set, production upload and cutover remain externally unverified rather than
+being inferred from deterministic signing tests.
+
+## 2026-08-13 — Retain legacy Storage identifiers through R2 deletion
+
+Migrated R2 assets may keep their original Supabase Storage path during the
+compatibility window, but that path is now a durable cleanup identifier rather
+than dead metadata. Explicit R2 deletion and account-deletion jobs pass the
+exact bucket/path to a service-only cleanup RPC, which deletes only that object
+and treats an already-missing object as success. Deleted R2 tombstones retain
+the path until the control plane completes cleanup, while provider-native R2
+assets with a NULL path never enter the legacy branch. No production media,
+backfill, feature flag, or Supabase Storage retirement action was performed.
+## 2026-08-13 — Gate R2 media enablement on control-plane hardening
+
+R2 profile-media uploads remain disabled until deterministic SigV4 coverage and
+a live disposable-bucket smoke have passed. The control plane verifies actual
+object bytes and container signatures, counts physical staged bytes and
+per-kind pending assets, and keeps failed upload, deletion, purge, and account
+cleanup work retryable. Public deletion purges only the exact immutable media
+URL; unequip and replacement do not purge. R2 Standard remains the only
+allowed storage class, with no Infrequent Access lifecycle transition.

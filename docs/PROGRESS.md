@@ -1,5 +1,31 @@
 # Chromadie 2.0 Progress
 
+## Supabase modern key compatibility — 2026-08-13
+
+- Browser Supabase initialization now prefers `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- Pages Functions, scripts, and privileged Edge Functions now prefer
+  `SUPABASE_SECRET_KEY` through shared credential/header helpers.
+- Legacy key variables remain compatibility fallbacks for the two-phase
+  production configuration change. Modern project keys are never synthesized
+  into bearer credentials, while real user JWTs remain bearer tokens.
+- Build, Svelte check, ESLint, full tests, security/profile gates, and the
+  local disposable-R2 application smoke pass with the canonical variable names.
+
+## Profile media R2 migration foundation — 2026-08-13
+
+- Removed public ProfileShell timestamp cache busting and avoided mounting a
+  full background image beside active background video.
+- Added provider-neutral R2 media references, immutable-key metadata fields,
+  ready/publication state, direct-upload control-plane endpoints, temporary
+  private-to-public promotion, and R2-aware selection/deletion semantics.
+- Added discovery/home/leaderboard/provider-preview projection support so R2
+  avatars do not disappear outside the main profile route.
+- Added idempotent active-selected Supabase→R2 migration tooling and a durable
+  account-deletion cleanup queue with retryable service processing.
+- R2 policy is Standard-only: no Infrequent Access, no automatic transition,
+  and no paid media proxy. Production bucket/domain/CORS/secret provisioning,
+  backfill, and zero-Supabase-read verification remain external gates.
+
 ## Profile Studio lifecycle cleanup — 2026-08-13
 
 - Removed whole-profile session/view-state persistence and mount-time restores
@@ -3426,6 +3452,15 @@ profile, and V2 hydration backfills expression fields from the legacy read
 during a partial database rollout. Regression coverage covers the V2 owner and
 public paths, Studio preview projection, and homepage discovery-row merge.
 
+## 2026-08-13 — Close retained legacy-media cleanup gap
+
+Added additive exact-path Supabase Storage cleanup for migrated R2 assets. The
+explicit delete flow and durable account-cleanup queue now preserve and process
+retained legacy paths alongside R2 private/public keys. Local database reset,
+database-security assertions, targeted R2 tests, cutover audit, and clean npm
+install pass; the live R2 integration remains skipped without disposable R2
+credentials.
+
 ## 2026-08-11 — Replace layout names with layout renderers
 
 - Implemented distinct structural frames for Compact, Sleek, Minimal, Modern,
@@ -3465,3 +3500,29 @@ target, while every blocking route budget passes.
 The previous renderer-consolidation snapshot builder remains the shared path
 for public profiles and Studio. This pass reduces Studio render-state writers
 without changing the five layouts or the physical-size preview architecture.
+## 2026-08-13 — Harden the staged R2 control plane
+
+- Corrected canonical SigV4 header/query signing and added deterministic
+  vectors plus an environment-gated live PUT/HEAD/GET/copy/delete smoke.
+- Separated standalone audio migration from playlist-track migration and made
+  selection updates locked, field-scoped, and rerunnable.
+- Added exact Cloudflare purge retry state, abandoned private-upload cleanup,
+  reclaimable account-cleanup leases, actual media-container checks, physical
+  quota/count enforcement, and promotion destination verification.
+
+The R2 feature flag, active backfill, public canary, and Supabase Storage
+retirement remain disabled pending external Cloudflare/R2 and network audits.
+
+## 2026-08-13 — Final R2 correctness gate
+
+- Guarded every legacy-path selection comparison with a non-NULL asset path and
+  added database regressions for unused versus selected provider-native assets.
+- Preserved `updated_at`, selection-change, and cleanup state through the delete
+  API; finalized temporary private metadata after successful promotion and made
+  complete/promote retries idempotent.
+- Bound presigned uploads to the authorized byte length, added a real 15-minute
+  cleanup scheduler Worker, and expanded scheduler retry observability.
+- Local build, check, lint, unit tests, database reset/lint/security, link/CSP,
+  responsive, drift, parity, and performance gates pass. The live R2 smoke was
+  skipped because no R2 credentials were configured, so the production canary
+  remains externally unverified.

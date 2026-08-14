@@ -3,16 +3,15 @@ export function isChallengeId(value) {
 }
 
 export async function loadAuthoritativeChallenge(id, env) {
-  const supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
-  const supabaseKey = env.VITE_SUPABASE_KEY || env.SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseKey || !isChallengeId(id)) return null;
+  const supabase = getSupabaseCredentials(env);
+  const supabaseUrl = supabase.url;
+  if (!supabaseUrl || !supabase.publishableKey || !isChallengeId(id)) return null;
 
   try {
     const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/challenge-link`, {
       method: 'POST',
       headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
+        ...getSupabasePublicHeaders(env),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ action: 'get', id })
@@ -24,3 +23,4 @@ export async function loadAuthoritativeChallenge(id, env) {
     return null;
   }
 }
+import { getSupabaseCredentials, getSupabasePublicHeaders } from './_supabaseApi.js';

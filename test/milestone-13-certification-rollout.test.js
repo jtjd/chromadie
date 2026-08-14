@@ -68,7 +68,7 @@ test('M13 rollout flags are audience-scoped and independently reversible', () =>
   assert.equal(resolveProfileFeatureFlags({ env: { VITE_CHROMADIE_ROLLOUT_STAGE: 'off' }, isStaff: true }).expandedAnalytics, false);
   assert.equal(resolveProfileFeatureFlags({ env: { VITE_CHROMADIE_ROLLOUT_STAGE: 'unexpected' } }).commerce, true);
   assert.equal(isProfileFeatureEnabled('not-a-feature', { env: { VITE_CHROMADIE_ROLLOUT_STAGE: 'all' } }), false);
-  assert.deepEqual(FEATURE_FLAG_KEYS, ['commerce', 'richMedia', 'profileConfigurationV2', 'expandedAnalytics', 'socialDepth']);
+  assert.deepEqual(FEATURE_FLAG_KEYS, ['commerce', 'richMedia', 'profileMediaR2', 'profileConfigurationV2', 'expandedAnalytics', 'socialDepth']);
 });
 
 test('M13 client surfaces retain reversible gates and V1 fallbacks', async () => {

@@ -40,7 +40,11 @@ supabase db lint --local --level warning --fail-on warning
 Use `.env` or the deployment environment:
 
 - `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_KEY`
+- `VITE_SUPABASE_PUBLISHABLE_KEY` (preferred browser/public API key)
+- `SUPABASE_PUBLISHABLE_KEY` (preferred public API key for Supabase Edge Functions)
+- `SUPABASE_SECRET_KEY` (preferred server-only privileged API key; never use a `VITE_` prefix)
+- `VITE_SUPABASE_KEY` (legacy browser-key fallback during the transition)
+- `SUPABASE_SERVICE_ROLE_KEY` (legacy server-key fallback during the transition)
 - `VITE_CLOUDFLARE_SITE_KEY`
 - `VITE_SITE_URL`
 - `VITE_CHROMADIE_ROLLOUT_STAGE` (`staff`, `internal`, `cohort`, or `all`)
@@ -74,6 +78,12 @@ during local development. Local auth bypasses Turnstile and disables email
 confirmation only on localhost, so a test account is available immediately.
 Stop the local services with `supabase stop` when finished.
 
+For modern deployments, put the public value in
+`VITE_SUPABASE_PUBLISHABLE_KEY` and the privileged server value in
+`SUPABASE_SECRET_KEY`. The old `VITE_SUPABASE_KEY` and
+`SUPABASE_SERVICE_ROLE_KEY` names remain temporary compatibility fallbacks;
+the application never sends a modern `sb_*` project key as a user bearer token.
+
 ## Production Deployment
 
 - Cloudflare Pages source: GitHub `main`
@@ -92,9 +102,11 @@ supabase functions deploy restore-premium-checkout --no-verify-jwt
 supabase functions deploy stripe-premium-webhook --no-verify-jwt
 ```
 
-These functions perform their own token or signature validation. Hosted Supabase supplies `SUPABASE_URL`,
-`SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; confirm all three are visible to the
-function runtime without printing their values.
+These functions perform their own token or signature validation. Hosted Supabase
+functions should prefer `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and
+`SUPABASE_SECRET_KEY`; the legacy `SUPABASE_ANON_KEY` and
+`SUPABASE_SERVICE_ROLE_KEY` names remain supported during the transition. Confirm
+the required values are available to the function runtime without printing them.
 
 Billing additionally requires Supabase secrets named `SITE_URL` (the canonical
 origin), `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET`. Configure Stripe to
@@ -146,7 +158,8 @@ If you are auditing the project, start with:
 - Fresh resets should be playable using `supabase/seed.sql`.
 - The app depends on RLS, RPCs, and restricted public reads for security.
 - `npm run check:catalog-drift` always compares the catalog snapshot with the seed. When
-  `SUPABASE_URL` and `SUPABASE_ANON_KEY` (or their `VITE_` equivalents) are set, it also
+  `SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or legacy compatible
+  equivalents) are set, it also
   verifies the live catalog.
 - `supabase/config.toml` versions local Auth, database, redirect, and Edge Function behavior.
 - Production cron readiness must be checked with:

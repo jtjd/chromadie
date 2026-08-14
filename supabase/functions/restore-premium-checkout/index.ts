@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { getSupabaseKeys, supabaseServerClientOptions } from '../_shared/supabase-keys.ts';
 import { CHROMADIE_STRIPE_API_VERSION, stripeRequest } from '../_shared/billing-core.js';
 import { corsHeaders, getBearerToken, jsonResponse } from '../_shared/http.ts';
 
@@ -7,9 +8,7 @@ Deno.serve(async request => {
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405);
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const { url: supabaseUrl, publishableKey: anonKey, secretKey: serviceRoleKey } = getSupabaseKeys();
     const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
     if (!supabaseUrl || !anonKey || !serviceRoleKey || !stripeSecret) throw new Error('Billing service is not configured.');
     const bearerToken = getBearerToken(request);
@@ -26,7 +25,7 @@ Deno.serve(async request => {
     const sessionId = typeof body?.session_id === 'string' ? body.session_id : '';
     if (!/^cs_(test_|live_)?[A-Za-z0-9]+$/.test(sessionId)) return jsonResponse({ error: 'A valid checkout session is required.', code: 'missing_session' }, 400);
 
-    const service = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const service = createClient(supabaseUrl, serviceRoleKey, supabaseServerClientOptions(serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }));
     const { data: storedSession, error: storedError } = await service
       .from('billing_checkout_sessions')
       .select('stripe_checkout_session_id, status, payment_status')

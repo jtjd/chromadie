@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createSupabaseHeaders, getSupabaseCredentials } from '../functions/_supabaseApi.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
@@ -191,11 +192,11 @@ async function readLocalCatalog(filePath) {
   return parsed;
 }
 
-async function readRemoteCatalog(columns, url, key) {
+async function readRemoteCatalog(columns, url, key, projectKeyIsLegacy = false) {
   const endpoint = new URL('/rest/v1/rpc/get_shop_catalog', url);
   const response = await fetch(endpoint, {
     method: 'POST',
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    headers: createSupabaseHeaders({ apiKey: key, projectKeyIsLegacy, contentType: true }),
     body: '{}'
   });
   if (!response.ok) {
@@ -314,11 +315,12 @@ if (!atelierExpressionMigration.includes("'name_motion'") || !atelierExpressionM
 if (!atelierExpressionMigration.includes("'chromadie_plus'")) fail('the Atelier expression migration does not use the canonical Plus entitlement');
 if (!atelierExpressionMigration.includes('Expected 99 active catalog rows')) fail('the Atelier expression migration has a stale active catalog count');
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_KEY;
+const supabase = getSupabaseCredentials(process.env);
+const supabaseUrl = supabase.url;
+const supabaseKey = supabase.publishableKey;
 
 if (supabaseUrl && supabaseKey) {
-  const remote = await readRemoteCatalog(seed.columns, supabaseUrl, supabaseKey);
+  const remote = await readRemoteCatalog(seed.columns, supabaseUrl, supabaseKey, supabase.publishableKeyIsLegacy);
   compareCatalogs(seed, remote, 'remote shop_items');
   console.log(
     `Catalog drift check passed: seed and remote match (${seed.catalog.size} items; ` +
@@ -328,6 +330,6 @@ if (supabaseUrl && supabaseKey) {
   console.log(
     `Catalog drift check passed locally: final seed is valid (${seed.catalog.size} items; ` +
       `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} structural Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres). ` +
-      'Set SUPABASE_URL and SUPABASE_ANON_KEY to include the remote catalog.'
+    'Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY to include the remote catalog.'
   );
 }

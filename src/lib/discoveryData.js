@@ -88,6 +88,31 @@ function normalizeAvatarPath(value) {
     : null;
 }
 
+function normalizeAvatarReference(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const provider = String(value.storage_provider || '').toLowerCase();
+  if (provider === 'r2') {
+    const key = typeof value.r2_public_key === 'string' ? value.r2_public_key.trim() : '';
+    if (!key || key.length > 1024 || key.split('/').some(segment => segment === '.' || segment === '..')
+      || [...key].some(character => {
+        const codePoint = character.codePointAt(0);
+        return codePoint < 0x20 || codePoint === 0x7f;
+      })) return null;
+    return {
+      asset_id: UUID_PATTERN.test(String(value.asset_id || '')) ? String(value.asset_id).toLowerCase() : null,
+      storage_provider: 'r2',
+      r2_public_key: key,
+      mime_type: typeof value.mime_type === 'string' ? value.mime_type.slice(0, 120) : null,
+      byte_size: safeCount(value.byte_size)
+    };
+  }
+  if (provider === 'supabase') {
+    const path = normalizeAvatarPath(value.storage_path);
+    return path ? { storage_provider: 'supabase', storage_path: path } : null;
+  }
+  return null;
+}
+
 export function isSafeDiscoveryUsername(value) {
   return typeof value === 'string' && normalizeUsernameSegment(value) === value;
 }
@@ -137,6 +162,7 @@ export function normalizeDiscoveryItem(raw) {
     bio: safeText(raw.bio, 160),
     profileAccent: normalizeHex(raw.profileAccent),
     avatarPath: normalizeAvatarPath(raw.avatarPath),
+    avatarReference: normalizeAvatarReference(raw.avatarReference),
     currentStreak: safeCount(raw.currentStreak),
     totalRolls: safeCount(raw.totalRolls),
     lifetimeEp: safeCount(raw.lifetimeEp),

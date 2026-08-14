@@ -2,6 +2,27 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-13 — Add modern Supabase key compatibility
+
+- Browser configuration prefers `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- Server/control-plane configuration prefers `SUPABASE_SECRET_KEY`.
+- Legacy browser/service-role variable names remain temporary fallbacks while
+  production variables are migrated. Modern project keys stay in `apikey`;
+  user session JWTs remain the only normal bearer credentials.
+
+## 2026-08-13 — Begin profile-media delivery migration to R2
+
+- Public profile media URLs are now stable instead of receiving a new
+  timestamp query parameter on every render.
+- New R2 support uses authorized direct browser uploads, verified readiness,
+  immutable public keys, and `media.chm.lol` provider-neutral references while
+  legacy Supabase media remains compatible during rollout.
+- Existing Studio draft/render architecture is unchanged. Active selected
+  legacy assets have an idempotent migration path, and account deletion uses
+  retryable R2 cleanup rather than waiting on a transient Cloudflare response.
+- CHM uses R2 Standard only; no Infrequent Access transition is part of the
+  product storage policy.
+
 ## 2026-08-13 — Close the Profile Studio session-state side door
 
 - Profile Studio no longer restores unpublished profile drafts from
@@ -2764,3 +2785,37 @@ direct route behavior.
   readable physical desktop/mobile preview behavior.
 - Accepted structurally valid V2 configuration envelopes even when optional
   expression media is absent.
+## 2026-08-13 — Harden staged R2 profile media
+
+- Fixed SigV4 canonical header/date signing and added deterministic and
+  optional live R2 control-plane coverage.
+- Kept standalone audio and playlist-track migration references separate.
+- Added exact-URL Cloudflare purge retries, abandoned-upload cleanup, leased
+  account cleanup, server-side container validation, physical quota/count
+  limits, and idempotent promotion checks.
+- Kept R2 Standard-only policy and all production upload/backfill/cutover
+  actions operator-gated.
+
+## 2026-08-13 — Close the final pre-canary R2 correctness gaps
+
+- Fixed NULL legacy-path deletion matching so unused R2 assets cannot clear a
+  different typed selection, with launch security coverage for multiple media
+  kinds.
+- Preserved delete operation metadata and optimistic-concurrency timestamps,
+  cleared successful promotion's private key, and made completion/publication
+  retries safe after cleanup.
+- Signed upload byte length and added an environment-gated oversized/undersized
+  R2 smoke; added the standalone 15-minute cleanup scheduler and control-plane
+  tests. No production R2 flag, backfill, public cutover, or Supabase Storage
+  deletion was performed.
+
+## 2026-08-13 — Clean up retained legacy media after R2 migration
+
+- Added a service-only, exact bucket/path cleanup RPC for migrated assets that
+  still retain a legacy Supabase Storage path.
+- Extended explicit R2 deletion, deleted-asset retries, and account-deletion
+  jobs so legacy Supabase objects are removed idempotently alongside R2
+  objects, while NULL paths remain native-R2 safe.
+- Added database security regressions for migrated-asset deletion and durable
+  account queue capture. No production canary, backfill, or legacy-storage
+  retirement was run.

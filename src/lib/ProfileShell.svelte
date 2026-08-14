@@ -66,7 +66,6 @@
   let followLoading = false;
   let profileRollState = 'idle';
   let profileRollEffectTimer = null;
-  let mediaCacheKey = '';
   let refreshing = false;
   let profileMoreActive = false;
   let profilePageElement;
@@ -103,7 +102,6 @@
     socialSettings = createDefaultProfileSocialSettings();
     allAchievements = [];
     profileRollState = 'idle';
-    mediaCacheKey = '';
     if (profileRollEffectTimer) {
       clearTimeout(profileRollEffectTimer);
       profileRollEffectTimer = null;
@@ -259,7 +257,6 @@
     profileConfig = context.profileConfig;
     social = context.social;
     socialSettings = context.socialSettings;
-    mediaCacheKey = String(Date.now());
     allAchievements = context.allAchievements;
     loadError = context.loadError;
     loading = false;
@@ -405,7 +402,6 @@
     mode: previewMode ? 'studio' : 'public',
     isOwner: profileOwnerContext,
     rollState: profileRollState,
-    mediaCacheKey,
     visualFixture,
     dev: import.meta.env.DEV
   });
@@ -441,6 +437,7 @@
   $: backgroundSrc = profileRenderSnapshot?.environment?.backgroundImageUrl || '';
   $: audioSrc = profileRenderSnapshot?.media?.audioUrl || '';
   $: backgroundVideoSrc = profileRenderSnapshot?.environment?.backgroundVideoUrl || '';
+  $: backgroundVideoActive = Boolean(backgroundVideoSrc && !prefersReducedMotion);
   $: bannerSrc = profileRenderSnapshot?.media?.bannerUrl || '';
   $: pointerCursorSrc = profileRenderSnapshot?.environment?.pointerCursorUrl || '';
   $: richAudioPlaylist = profileRenderSnapshot?.media?.playlist || { tracks: [] };
@@ -480,14 +477,18 @@
 </script>
 
   <main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} data-profile-render-model="v1" data-profile-layout={profilePresentationLayoutVariant} data-profile-render-mode={profileRenderSnapshot?.mode || (previewMode ? 'studio' : 'public')} aria-busy={loading}>
-  {#if backgroundSrc}
+  {#if backgroundSrc && !backgroundVideoActive}
     <img class="profile-shell__media-image" src={backgroundSrc} alt="" loading="eager" decoding="async" aria-hidden="true" />
   {/if}
   {#if backgroundSrc}
     <div class="profile-shell__media-overlay" aria-hidden="true"></div>
   {/if}
-  {#if backgroundVideoSrc && !prefersReducedMotion}
-    <video class="profile-shell__media-video" src={backgroundVideoSrc} autoplay muted loop playsinline poster={backgroundSrc || undefined} aria-hidden="true"></video>
+  {#if backgroundVideoActive}
+    <!-- Do not use the full background image as a video poster: that would
+         reintroduce the duplicate large-media download this environment
+         intentionally avoids. The resolved background color remains visible
+         until the video is ready. -->
+    <video class="profile-shell__media-video" src={backgroundVideoSrc} autoplay muted loop playsinline aria-hidden="true"></video>
   {/if}
   {#if atmosphereKey}
     <AtmosphereLayer atmosphereKey={atmosphereKey} todayColor={nameRendererTodayColor} recentColors={nameRendererRecentColors} active={true} animated={true} mode="profile" className="profile-shell__page-atmosphere-layer" />

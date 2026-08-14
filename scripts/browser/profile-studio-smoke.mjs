@@ -22,6 +22,7 @@ import { isReservedRouteSegment } from '../../src/lib/routeContract.js';
 import { isProtectedUsername } from '../../src/lib/usernamePolicy.js';
 import { isProfileSocialLink } from '../../src/lib/profileLinkTypes.js';
 import { RICH_PROFILE_FIXTURE } from './profile-rich-fixture.mjs';
+import { createSupabaseHeaders, getSupabaseCredentials } from '../../functions/_supabaseApi.js';
 
 const environment = await loadLocalEnvironment();
 const execFileAsync = promisify(execFile);
@@ -29,7 +30,7 @@ const execFileAsync = promisify(execFile);
 // Keep environment parsing private to the harness API while making this script
 // fail early and clearly if somebody runs it against a deployed project.
 if (!environment?.url || !environment?.key) {
-  throw new Error('Local smoke requires VITE_SUPABASE_URL and VITE_SUPABASE_KEY (normally provided by .env.local).');
+  throw new Error('Local smoke requires VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY (legacy VITE_SUPABASE_KEY is accepted during migration).');
 }
 const supabaseUrl = assertLocalSupabaseUrl(environment.url);
 const evidenceDir = await mkdtemp(join(tmpdir(), 'chromadie-profile-studio-smoke-'));
@@ -159,7 +160,7 @@ async function uploadGeneratedImage(selector, { width, height, filename, kind })
 
 async function getLocalServiceRoleKey() {
   if (localServiceRoleKey) return localServiceRoleKey;
-  const configuredKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  const configuredKey = getSupabaseCredentials(process.env).secretKey;
   if (configuredKey) {
     localServiceRoleKey = configuredKey;
     return localServiceRoleKey;
@@ -183,9 +184,11 @@ async function serviceRest(path, { method = 'GET', body, headers = {} } = {}) {
   const response = await fetch(`${supabaseUrl.origin}${path}`, {
     method,
     headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      'Content-Type': 'application/json',
+      ...createSupabaseHeaders({
+        apiKey: serviceRoleKey,
+        projectKeyIsLegacy: !serviceRoleKey.startsWith('sb_secret_'),
+        contentType: true
+      }),
       ...headers
     },
     body: body === undefined ? undefined : JSON.stringify(body)
@@ -723,6 +726,10 @@ async function capturePublishedLayouts() {
     await page.command('Page.navigate', { url: mobileUrl });
     await page.waitFor(`document.readyState === 'complete' && location.pathname === ${JSON.stringify('/' + canonicalUsername)}`, `${layout} public evidence mobile`);
     await waitForPublicLayout(layout, `${layout} public mobile profile`);
+    await page.waitFor(
+      `(() => { const image = document.querySelector('.profile-shell-page .profile-shell__media-image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`,
+      `${layout} public mobile uploaded background`
+    );
     await delay(180);
     const mobileGeometry = await page.evaluate(`(() => {
       const shell = document.querySelector('.profile-shell-page');

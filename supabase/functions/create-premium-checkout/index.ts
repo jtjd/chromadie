@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { getSupabaseKeys, supabaseServerClientOptions } from '../_shared/supabase-keys.ts';
 import {
   CHROMADIE_PLUS_AMOUNT,
   CHROMADIE_PLUS_CURRENCY,
@@ -14,9 +15,7 @@ Deno.serve(async request => {
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405);
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const { url: supabaseUrl, publishableKey: anonKey, secretKey: serviceRoleKey } = getSupabaseKeys();
     const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
     if (!supabaseUrl || !anonKey || !serviceRoleKey || !stripeSecret) throw new Error('Billing service is not configured.');
 
@@ -29,7 +28,7 @@ Deno.serve(async request => {
     const { data: userData, error: userError } = await authClient.auth.getUser(bearerToken);
     if (userError || !userData.user) return jsonResponse({ error: 'Authentication required.' }, 401);
 
-    const service = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const service = createClient(supabaseUrl, serviceRoleKey, supabaseServerClientOptions(serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }));
     const userId = userData.user.id;
     const [{ data: access }, { data: customer }, { data: ownerProfile }] = await Promise.all([
       service.from('billing_premium_access').select('active').eq('user_id', userId).maybeSingle(),

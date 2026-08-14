@@ -26,14 +26,22 @@ const DEFAULT_COLOR = '#CDD2FF';
 const EXPRESSION_FIELDS = Object.freeze([
   'avatar_path',
   'background_path',
+  'avatar_asset_id',
+  'background_asset_id',
   'audio_path',
+  'audio_asset_id',
   'spotify_type',
   'spotify_id',
   'background_video_path',
+  'background_video_asset_id',
   'banner_path',
+  'banner_asset_id',
   'cursor_path',
+  'cursor_asset_id',
   'pointer_cursor_path',
-  'audio_playlist'
+  'pointer_cursor_asset_id',
+  'audio_playlist',
+  'media_references'
 ]);
 
 function asObject(value) {
@@ -118,10 +126,19 @@ function applyExpressionOverrides(value, ...overrides) {
   return merged;
 }
 
-function resolveMediaUrl(path, input) {
-  if (!path) return '';
-  if (typeof input.mediaResolver === 'function') return input.mediaResolver(path, input.mediaCacheKey || '');
-  return getProfileMediaUrl(path, input.mediaCacheKey || '');
+function resolveMediaUrl(path, input, mediaKind = '') {
+  const references = asObject(input.mediaReferences);
+  const reference = references[mediaKind] || references[`${mediaKind}Media`] || path;
+  if (!reference) return '';
+  const previewMode = Boolean(input.previewMode || input.mode === 'studio');
+  // Public profile URLs must remain stable. Cache invalidation is limited to
+  // owner/editor previews, where a temporary persisted-media replacement may
+  // otherwise be hidden by the browser's local cache.
+  const previewCacheKey = previewMode
+    ? input.mediaCacheKey || ''
+    : '';
+  if (typeof input.mediaResolver === 'function') return input.mediaResolver(reference, previewCacheKey, { preview: previewMode });
+  return getProfileMediaUrl(reference, previewCacheKey, { preview: previewMode });
 }
 
 function resolveBadges(profile, allAchievements) {
@@ -188,6 +205,16 @@ export function buildProfileRenderSnapshot(input = {}) {
   const profileConfig = asObject(input.profileConfig);
   const fallbackColor = sourceProfile?.mood_color || input.fallbackColor || DEFAULT_COLOR;
   const selectedConfiguration = pickConfigurationSource(input);
+  const mediaReferences = asObject(
+    input.mediaReferences
+      || selectedConfiguration.media_references
+      || selectedConfiguration.mediaReferences
+      || selectedConfiguration.base?.media_references
+      || selectedConfiguration.media
+      || selectedConfiguration.media_assets
+      || profileConfig.media
+      || profileConfig.media_assets
+  );
   const configurationWithExpressions = applyExpressionOverrides(
     mergeExpressionFields(
       selectedConfiguration,
@@ -248,19 +275,19 @@ export function buildProfileRenderSnapshot(input = {}) {
   const hasSpotifyWidget = profileWidgets.some(widget => widget.provider === 'spotify');
   const media = {
     avatarPath: configuration.avatar_path,
-    avatarUrl: resolveMediaUrl(configuration.avatar_path, input),
+    avatarUrl: resolveMediaUrl(configuration.avatar_path, { ...input, mediaReferences }, 'avatar'),
     backgroundPath: configuration.background_path,
-    backgroundUrl: resolveMediaUrl(configuration.background_path, input),
+    backgroundUrl: resolveMediaUrl(configuration.background_path, { ...input, mediaReferences }, 'background'),
     backgroundVideoPath: richMedia.background_video_path,
-    backgroundVideoUrl: resolveMediaUrl(richMedia.background_video_path, input),
+    backgroundVideoUrl: resolveMediaUrl(richMedia.background_video_path, { ...input, mediaReferences }, 'background_video'),
     audioPath: configuration.audio_path,
-    audioUrl: resolveMediaUrl(configuration.audio_path, input),
+    audioUrl: resolveMediaUrl(configuration.audio_path, { ...input, mediaReferences }, 'audio'),
     bannerPath: richMedia.banner_path,
-    bannerUrl: resolveMediaUrl(richMedia.banner_path, input),
+    bannerUrl: resolveMediaUrl(richMedia.banner_path, { ...input, mediaReferences }, 'banner'),
     cursorPath: richMedia.cursor_path,
-    cursorUrl: resolveMediaUrl(richMedia.cursor_path, input),
+    cursorUrl: resolveMediaUrl(richMedia.cursor_path, { ...input, mediaReferences }, 'cursor'),
     pointerCursorPath: richMedia.pointer_cursor_path,
-    pointerCursorUrl: resolveMediaUrl(richMedia.pointer_cursor_path, input),
+    pointerCursorUrl: resolveMediaUrl(richMedia.pointer_cursor_path, { ...input, mediaReferences }, 'pointer_cursor'),
     playlist: richMedia.audio_playlist
   };
   const hasProfileMusic = Boolean(media.audioUrl || media.audioPath)
@@ -301,7 +328,9 @@ export function buildProfileRenderSnapshot(input = {}) {
     showLowerExpression,
     hasProfileStory
   });
-  const cacheKey = input.mediaCacheKey || '';
+  const cacheKey = input.previewMode || input.mode === 'studio'
+    ? input.mediaCacheKey || ''
+    : '';
   const pageStyle = [
     getProfileCanvasStyle(configuration),
     media.cursorUrl ? `cursor:url("${media.cursorUrl}") 16 16, auto` : '',
@@ -383,6 +412,7 @@ export function buildProfileRenderSnapshot(input = {}) {
       cacheKey
     },
     media,
+    mediaReferences,
     cosmetics: {
       loadout: cosmetics,
       name: getNameRendererLoadout(cosmetics),

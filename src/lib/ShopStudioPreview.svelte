@@ -37,8 +37,9 @@
       return { id, name: meta.name, icon: meta.symbol };
     })
     .filter(Boolean);
-  $: previewAvatarSrc = getProfileMediaUrl(previewProfileConfig.avatar_path);
-  $: previewBackgroundSrc = getProfileMediaUrl(previewProfileConfig.background_path);
+  $: previewMediaReferences = previewProfileConfig.media_references || previewProfileConfig.mediaReferences || {};
+  $: previewAvatarSrc = getProfileMediaUrl(previewMediaReferences.avatar || previewProfileConfig.avatar_path);
+  $: previewBackgroundSrc = getProfileMediaUrl(previewMediaReferences.background || previewProfileConfig.background_path);
   $: previewAccentColor = previewProfileConfig.appearance?.colors?.accent || displayColor;
   $: previewCardStyle = getProfileAppearanceStyle(previewProfileConfig);
   $: nameRendererLoadout = getNameRendererLoadout(loadout);

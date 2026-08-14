@@ -140,7 +140,12 @@
   }
 
   $: editorProfileConfig = createStudioEditorProfileConfig(context?.profileConfig);
-  $: sidebarAvatarSrc = getProfileMediaUrl(editorProfileConfig?.draft?.avatar_path || editorProfileConfig?.published?.avatar_path);
+  $: sidebarAvatarSrc = getProfileMediaUrl(
+    editorProfileConfig?.draft?.media_references?.avatar
+      || editorProfileConfig?.published?.media_references?.avatar
+      || editorProfileConfig?.draft?.avatar_path
+      || editorProfileConfig?.published?.avatar_path
+  );
   $: dashboardDirty = hasDirtySources(dirtySources) || hasServerDraftChanges(context?.profileConfig);
   $: previewModel = createProfileStudioPreviewModel({
     targetProfile: context?.targetProfile,

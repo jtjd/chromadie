@@ -39,7 +39,7 @@ export async function loadLocalEnvironment() {
   const get = key => process.env[key] ?? values[key] ?? '';
   return {
     url: get('VITE_SUPABASE_URL'),
-    key: get('VITE_SUPABASE_KEY') || get('VITE_SUPABASE_ANON_KEY'),
+    key: get('VITE_SUPABASE_PUBLISHABLE_KEY') || get('VITE_SUPABASE_KEY') || get('VITE_SUPABASE_ANON_KEY'),
     siteUrl: get('VITE_SITE_URL')
   };
 }
@@ -401,7 +401,7 @@ export async function startVite({ appPort, environment, evidenceDir }) {
     env: {
       ...process.env,
       VITE_SUPABASE_URL: environment.url,
-      VITE_SUPABASE_KEY: environment.key,
+      VITE_SUPABASE_PUBLISHABLE_KEY: environment.key,
       VITE_SITE_URL: `http://127.0.0.1:${appPort}`
     },
     stdio: ['ignore', 'pipe', 'pipe']

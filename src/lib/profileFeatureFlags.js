@@ -8,12 +8,13 @@
 export const FEATURE_FLAG_KEYS = Object.freeze([
   'commerce',
   'richMedia',
+  'profileMediaR2',
   'profileConfigurationV2',
   'expandedAnalytics',
   'socialDepth'
 ]);
 
-const FEATURE_FLAG_ENV_SUFFIXES = ['COMMERCE', 'RICH_MEDIA', 'PROFILE_CONFIGURATION_V2', 'EXPANDED_ANALYTICS', 'SOCIAL_DEPTH'];
+const FEATURE_FLAG_ENV_SUFFIXES = ['COMMERCE', 'RICH_MEDIA', 'PROFILE_MEDIA_R2', 'PROFILE_CONFIGURATION_V2', 'EXPANDED_ANALYTICS', 'SOCIAL_DEPTH'];
 export const FEATURE_FLAG_ENV_KEYS = Object.freeze(Object.fromEntries(
   FEATURE_FLAG_KEYS.map((key, index) => [key, `VITE_CHROMADIE_FLAG_${FEATURE_FLAG_ENV_SUFFIXES[index]}`])
 ));
@@ -21,6 +22,9 @@ export const FEATURE_FLAG_ENV_KEYS = Object.freeze(Object.fromEntries(
 export const FEATURE_FLAG_DEFAULTS = Object.freeze({
   commerce: true,
   richMedia: true,
+  // R2 stays disabled until its buckets, custom domain, and control-plane
+  // secrets are configured in the deployment environment.
+  profileMediaR2: false,
   profileConfigurationV2: true,
   expandedAnalytics: true,
   socialDepth: true
@@ -37,6 +41,7 @@ const BUILD_ENV = {
   flags: [
     import.meta.env?.VITE_CHROMADIE_FLAG_COMMERCE,
     import.meta.env?.VITE_CHROMADIE_FLAG_RICH_MEDIA,
+    import.meta.env?.VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2,
     import.meta.env?.VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2,
     import.meta.env?.VITE_CHROMADIE_FLAG_EXPANDED_ANALYTICS,
     import.meta.env?.VITE_CHROMADIE_FLAG_SOCIAL_DEPTH
@@ -126,6 +131,7 @@ export function resolveProfileFeatureFlags(options = {}) {
   const flags = {
     commerce: false,
     richMedia: false,
+    profileMediaR2: false,
     profileConfigurationV2: false,
     expandedAnalytics: false,
     socialDepth: false

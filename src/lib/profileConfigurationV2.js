@@ -68,13 +68,20 @@ export function normalizeProfileConfigurationV2(value, fallbackColor = '#CDD2FF'
   const expressionFields = [
     'avatar_path',
     'background_path',
+    'avatar_asset_id',
+    'background_asset_id',
     'audio_path',
+    'audio_asset_id',
     'spotify_type',
     'spotify_id',
     'background_video_path',
+    'background_video_asset_id',
     'banner_path',
+    'banner_asset_id',
     'cursor_path',
+    'cursor_asset_id',
     'pointer_cursor_path',
+    'pointer_cursor_asset_id',
     'audio_playlist'
   ];
   const envelopeExpression = Object.fromEntries(

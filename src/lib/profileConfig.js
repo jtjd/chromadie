@@ -265,6 +265,9 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
       glow: safeInteger(value.linkStyle.glow, 0, 0, 2)
     };
   }
+  if (value.media_references && typeof value.media_references === 'object') {
+    normalized.media_references = value.media_references;
+  }
   return normalized;
 }
 

@@ -1,0 +1,13 @@
+name = "chm-profile-media-cleanup-scheduler"
+main = "index.js"
+compatibility_date = "2026-08-13"
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+# Keep this as the Pages production origin that serves functions/api.
+CLEANUP_ENDPOINT_URL = "https://chm.lol/api/profile-media/account-cleanup"
+
+# Install the server-only secret separately:
+#   npx wrangler secret put R2_ACCOUNT_CLEANUP_SECRET --config workers/profile-media-cleanup-scheduler/wrangler.toml

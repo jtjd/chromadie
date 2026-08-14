@@ -50,7 +50,8 @@
   };
 
   function isLocalDevelopment() {
-    if (!import.meta.env.DEV || typeof window === 'undefined') return false;
+    const localIntegrationTest = import.meta.env?.VITE_LOCAL_INTEGRATION_TEST === 'true';
+    if ((!import.meta.env.DEV && !localIntegrationTest) || typeof window === 'undefined') return false;
     return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
   }
 

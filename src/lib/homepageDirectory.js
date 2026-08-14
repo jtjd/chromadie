@@ -18,7 +18,8 @@ function candidateKey(username) {
 
 function hasPublicExpression(context) {
   const config = getPublishedConfig(context);
-  return Boolean(config?.audio_path || (config?.spotify_type && config?.spotify_id) || config?.widgets?.length);
+  return Boolean(config?.audio_path || config?.media_references?.audio
+    || (config?.spotify_type && config?.spotify_id) || config?.widgets?.length);
 }
 
 export function getHomepagePublishedConfig(context) {
@@ -31,6 +32,11 @@ export function getHomepagePublishedConfig(context) {
 
 function getPublishedConfig(context) {
   return getHomepagePublishedConfig(context);
+}
+
+function getPublishedAvatarReference(context) {
+  const config = getHomepagePublishedConfig(context);
+  return config?.media_references?.avatar || config?.mediaReferences?.avatar || null;
 }
 
 /**
@@ -48,7 +54,8 @@ export function mergeHomepageDiscoveryProfile(item, context) {
     displayName: item.displayName || profile?.display_name || '',
     bio: item.bio || profile?.bio || '',
     profileAccent: item.profileAccent || config?.signatureColor || profile?.mood_color || null,
-    avatarPath: item.avatarPath || config?.avatar_path || null
+    avatarPath: item.avatarPath || config?.avatar_path || null,
+    avatarReference: item.avatarReference || getPublishedAvatarReference(context)
   };
 }
 
@@ -63,7 +70,7 @@ function profileRichness(model) {
   return [
     profile?.is_staff,
     Boolean(config?.background_path),
-    Boolean(config?.avatar_path),
+    Boolean(config?.avatar_path || getPublishedAvatarReference(context)),
     Boolean(profile?.bio?.trim()),
     Boolean(config?.links?.length),
     hasPublicExpression(context),
@@ -128,6 +135,7 @@ export function buildHomepageFeaturedProfiles(models = [], limit = 3) {
         displayName: profile.display_name || profile.username,
         bio: profile.bio || '',
         avatarPath: config?.avatar_path || null,
+        avatarReference: getPublishedAvatarReference(context),
         profileAccent: config?.signatureColor || profile.mood_color || '#8B7CF6',
         equippedCosmetics: profile.equipped_cosmetics || {},
         hexCode: latestRoll?.hex_code || profile.best_roll_hex || null,

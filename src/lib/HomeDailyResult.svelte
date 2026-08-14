@@ -20,7 +20,7 @@
   $: hasFeaturedRoll = Boolean(hasResult && !rollIsPreview && roll?.username);
   $: hasProfileLink = Boolean(hasFeaturedRoll && roll?.profilePath);
   $: featuredName = roll?.displayName || roll?.username || '';
-  $: featuredAvatarSrc = getProfileMediaUrl(roll?.avatarPath || '');
+  $: featuredAvatarSrc = getProfileMediaUrl(roll?.avatarReference || roll?.avatarPath || '');
   $: streakValue = roll?.currentStreak === null || roll?.currentStreak === undefined
     ? null
     : Number(roll.currentStreak);

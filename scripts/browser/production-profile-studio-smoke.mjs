@@ -18,7 +18,7 @@ function run(command, args, environment) {
 
 const environment = await loadLocalEnvironment();
 if (!environment.url || !environment.key) {
-  throw new Error('Production preview smoke requires VITE_SUPABASE_URL and VITE_SUPABASE_KEY (normally provided by .env.local).');
+  throw new Error('Production preview smoke requires VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY (legacy VITE_SUPABASE_KEY is accepted during migration).');
 }
 const localSupabaseUrl = assertLocalSupabaseUrl(environment.url);
 const proxy = await startLocalSupabaseHttpsProxy({ targetUrl: localSupabaseUrl.origin });
@@ -26,7 +26,7 @@ const smokeEnvironment = {
   ...process.env,
   PROFILE_STUDIO_SMOKE_MODE: 'preview',
   VITE_SUPABASE_URL: proxy.url,
-  VITE_SUPABASE_KEY: environment.key,
+  VITE_SUPABASE_PUBLISHABLE_KEY: environment.key,
   VITE_CLOUDFLARE_SITE_KEY: '1x00000000000000000000AA',
   NODE_EXTRA_CA_CERTS: proxy.caPath
 };

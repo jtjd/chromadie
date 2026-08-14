@@ -3,6 +3,7 @@
   import { supabase } from './supabase.js';
   import { buildProfileStoragePath, getProfileStorageRef, normalizeProfileExpression, parseSpotifyUrl, spotifyUrlFromParts, PROFILE_IMAGE_RULES } from './profileExpression.js';
   import { getProfileMediaUrl } from './profileMedia.js';
+  import { deleteProfileMediaR2, isR2MediaAsset, promoteProfileMediaR2, uploadProfileMediaToR2 } from './profileMediaR2.js';
   import { prepareProfileAudioFile, processProfileImage, validateProfileAudioFile } from './profileMediaProcessing.js';
   import { isProfileFeatureEnabled } from './profileFeatureFlags.js';
   import ProfileMediaIcon from './ProfileMediaIcon.svelte';
@@ -39,6 +40,7 @@
   let avatarAssets = [];
   let backgroundAssets = [];
   let assetsLoading = false;
+  let expressionMediaReferences = {};
   let assetLoadRequestId = 0;
   const avatarRules = PROFILE_IMAGE_RULES.avatar;
   const backgroundRules = PROFILE_IMAGE_RULES.background;
@@ -57,11 +59,16 @@
     syncedKey = nextKey;
   }
   $: syncIncomingExpression(incomingExpression, incomingKey);
-  $: avatarSrc = avatarPreviewSrc || getProfileMediaUrl(expression.avatar_path, mediaCacheKey);
-  $: backgroundSrc = backgroundPreviewSrc || getProfileMediaUrl(expression.background_path, mediaCacheKey);
-  $: audioSrc = audioPreviewSrc || getProfileMediaUrl(expression.audio_path, mediaCacheKey);
+  $: configuredMediaReferences = config?.draft?.media_references || config?.draft?.base?.media_references || config?.published?.media_references || config?.published?.base?.media_references || {};
+  $: avatarSrc = avatarPreviewSrc || getProfileMediaUrl(configuredMediaReferences.avatar || expressionMediaReferences.avatar || expression.avatar_path, mediaCacheKey);
+  $: backgroundSrc = backgroundPreviewSrc || getProfileMediaUrl(configuredMediaReferences.background || expressionMediaReferences.background || expression.background_path, mediaCacheKey);
+  $: audioSrc = audioPreviewSrc || getProfileMediaUrl(configuredMediaReferences.audio || expressionMediaReferences.audio || expression.audio_path, mediaCacheKey);
+  $: hasAvatar = Boolean(expression.avatar_path || expression.avatar_asset_id || configuredMediaReferences.avatar || expressionMediaReferences.avatar);
+  $: hasBackground = Boolean(expression.background_path || expression.background_asset_id || configuredMediaReferences.background || expressionMediaReferences.background);
+  $: hasAudio = Boolean(expression.audio_path || expression.audio_asset_id || configuredMediaReferences.audio || expressionMediaReferences.audio);
   $: audioProgress = audioDuration > 0 ? Math.min(100, (audioCurrentTime / audioDuration) * 100) : 0;
   $: richMediaEnabled = isProfileFeatureEnabled('richMedia', { userId: profileId, isStaff: staff });
+  $: r2MediaEnabled = isProfileFeatureEnabled('profileMediaR2', { userId: profileId, isStaff: staff });
 
   function formatInputLimit(bytes) {
     const megabytes = bytes / (1024 * 1024);
@@ -145,7 +152,7 @@
     assetsLoading = true;
     const { data, error: assetError } = await supabase
       .from('profile_media_assets')
-      .select('id, kind, storage_path, label, created_at, status')
+      .select('id, kind, storage_path, storage_provider, r2_public_key, label, created_at, status, delivery_status, ever_public')
       .eq('user_id', profileId)
       .order('created_at', { ascending: false });
     if (requestId !== assetLoadRequestId) return;
@@ -175,12 +182,47 @@
     return data;
   }
 
-  async function selectAsset(kind, storagePath) {
-    if (!storagePath || busy) return;
+  async function selectR2ExpressionAsset(kind, assetId, { clear = false } = {}) {
+    if (kind === 'audio') {
+      const { data, error: audioRpcError } = await supabase.rpc('select_my_profile_audio_asset', {
+        p_audio_id: clear ? null : assetId,
+        p_clear_audio: clear
+      });
+      if (audioRpcError || !data?.success) throw new Error(audioRpcError?.message || data?.error || 'The profile audio selection could not be saved.');
+      expression = normalizeProfileExpression({ ...expression, ...data });
+      expressionMediaReferences = data.media_references || {};
+      syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
+      mediaCacheKey = String(Date.now());
+      dispatch('expressionchange', { ...expression, media_references: data.media_references || {}, updatedAt: data.updated_at || null });
+      return data;
+    }
+    const { data, error: rpcError } = await supabase.rpc('select_my_profile_expression_assets', {
+      p_avatar_id: kind === 'avatar' ? (clear ? null : assetId) : (expression.avatar_asset_id || null),
+      p_background_id: kind === 'background' ? (clear ? null : assetId) : (expression.background_asset_id || null),
+      p_clear_avatar: kind === 'avatar' && clear,
+      p_clear_background: kind === 'background' && clear
+    });
+    if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The profile media selection could not be saved.');
+    expression = normalizeProfileExpression({ ...expression, ...data });
+    expressionMediaReferences = data.media_references || {};
+    syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
+    mediaCacheKey = String(Date.now());
+    dispatch('expressionchange', { ...expression, media_references: data.media_references || {}, updatedAt: data.updated_at || null });
+    return data;
+  }
+
+  async function selectAsset(kind, asset) {
+    const storagePath = typeof asset === 'string' ? asset : asset?.storage_path;
+    if ((!storagePath && !asset?.id) || busy) return;
     busy = true;
     setFeedback('', `Applying ${kind}…`);
     try {
-      await saveExpression({ ...expression, [`${kind}_path`]: storagePath });
+      if (r2MediaEnabled && asset?.id && isR2MediaAsset(asset)) {
+        if (!asset.ever_public) await promoteProfileMediaR2(asset.id);
+        await selectR2ExpressionAsset(kind, asset.id);
+      } else {
+        await saveExpression({ ...expression, [`${kind}_path`]: storagePath });
+      }
       setFeedback('', `${kind === 'avatar' ? 'Avatar' : 'Background'} applied to your profile.`);
     } catch (selectionError) {
       setFeedback(selectionError instanceof Error ? selectionError.message : `The ${kind} could not be applied.`);
@@ -194,16 +236,20 @@
     busy = true;
     setFeedback('', 'Removing media asset…');
     try {
-      const { data, error: deleteError } = await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: asset.id });
-      if (deleteError || !data?.success) {
-        throw new Error(deleteError?.message || data?.error || 'The media asset could not be removed.');
+      const data = r2MediaEnabled && isR2MediaAsset(asset)
+        ? await deleteProfileMediaR2(asset.id)
+        : (await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: asset.id })).data;
+      if (!data?.success) {
+        throw new Error(data?.error || 'The media asset could not be removed.');
       }
       const field = `${asset.kind}_path`;
-      if (expression[field] === asset.storage_path) {
-        expression = normalizeProfileExpression({ ...expression, [field]: null });
+      if (expression[field] === asset.storage_path || expression[`${asset.kind}_asset_id`] === asset.id) {
+        expression = normalizeProfileExpression({ ...expression, [field]: null, [`${asset.kind}_asset_id`]: null });
         syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
         mediaCacheKey = String(Date.now());
-        dispatch('expressionchange', { ...expression, updatedAt: data.updated_at || null });
+        const nextReferences = { ...configuredMediaReferences, ...expressionMediaReferences, [asset.kind]: null };
+        expressionMediaReferences = nextReferences;
+        dispatch('expressionchange', { ...expression, media_references: nextReferences, updatedAt: data.updated_at || null });
       }
       await loadAssetLibrary();
       setFeedback('', 'Media asset removed from your library.');
@@ -277,9 +323,31 @@
     setFeedback('', 'Preparing the avatar…');
     let uploadedReference = null;
     let registeredAssetId = '';
+    let r2AssetId = '';
     let persisted = false;
     try {
       const blob = await processProfileImage(file, 'avatar');
+      if (r2MediaEnabled) {
+        const uploaded = await uploadProfileMediaToR2({
+          kind: 'avatar',
+          blob,
+          extension: 'webp',
+          mimeType: 'image/webp',
+          label: file.name
+        });
+        const assetId = uploaded.asset_id || uploaded.asset?.id;
+        if (!assetId) throw new Error('The R2 upload did not return a media asset.');
+        r2AssetId = assetId;
+        const promoted = await promoteProfileMediaR2(assetId);
+        const publicReference = { r2_public_key: promoted.r2_public_key };
+        const persistedSrc = await verifyPersistedImage(publicReference);
+        await selectR2ExpressionAsset('avatar', assetId);
+        persisted = true;
+        setPersistedAvatarPreview(persistedSrc);
+        await loadAssetLibrary();
+        setFeedback('', `Avatar saved to your R2 library and profile (${formatStoredSize(blob.size)} stored).`);
+        return;
+      }
       const assetId = createAssetId();
       const storedPath = buildProfileStoragePath('avatar', profileId, assetId);
       const reference = getProfileStorageRef(storedPath);
@@ -308,6 +376,7 @@
       setFeedback('', `Avatar saved to your library and profile (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
       if (!persisted) {
+        if (r2AssetId) await deleteProfileMediaR2(r2AssetId).catch(() => {});
         await cleanupFailedImageUpload(uploadedReference, registeredAssetId).catch(() => {});
       }
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The avatar could not be saved.');
@@ -318,11 +387,13 @@
   }
 
   async function removeAvatar() {
-    if (!expression.avatar_path || busy) return;
+    if ((!expression.avatar_path && !expression.avatar_asset_id) || busy) return;
     busy = true;
     setFeedback('', 'Removing the avatar…');
     try {
-      const next = await saveExpression({ ...expression, avatar_path: null });
+      const next = r2MediaEnabled && expression.avatar_asset_id
+        ? (await selectR2ExpressionAsset('avatar', null, { clear: true }), normalizeProfileExpression({ ...expression, avatar_path: null, avatar_asset_id: null }))
+        : await saveExpression({ ...expression, avatar_path: null });
       expression = next;
       revokeAvatarPreview();
       setFeedback('', 'Avatar removed. Your initials fallback is active; the saved asset remains in your library.');
@@ -342,9 +413,30 @@
     setFeedback('', 'Preparing the background…');
     let uploadedReference = null;
     let registeredAssetId = '';
+    let r2AssetId = '';
     let persisted = false;
     try {
       const blob = await processProfileImage(file, 'background');
+      if (r2MediaEnabled) {
+        const uploaded = await uploadProfileMediaToR2({
+          kind: 'background',
+          blob,
+          extension: 'webp',
+          mimeType: 'image/webp',
+          label: file.name
+        });
+        const assetId = uploaded.asset_id || uploaded.asset?.id;
+        if (!assetId) throw new Error('The R2 upload did not return a media asset.');
+        r2AssetId = assetId;
+        const promoted = await promoteProfileMediaR2(assetId);
+        const persistedSrc = await verifyPersistedImage({ r2_public_key: promoted.r2_public_key });
+        await selectR2ExpressionAsset('background', assetId);
+        persisted = true;
+        setPersistedBackgroundPreview(persistedSrc);
+        await loadAssetLibrary();
+        setFeedback('', `Background saved to your R2 library and public atmosphere (${formatStoredSize(blob.size)} stored).`);
+        return;
+      }
       const assetId = createAssetId();
       const storedPath = buildProfileStoragePath('background', profileId, assetId);
       const reference = getProfileStorageRef(storedPath);
@@ -373,6 +465,7 @@
       setFeedback('', `Background saved to your library and public atmosphere (${formatStoredSize(blob.size)} stored).`);
     } catch (uploadError) {
       if (!persisted) {
+        if (r2AssetId) await deleteProfileMediaR2(r2AssetId).catch(() => {});
         await cleanupFailedImageUpload(uploadedReference, registeredAssetId).catch(() => {});
       }
       setFeedback(uploadError instanceof Error ? uploadError.message : 'The background could not be saved.');
@@ -383,11 +476,13 @@
   }
 
   async function removeBackground() {
-    if (!expression.background_path || busy) return;
+    if ((!expression.background_path && !expression.background_asset_id) || busy) return;
     busy = true;
     setFeedback('', 'Removing the background…');
     try {
-      const next = await saveExpression({ ...expression, background_path: null });
+      const next = r2MediaEnabled && expression.background_asset_id
+        ? (await selectR2ExpressionAsset('background', null, { clear: true }), normalizeProfileExpression({ ...expression, background_path: null, background_asset_id: null }))
+        : await saveExpression({ ...expression, background_path: null });
       expression = next;
       revokeBackgroundPreview();
       setFeedback('', 'Background removed. The generated color atmosphere is active; the saved asset remains in your library.');
@@ -430,6 +525,8 @@
 
     busy = true;
     setFeedback('', 'Checking the audio…');
+    let r2AssetId = '';
+    let persisted = false;
     try {
       const validationError = validateProfileAudioFile(file);
       if (validationError) throw new Error(validationError);
@@ -439,6 +536,27 @@
       if (!reference) throw new Error('The audio path could not be prepared.');
 
       const blob = await prepareProfileAudioFile(file);
+      if (r2MediaEnabled) {
+        const uploaded = await uploadProfileMediaToR2({
+          kind: 'audio',
+          blob,
+          extension: 'mp3',
+          mimeType: 'audio/mpeg',
+          label: file.name
+        });
+        const assetId = uploaded.asset_id || uploaded.asset?.id;
+        if (!assetId) throw new Error('The R2 audio upload did not return a media asset.');
+        r2AssetId = assetId;
+        const promoted = await promoteProfileMediaR2(assetId);
+        await selectR2ExpressionAsset('audio', assetId);
+        expressionMediaReferences = {
+          ...expressionMediaReferences,
+          audio: { r2_public_key: promoted.r2_public_key }
+        };
+        persisted = true;
+        setFeedback('', `Profile audio saved to R2 (${Math.round(blob.size / 1024)} KB).`);
+        return;
+      }
       const objectUrl = URL.createObjectURL(blob);
       if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
       audioPreviewSrc = objectUrl;
@@ -457,9 +575,11 @@
       syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
       mediaCacheKey = String(Date.now());
       dispatch('expressionchange', { ...expression, updatedAt: data.updated_at || null });
+      persisted = true;
       setFeedback('', `Profile audio saved. It will autoplay when the browser permits (${Math.round(blob.size / 1024)} KB).`);
     } catch (audioError) {
       setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be saved.');
+      if (r2AssetId && !persisted) await deleteProfileMediaR2(r2AssetId).catch(() => {});
       if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
       audioPreviewSrc = '';
     } finally {
@@ -468,7 +588,23 @@
   }
 
   async function removeAudio() {
-    if (!expression.audio_path || !staff || busy) return;
+    if ((!expression.audio_path && !expression.audio_asset_id) || !staff || busy) return;
+    if (r2MediaEnabled && expression.audio_asset_id) {
+      busy = true;
+      setFeedback('', 'Removing profile audio…');
+      try {
+        await selectR2ExpressionAsset('audio', null, { clear: true });
+        if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
+        audioPreviewSrc = '';
+        setFeedback('', 'Profile audio removed. The saved asset remains in your library.');
+      } catch (audioError) {
+        setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be removed.');
+      } finally {
+        busy = false;
+      }
+      return;
+    }
+    if (!expression.audio_path) return;
     const previousPath = expression.audio_path;
     busy = true;
     setFeedback('', 'Removing profile audio…');
@@ -515,7 +651,7 @@
           type="button"
           disabled={busy}
           on:click={() => avatarInput?.click()}
-          aria-label={expression.avatar_path ? 'Replace profile avatar' : 'Upload profile avatar'}
+          aria-label={hasAvatar ? 'Replace profile avatar' : 'Upload profile avatar'}
         >
           {#if avatarSrc}
             <div class="profile-expression-editor__compact-avatar-frame">
@@ -524,12 +660,12 @@
           {:else}
             <ProfileMediaIcon kind="avatar" />
           {/if}
-          <span class="profile-expression-editor__compact-upload-hint" class:profile-expression-editor__compact-upload-hint--active={Boolean(avatarSrc)}>{expression.avatar_path ? 'Click to replace' : 'Click to upload'}</span>
+          <span class="profile-expression-editor__compact-upload-hint" class:profile-expression-editor__compact-upload-hint--active={Boolean(avatarSrc)}>{hasAvatar ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
           <strong>Avatar</strong>
         </div>
-        {#if expression.avatar_path}
+        {#if hasAvatar}
           <div class="profile-expression-editor__compact-actions">
             <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => avatarInput?.click()}>Replace</button>
             <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Remove</button>
@@ -544,19 +680,19 @@
           type="button"
           disabled={busy}
           on:click={() => backgroundInput?.click()}
-          aria-label={expression.background_path ? 'Replace profile background' : 'Upload profile background'}
+          aria-label={hasBackground ? 'Replace profile background' : 'Upload profile background'}
         >
           {#if backgroundSrc}
             <Media src={backgroundSrc} alt="Profile background preview" aspect="wide" loading="eager" className="profile-expression-editor__compact-media" fallbackLabel="Background unavailable" allowLocalPreview={true} />
           {:else}
             <ProfileMediaIcon kind="image" />
           {/if}
-          <span class="profile-expression-editor__compact-upload-hint" class:profile-expression-editor__compact-upload-hint--active={Boolean(backgroundSrc)}>{expression.background_path ? 'Click to replace' : 'Click to upload'}</span>
+          <span class="profile-expression-editor__compact-upload-hint" class:profile-expression-editor__compact-upload-hint--active={Boolean(backgroundSrc)}>{hasBackground ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
           <strong>Background</strong>
         </div>
-        {#if expression.background_path}
+        {#if hasBackground}
           <div class="profile-expression-editor__compact-actions">
             <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => backgroundInput?.click()}>Replace</button>
             <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>Remove</button>
@@ -607,7 +743,7 @@
               <span class="profile-expression-editor__compact-upload-hint">Click to upload</span>
             </button>
           {/if}
-          {#if expression.audio_path}
+          {#if hasAudio}
             <div class="profile-expression-editor__compact-actions">
               <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => audioInput?.click()}>Replace</button>
               <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAudio}>Remove</button>
@@ -655,12 +791,12 @@
       {/if}
     </div>
     <div class="profile-expression-editor__copy" style="display:grid;gap:.5rem;min-width:12rem;flex:1">
-      <strong>{expression.avatar_path ? 'Avatar is visible' : 'Initials fallback is active'}</strong>
+      <strong>{hasAvatar ? 'Avatar is visible' : 'Initials fallback is active'}</strong>
       <p>JPEG, PNG, or WebP · up to {formatInputLimit(avatarRules.maxInputBytes)} input; stored as WebP up to {avatarRules.outputLabel}.</p>
       <div class="profile-expression-editor__actions">
         <input bind:this={avatarInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose avatar image" on:change={handleAvatarChange} />
-        <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => avatarInput?.click()}>{expression.avatar_path ? 'Replace avatar' : 'Upload avatar'}</button>
-        {#if expression.avatar_path}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAvatar}>Remove</button>{/if}
+        <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => avatarInput?.click()}>{hasAvatar ? 'Replace avatar' : 'Upload avatar'}</button>
+        {#if hasAvatar}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAvatar}>Remove</button>{/if}
       </div>
     </div>
   </div>
@@ -673,12 +809,12 @@
       </div>
       <div class="profile-expression-editor__asset-grid">
         {#each avatarAssets as asset (asset.id)}
-          <div class="profile-expression-editor__asset" class:profile-expression-editor__asset--active={asset.storage_path === expression.avatar_path}>
-            <button type="button" class="profile-expression-editor__asset-select" aria-label={`Use ${asset.label || 'saved avatar'}`} disabled={busy} on:click={() => selectAsset('avatar', asset.storage_path)}>
-              <Media src={getProfileMediaUrl(asset.storage_path, mediaCacheKey)} alt={asset.label || 'Saved avatar'} aspect="square" loading="lazy" className="profile-expression-editor__asset-media" fallbackLabel="Avatar unavailable" />
+          <div class="profile-expression-editor__asset" class:profile-expression-editor__asset--active={asset.storage_path === expression.avatar_path || asset.id === expression.avatar_asset_id}>
+            <button type="button" class="profile-expression-editor__asset-select" aria-label={`Use ${asset.label || 'saved avatar'}`} disabled={busy} on:click={() => selectAsset('avatar', asset)}>
+              <Media src={getProfileMediaUrl(asset.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : asset.storage_path, mediaCacheKey)} alt={asset.label || 'Saved avatar'} aspect="square" loading="lazy" className="profile-expression-editor__asset-media" fallbackLabel="Avatar unavailable" />
             </button>
             <div class="profile-expression-editor__asset-meta">
-              <span>{asset.storage_path === expression.avatar_path ? 'Active' : (asset.label || 'Saved avatar')}</span>
+              <span>{asset.storage_path === expression.avatar_path || asset.id === expression.avatar_asset_id ? 'Active' : (asset.label || 'Saved avatar')}</span>
               <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Remove</button>
             </div>
           </div>
@@ -701,12 +837,12 @@
         {/if}
       </div>
       <div class="profile-expression-editor__copy" style="display:grid;gap:.5rem;min-width:12rem;flex:1">
-        <strong>{expression.background_path ? 'Background is visible' : 'Generated atmosphere is active'}</strong>
+        <strong>{hasBackground ? 'Background is visible' : 'Generated atmosphere is active'}</strong>
         <p>JPEG, PNG, or WebP · up to {formatInputLimit(backgroundRules.maxInputBytes)} input; stored as WebP up to {backgroundRules.outputLabel}.</p>
         <div class="profile-expression-editor__actions">
           <input bind:this={backgroundInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose background image" on:change={handleBackgroundChange} />
-          <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => backgroundInput?.click()}>{expression.background_path ? 'Replace background' : 'Upload background'}</button>
-          {#if expression.background_path}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeBackground}>Remove</button>{/if}
+          <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => backgroundInput?.click()}>{hasBackground ? 'Replace background' : 'Upload background'}</button>
+          {#if hasBackground}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeBackground}>Remove</button>{/if}
         </div>
       </div>
     </div>
@@ -718,12 +854,12 @@
         </div>
         <div class="profile-expression-editor__asset-grid profile-expression-editor__asset-grid--background">
           {#each backgroundAssets as asset (asset.id)}
-            <div class="profile-expression-editor__asset" class:profile-expression-editor__asset--active={asset.storage_path === expression.background_path}>
-              <button type="button" class="profile-expression-editor__asset-select" aria-label={`Use ${asset.label || 'saved background'}`} disabled={busy} on:click={() => selectAsset('background', asset.storage_path)}>
-                <Media src={getProfileMediaUrl(asset.storage_path, mediaCacheKey)} alt={asset.label || 'Saved background'} aspect="wide" loading="lazy" className="profile-expression-editor__asset-media" fallbackLabel="Background unavailable" />
+            <div class="profile-expression-editor__asset" class:profile-expression-editor__asset--active={asset.storage_path === expression.background_path || asset.id === expression.background_asset_id}>
+              <button type="button" class="profile-expression-editor__asset-select" aria-label={`Use ${asset.label || 'saved background'}`} disabled={busy} on:click={() => selectAsset('background', asset)}>
+                <Media src={getProfileMediaUrl(asset.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : asset.storage_path, mediaCacheKey)} alt={asset.label || 'Saved background'} aspect="wide" loading="lazy" className="profile-expression-editor__asset-media" fallbackLabel="Background unavailable" />
               </button>
               <div class="profile-expression-editor__asset-meta">
-                <span>{asset.storage_path === expression.background_path ? 'Active' : (asset.label || 'Saved background')}</span>
+                <span>{asset.storage_path === expression.background_path || asset.id === expression.background_asset_id ? 'Active' : (asset.label || 'Saved background')}</span>
                 <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Remove</button>
               </div>
             </div>
@@ -771,8 +907,8 @@
         <p class="profile-expression-editor__audio-limit">MP3 only · up to 5 MB.</p>
         <div class="profile-expression-editor__actions">
           <input bind:this={audioInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={handleAudioChange} />
-          <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => audioInput?.click()}>{expression.audio_path ? 'Replace audio' : 'Upload audio'}</button>
-          {#if expression.audio_path}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAudio}>Remove</button>{/if}
+          <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => audioInput?.click()}>{hasAudio ? 'Replace audio' : 'Upload audio'}</button>
+          {#if hasAudio}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAudio}>Remove</button>{/if}
         </div>
       </div>
     </div>

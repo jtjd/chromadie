@@ -9,6 +9,12 @@ export const PROFILE_STORAGE_BUCKETS = Object.freeze({
 
 const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
 const SPOTIFY_ID_PATTERN = /^[A-Za-z0-9]{22}$/;
+const UUID_RE = new RegExp(`^${UUID_PATTERN}$`, 'i');
+
+function normalizeAssetId(value) {
+  const candidate = String(value || '').trim();
+  return UUID_RE.test(candidate) ? candidate.toLowerCase() : null;
+}
 
 function normalizeStoredPath(value, bucket, filename) {
   if (typeof value !== 'string') return null;
@@ -27,13 +33,19 @@ export function normalizeProfileExpression(value = {}) {
     ? source.spotify_id
     : null;
 
-  return {
+  const output = {
     avatar_path: normalizeStoredPath(source.avatar_path, PROFILE_STORAGE_BUCKETS.avatar, 'avatar.webp'),
     background_path: normalizeStoredPath(source.background_path, PROFILE_STORAGE_BUCKETS.background, 'background.webp'),
     audio_path: normalizeStoredPath(source.audio_path, PROFILE_STORAGE_BUCKETS.audio, 'profile.mp3'),
     spotify_type: spotifyType && spotifyId ? spotifyType : null,
     spotify_id: spotifyType && spotifyId ? spotifyId : null
   };
+
+  for (const field of ['avatar_asset_id', 'background_asset_id', 'audio_asset_id']) {
+    if (Object.prototype.hasOwnProperty.call(source, field)) output[field] = normalizeAssetId(source[field]);
+  }
+
+  return output;
 }
 
 export function parseSpotifyUrl(value) {

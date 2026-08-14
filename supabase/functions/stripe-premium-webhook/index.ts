@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { verifyStripeSignature } from '../_shared/billing-core.js';
 import { jsonResponse } from '../_shared/http.ts';
+import { getSupabaseKeys, supabaseServerClientOptions } from '../_shared/supabase-keys.ts';
 
 Deno.serve(async request => {
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405);
@@ -13,10 +14,9 @@ Deno.serve(async request => {
 
   try {
     const event = JSON.parse(rawPayload);
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const { url: supabaseUrl, secretKey: serviceRoleKey } = getSupabaseKeys();
     if (!supabaseUrl || !serviceRoleKey) throw new Error('Webhook service is not configured.');
-    const service = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const service = createClient(supabaseUrl, serviceRoleKey, supabaseServerClientOptions(serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }));
     const { data, error } = await service.rpc('process_stripe_billing_event', { p_event: event });
     if (error) throw error;
     return jsonResponse(data || { success: true });

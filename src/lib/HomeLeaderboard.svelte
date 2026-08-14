@@ -17,7 +17,7 @@
   $: hasProfiles = visibleProfiles.length > 0;
 
   function avatarUrl(row) {
-    return getProfileMediaUrl(row?.avatarPath || '');
+    return getProfileMediaUrl(row?.avatarReference || row?.avatarPath || '');
   }
 
   function rowColor(row) {

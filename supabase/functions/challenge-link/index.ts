@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.110.1'
+import { getSupabaseKeys, supabaseServerClientOptions } from '../_shared/supabase-keys.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,15 +45,13 @@ Deno.serve(async request => {
     return jsonResponse({ success: false, error: 'Method not allowed' }, 405)
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')
-  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const { url: supabaseUrl, publishableKey: supabasePublishableKey, secretKey: supabaseSecretKey } = getSupabaseKeys()
 
-  if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+  if (!supabaseUrl || !supabasePublishableKey || !supabaseSecretKey) {
     return jsonResponse({ success: false, error: 'Server configuration missing' }, 500)
   }
 
-  const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey)
+  const serviceClient = createClient(supabaseUrl, supabaseSecretKey, supabaseServerClientOptions(supabaseSecretKey))
   const body = await request.json().catch(() => ({} as Record<string, unknown>))
   const action = String(body.action || 'get').toLowerCase()
 
@@ -69,7 +68,7 @@ Deno.serve(async request => {
       return jsonResponse({ success: false, error: 'Authentication required to create a challenge' }, 401)
     }
 
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    const userClient = createClient(supabaseUrl, supabasePublishableKey, {
       global: { headers: { Authorization: `Bearer ${token}` } }
     })
     const { data: userData } = await userClient.auth.getUser()

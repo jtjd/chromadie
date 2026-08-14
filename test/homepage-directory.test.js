@@ -118,3 +118,20 @@ test('homepage discovery rows recover media from the hydrated public profile', (
 
   assert.equal(merged.avatarPath, avatarPath);
 });
+
+test('homepage featured profiles carry the provider-neutral avatar reference', () => {
+  const avatarReference = {
+    storage_provider: 'r2',
+    r2_public_key: 'profiles/10000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000002/abc.webp'
+  };
+  const model = profileModel({
+    username: 'R2Player',
+    publishedConfig: {
+      ...createDefaultProfileConfig('#8B7CF6'),
+      avatar_path: null,
+      media_references: { avatar: avatarReference }
+    }
+  });
+  const featured = buildHomepageFeaturedProfiles([model], 1);
+  assert.deepEqual(featured[0].avatarReference, avatarReference);
+});

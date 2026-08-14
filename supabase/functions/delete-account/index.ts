@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.110.1'
+import { getSupabaseKeys, supabaseServerClientOptions } from '../_shared/supabase-keys.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -52,9 +53,7 @@ Deno.serve(async request => {
     return jsonResponse({ success: false, error: 'Not authenticated' }, 401)
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')
-  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const { url: supabaseUrl, publishableKey: supabaseAnonKey, secretKey: supabaseServiceRoleKey } = getSupabaseKeys()
 
   if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
     return jsonResponse({ success: false, error: 'Server configuration missing' }, 500)
@@ -79,7 +78,7 @@ Deno.serve(async request => {
     return jsonResponse({ success: false, error: 'Confirmation phrase required' }, 400)
   }
 
-  const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey)
+  const serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey, supabaseServerClientOptions(supabaseServiceRoleKey))
   const userId = userData.user.id
 
   const { data: cleanupData, error: cleanupError } = await serviceClient.rpc('delete_account_data', {

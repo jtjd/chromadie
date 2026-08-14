@@ -1,4 +1,5 @@
 import { baseSecurityHeaders } from '../_publicPage.js';
+import { getSupabaseCredentials, getSupabasePublicHeaders } from '../_supabaseApi.js';
 
 const USERNAME_PATTERN = /^[a-z0-9_]{1,20}$/;
 const ENTRY_KEY_PATTERN = /^[a-z0-9][a-z0-9_-]{0,31}$/;
@@ -56,18 +57,17 @@ export async function onRequestPost({ request, env }) {
     return jsonResponse({ success: false, error: 'Invalid analytics event.' }, 400);
   }
 
-  const supabaseUrl = env?.VITE_SUPABASE_URL || env?.SUPABASE_URL;
-  const supabaseKey = env?.VITE_SUPABASE_KEY || env?.SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseKey) return jsonResponse({ success: false, error: 'Analytics service unavailable.' }, 503);
+  const supabase = getSupabaseCredentials(env);
+  const supabaseUrl = supabase.url;
+  if (!supabaseUrl || !supabase.publishableKey) return jsonResponse({ success: false, error: 'Analytics service unavailable.' }, 503);
 
-  const authorization = request.headers.get('authorization') || `Bearer ${supabaseKey}`;
+  const authorization = request.headers.get('authorization') || request.headers.get('Authorization') || '';
   try {
     const endpoint = new URL('/rest/v1/rpc/record_profile_insight', supabaseUrl);
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        apikey: supabaseKey,
-        Authorization: authorization,
+        ...getSupabasePublicHeaders(env, { authorization }),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
