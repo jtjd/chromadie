@@ -9,17 +9,106 @@
   export let accountUnavailable = false;
 
   const dispatch = createEventDispatcher();
-  const PROFILE_TILT_MAX_Y = 6;
-  const PROFILE_TILT_MAX_X = 4;
+  const PROFILE_TILT_MAX_Y = 12;
+  const PROFILE_TILT_MAX_X = 7;
+  const PREVIEW_ROLL_TICK_MS = 90;
+  const PREVIEW_ROLL_TICKS = 7;
+  const PREVIEW_ROLLS = Object.freeze([
+    Object.freeze({ hex_code: '#D8A6FF', score: 74231, rarity: 'Rare', identity: 'Soft Electric Orchid' }),
+    Object.freeze({ hex_code: '#78DCCA', score: 38642, rarity: 'Uncommon', identity: 'Luminous Mint Tide' }),
+    Object.freeze({ hex_code: '#FFB7D5', score: 61184, rarity: 'Rare', identity: 'Bright Dream Rose' }),
+    Object.freeze({ hex_code: '#8EBBFF', score: 47906, rarity: 'Uncommon', identity: 'Clear Horizon Blue' }),
+    Object.freeze({ hex_code: '#FFD58A', score: 52873, rarity: 'Rare', identity: 'Soft Golden Hour' }),
+    Object.freeze({ hex_code: '#B8F29A', score: 34718, rarity: 'Uncommon', identity: 'Fresh Meadow Light' }),
+    Object.freeze({ hex_code: '#C99CFF', score: 68415, rarity: 'Rare', identity: 'Vivid Violet Haze' })
+  ]);
+  const PROFILE_PARTICLES = Object.freeze([
+    [-118, -96, 0], [-72, -132, 35], [-18, -118, 70], [52, -128, 20], [112, -82, 60],
+    [132, -14, 10], [108, 74, 55], [42, 118, 25], [-32, 124, 65], [-102, 82, 40], [-132, 12, 75]
+  ]);
   let fixtureIndex = 0;
   let profileTiltEnabled = false;
+  let prefersReducedMotion = false;
   let profileTiltStyle = '';
+  let previewRoll = null;
+  let previewRollTimer;
+  let previewRollCount = 0;
+  let isPreviewRolling = false;
+  let hasPreviewRolled = false;
+  let profilePopActive = false;
+  let particleBurstActive = false;
+  let profilePopTimer;
+  let particleBurstTimer;
 
   $: fixture = HOMEPAGE_FIXTURES[fixtureIndex];
   $: exampleNumber = String(fixtureIndex + 1).padStart(2, '0');
-  $: latestRoll = fixture.scores[0];
+  $: latestRoll = previewRoll || fixture.scores[0];
+  $: previewRollButtonLabel = isPreviewRolling ? 'Rolling…' : hasPreviewRolled ? 'Roll again' : 'Preview a roll';
+
+  function clearPreviewRollTimers() {
+    clearTimeout(previewRollTimer);
+    clearTimeout(profilePopTimer);
+    clearTimeout(particleBurstTimer);
+    previewRollTimer = undefined;
+    profilePopTimer = undefined;
+    particleBurstTimer = undefined;
+  }
+
+  function setPreviewRoll(result) {
+    previewRoll = result;
+    dispatch('accentpreview', { accent: result.hex_code });
+  }
+
+  function finishPreviewRoll() {
+    const finalRoll = PREVIEW_ROLLS[(previewRollCount * 3 + 4) % PREVIEW_ROLLS.length];
+    previewRollCount += 1;
+    setPreviewRoll(finalRoll);
+    isPreviewRolling = false;
+    hasPreviewRolled = true;
+
+    if (prefersReducedMotion) return;
+
+    profilePopActive = true;
+    particleBurstActive = true;
+    profilePopTimer = setTimeout(() => { profilePopActive = false; }, 420);
+    particleBurstTimer = setTimeout(() => { particleBurstActive = false; }, 720);
+  }
+
+  function previewDailyRoll() {
+    if (isPreviewRolling) return;
+
+    clearPreviewRollTimers();
+    isPreviewRolling = true;
+    profilePopActive = false;
+    particleBurstActive = false;
+
+    if (prefersReducedMotion) {
+      finishPreviewRoll();
+      return;
+    }
+
+    let tick = 0;
+    setPreviewRoll(PREVIEW_ROLLS[previewRollCount % PREVIEW_ROLLS.length]);
+    function advancePreviewRoll() {
+      tick += 1;
+      if (tick >= PREVIEW_ROLL_TICKS) {
+        previewRollTimer = undefined;
+        finishPreviewRoll();
+        return;
+      }
+      setPreviewRoll(PREVIEW_ROLLS[(previewRollCount + tick) % PREVIEW_ROLLS.length]);
+      previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_TICK_MS);
+    }
+    previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_TICK_MS);
+  }
 
   function moveFixture(direction) {
+    clearPreviewRollTimers();
+    previewRoll = null;
+    isPreviewRolling = false;
+    hasPreviewRolled = false;
+    profilePopActive = false;
+    particleBurstActive = false;
     fixtureIndex = (fixtureIndex + direction + HOMEPAGE_FIXTURES.length) % HOMEPAGE_FIXTURES.length;
     dispatch('fixturechange', { fixture: HOMEPAGE_FIXTURES[fixtureIndex] });
   }
@@ -28,7 +117,7 @@
     dispatch(event.type, event.detail);
   }
 
-  function handleProfilePointerMove(event) {
+  function handleHeroPointerMove(event) {
     if (!profileTiltEnabled || event.pointerType === 'touch') return;
 
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -47,19 +136,24 @@
 
   onMount(() => {
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const desktopHero = window.matchMedia('(min-width: 931px)');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     function updateTiltAvailability() {
-      profileTiltEnabled = finePointer.matches && !reducedMotion.matches;
+      prefersReducedMotion = reducedMotion.matches;
+      profileTiltEnabled = finePointer.matches && desktopHero.matches && !reducedMotion.matches;
       if (!profileTiltEnabled) resetProfileTilt();
     }
 
     updateTiltAvailability();
     finePointer.addEventListener('change', updateTiltAvailability);
+    desktopHero.addEventListener('change', updateTiltAvailability);
     reducedMotion.addEventListener('change', updateTiltAvailability);
 
     return () => {
+      clearPreviewRollTimers();
       finePointer.removeEventListener('change', updateTiltAvailability);
+      desktopHero.removeEventListener('change', updateTiltAvailability);
       reducedMotion.removeEventListener('change', updateTiltAvailability);
     };
   });
@@ -69,6 +163,8 @@
   class="homepage-hero homepage-shell"
   id="top"
   aria-labelledby="homepage-title"
+  on:pointermove={handleHeroPointerMove}
+  on:pointerleave={resetProfileTilt}
 >
   <div class="homepage-hero__copy">
     <div class="homepage-eyebrow">A profile that changes every day</div>
@@ -90,6 +186,7 @@
         <span>{latestRoll.identity}</span>
         <strong>{Number(latestRoll.score).toLocaleString()} EP · {latestRoll.rarity}</strong>
       </div>
+      <button class="homepage-roll-compact__button" type="button" disabled={isPreviewRolling} on:click={previewDailyRoll}>{previewRollButtonLabel}</button>
     </div>
   </div>
 
@@ -104,11 +201,18 @@
         class="homepage-profile-wrap"
         role="presentation"
         style={profileTiltStyle}
-        on:pointermove={handleProfilePointerMove}
-        on:pointerleave={resetProfileTilt}
       >
-        <HomepageProfileDemo fixture={fixture} />
+        <div class="homepage-profile-pop" class:homepage-profile-pop--active={profilePopActive}>
+          <HomepageProfileDemo fixture={fixture} {previewRoll} />
+        </div>
       </div>
+      {#if particleBurstActive}
+        <div class="homepage-roll-particles" aria-hidden="true">
+          {#each PROFILE_PARTICLES as particle (particle)}
+            <span style={`--particle-x: ${particle[0]}px; --particle-y: ${particle[1]}px; --particle-delay: ${particle[2]}ms;`}></span>
+          {/each}
+        </div>
+      {/if}
       <button class="homepage-theme-button homepage-theme-button--next" type="button" aria-label="Next profile example" on:click={() => moveFixture(1)}>›</button>
     </div>
 
@@ -203,6 +307,28 @@
   .homepage-roll-compact__meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .homepage-roll-compact__meta strong { color: rgba(245, 245, 247, 0.7); font-weight: 500; white-space: nowrap; }
 
+  .homepage-roll-compact__button {
+    width: 100%;
+    height: 42px;
+    margin-top: 13px;
+    border: 1px solid var(--homepage-accent);
+    border-radius: 9px;
+    background: rgba(5, 5, 6, 0.28);
+    color: var(--homepage-accent);
+    cursor: pointer;
+    font: 600 0.82rem / 1 'Clash Display', sans-serif;
+    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .homepage-roll-compact__button:hover:not(:disabled) {
+    background: var(--homepage-accent);
+    color: #050506;
+    box-shadow: 0 0 24px var(--homepage-accent-glow);
+  }
+
+  .homepage-roll-compact__button:focus-visible { outline: 2px solid var(--homepage-accent); outline-offset: 3px; }
+  .homepage-roll-compact__button:disabled { opacity: 0.6; cursor: wait; }
+
   .homepage-hero__product {
     grid-column: 2;
     display: flex;
@@ -216,8 +342,42 @@
   }
 
   .homepage-profile-stage { position: relative; width: 440px; min-width: 0; padding: 0 28px; outline: none; }
-  .homepage-profile-wrap { width: 100%; transform: rotateY(-4deg) rotateX(2deg); transform-style: preserve-3d; transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s ease; }
+  .homepage-profile-wrap { width: 100%; transform: rotateY(-8deg) rotateX(4deg); transform-style: preserve-3d; transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s ease; }
+  .homepage-profile-pop { width: 100%; transform-origin: center; }
+  .homepage-profile-pop--active { animation: homepage-profile-pop 0.38s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .homepage-profile-stage:focus-visible { border-radius: 24px; outline: 2px solid var(--homepage-accent); outline-offset: 5px; }
+
+  .homepage-roll-particles {
+    position: absolute;
+    z-index: 7;
+    inset: 0 28px;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .homepage-roll-particles span {
+    position: absolute;
+    top: 52%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--homepage-accent);
+    box-shadow: 0 0 12px var(--homepage-accent-glow);
+    opacity: 0;
+    animation: homepage-roll-particle 0.68s cubic-bezier(0.2, 0.75, 0.25, 1) var(--particle-delay) forwards;
+  }
+
+  @keyframes homepage-profile-pop {
+    0%, 100% { transform: scale(1); }
+    48% { transform: scale(1.035); }
+  }
+
+  @keyframes homepage-roll-particle {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.35); }
+    18% { opacity: 0.9; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--particle-x)), calc(-50% + var(--particle-y))) scale(0); }
+  }
 
   .homepage-theme-button {
     position: absolute;
@@ -285,6 +445,9 @@
 
   @media (prefers-reduced-motion: reduce) {
     .homepage-profile-wrap { transform: none; transition: none; }
+    .homepage-profile-pop--active { animation: none; }
+    .homepage-roll-particles { display: none; }
+    .homepage-roll-compact__button { transition: none; }
     .homepage-theme-button,
     .homepage-context-dot { transition: none; }
   }

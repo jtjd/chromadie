@@ -2,14 +2,16 @@
   /** @type {any} */
   export let fixture = null;
   export let variant = 'hero';
+  /** @type {any} */
+  export let previewRoll = null;
 
-  $: latestRoll = fixture?.scores?.[0] || null;
+  $: latestRoll = previewRoll || fixture?.scores?.[0] || null;
   $: links = (fixture?.links || []).slice(0, variant === 'showcase' ? 2 : 4);
   $: profileLabel = fixture ? `${fixture.displayName}'s profile example` : 'Profile example';
   $: avatarSource = fixture?.media?.avatar || '';
   $: secondaryLine = fixture?.secondaryLine || '';
   $: demoStyle = fixture
-    ? `--homepage-demo-accent: ${fixture.accent}; --homepage-demo-avatar: url("${avatarSource}");`
+    ? `--homepage-demo-accent: ${previewRoll?.hex_code || fixture.accent}; --homepage-demo-avatar: url("${avatarSource}");`
     : '';
 </script>
 

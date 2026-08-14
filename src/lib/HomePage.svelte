@@ -29,6 +29,10 @@
     activeBackground = event.detail.fixture.media.background;
     activeAccent = event.detail.fixture.accent;
   }
+
+  function handleAccentPreview(event) {
+    activeAccent = event.detail.accent;
+  }
 </script>
 
 <div
@@ -55,6 +59,7 @@
       {accountReady}
       {accountUnavailable}
       on:fixturechange={handleFixtureChange}
+      on:accentpreview={handleAccentPreview}
       on:claim={forwardAction}
       on:profile={forwardAction}
     />

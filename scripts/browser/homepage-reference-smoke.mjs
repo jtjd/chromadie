@@ -140,6 +140,97 @@ try {
     return state;
   });
 
+  await check('desktop hero drives the card tilt while surrounding controls remain stationary', async () => {
+    await page.setReducedMotion(false);
+    await delay(80);
+    const finePointerAvailable = await page.evaluate('window.matchMedia("(hover: hover) and (pointer: fine)").matches');
+    if (!finePointerAvailable) {
+      return { skipped: true, reason: 'Headless Chromium does not expose a fine-pointer media capability.' };
+    }
+    const bounds = await page.evaluate(`(() => {
+      const box = document.querySelector('.homepage-hero')?.getBoundingClientRect();
+      return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom } : null;
+    })()`);
+    assert(bounds, 'Homepage hero bounds are unavailable for tilt verification.');
+    await page.command('Input.dispatchMouseEvent', {
+      type: 'mouseMoved',
+      x: bounds.right - 4,
+      y: bounds.top + 4,
+      buttons: 0,
+      pointerType: 'mouse'
+    });
+    await delay(60);
+    const active = await page.evaluate(`(() => ({
+      transform: document.querySelector('.homepage-profile-wrap')?.style.transform || '',
+      claimTransform: getComputedStyle(document.querySelector('.homepage-claim__field')).transform,
+      prevTransform: getComputedStyle(document.querySelector('.homepage-theme-button--prev')).transform
+    }))()`);
+    const rotations = active.transform.match(/rotateY\((-?[\d.]+)deg\) rotateX\((-?[\d.]+)deg\)/);
+    assert(rotations && Number(rotations[1]) > 10 && Number(rotations[2]) > 5,
+      `Hero-wide pointer movement did not produce the requested visible tilt: ${JSON.stringify(active)}.`);
+    assert(active.claimTransform === 'none', `Claim bar moved with the profile card: ${JSON.stringify(active)}.`);
+
+    await page.command('Input.dispatchMouseEvent', {
+      type: 'mouseMoved',
+      x: Math.max(1, bounds.left - 8),
+      y: bounds.top + 20,
+      buttons: 0,
+      pointerType: 'mouse'
+    });
+    await delay(60);
+    const resting = await page.evaluate('document.querySelector(".homepage-profile-wrap")?.style.transform || ""');
+    assert(resting === '', `Profile did not return to its resting CSS tilt: ${JSON.stringify({ active, resting })}.`);
+    return { active, resting };
+  });
+
+  await check('preview roll animates locally and honors reduced motion', async () => {
+    const networkBefore = homepageNetworkSnapshot();
+    const initialHex = await page.evaluate('document.querySelector(".homepage-profile-demo__roll strong")?.textContent?.trim() || ""');
+    await page.click('.homepage-roll-compact__button', 'animated homepage preview roll');
+    const rollingLabel = await page.evaluate('document.querySelector(".homepage-roll-compact__button")?.textContent?.trim() || ""');
+    assert(rollingLabel === 'Rolling…', `Preview roll did not enter its disabled rolling state: ${JSON.stringify(rollingLabel)}.`);
+    await page.waitFor('document.querySelector(".homepage-roll-compact__button")?.textContent?.trim() === "Roll again"', 'animated homepage preview roll result');
+    const animated = await page.evaluate(`(() => {
+      const dot = document.querySelector('.homepage-roll-compact__dot');
+      const swatch = document.querySelector('.homepage-profile-demo__roll-swatch');
+      const headline = document.querySelector('.homepage-hero h1 span');
+      return {
+        accent: getComputedStyle(document.querySelector('.homepage-reference')).getPropertyValue('--homepage-accent').trim(),
+        leftHex: document.querySelector('.homepage-roll-compact__result span:last-child')?.textContent?.trim() || '',
+        cardHex: document.querySelector('.homepage-profile-demo__roll strong')?.textContent?.trim() || '',
+        dotColor: dot ? getComputedStyle(dot).backgroundColor : '',
+        swatchColor: swatch ? getComputedStyle(swatch).backgroundColor : '',
+        headlineColor: headline ? getComputedStyle(headline).color : '',
+        particles: document.querySelectorAll('.homepage-roll-particles span').length,
+        pop: document.querySelector('.homepage-profile-pop')?.classList.contains('homepage-profile-pop--active') || false
+      };
+    })()`);
+    assert(animated.cardHex !== initialHex && animated.leftHex === animated.cardHex && animated.accent === animated.cardHex,
+      `Preview roll did not update the complete accent and roll state: ${JSON.stringify({ initialHex, animated })}.`);
+    assert(animated.dotColor === animated.swatchColor && animated.dotColor === animated.headlineColor,
+      `Preview roll color consumers diverged: ${JSON.stringify(animated)}.`);
+    assert(animated.particles > 0 && animated.pop, `Animated roll omitted the profile response: ${JSON.stringify(animated)}.`);
+
+    await delay(800);
+    await page.setReducedMotion(true);
+    await page.click('.homepage-roll-compact__button', 'reduced-motion homepage preview roll');
+    await delay(60);
+    const reduced = await page.evaluate(`(() => ({
+      label: document.querySelector('.homepage-roll-compact__button')?.textContent?.trim() || '',
+      cardHex: document.querySelector('.homepage-profile-demo__roll strong')?.textContent?.trim() || '',
+      particles: document.querySelectorAll('.homepage-roll-particles span').length,
+      pop: document.querySelector('.homepage-profile-pop')?.classList.contains('homepage-profile-pop--active') || false
+    }))()`);
+    assert(reduced.label === 'Roll again' && reduced.cardHex !== animated.cardHex && reduced.particles === 0 && !reduced.pop,
+      `Reduced-motion preview roll did not settle immediately and quietly: ${JSON.stringify({ animated, reduced })}.`);
+    const networkAfter = homepageNetworkSnapshot();
+    assert(networkAfter.supabaseRequestCount === networkBefore.supabaseRequestCount
+      && networkAfter.storageCount === networkBefore.storageCount
+      && networkAfter.remoteMediaCount === networkBefore.remoteMediaCount,
+    `Local homepage roll preview made an unexpected network request: ${JSON.stringify({ networkBefore, networkAfter })}.`);
+    return { initialHex, animated, reduced, networkBefore, networkAfter };
+  });
+
   await check('keyboard carousel switches the complete fixture environment', async () => {
     const networkBefore = homepageNetworkSnapshot();
     const before = await page.evaluate(`(() => ({

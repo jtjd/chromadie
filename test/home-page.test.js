@@ -28,6 +28,7 @@ test('the homepage is a single reference-first composition', () => {
   assert.match(home, /homepage-background/);
   assert.match(home, /HOMEPAGE_FIXTURES/);
   assert.match(home, /on:fixturechange={handleFixtureChange}/);
+  assert.match(home, /on:accentpreview={handleAccentPreview}/);
   assert.match(home, /accountState/);
   assert.match(home, /logoutInProgress/);
   assert.doesNotMatch(home, /HomeHero|HomeLeaderboard|HomepageProfileDirectory|SiteModeHeader|activecolor/);
@@ -46,7 +47,14 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
   assert.match(hero, /type="button" aria-label="Next profile example"/);
   assert.match(hero, /class="homepage-profile-stage"/);
   assert.match(hero, /anchorId="claim"/);
-  assert.doesNotMatch(hero, /ProfileShell|HomepageProfileRenderer|layoutLabel|Preview a roll|random|discovery/);
+  assert.match(hero, /'Preview a roll'/);
+  assert.match(hero, /Rolling…/);
+  assert.match(hero, /Roll again/);
+  assert.match(hero, /on:pointermove=\{handleHeroPointerMove\}/);
+  assert.match(hero, /class:homepage-profile-pop--active=\{profilePopActive\}/);
+  assert.match(hero, /homepage-roll-particles/);
+  assert.match(hero, /dispatch\('accentpreview'/);
+  assert.doesNotMatch(hero, /ProfileShell|HomepageProfileRenderer|layoutLabel|random|discovery|roll_die|supabase|\.rpc\(/);
   assert.doesNotMatch(demo, /ProfileShell|ProfileLayoutFrame|profile-shell|profileRenderModel/);
 });
 
@@ -117,6 +125,8 @@ test('the root route mounts the homepage without changing other route contracts'
   assert.match(fonts, /Clash Display/);
   assert.match(homepageStyles, /--homepage-bg: #050506/);
   assert.match(homepageStyles, /--homepage-radius: 18px/);
+  assert.doesNotMatch(homepageStyles, /radial-gradient\(circle at 62% 35%/);
+  assert.match(homepageStyles, /rgba\(5, 5, 6, 0\.24\) 0%/);
   assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
   assert.match(hero, /\.homepage-hero__product \{[\s\S]*min-width: 0;/);
   assert.match(hero, /\.homepage-profile-stage \{[\s\S]*min-width: 0;/);
