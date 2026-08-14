@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { normalizeMediaSource } from '../src/lib/mediaSafety.js';
 import { resolveProfileMediaReference } from '../src/lib/profileMediaResolver.js';
 
 const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
@@ -37,6 +38,15 @@ test('shared media elements reject Supabase Storage-shaped URLs', async () => {
   assert.doesNotMatch(mediaSafety, /supabaseStorage|from\s*\(/);
 });
 
+test('relative Supabase Storage paths fail closed at the shared safety boundary', () => {
+  assert.equal(normalizeMediaSource('/storage/v1/object/public/x/y'), '');
+  assert.equal(normalizeMediaSource('storage/v1/object/public/x/y'), '');
+  assert.equal(normalizeMediaSource('./storage/v1/object/public/x/y'), '');
+  assert.equal(normalizeMediaSource('\\storage\\v1\\object\\public\\x\\y'), '');
+  assert.equal(normalizeMediaSource('/logo-mark.svg'), '/logo-mark.svg');
+  assert.equal(normalizeMediaSource('images/profile.png'), 'images/profile.png');
+});
+
 test('R2 media identity is the complete stable URL contract', () => {
   const reference = {
     storage_provider: 'r2',
@@ -45,6 +55,23 @@ test('R2 media identity is the complete stable URL contract', () => {
   const urls = Array.from({ length: 5 }, () => resolveProfileMediaReference(reference));
   assert.deepEqual(new Set(urls), new Set(['https://media.chm.lol/profiles/user/asset/immutable.webp']));
   assert.ok(urls.every(url => !/[?&](?:v|cache|nonce)=/i.test(url)));
+});
+
+test('persistent media URLs reject query and hash cache-busting', () => {
+  for (const url of [
+    'https://media.chm.lol/profiles/u/a.webp?v=1',
+    'https://media.chm.lol/profiles/u/a.webp?cache=abc',
+    'https://media.chm.lol/profiles/u/a.webp#fragment'
+  ]) {
+    assert.equal(resolveProfileMediaReference({ url }), '');
+  }
+
+  const cleanUrl = 'https://media.chm.lol/profiles/u/a.webp';
+  assert.equal(resolveProfileMediaReference({ url: cleanUrl }), cleanUrl);
+  assert.equal(
+    resolveProfileMediaReference({ r2_public_key: 'profiles/u/a.webp' }),
+    cleanUrl
+  );
 });
 
 test('legacy media references and Supabase URLs fail closed', () => {
@@ -63,6 +90,14 @@ test('profile media deletion paths are R2/control-plane-only', async () => {
   assert.match(cleanupRoute, /requestR2Object/);
   assert.match(legacyRoute, /clear_my_legacy_profile_audio/);
   assert.doesNotMatch(`${deleteRoute}\n${cleanupRoute}\n${legacyRoute}`, /deleteSupabaseStorageObject|storage\/v1/);
+});
+
+test('legacy favicon metadata falls back instead of emitting an empty href', async () => {
+  const page = await read('functions/_profilePage.js');
+  assert.match(page, /const faviconUrl = getPublicMediaUrl\(metadata\.faviconPath, env\)/);
+  assert.match(page, /\.replace\(\/\<link rel="icon"/);
+  assert.match(page, /faviconUrl\s*\n\s*\? `<link rel="icon"/);
+  assert.match(page, /href="\/logo-mark\.svg"/);
 });
 
 test('latest database lockdown leaves no active public function touching Storage objects', async () => {

@@ -44,6 +44,7 @@ function resolveExplicitMediaUrl(value, publicOrigin) {
     const parsed = new URL(String(value));
     if (!['https:', 'http:'].includes(parsed.protocol)) return '';
     if (parsed.origin !== normalizeOrigin(publicOrigin)) return '';
+    if (parsed.search || parsed.hash) return '';
     return normalizeMediaSource(parsed.toString());
   } catch {
     return '';

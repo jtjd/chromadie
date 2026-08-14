@@ -83,6 +83,7 @@ export async function renderPublicProfilePage({ request, env, username, legacyPr
     ? (metadata.description || profile.bio || `View ${displayName}'s public ChromaDie profile, progress, achievements, and recent rolls.`)
     : 'This ChromaDie profile could not be found.';
   const robots = legacyProfile || !profile ? 'noindex,follow' : 'index,follow';
+  const faviconUrl = getPublicMediaUrl(metadata.faviconPath, env);
   const metadataBanner = getPublicMediaUrl(profile?.configuration?.media_references?.banner || metadata.bannerPath, env);
   const ogImage = profile
     ? (metadataBanner || `${origin}/og/profile.svg?username=${encodeURIComponent(profile.username)}`)
@@ -126,8 +127,8 @@ export async function renderPublicProfilePage({ request, env, username, legacyPr
     .replace(/<meta name="twitter:description"[^>]*>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`)
     .replace(/<meta name="twitter:image"[^>]*>/i, `<meta name="twitter:image" content="${escapeHtml(ogImage)}" />`)
     .replace(/<meta name="twitter:url"[^>]*>/i, `<meta name="twitter:url" content="${escapeHtml(canonical)}" />`)
-    .replace(/<link rel="icon"[^>]*>/i, metadata.faviconPath
-      ? `<link rel="icon" href="${escapeHtml(getPublicMediaUrl(metadata.faviconPath, env))}" />`
+    .replace(/<link rel="icon"[^>]*>/i, faviconUrl
+      ? `<link rel="icon" href="${escapeHtml(faviconUrl)}" />`
       : '<link rel="icon" type="image/svg+xml" sizes="any" href="/logo-mark.svg" />')
     .replace('<div id="app"></div>', `<div id="app"><noscript>${summary}</noscript></div>`);
 

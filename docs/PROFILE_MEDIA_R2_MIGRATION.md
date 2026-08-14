@@ -204,12 +204,16 @@ purge verification is an operator task outside the runtime contract.
 | Supabase Storage RPCs, RLS, and cleanup triggers | Storage-facing functions are inert/revoked; profile buckets are private with no browser policies |
 | `supabaseStorage.js` local compatibility/mock transport | Deleted; no runtime Supabase Storage client remains |
 
-The verified immediate egress cause was public ProfileShell generating a fresh
-`Date.now()` value and passing it through `getProfileMediaUrl()` as `?v=...`.
-That path is removed. No timestamp, random value, or render-time cache key is
-used for persistent remote media. The background/video fix also prevents
-simultaneous full image and video environment downloads in normal motion mode;
-reduced-motion keeps the static fallback.
+The incident contained two separate request-amplification classes. The old
+homepage live-directory implementation periodically issued discovery and
+full-profile hydration RPCs for multiple profiles. Independently, timestamp-
+based media cache busting was a confirmed dangerous egress mechanism: a fresh
+`Date.now()` value could be passed through `getProfileMediaUrl()` as `?v=...`.
+The persistent Studio/live-preview lifecycle materially increased exposure to
+that mechanism. Both paths are removed. No timestamp, random value, or
+render-time cache key is used for persistent remote media. The background/video
+fix also prevents simultaneous full image and video environment downloads in
+normal motion mode; reduced-motion keeps the static fallback.
 
 ## Account deletion
 

@@ -7,6 +7,23 @@ function hasControlCharacters(value) {
   });
 }
 
+function isSupabaseStoragePath(value) {
+  const source = String(value || '').replaceAll('\\', '/');
+  const candidates = [source.replace(/^\/+/, '/')];
+  try {
+    const parsed = new URL(source, 'https://chm.lol');
+    candidates.push(parsed.pathname);
+    try {
+      candidates.push(decodeURIComponent(parsed.pathname));
+    } catch {
+      // Keep the raw pathname check for malformed percent-encoding.
+    }
+  } catch {
+    // Relative-source validation below remains conservative for malformed URLs.
+  }
+  return candidates.some(candidate => /^\/?storage\/v1(?:[/?#]|$)/i.test(candidate));
+}
+
 /**
  * Keep media rendering on same-origin paths, loopback development URLs, or
  * explicit HTTPS URLs. Protocol-relative, data, blob, javascript, and public
@@ -17,6 +34,7 @@ export function normalizeMediaSource(value) {
   const source = value.trim();
   if (!source || source.length > MAX_MEDIA_SOURCE_LENGTH || hasControlCharacters(source)) return '';
   if (source.startsWith('//')) return '';
+  if (isSupabaseStoragePath(source)) return '';
 
   if (!/^[a-z][a-z\d+.-]*:/i.test(source)) return source;
 
@@ -27,7 +45,7 @@ export function normalizeMediaSource(value) {
     // at the shared media element boundary as well as in the R2 resolver so a
     // legacy reference cannot become a browser request through another leaf.
     if (/(?:^|\.)supabase\.(?:co|in)$/i.test(parsed.hostname)) return '';
-    if (/^\/storage\/v1(?:\/|$)/i.test(parsed.pathname)) return '';
+    if (isSupabaseStoragePath(parsed.pathname)) return '';
     return parsed.protocol === 'https:' || (parsed.protocol === 'http:' && loopback) ? source : '';
   } catch {
     return '';
