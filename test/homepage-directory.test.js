@@ -58,7 +58,7 @@ test('the first homepage fixture is the authored Meilin profile example', () => 
   assert.ok(!otherMedia.includes(fixture.media.avatar));
 });
 
-test('the direct homepage specimen and carousel contain no production profile renderer seam', async () => {
+test('the direct homepage specimen keeps production layout geometry out while sharing only motion', async () => {
   const [hero, demo, showcase] = await Promise.all([
     read('src/lib/homepage/HomepageHero.svelte'),
     read('src/lib/homepage/HomepageProfileDemo.svelte'),
@@ -66,28 +66,16 @@ test('the direct homepage specimen and carousel contain no production profile re
   ]);
   const source = `${hero}\n${demo}\n${showcase}`;
   assert.doesNotMatch(source, /ProfileShell|ProfileLayoutFrame|profileRenderModel|HomepageProfileRenderer|profile-shell/);
+  assert.match(hero, /ProfileMotionEffect/);
   assert.match(source, /HomepageProfileDemo/);
-  assert.match(hero, /window\.addEventListener\('pointermove', handleViewportPointerMove/);
-  assert.doesNotMatch(hero, /on:pointermove=\{handleHeroPointerMove\}|on:pointerleave=\{resetProfileTilt\}/);
-  assert.match(hero, /matchMedia\('\(hover: hover\) and \(pointer: fine\)'\)/);
-  assert.match(hero, /prefers-reduced-motion/);
-  assert.match(hero, /event\.pointerType === 'touch'/);
-  assert.match(hero, /event\.clientX \/ viewportWidth - 0\.5/);
-  assert.match(hero, /event\.clientY \/ viewportHeight - 0\.5/);
-  assert.match(hero, /PROFILE_TILT_MAX_Y = 14/);
-  assert.match(hero, /PROFILE_TILT_MAX_X = 8/);
-  assert.match(hero, /perspective: 1150px/);
-  assert.match(hero, /transform: rotateY\(var\(--profile-tilt-y, -8deg\)\) rotateX\(var\(--profile-tilt-x, 4deg\)\)/);
-  assert.match(hero, /requestAnimationFrame\(animateTilt\)/);
-  assert.match(hero, /will-change: transform/);
-  assert.match(hero, /homepage-profile-wrap--returning/);
-  assert.doesNotMatch(hero, /transition: transform 0\.3s/);
+  assert.match(hero, /inputSurface="viewport"/);
+  assert.doesNotMatch(hero, /handleViewportPointerMove|animateTilt|requestAnimationFrame|PROFILE_TILT_|homepage-profile-wrap|perspective: 1150px/);
   assert.match(hero, /PREVIEW_ROLL_DELAYS = Object\.freeze\(\[76, 78, 82, 88, 100, 116, 136\]\)/);
   assert.match(hero, /rollPhase = 'spin'/);
   assert.match(hero, /rollPhase = 'land'/);
   assert.match(hero, /rollPhase = 'impact'/);
   assert.match(hero, /IMPACT_DURATION_MS = 1120/);
-  assert.match(hero, /if \(prefersReducedMotion\)/);
+  assert.match(hero, /hasReducedMotion\(\)/);
   assert.match(hero, /clearTimeout\(previewRollTimer\)/);
   assert.match(hero, /setLocalPreviewRoll/);
   assert.match(hero, /dispatch\('accentpreview', \{ accent: finalRoll\.hex_code \}\)/);
@@ -95,7 +83,7 @@ test('the direct homepage specimen and carousel contain no production profile re
   assert.match(hero, /<HomepageProfileDemo fixture=\{fixture\} \{previewRoll\}/);
   assert.match(demo, /fixture\?\.media\?\.avatar/);
   assert.match(demo, /export let previewRoll = null/);
-  assert.match(demo, /impactActive = false/);
+  assert.doesNotMatch(demo, /impactActive = false/);
   assert.match(demo, /previewRoll \|\| fixture\?\.scores\?\.\[0\]/);
   assert.doesNotMatch(demo, /homepage-profile-demo__head|Profile preview|@\{fixture\.username\}/);
   assert.match(demo, /homepage-profile-demo__secondary/);

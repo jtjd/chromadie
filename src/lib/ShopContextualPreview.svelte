@@ -64,6 +64,7 @@
     profile_atmosphere: 'Atmosphere',
     cursor_trail: 'Cursor',
     profile_layout: 'Layout',
+    profile_motion: 'Motion',
     consumable: 'Utility'
   }[selectedItem?.slot] || 'Piece';
   // Re-mount the shared renderer whenever the fitting-room selection or any
@@ -78,7 +79,8 @@
     loadout?.avatar_effect || '',
     loadout?.cursor_trail || '',
     loadout?.profile_layout || '',
-    loadout?.profile_atmosphere || ''
+    loadout?.profile_atmosphere || '',
+    loadout?.profile_motion || ''
   ].join('|');
 
   function compactPrice(value) {

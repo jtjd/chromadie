@@ -12,35 +12,40 @@ const PROFILE_LAYOUTS = {
     label: 'Compact',
     description: 'A horizontal identity head with a tiny integrated daily roll.',
     footprint: 'small',
-    structure: Object.freeze({ identity: 'horizontal', roll: 'integrated', surface: 'card' })
+    structure: Object.freeze({ identity: 'horizontal', roll: 'integrated', surface: 'card' }),
+    motionTarget: 'layout-frame'
   },
   sleek: {
     key: 'sleek',
     label: 'Sleek',
     description: 'A compact identity card with detached media and status modules when available.',
     footprint: 'small',
-    structure: Object.freeze({ identity: 'stacked', roll: 'detached', surface: 'card-with-strips' })
+    structure: Object.freeze({ identity: 'stacked', roll: 'detached', surface: 'card-with-strips' }),
+    motionTarget: 'layout-frame'
   },
   minimal: {
     key: 'minimal',
     label: 'Minimal',
     description: 'A free-floating, offset identity with an inline daily indicator.',
     footprint: 'floating',
-    structure: Object.freeze({ identity: 'offset', roll: 'inline', surface: 'cardless' })
+    structure: Object.freeze({ identity: 'offset', roll: 'inline', surface: 'cardless' }),
+    motionTarget: 'layout-frame'
   },
   modern: {
     key: 'modern',
     label: 'Modern',
     description: 'A compact identity surface with a small secondary roll widget.',
     footprint: 'small',
-    structure: Object.freeze({ identity: 'compact', roll: 'widget', surface: 'card-with-region' })
+    structure: Object.freeze({ identity: 'compact', roll: 'widget', surface: 'card-with-region' }),
+    motionTarget: 'layout-frame'
   },
   portfolio: {
     key: 'portfolio',
     label: 'Portfolio',
     description: 'A cardless centered identity landing that opens into a longer profile story.',
     footprint: 'longform',
-    structure: Object.freeze({ identity: 'hero', roll: 'below-fold', surface: 'cardless' })
+    structure: Object.freeze({ identity: 'hero', roll: 'below-fold', surface: 'cardless' }),
+    motionTarget: 'identity-frame'
   }
 };
 
@@ -95,6 +100,10 @@ export function normalizeProfileLayoutKey(value, fallback = 'compact') {
 export function getProfileLayoutDefinition(value) {
   const candidate = normalizeCandidate(value);
   return PROFILE_LAYOUT_DEFINITIONS[candidate] || null;
+}
+
+export function getProfileLayoutMotionTarget(value) {
+  return getProfileLayoutDefinition(value)?.motionTarget || 'none';
 }
 
 export function isPaidProfileLayoutKey() {

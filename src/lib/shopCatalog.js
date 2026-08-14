@@ -1,5 +1,5 @@
 const NAME_SLOTS = ['name_font', 'name_material', 'name_motion'];
-const PROFILE_SLOTS = [...NAME_SLOTS, 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'];
+const PROFILE_SLOTS = [...NAME_SLOTS, 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'];
 const COSMETIC_SLOTS = [...PROFILE_SLOTS];
 
 export const SHOP_NAME_SLOTS = Object.freeze([...NAME_SLOTS]);
@@ -39,6 +39,7 @@ export const SHOP_SLOT_LABELS = Object.freeze({
   cursor_trail: 'Cursor trail',
   profile_layout: 'Profile layout',
   profile_atmosphere: 'Atmosphere',
+  profile_motion: 'Profile motion',
   consumable: 'Utility',
   title: 'Title'
 });

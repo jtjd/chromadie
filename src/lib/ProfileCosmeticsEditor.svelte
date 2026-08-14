@@ -54,7 +54,8 @@
     'profile_border',
     'avatar_effect',
     'cursor_trail',
-    'profile_atmosphere'
+    'profile_atmosphere',
+    'profile_motion'
   ]);
 
   $: account = { ...($profile || {}), ...(accountProfile || {}) };
@@ -82,6 +83,7 @@
   $: avatarItems = ownedCosmetics.filter(item => item.slot === 'avatar_effect');
   $: cursorItems = ownedCosmetics.filter(item => item.slot === 'cursor_trail');
   $: atmosphereItems = ownedCosmetics.filter(item => item.slot === 'profile_atmosphere');
+  $: profileMotionItems = ownedCosmetics.filter(item => item.slot === 'profile_motion');
   $: previewItems = Object.fromEntries(COSMETIC_SLOTS.map(slot => [slot, $shopItems[previewLoadout[slot]] || null]));
   $: namePreviewLayerValues = {
     name_font: previewItems.name_font?.css_value || '',
@@ -279,6 +281,19 @@
               </div>
             </div>
 
+            <div class="profile-cosmetics-slot">
+              <div class="profile-cosmetics-visual-preview" aria-label="Profile motion preview">
+                {#if previewItems.profile_motion}<ShopItemPreview item={previewItems.profile_motion} {username} {displayColor} {avatarSrc} active={true} renderContext={PROFILE_RENDER_CONTEXTS.EFFECT_CARD} />{:else}<span class="profile-cosmetics-empty-preview">No motion</span>{/if}
+              </div>
+              <div>
+                <label for="cosmetic-profile-motion">Profile motion</label>
+                <select id="cosmetic-profile-motion" value={previewLoadout.profile_motion || ''} disabled={!!loadingSlot} on:change={event => previewSlot('profile_motion', event.currentTarget.value)}>
+                  <option value="">No motion</option>
+                  {#each profileMotionItems as item (item.item_key)}<option value={item.item_key}>{item.name}</option>{/each}
+                </select>
+              </div>
+            </div>
+
           </div>
 
           <button type="button" class="profile-cosmetics-apply" disabled={!!loadingSlot || !hasPendingChanges} on:click={applyChanges}>{loadingSlot ? 'Updating…' : 'Update equipped effects'}</button>
@@ -327,7 +342,7 @@
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid { padding: .35rem 0; border: 0; background: transparent; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-slot { position: relative; align-content: start; gap: .6rem; background: transparent; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-slot::before { content: ''; position: absolute; top: .55rem; left: .55rem; z-index: 1; width: .4rem; height: .4rem; border-radius: 50%; background: var(--cosmetics-save); }
-  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
+  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-slot select { min-height: 2.5rem; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid .profile-cosmetics-slot label { margin-bottom: .3rem; font-size: .72rem; line-height: 1.15; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-name-grid .profile-cosmetics-name-preview { height: 2rem; overflow: visible; }
@@ -363,7 +378,7 @@
   .profile-cosmetics-section-heading button:focus-visible { outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
   .profile-cosmetics-section-heading--visual { margin-top: .3rem; }
   .profile-cosmetics-name-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: .55rem .6rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: transparent; }
-  .profile-cosmetics-visual-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; }
+  .profile-cosmetics-visual-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; }
   .profile-cosmetics-slot { display: grid; grid-template-columns: minmax(0, 1fr); gap: .35rem .7rem; align-items: end; padding-top: .15rem; border-top: 0; }
   .profile-cosmetics-name-control { position: relative; min-width: 0; }
   .profile-cosmetics-name-preview { position: absolute; right: .7rem; top: 50%; display: flex; width: min(42%, 8.5rem); height: 2rem; align-items: center; justify-content: flex-end; overflow: visible; pointer-events: none; transform: translateY(-50%); }

@@ -64,6 +64,7 @@ function importantSnapshotState(snapshot) {
     avatarEffect: snapshot.cosmetics.avatarEffectKey,
     border: snapshot.cosmetics.borderKey,
     atmosphere: snapshot.cosmetics.atmosphereKey,
+    motion: snapshot.cosmetics.profileMotionKey,
     cursor: snapshot.cosmetics.cursorTrailKey,
     openingLinks: snapshot.links.opening.map(link => link.url),
     continuationLinks: snapshot.links.continuation.map(link => link.url),
@@ -87,6 +88,7 @@ test('public and Studio hosts resolve one rich profile to the same render state'
       avatar_effect: 'avatar_effect_ghost_double',
       profile_border: 'border_celestial',
       profile_atmosphere: 'profile_atmosphere_rain_window',
+      profile_motion: 'profile_motion_perspective_tilt',
       cursor_trail: 'cursor_trail_pixel_wake'
     }
   };
@@ -119,6 +121,7 @@ test('public and Studio hosts resolve one rich profile to the same render state'
   assert.equal(studioSnapshot.mode, 'studio');
   assert.equal(publicSnapshot.mode, 'public');
   assert.equal(studioSnapshot.permissions.isVisitor, true);
+  assert.equal(publicSnapshot.cosmetics.profileMotionKey, 'profile_motion_perspective_tilt');
   assert.equal(Object.isFrozen(studioSnapshot), true);
 });
 
@@ -147,6 +150,7 @@ test('draft, media, identity, and cosmetic precedence is resolved before renderi
   assert.equal(snapshot.surface.blur, 8);
   assert.equal(snapshot.cosmetics.borderKey, 'border_celestial');
   assert.equal(snapshot.cosmetics.avatarEffectKey, 'avatar_effect_orbit');
+  assert.equal(snapshot.cosmetics.profileMotionKey, '');
   assert.equal(snapshot.media.avatarUrl, mediaResolver(MEDIA.avatar));
   assert.equal(snapshot.media.backgroundVideoUrl, mediaResolver(MEDIA.video));
 });

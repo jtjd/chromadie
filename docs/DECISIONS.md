@@ -4700,3 +4700,17 @@ the reference. It never requests Supabase Storage bytes or invokes a Storage
 delete; the user must re-upload the asset to R2 if it is still wanted. This
 keeps legacy metadata recoverable while making Supabase Storage impossible to
 reach from profile-media runtime code.
+
+## 2026-08-14 — Make profile motion a canonical equipped expression layer
+
+3D Tilt is modeled as the first `profile_motion` catalog slot rather than as a
+homepage-specific interaction. The free catalog item participates in the
+existing equipment, inventory, cache, and editor flows without being added to
+featured or promotional shop navigation.
+
+`ProfileMotionEffect` owns only the bounded profile-content motion target. The
+public page background and continuation remain fixed; public and homepage
+surfaces use viewport input, while the Studio preview passes its stage as the
+container surface. The renderer keeps the supplied `/60` pointer formula
+unchanged, disables on coarse/reduced-motion surfaces, and leaves card-local
+roll scale animations on an inner wrapper.

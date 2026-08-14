@@ -50,8 +50,10 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
   assert.match(hero, /'Preview a roll'/);
   assert.match(hero, /Rolling…/);
   assert.match(hero, /Roll again/);
-  assert.match(hero, /window\.addEventListener\('pointermove', handleViewportPointerMove/);
-  assert.match(hero, /requestAnimationFrame\(animateTilt\)/);
+  assert.match(hero, /<ProfileMotionEffect/);
+  assert.match(hero, /motionKey=\{fixture\.profileMotion \|\| ''\}/);
+  assert.match(hero, /inputSurface="viewport"/);
+  assert.doesNotMatch(hero, /handleViewportPointerMove|animateTilt|requestAnimationFrame/);
   assert.match(hero, /class:homepage-profile-pop--active=\{profileImpactActive\}/);
   assert.match(hero, /rollPhase = 'spin'/);
   assert.match(hero, /rollPhase = 'land'/);
@@ -74,7 +76,7 @@ test('the homepage specimen owns the approved profile anatomy', () => {
   assert.match(demo, /repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(demo, /border-radius: 22px/);
   assert.match(demo, /backdrop-filter: blur\(32px\)/);
-  assert.match(demo, /export let impactActive = false/);
+  assert.doesNotMatch(demo, /export let impactActive = false/);
   assert.doesNotMatch(demo, /Profile preview|homepage-profile-demo__head|@\{fixture\.username\}|Views|views|↗/);
 });
 

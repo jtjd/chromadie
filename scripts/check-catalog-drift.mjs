@@ -216,7 +216,7 @@ const nameMotionReferenceMigration = await readFile(nameMotionReferenceMigration
 const nameMaterialCurationMigration = await readFile(nameMaterialCurationMigrationPath, 'utf8');
 const validSlots = new Set([
   'consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border',
-  'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'
+  'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'
 ]);
 const validCatalogStatuses = new Set(['active', 'legacy', 'retired']);
 const rendererKeys = Object.freeze({
@@ -226,10 +226,11 @@ const rendererKeys = Object.freeze({
   cursor_trail: new Set(['signal-trace', 'pixel-wake', 'chroma-ribbon', 'glass-shards', 'ember-ash', 'comet-thread', 'ink-drops', 'orbit-dust', 'static-echo', 'rain-trace', 'gold-fleck', 'ghost-tail', 'color-memory', 'marker-stroke', 'solar-sparks', 'void-lensing']),
   avatar_effect: new Set(['signal-ring', 'neon-halo', 'prism-orbit', 'crystal-aperture', 'chroma-arc', 'ember-crown', 'ashfall', 'gold-laurel', 'ink-stamp', 'paper-tear', 'static-offset', 'pixel-satellites', 'crt-scan', 'void-eclipse', 'ghost-double', 'night-frame', 'daily-aura', 'color-archive']),
   profile_layout: new Set(['compact', 'sleek', 'minimal', 'modern', 'portfolio']),
-  profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare'])
+  profile_atmosphere: new Set(['rain-window', 'droplets-glass', 'dust-light', 'ink-bloom', 'snowfall', 'silk-folds', 'glass-caustics', 'cinder-drift', 'night-pollen', 'paper-shadow', 'smoke-spiral', 'lumen-flare']),
+  profile_motion: new Set(['perspective-tilt'])
 });
-const expectedCounts = Object.freeze({ name_font: 18, name_material: 7, name_motion: 11, profile_border: 9, cursor_trail: 16, avatar_effect: 18, profile_layout: 5, profile_atmosphere: 13 });
-const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0 };
+const expectedCounts = Object.freeze({ name_font: 18, name_material: 7, name_motion: 11, profile_border: 9, cursor_trail: 16, avatar_effect: 18, profile_layout: 5, profile_atmosphere: 13, profile_motion: 1 });
+const composableCounts = { name_font: 0, name_material: 0, name_motion: 0, profile_border: 0, cursor_trail: 0, avatar_effect: 0, profile_layout: 0, profile_atmosphere: 0, profile_motion: 0 };
 const obsoleteSlots = ['name_effect', 'frame', 'profile_bg', 'orb_shape', 'roll_effect', 'lb_theme'];
 for (const item of seed.catalog.values()) {
   if (!validSlots.has(item.slot)) fail(`${item.item_key} has unknown slot ${item.slot}`);
@@ -240,7 +241,7 @@ for (const item of seed.catalog.values()) {
       ? new Set(['celestial', 'chroma', 'crystal', 'glitch', 'gold', 'neon', 'prism', 'void', 'signal'])
       : rendererKeys[item.slot];
     if (!allowedRendererKeys?.has(item.css_value)) fail(`${item.item_key} references an unknown ${item.slot} renderer ${item.css_value}`);
-    if (!['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'].includes(item.slot)) {
+    if (!['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'].includes(item.slot)) {
       fail(`${item.item_key} uses renderer syntax outside a retained renderer slot`);
     }
     if ((item.catalog_status || 'active') !== 'active') fail(`${item.item_key} renderer row must be active`);
@@ -256,8 +257,8 @@ for (const [slot, count] of Object.entries(expectedCounts)) {
   const actual = seed.catalog.size && [...seed.catalog.values()].filter(item => item.slot === slot && (item.catalog_status || 'active') === 'active').length;
   if (actual !== count) fail(`${slot} expected ${count} active rows, found ${actual}`);
 }
-if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 99) {
-  fail(`expected 99 active catalog rows, found ${seed.catalog.size}`);
+if ([...seed.catalog.values()].filter(item => (item.catalog_status || 'active') === 'active').length !== 100) {
+  fail(`expected 100 active catalog rows, found ${seed.catalog.size}`);
 }
 if ([...seed.catalog.values()].some(item => obsoleteSlots.includes(item.slot))) {
   fail('the seed still contains an obsolete cosmetic slot');
@@ -324,12 +325,12 @@ if (supabaseUrl && supabaseKey) {
   compareCatalogs(seed, remote, 'remote shop_items');
   console.log(
     `Catalog drift check passed: seed and remote match (${seed.catalog.size} items; ` +
-      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} structural Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres).`
+      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} structural Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres, ${composableCounts.profile_motion} Profile Motions).`
   );
 } else {
   console.log(
     `Catalog drift check passed locally: final seed is valid (${seed.catalog.size} items; ` +
-      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} structural Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres). ` +
+      `${composableCounts.name_font} Fonts, ${composableCounts.name_material} Materials, ${composableCounts.name_motion} Motions, ${composableCounts.profile_border} Profile Borders, ${composableCounts.cursor_trail} Cursor Trails, ${composableCounts.avatar_effect} Avatar Effects, ${composableCounts.profile_layout} structural Profile Layouts, ${composableCounts.profile_atmosphere} Atmospheres, ${composableCounts.profile_motion} Profile Motions). ` +
     'Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY to include the remote catalog.'
   );
 }

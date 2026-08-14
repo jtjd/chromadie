@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-14 — Add canonical 3D Tilt profile expression
+
+- Added `3D Tilt` as a free `profile_motion` expression that can be equipped
+  through the existing profile cosmetics flow.
+- Homepage Meilin and real public profiles now consume the same bounded motion
+  renderer. Profile Studio uses the preview container as its input surface.
+- The effect adds no glow, glare, avatar treatment, or page-background motion;
+  reduced-motion and coarse-pointer users receive the unchanged static profile.
+
 ## 2026-08-14 — Clarify profile-media removal semantics
 
 - Profile Studio now labels removing an active avatar, background, or audio as

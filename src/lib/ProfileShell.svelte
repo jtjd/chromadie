@@ -14,6 +14,7 @@
   import { getProfileStoryUnlocks } from './profileStory.js';
   import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
+  import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileLayoutFrame from './ProfileLayoutFrame.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
   import ProfileWidgets from './ProfileWidgets.svelte';
@@ -30,6 +31,7 @@
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
   import { isProfileFeatureEnabled, resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { buildProfileRenderSnapshot } from './profileRenderModel.js';
+  import { getProfileLayoutMotionTarget } from './profile-layout/profileLayouts.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -47,6 +49,7 @@
   // use the same renderer without inheriting profile-page geometry.
   export let renderContext = 'profile';
   export let previewDevice = 'desktop';
+  export let motionSurfaceElement = null;
   $: renderContext;
 
   const profileShellStyle = '--profile-accent: var(--color-accent-roll); --profile-surface-accent: var(--color-accent-cyan); --profile-control-accent: var(--color-accent);';
@@ -468,6 +471,8 @@
   // Layout is structure only. Keep the default class off the renderer so a
   // new Compact profile never receives a baked-in starfield or color theme.
   $: profilePresentationLayoutVariant = layoutVariant;
+  $: profileMotionKey = profileRenderSnapshot?.cosmetics?.profileMotionKey || '';
+  $: profileMotionTarget = getProfileLayoutMotionTarget(profilePresentationLayoutVariant);
   $: profileCardStyle = profileRenderSnapshot?.surface?.style || '';
   $: profilePageStyle = `${profileShellStyle};${profileRenderSnapshot?.styles?.page || ''}`;
 
@@ -501,75 +506,84 @@
     <div class="profile-shell__approved-canvas">
       <div class="profile-shell__approved-main">
         <div class="profile-shell__opening profile-shell__approved-opening" data-profile-region="identity">
-          <ProfileLayoutFrame
-            >
-              <div class="profile-shell__layout-identity profile-layout-frame__identity">
-                <ProfileBorderEffect borderKey={cosmetics?.profile_border} surfaceStyle={profileCardStyle} className={'profile-shell__identity-boundary' + (profilePresentationLayoutVariant === 'minimal' || profilePresentationLayoutVariant === 'portfolio' ? ' profile-border-effect--content' : '')}>
-                  {#if bannerSrc}
-                    <img class="profile-shell__rich-banner" src={bannerSrc} alt="" loading="lazy" aria-hidden="true" />
-                  {/if}
-                  {#if identityCardComponent}
-                    <svelte:component this={identityCardComponent}
-                      username={username}
-                      displayName={profileDisplayName}
-                      profilePath={profilePath}
-                      bio={profileBio}
-                      links={openingLinks}
-                      badges={pinnedAchievements}
-                      staff={Boolean(renderProfile?.is_staff)}
-                      avatarSrc={avatarSrc}
-                      founder={Boolean(renderProfile?.equipped_badges?.includes('launch_edition'))}
-                      accentColor={signatureColor}
-                      nameRendererLoadout={nameRendererLoadout}
-                      nameRendererContext="profile"
-                      nameRendererMode="animated"
-                      nameRendererRecentColors={nameRendererRecentColors}
-                      nameRendererTodayColor={nameRendererTodayColor}
-                      nameRendererBaseColor={nameRendererBaseColor}
-                      avatarEffectKey={cosmetics?.avatar_effect}
-                      avatarEffectMode="profile"
-                      avatarEffectAnimated={true}
-                      layoutVariant={profilePresentationLayoutVariant}
-                      surface={false}
-                      location={identityPresentation.location}
-                      timezone={identityPresentation.timezone}
-                      joinedLabel={joinedLabel}
-                      showJoinDate={identityPresentation.showJoinDate}
-                      showAvatar={identityPresentation.showAvatar}
-                      descriptionMode={identityPresentation.descriptionMode}
-                      entryAnimation={prefersReducedMotion ? 'none' : identityPresentation.entryAnimation}
-                      linkStyle={effectiveProfileConfig.linkStyle}
-                      onEntryClick={recordProfileClick}
-                      rollState={profileRollState}
-                      showToday={false}
-                      previewDevice={previewMode ? previewDevice : 'desktop'}
-                    />
-                  {:else}
-                    <div class="profile-shell__identity-loading" aria-busy="true" aria-label="Identity pending"></div>
-                  {/if}
-                </ProfileBorderEffect>
-              </div>
+          <ProfileMotionEffect
+            motionKey={profileMotionTarget === 'none' ? '' : profileMotionKey}
+            inputSurface={previewMode ? 'container' : 'viewport'}
+            surfaceElement={previewMode ? motionSurfaceElement : null}
+            disabled={previewMode && previewDevice === 'mobile'}
+            className={'profile-shell__motion-target profile-shell__motion-target--' + profileMotionTarget}
+          >
+            <div class="profile-shell__card-scale" data-profile-motion-target={profileMotionTarget}>
+              <ProfileLayoutFrame>
+                <div class="profile-shell__layout-identity profile-layout-frame__identity">
+                  <ProfileBorderEffect borderKey={cosmetics?.profile_border} surfaceStyle={profileCardStyle} className={'profile-shell__identity-boundary' + (profilePresentationLayoutVariant === 'minimal' || profilePresentationLayoutVariant === 'portfolio' ? ' profile-border-effect--content' : '')}>
+                    {#if bannerSrc}
+                      <img class="profile-shell__rich-banner" src={bannerSrc} alt="" loading="lazy" aria-hidden="true" />
+                    {/if}
+                    {#if identityCardComponent}
+                      <svelte:component this={identityCardComponent}
+                        username={username}
+                        displayName={profileDisplayName}
+                        profilePath={profilePath}
+                        bio={profileBio}
+                        links={openingLinks}
+                        badges={pinnedAchievements}
+                        staff={Boolean(renderProfile?.is_staff)}
+                        avatarSrc={avatarSrc}
+                        founder={Boolean(renderProfile?.equipped_badges?.includes('launch_edition'))}
+                        accentColor={signatureColor}
+                        nameRendererLoadout={nameRendererLoadout}
+                        nameRendererContext="profile"
+                        nameRendererMode="animated"
+                        nameRendererRecentColors={nameRendererRecentColors}
+                        nameRendererTodayColor={nameRendererTodayColor}
+                        nameRendererBaseColor={nameRendererBaseColor}
+                        avatarEffectKey={cosmetics?.avatar_effect}
+                        avatarEffectMode="profile"
+                        avatarEffectAnimated={true}
+                        layoutVariant={profilePresentationLayoutVariant}
+                        surface={false}
+                        location={identityPresentation.location}
+                        timezone={identityPresentation.timezone}
+                        joinedLabel={joinedLabel}
+                        showJoinDate={identityPresentation.showJoinDate}
+                        showAvatar={identityPresentation.showAvatar}
+                        descriptionMode={identityPresentation.descriptionMode}
+                        entryAnimation={prefersReducedMotion ? 'none' : identityPresentation.entryAnimation}
+                        linkStyle={effectiveProfileConfig.linkStyle}
+                        onEntryClick={recordProfileClick}
+                        rollState={profileRollState}
+                        showToday={false}
+                        previewDevice={previewMode ? previewDevice : 'desktop'}
+                      />
+                    {:else}
+                      <div class="profile-shell__identity-loading" aria-busy="true" aria-label="Identity pending"></div>
+                    {/if}
+                  </ProfileBorderEffect>
+                </div>
 
-              {#if profilePresentationLayoutVariant === 'sleek' && hasProfileMusic}
-                <div class="profile-layout-frame__strip">
-                  <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} compact={true} />
-                </div>
-              {/if}
-              {#if showRoll && !refreshing && profilePresentationLayoutVariant !== 'portfolio'}
-                <div class="profile-layout-frame__roll">
-                  <ProfileDailyRoll
-                    isOwner={isOwnProfile}
-                    result={latestRoll}
-                    accentColor={signatureColor}
-                    variant={profilePresentationLayoutVariant}
-                    {visualFixture}
-                    on:rollstart={handleRollStart}
-                    on:rollcancel={handleRollCancel}
-                    on:rollcomplete={handleRollComplete}
-                  />
-                </div>
-              {/if}
-          </ProfileLayoutFrame>
+                {#if profilePresentationLayoutVariant === 'sleek' && hasProfileMusic}
+                  <div class="profile-layout-frame__strip">
+                    <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} compact={true} />
+                  </div>
+                {/if}
+                {#if showRoll && !refreshing && profilePresentationLayoutVariant !== 'portfolio'}
+                  <div class="profile-layout-frame__roll">
+                    <ProfileDailyRoll
+                      isOwner={isOwnProfile}
+                      result={latestRoll}
+                      accentColor={signatureColor}
+                      variant={profilePresentationLayoutVariant}
+                      {visualFixture}
+                      on:rollstart={handleRollStart}
+                      on:rollcancel={handleRollCancel}
+                      on:rollcomplete={handleRollComplete}
+                    />
+                  </div>
+                {/if}
+              </ProfileLayoutFrame>
+            </div>
+          </ProfileMotionEffect>
         </div>
 
       {#if !previewMode && hasProfileMore && !profileMoreActive}
@@ -833,6 +847,10 @@
   }
 
   .profile-shell-page--roll-settled .profile-shell__opening.profile-shell__approved-opening {
+    animation: none;
+  }
+
+  .profile-shell-page--roll-settled .profile-shell__card-scale {
     animation: profile-shell-roll-settle 1.05s var(--motion-ease-emphasis);
   }
 
@@ -1119,6 +1137,10 @@
     box-shadow: none;
   }
 
+  .profile-shell__motion-target,
+  .profile-shell__card-scale { width: 100%; min-width: 0; }
+  .profile-shell__card-scale { transform-origin: center; }
+
   :global(.profile-shell__identity-boundary) {
     position: relative;
     width: 100%;
@@ -1251,6 +1273,7 @@
     .profile-shell-page--roll-settled .profile-shell__opening.profile-shell__approved-opening {
       animation: none;
     }
+    .profile-shell-page--roll-settled .profile-shell__card-scale { animation: none; }
   }
 
   /* Active profile layouts are intentionally small. The page remains the

@@ -6,6 +6,7 @@
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
   import { getProfileLayoutLabel } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
+  import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import { PROFILE_RENDER_CONTEXTS, resolveProfileRenderContext } from './profile-studio/previewContexts.js';
 
   export let item;
@@ -42,6 +43,7 @@
   $: isCursor = item?.slot === 'cursor_trail';
   $: isLayout = item?.slot === 'profile_layout';
   $: isAtmosphere = item?.slot === 'profile_atmosphere';
+  $: isProfileMotion = item?.slot === 'profile_motion';
   $: cursorPreviewKey = getCursorTrailKey(item?.css_value);
   $: previewAccent = isNamePreview ? displayColor : COLLECTION_TONES[item?.collection] || '#C7B4FF';
   $: previewType = isNamePreview
@@ -60,9 +62,11 @@
               ? 'cursor'
               : item?.slot === 'profile_layout'
                 ? 'layout'
-                : item?.slot === 'profile_atmosphere'
-                  ? 'atmosphere'
-                  : 'utility';
+              : item?.slot === 'profile_atmosphere'
+                ? 'atmosphere'
+                : item?.slot === 'profile_motion'
+                  ? 'motion'
+                : 'utility';
   $: previewClasses = `shop-preview-area shop-preview-area--${previewType}`;
   $: resolvedRenderContext = resolveProfileRenderContext(renderContext, PROFILE_RENDER_CONTEXTS.CATALOG);
   $: previewSurface = resolvedRenderContext === PROFILE_RENDER_CONTEXTS.CATALOG ? PREVIEW_SURFACE : 'transparent';
@@ -79,9 +83,10 @@
     : mode;
 
   let hovered = false;
+  let motionPreviewSurface;
 </script>
 
-<div class={previewClasses} style={previewStyle} data-preview-source={displayColor} data-render-context={resolvedRenderContext} role="presentation" on:pointerenter={() => hovered = true} on:pointerleave={() => hovered = false}>
+<div bind:this={motionPreviewSurface} class={previewClasses} style={previewStyle} data-preview-source={displayColor} data-render-context={resolvedRenderContext} role="presentation" on:pointerenter={() => hovered = true} on:pointerleave={() => hovered = false}>
   {#if item?.slot === 'profile_border'}
     <ProfileBorderEffect borderKey={item.css_value} compact={true} animated={mode === 'animated'} className="preview-border-shell">
       <span class="preview-border-space" aria-hidden="true"></span>
@@ -131,6 +136,10 @@
     <div class="shop-atmosphere-preview">
       <AtmosphereLayer atmosphereKey={item.css_value} todayColor={previewAccent} recentColors={['#8DDCFF', '#B7FD4D', '#F7B7E2']} mode="preview" active={active || hovered} animated={active || hovered} />
     </div>
+  {:else if isProfileMotion}
+    <ProfileMotionEffect motionKey={item.item_key} inputSurface="container" surfaceElement={motionPreviewSurface} disabled={!active}>
+      <div class="shop-motion-preview" aria-hidden="true"><span>3D</span></div>
+    </ProfileMotionEffect>
   {:else}
     <div class="shop-preview-text shop-preview-text--utility">
       <span class="preview-utility-mark" aria-hidden="true">✦</span>
@@ -184,6 +193,7 @@
   .shop-atmosphere-preview :global(.profile-atmosphere) { inset:0; width:100%; height:100%; opacity:.9; }
   .shop-atmosphere-preview :global(.profile-atmosphere__video) { inset:0; width:100%; height:100%; display:block; object-fit:cover; transform:scale(1.08); transform-origin:center; filter:none !important; }
   .shop-atmosphere-preview :global(.profile-atmosphere__video--poster) { opacity:.42; }
+  .shop-motion-preview { display:grid; place-items:center; width:78%; height:72%; border:1px solid rgba(205,210,255,.42); border-radius:8px; background:rgba(205,210,255,.05); color:rgba(205,210,255,.82); font:650 1.35rem/1 var(--shop-display, var(--font-display)); letter-spacing:-.06em; }
 
   @media (max-width: 600px) {
     .shop-preview-area { padding: 10px; }

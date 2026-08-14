@@ -1,7 +1,8 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import HomepageClaim from './HomepageClaim.svelte';
   import HomepageProfileDemo from './HomepageProfileDemo.svelte';
+  import ProfileMotionEffect from '../profile-motion/ProfileMotionEffect.svelte';
   import { HOMEPAGE_FIXTURES } from './homepageFixtures.js';
 
   export let isAuthenticated = false;
@@ -9,10 +10,6 @@
   export let accountUnavailable = false;
 
   const dispatch = createEventDispatcher();
-  const PROFILE_TILT_RESTING = Object.freeze({ x: 4, y: -8 });
-  const PROFILE_TILT_MAX_Y = 14;
-  const PROFILE_TILT_MAX_X = 8;
-  const PROFILE_TILT_LERP = 0.19;
   const PREVIEW_ROLL_DELAYS = Object.freeze([76, 78, 82, 88, 100, 116, 136]);
   const PREVIEW_ROLL_TICKS = PREVIEW_ROLL_DELAYS.length + 1;
   const LAND_DURATION_MS = 36;
@@ -49,16 +46,6 @@
     Object.freeze({ x: 58, y: 72, size: 4, delay: 556, bright: true })
   ]);
   let fixtureIndex = 0;
-  let profileTiltEnabled = false;
-  let prefersReducedMotion = false;
-  let profileTiltReturning = false;
-  let profileTiltStyle = '';
-  let tiltFrame;
-  let tiltReturnTimer;
-  let targetTiltX = PROFILE_TILT_RESTING.x;
-  let targetTiltY = PROFILE_TILT_RESTING.y;
-  let currentTiltX = PROFILE_TILT_RESTING.x;
-  let currentTiltY = PROFILE_TILT_RESTING.y;
   let previewRoll = null;
   let previewRollTimer;
   let impactTimer;
@@ -73,6 +60,10 @@
   $: previewRollButtonLabel = rollPhase === 'spin' ? 'Rolling…' : hasPreviewRolled ? 'Roll again' : 'Preview a roll';
   $: profileImpactActive = rollPhase === 'impact';
   $: particleBurstActive = rollPhase === 'impact';
+
+  function hasReducedMotion() {
+    return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  }
 
   function clearPreviewRollTimers() {
     clearTimeout(previewRollTimer);
@@ -93,7 +84,7 @@
     rollPhase = 'land';
     dispatch('accentpreview', { accent: finalRoll.hex_code });
 
-    if (prefersReducedMotion) {
+    if (hasReducedMotion()) {
       rollPhase = 'idle';
       return;
     }
@@ -110,7 +101,7 @@
     clearPreviewRollTimers();
     rollPhase = 'spin';
 
-    if (prefersReducedMotion) {
+    if (hasReducedMotion()) {
       finishPreviewRoll();
       return;
     }
@@ -143,106 +134,6 @@
     dispatch(event.type, event.detail);
   }
 
-  function writeTiltStyle() {
-    const shadowX = (-currentTiltY * 0.65).toFixed(2);
-    const shadowY = (currentTiltX * 0.35).toFixed(2);
-    const highlightX = (50 + currentTiltY * 1.7).toFixed(2);
-    const highlightY = (28 - currentTiltX * 1.25).toFixed(2);
-    profileTiltStyle = `--profile-tilt-y: ${currentTiltY.toFixed(2)}deg; --profile-tilt-x: ${currentTiltX.toFixed(2)}deg; --profile-shadow-x: ${shadowX}px; --profile-shadow-y: ${shadowY}px; --profile-highlight-x: ${highlightX}%; --profile-highlight-y: ${highlightY}%;`;
-  }
-
-  function animateTilt() {
-    tiltFrame = undefined;
-    currentTiltX += (targetTiltX - currentTiltX) * PROFILE_TILT_LERP;
-    currentTiltY += (targetTiltY - currentTiltY) * PROFILE_TILT_LERP;
-    writeTiltStyle();
-
-    if (Math.abs(targetTiltX - currentTiltX) > 0.02 || Math.abs(targetTiltY - currentTiltY) > 0.02) {
-      tiltFrame = requestAnimationFrame(animateTilt);
-    }
-  }
-
-  function scheduleTiltFrame() {
-    if (tiltFrame === undefined) tiltFrame = requestAnimationFrame(animateTilt);
-  }
-
-  function handleViewportPointerMove(event) {
-    if (!profileTiltEnabled || event.pointerType === 'touch') return;
-
-    clearTimeout(tiltReturnTimer);
-    profileTiltReturning = false;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    if (!viewportWidth || !viewportHeight) return;
-
-    const pointerX = Math.max(-0.5, Math.min(0.5, event.clientX / viewportWidth - 0.5));
-    const pointerY = Math.max(-0.5, Math.min(0.5, event.clientY / viewportHeight - 0.5));
-    targetTiltY = pointerX * PROFILE_TILT_MAX_Y * 2;
-    targetTiltX = -pointerY * PROFILE_TILT_MAX_X * 2;
-    scheduleTiltFrame();
-  }
-
-  function handleViewportPointerOut(event) {
-    if (!event.relatedTarget) resetProfileTilt();
-  }
-
-  function resetProfileTilt() {
-    if (!profileTiltEnabled) return;
-    clearTimeout(tiltReturnTimer);
-    if (tiltFrame !== undefined) {
-      cancelAnimationFrame(tiltFrame);
-      tiltFrame = undefined;
-    }
-    targetTiltX = PROFILE_TILT_RESTING.x;
-    targetTiltY = PROFILE_TILT_RESTING.y;
-    currentTiltX = PROFILE_TILT_RESTING.x;
-    currentTiltY = PROFILE_TILT_RESTING.y;
-    profileTiltStyle = `--profile-tilt-y: ${PROFILE_TILT_RESTING.y}deg; --profile-tilt-x: ${PROFILE_TILT_RESTING.x}deg; --profile-shadow-x: 0px; --profile-shadow-y: 0px; --profile-highlight-x: 50%; --profile-highlight-y: 28%;`;
-    profileTiltReturning = true;
-    tiltReturnTimer = setTimeout(() => {
-      profileTiltReturning = false;
-      profileTiltStyle = '';
-      tiltReturnTimer = undefined;
-    }, 560);
-  }
-
-  onMount(() => {
-    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
-    const desktopHero = window.matchMedia('(min-width: 931px)');
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-    function updateTiltAvailability() {
-      prefersReducedMotion = reducedMotion.matches;
-      profileTiltEnabled = finePointer.matches && desktopHero.matches && !reducedMotion.matches;
-      if (!profileTiltEnabled) {
-        clearTimeout(tiltReturnTimer);
-        if (tiltFrame !== undefined) cancelAnimationFrame(tiltFrame);
-        tiltFrame = undefined;
-        profileTiltReturning = false;
-        profileTiltStyle = '';
-      }
-    }
-
-    updateTiltAvailability();
-    window.addEventListener('pointermove', handleViewportPointerMove, { passive: true });
-    window.addEventListener('pointerout', handleViewportPointerOut, { passive: true });
-    window.addEventListener('blur', resetProfileTilt);
-    finePointer.addEventListener('change', updateTiltAvailability);
-    desktopHero.addEventListener('change', updateTiltAvailability);
-    reducedMotion.addEventListener('change', updateTiltAvailability);
-
-    return () => {
-      clearPreviewRollTimers();
-      clearTimeout(tiltReturnTimer);
-      if (tiltFrame !== undefined) cancelAnimationFrame(tiltFrame);
-      window.removeEventListener('pointermove', handleViewportPointerMove);
-      window.removeEventListener('pointerout', handleViewportPointerOut);
-      window.removeEventListener('blur', resetProfileTilt);
-      finePointer.removeEventListener('change', updateTiltAvailability);
-      desktopHero.removeEventListener('change', updateTiltAvailability);
-      reducedMotion.removeEventListener('change', updateTiltAvailability);
-    };
-  });
 </script>
 
 <section
@@ -282,16 +173,14 @@
       aria-label="Profile examples"
     >
       <button class="homepage-theme-button homepage-theme-button--prev" type="button" aria-label="Previous profile example" on:click={() => moveFixture(-1)}>‹</button>
-      <div
-        class="homepage-profile-wrap"
-        class:homepage-profile-wrap--returning={profileTiltReturning}
-        role="presentation"
-        style={profileTiltStyle}
+      <ProfileMotionEffect
+        motionKey={fixture.profileMotion || ''}
+        inputSurface="viewport"
       >
         <div class="homepage-profile-pop" class:homepage-profile-pop--active={profileImpactActive}>
-          <HomepageProfileDemo fixture={fixture} {previewRoll} impactActive={profileImpactActive} />
+          <HomepageProfileDemo fixture={fixture} {previewRoll} />
         </div>
-      </div>
+      </ProfileMotionEffect>
       {#if particleBurstActive}
         <div class="homepage-roll-particles" aria-hidden="true">
           {#each PROFILE_PARTICLES as particle (particle)}
@@ -427,18 +316,9 @@
     align-items: center;
     gap: 18px;
     justify-self: center;
-    perspective: 1150px;
   }
 
   .homepage-profile-stage { position: relative; width: 440px; min-width: 0; padding: 0 28px; outline: none; }
-  .homepage-profile-wrap {
-    width: 100%;
-    transform: rotateY(var(--profile-tilt-y, -8deg)) rotateX(var(--profile-tilt-x, 4deg));
-    transform-style: preserve-3d;
-    transition: none;
-    will-change: transform;
-  }
-  .homepage-profile-wrap--returning { transition: transform 0.56s cubic-bezier(0.16, 1, 0.3, 1); }
   .homepage-profile-pop { width: 100%; transform-origin: center; }
   .homepage-profile-pop--active { animation: homepage-profile-pop 0.38s cubic-bezier(0.2, 0.8, 0.2, 1); }
   .homepage-profile-stage:focus-visible { border-radius: 24px; outline: 2px solid var(--homepage-accent); outline-offset: 5px; }
@@ -535,7 +415,6 @@
     .homepage-roll-compact { max-width: 420px; }
     .homepage-hero__product { grid-column: 1; width: 100%; max-width: 470px; }
     .homepage-profile-stage { width: 100%; max-width: 440px; }
-    .homepage-profile-wrap { transform: none; transition: none; }
     .homepage-hero__context { display: none; }
   }
 
@@ -548,7 +427,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .homepage-profile-wrap { transform: none; transition: none; }
     .homepage-profile-pop--active { animation: none; }
     .homepage-roll-particles { display: none; }
     .homepage-roll-compact__button { transition: none; }

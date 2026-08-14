@@ -408,6 +408,7 @@ export function buildProfileRenderSnapshot(input = {}) {
       avatarEffectKey: cosmetics.avatar_effect || '',
       borderKey: cosmetics.profile_border || '',
       atmosphereKey: cosmetics.profile_atmosphere || '',
+      profileMotionKey: cosmetics.profile_motion || '',
       cursorTrailKey
     },
     links: {

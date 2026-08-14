@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Canonical profile motion layer — 2026-08-14
+
+- Added the free `profile_motion_perspective_tilt` catalog item and the
+  additive catalog/equipment migration without adding featured shop UI or new
+  pricing behavior.
+- Added the shared `ProfileMotionEffect` and controller. Public profiles and
+  the homepage use viewport input; Profile Studio passes the preview stage for
+  container input. Layout metadata selects a bounded identity/layout target so
+  page backgrounds and continuation content never tilt.
+- Removed homepage-only tilt state/listeners and separated motion-wrapper
+  rotation from inner card roll scale. Added controller, catalog, render-model,
+  editor, and integration regressions for the exact formula and interaction
+  boundaries.
+
 ## R2 deletion lifecycle clarification — 2026-08-14
 
 - Production forensic reads showed the canary avatar/background rows remained

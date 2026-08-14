@@ -4,7 +4,6 @@
   export let variant = 'hero';
   /** @type {any} */
   export let previewRoll = null;
-  export let impactActive = false;
 
   $: latestRoll = previewRoll || fixture?.scores?.[0] || null;
   $: links = (fixture?.links || []).slice(0, variant === 'showcase' ? 2 : 4);
@@ -44,7 +43,6 @@
     <article
       class="homepage-profile-demo homepage-profile-demo--hero"
       class:homepage-profile-demo--has-secondary={secondaryLine}
-      class:homepage-profile-demo--impact={impactActive}
       style={demoStyle}
       data-homepage-profile-specimen="hero"
       data-homepage-fixture={fixture.id}
@@ -94,9 +92,7 @@
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 22px;
     background: rgba(10, 10, 13, 0.52);
-    box-shadow:
-      var(--profile-shadow-x, 0px) calc(34px + var(--profile-shadow-y, 0px)) 80px rgba(0, 0, 0, 0.5),
-      0 0 54px color-mix(in srgb, var(--homepage-demo-accent) 12%, transparent);
+    box-shadow: 0 34px 80px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(32px) saturate(160%);
     -webkit-backdrop-filter: blur(32px) saturate(160%);
     text-align: center;
@@ -105,52 +101,18 @@
   /* Keep the authored secondary line within the established card footprint. */
   .homepage-profile-demo--hero.homepage-profile-demo--has-secondary { padding-top: 51px; padding-bottom: 26.5px; }
 
-  .homepage-profile-demo--hero::before {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 220px;
-    height: 220px;
-    content: '';
-    transform: translate(-50%, -62%);
-    border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--homepage-demo-accent) 28%, transparent), transparent 68%);
-    pointer-events: none;
-  }
-
-  .homepage-profile-demo--hero::after {
-    z-index: 0;
-    position: absolute;
-    inset: 0;
-    content: '';
-    background: radial-gradient(circle at var(--profile-highlight-x, 50%) var(--profile-highlight-y, 28%), rgba(255, 255, 255, 0.1), transparent 34%);
-    opacity: 0.34;
-    pointer-events: none;
-  }
-
-  .homepage-profile-demo--impact {
-    animation: homepage-profile-accent-pulse 0.52s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
   .homepage-profile-demo__avatar-shell {
     position: relative;
     width: 100px;
     height: 100px;
     margin: 24px auto 15px;
-    padding: 3px;
     border-radius: 50%;
-    background: conic-gradient(from 20deg, var(--homepage-demo-accent), transparent 30%, var(--homepage-demo-accent) 70%, transparent 92%, var(--homepage-demo-accent));
-    box-shadow: 0 0 28px color-mix(in srgb, var(--homepage-demo-accent) 28%, transparent);
-  }
-
-  .homepage-profile-demo--impact .homepage-profile-demo__avatar-shell {
-    animation: homepage-avatar-accent-pulse 0.52s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
   }
 
   .homepage-profile-demo__avatar {
     width: 100%;
     height: 100%;
-    border: 4px solid #0b0b0e;
     border-radius: 50%;
     background-image: var(--homepage-demo-avatar);
     background-position: center;
@@ -250,25 +212,6 @@
     flex: 0 0 auto;
     border-radius: 50%;
     background: var(--homepage-demo-accent);
-    box-shadow: 0 0 22px color-mix(in srgb, var(--homepage-demo-accent) 28%, transparent);
-  }
-
-  @keyframes homepage-profile-accent-pulse {
-    0%, 100% {
-      box-shadow:
-        var(--profile-shadow-x, 0px) calc(34px + var(--profile-shadow-y, 0px)) 80px rgba(0, 0, 0, 0.5),
-        0 0 54px color-mix(in srgb, var(--homepage-demo-accent) 12%, transparent);
-    }
-    32% {
-      box-shadow:
-        var(--profile-shadow-x, 0px) calc(34px + var(--profile-shadow-y, 0px)) 80px rgba(0, 0, 0, 0.5),
-        0 0 96px color-mix(in srgb, var(--homepage-demo-accent) 48%, transparent);
-    }
-  }
-
-  @keyframes homepage-avatar-accent-pulse {
-    0%, 100% { box-shadow: 0 0 28px color-mix(in srgb, var(--homepage-demo-accent) 28%, transparent); }
-    32% { box-shadow: 0 0 58px color-mix(in srgb, var(--homepage-demo-accent) 62%, transparent); }
   }
 
   .homepage-profile-demo--showcase { position: absolute; inset: 0; z-index: 2; }

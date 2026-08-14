@@ -129,6 +129,7 @@
               previewCollectionItems={previewCollectionItems}
               previewAllAchievements={previewAllAchievements}
               {previewDevice}
+              motionSurfaceElement={previewStage}
               renderContext={liveProfileContext}
             />
             {#if previewScrollNeeded}

@@ -243,7 +243,7 @@ if (borderRows.length !== 9 || borderKeySet.size !== 9 || borderInvalidRows.leng
   process.exit(1);
 }
 const launchRows = [...seed.matchAll(
-  /^\s*\('((?:cursor_trail|avatar_effect|profile_layout|profile_atmosphere)_[a-z0-9_]+)',\s*'[^']+',\s*'(cursor_trail|avatar_effect|profile_layout|profile_atmosphere)',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)',\s*false,\s*'(earned|free)',\s*NULL,\s*'active'\),?$/gm
+  /^\s*\('((?:cursor_trail|avatar_effect|profile_layout|profile_atmosphere|profile_motion)_[a-z0-9_]+)',\s*'[^']+',\s*'(cursor_trail|avatar_effect|profile_layout|profile_atmosphere|profile_motion)',\s*(\d+),\s*'renderer',\s*'([^']+)',\s*NULL,\s*NULL,\s*'([^']+)',\s*'([^']*)',\s*'([^']*)',\s*false,\s*'(earned|free)',\s*NULL,\s*'active'\),?$/gm
 )].map(([, itemKey, slot, cost, rendererKey, rarity, description, collection, accessTier]) => ({
   itemKey,
   slot,
@@ -268,6 +268,7 @@ const launchExpectedCosts = Object.freeze({
   avatar_effect_ghost_double: 350000, avatar_effect_night_frame: 220000, avatar_effect_daily_aura: 400000,
   avatar_effect_color_archive: 720000, profile_layout_compact: 0, profile_layout_sleek: 0,
   profile_layout_minimal: 0, profile_layout_modern: 0, profile_layout_portfolio: 0,
+  profile_motion_perspective_tilt: 0,
   profile_atmosphere_rain_window: 260000, profile_atmosphere_droplets_glass: 240000,
   profile_atmosphere_dust_light: 280000, profile_atmosphere_ink_bloom: 520000,
   profile_atmosphere_snowfall: 300000, profile_atmosphere_silk_folds: 320000,
@@ -279,7 +280,8 @@ const launchExpectedRenderers = new Set([
   ...cursorTrails.CURSOR_TRAIL_KEYS.map(key => `cursor_trail_${key.replaceAll('-', '_')}`),
   ...avatarEffects.AVATAR_EFFECT_KEYS.map(key => `avatar_effect_${key.replaceAll('-', '_')}`),
   ...profileLayouts.PROFILE_LAYOUT_KEYS.map(key => `profile_layout_${key.replaceAll('-', '_')}`),
-  ...profileAtmospheres.PROFILE_ATMOSPHERE_KEYS.map(key => `profile_atmosphere_${key.replaceAll('-', '_')}`)
+  ...profileAtmospheres.PROFILE_ATMOSPHERE_KEYS.map(key => `profile_atmosphere_${key.replaceAll('-', '_')}`),
+  'profile_motion_perspective_tilt'
 ]);
 const launchInvalidRows = launchRows.filter(row => (
   !launchExpectedRenderers.has(row.itemKey)
@@ -288,17 +290,17 @@ const launchInvalidRows = launchRows.filter(row => (
   || !expectedNameRarities.has(row.rarity)
   || !row.description.trim()
   || !row.collection.trim()
-  || row.accessTier !== (row.slot === 'profile_layout' ? 'free' : 'earned')
+  || row.accessTier !== (row.slot === 'profile_layout' || row.slot === 'profile_motion' ? 'free' : 'earned')
 ));
-const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'].map(slot => [
+const launchCounts = Object.fromEntries(['cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'].map(slot => [
   slot,
   launchRows.filter(row => row.slot === slot).length
 ]));
 if (
-    launchRows.length !== 51
-    || new Set(launchRows.map(row => row.itemKey)).size !== 51
+    launchRows.length !== 52
+    || new Set(launchRows.map(row => row.itemKey)).size !== 52
     || launchInvalidRows.length > 0
-    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 16, avatar_effect: 18, profile_layout: 5, profile_atmosphere: 12 })
+    || JSON.stringify(launchCounts) !== JSON.stringify({ cursor_trail: 16, avatar_effect: 18, profile_layout: 5, profile_atmosphere: 12, profile_motion: 1 })
 ) {
   console.error('Launch cosmetic catalog balance/drift check failed.');
   console.error(JSON.stringify({

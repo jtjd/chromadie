@@ -349,7 +349,8 @@ SELECT pg_temp.audit_assert(
   AND (SELECT count(*) = 18 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
   AND (SELECT count(*) = 5 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
   AND (SELECT count(*) = 13 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
-  AND (SELECT count(*) = 99 FROM public.shop_items WHERE catalog_status = 'active')
+  AND (SELECT count(*) = 1 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
+  AND (SELECT count(*) = 100 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -363,9 +364,9 @@ SELECT pg_temp.audit_assert(
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 97
+    AND (SELECT count(*) = 98
          FROM public.get_shop_catalog()
-         WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere') AND catalog_status = 'active')
+         WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),
   'shop catalog RPC must expose only active retained rows with bounded renderer access'
 );
@@ -888,6 +889,23 @@ SELECT pg_temp.audit_assert(
       AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_signal_ring'
    FROM audit_results WHERE name = 'launch_equip_layout'),
   'equipping a structural Profile Layout did not preserve Avatar Effect state'
+);
+INSERT INTO audit_results VALUES ('launch_equip_motion', public.equip_item('profile_motion_perspective_tilt'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->'cosmetics'->>'profile_motion' = 'profile_motion_perspective_tilt'
+      AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_sleek'
+      AND jsonb_exists(payload->'cosmetics', 'profile_motion')
+   FROM audit_results WHERE name = 'launch_equip_motion'),
+  'equipping Profile Motion did not persist exactly one motion slot'
+);
+INSERT INTO audit_results VALUES ('launch_unequip_motion', public.unequip_item('profile_motion'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND NOT (payload->'cosmetics' ? 'profile_motion')
+      AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_sleek'
+   FROM audit_results WHERE name = 'launch_unequip_motion'),
+  'unequipping Profile Motion did not preserve the other equipped slots'
 );
 INSERT INTO audit_results VALUES ('launch_wrong_slot', public.equip_item('streak_freeze'));
 SELECT pg_temp.audit_assert(

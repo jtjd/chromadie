@@ -20,6 +20,7 @@
     profile_atmosphere: 'Atmosphere',
     cursor_trail: 'Cursor',
     profile_layout: 'Layout',
+    profile_motion: 'Motion',
     consumable: 'Utility'
   }[item?.slot] || 'Cosmetic';
 

@@ -10,6 +10,7 @@ import { getCursorTrailKey } from './cursor-trail/cursorTrails.js'
 import { isAvatarEffectKey } from './avatar-effect/avatarEffects.js'
 import { isProfileLayoutKey } from './profile-layout/profileLayouts.js'
 import { isAtmosphereKey } from './profile-atmosphere/atmospheres.js'
+import { isProfileMotionKey } from './profile-motion/profileMotions.js'
 
 // --- Auth & Profile State ---
 export const session = writable(null)
@@ -111,8 +112,8 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
 
 const SHOP_CACHE_KEY = 'shop_cache:v5'
 const SHOP_CACHE_SHAPE_VERSION = 5
-const SHOP_SLOTS = new Set(['consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'])
-const NAME_RENDERER_SLOTS = new Set(['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere'])
+const SHOP_SLOTS = new Set(['consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'])
+const NAME_RENDERER_SLOTS = new Set(['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'])
 
 function normalizeShopItem(item) {
     if (!item || typeof item !== 'object' || !/^[a-z0-9_]{1,80}$/.test(item.item_key || '')) return null
@@ -134,7 +135,11 @@ function normalizeShopItem(item) {
                             ? (isAvatarEffectKey(rendererKey) ? rendererKey : '')
                             : item.slot === 'profile_layout'
                                 ? isProfileLayoutKey(rendererKey) ? rendererKey : ''
-                                : isAtmosphereKey(rendererKey) ? rendererKey : ''
+                                : item.slot === 'profile_atmosphere'
+                                    ? isAtmosphereKey(rendererKey) ? rendererKey : ''
+                                    : item.slot === 'profile_motion'
+                                        ? isProfileMotionKey(rendererKey) ? rendererKey : ''
+                                        : ''
         if (resolvedKey !== rendererKey || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(rendererKey)) return null
     } else if (NAME_RENDERER_SLOTS.has(item.slot)) {
         return null

@@ -156,7 +156,8 @@ INSERT INTO public.shop_items (
   ('profile_layout_sleek', 'Sleek', 'profile_layout', 0, 'renderer', 'sleek', NULL, NULL, 'Uncommon', 'A compact identity card with small detached presence and music strips.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_layout_minimal', 'Minimal', 'profile_layout', 0, 'renderer', 'minimal', NULL, NULL, 'Uncommon', 'A free-floating identity treatment with almost no structural container.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_layout_modern', 'Modern', 'profile_layout', 0, 'renderer', 'modern', NULL, NULL, 'Uncommon', 'A compact identity surface with a quiet secondary widget treatment.', 'Layouts', false, 'free', NULL, 'active'),
-  ('profile_layout_portfolio', 'Portfolio', 'profile_layout', 0, 'renderer', 'portfolio', NULL, NULL, 'Uncommon', 'A restrained landing view that opens into a longer personal profile story.', 'Layouts', false, 'free', NULL, 'active')
+  ('profile_layout_portfolio', 'Portfolio', 'profile_layout', 0, 'renderer', 'portfolio', NULL, NULL, 'Uncommon', 'A restrained landing view that opens into a longer personal profile story.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_motion_perspective_tilt', '3D Tilt', 'profile_motion', 0, 'renderer', 'perspective-tilt', NULL, NULL, 'Uncommon', 'A restrained perspective shift follows the pointer across the profile surface.', 'Layouts', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
   slot = EXCLUDED.slot,
@@ -225,7 +226,7 @@ ON CONFLICT (item_key) DO UPDATE SET
   catalog_status = EXCLUDED.catalog_status;
 
 INSERT INTO public.meta (key, value) VALUES
-('shop_version', '2026-08-09T00:00:00Z'),
+('shop_version', '2026-08-14T05:00:00Z'),
 ('cotw_target', '73,114,201'),
 ('official_launch_at', '2026-07-11T00:00:00Z'),
 ('founder_window_ends_at', '2026-08-11T00:00:00Z')

@@ -69,6 +69,7 @@ function createFixture({
   background,
   avatar,
   effects,
+  profileMotion = '',
   links,
   scores,
   showcasePosition
@@ -83,6 +84,7 @@ function createFixture({
     secondaryLine,
     accent,
     media: Object.freeze({ background, avatar }),
+    profileMotion,
     links: Object.freeze(links.map(link => Object.freeze({ ...link }))),
     effects: SUPPORTED_EFFECTS[effects],
     scores: Object.freeze(normalizedScores),
@@ -102,6 +104,7 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
     background: '/homepage/fixtures/meilin/background.webp',
     avatar: '/homepage/fixtures/meilin/avatar.webp',
     effects: 'portfolio',
+    profileMotion: 'profile_motion_perspective_tilt',
     showcasePosition: 'bottom',
     links: [
       { type: 'website', label: 'Website', url: 'https://chm.lol/', order: 0 },
