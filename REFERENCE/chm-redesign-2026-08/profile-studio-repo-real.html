@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>chm.lol — Profile Studio reference</title>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400,500,600,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050506;
+  --panel:rgba(12,12,15,.78);
+  --panel-card:rgba(10,10,12,.58);
+  --control:rgba(255,255,255,.035);
+  --control-2:rgba(0,0,0,.22);
+  --border:rgba(255,255,255,.10);
+  --border-hover:rgba(255,255,255,.20);
+  --text:#f8f8f8;
+  --muted:#8f9099;
+  --faint:#686971;
+  --accent:#00ffb3;
+  --accent-soft:rgba(0,255,179,.08);
+  --accent-glow:rgba(0,255,179,.24);
+  --danger:#ff5578;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-width:320px;min-height:100vh;color:var(--text);
+  font-family:Inter,system-ui,sans-serif;background:#050506;
+  background-image:
+    linear-gradient(90deg,rgba(5,5,6,.18),rgba(5,5,6,.04) 58%,rgba(5,5,6,.18)),
+    url('https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=2200&q=88');
+  background-size:cover;background-position:center;background-attachment:fixed;
+}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+nav{
+  position:sticky;top:0;z-index:50;height:64px;padding:0 30px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background:rgba(5,5,6,.84);backdrop-filter:blur(22px);
+}
+.logo{display:flex;align-items:center;gap:11px;font:600 1.25rem/1 'Clash Display',sans-serif}
+.logo-mark{position:relative;width:24px;height:24px;border:2px solid color-mix(in srgb,var(--accent) 36%,transparent);border-radius:50%;box-shadow:0 0 15px var(--accent-glow)}
+.logo-mark::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--accent)}
+.nav-right{display:flex;align-items:center;gap:14px}
+.nav-link{border:0;background:transparent;color:var(--muted);font-size:.8rem;font-weight:500}
+.nav-link:hover{color:var(--text)}
+.publish{
+  min-height:37px;padding:0 18px;border:1px solid var(--accent);border-radius:7px;
+  background:var(--accent);color:#050506;font:700 .76rem/1 'Clash Display',sans-serif;
+}
+.publish:disabled{opacity:.5;cursor:default}
+
+.dashboard{
+  width:min(calc(100% - 48px),1440px);margin:0 auto;padding:38px 0 90px;
+  display:grid;grid-template-columns:minmax(540px,640px) minmax(400px,1fr);
+  gap:clamp(42px,5vw,82px);align-items:start;
+}
+.editor-side{min-width:0}
+.editor-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:19px}
+.editor-header h1{font:600 2rem/1 'Clash Display',sans-serif;letter-spacing:-.035em}
+.save-state{display:flex;align-items:center;gap:7px;margin-top:7px;color:var(--muted);font-size:.72rem}
+.save-state i{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.published{padding:6px 10px;border:1px solid color-mix(in srgb,var(--accent) 58%,transparent);border-radius:999px;color:var(--accent);font:600 .62rem/1 'Clash Display',sans-serif}
+.tabs{display:flex;gap:26px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{
+  position:relative;padding:11px 0;border:0;background:transparent;color:var(--muted);
+  font-size:.82rem;font-weight:500
+}
+.tab.active{color:var(--text)}
+.tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--accent)}
+.panel{
+  border:1px solid var(--border);border-radius:15px;background:var(--panel);
+  backdrop-filter:blur(28px) saturate(145%);box-shadow:0 26px 70px rgba(0,0,0,.24);
+  padding:26px;
+}
+.pane{display:none}.pane.active{display:block}
+.section{padding-bottom:27px;margin-bottom:27px;border-bottom:1px solid var(--border)}
+.section:last-child{padding-bottom:0;margin-bottom:0;border-bottom:0}
+.section-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:15px}
+.section-head h2{font:600 1.05rem/1.2 'Clash Display',sans-serif}
+.section-head p{margin-top:5px;color:var(--muted);font-size:.68rem;line-height:1.45;max-width:420px}
+.badge{padding:4px 7px;border:1px solid var(--border);border-radius:999px;color:#777881;font-size:.56rem;text-transform:uppercase;letter-spacing:.08em}
+.badge.plus{color:#d6b5ff;border-color:rgba(203,166,247,.35)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.field{display:grid;gap:6px;min-width:0}
+.field.full{grid-column:1/-1}
+.label-row{display:flex;justify-content:space-between;gap:10px}
+label,.label{color:#8f9099;font-size:.64rem;text-transform:uppercase;letter-spacing:.055em}
+label small,.label small{text-transform:none;letter-spacing:0}
+.field input,.field textarea,.field select{
+  width:100%;min-height:40px;border:1px solid var(--border);border-radius:7px;
+  background:var(--control);padding:9px 11px;outline:0;color:#ededf0;font-size:.78rem
+}
+.field textarea{min-height:76px;resize:vertical;line-height:1.5}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field input[readonly]{color:#a9aab0}
+.options{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px}
+.check{display:flex;align-items:center;gap:7px;color:#aaaab1;font-size:.7rem;text-transform:none;letter-spacing:0}
+.check input{accent-color:var(--accent)}
+
+.color-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.color-role{
+  display:grid;grid-template-columns:minmax(0,1fr) 92px;align-items:center;gap:10px;
+  padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--control)
+}
+.color-role span{display:flex;align-items:center;gap:8px;color:#b9bac0;font-size:.7rem}
+.color-role i{width:13px;height:13px;border-radius:50%;background:var(--role-color);box-shadow:0 0 10px color-mix(in srgb,var(--role-color) 35%,transparent)}
+.hex{min-height:29px!important;padding:0 7px!important;background:var(--control-2)!important;font:500 .64rem/1 ui-monospace,monospace!important}
+
+.surface-row{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:13px;align-items:end}
+.range{display:grid;gap:8px;color:#92939b;font-size:.68rem;text-transform:none;letter-spacing:0}
+.range span{display:flex;justify-content:space-between;gap:10px}
+.range output{color:#6d6e76;font:500 .62rem/1 ui-monospace,monospace}
+.range input{width:100%;accent-color:var(--accent)}
+
+.effect-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.effect-card{
+  display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:10px;align-items:center;
+  padding:11px;border:1px solid var(--border);border-radius:9px;background:var(--control)
+}
+.effect-card strong{display:block;font-size:.72rem}
+.effect-card small{display:block;margin-top:3px;color:#6f7078;font-size:.6rem;line-height:1.35}
+.effect-card select{
+  min-width:0;width:100%;min-height:34px;border:1px solid var(--border);
+  border-radius:6px;background:var(--control-2);color:#aaaab1;padding:0 8px;font-size:.66rem
+}
+.reset{border:0;background:transparent;color:var(--muted);font-size:.63rem}
+.reset:hover{color:var(--text)}
+
+.media-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.media-card{overflow:hidden;border:1px solid var(--border);border-radius:9px;background:var(--control)}
+.media-preview{
+  height:115px;position:relative;display:grid;place-items:center;overflow:hidden;
+  background:#101014;background-size:cover;background-position:center
+}
+.media-preview.background{
+  background-image:url('https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=700&q=82')
+}
+.media-preview.avatar::after{
+  content:"";width:76px;height:76px;border-radius:50%;border:2px solid var(--accent);
+  background-image:url('https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=220&q=88');
+  background-size:cover;background-position:center;box-shadow:0 0 18px var(--accent-glow)
+}
+.media-glyph{font:500 1.4rem/1 'Clash Display',sans-serif;color:#85868e}
+.media-copy{padding:11px}
+.media-copy strong{font-size:.73rem}
+.media-copy small{display:block;margin-top:4px;color:#6d6e76;font-size:.59rem;line-height:1.4}
+.media-actions{display:flex;gap:6px;margin-top:9px}
+.small{
+  min-height:31px;padding:0 9px;border:1px solid var(--border-hover);border-radius:6px;
+  background:transparent;color:#a8a9b0;font-size:.63rem
+}
+.small:hover{border-color:var(--accent);color:var(--text)}
+.small.danger:hover{border-color:var(--danger);color:var(--danger)}
+.file{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+.spotify-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.spotify-row input{min-height:40px;border:1px solid var(--border);border-radius:7px;background:var(--control);padding:0 11px;outline:0;color:#ededf0;font-size:.76rem}
+.spotify-row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+.saved-list{display:grid;gap:8px}
+.saved-row{
+  display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;
+  padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--control)
+}
+.saved-thumb{width:54px;height:42px;border-radius:6px;background-size:cover;background-position:center;background-color:#101014}
+.saved-thumb.avatar{width:42px;height:42px;border-radius:50%;background-image:url('https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=150&q=82')}
+.saved-thumb.bg{background-image:url('https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=260&q=78')}
+.saved-copy strong{display:block;font-size:.69rem}
+.saved-copy small{display:block;margin-top:3px;color:#6d6e76;font-size:.58rem}
+.saved-actions{display:flex;gap:6px}
+
+.plus-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.plus-card{padding:11px;border:1px solid var(--border);border-radius:8px;background:var(--control)}
+.plus-card strong{font-size:.69rem}
+.plus-card small{display:block;margin-top:4px;color:#6d6e76;font-size:.59rem;line-height:1.4}
+
+.layouts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.layout-card{
+  position:relative;padding:9px;border:1px solid var(--border);border-radius:8px;
+  background:var(--control);text-align:left;color:var(--text)
+}
+.layout-card.active{border-color:var(--accent);box-shadow:0 0 15px var(--accent-glow)}
+.layout-mini{height:78px;margin-bottom:9px;border:1px solid rgba(255,255,255,.08);border-radius:6px;background:rgba(0,0,0,.23);position:relative;overflow:hidden}
+.layout-mini::before{content:"";position:absolute;width:22px;height:22px;border-radius:50%;left:10px;top:12px;background:#3a3b41;border:1px solid var(--accent)}
+.layout-mini::after{content:"";position:absolute;left:42px;right:11px;top:15px;height:5px;border-radius:4px;background:rgba(255,255,255,.15);box-shadow:0 13px 0 rgba(255,255,255,.08),0 34px 0 rgba(255,255,255,.08),0 46px 0 rgba(255,255,255,.06)}
+.layout-card[data-layout="minimal"] .layout-mini{background:transparent;border-color:transparent}
+.layout-card[data-layout="minimal"] .layout-mini::before{left:16px;top:13px}
+.layout-card[data-layout="portfolio"] .layout-mini::before{left:50%;transform:translateX(-50%);top:9px}
+.layout-card[data-layout="portfolio"] .layout-mini::after{left:18%;right:18%;top:42px;box-shadow:0 12px 0 rgba(255,255,255,.08)}
+.layout-card[data-layout="modern"] .layout-mini::after{box-shadow:0 13px 0 rgba(255,255,255,.08),0 39px 0 color-mix(in srgb,var(--accent) 28%,transparent)}
+.layout-card strong{display:block;font-size:.68rem}
+.layout-card small{display:block;min-height:31px;margin-top:4px;color:#6b6c74;font-size:.56rem;line-height:1.35}
+
+.segmented{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.segmented button{min-height:37px;border:0;border-right:1px solid var(--border);background:var(--control);color:#90919a;font-size:.67rem}
+.segmented button:last-child{border-right:0}
+.segmented button.active{background:var(--accent-soft);color:var(--accent)}
+
+.module-list{display:grid;gap:7px;margin-top:12px}
+.module-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;
+  min-height:41px;padding:0 10px;border:1px solid var(--border);border-radius:7px;background:var(--control)
+}
+.module-row label{display:flex;align-items:center;gap:8px;color:#b5b6bc;font-size:.68rem;text-transform:none;letter-spacing:0}
+.module-row label input{accent-color:var(--accent)}
+.module-row span{color:#666770;font-size:.58rem}
+
+.preview-side{
+  position:sticky;top:94px;min-height:calc(100vh - 130px);
+  display:flex;flex-direction:column;align-items:center;padding-top:5px
+}
+.preview-label{display:flex;align-items:center;gap:8px;margin-bottom:17px;color:#8b8c94;font-size:.63rem;letter-spacing:.1em;text-transform:uppercase}
+.preview-label i{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.card-wrap{width:350px;perspective:1200px;transition:.25s ease;transform:rotateY(-4deg) rotateX(2deg)}
+.profile-card{
+  position:relative;overflow:hidden;padding:28px 25px 23px;border:1px solid rgba(255,255,255,.11);
+  border-radius:20px;background:var(--panel-card);backdrop-filter:blur(30px) saturate(160%);
+  box-shadow:0 30px 65px rgba(0,0,0,.52),0 0 48px var(--accent-glow)
+}
+.profile-card.layout-minimal,.profile-card.layout-portfolio{background:rgba(5,5,6,.20);border-color:rgba(255,255,255,.05);backdrop-filter:blur(10px);box-shadow:0 28px 60px rgba(0,0,0,.42)}
+.profile-card.layout-sleek .profile-links{grid-template-columns:1fr}
+.profile-card.layout-portfolio{text-align:center}
+.profile-card.layout-portfolio .profile-links{max-width:240px;margin-left:auto;margin-right:auto}
+.profile-head{display:flex;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.075);color:#6b6c74;font-size:.6rem;letter-spacing:.07em;text-transform:uppercase}
+.avatar-shell{width:86px;height:86px;margin:22px auto 14px;padding:3px;border-radius:50%;background:conic-gradient(from 0deg,var(--accent),transparent,var(--accent));box-shadow:0 0 23px var(--accent-glow)}
+.avatar-shell div{width:100%;height:100%;border:3px solid #0a0a0c;border-radius:50%;background-image:url('https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=240&q=88');background-size:cover;background-position:center}
+.profile-name{text-align:center;font:600 1.78rem/1 'Clash Display',sans-serif;letter-spacing:-.035em}
+.profile-bio{text-align:center;margin:8px auto 0;max-width:260px;color:#aaaab1;font-size:.78rem;line-height:1.45}
+.profile-meta{text-align:center;margin-top:6px;color:#6f7078;font-size:.61rem}
+.profile-links{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:19px}
+.profile-links span{min-height:37px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(255,255,255,.04);font-size:.69rem}
+.profile-audio{display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding:9px 11px;border:1px solid rgba(255,255,255,.06);border-radius:8px;background:rgba(0,0,0,.3);color:#85868e;font-size:.62rem}
+.profile-audio strong{color:var(--accent)}
+.profile-roll{display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding:12px;border:1px solid rgba(255,255,255,.06);border-radius:8px;background:rgba(0,0,0,.38)}
+.profile-roll small{display:block;color:#73747b;font-size:.57rem;text-transform:uppercase;letter-spacing:.06em}
+.profile-roll strong{display:block;margin-top:4px;color:var(--accent);font:600 .82rem/1 'Clash Display',sans-serif}
+.roll-swatch{width:29px;height:29px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--accent-glow)}
+.preview-foot{width:350px;margin-top:15px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;color:#777881;font-size:.6rem}
+.preview-foot strong{color:#bfc0c5;font-weight:500}
+
+@media(max-width:1100px){
+  .dashboard{grid-template-columns:1fr;max-width:760px}
+  .preview-side{position:relative;top:auto;min-height:0;padding-top:24px}
+}
+@media(max-width:700px){
+  nav{padding:0 15px}.nav-link{display:none}
+  .dashboard{width:calc(100% - 24px);padding-top:24px}
+  .panel{padding:18px}
+  .grid2,.grid3,.color-grid,.surface-row,.effect-grid,.media-grid,.plus-grid{grid-template-columns:1fr}
+  .layouts{grid-template-columns:1fr 1fr}
+  .card-wrap,.preview-foot{width:min(100%,350px)}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><span class="logo-mark"></span><span>chm.lol</span></div>
+  <div class="nav-right">
+    <button class="nav-link">View profile</button>
+    <button class="publish" id="publishBtn" disabled>Publish profile</button>
+  </div>
+</nav>
+
+<main class="dashboard">
+<section class="editor-side">
+  <header class="editor-header">
+    <div>
+      <h1>Customize profile</h1>
+      <div class="save-state"><i></i><span id="saveText">All changes saved</span></div>
+    </div>
+    <span class="published">● Published</span>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Customize profile">
+    <button class="tab active" data-tab="appearance">Appearance</button>
+    <button class="tab" data-tab="media">Media</button>
+    <button class="tab" data-tab="layout">Layout</button>
+  </div>
+
+  <div class="panel">
+    <section class="pane active" id="appearance">
+      <div class="section">
+        <div class="section-head"><div><h2>Profile identity</h2><p>Bio and the finite presentation controls currently supported by Profile Studio.</p></div></div>
+        <div class="grid2">
+          <div class="field"><label>Username</label><input value="nocturne" readonly></div>
+          <div class="field"><label>Location <small>optional</small></label><input id="locationInput" value="Tokyo"></div>
+          <div class="field full"><div class="label-row"><label>Bio</label><span style="color:#676872;font-size:.61rem">58 / 160</span></div><textarea id="bioInput">Field recordings, night walks, and things in progress.</textarea></div>
+          <div class="field"><label>Timezone <small>optional</small></label><input value="Asia/Tokyo"></div>
+          <div class="field"><label>Description rhythm</label><select><option>Plain text</option><option>Finite typewriter</option></select></div>
+          <div class="field"><label>Entry animation</label><select><option>Fade</option><option>None</option></select></div>
+        </div>
+        <div class="options">
+          <label class="check"><input type="checkbox" checked> Show join month</label>
+          <label class="check"><input type="checkbox" checked> Show avatar</label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div><h2>Profile colors</h2><p>The current six editable page roles. Profile surface is adjusted separately below.</p></div></div>
+        <div class="color-grid">
+          <div class="color-role"><span><i style="--role-color:#F4F6FB"></i>Profile text</span><input class="hex" value="#F4F6FB"></div>
+          <div class="color-role"><span><i style="--role-color:#00FFB3"></i>Accent</span><input class="hex live-accent" value="#00FFB3"></div>
+          <div class="color-role"><span><i style="--role-color:#AEB6C4"></i>Handle & metadata</span><input class="hex" value="#AEB6C4"></div>
+          <div class="color-role"><span><i style="--role-color:#FFFFFF"></i>Username</span><input class="hex" value="#FFFFFF"></div>
+          <div class="color-role"><span><i style="--role-color:#CBD1DC"></i>Bio text</span><input class="hex" value="#CBD1DC"></div>
+          <div class="color-role"><span><i style="--role-color:#07080B"></i>Page background</span><input class="hex" value="#07080B"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div><h2>Profile surface</h2><p>Adjust the profile card. Cardless layouts ignore these surface controls.</p></div></div>
+        <div class="surface-row">
+          <div class="field"><label>Profile surface</label><input value="#11141B"></div>
+          <label class="range"><span>Opacity <output id="surfaceOpacityOut">64%</output></span><input id="surfaceOpacity" type="range" min="0" max="100" value="64"></label>
+          <label class="range"><span>Blur <output id="surfaceBlurOut">20px</output></span><input id="surfaceBlur" type="range" min="0" max="40" value="20"></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div><h2>Profile effects</h2><p>These are the current cosmetic slots. The production editor lists only items the account owns or can use.</p></div><button class="reset">Reset name effects</button></div>
+        <div class="effect-grid">
+          <div class="effect-card"><div><strong>Font</strong><small>Name effect layer</small></div><select><option>Platform default font</option></select></div>
+          <div class="effect-card"><div><strong>Material</strong><small>Name effect layer</small></div><select><option>Plain material</option></select></div>
+          <div class="effect-card"><div><strong>Motion</strong><small>Name effect layer</small></div><select><option>Still motion</option></select></div>
+          <div class="effect-card"><div><strong>Avatar effect</strong><small>Visual effect around the avatar</small></div><select><option>No avatar effect</option></select></div>
+          <div class="effect-card"><div><strong>Profile border</strong><small>Boundary cosmetic</small></div><select><option>No border</option></select></div>
+          <div class="effect-card"><div><strong>Cursor trail</strong><small>Profile-scoped pointer trail</small></div><select><option>No cursor trail</option></select></div>
+          <div class="effect-card"><div><strong>Profile atmosphere</strong><small>Page-wide authored effect</small></div><select><option>No atmosphere</option></select></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane" id="media">
+      <div class="section">
+        <div class="section-head"><div><h2>Profile media</h2><p>Avatar and background are standard profile media. Plus unlocks the richer audio and cursor library.</p></div></div>
+        <div class="media-grid">
+          <article class="media-card">
+            <input class="file" id="backgroundFile" type="file" accept="image/jpeg,image/png,image/webp">
+            <button class="media-preview background" type="button" id="backgroundPreview" aria-label="Replace background"></button>
+            <div class="media-copy"><strong>Background</strong><small>JPEG, PNG, or WebP · processed and stored as WebP</small><div class="media-actions"><button class="small" data-file="backgroundFile">Replace</button><button class="small">Unequip</button></div></div>
+          </article>
+          <article class="media-card">
+            <input class="file" id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp">
+            <button class="media-preview avatar" type="button" aria-label="Replace avatar"></button>
+            <div class="media-copy"><strong>Avatar</strong><small>JPEG, PNG, or WebP · processed and stored as WebP</small><div class="media-actions"><button class="small" data-file="avatarFile">Replace</button><button class="small">Unequip</button></div></div>
+          </article>
+          <article class="media-card">
+            <div class="media-preview"><span class="media-glyph">♪</span></div>
+            <div class="media-copy"><strong>Profile audio <span class="badge plus">Plus</span></strong><small>MP3 · reusable audio library / playlist support</small><div class="media-actions"><button class="small">Upload audio</button></div></div>
+          </article>
+          <article class="media-card">
+            <div class="media-preview"><span class="media-glyph">↖</span></div>
+            <div class="media-copy"><strong>Custom cursor <span class="badge plus">Plus</span></strong><small>JPEG, PNG, WebP, or ANI</small><div class="media-actions"><button class="small">Upload cursor</button></div></div>
+          </article>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div><h2>Spotify</h2><p>Track, playlist, or album URLs from open.spotify.com are supported.</p></div></div>
+        <div class="spotify-row"><input placeholder="https://open.spotify.com/..."><button class="small">Save Spotify</button></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div><h2>Background options</h2><p>The treatment controls currently applied to the uploaded background.</p></div></div>
+        <div class="grid2">
+          <label class="range"><span>Blur <output id="bgBlurOut">0px</output></span><input id="bgBlur" type="range" min="0" max="40" value="0"></label>
+          <label class="range"><span>Image opacity <output id="bgOpacityOut">100%</output></span><input id="bgOpacity" type="range" min="0" max="100" value="100"></label>
+          <div class="field"><label>Overlay color</label><input value="#000000"></div>
+          <label class="range"><span>Overlay opacity <output id="overlayOut">0%</output></span><input id="overlayOpacity" type="range" min="0" max="100" value="0"></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div><h2>Saved media</h2><p>Unequip only removes an asset from the profile. Delete from library is permanent.</p></div></div>
+        <div class="saved-list">
+          <div class="saved-row"><span class="saved-thumb avatar"></span><div class="saved-copy"><strong>profile-avatar.webp</strong><small>Active avatar · saved media</small></div><div class="saved-actions"><button class="small danger">Delete from library</button></div></div>
+          <div class="saved-row"><span class="saved-thumb bg"></span><div class="saved-copy"><strong>fuji-background.webp</strong><small>Active background · saved media</small></div><div class="saved-actions"><button class="small danger">Delete from library</button></div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div><h2>Rich media</h2><p>Additional bounded profile media available through Chromadie Plus.</p></div><span class="badge plus">Plus</span></div>
+        <div class="plus-grid">
+          <div class="plus-card"><strong>Background video</strong><small>Up to 25 MB · autoplay is muted.</small></div>
+          <div class="plus-card"><strong>Banner</strong><small>Processed to bounded WebP.</small></div>
+          <div class="plus-card"><strong>Pointer cursor</strong><small>Separate pointer asset · WebP or ANI.</small></div>
+          <div class="plus-card"><strong>Audio playlist</strong><small>Up to 5 MP3 tracks with ordering and playback settings.</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane" id="layout">
+      <div class="section">
+        <div class="section-head"><div><h2>Profile layout</h2><p>Five free structural layouts. Background, media, name, avatar, and cosmetics provide the personality.</p></div><span class="badge" id="layoutBadge">Compact</span></div>
+        <div class="layouts">
+          <button class="layout-card active" data-layout="compact"><div class="layout-mini"></div><strong>Compact</strong><small>Horizontal identity head with a tiny integrated roll.</small></button>
+          <button class="layout-card" data-layout="sleek"><div class="layout-mini"></div><strong>Sleek</strong><small>Stacked card with detached music and Today strips.</small></button>
+          <button class="layout-card" data-layout="minimal"><div class="layout-mini"></div><strong>Minimal</strong><small>Offset, cardless identity with an inline indicator.</small></button>
+          <button class="layout-card" data-layout="modern"><div class="layout-mini"></div><strong>Modern</strong><small>Compact identity with a small secondary roll widget.</small></button>
+          <button class="layout-card" data-layout="portfolio"><div class="layout-mini"></div><strong>Portfolio</strong><small>Cardless centered hero with Today below the fold.</small></button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div><h2>Link alignment</h2><p>Controls how public links sit inside the selected layout.</p></div></div>
+        <div class="segmented" id="alignment"><button class="active">Left</button><button>Center</button><button>Right</button></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><div><h2>Visible sections</h2><p>Daily roll is fixed. These secondary modules can be shown, hidden, and ordered in the real editor.</p></div></div>
+        <div class="module-list">
+          <div class="module-row"><label><input type="checkbox" checked disabled> Daily roll</label><span>fixed</span></div>
+          <div class="module-row"><label><input type="checkbox" checked> Progress stats</label><span>wide / medium / narrow</span></div>
+          <div class="module-row"><label><input type="checkbox" checked> Signature roll</label><span>wide / medium / narrow</span></div>
+          <div class="module-row"><label><input type="checkbox" checked> Social links</label><span>wide / medium / narrow</span></div>
+          <div class="module-row"><label><input type="checkbox" checked> Recent colors</label><span>wide / medium / narrow</span></div>
+          <div class="module-row"><label><input type="checkbox"> Pinned achievements</label><span>wide / medium / narrow</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
+
+<aside class="preview-side">
+  <div class="preview-label"><i></i> Live public-profile preview</div>
+  <div class="card-wrap" id="cardWrap">
+    <article class="profile-card layout-compact" id="profileCard">
+      <div class="profile-head"><span>Profile preview</span><span id="previewLayout">Compact</span></div>
+      <div class="avatar-shell"><div id="previewAvatar"></div></div>
+      <h2 class="profile-name">nocturne</h2>
+      <p class="profile-bio" id="previewBio">Field recordings, night walks, and things in progress.</p>
+      <div class="profile-meta" id="previewMeta">Tokyo · Joined Aug 2026</div>
+      <div class="profile-links"><span>Website</span><span>GitHub</span><span>YouTube</span><span>Discord</span></div>
+      <div class="profile-audio"><span>Profile audio</span><strong>▶ 01:42</strong></div>
+      <div class="profile-roll"><div><small>Today's color</small><strong id="previewColor">#00FFB3</strong></div><i class="roll-swatch"></i></div>
+    </article>
+  </div>
+  <div class="preview-foot"><span>Draft preview</span><strong id="previewStatus">Published</strong></div>
+</aside>
+</main>
+
+<script>
+const root=document.documentElement;
+const dirty=()=>{
+  document.getElementById('saveText').textContent='Unpublished changes';
+  document.getElementById('previewStatus').textContent='Draft';
+  document.getElementById('publishBtn').disabled=false;
+};
+
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(btn.dataset.tab).classList.add('active');
+}));
+
+document.getElementById('bioInput').addEventListener('input',e=>{document.getElementById('previewBio').textContent=e.target.value;dirty()});
+document.getElementById('locationInput').addEventListener('input',e=>{document.getElementById('previewMeta').textContent=(e.target.value||'Location hidden')+' · Joined Aug 2026';dirty()});
+
+document.querySelectorAll('.live-accent').forEach(input=>input.addEventListener('change',e=>{
+  const value=e.target.value.trim();
+  if(/^#[0-9a-f]{6}$/i.test(value)){
+    root.style.setProperty('--accent',value);
+    root.style.setProperty('--accent-soft',value+'16');
+    root.style.setProperty('--accent-glow',value+'3d');
+    document.getElementById('previewColor').textContent=value.toUpperCase();
+    dirty();
+  }
+}));
+
+const surfaceOpacity=document.getElementById('surfaceOpacity');
+const surfaceBlur=document.getElementById('surfaceBlur');
+const profileCard=document.getElementById('profileCard');
+function updateSurface(){
+  document.getElementById('surfaceOpacityOut').textContent=surfaceOpacity.value+'%';
+  document.getElementById('surfaceBlurOut').textContent=surfaceBlur.value+'px';
+  if(!profileCard.classList.contains('layout-minimal')&&!profileCard.classList.contains('layout-portfolio')){
+    profileCard.style.background=`rgba(10,10,12,${surfaceOpacity.value/100})`;
+    profileCard.style.backdropFilter=`blur(${surfaceBlur.value}px) saturate(160%)`;
+  }
+  dirty();
+}
+surfaceOpacity.addEventListener('input',updateSurface);
+surfaceBlur.addEventListener('input',updateSurface);
+
+const bgBlur=document.getElementById('bgBlur'),bgOpacity=document.getElementById('bgOpacity'),overlayOpacity=document.getElementById('overlayOpacity');
+function updateBgLabels(){
+  document.getElementById('bgBlurOut').textContent=bgBlur.value+'px';
+  document.getElementById('bgOpacityOut').textContent=bgOpacity.value+'%';
+  document.getElementById('overlayOut').textContent=overlayOpacity.value+'%';
+  document.body.style.backgroundSize='cover';
+  dirty();
+}
+bgBlur.addEventListener('input',updateBgLabels);
+bgOpacity.addEventListener('input',updateBgLabels);
+overlayOpacity.addEventListener('input',updateBgLabels);
+
+document.querySelectorAll('[data-file]').forEach(btn=>btn.addEventListener('click',()=>document.getElementById(btn.dataset.file).click()));
+document.getElementById('backgroundPreview').addEventListener('click',()=>document.getElementById('backgroundFile').click());
+
+document.getElementById('backgroundFile').addEventListener('change',e=>{
+  const file=e.target.files?.[0]; if(!file)return;
+  const url=URL.createObjectURL(file);
+  document.body.style.backgroundImage=`linear-gradient(90deg,rgba(5,5,6,.18),rgba(5,5,6,.04) 58%,rgba(5,5,6,.18)),url('${url}')`;
+  document.getElementById('backgroundPreview').style.backgroundImage=`url('${url}')`;
+  dirty();
+});
+document.getElementById('avatarFile').addEventListener('change',e=>{
+  const file=e.target.files?.[0]; if(!file)return;
+  const url=URL.createObjectURL(file);
+  document.getElementById('previewAvatar').style.backgroundImage=`url('${url}')`;
+  dirty();
+});
+
+document.querySelectorAll('.layout-card').forEach(card=>card.addEventListener('click',()=>{
+  document.querySelectorAll('.layout-card').forEach(x=>x.classList.remove('active'));
+  card.classList.add('active');
+  const layout=card.dataset.layout;
+  profileCard.className='profile-card layout-'+layout;
+  const label=layout.charAt(0).toUpperCase()+layout.slice(1);
+  document.getElementById('previewLayout').textContent=label;
+  document.getElementById('layoutBadge').textContent=label;
+  profileCard.style.background='';
+  profileCard.style.backdropFilter='';
+  dirty();
+}));
+
+document.querySelectorAll('#alignment button').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#alignment button').forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active'); dirty();
+}));
+
+document.querySelectorAll('.field input:not([readonly]),.field textarea,.field select,.check input,.effect-card select,.module-row input:not(:disabled),.spotify-row input').forEach(el=>el.addEventListener('change',dirty));
+
+document.getElementById('publishBtn').addEventListener('click',()=>{
+  document.getElementById('saveText').textContent='All changes saved';
+  document.getElementById('previewStatus').textContent='Published';
+  document.getElementById('publishBtn').disabled=true;
+});
+</script>
+</body>
+</html>

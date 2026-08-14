@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>chm.lol — Your Profile, Alive</title>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050506;
+    --panel: rgba(13, 13, 16, 0.66);
+    --panel-heavy: rgba(8, 8, 10, 0.82);
+    --border: rgba(255,255,255,.11);
+    --border-strong: rgba(255,255,255,.18);
+    --text: #f5f5f7;
+    --muted: #95959f;
+    --muted-2: #6f6f79;
+    --accent: #00ffb3;
+    --accent-soft: rgba(0,255,179,.12);
+    --accent-glow: rgba(0,255,179,.28);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    min-width: 320px;
+  }
+  button, input { font: inherit; }
+  a { color: inherit; }
+
+  .background {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.01);
+    filter: saturate(1.08) contrast(1.06);
+    transition: background-image .45s ease, filter .3s ease;
+  }
+  .background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 62% 35%, rgba(5,5,6,.05), rgba(5,5,6,.32) 40%, rgba(5,5,6,.76) 100%),
+      linear-gradient(90deg, rgba(5,5,6,.55) 0%, rgba(5,5,6,.12) 44%, rgba(5,5,6,.22) 72%, rgba(5,5,6,.68) 100%);
+  }
+
+  .page { position: relative; z-index: 2; }
+  .shell { width: min(1480px, calc(100% - 64px)); margin: 0 auto; }
+
+  nav {
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    font-family: 'Clash Display', sans-serif;
+    font-size: 1.28rem;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: -.025em;
+  }
+  .logo-mark {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    border: 2px solid color-mix(in srgb, var(--accent) 36%, transparent);
+    border-radius: 999px;
+    box-shadow: 0 0 18px var(--accent-glow);
+  }
+  .logo-mark::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+  .nav-actions { display: flex; align-items: center; gap: 28px; }
+  .nav-actions a:not(.button) {
+    color: rgba(245,245,247,.6);
+    font-size: .84rem;
+    text-decoration: none;
+    transition: color .2s ease;
+  }
+  .nav-actions a:not(.button):hover { color: var(--text); }
+  .button {
+    border: 0;
+    border-radius: 9px;
+    background: var(--text);
+    color: #08080a;
+    min-height: 42px;
+    padding: 0 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-family: 'Clash Display', sans-serif;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .18s ease, background .18s ease;
+  }
+  .button:hover { transform: translateY(-1px); background: var(--accent); }
+
+
+  /* HERO — fixed center composition */
+  .hero {
+    min-height: calc(100svh - 88px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 470px minmax(0, 1fr);
+    gap: clamp(28px, 4vw, 72px);
+    align-items: center;
+    padding: 34px 0 70px;
+  }
+
+  .hero-copy {
+    justify-self: start;
+    width: min(100%, 360px);
+    align-self: center;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(245,245,247,.62);
+    font-size: .69rem;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+
+  h1, h2, h3 { font-family: 'Clash Display', sans-serif; }
+
+  .hero h1 {
+    font-size: clamp(3.8rem, 5.1vw, 5.7rem);
+    line-height: .86;
+    letter-spacing: -.055em;
+    font-weight: 600;
+    margin-bottom: 24px;
+    text-shadow: 0 8px 40px rgba(0,0,0,.55);
+  }
+  .hero h1 span { display: block; color: var(--accent); }
+
+  .hero-lede {
+    max-width: 330px;
+    color: rgba(245,245,247,.72);
+    font-size: .98rem;
+    line-height: 1.62;
+    text-shadow: 0 2px 14px rgba(0,0,0,.72);
+  }
+
+  .roll-compact {
+    margin-top: 30px;
+    max-width: 340px;
+    border-top: 1px solid rgba(255,255,255,.14);
+    border-bottom: 1px solid rgba(255,255,255,.10);
+    padding: 16px 0;
+  }
+  .roll-top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .roll-meta strong {
+    display: block;
+    font-family: 'Clash Display', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .roll-meta span {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: .72rem;
+    line-height: 1.35;
+  }
+  .rolled-color {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-family: 'Clash Display', sans-serif;
+    font-size: .68rem;
+  }
+  .rolled-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #3a3a3f;
+    transition: background .2s ease, box-shadow .2s ease;
+  }
+  .roll-button {
+    width: 100%;
+    height: 44px;
+    border: 1px solid var(--accent);
+    border-radius: 9px;
+    background: rgba(5,5,6,.28);
+    color: var(--accent);
+    font-family: 'Clash Display', sans-serif;
+    font-size: .86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+  }
+  .roll-button:hover {
+    background: var(--accent);
+    color: #050506;
+    box-shadow: 0 0 24px var(--accent-glow);
+  }
+  .roll-button:disabled { opacity: .6; cursor: wait; }
+
+  /* The middle column is deliberately fixed so the profile remains
+     geometrically centered in the desktop hero. */
+  .hero-product {
+    grid-column: 2;
+    justify-self: center;
+    width: 470px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    perspective: 1400px;
+  }
+
+  .profile-stage {
+    position: relative;
+    width: 440px;
+    padding: 0 28px;
+  }
+  .profile-wrap {
+    width: 100%;
+    transform: rotateY(-4deg) rotateX(2deg);
+    transform-style: preserve-3d;
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .25s ease;
+  }
+  .profile-card {
+    position: relative;
+    width: 100%;
+    padding: 29px 28px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 22px;
+    background: rgba(10,10,13,.60);
+    backdrop-filter: blur(32px) saturate(160%);
+    box-shadow:
+      0 34px 80px rgba(0,0,0,.50),
+      0 0 54px color-mix(in srgb, var(--accent) 18%, transparent);
+    overflow: hidden;
+  }
+  .profile-card.layout-sleek .socials { grid-template-columns: 1fr; }
+  .profile-card.layout-minimal,
+  .profile-card.layout-portfolio {
+    background: rgba(5,5,6,.18);
+    border-color: rgba(255,255,255,.06);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 30px 70px rgba(0,0,0,.42);
+  }
+  .profile-card.layout-minimal .profile-head,
+  .profile-card.layout-portfolio .profile-head { border-bottom-color: transparent; }
+  .profile-card.layout-portfolio { text-align: center; }
+  .profile-card.layout-portfolio .socials { max-width: 270px; margin-left: auto; margin-right: auto; }
+
+  .profile-card::before {
+    content: '';
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%,-62%);
+    background: radial-gradient(circle, var(--accent-glow), transparent 68%);
+    pointer-events: none;
+  }
+  .profile-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    color: rgba(245,245,247,.40);
+    font-family: 'Clash Display', sans-serif;
+    font-size: .67rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .profile-head strong { color: rgba(245,245,247,.80); font-weight: 600; }
+
+  .avatar-shell {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 24px auto 15px;
+    padding: 3px;
+    border-radius: 50%;
+    background: conic-gradient(from 20deg, var(--accent), transparent 30%, var(--accent) 70%, transparent 92%, var(--accent));
+    box-shadow: 0 0 28px var(--accent-glow);
+  }
+  .avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    border: 4px solid #0b0b0e;
+  }
+  .profile-name {
+    text-align: center;
+    font-size: 1.95rem;
+    font-weight: 600;
+    letter-spacing: -.035em;
+    line-height: 1;
+  }
+  .profile-bio {
+    text-align: center;
+    margin-top: 8px;
+    color: rgba(245,245,247,.54);
+    font-size: .84rem;
+  }
+  .socials {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 22px;
+  }
+  .social {
+    height: 41px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 9px;
+    background: rgba(255,255,255,.043);
+    color: rgba(245,245,247,.86);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .78rem;
+    font-weight: 500;
+  }
+  .aura-panel {
+    margin-top: 11px;
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 10px;
+    background: rgba(0,0,0,.30);
+  }
+  .aura-panel small {
+    display: block;
+    color: var(--muted-2);
+    font-size: .62rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .aura-panel strong {
+    display: block;
+    margin-top: 3px;
+    font-family: 'Clash Display', sans-serif;
+    font-size: .90rem;
+  }
+  .aura-swatch {
+    width: 31px;
+    height: 31px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 22px var(--accent-glow);
+  }
+
+  .theme-button {
+    position: absolute;
+    top: 48%;
+    transform: translateY(-50%);
+    z-index: 6;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(10,10,13,.60);
+    backdrop-filter: blur(16px);
+    color: var(--text);
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease, color .2s ease;
+  }
+  .theme-button:hover {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #050506;
+  }
+  .theme-button.prev { left: 0; }
+  .theme-button.next { right: 0; }
+
+  .claim {
+    width: 410px;
+    display: flex;
+    align-items: center;
+    padding: 6px 6px 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: rgba(8,8,10,.76);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 16px 38px rgba(0,0,0,.26);
+  }
+  .claim:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .claim-prefix {
+    color: rgba(245,245,247,.50);
+    font-family: 'Clash Display', sans-serif;
+    font-weight: 500;
+  }
+  .claim input {
+    min-width: 0;
+    flex: 1;
+    height: 42px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    padding: 0 8px;
+    font-family: 'Clash Display', sans-serif;
+    font-size: .96rem;
+  }
+  .claim input::placeholder { color: rgba(245,245,247,.23); }
+  .claim button { min-width: 92px; }
+
+  .product-caption {
+    color: rgba(245,245,247,.38);
+    font-size: .70rem;
+    text-align: center;
+  }
+
+  .hero-context {
+    justify-self: end;
+    width: min(100%, 270px);
+    align-self: center;
+    padding-top: 42px;
+  }
+  .context-kicker {
+    color: rgba(245,245,247,.38);
+    font-size: .66rem;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .context-rule {
+    height: 1px;
+    background: rgba(255,255,255,.12);
+    margin-bottom: 4px;
+  }
+  .context-row {
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .context-row span {
+    color: rgba(245,245,247,.42);
+    font-size: .72rem;
+  }
+  .context-row strong {
+    font-family: 'Clash Display', sans-serif;
+    font-size: .78rem;
+    font-weight: 500;
+    color: rgba(245,245,247,.82);
+    text-align: right;
+  }
+  .context-note {
+    margin-top: 18px;
+    color: rgba(245,245,247,.47);
+    font-size: .76rem;
+    line-height: 1.55;
+    max-width: 240px;
+  }
+  .context-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 16px;
+  }
+  .context-dot {
+    width: 22px;
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.13);
+    transition: background .2s ease, width .2s ease;
+  }
+  .context-dot.active {
+    width: 34px;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  @media (max-width: 1180px) {
+    .hero {
+      grid-template-columns: minmax(0,1fr) 430px minmax(0,.7fr);
+      gap: 24px;
+    }
+    .hero-product { width: 430px; }
+    .profile-stage { width: 410px; }
+    .claim { width: 390px; }
+    .hero-context { width: 210px; }
+    .hero h1 { font-size: clamp(3.55rem,5.4vw,4.8rem); }
+  }
+
+  @media (max-width: 930px) {
+    .hero {
+      min-height: auto;
+      grid-template-columns: 1fr;
+      gap: 42px;
+      padding: 42px 0 76px;
+    }
+    .hero-copy {
+      justify-self: stretch;
+      width: 100%;
+      max-width: 560px;
+    }
+    .hero h1 {
+      font-size: clamp(4rem, 14vw, 5.5rem);
+      max-width: 520px;
+    }
+    .hero-lede { max-width: 480px; }
+    .roll-compact { max-width: 420px; }
+    .hero-product {
+      grid-column: 1;
+      width: 100%;
+      max-width: 470px;
+      justify-self: center;
+    }
+    .profile-stage {
+      width: 100%;
+      max-width: 440px;
+    }
+    .profile-wrap { transform: none !important; }
+    .claim {
+      width: min(100%, 410px);
+    }
+    .hero-context { display: none; }
+  }
+
+  @media (max-width: 460px) {
+    .profile-stage { padding: 0 18px; }
+    .theme-button.prev { left: 0; }
+    .theme-button.next { right: 0; }
+    .profile-card {
+      padding: 21px 18px;
+      border-radius: 18px;
+    }
+    .avatar-shell { width: 90px; height: 90px; }
+    .profile-name { font-size: 1.75rem; }
+    .claim { padding-left: 12px; }
+    .claim-prefix { font-size: .86rem; }
+    .claim input { font-size: .88rem; padding: 0 5px; }
+    .claim button { min-width: 80px; padding: 0 10px; }
+  }
+
+  /* TRANSITION */
+  .fade-to-content {
+    position: relative;
+    z-index: 2;
+    height: 180px;
+    margin-top: -120px;
+    background: linear-gradient(to bottom, transparent, rgba(5,5,6,.82) 55%, var(--bg));
+    pointer-events: none;
+  }
+
+  /* MAIN CONTENT */
+  .content {
+    position: relative;
+    z-index: 3;
+    background: var(--bg);
+  }
+  .section { width: min(1160px, calc(100% - 48px)); margin: 0 auto; }
+  .section-kicker {
+    color: var(--accent);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    margin-bottom: 14px;
+  }
+  .section-heading {
+    max-width: 780px;
+    font-size: clamp(3rem, 5vw, 5.25rem);
+    line-height: .94;
+    letter-spacing: -.048em;
+    font-weight: 600;
+  }
+  .section-heading span { color: var(--accent); }
+  .section-sub {
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.65;
+    max-width: 590px;
+  }
+
+  .how { padding: 110px 0 130px; }
+  .steps { margin-top: 74px; border-top: 1px solid var(--border); }
+  .step {
+    display: grid;
+    grid-template-columns: 90px minmax(160px,.8fr) minmax(280px,1.15fr) minmax(220px,.8fr);
+    gap: 34px;
+    padding: 34px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .step-num {
+    color: color-mix(in srgb, var(--accent) 48%, transparent);
+    font-family: 'Clash Display', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 600;
+  }
+  .step h3 { font-size: 1.65rem; letter-spacing: -.03em; }
+  .step p { color: var(--muted); line-height: 1.62; font-size: .92rem; max-width: 430px; }
+  .step-visual {
+    justify-self: end;
+    width: 210px;
+    height: 82px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px;
+    background: rgba(255,255,255,.025);
+    position: relative;
+    overflow: hidden;
+  }
+  .visual-roll { display: flex; align-items: center; justify-content: center; gap: 9px; }
+  .visual-roll span { width: 18px; height: 18px; border-radius: 50%; opacity: .22; }
+  .visual-roll span:nth-child(1) { background: #ff5c8a; }
+  .visual-roll span:nth-child(2) { background: #ffd166; }
+  .visual-roll span:nth-child(3) { background: var(--accent); opacity: 1; box-shadow: 0 0 20px var(--accent-glow); transform: scale(1.3); }
+  .visual-roll span:nth-child(4) { background: #7aa2f7; }
+  .visual-roll span:nth-child(5) { background: #bb9af7; }
+  .visual-build::before,
+  .visual-build::after {
+    content: '';
+    position: absolute;
+    border-radius: 9px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.045);
+  }
+  .visual-build::before { width: 90px; height: 58px; left: 35px; top: 12px; transform: rotate(-5deg); }
+  .visual-build::after { width: 90px; height: 58px; right: 25px; top: 12px; border-color: color-mix(in srgb, var(--accent) 65%, transparent); box-shadow: 0 0 22px var(--accent-soft); transform: rotate(5deg); }
+  .visual-seen { display:flex; align-items:center; justify-content:center; gap:7px; }
+  .visual-seen span { height: 8px; border-radius: 100px; background: rgba(255,255,255,.08); }
+  .visual-seen span:nth-child(1) { width: 34px; }
+  .visual-seen span:nth-child(2) { width: 52px; background: var(--accent); box-shadow: 0 0 14px var(--accent-soft); }
+  .visual-seen span:nth-child(3) { width: 70px; }
+
+  /* SHOWCASE */
+  .showcase-wrap { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: #070708; }
+  .showcase { padding: 120px 0 132px; }
+  .showcase-top { display:flex; justify-content:space-between; gap:60px; align-items:flex-end; }
+  .showcase-top .section-sub { max-width: 420px; margin: 0 0 4px; }
+  .profiles-grid {
+    margin-top: 66px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .show-card {
+    min-height: 470px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.1);
+    position: relative;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+  }
+  .show-card::after {
+    content: '';
+    position:absolute; inset:0;
+    background: linear-gradient(to bottom, rgba(2,2,3,.12), rgba(2,2,3,.42) 45%, rgba(2,2,3,.8));
+  }
+  .mini-profile {
+    position:absolute;
+    z-index:2;
+    left:22px; right:22px; bottom:22px;
+    padding:20px;
+    border-radius:15px;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(8,8,10,.6);
+    backdrop-filter: blur(20px);
+  }
+  .show-card--minimal .mini-profile {
+    left: 30px; right: auto; width: 58%; border-color: transparent;
+    background: rgba(5,5,6,.26); backdrop-filter: blur(10px);
+  }
+  .show-card--sleek .mini-links { grid-template-columns: 1fr; }
+  .show-card--portfolio .mini-profile {
+    left: 50%; right: auto; width: 72%; transform: translateX(-50%);
+    text-align: center; border-color: transparent; background: rgba(5,5,6,.26);
+  }
+  .show-card--portfolio .mini-head { justify-content: center; flex-direction: column; }
+  .show-card--portfolio .mini-links { max-width: 230px; margin-left: auto; margin-right: auto; }
+
+  .mini-head { display:flex; align-items:center; gap:12px; }
+  .mini-avatar { width:46px; height:46px; border-radius:50%; background-size:cover; background-position:center; border:2px solid var(--mini-accent,#fff); box-shadow:0 0 16px color-mix(in srgb, var(--mini-accent,#fff) 40%, transparent); }
+  .mini-name { font-family:'Clash Display',sans-serif; font-size:1.15rem; font-weight:600; }
+  .mini-meta { color:rgba(245,245,247,.5); font-size:.72rem; margin-top:2px; }
+  .mini-links { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:15px; }
+  .mini-links span { height:33px; border-radius:8px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.045); display:flex; align-items:center; justify-content:center; font-size:.72rem; }
+  .show-label {
+    position:absolute; z-index:3; left:20px; top:20px;
+    padding:7px 10px; border-radius:100px;
+    border:1px solid rgba(255,255,255,.11);
+    background:rgba(8,8,10,.58); backdrop-filter:blur(12px);
+    font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:rgba(245,245,247,.68);
+  }
+
+  /* COMMUNITY */
+  .community { padding: 112px 0 120px; display:grid; grid-template-columns:.9fr 1.1fr; gap:80px; align-items:center; }
+  .community-copy .section-heading { font-size: clamp(2.9rem, 4vw, 4.4rem); }
+  .leaderboard {
+    border-top:1px solid var(--border);
+  }
+  .leader-row {
+    min-height:70px;
+    display:grid;
+    grid-template-columns:50px 1fr auto 18px;
+    gap:16px;
+    align-items:center;
+    border-bottom:1px solid var(--border);
+  }
+  .leader-rank { color:var(--muted); font-family:'Clash Display',sans-serif; font-size:.92rem; }
+  .leader-rank.top { color:var(--accent); }
+  .leader-name { font-family:'Clash Display',sans-serif; font-weight:500; }
+  .leader-score { font-size:.8rem; font-weight:600; }
+  .leader-color { width:10px; height:10px; border-radius:3px; box-shadow:0 0 11px currentColor; }
+
+  /* CTA */
+  .final {
+    padding: 118px 0 52px;
+    text-align:center;
+    border-top:1px solid var(--border);
+  }
+  .final h2 { font-size:clamp(3.6rem,6vw,6rem); line-height:.9; letter-spacing:-.05em; }
+  .final p { color:var(--muted); max-width:500px; margin:18px auto 34px; line-height:1.6; }
+  .final .button { min-height:58px; padding:0 30px; font-size:1rem; }
+  footer { width:min(1160px,calc(100% - 48px)); margin:0 auto; padding:28px 0 36px; border-top:1px solid var(--border); color:var(--muted-2); font-size:.76rem; display:flex; justify-content:space-between; gap:24px; }
+
+  @media (max-width: 1100px) {
+    .shell { width: min(100% - 40px, 980px); }
+    .step { grid-template-columns:60px 170px 1fr; }
+    .step-visual { display:none; }
+    .profiles-grid { grid-template-columns:1fr 1fr; }
+    .show-card:last-child { grid-column:1 / -1; min-height:410px; }
+  }
+
+  @media (max-width: 780px) {
+    .shell { width: calc(100% - 30px); }
+    nav { height:70px; }
+    .nav-actions a:not(.button) { display:none; }
+    .nav-actions { gap:10px; }
+    .nav-actions .button { min-height:38px; padding:0 14px; font-size:.8rem; }
+    .fade-to-content { height:120px; margin-top:-80px; }
+    .section { width:calc(100% - 30px); }
+    .how, .showcase { padding:86px 0 94px; }
+    .section-heading { font-size:clamp(2.9rem,13vw,4rem); }
+    .steps { margin-top:48px; }
+    .step { grid-template-columns:45px 1fr; gap:15px 18px; align-items:start; }
+    .step-num { font-size:1.8rem; }
+    .step h3 { font-size:1.35rem; }
+    .step p { grid-column:2; }
+    .showcase-top { display:block; }
+    .showcase-top .section-sub { margin-top:20px; }
+    .profiles-grid { grid-template-columns:1fr; gap:14px; }
+    .show-card, .show-card:last-child { grid-column:auto; min-height:440px; }
+    .community { grid-template-columns:1fr; gap:48px; padding:88px 0 94px; }
+    .final { padding:88px 0 48px; }
+    footer { width:calc(100% - 30px); flex-direction:column; }
+  }
+
+  @media (max-width: 460px) {
+    .profile-stage { padding:0 18px; }
+    .theme-button.prev { left:-1px; }
+    .theme-button.next { right:-1px; }
+    .profile-card { padding:21px 18px; border-radius:18px; }
+    .avatar-shell { width:92px; height:92px; }
+    .profile-name { font-size:1.8rem; }
+    .claim { padding-left:12px; }
+    .claim-prefix { font-size:.88rem; }
+    .claim input { font-size:.9rem; padding:0 5px; }
+    .claim button { min-width:82px; padding:0 10px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior:auto !important; transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="background" id="background"></div>
+<div class="page">
+  <header class="shell">
+    <nav>
+      <a class="logo" href="#top"><span class="logo-mark" aria-hidden="true"></span><span>chm.lol</span></a>
+      <div class="nav-actions">
+        <a href="#how">How it works</a>
+        <a href="#showcase">Profiles</a>
+        <a href="#community">Discover</a>
+        <a class="button" href="#claim">Claim handle</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+
+    <section class="hero shell" id="top">
+      <div class="hero-copy">
+        <div class="eyebrow">A profile that changes every day</div>
+        <h1>Your profile,<span id="headlineAccent">alive.</span></h1>
+        <p class="hero-lede">Build a public profile with your background, avatar, links, music, layouts, and effects. Roll once a day and let every result become part of your history.</p>
+
+        <div class="roll-compact">
+          <div class="roll-top">
+            <div class="roll-meta">
+              <strong>Preview today's roll</strong>
+              <span>Color, score, rarity, and conditions become part of your daily history.</span>
+            </div>
+            <div class="rolled-color">
+              <span class="rolled-dot" id="rolledDot"></span>
+              <span id="rolledText">Not rolled</span>
+            </div>
+          </div>
+          <button class="roll-button" id="rollButton">✦ Preview a roll</button>
+        </div>
+      </div>
+
+      <div class="hero-product">
+        <div class="profile-stage">
+          <button class="theme-button prev" id="themePrev" aria-label="Previous profile">‹</button>
+          <div class="profile-wrap" id="profileWrap">
+            <article class="profile-card layout-compact" id="heroProfileCard">
+              <div class="profile-head">
+                <span>Profile preview</span>
+                <span>Views <strong id="profileViews">1.8K</strong></span>
+              </div>
+              <div class="avatar-shell"><div class="avatar" id="avatar"></div></div>
+              <h2 class="profile-name" id="profileName">Tjz</h2>
+              <p class="profile-bio" id="profileBio">Software developer · Tokyo</p>
+              <div class="socials">
+                <div class="social">Website</div><div class="social">GitHub</div>
+                <div class="social">X</div><div class="social">Discord</div>
+              </div>
+              <div class="aura-panel">
+                <div>
+                  <small>Today's roll</small>
+                  <strong id="rollHex">Awaiting roll</strong>
+                </div>
+                <div class="aura-swatch"></div>
+              </div>
+            </article>
+          </div>
+          <button class="theme-button next" id="themeNext" aria-label="Next profile">›</button>
+        </div>
+
+        <form class="claim" id="claim">
+          <span class="claim-prefix">chm.lol/</span>
+          <input id="handle" autocomplete="off" placeholder="username" aria-label="Username">
+          <button class="button" type="submit">Claim</button>
+        </form>
+        <p class="product-caption">Switch examples to change the profile environment.</p>
+      </div>
+
+      <aside class="hero-context" aria-label="Profile preview details">
+        <div class="context-kicker">Profile example</div>
+        <div class="context-rule"></div>
+        <div class="context-row"><span>Example</span><strong id="themePosition">01 / 04</strong></div>
+        <div class="context-row"><span>Layout</span><strong id="themeLabel">Compact</strong></div>
+        <div class="context-row"><span>Daily roll</span><strong>Color + score</strong></div>
+        <div class="context-row"><span>Media</span><strong>Background + avatar</strong></div>
+        <p class="context-note">The profile remains the center of the page. Layout, media, links, daily history, and equipped effects provide the variation.</p>
+        <div class="context-dots" aria-hidden="true">
+          <span class="context-dot active"></span>
+          <span class="context-dot"></span>
+          <span class="context-dot"></span>
+          <span class="context-dot"></span>
+        </div>
+      </aside>
+    </section>
+
+    <div class="fade-to-content"></div>
+
+    <div class="content">
+      <section class="section how" id="how">
+        <div class="section-kicker">The loop</div>
+        <h2 class="section-heading">A profile you actually have a reason to <span>come back to.</span></h2>
+        <p class="section-sub">The daily roll gives the profile a pulse. Progress gives you more ways to shape it. The result is still your page—not a game screen pretending to be one.</p>
+
+        <div class="steps">
+          <article class="step">
+            <div class="step-num">01</div>
+            <h3>Roll</h3>
+            <p>Show up once a day for a color, score, rarity, and condition result. Each roll becomes part of your public history.</p>
+            <div class="step-visual visual-roll"><span></span><span></span><span></span><span></span><span></span></div>
+          </article>
+          <article class="step">
+            <div class="step-num">02</div>
+            <h3>Build</h3>
+            <p>Shape the page with your own media, five structural layouts, and equipped name, border, avatar, cursor-trail, and atmosphere cosmetics.</p>
+            <div class="step-visual visual-build"></div>
+          </article>
+          <article class="step">
+            <div class="step-num">03</div>
+            <h3>Be seen</h3>
+            <p>Share one URL for your identity and links. Discovery, leaderboard rank, recent colors, favorites, reactions, and guestbook activity add a bounded social layer.</p>
+            <div class="step-visual visual-seen"><span></span><span></span><span></span></div>
+          </article>
+        </div>
+      </section>
+
+      <div class="showcase-wrap" id="showcase">
+        <section class="section showcase">
+          <div class="showcase-top">
+            <div>
+              <div class="section-kicker">Your page, not ours</div>
+              <h2 class="section-heading">Profiles shouldn't all look <span>the same.</span></h2>
+            </div>
+            <p class="section-sub">The current profile system has five structural layouts—Compact, Sleek, Minimal, Modern, and Portfolio. Media and cosmetics provide the personality.</p>
+          </div>
+
+          <div class="profiles-grid">
+            <article class="show-card show-card--minimal" style="background-image:url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=900&q=85'); --mini-accent:#f5f5f7;">
+              <span class="show-label">Minimal layout</span>
+              <div class="mini-profile">
+                <div class="mini-head">
+                  <div class="mini-avatar" style="background-image:url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=180&q=85')"></div>
+                  <div><div class="mini-name">mono</div><div class="mini-meta">designer · berlin</div></div>
+                </div>
+                <div class="mini-links"><span>Work</span><span>Archive</span></div>
+              </div>
+            </article>
+
+            <article class="show-card show-card--sleek" style="background-image:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=900&q=85'); --mini-accent:#00ffb3;">
+              <span class="show-label">Sleek layout</span>
+              <div class="mini-profile">
+                <div class="mini-head">
+                  <div class="mini-avatar" style="background-image:url('https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=180&q=85')"></div>
+                  <div><div class="mini-name">Tjz</div><div class="mini-meta">developer · tokyo</div></div>
+                </div>
+                <div class="mini-links"><span>GitHub</span><span>Discord</span></div>
+              </div>
+            </article>
+
+            <article class="show-card show-card--portfolio" style="background-image:url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=900&q=85&sat=-50'); --mini-accent:#bb9af7;">
+              <span class="show-label">Portfolio layout</span>
+              <div class="mini-profile">
+                <div class="mini-head">
+                  <div class="mini-avatar" style="background-image:url('https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=180&q=85')"></div>
+                  <div><div class="mini-name">void</div><div class="mini-meta">visuals · elsewhere</div></div>
+                </div>
+                <div class="mini-links"><span>Gallery</span><span>Music</span></div>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <section class="section community" id="community">
+        <div class="community-copy">
+          <div class="section-kicker">A little competition</div>
+          <h2 class="section-heading">The roll gives the profile a <span>social pulse.</span></h2>
+          <p class="section-sub">Daily and longer-term leaderboard views make strong rolls visible without turning the profile itself into a game dashboard.</p>
+        </div>
+        <div class="leaderboard" aria-label="Example daily leaderboard">
+          <div class="leader-row"><div class="leader-rank top">01</div><div class="leader-name">Whynot</div><div class="leader-score">+1,250</div><div class="leader-color" style="background:#ff5c8a;color:#ff5c8a"></div></div>
+          <div class="leader-row"><div class="leader-rank">02</div><div class="leader-name">BFR</div><div class="leader-score">+980</div><div class="leader-color" style="background:#34c759;color:#34c759"></div></div>
+          <div class="leader-row"><div class="leader-rank">03</div><div class="leader-name">Arcade</div><div class="leader-score">+810</div><div class="leader-color" style="background:#ffd700;color:#ffd700"></div></div>
+        </div>
+      </section>
+
+      <section class="section final">
+        <h2>Make it yours.</h2>
+        <p>Claim a handle, build the profile, and add a new color to its history tomorrow.</p>
+        <a class="button" href="#top">Claim your handle</a>
+      </section>
+      <footer><span>chm.lol</span><span>A public profile that changes every day.</span></footer>
+    </div>
+  </main>
+</div>
+
+<script>
+  const themes = [
+    {
+      bg: "https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=2000&q=88",
+      avatar: "https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=300&q=88",
+      name: "Tjz", bio: "Software developer · Tokyo", views: "1.8K", accent: "#00ffb3", label: "Compact", layout: "compact"
+    },
+    {
+      bg: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=2000&q=88",
+      avatar: "https://images.unsplash.com/photo-1557862921-37829c790f19?auto=format&fit=crop&w=300&q=88",
+      name: "Arcade", bio: "FPS · design · late nights", views: "5.4K", accent: "#7aa2f7", label: "Sleek", layout: "sleek"
+    },
+    {
+      bg: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=2000&q=88",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=88",
+      name: "mono", bio: "Designer · Berlin", views: "930", accent: "#f5f5f7", label: "Minimal", layout: "minimal"
+    },
+    {
+      bg: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=2000&q=88",
+      avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=88",
+      name: "void", bio: "Visuals · music · archive", views: "2.7K", accent: "#bb9af7", label: "Portfolio", layout: "portfolio"
+    }
+  ];
+
+  const rollColors = ["#00ffb3", "#ff5c8a", "#ffd166", "#7aa2f7", "#bb9af7", "#f38ba8"];
+  const root = document.documentElement;
+  const background = document.getElementById('background');
+  const avatar = document.getElementById('avatar');
+  const profileWrap = document.getElementById('profileWrap');
+  const profileName = document.getElementById('profileName');
+  const profileBio = document.getElementById('profileBio');
+  const profileViews = document.getElementById('profileViews');
+  const rolledDot = document.getElementById('rolledDot');
+  const rolledText = document.getElementById('rolledText');
+  const rollHex = document.getElementById('rollHex');
+  const headlineAccent = document.getElementById('headlineAccent');
+  const heroProfileCard = document.getElementById('heroProfileCard');
+  const themePosition = document.getElementById('themePosition');
+  const themeLabel = document.getElementById('themeLabel');
+  const contextDots = [...document.querySelectorAll('.context-dot')];
+  let themeIndex = 0;
+
+  function setAccent(color) {
+    root.style.setProperty('--accent', color);
+    root.style.setProperty('--accent-soft', `${color}1f`);
+    root.style.setProperty('--accent-glow', `${color}47`);
+    rolledDot.style.background = color;
+    rolledDot.style.boxShadow = `0 0 14px ${color}80`;
+    headlineAccent.style.color = color;
+  }
+
+  function applyTheme(index) {
+    const t = themes[index];
+    profileWrap.style.opacity = '.55';
+    setTimeout(() => {
+      background.style.backgroundImage = `url('${t.bg}')`;
+      avatar.style.backgroundImage = `url('${t.avatar}')`;
+      profileName.textContent = t.name;
+      profileBio.textContent = t.bio;
+      profileViews.textContent = t.views;
+      if (themePosition) themePosition.textContent = `${String(index + 1).padStart(2, '0')} / ${String(themes.length).padStart(2, '0')}`;
+      if (themeLabel) themeLabel.textContent = t.label;
+      if (heroProfileCard) {
+        heroProfileCard.classList.remove('layout-compact','layout-sleek','layout-minimal','layout-modern','layout-portfolio');
+        heroProfileCard.classList.add(`layout-${t.layout || 'compact'}`);
+      }
+      contextDots.forEach((dot, dotIndex) => dot.classList.toggle('active', dotIndex === index));
+      setAccent(t.accent);
+      rolledText.textContent = 'Not rolled';
+      rollHex.textContent = 'Awaiting roll';
+      profileWrap.style.opacity = '1';
+    }, 150);
+  }
+
+  document.getElementById('themePrev').addEventListener('click', () => {
+    themeIndex = (themeIndex - 1 + themes.length) % themes.length;
+    applyTheme(themeIndex);
+  });
+  document.getElementById('themeNext').addEventListener('click', () => {
+    themeIndex = (themeIndex + 1) % themes.length;
+    applyTheme(themeIndex);
+  });
+
+  const rollButton = document.getElementById('rollButton');
+  rollButton.addEventListener('click', () => {
+    rollButton.disabled = true;
+    rollButton.textContent = 'Rolling…';
+    let ticks = 0;
+    const spin = setInterval(() => {
+      const color = rollColors[Math.floor(Math.random() * rollColors.length)];
+      setAccent(color);
+      rolledText.textContent = color.toUpperCase();
+      rollHex.textContent = color.toUpperCase();
+      ticks++;
+      if (ticks >= 7) {
+        clearInterval(spin);
+        const finalColor = rollColors[Math.floor(Math.random() * rollColors.length)];
+        setAccent(finalColor);
+        rolledText.textContent = finalColor.toUpperCase();
+        rollHex.textContent = finalColor.toUpperCase();
+        profileWrap.animate([
+          { transform: 'rotateY(-5deg) rotateX(2deg) scale(1)' },
+          { transform: 'rotateY(-5deg) rotateX(2deg) scale(1.025)' },
+          { transform: 'rotateY(-5deg) rotateX(2deg) scale(1)' }
+        ], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' });
+        rollButton.disabled = false;
+        rollButton.textContent = '✦ Roll again';
+      }
+    }, 85);
+  });
+
+  document.getElementById('claim').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const input = document.getElementById('handle');
+    const value = input.value.trim();
+    if (!value) { input.focus(); return; }
+    const btn = event.currentTarget.querySelector('button');
+    btn.textContent = 'Available';
+    setTimeout(() => { btn.textContent = 'Claim'; }, 1200);
+  });
+
+  if (window.matchMedia('(pointer:fine)').matches) {
+    document.querySelector('.hero-product').addEventListener('mousemove', (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - .5;
+      const y = (e.clientY - rect.top) / rect.height - .5;
+      profileWrap.style.transform = `rotateY(${x * 7 - 3}deg) rotateX(${-y * 5 + 1}deg)`;
+    });
+    document.querySelector('.hero-product').addEventListener('mouseleave', () => {
+      profileWrap.style.transform = 'rotateY(-5deg) rotateX(2deg)';
+    });
+  }
+
+  applyTheme(0);
+</script>
+</body>
+</html>
