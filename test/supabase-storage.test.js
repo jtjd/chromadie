@@ -2,36 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLazyStorageClient } from '../src/lib/supabaseStorage.js';
 
-test('storage upload preserves the Supabase object protocol without loading the storage SDK', async () => {
-  let request;
+test('storage compatibility client keeps public URL resolution without a write path', () => {
   const storage = createLazyStorageClient({
     storageUrl: 'https://example.supabase.co/storage/v1',
     headers: { 'X-Client-Info': 'chromadie-test' },
-    fetch: async (url, init) => {
-      request = { url, init };
-      return new Response(JSON.stringify({ Id: 'object-id', Key: 'profiles/user/avatar.webp' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+    fetch: async () => new Response('{}', { status: 200 })
   });
 
-  const blob = new Blob(['profile'], { type: 'image/webp' });
-  const result = await storage.from('profile-media').upload('user/avatar.webp', blob, {
-    cacheControl: '3600',
-    contentType: 'image/webp',
-    upsert: true
-  });
+  const result = storage.from('profile-media').getPublicUrl('/user/avatar.webp');
 
-  assert.equal(request.url, 'https://example.supabase.co/storage/v1/object/profile-media/user/avatar.webp');
-  assert.equal(request.init.method, 'POST');
-  assert.equal(request.init.headers['x-upsert'], 'true');
-  assert.equal(request.init.body.get('cacheControl'), '3600');
-  assert.equal(request.init.body.get('').type, 'image/webp');
-  assert.deepEqual(result, {
-    data: { id: 'object-id', path: 'user/avatar.webp', fullPath: 'profiles/user/avatar.webp' },
-    error: null
-  });
+  assert.equal(result.data.publicUrl, 'https://example.supabase.co/storage/v1/object/public/profile-media/user/avatar.webp');
+  assert.equal(typeof storage.from('profile-media').upload, 'undefined');
 });
 
 test('storage remove sends normalized prefixes and returns API errors', async () => {

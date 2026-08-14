@@ -39,9 +39,6 @@ function createUnavailableStorageClient(message) {
         getPublicUrl() {
           return { data: { publicUrl: '' } };
         },
-        upload() {
-          return Promise.resolve({ data: null, error });
-        },
         remove() {
           return Promise.resolve({ data: null, error });
         }
@@ -67,40 +64,11 @@ export function createLazyStorageClient({ storageUrl, headers, fetch, unavailabl
     }
   };
 
-  const objectPath = (bucket, path) => [bucket, ...normalizeStoragePath(path).split('/')]
-    .map(segment => encodeURIComponent(segment))
-    .join('/');
-
   return {
     from(bucket) {
       return {
         getPublicUrl(path, options) {
           return buildPublicStorageUrl(storageUrl, bucket, path, options);
-        },
-        async upload(path, fileBody, fileOptions = {}) {
-          const body = new FormData();
-          body.append('cacheControl', String(fileOptions.cacheControl ?? '3600'));
-          if (fileOptions.metadata) body.append('metadata', JSON.stringify(fileOptions.metadata));
-          body.append('', fileBody);
-
-          const result = await request(`${storageUrl}/object/${objectPath(bucket, path)}`, {
-            method: 'POST',
-            headers: {
-              ...headers,
-              'x-upsert': String(Boolean(fileOptions.upsert)),
-              ...(fileOptions.headers || {})
-            },
-            body
-          });
-          if (result.error) return result;
-          return {
-            data: {
-              id: result.data?.Id,
-              path: normalizeStoragePath(path),
-              fullPath: result.data?.Key
-            },
-            error: null
-          };
         },
         remove(paths) {
           return request(`${storageUrl}/object/${encodeURIComponent(bucket)}`, {

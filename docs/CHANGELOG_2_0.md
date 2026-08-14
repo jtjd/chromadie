@@ -2851,3 +2851,14 @@ direct route behavior.
 - Kept legacy provider-neutral reads during reconciliation. Four active legacy
   Supabase assets and three expired staged rows remain in the current inventory;
   active media is not deleted or backfilled without owner confirmation.
+
+## 2026-08-14 — Reconcile remaining legacy profile media
+
+- Cleaned the three expired staged rows through the durable cleanup endpoint;
+  no active legacy media was removed and the cleanup queue is empty.
+- Reconfirmed four active Supabase-backed assets, seven legacy configuration
+  path references, and nine legacy Storage objects (4,570,273 bytes). They
+  remain preserved pending owner-level disposition rather than an unsafe bulk
+  delete or generalized backfill.
+- Removed the unused browser Storage upload method while retaining the narrow
+  legacy read/delete compatibility boundary.

@@ -3577,3 +3577,16 @@ created.
 - Reconciliation found four active legacy Supabase assets plus three expired
   staged rows. Active rows remain pending owner-level disposition; no
   generalized production backfill or destructive active-media cleanup was run.
+
+## 2026-08-14 — Reconcile and narrow the remaining legacy Storage surface
+
+- Processed the three expired staged profile-media rows through the scheduled
+  cleanup control plane; the cleanup queue is now empty and no active legacy
+  asset was deleted.
+- The current production inventory remains four active Supabase-backed assets,
+  seven legacy configuration path references, and nine legacy Storage objects
+  totaling 4,570,273 bytes. These are preserved because their use or ownership
+  is not proven disposable; no generalized backfill was run.
+- Removed the unused browser Supabase Storage upload capability from the
+  compatibility client. Provider-neutral legacy reads and precise legacy
+  deletion remain only for the active compatibility window.

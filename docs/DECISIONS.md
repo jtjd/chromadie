@@ -4637,3 +4637,16 @@ bucket/path identifiers; they never treat `DELETE FROM storage.objects` as a
 physical file delete. The control plane deletes the exact object, treats a
 missing object as idempotent success, and finalizes the row only after external
 cleanup succeeds.
+
+## 2026-08-14 — Preserve active legacy media; retire the unused client write seam
+
+The three expired staged profile-media rows were processed through the durable
+cleanup endpoint. The four active Supabase-backed assets and their associated
+legacy configuration references remain until ownership/use is explicitly
+confirmed disposable. This keeps the transitional provider-neutral resolver
+safe without pretending the legacy inventory is empty.
+
+The browser compatibility Storage client no longer exposes an `upload()`
+method. New profile-media writes are R2-only; the remaining Supabase Storage
+surface is limited to legacy public URL resolution and exact-path deletion
+during the compatibility window.
