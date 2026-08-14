@@ -117,8 +117,11 @@ test('the root route mounts the homepage without changing other route contracts'
   assert.match(homepageStyles, /--homepage-bg: #050506/);
   assert.match(homepageStyles, /--homepage-radius: 18px/);
   assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
+  assert.match(hero, /\.homepage-hero__product \{[\s\S]*min-width: 0;/);
+  assert.match(hero, /\.homepage-profile-stage \{[\s\S]*min-width: 0;/);
   assert.match(hero, /width: 440px/);
   assert.doesNotMatch(hero, /height: 470px/);
   assert.match(claim, /backdrop-filter: blur\(20px\)/);
+  assert.match(claim, /\.homepage-claim__field \{[\s\S]*min-width: 0;/);
   assert.match(guestProfile, /This could be your profile/);
 });

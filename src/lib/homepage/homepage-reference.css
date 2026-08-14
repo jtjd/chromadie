@@ -29,7 +29,13 @@
 .homepage-reference input { font: inherit; }
 .homepage-reference h1,
 .homepage-reference h2,
-.homepage-reference h3 { font-family: 'Clash Display', sans-serif; }
+.homepage-reference h3,
+.app-main--site .homepage-reference :is(h1, h2, h3) {
+  /* The site shell has a higher-specificity !important heading rule. Keep the
+     approved homepage display face authoritative without changing other
+     application surfaces. */
+  font-family: 'Clash Display', sans-serif !important;
+}
 
 .homepage-background {
   position: fixed;

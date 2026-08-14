@@ -160,6 +160,7 @@
   .homepage-hero__product {
     grid-column: 2;
     display: flex;
+    min-width: 0;
     width: 470px;
     flex-direction: column;
     align-items: center;
@@ -168,7 +169,7 @@
     perspective: 1400px;
   }
 
-  .homepage-profile-stage { position: relative; width: 440px; padding: 0 28px; outline: none; }
+  .homepage-profile-stage { position: relative; width: 440px; min-width: 0; padding: 0 28px; outline: none; }
   .homepage-profile-wrap { width: 100%; transform: rotateY(-4deg) rotateX(2deg); transform-style: preserve-3d; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease; }
   .homepage-profile-stage:focus-visible { border-radius: 24px; outline: 2px solid var(--homepage-accent); outline-offset: 5px; }
 

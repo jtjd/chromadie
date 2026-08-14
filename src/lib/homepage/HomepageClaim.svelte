@@ -76,6 +76,7 @@
 
   .homepage-claim__field {
     display: flex;
+    min-width: 0;
     width: 100%;
     align-items: center;
     padding: 6px 6px 6px 16px;
@@ -145,6 +146,14 @@
     .homepage-claim__field { padding-left: 12px; }
     .homepage-claim__field input { padding-inline: 5px; font-size: 0.9rem; }
     .homepage-claim__field .homepage-button { min-width: 82px; padding-inline: 10px; }
+  }
+
+  @media (min-width: 931px) and (max-width: 1180px) {
+    .homepage-claim-slot { width: 390px; }
+  }
+
+  @media (max-width: 930px) {
+    .homepage-claim-slot { width: min(100%, 410px); }
   }
 
   @media (prefers-reduced-motion: reduce) {

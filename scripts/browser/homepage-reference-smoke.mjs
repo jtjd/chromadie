@@ -87,6 +87,7 @@ try {
   await page.setReducedMotion(true);
   await page.setViewport(1440, 900);
   await page.waitFor('Boolean(document.querySelector(".homepage-reference") && document.querySelector(".homepage-profile-demo--hero"))', 'homepage direct profile specimen');
+  await page.evaluate('document.fonts.ready.then(() => true)');
 
   await check('desktop reference anatomy and centered geometry', async () => {
     const state = await page.evaluate(`(() => {
@@ -94,6 +95,9 @@ try {
       const stage = document.querySelector('.homepage-profile-stage');
       const card = document.querySelector('.homepage-profile-demo--hero');
       const background = document.querySelector('.homepage-background');
+      const headlineStyle = getComputedStyle(document.querySelector('.homepage-hero h1'));
+      const profileNameStyle = getComputedStyle(document.querySelector('.homepage-profile-demo__name'));
+      const bodyStyle = getComputedStyle(document.querySelector('.homepage-hero__lede'));
       return {
         stage: rect(stage),
         card: rect(card),
@@ -104,6 +108,14 @@ try {
         bio: Boolean(card?.querySelector('.homepage-profile-demo__bio')),
         linkCount: card?.querySelectorAll('.homepage-profile-demo__links a').length || 0,
         roll: Boolean(card?.querySelector('.homepage-profile-demo__roll')),
+        fonts: {
+          status: document.fonts.status,
+          clash: document.fonts.check('600 48px "Clash Display"'),
+          inter: document.fonts.check('400 16px "Inter"'),
+          headline: headlineStyle.fontFamily,
+          profileName: profileNameStyle.fontFamily,
+          body: bodyStyle.fontFamily
+        },
         specimenCount: document.querySelectorAll('[data-homepage-profile-specimen]').length,
         profileShellCount: document.querySelectorAll('.profile-shell-page').length,
         oldBrowserFrame: Boolean(document.querySelector('.home-browser, .home-hero__stage, .home-page')),
@@ -114,6 +126,10 @@ try {
     assert(state.profileShellCount === 0, `Homepage mounted a public ProfileShell: ${JSON.stringify(state)}.`);
     assert(!state.oldBrowserFrame && !state.arrowGlyph, `Obsolete homepage treatment remains: ${JSON.stringify(state)}.`);
     assert(state.claim && state.avatar && state.name && state.bio && state.linkCount === 4 && state.roll, `Reference profile anatomy is incomplete: ${JSON.stringify(state)}.`);
+    assert(state.fonts.status === 'loaded' && state.fonts.clash && state.fonts.inter
+      && state.fonts.headline.includes('Clash Display')
+      && state.fonts.profileName.includes('Clash Display')
+      && state.fonts.body.includes('Inter'), `Homepage typography is not rendering the approved font faces: ${JSON.stringify(state.fonts)}.`);
     assert(state.backgroundImage.includes('compact-background.png'), `Homepage background is not photographic fixture one: ${JSON.stringify(state)}.`);
     assert(state.stage && Math.abs((state.stage.left + state.stage.right) / 2 - 720) <= 2, `Hero stage is not centered: ${JSON.stringify(state)}.`);
     assert(state.card && state.card.width >= 370 && state.card.width <= 395 && state.card.height >= 420 && state.card.height <= 490, `Hero card drifted from reference proportions: ${JSON.stringify(state)}.`);
@@ -205,6 +221,7 @@ try {
     await page.setViewport(width, height);
     await page.navigate(appUrl, `${width}x${height} homepage`);
     await page.waitFor('Boolean(document.querySelector(".homepage-reference .homepage-profile-demo--hero"))', `${width}x${height} direct homepage specimen`);
+    await page.evaluate('document.fonts.ready.then(() => true)');
     const state = await page.evaluate(`(() => ({
       width: innerWidth,
       height: innerHeight,
@@ -213,10 +230,20 @@ try {
       heroColumns: getComputedStyle(document.querySelector('.homepage-hero')).gridTemplateColumns,
       contextDisplay: getComputedStyle(document.querySelector('.homepage-hero__context')).display,
       stage: (() => { const box = document.querySelector('.homepage-profile-stage')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right, width: box.width } : null; })(),
-      card: (() => { const box = document.querySelector('.homepage-profile-demo--hero')?.getBoundingClientRect(); return box ? { width: box.width, height: box.height } : null; })()
+      card: (() => { const box = document.querySelector('.homepage-profile-demo--hero')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right, width: box.width, height: box.height } : null; })(),
+      claim: (() => { const box = document.querySelector('.homepage-claim__field')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right, width: box.width } : null; })(),
+      headlineFont: getComputedStyle(document.querySelector('.homepage-hero h1')).fontFamily
     }))()`);
     assert(state.scrollWidth <= width + 1 && state.bodyScrollWidth <= width + 1, `${width}x${height} homepage overflows horizontally: ${JSON.stringify(state)}.`);
     if (width <= 768) assert(state.heroColumns.trim().split(' ').length === 1, `Mobile homepage kept multi-column hero: ${JSON.stringify(state)}.`);
+    if (width <= 768) {
+      assert(state.claim && state.claim.left >= -1 && state.claim.right <= width + 1, `${width}x${height} claim control drifted outside the viewport: ${JSON.stringify(state)}.`);
+      assert(state.card && state.card.left >= -1 && state.card.right <= width + 1, `${width}x${height} profile card drifted outside the viewport: ${JSON.stringify(state)}.`);
+    }
+    if (width > 930 && width <= 1180) {
+      assert(state.claim && Math.abs(state.claim.width - 390) <= 1, `${width}x${height} intermediate claim width drifted from the reference: ${JSON.stringify(state)}.`);
+    }
+    assert(state.headlineFont.includes('Clash Display'), `${width}x${height} homepage headline lost Clash Display: ${JSON.stringify(state)}.`);
     results.viewports.push(state);
     await capture(`homepage-${width}x${height}`);
   }

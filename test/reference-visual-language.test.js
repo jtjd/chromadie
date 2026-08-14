@@ -15,11 +15,14 @@ test('the approved homepage typography is bundled and authoritative', async () =
   ]);
 
   assert.match(fonts, /font-family: 'Clash Display'/);
+  assert.match(fonts, /font-family: 'Inter'/);
   assert.match(fonts, /font-weight: 400/);
   assert.match(main, /@fontsource-variable\/inter\/wght\.css/);
   assert.doesNotMatch(index, /fonts\.googleapis|fonts\.gstatic/);
   assert.match(homepage, /font-family: 'Inter'/);
   assert.match(homepage, /font-family: 'Clash Display'/);
+  assert.match(homepage, /\.app-main--site \.homepage-reference :is\(h1, h2, h3\)/);
+  assert.match(homepage, /font-family: 'Clash Display', sans-serif !important/);
   assert.match(header, /'Clash Display'/);
   assert.match(claim, /'Inter'/);
 });
