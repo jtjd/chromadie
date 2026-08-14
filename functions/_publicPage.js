@@ -26,8 +26,8 @@ const CSP_BASE = [
   "frame-ancestors 'none'",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' https://cdn.fontshare.com https://cdn.jsdelivr.net data:",
-  "img-src 'self' data: blob: https://*.supabase.co https://media.chm.lol",
-  "media-src 'self' blob: https://*.supabase.co https://media.chm.lol",
+  "img-src 'self' data: blob: https://media.chm.lol",
+  "media-src 'self' blob: https://media.chm.lol",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://cloudflareinsights.com https://*.r2.cloudflarestorage.com",
   "frame-src https://challenges.cloudflare.com https://open.spotify.com https://www.youtube-nocookie.com"
 ];

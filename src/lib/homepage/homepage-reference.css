@@ -31,6 +31,27 @@
 .homepage-reference h2,
 .homepage-reference h3 { font-family: 'Clash Display', sans-serif; }
 
+.homepage-background {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  background-image: var(--homepage-background-image);
+  background-position: center;
+  background-size: cover;
+  filter: saturate(1.08) contrast(1.06);
+  transform: scale(1.01);
+  transition: background-image 0.45s ease, filter 0.3s ease;
+}
+
+.homepage-background::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background:
+    radial-gradient(circle at 62% 35%, rgba(5, 5, 6, 0.05), rgba(5, 5, 6, 0.32) 40%, rgba(5, 5, 6, 0.76) 100%),
+    linear-gradient(90deg, rgba(5, 5, 6, 0.55) 0%, rgba(5, 5, 6, 0.12) 44%, rgba(5, 5, 6, 0.22) 72%, rgba(5, 5, 6, 0.68) 100%);
+}
+
 .homepage-shell { width: min(1480px, calc(100% - 64px)); margin-inline: auto; }
 .homepage-section__inner,
 .homepage-section { width: min(1160px, calc(100% - 48px)); margin-inline: auto; }

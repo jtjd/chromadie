@@ -130,15 +130,8 @@ function resolveMediaUrl(path, input, mediaKind = '') {
   const references = asObject(input.mediaReferences);
   const reference = references[mediaKind] || references[`${mediaKind}Media`] || path;
   if (!reference) return '';
-  const previewMode = Boolean(input.previewMode || input.mode === 'studio');
-  // Public profile URLs must remain stable. Cache invalidation is limited to
-  // owner/editor previews, where a temporary persisted-media replacement may
-  // otherwise be hidden by the browser's local cache.
-  const previewCacheKey = previewMode
-    ? input.mediaCacheKey || ''
-    : '';
-  if (typeof input.mediaResolver === 'function') return input.mediaResolver(reference, previewCacheKey, { preview: previewMode });
-  return getProfileMediaUrl(reference, previewCacheKey, { preview: previewMode });
+  if (typeof input.mediaResolver === 'function') return input.mediaResolver(reference);
+  return getProfileMediaUrl(reference);
 }
 
 function resolveBadges(profile, allAchievements) {
@@ -328,9 +321,6 @@ export function buildProfileRenderSnapshot(input = {}) {
     showLowerExpression,
     hasProfileStory
   });
-  const cacheKey = input.previewMode || input.mode === 'studio'
-    ? input.mediaCacheKey || ''
-    : '';
   const pageStyle = [
     getProfileCanvasStyle(configuration),
     media.cursorUrl ? `cursor:url("${media.cursorUrl}") 16 16, auto` : '',
@@ -408,8 +398,7 @@ export function buildProfileRenderSnapshot(input = {}) {
       cursorTrailKey,
       cursorUrl: media.cursorUrl,
       pointerCursorUrl: media.pointerCursorUrl,
-      pageStyle,
-      cacheKey
+      pageStyle
     },
     media,
     mediaReferences,

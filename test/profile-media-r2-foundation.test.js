@@ -11,22 +11,20 @@ test('R2 public media references resolve to stable immutable URLs', () => {
     r2_public_key: 'profiles/user-1/asset-1/abc123.webp'
   };
   const first = resolveProfileMediaReference(reference, { publicOrigin: 'https://media.chm.lol' });
-  const second = resolveProfileMediaReference(reference, { publicOrigin: 'https://media.chm.lol', cacheKey: String(Date.now()) });
+  const second = resolveProfileMediaReference(reference, { publicOrigin: 'https://media.chm.lol' });
 
   assert.equal(first, 'https://media.chm.lol/profiles/user-1/asset-1/abc123.webp');
   assert.equal(second, first);
   assert.doesNotMatch(first, /[?&](?:v|cacheNonce)=/);
 });
 
-test('legacy cache busting is opt-in for editor previews only', () => {
-  const legacyResolver = path => `https://storage.example.test/${path}`;
+test('legacy storage references fail closed and cannot be cache-busted into a URL', () => {
+  const legacyResolver = () => 'https://storage.example.test/avatars/user/avatar.webp';
   const path = 'avatars/user/avatar.webp';
 
-  assert.equal(resolveProfileMediaReference(path, { legacyResolver }), `https://storage.example.test/${path}`);
-  assert.equal(
-    resolveProfileMediaReference(path, { legacyResolver, cacheKey: 'preview-1', allowLegacyCacheBust: true }),
-    `https://storage.example.test/${path}?v=preview-1`
-  );
+  assert.equal(resolveProfileMediaReference(path, { legacyResolver }), '');
+  assert.equal(resolveProfileMediaReference(path, { legacyResolver, cacheKey: 'preview-1', allowLegacyCacheBust: true }), '');
+  assert.equal(resolveProfileMediaReference({ url: 'https://example.supabase.co/storage/v1/object/public/avatars/user/avatar.webp' }), '');
 });
 
 test('public ProfileShell no longer cache-busts media or mounts a full image beside active video', async () => {
@@ -68,12 +66,26 @@ test('R2 migration keeps the two-bucket overlap temporary and unequip does not p
 test('R2 public URL contract remains stable and migration tooling is idempotent in shape', async () => {
   const resolver = await read('src/lib/profileMediaResolver.js');
   const migrationScript = await read('scripts/migrate-profile-media-to-r2.mjs');
-  assert.match(resolver, /Public R2 URLs are immutable/);
+  assert.match(resolver, /immutable/);
   assert.doesNotMatch(resolver, /Date\.now\(\)/);
   assert.match(migrationScript, /dryRun/);
   assert.match(migrationScript, /already public on R2/);
   assert.match(migrationScript, /privateCleanup/);
   assert.match(migrationScript, /r2_private_key: null/);
+});
+
+test('latest database media projection and selection are R2-only', async () => {
+  const migration = await read('supabase/migrations/20260814020000_profile_media_r2_only_runtime.sql');
+  assert.match(migration, /storage_provider = 'r2'/g);
+  assert.match(migration, /NULLIF\(v_asset\.r2_public_key, ''\)/);
+  assert.doesNotMatch(migration, /storage_provider = 'supabase'/);
+  assert.match(migration, /profile_media_public_reference/);
+  assert.match(migration, /select_my_profile_expression_assets/);
+  assert.match(migration, /select_my_profile_r2_media/);
+  assert.match(migration, /select_my_profile_audio_asset/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.register_my_profile_media_asset/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.stage_my_profile_media_asset/);
+  assert.match(migration, /REVOKE ALL ON FUNCTION public\.select_my_profile_rich_media/);
 });
 
 test('R2 completion hashes actual private bytes and upload authorization enforces the global safety cap', async () => {
@@ -90,7 +102,10 @@ test('R2 completion hashes actual private bytes and upload authorization enforce
 test('R2 selection returns provider-neutral playlist and standalone audio references', async () => {
   const selection = await read('supabase/migrations/20260813130000_profile_media_r2_selection.sql');
   const audio = await read('supabase/migrations/20260813160000_profile_media_r2_audio_selection.sql');
+  const latest = await read('supabase/migrations/20260814020000_profile_media_r2_only_runtime.sql');
   assert.match(selection, /profile_media_playlist_with_references\(v_playlist\)/);
   assert.match(audio, /select_my_profile_audio_asset/);
   assert.match(audio, /audio_asset_id/);
+  assert.match(latest, /storage_provider = 'r2'/);
+  assert.doesNotMatch(latest, /storage_provider = 'supabase'/);
 });

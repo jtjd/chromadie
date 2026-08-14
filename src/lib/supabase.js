@@ -1,4 +1,3 @@
-import { createLazyStorageClient, createUnavailableStorageClient } from './supabaseStorage.js';
 import { createSupabaseTransport, createUnavailableSupabaseTransport } from './supabaseTransport.js';
 
 const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL
@@ -8,10 +7,7 @@ const envName = import.meta.env?.DEV ? 'development' : 'production'
 const missingVars = []
 
 function createUnavailableSupabaseClient(message) {
-  return {
-    ...createUnavailableSupabaseTransport(message),
-    storage: createUnavailableStorageClient(message)
-  }
+  return createUnavailableSupabaseTransport(message)
 }
 
 if (!supabaseUrl) missingVars.push('VITE_SUPABASE_URL')
@@ -37,14 +33,7 @@ if (missingVars.length > 0) {
     }
 
     const transport = createSupabaseTransport({ supabaseUrl, supabaseKey, projectKeyIsLegacy: supabaseKeyIsLegacy })
-    supabaseClient = {
-      ...transport,
-      storage: createLazyStorageClient({
-        storageUrl: transport.serviceUrls.storage,
-        headers: transport.globalHeaders,
-        fetch: transport.fetchWithAuth
-      })
-    }
+    supabaseClient = transport
   } catch (error) {
     supabaseError = {
       title: 'Invalid Supabase configuration',

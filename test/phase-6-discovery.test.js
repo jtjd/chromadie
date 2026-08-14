@@ -47,7 +47,7 @@ test('discovery normalization keeps public card fields bounded and drops interna
   assert.equal(item.displayName, 'Neon User');
   assert.equal(item.bio, 'Collecting colors and building a public profile.');
   assert.equal(item.profileAccent, '#8B7CF6');
-  assert.equal(item.avatarPath, 'avatars/10000000-0000-4000-8000-000000000001/avatar.webp');
+  assert.equal(item.avatarPath, null);
   assert.equal(item.avatarReference, null);
   assert.deepEqual(item.equippedBadges, ['launch_edition']);
   assert.equal(item.equippedCosmetics.unsafe, undefined);
@@ -58,7 +58,7 @@ test('discovery normalization keeps public card fields bounded and drops interna
       ...publicItem,
       avatarPath: 'avatars/10000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000002.webp'
     }).avatarPath,
-    'avatars/10000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000002.webp'
+    null
   );
   assert.equal(
     normalizeDiscoveryItem({

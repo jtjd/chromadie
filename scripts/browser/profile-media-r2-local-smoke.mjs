@@ -342,6 +342,42 @@ async function studioMediaUrls() {
   '})()');
 }
 
+function stableProfileMediaRequests() {
+  return (page?.requestLog || []).filter(entry => {
+    if (entry.method !== 'GET') return false;
+    try {
+      const parsed = new URL(entry.url);
+      return parsed.hostname === new URL(publicOrigin).hostname
+        || parsed.hostname.endsWith('.r2.cloudflarestorage.com');
+    } catch {
+      return false;
+    }
+  });
+}
+
+async function assertStudioMediaStaysStableAfterDraftChange() {
+  const requestsBefore = stableProfileMediaRequests();
+  const sourcesBefore = await page.evaluate('(() => [...document.querySelectorAll(\'.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video\')]'
+    + '.map(element => element.currentSrc || element.src || \'\')'
+    + '.filter(source => source && /media\\.chm\\.lol|r2\\.cloudflarestorage\\.com/.test(source)))()');
+  assert(sourcesBefore.every(source => !new URL(source).search), 'Studio preview media source acquired a cache-busting query before draft change.');
+
+  await page.click('#profile-customize-tab-layout', 'R2 smoke layout tab');
+  await page.waitFor('document.querySelector("#profile-customize-tab-layout")?.getAttribute("aria-selected") === "true" && !document.querySelector("[data-editor-section=layout]")?.hidden', 'R2 smoke visible Layout editor');
+  await page.evaluate('(() => { const card = [...document.querySelectorAll(\'.profile-template-picker__card\')].find(node => node.querySelector(\'strong\')?.textContent.trim() === \'Sleek\'); card?.click(); })()');
+  await page.waitFor('document.querySelector(".profile-studio-preview .profile-shell-page--preview .identity-card--layout-sleek")', 'R2 smoke staged layout');
+  await delay(250);
+
+  const requestsAfter = stableProfileMediaRequests();
+  const sourcesAfter = await page.evaluate('(() => [...document.querySelectorAll(\'.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video\')]'
+    + '.map(element => element.currentSrc || element.src || \'\')'
+    + '.filter(source => source && /media\\.chm\\.lol|r2\\.cloudflarestorage\\.com/.test(source)))()');
+  assert(requestsAfter.length === requestsBefore.length, `Changing a non-media Studio setting reloaded media: ${JSON.stringify({ before: requestsBefore, after: requestsAfter })}`);
+  assert(sourcesAfter.every(source => !new URL(source).search), `Studio preview media source acquired a cache-busting query after draft change: ${JSON.stringify(sourcesAfter)}`);
+  assert(JSON.stringify(sourcesAfter) === JSON.stringify(sourcesBefore), `Studio draft changed media identity: ${JSON.stringify({ before: sourcesBefore, after: sourcesAfter })}`);
+  return { mediaRequestCount: requestsAfter.length, stableMediaSources: sourcesAfter, draftChange: 'layout' };
+}
+
 async function deleteAssetThroughApp(assetId) {
   const expression = '(async () => {' +
     'const findSession = value => {' +
@@ -457,6 +493,8 @@ async function main() {
       studioPreviewUsesPublicOrigin: true
     });
   }
+
+  result.studioMediaStability = await assertStudioMediaStaysStableAfterDraftChange();
 
   const storageRequests = page.requestLog.filter(entry => {
     try {

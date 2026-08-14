@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import HomepageClaim from './HomepageClaim.svelte';
-  import HomepageProfileRenderer from './HomepageProfileRenderer.svelte';
+  import HomepageProfileDemo from './HomepageProfileDemo.svelte';
   import { HOMEPAGE_FIXTURES } from './homepageFixtures.js';
 
   export let isAuthenticated = false;
@@ -17,6 +17,7 @@
 
   function moveFixture(direction) {
     fixtureIndex = (fixtureIndex + direction + HOMEPAGE_FIXTURES.length) % HOMEPAGE_FIXTURES.length;
+    dispatch('fixturechange', { fixture: HOMEPAGE_FIXTURES[fixtureIndex] });
   }
 
   function forward(event) {
@@ -27,11 +28,8 @@
 <section
   class="homepage-hero homepage-shell"
   id="top"
-  style={`--homepage-hero-background: url("${fixture.background}"); --homepage-hero-accent: ${fixture.accent};`}
   aria-labelledby="homepage-title"
 >
-  <div class="homepage-hero__environment" aria-hidden="true"></div>
-
   <div class="homepage-hero__copy">
     <div class="homepage-eyebrow">A profile that changes every day</div>
     <h1 id="homepage-title">Your profile,<span>alive.</span></h1>
@@ -55,11 +53,15 @@
     </div>
   </div>
 
-  <div class="homepage-hero__product" id="claim">
-    <div class="homepage-profile-stage">
+  <div class="homepage-hero__product">
+    <div
+      class="homepage-profile-stage"
+      role="region"
+      aria-label="Profile examples"
+    >
       <button class="homepage-theme-button homepage-theme-button--prev" type="button" aria-label="Previous profile example" on:click={() => moveFixture(-1)}>‹</button>
       <div class="homepage-profile-wrap">
-        <HomepageProfileRenderer fixture={fixture} previewDevice="desktop" className="homepage-profile-renderer--hero" />
+        <HomepageProfileDemo fixture={fixture} />
       </div>
       <button class="homepage-theme-button homepage-theme-button--next" type="button" aria-label="Next profile example" on:click={() => moveFixture(1)}>›</button>
     </div>
@@ -69,6 +71,7 @@
       {accountReady}
       {accountUnavailable}
       inputId="homepage-claim-hero"
+      anchorId="claim"
       on:claim={forward}
       on:profile={forward}
     />
@@ -79,10 +82,10 @@
     <div class="homepage-context-kicker">Profile example</div>
     <div class="homepage-context-rule"></div>
     <div class="homepage-context-row"><span>Example</span><strong>{exampleNumber} / 04</strong></div>
-    <div class="homepage-context-row"><span>Layout</span><strong>{fixture.layoutLabel}</strong></div>
+    <div class="homepage-context-row"><span>Identity</span><strong>{fixture.displayName}</strong></div>
     <div class="homepage-context-row"><span>Daily roll</span><strong>Color + score</strong></div>
     <div class="homepage-context-row"><span>Media</span><strong>Background + avatar</strong></div>
-    <p class="homepage-context-note">The profile remains the center of the page. Layout, media, links, daily history, and equipped effects provide the variation.</p>
+    <p class="homepage-context-note">The profile remains the center of the page. Media, links, daily history, and equipped effects provide the variation.</p>
     <div class="homepage-context-dots" aria-hidden="true">
       {#each HOMEPAGE_FIXTURES as item, index (item.id)}
         <span class:active={index === fixtureIndex} class="homepage-context-dot"></span>
@@ -93,7 +96,6 @@
 
 <style>
   .homepage-hero {
-    --homepage-accent: var(--homepage-hero-accent, #00ffb3);
     --homepage-accent-soft: color-mix(in srgb, var(--homepage-accent) 12%, transparent);
     --homepage-accent-glow: color-mix(in srgb, var(--homepage-accent) 28%, transparent);
     position: relative;
@@ -107,32 +109,7 @@
     isolation: isolate;
   }
 
-  .homepage-hero__environment {
-    position: absolute;
-    z-index: -2;
-    inset: 0;
-    background-image: var(--homepage-hero-background);
-    background-position: center;
-    background-size: cover;
-    filter: saturate(1.08) contrast(1.06);
-    transform: scale(1.01);
-    transition: background-image 0.45s ease, filter 0.3s ease;
-  }
-
-  .homepage-hero__environment::after {
-    position: absolute;
-    inset: 0;
-    content: '';
-    background:
-      radial-gradient(circle at 62% 35%, rgba(5, 5, 6, 0.05), rgba(5, 5, 6, 0.32) 40%, rgba(5, 5, 6, 0.76) 100%),
-      linear-gradient(90deg, rgba(5, 5, 6, 0.55) 0%, rgba(5, 5, 6, 0.12) 44%, rgba(5, 5, 6, 0.22) 72%, rgba(5, 5, 6, 0.68) 100%);
-  }
-
-  .homepage-hero__copy {
-    align-self: center;
-    justify-self: start;
-    width: min(100%, 360px);
-  }
+  .homepage-hero__copy { align-self: center; justify-self: start; width: min(100%, 360px); }
 
   .homepage-eyebrow,
   .homepage-context-kicker {
@@ -171,38 +148,14 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .homepage-roll-compact__top {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .homepage-roll-compact__top strong {
-    display: block;
-    color: var(--homepage-text);
-    font: 600 0.82rem / 1.1 'Clash Display', sans-serif;
-  }
-
-  .homepage-roll-compact__top span:not(.homepage-roll-compact__dot) {
-    display: block;
-    max-width: 220px;
-    margin-top: 3px;
-    color: var(--homepage-muted);
-    font: 400 0.72rem / 1.35 'Inter', sans-serif;
-  }
-
-  .homepage-roll-compact__result {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    color: var(--homepage-muted);
-    font: 500 0.68rem / 1 'Clash Display', sans-serif;
-  }
-
+  .homepage-roll-compact__top { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; }
+  .homepage-roll-compact__top strong { display: block; color: var(--homepage-text); font: 600 0.82rem / 1.1 'Clash Display', sans-serif; }
+  .homepage-roll-compact__top span:not(.homepage-roll-compact__dot) { display: block; max-width: 220px; margin-top: 3px; color: var(--homepage-muted); font: 400 0.72rem / 1.35 'Inter', sans-serif; }
+  .homepage-roll-compact__result { display: flex; align-items: center; gap: 7px; color: var(--homepage-muted); font: 500 0.68rem / 1 'Clash Display', sans-serif; }
   .homepage-roll-compact__dot { width: 9px; height: 9px; border-radius: 999px; box-shadow: 0 0 12px var(--homepage-accent-glow); }
   .homepage-roll-compact__meta { display: flex; justify-content: space-between; gap: 14px; margin-top: 12px; color: var(--homepage-muted); font: 400 0.68rem / 1.2 'Inter', sans-serif; }
-  .homepage-roll-compact__meta strong { color: rgba(245, 245, 247, 0.7); font-weight: 500; }
+  .homepage-roll-compact__meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .homepage-roll-compact__meta strong { color: rgba(245, 245, 247, 0.7); font-weight: 500; white-space: nowrap; }
 
   .homepage-hero__product {
     grid-column: 2;
@@ -215,9 +168,9 @@
     perspective: 1400px;
   }
 
-  .homepage-profile-stage { position: relative; width: 440px; height: 470px; padding: 0 28px; }
-  .homepage-profile-wrap { width: 100%; height: 100%; transform: rotateY(-4deg) rotateX(2deg); transform-style: preserve-3d; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease; }
-  .homepage-profile-wrap :global(.profile-shell-page) { background: transparent; }
+  .homepage-profile-stage { position: relative; width: 440px; padding: 0 28px; outline: none; }
+  .homepage-profile-wrap { width: 100%; transform: rotateY(-4deg) rotateX(2deg); transform-style: preserve-3d; transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease; }
+  .homepage-profile-stage:focus-visible { border-radius: 24px; outline: 2px solid var(--homepage-accent); outline-offset: 5px; }
 
   .homepage-theme-button {
     position: absolute;
@@ -239,6 +192,7 @@
   }
 
   .homepage-theme-button:hover { border-color: var(--homepage-accent); background: var(--homepage-accent); color: #050506; }
+  .homepage-theme-button:focus-visible { outline: 2px solid var(--homepage-accent); outline-offset: 3px; }
   .homepage-theme-button--prev { left: 0; }
   .homepage-theme-button--next { right: 0; }
 
@@ -278,7 +232,6 @@
     .homepage-profile-stage { padding-inline: 18px; }
     .homepage-theme-button--prev { left: 0; }
     .homepage-theme-button--next { right: 0; }
-    .homepage-profile-stage { height: 430px; }
     .homepage-hero__product { gap: 14px; }
     .homepage-roll-compact__meta { align-items: flex-start; flex-direction: column; gap: 4px; }
   }

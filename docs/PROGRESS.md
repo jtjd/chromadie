@@ -3590,3 +3590,50 @@ created.
 - Removed the unused browser Supabase Storage upload capability from the
   compatibility client. Provider-neutral legacy reads and precise legacy
   deletion remain only for the active compatibility window.
+
+## 2026-08-14 — Harden the remaining legacy delete paths
+
+- Corrected exact legacy Supabase Storage removal to use `DELETE` with the
+  supported `prefixes` payload; missing objects remain idempotent success.
+- Moved asset-less legacy staff-audio removal behind the server control plane:
+  the exact path is physically deleted first, then an owner/path-guarded RPC
+  clears configuration. Failed deletion leaves the configuration reference
+  recoverable for retry.
+- No remaining production legacy media was deleted in this pass.
+
+## Homepage visual replacement — Phase 1 complete — 2026-08-14
+
+- Replaced the root homepage presentation with the approved centered reference
+  shell, a direct `HomepageProfileDemo` hero/showcase specimen, local
+  photographic fixture assets, real claim/auth behavior, and live community
+  discovery.
+- Removed the superseded homepage presentation components, assets, scripts, and
+  selectors after dependency/reference audit. Shared profile rendering,
+  authentication, discovery contracts, and media behavior remain intact.
+- Build, check, lint, unit tests, link/CSP/performance/security/drift gates,
+  responsive checks, and the homepage browser smoke/capture pass completed.
+- Profile Studio was not started.
+
+## Homepage reference fidelity correction — 2026-08-14
+
+- Removed the homepage dependency on `ProfileShell` and deleted the obsolete
+  homepage renderer adapter.
+- Restored the reference composition: centered glass profile anatomy, direct
+  transparent claim control, photographic full-page environments, restrained
+  context, and photographic lower showcase.
+- Captured and checked 1440×900, 1280×800, 1024×900, 768×1024, 390×844, and
+  375×812; full validation completed without changing public profiles, Studio,
+  R2/media contracts, or backend behavior.
+
+## 2026-08-14 — Close media egress and repeated-request paths
+
+Removed the production Supabase Storage escape hatches from profile-media
+resolution, public metadata rendering, editor uploads, deletion, account
+cleanup, and active database functions. R2 object identity is now the complete
+remote URL identity, so unchanged media never receives a render-time query
+parameter. Local Blob previews remain available only for the newly selected
+file and are revoked when replaced or destroyed.
+
+Added source, resolver, database-security, homepage network-budget, and Studio
+media-stability regression coverage. The homepage remains fixture-driven with
+one bounded live discovery read and no user-media downloads or polling.

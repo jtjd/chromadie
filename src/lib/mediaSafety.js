@@ -23,6 +23,11 @@ export function normalizeMediaSource(value) {
   try {
     const parsed = new URL(source);
     const loopback = ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname);
+    // Supabase Storage is not a profile-media provider. Reject its URL shape
+    // at the shared media element boundary as well as in the R2 resolver so a
+    // legacy reference cannot become a browser request through another leaf.
+    if (/(?:^|\.)supabase\.(?:co|in)$/i.test(parsed.hostname)) return '';
+    if (/^\/storage\/v1(?:\/|$)/i.test(parsed.pathname)) return '';
     return parsed.protocol === 'https:' || (parsed.protocol === 'http:' && loopback) ? source : '';
   } catch {
     return '';

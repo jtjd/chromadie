@@ -1,4 +1,4 @@
-import { normalizeMediaSource } from './mediaSafety.js';
+import { normalizeLocalMediaPreviewSource, normalizeMediaSource } from './mediaSafety.js';
 
 export const DEFAULT_PROFILE_MEDIA_ORIGIN = 'https://media.chm.lol';
 
@@ -36,36 +36,40 @@ function buildPublicObjectUrl(origin, objectKey) {
   return normalizeMediaSource(`${normalizeOrigin(origin)}/${encodedPath}`);
 }
 
-function appendPreviewCacheKey(url, cacheKey) {
-  if (!url || !cacheKey) return url;
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}v=${encodeURIComponent(String(cacheKey))}`;
+function resolveExplicitMediaUrl(value, publicOrigin) {
+  const localPreview = normalizeLocalMediaPreviewSource(value);
+  if (localPreview) return localPreview;
+
+  try {
+    const parsed = new URL(String(value));
+    if (!['https:', 'http:'].includes(parsed.protocol)) return '';
+    if (parsed.origin !== normalizeOrigin(publicOrigin)) return '';
+    return normalizeMediaSource(parsed.toString());
+  } catch {
+    return '';
+  }
 }
 
 /**
- * Resolve either the new provider-aware media reference or a legacy Storage
- * path. Public R2 URLs are immutable and never receive cache-busting query
- * parameters. Legacy cache-busting is available only to explicit editor
- * preview callers during the migration window.
+ * Resolve only provider-aware R2 references or an explicitly supplied local
+ * object URL. Legacy storage paths intentionally fail closed. An immutable
+ * R2 object key is the cache identity; render state never participates in the
+ * returned URL.
  */
 export function resolveProfileMediaReference(value, {
-  publicOrigin = DEFAULT_PROFILE_MEDIA_ORIGIN,
-  legacyResolver = null,
-  cacheKey = '',
-  allowLegacyCacheBust = false
+  publicOrigin = DEFAULT_PROFILE_MEDIA_ORIGIN
 } = {}) {
   const source = typeof value === 'string' ? { path: value } : (value && typeof value === 'object' ? value : {});
   const previewUrl = getReferenceValue(source, ['preview_url', 'previewUrl']);
-  if (previewUrl) return normalizeMediaSource(previewUrl);
+  if (previewUrl) return resolveExplicitMediaUrl(previewUrl, publicOrigin);
 
   const publicKey = getReferenceValue(source, ['r2_public_key', 'public_key', 'publicKey']);
   if (publicKey) return buildPublicObjectUrl(publicOrigin, publicKey);
 
   const explicitUrl = getReferenceValue(source, ['url', 'public_url', 'publicUrl']);
-  if (explicitUrl) return normalizeMediaSource(explicitUrl);
+  if (explicitUrl) return resolveExplicitMediaUrl(explicitUrl, publicOrigin);
 
-  const legacyPath = getReferenceValue(source, ['storage_path', 'storagePath', 'path', 'legacy_path', 'legacyPath']);
-  if (!legacyPath || typeof legacyResolver !== 'function') return '';
-  const legacyUrl = normalizeMediaSource(legacyResolver(legacyPath));
-  return allowLegacyCacheBust ? appendPreviewCacheKey(legacyUrl, cacheKey) : legacyUrl;
+  // storage_path and other legacy references are metadata only. They must
+  // never become a network URL, including through a compatibility resolver.
+  return '';
 }

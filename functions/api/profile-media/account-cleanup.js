@@ -1,7 +1,6 @@
 import {
   callSupabaseRpc,
   controlPlaneError,
-  deleteSupabaseStorageObject,
   getR2Config,
   jsonResponse,
   optionsResponse,
@@ -26,7 +25,7 @@ function parseObjectKeys(value) {
   return value
     .filter(entry => entry && typeof entry === 'object')
     .map(entry => ({ bucket: String(entry.bucket || ''), key: String(entry.key || '').replace(/^\/+/, '') }))
-    .filter(entry => ['private', 'public', 'supabase'].includes(entry.bucket)
+    .filter(entry => ['private', 'public'].includes(entry.bucket)
       && entry.key
       && entry.key.length <= 1024
       && !entry.key.split('/').some(segment => segment === '.' || segment === '..'));
@@ -43,14 +42,6 @@ export async function onRequestPost({ request, env }) {
     for (const job of jobs) {
       const failures = [];
       for (const object of parseObjectKeys(job.object_keys)) {
-        if (object.bucket === 'supabase') {
-          try {
-            await deleteSupabaseStorageObject(env, object.key);
-          } catch (legacyError) {
-            failures.push({ operation: 'legacy_storage_delete', key: object.key, error: legacyError.message });
-          }
-          continue;
-        }
         const bucket = object.bucket === 'private' ? config.privateBucket : config.publicBucket;
         const response = await requestR2Object(env, { method: 'DELETE', bucket, key: object.key });
         if (!response.ok && response.status !== 404) failures.push({ bucket: object.bucket, key: object.key, status: response.status });
@@ -106,13 +97,8 @@ export async function onRequestPost({ request, env }) {
           }
         }
       }
-      if (asset.storage_path) {
-        try {
-          await deleteSupabaseStorageObject(env, asset.storage_path);
-        } catch (legacyError) {
-          failures.push({ operation: 'legacy_storage_delete', key: asset.storage_path, error: legacyError.message });
-        }
-      }
+      // Historical storage_path values are metadata-only tombstones. Cleanup
+      // never contacts Supabase Storage for them.
       let purgeSuccess = !asset.cache_purge_required || asset.cache_purge_status === 'completed';
       if (asset.storage_provider === 'r2' && asset.cache_purge_required && asset.cache_purge_status !== 'completed' && asset.r2_public_key) {
         try {

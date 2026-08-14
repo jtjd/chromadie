@@ -141,7 +141,8 @@ test('media storage, server validation, and public rendering boundaries are expl
   assert.match(tiktokIcon, /currentColor/);
   assert.match(twitchIcon, /<svg/);
   assert.match(twitchIcon, /currentColor/);
-  assert.match(settings, /update_my_profile_audio/);
+  assert.match(settings, /deleteLegacyProfileAudio/);
+  assert.match(await read('supabase/migrations/20260814010000_profile_audio_legacy_delete_order.sql'), /clear_my_legacy_profile_audio/);
   assert.doesNotMatch(migration, /iframe|innerHTML|CREATE TABLE.*media/i);
   assert.match(settings, /accept="image\/jpeg,image\/png,image\/webp"/);
   assert.match(settings, /stored as WebP up to/);

@@ -25,9 +25,10 @@ test('the approved homepage typography is bundled and authoritative', async () =
 });
 
 test('the homepage shell preserves the frozen reference geometry and treatment', async () => {
-  const [styles, hero, showcase, loop] = await Promise.all([
+  const [styles, hero, demo, showcase, loop] = await Promise.all([
     read('src/lib/homepage/homepage-reference.css'),
     read('src/lib/homepage/HomepageHero.svelte'),
+    read('src/lib/homepage/HomepageProfileDemo.svelte'),
     read('src/lib/homepage/HomepageShowcase.svelte'),
     read('src/lib/homepage/HomepageLoop.svelte')
   ]);
@@ -35,13 +36,19 @@ test('the homepage shell preserves the frozen reference geometry and treatment',
   assert.match(styles, /--homepage-bg: #050506/);
   assert.match(styles, /--homepage-border: rgba\(255, 255, 255, 0\.11\)/);
   assert.match(styles, /--homepage-radius: 18px/);
+  assert.match(styles, /position: fixed/);
+  assert.match(styles, /--homepage-background-image/);
   assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
   assert.match(hero, /min-height: calc\(100svh - 88px\)/);
-  assert.match(hero, /width: 440px; height: 470px/);
-  assert.match(hero, /background-image: var\(--homepage-hero-background\)/);
-  assert.match(hero, /backdrop-filter: blur\(16px\)/);
-  assert.match(showcase, /homepage-profile-renderer--showcase/);
-  assert.match(showcase, /profile-shell-page/);
+  assert.match(hero, /width: 440px/);
+  assert.doesNotMatch(hero, /height: 470px|ProfileShell|HomepageProfileRenderer|layoutLabel/);
+  assert.match(demo, /homepage-profile-demo__avatar-shell/);
+  assert.match(demo, /homepage-profile-demo__links/);
+  assert.match(demo, /repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(demo, /backdrop-filter: blur\(32px\)/);
+  assert.doesNotMatch(`${demo}${showcase}`, /profile-shell|ProfileShell|ProfileLayoutFrame/);
+  assert.match(showcase, /homepage-profile-demo/);
+  assert.doesNotMatch(showcase, /layout|profile-shell/i);
   for (const step of ['Roll', 'Build', 'Be seen']) assert.match(loop, new RegExp(`<h3>${step}</h3>`));
   assert.match(styles, /prefers-reduced-motion/);
   assert.doesNotMatch(`${styles}${hero}${showcase}${loop}`, /blob|orb|dashboard statistic|illustration/i);

@@ -4,22 +4,23 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the homepage showcase uses local fixture environments and the production profile renderer', async () => {
-  const [hero, renderer, showcase, fixtures, community] = await Promise.all([
+test('the homepage showcase uses local photographic fixtures and the direct profile specimen', async () => {
+  const [hero, demo, showcase, fixtures, community] = await Promise.all([
     read('src/lib/homepage/HomepageHero.svelte'),
-    read('src/lib/homepage/HomepageProfileRenderer.svelte'),
+    read('src/lib/homepage/HomepageProfileDemo.svelte'),
     read('src/lib/homepage/HomepageShowcase.svelte'),
     read('src/lib/homepage/homepageFixtures.js'),
     read('src/lib/homepage/HomepageCommunity.svelte')
   ]);
 
-  assert.match(hero, /homepage-hero-background/);
-  assert.match(hero, /HomepageProfileRenderer/);
-  assert.match(renderer, /ProfileShell/);
-  assert.match(renderer, /previewProfileConfig/);
+  assert.match(hero, /HomepageProfileDemo/);
+  assert.match(hero, /homepage-profile-stage/);
+  assert.match(demo, /homepage-profile-demo__avatar/);
   assert.match(showcase, /getHomepageShowcaseFixtures/);
-  assert.match(showcase, /homepage-profile-renderer--showcase/);
+  assert.match(showcase, /homepage-showcase-card/);
+  assert.doesNotMatch(`${hero}${demo}${showcase}`, /ProfileShell|HomepageProfileRenderer|profile-shell/);
   assert.match(fixtures, /\/homepage\/fixtures\/.*background\.png/);
+  assert.match(fixtures, /condition_ids/);
   assert.doesNotMatch(fixtures, /supabase|KNOWN_STAFF_SHOWCASE_USERNAMES/);
   assert.match(community, /get_public_discovery/);
 });

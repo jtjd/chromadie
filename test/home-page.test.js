@@ -4,10 +4,10 @@ import { stat, readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [home, hero, renderer, fixtures, community, claim, header, app, routeLoaders, main, fonts, homepageStyles, guestProfile] = await Promise.all([
+const [home, hero, demo, fixtures, community, claim, header, app, routeLoaders, main, fonts, homepageStyles, guestProfile] = await Promise.all([
   read('src/lib/HomePage.svelte'),
   read('src/lib/homepage/HomepageHero.svelte'),
-  read('src/lib/homepage/HomepageProfileRenderer.svelte'),
+  read('src/lib/homepage/HomepageProfileDemo.svelte'),
   read('src/lib/homepage/homepageFixtures.js'),
   read('src/lib/homepage/HomepageCommunity.svelte'),
   read('src/lib/homepage/HomepageClaim.svelte'),
@@ -25,6 +25,9 @@ test('the homepage is a single reference-first composition', () => {
     assert.match(home, new RegExp(component));
   }
   assert.match(home, /homepage-reference\.css/);
+  assert.match(home, /homepage-background/);
+  assert.match(home, /HOMEPAGE_FIXTURES/);
+  assert.match(home, /on:fixturechange={handleFixtureChange}/);
   assert.match(home, /accountState/);
   assert.match(home, /logoutInProgress/);
   assert.doesNotMatch(home, /HomeHero|HomeLeaderboard|HomepageProfileDirectory|SiteModeHeader|activecolor/);
@@ -34,27 +37,38 @@ test('the homepage is a single reference-first composition', () => {
   assert.match(home, /<footer class="homepage-footer">/);
 });
 
-test('the hero carousel renders deterministic fixture models through ProfileShell', () => {
+test('the hero carousel uses deterministic homepage specimens without public-profile rendering', () => {
   assert.match(hero, /HOMEPAGE_FIXTURES/);
   assert.match(hero, /Previous profile example/);
   assert.match(hero, /Next profile example/);
-  assert.match(hero, /<HomepageProfileRenderer fixture={fixture}/);
+  assert.match(hero, /<HomepageProfileDemo fixture={fixture}/);
+  assert.match(hero, /type="button" aria-label="Previous profile example"/);
+  assert.match(hero, /type="button" aria-label="Next profile example"/);
   assert.match(hero, /class="homepage-profile-stage"/);
-  assert.match(hero, /id="claim"/);
-  assert.doesNotMatch(hero, /Preview a roll|Roll now|fake|random|discovery/);
-  assert.match(renderer, /<ProfileShell/);
-  assert.match(renderer, /previewMode={true}/);
-  for (const prop of ['previewProfile', 'previewProfileConfig', 'previewScores', 'previewTimelineEvents', 'previewCollectionItems', 'previewAllAchievements', 'visualFixture', 'renderContext', 'previewDevice']) {
-    assert.match(renderer, new RegExp(prop));
-  }
-  assert.doesNotMatch(renderer, /renderSnapshot/);
+  assert.match(hero, /anchorId="claim"/);
+  assert.doesNotMatch(hero, /ProfileShell|HomepageProfileRenderer|layoutLabel|Preview a roll|random|discovery/);
+  assert.doesNotMatch(demo, /ProfileShell|ProfileLayoutFrame|profile-shell|profileRenderModel/);
 });
 
-test('homepage fixtures are local, deterministic, and outside production data feeds', async () => {
-  assert.match(fixtures, /createDefaultProfileConfig/);
-  assert.match(fixtures, /normalizeProfileConfig/);
-  assert.match(fixtures, /homepage-fixture-/);
-  assert.doesNotMatch(fixtures, /supabase|rpc\(|get_public_discovery|KNOWN_STAFF_SHOWCASE_USERNAMES/);
+test('the homepage specimen owns the approved profile anatomy', () => {
+  for (const selector of [
+    'homepage-profile-demo--hero',
+    'homepage-profile-demo__head',
+    'homepage-profile-demo__avatar-shell',
+    'homepage-profile-demo__name',
+    'homepage-profile-demo__bio',
+    'homepage-profile-demo__links',
+    'homepage-profile-demo__roll'
+  ]) assert.match(demo, new RegExp(selector));
+  assert.match(demo, /repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(demo, /border-radius: 22px/);
+  assert.match(demo, /backdrop-filter: blur\(32px\)/);
+  assert.doesNotMatch(demo, /Views|views|↗/);
+});
+
+test('homepage fixtures are local, deterministic, scored, and outside production data feeds', async () => {
+  assert.match(fixtures, /HOMEPAGE_FIXTURES|condition_ids|timelineEvents/);
+  assert.doesNotMatch(fixtures, /createDefaultProfileConfig|normalizeProfileConfig|profileConfig|layoutVariant|supabase|rpc\(|get_public_discovery|KNOWN_STAFF_SHOWCASE_USERNAMES/);
 
   const assetPaths = [
     'compact-background.png', 'compact-avatar.png',
@@ -85,7 +99,7 @@ test('claim behavior stays on the shared username and auth routes', () => {
   assert.match(claim, /dispatch\('profile'\)/);
   assert.match(claim, /username_claim_started/);
   assert.match(claim, /username_claim_completed/);
-  assert.match(claim, /accountUnavailable/);
+  assert.doesNotMatch(claim, /↗|Free · One roll each day/);
   assert.match(header, /dispatch\('login'/);
   assert.match(header, /dispatch\('logout'/);
   assert.match(header, /dispatch\('retry'/);
@@ -103,7 +117,8 @@ test('the root route mounts the homepage without changing other route contracts'
   assert.match(homepageStyles, /--homepage-bg: #050506/);
   assert.match(homepageStyles, /--homepage-radius: 18px/);
   assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
-  assert.match(hero, /width: 440px; height: 470px/);
+  assert.match(hero, /width: 440px/);
+  assert.doesNotMatch(hero, /height: 470px/);
   assert.match(claim, /backdrop-filter: blur\(20px\)/);
   assert.match(guestProfile, /This could be your profile/);
 });

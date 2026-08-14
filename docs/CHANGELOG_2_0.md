@@ -2862,3 +2862,42 @@ direct route behavior.
   delete or generalized backfill.
 - Removed the unused browser Storage upload method while retaining the narrow
   legacy read/delete compatibility boundary.
+
+## 2026-08-14 — Harden legacy profile-media deletion
+
+- Legacy Supabase Storage cleanup now uses the supported `DELETE` object API
+  and treats missing objects as idempotent success.
+- Legacy staff audio without an asset-library row now deletes the exact
+  physical object server-side before clearing `audio_path`; failed cleanup
+  leaves the path available for retry.
+- Added focused endpoint, migration, and local Storage lifecycle coverage.
+
+## 2026-08-14 — Replace the homepage presentation (Phase 1)
+
+- Replaced the legacy homepage with the approved reference-first visual shell.
+- Added deterministic local fixture profiles rendered through a direct
+  `HomepageProfileDemo` for the centered hero and photographic showcase, plus
+  live community discovery and the existing claim/auth flows.
+- Loaded the approved Clash Display and Inter typography and removed obsolete
+  homepage presentation components, assets, scripts, and selectors after audit.
+- Profile Studio remains unchanged and is not part of this phase.
+
+## 2026-08-14 — Restore homepage reference fidelity
+
+- Removed the homepage `ProfileShell` adapter and restored the reference-owned
+  profile specimen geometry, transparent claim treatment, photographic
+  environments, and centered desktop composition.
+- Kept fixture carousel changes local and deterministic; production profile
+  rendering, live community data, claim/auth behavior, and media contracts were
+  not changed.
+
+## 2026-08-14 — Enforce R2-only profile-media egress
+
+- Removed runtime Supabase Storage URL/API, verification, deletion, and
+  fallback paths. Historical media references now remain inert metadata and
+  resolve to an unavailable state until replaced with an R2 asset.
+- Removed timestamped remote media cache busting and kept Profile Studio’s
+  persistent preview stable across non-media draft changes.
+- Added homepage idle/request-budget coverage, shared media URL stability
+  guards, active database Storage-function lockdown, and R2-only account
+  cleanup assertions.

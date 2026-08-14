@@ -26,7 +26,6 @@ export const DISCOVERY_SURFACES = Object.freeze({
 const RARITIES = new Set(['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']);
 const ITEM_KEY_PATTERN = /^[a-z0-9_]{1,80}$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const AVATAR_PATH_PATTERN = new RegExp(`^avatars/${UUID_PATTERN.source.slice(1, -1)}/avatar\\.webp$`, 'i');
 
 function safeText(value, maxLength = 120) {
   if (typeof value !== 'string') return '';
@@ -80,14 +79,6 @@ function normalizeHex(value) {
     : null;
 }
 
-function normalizeAvatarPath(value) {
-  const candidate = typeof value === 'string' ? value.trim() : '';
-  const isLegacyAvatar = AVATAR_PATH_PATTERN.test(candidate);
-  return isProfileMediaPathForKind(candidate, 'avatar') && (isLegacyAvatar || candidate.endsWith('.webp'))
-    ? candidate.toLowerCase()
-    : null;
-}
-
 function normalizeAvatarReference(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const provider = String(value.storage_provider || '').toLowerCase();
@@ -105,10 +96,6 @@ function normalizeAvatarReference(value) {
       mime_type: typeof value.mime_type === 'string' ? value.mime_type.slice(0, 120) : null,
       byte_size: safeCount(value.byte_size)
     };
-  }
-  if (provider === 'supabase') {
-    const path = normalizeAvatarPath(value.storage_path);
-    return path ? { storage_provider: 'supabase', storage_path: path } : null;
   }
   return null;
 }
@@ -161,7 +148,9 @@ export function normalizeDiscoveryItem(raw) {
     displayName: safeText(raw.displayName, 40),
     bio: safeText(raw.bio, 160),
     profileAccent: normalizeHex(raw.profileAccent),
-    avatarPath: normalizeAvatarPath(raw.avatarPath),
+    // Historical avatar paths remain metadata only and intentionally do not
+    // become a browser media source.
+    avatarPath: null,
     avatarReference: normalizeAvatarReference(raw.avatarReference),
     currentStreak: safeCount(raw.currentStreak),
     totalRolls: safeCount(raw.totalRolls),
@@ -224,4 +213,3 @@ export function isDiscoveryRarity(value) {
   return value === '' || RARITIES.has(value);
 }
 import { getCanonicalProfilePath, normalizeUsernameSegment } from './routeContract.js';
-import { isProfileMediaPathForKind } from './profileExpression.js';

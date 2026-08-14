@@ -1,65 +1,51 @@
-import { createDefaultProfileConfig, normalizeProfileConfig } from '../profileConfig.js';
-
-const BASE_APPEARANCE = Object.freeze({
-  colors: {
-    text: '#F5F5F7',
-    secondaryText: '#95959F',
-    username: '#F5F5F7',
-    description: '#95959F',
-    background: '#050506',
-    surface: '#0D0D10',
-    accent: '#00FFB3',
-    highlight: '#F5F5F7'
-  },
-  surface: { opacity: 60, blur: 32 },
-  background: { blur: 0, imageOpacity: 100, overlayColor: '#050506', overlayOpacity: 26 },
-  gradient: { enabled: false, primary: '#050506', secondary: '#050506', angle: 135 },
-  border: { enabled: true, color: '#FFFFFF', width: 1, radius: 22, opacity: 12 }
+const SUPPORTED_EFFECTS = Object.freeze({
+  compact: Object.freeze({
+    nameFont: 'name_font_editorial_serif',
+    nameMaterial: 'name_material_glass_emboss',
+    nameMotion: 'name_motion_haunt_glow',
+    profileBorder: 'border_signal',
+    avatar: 'signal-ring',
+    cursorTrail: 'cursor_trail_signal_trace',
+    atmosphere: 'profile_atmosphere_rain_window'
+  }),
+  sleek: Object.freeze({
+    nameFont: 'name_font_wide_geometric',
+    nameMaterial: 'name_material_neon_tube',
+    nameMotion: 'name_motion_haunt_gradient',
+    profileBorder: 'border_neon',
+    avatar: 'prism-orbit',
+    cursorTrail: 'cursor_trail_pixel_wake',
+    atmosphere: 'profile_atmosphere_dust_light'
+  }),
+  minimal: Object.freeze({
+    nameFont: 'name_font_mono_compact',
+    nameMaterial: 'name_material_carbon_cut',
+    nameMotion: 'name_motion_haunt_fuzzy',
+    profileBorder: 'border_void',
+    avatar: 'crystal-aperture',
+    cursorTrail: 'cursor_trail_glass_shards',
+    atmosphere: 'profile_atmosphere_droplets_glass'
+  }),
+  portfolio: Object.freeze({
+    nameFont: 'name_font_editorial_serif',
+    nameMaterial: 'name_material_glass_emboss',
+    nameMotion: 'name_motion_haunt_rainbow',
+    profileBorder: 'border_prism',
+    avatar: 'chroma-arc',
+    cursorTrail: 'cursor_trail_chroma_ribbon',
+    atmosphere: 'profile_atmosphere_silk_folds'
+  })
 });
 
-const MODULES = Object.freeze([
-  { id: 'roll', visible: true, order: 0, size: 'wide' },
-  { id: 'stats', visible: false, order: 1, size: 'wide' },
-  { id: 'signature', visible: false, order: 2, size: 'medium' },
-  { id: 'links', visible: true, order: 3, size: 'medium' },
-  { id: 'recent', visible: false, order: 4, size: 'medium' },
-  { id: 'achievements', visible: false, order: 5, size: 'medium' },
-  { id: 'boundary', visible: false, order: 6, size: 'medium' },
-  { id: 'explore', visible: false, order: 7, size: 'wide' }
-]);
-
-function createConfig({ accent, background, avatar, layoutVariant, links }) {
-  const base = createDefaultProfileConfig(accent);
-  return normalizeProfileConfig({
-    ...base,
-    appearance: {
-      ...BASE_APPEARANCE,
-      colors: { ...BASE_APPEARANCE.colors, accent },
-      background: { ...BASE_APPEARANCE.background, overlayColor: '#050506' },
-      border: { ...BASE_APPEARANCE.border }
-    },
-    signatureColor: accent,
-    layoutVariant,
-    templateKey: layoutVariant,
-    storyVisible: false,
-    modules: MODULES.map(module => ({ ...module })),
-    links,
-    media_references: {
-      background: { preview_url: background },
-      avatar: { preview_url: avatar }
-    }
-  }, accent);
-}
-
 function createScores(scores) {
-  return scores.map((score, index) => ({
+  return scores.map((score, index) => Object.freeze({
     ...score,
     roll_date: score.roll_date || `2026-08-${String(14 - index).padStart(2, '0')}`
   }));
 }
 
 function createTimeline(username, scores) {
-  return scores.map((score, index) => ({
+  return scores.map((score, index) => Object.freeze({
     id: `homepage-${username}-roll-${index + 1}`,
     eventType: 'roll',
     occurredAt: `${score.roll_date}T12:00:00.000Z`,
@@ -67,7 +53,8 @@ function createTimeline(username, scores) {
       hex: score.hex_code,
       score: String(score.score),
       rarity: score.rarity,
-      identity: score.identity
+      identity: score.identity,
+      conditionIds: score.condition_ids
     }
   }));
 }
@@ -78,48 +65,27 @@ function createFixture({
   displayName,
   bio,
   accent,
-  layoutVariant,
   background,
   avatar,
-  cosmetics,
+  effects,
   links,
-  scores
+  scores,
+  showcasePosition
 }) {
   const normalizedScores = createScores(scores);
-  const best = normalizedScores.reduce((current, candidate) => Number(candidate.score) > Number(current.score) ? candidate : current, normalizedScores[0]);
-  const profile = {
-    id: `homepage-fixture-${id}`,
-    username,
-    display_name: displayName,
-    bio,
-    mood_color: accent,
-    current_streak: 7,
-    longest_streak: 19,
-    lifetime_ep: normalizedScores.reduce((total, score) => total + Number(score.score || 0), 0),
-    total_rolls: normalizedScores.length,
-    best_roll_score: best.score,
-    best_roll_hex: best.hex_code,
-    best_roll_rarity: best.rarity,
-    created_at: '2025-01-15T12:00:00.000Z',
-    is_staff: false,
-    equipped_cosmetics: cosmetics,
-    equipped_badges: []
-  };
 
   return Object.freeze({
     id,
     username,
     displayName,
-    layoutLabel: layoutVariant[0].toUpperCase() + layoutVariant.slice(1),
+    bio,
     accent,
-    background,
-    avatar,
-    profile,
-    profileConfig: createConfig({ accent, background, avatar, layoutVariant, links }),
+    media: Object.freeze({ background, avatar }),
+    links: Object.freeze(links.map(link => Object.freeze({ ...link }))),
+    effects: SUPPORTED_EFFECTS[effects],
     scores: Object.freeze(normalizedScores),
     timelineEvents: Object.freeze(createTimeline(username, normalizedScores)),
-    collectionItems: Object.freeze([]),
-    allAchievements: Object.freeze([])
+    showcasePosition
   });
 }
 
@@ -130,18 +96,10 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
     displayName: 'Tjz',
     bio: 'Software developer · Tokyo',
     accent: '#00FFB3',
-    layoutVariant: 'compact',
     background: '/homepage/fixtures/compact-background.png',
     avatar: '/homepage/fixtures/compact-avatar.png',
-    cosmetics: {
-      name_font: 'name_font_soft_grotesk',
-      name_material: 'name_material_glass_emboss',
-      name_motion: 'name_motion_haunt_glow',
-      profile_border: 'border_signal',
-      avatar_effect: 'avatar_effect_signal_ring',
-      cursor_trail: 'cursor_trail_signal_trace',
-      profile_atmosphere: 'profile_atmosphere_rain_window'
-    },
+    effects: 'compact',
+    showcasePosition: 'bottom',
     links: [
       { type: 'website', label: 'Website', url: 'https://chm.lol/', order: 0 },
       { type: 'github', label: 'GitHub', url: 'https://github.com/', order: 1 },
@@ -149,9 +107,9 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
       { type: 'other', label: 'Archive', url: 'https://example.com/', order: 3 }
     ],
     scores: [
-      { hex_code: '#00FFB3', score: 1250, rarity: 'Epic', identity: 'Signal Bloom' },
-      { hex_code: '#4E7CFF', score: 980, rarity: 'Rare', identity: 'Blue Hour' },
-      { hex_code: '#FF5C8A', score: 810, rarity: 'Uncommon', identity: 'Soft Static' }
+      { hex_code: '#00FFB3', score: 326203, rarity: 'Epic', identity: 'Balanced Electric Emerald', condition_ids: ['sum_even', 'hue_family_emerald', 'temperature_cool', 'mixed_channel_rhythm'] },
+      { hex_code: '#4E7CFF', score: 307989, rarity: 'Epic', identity: 'Bright Electric Azure', condition_ids: ['sum_odd', 'hue_family_azure', 'temperature_cool', 'mixed_channel_rhythm'] },
+      { hex_code: '#FF5C8A', score: 60083, rarity: 'Rare', identity: 'Bright Electric Rose', condition_ids: ['sum_odd', 'hue_family_rose', 'temperature_warm', 'mixed_channel_rhythm'] }
     ]
   }),
   createFixture({
@@ -160,18 +118,10 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
     displayName: 'Arcade',
     bio: 'FPS · design · late nights',
     accent: '#7AA2F7',
-    layoutVariant: 'sleek',
     background: '/homepage/fixtures/sleek-background.png',
     avatar: '/homepage/fixtures/sleek-avatar.png',
-    cosmetics: {
-      name_font: 'name_font_wide_geometric',
-      name_material: 'name_material_neon_tube',
-      name_motion: 'name_motion_haunt_gradient',
-      profile_border: 'border_neon',
-      avatar_effect: 'avatar_effect_prism_orbit',
-      cursor_trail: 'cursor_trail_pixel_wake',
-      profile_atmosphere: 'profile_atmosphere_dust_light'
-    },
+    effects: 'sleek',
+    showcasePosition: 'bottom',
     links: [
       { type: 'website', label: 'Website', url: 'https://example.com/studio', order: 0 },
       { type: 'github', label: 'GitHub', url: 'https://github.com/', order: 1 },
@@ -179,9 +129,9 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
       { type: 'discord', label: 'Discord', url: 'https://discord.com/', order: 3 }
     ],
     scores: [
-      { hex_code: '#7AA2F7', score: 980, rarity: 'Rare', identity: 'Night Drive' },
-      { hex_code: '#BBA4FF', score: 760, rarity: 'Uncommon', identity: 'Arcade Light' },
-      { hex_code: '#34C759', score: 620, rarity: 'Common', identity: 'Green Room' }
+      { hex_code: '#7AA2F7', score: 52058, rarity: 'Rare', identity: 'Bright Vivid Azure', condition_ids: ['sum_odd', 'hue_family_azure', 'temperature_cool', 'mixed_channel_rhythm'] },
+      { hex_code: '#BBA4FF', score: 57079, rarity: 'Rare', identity: 'Bright Electric Violet', condition_ids: ['sum_even', 'hue_family_violet', 'temperature_cool', 'mixed_channel_rhythm'] },
+      { hex_code: '#34C759', score: 21717, rarity: 'Trash', identity: 'Balanced Rich Emerald', condition_ids: ['sum_even', 'hue_family_emerald', 'temperature_cool', 'mixed_channel_rhythm'] }
     ]
   }),
   createFixture({
@@ -190,27 +140,20 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
     displayName: 'mono',
     bio: 'Designer · Berlin',
     accent: '#F5F5F7',
-    layoutVariant: 'minimal',
     background: '/homepage/fixtures/minimal-background.png',
     avatar: '/homepage/fixtures/minimal-avatar.png',
-    cosmetics: {
-      name_font: 'name_font_mono_compact',
-      name_material: 'name_material_carbon_cut',
-      name_motion: 'name_motion_haunt_fuzzy',
-      profile_border: 'border_void',
-      avatar_effect: 'avatar_effect_crystal_aperture',
-      cursor_trail: 'cursor_trail_glass_shards',
-      profile_atmosphere: 'profile_atmosphere_droplets_glass'
-    },
+    effects: 'minimal',
+    showcasePosition: 'left',
     links: [
       { type: 'website', label: 'Work', url: 'https://example.com/work', order: 0 },
       { type: 'other', label: 'Archive', url: 'https://example.com/archive', order: 1 },
-      { type: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/', order: 2 }
+      { type: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/', order: 2 },
+      { type: 'other', label: 'Notes', url: 'https://example.com/notes', order: 3 }
     ],
     scores: [
-      { hex_code: '#F5F5F7', score: 930, rarity: 'Rare', identity: 'Paper Light' },
-      { hex_code: '#B8C0D8', score: 710, rarity: 'Uncommon', identity: 'Concrete Air' },
-      { hex_code: '#8794A6', score: 540, rarity: 'Common', identity: 'Wet Stone' }
+      { hex_code: '#F5F5F7', score: 102607, rarity: 'Epic', identity: 'Luminous Soft Blue', condition_ids: ['sum_odd', 'hue_family_blue', 'temperature_cool', 'odd_channel_rhythm'] },
+      { hex_code: '#B8C0D8', score: 44097, rarity: 'Uncommon', identity: 'Bright Muted Blue', condition_ids: ['sum_even', 'hue_family_blue', 'temperature_cool', 'even_channel_harmony'] },
+      { hex_code: '#8794A6', score: 27641, rarity: 'Common', identity: 'Balanced Soft Azure', condition_ids: ['sum_odd', 'hue_family_azure', 'temperature_cool', 'mixed_channel_rhythm'] }
     ]
   }),
   createFixture({
@@ -219,27 +162,20 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
     displayName: 'void',
     bio: 'Visuals · music · archive',
     accent: '#BB9AF7',
-    layoutVariant: 'portfolio',
     background: '/homepage/fixtures/portfolio-background.png',
     avatar: '/homepage/fixtures/portfolio-avatar.png',
-    cosmetics: {
-      name_font: 'name_font_editorial_serif',
-      name_material: 'name_material_velvet_ink',
-      name_motion: 'name_motion_haunt_rainbow',
-      profile_border: 'border_prism',
-      avatar_effect: 'avatar_effect_chroma_arc',
-      cursor_trail: 'cursor_trail_chroma_ribbon',
-      profile_atmosphere: 'profile_atmosphere_silk_folds'
-    },
+    effects: 'portfolio',
+    showcasePosition: 'center',
     links: [
       { type: 'website', label: 'Gallery', url: 'https://example.com/gallery', order: 0 },
       { type: 'spotify', label: 'Music', url: 'https://open.spotify.com/', order: 1 },
-      { type: 'other', label: 'Archive', url: 'https://example.com/archive', order: 2 }
+      { type: 'other', label: 'Archive', url: 'https://example.com/archive', order: 2 },
+      { type: 'other', label: 'Notes', url: 'https://example.com/notes', order: 3 }
     ],
     scores: [
-      { hex_code: '#BB9AF7', score: 1120, rarity: 'Epic', identity: 'Archive Glow' },
-      { hex_code: '#F38BA8', score: 840, rarity: 'Rare', identity: 'Afterimage' },
-      { hex_code: '#FFD166', score: 680, rarity: 'Uncommon', identity: 'Late Light' }
+      { hex_code: '#BB9AF7', score: 42043, rarity: 'Uncommon', identity: 'Bright Vivid Violet', condition_ids: ['sum_even', 'hue_family_violet', 'temperature_cool', 'mixed_channel_rhythm'] },
+      { hex_code: '#F38BA8', score: 32965, rarity: 'Common', identity: 'Bright Vivid Rose', condition_ids: ['sum_even', 'hue_family_rose', 'temperature_warm', 'mixed_channel_rhythm'] },
+      { hex_code: '#FFD166', score: 60081, rarity: 'Rare', identity: 'Bright Electric Amber', condition_ids: ['sum_even', 'hue_family_amber', 'temperature_warm', 'mixed_channel_rhythm'] }
     ]
   })
 ]);

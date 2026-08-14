@@ -30,13 +30,13 @@ const discovery = await read('src/lib/DiscoveryHub.svelte');
 const foundations = await read('src/styles/foundations.css');
 
 test('the replacement homepage has explicit desktop, tablet, and phone containment rules', () => {
-  assert.match(homepage, /HomepageProfileRenderer|HomepageHero/);
+  assert.match(homepage, /HomepageProfileDemo|HomepageHero/);
   assert.match(homepageStyles, /@media \(max-width: 780px\)/);
   assert.match(homepageHero, /@media \(max-width: 930px\)[\s\S]*grid-template-columns: 1fr/);
   assert.match(homepageHero, /@media \(max-width: 460px\)/);
-  assert.match(homepageSmoke, /1440, 1000/);
-  assert.match(homepageSmoke, /1024, 900/);
-  assert.match(homepageSmoke, /390, 844/);
+  for (const viewport of ['1440, 900', '1280, 800', '1024, 900', '768, 1024', '390, 844', '375, 812']) {
+    assert.match(homepageSmoke, new RegExp(viewport.replace(', ', ', ')));
+  }
   assert.match(homepageSmoke, /scrollWidth <= width \+ 1/);
 });
 
@@ -135,7 +135,7 @@ test('browser smoke can run against the production preview and checks the phone 
   assert.match(browserHarness, /startVitePreview/);
   assert.match(browserSmoke, /smokeMode/);
   assert.match(browserSmoke, /compiled homepage keeps its phone layout/);
-  assert.match(browserSmoke, /homepage-profile-renderer--hero/);
+  assert.match(browserSmoke, /homepage-profile-demo--hero/);
   assert.match(browserSmoke, /homepage-profile-stage/);
   assert.match(browserSmoke, /oldHeader/);
   assert.match(browserSmoke, /authenticated Profile Studio shell/);

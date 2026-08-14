@@ -115,7 +115,7 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   assert.match(editor, /deleteProfileMediaAsset/);
   assert.doesNotMatch(editor, /stage_my_profile_media_asset|stage_my_profile_media_replacement|finalize_my_profile_media_asset/);
   assert.doesNotMatch(editor, /supabase\.storage[\s\S]*\.upload/);
-  assert.match(editor, /select_my_profile_rich_media/);
+  assert.match(editor, /select_my_profile_r2_media/);
   assert.match(editor, /application\/x-navi-animation/);
   assert.match(editor, /\.ani/);
   assert.match(editor, /PROFILE_ANIMATED_CURSOR_MIME/);

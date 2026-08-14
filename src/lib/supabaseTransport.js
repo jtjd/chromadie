@@ -17,7 +17,7 @@ function createAuthFetch({ supabaseKey, projectKeyIsLegacy, authClientRef, authU
     // getSession() for those requests waits on the same initialize promise and
     // can deadlock an existing or expired browser session. GoTrue already puts
     // the correct JWT on authenticated auth requests; only attach the current
-    // session token to PostgREST, Storage, and Functions requests.
+    // session token to PostgREST and Functions requests.
     if (!requestHeaders.has('Authorization') && !isAuthRequest) {
       const sessionResult = authClientRef.current
         ? await authClientRef.current.getSession()
@@ -63,7 +63,6 @@ export function createSupabaseTransport({
   const serviceUrls = {
     auth: new URL('auth/v1', baseUrl).href,
     rest: new URL('rest/v1', baseUrl).href,
-    storage: new URL('storage/v1', baseUrl).href,
     functions: new URL('functions/v1', baseUrl).href
   };
   const globalHeaders = {

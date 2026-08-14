@@ -291,12 +291,12 @@ SELECT pg_temp.audit_assert(
   'profile expression RPC must have a fixed search_path'
 );
 SELECT pg_temp.audit_assert(
-  (SELECT public AND file_size_limit = 262144 AND allowed_mime_types = ARRAY['image/webp']::text[]
+  (SELECT NOT public AND file_size_limit = 262144 AND allowed_mime_types = ARRAY['image/webp']::text[]
    FROM storage.buckets WHERE id = 'avatars')
-    AND (SELECT public AND file_size_limit = 4194304 AND allowed_mime_types = ARRAY['image/webp']::text[]
+    AND (SELECT NOT public AND file_size_limit = 4194304 AND allowed_mime_types = ARRAY['image/webp']::text[]
          FROM storage.buckets WHERE id = 'backgrounds')
     AND (SELECT relrowsecurity FROM pg_class WHERE oid = 'storage.objects'::regclass)
-    AND (SELECT count(*) = 4 FROM pg_policies
+    AND (SELECT count(*) = 0 FROM pg_policies
          WHERE schemaname = 'storage' AND tablename = 'objects'
            AND policyname IN (
              'Public profile expression media read',
@@ -304,7 +304,7 @@ SELECT pg_temp.audit_assert(
              'Owners can replace profile expression media',
              'Owners can delete profile expression media'
            )),
-  'profile media buckets and owner-scoped storage policies must remain bounded'
+  'legacy Supabase profile-media buckets must remain private with no browser Storage policies'
 );
 SELECT pg_temp.audit_assert(
   NOT has_table_privilege('anon', 'public.profile_entitlements', 'SELECT')
@@ -1470,15 +1470,9 @@ SELECT pg_temp.audit_assert(
    FROM audit_results WHERE name = 'expression_save'),
   'valid profile expression values were not saved'
 );
-INSERT INTO audit_results VALUES (
-  'audio_save',
-  public.update_my_profile_audio('profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3')
-);
-SELECT pg_temp.audit_assert(
-  (SELECT payload->>'success' = 'true'
-      AND payload->>'audio_path' = 'profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3'
-   FROM audit_results WHERE name = 'audio_save'),
-  'valid staff profile audio was not saved'
+SELECT pg_temp.audit_expect_error(
+  $retired_audio$SELECT public.update_my_profile_audio('profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3')$retired_audio$,
+  'retired Supabase-backed profile audio RPC remained callable'
 );
 SELECT pg_temp.audit_expect_error(
   $expression_path$SELECT public.update_my_profile_expression(
@@ -1510,7 +1504,7 @@ INSERT INTO audit_results VALUES ('config_public_expression', public.get_public_
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'avatar_path' = 'avatars/10000000-0000-0000-0000-000000000001/avatar.webp'
       AND payload->>'background_path' = 'backgrounds/10000000-0000-0000-0000-000000000001/background.webp'
-      AND payload->>'audio_path' = 'profile_audio/10000000-0000-0000-0000-000000000001/profile.mp3'
+      AND payload->>'audio_path' IS NULL
       AND payload->>'spotify_type' = 'track'
       AND payload->>'spotify_id' = '1234567890123456789012'
       AND NOT (payload ? 'draft')
@@ -1518,106 +1512,33 @@ SELECT pg_temp.audit_assert(
   'public profile expression projection was not bounded'
 );
 
--- Milestone 10 rich media remains staged, quota-accounted, owner-scoped, and
--- entitlement-aware. A staff flag is sufficient for this fixture; refunded
--- non-staff accounts are checked below through the public projection.
+-- Supabase is no longer a profile-media provider. The retired Storage-facing
+-- RPC names remain inert for migration compatibility, while the R2 selection
+-- contracts are the only authenticated media configuration authority.
 SELECT pg_temp.audit_assert(
   NOT has_table_privilege('authenticated', 'public.profile_media_assets', 'INSERT')
     AND NOT has_table_privilege('authenticated', 'public.profile_media_assets', 'UPDATE')
     AND NOT has_table_privilege('authenticated', 'public.profile_media_assets', 'DELETE')
-    AND has_function_privilege('authenticated', 'public.stage_my_profile_media_asset(text,uuid,text,bigint,text,jsonb)', 'EXECUTE')
-    AND has_function_privilege('authenticated', 'public.finalize_my_profile_media_asset(uuid)', 'EXECUTE')
-    AND has_function_privilege('authenticated', 'public.select_my_profile_rich_media(uuid,uuid,uuid,uuid,jsonb)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.select_my_profile_expression_assets(uuid,uuid,boolean,boolean)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.select_my_profile_r2_media(uuid,uuid,uuid,uuid,jsonb)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'public.select_my_profile_audio_asset(uuid,boolean)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.stage_my_profile_media_asset(text,uuid,text,bigint,text,jsonb)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.finalize_my_profile_media_asset(uuid)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.select_my_profile_rich_media(uuid,uuid,uuid,uuid,jsonb)', 'EXECUTE')
     AND NOT has_function_privilege('anon', 'public.stage_my_profile_media_asset(text,uuid,text,bigint,text,jsonb)', 'EXECUTE')
     AND NOT has_function_privilege('authenticated', 'public.cleanup_staged_profile_media()', 'EXECUTE'),
-  'rich media browser roles crossed the staged upload authority boundary'
+  'profile media roles crossed the R2 control-plane authority boundary'
 );
 SELECT pg_temp.audit_assert(
-  EXISTS (
+  NOT EXISTS (
     SELECT 1
-    FROM pg_policies
-    WHERE schemaname = 'storage'
-      AND tablename = 'objects'
-      AND policyname = 'Owners can stage rich profile media'
-      AND with_check LIKE '%objects.metadata%'
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.prokind = 'f'
+      AND pg_get_functiondef(p.oid) ILIKE '%storage.objects%'
   ),
-  'rich media Storage INSERT policy did not qualify the uploaded object metadata'
-);
-SELECT pg_temp.audit_expect_error(
-  $rich_kind$SELECT public.stage_my_profile_media_asset('background_video', '20000000-0000-0000-0000-000000000002', 'mp3', 1024, 'wrong', '{}'::jsonb)$rich_kind$,
-  'rich media staging accepted a mismatched extension'
-);
-INSERT INTO audit_results VALUES (
-  'rich_stage_video',
-  public.stage_my_profile_media_asset('background_video', '20000000-0000-0000-0000-000000000002', 'mp4', 1024, 'Security video', '{"width":1920,"height":1080}'::jsonb)
-);
--- Exercise the same Storage INSERT boundary used by the browser client. The
--- surrounding audit runs as postgres so it can inspect protected projections;
--- this statement deliberately runs as the authenticated role.
-SET LOCAL ROLE authenticated;
-INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
-VALUES (
-  gen_random_uuid(), 'profile_media', '10000000-0000-0000-0000-000000000001/20000000-0000-0000-0000-000000000002.mp4',
-  '10000000-0000-0000-0000-000000000001', '{"mimetype":"video/mp4","size":"1024"}'::jsonb
-);
-RESET ROLE;
-INSERT INTO audit_results VALUES (
-  'rich_finalize_video',
-  public.finalize_my_profile_media_asset('20000000-0000-0000-0000-000000000002')
-);
-SELECT pg_temp.audit_assert(
-  (SELECT payload->>'status' = 'active' FROM audit_results WHERE name = 'rich_finalize_video')
-    AND (SELECT status = 'active' FROM public.profile_media_assets WHERE id = '20000000-0000-0000-0000-000000000002'),
-  'verified rich media did not become active'
-);
-SELECT set_config(
-  'request.jwt.claims',
-  '{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}',
-  true
-);
-SELECT pg_temp.audit_expect_error(
-  $rich_cross_owner$SELECT public.select_my_profile_rich_media('20000000-0000-0000-0000-000000000002', NULL, NULL, NULL, '{}'::jsonb)$rich_cross_owner$,
-  'another owner selected a rich media asset by UUID'
-);
-SELECT set_config(
-  'request.jwt.claims',
-  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
-  true
-);
-INSERT INTO audit_results VALUES (
-  'rich_select_video',
-  public.select_my_profile_rich_media('20000000-0000-0000-0000-000000000002', NULL, NULL, NULL, '{}'::jsonb)
-);
-SELECT pg_temp.audit_assert(
-  (SELECT payload->>'background_video_path' = 'profile_media/10000000-0000-0000-0000-000000000001/20000000-0000-0000-0000-000000000002.mp4' FROM audit_results WHERE name = 'rich_select_video')
-    AND public.get_public_profile_configuration('10000000-0000-0000-0000-000000000001')->>'background_video_path' = 'profile_media/10000000-0000-0000-0000-000000000001/20000000-0000-0000-0000-000000000002.mp4',
-  'active rich media selection was not projected for an authorized profile'
-);
-INSERT INTO audit_results VALUES (
-  'rich_stage_bad_mime',
-  public.stage_my_profile_media_asset('audio', '20000000-0000-0000-0000-000000000003', 'mp3', 1024, 'Bad audio', '{}'::jsonb)
-);
-INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
-VALUES (
-  gen_random_uuid(), 'profile_media', '10000000-0000-0000-0000-000000000001/20000000-0000-0000-0000-000000000003.mp3',
-  '10000000-0000-0000-0000-000000000001', '{"mimetype":"video/mp4","size":"1024"}'::jsonb
-);
-SELECT pg_temp.audit_expect_error(
-  $rich_bad_mime$SELECT public.finalize_my_profile_media_asset('20000000-0000-0000-0000-000000000003')$rich_bad_mime$,
-  'rich media finalization accepted a malformed MIME type'
-);
-SELECT public.delete_my_profile_media_asset('20000000-0000-0000-0000-000000000003');
-SELECT public.delete_my_profile_media_asset('20000000-0000-0000-0000-000000000002');
--- The authenticated RPC creates durable tombstones. The Pages control plane
--- performs the physical Storage API delete before this service-owned
--- finalization step; simulate that external success in the SQL audit.
-SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
-SELECT public.complete_profile_media_deleted_cleanup_v2('20000000-0000-0000-0000-000000000003', true, true, NULL);
-SELECT public.complete_profile_media_deleted_cleanup_v2('20000000-0000-0000-0000-000000000002', true, true, NULL);
-SELECT pg_temp.audit_assert(
-  NOT EXISTS (SELECT 1 FROM public.profile_media_assets WHERE id = '20000000-0000-0000-0000-000000000002')
-    AND public.get_public_profile_configuration('10000000-0000-0000-0000-000000000001')->>'background_video_path' IS NULL,
-  'deleting an active rich asset left a public reference behind'
+  'a public database function still touches Supabase Storage objects'
 );
 
 -- R2 deletion must use typed asset IDs when available. A provider-native row
@@ -1760,10 +1681,9 @@ SELECT pg_temp.audit_assert(
   'successful R2 cleanup did not finalize the tombstone'
 );
 
--- A migrated R2 asset can retain its precise legacy Supabase path during the
--- rollback window. The authenticated delete only tombstones it; the service
--- cleanup RPC then removes that exact Storage object before the tombstone is
--- finalized. Native R2 assets continue to use NULL and never enter this path.
+-- A migrated R2 asset may retain a historical storage_path as inert metadata.
+-- Deletion queues only its R2 keys; no database or service role may invoke a
+-- legacy Supabase Storage cleanup operation.
 INSERT INTO public.profile_media_assets (
   id, user_id, kind, storage_path, storage_provider, r2_public_key,
   status, delivery_status, ever_public, mime_type, byte_size, label
@@ -1828,43 +1748,14 @@ SELECT pg_temp.audit_assert(
     ),
   'migrated R2 deletion did not retain the legacy cleanup identifier until control-plane cleanup'
 );
+SELECT pg_temp.audit_assert(
+  NOT has_function_privilege('service_role', 'public.delete_profile_media_legacy_storage_object(text)', 'EXECUTE')
+    AND NOT has_function_privilege('service_role', 'public.cleanup_staged_profile_media()', 'EXECUTE'),
+  'legacy Supabase media cleanup remained callable from the service role'
+);
+-- R2 control-plane cleanup finalizes the tombstone after the external R2
+-- deletion succeeds; this SQL audit simulates only that metadata transition.
 SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
-INSERT INTO audit_results VALUES (
-  'legacy_avatar_cleanup',
-  public.delete_profile_media_legacy_storage_object('avatars/10000000-0000-0000-0000-000000000001/migrated.webp')
-);
-SELECT pg_temp.audit_assert(
-  (SELECT payload->>'success' = 'false'
-      AND payload->>'deferred' = 'true'
-      AND payload->>'storage_path' = 'avatars/10000000-0000-0000-0000-000000000001/migrated.webp'
-   FROM audit_results WHERE name = 'legacy_avatar_cleanup')
-    AND EXISTS (
-      SELECT 1 FROM storage.objects
-      WHERE bucket_id = 'avatars'
-        AND name = '10000000-0000-0000-0000-000000000001/migrated.webp'
-    ),
-  'database compatibility RPC claimed to delete a physical legacy object'
-);
-INSERT INTO audit_results VALUES (
-  'legacy_avatar_cleanup_retry',
-  public.delete_profile_media_legacy_storage_object('avatars/10000000-0000-0000-0000-000000000001/migrated.webp')
-);
-SELECT pg_temp.audit_assert(
-  (SELECT payload->>'success' = 'false' AND payload->>'deferred' = 'true'
-   FROM audit_results WHERE name = 'legacy_avatar_cleanup_retry'),
-  'legacy Storage cleanup compatibility RPC did not remain deferred and safe'
-);
-SELECT pg_temp.audit_assert(
-  EXISTS (
-    SELECT 1 FROM storage.objects
-    WHERE bucket_id = 'avatars'
-      AND name = '10000000-0000-0000-0000-000000000001/migrated-sibling.webp'
-  ),
-  'database compatibility cleanup touched the unrelated legacy sibling'
-);
--- The Pages control plane performs the physical Storage API deletion. Simulate
--- that successful external operation here, then verify the tombstone can
--- finalize; the surrounding transaction rollback leaves fixture objects intact.
 INSERT INTO audit_results VALUES (
   'legacy_avatar_cleanup_finalize',
   public.complete_profile_media_deleted_cleanup_v2(
@@ -1879,8 +1770,9 @@ SELECT pg_temp.audit_assert(
   'migrated R2 tombstone was not finalized after control-plane cleanup'
 );
 
--- Account deletion captures migrated legacy paths before profile/media rows
--- disappear, alongside native R2 keys. This is the durable retry boundary.
+-- Account deletion captures native R2 keys before profile/media rows disappear.
+-- Historical storage_path values are deliberately excluded from the durable
+-- cleanup job.
 SELECT set_config(
   'request.jwt.claims',
   '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
@@ -2011,32 +1903,23 @@ SELECT pg_temp.audit_assert(
     ),
   'out-of-order chargeback was lost when checkout completion arrived later'
 );
--- Expired refund recovery is service-cleaned; the immediate public projection
--- already omitted the rich selection when the entitlement was revoked.
+-- Expired refund recovery omits the rich selection immediately. Physical R2
+-- cleanup is owned by the control plane; no SQL cleanup function may inspect a
+-- Supabase Storage object.
 UPDATE public.billing_premium_access
 SET recovery_until = now() - interval '1 minute', updated_at = now()
 WHERE user_id = '10000000-0000-0000-0000-000000000002';
-INSERT INTO public.profile_media_assets (id, user_id, kind, storage_path, status, mime_type, byte_size, metadata)
-VALUES (
-  '40000000-0000-0000-0000-000000000004',
-  '10000000-0000-0000-0000-000000000002',
-  'background_video',
-  'profile_media/10000000-0000-0000-0000-000000000002/40000000-0000-0000-0000-000000000004.mp4',
-  'active', 'video/mp4', 1024, '{"width":1920,"height":1080}'::jsonb
-);
-INSERT INTO storage.objects (id, bucket_id, name, owner_id, metadata)
-VALUES (
-  gen_random_uuid(), 'profile_media', '10000000-0000-0000-0000-000000000002/40000000-0000-0000-0000-000000000004.mp4',
-  '10000000-0000-0000-0000-000000000002', '{"mimetype":"video/mp4","size":"1024"}'::jsonb
-);
-UPDATE public.profile_configurations
-SET background_video_path = 'profile_media/10000000-0000-0000-0000-000000000002/40000000-0000-0000-0000-000000000004.mp4'
-WHERE user_id = '10000000-0000-0000-0000-000000000002';
-SELECT public.cleanup_staged_profile_media();
 SELECT pg_temp.audit_assert(
-  NOT EXISTS (SELECT 1 FROM public.profile_media_assets WHERE id = '40000000-0000-0000-0000-000000000004')
-    AND NOT EXISTS (SELECT 1 FROM storage.objects WHERE bucket_id = 'profile_media' AND name LIKE '10000000-0000-0000-0000-000000000002/%'),
-  'expired rich media recovery was not cleaned by the service path'
+  NOT has_function_privilege('service_role', 'public.cleanup_staged_profile_media()', 'EXECUTE')
+    AND NOT EXISTS (
+      SELECT 1 FROM public.profile_media_assets
+      WHERE user_id = '10000000-0000-0000-0000-000000000002'
+        AND status = 'active'
+        AND kind IN ('background_video', 'banner', 'audio', 'cursor', 'pointer_cursor')
+        AND delivery_status = 'ready'
+        AND storage_provider = 'supabase'
+    ),
+  'expired rich media retained a callable Supabase cleanup path'
 );
 SELECT set_config('request.jwt.claims', '{"role":"anon"}', true);
 INSERT INTO audit_results VALUES ('config_anon_owner', public.get_my_profile_configuration());
@@ -2068,11 +1951,15 @@ SELECT pg_temp.audit_assert(
     FROM public.profile_media_account_cleanup_jobs
     WHERE user_id = '10000000-0000-0000-0000-000000000001'
       AND object_keys @> jsonb_build_array(jsonb_build_object(
+        'bucket', 'public',
+        'key', 'profiles/10000000-0000-0000-0000-000000000001/account-migrated.mp4'
+      ))
+      AND NOT object_keys @> jsonb_build_array(jsonb_build_object(
         'bucket', 'supabase',
         'key', 'profile_media/10000000-0000-0000-0000-000000000001/account-migrated.mp4'
       ))
   ),
-  'account deletion did not durably capture the retained legacy Supabase path'
+  'account deletion did not durably capture only the native R2 key'
 );
 INSERT INTO audit_results VALUES (
   'delete_second',
@@ -2100,12 +1987,12 @@ SELECT pg_temp.audit_assert(
 );
 SELECT pg_temp.audit_assert(
   NOT EXISTS (
-    SELECT 1 FROM storage.objects
-    WHERE (bucket_id = 'avatars' AND name = '10000000-0000-0000-0000-000000000001/avatar.webp')
-       OR (bucket_id = 'backgrounds' AND name = '10000000-0000-0000-0000-000000000001/background.webp')
-       OR (bucket_id = 'profile_audio' AND name = '10000000-0000-0000-0000-000000000001/profile.mp3')
+    SELECT 1
+    FROM public.profile_media_account_cleanup_jobs,
+      jsonb_array_elements(object_keys) AS object_key
+    WHERE object_keys @> jsonb_build_array(jsonb_build_object('bucket', 'supabase'))
   ),
-  'profile expression storage objects did not follow account deletion'
+  'account deletion queued a legacy Supabase media object'
 );
 SELECT pg_temp.audit_assert(
   NOT EXISTS (

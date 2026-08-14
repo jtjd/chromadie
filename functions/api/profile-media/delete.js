@@ -1,7 +1,6 @@
 import {
   callSupabaseRpc,
   controlPlaneError,
-  deleteSupabaseStorageObject,
   getR2Config,
   getSupabaseAsset,
   jsonResponse,
@@ -29,7 +28,7 @@ export async function onRequestPost({ request, env }) {
     if (!asset) return jsonResponse({ success: false, error: 'Media asset not found.' }, 404, request);
     const result = await callSupabaseRpc(env, 'delete_my_profile_media_asset', { p_asset_id: asset.id }, { token: auth.token });
     if (!result?.success) return jsonResponse(result || { success: false, error: 'The media asset could not be removed.' }, 422, request);
-    const provider = result.storage_provider || asset.storage_provider || 'supabase';
+    const provider = result.storage_provider || asset.storage_provider || '';
     const config = provider === 'r2' ? getR2Config(env) : null;
     if (provider === 'r2' && !config) return jsonResponse({ success: false, error: 'R2 media deletion is not configured.' }, 503, request);
     const keys = [...new Set([result.r2_private_key || asset.r2_private_key, result.r2_public_key || asset.r2_public_key].filter(Boolean))];
@@ -42,14 +41,9 @@ export async function onRequestPost({ request, env }) {
         }
       }
     }
-    const storagePath = result.storage_path || asset.storage_path;
-    if (storagePath) {
-      try {
-        await deleteSupabaseStorageObject(env, storagePath);
-      } catch (legacyError) {
-        cleanup.push({ operation: 'legacy_storage_delete', storage_path: storagePath, error: legacyError.message });
-      }
-    }
+    // Legacy storage_path values are inert metadata. They are intentionally
+    // not sent to a provider-specific delete API; the user must re-upload
+    // the asset to R2 if the media is still wanted.
     let purgeSuccess = true;
     const publicKey = result.r2_public_key || asset.r2_public_key;
     if (provider === 'r2' && (result.ever_public ?? asset.ever_public) && publicKey) {

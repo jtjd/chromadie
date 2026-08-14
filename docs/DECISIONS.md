@@ -4650,3 +4650,53 @@ The browser compatibility Storage client no longer exposes an `upload()`
 method. New profile-media writes are R2-only; the remaining Supabase Storage
 surface is limited to legacy public URL resolution and exact-path deletion
 during the compatibility window.
+
+## 2026-08-14 — Replace the homepage presentation with a direct reference specimen
+
+Phase 1 replaces the legacy homepage composition with the approved centered
+reference shell. The hero and lower showcase render deterministic, homepage-only
+fixture models through a purpose-specific `HomepageProfileDemo`; they do not
+create accounts, query live profiles, or mutate product data. The community
+section is the only homepage profile feed backed by live discovery data.
+
+Clash Display and Inter are loaded as the reference typography. Fixture
+photographs and avatars are local purpose-made assets, and the existing claim,
+auth, username-policy, analytics, and route behavior remain authoritative.
+Legacy homepage presentation components, assets, scripts, and dead selectors
+were removed only after import/reference checks. Profile Studio and shared
+profile/business logic remain outside this phase.
+
+## 2026-08-14 — Restore homepage reference fidelity
+
+The homepage marketing specimen intentionally owns the approved reference
+geometry instead of inheriting public-profile layout geometry. `ProfileShell`,
+`ProfileLayoutFrame`, the public layouts, and the production render model remain
+unchanged and are not mounted by the homepage. Fixture combinations continue to
+use local photographic assets, valid product concepts, deterministic scored
+rolls, and no live profile reads or writes.
+
+## 2026-08-14 — Make Supabase a control plane, never a media host
+
+Profile media now has one production provider: Cloudflare R2. Browser and
+Pages runtime code can resolve only stable R2 public keys or same-page local
+Blob previews; historical `storage_path` values fail closed. The persistent
+Studio preview consumes supplied render state and does not perform profile
+hydration, media verification, or timestamped URL generation during draft
+updates.
+
+The final runtime lockdown migration also makes historical Storage-backed SQL
+RPCs inert/revoked, removes Storage-object work from the profile-delete trigger,
+and excludes legacy paths from account-cleanup jobs. Supabase Storage schema,
+historical migrations, and the one-time operator migration remain only as
+historical/inventory context; they are not application media paths.
+
+## 2026-08-14 — Fail closed on legacy audio metadata
+
+The historical staff-audio configuration can exist without a
+`profile_media_assets` row. Its delete flow runs through a small server-only
+endpoint that authenticates the owner, validates the exact
+`profile_audio/<user>/profile.mp3` metadata path, and calls an RPC that clears
+the reference. It never requests Supabase Storage bytes or invokes a Storage
+delete; the user must re-upload the asset to R2 if it is still wanted. This
+keeps legacy metadata recoverable while making Supabase Storage impossible to
+reach from profile-media runtime code.

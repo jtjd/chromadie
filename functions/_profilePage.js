@@ -1,5 +1,4 @@
 import { getCanonicalProfilePath, normalizeUsernameSegment } from '../src/lib/routeContract.js';
-import { getProfileStorageRef } from '../src/lib/profileExpression.js';
 import { resolveProfileMediaReference } from '../src/lib/profileMediaResolver.js';
 import { normalizeProfileMetadata } from '../src/lib/profileMetadata.js';
 import { baseSecurityHeaders, createHtmlHeaders, fetchAppShell, getSiteOrigin } from './_publicPage.js';
@@ -55,21 +54,8 @@ export async function loadPublicProfile(username, env) {
 }
 
 function getPublicMediaUrl(mediaReference, env) {
-  const supabaseUrl = env?.VITE_SUPABASE_URL || env?.SUPABASE_URL;
-  const legacyResolver = storedPath => {
-    if (!supabaseUrl) return '';
-    try {
-      const legacyReference = getProfileStorageRef(storedPath);
-      if (!legacyReference) return '';
-      const origin = new URL(supabaseUrl).origin;
-      return `${origin}/storage/v1/object/public/${legacyReference.bucket}/${legacyReference.objectPath}`;
-    } catch {
-      return '';
-    }
-  };
   return resolveProfileMediaReference(mediaReference, {
-    publicOrigin: env?.MEDIA_PUBLIC_ORIGIN || 'https://media.chm.lol',
-    legacyResolver
+    publicOrigin: env?.MEDIA_PUBLIC_ORIGIN || 'https://media.chm.lol'
   });
 }
 

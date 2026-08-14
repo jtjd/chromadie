@@ -1,7 +1,8 @@
 # Profile Media: Supabase Storage → Cloudflare R2
 
-Status: local implementation slice complete; Cloudflare provisioning, active
-asset backfill, and production cutover remain operator-gated.
+Status: R2-only runtime boundary enforced on 2026-08-14. Cloudflare
+provisioning and any remaining legacy-asset backfill are operator-gated; the
+application has no Supabase Storage media fallback.
 
 This migration moves profile-media bytes out of Supabase Storage without
 changing Supabase's authority over authentication, profile configuration,
@@ -39,6 +40,31 @@ profile renderer → media.chm.lol → Cloudflare Cache → public R2 (miss only
 No Worker proxies normal media GETs. Pages/control-plane functions only
 authorize uploads, verify objects, promote objects, enforce deletion, and
 retry account cleanup.
+
+## Effective runtime boundary (2026-08-14)
+
+This section supersedes the compatibility language in the historical rollout
+notes below. Supabase is the database/auth/RPC control plane only. The shipped
+runtime now enforces the following:
+
+- `profileMediaResolver.js` accepts R2 object keys and local Blob previews;
+  legacy `storage_path` values and Supabase Storage URLs resolve to empty.
+- Browser uploads use upload-intent → direct private-R2 PUT → completion →
+  promotion to public R2. Public references are immutable URLs on
+  `media.chm.lol` with no render-time query string.
+- Profile Studio preview mode uses its supplied render state and does not
+  hydrate a public profile. Unchanged media nodes keep their source while
+  unrelated draft fields change.
+- Supabase Storage profile buckets are retained only as historical schema
+  metadata, set non-public, and have no browser Storage policies. Historical
+  bytes are not deleted by a schema migration; an explicit audited cleanup or
+  re-upload is required for any legacy inventory.
+- Retired Storage-facing RPCs and cleanup triggers are inert or revoked, and
+  account cleanup queues only native R2 private/public keys.
+
+The phased rollout text below records the earlier migration history. It must
+not be interpreted as permission to restore a Supabase Storage read, upload,
+verification, deletion, or fallback path.
 
 ## Two-bucket lifecycle
 
@@ -160,32 +186,30 @@ canary is enabled. A standalone Cloudflare Worker with a 15-minute Cron
 Trigger invokes the existing cleanup endpoint over HTTPS using the server-only
 cleanup secret. It is control-plane-only and never handles public media GETs.
 
-No production feature flag, active-media backfill, public R2 cutover, or
-Supabase Storage deletion is performed by this hardening pass. Those actions
-remain blocked until the live R2 smoke, Cloudflare purge test, staged
-backfill verification, and browser/network zero-Supabase-Storage audit have
-all passed.
+The live application boundary is now R2-only. A disabled R2 feature flag makes
+new media upload unavailable; it never re-enables a Supabase Storage path.
+Any remaining active-asset backfill, legacy-object inventory, or Cloudflare
+purge verification is an operator task outside the runtime contract.
 
 ### Storage dependency audit
 
 | Current use | Migration disposition |
 | --- | --- |
-| `ProfileExpressionEditor.svelte` avatar/background/standalone-audio upload and deletion | R2 control plane when the feature flag is enabled; legacy Supabase path retained during rollback window |
-| `ProfileRichMediaEditor.svelte` video/banner/cursor/audio upload and selection | R2 control plane when enabled; legacy staged Storage RPC path retained temporarily |
-| `profileMedia.js` legacy URL fallback | Keep temporarily for historical Supabase assets; no new public R2 URL uses it |
-| `profileRenderModel.js`, ProfileShell, ProfileMusic | Provider-neutral `media_references` first, legacy path fallback second |
+| `ProfileExpressionEditor.svelte` avatar/background/standalone-audio upload and deletion | R2 control plane only; legacy references fail closed and can be re-uploaded |
+| `ProfileRichMediaEditor.svelte` video/banner/cursor/audio upload and selection | R2 control plane only; retired Storage RPCs are inert/revoked |
+| `profileMedia.js` resolver | R2 object keys and local Blob previews only; no legacy URL fallback |
+| `profileRenderModel.js`, ProfileShell, ProfileMusic | Provider-aware R2 `media_references`; legacy paths remain metadata only |
 | Discovery, homepage, leaderboard, cosmetics, Shop previews | Updated to consume the same `avatarReference`/`media_references` contract |
-| `_profilePage.js` metadata/OG resolver | Provider-neutral R2 reference first, legacy Supabase fallback during migration |
-| Supabase Storage RPCs, RLS, and cleanup triggers | Keep temporarily for legacy rows and rollback; retire only after the zero-read window |
-| `supabaseStorage.js` local compatibility/mock transport | Unrelated transport compatibility; do not remove as part of the profile cutover |
+| `_profilePage.js` metadata/OG resolver | R2-only metadata resolution; legacy references produce no media URL |
+| Supabase Storage RPCs, RLS, and cleanup triggers | Storage-facing functions are inert/revoked; profile buckets are private with no browser policies |
+| `supabaseStorage.js` local compatibility/mock transport | Deleted; no runtime Supabase Storage client remains |
 
 The verified immediate egress cause was public ProfileShell generating a fresh
 `Date.now()` value and passing it through `getProfileMediaUrl()` as `?v=...`.
-That path is removed. Remaining timestamp values in editor-only preview/cache
-code are intentionally scoped to owner previews and do not enter public R2
-references. The background/video fix also prevents simultaneous full image and
-video environment downloads in normal motion mode; reduced-motion keeps the
-static fallback.
+That path is removed. No timestamp, random value, or render-time cache key is
+used for persistent remote media. The background/video fix also prevents
+simultaneous full image and video environment downloads in normal motion mode;
+reduced-motion keeps the static fallback.
 
 ## Account deletion
 
@@ -201,8 +225,8 @@ cannot make a user unable to delete their account.
 
 Public ProfileShell media no longer appends a per-render `Date.now()` query
 parameter. R2 references resolve to stable immutable URLs. Legacy Supabase
-paths remain cache-stable in public rendering; cache-busting is available only
-to explicit editor-preview callers during the compatibility window.
+paths fail closed in public rendering, and local upload previews use revocable
+Blob URLs only until the stable R2 reference is available.
 
 When a background video is active and motion is allowed, ProfileShell does not
 mount or use the full background image as a video poster. The resolved
@@ -210,7 +234,11 @@ background color remains the lightweight loading fallback, and reduced-motion
 mode uses the static background path. A future optimized poster can be added
 as its own bounded media reference without reusing the original full image.
 
-## Cutover runbook
+## Historical cutover runbook (superseded)
+
+The following phases document the earlier rollout sequence and are retained
+for audit context. The effective runtime boundary above is already enforced;
+none of these notes authorizes restoring Supabase Storage compatibility.
 
 ### Phase A — reduce avoidable Supabase egress
 

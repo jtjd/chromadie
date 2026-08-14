@@ -15,7 +15,8 @@ test('media sources allow local and HTTPS assets but reject unsafe protocols', (
   assert.equal(normalizeMediaSource('/logo-mark.svg'), '/logo-mark.svg');
   assert.equal(normalizeMediaSource('images/profile.png'), 'images/profile.png');
   assert.equal(normalizeMediaSource('https://cdn.example.com/profile.png'), 'https://cdn.example.com/profile.png');
-  assert.equal(normalizeMediaSource('http://127.0.0.1:54321/storage/v1/object/public/avatars/avatar.webp'), 'http://127.0.0.1:54321/storage/v1/object/public/avatars/avatar.webp');
+  assert.equal(normalizeMediaSource('http://127.0.0.1:54321/storage/v1/object/public/avatars/avatar.webp'), '');
+  assert.equal(normalizeMediaSource('https://project.supabase.co/storage/v1/object/public/avatars/avatar.webp'), '');
   assert.equal(normalizeMediaSource('//cdn.example.com/profile.png'), '');
   assert.equal(normalizeMediaSource('http://cdn.example.com/profile.png'), '');
   assert.equal(normalizeMediaSource('data:image/svg+xml;base64,unsafe'), '');

@@ -35,7 +35,6 @@
   let busy = false;
   let status = '';
   let error = '';
-  let cacheKey = String(Date.now());
   let incomingKey = '';
   let richConfig = normalizeRichMediaConfig();
   let audioTracks = [];
@@ -116,7 +115,7 @@
   }
 
   function assetMediaUrl(asset) {
-    return getProfileMediaUrl(asset?.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : asset?.storage_path, cacheKey);
+    return getProfileMediaUrl(asset?.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : null);
   }
 
   function animatedCursorAsset(asset) {
@@ -146,7 +145,8 @@
   function selectedAssetId(kind) {
     const idField = kind === 'background_video' ? 'background_video_asset_id' : `${kind}_asset_id`;
     const field = kind === 'background_video' ? 'background_video_path' : `${kind}_path`;
-    return richConfig[idField] || assetForPath(richConfig[field])?.id || null;
+    const asset = assetForPath(richConfig[field], richConfig[idField]);
+    return asset && isR2MediaAsset(asset) && asset.r2_public_key ? asset.id : null;
   }
 
   function audioConfigPayload() {
@@ -166,8 +166,7 @@
   }
 
   async function saveSelection(next = {}) {
-    const rpcName = r2MediaEnabled ? 'select_my_profile_r2_media' : 'select_my_profile_rich_media';
-    const { data, error: rpcError } = await supabase.rpc(rpcName, {
+    const { data, error: rpcError } = await supabase.rpc('select_my_profile_r2_media', {
       p_background_video_id: next.background_video_id === undefined ? selectedAssetId('background_video') : next.background_video_id,
       p_banner_id: next.banner_id === undefined ? selectedAssetId('banner') : next.banner_id,
       p_cursor_id: next.cursor_id === undefined ? selectedAssetId('cursor') : next.cursor_id,
@@ -177,30 +176,33 @@
     if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The rich media selection could not be saved.');
     richConfig = normalizeRichMediaConfig(data);
     incomingKey = `${profileId || ''}:${JSON.stringify(richConfig)}`;
-    cacheKey = String(Date.now());
-    dispatch('expressionchange', { ...richConfig, updatedAt: data.updated_at || null });
+    dispatch('expressionchange', { ...richConfig, media_references: data.media_references || {}, updatedAt: data.updated_at || null });
     return data;
   }
 
   async function selectAsset(kind, asset, force = false) {
     if (!asset || (busy && !force)) return;
+    if (!isR2MediaAsset(asset) || !asset.r2_public_key) {
+      setFeedback('', 'This saved media is unavailable. Re-upload it to R2 to use it.');
+      return;
+    }
     busy = true;
     setFeedback('', `Applying ${asset.label || kind.replace('_', ' ')}…`);
     try {
-      if (r2MediaEnabled && isR2MediaAsset(asset) && !asset.ever_public) {
+      if (!asset.ever_public) {
         await promoteProfileMediaR2(asset.id);
         asset = { ...asset, ever_public: true };
       }
       if (kind === 'audio') {
         if (audioTracks.some(track => track.asset_id === asset.id)) return;
         if (audioTracks.length >= 5) throw new Error('You can select up to five audio tracks.');
-        audioTracks = [...audioTracks, { asset_id: asset.id, path: asset.storage_path, label: asset.label || `Track ${audioTracks.length + 1}`, duration_ms: asset.duration_ms || 0, trim_start_ms: 0, trim_end_ms: asset.duration_ms || 0 }];
+        audioTracks = [...audioTracks, { asset_id: asset.id, path: null, media_reference: { storage_provider: 'r2', r2_public_key: asset.r2_public_key }, label: asset.label || `Track ${audioTracks.length + 1}`, duration_ms: asset.duration_ms || 0, trim_start_ms: 0, trim_end_ms: asset.duration_ms || 0 }];
         await saveSelection({ audio_config: audioConfigPayload() });
       } else {
         const field = kind === 'background_video' ? 'background_video_path' : `${kind}_path`;
         const idField = kind === 'background_video' ? 'background_video_id' : `${kind}_id`;
-        richConfig = { ...richConfig, [field]: asset.storage_path, [`${kind}_asset_id`]: asset.id };
-        await saveSelection({ [field]: asset.storage_path, [idField]: asset.id });
+        richConfig = { ...richConfig, [field]: null, [`${kind}_asset_id`]: asset.id };
+        await saveSelection({ [field]: null, [idField]: asset.id });
       }
       setFeedback('', `${kind === 'audio' ? 'Track' : kind.replace('_', ' ')} applied.`);
     } catch (selectionError) {
@@ -215,9 +217,8 @@
     busy = true;
     setFeedback('', 'Removing rich media…');
     try {
-      // Permanent deletion is provider-owned by the control plane. This also
-      // handles retained legacy Supabase paths without exposing deletion
-      // authority to the browser RPC path.
+      // Permanent deletion is provider-owned by the control plane. Historical
+      // storage_path values are inert and never enter a provider delete path.
       const data = await deleteProfileMediaAsset(asset.id);
       if (!data?.success) throw new Error(data?.error || 'The media asset could not be removed.');
       audioTracks = audioTracks.filter(track => track.asset_id !== asset.id);
@@ -440,20 +441,20 @@
     </div>
 
     {#each [
-      ['background_video', 'Background videos', videoAssets, 'background_video_path'],
-      ['banner', 'Banners', bannerAssets, 'banner_path'],
-      ['cursor', 'Cursors', cursorAssets, 'cursor_path'],
-      ['pointer_cursor', 'Pointer cursors', pointerCursorAssets, 'pointer_cursor_path']
+      ['background_video', 'Background videos', videoAssets, 'background_video_path', 'background_video_asset_id'],
+      ['banner', 'Banners', bannerAssets, 'banner_path', 'banner_asset_id'],
+      ['cursor', 'Cursors', cursorAssets, 'cursor_path', 'cursor_asset_id'],
+      ['pointer_cursor', 'Pointer cursors', pointerCursorAssets, 'pointer_cursor_path', 'pointer_cursor_asset_id']
     ] as group (group[0])}
       {#if group[2].length}
         <section class="rich-media-editor__library" aria-label={String(group[1])}>
           <h3>{group[1]} <span>{group[2].length}</span></h3>
           <div class="rich-media-editor__asset-row">
             {#each group[2] as asset (asset.id)}
-              <article class:rich-media-editor__asset--active={richConfig[group[3]] === asset.storage_path} class="rich-media-editor__asset">
+              <article class:rich-media-editor__asset--active={richConfig[group[4]] === asset.id || (group[3] && richConfig[group[3]] === asset.storage_path)} class="rich-media-editor__asset">
                 {#if group[0] === 'background_video'}<video src={assetMediaUrl(asset)} muted loop playsinline preload="metadata" aria-label={asset.label || 'Background video'}></video>{:else if animatedCursorAsset(asset)}<span class="rich-media-editor__cursor-badge" aria-label="Animated cursor">ANI</span>{:else}<img src={assetMediaUrl(asset)} alt={asset.label || group[1]} loading="lazy" />{/if}
                 <div><strong>{asset.label || 'Untitled asset'}</strong><small>{formatRichMediaBytes(asset.byte_size)}</small></div>
-                <div class="rich-media-editor__asset-actions"><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => selectAsset(group[0], asset)}>{richConfig[group[3]] === asset.storage_path ? 'Active' : 'Use'}</button><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => removeAsset(asset)}>Remove</button></div>
+                <div class="rich-media-editor__asset-actions"><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => selectAsset(group[0], asset)}>{richConfig[group[4]] === asset.id || (group[3] && richConfig[group[3]] === asset.storage_path) ? 'Active' : 'Use'}</button><button type="button" style={quietButtonStyle} disabled={busy} on:click={() => removeAsset(asset)}>Remove</button></div>
               </article>
             {/each}
           </div>

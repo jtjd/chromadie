@@ -18,9 +18,8 @@ const budgets = {
   html: 12 * 1024,
   routes: {
     auth: { entries: ['src/lib/Auth.svelte'], javascript: 300 * 1024, css: 90 * 1024 },
-    // The reference homepage intentionally mounts the production ProfileShell
-    // for its hero and photographic showcase, so this route includes the
-    // shared renderer payload in addition to the homepage shell.
+    // The reference homepage owns a direct marketing specimen for its hero and
+    // photographic showcase, so this route is budgeted as its own shell.
     homepage: { entries: ['src/lib/HomePage.svelte'], javascript: 500 * 1024, css: 220 * 1024 },
     publicProfile: { entries: ['src/lib/ProfileShell.svelte'], javascript: 475 * 1024, css: 200 * 1024 },
     dashboard: {

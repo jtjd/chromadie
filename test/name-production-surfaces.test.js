@@ -23,7 +23,6 @@ const PRODUCTION_SURFACES = Object.freeze([
   'src/lib/Profile.svelte',
   'src/lib/ProfileShell.svelte',
   'src/lib/DiscoveryCard.svelte',
-  'src/lib/homepage/HomepageProfileRenderer.svelte',
   'src/lib/ShopItemPreview.svelte',
   'src/lib/ShopStudioPreview.svelte'
 ]);
@@ -31,11 +30,7 @@ const PRODUCTION_SURFACES = Object.freeze([
 test('every production identity surface uses the shared Name renderer path', async () => {
   for (const path of PRODUCTION_SURFACES) {
     const source = await readProjectFile(path);
-    if (path === 'src/lib/homepage/HomepageProfileRenderer.svelte') {
-      assert.match(source, /ProfileShell/, path);
-    } else {
-      assert.match(source, /NameEffectCanvas|nameRendererLoadout|nameRendererContext/, path);
-    }
+    assert.match(source, /NameEffectCanvas|nameRendererLoadout|nameRendererContext/, path);
   }
 
   const identity = await readProjectFile('src/lib/IdentityCard.svelte');

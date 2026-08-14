@@ -1,46 +1,56 @@
 #!/usr/bin/env node
 
 /*
- * Static final-cutover audit. Legacy Supabase URL construction is intentionally
- * retained in the migration resolver and backfill tooling, but normal public
- * render consumers must only consume provider-neutral media references.
+ * Runtime boundary guard. Historical migrations and one-time migration tools
+ * may describe the retired provider, but shipped application code may not
+ * expose a Supabase Storage API, URL, or media cache-busting path.
  */
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import { join, relative, resolve } from 'node:path';
 
 const root = process.cwd();
-const publicConsumers = [
-  'src/lib/ProfileShell.svelte',
-  'src/lib/ProfileMusic.svelte',
-  'src/lib/DiscoveryCard.svelte',
-  'src/lib/homepage/HomepageProfileRenderer.svelte',
-  'src/lib/ShopStudioPreview.svelte'
-];
+const runtimeRoots = ['src', 'functions', 'workers'];
 const forbidden = [
-  /storage\/v1\/object\/public/,
-  /\.storage\.from\(/,
-  /getPublicUrl\(/,
-  /supabaseStorage\./
+  /supabase\s*\.\s*storage\b/,
+  /\.storage\s*\.\s*from\s*\(/,
+  /getPublicUrl\s*\(/,
+  /\/storage\/v1(?:\/object)?/,
+  /object\/public\//,
+  /(?:mediaCacheKey|media_cache_key|verify-\$\{Date\.now|cacheKey\s*=\s*String\(Date\.now)/
 ];
+
+async function sourceFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...await sourceFiles(path));
+    else if (/\.(?:js|mjs|svelte|ts)$/.test(entry.name)) files.push(path);
+  }
+  return files;
+}
+
 const findings = [];
-for (const relativePath of publicConsumers) {
-  const source = await readFile(resolve(root, relativePath), 'utf8');
-  for (const pattern of forbidden) {
-    if (pattern.test(source)) findings.push({ file: relativePath, pattern: pattern.source });
+for (const runtimeRoot of runtimeRoots) {
+  for (const path of await sourceFiles(resolve(root, runtimeRoot))) {
+    const source = await readFile(path, 'utf8');
+    for (const pattern of forbidden) {
+      if (pattern.test(source)) findings.push({ file: relative(root, path), pattern: pattern.source });
+    }
   }
 }
 
 const resolver = await readFile(resolve(root, 'src/lib/profileMediaResolver.js'), 'utf8');
-const providerNeutral = /r2_public_key|publicOrigin/.test(resolver);
 const result = {
-  r2_only_public_consumers: findings.length === 0,
-  provider_neutral_resolver: providerNeutral,
-  compatibility_paths: [
-    'src/lib/profileMedia.js',
-    'functions/_profilePage.js',
-    'scripts/migrate-profile-media-to-r2.mjs'
+  r2_only_runtime: findings.length === 0,
+  provider_aware_resolver: /r2_public_key|publicOrigin/.test(resolver),
+  legacy_references_fail_closed: /Legacy storage paths intentionally fail closed|return ''/.test(resolver),
+  historical_compatibility_sources: [
+    'supabase/migrations/',
+    'scripts/migrate-profile-media-to-r2.mjs',
+    'scripts/browser/'
   ],
   findings
 };
 console.log(JSON.stringify(result, null, 2));
-if (!providerNeutral || findings.length) process.exit(1);
+if (!result.r2_only_runtime || !result.provider_aware_resolver || !result.legacy_references_fail_closed) process.exit(1);

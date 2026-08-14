@@ -1,5 +1,5 @@
 <script>
-  import HomepageProfileRenderer from './HomepageProfileRenderer.svelte';
+  import HomepageProfileDemo from './HomepageProfileDemo.svelte';
   import { getHomepageShowcaseFixtures } from './homepageFixtures.js';
 
   const fixtures = getHomepageShowcaseFixtures();
@@ -12,14 +12,17 @@
         <div class="homepage-section-kicker">Your page, not ours</div>
         <h2 id="homepage-showcase-title" class="homepage-section-heading">Profiles shouldn't all look <span>the same.</span></h2>
       </div>
-      <p class="homepage-section-sub">The current profile system has five structural layouts—Compact, Sleek, Minimal, Modern, and Portfolio. Media and cosmetics provide the personality.</p>
+      <p class="homepage-section-sub">Media and cosmetics give the same profile idea a different point of view. Background, avatar, links, music, and daily history make the page personal.</p>
     </div>
 
     <div class="homepage-profiles-grid">
       {#each fixtures as fixture (fixture.id)}
-        <article class={`homepage-showcase-card homepage-showcase-card--${fixture.profileConfig.layoutVariant}`} aria-label={`${fixture.layoutLabel} layout example`}>
-          <span class="homepage-showcase-card__label">{fixture.layoutLabel} layout</span>
-          <HomepageProfileRenderer fixture={fixture} previewDevice="desktop" className="homepage-profile-renderer--showcase" />
+        <article
+          class={`homepage-showcase-card homepage-showcase-card--${fixture.showcasePosition}`}
+          style={`--homepage-showcase-background: url("${fixture.media.background}"); --homepage-showcase-accent: ${fixture.accent};`}
+          aria-label={`${fixture.displayName} profile example`}
+        >
+          <HomepageProfileDemo fixture={fixture} variant="showcase" />
         </article>
       {/each}
     </div>
@@ -39,19 +42,40 @@
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    background: #050506;
+    background-image: var(--homepage-showcase-background);
+    background-position: center;
+    background-size: cover;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
     isolation: isolate;
   }
 
-  .homepage-showcase-card::after { position: absolute; z-index: 1; inset: 0; content: ''; pointer-events: none; background: linear-gradient(to bottom, rgba(2, 2, 3, 0.12), rgba(2, 2, 3, 0.12) 45%, rgba(2, 2, 3, 0.72)); }
-  .homepage-showcase-card__label { position: absolute; top: 20px; left: 20px; z-index: 5; padding: 7px 10px; border: 1px solid rgba(255, 255, 255, 0.11); border-radius: 100px; background: rgba(8, 8, 10, 0.58); color: rgba(245, 245, 247, 0.68); font: 600 0.68rem / 1 'Inter', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-  .homepage-showcase-card :global(.homepage-profile-renderer) { position: absolute; inset: 0; z-index: 2; }
-  .homepage-showcase-card :global(.profile-shell-page) { padding: 0; }
-  .homepage-showcase-card :global(.profile-shell__opening.profile-shell__approved-opening) { width: min(100%, 320px); }
-  .homepage-showcase-card--minimal :global(.profile-shell__opening.profile-shell__approved-opening) { width: 58%; margin-left: 30px; margin-right: auto; align-self: flex-end; }
-  .homepage-showcase-card--portfolio :global(.profile-shell__opening.profile-shell__approved-opening) { width: 72%; }
-  .homepage-showcase-card :global(.profile-shell__approved-main) { height: 100%; min-height: 100%; }
+  .homepage-showcase-card::after {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    content: '';
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(2, 2, 3, 0.12), rgba(2, 2, 3, 0.42) 45%, rgba(2, 2, 3, 0.8));
+  }
+
+  .homepage-showcase-card--left :global(.homepage-profile-demo__mini-profile) {
+    right: auto;
+    left: 30px;
+    width: 58%;
+    border-color: transparent;
+    background: rgba(5, 5, 6, 0.26);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .homepage-showcase-card--center :global(.homepage-profile-demo__mini-profile) {
+    right: auto;
+    left: 50%;
+    width: 72%;
+    transform: translateX(-50%);
+    border-color: transparent;
+    background: rgba(5, 5, 6, 0.26);
+  }
 
   @media (max-width: 1100px) {
     .homepage-profiles-grid { grid-template-columns: repeat(2, 1fr); }
@@ -65,7 +89,12 @@
     .homepage-profiles-grid { grid-template-columns: 1fr; gap: 14px; }
     .homepage-showcase-card,
     .homepage-showcase-card:last-child { grid-column: auto; min-height: 440px; }
-    .homepage-showcase-card--minimal :global(.profile-shell__opening.profile-shell__approved-opening),
-    .homepage-showcase-card--portfolio :global(.profile-shell__opening.profile-shell__approved-opening) { width: min(100%, 320px); margin-inline: auto; align-self: center; }
+    .homepage-showcase-card--left :global(.homepage-profile-demo__mini-profile),
+    .homepage-showcase-card--center :global(.homepage-profile-demo__mini-profile) {
+      right: 22px;
+      left: 22px;
+      width: auto;
+      transform: none;
+    }
   }
 </style>

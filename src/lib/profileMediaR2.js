@@ -95,6 +95,13 @@ export function deleteProfileMediaAsset(assetId) {
   });
 }
 
+export function deleteLegacyProfileAudio(storagePath) {
+  return requestControlPlane('/api/profile-media/delete-legacy-audio', {
+    method: 'POST',
+    body: JSON.stringify({ storage_path: storagePath })
+  });
+}
+
 // Kept as a compatibility alias for existing callers while the endpoint now
 // handles both native R2 assets and retained legacy Supabase assets.
 export const deleteProfileMediaR2 = deleteProfileMediaAsset;

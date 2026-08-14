@@ -7,6 +7,7 @@
   import HomepageHero from './homepage/HomepageHero.svelte';
   import HomepageLoop from './homepage/HomepageLoop.svelte';
   import HomepageShowcase from './homepage/HomepageShowcase.svelte';
+  import { HOMEPAGE_FIXTURES } from './homepage/homepageFixtures.js';
 
   export let isAuthenticated = false;
   export let accountState = /** @type {string} */ (ACCOUNT_STATES.BOOTING);
@@ -14,6 +15,8 @@
   export let logoutInProgress = false;
 
   const dispatch = createEventDispatcher();
+  let activeBackground = HOMEPAGE_FIXTURES[0].media.background;
+  let activeAccent = HOMEPAGE_FIXTURES[0].accent;
 
   $: accountReady = accountState === ACCOUNT_STATES.SIGNED_OUT || accountState === ACCOUNT_STATES.AUTHENTICATED;
   $: accountUnavailable = accountState === ACCOUNT_STATES.PROFILE_ERROR;
@@ -21,9 +24,20 @@
   function forwardAction(event) {
     dispatch(event.type, event.detail);
   }
+
+  function handleFixtureChange(event) {
+    activeBackground = event.detail.fixture.media.background;
+    activeAccent = event.detail.fixture.accent;
+  }
 </script>
 
-<div class="homepage-reference" aria-labelledby="homepage-title">
+<div
+  class="homepage-reference"
+  aria-labelledby="homepage-title"
+  style={`--homepage-background-image: url("${activeBackground}"); --homepage-accent: ${activeAccent};`}
+>
+  <div class="homepage-background" aria-hidden="true"></div>
+
   <HomepageHeader
     {accountState}
     {isAuthenticated}
@@ -40,6 +54,7 @@
       {isAuthenticated}
       {accountReady}
       {accountUnavailable}
+      on:fixturechange={handleFixtureChange}
       on:claim={forwardAction}
       on:profile={forwardAction}
     />

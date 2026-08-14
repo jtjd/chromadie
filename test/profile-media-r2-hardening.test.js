@@ -4,13 +4,12 @@ import { readFile } from 'node:fs/promises';
 import {
   buildSignature,
   createPresignedUrl,
-  deleteSupabaseStorageObject,
-  parseLegacyProfileMediaPath,
   purgePublicMediaUrl,
   validateProfileMediaSignature
 } from '../functions/_profileMediaControl.js';
 import { selectedRows } from '../scripts/profile-media-migration-model.mjs';
 import { triggerProfileMediaCleanup } from '../workers/profile-media-cleanup-scheduler/index.js';
+import { onRequestPost as deleteLegacyAudio } from '../functions/api/profile-media/delete-legacy-audio.js';
 
 const read = path => readFile(new URL('../' + path, import.meta.url), 'utf8');
 const config = {
@@ -100,32 +99,64 @@ test('exact public media purge is scoped to the immutable media URL', async () =
   }
 });
 
-test('legacy Supabase cleanup uses the exact Storage API path without database-row deletion', async () => {
-  assert.deepEqual(parseLegacyProfileMediaPath('avatars/user-id/avatar.webp'), {
-    bucket: 'avatars',
-    objectPath: 'user-id/avatar.webp',
-    storagePath: 'avatars/user-id/avatar.webp'
-  });
-  assert.equal(parseLegacyProfileMediaPath('avatars/../other.webp'), null);
+test('legacy media cleanup has no Supabase Storage operation', async () => {
+  const control = await read('functions/_profileMediaControl.js');
+  const deletion = await read('functions/api/profile-media/delete.js');
+  const cleanup = await read('functions/api/profile-media/account-cleanup.js');
+  const endpoint = await read('functions/api/profile-media/delete-legacy-audio.js');
+  assert.doesNotMatch(control, /storage\/v1|deleteSupabaseStorageObject|parseLegacyProfileMediaPath/);
+  assert.doesNotMatch(deletion, /deleteSupabaseStorageObject|storage\/v1/);
+  assert.doesNotMatch(cleanup, /deleteSupabaseStorageObject|storage\/v1/);
+  assert.doesNotMatch(endpoint, /deleteSupabaseStorageObject|storage\/v1/);
+  assert.match(endpoint, /clear_my_legacy_profile_audio/);
+});
+
+test('legacy audio clears metadata without issuing a media request', async () => {
+  const userId = '10000000-0000-0000-0000-000000000001';
+  const storagePath = `profile_audio/${userId}/profile.mp3`;
+  const env = {
+    VITE_SUPABASE_URL: 'https://example.supabase.co',
+    VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake_example',
+    SUPABASE_SECRET_KEY: 'sb_secret_fake_example'
+  };
   const previousFetch = globalThis.fetch;
   const requests = [];
-  globalThis.fetch = async (url, options) => {
+  globalThis.fetch = async (url, options = {}) => {
     requests.push({ url, options });
-    return new Response('{}', { status: 200 });
+    if (url.endsWith('/auth/v1/user')) return new Response(JSON.stringify({ id: userId }), { status: 200 });
+    if (url.endsWith('/rpc/clear_my_legacy_profile_audio')) {
+      return new Response(JSON.stringify({ success: true, cleared: true, updated_at: '2026-08-14T00:00:00Z' }), { status: 200 });
+    }
+    throw new Error(`Unexpected request: ${url}`);
   };
+  const makeRequest = () => new Request('https://chm.lol/api/profile-media/delete-legacy-audio', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer user-token', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ storage_path: storagePath })
+  });
+
   try {
-    await deleteSupabaseStorageObject({
-      VITE_SUPABASE_URL: 'https://example.supabase.co',
-      SUPABASE_SECRET_KEY: 'sb_secret_fake_example'
-    }, 'avatars/user-id/avatar.webp');
-    assert.equal(requests[0].url, 'https://example.supabase.co/storage/v1/object/avatars');
-    assert.equal(requests[0].options.method, 'POST');
-    assert.equal(requests[0].options.headers.apikey, 'sb_secret_fake_example');
-    assert.equal(requests[0].options.headers.Authorization, undefined);
-    assert.deepEqual(JSON.parse(requests[0].options.body), { prefixes: ['user-id/avatar.webp'] });
+    const success = await deleteLegacyAudio({ request: makeRequest(), env });
+    assert.equal(success.status, 200);
+    assert.equal((await success.json()).updated_at, '2026-08-14T00:00:00Z');
+    assert.equal(requests.length, 2);
+    assert.match(requests[1].url, /rpc\/clear_my_legacy_profile_audio$/);
+    assert.equal(requests.some(request => request.url.includes('/storage/')), false);
   } finally {
     globalThis.fetch = previousFetch;
   }
+});
+
+test('legacy audio cleanup remains path-guarded and metadata-only', async () => {
+  const editor = await read('src/lib/ProfileExpressionEditor.svelte');
+  const endpoint = await read('functions/api/profile-media/delete-legacy-audio.js');
+  const migration = await read('supabase/migrations/20260814010000_profile_audio_legacy_delete_order.sql');
+  assert.match(editor, /deleteLegacyProfileAudio\(previousPath\)/);
+  assert.doesNotMatch(editor, /supabase\.storage\.from\([\s\S]*remove/);
+  assert.doesNotMatch(endpoint, /deleteSupabaseStorageObject|storage\/v1/);
+  assert.match(endpoint, /clear_my_legacy_profile_audio/);
+  assert.match(migration, /audio_path = v_expected_path/);
+  assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.clear_my_legacy_profile_audio\(text\) TO authenticated/);
 });
 
 test('R2 hardening keeps audio migration targets distinct and cleanup retryable', async () => {
@@ -214,14 +245,14 @@ test('R2 final correctness keeps deletion operation state and scheduler control-
   assert.match(promotion, /asset\.r2_public_key \|\| asset\.r2_private_key/);
   assert.match(promotion, /status === 404/);
   assert.match(lifecycle, /already_public/);
-  assert.match(deletion, /deleteSupabaseStorageObject/);
-  assert.match(deletion, /asset\.storage_path/);
+  assert.doesNotMatch(deletion, /deleteSupabaseStorageObject|storage\/v1/);
+  assert.match(deletion, /Legacy storage_path values are inert metadata/);
   assert.doesNotMatch(legacyCleanup, /DELETE FROM storage\.objects/);
   assert.match(legacyCleanup, /v_bucket NOT IN \('avatars', 'backgrounds', 'profile_audio', 'profile_media'\)/);
   assert.match(legacyCleanup, /storage_path text/);
   assert.match(accountQueue, /'supabase'::text AS bucket/);
-  assert.match(accountCleanup, /\['private', 'public', 'supabase'\]/);
-  assert.match(accountCleanup, /deleteSupabaseStorageObject/);
+  assert.match(accountCleanup, /\['private', 'public'\]/);
+  assert.doesNotMatch(accountCleanup, /deleteSupabaseStorageObject|storage\/v1/);
   assert.match(scheduler, /R2_ACCOUNT_CLEANUP_SECRET/);
   assert.match(scheduler, /Authorization: `Bearer \$\{secret\}`/);
   assert.match(scheduler, /CLEANUP_ENDPOINT_URL/);
@@ -242,7 +273,7 @@ test('permanent R2 library deletion stays on the provider control plane after ro
   assert.match(richMediaEditor, /deleted from your library/);
 });
 
-test('legacy Supabase media cleanup is exact-path, retryable, and NULL-safe', async () => {
+test('legacy Supabase media metadata remains inert during cleanup', async () => {
   const migration = await read('supabase/migrations/20260814000000_profile_media_legacy_storage_api_cleanup.sql');
   const sqlTests = await read('supabase/tests/launch_security.sql');
   const deletion = await read('functions/api/profile-media/delete.js');
@@ -255,10 +286,9 @@ test('legacy Supabase media cleanup is exact-path, retryable, and NULL-safe', as
   assert.match(migration, /asset\.storage_path/);
   assert.match(sqlTests, /r2_delete_migrated_avatar/);
   assert.match(sqlTests, /legacy_avatar_cleanup/);
-  assert.match(sqlTests, /account deletion did not durably capture the retained legacy Supabase path/);
-  assert.match(deletion, /deleteSupabaseStorageObject\(env, storagePath\)/);
-  assert.match(cleanup, /deleteSupabaseStorageObject\(env, object\.key\)/);
-  assert.match(cleanup, /deleteSupabaseStorageObject\(env, asset\.storage_path\)/);
+  assert.match(sqlTests, /account deletion did not durably capture only the native R2 key/);
+  assert.doesNotMatch(deletion, /deleteSupabaseStorageObject|storage\/v1/);
+  assert.doesNotMatch(cleanup, /deleteSupabaseStorageObject|storage\/v1/);
   assert.match(cleanup, /const objectDeleteSuccess = failures\.every\(entry => entry\.operation === 'cache_purge'\)/);
 });
 

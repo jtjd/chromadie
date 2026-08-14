@@ -58,6 +58,19 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function stableProfileMediaRequests() {
+  return page.requestLog.filter(entry => {
+    if (entry.method !== 'GET') return false;
+    try {
+      const parsed = new URL(entry.url);
+      return parsed.hostname === 'media.chm.lol'
+        || parsed.hostname.endsWith('.r2.cloudflarestorage.com');
+    } catch {
+      return false;
+    }
+  });
+}
+
 function expectedLayoutLinks(layout) {
   const openingSocial = RICH_PROFILE_FIXTURE.links.filter(link => isProfileSocialLink(link.type)).slice(0, 6);
   const customOpeningLimit = layout === 'minimal' ? 2 : 0;
@@ -796,9 +809,9 @@ try {
 
   await step('open local homepage', async () => {
     await page.waitFor(`(() => {
-      const environment = document.querySelector('.homepage-hero__environment');
+      const environment = document.querySelector('.homepage-background');
       return Boolean(document.querySelector('.homepage-reference')
-        && document.querySelector('.homepage-profile-renderer--hero .profile-shell-page[data-profile-render-model="v1"]')
+        && document.querySelector('.homepage-profile-demo--hero')
         && environment
         && getComputedStyle(environment).backgroundImage !== 'none');
     })()`, 'hydrated homepage');
@@ -1063,6 +1076,10 @@ try {
     const avatarUpload = await uploadGeneratedImage('input[aria-label="Choose avatar image"]', { ...RICH_PROFILE_FIXTURE.avatar, kind: 'avatar' });
     await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Avatar saved'))`, 'persisted uploaded avatar');
     await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .identity-card__avatar-media'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded avatar in live preview');
+    const mediaRequestsBeforeDraftChange = stableProfileMediaRequests();
+    const mediaSourcesBeforeDraftChange = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video')]
+      .map(element => element.currentSrc || element.src || '')
+      .filter(Boolean))()`);
     // Exercise the real immediate-media -> staged-layout -> publish boundary
     // before any later fixture RPC can refresh the concurrency token for us.
     await page.click('#profile-customize-tab-layout', 'layout tab after media mutation');
@@ -1072,6 +1089,18 @@ try {
       card?.click();
     })()`);
     await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-sleek')`, 'layout staged after media mutation');
+    await delay(250);
+    const mediaRequestsAfterDraftChange = stableProfileMediaRequests();
+    const mediaSourcesAfterDraftChange = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video')]
+      .map(element => element.currentSrc || element.src || '')
+      .filter(Boolean))()`);
+    assert(mediaRequestsAfterDraftChange.length === mediaRequestsBeforeDraftChange.length,
+      `Changing layout remounted unchanged Studio media: ${JSON.stringify({ before: mediaRequestsBeforeDraftChange, after: mediaRequestsAfterDraftChange })}.`);
+    assert(mediaSourcesAfterDraftChange.filter(source => /media\.chm\.lol|r2\.cloudflarestorage\.com/.test(source)).every(source => !new URL(source).search),
+      `Studio preview media source acquired a cache-busting query: ${JSON.stringify(mediaSourcesAfterDraftChange)}.`);
+    assert(JSON.stringify(mediaSourcesAfterDraftChange.filter(source => /media\.chm\.lol|r2\.cloudflarestorage\.com/.test(source)))
+      === JSON.stringify(mediaSourcesBeforeDraftChange.filter(source => /media\.chm\.lol|r2\.cloudflarestorage\.com/.test(source))),
+    `Studio draft changed media identity: ${JSON.stringify({ before: mediaSourcesBeforeDraftChange, after: mediaSourcesAfterDraftChange })}.`);
     await page.clickText('Publish profile', { description: 'publish after immediate media mutation' });
     await page.waitFor(`document.querySelector('.profile-dashboard-actions__message')?.textContent?.trim() === 'Profile published.'`, 'publish after immediate media mutation');
     const mediaPublishExpression = await assertPublishedExpressionVisible('media mutation publish');
