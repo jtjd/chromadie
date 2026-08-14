@@ -99,8 +99,8 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
     bio: 'daydreamer · pixel artist · music lover',
     secondaryLine: 'somewhere between here and the horizon',
     accent: '#D8A6FF',
-    background: '/homepage/fixtures/compact-background.png',
-    avatar: '/homepage/fixtures/sleek-avatar.png',
+    background: '/homepage/fixtures/meilin/background.webp',
+    avatar: '/homepage/fixtures/meilin/avatar.webp',
     effects: 'portfolio',
     showcasePosition: 'bottom',
     links: [

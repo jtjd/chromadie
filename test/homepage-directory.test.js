@@ -24,8 +24,8 @@ test('homepage fixtures share one direct specimen composition', () => {
     assert.ok(fixture.username);
     assert.ok(fixture.displayName);
     assert.ok(fixture.bio);
-    assert.match(fixture.media.background, /^\/homepage\/fixtures\/.*\.png$/);
-    assert.match(fixture.media.avatar, /^\/homepage\/fixtures\/.*\.png$/);
+    assert.match(fixture.media.background, /^\/homepage\/fixtures\/.*\.(?:png|webp)$/);
+    assert.match(fixture.media.avatar, /^\/homepage\/fixtures\/.*\.(?:png|webp)$/);
     assert.equal(fixture.links.length, 4);
     assert.ok(fixture.links.every(link => /^https:\/\//.test(link.url)));
     assert.ok(fixture.effects.profileBorder);
@@ -51,8 +51,11 @@ test('the first homepage fixture is the authored Meilin profile example', () => 
   assert.equal(fixture.bio, 'daydreamer · pixel artist · music lover');
   assert.equal(fixture.secondaryLine, 'somewhere between here and the horizon');
   assert.deepEqual(fixture.links.map(link => link.label), ['Website', 'Spotify', 'Discord', 'Archive']);
-  assert.equal(fixture.media.background, '/homepage/fixtures/compact-background.png');
-  assert.equal(fixture.media.avatar, '/homepage/fixtures/sleek-avatar.png');
+  assert.equal(fixture.media.background, '/homepage/fixtures/meilin/background.webp');
+  assert.equal(fixture.media.avatar, '/homepage/fixtures/meilin/avatar.webp');
+  const otherMedia = HOMEPAGE_FIXTURES.slice(1).flatMap(item => [item.media.background, item.media.avatar]);
+  assert.ok(!otherMedia.includes(fixture.media.background));
+  assert.ok(!otherMedia.includes(fixture.media.avatar));
 });
 
 test('the direct homepage specimen and carousel contain no production profile renderer seam', async () => {
@@ -71,6 +74,10 @@ test('the direct homepage specimen and carousel contain no production profile re
   assert.match(hero, /event\.pointerType === 'touch'/);
   assert.match(hero, /event\.clientX - bounds\.left/);
   assert.match(hero, /event\.clientY - bounds\.top/);
+  assert.match(hero, /PROFILE_TILT_MAX_Y = 6/);
+  assert.match(hero, /PROFILE_TILT_MAX_X = 4/);
+  assert.match(hero, /\(pointerX - 0\.5\) \* PROFILE_TILT_MAX_Y \* 2/);
+  assert.match(hero, /\(0\.5 - pointerY\) \* PROFILE_TILT_MAX_X \* 2/);
   assert.match(hero, /perspective:\s*1400px/);
   assert.match(hero, /transform:\s*rotateY\(-4deg\) rotateX\(2deg\)/);
   assert.match(hero, /transform-style:\s*preserve-3d/);

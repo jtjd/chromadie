@@ -71,6 +71,7 @@ test('homepage fixtures are local, deterministic, scored, and outside production
   assert.doesNotMatch(fixtures, /createDefaultProfileConfig|normalizeProfileConfig|profileConfig|layoutVariant|supabase|rpc\(|get_public_discovery|KNOWN_STAFF_SHOWCASE_USERNAMES/);
 
   const assetPaths = [
+    'meilin/background.webp', 'meilin/avatar.webp',
     'compact-background.png', 'compact-avatar.png',
     'sleek-background.png', 'sleek-avatar.png',
     'minimal-background.png', 'minimal-avatar.png',

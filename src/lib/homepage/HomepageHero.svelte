@@ -9,6 +9,8 @@
   export let accountUnavailable = false;
 
   const dispatch = createEventDispatcher();
+  const PROFILE_TILT_MAX_Y = 6;
+  const PROFILE_TILT_MAX_X = 4;
   let fixtureIndex = 0;
   let profileTiltEnabled = false;
   let profileTiltStyle = '';
@@ -34,8 +36,8 @@
 
     const pointerX = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
     const pointerY = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
-    const rotateY = (-4 + ((pointerX - 0.5) * 6)).toFixed(2);
-    const rotateX = (2 + ((0.5 - pointerY) * 6)).toFixed(2);
+    const rotateY = ((pointerX - 0.5) * PROFILE_TILT_MAX_Y * 2).toFixed(2);
+    const rotateX = ((0.5 - pointerY) * PROFILE_TILT_MAX_X * 2).toFixed(2);
     profileTiltStyle = `transform: rotateY(${rotateY}deg) rotateX(${rotateX}deg);`;
   }
 
