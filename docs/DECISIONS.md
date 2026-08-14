@@ -4592,6 +4592,11 @@ it is not safe for the first production R2 canary. When
 exact normalized Auth UUID from that list while all other feature flags keep
 using the existing audience resolver. An empty list preserves the existing
 general rollout behavior for a later intentional broad rollout.
+
+The first production gate build was rolled back to disabled after static and
+unit validation because no approved authenticated browser session was
+available for the live avatar/background lifecycle. No production media row or
+object was created.
 ## 2026-08-13 — Gate R2 media enablement on control-plane hardening
 
 R2 profile-media uploads remain disabled until deterministic SigV4 coverage and

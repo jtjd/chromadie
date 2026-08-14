@@ -3533,6 +3533,11 @@ retirement remain disabled pending external Cloudflare/R2 and network audits.
 - Added regressions for disabled, allowlisted, non-allowlisted, anonymous, and
   unrelated-feature behavior.
 
+The production canary variables were reverted to disabled after the gate build
+was verified because no approved authenticated session was available to run
+the live avatar/background lifecycle. No production media row or object was
+created.
+
 ## 2026-08-13 — Final R2 correctness gate
 
 - Guarded every legacy-path selection comparison with a non-NULL asset path and
