@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-14 — Deploy R2 control-plane compatibility safely
+
+- Deployed the R2 control-plane and modern Supabase-key compatibility code with
+  profile-media R2 uploads still disabled for users.
+- Kept the rehearsal gate on browser routes while allowing only the authenticated
+  cleanup scheduler request to reach its server-only endpoint.
+
 ## 2026-08-13 — Add modern Supabase key compatibility
 
 - Browser configuration prefers `VITE_SUPABASE_PUBLISHABLE_KEY`.

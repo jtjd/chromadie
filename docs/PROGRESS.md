@@ -3513,6 +3513,18 @@ without changing the five layouts or the physical-size preview architecture.
 The R2 feature flag, active backfill, public canary, and Supabase Storage
 retirement remain disabled pending external Cloudflare/R2 and network audits.
 
+## 2026-08-14 — Deploy R2 infrastructure with user uploads disabled
+
+- Deployed commit `ad240a6` through the connected Cloudflare Pages production
+  workflow with `VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2` absent.
+- Applied the intended additive R2/profile-media migrations to linked Supabase;
+  no media backfill or legacy-object deletion was run.
+- Confirmed production R2 bucket names and the cleanup scheduler deployment.
+- Kept the browser maintenance gate active; authorized cleanup scheduler POSTs
+  now bypass only that gate and remain protected by the endpoint secret check.
+- Normal live route smoke is still blocked by the existing maintenance gate, so
+  the single-account canary remains a separate next step.
+
 ## 2026-08-13 — Final R2 correctness gate
 
 - Guarded every legacy-path selection comparison with a non-NULL asset path and

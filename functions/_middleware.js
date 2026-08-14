@@ -1,6 +1,7 @@
 const COOKIE_NAME = "__Host-chromadie-preview";
 const LOGIN_PATH = "/__preview-login";
 const LOGOUT_PATH = "/__preview-logout";
+const CLEANUP_PATH = "/api/profile-media/account-cleanup";
 const SESSION_SECONDS = 60 * 60;
 const encoder = new TextEncoder();
 
@@ -135,6 +136,13 @@ export async function onRequest(context) {
     return context.next();
   }
 
+  // The account-cleanup scheduler is a server-only control-plane caller. It
+  // must be able to reach its handler while the browser-facing rehearsal gate
+  // is active, but only with the same secret checked again by that handler.
+  if (url.pathname === CLEANUP_PATH && request.method === 'POST' && isAuthorizedCleanupRequest(request, context.env)) {
+    return context.next();
+  }
+
   // Keep the rehearsal gate reversible after the public release. The
   // password flow remains the default unless the Pages environment explicitly
   // disables it with PREVIEW_PROTECTION=off.
@@ -171,6 +179,16 @@ export async function onRequest(context) {
   }
 
   return loginResponse(url.pathname + url.search);
+}
+
+function isAuthorizedCleanupRequest(request, env) {
+  const expected = String(env?.R2_ACCOUNT_CLEANUP_SECRET || '').trim();
+  if (!expected) return false;
+
+  const authorization = request.headers.get('authorization') || '';
+  const bearer = authorization.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() || '';
+  const supplied = request.headers.get('x-r2-cleanup-secret')?.trim() || bearer;
+  return Boolean(supplied && supplied === expected);
 }
 
 function uncachedPreviewResponse(response) {

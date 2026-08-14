@@ -66,6 +66,46 @@ test('preview gate can be lifted explicitly for the public release', async () =>
   assert.equal(await response.text(), 'public site');
 });
 
+test('preview gate allows only the authenticated cleanup scheduler through', async () => {
+  let authorizedNextCalled = false;
+  const authorizedResponse = await previewMiddleware({
+    request: new Request('https://chm.lol/api/profile-media/account-cleanup', {
+      method: 'POST',
+      headers: { authorization: 'Bearer cleanup-test-secret' }
+    }),
+    env: {
+      PREVIEW_PASSWORD: 'preview-test-password',
+      R2_ACCOUNT_CLEANUP_SECRET: 'cleanup-test-secret'
+    },
+    next: () => {
+      authorizedNextCalled = true;
+      return new Response(JSON.stringify({ success: true }), { status: 200 });
+    }
+  });
+
+  assert.equal(authorizedNextCalled, true);
+  assert.equal(authorizedResponse.status, 200);
+
+  let unauthorizedNextCalled = false;
+  const unauthorizedResponse = await previewMiddleware({
+    request: new Request('https://chm.lol/api/profile-media/account-cleanup', {
+      method: 'POST',
+      headers: { authorization: 'Bearer wrong-secret' }
+    }),
+    env: {
+      PREVIEW_PASSWORD: 'preview-test-password',
+      R2_ACCOUNT_CLEANUP_SECRET: 'cleanup-test-secret'
+    },
+    next: () => {
+      unauthorizedNextCalled = true;
+      return new Response('should not reach cleanup', { status: 200 });
+    }
+  });
+
+  assert.equal(unauthorizedNextCalled, false);
+  assert.equal(unauthorizedResponse.status, 401);
+});
+
 test('authenticated preview HTML is never cached between deployments', async () => {
   const password = 'preview-test-password';
   const loginResponse = await previewMiddleware({

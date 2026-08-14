@@ -4574,6 +4574,15 @@ and treats an already-missing object as success. Deleted R2 tombstones retain
 the path until the control plane completes cleanup, while provider-native R2
 assets with a NULL path never enter the legacy branch. No production media,
 backfill, feature flag, or Supabase Storage retirement action was performed.
+
+## 2026-08-14 — Keep the cleanup control plane reachable during the rehearsal gate
+
+The browser-facing maintenance/password gate remains enabled during the first
+production infrastructure deployment. The server-only account-cleanup route
+is therefore allowed through the gate only for a POST carrying the configured
+cleanup secret; the cleanup handler performs the same authorization check
+again. Invalid or browser-originated requests remain behind the gate, and no
+profile-media rollout flag is enabled by this exception.
 ## 2026-08-13 — Gate R2 media enablement on control-plane hardening
 
 R2 profile-media uploads remain disabled until deterministic SigV4 coverage and
