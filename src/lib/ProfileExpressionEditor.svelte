@@ -780,6 +780,51 @@
         </article>
       {/if}
 
+      {#if avatarAssets.length > 0 || backgroundAssets.length > 0}
+        <section class="profile-expression-editor__compact-library" aria-label="Saved media library">
+          <div class="profile-expression-editor__compact-library-heading">
+            <strong>Saved media</strong>
+            <span>Delete permanently from your library</span>
+          </div>
+          <div class="profile-expression-editor__compact-library-list">
+            {#each avatarAssets as asset (asset.id)}
+              <div class="profile-expression-editor__compact-library-item">
+                <Media
+                  src={getProfileMediaUrl(asset.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : asset.storage_path, mediaCacheKey)}
+                  alt={asset.label || 'Saved avatar'}
+                  aspect="square"
+                  loading="lazy"
+                  className="profile-expression-editor__compact-library-media"
+                  fallbackLabel="Avatar unavailable"
+                />
+                <div class="profile-expression-editor__compact-library-copy">
+                  <strong>{asset.label || 'Saved avatar'}</strong>
+                  <span>{asset.id === expression.avatar_asset_id ? 'Active avatar' : 'Saved avatar'}</span>
+                </div>
+                <button type="button" class="profile-expression-editor__compact-library-delete" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
+              </div>
+            {/each}
+            {#each backgroundAssets as asset (asset.id)}
+              <div class="profile-expression-editor__compact-library-item">
+                <Media
+                  src={getProfileMediaUrl(asset.storage_provider === 'r2' ? { r2_public_key: asset.r2_public_key } : asset.storage_path, mediaCacheKey)}
+                  alt={asset.label || 'Saved background'}
+                  aspect="wide"
+                  loading="lazy"
+                  className="profile-expression-editor__compact-library-media profile-expression-editor__compact-library-media--wide"
+                  fallbackLabel="Background unavailable"
+                />
+                <div class="profile-expression-editor__compact-library-copy">
+                  <strong>{asset.label || 'Saved background'}</strong>
+                  <span>{asset.id === expression.background_asset_id ? 'Active background' : 'Saved background'}</span>
+                </div>
+                <button type="button" class="profile-expression-editor__compact-library-delete" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
+
     </div>
   {/if}
 
@@ -1098,6 +1143,24 @@
   .profile-expression-editor__compact-remove:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
   .profile-expression-editor__compact-replace:disabled,
   .profile-expression-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
+  .profile-expression-editor__compact-library { grid-column: 1 / -1; display: grid; gap: .55rem; padding: .7rem; border: 1px solid var(--media-line); border-radius: var(--media-radius, .38rem); background: color-mix(in srgb, var(--media-surface-inset) 82%, transparent); }
+  .profile-expression-editor__compact-library-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; min-width: 0; color: var(--media-text-primary); }
+  .profile-expression-editor__compact-library-heading strong { font-size: .86rem; font-weight: 650; }
+  .profile-expression-editor__compact-library-heading span { color: var(--media-text-muted); font-size: .72rem; }
+  .profile-expression-editor__compact-library-list { display: grid; gap: .45rem; }
+  .profile-expression-editor__compact-library-item { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr) auto; align-items: center; gap: .6rem; min-width: 0; padding: .35rem; border: 1px solid var(--media-line); border-radius: .3rem; background: var(--media-surface-deep); }
+  :global(.profile-expression-editor__compact-library-media) { width: 3.25rem; height: 3.25rem; overflow: hidden; border-radius: .24rem; }
+  :global(.profile-expression-editor__compact-library-media--wide) { height: 2.2rem; }
+  .profile-expression-editor__compact-library-copy { display: grid; gap: .12rem; min-width: 0; }
+  .profile-expression-editor__compact-library-copy strong,
+  .profile-expression-editor__compact-library-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-library-copy strong { color: var(--media-text-primary); font-size: .78rem; font-weight: 600; }
+  .profile-expression-editor__compact-library-copy span { color: var(--media-text-muted); font-size: .7rem; }
+  .profile-expression-editor__compact-library-delete { min-height: 1.8rem; padding: .28rem .6rem; border: 1px solid color-mix(in srgb, var(--media-red) 55%, var(--media-line)); border-radius: .28rem; background: transparent; color: color-mix(in srgb, var(--media-red) 84%, var(--media-text-secondary)); font: 600 .72rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
+  .profile-expression-editor__compact-library-delete:hover:not(:disabled),
+  .profile-expression-editor__compact-library-delete:focus-visible { border-color: var(--media-red); background: color-mix(in srgb, var(--media-red) 10%, transparent); color: var(--media-red); }
+  .profile-expression-editor__compact-library-delete:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
+  .profile-expression-editor__compact-library-delete:disabled { cursor: wait; opacity: .55; }
   .profile-expression-editor__compact-audio-player { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .55rem; width: 100%; min-height: 5.7rem; aspect-ratio: 10 / 3; padding: .6rem .65rem; border: 1px solid var(--media-line); border-radius: .35rem; background: var(--media-surface-inset); }
   .profile-expression-editor__compact-audio-play { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; flex: 0 0 auto; border: 1px solid color-mix(in srgb, var(--media-card-accent) 58%, var(--media-line-strong)); border-radius: 50%; background: color-mix(in srgb, var(--media-card-accent) 13%, transparent); color: var(--media-text-primary); font: 700 .72rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
   .profile-expression-editor__compact-audio-play:hover { border-color: var(--media-card-accent); background: color-mix(in srgb, var(--media-card-accent) 24%, transparent); }
@@ -1276,6 +1339,8 @@
 
   @media (max-width: 52rem) {
     .profile-expression-editor__compact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .profile-expression-editor__compact-library-item { grid-template-columns: 3rem minmax(0, 1fr); }
+    .profile-expression-editor__compact-library-delete { grid-column: 2; justify-self: start; }
   }
 
   @media (max-width: 24rem) {

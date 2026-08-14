@@ -205,6 +205,8 @@ test('permanent R2 library deletion stays on the provider control plane after ro
   assert.match(richMediaEditor, /const data = isR2MediaAsset\(asset\)\s*\n\s*\? await deleteProfileMediaR2\(asset\.id\)/);
   assert.match(expressionEditor, /Avatar unequipped\.[\s\S]*saved asset remains in your library/);
   assert.match(expressionEditor, /Background unequipped\.[\s\S]*saved asset remains in your library/);
+  assert.match(expressionEditor, /profile-expression-editor__compact-library/);
+  assert.match(expressionEditor, /compact-library-delete[\s\S]*Delete from library/);
   assert.match(expressionEditor, /Delete from library/);
   assert.match(richMediaEditor, /deleted from your library/);
 });
