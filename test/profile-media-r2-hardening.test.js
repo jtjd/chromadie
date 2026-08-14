@@ -198,6 +198,17 @@ test('R2 final correctness keeps deletion operation state and scheduler control-
   assert.doesNotMatch(scheduler, /media\.chm\.lol/);
 });
 
+test('permanent R2 library deletion stays on the provider control plane after rollback', async () => {
+  const expressionEditor = await read('src/lib/ProfileExpressionEditor.svelte');
+  const richMediaEditor = await read('src/lib/ProfileRichMediaEditor.svelte');
+  assert.match(expressionEditor, /const data = isR2MediaAsset\(asset\)\s*\n\s*\? await deleteProfileMediaR2\(asset\.id\)/);
+  assert.match(richMediaEditor, /const data = isR2MediaAsset\(asset\)\s*\n\s*\? await deleteProfileMediaR2\(asset\.id\)/);
+  assert.match(expressionEditor, /Avatar unequipped\.[\s\S]*saved asset remains in your library/);
+  assert.match(expressionEditor, /Background unequipped\.[\s\S]*saved asset remains in your library/);
+  assert.match(expressionEditor, /Delete from library/);
+  assert.match(richMediaEditor, /deleted from your library/);
+});
+
 test('legacy Supabase media cleanup is exact-path, retryable, and NULL-safe', async () => {
   const migration = await read('supabase/migrations/20260813235900_profile_media_r2_legacy_storage_cleanup.sql');
   const sqlTests = await read('supabase/tests/launch_security.sql');

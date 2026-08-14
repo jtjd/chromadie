@@ -238,7 +238,9 @@
     busy = true;
     setFeedback('', 'Removing rich media…');
     try {
-      const data = r2MediaEnabled && isR2MediaAsset(asset)
+      // Deletion is provider-owned, not rollout-owned. An R2 asset remains
+      // deletable through the R2 control plane after a canary rollback.
+      const data = isR2MediaAsset(asset)
         ? await deleteProfileMediaR2(asset.id)
         : (await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: asset.id })).data;
       if (!data?.success) throw new Error(data?.error || 'The media asset could not be removed.');
@@ -249,7 +251,7 @@
         richConfig = { ...richConfig, [field]: null, [`${asset.kind}_asset_id`]: null };
       }
       dispatch('expressionchange', { ...richConfig, updatedAt: data.updated_at || null });
-      setFeedback('', 'Rich media removed from your library.');
+      setFeedback('', 'Rich media deleted from your library.');
     } catch (removeError) {
       setFeedback(removeError instanceof Error ? removeError.message : 'The media asset could not be removed.');
     } finally {

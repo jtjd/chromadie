@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-14 — Clarify profile-media removal semantics
+
+- Profile Studio now labels removing an active avatar, background, or audio as
+  `Unequip`, reflecting that the reusable library asset remains available.
+- Saved-library actions are labeled `Delete from library`; existing R2 assets
+  continue to use the R2 deletion control plane even during a rollout rollback.
+
 ## 2026-08-14 — Deploy R2 control-plane compatibility safely
 
 - Deployed the R2 control-plane and modern Supabase-key compatibility code with

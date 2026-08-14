@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## R2 deletion lifecycle clarification — 2026-08-14
+
+- Production forensic reads showed the canary avatar/background rows remained
+  `active` with typed selections cleared and no cleanup jobs. The observed
+  action was the existing unequip path, not permanent library deletion.
+- Permanent R2 library deletion now routes by `storage_provider` even when the
+  user-facing R2 rollout flag is disabled, preventing a rollback from sending
+  an R2 asset through the Supabase-only deletion RPC.
+- Studio labels distinguish `Unequip` from `Delete from library`, and the
+  database security suite covers durable deleted-tombstone key retention and
+  cleanup claiming after an external failure.
+
 ## Supabase modern key compatibility — 2026-08-13
 
 - Browser Supabase initialization now prefers `VITE_SUPABASE_PUBLISHABLE_KEY`.

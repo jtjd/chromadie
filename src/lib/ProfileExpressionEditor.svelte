@@ -236,7 +236,11 @@
     busy = true;
     setFeedback('', 'Removing media asset…');
     try {
-      const data = r2MediaEnabled && isR2MediaAsset(asset)
+      // Existing R2 assets must always use the control plane for permanent
+      // deletion, even when the user-facing R2 upload flag is rolled back.
+      // The flag gates new R2 media behavior; it must not route an R2 row
+      // through the legacy Supabase-only deletion RPC.
+      const data = isR2MediaAsset(asset)
         ? await deleteProfileMediaR2(asset.id)
         : (await supabase.rpc('delete_my_profile_media_asset', { p_asset_id: asset.id })).data;
       if (!data?.success) {
@@ -252,7 +256,7 @@
         dispatch('expressionchange', { ...expression, media_references: nextReferences, updatedAt: data.updated_at || null });
       }
       await loadAssetLibrary();
-      setFeedback('', 'Media asset removed from your library.');
+      setFeedback('', 'Media asset deleted from your library.');
     } catch (deleteError) {
       setFeedback(deleteError instanceof Error ? deleteError.message : 'The media asset could not be removed.');
     } finally {
@@ -396,7 +400,7 @@
         : await saveExpression({ ...expression, avatar_path: null });
       expression = next;
       revokeAvatarPreview();
-      setFeedback('', 'Avatar removed. Your initials fallback is active; the saved asset remains in your library.');
+      setFeedback('', 'Avatar unequipped. Your initials fallback is active; the saved asset remains in your library.');
     } catch (removeError) {
       setFeedback(removeError instanceof Error ? removeError.message : 'The avatar could not be removed.');
     } finally {
@@ -485,7 +489,7 @@
         : await saveExpression({ ...expression, background_path: null });
       expression = next;
       revokeBackgroundPreview();
-      setFeedback('', 'Background removed. The generated color atmosphere is active; the saved asset remains in your library.');
+      setFeedback('', 'Background unequipped. The generated color atmosphere is active; the saved asset remains in your library.');
     } catch (removeError) {
       setFeedback(removeError instanceof Error ? removeError.message : 'The background could not be removed.');
     } finally {
@@ -596,7 +600,7 @@
         await selectR2ExpressionAsset('audio', null, { clear: true });
         if (audioPreviewSrc && audioPreviewSrc.startsWith('blob:')) URL.revokeObjectURL(audioPreviewSrc);
         audioPreviewSrc = '';
-        setFeedback('', 'Profile audio removed. The saved asset remains in your library.');
+        setFeedback('', 'Profile audio unequipped. The saved asset remains in your library.');
       } catch (audioError) {
         setFeedback(audioError instanceof Error ? audioError.message : 'The audio could not be removed.');
       } finally {
@@ -668,7 +672,7 @@
         {#if hasAvatar}
           <div class="profile-expression-editor__compact-actions">
             <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => avatarInput?.click()}>Replace</button>
-            <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Remove</button>
+            <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Unequip</button>
           </div>
         {/if}
       </article>
@@ -695,7 +699,7 @@
         {#if hasBackground}
           <div class="profile-expression-editor__compact-actions">
             <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => backgroundInput?.click()}>Replace</button>
-            <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>Remove</button>
+            <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>Unequip</button>
           </div>
         {/if}
       </article>
@@ -746,7 +750,7 @@
           {#if hasAudio}
             <div class="profile-expression-editor__compact-actions">
               <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => audioInput?.click()}>Replace</button>
-              <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAudio}>Remove</button>
+              <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAudio}>Unequip</button>
             </div>
           {/if}
         </article>
@@ -796,7 +800,7 @@
       <div class="profile-expression-editor__actions">
         <input bind:this={avatarInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose avatar image" on:change={handleAvatarChange} />
         <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => avatarInput?.click()}>{hasAvatar ? 'Replace avatar' : 'Upload avatar'}</button>
-        {#if hasAvatar}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAvatar}>Remove</button>{/if}
+        {#if hasAvatar}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAvatar}>Unequip</button>{/if}
       </div>
     </div>
   </div>
@@ -815,7 +819,7 @@
             </button>
             <div class="profile-expression-editor__asset-meta">
               <span>{asset.storage_path === expression.avatar_path || asset.id === expression.avatar_asset_id ? 'Active' : (asset.label || 'Saved avatar')}</span>
-              <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Remove</button>
+              <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
             </div>
           </div>
         {/each}
@@ -842,7 +846,7 @@
         <div class="profile-expression-editor__actions">
           <input bind:this={backgroundInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose background image" on:change={handleBackgroundChange} />
           <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => backgroundInput?.click()}>{hasBackground ? 'Replace background' : 'Upload background'}</button>
-          {#if hasBackground}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeBackground}>Remove</button>{/if}
+          {#if hasBackground}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeBackground}>Unequip</button>{/if}
         </div>
       </div>
     </div>
@@ -860,7 +864,7 @@
               </button>
               <div class="profile-expression-editor__asset-meta">
                 <span>{asset.storage_path === expression.background_path || asset.id === expression.background_asset_id ? 'Active' : (asset.label || 'Saved background')}</span>
-                <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Remove</button>
+                <button type="button" class="profile-expression-editor__asset-remove" disabled={busy} on:click={() => deleteAsset(asset)}>Delete from library</button>
               </div>
             </div>
           {/each}
@@ -908,7 +912,7 @@
         <div class="profile-expression-editor__actions">
           <input bind:this={audioInput} class="profile-expression-editor__file" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={handleAudioChange} />
           <button type="button" class="profile-expression-editor__button" style={actionButtonStyle} disabled={busy} on:click={() => audioInput?.click()}>{hasAudio ? 'Replace audio' : 'Upload audio'}</button>
-          {#if hasAudio}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAudio}>Remove</button>{/if}
+          {#if hasAudio}<button type="button" class="profile-expression-editor__button profile-expression-editor__button--quiet" style={quietButtonStyle} disabled={busy} on:click={removeAudio}>Unequip</button>{/if}
         </div>
       </div>
     </div>

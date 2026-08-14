@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-14 — Keep unequip and permanent media deletion distinct
+
+Profile Studio's visible avatar/background/audio Remove action is an
+unequip operation: it clears the selected profile reference while retaining
+the reusable library asset and its public R2 object. Permanent deletion is the
+explicit library action. Library deletion is routed by the asset's provider,
+not by the current R2 rollout flag, so an already-created R2 asset remains
+deletable during a canary rollback. The UI labels now make the two operations
+explicit.
+
 ## 2026-08-13 — Adopt Supabase publishable and secret key names compatibly
 
 Browser clients prefer `VITE_SUPABASE_PUBLISHABLE_KEY`, and trusted server

@@ -1681,6 +1681,79 @@ SELECT pg_temp.audit_assert(
   'deleting a selected R2 asset did not clear its typed reference and return the new token'
 );
 
+-- A permanent R2 deletion must leave its exact keys claimable until the
+-- control plane confirms external deletion. This is distinct from the
+-- unequip path above, which intentionally leaves an active library asset.
+INSERT INTO public.profile_media_assets (
+  id, user_id, kind, storage_path, storage_provider, r2_private_key, r2_public_key,
+  status, delivery_status, ever_public, mime_type, byte_size, label
+) VALUES (
+  '30000000-0000-0000-0000-000000000010',
+  '10000000-0000-0000-0000-000000000001',
+  'avatar', NULL, 'r2',
+  'profiles/10000000-0000-0000-0000-000000000010/private.webp',
+  'profiles/10000000-0000-0000-0000-000000000010/public.webp',
+  'active', 'ready', true, 'image/webp', 1, 'Deletion retry avatar'
+);
+SELECT set_config(
+  'request.jwt.claims',
+  '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}',
+  true
+);
+INSERT INTO audit_results VALUES (
+  'r2_delete_retry_request',
+  public.delete_my_profile_media_asset('30000000-0000-0000-0000-000000000010')
+);
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
+INSERT INTO audit_results
+SELECT 'r2_delete_retry_claim', COALESCE(jsonb_agg(to_jsonb(claimed)), '[]'::jsonb)
+FROM public.claim_profile_media_deleted_cleanup_v2(100) AS claimed;
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true'
+      AND payload->>'cleanup_pending' = 'true'
+      AND EXISTS (
+        SELECT 1
+        FROM public.profile_media_assets
+        WHERE id = '30000000-0000-0000-0000-000000000010'
+          AND status = 'deleted'
+          AND r2_private_key = 'profiles/10000000-0000-0000-0000-000000000010/private.webp'
+          AND r2_public_key = 'profiles/10000000-0000-0000-0000-000000000010/public.webp'
+      )
+   FROM audit_results WHERE name = 'r2_delete_retry_request')
+    AND (SELECT payload @> '[{"id":"30000000-0000-0000-0000-000000000010","r2_public_key":"profiles/10000000-0000-0000-0000-000000000010/public.webp"}]'::jsonb
+         FROM audit_results WHERE name = 'r2_delete_retry_claim'),
+  'R2 deletion did not retain exact external keys in the durable cleanup queue'
+);
+INSERT INTO audit_results VALUES (
+  'r2_delete_retry_failed',
+  public.complete_profile_media_deleted_cleanup_v2(
+    '30000000-0000-0000-0000-000000000010', false, false, 'simulated external deletion failure'
+  )
+);
+SELECT pg_temp.audit_assert(
+  EXISTS (
+    SELECT 1 FROM public.profile_media_assets
+    WHERE id = '30000000-0000-0000-0000-000000000010'
+      AND status = 'deleted'
+      AND r2_public_key = 'profiles/10000000-0000-0000-0000-000000000010/public.webp'
+      AND cleanup_at > now()
+  ),
+  'failed R2 deletion forgot its retryable tombstone'
+);
+INSERT INTO audit_results VALUES (
+  'r2_delete_retry_complete',
+  public.complete_profile_media_deleted_cleanup_v2(
+    '30000000-0000-0000-0000-000000000010', true, true, NULL
+  )
+);
+SELECT pg_temp.audit_assert(
+  NOT EXISTS (
+    SELECT 1 FROM public.profile_media_assets
+    WHERE id = '30000000-0000-0000-0000-000000000010'
+  ),
+  'successful R2 cleanup did not finalize the tombstone'
+);
+
 -- A migrated R2 asset can retain its precise legacy Supabase path during the
 -- rollback window. The authenticated delete only tombstones it; the service
 -- cleanup RPC then removes that exact Storage object before the tombstone is
