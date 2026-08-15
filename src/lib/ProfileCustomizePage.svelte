@@ -249,7 +249,7 @@
   .studio-customize :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
   .studio-customize :global(.appearance-editor__surface-grid) { grid-template-columns: 1.15fr 1fr 1fr; gap: 13px; padding: 0; }
   .studio-customize :global(.appearance-editor__surface-intro) { grid-column: 1 / -1; }
-  .studio-customize :global(.appearance-editor__surface-color) { grid-template-columns: minmax(0, 1fr) 1fr; }
+  .studio-customize :global(.appearance-editor__surface-color) { grid-template-columns: minmax(0, 1fr); }
   .studio-customize :global(.appearance-editor__range) { margin-top: 0; gap: 8px; }
   .studio-customize :global(.appearance-editor__range output) { color: var(--studio-faint); font: 500 .62rem/1 ui-monospace, monospace; }
   .studio-customize :global(.appearance-editor__range input) { accent-color: var(--studio-accent); }

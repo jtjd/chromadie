@@ -364,10 +364,11 @@
   .appearance-editor__cardless-note { margin: .3rem 0 0; color: var(--appearance-secondary); font-size: var(--appearance-label-size); line-height: 1.35; }
   .appearance-editor__panel--cardless input:disabled, .appearance-editor__panel--cardless button:disabled { cursor: not-allowed; }
   .appearance-editor__surface-intro .appearance-editor__heading { margin: 0; }
-  .appearance-editor__surface-color { align-self: start; grid-template-columns: minmax(0, 1fr) minmax(7rem, 1fr); align-items: center; gap: .55rem; }
+  .appearance-editor__surface-color { align-self: start; grid-template-columns: minmax(0, 1fr); align-items: start; gap: .35rem; }
   .appearance-editor__field, .appearance-editor__range { display: grid; gap: .35rem; min-width: 0; }
   .appearance-editor__field > span, .appearance-editor__range > span { display: flex; justify-content: space-between; gap: .5rem; color: var(--appearance-secondary); font-size: var(--appearance-label-size); line-height: 1.3; }
   .appearance-editor__field > span { align-items: center; justify-content: flex-start; gap: .45rem; }
+  .appearance-editor__surface-color > span { letter-spacing: .055em; text-transform: uppercase; }
   .appearance-editor__field.active > span { color: var(--appearance-text); }
   .appearance-editor__color-dot { width: .92rem; height: .92rem; flex: 0 0 auto; padding: 0; border: 1px solid color-mix(in srgb, var(--dot-color) 55%, var(--appearance-line-strong)); border-radius: 50%; background: var(--dot-color); cursor: pointer; }
   .appearance-editor__color-dot:focus-visible { outline: 2px solid var(--appearance-focus); outline-offset: 2px; }
