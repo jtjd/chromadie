@@ -94,9 +94,9 @@
     grid-column: 1 / -1;
   }
 
-  .profile-media-workspace :global(.profile-expression-editor__compact-library) { order: 5; }
-  .profile-media-workspace :global(.profile-expression-editor__compact-spotify) { order: 6; }
-  .profile-media-workspace :global(.profile-background-treatment) { order: 7; }
+  .profile-media-workspace :global(.profile-expression-editor__compact-spotify) { order: 5; }
+  .profile-media-workspace :global(.profile-background-treatment) { order: 6; }
+  .profile-media-workspace :global(.profile-expression-editor__compact-library) { order: 7; }
   .profile-media-workspace :global(.profile-expression-editor__message) {
     grid-column: 1 / -1;
     order: 0;

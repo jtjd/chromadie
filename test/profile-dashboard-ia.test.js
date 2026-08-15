@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate destinations through the reference shell', async () => {
-  const [settings, contract, registry, workspace, header, preview, customize, premium, shell, editor, expression, richMedia, identity, appearance, appearanceColors, cosmetics, referenceLayout] = await Promise.all([
+  const [settings, contract, registry, workspace, header, preview, customize, premium, shell, editor, expression, richMedia, identity, appearance, appearanceColors, cosmetics, referenceLayout, mediaWorkspace] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/dashboardContract.js'),
     read('src/lib/profile-studio/sectionRegistry.js'),
@@ -22,7 +22,8 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/profileAppearanceColors.js'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),
-    read('src/lib/ProfileReferenceLayoutEditor.svelte')
+    read('src/lib/ProfileReferenceLayoutEditor.svelte'),
+    read('src/lib/ProfileMediaWorkspace.svelte')
   ]);
   const studio = [settings, contract, registry, workspace, header, preview].join('\n');
 
@@ -106,8 +107,9 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.doesNotMatch(customize, /gradient/);
   assert.doesNotMatch(customize, /premium-banner|premiumrequest|Chromadie Plus/);
   assert.match(expression, /profile-media-icon\) \{ width: 2\.35rem; height: 2\.35rem/);
-  assert.match(expression, /min-height: 5\.7rem/);
-  assert.match(expression, /font-size: \.92rem/);
+  assert.match(mediaWorkspace, /rich-media-editor__compact-card[\s\S]*grid-template-rows: 115px auto/);
+  assert.match(mediaWorkspace, /rich-media-editor__compact-copy strong[\s\S]*font: 600 \.73rem\/1\.2 /);
+  assert.doesNotMatch(expression, /compact-grid :global\(\.rich-media-editor__compact-card\)/);
   assert.match(richMedia, /async function removeCursor/);
   assert.match(richMedia, /await removeAsset\(activeCursor\)/);
   assert.match(richMedia, /rich-media-editor__compact-remove/);
