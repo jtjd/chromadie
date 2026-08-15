@@ -214,41 +214,47 @@ body,
  * ------------------------------------------------------------------------- */
 
 .app-main--site {
-  --site-font: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-  --site-mono: 'IBM Plex Mono', ui-monospace, monospace;
-  --site-canvas: #0d0f13;
-  --site-deep: #090a0d;
-  --site-raised: #111319;
-  --site-ink: #f2f0eb;
-  --site-muted: #aaa8b0;
-  --site-faint: #7d7e87;
-  --site-accent: #cdd2ff;
-  --site-accent: var(--color-accent);
-  --site-accent-bright: #f2f0eb;
-  --site-line: rgba(255, 255, 255, 0.075);
-  --site-line-strong: rgba(255, 255, 255, 0.15);
-  --site-surface: var(--site-raised);
+  --site-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --site-display: 'Clash Display', ui-sans-serif, system-ui, sans-serif;
+  --site-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --site-canvas: #050506;
+  --site-deep: #050506;
+  --site-raised: rgba(12, 12, 15, 0.78);
+  --site-ink: #f8f8f8;
+  --site-muted: #8f9099;
+  --site-faint: #686971;
+  --site-accent: #00ffb3;
+  --site-accent-bright: #f8f8f8;
+  --site-line: rgba(255, 255, 255, 0.1);
+  --site-line-strong: rgba(255, 255, 255, 0.2);
+  --site-surface: rgba(10, 10, 12, 0.58);
   --site-surface-soft: rgba(255, 255, 255, 0.035);
-  --font-display-stack: var(--site-font);
   --font-body-stack: var(--site-font);
   --font-mono-stack: var(--site-mono);
-  --font-display: var(--site-font);
+  --font-display-stack: var(--site-display);
+  --font-display: var(--site-display);
   --color-canvas: var(--site-canvas);
   --color-canvas-raised: var(--site-raised);
   --color-canvas-deep: var(--site-deep);
   --color-ink-strong: var(--site-ink);
-  --color-ink: #d8d6d2;
+  --color-ink: #bfc0c5;
   --color-ink-muted: var(--site-muted);
   --color-ink-faint: var(--site-faint);
   --color-accent: var(--site-accent);
   --color-accent-bright: var(--site-accent-bright);
+  --color-accent-cyan: var(--site-accent);
+  --color-success: var(--site-accent);
+  --color-earned: #f5c26f;
+  --color-warning: #f5c26f;
+  --color-danger: #ff5578;
+  --text-muted: var(--site-muted);
   --surface-panel: var(--site-raised);
-  --surface-panel-strong: #15171d;
+  --surface-panel-strong: rgba(255, 255, 255, 0.1);
   --surface-panel-soft: var(--site-surface-soft);
-  --surface-inset: rgba(0, 0, 0, 0.32);
+  --surface-inset: rgba(0, 0, 0, 0.22);
   min-height: calc(100dvh - 4.25rem);
   color: var(--site-ink);
-  background: linear-gradient(180deg, #121419 0%, var(--site-canvas) 35%, var(--site-deep) 100%);
+  background: var(--site-canvas);
   font-family: var(--site-font);
 }
 
@@ -258,7 +264,7 @@ body,
 
 .app-main--site :is(h1, h2, h3, h4, h5) {
   color: var(--site-ink);
-  font-family: var(--site-font) !important;
+  font-family: var(--site-display) !important;
   letter-spacing: -0.045em;
 }
 
@@ -275,38 +281,39 @@ body,
 
 .app-main--site :is(.card, .discovery-card, .discovery-empty, .discovery-your-rank, .discovery-tabs, .shop-status, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section) {
   border: 1px solid var(--site-line);
-  border-radius: 0.5rem;
-  background: var(--site-raised);
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  border-radius: 0.65rem;
+  background: var(--site-surface);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .app-main--site :is(.card, .discovery-card, .shop-item, .discovery-tabs):hover {
   border-color: var(--site-line-strong);
-  background: var(--site-raised);
+  background: var(--site-surface);
 }
 
 .app-main--site :is(.roll-btn, .auth-submit) {
-  border: 1px solid var(--site-ink);
-  border-radius: 0.35rem;
-  background: var(--site-ink);
-  color: var(--site-deep);
+  border: 1px solid var(--site-accent);
+  border-radius: 0.45rem;
+  background: var(--site-accent);
+  color: #06110d;
   box-shadow: none;
-  font: 650 0.82rem / 1 var(--site-font);
+  font: 700 0.82rem / 1 var(--site-font);
   letter-spacing: 0.01em;
   text-transform: none;
 }
 
 .app-main--site :is(.roll-btn, .auth-submit):hover:not(:disabled) {
-  background: #ffffff;
+  border-color: #8affd4;
+  background: #8affd4;
   box-shadow: none;
   transform: translateY(-1px);
 }
 
 .app-main--site :is(.chroma-btn, .download-btn, .close-btn, .challenge-close, .reroll-btn, .discovery-filter-button, .discovery-clear-button, .detail-button, .quiet-action, .try-button, .shop-empty button) {
   border: 1px solid var(--site-line-strong);
-  border-radius: 0.35rem;
+  border-radius: 0.45rem;
   background: transparent;
   color: var(--site-ink);
   box-shadow: none;
@@ -514,11 +521,11 @@ body,
 
 .auth-container,
 .bootstrap-error-card {
-  border: 1px solid rgba(255, 255, 255, 0.075) !important;
-  border-radius: 0.5rem !important;
-  background: #111319 !important;
-  box-shadow: none !important;
-  font-family: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.65rem !important;
+  background: rgba(12, 12, 15, 0.78) !important;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.18) !important;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 .auth-container :is(.auth-header, .tabs, #turnstile-container) {
@@ -529,53 +536,53 @@ body,
 
 .auth-container :is(.auth-brand, .auth-kicker, .link-btn, .privacy-link-note a),
 .bootstrap-error-kicker {
-  color: #cdd2ff !important;
+  color: #00ffb3 !important;
 }
 
 .auth-container .tabs :is(button, a).active {
-  background: color-mix(in srgb, #cdd2ff 10%, transparent);
-  box-shadow: inset 0 -2px 0 #cdd2ff;
+  background: color-mix(in srgb, #00ffb3 10%, transparent);
+  box-shadow: inset 0 -2px 0 #00ffb3;
 }
 
 .auth-container .input-field,
 .bootstrap-error-card .input-field {
-  border-color: rgba(255, 255, 255, 0.075);
-  border-radius: 0.35rem;
-  background: #090a0d;
-  color: #f2f0eb;
+  border-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0.45rem;
+  background: rgba(0, 0, 0, 0.22);
+  color: #f8f8f8;
 }
 
 .auth-container .auth-submit,
 .bootstrap-error-card .roll-btn {
-  border-color: #f2f0eb;
-  background: #f2f0eb;
-  color: #090a0d;
+  border-color: #00ffb3;
+  background: #00ffb3;
+  color: #06110d;
 }
 
 .bootstrap-error-shell {
   min-height: 100dvh;
-  background: linear-gradient(180deg, #121419 0%, #0d0f13 35%, #090a0d 100%);
-  font-family: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  background: #050506;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 .bootstrap-error-card h1 {
-  color: #f2f0eb !important;
-  font-family: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif !important;
+  color: #f8f8f8 !important;
+  font-family: 'Clash Display', ui-sans-serif, system-ui, sans-serif !important;
   letter-spacing: -0.045em;
 }
 
 .bootstrap-error-message,
-.bootstrap-error-help { color: #aaa8b0 !important; }
+.bootstrap-error-help { color: #8f9099 !important; }
 
 .site-footer {
-  border-top-color: rgba(255, 255, 255, 0.075);
-  background: #090a0d;
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  border-top-color: rgba(255, 255, 255, 0.1);
+  background: #050506;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 .site-footer p,
-.site-footer a { color: #7d7e87; }
-.site-footer a:hover { color: #cdd2ff; }
+.site-footer a { color: #686971; }
+.site-footer a:hover { color: #00ffb3; }
 
 @media (max-width: 48rem) {
   .app-main--site :is(.guide, .legal-page, .terms, .shop-page, .discovery-hub) {
@@ -660,4 +667,111 @@ body,
   background-color: var(--customize-surface-deep);
   color: var(--customize-text-primary);
   color-scheme: dark;
+}
+
+/* Supporting routes use the same quiet surface language as Profile Studio.
+ * These rules only project existing page components into the new shell; they
+ * do not change their route, data, or interaction contracts. */
+.app-main--site :is(.discovery-hub, .shop-page, .guide, .legal-page, .terms, .pricing-page) {
+  color: var(--site-ink);
+  font-family: var(--site-font);
+}
+
+.app-main--site :is(.discovery-hub, .shop-page, .guide, .legal-page, .terms) {
+  background: transparent;
+}
+
+.app-main--site :is(.discovery-hub h1, .shop-heading h1, .guide h1, .terms h1, .legal-hero h1, .pricing-hero h1, .pricing-card h2, .pricing-card__price, .pricing-page__promise-heading h2) {
+  font-family: var(--site-display) !important;
+  font-weight: 600;
+}
+
+.app-main--site :is(.discovery-tabs, .discovery-card, .discovery-empty, .discovery-your-rank, .shop-status, .shop-item, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section, .pricing-page__notice) {
+  border-color: var(--site-line);
+  border-radius: 0.65rem;
+  background: var(--site-surface);
+  box-shadow: none;
+}
+
+.app-main--site .discovery-tabs {
+  gap: 0.75rem;
+  padding: 0.8rem;
+  background: transparent;
+}
+
+.app-main--site :is(.discovery-tabs button, .discovery-filter-button, .discovery-clear-button, .discovery-filters input, .discovery-filters select) {
+  border-color: var(--site-line);
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--site-muted);
+  font-family: var(--site-font);
+}
+
+.app-main--site :is(.discovery-tabs button:hover, .discovery-tabs button.active, .discovery-filter-button:hover, .discovery-clear-button:hover) {
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-accent) 9%, transparent);
+  color: var(--site-ink);
+}
+
+.app-main--site .discovery-grid {
+  border-color: var(--site-line);
+  border-radius: 0.65rem;
+  background: transparent;
+}
+
+.app-main--site .discovery-grid__item {
+  border-top-color: var(--site-line);
+}
+
+.app-main--site .discovery-hub__privacy-note {
+  border-color: color-mix(in srgb, var(--site-accent) 36%, transparent);
+  border-radius: 0.45rem;
+  color: var(--site-accent);
+  font-family: var(--site-font);
+}
+
+.app-main--site .pricing-page {
+  min-height: 100%;
+  background: var(--site-canvas) !important;
+}
+
+.app-main--site .pricing-page::before,
+.app-main--site .pricing-page__atmosphere {
+  display: none;
+}
+
+.app-main--site .pricing-card--plus {
+  background: var(--site-surface);
+}
+
+.app-main--site .pricing-card--plus::before {
+  background: var(--site-accent);
+  box-shadow: none;
+}
+
+.app-main--site :is(.pricing-card__primary, .pricing-card__secondary) {
+  border-radius: 0.45rem;
+  font-family: var(--site-font);
+}
+
+.app-main--site .pricing-card__primary {
+  border-color: var(--site-accent);
+  background: var(--site-accent);
+  color: #06110d;
+}
+
+.app-main--site .pricing-card__primary:hover:not(:disabled) {
+  border-color: #8affd4;
+  background: #8affd4;
+}
+
+.app-main--site .pricing-card__secondary:hover {
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-accent) 9%, transparent);
+}
+
+@media (max-width: 48rem) {
+  .app-main--site :is(.discovery-hub, .shop-page, .guide, .legal-page, .terms, .pricing-page) {
+    padding-top: 2.5rem;
+  }
 }

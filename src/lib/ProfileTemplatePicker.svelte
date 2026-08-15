@@ -16,7 +16,8 @@
     sleek: { label: 'Sleek', description: 'Stacked card with detached music and Today strips when available.' },
     minimal: { label: 'Minimal', description: 'Offset, cardless identity with an inline indicator.' },
     modern: { label: 'Modern', description: 'Compact identity with a small secondary roll widget.' },
-    portfolio: { label: 'Portfolio', description: 'Cardless centered hero with Today below the fold.' }
+    portfolio: { label: 'Portfolio', description: 'Cardless centered hero with Today below the fold.' },
+    'full-bleed': { label: 'Immersive', description: 'Full-viewport identity scene with a large avatar and icon links.' }
   });
 
   $: currentTemplateKey = normalizeProfileTemplateKey(config?.templateKey, config?.layoutVariant || 'compact');
@@ -59,7 +60,7 @@
   .profile-template-picker h3 { margin: 0; color: var(--site-ink, #f2f0eb); font-size: .88rem; }
   .profile-template-picker p { max-width: 44rem; margin: .35rem 0 0; color: var(--site-muted, #aaa8b0); font-size: .7rem; line-height: 1.5; }
   .profile-template-picker__current { flex: 0 0 auto; color: var(--site-accent, #cdd2ff); font: .62rem/1 var(--site-mono, monospace); }
-  .profile-template-picker__grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; }
+  .profile-template-picker__grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .55rem; }
   .profile-template-picker__card { position: relative; display: grid; gap: .45rem; min-width: 0; min-height: 8rem; padding: .55rem; border: 1px solid var(--site-line, rgba(255,255,255,.08)); border-radius: .42rem; background: var(--site-deep, #090a0d); color: var(--site-ink, #f2f0eb); cursor: pointer; text-align: left; }
   .profile-template-picker__card:hover, .profile-template-picker__card:focus-visible, .profile-template-picker__card.is-active { border-color: color-mix(in srgb, var(--site-accent, #cdd2ff) 58%, var(--site-line)); background: color-mix(in srgb, var(--site-accent, #cdd2ff) 7%, var(--site-deep, #090a0d)); }
   .profile-template-picker__card.is-active::after { content: '✓'; position: absolute; top: .45rem; right: .45rem; display: grid; width: 1rem; height: 1rem; place-items: center; border-radius: 50%; background: var(--ctp-lavender, #b4befe); color: var(--ctp-crust, #11111b); font-size: .62rem; font-weight: 800; }
@@ -106,6 +107,12 @@
   .profile-template-picker__swatch--portfolio i:nth-child(3) { width: 38%; flex-basis: 38%; height: .22rem; }
   .profile-template-picker__swatch--portfolio::before { top: .55rem; left: 50%; transform: translateX(-50%); }
   .profile-template-picker__swatch--portfolio::after { display: none; }
+  .profile-template-picker__swatch--full-bleed { align-items: center; justify-content: center; background: transparent; border-color: transparent; }
+  .profile-template-picker__swatch--full-bleed i { width: 72%; flex: 0 0 72%; height: .18rem; }
+  .profile-template-picker__swatch--full-bleed i:nth-child(2) { width: 55%; flex-basis: 55%; }
+  .profile-template-picker__swatch--full-bleed i:nth-child(3) { width: 38%; flex-basis: 38%; }
+  .profile-template-picker__swatch--full-bleed::before { top: .45rem; left: 50%; transform: translateX(-50%); }
+  .profile-template-picker__swatch--full-bleed::after { display: none; }
   .profile-template-picker button:focus-visible { outline: 2px solid var(--site-accent, #cdd2ff); outline-offset: 3px; }
   @media (max-width: 64rem) { .profile-template-picker__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 42rem) { .profile-template-picker__heading { flex-direction: column; gap: .35rem; } .profile-template-picker__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

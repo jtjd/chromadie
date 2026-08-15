@@ -309,7 +309,7 @@ export function buildProfileRenderSnapshot(input = {}) {
   const showRoll = getProfileRollVisible(configuration);
   const showLowerExpression = hasLowerExpression
     && (layoutVariant !== 'sleek' || profileWidgets.length > 0 || hasProfileContent);
-  const hasBelowFoldRoll = showRoll && layoutVariant === 'portfolio';
+  const hasBelowFoldRoll = showRoll && (layoutVariant === 'portfolio' || layoutVariant === 'full-bleed');
   const storyUnlocks = getProfileStoryUnlocks(profile);
   const rank = profile ? getRank(profile.lifetime_ep || 0) : null;
   const rankState = profile ? getRankState(profile.lifetime_ep || 0) : null;

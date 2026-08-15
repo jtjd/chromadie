@@ -2,13 +2,32 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-15 — Add the Immersive profile layout
+
+- Added a sixth free profile layout with a full-viewport photographic
+  environment, large centered avatar, identity, bio, metadata, and icon links.
+- The same Immersive composition is available in the public profile and live
+  Studio preview, while the existing roll, story, media, and social content
+  remain available below the opening scene.
+- Existing layouts, profile data contracts, cosmetics, draft/publish behavior,
+  and media delivery are unchanged.
+
 ## 2026-08-15 — Complete homepage navigation
 
 - Replaced the homepage's discovery placeholder with real Leaderboard,
   Customize, and Pricing destinations while keeping the in-page reference
-  anchors and Claim handle action.
+  content and Claim handle action; the in-page How it works and Profiles
+  anchors no longer appear in the header.
 - Expanded the homepage footer with the product's real navigation, legal,
   support, and business destinations.
+
+## 2026-08-15 — Align legacy headers and pages with Profile Studio
+
+- Replaced the old supporting-route capsule/slash header with a quiet
+  reference-aligned application bar and canonical Customize destination.
+- Updated legacy supporting surfaces and standalone auth to use the approved
+  Clash Display + Inter typography, near-black canvas, restrained glass
+  surfaces, thin borders, and green accent without changing route or behavior.
 
 ## 2026-08-15 — Align the Profile Studio Media tab with the approved reference
 

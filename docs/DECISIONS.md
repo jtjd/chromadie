@@ -1,13 +1,24 @@
 # Chromadie 2.0 Decisions
 
-## 2026-08-15 — Keep homepage navigation connected to canonical routes
+## 2026-08-15 — Add the reference-first Immersive profile layout
 
-The homepage keeps its reference anchors for How it works and Profiles, but
-real product surfaces use their canonical paths: Leaderboard, Customize, and
-Pricing. The footer now exposes the existing legal, support, and business
-destinations as well. Links remain ordinary same-origin anchors so the shared
-application navigation guard and direct-refresh route contracts continue to
-own navigation behavior.
+The new `full-bleed`/Immersive layout is a sixth free structural layout in the
+existing profile configuration and catalog contracts. It uses a purpose-built
+centered identity composition for the public profile and Studio preview while
+leaving `ProfileShell`, the normalized render snapshot, R2 media resolution,
+link metadata, and cosmetic leaf renderers authoritative. The page environment
+remains outside the motion target; daily roll, story, content, social, audio,
+and widget modules continue below the opening composition through the existing
+continuation path. No old layout was removed or reinterpreted.
+
+## 2026-08-15 — Align legacy application surfaces with the approved shell
+
+The homepage header keeps only product destinations and the claim action; the
+internal How it works and Profiles anchors remain available in the page body
+and are no longer competing with navigation. Supporting routes now use the
+same near-black canvas, Clash Display + Inter typography, restrained borders,
+and green accent as Profile Studio. Existing route interception, auth/account
+controls, prefetching, legal links, and page data contracts remain unchanged.
 
 ## 2026-08-15 — Make the Studio Media tab follow the approved reference hierarchy
 

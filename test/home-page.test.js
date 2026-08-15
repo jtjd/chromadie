@@ -40,8 +40,6 @@ test('the homepage is a single reference-first composition', () => {
 
 test('homepage navigation exposes real product destinations without placeholder links', () => {
   for (const destination of [
-    'href="#how">How it works',
-    'href="#showcase">Profiles',
     'href="/leaderboard">Leaderboard',
     'href="/profile/settings">Customize',
     'href="/pricing">Pricing',
@@ -53,6 +51,7 @@ test('homepage navigation exposes real product destinations without placeholder 
   }
   assert.match(home, /support@chromadie\.com/);
   assert.match(home, /business@chromadie\.com/);
+  assert.doesNotMatch(header, /How it works|Profiles|href="#how"|href="#showcase"/);
   assert.doesNotMatch(header, /href="#"/);
 });
 

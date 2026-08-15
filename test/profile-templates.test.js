@@ -18,8 +18,8 @@ import {
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('template registry is finite, structured, and preserves the free foundation', () => {
-  assert.deepEqual(FREE_PROFILE_TEMPLATE_KEYS, ['compact', 'sleek', 'minimal', 'modern', 'portfolio']);
-  assert.equal(Object.keys(PROFILE_TEMPLATE_DEFINITIONS).length, 5);
+  assert.deepEqual(FREE_PROFILE_TEMPLATE_KEYS, ['compact', 'sleek', 'minimal', 'modern', 'portfolio', 'full-bleed']);
+  assert.equal(Object.keys(PROFILE_TEMPLATE_DEFINITIONS).length, 6);
   assert.equal(Object.values(PROFILE_TEMPLATE_DEFINITIONS).every(definition => definition.tier === 'free'), true);
 
   for (const definition of Object.values(PROFILE_TEMPLATE_DEFINITIONS)) {

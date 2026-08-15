@@ -898,7 +898,7 @@
         on:logout={handleLogout}
         on:retry={() => window.location.reload()}
         on:edit={handleProfileHeaderEdit}
-        accentColor="#cdd2ff"
+        accentColor="#00ffb3"
       />
     {/if}
 

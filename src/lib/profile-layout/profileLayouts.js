@@ -46,6 +46,14 @@ const PROFILE_LAYOUTS = {
     footprint: 'longform',
     structure: Object.freeze({ identity: 'hero', roll: 'below-fold', surface: 'cardless' }),
     motionTarget: 'identity-frame'
+  },
+  'full-bleed': {
+    key: 'full-bleed',
+    label: 'Immersive',
+    description: 'A full-viewport identity scene with a large avatar, bio, and icon links.',
+    footprint: 'immersive',
+    structure: Object.freeze({ identity: 'centered', roll: 'below-fold', surface: 'cardless' }),
+    motionTarget: 'full-bleed-identity'
   }
 };
 

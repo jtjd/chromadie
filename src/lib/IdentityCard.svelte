@@ -379,7 +379,7 @@
   }
 
   /* The active catalog is intentionally small and background-first. These
-     rules are kept together so the five layouts share the same identity,
+     rules are kept together so the card-based layouts share the same identity,
      social-link and cosmetic renderers without importing theme-specific
      geometry. */
   .identity-card--default {

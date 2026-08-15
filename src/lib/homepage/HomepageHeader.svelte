@@ -30,8 +30,6 @@
     </a>
 
     <nav class="homepage-header__nav" aria-label="Homepage">
-      <a href="#how">How it works</a>
-      <a href="#showcase">Profiles</a>
       <a class="homepage-header__route-link" href="/leaderboard">Leaderboard</a>
       <a class="homepage-header__route-link" href="/profile/settings">Customize</a>
       <a class="homepage-header__route-link" href="/pricing">Pricing</a>

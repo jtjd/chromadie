@@ -22,7 +22,7 @@
     recent: 'Recent colors', achievements: 'Pinned achievements', boundary: 'Public boundary', explore: 'Explore footer'
   });
   const EDITABLE_MODULE_IDS = Object.freeze(['stats', 'signature', 'links', 'recent', 'achievements']);
-  const STYLE_LABELS = Object.freeze({ compact: 'Compact', sleek: 'Sleek', minimal: 'Minimal', modern: 'Modern', portfolio: 'Portfolio' });
+  const STYLE_LABELS = Object.freeze({ compact: 'Compact', sleek: 'Sleek', minimal: 'Minimal', modern: 'Modern', portfolio: 'Portfolio', 'full-bleed': 'Immersive' });
   const MODULE_SIZE_LABELS = Object.freeze({ wide: 'Wide', medium: 'Medium', narrow: 'Narrow' });
   let draft = normalizeProfileConfig(draftConfig || publishedConfig);
   let baseline = draft;

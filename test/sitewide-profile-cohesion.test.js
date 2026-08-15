@@ -9,7 +9,6 @@ test('all routes use one cohesive application header', async () => {
 
   assert.match(siteHeader, /site-mode-header__wordmark/);
   assert.match(siteHeader, /background: transparent/);
-  assert.match(siteHeader, /site-mode-header__nav.*\//s);
   assert.match(siteHeader, /\{#if !minimalMode\}\s*<nav class="site-mode-header__nav"/);
   assert.match(siteHeader, /\{#if !minimalMode\}\s*<div class="site-mode-header__mobile-primary"/);
   assert.match(siteHeader, /isProfileMode \? 'Open profile actions' : isHomeMode \|\| isHomepageStyle \? 'Open account actions'/);
@@ -27,12 +26,14 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /site-mode-header__mobile-primary"[\s\S]*activeView === 'pricing'/);
   assert.doesNotMatch(siteHeader, /Explore|How it works|scrollToHomeSection/);
   assert.doesNotMatch(siteHeader, />Profile</);
-  assert.match(siteHeader, />Studio</);
+  assert.match(siteHeader, />Customize</);
   assert.doesNotMatch(siteHeader, />Shop</);
   assert.match(siteHeader, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);
-  assert.match(siteHeader, /--site-header-control-size: 0\.78rem/);
-  assert.match(siteHeader, /--site-header-font: 'Satoshi'/);
-  assert.doesNotMatch(siteHeader, /var\(--font-mono-stack\)/);
+  assert.match(siteHeader, /--site-header-control-size: 0\.82rem/);
+  assert.match(siteHeader, /--site-header-font: 'Inter'/);
+  assert.match(siteHeader, /--site-header-display: 'Clash Display'/);
+  assert.match(siteHeader, /site-mode-header__brand-mark/);
+  assert.doesNotMatch(siteHeader, /Satoshi|IBM Plex Mono|text-transform: lowercase/);
 });
 
 test('supporting surfaces consume the profile visual tokens without changing route components', async () => {
@@ -45,12 +46,12 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /\.app-main--site \.game-container/);
   assert.match(siteStyles, /\.app-main--site \.discovery-card/);
   assert.match(siteStyles, /\.app-main--site \.shop-page/);
-  assert.match(siteStyles, /--site-font: 'Instrument Sans Variable'/);
+  assert.match(siteStyles, /--site-font: 'Inter'/);
   assert.match(siteStyles, /--font-display-stack: 'Clash Display'/);
   assert.match(siteStyles, /--font-body-stack: 'Inter'/);
-  assert.match(siteStyles, /--site-accent: #cdd2ff/);
+  assert.match(siteStyles, /--site-accent: #00ffb3/);
   assert.doesNotMatch(siteStyles, /site-mode-header:not\(\.site-mode-header--home\):not\(\.site-mode-header--profile\)/);
-  assert.match(siteHeader, /\.site-mode-header--home \.site-mode-header__brand[\s\S]*font-size: 0\.75rem/);
+  assert.match(siteHeader, /\.site-mode-header__brand-mark/);
   assert.match(siteStyles, /Homepage baseline for supporting routes/);
   assert.match(siteStyles, /prefers-reduced-motion/);
 });
@@ -65,7 +66,6 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(siteHeader, /\.site-mode-header--profile \{[\s\S]*background: transparent !important;[\s\S]*backdrop-filter: none !important;/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__nav-space \{ display: none; \}/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: none; \}/);
-  assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__wordmark > span \{ color: #cdd2ff; \}/);
   assert.match(siteHeader, /\{#if isHomeMode \|\| isHomepageStyle\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
   assert.match(profileShell, /ProfileEnvironmentLayer/);
   assert.match(environment, /profile-environment--public/);

@@ -2,7 +2,7 @@ import { CHROMADIE_PLUS_ENTITLEMENT_KEY, hasChromadiePlus } from './premiumEntit
 import { LEGACY_PROFILE_LAYOUT_MAP, PROFILE_LAYOUT_DEFINITIONS, PROFILE_LAYOUT_KEYS, normalizeProfileLayoutKey } from './profile-layout/profileLayouts.js';
 
 /**
- * Templates are the Studio-facing names for the five structural layout
+ * Templates are the Studio-facing names for the structural layout
  * renderers. They do not carry a theme or cosmetic loadout.
  */
 export const PROFILE_TEMPLATE_KEYS = PROFILE_LAYOUT_KEYS;
@@ -21,7 +21,8 @@ const MODULE_ORDER = Object.freeze({
   sleek: ['roll', 'links', 'stats', 'signature', 'recent', 'achievements', 'boundary', 'explore'],
   minimal: ['roll', 'links', 'signature', 'stats', 'recent', 'achievements', 'boundary', 'explore'],
   modern: ['roll', 'stats', 'links', 'signature', 'achievements', 'recent', 'boundary', 'explore'],
-  portfolio: ['roll', 'signature', 'links', 'recent', 'achievements', 'stats', 'boundary', 'explore']
+  portfolio: ['roll', 'signature', 'links', 'recent', 'achievements', 'stats', 'boundary', 'explore'],
+  'full-bleed': ['roll', 'links', 'signature', 'recent', 'achievements', 'stats', 'boundary', 'explore']
 });
 
 const MODULE_SIZES = Object.freeze({

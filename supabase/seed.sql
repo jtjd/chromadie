@@ -157,6 +157,7 @@ INSERT INTO public.shop_items (
   ('profile_layout_minimal', 'Minimal', 'profile_layout', 0, 'renderer', 'minimal', NULL, NULL, 'Uncommon', 'A free-floating identity treatment with almost no structural container.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_layout_modern', 'Modern', 'profile_layout', 0, 'renderer', 'modern', NULL, NULL, 'Uncommon', 'A compact identity surface with a quiet secondary widget treatment.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_layout_portfolio', 'Portfolio', 'profile_layout', 0, 'renderer', 'portfolio', NULL, NULL, 'Uncommon', 'A restrained landing view that opens into a longer personal profile story.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_layout_full_bleed', 'Immersive', 'profile_layout', 0, 'renderer', 'full-bleed', NULL, NULL, 'Uncommon', 'A full-viewport identity scene with a large avatar, bio, and icon links.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_motion_perspective_tilt', '3D Tilt', 'profile_motion', 0, 'renderer', 'perspective-tilt', NULL, NULL, 'Uncommon', 'A restrained perspective shift follows the pointer across the profile surface.', 'Layouts', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,

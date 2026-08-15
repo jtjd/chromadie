@@ -16,6 +16,7 @@
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileLayoutFrame from './ProfileLayoutFrame.svelte';
+  import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
   import ProfileMusic from './ProfileMusic.svelte';
   import ProfileWidgets from './ProfileWidgets.svelte';
   import ProfileContent from './ProfileContent.svelte';
@@ -493,82 +494,106 @@
             className={'profile-shell__motion-target profile-shell__motion-target--' + profileMotionTarget}
           >
             <div class="profile-shell__card-scale" data-profile-motion-target={profileMotionTarget}>
-              <ProfileLayoutFrame>
-                <div class="profile-shell__layout-identity profile-layout-frame__identity">
-                  <ProfileBorderEffect borderKey={cosmetics?.profile_border} surfaceStyle={profileCardStyle} className={'profile-shell__identity-boundary' + (profilePresentationLayoutVariant === 'minimal' || profilePresentationLayoutVariant === 'portfolio' ? ' profile-border-effect--content' : '')}>
-                    {#if bannerSrc}
-                      <img class="profile-shell__rich-banner" src={bannerSrc} alt="" loading="lazy" aria-hidden="true" />
-                    {/if}
-                    {#if identityCardComponent}
-                      <svelte:component this={identityCardComponent}
-                        username={username}
-                        displayName={profileDisplayName}
-                        profilePath={profilePath}
-                        bio={profileBio}
-                        links={openingLinks}
-                        badges={pinnedAchievements}
-                        staff={Boolean(renderProfile?.is_staff)}
-                        avatarSrc={avatarSrc}
-                        founder={Boolean(renderProfile?.equipped_badges?.includes('launch_edition'))}
-                        accentColor={signatureColor}
-                        nameRendererLoadout={nameRendererLoadout}
-                        nameRendererContext="profile"
-                        nameRendererMode="animated"
-                        nameRendererRecentColors={nameRendererRecentColors}
-                        nameRendererTodayColor={nameRendererTodayColor}
-                        nameRendererBaseColor={nameRendererBaseColor}
-                        avatarEffectKey={cosmetics?.avatar_effect}
-                        avatarEffectMode="profile"
-                        avatarEffectAnimated={true}
-                        layoutVariant={profilePresentationLayoutVariant}
-                        surface={false}
-                        location={identityPresentation.location}
-                        timezone={identityPresentation.timezone}
-                        joinedLabel={joinedLabel}
-                        showJoinDate={identityPresentation.showJoinDate}
-                        showAvatar={identityPresentation.showAvatar}
-                        descriptionMode={identityPresentation.descriptionMode}
-                        entryAnimation={prefersReducedMotion ? 'none' : identityPresentation.entryAnimation}
-                        linkStyle={effectiveProfileConfig.linkStyle}
-                        onEntryClick={recordProfileClick}
-                        rollState={profileRollState}
-                        showToday={false}
-                        previewDevice={previewMode ? previewDevice : 'desktop'}
-                        {previewMode}
-                      />
-                    {:else}
-                      <div class="profile-shell__identity-loading" aria-busy="true" aria-label="Identity pending"></div>
-                    {/if}
-                    {#if showRoll && !refreshing && profilePresentationLayoutVariant !== 'portfolio'}
-                      <div class="profile-layout-frame__roll">
-                        <ProfileDailyRoll
-                          isOwner={isOwnProfile}
-                          result={latestRoll}
+              {#if profilePresentationLayoutVariant === 'full-bleed'}
+                <ProfileFullBleedLayout
+                  displayName={profileDisplayName}
+                  bio={profileBio}
+                  avatarSrc={avatarSrc}
+                  avatarEffectKey={cosmetics?.avatar_effect}
+                  nameLoadout={nameRendererLoadout}
+                  nameTodayColor={nameRendererTodayColor}
+                  nameBaseColor={nameRendererBaseColor}
+                  nameRecentColors={nameRendererRecentColors}
+                  profileBorderKey={cosmetics?.profile_border}
+                  location={identityPresentation.location}
+                  timezone={identityPresentation.timezone}
+                  joinedLabel={joinedLabel}
+                  showJoinDate={identityPresentation.showJoinDate}
+                  showAvatar={identityPresentation.showAvatar}
+                  descriptionMode={identityPresentation.descriptionMode}
+                  entryAnimation={prefersReducedMotion ? 'none' : identityPresentation.entryAnimation}
+                  links={openingLinks}
+                  accentColor={signatureColor}
+                  onEntryClick={recordProfileClick}
+                />
+              {:else}
+                <ProfileLayoutFrame>
+                  <div class="profile-shell__layout-identity profile-layout-frame__identity">
+                    <ProfileBorderEffect borderKey={cosmetics?.profile_border} surfaceStyle={profileCardStyle} className={'profile-shell__identity-boundary' + (profilePresentationLayoutVariant === 'minimal' || profilePresentationLayoutVariant === 'portfolio' ? ' profile-border-effect--content' : '')}>
+                      {#if bannerSrc}
+                        <img class="profile-shell__rich-banner" src={bannerSrc} alt="" loading="lazy" aria-hidden="true" />
+                      {/if}
+                      {#if identityCardComponent}
+                        <svelte:component this={identityCardComponent}
+                          username={username}
+                          displayName={profileDisplayName}
+                          profilePath={profilePath}
+                          bio={profileBio}
+                          links={openingLinks}
+                          badges={pinnedAchievements}
+                          staff={Boolean(renderProfile?.is_staff)}
+                          avatarSrc={avatarSrc}
+                          founder={Boolean(renderProfile?.equipped_badges?.includes('launch_edition'))}
                           accentColor={signatureColor}
-                          variant={profilePresentationLayoutVariant}
-                          {visualFixture}
-                          on:rollstart={handleRollStart}
-                          on:rollcancel={handleRollCancel}
-                          on:rollcomplete={handleRollComplete}
+                          nameRendererLoadout={nameRendererLoadout}
+                          nameRendererContext="profile"
+                          nameRendererMode="animated"
+                          nameRendererRecentColors={nameRendererRecentColors}
+                          nameRendererTodayColor={nameRendererTodayColor}
+                          nameRendererBaseColor={nameRendererBaseColor}
+                          avatarEffectKey={cosmetics?.avatar_effect}
+                          avatarEffectMode="profile"
+                          avatarEffectAnimated={true}
+                          layoutVariant={profilePresentationLayoutVariant}
+                          surface={false}
+                          location={identityPresentation.location}
+                          timezone={identityPresentation.timezone}
+                          joinedLabel={joinedLabel}
+                          showJoinDate={identityPresentation.showJoinDate}
+                          showAvatar={identityPresentation.showAvatar}
+                          descriptionMode={identityPresentation.descriptionMode}
+                          entryAnimation={prefersReducedMotion ? 'none' : identityPresentation.entryAnimation}
+                          linkStyle={effectiveProfileConfig.linkStyle}
+                          onEntryClick={recordProfileClick}
+                          rollState={profileRollState}
+                          showToday={false}
+                          previewDevice={previewMode ? previewDevice : 'desktop'}
+                          {previewMode}
                         />
-                      </div>
-                    {/if}
-                  </ProfileBorderEffect>
-                </div>
-
-                {#if profilePresentationLayoutVariant === 'sleek' && hasProfileMusic}
-                  <div class="profile-layout-frame__strip">
-                    <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} compact={true} />
+                      {:else}
+                        <div class="profile-shell__identity-loading" aria-busy="true" aria-label="Identity pending"></div>
+                      {/if}
+                      {#if showRoll && !refreshing && profilePresentationLayoutVariant !== 'portfolio' && profilePresentationLayoutVariant !== 'full-bleed'}
+                        <div class="profile-layout-frame__roll">
+                          <ProfileDailyRoll
+                            isOwner={isOwnProfile}
+                            result={latestRoll}
+                            accentColor={signatureColor}
+                            variant={profilePresentationLayoutVariant}
+                            {visualFixture}
+                            on:rollstart={handleRollStart}
+                            on:rollcancel={handleRollCancel}
+                            on:rollcomplete={handleRollComplete}
+                          />
+                        </div>
+                      {/if}
+                    </ProfileBorderEffect>
                   </div>
-                {/if}
-              </ProfileLayoutFrame>
+
+                  {#if profilePresentationLayoutVariant === 'sleek' && hasProfileMusic}
+                    <div class="profile-layout-frame__strip">
+                      <ProfileMusic bestRoll={latestRoll || displayBestRoll} accentColor={profileControlAccent} colorEffectsEnabled={colorEffectsEnabled} audioSrc={audioSrc} audioPlaylist={richAudioPlaylist} spotifyType={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_type} spotifyId={hasSpotifyWidget ? '' : effectiveProfileConfig.spotify_id} visualFixture={visualFixture} deferMedia={previewMode} reducedMotion={prefersReducedMotion} compact={true} />
+                    </div>
+                  {/if}
+                </ProfileLayoutFrame>
+              {/if}
             </div>
           </ProfileMotionEffect>
         </div>
 
       {#if !previewMode && hasProfileMore && !profileMoreActive}
-        <button type="button" class={'profile-shell__more-cue' + (profilePresentationLayoutVariant === 'portfolio' ? '' : ' profile-shell__more-cue--continuation')} aria-controls="profile-more" on:click={scrollToProfileMore}>
-          <span class="profile-shell__more-cue-label">{profilePresentationLayoutVariant === 'portfolio' ? 'Explore profile' : (continuationLinks.length ? 'Links' : 'More')}</span>
+        <button type="button" class={'profile-shell__more-cue' + (profilePresentationLayoutVariant === 'portfolio' || profilePresentationLayoutVariant === 'full-bleed' ? '' : ' profile-shell__more-cue--continuation')} aria-controls="profile-more" on:click={scrollToProfileMore}>
+          <span class="profile-shell__more-cue-label">{profilePresentationLayoutVariant === 'portfolio' || profilePresentationLayoutVariant === 'full-bleed' ? 'Explore profile' : (continuationLinks.length ? 'Links' : 'More')}</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
         </button>
       {/if}
@@ -584,7 +609,7 @@
           </button>
         {/if}
         <div class="profile-shell__continuation-column">
-        {#if showRoll && !refreshing && profilePresentationLayoutVariant === 'portfolio'}
+        {#if showRoll && !refreshing && (profilePresentationLayoutVariant === 'portfolio' || profilePresentationLayoutVariant === 'full-bleed')}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
               <ProfileRoll moduleSize={rollModule.size} compact={true} integrated={true} quiet={true} presentation={profilePresentationLayoutVariant} visualFixture={visualFixture} fixtureResult={latestRoll} on:rollstart={handleRollStart} on:rollcancel={handleRollCancel} on:rollcomplete={handleRollComplete} />
@@ -1254,11 +1279,13 @@
   .profile-shell-page--minimal .profile-shell__opening.profile-shell__approved-opening { width: min(300px, calc(100% - 1rem)); }
   .profile-shell-page--modern .profile-shell__opening.profile-shell__approved-opening { width: min(330px, calc(100% - 1rem)); }
   .profile-shell-page--portfolio .profile-shell__opening.profile-shell__approved-opening { width: min(340px, calc(100% - 1rem)); }
+  .profile-shell-page--full-bleed .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 74rem); }
 
   .profile-shell-page--compact .profile-shell__approved-main,
   .profile-shell-page--sleek .profile-shell__approved-main,
   .profile-shell-page--minimal .profile-shell__approved-main,
-  .profile-shell-page--modern .profile-shell__approved-main { justify-content: center; }
+  .profile-shell-page--modern .profile-shell__approved-main,
+  .profile-shell-page--full-bleed .profile-shell__approved-main { justify-content: center; }
   .profile-shell-page--minimal :global(.profile-shell__identity-boundary.profile-border-effect--none) { background: transparent; }
 
   .profile-shell-page--compact .profile-shell__more,
@@ -1269,7 +1296,8 @@
   .profile-shell-page--sleek .profile-shell__more-back,
   .profile-shell-page--minimal .profile-shell__more-back,
   .profile-shell-page--modern .profile-shell__more-back { display: none; }
-  .profile-shell-page--portfolio .profile-shell__more { align-items: center; }
+  .profile-shell-page--portfolio .profile-shell__more,
+  .profile-shell-page--full-bleed .profile-shell__more { align-items: center; }
 
   .profile-shell-page--preview .profile-shell__opening.profile-shell__approved-opening { width: 100%; }
   .profile-shell-page--preview :global(.profile-daily-roll) { box-sizing: border-box; }
@@ -1312,7 +1340,8 @@
     .profile-shell-page--sleek .profile-shell__opening.profile-shell__approved-opening,
     .profile-shell-page--minimal .profile-shell__opening.profile-shell__approved-opening,
     .profile-shell-page--modern .profile-shell__opening.profile-shell__approved-opening,
-    .profile-shell-page--portfolio .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 320px); }
+    .profile-shell-page--portfolio .profile-shell__opening.profile-shell__approved-opening,
+    .profile-shell-page--full-bleed .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 100%); }
     .profile-shell-page--minimal .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 300px); }
   }
 

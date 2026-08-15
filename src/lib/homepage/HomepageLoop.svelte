@@ -14,7 +14,7 @@
       <article class="homepage-step">
         <div class="homepage-step__num">02</div>
         <h3>Build</h3>
-        <p>Shape the page with your own media, five structural layouts, and equipped name, border, avatar, cursor-trail, and atmosphere cosmetics.</p>
+        <p>Shape the page with your own media, six structural layouts, and equipped name, border, avatar, cursor-trail, and atmosphere cosmetics.</p>
         <div class="homepage-step__visual homepage-step__visual--build" aria-hidden="true"></div>
       </article>
       <article class="homepage-step">

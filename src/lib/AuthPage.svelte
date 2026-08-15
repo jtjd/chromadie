@@ -118,21 +118,22 @@
 
 <style>
   .auth-page {
-    --home-canvas: #0d0f13;
-    --home-deep: #090a0d;
-    --home-raised: #111319;
-    --home-line: rgba(255, 255, 255, 0.075);
-    --home-ink: #f2f0eb;
-    --home-ink-muted: #aaa8b0;
-    --home-ink-faint: #7d7e87;
-    --home-accent: #cdd2ff;
-    --home-font: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-    --home-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --home-canvas: #050506;
+    --home-deep: #050506;
+    --home-raised: rgba(12, 12, 15, 0.78);
+    --home-line: rgba(255, 255, 255, 0.1);
+    --home-ink: #f8f8f8;
+    --home-ink-muted: #8f9099;
+    --home-ink-faint: #686971;
+    --home-accent: #00ffb3;
+    --home-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --home-display: 'Clash Display', ui-sans-serif, system-ui, sans-serif;
+    --home-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
     position: relative;
     min-height: 100svh;
     overflow: hidden;
     isolation: isolate;
-    background: linear-gradient(180deg, #121419 0%, var(--home-canvas) 34%, var(--home-deep) 100%);
+    background: var(--home-canvas);
     color: var(--home-ink);
     font-family: var(--home-font);
   }
@@ -142,17 +143,17 @@
   .auth-page__layout { display: grid; min-height: calc(100svh - 8rem); grid-template-columns: minmax(0, 1fr) minmax(22rem, 31rem); align-items: center; gap: clamp(2.5rem, 8vw, 8rem); padding-block: clamp(3rem, 8vh, 7rem); }
   .auth-page__intro { max-width: 40rem; }
   .auth-page__kicker { margin: 0; color: #858690; font: 500 0.68rem / 1 var(--home-mono); letter-spacing: 0.13em; text-transform: uppercase; }
-  .auth-page__intro h1 { max-width: 38rem; margin: 0.9rem 0 0; color: var(--home-ink); font: 650 clamp(3.1rem, min(6vw, 8.4vh), 5.5rem) / 0.9 var(--home-font); letter-spacing: -0.045em; }
+  .auth-page__intro h1 { max-width: 38rem; margin: 0.9rem 0 0; color: var(--home-ink); font: 600 clamp(3.1rem, min(6vw, 8.4vh), 5.5rem) / 0.9 var(--home-display); letter-spacing: -0.055em; }
   .auth-page__intro h1 :global(span) { color: color-mix(in srgb, var(--home-accent) 62%, #f2f0eb); text-shadow: 0 0 2.2rem color-mix(in srgb, var(--home-accent) 24%, transparent); }
   .auth-page__intro > p:not(.auth-page__kicker) { max-width: 31rem; margin: 1.5rem 0 0; color: var(--home-ink-muted); font-size: clamp(1rem, 1.5vw, 1.06rem); line-height: 1.6; }
   .auth-page__promise { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
-  .auth-page__promise span { padding: 0.55rem 0.7rem; border: 1px solid var(--home-line); border-radius: 999px; color: var(--home-ink-muted); font: 500 0.66rem / 1 var(--home-mono); }
-  .auth-page__stage { position: relative; width: 100%; overflow: hidden; border: 1px solid #3a3e48; border-radius: 0.65rem; background: #0a0c10; box-shadow: 0 1.9rem 5rem rgba(0, 0, 0, 0.4); }
+  .auth-page__promise span { padding: 0.55rem 0.7rem; border: 1px solid var(--home-line); border-radius: 0.45rem; color: var(--home-ink-muted); font: 500 0.72rem / 1 var(--home-font); }
+  .auth-page__stage { position: relative; width: 100%; overflow: hidden; border: 1px solid var(--home-line); border-radius: 0.65rem; background: rgba(10, 10, 12, 0.58); box-shadow: 0 1.9rem 5rem rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
   .auth-page__form { width: 100%; padding: clamp(0.85rem, 2vw, 1.25rem); }
   :global(.auth-page .auth-container) { max-width: none; padding: clamp(1.35rem, 3vw, 2.1rem); border-color: var(--home-line); border-radius: 0.5rem; background: var(--home-raised); box-shadow: none; }
-  :global(.auth-page .auth-title) { margin: 0.35rem 0 0; color: var(--home-ink); font: 650 clamp(1.65rem, 3vw, 2.35rem) / 1 var(--home-font); letter-spacing: -0.045em; }
-  :global(.auth-page .auth-brand) { color: var(--home-ink-faint); font-family: var(--home-mono); }
-  :global(.auth-page .auth-kicker) { color: var(--home-accent); font-family: var(--home-mono); }
+  :global(.auth-page .auth-title) { margin: 0.35rem 0 0; color: var(--home-ink); font: 600 clamp(1.65rem, 3vw, 2.35rem) / 1 var(--home-display); letter-spacing: -0.045em; }
+  :global(.auth-page .auth-brand) { color: var(--home-ink-faint); font-family: var(--home-display); }
+  :global(.auth-page .auth-kicker) { color: var(--home-accent); font-family: var(--home-font); }
   :global(.auth-page .auth-description), :global(.auth-page .field-hint), :global(.auth-page .auth-footnote) { color: var(--home-ink-muted); }
   :global(.auth-page .auth-header) { position: static; }
   :global(.auth-page .tabs a) { display: inline-flex; align-items: center; justify-content: center; color: inherit; text-decoration: none; }

@@ -1,11 +1,32 @@
 # Chromadie 2.0 Progress
 
+## Immersive public-profile composition — 2026-08-15
+
+- Added the free `full-bleed`/Immersive layout to the existing layout registry,
+  template picker, editor, seed catalog, and additive Supabase migration.
+- Public profiles and Studio use `ProfileFullBleedLayout` inside the existing
+  `ProfileMotionEffect` boundary. The selected photographic environment stays
+  fixed while the centered avatar, identity, bio, and icon-link composition is
+  the bounded motion target.
+- Existing Compact, Sleek, Minimal, Modern, and Portfolio renderers,
+  continuation modules, draft/publish state, media, and catalog/equipment
+  contracts remain unchanged.
+
 ## Homepage navigation completion — 2026-08-15
 
 - Homepage header now links to the real Leaderboard, Customize, and Pricing
-  routes alongside its working in-page sections and claim action.
+  routes without duplicating the in-page How it works and Profiles anchors.
 - Homepage footer now exposes the existing product, legal, support, and
   business destinations without changing auth or route contracts.
+
+## Sitewide legacy shell alignment — 2026-08-15
+
+- Replaced the legacy capsule/slash application header treatment with a flat,
+  reference-aligned header: compact mark, Clash Display wordmark, Inter
+  navigation, green active state, and quiet account controls.
+- Reprojected leaderboard, pricing, help, legal, shop, game, and auth support
+  surfaces onto the Profile Studio canvas and surface tokens without changing
+  their routes, data loading, or auth behavior.
 
 ## Profile Studio Media tab reference-fidelity pass — 2026-08-15
 

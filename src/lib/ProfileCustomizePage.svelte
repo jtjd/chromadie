@@ -91,7 +91,7 @@
         <ProfileAppearanceEditor
           bind:this={appearanceEditor}
           draftConfig={profileConfig?.draft}
-          layoutVariant="compact"
+          layoutVariant={profileConfig?.draft?.layoutVariant || profileConfig?.published?.layoutVariant || 'compact'}
           on:appearancechange={event => forwardPatch('appearance', event)}
           on:dirty={event => forwardDirty('customize:appearance', event)}
         />

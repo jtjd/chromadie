@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileReferenceCard from './ProfileReferenceCard.svelte';
+  import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
 
   /** @type {any} */
   export let previewRenderSnapshot = null;
@@ -38,6 +39,7 @@
   $: avatarEffectKey = previewRenderSnapshot?.cosmetics?.avatarEffectKey || '';
   $: profileBorderKey = previewRenderSnapshot?.cosmetics?.borderKey || '';
   $: linkStyle = previewRenderSnapshot?.configuration?.linkStyle || {};
+  $: layoutVariant = previewRenderSnapshot?.layout?.variant || 'compact';
 
   function formatDuration(value) {
     const seconds = Math.max(0, Math.round(Number(value) / 1000));
@@ -72,31 +74,54 @@
             disabled={previewDevice === 'mobile'}
             className="profile-studio-preview__motion"
           >
-            <ProfileReferenceCard
-              displayName={identity.displayName || identity.username}
-              bio={identity.bio}
-              meta={metadata}
-              avatarSrc={identity.avatarUrl}
-              avatarEffectKey={avatarEffectKey}
-              {nameLoadout}
-              {nameTodayColor}
-              {nameBaseColor}
-              {nameRecentColors}
-              profileBorderKey={profileBorderKey}
-              surfaceStyle={appearanceStyle}
-              showAvatar={identity.showAvatar !== false}
-              descriptionMode={identity.descriptionMode}
-              entryAnimation={identity.entryAnimation}
-              {links}
-              {linkStyle}
-              roll={latestRoll}
-              {accentColor}
-              {audioAvailable}
-              audioStatus={audioStatus}
-              rollLabel="Today's color"
-              presentation="studio"
-              ariaLabel="Live public-profile preview card"
-            />
+            {#if layoutVariant === 'full-bleed'}
+              <ProfileFullBleedLayout
+                displayName={identity.displayName || identity.username}
+                bio={identity.bio}
+                avatarSrc={identity.avatarUrl}
+                avatarEffectKey={avatarEffectKey}
+                {nameLoadout}
+                {nameTodayColor}
+                {nameBaseColor}
+                {nameRecentColors}
+                profileBorderKey={profileBorderKey}
+                location={identity.location}
+                timezone={identity.timezone}
+                joinedLabel={identity.joinedLabel}
+                showJoinDate={identity.showJoinDate}
+                showAvatar={identity.showAvatar !== false}
+                descriptionMode={identity.descriptionMode}
+                entryAnimation={identity.entryAnimation}
+                {links}
+                {accentColor}
+              />
+            {:else}
+              <ProfileReferenceCard
+                displayName={identity.displayName || identity.username}
+                bio={identity.bio}
+                meta={metadata}
+                avatarSrc={identity.avatarUrl}
+                avatarEffectKey={avatarEffectKey}
+                {nameLoadout}
+                {nameTodayColor}
+                {nameBaseColor}
+                {nameRecentColors}
+                profileBorderKey={profileBorderKey}
+                surfaceStyle={appearanceStyle}
+                showAvatar={identity.showAvatar !== false}
+                descriptionMode={identity.descriptionMode}
+                entryAnimation={identity.entryAnimation}
+                {links}
+                {linkStyle}
+                roll={latestRoll}
+                {accentColor}
+                {audioAvailable}
+                audioStatus={audioStatus}
+                rollLabel="Today's color"
+                presentation="studio"
+                ariaLabel="Live public-profile preview card"
+              />
+            {/if}
           </ProfileMotionEffect>
         </div>
       </div>

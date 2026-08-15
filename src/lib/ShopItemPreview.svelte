@@ -188,6 +188,13 @@
   .shop-layout-preview--portfolio .shop-layout-preview__rail { display:none; }
   .shop-layout-preview--portfolio .shop-layout-preview__hero { left:24%; right:24%; height:24%; }
   .shop-layout-preview--portfolio .shop-layout-preview__module { left:24%; right:24%; width:auto; }
+  .shop-layout-preview--full-bleed { border-color:transparent; background:transparent; }
+  .shop-layout-preview--full-bleed .shop-layout-preview__rail { display:none; }
+  .shop-layout-preview--full-bleed .shop-layout-preview__hero { top:16%; left:38%; right:38%; height:20%; border-radius:50%; }
+  .shop-layout-preview--full-bleed .shop-layout-preview__module { left:22%; right:22%; width:auto; height:10%; border:0; border-bottom:1px solid rgba(205,210,255,.35); background:transparent; }
+  .shop-layout-preview--full-bleed .shop-layout-preview__module--one { top:45%; }
+  .shop-layout-preview--full-bleed .shop-layout-preview__module--two { top:61%; }
+  .shop-layout-preview--full-bleed .shop-layout-preview__module--three { top:77%; bottom:auto; width:42%; left:29%; right:29%; }
   .shop-atmosphere-preview { position:relative; width:100%; height:100%; min-height:7.5rem; overflow:hidden; border-radius:5px; background:transparent; }
   .shop-preview-area[data-render-context="effect-card"] .shop-atmosphere-preview { min-height: 100%; }
   .shop-atmosphere-preview :global(.profile-atmosphere) { inset:0; width:100%; height:100%; opacity:.9; }

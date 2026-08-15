@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Studio is primary navigation while Shop remains a direct compatibility route', async () => {
+test('Customize is primary navigation while Shop remains a direct compatibility route', async () => {
   const [header, app, shop, cosmetics] = await Promise.all([
     read('src/lib/SiteModeHeader.svelte'),
     read('src/App.svelte'),
@@ -12,7 +12,7 @@ test('Studio is primary navigation while Shop remains a direct compatibility rou
     read('src/lib/ProfileCosmeticsEditor.svelte')
   ]);
 
-  assert.match(header, />Studio</);
+  assert.match(header, />Customize</);
   assert.doesNotMatch(header, />Shop</);
   assert.match(app, /parseRouteLocation/);
   assert.match(app, /isProfileSettings=\{profileSettingsModeVisible\}/);

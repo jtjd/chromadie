@@ -34,6 +34,7 @@
     'shop-item-name',
     'profile-name',
     'profile-reference-card__name',
+    'profile-full-bleed__name',
     'profile-username-large',
     'discovery-card__name',
     'lb-username',

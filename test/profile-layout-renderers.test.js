@@ -27,8 +27,8 @@ import { RICH_PROFILE_FIXTURE } from '../scripts/browser/profile-rich-fixture.mj
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the five layout definitions carry distinct structural contracts', () => {
-  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'sleek', 'minimal', 'modern', 'portfolio']);
+test('the six layout definitions carry distinct structural contracts', () => {
+  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'sleek', 'minimal', 'modern', 'portfolio', 'full-bleed']);
   assert.deepEqual(
     PROFILE_LAYOUT_KEYS.map(key => PROFILE_LAYOUT_DEFINITIONS[key].structure),
     [
@@ -36,7 +36,8 @@ test('the five layout definitions carry distinct structural contracts', () => {
       { identity: 'stacked', roll: 'detached', surface: 'card-with-strips' },
       { identity: 'offset', roll: 'inline', surface: 'cardless' },
       { identity: 'compact', roll: 'widget', surface: 'card-with-region' },
-      { identity: 'hero', roll: 'below-fold', surface: 'cardless' }
+      { identity: 'hero', roll: 'below-fold', surface: 'cardless' },
+      { identity: 'centered', roll: 'below-fold', surface: 'cardless' }
     ]
   );
 });
@@ -239,13 +240,14 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(renderModel, /getProfileLayoutLinkPartitions/);
   assert.match(renderModel, /continuationSocialLinks/);
   assert.match(renderModel, /continuationNavigationLinks/);
-  assert.match(renderModel, /hasBelowFoldRoll = showRoll[\s\S]*layoutVariant === 'portfolio'/);
+  assert.match(renderModel, /hasBelowFoldRoll = showRoll[\s\S]*full-bleed/);
   assert.match(shell, /\{#if renderProfileMore\}[\s\S]*<div id="profile-more"/);
   assert.match(renderModel, /hasLowerExpression = hasProfileMusic/);
   const mediaDeleteMigration = await read('supabase/migrations/20260812160000_profile_media_delete_token_guard.sql');
   assert.match(mediaDeleteMigration, /v_selected := v_selected OR EXISTS/);
   assert.doesNotMatch(mediaDeleteMigration, /v_selected := EXISTS/);
-  assert.match(shell, /profilePresentationLayoutVariant === 'portfolio' \? 'Explore profile' : \(continuationLinks\.length \? 'Links' : 'More'\)/);
+  assert.match(shell, /profilePresentationLayoutVariant === 'portfolio' \|\| profilePresentationLayoutVariant === 'full-bleed'/);
+  assert.match(shell, /<ProfileFullBleedLayout/);
   assert.match(shell, /profile-shell__more-cue--continuation/);
   assert.match(frame, /profile-shell-page--minimal\) \.profile-layout-frame \{ --profile-layout-width: 300px; \}/);
   assert.doesNotMatch(frame, /profile-shell-page--minimal\)[^{]*\{[^}]*margin-left/);
@@ -276,7 +278,7 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.doesNotMatch(preview, /previewIdentityOnly/);
   assert.match(customize, /ProfileReferenceLayoutEditor/);
   assert.doesNotMatch(customize, /export function getDraftConfig/);
-  assert.match(customize, /<ProfileAppearanceEditor[\s\S]*layoutVariant="compact"/);
+  assert.match(customize, /<ProfileAppearanceEditor[\s\S]*layoutVariant=\{profileConfig\?\.draft\?\.layoutVariant/);
   assert.match(settings, /function getDashboardDraft\(\)[\s\S]*studioDraft \|\| toEditorProfileConfig/);
   assert.match(settings, /applyProfileStudioDraftPatch/);
 });

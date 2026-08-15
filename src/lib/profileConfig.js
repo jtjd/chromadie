@@ -354,6 +354,12 @@ export function getProfileContinuationLinks(config) {
 export function getProfileLayoutLinkPartitions(config, layoutVariant = 'compact') {
   const visibleLinks = getVisibleProfileLinks(config);
   const normalizedLayout = normalizeProfileLayoutKey(layoutVariant, 'compact');
+  if (normalizedLayout === 'full-bleed') {
+    return {
+      opening: visibleLinks,
+      continuation: []
+    };
+  }
   const openingSocial = visibleLinks
     .filter(link => isProfileSocialLink(link.type))
     .slice(0, PROFILE_LINK_LIMITS.openingLinks);
