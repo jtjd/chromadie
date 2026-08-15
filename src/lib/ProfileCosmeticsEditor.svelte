@@ -29,6 +29,7 @@
   export let entitlements = [];
   export let staff = false;
   export let compact = false;
+  export let presentation = 'default';
 
   const dispatch = createEventDispatcher();
   let previewLoadout = /** @type {Record<string, string>} */ ({});
@@ -157,7 +158,11 @@
   }
 </script>
 
-<Surface variant="panel" padding="lg" className={compact ? 'profile-cosmetics-surface profile-cosmetics-surface--compact' : 'profile-cosmetics-surface'}>
+<Surface
+  variant="panel"
+  padding="lg"
+  className={`${compact ? 'profile-cosmetics-surface profile-cosmetics-surface--compact' : 'profile-cosmetics-surface'}${presentation === 'studio' ? ' profile-cosmetics-surface--studio' : ''}`}
+>
   <section aria-labelledby="profile-cosmetics-title">
     <div class="profile-cosmetics-heading">
       <div>
@@ -195,8 +200,8 @@
           </div>
 
           <div class="profile-cosmetics-section-heading">
-            <h3>Name effects</h3>
-            <p>These effects are applied to your username.</p>
+            <h3>{presentation === 'studio' ? 'Profile effects' : 'Name effects'}</h3>
+            <p>{presentation === 'studio' ? 'These are the current cosmetic slots. Choose an effect, preview it, then update the equipped expression.' : 'These effects are applied to your username.'}</p>
             <button type="button" on:click={resetNameEffects}>Reset name effects</button>
           </div>
 

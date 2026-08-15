@@ -4,7 +4,7 @@
   import { restoreFocus, trapFocus } from './a11y.js';
   import { authUser, equippedItems, isAuthenticated, profile, profileEntitlements, session } from './stores';
   import { supabase } from './supabase';
-  import { loadProfileContext } from './profileData.js';
+  import { loadProfileContext, loadProfileStudioContext } from './profileData.js';
   import { normalizeProfileConfig } from './profileConfig.js';
   import { resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { createDefaultProfileSocialSettings, createEmptyProfileSocial } from './profileSocial.js';
@@ -14,7 +14,6 @@
   import ProfileStudioWorkspace from './ProfileStudioWorkspace.svelte';
   import ProfileStudioDirtyPrompt from './ProfileStudioDirtyPrompt.svelte';
   import {
-    PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS,
     PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES,
     PROFILE_STUDIO_CUSTOMIZE_TAB_IDS,
     PROFILE_STUDIO_FALLBACK_COLOR,
@@ -49,7 +48,6 @@
 
   // Shared contracts keep old #profile-* destinations alive while this file
   // remains only the authenticated route/state adapter.
-  const CUSTOMIZE_SECTION_IDS = PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS;
   const LINKS_SECTION_IDS = PROFILE_STUDIO_LINKS_SECTION_IDS;
   const FALLBACK_PROFILE_COLOR = PROFILE_STUDIO_FALLBACK_COLOR;
   const CUSTOMIZE_TAB_IDS = PROFILE_STUDIO_CUSTOMIZE_TAB_IDS;
@@ -107,10 +105,11 @@
   let dashboardSaving = false;
   let dashboardStatus = '';
   let dashboardError = '';
-  let StudioActionsComponent = null;
   let ProfilePreviewComponent = null;
   let previewLoadPromise = null;
   let previewError = '';
+  let fullContextLoaded = false;
+  let fullContextPromise = null;
 
   $: accountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
   $: accountKey = $isAuthenticated && $session?.user?.id ? $session.user.id : '';
@@ -155,7 +154,6 @@
   $: previewRenderSnapshot = previewModel.snapshot;
 
   onMount(() => {
-    void loadDashboardActions();
     previewMediaQuery = window.matchMedia('(max-width: 64rem)');
     const updatePreviewViewport = () => {
       isMobileViewport = previewMediaQuery.matches;
@@ -235,6 +233,9 @@
     if (sectionId === 'customize') void loadCustomizeComponents();
     else if (sectionId === 'links') void loadLinksComponents();
     else void loadSectionComponent(sectionId);
+    if (sectionId !== 'customize' && sectionId !== 'links' && sectionId !== 'premium') {
+      void ensureFullContext();
+    }
     if (typeof window !== 'undefined') {
       const nextHash = hash || getProfileStudioHash(sectionId, customizeTab || activeCustomizeTab);
       const url = `${window.location.pathname}${window.location.search}#${nextHash}`;
@@ -256,6 +257,7 @@
   function selectCustomizeTab(tabId, { push = true, focus = false } = {}) {
     if (!CUSTOMIZE_TAB_IDS.includes(tabId)) return;
     activeCustomizeTab = tabId;
+    void loadCustomizeComponents();
     if (typeof window !== 'undefined') {
       const nextHash = CUSTOMIZE_TAB_HASHES[tabId];
       const url = `${window.location.pathname}${window.location.search}#${nextHash}`;
@@ -337,16 +339,6 @@
     return promise;
   }
 
-  async function loadDashboardActions() {
-    if (StudioActionsComponent) return;
-    try {
-      const module = await import('./ProfileStudioActions.svelte');
-      StudioActionsComponent = module.default;
-    } catch (loadError) {
-      dashboardError = loadError instanceof Error ? loadError.message : 'The dashboard actions could not be loaded.';
-    }
-  }
-
   async function loadPreviewComponent() {
     if (ProfilePreviewComponent) return ProfilePreviewComponent;
     if (previewLoadPromise) return previewLoadPromise;
@@ -365,7 +357,12 @@
   }
 
   async function loadCustomizeComponents() {
-    await Promise.all(CUSTOMIZE_SECTION_IDS.map(sectionId => loadSectionComponent(sectionId)));
+    const sectionIds = activeCustomizeTab === 'appearance'
+      ? ['customize', 'profile-identity', 'profile-collection']
+      : activeCustomizeTab === 'media'
+        ? ['customize', 'profile-media']
+        : ['customize'];
+    await Promise.all(sectionIds.map(sectionId => loadSectionComponent(sectionId)));
   }
 
   async function loadLinksComponents() {
@@ -507,11 +504,17 @@
   async function loadSettings() {
     const nextRequestId = ++requestId;
     const previousContext = context;
-    loading = !previousContext;
+    loading = !previousContext?.targetProfile || !previousContext?.profileConfig;
     error = '';
     dashboardStatus = '';
     dashboardError = '';
-    const nextContext = await loadProfileContext({ supabaseClient: supabase, isAuthenticated: $isAuthenticated, sessionUserId: $session?.user?.id, currentUsername: accountUsername });
+    fullContextLoaded = false;
+    fullContextPromise = null;
+    const nextContext = await loadProfileStudioContext({
+      supabaseClient: supabase,
+      profileRecord: $profile,
+      sessionUserId: $session?.user?.id
+    });
     if (nextRequestId !== requestId) return;
     if (nextContext.loadError && previousContext) {
       context = { ...previousContext, dataWarning: nextContext.loadError };
@@ -528,6 +531,41 @@
     loading = false;
     if (nextContext.loadError) error = nextContext.loadError;
     else if (!nextContext.viewingOwnProfile) error = 'Profile settings are available only for your own profile.';
+  }
+
+  async function ensureFullContext({ force = false } = {}) {
+    if (fullContextLoaded && !force) return context;
+    if (fullContextPromise && !force) return fullContextPromise;
+    const nextRequestId = ++requestId;
+    fullContextPromise = loadProfileContext({
+      supabaseClient: supabase,
+      isAuthenticated: $isAuthenticated,
+      sessionUserId: $session?.user?.id,
+      currentUsername: accountUsername
+    }).then(nextContext => {
+      if (nextRequestId !== requestId) return context;
+      if (nextContext.targetProfile || nextContext.profileConfig) {
+        context = {
+          ...context,
+          ...nextContext,
+          targetProfile: nextContext.targetProfile || context.targetProfile,
+          profileConfig: nextContext.profileConfig || context.profileConfig
+        };
+        studioDraft = toEditorProfileConfig(context.profileConfig?.draft, FALLBACK_PROFILE_COLOR);
+        studioIdentityDraft = {
+          bio: context.targetProfile?.bio || '',
+          identityPresentation: studioDraft?.identityPresentation
+        };
+      }
+      fullContextLoaded = true;
+      return context;
+    }).catch(loadError => {
+      context = { ...context, dataWarning: loadError instanceof Error ? loadError.message : 'Additional profile details are temporarily unavailable.' };
+      return context;
+    }).finally(() => {
+      fullContextPromise = null;
+    });
+    return fullContextPromise;
   }
 
   function updateConfiguration(event) {
@@ -641,7 +679,7 @@
     cosmeticPreviewLoadout = event.detail?.loadout || null;
   }
 
-  function handleSocialChange() { void loadSettings(); }
+  function handleSocialChange() { void ensureFullContext({ force: true }); }
 
   function updateIdentity(event) {
     const nextPresentation = event.detail?.identityPresentation;
@@ -707,12 +745,6 @@
   on:reset={resetDashboard}
   on:publish={publishDashboard}
 >
-  <svelte:fragment slot="topbar">
-    {#if context && !loading && (activeSection === 'customize' || activeSection === 'links') && StudioActionsComponent}
-      <svelte:component this={StudioActionsComponent} dirty={dashboardDirty} saving={dashboardSaving} status={dashboardStatus} error={dashboardError} on:reset={resetDashboard} on:publish={publishDashboard} />
-    {/if}
-  </svelte:fragment>
-
   <div class="profile-settings-page" data-dashboard-adapter="profile-studio" aria-busy={loading}>
     {#if context?.dataWarning}<p class="profile-settings-page__warning" role="status">{context.dataWarning}</p>{/if}
     {#if context && !loading && !error}
@@ -724,6 +756,8 @@
         {previewOpen}
         dirty={dashboardDirty}
         saving={dashboardSaving}
+        status={dashboardStatus}
+        error={dashboardError}
         on:tabchange={event => selectCustomizeTab(event.detail?.tabId, { focus: event.detail?.focus })}
         on:previewtoggle={togglePreview}
       />

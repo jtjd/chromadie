@@ -406,7 +406,7 @@ async function assertPublishedExpressionVisible(description) {
 }
 
 async function waitForStudioReferenceCard(description) {
-  const referenceCard = `document.querySelector('[data-editor-section="layout"] .profile-reference-layout-editor') && document.querySelector('.profile-studio-preview .profile-reference-card')`;
+  const referenceCard = `document.querySelector('.profile-layout-editor[data-layout-editor="reference-first"]') && document.querySelector('.profile-studio-preview .profile-reference-card')`;
   try {
     await page.waitFor(referenceCard, description);
   } catch {
@@ -479,7 +479,7 @@ async function capturePublishedLayouts() {
   assert(JSON.stringify(mediaSourcesAfterDraftChange) === JSON.stringify(mediaSourcesBeforeDraftChange), `Studio appearance navigation changed media identity: ${JSON.stringify({ before: mediaSourcesBeforeDraftChange, after: mediaSourcesAfterDraftChange })}.`);
   await page.setViewport(390, 844);
   await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'reference-card mobile Studio evidence');
-  await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page')`, 'mobile Studio document');
+  await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize')`, 'mobile Studio document');
   if (!(await page.evaluate(`Boolean(document.querySelector('.profile-studio-preview'))`))) {
     await page.clickText('Preview', { description: 'open mobile reference preview' });
   }
@@ -624,7 +624,7 @@ try {
 
   await step('direct-refresh authenticated Profile Studio', async () => {
     await page.navigate(`${appUrl}/profile/settings`, 'authenticated Profile Studio');
-    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-shell__brand')`, 'Profile Studio');
+    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.profile-studio-shell__brand')`, 'Profile Studio');
     const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-studio-workspace')?.getAttribute('data-section-destination') || '', authenticated: Boolean(document.querySelector('.profile-studio-shell__brand')), globalHeader: Boolean(document.querySelector('.site-mode-header')) })`);
     assert(state.path === '/profile/settings', `Expected /profile/settings after refresh, got ${state.path}.`);
     assert(state.authenticated, 'Authenticated owner card is missing after Profile Studio refresh.');
@@ -674,15 +674,15 @@ try {
 
     await page.evaluate('window.__profileStudioSmokeReloadToken = "pending"');
     await page.command('Page.reload', { ignoreCache: true });
-    await page.waitFor(`window.__profileStudioSmokeReloadToken === undefined && document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-preview .profile-reference-card') && document.querySelector('.profile-studio-actions')`, 'stale-session Studio hydration');
+    await page.waitFor(`window.__profileStudioSmokeReloadToken === undefined && document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.profile-studio-preview .profile-reference-card') && document.querySelector('.profile-studio-shell__publish')`, 'stale-session Studio hydration');
     await delay(300);
     const state = await page.evaluate(`(() => {
       const card = document.querySelector('.profile-studio-preview .profile-reference-card');
-      const actions = document.querySelector('.profile-studio-actions');
+      const actions = document.querySelector('.profile-studio-shell__publish');
       const published = document.querySelector('.profile-studio-header__published');
       return {
         card: Boolean(card),
-        dirty: Boolean(actions?.querySelector('.profile-studio-actions__state--dirty')),
+        dirty: Boolean(actions && !actions.disabled),
         saved: published?.textContent?.trim() || '',
         hiddenLegacyEditors: document.querySelectorAll('.profile-content-editor, .profile-widget-editor').length,
         surface: (() => {
@@ -750,12 +750,12 @@ try {
   await step('Customize controls publish the configured surface depth', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize-effects`, 'legacy Effects destination');
     await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'Customize tab workspace and persistent preview');
-    await page.waitFor(`document.querySelector('.profile-studio-actions')`, 'Studio profile actions');
+    await page.waitFor(`document.querySelector('.profile-studio-shell__publish')`, 'Studio publish control');
     const customizeTabs = await page.evaluate(`[...document.querySelectorAll('[role="tablist"][aria-label="Customize profile"] [role="tab"]')].map(tab => tab.textContent.trim())`);
     assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Layout']), `Customize tabs did not collapse Effects into Appearance: ${JSON.stringify(customizeTabs)}.`);
-    await page.waitFor(`!document.querySelector('#customize-effects')?.hidden`, 'visual effects inside Appearance');
+    await page.waitFor(`document.querySelector('#customize-effects')`, 'visual effects inside Appearance');
     await page.click('#profile-customize-tab-media', 'Media customize tab');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="media"]')?.hidden`, 'visible Media editor');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-media')`, 'visible Media editor');
     await page.waitFor(`(() => {
       const grid = document.querySelector('.profile-expression-editor__compact-grid');
       return Boolean(grid && grid.querySelectorAll('.profile-expression-editor__compact-card, .rich-media-editor__compact-card').length === 4);
@@ -816,7 +816,7 @@ try {
     // Exercise the real immediate-media -> staged-layout -> publish boundary
     // before any later fixture RPC can refresh the concurrency token for us.
     await page.click('#profile-customize-tab-layout', 'layout tab after media mutation');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, 'layout editor after media mutation');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-layout')`, 'layout editor after media mutation');
     await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card')`, 'reference card staged after media mutation');
     await delay(250);
     const mediaRequestsAfterDraftChange = stableProfileMediaRequests();
@@ -831,7 +831,7 @@ try {
       === JSON.stringify(mediaSourcesBeforeDraftChange.filter(source => /media\.chm\.lol|r2\.cloudflarestorage\.com/.test(source))),
     `Studio draft changed media identity: ${JSON.stringify({ before: mediaSourcesBeforeDraftChange, after: mediaSourcesAfterDraftChange })}.`);
     await page.clickText('Publish profile', { description: 'publish after immediate media mutation' });
-    await page.waitFor(`document.querySelector('.profile-studio-actions__message')?.textContent?.trim() === 'Profile published.'`, 'publish after immediate media mutation');
+    await page.waitFor(`document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.'`, 'publish after immediate media mutation');
     const mediaPublishExpression = await assertPublishedExpressionVisible('media mutation publish');
     const mediaPublishConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
     assert(mediaPublishConfiguration?.updated_at && mediaPublishExpression.expression.avatar && mediaPublishExpression.expression.background, `Media mutation publish did not preserve the current token and expression: ${JSON.stringify({ mediaPublishExpression, mediaPublishConfiguration })}`);
@@ -849,18 +849,18 @@ try {
     await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=rich-${Date.now()}` });
     await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-settings-page')`, 'rehydrated rich Profile Studio document');
     await page.command('Page.navigate', { url: `${appUrl}/profile/settings#customize-layout` });
-    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'rehydrated rich Profile Studio layout');
+    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('#customize-layout') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'rehydrated rich Profile Studio layout');
     await delay(180);
     await page.setInputValue('#profile-bio', RICH_PROFILE_FIXTURE.bio, ['input']);
     await page.setInputValue('#profile-location', RICH_PROFILE_FIXTURE.location, ['input']);
     await page.setInputValue('#profile-timezone', RICH_PROFILE_FIXTURE.timezone, ['input']);
     await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card__bio')?.textContent?.trim() === ${JSON.stringify(RICH_PROFILE_FIXTURE.bio)}`, 'rich identity draft in live preview');
-    await page.evaluate(`document.querySelector('[data-editor-section="media"]')?.scrollIntoView({ block: 'start' })`);
+    await page.evaluate(`document.querySelector('#customize-media')?.scrollIntoView({ block: 'start' })`);
     await capture('04-media-workspace');
     await page.click('#profile-customize-tab-layout', 'Layout customize tab');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, 'visible Layout editor');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-layout')`, 'visible Layout editor');
     const layoutState = await page.evaluate(`(() => {
-      const editor = document.querySelector('[data-editor-section="layout"]');
+      const editor = document.querySelector('#customize-layout');
       const workspace = document.querySelector('.profile-studio-workspace');
       const rect = element => {
         const box = element?.getBoundingClientRect();
@@ -870,18 +870,18 @@ try {
     })()`);
     assert((layoutState.editor?.width || 0) > 0 && (layoutState.editor?.height || 0) > 0, `Layout editor has no visible geometry: ${JSON.stringify(layoutState)}.`);
     assert((layoutState.workspace?.width || 0) > 0 && (layoutState.workspace?.bottom || 0) <= layoutState.viewport.height + 2, `Layout workspace escapes the viewport: ${JSON.stringify(layoutState)}.`);
-    await page.evaluate(`document.querySelector('[data-editor-section="layout"]')?.scrollIntoView({ block: 'start' })`);
+    await page.evaluate(`document.querySelector('#customize-layout')?.scrollIntoView({ block: 'start' })`);
     await capture('04-layout-workspace');
   await step('reference card layout replaces legacy template selection', async () => {
     const state = await page.evaluate(`(() => {
-      const editor = document.querySelector('[data-studio-layout="reference-card"]');
+      const editor = document.querySelector('[data-layout-editor="reference-first"]');
       const card = document.querySelector('.profile-studio-preview .profile-reference-card');
       const viewport = document.querySelector('.profile-studio-preview__viewport');
       const cardBox = card?.getBoundingClientRect();
       const viewportBox = viewport?.getBoundingClientRect();
       return {
         editor: Boolean(editor),
-        active: editor?.querySelector('.profile-reference-layout-editor__state')?.textContent?.trim() || '',
+        active: editor?.querySelector('.profile-layout-editor__card.active strong')?.textContent?.trim() || '',
         card: cardBox ? { width: cardBox.width, left: cardBox.left, right: cardBox.right } : null,
         viewport: viewportBox ? { left: viewportBox.left, right: viewportBox.right, width: viewportBox.width } : null,
         oldPicker: Boolean(document.querySelector('.profile-template-picker, .profile-template-picker__card')),
@@ -889,7 +889,7 @@ try {
         scrollCue: Boolean(document.querySelector('.profile-studio-preview__scroll-cue'))
       };
     })()`);
-    assert(state.editor && state.active === 'Active', `Reference layout editor is not active: ${JSON.stringify(state)}.`);
+    assert(state.editor && state.active, `Reference layout editor is not active: ${JSON.stringify(state)}.`);
     assert(state.card && state.viewport && state.card.left >= state.viewport.left - 1 && state.card.right <= state.viewport.right + 1, `Reference preview card escaped its bounded rail: ${JSON.stringify(state)}.`);
     assert(!state.oldPicker && !state.oldPreview && !state.scrollCue, `Obsolete Studio presentation still mounted: ${JSON.stringify(state)}.`);
     return state;
@@ -901,10 +901,10 @@ try {
       // built editor therefore receives the same public cosmetic projection
       // without importing source modules that do not exist in a production
       // bundle.
-      const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-actions__publish')].find(button => !button.disabled))`);
+      const publishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-shell__publish')].find(button => !button.disabled))`);
       if (publishPending) {
-        await page.click('.profile-studio-actions__publish', 'publish layout smoke draft');
-        await page.waitFor(`document.querySelector('.profile-studio-actions__publish')?.disabled === true`, 'publish layout smoke draft');
+        await page.click('.profile-studio-shell__publish', 'publish layout smoke draft');
+        await page.waitFor(`document.querySelector('.profile-studio-shell__publish')?.disabled === true`, 'publish layout smoke draft');
         await assertPublishedExpressionVisible('layout smoke publish');
       }
 
@@ -913,7 +913,7 @@ try {
       return { layoutState, mediaRail, backgroundUpload, avatarUpload, richFixture, publicEvidence, productionPreview: true };
     }
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'visible Appearance editor');
     await page.evaluate(`(async () => {
       const { userInventory } = await import('/src/lib/stores.js');
       userInventory.update(items => [...new Set([...(Array.isArray(items) ? items : []), 'name_font_marker_tag', 'name_material_blueprint_ink', 'name_motion_typewriter_name', 'avatar_effect_ghost_double', 'border_celestial', 'cursor_trail_pixel_wake', 'profile_atmosphere_rain_window', 'profile_atmosphere_silk_folds'])]);
@@ -1053,11 +1053,11 @@ try {
       };
     })()`);
     await page.click('#profile-customize-tab-media', 'Media tab before animation resume check');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('[data-editor-section="media"]')?.hidden === false`, 'visible Media during animation resume check');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-media')`, 'visible Media during animation resume check');
     await page.click('#profile-customize-tab-layout', 'Layout tab before animation resume check');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && document.querySelector('[data-editor-section="layout"]')?.hidden === false`, 'visible Layout during animation resume check');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-layout')`, 'visible Layout during animation resume check');
     await page.click('#profile-customize-tab-appearance', 'Appearance tab after animation resume check');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('#customize-effects')?.hidden`, 'effects after tab switching');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-effects')`, 'effects after tab switching');
     await page.evaluate(`document.querySelector('#customize-effects')?.scrollIntoView({ block: 'start' })`);
     try {
       await page.waitFor(`document.querySelector('[aria-label="Cursor trail preview"] .cursor-trail-layer[data-input-mode="demo"]') && document.querySelector('[aria-label="Profile atmosphere preview"] [data-atmosphere="silk-folds"][data-atmosphere-state="animated"]')`, 'cosmetic animations resumed after tab switching');
@@ -1121,7 +1121,7 @@ try {
     // before measuring the live renderer so this assertion exercises the same
     // persisted-loadout path users get after a refresh.
     await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=effects-${Date.now()}#customize-appearance` });
-    await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'rehydrated active cosmetic Studio preview');
+    await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'rehydrated active cosmetic Studio preview');
     await waitForStudioReferenceCard('rehydrated active Studio reference card');
     const studioNameEffect = await page.evaluate(`(() => {
       const card = document.querySelector('.profile-studio-preview .profile-reference-card');
@@ -1138,7 +1138,7 @@ try {
     })()`);
     assert(studioNameEffect.card && studioNameEffect.name && studioNameEffect.avatar && studioNameEffect.cardWidth >= 300, `Active Studio reference card is incomplete: ${JSON.stringify(studioNameEffect)}.`);
     await page.evaluate(`(() => {
-      document.querySelector('[data-editor-section="general"]')?.scrollIntoView({ block: 'start' });
+      document.querySelector('#customize-identity')?.scrollIntoView({ block: 'start' });
     })()`);
     await page.setInputValue('#profile-bio', RICH_PROFILE_FIXTURE.bio, ['input']);
     try {
@@ -1185,7 +1185,7 @@ try {
     assert(JSON.stringify(surfaceAfterUnrelatedEdit) === JSON.stringify(surfaceBeforeUnrelatedEdit), `Unrelated text edit changed the reference card surface: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterUnrelatedEdit })}.`);
     const originalBackgroundBlur = await page.evaluate(`document.querySelector('.profile-background-treatment input[type="range"]')?.value || '0'`);
     await page.click('#profile-customize-tab-media', 'switch to Media background treatment');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="media"]')?.hidden`, 'visible Media background treatment');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-media')`, 'visible Media background treatment');
     await page.setInputValue('.profile-background-treatment input[type="range"]', 27, ['input']);
     await page.waitFor(`document.querySelector('.profile-background-treatment output')?.textContent?.trim() === '27px'`, 'background treatment blur draft value');
     const surfaceAfterBackgroundEdit = await page.evaluate(`(() => {
@@ -1196,7 +1196,7 @@ try {
     assert(surfaceAfterBackgroundEdit.backgroundBlur === '27px', `Background treatment did not update its own render field: ${JSON.stringify(surfaceAfterBackgroundEdit)}.`);
     const surfaceFieldsBeforeCrossEditor = { ...surfaceAfterBackgroundEdit };
     await page.click('#profile-customize-tab-appearance', 'switch back to Appearance');
-    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor after Media');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'visible Appearance editor after Media');
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', '#345678', ['input']);
     await page.waitFor(`document.querySelector('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex')?.value?.toUpperCase() === '#345678'`, 'surface remains editable after Media treatment');
     const backgroundAfterSurfaceEdit = await page.evaluate(`(() => ({
@@ -1255,11 +1255,11 @@ try {
     assert(publishRequestsBefore === publishRequestsAfter, 'Changing Customize unexpectedly called the publish RPC.');
     await capture('05-customize-draft-blur');
     await page.clickText('Publish profile', { description: 'publish configured surface depth' });
-    await page.waitFor(`document.querySelector('.profile-studio-actions__message')?.textContent?.trim() === 'Profile published.'`, 'published profile appearance');
+    await page.waitFor(`document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.'`, 'published profile appearance');
     const immediatePublishedMedia = await assertPublishedExpressionVisible('surface publish');
     const publishedState = await page.evaluate(`({
       publishDisabled: [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Publish profile')?.disabled ?? null,
-      status: document.querySelector('.profile-studio-actions__message')?.textContent?.trim() || ''
+      status: document.querySelector('.profile-studio-header__message')?.textContent?.trim() || ''
     })`);
     const publishRequests = page.requestLog.filter(request => request.url.includes('save_profile_configuration_v2') || request.url.includes('publish_profile_configuration_v2') || request.url.includes('publish_profile_studio_v2')).length;
     assert(publishedState.publishDisabled === true, 'Publishing did not clear the dashboard draft state.');
@@ -1366,14 +1366,14 @@ try {
 
     for (const [width, height] of viewports) {
       await page.setViewport(width, height);
-      await page.waitFor(`document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-header__customize-tabs')`, `Customize at ${width}px`);
+      await page.waitFor(`document.querySelector('.studio-customize') && document.querySelector('.profile-studio-header__customize-tabs')`, `Customize at ${width}px`);
       if (width > 1024) {
         await page.waitFor('document.querySelector(".profile-studio-preview__devices button")', `narrow-desktop preview at ${width}px`);
         await page.click('.profile-studio-preview__devices button:first-child', `desktop preview mode at ${width}px`);
       }
       for (const tab of customizeTabs) {
         await page.click(`#profile-customize-tab-${tab}`, `${tab} tab at ${width}px`);
-        await page.waitFor(`document.querySelector('#profile-customize-tab-${tab}')?.getAttribute('aria-selected') === 'true' && document.querySelector('[data-editor-section="${tab === 'appearance' ? 'appearance' : tab}"]')?.hidden === false`, `${tab} panel at ${width}px`);
+        await page.waitFor(`document.querySelector('#profile-customize-tab-${tab}')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-${tab === 'appearance' ? 'appearance' : tab}')`, `${tab} panel at ${width}px`);
         const state = await page.evaluate(`(() => {
           const visible = element => {
             if (!element) return false;
@@ -1392,14 +1392,14 @@ try {
               height: Math.round(box.height)
             } : null;
           };
-          const candidates = [...document.querySelectorAll('.profile-studio-header__customize-tabs, .profile-studio-header__customize-tabs [role="tab"], .profile-studio-actions, [data-editor-section]:not([hidden]), input, select, textarea, [role="slider"]')]
+          const candidates = [...document.querySelectorAll('.profile-studio-header__customize-tabs, .profile-studio-header__customize-tabs [role="tab"], .profile-studio-shell__publish, #customize-appearance, #customize-media, #customize-layout, input, select, textarea, [role="slider"]')]
             .filter(visible);
           const overflow = candidates
             .map(element => ({ element, box: element.getBoundingClientRect() }))
             .filter(({ box }) => box.left < -1 || box.right > innerWidth + 1)
             .slice(0, 8)
             .map(({ element, box }) => ({ selector: element.className || element.tagName, tag: element.tagName, type: element.getAttribute('type') || '', aria: element.getAttribute('aria-label') || '', parent: element.parentElement?.className || '', left: Math.round(box.left), right: Math.round(box.right), width: Math.round(box.width) }));
-          const activePanel = document.querySelector('[data-editor-section="${tab === 'appearance' ? 'appearance' : tab}"]');
+          const activePanel = document.querySelector('#customize-${tab === 'appearance' ? 'appearance' : tab}');
           const preview = document.querySelector('#profile-studio-preview');
           const previewBox = preview?.getBoundingClientRect();
           const activeBox = activePanel?.getBoundingClientRect();
@@ -1425,7 +1425,7 @@ try {
             overflow,
             tablist: rect(document.querySelector('.profile-studio-header__tablist')),
             tabs: [...document.querySelectorAll('.profile-studio-header__tablist [role="tab"]')].map(rect),
-            actions: rect(document.querySelector('.profile-studio-actions')),
+            actions: rect(document.querySelector('.profile-studio-shell__publish')),
             activePanel: rect(activePanel),
             panelBottom: activePanel ? Math.round(activePanel.getBoundingClientRect().bottom) : null,
             preview: rect(preview),
@@ -1479,7 +1479,7 @@ try {
 
     await page.setViewport(414, 896);
     await page.click('#profile-customize-tab-appearance', 'Appearance before narrow mobile navigation audit');
-    await page.waitFor('document.querySelector(".profile-customize-page")', 'Appearance at 414px');
+    await page.waitFor('document.querySelector(".studio-customize")', 'Appearance at 414px');
     const drawer = await page.evaluate(`(() => {
       const shell = document.querySelector('.profile-studio-shell');
       const more = document.querySelector('.profile-studio-shell__menu-trigger');
@@ -1596,7 +1596,7 @@ try {
       const outOfBounds = fieldGeometry.filter(({ box, control }) => [box, control].some(item => item && (item.left < -1 || item.right > innerWidth + 1)));
       const shell = document.querySelector('.profile-studio-shell');
       const tabs = [...document.querySelectorAll('.profile-studio-header__tablist [role="tab"]')].map(rect);
-      const actions = rect(document.querySelector('.profile-studio-actions'));
+      const actions = rect(document.querySelector('.profile-studio-shell__publish'));
       return {
         viewport: innerWidth,
         mobileClass: shell?.classList.contains('profile-studio-shell--mobile'),

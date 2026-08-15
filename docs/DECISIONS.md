@@ -4759,3 +4759,18 @@ panel are obsolete presentation code and were removed after dependency checks.
 This is a presentation replacement, not a compatibility layer. Existing
 destination hashes, dirty guards, draft/publish orchestration, auth, RPC/RLS,
 R2 media, and production ProfileShell behavior remain unchanged.
+
+## 2026-08-15 — Make Profile Studio reference-first without widening its data load
+
+Customize now mounts one reference-style editor surface and one bounded
+`ProfileReferenceCard` preview. Appearance, Media, and Layout are real active
+tab surfaces; only the selected tab's editor components are loaded. The Studio
+preview is intentionally not a public-layout renderer, while the public
+ProfileShell and its five layout authorities remain unchanged.
+
+The authenticated Studio first uses the profile already present in the account
+store plus the owner configuration RPC. Full public-profile hydration is
+deferred until a section that actually needs it, so entering Customize does not
+fan out into social, score, story, achievement, or progression reads. Existing
+draft/publish, dirty-state, identity, media, cosmetics, auth, and route
+contracts remain the behavioral authorities.

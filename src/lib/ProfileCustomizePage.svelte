@@ -12,7 +12,6 @@
   export let entitlements = [];
   export let staff = false;
   export let activeTab = 'appearance';
-  export let layoutVariant = 'compact';
   /** @type {any} */
   export let identityDraft = null;
 
@@ -26,13 +25,6 @@
   $: mediaComponent = components['profile-media'];
   $: collectionComponent = components['profile-collection'];
   $: selectedTab = ['appearance', 'media', 'layout'].includes(activeTab) ? activeTab : 'appearance';
-
-  // The parent owns the canonical Studio draft. These three editors can keep
-  // ephemeral control state while mounted, but they never restore profile
-  // data from a session cache or submit a complete replacement draft.
-  function forward(event) {
-    dispatch(event.type, event.detail);
-  }
 
   function forwardPatch(scope, event) {
     dispatch('studiopatch', { scope, detail: event.detail || {} });
@@ -54,9 +46,8 @@
 
   export function acceptSaved(nextConfig) {
     identityEditor?.acceptSaved?.(nextConfig);
-    const nextAppearance = nextConfig?.appearance || nextConfig;
-    appearanceEditor?.acceptSaved?.(nextAppearance);
-    mediaWorkspaceEditor?.acceptSaved?.(nextAppearance);
+    appearanceEditor?.acceptSaved?.(nextConfig?.appearance || nextConfig);
+    mediaWorkspaceEditor?.acceptSaved?.(nextConfig?.appearance || nextConfig);
     layoutEditor?.acceptSaved?.(nextConfig);
   }
 
@@ -68,273 +59,248 @@
   }
 </script>
 
-<div class="profile-customize-page">
-  <div class="profile-customize-page__panel">
-  <section class="profile-customize-page__surface profile-customize-page__surface--assets" class:is-tab-hidden={selectedTab !== 'media'} aria-hidden={selectedTab !== 'media'} hidden={selectedTab !== 'media'} aria-labelledby="profile-customize-media-title" data-editor-section="media">
-    <div class="profile-customize-page__surface-heading">
-      <div><h3 id="profile-customize-media-title">Profile media</h3><p>Manage the assets used on your profile.</p></div>
-    </div>
-
-    {#if mediaComponent}
-      <div class="profile-customize-page__editor profile-customize-page__editor--media">
-        <ProfileMediaWorkspace bind:this={mediaWorkspaceEditor} {mediaComponent} {profileId} {accountUsername} {targetProfile} {profileConfig} {staff} {entitlements} on:expressionchange={event => forwardPatch('media', event)} on:backgroundchange={event => forwardPatch('appearance-background', event)} on:dirty={event => forwardDirty('customize:media', event)} />
-      </div>
-    {:else}
-      <div class="profile-customize-page__loading" role="status">Loading media controls…</div>
-    {/if}
-  </section>
-
-  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-labelledby="profile-customize-general-title" data-editor-section="general">
-    <div class="profile-customize-page__surface-heading">
-      <h3 id="profile-customize-general-title">Profile identity</h3>
-    </div>
-
-    <div class="profile-customize-page__control-grid profile-customize-page__control-grid--general">
-      <section class="profile-customize-page__control" aria-labelledby="profile-customize-identity-title" data-editor-section="identity" id="customize-identity">
-        <div class="profile-customize-page__control-heading">
-          <div><span class="profile-customize-page__control-kicker">Identity</span><h4 id="profile-customize-identity-title">Bio and presence</h4></div>
-          <span aria-hidden="true">01</span>
-        </div>
+<div class="studio-customize" data-studio-customize-tab={selectedTab}>
+  {#if selectedTab === 'appearance'}
+    <div class="studio-panel" id="customize-appearance" role="region" aria-label="Profile appearance">
+      <section id="customize-identity" class="studio-section studio-section--identity" aria-labelledby="studio-identity-title">
+        <header class="studio-section__head">
+          <div>
+            <h2 id="studio-identity-title">Profile identity</h2>
+            <p>Bio and the finite presentation controls currently supported by Profile Studio.</p>
+          </div>
+        </header>
         {#if identityComponent}
-          <svelte:component this={identityComponent} bind:this={identityEditor} profileId={profileId} username={targetProfile?.username || accountUsername} bio={identityDraft?.bio ?? targetProfile?.bio ?? ''} publishedBio={targetProfile?.bio ?? ''} config={profileConfig} studio={true} on:identitypreview={event => forwardPatch('identity', event)} on:identitysaved={forward} on:configsaved={forward} on:dirty={event => forwardDirty('customize:identity', event)} />
+          <svelte:component
+            this={identityComponent}
+            bind:this={identityEditor}
+            profileId={profileId}
+            username={targetProfile?.username || accountUsername}
+            bio={identityDraft?.bio ?? targetProfile?.bio ?? ''}
+            publishedBio={targetProfile?.bio ?? ''}
+            config={profileConfig}
+            studio={true}
+            on:identitypreview={event => forwardPatch('identity', event)}
+            on:dirty={event => forwardDirty('customize:identity', event)}
+          />
         {:else}
-          <div class="profile-customize-page__loading" role="status">Loading identity controls…</div>
+          <div class="studio-loading" role="status">Loading identity controls…</div>
+        {/if}
+      </section>
+
+      <section class="studio-section studio-section--appearance" aria-label="Profile colors and surface">
+        <ProfileAppearanceEditor
+          bind:this={appearanceEditor}
+          draftConfig={profileConfig?.draft}
+          layoutVariant="compact"
+          on:appearancechange={event => forwardPatch('appearance', event)}
+          on:dirty={event => forwardDirty('customize:appearance', event)}
+        />
+      </section>
+
+      <section id="customize-effects" class="studio-section studio-section--effects" aria-labelledby="studio-effects-title">
+        {#if collectionComponent}
+          <svelte:component
+            this={collectionComponent}
+            accountProfile={targetProfile}
+            {profileConfig}
+            {entitlements}
+            {staff}
+            compact={true}
+            presentation="studio"
+            on:cosmeticpreview={event => dispatch('cosmeticpreview', event.detail)}
+          />
+        {:else}
+          <div class="studio-loading" role="status">Loading profile effects…</div>
         {/if}
       </section>
     </div>
-  </section>
-
-  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-label="Profile appearance" data-editor-section="appearance" id="customize-appearance">
-    <div class="profile-customize-page__editor">
-      <ProfileAppearanceEditor bind:this={appearanceEditor} draftConfig={profileConfig?.draft} {layoutVariant} on:appearancechange={event => forwardPatch('appearance', event)} on:dirty={event => forwardDirty('customize:appearance', event)} />
+  {:else if selectedTab === 'media'}
+    <div class="studio-panel" id="customize-media" role="region" aria-label="Profile media">
+      <section class="studio-section studio-section--media" aria-labelledby="studio-media-title">
+        <header class="studio-section__head">
+          <div>
+            <h2 id="studio-media-title">Profile media</h2>
+            <p>Avatar and background are standard profile media. Plus unlocks richer audio and cursor library tools.</p>
+          </div>
+        </header>
+        {#if mediaComponent}
+          <ProfileMediaWorkspace
+            bind:this={mediaWorkspaceEditor}
+            {mediaComponent}
+            {profileId}
+            {accountUsername}
+            {targetProfile}
+            {profileConfig}
+            {staff}
+            {entitlements}
+            on:expressionchange={event => forwardPatch('media', event)}
+            on:backgroundchange={event => forwardPatch('appearance-background', event)}
+            on:dirty={event => forwardDirty('customize:media', event)}
+          />
+        {:else}
+          <div class="studio-loading" role="status">Loading media controls…</div>
+        {/if}
+      </section>
     </div>
-  </section>
-
-  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'appearance'} aria-hidden={selectedTab !== 'appearance'} hidden={selectedTab !== 'appearance'} aria-label="Visual effects" data-editor-section="effects" id="customize-effects">
-    <div class="profile-customize-page__editor">
-      {#if collectionComponent}
-        <svelte:component this={collectionComponent} accountProfile={targetProfile} {profileConfig} {entitlements} {staff} compact={true} on:cosmeticpreview={forward} />
-      {:else}
-        <div class="profile-customize-page__loading" role="status">Loading effects controls…</div>
-      {/if}
+  {:else}
+    <div class="studio-panel" id="customize-layout" role="region" aria-label="Profile layout">
+      <ProfileReferenceLayoutEditor
+        bind:this={layoutEditor}
+        draftConfig={profileConfig?.draft}
+        publishedConfig={profileConfig?.published}
+        on:studiopatch={event => forwardPatch(event.detail?.scope || 'layout', { detail: event.detail?.detail || {} })}
+        on:dirty={event => forwardDirty('customize:layout', event)}
+      />
     </div>
-  </section>
-
-  <section class="profile-customize-page__surface" class:is-tab-hidden={selectedTab !== 'layout'} aria-hidden={selectedTab !== 'layout'} hidden={selectedTab !== 'layout'} aria-labelledby="profile-customize-templates-title" data-editor-section="layout" id="customize-layout">
-    <div class="profile-customize-page__surface-heading">
-      <div><h3 id="profile-customize-templates-title">Profile composition</h3><p>Shape the focused profile surface used by Studio.</p></div>
-    </div>
-    <div class="profile-customize-page__editor">
-      <ProfileReferenceLayoutEditor bind:this={layoutEditor} draftConfig={profileConfig?.draft} publishedConfig={profileConfig?.published} />
-    </div>
-  </section>
-
-</div>
+  {/if}
 </div>
 
 <style>
-  .profile-customize-page {
-    --customize-surface: rgba(12, 12, 15, .78);
-    --customize-surface-raised: rgba(10, 10, 12, .58);
-    --customize-surface-inset: rgba(255, 255, 255, .035);
-    --customize-surface-deep: rgba(0, 0, 0, .22);
-    --customize-text-primary: #f8f8f8;
-    --customize-text-secondary: #bfc0c5;
-    --customize-text-muted: #8f9099;
-    --customize-text-faint: #686971;
-    --customize-border: rgba(255, 255, 255, .10);
-    --customize-border-strong: rgba(255, 255, 255, .20);
-    --customize-border-subtle: rgba(255, 255, 255, .075);
-    --customize-focus: #00ffb3;
-    --customize-accent-primary: #00ffb3;
-    --customize-accent-secondary: #00ffb3;
-    --customize-accent-add: #f5c26f;
-    --customize-accent-save: #00ffb3;
-    --customize-accent-danger: #ff5578;
-    --customize-font-body: var(--font-body-stack, var(--site-font, sans-serif));
-    --customize-font-mono: var(--font-mono-stack, ui-monospace, SFMono-Regular, Menlo, monospace);
-    --customize-section-heading-size: 1.02rem;
-    --customize-subheading-size: .92rem;
-    --customize-label-size: .8rem;
-    --customize-control-size: .84rem;
-    --customize-secondary-height: 1.95rem;
-    --customize-primary-height: 2.25rem;
-    --customize-radius: 7px;
-    --customize-control-surface: rgba(255, 255, 255, .035);
-    --customize-control-line: rgba(255, 255, 255, .10);
-    --customize-section-input: var(--customize-surface-inset);
-    display: grid;
+  .studio-customize {
+    --studio-bg: #050506;
+    --studio-panel: rgba(12, 12, 15, .78);
+    --studio-card: rgba(10, 10, 12, .58);
+    --studio-control: rgba(255, 255, 255, .035);
+    --studio-control-deep: rgba(0, 0, 0, .22);
+    --studio-border: rgba(255, 255, 255, .10);
+    --studio-border-strong: rgba(255, 255, 255, .20);
+    --studio-border-soft: rgba(255, 255, 255, .075);
+    --studio-text: #f8f8f8;
+    --studio-secondary: #bfc0c5;
+    --studio-muted: #8f9099;
+    --studio-faint: #686971;
+    --studio-accent: #00ffb3;
+    --studio-danger: #ff5578;
+    width: 100%;
+    min-width: 0;
+    color: var(--studio-text);
+    font-family: 'Inter', var(--font-body-stack, sans-serif);
+  }
+
+  .studio-panel {
     box-sizing: border-box;
     width: 100%;
-    gap: .65rem;
     min-width: 0;
-    padding: 0 0 1.5rem;
-    color: var(--customize-text-primary);
-    font-family: var(--customize-font-body);
-    font-size: var(--customize-control-size);
-
-    /* Embedded editors consume these aliases. Keeping them here makes the
-     * Customize page a coherent visual surface without changing their APIs. */
-    --site-canvas: var(--customize-surface);
-    --site-deep: var(--customize-surface-deep);
-    --site-raised: var(--customize-surface-raised);
-    --site-ink: var(--customize-text-primary);
-    --site-muted: var(--customize-text-secondary);
-    --site-faint: var(--customize-text-faint);
-    --site-accent: var(--customize-accent-primary);
-    --site-accent-bright: var(--customize-focus);
-    --site-line: var(--customize-border-subtle);
-    --site-line-strong: var(--customize-border-strong);
-    --site-surface: var(--customize-surface-raised);
-    --site-surface-soft: var(--customize-surface-inset);
-    --color-canvas: var(--customize-surface);
-    --color-canvas-raised: var(--customize-surface-raised);
-    --color-canvas-deep: var(--customize-surface-deep);
-    --color-ink-strong: var(--customize-text-primary);
-    --color-ink: var(--customize-text-secondary);
-    --color-ink-muted: var(--customize-text-muted);
-    --color-ink-faint: var(--customize-text-faint);
-    --color-line-subtle: var(--customize-border-subtle);
-    --color-line-strong: var(--customize-border-strong);
-    --color-accent: var(--customize-accent-primary);
-    --color-accent-bright: var(--customize-focus);
-    --color-accent-cyan: var(--customize-accent-primary);
-    --color-accent-roll: var(--customize-accent-save);
-    --color-success: var(--customize-accent-save);
-    --color-earned: var(--customize-accent-add);
-    --color-warning: #f5c26f;
-    --color-danger: var(--customize-accent-danger);
-    --surface-panel: var(--customize-surface-raised);
-    --surface-panel-strong: var(--customize-border-strong);
-    --surface-panel-soft: var(--customize-surface-inset);
-    --surface-inset: var(--customize-surface-inset);
+    padding: 26px;
+    border: 1px solid var(--studio-border);
+    border-radius: 15px;
+    background: var(--studio-panel);
+    backdrop-filter: blur(28px) saturate(145%);
+    box-shadow: 0 26px 70px rgba(0, 0, 0, .24);
   }
 
-  .profile-customize-page__control-kicker { display: none; }
-
-  .profile-customize-page__panel > [hidden] { display: none !important; }
-
-  .profile-customize-page__panel { box-sizing: border-box; width: 100%; min-width: 0; padding: 1.6rem 1.65rem; border: 1px solid var(--customize-border); border-radius: 15px; background: var(--customize-surface); backdrop-filter: blur(28px) saturate(145%); box-shadow: 0 26px 70px rgba(0,0,0,.24); }
-  .profile-customize-page__surface { --customize-section-accent: var(--customize-text-faint); --customize-section-surface: transparent; --customize-section-input: var(--customize-control-surface); --customize-section-input-line: var(--customize-control-line); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--customize-border-strong); --surface-panel-soft: var(--customize-section-input); display: grid; box-sizing: border-box; width: 100%; max-width: 100%; gap: .75rem; min-width: 0; padding: 0 0 27px; margin: 0 0 27px; border: 0; border-bottom: 1px solid var(--customize-border); border-radius: 0; background: transparent; scroll-margin-top: 5rem; }
-  .profile-customize-page__surface:last-child { padding-bottom: 0; margin-bottom: 0; border-bottom: 0; }
-  .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: #89dceb; }
-  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: #89dceb; }
-  .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--customize-accent-primary); }
-  .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: #d6b5ff; }
-  .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: #f5c2e7; }
-  .profile-customize-page__surface[data-editor-section="general"] .profile-customize-page__surface-heading h3 { color: var(--customize-text-primary); }
-  .profile-customize-page__surface--assets { padding-top: 0; }
-  .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
-  .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-text-primary); font: 600 1.05rem/1.2 'Clash Display', var(--font-display-stack, sans-serif); letter-spacing: 0; }
-  .profile-customize-page__surface-heading p { max-width: 420px; margin: .35rem 0 0; color: var(--customize-text-muted); font: 400 .68rem/1.45 'Inter', var(--font-body-stack, sans-serif); }
-
-  /* Appearance is a stack of the reference's independent cards. The tab
-   * heading is carried by the color card, so the generic section chrome stays
-   * out of the visual rhythm while the editor remains fully mounted. */
-  .profile-customize-page__surface[data-editor-section="appearance"] { gap: .7rem; margin-top: -.25rem; padding: 0; border: 0; background: transparent; }
-  .profile-customize-page__surface[data-editor-section="appearance"] > .profile-customize-page__editor { display: grid; gap: .65rem; }
-
-  .profile-customize-page__control-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; min-width: 0; }
-  .profile-customize-page__control-grid--general { grid-template-columns: minmax(0, 1fr); }
-  .profile-customize-page__control { display: block; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; scroll-margin-top: 5rem; }
-  .profile-customize-page__control-heading { display: none; }
-  .profile-customize-page__editor { min-width: 0; container-type: inline-size; container-name: profile-customize-editor; }
-  .profile-customize-page__loading { display: grid; min-height: 7rem; place-items: center; color: var(--customize-text-muted); font-size: var(--customize-control-size); }
-
-  /* The embedded editors keep their domain contracts, but share the compact
-   * shell here so the single-page workspace reads like one interface. */
-  .profile-customize-page :global(.foundation-module) { width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
-  .profile-customize-page :global(.foundation-module__header),
-  .profile-customize-page :global(.profile-editor__header),
-  .profile-customize-page :global(.profile-cosmetics-heading) { display: none; }
-  .profile-customize-page :global(.foundation-module__description) { display: none; }
-  .profile-customize-page :global(.foundation-module__body) { padding: 0; }
-  .profile-customize-page :global(.appearance-editor__heading h2),
-  .profile-customize-page :global(.profile-editor__panel h3),
-  .profile-customize-page :global(.profile-cosmetics-controls__heading strong) { color: var(--customize-text-primary); font-size: var(--customize-subheading-size); line-height: 1.25; }
-  .profile-customize-page :global(.appearance-editor__field > span),
-  .profile-customize-page :global(.appearance-editor__range > span),
-  .profile-customize-page :global(.profile-editor__field),
-  .profile-customize-page :global(.profile-editor__link-style label),
-  .profile-customize-page :global(.profile-editor__metadata label),
-  .profile-customize-page :global(.profile-cosmetics-slot label) { color: var(--customize-text-secondary); font-size: var(--customize-label-size); }
-  .profile-customize-page :global(.appearance-editor__heading > span),
-  .profile-customize-page :global(.appearance-editor__range output),
-  .profile-customize-page :global(.profile-editor__version),
-  .profile-customize-page :global(.profile-editor__panel-heading > span) { color: var(--customize-text-faint); font-family: var(--customize-font-mono); }
-  .profile-customize-page :global(.profile-editor :is(input[type="text"], input[type="url"], input[type="email"], input[type="search"], input[type="number"], textarea, select)),
-  .profile-customize-page :global(.appearance-editor__color-input),
-  .profile-customize-page :global(.profile-cosmetics-slot select) { border-color: var(--customize-section-input-line) !important; background: var(--customize-section-input) !important; color: var(--customize-text-primary) !important; font-size: var(--customize-control-size); }
-  .profile-customize-page :global(.profile-editor :is(input[type="text"], input[type="url"], input[type="email"], input[type="search"], input[type="number"], textarea, select)),
-  .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: 2rem; font-family: var(--customize-font-body); }
-  .profile-customize-page :global(.profile-cosmetics-slot select) { min-height: max(var(--customize-secondary-height), 2.5rem); padding-inline: .65rem; font: 500 var(--customize-control-size) / 1 var(--customize-font-body); }
-  /* Keep every text-like editor control darker than its section surface. The
-   * media/color contracts stay untouched: range, swatch, file, and native
-   * toggle inputs retain their editor-specific treatment. */
-  .profile-customize-page :global(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"])),
-  .profile-customize-page :global(textarea),
-  .profile-customize-page :global(select) { border-color: var(--customize-control-line) !important; background: var(--customize-control-surface) !important; color: var(--customize-text-primary) !important; }
-  .profile-customize-page :global(.appearance-editor__range input),
-  .profile-customize-page :global(.profile-editor__link-style input[type="range"]) { accent-color: var(--customize-accent-secondary); }
-  .profile-customize-page :global(input[type="checkbox"]),
-  .profile-customize-page :global(input[type="radio"]) { accent-color: var(--customize-accent-primary); }
-  .profile-customize-page :global(.profile-cosmetics-slot select:focus-visible),
-  .profile-customize-page :global(.profile-editor :is(input, textarea, select):focus-visible) { border-color: var(--customize-focus) !important; box-shadow: 0 0 0 2px color-mix(in srgb, var(--customize-focus) 24%, transparent); }
-  .profile-customize-page :global(.appearance-editor__hex) { color: var(--customize-text-primary) !important; font: 500 var(--customize-control-size) / 1 var(--customize-font-mono) !important; }
-  .profile-customize-page :global(.profile-editor :is(input, textarea)::placeholder) { color: var(--customize-text-faint); }
-  .profile-customize-page :global(.profile-cosmetics-apply) { min-height: max(var(--customize-primary-height), 2.75rem); border: 1px solid var(--customize-accent-save) !important; border-radius: var(--customize-radius); background: var(--customize-accent-save) !important; color: var(--customize-surface-inset) !important; font: 700 var(--customize-label-size) / 1 var(--customize-font-body); }
-  .profile-customize-page :global(.profile-cosmetics-apply:hover:not(:disabled)) { background: color-mix(in srgb, var(--customize-accent-save) 82%, var(--customize-text-primary)) !important; }
-  .profile-customize-page :global(.profile-editor__text-button),
-  .profile-customize-page :global(.profile-editor__remove),
-  .profile-customize-page :global(.profile-editor__module-actions button),
-  .profile-customize-page :global(.profile-editor__module-actions select),
-  .profile-customize-page :global(.profile-expression-editor__button) { min-height: var(--customize-secondary-height) !important; border-radius: var(--customize-radius) !important; border-color: var(--customize-border-strong) !important; background: transparent !important; color: var(--customize-text-secondary) !important; font: 600 var(--customize-label-size) / 1 var(--customize-font-body) !important; }
-  .profile-customize-page :global(.profile-editor__text-button:hover:not(:disabled)),
-  .profile-customize-page :global(.profile-editor__remove:hover),
-  .profile-customize-page :global(.profile-editor__module-actions button:hover:not(:disabled)),
-  .profile-customize-page :global(.profile-editor__module-actions select:hover:not(:disabled)),
-  .profile-customize-page :global(.profile-expression-editor__button:hover:not(:disabled)) { border-color: var(--customize-accent-secondary) !important; background: color-mix(in srgb, var(--customize-accent-secondary) 9%, transparent) !important; color: var(--customize-text-primary) !important; }
-  .profile-customize-page :global(.profile-editor__remove:hover) { border-color: var(--customize-accent-danger) !important; background: color-mix(in srgb, var(--customize-accent-danger) 9%, transparent) !important; color: var(--customize-accent-danger) !important; }
-  .profile-customize-page :global(.profile-cosmetics-apply:disabled) { cursor: not-allowed; opacity: .45; }
-  .profile-customize-page :global(.profile-cosmetics-apply:focus-visible) { outline: 2px solid var(--customize-focus); outline-offset: 2px; }
-  .profile-customize-page :global(.profile-editor) { gap: .65rem; }
-  .profile-customize-page :global(.profile-editor__panel) { padding: .65rem 0; border: 0; border-top: 1px solid var(--customize-border-subtle); border-radius: 0; background: transparent; }
-  .profile-customize-page :global(.profile-editor__hint) { display: none; }
-  .profile-customize-page :global(.profile-editor__panel) { gap: .6rem; padding: .5rem 0; }
-  .profile-customize-page :global(.profile-editor__layout-options) { gap: .85rem; padding: .85rem; border: 1px solid var(--customize-border-subtle); border-radius: var(--customize-radius); background: var(--customize-surface-inset); }
-  .profile-customize-page :global(.profile-editor__layout-options .profile-editor__segmented-field > div) { min-height: var(--customize-secondary-height); }
-  .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .profile-customize-page :global(.rich-media-editor__compact-preview),
-  .profile-customize-page :global(.rich-media-editor__upload-card),
-  .profile-customize-page :global(.rich-media-editor__upload-preview),
-  .profile-customize-page :global(.rich-media-editor__asset),
-  .profile-customize-page :global(.rich-media-editor__track),
-  .profile-customize-page :global(.profile-editor__module-list li) { border-color: var(--customize-border-subtle) !important; }
-  .profile-customize-page :global(.rich-media-editor__message),
-  .profile-customize-page :global(.appearance-editor__message) { color: var(--customize-text-muted); font-size: var(--customize-label-size); }
-  .profile-customize-page :global([role="alert"]) { color: var(--customize-accent-danger); }
-  @media (max-width: 72rem) {
-    .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .studio-section {
+    min-width: 0;
+    padding: 0 0 27px;
+    margin: 0 0 27px;
+    border-bottom: 1px solid var(--studio-border);
   }
+
+  .studio-section:last-child { padding-bottom: 0; margin-bottom: 0; border-bottom: 0; }
+  .studio-section__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 15px; }
+  .studio-section__head h2 { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Clash Display', var(--font-display-stack, sans-serif); letter-spacing: 0; }
+  .studio-section__head p { max-width: 420px; margin: 5px 0 0; color: var(--studio-muted); font: 400 .68rem/1.45 'Inter', var(--font-body-stack, sans-serif); }
+  .studio-loading { display: grid; min-height: 7rem; place-items: center; color: var(--studio-muted); font: 400 .78rem/1.4 'Inter', sans-serif; }
+
+  /* IdentityEditor keeps its validation and preview contract; Studio owns its
+   * reference geometry and deliberately removes the old module chrome. */
+  .studio-customize :global(.identity-editor--studio .foundation-module__header),
+  .studio-customize :global(.identity-editor--studio .foundation-module__description) { display: none !important; }
+  .studio-customize :global(.foundation-module.identity-editor--studio),
+  .studio-customize :global(.identity-editor--studio .foundation-module__body) { width: 100%; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__form) { display: block !important; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__fields) { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__field--username) { grid-column: 1; grid-row: 1; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__field[for='profile-bio']) { grid-column: 1 / -1; grid-row: 2; top: auto; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__grid) { display: contents !important; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field:first-child) { grid-column: 2; grid-row: 1; position: static; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field:last-child) { grid-column: 1; grid-row: 3; position: static; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field:first-child) { grid-column: 2; grid-row: 3; position: static; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field:last-child) { grid-column: 1; grid-row: 4; position: static; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__options) { grid-column: 1 / -1; grid-row: 5; position: static; min-height: 40px; margin: 0; padding: 0; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__field :is(input, textarea, select)) { min-height: 40px; border: 1px solid var(--studio-border) !important; border-radius: 7px; background: var(--studio-control) !important; color: var(--studio-text) !important; font: 500 .78rem/1.35 'Inter', sans-serif; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__field textarea) { min-height: 76px; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__field > span),
+  .studio-customize :global(.identity-editor--studio .identity-editor__options) { color: var(--studio-muted); font: 400 .64rem/1.35 'Inter', sans-serif; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__label-row) { align-items: baseline; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__counter) { color: var(--studio-faint); font: 400 .61rem/1 ui-monospace, monospace; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__footer) { display: none !important; }
+
+  /* AppearanceEditor owns color/picker behavior. These rules only restore the
+   * reference's panel geometry and palette, with no Catppuccin fallbacks. */
+  .studio-customize :global(.appearance-editor) { gap: 27px; }
+  .studio-customize :global(.appearance-editor__colors-layout) { grid-template-columns: minmax(0, 1fr) !important; gap: 10px; }
+  .studio-customize :global(.appearance-editor__color-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .studio-customize :global(.appearance-editor__colors-heading) { grid-column: 1 / -1; }
+  .studio-customize :global(.appearance-editor__colors-heading h2),
+  .studio-customize :global(.appearance-editor__heading h2) { color: var(--studio-text) !important; font: 600 1.05rem/1.2 'Clash Display', sans-serif !important; }
+  .studio-customize :global(.appearance-editor__colors-heading p),
+  .studio-customize :global(.appearance-editor__heading p) { color: var(--studio-muted) !important; font: 400 .68rem/1.45 'Inter', sans-serif !important; }
+  .studio-customize :global(.appearance-editor__field) { min-width: 0; }
+  .studio-customize :global(.appearance-editor__color-grid .appearance-editor__field) { grid-template-columns: minmax(0, 1fr) 92px; min-height: 40px; padding: 9px 10px; border: 1px solid var(--studio-border); border-radius: 8px; background: var(--studio-control); }
+  .studio-customize :global(.appearance-editor__field > span),
+  .studio-customize :global(.appearance-editor__range > span) { color: var(--studio-secondary) !important; font: 400 .7rem/1.3 'Inter', sans-serif !important; }
+  .studio-customize :global(.appearance-editor__color-input) { min-height: 29px; height: 29px; border: 1px solid var(--studio-border-strong); border-radius: 0; background: var(--studio-control-deep); }
+  .studio-customize :global(.appearance-editor__hex) { min-height: 29px; height: 29px; color: var(--studio-text) !important; font: 500 .64rem/1 ui-monospace, monospace !important; }
+  .studio-customize :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .studio-customize :global(.appearance-editor__surface-grid) { grid-template-columns: 1.15fr 1fr 1fr; gap: 13px; padding: 0; }
+  .studio-customize :global(.appearance-editor__surface-intro) { grid-column: 1 / -1; }
+  .studio-customize :global(.appearance-editor__surface-color) { grid-template-columns: minmax(0, 1fr) 1fr; }
+  .studio-customize :global(.appearance-editor__range) { margin-top: 0; gap: 8px; }
+  .studio-customize :global(.appearance-editor__range output) { color: var(--studio-faint); font: 500 .62rem/1 ui-monospace, monospace; }
+  .studio-customize :global(.appearance-editor__range input) { accent-color: var(--studio-accent); }
+  .studio-customize :global(.appearance-editor__picker) { display: none; }
+  .studio-customize :global(.appearance-editor--picker-open .appearance-editor__picker) { display: grid; }
+  .studio-customize :global(.appearance-editor__message) { color: var(--studio-danger); font: 400 .7rem/1.4 'Inter', sans-serif; }
+
+  /* Cosmetic behavior remains in ProfileCosmeticsEditor; its Studio branch
+   * is flattened into the reference effect-card grid. */
+  .studio-customize :global(.profile-cosmetics-surface--studio) { width: 100%; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-heading),
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-plus-guide),
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-controls__heading),
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading--visual) { display: none !important; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-layout),
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-controls) { display: block; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-name-grid),
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-visual-grid) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-name-grid) { margin-bottom: 10px; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading) { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin: 0 0 15px; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading h3) { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Clash Display', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading p) { display: none; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading button) { border: 0; background: transparent; color: var(--studio-muted); font: 400 .63rem/1 'Inter', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-slot) { min-width: 0; padding: 11px; border: 1px solid var(--studio-border); border-radius: 9px; background: var(--studio-control); }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-slot label) { color: var(--studio-secondary); font: 400 .7rem/1.3 'Inter', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-slot select) { min-height: 34px; border: 1px solid var(--studio-border); border-radius: 6px; background: var(--studio-control-deep); color: var(--studio-text); font: 500 .66rem/1 'Inter', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-apply) { min-height: 36px; margin-top: 12px; border-radius: 7px; background: var(--studio-accent); color: #050506; font: 700 .7rem/1 'Inter', sans-serif; }
+
+  .studio-customize :global(input:focus-visible),
+  .studio-customize :global(textarea:focus-visible),
+  .studio-customize :global(select:focus-visible),
+  .studio-customize :global(button:focus-visible) { outline: 2px solid var(--studio-accent); outline-offset: 2px; }
 
   @media (max-width: 52rem) {
-    .profile-customize-page { padding-inline: 0; overflow-x: clip; }
-    .profile-customize-page__control-grid { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.profile-editor__module-list),
-    .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page__surface { padding-inline: .75rem; }
+    .studio-panel { padding: 20px; }
+    .studio-customize :global(.appearance-editor__color-grid),
+    .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-name-grid),
+    .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-visual-grid) { grid-template-columns: minmax(0, 1fr); }
+    .studio-customize :global(.appearance-editor__surface-grid) { grid-template-columns: minmax(0, 1fr); }
+    .studio-customize :global(.appearance-editor__surface-intro) { grid-column: 1; }
   }
 
   @media (max-width: 38rem) {
-    .profile-customize-page__surface, .profile-customize-page__surface--assets { padding: .75rem; }
-    .profile-customize-page__surface-heading { align-items: flex-start; flex-direction: column; }
-    .profile-customize-page :global(.profile-editor__module-list) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.profile-cosmetics-controls) { grid-template-columns: minmax(0, 1fr); }
-    .profile-customize-page :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { height: auto; }
-    .profile-customize-page__control { padding: 0; }
+    .studio-panel { padding: 16px; }
+    .studio-customize :global(.identity-editor--studio .identity-editor__fields) { grid-template-columns: minmax(0, 1fr); }
+    .studio-customize :global(.identity-editor--studio .identity-editor__field--username),
+    .studio-customize :global(.identity-editor--studio .identity-editor__field[for='profile-bio']),
+    .studio-customize :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field:first-child),
+    .studio-customize :global(.identity-editor--studio .identity-editor__grid--meta .identity-editor__field:last-child),
+    .studio-customize :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field:first-child),
+    .studio-customize :global(.identity-editor--studio .identity-editor__grid--behavior .identity-editor__field:last-child),
+    .studio-customize :global(.identity-editor--studio .identity-editor__options) { grid-column: 1; grid-row: auto; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .profile-customize-page :global(*) { scroll-behavior: auto; }
+    .studio-customize :global(*) { scroll-behavior: auto; }
   }
 </style>

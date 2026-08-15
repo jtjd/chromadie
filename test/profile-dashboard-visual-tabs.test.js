@@ -14,11 +14,14 @@ test('Customize tabs mount only the supported visible editor groups', async () =
 
   assert.match(customize, /export let activeTab = 'appearance'/);
   assert.match(customize, /selectedTab = \['appearance', 'media', 'layout'\]/);
-  assert.match(customize, /hidden=\{selectedTab !== 'media'\}/);
-  assert.match(customize, /hidden=\{selectedTab !== 'appearance'\}/);
-  assert.match(customize, /class:is-tab-hidden=\{selectedTab !== 'appearance'\}[^>]*id="customize-effects"/);
-  assert.match(customize, /data-editor-section="effects"/);
-  assert.match(customize, /hidden=\{selectedTab !== 'layout'\}/);
+  assert.match(customize, /\{#if selectedTab === 'appearance'\}/);
+  assert.match(customize, /\{:else if selectedTab === 'media'\}/);
+  assert.match(customize, /id="customize-appearance"/);
+  assert.match(customize, /id="customize-media"/);
+  assert.match(customize, /id="customize-layout"/);
+  assert.match(customize, /id="customize-identity"/);
+  assert.match(customize, /id="customize-effects"/);
+  assert.doesNotMatch(customize, /hidden=|class:is-tab-hidden|data-editor-section=/);
   assert.match(customize, /profile-collection/);
   assert.doesNotMatch(customize, /contentComponent|widgetComponent|id="customize-content"|id="customize-widgets"/);
   assert.match(customize, /ProfileReferenceLayoutEditor/);
@@ -85,12 +88,12 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
 });
 
 test('reference workspace composition stays explicit', async () => {
-  const [settings, header, preview, draftModel, actions, appearance, appearanceColors, cosmetics, customize, mediaWorkspace, profileShell, editor, expression, shopPreview, renderModel] = await Promise.all([
+  const [settings, shell, header, preview, draftModel, appearance, appearanceColors, cosmetics, customize, mediaWorkspace, profileShell, editor, expression, shopPreview, renderModel] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
+    read('src/lib/ProfileStudioShell.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/profile-studio/draftModel.js'),
-    read('src/lib/ProfileStudioActions.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/profileAppearanceColors.js'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),
@@ -102,10 +105,11 @@ test('reference workspace composition stays explicit', async () => {
     read('src/lib/ShopItemPreview.svelte'),
     read('src/lib/profileRenderModel.js')
   ]);
-  assert.match(actions, /Publish profile/);
-  assert.match(actions, /profile-studio-actions__publish/);
-  assert.doesNotMatch(actions, /Customize profile|All changes saved|margin-inline: \.75rem/);
-  assert.match(settings, /slot="topbar"/);
+  assert.match(shell, /profile-studio-shell__publish/);
+  assert.match(shell, /Publish profile/);
+  assert.doesNotMatch(shell, /slot name="topbar"|profile-studio-actions/);
+  assert.match(settings, /loadProfileStudioContext/);
+  assert.match(settings, /loadCustomizeComponents/);
   assert.match(header, /profile-studio-header__customize-tabs/);
   assert.match(preview, /profile-studio-preview__devices/);
   assert.doesNotMatch(preview, /Unlock more with Chromadie Plus/);
@@ -120,9 +124,10 @@ test('reference workspace composition stays explicit', async () => {
   }
   assert.doesNotMatch(appearanceColors, /Surface tint|label: 'Border'/);
   assert.doesNotMatch(customize, /profile-customize-page__appearance-effects|Overlay color|Atmosphere strength|Restart animations/);
-  assert.match(customize, /--customize-control-surface: rgba\(255, 255, 255, \.035\)/);
-  assert.match(customize, /background: var\(--customize-control-surface\) !important/);
+  assert.match(customize, /--studio-control: rgba\(255, 255, 255, \.035\)/);
+  assert.match(customize, /background: var\(--studio-control\)/);
   assert.match(customize, /ProfileReferenceLayoutEditor/);
+  assert.match(customize, /presentation="studio"/);
   assert.doesNotMatch(customize, /ProfileTemplatePicker|showLinks=\{false\}/);
   assert.match(cosmetics, /Name effects/);
   assert.match(cosmetics, /name_font: 'Font'/);
@@ -146,7 +151,7 @@ test('reference workspace composition stays explicit', async () => {
   }
   assert.match(cosmetics, /NAME_COMPOSABLE_SLOTS[\s\S]*previewSlot\(slot/);
   assert.match(customize, /dispatch\('studiopatch'/);
-  assert.match(customize, /on:cosmeticpreview=\{forward\}/);
+  assert.match(customize, /on:cosmeticpreview=/);
   assert.match(settings, /on:cosmeticpreview=\{updateCosmeticPreview\}/);
   assert.match(settings, /on:studiopatch=\{applyStudioPatch\}/);
   assert.doesNotMatch(settings, /configurationPreview|identityPreview|customizepreview|updateConfigurationPreview/);

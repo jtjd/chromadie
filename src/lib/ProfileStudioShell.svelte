@@ -113,7 +113,13 @@
     </a>
     <div class="profile-studio-shell__header-actions">
       <a class="profile-studio-shell__view-profile" href={ownerProfilePath}>View profile</a>
-      <slot name="topbar" />
+      <button
+        class="profile-studio-shell__publish"
+        type="button"
+        disabled={!dirty || mobileSaving}
+        aria-busy={mobileSaving ? 'true' : 'false'}
+        on:click={() => dispatch('publish')}
+      >{mobileSaving ? 'Publishing…' : 'Publish profile'}</button>
       <div class="profile-studio-shell__menu-wrap">
         <button
           bind:this={moreTrigger}
@@ -220,6 +226,9 @@
   .profile-studio-shell__header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .85rem; min-width: 0; }
   .profile-studio-shell__view-profile { color: var(--studio-muted); font-size: .8rem; font-weight: 500; white-space: nowrap; }
   .profile-studio-shell__view-profile:hover, .profile-studio-shell__view-profile:focus-visible { color: var(--studio-text); }
+  .profile-studio-shell__publish { min-height: 2.31rem; padding: 0 1.1rem; border: 1px solid var(--studio-accent); border-radius: 7px; background: var(--studio-accent); color: #050506; font: 700 .76rem/1 'Clash Display', var(--font-display-stack, sans-serif); white-space: nowrap; cursor: pointer; }
+  .profile-studio-shell__publish:hover:not(:disabled), .profile-studio-shell__publish:focus-visible { border-color: var(--studio-text); background: var(--studio-text); }
+  .profile-studio-shell__publish:disabled { border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.12); color: rgba(255,255,255,.42); cursor: default; }
   .profile-studio-shell__menu-wrap { position: relative; flex: 0 0 auto; }
   .profile-studio-shell__menu-trigger { min-height: 2.25rem; padding: .45rem .1rem; border: 0; background: transparent; color: var(--studio-muted); font: 500 .78rem/1 'Inter', var(--font-body-stack, sans-serif); cursor: pointer; }
   .profile-studio-shell__menu-trigger:hover, .profile-studio-shell__menu-trigger:focus-visible, .profile-studio-shell__menu-trigger.active { color: var(--studio-text); }
@@ -251,6 +260,7 @@
     .profile-studio-shell__brand-name { font-size: 1.15rem; }
     .profile-studio-shell__view-profile { display: none; }
     .profile-studio-shell__header-actions { gap: .55rem; }
+    .profile-studio-shell__publish { min-height: 2.5rem; padding-inline: .8rem; font-size: .7rem; }
     .profile-studio-shell__workspace,
     .profile-studio-shell--with-preview .profile-studio-shell__workspace { grid-template-columns: minmax(0, 1fr); width: calc(100% - 24px); padding-top: 1.5rem; }
     .profile-studio-shell__mobile-tools { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: calc(100% - 24px); min-height: 2.8rem; margin: 0 auto; border-bottom: 1px solid var(--studio-border); color: var(--studio-text); font: 600 .8rem/1 'Clash Display', var(--font-display-stack, sans-serif); }

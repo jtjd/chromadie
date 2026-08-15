@@ -36,13 +36,13 @@ test('Studio navigation has one canonical ordered IA and safe compact menu behav
 });
 
 test('section editors stage bounded drafts for the aggregate dashboard action', async () => {
-  const [layout, appearance, migration, sqlTest, settings, actions] = await Promise.all([
+  const [layout, appearance, migration, sqlTest, settings, shell] = await Promise.all([
     read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('supabase/migrations/20260805100000_profile_appearance_dashboard.sql'),
     read('supabase/tests/launch_security.sql'),
     read('src/lib/ProfileSettings.svelte'),
-    read('src/lib/ProfileStudioActions.svelte')
+    read('src/lib/ProfileStudioShell.svelte')
   ]);
   assert.doesNotMatch(layout, /export function getDraftConfig/);
   assert.match(layout, /export function validateDraft/);
@@ -58,9 +58,8 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.doesNotMatch(appearance, /Reload server version|save_profile_configuration_section|publish_profile_configuration_section|profile-appearance-editor__actions/);
   assert.match(settings, /save_profile_configuration_v2/);
   assert.match(settings, /publish_profile_studio_v2/);
-  assert.match(actions, /Publish profile/);
-  assert.match(actions, /profile-studio-actions__publish/);
-  assert.match(actions, /--studio-accent/);
+  assert.match(shell, /profile-studio-shell__publish[\s\S]*Publish profile/);
+  assert.match(shell, /--studio-accent/);
   assert.match(appearance, /appearance-editor__color-input:focus-within/);
   assert.match(migration, /'draft', v_record\.draft_config/);
   assert.match(migration, /'published', v_record\.published_config/);

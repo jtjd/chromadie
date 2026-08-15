@@ -276,7 +276,7 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.doesNotMatch(preview, /previewIdentityOnly/);
   assert.match(customize, /ProfileReferenceLayoutEditor/);
   assert.doesNotMatch(customize, /export function getDraftConfig/);
-  assert.match(customize, /<ProfileAppearanceEditor[\s\S]*\{layoutVariant\}/);
+  assert.match(customize, /<ProfileAppearanceEditor[\s\S]*layoutVariant="compact"/);
   assert.match(settings, /function getDashboardDraft\(\)[\s\S]*studioDraft \|\| toEditorProfileConfig/);
   assert.match(settings, /applyProfileStudioDraftPatch/);
 });

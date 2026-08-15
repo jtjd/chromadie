@@ -40,7 +40,8 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(workspace, /<svelte:component/);
   assert.match(registry, /id: 'account',[\s\S]*ProfileAccountSettings\.svelte/);
   assert.match(settings, /createInitialSettingsContext/);
-  assert.match(settings, /loading = !previousContext/);
+  assert.match(settings, /loadProfileStudioContext/);
+  assert.match(settings, /fullContextLoaded/);
   assert.match(siteStyles, /\.app-main--profile-settings/);
   assert.match(siteStyles, /--site-font: 'Inter'/);
   assert.match(siteStyles, /--font-display-stack: 'Clash Display'/);

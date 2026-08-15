@@ -15,7 +15,6 @@ const homepageHero = await read('src/lib/homepage/HomepageHero.svelte');
 const homepageSmoke = await read('scripts/browser/homepage-reference-smoke.mjs');
 const profileShell = await read('src/lib/ProfileShell.svelte');
 const dashboard = await read('src/lib/ProfileStudioShell.svelte');
-const dashboardActions = await read('src/lib/ProfileStudioActions.svelte');
 const preview = await read('src/lib/ProfileStudioPreview.svelte');
 const identity = await read('src/lib/IdentityCard.svelte');
 const identityEditor = await read('src/lib/IdentityEditor.svelte');
@@ -74,7 +73,7 @@ test('profile mobile header keeps edit visible and moves account actions into th
   assert.match(header, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: block/);
   assert.match(header, /\.site-mode-header--profile \.site-mode-header__mobile-context \{ display: none/);
   assert.match(studioHeader, /\.profile-studio-header__toolbar-actions button \{ flex: 1 1 0; text-align: left;/);
-  assert.match(dashboardActions, /\.profile-studio-actions__publish \{ min-height: 2\.3rem/);
+  assert.match(dashboard, /\.profile-studio-shell__publish \{/);
 });
 
 test('share dialog has the same focus and scroll management contract as other dialogs', () => {

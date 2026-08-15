@@ -115,6 +115,78 @@ function emptyProfileContext(overrides = {}) {
 }
 
 /**
+ * The Studio already has the authenticated profile in the account store. Its
+ * first paint only needs the owner configuration that drives the editor and
+ * live card; it should not pay for the public-profile hydration contract used
+ * by the public route. Keep this intentionally narrow so adding another
+ * editor control cannot accidentally reintroduce the full profile fan-out.
+ */
+export async function loadProfileStudioContext({
+  supabaseClient = null,
+  profileRecord = null,
+  sessionUserId = null
+} = {}) {
+  if (!supabaseClient) return emptyProfileContext({ loadError: PROFILE_LOAD_MESSAGE });
+
+  const targetProfile = profileRecord && typeof profileRecord === 'object'
+    ? mapProfileRecord(profileRecord)
+    : null;
+  const profileId = targetProfile?.id || sessionUserId || null;
+  if (!profileId) return emptyProfileContext({ loadError: PROFILE_LOAD_MESSAGE });
+
+  const context = emptyProfileContext({
+    profileId,
+    viewingOwnProfile: true,
+    targetProfile,
+    totalRolls: Number(targetProfile?.total_rolls) || 0
+  });
+  const fallbackColor = targetProfile?.mood_color || '#CDD2FF';
+  const useV2 = isProfileFeatureEnabled('profileConfigurationV2', {
+    userId: profileId,
+    isStaff: Boolean(targetProfile?.is_staff)
+  });
+  const configResponse = await loadProfileConfiguration(supabaseClient, {
+    viewingOwnProfile: true,
+    profileId,
+    useV2
+  });
+
+  if (configResponse.error || configResponse.data?.success === false) {
+    context.dataWarning = 'Profile customization is temporarily unavailable.';
+    const fallback = createDefaultProfileConfig(fallbackColor);
+    context.profileConfig = { draft: fallback, published: fallback, version: 1 };
+    return context;
+  }
+
+  const v2Draft = useV2
+    ? configResponse.data?.draft_v2
+      || configResponse.data?.configuration_v2?.draft
+      || (Number(configResponse.data?.draft?.version) === 2 ? configResponse.data.draft : null)
+    : null;
+  const v2Published = useV2
+    ? configResponse.data?.published_v2
+      || configResponse.data?.configuration_v2?.published
+      || (Number(configResponse.data?.published?.version) === 2 ? configResponse.data.published : null)
+    : null;
+  const normalizedV2Draft = v2Draft
+    ? await normalizeV2Configuration(v2Draft, fallbackColor, { staff: Boolean(targetProfile?.is_staff) })
+    : null;
+  const normalizedV2Published = v2Published
+    ? await normalizeV2Configuration(v2Published, fallbackColor, { staff: Boolean(targetProfile?.is_staff) })
+    : null;
+  context.profileConfig = {
+    version: normalizedV2Draft || normalizedV2Published ? 2 : (Number(configResponse.data?.version) || 1),
+    draft: normalizedV2Draft || normalizeProfileConfig(configResponse.data?.draft, fallbackColor),
+    published: normalizedV2Published || normalizeProfileConfig(configResponse.data?.published, fallbackColor),
+    v2Draft: normalizedV2Draft,
+    v2Published: normalizedV2Published,
+    updatedAt: configResponse.data?.updated_at || null,
+    publishedAt: configResponse.data?.published_at || null
+  };
+  return context;
+}
+
+/**
  * Hydrate the public profile contract used by both the live shell and the
  * temporary legacy renderer. The ownership branch is deliberately kept here
  * so a renderer cannot accidentally broaden a public request into an owner

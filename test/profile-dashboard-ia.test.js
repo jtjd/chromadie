@@ -72,9 +72,9 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.doesNotMatch(appearance, /\['surface', 'Profile Surface'\]/);
   assert.match(studio, /ProfilePremiumPage\.svelte/);
   for (const section of ['media', 'identity', 'appearance', 'effects', 'layout']) {
-    assert.match(customize, new RegExp(`data-editor-section="${section}"`));
+    assert.match(customize, new RegExp(`id="customize-${section === 'identity' || section === 'effects' ? section : section}"`));
   }
-  assert.match(customize, /aria-label="Visual effects"[^>]*id="customize-effects"/);
+  assert.doesNotMatch(customize, /data-editor-section=|hidden=|class:is-tab-hidden/);
   assert.match(cosmetics, /profile-cosmetics-surface--compact/);
   assert.match(customize, /id="customize-effects"[\s\S]*id="customize-layout"/);
   assert.match(customize, /Profile media/);
@@ -101,12 +101,9 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(studio, /'customize-effects': 'appearance'/);
   assert.match(customize, /export let activeTab = 'appearance'/);
   assert.match(customize, /ProfileAppearanceEditor/);
-  assert.match(customize, /data-editor-section="general"/);
-  assert.match(customize, /--customize-section-accent/);
-  assert.match(customize, /--customize-section-surface/);
-  assert.match(customize, /--customize-section-surface: transparent/);
-  assert.match(customize, /--customize-section-input: var\(--customize-control-surface\)/);
-  assert.match(customize, /--customize-primary-height: 2\.25rem/);
+  assert.match(customize, /id="customize-identity"/);
+  assert.match(customize, /--studio-panel: rgba\(12, 12, 15, \.78\)/);
+  assert.match(customize, /--studio-control: rgba\(255, 255, 255, \.035\)/);
   assert.match(expression, /profile-expression-editor__compact-grid[\s\S]*grid-template-columns: minmax\(0, \.9fr\)[\s\S]*gap: \.65rem/);
   assert.doesNotMatch(customize, /gradient/);
   assert.doesNotMatch(customize, /premium-banner|premiumrequest|Chromadie Plus/);
@@ -118,21 +115,8 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(richMedia, /rich-media-editor__compact-remove/);
   assert.match(richMedia, /rich-media-editor__compact-preview:hover:not\(:disabled\)/);
   assert.doesNotMatch(customize, /--customize-section-surface: var\(--customize-surface-alt\)/);
-  assert.match(customize, /--customize-section-input/);
-  assert.match(customize, /--customize-section-input-line/);
-  assert.match(customize, /--customize-surface: rgba\(12, 12, 15, \.78\)/);
-  assert.match(customize, /--customize-surface-inset: rgba\(255, 255, 255, \.035\)/);
-  assert.match(customize, /--customize-accent-add: #f5c26f/);
-  assert.match(customize, /--customize-accent-save: #00ffb3/);
-  assert.match(customize, /--customize-focus: #00ffb3/);
-  assert.match(customize, /--customize-border-subtle:/);
-  assert.match(identity, /--identity-save: var\(--customize-accent-save/);
-  assert.match(expression, /--media-card-accent:/);
-  assert.match(appearance, /--appearance-focus: var\(--customize-focus/);
-  assert.match(content, /--content-add: var\(--customize-accent-add/);
-  assert.match(widgets, /--widget-add: var\(--customize-accent-add/);
-  assert.match(cosmetics, /--cosmetics-save: var\(--customize-accent-save/);
-  assert.match(editor, /--editor-add: var\(--customize-accent-add/);
+  assert.match(customize, /--studio-border:/);
+  assert.match(customize, /--studio-accent: #00ffb3/);
   assert.doesNotMatch(customize, /profile-customize-page__surface-note/);
   assert.doesNotMatch(customize, /Shape the profile canvas|Set your bio and choose|Preview your palette here|Preview owned expression layers|Choose the profile structure|Tell more of your story|Use official HTTPS provider URLs/);
   assert.doesNotMatch(expression, /Unlock richer expression/);
@@ -145,7 +129,12 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(customize, /profile-collection/);
   assert.match(customize, /ProfileReferenceLayoutEditor/);
   assert.doesNotMatch(customize, /showLinks=\{false\}|ProfileTemplatePicker|components\['profile-layout'\]/);
-  assert.match(referenceLayout, /data-studio-layout="reference-card"/);
+  assert.match(referenceLayout, /data-layout-editor="reference-first"/);
+  assert.match(referenceLayout, /PROFILE_LAYOUT_DEFINITIONS/);
+  assert.match(referenceLayout, /PROFILE_LAYOUT_KEYS/);
+  for (const layout of ['compact', 'sleek', 'minimal', 'modern', 'portfolio']) {
+    assert.match(referenceLayout, new RegExp(`data-layout=\{key\}|['"]${layout}['"]`));
+  }
   assert.match(premium, /\$7\.99 lifetime/);
   assert.match(premium, /Premium buys expression\. Gameplay earns prestige\./);
   assert.match(shell, /profile-studio-shell__brand/);

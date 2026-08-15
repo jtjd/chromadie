@@ -12,6 +12,8 @@
   export let previewOpen = false;
   export let dirty = false;
   export let saving = false;
+  export let status = '';
+  export let error = '';
 
   const dispatch = createEventDispatcher();
 
@@ -44,6 +46,7 @@
     <div>
       <h1>{activeLabel}</h1>
       <div class="profile-studio-header__save-state"><i class:dirty={dirty}></i><span>{saving ? 'Saving changes' : dirty ? 'Unpublished changes' : 'All changes saved'}</span></div>
+      {#if error}<p class="profile-studio-header__message profile-studio-header__message--error" role="alert">{error}</p>{:else if status}<p class="profile-studio-header__message" role="status" aria-live="polite">{status}</p>{/if}
     </div>
     <span class="profile-studio-header__published" class:dirty>{dirty ? 'Draft' : 'Published'}</span>
     <div class="profile-studio-header__toolbar-actions">
@@ -57,6 +60,7 @@
     <div>
       <h1>Customize profile</h1>
       <div class="profile-studio-header__save-state"><i class:dirty={dirty}></i><span>{saving ? 'Saving changes' : dirty ? 'Unpublished changes' : 'All changes saved'}</span></div>
+      {#if error}<p class="profile-studio-header__message profile-studio-header__message--error" role="alert">{error}</p>{:else if status}<p class="profile-studio-header__message" role="status" aria-live="polite">{status}</p>{/if}
     </div>
     <span class="profile-studio-header__published" class:dirty>{dirty ? 'Draft' : 'Published'}</span>
   </header>
@@ -89,6 +93,8 @@
   .profile-studio-header__save-state { display: flex; align-items: center; gap: .45rem; margin-top: .45rem; color: var(--studio-muted, #8f9099); font: 500 .72rem/1 'Inter', var(--font-body-stack, sans-serif); }
   .profile-studio-header__save-state i { width: .42rem; height: .42rem; border-radius: 50%; background: var(--studio-accent, #00ffb3); box-shadow: 0 0 8px var(--studio-accent-glow, rgba(0,255,179,.24)); }
   .profile-studio-header__save-state i.dirty { background: #f5c26f; box-shadow: none; }
+  .profile-studio-header__message { max-width: 25rem; margin: .55rem 0 0; color: var(--studio-muted, #8f9099); font: 400 .68rem/1.35 'Inter', sans-serif; }
+  .profile-studio-header__message--error { color: #ff5578; }
   .profile-studio-header__published { flex: 0 0 auto; margin-top: .05rem; padding: .38rem .6rem; border: 1px solid color-mix(in srgb, var(--studio-accent, #00ffb3) 58%, transparent); border-radius: 999px; color: var(--studio-accent, #00ffb3); font: 600 .62rem/1 'Clash Display', var(--font-display-stack, sans-serif); }
   .profile-studio-header__published.dirty { border-color: rgba(245,194,111,.58); color: #f5c26f; }
   .profile-studio-header__toolbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: .55rem; min-width: 0; }

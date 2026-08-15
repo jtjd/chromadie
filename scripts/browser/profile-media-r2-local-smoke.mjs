@@ -363,7 +363,7 @@ async function assertStudioMediaStaysStableAfterDraftChange() {
   assert(sourcesBefore.every(source => !new URL(source).search), 'Studio preview media source acquired a cache-busting query before draft change.');
 
   await page.click('#profile-customize-tab-layout', 'R2 smoke layout tab');
-  await page.waitFor('document.querySelector("#profile-customize-tab-layout")?.getAttribute("aria-selected") === "true" && !document.querySelector("[data-editor-section=layout]")?.hidden', 'R2 smoke visible Layout editor');
+  await page.waitFor('document.querySelector("#profile-customize-tab-layout")?.getAttribute("aria-selected") === "true" && document.querySelector("#customize-layout")', 'R2 smoke visible Layout editor');
   await page.evaluate('(() => { const card = [...document.querySelectorAll(\'.profile-template-picker__card\')].find(node => node.querySelector(\'strong\')?.textContent.trim() === \'Sleek\'); card?.click(); })()');
   await page.waitFor('document.querySelector(".profile-studio-preview .profile-shell-page--preview .identity-card--layout-sleek")', 'R2 smoke staged layout');
   await delay(250);
@@ -452,9 +452,9 @@ async function main() {
 
   const userId = await readLocalUserId();
   await page.navigate(appUrl + '/profile/settings', 'local Profile Studio');
-  await page.waitFor('document.querySelector(".profile-settings-page") && document.querySelector(".profile-customize-page")', 'local Profile Studio');
+  await page.waitFor('document.querySelector(".profile-settings-page") && document.querySelector(".studio-customize")', 'local Profile Studio');
   await page.click('#profile-customize-tab-media', 'local media customize tab');
-  await page.waitFor('document.querySelector("#profile-customize-tab-media")?.getAttribute("aria-selected") === "true" && document.querySelector("[data-editor-section=media]")?.hidden === false', 'visible local media editor');
+  await page.waitFor('document.querySelector("#profile-customize-tab-media")?.getAttribute("aria-selected") === "true" && document.querySelector("#customize-media")', 'visible local media editor');
 
   const uploadCases = [
     { kind: 'avatar', selector: 'input[aria-label="Choose avatar image"]', width: 256, height: 256, filename: 'r2-smoke-avatar.png', statusText: 'Avatar saved' },

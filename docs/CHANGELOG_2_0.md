@@ -2945,3 +2945,14 @@ direct route behavior.
 - Updated browser smoke and focused regression coverage for the new shell,
   mobile Preview control, More-menu focus behavior, responsive containment, and
   all existing Studio destinations.
+
+## 2026-08-15 — Rebuild Profile Studio Customize around the reference
+
+- Replaced the old Customize card stack with the approved reference-first dark
+  editor surface and bounded live profile card.
+- Kept Appearance, Media, Layout, identity, cosmetics, media, five-layout,
+  draft/publish, and environment behavior on their existing production
+  contracts while removing obsolete duplicate action presentation.
+- Reduced initial Customize work to the owner profile/configuration path and
+  active tab; deferred broader profile hydration until another dashboard
+  section requires it.

@@ -235,7 +235,7 @@
     <div class="appearance-editor__colors-layout">
       <div class="appearance-editor__color-grid">
         <div class="appearance-editor__colors-heading">
-          <div><h2>Profile colors</h2><p>Pick a color to edit</p></div>
+          <div><h2>Profile colors</h2><p>The current six editable page roles. Profile surface is adjusted separately below.</p></div>
           <button
             type="button"
             class="appearance-editor__picker-toggle"

@@ -3667,6 +3667,23 @@ created.
   375×812; full validation completed without changing public profiles, Studio,
   R2/media contracts, or backend behavior.
 
+## Profile Studio reference-first replacement — 2026-08-15
+
+- Replaced the Customize presentation with the approved dark reference shell:
+  direct identity, colors/surface, effects, media, and five-layout controls in
+  one reference-style panel, with a bounded persistent live card on the right.
+- Kept the selected profile environment behind the Studio surface and reused
+  the existing editor/state/draft/publish contracts without mounting the old
+  public-profile renderer in the preview.
+- Deferred full profile hydration and loaded only the active Customize tab on
+  entry/tab change. Removed the now-unused duplicate Studio action component
+  after import/reference checks and updated browser/source regression selectors
+  to the new presentation contract.
+- `npm run check`, `npm run build`, targeted Studio tests, and the full unit
+  suite pass. Production browser smoke reached authenticated Studio and stale
+  session checks; its later alias step remained environment-flaky when the
+  local account became unavailable.
+
 ## 2026-08-14 — Close media egress and repeated-request paths
 
 Removed the production Supabase Storage escape hatches from profile-media

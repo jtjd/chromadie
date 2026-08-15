@@ -43,7 +43,7 @@ test('appearance v1 is bounded and independent from daily roll color', () => {
 });
 
 test('dashboard uses its self-contained shell and aggregate profile action contract', async () => {
-  const [app, settings, contract, registry, workspace, preview, header, appearance, layout, migration, shell, actions] = await Promise.all([
+  const [app, settings, contract, registry, workspace, preview, header, appearance, layout, migration, shell] = await Promise.all([
     read('src/App.svelte'),
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/dashboardContract.js'),
@@ -54,8 +54,7 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileEditor.svelte'),
     read('supabase/migrations/20260808220000_profile_configuration_v2.sql'),
-    read('src/lib/ProfileStudioShell.svelte'),
-    read('src/lib/ProfileStudioActions.svelte')
+    read('src/lib/ProfileStudioShell.svelte')
   ]);
   const studio = [settings, contract, registry, workspace, preview, header].join('\n');
   assert.match(app, /\{#if !profileModeVisible && !profileSettingsModeVisible && !homeModeVisible\}/);
@@ -78,7 +77,7 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
   assert.match(settings, /save_profile_configuration_v2/);
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /on:publish=\{publishDashboard\}/);
-  assert.match(actions, /Publish profile/);
+  assert.match(shell, /profile-studio-shell__publish[\s\S]*Publish profile/);
   assert.match(shell, /dispatch\('reset'\)/);
   assert.doesNotMatch(appearance, /Highlight|Background gradient|Border color|appearance-gradient|appearance-border/);
   assert.doesNotMatch(layout, /save_profile_configuration['"]/);

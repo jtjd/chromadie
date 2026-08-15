@@ -36,6 +36,11 @@ test('Studio and homepage share the reference card without sharing public layout
   assert.match(homepage, /presentation="homepage"/);
   assert.match(customize, /import ProfileReferenceLayoutEditor/);
   assert.doesNotMatch(customize, /ProfileTemplatePicker|showLinks=\{false\}|components\['profile-layout'\]/);
-  assert.match(layout, /data-studio-layout="reference-card"/);
-  assert.doesNotMatch(layout, /Compact|Sleek|Minimal|Modern|Portfolio|ProfileTemplatePicker/);
+  assert.match(layout, /data-layout-editor="reference-first"/);
+  assert.match(layout, /PROFILE_LAYOUT_DEFINITIONS/);
+  assert.match(layout, /PROFILE_LAYOUT_KEYS/);
+  for (const key of ['compact', 'sleek', 'minimal', 'modern', 'portfolio']) {
+    assert.match(layout, new RegExp(`data-layout=\{key\}|['"]${key}['"]`));
+  }
+  assert.doesNotMatch(layout, /ProfileTemplatePicker/);
 });

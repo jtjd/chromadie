@@ -990,7 +990,7 @@
     </div>
   {/if}
 
-  <div class={'app-main ' + (profileModeVisible ? 'app-main--profile' : 'app-main--site') + (homeModeVisible ? ' app-main--home' : '') + (profileSettingsModeVisible ? ' app-main--profile-settings' : '')} id="main-content" role={routeMode === 'app' ? 'main' : undefined} tabindex="-1" bind:this={mainContent}>
+  <div class={'app-main ' + (profileModeVisible ? 'app-main--profile' : profileSettingsModeVisible ? 'app-main--profile-settings' : 'app-main--site') + (homeModeVisible ? ' app-main--home' : '')} id="main-content" role={routeMode === 'app' ? 'main' : undefined} tabindex="-1" bind:this={mainContent}>
   <RouteOutlet
     loaderKey={routeTarget.loaderKey}
     staticComponent={routeTarget.staticComponent}
