@@ -80,7 +80,7 @@
   .profile-motion-effect__motion {
     width: 100%;
     min-width: 0;
-    transform: rotateY(0deg) rotateX(0deg);
+    transform: rotateY(-4deg) rotateX(2deg);
     transform-style: preserve-3d;
     transition: transform 0.2s cubic-bezier(.23, 1, .32, 1);
     will-change: transform;

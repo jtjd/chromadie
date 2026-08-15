@@ -1,8 +1,7 @@
-// Keep the card visually neutral until the pointer supplies a real position.
-// A persistent base rotation makes the effect look permanently leaned over
-// before the user has interacted with the page.
-export const PROFILE_MOTION_RESTING = Object.freeze({ x: 0, y: 0 });
-export const PROFILE_MOTION_RESTING_TRANSFORM = 'rotateY(0deg) rotateX(0deg)';
+// Keep a restrained 3D cue at rest without reproducing the heavy left lean of
+// the previous ten-degree base rotation.
+export const PROFILE_MOTION_RESTING = Object.freeze({ x: 2, y: -4 });
+export const PROFILE_MOTION_RESTING_TRANSFORM = 'rotateY(-4deg) rotateX(2deg)';
 
 function canUseMotion() {
   if (typeof window === 'undefined') return false;
