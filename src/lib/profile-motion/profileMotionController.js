@@ -1,5 +1,8 @@
-export const PROFILE_MOTION_RESTING = Object.freeze({ x: 5, y: -10 });
-export const PROFILE_MOTION_RESTING_TRANSFORM = 'rotateY(-10deg) rotateX(5deg)';
+// Keep the card visually neutral until the pointer supplies a real position.
+// A persistent base rotation makes the effect look permanently leaned over
+// before the user has interacted with the page.
+export const PROFILE_MOTION_RESTING = Object.freeze({ x: 0, y: 0 });
+export const PROFILE_MOTION_RESTING_TRANSFORM = 'rotateY(0deg) rotateX(0deg)';
 
 function canUseMotion() {
   if (typeof window === 'undefined') return false;

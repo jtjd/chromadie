@@ -207,7 +207,7 @@ test('motion owns rotation while the inner card owns roll scale, with no bundled
   ]);
 
   assert.match(motion, /perspective: 1200px/);
-  assert.match(motion, /transform: rotateY\(-10deg\) rotateX\(5deg\)/);
+  assert.match(motion, /transform: rotateY\(0deg\) rotateX\(0deg\)/);
   assert.match(motion, /transition: transform 0\.2s cubic-bezier\(\.23, 1, \.32, 1\)/);
   assert.match(motion, /will-change: transform/);
   assert.doesNotMatch(motion, /requestAnimationFrame|lerp|spring|radial-gradient|box-shadow|glare|halo|avatar/);
