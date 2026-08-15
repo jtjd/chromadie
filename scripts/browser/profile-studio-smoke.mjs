@@ -224,29 +224,6 @@ async function callAuthenticatedRpc(functionName, args = {}) {
   return result.body;
 }
 
-async function latestRpcPayload(functionName) {
-  const request = [...(page?.requestLog || [])]
-    .reverse()
-    .find(entry => entry.method === 'POST' && entry.url.endsWith(`/rpc/${functionName}`));
-  if (!request?.requestId) return null;
-  try {
-    const result = await page.command('Network.getRequestPostData', { requestId: request.requestId });
-    const payload = JSON.parse(result.postData || '{}');
-    const draft = payload?.p_draft;
-    return draft && typeof draft === 'object'
-      ? {
-          version: draft.version,
-          layout: draft.base?.layoutVariant || draft.layoutVariant || null,
-          links: Array.isArray(draft.links) ? draft.links.length : null,
-          baseLinks: Array.isArray(draft.base?.links) ? draft.base.links.length : null,
-          surfaceBlur: draft.base?.appearance?.surface?.blur ?? draft.appearance?.surface?.blur ?? null
-        }
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 async function seedRichProfileFixture() {
   const sessionState = await page.evaluate(`(() => {
     const candidate = Object.values(localStorage)

@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate destinations through the reference shell', async () => {
-  const [settings, contract, registry, workspace, header, preview, customize, premium, shell, editor, expression, richMedia, identity, appearance, appearanceColors, content, widgets, cosmetics, referenceLayout] = await Promise.all([
+  const [settings, contract, registry, workspace, header, preview, customize, premium, shell, editor, expression, richMedia, identity, appearance, appearanceColors, cosmetics, referenceLayout] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/dashboardContract.js'),
     read('src/lib/profile-studio/sectionRegistry.js'),
@@ -21,8 +21,6 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
     read('src/lib/IdentityEditor.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/profileAppearanceColors.js'),
-    read('src/lib/ProfileContentEditor.svelte'),
-    read('src/lib/ProfileWidgetEditor.svelte'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/ProfileReferenceLayoutEditor.svelte')
   ]);
@@ -133,7 +131,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(referenceLayout, /PROFILE_LAYOUT_DEFINITIONS/);
   assert.match(referenceLayout, /PROFILE_LAYOUT_KEYS/);
   for (const layout of ['compact', 'sleek', 'minimal', 'modern', 'portfolio']) {
-    assert.match(referenceLayout, new RegExp(`data-layout=\{key\}|['"]${layout}['"]`));
+    assert.match(referenceLayout, new RegExp(`data-layout=\\{key\\}|['"]${layout}['"]`));
   }
   assert.match(premium, /\$7\.99 lifetime/);
   assert.match(premium, /Premium buys expression\. Gameplay earns prestige\./);

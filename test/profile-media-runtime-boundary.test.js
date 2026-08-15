@@ -95,7 +95,7 @@ test('profile media deletion paths are R2/control-plane-only', async () => {
 test('legacy favicon metadata falls back instead of emitting an empty href', async () => {
   const page = await read('functions/_profilePage.js');
   assert.match(page, /const faviconUrl = getPublicMediaUrl\(metadata\.faviconPath, env\)/);
-  assert.match(page, /\.replace\(\/\<link rel="icon"/);
+  assert.match(page, /\.replace\(\/<link rel="icon"/);
   assert.match(page, /faviconUrl\s*\n\s*\? `<link rel="icon"/);
   assert.match(page, /href="\/logo-mark\.svg"/);
 });

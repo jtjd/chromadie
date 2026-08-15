@@ -88,7 +88,7 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
 });
 
 test('reference workspace composition stays explicit', async () => {
-  const [settings, shell, header, preview, draftModel, appearance, appearanceColors, cosmetics, customize, mediaWorkspace, profileShell, editor, expression, shopPreview, renderModel] = await Promise.all([
+  const [settings, shell, header, preview, draftModel, appearance, appearanceColors, cosmetics, customize, mediaWorkspace, profileShell, expression, shopPreview, renderModel] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileStudioShell.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
@@ -100,7 +100,6 @@ test('reference workspace composition stays explicit', async () => {
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfileMediaWorkspace.svelte'),
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/ProfileEditor.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ShopItemPreview.svelte'),
     read('src/lib/profileRenderModel.js')
