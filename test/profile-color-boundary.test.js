@@ -31,6 +31,7 @@ test('profile color presentation remains bounded and the retained border is shar
   assert.match(profile, /ProfileBorderEffect/);
   assert.match(registry, /PROFILE_BORDER_KEYS/);
   assert.match(border, /prefers-reduced-motion/);
+  assert.match(border, /profile-border-effect--none[\s\S]*--border-accent: transparent/);
   assert.match(border, /@keyframes profile-border-chroma/);
   assert.match(border, /@keyframes profile-border-prism/);
   assert.doesNotMatch(border, /profile-border-spectrum|filter:\s*hue-rotate/);

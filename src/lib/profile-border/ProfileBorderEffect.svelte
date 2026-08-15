@@ -75,6 +75,14 @@
     isolation: isolate;
   }
 
+  /* An empty slot is a real no-effect state. Keep the base surface's normal
+     border behavior, but never let the renderer's default accent leak into it
+     when no profile border cosmetic is equipped. */
+  .profile-border-effect--none {
+    --border-accent: transparent;
+    --border-shadow: transparent;
+  }
+
   .profile-border-effect,
   .profile-border-effect--surface {
     border-width: var(--profile-border-width, 1px);
