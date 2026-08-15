@@ -1,6 +1,12 @@
 # Profile Studio Dashboard
 
-Status: implementation complete; the approved dark Profile Studio reference shell, compact navigation, two-column Customize workspace, persistent live preview, and responsive/mobile treatment implemented 2026-08-14
+Status: superseded presentation record; the current Studio implementation is
+the clean reference-card replacement documented in `docs/DECISIONS.md` and
+`docs/PROGRESS.md` (2026-08-14).
+
+The historical implementation details below remain as a record of the
+incremental dashboard work. They are not visual authorities for new Studio
+changes.
 
 The latest renderer follow-up also projects catalog CSS values at the preview
 boundary, gives Motion its animated Name renderer, and explicitly resumes

@@ -67,15 +67,10 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
 test('the homepage specimen owns the approved profile anatomy', () => {
   for (const selector of [
     'homepage-profile-demo--hero',
-    'homepage-profile-demo__avatar-shell',
-    'homepage-profile-demo__name',
-    'homepage-profile-demo__bio',
-    'homepage-profile-demo__links',
-    'homepage-profile-demo__roll'
+    'ProfileReferenceCard',
+    'presentation="homepage"'
   ]) assert.match(demo, new RegExp(selector));
-  assert.match(demo, /repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(demo, /border-radius: 22px/);
-  assert.match(demo, /backdrop-filter: blur\(32px\)/);
+  assert.doesNotMatch(demo, /ProfileShell|ProfileLayoutFrame|profile-shell/);
   assert.doesNotMatch(demo, /export let impactActive = false/);
   assert.doesNotMatch(demo, /Profile preview|homepage-profile-demo__head|@\{fixture\.username\}|Views|views|↗/);
 });

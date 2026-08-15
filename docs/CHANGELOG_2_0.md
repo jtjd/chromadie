@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-14 — Rebuild the Profile Studio preview around the reference card
+
+- The selected profile background now acts as the Studio page environment;
+  the live preview is one bounded glass profile card instead of a scrollable
+  public-profile layout canvas.
+- Homepage and Studio share the same reference card anatomy for avatar,
+  identity, links, media, and Today’s color.
+- Customize Layout now describes the active reference-card composition rather
+  than exposing the superseded five-template presentation picker.
+- Existing profile data, media, draft/publish, and public-profile behavior
+  remain on their established contracts.
+
 ## 2026-08-14 — Replace the Profile Studio presentation with the approved shell
 
 - Profile Studio now opens on the selected profile's photographic environment

@@ -28,10 +28,11 @@ test('the approved homepage typography is bundled and authoritative', async () =
 });
 
 test('the homepage shell preserves the frozen reference geometry and treatment', async () => {
-  const [styles, hero, demo, showcase, loop] = await Promise.all([
+  const [styles, hero, demo, card, showcase, loop] = await Promise.all([
     read('src/lib/homepage/homepage-reference.css'),
     read('src/lib/homepage/HomepageHero.svelte'),
     read('src/lib/homepage/HomepageProfileDemo.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/homepage/HomepageShowcase.svelte'),
     read('src/lib/homepage/HomepageLoop.svelte')
   ]);
@@ -45,10 +46,10 @@ test('the homepage shell preserves the frozen reference geometry and treatment',
   assert.match(hero, /min-height: calc\(100svh - 88px\)/);
   assert.match(hero, /width: 440px/);
   assert.doesNotMatch(hero, /height: 470px|ProfileShell|HomepageProfileRenderer|layoutLabel/);
-  assert.match(demo, /homepage-profile-demo__avatar-shell/);
-  assert.match(demo, /homepage-profile-demo__links/);
-  assert.match(demo, /repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(demo, /backdrop-filter: blur\(32px\)/);
+  assert.match(demo, /ProfileReferenceCard/);
+  assert.match(card, /profile-reference-card--homepage/);
+  assert.match(card, /repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(card, /backdrop-filter: blur\(32px\)/);
   assert.doesNotMatch(`${demo}${showcase}`, /profile-shell|ProfileShell|ProfileLayoutFrame/);
   assert.match(showcase, /homepage-profile-demo/);
   assert.doesNotMatch(showcase, /layout|profile-shell/i);

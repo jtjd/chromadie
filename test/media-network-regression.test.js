@@ -16,7 +16,8 @@ test('persistent Profile Studio preview owns no independent profile/media fetch 
   ]);
   assert.match(shell, /if \(previewMode\) return;/);
   assert.match(shell, /if \(previewMode\) \{/);
-  assert.match(preview, /previewMode=\{true\}/);
+  assert.match(preview, /ProfileReferenceCard/);
+  assert.doesNotMatch(preview, /ProfileShell|previewMode=\{true\}/);
   assert.doesNotMatch(`${shell}\n${renderModel}\n${expression}\n${richMedia}`, /mediaCacheKey|previewCacheKey|String\(Date\.now\(\)|verify-\$\{Date\.now/);
   assert.doesNotMatch(renderModel, /cacheKey/);
   assert.match(music, /getProfileMediaUrl\(activeTrack\.media_reference\)/);

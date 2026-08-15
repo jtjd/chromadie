@@ -93,15 +93,8 @@
   let studioDraft = null;
   let studioIdentityDraft = null;
   let cosmeticPreviewLoadout = null;
-  let PreviewComponent = null;
-  let previewError = '';
-  let previewDockError = '';
   let previewOpen = false;
   let previewDevice = 'desktop';
-  let previewLoadPromise = null;
-  let previewDockLoadPromise = null;
-  /** @type {any} */
-  let PreviewDockComponent = null;
   let sectionComponents = {};
   let sectionLoading = false;
   const sectionLoadPromises = new SvelteMap();
@@ -115,6 +108,9 @@
   let dashboardStatus = '';
   let dashboardError = '';
   let StudioActionsComponent = null;
+  let ProfilePreviewComponent = null;
+  let previewLoadPromise = null;
+  let previewError = '';
 
   $: accountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
   $: accountKey = $isAuthenticated && $session?.user?.id ? $session.user.id : '';
@@ -156,13 +152,10 @@
     previewAllAchievements: context?.allAchievements || [],
     dev: import.meta.env.DEV
   });
-  $: previewProfile = previewModel.profile;
-  $: previewProfileConfig = previewModel.profileConfig;
   $: previewRenderSnapshot = previewModel.snapshot;
 
   onMount(() => {
     void loadDashboardActions();
-    void loadPreviewDockComponent();
     previewMediaQuery = window.matchMedia('(max-width: 64rem)');
     const updatePreviewViewport = () => {
       isMobileViewport = previewMediaQuery.matches;
@@ -275,10 +268,7 @@
   function togglePreview() {
     if (!previewAvailable && !customizePreviewAvailable) return;
     previewOpen = !previewOpen;
-    if (previewOpen) {
-      void loadPreviewDockComponent();
-      void loadPreviewComponent();
-    }
+    if (previewOpen) void loadPreviewComponent();
   }
 
   function setPreviewDevice(device) {
@@ -355,6 +345,23 @@
     } catch (loadError) {
       dashboardError = loadError instanceof Error ? loadError.message : 'The dashboard actions could not be loaded.';
     }
+  }
+
+  async function loadPreviewComponent() {
+    if (ProfilePreviewComponent) return ProfilePreviewComponent;
+    if (previewLoadPromise) return previewLoadPromise;
+    previewError = '';
+    previewLoadPromise = import('./ProfileStudioPreview.svelte')
+      .then(module => {
+        ProfilePreviewComponent = module.default;
+        return ProfilePreviewComponent;
+      })
+      .catch(loadError => {
+        previewError = loadError instanceof Error ? loadError.message : 'The live preview could not be loaded.';
+        return null;
+      })
+      .finally(() => { previewLoadPromise = null; });
+    return previewLoadPromise;
   }
 
   async function loadCustomizeComponents() {
@@ -668,40 +675,6 @@
     studioIdentityDraft = applyProfileStudioIdentityPatch(studioIdentityDraft, event.detail || {});
   }
 
-  async function loadPreviewComponent() {
-    if (PreviewComponent) return PreviewComponent;
-    if (previewLoadPromise) return previewLoadPromise;
-    previewError = '';
-    previewLoadPromise = import('./ProfileShell.svelte')
-      .then(module => {
-        PreviewComponent = module.default;
-        return PreviewComponent;
-      })
-      .catch(loadError => {
-        previewError = loadError instanceof Error ? loadError.message : 'The live preview could not be loaded.';
-        return null;
-      })
-      .finally(() => { previewLoadPromise = null; });
-    return previewLoadPromise;
-  }
-
-  async function loadPreviewDockComponent() {
-    if (PreviewDockComponent) return PreviewDockComponent;
-    if (previewDockLoadPromise) return previewDockLoadPromise;
-    previewDockError = '';
-    previewDockLoadPromise = import('./ProfileStudioPreview.svelte')
-      .then(module => {
-        PreviewDockComponent = module.default;
-        return PreviewDockComponent;
-      })
-      .catch(loadError => {
-        previewDockError = loadError instanceof Error ? loadError.message : 'The live preview dock could not be loaded.';
-        return null;
-      })
-      .finally(() => { previewDockLoadPromise = null; });
-    return previewDockLoadPromise;
-  }
-
   function handleDirtyPromptKeydown(event) {
     if (!showDirtyPrompt) return;
     if (event.key === 'Escape') {
@@ -781,35 +754,26 @@
       on:configpublished={updateConfiguration}
       on:configreloaded={handleConfigurationReloaded}
       on:socialchange={handleSocialChange}
-      on:premiumrequest={handleDashboardSectionChange}
       on:accountdeleted={handleAccountDeleted}
     />
   </div>
 
   <svelte:fragment slot="preview">
-    {#if PreviewDockComponent}
+    {#if ProfilePreviewComponent}
       <svelte:component
-        this={PreviewDockComponent}
-        previewComponent={PreviewComponent}
-        {previewError}
-        {previewProfile}
-        {previewProfileConfig}
+        this={ProfilePreviewComponent}
         previewRenderSnapshot={previewRenderSnapshot}
-        previewScores={context?.targetScores || []}
-        previewTimelineEvents={context?.timelineEvents || []}
-        previewCollectionItems={context?.collectionItems || []}
-        previewAllAchievements={context?.allAchievements || []}
         {activeSection}
         {activeCustomizeTab}
         {previewDevice}
         {isMobileViewport}
         on:toggle={togglePreview}
-        on:retry={loadPreviewComponent}
         on:devicechange={event => setPreviewDevice(event.detail)}
-        on:premiumrequest={() => handleDashboardSectionChange({ detail: { sectionId: 'premium' } })}
       />
-    {:else if previewDockError}
-      <div class="profile-settings-page__preview-error" role="alert">{previewDockError}</div>
+    {:else if previewError}
+      <div class="profile-settings-page__preview-state" role="alert">{previewError}</div>
+    {:else}
+      <div class="profile-settings-page__preview-state" role="status">Preparing live preview…</div>
     {/if}
   </svelte:fragment>
 </ProfileStudioShell>
@@ -819,6 +783,7 @@
 <style>
   .profile-settings-page { width: 100%; min-width: 0; }
   .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--studio-warning, #f5c26f) 35%, transparent); border-radius: .35rem; color: var(--studio-warning, #f5c26f); font-size: .8rem; }
-  .profile-settings-page__preview-error { display: grid; min-height: 10rem; place-items: center; padding: 1rem; color: var(--studio-muted, #bac2de); font-size: .8rem; text-align: center; }
+  .profile-settings-page__preview-state { display: grid; min-height: 22rem; place-items: center; padding: 1rem; color: var(--studio-muted, #8f9099); font: 400 .8rem/1.45 'Inter', sans-serif; text-align: center; }
+  .profile-settings-page__preview-state[role="alert"] { color: #ff5578; }
   @media (prefers-reduced-motion: reduce) { .profile-settings-page { scroll-behavior: auto; } }
 </style>

@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('Profile Studio exposes aggregate destinations through the reference shell', async () => {
-  const [settings, contract, registry, workspace, header, preview, customize, premium, shell, editor, expression, richMedia, identity, appearance, appearanceColors, content, widgets, cosmetics] = await Promise.all([
+  const [settings, contract, registry, workspace, header, preview, customize, premium, shell, editor, expression, richMedia, identity, appearance, appearanceColors, content, widgets, cosmetics, referenceLayout] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/profile-studio/dashboardContract.js'),
     read('src/lib/profile-studio/sectionRegistry.js'),
@@ -23,7 +23,8 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
     read('src/lib/profileAppearanceColors.js'),
     read('src/lib/ProfileContentEditor.svelte'),
     read('src/lib/ProfileWidgetEditor.svelte'),
-    read('src/lib/ProfileCosmeticsEditor.svelte')
+    read('src/lib/ProfileCosmeticsEditor.svelte'),
+    read('src/lib/ProfileReferenceLayoutEditor.svelte')
   ]);
   const studio = [settings, contract, registry, workspace, header, preview].join('\n');
 
@@ -94,13 +95,11 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(richMedia, /export let compact = false/);
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);
-  assert.match(customize, /Chromadie Plus/);
   assert.match(studio, /role="tablist" aria-label="Customize profile"/);
   assert.match(studio, /Appearance[\s\S]*Media[\s\S]*Layout/);
   assert.doesNotMatch(studio, /\{ id: 'effects', label: 'Effects'/);
   assert.match(studio, /'customize-effects': 'appearance'/);
   assert.match(customize, /export let activeTab = 'appearance'/);
-  assert.match(customize, /premiumrequest/);
   assert.match(customize, /ProfileAppearanceEditor/);
   assert.match(customize, /data-editor-section="general"/);
   assert.match(customize, /--customize-section-accent/);
@@ -110,9 +109,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(customize, /--customize-primary-height: 2\.25rem/);
   assert.match(expression, /profile-expression-editor__compact-grid[\s\S]*grid-template-columns: minmax\(0, \.9fr\)[\s\S]*gap: \.65rem/);
   assert.doesNotMatch(customize, /gradient/);
-  assert.match(customize, /min-height: 5\.6rem/);
-  assert.match(customize, /font: 600 \.94rem\/1\.35/);
-  assert.doesNotMatch(customize, /premium-arrow/);
+  assert.doesNotMatch(customize, /premium-banner|premiumrequest|Chromadie Plus/);
   assert.match(expression, /profile-media-icon\) \{ width: 2\.35rem; height: 2\.35rem/);
   assert.match(expression, /min-height: 5\.7rem/);
   assert.match(expression, /font-size: \.92rem/);
@@ -146,7 +143,9 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(customize, /profile-identity/);
   assert.match(customize, /profile-media/);
   assert.match(customize, /profile-collection/);
-  assert.match(customize, /showLinks=\{false\}/);
+  assert.match(customize, /ProfileReferenceLayoutEditor/);
+  assert.doesNotMatch(customize, /showLinks=\{false\}|ProfileTemplatePicker|components\['profile-layout'\]/);
+  assert.match(referenceLayout, /data-studio-layout="reference-card"/);
   assert.match(premium, /\$7\.99 lifetime/);
   assert.match(premium, /Premium buys expression\. Gameplay earns prestige\./);
   assert.match(shell, /profile-studio-shell__brand/);

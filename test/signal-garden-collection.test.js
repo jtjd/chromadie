@@ -15,7 +15,7 @@ test('the homepage showcase uses local photographic fixtures and the direct prof
 
   assert.match(hero, /HomepageProfileDemo/);
   assert.match(hero, /homepage-profile-stage/);
-  assert.match(demo, /homepage-profile-demo__avatar/);
+  assert.match(demo, /ProfileReferenceCard/);
   assert.match(showcase, /getHomepageShowcaseFixtures/);
   assert.match(showcase, /homepage-showcase-card/);
   assert.doesNotMatch(`${hero}${demo}${showcase}`, /ProfileShell|HomepageProfileRenderer|profile-shell/);

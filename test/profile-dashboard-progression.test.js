@@ -24,8 +24,9 @@ test('Profile Studio is a full-page dashboard with a responsive owner shell', as
   assert.match(settings, /showPreview=\{showDashboardPreview\}/);
   assert.match(settings, /customizePreviewAvailable && \(!isMobileViewport \|\| previewOpen\)/);
   assert.match(settings, /slot="preview"/);
-  assert.match(studio, /profile-studio-preview__body/);
-  assert.match(studio, /renderSnapshot=\{previewRenderSnapshot\}/);
+  assert.match(studio, /profile-studio-preview__canvas/);
+  assert.match(studio, /previewRenderSnapshot=\{previewRenderSnapshot\}/);
+  assert.match(studio, /ProfileReferenceCard/);
   assert.doesNotMatch(studio, /profile-preview-drawer__backdrop/);
   assert.match(shell, /profile-studio-shell__mobile-tools/);
   assert.match(shell, /profile-studio-shell--with-preview/);

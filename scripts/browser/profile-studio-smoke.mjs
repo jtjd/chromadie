@@ -20,7 +20,6 @@ import {
 } from './cdp-harness.mjs';
 import { isReservedRouteSegment } from '../../src/lib/routeContract.js';
 import { isProtectedUsername } from '../../src/lib/usernamePolicy.js';
-import { isProfileSocialLink } from '../../src/lib/profileLinkTypes.js';
 import { RICH_PROFILE_FIXTURE } from './profile-rich-fixture.mjs';
 import { createSupabaseHeaders, getSupabaseCredentials } from '../../functions/_supabaseApi.js';
 
@@ -69,20 +68,6 @@ function stableProfileMediaRequests() {
       return false;
     }
   });
-}
-
-function expectedLayoutLinks(layout) {
-  const openingSocial = RICH_PROFILE_FIXTURE.links.filter(link => isProfileSocialLink(link.type)).slice(0, 6);
-  const customOpeningLimit = layout === 'minimal' ? 2 : 0;
-  const customOpening = RICH_PROFILE_FIXTURE.links
-    .filter(link => !isProfileSocialLink(link.type))
-    .slice(0, Math.min(customOpeningLimit, 6 - openingSocial.length));
-  const opening = [...openingSocial, ...customOpening];
-  const openingSet = new Set(opening);
-  return {
-    opening: RICH_PROFILE_FIXTURE.links.filter(link => openingSet.has(link)),
-    continuation: RICH_PROFILE_FIXTURE.links.filter(link => !openingSet.has(link))
-  };
 }
 
 async function step(name, action) {
@@ -262,67 +247,6 @@ async function latestRpcPayload(functionName) {
   }
 }
 
-function summarizeV2Draft(value) {
-  return {
-    layout: value?.base?.layoutVariant || null,
-    links: Array.isArray(value?.links) ? value.links.length : null,
-    surfaceBlur: value?.base?.appearance?.surface?.blur ?? value?.appearance?.surface?.blur ?? null
-  };
-}
-
-async function readRenderParityState(selector) {
-  return page.evaluate(`(() => {
-    const root = document.querySelector(${JSON.stringify(selector)});
-    const opening = root?.querySelector('.profile-shell__opening');
-    const identity = root?.querySelector('.identity-card');
-    const avatar = identity?.querySelector('.identity-card__avatar-media');
-    const background = root?.querySelector('.profile-environment__image');
-    const boundary = root?.querySelector('[data-profile-surface="true"]');
-    const surface = boundary ? getComputedStyle(boundary) : null;
-    const path = value => {
-      try { return value ? new URL(value, location.href).pathname : ''; } catch { return value || ''; }
-    };
-    return {
-      model: root?.dataset.profileRenderModel || '',
-      mode: root?.dataset.profileRenderMode || '',
-      layout: root?.dataset.profileLayout || '',
-      avatar: path(avatar?.currentSrc || avatar?.src),
-      background: path(background?.currentSrc || background?.src),
-      surface: surface ? {
-        fill: surface.getPropertyValue('--profile-surface-fill').trim(),
-        opacity: surface.getPropertyValue('--profile-surface-opacity').trim(),
-        blur: surface.getPropertyValue('--profile-surface-blur').trim(),
-        radius: surface.getPropertyValue('--profile-border-radius').trim(),
-        borderColor: surface.getPropertyValue('--profile-border-color').trim(),
-        backgroundColor: surface.backgroundColor,
-        backdropFilter: surface.backdropFilter || surface.webkitBackdropFilter || 'none'
-      } : null,
-      nameRenderer: identity?.querySelector('.name-effect-canvas')?.getAttribute('data-name-renderer') || '',
-      avatarEffect: [...(identity?.querySelector('.avatar-effect')?.classList || [])].find(value => value.startsWith('avatar-effect--')) || '',
-      border: root?.querySelector('[data-profile-border]')?.getAttribute('data-profile-border') || '',
-      atmosphere: root?.querySelector('[data-atmosphere]')?.getAttribute('data-atmosphere') || '',
-      opening: (() => {
-        const box = opening?.getBoundingClientRect();
-        return box ? { left: box.left, top: box.top, width: box.width, height: box.height } : null;
-      })()
-    };
-  })()`);
-}
-
-function parityFields(state) {
-  return {
-    model: state?.model || '',
-    layout: state?.layout || '',
-    avatar: state?.avatar || '',
-    background: state?.background || '',
-    surface: state?.surface || null,
-    nameRenderer: state?.nameRenderer || '',
-    avatarEffect: state?.avatarEffect || '',
-    border: state?.border || '',
-    atmosphere: state?.atmosphere || ''
-  };
-}
-
 async function seedRichProfileFixture() {
   const sessionState = await page.evaluate(`(() => {
     const candidate = Object.values(localStorage)
@@ -459,14 +383,14 @@ async function publishRichProfileDraft() {
 
 async function assertPublishedExpressionVisible(description) {
   await page.waitFor(`(() => {
-    const avatar = document.querySelector('.profile-studio-preview .identity-card__avatar-media');
-    const background = document.querySelector('.profile-studio-preview .profile-environment__image');
+    const avatar = document.querySelector('.profile-studio-preview .profile-reference-card__avatar');
+    const background = document.querySelector('.profile-environment--studio .profile-environment__image');
     return Boolean(avatar?.complete && avatar.naturalWidth > 0 && background?.complete && background.naturalWidth > 0);
   })()`, `${description} media load`, 15000);
   const state = await page.evaluate(`(() => {
-    const avatar = document.querySelector('.profile-studio-preview .identity-card__avatar-media');
-    const background = document.querySelector('.profile-studio-preview .profile-environment__image');
-    const video = document.querySelector('.profile-studio-preview .profile-environment__video');
+    const avatar = document.querySelector('.profile-studio-preview .profile-reference-card__avatar');
+    const background = document.querySelector('.profile-studio-preview .profile-environment__image, .profile-environment--studio .profile-environment__image');
+    const video = document.querySelector('.profile-environment--studio .profile-environment__video');
     return {
       avatar: avatar ? { complete: avatar.complete, naturalWidth: avatar.naturalWidth, src: avatar.currentSrc || avatar.src } : null,
       background: background ? { complete: background.complete, naturalWidth: background.naturalWidth, src: background.currentSrc || background.src } : null,
@@ -481,44 +405,23 @@ async function assertPublishedExpressionVisible(description) {
   return { state, expression: { avatar: expression.avatar_path, background: expression.background_path, video: expression.background_video_path || null, audio: expression.audio_path || null, cursor: expression.cursor_path || null } };
 }
 
-async function waitForPublicLayout(layout, description) {
-  const selector = `.profile-shell-page[aria-busy="false"] .identity-card--layout-${layout}`;
+async function waitForStudioReferenceCard(description) {
+  const referenceCard = `document.querySelector('[data-editor-section="layout"] .profile-reference-layout-editor') && document.querySelector('.profile-studio-preview .profile-reference-card')`;
   try {
-    await page.waitFor(`document.querySelector(${JSON.stringify(selector)})`, description);
-  } catch (error) {
-    // Local GoTrue/Vite can transiently lose one hydration or module request
-    // while the smoke rotates through five authenticated publish/navigation
-    // cycles. Retry one clean document load, but keep the layout assertion
-    // itself strict so a real wrong-layout render still fails.
-    const state = await page.evaluate(`({
-      path: location.pathname,
-      unavailable: Boolean([...document.querySelectorAll('h1, h2, p')].find(node => node.textContent?.includes('Account unavailable'))),
-      shell: Boolean(document.querySelector('.profile-shell-page[aria-busy="false"]'))
-    })`).catch(() => null);
-    if (state?.shell) throw error;
-    await page.command('Page.reload', { ignoreCache: true });
-    await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`);
-    await page.waitFor(`document.querySelector(${JSON.stringify(selector)})`, `${description} retry`);
-  }
-}
-
-async function waitForStudioLayoutPicker(description) {
-  const picker = `document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-template-picker__card')`;
-  try {
-    await page.waitFor(picker, description);
+    await page.waitFor(referenceCard, description);
   } catch {
     // A direct route navigation can finish before the authenticated settings
     // request has completed on a local GoTrue/Vite run. Retry the document
-    // once, but keep the picker assertion strict after the retry.
+    // once, but keep the reference-card assertion strict after the retry.
     await page.command('Page.reload', { ignoreCache: true });
     await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`);
-    await page.waitFor(picker, `${description} retry`);
+    await page.waitFor(referenceCard, `${description} retry`);
   }
 }
 
-async function waitForRichStudioOpeningLinks(description) {
-  const selector = '.profile-studio-preview .identity-card__links a';
-  const minimum = RICH_PROFILE_FIXTURE.links.filter(link => isProfileSocialLink(link.type)).length;
+async function waitForReferenceCardLinks(description) {
+  const selector = '.profile-studio-preview .profile-reference-card__links a';
+  const minimum = Math.min(4, RICH_PROFILE_FIXTURE.links.length);
   const condition = `document.querySelectorAll(${JSON.stringify(selector)}).length >= ${minimum}`;
   try {
     await page.waitFor(condition, description);
@@ -526,264 +429,96 @@ async function waitForRichStudioOpeningLinks(description) {
     // The authenticated Studio route can first paint its empty bootstrap
     // context before the V2 owner projection arrives. Retry the same route
     // once rather than allowing a transient empty draft to be published.
-    const state = await page.evaluate(`({ openingLinks: document.querySelectorAll(${JSON.stringify(selector)}).length, picker: Boolean(document.querySelector('.profile-template-picker__card')), shell: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page--preview')) })`).catch(() => null);
-    if (state?.openingLinks >= minimum) return;
+    const state = await page.evaluate(`({ links: document.querySelectorAll(${JSON.stringify(selector)}).length, card: Boolean(document.querySelector('.profile-studio-preview .profile-reference-card')) })`).catch(() => null);
+    if (state?.links >= minimum) return;
     await page.command('Page.reload', { ignoreCache: true });
     await page.waitFor(`document.readyState === 'complete'`, `${description} retry document load`);
-    await waitForStudioLayoutPicker(`${description} retry picker`);
+    await waitForStudioReferenceCard(`${description} retry reference card`);
     await page.waitFor(condition, `${description} retry`);
   }
 }
 
 async function capturePublishedLayouts() {
-  const publicLayouts = ['compact', 'sleek', 'minimal', 'modern', 'portfolio'];
-  const evidence = [];
-  let compactSurfaceValues = null;
-  for (const layout of publicLayouts) {
-    await page.setViewport(1440, 900);
-    await page.navigate(`${appUrl}/profile/settings#customize-layout`, `${layout} public evidence Studio`);
-    await waitForStudioLayoutPicker(`${layout} public evidence picker`);
-    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview[aria-busy="false"]')`, `${layout} stable Studio preview`);
-    await waitForRichStudioOpeningLinks(`${layout} hydrated opening links`);
-    let studioParityState;
-    const serverConfigBefore = await callAuthenticatedRpc('get_my_profile_configuration_v2');
-    const serverBeforeDraft = serverConfigBefore?.draft || serverConfigBefore?.configuration_v2?.draft;
-    const serverBeforeSummary = summarizeV2Draft(serverBeforeDraft);
-    await page.evaluate(`(() => {
-      const wanted = ${JSON.stringify(layout)};
-      const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim().toLowerCase() === wanted);
-      card?.click();
-    })()`);
-    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} public evidence preview`);
-    if (layout === 'compact') {
-      await page.click('#profile-customize-tab-appearance', 'inspect Compact surface controls');
-      await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Compact Appearance editor');
-      compactSurfaceValues = await page.evaluate(`(() => {
-        const panel = document.querySelector('.appearance-editor__surface-grid')?.closest('.appearance-editor__panel');
-        const hex = panel?.querySelector('.appearance-editor__surface-color .appearance-editor__hex');
-        const ranges = [...(panel?.querySelectorAll('.appearance-editor__range input[type="range"]') || [])];
-        return { color: hex?.value || '', opacity: ranges[0]?.value || '', blur: ranges[1]?.value || '' };
-      })()`);
-      await page.click('#profile-customize-tab-layout', 'restore Layout editor after Compact surface inspection');
-      await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, 'visible Compact Layout editor');
-    }
-    if (layout === 'minimal' || layout === 'portfolio') {
-      await page.click('#profile-customize-tab-appearance', `inspect ${layout} cardless surface controls`);
-      await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, `${layout} Appearance editor`);
-      const cardlessControls = await page.evaluate(`(() => {
-        const panel = document.querySelector('.appearance-editor__surface-grid')?.closest('.appearance-editor__panel');
-        const controls = [...(panel?.querySelectorAll('.appearance-editor__surface-color input, .appearance-editor__surface-color button, .appearance-editor__range input') || [])];
-        const hex = panel?.querySelector('.appearance-editor__surface-color .appearance-editor__hex');
-        const ranges = [...(panel?.querySelectorAll('.appearance-editor__range input[type="range"]') || [])];
-        return {
-          cardless: Boolean(panel?.classList.contains('appearance-editor__panel--cardless')),
-          disabled: controls.every(control => control.disabled),
-          note: panel?.textContent?.includes('This layout does not use a profile card surface.') || false,
-          values: { color: hex?.value || '', opacity: ranges[0]?.value || '', blur: ranges[1]?.value || '' }
-        };
-      })()`);
-      assert(cardlessControls.cardless && cardlessControls.disabled && cardlessControls.note, `${layout} did not communicate that profile surface controls are unavailable: ${JSON.stringify(cardlessControls)}.`);
-      if (compactSurfaceValues) {
-        assert(JSON.stringify(cardlessControls.values) === JSON.stringify(compactSurfaceValues), `${layout} changed saved surface values while cardless: ${JSON.stringify({ before: compactSurfaceValues, after: cardlessControls.values })}.`);
-      }
-      await page.click('#profile-customize-tab-layout', `restore Layout editor after ${layout} surface inspection`);
-      await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, `${layout} Layout editor`);
-    }
-    const layoutPublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-actions__publish')].find(button => !button.disabled))`);
-    let serverAfterDraft = serverBeforeDraft;
-    let publishPayload = null;
-    if (layoutPublishPending) {
-      await page.click('.profile-studio-actions__publish', `${layout} public evidence publish`);
-      await page.waitFor(`document.querySelector('.profile-studio-actions__publish')?.disabled === true`, `${layout} public evidence published`);
-      await assertPublishedExpressionVisible(`${layout} Studio publish`);
-      publishPayload = await latestRpcPayload('publish_profile_studio_v2');
-      const serverConfigAfter = await callAuthenticatedRpc('get_my_profile_configuration_v2');
-      serverAfterDraft = serverConfigAfter?.draft || serverConfigAfter?.configuration_v2?.draft;
-    }
-    studioParityState = await readRenderParityState('.profile-studio-preview .profile-shell-page--preview');
-    await delay(180);
-    const settledStudioParityState = await readRenderParityState('.profile-studio-preview .profile-shell-page--preview');
-    assert(JSON.stringify(parityFields(settledStudioParityState)) === JSON.stringify(parityFields(studioParityState)), `${layout} Studio render snapshot changed after the preview settled: ${JSON.stringify({ before: studioParityState, after: settledStudioParityState })}.`);
-    assert(studioParityState.model === 'v1' && studioParityState.layout === layout && studioParityState.mode === 'studio', `${layout} Studio did not expose the canonical render snapshot boundary: ${JSON.stringify(studioParityState)}.`);
-    const serverAfterSummary = summarizeV2Draft(serverAfterDraft);
-    await page.navigate(`${appUrl}/${canonicalUsername}`, `${layout} public evidence desktop`);
-    await waitForPublicLayout(layout, `${layout} public desktop profile`);
-    if (studioParityState.atmosphere) {
-      await page.waitFor(
-        `document.querySelector(${JSON.stringify(`.profile-shell-page [data-atmosphere="${studioParityState.atmosphere}"]`)})`,
-        `${layout} public settled atmosphere`
-      );
-    }
-    if (smokeMode === 'dev') {
-      await page.waitFor(`document.querySelector('.profile-shell-page [data-atmosphere="rain-window"]')`, `${layout} public atmosphere renderer`);
-    }
-    if (layout === 'compact') {
-      await page.waitFor(`document.querySelector('.profile-shell__opening .profile-roll__result .final-color-display') || document.querySelector('.profile-shell__opening .profile-roll__reveal-button:not(:disabled)')`, 'owner Daily Color state', 15000);
-      const canRevealOwnerColor = await page.evaluate(`Boolean(document.querySelector('.profile-shell__opening .profile-roll__reveal-button:not(:disabled)'))`);
-      if (canRevealOwnerColor) {
-        await page.click('.profile-shell__opening .profile-roll__reveal-button', 'reveal owner Daily Color');
-        await page.waitFor(`document.querySelector('.profile-shell__opening .profile-roll__result .final-color-display')`, 'owner Daily Color result');
-      }
-    }
-    const publicGeometry = await page.evaluate(`(() => {
-      const shell = document.querySelector('.profile-shell-page');
-      const image = document.querySelector('.profile-environment__image');
-      const canvas = document.querySelector('.name-effect-canvas__visual');
-      const semantic = document.querySelector('.name-effect-canvas__semantic, .identity-card__name');
-      const shellBox = shell?.getBoundingClientRect();
-      const imageBox = image?.getBoundingClientRect();
-      const imageStyle = image ? getComputedStyle(image) : null;
-      const canvasBox = canvas?.getBoundingClientRect();
-      const semanticBox = semantic?.getBoundingClientRect();
-      const ownerColor = document.querySelector('.profile-shell__opening .profile-roll .final-color-display, .profile-shell__more .profile-roll .final-color-display');
-      const ownerColorBox = ownerColor?.getBoundingClientRect();
-      const avatar = document.querySelector('.profile-shell__opening .identity-card__avatar');
-      const avatarBox = avatar?.getBoundingClientRect();
-      const socialGlyph = document.querySelector('.profile-shell__opening .identity-card__link-glyph');
-      const socialGlyphBox = socialGlyph?.getBoundingClientRect();
-      const continuationColumn = document.querySelector('.profile-shell__continuation-column');
-      const continuationColumnBox = continuationColumn?.getBoundingClientRect();
-      const continuationModules = [...document.querySelectorAll('.profile-shell__continuation-column > *')].map(node => {
-        const box = node.getBoundingClientRect();
-        return { left: box.left, right: box.right, width: box.width };
-      });
-      const continuationOrder = [...document.querySelectorAll('.profile-shell__continuation-column [data-profile-continuation]')]
-        .map(node => node.getAttribute('data-profile-continuation'));
-      return {
-        viewport: [innerWidth, innerHeight],
-        shell: shellBox ? { width: shellBox.width, height: shellBox.height } : null,
-        background: image ? { complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight, position: imageStyle.position, objectFit: imageStyle.objectFit, box: imageBox ? { left: imageBox.left, top: imageBox.top, width: imageBox.width, height: imageBox.height } : null } : null,
-        name: canvas && semantic ? { canvas: { width: canvas.width, height: canvas.height, cssWidth: canvasBox?.width || 0, cssHeight: canvasBox?.height || 0 }, semantic: { left: semanticBox?.left || 0, top: semanticBox?.top || 0, width: semanticBox?.width || 0, height: semanticBox?.height || 0 }, fontSize: getComputedStyle(semantic).fontSize } : null,
-        ownerColor: ownerColorBox ? { width: ownerColorBox.width, height: ownerColorBox.height } : null,
-        avatar: avatarBox ? { width: avatarBox.width, height: avatarBox.height } : null,
-        socialGlyph: socialGlyphBox ? { width: socialGlyphBox.width, height: socialGlyphBox.height } : null,
-        continuationColumn: continuationColumnBox ? { left: continuationColumnBox.left, right: continuationColumnBox.right, width: continuationColumnBox.width } : null,
-        continuationModules,
-        continuationOrder,
-        northeastArrow: Boolean(document.querySelector('.profile-shell-page')?.innerHTML.includes('↗')),
-        openingLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links a')].map(link => link.href),
-        continuationLinks: [...document.querySelectorAll('.profile-shell__continuation-links a')].map(link => link.href),
-        openingSocialLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links--social a')].map(link => link.href),
-        openingNavigationLinks: [...document.querySelectorAll('.profile-shell__opening .identity-card__links--labeled a')].map(link => link.href),
-        continuationSocialLinks: [...document.querySelectorAll('.profile-shell__continuation-links .profile-shell__links--social a')].map(link => link.href),
-        continuationNavigationLinks: [...document.querySelectorAll('.profile-shell__continuation-links .profile-shell__links--navigation a')].map(link => link.href),
-        continuationAbout: document.querySelector('.profile-content__about')?.textContent?.trim() || '',
-        continuationProjects: [...document.querySelectorAll('.profile-content__project')].map(project => project.textContent.trim()),
-        continuationCue: Boolean(document.querySelector('.profile-shell__more-cue')),
-        subtleContinuationCue: Boolean(document.querySelector('.profile-shell__more-cue--continuation')),
-        ownerRoll: Boolean(document.querySelector('.profile-shell-page .profile-roll')),
-        atmosphere: document.querySelector('[data-atmosphere]')?.getAttribute('data-atmosphere') || '',
-        avatarEffect: [...(document.querySelector('.profile-shell__opening .avatar-effect')?.classList || [])].find(value => value.startsWith('avatar-effect--')) || '',
-        border: document.querySelector('.profile-shell__opening [data-profile-border]')?.getAttribute('data-profile-border') || ''
-        ,serverBefore: ${JSON.stringify(serverBeforeSummary)}
-        ,serverAfter: ${JSON.stringify(serverAfterSummary)}
-        ,publishPayload: ${JSON.stringify(publishPayload)}
-      };
-    })()`);
-    const publicParityState = await readRenderParityState('.profile-shell-page');
-    assert(JSON.stringify(parityFields(publicParityState)) === JSON.stringify(parityFields(studioParityState)), `${layout} public render diverged from the Studio snapshot: ${JSON.stringify({ studio: studioParityState, public: publicParityState })}.`);
-    assert(publicParityState.mode === 'public' && publicParityState.model === 'v1', `${layout} public profile did not use the canonical render snapshot boundary: ${JSON.stringify(publicParityState)}.`);
-    assert(publicGeometry.shell && Math.abs(publicGeometry.shell.width - 1440) <= 1 && Math.abs(publicGeometry.shell.height - 900) <= 1, `${layout} public profile does not fill the desktop viewport: ${JSON.stringify(publicGeometry)}.`);
-    if (publicGeometry.background) {
-      assert(publicGeometry.background.complete && publicGeometry.background.naturalWidth > 0 && publicGeometry.background.position === 'fixed' && publicGeometry.background.objectFit === 'cover' && (publicGeometry.background.box?.width || 0) >= 1439 && (publicGeometry.background.box?.height || 0) >= 899, `${layout} public uploaded background is not viewport-bound: ${JSON.stringify(publicGeometry)}.`);
-    }
-    if (publicGeometry.name) {
-      assert(publicGeometry.name.canvas.width <= 2048 && publicGeometry.name.canvas.height <= 512 && publicGeometry.name.canvas.cssWidth < 360 && publicGeometry.name.canvas.cssHeight < 100 && Number.parseFloat(publicGeometry.name.fontSize) >= 12, `${layout} effected username canvas is not sane: ${JSON.stringify(publicGeometry)}.`);
-    }
-    if (publicGeometry.ownerColor) {
-      assert(publicGeometry.ownerColor.width <= 48 && publicGeometry.ownerColor.height <= 48, `${layout} owner Daily Color escaped its compact presentation: ${JSON.stringify(publicGeometry)}.`);
-    }
-    if (layout === 'compact') {
-      assert(publicGeometry.ownerColor, `Compact owner Daily Color did not reach a revealed result state: ${JSON.stringify(publicGeometry)}.`);
-    }
-    const minimumAvatar = layout === 'compact' ? 60 : layout === 'sleek' || layout === 'modern' ? 56 : 76;
-    assert((publicGeometry.avatar?.width || 0) >= minimumAvatar && (publicGeometry.avatar?.height || 0) >= minimumAvatar, `${layout} avatar did not reach the readable compact size: ${JSON.stringify(publicGeometry)}.`);
-    if (publicGeometry.openingSocialLinks.length) {
-      assert((publicGeometry.socialGlyph?.width || 0) >= 18 && (publicGeometry.socialGlyph?.height || 0) >= 18, `${layout} social glyph is visually too small: ${JSON.stringify(publicGeometry)}.`);
-    }
-    assert(!publicGeometry.northeastArrow, `${layout} profile renderer still contains a decorative northeast arrow glyph.`);
-    assert(publicGeometry.continuationAbout.includes('About me') && publicGeometry.continuationAbout.includes(RICH_PROFILE_FIXTURE.content.about.body) && publicGeometry.continuationProjects.length === RICH_PROFILE_FIXTURE.content.projects.length, `${layout} rich continuation content did not render through the public profile path: ${JSON.stringify(publicGeometry)}.`);
-    const continuationOrder = publicGeometry.continuationOrder;
-    const contentOrder = continuationOrder.indexOf('content');
-    const linksOrder = continuationOrder.indexOf('links');
-    const mediaOrder = continuationOrder.indexOf('media');
-    assert(contentOrder < linksOrder && linksOrder < mediaOrder, `${layout} continuation content is not ordered About/Projects → Links → Media: ${JSON.stringify(publicGeometry)}.`);
-    if (publicGeometry.continuationColumn) {
-      assert(publicGeometry.continuationColumn.width <= 850 && publicGeometry.continuationModules.every(module => module.left >= publicGeometry.continuationColumn.left - 1 && module.right <= publicGeometry.continuationColumn.right + 1), `${layout} continuation modules escaped the shared centered column: ${JSON.stringify(publicGeometry)}.`);
-    }
-    const expectedLinks = expectedLayoutLinks(layout);
-    assert(JSON.stringify(publicGeometry.openingLinks) === JSON.stringify(expectedLinks.opening.map(link => link.url)) && JSON.stringify(publicGeometry.continuationLinks) === JSON.stringify(expectedLinks.continuation.map(link => link.url)) && new Set([...publicGeometry.openingLinks, ...publicGeometry.continuationLinks]).size === RICH_PROFILE_FIXTURE.links.length, `${layout} public opening/continuation links are duplicated or reordered: ${JSON.stringify(publicGeometry)}.`);
-    if (expectedLinks.continuation.length) {
-      assert(publicGeometry.continuationCue && (layout === 'portfolio' || publicGeometry.subtleContinuationCue), `${layout} lower links have no continuation affordance: ${JSON.stringify(publicGeometry)}.`);
-    }
-    assert(publicGeometry.openingSocialLinks.length === expectedLinks.opening.filter(link => isProfileSocialLink(link.type)).length && publicGeometry.continuationSocialLinks.length === expectedLinks.continuation.filter(link => isProfileSocialLink(link.type)).length && publicGeometry.openingNavigationLinks.length === expectedLinks.opening.filter(link => !isProfileSocialLink(link.type)).length && publicGeometry.continuationNavigationLinks.length === expectedLinks.continuation.filter(link => !isProfileSocialLink(link.type)).length, `${layout} social/custom link treatments are not partitioned by layout: ${JSON.stringify(publicGeometry)}.`);
-    assert(publicGeometry.ownerRoll, `${layout} owner public profile did not mount the interactive shared roll path: ${JSON.stringify(publicGeometry)}.`);
-    if (smokeMode === 'dev') {
-      assert(publicGeometry.name, `${layout} public profile did not mount the active NameEffectCanvas after publish and refresh.`);
-      assert(publicGeometry.atmosphere === 'rain-window' && publicGeometry.avatarEffect === 'avatar-effect--ghost-double' && publicGeometry.border === 'celestial', `${layout} public cosmetic boundary fixture did not survive publish: ${JSON.stringify(publicGeometry)}.`);
-    }
-    await capture(`public-${layout}-desktop`);
-    if (layout === 'compact') {
-      await captureRegion('compact-owner-daily-color', '.profile-shell__opening .profile-roll');
-      await page.evaluate(`(() => { const shell = document.querySelector('.profile-shell-page'); shell?.scrollTo({ top: shell.scrollHeight, behavior: 'instant' }); })()`);
-      await delay(120);
-      await capture('compact-continuation-desktop');
-      await page.evaluate(`(() => { const shell = document.querySelector('.profile-shell-page'); shell?.scrollTo({ top: 0, behavior: 'instant' }); })()`);
-    }
-    await page.setViewport(390, 844);
-    // Navigate to a cache-busted public URL for per-layout evidence. The
-    // dedicated direct-refresh step below still exercises Page.reload; using a
-    // fresh navigation here avoids measuring the previous layout's DOM while a
-    // browser reload is replacing it.
-    const mobileUrl = `${appUrl}/${canonicalUsername}?qa=${layout}-mobile-${Date.now()}`;
-    await page.command('Page.navigate', { url: mobileUrl });
-    await page.waitFor(`document.readyState === 'complete' && location.pathname === ${JSON.stringify('/' + canonicalUsername)}`, `${layout} public evidence mobile`);
-    await waitForPublicLayout(layout, `${layout} public mobile profile`);
-    await page.waitFor(
-      `(() => { const image = document.querySelector('.profile-shell-page .profile-environment__image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`,
-      `${layout} public mobile uploaded background`
-    );
-    await delay(180);
-    const mobileGeometry = await page.evaluate(`(() => {
-      const shell = document.querySelector('.profile-shell-page');
-      const image = document.querySelector('.profile-environment__image');
-      const box = element => element?.getBoundingClientRect();
-      const shellBox = box(shell);
-      const imageBox = box(image);
-      const style = image ? getComputedStyle(image) : null;
-      return { shell: shellBox ? { width: shellBox.width, height: shellBox.height } : null, background: imageBox && style ? { width: imageBox.width, height: imageBox.height, position: style.position, objectFit: style.objectFit, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight } : null };
-    })()`);
-    assert(mobileGeometry.shell && Math.abs(mobileGeometry.shell.width - 390) <= 1 && mobileGeometry.background && mobileGeometry.background.position === 'fixed' && mobileGeometry.background.objectFit === 'cover' && mobileGeometry.background.width >= 389 && mobileGeometry.background.height >= 843, `${layout} public mobile environment is not covered: ${JSON.stringify(mobileGeometry)}.`);
-    await capture(`public-${layout}-mobile`);
-    evidence.push({ layout, studioParityState, publicParityState, desktop: publicGeometry, mobile: mobileGeometry });
-  }
   await page.setViewport(1440, 900);
-  await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore Compact after public evidence');
-  await waitForStudioLayoutPicker('restore Compact picker');
-  await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview[aria-busy="false"]')`, 'restore Compact stable Studio preview');
-  await waitForRichStudioOpeningLinks('restore Compact hydrated opening links');
-  await page.evaluate(`(() => {
-    const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim() === 'Compact');
-    card?.click();
+  await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'reference-card Studio evidence');
+  await waitForStudioReferenceCard('reference-card Studio preview');
+  await waitForReferenceCardLinks('reference-card Studio links');
+  const studioState = await page.evaluate(`(() => {
+    const canvas = document.querySelector('.profile-studio-preview__canvas');
+    const viewport = document.querySelector('.profile-studio-preview__viewport');
+    const stage = document.querySelector('.profile-studio-preview__stage');
+    const card = document.querySelector('.profile-studio-preview .profile-reference-card');
+    const rect = element => {
+      const box = element?.getBoundingClientRect();
+      return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
+    };
+    return {
+      canvas: rect(canvas),
+      viewport: rect(viewport),
+      stage: rect(stage),
+      card: rect(card),
+      cardCount: document.querySelectorAll('.profile-studio-preview .profile-reference-card').length,
+      avatar: Boolean(card?.querySelector('.profile-reference-card__avatar, .profile-reference-card__avatar-fallback')),
+      name: Boolean(card?.querySelector('.profile-reference-card__name')),
+      links: card?.querySelectorAll('.profile-reference-card__links a').length || 0,
+      roll: Boolean(card?.querySelector('.profile-reference-card__roll')),
+      motion: Boolean(document.querySelector('.profile-studio-preview .profile-motion-effect')),
+      oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-layout-frame, .profile-studio-preview .profile-template-picker')),
+      scrollable: Boolean(stage && stage.scrollHeight > stage.clientHeight + 4)
+    };
   })()`);
-  await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-compact')`, 'restore Compact public evidence preview');
-  const restorePublishPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-actions__publish')].find(button => !button.disabled))`);
-  let restorePayload = null;
-  if (restorePublishPending) {
-    await page.click('.profile-studio-actions__publish', 'restore Compact publish');
-    await page.waitFor(`document.querySelector('.profile-studio-actions__publish')?.disabled === true`, 'restore Compact published');
-    restorePayload = await latestRpcPayload('publish_profile_studio_v2');
+  assert(studioState.cardCount === 1 && studioState.avatar && studioState.name && studioState.links > 0 && studioState.roll, `Studio reference card anatomy is incomplete: ${JSON.stringify(studioState)}.`);
+  assert(studioState.card && studioState.card.width >= 300 && studioState.card.width <= 360 && studioState.card.left >= (studioState.viewport?.left || 0) - 1 && studioState.card.right <= (studioState.viewport?.right || 0) + 1, `Studio reference card is not bounded by its preview rail: ${JSON.stringify(studioState)}.`);
+  assert(studioState.motion && !studioState.oldRenderer && !studioState.scrollable, `Studio still mounts an obsolete or scrollable profile renderer: ${JSON.stringify(studioState)}.`);
+  await captureRegion('studio-reference-card-desktop', '.profile-studio-preview__viewport');
+  const mediaSourcesBeforeDraftChange = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video')].map(element => element.currentSrc || element.src || '').filter(Boolean))()`);
+  await page.click('#profile-customize-tab-appearance', 'reference-card Appearance tab');
+  await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true'`, 'reference-card Appearance editor');
+  await delay(180);
+  const mediaSourcesAfterDraftChange = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video')].map(element => element.currentSrc || element.src || '').filter(Boolean))()`);
+  assert(JSON.stringify(mediaSourcesAfterDraftChange) === JSON.stringify(mediaSourcesBeforeDraftChange), `Studio appearance navigation changed media identity: ${JSON.stringify({ before: mediaSourcesBeforeDraftChange, after: mediaSourcesAfterDraftChange })}.`);
+  await page.setViewport(390, 844);
+  await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'reference-card mobile Studio evidence');
+  await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page')`, 'mobile Studio document');
+  if (!(await page.evaluate(`Boolean(document.querySelector('.profile-studio-preview'))`))) {
+    await page.clickText('Preview', { description: 'open mobile reference preview' });
   }
-  const restoredConfiguration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
-  return {
-    layouts: evidence,
-    restore: {
-      pending: restorePublishPending,
-      payload: restorePayload,
-      draft: summarizeV2Draft(restoredConfiguration?.draft || restoredConfiguration?.configuration_v2?.draft),
-      published: summarizeV2Draft(restoredConfiguration?.published || restoredConfiguration?.configuration_v2?.published)
-    }
-  };
+  await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card')`, 'mobile reference card');
+  await page.click('.profile-studio-preview__devices button:nth-child(2)', 'mobile reference-card device');
+  await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile .profile-reference-card')`, 'mobile reference-card canvas');
+  const mobileState = await page.evaluate(`(() => {
+    const preview = document.querySelector('.profile-studio-preview');
+    const card = preview?.querySelector('.profile-reference-card');
+    const box = card?.getBoundingClientRect();
+    return {
+      preview: Boolean(preview),
+      card: box ? { left: box.left, right: box.right, width: box.width } : null,
+      viewport: innerWidth,
+      overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1,
+      oldRenderer: Boolean(preview?.querySelector('.profile-shell-page, .profile-layout-frame, .profile-template-picker'))
+    };
+  })()`);
+  assert(mobileState.card && mobileState.card.left >= -1 && mobileState.card.right <= mobileState.viewport + 1 && !mobileState.overflow && !mobileState.oldRenderer, `Mobile reference card is not contained: ${JSON.stringify(mobileState)}.`);
+  await captureRegion('studio-reference-card-mobile', '.profile-studio-preview__viewport');
+  await page.setViewport(1440, 900);
+  await page.navigate(`${appUrl}/${canonicalUsername}`, 'published reference profile evidence');
+  await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] .identity-card')`, 'published profile evidence');
+  const publicState = await page.evaluate(`(() => {
+    const shell = document.querySelector('.profile-shell-page');
+    const image = shell?.querySelector('.profile-environment__image');
+    const box = shell?.getBoundingClientRect();
+    return {
+      shell: box ? { width: box.width, height: box.height } : null,
+      background: Boolean(image?.complete && image.naturalWidth > 0),
+      card: Boolean(shell?.querySelector('.identity-card')),
+      motion: Boolean(shell?.querySelector('.profile-motion-effect'))
+    };
+  })()`);
+  assert(publicState.card && publicState.shell && publicState.shell.width >= 1439 && publicState.shell.height >= 899, `Published profile evidence did not fill the viewport: ${JSON.stringify(publicState)}.`);
+  await capture('public-reference-profile-desktop');
+  await page.navigate(`${appUrl}/profile/settings#customize-layout`, 'restore reference-card Studio');
+  await waitForStudioReferenceCard('restore reference-card Studio');
+  return { studio: studioState, mobile: mobileState, public: publicState };
 }
 
 try {
@@ -899,17 +634,15 @@ try {
   });
 
   await step('Profile Studio ignores stale per-editor session drafts after refresh', async () => {
-    await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-surface="true"]')`, 'initial Studio profile surface before stale-session test');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card')`, 'initial Studio reference card before stale-session test');
     const baselineSurface = await page.evaluate(`(() => {
-      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
+      const surface = document.querySelector('.profile-studio-preview .profile-reference-card');
       const style = surface ? getComputedStyle(surface) : null;
       return style ? {
         backgroundColor: style.backgroundColor,
         backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
-        surface: style.getPropertyValue('--profile-surface').trim(),
-        fill: style.getPropertyValue('--profile-surface-fill').trim(),
-        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
-        blur: style.getPropertyValue('--profile-surface-blur').trim()
+        borderRadius: style.borderRadius,
+        width: style.width
       } : null;
     })()`);
     assert(baselineSurface, 'Could not read the saved Studio profile surface before stale-session test.');
@@ -941,32 +674,32 @@ try {
 
     await page.evaluate('window.__profileStudioSmokeReloadToken = "pending"');
     await page.command('Page.reload', { ignoreCache: true });
-    await page.waitFor(`window.__profileStudioSmokeReloadToken === undefined && document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-preview .profile-shell-page--preview') && document.querySelector('.profile-studio-actions')`, 'stale-session Studio hydration');
+    await page.waitFor(`window.__profileStudioSmokeReloadToken === undefined && document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-preview .profile-reference-card') && document.querySelector('.profile-studio-actions')`, 'stale-session Studio hydration');
     await delay(300);
     const state = await page.evaluate(`(() => {
-      const shell = document.querySelector('.profile-studio-preview .profile-shell-page--preview');
+      const card = document.querySelector('.profile-studio-preview .profile-reference-card');
       const actions = document.querySelector('.profile-studio-actions');
+      const published = document.querySelector('.profile-studio-header__published');
       return {
-        layout: shell?.dataset.profileLayout || '',
+        card: Boolean(card),
         dirty: Boolean(actions?.querySelector('.profile-studio-actions__state--dirty')),
-        saved: actions?.querySelector('.profile-studio-actions__state')?.textContent?.trim() || '',
+        saved: published?.textContent?.trim() || '',
         hiddenLegacyEditors: document.querySelectorAll('.profile-content-editor, .profile-widget-editor').length,
         surface: (() => {
-          const boundary = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
-          const style = boundary ? getComputedStyle(boundary) : null;
+          const referenceCard = document.querySelector('.profile-studio-preview .profile-reference-card');
+          const style = referenceCard ? getComputedStyle(referenceCard) : null;
           return style ? {
             backgroundColor: style.backgroundColor,
             backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
-            surface: style.getPropertyValue('--profile-surface').trim(),
-            fill: style.getPropertyValue('--profile-surface-fill').trim(),
-            opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
-            blur: style.getPropertyValue('--profile-surface-blur').trim()
+            borderRadius: style.borderRadius,
+            width: style.width
           } : null;
         })(),
-        preview: Boolean(shell)
+        preview: Boolean(card),
+        oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-layout-frame'))
       };
     })()`);
-    assert(state.preview && state.layout === 'compact', `Stale editor session state changed the initial Studio layout: ${JSON.stringify(state)}.`);
+    assert(state.preview && !state.oldRenderer, `Stale editor session state changed the Studio reference surface: ${JSON.stringify(state)}.`);
     assert(!state.dirty && state.saved === 'Published', `Stale editor session state changed dirty status: ${JSON.stringify(state)}.`);
     assert(state.hiddenLegacyEditors === 0, `Hidden legacy editors still mounted in Customize: ${JSON.stringify(state)}.`);
     assert(JSON.stringify(state.surface) === JSON.stringify(baselineSurface), `Stale editor session state changed the saved surface: ${JSON.stringify({ baseline: baselineSurface, afterRefresh: state.surface })}.`);
@@ -1001,12 +734,12 @@ try {
     await page.clickText('Preview', { description: 'open live preview control' });
     await page.waitFor(`(() => {
       const preview = document.querySelector('.profile-studio-preview');
-      const canvas = document.querySelector('.profile-studio-preview .profile-shell-page--preview');
+      const canvas = document.querySelector('.profile-studio-preview .profile-reference-card');
       return Boolean(preview && canvas && !preview.closest('.auth-modal-overlay'));
     })()`, 'on-demand live preview');
     const state = await page.evaluate(`(() => ({
       open: Boolean(document.querySelector('.profile-studio-preview')),
-      previewCanvas: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page--preview')),
+      previewCanvas: Boolean(document.querySelector('.profile-studio-preview .profile-reference-card')),
       authOverlay: Boolean(document.querySelector('.profile-studio-preview')?.closest('.auth-modal-overlay'))
     }))()`);
     await page.click('.profile-studio-preview__close', 'close live preview control');
@@ -1016,7 +749,7 @@ try {
 
   await step('Customize controls publish the configured surface depth', async () => {
     await page.navigate(`${appUrl}/profile/settings#customize-effects`, 'legacy Effects destination');
-    await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-studio-preview .profile-shell-page--preview')`, 'Customize tab workspace and persistent preview');
+    await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'Customize tab workspace and persistent preview');
     await page.waitFor(`document.querySelector('.profile-studio-actions')`, 'Studio profile actions');
     const customizeTabs = await page.evaluate(`[...document.querySelectorAll('[role="tablist"][aria-label="Customize profile"] [role="tab"]')].map(tab => tab.textContent.trim())`);
     assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Layout']), `Customize tabs did not collapse Effects into Appearance: ${JSON.stringify(customizeTabs)}.`);
@@ -1062,21 +795,20 @@ try {
     const backgroundUpload = await uploadGeneratedImage('input[aria-label="Choose background image"]', { ...RICH_PROFILE_FIXTURE.background, kind: 'background' });
     await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Background saved'))`, 'persisted uploaded background');
     try {
-      await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .profile-environment__image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded background in live preview');
+      await page.waitFor(`(() => { const image = document.querySelector('.profile-environment--studio .profile-environment__image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded background in live preview');
     } catch (error) {
       const previewState = await page.evaluate(`(() => ({
         images: [...document.querySelectorAll('.profile-studio-preview img')].map(image => ({ className: image.className, src: image.currentSrc || image.src, complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight })),
         editorImages: [...document.querySelectorAll('.profile-expression-editor img')].map(image => ({ className: image.className, src: image.currentSrc || image.src, complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight })),
-        previewShell: document.querySelector('.profile-studio-preview .profile-shell-page')?.className || '',
-        previewBackgroundPath: document.querySelector('.profile-studio-preview .profile-shell-page')?.getAttribute('data-profile-preview-background') || '',
-        previewConfig: document.querySelector('.profile-studio-preview .profile-shell-page')?.getAttribute('style') || '',
+        previewCard: document.querySelector('.profile-studio-preview .profile-reference-card')?.className || '',
+        previewEnvironment: document.querySelector('.profile-environment--studio')?.getAttribute('style') || '',
         messages: [...document.querySelectorAll('.profile-expression-editor__message[role="status"]')].map(node => node.textContent.trim())
       }))()`);
       throw new Error(`${error.message} State: ${JSON.stringify(previewState)}`, { cause: error });
     }
     const avatarUpload = await uploadGeneratedImage('input[aria-label="Choose avatar image"]', { ...RICH_PROFILE_FIXTURE.avatar, kind: 'avatar' });
     await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Avatar saved'))`, 'persisted uploaded avatar');
-    await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .identity-card__avatar-media'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded avatar in live preview');
+    await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .profile-reference-card__avatar'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded avatar in live preview');
     const mediaRequestsBeforeDraftChange = stableProfileMediaRequests();
     const mediaSourcesBeforeDraftChange = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video')]
       .map(element => element.currentSrc || element.src || '')
@@ -1085,11 +817,7 @@ try {
     // before any later fixture RPC can refresh the concurrency token for us.
     await page.click('#profile-customize-tab-layout', 'layout tab after media mutation');
     await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="layout"]')?.hidden`, 'layout editor after media mutation');
-    await page.evaluate(`(() => {
-      const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim() === 'Sleek');
-      card?.click();
-    })()`);
-    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-sleek')`, 'layout staged after media mutation');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card')`, 'reference card staged after media mutation');
     await delay(250);
     const mediaRequestsAfterDraftChange = stableProfileMediaRequests();
     const mediaSourcesAfterDraftChange = await page.evaluate(`(() => [...document.querySelectorAll('.profile-studio-preview img, .profile-studio-preview audio, .profile-studio-preview video')]
@@ -1121,12 +849,12 @@ try {
     await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=rich-${Date.now()}` });
     await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-settings-page')`, 'rehydrated rich Profile Studio document');
     await page.command('Page.navigate', { url: `${appUrl}/profile/settings#customize-layout` });
-    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-studio-preview .profile-shell-page--preview')`, 'rehydrated rich Profile Studio layout');
+    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('[data-editor-section="layout"]') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'rehydrated rich Profile Studio layout');
     await delay(180);
     await page.setInputValue('#profile-bio', RICH_PROFILE_FIXTURE.bio, ['input']);
     await page.setInputValue('#profile-location', RICH_PROFILE_FIXTURE.location, ['input']);
     await page.setInputValue('#profile-timezone', RICH_PROFILE_FIXTURE.timezone, ['input']);
-    await page.waitFor(`document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() === ${JSON.stringify(RICH_PROFILE_FIXTURE.bio)}`, 'rich identity draft in live preview');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card__bio')?.textContent?.trim() === ${JSON.stringify(RICH_PROFILE_FIXTURE.bio)}`, 'rich identity draft in live preview');
     await page.evaluate(`document.querySelector('[data-editor-section="media"]')?.scrollIntoView({ block: 'start' })`);
     await capture('04-media-workspace');
     await page.click('#profile-customize-tab-layout', 'Layout customize tab');
@@ -1144,243 +872,29 @@ try {
     assert((layoutState.workspace?.width || 0) > 0 && (layoutState.workspace?.bottom || 0) <= layoutState.viewport.height + 2, `Layout workspace escapes the viewport: ${JSON.stringify(layoutState)}.`);
     await page.evaluate(`document.querySelector('[data-editor-section="layout"]')?.scrollIntoView({ block: 'start' })`);
     await capture('04-layout-workspace');
-    await step('all five profile layouts use distinct structural renderers', async () => {
-      const layouts = ['compact', 'sleek', 'minimal', 'modern', 'portfolio'];
-      const pickerLabels = await page.evaluate(`([...document.querySelectorAll('.profile-template-picker__card strong')]).map(node => node.textContent.trim())`);
-      assert(JSON.stringify(pickerLabels) === JSON.stringify(['Compact', 'Sleek', 'Minimal', 'Modern', 'Portfolio']), `Profile Studio layout catalog is not the five-layout set: ${JSON.stringify(pickerLabels)}.`);
+  await step('reference card layout replaces legacy template selection', async () => {
+    const state = await page.evaluate(`(() => {
+      const editor = document.querySelector('[data-studio-layout="reference-card"]');
+      const card = document.querySelector('.profile-studio-preview .profile-reference-card');
+      const viewport = document.querySelector('.profile-studio-preview__viewport');
+      const cardBox = card?.getBoundingClientRect();
+      const viewportBox = viewport?.getBoundingClientRect();
+      return {
+        editor: Boolean(editor),
+        active: editor?.querySelector('.profile-reference-layout-editor__state')?.textContent?.trim() || '',
+        card: cardBox ? { width: cardBox.width, left: cardBox.left, right: cardBox.right } : null,
+        viewport: viewportBox ? { left: viewportBox.left, right: viewportBox.right, width: viewportBox.width } : null,
+        oldPicker: Boolean(document.querySelector('.profile-template-picker, .profile-template-picker__card')),
+        oldPreview: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-layout-frame')),
+        scrollCue: Boolean(document.querySelector('.profile-studio-preview__scroll-cue'))
+      };
+    })()`);
+    assert(state.editor && state.active === 'Active', `Reference layout editor is not active: ${JSON.stringify(state)}.`);
+    assert(state.card && state.viewport && state.card.left >= state.viewport.left - 1 && state.card.right <= state.viewport.right + 1, `Reference preview card escaped its bounded rail: ${JSON.stringify(state)}.`);
+    assert(!state.oldPicker && !state.oldPreview && !state.scrollCue, `Obsolete Studio presentation still mounted: ${JSON.stringify(state)}.`);
+    return state;
+  });
 
-      const measurements = [];
-      for (const layout of layouts) {
-        const clicked = await page.evaluate(`(() => {
-          const wanted = ${JSON.stringify(layout)};
-          const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim().toLowerCase() === wanted);
-          if (!card) return false;
-          card.scrollIntoView({ block: 'center', inline: 'nearest' });
-          card.click();
-          return true;
-        })()`);
-        assert(clicked, `Could not select ${layout} in Profile Studio.`);
-        await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} live preview layout`);
-        await page.waitFor(`(() => {
-          const layout = ${JSON.stringify(layout)};
-          const boundary = document.querySelector('.profile-studio-preview .profile-shell__identity-boundary');
-          const style = boundary ? getComputedStyle(boundary) : null;
-          if (!style) return false;
-          const cardless = style.backgroundColor === 'rgba(0, 0, 0, 0)' || style.backgroundColor === 'transparent';
-          const backdrop = style.backdropFilter || style.webkitBackdropFilter || 'none';
-          return layout === 'minimal' || layout === 'portfolio'
-            ? cardless && backdrop === 'none'
-            : style.borderTopWidth !== '0px';
-        })()`, `${layout} preview surface CSS`).catch(async error => {
-          const state = await page.evaluate(`(() => {
-            const boundary = document.querySelector('.profile-studio-preview .profile-shell__identity-boundary');
-            const style = boundary ? getComputedStyle(boundary) : null;
-            return {
-              className: boundary?.className || '',
-              backgroundColor: style?.backgroundColor || '',
-              backdropFilter: style?.backdropFilter || '',
-              webkitBackdropFilter: style?.webkitBackdropFilter || '',
-              borderTopWidth: style?.borderTopWidth || '',
-              borderTopColor: style?.borderTopColor || '',
-              stylesheetCount: document.styleSheets.length,
-              hrefs: [...document.styleSheets].map(sheet => sheet.href).filter(Boolean).slice(-12)
-            };
-          })()`);
-          throw new Error(`${error.message} State: ${JSON.stringify(state)}`);
-        });
-        const state = await page.evaluate(`(() => {
-          const canvas = document.querySelector('.profile-studio-preview__canvas');
-          const shell = canvas?.querySelector('.profile-shell-page--preview');
-          const viewport = canvas?.querySelector('.profile-studio-preview__viewport');
-          const stage = canvas?.querySelector('.profile-studio-preview__stage');
-          const frame = shell?.querySelector('.profile-layout-frame');
-          const opening = shell?.querySelector('.profile-shell__approved-opening');
-          const identityRegion = frame?.querySelector('.profile-shell__layout-identity');
-          const boundary = shell?.querySelector('.profile-shell__identity-boundary');
-          const card = shell?.querySelector('.identity-card');
-          const avatar = card?.querySelector('.identity-card__avatar');
-          const name = card?.querySelector('.identity-card__name');
-          const copy = card?.querySelector('.identity-card__copy');
-          const rect = element => {
-            const box = element?.getBoundingClientRect();
-            return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
-          };
-          const shellBox = rect(shell);
-          const viewportBox = rect(viewport);
-          const cardBox = rect(card);
-          const frameBox = rect(frame);
-          const openingBox = rect(opening);
-          const identityBox = rect(identityRegion);
-          const stageBox = rect(stage);
-          const boundaryBox = rect(boundary);
-          const avatarBox = rect(avatar);
-          const nameBox = rect(name);
-          const copyBox = rect(copy);
-          const overflow = [...(shell?.querySelectorAll('*') || [])]
-            .map(element => ({ element, box: element.getBoundingClientRect() }))
-            .filter(({ box }) => box.width > 0 && box.height > 0 && shellBox && (box.left < shellBox.left - 1 || box.right > shellBox.right + 1))
-            .slice(0, 4)
-            .map(({ element, box }) => ({ tag: element.tagName, className: element.className, left: Math.round(box.left), right: Math.round(box.right) }));
-          const avatarNameOverlap = Boolean(avatarBox && nameBox && avatarBox.left < nameBox.right - 1 && nameBox.left < avatarBox.right - 1 && avatarBox.top < nameBox.bottom - 1 && nameBox.top < avatarBox.bottom - 1);
-          const avatarCopyCenterDelta = avatarBox && copyBox
-            ? Math.abs((avatarBox.top + avatarBox.height / 2) - (copyBox.top + copyBox.height / 2))
-            : null;
-          const backgroundBounds = [...(shell?.querySelectorAll('.profile-environment__image, .profile-environment__overlay, .profile-environment__video, .profile-environment__atmosphere, .profile-environment__cursor') || [])]
-            .map(element => ({ selector: element.className?.baseVal || element.className || element.tagName, box: rect(element) }))
-            .filter(item => item.box);
-          const shellStyle = shell ? getComputedStyle(shell) : null;
-          const boundaryStyle = boundary ? getComputedStyle(boundary) : null;
-          const cardStyle = card ? getComputedStyle(card) : null;
-          const nameStyle = name ? getComputedStyle(name) : null;
-          const nameCanvas = card?.querySelector('.name-effect-canvas__visual');
-          const mediaStyles = [...(shell?.querySelectorAll('.profile-environment__image, .profile-environment__video') || [])].map(element => {
-            const style = getComputedStyle(element);
-            return { position: style.position, width: style.width, height: style.height, objectFit: style.objectFit };
-          });
-          const contentOverflow = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
-          const openingFits = Boolean(stage && openingBox && openingBox.height <= stage.clientHeight + 4);
-          const frameCenterX = frameBox ? frameBox.left + frameBox.width / 2 : null;
-          const frameCenterY = frameBox ? frameBox.top + frameBox.height / 2 : null;
-          const stageCenterX = stageBox ? stageBox.left + stageBox.width / 2 : null;
-          const stageCenterY = stageBox ? stageBox.top + stageBox.height / 2 : null;
-          return {
-            shell: shellBox,
-            shellScrollHeight: shell?.scrollHeight || 0,
-            viewport: viewportBox,
-            stage: stageBox,
-            frame: frameBox,
-            opening: openingBox,
-            identityRegion: identityBox,
-            boundary: boundaryBox,
-            card: cardBox,
-            cardClass: card?.className || '',
-            avatar: avatarBox,
-            name: nameBox,
-            copy: copyBox,
-            avatarNameOverlap,
-            avatarCopyCenterDelta,
-            avatarBeforeName: Boolean(avatarBox && nameBox && avatarBox.left < nameBox.left),
-            hasDailyRoll: Boolean(shell?.querySelector('.profile-daily-roll')),
-            frameVariant: ['compact', 'sleek', 'minimal', 'modern', 'portfolio'].find(layoutKey => shell?.classList.contains('profile-shell-page--' + layoutKey)) || '',
-            presenceStrip: Boolean(frame?.querySelector('[data-profile-layout-strip="presence"]')),
-            musicStrip: Boolean(frame?.querySelector('.profile-layout-frame__strip .profile-music')),
-            todayStrip: Boolean(frame?.querySelector('.profile-daily-roll--sleek')),
-            modernRegion: Boolean(frame?.querySelector('.profile-daily-roll--modern')),
-            secondary: Boolean(frame?.querySelector('.profile-daily-roll--modern')),
-            tabs: Boolean(frame?.querySelector('[role="tab"], [role="tablist"], [data-profile-layout-tabs]')),
-            // Cardless layouts still allow an equipped border cosmetic to
-            // surround the content. Cardless means no surface fill/backdrop;
-            // it does not mean removing the user's purchased perimeter.
-            cardless: Boolean(boundaryStyle
-              && (boundaryStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || boundaryStyle.backgroundColor === 'transparent')
-              && (boundaryStyle.backdropFilter || boundaryStyle.webkitBackdropFilter || 'none') === 'none'),
-            avatarRadius: avatar ? getComputedStyle(avatar).borderRadius : '',
-            shellBackground: shellStyle?.backgroundColor || '',
-            previewDevice: shell?.classList.contains('profile-shell-page--preview-mobile') ? 'mobile' : (shell?.classList.contains('profile-shell-page--preview') ? 'desktop' : ''),
-            shellTransform: shellStyle?.transform || 'none',
-            previewScrollable: stage?.getAttribute('data-preview-scrollable') === 'true',
-            contentOverflow,
-            openingFits,
-            openingOverflow: Boolean(stage && openingBox && openingBox.height > stage.clientHeight + 4),
-            frameCenterDeltaX: frameCenterX !== null && stageCenterX !== null ? Math.abs(frameCenterX - stageCenterX) : null,
-            frameCenterDeltaY: frameCenterY !== null && stageCenterY !== null ? Math.abs(frameCenterY - stageCenterY) : null,
-            scrollCue: Boolean(canvas?.querySelector('.profile-studio-preview__scroll-cue')),
-            nameFontSize: Number.parseFloat(nameStyle?.fontSize || '0'),
-            nameWidth: nameBox?.width || 0,
-            nameTextLength: name?.textContent?.trim().length || 0,
-            nameCanvas: nameCanvas ? { width: nameCanvas.width, height: nameCanvas.height } : null,
-            mediaStyles,
-            backgroundBounds,
-            iconCount: card?.querySelectorAll('.identity-card__link-glyph img').length || 0,
-            hasRedundantHandle: Boolean(card?.querySelector('.identity-card__handle, .identity-card__handle-row')),
-            overflow
-          };
-        })()`);
-        assert(state.frameVariant === layout, `${layout} preview mounted the wrong frame variant: ${JSON.stringify(state)}.`);
-        assert(state.previewDevice === 'desktop' && state.shell && state.stage && Math.abs(state.shell.left - state.stage.left) <= 3 && Math.abs(state.shell.top - state.stage.top) <= 3 && Math.abs(state.shell.width - state.stage.width) <= 3 && Math.abs(state.shell.height - state.stage.height) <= 3, `${layout} desktop preview page does not fill its physical environment: ${JSON.stringify(state)}.`);
-        assert(state.shellTransform === 'none' && state.card?.width >= 220 && state.card.width <= 360, `${layout} profile surface is microscopic or no longer compact: ${JSON.stringify(state)}.`);
-        assert((state.viewport?.height || 0) >= 360 && (!state.previewScrollable || state.scrollCue), `${layout} desktop preview is too short or hides its continuation affordance: ${JSON.stringify(state)}.`);
-        assert(state.card?.top >= (state.shell?.top || 0) - 1 && state.shellScrollHeight >= (state.card?.bottom || 0) - (state.shell?.top || 0) - 1, `${layout} desktop preview vertically clips the readable profile surface: ${JSON.stringify(state)}.`);
-        if (state.openingFits && layout !== 'minimal') {
-          assert((state.frameCenterDeltaX ?? 99) <= 4 && (state.frameCenterDeltaY ?? 99) <= 6, `${layout} fitting desktop preview frame is not centered in its environment: ${JSON.stringify(state)}.`);
-        }
-        if (!state.openingFits && layout !== 'minimal') {
-          assert((state.frame?.top || 0) >= (state.shell?.top || 0) - 1, `${layout} oversized preview opening is not top-accessible: ${JSON.stringify(state)}.`);
-        }
-        const minimumNameWidth = Math.max(8, Math.min(20, state.nameTextLength * 6));
-        assert(state.nameFontSize >= 12 && state.nameWidth >= minimumNameWidth && (!state.nameCanvas || (state.nameCanvas.width <= 2048 && state.nameCanvas.height <= 512)), `${layout} username geometry is not legible or sane: ${JSON.stringify(state)}.`);
-        assert(state.card?.right <= (state.shell?.right || 0) + 1 && state.card?.left >= (state.shell?.left || 0) - 1, `${layout} profile surface escapes the preview shell: ${JSON.stringify(state)}.`);
-        assert(!state.avatarNameOverlap && !state.overflow.length, `${layout} preview has identity collision or clipping: ${JSON.stringify(state)}.`);
-        assert(state.hasDailyRoll || layout === 'portfolio', `${layout} preview lost the shared daily-roll presentation.`);
-        assert(!state.hasRedundantHandle, `${layout} preview still renders a redundant @username handle.`);
-        for (const media of state.backgroundBounds) {
-          assert(Math.abs(media.box.left - state.shell.left) <= 1 && Math.abs(media.box.top - state.shell.top) <= 1 && Math.abs(media.box.width - state.shell.width) <= 1 && Math.abs(media.box.height - state.shell.height) <= 1, `${layout} page-level media/effects do not bound to the profile viewport: ${JSON.stringify(state)}.`);
-        }
-        for (const media of state.mediaStyles) {
-          assert(media.position === 'absolute' && media.objectFit === 'cover' && media.width !== 'auto' && media.height !== 'auto', `${layout} preview background media is not stage-bound: ${JSON.stringify(state)}.`);
-        }
-        if (layout === 'compact') {
-          assert(state.avatarBeforeName && (state.avatarCopyCenterDelta ?? 99) <= Math.max(10, (state.avatar?.height || 0) * .28), `Compact is not a horizontal identity head: ${JSON.stringify(state)}.`);
-        } else if (layout === 'sleek') {
-          assert(!state.presenceStrip && state.todayStrip && state.avatarRadius !== '50%', `Sleek is rendering fake presence or missing its detached Today strip/rounded-square avatar: ${JSON.stringify(state)}.`);
-        } else if (layout === 'minimal') {
-          assert(state.cardless && state.identityRegion?.left < state.shell.left + state.shell.width / 2 - 10, `Minimal is not a cardless offset identity: ${JSON.stringify(state)}.`);
-        } else if (layout === 'modern') {
-          assert(state.modernRegion && state.secondary && !state.tabs, `Modern is missing its valid secondary region: ${JSON.stringify(state)}.`);
-        } else if (layout === 'portfolio') {
-          assert(state.cardless && !state.hasDailyRoll, `Portfolio still presents the hero as a card or keeps Today in the opening: ${JSON.stringify(state)}.`);
-        }
-        await captureRegion(`${layout}-desktop`, '.profile-studio-preview__viewport');
-        measurements.push({ layout, ...state });
-      }
-
-      for (const layout of layouts) {
-        const clicked = await page.evaluate(`(() => {
-          const wanted = ${JSON.stringify(layout)};
-          const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim().toLowerCase() === wanted);
-          card?.click();
-          return Boolean(card);
-        })()`);
-        assert(clicked, `Could not restore ${layout} for the mobile evidence capture.`);
-        await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-${layout}')`, `${layout} mobile evidence layout`);
-        await page.click('.profile-studio-preview__devices button:nth-child(2)', `${layout} mobile preview control`);
-        await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile') && document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview')`, `${layout} mobile preview canvas`);
-        const mobileBounds = await page.evaluate(`(() => {
-          const viewport = document.querySelector('.profile-studio-preview__canvas--mobile .profile-studio-preview__viewport')?.getBoundingClientRect();
-          const stage = document.querySelector('.profile-studio-preview__canvas--mobile .profile-studio-preview__stage')?.getBoundingClientRect();
-          const shell = document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview')?.getBoundingClientRect();
-          const card = document.querySelector('.profile-studio-preview__canvas--mobile .identity-card');
-          const name = card?.querySelector('.identity-card__name');
-          const cardStyle = card ? getComputedStyle(card) : null;
-          const personStyle = card?.querySelector('.identity-card__person') ? getComputedStyle(card.querySelector('.identity-card__person')) : null;
-          const box = element => {
-            const rect = element?.getBoundingClientRect();
-            return rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : null;
-          };
-          return viewport && stage && shell ? { viewport: box({ getBoundingClientRect: () => viewport }), stage: box({ getBoundingClientRect: () => stage }), shell: box({ getBoundingClientRect: () => shell }), card: box(card), name: box(name), nameTextLength: name?.textContent?.trim().length || 0, nameFontSize: Number.parseFloat(name ? getComputedStyle(name).fontSize : '0') || 0, mobileClass: card?.classList.contains('identity-card--preview-mobile'), display: cardStyle?.display || '', personDirection: personStyle?.flexDirection || '' } : null;
-        })()`);
-        const minimumMobileNameWidth = Math.max(8, Math.min(20, (mobileBounds?.nameTextLength || 1) * 6));
-        assert(mobileBounds && Math.abs(mobileBounds.shell.left - mobileBounds.stage.left) <= 3 && Math.abs(mobileBounds.shell.top - mobileBounds.stage.top) <= 3 && Math.abs(mobileBounds.shell.width - mobileBounds.stage.width) <= 3 && mobileBounds.mobileClass && mobileBounds.personDirection === 'column' && mobileBounds.card.width >= 200 && mobileBounds.name.width >= minimumMobileNameWidth && mobileBounds.name.height >= 14 && mobileBounds.nameFontSize >= 12, `${layout} mobile preview is not an intentional readable mobile composition: ${JSON.stringify(mobileBounds)}.`);
-        await captureRegion(`${layout}-mobile`, '.profile-studio-preview__viewport');
-        await page.click('.profile-studio-preview__devices button:nth-child(1)', `${layout} desktop preview control`);
-        await page.waitFor(`!document.querySelector('.profile-studio-preview__canvas--mobile')`, `${layout} desktop preview canvas`);
-      }
-
-      await page.evaluate(`(() => {
-        const card = [...document.querySelectorAll('.profile-template-picker__card')].find(node => node.querySelector('strong')?.textContent.trim() === 'Compact');
-        card?.click();
-      })()`);
-      await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card--layout-compact')`, 'restore Compact preview layout');
-      // Layout selection is intentionally a real draft update. Reset it before
-      // the later route/viewport checks so navigation is testing geometry rather
-      // than being intercepted by the unsaved-changes guard.
-      const layoutResetPending = await page.evaluate(`Boolean([...document.querySelectorAll('.profile-studio-actions button')].find(button => button.textContent.trim() === 'Reset' && !button.disabled))`);
-      if (layoutResetPending) {
-        await page.click('.profile-studio-actions button:not(.profile-studio-actions__publish)', 'reset layout smoke draft');
-        await page.waitFor(`([...document.querySelectorAll('.profile-studio-actions button')].find(button => button.textContent.trim() === 'Reset'))?.disabled === true`, 'reset layout smoke draft');
-      }
-      return { pickerLabels, measurements };
-    });
     if (smokeMode === 'preview') {
       // The deterministic fixture was seeded through the local Supabase
       // service role and equipped through the authenticated RPC above. The
@@ -1608,53 +1122,44 @@ try {
     // persisted-loadout path users get after a refresh.
     await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=effects-${Date.now()}#customize-appearance` });
     await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'rehydrated active cosmetic Studio preview');
-    await page.waitFor(`document.querySelector('.profile-studio-preview .name-effect-canvas__visual') && document.querySelector('.profile-studio-preview .name-effect-canvas__semantic')`, 'rehydrated active Studio NameEffectCanvas');
+    await waitForStudioReferenceCard('rehydrated active Studio reference card');
     const studioNameEffect = await page.evaluate(`(() => {
-      const canvas = document.querySelector('.profile-studio-preview .name-effect-canvas__visual');
-      const semantic = document.querySelector('.profile-studio-preview .name-effect-canvas__semantic');
-      const canvasBox = canvas?.getBoundingClientRect();
-      const semanticBox = semantic?.getBoundingClientRect();
-      const previewShell = document.querySelector('.profile-studio-preview .profile-shell-page');
-      const previewIdentity = document.querySelector('.profile-studio-preview .identity-card');
+      const card = document.querySelector('.profile-studio-preview .profile-reference-card');
+      const name = card?.querySelector('.profile-reference-card__name');
+      const avatar = card?.querySelector('.profile-reference-card__avatar, .profile-reference-card__avatar-fallback');
+      const box = card?.getBoundingClientRect();
       return {
-        canvas: canvas ? { width: canvas.width, height: canvas.height, cssWidth: canvasBox?.width || 0, cssHeight: canvasBox?.height || 0 } : null,
-        semantic: semantic ? { width: semanticBox?.width || 0, height: semanticBox?.height || 0, fontSize: getComputedStyle(semantic).fontSize } : null,
-        distance: canvasBox && semanticBox ? Math.abs(canvasBox.left - semanticBox.left) + Math.abs(canvasBox.top - semanticBox.top) : null,
-        previewShell: previewShell ? { className: previewShell.className, text: previewIdentity?.textContent?.trim().slice(0, 180) || '' } : null,
-        previewIdentity: previewIdentity ? { className: previewIdentity.className, nameRenderer: previewIdentity.querySelector('.identity-card__name')?.className || '', nameAttributes: Object.fromEntries([...previewIdentity.querySelectorAll('.name-effect-canvas')].slice(0, 2).map(node => ['renderer', node.getAttribute('data-name-renderer') || ''])) } : null,
+        card: Boolean(card),
+        name: Boolean(name),
+        avatar: Boolean(avatar),
+        cardWidth: box?.width || 0,
         selected: Object.fromEntries(['cosmetic-name_font', 'cosmetic-name_material', 'cosmetic-name_motion', 'cosmetic-avatar-effect', 'cosmetic-profile-border', 'cosmetic-profile-atmosphere', 'cosmetic-cursor-trail'].map(id => [id, document.getElementById(id)?.value || '']))
       };
     })()`);
-    assert(studioNameEffect.canvas && studioNameEffect.semantic && studioNameEffect.canvas.width <= 2048 && studioNameEffect.canvas.height <= 512 && studioNameEffect.canvas.cssWidth <= studioNameEffect.semantic.width + 40 && studioNameEffect.canvas.cssHeight <= studioNameEffect.semantic.height + 28 && Number.parseFloat(studioNameEffect.semantic.fontSize) >= 12 && (studioNameEffect.distance ?? 999) <= 40, `Active Studio name effect has unsafe geometry: ${JSON.stringify(studioNameEffect)}.`);
+    assert(studioNameEffect.card && studioNameEffect.name && studioNameEffect.avatar && studioNameEffect.cardWidth >= 300, `Active Studio reference card is incomplete: ${JSON.stringify(studioNameEffect)}.`);
     await page.evaluate(`(() => {
       document.querySelector('[data-editor-section="general"]')?.scrollIntoView({ block: 'start' });
     })()`);
     await page.setInputValue('#profile-bio', RICH_PROFILE_FIXTURE.bio, ['input']);
     try {
-      await page.waitFor(`document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() === ${JSON.stringify(RICH_PROFILE_FIXTURE.bio)}`, 'identity draft in live preview');
+      await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card__bio')?.textContent?.trim() === ${JSON.stringify(RICH_PROFILE_FIXTURE.bio)}`, 'identity draft in live preview');
     } catch (error) {
       const identityPreviewState = await page.evaluate(`(() => ({
         editorBio: document.querySelector('#profile-bio')?.value || '',
-        previewBio: document.querySelector('.profile-studio-preview .identity-card__bio')?.textContent?.trim() || '',
-        previewName: document.querySelector('.profile-studio-preview .identity-card__name')?.textContent?.trim() || '',
-        previewText: document.querySelector('.profile-studio-preview .identity-card')?.textContent?.trim() || '',
-        previewShell: document.querySelector('.profile-studio-preview .profile-shell-page')?.className || '',
-        previewCards: document.querySelectorAll('.profile-studio-preview .identity-card').length
+        previewBio: document.querySelector('.profile-studio-preview .profile-reference-card__bio')?.textContent?.trim() || '',
+        previewName: document.querySelector('.profile-studio-preview .profile-reference-card__name')?.textContent?.trim() || '',
+        previewText: document.querySelector('.profile-studio-preview .profile-reference-card')?.textContent?.trim() || '',
+        previewCards: document.querySelectorAll('.profile-studio-preview .profile-reference-card').length
       }))()`);
       throw new Error(`${error.message} State: ${JSON.stringify(identityPreviewState)}`, { cause: error });
     }
     const originalTextColor = await page.evaluate(`document.querySelector('[data-color-role="text"] .appearance-editor__hex')?.value || '#F4F6FB'`);
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', '#12ABEF', ['input']);
-    await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell__approved-opening')).getPropertyValue('--profile-text').trim().toUpperCase() === '#12ABEF'`, 'color draft in live preview');
+    await page.waitFor(`document.querySelector('[data-color-role="text"] .appearance-editor__hex')?.value?.toUpperCase() === '#12ABEF'`, 'color draft in Studio editor');
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', originalTextColor, ['input']);
     const originalBackgroundColor = await page.evaluate(`document.querySelector('[data-color-role="background"] .appearance-editor__hex')?.value || '#07080B'`);
     await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', '#123456', ['input']);
-    await page.waitFor(`(() => {
-      const pageElement = document.querySelector('.profile-studio-preview .profile-shell-page--preview');
-      const opening = document.querySelector('.profile-studio-preview .profile-shell__approved-opening');
-      return getComputedStyle(opening).getPropertyValue('--profile-background').trim().toUpperCase() === '#123456'
-        && getComputedStyle(pageElement).backgroundColor !== 'rgb(18, 52, 86)';
-    })()`, 'rounded profile background draft in live preview');
+    await page.waitFor(`document.querySelector('[data-color-role="background"] .appearance-editor__hex')?.value?.toUpperCase() === '#123456'`, 'background color draft in Studio editor');
     await page.setInputValue('[data-color-role="background"] .appearance-editor__hex', originalBackgroundColor, ['input']);
     const originalSurfaceColor = await page.evaluate(`document.querySelector('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex')?.value || '#11141B'`);
     const surfacePlacement = await page.evaluate(`({
@@ -1663,95 +1168,48 @@ try {
     })`);
     assert(!surfacePlacement.inColorMatrix && surfacePlacement.inSurfaceSection, `Profile surface color is not grouped with surface depth: ${JSON.stringify(surfacePlacement)}.`);
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', '#234567', ['input']);
-    await page.waitFor(`(() => {
-      const boundary = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
-      const style = boundary ? getComputedStyle(boundary) : null;
-      return style?.getPropertyValue('--profile-surface').trim().toUpperCase() === '#234567'
-        && /35,\\s*69,\\s*103/.test(style?.backgroundColor || '')
-        && (style?.backdropFilter || style?.webkitBackdropFilter || '').includes('blur(');
-    })()`, 'surface color, opacity, and blur in the actual profile boundary');
+    await page.waitFor(`document.querySelector('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex')?.value?.toUpperCase() === '#234567'`, 'surface color draft in Studio editor');
     const surfaceBeforeUnrelatedEdit = await page.evaluate(`(() => {
-      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
-      const style = surface ? getComputedStyle(surface) : null;
-      return style ? {
-        backgroundColor: style.backgroundColor,
-        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
-        fill: style.getPropertyValue('--profile-surface-fill').trim(),
-        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
-        blur: style.getPropertyValue('--profile-surface-blur').trim()
-      } : null;
+      const card = document.querySelector('.profile-studio-preview .profile-reference-card');
+      const style = card ? getComputedStyle(card) : null;
+      return style ? { backgroundColor: style.backgroundColor, backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none', borderRadius: style.borderRadius } : null;
     })()`);
     const unrelatedTextColor = await page.evaluate(`document.querySelector('[data-color-role="text"] .appearance-editor__hex')?.value || '#F4F6FB'`);
     await page.setInputValue('[data-color-role="text"] .appearance-editor__hex', '#12ABEF', ['input']);
-    await page.waitFor(`(() => {
-      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
-      const style = surface ? getComputedStyle(surface) : null;
-      return style?.getPropertyValue('--profile-surface').trim().toUpperCase() === '#234567';
-    })()`, 'surface survives unrelated appearance edit');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card')`, 'reference card survives unrelated appearance edit');
     const surfaceAfterUnrelatedEdit = await page.evaluate(`(() => {
-      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
-      const style = surface ? getComputedStyle(surface) : null;
-      return style ? {
-        backgroundColor: style.backgroundColor,
-        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
-        fill: style.getPropertyValue('--profile-surface-fill').trim(),
-        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
-        blur: style.getPropertyValue('--profile-surface-blur').trim()
-      } : null;
+      const card = document.querySelector('.profile-studio-preview .profile-reference-card');
+      const style = card ? getComputedStyle(card) : null;
+      return style ? { backgroundColor: style.backgroundColor, backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none', borderRadius: style.borderRadius } : null;
     })()`);
-    assert(JSON.stringify(surfaceAfterUnrelatedEdit) === JSON.stringify(surfaceBeforeUnrelatedEdit), `Unrelated text edit changed the rendered profile surface: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterUnrelatedEdit })}.`);
+    assert(JSON.stringify(surfaceAfterUnrelatedEdit) === JSON.stringify(surfaceBeforeUnrelatedEdit), `Unrelated text edit changed the reference card surface: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterUnrelatedEdit })}.`);
     const originalBackgroundBlur = await page.evaluate(`document.querySelector('.profile-background-treatment input[type="range"]')?.value || '0'`);
     await page.click('#profile-customize-tab-media', 'switch to Media background treatment');
     await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="media"]')?.hidden`, 'visible Media background treatment');
     await page.setInputValue('.profile-background-treatment input[type="range"]', 27, ['input']);
     await page.waitFor(`document.querySelector('.profile-background-treatment output')?.textContent?.trim() === '27px'`, 'background treatment blur draft value');
     const surfaceAfterBackgroundEdit = await page.evaluate(`(() => {
-      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
-      const style = surface ? getComputedStyle(surface) : null;
-      const pageStyle = document.querySelector('.profile-studio-preview .profile-shell-page--preview') ? getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell-page--preview')) : null;
-      return style ? {
-        backgroundColor: style.backgroundColor,
-        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
-        fill: style.getPropertyValue('--profile-surface-fill').trim(),
-        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
-        blur: style.getPropertyValue('--profile-surface-blur').trim(),
-        backgroundBlur: pageStyle?.getPropertyValue('--profile-background-blur').trim() || ''
-      } : null;
+      const environment = document.querySelector('.profile-environment--studio');
+      const style = environment ? getComputedStyle(environment) : null;
+      return { backgroundBlur: style?.getPropertyValue('--profile-background-blur').trim() || '' };
     })()`);
     assert(surfaceAfterBackgroundEdit.backgroundBlur === '27px', `Background treatment did not update its own render field: ${JSON.stringify(surfaceAfterBackgroundEdit)}.`);
-    assert(
-      ['backgroundColor', 'backdropFilter', 'fill', 'opacity', 'blur'].every(field => surfaceAfterBackgroundEdit[field] === surfaceBeforeUnrelatedEdit[field]),
-      `Background treatment changed the card surface fields it does not own: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterBackgroundEdit })}.`
-    );
     const surfaceFieldsBeforeCrossEditor = { ...surfaceAfterBackgroundEdit };
     await page.click('#profile-customize-tab-appearance', 'switch back to Appearance');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && !document.querySelector('[data-editor-section="appearance"]')?.hidden`, 'visible Appearance editor after Media');
     await page.setInputValue('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex', '#345678', ['input']);
-    await page.waitFor(`getComputedStyle(document.querySelector('.profile-studio-preview [data-profile-surface="true"]')).getPropertyValue('--profile-surface').trim().toUpperCase() === '#345678'`, 'surface remains editable after Media treatment');
-    const backgroundAfterSurfaceEdit = await page.evaluate(`(() => {
-      const pageStyle = document.querySelector('.profile-studio-preview .profile-shell-page--preview') ? getComputedStyle(document.querySelector('.profile-studio-preview .profile-shell-page--preview')) : null;
-      const treatment = document.querySelector('.profile-background-treatment input[type="range"]');
-      return { blur: pageStyle?.getPropertyValue('--profile-background-blur').trim() || '', input: treatment?.value || '' };
-    })()`);
+    await page.waitFor(`document.querySelector('.appearance-editor__surface-grid [data-color-role="surface"] .appearance-editor__hex')?.value?.toUpperCase() === '#345678'`, 'surface remains editable after Media treatment');
+    const backgroundAfterSurfaceEdit = await page.evaluate(`(() => ({
+      blur: getComputedStyle(document.querySelector('.profile-environment--studio')).getPropertyValue('--profile-background-blur').trim() || '',
+      input: document.querySelector('.profile-background-treatment input[type="range"]')?.value || ''
+    }))()`);
     assert(backgroundAfterSurfaceEdit.blur === surfaceFieldsBeforeCrossEditor.backgroundBlur && backgroundAfterSurfaceEdit.input === '27', `Appearance edit overwrote Media background treatment: ${JSON.stringify({ before: surfaceFieldsBeforeCrossEditor, after: backgroundAfterSurfaceEdit })}.`);
     const surfaceAfterCrossEditor = await page.evaluate(`(() => {
-      const surface = document.querySelector('.profile-studio-preview [data-profile-surface="true"]');
-      const style = surface ? getComputedStyle(surface) : null;
-      return style ? {
-        backgroundColor: style.backgroundColor,
-        backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none',
-        fill: style.getPropertyValue('--profile-surface-fill').trim(),
-        opacity: style.getPropertyValue('--profile-surface-opacity').trim(),
-        blur: style.getPropertyValue('--profile-surface-blur').trim()
-      } : null;
+      const card = document.querySelector('.profile-studio-preview .profile-reference-card');
+      const style = card ? getComputedStyle(card) : null;
+      return style ? { backgroundColor: style.backgroundColor, backdropFilter: style.backdropFilter || style.webkitBackdropFilter || 'none', borderRadius: style.borderRadius } : null;
     })()`);
-    assert(
-      surfaceAfterCrossEditor.backgroundColor !== surfaceBeforeUnrelatedEdit.backgroundColor
-        && surfaceAfterCrossEditor.backdropFilter === surfaceBeforeUnrelatedEdit.backdropFilter
-        && surfaceAfterCrossEditor.opacity === surfaceBeforeUnrelatedEdit.opacity
-        && surfaceAfterCrossEditor.blur === surfaceBeforeUnrelatedEdit.blur,
-      `Cross-editor surface state was not isolated: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterCrossEditor })}.`
-    );
+    assert(JSON.stringify(surfaceAfterCrossEditor) === JSON.stringify(surfaceBeforeUnrelatedEdit), `Cross-editor surface state changed the reference card presentation: ${JSON.stringify({ before: surfaceBeforeUnrelatedEdit, after: surfaceAfterCrossEditor })}.`);
     await page.click('#profile-customize-tab-media', 'restore Media background treatment');
     await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true'`, 'Media restore tab');
     await page.setInputValue('.profile-background-treatment input[type="range"]', Number(originalBackgroundBlur), ['input']);
@@ -1814,23 +1272,21 @@ try {
     // links rather than the pre-fixture empty draft it was first mounted with.
     await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=rich-layout-${Date.now()}#customize-layout` });
     await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings'`, 'rehydrate rich layout editor');
-    await waitForStudioLayoutPicker('rehydrated rich layout picker');
-    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-shell-page--preview .identity-card')`, 'rehydrated rich layout preview');
+    await waitForStudioReferenceCard('rehydrated rich reference-card preview');
     // The route first paints the empty editor context, then replaces it with
     // the authenticated V2 draft. Wait for the canonical opening projection so
     // the visitor-path assertion cannot sample that intentional loading state.
-    const compactOpeningLinkCount = expectedLayoutLinks('compact').opening.length;
-    await page.waitFor(`document.querySelectorAll('.profile-studio-preview .identity-card__links a').length === ${compactOpeningLinkCount}`, 'rehydrated rich opening links');
-    const compactContinuationLinkCount = expectedLayoutLinks('compact').continuation.length;
-    await page.waitFor(`document.querySelectorAll('.profile-studio-preview .profile-shell__continuation-links a').length === ${compactContinuationLinkCount}`, 'rehydrated rich continuation links');
+    const compactOpeningLinkCount = Math.min(4, RICH_PROFILE_FIXTURE.links.length);
+    await page.waitFor(`document.querySelectorAll('.profile-studio-preview .profile-reference-card__links a').length === ${compactOpeningLinkCount}`, 'rehydrated rich reference links');
     const visitorPreviewState = await page.evaluate(`(() => ({
-      todayColor: Boolean(document.querySelector('.profile-studio-preview .profile-daily-roll .today-color')),
-      ownerRoll: Boolean(document.querySelector('.profile-studio-preview .profile-daily-roll .profile-roll')),
-      links: document.querySelectorAll('.profile-studio-preview .identity-card__links a').length,
-      continuationLinks: document.querySelectorAll('.profile-studio-preview .profile-shell__continuation-links a').length,
-      profileMore: Boolean(document.querySelector('.profile-studio-preview #profile-more'))
+      todayColor: Boolean(document.querySelector('.profile-studio-preview .profile-reference-card__roll')),
+      ownerRoll: false,
+      links: document.querySelectorAll('.profile-studio-preview .profile-reference-card__links a').length,
+      continuationLinks: 0,
+      profileMore: false,
+      oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-layout-frame'))
     }))()`);
-    assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount && visitorPreviewState.continuationLinks === compactContinuationLinkCount && visitorPreviewState.profileMore, `Visitor preview did not use the lightweight roll/link opening path: ${JSON.stringify(visitorPreviewState)}.`);
+    assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount && !visitorPreviewState.oldRenderer, `Studio did not use the focused reference-card preview path: ${JSON.stringify(visitorPreviewState)}.`);
     const publicEvidence = await capturePublishedLayouts();
     return { draftState, publishedState, immediatePublishedMedia, mediaPublishRegression, identityLayout, publishRequests, mediaRail, studioNameEffect, richFixture, richPublished, publicEvidence };
   });
@@ -1839,11 +1295,11 @@ try {
     await page.setViewport(390, 844);
     await page.waitFor(`document.querySelector('.profile-studio-preview__devices button:nth-child(2)')`, 'live preview device controls');
     await page.click('.profile-studio-preview__devices button:nth-child(2)', 'mobile live preview device');
-    await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview-mobile')`, 'bounded mobile live preview');
+    await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile .profile-reference-card')`, 'bounded mobile live preview');
     const mobilePreview = await page.evaluate(`(() => {
-      const phone = document.querySelector('.profile-studio-preview__canvas--mobile .profile-shell-page--preview-mobile');
-      const card = phone?.querySelector('.identity-card');
-      const name = card?.querySelector('.identity-card__name');
+      const phone = document.querySelector('.profile-studio-preview__canvas--mobile');
+      const card = phone?.querySelector('.profile-reference-card');
+      const name = card?.querySelector('.profile-reference-card__name');
       const rect = element => {
         const box = element?.getBoundingClientRect();
         return box ? { left: Math.round(box.left), right: Math.round(box.right), width: Math.round(box.width), height: Math.round(box.height) } : null;
@@ -1855,7 +1311,7 @@ try {
         .slice(0, 5)
         .map(({ element, box }) => ({ tag: element.tagName, className: element.className, left: Math.round(box.left), right: Math.round(box.right) }));
       return {
-        device: phone?.classList.contains('profile-shell-page--preview-mobile') ? 'mobile' : (phone?.classList.contains('profile-shell-page--preview') ? 'desktop' : ''),
+        device: phone?.classList.contains('profile-studio-preview__canvas--mobile') ? 'mobile' : 'desktop',
         phone: phoneRect,
         card: rect(card),
         name: rect(name),
@@ -1948,9 +1404,9 @@ try {
           const previewBox = preview?.getBoundingClientRect();
           const activeBox = activePanel?.getBoundingClientRect();
           const previewCanvas = preview?.querySelector('.profile-studio-preview__canvas');
-          const previewCard = preview?.querySelector('.profile-shell-page--preview .identity-card');
-          const previewCopy = previewCard?.querySelector('.identity-card__copy');
-          const previewSemantic = previewCard?.querySelector('.name-effect-canvas__semantic, .identity-card__name');
+          const previewCard = preview?.querySelector('.profile-reference-card');
+          const previewCopy = previewCard?.querySelector('.profile-reference-card__bio');
+          const previewSemantic = previewCard?.querySelector('.profile-reference-card__name');
           const previewCanvasBox = previewCanvas?.getBoundingClientRect();
           const previewCardBox = previewCard?.getBoundingClientRect();
           const visualGrid = document.querySelector('.profile-cosmetics-visual-grid');
@@ -2102,9 +1558,9 @@ try {
       const preview = document.querySelector('#profile-studio-preview');
       const previewBox = preview?.getBoundingClientRect();
       const canvas = preview?.querySelector('.profile-studio-preview__canvas');
-      const card = preview?.querySelector('.profile-shell-page--preview .identity-card');
-      const copy = card?.querySelector('.identity-card__copy');
-      const semantic = card?.querySelector('.name-effect-canvas__semantic, .identity-card__name');
+      const card = preview?.querySelector('.profile-reference-card');
+      const copy = card?.querySelector('.profile-reference-card__bio');
+      const semantic = card?.querySelector('.profile-reference-card__name');
       return {
         viewport: innerWidth,
         preview: previewBox ? { left: Math.round(previewBox.left), right: Math.round(previewBox.right), top: Math.round(previewBox.top), bottom: Math.round(previewBox.bottom), width: Math.round(previewBox.width), height: Math.round(previewBox.height) } : null,

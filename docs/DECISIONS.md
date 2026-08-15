@@ -1,5 +1,22 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-14 — Make the reference card the only Studio preview presentation
+
+The approved Studio reference is a presentation replacement, not a skin over
+the public-profile layout renderer. `ProfileStudioPreview` now renders the
+small `ProfileReferenceCard` directly from the canonical preview snapshot;
+it does not dynamically load `ProfileShell`, `ProfileLayoutFrame`, or a
+scrollable public-profile canvas. `ProfileEnvironmentLayer` remains the page
+environment owner, so the selected photographic background fills the Studio
+surface while the card stays a bounded glass object.
+
+The homepage and Studio share the same reference card anatomy. The Studio
+Customize Layout tab exposes only that composition and no longer mounts the
+five-template presentation picker. The existing normalized layout data,
+public renderer, links destination, draft/publish RPCs, auth, and media
+contracts remain available at their own behavioral boundaries; obsolete
+presentation markup is not retained as a compatibility requirement.
+
 ## 2026-08-14 — Make the versioned Profile Studio reference the active shell
 
 The approved `REFERENCE/chm-redesign-2026-08/profile-studio-repo-real.html`
@@ -11,9 +28,9 @@ profile renderer, auth, RPC/RLS, and media boundaries remain authoritative.
 
 The shell uses one full-page selected-profile environment, a reference-width
 editor workspace, a sticky live preview rail, and a compact accessible menu for
-secondary destinations. The shared IdentityCard owns the reference card
-anatomy used by the Studio preview and public profile surfaces; no new profile
-data or rendering contract is introduced.
+secondary destinations. The public `IdentityCard` and existing ProfileShell
+remain public-profile authorities; Studio's bounded reference card is a
+purpose-specific presentation of the same snapshot, not a second data model.
 
 ## 2026-08-14 — Keep unequip and permanent media deletion distinct
 

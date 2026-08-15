@@ -86,7 +86,8 @@ test('the direct homepage specimen keeps production layout geometry out while sh
   assert.doesNotMatch(demo, /impactActive = false/);
   assert.match(demo, /previewRoll \|\| fixture\?\.scores\?\.\[0\]/);
   assert.doesNotMatch(demo, /homepage-profile-demo__head|Profile preview|@\{fixture\.username\}/);
-  assert.match(demo, /homepage-profile-demo__secondary/);
+  assert.match(demo, /ProfileReferenceCard/);
+  assert.match(demo, /secondaryLine/);
 });
 
 test('the live community surface remains isolated from homepage fixtures', async () => {

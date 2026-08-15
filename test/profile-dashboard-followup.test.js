@@ -98,12 +98,15 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(studioPreview, /previewCollectionItems/);
   assert.match(studioPreview, /previewScores/);
   assert.match(settings, /createProfileStudioPreviewModel/);
-  assert.match(settings, /void loadPreviewComponent\(\)/);
+  assert.match(settings, /import\('\.\/ProfileStudioPreview\.svelte'\)/);
+  assert.doesNotMatch(settings, /import\('\.\/ProfileShell\.svelte'\)|PreviewDockComponent|previewComponent/);
   assert.match(settings, /slot="preview"/);
   assert.doesNotMatch(settings, /function openPreview/);
   assert.doesNotMatch(studioPreview, /profile-preview-drawer__backdrop/);
   assert.match(settings, /previewRenderSnapshot=\{previewRenderSnapshot\}/);
-  assert.match(preview, /renderEnvironment=\{false\}/);
+  assert.match(preview, /ProfileReferenceCard/);
+  assert.match(preview, /inputSurface="container"/);
+  assert.doesNotMatch(preview, /ProfileShell|profile-shell-page|overflow-y:\s*auto/);
   assert.match(environment, /backgroundImageUrl/);
   assert.match(environment, /<img class="profile-environment__image" src=\{backgroundSrc\}/);
   assert.doesNotMatch(shell, /profilePageMediaStyle|profile-page-media-image/);
@@ -150,7 +153,7 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(shell, /\.profile-shell__approved-canvas,\s+\.profile-shell__opening\.profile-shell__approved-opening \{ z-index: auto; \}/);
   assert.doesNotMatch(shell, /profile-shell__surface-media|profile-shell__surface-video|profile-shell__surface-atmosphere-layer|profile-shell__surface-backdrop::before/);
   assert.match(fittingPreview, /studio-profile-card[\s\S]*studio-atmosphere-layer/);
-  assert.match(studioPreview, /renderEnvironment=\{false\}/);
+  assert.match(studioPreview, /ProfileReferenceCard/);
   assert.doesNotMatch(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer/);
   assert.doesNotMatch(shell, /profile-shell__surface-media-background \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);
   assert.match(environment, /background-position|object-fit: cover/);

@@ -140,9 +140,11 @@ test('dashboard ownership keeps routing, rendering, and dirty-state boundaries s
   assert.match(workspace, /getProfileStudioSectionRegistration/);
   assert.doesNotMatch(workspace, /export function getDraftConfig/);
   assert.match(workspace, /export function resetChanges/);
-  assert.match(preview, /PROFILE_RENDER_CONTEXTS\.LIVE_PROFILE/);
-  assert.match(preview, /renderSnapshot=\{previewRenderSnapshot\}/);
-  assert.match(preview, /renderContext=\{liveProfileContext\}/);
+  assert.match(preview, /ProfileReferenceCard/);
+  assert.match(preview, /ProfileMotionEffect/);
+  assert.match(preview, /inputSurface="container"/);
+  assert.match(preview, /previewRenderSnapshot/);
+  assert.doesNotMatch(preview, /ProfileShell|renderSnapshot=\{previewRenderSnapshot\}/);
   assert.match(dirtyPrompt, /dispatch\('stay'\)/);
   assert.match(dirtyPrompt, /dispatch\('discard'\)/);
   assert.match(registry, /PROFILE_STUDIO_SECTION_REGISTRY/);

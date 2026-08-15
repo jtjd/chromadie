@@ -104,7 +104,6 @@
             on:configsaved={forward}
             on:configpublished={forward}
             on:configreloaded={forward}
-            on:premiumrequest={forward}
           />
         {:else if sectionLoading}
           <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading Customize</h2></div>

@@ -21,7 +21,8 @@ test('Customize tabs mount only the supported visible editor groups', async () =
   assert.match(customize, /hidden=\{selectedTab !== 'layout'\}/);
   assert.match(customize, /profile-collection/);
   assert.doesNotMatch(customize, /contentComponent|widgetComponent|id="customize-content"|id="customize-widgets"/);
-  assert.match(customize, /profile-layout/);
+  assert.match(customize, /ProfileReferenceLayoutEditor/);
+  assert.doesNotMatch(customize, /ProfileTemplatePicker|showLinks=\{false\}/);
   const studio = [settings, contract].join('\n');
   assert.match(studio, /content: 'media'/);
   assert.match(studio, /widgets: 'appearance'/);
@@ -108,7 +109,8 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(header, /profile-studio-header__customize-tabs/);
   assert.match(preview, /profile-studio-preview__devices/);
   assert.doesNotMatch(preview, /Unlock more with Chromadie Plus/);
-  assert.match(preview, /renderEnvironment=\{false\}/);
+  assert.match(preview, /ProfileReferenceCard/);
+  assert.match(preview, /inputSurface="container"/);
   assert.match(preview, /profile-studio-preview__viewport[\s\S]*overflow: visible/);
   assert.doesNotMatch(preview, /!important/);
   assert.match(appearance, /appearance-editor__picker-surface/);
@@ -120,8 +122,8 @@ test('reference workspace composition stays explicit', async () => {
   assert.doesNotMatch(customize, /profile-customize-page__appearance-effects|Overlay color|Atmosphere strength|Restart animations/);
   assert.match(customize, /--customize-control-surface: rgba\(255, 255, 255, \.035\)/);
   assert.match(customize, /background: var\(--customize-control-surface\) !important/);
-  assert.match(editor, /profile-template-picker__grid[^}]*repeat\(5/);
-  assert.doesNotMatch(editor, /profile-template-picker__premium/);
+  assert.match(customize, /ProfileReferenceLayoutEditor/);
+  assert.doesNotMatch(customize, /ProfileTemplatePicker|showLinks=\{false\}/);
   assert.match(cosmetics, /Name effects/);
   assert.match(cosmetics, /name_font: 'Font'/);
   assert.match(cosmetics, /name_material: 'Material'/);

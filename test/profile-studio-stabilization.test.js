@@ -89,14 +89,16 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(settings, /function applyStudioPatch\(event\)/);
   assert.doesNotMatch(settings, /configurationPreview|updateConfigurationPreview/);
   assert.match(preview, /\{previewDevice\}/);
-  assert.match(preview, /canvas--mobile[\s\S]*height: min\(42rem/);
+  assert.match(preview, /profile-studio-preview__canvas/);
+  assert.match(preview, /profile-studio-preview__viewport[\s\S]*width: min\(350px, 100%\)/);
   assert.match(preview, /profile-studio-preview__stage/);
   assert.doesNotMatch(preview, /logical-canvas|1440|previewScale|transform: scale/);
   assert.match(smoke, /profile-shell-page\[aria-busy="false"\]/);
   assert.match(smoke, /stable mobile uploaded background after direct refresh/);
   assert.match(shell, /profile-shell-page--preview-mobile/);
   assert.match(shell, /ProfileEnvironmentLayer/);
-  assert.match(preview, /renderEnvironment=\{false\}/);
+  assert.match(preview, /ProfileReferenceCard/);
+  assert.doesNotMatch(preview, /ProfileShell|overflow-y:\s*auto/);
   assert.match(identity, /identity-card--preview-mobile/);
   assert.match(cursor, /inputMode = 'window'/);
   assert.match(cursor, /inputMode === 'demo'/);

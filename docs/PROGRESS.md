@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio reference-card replacement — 2026-08-14
+
+- Removed the Studio preview's dynamic `ProfileShell`/legacy layout renderer
+  and replaced it with a bounded reference card built from the canonical
+  preview snapshot.
+- Kept the selected R2-backed profile environment as the fixed page
+  background, with the card itself remaining a centered glass surface rather
+  than a scrollable public-profile canvas.
+- Reused the same `ProfileReferenceCard` anatomy for the homepage hero and
+  replaced the Customize Layout tab's five-template picker with the one
+  approved reference-card composition.
+- Updated presentation tests to assert the new ownership boundary while
+  retaining public-profile layout, draft/publish, auth, media, and RPC tests.
+
 ## Profile Studio reference-first shell replacement — 2026-08-14
 
 - Replaced the obsolete dashboard presentation with the approved versioned

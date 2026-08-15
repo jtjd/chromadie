@@ -130,7 +130,8 @@ test('homepage, public profiles, and Studio consume one motion renderer with sep
   assert.match(shell, /import ProfileMotionEffect from '\.\/profile-motion\/ProfileMotionEffect\.svelte'/);
   assert.match(shell, /motionKey=\{profileMotionTarget === 'none' \? '' : profileMotionKey\}/);
   assert.match(shell, /inputSurface=\{previewMode \? 'container' : 'viewport'\}/);
-  assert.match(studio, /motionSurfaceElement=\{previewStage\}/);
+  assert.match(studio, /surfaceElement=\{previewStage\}/);
+  assert.match(studio, /inputSurface="container"/);
   assert.match(stores, /'profile_motion'\]\)/);
   assert.match(stores, /isProfileMotionKey/);
   assert.match(motion, /\{#if motionEnabled\}/);
