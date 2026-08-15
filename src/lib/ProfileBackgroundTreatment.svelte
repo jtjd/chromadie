@@ -56,6 +56,7 @@
 <section class="profile-background-treatment" aria-labelledby="profile-background-treatment-title">
   <div class="profile-background-treatment__heading">
     <h3 id="profile-background-treatment-title">Background options</h3>
+    <p>The treatment controls currently applied to the uploaded background.</p>
   </div>
 
   <div class="profile-background-treatment__controls">

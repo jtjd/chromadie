@@ -85,16 +85,17 @@ test('cursor uploads use the R2 control plane instead of the legacy staging boun
   assert.match(recovery, /v_selected_path IS NOT NULL AND v_selected_path IS DISTINCT FROM v_old\.storage_path/);
 });
 
-test('media second-row controls stay compact and keep treatment copy concise', async () => {
+test('media sections follow the approved reference hierarchy', async () => {
   const [workspace, treatment] = await Promise.all([
     read('src/lib/ProfileMediaWorkspace.svelte'),
     read('src/lib/ProfileBackgroundTreatment.svelte')
   ]);
 
-  assert.match(workspace, /rich-media-editor__compact-card--cursor[\s\S]*grid-template-columns: minmax\(0, 1fr\) auto/);
-  assert.match(workspace, /rich-media-editor__compact-card--cursor \.rich-media-editor__compact-preview[\s\S]*min-height: 4rem;[\s\S]*height: 4rem/);
-  assert.match(workspace, /rich-media-editor__compact-card--cursor\.rich-media-editor__compact-card--locked[\s\S]*height: auto;[\s\S]*min-height: 4\.75rem/);
-  assert.match(workspace, /profile-background-treatment[\s\S]*grid-row: 2;[\s\S]*align-self: start/);
+  assert.match(workspace, /rich-media-editor__compact-card--cursor\) \{ order: 4; \}/);
+  assert.match(workspace, /rich-media-editor__compact-preview[\s\S]*height: 115px;[\s\S]*min-height: 115px/);
+  assert.match(workspace, /profile-background-treatment\)[\s\S]*grid-column: 1 \/ -1/);
+  assert.match(workspace, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(treatment, /<h3 id="profile-background-treatment-title">Background options<\/h3>/);
+  assert.match(treatment, /The treatment controls currently applied to the uploaded background/);
   assert.doesNotMatch(treatment, /Shape the uploaded atmosphere|MEDIA \/ 02/);
 });

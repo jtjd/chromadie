@@ -360,10 +360,13 @@
           <input bind:this={audioInput} class="rich-media-editor__compact-file" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={(event) => uploadFile(event, 'audio')} />
           <button class="rich-media-editor__compact-preview rich-media-editor__compact-preview--audio" type="button" disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()} aria-label="Add audio track">
             <ProfileMediaIcon kind="audio" />
-            <span class="rich-media-editor__compact-upload-hint">{audioTracks.length >= 5 ? 'Library limit reached' : primaryAudioAsset ? `Click to add · ${audioTracks.length}/5` : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
             <strong>Profile audio</strong>
+            <small>MP3 · reusable audio library / playlist support</small>
+            <div class="rich-media-editor__compact-actions">
+              <button type="button" class="rich-media-editor__compact-replace" disabled={busy || audioTracks.length >= 5} on:click={() => audioInput?.click()}>{audioTracks.length >= 5 ? 'Library full' : 'Upload audio'}</button>
+            </div>
           </div>
         </article>
       {/if}
@@ -377,17 +380,15 @@
             {:else}
               <ProfileMediaIcon kind="image" />
             {/if}
-            <span class="rich-media-editor__compact-upload-hint" class:rich-media-editor__compact-upload-hint--active={Boolean(activeCursor)}>{activeCursor ? 'Click to replace' : 'Click to upload'}</span>
           </button>
           <div class="rich-media-editor__compact-copy">
             <strong>Custom cursor</strong>
-          </div>
-          {#if activeCursor}
+            <small>JPEG, PNG, WebP, or ANI</small>
             <div class="rich-media-editor__compact-actions">
-              <button type="button" class="rich-media-editor__compact-replace" disabled={busy} on:click={() => cursorInput?.click()}>Replace</button>
-              <button type="button" class="rich-media-editor__compact-remove" disabled={busy} on:click={removeCursor}>Remove</button>
+              <button type="button" class="rich-media-editor__compact-replace" disabled={busy} on:click={() => cursorInput?.click()}>{activeCursor ? 'Replace' : 'Upload cursor'}</button>
+              {#if activeCursor}<button type="button" class="rich-media-editor__compact-remove" disabled={busy} on:click={removeCursor}>Remove</button>{/if}
             </div>
-          {/if}
+          </div>
         </article>
       {/if}
 
@@ -523,34 +524,31 @@
   :global(.rich-media-editor--compact) { display: contents; }
   :global(.rich-media-editor--compact > .foundation-module__header) { display: none; }
   :global(.rich-media-editor--compact > .foundation-module__body) { display: contents; }
-  .rich-media-editor__compact-card { display: grid; grid-template-rows: minmax(1.05rem, auto) minmax(5.7rem, auto) auto; align-content: start; gap: .55rem; min-width: 0; padding: .65rem; border: 1px solid color-mix(in srgb, var(--customize-border, var(--color-line-subtle)) 66%, transparent); border-radius: var(--customize-radius, .38rem); background: var(--customize-surface-inset, var(--surface-inset)); }
+  .rich-media-editor__compact-card { display: grid; grid-template-rows: 115px auto; align-content: start; gap: 0; min-width: 0; overflow: hidden; padding: 0; border: 1px solid rgba(255, 255, 255, .10); border-radius: 9px; background: rgba(255, 255, 255, .035); }
   .rich-media-editor__compact-card--audio { order: 2; }
   .rich-media-editor__compact-card--cursor { order: 4; }
-  .rich-media-editor__compact-card--locked { opacity: .72; }
+  .rich-media-editor__compact-card--locked { opacity: 1; }
   .rich-media-editor__compact-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); }
-  .rich-media-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; min-height: 5.7rem; aspect-ratio: 10 / 3; overflow: hidden; padding: .75rem; border: 1px solid var(--color-line-subtle); border-radius: .38rem; background: var(--surface-inset); color: var(--color-ink-muted); cursor: pointer; }
-  .rich-media-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: .65rem; cursor: default; }
+  .rich-media-editor__compact-preview { position: relative; display: grid; align-content: center; justify-items: center; gap: .6rem; width: 100%; height: 115px; min-height: 115px; aspect-ratio: auto; overflow: hidden; padding: 0; border: 0; border-bottom: 1px solid rgba(255, 255, 255, .08); border-radius: 0; background: rgba(0, 0, 0, .22); color: #85868e; cursor: pointer; }
+  .rich-media-editor__compact-preview--locked { align-content: center; gap: .4rem; padding: 0; cursor: default; }
   .rich-media-editor__compact-preview:disabled { cursor: wait; opacity: .7; }
-  .rich-media-editor__compact-preview:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 2px; }
-  .rich-media-editor__compact-preview:hover:not(:disabled) { border-color: var(--ctp-green, #a6e3a1); box-shadow: 0 0 0 1px color-mix(in srgb, var(--ctp-green, #a6e3a1) 54%, transparent); }
+  .rich-media-editor__compact-preview:focus-visible { outline: 2px solid #00ffb3; outline-offset: -2px; }
+  .rich-media-editor__compact-preview:hover:not(:disabled) { border-color: rgba(255, 255, 255, .08); box-shadow: none; background: rgba(0, 0, 0, .22); }
   .rich-media-editor__compact-preview img { width: 4rem; height: 4rem; object-fit: contain; }
-  .rich-media-editor__cursor-badge { display: grid; width: 4rem; height: 4rem; place-items: center; border: 1px solid color-mix(in srgb, var(--ctp-green, #a6e3a1) 58%, var(--color-line-subtle)); border-radius: .45rem; background: color-mix(in srgb, var(--ctp-green, #a6e3a1) 12%, var(--surface-inset)); color: var(--ctp-green, #a6e3a1); font: 750 .76rem/1 var(--customize-font-mono, var(--font-mono-stack, monospace)); letter-spacing: .08em; }
-  .rich-media-editor__compact-preview small { overflow: hidden; color: var(--color-ink-muted); font-size: var(--type-label); text-overflow: ellipsis; white-space: nowrap; }
-  .rich-media-editor__compact-upload-hint { max-width: 100%; overflow: hidden; color: var(--color-ink-muted); font-size: .84rem; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-  .rich-media-editor__compact-upload-hint--active { display: none; }
-  .rich-media-editor__compact-copy { display: block; min-width: 0; order: -1; }
-  .rich-media-editor__compact-copy strong { display: flex; align-items: center; gap: .38rem; overflow: hidden; color: var(--color-ink-strong); font-size: .92rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-  .rich-media-editor__compact-copy strong::before { display: block; width: .42rem; height: .42rem; flex: 0 0 auto; border-radius: 50%; background: var(--ctp-green, #a6e3a1); content: ''; }
-  .rich-media-editor__compact-actions { display: flex; flex-wrap: wrap; gap: .4rem; min-width: 0; }
+  .rich-media-editor__cursor-badge { display: grid; width: 4rem; height: 4rem; place-items: center; border: 1px solid rgba(255, 255, 255, .20); border-radius: .45rem; background: rgba(255, 255, 255, .035); color: #a8a9b0; font: 500 .64rem/1 ui-monospace, monospace; letter-spacing: .08em; }
+  .rich-media-editor__compact-preview small { overflow: hidden; color: #6d6e76; font: 400 .59rem/1.4 'Inter', var(--font-body-stack, sans-serif); text-overflow: ellipsis; white-space: nowrap; }
+  .rich-media-editor__compact-copy { display: grid; align-content: start; gap: 4px; min-width: 0; order: 2; padding: 11px; }
+  .rich-media-editor__compact-copy strong { display: block; overflow: visible; color: #f8f8f8; font: 600 .73rem/1.2 'Inter', var(--font-body-stack, sans-serif); white-space: normal; }
+  .rich-media-editor__compact-actions { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; margin-top: 4px; }
   .rich-media-editor__compact-replace,
-  .rich-media-editor__compact-remove { min-height: 1.8rem; padding: .28rem .65rem; border: 1px solid var(--customize-border-strong, var(--color-line-subtle)); border-radius: .28rem; background: transparent; color: var(--color-ink-muted); font: 600 .75rem/1 var(--customize-font-body, var(--font-body-stack, sans-serif)); cursor: pointer; }
+  .rich-media-editor__compact-remove { min-height: 31px; padding: 0 9px; border: 1px solid rgba(255, 255, 255, .20); border-radius: 6px; background: transparent; color: #a8a9b0; font: 500 .63rem/1 'Inter', var(--font-body-stack, sans-serif); cursor: pointer; }
   .rich-media-editor__compact-replace:hover:not(:disabled),
-  .rich-media-editor__compact-replace:focus-visible { border-color: var(--ctp-green, #a6e3a1); background: color-mix(in srgb, var(--ctp-green, #a6e3a1) 10%, transparent); color: var(--color-ink-strong); }
-  .rich-media-editor__compact-remove { border-color: color-mix(in srgb, var(--ctp-red, #f38ba8) 55%, var(--color-line-subtle)); color: var(--ctp-red, #f38ba8); }
+  .rich-media-editor__compact-replace:focus-visible { border-color: #00ffb3; background: rgba(0, 255, 179, .08); color: #f8f8f8; }
+  .rich-media-editor__compact-remove { border-color: rgba(255, 85, 120, .55); color: #ff5578; }
   .rich-media-editor__compact-remove:hover:not(:disabled),
-  .rich-media-editor__compact-remove:focus-visible { border-color: var(--ctp-red, #f38ba8); background: color-mix(in srgb, var(--ctp-red, #f38ba8) 10%, transparent); color: var(--ctp-red, #f38ba8); }
+  .rich-media-editor__compact-remove:focus-visible { border-color: #ff5578; background: rgba(255, 85, 120, .10); color: #ff5578; }
   .rich-media-editor__compact-replace:focus-visible,
-  .rich-media-editor__compact-remove:focus-visible { outline: 2px solid var(--ctp-lavender, #b4befe); outline-offset: 2px; }
+  .rich-media-editor__compact-remove:focus-visible { outline: 2px solid #00ffb3; outline-offset: 2px; }
   .rich-media-editor__compact-replace:disabled,
   .rich-media-editor__compact-remove:disabled { cursor: wait; opacity: .55; }
   .rich-media-editor__advanced { grid-column: 1 / -1; margin-top: .15rem; padding-top: .75rem; border-top: 1px solid var(--color-line-subtle); }

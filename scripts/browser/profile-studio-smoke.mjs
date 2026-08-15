@@ -791,9 +791,9 @@ try {
     const cursor = mediaRail.cardGeometry['Custom cursor'];
     assert(mediaRail.workspace?.width > 0 && mediaRail.workspace?.right >= (mediaRail.options?.right || 0) - 2, `Media workspace overflows its own bounds: ${JSON.stringify(mediaRail)}.`);
     assert(background && avatar && audio && cursor && mediaRail.options, `Media reference geometry is incomplete: ${JSON.stringify(mediaRail)}.`);
-    assert(Math.abs(background.top - avatar.top) <= 2 && Math.abs(avatar.top - audio.top) <= 2, `Media top row is not aligned: ${JSON.stringify(mediaRail)}.`);
-    assert(background.left < avatar.left && avatar.left < audio.left, `Media top row order is not Background, Avatar, Audio: ${JSON.stringify(mediaRail)}.`);
-    assert(cursor.top > background.top && Math.abs(cursor.top - mediaRail.options.top) <= 2 && cursor.left < mediaRail.options.left, `Media second row does not pair Custom cursor with Background options: ${JSON.stringify(mediaRail)}.`);
+    assert(Math.abs(background.top - avatar.top) <= 2 && audio.top > background.top && Math.abs(audio.top - cursor.top) <= 2, `Media cards are not arranged as the reference two-by-two grid: ${JSON.stringify(mediaRail)}.`);
+    assert(background.left < avatar.left && audio.left < cursor.left, `Media cards do not preserve the reference column order: ${JSON.stringify(mediaRail)}.`);
+    assert(mediaRail.options.top >= audio.bottom - 2, `Background options does not follow the media card grid: ${JSON.stringify(mediaRail)}.`);
     const backgroundUpload = await uploadGeneratedImage('input[aria-label="Choose background image"]', { ...RICH_PROFILE_FIXTURE.background, kind: 'background' });
     await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Background saved'))`, 'persisted uploaded background');
     try {

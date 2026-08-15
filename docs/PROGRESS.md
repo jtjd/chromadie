@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio Media tab reference-fidelity pass — 2026-08-15
+
+- Replaced the obsolete three-column media workspace with the approved
+  two-column media-card grid and full-width section rhythm.
+- Removed colored status dots, click-to-upload helper chrome, and Catppuccin
+  fallback styling from the compact media presentation while preserving the
+  real upload, R2 selection, unequip, deletion, audio, cursor, and Spotify
+  behavior.
+- Added reference-aligned descriptions and action placement for image, audio,
+  and cursor media, plus the existing compact Spotify editor and background
+  treatment explanation.
+- Updated source, responsive, and browser geometry contracts. Full unit tests,
+  Svelte check, source lint, and build pass; the local browser smoke reaches
+  the media geometry checks but remains blocked later by the known local R2
+  persisted-upload fixture.
+
 ## Profile Studio reference-card replacement — 2026-08-14
 
 - Removed the Studio preview's dynamic `ProfileShell`/legacy layout renderer

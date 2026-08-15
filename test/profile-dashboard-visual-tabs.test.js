@@ -165,11 +165,14 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(renderModel, /getNameRendererLoadout\(cosmetics\)/);
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
   assert.match(profileShell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\}/);
-  assert.match(expression, /\.profile-expression-editor__compact-grid \{[\s\S]*grid-template-columns: minmax\(0, \.9fr\) minmax\(0, \.9fr\) minmax\(0, 1\.5fr\)/);
+  assert.match(expression, /\.profile-expression-editor__compact-grid \{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(expression, /profile-expression-editor__compact-spotify/);
+  assert.match(expression, /JPEG, PNG, or WebP · processed and stored as WebP/);
   assert.match(mediaWorkspace, /data-media-workspace-layout="reference"/);
-  assert.match(mediaWorkspace, /grid-column: 1;[\s\S]*grid-row: 1;[\s\S]*compact-card--background/);
-  assert.match(mediaWorkspace, /profile-background-treatment[\s\S]*grid-column: 2 \/ -1/);
-  assert.match(mediaWorkspace, /@media \(max-width: 52rem\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)/);
+  assert.match(mediaWorkspace, /compact-card--background\) \{ order: 1; \}/);
+  assert.match(mediaWorkspace, /compact-library\),[\s\S]*grid-column: 1 \/ -1/);
+  assert.match(mediaWorkspace, /profile-background-treatment\)[\s\S]*grid-column: 1 \/ -1/);
+  assert.match(mediaWorkspace, /@media \(max-width: 34rem\)[\s\S]*grid-template-columns: minmax\(0, 1fr\)/);
   assert.match(cosmetics, /profile-cosmetics-surface--compact\) \{[^}]*padding: 0; border: 0; border-radius: 0; background: transparent/);
   assert.match(cosmetics, /profile-cosmetics-name-preview[^\n]*overflow: visible/);
   assert.match(cosmetics, /profile-cosmetics-name-grid \.profile-cosmetics-slot select \{ height: 2\.5rem; min-height: 2\.5rem;/);

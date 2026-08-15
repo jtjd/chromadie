@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-15 — Align the Profile Studio Media tab with the approved reference
+
+- Media, avatar, audio, and cursor controls now use the reference two-by-two
+  card composition with photographic/media preview wells and quiet copy below.
+- Spotify, Background options, and Saved media now read as separated full-width
+  sections instead of old dashboard cards or a three-column action rail.
+- Upload/replace/unequip and library actions remain connected to the existing
+  media contracts; this pass changes presentation only.
+
 ## 2026-08-14 — Rebuild the Profile Studio preview around the reference card
 
 - The selected profile background now acts as the Studio page environment;

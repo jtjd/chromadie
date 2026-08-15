@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-15 — Make the Studio Media tab follow the approved reference hierarchy
+
+The Media tab now owns the reference composition directly: a two-by-two media
+grid followed by full-width Spotify, Background options, and Saved media
+sections. The compact media editors still own upload, selection, unequip,
+library deletion, Spotify validation, and R2 mutation behavior; only their
+presentation geometry and copy are projected into the Studio surface. Status
+messages span the workspace so an unavailable-media state cannot shift one
+card out of alignment.
+
 ## 2026-08-14 — Make the reference card the only Studio preview presentation
 
 The approved Studio reference is a presentation replacement, not a skin over

@@ -126,8 +126,8 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(richMedia, /await removeAsset\(activeCursor\)/);
   assert.match(customize, /ProfileMediaWorkspace/);
   assert.match(mediaWorkspace, /data-media-workspace-layout="reference"/);
-  assert.match(mediaWorkspace, /grid-template-columns: minmax\(12rem, \.9fr\) minmax\(12rem, \.9fr\) minmax\(0, 1\.5fr\)/);
-  assert.match(mediaWorkspace, /profile-background-treatment[\s\S]*grid-column: 2 \/ -1/);
+  assert.match(mediaWorkspace, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(mediaWorkspace, /profile-background-treatment\)[\s\S]*grid-column: 1 \/ -1/);
   assert.match(migration, /normalize_profile_appearance/);
   assert.match(migration, /stage_my_profile_media_replacement/);
   assert.match(migration, /commit_my_profile_media_replacement/);

@@ -117,7 +117,7 @@ test('Profile Studio keeps draft publishing and narrow editor surfaces usable', 
   assert.match(cosmetics, /profile-cosmetics-name-preview \{ position: static/);
   assert.match(mediaWorkspace, /container: profile-media \/ inline-size/);
   assert.match(mediaWorkspace, /@container profile-media \(max-width: 34rem\)/);
-  assert.match(mediaWorkspace, /compact-actions button\)[\s\S]*min-height: 2\.5rem/);
+  assert.match(mediaWorkspace, /compact-actions button\)[\s\S]*min-height: 31px/);
 });
 
 test('production builds retain responsive CSS and do not run the incompatible CSSO pass', () => {

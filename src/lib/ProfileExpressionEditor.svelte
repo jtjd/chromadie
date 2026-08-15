@@ -506,17 +506,15 @@
           {:else}
             <ProfileMediaIcon kind="avatar" />
           {/if}
-          <span class="profile-expression-editor__compact-upload-hint" class:profile-expression-editor__compact-upload-hint--active={Boolean(avatarSrc)}>{hasAvatar ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
           <strong>Avatar</strong>
-        </div>
-        {#if hasAvatar}
+          <small>JPEG, PNG, or WebP · processed and stored as WebP</small>
           <div class="profile-expression-editor__compact-actions">
-            <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => avatarInput?.click()}>Replace</button>
-            <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Unequip</button>
+            <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => avatarInput?.click()}>{hasAvatar ? 'Replace' : 'Upload avatar'}</button>
+            {#if hasAvatar}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAvatar}>Unequip</button>{/if}
           </div>
-        {/if}
+        </div>
       </article>
 
       <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--background">
@@ -533,25 +531,20 @@
           {:else}
             <ProfileMediaIcon kind="image" />
           {/if}
-          <span class="profile-expression-editor__compact-upload-hint" class:profile-expression-editor__compact-upload-hint--active={Boolean(backgroundSrc)}>{hasBackground ? 'Click to replace' : 'Click to upload'}</span>
         </button>
         <div class="profile-expression-editor__compact-copy">
           <strong>Background</strong>
-        </div>
-        {#if hasBackground}
+          <small>JPEG, PNG, or WebP · processed and stored as WebP</small>
           <div class="profile-expression-editor__compact-actions">
-            <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => backgroundInput?.click()}>Replace</button>
-            <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>Unequip</button>
+            <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => backgroundInput?.click()}>{hasBackground ? 'Replace' : 'Upload background'}</button>
+            {#if hasBackground}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeBackground}>Unequip</button>{/if}
           </div>
-        {/if}
+        </div>
       </article>
 
       {#if staff}
         <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--audio">
           <input bind:this={audioInput} class="profile-expression-editor__compact-file" type="file" accept="audio/mpeg,.mp3" aria-label="Choose profile audio" on:change={handleAudioChange} />
-          <div class="profile-expression-editor__compact-copy">
-            <strong>Profile audio</strong>
-          </div>
           {#if audioSrc}
             {#key audioSrc}
               <div class="profile-expression-editor__compact-audio-player">
@@ -586,15 +579,16 @@
               aria-label="Upload profile audio"
             >
               <ProfileMediaIcon kind="audio" />
-              <span class="profile-expression-editor__compact-upload-hint">Click to upload</span>
             </button>
           {/if}
-          {#if hasAudio}
+          <div class="profile-expression-editor__compact-copy">
+            <strong>Profile audio</strong>
+            <small>MP3 · reusable audio library / playlist support</small>
             <div class="profile-expression-editor__compact-actions">
-              <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => audioInput?.click()}>Replace</button>
-              <button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAudio}>Unequip</button>
+              <button type="button" class="profile-expression-editor__compact-replace" disabled={busy} on:click={() => audioInput?.click()}>{hasAudio ? 'Replace' : 'Upload audio'}</button>
+              {#if hasAudio}<button type="button" class="profile-expression-editor__compact-remove" disabled={busy} on:click={removeAudio}>Unequip</button>{/if}
             </div>
-          {/if}
+          </div>
         </article>
       {:else if !richMediaEnabled}
         <article class="profile-expression-editor__compact-card profile-expression-editor__compact-card--audio profile-expression-editor__compact-card--locked">
@@ -604,6 +598,7 @@
           </div>
           <div class="profile-expression-editor__compact-copy">
             <strong>Profile audio</strong>
+            <small>MP3 · reusable audio library / playlist support</small>
           </div>
         </article>
       {/if}
@@ -618,6 +613,7 @@
           </div>
           <div class="profile-expression-editor__compact-copy">
             <strong>Custom cursor</strong>
+            <small>JPEG, PNG, WebP, or ANI</small>
           </div>
         </article>
       {/if}
@@ -626,7 +622,7 @@
         <section class="profile-expression-editor__compact-library" aria-label="Saved media library">
           <div class="profile-expression-editor__compact-library-heading">
             <strong>Saved media</strong>
-            <span>Delete permanently from your library</span>
+            <span>Unequip only removes an asset from the profile. Delete from library is permanent.</span>
           </div>
           <div class="profile-expression-editor__compact-library-list">
             {#each avatarAssets as asset (asset.id)}
@@ -668,6 +664,20 @@
       {/if}
 
     </div>
+  {/if}
+
+  {#if compact}
+    <section class="profile-expression-editor__compact-spotify" aria-labelledby="profile-expression-editor__compact-spotify-title">
+      <div class="profile-expression-editor__compact-spotify-heading">
+        <h3 id="profile-expression-editor__compact-spotify-title">Spotify</h3>
+        <p>Track, playlist, or album URLs from open.spotify.com are supported.</p>
+      </div>
+      <div class="profile-expression-editor__compact-spotify-row">
+        <input bind:value={spotifyUrl} type="url" inputmode="url" autocomplete="off" placeholder="https://open.spotify.com/..." />
+        <button type="button" class="profile-expression-editor__compact-spotify-save" disabled={busy} on:click={saveSpotify}>{expression.spotify_id ? 'Update Spotify' : 'Save Spotify'}</button>
+        {#if expression.spotify_id}<button type="button" class="profile-expression-editor__compact-spotify-remove" disabled={busy} on:click={() => { spotifyUrl = ''; void saveSpotify(); }}>Remove</button>{/if}
+      </div>
+    </section>
   {/if}
 
   {#if !compact}
@@ -841,26 +851,26 @@
 
 <style>
   .profile-expression-editor__compact-grid {
-    --media-surface: var(--customize-surface, var(--ctp-base, #1e1e2e));
-    --media-surface-inset: var(--customize-surface-inset, var(--ctp-mantle, #181825));
-    --media-surface-deep: var(--customize-surface-deep, var(--ctp-crust, #11111b));
-    --media-text-primary: var(--customize-text-primary, var(--ctp-text, #cdd6f4));
-    --media-text-secondary: var(--customize-text-secondary, var(--ctp-subtext1, #bac2de));
-    --media-text-muted: var(--customize-text-muted, var(--ctp-subtext0, #a6adc8));
-    --media-text-faint: var(--customize-text-faint, var(--ctp-overlay1, #7f849c));
-    --media-line: color-mix(in srgb, var(--customize-border, var(--ctp-overlay0, #6c7086)) 72%, transparent);
-    --media-line-strong: color-mix(in srgb, var(--customize-border-strong, var(--ctp-overlay1, #7f849c)) 78%, transparent);
-    --media-focus: var(--customize-focus, var(--ctp-lavender, #b4befe));
-    --media-teal: var(--customize-accent-primary, var(--ctp-teal, #94e2d5));
-    --media-sky: var(--customize-accent-secondary, var(--ctp-sky, #89dceb));
-    --media-peach: var(--customize-accent-add, var(--ctp-peach, #fab387));
-    --media-green: var(--customize-accent-save, var(--ctp-green, #a6e3a1));
-    --media-red: var(--customize-accent-danger, var(--ctp-red, #f38ba8));
-    --media-premium: var(--customize-accent-premium, var(--ctp-mauve, #cba6f7));
+    --media-surface: rgba(12, 12, 15, .78);
+    --media-surface-inset: rgba(255, 255, 255, .035);
+    --media-surface-deep: rgba(0, 0, 0, .22);
+    --media-text-primary: #f8f8f8;
+    --media-text-secondary: #a8a9b0;
+    --media-text-muted: #8f9099;
+    --media-text-faint: #686971;
+    --media-line: rgba(255, 255, 255, .10);
+    --media-line-strong: rgba(255, 255, 255, .20);
+    --media-focus: #00ffb3;
+    --media-teal: #00ffb3;
+    --media-sky: #00ffb3;
+    --media-peach: #00ffb3;
+    --media-green: #00ffb3;
+    --media-red: #ff5578;
+    --media-premium: #8f9099;
     display: grid;
-    grid-template-columns: minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.5fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
-    gap: .65rem;
+    gap: 10px;
     color: var(--media-text-primary);
     font-family: var(--customize-font-body, var(--font-body-stack, sans-serif));
   }
@@ -874,12 +884,13 @@
     --media-card-accent: var(--media-teal);
     display: grid;
     align-content: start;
-    gap: .45rem;
+    gap: 0;
     min-width: 0;
-    grid-template-rows: minmax(1.05rem, auto) minmax(5.7rem, auto) auto;
-    padding: .65rem;
+    grid-template-rows: 115px auto;
+    overflow: hidden;
+    padding: 0;
     border: 1px solid var(--media-line);
-    border-radius: var(--media-radius, .38rem);
+    border-radius: 9px;
     background: var(--media-surface-inset);
   }
 
@@ -896,13 +907,15 @@
     justify-items: center;
     gap: .5rem;
     width: 100%;
-    min-height: 5.7rem;
-    aspect-ratio: 10 / 3;
+    height: 115px;
+    min-height: 115px;
+    aspect-ratio: auto;
     overflow: hidden;
-    padding: .6rem .65rem;
-    border: 1px solid var(--media-line);
-    border-radius: .35rem;
-    background: var(--media-surface-inset);
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 0;
+    background: rgba(0, 0, 0, .22);
     color: var(--media-text-secondary);
     font: inherit;
     line-height: 1.2;
@@ -910,17 +923,17 @@
   }
 
   .profile-expression-editor__compact-preview:hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--media-card-accent) 60%, var(--media-line-strong));
-    background: var(--media-surface-inset);
+    border-color: rgba(255, 255, 255, .08);
+    background: rgba(0, 0, 0, .22);
   }
 
-  .profile-expression-editor__compact-preview--locked { align-content: center; gap: .35rem; padding: .6rem; border-color: var(--media-line); background: var(--media-surface-deep); cursor: default; }
+  .profile-expression-editor__compact-preview--locked { align-content: center; gap: .35rem; padding: 0; border-color: rgba(255, 255, 255, .08); background: rgba(0, 0, 0, .22); cursor: default; }
   .profile-expression-editor__compact-preview:disabled { cursor: wait; opacity: .72; }
   .profile-expression-editor__compact-preview:focus-visible { outline: 2px solid var(--media-focus); outline-offset: 2px; }
   :global(.profile-expression-editor__compact-preview .profile-media-icon) { color: var(--media-card-accent); }
   :global(.profile-expression-editor__compact-preview--locked .profile-media-icon) { color: var(--media-premium); }
   .profile-expression-editor__compact-preview--avatar { border-color: var(--media-line); }
-  .profile-expression-editor__compact-card--avatar .profile-expression-editor__compact-preview { aspect-ratio: 1; min-height: 5.7rem; }
+  .profile-expression-editor__compact-card--avatar .profile-expression-editor__compact-preview { aspect-ratio: auto; min-height: 115px; }
   .profile-expression-editor__compact-avatar-frame {
     display: block;
     width: 5.5rem;
@@ -966,12 +979,9 @@
   /* The circular avatar frame above owns avatar media geometry. */
   :global(.profile-expression-editor__compact-preview .profile-media-icon) { width: 2.35rem; height: 2.35rem; }
   :global(.profile-expression-editor__compact-media .foundation-media__fallback) { min-height: 0; }
-  .profile-expression-editor__compact-upload-hint { max-width: 100%; overflow: hidden; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .84rem; font-weight: 500; line-height: 1.2; pointer-events: none; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-expression-editor__compact-upload-hint--active { display: none; }
-  .profile-expression-editor__compact-copy { display: block; min-width: 0; order: -1; }
-  .profile-expression-editor__compact-copy strong { display: flex; align-items: center; gap: .38rem; overflow: hidden; color: var(--media-text-primary); font-size: .92rem; font-weight: 600; letter-spacing: -.01em; text-overflow: ellipsis; white-space: nowrap; }
-  .profile-expression-editor__compact-copy strong::before { display: block; width: .42rem; height: .42rem; flex: 0 0 auto; border-radius: 50%; background: var(--media-card-accent); content: ''; }
-  .profile-expression-editor__compact-preview small { overflow: hidden; color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-expression-editor__compact-copy { display: grid; align-content: start; gap: 4px; min-width: 0; order: 2; padding: 11px; }
+  .profile-expression-editor__compact-copy strong { display: block; overflow: visible; color: var(--media-text-primary); font: 600 .73rem/1.2 'Inter', var(--font-body-stack, sans-serif); letter-spacing: 0; white-space: normal; }
+  .profile-expression-editor__compact-preview small { overflow: hidden; color: #6d6e76; font: 400 .59rem/1.4 'Inter', var(--font-body-stack, sans-serif); text-overflow: ellipsis; white-space: nowrap; }
   .profile-expression-editor__compact-preview--locked small { color: var(--media-premium); font-weight: 600; }
   .profile-expression-editor__compact-actions { display: flex; flex-wrap: wrap; gap: .4rem; min-width: 0; }
   .profile-expression-editor__compact-replace,
@@ -1065,7 +1075,6 @@
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview--locked .profile-media-icon) { color: var(--media-premium); }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview small) { color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-preview--locked small) { color: var(--media-premium); font-weight: 600; }
-  .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-upload-hint) { max-width: 100%; padding: .18rem .35rem; border-radius: .25rem; background: var(--media-surface-deep); color: var(--media-text-secondary); font-size: .84rem; font-weight: 500; line-height: 1.2; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-copy strong) { color: var(--media-text-primary); font-size: .92rem; font-weight: 600; letter-spacing: -.01em; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-copy small) { color: var(--media-text-secondary); font-size: .76rem; line-height: 1.25; }
   .profile-expression-editor__compact-grid :global(.rich-media-editor__compact-card--locked .rich-media-editor__compact-copy small) { color: color-mix(in srgb, var(--media-premium) 76%, var(--media-text-secondary)); }

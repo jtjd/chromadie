@@ -83,7 +83,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(header, /activeSection !== 'customize'/);
   assert.match(settings, /previewAvailable = activeSection === 'links'/);
   assert.match(expression, /profile-expression-editor__compact-grid/);
-  assert.match(expression, /profile-expression-editor__compact-upload-hint/);
+  assert.match(expression, /JPEG, PNG, or WebP · processed and stored as WebP/);
   for (const action of ['Background', 'Profile audio', 'Avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
   assert.doesNotMatch(expression, /More media controls/);
   assert.match(expression, /profile-expression-editor__compact-audio-player/);
@@ -102,7 +102,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(customize, /id="customize-identity"/);
   assert.match(customize, /--studio-panel: rgba\(12, 12, 15, \.78\)/);
   assert.match(customize, /--studio-control: rgba\(255, 255, 255, \.035\)/);
-  assert.match(expression, /profile-expression-editor__compact-grid[\s\S]*grid-template-columns: minmax\(0, \.9fr\)[\s\S]*gap: \.65rem/);
+  assert.match(expression, /profile-expression-editor__compact-grid[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)[\s\S]*gap: 10px/);
   assert.doesNotMatch(customize, /gradient/);
   assert.doesNotMatch(customize, /premium-banner|premiumrequest|Chromadie Plus/);
   assert.match(expression, /profile-media-icon\) \{ width: 2\.35rem; height: 2\.35rem/);
