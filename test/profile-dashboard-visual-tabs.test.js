@@ -127,6 +127,9 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(customize, /background: var\(--studio-control\)/);
   assert.match(customize, /ProfileReferenceLayoutEditor/);
   assert.match(customize, /presentation="studio"/);
+  assert.match(cosmetics, /STUDIO_EFFECT_DEFINITIONS/);
+  assert.match(cosmetics, /data-presentation="reference-effect-grid"/);
+  assert.match(cosmetics, /profile-cosmetics-studio-card/);
   assert.doesNotMatch(customize, /ProfileTemplatePicker|showLinks=\{false\}/);
   assert.match(cosmetics, /Name effects/);
   assert.match(cosmetics, /name_font: 'Font'/);

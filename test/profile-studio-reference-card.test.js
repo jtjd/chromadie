@@ -26,10 +26,12 @@ test('Studio preview is a bounded reference card, not a public-profile renderer'
 });
 
 test('Studio and homepage share the reference card without sharing public layout wrappers', async () => {
-  const [homepage, customize, layout] = await Promise.all([
+  const [homepage, customize, layout, appearance, cosmetics] = await Promise.all([
     read('src/lib/homepage/HomepageProfileDemo.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
-    read('src/lib/ProfileReferenceLayoutEditor.svelte')
+    read('src/lib/ProfileReferenceLayoutEditor.svelte'),
+    read('src/lib/ProfileAppearanceEditor.svelte'),
+    read('src/lib/ProfileCosmeticsEditor.svelte')
   ]);
 
   assert.match(homepage, /import ProfileReferenceCard/);
@@ -43,4 +45,10 @@ test('Studio and homepage share the reference card without sharing public layout
     assert.match(layout, new RegExp(`data-layout=\\{key\\}|['"]${key}['"]`));
   }
   assert.doesNotMatch(layout, /ProfileTemplatePicker/);
+  assert.match(customize, /appearance-editor__picker-toggle/);
+  assert.match(customize, /display: none !important/);
+  assert.match(appearance, /Profile surface<\/h2><p>Adjust the profile card\. Cardless layouts ignore these surface controls\./);
+  assert.match(customize, /presentation="studio"/);
+  assert.match(cosmetics, /STUDIO_EFFECT_DEFINITIONS/);
+  assert.match(cosmetics, /Profile motion/);
 });

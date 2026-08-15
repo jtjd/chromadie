@@ -250,6 +250,7 @@
   .studio-customize :global(.appearance-editor__range output) { color: var(--studio-faint); font: 500 .62rem/1 ui-monospace, monospace; }
   .studio-customize :global(.appearance-editor__range input) { accent-color: var(--studio-accent); }
   .studio-customize :global(.appearance-editor__picker) { display: none; }
+  .studio-customize :global(.appearance-editor__picker-toggle) { display: none !important; }
   .studio-customize :global(.appearance-editor--picker-open .appearance-editor__picker) { display: grid; }
   .studio-customize :global(.appearance-editor__message) { color: var(--studio-danger); font: 400 .7rem/1.4 'Inter', sans-serif; }
 
@@ -267,8 +268,8 @@
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-name-grid) { margin-bottom: 10px; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading) { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin: 0 0 15px; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading h3) { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Clash Display', sans-serif; }
-  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading p) { display: none; }
-  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading button) { border: 0; background: transparent; color: var(--studio-muted); font: 400 .63rem/1 'Inter', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading p) { display: block; max-width: 420px; margin: 5px 0 0; color: var(--studio-muted); font: 400 .68rem/1.45 'Inter', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading button) { align-self: start; border: 0; background: transparent; color: var(--studio-muted); font: 400 .63rem/1 'Inter', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-slot) { min-width: 0; padding: 11px; border: 1px solid var(--studio-border); border-radius: 9px; background: var(--studio-control); }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-slot label) { color: var(--studio-secondary); font: 400 .7rem/1.3 'Inter', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-slot select) { min-height: 34px; border: 1px solid var(--studio-border); border-radius: 6px; background: var(--studio-control-deep); color: var(--studio-text); font: 500 .66rem/1 'Inter', sans-serif; }

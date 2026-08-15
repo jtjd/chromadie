@@ -300,7 +300,7 @@
   <section class="appearance-editor__panel" class:appearance-editor__panel--cardless={cardlessLayout} aria-labelledby="appearance-surface-title">
     <div class="appearance-editor__surface-grid">
       <div class="appearance-editor__surface-intro">
-        <div class="appearance-editor__heading"><div><h2 id="appearance-surface-title">Profile surface</h2><p>Adjust the profile card</p>{#if cardlessLayout}<p class="appearance-editor__cardless-note">This layout does not use a profile card surface.</p>{/if}</div></div>
+        <div class="appearance-editor__heading"><div><h2 id="appearance-surface-title">Profile surface</h2><p>Adjust the profile card. Cardless layouts ignore these surface controls.</p>{#if cardlessLayout}<p class="appearance-editor__cardless-note">This layout does not use a profile card surface.</p>{/if}</div></div>
       </div>
       <label class="appearance-editor__field appearance-editor__surface-color" class:active={activeColor === 'surface'} data-color-role="surface" on:pointerdown={() => chooseColor('surface')}>
         <span><button type="button" class="appearance-editor__color-dot" disabled={cardlessLayout} style={`--dot-color:${fieldValue('surface', staged)}`} aria-label="Edit Profile surface" on:click={() => chooseColor('surface')}></button>Profile surface</span>
