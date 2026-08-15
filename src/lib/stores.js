@@ -1,6 +1,6 @@
 import { derived, writable, get } from 'svelte/store'
 import { supabase } from './supabase'
-import { resolveAccountState } from './authState'
+import { isSameAuthenticatedAccount, resolveAccountState } from './authState'
 import { clearAllViewState } from './viewState.js'
 import { resolveNameFontKey } from './name/nameFonts.js'
 import { resolveNameMaterialKey } from './name/nameMaterials.js'
@@ -406,10 +406,14 @@ async function hydrateAuthenticatedUser(currentSession, expectedEventId) {
 
 supabase.auth.onAuthStateChange((eventName, currentSession) => {
     const nextAuthEventId = ++authEventId
+    const currentProfile = get(profile)
+    const sameAuthenticatedAccount = isSameAuthenticatedAccount(currentSession, currentProfile)
     authEvent.set(eventName)
     authInitialized.set(true)
     session.set(currentSession)
-    clearUserState()
+    if (!sameAuthenticatedAccount || !currentSession) {
+        clearUserState()
+    }
     profileLoadFailed.set(false)
 
     if (!currentSession) {
@@ -417,7 +421,15 @@ supabase.auth.onAuthStateChange((eventName, currentSession) => {
         return
     }
 
-    profileReady.set(false)
+    // Refreshing a token changes credentials, not profile data. Keep the
+    // mounted Studio/public route stable and avoid repeating the account RPC
+    // fan-out when the current account is already hydrated.
+    if (eventName === 'TOKEN_REFRESHED' && sameAuthenticatedAccount) {
+        profileReady.set(true)
+        return
+    }
+
+    if (!sameAuthenticatedAccount) profileReady.set(false)
     queueMicrotask(() => {
         void hydrateAuthenticatedUser(currentSession, nextAuthEventId)
     })

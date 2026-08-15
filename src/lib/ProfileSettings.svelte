@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
-  import { SvelteMap } from 'svelte/reactivity';
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import { restoreFocus, trapFocus } from './a11y.js';
   import { authUser, equippedItems, isAuthenticated, profile, profileEntitlements, session } from './stores';
   import { supabase } from './supabase';
@@ -110,10 +110,12 @@
   let previewError = '';
   let fullContextLoaded = false;
   let fullContextPromise = null;
+  const settingsLoadAccounts = new SvelteSet();
 
   $: accountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
   $: accountKey = $isAuthenticated && $session?.user?.id ? $session.user.id : '';
-  $: if (accountKey) void loadSettings();
+  $: if (!accountKey) resetSettingsLoadState();
+  $: if (accountKey) ensureSettingsLoaded(accountKey);
   $: profilePath = context?.targetProfile?.username ? getCanonicalProfilePath(context.targetProfile.username) : '/profile';
   $: featureFlags = resolveProfileFeatureFlags({
     userId: context?.profileId || $session?.user?.id,
@@ -152,6 +154,18 @@
     dev: import.meta.env.DEV
   });
   $: previewRenderSnapshot = previewModel.snapshot;
+
+  function resetSettingsLoadState() {
+    if (!settingsLoadAccounts.size) return;
+    settingsLoadAccounts.clear();
+    requestId += 1;
+  }
+
+  function ensureSettingsLoaded(nextAccountKey) {
+    if (settingsLoadAccounts.has(nextAccountKey)) return;
+    settingsLoadAccounts.add(nextAccountKey);
+    void loadSettings(nextAccountKey);
+  }
 
   onMount(() => {
     previewMediaQuery = window.matchMedia('(max-width: 64rem)');
@@ -501,7 +515,7 @@
     dashboardStatus = 'Profile changes reset.';
   }
 
-  async function loadSettings() {
+  async function loadSettings(expectedAccountKey = '') {
     const nextRequestId = ++requestId;
     const previousContext = context;
     loading = !previousContext?.targetProfile || !previousContext?.profileConfig;
@@ -516,6 +530,7 @@
       sessionUserId: $session?.user?.id
     });
     if (nextRequestId !== requestId) return;
+    if (expectedAccountKey && expectedAccountKey !== $session?.user?.id) return;
     if (nextContext.loadError && previousContext) {
       context = { ...previousContext, dataWarning: nextContext.loadError };
       loading = false;
