@@ -213,6 +213,13 @@
       <p role="alert">{$shopItemsError}</p>
     {:else}
       {#if presentation === 'studio'}
+        <div class="profile-cosmetics-studio-heading">
+          <div>
+            <h2>Profile effects</h2>
+            <p>These are the current cosmetic slots. The production editor lists only items the account owns or can use.</p>
+          </div>
+          <button type="button" on:click={resetNameEffects}>Reset name effects</button>
+        </div>
         <div class="profile-cosmetics-studio-grid" data-presentation="reference-effect-grid">
           {#each STUDIO_EFFECT_DEFINITIONS as definition (definition.slot)}
             <div class="profile-cosmetics-studio-card" data-cosmetic-slot={definition.slot}>

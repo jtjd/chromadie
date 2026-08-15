@@ -249,7 +249,9 @@
   .studio-customize :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
   .studio-customize :global(.appearance-editor__surface-grid) { grid-template-columns: 1.15fr 1fr 1fr; gap: 13px; padding: 0; }
   .studio-customize :global(.appearance-editor__surface-intro) { grid-column: 1 / -1; }
-  .studio-customize :global(.appearance-editor__surface-color) { grid-template-columns: minmax(0, 1fr); }
+  .studio-customize :global(.appearance-editor__surface-color) { align-self: end; grid-template-columns: minmax(0, 1fr); }
+  .studio-customize :global(.appearance-editor__surface-color .appearance-editor__color-input),
+  .studio-customize :global(.appearance-editor__surface-color .appearance-editor__hex) { min-height: 40px; height: 40px; }
   .studio-customize :global(.appearance-editor__range) { margin-top: 0; gap: 8px; }
   .studio-customize :global(.appearance-editor__range output) { color: var(--studio-faint); font: 500 .62rem/1 ui-monospace, monospace; }
   .studio-customize :global(.appearance-editor__range input) { accent-color: var(--studio-accent); }
@@ -267,6 +269,11 @@
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading--visual) { display: none !important; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-layout),
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-controls) { display: block; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 1rem; margin: 0 0 15px; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading > div) { min-width: 0; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading h2) { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Clash Display', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading p) { max-width: 420px; margin: 5px 0 0; color: var(--studio-muted); font: 400 .68rem/1.45 'Inter', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading button) { align-self: start; min-height: 0; padding: 0; border: 0; background: transparent; color: var(--studio-muted); font: 400 .63rem/1 'Inter', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-name-grid),
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-visual-grid) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-name-grid) { margin-bottom: 10px; }
@@ -291,6 +298,8 @@
     .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-visual-grid) { grid-template-columns: minmax(0, 1fr); }
     .studio-customize :global(.appearance-editor__surface-grid) { grid-template-columns: minmax(0, 1fr); }
     .studio-customize :global(.appearance-editor__surface-intro) { grid-column: 1; }
+    .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading) { grid-template-columns: minmax(0, 1fr); }
+    .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading button) { justify-self: start; }
   }
 
   @media (max-width: 38rem) {

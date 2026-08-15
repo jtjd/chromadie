@@ -75,7 +75,7 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(appearance, /\.appearance-editor__panel \{ width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;/);
   assert.match(appearance, /\.appearance-editor__surface-color \{[\s\S]*grid-template-columns: minmax\(0, 1fr\);[\s\S]*align-items: start/);
   assert.match(appearance, /\.appearance-editor__surface-color > span \{[\s\S]*text-transform: uppercase/);
-  assert.match(await read('src/lib/ProfileCustomizePage.svelte'), /appearance-editor__surface-color\) \{ grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(await read('src/lib/ProfileCustomizePage.svelte'), /appearance-editor__surface-color\) \{ align-self: end; grid-template-columns: minmax\(0, 1fr\);/);
   assert.match(appearance, /@media \(max-width: 72rem\)[\s\S]*appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
   assert.match(appearance, /@media \(max-width: 40rem\)[\s\S]*appearance-editor__color-grid, \.appearance-editor__surface-grid \{ grid-template-columns: minmax\(0, 1fr\);/);
   assert.match(identity, /@media \(max-width: 52rem\)[\s\S]*identity-editor__fields\) \{ display: grid; gap: \.8rem;[\s\S]*identity-editor__grid--behavior \.identity-editor__field:last-child\)/);
