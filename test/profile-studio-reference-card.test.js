@@ -14,6 +14,7 @@ test('Studio preview is a bounded reference card, not a public-profile renderer'
   assert.match(preview, /import ProfileReferenceCard from '\.\/ProfileReferenceCard\.svelte'/);
   assert.match(preview, /<ProfileMotionEffect[\s\S]*inputSurface="container"/);
   assert.match(preview, /<ProfileReferenceCard[\s\S]*presentation="studio"/);
+  assert.doesNotMatch(preview, /showHeader|headerValue|Draft preview/);
   assert.doesNotMatch(preview, /ProfileShell|ProfileLayoutFrame|profile-shell-page|overflow-y:\s*auto|scroll-cue/);
   assert.match(settings, /import\('\.\/ProfileStudioPreview\.svelte'\)/);
   assert.doesNotMatch(settings, /ProfileShell\.svelte|PreviewDockComponent|previewComponent/);
@@ -23,6 +24,9 @@ test('Studio preview is a bounded reference card, not a public-profile renderer'
   }
   assert.match(card, /border-radius: 20px/);
   assert.match(card, /backdrop-filter: blur\(30px\) saturate\(160%\)/);
+  assert.doesNotMatch(card, /profile-reference-card__head|headerValue/);
+  assert.match(preview, /profile-studio-preview__header[\s\S]*width: min\(350px, 100%\)/);
+  assert.match(preview, /@media \(min-width: 1101px\)[\s\S]*padding-top: 5\.1rem/);
 });
 
 test('Studio and homepage share the reference card without sharing public layout wrappers', async () => {

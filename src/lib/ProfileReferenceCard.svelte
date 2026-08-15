@@ -9,8 +9,6 @@
   export let links = [];
   export let roll = null;
   export let accentColor = '#00FFB3';
-  export let showHeader = false;
-  export let headerValue = 'Compact';
   export let audioAvailable = false;
   export let audioLabel = 'Profile audio';
   export let audioStatus = '▶';
@@ -32,20 +30,12 @@
   $: cardClass = [
     'profile-reference-card',
     `profile-reference-card--${presentation}`,
-    showHeader ? 'profile-reference-card--with-header' : '',
     className
   ].filter(Boolean).join(' ');
 
 </script>
 
 <article class={cardClass} style={`--profile-reference-accent: ${safeAccent};`} aria-label={ariaLabel} data-profile-reference-card>
-  {#if showHeader}
-    <div class="profile-reference-card__head">
-      <span>Profile preview</span>
-      <span>{headerValue}</span>
-    </div>
-  {/if}
-
   <div class="profile-reference-card__avatar-shell">
     {#if activeAvatarSource}
       <img class="profile-reference-card__avatar" src={activeAvatarSource} alt={`${safeDisplayName} avatar`} loading="eager" decoding="async" on:error={() => failedAvatarSource = avatarSrc} />
@@ -110,19 +100,6 @@
     box-shadow: 0 34px 80px rgba(0,0,0,.5);
     backdrop-filter: blur(32px) saturate(160%);
     -webkit-backdrop-filter: blur(32px) saturate(160%);
-  }
-
-  .profile-reference-card__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-bottom: 14px;
-    border-bottom: 1px solid rgba(255,255,255,.075);
-    color: #6b6c74;
-    font: 500 .6rem/1 'Inter', sans-serif;
-    letter-spacing: .07em;
-    text-transform: uppercase;
   }
 
   .profile-reference-card__avatar-shell {
