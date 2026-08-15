@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-15 — Complete homepage navigation
+
+- Replaced the homepage's discovery placeholder with real Leaderboard,
+  Customize, and Pricing destinations while keeping the in-page reference
+  anchors and Claim handle action.
+- Expanded the homepage footer with the product's real navigation, legal,
+  support, and business destinations.
+
 ## 2026-08-15 — Align the Profile Studio Media tab with the approved reference
 
 - Media, avatar, audio, and cursor controls now use the reference two-by-two

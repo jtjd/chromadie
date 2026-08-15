@@ -38,6 +38,24 @@ test('the homepage is a single reference-first composition', () => {
   assert.match(home, /<footer class="homepage-footer">/);
 });
 
+test('homepage navigation exposes real product destinations without placeholder links', () => {
+  for (const destination of [
+    'href="#how">How it works',
+    'href="#showcase">Profiles',
+    'href="/leaderboard">Leaderboard',
+    'href="/profile/settings">Customize',
+    'href="/pricing">Pricing',
+    'href="#claim">Claim handle'
+  ]) assert.match(header, new RegExp(destination.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+
+  for (const destination of ['/leaderboard', '/profile/settings', '/pricing', '/how-to-play', '/privacy', '/terms']) {
+    assert.match(home, new RegExp(`href="${destination}"`));
+  }
+  assert.match(home, /support@chromadie\.com/);
+  assert.match(home, /business@chromadie\.com/);
+  assert.doesNotMatch(header, /href="#"/);
+});
+
 test('the hero carousel uses deterministic homepage specimens without public-profile rendering', () => {
   assert.match(hero, /HOMEPAGE_FIXTURES/);
   assert.match(hero, /Previous profile example/);

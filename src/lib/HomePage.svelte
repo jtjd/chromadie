@@ -78,8 +78,20 @@
       </section>
 
       <footer class="homepage-footer">
-        <span>chm.lol</span>
-        <span>A public profile that changes every day.</span>
+        <div class="homepage-footer__identity">
+          <span>chm.lol</span>
+          <span>A public profile that changes every day.</span>
+        </div>
+        <nav class="homepage-footer__nav" aria-label="Footer navigation">
+          <a href="/leaderboard">Leaderboard</a>
+          <a href="/profile/settings">Customize</a>
+          <a href="/pricing">Pricing</a>
+          <a href="/how-to-play">How to Play</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="mailto:support@chromadie.com">Support</a>
+          <a href="mailto:business@chromadie.com">Business</a>
+        </nav>
       </footer>
     </div>
   </main>

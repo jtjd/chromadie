@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Homepage navigation completion — 2026-08-15
+
+- Homepage header now links to the real Leaderboard, Customize, and Pricing
+  routes alongside its working in-page sections and claim action.
+- Homepage footer now exposes the existing product, legal, support, and
+  business destinations without changing auth or route contracts.
+
 ## Profile Studio Media tab reference-fidelity pass — 2026-08-15
 
 - Replaced the obsolete three-column media workspace with the approved

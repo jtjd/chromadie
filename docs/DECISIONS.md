@@ -1,5 +1,14 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-15 — Keep homepage navigation connected to canonical routes
+
+The homepage keeps its reference anchors for How it works and Profiles, but
+real product surfaces use their canonical paths: Leaderboard, Customize, and
+Pricing. The footer now exposes the existing legal, support, and business
+destinations as well. Links remain ordinary same-origin anchors so the shared
+application navigation guard and direct-refresh route contracts continue to
+own navigation behavior.
+
 ## 2026-08-15 — Make the Studio Media tab follow the approved reference hierarchy
 
 The Media tab now owns the reference composition directly: a two-by-two media
