@@ -77,7 +77,7 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /on:publish=\{publishDashboard\}/);
   assert.match(actions, /Publish profile/);
-  assert.match(actions, /on:click=\{\(\) => dispatch\('reset'\)\}/);
+  assert.match(shell, /dispatch\('reset'\)/);
   assert.doesNotMatch(appearance, /Highlight|Background gradient|Border color|appearance-gradient|appearance-border/);
   assert.doesNotMatch(layout, /save_profile_configuration['"]/);
   assert.doesNotMatch(layout, /Signature color|Ambient color|colorEffectsEnabled/);
@@ -87,7 +87,8 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.save_profile_configuration_v2/);
   assert.match(migration, /GRANT EXECUTE ON FUNCTION public\.publish_profile_configuration_v2/);
   assert.match(migration, /profile_configuration_v2_from_v1/);
-  assert.match(shell, /profile-studio-shell__primary-nav/);
+  assert.doesNotMatch(shell, /profile-studio-shell__primary-nav/);
+  assert.match(shell, /profile-studio-shell__menu-trigger/);
   assert.match(shell, /profile-studio-shell__more-menu/);
   assert.match(shell, /aria-haspopup="menu"/);
   assert.match(shell, /slot name="preview"/);

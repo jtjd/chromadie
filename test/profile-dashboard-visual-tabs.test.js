@@ -36,7 +36,8 @@ test('Profile Studio mode control is keyboard-labelled and stays gradient-free',
     read('src/lib/ProfileSettings.svelte')
   ]);
 
-  assert.match(shell, /profile-studio-shell__primary-nav/);
+  assert.doesNotMatch(shell, /profile-studio-shell__primary-nav/);
+  assert.match(shell, /profile-studio-shell__menu-trigger/);
   assert.match(shell, /profile-studio-shell__more-menu/);
   assert.match(shell, /aria-haspopup="menu"/);
   assert.doesNotMatch(shell, /colorMode|mode-toggle|profile-dashboard-shell--light/);
@@ -107,8 +108,8 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(header, /profile-studio-header__customize-tabs/);
   assert.match(preview, /profile-studio-preview__devices/);
   assert.doesNotMatch(preview, /Unlock more with Chromadie Plus/);
-  assert.match(preview, /profile-studio-preview__canvas--appearance/);
-  assert.match(preview, /profile-studio-preview__viewport[\s\S]*overflow: hidden; border: 1px[\s\S]*border-radius: 1rem/);
+  assert.match(preview, /renderEnvironment=\{false\}/);
+  assert.match(preview, /profile-studio-preview__viewport[\s\S]*overflow: visible/);
   assert.doesNotMatch(preview, /!important/);
   assert.match(appearance, /appearance-editor__picker-surface/);
   assert.match(appearance, /appearance-editor__palette/);
@@ -117,7 +118,7 @@ test('reference workspace composition stays explicit', async () => {
   }
   assert.doesNotMatch(appearanceColors, /Surface tint|label: 'Border'/);
   assert.doesNotMatch(customize, /profile-customize-page__appearance-effects|Overlay color|Atmosphere strength|Restart animations/);
-  assert.match(customize, /--customize-control-surface: var\(--ctp-crust/);
+  assert.match(customize, /--customize-control-surface: rgba\(255, 255, 255, \.035\)/);
   assert.match(customize, /background: var\(--customize-control-surface\) !important/);
   assert.match(editor, /profile-template-picker__grid[^}]*repeat\(5/);
   assert.doesNotMatch(editor, /profile-template-picker__premium/);

@@ -276,7 +276,7 @@ async function readRenderParityState(selector) {
     const opening = root?.querySelector('.profile-shell__opening');
     const identity = root?.querySelector('.identity-card');
     const avatar = identity?.querySelector('.identity-card__avatar-media');
-    const background = root?.querySelector('.profile-shell__media-image');
+    const background = root?.querySelector('.profile-environment__image');
     const boundary = root?.querySelector('[data-profile-surface="true"]');
     const surface = boundary ? getComputedStyle(boundary) : null;
     const path = value => {
@@ -460,13 +460,13 @@ async function publishRichProfileDraft() {
 async function assertPublishedExpressionVisible(description) {
   await page.waitFor(`(() => {
     const avatar = document.querySelector('.profile-studio-preview .identity-card__avatar-media');
-    const background = document.querySelector('.profile-studio-preview .profile-shell__media-image');
+    const background = document.querySelector('.profile-studio-preview .profile-environment__image');
     return Boolean(avatar?.complete && avatar.naturalWidth > 0 && background?.complete && background.naturalWidth > 0);
   })()`, `${description} media load`, 15000);
   const state = await page.evaluate(`(() => {
     const avatar = document.querySelector('.profile-studio-preview .identity-card__avatar-media');
-    const background = document.querySelector('.profile-studio-preview .profile-shell__media-image');
-    const video = document.querySelector('.profile-studio-preview .profile-shell__media-video');
+    const background = document.querySelector('.profile-studio-preview .profile-environment__image');
+    const video = document.querySelector('.profile-studio-preview .profile-environment__video');
     return {
       avatar: avatar ? { complete: avatar.complete, naturalWidth: avatar.naturalWidth, src: avatar.currentSrc || avatar.src } : null,
       background: background ? { complete: background.complete, naturalWidth: background.naturalWidth, src: background.currentSrc || background.src } : null,
@@ -627,7 +627,7 @@ async function capturePublishedLayouts() {
     }
     const publicGeometry = await page.evaluate(`(() => {
       const shell = document.querySelector('.profile-shell-page');
-      const image = document.querySelector('.profile-shell__media-image');
+      const image = document.querySelector('.profile-environment__image');
       const canvas = document.querySelector('.name-effect-canvas__visual');
       const semantic = document.querySelector('.name-effect-canvas__semantic, .identity-card__name');
       const shellBox = shell?.getBoundingClientRect();
@@ -740,13 +740,13 @@ async function capturePublishedLayouts() {
     await page.waitFor(`document.readyState === 'complete' && location.pathname === ${JSON.stringify('/' + canonicalUsername)}`, `${layout} public evidence mobile`);
     await waitForPublicLayout(layout, `${layout} public mobile profile`);
     await page.waitFor(
-      `(() => { const image = document.querySelector('.profile-shell-page .profile-shell__media-image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`,
+      `(() => { const image = document.querySelector('.profile-shell-page .profile-environment__image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`,
       `${layout} public mobile uploaded background`
     );
     await delay(180);
     const mobileGeometry = await page.evaluate(`(() => {
       const shell = document.querySelector('.profile-shell-page');
-      const image = document.querySelector('.profile-shell__media-image');
+      const image = document.querySelector('.profile-environment__image');
       const box = element => element?.getBoundingClientRect();
       const shellBox = box(shell);
       const imageBox = box(image);
@@ -890,7 +890,7 @@ try {
   await step('direct-refresh authenticated Profile Studio', async () => {
     await page.navigate(`${appUrl}/profile/settings`, 'authenticated Profile Studio');
     await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.profile-customize-page') && document.querySelector('.profile-studio-shell__brand')`, 'Profile Studio');
-    const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-studio-shell__primary-nav button.active')?.textContent?.trim(), authenticated: Boolean(document.querySelector('.profile-studio-shell__brand')), globalHeader: Boolean(document.querySelector('.site-mode-header')) })`);
+    const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-studio-workspace')?.getAttribute('data-section-destination') || '', authenticated: Boolean(document.querySelector('.profile-studio-shell__brand')), globalHeader: Boolean(document.querySelector('.site-mode-header')) })`);
     assert(state.path === '/profile/settings', `Expected /profile/settings after refresh, got ${state.path}.`);
     assert(state.authenticated, 'Authenticated owner card is missing after Profile Studio refresh.');
     assert(!state.globalHeader, 'Profile Studio mounted the redundant global site header.');
@@ -1062,7 +1062,7 @@ try {
     const backgroundUpload = await uploadGeneratedImage('input[aria-label="Choose background image"]', { ...RICH_PROFILE_FIXTURE.background, kind: 'background' });
     await page.waitFor(`([...document.querySelectorAll('.profile-expression-editor__message[role="status"]')]).some(node => node.textContent.includes('Background saved'))`, 'persisted uploaded background');
     try {
-      await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .profile-shell__media-image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded background in live preview');
+      await page.waitFor(`(() => { const image = document.querySelector('.profile-studio-preview .profile-environment__image'); return Boolean(image?.complete && image.naturalWidth > 0); })()`, 'uploaded background in live preview');
     } catch (error) {
       const previewState = await page.evaluate(`(() => ({
         images: [...document.querySelectorAll('.profile-studio-preview img')].map(image => ({ className: image.className, src: image.currentSrc || image.src, complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight })),
@@ -1225,7 +1225,7 @@ try {
           const avatarCopyCenterDelta = avatarBox && copyBox
             ? Math.abs((avatarBox.top + avatarBox.height / 2) - (copyBox.top + copyBox.height / 2))
             : null;
-          const backgroundBounds = [...(shell?.querySelectorAll('.profile-shell__media-image, .profile-shell__media-overlay, .profile-shell__media-video, .profile-shell__page-atmosphere-layer, .profile-shell__page-cursor-layer') || [])]
+          const backgroundBounds = [...(shell?.querySelectorAll('.profile-environment__image, .profile-environment__overlay, .profile-environment__video, .profile-environment__atmosphere, .profile-environment__cursor') || [])]
             .map(element => ({ selector: element.className?.baseVal || element.className || element.tagName, box: rect(element) }))
             .filter(item => item.box);
           const shellStyle = shell ? getComputedStyle(shell) : null;
@@ -1233,7 +1233,7 @@ try {
           const cardStyle = card ? getComputedStyle(card) : null;
           const nameStyle = name ? getComputedStyle(name) : null;
           const nameCanvas = card?.querySelector('.name-effect-canvas__visual');
-          const mediaStyles = [...(shell?.querySelectorAll('.profile-shell__media-image, .profile-shell__media-video') || [])].map(element => {
+          const mediaStyles = [...(shell?.querySelectorAll('.profile-environment__image, .profile-environment__video') || [])].map(element => {
             const style = getComputedStyle(element);
             return { position: style.position, width: style.width, height: style.height, objectFit: style.objectFit };
           });
@@ -1869,9 +1869,9 @@ try {
     assert(mobilePreview.device === 'mobile', `Mobile live preview did not activate: ${JSON.stringify(mobilePreview)}.`);
     assert((mobilePreview.phone?.width || 0) <= 322 && (mobilePreview.card?.width || 0) > 200, `Mobile live preview is not a bounded phone canvas: ${JSON.stringify(mobilePreview)}.`);
     assert(!mobilePreview.overflow.length && mobilePreview.phoneScrollWidth <= mobilePreview.phoneClientWidth + 1 && mobilePreview.nameScrollWidth <= mobilePreview.nameClientWidth + 1, `Mobile live preview has horizontal content overflow: ${JSON.stringify(mobilePreview)}.`);
-    await page.waitFor(`document.querySelector('.profile-studio-shell__more-nav > button')`, 'Profile Studio More menu');
+    await page.waitFor(`document.querySelector('.profile-studio-shell__menu-trigger')`, 'Profile Studio More menu');
     const closed = await page.evaluate(`(() => {
-      const trigger = document.querySelector('.profile-studio-shell__more-nav > button');
+      const trigger = document.querySelector('.profile-studio-shell__menu-trigger');
       return {
         visible: Boolean(trigger && trigger.getBoundingClientRect().width > 0),
         contained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1,
@@ -1882,11 +1882,11 @@ try {
     assert(closed.visible, 'Profile Studio More menu trigger is not visible.');
     assert(closed.contained, 'Profile Studio overflows horizontally on mobile.');
     assert(closed.menuHidden && closed.expanded === 'false', `Profile Studio More menu is not initially closed: ${JSON.stringify(closed)}.`);
-    await page.click('.profile-studio-shell__more-nav > button', 'Profile Studio More menu trigger');
-    await page.waitFor(`document.querySelector('.profile-studio-shell__more-nav > button')?.getAttribute('aria-expanded') === 'true' && document.activeElement?.closest('.profile-studio-shell__more-menu')`, 'opened Profile Studio More menu focus');
-    const opened = await page.evaluate(`(() => ({ expanded: document.querySelector('.profile-studio-shell__more-nav > button')?.getAttribute('aria-expanded'), focusedInMenu: Boolean(document.activeElement?.closest('.profile-studio-shell__more-menu')), items: document.querySelectorAll('.profile-studio-shell__more-menu [role="menuitem"]').length }))()`);
+    await page.click('.profile-studio-shell__menu-trigger', 'Profile Studio More menu trigger');
+    await page.waitFor(`document.querySelector('.profile-studio-shell__menu-trigger')?.getAttribute('aria-expanded') === 'true' && document.activeElement?.closest('.profile-studio-shell__more-menu')`, 'opened Profile Studio More menu focus');
+    const opened = await page.evaluate(`(() => ({ expanded: document.querySelector('.profile-studio-shell__menu-trigger')?.getAttribute('aria-expanded'), focusedInMenu: Boolean(document.activeElement?.closest('.profile-studio-shell__more-menu')), items: document.querySelectorAll('.profile-studio-shell__more-menu [role="menuitem"]').length }))()`);
     await page.pressKey('Escape');
-    await page.waitFor(`document.querySelector('.profile-studio-shell__more-nav > button')?.getAttribute('aria-expanded') === 'false' && document.activeElement === document.querySelector('.profile-studio-shell__more-nav > button')`, 'More menu Escape focus restoration');
+    await page.waitFor(`document.querySelector('.profile-studio-shell__menu-trigger')?.getAttribute('aria-expanded') === 'false' && document.activeElement === document.querySelector('.profile-studio-shell__menu-trigger')`, 'More menu Escape focus restoration');
     await capture('06-mobile-dashboard-menu');
     return { mobilePreview, closed, opened };
   });
@@ -2026,19 +2026,18 @@ try {
     await page.waitFor('document.querySelector(".profile-customize-page")', 'Appearance at 414px');
     const drawer = await page.evaluate(`(() => {
       const shell = document.querySelector('.profile-studio-shell');
-      const nav = document.querySelector('.profile-studio-shell__destination-nav');
-      const more = document.querySelector('.profile-studio-shell__more-nav > button');
+      const more = document.querySelector('.profile-studio-shell__menu-trigger');
       return {
         viewport: innerWidth,
-        left: nav ? Math.round(nav.getBoundingClientRect().left) : null,
-        right: nav ? Math.round(nav.getBoundingClientRect().right) : null,
-        buttons: shell?.querySelectorAll('.profile-studio-shell__primary-nav button, .profile-studio-shell__more-nav > button').length || 0,
-        contained: Boolean(nav && nav.getBoundingClientRect().left >= -1 && nav.getBoundingClientRect().right <= innerWidth + 1),
+        left: more ? Math.round(more.getBoundingClientRect().left) : null,
+        right: more ? Math.round(more.getBoundingClientRect().right) : null,
+        buttons: shell?.querySelectorAll('.profile-studio-shell__menu-trigger').length || 0,
+        contained: Boolean(more && more.getBoundingClientRect().left >= -1 && more.getBoundingClientRect().right <= innerWidth + 1),
         moreClosed: more?.getAttribute('aria-expanded') === 'false'
       };
     })()`);
-    assert(drawer.contained && drawer.buttons >= 5 && drawer.moreClosed, `Narrow mobile navigation is not usable at 414px: ${JSON.stringify(drawer)}.`);
-    await page.click('.profile-studio-shell__more-nav > button', 'open narrow mobile More menu');
+    assert(drawer.contained && drawer.buttons === 1 && drawer.moreClosed, `Narrow mobile navigation is not usable at 414px: ${JSON.stringify(drawer)}.`);
+    await page.click('.profile-studio-shell__menu-trigger', 'open narrow mobile More menu');
     await page.waitFor('document.querySelector(".profile-studio-shell__more-menu")', 'open narrow mobile More menu state');
     const mobileMore = await page.evaluate(`(() => {
       const menu = document.querySelector('.profile-studio-shell__more-menu');
@@ -2181,19 +2180,14 @@ try {
         // the real production guard and discard that disposable smoke draft if
         // it appears, rather than allowing the guard to turn into a timeout.
         await page.command('Page.navigate', { url: destinationUrl });
-        const moreDestination = !['overview', 'customize', 'links', 'premium'].includes(destination);
-        await page.waitFor(`Boolean(document.querySelector('.profile-studio-dirty-prompt')) || (document.readyState === 'complete' && location.pathname === '/profile/settings' && (document.querySelector('.profile-studio-shell__primary-nav button.active[data-section="${destination}"]') || (${moreDestination} && document.querySelector('.profile-studio-shell__more-nav > button.active'))))`, `${destination} navigation request at ${width}px`, 30000);
+        await page.waitFor(`Boolean(document.querySelector('.profile-studio-dirty-prompt')) || (document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-studio-workspace[data-section-destination="${destination}"]'))`, `${destination} navigation request at ${width}px`, 30000);
         if (await page.evaluate('Boolean(document.querySelector(".profile-studio-dirty-prompt"))')) {
           await page.click('.profile-studio-dirty-prompt__discard', `${destination} discard smoke draft`);
         }
-        if (moreDestination) {
-          if (await page.evaluate('document.querySelector(".profile-studio-shell__more-nav > button")?.getAttribute("aria-expanded") !== "true"')) {
-            await page.click('.profile-studio-shell__more-nav > button', `${destination} More menu`);
-          }
-          await page.waitFor(`document.querySelector('.profile-studio-shell__more-menu button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace')`, `${destination} destination at ${width}px`, 30000);
-        } else {
-          await page.waitFor(`document.querySelector('.profile-studio-shell__primary-nav button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace')`, `${destination} destination at ${width}px`, 30000);
+        if (await page.evaluate('document.querySelector(".profile-studio-shell__menu-trigger")?.getAttribute("aria-expanded") !== "true"')) {
+          await page.click('.profile-studio-shell__menu-trigger', `${destination} More menu`);
         }
+        await page.waitFor(`document.querySelector('.profile-studio-shell__more-menu button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace[data-section-destination="${destination}"]')`, `${destination} destination at ${width}px`, 30000);
         await delay(80);
         const state = await page.evaluate(`(() => {
           const visible = element => {
@@ -2329,7 +2323,7 @@ try {
       const boundaryStyle = boundary ? getComputedStyle(boundary) : null;
       const rollStyle = roll ? getComputedStyle(roll) : null;
       const pageBox = pageElement?.getBoundingClientRect();
-      const media = [...document.querySelectorAll('.profile-shell__media-image, .profile-shell__media-video')].map(element => {
+      const media = [...document.querySelectorAll('.profile-environment__image, .profile-environment__video')].map(element => {
         const style = getComputedStyle(element);
         const box = element.getBoundingClientRect();
         return { position: style.position, inset: style.inset, width: box.width, height: box.height, objectFit: style.objectFit, naturalWidth: element.naturalWidth || 0, naturalHeight: element.naturalHeight || 0, complete: element.complete ?? true };
@@ -2353,7 +2347,7 @@ try {
         pageBlur: pageStyle.getPropertyValue('--profile-surface-blur').trim(),
         rollBlur: rollStyle?.getPropertyValue('--profile-surface-blur').trim() || '',
         pageBackground: pageStyle.backgroundImage || pageStyle.backgroundColor,
-        pageMediaImage: Boolean(document.querySelector('.profile-shell__media-image')),
+        pageMediaImage: Boolean(document.querySelector('.profile-environment__image')),
         pageBox: pageBox ? { width: pageBox.width, height: pageBox.height } : null,
         media,
         nameEffect: nameCanvas && nameSemantic ? {
@@ -2396,12 +2390,12 @@ try {
     await page.setViewport(390, 844);
     await page.command('Page.reload', { ignoreCache: true });
     await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] .identity-card')`, 'public profile mobile after direct refresh');
-    await page.waitFor(`(() => { const pageElement = document.querySelector('.profile-shell-page[aria-busy="false"]'); const image = pageElement?.querySelector('.profile-shell__media-image'); return Boolean(pageElement && image?.complete && image.naturalWidth > 0 && image.currentSrc); })()`, 'mobile uploaded background after direct refresh');
+    await page.waitFor(`(() => { const pageElement = document.querySelector('.profile-shell-page[aria-busy="false"]'); const image = pageElement?.querySelector('.profile-environment__image'); return Boolean(pageElement && image?.complete && image.naturalWidth > 0 && image.currentSrc); })()`, 'mobile uploaded background after direct refresh');
     await delay(150);
-    await page.waitFor(`(() => { const pageElement = document.querySelector('.profile-shell-page[aria-busy="false"]'); const image = pageElement?.querySelector('.profile-shell__media-image'); return Boolean(pageElement && image?.complete && image.naturalWidth > 0 && image.currentSrc); })()`, 'stable mobile uploaded background after direct refresh');
+    await page.waitFor(`(() => { const pageElement = document.querySelector('.profile-shell-page[aria-busy="false"]'); const image = pageElement?.querySelector('.profile-environment__image'); return Boolean(pageElement && image?.complete && image.naturalWidth > 0 && image.currentSrc); })()`, 'stable mobile uploaded background after direct refresh');
     const mobile = await page.evaluate(`(() => {
       const pageElement = document.querySelector('.profile-shell-page');
-      const image = document.querySelector('.profile-shell__media-image');
+      const image = document.querySelector('.profile-environment__image');
       const box = image?.getBoundingClientRect();
       const style = image ? getComputedStyle(image) : null;
       return { page: pageElement?.getBoundingClientRect(), media: image && box && style ? { complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight, position: style.position, inset: style.inset, objectFit: style.objectFit, width: box.width, height: box.height } : null };

@@ -247,7 +247,7 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.doesNotMatch(mediaDeleteMigration, /v_selected := EXISTS/);
   assert.match(shell, /profilePresentationLayoutVariant === 'portfolio' \? 'Explore profile' : \(continuationLinks\.length \? 'Links' : 'More'\)/);
   assert.match(shell, /profile-shell__more-cue--continuation/);
-  assert.match(frame, /profile-shell-page--minimal\) \.profile-layout-frame \{ --profile-layout-width: 280px; \}/);
+  assert.match(frame, /profile-shell-page--minimal\) \.profile-layout-frame \{ --profile-layout-width: 300px; \}/);
   assert.doesNotMatch(frame, /profile-shell-page--minimal\)[^{]*\{[^}]*margin-left/);
   assert.doesNotMatch(shell, /links=\{visibleLinks\}/);
   assert.match(shell, /profile-border-effect--content/);
@@ -256,7 +256,8 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.doesNotMatch(preview, /logical-canvas|1440|previewScale|transform: scale/);
   assert.doesNotMatch(frame, /role="tab"|presenceLabel|daily color profile/);
   assert.doesNotMatch(preview, /@container profile-preview \(max-width: 31rem\)/);
-  assert.match(preview, /aspect-ratio: 16 \/ 10/);
+  assert.match(preview, /profile-studio-preview__viewport[\s\S]*width: min\(350px, 100%\)/);
+  assert.match(preview, /profile-studio-preview__footer/);
   assert.doesNotMatch(preview, /device-sample/);
   assert.match(dailyRoll, /presentation=\{variant\}/);
   assert.match(roll, /profile-roll--presentation[\s\S]*final-color-display/);
@@ -267,7 +268,7 @@ test('layout renderer composes the shared roll through distinct presentation reg
   assert.match(content, /About me/);
   assert.doesNotMatch(content, /↗/);
   assert.doesNotMatch(widgets, /↗/);
-  assert.match(preview, /height: clamp\(24rem, 54vh, 32rem\)/);
+  assert.match(preview, /height: clamp\(28rem, 66vh, 40rem\)/);
   assert.match(preview, /profile-studio-preview__scroll-cue/);
   assert.match(preview, /previewContentOverflow/);
   assert.doesNotMatch(preview, /previewOpeningOverflow/);

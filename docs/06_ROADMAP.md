@@ -222,11 +222,13 @@ Exit criteria:
   boundary for later work.
 - Phase 11 is tracked separately in the next-phases roadmap and its report.
 
-## Phase 10.2 — Approved Mockup Visual Convergence
+## Phase 10.2 — Approved Mockup Visual Convergence (historical)
 
-Translate the approved `design/reference/v0-profile-mockup/` composition into
-the existing Svelte renderer while keeping Supabase-backed profile and roll
-authority unchanged.
+This completed phase translated the former profile mockup composition into the
+existing Svelte renderer while keeping Supabase-backed profile and roll
+authority unchanged. The retired mockup source is no longer an active visual
+authority; current work follows the versioned references under
+`REFERENCE/chm-redesign-2026-08/`.
 
 Deliverables:
 

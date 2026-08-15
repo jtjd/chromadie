@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Profile Studio reference-first shell replacement — 2026-08-14
+
+- Replaced the obsolete dashboard presentation with the approved versioned
+  Profile Studio shell: selected-profile photographic environment, compact
+  header menu, reference-width editor surface, and sticky live preview rail.
+- Reused the existing ProfileSettings route adapter, editor sections,
+  draft/publish orchestration, ProfileShell snapshot, media contracts, and
+  destination routing without adding a compatibility presentation branch.
+- Replaced the old nested preview chrome and Catppuccin dashboard framing with
+  the shared glass IdentityCard presentation while preserving the five layout
+  implementations and public-profile behavior.
+- Retired inactive visual source files after import/reference checks; historical
+  milestone records remain but no longer point to those files as authorities.
+
 ## Canonical profile motion layer — 2026-08-14
 
 - Added the free `profile_motion_perspective_tilt` catalog item and the

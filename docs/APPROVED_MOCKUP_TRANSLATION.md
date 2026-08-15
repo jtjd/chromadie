@@ -1,8 +1,8 @@
 # Approved Mockup Translation Map
 
 Phase: 10.2 — Approved Mockup Visual Convergence  
-Reference: `design/reference/v0-profile-mockup/`  
-Status: translation contract before production implementation
+Reference: historical Phase 10.2 mockup source (retired 2026-08-14)
+Status: historical translation record; not an active visual authority
 
 The reference is a visual contract for composition, atmosphere, spacing, and
 interaction tone. It is not a production data or authority contract. The

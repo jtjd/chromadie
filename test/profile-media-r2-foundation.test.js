@@ -29,10 +29,12 @@ test('legacy storage references fail closed and cannot be cache-busted into a UR
 
 test('public ProfileShell no longer cache-busts media or mounts a full image beside active video', async () => {
   const shell = await read('src/lib/ProfileShell.svelte');
+  const environment = await read('src/lib/ProfileEnvironmentLayer.svelte');
   assert.doesNotMatch(shell, /mediaCacheKey = String\(Date\.now\(\)\)/);
-  assert.match(shell, /backgroundSrc && !backgroundVideoActive/);
-  assert.match(shell, /backgroundVideoActive\}/);
-  assert.doesNotMatch(shell, /poster=\{backgroundSrc/);
+  assert.match(shell, /ProfileEnvironmentLayer/);
+  assert.match(environment, /backgroundSrc && !backgroundVideoActive/);
+  assert.match(environment, /backgroundVideoActive\}/);
+  assert.doesNotMatch(environment, /poster=\{backgroundSrc/);
 });
 
 test('R2 foundation keeps public publication state explicit and Standard-only', async () => {

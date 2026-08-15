@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-14 — Replace the Profile Studio presentation with the approved shell
+
+- Profile Studio now opens on the selected profile's photographic environment
+  with a focused editor surface and sticky live public-profile preview.
+- The obsolete destination-navigation row, nested preview panel chrome, and
+  old dashboard card framing are gone; secondary destinations remain available
+  through the compact More menu.
+- Appearance, Media, and Layout keep their existing editor behavior, draft and
+  publish state, media flows, and production rendering contracts.
+
 ## 2026-08-14 — Add canonical 3D Tilt profile expression
 
 - Added `3D Tilt` as a free `profile_motion` expression that can be equipped

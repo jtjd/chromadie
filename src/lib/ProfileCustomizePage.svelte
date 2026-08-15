@@ -73,6 +73,7 @@
 </script>
 
 <div class="profile-customize-page">
+  <div class="profile-customize-page__panel">
   <section class="profile-customize-page__surface profile-customize-page__surface--assets" class:is-tab-hidden={selectedTab !== 'media'} aria-hidden={selectedTab !== 'media'} hidden={selectedTab !== 'media'} aria-labelledby="profile-customize-media-title" data-editor-section="media">
     <div class="profile-customize-page__surface-heading">
       <div><h3 id="profile-customize-media-title">Profile media</h3><p>Manage the assets used on your profile.</p></div>
@@ -142,27 +143,28 @@
   </section>
 
 </div>
+</div>
 
 <style>
   .profile-customize-page {
-    --customize-surface: var(--ctp-crust, #11111b);
-    --customize-surface-raised: var(--ctp-mantle, #181825);
-    --customize-surface-inset: var(--studio-inset, var(--ctp-base, #1e1e2e));
-    --customize-surface-deep: var(--ctp-crust, #11111b);
-    --customize-text-primary: var(--ctp-text, #cdd6f4);
-    --customize-text-secondary: var(--ctp-subtext1, #bac2de);
-    --customize-text-muted: var(--ctp-subtext0, #a6adc8);
-    --customize-text-faint: var(--ctp-overlay1, #7f849c);
-    --customize-border: var(--ctp-surface0, #313244);
-    --customize-border-strong: var(--ctp-surface1, #45475a);
-    --customize-border-subtle: color-mix(in srgb, var(--ctp-surface0, #313244) 66%, transparent);
-    --customize-focus: var(--ctp-lavender, #b4befe);
-    --customize-accent-primary: var(--ctp-teal, #94e2d5);
-    --customize-accent-secondary: var(--ctp-sky, #89dceb);
-    --customize-accent-add: var(--ctp-peach, #fab387);
-    --customize-accent-save: var(--ctp-green, #a6e3a1);
-    --customize-accent-danger: var(--ctp-red, #f38ba8);
-    --customize-accent-premium: var(--ctp-mauve, #cba6f7);
+    --customize-surface: rgba(12, 12, 15, .78);
+    --customize-surface-raised: rgba(10, 10, 12, .58);
+    --customize-surface-inset: rgba(255, 255, 255, .035);
+    --customize-surface-deep: rgba(0, 0, 0, .22);
+    --customize-text-primary: #f8f8f8;
+    --customize-text-secondary: #bfc0c5;
+    --customize-text-muted: #8f9099;
+    --customize-text-faint: #686971;
+    --customize-border: rgba(255, 255, 255, .10);
+    --customize-border-strong: rgba(255, 255, 255, .20);
+    --customize-border-subtle: rgba(255, 255, 255, .075);
+    --customize-focus: #00ffb3;
+    --customize-accent-primary: #00ffb3;
+    --customize-accent-secondary: #00ffb3;
+    --customize-accent-add: #f5c26f;
+    --customize-accent-save: #00ffb3;
+    --customize-accent-danger: #ff5578;
+    --customize-accent-premium: #d6b5ff;
     --customize-font-body: var(--font-body-stack, var(--site-font, sans-serif));
     --customize-font-mono: var(--font-mono-stack, ui-monospace, SFMono-Regular, Menlo, monospace);
     --customize-section-heading-size: 1.02rem;
@@ -171,16 +173,16 @@
     --customize-control-size: .84rem;
     --customize-secondary-height: 1.95rem;
     --customize-primary-height: 2.25rem;
-    --customize-radius: .38rem;
-    --customize-control-surface: var(--ctp-crust, #11111b);
-    --customize-control-line: var(--ctp-surface1, #45475a);
+    --customize-radius: 7px;
+    --customize-control-surface: rgba(255, 255, 255, .035);
+    --customize-control-line: rgba(255, 255, 255, .10);
     --customize-section-input: var(--customize-surface-inset);
     display: grid;
     box-sizing: border-box;
     width: 100%;
     gap: .65rem;
     min-width: 0;
-    padding: 0 .75rem 1.5rem;
+    padding: 0 0 1.5rem;
     color: var(--customize-text-primary);
     font-family: var(--customize-font-body);
     font-size: var(--customize-control-size);
@@ -214,29 +216,31 @@
     --color-accent-roll: var(--customize-accent-save);
     --color-success: var(--customize-accent-save);
     --color-earned: var(--customize-accent-add);
-    --color-warning: var(--ctp-yellow, #f9e2af);
+    --color-warning: #f5c26f;
     --color-danger: var(--customize-accent-danger);
     --surface-panel: var(--customize-surface-raised);
-    --surface-panel-strong: var(--ctp-surface1, #45475a);
+    --surface-panel-strong: var(--customize-border-strong);
     --surface-panel-soft: var(--customize-surface-inset);
     --surface-inset: var(--customize-surface-inset);
   }
 
   .profile-customize-page__control-kicker { display: none; }
 
-  .profile-customize-page > [hidden] { display: none !important; }
+  .profile-customize-page__panel > [hidden] { display: none !important; }
 
-  .profile-customize-page__surface { --customize-section-accent: var(--ctp-overlay1, #7f849c); --customize-section-surface: var(--studio-panel, var(--customize-surface)); --customize-section-input: var(--customize-control-surface); --customize-section-input-line: var(--customize-control-line); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--ctp-surface0, #313244); --surface-panel-soft: var(--customize-section-input); display: grid; box-sizing: border-box; width: 100%; max-width: 100%; gap: .75rem; min-width: 0; padding: .85rem 1.05rem .8rem; border: 1px solid var(--ctp-surface0, #313244); border-radius: .52rem; background: var(--customize-section-surface); scroll-margin-top: 5rem; }
-  .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: var(--ctp-sapphire, #74c7ec); }
-  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: var(--ctp-teal, #94e2d5); }
-  .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--ctp-yellow, #f9e2af); }
-  .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: var(--ctp-mauve, #cba6f7); }
-  .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: var(--ctp-pink, #f5c2e7); }
-  .profile-customize-page__surface[data-editor-section="general"] .profile-customize-page__surface-heading h3 { color: var(--ctp-sky, #89dceb); }
-  .profile-customize-page__surface--assets { padding: .75rem 1.05rem .5rem; }
+  .profile-customize-page__panel { box-sizing: border-box; width: 100%; min-width: 0; padding: 1.6rem 1.65rem; border: 1px solid var(--customize-border); border-radius: 15px; background: var(--customize-surface); backdrop-filter: blur(28px) saturate(145%); box-shadow: 0 26px 70px rgba(0,0,0,.24); }
+  .profile-customize-page__surface { --customize-section-accent: var(--customize-text-faint); --customize-section-surface: transparent; --customize-section-input: var(--customize-control-surface); --customize-section-input-line: var(--customize-control-line); --site-canvas: var(--customize-section-surface); --site-deep: var(--customize-surface-deep); --site-raised: var(--customize-section-input); --site-surface: var(--customize-section-input); --site-line: var(--customize-border); --site-line-strong: var(--customize-border-strong); --site-surface-soft: var(--customize-section-input); --surface-inset: var(--customize-section-input); --color-canvas: var(--customize-section-surface); --color-canvas-raised: var(--customize-section-input); --color-canvas-deep: var(--customize-surface-deep); --color-accent: var(--customize-section-accent); --color-line-subtle: var(--customize-border); --color-line-strong: var(--customize-border-strong); --surface-panel: var(--customize-section-input); --surface-panel-strong: var(--customize-border-strong); --surface-panel-soft: var(--customize-section-input); display: grid; box-sizing: border-box; width: 100%; max-width: 100%; gap: .75rem; min-width: 0; padding: 0 0 27px; margin: 0 0 27px; border: 0; border-bottom: 1px solid var(--customize-border); border-radius: 0; background: transparent; scroll-margin-top: 5rem; }
+  .profile-customize-page__surface:last-child { padding-bottom: 0; margin-bottom: 0; border-bottom: 0; }
+  .profile-customize-page__surface[data-editor-section="media"] { --customize-section-accent: #89dceb; }
+  .profile-customize-page__surface[data-editor-section="general"] { --customize-section-accent: #89dceb; }
+  .profile-customize-page__surface[data-editor-section="appearance"] { --customize-section-accent: var(--customize-accent-primary); }
+  .profile-customize-page__surface[data-editor-section="effects"] { --customize-section-accent: #d6b5ff; }
+  .profile-customize-page__surface[data-editor-section="layout"] { --customize-section-accent: #f5c2e7; }
+  .profile-customize-page__surface[data-editor-section="general"] .profile-customize-page__surface-heading h3 { color: var(--customize-text-primary); }
+  .profile-customize-page__surface--assets { padding-top: 0; }
   .profile-customize-page__surface-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; min-width: 0; flex-wrap: wrap; }
-  .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-text-primary); font-size: 1rem; line-height: 1.2; letter-spacing: -.03em; }
-  .profile-customize-page__surface-heading p { margin: .28rem 0 0; color: var(--customize-text-muted); font-size: .72rem; line-height: 1.35; }
+  .profile-customize-page__surface-heading h3 { margin: 0; color: var(--customize-text-primary); font: 600 1.05rem/1.2 'Clash Display', var(--font-display-stack, sans-serif); letter-spacing: 0; }
+  .profile-customize-page__surface-heading p { max-width: 420px; margin: .35rem 0 0; color: var(--customize-text-muted); font: 400 .68rem/1.45 'Inter', var(--font-body-stack, sans-serif); }
 
   /* Appearance is a stack of the reference's independent cards. The tab
    * heading is carried by the color card, so the generic section chrome stays
@@ -244,7 +248,7 @@
   .profile-customize-page__surface[data-editor-section="appearance"] { gap: .7rem; margin-top: -.25rem; padding: 0; border: 0; background: transparent; }
   .profile-customize-page__surface[data-editor-section="appearance"] > .profile-customize-page__editor { display: grid; gap: .65rem; }
 
-  .profile-customize-page__premium-banner { display: none; position: relative; align-items: center; justify-content: center; gap: .55rem; min-height: 5.6rem; overflow: hidden; padding: 1rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--ctp-surface1, #45475a)); border-radius: .5rem; background: var(--ctp-mantle, #181825); color: var(--customize-text-muted); font: 600 .94rem/1.35 var(--customize-font-body); cursor: pointer; }
+  .profile-customize-page__premium-banner { display: none; position: relative; align-items: center; justify-content: center; gap: .55rem; min-height: 5.6rem; overflow: hidden; padding: 1rem 2.8rem; border: 1px solid color-mix(in srgb, var(--customize-accent-premium) 36%, var(--customize-border-strong)); border-radius: .5rem; background: var(--customize-surface-raised); color: var(--customize-text-muted); font: 600 .94rem/1.35 var(--customize-font-body); cursor: pointer; }
   .profile-customize-page__premium-banner::before, .profile-customize-page__premium-banner::after { position: absolute; color: color-mix(in srgb, var(--customize-accent-premium) 12%, transparent); font-size: 2.7rem; line-height: 1; pointer-events: none; }
   .profile-customize-page__premium-banner::before { content: '◇'; left: 1rem; transform: rotate(-18deg); }
   .profile-customize-page__premium-banner::after { content: '✦'; right: 1rem; transform: rotate(18deg); }

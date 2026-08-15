@@ -68,11 +68,14 @@ Components must consume tokens rather than scattered literals.
 
 ### Current typography contract
 
-The sitewide type direction uses Satoshi for body copy and controls, Cabinet
-Grotesk for display identity and major headings, and Geist Mono for technical
-labels, scores, and compact metadata. The stack is loaded with swap-safe
-fallbacks and should be consumed through the shared font tokens rather than
-literal family names in components.
+The approved homepage and Profile Studio references use Clash Display for
+display identity, major headings, the wordmark, and prominent short labels;
+Inter is used for navigation, body copy, metadata, editor controls, and
+supporting interface text. These two families are bundled and loaded with
+swap-safe fallbacks. Existing game-specific surfaces may retain their own
+bundled typography until a separate visual milestone moves them, but Satoshi,
+Cabinet Grotesk, and Geist Mono are not the reference authority for the
+homepage or Profile Studio.
 
 The visual reference is typographic and atmospheric: near-black canvas, thin
 rules, quiet capsule controls, restrained surfaces, subtle grain, and one

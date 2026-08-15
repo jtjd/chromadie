@@ -44,5 +44,5 @@
   .profile-studio-dirty-prompt p { margin: .5rem 0 1rem; color: var(--studio-muted, #bac2de); font-size: .75rem; }
   .profile-studio-dirty-prompt > div { display: flex; justify-content: flex-end; gap: .5rem; }
   .profile-studio-dirty-prompt button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--studio-text, #cdd6f4); font-size: .68rem; cursor: pointer; }
-  .profile-studio-dirty-prompt__discard { border-color: var(--ctp-red, #f38ba8); color: var(--ctp-red, #f38ba8); }
+  .profile-studio-dirty-prompt__discard { border-color: var(--studio-danger, #ff718d); color: var(--studio-danger, #ff718d); }
 </style>

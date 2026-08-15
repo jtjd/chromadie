@@ -1,8 +1,8 @@
 # Approved Mockup Parity Gate
 
 Phase: 10.2 — Approved Mockup Visual Convergence  
-Reference: `design/reference/v0-profile-mockup/`  
-Status: acceptance checklist
+Reference: historical Phase 10.2 mockup source (retired 2026-08-14)
+Status: completed historical acceptance checklist; not an active visual authority
 
 ## Composition
 

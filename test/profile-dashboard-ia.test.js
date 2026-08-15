@@ -37,7 +37,8 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(settings, /on:identitysaved=\{updateIdentity\}/);
   assert.match(studio, /identityPresentation: nextPresentation/);
   assert.match(shell, /data-section=\{section\.id\}/);
-  assert.match(shell, /profile-studio-shell__primary-nav/);
+  assert.doesNotMatch(shell, /profile-studio-shell__primary-nav/);
+  assert.match(shell, /profile-studio-shell__menu-trigger/);
   assert.match(shell, /profile-studio-shell__more-menu/);
   assert.match(shell, /View profile/);
   assert.doesNotMatch(shell, /sidebar|ProfileDashboardIcon|colorMode|gradient/i);
@@ -104,7 +105,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(customize, /data-editor-section="general"/);
   assert.match(customize, /--customize-section-accent/);
   assert.match(customize, /--customize-section-surface/);
-  assert.match(customize, /--customize-section-surface: var\(--studio-panel/);
+  assert.match(customize, /--customize-section-surface: transparent/);
   assert.match(customize, /--customize-section-input: var\(--customize-control-surface\)/);
   assert.match(customize, /--customize-primary-height: 2\.25rem/);
   assert.match(expression, /profile-expression-editor__compact-grid[\s\S]*grid-template-columns: minmax\(0, \.9fr\)[\s\S]*gap: \.65rem/);
@@ -122,11 +123,11 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.doesNotMatch(customize, /--customize-section-surface: var\(--customize-surface-alt\)/);
   assert.match(customize, /--customize-section-input/);
   assert.match(customize, /--customize-section-input-line/);
-  assert.match(customize, /--ctp-base/);
-  assert.match(customize, /--ctp-mantle/);
-  assert.match(customize, /--customize-accent-add: var\(--ctp-peach/);
-  assert.match(customize, /--customize-accent-save: var\(--ctp-green/);
-  assert.match(customize, /--customize-focus: var\(--ctp-lavender/);
+  assert.match(customize, /--customize-surface: rgba\(12, 12, 15, \.78\)/);
+  assert.match(customize, /--customize-surface-inset: rgba\(255, 255, 255, \.035\)/);
+  assert.match(customize, /--customize-accent-add: #f5c26f/);
+  assert.match(customize, /--customize-accent-save: #00ffb3/);
+  assert.match(customize, /--customize-focus: #00ffb3/);
   assert.match(customize, /--customize-border-subtle:/);
   assert.match(identity, /--identity-save: var\(--customize-accent-save/);
   assert.match(expression, /--media-card-accent:/);

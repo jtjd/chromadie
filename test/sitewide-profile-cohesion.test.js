@@ -58,6 +58,7 @@ test('supporting surfaces consume the profile visual tokens without changing rou
 test('profile mode keeps the new header transparent and account-only', async () => {
   const siteHeader = await read('src/lib/SiteModeHeader.svelte');
   const profileShell = await read('src/lib/ProfileShell.svelte');
+  const environment = await read('src/lib/ProfileEnvironmentLayer.svelte');
 
   assert.match(siteHeader, /\.site-mode-header--profile \{/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__right \{[\s\S]*background: transparent;[\s\S]*box-shadow: none;/);
@@ -66,14 +67,13 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: none; \}/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__wordmark > span \{ color: #cdd2ff; \}/);
   assert.match(siteHeader, /\{#if isHomeMode \|\| isHomepageStyle\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
-  assert.match(profileShell, /:global\(\.profile-atmosphere\.profile-shell__page-atmosphere-layer\) \{ position: fixed;/);
-  assert.match(profileShell, /:global\(\.cursor-trail-layer\.profile-shell__page-cursor-layer\) \{ position: fixed;/);
-  assert.match(profileShell, /profile-shell-page--preview \.profile-atmosphere\.profile-shell__page-atmosphere-layer/);
-  assert.match(profileShell, /profile-shell-page--preview \.cursor-trail-layer\.profile-shell__page-cursor-layer/);
+  assert.match(profileShell, /ProfileEnvironmentLayer/);
+  assert.match(environment, /profile-environment--public/);
+  assert.match(profileShell, /mode=\{previewMode \? 'preview' : 'public'\}/);
   assert.match(profileShell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
-  assert.match(profileShell, /<img class="profile-shell__media-image" src=\{backgroundSrc\}/);
-  assert.match(profileShell, /\.profile-shell__media-image,[\s\S]*\.profile-shell__media-video/);
-  assert.doesNotMatch(profileShell, /profile-shell__media-background/);
+  assert.match(environment, /<img class="profile-environment__image" src=\{backgroundSrc\}/);
+  assert.match(environment, /\.profile-environment__image,[\s\S]*\.profile-environment__video/);
+  assert.doesNotMatch(environment, /profile-shell__media-background/);
   assert.match(profileShell, /<ProfileBorderEffect/);
   assert.doesNotMatch(profileShell, /profile-shell__surface-backdrop/);
   assert.doesNotMatch(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);

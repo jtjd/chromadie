@@ -114,9 +114,9 @@ currency in that slice.
 Customize now opens with five direct asset-management entries and a persistent
 seven-category switcher. Editors stay mounted to retain local drafts, but only
 the selected category and its section-scoped action bar are displayed. Preview
-is user-controlled and responsive instead of permanently reducing the editor
-width. This is a presentation-only refinement: it reuses the existing media
-library, entitlement gates, structured configuration, and owner RPCs.
+remains live and sticky at desktop widths, then stacks with the editor at
+narrower widths. This is a presentation-only refinement: it reuses the existing
+media library, entitlement gates, structured configuration, and owner RPCs.
 
 The follow-up correction keeps the same destination but removes the remaining
 nested interaction model. Customize is now one continuous workspace with direct

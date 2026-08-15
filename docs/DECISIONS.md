@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-14 — Make the versioned Profile Studio reference the active shell
+
+The approved `REFERENCE/chm-redesign-2026-08/profile-studio-repo-real.html`
+now governs the authenticated Profile Studio presentation. The old dashboard
+shell, visible destination-navigation row, nested preview chrome, and
+Catppuccin-specific surface framing are presentation history, not compatibility
+requirements. The route adapter, draft/publish state, editor contracts, shared
+profile renderer, auth, RPC/RLS, and media boundaries remain authoritative.
+
+The shell uses one full-page selected-profile environment, a reference-width
+editor workspace, a sticky live preview rail, and a compact accessible menu for
+secondary destinations. The shared IdentityCard owns the reference card
+anatomy used by the Studio preview and public profile surfaces; no new profile
+data or rendering contract is introduced.
+
 ## 2026-08-14 — Keep unequip and permanent media deletion distinct
 
 Profile Studio's visible avatar/background/audio Remove action is an
@@ -2638,8 +2653,8 @@ schema changes, media integration, or later product expansion.
 
 **Status:** accepted and implemented for Phase 10.2
 
-The approved `design/reference/v0-profile-mockup/` is translated into Svelte
-as a centered personal identity surface: a minimal profile header, canonical
+The former Phase 10.2 profile mockup was translated into Svelte as a centered
+personal identity surface: a minimal profile header, canonical
 daily color, one quiet collection trace, and one expression/music boundary.
 The reference remains frontend-only inspection material. Its React/Next.js
 architecture, literals, local roll simulation, placeholder socials, and fake

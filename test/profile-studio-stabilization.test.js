@@ -95,9 +95,8 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(smoke, /profile-shell-page\[aria-busy="false"\]/);
   assert.match(smoke, /stable mobile uploaded background after direct refresh/);
   assert.match(shell, /profile-shell-page--preview-mobile/);
-  assert.match(shell, /profile-shell__media-overlay/);
-  assert.match(shell, /profile-shell__media-image/);
-  assert.match(shell, /profile-shell__media-overlay/);
+  assert.match(shell, /ProfileEnvironmentLayer/);
+  assert.match(preview, /renderEnvironment=\{false\}/);
   assert.match(identity, /identity-card--preview-mobile/);
   assert.match(cursor, /inputMode = 'window'/);
   assert.match(cursor, /inputMode === 'demo'/);

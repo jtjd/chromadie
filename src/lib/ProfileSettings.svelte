@@ -726,9 +726,12 @@
   mobilePreviewOpen={showDashboardPreview}
   mobileDirty={dashboardDirty}
   mobileSaving={dashboardSaving}
+  dirty={dashboardDirty}
+  previewRenderSnapshot={previewRenderSnapshot}
   showPreview={showDashboardPreview}
   on:sectionchange={handleDashboardSectionChange}
   on:previewtoggle={togglePreview}
+  on:reset={resetDashboard}
   on:publish={publishDashboard}
 >
   <svelte:fragment slot="topbar">
@@ -815,7 +818,7 @@
 
 <style>
   .profile-settings-page { width: 100%; min-width: 0; }
-  .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--ctp-peach, #fab387) 35%, transparent); border-radius: .35rem; color: var(--ctp-peach, #fab387); font-size: .8rem; }
+  .profile-settings-page__warning { margin: 0 0 1rem; padding: .65rem .75rem; border: 1px solid color-mix(in srgb, var(--studio-warning, #f5c26f) 35%, transparent); border-radius: .35rem; color: var(--studio-warning, #f5c26f); font-size: .8rem; }
   .profile-settings-page__preview-error { display: grid; min-height: 10rem; place-items: center; padding: 1rem; color: var(--studio-muted, #bac2de); font-size: .8rem; text-align: center; }
   @media (prefers-reduced-motion: reduce) { .profile-settings-page { scroll-behavior: auto; } }
 </style>

@@ -29,7 +29,6 @@
     return Boolean(value && typeof value === 'object' && value.profile);
   }
 
-  $: isAppearancePreview = activeSection === 'customize' && activeCustomizeTab === 'appearance';
   $: previewReady = Boolean(previewComponent && hasRenderablePreview(previewRenderSnapshot));
 
   function updatePreviewScrollState() {
@@ -43,8 +42,7 @@
       observedPreviewShell = null;
     }
     const nextContentOverflow = Boolean(shell && shell.scrollHeight > shell.clientHeight + 4);
-    const nextContentOverflowValue = nextContentOverflow ? 'true' : 'false';
-    if (shell && shell.dataset.previewContentOverflow !== nextContentOverflowValue) shell.dataset.previewContentOverflow = nextContentOverflowValue;
+    if (shell && shell.dataset.previewContentOverflow !== String(nextContentOverflow)) shell.dataset.previewContentOverflow = String(nextContentOverflow);
     if (nextContentOverflow !== previewScrollNeeded) previewScrollNeeded = nextContentOverflow;
   }
 
@@ -56,9 +54,6 @@
     }
     if (!previewMutationObserver && typeof MutationObserver !== 'undefined') {
       previewMutationObserver = new MutationObserver(updatePreviewScrollState);
-      // ResizeObserver covers layout changes. Avoid observing the data
-      // attributes this component owns, otherwise each measurement can feed
-      // back through MutationObserver while the preview is settling.
       previewMutationObserver.observe(previewStage, { childList: true, subtree: true });
     }
   }
@@ -80,32 +75,23 @@
     };
   });
 
-  function togglePreview() {
-    dispatch('toggle');
-  }
-
+  function togglePreview() { dispatch('toggle'); }
   function setPreviewDevice(device) {
     if (device === 'desktop' || device === 'mobile') dispatch('devicechange', device);
   }
-
-  function retryPreview() {
-    dispatch('retry');
-  }
-
+  function retryPreview() { dispatch('retry'); }
 </script>
 
-<div class="profile-studio-preview">
+<div class="profile-studio-preview" data-preview-tab={activeCustomizeTab}>
   <header class="profile-studio-preview__header">
-    <div>
-      <h2>Live preview</h2>
-      <p>This is how your profile looks</p>
-    </div>
+    <div class="profile-studio-preview__label"><i></i><span>Live public-profile preview</span></div>
     {#if isMobileViewport || activeSection === 'links'}
       <button class="profile-studio-preview__close" type="button" aria-label="Close live preview" on:click={togglePreview}>×</button>
     {/if}
   </header>
+
   <div class="profile-studio-preview__body">
-    <div class="profile-studio-preview__canvas" class:profile-studio-preview__canvas--mobile={previewDevice === 'mobile'} class:profile-studio-preview__canvas--appearance={isAppearancePreview}>
+    <div class="profile-studio-preview__canvas" class:profile-studio-preview__canvas--mobile={previewDevice === 'mobile'}>
       {#if previewReady}
         <div class="profile-studio-preview__viewport" data-preview-device={previewDevice}>
           <div
@@ -117,6 +103,7 @@
             <svelte:component
               this={previewComponent}
               previewMode={true}
+              renderEnvironment={false}
               previewProfile={previewProfile}
               previewProfileConfig={previewProfileConfig}
               renderSnapshot={previewRenderSnapshot}
@@ -139,44 +126,56 @@
         <div class="profile-studio-preview__loading" role="status" aria-live="polite"><span aria-hidden="true">✦</span> Preparing your live canvas…</div>
       {/if}
     </div>
-    <div class="profile-studio-preview__device-panel" class:profile-studio-preview__device-panel--appearance={isAppearancePreview}>
+
+    <footer class="profile-studio-preview__footer">
+      <span>Draft preview</span>
       <div class="profile-studio-preview__devices" role="group" aria-label="Preview device">
-        <button type="button" class:active={previewDevice === 'desktop'} aria-pressed={previewDevice === 'desktop'} on:click={() => setPreviewDevice('desktop')}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="1.5"></rect><path d="M8 20h8M12 17v3"></path></svg>Desktop</button>
-        <button type="button" class:active={previewDevice === 'mobile'} aria-pressed={previewDevice === 'mobile'} on:click={() => setPreviewDevice('mobile')}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"></rect><path d="M11 18h2"></path></svg>Mobile</button>
+        <button type="button" class:active={previewDevice === 'desktop'} aria-pressed={previewDevice === 'desktop'} on:click={() => setPreviewDevice('desktop')}>Desktop</button>
+        <button type="button" class:active={previewDevice === 'mobile'} aria-pressed={previewDevice === 'mobile'} on:click={() => setPreviewDevice('mobile')}>Mobile</button>
       </div>
-    </div>
+    </footer>
   </div>
 </div>
 
 <style>
-  .profile-studio-preview { display: grid; grid-template-rows: auto minmax(0, 1fr); width: 100%; max-width: 100%; min-width: 0; min-height: 0; height: 100%; overflow: hidden; }
-  .profile-studio-preview__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; min-height: 5.1rem; padding: 1.1rem 1rem .7rem; }
-  .profile-studio-preview__header h2 { margin: 0; color: var(--studio-text, var(--site-ink, #f2f0eb)); font-size: 1.05rem; letter-spacing: -.02em; }
-  .profile-studio-preview__header p { margin: .35rem 0 0; color: var(--studio-faint, var(--site-muted, #a6adc8)); font-size: .74rem; }
-  .profile-studio-preview__close { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .4rem; background: transparent; color: var(--studio-muted, #bac2de); font-size: 1.1rem; cursor: pointer; }
-  .profile-studio-preview__close:hover, .profile-studio-preview__close:focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-text, #cdd6f4); }
-  .profile-studio-preview__body { display: grid; align-content: start; gap: .9rem; min-height: 0; overflow: auto; padding: .2rem 1rem calc(1rem + env(safe-area-inset-bottom)); background: var(--ctp-mantle, var(--site-deep, #11111b)); }
-  .profile-studio-preview__canvas { display: grid; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; place-items: start center; padding: .15rem 0 0; overflow-x: hidden; }
-  .profile-studio-preview__canvas--appearance { min-height: 0; margin-bottom: .6rem; }
-  .profile-studio-preview__viewport { position: relative; width: 100%; height: clamp(24rem, 54vh, 32rem); min-height: 0; aspect-ratio: 16 / 10; overflow: hidden; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 42%, var(--studio-border, #313244)); border-radius: 1rem; background: var(--color-canvas-deep, #07080b); box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .28); }
+  .profile-studio-preview { display: grid; align-content: start; width: 100%; max-width: 100%; min-width: 0; min-height: 0; height: 100%; overflow: visible; }
+  .profile-studio-preview__header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 2rem; margin-bottom: 1rem; }
+  .profile-studio-preview__label { display: inline-flex; align-items: center; gap: .5rem; color: #8b8c94; font-size: .63rem; letter-spacing: .1em; text-transform: uppercase; }
+  .profile-studio-preview__label i { width: .38rem; height: .38rem; border-radius: 50%; background: var(--studio-accent, #00ffb3); box-shadow: 0 0 8px var(--studio-accent-glow, rgba(0,255,179,.24)); }
+  .profile-studio-preview__close { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--studio-border, rgba(255,255,255,.1)); border-radius: .4rem; background: transparent; color: var(--studio-muted, #bac2de); font-size: 1.1rem; cursor: pointer; }
+  .profile-studio-preview__close:hover, .profile-studio-preview__close:focus-visible { border-color: var(--studio-accent, #00ffb3); color: var(--studio-text, #f8f8f8); }
+  .profile-studio-preview__body { display: grid; align-content: start; min-height: 0; overflow: visible; }
+  .profile-studio-preview__canvas { display: grid; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; min-height: clamp(30rem, 68vh, 42rem); place-items: center; overflow: visible; }
+  .profile-studio-preview__viewport { position: relative; width: min(350px, 100%); height: clamp(28rem, 66vh, 40rem); min-height: 0; overflow: visible; }
   .profile-studio-preview__stage { position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
-  .profile-studio-preview__scroll-cue { position: absolute; right: .7rem; bottom: .7rem; z-index: 8; display: inline-flex; align-items: center; gap: .35rem; padding: .35rem .5rem; border: 1px solid color-mix(in srgb, var(--studio-focus, #b4befe) 38%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--studio-inset, #1e1e2e) 82%, transparent); color: var(--studio-muted, #bac2de); font: 600 .62rem/1 var(--studio-font, var(--site-font, sans-serif)); pointer-events: none; }
-  .profile-studio-preview__scroll-cue span:last-child { color: var(--studio-focus, #b4befe); font-size: .8rem; }
-  .profile-studio-preview__canvas--mobile { padding: .65rem 0 1rem; }
-  .profile-studio-preview__canvas--mobile .profile-studio-preview__viewport { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 14rem)); min-height: min(24rem, calc(100dvh - 12rem)); aspect-ratio: auto; border-radius: 1.25rem; }
-  .profile-studio-preview__canvas--mobile .profile-studio-preview__stage { min-height: 100%; }
-  .profile-studio-preview__device-panel { min-width: 0; }
-  .profile-studio-preview__device-panel--appearance { min-height: 0; overflow: hidden; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }
-  .profile-studio-preview__devices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 3rem; border: 1px solid var(--studio-border, #313244); border-radius: .55rem; background: var(--studio-inset, #1e1e2e); }
-  .profile-studio-preview__device-panel--appearance .profile-studio-preview__devices { border: 0; border-bottom: 1px solid var(--studio-border, #313244); border-radius: 0; }
-  .profile-studio-preview__devices button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--studio-muted, #bac2de); font: 600 .74rem/1 var(--studio-font, var(--site-font, sans-serif)); cursor: pointer; }
-  .profile-studio-preview__devices button.active { border-bottom-color: var(--studio-accent, #89b4fa); color: var(--studio-accent, #89b4fa); }
-  .profile-studio-preview__devices button:focus-visible { outline: 2px solid var(--studio-focus, #b4befe); outline-offset: -2px; }
-  .profile-studio-preview__devices svg { width: .9rem; height: .9rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
-  .profile-studio-preview__loading { display: grid; place-items: center; min-height: 18rem; gap: .55rem; color: var(--studio-muted, #bac2de); font-size: .8rem; text-align: center; }
-  .profile-studio-preview__loading span { color: var(--studio-focus, #b4befe); font-size: 1.2rem; }
+  .profile-studio-preview__stage :global(.profile-shell-page--preview) { width: 100%; height: 100%; min-height: 100%; overflow-y: auto; background: transparent; }
+  .profile-studio-preview__stage :global(.profile-shell__approved-main) { padding-inline: .25rem; }
+  .profile-studio-preview__scroll-cue { position: absolute; right: .35rem; bottom: .35rem; z-index: 8; display: inline-flex; align-items: center; gap: .35rem; padding: .35rem .5rem; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; background: rgba(10,10,12,.72); color: #8f9099; font: 600 .62rem/1 'Inter', sans-serif; pointer-events: none; }
+  .profile-studio-preview__scroll-cue span:last-child { color: var(--studio-accent, #00ffb3); font-size: .8rem; }
+  .profile-studio-preview__loading { display: grid; place-items: center; min-height: 22rem; gap: .55rem; color: var(--studio-muted, #bac2de); font-size: .8rem; text-align: center; }
+  .profile-studio-preview__loading span { color: var(--studio-accent, #00ffb3); font-size: 1.2rem; }
   .profile-studio-preview__loading strong { color: var(--studio-text, #cdd6f4); font-size: .92rem; }
   .profile-studio-preview__loading p { max-width: 20rem; margin: 0; color: var(--studio-faint, #7f849c); line-height: 1.45; }
-  .profile-studio-preview__loading button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--studio-border-strong, rgba(255,255,255,.14)); border-radius: .35rem; background: transparent; color: var(--studio-text, #cdd6f4); font-size: .78rem; cursor: pointer; }
-  @media (prefers-reduced-motion: reduce) { .profile-studio-preview__body { scroll-behavior: auto; } }
+  .profile-studio-preview__loading button { min-height: 2rem; padding: .45rem .7rem; border: 1px solid var(--studio-border-hover, rgba(255,255,255,.2)); border-radius: .35rem; background: transparent; color: var(--studio-text, #cdd6f4); font-size: .78rem; cursor: pointer; }
+  .profile-studio-preview__footer { display: flex; align-items: center; justify-content: space-between; gap: .7rem; width: min(350px, 100%); min-height: 2.8rem; margin: .75rem auto 0; padding-top: .7rem; border-top: 1px solid rgba(255,255,255,.12); color: #777881; font-size: .6rem; }
+  .profile-studio-preview__devices { display: inline-flex; align-items: center; gap: .2rem; }
+  .profile-studio-preview__devices button { min-height: 1.8rem; padding: .25rem .45rem; border: 0; border-radius: .3rem; background: transparent; color: #777881; font: 500 .6rem/1 'Inter', sans-serif; cursor: pointer; }
+  .profile-studio-preview__devices button.active { background: rgba(255,255,255,.08); color: #bfc0c5; }
+  .profile-studio-preview__devices button:hover, .profile-studio-preview__devices button:focus-visible { color: var(--studio-text, #f8f8f8); }
+
+  @media (max-width: 1100px) {
+    .profile-studio-preview { height: auto; }
+    .profile-studio-preview__canvas { min-height: 30rem; }
+  }
+
+  @media (max-width: 700px) {
+    .profile-studio-preview__header { margin-bottom: .7rem; }
+    .profile-studio-preview__canvas { min-height: 0; padding: .5rem 0 1rem; }
+    .profile-studio-preview__viewport { width: min(20rem, 100%); height: min(42rem, calc(100dvh - 12rem)); min-height: min(26rem, calc(100dvh - 12rem)); }
+    .profile-studio-preview__footer { margin-top: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .profile-studio-preview__stage { scroll-behavior: auto; }
+  }
 </style>

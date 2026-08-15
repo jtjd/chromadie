@@ -57,8 +57,7 @@ test('Profile Studio preview is bounded on short-height screens and respects saf
   assert.match(dashboard, /min-height: 100dvh/);
   assert.match(dashboard, /@media \(max-width: 700px\)/);
   assert.match(dashboard, /env\(safe-area-inset-bottom\)/);
-  assert.match(preview, /env\(safe-area-inset-bottom\)/);
-  assert.match(preview, /min-height: min\(24rem, calc\(100dvh - 12rem\)\)/);
+  assert.match(preview, /min-height: min\(26rem, calc\(100dvh - 12rem\)\)/);
 });
 
 test('narrow identity cards use container-aware stacked layouts and readable bios', () => {
@@ -73,8 +72,8 @@ test('profile mobile header keeps edit visible and moves account actions into th
   assert.match(header, /\.site-mode-header--profile \.site-mode-header__account \{ display: none/);
   assert.match(header, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: block/);
   assert.match(header, /\.site-mode-header--profile \.site-mode-header__mobile-context \{ display: none/);
-  assert.match(studioHeader, /\.profile-studio-header__toolbar-actions button \{ flex: 1 1 0; text-align: center;/);
-  assert.match(dashboardActions, /\.profile-studio-actions__buttons button \{ min-height: 2\.5rem/);
+  assert.match(studioHeader, /\.profile-studio-header__toolbar-actions button \{ flex: 1 1 0; text-align: left;/);
+  assert.match(dashboardActions, /\.profile-studio-actions__publish \{ min-height: 2\.3rem/);
 });
 
 test('share dialog has the same focus and scroll management contract as other dialogs', () => {

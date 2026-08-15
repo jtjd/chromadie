@@ -43,6 +43,7 @@
   export let linkStyle = null;
   export let previewDevice = 'desktop';
   export let surface = true;
+  export let previewMode = false;
   /** @type {(entryKey: string) => void} */
   export let onEntryClick = () => {};
 
@@ -68,7 +69,10 @@
   }
 </script>
 
-<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + (surface ? '' : ' identity-card--content-only') + (defaultPresentation ? ' identity-card--default' : '') + (previewDevice === 'mobile' ? ' identity-card--preview-mobile' : '') + ' identity-card--entry-' + entryAnimation} data-profile-path={profilePath || undefined} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
+<section class={'identity-card identity-card--roll-' + rollState + ' identity-card--layout-' + safeLayoutVariant + (surface ? '' : ' identity-card--content-only') + (defaultPresentation ? ' identity-card--default' : '') + (previewMode ? ' identity-card--preview' : '') + (previewDevice === 'mobile' ? ' identity-card--preview-mobile' : '') + ' identity-card--entry-' + entryAnimation} data-profile-path={profilePath || undefined} style={'--identity-accent: ' + accentColor + '; --identity-base-color: ' + nameRendererBaseColor + '; --profile-link-align: ' + (safeLinkStyle.alignment || 'left') + '; --profile-link-size: ' + (1 + Number(safeLinkStyle.size || 0) * .08) + '; --profile-link-glow: ' + (Number(safeLinkStyle.glow || 0) * .18) + ';'} aria-labelledby={titleId}>
+  {#if previewMode}
+    <div class="identity-card__preview-head"><span>Profile preview</span><span>{safeLayoutVariant}</span></div>
+  {/if}
   <div class="identity-card__person">
     {#if showAvatar}
     <AvatarEffect
@@ -563,5 +567,118 @@
   .identity-card--preview-mobile.identity-card--layout-modern .identity-card__name-row,
   .identity-card--preview-mobile.identity-card--layout-portfolio .identity-card__name-row {
     justify-content: flex-start;
+  }
+
+  /* Reference-first card presentation. The data, links, effects, roll slot,
+     and layout keys remain shared; this block owns the visual identity surface
+     used by public profiles and the Studio preview. */
+  .identity-card {
+    padding: 1.75rem 1.55rem 1.45rem;
+    border-radius: 20px;
+    background: var(--profile-surface-fill, rgba(10, 10, 12, .58));
+    box-shadow: 0 1.9rem 4.1rem rgba(0, 0, 0, .42), inset 0 1px 0 rgba(255, 255, 255, .035);
+    backdrop-filter: blur(var(--profile-surface-blur, 30px)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--profile-surface-blur, 30px)) saturate(160%);
+  }
+
+  .identity-card.identity-card--content-only {
+    padding: 1.75rem 1.55rem 1.45rem;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .identity-card__preview-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: .85rem; border-bottom: 1px solid rgba(255,255,255,.075); color: #6b6c74; font: 500 .6rem/1 'Inter', var(--font-body-stack, sans-serif); letter-spacing: .07em; text-transform: uppercase; }
+  .identity-card--preview .identity-card__person { margin-top: 1.4rem; }
+  .identity-card__person,
+  .identity-card--layout-compact .identity-card__person,
+  .identity-card--layout-sleek .identity-card__person,
+  .identity-card--layout-modern .identity-card__person { flex-direction: column; align-items: center; gap: .85rem; }
+  .identity-card__copy,
+  .identity-card--layout-compact .identity-card__copy,
+  .identity-card--layout-sleek .identity-card__copy,
+  .identity-card--layout-modern .identity-card__copy { width: 100%; padding-top: 0; text-align: center; }
+  .identity-card__name-row,
+  .identity-card--layout-compact .identity-card__name-row,
+  .identity-card--layout-sleek .identity-card__name-row,
+  .identity-card--layout-modern .identity-card__name-row { justify-content: center; }
+  .identity-card__name { font-size: clamp(1.72rem, 4vw, 2rem); }
+  .identity-card__bio { max-width: 17rem; margin: .5rem auto 0; font-size: .78rem; line-height: 1.45; }
+  .identity-card__metadata { justify-content: center; margin-top: .45rem; font: .61rem/1.3 'Inter', var(--font-body-stack, sans-serif); }
+
+  :global(.identity-card__avatar) {
+    flex: 0 0 86px;
+    width: 86px;
+    height: 86px;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 50%;
+    background: rgba(255,255,255,.06);
+    box-shadow: none;
+  }
+  :global(.identity-card__avatar-glow) { display: none; }
+  :global(.identity-card__avatar-media) { border-radius: 50%; clip-path: circle(50% at 50% 50%); }
+
+  .identity-card__links,
+  .identity-card--layout-compact .identity-card__links,
+  .identity-card--layout-modern .identity-card__links,
+  .identity-card--layout-portfolio .identity-card__links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; width: 100%; margin-top: 1.2rem; padding-top: 0; border-top: 0; }
+  .identity-card__links--labeled,
+  .identity-card--layout-compact .identity-card__links--labeled,
+  .identity-card--layout-modern .identity-card__links--labeled,
+  .identity-card--layout-portfolio .identity-card__links--labeled { display: grid; width: 100%; gap: 7px; }
+  .identity-card__links a,
+  .identity-card--layout-compact .identity-card__links a,
+  .identity-card--layout-modern .identity-card__links a,
+  .identity-card--layout-portfolio .identity-card__links a,
+  .identity-card--layout-compact .identity-card__links--labeled a,
+  .identity-card--layout-modern .identity-card__links--labeled a,
+  .identity-card--layout-portfolio .identity-card__links--labeled a { display: flex; align-items: center; justify-content: center; gap: .35rem; width: auto; height: auto; min-height: 2.3rem; padding: .45rem .5rem; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; background: rgba(255,255,255,.04); color: var(--profile-text, rgba(237,237,240,.82)); font-size: .69rem; text-decoration: none; }
+  .identity-card__links a:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--identity-accent) 50%, rgba(255,255,255,.16)); background: color-mix(in srgb, var(--identity-accent) 8%, rgba(255,255,255,.04)); }
+  .identity-card__links strong,
+  .identity-card--layout-compact .identity-card__links strong,
+  .identity-card--layout-sleek .identity-card__links strong,
+  .identity-card--layout-modern .identity-card__links strong,
+  .identity-card--layout-portfolio .identity-card__links strong { position: static; width: auto; height: auto; overflow: visible; clip: auto; clip-path: none; color: inherit; font-size: inherit; font-weight: 500; white-space: normal; }
+  .identity-card__link-glyph { width: .85rem; height: .85rem; }
+  .identity-card__link-glyph img { opacity: .68; }
+  .identity-card--layout-sleek .identity-card__links { grid-template-columns: 1fr; }
+  .identity-card--layout-minimal .identity-card__links,
+  .identity-card--layout-portfolio .identity-card__links { margin-top: 1.1rem; }
+  .identity-card--layout-minimal,
+  .identity-card--layout-portfolio { padding: 1.25rem 0; }
+  .identity-card--layout-minimal .identity-card__links--labeled { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .identity-card__divider { margin: 1.1rem 0 .9rem; background: rgba(255,255,255,.075); }
+  .identity-card--preview .identity-card__divider { display: none; }
+  .identity-card--preview .identity-card__today { margin-top: .55rem; padding: .65rem .7rem .7rem; border: 1px solid rgba(255,255,255,.06); border-radius: 8px; background: rgba(0,0,0,.3); }
+  .identity-card--preview .identity-card__today :global(.profile-daily-roll--compact) { padding: 0; border-top: 0; }
+
+  .identity-card--preview-mobile,
+  .identity-card--preview-mobile.identity-card--layout-compact,
+  .identity-card--preview-mobile.identity-card--layout-sleek,
+  .identity-card--preview-mobile.identity-card--layout-minimal,
+  .identity-card--preview-mobile.identity-card--layout-modern,
+  .identity-card--preview-mobile.identity-card--layout-portfolio { padding: 1.35rem; }
+  .identity-card--preview-mobile .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-compact .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-sleek .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-minimal .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-modern .identity-card__person,
+  .identity-card--preview-mobile.identity-card--layout-portfolio .identity-card__person { align-items: center; gap: .85rem; }
+  .identity-card--preview-mobile .identity-card__copy,
+  .identity-card--preview-mobile.identity-card--layout-compact .identity-card__copy,
+  .identity-card--preview-mobile.identity-card--layout-sleek .identity-card__copy,
+  .identity-card--preview-mobile.identity-card--layout-minimal .identity-card__copy,
+  .identity-card--preview-mobile.identity-card--layout-modern .identity-card__copy,
+  .identity-card--preview-mobile.identity-card--layout-portfolio .identity-card__copy { width: 100%; text-align: center; }
+
+  @media (max-width: 36rem) {
+    .identity-card { padding: 1.35rem; border-radius: 18px; }
+    .identity-card.identity-card--content-only { padding: 1.35rem; }
+    :global(.identity-card__avatar) { flex-basis: 76px; width: 76px; height: 76px; }
+    .identity-card__links,
+    .identity-card--layout-minimal .identity-card__links--labeled { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>

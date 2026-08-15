@@ -83,7 +83,10 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   const migration = await read('supabase/migrations/20260808210000_bounded_rich_profile_media.sql');
   const rlsFix = await read('supabase/migrations/20260809010000_fix_rich_media_storage_rls.sql');
   const editor = await read('src/lib/ProfileRichMediaEditor.svelte');
-  const shell = await read('src/lib/ProfileShell.svelte');
+  const [shell, environment] = await Promise.all([
+    read('src/lib/ProfileShell.svelte'),
+    read('src/lib/ProfileEnvironmentLayer.svelte')
+  ]);
   const music = await read('src/lib/ProfileMusic.svelte');
   const config = await read('src/lib/profileConfig.js');
 
@@ -128,8 +131,9 @@ test('rich media migration and renderer preserve ownership and browser safety bo
   assert.match(editor, /Replace video/);
   assert.match(editor, /Replace banner/);
   assert.match(editor, /controls preload="metadata"/);
-  assert.match(shell, /autoplay muted loop playsinline/);
-  assert.doesNotMatch(shell, /poster=\{backgroundSrc/);
+  assert.match(environment, /autoplay muted loop playsinline/);
+  assert.doesNotMatch(environment, /poster=\{backgroundSrc/);
+  assert.match(shell, /ProfileEnvironmentLayer/);
   assert.match(shell, /prefersReducedMotion/);
   assert.match(shell, /--profile-pointer-cursor/);
   assert.match(music, /Enter profile/);

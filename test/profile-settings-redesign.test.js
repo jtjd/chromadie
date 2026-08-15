@@ -18,7 +18,7 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(studio, /ProfileCustomizePage/);
   assert.match(studio, /ProfilePremiumPage/);
   assert.match(studio, /id: 'links'/);
-  assert.match(preview, /Live preview/);
+  assert.match(preview, /Live public-profile preview/);
   assert.match(settings, /previewOpen/);
   assert.match(settings, /togglePreview/);
   assert.match(settings, /showPreview=\{showDashboardPreview\}/);
@@ -48,19 +48,16 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(siteStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
-test('Profile Studio scopes the approved dark reference palette without changing its layout contract', async () => {
+test('Profile Studio scopes the approved dark reference palette without legacy theme aliases', async () => {
   const siteStyles = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
   assert.match(siteStyles, /\.app-main--profile-settings\s*\{/);
-  assert.match(siteStyles, /--ctp-crust: \#050506;/);
-  assert.match(siteStyles, /--ctp-mantle: \#0c0c0f;/);
-  assert.match(siteStyles, /--ctp-text: \#f8f8f8;/);
-  assert.match(siteStyles, /--ctp-mauve: \#00ffb3;/);
-  assert.match(siteStyles, /--ctp-red: \#ff5578;/);
-  assert.match(siteStyles, /--ctp-peach: \#f5c26f;/);
-  assert.match(siteStyles, /--site-accent: var\(--ctp-mauve\)/);
-  assert.match(siteStyles, /--site-raised: var\(--ctp-surface0\)/);
-  assert.match(siteStyles, /--color-danger: var\(--ctp-red\)/);
-  assert.match(siteStyles, /--surface-inset: var\(--ctp-mantle\)/);
+  assert.match(siteStyles, /--customize-surface: rgba\(12, 12, 15, \.78\)/);
+  assert.match(siteStyles, /--customize-focus: #00ffb3/);
+  assert.match(siteStyles, /--site-accent: #00ffb3/);
+  assert.match(siteStyles, /--site-raised: rgba\(255, 255, 255, \.1\)/);
+  assert.match(siteStyles, /--color-danger: #ff5578/);
+  assert.match(siteStyles, /--surface-inset: rgba\(0, 0, 0, \.22\)/);
+  assert.doesNotMatch(siteStyles, /--ctp-/);
   assert.match(siteStyles, /input\[type='checkbox'\], input\[type='radio'\], input\[type='range'\]/);
-  assert.match(siteStyles, /background-color: var\(--ctp-mantle\)/);
+  assert.match(siteStyles, /background-color: var\(--customize-surface-deep\)/);
 });
