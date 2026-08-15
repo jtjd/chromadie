@@ -22,8 +22,8 @@ test('Studio preview is a bounded reference card, not a public-profile renderer'
   for (const anatomy of ['profile-reference-card__avatar', 'profile-reference-card__name', 'profile-reference-card__bio', 'profile-reference-card__links', 'profile-reference-card__roll']) {
     assert.match(card, new RegExp(anatomy));
   }
-  assert.match(card, /border-radius: 20px/);
-  assert.match(card, /backdrop-filter: blur\(30px\) saturate\(160%\)/);
+  assert.match(card, /border-radius: var\(--profile-border-radius, 20px\)/);
+  assert.match(card, /backdrop-filter: blur\(var\(--profile-surface-blur, 30px\)\) saturate\(160%\)/);
   assert.doesNotMatch(card, /profile-reference-card__head|headerValue/);
   assert.match(preview, /profile-studio-preview__header[\s\S]*width: min\(350px, 100%\)/);
   assert.match(preview, /@media \(min-width: 1101px\)[\s\S]*padding-top: 5\.1rem/);

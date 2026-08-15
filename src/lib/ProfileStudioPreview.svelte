@@ -26,9 +26,18 @@
   $: audioStatus = firstTrack?.duration_ms ? `▶ ${formatDuration(firstTrack.duration_ms)}` : '▶';
   $: metadata = [
     identity.location,
+    identity.timezone,
     identity.showJoinDate && identity.joinedLabel ? `Joined ${identity.joinedLabel}` : ''
   ].filter(Boolean).join(' · ');
   $: motionKey = previewRenderSnapshot?.cosmetics?.profileMotionKey || '';
+  $: nameLoadout = previewRenderSnapshot?.cosmetics?.name || null;
+  $: nameTodayColor = previewRenderSnapshot?.colors?.nameToday || accentColor;
+  $: nameBaseColor = previewRenderSnapshot?.colors?.nameBase || '#FFFFFF';
+  $: nameRecentColors = previewRenderSnapshot?.colors?.nameRecent || [];
+  $: appearanceStyle = previewRenderSnapshot?.surface?.style || '';
+  $: avatarEffectKey = previewRenderSnapshot?.cosmetics?.avatarEffectKey || '';
+  $: profileBorderKey = previewRenderSnapshot?.cosmetics?.borderKey || '';
+  $: linkStyle = previewRenderSnapshot?.configuration?.linkStyle || {};
 
   function formatDuration(value) {
     const seconds = Math.max(0, Math.round(Number(value) / 1000));
@@ -68,7 +77,18 @@
               bio={identity.bio}
               meta={metadata}
               avatarSrc={identity.avatarUrl}
+              avatarEffectKey={avatarEffectKey}
+              {nameLoadout}
+              {nameTodayColor}
+              {nameBaseColor}
+              {nameRecentColors}
+              profileBorderKey={profileBorderKey}
+              surfaceStyle={appearanceStyle}
+              showAvatar={identity.showAvatar !== false}
+              descriptionMode={identity.descriptionMode}
+              entryAnimation={identity.entryAnimation}
               {links}
+              {linkStyle}
               roll={latestRoll}
               {accentColor}
               {audioAvailable}

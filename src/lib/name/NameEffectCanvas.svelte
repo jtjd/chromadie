@@ -33,6 +33,7 @@
     'shop-name',
     'shop-item-name',
     'profile-name',
+    'profile-reference-card__name',
     'profile-username-large',
     'discovery-card__name',
     'lb-username',
@@ -313,6 +314,7 @@
      that contract locally or the visual Canvas would measure a tiny default
      heading and render the name at the wrong scale. */
   .name-effect-canvas__semantic.identity-card__name { max-width: 100%; margin: 0; color: var(--identity-base-color, var(--profile-username, rgba(248, 250, 255, 0.98))); font-family: var(--font-display-stack, var(--font-display)); font-size: var(--identity-name-size, 1em); font-weight: 700; line-height: var(--identity-name-line-height, 1); letter-spacing: -0.055em; overflow-wrap: anywhere; }
+  .name-effect-canvas__semantic.profile-reference-card__name { max-width: 100%; margin: 0; color: var(--profile-username, rgba(248, 250, 255, 0.98)); font-family: var(--font-display-stack, var(--font-display)); font-size: var(--profile-reference-name-size, 1.78rem); font-weight: 600; line-height: 1; letter-spacing: -.035em; overflow-wrap: anywhere; }
   .name-effect-canvas__visual { position: absolute; z-index: 0; inset: -12px -18px; display: block; width: calc(100% + 36px); height: calc(100% + 24px); max-width: none; pointer-events: none; }
   .name-effect-canvas--ready .name-effect-canvas__semantic { color: transparent !important; text-shadow: none !important; -webkit-text-fill-color: transparent !important; }
   .name-effect-canvas--fallback .name-effect-canvas__visual { display: none; }

@@ -4774,3 +4774,13 @@ deferred until a section that actually needs it, so entering Customize does not
 fan out into social, score, story, achievement, or progression reads. Existing
 draft/publish, dirty-state, identity, media, cosmetics, auth, and route
 contracts remain the behavioral authorities.
+
+## 2026-08-15 — Keep the bounded Studio preview render-complete
+
+The reference-card preview consumes the complete staged render snapshot rather
+than a hand-picked subset of appearance and cosmetic values. It owns the
+reference-card geometry, while existing name, avatar, and profile-border leaf
+renderers own their configured effects. Background and atmosphere remain on the
+environment layer, and ProfileMotionEffect remains the outer container-motion
+boundary. This keeps Customize immediately truthful without reintroducing the
+public-profile layout renderer or a second cosmetic system.

@@ -2956,3 +2956,14 @@ direct route behavior.
 - Reduced initial Customize work to the owner profile/configuration path and
   active tab; deferred broader profile hydration until another dashboard
   section requires it.
+
+## 2026-08-15 — Complete the Profile Studio live preview contract
+
+- Staged Customize changes now reach the bounded preview card for appearance
+  colors/surface, identity presentation, link styling, name font/material/
+  motion, avatar effects, profile borders, and profile motion.
+- Kept background, atmosphere, cursor, and media behavior on the existing
+  snapshot/environment contracts and reused the production leaf renderers
+  rather than adding preview-only cosmetic implementations.
+- Added regression coverage for the complete staged snapshot-to-card prop
+  boundary.

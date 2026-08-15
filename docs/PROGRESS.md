@@ -3684,6 +3684,18 @@ created.
   session checks; its later alias step remained environment-flaky when the
   local account became unavailable.
 
+## Profile Studio live-preview propagation — 2026-08-15
+
+- Wired the bounded Studio reference card to the complete staged render
+  snapshot so appearance tokens, name layers, avatar effects, profile borders,
+  link styling, identity presentation, and motion-related settings update
+  without leaving Customize.
+- Reused the existing production leaf renderers for names, avatar effects, and
+  profile borders. The preview remains a bounded reference card and does not
+  mount the public-profile layout renderer.
+- Added snapshot/source regression coverage; the full unit suite, production
+  build, and authenticated browser smoke pass.
+
 ## 2026-08-14 — Close media egress and repeated-request paths
 
 Removed the production Supabase Storage escape hatches from profile-media
