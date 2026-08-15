@@ -159,6 +159,7 @@
     color: #f8f8f8;
     font: 600 1.78rem/1 'Clash Display', sans-serif;
     letter-spacing: -.035em;
+    overflow-wrap: anywhere;
   }
 
   .profile-reference-card--homepage .profile-reference-card__name { font-size: 1.95rem; }

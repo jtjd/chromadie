@@ -47,6 +47,10 @@ test('Studio and homepage share the reference card without sharing public layout
   assert.doesNotMatch(layout, /ProfileTemplatePicker/);
   assert.match(customize, /appearance-editor__picker-toggle/);
   assert.match(customize, /display: none !important/);
+  assert.match(customize, /identity-editor__field > span\) \{ letter-spacing: \.055em; text-transform: uppercase;/);
+  assert.match(customize, /appearance-editor__hex\) \{[^}]*border: 1px solid var\(--studio-border-strong\)/);
+  assert.match(customize, /appearance-editor__color-input\) \{ display: block/);
+  assert.doesNotMatch(appearance, /appearance-editor__color-input">\s*<input type="color"/);
   assert.match(appearance, /Profile surface<\/h2><p>Adjust the profile card\. Cardless layouts ignore these surface controls\./);
   assert.match(customize, /presentation="studio"/);
   assert.match(cosmetics, /STUDIO_EFFECT_DEFINITIONS/);

@@ -222,6 +222,8 @@
   .studio-customize :global(.identity-editor--studio .identity-editor__field textarea) { min-height: 76px; }
   .studio-customize :global(.identity-editor--studio .identity-editor__field > span),
   .studio-customize :global(.identity-editor--studio .identity-editor__options) { color: var(--studio-muted); font: 400 .64rem/1.35 'Inter', sans-serif; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__field > span) { letter-spacing: .055em; text-transform: uppercase; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__field > span small) { letter-spacing: 0; text-transform: none; }
   .studio-customize :global(.identity-editor--studio .identity-editor__label-row) { align-items: baseline; }
   .studio-customize :global(.identity-editor--studio .identity-editor__counter) { color: var(--studio-faint); font: 400 .61rem/1 ui-monospace, monospace; }
   .studio-customize :global(.identity-editor--studio .identity-editor__footer) { display: none !important; }
@@ -240,8 +242,10 @@
   .studio-customize :global(.appearance-editor__color-grid .appearance-editor__field) { grid-template-columns: minmax(0, 1fr) 92px; min-height: 40px; padding: 9px 10px; border: 1px solid var(--studio-border); border-radius: 8px; background: var(--studio-control); }
   .studio-customize :global(.appearance-editor__field > span),
   .studio-customize :global(.appearance-editor__range > span) { color: var(--studio-secondary) !important; font: 400 .7rem/1.3 'Inter', sans-serif !important; }
-  .studio-customize :global(.appearance-editor__color-input) { min-height: 29px; height: 29px; border: 1px solid var(--studio-border-strong); border-radius: 0; background: var(--studio-control-deep); }
-  .studio-customize :global(.appearance-editor__hex) { min-height: 29px; height: 29px; color: var(--studio-text) !important; font: 500 .64rem/1 ui-monospace, monospace !important; }
+  .studio-customize :global(.appearance-editor__color-dot) { width: 13px; height: 13px; box-shadow: 0 0 10px color-mix(in srgb, var(--dot-color) 35%, transparent); }
+  .studio-customize :global(.appearance-editor__color-input) { display: block; min-height: 29px; height: 29px; overflow: visible; border: 0; border-radius: 0; background: transparent; }
+  .studio-customize :global(.appearance-editor__color-input:focus-within) { border-color: transparent; box-shadow: none; }
+  .studio-customize :global(.appearance-editor__hex) { min-height: 29px; height: 29px; box-sizing: border-box; padding: 0 7px !important; border: 1px solid var(--studio-border-strong); border-radius: 7px; background: var(--studio-control-deep) !important; color: var(--studio-text) !important; font: 500 .64rem/1 ui-monospace, monospace !important; }
   .studio-customize :global(.appearance-editor__panel:not(.appearance-editor__panel--colors)) { min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
   .studio-customize :global(.appearance-editor__surface-grid) { grid-template-columns: 1.15fr 1fr 1fr; gap: 13px; padding: 0; }
   .studio-customize :global(.appearance-editor__surface-intro) { grid-column: 1 / -1; }

@@ -134,7 +134,7 @@
     backgroundAssets = (data || []).filter(asset => asset.kind === 'background' && (!asset.status || asset.status === 'active'));
   }
 
-  async function selectR2ExpressionAsset(kind, assetId, { clear = false } = {}) {
+  async function selectR2ExpressionAsset(kind, assetId, { clear = false, mediaReference = null } = {}) {
     if (kind === 'audio') {
       const { data, error: audioRpcError } = await supabase.rpc('select_my_profile_audio_asset', {
         p_audio_id: clear ? null : assetId,
@@ -142,9 +142,13 @@
       });
       if (audioRpcError || !data?.success) throw new Error(audioRpcError?.message || data?.error || 'The profile audio selection could not be saved.');
       expression = normalizeProfileExpression({ ...expression, ...data });
-      expressionMediaReferences = data.media_references || {};
+      expressionMediaReferences = {
+        ...expressionMediaReferences,
+        ...(data.media_references || {}),
+        ...(mediaReference ? { audio: mediaReference } : {})
+      };
       syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
-      dispatch('expressionchange', { ...expression, media_references: data.media_references || {}, updatedAt: data.updated_at || null });
+      dispatch('expressionchange', { ...expression, media_references: expressionMediaReferences, updatedAt: data.updated_at || null });
       return data;
     }
     const { data, error: rpcError } = await supabase.rpc('select_my_profile_expression_assets', {
@@ -155,9 +159,13 @@
     });
     if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The profile media selection could not be saved.');
     expression = normalizeProfileExpression({ ...expression, ...data });
-    expressionMediaReferences = data.media_references || {};
+    expressionMediaReferences = {
+      ...expressionMediaReferences,
+      ...(data.media_references || {}),
+      ...(mediaReference ? { [kind]: mediaReference } : {})
+    };
     syncedKey = `${profileId || ''}:${JSON.stringify(expression)}`;
-    dispatch('expressionchange', { ...expression, media_references: data.media_references || {}, updatedAt: data.updated_at || null });
+    dispatch('expressionchange', { ...expression, media_references: expressionMediaReferences, updatedAt: data.updated_at || null });
     return data;
   }
 
@@ -282,7 +290,9 @@
       if (!assetId) throw new Error('The R2 upload did not return a media asset.');
       r2AssetId = assetId;
       const promoted = await promoteProfileMediaR2(assetId);
-      await selectR2ExpressionAsset('avatar', assetId);
+      await selectR2ExpressionAsset('avatar', assetId, {
+        mediaReference: { storage_provider: 'r2', r2_public_key: promoted.r2_public_key }
+      });
       persisted = true;
       setPersistedAvatarPreview(getProfileMediaUrl({ r2_public_key: promoted.r2_public_key }));
       await loadAssetLibrary();
@@ -335,7 +345,9 @@
       if (!assetId) throw new Error('The R2 upload did not return a media asset.');
       r2AssetId = assetId;
       const promoted = await promoteProfileMediaR2(assetId);
-      await selectR2ExpressionAsset('background', assetId);
+      await selectR2ExpressionAsset('background', assetId, {
+        mediaReference: { storage_provider: 'r2', r2_public_key: promoted.r2_public_key }
+      });
       persisted = true;
       setPersistedBackgroundPreview(getProfileMediaUrl({ r2_public_key: promoted.r2_public_key }));
       await loadAssetLibrary();

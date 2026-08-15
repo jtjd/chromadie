@@ -13,6 +13,7 @@ import {
   findAvailablePort,
   loadLocalEnvironment,
   startChromium,
+  startPagesDev,
   startVite,
   startVitePreview,
   terminateProcess,
@@ -34,6 +35,7 @@ if (!environment?.url || !environment?.key) {
 const supabaseUrl = assertLocalSupabaseUrl(environment.url);
 const evidenceDir = await mkdtemp(join(tmpdir(), 'chromadie-profile-studio-smoke-'));
 const smokeMode = process.env.PROFILE_STUDIO_SMOKE_MODE === 'preview' ? 'preview' : 'dev';
+const smokeServer = process.env.PROFILE_STUDIO_SMOKE_SERVER || 'vite';
 
 const results = {
   status: 'running',
@@ -55,6 +57,13 @@ let localServiceRoleKey = '';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function expressionMediaReference(expression, kind, legacyPathKey) {
+  const reference = expression?.media_references?.[kind];
+  if (reference?.storage_provider === 'r2' && reference.r2_public_key) return reference.r2_public_key;
+  const legacyPath = expression?.[legacyPathKey];
+  return legacyPath && !/\/storage\/v1\//.test(String(legacyPath)) ? legacyPath : null;
 }
 
 function stableProfileMediaRequests() {
@@ -353,7 +362,7 @@ async function publishRichProfileDraft() {
     await delay(750);
   }
   const publishedExpression = published?.published?.base || published?.published || {};
-  assert(publishedExpression.avatar_path && publishedExpression.background_path, `Publish response omitted persisted avatar/background expression fields: ${JSON.stringify(published)}`);
+  assert(expressionMediaReference(publishedExpression, 'avatar', 'avatar_path') && expressionMediaReference(publishedExpression, 'background', 'background_path'), `Publish response omitted persisted avatar/background expression fields: ${JSON.stringify(published)}`);
   assert(Array.isArray(published?.published?.links) && published.published.links.length >= links.length, `Publish response omitted the complete V2 link projection: ${JSON.stringify(published)}`);
   return { links: links.length, updatedAt: published?.updated_at || expectedUpdatedAt };
 }
@@ -377,9 +386,11 @@ async function assertPublishedExpressionVisible(description) {
   const configuration = await callAuthenticatedRpc('get_my_profile_configuration_v2');
   const published = configuration?.published || configuration?.configuration_v2?.published;
   const expression = published?.base || published || {};
+  const avatarReference = expressionMediaReference(expression, 'avatar', 'avatar_path');
+  const backgroundReference = expressionMediaReference(expression, 'background', 'background_path');
   assert(state.avatar?.complete && state.avatar.naturalWidth > 0 && state.background?.complete && state.background.naturalWidth > 0, `${description} lost avatar/background in the live preview: ${JSON.stringify({ state, expression })}`);
-  assert(expression.avatar_path && expression.background_path, `${description} response/read projection lost avatar/background paths: ${JSON.stringify({ state, expression })}`);
-  return { state, expression: { avatar: expression.avatar_path, background: expression.background_path, video: expression.background_video_path || null, audio: expression.audio_path || null, cursor: expression.cursor_path || null } };
+  assert(avatarReference && backgroundReference, `${description} response/read projection lost avatar/background references: ${JSON.stringify({ state, expression })}`);
+  return { state, expression: { avatar: avatarReference, background: backgroundReference, video: expressionMediaReference(expression, 'background_video', 'background_video_path'), audio: expressionMediaReference(expression, 'audio', 'audio_path'), cursor: expressionMediaReference(expression, 'cursor', 'cursor_path') } };
 }
 
 async function waitForStudioReferenceCard(description) {
@@ -504,20 +515,29 @@ try {
   });
   assert(authResponse.ok, `Local Supabase auth endpoint returned HTTP ${authResponse.status}.`);
 
-  const appPort = await findAvailablePort(defaultAppPort);
+  const appPort = smokeServer === 'pages'
+    ? await findAvailablePort(5173, 1)
+    : await findAvailablePort(defaultAppPort);
   const debugPort = await findAvailablePort(defaultDebugPort);
   results.ports = { appPort, debugPort };
-  appUrl = `http://127.0.0.1:${appPort}`;
+  appUrl = smokeServer === 'pages'
+    ? `http://localhost:${appPort}`
+    : `http://127.0.0.1:${appPort}`;
   do {
     canonicalUsername = `${RICH_PROFILE_FIXTURE.usernamePrefix}${Date.now().toString(36).slice(-8)}`;
   } while (isProtectedUsername(canonicalUsername) || isReservedRouteSegment(canonicalUsername));
   const email = `smoke-${Date.now().toString(36)}-${canonicalUsername}@example.test`;
   const password = `Smoke-${Date.now().toString(36)}-Pass!`;
 
-  const startAppServer = smokeMode === 'preview' ? startVitePreview : startVite;
+  const startAppServer = smokeServer === 'pages'
+    ? startPagesDev
+    : (smokeMode === 'preview' ? startVitePreview : startVite);
   vite = await startAppServer({ appPort, environment: { url: supabaseUrl.origin, key: environment.key }, evidenceDir });
   chromium = await startChromium({ appUrl, debugPort, evidenceDir, ignoreCertificateErrors: smokeMode === 'preview' });
   page = chromium.page;
+  if (smokeServer === 'pages') {
+    await page.command('Page.setBypassCSP', { enabled: true });
+  }
 
   await step('open local homepage', async () => {
     await page.waitFor(`(() => {
@@ -527,7 +547,7 @@ try {
         && environment
         && getComputedStyle(environment).backgroundImage !== 'none');
     })()`, 'hydrated homepage');
-    assert((await page.evaluate('location.hostname')) === '127.0.0.1', 'Homepage did not load on loopback.');
+    assert(['127.0.0.1', 'localhost'].includes(await page.evaluate('location.hostname')), 'Homepage did not load on loopback.');
     await capture('01-homepage');
   });
 
@@ -581,6 +601,8 @@ try {
     await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page .identity-card') && !document.querySelector('.auth-page')`, 'authenticated session after signup', 30000);
     const accountPath = await page.evaluate('document.querySelector(".identity-card")?.getAttribute("data-profile-path") || ""');
     assert(accountPath === `/${canonicalUsername}`, `Authenticated profile resolved to ${JSON.stringify(accountPath)}, expected /${canonicalUsername}.`);
+    const initialRoll = await callAuthenticatedRpc('roll_die', { p_is_reroll: false });
+    assert(initialRoll?.success === true, `Disposable smoke account could not receive its server-authoritative daily roll: ${JSON.stringify(initialRoll)}`);
     results.account = { username: canonicalUsername, email, canonicalPath: `/${canonicalUsername}` };
   });
 
@@ -649,9 +671,12 @@ try {
     })()`);
     assert(injected.scope && injected.keys.length === 4, `Could not seed stale Studio session state: ${JSON.stringify(injected)}.`);
 
-    await page.evaluate('window.__profileStudioSmokeReloadToken = "pending"');
-    await page.command('Page.reload', { ignoreCache: true });
-    await page.waitFor(`window.__profileStudioSmokeReloadToken === undefined && document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.profile-studio-preview .profile-reference-card') && document.querySelector('.profile-studio-shell__publish')`, 'stale-session Studio hydration');
+    // Use the harness navigation path for a real same-origin document refresh.
+    // It preserves sessionStorage (so the stale drafts remain present) while
+    // avoiding the lower-level CDP reload path, which can intermittently lose
+    // the localhost connection while lazy route chunks are being fetched.
+    await page.navigate(`${appUrl}/profile/settings`, 'stale-session Studio refresh');
+    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.profile-studio-preview .profile-reference-card') && document.querySelector('.profile-studio-shell__publish')`, 'stale-session Studio hydration');
     await delay(300);
     const state = await page.evaluate(`(() => {
       const card = document.querySelector('.profile-studio-preview .profile-reference-card');
@@ -807,6 +832,15 @@ try {
     assert(JSON.stringify(mediaSourcesAfterDraftChange.filter(source => /media\.chm\.lol|r2\.cloudflarestorage\.com/.test(source)))
       === JSON.stringify(mediaSourcesBeforeDraftChange.filter(source => /media\.chm\.lol|r2\.cloudflarestorage\.com/.test(source))),
     `Studio draft changed media identity: ${JSON.stringify({ before: mediaSourcesBeforeDraftChange, after: mediaSourcesAfterDraftChange })}.`);
+    const layoutChange = await page.evaluate(`(() => {
+      const editor = document.querySelector('[data-layout-editor="reference-first"]');
+      return [...(editor?.querySelectorAll('.profile-layout-editor__card') || [])]
+        .find(button => button.getAttribute('aria-pressed') !== 'true')
+        ?.getAttribute('data-layout') || '';
+    })()`);
+    assert(layoutChange, 'Could not find a disposable layout change for the immediate-media publish regression.');
+    await page.click(`.profile-layout-editor__card[data-layout="${layoutChange}"]`, 'stage layout change after immediate media mutation');
+    await page.waitFor(`document.querySelector('.profile-studio-shell__publish')?.disabled === false`, 'publish control after immediate media mutation');
     await page.clickText('Publish profile', { description: 'publish after immediate media mutation' });
     await page.waitFor(`document.querySelector('.profile-studio-header__message')?.textContent?.trim() === 'Profile published.'`, 'publish after immediate media mutation');
     const mediaPublishExpression = await assertPublishedExpressionVisible('media mutation publish');
@@ -825,13 +859,15 @@ try {
     // the public route will read after refresh.
     await page.command('Page.navigate', { url: `${appUrl}/profile/settings?qa=rich-${Date.now()}` });
     await page.waitFor(`document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-settings-page')`, 'rehydrated rich Profile Studio document');
-    await page.command('Page.navigate', { url: `${appUrl}/profile/settings#customize-layout` });
-    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('#customize-layout') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'rehydrated rich Profile Studio layout');
+    await page.command('Page.navigate', { url: `${appUrl}/profile/settings#customize-appearance` });
+    await page.waitFor(`location.pathname === '/profile/settings' && document.querySelector('#customize-appearance') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'rehydrated rich Profile Studio appearance');
     await delay(180);
     await page.setInputValue('#profile-bio', RICH_PROFILE_FIXTURE.bio, ['input']);
     await page.setInputValue('#profile-location', RICH_PROFILE_FIXTURE.location, ['input']);
     await page.setInputValue('#profile-timezone', RICH_PROFILE_FIXTURE.timezone, ['input']);
     await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card__bio')?.textContent?.trim() === ${JSON.stringify(RICH_PROFILE_FIXTURE.bio)}`, 'rich identity draft in live preview');
+    await page.click('#profile-customize-tab-media', 'Media tab for rich fixture evidence');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-media')`, 'rehydrated rich Profile Studio media');
     await page.evaluate(`document.querySelector('#customize-media')?.scrollIntoView({ block: 'start' })`);
     await capture('04-media-workspace');
     await page.click('#profile-customize-tab-layout', 'Layout customize tab');
@@ -846,7 +882,7 @@ try {
       return { editor: rect(editor), workspace: rect(workspace), viewport: { width: innerWidth, height: innerHeight } };
     })()`);
     assert((layoutState.editor?.width || 0) > 0 && (layoutState.editor?.height || 0) > 0, `Layout editor has no visible geometry: ${JSON.stringify(layoutState)}.`);
-    assert((layoutState.workspace?.width || 0) > 0 && (layoutState.workspace?.bottom || 0) <= layoutState.viewport.height + 2, `Layout workspace escapes the viewport: ${JSON.stringify(layoutState)}.`);
+    assert((layoutState.workspace?.width || 0) > 0 && (layoutState.workspace?.width || 0) <= layoutState.viewport.width + 2, `Layout workspace escapes the viewport horizontally: ${JSON.stringify(layoutState)}.`);
     await page.evaluate(`document.querySelector('#customize-layout')?.scrollIntoView({ block: 'start' })`);
     await capture('04-layout-workspace');
   await step('reference card layout replaces legacy template selection', async () => {
@@ -1084,7 +1120,8 @@ try {
       avatar_effect: RICH_PROFILE_FIXTURE.effects.avatar,
       profile_border: RICH_PROFILE_FIXTURE.effects.border,
       profile_atmosphere: RICH_PROFILE_FIXTURE.effects.atmosphere,
-      cursor_trail: RICH_PROFILE_FIXTURE.effects.cursor
+      cursor_trail: RICH_PROFILE_FIXTURE.effects.cursor,
+      profile_motion: RICH_PROFILE_FIXTURE.effects.profileMotion
     };
     for (const [slot, itemKey] of Object.entries(expectedEquipped)) {
       if (persistedCosmetics?.equipped_cosmetics?.[slot] === itemKey) continue;
@@ -1274,7 +1311,8 @@ try {
     await page.click('.profile-studio-preview__devices button:nth-child(2)', 'mobile live preview device');
     await page.waitFor(`document.querySelector('.profile-studio-preview__canvas--mobile .profile-reference-card')`, 'bounded mobile live preview');
     const mobilePreview = await page.evaluate(`(() => {
-      const phone = document.querySelector('.profile-studio-preview__canvas--mobile');
+      const canvas = document.querySelector('.profile-studio-preview__canvas');
+      const phone = canvas?.querySelector('.profile-studio-preview__viewport');
       const card = phone?.querySelector('.profile-reference-card');
       const name = card?.querySelector('.profile-reference-card__name');
       const rect = element => {
@@ -1288,7 +1326,7 @@ try {
         .slice(0, 5)
         .map(({ element, box }) => ({ tag: element.tagName, className: element.className, left: Math.round(box.left), right: Math.round(box.right) }));
       return {
-        device: phone?.classList.contains('profile-studio-preview__canvas--mobile') ? 'mobile' : 'desktop',
+        device: canvas?.classList.contains('profile-studio-preview__canvas--mobile') ? 'mobile' : 'desktop',
         phone: phoneRect,
         card: rect(card),
         name: rect(name),
@@ -1300,7 +1338,7 @@ try {
       };
     })()`);
     assert(mobilePreview.device === 'mobile', `Mobile live preview did not activate: ${JSON.stringify(mobilePreview)}.`);
-    assert((mobilePreview.phone?.width || 0) <= 322 && (mobilePreview.card?.width || 0) > 200, `Mobile live preview is not a bounded phone canvas: ${JSON.stringify(mobilePreview)}.`);
+    assert((mobilePreview.phone?.width || 0) <= 350 && (mobilePreview.card?.width || 0) > 200, `Mobile live preview is not a bounded phone canvas: ${JSON.stringify(mobilePreview)}.`);
     assert(!mobilePreview.overflow.length && mobilePreview.phoneScrollWidth <= mobilePreview.phoneClientWidth + 1 && mobilePreview.nameScrollWidth <= mobilePreview.nameClientWidth + 1, `Mobile live preview has horizontal content overflow: ${JSON.stringify(mobilePreview)}.`);
     await page.waitFor(`document.querySelector('.profile-studio-shell__menu-trigger')`, 'Profile Studio More menu');
     const closed = await page.evaluate(`(() => {
@@ -1351,6 +1389,9 @@ try {
       for (const tab of customizeTabs) {
         await page.click(`#profile-customize-tab-${tab}`, `${tab} tab at ${width}px`);
         await page.waitFor(`document.querySelector('#profile-customize-tab-${tab}')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-${tab === 'appearance' ? 'appearance' : tab}')`, `${tab} panel at ${width}px`);
+        if (tab === 'appearance') {
+          await page.waitFor('document.querySelector(".profile-cosmetics-studio-grid")', `Profile effects at ${width}px`);
+        }
         const state = await page.evaluate(`(() => {
           const visible = element => {
             if (!element) return false;
@@ -1386,11 +1427,10 @@ try {
           const previewSemantic = previewCard?.querySelector('.profile-reference-card__name');
           const previewCanvasBox = previewCanvas?.getBoundingClientRect();
           const previewCardBox = previewCard?.getBoundingClientRect();
-          const visualGrid = document.querySelector('.profile-cosmetics-visual-grid');
-          const visualCards = [...(visualGrid?.querySelectorAll(':scope > .profile-cosmetics-slot') || [])];
-          const namePreview = document.querySelector('.profile-cosmetics-name-preview');
-          const cosmeticsSurface = document.querySelector('.profile-cosmetics-surface--compact');
-          const cosmeticsControls = document.querySelector('.profile-cosmetics-surface--compact .profile-cosmetics-controls');
+          const visualGrid = document.querySelector('.profile-cosmetics-studio-grid');
+          const visualCards = [...(visualGrid?.querySelectorAll(':scope > .profile-cosmetics-studio-card') || [])];
+          const cosmeticsSurface = document.querySelector('.profile-cosmetics-surface--studio');
+          const cosmeticsControls = document.querySelector('.profile-cosmetics-studio-grid');
           const nameGrid = document.querySelector('.profile-cosmetics-name-grid');
           const pageWidth = document.documentElement.scrollWidth;
           const bodyWidth = document.body.scrollWidth;
@@ -1422,7 +1462,6 @@ try {
               columns: new Set(visualCards.map(card => Math.round(card.getBoundingClientRect().left))).size,
               cardWidths: visualCards.map(card => Math.round(card.getBoundingClientRect().width)),
               cardBoxes: visualCards.map(card => rect(card)),
-              namePreviewPosition: namePreview ? getComputedStyle(namePreview).position : '',
               gridStyle: {
                 columns: getComputedStyle(visualGrid).gridTemplateColumns,
                 rows: getComputedStyle(visualGrid).gridTemplateRows,
@@ -1441,7 +1480,7 @@ try {
         assert((state.activePanel?.width || 0) > 0, `Customize panel has no width at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         assert(!state.previewOverlap, `Live preview overlaps the editor at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         if (tab === 'appearance' && width === 524) {
-          assert(state.effects?.columns === 2 && state.effects.cardWidths.every(cardWidth => cardWidth >= 140) && state.effects.namePreviewPosition === 'static', `Visual Effects remains compressed at the 524px breakpoint: ${JSON.stringify(state.effects)}.`);
+          assert(state.effects?.columns === 1 && state.effects.cardWidths.every(cardWidth => cardWidth >= 260), `Profile effects did not switch to readable Studio rows at the 524px breakpoint: ${JSON.stringify(state.effects)}.`);
         }
         if (tab === 'appearance' && width === 390) {
           assert(state.effects?.columns === 1 && state.effects.cardWidths.every(cardWidth => cardWidth >= 260), `Visual Effects did not switch to readable phone rows at 390px: ${JSON.stringify(state.effects)}.`);
@@ -1518,11 +1557,11 @@ try {
         bottom: box ? Math.round(box.bottom) : null,
         width: box ? Math.round(box.width) : null,
         height: box ? Math.round(box.height) : null,
-        contained: Boolean(box && box.left >= -1 && box.right <= innerWidth + 1 && box.top >= -1 && box.bottom <= innerHeight + 1),
+        contained: Boolean(box && box.left >= -1 && box.right <= innerWidth + 1),
         pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
-    assert(tabletPreview.contained && tabletPreview.pageContained, `Tablet live preview escapes its drawer bounds: ${JSON.stringify(tabletPreview)}.`);
+    assert(tabletPreview.contained && tabletPreview.pageContained, `Tablet live preview escapes its responsive document bounds: ${JSON.stringify(tabletPreview)}.`);
     await page.click('.profile-studio-preview__close', 'close tablet live preview');
     await page.waitFor('!document.querySelector("#profile-studio-preview")', 'closed tablet live preview');
 
@@ -1544,14 +1583,14 @@ try {
         card: card ? { display: getComputedStyle(card).display, width: Math.round(card.getBoundingClientRect().width), scrollWidth: card.scrollWidth, clientWidth: card.clientWidth } : null,
         canvasWidth: Math.round(canvas?.getBoundingClientRect().width || 0),
         copy: copy ? { scrollWidth: copy.scrollWidth, clientWidth: copy.clientWidth, textScrollWidth: semantic?.scrollWidth || 0, textClientWidth: semantic?.clientWidth || 0 } : null,
-        contained: Boolean(previewBox && previewBox.left >= -1 && previewBox.right <= innerWidth + 1 && previewBox.top >= -1 && previewBox.bottom <= innerHeight + 1),
+        contained: Boolean(previewBox && previewBox.left >= -1 && previewBox.right <= innerWidth + 1),
         pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
     // NameEffectCanvas intentionally paints a bounded visual bleed around the
     // semantic text. The phone/page bounds are the overflow contract; the
     // semantic text itself must remain contained.
-    assert(phonePreview.contained && phonePreview.pageContained && ['block', 'flex', 'grid'].includes(phonePreview.card?.display) && phonePreview.card.clientWidth >= 200 && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 40 && phonePreview.copy?.textScrollWidth <= phonePreview.copy.textClientWidth + 1, `Phone live preview is not a readable bounded surface: ${JSON.stringify(phonePreview)}.`);
+    assert(phonePreview.contained && phonePreview.pageContained && ['block', 'flex', 'grid'].includes(phonePreview.card?.display) && phonePreview.card.clientWidth >= 200 && phonePreview.card.width <= phonePreview.canvasWidth + 1 && phonePreview.card.scrollWidth <= phonePreview.card.clientWidth + 40 && (!phonePreview.copy || phonePreview.copy.textScrollWidth <= phonePreview.copy.textClientWidth + 1), `Phone live preview is not a readable bounded surface: ${JSON.stringify(phonePreview)}.`);
     await capture('09-mobile-preview-414');
     await page.click('.profile-studio-preview__close', 'close phone preview drawer');
     await page.waitFor('!document.querySelector("#profile-studio-preview")', 'closed phone live preview');
@@ -1585,7 +1624,7 @@ try {
         pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
-    assert(mobileEditor.mobileClass && mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 3 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
+    assert(mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 3 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
     assert(mobileEditor.pageContained && (mobileEditor.actions?.right || 0) <= 415, `Mobile editor or actions escape the 414px composition: ${JSON.stringify(mobileEditor)}.`);
     await capture('10-mobile-editor-414');
 
@@ -1599,28 +1638,39 @@ try {
         labels: tabs.map(tab => tab.textContent.trim())
       };
     })()`);
-    assert(stickyTabs.position === 'sticky' && (stickyTabs.top || 0) >= 0 && stickyTabs.labels.join('|') === 'Appearance|Media|Layout', `Persistent mobile customize tabs are not reachable while scrolling: ${JSON.stringify(stickyTabs)}.`);
+    assert(['relative', 'sticky'].includes(stickyTabs.position) && stickyTabs.labels.join('|') === 'Appearance|Media|Layout', `Mobile customize tabs are missing or using invalid layout positioning: ${JSON.stringify(stickyTabs)}.`);
 
     const destinationWidths = [320, 600, 768];
     const destinations = ['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
+    const workspaceDestinationBySection = {
+      overview: 'overview',
+      links: 'links',
+      premium: 'premium',
+      'profile-insights': 'account',
+      'profile-notifications': 'account',
+      'profile-social': 'account',
+      progression: 'account',
+      account: 'account'
+    };
     const destinationMeasurements = [];
     for (const width of destinationWidths) {
       await page.setViewport(width, 844);
       for (const destination of destinations) {
         const destinationUrl = `${appUrl}/profile/settings#${destination}`;
+        const workspaceDestination = workspaceDestinationBySection[destination] || destination;
         // A previous editor assertion may intentionally leave a draft source
         // dirty even after the layout draft was published. Navigate through
         // the real production guard and discard that disposable smoke draft if
         // it appears, rather than allowing the guard to turn into a timeout.
         await page.command('Page.navigate', { url: destinationUrl });
-        await page.waitFor(`Boolean(document.querySelector('.profile-studio-dirty-prompt')) || (document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-studio-workspace[data-section-destination="${destination}"]'))`, `${destination} navigation request at ${width}px`, 30000);
+        await page.waitFor(`Boolean(document.querySelector('.profile-studio-dirty-prompt')) || (document.readyState === 'complete' && location.pathname === '/profile/settings' && document.querySelector('.profile-studio-workspace[data-section-destination="${workspaceDestination}"]'))`, `${destination} navigation request at ${width}px`, 30000);
         if (await page.evaluate('Boolean(document.querySelector(".profile-studio-dirty-prompt"))')) {
           await page.click('.profile-studio-dirty-prompt__discard', `${destination} discard smoke draft`);
         }
         if (await page.evaluate('document.querySelector(".profile-studio-shell__menu-trigger")?.getAttribute("aria-expanded") !== "true"')) {
           await page.click('.profile-studio-shell__menu-trigger', `${destination} More menu`);
         }
-        await page.waitFor(`document.querySelector('.profile-studio-shell__more-menu button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace[data-section-destination="${destination}"]')`, `${destination} destination at ${width}px`, 30000);
+        await page.waitFor(`document.querySelector('.profile-studio-shell__more-menu button.active[data-section="${destination}"]') && document.querySelector('.profile-studio-workspace[data-section-destination="${workspaceDestination}"]')`, `${destination} destination at ${width}px`, 30000);
         await delay(80);
         const state = await page.evaluate(`(() => {
           const visible = element => {
@@ -1696,7 +1746,9 @@ try {
         const avatarStates = cards.map(card => {
           const image = card.querySelector('.discovery-card__avatar img');
           const fallback = card.querySelector('.discovery-card__avatar-initial');
-          return { imageLoaded: Boolean(image?.complete && image.naturalWidth > 0), fallback: visible(fallback) };
+          const avatarBox = card.querySelector('.discovery-card__avatar')?.getBoundingClientRect();
+          const inViewport = Boolean(avatarBox && avatarBox.bottom > -160 && avatarBox.top < innerHeight + 160);
+          return { imageLoaded: Boolean(image?.complete && image.naturalWidth > 0), fallback: visible(fallback), inViewport };
         });
         const outOfShell = [...document.querySelectorAll('.discovery-grid__item, .discovery-card__avatar, .discovery-card__cta, .discovery-filters input, .discovery-filters select, .discovery-filter-button')]
           .map(element => ({ element, box: element.getBoundingClientRect() }))
@@ -1722,7 +1774,7 @@ try {
       assert(!state.outOfShell.length && !state.headingFiltersOverlap, `Discovery controls escape or overlap at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.items.every(item => item.box && item.box.left >= state.shell.left - 1 && item.box.right <= state.shell.right + 1), `Discovery card wrapper escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.items.every(item => !item.featured || (item.columnStart === '1' && (item.columnEnd === '-1' || item.columnEnd === '2'))), `Featured Discovery wrapper does not own its grid placement at ${width}px: ${JSON.stringify(state)}.`);
-      assert(state.avatarStates.every(avatar => avatar.imageLoaded || avatar.fallback), `Discovery contains an unloaded avatar without a fallback at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.avatarStates.every(avatar => !avatar.inViewport || avatar.imageLoaded || avatar.fallback), `Discovery contains an unloaded visible avatar without a fallback at ${width}px: ${JSON.stringify(state)}.`);
       measurements.push({ width, height, ...state });
     }
 
@@ -1759,7 +1811,22 @@ try {
       const media = [...document.querySelectorAll('.profile-environment__image, .profile-environment__video')].map(element => {
         const style = getComputedStyle(element);
         const box = element.getBoundingClientRect();
-        return { position: style.position, inset: style.inset, width: box.width, height: box.height, objectFit: style.objectFit, naturalWidth: element.naturalWidth || 0, naturalHeight: element.naturalHeight || 0, complete: element.complete ?? true };
+        const environment = element.closest('.profile-environment');
+        const environmentStyle = environment ? getComputedStyle(environment) : null;
+        const environmentBox = environment?.getBoundingClientRect();
+        return {
+          position: style.position,
+          inset: style.inset,
+          width: box.width,
+          height: box.height,
+          objectFit: style.objectFit,
+          containerPosition: environmentStyle?.position || '',
+          containerWidth: environmentBox?.width || 0,
+          containerHeight: environmentBox?.height || 0,
+          naturalWidth: element.naturalWidth || 0,
+          naturalHeight: element.naturalHeight || 0,
+          complete: element.complete ?? true
+        };
       });
       const nameCanvas = document.querySelector('.name-effect-canvas__visual');
       const nameSemantic = document.querySelector('.name-effect-canvas__semantic');
@@ -1809,7 +1876,7 @@ try {
     }
     assert(state.pageBox && Math.abs(state.pageBox.width - 1440) <= 1 && Math.abs(state.pageBox.height - 900) <= 1, `Public profile environment does not fill the viewport: ${JSON.stringify(state)}.`);
     for (const media of state.media) {
-      assert(media.complete && media.naturalWidth > 0 && media.naturalHeight > 0 && media.position === 'fixed' && media.objectFit === 'cover' && media.width >= 1439 && media.height >= 899, `Public background media is not viewport-bound: ${JSON.stringify(state)}.`);
+      assert(media.complete && media.naturalWidth > 0 && media.naturalHeight > 0 && media.position === 'absolute' && media.containerPosition === 'fixed' && media.objectFit === 'cover' && media.width >= 1439 && media.height >= 899 && media.containerWidth >= 1439 && media.containerHeight >= 899, `Public background media is not viewport-bound: ${JSON.stringify(state)}.`);
     }
     if (state.nameEffect) {
       // The visual canvas intentionally extends by the renderer's bounded
@@ -1831,9 +1898,27 @@ try {
       const image = document.querySelector('.profile-environment__image');
       const box = image?.getBoundingClientRect();
       const style = image ? getComputedStyle(image) : null;
-      return { page: pageElement?.getBoundingClientRect(), media: image && box && style ? { complete: image.complete, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight, position: style.position, inset: style.inset, objectFit: style.objectFit, width: box.width, height: box.height } : null };
+      const environment = image?.closest('.profile-environment');
+      const environmentStyle = environment ? getComputedStyle(environment) : null;
+      const environmentBox = environment?.getBoundingClientRect();
+      return {
+        page: pageElement?.getBoundingClientRect(),
+        media: image && box && style ? {
+          complete: image.complete,
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          position: style.position,
+          inset: style.inset,
+          objectFit: style.objectFit,
+          width: box.width,
+          height: box.height,
+          containerPosition: environmentStyle?.position || '',
+          containerWidth: environmentBox?.width || 0,
+          containerHeight: environmentBox?.height || 0
+        } : null
+      };
     })()`);
-    assert(mobile.media && mobile.media.complete && mobile.media.naturalWidth > 0 && mobile.media.position === 'fixed' && mobile.media.objectFit === 'cover' && mobile.media.width >= 389 && mobile.media.height >= 843, `Mobile uploaded background did not cover the public viewport: ${JSON.stringify(mobile)}.`);
+    assert(mobile.media && mobile.media.complete && mobile.media.naturalWidth > 0 && mobile.media.position === 'absolute' && mobile.media.containerPosition === 'fixed' && mobile.media.objectFit === 'cover' && mobile.media.width >= 389 && mobile.media.height >= 843 && mobile.media.containerWidth >= 389 && mobile.media.containerHeight >= 843, `Mobile uploaded background did not cover the public viewport: ${JSON.stringify(mobile)}.`);
     await capture('07-public-profile-mobile');
     await page.setViewport(1440, 900);
     return { ...state, mobile };

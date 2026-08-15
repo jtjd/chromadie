@@ -67,7 +67,8 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(shell, /profile-studio-shell--dirty/);
   assert.match(shell, /\.profile-studio-shell__preview \{ position: sticky/);
   assert.match(shell, /profile-studio-shell--with-preview \.profile-studio-shell__workspace/);
-  assert.match(shell, /@media \(max-width: 1100px\)[\s\S]*grid-template-columns: minmax\(0, 760px\)/);
+  assert.match(shell, /@media \(max-width: 1100px\)[\s\S]*grid-template-columns: minmax\(0, 640px\)/);
+  assert.match(shell, /width: min\(calc\(100% - 48px\), 640px\)/);
   assert.match(shell, /@media \(max-width: 700px\)/);
   assert.doesNotMatch(shell, /sidebar|drawer|profile-dashboard-shell/i);
   assert.match(appearance, /\.appearance-editor \{[\s\S]*width: 100%;[\s\S]*min-width: 0;[\s\S]*box-sizing: border-box;/);

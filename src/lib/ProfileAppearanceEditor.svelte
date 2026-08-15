@@ -250,7 +250,6 @@
           <label class="appearance-editor__field" class:active={activeColor === key} data-color-role={key} on:pointerdown={() => chooseColor(key)}>
             <span><button type="button" class="appearance-editor__color-dot" style={`--dot-color:${fieldValue(key, staged)}`} aria-label={`Edit ${label}`} on:click={() => chooseColor(key)}></button>{label}</span>
             <div class="appearance-editor__color-input">
-              <input type="color" value={fieldValue(key, staged)} aria-label={label} on:focus={() => chooseColor(key)} on:input={event => updateColor(fieldFor(key).path, event)} />
               <input class="appearance-editor__hex" value={hexInputValue(key, staged, hexDrafts)} maxlength="7" aria-label={`${label} hex`} on:focus={() => chooseColor(key)} on:input={event => updateHex(key, event)} on:change={event => updateHex(key, event)} />
             </div>
           </label>
@@ -305,7 +304,6 @@
       <label class="appearance-editor__field appearance-editor__surface-color" class:active={activeColor === 'surface'} data-color-role="surface" on:pointerdown={() => chooseColor('surface')}>
         <span><button type="button" class="appearance-editor__color-dot" disabled={cardlessLayout} style={`--dot-color:${fieldValue('surface', staged)}`} aria-label="Edit Profile surface" on:click={() => chooseColor('surface')}></button>Profile surface</span>
         <div class="appearance-editor__color-input">
-          <input type="color" disabled={cardlessLayout} value={fieldValue('surface', staged)} aria-label="Profile surface" on:focus={() => chooseColor('surface')} on:input={event => updateColor(fieldFor('surface').path, event)} />
           <input class="appearance-editor__hex" disabled={cardlessLayout} value={hexInputValue('surface', staged, hexDrafts)} maxlength="7" aria-label="Profile surface hex" on:focus={() => chooseColor('surface')} on:input={event => updateHex('surface', event)} on:change={event => updateHex('surface', event)} />
         </div>
       </label>
@@ -375,8 +373,7 @@
   .appearance-editor__color-dot:focus-visible { outline: 2px solid var(--appearance-focus); outline-offset: 2px; }
   .appearance-editor__color-input { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); align-items: center; min-height: var(--appearance-primary-height); overflow: hidden; border: 1px solid var(--appearance-line-strong); border-radius: var(--appearance-radius); background: var(--appearance-input); }
   .appearance-editor__color-input:focus-within { border-color: var(--appearance-focus); box-shadow: 0 0 0 2px color-mix(in srgb, var(--appearance-focus) 30%, transparent); }
-  .appearance-editor__color-input input[type="color"] { width: 1.45rem; height: 1.45rem; padding: .18rem; border: 0; background: transparent; cursor: pointer; }
-  .appearance-editor__color-input input[type="color"]:focus-visible, .appearance-editor__hex:focus-visible { outline: 0; }
+  .appearance-editor__hex:focus-visible { outline: 0; }
   .appearance-editor__hex { min-width: 0; width: 100%; min-height: var(--appearance-primary-height); box-sizing: border-box; padding: .55rem .6rem; border: 0; outline: 0; background: transparent; color: var(--appearance-text); font: var(--appearance-control-size)/1 var(--appearance-mono); }
   .appearance-editor__range { margin-top: .75rem; }
   .appearance-editor__surface-grid .appearance-editor__range { align-self: start; margin-top: 0; }
@@ -417,7 +414,6 @@
   .appearance-editor__colors-layout { grid-template-columns: minmax(0, 1.6fr) minmax(14rem, 1fr); }
   .appearance-editor__color-input,
   .appearance-editor__hex { min-height: 1.6rem; height: 1.6rem; }
-  .appearance-editor__color-input input[type="color"] { width: 1.45rem; height: 1.45rem; }
   .appearance-editor__color-grid .appearance-editor__hex { padding: .25rem .35rem; font-size: .68rem; }
   .appearance-editor__color-grid .appearance-editor__field { grid-template-columns: minmax(0, 1fr) minmax(6rem, auto); }
   .appearance-editor__color-grid .appearance-editor__colors-heading { margin-bottom: .15rem; }
@@ -435,7 +431,6 @@
     .appearance-editor__color-grid .appearance-editor__field { min-height: 2.75rem; }
     .appearance-editor__color-input,
     .appearance-editor__hex { min-height: 2.5rem; height: 2.5rem; }
-    .appearance-editor__color-input input[type="color"] { width: 2.2rem; height: 2.2rem; }
     .appearance-editor__surface-grid .appearance-editor__range input { min-height: 2.5rem; }
   }
   @container profile-appearance (max-width: 34rem) {

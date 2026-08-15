@@ -251,7 +251,7 @@
 
   @media (max-width: 1100px) {
     .profile-studio-shell__workspace,
-    .profile-studio-shell--with-preview .profile-studio-shell__workspace { grid-template-columns: minmax(0, 760px); justify-content: center; }
+    .profile-studio-shell--with-preview .profile-studio-shell__workspace { grid-template-columns: minmax(0, 640px); justify-content: center; width: min(calc(100% - 48px), 640px); }
     .profile-studio-shell__preview { position: relative; top: auto; height: auto; min-height: 0; padding-top: 1.5rem; }
   }
 

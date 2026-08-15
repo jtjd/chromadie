@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, unlink, writeFile } from 'node:fs/promises';
 import { createWriteStream as createStream } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
@@ -429,6 +429,86 @@ export async function startVitePreview({ appPort, evidenceDir }) {
     await waitForHttp(`http://127.0.0.1:${appPort}/`, 30000);
   } catch (error) {
     await terminateProcess(child, 'Vite preview');
+    throw new Error(`${error.message} See ${logPath}.`, { cause: error });
+  }
+  return { child, logPath };
+}
+
+export async function startPagesDev({ appPort, evidenceDir, envFile = '.env.r2-test.local' }) {
+  const logPath = join(evidenceDir, 'pages-dev.log');
+  const output = createStream(logPath, { flags: 'a' });
+  const persistPath = join(evidenceDir, 'wrangler-state');
+  const devVarsPath = join(projectRoot, '.dev.vars');
+  const bindingKeys = [
+    'VITE_SUPABASE_URL',
+    'VITE_SUPABASE_PUBLISHABLE_KEY',
+    'VITE_SUPABASE_KEY',
+    'SUPABASE_PUBLISHABLE_KEY',
+    'SUPABASE_SECRET_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'R2_ACCOUNT_ID',
+    'R2_ACCESS_KEY_ID',
+    'R2_SECRET_ACCESS_KEY',
+    'R2_PRIVATE_BUCKET',
+    'R2_PUBLIC_BUCKET',
+    'MEDIA_PUBLIC_ORIGIN',
+    'R2_ACCOUNT_CLEANUP_SECRET',
+    'CLOUDFLARE_ZONE_ID',
+    'CLOUDFLARE_API_TOKEN',
+    'PREVIEW_PROTECTION',
+    'PREVIEW_PASSWORD'
+  ];
+  const fileValues = parseEnvText(await readFile(join(projectRoot, envFile), 'utf8').catch(error => {
+    if (error.code === 'ENOENT') return '';
+    throw error;
+  }));
+  let originalDevVars = null;
+  try {
+    originalDevVars = { exists: true, content: await readFile(devVarsPath, 'utf8') };
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    originalDevVars = { exists: false, content: '' };
+  }
+  const devVars = bindingKeys
+    .map(key => `${key}=${JSON.stringify(String(process.env[key] ?? fileValues[key] ?? ''))}`)
+    .concat('PREVIEW_PROTECTION="off"')
+    .join('\n') + '\n';
+  await writeFile(devVarsPath, devVars, 'utf8');
+  let restored = false;
+  const restoreDevVars = async () => {
+    if (restored) return;
+    restored = true;
+    if (originalDevVars.exists) await writeFile(devVarsPath, originalDevVars.content, 'utf8');
+    else await unlink(devVarsPath).catch(error => { if (error.code !== 'ENOENT') throw error; });
+  };
+  const child = spawn('npx', [
+    '--yes',
+    'wrangler',
+    'pages',
+    'dev',
+    'dist',
+    '--ip',
+    '127.0.0.1',
+    '--port',
+    String(appPort),
+    '--env-file',
+    envFile,
+    '--persist-to',
+    persistPath,
+    '--log-level',
+    'error'
+  ], {
+    cwd: projectRoot,
+    detached: true,
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  captureProcessOutput(child, output);
+  child.once('close', () => { void restoreDevVars(); });
+  try {
+    await waitForHttp(`http://127.0.0.1:${appPort}/`, 45000);
+  } catch (error) {
+    await terminateProcess(child, 'Pages Functions');
+    await restoreDevVars();
     throw new Error(`${error.message} See ${logPath}.`, { cause: error });
   }
   return { child, logPath };

@@ -31,7 +31,8 @@ export const RICH_PROFILE_FIXTURE = Object.freeze({
     avatar: 'avatar_effect_ghost_double',
     border: 'border_celestial',
     atmosphere: 'profile_atmosphere_rain_window',
-    cursor: 'cursor_trail_pixel_wake'
+    cursor: 'cursor_trail_pixel_wake',
+    profileMotion: 'profile_motion_perspective_tilt'
   }),
   links: Object.freeze([
     Object.freeze({ type: 'github', label: 'GitHub', url: 'https://github.com/chromadie' }),

@@ -25,8 +25,14 @@ const proxy = await startLocalSupabaseHttpsProxy({ targetUrl: localSupabaseUrl.o
 const smokeEnvironment = {
   ...process.env,
   PROFILE_STUDIO_SMOKE_MODE: 'preview',
+  PROFILE_STUDIO_SMOKE_SERVER: 'pages',
   VITE_SUPABASE_URL: proxy.url,
   VITE_SUPABASE_PUBLISHABLE_KEY: environment.key,
+  VITE_CHROMADIE_ROLLOUT_STAGE: 'all',
+  VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2: 'true',
+  VITE_CHROMADIE_FLAG_RICH_MEDIA: 'true',
+  VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2: 'true',
+  VITE_PROFILE_MEDIA_ORIGIN: process.env.VITE_PROFILE_MEDIA_ORIGIN || 'https://media-test.chm.lol',
   VITE_CLOUDFLARE_SITE_KEY: '1x00000000000000000000AA',
   NODE_EXTRA_CA_CERTS: proxy.caPath
 };
