@@ -160,6 +160,13 @@
     -webkit-backdrop-filter: blur(32px) saturate(160%);
   }
 
+  .profile-reference-card--studio {
+    /* Studio shows the selected profile-border cosmetic on the outer
+       renderer. Keep the reference card's own edge neutral so appearance
+       border tokens cannot create a second colored outline. */
+    border: 1px solid rgba(255,255,255,.11);
+  }
+
   .profile-reference-card__avatar-shell {
     display: grid;
     width: 86px;
