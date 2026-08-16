@@ -1,5 +1,23 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-16 — Keep profile typography expressive without per-section bloat
+
+The equipped Name Font remains username-only by default. Profile Effects adds
+one explicit `useNameFontAcrossProfile` appearance boolean for owners who want
+the selected custom face to carry through all public profile content, including
+bio, metadata, links, stats, and lower sections. The control is off by default,
+is unavailable for the Platform default, and is cleared when the Name Font is
+removed. There are no per-section font selectors: they would multiply preview
+state, validation, and responsive decisions without enough identity value to
+justify the added customization surface.
+
+The renderer resolves the finite code-owned font registry into a safe CSS
+family stack and scopes the inherited family to `ProfileShell`'s profile tree.
+Site chrome and Studio controls retain their own typography. The server
+normalizes the boolean, backfills both configuration generations, and clears
+the flag through the existing Name Font unequip RPC so draft, published, and
+V2 projections cannot drift.
+
 ## 2026-08-16 — Curate the Profile Effects font catalog
 
 Profile Effects now exposes one empty Platform default baseline plus ten

@@ -36,7 +36,8 @@ export const PROFILE_APPEARANCE_DEFAULTS = Object.freeze({
   surface: Object.freeze({ opacity: 64, blur: 20 }),
   background: Object.freeze({ blur: 0, imageOpacity: 100, overlayColor: '#000000', overlayOpacity: 0 }),
   gradient: Object.freeze({ enabled: false, primary: '#07080B', secondary: '#171A22', angle: 135 }),
-  border: Object.freeze({ enabled: true, color: '#FFFFFF', width: 1, radius: 24, opacity: 11 })
+  border: Object.freeze({ enabled: true, color: '#FFFFFF', width: 1, radius: 24, opacity: 11 }),
+  useNameFontAcrossProfile: false
 });
 
 const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
@@ -96,7 +97,8 @@ function normalizeAppearance(value, fallbackAccent = String(PROFILE_APPEARANCE_D
       width: safeInteger(border.width, defaults.border.width, 0, 4),
       radius: safeInteger(border.radius, defaults.border.radius, 0, 48),
       opacity: safeInteger(border.opacity, defaults.border.opacity, 0, 100)
-    }
+    },
+    useNameFontAcrossProfile: input.useNameFontAcrossProfile === true
   };
 }
 

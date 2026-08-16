@@ -26,6 +26,7 @@
   import { isProfileFeatureEnabled, resolveProfileFeatureFlags } from './profileFeatureFlags.js';
   import { buildProfileRenderSnapshot } from './profileRenderModel.js';
   import { getProfileLayoutMotionTarget } from './profile-layout/profileLayouts.js';
+  import { requestNameFontLoad } from './name/nameFonts.js';
 
   export let profileUsername = null;
   export let userId = null;
@@ -70,6 +71,7 @@
   let prefersReducedMotion = false;
   let profileReferenceCardComponent = null;
   let profileReferenceCardRequest = null;
+  let profileWideFontRequestKey = '';
   let todayColorComponent = null;
   let todayColorRequest = null;
   let profileRollComponent = null;
@@ -83,6 +85,15 @@
       .catch(() => { profileReferenceCardComponent = null; })
       .finally(() => { profileReferenceCardRequest = null; });
     return profileReferenceCardRequest;
+  }
+
+  function requestProfileWideFont(fontKey, text) {
+    const key = `${fontKey}:${text}`;
+    if (!fontKey || profileWideFontRequestKey === key) return;
+    profileWideFontRequestKey = key;
+    void requestNameFontLoad(fontKey, 28, text).then(loaded => {
+      if (!loaded && profileWideFontRequestKey === key) profileWideFontRequestKey = '';
+    });
   }
 
   function ensureTodayColor() {
@@ -458,6 +469,10 @@
   $: nameRendererTodayColor = colorFor(profileRenderSnapshot?.colors?.nameToday || '#8B7CF6');
   $: colorEffectsEnabled = profileRenderSnapshot?.colors?.colorEffectsEnabled === true;
   $: profileControlAccent = signatureColor;
+  $: profileWideNameFontEnabled = profileRenderSnapshot?.typography?.profileWideNameFont === true;
+  $: if (profileWideNameFontEnabled && profileRenderSnapshot?.typography?.nameFontKey) {
+    requestProfileWideFont(profileRenderSnapshot.typography.nameFontKey, profileDisplayName || username);
+  }
   $: avatarSrc = profileRenderSnapshot?.media?.avatarUrl || '';
   $: audioSrc = profileRenderSnapshot?.media?.audioUrl || '';
   $: pointerCursorSrc = profileRenderSnapshot?.environment?.pointerCursorUrl || '';
@@ -498,7 +513,7 @@
   });
 </script>
 
-<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} data-profile-render-model="v1" data-profile-layout={profilePresentationLayoutVariant} data-profile-render-mode={profileRenderSnapshot?.mode || (previewMode ? 'studio' : 'public')} aria-busy={loading}>
+<main bind:this={profilePageElement} class={'profile-shell-page profile-shell-page--' + profilePresentationLayoutVariant + (profileWideNameFontEnabled ? ' profile-shell-page--profile-wide-name-font' : '') + (previewMode ? ' profile-shell-page--preview' : '') + (previewMode && previewDevice === 'mobile' ? ' profile-shell-page--preview-mobile' : '') + (profileRollState !== 'idle' ? ' profile-shell-page--roll-' + profileRollState : '') + (pointerCursorSrc ? ' profile-shell-page--rich-pointer' : '') + ' foundation-page'} style={profilePageStyle} data-profile-render-model="v1" data-profile-layout={profilePresentationLayoutVariant} data-profile-render-mode={profileRenderSnapshot?.mode || (previewMode ? 'studio' : 'public')} aria-busy={loading}>
   {#if renderEnvironment}
     <ProfileEnvironmentLayer snapshot={profileRenderSnapshot} mode={previewMode ? 'preview' : 'public'} reducedMotion={prefersReducedMotion} />
   {/if}
@@ -1325,5 +1340,13 @@
   }
   .profile-shell-page--preview-mobile .profile-shell__opening.profile-shell__approved-opening {
     margin-block: auto;
+  }
+
+  /* Profile-wide typography is an explicit owner choice. Keep the override
+     scoped to the public/profile render tree so site chrome and Studio
+     controls retain their own typography contracts. */
+  .profile-shell-page--profile-wide-name-font,
+  .profile-shell-page--profile-wide-name-font :global(*) {
+    font-family: var(--profile-font-family) !important;
   }
 </style>

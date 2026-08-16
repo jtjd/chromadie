@@ -15,6 +15,7 @@ import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js'
 import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
 import { isProfileBorderKey } from './profile-border/profileBorders.js';
 import { getNameRendererLoadout } from './name/nameLoadout.js';
+import { getNameFontCssFamily, isCustomNameFontKey, resolveNameFontKey } from './name/nameFonts.js';
 import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
 import { getVisibleProfileContent } from './profileContentLegacy.js';
 import { getVisibleProfileWidgets } from './profileWidgetsLegacy.js';
@@ -254,6 +255,17 @@ export function buildProfileRenderSnapshot(input = {}) {
   const best = bestScore(scores, profile);
   const appearance = configuration.appearance;
   const cosmetics = asObject(equippedCosmetics);
+  const nameRendererLoadout = getNameRendererLoadout(cosmetics);
+  const selectedNameFontKey = typeof nameRendererLoadout?.fontKey === 'string'
+    ? nameRendererLoadout.fontKey.trim()
+    : '';
+  const resolvedNameFontKey = selectedNameFontKey && isCustomNameFontKey(selectedNameFontKey)
+    ? resolveNameFontKey(selectedNameFontKey)
+    : '';
+  const profileWideNameFontEnabled = appearance.useNameFontAcrossProfile === true && Boolean(resolvedNameFontKey);
+  const profileWideNameFontFamily = profileWideNameFontEnabled
+    ? getNameFontCssFamily(resolvedNameFontKey)
+    : '';
   const identityPresentation = configuration.identityPresentation || {};
   const isOwner = Boolean(input.permissions?.isOwner ?? input.isOwner ?? false);
   const previewMode = Boolean(input.previewMode || input.mode === 'studio');
@@ -323,6 +335,7 @@ export function buildProfileRenderSnapshot(input = {}) {
   });
   const pageStyle = [
     getProfileCanvasStyle(configuration),
+    profileWideNameFontFamily ? `--profile-font-family:${profileWideNameFontFamily}` : '',
     media.cursorUrl ? `cursor:url("${media.cursorUrl}") 16 16, auto` : '',
     media.pointerCursorUrl ? `--profile-pointer-cursor:url("${media.pointerCursorUrl}")` : ''
   ].filter(Boolean).join(';');
@@ -376,6 +389,11 @@ export function buildProfileRenderSnapshot(input = {}) {
       presentation: layoutVariant
     },
     appearance,
+    typography: {
+      profileWideNameFont: profileWideNameFontEnabled,
+      nameFontKey: resolvedNameFontKey,
+      family: profileWideNameFontFamily
+    },
     surface: {
       color: appearance.colors.surface,
       opacity: appearance.surface.opacity,
@@ -404,7 +422,7 @@ export function buildProfileRenderSnapshot(input = {}) {
     mediaReferences,
     cosmetics: {
       loadout: cosmetics,
-      name: getNameRendererLoadout(cosmetics),
+      name: nameRendererLoadout,
       avatarEffectKey: cosmetics.avatar_effect || '',
       // Keep the persisted item key intact for the renderer contract while
       // failing closed for retired or malformed border values.

@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Profile-wide Name Font scope — 2026-08-16
+
+- Added one opt-in Profile Effects toggle that applies the selected custom
+  Name Font across all public profile content; the Platform default keeps the
+  toggle disabled.
+- Kept the setting in normalized appearance configuration while the equipped
+  font remains the cosmetic source of truth. The public renderer exposes a
+  finite, safe family stack only when both inputs are valid.
+- Wired the staged Studio preview, live profile snapshot, bundled font
+  readiness request, and ProfileShell-scoped inheritance without changing site
+  chrome or per-section editor complexity.
+- Added an additive database normalizer/backfill and Name Font unequip guard
+  that synchronizes V1 and V2 draft/published projections.
+
 ## Profile Effects font catalog — 2026-08-16
 
 - Replaced the active Name Font catalog with the Platform default baseline,

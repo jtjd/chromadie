@@ -1394,6 +1394,29 @@ SELECT pg_temp.audit_assert(
    FROM audit_results WHERE name = 'config_publish'),
   'profile configuration publish did not promote the saved draft'
 );
+SELECT pg_temp.audit_assert(
+  public.normalize_profile_appearance(jsonb_build_object('useNameFontAcrossProfile', true))->>'useNameFontAcrossProfile' = 'true'
+    AND public.normalize_profile_appearance(jsonb_build_object('useNameFontAcrossProfile', 'true'))->>'useNameFontAcrossProfile' = 'false',
+  'profile-wide Name Font scope did not normalize as a strict boolean'
+);
+UPDATE public.profile_configurations
+SET draft_config = jsonb_set(draft_config, '{appearance,useNameFontAcrossProfile}', 'true'::jsonb, true),
+    published_config = jsonb_set(published_config, '{appearance,useNameFontAcrossProfile}', 'true'::jsonb, true),
+    draft_config_v2 = jsonb_set(draft_config_v2, '{base,appearance,useNameFontAcrossProfile}', 'true'::jsonb, true),
+    published_config_v2 = jsonb_set(published_config_v2, '{base,appearance,useNameFontAcrossProfile}', 'true'::jsonb, true)
+WHERE user_id = '10000000-0000-0000-0000-000000000001';
+INSERT INTO audit_results VALUES ('d2_unequip_font_scope', public.unequip_item('name_font'));
+SELECT pg_temp.audit_assert(
+  (SELECT payload->>'success' = 'true' AND NOT (payload->'cosmetics' ? 'name_font')
+   FROM audit_results WHERE name = 'd2_unequip_font_scope')
+    AND (SELECT draft_config->'appearance'->>'useNameFontAcrossProfile' = 'false'
+              AND published_config->'appearance'->>'useNameFontAcrossProfile' = 'false'
+              AND draft_config_v2->'base'->'appearance'->>'useNameFontAcrossProfile' = 'false'
+              AND published_config_v2->'base'->'appearance'->>'useNameFontAcrossProfile' = 'false'
+         FROM public.profile_configurations
+         WHERE user_id = '10000000-0000-0000-0000-000000000001'),
+  'unequipping Name Font did not clear the profile-wide scope in every config projection'
+);
 
 -- Profile Studio must not leave a configuration draft or public identity half
 -- updated when one part of the aggregate publish fails.

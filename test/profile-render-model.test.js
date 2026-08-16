@@ -172,6 +172,48 @@ test('public rendering never promotes an owner draft over the published configur
   assert.equal(snapshot.media.avatarUrl, mediaResolver(MEDIA.avatar));
 });
 
+test('profile-wide typography resolves only for an opted-in custom Name Font', () => {
+  const base = createDefaultProfileConfig('#123456');
+  const profile = { id: 'profile-wide-font', username: 'font-forward', bio: 'A profile-wide type test.' };
+  const configuration = {
+    ...base,
+    appearance: {
+      ...base.appearance,
+      useNameFontAcrossProfile: true
+    }
+  };
+
+  const active = buildProfileRenderSnapshot({
+    profile: { ...profile, equipped_cosmetics: { name_font: 'name_font_silkscreen' } },
+    profileConfig: { published: configuration },
+    featureFlags: FLAGS,
+    mode: 'public'
+  });
+  assert.equal(active.typography.profileWideNameFont, true);
+  assert.equal(active.typography.nameFontKey, 'silkscreen');
+  assert.equal(active.typography.family, '"Silkscreen", ui-monospace, SFMono-Regular, Consolas, monospace');
+  assert.match(active.styles.page, /--profile-font-family:"Silkscreen", ui-monospace/);
+
+  const platformDefault = buildProfileRenderSnapshot({
+    profile: { ...profile, equipped_cosmetics: { name_font: 'name_font_default' } },
+    profileConfig: { published: configuration },
+    featureFlags: FLAGS,
+    mode: 'public'
+  });
+  assert.equal(platformDefault.typography.profileWideNameFont, false);
+  assert.equal(platformDefault.typography.family, '');
+  assert.doesNotMatch(platformDefault.styles.page, /profile-font-family/);
+
+  const disabled = buildProfileRenderSnapshot({
+    profile: { ...profile, equipped_cosmetics: { name_font: 'name_font_silkscreen' } },
+    profileConfig: { published: { ...configuration, appearance: { ...configuration.appearance, useNameFontAcrossProfile: false } } },
+    featureFlags: FLAGS,
+    mode: 'public'
+  });
+  assert.equal(disabled.typography.profileWideNameFont, false);
+  assert.equal(disabled.typography.nameFontKey, 'silkscreen');
+});
+
 test('dedicated expression fields survive an incomplete draft envelope', () => {
   const published = createRichConfiguration();
   const draft = {

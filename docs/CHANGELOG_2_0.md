@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-16 — Add optional profile-wide typography
+
+- Profile Effects now lets an owner apply a selected custom Name Font across
+  the profile's bio, metadata, links, stats, and other public content.
+- The setting is opt-in, unavailable for the Platform default, and remains a
+  single profile-wide choice rather than adding a separate font control to
+  every section.
+
 ## 2026-08-16 — Refresh Profile Effects fonts
 
 - Profile Effects now offers the Platform default plus Black Ops One,

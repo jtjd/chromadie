@@ -289,8 +289,29 @@ export function resolveNameFontKey(fontKey) {
   return canonicalFontKey(fontKey);
 }
 
+export function isCustomNameFontKey(fontKey) {
+  const candidate = typeof fontKey === 'string' ? fontKey.trim() : '';
+  return Boolean(candidate) && canonicalFontKey(candidate) !== DEFAULT_NAME_FONT_KEY;
+}
+
 export function getNameFont(fontKey) {
   return NAME_FONT_REGISTRY[canonicalFontKey(fontKey)];
+}
+
+function safeCssFontValue(value, fallback) {
+  return String(value || fallback).replace(/[;"\\\r\n{}]/g, '');
+}
+
+/**
+ * Return the finite, code-owned family stack used by profile-wide typography.
+ * Catalog data never contributes to this value; it is resolved through the
+ * same renderer registry used by the Canvas name effect.
+ */
+export function getNameFontCssFamily(fontKey) {
+  const definition = getNameFont(fontKey);
+  const family = safeCssFontValue(definition.family, 'sans-serif');
+  const fallback = safeCssFontValue(definition.fallback, 'sans-serif');
+  return `"${family}", ${fallback}`;
 }
 
 export function loadNameFontAsset(fontKey) {

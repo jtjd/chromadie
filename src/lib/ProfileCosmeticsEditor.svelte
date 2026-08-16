@@ -17,6 +17,7 @@
   import { supabase } from './supabase';
   import { trackProductEvent } from './productAnalytics.js';
   import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer, getNamePreviewLoadoutForSlot } from './name/nameLoadout.js';
+  import { isCustomNameFontKey } from './name/nameFonts.js';
   import { SHOP_SLOT_LABELS, isShopCosmetic } from './shopCatalog.js';
   import { getProfileMediaUrl } from './profileMedia.js';
 
@@ -94,6 +95,12 @@
     name_material: previewItems.name_material?.css_value || '',
     name_motion: previewItems.name_motion?.css_value || ''
   };
+  $: profileAppearance = profileConfig?.draft?.appearance
+    || profileConfig?.published?.appearance
+    || profileConfig?.appearance
+    || {};
+  $: profileWideNameFontEnabled = profileAppearance.useNameFontAcrossProfile === true;
+  $: hasCustomNameFontSelection = isCustomNameFontKey(previewLoadout.name_font);
   $: hasPendingChanges = COSMETIC_SLOTS.some(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
   $: equippedKey = JSON.stringify($equippedItems || {});
   $: previewSourceKey = stagedLoadout === null
@@ -120,7 +127,18 @@
     if (!item && !NAME_COMPOSABLE_SLOTS.includes(slot)) delete previewLoadout[slot];
     error = '';
     dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
+    if (slot === 'name_font' && !isCustomNameFontKey(item?.item_key || itemKey)) updateProfileWideNameFont(false);
     trackProductEvent('cosmetic_preview', { slot, context: 'profile' });
+  }
+
+  function updateProfileWideNameFont(enabled) {
+    const nextEnabled = Boolean(enabled) && hasCustomNameFontSelection;
+    if (nextEnabled === profileWideNameFontEnabled) return;
+    dispatch('studiopatch', {
+      scope: 'appearance',
+      detail: { appearance: { useNameFontAcrossProfile: nextEnabled } }
+    });
+    dispatch('dirty', { dirty: true });
   }
 
   function resetNameEffects() {
@@ -130,6 +148,7 @@
     };
     error = '';
     dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
+    if (!isCustomNameFontKey(previewLoadout.name_font)) updateProfileWideNameFont(false);
   }
 
   function itemsForSlot(slot) {
@@ -209,6 +228,18 @@
               <div>
                 <strong>{definition.label}</strong>
                 <small>{definition.description}</small>
+                {#if definition.slot === 'name_font'}
+                  <label class="profile-cosmetics-studio-font-scope">
+                    <input
+                      type="checkbox"
+                      checked={profileWideNameFontEnabled && hasCustomNameFontSelection}
+                      disabled={!!loadingSlot || !hasCustomNameFontSelection}
+                      on:change={event => updateProfileWideNameFont(event.currentTarget.checked)}
+                    />
+                    <span>Apply across profile</span>
+                  </label>
+                  <small class="profile-cosmetics-studio-font-note">Includes bio and profile content.</small>
+                {/if}
               </div>
               <select
                 id={`cosmetic-studio-${definition.slot}`}
@@ -408,6 +439,9 @@
   }
   .profile-cosmetics-studio-card strong { display: block; color: var(--cosmetics-text); font: 600 .72rem/1.2 var(--cosmetics-body); }
   .profile-cosmetics-studio-card small { display: block; margin-top: 3px; color: var(--cosmetics-faint); font: 400 .6rem/1.35 var(--cosmetics-body); }
+  .profile-cosmetics-studio-font-scope { display: flex; align-items: center; gap: .35rem; margin-top: .55rem; color: var(--cosmetics-secondary); font: 600 .62rem/1.2 var(--cosmetics-body); cursor: pointer; }
+  .profile-cosmetics-studio-font-scope input { flex: 0 0 auto; accent-color: var(--cosmetics-neutral); }
+  .profile-cosmetics-studio-font-note { margin-top: .25rem !important; color: var(--cosmetics-faint); font-size: .56rem !important; }
   .profile-cosmetics-studio-card select { min-width: 0; width: 100%; min-height: 34px; border: 1px solid var(--cosmetics-border); border-radius: 6px; background: var(--cosmetics-inset); color: var(--cosmetics-secondary); padding: 0 8px; font: 500 .66rem/1 var(--cosmetics-body); }
   .profile-cosmetics-studio-grid .profile-cosmetics-apply { grid-column: 1 / -1; justify-self: end; margin-top: 2px; }
   .profile-cosmetics-controls { display: grid; gap: .65rem; min-width: 0; padding: .25rem 0; border: 0; border-radius: 0; background: transparent; font-family: var(--cosmetics-body); }

@@ -114,6 +114,8 @@
             presentation="studio"
             stagedLoadout={cosmeticPreviewLoadout}
             on:cosmeticpreview={event => dispatch('cosmeticpreview', event.detail)}
+            on:studiopatch={event => forwardPatch(event.detail?.scope || 'appearance', { detail: event.detail?.detail || {} })}
+            on:dirty={event => forwardDirty('customize:appearance', event)}
           />
         {:else}
           <div class="studio-loading" role="status">Loading profile effects…</div>
