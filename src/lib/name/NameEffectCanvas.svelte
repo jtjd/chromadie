@@ -4,7 +4,7 @@
   import { shouldAnimateNameFrame, createNameCanvasRenderer } from './nameRenderer.js';
   import { getNameRendererDefinition, hasComposableNameInput, resolveNameRendererKey } from './nameCatalog.js';
   import { loadCodeOwnedNameRenderers } from './nameComposableRenderer.js';
-  import { getNameFont, requestNameFontLoad, resolveNameFontKey } from './nameFonts.js';
+  import { DEFAULT_NAME_FONT_KEY, getNameFont, requestNameFontLoad, resolveNameFontKey } from './nameFonts.js';
 
   export let text = '';
   export let rendererKey = '';
@@ -89,7 +89,7 @@
   });
   $: safeRendererKey = hasComposableKeys ? 'plain' : resolveNameRendererKey(rendererKey || 'plain');
   $: activeFontKey = hasComposableKeys
-    ? explicitFontKey || 'soft-grotesk'
+    ? explicitFontKey || DEFAULT_NAME_FONT_KEY
     : getNameRendererDefinition(safeRendererKey).font;
   $: activeFont = getNameFont(activeFontKey);
   $: resolvedFontKey = resolveNameFontKey(activeFontKey);

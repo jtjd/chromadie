@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-16 — Refresh Profile Effects fonts
+
+- Profile Effects now offers the Platform default plus Black Ops One,
+  Permanent Marker, Satoshi, Fira Code, Poppins, JetBrains Mono, Array,
+  Velocity, and Outfit.
+- Retired font choices disappear from the active selector without changing
+  the appearance of profiles that already use them.
+- The supplied Velocity face is bundled locally so it renders consistently in
+  Compact, Immersive, and fitting-room previews.
+
 ## 2026-08-16 — Stabilize Customize layout and font previews
 
 - Customize now has one canonical layout model: Compact and Immersive

@@ -4,28 +4,34 @@ import { readFile } from 'node:fs/promises';
 
 import { NAME_COMPOSABLE_COUNTS, resolveNameLoadout } from '../src/lib/name/nameCatalog.js';
 import { applyNamePreviewLayer } from '../src/lib/name/nameLoadout.js';
-import { NAME_FONTS, NAME_FONT_ASSET_KEYS } from '../src/lib/name/nameFonts.js';
+import { NAME_FONTS, NAME_FONT_ASSET_KEYS, NAME_FONT_REGISTRY, getNameFont } from '../src/lib/name/nameFonts.js';
 import { NAME_MATERIALS } from '../src/lib/name/nameMaterials.js';
 import { NAME_MOTIONS } from '../src/lib/name/nameMotions.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the curated catalog keeps exactly 35 paid Name rows and nine Profile Border rows', async () => {
+test('the curated catalog keeps the approved active Name rows and nine Profile Border rows', async () => {
   const seed = await read('supabase/seed.sql');
-  assert.equal((seed.match(/'name_font_[a-z0-9_]+'/g) || []).length, 18);
+  assert.equal((seed.match(/'name_font_[a-z0-9_]+'/g) || []).length, 9);
   assert.equal((seed.match(/'name_material_[a-z0-9_]+'/g) || []).length, 7);
   assert.equal((seed.match(/'name_motion_[a-z0-9_]+'/g) || []).length, 10);
   assert.equal((seed.match(/'border_(?:celestial|chroma|crystal|glitch|gold|neon|prism|void|signal)'/g) || []).length, 9);
   assert.doesNotMatch(seed, /name_material_plain|name_motion_none/);
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
-    fonts: 18,
+    fonts: 10,
     materials: 8,
     motions: 11,
-    paidFonts: 18,
+    paidFonts: 9,
     paidMaterials: 7,
     paidMotions: 10,
-    paidTotal: 35
+    paidTotal: 26
   });
+  assert.deepEqual(Object.keys(NAME_FONTS), [
+    'industrial-stencil', 'marker-tag', 'satoshi', 'fira-code', 'poppins',
+    'jetbrains-mono', 'array', 'velocity', 'outfit'
+  ]);
+  assert.equal(NAME_FONTS['soft-grotesk'], undefined);
+  assert.equal(NAME_FONTS['editorial-serif'], undefined);
   assert.deepEqual(Object.keys(NAME_MOTIONS).filter(key => key !== 'none'), [
     'haunt-glow', 'letter-shuffle', 'typewriter-name', 'haunt-particles',
     'haunt-rainbow', 'haunt-gradient', 'haunt-fuzzy', 'haunt-reveal',
@@ -33,19 +39,20 @@ test('the curated catalog keeps exactly 35 paid Name rows and nine Profile Borde
   ]);
 });
 
-test('the earned Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
-  const [seed, labelMigration, fontLabelMigration, motionCurationMigration] = await Promise.all([
+test('the active Name catalog uses distinctive labels synchronized with each renderer registry', async () => {
+  const [seed, labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration] = await Promise.all([
     read('supabase/seed.sql'),
     read('supabase/migrations/20260803120000_refresh_name_catalog_labels.sql'),
     read('supabase/migrations/20260803130000_use_reference_font_family_names.sql'),
-    read('supabase/migrations/20260805140000_replace_name_motions_with_haunt_reference_set.sql')
+    read('supabase/migrations/20260805140000_replace_name_motions_with_haunt_reference_set.sql'),
+    read('supabase/migrations/20260816110000_name_font_catalog_refresh.sql')
   ]);
   const rows = [...seed.matchAll(
     /^\s*\('([^']+)',\s*'([^']+)',\s*'(name_font|name_material|name_motion)'[^\n]*?'renderer',\s*'([^']+)'/gm
   )].map(([, itemKey, name, slot, rendererKey]) => ({ itemKey, name, slot, rendererKey }))
     .filter(row => row.itemKey !== 'name_prism_atelier');
 
-  assert.equal(rows.length, 35);
+  assert.equal(rows.length, 26);
   assert.equal(new Set(rows.map(row => row.name)).size, rows.length);
 
   const registries = {
@@ -58,7 +65,7 @@ test('the earned Name catalog uses distinctive labels synchronized with each ren
     assert.ok(definition, `${row.itemKey} must resolve to a code-owned renderer`);
     assert.equal(definition.label, row.name, `${row.itemKey} label drifted from its renderer`);
     assert.equal(
-      [labelMigration, fontLabelMigration, motionCurationMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
+      [labelMigration, fontLabelMigration, motionCurationMigration, fontRefreshMigration].some(migration => migration.includes(`'${row.itemKey}', '${row.name}'`)),
       true,
       `${row.itemKey} label is missing from the production migrations`
     );
@@ -81,13 +88,22 @@ test('the earned Name catalog uses distinctive labels synchronized with each ren
   }
 });
 
-test('reference Font families are real bundled assets rather than shared fallbacks', async () => {
-  const fontsSource = await read('src/lib/name/nameFonts.js');
-  assert.deepEqual([...NAME_FONT_ASSET_KEYS].sort(), Object.keys(NAME_FONTS).sort());
+test('active Font families are real assets and legacy families remain readable', async () => {
+  const [fontsSource, stylesSource, assetReadme] = await Promise.all([
+    read('src/lib/name/nameFonts.js'),
+    read('src/styles/fonts.css'),
+    read('src/assets/fonts/README.md')
+  ]);
+  assert.deepEqual([...NAME_FONT_ASSET_KEYS].sort(), Object.keys(NAME_FONT_REGISTRY).sort());
   for (const definition of Object.values(NAME_FONTS)) {
     assert.equal(definition.label, definition.targetFamily);
-    assert.equal(definition.source, 'bundled-fontsource');
+    assert.ok(['bundled-fontsource', 'fontshare', 'bundled-local'].includes(definition.source));
   }
+  assert.equal(getNameFont('name_font_editorial_serif').family, 'Cormorant Garamond');
+  assert.equal(getNameFont('name_font_soft_grotesk').family, 'Instrument Sans Variable');
+  assert.match(stylesSource, /font-family: 'Array'/);
+  assert.match(stylesSource, /font-family: 'Velocity'/);
+  assert.match(assetReadme, /dafont\.com\/velocity\.font/);
 
   for (const familyImport of [
     '@fontsource/cormorant-garamond/latin-600.css',
@@ -105,7 +121,11 @@ test('reference Font families are real bundled assets rather than shared fallbac
     '@fontsource/vt323/latin-400.css',
     '@fontsource/fredoka/latin-600.css',
     '@fontsource/permanent-marker/latin-400.css',
-    '@fontsource/archivo-black/latin-400.css'
+    '@fontsource/archivo-black/latin-400.css',
+    '@fontsource/fira-code/latin-600.css',
+    '@fontsource/poppins/latin-600.css',
+    '@fontsource/jetbrains-mono/latin-600.css',
+    '@fontsource/outfit/latin-600.css'
   ]) {
     assert.match(fontsSource, new RegExp(familyImport.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }

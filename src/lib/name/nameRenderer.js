@@ -96,7 +96,7 @@ function mixColors(first, second, amount) {
 function estimateTextWidth(text, fontSize, font) {
   const widthFactor = Number.isFinite(font?.widthFactor)
     ? font.widthFactor
-    : font?.key === 'mono-compact' ? 0.64 : font?.key === 'editorial-serif' ? 0.58 : 0.56;
+    : 0.56;
   const letterSpacing = Number.isFinite(font?.letterSpacing) ? font.letterSpacing * fontSize : 0;
   const measured = Array.from(text).reduce((total, character) => {
     if (character === ' ') return total + fontSize * 0.32;

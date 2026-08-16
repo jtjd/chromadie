@@ -97,6 +97,28 @@
   font-weight: 900;
 }
 
+/* Array is the approved Fontshare dot-grid display face used by the Name
+   catalog. Keep this as a static, code-owned face; catalog data never supplies
+   font-family or font URLs. */
+@font-face {
+  font-family: 'Array';
+  src: url('https://cdn.fontshare.com/wf/4QBZHM3FOPYBI67YBLLWZV6ZYIUQTKEE/RXSUFPNEA6YXGQDMHMP3OODY6UWXRJBM/C6VM2RT4EU2NNT5XZWVYHR7WOIOGM4EU') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Velocity is sourced from the approved DaFont listing and served from the
+   app bundle so profile rendering does not depend on a third-party download
+   endpoint at runtime. */
+@font-face {
+  font-family: 'Velocity';
+  src: url('../assets/fonts/velocity-font.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
 @font-face {
   font-family: 'Cabinet Grotesk';
   src: url('https://cdn.fontshare.com/wf/J6PPRPKWXDUIYA47IXLEQB4R4OPVYDQH/N2ZXAXWEHVMLISD2TIXJC7EF4GOY43L4/NXM4Z4TDCMYWBZ7AVI2N6DQ5VMWNENMU.woff2') format('woff2');

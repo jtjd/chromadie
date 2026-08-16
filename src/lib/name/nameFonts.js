@@ -1,8 +1,7 @@
 /*
- * Name fonts are code-owned renderer inputs. The display families come from
- * the approved catalog reference and are bundled locally so cards, profiles,
- * and the fitting room show the intended face instead of silently collapsing
- * to the same system fallback.
+ * Name fonts are code-owned renderer inputs. Active catalog families are
+ * finite and explicit; legacy families remain readable for profiles that
+ * already have an older equipped key but are never exposed as new choices.
  */
 
 const SYSTEM_SANS = 'ui-sans-serif, system-ui, sans-serif';
@@ -24,7 +23,7 @@ function font(key, family, fallback, weight, extra = {}) {
   });
 }
 
-export const NAME_FONTS = Object.freeze({
+export const LEGACY_NAME_FONTS = Object.freeze({
   'editorial-serif': font('editorial-serif', 'Cormorant Garamond', SYSTEM_SERIF, 600, {
     source: 'bundled-fontsource',
     targetFamily: 'Cormorant Garamond',
@@ -153,16 +152,88 @@ export const NAME_FONTS = Object.freeze({
     label: 'Archivo Black', collection: 'Archive', rarity: 'Epic'
   })
 });
+export const DEFAULT_NAME_FONT_KEY = 'soft-grotesk';
 
+const ACTIVE_NAME_FONT_DEFINITIONS = Object.freeze({
+  'industrial-stencil': LEGACY_NAME_FONTS['industrial-stencil'],
+  'marker-tag': LEGACY_NAME_FONTS['marker-tag'],
+  'satoshi': font('satoshi', 'Satoshi', SYSTEM_SANS, 700, {
+    source: 'fontshare',
+    targetFamily: 'Satoshi',
+    substitution: 'Instrument Sans',
+    widthFactor: 0.56,
+    label: 'Satoshi', collection: 'Nocturne', rarity: 'Uncommon'
+  }),
+  'fira-code': font('fira-code', 'Fira Code', SYSTEM_MONO, 600, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Fira Code',
+    substitution: 'IBM Plex Mono',
+    widthFactor: 0.62,
+    label: 'Fira Code', collection: 'Signal', rarity: 'Rare'
+  }),
+  'poppins': font('poppins', 'Poppins', SYSTEM_SANS, 600, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Poppins',
+    substitution: 'Instrument Sans',
+    widthFactor: 0.57,
+    label: 'Poppins', collection: 'Prism', rarity: 'Uncommon'
+  }),
+  'jetbrains-mono': font('jetbrains-mono', 'JetBrains Mono', SYSTEM_MONO, 600, {
+    source: 'bundled-fontsource',
+    targetFamily: 'JetBrains Mono',
+    substitution: 'IBM Plex Mono',
+    widthFactor: 0.63,
+    label: 'JetBrains Mono', collection: 'Signal', rarity: 'Rare'
+  }),
+  'array': font('array', 'Array', SYSTEM_MONO, 400, {
+    source: 'fontshare',
+    targetFamily: 'Array',
+    substitution: 'IBM Plex Mono',
+    widthFactor: 0.64,
+    letterSpacing: 0.02,
+    label: 'Array', collection: 'Static Bloom', rarity: 'Epic'
+  }),
+  'velocity': font('velocity', 'Velocity', SYSTEM_DISPLAY, 400, {
+    source: 'bundled-local',
+    targetFamily: 'Velocity',
+    substitution: 'Spline Sans',
+    widthFactor: 0.62,
+    letterSpacing: 0.01,
+    label: 'Velocity', collection: 'Signal', rarity: 'Rare'
+  }),
+  'outfit': font('outfit', 'Outfit', SYSTEM_SANS, 600, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Outfit',
+    substitution: 'Instrument Sans',
+    widthFactor: 0.57,
+    label: 'Outfit', collection: 'Nocturne', rarity: 'Uncommon'
+  })
+});
+
+/**
+ * The active registry is the only registry used to build new catalog choices.
+ * LEGACY_NAME_FONTS remains available through the read-only resolver below so
+ * an existing profile does not silently change its identity after a catalog
+ * refresh.
+ */
+export const NAME_FONTS = ACTIVE_NAME_FONT_DEFINITIONS;
 export const NAME_FONT_KEYS = Object.freeze(Object.keys(NAME_FONTS));
 export const NAME_PAID_FONT_KEYS = NAME_FONT_KEYS;
-export const DEFAULT_NAME_FONT_KEY = 'soft-grotesk';
+export const NAME_COMPOSABLE_FONT_KEYS = Object.freeze([
+  DEFAULT_NAME_FONT_KEY,
+  ...NAME_FONT_KEYS
+]);
+export const NAME_FONT_REGISTRY = Object.freeze({
+  ...LEGACY_NAME_FONTS,
+  ...NAME_FONTS
+});
 
 // Keep the expanded reference faces out of the initial route bundle. The
 // Canvas asks for the selected face when a Name surface mounts; Vite then
 // loads only the matching local @fontsource asset and the renderer redraws
-// once that face is available. Instrument Sans and IBM Plex Mono are already
-// imported by the application shell, so their loaders are intentionally tiny.
+// once that face is available. Fontshare and Velocity are declared by the
+// app-owned typography stylesheet, while Instrument Sans and IBM Plex Mono are
+// imported by the application shell.
 const NAME_FONT_ASSET_LOADERS = Object.freeze({
   'editorial-serif': () => import('@fontsource/cormorant-garamond/latin-600.css'),
   'condensed-sans': () => import('@fontsource/archivo-narrow/latin-700.css'),
@@ -181,7 +252,14 @@ const NAME_FONT_ASSET_LOADERS = Object.freeze({
   'terminal-bitmap': () => import('@fontsource/vt323/latin-400.css'),
   'rounded-display': () => import('@fontsource/fredoka/latin-600.css'),
   'marker-tag': () => import('@fontsource/permanent-marker/latin-400.css'),
-  'newspaper-black': () => import('@fontsource/archivo-black/latin-400.css')
+  'newspaper-black': () => import('@fontsource/archivo-black/latin-400.css'),
+  'satoshi': () => Promise.resolve(),
+  'fira-code': () => import('@fontsource/fira-code/latin-600.css'),
+  'poppins': () => import('@fontsource/poppins/latin-600.css'),
+  'jetbrains-mono': () => import('@fontsource/jetbrains-mono/latin-600.css'),
+  'array': () => Promise.resolve(),
+  'velocity': () => Promise.resolve(),
+  'outfit': () => import('@fontsource/outfit/latin-600.css')
 });
 
 export const NAME_FONT_ASSET_KEYS = Object.freeze(Object.keys(NAME_FONT_ASSET_LOADERS));
@@ -190,11 +268,11 @@ const nameFontAssetPromises = new Map();
 function canonicalFontKey(fontKey) {
   if (typeof fontKey !== 'string') return DEFAULT_NAME_FONT_KEY;
   const candidate = fontKey.trim();
-  if (Object.prototype.hasOwnProperty.call(NAME_FONTS, candidate)) return candidate;
+  if (Object.prototype.hasOwnProperty.call(NAME_FONT_REGISTRY, candidate)) return candidate;
   const prefix = 'name_font_';
   const namespaced = candidate.startsWith(prefix) ? candidate.slice(prefix.length) : '';
   const normalizedNamespaced = namespaced.replaceAll('_', '-');
-  return Object.prototype.hasOwnProperty.call(NAME_FONTS, normalizedNamespaced)
+  return Object.prototype.hasOwnProperty.call(NAME_FONT_REGISTRY, normalizedNamespaced)
     ? normalizedNamespaced
     : DEFAULT_NAME_FONT_KEY;
 }
@@ -204,7 +282,7 @@ export function resolveNameFontKey(fontKey) {
 }
 
 export function getNameFont(fontKey) {
-  return NAME_FONTS[canonicalFontKey(fontKey)];
+  return NAME_FONT_REGISTRY[canonicalFontKey(fontKey)];
 }
 
 export function loadNameFontAsset(fontKey) {

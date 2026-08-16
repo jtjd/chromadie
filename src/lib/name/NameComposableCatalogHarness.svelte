@@ -1,6 +1,6 @@
 <script>
   import NameEffectCanvas from './NameEffectCanvas.svelte';
-  import { NAME_FONTS } from './nameFonts.js';
+  import { DEFAULT_NAME_FONT_KEY, NAME_FONTS } from './nameFonts.js';
   import { NAME_MATERIALS } from './nameMaterials.js';
   import { NAME_MOTIONS } from './nameMotions.js';
 
@@ -16,7 +16,7 @@
   export let compact = false;
 
   let activeLayer = 'fonts';
-  let selectedFont = 'soft-grotesk';
+  let selectedFont = 'industrial-stencil';
   let selectedMaterial = 'plain';
   let selectedMotion = 'none';
 
@@ -63,8 +63,8 @@
 
   function isolatedLoadout(definition) {
     if (activeLayer === 'fonts') return { fontKey: definition.key, materialKey: 'plain', motionKey: 'none' };
-    if (activeLayer === 'materials') return { fontKey: 'soft-grotesk', materialKey: definition.key, motionKey: 'none' };
-    return { fontKey: 'soft-grotesk', materialKey: 'plain', motionKey: definition.key };
+    if (activeLayer === 'materials') return { fontKey: DEFAULT_NAME_FONT_KEY, materialKey: definition.key, motionKey: 'none' };
+    return { fontKey: DEFAULT_NAME_FONT_KEY, materialKey: 'plain', motionKey: definition.key };
   }
 </script>
 

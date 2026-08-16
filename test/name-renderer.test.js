@@ -31,7 +31,7 @@ import { requestNameFontLoad } from '../src/lib/name/nameFonts.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the curated renderer registries contain the 35 paid layers and free baselines', async () => {
+test('the curated renderer registries contain the approved active layers and free baselines', async () => {
   const seed = await read('supabase/seed.sql');
   const seedRendererRows = [...seed.matchAll(
     /^\s*\('name_(font|material|motion)_[^']+',\s*'[^']+',\s*'(name_font|name_material|name_motion)',\s*\d+,\s*'renderer',\s*'([^']+)'/gm
@@ -44,17 +44,17 @@ test('the curated renderer registries contain the 35 paid layers and free baseli
   assert.deepEqual(NAME_PAID_MATERIAL_KEYS, seedKeys('name_material'));
   assert.deepEqual(NAME_PAID_MOTION_KEYS, seedKeys('name_motion'));
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
-    fonts: 18,
+    fonts: 10,
     materials: 8,
     motions: 11,
-    paidFonts: 18,
+    paidFonts: 9,
     paidMaterials: 7,
     paidMotions: 10,
-    paidTotal: 35
+    paidTotal: 26
   });
   assert.equal(NAME_MATERIALS.plain.composable, true);
   assert.equal(NAME_MOTIONS.none.composable, true);
-  assert.equal(new Set(Object.keys(NAME_FONTS)).size, 18);
+  assert.equal(new Set(Object.keys(NAME_FONTS)).size, 9);
   assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, 8);
   assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 11);
 });

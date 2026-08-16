@@ -1,5 +1,6 @@
 import {
   DEFAULT_NAME_FONT_KEY,
+  NAME_COMPOSABLE_FONT_KEYS,
   NAME_FONTS,
   NAME_FONT_KEYS,
   NAME_PAID_FONT_KEYS,
@@ -40,6 +41,7 @@ const DEFAULT_NAME_RENDERER = Object.freeze({
 
 export {
   DEFAULT_NAME_RENDERER,
+  NAME_COMPOSABLE_FONT_KEYS,
   NAME_FONTS,
   NAME_FONT_KEYS,
   NAME_PAID_FONT_KEYS,
@@ -56,7 +58,7 @@ export const NAME_RENDERER_CATALOG = Object.freeze({
 });
 
 export const NAME_COMPOSABLE_COUNTS = Object.freeze({
-  fonts: NAME_FONT_KEYS.length,
+  fonts: NAME_COMPOSABLE_FONT_KEYS.length,
   materials: NAME_COMPOSABLE_MATERIAL_KEYS.length,
   motions: NAME_COMPOSABLE_MOTION_KEYS.length,
   paidFonts: NAME_PAID_FONT_KEYS.length,

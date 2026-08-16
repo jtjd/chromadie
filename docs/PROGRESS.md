@@ -1,5 +1,20 @@
 # Chromadie 2.0 Progress
 
+## Profile Effects font catalog — 2026-08-16
+
+- Replaced the active Name Font catalog with the Platform default baseline,
+  Black Ops One, Permanent Marker, Satoshi, Fira Code, Poppins, JetBrains
+  Mono, Array, Velocity, and Outfit.
+- Added pinned Fontsource packages for the local families, static Fontshare
+  faces for Satoshi and Array, and an app-bundled WOFF2 for the supplied
+  Velocity source.
+- Preserved the sixteen retired font keys as legacy renderer mappings so
+  existing equipped profiles remain visually stable while the active catalog
+  and Profile Effects selectors stay focused.
+- Added catalog/renderer regression coverage and a forward migration that
+  reduces the active catalog from 97 to 88 rows without deleting historical
+  inventory or equipped references.
+
 ## Customize cleanup and font readiness — 2026-08-16
 
 - Removed the obsolete combined profile/template editor graph, including the
