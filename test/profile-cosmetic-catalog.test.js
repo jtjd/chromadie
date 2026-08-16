@@ -53,7 +53,11 @@ test('Customize exposes all active profile expression items without acquisition 
 });
 
 test('the interim catalog migration makes profile expression free and resets only invalid borders', async () => {
-  const migration = await read('supabase/migrations/20260815150000_profile_expression_catalog_free.sql');
+  const [migration, seed, drift] = await Promise.all([
+    read('supabase/migrations/20260815150000_profile_expression_catalog_free.sql'),
+    read('supabase/seed.sql'),
+    read('scripts/check-catalog-drift.mjs')
+  ]);
   assert.match(migration, /access_tier = 'free'/);
   assert.match(migration, /cost = 0/);
   assert.match(migration, /profile_motion_perspective_tilt/);
@@ -61,6 +65,10 @@ test('the interim catalog migration makes profile expression free and resets onl
   assert.match(migration, /equipped_cosmetics - 'profile_border'/);
   assert.match(migration, /item\.catalog_status = 'active'/);
   assert.doesNotMatch(migration, /DELETE FROM public\.profiles/);
+  assert.match(seed, /Customize is the only active profile-expression surface/);
+  assert.match(seed, /SET access_tier = 'free'/);
+  assert.match(seed, /A centered glass profile card that leaves the user background in charge/);
+  assert.match(drift, /applyProfileExpressionFreeUpdates/);
 });
 
 test('layout publishing keeps the template and variant markers paired', async () => {

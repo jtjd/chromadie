@@ -137,6 +137,30 @@ function applyCatalogStatusUpdates(sql, catalog) {
   }
 }
 
+function applyProfileExpressionFreeUpdates(sql, catalog, source) {
+  const update = sql.match(/UPDATE public\.shop_items\s+SET access_tier = 'free',\s+cost = 0,\s+entitlement_key = NULL\s+WHERE catalog_status = 'active'\s+AND slot IN\s*\(([^)]+)\);/i);
+  if (update) {
+    const slots = [...update[1].matchAll(/'([a-z_]+)'/g)].map(([, slot]) => slot);
+    if (!slots.length) fail(`profile expression free update has no slots in ${source}`);
+    const slotSet = new Set(slots);
+    for (const item of catalog.values()) {
+      if ((item.catalog_status || 'active') === 'active' && slotSet.has(item.slot)) {
+        item.access_tier = 'free';
+        item.cost = '0';
+        item.entitlement_key = null;
+      }
+    }
+  }
+
+  const description = sql.match(/UPDATE public\.shop_items\s+SET description = '((?:''|[^'])*)'\s+WHERE item_key = '([a-z0-9_]+)';/i);
+  if (description) {
+    const [, value, itemKey] = description;
+    const item = catalog.get(itemKey);
+    if (!item) fail(`description update references missing item_key ${itemKey} in ${source}`);
+    item.description = value.replaceAll("''", "'");
+  }
+}
+
 const DEFAULT_CATALOG_VALUES = Object.freeze({
   stackable: 'false',
   access_tier: 'earned',
@@ -189,6 +213,7 @@ async function readLocalCatalog(filePath) {
   const parsed = parseCatalog(sql, source);
   applyCostUpdates(sql, parsed.catalog, source);
   applyCatalogStatusUpdates(sql, parsed.catalog);
+  applyProfileExpressionFreeUpdates(sql, parsed.catalog, source);
   return parsed;
 }
 

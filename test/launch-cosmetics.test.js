@@ -180,7 +180,7 @@ test('seed and migrations contain the launch products and version bumps', async 
   ]);
   assert.equal((seed.match(/'cursor_trail_[a-z0-9_]+'/g) || []).length, 16);
   assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 18);
-  assert.equal((seed.match(/'profile_layout_[a-z0-9_]+'/g) || []).length, 2);
+  assert.equal((seed.match(/\('profile_layout_[a-z0-9_]+'/g) || []).length, 2);
   assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 12);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
   const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');

@@ -228,3 +228,28 @@ INSERT INTO public.meta (key, value) VALUES
 ('official_launch_at', '2026-07-11T00:00:00Z'),
 ('founder_window_ends_at', '2026-08-11T00:00:00Z')
 ON CONFLICT (key) DO NOTHING;
+
+-- Customize is the only active profile-expression surface for this phase.
+-- Keep the reset seed aligned with the deployed catalog migration: every
+-- active expression is available directly in Profile Studio, while utility
+-- rows retain their separate progression semantics.
+UPDATE public.shop_items
+SET access_tier = 'free',
+    cost = 0,
+    entitlement_key = NULL
+WHERE catalog_status = 'active'
+  AND slot IN (
+    'name_font',
+    'name_material',
+    'name_motion',
+    'profile_border',
+    'cursor_trail',
+    'avatar_effect',
+    'profile_layout',
+    'profile_atmosphere',
+    'profile_motion'
+  );
+
+UPDATE public.shop_items
+SET description = 'A centered glass profile card that leaves the user background in charge.'
+WHERE item_key = 'profile_layout_compact';
