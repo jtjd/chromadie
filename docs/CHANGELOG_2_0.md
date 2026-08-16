@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-16 — Use Immersive for the first homepage example
+
+- The first homepage hero example now demonstrates the canonical Immersive
+  profile composition with a cardless identity, avatar, bio, and icon links.
+- Other carousel examples keep the compact presentation so the homepage still
+  shows both supported profile structures without creating a second renderer.
+
 ## 2026-08-16 — Add optional profile-wide typography
 
 - Profile Effects now lets an owner apply a selected custom Name Font across

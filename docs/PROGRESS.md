@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Homepage hero Immersive example — 2026-08-16
+
+- The first authored homepage profile example now uses the canonical
+  Immersive (`full-bleed`) identity composition, including its avatar, bio,
+  and icon links.
+- The remaining homepage carousel examples retain the compact specimen, and
+  the switch is fixture-driven so the homepage stays local and deterministic.
+
 ## Profile-wide Name Font scope — 2026-08-16
 
 - Added one opt-in Profile Effects toggle that applies the selected custom

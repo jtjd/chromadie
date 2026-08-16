@@ -1,5 +1,6 @@
 <script>
   import ProfileReferenceCard from '../ProfileReferenceCard.svelte';
+  import ProfileFullBleedLayout from '../profile-layout/ProfileFullBleedLayout.svelte';
 
   /** @type {any} */
   export let fixture = null;
@@ -12,6 +13,7 @@
   $: profileLabel = fixture ? `${fixture.displayName}'s profile example` : 'Profile example';
   $: avatarSource = fixture?.media?.avatar || '';
   $: secondaryLine = fixture?.secondaryLine || '';
+  $: useImmersiveLayout = variant === 'hero' && fixture?.heroLayout === 'immersive';
   $: demoStyle = fixture
     ? `--homepage-demo-accent: ${previewRoll?.hex_code || fixture.accent}; --homepage-demo-avatar: url("${avatarSource}");`
     : '';
@@ -47,20 +49,32 @@
       style={demoStyle}
       data-homepage-profile-specimen="hero"
       data-homepage-fixture={fixture.id}
+      data-homepage-profile-layout={useImmersiveLayout ? 'full-bleed' : 'compact'}
+      class:homepage-profile-demo--immersive={useImmersiveLayout}
       aria-label={profileLabel}
     >
-      <ProfileReferenceCard
-        displayName={fixture.displayName}
-        bio={fixture.bio}
-        {secondaryLine}
-        avatarSrc={avatarSource}
-        {links}
-        roll={latestRoll}
-        accentColor={previewRoll?.hex_code || fixture.accent}
-        rollLabel="Today's roll"
-        presentation="homepage"
-        ariaLabel={profileLabel}
-      />
+      {#if useImmersiveLayout}
+        <ProfileFullBleedLayout
+          displayName={fixture.displayName}
+          bio={fixture.bio}
+          avatarSrc={avatarSource}
+          {links}
+          accentColor={previewRoll?.hex_code || fixture.accent}
+        />
+      {:else}
+        <ProfileReferenceCard
+          displayName={fixture.displayName}
+          bio={fixture.bio}
+          {secondaryLine}
+          avatarSrc={avatarSource}
+          {links}
+          roll={latestRoll}
+          accentColor={previewRoll?.hex_code || fixture.accent}
+          rollLabel="Today's roll"
+          presentation="homepage"
+          ariaLabel={profileLabel}
+        />
+      {/if}
     </div>
   {/if}
 {/if}
@@ -74,6 +88,31 @@
   }
 
   .homepage-profile-demo--hero { width: 100%; min-width: 0; }
+
+  .homepage-profile-demo--immersive {
+    display: grid;
+    min-height: 310px;
+    place-items: center;
+  }
+
+  .homepage-profile-demo--immersive :global(.profile-full-bleed) {
+    width: 100%;
+    padding-inline: 0;
+  }
+
+  .homepage-profile-demo--immersive :global(.profile-full-bleed__avatar-shell) {
+    width: clamp(8.5rem, 18vw, 10.5rem);
+    height: clamp(8.5rem, 18vw, 10.5rem);
+    margin-bottom: .8rem;
+  }
+
+  .homepage-profile-demo--immersive :global(.profile-full-bleed__name) {
+    max-width: 100%;
+    font-size: clamp(1.75rem, 6vw, 2.05rem);
+  }
+
+  .homepage-profile-demo--immersive :global(.profile-full-bleed__bio) { max-width: 100%; }
+  .homepage-profile-demo--immersive :global(.profile-full-bleed__links) { margin-top: 1rem; }
 
   .homepage-profile-demo--showcase { position: absolute; inset: 0; z-index: 2; }
 

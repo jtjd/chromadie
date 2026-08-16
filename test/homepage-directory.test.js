@@ -53,12 +53,14 @@ test('the first homepage fixture is the authored Meilin profile example', () => 
   assert.deepEqual(fixture.links.map(link => link.label), ['Website', 'Spotify', 'Discord', 'Archive']);
   assert.equal(fixture.media.background, '/homepage/fixtures/meilin/background.webp');
   assert.equal(fixture.media.avatar, '/homepage/fixtures/meilin/avatar.webp');
+  assert.equal(fixture.heroLayout, 'immersive');
+  assert.ok(HOMEPAGE_FIXTURES.slice(1).every(item => !item.heroLayout));
   const otherMedia = HOMEPAGE_FIXTURES.slice(1).flatMap(item => [item.media.background, item.media.avatar]);
   assert.ok(!otherMedia.includes(fixture.media.background));
   assert.ok(!otherMedia.includes(fixture.media.avatar));
 });
 
-test('the direct homepage specimen keeps production layout geometry out while sharing only motion', async () => {
+test('the direct homepage specimen uses the canonical first-example layout without mounting the profile shell', async () => {
   const [hero, demo, showcase] = await Promise.all([
     read('src/lib/homepage/HomepageHero.svelte'),
     read('src/lib/homepage/HomepageProfileDemo.svelte'),
@@ -85,6 +87,8 @@ test('the direct homepage specimen keeps production layout geometry out while sh
   assert.match(demo, /export let previewRoll = null/);
   assert.doesNotMatch(demo, /impactActive = false/);
   assert.match(demo, /previewRoll \|\| fixture\?\.scores\?\.\[0\]/);
+  assert.match(demo, /ProfileFullBleedLayout/);
+  assert.match(demo, /data-homepage-profile-layout/);
   assert.doesNotMatch(demo, /homepage-profile-demo__head|Profile preview|@\{fixture\.username\}/);
   assert.match(demo, /ProfileReferenceCard/);
   assert.match(demo, /secondaryLine/);

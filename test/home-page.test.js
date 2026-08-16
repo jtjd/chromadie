@@ -84,6 +84,7 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
 test('the homepage specimen owns the approved profile anatomy', () => {
   for (const selector of [
     'homepage-profile-demo--hero',
+    'ProfileFullBleedLayout',
     'ProfileReferenceCard',
     'presentation="homepage"'
   ]) assert.match(demo, new RegExp(selector));
