@@ -29,11 +29,48 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, />Customize</);
   assert.doesNotMatch(siteHeader, />Shop</);
   assert.match(siteHeader, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);
-  assert.match(siteHeader, /--site-header-control-size: 0\.82rem/);
+  assert.match(siteHeader, /--site-header-control-size: 0\.84rem/);
   assert.match(siteHeader, /--site-header-font: 'Inter'/);
   assert.match(siteHeader, /--site-header-display: 'Clash Display'/);
   assert.match(siteHeader, /site-mode-header__brand-mark/);
+  assert.match(siteHeader, /data-site-chrome="header"/);
+  assert.match(siteHeader, /height: 88px/);
+  assert.match(siteHeader, /width: min\(1480px, calc\(100% - 64px\)\)/);
+  assert.match(siteHeader, /Claim handle/);
   assert.doesNotMatch(siteHeader, /Satoshi|IBM Plex Mono|text-transform: lowercase/);
+});
+
+test('homepage, application, and auth routes share one footer chrome', async () => {
+  const [homepage, app, auth, footer] = await Promise.all([
+    read('src/lib/HomePage.svelte'),
+    read('src/App.svelte'),
+    read('src/lib/AuthPage.svelte'),
+    read('src/lib/SiteFooter.svelte')
+  ]);
+
+  assert.match(homepage, /SiteFooter/);
+  assert.match(app, /import SiteFooter from ['"]\.\/lib\/SiteFooter\.svelte['"]/);
+  assert.match(auth, /SiteFooter/);
+  assert.match(footer, /data-site-chrome="footer"/);
+  assert.match(footer, /width: min\(1160px, calc\(100% - 48px\)\)/);
+  assert.match(footer, /padding: 28px 0 36px/);
+  assert.match(footer, /@media \(max-width: 780px\)/);
+  assert.doesNotMatch(homepage, /homepage-footer/);
+  assert.doesNotMatch(app, /site-footer-inner/);
+  assert.doesNotMatch(auth, /auth-page__footer/);
+});
+
+test('authentication lifecycle pages keep the same site chrome while status is pending', async () => {
+  const [callback, reset] = await Promise.all([
+    read('src/lib/AuthCallback.svelte'),
+    read('src/lib/ResetPassword.svelte')
+  ]);
+
+  for (const source of [callback, reset]) {
+    assert.match(source, /SiteModeHeader/);
+    assert.match(source, /SiteFooter/);
+    assert.match(source, /isHomepageStyle=\{true\}/);
+  }
 });
 
 test('supporting surfaces consume the profile visual tokens without changing route components', async () => {

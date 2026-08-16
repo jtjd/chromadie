@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Shared homepage chrome — 2026-08-16
+
+- Consolidated the homepage, application, and standalone auth/lifecycle footers onto one
+  `SiteFooter` with the homepage’s constrained width, spacing, typography, and
+  responsive stacking.
+- Aligned the shared application/auth `SiteModeHeader` to the homepage’s
+  transparent 88px desktop and 70px mobile geometry, brand treatment, nav
+  spacing, account controls, and Claim handle CTA.
+- Kept public-profile account chrome and Profile Studio controls as intentional
+  specialized surfaces; they do not inherit the marketing/site header.
+
 ## Homepage hero Immersive example — 2026-08-16
 
 - The first authored homepage profile example now uses the canonical

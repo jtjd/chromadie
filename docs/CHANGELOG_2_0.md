@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-16 — Align supporting pages with homepage chrome
+
+- Leaderboard, roll, pricing, legal, and authentication lifecycle pages now
+  use the same transparent header geometry and constrained footer layout as the
+  homepage.
+- The shared header keeps its route-aware navigation and mobile account menu,
+  while matching the homepage’s brand, typography, spacing, and Claim handle
+  treatment.
+
 ## 2026-08-16 — Use Immersive for the first homepage example
 
 - The first homepage hero example now demonstrates the canonical Immersive

@@ -1,5 +1,8 @@
 <script>
   import { onMount } from 'svelte';
+  import SiteFooter from './SiteFooter.svelte';
+  import SiteModeHeader from './SiteModeHeader.svelte';
+  import { ACCOUNT_STATES } from './authState.js';
   import { supabase } from './supabase';
   import { session, authEvent } from './stores';
   import { getAppOrigin, getSafeNextUrl } from './authUrls';
@@ -13,6 +16,18 @@
   let success = false;
   let timeoutId;
   let nextUrl = getAppOrigin();
+
+  $: chromeAuthenticated = Boolean($session);
+  $: chromeAccountState = chromeAuthenticated ? ACCOUNT_STATES.AUTHENTICATED : ACCOUNT_STATES.SIGNED_OUT;
+
+  function navigateFromChrome(event) {
+    const view = event.detail?.view;
+    window.location.assign(view === 'leaderboard' ? '/leaderboard' : view === 'pricing' ? '/pricing' : view === 'profile-settings' ? '/profile/settings' : '/');
+  }
+
+  function openAuthRoute(event) {
+    window.location.assign(event.detail?.mode === 'signup' ? '/signup' : '/login');
+  }
 
   function parseNextUrl() {
     if (typeof window === 'undefined') return getAppOrigin();
@@ -95,43 +110,66 @@
   }
 </script>
 
-<main class="bootstrap-error-shell">
-  <section class="bootstrap-error-card glass-panel" role="status" aria-live="polite">
-    <p class="bootstrap-error-kicker">Password reset</p>
+<div class="site-status-page">
+  <SiteModeHeader
+    activeView="home"
+    accountState={chromeAccountState}
+    isAuthenticated={chromeAuthenticated}
+    isHomeMode={true}
+    isHomepageStyle={true}
+    on:navigate={navigateFromChrome}
+    on:login={openAuthRoute}
+    on:claim={() => window.location.assign('/signup')}
+  />
 
-    {#if success}
-      <h1>Password updated</h1>
-      <p class="bootstrap-error-message">{notice}</p>
-    {:else if error && !ready}
-      <h1>Reset link unavailable</h1>
-      <p class="bootstrap-error-message">{error}</p>
-      <p class="bootstrap-error-help">Return to the app and request a new reset link from the login form.</p>
-    {:else if ready}
-      <h1>Create a new password</h1>
-      <p class="bootstrap-error-message">Enter the new password you want to use for ChromaDie.</p>
-      <form class="reset-form" on:submit|preventDefault={handleReset}>
-        <label for="reset-new-password">New password</label>
-        <input id="reset-new-password" class="input-field" type="password" bind:value={newPassword} placeholder="New password" autocomplete="new-password" minlength="8" required />
-        <label for="reset-confirm-password">Confirm new password</label>
-        <input id="reset-confirm-password" class="input-field" type="password" bind:value={confirmPassword} placeholder="Confirm new password" autocomplete="new-password" minlength="8" required />
-        {#if error}
-          <p class="bootstrap-error-details">{error}</p>
-        {/if}
-        {#if notice}
-          <p class="bootstrap-success">{notice}</p>
-        {/if}
-        <button type="submit" class="roll-btn" disabled={loading}>
-          {loading ? 'Updating...' : 'Update Password'}
-        </button>
-      </form>
-    {:else}
-      <h1>Preparing reset session</h1>
-      <p class="bootstrap-error-message">Please wait while we verify your reset link.</p>
-    {/if}
-  </section>
-</main>
+  <main class="bootstrap-error-shell">
+    <section class="bootstrap-error-card glass-panel" role="status" aria-live="polite">
+      <p class="bootstrap-error-kicker">Password reset</p>
+
+      {#if success}
+        <h1>Password updated</h1>
+        <p class="bootstrap-error-message">{notice}</p>
+      {:else if error && !ready}
+        <h1>Reset link unavailable</h1>
+        <p class="bootstrap-error-message">{error}</p>
+        <p class="bootstrap-error-help">Return to the app and request a new reset link from the login form.</p>
+      {:else if ready}
+        <h1>Create a new password</h1>
+        <p class="bootstrap-error-message">Enter the new password you want to use for ChromaDie.</p>
+        <form class="reset-form" on:submit|preventDefault={handleReset}>
+          <label for="reset-new-password">New password</label>
+          <input id="reset-new-password" class="input-field" type="password" bind:value={newPassword} placeholder="New password" autocomplete="new-password" minlength="8" required />
+          <label for="reset-confirm-password">Confirm new password</label>
+          <input id="reset-confirm-password" class="input-field" type="password" bind:value={confirmPassword} placeholder="Confirm new password" autocomplete="new-password" minlength="8" required />
+          {#if error}
+            <p class="bootstrap-error-details">{error}</p>
+          {/if}
+          {#if notice}
+            <p class="bootstrap-success">{notice}</p>
+          {/if}
+          <button type="submit" class="roll-btn" disabled={loading}>
+            {loading ? 'Updating...' : 'Update Password'}
+          </button>
+        </form>
+      {:else}
+        <h1>Preparing reset session</h1>
+        <p class="bootstrap-error-message">Please wait while we verify your reset link.</p>
+      {/if}
+    </section>
+  </main>
+
+  <SiteFooter />
+</div>
 
 <style>
+  .site-status-page {
+    display: flex;
+    min-height: 100svh;
+    flex-direction: column;
+    background: #050506;
+    color: #f8f8f8;
+  }
+
   .reset-form {
     display: flex;
     flex-direction: column;
@@ -145,7 +183,9 @@
   }
 
   .bootstrap-error-shell {
-    min-height: 100vh;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
     display: grid;
     place-items: center;
     padding: 2rem 1rem;

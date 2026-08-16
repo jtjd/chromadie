@@ -1,5 +1,8 @@
 <script>
   import { onMount } from 'svelte';
+  import SiteFooter from './SiteFooter.svelte';
+  import SiteModeHeader from './SiteModeHeader.svelte';
+  import { ACCOUNT_STATES } from './authState.js';
   import { session, authEvent } from './stores';
   import { getAppOrigin, getSafeNextUrl } from './authUrls';
 
@@ -8,6 +11,18 @@
   let timeoutId;
   let redirected = false;
   let nextUrl = getAppOrigin();
+
+  $: chromeAuthenticated = Boolean($session);
+  $: chromeAccountState = chromeAuthenticated ? ACCOUNT_STATES.AUTHENTICATED : ACCOUNT_STATES.SIGNED_OUT;
+
+  function navigateFromChrome(event) {
+    const view = event.detail?.view;
+    window.location.assign(view === 'leaderboard' ? '/leaderboard' : view === 'pricing' ? '/pricing' : view === 'profile-settings' ? '/profile/settings' : '/');
+  }
+
+  function openAuthRoute(event) {
+    window.location.assign(event.detail?.mode === 'signup' ? '/signup' : '/login');
+  }
 
   function getNextUrl() {
     if (typeof window === 'undefined') return getAppOrigin();
@@ -61,20 +76,45 @@
   }
 </script>
 
-<main class="bootstrap-error-shell">
-  <section class="bootstrap-error-card glass-panel" role="status" aria-live="polite">
-    <p class="bootstrap-error-kicker">Authentication</p>
-    <h1>{status === 'success' ? 'Email confirmed' : status === 'error' ? 'Could not confirm' : 'Confirming your account'}</h1>
-    <p class="bootstrap-error-message">{message}</p>
-    {#if status === 'error'}
-      <p class="bootstrap-error-help">Return to the app and sign in again, or request a fresh confirmation email.</p>
-    {/if}
-  </section>
-</main>
+<div class="site-status-page">
+  <SiteModeHeader
+    activeView="home"
+    accountState={chromeAccountState}
+    isAuthenticated={chromeAuthenticated}
+    isHomeMode={true}
+    isHomepageStyle={true}
+    on:navigate={navigateFromChrome}
+    on:login={openAuthRoute}
+    on:claim={() => window.location.assign('/signup')}
+  />
+
+  <main class="bootstrap-error-shell">
+    <section class="bootstrap-error-card glass-panel" role="status" aria-live="polite">
+      <p class="bootstrap-error-kicker">Authentication</p>
+      <h1>{status === 'success' ? 'Email confirmed' : status === 'error' ? 'Could not confirm' : 'Confirming your account'}</h1>
+      <p class="bootstrap-error-message">{message}</p>
+      {#if status === 'error'}
+        <p class="bootstrap-error-help">Return to the app and sign in again, or request a fresh confirmation email.</p>
+      {/if}
+    </section>
+  </main>
+
+  <SiteFooter />
+</div>
 
 <style>
+  .site-status-page {
+    display: flex;
+    min-height: 100svh;
+    flex-direction: column;
+    background: #050506;
+    color: #f8f8f8;
+  }
+
   .bootstrap-error-shell {
-    min-height: 100vh;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
     display: grid;
     place-items: center;
     padding: 2rem 1rem;

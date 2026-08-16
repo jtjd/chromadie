@@ -1,6 +1,7 @@
 <script>
   import { onMount, tick } from 'svelte';
   import Auth from './Auth.svelte';
+  import SiteFooter from './SiteFooter.svelte';
   import SiteModeHeader from './SiteModeHeader.svelte';
   import { accountState, authEvent, authInitialized, authUser, isAuthenticated, profile, profileLoading, session } from './stores';
   import { buildAppUrl, getSafeNextUrl } from './authUrls.js';
@@ -72,6 +73,7 @@
       isHomepageStyle={true}
       on:navigate={navigateFromAuth}
       on:login={openAuthRoute}
+      on:claim={() => openAuthRoute({ detail: { mode: 'signup' } })}
     />
 
     <div class="auth-page__layout">
@@ -108,11 +110,7 @@
       </section>
     </div>
 
-    <footer class="auth-page__footer">
-      <span>ChromaDie</span>
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
-    </footer>
+    <SiteFooter />
   </div>
 </main>
 
@@ -139,7 +137,7 @@
   }
   .auth-page::before { position: fixed; z-index: -1; inset: 0; content: ''; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.009) 0 1px, transparent 1px 4px); opacity: 0.55; }
   .auth-page__content { position: relative; z-index: 1; min-height: 100svh; }
-  .auth-page__layout, .auth-page__footer { width: min(calc(100% - 2.5rem), 86.25rem); margin-inline: auto; }
+  .auth-page__layout { width: min(calc(100% - 2.5rem), 86.25rem); margin-inline: auto; }
   .auth-page__layout { display: grid; min-height: calc(100svh - 8rem); grid-template-columns: minmax(0, 1fr) minmax(22rem, 31rem); align-items: center; gap: clamp(2.5rem, 8vw, 8rem); padding-block: clamp(3rem, 8vh, 7rem); }
   .auth-page__intro { max-width: 40rem; }
   .auth-page__kicker { margin: 0; color: #858690; font: 500 0.68rem / 1 var(--home-mono); letter-spacing: 0.13em; text-transform: uppercase; }
@@ -157,16 +155,13 @@
   :global(.auth-page .auth-description), :global(.auth-page .field-hint), :global(.auth-page .auth-footnote) { color: var(--home-ink-muted); }
   :global(.auth-page .auth-header) { position: static; }
   :global(.auth-page .tabs a) { display: inline-flex; align-items: center; justify-content: center; color: inherit; text-decoration: none; }
-  .auth-page__footer { display: flex; flex-wrap: wrap; gap: 1rem; padding-bottom: 1.5rem; color: var(--home-ink-faint); font: 500 0.66rem / 1 var(--home-mono); }
-  .auth-page__footer a { color: inherit; text-decoration: none; }
-  .auth-page__footer a:hover, .auth-page__footer a:focus-visible { color: var(--home-ink); }
   @media (max-width: 52rem) {
     .auth-page__layout { grid-template-columns: 1fr; gap: 2.25rem; padding-block: 3rem; }
     .auth-page__intro h1 { max-width: 30rem; font-size: clamp(2.8rem, 11vw, 4.6rem); }
     .auth-page__form { max-width: 34rem; margin-inline: auto; }
   }
   @media (max-width: 35rem) {
-    .auth-page__layout, .auth-page__footer { width: min(calc(100% - 2rem), 86.25rem); }
+    .auth-page__layout { width: min(calc(100% - 2rem), 86.25rem); }
     .auth-page__layout { padding-block: 2.4rem; }
     .auth-page__intro h1 { font-size: clamp(2.55rem, 15vw, 4rem); }
     .auth-page__promise { display: grid; grid-template-columns: 1fr; }

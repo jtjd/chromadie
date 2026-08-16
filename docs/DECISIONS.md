@@ -1,5 +1,21 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-16 — Use one site chrome contract outside profile surfaces
+
+The homepage is the visual authority for marketing and supporting product
+routes. `SiteFooter` is now the single footer implementation for the homepage,
+application shell, and standalone auth page. `SiteModeHeader` keeps the
+route-aware event behavior and mobile menu needed by the application, but uses
+the homepage’s transparent 88px desktop / 70px mobile shell, constrained inner
+width, Inter controls, Clash brand, and neutral Claim handle CTA.
+
+Public profile rendering and Profile Studio retain their specialized headers:
+those surfaces have different interaction density and atmosphere requirements.
+They are excluded deliberately rather than inheriting site chrome through a
+global selector. This keeps profile typography and Studio controls isolated
+while eliminating the older full-width mono footer and bordered application
+header variants.
+
 ## 2026-08-16 — Keep profile typography expressive without per-section bloat
 
 The equipped Name Font remains username-only by default. Profile Effects adds

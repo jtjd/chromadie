@@ -4,7 +4,7 @@ import { stat, readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [home, hero, demo, fixtures, community, claim, header, app, routeLoaders, main, fonts, homepageStyles, guestProfile] = await Promise.all([
+const [home, hero, demo, fixtures, community, claim, header, footer, app, routeLoaders, main, fonts, homepageStyles, guestProfile] = await Promise.all([
   read('src/lib/HomePage.svelte'),
   read('src/lib/homepage/HomepageHero.svelte'),
   read('src/lib/homepage/HomepageProfileDemo.svelte'),
@@ -12,6 +12,7 @@ const [home, hero, demo, fixtures, community, claim, header, app, routeLoaders, 
   read('src/lib/homepage/HomepageCommunity.svelte'),
   read('src/lib/homepage/HomepageClaim.svelte'),
   read('src/lib/homepage/HomepageHeader.svelte'),
+  read('src/lib/SiteFooter.svelte'),
   read('src/App.svelte'),
   read('src/lib/routeLoaders.js'),
   read('src/main.js'),
@@ -35,7 +36,7 @@ test('the homepage is a single reference-first composition', () => {
   assert.match(home, /on:claim={forwardAction}/);
   assert.match(home, /on:login={forwardAction}/);
   assert.match(home, /on:logout={forwardAction}/);
-  assert.match(home, /<footer class="homepage-footer">/);
+  assert.match(home, /<SiteFooter \/>/);
 });
 
 test('homepage navigation exposes real product destinations without placeholder links', () => {
@@ -47,10 +48,10 @@ test('homepage navigation exposes real product destinations without placeholder 
   ]) assert.match(header, new RegExp(destination.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 
   for (const destination of ['/leaderboard', '/profile/settings', '/pricing', '/how-to-play', '/privacy', '/terms']) {
-    assert.match(home, new RegExp(`href="${destination}"`));
+    assert.match(footer, new RegExp(`href="${destination}"`));
   }
-  assert.match(home, /support@chromadie\.com/);
-  assert.match(home, /business@chromadie\.com/);
+  assert.match(footer, /support@chromadie\.com/);
+  assert.match(footer, /business@chromadie\.com/);
   assert.doesNotMatch(header, /How it works|Profiles|href="#how"|href="#showcase"/);
   assert.doesNotMatch(header, /href="#"/);
 });

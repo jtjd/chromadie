@@ -3,6 +3,7 @@
   import { signOutCurrentBrowser } from './lib/authSession';
   import { supabase, supabaseError } from './lib/supabase';
   import SiteModeHeader from './lib/SiteModeHeader.svelte';
+  import SiteFooter from './lib/SiteFooter.svelte';
   import Toast from './lib/Toast.svelte';
   import GuestLock from './lib/GuestLock.svelte';
   import AccountUnavailable from './lib/AccountUnavailable.svelte';
@@ -877,6 +878,7 @@
         isOwner={profileModeOwner}
         on:navigate={handleNavigation}
         on:login={navigateToAuth}
+        on:claim={() => navigateToAuth('signup')}
         on:logout={handleLogout}
         on:retry={() => window.location.reload()}
         on:edit={handleProfileHeaderEdit}
@@ -993,19 +995,7 @@
   </div>
 
   {#if view !== 'profile' && !profileSettingsModeVisible && !homeModeVisible}
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <p>ChromaDie</p>
-        <nav aria-label="Footer">
-          <a href="/privacy" on:click|preventDefault={() => navigateToPath('/privacy')}>Privacy Policy</a>
-          <a href="/terms" on:click|preventDefault={() => navigateToPath('/terms')}>Terms</a>
-          <a href="/how-to-play" on:click|preventDefault={() => navigateToPath('/how-to-play')}>How to Play</a>
-          <a href="/pricing" on:click|preventDefault={() => navigateToPath('/pricing')}>Pricing</a>
-          <a href="mailto:support@chromadie.com">Support</a>
-          <a href="mailto:business@chromadie.com">Business</a>
-        </nav>
-      </div>
-    </footer>
+    <SiteFooter />
   {/if}
   </div>
 {/if}
@@ -1345,54 +1335,6 @@
     transform: translateY(-1px);
   }
 
-  .site-footer {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    margin-top: auto;
-    padding: 0 0 1.5rem;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    color: var(--text-muted);
-    font: 500 0.72rem / 1.4 var(--font-mono-stack);
-  }
-
-  .site-footer-inner {
-    width: 100%;
-    max-width: none;
-    margin: 0 auto;
-    padding: 0.9rem 40px 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem 1rem;
-    flex-wrap: wrap;
-  }
-
-  .site-footer p {
-    margin: 0;
-    color: rgba(255,255,255,0.7);
-    letter-spacing: 0.04em;
-    text-transform: lowercase;
-    font-weight: 500;
-  }
-
-  .site-footer nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.9rem 1rem;
-  }
-
-  .site-footer a {
-    color: var(--text-muted);
-    text-decoration: none;
-  }
-
-  .site-footer a:hover {
-    color: #fff;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-
   .rank-pill {
     display: inline-flex;
     align-items: center;
@@ -1569,20 +1511,6 @@
     }
     .challenge-close {
       width: 100%;
-    }
-    .site-footer {
-      padding-bottom: 14px;
-    }
-    .site-footer-inner {
-      width: calc(100% - 1rem);
-      max-width: none;
-      padding: 0.8rem 0.25rem 0;
-      justify-content: center;
-      text-align: center;
-    }
-    .site-footer nav {
-      justify-content: center;
-      gap: 0.55rem 0.8rem;
     }
     .mobile-nav-panel {
       display: flex;

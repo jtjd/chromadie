@@ -534,16 +534,6 @@ body,
 .bootstrap-error-message,
 .bootstrap-error-help { color: #8f9099 !important; }
 
-.site-footer {
-  border-top-color: rgba(255, 255, 255, 0.1);
-  background: #050506;
-  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-}
-
-.site-footer p,
-.site-footer a { color: #686971; }
-.site-footer a:hover { color: #00ffb3; }
-
 @media (max-width: 48rem) {
   .app-main--site :is(.guide, .legal-page, .terms, .discovery-hub) {
     width: 100%;
