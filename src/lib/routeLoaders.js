@@ -5,7 +5,6 @@ const loaders = Object.freeze({
   authCallback: () => import('./AuthCallback.svelte'),
   resetPassword: () => import('./ResetPassword.svelte'),
   game: () => import('./Game.svelte'),
-  shop: () => import('./Shop.svelte'),
   leaderboard: () => import('./Leaderboard.svelte'),
   profileLegacy: () => import('./Profile.svelte'),
   profileShell: () => import('./ProfileShell.svelte'),

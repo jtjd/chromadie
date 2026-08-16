@@ -28,15 +28,16 @@ test('Atelier expression is restored as two canonical Plus renderer rows', async
   assert.equal(getAtmosphereDefinition('bg_prism_atmosphere')?.key, 'silk-folds');
 });
 
-test('Plus Collection explains where the Atelier layers are configured', async () => {
+test('Customize exposes the Atelier-backed expression layers without a Shop surface', async () => {
   const [editor, workspace] = await Promise.all([
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/ProfileStudioWorkspace.svelte')
   ]);
 
-  assert.match(editor, /Atelier expression is ready/);
-  assert.match(editor, /cosmetic-name_motion/);
-  assert.match(editor, /cosmetic-profile-atmosphere/);
+  assert.match(editor, /Profile expression/);
+  assert.doesNotMatch(editor, /Atelier expression is ready|Chromadie Plus/);
+  assert.match(editor, /slot: 'name_motion'/);
+  assert.match(editor, /slot: 'profile_atmosphere'/);
   assert.doesNotMatch(editor, /cosmetic-profile-layout/);
   assert.match(editor, /async function applyChanges/);
   assert.match(editor, /class="profile-cosmetics-apply"/);

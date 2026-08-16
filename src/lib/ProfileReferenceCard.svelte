@@ -166,7 +166,9 @@
     overflow: hidden;
     box-sizing: border-box;
     padding: 28px 25px 23px;
-    border: var(--profile-border-width, 1px) solid color-mix(in srgb, var(--profile-border-color, #ffffff) calc(var(--profile-border-opacity, .11) * 100%), transparent);
+    /* The appearance layer owns only neutral surface geometry. A colored
+       outline belongs exclusively to an equipped profile-border cosmetic. */
+    border: var(--profile-border-width, 1px) solid color-mix(in srgb, #ffffff calc(var(--profile-border-opacity, .11) * 100%), transparent);
     border-radius: var(--profile-border-radius, 20px);
     background: var(--profile-surface-fill, rgba(10,10,12,.58));
     box-shadow: 0 30px 65px rgba(0,0,0,.52);

@@ -1,6 +1,6 @@
 # Chromadie 2.0 — Current System Map
 
-**Audit date:** 2026-08-08
+**Audit date:** 2026-08-15
 **Application:** Svelte 5 + Vite SPA
 **Backend:** Supabase Auth/Postgres/RPCs/Edge Functions
 **Hosting:** Cloudflare Pages + Pages Functions
@@ -20,7 +20,7 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | --- | --- | --- | --- | --- |
 | `/` | `view = home` | `App.svelte` → lazy `HomePage.svelte` | `functions/index.js` serves homepage metadata | Public landing page; signed-in users receive an owner-profile CTA |
 | `/?view=game` | `view = game` | `App.svelte` → `Game.svelte` | Compatibility shell metadata remains canonicalized to `/` | Guest and authenticated daily roll |
-| `/shop` or `/?view=shop` | `view = shop` | `Shop.svelte` → `ShopBrowse.svelte` / `ShopCollection.svelte` / `ShopRail.svelte` / `ShopContextualPreview.svelte` → shared preview components | Shell metadata is canonicalized to `/` by the client for query form; `/shop` title/description identify the Shop | Authenticated account only; guests see `GuestLock`; previews have no permanent equip side effects |
+| `/shop` | `view = profile-settings` after one-way alias normalization | `App.svelte` → Profile Studio Customize | Old bookmarks are redirected to `/profile/settings#customize-appearance`; no Shop surface or purchase UI is mounted | Authenticated Profile Studio route; existing auth guard remains authoritative |
 | `/leaderboard` or `/?view=leaderboard` | `view = leaderboard` | `Leaderboard.svelte` | `functions/leaderboard.js` serves crawler metadata for `/leaderboard` | Public leaderboard reads; rival tab is authenticated |
 | `/leaderboard?tab=today|rivals|weekly|monthly|roll|recent|rising|new|random` | Leaderboard/discovery tab | `Leaderboard.svelte` → `DiscoveryHub.svelte` | Tab is client state; route accepts only the allow-listed values | `rivals` requires an authenticated session; other surfaces are public |
 | `/profile` or `/?view=profile` | Owner profile when authenticated; otherwise guest lock | `ProfileShell.svelte` by default, including owner roll and owner-only profile configuration editor; `Profile.svelte` with `legacy=1` | Client metadata is profile-aware; private owner form is `noindex` when no public username is selected | Public username/id lookups are supported separately |
@@ -57,8 +57,7 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | `src/lib/Leaderboard.svelte` | Compatibility entry point for the existing leaderboard route | `DiscoveryHub.svelte` |
 | `src/lib/DiscoveryHub.svelte` | Public discovery tabs, bounded RPC pagination, filters, loading/error/empty states, rank lookup, and navigation event forwarding | `get_public_discovery`, `get_rivals_scores`, `DiscoveryCard.svelte`, stores, route allow-list |
 | `src/lib/DiscoveryCard.svelte` | Public profile card presentation, safe color/cosmetic display, profile CTA, profile sharing, and compatibility rival follow control | `discoveryData.js`, cosmetics safety, stores, `DiscoveryHub.svelte` |
-| `src/lib/Shop.svelte` | Catalog browsing/filtering, fitting room, access-tier state, preview state, purchase confirmation, equip/unequip actions | Live catalog and entitlement stores, `shopCatalog.js`, purchase/equip RPCs, inventory/wallet/profile refresh |
-| `src/lib/ShopContextualPreview.svelte` | Persistent fitting-room preview for temporary Name, Border, Avatar, Cursor, and Layout selection | `ShopStudioPreview.svelte`; no purchase authority or account mutation |
+| `src/lib/ProfileCustomizePage.svelte` / `src/lib/ProfileCosmeticsEditor.svelte` | Appearance, media, layout, and profile-expression controls; live preview state; equip/unequip actions | Profile Studio draft/publish state, validated cosmetic catalog, `equip_item`/`unequip_item`, shared leaf renderers |
 | `src/lib/Auth.svelte` | Login/signup/password reset form, Turnstile, username moderation/availability checks | Supabase Auth, `is_username_allowed`, `is_username_available` |
 | `src/lib/AuthCallback.svelte` | OAuth/email callback completion and redirect behavior | Supabase Auth/session utilities |
 | `src/lib/ResetPassword.svelte` | Password update form and recovery session handling | Supabase Auth |
@@ -70,8 +69,8 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | `src/lib/foundation/Button.svelte` | Accessible link/button primitive with variants and focus states | `tokens.css`, motion tokens |
 | `src/lib/foundation/Media.svelte` | Bounded aspect-ratio media wrapper, same-origin/HTTPS source normalization, async loading, load-error fallback, and stable layout box | `mediaSafety.js`, structured `src`/`alt`, and allow-listed aspect values |
 | `src/lib/foundation/Module.svelte` | Responsive profile module frame with size/tone variants | `tokens.css`, profile canvas grid |
-| `src/lib/RollPreview.svelte`, `ShopItemPreview.svelte`, `ShopStudioPreview.svelte` | Reusable visual previews; the studio preview uses the live `ProfileShell` hero renderer in a network-free mode | Cosmetics safety and catalog state |
-| `src/lib/stores.js` | Auth/account hydration, profile/inventory/wallet/entitlement/reroll/badge/follow state, shop cache, toasts | Supabase Auth, RPCs, public account tables, cosmetic safety |
+| `src/lib/RollPreview.svelte`, `ShopItemPreview.svelte`, `ProfileStudioPreview.svelte` | Reusable roll/cosmetic previews; Studio renders the bounded reference card from the canonical snapshot | Cosmetics safety, catalog state, and Profile Studio preview state |
+| `src/lib/stores.js` | Auth/account hydration, profile/inventory/wallet/entitlement/reroll/badge/follow state, validated cosmetic-catalog cache, toasts | Supabase Auth, RPCs, public account tables, cosmetic safety |
 | `src/lib/routes.js` | Pure browser route parsing | `App.svelte`; no network or navigation side effects |
 | `src/lib/profileContract.js` | Allow-listed profile/score field mapping and owner predicates | `Profile.svelte`; no network side effects |
 | `src/lib/profileData.js` | Shared request/ownership branch and mapped profile context for shell and legacy renderer, including owner draft/public published configuration projections | Supabase client, `profileContract.js`, `profileConfig.js`; no client authority over profile or publish state |
@@ -82,15 +81,18 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | `src/lib/profileConfig.js` | Version-1 configuration constants, safe defaults, render normalization, visible module/link projections | `ProfileShell.svelte`, `ProfileEditor.svelte`; server RPC remains the write/publish authority |
 | `src/lib/profileStory.js` | Public story/collection normalizers and progressive story unlock thresholds based on server-owned roll totals | `profileData.js`, `ProfileShell.svelte`, `ProfileTimeline.svelte`, `ProfileCollection.svelte`; no scoring or grant authority |
 | `src/lib/profileSocial.js` | Bounded social/reaction/settings normalizers and RPC invocation seam | `profileData.js`, `ProfileSocial.svelte`; rejects malformed public entries and keeps social writes server-authoritative |
-| `src/lib/cursor-trail/CursorTrailLayer.svelte` | One bounded profile-scoped pointer-trail layer with reduced-motion, touch, visibility, and intersection guards | `ProfileShell.svelte`, `ShopStudioPreview.svelte`; decorative only |
-| `src/lib/avatar-effect/AvatarEffect.svelte`, `AvatarParticles.svelte`, `public/avatar-effects/` | Shared avatar-local decoration wrapper; three authored raster plates plus one bounded texture-atlas compositor | `IdentityCard.svelte`, discovery/leaderboard cards, shop/settings previews; decorative only, selected/full-profile surfaces animate |
-| `src/lib/profile-layout/profileLayouts.js` | Finite free/paid layout registry and paid-override resolution | `ProfileShell.svelte`, shop/settings previews; profile data and save authority remain unchanged |
-| `src/lib/cosmetics.js` | Retained title display helpers; renderer-backed Name and Border registries own cosmetic interpretation | Live `shopItems` store, component renderers, studio preview |
-| `src/lib/badgeData.js` / `balanceConfig.js` / `ranks.js` | Client display registries and thresholds | Profile, Game, Leaderboard, shop previews; server remains authoritative for grants/scoring |
+| `src/lib/cursor-trail/CursorTrailLayer.svelte` | One bounded profile-scoped pointer-trail layer with reduced-motion, touch, visibility, and intersection guards | `ProfileShell.svelte`, `ProfileStudioPreview.svelte`, and shared cosmetic previews; decorative only |
+| `src/lib/avatar-effect/AvatarEffect.svelte`, `AvatarParticles.svelte`, `public/avatar-effects/` | Shared avatar-local decoration wrapper; three authored raster plates plus one bounded texture-atlas compositor | Profile cards, discovery/leaderboard cards, and Customize previews; decorative only, selected/full-profile surfaces animate |
+| `src/lib/profile-layout/profileLayouts.js` | Finite Compact/Immersive layout registry and resolution | `ProfileShell.svelte`, `ProfileStudioPreview.svelte`, and `ProfileReferenceLayoutEditor.svelte`; profile data and save authority remain unchanged |
+| `src/lib/cosmetics.js` | Retained title display helpers; renderer-backed Name and Border registries own cosmetic interpretation | Live validated cosmetic catalog store, component renderers, and Studio expression controls |
+| `src/lib/badgeData.js` / `balanceConfig.js` / `ranks.js` | Client display registries and thresholds | Profile, Game, Leaderboard, and bounded previews; server remains authoritative for grants/scoring |
 | `src/lib/mediaSafety.js` | Safe media-source normalization for local and HTTPS assets | `Media.svelte`; rejects protocol-relative, HTTP, data, blob, JavaScript, control-character, and oversized sources |
 | `src/lib/productAnalytics.js` | Consent state, event/property allow-list, redaction, bounded local adapter seam | `AnalyticsPreferences.svelte`, `main.js`, and existing flow call sites; no scoring, account, social, or network authority |
 
-The largest ownership risk is concentration: `App.svelte`, `Game.svelte`, `Profile.svelte`, and `Shop.svelte` are each large components that combine data loading, state transitions, rendering, and interaction handling.
+The largest ownership risk is concentration: `App.svelte`, `Game.svelte`, and
+`Profile.svelte` still combine data loading, state transitions, rendering, and
+interaction handling. Profile expression controls remain inside the bounded
+Profile Studio surface rather than forming a second catalog application.
 
 ## Store and state map
 
@@ -99,8 +101,8 @@ The largest ownership risk is concentration: `App.svelte`, `Game.svelte`, `Profi
 | `session`, `authUser`, `isGuest`, `authInitialized`, `authEvent` | `stores.js` + Supabase Auth listener | Auth session lifecycle; the listener stays synchronous and defers account hydration to avoid Auth lock deadlocks |
 | `profile`, `profileReady`, `profileLoading`, `profileLoadFailed`, `accountState`, `isAuthenticated` | `stores.js` | Authenticated account is usable only when hydrated profile id matches session user id |
 | `guestProgressActive` | `stores.js` + Game | Indicates locally persisted guest progress; does not become an authenticated identity |
-| `shopItems`, `shopItemsLoading`, `shopItemsError` | `stores.js` | Versioned live catalog with validated 24-hour local cache; item access tier and premium entitlement key are validated; invalid catalog data is rejected |
-| `userInventory`, `equippedItems`, `walletBalance` | `stores.js` | Hydrated account inventory/equipped cosmetics/EP balance; refreshes after shop actions and rolls |
+| `cosmeticCatalogItems`, `cosmeticCatalogLoading`, `cosmeticCatalogError` | `stores.js` | Versioned live catalog with validated 24-hour local cache; active profile-expression rows are exposed to Customize without client acquisition gates |
+| `userInventory`, `equippedItems`, `walletBalance` | `stores.js` | Hydrated account inventory/equipped cosmetics/EP balance; refreshes after expression actions and rolls |
 | `profileEntitlements` | `stores.js` + `get_my_profile_entitlements()` | Owner-only allow-listed entitlement keys; cleared on sign-out/session change; never public profile data or client purchase authority |
 | `rerollShards`, `equippedBadges`, `followedUsers` | `stores.js` | Account progression and social state; loaded only for the current authenticated user |
 | `selectedUserId` | `stores.js` + App | Query-string profile target; cleared on public username routes, challenges, and non-profile navigation |
@@ -110,12 +112,12 @@ The largest ownership risk is concentration: `App.svelte`, `Game.svelte`, `Profi
 | Profile configuration preview (`previewConfig`) | `ProfileEditor.svelte` event → `ProfileShell.svelte` local | Owner-only in-memory preview; it is discarded on reload or after publish and is never treated as public state |
 | Game locals (`phase`, `loading`, `rollRequestId`, `initialStateKey`, presentation fields) | `Game.svelte` | Root daily-roll state; guest local persistence remains here, stale auth/roll responses are ignored, reroll requests are locally locked and server-checked |
 | Profile roll locals (`phase`, `loading`, `rollRequestId`, canonical presentation, reward/condition display) | `ProfileRoll.svelte` | Authenticated owner profile roll state; no guest persistence, client scoring, eligibility, or reward calculation; stale session/roll responses are ignored |
-| Shop locals (`fittingRoom`, filters, selected item, loading action) | `Shop.svelte` | Preview state is separate from equipped account state until an RPC succeeds; free/earned/premium access labels are presentation state and premium remains preview-only without an entitlement |
+| Customize expression locals (`previewLoadout`, selected slot, loading action) | `ProfileCosmeticsEditor.svelte` | Preview state remains separate from equipped account state until the existing equip/unequip RPC succeeds; the catalog is not a purchase surface |
 | Discovery locals (`activeTab`, public card items, filters, page, `hasMore`, request id, rank strip) | `DiscoveryHub.svelte` | Public discovery is request-keyed and bounded; only the compatibility rivals surface carries the existing follow id needed by the authenticated follow mutation |
 | Social locals (`actionLoading`, guestbook/report forms, settings draft, notice) | `ProfileSocial.svelte` | Presentation/request state only; the database enforces authentication, blocks, privacy, text bounds, moderation status, deletion, and rate limits |
 | `productAnalyticsConsent` and product-event adapter | `productAnalytics.js` + privacy page | Explicit browser-local `granted`/`denied` preference and page-local `CustomEvent` adapter; unknown/denied consent emits nothing, and no event record is persisted |
 
-Authentication hydration loads the shop, own profile, inventory, wallet, follows, and the owner entitlement projection in one guarded sequence. `authEventId` prevents a previous session's asynchronous results from overwriting a newer session or sign-out. Entitlements are keys only; the browser cannot grant, purchase, or write them.
+Authentication hydration loads the own profile, inventory, wallet, follows, and the owner entitlement projection in one guarded sequence. The cosmetic catalog is loaded by Customize when needed. `authEventId` prevents a previous session's asynchronous result from overwriting a newer session or sign-out. Entitlements are keys only; the browser cannot grant, purchase, or write them.
 
 The launch-hardening slice adds no new canonical account state. `App.svelte`
 keeps route focus in the browser only; `Media.svelte` keeps source failure and
@@ -178,7 +180,7 @@ and signup advisory lock remain authoritative. The short application paths
 | `Profile.svelte` / `Leaderboard.svelte` | `toggle_follow(p_target_id)` | Authenticated rival/follow mutation |
 | `Profile.svelte` | `leaderboard_view` read for followed users | Owner rival cards; public fields only |
 
-### Leaderboards and shop
+### Leaderboards and profile expression catalog
 
 | Client caller | Surface | Purpose |
 | --- | --- | --- |
@@ -189,11 +191,11 @@ and signup advisory lock remain authoritative. The short application paths
 | `DiscoveryHub.svelte` | `get_rivals_scores()` | Authenticated followed-user compatibility projection |
 | `DiscoveryHub.svelte` | `get_public_discovery(text,text,text,integer,integer)` | Anonymous/authenticated bounded discovery projection for today, weekly, monthly, all-time, exceptional, rising, new, and deterministic daily-random surfaces; returns usernames and public card fields, never `user_id` |
 | `DiscoveryHub.svelte` | Existing leaderboard views (`leaderboard_view`, `weekly_best_leaderboard_view`, `monthly_best_leaderboard_view`, `all_time_leaderboard_view`) | Authenticated owner rank strip only; the public card feed remains behind `get_public_discovery` |
-| `Shop.svelte` | `purchase_item(p_item_key)` | Server-authoritative purchase/economy mutation |
-| `Shop.svelte` | `equip_item(p_item_key)` | Server-authoritative cosmetic equip |
-| `Shop.svelte` | `unequip_item(p_slot)` | Server-authoritative cosmetic removal |
-| `stores.js` / `Shop.svelte` | `get_my_profile_entitlements()` | Owner-only projection of granted premium expression keys; no direct table read |
-| `Shop.svelte` | `get_my_profile`, inventory, wallet | Refresh after successful shop actions |
+| No active browser surface | `purchase_item(p_item_key)` | Retained server-authoritative purchase/economy contract for a future acquisition surface; no Shop UI calls it |
+| `ProfileCosmeticsEditor.svelte` | `equip_item(p_item_key)` | Server-authoritative cosmetic equip from the Customize expression controls |
+| `ProfileCosmeticsEditor.svelte` | `unequip_item(p_slot)` | Server-authoritative cosmetic removal from the Customize expression controls |
+| `stores.js` / profile settings | `get_my_profile_entitlements()` | Owner-only projection retained for future premium/progression boundaries; no direct table read |
+| `ProfileCosmeticsEditor.svelte` | `refreshProfileState()` | Refresh after successful expression equip/unequip |
 
 Premium expression grants use `grant_profile_entitlement(uuid,text,text)`, a service-role-only SECURITY DEFINER RPC. No browser caller uses this grant path, and `purchase_item` rejects premium rows before EP purchase logic. `equip_item` checks the entitlement inside the transaction; inventory remains the authority for earned items and free baseline items remain available without purchase.
 
@@ -201,7 +203,7 @@ Premium expression grants use `grant_profile_entitlement(uuid,text,text)`, a ser
 
 | Client / operator surface | Boundary | Current behavior |
 | --- | --- | --- |
-| `App.svelte`, `ProfileShell.svelte`, `Game.svelte`, `ProfileRoll.svelte`, `DiscoveryCard.svelte`, `Shop.svelte` | `trackProductEvent()` | Emits only the allowlisted, redacted product-event contract after explicit consent; events do not affect product state |
+| `App.svelte`, `ProfileShell.svelte`, `Game.svelte`, `ProfileRoll.svelte`, `DiscoveryCard.svelte`, `ProfileCosmeticsEditor.svelte` | `trackProductEvent()` | Emits only the allowlisted, redacted product-event contract after explicit consent; events do not affect product state |
 | `AnalyticsPreferences.svelte` / `PrivacyPolicy.svelte` | `localStorage['chromadie-product-analytics-consent']` | Browser-local opt-in/opt-out; no event history is stored |
 | `main.js` | `createBrowserProductAnalyticsAdapter()` | Dispatches `chromadie:product-event` in the page only; no fetch, beacon, Supabase insert, or third-party product sink |
 | Authorized operations tooling | Protected social tables/RPCs | Current social reports and guestbook states are stored behind RLS/service-role access; there is no moderation dashboard, queue, notification, or appeal workflow |
@@ -305,11 +307,11 @@ Svelte text interpolation, with links rejected at the database boundary.
 7. The browser's ten-second reroll lock is a duplicate-click guard. The RPC remains the security/economy authority.
 8. If product-event consent is granted, the existing surfaces may emit a redacted `roll_ready` or `roll_completed` observation. The event adapter has no influence on the transaction and currently keeps the observation in the page only.
 
-## Cosmetic, achievement, and shop data sources
+## Cosmetic, achievement, and profile-expression data sources
 
 | Domain | Current source | Consumer / hazard |
 | --- | --- | --- |
-| Shop catalog | `public.shop_items` plus `meta.shop_version`; local cache; `supabase/seed.sql` and additive catalog migrations; 97 active rows | `stores.js` validates Name, Border, Cursor, Avatar, the two active Profile Layout rows, the free Profile Motion row, and the 13 active Profile Atmosphere rows; `Shop.svelte` adds section/filter behavior and explicit access labels |
+| Profile expression catalog | `public.shop_items` plus `meta.shop_version`; local cache; `supabase/seed.sql` and additive catalog migrations | `stores.js` validates the server-owned catalog; `ProfileCosmeticsEditor.svelte` exposes active Name, Border, Cursor, Avatar, Compact/Immersive Layout, Profile Motion, and Profile Atmosphere rows without acquisition UI |
 | Premium expression entitlements | `public.profile_entitlements`, written only by service-role grant code and read through `get_my_profile_entitlements()` | RLS is enabled, browser roles have no table privileges, and `equip_item` rechecks the matching catalog entitlement server-side; no payment provider or client grant path exists in Phase 8 |
 | Cosmetic rendering | Modern Name rows resolve through `src/lib/name/`; nine Profile Border rows resolve through `src/lib/profile-border/`; Cursor Trails, Avatar Effects, Compact/Immersive layouts, and Profile Motion resolve through finite registries/renderers; titles and utility use bounded text | Catalog values select finite code-owned renderers; no catalog CSS, HTML, JavaScript, URLs, or arbitrary effects are accepted |
 | Badges and achievement labels | `src/lib/badgeData.js` for client labels/icons/points; database seeded definitions and SQL achievement checks | Display metadata can drift from server ids; `check:balance-drift` and tests protect the registry/seed relationship |
@@ -359,13 +361,11 @@ SVGs retain their separate five-minute/browser and fifteen-minute edge cache.
 No owner draft, private activity, entitlement, or social-control data enters a
 cacheable response.
 
-Phase 8 keeps `/shop` as an authenticated, non-public account route while
-renaming the client page metadata to Decoration Studio. The studio uses the
-actual `ProfileShell` hero renderer in an isolated preview mode, so it performs
-no profile/network/social/owner-control loads. Free baseline presentation
-remains available to every profile; earned items continue to use EP/inventory,
-and premium expression is entitlement-gated without adding payment metadata to
-profile URLs, OG/JSON-LD, or sitemap output.
+The retired Shop was an authenticated, non-public account route. `/shop` now
+only aliases into Customize; the live preview is snapshot-driven and performs
+no independent profile/network/social/owner-control loads. Free profile
+expression is available to every account during this interim phase, while
+future progression or premium acquisition remains a server-side decision.
 
 The Phase 1 prototype has a separate Pages Function at `/prototype/profile`. It uses the same shell/security headers, is explicitly `noindex,nofollow`, and is not included in public profile discovery or sitemap data. The Phase 2 legacy profile query is also `noindex,follow` while canonicalizing to the public profile URL.
 
@@ -373,14 +373,18 @@ The Phase 1 prototype has a separate Pages Function at `/prototype/profile`. It 
 
 - Manual routing is split between `App.svelte`, `routes.js`, Cloudflare Pages redirects, and Pages Functions. Removing or replacing a route requires direct-refresh, metadata, canonical, and share-link checks together.
 - App metadata has both server-shell and client-hydration implementations. A new profile renderer must preserve canonical `/u/<username>` URLs, robots behavior, OG images, sitemap membership, and challenge metadata.
-- `Game.svelte`, `Profile.svelte`, `ProfileRoll.svelte`, and `Shop.svelte` combine data access with substantial rendering. Extracting pieces must preserve request-id/session guards, loading/error states, and event contracts.
+- `Game.svelte`, `Profile.svelte`, and the Profile Studio shell combine data
+  access with substantial rendering. Extracting pieces must preserve
+  request-id/session guards, loading/error states, and event contracts.
 - Profile data is intentionally split across a public base-table projection, an owner-only RPC, public score RPC, public leaderboard views, and owner achievements. Broadening a select for convenience risks private-field exposure or RLS regressions.
 - The four leaderboard views are intentional `SECURITY DEFINER`/owner-privilege projection boundaries with approved public columns. The Supabase advisor warning is known and must not be “fixed” by granting base-table access.
 - The database stores authoritative roll presentation. Any client display model must preserve `condition_ids`/badges, contributors, traits, identity, and bounds without re-scoring or inventing rewards.
 - SQL and JavaScript scoring/rarity/achievement definitions have parity checks but remain separate implementations. Changing one without the other creates historical and launch-economy drift.
 - Auth hydration is asynchronous and guarded by `authEventId`; new account consumers must not read an old session's profile, inventory, wallet, or follows after sign-out/sign-in races.
 - Guest progress is UTC-date keyed local storage. It is deliberately separate from account state and must not be silently migrated into an account or treated as proof of a server roll.
-- The shop is live-catalog driven and uses structured cosmetic slots plus cached validated CSS class/style values. Catalog keys, slots, and safety validation are shared coupling points.
+- Profile expression controls are live-catalog driven and use structured
+  cosmetic slots plus cached validation. Catalog keys, slots, and renderer
+  safety are shared coupling points; the browser has no purchase authority.
 - Daily eligibility, rerolls, streaks, totals, achievements, EP, purchases, and best-roll state are server-owned. Client readiness and local reroll locks are UX guards only.
 - Public profile loading and leaderboard loading are bounded, but the current profile and leaderboard components still assume the existing response shapes. Field aliases (`hex_code` versus `hex`, `condition_ids` versus `badges`) are compatibility hazards. `profileData.js` is now the shared seam for the live shell and legacy renderer.
 - The latest audit migration is additive/reconciling existing data and has an intentional pending working-tree comment change. Phase 0 introduced no schema migration and did not alter production data semantics.
@@ -397,10 +401,20 @@ The Phase 1 prototype has a separate Pages Function at `/prototype/profile`. It 
 - Phase 6 discovery has two public-read contracts: the new `get_public_discovery` projection intentionally omits internal profile ids, while the existing authenticated rivals RPC retains its id only for the pre-existing follow mutation. Do not copy that compatibility exception into new public surfaces.
 - Discovery ordering is split across indexed date/score/profile queries and a bounded deterministic hash order for the random surface. Adding a new surface requires a defined ranking meaning, public-field review, page/response bound, and index or planner check before exposing it.
 - Discovery card cosmetics still resolve through the live catalog and `cosmetics.js`; a card must never render RPC-provided CSS strings directly or treat a public profile card as an authority for follows, rank, scoring, or rewards.
-- The shop catalog has 99 active rows and 42 retained legacy rows across three explicit access tiers. New catalog keys must be added consistently to `shop_items`, the seed, an additive migration, renderer registries, cache validation, and drift checks. The active retained slots include 36 Name rows (35 earned plus the Atelier Plus row), nine Borders, 16 Cursor Trails, 18 Avatar Effects, five paid Layouts, and 13 authored Profile Atmosphere rows (12 earned plus the Atelier Plus row).
+- The profile-expression catalog remains in `shop_items` as a server-owned
+  registry with retained legacy rows. New catalog keys must be added
+  consistently to the table, seed, additive migration, renderer registries,
+  cache validation, and drift checks. Customize currently exposes all active
+  profile-expression rows without a client acquisition gate; future
+  progression/premium rules remain server-side decisions.
 - `profile_entitlements` is intentionally service-owned. Browser roles have no table grants and the owner client receives only bounded keys through `get_my_profile_entitlements`; introducing payment/webhook integration must preserve the service-role-only grant boundary, account-deletion cascade, and idempotent key upsert.
-- `purchase_item` must continue rejecting premium rows before EP/inventory mutation, while `equip_item` must recheck entitlement server-side. Never model a premium key in browser state as proof of purchase or move grants into `Shop.svelte`.
-- `ShopStudioPreview` must keep its `ProfileShell` preview mode network-free and isolated from social/owner controls. Changes to `ProfileShell` data loading or CSS can accidentally turn a fitting-room preview into a profile mutation/read surface.
+- `purchase_item` remains a server-side future-acquisition contract, while
+  `equip_item` must continue to validate the active catalog row and any
+  entitlement server-side. Never model a premium key in browser state as proof
+  of purchase or move grants into the Customize editor.
+- `ProfileStudioPreview` must remain a bounded, snapshot-driven card isolated
+  from social/owner controls. Changes to ProfileShell data loading or CSS must
+  not turn the live preview into a profile mutation/read surface.
 - Phase 7 social state is split across seven protected tables and one existing follow table. Any new social action must use the RPC boundary, preserve fixed `search_path`, and add authenticated-owner/other/anonymous tests before being exposed in the client.
 - `get_public_profile_social` includes an opaque guestbook entry reference so an author/profile owner can delete or report a note; it must never be changed to expose author ids, reporter ids, report details, moderation status, or email.
 - Block cleanup currently removes reciprocal follows, favorites, and reactions while guestbook rows remain protected and hidden from the blocked projection. Changing that retention choice affects moderation/deletion semantics and needs a separate decision.

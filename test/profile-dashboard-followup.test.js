@@ -75,14 +75,13 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(settings, /applyProfileStudioDraftPatch/);
 });
 
-test('collection fitting room previews the draft card appearance and media', async () => {
-  const preview = await read('src/lib/ShopStudioPreview.svelte');
-  assert.match(preview, /profileConfig\?\.draft \|\| profileConfig\?\.published/);
-  assert.match(preview, /getProfileAppearanceStyle\(previewProfileConfig\)/);
-  assert.match(preview, /previewBackgroundSrc/);
-  assert.match(preview, /style=\{previewCardStyle\}/);
-  assert.match(preview, /studio-profile-card[\s\S]*studio-atmosphere-layer/);
-  assert.match(preview, /studio-profile-card[\s\S]*studio-cursor-layer/);
+test('Customize previews the draft card appearance and media', async () => {
+  const preview = await read('src/lib/ProfileStudioPreview.svelte');
+  assert.match(preview, /previewRenderSnapshot/);
+  assert.match(preview, /ProfileReferenceCard/);
+  assert.match(preview, /ProfileFullBleedLayout/);
+  assert.match(preview, /inputSurface="container"/);
+  assert.doesNotMatch(preview, /studio-profile-card|studio-atmosphere-layer|studio-cursor-layer/);
 });
 
 test('preview renders bounded media and never exposes mutations', async () => {
@@ -127,11 +126,10 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(music, /loading="lazy"/);
 });
 
-test('appearance controls are consumed by the identity card and fitting-room renderer', async () => {
-  const [appearanceStyle, identityCard, fittingPreview, studioPreview, editor, shell, environment, atmosphere, viteConfig] = await Promise.all([
+test('appearance controls are consumed by the identity card and Studio renderer', async () => {
+  const [appearanceStyle, identityCard, studioPreview, editor, shell, environment, atmosphere, viteConfig] = await Promise.all([
     read('src/lib/profileAppearanceStyle.js'),
     read('src/lib/ProfileReferenceCard.svelte'),
-    read('src/lib/ShopStudioPreview.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('src/lib/ProfileShell.svelte'),
@@ -152,7 +150,6 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.doesNotMatch(viteConfig, /csso|restructure: false/);
   assert.match(shell, /\.profile-shell__approved-canvas,\s+\.profile-shell__opening\.profile-shell__approved-opening \{ z-index: auto; \}/);
   assert.doesNotMatch(shell, /profile-shell__surface-media|profile-shell__surface-video|profile-shell__surface-atmosphere-layer|profile-shell__surface-backdrop::before/);
-  assert.match(fittingPreview, /studio-profile-card[\s\S]*studio-atmosphere-layer/);
   assert.match(studioPreview, /ProfileReferenceCard/);
   assert.doesNotMatch(shell, /profile-atmosphere\.profile-shell__card-atmosphere-layer/);
   assert.doesNotMatch(shell, /profile-shell__surface-media-background \{[\s\S]*filter: blur\(var\(--profile-surface-blur/);

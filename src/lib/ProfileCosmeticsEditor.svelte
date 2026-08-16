@@ -7,27 +7,22 @@
     addToast,
     equippedItems,
     profile,
-    profileEntitlements,
     refreshProfileState,
     session,
-    loadShopItems,
-    shopItems,
-    shopItemsError,
-    shopItemsLoading,
-    userInventory
+    loadCosmeticCatalog,
+    cosmeticCatalogItems,
+    cosmeticCatalogError,
+    cosmeticCatalogLoading,
   } from './stores';
   import { supabase } from './supabase';
   import { trackProductEvent } from './productAnalytics.js';
   import { NAME_COMPOSABLE_SLOTS, applyNamePreviewLayer, getNamePreviewLoadoutForSlot } from './name/nameLoadout.js';
-  import { SHOP_SLOT_LABELS, createFittingRoom, hasShopEntitlement, isShopCosmetic } from './shopCatalog.js';
-  import { hasChromadiePlus } from './premiumEntitlements.js';
+  import { SHOP_SLOT_LABELS, isShopCosmetic } from './shopCatalog.js';
   import { getProfileMediaUrl } from './profileMedia.js';
 
   export let accountProfile = null;
   /** @type {any} */
   export let profileConfig = null;
-  export let entitlements = [];
-  export let staff = false;
   export let compact = false;
   export let presentation = 'default';
 
@@ -80,22 +75,18 @@
       || profileConfig.published?.avatar_path
     )) || ''
   );
-  $: plusUnlocked = Boolean(staff || hasChromadiePlus(entitlements));
-  $: fittingRoom = createFittingRoom({
-    userInventory: $userInventory,
-    equippedItems: $equippedItems,
-    entitlements: $profileEntitlements
-  });
-  $: ownedCosmetics = Object.values($shopItems)
-    .filter(item => isShopCosmetic(item) && hasShopEntitlement(item, fittingRoom))
+  // The studio is the expression catalog. Every active profile cosmetic is
+  // available to preview and equip while acquisition is being redesigned.
+  $: availableCosmetics = Object.values($cosmeticCatalogItems)
+    .filter(item => isShopCosmetic(item) && item.catalog_status === 'active')
     .sort((left, right) => (SHOP_SLOT_LABELS[left.slot] || left.slot).localeCompare(SHOP_SLOT_LABELS[right.slot] || right.slot)
       || left.name.localeCompare(right.name));
-  $: borderItems = ownedCosmetics.filter(item => item.slot === 'profile_border');
-  $: avatarItems = ownedCosmetics.filter(item => item.slot === 'avatar_effect');
-  $: cursorItems = ownedCosmetics.filter(item => item.slot === 'cursor_trail');
-  $: atmosphereItems = ownedCosmetics.filter(item => item.slot === 'profile_atmosphere');
-  $: profileMotionItems = ownedCosmetics.filter(item => item.slot === 'profile_motion');
-  $: previewItems = Object.fromEntries(COSMETIC_SLOTS.map(slot => [slot, $shopItems[previewLoadout[slot]] || null]));
+  $: borderItems = availableCosmetics.filter(item => item.slot === 'profile_border');
+  $: avatarItems = availableCosmetics.filter(item => item.slot === 'avatar_effect');
+  $: cursorItems = availableCosmetics.filter(item => item.slot === 'cursor_trail');
+  $: atmosphereItems = availableCosmetics.filter(item => item.slot === 'profile_atmosphere');
+  $: profileMotionItems = availableCosmetics.filter(item => item.slot === 'profile_motion');
+  $: previewItems = Object.fromEntries(COSMETIC_SLOTS.map(slot => [slot, $cosmeticCatalogItems[previewLoadout[slot]] || null]));
   $: namePreviewLayerValues = {
     name_font: previewItems.name_font?.css_value || '',
     name_material: previewItems.name_material?.css_value || '',
@@ -106,7 +97,7 @@
   $: syncEquippedLoadout(equippedKey, $equippedItems);
 
   onMount(() => {
-    void loadShopItems();
+    void loadCosmeticCatalog();
   });
 
   function syncEquippedLoadout(key, loadout) {
@@ -116,14 +107,14 @@
   }
 
   function previewSlot(slot, itemKey) {
-    const item = $shopItems[itemKey] || null;
+    const item = $cosmeticCatalogItems[itemKey] || null;
     previewLoadout = NAME_COMPOSABLE_SLOTS.includes(slot)
       ? applyNamePreviewLayer(previewLoadout, slot, item?.item_key || '')
       : { ...previewLoadout, ...(item ? { [slot]: item.item_key } : {}) };
     if (!item && !NAME_COMPOSABLE_SLOTS.includes(slot)) delete previewLoadout[slot];
     error = '';
     dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
-    trackProductEvent('shop_try_on', { slot, context: 'profile' });
+    trackProductEvent('cosmetic_preview', { slot, context: 'profile' });
   }
 
   function resetNameEffects() {
@@ -136,7 +127,7 @@
   }
 
   function itemsForSlot(slot) {
-    if (NAME_COMPOSABLE_SLOTS.includes(slot)) return ownedCosmetics.filter(item => item.slot === slot);
+    if (NAME_COMPOSABLE_SLOTS.includes(slot)) return availableCosmetics.filter(item => item.slot === slot);
     return {
       avatar_effect: avatarItems,
       profile_border: borderItems,
@@ -154,12 +145,12 @@
 
     try {
       for (const slot of changedSlots) {
-        const item = previewLoadout[slot] ? $shopItems[previewLoadout[slot]] : null;
+        const item = previewLoadout[slot] ? $cosmeticCatalogItems[previewLoadout[slot]] : null;
         const { data, error: rpcError } = item
           ? await supabase.rpc('equip_item', { p_item_key: item.item_key })
           : await supabase.rpc('unequip_item', { p_slot: slot });
         if (rpcError || !data?.success) throw new Error(rpcError?.message || data?.error || 'The appearance change could not be saved.');
-        if (item) trackProductEvent('shop_equip', { slot, context: 'profile' });
+        if (item) trackProductEvent('cosmetic_equip', { slot, context: 'profile' });
       }
 
       const userId = $session?.user?.id;
@@ -187,36 +178,21 @@
   <section aria-labelledby="profile-cosmetics-title">
     <div class="profile-cosmetics-heading">
       <div>
-        <h2 id="profile-cosmetics-title">Collection</h2>
-        <p>Preview and equip owned expression layers.</p>
+        <h2 id="profile-cosmetics-title">Profile expression</h2>
+        <p>Preview and equip every profile expression layer.</p>
       </div>
     </div>
 
-    {#if plusUnlocked}
-      <aside class="profile-cosmetics-plus-guide" aria-labelledby="profile-cosmetics-plus-guide-title">
-        <div class="profile-cosmetics-plus-guide__intro">
-          <span class="profile-cosmetics-plus-guide__eyebrow">Chromadie Plus</span>
-          <h3 id="profile-cosmetics-plus-guide-title">Atelier expression is ready</h3>
-          <p>The Atelier name treatment and atmosphere are separate layers. Choose your expression below, preview it, then update the equipped effects. These changes apply immediately.</p>
-        </div>
-        <nav class="profile-cosmetics-plus-guide__links" aria-label="Atelier expression shortcuts">
-          <a href="#cosmetic-name_motion"><strong>Name effect</strong><span>Collection → Name · Motion</span></a>
-          <a href="#cosmetic-profile-atmosphere"><strong>Background atmosphere</strong><span>Collection → Atmosphere</span></a>
-          <a href="#customize"><strong>Atelier template</strong><span>Customize → Templates</span></a>
-        </nav>
-      </aside>
-    {/if}
-
-    {#if $shopItemsLoading}
+    {#if $cosmeticCatalogLoading}
       <p role="status">Loading your cosmetic collection…</p>
-    {:else if $shopItemsError}
-      <p role="alert">{$shopItemsError}</p>
+    {:else if $cosmeticCatalogError}
+      <p role="alert">{$cosmeticCatalogError}</p>
     {:else}
       {#if presentation === 'studio'}
         <div class="profile-cosmetics-studio-heading">
           <div>
             <h2>Profile effects</h2>
-            <p>These are the current cosmetic slots. The production editor lists only items the account owns or can use.</p>
+            <p>These are the current cosmetic slots. Changes apply to the live preview immediately.</p>
           </div>
           <button type="button" on:click={resetNameEffects}>Reset name effects</button>
         </div>
@@ -265,7 +241,7 @@
                   <div class="profile-cosmetics-name-control">
                     <select id={`cosmetic-${slot}`} value={previewLoadout[slot] || ''} disabled={!!loadingSlot} on:change={event => previewSlot(slot, event.currentTarget.value)}>
                       <option value="">{NAME_DEFAULT_LABELS[slot]}</option>
-                      {#each ownedCosmetics.filter(item => item.slot === slot) as item (item.item_key)}
+                      {#each availableCosmetics.filter(item => item.slot === slot) as item (item.item_key)}
                         <option value={item.item_key}>{item.name}</option>
                       {/each}
                     </select>
@@ -392,7 +368,6 @@
   }
   :global(.profile-cosmetics-surface.profile-cosmetics-surface--compact) { container: profile-cosmetics / inline-size; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-heading { display: none; }
-  :global(.profile-cosmetics-surface--compact) .profile-cosmetics-plus-guide { display: none; grid-template-columns: 1fr; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-controls { grid-template-columns: minmax(0, 1fr); gap: .8rem; padding: .1rem 0 0; border: 0; background: transparent; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-controls__heading { display: none; }
   :global(.profile-cosmetics-surface--compact) .profile-cosmetics-slot { padding: .75rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: transparent; }
@@ -411,17 +386,6 @@
   .profile-cosmetics-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .profile-cosmetics-heading h2 { margin: 0; color: var(--cosmetics-text); font: 600 var(--customize-subheading-size, .88rem) / 1.25 var(--cosmetics-body); }
   .profile-cosmetics-heading p { max-width: 42rem; margin: .35rem 0 0; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); line-height: 1.45; }
-  .profile-cosmetics-plus-guide { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, .9fr); gap: 1rem; margin: 0 0 1rem; padding: .8rem; border: 1px solid color-mix(in srgb, var(--cosmetics-expression) 30%, var(--cosmetics-border)); border-radius: var(--cosmetics-radius); background: color-mix(in srgb, var(--cosmetics-expression) 7%, var(--cosmetics-surface)); font-family: var(--cosmetics-body); }
-  .profile-cosmetics-plus-guide__intro { display: grid; align-content: start; gap: .35rem; }
-  .profile-cosmetics-plus-guide__eyebrow { color: var(--cosmetics-expression); font: 700 var(--cosmetics-label-size) / 1.2 var(--cosmetics-mono); letter-spacing: .12em; text-transform: uppercase; }
-  .profile-cosmetics-plus-guide h3 { margin: 0; color: var(--cosmetics-text); font: 600 var(--customize-subheading-size, .88rem) / 1.25 var(--cosmetics-body); }
-  .profile-cosmetics-plus-guide p { max-width: 38rem; margin: 0; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); line-height: 1.5; }
-  .profile-cosmetics-plus-guide__links { display: grid; gap: .45rem; }
-  .profile-cosmetics-plus-guide__links a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .12rem .6rem; align-items: center; padding: .55rem .65rem; border: 1px solid var(--cosmetics-border); border-radius: var(--cosmetics-radius); background: var(--cosmetics-inset); color: var(--cosmetics-text); font-family: var(--cosmetics-body); text-decoration: none; }
-  .profile-cosmetics-plus-guide__links a:hover { border-color: var(--cosmetics-neutral); background: color-mix(in srgb, var(--cosmetics-neutral) 9%, var(--cosmetics-inset)); }
-  .profile-cosmetics-plus-guide__links a:focus-visible { border-color: var(--cosmetics-focus); outline: 2px solid var(--cosmetics-focus); outline-offset: 2px; }
-  .profile-cosmetics-plus-guide__links strong { min-width: 0; font-size: var(--cosmetics-label-size); }
-  .profile-cosmetics-plus-guide__links span { min-width: 0; overflow: hidden; color: var(--cosmetics-muted); font-size: var(--cosmetics-label-size); text-overflow: ellipsis; white-space: nowrap; }
   .profile-cosmetics-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; }
   .profile-cosmetics-studio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch; }
   .profile-cosmetics-studio-card {
@@ -479,7 +443,7 @@
   .profile-cosmetics-apply:disabled { opacity: .45; cursor: not-allowed; }
   .profile-cosmetics-status { min-height: 1.25rem; margin: .65rem 0 0; color: var(--cosmetics-muted); font: var(--cosmetics-label-size)/1.45 var(--cosmetics-body); }
   .profile-cosmetics-status.error-message { color: var(--cosmetics-danger); }
-  @media (max-width: 900px) { .profile-cosmetics-layout, .profile-cosmetics-plus-guide { grid-template-columns: 1fr; } .profile-cosmetics-name-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .profile-cosmetics-visual-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 900px) { .profile-cosmetics-layout { grid-template-columns: 1fr; } .profile-cosmetics-name-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .profile-cosmetics-visual-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 700px) { .profile-cosmetics-studio-grid { grid-template-columns: 1fr; } .profile-cosmetics-studio-card { grid-template-columns: minmax(0, 1fr) 140px; } .profile-cosmetics-studio-grid .profile-cosmetics-apply { width: 100%; } }
 
   @container profile-cosmetics (max-width: 42rem) {
@@ -502,5 +466,4 @@
     :global(.profile-cosmetics-surface--compact) .profile-cosmetics-visual-grid .profile-cosmetics-visual-preview { grid-row: 1 / span 2; width: 5rem; height: 4.5rem; min-height: 4.5rem; }
     .profile-cosmetics-name-control { grid-template-columns: minmax(0, 1fr); }
   }
-  @media (prefers-reduced-motion: reduce) { .profile-cosmetics-plus-guide__links a { transition: none; } }
 </style>

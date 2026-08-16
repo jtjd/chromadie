@@ -10,6 +10,22 @@
 - ProfileShell, ProfileMotionEffect, draft/publish state, media, roll/scoring,
   auth, RPC/RLS, and cosmetic leaf renderers remain the behavioral authorities.
 
+## Shop surface retirement and expression catalog — 2026-08-15
+
+- Removed the standalone Shop presentation, route loader, navigation surface,
+  and obsolete Shop-only components. `/shop` now enters Profile Studio
+  Customize as a one-way legacy URL alias.
+- Customize now exposes every active profile expression without ownership or
+  purchase gates and saves through the existing `equip_item`/`unequip_item`
+  contracts. Server catalog/economy tables and RPCs remain dormant authorities
+  for future progression or premium acquisition decisions.
+- Added additive catalog/layout migrations: active expression rows are free
+  during this phase, malformed border selections are cleared without removing
+  valid border effects, and Compact/Immersive configuration markers stay
+  paired through draft and publish.
+- The shared card has a neutral no-border edge; a colored outline is emitted
+  only by a valid selected Profile Border renderer.
+
 Older layout-specific entries below are historical implementation records, not
 active presentation guidance.
 

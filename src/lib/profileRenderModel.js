@@ -13,6 +13,7 @@ import {
 } from './profileConfig.js';
 import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
 import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
+import { isProfileBorderKey } from './profile-border/profileBorders.js';
 import { getNameRendererLoadout } from './name/nameLoadout.js';
 import { getProfileAppearanceStyle, getProfileCanvasStyle } from './profileAppearanceStyle.js';
 import { getVisibleProfileContent } from './profileContentLegacy.js';
@@ -405,7 +406,9 @@ export function buildProfileRenderSnapshot(input = {}) {
       loadout: cosmetics,
       name: getNameRendererLoadout(cosmetics),
       avatarEffectKey: cosmetics.avatar_effect || '',
-      borderKey: cosmetics.profile_border || '',
+      // Keep the persisted item key intact for the renderer contract while
+      // failing closed for retired or malformed border values.
+      borderKey: isProfileBorderKey(cosmetics.profile_border) ? String(cosmetics.profile_border) : '',
       atmosphereKey: cosmetics.profile_atmosphere || '',
       profileMotionKey: cosmetics.profile_motion || '',
       cursorTrailKey

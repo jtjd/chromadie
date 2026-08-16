@@ -15,6 +15,28 @@ compatibility branches.
 The older layout decisions below are historical records only and must not be
 used as visual or architectural guidance for new profile work.
 
+## 2026-08-15 — Retire the Shop surface and make Customize the expression catalog
+
+The standalone Shop route and its presentation components are retired. `/shop`
+is retained only as a one-way route alias into Profile Studio Customize so an
+old bookmark cannot open an obsolete surface. Profile Studio Customize is now
+the only profile-expression UI: it loads the active server catalog, previews
+the supported expression slots, and uses the existing `equip_item` and
+`unequip_item` RPC boundaries.
+
+For this interim product phase, every active profile-expression catalog row is
+free and available to every account. The catalog, inventory, entitlement,
+purchase, and equip contracts remain server-side authorities for future
+progression or premium acquisition work; no Shop navigation or promotional
+surface is reintroduced. The shared cosmetic renderers and existing catalog
+tables remain because they are product behavior, not legacy Shop UI.
+
+The no-border state owns a neutral card edge. Colored outlines are emitted only
+by a valid equipped Profile Border renderer; malformed or retired border keys
+fail closed. Compact and Immersive layout markers are paired at both the
+client-normalization and database-publish boundaries so publishing Immersive
+cannot silently fall back to Compact.
+
 ## 2026-08-15 — Align legacy application surfaces with the approved shell
 
 The homepage header keeps only product destinations and the claim action; the
@@ -107,7 +129,8 @@ Profile Studio editors no longer persist or restore profile-data drafts through
 session/view state. Identity, Layout, Content, and Widget editors initialize
 from the parent-owned `studioDraft` (and `studioIdentityDraft` where relevant)
 and emit only their existing scoped user-edit patches. Session state remains
-available for UI-only surfaces such as Discovery filters and Shop navigation.
+available for UI-only surfaces such as Discovery filters. Profile data is not
+stored in view state.
 
 Customize now mounts only its supported Appearance, Media, Layout, collection,
 and identity controls; legacy Content and Widget editors remain available to

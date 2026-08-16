@@ -45,7 +45,7 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /--site-surface:/);
   assert.match(siteStyles, /\.app-main--site \.game-container/);
   assert.match(siteStyles, /\.app-main--site \.discovery-card/);
-  assert.match(siteStyles, /\.app-main--site \.shop-page/);
+  assert.doesNotMatch(siteStyles, /\.app-main--site \.shop-page|\.shop-heading|\.shop-item/);
   assert.match(siteStyles, /--site-font: 'Inter'/);
   assert.match(siteStyles, /--font-display-stack: 'Clash Display'/);
   assert.match(siteStyles, /--font-body-stack: 'Inter'/);

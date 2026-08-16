@@ -31,8 +31,8 @@ owner.
 | `roll_ready` | `surface`, `accountMode` | An existing roll surface became ready; values identify only the surface and guest/auth mode |
 | `roll_completed` | `surface`, `accountMode`, `isReroll` | An existing server response passed canonical normalization |
 | `profile_shared` | `surface`, `method` | A supported profile-share action completed |
-| `shop_try_on` | `slot`, `accessTier`, `context` | A structured cosmetic entered the fitting-room preview |
-| `shop_equip` | `slot`, `accessTier` | The existing equip RPC succeeded |
+| `cosmetic_preview` | `slot`, `context` | A structured profile expression entered the Customize preview |
+| `cosmetic_equip` | `slot`, `context` | The existing equip RPC succeeded from Customize |
 
 The client contract allowlists event names and property keys, strips control
 characters, bounds strings to 48 characters, and accepts booleans only where
@@ -92,7 +92,8 @@ incident ownership.
   privacy policy
 - Adapter setup: `src/main.js`
 - Event call sites: `App.svelte`, `ProfileShell.svelte`, `Game.svelte`,
-  `ProfileRoll.svelte`, `DiscoveryCard.svelte`, and `Shop.svelte`
+  `ProfileRoll.svelte`, `DiscoveryCard.svelte`, and
+  `ProfileCosmeticsEditor.svelte`
 - Regression coverage: `test/phase-9-analytics.test.js`
 
 Any future provider adapter must preserve the same event names and field

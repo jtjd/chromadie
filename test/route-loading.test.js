@@ -26,7 +26,7 @@ test('route loading keeps the shell and previous page mounted until a destinatio
 });
 
 test('route loaders use explicit split points and cache prefetched modules', () => {
-  for (const key of ['game', 'shop', 'leaderboard', 'profileShell', 'profileSettings', 'guestProfile', 'privacy', 'terms', 'howToPlay']) {
+  for (const key of ['game', 'leaderboard', 'profileShell', 'profileSettings', 'guestProfile', 'privacy', 'terms', 'howToPlay']) {
     assert.match(loaders, new RegExp(`${key}: \\(\\) => import\\(`));
   }
   assert.match(loaders, /const promiseCache = new Map/);

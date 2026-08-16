@@ -6,7 +6,7 @@ import {
   normalizeUsernameSegment
 } from './routeContract.js';
 
-export const VALID_VIEWS = Object.freeze(['home', 'game', 'shop', 'leaderboard', 'profile', 'profile-settings', 'prototype', 'pricing'])
+export const VALID_VIEWS = Object.freeze(['home', 'game', 'leaderboard', 'profile', 'profile-settings', 'prototype', 'pricing'])
 export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'rivals', 'weekly', 'monthly', 'roll', 'recent', 'rising', 'new', 'random'])
 
 const VALID_VIEW_SET = new Set(VALID_VIEWS)
@@ -15,7 +15,9 @@ const CLEAN_APP_PATHS = new Set(['/', '/shop', '/leaderboard', '/profile', '/pro
 
 function getCleanPathView(pathname) {
   if (pathname === '/') return 'home'
-  if (pathname === '/shop') return 'shop'
+  // The former Shop URL is a one-way route alias into the profile studio.
+  // There is no Shop view or presentation behind it anymore.
+  if (pathname === '/shop') return 'profile-settings'
   if (pathname === '/leaderboard') return 'leaderboard'
   if (pathname === '/profile') return 'profile'
   if (pathname === '/profile/settings') return 'profile-settings'

@@ -2,7 +2,6 @@ import { normalizeProfileExpression } from './profileExpression.js';
 import { createDefaultRichMediaConfig, normalizeRichMediaConfig } from './profileRichMedia.js';
 import { createDefaultProfileContent, normalizeProfileContent } from './profileContentLegacy.js';
 import { normalizeProfileWidgets } from './profileWidgetsLegacy.js';
-import { inferProfileTemplateKey, normalizeProfileTemplateKey } from './profileTemplates.js';
 import { normalizeProfileLayoutKey, PROFILE_LAYOUT_KEYS } from './profile-layout/profileLayouts.js';
 import { PROFILE_LINK_TYPES, isProfileLinkUrlValid } from './profileLinkTypes.js';
 
@@ -239,7 +238,10 @@ export function normalizeProfileConfig(value, fallbackColor = '#8B7CF6') {
   const normalized = {
     version: PROFILE_CONFIG_VERSION,
     signatureColor: safeColor(value.signatureColor, fallback.signatureColor),
-    templateKey: normalizeProfileTemplateKey(value.templateKey, inferProfileTemplateKey(normalizedLayoutVariant)),
+    // Layout variant is the renderer authority. Keep the Studio-facing
+    // template marker in lockstep so a stale compact template cannot erase a
+    // selected Immersive layout during V2 publish or hydration.
+    templateKey: normalizedLayoutVariant,
     colorEffectsEnabled: value.colorEffectsEnabled === true,
     appearance: normalizedAppearance,
     layoutVariant: normalizedLayoutVariant,

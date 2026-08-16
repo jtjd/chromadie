@@ -49,10 +49,10 @@ export const isAuthenticated = derived(
     )
 )
 
-// --- Shop & Inventory State ---
-export const shopItems = writable({})
-export const shopItemsLoading = writable(true)
-export const shopItemsError = writable(null)
+// --- Cosmetic catalog & inventory state ---
+export const cosmeticCatalogItems = writable({})
+export const cosmeticCatalogLoading = writable(true)
+export const cosmeticCatalogError = writable(null)
 export const userInventory = writable([])
 export const equippedItems = writable({})
 export const walletBalance = writable(0)
@@ -86,7 +86,7 @@ export function clearUserState() {
     followedUsers.set([])
 }
 
-export function clearLocalAccountCache({ clearShopCache = false } = {}) {
+export function clearLocalAccountCache({ clearCatalogCache = false } = {}) {
     const keysToRemove = ['chromadie-roll']
     guestProgressActive.set(false)
 
@@ -98,8 +98,8 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
             }
         }
 
-        if (clearShopCache) {
-            keysToRemove.push('shop_cache', 'shop_cache:v2', 'shop_cache:v3', 'shop_cache:v4', 'shop_cache:v5')
+        if (clearCatalogCache) {
+            keysToRemove.push('cosmetic_catalog:v6', 'shop_cache', 'shop_cache:v2', 'shop_cache:v3', 'shop_cache:v4', 'shop_cache:v5')
         }
 
         keysToRemove.forEach(key => localStorage.removeItem(key))
@@ -110,8 +110,8 @@ export function clearLocalAccountCache({ clearShopCache = false } = {}) {
     clearAllViewState()
 }
 
-const SHOP_CACHE_KEY = 'shop_cache:v5'
-const SHOP_CACHE_SHAPE_VERSION = 5
+const SHOP_CACHE_KEY = 'cosmetic_catalog:v6'
+const SHOP_CACHE_SHAPE_VERSION = 6
 const SHOP_SLOTS = new Set(['consumable', 'title', 'name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'])
 const NAME_RENDERER_SLOTS = new Set(['name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion'])
 
@@ -187,20 +187,20 @@ function setShopCache(cache) {
     }
 }
 
-let shopLoadPromise = null
+let catalogLoadPromise = null
 
-export function loadShopItems() {
-    if (!shopLoadPromise) {
-        shopLoadPromise = loadShopItemsOnce().finally(() => {
-            shopLoadPromise = null
+export function loadCosmeticCatalog() {
+    if (!catalogLoadPromise) {
+        catalogLoadPromise = loadCosmeticCatalogOnce().finally(() => {
+            catalogLoadPromise = null
         })
     }
-    return shopLoadPromise
+    return catalogLoadPromise
 }
 
-async function loadShopItemsOnce() {
-    shopItemsLoading.set(true)
-    shopItemsError.set(null)
+async function loadCosmeticCatalogOnce() {
+    cosmeticCatalogLoading.set(true)
+    cosmeticCatalogError.set(null)
 
     try {
         const { data: meta, error: metaError } = await supabase
@@ -217,7 +217,7 @@ async function loadShopItemsOnce() {
         const cacheIsFresh = cacheAgeMs < 24 * 60 * 60 * 1000;
 
         if (cached.version === latestVersion && cached.items && cacheIsFresh) {
-            shopItems.set(cached.items);
+            cosmeticCatalogItems.set(cached.items);
             return;
         }
 
@@ -236,7 +236,7 @@ async function loadShopItemsOnce() {
 
         if (itemsError) throw itemsError
         if (!Array.isArray(data) || data.length === 0) {
-            throw new Error('The shop catalog is empty.')
+            throw new Error('The cosmetic catalog is empty.')
         }
 
         const cache = {}
@@ -245,14 +245,14 @@ async function loadShopItemsOnce() {
             if (item) cache[item.item_key] = item
         })
         if (Object.keys(cache).length !== (data || []).length) {
-            throw new Error('The shop catalog contained an invalid item.')
+            throw new Error('The cosmetic catalog contained an invalid item.')
         }
-        shopItems.set(cache)
+        cosmeticCatalogItems.set(cache)
         setShopCache({ version: latestVersion, savedAt: Date.now(), items: cache });
     } catch {
-        shopItemsError.set('The shop could not be loaded. Please refresh and try again.')
+        cosmeticCatalogError.set('The cosmetic catalog could not be loaded. Please refresh and try again.')
     } finally {
-        shopItemsLoading.set(false)
+        cosmeticCatalogLoading.set(false)
     }
 }
 

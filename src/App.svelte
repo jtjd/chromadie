@@ -73,6 +73,10 @@
     const parsed = parseRouteLocation(window.location.pathname, window.location.search);
     routeMode = parsed.routeMode;
 
+    if (typeof window !== 'undefined' && window.location.pathname === '/shop') {
+      window.history.replaceState({}, '', '/profile/settings#customize-appearance');
+    }
+
     if (parsed.routeMode === 'auth') {
       view = 'auth';
       authRouteTab = parsed.authTab || 'login';
@@ -446,7 +450,7 @@
 
   async function handleAccountDeleted(event) {
     const { alreadyDeleted = false, message = 'Account deleted.', cleanup = null } = event.detail || {};
-    clearLocalAccountCache({ clearShopCache: true });
+    clearLocalAccountCache({ clearCatalogCache: true });
     clearUserState();
     session.set(null);
     selectedUserId.set(null);
@@ -621,7 +625,7 @@
       };
     }
 
-    if (initialized && sessionState && accountError && (currentView === 'shop' || currentView === 'profile')) {
+    if (initialized && sessionState && accountError && currentView === 'profile') {
       return {
         componentKey: `account-error:${currentView}`,
         staticComponent: AccountUnavailable,
@@ -643,30 +647,12 @@
       };
     }
 
-    if (authenticated && currentView === 'shop') {
-      return {
-        loaderKey: 'shop',
-        componentKey: 'shop',
-        componentProps: {},
-        loadingLabel: 'Opening decoration studio'
-      };
-    }
-
     if (currentView === 'profile' && currentAccountState === ACCOUNT_STATES.SIGNED_OUT) {
       return {
         loaderKey: 'guestProfile',
         componentKey: `guest-profile:${guestActive}`,
         componentProps: { guestActive },
         loadingLabel: 'Opening a profile preview'
-      };
-    }
-
-    if (currentView === 'shop' && currentAccountState === ACCOUNT_STATES.SIGNED_OUT) {
-      return {
-        componentKey: `shop-guest:${guestActive}`,
-        staticComponent: GuestLock,
-        componentProps: { view: currentView, guestActive },
-        loadingLabel: 'Checking account access'
       };
     }
 
@@ -707,7 +693,7 @@
 
   $: headerUsername = $profile?.username || $authUser?.user_metadata?.username || $authUser?.email?.split('@')[0] || 'Signed in';
   $: launchEditionOwned = $profile?.equipped_badges?.includes('launch_edition');
-  $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && view !== 'home' && view !== 'profile' && view !== 'profile-settings' && view !== 'shop' && (!$authUser || !$profileLoading);
+  $: founderAnnouncementVisible = founderLaunchWindowActive && !launchEditionOwned && view !== 'home' && view !== 'profile' && view !== 'profile-settings' && (!$authUser || !$profileLoading);
   $: profileTitle = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || 'Profile';
   $: profileModeVisible = routeMode === 'app' && view === 'profile' && !legacyProfile && !aliasResolving;
   $: profileSettingsModeVisible = routeMode === 'app' && view === 'profile-settings';
@@ -745,8 +731,6 @@
           ? 'Profile Canvas Prototype | ChromaDie'
         : routeMode === 'app' && view === 'leaderboard'
           ? 'Discovery | ChromaDie'
-        : routeMode === 'app' && view === 'shop'
-          ? 'Decoration Studio | ChromaDie'
         : routeMode === 'app' && view === 'pricing'
           ? 'Chromadie Plus — $7.99 lifetime | ChromaDie'
         : routeMode === 'app' && view === 'game' && challengeData
@@ -780,8 +764,6 @@
           ? 'A noindex Phase 1 profile canvas prototype for ChromaDie.'
         : routeMode === 'app' && view === 'leaderboard'
           ? 'Explore ChromaDie players, public color stories, exceptional rolls, and leaderboard results.'
-        : routeMode === 'app' && view === 'shop'
-          ? 'Shape a beautiful ChromaDie profile with free foundations, earned cosmetics, and safe premium expression.'
         : routeMode === 'app' && view === 'pricing'
           ? 'Compare the complete free profile with Chromadie Plus lifetime profile expression.'
           : 'Roll a new color every day, discover its rarity and traits, earn EP, and compete for the highest score.';
@@ -810,7 +792,7 @@
           : '/';
   $: pageRobots = routeMode === 'not-found'
     ? 'noindex,follow'
-    : routeMode === 'app' && (legacyProfile || profileRouteKind === 'compatibility' || view === 'game' || view === 'shop' || view === 'profile-settings' || view === 'pricing' && typeof window !== 'undefined' && window.location.pathname === '/pricing/success' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
+    : routeMode === 'app' && (legacyProfile || profileRouteKind === 'compatibility' || view === 'game' || view === 'profile-settings' || view === 'pricing' && typeof window !== 'undefined' && window.location.pathname === '/pricing/success' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
     ? 'noindex,follow'
     : routeMode === 'auth' || routeMode === 'auth-callback' || routeMode === 'reset-password'
       ? 'noindex,nofollow'

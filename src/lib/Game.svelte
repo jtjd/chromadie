@@ -962,13 +962,13 @@
       {/if}
 
       {#if $isAuthenticated}
-        <div class="shop-onboarding">
+        <div class="studio-onboarding">
           <div>
-            <div class="shop-onboarding-title">Put your EP to use</div>
-            <div class="shop-onboarding-copy">Spend EP in the Shop to customize your name, profile, rolls, and leaderboard row.</div>
+            <div class="studio-onboarding-title">Shape your profile</div>
+            <div class="studio-onboarding-copy">Customize your name, profile surface, atmosphere, and expression layers in Profile Studio.</div>
           </div>
-          <button type="button" class="chroma-btn shop-onboarding-btn" on:click={() => dispatch('navigate', { view: 'shop' })}>
-            Open Shop
+          <button type="button" class="chroma-btn studio-onboarding-btn" on:click={() => dispatch('navigate', { view: 'profile-settings' })}>
+            Open Customize
           </button>
         </div>
       {/if}
@@ -1109,7 +1109,7 @@
   }
   .badges-subtitle { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 10px; text-align: left; opacity: 0.8; }
 
-  .shop-onboarding {
+  .studio-onboarding {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1121,19 +1121,19 @@
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(139, 92, 246, 0.08));
     text-align: left;
   }
-  .shop-onboarding-title {
+  .studio-onboarding-title {
     color: #fff;
     font-family: var(--font-display-stack);
     font-size: 1rem;
     font-weight: 700;
     margin-bottom: 4px;
   }
-  .shop-onboarding-copy {
+  .studio-onboarding-copy {
     color: var(--text-muted);
     font-size: 0.82rem;
     line-height: 1.45;
   }
-  .shop-onboarding-btn {
+  .studio-onboarding-btn {
     flex: 0 0 auto;
   }
 
@@ -1230,12 +1230,12 @@
     .guest-prompt-copy {
       font-size: 0.88rem;
     }
-    .shop-onboarding {
+    .studio-onboarding {
       align-items: stretch;
       flex-direction: column;
       padding: 15px;
     }
-    .shop-onboarding-btn {
+    .studio-onboarding-btn {
       width: 100%;
       justify-content: center;
     }

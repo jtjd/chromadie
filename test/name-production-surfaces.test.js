@@ -23,8 +23,7 @@ const PRODUCTION_SURFACES = Object.freeze([
   'src/lib/Profile.svelte',
   'src/lib/ProfileShell.svelte',
   'src/lib/DiscoveryCard.svelte',
-  'src/lib/ShopItemPreview.svelte',
-  'src/lib/ShopStudioPreview.svelte'
+  'src/lib/ShopItemPreview.svelte'
 ]);
 
 test('every production identity surface uses the shared Name renderer path', async () => {

@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { normalizeProfileConfig } from './profileConfig.js';
+  import { createProfileTemplatePatch } from './profileTemplates.js';
   import { PROFILE_LAYOUT_DEFINITIONS, PROFILE_LAYOUT_KEYS } from './profile-layout/profileLayouts.js';
 
   /** @type {any} */
@@ -41,8 +42,9 @@
 
   function chooseLayout(layoutVariant) {
     if (!PROFILE_LAYOUT_KEYS.includes(layoutVariant) || layoutVariant === staged.layoutVariant) return;
-    staged = normalizeProfileConfig({ ...staged, layoutVariant });
-    emitPatch({ layoutVariant });
+    const layoutPatch = createProfileTemplatePatch(layoutVariant);
+    staged = normalizeProfileConfig({ ...staged, ...layoutPatch });
+    emitPatch(layoutPatch);
   }
 
   function setAlignment(alignment) {

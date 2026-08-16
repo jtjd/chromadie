@@ -108,9 +108,9 @@ test('denied consent blocks events and the memory adapter remains bounded', () =
     });
     assert.equal(setProductAnalyticsConsent('granted'), 'granted');
     trackProductEvent('route_view', { route: 'game' });
-    trackProductEvent('route_view', { route: 'shop' });
+    trackProductEvent('route_view', { route: 'profile-settings' });
     trackProductEvent('route_view', { route: 'privacy' });
-    assert.deepEqual(adapter.getEvents().map(event => event.properties.route), ['shop', 'privacy']);
+    assert.deepEqual(adapter.getEvents().map(event => event.properties.route), ['profile-settings', 'privacy']);
   } finally {
     restore();
   }
@@ -133,10 +133,9 @@ test('existing flows use the product-event contract without exposing private pay
     readFile(new URL('../src/lib/Game.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/DiscoveryCard.svelte', import.meta.url), 'utf8'),
-    readFile(new URL('../src/lib/Shop.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileCosmeticsEditor.svelte', import.meta.url), 'utf8')
   ]);
-  const [app, shell, game, profileRoll, discovery, shop, cosmeticsEditor] = sources;
+  const [app, shell, game, profileRoll, discovery, cosmeticsEditor] = sources;
 
   assert.match(app, /trackProductEvent\('route_view'/);
   assert.match(shell, /trackProductEvent\('public_profile_view'/);
@@ -145,10 +144,9 @@ test('existing flows use the product-event contract without exposing private pay
   assert.match(profileRoll, /trackProductEvent\('roll_ready'/);
   assert.match(profileRoll, /trackProductEvent\('roll_completed'/);
   assert.match(discovery, /trackProductEvent\('profile_shared'/);
-  assert.match(cosmeticsEditor, /trackProductEvent\('shop_try_on'/);
-  assert.match(shop, /supabase\.rpc\('purchase_item'/);
-  assert.doesNotMatch(shop, /trackProductEvent\('shop_equip'/);
-  assert.doesNotMatch(app + shell + game + profileRoll + discovery + shop + cosmeticsEditor, /trackProductEvent\([^\n]*(username|profileId|score|hex|email|details)/i);
+  assert.match(cosmeticsEditor, /trackProductEvent\('cosmetic_preview'/);
+  assert.match(cosmeticsEditor, /trackProductEvent\('cosmetic_equip'/);
+  assert.doesNotMatch(app + shell + game + profileRoll + discovery + cosmeticsEditor, /trackProductEvent\([^\n]*(username|profileId|score|hex|email|details)/i);
 });
 
 test('homepage conversion events are allowlisted without identity payloads', () => {

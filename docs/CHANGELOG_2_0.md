@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-15 — Retire the Shop and make Customize the expression catalog
+
+- Removed the standalone Shop presentation and its obsolete browsing,
+  fitting-room, and purchase UI. Existing `/shop` links enter Customize rather
+  than opening a second cosmetic surface.
+- Customize now exposes all active profile expression layers, including
+  Compact, Immersive, and Profile Motion, through the existing equip/unequip
+  flow. Active expression rows are temporarily free for every account while
+  future progression and premium acquisition are redesigned.
+- Publishing now preserves the selected Compact or Immersive layout across
+  both configuration markers. The no-border state uses a neutral card edge;
+  valid Profile Border effects remain visible when selected.
+
 ## 2026-08-15 — Add the Immersive profile layout
 
 - Added a sixth free profile layout with a full-viewport photographic

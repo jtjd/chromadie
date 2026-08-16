@@ -22,12 +22,13 @@ test('progression is a dashboard surface backed by existing profile history', as
   assert.match(workspace, /activeSection === 'progression'/);
 });
 
-test('collection remains the owned expression surface while Shop stays acquisition-only', async () => {
+test('Customize is the complete profile expression surface while purchases stay retired', async () => {
   const cosmetics = await read('src/lib/ProfileCosmeticsEditor.svelte');
-  const shop = await read('src/lib/Shop.svelte');
 
-  assert.match(cosmetics, /Collection/);
-  assert.match(cosmetics, /owned expression layers/);
+  assert.match(cosmetics, /Profile expression/);
+  assert.match(cosmetics, /every profile expression layer/);
+  assert.match(cosmetics, /availableCosmetics/);
+  assert.doesNotMatch(cosmetics, /hasShopEntitlement|ownedCosmetics|profile-cosmetics-plus-guide/);
   assert.match(cosmetics, /equip_item/);
-  assert.match(shop, /supabase\.rpc\('purchase_item'/);
+  assert.doesNotMatch(cosmetics, /purchase_item/);
 });

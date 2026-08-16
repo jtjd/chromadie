@@ -349,13 +349,12 @@ test('surface and canvas ownership stay bounded at the renderer boundaries', asy
 });
 
 test('public profile does not inject filler bio copy or obsolete handle styles', async () => {
-  const [shell, identity, homepage, shop] = await Promise.all([
+  const [shell, identity, homepage] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileReferenceCard.svelte'),
-    read('src/lib/homepage/HomepageProfileDemo.svelte'),
-    read('src/lib/ShopStudioPreview.svelte')
+    read('src/lib/homepage/HomepageProfileDemo.svelte')
   ]);
-  assert.doesNotMatch(shell + homepage + shop, /No bio added yet/);
+  assert.doesNotMatch(shell + homepage, /No bio added yet/);
   assert.doesNotMatch(identity, /identity-card__handle-row|identity-card__handle/);
 });
 

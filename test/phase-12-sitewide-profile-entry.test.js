@@ -48,12 +48,11 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.doesNotMatch(header, /shareProfile/);
   assert.match(header, /dispatch\('logout'/);
   assert.match(site, /\.app-main--site \.card/);
-  assert.match(site, /\.app-main--site \.shop-page/);
   assert.match(site, /\.app-main--site \.discovery-hub/);
 });
 
-test('explicit routes remain available instead of being rewritten to the profile', () => {
-  assert.equal(parseRouteLocation('/shop').view, 'shop');
+test('explicit routes remain available while the retired Shop URL enters Customize', () => {
+  assert.equal(parseRouteLocation('/shop').view, 'profile-settings');
   assert.equal(parseRouteLocation('/leaderboard').view, 'leaderboard');
   assert.equal(parseRouteLocation('/how-to-play').routeMode, 'how-to-play');
   assert.equal(parseRouteLocation('/privacy').routeMode, 'privacy');

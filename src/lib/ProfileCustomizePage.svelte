@@ -103,8 +103,6 @@
             this={collectionComponent}
             accountProfile={targetProfile}
             {profileConfig}
-            {entitlements}
-            {staff}
             compact={true}
             presentation="studio"
             on:cosmeticpreview={event => dispatch('cosmeticpreview', event.detail)}
@@ -120,7 +118,7 @@
         <header class="studio-section__head">
           <div>
             <h2 id="studio-media-title">Profile media</h2>
-            <p>Avatar and background are standard profile media. Plus unlocks richer audio and cursor library tools.</p>
+            <p>Avatar, background, audio, and cursor media are managed here through the profile media library.</p>
           </div>
         </header>
         {#if mediaComponent}
@@ -264,7 +262,6 @@
    * is flattened into the reference effect-card grid. */
   .studio-customize :global(.profile-cosmetics-surface--studio) { width: 100%; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-heading),
-  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-plus-guide),
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-controls__heading),
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading--visual) { display: none !important; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-layout),

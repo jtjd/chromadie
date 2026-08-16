@@ -1,4 +1,4 @@
-import { shopItems } from './stores';
+import { cosmeticCatalogItems } from './stores';
 import { get } from 'svelte/store';
 
 /**
@@ -9,7 +9,7 @@ import { get } from 'svelte/store';
 export function getTitleText(cosmetics) {
   if (!cosmetics || !cosmetics.title) return '';
   if (cosmetics.title === 'title_founder') return '✦ FOUNDER ✦';
-  const item = get(shopItems)[cosmetics.title];
+  const item = get(cosmeticCatalogItems)[cosmetics.title];
   if (!item || item.css_type !== 'text') return '';
   return typeof item.css_value === 'string'
     && item.css_value.length <= 80

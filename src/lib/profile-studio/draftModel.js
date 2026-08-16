@@ -130,7 +130,12 @@ export function hasServerDraftChanges(value) {
 }
 
 export function buildConfigurationV2(editorConfig, reference = null, fallbackColor = PROFILE_STUDIO_FALLBACK_COLOR) {
-  const base = toEditorProfileConfig(editorConfig, fallbackColor);
+  const normalizedBase = toEditorProfileConfig(editorConfig, fallbackColor);
+  const base = normalizeProfileConfig({
+    ...normalizedBase,
+    templateKey: normalizedBase.layoutVariant,
+    layoutVariant: normalizedBase.layoutVariant
+  }, fallbackColor);
   const source = reference && Number(reference.version) === 2 ? reference : {};
   return {
     version: 2,

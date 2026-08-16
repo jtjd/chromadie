@@ -60,6 +60,6 @@ test('Studio and homepage share the reference card without sharing public layout
   assert.match(customize, /presentation="studio"/);
   assert.match(cosmetics, /STUDIO_EFFECT_DEFINITIONS/);
   assert.match(cosmetics, /Profile motion/);
-  assert.match(cosmetics, /profile-cosmetics-studio-heading[\s\S]*Profile effects[\s\S]*production editor lists only items the account owns or can use[\s\S]*Reset name effects/);
+  assert.match(cosmetics, /profile-cosmetics-studio-heading[\s\S]*Profile effects[\s\S]*Changes apply to the live preview immediately\.[\s\S]*Reset name effects/);
   assert.match(customize, /appearance-editor__surface-color[\s\S]*align-self: end[\s\S]*appearance-editor__surface-color \.appearance-editor__color-input/);
 });
