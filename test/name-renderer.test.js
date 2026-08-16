@@ -44,17 +44,17 @@ test('the curated renderer registries contain the approved active layers and fre
   assert.deepEqual(NAME_PAID_MATERIAL_KEYS, seedKeys('name_material'));
   assert.deepEqual(NAME_PAID_MOTION_KEYS, seedKeys('name_motion'));
   assert.deepEqual(NAME_COMPOSABLE_COUNTS, {
-    fonts: 10,
+    fonts: 11,
     materials: 8,
     motions: 11,
-    paidFonts: 9,
+    paidFonts: 10,
     paidMaterials: 7,
     paidMotions: 10,
-    paidTotal: 26
+    paidTotal: 27
   });
   assert.equal(NAME_MATERIALS.plain.composable, true);
   assert.equal(NAME_MOTIONS.none.composable, true);
-  assert.equal(new Set(Object.keys(NAME_FONTS)).size, 9);
+  assert.equal(new Set(Object.keys(NAME_FONTS)).size, 10);
   assert.equal(new Set(Object.keys(NAME_MATERIALS)).size, 8);
   assert.equal(new Set(Object.keys(NAME_MOTIONS)).size, 11);
 });

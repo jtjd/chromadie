@@ -193,6 +193,13 @@ const ACTIVE_NAME_FONT_DEFINITIONS = Object.freeze({
     letterSpacing: 0.02,
     label: 'Array', collection: 'Static Bloom', rarity: 'Epic'
   }),
+  'silkscreen': font('silkscreen', 'Silkscreen', SYSTEM_MONO, 400, {
+    source: 'bundled-fontsource',
+    targetFamily: 'Silkscreen',
+    substitution: 'IBM Plex Mono',
+    widthFactor: 0.64,
+    label: 'Silkscreen', collection: 'Static Bloom', rarity: 'Rare'
+  }),
   'velocity': font('velocity', 'Velocity', SYSTEM_DISPLAY, 400, {
     source: 'bundled-local',
     targetFamily: 'Velocity',
@@ -258,6 +265,7 @@ const NAME_FONT_ASSET_LOADERS = Object.freeze({
   'poppins': () => import('@fontsource/poppins/latin-600.css'),
   'jetbrains-mono': () => import('@fontsource/jetbrains-mono/latin-600.css'),
   'array': () => Promise.resolve(),
+  'silkscreen': () => import('@fontsource/silkscreen/latin-400.css'),
   'velocity': () => Promise.resolve(),
   'outfit': () => import('@fontsource/outfit/latin-600.css')
 });

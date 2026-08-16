@@ -6,7 +6,7 @@ Document user-visible redesign changes by milestone.
 
 - Profile Effects now offers the Platform default plus Black Ops One,
   Permanent Marker, Satoshi, Fira Code, Poppins, JetBrains Mono, Array,
-  Velocity, and Outfit.
+  Silkscreen, Velocity, and Outfit.
 - Retired font choices disappear from the active selector without changing
   the appearance of profiles that already use them.
 - The supplied Velocity face is bundled locally so it renders consistently in

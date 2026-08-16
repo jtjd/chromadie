@@ -4,7 +4,7 @@
 
 - Replaced the active Name Font catalog with the Platform default baseline,
   Black Ops One, Permanent Marker, Satoshi, Fira Code, Poppins, JetBrains
-  Mono, Array, Velocity, and Outfit.
+  Mono, Array, Silkscreen, Velocity, and Outfit.
 - Added pinned Fontsource packages for the local families, static Fontshare
   faces for Satoshi and Array, and an app-bundled WOFF2 for the supplied
   Velocity source.
@@ -12,7 +12,7 @@
   existing equipped profiles remain visually stable while the active catalog
   and Profile Effects selectors stay focused.
 - Added catalog/renderer regression coverage and a forward migration that
-  reduces the active catalog from 97 to 88 rows without deleting historical
+  reduces the active catalog from 97 to 89 rows without deleting historical
   inventory or equipped references.
 
 ## Customize cleanup and font readiness — 2026-08-16

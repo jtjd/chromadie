@@ -2,9 +2,9 @@
 
 ## 2026-08-16 — Curate the Profile Effects font catalog
 
-Profile Effects now exposes one empty Platform default baseline plus nine
+Profile Effects now exposes one empty Platform default baseline plus ten
 active custom font choices: Black Ops One, Permanent Marker, Satoshi, Fira
-Code, Poppins, JetBrains Mono, Array, Velocity, and Outfit. The default is
+Code, Poppins, JetBrains Mono, Array, Silkscreen, Velocity, and Outfit. The default is
 the existing code-owned Instrument Sans baseline; it is not duplicated as a
 second purchasable catalog row.
 
@@ -16,7 +16,8 @@ longer expose them. New font input remains a finite code-owned registry;
 catalog data cannot provide arbitrary CSS or font URLs. Fira Code, Poppins,
 JetBrains Mono, and Outfit use pinned Fontsource packages; Satoshi and Array
 use the existing approved Fontshare source; Velocity is bundled locally from
-the supplied DaFont source with attribution kept beside the asset.
+the supplied DaFont source with attribution kept beside the asset. Silkscreen
+uses the pinned Fontsource package.
 
 ## 2026-08-16 — Make Customize state and presentation canonical
 

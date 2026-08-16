@@ -72,6 +72,7 @@ INSERT INTO public.shop_items (
   ('name_font_poppins', 'Poppins', 'name_font', 0, 'renderer', 'poppins', NULL, NULL, 'Uncommon', 'A geometric sans with open counters and a polished everyday profile.', 'Prism', false, 'free', NULL, 'active'),
   ('name_font_jetbrains_mono', 'JetBrains Mono', 'name_font', 0, 'renderer', 'jetbrains-mono', NULL, NULL, 'Rare', 'A technical monospace with distinctive shapes and focused spacing.', 'Signal', false, 'free', NULL, 'active'),
   ('name_font_array', 'Array', 'name_font', 0, 'renderer', 'array', NULL, NULL, 'Epic', 'A dot-grid display face that turns the name into a compact signal.', 'Static Bloom', false, 'free', NULL, 'active'),
+  ('name_font_silkscreen', 'Silkscreen', 'name_font', 0, 'renderer', 'silkscreen', NULL, NULL, 'Rare', 'A compact pixel display face with a crisp, arcade-like identity voice.', 'Static Bloom', false, 'free', NULL, 'active'),
   ('name_font_velocity', 'Velocity', 'name_font', 0, 'renderer', 'velocity', NULL, NULL, 'Rare', 'A sharp display face with forward motion and an unmistakable silhouette.', 'Signal', false, 'free', NULL, 'active'),
   ('name_font_outfit', 'Outfit', 'name_font', 0, 'renderer', 'outfit', NULL, NULL, 'Uncommon', 'A modern rounded sans with a confident, approachable profile.', 'Nocturne', false, 'free', NULL, 'active'),
   ('name_material_glass_emboss', 'Raised Glass', 'name_material', 350000, 'renderer', 'glass-emboss', NULL, NULL, 'Epic', 'A translucent embossed surface with a raised, refracted edge.', 'Prism', false, 'earned', NULL, 'active'),
