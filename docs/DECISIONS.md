@@ -4856,3 +4856,10 @@ existing auth, RPC/RLS, roll, media, and cosmetic authorities intact.
 The old layout wrappers and IdentityCard presentation were removed after
 runtime import/reference checks. Shared leaf renderers and the production
 ProfileShell remain; obsolete presentation compatibility is not retained.
+
+## 2026-08-15 — Match Immersive identity proportions to the reference
+
+Immersive keeps its full-bleed composition, but its display name, bio, and
+social-link row use the smaller, quieter proportions shown in the approved
+reference. Link targets remain accessible while the visible icons use a fixed,
+compact horizontal gap rather than a viewport-scaled gap.

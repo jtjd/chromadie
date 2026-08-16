@@ -196,8 +196,8 @@
     max-width: min(92vw, 68rem);
     margin: 0;
     color: var(--profile-username, #ffffff);
-    font: 600 clamp(3rem, 7.8vw, 7rem) / .92 'Clash Display', sans-serif;
-    letter-spacing: -.07em;
+    font: 600 clamp(1.75rem, 1.8vw, 2.4rem) / 1 'Clash Display', sans-serif;
+    letter-spacing: -.035em;
     overflow-wrap: anywhere;
   }
 
@@ -213,11 +213,11 @@
   }
 
   .profile-full-bleed__bio {
-    max-width: min(90vw, 66rem);
-    margin: clamp(1.1rem, 2.2vw, 1.8rem) auto 0;
+    max-width: min(90vw, 26rem);
+    margin: .5rem auto 0;
     color: var(--profile-description, rgba(248, 248, 248, .88));
-    font: 500 clamp(1.05rem, 2vw, 1.8rem) / 1.25 'Inter', sans-serif;
-    letter-spacing: .045em;
+    font: 500 clamp(.78rem, 1vw, 1rem) / 1.45 'Inter', sans-serif;
+    letter-spacing: .01em;
     overflow-wrap: anywhere;
   }
 
@@ -244,15 +244,16 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: clamp(.7rem, 1.5vw, 1.35rem);
+    column-gap: .25rem;
+    row-gap: .35rem;
     max-width: min(92vw, 52rem);
-    margin: clamp(1.8rem, 4vw, 3rem) auto 0;
+    margin: 1.15rem auto 0;
   }
 
   .profile-full-bleed__links a {
     display: grid;
-    width: clamp(2.9rem, 5vw, 4.1rem);
-    height: clamp(2.9rem, 5vw, 4.1rem);
+    width: 2rem;
+    height: 2rem;
     place-items: center;
     border: 1px solid transparent;
     border-radius: 50%;
@@ -263,8 +264,8 @@
 
   .profile-full-bleed__links a img {
     display: block;
-    width: clamp(1.55rem, 2.8vw, 2.25rem);
-    height: clamp(1.55rem, 2.8vw, 2.25rem);
+    width: 1.5rem;
+    height: 1.5rem;
     object-fit: contain;
     filter: brightness(0) invert(1);
     opacity: .9;
@@ -304,9 +305,13 @@
   @media (max-width: 36rem) {
     .profile-full-bleed { padding-inline: .75rem; }
     .profile-full-bleed__avatar-shell { margin-bottom: 1.1rem; }
-    .profile-full-bleed__name { font-size: clamp(2.8rem, 15vw, 5rem); }
-    .profile-full-bleed__bio { max-width: 22rem; font-size: clamp(.98rem, 4.5vw, 1.3rem); }
-    .profile-full-bleed__links { gap: .5rem; margin-top: 1.5rem; }
+    .profile-full-bleed__name { font-size: clamp(1.6rem, 8vw, 2.15rem); }
+    .profile-full-bleed__bio { max-width: 22rem; font-size: clamp(.76rem, 4vw, 1rem); }
+    .profile-full-bleed__links {
+      column-gap: .2rem;
+      row-gap: .3rem;
+      margin-top: 1rem;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

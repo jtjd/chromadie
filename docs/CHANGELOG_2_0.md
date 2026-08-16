@@ -3029,3 +3029,9 @@ direct route behavior.
   contracts remain intact.
 - Removed the retired layout wrapper and IdentityCard presentation paths and
   kept shared production leaf renderers as the reusable effect boundary.
+
+## 2026-08-15 — Tune Immersive identity spacing
+
+- Matched the Immersive name and bio scale to the approved reference.
+- Tightened the horizontal spacing between social icons without changing the
+  full-bleed profile composition or link behavior.

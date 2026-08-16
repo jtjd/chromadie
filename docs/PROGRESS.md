@@ -3773,6 +3773,14 @@ created.
 - Local schema reset, database lint/security, catalog/balance/scoring drift,
   performance, link/CSP, check, build, lint, and unit validation are passing.
 
+## Immersive link spacing correction — 2026-08-15
+
+- Reduced the Immersive name and bio scale to the reference proportions.
+- Replaced viewport-scaled social-link spacing with compact fixed horizontal
+  spacing and retained accessible link hit areas and responsive wrapping.
+- Added focused source regression coverage for the typography and link-row
+  contract.
+
 ## 2026-08-14 — Close media egress and repeated-request paths
 
 Removed the production Supabase Storage escape hatches from profile-media

@@ -74,3 +74,19 @@ test('Immersive uses one purpose-built identity composition in public and Studio
   assert.match(migration, /profile_layout_full_bleed/);
   assert.match(migration, /css_value IN \('compact', 'full-bleed'\)/);
 });
+
+test('Immersive matches the reference identity scale and compact horizontal link spacing', async () => {
+  const layout = await read('src/lib/profile-layout/ProfileFullBleedLayout.svelte');
+
+  assert.match(layout, /font: 600 clamp\(1\.75rem, 1\.8vw, 2\.4rem\) \/ 1 'Clash Display'/);
+  assert.match(layout, /margin: \.5rem auto 0;/);
+  assert.match(layout, /font: 500 clamp\(\.78rem, 1vw, 1rem\) \/ 1\.45 'Inter'/);
+  assert.match(layout, /column-gap: \.25rem;/);
+  assert.match(layout, /row-gap: \.35rem;/);
+  assert.match(layout, /margin: 1\.15rem auto 0;/);
+  assert.match(layout, /width: 2rem;\n    height: 2rem;/);
+  assert.match(layout, /width: 1\.5rem;\n    height: 1\.5rem;\n    object-fit: contain;/);
+  assert.match(layout, /column-gap: \.2rem;/);
+  assert.match(layout, /font-size: clamp\(1\.6rem, 8vw, 2\.15rem\)/);
+  assert.match(layout, /font-size: clamp\(\.76rem, 4vw, 1rem\)/);
+});
