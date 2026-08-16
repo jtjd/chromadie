@@ -22,7 +22,7 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | `/?view=game` | `view = game` | `App.svelte` → `Game.svelte` | Compatibility shell metadata remains canonicalized to `/` | Guest and authenticated daily roll |
 | `/shop` | `view = profile-settings` after one-way alias normalization | `App.svelte` → Profile Studio Customize | Old bookmarks are redirected to `/profile/settings#customize-appearance`; no Shop surface or purchase UI is mounted | Authenticated Profile Studio route; existing auth guard remains authoritative |
 | `/leaderboard` or `/?view=leaderboard` | `view = leaderboard` | `Leaderboard.svelte` | `functions/leaderboard.js` serves crawler metadata for `/leaderboard` | Public leaderboard reads; rival tab is authenticated |
-| `/leaderboard?tab=today|rivals|weekly|monthly|roll|recent|rising|new|random` | Leaderboard/discovery tab | `Leaderboard.svelte` → `DiscoveryHub.svelte` | Tab is client state; route accepts only the allow-listed values | `rivals` requires an authenticated session; other surfaces are public |
+| `/leaderboard?tab=today|rivals|weekly|monthly|roll|recent|rising|new|random` | Leaderboard/discovery tab | `Leaderboard.svelte` | Tab is client state; route accepts only the allow-listed values | `rivals` requires an authenticated session; other surfaces are public |
 | `/profile` or `/?view=profile` | Owner profile when authenticated; otherwise guest lock | `ProfileShell.svelte` by default, including owner roll and owner-only profile configuration editor; `Profile.svelte` with `legacy=1` | Client metadata is profile-aware; private owner form is `noindex` when no public username is selected | Public username/id lookups are supported separately |
 | `/u/<username>` | `view = profile`, `selectedProfileUsername` | `App.svelte` → `ProfileShell.svelte` | `functions/u/[[username]].js` validates the username, fetches minimal public metadata, sets OG/JSON-LD/noscript, and returns 404 for missing profiles | Public profile surface; only approved fields are used |
 | `/u/<username>?legacy=1` or `/profile?legacy=1` | Same profile target with legacy renderer selected | `App.svelte` → `Profile.svelte` | Canonical remains the public profile URL; legacy query responses are `noindex,follow` | Temporary migration fallback for mood, badge, rival, and deletion controls |
@@ -56,9 +56,8 @@ The browser talks directly to Supabase through `src/lib/supabase.js`. Gameplay m
 | `src/lib/ProfileCollection.svelte` | Lifetime condition collection showcase with safe metadata, rarity, discovery count, and first-seen date | `profileStory.js`-normalized public collection summary; presentation only |
 | `src/lib/ProfileSocial.svelte` | Owner/visitor social controls: favorites, positive reactions, moderated guestbook, block/report actions, owner privacy settings, safe text rendering, mobile/focus/reduced-motion states | `profileSocial.js`, `supabase.js`, social RPCs; no direct social-table access, scoring, ranking, notification, or private-message path |
 | `src/lib/Profile.svelte` | Temporary legacy owner/visitor renderer and controls: mood editing, pinned badges, rivals, deletion, plus legacy profile presentation | `profileData.js`, `get_my_profile`, public `profiles` read, `get_public_profile_scores`, achievement tables, profile metadata/badge RPCs, stores |
-| `src/lib/Leaderboard.svelte` | Compatibility entry point for the existing leaderboard route | `DiscoveryHub.svelte` |
-| `src/lib/DiscoveryHub.svelte` | Public discovery tabs, bounded RPC pagination, filters, loading/error/empty states, rank lookup, and navigation event forwarding | `get_public_discovery`, `get_rivals_scores`, `DiscoveryCard.svelte`, stores, route allow-list |
-| `src/lib/DiscoveryCard.svelte` | Public profile card presentation, safe color/cosmetic display, profile CTA, profile sharing, and compatibility rival follow control | `discoveryData.js`, cosmetics safety, stores, `DiscoveryHub.svelte` |
+| `src/lib/Leaderboard.svelte` | Profile Studio-inspired public leaderboard surface: tabs, bounded pagination, filters, loading/error/empty states, rank context, and navigation event forwarding | `get_public_discovery`, `get_rivals_scores`, `LeaderboardEntry.svelte`, stores, route allow-list |
+| `src/lib/LeaderboardEntry.svelte` | Public profile row presentation, safe color/cosmetic display, profile CTA, profile sharing, and compatibility rival follow control | `discoveryData.js`, cosmetics safety, stores, `Leaderboard.svelte` |
 | `src/lib/ProfileCustomizePage.svelte` / `src/lib/ProfileCosmeticsEditor.svelte` | Appearance, media, layout, and profile-expression controls; live preview state; equip/unequip actions | Profile Studio draft/publish state, validated cosmetic catalog, `equip_item`/`unequip_item`, shared leaf renderers |
 | `src/lib/Auth.svelte` | Login/signup/password reset form, Turnstile, username moderation/availability checks | Supabase Auth, `is_username_allowed`, `is_username_available` |
 | `src/lib/AuthCallback.svelte` | OAuth/email callback completion and redirect behavior | Supabase Auth/session utilities |
@@ -115,7 +114,7 @@ Profile Studio surface rather than forming a second catalog application.
 | Game locals (`phase`, `loading`, `rollRequestId`, `initialStateKey`, presentation fields) | `Game.svelte` | Root daily-roll state; guest local persistence remains here, stale auth/roll responses are ignored, reroll requests are locally locked and server-checked |
 | Profile roll locals (`phase`, `loading`, `rollRequestId`, canonical presentation, reward/condition display) | `ProfileRoll.svelte` | Authenticated owner profile roll state; no guest persistence, client scoring, eligibility, or reward calculation; stale session/roll responses are ignored |
 | Customize expression locals (`previewLoadout`, selected slot, loading action) | `ProfileCosmeticsEditor.svelte` | Preview state remains separate from equipped account state until the existing equip/unequip RPC succeeds; the catalog is not a purchase surface |
-| Discovery locals (`activeTab`, public card items, filters, page, `hasMore`, request id, rank strip) | `DiscoveryHub.svelte` | Public discovery is request-keyed and bounded; only the compatibility rivals surface carries the existing follow id needed by the authenticated follow mutation |
+| Leaderboard locals (`activeTab`, public profile items, filters, page, `hasMore`, request id, rank context) | `Leaderboard.svelte` | Public discovery is request-keyed and bounded; only the compatibility rivals surface carries the existing follow id needed by the authenticated follow mutation |
 | Social locals (`actionLoading`, guestbook/report forms, settings draft, notice) | `ProfileSocial.svelte` | Presentation/request state only; the database enforces authentication, blocks, privacy, text bounds, moderation status, deletion, and rate limits |
 | `productAnalyticsConsent` and product-event adapter | `productAnalytics.js` + privacy page | Explicit browser-local `granted`/`denied` preference and page-local `CustomEvent` adapter; unknown/denied consent emits nothing, and no event record is persisted |
 
@@ -186,13 +185,13 @@ and signup advisory lock remain authoritative. The short application paths
 
 | Client caller | Surface | Purpose |
 | --- | --- | --- |
-| `DiscoveryHub.svelte` | `leaderboard_view` | Existing today projection used for the authenticated owner's rank strip |
-| `DiscoveryHub.svelte` | `weekly_best_leaderboard_view` | Existing weekly projection used for the authenticated owner's rank strip |
-| `DiscoveryHub.svelte` | `monthly_best_leaderboard_view` | Existing monthly projection used for the authenticated owner's rank strip |
-| `DiscoveryHub.svelte` | `all_time_leaderboard_view` | Existing best-roll projection used for the authenticated owner's rank strip |
-| `DiscoveryHub.svelte` | `get_rivals_scores()` | Authenticated followed-user compatibility projection |
-| `DiscoveryHub.svelte` | `get_public_discovery(text,text,text,integer,integer)` | Anonymous/authenticated bounded discovery projection for today, weekly, monthly, all-time, exceptional, rising, new, and deterministic daily-random surfaces; returns usernames and public card fields, never `user_id` |
-| `DiscoveryHub.svelte` | Existing leaderboard views (`leaderboard_view`, `weekly_best_leaderboard_view`, `monthly_best_leaderboard_view`, `all_time_leaderboard_view`) | Authenticated owner rank strip only; the public card feed remains behind `get_public_discovery` |
+| `Leaderboard.svelte` | `leaderboard_view` | Existing today projection used for the authenticated owner's rank context |
+| `Leaderboard.svelte` | `weekly_best_leaderboard_view` | Existing weekly projection used for the authenticated owner's rank context |
+| `Leaderboard.svelte` | `monthly_best_leaderboard_view` | Existing monthly projection used for the authenticated owner's rank context |
+| `Leaderboard.svelte` | `all_time_leaderboard_view` | Existing best-roll projection used for the authenticated owner's rank context |
+| `Leaderboard.svelte` | `get_rivals_scores()` | Authenticated followed-user compatibility projection |
+| `Leaderboard.svelte` | `get_public_discovery(text,text,text,integer,integer)` | Anonymous/authenticated bounded discovery projection for today, weekly, monthly, all-time, exceptional, rising, new, and deterministic daily-random surfaces; returns usernames and public profile fields, never `user_id` |
+| `Leaderboard.svelte` | Existing leaderboard views (`leaderboard_view`, `weekly_best_leaderboard_view`, `monthly_best_leaderboard_view`, `all_time_leaderboard_view`) | Authenticated owner rank context only; the public profile feed remains behind `get_public_discovery` |
 | No active browser surface | `purchase_item(p_item_key)` | Retained server-authoritative purchase/economy contract for a future acquisition surface; no Shop UI calls it |
 | `ProfileCosmeticsEditor.svelte` | `equip_item(p_item_key)` | Server-authoritative cosmetic equip from the Customize expression controls |
 | `ProfileCosmeticsEditor.svelte` | `unequip_item(p_slot)` | Server-authoritative cosmetic removal from the Customize expression controls |
@@ -205,7 +204,7 @@ Premium expression grants use `grant_profile_entitlement(uuid,text,text)`, a ser
 
 | Client / operator surface | Boundary | Current behavior |
 | --- | --- | --- |
-| `App.svelte`, `ProfileShell.svelte`, `Game.svelte`, `ProfileRoll.svelte`, `DiscoveryCard.svelte`, `ProfileCosmeticsEditor.svelte` | `trackProductEvent()` | Emits only the allowlisted, redacted product-event contract after explicit consent; events do not affect product state |
+| `App.svelte`, `ProfileShell.svelte`, `Game.svelte`, `ProfileRoll.svelte`, `LeaderboardEntry.svelte`, `ProfileCosmeticsEditor.svelte` | `trackProductEvent()` | Emits only the allowlisted, redacted product-event contract after explicit consent; events do not affect product state |
 | `AnalyticsPreferences.svelte` / `PrivacyPolicy.svelte` | `localStorage['chromadie-product-analytics-consent']` | Browser-local opt-in/opt-out; no event history is stored |
 | `main.js` | `createBrowserProductAnalyticsAdapter()` | Dispatches `chromadie:product-event` in the page only; no fetch, beacon, Supabase insert, or third-party product sink |
 | Authorized operations tooling | Protected social tables/RPCs | Current social reports and guestbook states are stored behind RLS/service-role access; there is no moderation dashboard, queue, notification, or appeal workflow |
@@ -257,12 +256,12 @@ browser /leaderboard?tab=<allow-listed surface>
         │
         ├─ App parses the tab without changing the canonical /leaderboard URL
         │
-        └─ DiscoveryHub
+        └─ Leaderboard
               ├─ public surfaces → get_public_discovery(surface, rarity, username prefix, page, limit)
               │       └─ SECURITY DEFINER projection reads existing profiles/scores/views
               │           and returns bounded public card JSON without internal ids
               ├─ rivals → existing authenticated get_rivals_scores compatibility path
-              ├─ DiscoveryCard renders only normalized fields and structured cosmetics
+              ├─ LeaderboardEntry renders only normalized fields and structured cosmetics
               ├─ profile CTA → App history bridge → /u/<username> → ProfileShell
               └─ share → validated /u/<username> URL via Web Share or clipboard
 ```

@@ -28,7 +28,7 @@ test('only UI-only views persist session state; Profile Studio profile data does
   const [links, identity, discovery, stores, settings, customize, contract, workspace] = await Promise.all([
     readFile(new URL('../src/lib/ProfileLinksEditor.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/IdentityEditor.svelte', import.meta.url), 'utf8'),
-    readFile(new URL('../src/lib/DiscoveryHub.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/Leaderboard.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/stores.js', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileCustomizePage.svelte', import.meta.url), 'utf8'),
@@ -43,7 +43,7 @@ test('only UI-only views persist session state; Profile Studio profile data does
   assert.doesNotMatch(links, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(links, /export function getDraftConfig/);
   assert.doesNotMatch(links, /save_profile_configuration['"]/);
-  assert.match(discovery, /VIEW_STATE_NAMESPACE = 'discovery'/);
+  assert.match(discovery, /VIEW_STATE_NAMESPACE = 'leaderboard'/);
   assert.match(stores, /clearAllViewState/);
   assert.match(settings, /function createStudioEditorProfileConfig/);
   assert.match(settings, /return base && studioDraft \? \{ \.\.\.base, draft: studioDraft \} : base/);

@@ -37,9 +37,8 @@ src/
     ProfileLinksEditor.svelte
     ProfileReferenceLayoutEditor.svelte
   discovery/
-    DiscoveryHub.svelte
-    RollLeaderboard.svelte
-    ProfileCard.svelte
+    Leaderboard.svelte
+    LeaderboardEntry.svelte
   commerce/
     catalog/
   domain/

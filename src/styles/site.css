@@ -269,14 +269,14 @@ body,
   color: var(--site-muted);
 }
 
-.app-main--site :is(.section-kicker, .guide__eyebrow, .legal-kicker, .panel-label, .collection-number, .results-heading > div > span, .discovery-hub__kicker, .discovery-heading__eyebrow, .discovery-card__eyebrow) {
+.app-main--site :is(.section-kicker, .guide__eyebrow, .legal-kicker, .panel-label, .collection-number, .results-heading > div > span) {
   color: var(--site-faint);
   font: 500 0.68rem / 1 var(--site-mono);
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
-.app-main--site :is(.card, .discovery-card, .discovery-empty, .discovery-your-rank, .discovery-tabs, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section) {
+.app-main--site :is(.card, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section) {
   border: 1px solid var(--site-line);
   border-radius: 0.65rem;
   background: var(--site-surface);
@@ -285,7 +285,7 @@ body,
   -webkit-backdrop-filter: blur(20px);
 }
 
-.app-main--site :is(.card, .discovery-card, .discovery-tabs):hover {
+.app-main--site :is(.card):hover {
   border-color: var(--site-line-strong);
   background: var(--site-surface);
 }
@@ -308,7 +308,7 @@ body,
   transform: translateY(-1px);
 }
 
-.app-main--site :is(.chroma-btn, .download-btn, .close-btn, .challenge-close, .reroll-btn, .discovery-filter-button, .discovery-clear-button, .detail-button, .quiet-action, .try-button) {
+.app-main--site :is(.chroma-btn, .download-btn, .close-btn, .challenge-close, .reroll-btn, .detail-button, .quiet-action, .try-button) {
   border: 1px solid var(--site-line-strong);
   border-radius: 0.45rem;
   background: transparent;
@@ -319,7 +319,7 @@ body,
   text-transform: none;
 }
 
-.app-main--site :is(.chroma-btn, .download-btn, .close-btn, .challenge-close, .reroll-btn, .discovery-filter-button, .discovery-clear-button, .detail-button, .quiet-action, .try-button):hover:not(:disabled) {
+.app-main--site :is(.chroma-btn, .download-btn, .close-btn, .challenge-close, .reroll-btn, .detail-button, .quiet-action, .try-button):hover:not(:disabled) {
   border-color: var(--site-accent);
   background: color-mix(in srgb, var(--site-accent) 9%, transparent);
   color: var(--site-ink);
@@ -367,60 +367,6 @@ body,
 .app-main--site :is(.rank-display, .badge-points, .ep-points) {
   color: var(--site-accent) !important;
   text-shadow: none !important;
-}
-
-/* Discovery and leaderboard */
-.app-main--site .discovery-hub {
-  box-sizing: border-box;
-  width: min(calc(100% - 2rem), 72rem);
-  max-width: 72rem;
-  margin-inline: auto;
-  padding: clamp(3.5rem, 8vw, 6rem) clamp(1rem, 4vw, 2.5rem) 5rem;
-  text-align: left;
-}
-
-.app-main--site .discovery-hub h1 {
-  max-width: 11ch;
-  font-size: clamp(3.25rem, 7vw, 6rem);
-  line-height: 0.9;
-}
-
-.app-main--site .discovery-hub__privacy-note {
-  border-color: var(--site-line);
-  border-radius: 0.35rem;
-  color: var(--site-muted);
-}
-
-.app-main--site .discovery-tabs {
-  padding: 0.35rem;
-  background: transparent;
-}
-
-.app-main--site :is(.discovery-tabs button, .discovery-filter-button, .discovery-clear-button, .discovery-filters input, .discovery-filters select) {
-  border-color: var(--site-line);
-  border-radius: 0.35rem;
-  background: transparent;
-  color: var(--site-muted);
-}
-
-.app-main--site :is(.discovery-tabs button:hover, .discovery-tabs button.active, .discovery-filter-button:hover, .discovery-clear-button:hover) {
-  border-color: var(--site-accent);
-  background: color-mix(in srgb, var(--site-accent) 9%, transparent);
-  color: var(--site-ink);
-}
-
-.app-main--site .discovery-card,
-.app-main--site .discovery-card--featured {
-  border-color: var(--site-line);
-  background: var(--site-raised);
-}
-
-.app-main--site .discovery-card:hover {
-  border-color: color-mix(in srgb, var(--site-accent) 48%, var(--site-line));
-}
-
-.app-main--site :is(.discovery-card__score strong, .discovery-card__cta, .discovery-card .staff-title) {
-  color: var(--site-accent);
 }
 
 .app-main--site :is(.search-field input, .select-row select) {
@@ -535,12 +481,12 @@ body,
 .bootstrap-error-help { color: #8f9099 !important; }
 
 @media (max-width: 48rem) {
-  .app-main--site :is(.guide, .legal-page, .terms, .discovery-hub) {
+  .app-main--site :is(.guide, .legal-page, .terms) {
     width: 100%;
     padding-inline: 1rem;
   }
 
-  .app-main--site :is(.discovery-hub h1, .guide h1, .terms h1, .legal-hero h1) {
+  .app-main--site :is(.guide h1, .terms h1, .legal-hero h1) {
     font-size: clamp(2.85rem, 15vw, 4.75rem);
   }
 }
@@ -622,62 +568,25 @@ body,
 /* Supporting routes use the same quiet surface language as Profile Studio.
  * These rules only project existing page components into the new shell; they
  * do not change their route, data, or interaction contracts. */
-.app-main--site :is(.discovery-hub, .guide, .legal-page, .terms, .pricing-page) {
+.app-main--site :is(.guide, .legal-page, .terms, .pricing-page) {
   color: var(--site-ink);
   font-family: var(--site-font);
 }
 
-.app-main--site :is(.discovery-hub, .guide, .legal-page, .terms) {
+.app-main--site :is(.guide, .legal-page, .terms) {
   background: transparent;
 }
 
-.app-main--site :is(.discovery-hub h1, .guide h1, .terms h1, .legal-hero h1, .pricing-hero h1, .pricing-card h2, .pricing-card__price, .pricing-page__promise-heading h2) {
+.app-main--site :is(.guide h1, .terms h1, .legal-hero h1, .pricing-hero h1, .pricing-card h2, .pricing-card__price, .pricing-page__promise-heading h2) {
   font-family: var(--site-display) !important;
   font-weight: 600;
 }
 
-.app-main--site :is(.discovery-tabs, .discovery-card, .discovery-empty, .discovery-your-rank, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section, .pricing-page__notice) {
+.app-main--site :is(.guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section, .pricing-page__notice) {
   border-color: var(--site-line);
   border-radius: 0.65rem;
   background: var(--site-surface);
   box-shadow: none;
-}
-
-.app-main--site .discovery-tabs {
-  gap: 0.75rem;
-  padding: 0.8rem;
-  background: transparent;
-}
-
-.app-main--site :is(.discovery-tabs button, .discovery-filter-button, .discovery-clear-button, .discovery-filters input, .discovery-filters select) {
-  border-color: var(--site-line);
-  border-radius: 0.45rem;
-  background: rgba(255, 255, 255, 0.035);
-  color: var(--site-muted);
-  font-family: var(--site-font);
-}
-
-.app-main--site :is(.discovery-tabs button:hover, .discovery-tabs button.active, .discovery-filter-button:hover, .discovery-clear-button:hover) {
-  border-color: var(--site-accent);
-  background: color-mix(in srgb, var(--site-accent) 9%, transparent);
-  color: var(--site-ink);
-}
-
-.app-main--site .discovery-grid {
-  border-color: var(--site-line);
-  border-radius: 0.65rem;
-  background: transparent;
-}
-
-.app-main--site .discovery-grid__item {
-  border-top-color: var(--site-line);
-}
-
-.app-main--site .discovery-hub__privacy-note {
-  border-color: color-mix(in srgb, var(--site-accent) 36%, transparent);
-  border-radius: 0.45rem;
-  color: var(--site-accent);
-  font-family: var(--site-font);
 }
 
 .app-main--site .pricing-page {
@@ -721,7 +630,7 @@ body,
 }
 
 @media (max-width: 48rem) {
-  .app-main--site :is(.discovery-hub, .guide, .legal-page, .terms, .pricing-page) {
+  .app-main--site :is(.guide, .legal-page, .terms, .pricing-page) {
     padding-top: 2.5rem;
   }
 }

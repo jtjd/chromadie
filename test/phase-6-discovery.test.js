@@ -134,33 +134,32 @@ test('discovery route parsing preserves legacy leaderboard tabs and adds only al
   assert.equal(parseRouteLocation('/leaderboard', '?tab=private').leaderboardTab, 'today');
 });
 
-test('discovery implementation uses public RPC projections, profile CTAs, sharing, and reduced motion without raw HTML', async () => {
-  const hub = await readFile(new URL('../src/lib/DiscoveryHub.svelte', import.meta.url), 'utf8');
-  const card = await readFile(new URL('../src/lib/DiscoveryCard.svelte', import.meta.url), 'utf8');
-  const entry = await readFile(new URL('../src/lib/Leaderboard.svelte', import.meta.url), 'utf8');
+test('leaderboard implementation uses public RPC projections, profile rows, sharing, and reduced motion without raw HTML', async () => {
+  const leaderboard = await readFile(new URL('../src/lib/Leaderboard.svelte', import.meta.url), 'utf8');
+  const entry = await readFile(new URL('../src/lib/LeaderboardEntry.svelte', import.meta.url), 'utf8');
   const migration = await readFile(new URL('../supabase/migrations/20260725120000_public_discovery.sql', import.meta.url), 'utf8');
   const previewMigration = await readFile(new URL('../supabase/migrations/20260801090000_discovery_profile_preview.sql', import.meta.url), 'utf8');
   const hardeningMigration = await readFile(new URL('../supabase/migrations/20260811130000_discovery_avatar_contract_and_media_cleanup.sql', import.meta.url), 'utf8');
   const r2Migration = await readFile(new URL('../supabase/migrations/20260813140000_profile_media_r2_discovery.sql', import.meta.url), 'utf8');
 
-  assert.match(hub, /get_public_discovery/);
-  assert.match(hub, /Load more profiles/);
-  assert.match(hub, /Search username/);
-  assert.match(hub, /Exceptional/);
-  assert.match(hub, /Rising/);
-  assert.match(hub, /Random/);
-  assert.match(card, /getPublicProfilePath/);
-  assert.match(card, /getProfileShareText/);
-  assert.match(card, /getProfileMediaUrl/);
-  assert.match(card, /CompactRollPreview/);
-  assert.match(card, /ProfileBorderEffect/);
-  assert.match(card, /getNameRendererLoadout/);
-  assert.match(card, /filter\(badge => badge\.symbol !== '❓'\)/);
-  assert.match(card, /Color roll/);
-  assert.match(card, /Open profile/);
-  assert.match(card, /prefers-reduced-motion/);
-  assert.doesNotMatch(hub + card, /innerHTML|new Function|eval\s*\(/);
-  assert.match(entry, /DiscoveryHub/);
+  assert.match(leaderboard, /get_public_discovery/);
+  assert.match(leaderboard, /Load more profiles/);
+  assert.match(leaderboard, /Search username/);
+  assert.match(leaderboard, /Exceptional/);
+  assert.match(leaderboard, /Rising/);
+  assert.match(leaderboard, /Random/);
+  assert.match(entry, /getPublicProfilePath/);
+  assert.match(entry, /getProfileShareText/);
+  assert.match(entry, /getProfileMediaUrl/);
+  assert.match(entry, /CompactRollPreview/);
+  assert.match(entry, /ProfileBorderEffect/);
+  assert.match(entry, /getNameRendererLoadout/);
+  assert.match(entry, /filter\(badge => badge\.symbol !== '❓'\)/);
+  assert.match(entry, /Signature color/);
+  assert.match(entry, /View profile/);
+  assert.match(entry, /prefers-reduced-motion/);
+  assert.doesNotMatch(leaderboard + entry, /innerHTML|new Function|eval\s*\(/);
+  assert.match(entry, /leaderboard-entry__name/);
   assert.match(migration, /SECURITY DEFINER/);
   assert.match(migration, /LIMIT v_limit \+ 1/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_public_discovery/);
@@ -176,8 +175,7 @@ test('discovery implementation uses public RPC projections, profile CTAs, sharin
   assert.match(hardeningMigration, /name LIKE OLD\.id::text \|\| '\/%'/);
   assert.match(r2Migration, /'avatarReference'/);
   assert.match(r2Migration, /profile_media_public_reference/);
-  assert.match(hub, /discovery-grid__item/);
-  assert.match(hub, /presentation="leaderboard"/);
-  assert.doesNotMatch(hub, /<main class="container discovery-hub">/);
-  assert.match(card, /discovery-card--leaderboard/);
+  assert.match(leaderboard, /leaderboard-studio__list-item/);
+  assert.match(leaderboard, /LeaderboardEntry/);
+  assert.doesNotMatch(leaderboard + entry, /DiscoveryHub|DiscoveryCard|discovery-card|discovery-grid|discovery-hub/);
 });

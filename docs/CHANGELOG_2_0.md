@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-16 — Rebuild the leaderboard as a Profile Studio board
+
+- Replaced the previous discovery-card/grid presentation with an editor-style
+  leaderboard surface modeled on Customize’s dark canvas, restrained modules,
+  tab rails, controls, and green action accent.
+- Profile rows now make rank, identity, signature color, score, public stats,
+  and profile actions readable as one bounded unit on desktop and mobile.
+- Kept public discovery RPCs, filters, pagination, rival follows, profile
+  navigation, sharing, route tabs, and owner rank context unchanged.
+- Removed the superseded DiscoveryHub/DiscoveryCard presentation and the
+  duplicate site CSS overrides so the retired styling cannot leak back into
+  the route.
+
 ## 2026-08-16 — Align supporting pages with homepage chrome
 
 - Leaderboard, roll, pricing, legal, and authentication lifecycle pages now

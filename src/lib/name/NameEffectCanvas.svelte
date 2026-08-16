@@ -35,7 +35,7 @@
     'profile-reference-card__name',
     'profile-full-bleed__name',
     'profile-username-large',
-    'discovery-card__name',
+    'leaderboard-entry__name',
     'lb-username',
     'studio-player-name'
   ]);

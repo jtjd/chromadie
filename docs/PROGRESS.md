@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Leaderboard Studio redesign — 2026-08-16
+
+- Replaced the old discovery-card/grid leaderboard presentation with a new
+  Profile Studio-inspired board: structured controls, ranked profile rows,
+  board context, public-visibility messaging, and an authenticated owner rank
+  module.
+- Kept `/leaderboard`, allow-listed tabs, bounded discovery pagination, public
+  RPC projections, rival follow behavior, profile navigation, sharing, and
+  reduced-motion behavior intact.
+- Removed the unused `DiscoveryHub.svelte` and `DiscoveryCard.svelte` runtime
+  surfaces and their duplicate site-level styling overrides. `Leaderboard.svelte`
+  is now the behavioral and presentation owner, with `LeaderboardEntry.svelte`
+  as the only row renderer.
+
 ## Shared homepage chrome — 2026-08-16
 
 - Consolidated the homepage, application, and standalone auth/lifecycle footers onto one

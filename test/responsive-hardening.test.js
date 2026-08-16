@@ -25,7 +25,8 @@ const mediaWorkspace = await read('src/lib/ProfileMediaWorkspace.svelte');
 const header = await read('src/lib/SiteModeHeader.svelte');
 const studioHeader = await read('src/lib/ProfileStudioHeader.svelte');
 const shareDialog = await read('src/lib/ProfileShareDialog.svelte');
-const discovery = await read('src/lib/DiscoveryHub.svelte');
+const leaderboard = await read('src/lib/Leaderboard.svelte');
+const leaderboardEntry = await read('src/lib/LeaderboardEntry.svelte');
 const foundations = await read('src/styles/foundations.css');
 
 test('the replacement homepage has explicit desktop, tablet, and phone containment rules', () => {
@@ -90,11 +91,13 @@ test('editable controls use a mobile-safe text size without enlarging binary con
   assert.match(foundations, /:not\(\[type=['"]range['"]\]\)/);
 });
 
-test('Discovery reduces mobile card density and enlarges touch controls', () => {
-  assert.match(discovery, /@media \(max-width: 36rem\)/);
-  assert.match(discovery, /:global\(\.discovery-card__stats\) \{ display: none/);
-  assert.match(discovery, /:global\(\.discovery-card__cta\) \{ display: inline-flex; min-height: 2\.75rem/);
-  assert.match(discovery, /:global\(\.discovery-card__share\), :global\(\.discovery-card__icon-button\) \{ min-height: 2\.75rem/);
+test('Leaderboard uses the Customize surface language and keeps mobile rows actionable', () => {
+  assert.match(leaderboard, /leaderboard-studio__module/);
+  assert.match(leaderboard, /@media \(max-width: 700px\)/);
+  assert.match(leaderboardEntry, /@media \(max-width: 460px\)/);
+  assert.match(leaderboardEntry, /leaderboard-entry__open \{ min-height: 2\.75rem/);
+  assert.match(leaderboardEntry, /leaderboard-entry__share, \.leaderboard-entry__icon-button \{ min-height: 2\.75rem/);
+  assert.doesNotMatch(leaderboard + leaderboardEntry, /discovery-card|discovery-grid|discovery-hub/);
 });
 
 test('Profile Studio keeps draft publishing and narrow editor surfaces usable', () => {
@@ -138,7 +141,7 @@ test('browser smoke can run against the production preview and checks the phone 
   assert.match(browserSmoke, /oldHeader/);
   assert.match(browserSmoke, /authenticated Profile Studio shell/);
   assert.match(browserSmoke, /Mobile customize tabs/);
-  assert.match(browserSmoke, /production Discovery keeps its route shell and card geometry bounded/);
-  assert.match(browserSmoke, /discovery-grid__item/);
+  assert.match(browserSmoke, /production Leaderboard keeps its route shell and row geometry bounded/);
+  assert.match(browserSmoke, /leaderboard-studio__list-item/);
   assert.match(browserSmoke, /avatarStates/);
 });

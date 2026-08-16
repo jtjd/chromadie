@@ -132,7 +132,7 @@ test('existing flows use the product-event contract without exposing private pay
     readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/Game.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8'),
-    readFile(new URL('../src/lib/DiscoveryCard.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/LeaderboardEntry.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileCosmeticsEditor.svelte', import.meta.url), 'utf8')
   ]);
   const [app, shell, game, profileRoll, discovery, cosmeticsEditor] = sources;

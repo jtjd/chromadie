@@ -1,5 +1,22 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-16 — Make the leaderboard a Profile Studio-style discovery board
+
+The leaderboard route now has one presentation authority: `Leaderboard.svelte`
+owns the public board shell, tab rail, filters, result states, bounded list, and
+owner rank context; `LeaderboardEntry.svelte` owns each profile row. The visual
+language intentionally follows Profile Studio’s approved surface tokens—dark
+canvas, quiet raised modules, thin rules, Clash Display headings, Inter body
+copy, and a restrained green accent—without mounting Profile Studio or sharing
+its owner-only state.
+
+This is a presentation replacement, not a data migration. The `/leaderboard`
+route, allow-listed tab parser, `get_public_discovery`, `get_rivals_scores`,
+rank-view reads, public field normalization, profile navigation, share contract,
+follow mutation, and privacy boundary remain unchanged. The obsolete
+`DiscoveryHub.svelte` and `DiscoveryCard.svelte` components and their duplicate
+site CSS selectors were removed because they had no remaining runtime consumer.
+
 ## 2026-08-16 — Use one site chrome contract outside profile surfaces
 
 The homepage is the visual authority for marketing and supporting product

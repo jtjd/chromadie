@@ -1744,7 +1744,7 @@ try {
     return { viewports, measurements, drawer, tabletToggle, tabletPreview, phonePreview, destinationMeasurements };
   });
 
-  await step('production Discovery keeps its route shell and card geometry bounded', async () => {
+  await step('production Leaderboard keeps its route shell and row geometry bounded', async () => {
     const viewports = [
       [390, 844],
       [524, 900],
@@ -1757,10 +1757,10 @@ try {
 
     for (const [width, height] of viewports) {
       await page.setViewport(width, height);
-      await page.navigate(`${appUrl}/leaderboard`, `Discovery at ${width}x${height}`);
-      await page.waitFor(`location.pathname === '/leaderboard' && document.querySelector('.discovery-hub')`, `Discovery shell at ${width}px`, 30000);
-      await page.clickText('New', { description: `Discovery New profiles tab at ${width}px` });
-      await page.waitFor('document.querySelector(".discovery-card, .discovery-empty")', `Discovery results at ${width}px`, 30000);
+      await page.navigate(`${appUrl}/leaderboard`, `Leaderboard at ${width}x${height}`);
+      await page.waitFor(`location.pathname === '/leaderboard' && document.querySelector('.leaderboard-studio')`, `Leaderboard shell at ${width}px`, 30000);
+      await page.clickText('New profiles', { description: `Leaderboard New profiles tab at ${width}px` });
+      await page.waitFor('document.querySelector(".leaderboard-entry, .leaderboard-studio__state")', `Leaderboard results at ${width}px`, 30000);
       await delay(120);
       const state = await page.evaluate(`(() => {
         const rect = element => {
@@ -1768,27 +1768,28 @@ try {
           return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
         };
         const intersects = (left, right) => Boolean(left && right && left.left < right.right - 1 && right.left < left.right - 1 && left.top < right.bottom - 1 && right.top < left.bottom - 1);
-        const shell = document.querySelector('.discovery-hub');
-        const grid = document.querySelector('.discovery-grid');
-        const items = [...document.querySelectorAll('.discovery-grid__item')];
-        const cards = [...document.querySelectorAll('.discovery-card')];
-        const heading = document.querySelector('.discovery-heading');
+        const shell = document.querySelector('.leaderboard-studio');
+        const list = document.querySelector('.leaderboard-studio__list');
+        const empty = document.querySelector('.leaderboard-studio__state');
+        const items = [...document.querySelectorAll('.leaderboard-studio__list-item')];
+        const entries = [...document.querySelectorAll('.leaderboard-entry')];
+        const heading = document.querySelector('.leaderboard-studio__results-heading');
         const headingCopy = heading?.firstElementChild;
-        const filters = document.querySelector('.discovery-filters');
+        const filters = document.querySelector('.leaderboard-studio__filters');
         const visible = element => {
           if (!element) return false;
           const style = getComputedStyle(element);
           const box = element.getBoundingClientRect();
           return style.display !== 'none' && style.visibility !== 'hidden' && box.width > 0 && box.height > 0;
         };
-        const avatarStates = cards.map(card => {
-          const image = card.querySelector('.discovery-card__avatar img');
-          const fallback = card.querySelector('.discovery-card__avatar-initial');
-          const avatarBox = card.querySelector('.discovery-card__avatar')?.getBoundingClientRect();
+        const avatarStates = entries.map(entry => {
+          const image = entry.querySelector('.leaderboard-entry__avatar img');
+          const fallback = entry.querySelector('.leaderboard-entry__avatar-initial');
+          const avatarBox = entry.querySelector('.leaderboard-entry__avatar')?.getBoundingClientRect();
           const inViewport = Boolean(avatarBox && avatarBox.bottom > -160 && avatarBox.top < innerHeight + 160);
           return { imageLoaded: Boolean(image?.complete && image.naturalWidth > 0), fallback: visible(fallback), inViewport };
         });
-        const outOfShell = [...document.querySelectorAll('.discovery-grid__item, .discovery-card__avatar, .discovery-card__cta, .discovery-filters input, .discovery-filters select, .discovery-filter-button')]
+        const outOfShell = [...document.querySelectorAll('.leaderboard-studio__list-item, .leaderboard-entry__avatar, .leaderboard-entry__open, .leaderboard-studio__filters input, .leaderboard-studio__filters select, .leaderboard-studio__button')]
           .map(element => ({ element, box: element.getBoundingClientRect() }))
           .filter(({ box }) => box.left < shell?.getBoundingClientRect().left - 1 || box.right > shell?.getBoundingClientRect().right + 1)
           .slice(0, 8)
@@ -1796,10 +1797,10 @@ try {
         return {
           viewport: [innerWidth, innerHeight],
           shell: rect(shell),
-          grid: rect(grid),
-          gridColumns: grid ? getComputedStyle(grid).gridTemplateColumns.trim().split(/\\s+/).filter(Boolean).length : 0,
-          items: items.map(item => ({ box: rect(item), columnStart: getComputedStyle(item).gridColumnStart, columnEnd: getComputedStyle(item).gridColumnEnd, featured: item.classList.contains('discovery-grid__item--featured') })),
-          cards: cards.map(card => rect(card)),
+          list: rect(list),
+          empty: rect(empty),
+          items: items.map(item => ({ box: rect(item) })),
+          entries: entries.map(entry => rect(entry)),
           heading: rect(heading),
           filters: rect(filters),
           headingFiltersOverlap: visible(filters) && intersects(headingCopy?.getBoundingClientRect(), filters?.getBoundingClientRect()),
@@ -1808,15 +1809,16 @@ try {
         };
       })()`);
       assert(state.shell && state.shell.width >= Math.min(width - 16, 900), `Discovery shell is still constrained at ${width}px: ${JSON.stringify(state)}.`);
-      assert(state.grid && state.gridColumns === 1, `Discovery grid has competing column ownership at ${width}px: ${JSON.stringify(state)}.`);
-      assert(!state.outOfShell.length && !state.headingFiltersOverlap, `Discovery controls escape or overlap at ${width}px: ${JSON.stringify(state)}.`);
-      assert(state.items.every(item => item.box && item.box.left >= state.shell.left - 1 && item.box.right <= state.shell.right + 1), `Discovery card wrapper escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
-      assert(state.items.every(item => !item.featured || (item.columnStart === '1' && (item.columnEnd === '-1' || item.columnEnd === '2'))), `Featured Discovery wrapper does not own its grid placement at ${width}px: ${JSON.stringify(state)}.`);
-      assert(state.avatarStates.every(avatar => !avatar.inViewport || avatar.imageLoaded || avatar.fallback), `Discovery contains an unloaded visible avatar without a fallback at ${width}px: ${JSON.stringify(state)}.`);
+      const resultSurface = state.list || state.empty;
+      assert(resultSurface && resultSurface.left >= state.shell.left - 1 && resultSurface.right <= state.shell.right + 1, `Leaderboard results surface escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
+      assert(!state.outOfShell.length && !state.headingFiltersOverlap, `Leaderboard controls escape or overlap at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.items.every(item => item.box && item.box.left >= state.shell.left - 1 && item.box.right <= state.shell.right + 1), `Leaderboard row wrapper escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.entries.every(entry => entry && entry.left >= state.shell.left - 1 && entry.right <= state.shell.right + 1), `Leaderboard entry escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.avatarStates.every(avatar => !avatar.inViewport || avatar.imageLoaded || avatar.fallback), `Leaderboard contains an unloaded visible avatar without a fallback at ${width}px: ${JSON.stringify(state)}.`);
       measurements.push({ width, height, ...state });
     }
 
-    await capture('11-discovery-responsive');
+    await capture('11-leaderboard-responsive');
     return { viewports, measurements };
   });
 

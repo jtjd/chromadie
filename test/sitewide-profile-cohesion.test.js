@@ -81,7 +81,7 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(main, /styles\/site\.css/);
   assert.match(siteStyles, /--site-surface:/);
   assert.match(siteStyles, /\.app-main--site \.game-container/);
-  assert.match(siteStyles, /\.app-main--site \.discovery-card/);
+  assert.doesNotMatch(siteStyles, /\.app-main--site \.discovery-card/);
   assert.doesNotMatch(siteStyles, /\.app-main--site \.shop-page|\.shop-heading|\.shop-item/);
   assert.match(siteStyles, /--site-font: 'Inter'/);
   assert.match(siteStyles, /--font-display-stack: 'Clash Display'/);
@@ -117,19 +117,20 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.doesNotMatch(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);
 });
 
-test('leaderboard and legal routes share the homepage presentation contract', async () => {
+test('leaderboard owns a new Profile Studio-inspired presentation contract', async () => {
   const siteStyles = await read('src/styles/site.css');
-  const discoveryHub = await read('src/lib/DiscoveryHub.svelte');
+  const leaderboard = await read('src/lib/Leaderboard.svelte');
+  const leaderboardEntry = await read('src/lib/LeaderboardEntry.svelte');
   const privacy = await read('src/lib/PrivacyPolicy.svelte');
   const terms = await read('src/lib/TermsOfService.svelte');
 
-  assert.match(discoveryHub, /<div class="discovery-grid">/);
-  assert.match(discoveryHub, /discovery-grid__item/);
-  assert.match(discoveryHub, /presentation="leaderboard"/);
-  assert.match(siteStyles, /\.app-main--site \.discovery-hub \{/);
-  assert.match(siteStyles, /\.app-main--site \.discovery-card/);
-  assert.doesNotMatch(siteStyles, /\.app-main--site \.discovery-grid > \.discovery-card/);
-  assert.doesNotMatch(siteStyles, /\.app-main--site \.discovery-card__main \{/);
+  assert.match(leaderboard, /<main class="leaderboard-studio"/);
+  assert.match(leaderboard, /leaderboard-studio__module/);
+  assert.match(leaderboard, /leaderboard-studio__tab-rail/);
+  assert.match(leaderboardEntry, /leaderboard-entry/);
+  assert.match(leaderboard, /--studio-accent: #00ffb3/);
+  assert.match(leaderboard, /Clash Display/);
+  assert.doesNotMatch(siteStyles, /discovery-(?:hub|card|grid|tabs|empty|your-rank)/);
   assert.match(privacy, /class="container site-document legal-page"/);
   assert.match(terms, /class="site-document terms"/);
   assert.match(siteStyles, /Privacy and Terms are the same kind of quiet product document/);

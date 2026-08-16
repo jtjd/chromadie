@@ -48,7 +48,7 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.doesNotMatch(header, /shareProfile/);
   assert.match(header, /dispatch\('logout'/);
   assert.match(site, /\.app-main--site \.card/);
-  assert.match(site, /\.app-main--site \.discovery-hub/);
+  assert.doesNotMatch(site, /discovery-(?:hub|card|grid|tabs)/);
 });
 
 test('explicit routes remain available while the retired Shop URL enters Customize', () => {
