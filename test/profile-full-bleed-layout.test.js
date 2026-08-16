@@ -85,8 +85,8 @@ test('Immersive matches the reference identity scale and compact horizontal link
   assert.match(layout, /column-gap: \.25rem;/);
   assert.match(layout, /row-gap: \.35rem;/);
   assert.match(layout, /margin: 1\.15rem auto 0;/);
-  assert.match(layout, /width: 2rem;\n\s{4}height: 2rem;/);
-  assert.match(layout, /width: 1\.8rem;\n\s{4}height: 1\.8rem;\n\s{4}object-fit: contain;/);
+  assert.match(layout, /width: 2\.4rem;\n\s{4}height: 2\.4rem;/);
+  assert.match(layout, /width: 2\.2rem;\n\s{4}height: 2\.2rem;\n\s{4}object-fit: contain;/);
   assert.match(layout, /column-gap: \.2rem;/);
   assert.match(layout, /margin-bottom: \.55rem;/);
   assert.match(layout, /font-size: clamp\(1\.45rem, 7vw, 1\.9rem\)/);

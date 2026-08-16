@@ -252,8 +252,8 @@
 
   .profile-full-bleed__links a {
     display: grid;
-    width: 2rem;
-    height: 2rem;
+    width: 2.4rem;
+    height: 2.4rem;
     place-items: center;
     border: 1px solid transparent;
     border-radius: 50%;
@@ -264,8 +264,8 @@
 
   .profile-full-bleed__links a img {
     display: block;
-    width: 1.8rem;
-    height: 1.8rem;
+    width: 2.2rem;
+    height: 2.2rem;
     object-fit: contain;
     filter: brightness(0) invert(1);
     opacity: .9;
