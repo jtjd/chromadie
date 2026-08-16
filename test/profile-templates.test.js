@@ -18,8 +18,8 @@ import {
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('template registry is finite, structured, and preserves the free foundation', () => {
-  assert.deepEqual(FREE_PROFILE_TEMPLATE_KEYS, ['compact', 'sleek', 'minimal', 'modern', 'portfolio', 'full-bleed']);
-  assert.equal(Object.keys(PROFILE_TEMPLATE_DEFINITIONS).length, 6);
+  assert.deepEqual(FREE_PROFILE_TEMPLATE_KEYS, ['compact', 'full-bleed']);
+  assert.equal(Object.keys(PROFILE_TEMPLATE_DEFINITIONS).length, 2);
   assert.equal(Object.values(PROFILE_TEMPLATE_DEFINITIONS).every(definition => definition.tier === 'free'), true);
 
   for (const definition of Object.values(PROFILE_TEMPLATE_DEFINITIONS)) {
@@ -28,23 +28,23 @@ test('template registry is finite, structured, and preserves the free foundation
     assert.equal(definition.modules.every(module => ['wide', 'medium', 'narrow'].includes(module.size)), true);
   }
 
-  const patch = createProfileTemplatePatch('sleek');
-  assert.equal(patch.templateKey, 'sleek');
-  assert.equal(patch.layoutVariant, 'sleek');
-  assert.deepEqual(patch.modules.map(module => module.id), ['roll', 'links', 'stats', 'signature', 'recent', 'achievements', 'boundary', 'explore']);
+  const patch = createProfileTemplatePatch('full-bleed');
+  assert.equal(patch.templateKey, 'full-bleed');
+  assert.equal(patch.layoutVariant, 'full-bleed');
+  assert.deepEqual(patch.modules.map(module => module.id), ['roll', 'links', 'signature', 'recent', 'achievements', 'stats', 'boundary', 'explore']);
   assert.equal('appearance' in patch, false);
   assert.equal(normalizeProfileTemplateKey('not-real'), 'compact');
-  assert.equal(normalizeProfileTemplateKey('editorial'), 'sleek');
+  assert.equal(normalizeProfileTemplateKey('editorial'), 'compact');
   assert.equal(isPremiumExpressionUnlocked(['other']), false);
   assert.equal(isPremiumExpressionUnlocked([PREMIUM_EXPRESSION_ENTITLEMENT_KEY]), true);
 });
 
-test('profile config carries a backward-compatible template marker without changing safe defaults', () => {
+test('profile config carries the active template marker without changing safe defaults', () => {
   const defaults = createDefaultProfileConfig('#123456');
   assert.equal(defaults.templateKey, 'compact');
-  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'sleek', layoutVariant: 'sleek' }).templateKey, 'sleek');
+  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'full-bleed', layoutVariant: 'full-bleed' }).templateKey, 'full-bleed');
   assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'unsafe-template' }).templateKey, 'compact');
-  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'custom', layoutVariant: 'modern' }).templateKey, 'modern');
+  assert.equal(normalizeProfileConfig({ ...defaults, templateKey: 'custom', layoutVariant: 'modern' }).templateKey, 'compact');
 });
 
 test('template application preserves user-owned expression and premium authority', async () => {
@@ -58,7 +58,7 @@ test('template application preserves user-owned expression and premium authority
 
   assert.match(picker, /createProfileTemplatePatch/);
   assert.match(picker, /Compact/);
-  assert.match(picker, /Portfolio/);
+  assert.match(picker, /Immersive/);
   assert.doesNotMatch(picker, /Premium expression/);
   assert.match(editor, /ProfileTemplatePicker/);
   assert.match(editor, /templateKey/);

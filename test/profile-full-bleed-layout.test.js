@@ -51,7 +51,7 @@ test('Immersive uses one purpose-built identity composition in public and Studio
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/profileRenderModel.js'),
     read('src/lib/ProfileReferenceLayoutEditor.svelte'),
-    read('supabase/migrations/20260815120000_profile_full_bleed_layout.sql')
+    read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql')
   ]);
 
   assert.match(layout, /data-profile-layout-content="full-bleed"/);
@@ -64,13 +64,13 @@ test('Immersive uses one purpose-built identity composition in public and Studio
   assert.match(shell, /import ProfileFullBleedLayout/);
   assert.match(shell, /profilePresentationLayoutVariant === 'full-bleed'/);
   assert.match(shell, /inputSurface=\{previewMode \? 'container' : 'viewport'\}/);
-  assert.match(shell, /profilePresentationLayoutVariant === 'full-bleed'\)}/);
-  assert.match(renderModel, /layoutVariant === 'portfolio' \|\| layoutVariant === 'full-bleed'/);
+  assert.match(shell, /\{#if profilePresentationLayoutVariant === 'full-bleed'\}/);
+  assert.match(renderModel, /layoutVariant === 'full-bleed'/);
 
   assert.match(studio, /import ProfileFullBleedLayout/);
   assert.match(studio, /layoutVariant === 'full-bleed'/);
   assert.match(studio, /inputSurface="container"/);
   assert.match(editor, /data-layout='full-bleed'/);
   assert.match(migration, /profile_layout_full_bleed/);
-  assert.match(migration, /css_value IN \('compact', 'sleek', 'minimal', 'modern', 'portfolio', 'full-bleed'\)/);
+  assert.match(migration, /css_value IN \('compact', 'full-bleed'\)/);
 });

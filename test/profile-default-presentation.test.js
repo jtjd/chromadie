@@ -17,13 +17,13 @@ test('new profile defaults use the compact background-first composition', () => 
 test('default profile presentation does not inject a theme or redundant handle', async () => {
   const [shell, card] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/IdentityCard.svelte')
+    read('src/lib/ProfileReferenceCard.svelte')
   ]);
 
   assert.doesNotMatch(shell, /defaultProfilePresentation/);
   assert.match(shell, /profilePresentationLayoutVariant/);
-  assert.match(shell, /borderKey=\{cosmetics\?\.profile_border\}/);
-  assert.match(card, /background-image: none/);
+  assert.match(shell, /profileBorderKey=\{cosmetics\?\.profile_border\}/);
+  assert.match(card, /background: var\(--profile-surface-fill/);
   assert.doesNotMatch(card, /identity-card__handle-row|identity-card__handle/);
   assert.doesNotMatch(card, /starfield-blue\.webp/);
 });

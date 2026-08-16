@@ -46,7 +46,7 @@ test('Studio and homepage share the reference card without sharing public layout
   assert.match(layout, /data-layout-editor="reference-first"/);
   assert.match(layout, /PROFILE_LAYOUT_DEFINITIONS/);
   assert.match(layout, /PROFILE_LAYOUT_KEYS/);
-  for (const key of ['compact', 'sleek', 'minimal', 'modern', 'portfolio', 'full-bleed']) {
+  for (const key of ['compact', 'full-bleed']) {
     assert.match(layout, new RegExp(`data-layout=\\{key\\}|['"]${key}['"]`));
   }
   assert.doesNotMatch(layout, /ProfileTemplatePicker/);

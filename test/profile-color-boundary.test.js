@@ -20,14 +20,16 @@ test('all retained Profile Border keys resolve through the finite registry', () 
 });
 
 test('profile color presentation remains bounded and the retained border is shared', async () => {
-  const [shell, profile, border, registry] = await Promise.all([
+  const [shell, profile, card, border, registry] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/Profile.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/profile-border/ProfileBorderEffect.svelte'),
     read('src/lib/profile-border/profileBorders.js')
   ]);
   assert.match(shell, /--profile-accent/);
-  assert.match(shell, /ProfileBorderEffect/);
+  assert.match(shell, /ProfileReferenceCard/);
+  assert.match(card, /ProfileBorderEffect/);
   assert.match(profile, /ProfileBorderEffect/);
   assert.match(registry, /PROFILE_BORDER_KEYS/);
   assert.match(border, /prefers-reduced-motion/);
@@ -42,8 +44,9 @@ test('profile color presentation remains bounded and the retained border is shar
 });
 
 test('profile appearance tokens stay on the identity card and out of the roll UI', async () => {
-  const [shell, appearanceStyle, renderModel, border] = await Promise.all([
+  const [shell, card, appearanceStyle, renderModel, border] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/profileAppearanceStyle.js'),
     read('src/lib/profileRenderModel.js'),
     read('src/lib/profile-border/ProfileBorderEffect.svelte')
@@ -53,7 +56,9 @@ test('profile appearance tokens stay on the identity card and out of the roll UI
   assert.match(renderModel, /getProfileAppearanceStyle\(configuration\)/);
   assert.match(renderModel, /getProfileCanvasStyle\(configuration\)/);
   assert.match(shell, /style=\{profilePageStyle\} data-profile-render-model="v1"/);
-  assert.match(shell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\} surfaceStyle=\{profileCardStyle\}/);
+  assert.match(shell, /profileBorderKey=\{cosmetics\?\.profile_border\}/);
+  assert.match(shell, /surfaceStyle=\{profileCardStyle\}/);
+  assert.match(card, /<ProfileBorderEffect[\s\S]*borderKey=\{profileBorderKey\}[\s\S]*surfaceStyle=\{surfaceStyle\}/);
   assert.match(border, /style=\{surfaceStyle\} data-profile-border=.*data-profile-surface/);
   assert.match(appearanceStyle, /--profile-background-paint/);
   assert.match(appearanceStyle, /function rgbaFromHex/);

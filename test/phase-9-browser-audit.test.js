@@ -54,7 +54,7 @@ test('browser audit preserves guest/authenticated roll and owner/visitor profile
   assert.match(profileRoll, /normalizeCanonicalRoll/);
   assert.match(profileShell, /isOwnProfileTarget/);
   assert.match(profileShell, /isOwnProfile/);
-  assert.match(profileShell, /<ProfileRoll/);
+  assert.match(profileShell, /profileRollComponent[\s\S]*fixtureResult=\{latestRoll\}/);
 
   assert.equal(canInitiateRoll({ authInitialized: false }), false);
   assert.equal(canInitiateRoll({ authInitialized: true }), true);

@@ -40,7 +40,7 @@ test('identity validation is optional, trimmed, and character-aware', () => {
 });
 
 test('identity values stay plain text in the public render contract', async () => {
-  const identityCard = await readFile(new URL('../src/lib/IdentityCard.svelte', import.meta.url), 'utf8');
+  const identityCard = await readFile(new URL('../src/lib/ProfileReferenceCard.svelte', import.meta.url), 'utf8');
   const identityEditor = await readFile(new URL('../src/lib/IdentityEditor.svelte', import.meta.url), 'utf8');
   const migration = await readFile(new URL('../supabase/migrations/20260725150000_profile_identity.sql', import.meta.url), 'utf8');
   const dangerous = '<strong>**not markup**</strong>';

@@ -1,5 +1,5 @@
 import { CHROMADIE_PLUS_ENTITLEMENT_KEY, hasChromadiePlus } from './premiumEntitlements.js';
-import { LEGACY_PROFILE_LAYOUT_MAP, PROFILE_LAYOUT_DEFINITIONS, PROFILE_LAYOUT_KEYS, normalizeProfileLayoutKey } from './profile-layout/profileLayouts.js';
+import { PROFILE_LAYOUT_DEFINITIONS, PROFILE_LAYOUT_KEYS, normalizeProfileLayoutKey } from './profile-layout/profileLayouts.js';
 
 /**
  * Templates are the Studio-facing names for the structural layout
@@ -18,10 +18,6 @@ function freezeModules(modules) {
 
 const MODULE_ORDER = Object.freeze({
   compact: ['roll', 'stats', 'links', 'signature', 'recent', 'achievements', 'boundary', 'explore'],
-  sleek: ['roll', 'links', 'stats', 'signature', 'recent', 'achievements', 'boundary', 'explore'],
-  minimal: ['roll', 'links', 'signature', 'stats', 'recent', 'achievements', 'boundary', 'explore'],
-  modern: ['roll', 'stats', 'links', 'signature', 'achievements', 'recent', 'boundary', 'explore'],
-  portfolio: ['roll', 'signature', 'links', 'recent', 'achievements', 'stats', 'boundary', 'explore'],
   'full-bleed': ['roll', 'links', 'signature', 'recent', 'achievements', 'stats', 'boundary', 'explore']
 });
 
@@ -71,10 +67,6 @@ export function normalizeProfileTemplateKey(value, fallback = 'compact') {
   const candidate = String(value || '').trim().toLowerCase();
   if (getProfileTemplateDefinition(candidate)) return candidate;
 
-  // Preserve an explicitly selected new layout when an old editor marks a
-  // composition as "custom". Historical template names are mapped to the
-  // nearest structural replacement instead of remaining active catalog keys.
-  if (candidate === 'custom') return normalizeProfileLayoutKey(fallback, 'compact');
   return normalizeProfileLayoutKey(candidate, normalizeProfileLayoutKey(fallback, 'compact'));
 }
 
@@ -100,7 +92,3 @@ export function createProfileTemplatePatch(value) {
     modules: definition.modules.map(module => ({ ...module }))
   };
 }
-
-// Exported for migration/contract tests without making the legacy catalog
-// active again.
-export { LEGACY_PROFILE_LAYOUT_MAP };

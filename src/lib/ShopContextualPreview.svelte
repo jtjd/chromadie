@@ -215,10 +215,10 @@
   .shop-contextual-preview :global(.studio-stage.context-profile) { min-height: 19rem; padding: .55rem; border: 1px solid var(--shop-line); border-radius: var(--radius-md); background: var(--shop-deep); }
   .shop-contextual-preview :global(.stage-grid) { display:none; }
   .shop-contextual-preview :global(.studio-profile-card) { width: calc(100% - .25rem); max-width: 100%; margin-inline: auto; border-color: transparent; background: transparent; box-shadow: none; }
-  .shop-contextual-preview :global(.studio-profile-card .identity-card) { min-height: 16rem; padding: 1.15rem; border-color: transparent; background: transparent !important; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .shop-contextual-preview :global(.studio-profile-card .identity-card__avatar) { flex-basis: 3.5rem; width: 3.5rem; }
-  .shop-contextual-preview :global(.studio-profile-card .identity-card__name) { font-size: clamp(2rem, 5.5vw, 2.65rem); }
-  .shop-contextual-preview :global(.studio-profile-card .identity-card__links) { gap: .45rem .8rem; margin-top: .8rem; }
+  .shop-contextual-preview :global(.studio-profile-card .profile-reference-card) { min-height: 16rem; }
+  .shop-contextual-preview :global(.studio-profile-card .profile-reference-card__avatar-shell) { width: 3.5rem; height: 3.5rem; margin-top: 1rem; }
+  .shop-contextual-preview :global(.studio-profile-card .profile-reference-card__name) { font-size: clamp(2rem, 5.5vw, 2.65rem); }
+  .shop-contextual-preview :global(.studio-profile-card .profile-reference-card__links) { gap: .45rem .8rem; margin-top: .8rem; }
 
   .shop-contextual-preview__status { display:grid; gap:.25rem; padding:0 .15rem .05rem; }
   .shop-contextual-preview__status span { color:var(--shop-faint); font:700 .62rem/1 var(--shop-mono); letter-spacing:.1em; text-transform:uppercase; }

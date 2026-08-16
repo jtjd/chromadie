@@ -335,7 +335,7 @@ async function verifyAssetDelivery(asset, label) {
 
 async function studioMediaUrls() {
   return page.evaluate('(() => {' +
-    'const avatar = document.querySelector(".profile-studio-preview .identity-card__avatar-media");' +
+    'const avatar = document.querySelector(".profile-studio-preview .profile-reference-card__avatar");' +
     'const background = document.querySelector(".profile-studio-preview .profile-shell__media-image");' +
     'const url = element => element?.currentSrc || element?.src || "";' +
     'return { avatar: url(avatar), background: url(background) };' +
@@ -364,8 +364,8 @@ async function assertStudioMediaStaysStableAfterDraftChange() {
 
   await page.click('#profile-customize-tab-layout', 'R2 smoke layout tab');
   await page.waitFor('document.querySelector("#profile-customize-tab-layout")?.getAttribute("aria-selected") === "true" && document.querySelector("#customize-layout")', 'R2 smoke visible Layout editor');
-  await page.evaluate('(() => { const card = [...document.querySelectorAll(\'.profile-template-picker__card\')].find(node => node.querySelector(\'strong\')?.textContent.trim() === \'Sleek\'); card?.click(); })()');
-  await page.waitFor('document.querySelector(".profile-studio-preview .profile-shell-page--preview .identity-card--layout-sleek")', 'R2 smoke staged layout');
+  await page.evaluate('(() => { const card = [...document.querySelectorAll(\'.profile-template-picker__card\')].find(node => node.querySelector(\'strong\')?.textContent.trim() === \'Immersive\'); card?.click(); })()');
+  await page.waitFor('document.querySelector(".profile-studio-preview [data-profile-reference-card], .profile-studio-preview [data-profile-layout-content=full-bleed]")', 'R2 smoke staged layout');
   await delay(250);
 
   const requestsAfter = stableProfileMediaRequests();
@@ -447,7 +447,7 @@ async function main() {
   await page.setInputValue('#email-input', email, ['input', 'change']);
   await page.setInputValue('#password-input', password, ['input', 'change']);
   await page.click('.auth-submit', 'local signup submit');
-  await page.waitFor("location.pathname === " + JSON.stringify('/' + username) + " && document.querySelector('.profile-shell-page .identity-card')", 'local authenticated profile', 30000);
+  await page.waitFor("location.pathname === " + JSON.stringify('/' + username) + " && document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content=full-bleed]')", 'local authenticated profile', 30000);
   result.accountCreated = true;
 
   const userId = await readLocalUserId();

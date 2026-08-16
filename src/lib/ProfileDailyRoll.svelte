@@ -63,39 +63,5 @@
     border-top: 1px solid color-mix(in srgb, var(--profile-control-accent, #8B7CF6) 22%, transparent);
   }
 
-  .profile-daily-roll--sleek {
-    min-height: 3rem;
-    padding: .2rem .55rem;
-    border: 1px solid color-mix(in srgb, var(--profile-border-color, #ffffff) 14%, transparent);
-    border-radius: .72rem;
-    background: color-mix(in srgb, var(--profile-surface, #090b0f) 52%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-
-  .profile-daily-roll--minimal {
-    width: auto;
-    max-width: 100%;
-    padding: .25rem 0;
-    border-top: 1px solid color-mix(in srgb, var(--profile-control-accent, #8B7CF6) 18%, transparent);
-  }
-
-  .profile-daily-roll--minimal :global(.today-color__result-head),
-  .profile-daily-roll--minimal :global(.profile-roll__result) { max-width: 15rem; }
-
-  .profile-daily-roll--modern {
-    padding: .3rem .55rem .15rem;
-    border: 1px solid color-mix(in srgb, var(--profile-border-color, #ffffff) 11%, transparent);
-    border-radius: .72rem;
-    background: color-mix(in srgb, var(--profile-surface, #090b0f) 42%, transparent);
-  }
-
-  .profile-daily-roll--modern :global(.today-color__result-head),
-  .profile-daily-roll--modern :global(.profile-roll__result) { max-width: 17rem; }
-
-  .profile-daily-roll--portfolio {
-    padding: .5rem 0;
-  }
-
   @media (prefers-reduced-motion: reduce) { .profile-daily-roll :global(*) { scroll-behavior: auto; } }
 </style>

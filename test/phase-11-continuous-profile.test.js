@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 test('phase 11 profile composition uses one opening canvas and quiet supporting surfaces', async () => {
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');
+  const card = await readFile(new URL('../src/lib/ProfileReferenceCard.svelte', import.meta.url), 'utf8');
   const expression = await readFile(new URL('../src/lib/ProfileExpression.svelte', import.meta.url), 'utf8');
   const featured = await readFile(new URL('../src/lib/ProfileFeatured.svelte', import.meta.url), 'utf8');
   const roll = await readFile(new URL('../src/lib/ProfileRoll.svelte', import.meta.url), 'utf8');
@@ -12,7 +13,8 @@ test('phase 11 profile composition uses one opening canvas and quiet supporting 
   assert.match(shell, /profile-shell__opening/);
   assert.match(shell, /profile-shell__supporting/);
   assert.match(shell, /profile-shell__identity/);
-  assert.match(shell, /<ProfileDailyRoll/);
+  assert.match(shell, /ProfileReferenceCard/);
+  assert.match(card, /<ProfileDailyRoll/);
   assert.doesNotMatch(shell, /More of the color story|Connect with this profile|Public boundary/);
   assert.doesNotMatch(featured, /Featured accomplishment/);
   assert.doesNotMatch(expression, /<Module/);

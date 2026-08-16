@@ -86,10 +86,11 @@ test('collection fitting room previews the draft card appearance and media', asy
 });
 
 test('preview renders bounded media and never exposes mutations', async () => {
-  const [settings, preview, shell, environment, music] = await Promise.all([
+  const [settings, preview, shell, card, environment, music] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileShell.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/ProfileEnvironmentLayer.svelte'),
     read('src/lib/ProfileMusic.svelte')
   ]);
@@ -115,7 +116,7 @@ test('preview renders bounded media and never exposes mutations', async () => {
   assert.match(environment, /CursorTrailLayer/);
   assert.match(shell, /background: var\(--profile-background-paint, var\(--color-canvas-deep\)\);/);
   assert.match(environment, /\.profile-environment__image,[\s\S]*\.profile-environment__video/);
-  assert.match(shell, /profile-border-effect--content/);
+  assert.match(card, /profile-border-effect--content/);
   assert.doesNotMatch(shell, /<div class="profile-shell__card-media-background"|<div class="profile-shell__surface-media-background"/);
   assert.doesNotMatch(shell, /profile-shell__card-atmosphere-layer|profile-shell__card-cursor-layer/);
   assert.doesNotMatch(shell, /<ProfileBorderEffect[\s\S]*\{#if atmosphereKey && previewMode\}/);
@@ -129,7 +130,7 @@ test('preview renders bounded media and never exposes mutations', async () => {
 test('appearance controls are consumed by the identity card and fitting-room renderer', async () => {
   const [appearanceStyle, identityCard, fittingPreview, studioPreview, editor, shell, environment, atmosphere, viteConfig] = await Promise.all([
     read('src/lib/profileAppearanceStyle.js'),
-    read('src/lib/IdentityCard.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/ShopStudioPreview.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
@@ -143,10 +144,10 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(appearanceStyle, /--profile-surface-fill:\$\{rgbaFromHex/);
   assert.match(identityCard, /background: var\(--profile-surface-fill/);
   assert.match(identityCard, /backdrop-filter: blur\(var\(--profile-surface-blur/);
-  assert.match(identityCard, /@supports \(backdrop-filter: blur\(0\)\) \{[\s\S]*\.identity-card \{ backdrop-filter: blur\(var\(--profile-surface-blur/);
-  assert.match(shell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
+  assert.match(identityCard, /container: profile-reference-card \/ inline-size/);
+  assert.match(shell, /ProfileReferenceCard/);
   assert.match(environment, /profile-environment__overlay/);
-  assert.match(shell, /<ProfileBorderEffect/);
+  assert.match(identityCard, /<ProfileBorderEffect/);
   assert.doesNotMatch(shell, /profile-shell__surface-backdrop/);
   assert.doesNotMatch(viteConfig, /csso|restructure: false/);
   assert.match(shell, /\.profile-shell__approved-canvas,\s+\.profile-shell__opening\.profile-shell__approved-opening \{ z-index: auto; \}/);
@@ -158,9 +159,9 @@ test('appearance controls are consumed by the identity card and fitting-room ren
   assert.match(environment, /background-position|object-fit: cover/);
   assert.match(atmosphere, /\.profile-atmosphere \{[^}]*isolation: auto;/);
   assert.match(identityCard, /color: var\(--profile-text/);
-  assert.match(identityCard, /color: var\(--profile-highlight/);
-  assert.match(identityCard, /border-radius: 20px/);
-  assert.match(identityCard, /identity-card__preview-head/);
+  assert.match(identityCard, /color: var\(--profile-reference-accent/);
+  assert.match(identityCard, /border-radius: var\(--profile-border-radius, 20px\)/);
+  assert.doesNotMatch(identityCard, /identity-card__|profile-card__head|headerValue/);
   assert.match(editor, /appearance-editor__color-grid/);
   assert.match(editor, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)/);
   assert.doesNotMatch(editor, /Highlight|Background gradient|Border color|appearance-editor__style-grid/);

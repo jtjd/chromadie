@@ -82,8 +82,7 @@ const FEATURED_KEYS = Object.freeze([
   'name_motion_haunt_gradient',
   'border_prism',
   'cursor_trail_color_memory',
-  'avatar_effect_color_archive',
-  'profile_layout_modern'
+  'avatar_effect_color_archive'
 ]);
 
 export function isShopCosmetic(item) {

@@ -307,9 +307,8 @@ export function buildProfileRenderSnapshot(input = {}) {
   });
   const storyModules = composition.secondaryModules.filter(module => module.id !== 'links');
   const showRoll = getProfileRollVisible(configuration);
-  const showLowerExpression = hasLowerExpression
-    && (layoutVariant !== 'sleek' || profileWidgets.length > 0 || hasProfileContent);
-  const hasBelowFoldRoll = showRoll && (layoutVariant === 'portfolio' || layoutVariant === 'full-bleed');
+  const showLowerExpression = hasLowerExpression;
+  const hasBelowFoldRoll = showRoll && layoutVariant === 'full-bleed';
   const storyUnlocks = getProfileStoryUnlocks(profile);
   const rank = profile ? getRank(profile.lifetime_ep || 0) : null;
   const rankState = profile ? getRankState(profile.lifetime_ep || 0) : null;

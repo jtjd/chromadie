@@ -1,15 +1,19 @@
 # Chromadie 2.0 Decisions
 
-## 2026-08-15 — Add the reference-first Immersive profile layout
+## 2026-08-15 — Reset the public profile presentation to Compact and Immersive
 
-The new `full-bleed`/Immersive layout is a sixth free structural layout in the
-existing profile configuration and catalog contracts. It uses a purpose-built
-centered identity composition for the public profile and Studio preview while
-leaving `ProfileShell`, the normalized render snapshot, R2 media resolution,
-link metadata, and cosmetic leaf renderers authoritative. The page environment
-remains outside the motion target; daily roll, story, content, social, audio,
-and widget modules continue below the opening composition through the existing
-continuation path. No old layout was removed or reinterpreted.
+The active structural presentation is intentionally limited to two choices:
+`Compact` (`ProfileReferenceCard`) and `Immersive` (`ProfileFullBleedLayout`).
+The additive reset migration normalizes old configuration and equipped values,
+clears obsolete layout inventory before removing its protected catalog rows,
+and canonicalizes new configuration at the database boundary. ProfileShell,
+the normalized render snapshot, R2 media resolution, link metadata, roll and
+scoring authority, auth/RPC/RLS, and cosmetic leaf renderers remain
+authoritative. The retired layout wrappers are not retained as presentation
+compatibility branches.
+
+The older layout decisions below are historical records only and must not be
+used as visual or architectural guidance for new profile work.
 
 ## 2026-08-15 — Align legacy application surfaces with the approved shell
 
@@ -4795,8 +4799,9 @@ R2 media, and production ProfileShell behavior remain unchanged.
 Customize now mounts one reference-style editor surface and one bounded
 `ProfileReferenceCard` preview. Appearance, Media, and Layout are real active
 tab surfaces; only the selected tab's editor components are loaded. The Studio
-preview is intentionally not a public-layout renderer, while the public
-ProfileShell and its five layout authorities remain unchanged.
+preview is intentionally a bounded reference-card renderer. The public
+ProfileShell now has the same two active structural authorities as the Studio:
+Compact and Immersive.
 
 The authenticated Studio first uses the profile already present in the account
 store plus the owner configuration RPC. Full public-profile hydration is
@@ -4814,3 +4819,17 @@ renderers own their configured effects. Background and atmosphere remain on the
 environment layer, and ProfileMotionEffect remains the outer container-motion
 boundary. This keeps Customize immediately truthful without reintroducing the
 public-profile layout renderer or a second cosmetic system.
+
+## 2026-08-15 — Retire the temporary layout catalog in favor of Compact and Immersive
+
+The active public-profile and Profile Studio presentation catalog now contains
+exactly two structural choices: `Compact`, the centered reference card, and
+`Immersive`, the full-bleed identity scene. The additive reset migration
+normalizes equipped cosmetics and published/draft configuration to those keys,
+canonicalizes the template marker at the database boundary, clears obsolete
+layout inventory rows before removing their catalog rows, and leaves the
+existing auth, RPC/RLS, roll, media, and cosmetic authorities intact.
+
+The old layout wrappers and IdentityCard presentation were removed after
+runtime import/reference checks. Shared leaf renderers and the production
+ProfileShell remain; obsolete presentation compatibility is not retained.

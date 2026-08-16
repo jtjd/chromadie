@@ -43,7 +43,7 @@ test('profile settings keeps secondary features available away from the public c
   const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
 
   assert.match(shell, /data-profile-region="identity"/);
-  assert.match(shell, /profile-shell__identity-boundary/);
+  assert.match(shell, /ProfileReferenceCard/);
   assert.match(shell, /data-profile-region="roll"/);
   assert.match(shell, /data-profile-continuation="content"/);
   assert.match(shell, /data-profile-region="featured"/);
@@ -51,7 +51,7 @@ test('profile settings keeps secondary features available away from the public c
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
   assert.match(registry, /ProfileEditor\.svelte/);
   assert.match(registry, /ProfileSocial\.svelte/);
-  assert.match(shell, /TodayColor result=\{latestRoll\}[^\n]*accentColor=\{signatureColor\}/);
+  assert.match(shell, /todayColorComponent[\s\S]*result=\{latestRoll\}[\s\S]*accentColor=\{signatureColor\}/);
   assert.match(shell, /this=\{profileSocialComponent\}[\s\S]*social=\{social\}/);
   assert.match(shell, /profile-shell__social-section/);
   assert.match(shell, /Add to rivals/);

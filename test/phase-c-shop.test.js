@@ -166,7 +166,7 @@ test('contextual preview delegates to the shared production profile renderer', a
   const contextual = await readProjectFile('src/lib/ShopContextualPreview.svelte');
   const studio = await readProjectFile('src/lib/ShopStudioPreview.svelte');
   const itemPreview = await readProjectFile('src/lib/ShopItemPreview.svelte');
-  const identity = await readProjectFile('src/lib/IdentityCard.svelte');
+  const identity = await readProjectFile('src/lib/ProfileReferenceCard.svelte');
 
   assert.match(contextual, /<ShopStudioPreview/);
   assert.match(contextual, /Live profile/);
@@ -196,7 +196,8 @@ test('contextual preview delegates to the shared production profile renderer', a
   assert.match(studio, /nameRendererLoadout/);
   assert.match(studio, /export let links = \[\]/);
   assert.match(studio, /\{links\}/);
-  assert.match(studio, /profile-border-effect__content/);
+  assert.match(studio, /ProfileReferenceCard/);
+  assert.match(studio, /ProfileFullBleedLayout/);
   assert.doesNotMatch(studio, /studio-layout-badge|getProfileLayoutLabel/);
   assert.match(identity, /<NameEffectCanvas/);
   assert.match(itemPreview, /<NameEffectCanvas/);

@@ -76,7 +76,7 @@
 
 <style>
   .avatar-effect { position:relative; isolation:isolate; }
-  .avatar-effect > :global(img), .avatar-effect > :global(.identity-card__avatar-glow), .avatar-effect > :global(.identity-card__avatar-letter), .avatar-effect > :global(.identity-card__avatar-mark), .avatar-effect > :global(.discovery-card__avatar-initial), .avatar-effect > :global(.home-rank-row__avatar) { position:relative; z-index:2; }
+  .avatar-effect > :global(img), .avatar-effect > :global(.discovery-card__avatar-initial), .avatar-effect > :global(.home-rank-row__avatar) { position:relative; z-index:2; }
   .avatar-effect__authored-plate, .avatar-effect > .avatar-effect__authored-plate { position:absolute; z-index:3; inset:-25%; width:150%; height:150%; max-width:none; object-fit:contain; pointer-events:none; user-select:none; }
   .avatar-effect__duplicate, .avatar-effect > .avatar-effect__duplicate { position:absolute; z-index:1; inset:0; width:100%; height:100%; object-fit:cover; border-radius:inherit; clip-path:circle(50% at 50% 50%); opacity:.2; transform:translate(4px, -1px) scale(1.012); filter:saturate(1.55) contrast(1.1) hue-rotate(14deg); mix-blend-mode:screen; pointer-events:none; }
   .avatar-effect__duplicate--fallback { display:grid; place-items:center; color:rgba(245,247,255,.74); font:600 2.2rem/1 var(--font-display-stack); letter-spacing:-.08em; }

@@ -16,7 +16,7 @@ const homepageSmoke = await read('scripts/browser/homepage-reference-smoke.mjs')
 const profileShell = await read('src/lib/ProfileShell.svelte');
 const dashboard = await read('src/lib/ProfileStudioShell.svelte');
 const preview = await read('src/lib/ProfileStudioPreview.svelte');
-const identity = await read('src/lib/IdentityCard.svelte');
+const identity = await read('src/lib/ProfileReferenceCard.svelte');
 const identityEditor = await read('src/lib/IdentityEditor.svelte');
 const settings = await read('src/lib/ProfileSettings.svelte');
 const customize = await read('src/lib/ProfileCustomizePage.svelte');
@@ -60,12 +60,11 @@ test('Profile Studio preview is bounded on short-height screens and respects saf
   assert.doesNotMatch(preview, /overflow-y:\s*auto|profile-studio-preview__scroll-cue/);
 });
 
-test('narrow identity cards use container-aware stacked layouts and readable bios', () => {
-  assert.match(identity, /container: identity-card \/ inline-size/);
-  assert.match(identity, /@container identity-card \(max-width: 24rem\)/);
-  assert.match(identity, /\.identity-card__bio--typewriter[^}]*white-space: normal/);
-  assert.match(identity, /\.identity-card--layout-(?:compact|sleek|minimal|modern|portfolio)/);
-  assert.doesNotMatch(identity, /identity-card--layout-(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)/);
+test('the reference card keeps bounded media and readable identity content', () => {
+  assert.match(identity, /container: profile-reference-card \/ inline-size/);
+  assert.match(identity, /profile-reference-card__bio--typewriter/);
+  assert.match(identity, /profile-reference-card__links/);
+  assert.doesNotMatch(identity, /identity-card|profile-reference-card--(?:sleek|minimal|modern|portfolio)/);
 });
 
 test('profile mobile header keeps edit visible and moves account actions into the menu', () => {

@@ -132,7 +132,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(referenceLayout, /data-layout-editor="reference-first"/);
   assert.match(referenceLayout, /PROFILE_LAYOUT_DEFINITIONS/);
   assert.match(referenceLayout, /PROFILE_LAYOUT_KEYS/);
-  for (const layout of ['compact', 'sleek', 'minimal', 'modern', 'portfolio', 'full-bleed']) {
+  for (const layout of ['compact', 'full-bleed']) {
     assert.match(referenceLayout, new RegExp(`data-layout=\\{key\\}|['"]${layout}['"]`));
   }
   assert.match(premium, /\$7\.99 lifetime/);

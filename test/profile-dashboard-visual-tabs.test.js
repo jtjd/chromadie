@@ -164,7 +164,7 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(draftModel, /equipped_cosmetics: cosmeticPreviewLoadout \|\| equippedCosmetics/);
   assert.match(renderModel, /getNameRendererLoadout\(cosmetics\)/);
   assert.match(profileShell, /avatarEffectKey=\{cosmetics\?\.avatar_effect\}/);
-  assert.match(profileShell, /<ProfileBorderEffect borderKey=\{cosmetics\?\.profile_border\}/);
+  assert.match(profileShell, /profileBorderKey=\{cosmetics\?\.profile_border\}/);
   assert.match(expression, /\.profile-expression-editor__compact-grid \{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(expression, /profile-expression-editor__compact-spotify/);
   assert.match(expression, /JPEG, PNG, or WebP · processed and stored as WebP/);

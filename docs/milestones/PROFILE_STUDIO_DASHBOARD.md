@@ -38,7 +38,7 @@ The authenticated profile-settings route is the Profile Studio dashboard. It
 opens on an aggregate expression workspace and keeps account surfaces separate:
 
 - Customize — identity, appearance, rich media, About, widgets, collection,
-  templates, and public composition controls.
+  Compact/Immersive presentation, and public composition controls.
 - Links — public links, aliases, sharing metadata, and QR actions.
 - Premium — Plus status and a read-only path to the existing pricing flow.
 - Account — overview, analytics, notifications, privacy/social, progression,

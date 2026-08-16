@@ -1,16 +1,17 @@
 # Chromadie 2.0 Progress
 
-## Immersive public-profile composition — 2026-08-15
+## Current profile presentation — 2026-08-15
 
-- Added the free `full-bleed`/Immersive layout to the existing layout registry,
-  template picker, editor, seed catalog, and additive Supabase migration.
-- Public profiles and Studio use `ProfileFullBleedLayout` inside the existing
-  `ProfileMotionEffect` boundary. The selected photographic environment stays
-  fixed while the centered avatar, identity, bio, and icon-link composition is
-  the bounded motion target.
-- Existing Compact, Sleek, Minimal, Modern, and Portfolio renderers,
-  continuation modules, draft/publish state, media, and catalog/equipment
-  contracts remain unchanged.
+- The active public-profile presentation has exactly two structural choices:
+  `Compact` (`ProfileReferenceCard`) and `Immersive` (`ProfileFullBleedLayout`).
+- Existing profiles, equipped layout values, and draft/published configuration
+  are normalized through the additive reset migration. Obsolete presentation
+  inventory and catalog rows are removed after their references are cleared.
+- ProfileShell, ProfileMotionEffect, draft/publish state, media, roll/scoring,
+  auth, RPC/RLS, and cosmetic leaf renderers remain the behavioral authorities.
+
+Older layout-specific entries below are historical implementation records, not
+active presentation guidance.
 
 ## Homepage navigation completion — 2026-08-15
 
@@ -3714,8 +3715,9 @@ created.
 ## Profile Studio reference-first replacement — 2026-08-15
 
 - Replaced the Customize presentation with the approved dark reference shell:
-  direct identity, colors/surface, effects, media, and five-layout controls in
-  one reference-style panel, with a bounded persistent live card on the right.
+  direct identity, colors/surface, effects, media, and Compact/Immersive
+  presentation controls in one reference-style panel, with a bounded
+  persistent live card on the right.
 - Kept the selected profile environment behind the Studio surface and reused
   the existing editor/state/draft/publish contracts without mounting the old
   public-profile renderer in the preview.
@@ -3739,6 +3741,21 @@ created.
   mount the public-profile layout renderer.
 - Added snapshot/source regression coverage; the full unit suite, production
   build, and authenticated browser smoke pass.
+
+## Profile presentation reset — 2026-08-15
+
+- Replaced the temporary multi-layout public presentation with the two active
+  structural renderers: Compact (`ProfileReferenceCard`) and Immersive
+  (`ProfileFullBleedLayout`).
+- Normalized the active catalog, equipped layout values, draft/published
+  configuration, and template markers through the additive reset migration;
+  obsolete layout inventory is cleared before the protected catalog rows are
+  removed.
+- Removed obsolete IdentityCard/ProfileLayoutFrame presentation code and
+  updated Studio, onboarding, fitting-room, browser smoke, source guards, and
+  layout tests to the canonical renderers.
+- Local schema reset, database lint/security, catalog/balance/scoring drift,
+  performance, link/CSP, check, build, lint, and unit validation are passing.
 
 ## 2026-08-14 — Close media egress and repeated-request paths
 

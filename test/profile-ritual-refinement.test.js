@@ -5,30 +5,21 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('the profile identity surface stays sparse and keeps the archive outside the card', async () => {
-  const identity = await read('src/lib/IdentityCard.svelte');
+  const identity = await read('src/lib/ProfileReferenceCard.svelte');
   const shell = await read('src/lib/ProfileShell.svelte');
   const renderModel = await read('src/lib/profileRenderModel.js');
 
   assert.doesNotMatch(identity, /identity-card__handle-row|identity-card__handle/);
-  assert.match(identity, /identity-card__link-glyph/);
-  assert.match(identity, /identity-card__badges/);
-  assert.match(identity, /identity-card__badge--staff/);
-  assert.match(identity, /<span>STAFF<\/span>/);
-  assert.match(identity, /staff \|\| founder \|\| displayedBadges\.length/);
-  assert.match(identity, /export let staff = false/);
-  assert.match(identity, /badges = \[\]/);
-  assert.match(identity, /showToday = true/);
-  assert.match(identity, /slot name="today"/);
+  assert.match(identity, /profile-reference-card__links/);
+  assert.match(identity, /profile-reference-card__roll/);
   assert.doesNotMatch(identity, /color identity/);
   assert.doesNotMatch(identity, /chm\.lol\/\{username\}/);
-  assert.doesNotMatch(identity, /identity-card__collection/);
+  assert.doesNotMatch(identity, /identity-card|collection/);
   assert.match(shell, /profile-shell__approved-main/);
   assert.match(shell, /profile-shell__approved-game/);
   assert.match(shell, /profile-shell__approved-featured/);
-  assert.match(shell, /badges=\{pinnedAchievements\}/);
-  assert.match(shell, /staff=\{Boolean\(renderProfile\?\.is_staff\)\}/);
+  assert.match(shell, /pinnedAchievements/);
   assert.match(renderModel, /profileDisplayName = profile\?\.display_name \|\| profileName/);
-  assert.match(shell, /showToday=\{false\}/);
   assert.match(shell, /quiet=\{true\}/);
   assert.match(shell, /data-profile-region="featured"/);
   assert.doesNotMatch(shell, /slot="today"/);

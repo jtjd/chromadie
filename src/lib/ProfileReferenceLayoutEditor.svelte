@@ -77,7 +77,7 @@
   <header class="profile-layout-editor__head">
     <div>
       <h2 id="profile-layout-title">Profile layout</h2>
-      <p>Six free structural layouts. Background, media, name, avatar, and cosmetics provide the personality.</p>
+      <p>Choose the profile composition. Background, media, name, avatar, and cosmetics provide the personality.</p>
     </div>
     <span class="profile-layout-editor__badge">{PROFILE_LAYOUT_DEFINITIONS[activeLayout]?.label || 'Compact'}</span>
   </header>
@@ -136,14 +136,9 @@
   .profile-layout-editor__mini { position: relative; display: block; height: 78px; margin-bottom: 9px; overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 6px; background: rgba(0,0,0,.23); }
   .profile-layout-editor__mini::before { position: absolute; top: 12px; left: 10px; width: 22px; height: 22px; border: 1px solid #00ffb3; border-radius: 50%; background: #3a3b41; content: ''; }
   .profile-layout-editor__mini::after { position: absolute; top: 15px; right: 11px; left: 42px; height: 5px; border-radius: 4px; background: rgba(255,255,255,.15); box-shadow: 0 13px 0 rgba(255,255,255,.08), 0 34px 0 rgba(255,255,255,.08), 0 46px 0 rgba(255,255,255,.06); content: ''; }
-  .profile-layout-editor__card[data-layout='minimal'] .profile-layout-editor__mini { border-color: transparent; background: transparent; }
-  .profile-layout-editor__card[data-layout='minimal'] .profile-layout-editor__mini::before { left: 16px; }
-  .profile-layout-editor__card[data-layout='portfolio'] .profile-layout-editor__mini::before { left: 50%; transform: translateX(-50%); }
-  .profile-layout-editor__card[data-layout='portfolio'] .profile-layout-editor__mini::after { right: 18%; left: 18%; top: 42px; box-shadow: 0 12px 0 rgba(255,255,255,.08); }
   .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini { border-color: transparent; background: transparent; }
   .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini::before { top: 10px; left: 50%; width: 24px; height: 24px; transform: translateX(-50%); }
   .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini::after { top: 45px; right: 25%; left: 25%; height: 4px; box-shadow: 0 10px 0 rgba(255,255,255,.1), 0 21px 0 rgba(0,255,179,.24); }
-  .profile-layout-editor__card[data-layout='modern'] .profile-layout-editor__mini::after { box-shadow: 0 13px 0 rgba(255,255,255,.08), 0 39px 0 rgba(0,255,179,.28); }
   .profile-layout-editor__section { display: grid; gap: 15px; padding-top: 27px; border-top: 1px solid rgba(255,255,255,.1); }
   .profile-layout-editor__segmented { display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 7px; }
   .profile-layout-editor__segmented button { min-height: 37px; border: 0; border-right: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.035); color: #90919a; font: 500 .67rem/1 'Inter', sans-serif; cursor: pointer; }

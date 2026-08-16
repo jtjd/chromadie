@@ -59,6 +59,7 @@ test('supporting surfaces consume the profile visual tokens without changing rou
 test('profile mode keeps the new header transparent and account-only', async () => {
   const siteHeader = await read('src/lib/SiteModeHeader.svelte');
   const profileShell = await read('src/lib/ProfileShell.svelte');
+  const profileCard = await read('src/lib/ProfileReferenceCard.svelte');
   const environment = await read('src/lib/ProfileEnvironmentLayer.svelte');
 
   assert.match(siteHeader, /\.site-mode-header--profile \{/);
@@ -70,11 +71,11 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(profileShell, /ProfileEnvironmentLayer/);
   assert.match(environment, /profile-environment--public/);
   assert.match(profileShell, /mode=\{previewMode \? 'preview' : 'public'\}/);
-  assert.match(profileShell, /profile-border-effect\.profile-shell__identity-boundary\) \{ isolation: auto;/);
+  assert.match(profileShell, /ProfileReferenceCard/);
   assert.match(environment, /<img class="profile-environment__image" src=\{backgroundSrc\}/);
   assert.match(environment, /\.profile-environment__image,[\s\S]*\.profile-environment__video/);
   assert.doesNotMatch(environment, /profile-shell__media-background/);
-  assert.match(profileShell, /<ProfileBorderEffect/);
+  assert.match(profileCard, /<ProfileBorderEffect/);
   assert.doesNotMatch(profileShell, /profile-shell__surface-backdrop/);
   assert.doesNotMatch(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);
 });

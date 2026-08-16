@@ -4,7 +4,7 @@ import { createDefaultProfileContent, normalizeProfileContent } from './profileC
 import { normalizeProfileWidgets } from './profileWidgetsLegacy.js';
 import { inferProfileTemplateKey, normalizeProfileTemplateKey } from './profileTemplates.js';
 import { normalizeProfileLayoutKey, PROFILE_LAYOUT_KEYS } from './profile-layout/profileLayouts.js';
-import { PROFILE_LINK_TYPES, isProfileLinkUrlValid, isProfileSocialLink } from './profileLinkTypes.js';
+import { PROFILE_LINK_TYPES, isProfileLinkUrlValid } from './profileLinkTypes.js';
 
 export const PROFILE_CONFIG_VERSION = 1;
 
@@ -345,12 +345,7 @@ export function getProfileContinuationLinks(config) {
   return getVisibleProfileLinks(config).slice(PROFILE_LINK_LIMITS.openingLinks);
 }
 
-/**
- * Keep the opening identity surface compact without changing the stored link
- * order. Social services remain in the opening; custom destinations continue
- * below it except for Minimal, which can show two labeled destinations beside
- * its intentionally sparse identity treatment.
- */
+/** Keep the opening Compact card useful without changing stored link order. */
 export function getProfileLayoutLinkPartitions(config, layoutVariant = 'compact') {
   const visibleLinks = getVisibleProfileLinks(config);
   const normalizedLayout = normalizeProfileLayoutKey(layoutVariant, 'compact');
@@ -360,22 +355,9 @@ export function getProfileLayoutLinkPartitions(config, layoutVariant = 'compact'
       continuation: []
     };
   }
-  const openingSocial = visibleLinks
-    .filter(link => isProfileSocialLink(link.type))
-    .slice(0, PROFILE_LINK_LIMITS.openingLinks);
-  const customOpeningLimit = normalizedLayout === 'minimal' ? 2 : 0;
-  const customOpeningSlots = Math.max(0, PROFILE_LINK_LIMITS.openingLinks - openingSocial.length);
-  const customOpening = visibleLinks
-    .filter(link => !isProfileSocialLink(link.type))
-    .slice(0, Math.min(customOpeningLimit, customOpeningSlots));
-  const openingSelection = new Set([
-    ...openingSocial,
-    ...customOpening
-  ]);
-
   return {
-    opening: visibleLinks.filter(link => openingSelection.has(link)),
-    continuation: visibleLinks.filter(link => !openingSelection.has(link))
+    opening: visibleLinks.slice(0, PROFILE_LINK_LIMITS.openingLinks),
+    continuation: visibleLinks.slice(PROFILE_LINK_LIMITS.openingLinks)
   };
 }
 

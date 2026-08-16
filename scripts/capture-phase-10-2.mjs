@@ -102,7 +102,7 @@ async function captureViewport(viewport, index) {
       features: [{ name: 'prefers-reduced-motion', value: reducedMotion ? 'reduce' : 'no-preference' }]
     });
     await evaluateEventually(command, {
-      expression: `new Promise(resolve => { const started = Date.now(); const check = () => { if (document.querySelector('${waitForIdentity ? '.identity-card' : 'header'}, .profile-shell__hero, [data-profile-region]') || Date.now() - started > 14000) resolve(true); else setTimeout(check, 100); }; check(); })`,
+      expression: `new Promise(resolve => { const started = Date.now(); const check = () => { if (document.querySelector('${waitForIdentity ? '[data-profile-reference-card], [data-profile-layout-content="full-bleed"]' : 'header'}, .profile-shell__hero, [data-profile-region]') || Date.now() - started > 14000) resolve(true); else setTimeout(check, 100); }; check(); })`,
       awaitPromise: true,
       returnByValue: true
     });

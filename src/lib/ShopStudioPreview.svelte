@@ -1,9 +1,8 @@
 <script>
-  import IdentityCard from './IdentityCard.svelte';
-  import { getBadgeMeta } from './badgeData.js';
+  import ProfileReferenceCard from './ProfileReferenceCard.svelte';
+  import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
   import { createDefaultProfileConfig } from './profileConfig.js';
   import { getProfileMediaUrl } from './profileMedia.js';
-  import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import { getNameRendererLoadout } from './name/nameLoadout.js';
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
@@ -28,15 +27,6 @@
   $: accountDisplayName = account.display_name || username || accountUsername;
   $: resolvedNameRendererMode = nameRendererMode || (compact ? 'static-signature' : 'animated');
   $: previewProfileConfig = profileConfig?.draft || profileConfig?.published || profileConfig || createDefaultProfileConfig(displayColor);
-  $: previewBadges = (Array.isArray(account.equipped_badges) ? account.equipped_badges : [])
-    .filter(id => typeof id === 'string' && id !== 'launch_edition')
-    .slice(0, 3)
-    .map(id => {
-      const meta = getBadgeMeta(id);
-      if (!meta || meta.symbol === '❓' || meta.name === id || meta.name === 'Unknown Badge' || meta.name === 'Unknown Achievement') return null;
-      return { id, name: meta.name, icon: meta.symbol };
-    })
-    .filter(Boolean);
   $: previewMediaReferences = previewProfileConfig.media_references || previewProfileConfig.mediaReferences || {};
   $: previewAvatarSrc = getProfileMediaUrl(previewMediaReferences.avatar || previewProfileConfig.avatar_path);
   $: previewBackgroundSrc = getProfileMediaUrl(previewMediaReferences.background || previewProfileConfig.background_path);
@@ -61,43 +51,49 @@
 
   <div class="studio-stage context-profile">
     <div class="stage-grid" aria-hidden="true"></div>
-    <ProfileBorderEffect
-      borderKey={loadout?.profile_border}
-      className="studio-profile-border"
-      compact={compact}
-      animated={resolvedNameRendererMode === 'animated'}
-    >
-      <div class={'studio-profile-card studio-profile-card--' + previewLayout} style={previewCardStyle}>
-        {#if previewBackgroundSrc}
-          <div class="studio-profile-card__background" style={`background-image: url("${previewBackgroundSrc}");`} aria-hidden="true"></div>
-        {/if}
-        {#if loadout?.profile_atmosphere}
-          <AtmosphereLayer atmosphereKey={loadout.profile_atmosphere} todayColor={displayColor} mode={compact ? 'compact' : 'preview'} active={true} animated={resolvedNameRendererMode === 'animated'} className="studio-atmosphere-layer" />
-        {/if}
-        {#if cursorKey}
-          <CursorTrailLayer trailKey={cursorKey} todayColor={displayColor} active={true} className="studio-cursor-layer" />
-        {/if}
-        <IdentityCard
-          username={accountUsername}
+    <div class={'studio-profile-card studio-profile-card--' + previewLayout} style={previewCardStyle}>
+      {#if previewBackgroundSrc}
+        <div class="studio-profile-card__background" style={`background-image: url("${previewBackgroundSrc}");`} aria-hidden="true"></div>
+      {/if}
+      {#if loadout?.profile_atmosphere}
+        <AtmosphereLayer atmosphereKey={loadout.profile_atmosphere} todayColor={displayColor} mode={compact ? 'compact' : 'preview'} active={true} animated={resolvedNameRendererMode === 'animated'} className="studio-atmosphere-layer" />
+      {/if}
+      {#if cursorKey}
+        <CursorTrailLayer trailKey={cursorKey} todayColor={displayColor} active={true} className="studio-cursor-layer" />
+      {/if}
+      {#if previewLayout === 'full-bleed'}
+        <ProfileFullBleedLayout
           displayName={accountDisplayName}
           bio={account.bio || ''}
-          {links}
-          badges={previewBadges}
-          founder={Boolean(account.equipped_badges?.includes('launch_edition'))}
           avatarSrc={previewAvatarSrc}
-          accentColor={previewAccentColor}
-          nameRendererLoadout={nameRendererLoadout}
-          nameRendererContext={compact ? 'card' : 'profile'}
-          nameRendererMode={resolvedNameRendererMode}
           avatarEffectKey={loadout?.avatar_effect}
-          avatarEffectMode={compact ? 'compact' : 'profile'}
-          avatarEffectAnimated={resolvedNameRendererMode === 'animated'}
-          avatarEffectActive={resolvedNameRendererMode === 'animated'}
-          layoutVariant={previewLayout}
-          showToday={false}
+          nameLoadout={nameRendererLoadout}
+          nameTodayColor={previewAccentColor}
+          nameBaseColor="#FFFFFF"
+          profileBorderKey={loadout?.profile_border}
+          showAvatar={true}
+          links={links}
+          accentColor={previewAccentColor}
         />
-      </div>
-    </ProfileBorderEffect>
+      {:else}
+        <ProfileReferenceCard
+          displayName={accountDisplayName}
+          bio={account.bio || ''}
+          avatarSrc={previewAvatarSrc}
+          avatarEffectKey={loadout?.avatar_effect}
+          nameLoadout={nameRendererLoadout}
+          nameTodayColor={previewAccentColor}
+          nameBaseColor="#FFFFFF"
+          profileBorderKey={loadout?.profile_border}
+          surfaceStyle={previewCardStyle}
+          showAvatar={true}
+          links={links}
+          accentColor={previewAccentColor}
+          presentation="studio"
+          ariaLabel="Your cosmetic preview card"
+        />
+      {/if}
+    </div>
   </div>
 
   {#if !compact}
@@ -181,9 +177,6 @@
   .studio-stage.context-profile { min-height: 300px; }
   .studio-profile-card :global(.studio-atmosphere-layer) { z-index: 0; opacity: .82; isolation: auto; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; }
   .studio-profile-card :global(.studio-cursor-layer) { z-index: 3 !important; }
-  .studio-stage > :global(.profile-border-effect) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
-  .studio-stage > :global(.profile-border-effect) :global(.profile-border-effect__content) { width: 100%; display: flex; justify-content: center; box-sizing: border-box; }
-  .studio-stage > :global(.profile-border-effect.studio-profile-border) { isolation: auto; }
 
   .stage-grid {
     position: absolute;
@@ -203,24 +196,17 @@
     max-width: 72rem;
     margin-inline: auto;
     box-sizing: border-box;
-    overflow: hidden;
-    border: 1px solid var(--color-line-subtle);
+    overflow: visible;
+    border: 0;
     border-radius: var(--radius-md);
-    background: var(--profile-background-paint, var(--surface-panel-strong));
-    box-shadow: 0 24px 48px rgba(0,0,0,0.38);
+    background: transparent;
+    box-shadow: none;
   }
-  .studio-profile-card__background { position: absolute; inset: 0; z-index: 0; background-position: center; background-size: cover; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; pointer-events: none; }
-  .studio-profile-card :global(.identity-card) { position: relative; z-index: 1; width: 100%; box-sizing: border-box; padding: 1rem; border: var(--profile-border-width, 1px) solid color-mix(in srgb, var(--profile-border-color, #ffffff) calc(var(--profile-border-opacity, .11) * 100%), transparent); border-radius: var(--profile-border-radius, 17px); background: var(--profile-surface-fill, color-mix(in srgb, var(--profile-surface, #090b0f) calc(var(--profile-surface-opacity, .64) * 100%), transparent)); backdrop-filter: blur(var(--profile-surface-blur, 20px)); -webkit-backdrop-filter: blur(var(--profile-surface-blur, 20px)); }
-  .studio-profile-card :global(.identity-card__person) { gap: 0.75rem; }
-  .studio-profile-card :global(.identity-card__avatar) { flex-basis: 3.25rem; width: 3.25rem; }
-  .studio-profile-card :global(.identity-card__avatar-letter) { font-size: 1.5rem; }
-  .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.8rem, 6.5vw, 2.35rem); line-height: .98; }
-  .studio-profile-card :global(.identity-card__bio) { margin-top: 0.45rem; font-size: 0.72rem; }
-  .studio-profile-card--compact,
-  .studio-profile-card--sleek,
-  .studio-profile-card--modern,
-  .studio-profile-card--portfolio { width: min(100% - 2rem, 335px); }
-  .studio-profile-card--minimal { width: min(100% - 2rem, 300px); border-color: transparent; background: transparent; box-shadow: none; }
+  .studio-profile-card__background { position: absolute; inset: 0; z-index: 0; border-radius: inherit; background-position: center; background-size: cover; filter: blur(var(--profile-surface-blur, 0px)); transform: scale(1.06); transform-origin: center; pointer-events: none; }
+  .studio-profile-card--compact { width: min(100% - 2rem, 335px); }
+  .studio-profile-card--full-bleed { width: min(100% - 1rem, 100%); }
+  .studio-profile-card :global(.profile-reference-card__border),
+  .studio-profile-card :global(.profile-full-bleed__boundary) { position: relative; z-index: 1; }
   .studio-selection {
     display: flex;
     flex-direction: column;
@@ -248,6 +234,6 @@
     .studio-stage.context-profile { min-height: 210px; }
     .studio-profile-card { width: calc(100% - 14px); }
     .studio-profile-card { min-height: 218px; }
-    .studio-profile-card :global(.identity-card__name) { font-size: clamp(1.65rem, 9vw, 2.2rem); }
+    .studio-profile-card--compact { width: min(100% - 1rem, 335px); }
   }
 </style>

@@ -2986,8 +2986,9 @@ direct route behavior.
 
 - Replaced the old Customize card stack with the approved reference-first dark
   editor surface and bounded live profile card.
-- Kept Appearance, Media, Layout, identity, cosmetics, media, five-layout,
-  draft/publish, and environment behavior on their existing production
+- Kept Appearance, Media, Layout, identity, cosmetics, media,
+  Compact/Immersive presentation, draft/publish, and environment behavior on
+  their existing production
   contracts while removing obsolete duplicate action presentation.
 - Reduced initial Customize work to the owner profile/configuration path and
   active tab; deferred broader profile hydration until another dashboard
@@ -3003,3 +3004,15 @@ direct route behavior.
   rather than adding preview-only cosmetic implementations.
 - Added regression coverage for the complete staged snapshot-to-card prop
   boundary.
+
+## 2026-08-15 — Reset profile presentation to Compact and Immersive
+
+- Public profiles and Profile Studio now share the two active structural
+  presentations: the centered Compact reference card and the Immersive
+  full-bleed identity scene.
+- Existing accounts are normalized through a forward migration; obsolete
+  layout catalog and inventory presentation rows are removed after references
+  are cleared, while profile data, effects, media, rolls, and publishing
+  contracts remain intact.
+- Removed the retired layout wrapper and IdentityCard presentation paths and
+  kept shared production leaf renderers as the reusable effect boundary.

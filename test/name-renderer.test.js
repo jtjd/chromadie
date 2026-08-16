@@ -335,7 +335,7 @@ test('the shared animation clock has one scheduled loop and cleans registrations
 test('production Name surfaces preserve semantic text while the Canvas is visual-only', async () => {
   const [canvas, identity, preview, profile] = await Promise.all([
     read('src/lib/name/NameEffectCanvas.svelte'),
-    read('src/lib/IdentityCard.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/ShopItemPreview.svelte'),
     read('src/lib/Profile.svelte')
   ]);
@@ -347,8 +347,8 @@ test('production Name surfaces preserve semantic text while the Canvas is visual
   assert.match(canvas, /CANVAS_BLEED_Y/);
   assert.match(canvas, /inset: -12px -18px/);
   assert.match(identity, /<NameEffectCanvas/);
-  assert.match(identity, /semanticClass="identity-card__name"/);
-  assert.match(canvas, /name-effect-canvas__semantic\.identity-card__name/);
+  assert.match(identity, /semanticClass="profile-reference-card__name"/);
+  assert.match(canvas, /name-effect-canvas__semantic\.profile-reference-card__name/);
   assert.match(preview, /NameEffectCanvas/);
   assert.match(profile, /ProfileBorderEffect/);
   assert.doesNotMatch(canvas, /arbitrary CSS|innerHTML|eval\s*\(/i);

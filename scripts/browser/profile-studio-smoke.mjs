@@ -302,7 +302,11 @@ async function seedRichProfileFixture() {
     ...draft,
     base: {
       ...(draft.base || {}),
-      links: links.slice(0, 6)
+      links: links.slice(0, 6),
+      // Rich fixture assertions exercise the canonical centered card. The
+      // separate layout step above already covers switching to Immersive.
+      templateKey: 'compact',
+      layoutVariant: 'compact'
     },
     links,
     identity: {
@@ -369,12 +373,12 @@ async function publishRichProfileDraft() {
 
 async function assertPublishedExpressionVisible(description) {
   await page.waitFor(`(() => {
-    const avatar = document.querySelector('.profile-studio-preview .profile-reference-card__avatar');
+    const avatar = document.querySelector('.profile-studio-preview .profile-reference-card__avatar, .profile-studio-preview .profile-full-bleed__avatar');
     const background = document.querySelector('.profile-environment--studio .profile-environment__image');
     return Boolean(avatar?.complete && avatar.naturalWidth > 0 && background?.complete && background.naturalWidth > 0);
   })()`, `${description} media load`, 15000);
   const state = await page.evaluate(`(() => {
-    const avatar = document.querySelector('.profile-studio-preview .profile-reference-card__avatar');
+    const avatar = document.querySelector('.profile-studio-preview .profile-reference-card__avatar, .profile-studio-preview .profile-full-bleed__avatar');
     const background = document.querySelector('.profile-studio-preview .profile-environment__image, .profile-environment--studio .profile-environment__image');
     const video = document.querySelector('.profile-environment--studio .profile-environment__video');
     return {
@@ -451,7 +455,7 @@ async function capturePublishedLayouts() {
       links: card?.querySelectorAll('.profile-reference-card__links a').length || 0,
       roll: Boolean(card?.querySelector('.profile-reference-card__roll')),
       motion: Boolean(document.querySelector('.profile-studio-preview .profile-motion-effect')),
-      oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-layout-frame, .profile-studio-preview .profile-template-picker')),
+      oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-template-picker')),
       scrollable: Boolean(stage && stage.scrollHeight > stage.clientHeight + 4)
     };
   })()`);
@@ -483,14 +487,14 @@ async function capturePublishedLayouts() {
       card: box ? { left: box.left, right: box.right, width: box.width } : null,
       viewport: innerWidth,
       overflow: document.documentElement.scrollWidth > innerWidth + 1 || document.body.scrollWidth > innerWidth + 1,
-      oldRenderer: Boolean(preview?.querySelector('.profile-shell-page, .profile-layout-frame, .profile-template-picker'))
+      oldRenderer: Boolean(preview?.querySelector('.profile-shell-page, .profile-template-picker'))
     };
   })()`);
   assert(mobileState.card && mobileState.card.left >= -1 && mobileState.card.right <= mobileState.viewport + 1 && !mobileState.overflow && !mobileState.oldRenderer, `Mobile reference card is not contained: ${JSON.stringify(mobileState)}.`);
   await captureRegion('studio-reference-card-mobile', '.profile-studio-preview__viewport');
   await page.setViewport(1440, 900);
   await page.navigate(`${appUrl}/${canonicalUsername}`, 'published reference profile evidence');
-  await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] .identity-card')`, 'published profile evidence');
+  await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-reference-card], .profile-shell-page[aria-busy="false"] [data-profile-layout-content="full-bleed"]')`, 'published profile evidence');
   const publicState = await page.evaluate(`(() => {
     const shell = document.querySelector('.profile-shell-page');
     const image = shell?.querySelector('.profile-environment__image');
@@ -498,7 +502,7 @@ async function capturePublishedLayouts() {
     return {
       shell: box ? { width: box.width, height: box.height } : null,
       background: Boolean(image?.complete && image.naturalWidth > 0),
-      card: Boolean(shell?.querySelector('.identity-card')),
+      card: Boolean(shell?.querySelector('[data-profile-reference-card], [data-profile-layout-content="full-bleed"]')),
       motion: Boolean(shell?.querySelector('.profile-motion-effect'))
     };
   })()`);
@@ -598,8 +602,8 @@ try {
     await page.setInputValue('#email-input', email, ['input', 'change']);
     await page.setInputValue('#password-input', password, ['input', 'change']);
     await page.click('.auth-submit', 'signup submit control');
-    await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page .identity-card') && !document.querySelector('.auth-page')`, 'authenticated session after signup', 30000);
-    const accountPath = await page.evaluate('document.querySelector(".identity-card")?.getAttribute("data-profile-path") || ""');
+    await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page') && document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content="full-bleed"]') && !document.querySelector('.auth-page')`, 'authenticated session after signup', 30000);
+    const accountPath = await page.evaluate('location.pathname');
     assert(accountPath === `/${canonicalUsername}`, `Authenticated profile resolved to ${JSON.stringify(accountPath)}, expected /${canonicalUsername}.`);
     const initialRoll = await callAuthenticatedRpc('roll_die', { p_is_reroll: false });
     assert(initialRoll?.success === true, `Disposable smoke account could not receive its server-authoritative daily roll: ${JSON.stringify(initialRoll)}`);
@@ -654,7 +658,7 @@ try {
       const prefix = 'chromadie-view-state:';
       const staleDraft = JSON.stringify({
         draft: {
-          layoutVariant: 'modern',
+          layoutVariant: 'full-bleed',
           appearance: { surface: { color: '#111111', opacity: 12, blur: 40 } }
         }
       });
@@ -698,7 +702,7 @@ try {
           } : null;
         })(),
         preview: Boolean(card),
-        oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-layout-frame'))
+        oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-template-picker'))
       };
     })()`);
     assert(state.preview && !state.oldRenderer, `Stale editor session state changed the Studio reference surface: ${JSON.stringify(state)}.`);
@@ -719,8 +723,8 @@ try {
     const aliasPath = await page.evaluate('document.querySelector(".aliases-editor__row a")?.getAttribute("href") || ""');
     assert(aliasPath === `/a/${alias}`, `Alias path was ${aliasPath}, expected /a/${alias}.`);
     await page.command('Page.navigate', { url: `${appUrl}${aliasPath}` });
-    await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page .identity-card')`, 'canonical profile after alias resolution', 30000);
-    const state = await page.evaluate(`({ path: location.pathname, aliasPath: ${JSON.stringify(aliasPath)}, canonical: Boolean(document.querySelector('.profile-shell-page .identity-card')) })`);
+    await page.waitFor(`location.pathname === ${JSON.stringify(`/${canonicalUsername}`)} && document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content="full-bleed"]')`, 'canonical profile after alias resolution', 30000);
+    const state = await page.evaluate(`({ path: location.pathname, aliasPath: ${JSON.stringify(aliasPath)}, canonical: Boolean(document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content="full-bleed"]')) })`);
     assert(state.path === `/${canonicalUsername}`, `Alias resolved to ${state.path} instead of canonical profile.`);
     assert(state.canonical, 'Canonical profile did not render after alias resolution.');
     await page.navigate(`${appUrl}/profile/settings`, 'Profile Studio after alias resolution');
@@ -898,7 +902,7 @@ try {
         card: cardBox ? { width: cardBox.width, left: cardBox.left, right: cardBox.right } : null,
         viewport: viewportBox ? { left: viewportBox.left, right: viewportBox.right, width: viewportBox.width } : null,
         oldPicker: Boolean(document.querySelector('.profile-template-picker, .profile-template-picker__card')),
-        oldPreview: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-layout-frame')),
+        oldPreview: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-template-picker')),
         scrollCue: Boolean(document.querySelector('.profile-studio-preview__scroll-cue'))
       };
     })()`);
@@ -1298,7 +1302,7 @@ try {
       links: document.querySelectorAll('.profile-studio-preview .profile-reference-card__links a').length,
       continuationLinks: 0,
       profileMore: false,
-      oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-layout-frame'))
+      oldRenderer: Boolean(document.querySelector('.profile-studio-preview .profile-shell-page, .profile-studio-preview .profile-template-picker'))
     }))()`);
     assert(visitorPreviewState.todayColor && !visitorPreviewState.ownerRoll && visitorPreviewState.links === compactOpeningLinkCount && !visitorPreviewState.oldRenderer, `Studio did not use the focused reference-card preview path: ${JSON.stringify(visitorPreviewState)}.`);
     const publicEvidence = await capturePublishedLayouts();
@@ -1794,14 +1798,14 @@ try {
     await page.setViewport(1440, 900);
     const canonicalUrl = `${appUrl}/${canonicalUsername}`;
     await page.navigate(canonicalUrl, 'canonical public profile');
-    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] .identity-card')`, 'public profile canvas');
+    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-reference-card], .profile-shell-page[aria-busy="false"] [data-profile-layout-content="full-bleed"]')`, 'public profile canvas');
     await page.command('Page.reload', { ignoreCache: true });
     await delay(350);
-    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] .identity-card')`, 'public profile after direct refresh');
+    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-reference-card], .profile-shell-page[aria-busy="false"] [data-profile-layout-content="full-bleed"]')`, 'public profile after direct refresh');
     const state = await page.evaluate(`(() => {
       const pageElement = document.querySelector('.profile-shell-page');
-      const card = document.querySelector('.profile-shell-page .identity-card');
-      const boundary = document.querySelector('.profile-shell-page .profile-shell__identity-boundary');
+      const card = document.querySelector('.profile-shell-page [data-profile-reference-card], .profile-shell-page [data-profile-layout-content="full-bleed"]');
+      const boundary = document.querySelector('.profile-shell-page .profile-reference-card__border, .profile-shell-page .profile-full-bleed__boundary');
       const roll = document.querySelector('.profile-shell-page [data-profile-region="roll"]');
       const pageStyle = getComputedStyle(pageElement);
       const cardStyle = getComputedStyle(card);
@@ -1834,7 +1838,7 @@ try {
       const nameSemanticBox = nameSemantic?.getBoundingClientRect();
       return {
         path: location.pathname,
-        username: document.querySelector('.identity-card')?.getAttribute('data-profile-path')?.slice(1) || '',
+        username: location.pathname.slice(1),
         canvas: Boolean(pageElement),
         card: Boolean(card),
         roll: Boolean(roll),
@@ -1889,7 +1893,7 @@ try {
     await capture('07-public-profile');
     await page.setViewport(390, 844);
     await page.command('Page.reload', { ignoreCache: true });
-    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] .identity-card')`, 'public profile mobile after direct refresh');
+    await page.waitFor(`document.querySelector('.profile-shell-page[aria-busy="false"]') && document.querySelector('.profile-shell-page[aria-busy="false"] [data-profile-reference-card], .profile-shell-page[aria-busy="false"] [data-profile-layout-content="full-bleed"]')`, 'public profile mobile after direct refresh');
     await page.waitFor(`(() => { const pageElement = document.querySelector('.profile-shell-page[aria-busy="false"]'); const image = pageElement?.querySelector('.profile-environment__image'); return Boolean(pageElement && image?.complete && image.naturalWidth > 0 && image.currentSrc); })()`, 'mobile uploaded background after direct refresh');
     await delay(150);
     await page.waitFor(`(() => { const pageElement = document.querySelector('.profile-shell-page[aria-busy="false"]'); const image = pageElement?.querySelector('.profile-environment__image'); return Boolean(pageElement && image?.complete && image.naturalWidth > 0 && image.currentSrc); })()`, 'stable mobile uploaded background after direct refresh');
@@ -1935,13 +1939,17 @@ try {
     assert(!failedAssets.length, `Profile build requested missing or failed assets: ${JSON.stringify(failedAssets.slice(0, 8))}.`);
     const state = await page.evaluate(`(() => {
       const sheets = [...document.styleSheets].map(sheet => sheet.href || '').filter(Boolean);
-      return { sheets, missing: ['ProfileShell-', 'NameEffectCanvas-'].filter(prefix => !sheets.some(href => href.includes(prefix))) };
+      return {
+        sheets,
+        missing: ['ProfileShell-'].filter(prefix => !sheets.some(href => href.includes(prefix))),
+        canonicalRendererCss: sheets.some(href => /ProfileReferenceCard-|ProfileFullBleedLayout-/.test(href))
+      };
     })()`);
     const studioPreviewCss = page.requestLog.filter(request => request.url.includes('/assets/ProfileStudioPreview-') && !request.failed && Number(request.status) < 400);
-    assert(!state.missing.length && studioPreviewCss.length > 0, `Critical profile CSS was not active or did not load during Studio: ${JSON.stringify({ ...state, studioPreviewCss })}.`);
+    assert(!state.missing.length && state.canonicalRendererCss && studioPreviewCss.length > 0, `Critical profile CSS was not active or did not load during Studio: ${JSON.stringify({ ...state, studioPreviewCss })}.`);
     return {
       failedAssets,
-      activePublicSheets: state.sheets.filter(href => /ProfileShell-|NameEffectCanvas-/.test(href)),
+      activePublicSheets: state.sheets.filter(href => /ProfileShell-|ProfileReferenceCard-|ProfileFullBleedLayout-/.test(href)),
       studioPreviewCss: studioPreviewCss.map(request => ({ url: request.url, status: request.status }))
     };
   });

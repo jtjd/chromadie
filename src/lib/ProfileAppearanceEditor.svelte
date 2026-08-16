@@ -27,7 +27,7 @@
   let pickerOpen = false;
 
   $: incomingKey = JSON.stringify(draftConfig?.appearance || draftConfig?.signatureColor || '');
-  $: cardlessLayout = layoutVariant === 'minimal' || layoutVariant === 'portfolio' || layoutVariant === 'full-bleed';
+  $: cardlessLayout = layoutVariant === 'full-bleed';
   $: if (cardlessLayout && activeColor === 'surface') activeColor = 'accent';
 
   function clone(value) {

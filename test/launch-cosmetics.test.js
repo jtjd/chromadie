@@ -25,11 +25,11 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
   assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 18);
   assert.equal(new Set(PAID_PROFILE_LAYOUT_KEYS).size, 0);
-  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'sleek', 'minimal', 'modern', 'portfolio', 'full-bleed']);
+  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed']);
   assert.deepEqual(FREE_PROFILE_LAYOUTS, PROFILE_LAYOUT_KEYS);
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
   assert.equal(isAvatarEffectKey('avatar_effect_color_archive'), true);
-  assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Portfolio');
+  assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Compact');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_color_memory'), null);
   assert.equal(getAtmosphereDefinition('profile_atmosphere_signal_garden'), null);
   assert.equal(getAtmosphereDefinition('profile_atmosphere_droplets_glass')?.key, 'droplets-glass');
@@ -131,33 +131,28 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
 });
 
 test('public layout resolution is config-only and fitting-room previews stay temporary', () => {
-  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'sleek', profile_layout: 'profile_layout_split_signal' }), 'sleek');
-  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'sleek', layoutOverride: 'focus', profile_layout: 'profile_layout_split_signal' }), 'sleek');
+  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'compact', profile_layout: 'profile_layout_full_bleed' }), 'compact');
+  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'compact', layoutOverride: 'focus', profile_layout: 'profile_layout_full_bleed' }), 'compact');
   assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'not-real', profile_layout: 'profile_layout_split_signal' }), 'compact');
-  assert.equal(resolveProfileLayoutPreviewVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'sleek' }), 'sleek');
+  assert.equal(resolveProfileLayoutPreviewVariant({ profile_layout: 'profile_layout_full_bleed' }, { layoutVariant: 'compact' }), 'full-bleed');
+  assert.equal(resolveProfileLayoutPreviewVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'compact' }), 'compact');
 });
 
-test('profile layouts compose shared roll data through distinct presentation regions', async () => {
-  const [shell, card, frame, dailyRoll] = await Promise.all([
+test('profile layouts compose the two active presentation regions', async () => {
+  const [shell, card, fullBleed, dailyRoll] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/IdentityCard.svelte'),
-    read('src/lib/ProfileLayoutFrame.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte'),
+    read('src/lib/profile-layout/ProfileFullBleedLayout.svelte'),
     read('src/lib/ProfileDailyRoll.svelte')
   ]);
-  for (const layout of ['compact', 'sleek', 'minimal', 'modern', 'portfolio']) {
-    assert.match(card, new RegExp(`identity-card--layout-${layout}`));
-  }
-  assert.match(shell, /ProfileDailyRoll/);
-  assert.match(shell, /<ProfileLayoutFrame/);
-  assert.match(shell, /profile-layout-frame__identity/);
-  assert.match(shell, /profile-layout-frame__roll/);
-  assert.match(shell, /profile-layout-frame__strip/);
-  assert.match(dailyRoll, /profile-daily-roll--sleek/);
-  assert.match(dailyRoll, /profile-daily-roll--modern/);
-  assert.doesNotMatch(frame, /data-profile-layout-strip="presence"|role="tab"/);
+  assert.match(shell, /ProfileReferenceCard/);
+  assert.match(shell, /<ProfileFullBleedLayout/);
+  assert.match(card, /ProfileDailyRoll/);
+  assert.match(fullBleed, /data-profile-layout-content="full-bleed"/);
+  assert.doesNotMatch(shell, /ProfileLayoutFrame|IdentityCard|profile-layout-frame/);
+  assert.doesNotMatch(dailyRoll, /profile-daily-roll--(?:sleek|minimal|modern|portfolio)/);
   assert.match(dailyRoll, /profile-daily-roll--' \+ variant/);
-  assert.match(shell, /layoutVariant=\{profilePresentationLayoutVariant\}/);
-  assert.doesNotMatch(card, /identity-card--layout-(?:split-signal|archive-index|prism-mosaic|night-terminal|story-stack)/);
+  assert.match(shell, /profilePresentationLayoutVariant === 'full-bleed'/);
 });
 
 test('new catalog slots filter independently and fitting-room selection preserves other slots', () => {
@@ -165,7 +160,7 @@ test('new catalog slots filter independently and fitting-room selection preserve
     { item_key: 'cursor_trail_signal_trace', slot: 'cursor_trail', cost: 160000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
     { item_key: 'avatar_effect_signal_ring', slot: 'avatar_effect', cost: 180000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
     { item_key: 'profile_atmosphere_rain_window', slot: 'profile_atmosphere', cost: 260000, rarity: 'Rare', collection: 'Nocturne', catalog_status: 'active' },
-    { item_key: 'profile_layout_sleek', slot: 'profile_layout', cost: 0, rarity: 'Uncommon', collection: 'Layouts', catalog_status: 'active' }
+    { item_key: 'profile_layout_compact', slot: 'profile_layout', cost: 0, rarity: 'Uncommon', collection: 'Layouts', catalog_status: 'active' }
   ];
   for (const section of ['avatar', 'atmosphere', 'cursor', 'layouts']) {
     assert.equal(SHOP_SECTIONS.some(entry => entry.id === section), true);
@@ -178,13 +173,14 @@ test('new catalog slots filter independently and fitting-room selection preserve
 });
 
 test('seed and migrations contain the launch products and version bumps', async () => {
-  const [seed, migration] = await Promise.all([
+  const [seed, migration, resetMigration] = await Promise.all([
     read('supabase/seed.sql'),
-    read('supabase/migrations/20260804120000_launch_cosmetic_expansion.sql')
+    read('supabase/migrations/20260804120000_launch_cosmetic_expansion.sql'),
+    read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql')
   ]);
   assert.equal((seed.match(/'cursor_trail_[a-z0-9_]+'/g) || []).length, 16);
   assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 18);
-  assert.equal((seed.match(/'profile_layout_[a-z0-9_]+'/g) || []).length, 6);
+  assert.equal((seed.match(/'profile_layout_[a-z0-9_]+'/g) || []).length, 2);
   assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 12);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
   const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');
@@ -219,4 +215,7 @@ test('seed and migrations contain the launch products and version bumps', async 
   assert.match(atmosphereQualityMigration, /Chromatic Tangle/);
   assert.match(atmosphereQualityMigration, /Expected 126 active catalog rows/);
   assert.match(atmosphereQualityMigration, /Expected 12 active Profile Atmosphere rows/);
+  assert.match(resetMigration, /Expected 97 active catalog rows/);
+  assert.match(resetMigration, /Expected 2 active Profile Layout rows/);
+  assert.match(resetMigration, /css_value IN \('compact', 'full-bleed'\)/);
 });

@@ -1,9 +1,11 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
   import { normalizeHexColor } from './utils.js';
   import { PROFILE_IDENTITY_DESCRIPTION_MODES, PROFILE_IDENTITY_ENTRY_ANIMATIONS } from './profileIdentityPresentation.js';
   import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
+  import ProfileDailyRoll from './ProfileDailyRoll.svelte';
 
   export let displayName = 'Unknown Player';
   export let bio = '';
@@ -29,9 +31,13 @@
   export let audioStatus = '▶';
   export let rollLabel = "Today's roll";
   export let presentation = 'homepage';
+  export let liveRoll = false;
+  export let isOwner = false;
+  export let visualFixture = '';
   export let className = '';
   export let ariaLabel = 'Profile preview';
 
+  const dispatch = createEventDispatcher();
   let failedAvatarSource = '';
 
   $: safeAccent = normalizeHexColor(accentColor, '#00FFB3');
@@ -56,6 +62,10 @@
   $: cardStyle = `${surfaceStyle || ''};--profile-reference-accent:${safeAccent};--profile-reference-name-size:${presentation === 'homepage' ? '1.95rem' : '1.78rem'};`;
   $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .08;
   $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0) * .18;
+
+  function forward(event) {
+    dispatch(event.type, event.detail);
+  }
 
 </script>
 
@@ -121,7 +131,20 @@
       </div>
     {/if}
 
-    {#if rollHex}
+    {#if liveRoll}
+      <div class="profile-reference-card__roll profile-reference-card__roll--live">
+        <ProfileDailyRoll
+          {isOwner}
+          result={roll}
+          accentColor={safeAccent}
+          variant="compact"
+          {visualFixture}
+          on:rollstart={forward}
+          on:rollcancel={forward}
+          on:rollcomplete={forward}
+        />
+      </div>
+    {:else if rollHex}
       <div class="profile-reference-card__roll">
         <div>
           <small>{rollLabel}</small>
@@ -137,6 +160,7 @@
   .profile-reference-card {
     --profile-reference-accent: #00FFB3;
     position: relative;
+    container: profile-reference-card / inline-size;
     width: 100%;
     min-width: 0;
     overflow: hidden;

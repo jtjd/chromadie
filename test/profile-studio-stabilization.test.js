@@ -60,7 +60,7 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
     read('src/lib/ProfileStudioWorkspace.svelte'),
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileShell.svelte'),
-    read('src/lib/IdentityCard.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte'),
     read('src/lib/cursor-trail/CursorTrailLayer.svelte'),
     read('src/lib/profile-atmosphere/AtmosphereLayer.svelte'),
     read('src/lib/name/NameEffectCanvas.svelte'),
@@ -99,7 +99,7 @@ test('Profile Studio stabilization keeps preview and media mutations on explicit
   assert.match(shell, /ProfileEnvironmentLayer/);
   assert.match(preview, /ProfileReferenceCard/);
   assert.doesNotMatch(preview, /ProfileShell|overflow-y:\s*auto/);
-  assert.match(identity, /identity-card--preview-mobile/);
+  assert.match(identity, /profile-reference-card--studio/);
   assert.match(cursor, /inputMode = 'window'/);
   assert.match(cursor, /inputMode === 'demo'/);
   assert.match(cursor, /function demoPoint/);

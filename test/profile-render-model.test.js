@@ -29,7 +29,7 @@ function createRichConfiguration() {
   return {
     ...base,
     configurationVersion: 2,
-    layoutVariant: 'modern',
+    layoutVariant: 'compact',
     avatar_path: MEDIA.avatar,
     background_path: MEDIA.background,
     background_video_path: MEDIA.video,
@@ -128,13 +128,13 @@ test('public and Studio hosts resolve one rich profile to the same render state'
 test('draft, media, identity, and cosmetic precedence is resolved before rendering', () => {
   const published = createRichConfiguration();
   published.layoutVariant = 'compact';
-  const draft = { ...published, layoutVariant: 'sleek' };
+  const draft = { ...published, layoutVariant: 'full-bleed' };
   const currentCosmetics = { profile_border: 'border_signal', avatar_effect: 'avatar_effect_ghost_double' };
   const previewCosmetics = { profile_border: 'border_celestial', avatar_effect: 'avatar_effect_orbit' };
   const snapshot = buildProfileRenderSnapshot({
     profile: { id: 'profile-2', username: 'draft-user', bio: 'published bio', equipped_cosmetics: currentCosmetics },
     profileConfig: { draft, published },
-    studioDraft: { ...draft, layoutVariant: 'modern', appearance: { ...draft.appearance, surface: { opacity: 82, blur: 8 } } },
+    studioDraft: { ...draft, layoutVariant: 'full-bleed', appearance: { ...draft.appearance, surface: { opacity: 82, blur: 8 } } },
     studioIdentityDraft: { bio: 'draft bio', identityPresentation: { location: 'Brooklyn, NY' } },
     cosmeticPreviewLoadout: previewCosmetics,
     featureFlags: FLAGS,
@@ -143,7 +143,7 @@ test('draft, media, identity, and cosmetic precedence is resolved before renderi
     mode: 'studio'
   });
 
-  assert.equal(snapshot.layout.variant, 'modern');
+  assert.equal(snapshot.layout.variant, 'full-bleed');
   assert.equal(snapshot.identity.bio, 'draft bio');
   assert.equal(snapshot.identity.location, 'Brooklyn, NY');
   assert.equal(snapshot.surface.opacity, 82);
@@ -157,7 +157,7 @@ test('draft, media, identity, and cosmetic precedence is resolved before renderi
 
 test('public rendering never promotes an owner draft over the published configuration', () => {
   const published = createRichConfiguration();
-  const draft = { ...published, layoutVariant: 'portfolio', appearance: { ...published.appearance, colors: { ...published.appearance.colors, surface: '#010101' } } };
+  const draft = { ...published, layoutVariant: 'full-bleed', appearance: { ...published.appearance, colors: { ...published.appearance.colors, surface: '#010101' } } };
   const snapshot = buildProfileRenderSnapshot({
     profile: { id: 'profile-published', username: 'published-profile' },
     profileConfig: { draft, published },
@@ -167,7 +167,7 @@ test('public rendering never promotes an owner draft over the published configur
     previewMode: false
   });
 
-  assert.equal(snapshot.layout.variant, 'modern');
+  assert.equal(snapshot.layout.variant, 'compact');
   assert.equal(snapshot.surface.color, published.appearance.colors.surface);
   assert.equal(snapshot.media.avatarUrl, mediaResolver(MEDIA.avatar));
 });
@@ -179,7 +179,7 @@ test('dedicated expression fields survive an incomplete draft envelope', () => {
     base: {
       ...published,
       version: 1,
-      layoutVariant: 'sleek'
+      layoutVariant: 'compact'
     }
   };
   delete draft.base.avatar_path;
@@ -198,7 +198,7 @@ test('dedicated expression fields survive an incomplete draft envelope', () => {
     mode: 'studio'
   });
 
-  assert.equal(snapshot.layout.variant, 'sleek');
+  assert.equal(snapshot.layout.variant, 'compact');
   assert.equal(snapshot.media.avatarUrl, mediaResolver(MEDIA.avatar));
   assert.equal(snapshot.environment.backgroundImageUrl, mediaResolver(MEDIA.background));
   assert.equal(snapshot.environment.backgroundVideoUrl, mediaResolver(MEDIA.video));
@@ -208,8 +208,8 @@ test('current expression selections override the selected configuration atomical
   const published = createRichConfiguration();
   const snapshot = buildProfileRenderSnapshot({
     profile: { id: 'profile-expression', username: 'expression-stable' },
-    profileConfig: { draft: { ...published, layoutVariant: 'sleek' }, published },
-    studioDraft: { ...published, layoutVariant: 'modern' },
+    profileConfig: { draft: { ...published, layoutVariant: 'compact' }, published },
+    studioDraft: { ...published, layoutVariant: 'full-bleed' },
     expression: { avatar_path: null, background_path: 'backgrounds/22222222-2222-4222-8222-222222222222/background.webp' },
     featureFlags: FLAGS,
     mediaResolver,
@@ -217,7 +217,7 @@ test('current expression selections override the selected configuration atomical
     mode: 'studio'
   });
 
-  assert.equal(snapshot.layout.variant, 'modern');
+  assert.equal(snapshot.layout.variant, 'full-bleed');
   assert.equal(snapshot.media.avatarPath, null);
   assert.equal(snapshot.media.backgroundPath, 'backgrounds/22222222-2222-4222-8222-222222222222/background.webp');
   assert.equal(snapshot.media.backgroundUrl, mediaResolver('backgrounds/22222222-2222-4222-8222-222222222222/background.webp'));
@@ -293,7 +293,7 @@ test('Studio patches update only the editor-owned slice of the canonical draft',
   const base = createRichConfiguration();
   const staleEditorConfig = {
     ...createDefaultProfileConfig('#090B0F'),
-    layoutVariant: 'sleek',
+    layoutVariant: 'full-bleed',
     appearance: {
       ...createDefaultProfileConfig('#090B0F').appearance,
       colors: { ...createDefaultProfileConfig('#090B0F').appearance.colors, surface: '#090B0F' }
@@ -304,7 +304,7 @@ test('Studio patches update only the editor-owned slice of the canonical draft',
     scope: 'layout',
     detail: { config: staleEditorConfig }
   });
-  assert.equal(afterLayout.layoutVariant, 'sleek');
+  assert.equal(afterLayout.layoutVariant, 'full-bleed');
   assert.equal(afterLayout.appearance.colors.surface, base.appearance.colors.surface);
   assert.equal(afterLayout.avatar_path, base.avatar_path);
   assert.equal(afterLayout.background_path, base.background_path);
@@ -322,7 +322,7 @@ test('Studio patches update only the editor-owned slice of the canonical draft',
   assert.equal(afterAppearance.appearance.colors.surface, '#6A2E9A');
   assert.equal(afterAppearance.appearance.surface.opacity, 93);
   assert.equal(afterAppearance.appearance.surface.blur, 10);
-  assert.equal(afterAppearance.layoutVariant, 'sleek');
+  assert.equal(afterAppearance.layoutVariant, 'full-bleed');
   assert.equal(afterAppearance.background_path, base.background_path);
 
   const afterBackground = applyProfileStudioDraftPatch(afterAppearance, {
@@ -363,7 +363,7 @@ test('layout patches own only link alignment while Links owns the remaining styl
     detail: {
       config: {
         ...base,
-        layoutVariant: 'minimal',
+        layoutVariant: 'compact',
         linkStyle: { alignment: 'center', size: 0, glow: 0, monochrome: false }
       }
     }

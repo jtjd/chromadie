@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher, onDestroy } from 'svelte';
-  import IdentityCard from './IdentityCard.svelte';
+  import ProfileReferenceCard from './ProfileReferenceCard.svelte';
   import ProfileRoll from './ProfileRoll.svelte';
   import { guestRollFixture } from './guestRollFixture.js';
 
@@ -49,7 +49,7 @@
       {#if guestActive}<span class="guest-profile-onboarding__status">A local profile is ready on this device.</span>{/if}
 
       <div class="guest-profile-onboarding__identity-wrap">
-        <IdentityCard username="yourname" displayName="Your profile" bio="A public identity shaped by your daily colors." accentColor="#8B7CF6" badges={[{ id: 'profile_seed', name: 'Profile Seed', icon: '✦' }]} showToday={false} />
+        <ProfileReferenceCard displayName="Your profile" bio="A public identity shaped by your daily colors." accentColor="#8B7CF6" presentation="profile" ariaLabel="Example profile card" />
         <div class="guest-profile-onboarding__effects" aria-label="Example profile details">
           <span><i aria-hidden="true"></i> Name layers</span>
           <span><i aria-hidden="true"></i> Profile border</span>
@@ -94,7 +94,7 @@
   .guest-profile-onboarding__intro-copy { max-width: 36rem; margin: 1rem auto 0; color: var(--color-ink-muted); font-size: 1rem; line-height: 1.55; }
   .guest-profile-onboarding__status { display: inline-block; margin-top: 0.9rem; color: #d6ff63; font: 500 0.68rem / 1.2 var(--font-mono-stack); }
   .guest-profile-onboarding__identity-wrap { width: min(100%, 48rem); margin: 2.75rem auto 0; }
-  .guest-profile-onboarding__identity-wrap :global(.identity-card) { border-color: rgba(196,181,253,0.42); box-shadow: 0 0 3rem rgba(139,124,246,0.2), 0 2rem 5rem rgba(0,0,0,0.34); text-align: left; }
+  .guest-profile-onboarding__identity-wrap :global(.profile-reference-card) { border-color: rgba(196,181,253,0.42); box-shadow: 0 0 3rem rgba(139,124,246,0.2), 0 2rem 5rem rgba(0,0,0,0.34); }
   .guest-profile-onboarding__effects { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.55rem 1rem; margin-top: 1rem; }
   .guest-profile-onboarding__effects span { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--color-ink-faint); font: 500 0.64rem / 1 var(--font-mono-stack); }
   .guest-profile-onboarding__effects i { width: 0.38rem; height: 0.38rem; border-radius: 50%; background: #c4b5fd; box-shadow: 0 0 0.7rem rgba(196,181,253,0.72); }
