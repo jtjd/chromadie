@@ -13,11 +13,12 @@ test('Customize tabs mount only the supported visible editor groups', async () =
   ]);
 
   assert.match(customize, /export let activeTab = 'appearance'/);
-  assert.match(customize, /selectedTab = \['appearance', 'media', 'layout'\]/);
+  assert.match(customize, /selectedTab = \['appearance', 'media', 'links', 'layout'\]/);
   assert.match(customize, /\{#if selectedTab === 'appearance'\}/);
   assert.match(customize, /\{:else if selectedTab === 'media'\}/);
   assert.match(customize, /id="customize-appearance"/);
   assert.match(customize, /id="customize-media"/);
+  assert.match(customize, /id="customize-links"/);
   assert.match(customize, /id="customize-layout"/);
   assert.match(customize, /id="customize-identity"/);
   assert.match(customize, /id="customize-effects"/);
@@ -29,7 +30,7 @@ test('Customize tabs mount only the supported visible editor groups', async () =
   const studio = [settings, contract].join('\n');
   assert.match(studio, /content: 'media'/);
   assert.match(studio, /widgets: 'appearance'/);
-  assert.deepEqual(PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS, ['customize', 'profile-identity', 'profile-media', 'profile-collection', 'profile-layout']);
+  assert.deepEqual(PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS, ['customize', 'profile-identity', 'profile-media', 'profile-collection', 'profile-layout', 'profile-aliases']);
   assert.match(studio, /'customize-effects': 'appearance'/);
   assert.doesNotMatch(studio, /\{ id: 'effects', label: 'Effects'/);
 });
@@ -88,7 +89,7 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(smoke, /09-mobile-preview-414/);
   assert.match(smoke, /10-mobile-editor-414/);
   assert.match(smoke, /profile-studio-shell__mobile-tools/);
-  assert.match(smoke, /const destinations = \['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'\]/);
+  assert.match(smoke, /const destinations = \['overview', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'\]/);
 });
 
 test('reference workspace composition stays explicit', async () => {

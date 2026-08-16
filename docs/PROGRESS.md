@@ -3781,6 +3781,17 @@ created.
 - Added focused source regression coverage for the typography and link-row
   contract.
 
+## Customize Links integration — 2026-08-15
+
+- Moved Links out of the Studio More menu and into the canonical Customize tab
+  order: Appearance, Media, Links, Layout.
+- Integrated the existing staged link editor and alias manager into the
+  reference-style Customize surface, with live draft preview and aggregate
+  publish/reset behavior unchanged.
+- Retained old Links, alias, and layout hashes as safe Customize-tab aliases;
+  the obsolete standalone Links workspace is no longer mounted.
+- Updated route, responsive, browser-smoke, and source architecture coverage.
+
 ## 2026-08-14 — Close media egress and repeated-request paths
 
 Removed the production Supabase Storage escape hatches from profile-media

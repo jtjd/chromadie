@@ -82,7 +82,7 @@
       <a href="#customize"><strong>Customize</strong><span>Identity & presence</span><b aria-hidden="true">→</b></a>
       <a href="#customize"><strong>Expression</strong><span>Media & cosmetics</span><b aria-hidden="true">→</b></a>
       <a href="#progression"><strong>Progression</strong><span>Rolls & milestones</span><b aria-hidden="true">→</b></a>
-      <a href="#links"><strong>Links</strong><span>Sharing & aliases</span><b aria-hidden="true">→</b></a>
+      <a href="#customize-links"><strong>Links</strong><span>Sharing & aliases</span><b aria-hidden="true">→</b></a>
     </nav>
 
     <div class="profile-studio-overview__lower">

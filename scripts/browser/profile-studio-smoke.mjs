@@ -732,25 +732,23 @@ try {
     return state;
   });
 
-  await step('live preview opens on demand and closes cleanly', async () => {
-    await page.navigate(`${appUrl}/profile/settings#links`, 'Links section for preview');
-    await page.waitFor(`document.querySelector('.profile-links-page') && document.querySelector('.profile-studio-header__toolbar')`, 'Links toolbar');
-    const initiallyOpen = await page.evaluate(`Boolean(document.querySelector('.profile-studio-preview'))`);
-    assert(!initiallyOpen, 'Live preview should be collapsed when Links opens.');
-    await page.clickText('Preview', { description: 'open live preview control' });
+  await step('Customize Links tab keeps the live preview connected', async () => {
+    await page.navigate(`${appUrl}/profile/settings#customize-links`, 'Customize Links tab');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-links')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-links') && document.querySelector('.profile-studio-preview')`, 'integrated Links tab and preview');
     await page.waitFor(`(() => {
       const preview = document.querySelector('.profile-studio-preview');
       const canvas = document.querySelector('.profile-studio-preview .profile-reference-card');
       return Boolean(preview && canvas && !preview.closest('.auth-modal-overlay'));
-    })()`, 'on-demand live preview');
+    })()`, 'integrated Links live preview');
     const state = await page.evaluate(`(() => ({
       open: Boolean(document.querySelector('.profile-studio-preview')),
+      tab: document.querySelector('#profile-customize-tab-links')?.getAttribute('aria-selected') === 'true',
+      panel: Boolean(document.querySelector('#customize-links')),
       previewCanvas: Boolean(document.querySelector('.profile-studio-preview .profile-reference-card')),
       authOverlay: Boolean(document.querySelector('.profile-studio-preview')?.closest('.auth-modal-overlay'))
     }))()`);
-    await page.click('.profile-studio-preview__close', 'close live preview control');
-    await page.waitFor(`!document.querySelector('.profile-studio-preview')`, 'closed live preview');
-    return { ...state, closed: true };
+    assert(state.open && state.tab && state.panel, `Customize Links did not mount the integrated editor: ${JSON.stringify(state)}.`);
+    return state;
   });
 
   await step('Customize controls publish the configured surface depth', async () => {
@@ -758,7 +756,7 @@ try {
     await page.waitFor(`document.querySelector('[role="tablist"][aria-label="Customize profile"]') && document.querySelector('.profile-studio-preview .profile-reference-card')`, 'Customize tab workspace and persistent preview');
     await page.waitFor(`document.querySelector('.profile-studio-shell__publish')`, 'Studio publish control');
     const customizeTabs = await page.evaluate(`[...document.querySelectorAll('[role="tablist"][aria-label="Customize profile"] [role="tab"]')].map(tab => tab.textContent.trim())`);
-    assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Layout']), `Customize tabs did not collapse Effects into Appearance: ${JSON.stringify(customizeTabs)}.`);
+    assert(JSON.stringify(customizeTabs) === JSON.stringify(['Appearance', 'Media', 'Links', 'Layout']), `Customize tabs did not expose the integrated Links tab in order: ${JSON.stringify(customizeTabs)}.`);
     await page.waitFor(`document.querySelector('#customize-effects')`, 'visual effects inside Appearance');
     await page.click('#profile-customize-tab-media', 'Media customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-media')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-media')`, 'visible Media editor');
@@ -1381,7 +1379,7 @@ try {
       [1280, 720], [1366, 768], [1440, 900], [1920, 1080]
     ];
     const measurements = [];
-    const customizeTabs = ['appearance', 'media', 'layout'];
+    const customizeTabs = ['appearance', 'media', 'links', 'layout'];
 
     for (const [width, height] of viewports) {
       await page.setViewport(width, height);
@@ -1414,7 +1412,7 @@ try {
               height: Math.round(box.height)
             } : null;
           };
-          const candidates = [...document.querySelectorAll('.profile-studio-header__customize-tabs, .profile-studio-header__customize-tabs [role="tab"], .profile-studio-shell__publish, #customize-appearance, #customize-media, #customize-layout, input, select, textarea, [role="slider"]')]
+          const candidates = [...document.querySelectorAll('.profile-studio-header__customize-tabs, .profile-studio-header__customize-tabs [role="tab"], .profile-studio-shell__publish, #customize-appearance, #customize-media, #customize-links, #customize-layout, input, select, textarea, [role="slider"]')]
             .filter(visible);
           const overflow = candidates
             .map(element => ({ element, box: element.getBoundingClientRect() }))
@@ -1480,7 +1478,7 @@ try {
           };
         })()`);
         assert(state.contained && !state.overflow.length, `Dashboard overflows at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
-        assert(state.tabs.length === 3 && state.tabs.every(tabRect => tabRect && tabRect.left >= -1 && tabRect.right <= width + 1), `Customize tabs escape the viewport at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
+        assert(state.tabs.length === 4 && state.tabs.every(tabRect => tabRect && tabRect.left >= -1 && tabRect.right <= width + 1), `Customize tabs escape the viewport at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         assert((state.activePanel?.width || 0) > 0, `Customize panel has no width at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         assert(!state.previewOverlap, `Live preview overlaps the editor at ${width}px on ${tab}: ${JSON.stringify(state)}.`);
         if (tab === 'appearance' && width === 524) {
@@ -1628,7 +1626,7 @@ try {
         pageContained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
-    assert(mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 3 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
+    assert(mobileEditor.fieldGeometry.length >= 6 && !mobileEditor.overlaps.length && !mobileEditor.outOfBounds.length && mobileEditor.tabs.length === 4 && mobileEditor.tabs.every(tab => tab && tab.left >= -1 && tab.right <= 415), `Mobile editor is still using desktop geometry at 414px: ${JSON.stringify(mobileEditor)}.`);
     assert(mobileEditor.pageContained && (mobileEditor.actions?.right || 0) <= 415, `Mobile editor or actions escape the 414px composition: ${JSON.stringify(mobileEditor)}.`);
     await capture('10-mobile-editor-414');
 
@@ -1642,13 +1640,12 @@ try {
         labels: tabs.map(tab => tab.textContent.trim())
       };
     })()`);
-    assert(['relative', 'sticky'].includes(stickyTabs.position) && stickyTabs.labels.join('|') === 'Appearance|Media|Layout', `Mobile customize tabs are missing or using invalid layout positioning: ${JSON.stringify(stickyTabs)}.`);
+    assert(['relative', 'sticky'].includes(stickyTabs.position) && stickyTabs.labels.join('|') === 'Appearance|Media|Links|Layout', `Mobile customize tabs are missing or using invalid layout positioning: ${JSON.stringify(stickyTabs)}.`);
 
     const destinationWidths = [320, 600, 768];
-    const destinations = ['overview', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
+    const destinations = ['overview', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
     const workspaceDestinationBySection = {
       overview: 'overview',
-      links: 'links',
       premium: 'premium',
       'profile-insights': 'account',
       'profile-notifications': 'account',

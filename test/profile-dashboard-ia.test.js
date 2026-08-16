@@ -27,7 +27,8 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   ]);
   const studio = [settings, contract, registry, workspace, header, preview].join('\n');
 
-  for (const id of ['customize', 'links', 'premium']) assert.match(studio, new RegExp(`id: '${id}'`));
+  for (const id of ['customize', 'premium']) assert.match(studio, new RegExp(`id: '${id}'`));
+  assert.match(contract, /\{ id: 'links', label: 'Links'/);
   assert.match(studio, /groupLabel: 'Account'/);
   assert.match(studio, /CUSTOMIZE_SECTION_IDS/);
   assert.match(studio, /LINKS_SECTION_IDS/);
@@ -70,7 +71,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(appearance, /Profile colors/);
   assert.doesNotMatch(appearance, /\['surface', 'Profile Surface'\]/);
   assert.match(studio, /ProfilePremiumPage\.svelte/);
-  for (const section of ['media', 'identity', 'appearance', 'effects', 'layout']) {
+  for (const section of ['media', 'identity', 'appearance', 'effects', 'links', 'layout']) {
     assert.match(customize, new RegExp(`id="customize-${section === 'identity' || section === 'effects' ? section : section}"`));
   }
   assert.doesNotMatch(customize, /data-editor-section=|hidden=|class:is-tab-hidden/);
@@ -82,7 +83,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.doesNotMatch(customize, /01 \/ Assets uploader/);
   assert.doesNotMatch(customize, /Click an asset to upload/);
   assert.match(header, /activeSection !== 'customize'/);
-  assert.match(settings, /previewAvailable = activeSection === 'links'/);
+  assert.match(settings, /previewAvailable = false/);
   assert.match(expression, /profile-expression-editor__compact-grid/);
   assert.match(expression, /JPEG, PNG, or WebP · processed and stored as WebP/);
   for (const action of ['Background', 'Profile audio', 'Avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
@@ -95,7 +96,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(richMedia, /compactKinds/);
   assert.match(richMedia, /rich-media-editor__compact-card/);
   assert.match(studio, /role="tablist" aria-label="Customize profile"/);
-  assert.match(studio, /Appearance[\s\S]*Media[\s\S]*Layout/);
+  assert.match(studio, /Appearance[\s\S]*Media[\s\S]*Links[\s\S]*Layout/);
   assert.doesNotMatch(studio, /\{ id: 'effects', label: 'Effects'/);
   assert.match(studio, /'customize-effects': 'appearance'/);
   assert.match(customize, /export let activeTab = 'appearance'/);
@@ -128,7 +129,8 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(customize, /profile-media/);
   assert.match(customize, /profile-collection/);
   assert.match(customize, /ProfileReferenceLayoutEditor/);
-  assert.doesNotMatch(customize, /showLinks=\{false\}|ProfileTemplatePicker|components\['profile-layout'\]/);
+  assert.doesNotMatch(customize, /showLinks=\{false\}|ProfileTemplatePicker/);
+  assert.match(customize, /linksComponent|presentation="customize"/);
   assert.match(referenceLayout, /data-layout-editor="reference-first"/);
   assert.match(referenceLayout, /PROFILE_LAYOUT_DEFINITIONS/);
   assert.match(referenceLayout, /PROFILE_LAYOUT_KEYS/);

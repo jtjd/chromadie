@@ -18,7 +18,6 @@
     PROFILE_STUDIO_CUSTOMIZE_TAB_IDS,
     PROFILE_STUDIO_FALLBACK_COLOR,
     PROFILE_STUDIO_HASH_ALIASES,
-    PROFILE_STUDIO_LINKS_SECTION_IDS,
     PROFILE_STUDIO_SECTIONS,
     getProfileStudioHash,
     getVisibleProfileStudioSections,
@@ -48,13 +47,13 @@
 
   // Shared contracts keep old #profile-* destinations alive while this file
   // remains only the authenticated route/state adapter.
-  const LINKS_SECTION_IDS = PROFILE_STUDIO_LINKS_SECTION_IDS;
   const FALLBACK_PROFILE_COLOR = PROFILE_STUDIO_FALLBACK_COLOR;
   const CUSTOMIZE_TAB_IDS = PROFILE_STUDIO_CUSTOMIZE_TAB_IDS;
   const CUSTOMIZE_TAB_HASHES = PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES;
   const SETTINGS_SECTIONS = PROFILE_STUDIO_SECTIONS;
   const HASH_ALIASES = PROFILE_STUDIO_HASH_ALIASES;
-  const CUSTOMIZE_TAB_LABELS = Object.freeze({ appearance: 'Appearance', media: 'Media', layout: 'Layout' });
+  const CUSTOMIZE_TAB_LABELS = Object.freeze({ appearance: 'Appearance', media: 'Media', links: 'Links', layout: 'Layout' });
+  const previewAvailable = false;
 
   const dispatch = createEventDispatcher();
 
@@ -125,11 +124,10 @@
   $: if (!visibleSettingsSections.some(section => section.id === activeSection)) activeSection = 'customize';
   $: activeLabel = visibleSettingsSections.find(section => section.id === activeSection)?.label || 'Customize';
   $: mobileStudioTitle = activeSection === 'customize' ? (CUSTOMIZE_TAB_LABELS[activeCustomizeTab] || activeLabel) : activeLabel;
-  $: previewAvailable = activeSection === 'links';
+  // Links is part of Customize now, so every Customize tab shares the same
+  // live preview contract.
   $: customizePreviewAvailable = activeSection === 'customize';
-  $: showDashboardPreview = previewAvailable
-    ? previewOpen
-    : customizePreviewAvailable && (!isMobileViewport || previewOpen);
+  $: showDashboardPreview = customizePreviewAvailable && (!isMobileViewport || previewOpen);
   function createStudioEditorProfileConfig(value) {
     const base = createEditorProfileConfig(value);
     return base && studioDraft ? { ...base, draft: studioDraft } : base;
@@ -184,7 +182,10 @@
       const nextLocation = getLocationState();
       const nextSection = nextLocation.sectionId;
       if (nextSection === activeSection) {
-        if (nextSection === 'customize' && nextLocation.customizeTab) activeCustomizeTab = nextLocation.customizeTab;
+        if (nextSection === 'customize' && nextLocation.customizeTab && nextLocation.customizeTab !== activeCustomizeTab) {
+          activeCustomizeTab = nextLocation.customizeTab;
+          void loadCustomizeComponents();
+        }
         return;
       }
       if (dashboardDirty) {
@@ -245,9 +246,8 @@
       }
     } else previewOpen = false;
     if (sectionId === 'customize') void loadCustomizeComponents();
-    else if (sectionId === 'links') void loadLinksComponents();
     else void loadSectionComponent(sectionId);
-    if (sectionId !== 'customize' && sectionId !== 'links' && sectionId !== 'premium') {
+    if (sectionId !== 'customize' && sectionId !== 'premium') {
       void ensureFullContext();
     }
     if (typeof window !== 'undefined') {
@@ -282,7 +282,7 @@
   }
 
   function togglePreview() {
-    if (!previewAvailable && !customizePreviewAvailable) return;
+    if (!customizePreviewAvailable) return;
     previewOpen = !previewOpen;
     if (previewOpen) void loadPreviewComponent();
   }
@@ -375,12 +375,10 @@
       ? ['customize', 'profile-identity', 'profile-collection']
       : activeCustomizeTab === 'media'
         ? ['customize', 'profile-media']
-        : ['customize'];
+        : activeCustomizeTab === 'links'
+          ? ['customize', 'profile-layout', 'profile-aliases']
+          : ['customize'];
     await Promise.all(sectionIds.map(sectionId => loadSectionComponent(sectionId)));
-  }
-
-  async function loadLinksComponents() {
-    await Promise.all(LINKS_SECTION_IDS.map(sectionId => loadSectionComponent(sectionId)));
   }
 
   function buildConfigurationV2(editorConfig, reference = context?.profileConfig?.v2Draft) {

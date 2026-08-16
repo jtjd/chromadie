@@ -15,6 +15,7 @@
   export let showLayout = true;
   export let showLinks = true;
   export let studio = false;
+  export let presentation = '';
 
   const dispatch = createEventDispatcher();
   const MODULE_LABELS = Object.freeze({
@@ -169,7 +170,7 @@
   }
 </script>
 
-<section class="profile-editor" class:profile-editor--studio={studio} aria-labelledby="profile-layout-title">
+<section class="profile-editor" class:profile-editor--studio={studio} class:profile-editor--customize={presentation === 'customize'} aria-labelledby="profile-layout-title">
   <header class="profile-editor__header">
     <div><h2 id="profile-layout-title">{showLayout && showLinks ? 'Layout & links' : showLayout ? 'Layout & templates' : 'Links & sharing'}</h2><p>{showLayout && showLinks ? 'Arrange sections and links.' : showLayout ? 'Choose a template and arrange sections.' : 'Manage links and sharing.'}</p></div>
     <span class="profile-editor__version">Public layout: {STYLE_LABELS[normalizeProfileConfig(publishedConfig).layoutVariant]}</span>
@@ -347,6 +348,45 @@
   .profile-editor--studio .profile-editor__module-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .profile-editor--studio :global(.profile-template-picker) { grid-column: 1; }
 
+  /* The integrated Links tab uses the same dark Studio controls as the other
+   * Customize tabs. The standalone editor contract remains available for
+   * legacy callers, but it no longer defines this surface's geometry. */
+  .profile-editor--customize {
+    --editor-surface: var(--studio-panel, rgba(12, 12, 15, .78));
+    --editor-input: var(--studio-control, rgba(255, 255, 255, .035));
+    --editor-inset: var(--studio-control-deep, rgba(0, 0, 0, .22));
+    --editor-text: var(--studio-text, #f8f8f8);
+    --editor-secondary: var(--studio-secondary, #bfc0c5);
+    --editor-muted: var(--studio-muted, #8f9099);
+    --editor-faint: var(--studio-faint, #686971);
+    --editor-border: var(--studio-border, rgba(255, 255, 255, .1));
+    --editor-border-strong: var(--studio-border-strong, rgba(255, 255, 255, .2));
+    --editor-focus: var(--studio-accent, #00ffb3);
+    --editor-neutral: var(--studio-accent, #00ffb3);
+    --editor-add: var(--studio-accent, #00ffb3);
+    --editor-danger: var(--studio-danger, #ff5578);
+    --editor-primary: var(--studio-accent, #00ffb3);
+    --editor-body: 'Inter', sans-serif;
+    --editor-mono: ui-monospace, monospace;
+    --editor-heading-size: .95rem;
+    --editor-label-size: .7rem;
+    --editor-control-size: .75rem;
+    --editor-secondary-height: 2.1rem;
+    --editor-primary-height: 2.4rem;
+    --editor-radius: 8px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .85rem;
+  }
+  .profile-editor--customize .profile-editor__header { display: none; }
+  .profile-editor--customize .profile-editor__panel { gap: .7rem; padding: .65rem 0 1rem; }
+  .profile-editor--customize .profile-editor__links { min-width: 0; }
+  .profile-editor--customize .profile-editor__link-row { grid-template-columns: auto minmax(7rem, .7fr) minmax(8rem, 1fr) minmax(12rem, 1.5fr) auto; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; padding: .65rem; border: 1px solid var(--editor-border); border-radius: var(--editor-radius); background: var(--editor-input); }
+  .profile-editor--customize .profile-editor__link-row > * { min-width: 0; }
+  .profile-editor--customize .profile-editor__link-row :is(input, select) { min-width: 0; max-width: 100%; box-sizing: border-box; }
+  .profile-editor--customize .profile-editor__link-style { gap: .65rem; padding-top: .35rem; }
+  .profile-editor--customize .profile-editor__metadata { gap: .65rem; padding-top: .85rem; }
+  .profile-editor--customize .profile-editor__hint { margin-top: .1rem; }
+
   .profile-editor :global(.profile-template-picker) { display: grid; gap: .65rem; padding: .45rem 0 .75rem; border: 0; border-bottom: 1px solid var(--editor-border); border-radius: 0; background: transparent; font-family: var(--editor-body); }
   .profile-editor :global(.profile-template-picker__heading) { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
   .profile-editor :global(.profile-template-picker h3) { margin: 0; color: var(--editor-text); font: 600 var(--editor-heading-size)/1.25 var(--editor-body); }
@@ -367,6 +407,9 @@
     .profile-editor__link-row { grid-template-columns: auto 1fr; }
     .profile-editor__link-row input:nth-of-type(2) { grid-column: 1 / -1; }
     .profile-editor__link-row .profile-editor__link-actions { grid-column: 2; }
+    .profile-editor--customize .profile-editor__link-row { grid-template-columns: minmax(0, 1fr); }
+    .profile-editor--customize .profile-editor__link-row > * { grid-column: 1 !important; }
+    .profile-editor--customize .profile-editor__link-row :is(input, select) { width: 100%; min-width: 0; max-width: 100%; }
     .profile-editor__link-style { grid-template-columns: 1fr 1fr; }
     .profile-editor__style-check { grid-column: 1 / -1; }
     .profile-editor :global(.profile-template-picker__grid) { grid-template-columns: 1fr; }

@@ -51,7 +51,7 @@ test('only UI-only views persist session state; Profile Studio profile data does
   assert.match(settings, /return base && studioDraft \? \{ \.\.\.base, draft: studioDraft \} : base/);
   assert.match(customize, /identityDraft\?\.bio/);
   assert.doesNotMatch(customize, /contentComponent|widgetComponent|id="customize-content"|id="customize-widgets"/);
-  assert.deepEqual(PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS, ['customize', 'profile-identity', 'profile-media', 'profile-collection', 'profile-layout']);
+  assert.deepEqual(PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS, ['customize', 'profile-identity', 'profile-media', 'profile-collection', 'profile-layout', 'profile-aliases']);
   assert.match(contract, /PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS/);
   assert.match(workspace, /profileId=\{context\.profileId\}/);
   assert.match(workspace, /studioIdentityDraft/);

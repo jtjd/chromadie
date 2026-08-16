@@ -42,7 +42,8 @@ test('Studio and homepage share the reference card without sharing public layout
   assert.match(homepage, /import ProfileReferenceCard/);
   assert.match(homepage, /presentation="homepage"/);
   assert.match(customize, /import ProfileReferenceLayoutEditor/);
-  assert.doesNotMatch(customize, /ProfileTemplatePicker|showLinks=\{false\}|components\['profile-layout'\]/);
+  assert.match(customize, /linksComponent|presentation="customize"/);
+  assert.doesNotMatch(customize, /ProfileTemplatePicker|showLinks=\{false\}/);
   assert.match(layout, /data-layout-editor="reference-first"/);
   assert.match(layout, /PROFILE_LAYOUT_DEFINITIONS/);
   assert.match(layout, /PROFILE_LAYOUT_KEYS/);

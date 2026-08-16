@@ -53,7 +53,6 @@
 
   export function validateDraft() {
     if (activeSection === 'customize') return customizePage?.validateDraft?.() !== false;
-    if (activeSection === 'links') return layoutEditor?.validateDraft?.() !== false;
     if (activeSection === 'profile-content') return contentEditor?.validateDraft?.() !== false;
     if (activeSection === 'profile-widgets') return widgetEditor?.validateDraft?.() !== false;
     if (activeSection === 'profile-layout') return layoutEditor?.validateDraft?.() !== false;
@@ -69,7 +68,7 @@
 
   export function resetChanges(sectionId = activeSection) {
     if (sectionId === 'customize') customizePage?.resetChanges?.();
-    if (sectionId === 'links' || sectionId === 'profile-layout') layoutEditor?.resetChanges?.();
+    if (sectionId === 'profile-layout') layoutEditor?.resetChanges?.();
     if (sectionId === 'profile-content') contentEditor?.resetChanges?.();
     if (sectionId === 'profile-widgets') widgetEditor?.resetChanges?.();
   }
@@ -108,17 +107,6 @@
         {:else if sectionLoading}
           <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading Customize</h2></div>
         {/if}
-      {:else if activeSection === 'links'}
-        <div class="profile-links-page">
-          {#if sectionComponents['profile-layout']}
-            <svelte:component this={sectionComponents['profile-layout']} bind:this={layoutEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} showLayout={false} showLinks={true} on:dirty={event => forwardDirty('links', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardStudioPatch('links', event)} />
-          {:else if sectionLoading}
-            <div class="profile-studio-workspace__state" role="status" aria-live="polite"><span aria-hidden="true">✦</span><h2>Loading links</h2></div>
-          {/if}
-          {#if sectionComponents['profile-aliases']}
-            <svelte:component this={sectionComponents['profile-aliases']} />
-          {/if}
-        </div>
       {:else if activeSection === 'premium'}
         {#if sectionComponents.premium}
           <svelte:component this={sectionComponents.premium} {entitlements} {staff} />
@@ -174,6 +162,5 @@
   .profile-studio-workspace__state :global(.surface) { max-width: 42rem; }
   .profile-studio-workspace__back { display: inline-flex; min-height: 2.25rem; align-items: center; justify-content: center; margin-top: .8rem; padding: .45rem .75rem; border: 1px solid var(--studio-border-strong, #45475a); border-radius: .35rem; color: var(--studio-text, #cdd6f4); font-size: .8rem; font-weight: 650; text-decoration: none; }
   .profile-studio-workspace__back:hover, .profile-studio-workspace__back:focus-visible { border-color: var(--studio-focus, #b4befe); color: var(--studio-focus, #b4befe); }
-  .profile-links-page { display: grid; gap: 1rem; min-width: 0; }
   @media (prefers-reduced-motion: reduce) { .profile-studio-workspace { scroll-behavior: auto; } }
 </style>

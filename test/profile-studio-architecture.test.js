@@ -34,11 +34,28 @@ test('Profile Studio routing keeps canonical destinations and legacy hashes comp
     customizeTab: 'media',
     isLegacyAlias: true
   });
-  assert.equal(resolveProfileStudioLocation('#profile-aliases').sectionId, 'links');
-  assert.equal(resolveProfileStudioLocation('#profile-layout').sectionId, 'links');
+  assert.deepEqual(resolveProfileStudioLocation('#customize-links'), {
+    rawHash: 'customize-links',
+    sectionId: 'customize',
+    customizeTab: 'links',
+    isLegacyAlias: false
+  });
+  assert.deepEqual(resolveProfileStudioLocation('#profile-aliases'), {
+    rawHash: 'profile-aliases',
+    sectionId: 'customize',
+    customizeTab: 'links',
+    isLegacyAlias: true
+  });
+  assert.deepEqual(resolveProfileStudioLocation('#profile-layout'), {
+    rawHash: 'profile-layout',
+    sectionId: 'customize',
+    customizeTab: 'layout',
+    isLegacyAlias: true
+  });
   assert.equal(resolveProfileStudioLocation('#not-a-dashboard-section').sectionId, 'customize');
   assert.equal(getProfileStudioHash('customize', 'layout'), 'customize-layout');
-  assert.equal(getProfileStudioHash('links'), 'links');
+  assert.equal(getProfileStudioHash('customize', 'links'), 'customize-links');
+  assert.equal(getProfileStudioHash('links'), 'customize-links');
 
   const visible = getVisibleProfileStudioSections({ expandedAnalytics: false, socialDepth: false });
   assert.equal(visible.some(section => section.id === 'profile-insights'), false);

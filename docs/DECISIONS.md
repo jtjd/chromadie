@@ -4863,3 +4863,16 @@ Immersive keeps its full-bleed composition, but its display name, bio, and
 social-link row use the smaller, quieter proportions shown in the approved
 reference. Link targets remain accessible while the visible icons use a fixed,
 compact horizontal gap rather than a viewport-scaled gap.
+
+## 2026-08-15 — Integrate Links into the Customize workspace
+
+Links is now a first-class Customize tab ordered between Media and Layout. The
+existing draft-backed ProfileEditor and alias behavior are mounted inside the
+same Studio surface and use the same dark controls, spacing, and live preview
+contract as the neighboring tabs. The old top-level Links destination is no
+longer rendered or exposed through More.
+
+Historical `#links`, `#profile-aliases`, and `#profile-layout` hashes remain
+safe route aliases into the new Customize tabs. Link data validation, alias
+RPCs, draft/publish orchestration, auth, and preview rendering remain on their
+existing authorities.

@@ -40,7 +40,7 @@ test('Profile Studio publishes identity and the complete expression-aware config
   assert.match(settings, /dirtySourceForEvent/);
   assert.match(customize, /customize:identity/);
   assert.match(customize, /customize:appearance/);
-  assert.match(workspace, /forwardDirty\('links'/);
+  assert.match(customize, /customize:links/);
   assert.match(appearance, /emitAppearanceChange\(JSON\.stringify\(staged\) !== JSON\.stringify\(saved\)\)/);
   assert.match(appearance, /appearance-editor__picker-toggle/);
   assert.match(appearance, /Accessible color controls/);

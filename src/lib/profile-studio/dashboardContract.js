@@ -9,6 +9,7 @@ export const PROFILE_STUDIO_FALLBACK_COLOR = '#CDD2FF';
 export const PROFILE_STUDIO_CUSTOMIZE_TABS = Object.freeze([
   { id: 'appearance', label: 'Appearance', description: 'Color, identity, and presence' },
   { id: 'media', label: 'Media', description: 'Avatar, background, music, and uploads' },
+  { id: 'links', label: 'Links', description: 'Public links, sharing, and aliases' },
   { id: 'layout', label: 'Layout', description: 'Templates and profile structure' }
 ]);
 
@@ -19,6 +20,7 @@ export const PROFILE_STUDIO_CUSTOMIZE_TAB_IDS = Object.freeze(
 export const PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES = Object.freeze({
   appearance: 'customize-appearance',
   media: 'customize-media',
+  links: 'customize-links',
   layout: 'customize-layout'
 });
 
@@ -32,6 +34,10 @@ export const PROFILE_STUDIO_CUSTOMIZE_TAB_ALIASES = Object.freeze({
   expression: 'media',
   'customize-media': 'media',
   'profile-media': 'media',
+  links: 'links',
+  aliases: 'links',
+  'customize-links': 'links',
+  'profile-aliases': 'links',
   effects: 'appearance',
   'customize-effects': 'appearance',
   collection: 'appearance',
@@ -42,13 +48,13 @@ export const PROFILE_STUDIO_CUSTOMIZE_TAB_ALIASES = Object.freeze({
   'customize-widgets': 'appearance',
   layout: 'layout',
   templates: 'layout',
-  'customize-layout': 'layout'
+  'customize-layout': 'layout',
+  'profile-layout': 'layout'
 });
 
 export const PROFILE_STUDIO_SECTIONS = Object.freeze([
   { id: 'overview', label: 'Overview', groupKey: 'primary', groupLabel: 'Customize', icon: 'overview' },
   { id: 'customize', label: 'Customize', groupKey: 'primary', icon: 'customize' },
-  { id: 'links', label: 'Links', groupKey: 'primary', icon: 'links' },
   { id: 'premium', label: 'Premium', groupKey: 'primary', icon: 'premium' },
   { id: 'profile-insights', label: 'Analytics', groupKey: 'account', groupLabel: 'Account', icon: 'profile-insights' },
   { id: 'profile-notifications', label: 'Notifications', groupKey: 'account', icon: 'profile-notifications' },
@@ -60,7 +66,6 @@ export const PROFILE_STUDIO_SECTIONS = Object.freeze([
 export const PROFILE_STUDIO_PRIMARY_SECTION_IDS = Object.freeze([
   'overview',
   'customize',
-  'links',
   'premium'
 ]);
 
@@ -77,18 +82,19 @@ export const PROFILE_STUDIO_CUSTOMIZE_SECTION_IDS = Object.freeze([
   'profile-identity',
   'profile-media',
   'profile-collection',
-  'profile-layout'
+  'profile-layout',
+  'profile-aliases'
 ]);
 
 export const PROFILE_STUDIO_LINKS_SECTION_IDS = Object.freeze(['profile-layout', 'profile-aliases']);
 
 export const PROFILE_STUDIO_LEGACY_SECTION_ROUTES = Object.freeze([
   { id: 'profile-identity', redirect: 'customize' },
-  { id: 'profile-aliases', redirect: 'links' },
+  { id: 'profile-aliases', redirect: 'customize' },
   { id: 'profile-media', redirect: 'customize' },
   { id: 'profile-content', redirect: 'customize' },
   { id: 'profile-widgets', redirect: 'customize' },
-  { id: 'profile-layout', redirect: 'links' },
+  { id: 'profile-layout', redirect: 'customize' },
   { id: 'profile-collection', redirect: 'customize' }
 ]);
 
@@ -110,12 +116,13 @@ export const PROFILE_STUDIO_HASH_ALIASES = Object.freeze({
   'profile-insights': 'profile-insights',
   'profile-notifications': 'profile-notifications',
   identity: 'customize',
-  aliases: 'links',
+  links: 'customize',
+  aliases: 'customize',
   expression: 'customize',
   media: 'customize',
   content: 'customize',
   widgets: 'customize',
-  layout: 'links',
+  layout: 'customize',
   social: 'profile-social',
   insights: 'profile-insights',
   notifications: 'profile-notifications',
@@ -149,6 +156,8 @@ export function getProfileStudioHash(sectionId, customizeTab = null) {
   if (sectionId === 'customize' && PROFILE_STUDIO_CUSTOMIZE_TAB_IDS.includes(customizeTab)) {
     return PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES[customizeTab];
   }
+  if (sectionId === 'links' || sectionId === 'profile-aliases') return PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES.links;
+  if (sectionId === 'profile-layout') return PROFILE_STUDIO_CUSTOMIZE_TAB_HASHES.layout;
   return sectionId || 'customize';
 }
 

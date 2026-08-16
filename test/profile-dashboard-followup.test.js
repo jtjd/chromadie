@@ -12,7 +12,7 @@ test('Studio navigation has one canonical ordered IA and safe compact menu behav
   ]);
   const studio = [contract, settings].join('\n');
   const app = await read('src/App.svelte');
-  const ids = ['overview', 'customize', 'links', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
+  const ids = ['overview', 'customize', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
   let previous = -1;
   for (const id of ids) {
     const index = studio.indexOf("id: '" + id + "'");
@@ -22,6 +22,7 @@ test('Studio navigation has one canonical ordered IA and safe compact menu behav
   for (const alias of ['identity', 'expression', 'layout', 'social', 'collection', 'appearance']) {
     assert.match(studio, new RegExp(alias + ": '[^']+'"));
   }
+  assert.match(contract, /\{ id: 'links', label: 'Links'/);
   assert.match(settings, /history\.pushState/);
   assert.match(settings, /popstate/);
   assert.match(settings, /beforeunload/);

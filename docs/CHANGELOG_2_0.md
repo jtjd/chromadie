@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-15 — Integrate Links into Customize
+
+- Added Links between Media and Layout in Customize profile.
+- Reused the existing link draft, validation, sharing metadata, and alias
+  behavior inside the same reference-style Studio surface as Appearance and
+  Media.
+- Removed the old standalone Links destination from the More menu while
+  keeping historical dashboard hashes routed safely to the new tab.
+
 ## 2026-08-15 — Retire the Shop and make Customize the expression catalog
 
 - Removed the standalone Shop presentation and its obsolete browsing,

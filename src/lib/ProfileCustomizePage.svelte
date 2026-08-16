@@ -19,12 +19,15 @@
   let identityEditor = null;
   let appearanceEditor = null;
   let mediaWorkspaceEditor = null;
+  let linksEditor = null;
   let layoutEditor = null;
 
   $: identityComponent = components['profile-identity'];
   $: mediaComponent = components['profile-media'];
   $: collectionComponent = components['profile-collection'];
-  $: selectedTab = ['appearance', 'media', 'layout'].includes(activeTab) ? activeTab : 'appearance';
+  $: linksComponent = components['profile-layout'];
+  $: aliasesComponent = components['profile-aliases'];
+  $: selectedTab = ['appearance', 'media', 'links', 'layout'].includes(activeTab) ? activeTab : 'appearance';
 
   function forwardPatch(scope, event) {
     dispatch('studiopatch', { scope, detail: event.detail || {} });
@@ -39,7 +42,7 @@
   }
 
   export function validateDraft() {
-    return [identityEditor, appearanceEditor, layoutEditor]
+    return [identityEditor, appearanceEditor, linksEditor, layoutEditor]
       .filter(Boolean)
       .every(editor => editor.validateDraft?.() !== false);
   }
@@ -48,6 +51,7 @@
     identityEditor?.acceptSaved?.(nextConfig);
     appearanceEditor?.acceptSaved?.(nextConfig?.appearance || nextConfig);
     mediaWorkspaceEditor?.acceptSaved?.(nextConfig?.appearance || nextConfig);
+    linksEditor?.acceptSaved?.(nextConfig);
     layoutEditor?.acceptSaved?.(nextConfig);
   }
 
@@ -55,6 +59,7 @@
     identityEditor?.resetChanges?.();
     appearanceEditor?.resetChanges?.();
     mediaWorkspaceEditor?.resetChanges?.();
+    linksEditor?.resetChanges?.();
     layoutEditor?.resetChanges?.();
   }
 </script>
@@ -139,6 +144,49 @@
           <div class="studio-loading" role="status">Loading media controls…</div>
         {/if}
       </section>
+    </div>
+  {:else if selectedTab === 'links'}
+    <div class="studio-panel" id="customize-links" role="region" aria-label="Profile links">
+      <section class="studio-section studio-section--links" aria-labelledby="studio-links-title">
+        <header class="studio-section__head">
+          <div>
+            <h2 id="studio-links-title">Profile links</h2>
+            <p>Choose what people can open from your profile and shape the sharing details around it.</p>
+          </div>
+        </header>
+        {#if linksComponent}
+          <svelte:component
+            this={linksComponent}
+            bind:this={linksEditor}
+            {profileId}
+            draftConfig={profileConfig?.draft}
+            publishedConfig={profileConfig?.published}
+            updatedAt={profileConfig?.updatedAt}
+            {entitlements}
+            {staff}
+            showLayout={false}
+            showLinks={true}
+            studio={true}
+            presentation="customize"
+            on:dirty={event => forwardDirty('customize:links', event)}
+            on:configpreview={event => forwardPatch('links', event)}
+          />
+        {:else}
+          <div class="studio-loading" role="status">Loading link controls…</div>
+        {/if}
+      </section>
+
+      {#if aliasesComponent}
+        <section class="studio-section studio-section--aliases" aria-labelledby="studio-aliases-title">
+          <header class="studio-section__head">
+            <div>
+              <h2 id="studio-aliases-title">Profile aliases</h2>
+              <p>Keep alternate share paths connected to your canonical profile.</p>
+            </div>
+          </header>
+          <svelte:component this={aliasesComponent} />
+        </section>
+      {/if}
     </div>
   {:else}
     <div class="studio-panel" id="customize-layout" role="region" aria-label="Profile layout">
@@ -282,6 +330,31 @@
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-slot label) { color: var(--studio-secondary); font: 400 .7rem/1.3 'Inter', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-slot select) { min-height: 34px; border: 1px solid var(--studio-border); border-radius: 6px; background: var(--studio-control-deep); color: var(--studio-text); font: 500 .66rem/1 'Inter', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-apply) { min-height: 36px; margin-top: 12px; border-radius: 7px; background: var(--studio-accent); color: #050506; font: 700 .7rem/1 'Inter', sans-serif; }
+
+  .studio-customize :global(.aliases-editor) { min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; font-family: 'Inter', sans-serif; }
+  .studio-customize :global(.aliases-editor .foundation-module__header) { display: none; }
+  .studio-customize :global(.aliases-editor__content) { gap: 13px; }
+  .studio-customize :global(.aliases-editor__row),
+  .studio-customize :global(.aliases-editor__empty),
+  .studio-customize :global(.aliases-editor__state) { padding: 11px; border: 1px solid var(--studio-border); border-radius: 8px; background: var(--studio-control); color: var(--studio-secondary); }
+  .studio-customize :global(.aliases-editor__row a) { color: var(--studio-text); font: 500 .74rem/1.3 ui-monospace, monospace; }
+  .studio-customize :global(.aliases-editor__row a:hover) { color: var(--studio-accent); }
+  .studio-customize :global(.aliases-editor__empty strong) { color: var(--studio-text); font: 600 .78rem/1.25 'Inter', sans-serif; }
+  .studio-customize :global(.aliases-editor__empty p),
+  .studio-customize :global(.aliases-editor__state),
+  .studio-customize :global(.aliases-editor__form small) { color: var(--studio-muted); font: 400 .68rem/1.45 'Inter', sans-serif; }
+  .studio-customize :global(.aliases-editor__form) { gap: 8px; padding-top: 13px; border-top-color: var(--studio-border); }
+  .studio-customize :global(.aliases-editor__form label) { color: var(--studio-secondary); font: 400 .7rem/1.3 'Inter', sans-serif; }
+  .studio-customize :global(.aliases-editor__prefix),
+  .studio-customize :global(.aliases-editor__input-row input) { min-height: 38px; border-color: var(--studio-border-strong); border-radius: 8px; background: var(--studio-control-deep); color: var(--studio-text); font: 500 .72rem/1.2 'Inter', sans-serif; }
+  .studio-customize :global(.aliases-editor__prefix) { padding-inline: 11px; }
+  .studio-customize :global(.aliases-editor__save),
+  .studio-customize :global(.aliases-editor__remove) { min-height: 38px; border-color: var(--studio-border-strong); border-radius: 8px; padding: 0 12px; background: transparent; color: var(--studio-secondary); font: 600 .68rem/1 'Inter', sans-serif; }
+  .studio-customize :global(.aliases-editor__save) { border-color: var(--studio-accent); color: var(--studio-accent); }
+  .studio-customize :global(.aliases-editor__save:hover:not(:disabled)) { background: color-mix(in srgb, var(--studio-accent) 10%, transparent); color: var(--studio-text); }
+  .studio-customize :global(.aliases-editor__remove:hover:not(:disabled)) { border-color: var(--studio-danger); color: var(--studio-danger); }
+  .studio-customize :global(.aliases-editor__message) { color: var(--studio-accent); font: 400 .7rem/1.4 'Inter', sans-serif; }
+  .studio-customize :global(.aliases-editor__message--error) { color: var(--studio-danger); }
 
   .studio-customize :global(input:focus-visible),
   .studio-customize :global(textarea:focus-visible),

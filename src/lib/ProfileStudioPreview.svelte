@@ -58,7 +58,7 @@
 <div class="profile-studio-preview" data-preview-tab={activeCustomizeTab} data-preview-section={activeSection}>
   <header class="profile-studio-preview__header">
     <div class="profile-studio-preview__label"><i></i><span>Live public-profile preview</span></div>
-    {#if isMobileViewport || activeSection === 'links'}
+    {#if isMobileViewport}
       <button class="profile-studio-preview__close" type="button" aria-label="Close live preview" on:click={togglePreview}>×</button>
     {/if}
   </header>
