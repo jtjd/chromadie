@@ -1758,24 +1758,21 @@ try {
     for (const [width, height] of viewports) {
       await page.setViewport(width, height);
       await page.navigate(`${appUrl}/leaderboard`, `Leaderboard at ${width}x${height}`);
-      await page.waitFor(`location.pathname === '/leaderboard' && document.querySelector('.leaderboard-studio')`, `Leaderboard shell at ${width}px`, 30000);
-      await page.clickText('New profiles', { description: `Leaderboard New profiles tab at ${width}px` });
-      await page.waitFor('document.querySelector(".leaderboard-entry, .leaderboard-studio__state")', `Leaderboard results at ${width}px`, 30000);
+      await page.waitFor(`location.pathname === '/leaderboard' && document.querySelector('.roll-leaderboard')`, `Leaderboard shell at ${width}px`, 30000);
+      await page.clickText('This month', { description: `Leaderboard monthly tab at ${width}px` });
+      await page.waitFor('document.querySelector(".leaderboard-row, .roll-leaderboard__state")', `Leaderboard results at ${width}px`, 30000);
       await delay(120);
       const state = await page.evaluate(`(() => {
         const rect = element => {
           const box = element?.getBoundingClientRect();
           return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
         };
-        const intersects = (left, right) => Boolean(left && right && left.left < right.right - 1 && right.left < left.right - 1 && left.top < right.bottom - 1 && right.top < left.bottom - 1);
-        const shell = document.querySelector('.leaderboard-studio');
-        const list = document.querySelector('.leaderboard-studio__list');
-        const empty = document.querySelector('.leaderboard-studio__state');
-        const items = [...document.querySelectorAll('.leaderboard-studio__list-item')];
-        const entries = [...document.querySelectorAll('.leaderboard-entry')];
-        const heading = document.querySelector('.leaderboard-studio__results-heading');
-        const headingCopy = heading?.firstElementChild;
-        const filters = document.querySelector('.leaderboard-studio__filters');
+        const shell = document.querySelector('.roll-leaderboard');
+        const list = document.querySelector('.roll-leaderboard__list');
+        const empty = document.querySelector('.roll-leaderboard__state');
+        const items = [...document.querySelectorAll('.roll-leaderboard__list-item')];
+        const entries = [...document.querySelectorAll('.leaderboard-row')];
+        const tabs = [...document.querySelectorAll('.roll-leaderboard__tabs button')];
         const visible = element => {
           if (!element) return false;
           const style = getComputedStyle(element);
@@ -1783,13 +1780,13 @@ try {
           return style.display !== 'none' && style.visibility !== 'hidden' && box.width > 0 && box.height > 0;
         };
         const avatarStates = entries.map(entry => {
-          const image = entry.querySelector('.leaderboard-entry__avatar img');
-          const fallback = entry.querySelector('.leaderboard-entry__avatar-initial');
-          const avatarBox = entry.querySelector('.leaderboard-entry__avatar')?.getBoundingClientRect();
+          const image = entry.querySelector('.leaderboard-row__avatar img');
+          const fallback = entry.querySelector('.leaderboard-row__avatar-initial');
+          const avatarBox = entry.querySelector('.leaderboard-row__avatar')?.getBoundingClientRect();
           const inViewport = Boolean(avatarBox && avatarBox.bottom > -160 && avatarBox.top < innerHeight + 160);
           return { imageLoaded: Boolean(image?.complete && image.naturalWidth > 0), fallback: visible(fallback), inViewport };
         });
-        const outOfShell = [...document.querySelectorAll('.leaderboard-studio__list-item, .leaderboard-entry__avatar, .leaderboard-entry__open, .leaderboard-studio__filters input, .leaderboard-studio__filters select, .leaderboard-studio__button')]
+        const outOfShell = [...document.querySelectorAll('.roll-leaderboard__table, .roll-leaderboard__list-item, .leaderboard-row, .roll-leaderboard__tabs button')]
           .map(element => ({ element, box: element.getBoundingClientRect() }))
           .filter(({ box }) => box.left < shell?.getBoundingClientRect().left - 1 || box.right > shell?.getBoundingClientRect().right + 1)
           .slice(0, 8)
@@ -1801,17 +1798,16 @@ try {
           empty: rect(empty),
           items: items.map(item => ({ box: rect(item) })),
           entries: entries.map(entry => rect(entry)),
-          heading: rect(heading),
-          filters: rect(filters),
-          headingFiltersOverlap: visible(filters) && intersects(headingCopy?.getBoundingClientRect(), filters?.getBoundingClientRect()),
+          tabs: tabs.map(tab => ({ label: tab.textContent?.trim(), active: tab.getAttribute('aria-selected') === 'true', box: rect(tab) })),
           avatarStates,
           outOfShell
         };
       })()`);
-      assert(state.shell && state.shell.width >= Math.min(width - 16, 900), `Discovery shell is still constrained at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.shell && state.shell.width >= Math.min(width - 16, 900), `Leaderboard shell is still constrained at ${width}px: ${JSON.stringify(state)}.`);
       const resultSurface = state.list || state.empty;
       assert(resultSurface && resultSurface.left >= state.shell.left - 1 && resultSurface.right <= state.shell.right + 1, `Leaderboard results surface escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
-      assert(!state.outOfShell.length && !state.headingFiltersOverlap, `Leaderboard controls escape or overlap at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.tabs.length === 2 && state.tabs.some(tab => tab.label === 'This month' && tab.active), `Leaderboard period tabs are not reduced to Today and This month at ${width}px: ${JSON.stringify(state)}.`);
+      assert(!state.outOfShell.length, `Leaderboard controls escape its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.items.every(item => item.box && item.box.left >= state.shell.left - 1 && item.box.right <= state.shell.right + 1), `Leaderboard row wrapper escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.entries.every(entry => entry && entry.left >= state.shell.left - 1 && entry.right <= state.shell.right + 1), `Leaderboard entry escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.avatarStates.every(avatar => !avatar.inViewport || avatar.imageLoaded || avatar.fallback), `Leaderboard contains an unloaded visible avatar without a fallback at ${width}px: ${JSON.stringify(state)}.`);

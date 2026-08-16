@@ -22,7 +22,6 @@ async function findSvelteFiles(directory) {
 const PRODUCTION_SURFACES = Object.freeze([
   'src/lib/Profile.svelte',
   'src/lib/ProfileShell.svelte',
-  'src/lib/LeaderboardEntry.svelte',
   'src/lib/ShopItemPreview.svelte'
 ]);
 

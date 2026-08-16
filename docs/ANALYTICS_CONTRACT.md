@@ -92,8 +92,7 @@ incident ownership.
   privacy policy
 - Adapter setup: `src/main.js`
 - Event call sites: `App.svelte`, `ProfileShell.svelte`, `Game.svelte`,
-  `ProfileRoll.svelte`, `LeaderboardEntry.svelte`, and
-  `ProfileCosmeticsEditor.svelte`
+  `ProfileRoll.svelte`, and `ProfileCosmeticsEditor.svelte`
 - Regression coverage: `test/phase-9-analytics.test.js`
 
 Any future provider adapter must preserve the same event names and field

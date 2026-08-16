@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Focus the leaderboard on two roll periods — 2026-08-16
+
+- Reduced the public leaderboard to Today and This month views backed by the
+  existing bounded `get_public_discovery` projection.
+- Replaced the Studio-style discovery workspace with a compact ranked table:
+  rank, avatar/profile identity, score, and short color/rarity/date details.
+- Removed leaderboard filters, rival state, owner rank context, share actions,
+  cosmetic row rendering, and the unused discovery period controls from the
+  active leaderboard surface while keeping profile navigation and pagination.
+
 ## Leaderboard Studio redesign — 2026-08-16
 
 - Replaced the old discovery-card/grid leaderboard presentation with a new

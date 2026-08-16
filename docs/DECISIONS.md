@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-16 — Keep the leaderboard intentionally narrow
+
+The public leaderboard now exposes only Today and This month. Both views use
+the existing `get_public_discovery` projection: Today ranks current daily
+rolls, while This month ranks each player’s best roll in the current month.
+The UI is a compact table with rank, public identity, score, and concise roll
+details. Filters, rival/follow state, owner rank context, sharing, and cosmetic
+row effects were removed from this surface because they obscured the one useful
+job of the page: showing the strongest rolls.
+
+This is a client presentation and route-contract reduction, not a scoring or
+database authority change. Old unsupported `tab` query values normalize to
+Today, while the same `/leaderboard` URL and public RPC security boundary stay
+in place.
+
 ## 2026-08-16 — Make the leaderboard a Profile Studio-style discovery board
 
 The leaderboard route now has one presentation authority: `Leaderboard.svelte`

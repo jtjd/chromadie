@@ -128,13 +128,14 @@ test('rivals retain the existing authenticated follow identifier only at the com
   assert.equal(normalizeRivalItem({ ...publicItem, user_id: 'not-a-uuid' }), null);
 });
 
-test('discovery route parsing preserves legacy leaderboard tabs and adds only allow-listed discovery tabs', () => {
-  assert.equal(parseRouteLocation('/leaderboard', '?tab=random').leaderboardTab, 'random');
-  assert.equal(parseRouteLocation('/leaderboard', '?tab=recent').leaderboardTab, 'recent');
+test('leaderboard route parsing accepts only the active today and monthly periods', () => {
+  assert.equal(parseRouteLocation('/leaderboard', '?tab=monthly').leaderboardTab, 'monthly');
+  assert.equal(parseRouteLocation('/leaderboard', '?tab=weekly').leaderboardTab, 'today');
+  assert.equal(parseRouteLocation('/leaderboard', '?tab=random').leaderboardTab, 'today');
   assert.equal(parseRouteLocation('/leaderboard', '?tab=private').leaderboardTab, 'today');
 });
 
-test('leaderboard implementation uses public RPC projections, profile rows, sharing, and reduced motion without raw HTML', async () => {
+test('leaderboard implementation is a focused public score table without raw HTML', async () => {
   const leaderboard = await readFile(new URL('../src/lib/Leaderboard.svelte', import.meta.url), 'utf8');
   const entry = await readFile(new URL('../src/lib/LeaderboardEntry.svelte', import.meta.url), 'utf8');
   const migration = await readFile(new URL('../supabase/migrations/20260725120000_public_discovery.sql', import.meta.url), 'utf8');
@@ -143,23 +144,17 @@ test('leaderboard implementation uses public RPC projections, profile rows, shar
   const r2Migration = await readFile(new URL('../supabase/migrations/20260813140000_profile_media_r2_discovery.sql', import.meta.url), 'utf8');
 
   assert.match(leaderboard, /get_public_discovery/);
-  assert.match(leaderboard, /Load more profiles/);
-  assert.match(leaderboard, /Search username/);
-  assert.match(leaderboard, /Exceptional/);
-  assert.match(leaderboard, /Rising/);
-  assert.match(leaderboard, /Random/);
+  assert.match(leaderboard, /Today's top rolls/);
+  assert.match(leaderboard, /This month's top rolls/);
+  assert.match(leaderboard, /This month/);
+  assert.doesNotMatch(leaderboard, /Search username|Exceptional|Rising|Random|Following|All-time/);
   assert.match(entry, /getPublicProfilePath/);
-  assert.match(entry, /getProfileShareText/);
   assert.match(entry, /getProfileMediaUrl/);
-  assert.match(entry, /CompactRollPreview/);
-  assert.match(entry, /ProfileBorderEffect/);
-  assert.match(entry, /getNameRendererLoadout/);
-  assert.match(entry, /filter\(badge => badge\.symbol !== '❓'\)/);
-  assert.match(entry, /Signature color/);
-  assert.match(entry, /View profile/);
+  assert.match(entry, /Score details unavailable/);
+  assert.match(entry, /leaderboard-row/);
   assert.match(entry, /prefers-reduced-motion/);
+  assert.doesNotMatch(entry, /getProfileShareText|CompactRollPreview|ProfileBorderEffect|NameEffectCanvas|toggleFollow|profile_shared/);
   assert.doesNotMatch(leaderboard + entry, /innerHTML|new Function|eval\s*\(/);
-  assert.match(entry, /leaderboard-entry__name/);
   assert.match(migration, /SECURITY DEFINER/);
   assert.match(migration, /LIMIT v_limit \+ 1/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_public_discovery/);
@@ -175,7 +170,7 @@ test('leaderboard implementation uses public RPC projections, profile rows, shar
   assert.match(hardeningMigration, /name LIKE OLD\.id::text \|\| '\/%'/);
   assert.match(r2Migration, /'avatarReference'/);
   assert.match(r2Migration, /profile_media_public_reference/);
-  assert.match(leaderboard, /leaderboard-studio__list-item/);
+  assert.match(leaderboard, /roll-leaderboard__list-item/);
   assert.match(leaderboard, /LeaderboardEntry/);
   assert.doesNotMatch(leaderboard + entry, /DiscoveryHub|DiscoveryCard|discovery-card|discovery-grid|discovery-hub/);
 });

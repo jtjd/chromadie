@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-16 — Focus the leaderboard on top rolls
+
+- Simplified `/leaderboard` to two periods: Today and This month.
+- Replaced the multi-control discovery workspace with a compact ranked table
+  showing profile identity, score, and short roll details such as color, rarity,
+  and date.
+- Kept the public discovery RPC, bounded pagination, safe profile navigation,
+  and loading/error/empty states while removing filters, rival controls, share
+  actions, and owner rank context from the active surface.
+
 ## 2026-08-16 — Rebuild the leaderboard as a Profile Studio board
 
 - Replaced the previous discovery-card/grid presentation with an editor-style

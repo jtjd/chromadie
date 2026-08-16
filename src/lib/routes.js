@@ -7,7 +7,7 @@ import {
 } from './routeContract.js';
 
 export const VALID_VIEWS = Object.freeze(['home', 'game', 'leaderboard', 'profile', 'profile-settings', 'prototype', 'pricing'])
-export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'rivals', 'weekly', 'monthly', 'roll', 'recent', 'rising', 'new', 'random'])
+export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'monthly'])
 
 const VALID_VIEW_SET = new Set(VALID_VIEWS)
 const VALID_LEADERBOARD_TAB_SET = new Set(VALID_LEADERBOARD_TABS)

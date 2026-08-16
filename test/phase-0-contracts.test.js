@@ -77,7 +77,7 @@ test('public route parsing preserves profile, challenge, and app route contracts
   const leaderboard = parseRouteLocation('/leaderboard', '?tab=weekly&profile=user-2');
   assert.equal(leaderboard.routeMode, 'app');
   assert.equal(leaderboard.view, 'leaderboard');
-  assert.equal(leaderboard.leaderboardTab, 'weekly');
+  assert.equal(leaderboard.leaderboardTab, 'today');
   assert.equal(leaderboard.profileId, 'user-2');
 
   const challenge = parseRouteLocation('/c/challenge-1', '?from=NeonUser');

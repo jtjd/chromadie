@@ -91,12 +91,13 @@ test('editable controls use a mobile-safe text size without enlarging binary con
   assert.match(foundations, /:not\(\[type=['"]range['"]\]\)/);
 });
 
-test('Leaderboard uses the Customize surface language and keeps mobile rows actionable', () => {
-  assert.match(leaderboard, /leaderboard-studio__module/);
-  assert.match(leaderboard, /@media \(max-width: 700px\)/);
-  assert.match(leaderboardEntry, /@media \(max-width: 460px\)/);
-  assert.match(leaderboardEntry, /leaderboard-entry__open \{ min-height: 2\.75rem/);
-  assert.match(leaderboardEntry, /leaderboard-entry__share, \.leaderboard-entry__icon-button \{ min-height: 2\.75rem/);
+test('Leaderboard stays focused and keeps mobile score rows readable', () => {
+  assert.match(leaderboard, /roll-leaderboard__hero/);
+  assert.match(leaderboard, /roll-leaderboard__tabs/);
+  assert.match(leaderboard, /@media \(max-width: 620px\)/);
+  assert.match(leaderboardEntry, /@media \(max-width: 620px\)/);
+  assert.match(leaderboardEntry, /leaderboard-row__score/);
+  assert.match(leaderboardEntry, /min-height: 5\.6rem/);
   assert.doesNotMatch(leaderboard + leaderboardEntry, /discovery-card|discovery-grid|discovery-hub/);
 });
 
@@ -142,6 +143,6 @@ test('browser smoke can run against the production preview and checks the phone 
   assert.match(browserSmoke, /authenticated Profile Studio shell/);
   assert.match(browserSmoke, /Mobile customize tabs/);
   assert.match(browserSmoke, /production Leaderboard keeps its route shell and row geometry bounded/);
-  assert.match(browserSmoke, /leaderboard-studio__list-item/);
+  assert.match(browserSmoke, /roll-leaderboard__list-item/);
   assert.match(browserSmoke, /avatarStates/);
 });

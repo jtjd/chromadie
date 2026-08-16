@@ -25,7 +25,7 @@ test('view state is scoped and survives component remounts in memory', () => {
 });
 
 test('only UI-only views persist session state; Profile Studio profile data does not', async () => {
-  const [links, identity, discovery, stores, settings, customize, contract, workspace] = await Promise.all([
+  const [links, identity, leaderboard, stores, settings, customize, contract, workspace] = await Promise.all([
     readFile(new URL('../src/lib/ProfileLinksEditor.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/IdentityEditor.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/Leaderboard.svelte', import.meta.url), 'utf8'),
@@ -43,7 +43,7 @@ test('only UI-only views persist session state; Profile Studio profile data does
   assert.doesNotMatch(links, /save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(links, /export function getDraftConfig/);
   assert.doesNotMatch(links, /save_profile_configuration['"]/);
-  assert.match(discovery, /VIEW_STATE_NAMESPACE = 'leaderboard'/);
+  assert.doesNotMatch(leaderboard, /readViewState|writeViewState|VIEW_STATE_NAMESPACE/);
   assert.match(stores, /clearAllViewState/);
   assert.match(settings, /function createStudioEditorProfileConfig/);
   assert.match(settings, /return base && studioDraft \? \{ \.\.\.base, draft: studioDraft \} : base/);
