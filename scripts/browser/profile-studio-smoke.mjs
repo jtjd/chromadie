@@ -946,6 +946,15 @@ try {
     }
     await page.click('#profile-customize-tab-appearance', 'Appearance customize tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'visible Appearance editor');
+    // Keep Immersive mounted while changing the font. This catches the
+    // regression where a layout remount was the only thing that retriggered
+    // the lazy font loader.
+    await page.click('#profile-customize-tab-layout', 'Immersive font setup tab');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-layout')`, 'Immersive font setup editor');
+    await page.click('.profile-layout-editor__card[data-layout="full-bleed"]', 'stage Immersive for same-layout font update');
+    await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]') && !document.querySelector('.profile-studio-preview .profile-reference-card')`, 'Immersive mounted for same-layout font update');
+    await page.click('#profile-customize-tab-appearance', 'Appearance for same-layout font update');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance') && document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]')`, 'Appearance with Immersive still mounted');
     await page.evaluate(`(async () => {
       const { userInventory } = await import('/src/lib/stores.js');
       userInventory.update(items => [...new Set([...(Array.isArray(items) ? items : []), 'name_font_marker_tag', 'name_material_blueprint_ink', 'name_motion_typewriter_name', 'avatar_effect_ghost_double', 'border_celestial', 'cursor_trail_pixel_wake', 'profile_atmosphere_rain_window', 'profile_atmosphere_silk_folds'])]);
@@ -964,10 +973,10 @@ try {
       select.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
     await page.waitFor(`(() => {
-      const liveName = document.querySelector('.profile-studio-preview .name-effect-canvas__semantic');
+      const liveName = document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"] .name-effect-canvas__semantic');
       const canvas = liveName?.closest('.name-effect-canvas');
       return liveName?.getAttribute('style')?.includes('Permanent Marker') && canvas?.getAttribute('data-name-font-ready') === 'true';
-    })()`, 'font renderer in live preview');
+    })()`, 'font renderer in same-layout Immersive preview');
     const fontCardState = await page.evaluate(`(() => ({
       preview: Boolean(document.querySelector('.profile-cosmetics-name-preview')),
       renderer: Boolean(document.querySelector('.profile-cosmetics-name-preview .name-effect-canvas')),
@@ -976,11 +985,10 @@ try {
     assert(fontCardState.preview && fontCardState.renderer, `Font card did not mount the production renderer: ${JSON.stringify(fontCardState)}.`);
     await page.click('#profile-customize-tab-layout', 'Immersive font verification tab');
     await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-layout')`, 'Immersive font layout editor');
-    await page.click('.profile-layout-editor__card[data-layout="full-bleed"]', 'verify selected font in Immersive');
     await page.waitFor(`(() => {
       const canvas = document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"] .name-effect-canvas');
       return Boolean(canvas && canvas.getAttribute('data-name-font') === 'marker-tag' && canvas.getAttribute('data-name-font-ready') === 'true');
-    })()`, 'selected font readiness in Immersive preview');
+    })()`, 'selected font remains ready in Immersive preview');
     await page.click('.profile-layout-editor__card[data-layout="compact"]', 'restore Compact after font verification');
     await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card') && !document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]')`, 'Compact preview after font verification');
     await page.click('#profile-customize-tab-appearance', 'Appearance after font verification');

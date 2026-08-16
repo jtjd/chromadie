@@ -15,6 +15,9 @@ Document user-visible redesign changes by milestone.
 - Selected Name fonts remain visible as accessible text until the actual
   bundled face is ready, so Compact and Immersive previews no longer need a
   layout switch to display the intended font.
+- Changing a font while Immersive is already mounted now loads and redraws the
+  selected face in place; the same explicit update path also covers lazy name
+  material and motion renderers.
 
 ## 2026-08-15 — Integrate Links into Customize
 

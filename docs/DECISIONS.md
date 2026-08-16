@@ -21,6 +21,10 @@ to prevent a Compact DOM subtree from surviving an Immersive selection.
 Name rendering now keeps semantic text visible until the selected bundled font
 asset has loaded and passed `document.fonts.check`. The canvas redraws and
 resizes only after that readiness boundary, with stale font requests ignored.
+Font and lazy composable renderer requests receive their changing keys as
+explicit Svelte reactive dependencies; layout remounts are not used as a
+font-refresh mechanism. Failed readiness can retry after the browser reports
+font loading completion, while semantic text remains the safe fallback.
 This removes the previous “switch away and back” workaround while preserving
 the accessible text fallback and reduced-motion behavior.
 

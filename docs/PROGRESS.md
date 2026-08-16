@@ -13,8 +13,10 @@
   database runtime boundaries. Existing legacy values are backfilled once;
   “Immersive” is the display label for `full-bleed`, not a second key.
 - Name canvas rendering waits for the selected bundled font to be loaded and
-  verified before hiding semantic text, then redraws the correct face on both
-  Compact and Immersive preview mounts.
+  verified before hiding semantic text, then redraws the correct face in the
+  existing Compact or Immersive mount when the loadout changes. Lazy
+  composable renderer loading follows the same explicit reactive boundary;
+  layout remounts are no longer required.
 - Added focused source, font-readiness, migration, and browser-smoke coverage.
 
 ## Current profile presentation — 2026-08-15

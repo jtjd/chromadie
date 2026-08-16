@@ -42,6 +42,8 @@ test('every production identity surface uses the shared Name renderer path', asy
   assert.match(canvas, /data-name-font-ready/);
   assert.match(canvas, /style=\{semanticStyle\}/);
   assert.match(canvas, /aria-hidden="true"/);
+  assert.match(canvas, /\$:\s*if \(mounted && renderer && fontLoadKey\) requestFontLoad\(fontLoadKey, resolvedFontKey, text\);/);
+  assert.match(canvas, /\$:\s*if \(mounted && renderer && hasComposableKeys\) requestComposableRenderers\(hasComposableKeys\);/);
 });
 
 test('production components no longer apply removed cosmetic slots or legacy CSS bridges', async () => {
@@ -62,4 +64,6 @@ test('shared renderer semantics and lifecycle hooks remain explicit', async () =
   assert.match(canvas, /registerNameAnimation/);
   assert.match(canvas, /rendererReady && fontReady/);
   assert.match(canvas, /fontRequestId/);
+  assert.match(canvas, /requestedFontLoadKey = '';\s*fontReady = false;/);
+  assert.match(canvas, /document\.fonts\.addEventListener\('loadingdone'/);
 });

@@ -4,7 +4,7 @@
   import { shouldAnimateNameFrame, createNameCanvasRenderer } from './nameRenderer.js';
   import { getNameRendererDefinition, hasComposableNameInput, resolveNameRendererKey } from './nameCatalog.js';
   import { loadCodeOwnedNameRenderers } from './nameComposableRenderer.js';
-  import { getNameFont, requestNameFontLoad } from './nameFonts.js';
+  import { getNameFont, requestNameFontLoad, resolveNameFontKey } from './nameFonts.js';
 
   export let text = '';
   export let rendererKey = '';
@@ -92,8 +92,9 @@
     ? explicitFontKey || 'soft-grotesk'
     : getNameRendererDefinition(safeRendererKey).font;
   $: activeFont = getNameFont(activeFontKey);
+  $: resolvedFontKey = resolveNameFontKey(activeFontKey);
   $: semanticStyle = `font-family: "${String(activeFont.family || '').replace(/["\\]/g, '')}", ${String(activeFont.fallback || 'sans-serif').replace(/["\\]/g, '')}; font-style: ${activeFont.style}; font-weight: ${activeFont.weight};`;
-  $: fontLoadKey = `${activeFontKey}:${text}`;
+  $: fontLoadKey = `${resolvedFontKey}:${text}`;
   $: safeSemanticTag = SEMANTIC_TAGS.has(semanticTag) ? semanticTag : 'span';
   $: safeSemanticClass = SEMANTIC_CLASSES.has(semanticClass) ? semanticClass : '';
   $: safeMode = RENDER_MODES.has(mode) ? mode : 'animated';
@@ -124,34 +125,43 @@
     renderer.draw(lastDrawTime);
     syncAnimationLoop();
   }
-  function requestFontLoad() {
-    if (!renderer || !renderer.supported || fontLoadKey === requestedFontLoadKey) return;
-    const requestKey = fontLoadKey;
+  function requestFontLoad(requestKey = fontLoadKey, requestFontKey = resolvedFontKey, requestText = text) {
+    if (!renderer || !renderer.supported || !requestKey || requestKey === requestedFontLoadKey) return;
     const requestId = ++fontRequestId;
     requestedFontLoadKey = requestKey;
     fontReady = false;
-    requestNameFontLoad(activeFontKey, 24, text).then(ready => {
+    requestNameFontLoad(requestFontKey, 24, requestText).then(ready => {
       if (requestId !== fontRequestId || requestKey !== fontLoadKey) return;
-      fontReady = ready;
-      if (ready) {
-        applyResize();
-        syncAnimationLoop();
-      } else {
+      if (!ready) {
+        // Keep the semantic face visible after a failed or transient load.
+        // The loadingdone listener below can retry without remounting the
+        // layout, while a later prop change gets a fresh request key.
+        requestedFontLoadKey = '';
+        fontReady = false;
         renderer?.draw(lastDrawTime);
+        return;
       }
+      fontReady = ready;
+      applyResize();
+      syncAnimationLoop();
     });
   }
 
-  $: if (mounted && renderer) requestFontLoad();
+  // Pass the changing values into the reactive statement explicitly. Svelte
+  // cannot infer dependencies that are read only inside requestFontLoad().
+  $: if (mounted && renderer && fontLoadKey) requestFontLoad(fontLoadKey, resolvedFontKey, text);
 
-  function requestComposableRenderers() {
-    if (!hasComposableKeys || composableLoadPromise) return;
+  function requestComposableRenderers(nextHasComposableKeys = hasComposableKeys) {
+    if (!nextHasComposableKeys || composableLoadPromise) return;
     composableLoadPromise = loadCodeOwnedNameRenderers()
       .then(() => renderer?.draw(lastDrawTime))
-      .catch(() => renderer?.draw(lastDrawTime));
+      .catch(() => {
+        composableLoadPromise = null;
+        renderer?.draw(lastDrawTime);
+      });
   }
 
-  $: if (mounted && renderer) requestComposableRenderers();
+  $: if (mounted && renderer && hasComposableKeys) requestComposableRenderers(hasComposableKeys);
 
   function isAnimated() {
     return shouldAnimateNameFrame({ visible, mode: effectiveMode, reducedMotion });
@@ -276,6 +286,7 @@
 
     if (typeof document !== 'undefined' && document.fonts?.addEventListener) {
       const fontListener = () => {
+        requestFontLoad(fontLoadKey, resolvedFontKey, text);
         applyResize();
         renderer?.draw(lastDrawTime);
       };
