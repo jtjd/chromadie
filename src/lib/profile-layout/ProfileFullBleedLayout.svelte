@@ -156,7 +156,7 @@
     display: grid;
     width: clamp(8.5rem, 15vw, 11rem);
     height: clamp(8.5rem, 15vw, 11rem);
-    margin: 0 auto clamp(1.4rem, 3vw, 2rem);
+    margin: 0 auto clamp(.7rem, 1.5vw, 1rem);
     place-items: center;
     border-radius: 50%;
   }
@@ -196,7 +196,7 @@
     max-width: min(92vw, 68rem);
     margin: 0;
     color: var(--profile-username, #ffffff);
-    font: 600 clamp(1.65rem, 1.7vw, 2.2rem) / 1 'Clash Display', sans-serif;
+    font: 600 clamp(1.55rem, 1.6vw, 2.05rem) / 1 'Clash Display', sans-serif;
     letter-spacing: -.035em;
     overflow-wrap: anywhere;
   }
@@ -264,8 +264,8 @@
 
   .profile-full-bleed__links a img {
     display: block;
-    width: 1.65rem;
-    height: 1.65rem;
+    width: 1.8rem;
+    height: 1.8rem;
     object-fit: contain;
     filter: brightness(0) invert(1);
     opacity: .9;
@@ -304,8 +304,8 @@
 
   @media (max-width: 36rem) {
     .profile-full-bleed { padding-inline: .75rem; }
-    .profile-full-bleed__avatar-shell { margin-bottom: 1.1rem; }
-    .profile-full-bleed__name { font-size: clamp(1.5rem, 7.5vw, 2rem); }
+    .profile-full-bleed__avatar-shell { margin-bottom: .55rem; }
+    .profile-full-bleed__name { font-size: clamp(1.45rem, 7vw, 1.9rem); }
     .profile-full-bleed__bio { max-width: 22rem; font-size: clamp(.76rem, 4vw, 1rem); }
     .profile-full-bleed__links {
       column-gap: .2rem;

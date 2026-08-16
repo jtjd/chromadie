@@ -78,15 +78,17 @@ test('Immersive uses one purpose-built identity composition in public and Studio
 test('Immersive matches the reference identity scale and compact horizontal link spacing', async () => {
   const layout = await read('src/lib/profile-layout/ProfileFullBleedLayout.svelte');
 
-  assert.match(layout, /font: 600 clamp\(1\.65rem, 1\.7vw, 2\.2rem\) \/ 1 'Clash Display'/);
+  assert.match(layout, /margin: 0 auto clamp\(\.7rem, 1\.5vw, 1rem\);/);
+  assert.match(layout, /font: 600 clamp\(1\.55rem, 1\.6vw, 2\.05rem\) \/ 1 'Clash Display'/);
   assert.match(layout, /margin: \.5rem auto 0;/);
   assert.match(layout, /font: 500 clamp\(\.78rem, 1vw, 1rem\) \/ 1\.45 'Inter'/);
   assert.match(layout, /column-gap: \.25rem;/);
   assert.match(layout, /row-gap: \.35rem;/);
   assert.match(layout, /margin: 1\.15rem auto 0;/);
   assert.match(layout, /width: 2rem;\n\s{4}height: 2rem;/);
-  assert.match(layout, /width: 1\.65rem;\n\s{4}height: 1\.65rem;\n\s{4}object-fit: contain;/);
+  assert.match(layout, /width: 1\.8rem;\n\s{4}height: 1\.8rem;\n\s{4}object-fit: contain;/);
   assert.match(layout, /column-gap: \.2rem;/);
-  assert.match(layout, /font-size: clamp\(1\.5rem, 7\.5vw, 2rem\)/);
+  assert.match(layout, /margin-bottom: \.55rem;/);
+  assert.match(layout, /font-size: clamp\(1\.45rem, 7vw, 1\.9rem\)/);
   assert.match(layout, /font-size: clamp\(\.76rem, 4vw, 1rem\)/);
 });
