@@ -18,6 +18,12 @@ normalizes the boolean, backfills both configuration generations, and clears
 the flag through the existing Name Font unequip RPC so draft, published, and
 V2 projections cannot drift.
 
+The public V2 read contract returns a response wrapper around the published
+configuration. The client must unwrap that payload before normalization; doing
+otherwise preserves the equipped Name Font but silently drops the profile-wide
+scope. The Studio preview applies the same bounded family only to its profile
+stage, leaving Studio chrome untouched.
+
 ## 2026-08-16 — Curate the Profile Effects font catalog
 
 Profile Effects now exposes one empty Platform default baseline plus ten

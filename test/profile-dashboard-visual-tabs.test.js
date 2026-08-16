@@ -128,7 +128,8 @@ test('reference workspace composition stays explicit', async () => {
   assert.match(preview, /ProfileReferenceCard/);
   assert.match(preview, /inputSurface="container"/);
   assert.match(preview, /profile-studio-preview__viewport[\s\S]*overflow: visible/);
-  assert.doesNotMatch(preview, /!important/);
+  assert.match(preview, /profile-studio-preview__stage--profile-wide-name-font/);
+  assert.match(preview, /font-family: var\(--profile-font-family\) !important/);
   assert.match(appearance, /appearance-editor__picker-surface/);
   assert.match(appearance, /appearance-editor__palette/);
   for (const label of ['Profile text', 'Handle & metadata', 'Profile surface', 'Bio text', 'Page background']) {

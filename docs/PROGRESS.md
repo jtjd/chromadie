@@ -13,6 +13,8 @@
   chrome or per-section editor complexity.
 - Added an additive database normalizer/backfill and Name Font unequip guard
   that synchronizes V1 and V2 draft/published projections.
+- Fixed public V2 hydration to unwrap the nested published payload before
+  normalization, and applied the same scoped family to the live Studio stage.
 
 ## Profile Effects font catalog — 2026-08-16
 

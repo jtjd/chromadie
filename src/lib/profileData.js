@@ -18,13 +18,30 @@ const PROFILE_LOAD_MESSAGE = 'The profile could not be loaded. Please check your
 let achievementsCache = null;
 let achievementsRequest = null;
 
+function isV2ConfigurationPayload(value) {
+  return Boolean(value
+    && typeof value === 'object'
+    && Number(value.version) === 2
+    && value.base
+    && typeof value.base === 'object');
+}
+
+function getV2ConfigurationPayload(value, key) {
+  const source = value && typeof value === 'object' ? value : null;
+  if (!source) return null;
+  const candidates = [
+    source[`${key}_v2`],
+    source.configuration_v2?.[key],
+    source[key],
+    source
+  ];
+  return candidates.find(isV2ConfigurationPayload) || null;
+}
+
 function isValidV2ConfigurationResponse(response) {
   const value = response?.data;
   if (response?.error || !value || typeof value !== 'object' || value.success === false) return false;
-  return Number(value.version) === 2
-    || Number(value.draft?.version) === 2
-    || Number(value.published?.version) === 2
-    || Boolean(value.base && typeof value.base === 'object');
+  return Boolean(getV2ConfigurationPayload(value, 'draft') || getV2ConfigurationPayload(value, 'published'));
 }
 
 /**
@@ -358,14 +375,10 @@ export async function loadProfileContext({
         : { draft: null, published: fallback, version: 1 };
     } else if (viewingOwnProfile) {
       const v2Draft = profileConfigurationV2Enabled
-        ? configResponse.data?.draft_v2
-          || configResponse.data?.configuration_v2?.draft
-          || (Number(configResponse.data?.draft?.version) === 2 ? configResponse.data.draft : null)
+        ? getV2ConfigurationPayload(configResponse.data, 'draft')
         : null;
       const v2Published = profileConfigurationV2Enabled
-        ? configResponse.data?.published_v2
-          || configResponse.data?.configuration_v2?.published
-          || (Number(configResponse.data?.published?.version) === 2 ? configResponse.data.published : null)
+        ? getV2ConfigurationPayload(configResponse.data, 'published')
         : null;
       const normalizedV2Draft = v2Draft ? await normalizeV2Configuration(v2Draft, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) }) : null;
       const normalizedV2Published = v2Published ? await normalizeV2Configuration(v2Published, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) }) : null;
@@ -379,8 +392,11 @@ export async function loadProfileContext({
         publishedAt: configResponse.data?.published_at || null
       };
     } else {
-      const v2 = profileConfigurationV2Enabled && (configResponse.data?.version === 2 || configResponse.data?.base)
-        ? await normalizeV2Configuration(configResponse.data, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) })
+      const publicV2 = profileConfigurationV2Enabled
+        ? getV2ConfigurationPayload(configResponse.data, 'published')
+        : null;
+      const v2 = publicV2
+        ? await normalizeV2Configuration(publicV2, fallbackColor, { staff: Boolean(context.targetProfile?.is_staff) })
         : null;
       context.profileConfig = {
         version: v2 ? 2 : 1,

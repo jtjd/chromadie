@@ -9,6 +9,8 @@ Document user-visible redesign changes by milestone.
 - The setting is opt-in, unavailable for the Platform default, and remains a
   single profile-wide choice rather than adding a separate font control to
   every section.
+- Public V2 profiles now preserve the setting during hydration, and the live
+  Studio preview reflects the same profile-wide font scope.
 
 ## 2026-08-16 — Refresh Profile Effects fonts
 

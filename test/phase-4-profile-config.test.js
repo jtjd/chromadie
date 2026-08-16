@@ -199,6 +199,40 @@ test('profile context uses the media-aware V2 read contract for owner and public
   assert.equal(visitorSupabase.calls.some(call => call.name === 'get_public_profile_configuration_v2'), true);
 });
 
+test('public V2 response wrappers preserve the nested published appearance scope', async () => {
+  const published = createDefaultProfileConfig('#112233');
+  published.layoutVariant = 'full-bleed';
+  published.appearance = {
+    ...published.appearance,
+    useNameFontAcrossProfile: true
+  };
+  const publishedV2 = {
+    version: 2,
+    base: published,
+    links: published.links,
+    identity: published.identityPresentation,
+    content: published.content,
+    widgets: published.widgets
+  };
+  const supabaseClient = createConfigSupabase({
+    profile: { id: 'user-2', username: 'OtherUser', mood_color: '#778899', total_rolls: 3 },
+    draft: published,
+    published,
+    publicV2: { success: true, version: 2, draft: null, published: publishedV2 }
+  });
+
+  const visitor = await loadProfileContext({
+    supabaseClient,
+    isAuthenticated: false,
+    profileUsername: 'OtherUser'
+  });
+
+  assert.equal(visitor.profileConfig.version, 2);
+  assert.equal(visitor.profileConfig.published.base.appearance.useNameFontAcrossProfile, true);
+  assert.equal(visitor.profileConfig.published.base.layoutVariant, 'full-bleed');
+  assert.equal(supabaseClient.calls.some(call => call.name === 'get_public_profile_configuration'), false);
+});
+
 test('profile context accepts a structurally valid V2 envelope without an avatar', async () => {
   const avatarPath = 'avatars/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
   const legacyConfig = { ...createDefaultProfileConfig('#112233'), avatar_path: avatarPath };

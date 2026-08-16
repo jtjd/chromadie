@@ -3,6 +3,7 @@
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileReferenceCard from './ProfileReferenceCard.svelte';
   import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
+  import { requestNameFontLoad } from './name/nameFonts.js';
 
   /** @type {any} */
   export let previewRenderSnapshot = null;
@@ -40,6 +41,28 @@
   $: profileBorderKey = previewRenderSnapshot?.cosmetics?.borderKey || '';
   $: linkStyle = previewRenderSnapshot?.configuration?.linkStyle || {};
   $: layoutVariant = previewRenderSnapshot?.layout?.variant || 'compact';
+  $: profileWideNameFontEnabled = previewRenderSnapshot?.typography?.profileWideNameFont === true;
+  $: profileWideNameFontKey = previewRenderSnapshot?.typography?.nameFontKey || '';
+  $: profileWideNameFontFamily = profileWideNameFontEnabled
+    ? previewRenderSnapshot?.typography?.family || ''
+    : '';
+  $: previewTypographyStyle = profileWideNameFontFamily
+    ? `--profile-font-family:${profileWideNameFontFamily}`
+    : '';
+  $: previewFontRequestKey = `${profileWideNameFontKey}:${identity.displayName || identity.username || ''}`;
+  let requestedProfileWideFontKey = '';
+
+  function requestPreviewProfileWideFont(fontKey, text) {
+    if (!fontKey || requestedProfileWideFontKey === previewFontRequestKey) return;
+    requestedProfileWideFontKey = previewFontRequestKey;
+    void requestNameFontLoad(fontKey, 28, text).then(loaded => {
+      if (!loaded && requestedProfileWideFontKey === previewFontRequestKey) requestedProfileWideFontKey = '';
+    });
+  }
+
+  $: if (profileWideNameFontEnabled && profileWideNameFontKey) {
+    requestPreviewProfileWideFont(profileWideNameFontKey, identity.displayName || identity.username || 'Chromadie');
+  }
 
   function formatDuration(value) {
     const seconds = Math.max(0, Math.round(Number(value) / 1000));
@@ -66,7 +89,12 @@
   {#if previewReady}
     <div class="profile-studio-preview__canvas" class:profile-studio-preview__canvas--mobile={previewDevice === 'mobile'}>
       <div class="profile-studio-preview__viewport" data-preview-device={previewDevice}>
-        <div bind:this={previewStage} class="profile-studio-preview__stage" data-preview-device={previewDevice}>
+        <div
+          bind:this={previewStage}
+          class={'profile-studio-preview__stage' + (profileWideNameFontEnabled ? ' profile-studio-preview__stage--profile-wide-name-font' : '')}
+          style={previewTypographyStyle}
+          data-preview-device={previewDevice}
+        >
           <ProfileMotionEffect
             motionKey={motionKey}
             inputSurface="container"
@@ -157,6 +185,13 @@
   .profile-studio-preview__devices button { min-height: 1.8rem; padding: .25rem .45rem; border: 0; border-radius: .3rem; background: transparent; color: #777881; font: 500 .6rem/1 'Inter', sans-serif; cursor: pointer; }
   .profile-studio-preview__devices button.active { background: rgba(255,255,255,.08); color: #bfc0c5; }
   .profile-studio-preview__devices button:hover, .profile-studio-preview__devices button:focus-visible { color: #f8f8f8; }
+
+  /* Match the public renderer's explicit typography scope while keeping the
+     Studio chrome in its own Inter-based type system. */
+  .profile-studio-preview__stage--profile-wide-name-font,
+  .profile-studio-preview__stage--profile-wide-name-font :global(*) {
+    font-family: var(--profile-font-family) !important;
+  }
 
   @media (max-width: 1100px) {
     .profile-studio-preview { height: auto; }

@@ -47,11 +47,12 @@ test('appearance v1 is bounded and independent from daily roll color', () => {
 });
 
 test('profile-wide Name Font scope stays bounded to the public profile tree', async () => {
-  const [migration, cosmetics, customize, shell] = await Promise.all([
+  const [migration, cosmetics, customize, shell, preview] = await Promise.all([
     read('supabase/migrations/20260816130000_profile_wide_name_font_scope.sql'),
     read('src/lib/ProfileCosmeticsEditor.svelte'),
     read('src/lib/ProfileCustomizePage.svelte'),
-    read('src/lib/ProfileShell.svelte')
+    read('src/lib/ProfileShell.svelte'),
+    read('src/lib/ProfileStudioPreview.svelte')
   ]);
 
   assert.match(migration, /useNameFontAcrossProfile/);
@@ -66,6 +67,8 @@ test('profile-wide Name Font scope stays bounded to the public profile tree', as
   assert.match(shell, /profile-shell-page--profile-wide-name-font/);
   assert.match(shell, /requestNameFontLoad/);
   assert.match(shell, /:global\(\*\) \{[\s\S]*font-family: var\(--profile-font-family\) !important/);
+  assert.match(preview, /profile-studio-preview__stage--profile-wide-name-font/);
+  assert.match(preview, /requestNameFontLoad/);
 });
 
 test('dashboard uses its self-contained shell and aggregate profile action contract', async () => {
