@@ -4,7 +4,6 @@
   import AvatarEffect from './avatar-effect/AvatarEffect.svelte';
   import CursorTrailLayer from './cursor-trail/CursorTrailLayer.svelte';
   import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
-  import { getProfileLayoutLabel } from './profile-layout/profileLayouts.js';
   import AtmosphereLayer from './profile-atmosphere/AtmosphereLayer.svelte';
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import { PROFILE_RENDER_CONTEXTS, resolveProfileRenderContext } from './profile-studio/previewContexts.js';
@@ -41,7 +40,6 @@
   $: nameLayerLoadout = isNamePreview ? nameLoadout : itemNameLayerLoadout;
   $: isAvatar = item?.slot === 'avatar_effect';
   $: isCursor = item?.slot === 'cursor_trail';
-  $: isLayout = item?.slot === 'profile_layout';
   $: isAtmosphere = item?.slot === 'profile_atmosphere';
   $: isProfileMotion = item?.slot === 'profile_motion';
   $: cursorPreviewKey = getCursorTrailKey(item?.css_value);
@@ -60,8 +58,6 @@
             ? 'avatar'
             : item?.slot === 'cursor_trail'
               ? 'cursor'
-              : item?.slot === 'profile_layout'
-                ? 'layout'
               : item?.slot === 'profile_atmosphere'
                 ? 'atmosphere'
                 : item?.slot === 'profile_motion'
@@ -124,14 +120,6 @@
         className="shop-cursor-preview"
       />
     {/key}
-  {:else if isLayout}
-    <div class={'shop-layout-preview shop-layout-preview--' + item.css_value} aria-label={getProfileLayoutLabel(item.css_value)}>
-      <span class="shop-layout-preview__rail"></span>
-      <span class="shop-layout-preview__hero"></span>
-      <span class="shop-layout-preview__module shop-layout-preview__module--one"></span>
-      <span class="shop-layout-preview__module shop-layout-preview__module--two"></span>
-      <span class="shop-layout-preview__module shop-layout-preview__module--three"></span>
-    </div>
   {:else if isAtmosphere}
     <div class="shop-atmosphere-preview">
       <AtmosphereLayer atmosphereKey={item.css_value} todayColor={previewAccent} recentColors={['#8DDCFF', '#B7FD4D', '#F7B7E2']} mode="preview" active={active || hovered} animated={active || hovered} />
@@ -169,20 +157,6 @@
   .shop-avatar-preview :global(.avatar-effect) { display:grid; place-items:center; width:6.7rem; height:6.7rem; border:1px solid color-mix(in srgb, var(--preview-accent, #fff) 54%, white); border-radius:50%; background:transparent; }
   .shop-avatar-preview__media { position:relative; z-index:2; display:block; width:100%; height:100%; border-radius:50%; object-fit:cover; }
   .shop-avatar-preview__fallback { position:relative; z-index:2; display:grid; place-items:center; width:100%; height:100%; color:#f3f3ef; font:650 3rem/1 var(--shop-display, var(--font-display)); letter-spacing:-.08em; }
-  .shop-layout-preview { position:relative; width:70%; height:82%; border:1px solid rgba(205,210,255,.52); border-radius:12px; background:#0D1117; }
-  .shop-layout-preview span { position:absolute; display:block; border:1px solid rgba(205,210,255,.35); background:rgba(205,210,255,.07); }
-  .shop-layout-preview__rail { display:none; }
-  .shop-layout-preview__hero { left:34%; right:34%; top:10%; height:19%; border-radius:50%; }
-  .shop-layout-preview__module--one { left:12%; right:12%; top:41%; height:14%; }
-  .shop-layout-preview__module--two { left:12%; right:12%; top:61%; height:14%; }
-  .shop-layout-preview__module--three { left:22%; right:22%; bottom:9%; height:9%; }
-  .shop-layout-preview--full-bleed { border-color:transparent; background:transparent; }
-  .shop-layout-preview--full-bleed .shop-layout-preview__rail { display:none; }
-  .shop-layout-preview--full-bleed .shop-layout-preview__hero { top:16%; left:38%; right:38%; height:20%; border-radius:50%; }
-  .shop-layout-preview--full-bleed .shop-layout-preview__module { left:22%; right:22%; width:auto; height:10%; border:0; border-bottom:1px solid rgba(205,210,255,.35); background:transparent; }
-  .shop-layout-preview--full-bleed .shop-layout-preview__module--one { top:45%; }
-  .shop-layout-preview--full-bleed .shop-layout-preview__module--two { top:61%; }
-  .shop-layout-preview--full-bleed .shop-layout-preview__module--three { top:77%; bottom:auto; width:42%; left:29%; right:29%; }
   .shop-atmosphere-preview { position:relative; width:100%; height:100%; min-height:7.5rem; overflow:hidden; border-radius:5px; background:transparent; }
   .shop-preview-area[data-render-context="effect-card"] .shop-atmosphere-preview { min-height: 100%; }
   .shop-atmosphere-preview :global(.profile-atmosphere) { inset:0; width:100%; height:100%; opacity:.9; }

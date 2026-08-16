@@ -515,6 +515,7 @@
             className={'profile-shell__motion-target profile-shell__motion-target--' + profileMotionTarget}
           >
             <div class="profile-shell__card-scale" data-profile-motion-target={profileMotionTarget}>
+              {#key profilePresentationLayoutVariant}
               {#if profilePresentationLayoutVariant === 'full-bleed'}
                 <ProfileFullBleedLayout
                   displayName={profileDisplayName}
@@ -575,6 +576,7 @@
                   <div class="profile-shell__identity-loading" aria-busy="true" aria-label="Profile card pending"></div>
                 {/if}
               {/if}
+              {/key}
             </div>
           </ProfileMotionEffect>
         </div>

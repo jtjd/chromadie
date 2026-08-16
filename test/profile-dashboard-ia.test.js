@@ -15,7 +15,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
     read('src/lib/ProfileCustomizePage.svelte'),
     read('src/lib/ProfilePremiumPage.svelte'),
     read('src/lib/ProfileStudioShell.svelte'),
-    read('src/lib/ProfileEditor.svelte'),
+    read('src/lib/ProfileLinksEditor.svelte'),
     read('src/lib/ProfileExpressionEditor.svelte'),
     read('src/lib/ProfileRichMediaEditor.svelte'),
     read('src/lib/IdentityEditor.svelte'),
@@ -83,7 +83,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.doesNotMatch(customize, /01 \/ Assets uploader/);
   assert.doesNotMatch(customize, /Click an asset to upload/);
   assert.match(header, /activeSection !== 'customize'/);
-  assert.match(settings, /previewAvailable = false/);
+  assert.doesNotMatch(settings, /previewAvailable = false/);
   assert.match(expression, /profile-expression-editor__compact-grid/);
   assert.match(expression, /JPEG, PNG, or WebP · processed and stored as WebP/);
   for (const action of ['Background', 'Profile audio', 'Avatar', 'Custom cursor']) assert.match(expression, new RegExp(action));
@@ -144,10 +144,9 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(contract, /PROFILE_STUDIO_PRIMARY_SECTION_IDS/);
   assert.match(shell, /getProfileStudioNavigation/);
   assert.match(shell, /profile-studio-shell__more-menu/);
-  assert.match(editor, /export let showLayout = true/);
-  assert.match(editor, /export let showLinks = true/);
-  assert.match(editor, /\{#if showLayout\}/);
-  assert.match(editor, /\{#if showLinks\}/);
+  assert.match(editor, /export function validateDraft/);
+  assert.match(editor, /PROFILE_LINK_DEFINITIONS/);
+  assert.doesNotMatch(editor, /showLayout|showLinks|ProfileTemplatePicker/);
   for (const anchor of ['profile-media-avatar', 'profile-media-background', 'profile-media-audio', 'profile-media-music']) {
     assert.match(expression, new RegExp(`id="${anchor}"`));
   }

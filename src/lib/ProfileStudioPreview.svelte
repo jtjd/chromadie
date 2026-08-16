@@ -55,7 +55,7 @@
   }
 </script>
 
-<div class="profile-studio-preview" data-preview-tab={activeCustomizeTab} data-preview-section={activeSection}>
+<div class="profile-studio-preview" data-preview-tab={activeCustomizeTab} data-preview-section={activeSection} data-preview-layout={layoutVariant}>
   <header class="profile-studio-preview__header">
     <div class="profile-studio-preview__label"><i></i><span>Live public-profile preview</span></div>
     {#if isMobileViewport}
@@ -74,6 +74,7 @@
             disabled={previewDevice === 'mobile'}
             className="profile-studio-preview__motion"
           >
+            {#key layoutVariant}
             {#if layoutVariant === 'full-bleed'}
               <ProfileFullBleedLayout
                 displayName={identity.displayName || identity.username}
@@ -122,6 +123,7 @@
                 ariaLabel="Live public-profile preview card"
               />
             {/if}
+            {/key}
           </ProfileMotionEffect>
         </div>
       </div>

@@ -31,16 +31,16 @@ src/
       social/
       stats/
   editor/
-    ProfileEditor.svelte
-    LayoutEditor.svelte
-    ModuleLibrary.svelte
-    inspector/
+    ProfileSettings.svelte
+    ProfileStudioWorkspace.svelte
+    ProfileCustomizePage.svelte
+    ProfileLinksEditor.svelte
+    ProfileReferenceLayoutEditor.svelte
   discovery/
     DiscoveryHub.svelte
     RollLeaderboard.svelte
     ProfileCard.svelte
   commerce/
-    Shop.svelte
     catalog/
   domain/
     rolls/
@@ -79,7 +79,7 @@ Conceptual shape:
     motionLevel: "ambient"
   },
   layout: {
-    templateId: "immersive",
+    layoutVariant: "full-bleed",
     modules: [
       { id: "roll", variant: "hero-integrated", order: 0, size: "wide" },
       { id: "links", variant: "icons", order: 1, size: "compact" },

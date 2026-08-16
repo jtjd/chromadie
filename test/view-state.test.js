@@ -25,10 +25,8 @@ test('view state is scoped and survives component remounts in memory', () => {
 });
 
 test('only UI-only views persist session state; Profile Studio profile data does not', async () => {
-  const [editor, content, widgets, identity, discovery, stores, settings, customize, contract, workspace] = await Promise.all([
-    readFile(new URL('../src/lib/ProfileEditor.svelte', import.meta.url), 'utf8'),
-    readFile(new URL('../src/lib/ProfileContentEditor.svelte', import.meta.url), 'utf8'),
-    readFile(new URL('../src/lib/ProfileWidgetEditor.svelte', import.meta.url), 'utf8'),
+  const [links, identity, discovery, stores, settings, customize, contract, workspace] = await Promise.all([
+    readFile(new URL('../src/lib/ProfileLinksEditor.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/IdentityEditor.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/DiscoveryHub.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/stores.js', import.meta.url), 'utf8'),
@@ -38,13 +36,13 @@ test('only UI-only views persist session state; Profile Studio profile data does
     readFile(new URL('../src/lib/ProfileStudioWorkspace.svelte', import.meta.url), 'utf8')
   ]);
 
-  for (const profileEditor of [editor, content, widgets, identity]) {
+  for (const profileEditor of [links, identity]) {
     assert.doesNotMatch(profileEditor, /readViewState|writeViewState|clearViewState/);
     assert.doesNotMatch(profileEditor, /Unsaved (layout|content|widget|identity) restored/);
   }
-  assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
-  assert.doesNotMatch(editor, /export function getDraftConfig/);
-  assert.doesNotMatch(editor, /save_profile_configuration['"]/);
+  assert.doesNotMatch(links, /save_profile_configuration_section|publish_profile_configuration_section/);
+  assert.doesNotMatch(links, /export function getDraftConfig/);
+  assert.doesNotMatch(links, /save_profile_configuration['"]/);
   assert.match(discovery, /VIEW_STATE_NAMESPACE = 'discovery'/);
   assert.match(stores, /clearAllViewState/);
   assert.match(settings, /function createStudioEditorProfileConfig/);

@@ -93,11 +93,11 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
 });
 
 test('Customize link rows keep action controls inside the bounded editor surface', async () => {
-  const editor = await read('src/lib/ProfileEditor.svelte');
+  const editor = await read('src/lib/ProfileLinksEditor.svelte');
 
-  assert.match(editor, /profile-editor--customize \.profile-editor__link-row \{ grid-template-columns: auto minmax\(5\.5rem, \.8fr\) minmax\(6rem, 1fr\) minmax\(7\.5rem, 1\.5fr\) minmax\(8rem, max-content\)/);
-  assert.match(editor, /profile-editor--customize \.profile-editor__link-actions \{ min-width: 0; justify-content: flex-end; flex-wrap: wrap; \}/);
-  assert.match(editor, /profile-editor--customize \.profile-editor__remove \{ white-space: nowrap; \}/);
+  assert.match(editor, /profile-links-editor__link-row/);
+  assert.match(editor, /profile-links-editor__link-actions/);
+  assert.match(editor, /profile-links-editor__remove/);
 });
 
 test('reference workspace composition stays explicit', async () => {

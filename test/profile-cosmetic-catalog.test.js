@@ -79,7 +79,7 @@ test('layout publishing keeps the template and variant markers paired', async ()
     read('supabase/migrations/20260815151000_profile_layout_publish_pair.sql')
   ]);
 
-  assert.match(editor, /createProfileTemplatePatch/);
+  assert.match(editor, /createProfileLayoutPatch/);
   assert.match(editor, /emitPatch\(layoutPatch\)/);
   assert.match(draftModel, /templateKey: normalizedBase\.layoutVariant/);
   assert.match(config, /templateKey: normalizedLayoutVariant/);

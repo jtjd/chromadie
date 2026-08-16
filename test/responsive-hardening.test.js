@@ -106,7 +106,7 @@ test('Profile Studio keeps draft publishing and narrow editor surfaces usable', 
   assert.match(customize, /on:identitypreview=\{event => forwardPatch\('identity', event\)\}/);
   assert.match(settings, /publish_profile_studio_v2/);
   assert.match(settings, /bio: context\?\.targetProfile\?\.bio \|\| ''/);
-  assert.match(settings, /mobilePreviewAvailable=\{previewAvailable \|\| customizePreviewAvailable\}/);
+  assert.match(settings, /mobilePreviewAvailable=\{customizePreviewAvailable\}/);
   assert.match(dashboard, /profile-studio-shell__mobile-actions/);
   assert.match(dashboard, /aria-controls="profile-studio-preview"/);
   assert.match(studioHeader, /profile-studio-header__customize-tabs/);

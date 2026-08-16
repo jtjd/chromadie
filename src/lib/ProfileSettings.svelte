@@ -53,7 +53,6 @@
   const SETTINGS_SECTIONS = PROFILE_STUDIO_SECTIONS;
   const HASH_ALIASES = PROFILE_STUDIO_HASH_ALIASES;
   const CUSTOMIZE_TAB_LABELS = Object.freeze({ appearance: 'Appearance', media: 'Media', links: 'Links', layout: 'Layout' });
-  const previewAvailable = false;
 
   const dispatch = createEventDispatcher();
 
@@ -430,11 +429,6 @@
       ...nextDraft,
       bio: context?.targetProfile?.bio || ''
     });
-    studioDraft = nextDraft;
-    studioIdentityDraft = {
-      bio: context?.targetProfile?.bio || '',
-      identityPresentation: nextDraft.identityPresentation
-    };
     cosmeticPreviewLoadout = null;
     dirtySources = {};
   }
@@ -746,7 +740,7 @@
   {activeSection}
   ownerProfilePath={profilePath}
   mobileTitle={mobileStudioTitle}
-  mobilePreviewAvailable={previewAvailable || customizePreviewAvailable}
+  mobilePreviewAvailable={customizePreviewAvailable}
   mobilePreviewOpen={showDashboardPreview}
   mobileDirty={dashboardDirty}
   mobileSaving={dashboardSaving}
@@ -765,7 +759,7 @@
         {activeSection}
         {activeCustomizeTab}
         {activeLabel}
-        {previewAvailable}
+        previewAvailable={customizePreviewAvailable}
         {previewOpen}
         dirty={dashboardDirty}
         saving={dashboardSaving}
@@ -788,7 +782,7 @@
       {profilePath}
       {accountUsername}
       {studioIdentityDraft}
-      {previewRenderSnapshot}
+      cosmeticPreviewLoadout={cosmeticPreviewLoadout}
       entitlements={$profileEntitlements}
       staff={Boolean(context?.targetProfile?.is_staff)}
       isAuthenticated={$isAuthenticated}

@@ -48,7 +48,8 @@
   let mounted = false;
   let visible = true;
   let reducedMotion = false;
-  let canvasReady = false;
+  let rendererReady = false;
+  let fontReady = false;
   let lastDrawTime = 0;
   let stopAnimation = null;
   let intersectionObserver;
@@ -58,6 +59,7 @@
   let removeFontListener;
   let composableLoadPromise;
   let requestedFontLoadKey = '';
+  let fontRequestId = 0;
   let lastHostSize = { width: 220, height: 44 };
 
   // Motion layers intentionally extend beyond the glyphs. Keep that visual
@@ -96,6 +98,7 @@
   $: safeSemanticClass = SEMANTIC_CLASSES.has(semanticClass) ? semanticClass : '';
   $: safeMode = RENDER_MODES.has(mode) ? mode : 'animated';
   $: effectiveMode = reducedMotion ? 'reduced-motion' : safeMode;
+  $: canvasReady = rendererReady && fontReady;
   $: rendererOptions = {
     text,
     rendererKey: safeRendererKey,
@@ -122,10 +125,20 @@
     syncAnimationLoop();
   }
   function requestFontLoad() {
-    if (!renderer || fontLoadKey === requestedFontLoadKey) return;
-    requestedFontLoadKey = fontLoadKey;
-    requestNameFontLoad(activeFontKey, 24, text).then(() => {
-      renderer?.draw(lastDrawTime);
+    if (!renderer || !renderer.supported || fontLoadKey === requestedFontLoadKey) return;
+    const requestKey = fontLoadKey;
+    const requestId = ++fontRequestId;
+    requestedFontLoadKey = requestKey;
+    fontReady = false;
+    requestNameFontLoad(activeFontKey, 24, text).then(ready => {
+      if (requestId !== fontRequestId || requestKey !== fontLoadKey) return;
+      fontReady = ready;
+      if (ready) {
+        applyResize();
+        syncAnimationLoop();
+      } else {
+        renderer?.draw(lastDrawTime);
+      }
     });
   }
 
@@ -222,7 +235,8 @@
   onMount(() => {
     mounted = true;
     renderer = createNameCanvasRenderer(canvas, rendererOptions);
-    canvasReady = renderer.supported;
+    rendererReady = renderer.supported;
+    fontReady = false;
     applyResize();
     requestedFontLoadKey = '';
 
@@ -278,8 +292,11 @@
       resizeObserver?.disconnect();
       removeMediaListener?.();
       removeFontListener?.();
+      fontRequestId += 1;
       renderer?.destroy();
       renderer = null;
+      rendererReady = false;
+      fontReady = false;
       mounted = false;
     };
   });
@@ -295,6 +312,7 @@
   class={'name-effect-canvas name-effect-canvas--' + (canvasReady ? 'ready' : 'fallback')}
   data-name-renderer={safeRendererKey}
   data-name-font={activeFontKey}
+  data-name-font-ready={fontReady ? 'true' : 'false'}
   data-name-material={explicitMaterialKey}
   data-name-motion={explicitMotionKey}
 >

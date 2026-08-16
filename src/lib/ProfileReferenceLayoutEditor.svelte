@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { normalizeProfileConfig } from './profileConfig.js';
-  import { createProfileTemplatePatch } from './profileTemplates.js';
+  import { createProfileLayoutPatch } from './profile-layout/profileLayoutPatch.js';
   import { PROFILE_LAYOUT_DEFINITIONS, PROFILE_LAYOUT_KEYS } from './profile-layout/profileLayouts.js';
 
   /** @type {any} */
@@ -42,7 +42,7 @@
 
   function chooseLayout(layoutVariant) {
     if (!PROFILE_LAYOUT_KEYS.includes(layoutVariant) || layoutVariant === staged.layoutVariant) return;
-    const layoutPatch = createProfileTemplatePatch(layoutVariant);
+    const layoutPatch = createProfileLayoutPatch(layoutVariant);
     staged = normalizeProfileConfig({ ...staged, ...layoutPatch });
     emitPatch(layoutPatch);
   }
@@ -129,7 +129,7 @@
   .profile-layout-editor h3 { font-size: .92rem; line-height: 1.2; }
   .profile-layout-editor p { max-width: 420px; margin: 5px 0 0; color: #8f9099; font: 400 .68rem/1.45 'Inter', sans-serif; }
   .profile-layout-editor__badge { flex: 0 0 auto; padding: 4px 7px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; color: #777881; font: 500 .56rem/1 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase; }
-  .profile-layout-editor__layouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .profile-layout-editor__layouts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .profile-layout-editor__card { min-width: 0; padding: 9px; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: rgba(255,255,255,.035); color: #f8f8f8; text-align: left; cursor: pointer; }
   .profile-layout-editor__card:hover, .profile-layout-editor__card:focus-visible { border-color: rgba(255,255,255,.2); }
   .profile-layout-editor__card.active { border-color: #00ffb3; box-shadow: 0 0 15px rgba(0,255,179,.24); }

@@ -5,11 +5,8 @@ import { readFile } from 'node:fs/promises';
 import { CURSOR_TRAIL_KEYS, getCursorTrailKey } from '../src/lib/cursor-trail/cursorTrails.js';
 import { AVATAR_EFFECT_KEYS, AVATAR_EFFECT_DEFINITIONS, isAvatarEffectKey } from '../src/lib/avatar-effect/avatarEffects.js';
 import {
-  FREE_PROFILE_LAYOUTS,
-  PAID_PROFILE_LAYOUT_KEYS,
+  PROFILE_LAYOUT_DEFINITIONS,
   PROFILE_LAYOUT_KEYS,
-  getProfileLayoutLabel,
-  resolveProfileLayoutPreviewVariant,
   resolveProfileLayoutVariant
 } from '../src/lib/profile-layout/profileLayouts.js';
 import { filterShopItems, SHOP_SECTIONS, tryOnShopItem } from '../src/lib/shopCatalog.js';
@@ -20,16 +17,13 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('launch renderer registries contain exactly the requested finite keys', () => {
   assert.equal(CURSOR_TRAIL_KEYS.length, 16);
   assert.equal(AVATAR_EFFECT_KEYS.length, 18);
-  assert.equal(PAID_PROFILE_LAYOUT_KEYS.length, 0);
   assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 12);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
   assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 18);
-  assert.equal(new Set(PAID_PROFILE_LAYOUT_KEYS).size, 0);
   assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed']);
-  assert.deepEqual(FREE_PROFILE_LAYOUTS, PROFILE_LAYOUT_KEYS);
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
   assert.equal(isAvatarEffectKey('avatar_effect_color_archive'), true);
-  assert.equal(getProfileLayoutLabel('profile_layout_story_stack'), 'Compact');
+  assert.equal(PROFILE_LAYOUT_DEFINITIONS['full-bleed'].label, 'Immersive');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_color_memory'), null);
   assert.equal(getAtmosphereDefinition('profile_atmosphere_signal_garden'), null);
   assert.equal(getAtmosphereDefinition('profile_atmosphere_droplets_glass')?.key, 'droplets-glass');
@@ -130,12 +124,10 @@ test('atmosphere scenes are finite, authored, and safe to mount repeatedly', asy
   assert.doesNotMatch(atmosphereSource, /RAIN_WINDOW_TEXTURE/);
 });
 
-test('public layout resolution is config-only and fitting-room previews stay temporary', () => {
+test('public layout resolution is configuration-only', () => {
   assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'compact', profile_layout: 'profile_layout_full_bleed' }), 'compact');
   assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'compact', layoutOverride: 'focus', profile_layout: 'profile_layout_full_bleed' }), 'compact');
   assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'not-real', profile_layout: 'profile_layout_split_signal' }), 'compact');
-  assert.equal(resolveProfileLayoutPreviewVariant({ profile_layout: 'profile_layout_full_bleed' }, { layoutVariant: 'compact' }), 'full-bleed');
-  assert.equal(resolveProfileLayoutPreviewVariant({ profile_layout: 'profile_layout_split_signal' }, { layoutVariant: 'compact' }), 'compact');
 });
 
 test('profile layouts compose the two active presentation regions', async () => {

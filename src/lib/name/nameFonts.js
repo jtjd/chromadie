@@ -227,16 +227,19 @@ export function getNameCanvasFont(fontKey, pixelSize) {
 }
 
 /**
- * Ask the browser to resolve a code-owned font declaration. This is a best
- * effort request: the renderer remains valid when FontFaceSet is unavailable
- * or the optional family cannot be found locally.
+ * Ask the browser to resolve a code-owned font declaration and confirm that
+ * the requested face is available before a canvas hides its semantic fallback.
  */
 export function requestNameFontLoad(fontKey, pixelSize = 24, text = 'Chromadie') {
   if (typeof document === 'undefined') return Promise.resolve(false);
   const descriptor = getNameCanvasFont(fontKey, pixelSize);
   const assetPromise = loadNameFontAsset(fontKey);
   if (!document.fonts?.load) return assetPromise;
-  return assetPromise.then(() => document.fonts.load(descriptor, String(text || 'Chromadie')))
-    .then(() => true)
+  return assetPromise.then(assetLoaded => {
+    if (!assetLoaded) return false;
+    return document.fonts.load(descriptor, String(text || 'Chromadie'))
+      .then(() => typeof document.fonts.check !== 'function'
+        || document.fonts.check(descriptor, String(text || 'Chromadie')));
+  })
     .catch(() => false);
 }

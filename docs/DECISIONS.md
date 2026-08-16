@@ -1,5 +1,29 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-16 — Make Customize state and presentation canonical
+
+Customize now has one active layout vocabulary: `compact` and `full-bleed`.
+`full-bleed` remains labeled “Immersive” for people, but `immersive` and the
+older layout names are no longer accepted by the client or live database key
+resolver. The additive cleanup migration backfills existing equipped and
+draft/published values first, then narrows runtime normalization and removes
+browser access to the normalization functions. Historical migrations and
+dashboard hash aliases remain only for deployment history and safe navigation.
+
+The obsolete combined `ProfileEditor`, template picker, content editor, and
+widget editor are removed from the active graph. Links have a dedicated
+structured editor; the current identity, appearance, media, cosmetics, and
+layout editors remain. Profile Settings owns one staged draft and one staged
+cosmetic loadout, so switching Customize tabs cannot replace a preview with a
+stale equipped snapshot. Layout renderers are keyed by their canonical variant
+to prevent a Compact DOM subtree from surviving an Immersive selection.
+
+Name rendering now keeps semantic text visible until the selected bundled font
+asset has loaded and passed `document.fonts.check`. The canvas redraws and
+resizes only after that readiness boundary, with stale font requests ignored.
+This removes the previous “switch away and back” workaround while preserving
+the accessible text fallback and reduced-motion behavior.
+
 ## 2026-08-15 — Reset the public profile presentation to Compact and Immersive
 
 The active structural presentation is intentionally limited to two choices:

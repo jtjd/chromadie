@@ -21,15 +21,13 @@
   export let isAuthenticated = false;
   export let featureFlags = {};
   /** @type {any} */
-  export let previewRenderSnapshot = null;
-  /** @type {any} */
   export let studioIdentityDraft = null;
+  /** @type {any} */
+  export let cosmeticPreviewLoadout = null;
 
   const dispatch = createEventDispatcher();
   let customizePage = null;
   let layoutEditor = null;
-  let contentEditor = null;
-  let widgetEditor = null;
 
   $: isCustomize = activeSection === 'customize';
   $: activeRegistration = getProfileStudioSectionRegistration(activeSection);
@@ -53,8 +51,6 @@
 
   export function validateDraft() {
     if (activeSection === 'customize') return customizePage?.validateDraft?.() !== false;
-    if (activeSection === 'profile-content') return contentEditor?.validateDraft?.() !== false;
-    if (activeSection === 'profile-widgets') return widgetEditor?.validateDraft?.() !== false;
     if (activeSection === 'profile-layout') return layoutEditor?.validateDraft?.() !== false;
     return true;
   }
@@ -62,15 +58,11 @@
   export function acceptSaved(nextConfig) {
     customizePage?.acceptSaved?.(nextConfig);
     layoutEditor?.acceptSaved?.(nextConfig);
-    contentEditor?.acceptSaved?.(nextConfig);
-    widgetEditor?.acceptSaved?.(nextConfig);
   }
 
   export function resetChanges(sectionId = activeSection) {
     if (sectionId === 'customize') customizePage?.resetChanges?.();
     if (sectionId === 'profile-layout') layoutEditor?.resetChanges?.();
-    if (sectionId === 'profile-content') contentEditor?.resetChanges?.();
-    if (sectionId === 'profile-widgets') widgetEditor?.resetChanges?.();
   }
 </script>
 
@@ -91,9 +83,9 @@
             accountUsername={accountUsername}
             targetProfile={context.targetProfile}
             profileConfig={editorProfileConfig}
-            {studioIdentityDraft}
+            identityDraft={studioIdentityDraft}
+            {cosmeticPreviewLoadout}
             activeTab={activeCustomizeTab}
-            layoutVariant={previewRenderSnapshot?.layout?.variant || editorProfileConfig?.draft?.layoutVariant || 'compact'}
             {entitlements}
             {staff}
             on:studiopatch={forward}
@@ -128,10 +120,6 @@
           <svelte:component this={sectionComponents[activeSection]} />
         {:else if activeSection === 'profile-media'}
           <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} config={editorProfileConfig} fallbackInitial={(context.targetProfile?.username || '✦').slice(0, 1)} {staff} {entitlements} on:expressionchange={event => forwardStudioPatch('media', event)} />
-        {:else if activeSection === 'profile-content'}
-          <svelte:component this={sectionComponents[activeSection]} bind:this={contentEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('profile-content', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardStudioPatch('content', event)} />
-        {:else if activeSection === 'profile-widgets'}
-          <svelte:component this={sectionComponents[activeSection]} bind:this={widgetEditor} profileId={context.profileId} draftConfig={editorProfileConfig?.draft} publishedConfig={editorProfileConfig?.published} updatedAt={context.profileConfig?.updatedAt} {entitlements} {staff} on:dirty={event => forwardDirty('profile-widgets', event)} on:configsaved={forward} on:configpublished={forward} on:configreloaded={forward} on:configpreview={event => forwardStudioPatch('widgets', event)} />
         {:else if activeSection === 'profile-collection'}
           <svelte:component this={sectionComponents[activeSection]} accountProfile={context.targetProfile} profileConfig={editorProfileConfig} {entitlements} {staff} />
         {:else if activeSection === 'profile-layout'}

@@ -38,6 +38,8 @@ test('every production identity surface uses the shared Name renderer path', asy
   assert.match(identity, /semanticClass="profile-reference-card__name"/);
   assert.match(canvas, /name-effect-canvas__semantic\.profile-reference-card__name/);
   assert.match(canvas, /getNameFont/);
+  assert.match(canvas, /requestNameFontLoad/);
+  assert.match(canvas, /data-name-font-ready/);
   assert.match(canvas, /style=\{semanticStyle\}/);
   assert.match(canvas, /aria-hidden="true"/);
 });
@@ -58,4 +60,6 @@ test('shared renderer semantics and lifecycle hooks remain explicit', async () =
   assert.match(canvas, /resizeObserver\?\.disconnect\(\)/);
   assert.match(canvas, /renderer\?\.destroy\(\)/);
   assert.match(canvas, /registerNameAnimation/);
+  assert.match(canvas, /rendererReady && fontReady/);
+  assert.match(canvas, /fontRequestId/);
 });

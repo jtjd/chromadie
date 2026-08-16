@@ -5,7 +5,6 @@ import { readFile } from 'node:fs/promises';
 import {
   PROFILE_LAYOUT_DEFINITIONS,
   PROFILE_LAYOUT_KEYS,
-  resolveProfileLayoutPreviewVariant,
   resolveProfileLayoutVariant
 } from '../src/lib/profile-layout/profileLayouts.js';
 import {
@@ -21,7 +20,7 @@ import {
   buildConfigurationV2,
   mergeConfigurationV2ExpressionFields
 } from '../src/lib/profile-studio/draftModel.js';
-import { createProfileTemplatePatch } from '../src/lib/profileTemplates.js';
+import { createProfileLayoutPatch } from '../src/lib/profile-layout/profileLayoutPatch.js';
 import { PROFILE_LINK_DEFINITIONS, PROFILE_LINK_TYPES, isProfileSocialLink } from '../src/lib/profileLinkTypes.js';
 import { RICH_PROFILE_FIXTURE } from '../scripts/browser/profile-rich-fixture.mjs';
 
@@ -38,11 +37,9 @@ test('the two active layout definitions carry distinct structural contracts', ()
   );
 });
 
-test('public layout authority comes from profile configuration, with a separate fitting-room resolver', () => {
+test('public layout authority comes from profile configuration', () => {
   assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_full_bleed', layoutVariant: 'compact' }), 'compact');
   assert.equal(resolveProfileLayoutVariant({ profile_layout: 'profile_layout_modern', layoutVariant: 'not-real' }), 'compact');
-  assert.equal(resolveProfileLayoutPreviewVariant({ profile_layout: 'profile_layout_full_bleed' }, { layoutVariant: 'compact' }), 'full-bleed');
-  assert.equal(resolveProfileLayoutPreviewVariant({}, { layoutVariant: 'full-bleed' }), 'full-bleed');
 });
 
 test('opening and continuation link helpers partition a rich profile without overlap', () => {
@@ -147,10 +144,10 @@ test('an incomplete publish envelope preserves dedicated expression fields defen
 test('a layout template round trip returns the normalized draft to its published baseline', () => {
   const published = normalizeProfileConfig({
     ...createDefaultProfileConfig(),
-    ...createProfileTemplatePatch('compact')
+    ...createProfileLayoutPatch('compact')
   });
-  const immersive = normalizeProfileConfig({ ...published, ...createProfileTemplatePatch('full-bleed') });
-  const compactAgain = normalizeProfileConfig({ ...immersive, ...createProfileTemplatePatch('compact') });
+  const immersive = normalizeProfileConfig({ ...published, ...createProfileLayoutPatch('full-bleed') });
+  const compactAgain = normalizeProfileConfig({ ...immersive, ...createProfileLayoutPatch('compact') });
 
   assert.equal(areProfileConfigsEqual(immersive, published), false);
   assert.equal(areProfileConfigsEqual(compactAgain, published), true);
@@ -175,7 +172,7 @@ test('the canonical browser fixture contains the rich renderer coverage data', (
 });
 
 test('template selection applies the authored module order while remaining bounded', () => {
-  const patch = createProfileTemplatePatch('full-bleed');
+  const patch = createProfileLayoutPatch('full-bleed');
   assert.equal(patch.templateKey, 'full-bleed');
   assert.equal(patch.layoutVariant, 'full-bleed');
   assert.deepEqual(patch.modules.map(module => module.id), ['roll', 'links', 'signature', 'recent', 'achievements', 'stats', 'boundary', 'explore']);
@@ -186,7 +183,7 @@ test('template selection applies the authored module order while remaining bound
 
 test('editor, renderer, and public icon files consume one link service registry', async () => {
   const [editor, identity] = await Promise.all([
-    read('src/lib/ProfileEditor.svelte'),
+    read('src/lib/ProfileLinksEditor.svelte'),
     read('src/lib/ProfileReferenceCard.svelte')
   ]);
   assert.equal(PROFILE_LINK_TYPES.length, PROFILE_LINK_DEFINITIONS.length);

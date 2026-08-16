@@ -40,9 +40,8 @@ test('profile content is bounded, structured, and safe by default', () => {
 });
 
 test('content renderer and editor stay inside the structured public boundary', async () => {
-  const [content, editor, shell, renderModel, settings, registry, migration] = await Promise.all([
+  const [content, shell, renderModel, settings, registry, migration] = await Promise.all([
     read('src/lib/ProfileContent.svelte'),
-    read('src/lib/ProfileContentEditor.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/profileRenderModel.js'),
     read('src/lib/ProfileSettings.svelte'),
@@ -52,19 +51,9 @@ test('content renderer and editor stay inside the structured public boundary', a
   assert.match(content, /getVisibleProfileContent/);
   assert.match(content, /rel="noopener noreferrer"/);
   assert.doesNotMatch(content, /innerHTML|iframe|new Function|eval\s*\(/);
-  assert.doesNotMatch(editor, /save_profile_configuration_section|publish_profile_configuration_section/);
-  assert.doesNotMatch(editor, /export function getDraftConfig/);
-  assert.match(editor, /export function validateDraft/);
-  assert.match(editor, /PROFILE_CONTENT_LIMITS.projects/);
-  assert.match(editor, /profile-content-editor__project--empty/);
-  assert.match(editor, /profile-project-placeholder-title/);
-  assert.match(editor, /updateEmptyProject/);
-  assert.match(editor, /Plain text only/);
-  assert.doesNotMatch(editor, /innerHTML|iframe|new Function|eval\s*\(/);
   assert.match(shell, /<ProfileContent/);
   assert.match(renderModel, /getVisibleProfileContent/);
-  assert.match(registry, /id: 'profile-content'/);
-  assert.match(registry, /ProfileContentEditor\.svelte/);
+  assert.doesNotMatch(registry, /ProfileContentEditor\.svelte/);
   assert.match(migration, /normalize_profile_content/);
   assert.match(migration, /p_section NOT IN \('appearance', 'composition', 'content'\)/);
   assert.match(migration, /profile_content_patch/);

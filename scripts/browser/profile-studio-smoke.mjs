@@ -913,7 +913,18 @@ try {
     assert(state.editor && state.active, `Reference layout editor is not active: ${JSON.stringify(state)}.`);
     assert(state.card && state.viewport && state.card.left >= state.viewport.left - 1 && state.card.right <= state.viewport.right + 1, `Reference preview card escaped its bounded rail: ${JSON.stringify(state)}.`);
     assert(!state.oldPicker && !state.oldPreview && !state.scrollCue, `Obsolete Studio presentation still mounted: ${JSON.stringify(state)}.`);
-    return state;
+
+    await page.click('.profile-layout-editor__card[data-layout="full-bleed"]', 'stage Immersive layout');
+    await page.waitFor(`document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]') && !document.querySelector('.profile-studio-preview .profile-reference-card')`, 'Immersive live preview');
+    const immersive = await page.evaluate(`(() => ({
+      active: document.querySelector('.profile-layout-editor__card.active')?.getAttribute('data-layout') || '',
+      fullBleed: Boolean(document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]')),
+      compact: Boolean(document.querySelector('.profile-studio-preview .profile-reference-card'))
+    }))()`);
+    assert(immersive.active === 'full-bleed' && immersive.fullBleed && !immersive.compact, `Immersive selection did not replace the Compact preview: ${JSON.stringify(immersive)}.`);
+    await page.click('.profile-layout-editor__card[data-layout="compact"]', 'restore Compact layout');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card') && !document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]')`, 'Compact live preview after Immersive');
+    return { ...state, immersive };
   });
 
     if (smokeMode === 'preview') {
@@ -954,7 +965,8 @@ try {
     })()`);
     await page.waitFor(`(() => {
       const liveName = document.querySelector('.profile-studio-preview .name-effect-canvas__semantic');
-      return liveName?.getAttribute('style')?.includes('Permanent Marker');
+      const canvas = liveName?.closest('.name-effect-canvas');
+      return liveName?.getAttribute('style')?.includes('Permanent Marker') && canvas?.getAttribute('data-name-font-ready') === 'true';
     })()`, 'font renderer in live preview');
     const fontCardState = await page.evaluate(`(() => ({
       preview: Boolean(document.querySelector('.profile-cosmetics-name-preview')),
@@ -962,6 +974,17 @@ try {
       selected: document.querySelector('#cosmetic-name_font')?.value || ''
     }))()`);
     assert(fontCardState.preview && fontCardState.renderer, `Font card did not mount the production renderer: ${JSON.stringify(fontCardState)}.`);
+    await page.click('#profile-customize-tab-layout', 'Immersive font verification tab');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-layout')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-layout')`, 'Immersive font layout editor');
+    await page.click('.profile-layout-editor__card[data-layout="full-bleed"]', 'verify selected font in Immersive');
+    await page.waitFor(`(() => {
+      const canvas = document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"] .name-effect-canvas');
+      return Boolean(canvas && canvas.getAttribute('data-name-font') === 'marker-tag' && canvas.getAttribute('data-name-font-ready') === 'true');
+    })()`, 'selected font readiness in Immersive preview');
+    await page.click('.profile-layout-editor__card[data-layout="compact"]', 'restore Compact after font verification');
+    await page.waitFor(`document.querySelector('.profile-studio-preview .profile-reference-card') && !document.querySelector('.profile-studio-preview [data-profile-layout-content="full-bleed"]')`, 'Compact preview after font verification');
+    await page.click('#profile-customize-tab-appearance', 'Appearance after font verification');
+    await page.waitFor(`document.querySelector('#profile-customize-tab-appearance')?.getAttribute('aria-selected') === 'true' && document.querySelector('#customize-appearance')`, 'Appearance after Immersive font verification');
     await page.evaluate(`(() => {
       for (const [id, value] of [
         ['cosmetic-name_material', 'name_material_blueprint_ink'],

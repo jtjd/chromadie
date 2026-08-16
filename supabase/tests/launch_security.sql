@@ -93,6 +93,28 @@ SELECT pg_temp.audit_assert(
   'profile configuration RPCs must be available only to intended browser roles'
 );
 SELECT pg_temp.audit_assert(
+  public.profile_layout_key('compact', 'full-bleed') = 'compact'
+    AND public.profile_layout_key('full-bleed', 'compact') = 'full-bleed'
+    AND public.profile_layout_key('immersive', 'compact') = 'compact'
+    AND public.profile_layout_key('sleek', 'full-bleed') = 'full-bleed'
+    AND (
+      public.normalize_profile_configuration(
+        jsonb_set(public.profile_default_configuration(), '{layoutVariant}', '"immersive"'::jsonb, true),
+        NULL
+      )->>'layoutVariant'
+    ) = 'compact'
+    AND (
+      public.normalize_profile_configuration(
+        jsonb_set(public.profile_default_configuration(), '{layoutVariant}', '"full-bleed"'::jsonb, true),
+        NULL
+      )->>'templateKey'
+    ) = 'full-bleed'
+    AND NOT has_function_privilege('anon', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE')
+    AND NOT has_function_privilege('authenticated', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE')
+    AND NOT has_function_privilege('service_role', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE'),
+  'profile layout runtime accepted a legacy alias or exposed its normalizer'
+);
+SELECT pg_temp.audit_assert(
   has_function_privilege('authenticated', 'public.save_profile_configuration_section(text,jsonb,timestamptz)', 'EXECUTE')
     AND has_function_privilege('authenticated', 'public.publish_profile_configuration_section(text,jsonb,timestamptz)', 'EXECUTE')
     AND NOT has_function_privilege('anon', 'public.save_profile_configuration_section(text,jsonb,timestamptz)', 'EXECUTE')

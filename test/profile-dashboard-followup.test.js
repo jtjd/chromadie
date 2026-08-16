@@ -38,7 +38,7 @@ test('Studio navigation has one canonical ordered IA and safe compact menu behav
 
 test('section editors stage bounded drafts for the aggregate dashboard action', async () => {
   const [layout, appearance, migration, sqlTest, settings, shell] = await Promise.all([
-    read('src/lib/ProfileEditor.svelte'),
+    read('src/lib/ProfileLinksEditor.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
     read('supabase/migrations/20260805100000_profile_appearance_dashboard.sql'),
     read('supabase/tests/launch_security.sql'),
@@ -49,7 +49,7 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(layout, /export function validateDraft/);
   assert.doesNotMatch(layout, /Reload server version|save_profile_configuration_section|publish_profile_configuration_section/);
   assert.doesNotMatch(layout, /Signature color|Ambient color|colorEffectsEnabled/);
-  assert.match(layout, /function hasDraftChanges\(\)/);
+  assert.match(layout, /\$:\s*isDirty\s*=\s*!areProfileConfigsEqual/);
   assert.match(layout, /emitDirty\(\);/);
   assert.match(layout, /areProfileConfigsEqual/);
   assert.match(layout, /emitDirty\(false\)/);
@@ -68,10 +68,9 @@ test('section editors stage bounded drafts for the aggregate dashboard action', 
   assert.match(sqlTest, /config_composition_save/);
   assert.match(sqlTest, /composition save accepted appearance or effect keys/);
   assert.match(sqlTest, /config_composition_publish/);
-  assert.match(layout, /function setModuleSize/);
-  assert.match(layout, /Shared data, layout-controlled presentation/);
+  assert.match(layout, /Public links/);
   assert.match(layout, /Complete each link with a label and a valid HTTPS URL/);
-  assert.match(layout, /return showLinks \? validateLinks\(\) : true/);
+  assert.match(layout, /return validateLinks\(\)/);
   assert.match(settings, /let studioDraft = null/);
   assert.match(settings, /applyProfileStudioDraftPatch/);
 });
@@ -170,7 +169,7 @@ test('dirty prompt is keyboard-complete and editor reload actions remain reachab
     read('src/lib/ProfileSettings.svelte'),
     read('src/lib/ProfileStudioDirtyPrompt.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
-    read('src/lib/ProfileEditor.svelte')
+    read('src/lib/ProfileLinksEditor.svelte')
   ]);
   const dirtySource = [settings, dirtyPrompt].join('\n');
   assert.match(dirtySource, /focusPrimary/);

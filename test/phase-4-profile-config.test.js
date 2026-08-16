@@ -264,7 +264,7 @@ test('public profile context does not switch contracts based on missing expressi
 });
 
 test('profile configuration editor and renderer retain safe draft/publish boundaries', async () => {
-  const editor = await readFile(new URL('../src/lib/ProfileEditor.svelte', import.meta.url), 'utf8');
+  const editor = await readFile(new URL('../src/lib/ProfileLinksEditor.svelte', import.meta.url), 'utf8');
   const profileData = await readFile(new URL('../src/lib/profileData.js', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../src/lib/ProfileSettings.svelte', import.meta.url), 'utf8');
   const shell = await readFile(new URL('../src/lib/ProfileShell.svelte', import.meta.url), 'utf8');

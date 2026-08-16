@@ -10,7 +10,7 @@ export const PROFILE_STUDIO_CUSTOMIZE_TABS = Object.freeze([
   { id: 'appearance', label: 'Appearance', description: 'Color, identity, and presence' },
   { id: 'media', label: 'Media', description: 'Avatar, background, music, and uploads' },
   { id: 'links', label: 'Links', description: 'Public links, sharing, and aliases' },
-  { id: 'layout', label: 'Layout', description: 'Templates and profile structure' }
+  { id: 'layout', label: 'Layout', description: 'Profile structure and reading order' }
 ]);
 
 export const PROFILE_STUDIO_CUSTOMIZE_TAB_IDS = Object.freeze(

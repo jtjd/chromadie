@@ -49,7 +49,7 @@ test('profile settings keeps secondary features available away from the public c
   assert.match(shell, /data-profile-region="featured"/);
   assert.match(renderModel, /getProfileStoryVisible/);
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
-  assert.match(registry, /ProfileEditor\.svelte/);
+  assert.match(registry, /ProfileLinksEditor\.svelte/);
   assert.match(registry, /ProfileSocial\.svelte/);
   assert.match(shell, /todayColorComponent[\s\S]*result=\{latestRoll\}[\s\S]*accentColor=\{signatureColor\}/);
   assert.match(shell, /this=\{profileSocialComponent\}[\s\S]*social=\{social\}/);

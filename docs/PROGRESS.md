@@ -1,5 +1,22 @@
 # Chromadie 2.0 Progress
 
+## Customize cleanup and font readiness — 2026-08-16
+
+- Removed the obsolete combined profile/template editor graph, including the
+  template picker and unused content/widget editor loaders and components.
+  Structured links now use a dedicated links editor while old dashboard hashes
+  continue to redirect into the supported Customize tabs.
+- Kept one staged Profile Studio authority for identity, configuration, and
+  cosmetic preview loadouts. Tab changes now preserve pending expression
+  choices instead of rehydrating from equipped state.
+- Canonicalized layout state to `compact` and `full-bleed` at the client and
+  database runtime boundaries. Existing legacy values are backfilled once;
+  “Immersive” is the display label for `full-bleed`, not a second key.
+- Name canvas rendering waits for the selected bundled font to be loaded and
+  verified before hiding semantic text, then redraws the correct face on both
+  Compact and Immersive preview mounts.
+- Added focused source, font-readiness, migration, and browser-smoke coverage.
+
 ## Current profile presentation — 2026-08-15
 
 - The active public-profile presentation has exactly two structural choices:

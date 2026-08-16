@@ -14,6 +14,8 @@
   export let activeTab = 'appearance';
   /** @type {any} */
   export let identityDraft = null;
+  /** @type {any} */
+  export let cosmeticPreviewLoadout = null;
 
   const dispatch = createEventDispatcher();
   let identityEditor = null;
@@ -110,6 +112,7 @@
             {profileConfig}
             compact={true}
             presentation="studio"
+            stagedLoadout={cosmeticPreviewLoadout}
             on:cosmeticpreview={event => dispatch('cosmeticpreview', event.detail)}
           />
         {:else}
@@ -164,8 +167,6 @@
             updatedAt={profileConfig?.updatedAt}
             {entitlements}
             {staff}
-            showLayout={false}
-            showLinks={true}
             studio={true}
             presentation="customize"
             on:dirty={event => forwardDirty('customize:links', event)}

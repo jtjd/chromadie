@@ -32,7 +32,7 @@ test('phase 11 visual contract preserves secondary detail and owner boundaries',
 
   assert.match(renderModel, /getProfileStoryVisible/);
   assert.doesNotMatch(shell, /<details class="profile-shell__details/);
-  assert.match(registry, /ProfileEditor\.svelte/);
+  assert.match(registry, /ProfileLinksEditor\.svelte/);
   assert.match(registry, /ProfileSocial\.svelte/);
   assert.match(shell, /profileSocialComponent/);
   assert.match(shell, /this=\{profileSocialComponent\}[\s\S]*on:socialchange=\{handleSocialChange\}/);

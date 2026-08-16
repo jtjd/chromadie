@@ -52,7 +52,7 @@ test('dashboard uses its self-contained shell and aggregate profile action contr
     read('src/lib/ProfileStudioPreview.svelte'),
     read('src/lib/ProfileStudioHeader.svelte'),
     read('src/lib/ProfileAppearanceEditor.svelte'),
-    read('src/lib/ProfileEditor.svelte'),
+    read('src/lib/ProfileLinksEditor.svelte'),
     read('supabase/migrations/20260808220000_profile_configuration_v2.sql'),
     read('src/lib/ProfileStudioShell.svelte')
   ]);

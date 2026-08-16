@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createDefaultProfileConfig, normalizeProfileConfig } from '../src/lib/profileConfig.js';
-import { createProfileTemplatePatch } from '../src/lib/profileTemplates.js';
+import { createProfileLayoutPatch } from '../src/lib/profile-layout/profileLayoutPatch.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -11,7 +11,7 @@ test('new profile defaults use the compact background-first composition', () => 
   assert.equal(defaults.templateKey, 'compact');
   assert.equal(defaults.layoutVariant, 'compact');
   assert.equal(normalizeProfileConfig(defaults).layoutVariant, 'compact');
-  assert.equal(createProfileTemplatePatch('compact').layoutVariant, 'compact');
+  assert.equal(createProfileLayoutPatch('compact').layoutVariant, 'compact');
 });
 
 test('default profile presentation does not inject a theme or redundant handle', async () => {

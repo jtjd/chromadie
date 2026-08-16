@@ -27,6 +27,7 @@ import {
 } from '../src/lib/name/nameRenderer.js';
 import { createNameAnimationClock } from '../src/lib/name/nameAnimationClock.js';
 import { drawComposableMotion, getReadableMotionColor } from '../src/lib/name/render/composableMotions.js';
+import { requestNameFontLoad } from '../src/lib/name/nameFonts.js';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -84,6 +85,30 @@ test('invalid inputs fall back independently and cannot inject renderer values',
   assert.equal(definition.motion, 'none');
   assert.equal(resolveNameRendererKey('unknown'), 'plain');
   assert.equal(getNameRendererDefinition('unknown').key, 'plain');
+});
+
+test('name font readiness waits for the requested face to pass the browser font check', async () => {
+  const previousDocument = globalThis.document;
+  const calls = [];
+  globalThis.document = {
+    fonts: {
+      load: async (descriptor, text) => { calls.push({ type: 'load', descriptor, text }); },
+      check: (descriptor, text) => {
+        calls.push({ type: 'check', descriptor, text });
+        return true;
+      }
+    }
+  };
+
+  try {
+    assert.equal(await requestNameFontLoad('soft-grotesk', 28, 'Chromadie'), true);
+    assert.equal(calls.filter(call => call.type === 'load').length, 1);
+    assert.equal(calls.filter(call => call.type === 'check').length, 1);
+    assert.match(calls[0].descriptor, /Instrument Sans Variable/);
+  } finally {
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  }
 });
 
 test('composable loadouts produce deterministic bounded card and profile frames', () => {

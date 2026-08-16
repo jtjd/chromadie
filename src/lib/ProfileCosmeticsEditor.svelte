@@ -25,6 +25,8 @@
   export let profileConfig = null;
   export let compact = false;
   export let presentation = 'default';
+  /** A non-null value is the staged Studio loadout; null follows equipped items. */
+  export let stagedLoadout = null;
 
   const dispatch = createEventDispatcher();
   let previewLoadout = /** @type {Record<string, string>} */ ({});
@@ -94,14 +96,18 @@
   };
   $: hasPendingChanges = COSMETIC_SLOTS.some(slot => (previewLoadout[slot] || '') !== ($equippedItems[slot] || ''));
   $: equippedKey = JSON.stringify($equippedItems || {});
-  $: syncEquippedLoadout(equippedKey, $equippedItems);
+  $: previewSourceKey = stagedLoadout === null
+    ? `equipped:${equippedKey}`
+    : `staged:${JSON.stringify(stagedLoadout || {})}`;
+  $: previewSourceLoadout = stagedLoadout === null ? $equippedItems : stagedLoadout;
+  $: syncPreviewLoadout(previewSourceKey, previewSourceLoadout);
 
   onMount(() => {
     void loadCosmeticCatalog();
   });
 
-  function syncEquippedLoadout(key, loadout) {
-    if (loadingSlot || key === syncedLoadoutKey) return;
+  function syncPreviewLoadout(key, loadout) {
+    if (key === syncedLoadoutKey) return;
     previewLoadout = { ...(loadout || {}) };
     syncedLoadoutKey = key;
   }
@@ -157,11 +163,12 @@
       const refreshedProfile = userId ? await refreshProfileState(userId) : null;
       if (!refreshedProfile) throw new Error('The change saved, but the profile could not be refreshed.');
       previewLoadout = { ...(refreshedProfile.equipped_cosmetics || {}) };
-      syncedLoadoutKey = JSON.stringify(previewLoadout);
+      syncedLoadoutKey = '';
       dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
       addToast(`${changedSlots.length} appearance ${changedSlots.length === 1 ? 'change' : 'changes'} applied.`, 'success');
     } catch (actionError) {
       previewLoadout = { ...$equippedItems };
+      syncedLoadoutKey = '';
       dispatch('cosmeticpreview', { loadout: { ...previewLoadout } });
       error = actionError instanceof Error ? actionError.message : 'The appearance change could not be saved.';
     } finally {

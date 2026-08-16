@@ -2,6 +2,20 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-16 — Stabilize Customize layout and font previews
+
+- Customize now has one canonical layout model: Compact and Immersive
+  (`full-bleed` internally). Existing saved profiles are normalized once, and
+  old layout aliases no longer create competing runtime preview states.
+- Removed obsolete template, content, and widget editor surfaces from the
+  active Customize flow. Links remain fully structured and editable in their
+  own supported editor, with old dashboard links redirected safely.
+- Pending identity, profile, and cosmetic changes now stay visible while
+  moving between Customize tabs.
+- Selected Name fonts remain visible as accessible text until the actual
+  bundled face is ready, so Compact and Immersive previews no longer need a
+  layout switch to display the intended font.
+
 ## 2026-08-15 — Integrate Links into Customize
 
 - Added Links between Media and Layout in Customize profile.
