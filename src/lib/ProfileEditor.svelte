@@ -380,9 +380,11 @@
   .profile-editor--customize .profile-editor__header { display: none; }
   .profile-editor--customize .profile-editor__panel { gap: .7rem; padding: .65rem 0 1rem; }
   .profile-editor--customize .profile-editor__links { min-width: 0; }
-  .profile-editor--customize .profile-editor__link-row { grid-template-columns: auto minmax(7rem, .7fr) minmax(8rem, 1fr) minmax(12rem, 1.5fr) auto; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; padding: .65rem; border: 1px solid var(--editor-border); border-radius: var(--editor-radius); background: var(--editor-input); }
+  .profile-editor--customize .profile-editor__link-row { grid-template-columns: auto minmax(5.5rem, .8fr) minmax(6rem, 1fr) minmax(7.5rem, 1.5fr) minmax(8rem, max-content); width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; padding: .65rem; border: 1px solid var(--editor-border); border-radius: var(--editor-radius); background: var(--editor-input); }
   .profile-editor--customize .profile-editor__link-row > * { min-width: 0; }
   .profile-editor--customize .profile-editor__link-row :is(input, select) { min-width: 0; max-width: 100%; box-sizing: border-box; }
+  .profile-editor--customize .profile-editor__link-actions { min-width: 0; justify-content: flex-end; flex-wrap: wrap; }
+  .profile-editor--customize .profile-editor__remove { white-space: nowrap; }
   .profile-editor--customize .profile-editor__link-style { gap: .65rem; padding-top: .35rem; }
   .profile-editor--customize .profile-editor__metadata { gap: .65rem; padding-top: .85rem; }
   .profile-editor--customize .profile-editor__hint { margin-top: .1rem; }

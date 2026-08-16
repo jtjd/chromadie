@@ -92,6 +92,14 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(smoke, /const destinations = \['overview', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'\]/);
 });
 
+test('Customize link rows keep action controls inside the bounded editor surface', async () => {
+  const editor = await read('src/lib/ProfileEditor.svelte');
+
+  assert.match(editor, /profile-editor--customize \.profile-editor__link-row \{ grid-template-columns: auto minmax\(5\.5rem, \.8fr\) minmax\(6rem, 1fr\) minmax\(7\.5rem, 1\.5fr\) minmax\(8rem, max-content\)/);
+  assert.match(editor, /profile-editor--customize \.profile-editor__link-actions \{ min-width: 0; justify-content: flex-end; flex-wrap: wrap; \}/);
+  assert.match(editor, /profile-editor--customize \.profile-editor__remove \{ white-space: nowrap; \}/);
+});
+
 test('reference workspace composition stays explicit', async () => {
   const [settings, shell, header, preview, draftModel, appearance, appearanceColors, cosmetics, customize, mediaWorkspace, profileShell, expression, shopPreview, renderModel] = await Promise.all([
     read('src/lib/ProfileSettings.svelte'),

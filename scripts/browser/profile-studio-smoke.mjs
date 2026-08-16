@@ -745,9 +745,15 @@ try {
       tab: document.querySelector('#profile-customize-tab-links')?.getAttribute('aria-selected') === 'true',
       panel: Boolean(document.querySelector('#customize-links')),
       previewCanvas: Boolean(document.querySelector('.profile-studio-preview .profile-reference-card')),
-      authOverlay: Boolean(document.querySelector('.profile-studio-preview')?.closest('.auth-modal-overlay'))
+      authOverlay: Boolean(document.querySelector('.profile-studio-preview')?.closest('.auth-modal-overlay')),
+      linkRows: [...document.querySelectorAll('#customize-links .profile-editor__link-row')].map(row => {
+        const rowBox = row.getBoundingClientRect();
+        const remove = row.querySelector('.profile-editor__remove')?.getBoundingClientRect();
+        return remove ? { rowLeft: Math.round(rowBox.left), rowRight: Math.round(rowBox.right), removeLeft: Math.round(remove.left), removeRight: Math.round(remove.right) } : null;
+      }).filter(Boolean)
     }))()`);
     assert(state.open && state.tab && state.panel, `Customize Links did not mount the integrated editor: ${JSON.stringify(state)}.`);
+    assert(state.linkRows.every(row => row.removeLeft >= row.rowLeft - 1 && row.removeRight <= row.rowRight + 1), `Links row action controls escape their containing row: ${JSON.stringify(state.linkRows)}.`);
     return state;
   });
 
