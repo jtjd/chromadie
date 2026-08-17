@@ -144,7 +144,8 @@ Possible route map:
   CTA without changing the root route.
 - `/?view=game` → compatibility Roll route for guest play and old links.
 - `/u/:username` → public profile.
-- `/leaderboard` → public roll leaderboard with Today and This month views.
+- `/leaderboard` → public roll leaderboard with Today and This month views,
+  a featured top-three podium, and framed lower-ranked rows.
 - `/shop` → decoration studio or preserved redirect.
 - `/profile` → redirect to own profile.
 - Legal/auth/challenge routes remain explicit.

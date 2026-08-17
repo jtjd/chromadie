@@ -6,6 +6,7 @@
   export let item;
   export let position = 0;
   export let featured = false;
+  export let variant = 'list';
 
   const dispatch = createEventDispatcher();
   let failedAvatarSource = '';
@@ -45,13 +46,14 @@
 <a
   class:leaderboard-row--featured={featured}
   class:leaderboard-row--first={position === 0}
+  class:leaderboard-row--podium={variant === 'podium'}
   class="leaderboard-row"
   style={rowStyle}
   href={profilePath || '/leaderboard'}
   on:click={viewProfile}
   aria-label={`Open ${displayName}'s public profile, rank ${visiblePosition}, score ${scoreLabel}`}
 >
-  <span class="leaderboard-row__rank" aria-label={`Rank ${visiblePosition}`}>{visiblePosition}</span>
+  <span class="leaderboard-row__rank" aria-label={`Rank ${visiblePosition}`}>#{visiblePosition}</span>
 
   <span class="leaderboard-row__profile">
     <span class="leaderboard-row__avatar">
@@ -75,43 +77,77 @@
 
 <style>
   .leaderboard-row {
-    --row-line: rgba(255, 255, 255, .1);
-    display: grid;
-    grid-template-columns: 3.75rem minmax(0, 1fr) minmax(7rem, auto);
-    gap: 1.25rem;
-    align-items: center;
-    min-height: 6rem;
+    --row-line: rgba(255, 255, 255, .13);
+    position: relative;
     box-sizing: border-box;
-    padding: .85rem 1.4rem;
-    border-bottom: 1px solid var(--row-line);
-    background: #0d0d0e;
+    min-width: 0;
     color: #f5f4f7;
     text-decoration: none;
-    transition: background-color 160ms ease;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
   }
-  .leaderboard-row:hover,
-  .leaderboard-row:focus-visible { background: rgba(255, 255, 255, .045); }
-  .leaderboard-row--featured { background: color-mix(in srgb, var(--row-accent) 7%, #0d0d0e); }
-  .leaderboard-row--first { border-bottom-color: color-mix(in srgb, var(--row-accent) 34%, var(--row-line)); }
-  .leaderboard-row__rank { color: var(--row-accent); font: 500 1rem/1 'Inter', sans-serif; }
-  .leaderboard-row__profile { display: flex; align-items: center; gap: .8rem; min-width: 0; }
-  .leaderboard-row__avatar { display: grid; flex: 0 0 auto; place-items: center; width: 2.65rem; height: 2.65rem; overflow: hidden; border: 1px solid rgba(255, 255, 255, .08); border-radius: 50%; background: #19191b; color: #d5d1d8; }
+
+  .leaderboard-row:not(.leaderboard-row--podium) {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) minmax(7rem, auto);
+    gap: .85rem;
+    align-items: center;
+    min-height: 4.7rem;
+    padding: .75rem .9rem;
+    border: 1px solid var(--row-line);
+    border-radius: .85rem;
+    background: rgba(255, 255, 255, .035);
+  }
+  .leaderboard-row:not(.leaderboard-row--podium):hover,
+  .leaderboard-row:not(.leaderboard-row--podium):focus-visible { border-color: rgba(199, 124, 222, .5); background: rgba(255, 255, 255, .07); transform: translateX(3px); }
+  .leaderboard-row:not(.leaderboard-row--podium).leaderboard-row--first { border-color: color-mix(in srgb, var(--row-accent) 42%, var(--row-line)); }
+
+  .leaderboard-row--podium {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: .15rem .2rem .35rem;
+    background: transparent;
+    text-align: center;
+  }
+  .leaderboard-row--podium:hover,
+  .leaderboard-row--podium:focus-visible { background: transparent; transform: translateY(-3px); }
+  .leaderboard-row--podium .leaderboard-row__rank { margin-bottom: .55rem; font-size: .68rem; letter-spacing: .02em; }
+  .leaderboard-row--podium .leaderboard-row__profile { flex-direction: column; align-items: center; gap: .6rem; width: 100%; }
+  .leaderboard-row--podium .leaderboard-row__avatar { width: 4.25rem; height: 4.25rem; border: 2px solid color-mix(in srgb, var(--row-accent) 72%, #fff); box-shadow: 0 0 0 .25rem color-mix(in srgb, var(--row-accent) 15%, transparent); }
+  .leaderboard-row--podium.leaderboard-row--first .leaderboard-row__avatar { width: 5.25rem; height: 5.25rem; }
+  .leaderboard-row--podium .leaderboard-row__identity { justify-items: center; width: 100%; gap: .28rem; }
+  .leaderboard-row--podium .leaderboard-row__identity strong { font-size: .95rem; }
+  .leaderboard-row--podium .leaderboard-row__identity small { font-size: .63rem; }
+  .leaderboard-row--podium .leaderboard-row__score { justify-items: center; width: 100%; margin-top: .55rem; text-align: center; }
+  .leaderboard-row--podium .leaderboard-row__score strong { font-size: .9rem; }
+  .leaderboard-row--podium .leaderboard-row__score small { justify-content: center; font-size: .56rem; }
+
+  .leaderboard-row__rank { color: var(--row-accent); font: 500 .9rem/1 'Inter', sans-serif; }
+  .leaderboard-row__profile { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+  .leaderboard-row__avatar { display: grid; flex: 0 0 auto; place-items: center; width: 2.7rem; height: 2.7rem; overflow: hidden; border: 1px solid rgba(255, 255, 255, .12); border-radius: 50%; background: #19191b; color: #d5d1d8; }
   .leaderboard-row__avatar img { width: 100%; height: 100%; object-fit: cover; }
   .leaderboard-row__avatar-initial { font: 500 .95rem/1 'Inter', sans-serif; }
-  .leaderboard-row__identity { display: grid; min-width: 0; gap: .3rem; }
-  .leaderboard-row__identity strong { overflow: hidden; color: #f5f4f7; font: 600 .88rem/1.1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
-  .leaderboard-row__identity small { overflow: hidden; color: #88868d; font: 400 .68rem/1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
-  .leaderboard-row__score { display: grid; justify-items: end; min-width: 0; gap: .38rem; text-align: right; }
-  .leaderboard-row__score strong { color: #e9e7eb; font: 500 1rem/1 'Inter', sans-serif; white-space: nowrap; }
-  .leaderboard-row__score small { display: flex; align-items: center; max-width: 100%; overflow: hidden; color: #88868d; font: 400 .61rem/1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
-  .leaderboard-row__score i { display: inline-block; flex: 0 0 auto; width: .48rem; height: .48rem; margin-right: .35rem; border: 1px solid rgba(255, 255, 255, .3); border-radius: 50%; }
+  .leaderboard-row__identity { display: grid; min-width: 0; max-width: 100%; gap: .3rem; }
+  .leaderboard-row__identity strong { display: block; max-width: 100%; min-width: 0; overflow: hidden; color: #f5f4f7; font: 600 .86rem/1.1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+  .leaderboard-row__identity small { display: block; max-width: 100%; min-width: 0; overflow: hidden; color: #88868d; font: 400 .66rem/1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+  .leaderboard-row__score { display: grid; justify-items: end; min-width: 0; gap: .32rem; text-align: right; }
+  .leaderboard-row__score strong { color: #e9e7eb; font: 500 .95rem/1 'Inter', sans-serif; white-space: nowrap; }
+  .leaderboard-row__score small { display: flex; align-items: center; max-width: 100%; overflow: hidden; color: #88868d; font: 400 .59rem/1 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+  .leaderboard-row__score i { display: inline-block; flex: 0 0 auto; width: .45rem; height: .45rem; margin-right: .32rem; border: 1px solid rgba(255, 255, 255, .3); border-radius: 50%; }
 
   @media (max-width: 620px) {
-    .leaderboard-row { grid-template-columns: 2.5rem minmax(0, 1fr) 6.75rem; gap: .75rem; min-height: 5.6rem; padding-inline: .8rem; }
+    .leaderboard-row:not(.leaderboard-row--podium) { grid-template-columns: 2.25rem minmax(0, 1fr) 6.25rem; gap: .65rem; min-height: 4.45rem; padding-inline: .7rem; }
     .leaderboard-row__profile { gap: .6rem; }
     .leaderboard-row__avatar { width: 2.45rem; height: 2.45rem; }
     .leaderboard-row__score strong { font-size: .86rem; }
-    .leaderboard-row__score small { max-width: 6.75rem; }
+    .leaderboard-row__score small { max-width: 6.25rem; }
+    .leaderboard-row--podium .leaderboard-row__avatar { width: 3.75rem; height: 3.75rem; }
+    .leaderboard-row--podium.leaderboard-row--first .leaderboard-row__avatar { width: 4.6rem; height: 4.6rem; }
+    .leaderboard-row--podium .leaderboard-row__identity strong { font-size: .82rem; }
+    .leaderboard-row--podium .leaderboard-row__identity small { font-size: .55rem; }
+    .leaderboard-row--podium .leaderboard-row__score strong { font-size: .78rem; }
+    .leaderboard-row--podium .leaderboard-row__score small { font-size: .5rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {

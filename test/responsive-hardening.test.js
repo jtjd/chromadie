@@ -91,13 +91,15 @@ test('editable controls use a mobile-safe text size without enlarging binary con
   assert.match(foundations, /:not\(\[type=['"]range['"]\]\)/);
 });
 
-test('Leaderboard stays focused and keeps mobile score rows readable', () => {
-  assert.match(leaderboard, /roll-leaderboard__hero/);
+test('Leaderboard keeps the podium and mobile score rows readable', () => {
+  assert.match(leaderboard, /roll-leaderboard__featured-list/);
+  assert.match(leaderboard, /roll-leaderboard__lower/);
   assert.match(leaderboard, /roll-leaderboard__tabs/);
   assert.match(leaderboard, /@media \(max-width: 620px\)/);
   assert.match(leaderboardEntry, /@media \(max-width: 620px\)/);
   assert.match(leaderboardEntry, /leaderboard-row__score/);
-  assert.match(leaderboardEntry, /min-height: 5\.6rem/);
+  assert.match(leaderboardEntry, /leaderboard-row--podium/);
+  assert.match(leaderboardEntry, /min-height: 4\.45rem/);
   assert.doesNotMatch(leaderboard + leaderboardEntry, /discovery-card|discovery-grid|discovery-hub/);
 });
 

@@ -135,7 +135,7 @@ test('leaderboard route parsing accepts only the active today and monthly period
   assert.equal(parseRouteLocation('/leaderboard', '?tab=private').leaderboardTab, 'today');
 });
 
-test('leaderboard implementation is a focused public score table without raw HTML', async () => {
+test('leaderboard implementation is a focused podium and score list without raw HTML', async () => {
   const leaderboard = await readFile(new URL('../src/lib/Leaderboard.svelte', import.meta.url), 'utf8');
   const entry = await readFile(new URL('../src/lib/LeaderboardEntry.svelte', import.meta.url), 'utf8');
   const migration = await readFile(new URL('../supabase/migrations/20260725120000_public_discovery.sql', import.meta.url), 'utf8');
@@ -144,9 +144,16 @@ test('leaderboard implementation is a focused public score table without raw HTM
   const r2Migration = await readFile(new URL('../supabase/migrations/20260813140000_profile_media_r2_discovery.sql', import.meta.url), 'utf8');
 
   assert.match(leaderboard, /get_public_discovery/);
+  assert.match(leaderboard, /Top rolls/);
   assert.match(leaderboard, /Today's top rolls/);
   assert.match(leaderboard, /This month's top rolls/);
   assert.match(leaderboard, /This month/);
+  assert.match(leaderboard, /roll-leaderboard__featured-list/);
+  assert.match(leaderboard, /roll-leaderboard__lower/);
+  assert.match(leaderboard, /items\.slice\(0, 3\)/);
+  assert.match(leaderboard, /variant="podium"/);
+  assert.match(leaderboard, /variant="list"/);
+  assert.doesNotMatch(leaderboard, /roll-leaderboard__table/);
   assert.doesNotMatch(leaderboard, /Search username|Exceptional|Rising|Random|Following|All-time/);
   assert.match(entry, /getPublicProfilePath/);
   assert.match(entry, /getProfileMediaUrl/);

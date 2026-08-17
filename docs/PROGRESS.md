@@ -1,11 +1,20 @@
 # Chromadie 2.0 Progress
 
+## Refine the leaderboard into a podium and framed list — 2026-08-16
+
+- Replaced the wide score table presentation with a centered top-three podium.
+- Moved rank 4+ profiles into simple bordered frames while keeping score and
+  short roll details visible.
+- Kept Today and This month as the only active periods and preserved the
+  existing public RPC, pagination, safe navigation, and responsive states.
+
 ## Focus the leaderboard on two roll periods — 2026-08-16
 
 - Reduced the public leaderboard to Today and This month views backed by the
   existing bounded `get_public_discovery` projection.
-- Replaced the Studio-style discovery workspace with a compact ranked table:
-  rank, avatar/profile identity, score, and short color/rarity/date details.
+- Replaced the Studio-style discovery workspace with a compact ranked score
+  surface: rank, avatar/profile identity, score, and short color/rarity/date
+  details.
 - Removed leaderboard filters, rival state, owner rank context, share actions,
   cosmetic row rendering, and the unused discovery period controls from the
   active leaderboard surface while keeping profile navigation and pagination.

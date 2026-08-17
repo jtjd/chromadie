@@ -117,7 +117,7 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.doesNotMatch(profileShell, /\.profile-shell__card-media-background \{ position: absolute;/);
 });
 
-test('leaderboard owns a focused public score-table presentation contract', async () => {
+test('leaderboard owns a focused podium-and-list presentation contract', async () => {
   const siteStyles = await read('src/styles/site.css');
   const leaderboard = await read('src/lib/Leaderboard.svelte');
   const leaderboardEntry = await read('src/lib/LeaderboardEntry.svelte');
@@ -125,10 +125,11 @@ test('leaderboard owns a focused public score-table presentation contract', asyn
   const terms = await read('src/lib/TermsOfService.svelte');
 
   assert.match(leaderboard, /<main class="roll-leaderboard"/);
-  assert.match(leaderboard, /roll-leaderboard__hero/);
   assert.match(leaderboard, /roll-leaderboard__tabs/);
+  assert.match(leaderboard, /roll-leaderboard__featured-list/);
+  assert.match(leaderboard, /roll-leaderboard__lower/);
   assert.match(leaderboardEntry, /leaderboard-row/);
-  assert.match(leaderboard, /--leaderboard-purple:/);
+  assert.match(leaderboard, /--leaderboard-accent:/);
   assert.match(leaderboard, /Clash Display/);
   assert.doesNotMatch(siteStyles, /discovery-(?:hub|card|grid|tabs|empty|your-rank)/);
   assert.match(privacy, /class="container site-document legal-page"/);

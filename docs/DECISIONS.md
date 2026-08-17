@@ -1,14 +1,22 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-16 — Use a podium for the strongest rolls
+
+The leaderboard presents the first three ranked profiles as a small visual
+podium and the remaining profiles as simple framed rows. This preserves the
+importance of the strongest rolls without turning every result into a large
+card. The two active periods remain Today and This month, and both variants
+consume the same normalized public score entry.
+
 ## 2026-08-16 — Keep the leaderboard intentionally narrow
 
 The public leaderboard now exposes only Today and This month. Both views use
 the existing `get_public_discovery` projection: Today ranks current daily
 rolls, while This month ranks each player’s best roll in the current month.
-The UI is a compact table with rank, public identity, score, and concise roll
-details. Filters, rival/follow state, owner rank context, sharing, and cosmetic
-row effects were removed from this surface because they obscured the one useful
-job of the page: showing the strongest rolls.
+The UI is a simple podium and framed list with rank, public identity, score, and
+concise roll details. Filters, rival/follow state, owner rank context, sharing,
+and cosmetic row effects were removed from this surface because they obscured
+the one useful job of the page: showing the strongest rolls.
 
 This is a client presentation and route-contract reduction, not a scoring or
 database authority change. Old unsupported `tab` query values normalize to
