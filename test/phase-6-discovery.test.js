@@ -150,6 +150,8 @@ test('leaderboard implementation is a focused podium and score list without raw 
   assert.match(leaderboard, /This month/);
   assert.match(leaderboard, /roll-leaderboard__featured-list/);
   assert.match(leaderboard, /roll-leaderboard__lower/);
+  assert.match(leaderboard, /--leaderboard-bg: #f4f3f1/);
+  assert.match(leaderboard, /color-scheme: light/);
   assert.match(leaderboard, /items\.slice\(0, 3\)/);
   assert.match(leaderboard, /variant="podium"/);
   assert.match(leaderboard, /variant="list"/);
@@ -159,6 +161,7 @@ test('leaderboard implementation is a focused podium and score list without raw 
   assert.match(entry, /getProfileMediaUrl/);
   assert.match(entry, /Score details unavailable/);
   assert.match(entry, /leaderboard-row/);
+  assert.match(entry, /var\(--leaderboard-text/);
   assert.match(entry, /prefers-reduced-motion/);
   assert.doesNotMatch(entry, /getProfileShareText|CompactRollPreview|ProfileBorderEffect|NameEffectCanvas|toggleFollow|profile_shared/);
   assert.doesNotMatch(leaderboard + entry, /innerHTML|new Function|eval\s*\(/);

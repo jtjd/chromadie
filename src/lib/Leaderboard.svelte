@@ -194,19 +194,19 @@
 
 <style>
   .roll-leaderboard {
-    --leaderboard-bg: #050506;
-    --leaderboard-panel: rgba(255, 255, 255, .035);
-    --leaderboard-line: rgba(255, 255, 255, .13);
-    --leaderboard-muted: #929198;
-    --leaderboard-text: #f5f4f7;
-    --leaderboard-accent: #c77cde;
+    --leaderboard-bg: #f4f3f1;
+    --leaderboard-panel: rgba(255, 255, 255, .76);
+    --leaderboard-line: rgba(30, 25, 34, .14);
+    --leaderboard-muted: #706b76;
+    --leaderboard-text: #1a1820;
+    --leaderboard-accent: #9553ad;
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: 3rem 1rem 5rem;
     background: var(--leaderboard-bg);
     color: var(--leaderboard-text);
     font-family: 'Inter', var(--font-body-stack, sans-serif);
-    color-scheme: dark;
+    color-scheme: light;
   }
   .roll-leaderboard__shell { width: min(100%, 42rem); margin-inline: auto; }
   .roll-leaderboard__intro { display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -214,20 +214,21 @@
   .roll-leaderboard__tabs button {
     min-height: 2.4rem;
     padding: .6rem 1.15rem;
-    border: 1px solid rgba(255, 255, 255, .16);
+    border: 1px solid rgba(30, 25, 34, .16);
     border-radius: 999px;
-    background: rgba(255, 255, 255, .045);
-    color: #aaa8b0;
+    background: rgba(255, 255, 255, .68);
+    color: var(--leaderboard-muted);
     cursor: pointer;
     font: 500 .75rem/1 'Inter', sans-serif;
     transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
   }
   .roll-leaderboard__tabs button:hover,
-  .roll-leaderboard__tabs button:focus-visible { border-color: rgba(199, 124, 222, .65); color: #fff; transform: translateY(-1px); }
-  .roll-leaderboard__tabs button.active { border-color: rgba(199, 124, 222, .7); background: rgba(199, 124, 222, .2); color: #fff; }
-  .roll-leaderboard__eyebrow { margin: 0 0 .6rem; color: #8f8c96; font: 500 .63rem/1 'Inter', sans-serif; letter-spacing: .15em; text-transform: uppercase; }
-  .roll-leaderboard__intro h1 { margin: 0; color: #fff; font: 400 clamp(2.3rem, 6vw, 3.2rem)/1 'Clash Display', var(--font-display-stack, sans-serif) !important; letter-spacing: -.05em; }
-  .roll-leaderboard__scope { max-width: 24rem; margin: .75rem 0 0; color: #8f8c96; font: 400 .76rem/1.4 'Inter', sans-serif; }
+  .roll-leaderboard__tabs button:focus-visible { border-color: color-mix(in srgb, var(--leaderboard-accent) 65%, var(--leaderboard-line)); color: var(--leaderboard-text); background: #fff; transform: translateY(-1px); }
+  .roll-leaderboard__tabs button:hover { border-color: color-mix(in srgb, var(--leaderboard-accent) 55%, var(--leaderboard-line)); color: var(--leaderboard-text); background: #fff; transform: translateY(-1px); }
+  .roll-leaderboard__tabs button.active { border-color: color-mix(in srgb, var(--leaderboard-accent) 72%, var(--leaderboard-line)); background: color-mix(in srgb, var(--leaderboard-accent) 12%, #fff); color: var(--leaderboard-text); }
+  .roll-leaderboard__eyebrow { margin: 0 0 .6rem; color: var(--leaderboard-muted); font: 500 .63rem/1 'Inter', sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+  .roll-leaderboard__intro h1 { margin: 0; color: var(--leaderboard-text); font: 400 clamp(2.3rem, 6vw, 3.2rem)/1 'Clash Display', var(--font-display-stack, sans-serif) !important; letter-spacing: -.05em; }
+  .roll-leaderboard__scope { max-width: 24rem; margin: .75rem 0 0; color: var(--leaderboard-muted); font: 400 .76rem/1.4 'Inter', sans-serif; }
   .roll-leaderboard__board { margin-top: 2.5rem; }
   .roll-leaderboard__featured-list,
   .roll-leaderboard__list { margin: 0; padding: 0; list-style: none; }
@@ -240,23 +241,23 @@
   .roll-leaderboard__lower { margin-top: 2.6rem; }
   .roll-leaderboard__list { display: grid; gap: .7rem; }
   .roll-leaderboard__list-item { min-width: 0; }
-  .roll-leaderboard__state { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 9rem; padding: 1.4rem; border: 1px solid var(--leaderboard-line); border-radius: .9rem; background: var(--leaderboard-panel); }
+  .roll-leaderboard__state { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 9rem; padding: 1.4rem; border: 1px solid var(--leaderboard-line); border-radius: .9rem; background: var(--leaderboard-panel); box-shadow: 0 1.25rem 3rem rgba(35, 29, 42, .06); }
   .roll-leaderboard__state strong { font: 600 .9rem/1 'Inter', sans-serif; }
   .roll-leaderboard__state p { margin: .45rem 0 0; color: var(--leaderboard-muted); font: 400 .76rem/1.45 'Inter', sans-serif; }
-  .roll-leaderboard__retry { min-height: 2.4rem; padding: .6rem .9rem; border: 1px solid rgba(255, 255, 255, .2); border-radius: .45rem; background: transparent; color: #d8d5db; cursor: pointer; font: 500 .7rem/1 'Inter', sans-serif; }
-  .roll-leaderboard__retry:hover:not(:disabled), .roll-leaderboard__retry:focus-visible { border-color: var(--leaderboard-accent); color: #fff; }
+  .roll-leaderboard__retry { min-height: 2.4rem; padding: .6rem .9rem; border: 1px solid var(--leaderboard-line); border-radius: .45rem; background: transparent; color: var(--leaderboard-text); cursor: pointer; font: 500 .7rem/1 'Inter', sans-serif; }
+  .roll-leaderboard__retry:hover:not(:disabled), .roll-leaderboard__retry:focus-visible { border-color: var(--leaderboard-accent); background: color-mix(in srgb, var(--leaderboard-accent) 7%, #fff); color: var(--leaderboard-text); }
   .roll-leaderboard__retry:disabled { cursor: wait; opacity: .55; }
   .roll-leaderboard__load-more { display: flex; justify-content: center; padding-top: 1rem; }
   .roll-leaderboard__loading { display: grid; gap: 2.6rem; }
   .roll-leaderboard__featured-skeleton { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .8rem; }
   .roll-leaderboard__podium-skeleton { display: flex; flex-direction: column; align-items: center; gap: .55rem; }
-  .roll-leaderboard__podium-skeleton span { width: 4.25rem; height: 4.25rem; border: .3rem solid rgba(255, 255, 255, .12); border-radius: 50%; background: rgba(255, 255, 255, .07); }
+  .roll-leaderboard__podium-skeleton span { width: 4.25rem; height: 4.25rem; border: .3rem solid rgba(30, 25, 34, .1); border-radius: 50%; background: rgba(255, 255, 255, .7); }
   .roll-leaderboard__podium-skeleton:nth-child(2) span { width: 5.25rem; height: 5.25rem; }
-  .roll-leaderboard__podium-skeleton i { width: 4.2rem; height: .75rem; border-radius: .3rem; background: rgba(255, 255, 255, .08); }
-  .roll-leaderboard__podium-skeleton b { width: 3rem; height: .55rem; border-radius: .3rem; background: rgba(255, 255, 255, .06); }
+  .roll-leaderboard__podium-skeleton i { width: 4.2rem; height: .75rem; border-radius: .3rem; background: rgba(30, 25, 34, .11); }
+  .roll-leaderboard__podium-skeleton b { width: 3rem; height: .55rem; border-radius: .3rem; background: rgba(30, 25, 34, .08); }
   .roll-leaderboard__list-skeleton { display: grid; gap: .7rem; }
-  .roll-leaderboard__row-skeleton { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 6rem; gap: .8rem; align-items: center; min-height: 4.5rem; padding: .75rem .9rem; border: 1px solid rgba(255, 255, 255, .08); border-radius: .85rem; background: var(--leaderboard-panel); }
-  .roll-leaderboard__row-skeleton span { display: block; height: .7rem; border-radius: .25rem; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.12), rgba(255,255,255,.04)); background-size: 220% 100%; animation: leaderboard-shimmer 1.5s ease-in-out infinite; }
+  .roll-leaderboard__row-skeleton { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 6rem; gap: .8rem; align-items: center; min-height: 4.5rem; padding: .75rem .9rem; border: 1px solid var(--leaderboard-line); border-radius: .85rem; background: var(--leaderboard-panel); }
+  .roll-leaderboard__row-skeleton span { display: block; height: .7rem; border-radius: .25rem; background: linear-gradient(90deg, rgba(30,25,34,.06), rgba(30,25,34,.14), rgba(30,25,34,.06)); background-size: 220% 100%; animation: leaderboard-shimmer 1.5s ease-in-out infinite; }
   .roll-leaderboard__row-skeleton span:nth-child(2) { width: 48%; height: 1.65rem; }
   .roll-leaderboard__row-skeleton span:last-child { width: 75%; justify-self: end; }
   .roll-leaderboard__sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; clip-path: inset(50%); }

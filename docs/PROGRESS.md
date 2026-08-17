@@ -1,5 +1,12 @@
 # Chromadie 2.0 Progress
 
+## Lighten the leaderboard canvas — 2026-08-16
+
+- Replaced the leaderboard's black canvas with a soft neutral background and
+  dark readable type.
+- Kept rank colors, the centered podium, framed lower rows, and all loading,
+  empty, error, and reduced-motion states intact.
+
 ## Refine the leaderboard into a podium and framed list — 2026-08-16
 
 - Replaced the wide score table presentation with a centered top-three podium.

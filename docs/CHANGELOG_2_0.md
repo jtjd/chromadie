@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-16 — Lighten the leaderboard canvas
+
+- Changed the leaderboard from a pure-black page to a soft neutral light
+  surface with dark readable text and subtle framed result rows.
+- Preserved the existing podium hierarchy, rank accents, period controls, and
+  score details.
+
 ## 2026-08-16 — Add a simple leaderboard podium
 
 - Reworked the leaderboard into a featured top-three profile podium.

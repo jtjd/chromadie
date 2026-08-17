@@ -1,5 +1,14 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-16 — Use a light canvas for the public leaderboard
+
+The leaderboard uses a soft neutral light canvas so the podium and score rows
+read as an approachable public browsing surface rather than an extension of
+the dark application shell. Text, borders, controls, loading states, and
+interactive states use a scoped light palette; rank colors and profile media
+remain unchanged. This is presentation-only and does not alter the public
+score contract or route behavior.
+
 ## 2026-08-16 — Use a podium for the strongest rolls
 
 The leaderboard presents the first three ranked profiles as a small visual
