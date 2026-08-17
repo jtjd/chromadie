@@ -3,10 +3,11 @@
 ## 2026-08-17 — Share link size and glow behavior across active layouts
 
 Link size remains a bounded 0–2 control but now scales each step by 16% rather
-than 8%. Link Glow uses a visible white halo for both text links and icon links,
-and the same normalized link style is passed to Compact, Framed, and Immersive
-renderers plus the live Studio preview. Monochrome remains a separate legacy
-field until it has an actual renderer contract.
+than 8%. Link Glow uses a visible white halo for text links and applies
+pixel-shaped `drop-shadow` treatment to icon SVGs, rather than shadowing empty
+icon containers. The same normalized link style is passed to Compact, Framed,
+and Immersive renderers plus the live Studio preview. Monochrome remains a
+separate legacy field until it has an actual renderer contract.
 
 ## 2026-08-17 — Keep generic link services unrestricted but HTTPS-only
 

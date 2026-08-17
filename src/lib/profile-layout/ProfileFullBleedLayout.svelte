@@ -255,7 +255,6 @@
     border: 1px solid transparent;
     border-radius: 50%;
     color: var(--profile-text, #ffffff);
-    box-shadow: 0 0 calc(.8rem * var(--profile-full-bleed-link-glow, 0)) rgba(255,255,255,.9), 0 0 calc(1.8rem * var(--profile-full-bleed-link-glow, 0)) rgba(255,255,255,.4);
     text-decoration: none;
     transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
   }

@@ -6,6 +6,8 @@
   control.
 - Reworked Glow into a visible white halo and applied both settings to the
   Immersive link renderer and its live Studio preview.
+- Scoped icon-layout glow to the SVG pixels so links do not produce empty
+  circular halos around their containers.
 - Added renderer wiring regression coverage.
 
 ## Fix generic profile-link validation — 2026-08-17

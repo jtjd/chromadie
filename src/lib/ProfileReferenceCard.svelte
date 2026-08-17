@@ -287,7 +287,6 @@
     border-color: transparent;
     border-radius: .7rem;
     background: transparent;
-    box-shadow: 0 0 calc(.8rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.9), 0 0 calc(1.8rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.4);
   }
 
   .profile-reference-card--framed .profile-reference-card__links a img {

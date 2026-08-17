@@ -6,6 +6,7 @@ Document user-visible redesign changes by milestone.
 
 - Link size now has twice the visual range.
 - Link Glow now produces a clear white halo around labels and social icons.
+- Icon layouts glow the actual SVG shapes instead of their empty link circles.
 - Compact, Framed, and Immersive profiles now share the same size and glow
   behavior in the public renderer and Studio preview.
 

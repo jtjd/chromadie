@@ -89,6 +89,7 @@ test('Immersive matches the reference identity scale and exposes bounded link st
   assert.match(layout, /width: calc\(2\.4rem \* var\(--profile-full-bleed-link-scale, 1\)\);/);
   assert.match(layout, /width: calc\(2\.2rem \* var\(--profile-full-bleed-link-scale, 1\)\);/);
   assert.match(layout, /--profile-full-bleed-link-glow/);
+  assert.doesNotMatch(layout, /\.profile-full-bleed__links a \{[^}]*box-shadow:/);
   assert.match(layout, /rgba\(255,255,255/);
   assert.match(layout, /column-gap: \.2rem;/);
   assert.match(layout, /margin-bottom: \.55rem;/);

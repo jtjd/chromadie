@@ -231,7 +231,10 @@ test('link size and glow settings reach every active profile link renderer', asy
   assert.match(fullBleed, /export let linkStyle = null/);
   assert.match(fullBleed, /safeLinkScale[\s\S]*\* \.16/);
   assert.match(fullBleed, /--profile-full-bleed-link-scale/);
+  assert.doesNotMatch(fullBleed, /\.profile-full-bleed__links a \{[^}]*box-shadow:/);
   assert.match(fullBleed, /drop-shadow\(0 0/);
+  assert.doesNotMatch(card, /\.profile-reference-card--framed \.profile-reference-card__links a \{[^}]*box-shadow:/);
+  assert.match(card, /\.profile-reference-card--framed \.profile-reference-card__links a img[^}]*drop-shadow\(0 0/);
   assert.match(preview, /<ProfileFullBleedLayout[\s\S]*\{linkStyle\}/);
   assert.match(shell, /<ProfileFullBleedLayout[\s\S]*linkStyle=\{effectiveProfileConfig\.linkStyle\}/);
 });
