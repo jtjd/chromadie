@@ -50,7 +50,8 @@ test('the first homepage fixture is the authored Meilin profile example', () => 
   assert.equal(fixture.displayName, 'meilin');
   assert.equal(fixture.bio, 'daydreamer · pixel artist · music lover');
   assert.equal(fixture.secondaryLine, 'somewhere between here and the horizon');
-  assert.deepEqual(fixture.links.map(link => link.label), ['Website', 'Spotify', 'Discord', 'Archive']);
+  assert.deepEqual(fixture.links.map(link => link.type), ['instagram', 'youtube', 'discord', 'tiktok']);
+  assert.deepEqual(fixture.links.map(link => link.label), ['Instagram', 'YouTube', 'Discord', 'TikTok']);
   assert.equal(fixture.media.background, '/homepage/fixtures/meilin/background.webp');
   assert.equal(fixture.media.avatar, '/homepage/fixtures/meilin/avatar.webp');
   assert.equal(fixture.heroLayout, 'immersive');

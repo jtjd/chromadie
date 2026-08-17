@@ -110,10 +110,10 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
     heroLayout: 'immersive',
     showcasePosition: 'bottom',
     links: [
-      { type: 'website', label: 'Website', url: 'https://chm.lol/', order: 0 },
-      { type: 'spotify', label: 'Spotify', url: 'https://open.spotify.com/', order: 1 },
+      { type: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/', order: 0 },
+      { type: 'youtube', label: 'YouTube', url: 'https://www.youtube.com/', order: 1 },
       { type: 'discord', label: 'Discord', url: 'https://discord.com/', order: 2 },
-      { type: 'other', label: 'Archive', url: 'https://example.com/archive', order: 3 }
+      { type: 'tiktok', label: 'TikTok', url: 'https://www.tiktok.com/', order: 3 }
     ],
     scores: [
       { hex_code: '#D8A6FF', score: 74231, rarity: 'Rare', identity: 'Soft Electric Orchid', condition_ids: ['sum_odd', 'hue_family_violet', 'temperature_cool', 'mixed_channel_rhythm'] },
