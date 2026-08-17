@@ -24,7 +24,13 @@ const PROFILE_LINK_ROWS = [
  * editor when a player changes or adds a service link.
  */
 export const PROFILE_LINK_DEFINITIONS = Object.freeze(PROFILE_LINK_ROWS.map(([key, label, icon, ...values]) => {
-  return { key, label, icon, social: key !== 'website' && key !== 'other', urlValidation: values };
+  return {
+    key,
+    label,
+    icon,
+    social: key !== 'website' && key !== 'other',
+    urlValidation: values.filter(value => typeof value === 'string' && value.length > 0)
+  };
 }));
 
 export const PROFILE_LINK_TYPES = Object.freeze(PROFILE_LINK_DEFINITIONS.map(definition => definition.key));

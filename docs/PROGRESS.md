@@ -1,5 +1,20 @@
 # Chromadie 2.0 Progress
 
+## Make link styling visible across layouts — 2026-08-17
+
+- Doubled the effect range of Link size while keeping its bounded three-step
+  control.
+- Reworked Glow into a visible white halo and applied both settings to the
+  Immersive link renderer and its live Studio preview.
+- Added renderer wiring regression coverage.
+
+## Fix generic profile-link validation — 2026-08-17
+
+- Fixed Website and Other links being rejected during publish because their
+  unrestricted HTTPS marker was treated as a hostname.
+- Added regression coverage for valid and invalid protocols so structured
+  preview metadata can publish without changing link behavior.
+
 ## Simplify the Layout editor — 2026-08-17
 
 - Removed the inert Link alignment and legacy Visible sections controls from

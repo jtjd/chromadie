@@ -21,7 +21,7 @@ import {
   mergeConfigurationV2ExpressionFields
 } from '../src/lib/profile-studio/draftModel.js';
 import { createProfileLayoutPatch } from '../src/lib/profile-layout/profileLayoutPatch.js';
-import { PROFILE_LINK_DEFINITIONS, PROFILE_LINK_TYPES, isProfileSocialLink } from '../src/lib/profileLinkTypes.js';
+import { PROFILE_LINK_DEFINITIONS, PROFILE_LINK_TYPES, isProfileLinkUrlValid, isProfileSocialLink } from '../src/lib/profileLinkTypes.js';
 import { RICH_PROFILE_FIXTURE } from '../scripts/browser/profile-rich-fixture.mjs';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -210,6 +210,30 @@ test('editor, renderer, and public icon files consume one link service registry'
   assert.equal(isProfileSocialLink('spotify'), true);
   assert.equal(isProfileSocialLink('website'), false);
   assert.equal(isProfileSocialLink('other'), false);
+});
+
+test('Website and Other accept any valid HTTPS destination', () => {
+  for (const type of ['website', 'other']) {
+    assert.equal(isProfileLinkUrlValid(type, 'https://chromadie.com/about'), true);
+    assert.equal(isProfileLinkUrlValid(type, 'http://chromadie.com/about'), false);
+  }
+});
+
+test('link size and glow settings reach every active profile link renderer', async () => {
+  const [card, fullBleed, preview, shell] = await Promise.all([
+    read('src/lib/ProfileReferenceCard.svelte'),
+    read('src/lib/profile-layout/ProfileFullBleedLayout.svelte'),
+    read('src/lib/ProfileStudioPreview.svelte'),
+    read('src/lib/ProfileShell.svelte')
+  ]);
+  assert.match(card, /safeLinkScale[\s\S]*\* \.16/);
+  assert.match(card, /rgba\(255,255,255/);
+  assert.match(fullBleed, /export let linkStyle = null/);
+  assert.match(fullBleed, /safeLinkScale[\s\S]*\* \.16/);
+  assert.match(fullBleed, /--profile-full-bleed-link-scale/);
+  assert.match(fullBleed, /drop-shadow\(0 0/);
+  assert.match(preview, /<ProfileFullBleedLayout[\s\S]*\{linkStyle\}/);
+  assert.match(shell, /<ProfileFullBleedLayout[\s\S]*linkStyle=\{effectiveProfileConfig\.linkStyle\}/);
 });
 
 test('layout renderer composes Compact and Immersive through distinct presentation regions', async () => {

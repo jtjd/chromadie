@@ -75,7 +75,7 @@ test('Immersive uses one purpose-built identity composition in public and Studio
   assert.match(migration, /css_value IN \('compact', 'full-bleed'\)/);
 });
 
-test('Immersive matches the reference identity scale and compact horizontal link spacing', async () => {
+test('Immersive matches the reference identity scale and exposes bounded link styling', async () => {
   const layout = await read('src/lib/profile-layout/ProfileFullBleedLayout.svelte');
 
   assert.match(layout, /margin: 0 auto clamp\(\.7rem, 1\.5vw, 1rem\);/);
@@ -85,8 +85,11 @@ test('Immersive matches the reference identity scale and compact horizontal link
   assert.match(layout, /column-gap: \.25rem;/);
   assert.match(layout, /row-gap: \.35rem;/);
   assert.match(layout, /margin: 1\.15rem auto 0;/);
-  assert.match(layout, /width: 2\.4rem;\n\s{4}height: 2\.4rem;/);
-  assert.match(layout, /width: 2\.2rem;\n\s{4}height: 2\.2rem;\n\s{4}object-fit: contain;/);
+  assert.match(layout, /--profile-full-bleed-link-scale/);
+  assert.match(layout, /width: calc\(2\.4rem \* var\(--profile-full-bleed-link-scale, 1\)\);/);
+  assert.match(layout, /width: calc\(2\.2rem \* var\(--profile-full-bleed-link-scale, 1\)\);/);
+  assert.match(layout, /--profile-full-bleed-link-glow/);
+  assert.match(layout, /rgba\(255,255,255/);
   assert.match(layout, /column-gap: \.2rem;/);
   assert.match(layout, /margin-bottom: \.55rem;/);
   assert.match(layout, /font-size: clamp\(1\.45rem, 7vw, 1\.9rem\)/);

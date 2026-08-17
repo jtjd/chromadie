@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-17 — Make link styling visible across layouts
+
+- Link size now has twice the visual range.
+- Link Glow now produces a clear white halo around labels and social icons.
+- Compact, Framed, and Immersive profiles now share the same size and glow
+  behavior in the public renderer and Studio preview.
+
+## 2026-08-17 — Fix generic profile-link publishing
+
+- Website and Other links now accept valid HTTPS destinations as intended.
+- Editing structured share metadata no longer fails because a generic link is
+  incorrectly treated as invalid.
+
 ## 2026-08-17 — Simplify the Layout customization tab
 
 - Removed Link alignment and Visible sections controls that no longer affected

@@ -552,6 +552,7 @@
                   descriptionMode={identityPresentation.descriptionMode}
                   entryAnimation={prefersReducedMotion ? 'none' : identityPresentation.entryAnimation}
                   links={openingLinks}
+                  linkStyle={effectiveProfileConfig.linkStyle}
                   accentColor={signatureColor}
                   onEntryClick={recordProfileClick}
                 />

@@ -122,6 +122,7 @@
                 descriptionMode={identity.descriptionMode}
                 entryAnimation={identity.entryAnimation}
                 {links}
+                {linkStyle}
                 {accentColor}
               />
             {:else}

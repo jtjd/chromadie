@@ -65,8 +65,8 @@
     className
   ].filter(Boolean).join(' ');
   $: cardStyle = `${surfaceStyle || ''};--profile-reference-accent:${safeAccent};--profile-reference-name-size:${presentation === 'homepage' ? '1.95rem' : '1.78rem'};`;
-  $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .08;
-  $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0) * .18;
+  $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .16;
+  $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0);
 
   function forward(event) {
     dispatch(event.type, event.detail);
@@ -287,7 +287,7 @@
     border-color: transparent;
     border-radius: .7rem;
     background: transparent;
-    box-shadow: 0 0 calc(1rem * var(--profile-reference-link-glow, 0)) color-mix(in srgb, var(--profile-reference-accent) 35%, transparent);
+    box-shadow: 0 0 calc(.8rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.9), 0 0 calc(1.8rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.4);
   }
 
   .profile-reference-card--framed .profile-reference-card__links a img {
@@ -295,7 +295,7 @@
     width: 1.75rem;
     height: 1.75rem;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    filter: brightness(0) invert(1) drop-shadow(0 0 calc(.45rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.95));
     opacity: .86;
   }
 
@@ -414,7 +414,7 @@
     background: rgba(255,255,255,.04);
     color: var(--profile-text, rgba(245,245,247,.86));
     font: 500 calc(.69rem * var(--profile-reference-link-scale, 1))/1 'Inter', sans-serif;
-    box-shadow: 0 0 calc(1rem * var(--profile-reference-link-glow, 0)) color-mix(in srgb, var(--profile-reference-accent) 35%, transparent);
+    box-shadow: 0 0 calc(.8rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.9), 0 0 calc(1.8rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.4);
     text-decoration: none;
     text-overflow: ellipsis;
     white-space: nowrap;

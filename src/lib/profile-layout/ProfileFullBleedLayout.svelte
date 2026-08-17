@@ -21,6 +21,7 @@
   export let descriptionMode = 'plain';
   export let entryAnimation = 'none';
   export let links = [];
+  export let linkStyle = null;
   export let accentColor = '#00FFB3';
   export let onEntryClick = entryKey => { void entryKey; };
 
@@ -32,6 +33,8 @@
   $: safeDescriptionMode = descriptionMode === 'typewriter' ? 'typewriter' : 'plain';
   $: safeEntryAnimation = ['none', 'fade', 'focus'].includes(entryAnimation) ? entryAnimation : 'none';
   $: safeAccent = /^#[0-9a-f]{6}$/i.test(String(accentColor || '')) ? accentColor : '#00FFB3';
+  $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .16;
+  $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0);
   $: visibleLinks = (Array.isArray(links) ? links : [])
     .filter(link => link && typeof link.url === 'string' && link.url)
     .map(link => ({ ...link, definition: getProfileLinkDefinition(link.type) }));
@@ -53,7 +56,7 @@
 >
   <section
     class={`profile-full-bleed profile-full-bleed--entry-${safeEntryAnimation}`}
-    style={`--profile-full-bleed-accent:${safeAccent};`}
+    style={`--profile-full-bleed-accent:${safeAccent};--profile-full-bleed-link-scale:${safeLinkScale};--profile-full-bleed-link-glow:${safeLinkGlow};`}
     aria-label={`${safeDisplayName} profile`}
     data-profile-layout-content="full-bleed"
   >
@@ -246,22 +249,23 @@
 
   .profile-full-bleed__links a {
     display: grid;
-    width: 2.4rem;
-    height: 2.4rem;
+    width: calc(2.4rem * var(--profile-full-bleed-link-scale, 1));
+    height: calc(2.4rem * var(--profile-full-bleed-link-scale, 1));
     place-items: center;
     border: 1px solid transparent;
     border-radius: 50%;
     color: var(--profile-text, #ffffff);
+    box-shadow: 0 0 calc(.8rem * var(--profile-full-bleed-link-glow, 0)) rgba(255,255,255,.9), 0 0 calc(1.8rem * var(--profile-full-bleed-link-glow, 0)) rgba(255,255,255,.4);
     text-decoration: none;
     transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
   }
 
   .profile-full-bleed__links a img {
     display: block;
-    width: 2.2rem;
-    height: 2.2rem;
+    width: calc(2.2rem * var(--profile-full-bleed-link-scale, 1));
+    height: calc(2.2rem * var(--profile-full-bleed-link-scale, 1));
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    filter: brightness(0) invert(1) drop-shadow(0 0 calc(.45rem * var(--profile-full-bleed-link-glow, 0)) rgba(255,255,255,.95));
     opacity: .9;
   }
 
