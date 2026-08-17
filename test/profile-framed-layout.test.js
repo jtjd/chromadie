@@ -31,6 +31,9 @@ test('Framed keeps the avatar and identity in one bounded left-aligned card', as
   assert.match(card, /profile-reference-card__link-label/);
   assert.match(card, /overflow: visible/);
   assert.match(card, /text-align: left/);
+  assert.match(card, /profile-reference-card--framed \.profile-reference-card__avatar-shell \{[\s\S]*?padding: 0;[\s\S]*?border: 0;[\s\S]*?background: transparent;[\s\S]*?box-shadow: none;/);
+  assert.match(card, /profile-reference-card--framed :global\(\.name-effect-canvas\) \{[\s\S]*?display: inline-block;[\s\S]*?width: fit-content;/);
+  assert.match(card, /profile-reference-card--framed :global\(\.name-effect-canvas__semantic\.profile-reference-card__name\) \{[\s\S]*?width: auto;[\s\S]*?text-align: left;/);
   assert.match(shell, /layoutVariant=\{profilePresentationLayoutVariant\}/);
   assert.match(shell, /profileHasBelowFoldRoll = profilePresentationLayoutVariant === 'full-bleed' \|\| profilePresentationLayoutVariant === 'framed'/);
   assert.match(preview, /roll=\{layoutVariant === 'framed' \? null : latestRoll\}/);

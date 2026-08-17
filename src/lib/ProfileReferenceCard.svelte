@@ -234,11 +234,11 @@
     width: clamp(5.35rem, 13vw, 7.35rem);
     height: clamp(5.35rem, 13vw, 7.35rem);
     margin: 0;
-    padding: .16rem;
-    border: 1px solid rgba(255, 255, 255, .68);
+    padding: 0;
+    border: 0;
     border-radius: 1.45rem;
-    background: rgba(220, 225, 235, .9);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, .34), 0 0 0 .35rem rgba(4, 9, 18, .48);
+    background: transparent;
+    box-shadow: none;
     transform: translateY(-45%);
   }
 
@@ -255,6 +255,19 @@
   .profile-reference-card--framed .profile-reference-card__name {
     max-width: 100%;
     font-size: clamp(1.75rem, 4vw, 2.3rem);
+  }
+
+  .profile-reference-card--framed :global(.name-effect-canvas) {
+    display: inline-block;
+    width: fit-content;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .profile-reference-card--framed :global(.name-effect-canvas__semantic.profile-reference-card__name) {
+    display: inline-block;
+    width: auto;
+    text-align: left;
   }
 
   .profile-reference-card--framed .profile-reference-card__bio {
