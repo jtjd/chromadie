@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-17 — Simplify the Layout customization tab
+
+- Removed Link alignment and Visible sections controls that no longer affected
+  the active profile renderers.
+- Kept Compact, Immersive, and Framed layout selection as the focused Layout
+  customization surface.
+
 ## 2026-08-17 — Refresh Avatar Effects with four reference treatments
 
 - Replaced the old Avatar Effect choices with 3D Parallax Tilt, Glitch Slicer,

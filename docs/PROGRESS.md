@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Simplify the Layout editor — 2026-08-17
+
+- Removed the inert Link alignment and legacy Visible sections controls from
+  Profile Studio Layout.
+- Kept layout selection and structural module ordering intact while making the
+  draft patcher preserve link-style settings as Links-owned data.
+- Added regression coverage so the Layout editor stays limited to the active
+  structural choices.
+
 ## Avatar Effect reference refresh — 2026-08-17
 
 - Replaced the previous 18 active avatar effects with the four reference

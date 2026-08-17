@@ -1,5 +1,14 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-17 — Keep Layout focused on structural composition
+
+The Layout tab now exposes only the active Compact, Immersive, and Framed
+composition choices. Link alignment and visible-section toggles were removed
+because current renderers do not consume alignment and the approved profile
+surface does not expose the legacy module visibility model. Existing
+configuration fields remain normalized for compatibility, while Links keeps
+ownership of its remaining size, glow, and monochrome presentation settings.
+
 ## 2026-08-17 — Replace Avatar Effects with the four reference treatments
 
 The active Avatar Effect catalog now contains exactly four code-owned CSS

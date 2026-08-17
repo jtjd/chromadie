@@ -143,7 +143,6 @@
   {/if}
 
   <div class="profile-links-editor__link-style">
-    <label><span>Alignment</span><select value={draft.linkStyle?.alignment || 'left'} on:change={event => updateDraft({ linkStyle: { ...(draft.linkStyle || {}), alignment: event.currentTarget.value } })}><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
     <label><span>Link size</span><input type="range" min="0" max="2" step="1" value={draft.linkStyle?.size || 0} on:input={event => updateDraft({ linkStyle: { ...(draft.linkStyle || {}), size: Number(event.currentTarget.value) } })} /></label>
     <label><span>Glow</span><input type="range" min="0" max="2" step="1" value={draft.linkStyle?.glow || 0} on:input={event => updateDraft({ linkStyle: { ...(draft.linkStyle || {}), glow: Number(event.currentTarget.value) } })} /></label>
     <label class="profile-links-editor__style-check"><input type="checkbox" checked={draft.linkStyle?.monochrome === true} on:change={event => updateDraft({ linkStyle: { ...(draft.linkStyle || {}), monochrome: event.currentTarget.checked } })} /> Monochrome</label>
@@ -201,7 +200,7 @@
   .profile-links-editor__remove:hover:not(:disabled) { color: var(--editor-danger); }
   .profile-links-editor__link-style { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: end; gap: .65rem; padding-top: .35rem; }
   .profile-links-editor__link-style label { display: grid; align-items: end; color: var(--editor-secondary); }
-  .profile-links-editor__link-style select, .profile-links-editor__metadata :is(input, textarea) { min-height: 2.4rem; box-sizing: border-box; border: 1px solid var(--editor-border-strong); border-radius: 8px; padding: .55rem .6rem; background: var(--editor-input); color: var(--editor-text); font: 500 .75rem/1.3 'Inter', sans-serif; }
+  .profile-links-editor__metadata :is(input, textarea) { min-height: 2.4rem; box-sizing: border-box; border: 1px solid var(--editor-border-strong); border-radius: 8px; padding: .55rem .6rem; background: var(--editor-input); color: var(--editor-text); font: 500 .75rem/1.3 'Inter', sans-serif; }
   .profile-links-editor__link-style input[type='range'] { width: 100%; accent-color: var(--editor-focus); }
   .profile-links-editor__style-check { display: inline-flex !important; min-height: 2.4rem; white-space: nowrap; }
   .profile-links-editor__metadata { display: grid; gap: .65rem; padding-top: .85rem; border-top: 1px solid var(--editor-border); }

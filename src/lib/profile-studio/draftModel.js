@@ -241,13 +241,7 @@ export function applyProfileStudioDraftPatch(currentConfig, patch = {}, fallback
     const next = {
       ...current,
       ...pickFields(config, PROFILE_LAYOUT_DRAFT_FIELDS),
-      linkStyle: { ...current.linkStyle }
     };
-    // Layout only exposes alignment. Keep size, glow, monochrome, and any
-    // future link-style fields owned by the Links editor.
-    if (hasOwn(config.linkStyle, 'alignment')) {
-      next.linkStyle.alignment = config.linkStyle.alignment;
-    }
     return normalizeProfileConfig(next, fallbackColor);
   }
 
