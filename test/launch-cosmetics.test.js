@@ -16,13 +16,14 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('launch renderer registries contain exactly the requested finite keys', () => {
   assert.equal(CURSOR_TRAIL_KEYS.length, 16);
-  assert.equal(AVATAR_EFFECT_KEYS.length, 18);
+  assert.deepEqual(AVATAR_EFFECT_KEYS, ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud']);
   assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 12);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
-  assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 18);
+  assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 4);
   assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed', 'framed']);
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
-  assert.equal(isAvatarEffectKey('avatar_effect_color_archive'), true);
+  assert.equal(isAvatarEffectKey('avatar_effect_cyber_hud'), true);
+  assert.equal(isAvatarEffectKey('avatar_effect_color_archive'), false);
   assert.equal(PROFILE_LAYOUT_DEFINITIONS['full-bleed'].label, 'Immersive');
   assert.equal(getAtmosphereDefinition('profile_atmosphere_color_memory'), null);
   assert.equal(getAtmosphereDefinition('profile_atmosphere_signal_garden'), null);
@@ -39,23 +40,17 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(getAtmosphereDefinition('profile_atmosphere_lumen_flare')?.key, 'lumen-flare');
 });
 
-test('authored avatar anchors resolve raster plates and the shared texture atlas', async () => {
-  const anchors = ['prism-orbit', 'ember-crown', 'ghost-double'];
+test('reference avatar effects are code-owned, image-aware, and motion-safe', async () => {
+  const avatarSource = await read('src/lib/avatar-effect/AvatarEffect.svelte');
 
-  for (const key of anchors) {
-    const definition = AVATAR_EFFECT_DEFINITIONS[key];
-    assert.ok(definition, key);
-    assert.match(definition.authoredOverlay, /^\/avatar-effects\/.+\.png$/);
-    const asset = await readFile(new URL(`../public${definition.authoredOverlay}`, import.meta.url));
-    assert.deepEqual([...asset.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-  }
-
-  const atlas = await readFile(new URL('../public/avatar-effects/particle-atlas.png', import.meta.url));
-  assert.deepEqual([...atlas.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-
-  assert.equal(AVATAR_EFFECT_DEFINITIONS['prism-orbit'].particles, true);
-  assert.equal(AVATAR_EFFECT_DEFINITIONS['ember-crown'].particles, true);
-  assert.equal(AVATAR_EFFECT_DEFINITIONS['ghost-double'].imageAware, true);
+  assert.deepEqual(Object.keys(AVATAR_EFFECT_DEFINITIONS), ['3d-parallax', 'glitch-slicer', 'liquid-blob', 'cyber-hud']);
+  assert.match(avatarSource, /data-avatar-effect=\{activeDefinitionKey\}/);
+  assert.match(avatarSource, /avatar-effect__glitch-layer--red/);
+  assert.match(avatarSource, /avatar-effect__hud-ring--one/);
+  assert.match(avatarSource, /@keyframes avatar-effect-tilt/);
+  assert.match(avatarSource, /@keyframes avatar-effect-morph/);
+  assert.match(avatarSource, /prefers-reduced-motion/);
+  assert.doesNotMatch(avatarSource, /AvatarParticles|authoredOverlay|particle-atlas|avatar-effect--(?:signal-ring|neon-halo|prism-orbit|ghost-double)/);
 });
 
 test('atmosphere scenes are finite, authored, and safe to mount repeatedly', async () => {
@@ -150,7 +145,7 @@ test('profile layouts compose the shared card and alternate presentation regions
 test('new catalog slots filter independently and fitting-room selection preserves other slots', () => {
   const items = [
     { item_key: 'cursor_trail_signal_trace', slot: 'cursor_trail', cost: 160000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
-    { item_key: 'avatar_effect_signal_ring', slot: 'avatar_effect', cost: 180000, rarity: 'Rare', collection: 'Signal', catalog_status: 'active' },
+    { item_key: 'avatar_effect_3d_parallax', slot: 'avatar_effect', cost: 350000, rarity: 'Epic', collection: 'Signal', catalog_status: 'active' },
     { item_key: 'profile_atmosphere_rain_window', slot: 'profile_atmosphere', cost: 260000, rarity: 'Rare', collection: 'Nocturne', catalog_status: 'active' },
     { item_key: 'profile_layout_compact', slot: 'profile_layout', cost: 0, rarity: 'Uncommon', collection: 'Layouts', catalog_status: 'active' }
   ];
@@ -171,7 +166,7 @@ test('seed and migrations contain the launch products and version bumps', async 
     read('supabase/migrations/20260815130000_profile_compact_immersive_reset.sql')
   ]);
   assert.equal((seed.match(/'cursor_trail_[a-z0-9_]+'/g) || []).length, 16);
-  assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 18);
+  assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 4);
   assert.equal((seed.match(/\('profile_layout_[a-z0-9_]+'/g) || []).length, 3);
   assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 12);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');

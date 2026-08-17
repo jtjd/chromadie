@@ -242,16 +242,6 @@
     transform: translateY(-45%);
   }
 
-  .profile-reference-card--framed :global(.profile-reference-card__avatar-effect) {
-    overflow: visible;
-    border-radius: 1.25rem;
-  }
-
-  .profile-reference-card--framed :global(.profile-reference-card__avatar-effect > .profile-reference-card__avatar),
-  .profile-reference-card--framed :global(.profile-reference-card__avatar-effect > .profile-reference-card__avatar-fallback) {
-    border-radius: 1.25rem;
-  }
-
   .profile-reference-card--framed .profile-reference-card__name {
     max-width: 100%;
     font-size: clamp(1.75rem, 4vw, 2.3rem);
@@ -359,8 +349,6 @@
   .profile-reference-card__avatar { object-fit: cover; }
   .profile-reference-card__avatar-fallback { position: relative; z-index: 2; color: rgba(248,248,248,.78); font: 600 1.7rem/1 'Clash Display', sans-serif; }
   :global(.profile-reference-card__avatar-effect) { display: grid; width: 100%; height: 100%; place-items: center; }
-  :global(.profile-reference-card__avatar-effect > .profile-reference-card__avatar) { width: 100%; height: 100%; }
-  :global(.profile-reference-card__avatar-effect > .profile-reference-card__avatar-fallback) { width: 100%; height: 100%; }
 
   :global(.profile-reference-card__border) { width: 100%; min-width: 0; }
   :global(.profile-reference-card__border .profile-border-effect__content) { width: 100%; min-width: 0; }

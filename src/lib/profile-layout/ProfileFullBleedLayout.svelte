@@ -184,12 +184,6 @@
     font: 600 clamp(3rem, 7vw, 4.8rem) / 1 'Clash Display', sans-serif;
   }
 
-  :global(.profile-full-bleed__avatar-effect > .profile-full-bleed__avatar),
-  :global(.profile-full-bleed__avatar-effect > .profile-full-bleed__avatar-fallback) {
-    width: 100%;
-    height: 100%;
-  }
-
   .profile-full-bleed__name,
   :global(.profile-full-bleed .profile-full-bleed__name) {
     display: block;

@@ -85,7 +85,7 @@ test('public and Studio hosts resolve one rich profile to the same render state'
       name_font: 'name_font_marker_tag',
       name_material: 'name_material_blueprint_ink',
       name_motion: 'name_motion_typewriter_name',
-      avatar_effect: 'avatar_effect_ghost_double',
+      avatar_effect: 'avatar_effect_3d_parallax',
       profile_border: 'border_celestial',
       profile_atmosphere: 'profile_atmosphere_rain_window',
       profile_motion: 'profile_motion_perspective_tilt',
@@ -125,12 +125,29 @@ test('public and Studio hosts resolve one rich profile to the same render state'
   assert.equal(Object.isFrozen(studioSnapshot), true);
 });
 
+test('retired avatar selections fail closed at the render boundary', () => {
+  const snapshot = buildProfileRenderSnapshot({
+    profile: {
+      id: 'profile-retired-avatar',
+      username: 'retired-avatar',
+      equipped_cosmetics: { avatar_effect: 'avatar_effect_color_archive' }
+    },
+    profileConfig: { published: createDefaultProfileConfig('#123456') },
+    featureFlags: FLAGS,
+    mediaResolver,
+    mode: 'public',
+    previewMode: false
+  });
+
+  assert.equal(snapshot.cosmetics.avatarEffectKey, '');
+});
+
 test('draft, media, identity, and cosmetic precedence is resolved before rendering', () => {
   const published = createRichConfiguration();
   published.layoutVariant = 'compact';
   const draft = { ...published, layoutVariant: 'full-bleed' };
-  const currentCosmetics = { profile_border: 'border_signal', avatar_effect: 'avatar_effect_ghost_double' };
-  const previewCosmetics = { profile_border: 'border_celestial', avatar_effect: 'avatar_effect_orbit' };
+  const currentCosmetics = { profile_border: 'border_signal', avatar_effect: 'avatar_effect_3d_parallax' };
+  const previewCosmetics = { profile_border: 'border_celestial', avatar_effect: 'avatar_effect_liquid_blob' };
   const snapshot = buildProfileRenderSnapshot({
     profile: { id: 'profile-2', username: 'draft-user', bio: 'published bio', equipped_cosmetics: currentCosmetics },
     profileConfig: { draft, published },
@@ -149,7 +166,7 @@ test('draft, media, identity, and cosmetic precedence is resolved before renderi
   assert.equal(snapshot.surface.opacity, 82);
   assert.equal(snapshot.surface.blur, 8);
   assert.equal(snapshot.cosmetics.borderKey, 'border_celestial');
-  assert.equal(snapshot.cosmetics.avatarEffectKey, 'avatar_effect_orbit');
+  assert.equal(snapshot.cosmetics.avatarEffectKey, 'avatar_effect_liquid_blob');
   assert.equal(snapshot.cosmetics.profileMotionKey, '');
   assert.equal(snapshot.media.avatarUrl, mediaResolver(MEDIA.avatar));
   assert.equal(snapshot.media.backgroundVideoUrl, mediaResolver(MEDIA.video));

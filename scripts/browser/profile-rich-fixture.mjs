@@ -28,7 +28,7 @@ export const RICH_PROFILE_FIXTURE = Object.freeze({
     nameFont: 'name_font_marker_tag',
     nameMaterial: 'name_material_blueprint_ink',
     nameMotion: 'name_motion_typewriter_name',
-    avatar: 'avatar_effect_ghost_double',
+    avatar: 'avatar_effect_cyber_hud',
     border: 'border_celestial',
     atmosphere: 'profile_atmosphere_rain_window',
     cursor: 'cursor_trail_pixel_wake',

@@ -375,11 +375,11 @@ SELECT pg_temp.audit_assert(
   AND (SELECT count(*) = 11 FROM public.shop_items WHERE slot = 'name_motion' AND catalog_status = 'active')
   AND (SELECT count(*) = 9 FROM public.shop_items WHERE slot = 'profile_border' AND catalog_status = 'active')
   AND (SELECT count(*) = 16 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
-  AND (SELECT count(*) = 18 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
+  AND (SELECT count(*) = 4 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
   AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
   AND (SELECT count(*) = 13 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
   AND (SELECT count(*) = 1 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
-  AND (SELECT count(*) = 90 FROM public.shop_items WHERE catalog_status = 'active')
+  AND (SELECT count(*) = 76 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -393,7 +393,7 @@ SELECT pg_temp.audit_assert(
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 88
+    AND (SELECT count(*) = 74
          FROM public.get_shop_catalog()
          WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),
@@ -815,7 +815,7 @@ VALUES
   ('10000000-0000-0000-0000-000000000001', 'name_motion_haunt_flash', 1),
   ('10000000-0000-0000-0000-000000000001', 'border_signal', 1),
   ('10000000-0000-0000-0000-000000000001', 'cursor_trail_signal_trace', 1),
-  ('10000000-0000-0000-0000-000000000001', 'avatar_effect_signal_ring', 1),
+  ('10000000-0000-0000-0000-000000000001', 'avatar_effect_3d_parallax', 1),
   ('10000000-0000-0000-0000-000000000001', 'profile_layout_compact', 1);
 UPDATE public.profiles
 SET equipped_cosmetics = jsonb_build_object(
@@ -903,10 +903,10 @@ SELECT pg_temp.audit_assert(
    FROM audit_results WHERE name = 'launch_equip_cursor'),
   'equipping a Cursor Trail did not preserve unrelated cosmetic slots'
 );
-INSERT INTO audit_results VALUES ('launch_equip_avatar', public.equip_item('avatar_effect_signal_ring'));
+INSERT INTO audit_results VALUES ('launch_equip_avatar', public.equip_item('avatar_effect_3d_parallax'));
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
-      AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_signal_ring'
+      AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_3d_parallax'
       AND payload->'cosmetics'->>'cursor_trail' = 'cursor_trail_signal_trace'
    FROM audit_results WHERE name = 'launch_equip_avatar'),
   'equipping an Avatar Effect did not preserve the Cursor Trail slot'
@@ -915,7 +915,7 @@ INSERT INTO audit_results VALUES ('launch_equip_layout', public.equip_item('prof
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
       AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_compact'
-      AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_signal_ring'
+      AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_3d_parallax'
    FROM audit_results WHERE name = 'launch_equip_layout'),
   'equipping a structural Profile Layout did not preserve Avatar Effect state'
 );
@@ -946,7 +946,7 @@ INSERT INTO audit_results VALUES ('launch_unequip_cursor', public.unequip_item('
 SELECT pg_temp.audit_assert(
   (SELECT payload->>'success' = 'true'
       AND NOT (payload->'cosmetics' ? 'cursor_trail')
-      AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_signal_ring'
+      AND payload->'cosmetics'->>'avatar_effect' = 'avatar_effect_3d_parallax'
       AND payload->'cosmetics'->>'profile_layout' = 'profile_layout_compact'
    FROM audit_results WHERE name = 'launch_unequip_cursor'),
   'unequipping Cursor Trail cleared unrelated new slots'

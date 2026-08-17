@@ -21,7 +21,7 @@ test('Studio preview snapshots carry staged appearance and every equipped effect
     name_font: 'name_font_editorial_serif',
     name_material: 'name_material_glass_emboss',
     name_motion: 'name_motion_typewriter_name',
-    avatar_effect: 'avatar_effect_color_archive',
+    avatar_effect: 'avatar_effect_cyber_hud',
     profile_border: 'border_celestial',
     profile_atmosphere: 'profile_atmosphere_rain_window',
     profile_motion: 'profile_motion_perspective_tilt',
@@ -45,7 +45,7 @@ test('Studio preview snapshots carry staged appearance and every equipped effect
   assert.equal(preview.snapshot.cosmetics.name.fontKey, 'name_font_editorial_serif');
   assert.equal(preview.snapshot.cosmetics.name.materialKey, 'name_material_glass_emboss');
   assert.equal(preview.snapshot.cosmetics.name.motionKey, 'name_motion_typewriter_name');
-  assert.equal(preview.snapshot.cosmetics.avatarEffectKey, 'avatar_effect_color_archive');
+  assert.equal(preview.snapshot.cosmetics.avatarEffectKey, 'avatar_effect_cyber_hud');
   assert.equal(preview.snapshot.cosmetics.borderKey, 'border_celestial');
   assert.equal(preview.snapshot.cosmetics.atmosphereKey, 'profile_atmosphere_rain_window');
   assert.equal(preview.snapshot.cosmetics.profileMotionKey, 'profile_motion_perspective_tilt');

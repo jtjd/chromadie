@@ -13,6 +13,7 @@ import {
 } from './profileConfig.js';
 import { resolveProfileLayoutVariant } from './profile-layout/profileLayouts.js';
 import { getCursorTrailKey } from './cursor-trail/cursorTrails.js';
+import { isAvatarEffectKey } from './avatar-effect/avatarEffects.js';
 import { isProfileBorderKey } from './profile-border/profileBorders.js';
 import { getNameRendererLoadout } from './name/nameLoadout.js';
 import { getNameFontCssFamily, isCustomNameFontKey, resolveNameFontKey } from './name/nameFonts.js';
@@ -426,7 +427,9 @@ export function buildProfileRenderSnapshot(input = {}) {
     cosmetics: {
       loadout: cosmetics,
       name: nameRendererLoadout,
-      avatarEffectKey: cosmetics.avatar_effect || '',
+      // Keep malformed or retired avatar selections out of the renderer
+      // contract; the active registry is the only avatar-effect authority.
+      avatarEffectKey: isAvatarEffectKey(cosmetics.avatar_effect) ? String(cosmetics.avatar_effect) : '',
       // Keep the persisted item key intact for the renderer contract while
       // failing closed for retired or malformed border values.
       borderKey: isProfileBorderKey(cosmetics.profile_border) ? String(cosmetics.profile_border) : '',

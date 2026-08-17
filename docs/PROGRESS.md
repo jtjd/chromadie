@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Avatar Effect reference refresh — 2026-08-17
+
+- Replaced the previous 18 active avatar effects with the four reference
+  treatments: 3D Parallax Tilt, Glitch Slicer, Liquid Blob, and Cyber HUD.
+- Kept the renderer image-aware and structured, with no catalog-provided CSS,
+  HTML, JavaScript, URLs, raster plates, or particle atlas required.
+- Added the additive catalog migration, cleared retired equipped selections,
+  updated Studio/browser fixtures, and covered the four shapes plus reduced
+  motion in regression tests.
+
 ## Framed profile layout — 2026-08-17
 
 - Added the structured `framed` layout to the finite profile registry and

@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-17 — Refresh Avatar Effects with four reference treatments
+
+- Replaced the old Avatar Effect choices with 3D Parallax Tilt, Glitch Slicer,
+  Liquid Blob, and Cyber HUD.
+- Added image-aware chromatic slices, organic morphing, perspective depth, and
+  HUD rings while keeping the portrait readable and responsive.
+- Retired the previous active choices without deleting their historical
+  catalog rows; profiles using one are safely reset to no avatar effect.
+
 ## 2026-08-17 — Add the Framed profile layout
 
 - Added a Framed profile-card option with a rounded-square avatar overlapping

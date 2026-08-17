@@ -1,5 +1,19 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-17 — Replace Avatar Effects with the four reference treatments
+
+The active Avatar Effect catalog now contains exactly four code-owned CSS
+renderers: 3D Parallax Tilt, Glitch Slicer, Liquid Blob, and Cyber HUD. The
+shared `AvatarEffect` boundary remains image-slot based, so profile media and
+fallback initials work in every treatment without accepting catalog CSS,
+HTML, JavaScript, or remote assets.
+
+The former 18 catalog rows remain legacy database history but are no longer
+active or renderable. Equipped selections that point to those retired rows are
+cleared by the additive migration. All four treatments keep bounded sizing,
+image-aware layers, and `prefers-reduced-motion` behavior across public cards,
+Immersive profiles, and Studio previews.
+
 ## 2026-08-17 — Add a Framed identity card layout
 
 Profile Studio now offers a third structured layout, `framed`, alongside

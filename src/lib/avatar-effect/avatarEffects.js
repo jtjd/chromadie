@@ -1,39 +1,21 @@
 /** Finite avatar-local decoration registry. */
 const definitions = {
-  'signal-ring': { key: 'signal-ring', label: 'Signal Ring', particles: true },
-  'neon-halo': { key: 'neon-halo', label: 'Neon Halo', particles: true },
-  'prism-orbit': {
-    key: 'prism-orbit',
-    label: 'Prism Orbit',
-    authoredOverlay: '/avatar-effects/prism-orbit-authored.png',
-    particles: true
+  '3d-parallax': {
+    key: '3d-parallax',
+    label: '3D Parallax Tilt'
   },
-  'crystal-aperture': { key: 'crystal-aperture', label: 'Crystal Aperture', particles: true },
-  'chroma-arc': { key: 'chroma-arc', label: 'Chroma Arc', particles: true },
-  'ember-crown': {
-    key: 'ember-crown',
-    label: 'Ember Crown',
-    authoredOverlay: '/avatar-effects/ember-crown-authored.png',
-    particles: true
+  'glitch-slicer': {
+    key: 'glitch-slicer',
+    label: 'Glitch Slicer'
   },
-  ashfall: { key: 'ashfall', label: 'Ashfall', particles: true },
-  'gold-laurel': { key: 'gold-laurel', label: 'Gold Laurel', particles: true },
-  'ink-stamp': { key: 'ink-stamp', label: 'Ink Stamp', particles: true },
-  'paper-tear': { key: 'paper-tear', label: 'Paper Tear', particles: true },
-  'static-offset': { key: 'static-offset', label: 'Static Offset', particles: true },
-  'pixel-satellites': { key: 'pixel-satellites', label: 'Pixel Satellites', particles: true },
-  'crt-scan': { key: 'crt-scan', label: 'CRT Scan', particles: true },
-  'void-eclipse': { key: 'void-eclipse', label: 'Void Eclipse', particles: true },
-  'ghost-double': {
-    key: 'ghost-double',
-    label: 'Ghost Double',
-    authoredOverlay: '/avatar-effects/ghost-double-authored.png',
-    particles: true,
-    imageAware: true
+  'liquid-blob': {
+    key: 'liquid-blob',
+    label: 'Liquid Blob'
   },
-  'night-frame': { key: 'night-frame', label: 'Night Frame', particles: true },
-  'daily-aura': { key: 'daily-aura', label: 'Daily Aura', particles: true },
-  'color-archive': { key: 'color-archive', label: 'Color Archive', particles: true }
+  'cyber-hud': {
+    key: 'cyber-hud',
+    label: 'Cyber HUD'
+  }
 };
 
 const normalizedDefinitions = Object.fromEntries(
