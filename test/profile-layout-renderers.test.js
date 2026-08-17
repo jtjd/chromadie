@@ -26,15 +26,27 @@ import { RICH_PROFILE_FIXTURE } from '../scripts/browser/profile-rich-fixture.mj
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the two active layout definitions carry distinct structural contracts', () => {
-  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed']);
+test('the active layout definitions carry distinct structural contracts', () => {
+  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed', 'framed']);
   assert.deepEqual(
     PROFILE_LAYOUT_KEYS.map(key => PROFILE_LAYOUT_DEFINITIONS[key].structure),
     [
       { identity: 'centered', roll: 'integrated', surface: 'reference-card' },
-      { identity: 'centered', roll: 'below-fold', surface: 'cardless' }
+      { identity: 'centered', roll: 'below-fold', surface: 'cardless' },
+      { identity: 'left', roll: 'below-fold', surface: 'reference-card' }
     ]
   );
+});
+
+test('Framed preserves the bounded profile layout contract', () => {
+  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'framed' }), 'framed');
+  assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'profile_layout_framed' }), 'framed');
+  assert.equal(PROFILE_LAYOUT_DEFINITIONS.framed.label, 'Framed');
+  assert.equal(PROFILE_LAYOUT_DEFINITIONS.framed.motionTarget, 'framed-card');
+  const patch = createProfileLayoutPatch('framed');
+  assert.equal(patch.templateKey, 'framed');
+  assert.equal(patch.layoutVariant, 'framed');
+  assert.deepEqual(patch.modules.map(module => module.id), ['roll', 'links', 'signature', 'recent', 'achievements', 'stats', 'boundary', 'explore']);
 });
 
 test('public layout authority comes from profile configuration', () => {
@@ -229,7 +241,7 @@ test('layout renderer composes Compact and Immersive through distinct presentati
   assert.match(renderModel, /getProfileLayoutLinkPartitions/);
   assert.match(renderModel, /continuationSocialLinks/);
   assert.match(renderModel, /continuationNavigationLinks/);
-  assert.match(renderModel, /hasBelowFoldRoll = showRoll[\s\S]*full-bleed/);
+  assert.match(renderModel, /hasBelowFoldRoll = showRoll[\s\S]*full-bleed[\s\S]*framed/);
   assert.match(shell, /\{#if renderProfileMore\}[\s\S]*<div id="profile-more"/);
   assert.match(renderModel, /hasLowerExpression = hasProfileMusic/);
   const mediaDeleteMigration = await read('supabase/migrations/20260812160000_profile_media_delete_token_guard.sql');

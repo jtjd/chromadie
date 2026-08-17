@@ -20,6 +20,13 @@ const PROFILE_LAYOUTS = {
     description: 'A full-viewport identity scene with a large avatar, bio, and icon links.',
     structure: Object.freeze({ identity: 'centered', roll: 'below-fold', surface: 'cardless' }),
     motionTarget: 'full-bleed-identity'
+  },
+  framed: {
+    key: 'framed',
+    label: 'Framed',
+    description: 'A left-aligned identity card with an overlapping avatar and icon links.',
+    structure: Object.freeze({ identity: 'left', roll: 'below-fold', surface: 'reference-card' }),
+    motionTarget: 'framed-card'
   }
 };
 

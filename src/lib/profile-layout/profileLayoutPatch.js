@@ -2,7 +2,8 @@ import { PROFILE_LAYOUT_DEFINITIONS, PROFILE_LAYOUT_KEYS, normalizeProfileLayout
 
 const MODULE_ORDER = Object.freeze({
   compact: ['roll', 'stats', 'links', 'signature', 'recent', 'achievements', 'boundary', 'explore'],
-  'full-bleed': ['roll', 'links', 'signature', 'recent', 'achievements', 'stats', 'boundary', 'explore']
+  'full-bleed': ['roll', 'links', 'signature', 'recent', 'achievements', 'stats', 'boundary', 'explore'],
+  framed: ['roll', 'links', 'signature', 'recent', 'achievements', 'stats', 'boundary', 'explore']
 });
 
 const MODULE_SIZES = Object.freeze({

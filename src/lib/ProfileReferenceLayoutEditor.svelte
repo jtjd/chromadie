@@ -141,6 +141,9 @@
   .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini { border-color: transparent; background: transparent; }
   .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini::before { top: 10px; left: 50%; width: 24px; height: 24px; transform: translateX(-50%); }
   .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini::after { top: 45px; right: 25%; left: 25%; height: 4px; box-shadow: 0 10px 0 rgba(255,255,255,.1), 0 21px 0 rgba(0,255,179,.24); }
+  .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini { border-color: rgba(255,255,255,.22); background: linear-gradient(135deg, rgba(24,37,63,.78), rgba(7,12,24,.72)); }
+  .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini::before { top: 10px; left: 10px; width: 27px; height: 27px; border-radius: 6px; transform: translateY(-22%); }
+  .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini::after { top: 29px; right: 11px; left: 46px; height: 5px; box-shadow: 0 13px 0 rgba(255,255,255,.1), 0 35px 0 rgba(255,255,255,.08), 0 49px 0 rgba(0,255,179,.2); }
   .profile-layout-editor__section { display: grid; gap: 15px; padding-top: 27px; border-top: 1px solid rgba(255,255,255,.1); }
   .profile-layout-editor__segmented { display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 7px; }
   .profile-layout-editor__segmented button { min-height: 37px; border: 0; border-right: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.035); color: #90919a; font: 500 .67rem/1 'Inter', sans-serif; cursor: pointer; }

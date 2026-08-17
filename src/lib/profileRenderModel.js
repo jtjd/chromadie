@@ -321,7 +321,10 @@ export function buildProfileRenderSnapshot(input = {}) {
   const storyModules = composition.secondaryModules.filter(module => module.id !== 'links');
   const showRoll = getProfileRollVisible(configuration);
   const showLowerExpression = hasLowerExpression;
-  const hasBelowFoldRoll = showRoll && layoutVariant === 'full-bleed';
+  const hasBelowFoldRoll = showRoll && (
+    layoutVariant === 'full-bleed'
+    || layoutVariant === 'framed'
+  );
   const storyUnlocks = getProfileStoryUnlocks(profile);
   const rank = profile ? getRank(profile.lifetime_ep || 0) : null;
   const rankState = profile ? getRankState(profile.lifetime_ep || 0) : null;

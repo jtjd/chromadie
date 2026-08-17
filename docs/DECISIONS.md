@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-17 — Add a Framed identity card layout
+
+Profile Studio now offers a third structured layout, `framed`, alongside
+Compact and Immersive. Framed keeps the shared ProfileReferenceCard renderer
+and profile data contract, but changes the opening composition to a left-
+aligned card with a rounded-square avatar overlapping the top edge and
+allowlisted icon links beneath the bio. The daily roll moves to the existing
+continuation surface so the opening card stays faithful to the reference
+composition without removing or weakening the server-authoritative roll.
+
+The layout is a free expression choice, represented by one finite client
+registry key and one additive `profile_layout_framed` catalog row. Existing
+configuration, inventory, media, border effects, reduced-motion behavior, and
+public/private boundaries remain unchanged.
+
 ## 2026-08-16 — Use a light canvas for the public leaderboard
 
 The leaderboard uses a soft neutral light canvas so the podium and score rows

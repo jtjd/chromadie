@@ -20,7 +20,7 @@ test('launch renderer registries contain exactly the requested finite keys', () 
   assert.equal(PROFILE_ATMOSPHERE_KEYS.length, 12);
   assert.equal(new Set(CURSOR_TRAIL_KEYS).size, 16);
   assert.equal(new Set(AVATAR_EFFECT_KEYS).size, 18);
-  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed']);
+  assert.deepEqual(PROFILE_LAYOUT_KEYS, ['compact', 'full-bleed', 'framed']);
   assert.equal(getCursorTrailKey('cursor_trail_void_lensing'), 'void-lensing');
   assert.equal(isAvatarEffectKey('avatar_effect_color_archive'), true);
   assert.equal(PROFILE_LAYOUT_DEFINITIONS['full-bleed'].label, 'Immersive');
@@ -130,7 +130,7 @@ test('public layout resolution is configuration-only', () => {
   assert.equal(resolveProfileLayoutVariant({ layoutVariant: 'not-real', profile_layout: 'profile_layout_split_signal' }), 'compact');
 });
 
-test('profile layouts compose the two active presentation regions', async () => {
+test('profile layouts compose the shared card and alternate presentation regions', async () => {
   const [shell, card, fullBleed, dailyRoll] = await Promise.all([
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/ProfileReferenceCard.svelte'),
@@ -172,7 +172,7 @@ test('seed and migrations contain the launch products and version bumps', async 
   ]);
   assert.equal((seed.match(/'cursor_trail_[a-z0-9_]+'/g) || []).length, 16);
   assert.equal((seed.match(/'avatar_effect_[a-z0-9_]+'/g) || []).length, 18);
-  assert.equal((seed.match(/\('profile_layout_[a-z0-9_]+'/g) || []).length, 2);
+  assert.equal((seed.match(/\('profile_layout_[a-z0-9_]+'/g) || []).length, 3);
   assert.equal((seed.match(/'profile_atmosphere_[a-z0-9_]+'/g) || []).length, 12);
   const atmosphereMigration = await read('supabase/migrations/20260804160000_profile_atmosphere_catalog.sql');
   const dropletsMigration = await read('supabase/migrations/20260804183000_droplets_on_glass_atmosphere.sql');

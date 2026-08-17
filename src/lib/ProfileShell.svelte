@@ -503,6 +503,8 @@
   // Layout is structure only. Keep the default class off the renderer so a
   // new Compact profile never receives a baked-in starfield or color theme.
   $: profilePresentationLayoutVariant = layoutVariant;
+  $: profileCardKeepsRollInline = profilePresentationLayoutVariant !== 'framed';
+  $: profileHasBelowFoldRoll = profilePresentationLayoutVariant === 'full-bleed' || profilePresentationLayoutVariant === 'framed';
   $: profileMotionKey = profileRenderSnapshot?.cosmetics?.profileMotionKey || '';
   $: profileMotionTarget = getProfileLayoutMotionTarget(profilePresentationLayoutVariant);
   $: profileCardStyle = profileRenderSnapshot?.surface?.style || '';
@@ -573,13 +575,14 @@
                     entryAnimation={prefersReducedMotion ? 'none' : identityPresentation.entryAnimation}
                     links={openingLinks}
                     linkStyle={effectiveProfileConfig.linkStyle}
-                    roll={showRoll && !refreshing ? latestRoll : null}
+                    roll={showRoll && !refreshing && profileCardKeepsRollInline ? latestRoll : null}
                     accentColor={signatureColor}
                     audioAvailable={hasProfileMusic}
                     audioStatus="▶"
                     rollLabel="Today's color"
                     presentation="profile"
-                    liveRoll={showRoll && !refreshing}
+                    layoutVariant={profilePresentationLayoutVariant}
+                    liveRoll={showRoll && !refreshing && profileCardKeepsRollInline}
                     isOwner={isOwnProfile}
                     {visualFixture}
                     ariaLabel={`${profileDisplayName} profile`}
@@ -597,8 +600,8 @@
         </div>
 
       {#if !previewMode && hasProfileMore && !profileMoreActive}
-        <button type="button" class={'profile-shell__more-cue' + (profilePresentationLayoutVariant === 'full-bleed' ? '' : ' profile-shell__more-cue--continuation')} aria-controls="profile-more" on:click={scrollToProfileMore}>
-          <span class="profile-shell__more-cue-label">{profilePresentationLayoutVariant === 'full-bleed' ? 'Explore profile' : (continuationLinks.length ? 'Links' : 'More')}</span>
+        <button type="button" class={'profile-shell__more-cue' + (profileHasBelowFoldRoll ? '' : ' profile-shell__more-cue--continuation')} aria-controls="profile-more" on:click={scrollToProfileMore}>
+          <span class="profile-shell__more-cue-label">{profileHasBelowFoldRoll ? 'Explore profile' : (continuationLinks.length ? 'Links' : 'More')}</span>
           <span class="profile-shell__more-cue-arrow" aria-hidden="true">↓</span>
         </button>
       {/if}
@@ -614,7 +617,7 @@
           </button>
         {/if}
         <div class="profile-shell__continuation-column">
-        {#if showRoll && !refreshing && profilePresentationLayoutVariant === 'full-bleed'}
+        {#if showRoll && !refreshing && profileHasBelowFoldRoll}
           <div class="profile-shell__approved-game" data-profile-region="roll" aria-label={isOwnProfile ? 'Today’s color roll' : 'Latest color'}>
             {#if isOwnProfile}
               {#if profileRollComponent}
@@ -1267,24 +1270,28 @@
     .profile-shell-page--roll-settled .profile-shell__card-scale { animation: none; }
   }
 
-  /* Compact is the default reference-card surface. Immersive is the only
-     alternate composition; both remain objects placed into the environment. */
+  /* Compact is the default reference-card surface. Immersive and Framed are
+     alternate compositions; both remain objects placed into the environment. */
   .profile-shell-page--compact .profile-shell__opening.profile-shell__approved-opening { width: min(350px, calc(100% - 1rem)); }
   .profile-shell-page--full-bleed .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 74rem); }
+  .profile-shell-page--framed .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 40rem); }
 
   .profile-shell-page--compact .profile-shell__approved-main,
-  .profile-shell-page--full-bleed .profile-shell__approved-main { justify-content: center; }
+  .profile-shell-page--full-bleed .profile-shell__approved-main,
+  .profile-shell-page--framed .profile-shell__approved-main { justify-content: center; }
 
   .profile-shell-page--compact .profile-shell__more { min-height: 0; justify-content: flex-start; padding: 2.5rem 0 4rem; }
   .profile-shell-page--compact .profile-shell__more-back { display: none; }
-  .profile-shell-page--full-bleed .profile-shell__more { align-items: center; }
+  .profile-shell-page--full-bleed .profile-shell__more,
+  .profile-shell-page--framed .profile-shell__more { align-items: center; }
 
   .profile-shell-page--preview .profile-shell__opening.profile-shell__approved-opening { width: 100%; }
   .profile-shell-page--preview :global(.profile-daily-roll) { box-sizing: border-box; }
 
   @media (max-width: 36rem) {
     .profile-shell-page--compact .profile-shell__opening.profile-shell__approved-opening,
-    .profile-shell-page--full-bleed .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 100%); }
+    .profile-shell-page--full-bleed .profile-shell__opening.profile-shell__approved-opening,
+    .profile-shell-page--framed .profile-shell__opening.profile-shell__approved-opening { width: min(100%, 100%); }
   }
 
   /* Device context wins over browser-width rules. This is intentionally last

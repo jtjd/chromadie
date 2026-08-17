@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-17 — Add the Framed profile layout
+
+- Added a Framed profile-card option with a rounded-square avatar overlapping
+  the top-left edge of the card.
+- Left-aligned the display name and bio and placed allowlisted social icons
+  underneath, with accessible labels and keyboard focus states.
+- Kept the daily roll available through the existing profile continuation
+  surface so the reference composition stays focused without changing roll
+  authority or eligibility.
+
 ## 2026-08-16 — Lighten the leaderboard canvas
 
 - Changed the leaderboard from a pure-black page to a soft neutral light

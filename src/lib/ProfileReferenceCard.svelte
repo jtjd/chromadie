@@ -6,6 +6,7 @@
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileDailyRoll from './ProfileDailyRoll.svelte';
+  import { getProfileLinkDefinition } from './profileLinkTypes.js';
 
   export let displayName = 'Unknown Player';
   export let bio = '';
@@ -31,6 +32,7 @@
   export let audioStatus = '▶';
   export let rollLabel = "Today's roll";
   export let presentation = 'homepage';
+  export let layoutVariant = '';
   export let liveRoll = false;
   export let isOwner = false;
   export let visualFixture = '';
@@ -48,13 +50,16 @@
   $: safeNameBaseColor = normalizeHexColor(nameBaseColor, '#FFFFFF');
   $: safeDescriptionMode = PROFILE_IDENTITY_DESCRIPTION_MODES.includes(descriptionMode) ? descriptionMode : 'plain';
   $: safeEntryAnimation = PROFILE_IDENTITY_ENTRY_ANIMATIONS.includes(entryAnimation) ? entryAnimation : 'none';
+  $: framedLayout = layoutVariant === 'framed' || presentation === 'framed';
   $: visibleLinks = (Array.isArray(links) ? links : [])
     .filter(link => link && typeof link.url === 'string' && link.url)
+    .map(link => ({ ...link, definition: getProfileLinkDefinition(link.type) }))
     .slice(0, 4);
   $: rollHex = String((/** @type {any} */ (roll || {})).hex_code || '').trim().toUpperCase();
   $: cardClass = [
     'profile-reference-card',
     `profile-reference-card--${presentation}`,
+    framedLayout ? 'profile-reference-card--framed' : '',
     `profile-reference-card--description-${safeDescriptionMode}`,
     `profile-reference-card--entry-${safeEntryAnimation}`,
     className
@@ -74,7 +79,7 @@
   surfaceStyle={surfaceStyle}
   className="profile-reference-card__border profile-border-effect--content"
 >
-  <article class={cardClass} style={cardStyle} aria-label={ariaLabel} data-profile-reference-card>
+  <article class={cardClass} style={cardStyle} aria-label={ariaLabel} data-profile-reference-card data-profile-layout-content={framedLayout ? 'framed' : undefined}>
     {#if showAvatar}
       <div class="profile-reference-card__avatar-shell">
         <AvatarEffect
@@ -118,20 +123,34 @@
 
     {#if visibleLinks.length}
       <nav class="profile-reference-card__links" style={`--profile-reference-link-scale:${safeLinkScale};--profile-reference-link-glow:${safeLinkGlow};`} aria-label={`${safeDisplayName} profile links`}>
-        {#each visibleLinks as link (link.order || link.url)}
-          <a href={link.url} target="_blank" rel="noopener noreferrer">{link.label || link.type || 'Link'}</a>
+        {#each visibleLinks as link (link.key || link.order || link.url)}
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class:profile-reference-card__link--icon={framedLayout}
+            aria-label={link.label || link.definition.label}
+            title={framedLayout ? (link.label || link.definition.label) : undefined}
+          >
+            {#if framedLayout}
+              <img src={`/link-icons/${link.definition.icon}.svg`} alt="" loading="lazy" aria-hidden="true" />
+              <span class="profile-reference-card__link-label">{link.label || link.definition.label}</span>
+            {:else}
+              {link.label || link.type || 'Link'}
+            {/if}
+          </a>
         {/each}
       </nav>
     {/if}
 
-    {#if audioAvailable}
+    {#if audioAvailable && !framedLayout}
       <div class="profile-reference-card__audio" aria-label={audioLabel}>
         <span>{audioLabel}</span>
         <strong>{audioStatus}</strong>
       </div>
     {/if}
 
-    {#if liveRoll}
+    {#if liveRoll && !framedLayout}
       <div class="profile-reference-card__roll profile-reference-card__roll--live">
         <ProfileDailyRoll
           {isOwner}
@@ -144,7 +163,7 @@
           on:rollcomplete={forward}
         />
       </div>
-    {:else if rollHex}
+    {:else if rollHex && !framedLayout}
       <div class="profile-reference-card__roll">
         <div>
           <small>{rollLabel}</small>
@@ -192,6 +211,111 @@
        border tokens cannot create a second colored outline. */
     border: 1px solid rgba(255,255,255,.11);
   }
+
+  /* Framed is the left-aligned, identity-first card used by the new profile
+     layout. The avatar intentionally crosses the top edge so the card reads
+     as a composed profile surface instead of a centered dashboard tile. */
+  .profile-reference-card--framed {
+    min-height: 16.25rem;
+    overflow: visible;
+    padding: clamp(5.15rem, 10vw, 6.35rem) clamp(1.35rem, 4vw, 2.2rem) 1.45rem;
+    border-color: color-mix(in srgb, #ffffff 30%, transparent);
+    border-radius: 1.1rem;
+    background: var(--profile-surface-fill, linear-gradient(135deg, rgba(15, 24, 42, .86), rgba(5, 10, 20, .7)));
+    box-shadow: 0 28px 65px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .06);
+    text-align: left;
+  }
+
+  .profile-reference-card--framed .profile-reference-card__avatar-shell {
+    position: absolute;
+    top: 0;
+    left: clamp(1.25rem, 4vw, 2rem);
+    z-index: 4;
+    width: clamp(5.35rem, 13vw, 7.35rem);
+    height: clamp(5.35rem, 13vw, 7.35rem);
+    margin: 0;
+    padding: .16rem;
+    border: 1px solid rgba(255, 255, 255, .68);
+    border-radius: 1.45rem;
+    background: rgba(220, 225, 235, .9);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .34), 0 0 0 .35rem rgba(4, 9, 18, .48);
+    transform: translateY(-45%);
+  }
+
+  .profile-reference-card--framed :global(.profile-reference-card__avatar-effect) {
+    overflow: visible;
+    border-radius: 1.25rem;
+  }
+
+  .profile-reference-card--framed :global(.profile-reference-card__avatar-effect > .profile-reference-card__avatar),
+  .profile-reference-card--framed :global(.profile-reference-card__avatar-effect > .profile-reference-card__avatar-fallback) {
+    border-radius: 1.25rem;
+  }
+
+  .profile-reference-card--framed .profile-reference-card__name {
+    max-width: 100%;
+    font-size: clamp(1.75rem, 4vw, 2.3rem);
+  }
+
+  .profile-reference-card--framed .profile-reference-card__bio {
+    max-width: 34rem;
+    margin: .7rem 0 0;
+    font-size: clamp(.78rem, 1.3vw, .95rem);
+  }
+
+  .profile-reference-card--framed .profile-reference-card__secondary,
+  .profile-reference-card--framed .profile-reference-card__meta { text-align: left; }
+
+  .profile-reference-card--framed .profile-reference-card__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: .45rem;
+    margin-top: 1.45rem;
+  }
+
+  .profile-reference-card--framed .profile-reference-card__links a {
+    display: grid;
+    width: calc(2.35rem * var(--profile-reference-link-scale, 1));
+    min-height: 2.35rem;
+    height: calc(2.35rem * var(--profile-reference-link-scale, 1));
+    padding: 0;
+    place-items: center;
+    border-color: transparent;
+    border-radius: .7rem;
+    background: transparent;
+    box-shadow: 0 0 calc(1rem * var(--profile-reference-link-glow, 0)) color-mix(in srgb, var(--profile-reference-accent) 35%, transparent);
+  }
+
+  .profile-reference-card--framed .profile-reference-card__links a img {
+    display: block;
+    width: 1.75rem;
+    height: 1.75rem;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: .86;
+  }
+
+  .profile-reference-card--framed .profile-reference-card__link-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .profile-reference-card--framed .profile-reference-card__links a:hover,
+  .profile-reference-card--framed .profile-reference-card__links a:focus-visible {
+    border-color: color-mix(in srgb, var(--profile-reference-accent) 62%, transparent);
+    background: color-mix(in srgb, var(--profile-reference-accent) 13%, transparent);
+  }
+
+  .profile-reference-card--framed .profile-reference-card__links a:focus-visible { outline-offset: 3px; }
 
   .profile-reference-card__avatar-shell {
     display: grid;
@@ -334,6 +458,11 @@
     .profile-reference-card--homepage { padding: 38px 18px 21px; border-radius: 18px; }
     .profile-reference-card--homepage .profile-reference-card__avatar-shell { width: 90px; height: 90px; }
     .profile-reference-card--homepage .profile-reference-card__name { font-size: 1.75rem; }
+    .profile-reference-card--framed {
+      min-height: 14.5rem;
+      padding-inline: 1.15rem;
+    }
+    .profile-reference-card--framed .profile-reference-card__avatar-shell { left: 1.15rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -142,12 +142,13 @@
                 entryAnimation={identity.entryAnimation}
                 {links}
                 {linkStyle}
-                roll={latestRoll}
+                roll={layoutVariant === 'framed' ? null : latestRoll}
                 {accentColor}
                 {audioAvailable}
                 audioStatus={audioStatus}
                 rollLabel="Today's color"
                 presentation="studio"
+                {layoutVariant}
                 ariaLabel="Live public-profile preview card"
               />
             {/if}

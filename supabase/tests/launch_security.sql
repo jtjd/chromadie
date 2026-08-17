@@ -95,6 +95,7 @@ SELECT pg_temp.audit_assert(
 SELECT pg_temp.audit_assert(
   public.profile_layout_key('compact', 'full-bleed') = 'compact'
     AND public.profile_layout_key('full-bleed', 'compact') = 'full-bleed'
+    AND public.profile_layout_key('profile_layout_framed', 'compact') = 'framed'
     AND public.profile_layout_key('immersive', 'compact') = 'compact'
     AND public.profile_layout_key('sleek', 'full-bleed') = 'full-bleed'
     AND (
@@ -109,6 +110,12 @@ SELECT pg_temp.audit_assert(
         NULL
       )->>'templateKey'
     ) = 'full-bleed'
+    AND (
+      public.normalize_profile_configuration(
+        jsonb_set(public.profile_default_configuration(), '{layoutVariant}', '"framed"'::jsonb, true),
+        NULL
+      )->>'layoutVariant'
+    ) = 'framed'
     AND NOT has_function_privilege('anon', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE')
     AND NOT has_function_privilege('authenticated', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE')
     AND NOT has_function_privilege('service_role', 'public.normalize_profile_configuration(jsonb,text)', 'EXECUTE'),
@@ -369,10 +376,10 @@ SELECT pg_temp.audit_assert(
   AND (SELECT count(*) = 9 FROM public.shop_items WHERE slot = 'profile_border' AND catalog_status = 'active')
   AND (SELECT count(*) = 16 FROM public.shop_items WHERE slot = 'cursor_trail' AND catalog_status = 'active')
   AND (SELECT count(*) = 18 FROM public.shop_items WHERE slot = 'avatar_effect' AND catalog_status = 'active')
-  AND (SELECT count(*) = 2 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
+  AND (SELECT count(*) = 3 FROM public.shop_items WHERE slot = 'profile_layout' AND catalog_status = 'active')
   AND (SELECT count(*) = 13 FROM public.shop_items WHERE slot = 'profile_atmosphere' AND catalog_status = 'active')
   AND (SELECT count(*) = 1 FROM public.shop_items WHERE slot = 'profile_motion' AND catalog_status = 'active')
-  AND (SELECT count(*) = 89 FROM public.shop_items WHERE catalog_status = 'active')
+  AND (SELECT count(*) = 90 FROM public.shop_items WHERE catalog_status = 'active')
   AND NOT EXISTS (
     SELECT 1 FROM public.shop_items
     WHERE item_key IN ('name_material_plain', 'name_motion_none')
@@ -386,7 +393,7 @@ SELECT pg_temp.audit_assert(
     AND has_function_privilege('authenticated', 'public.get_shop_catalog()', 'EXECUTE')
     AND (SELECT p.proconfig @> ARRAY['search_path=public']
          FROM pg_proc p WHERE p.oid = 'public.get_shop_catalog()'::regprocedure)
-    AND (SELECT count(*) = 87
+    AND (SELECT count(*) = 88
          FROM public.get_shop_catalog()
          WHERE slot IN ('name_font', 'name_material', 'name_motion', 'profile_border', 'cursor_trail', 'avatar_effect', 'profile_layout', 'profile_atmosphere', 'profile_motion') AND catalog_status = 'active')
     AND NOT EXISTS (SELECT 1 FROM public.get_shop_catalog() WHERE catalog_status = 'retired'),

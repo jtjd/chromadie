@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Framed profile layout — 2026-08-17
+
+- Added the structured `framed` layout to the finite profile registry and
+  Profile Studio selector.
+- Reused the existing reference-card renderer for a left-aligned card with an
+  overlapping rounded-square avatar, icon links, responsive sizing, keyboard
+  focus states, and reduced-motion-safe behavior.
+- Kept Framed’s daily roll in the existing below-fold continuation surface and
+  added the additive free catalog row, seed entry, drift checks, and focused
+  regression coverage.
+
 ## Lighten the leaderboard canvas — 2026-08-16
 
 - Replaced the leaderboard's black canvas with a soft neutral background and

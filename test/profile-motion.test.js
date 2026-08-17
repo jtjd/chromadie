@@ -111,7 +111,7 @@ test('profile motion equipment is a normal one-slot loadout operation', () => {
 test('layout metadata identifies the bounded content target instead of the page', () => {
   assert.deepEqual(
     PROFILE_LAYOUT_KEYS.map(getProfileLayoutMotionTarget),
-    ['compact-card', 'full-bleed-identity']
+    ['compact-card', 'full-bleed-identity', 'framed-card']
   );
 });
 

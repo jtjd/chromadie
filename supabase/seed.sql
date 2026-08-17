@@ -146,6 +146,7 @@ INSERT INTO public.shop_items (
   ('avatar_effect_color_archive', 'Color Archive', 'avatar_effect', 720000, 'renderer', 'color-archive', NULL, NULL, 'Mythic', 'Recent roll colors form four animated archival segments around the portrait.', 'Prism', false, 'earned', NULL, 'active'),
   ('profile_layout_compact', 'Compact', 'profile_layout', 0, 'renderer', 'compact', NULL, NULL, 'Uncommon', 'A small centered identity surface that leaves the user background in charge.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_layout_full_bleed', 'Immersive', 'profile_layout', 0, 'renderer', 'full-bleed', NULL, NULL, 'Uncommon', 'A full-viewport identity scene with a large avatar, bio, and icon links.', 'Layouts', false, 'free', NULL, 'active'),
+  ('profile_layout_framed', 'Framed', 'profile_layout', 0, 'renderer', 'framed', NULL, NULL, 'Uncommon', 'A left-aligned identity card with an overlapping avatar and icon links.', 'Layouts', false, 'free', NULL, 'active'),
   ('profile_motion_perspective_tilt', '3D Tilt', 'profile_motion', 0, 'renderer', 'perspective-tilt', NULL, NULL, 'Uncommon', 'A restrained perspective shift follows the pointer across the profile surface.', 'Layouts', false, 'free', NULL, 'active')
 ON CONFLICT (item_key) DO UPDATE SET
   name = EXCLUDED.name,
