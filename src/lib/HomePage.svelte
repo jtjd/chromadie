@@ -8,6 +8,7 @@
   import HomepageHero from './homepage/HomepageHero.svelte';
   import HomepageLoop from './homepage/HomepageLoop.svelte';
   import HomepageShowcase from './homepage/HomepageShowcase.svelte';
+  import LazyAtmosphereLayer from './profile-atmosphere/LazyAtmosphereLayer.svelte';
   import { HOMEPAGE_FIXTURES } from './homepage/homepageFixtures.js';
 
   export let isAuthenticated = false;
@@ -18,6 +19,7 @@
   const dispatch = createEventDispatcher();
   let activeBackground = HOMEPAGE_FIXTURES[0].media.background;
   let activeAccent = HOMEPAGE_FIXTURES[0].accent;
+  let activeAtmosphereKey = HOMEPAGE_FIXTURES[0].atmosphereKey || '';
   let dailyLeaderboardRows = [];
   let dailyLeaderboardLoading = true;
   let dailyLeaderboardError = '';
@@ -30,8 +32,10 @@
   }
 
   function handleFixtureChange(event) {
-    activeBackground = event.detail.fixture.media.background;
-    activeAccent = event.detail.fixture.accent;
+    const nextFixture = event.detail.fixture;
+    activeBackground = nextFixture.media.background;
+    activeAccent = nextFixture.accent;
+    activeAtmosphereKey = nextFixture.atmosphereKey || '';
   }
 
   function handleAccentPreview(event) {
@@ -51,6 +55,17 @@
   style={`--homepage-background-image: url("${activeBackground}"); --homepage-accent: ${activeAccent};`}
 >
   <div class="homepage-background" aria-hidden="true"></div>
+
+  {#if activeAtmosphereKey}
+    <LazyAtmosphereLayer
+      atmosphereKey={activeAtmosphereKey}
+      todayColor={activeAccent}
+      active={true}
+      animated={true}
+      mode="profile"
+      className="homepage-atmosphere"
+    />
+  {/if}
 
   <HomepageHeader
     {accountState}

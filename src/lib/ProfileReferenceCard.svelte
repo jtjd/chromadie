@@ -6,6 +6,7 @@
   import NameEffectCanvas from './name/NameEffectCanvas.svelte';
   import ProfileBorderEffect from './profile-border/ProfileBorderEffect.svelte';
   import ProfileDailyRoll from './ProfileDailyRoll.svelte';
+  import { getNameFontCssFamily } from './name/nameFonts.js';
   import { getProfileLinkDefinition } from './profileLinkTypes.js';
 
   export let displayName = 'Unknown Player';
@@ -64,7 +65,11 @@
     `profile-reference-card--entry-${safeEntryAnimation}`,
     className
   ].filter(Boolean).join(' ');
-  $: cardStyle = `${surfaceStyle || ''};--profile-reference-accent:${safeAccent};--profile-reference-name-size:${presentation === 'homepage' ? '1.95rem' : '1.78rem'};`;
+  $: selectedNameFont = (/** @type {any} */ (nameLoadout || {})).fontKey
+    || (/** @type {any} */ (nameLoadout || {})).name_font
+    || '';
+  $: nameTypeface = selectedNameFont ? getNameFontCssFamily(selectedNameFont) : '';
+  $: cardStyle = `${surfaceStyle || ''};--profile-reference-accent:${safeAccent};--profile-reference-name-size:${presentation === 'homepage' ? '1.95rem' : '1.78rem'};--profile-reference-name-typeface:${nameTypeface};`;
   $: safeLinkScale = 1 + Number((/** @type {any} */ (linkStyle || {})).size || 0) * .16;
   $: safeLinkGlow = Number((/** @type {any} */ (linkStyle || {})).glow || 0);
 
@@ -221,7 +226,7 @@
     padding: clamp(5.15rem, 10vw, 6.35rem) clamp(1.35rem, 4vw, 2.2rem) 1.45rem;
     border-color: color-mix(in srgb, #ffffff 30%, transparent);
     border-radius: 1.1rem;
-    background: var(--profile-surface-fill, linear-gradient(135deg, rgba(15, 24, 42, .86), rgba(5, 10, 20, .7)));
+    background: transparent;
     box-shadow: 0 28px 65px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .06);
     text-align: left;
   }
@@ -231,8 +236,8 @@
     top: 0;
     left: clamp(1.25rem, 4vw, 2rem);
     z-index: 4;
-    width: clamp(5.35rem, 13vw, 7.35rem);
-    height: clamp(5.35rem, 13vw, 7.35rem);
+    width: clamp(6.25rem, 18vw, 8rem);
+    height: clamp(6.25rem, 18vw, 8rem);
     margin: 0;
     padding: 0;
     border: 0;
@@ -264,10 +269,14 @@
     max-width: 34rem;
     margin: .7rem 0 0;
     font-size: clamp(.78rem, 1.3vw, .95rem);
+    font-family: var(--profile-reference-name-typeface, 'Inter', sans-serif);
   }
 
   .profile-reference-card--framed .profile-reference-card__secondary,
-  .profile-reference-card--framed .profile-reference-card__meta { text-align: left; }
+  .profile-reference-card--framed .profile-reference-card__meta {
+    font-family: var(--profile-reference-name-typeface, 'Inter', sans-serif);
+    text-align: left;
+  }
 
   .profile-reference-card--framed .profile-reference-card__links {
     display: flex;
@@ -341,7 +350,7 @@
     background: rgba(255,255,255,.06);
   }
 
-  .profile-reference-card--homepage .profile-reference-card__avatar-shell {
+  .profile-reference-card--homepage:not(.profile-reference-card--framed) .profile-reference-card__avatar-shell {
     width: 100px;
     height: 100px;
     margin: 24px auto 15px;
@@ -467,7 +476,7 @@
 
   @media (max-width: 460px) {
     .profile-reference-card--homepage { padding: 38px 18px 21px; border-radius: 18px; }
-    .profile-reference-card--homepage .profile-reference-card__avatar-shell { width: 90px; height: 90px; }
+    .profile-reference-card--homepage:not(.profile-reference-card--framed) .profile-reference-card__avatar-shell { width: 90px; height: 90px; }
     .profile-reference-card--homepage .profile-reference-card__name { font-size: 1.75rem; }
     .profile-reference-card--framed {
       min-height: 14.5rem;

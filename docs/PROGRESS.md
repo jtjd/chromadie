@@ -1,5 +1,44 @@
 # Chromadie 2.0 Progress
 
+## Framed identity typeface consistency — 2026-08-18
+
+- Applied the selected Velocity family to Katt’s bio and secondary
+  `Siberia · Russia` line as well as the name.
+- Reused the bounded Name font registry and added browser-smoke assertions for
+  all three rendered identity text faces.
+
+## Full-page homepage atmosphere — 2026-08-18
+
+- Moved the Katt snowfall layer from the centered hero shell to the homepage
+  root so it covers the complete page without a dark square boundary.
+- Kept fixture switching and local roll accent updates connected to the root
+  atmosphere.
+- Added browser bounds coverage for full-viewport atmosphere rendering.
+
+## Katt Framed showcase treatment — 2026-08-18
+
+- Changed the second hero identity to `katt` and added `Siberia · Russia`.
+- Switched the name face to Velocity and passed Link size 2 / Glow 1 through
+  the shared Framed renderer.
+- Made the Framed card surface transparent, restored the intended larger
+  overlapping avatar, and mounted the snowfall atmosphere on the specimen.
+- Added browser-smoke assertions for the visible identity, font, link tokens,
+  card transparency, avatar size, and atmosphere.
+
+## Dedicated P2 homepage media — 2026-08-18
+
+- Added a `p2/` fixture folder with the provided portrait and a snowy
+  mountain background.
+- Replaced the visible `Arcade` placeholder with `p2` while preserving the
+  existing carousel slot and showcase ordering.
+
+## Second homepage Framed specimen — 2026-08-18
+
+- Changed the second hero carousel example to the Framed profile renderer.
+- Added the active 3D Parallax avatar treatment and Silkscreen name face.
+- Reused the existing perspective-tilt motion wrapper and covered the
+  complete fixture switch in the homepage browser smoke.
+
 ## Fix Framed link glow clipping — 2026-08-17
 
 - Removed the empty anchor background and shadow treatment from Framed icon

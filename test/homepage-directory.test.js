@@ -39,7 +39,7 @@ test('homepage fixtures share one direct specimen composition', () => {
 });
 
 test('fixture lookup is bounded and never falls back to live profile data', () => {
-  assert.equal(getHomepageFixture('sleek-arcade').username, 'Arcade');
+  assert.equal(getHomepageFixture('sleek-arcade').username, 'katt');
   assert.equal(getHomepageFixture('missing-fixture'), null);
   assert.equal(getHomepageFixture(), null);
 });
@@ -55,19 +55,39 @@ test('the first homepage fixture is the authored Meilin profile example', () => 
   assert.equal(fixture.media.background, '/homepage/fixtures/meilin/background-dusk-v2.webp');
   assert.equal(fixture.media.avatar, '/homepage/fixtures/meilin/avatar.webp');
   assert.equal(fixture.heroLayout, 'immersive');
-  assert.ok(HOMEPAGE_FIXTURES.slice(1).every(item => !item.heroLayout));
+  assert.ok(HOMEPAGE_FIXTURES.slice(2).every(item => !item.heroLayout));
   const otherMedia = HOMEPAGE_FIXTURES.slice(1).flatMap(item => [item.media.background, item.media.avatar]);
   assert.ok(!otherMedia.includes(fixture.media.background));
   assert.ok(!otherMedia.includes(fixture.media.avatar));
 });
 
+test('the second homepage fixture demonstrates the Framed 3D Velocity profile', () => {
+  const fixture = HOMEPAGE_FIXTURES[1];
+  assert.equal(fixture.id, 'sleek-arcade');
+  assert.equal(fixture.username, 'katt');
+  assert.equal(fixture.displayName, 'katt');
+  assert.equal(fixture.secondaryLine, 'Siberia · Russia');
+  assert.equal(fixture.media.background, '/homepage/fixtures/p2/background-snowy-mountains.png');
+  assert.equal(fixture.media.avatar, '/homepage/fixtures/p2/p2avatar.png');
+  assert.equal(fixture.heroLayout, 'framed');
+  assert.equal(fixture.profileMotion, 'profile_motion_perspective_tilt');
+  assert.equal(fixture.avatarEffectKey, '3d-parallax');
+  assert.equal(fixture.nameFontKey, 'velocity');
+  assert.deepEqual(fixture.linkStyle, { size: 2, glow: 1 });
+  assert.equal(fixture.atmosphereKey, 'snowfall');
+  assert.equal(fixture.effects.nameFont, 'name_font_velocity');
+  assert.equal(fixture.effects.atmosphere, 'profile_atmosphere_snowfall');
+});
+
 test('the direct homepage specimen uses the canonical first-example layout without mounting the profile shell', async () => {
-  const [hero, demo, showcase] = await Promise.all([
+  const [homePage, hero, demo, showcase, referenceCard] = await Promise.all([
+    read('src/lib/HomePage.svelte'),
     read('src/lib/homepage/HomepageHero.svelte'),
     read('src/lib/homepage/HomepageProfileDemo.svelte'),
-    read('src/lib/homepage/HomepageShowcase.svelte')
+    read('src/lib/homepage/HomepageShowcase.svelte'),
+    read('src/lib/ProfileReferenceCard.svelte')
   ]);
-  const source = `${hero}\n${demo}\n${showcase}`;
+  const source = `${homePage}\n${hero}\n${demo}\n${showcase}\n${referenceCard}`;
   assert.doesNotMatch(source, /ProfileShell|ProfileLayoutFrame|profileRenderModel|HomepageProfileRenderer|profile-shell/);
   assert.match(hero, /ProfileMotionEffect/);
   assert.match(source, /HomepageProfileDemo/);
@@ -94,11 +114,20 @@ test('the direct homepage specimen uses the canonical first-example layout witho
   assert.match(demo, /ProfileFullBleedLayout/);
   assert.match(demo, /data-homepage-profile-layout/);
   assert.match(demo, /useRollAvatarEffect/);
-  assert.match(demo, /avatarEffectKey=\{useRollAvatarEffect \? 'liquid-blob' : ''\}/);
+  assert.match(demo, /useFramedLayout/);
+  assert.match(demo, /avatarEffectKey=\{avatarEffectKey\}/);
+  assert.match(demo, /nameLoadout=\{nameLoadout\}/);
+  assert.match(demo, /linkStyle=\{fixture\.linkStyle \|\| null\}/);
+  assert.match(demo, /layoutVariant=\{useFramedLayout \? 'framed' : ''\}/);
   assert.match(demo, /colorizeAvatarEffect=\{useRollAvatarEffect\}/);
   assert.doesNotMatch(demo, /homepage-profile-demo__head|Profile preview|@\{fixture\.username\}/);
   assert.match(demo, /ProfileReferenceCard/);
   assert.match(demo, /secondaryLine/);
+  assert.match(homePage, /LazyAtmosphereLayer/);
+  assert.match(homePage, /className="homepage-atmosphere"/);
+  assert.match(homePage, /activeAtmosphereKey = nextFixture\.atmosphereKey/);
+  assert.match(source, /getNameFontCssFamily/);
+  assert.match(source, /--profile-reference-name-typeface/);
 });
 
 test('the live community surface remains isolated from homepage fixtures', async () => {

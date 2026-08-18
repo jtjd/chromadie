@@ -14,7 +14,12 @@
   $: avatarSource = fixture?.media?.avatar || '';
   $: secondaryLine = fixture?.secondaryLine || '';
   $: useImmersiveLayout = variant === 'hero' && fixture?.heroLayout === 'immersive';
+  $: useFramedLayout = variant === 'hero' && fixture?.heroLayout === 'framed';
   $: useRollAvatarEffect = useImmersiveLayout && fixture?.id === 'meilin-horizon';
+  $: avatarEffectKey = useRollAvatarEffect ? 'liquid-blob' : fixture?.avatarEffectKey || '';
+  $: nameLoadout = fixture?.nameFontKey
+    ? { fontKey: fixture.nameFontKey, materialKey: '', motionKey: '' }
+    : null;
   $: demoStyle = fixture
     ? `--homepage-demo-accent: ${previewRoll?.hex_code || fixture.accent}; --homepage-demo-avatar: url("${avatarSource}");`
     : '';
@@ -50,8 +55,9 @@
       style={demoStyle}
       data-homepage-profile-specimen="hero"
       data-homepage-fixture={fixture.id}
-      data-homepage-profile-layout={useImmersiveLayout ? 'full-bleed' : 'compact'}
+      data-homepage-profile-layout={useImmersiveLayout ? 'full-bleed' : useFramedLayout ? 'framed' : 'compact'}
       class:homepage-profile-demo--immersive={useImmersiveLayout}
+      class:homepage-profile-demo--framed={useFramedLayout}
       aria-label={profileLabel}
     >
       {#if useImmersiveLayout}
@@ -61,7 +67,7 @@
           avatarSrc={avatarSource}
           {links}
           accentColor={previewRoll?.hex_code || fixture.accent}
-          avatarEffectKey={useRollAvatarEffect ? 'liquid-blob' : ''}
+          avatarEffectKey={avatarEffectKey}
           colorizeAvatarEffect={useRollAvatarEffect}
         />
       {:else}
@@ -70,11 +76,15 @@
           bio={fixture.bio}
           {secondaryLine}
           avatarSrc={avatarSource}
+          avatarEffectKey={avatarEffectKey}
+          nameLoadout={nameLoadout}
+          linkStyle={fixture.linkStyle || null}
           {links}
           roll={latestRoll}
           accentColor={previewRoll?.hex_code || fixture.accent}
           rollLabel="Today's roll"
           presentation="homepage"
+          layoutVariant={useFramedLayout ? 'framed' : ''}
           ariaLabel={profileLabel}
         />
       {/if}
@@ -91,6 +101,15 @@
   }
 
   .homepage-profile-demo--hero { width: 100%; min-width: 0; }
+
+  .homepage-profile-demo--framed {
+    display: grid;
+    min-height: 310px;
+    align-items: center;
+  }
+
+  .homepage-profile-demo--framed :global(.profile-border-effect),
+  .homepage-profile-demo--framed :global(.profile-reference-card) { width: 100%; }
 
   .homepage-profile-demo--immersive {
     display: grid;

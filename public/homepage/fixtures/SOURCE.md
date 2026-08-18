@@ -6,6 +6,13 @@ fixtures only: they do not represent accounts, are not queried from the
 database, and cannot enter discovery, leaderboards, or production profile
 state.
 
+## Katt / P2 media folder
+
+`p2/p2avatar.png` is the user-provided portrait for the second homepage
+specimen, displayed as `katt`. `p2/background-snowy-mountains.png` is a
+generated snowy mountain landscape created for this fictional fixture, with a
+quiet center for the transparent Framed profile card.
+
 ## Meilin
 
 `meilin/background-dusk-v2.webp` and `meilin/avatar.webp` are dedicated,

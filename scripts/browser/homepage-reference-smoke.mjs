@@ -63,7 +63,8 @@ function homepageNetworkSnapshot() {
   const remoteMedia = parsed.filter(request => {
     const hostname = request.parsed?.hostname || '';
     return hostname === 'media.chm.lol' || hostname.endsWith('.r2.cloudflarestorage.com')
-      || /\.(?:mp3|mp4|webm)(?:\?|$)/i.test(request.parsed?.pathname || '');
+      || (hostname !== '127.0.0.1' && hostname !== 'localhost'
+        && /\.(?:mp3|mp4|webm)(?:\?|$)/i.test(request.parsed?.pathname || ''));
   });
   return {
     requestCount: requests.length,
@@ -301,21 +302,60 @@ try {
       fixture: document.querySelector('.homepage-profile-demo--hero')?.dataset.homepageFixture || '',
       layout: document.querySelector('.homepage-profile-demo--hero')?.dataset.homepageProfileLayout || '',
       name: document.querySelector('.homepage-profile-demo--hero .profile-full-bleed__name, .homepage-profile-demo--hero .profile-reference-card__name')?.textContent?.trim() || '',
+      avatarEffect: document.querySelector('.homepage-profile-demo--hero [data-avatar-effect]')?.getAttribute('data-avatar-effect') || '',
+      avatarImage: document.querySelector('.homepage-profile-demo--hero .profile-reference-card__avatar')?.getAttribute('src') || '',
+      profileMotion: document.querySelector('.homepage-profile-stage [data-profile-motion]')?.getAttribute('data-profile-motion') || '',
+      nameFont: getComputedStyle(document.querySelector('.homepage-profile-demo--hero .profile-full-bleed__name, .homepage-profile-demo--hero .profile-reference-card__name') || document.body).fontFamily,
       background: getComputedStyle(document.querySelector('.homepage-background')).backgroundImage,
       roll: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || ''
     }))()`);
     await page.evaluate('document.querySelector(".homepage-theme-button--next")?.focus()');
     await pressEnter();
     await page.waitFor('document.querySelector(".homepage-profile-demo--hero")?.dataset.homepageFixture === "sleek-arcade"', 'next deterministic homepage fixture');
+    await page.waitFor('document.querySelector(".homepage-reference [data-atmosphere=\\"snowfall\\"]")', 'full-page snowfall atmosphere');
     const after = await page.evaluate(`(() => ({
       fixture: document.querySelector('.homepage-profile-demo--hero')?.dataset.homepageFixture || '',
       layout: document.querySelector('.homepage-profile-demo--hero')?.dataset.homepageProfileLayout || '',
       name: document.querySelector('.homepage-profile-demo--hero .profile-full-bleed__name, .homepage-profile-demo--hero .profile-reference-card__name')?.textContent?.trim() || '',
+      secondary: document.querySelector('.homepage-profile-demo--hero .profile-reference-card__secondary')?.textContent?.trim() || '',
+      avatarEffect: document.querySelector('.homepage-profile-demo--hero [data-avatar-effect]')?.getAttribute('data-avatar-effect') || '',
+      avatarImage: document.querySelector('.homepage-profile-demo--hero .profile-reference-card__avatar')?.getAttribute('src') || '',
+      profileMotion: document.querySelector('.homepage-profile-stage [data-profile-motion]')?.getAttribute('data-profile-motion') || '',
+      nameFont: getComputedStyle(document.querySelector('.homepage-profile-demo--hero .profile-full-bleed__name, .homepage-profile-demo--hero .profile-reference-card__name') || document.body).fontFamily,
+      bioFont: getComputedStyle(document.querySelector('.homepage-profile-demo--hero .profile-reference-card__bio') || document.body).fontFamily,
+      secondaryFont: getComputedStyle(document.querySelector('.homepage-profile-demo--hero .profile-reference-card__secondary') || document.body).fontFamily,
+      atmosphere: document.querySelector('.homepage-reference [data-atmosphere]')?.getAttribute('data-atmosphere') || '',
+      atmosphereBounds: (() => {
+        const box = document.querySelector('.homepage-reference [data-atmosphere]')?.getBoundingClientRect();
+        return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
+      })(),
+      linkStyle: (() => {
+        const links = document.querySelector('.homepage-profile-demo--hero .profile-reference-card__links');
+        const style = getComputedStyle(links || document.body);
+        return { scale: style.getPropertyValue('--profile-reference-link-scale').trim(), glow: style.getPropertyValue('--profile-reference-link-glow').trim() };
+      })(),
+      card: (() => {
+        const card = document.querySelector('.homepage-profile-demo--hero .profile-reference-card--framed');
+        const style = getComputedStyle(card || document.body);
+        return { backgroundImage: style.backgroundImage, backgroundColor: style.backgroundColor };
+      })(),
+      avatarWidth: document.querySelector('.homepage-profile-demo--hero .profile-reference-card__avatar-shell')?.getBoundingClientRect().width || 0,
       background: getComputedStyle(document.querySelector('.homepage-background')).backgroundImage,
       roll: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || ''
     }))()`);
     assert(before.fixture === 'meilin-horizon' && after.fixture === 'sleek-arcade', `Carousel fixture state is not deterministic: ${JSON.stringify({ before, after })}.`);
-    assert(before.layout === 'full-bleed' && after.layout === 'compact' && before.name !== after.name && before.background !== after.background && before.roll !== after.roll, `Carousel did not update the complete environment: ${JSON.stringify({ before, after })}.`);
+    assert(before.layout === 'full-bleed' && after.layout === 'framed' && after.avatarEffect === '3d-parallax'
+      && after.profileMotion === 'perspective-tilt' && after.nameFont.includes('Velocity')
+      && after.bioFont.includes('Velocity') && after.secondaryFont.includes('Velocity')
+      && after.name === 'katt' && after.secondary === 'Siberia · Russia'
+      && after.atmosphere === 'snowfall' && after.atmosphereBounds && after.atmosphereBounds.left <= 0
+      && after.atmosphereBounds.right >= 1440 && after.atmosphereBounds.width >= 1440
+      && Number(after.linkStyle.scale) >= 1.3 && Number(after.linkStyle.glow) === 1
+      && after.card.backgroundImage === 'none' && after.card.backgroundColor === 'rgba(0, 0, 0, 0)'
+      && after.avatarWidth >= 120 && after.avatarImage.includes('/homepage/fixtures/p2/p2avatar.png')
+      && after.background.includes('/homepage/fixtures/p2/background-snowy-mountains.png')
+      && before.name !== after.name && before.background !== after.background && before.roll !== after.roll,
+    `Carousel did not update the complete environment: ${JSON.stringify({ before, after })}.`);
     await page.evaluate('document.querySelector(".homepage-theme-button--prev")?.focus()');
     await pressEnter();
     await page.waitFor('document.querySelector(".homepage-profile-demo--hero")?.dataset.homepageFixture === "meilin-horizon"', 'previous deterministic homepage fixture');

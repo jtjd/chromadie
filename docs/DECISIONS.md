@@ -1,5 +1,48 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-18 — Carry the selected Framed typeface into identity details
+
+The Framed showcase uses the selected Velocity face for its bio and secondary
+location/timezone line as well as the display name. The font family is resolved
+through the existing code-owned Name registry and passed as a sanitized CSS
+custom property, so this remains a structured typography choice rather than
+accepting arbitrary profile CSS.
+
+## 2026-08-18 — Mount homepage atmosphere at the page boundary
+
+The Katt snowfall scene is mounted by `HomePage` rather than inside the
+centered hero shell. This lets the authored atmosphere cover the header, hero,
+and lower homepage sections while the fixed background remains visible at the
+same depth. Carousel and local roll updates still change the root scene and
+its color without creating a bounded video rectangle.
+
+## 2026-08-18 — Make the second Framed specimen a complete snowfall showcase
+
+The second homepage specimen now presents the provided portrait as `katt` in
+Velocity, with `Siberia · Russia` as its secondary identity line. It uses the
+actual Framed renderer with a transparent card surface, larger link icons, a
+pixel-level white glow, a larger overlapping avatar, and the shared snowfall
+atmosphere. The values are fixture data passed through the same renderer
+contracts as production profiles rather than homepage-only visual overrides.
+
+## 2026-08-18 — Give the second homepage specimen dedicated P2 media
+
+The second homepage specimen keeps its stable carousel slot but now uses a
+dedicated `p2/` fixture folder, a `p2` placeholder identity, the provided
+portrait, and a purpose-made snowy mountain background. This keeps homepage
+media deterministic and separate from production profile storage while making
+the Framed example feel like one authored profile rather than a reused generic
+fixture.
+
+## 2026-08-18 — Give the second homepage specimen a Framed 3D identity
+
+The second homepage carousel specimen now demonstrates the Framed profile
+layout with the active 3D Parallax avatar effect, Silkscreen name font, and
+the existing perspective-tilt profile motion. These are deterministic
+homepage fixture choices that show how structural layout, avatar treatment,
+typography, and motion compose together; they do not mutate production
+profiles or introduce a second customization contract.
+
 ## 2026-08-17 — Let Framed link glows escape the icon control
 
 Framed links keep their anchors transparent and overflow-visible so the white

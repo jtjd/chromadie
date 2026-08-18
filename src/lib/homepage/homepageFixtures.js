@@ -9,13 +9,13 @@ const SUPPORTED_EFFECTS = Object.freeze({
     atmosphere: 'profile_atmosphere_rain_window'
   }),
   sleek: Object.freeze({
-    nameFont: 'name_font_wide_geometric',
+    nameFont: 'name_font_velocity',
     nameMaterial: 'name_material_neon_tube',
     nameMotion: 'name_motion_haunt_gradient',
     profileBorder: 'border_neon',
-    avatar: 'prism-orbit',
+    avatar: '3d-parallax',
     cursorTrail: 'cursor_trail_pixel_wake',
-    atmosphere: 'profile_atmosphere_dust_light'
+    atmosphere: 'profile_atmosphere_snowfall'
   }),
   minimal: Object.freeze({
     nameFont: 'name_font_mono_compact',
@@ -71,6 +71,10 @@ function createFixture({
   effects,
   profileMotion = '',
   heroLayout = '',
+  avatarEffectKey = '',
+  nameFontKey = '',
+  linkStyle = null,
+  atmosphereKey = '',
   links,
   scores,
   showcasePosition
@@ -88,6 +92,10 @@ function createFixture({
     profileMotion,
     links: Object.freeze(links.map(link => Object.freeze({ ...link }))),
     effects: SUPPORTED_EFFECTS[effects],
+    avatarEffectKey,
+    nameFontKey,
+    linkStyle: linkStyle ? Object.freeze({ ...linkStyle }) : null,
+    atmosphereKey,
     scores: Object.freeze(normalizedScores),
     timelineEvents: Object.freeze(createTimeline(username, normalizedScores)),
     heroLayout,
@@ -123,13 +131,20 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
   }),
   createFixture({
     id: 'sleek-arcade',
-    username: 'Arcade',
-    displayName: 'Arcade',
+    username: 'katt',
+    displayName: 'katt',
     bio: 'FPS · design · late nights',
+    secondaryLine: 'Siberia · Russia',
     accent: '#7AA2F7',
-    background: '/homepage/fixtures/sleek-background.png',
-    avatar: '/homepage/fixtures/sleek-avatar.png',
+    background: '/homepage/fixtures/p2/background-snowy-mountains.png',
+    avatar: '/homepage/fixtures/p2/p2avatar.png',
     effects: 'sleek',
+    profileMotion: 'profile_motion_perspective_tilt',
+    heroLayout: 'framed',
+    avatarEffectKey: '3d-parallax',
+    nameFontKey: 'velocity',
+    linkStyle: { size: 2, glow: 1 },
+    atmosphereKey: 'snowfall',
     showcasePosition: 'bottom',
     links: [
       { type: 'website', label: 'Website', url: 'https://example.com/studio', order: 0 },

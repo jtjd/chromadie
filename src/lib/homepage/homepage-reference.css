@@ -60,6 +60,15 @@
   );
 }
 
+.homepage-atmosphere {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+}
+
+.homepage-atmosphere .profile-atmosphere__video--snow { opacity: .4; }
+
 .homepage-shell { width: min(1480px, calc(100% - 64px)); margin-inline: auto; }
 .homepage-section__inner,
 .homepage-section { width: min(1160px, calc(100% - 48px)); margin-inline: auto; }

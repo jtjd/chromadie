@@ -92,7 +92,11 @@
     : getNameRendererDefinition(safeRendererKey).font;
   $: activeFont = getNameFont(activeFontKey);
   $: resolvedFontKey = resolveNameFontKey(activeFontKey);
-  $: semanticStyle = `font-family: "${String(activeFont.family || '').replace(/["\\]/g, '')}", ${String(activeFont.fallback || 'sans-serif').replace(/["\\]/g, '')}; font-style: ${activeFont.style}; font-weight: ${activeFont.weight};`;
+  // The shared profile-name rules include a font shorthand for their
+  // fallback presentation. Keep the renderer's resolved face authoritative
+  // on the semantic text node as well as on the canvas, so a composable font
+  // does not silently fall back to the surrounding profile display face.
+  $: semanticStyle = `font-family: "${String(activeFont.family || '').replace(/["\\]/g, '')}", ${String(activeFont.fallback || 'sans-serif').replace(/["\\]/g, '')} !important; font-style: ${activeFont.style} !important; font-weight: ${activeFont.weight} !important;`;
   $: fontLoadKey = `${resolvedFontKey}:${text}`;
   $: safeSemanticTag = SEMANTIC_TAGS.has(semanticTag) ? semanticTag : 'span';
   $: safeSemanticClass = SEMANTIC_CLASSES.has(semanticClass) ? semanticClass : '';

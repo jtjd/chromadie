@@ -2,6 +2,40 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-18 — Match Framed identity detail typography
+
+- The Katt Framed example now uses Velocity consistently for the name, bio,
+  and `Siberia · Russia` detail line.
+
+## 2026-08-18 — Extend homepage atmosphere across the page
+
+- Snowfall now spans the full homepage instead of stopping at the centered
+  hero shell, removing the visible dark rectangle around the scene.
+- Carousel and roll color changes continue to update the page-level atmosphere.
+
+## 2026-08-18 — Finish the Framed homepage showcase
+
+- The second hero example is now named `katt` and shows `Siberia · Russia`.
+- Its name uses Velocity, its avatar is larger, and its card has no fill so
+  the snowy background remains part of the composition.
+- Framed links use the larger size and direct white icon glow, with snowfall
+  carrying the atmosphere behind the complete example.
+
+## 2026-08-18 — Give the second homepage example its own media
+
+- The second hero now uses the provided `p2avatar.png` from a dedicated
+  `p2/` fixture folder.
+- Replaced the generic `Arcade` placeholder with `p2` and added a snowy
+  mountain background designed for the Framed card.
+
+## 2026-08-18 — Add a Framed 3D homepage example
+
+- The second hero preview now uses the Framed profile composition.
+- Its avatar demonstrates the 3D Parallax treatment and its name uses
+  Silkscreen.
+- The profile card keeps the existing perspective tilt on desktop while
+  respecting reduced-motion behavior.
+
 ## 2026-08-17 — Fix Framed link glows
 
 - Framed social icons now use the same direct pixel glow as Immersive links.
