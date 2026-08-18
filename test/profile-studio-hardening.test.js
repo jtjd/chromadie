@@ -46,6 +46,8 @@ test('Profile Studio publishes identity and the complete expression-aware config
   assert.match(appearance, /Accessible color controls/);
   assert.match(identity, /\{#if !studio\}[\s\S]*identity-editor__save/);
   assert.doesNotMatch(identity, /identity-editor--studio \.identity-editor__save/);
+  assert.match(identity, /let draftBio = bio \|\| ''/);
+  assert.match(identity, /parent-owned draft/);
   assert.match(cosmetics, /Update equipped effects/);
   assert.match(media, /profile-expression-editor__compact-remove/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.publish_profile_studio_v2/);

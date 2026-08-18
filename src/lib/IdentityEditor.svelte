@@ -18,7 +18,10 @@
 
   const dispatch = createEventDispatcher();
   let lastIncomingKey = '';
-  let draftBio = '';
+  // Studio unmounts this editor when the user changes Customize tabs. Start
+  // from the parent-owned draft so a remount does not briefly look like a new
+  // empty edit and block the incoming-state hydration guard below.
+  let draftBio = bio || '';
   /** @type {any} */
   let identityConfig = {};
   const initialConfig = config && typeof config === 'object' ? config : {};
