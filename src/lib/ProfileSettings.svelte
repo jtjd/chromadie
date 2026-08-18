@@ -468,6 +468,12 @@
       return;
     }
     const nextBio = publishResponse.data?.identity?.bio ?? identityDraft?.bio ?? context?.targetProfile?.bio ?? null;
+    // Settings remounts hydrate from the authenticated account store. Keep it
+    // aligned with the successful publish so leaving for the public profile
+    // and returning cannot restore the pre-publish bio.
+    profile.update(currentProfile => currentProfile && currentProfile.id === context.profileId
+      ? { ...currentProfile, bio: nextBio }
+      : currentProfile);
     context = { ...context, targetProfile: { ...context.targetProfile, bio: nextBio } };
     applyDashboardConfiguration({
       draft: publishResponse.data?.draft || v2Draft,

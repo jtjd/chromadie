@@ -37,6 +37,8 @@ test('Profile Studio publishes identity and the complete expression-aware config
 
   assert.match(settings, /publish_profile_studio_v2/);
   assert.doesNotMatch(settings, /update_my_profile_identity/);
+  assert.match(settings, /profile\.update\(/);
+  assert.match(settings, /bio: nextBio/);
   assert.match(settings, /dirtySourceForEvent/);
   assert.match(customize, /customize:identity/);
   assert.match(customize, /customize:appearance/);
