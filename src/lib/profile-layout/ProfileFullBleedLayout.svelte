@@ -23,6 +23,7 @@
   export let links = [];
   export let linkStyle = null;
   export let accentColor = '#00FFB3';
+  export let colorizeAvatarEffect = false;
   export let onEntryClick = entryKey => { void entryKey; };
 
   let failedAvatarSource = '';
@@ -71,6 +72,7 @@
           active={true}
           avatarSrc={activeAvatarSource}
           fallbackText={safeInitial}
+          colorizeLiquidBlob={colorizeAvatarEffect}
           className="profile-full-bleed__avatar-effect"
         >
           {#if activeAvatarSource}

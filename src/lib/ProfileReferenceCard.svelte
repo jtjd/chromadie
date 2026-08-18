@@ -300,6 +300,15 @@
     opacity: .92;
   }
 
+  /* Keep Framed links transparent at the anchor level so only the icon pixels
+     carry the same direct white glow as Immersive links. */
+  .profile-reference-card--framed .profile-reference-card__links a.profile-reference-card__link--icon {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
   .profile-reference-card--framed .profile-reference-card__link-label {
     position: absolute;
     width: 1px;

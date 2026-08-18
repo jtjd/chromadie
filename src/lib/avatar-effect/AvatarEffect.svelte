@@ -10,6 +10,7 @@
   export let className = '';
   export let avatarSrc = '';
   export let fallbackText = '';
+  export let colorizeLiquidBlob = false;
 
   /** @type {any} */
   let definition;
@@ -24,6 +25,7 @@
     'avatar-effect',
     className,
     `avatar-effect--${activeDefinitionKey}`,
+    colorizeLiquidBlob ? 'avatar-effect--colorize-liquid-blob' : '',
     compact ? 'avatar-effect--compact' : '',
     motionActive ? 'avatar-effect--animated' : 'avatar-effect--static'
   ].filter(Boolean).join(' ');
@@ -241,6 +243,11 @@
   .avatar-effect.avatar-effect--liquid-blob .avatar-effect__slot > :global(span) {
     border: 0;
     border-radius: inherit;
+  }
+
+  .avatar-effect.avatar-effect--colorize-liquid-blob.avatar-effect--liquid-blob {
+    background: var(--avatar-accent, #fff);
+    box-shadow: 0 0 25px color-mix(in srgb, var(--avatar-accent, #fff) 44%, transparent);
   }
 
   .avatar-effect.avatar-effect--cyber-hud {

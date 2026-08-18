@@ -17,7 +17,7 @@
   const PREVIEW_ROLL_DELAYS = Object.freeze([76, 78, 82, 88, 100, 116, 136]);
   const PREVIEW_ROLL_TICKS = PREVIEW_ROLL_DELAYS.length + 1;
   const LAND_DURATION_MS = 36;
-  const IMPACT_DURATION_MS = 1120;
+  const IMPACT_DURATION_MS = 1380;
   const PREVIEW_ROLLS = Object.freeze([
     Object.freeze({ hex_code: '#D8A6FF', score: 74231, rarity: 'Rare', identity: 'Soft Electric Orchid' }),
     Object.freeze({ hex_code: '#78DCCA', score: 38642, rarity: 'Uncommon', identity: 'Luminous Mint Tide' }),
@@ -28,26 +28,26 @@
     Object.freeze({ hex_code: '#C99CFF', score: 68415, rarity: 'Rare', identity: 'Vivid Violet Haze' })
   ]);
   const PROFILE_PARTICLES = Object.freeze([
-    Object.freeze({ x: -142, y: -116, size: 7, delay: 0, bright: true }),
-    Object.freeze({ x: -118, y: -46, size: 5, delay: 32, bright: false }),
-    Object.freeze({ x: -102, y: 82, size: 8, delay: 58, bright: false }),
-    Object.freeze({ x: -72, y: -142, size: 4, delay: 84, bright: true }),
-    Object.freeze({ x: -54, y: 126, size: 6, delay: 112, bright: false }),
-    Object.freeze({ x: -18, y: -128, size: 9, delay: 142, bright: true }),
-    Object.freeze({ x: 12, y: 148, size: 5, delay: 176, bright: false }),
-    Object.freeze({ x: 46, y: -138, size: 6, delay: 204, bright: false }),
-    Object.freeze({ x: 72, y: 126, size: 8, delay: 236, bright: true }),
-    Object.freeze({ x: 104, y: -98, size: 5, delay: 264, bright: false }),
-    Object.freeze({ x: 132, y: -30, size: 7, delay: 292, bright: true }),
-    Object.freeze({ x: 148, y: 54, size: 4, delay: 324, bright: false }),
-    Object.freeze({ x: 118, y: 98, size: 6, delay: 348, bright: false }),
-    Object.freeze({ x: 84, y: 154, size: 9, delay: 378, bright: true }),
-    Object.freeze({ x: 32, y: 112, size: 5, delay: 406, bright: false }),
-    Object.freeze({ x: -2, y: -156, size: 6, delay: 438, bright: false }),
-    Object.freeze({ x: -86, y: -104, size: 8, delay: 468, bright: true }),
-    Object.freeze({ x: -136, y: 28, size: 5, delay: 496, bright: false }),
-    Object.freeze({ x: -126, y: 134, size: 7, delay: 524, bright: false }),
-    Object.freeze({ x: 58, y: 72, size: 4, delay: 556, bright: true })
+    Object.freeze({ x: -174, y: -132, size: 11, delay: 0, bright: true }),
+    Object.freeze({ x: -148, y: -66, size: 8, delay: 28, bright: false }),
+    Object.freeze({ x: -136, y: 42, size: 10, delay: 56, bright: false }),
+    Object.freeze({ x: -116, y: 132, size: 8, delay: 84, bright: true }),
+    Object.freeze({ x: -78, y: -164, size: 9, delay: 112, bright: false }),
+    Object.freeze({ x: -46, y: 154, size: 11, delay: 140, bright: false }),
+    Object.freeze({ x: -12, y: -184, size: 10, delay: 168, bright: true }),
+    Object.freeze({ x: 20, y: 172, size: 8, delay: 196, bright: false }),
+    Object.freeze({ x: 58, y: -174, size: 11, delay: 224, bright: false }),
+    Object.freeze({ x: 88, y: 146, size: 9, delay: 252, bright: true }),
+    Object.freeze({ x: 124, y: -126, size: 10, delay: 280, bright: false }),
+    Object.freeze({ x: 154, y: -52, size: 8, delay: 308, bright: true }),
+    Object.freeze({ x: 180, y: 46, size: 11, delay: 336, bright: false }),
+    Object.freeze({ x: 146, y: 112, size: 8, delay: 364, bright: false }),
+    Object.freeze({ x: 102, y: 172, size: 10, delay: 392, bright: true }),
+    Object.freeze({ x: 62, y: 112, size: 8, delay: 420, bright: false }),
+    Object.freeze({ x: -62, y: 104, size: 9, delay: 448, bright: true }),
+    Object.freeze({ x: -102, y: -104, size: 8, delay: 476, bright: false }),
+    Object.freeze({ x: 8, y: 118, size: 11, delay: 504, bright: true }),
+    Object.freeze({ x: -28, y: -112, size: 8, delay: 532, bright: false })
   ]);
   let fixtureIndex = 0;
   let previewRoll = null;
@@ -386,26 +386,64 @@
     position: absolute;
     z-index: 7;
     inset: 0 28px;
+    isolation: isolate;
     overflow: visible;
     pointer-events: none;
+  }
+
+  .homepage-roll-particles::before,
+  .homepage-roll-particles::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 0;
+    display: block;
+    border-radius: 50%;
+    content: '';
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(.2);
+  }
+
+  .homepage-roll-particles::before {
+    width: 84px;
+    height: 84px;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--homepage-roll-accent) 84%, white) 0%,
+      color-mix(in srgb, var(--homepage-roll-accent) 52%, transparent) 30%,
+      transparent 72%
+    );
+    filter: blur(2px);
+    animation: homepage-roll-flash .72s cubic-bezier(.16, .8, .24, 1) forwards;
+  }
+
+  .homepage-roll-particles::after {
+    width: 92px;
+    height: 92px;
+    border: 2px solid color-mix(in srgb, var(--homepage-roll-accent) 78%, white);
+    box-shadow: 0 0 24px var(--homepage-roll-accent-glow), inset 0 0 18px var(--homepage-roll-accent-glow);
+    animation: homepage-roll-ring .96s cubic-bezier(.16, .8, .24, 1) forwards;
   }
 
   .homepage-roll-particles span {
     position: absolute;
     top: 50%;
     left: 50%;
+    z-index: 1;
     width: var(--particle-size);
     height: var(--particle-size);
     border-radius: 999px;
     background: var(--homepage-roll-accent);
-    box-shadow: 0 0 12px var(--homepage-roll-accent-glow);
+    box-shadow: 0 0 16px var(--homepage-roll-accent-glow), 0 0 30px color-mix(in srgb, var(--homepage-roll-accent) 34%, transparent);
+    mix-blend-mode: screen;
     opacity: 0;
-    animation: homepage-roll-particle 1.08s cubic-bezier(0.16, 0.8, 0.24, 1) var(--particle-delay) forwards;
+    animation: homepage-roll-particle 1.18s cubic-bezier(0.16, 0.8, 0.24, 1) var(--particle-delay) forwards;
   }
 
   .homepage-roll-particles span.homepage-roll-particle--bright {
     background: color-mix(in srgb, var(--homepage-roll-accent) 58%, white);
-    box-shadow: 0 0 16px color-mix(in srgb, var(--homepage-roll-accent) 74%, white), 0 0 28px var(--homepage-roll-accent-glow);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--homepage-roll-accent) 74%, white), 0 0 38px var(--homepage-roll-accent-glow);
   }
 
   @keyframes homepage-profile-pop {
@@ -416,10 +454,23 @@
   }
 
   @keyframes homepage-roll-particle {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.35); }
-    14% { opacity: 0.95; }
-    48% { opacity: 0.72; }
-    100% { opacity: 0; transform: translate(calc(-50% + var(--particle-x)), calc(-50% + var(--particle-y))) scale(0); }
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+    10% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+    48% { opacity: .88; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--particle-x)), calc(-50% + var(--particle-y))) scale(.34); }
+  }
+
+  @keyframes homepage-roll-flash {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+    14% { opacity: .94; transform: translate(-50%, -50%) scale(1); }
+    48% { opacity: .42; transform: translate(-50%, -50%) scale(1.65); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.35); }
+  }
+
+  @keyframes homepage-roll-ring {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.35); }
+    12% { opacity: .92; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
   }
 
   .homepage-theme-button {

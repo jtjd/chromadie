@@ -96,6 +96,7 @@ try {
       const card = document.querySelector('.homepage-profile-demo--hero');
       const background = document.querySelector('.homepage-background');
       const avatar = card?.querySelector('.profile-full-bleed__avatar, .profile-reference-card__avatar');
+      const avatarEffect = card?.querySelector('[data-avatar-effect]');
       const profileName = card?.querySelector('.profile-full-bleed__name, .profile-reference-card__name');
       const profileBio = card?.querySelector('.profile-full-bleed__bio, .profile-reference-card__bio');
       const headlineStyle = getComputedStyle(document.querySelector('.homepage-hero h1'));
@@ -107,6 +108,7 @@ try {
         layout: card?.dataset.homepageProfileLayout || '',
         backgroundImage: getComputedStyle(background).backgroundImage,
         avatarImage: avatar?.getAttribute('src') || (avatar ? getComputedStyle(avatar).backgroundImage : ''),
+        avatarEffect: avatarEffect?.getAttribute('data-avatar-effect') || '',
         claim: Boolean(document.querySelector('#claim .homepage-claim__field')),
         avatar: Boolean(avatar),
         name: Boolean(profileName),
@@ -134,7 +136,8 @@ try {
     assert(state.profileShellCount === 0, `Homepage mounted a public ProfileShell: ${JSON.stringify(state)}.`);
     assert(!state.oldBrowserFrame && !state.arrowGlyph, `Obsolete homepage treatment remains: ${JSON.stringify(state)}.`);
     assert(state.layout === 'full-bleed' && state.fullBleed, `Homepage fixture one is not using the Immersive renderer: ${JSON.stringify(state)}.`);
-    assert(state.claim && state.avatar && state.name && state.bio && state.linkCount === 4 && state.homepageRoll, `Immersive profile anatomy is incomplete: ${JSON.stringify(state)}.`);
+    assert(state.claim && state.avatar && state.name && state.bio && state.linkCount === 4 && state.homepageRoll
+      && state.avatarEffect === 'liquid-blob', `Immersive profile anatomy is incomplete: ${JSON.stringify(state)}.`);
     assert(state.fonts.status === 'loaded' && state.fonts.manrope && state.fonts.clash && state.fonts.inter
       && state.fonts.headline.includes('Manrope Variable')
       && state.fonts.profileName.includes('Clash Display')
@@ -211,6 +214,7 @@ try {
     const animated = await page.evaluate(`(() => {
       const dot = document.querySelector('.homepage-roll-compact__dot');
       const headline = document.querySelector('.homepage-hero h1 span');
+      const blob = document.querySelector('.homepage-profile-demo--hero [data-avatar-effect="liquid-blob"]');
       return {
         accent: getComputedStyle(document.querySelector('.homepage-reference')).getPropertyValue('--homepage-accent').trim(),
         localAccent: getComputedStyle(document.querySelector('.homepage-hero')).getPropertyValue('--homepage-roll-accent').trim(),
@@ -223,6 +227,7 @@ try {
         youScore: document.querySelector('.homepage-daily-leaderboard__row--you .homepage-daily-leaderboard__score')?.textContent?.trim() || '',
         dotColor: dot ? getComputedStyle(dot).backgroundColor : '',
         headlineColor: headline ? getComputedStyle(headline).color : '',
+        blobColor: blob ? getComputedStyle(blob).backgroundColor : '',
         particles: document.querySelectorAll('.homepage-roll-particles span').length,
         pop: document.querySelector('.homepage-profile-pop')?.classList.contains('homepage-profile-pop--active') || false
       };
@@ -231,6 +236,8 @@ try {
       `Preview roll did not update the complete accent and roll state: ${JSON.stringify({ initialHex, animated })}.`);
     assert(animated.dotColor === animated.headlineColor,
       `Preview roll color consumers diverged: ${JSON.stringify(animated)}.`);
+    assert(animated.blobColor === animated.dotColor,
+      `Preview roll did not map the final color onto Meilin's Liquid Blob effect: ${JSON.stringify(animated)}.`);
     assert(animated.particles > 0 && animated.pop && animated.player && animated.playerScore
       && animated.youRow.includes('YOU') && animated.youScore === animated.playerScore,
     `Animated roll omitted the highlighted YOU leaderboard result: ${JSON.stringify(animated)}.`);

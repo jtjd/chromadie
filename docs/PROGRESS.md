@@ -1,5 +1,31 @@
 # Chromadie 2.0 Progress
 
+## Fix Framed link glow clipping — 2026-08-17
+
+- Removed the empty anchor background and shadow treatment from Framed icon
+  links.
+- Allowed the icon-level white drop-shadow to render outside the control,
+  matching Immersive behavior.
+- Added renderer regression coverage for transparent, overflow-visible link
+  controls.
+
+## Stronger homepage roll impact — 2026-08-17
+
+- Increased the homepage roll burst to 20 larger, brighter accent-colored
+  sparks with wider travel.
+- Added a center flash and expanding ring so the result reads clearly against
+  photographic backgrounds.
+- Preserved reduced-motion suppression and added regression assertions for the
+  new impact layers.
+
+## Roll-reactive Meilin avatar — 2026-08-17
+
+- Applied the animated Liquid Blob effect to the authored Meilin hero avatar.
+- Mapped the blob fill and glow accent to the homepage roll state as it spins
+  and settles, while keeping the behavior local to the homepage specimen.
+- Added source and browser-smoke coverage for the effect key and computed
+  color mapping.
+
 ## One-shot homepage roll and leaderboard invitation — 2026-08-17
 
 - Limited the homepage preview to one roll, then changed the action into a

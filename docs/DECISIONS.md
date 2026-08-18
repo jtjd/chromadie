@@ -1,5 +1,29 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-17 — Let Framed link glows escape the icon control
+
+Framed links keep their anchors transparent and overflow-visible so the white
+drop-shadow is rendered from the icon pixels, matching Immersive. The previous
+shared link rule clipped that glow inside each control and made the links read
+like opaque buttons. The setting remains bounded by the existing Link Glow
+control.
+
+## 2026-08-17 — Give the homepage roll a readable firework impact
+
+The local homepage roll uses a stronger accent-colored impact: larger outward
+sparks, a brief center flash, and an expanding ring around the profile. The
+impact remains presentation-only, runs for a bounded duration, and disappears
+under `prefers-reduced-motion`.
+
+## 2026-08-17 — Tie Meilin's homepage avatar effect to the local roll
+
+The authored Meilin homepage hero uses the animated Liquid Blob treatment so
+the profile specimen has a visible, personal focal point. Its blob color reads
+the same local accent state as the homepage roll, including the animated roll
+sequence and the final result. This is scoped to the homepage specimen; it
+does not equip or mutate avatar effects on production profiles and does not
+change server-authoritative roll behavior.
+
 ## 2026-08-17 — Make the homepage roll a one-shot leaderboard invitation
 
 The homepage roll preview is intentionally limited to one local roll per

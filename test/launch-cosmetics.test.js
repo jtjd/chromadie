@@ -49,6 +49,8 @@ test('reference avatar effects are code-owned, image-aware, and motion-safe', as
   assert.match(avatarSource, /avatar-effect__hud-ring--one/);
   assert.match(avatarSource, /@keyframes avatar-effect-tilt/);
   assert.match(avatarSource, /@keyframes avatar-effect-morph/);
+  assert.match(avatarSource, /colorizeLiquidBlob/);
+  assert.match(avatarSource, /avatar-effect--colorize-liquid-blob/);
   assert.match(avatarSource, /prefers-reduced-motion/);
   assert.doesNotMatch(avatarSource, /AvatarParticles|authoredOverlay|particle-atlas|avatar-effect--(?:signal-ring|neon-halo|prism-orbit|ghost-double)/);
 });

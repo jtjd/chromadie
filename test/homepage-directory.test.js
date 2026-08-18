@@ -77,7 +77,10 @@ test('the direct homepage specimen uses the canonical first-example layout witho
   assert.match(hero, /rollPhase = 'spin'/);
   assert.match(hero, /rollPhase = 'land'/);
   assert.match(hero, /rollPhase = 'impact'/);
-  assert.match(hero, /IMPACT_DURATION_MS = 1120/);
+  assert.match(hero, /IMPACT_DURATION_MS = 1380/);
+  assert.match(hero, /homepage-roll-particles::before/);
+  assert.match(hero, /@keyframes homepage-roll-flash/);
+  assert.match(hero, /@keyframes homepage-roll-ring/);
   assert.match(hero, /hasReducedMotion\(\)/);
   assert.match(hero, /clearTimeout\(previewRollTimer\)/);
   assert.match(hero, /setLocalPreviewRoll/);
@@ -90,6 +93,9 @@ test('the direct homepage specimen uses the canonical first-example layout witho
   assert.match(demo, /previewRoll \|\| fixture\?\.scores\?\.\[0\]/);
   assert.match(demo, /ProfileFullBleedLayout/);
   assert.match(demo, /data-homepage-profile-layout/);
+  assert.match(demo, /useRollAvatarEffect/);
+  assert.match(demo, /avatarEffectKey=\{useRollAvatarEffect \? 'liquid-blob' : ''\}/);
+  assert.match(demo, /colorizeAvatarEffect=\{useRollAvatarEffect\}/);
   assert.doesNotMatch(demo, /homepage-profile-demo__head|Profile preview|@\{fixture\.username\}/);
   assert.match(demo, /ProfileReferenceCard/);
   assert.match(demo, /secondaryLine/);

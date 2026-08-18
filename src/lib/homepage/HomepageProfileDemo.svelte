@@ -14,6 +14,7 @@
   $: avatarSource = fixture?.media?.avatar || '';
   $: secondaryLine = fixture?.secondaryLine || '';
   $: useImmersiveLayout = variant === 'hero' && fixture?.heroLayout === 'immersive';
+  $: useRollAvatarEffect = useImmersiveLayout && fixture?.id === 'meilin-horizon';
   $: demoStyle = fixture
     ? `--homepage-demo-accent: ${previewRoll?.hex_code || fixture.accent}; --homepage-demo-avatar: url("${avatarSource}");`
     : '';
@@ -60,6 +61,8 @@
           avatarSrc={avatarSource}
           {links}
           accentColor={previewRoll?.hex_code || fixture.accent}
+          avatarEffectKey={useRollAvatarEffect ? 'liquid-blob' : ''}
+          colorizeAvatarEffect={useRollAvatarEffect}
         />
       {:else}
         <ProfileReferenceCard

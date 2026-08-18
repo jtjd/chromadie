@@ -237,6 +237,7 @@ test('link size and glow settings reach every active profile link renderer', asy
   assert.match(card, /\.profile-reference-card--framed \.profile-reference-card__links a img[\s\S]*width: calc\(1\.75rem \* var\(--profile-reference-link-scale, 1\)\)/);
   assert.match(card, /\.profile-reference-card--framed \.profile-reference-card__links a img[\s\S]*drop-shadow\(0 0 calc\(\.55rem \* var\(--profile-reference-link-glow, 0\)\)/);
   assert.match(card, /\.profile-reference-card--framed \.profile-reference-card__links a img[\s\S]*drop-shadow\(0 0 calc\(1\.15rem \* var\(--profile-reference-link-glow, 0\)\)/);
+  assert.match(card, /a\.profile-reference-card__link--icon[\s\S]*background: transparent !important[\s\S]*box-shadow: none !important[\s\S]*overflow: visible !important/);
   assert.match(preview, /<ProfileFullBleedLayout[\s\S]*\{linkStyle\}/);
   assert.match(shell, /<ProfileFullBleedLayout[\s\S]*linkStyle=\{effectiveProfileConfig\.linkStyle\}/);
 });

@@ -2,6 +2,27 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-17 — Fix Framed link glows
+
+- Framed social icons now use the same direct pixel glow as Immersive links.
+- Removed the opaque-looking link control treatment that was hiding the glow.
+
+## 2026-08-17 — Strengthen the homepage roll firework
+
+- Made the roll impact easier to see with larger, brighter sparks and wider
+  outward travel.
+- Added a short center flash and expanding accent ring around the profile.
+- Kept the effect bounded and disabled it for reduced-motion users.
+
+## 2026-08-17 — Make the Meilin hero avatar react to the homepage roll
+
+- The Meilin homepage example now uses the animated Liquid Blob avatar
+  treatment.
+- The blob's color and glow follow the roll accent during the preview and
+  settle on the final rolled color.
+- The effect remains a homepage presentation detail and does not change saved
+  profile cosmetics or gameplay authority.
+
 ## 2026-08-17 — Turn the homepage roll into a leaderboard invitation
 
 - The homepage roll can now be used once per profile specimen.
