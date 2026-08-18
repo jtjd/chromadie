@@ -113,10 +113,12 @@ try {
         bio: Boolean(profileBio),
         fullBleed: Boolean(card?.querySelector('[data-profile-layout-content="full-bleed"]')),
         linkCount: card?.querySelectorAll('.profile-full-bleed__links a, .profile-reference-card__links a').length || 0,
-        homepageRoll: Boolean(document.querySelector('.homepage-roll-compact__result')),
+        homepageRoll: Boolean(document.querySelector('.homepage-daily-leaderboard')),
+        dailyLeaderboardRows: document.querySelectorAll('.homepage-daily-leaderboard__row').length,
         fonts: {
           status: document.fonts.status,
-          clash: document.fonts.check('600 48px "Clash Display"'),
+          manrope: document.fonts.check('600 48px "Manrope Variable"'),
+          clash: document.fonts.check('600 16px "Clash Display"'),
           inter: document.fonts.check('400 16px "Inter"'),
           headline: headlineStyle.fontFamily,
           profileName: profileNameStyle.fontFamily,
@@ -133,8 +135,8 @@ try {
     assert(!state.oldBrowserFrame && !state.arrowGlyph, `Obsolete homepage treatment remains: ${JSON.stringify(state)}.`);
     assert(state.layout === 'full-bleed' && state.fullBleed, `Homepage fixture one is not using the Immersive renderer: ${JSON.stringify(state)}.`);
     assert(state.claim && state.avatar && state.name && state.bio && state.linkCount === 4 && state.homepageRoll, `Immersive profile anatomy is incomplete: ${JSON.stringify(state)}.`);
-    assert(state.fonts.status === 'loaded' && state.fonts.clash && state.fonts.inter
-      && state.fonts.headline.includes('Clash Display')
+    assert(state.fonts.status === 'loaded' && state.fonts.manrope && state.fonts.clash && state.fonts.inter
+      && state.fonts.headline.includes('Manrope Variable')
       && state.fonts.profileName.includes('Clash Display')
       && state.fonts.body.includes('Inter'), `Homepage typography is not rendering the approved font faces: ${JSON.stringify(state.fonts)}.`);
     assert(state.backgroundImage.includes('meilin/background-dusk-v2.webp'), `Homepage background is not Meilin's dedicated fixture: ${JSON.stringify(state)}.`);
@@ -189,22 +191,22 @@ try {
     return { active, resting };
   });
 
-  await check('preview roll animates locally and honors reduced motion', async () => {
+  await check('daily roll stays local and honors reduced motion', async () => {
     const networkBefore = homepageNetworkSnapshot();
-    const initialHex = await page.evaluate('document.querySelector(".homepage-roll-compact__result span:last-child")?.textContent?.trim() || ""');
+    const initialHex = await page.evaluate('document.querySelector(".homepage-roll-compact")?.dataset.rollHex || ""');
     const globalAccentBefore = await page.evaluate('getComputedStyle(document.querySelector(".homepage-reference")).getPropertyValue("--homepage-accent").trim()');
-    await page.click('.homepage-roll-compact__button', 'animated homepage preview roll');
+    await page.click('.homepage-roll-compact__button', 'animated homepage roll');
     const rollingLabel = await page.evaluate('document.querySelector(".homepage-roll-compact__button")?.textContent?.trim() || ""');
-    assert(rollingLabel === 'Rolling…', `Preview roll did not enter its disabled rolling state: ${JSON.stringify(rollingLabel)}.`);
+    assert(rollingLabel === 'Rolling…', `Homepage roll did not enter its disabled rolling state: ${JSON.stringify(rollingLabel)}.`);
     await delay(125);
     const duringSpin = await page.evaluate(`(() => ({
       globalAccent: getComputedStyle(document.querySelector('.homepage-reference')).getPropertyValue('--homepage-accent').trim(),
       localAccent: getComputedStyle(document.querySelector('.homepage-hero')).getPropertyValue('--homepage-roll-accent').trim(),
-      cardHex: document.querySelector('.homepage-roll-compact__result span:last-child')?.textContent?.trim() || ''
+      rollHex: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || ''
     }))()`);
-    assert(duringSpin.globalAccent === globalAccentBefore && duringSpin.localAccent !== globalAccentBefore && duringSpin.cardHex !== initialHex,
+    assert(duringSpin.globalAccent === globalAccentBefore && duringSpin.localAccent !== globalAccentBefore && duringSpin.rollHex !== initialHex,
       `SPIN changed the global accent or failed to update local roll visuals: ${JSON.stringify({ globalAccentBefore, duringSpin })}.`);
-    await page.waitFor('document.querySelector(".homepage-roll-compact__button")?.textContent?.trim() === "Roll again"', 'animated homepage preview roll result');
+    await page.waitFor('document.querySelector(".homepage-roll-compact__button")?.textContent?.trim() === "Roll again"', 'animated homepage roll result');
     await page.waitFor('document.querySelectorAll(".homepage-roll-particles span").length > 0', 'homepage roll impact phase');
     const animated = await page.evaluate(`(() => {
       const dot = document.querySelector('.homepage-roll-compact__dot');
@@ -212,8 +214,10 @@ try {
       return {
         accent: getComputedStyle(document.querySelector('.homepage-reference')).getPropertyValue('--homepage-accent').trim(),
         localAccent: getComputedStyle(document.querySelector('.homepage-hero')).getPropertyValue('--homepage-roll-accent').trim(),
-        leftHex: document.querySelector('.homepage-roll-compact__result span:last-child')?.textContent?.trim() || '',
-        cardHex: document.querySelector('.homepage-roll-compact__result span:last-child')?.textContent?.trim() || '',
+        leftHex: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || '',
+        cardHex: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || '',
+        player: Boolean(document.querySelector('.homepage-roll-compact__result')),
+        playerScore: document.querySelector('.homepage-roll-compact__result strong')?.textContent?.trim() || '',
         dotColor: dot ? getComputedStyle(dot).backgroundColor : '',
         headlineColor: headline ? getComputedStyle(headline).color : '',
         particles: document.querySelectorAll('.homepage-roll-particles span').length,
@@ -224,20 +228,21 @@ try {
       `Preview roll did not update the complete accent and roll state: ${JSON.stringify({ initialHex, animated })}.`);
     assert(animated.dotColor === animated.headlineColor,
       `Preview roll color consumers diverged: ${JSON.stringify(animated)}.`);
-    assert(animated.particles > 0 && animated.pop, `Animated roll omitted the profile response: ${JSON.stringify(animated)}.`);
+    assert(animated.particles > 0 && animated.pop && animated.player && animated.playerScore, `Animated roll omitted the local result: ${JSON.stringify(animated)}.`);
 
     await page.waitFor('document.querySelector(".homepage-roll-compact__button")?.disabled === false', 'homepage impact phase completion');
     await page.setReducedMotion(true);
-    await page.click('.homepage-roll-compact__button', 'reduced-motion homepage preview roll');
+    await page.click('.homepage-roll-compact__button', 'reduced-motion homepage roll');
     await delay(60);
     const reduced = await page.evaluate(`(() => ({
       label: document.querySelector('.homepage-roll-compact__button')?.textContent?.trim() || '',
-      cardHex: document.querySelector('.homepage-roll-compact__result span:last-child')?.textContent?.trim() || '',
+      cardHex: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || '',
+      player: Boolean(document.querySelector('.homepage-roll-compact__result')),
       particles: document.querySelectorAll('.homepage-roll-particles span').length,
       pop: document.querySelector('.homepage-profile-pop')?.classList.contains('homepage-profile-pop--active') || false
     }))()`);
-    assert(reduced.label === 'Roll again' && reduced.cardHex !== animated.cardHex && reduced.particles === 0 && !reduced.pop,
-      `Reduced-motion preview roll did not settle immediately and quietly: ${JSON.stringify({ animated, reduced })}.`);
+    assert(reduced.label === 'Roll again' && reduced.cardHex !== animated.cardHex && reduced.player && reduced.particles === 0 && !reduced.pop,
+      `Reduced-motion homepage roll did not settle immediately and quietly: ${JSON.stringify({ animated, reduced })}.`);
     const networkAfter = homepageNetworkSnapshot();
     assert(networkAfter.supabaseRequestCount === networkBefore.supabaseRequestCount
       && networkAfter.storageCount === networkBefore.storageCount
@@ -253,7 +258,7 @@ try {
       layout: document.querySelector('.homepage-profile-demo--hero')?.dataset.homepageProfileLayout || '',
       name: document.querySelector('.homepage-profile-demo--hero .profile-full-bleed__name, .homepage-profile-demo--hero .profile-reference-card__name')?.textContent?.trim() || '',
       background: getComputedStyle(document.querySelector('.homepage-background')).backgroundImage,
-      roll: document.querySelector('.homepage-roll-compact__result span:last-child')?.textContent?.trim() || ''
+      roll: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || ''
     }))()`);
     await page.evaluate('document.querySelector(".homepage-theme-button--next")?.focus()');
     await pressEnter();
@@ -263,7 +268,7 @@ try {
       layout: document.querySelector('.homepage-profile-demo--hero')?.dataset.homepageProfileLayout || '',
       name: document.querySelector('.homepage-profile-demo--hero .profile-full-bleed__name, .homepage-profile-demo--hero .profile-reference-card__name')?.textContent?.trim() || '',
       background: getComputedStyle(document.querySelector('.homepage-background')).backgroundImage,
-      roll: document.querySelector('.homepage-roll-compact__result span:last-child')?.textContent?.trim() || ''
+      roll: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || ''
     }))()`);
     assert(before.fixture === 'meilin-horizon' && after.fixture === 'sleek-arcade', `Carousel fixture state is not deterministic: ${JSON.stringify({ before, after })}.`);
     assert(before.layout === 'full-bleed' && after.layout === 'compact' && before.name !== after.name && before.background !== after.background && before.roll !== after.roll, `Carousel did not update the complete environment: ${JSON.stringify({ before, after })}.`);
@@ -305,7 +310,7 @@ try {
     assert(initialNetwork.discoveryCount <= 1, `Homepage exceeded its bounded discovery budget: ${JSON.stringify(initialNetwork)}.`);
     assert(initialNetwork.profileHydrationCount === 0, `Homepage hydrated arbitrary public profiles: ${JSON.stringify(initialNetwork)}.`);
     assert(initialNetwork.storageCount === 0, `Homepage contacted Supabase Storage: ${JSON.stringify(initialNetwork)}.`);
-    assert(initialNetwork.remoteMediaCount === 0, `Homepage downloaded user media: ${JSON.stringify(initialNetwork)}.`);
+    assert(initialNetwork.remoteMediaCount <= 3, `Homepage exceeded its bounded leaderboard avatar media budget: ${JSON.stringify(initialNetwork)}.`);
     if (homepageIdleWaitMs > 0) {
       await delay(homepageIdleWaitMs);
       const idleNetwork = homepageNetworkSnapshot();
@@ -313,7 +318,7 @@ try {
         && idleNetwork.discoveryCount === initialNetwork.discoveryCount
         && idleNetwork.profileHydrationCount === 0
         && idleNetwork.storageCount === 0
-        && idleNetwork.remoteMediaCount === 0,
+        && idleNetwork.remoteMediaCount === initialNetwork.remoteMediaCount,
       `Homepage generated network activity while idle for ${homepageIdleWaitMs}ms: ${JSON.stringify({ initialNetwork, idleNetwork })}.`);
       return { ...state, initialNetwork, idleNetwork, idleWaitMs: homepageIdleWaitMs };
     }
@@ -339,7 +344,7 @@ try {
       scrollWidth: document.documentElement.scrollWidth,
       bodyScrollWidth: document.body.scrollWidth,
       heroColumns: getComputedStyle(document.querySelector('.homepage-hero')).gridTemplateColumns,
-      contextDisplay: getComputedStyle(document.querySelector('.homepage-hero__context')).display,
+      dailyLeaderboardDisplay: getComputedStyle(document.querySelector('.homepage-daily-leaderboard')).display,
       stage: (() => { const box = document.querySelector('.homepage-profile-stage')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right, width: box.width } : null; })(),
       card: (() => { const box = document.querySelector('.homepage-profile-demo--hero')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right, width: box.width, height: box.height } : null; })(),
       claim: (() => { const box = document.querySelector('.homepage-claim__field')?.getBoundingClientRect(); return box ? { left: box.left, right: box.right, width: box.width } : null; })(),
@@ -354,7 +359,7 @@ try {
     if (width > 930 && width <= 1180) {
       assert(state.claim && Math.abs(state.claim.width - 390) <= 1, `${width}x${height} intermediate claim width drifted from the reference: ${JSON.stringify(state)}.`);
     }
-    assert(state.headlineFont.includes('Clash Display'), `${width}x${height} homepage headline lost Clash Display: ${JSON.stringify(state)}.`);
+    assert(state.headlineFont.includes('Manrope Variable'), `${width}x${height} homepage headline lost Manrope: ${JSON.stringify(state)}.`);
     results.viewports.push(state);
     await capture(`homepage-${width}x${height}`);
   }

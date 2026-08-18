@@ -5066,3 +5066,17 @@ Historical `#links`, `#profile-aliases`, and `#profile-layout` hashes remain
 safe route aliases into the new Customize tabs. Link data validation, alias
 RPCs, draft/publish orchestration, auth, and preview rendering remain on their
 existing authorities.
+
+## 2026-08-17 — Make the homepage hero socially legible
+
+The homepage hero now uses the existing bounded `get_public_discovery` today
+surface for a compact Daily highest roll board. The board is rendered from the
+same normalized public rows as the lower community section, includes the
+provider-safe avatar reference when one is available, and links to canonical
+public profiles. It keeps loading, error, empty, reduced-motion, and avatar
+fallback states explicit.
+
+The hero copy now owns a small local roll preview beneath the lede. It remains
+deliberately local: an unauthenticated homepage preview must not create a real
+score or alter today’s server-authoritative leaderboard. A real account roll
+continues to belong to the existing gameplay flow and secure roll RPC.

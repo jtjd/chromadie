@@ -41,8 +41,8 @@
     border-bottom: 1px solid var(--homepage-border);
   }
 
-  .homepage-step__num { color: color-mix(in srgb, var(--homepage-accent) 48%, transparent); font: 600 2.4rem / 1 'Clash Display', sans-serif; }
-  .homepage-step h3 { margin: 0; color: var(--homepage-text); font: 600 1.65rem / 1.05 'Clash Display', sans-serif; letter-spacing: -0.03em; }
+  .homepage-step__num { color: color-mix(in srgb, var(--homepage-accent) 48%, transparent); font: 600 2.4rem / 1 var(--homepage-display); }
+  .homepage-step h3 { margin: 0; color: var(--homepage-text); font: 600 1.65rem / 1.05 var(--homepage-display); letter-spacing: -0.03em; }
   .homepage-step p { max-width: 430px; margin: 0; color: var(--homepage-muted); font: 400 0.92rem / 1.62 'Inter', sans-serif; }
 
   .homepage-step__visual {

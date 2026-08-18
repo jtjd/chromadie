@@ -18,6 +18,9 @@
   const dispatch = createEventDispatcher();
   let activeBackground = HOMEPAGE_FIXTURES[0].media.background;
   let activeAccent = HOMEPAGE_FIXTURES[0].accent;
+  let dailyLeaderboardRows = [];
+  let dailyLeaderboardLoading = true;
+  let dailyLeaderboardError = '';
 
   $: accountReady = accountState === ACCOUNT_STATES.SIGNED_OUT || accountState === ACCOUNT_STATES.AUTHENTICATED;
   $: accountUnavailable = accountState === ACCOUNT_STATES.PROFILE_ERROR;
@@ -33,6 +36,12 @@
 
   function handleAccentPreview(event) {
     activeAccent = event.detail.accent;
+  }
+
+  function handleDailyLeaderboard(event) {
+    dailyLeaderboardRows = event.detail.rows || [];
+    dailyLeaderboardLoading = event.detail.loading === true;
+    dailyLeaderboardError = event.detail.error || '';
   }
 </script>
 
@@ -57,6 +66,9 @@
   <main>
     <HomepageHero
       {isAuthenticated}
+      dailyLeaderboardRows={dailyLeaderboardRows}
+      dailyLeaderboardLoading={dailyLeaderboardLoading}
+      dailyLeaderboardError={dailyLeaderboardError}
       {accountReady}
       {accountUnavailable}
       on:fixturechange={handleFixtureChange}
@@ -65,12 +77,10 @@
       on:profile={forwardAction}
     />
 
-    <div class="homepage-fade-to-content" aria-hidden="true"></div>
-
     <div class="homepage-content">
       <HomepageLoop />
       <HomepageShowcase />
-      <HomepageCommunity />
+      <HomepageCommunity on:leaderboard={handleDailyLeaderboard} />
 
       <section class="homepage-final homepage-section__inner" aria-labelledby="homepage-final-title">
         <h2 id="homepage-final-title">Make it yours.</h2>

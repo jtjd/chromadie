@@ -1,8 +1,8 @@
 /*
  * Shared application typography remains available to existing product
- * surfaces. The approved chm.lol homepage reference uses the exact Clash
- * Display + Inter pairing declared below; its homepage shell scopes those
- * families without changing the typography contracts of other routes.
+ * surfaces. The homepage uses Manrope + Inter while Clash Display remains
+ * available to application and profile surfaces. The homepage adds its own
+ * Manrope display contract without changing other route typography.
  */
 /* Fontsource names the variable face "Inter Variable". The approved
    homepage contract uses the reference name "Inter", so expose the same

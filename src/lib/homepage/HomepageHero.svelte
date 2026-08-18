@@ -1,11 +1,15 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import HomepageClaim from './HomepageClaim.svelte';
+  import HomepageDailyLeaderboard from './HomepageDailyLeaderboard.svelte';
   import HomepageProfileDemo from './HomepageProfileDemo.svelte';
   import ProfileMotionEffect from '../profile-motion/ProfileMotionEffect.svelte';
   import { HOMEPAGE_FIXTURES } from './homepageFixtures.js';
 
   export let isAuthenticated = false;
+  export let dailyLeaderboardRows = [];
+  export let dailyLeaderboardLoading = true;
+  export let dailyLeaderboardError = '';
   export let accountReady = true;
   export let accountUnavailable = false;
 
@@ -51,15 +55,37 @@
   let impactTimer;
   let previewRollCount = 0;
   let rollPhase = 'idle';
-  let hasPreviewRolled = false;
+  let hasLeaderboardEntry = false;
+  let leaderboardScore = 0;
+  let resetLabel = '—';
+  let resetTimer;
 
   $: fixture = HOMEPAGE_FIXTURES[fixtureIndex];
-  $: exampleNumber = String(fixtureIndex + 1).padStart(2, '0');
   $: latestRoll = previewRoll || fixture.scores[0];
   $: isPreviewRolling = rollPhase !== 'idle';
-  $: previewRollButtonLabel = rollPhase === 'spin' ? 'Rolling…' : hasPreviewRolled ? 'Roll again' : 'Preview a roll';
+  $: previewRollButtonLabel = rollPhase === 'spin' ? 'Rolling…' : hasLeaderboardEntry ? 'Roll again' : 'Roll';
   $: profileImpactActive = rollPhase === 'impact';
   $: particleBurstActive = rollPhase === 'impact';
+
+  function updateResetLabel() {
+    const now = new Date();
+    const nextReset = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+    const seconds = Math.max(0, Math.floor((nextReset - now.getTime()) / 1000));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    resetLabel = [hours, minutes, remainingSeconds].map(value => String(value).padStart(2, '0')).join(':');
+  }
+
+  onMount(() => {
+    function scheduleResetLabel() {
+      updateResetLabel();
+      resetTimer = setTimeout(scheduleResetLabel, 1000);
+    }
+
+    scheduleResetLabel();
+    return () => clearTimeout(resetTimer);
+  });
 
   function hasReducedMotion() {
     return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
@@ -80,7 +106,8 @@
     const finalRoll = PREVIEW_ROLLS[(previewRollCount * 3 + 4) % PREVIEW_ROLLS.length];
     previewRollCount += 1;
     setLocalPreviewRoll(finalRoll);
-    hasPreviewRolled = true;
+    hasLeaderboardEntry = true;
+    leaderboardScore = Number(finalRoll.score) || 0;
     rollPhase = 'land';
     dispatch('accentpreview', { accent: finalRoll.hex_code });
 
@@ -125,7 +152,8 @@
     clearPreviewRollTimers();
     previewRoll = null;
     rollPhase = 'idle';
-    hasPreviewRolled = false;
+    hasLeaderboardEntry = false;
+    leaderboardScore = 0;
     fixtureIndex = (fixtureIndex + direction + HOMEPAGE_FIXTURES.length) % HOMEPAGE_FIXTURES.length;
     dispatch('fixturechange', { fixture: HOMEPAGE_FIXTURES[fixtureIndex] });
   }
@@ -147,21 +175,27 @@
     <h1 id="homepage-title">Your profile,<span>alive.</span></h1>
     <p class="homepage-hero__lede">Build a public profile with your background, avatar, links, music, layouts, and effects. Roll once a day and let every result become part of your history.</p>
 
-    <div class="homepage-roll-compact" aria-label="Example daily roll">
-      <div class="homepage-roll-compact__top">
-        <div>
-          <strong>Example daily roll</strong>
-          <span>Color, score, rarity, and conditions become part of your daily history.</span>
-        </div>
+    <div
+      class="homepage-roll-compact"
+      aria-label="Daily roll demo"
+      data-roll-hex={latestRoll.hex_code}
+      data-roll-score={latestRoll.score}
+    >
+      <div class="homepage-roll-compact__header">
+        <strong>Roll today</strong>
+        <span>{hasLeaderboardEntry ? 'Your result' : 'One roll · every day'}</span>
+      </div>
+      {#if hasLeaderboardEntry}
         <div class="homepage-roll-compact__result">
           <span class="homepage-roll-compact__dot" style={`background: ${latestRoll.hex_code};`} aria-hidden="true"></span>
-          <span>{latestRoll.hex_code}</span>
+          <div>
+            <strong>+{leaderboardScore.toLocaleString()} EP</strong>
+            <small>{latestRoll.identity} · {latestRoll.rarity}</small>
+          </div>
         </div>
-      </div>
-      <div class="homepage-roll-compact__meta">
-        <span>{latestRoll.identity}</span>
-        <strong>{Number(latestRoll.score).toLocaleString()} EP · {latestRoll.rarity}</strong>
-      </div>
+      {:else}
+        <p class="homepage-roll-compact__prompt">See where today’s color takes you.</p>
+      {/if}
       <button class="homepage-roll-compact__button" type="button" disabled={isPreviewRolling} on:click={previewDailyRoll}>{previewRollButtonLabel}</button>
     </div>
   </div>
@@ -206,20 +240,12 @@
     <p class="homepage-product-caption">Switch examples to change the profile environment.</p>
   </div>
 
-  <aside class="homepage-hero__context" aria-label="Profile preview details">
-    <div class="homepage-context-kicker">Profile example</div>
-    <div class="homepage-context-rule"></div>
-    <div class="homepage-context-row"><span>Example</span><strong>{exampleNumber} / 04</strong></div>
-    <div class="homepage-context-row"><span>Identity</span><strong>{fixture.displayName}</strong></div>
-    <div class="homepage-context-row"><span>Daily roll</span><strong>Color + score</strong></div>
-    <div class="homepage-context-row"><span>Media</span><strong>Background + avatar</strong></div>
-    <p class="homepage-context-note">The profile remains the center of the page. Media, links, daily history, and equipped effects provide the variation.</p>
-    <div class="homepage-context-dots" aria-hidden="true">
-      {#each HOMEPAGE_FIXTURES as item, index (item.id)}
-        <span class:active={index === fixtureIndex} class="homepage-context-dot"></span>
-      {/each}
-    </div>
-  </aside>
+  <HomepageDailyLeaderboard
+    rows={dailyLeaderboardRows}
+    loading={dailyLeaderboardLoading}
+    error={dailyLeaderboardError}
+    {resetLabel}
+  />
 </section>
 
 <style>
@@ -239,11 +265,11 @@
 
   .homepage-hero__copy { align-self: center; justify-self: start; width: min(100%, 360px); }
 
-  .homepage-eyebrow,
-  .homepage-context-kicker {
-    color: rgba(245, 245, 247, 0.62);
+  .homepage-eyebrow {
+    color: rgba(250, 249, 252, 0.9);
     font: 600 0.69rem / 1.2 'Inter', sans-serif;
     letter-spacing: 0.14em;
+    text-shadow: 0 1px 8px rgba(7, 4, 14, .62);
     text-transform: uppercase;
   }
 
@@ -253,7 +279,7 @@
   .homepage-hero h1 {
     margin: 0 0 24px;
     color: var(--homepage-text);
-    font: 600 clamp(3.8rem, 5.1vw, 5.7rem) / 0.86 'Clash Display', sans-serif;
+    font: 600 clamp(3.8rem, 5.1vw, 5.7rem) / 0.86 var(--homepage-display);
     letter-spacing: -0.055em;
     text-shadow: 0 8px 40px rgba(0, 0, 0, 0.55);
   }
@@ -263,9 +289,9 @@
   .homepage-hero__lede {
     max-width: 330px;
     margin: 0;
-    color: rgba(245, 245, 247, 0.72);
-    font: 400 0.98rem / 1.62 'Inter', sans-serif;
-    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.72);
+    color: rgba(250, 249, 252, 0.94);
+    font: 450 0.98rem / 1.62 'Inter', sans-serif;
+    text-shadow: 0 1px 3px rgba(7, 4, 14, .72), 0 0 16px rgba(7, 4, 14, .24);
   }
 
   .homepage-roll-compact {
@@ -276,25 +302,25 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .homepage-roll-compact__top { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; }
-  .homepage-roll-compact__top strong { display: block; color: var(--homepage-text); font: 600 0.82rem / 1.1 'Clash Display', sans-serif; }
-  .homepage-roll-compact__top span:not(.homepage-roll-compact__dot) { display: block; max-width: 220px; margin-top: 3px; color: var(--homepage-muted); font: 400 0.72rem / 1.35 'Inter', sans-serif; }
-  .homepage-roll-compact__result { display: flex; align-items: center; gap: 7px; color: var(--homepage-muted); font: 500 0.68rem / 1 'Clash Display', sans-serif; }
-  .homepage-roll-compact__dot { width: 9px; height: 9px; border-radius: 999px; box-shadow: 0 0 12px var(--homepage-roll-accent-glow, var(--homepage-accent-glow)); }
-  .homepage-roll-compact__meta { display: flex; justify-content: space-between; gap: 14px; margin-top: 12px; color: var(--homepage-muted); font: 400 0.68rem / 1.2 'Inter', sans-serif; }
-  .homepage-roll-compact__meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .homepage-roll-compact__meta strong { color: rgba(245, 245, 247, 0.7); font-weight: 500; white-space: nowrap; }
+  .homepage-roll-compact__header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .homepage-roll-compact__header strong { color: var(--homepage-text); font: 600 0.82rem / 1.1 var(--homepage-display); }
+  .homepage-roll-compact__header span { color: rgba(250, 249, 252, .72); font: 450 0.64rem / 1.1 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); white-space: nowrap; }
+  .homepage-roll-compact__prompt { margin: 0; color: rgba(250, 249, 252, .72); font: 450 0.72rem / 1.35 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); }
+  .homepage-roll-compact__result { display: flex; align-items: center; gap: 9px; min-height: 38px; }
+  .homepage-roll-compact__dot { width: 11px; height: 11px; flex: 0 0 auto; border-radius: 999px; box-shadow: 0 0 14px var(--homepage-roll-accent-glow, var(--homepage-accent-glow)); }
+  .homepage-roll-compact__result strong { display: block; color: rgba(250, 249, 252, .94); font: 600 0.84rem / 1.1 var(--homepage-display); }
+  .homepage-roll-compact__result small { display: block; margin-top: 4px; color: rgba(250, 249, 252, .68); font: 400 0.66rem / 1.2 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); }
 
   .homepage-roll-compact__button {
     width: 100%;
     height: 42px;
-    margin-top: 13px;
+    margin-top: 14px;
     border: 1px solid var(--homepage-accent);
     border-radius: 9px;
     background: rgba(5, 5, 6, 0.28);
     color: var(--homepage-accent);
     cursor: pointer;
-    font: 600 0.82rem / 1 'Clash Display', sans-serif;
+    font: 600 0.82rem / 1 var(--homepage-display);
     transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   }
 
@@ -389,21 +415,10 @@
 
   .homepage-product-caption { margin: 0; color: rgba(245, 245, 247, 0.38); font: 400 0.7rem / 1.2 'Inter', sans-serif; text-align: center; }
 
-  .homepage-hero__context { align-self: center; justify-self: end; width: min(100%, 270px); padding-top: 42px; }
-  .homepage-context-rule { height: 1px; margin-bottom: 4px; background: rgba(255, 255, 255, 0.12); }
-  .homepage-context-row { display: flex; min-height: 54px; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-  .homepage-context-row span { color: rgba(245, 245, 247, 0.42); font: 400 0.72rem / 1.2 'Inter', sans-serif; }
-  .homepage-context-row strong { color: rgba(245, 245, 247, 0.82); font: 500 0.78rem / 1.2 'Clash Display', sans-serif; text-align: right; }
-  .homepage-context-note { max-width: 240px; margin: 18px 0 0; color: rgba(245, 245, 247, 0.47); font: 400 0.76rem / 1.55 'Inter', sans-serif; }
-  .homepage-context-dots { display: flex; gap: 6px; margin-top: 16px; }
-  .homepage-context-dot { width: 22px; height: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.13); transition: background 0.2s ease, width 0.2s ease; }
-  .homepage-context-dot.active { width: 34px; background: var(--homepage-accent); box-shadow: 0 0 12px var(--homepage-accent-glow); }
-
   @media (max-width: 1180px) {
     .homepage-hero { grid-template-columns: minmax(0, 1fr) 430px minmax(0, 0.7fr); gap: 24px; }
     .homepage-hero__product { width: 430px; }
     .homepage-profile-stage { width: 410px; }
-    .homepage-hero__context { width: 210px; }
     .homepage-hero h1 { font-size: clamp(3.55rem, 5.4vw, 4.8rem); }
   }
 
@@ -415,7 +430,6 @@
     .homepage-roll-compact { max-width: 420px; }
     .homepage-hero__product { grid-column: 1; width: 100%; max-width: 470px; }
     .homepage-profile-stage { width: 100%; max-width: 440px; }
-    .homepage-hero__context { display: none; }
   }
 
   @media (max-width: 460px) {
@@ -423,14 +437,14 @@
     .homepage-theme-button--prev { left: 0; }
     .homepage-theme-button--next { right: 0; }
     .homepage-hero__product { gap: 14px; }
-    .homepage-roll-compact__meta { align-items: flex-start; flex-direction: column; gap: 4px; }
+    .homepage-roll-compact__header { align-items: flex-start; flex-direction: column; gap: 5px; }
+    .homepage-roll-compact__header span { font-size: 0.62rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .homepage-profile-pop--active { animation: none; }
     .homepage-roll-particles { display: none; }
     .homepage-roll-compact__button { transition: none; }
-    .homepage-theme-button,
-    .homepage-context-dot { transition: none; }
+    .homepage-theme-button { transition: none; }
   }
 </style>

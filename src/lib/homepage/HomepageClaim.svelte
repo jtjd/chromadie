@@ -94,7 +94,7 @@
     box-shadow: 0 0 0 3px var(--homepage-accent-soft), 0 16px 38px rgba(0, 0, 0, 0.26);
   }
 
-  .homepage-claim__prefix { color: rgba(245, 245, 247, 0.5); font: 500 0.9rem / 1 'Clash Display', sans-serif; white-space: nowrap; }
+  .homepage-claim__prefix { color: rgba(245, 245, 247, 0.5); font: 500 0.9rem / 1 var(--homepage-display); white-space: nowrap; }
 
   .homepage-claim__field input {
     min-width: 0;
@@ -105,7 +105,7 @@
     outline: 0;
     background: transparent;
     color: var(--homepage-text);
-    font: 500 0.96rem / 1 'Clash Display', sans-serif;
+    font: 500 0.96rem / 1 var(--homepage-display);
   }
 
   .homepage-claim__field input::placeholder { color: rgba(245, 245, 247, 0.23); }
@@ -116,7 +116,7 @@
     border: 0;
     background: var(--homepage-text);
     color: #08080a;
-    font: 600 0.88rem / 1 'Clash Display', sans-serif;
+    font: 600 0.88rem / 1 var(--homepage-display);
     cursor: pointer;
     transition: background 0.18s ease, transform 0.18s ease;
   }

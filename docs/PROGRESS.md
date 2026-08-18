@@ -3959,4 +3959,17 @@ file and are revoked when replaced or destroyed.
 
 Added source, resolver, database-security, homepage network-budget, and Studio
 media-stability regression coverage. The homepage remains fixture-driven with
-one bounded live discovery read and no user-media downloads or polling.
+one bounded live discovery read, at most three provider-safe public avatar
+media requests, and no polling.
+
+## Homepage daily roll board — 2026-08-17
+
+- Replaced the hero’s right-side profile context copy with a compact Daily
+  highest roll board backed by the real `today` discovery surface.
+- Added avatar rendering through the existing provider-safe profile media URL
+  contract, canonical profile links, and bounded loading/error/empty states.
+- Moved the local demo roll beneath the hero copy; it previews the interaction
+  without writing a guest score or pretending to publish a real leaderboard
+  result.
+- Updated responsive browser smoke coverage, network-budget assertions, source
+  tests, and the homepage validation suite.

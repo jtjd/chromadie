@@ -144,7 +144,7 @@
     box-shadow: 0 0 16px color-mix(in srgb, var(--homepage-demo-accent) 40%, transparent);
   }
 
-  .homepage-profile-demo__mini-name { color: var(--homepage-text); font: 600 1.15rem / 1.1 'Clash Display', sans-serif; }
+  .homepage-profile-demo__mini-name { color: var(--homepage-text); font: 600 1.15rem / 1.1 var(--homepage-display); }
   .homepage-profile-demo__mini-meta { margin-top: 2px; overflow: hidden; color: rgba(245, 245, 247, 0.5); font: 400 0.72rem / 1.2 'Inter', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
   .homepage-profile-demo__mini-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-top: 15px; }
 

@@ -18,13 +18,15 @@ test('the approved homepage typography is bundled and authoritative', async () =
   assert.match(fonts, /font-family: 'Inter'/);
   assert.match(fonts, /font-weight: 400/);
   assert.match(main, /@fontsource-variable\/inter\/wght\.css/);
+  assert.match(main, /@fontsource-variable\/manrope\/wght\.css/);
   assert.doesNotMatch(index, /fonts\.googleapis|fonts\.gstatic/);
   assert.match(homepage, /font-family: 'Inter'/);
-  assert.match(homepage, /font-family: 'Clash Display'/);
-  assert.match(homepage, /\.app-main--site \.homepage-reference :is\(h1, h2, h3\)/);
-  assert.match(homepage, /font-family: 'Clash Display', sans-serif !important/);
-  assert.match(header, /'Clash Display'/);
-  assert.match(claim, /'Inter'/);
+  assert.match(homepage, /--homepage-display: 'Manrope Variable'/);
+  assert.match(homepage, /\.app-main--site \.homepage-reference :is\(\.homepage-hero__copy > h1, \.homepage-section-heading, \.homepage-final h2, \.homepage-step h3\)/);
+  assert.match(homepage, /font-family: var\(--homepage-display\) !important/);
+  assert.match(header, /var\(--homepage-display\)/);
+  assert.doesNotMatch(`${homepage}${header}${claim}`, /'Clash Display'/);
+  assert.match(claim, /var\(--homepage-display\)/);
 });
 
 test('the homepage shell preserves the frozen reference geometry and treatment', async () => {
@@ -42,6 +44,10 @@ test('the homepage shell preserves the frozen reference geometry and treatment',
   assert.match(styles, /--homepage-radius: 18px/);
   assert.match(styles, /position: fixed/);
   assert.match(styles, /--homepage-background-image/);
+  assert.match(styles, /\.homepage-content \{/);
+  assert.match(styles, /\.homepage-content::before \{/);
+  assert.match(styles, /height: 280px/);
+  assert.match(styles, /rgba\(5, 5, 6, \.36\) 0/);
   assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
   assert.match(hero, /min-height: calc\(100svh - 88px\)/);
   assert.match(hero, /width: 440px/);

@@ -43,7 +43,7 @@ test('homepage network budget is bounded and fixture changes stay local', async 
   assert.match(smoke, /discoveryCount <= 1/);
   assert.match(smoke, /profileHydrationCount === 0/);
   assert.match(smoke, /storageCount === 0/);
-  assert.match(smoke, /remoteMediaCount === 0/);
+  assert.match(smoke, /remoteMediaCount <= 3/);
   assert.match(smoke, /homepageIdleWaitMs/);
   assert.match(smoke, /61000/);
 });

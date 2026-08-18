@@ -3174,3 +3174,13 @@ direct route behavior.
 - Matched the Immersive name and bio scale to the approved reference.
 - Tightened the horizontal spacing between social icons without changing the
   full-bleed profile composition or link behavior.
+
+## 2026-08-17 — Add the homepage daily highest-roll board
+
+- Replaced the hero’s profile-example context panel with a compact live board
+  using today’s public discovery results, real EP scores, avatars, color
+  accents, and canonical profile links.
+- Moved the homepage roll preview under the hero copy and kept it local so the
+  public landing page cannot create unauthenticated server scores.
+- Added responsive, reduced-motion, fallback-avatar, and bounded-network
+  regression coverage.

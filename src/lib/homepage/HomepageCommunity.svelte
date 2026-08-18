@@ -1,11 +1,12 @@
 <script>
-  import { onDestroy, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { getCanonicalProfilePath } from '../routeContract.js';
   import { supabase } from '../supabase.js';
   import { normalizeDiscoveryResponse } from '../discoveryData.js';
   import { normalizeHexColor } from '../utils.js';
 
   const COMMUNITY_LIMIT = 3;
+  const dispatch = createEventDispatcher();
   let rows = [];
   let loading = true;
   let error = '';
@@ -25,6 +26,7 @@
     const currentRequestId = ++requestId;
     loading = true;
     error = '';
+    dispatch('leaderboard', { rows, loading, error });
 
     try {
       const { data, error: rpcError } = await supabase.rpc('get_public_discovery', {
@@ -47,7 +49,10 @@
       rows = [];
       error = 'Public profiles could not be loaded right now.';
     } finally {
-      if (currentRequestId === requestId) loading = false;
+      if (currentRequestId === requestId) {
+        loading = false;
+        dispatch('leaderboard', { rows, loading, error });
+      }
     }
   }
 
@@ -102,9 +107,9 @@
   .homepage-leader-row:hover,
   .homepage-leader-row:focus-visible { background: rgba(255, 255, 255, 0.025); }
   .homepage-leader-row:focus-visible { outline: 2px solid var(--homepage-accent); outline-offset: -2px; }
-  .homepage-leader-rank { color: var(--homepage-muted); font: 400 0.92rem / 1 'Clash Display', sans-serif; }
+  .homepage-leader-rank { color: var(--homepage-muted); font: 400 0.92rem / 1 var(--homepage-display); }
   .homepage-leader-rank.top { color: var(--homepage-accent); }
-  .homepage-leader-name { min-width: 0; overflow: hidden; color: var(--homepage-text); font: 500 0.95rem / 1.2 'Clash Display', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+  .homepage-leader-name { min-width: 0; overflow: hidden; color: var(--homepage-text); font: 500 0.95rem / 1.2 var(--homepage-display); text-overflow: ellipsis; white-space: nowrap; }
   .homepage-leader-score { color: rgba(245, 245, 247, 0.82); font: 600 0.8rem / 1 'Inter', sans-serif; white-space: nowrap; }
   .homepage-leader-color { width: 10px; height: 10px; border-radius: 3px; box-shadow: 0 0 11px currentColor; }
   .homepage-leaderboard__state { display: flex; min-height: 70px; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--homepage-border); color: var(--homepage-muted); font: 400 0.82rem / 1.45 'Inter', sans-serif; }

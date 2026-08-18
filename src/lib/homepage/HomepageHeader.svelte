@@ -75,7 +75,7 @@
     flex: 0 0 auto;
     gap: 11px;
     color: var(--homepage-text);
-    font: 600 1.28rem / 1 'Clash Display', sans-serif;
+    font: 600 1.28rem / 1 var(--homepage-display);
     letter-spacing: -0.025em;
     text-decoration: none;
   }
@@ -141,7 +141,7 @@
     border-radius: 9px;
     background: var(--homepage-text);
     color: #08080a;
-    font: 600 0.88rem / 1 'Clash Display', sans-serif;
+    font: 600 0.88rem / 1 var(--homepage-display);
     text-decoration: none;
     cursor: pointer;
     transition: transform 0.18s ease, background 0.18s ease;
