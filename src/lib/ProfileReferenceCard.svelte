@@ -291,11 +291,13 @@
 
   .profile-reference-card--framed .profile-reference-card__links a img {
     display: block;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: calc(1.75rem * var(--profile-reference-link-scale, 1));
+    height: calc(1.75rem * var(--profile-reference-link-scale, 1));
     object-fit: contain;
-    filter: brightness(0) invert(1) drop-shadow(0 0 calc(.45rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.95));
-    opacity: .86;
+    /* Keep the glow on the icon alpha itself. The anchor stays transparent so
+       framed links do not read as glowing empty buttons. */
+    filter: brightness(0) invert(1) drop-shadow(0 0 calc(.55rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.98)) drop-shadow(0 0 calc(1.15rem * var(--profile-reference-link-glow, 0)) rgba(255,255,255,.48));
+    opacity: .92;
   }
 
   .profile-reference-card--framed .profile-reference-card__link-label {
