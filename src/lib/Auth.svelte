@@ -411,9 +411,7 @@
     gap: 1rem;
     margin-bottom: 1.35rem;
     padding: 0.9rem 0.95rem 0.85rem;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.016)),
-      rgba(255,255,255,0.012);
+    background: rgba(255,255,255,.035);
     border: 1px solid rgba(255,255,255,0.07);
     border-radius: var(--radius-sm);
     box-shadow: none;
@@ -485,9 +483,7 @@
   .tabs {
     display: flex;
     margin-bottom: 1rem;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018)),
-      rgba(255,255,255,0.012);
+    background: rgba(255,255,255,.035);
     border-radius: var(--radius-sm);
     padding: 0.2rem;
     border: 1px solid rgba(255,255,255,0.07);
@@ -596,11 +592,11 @@
     width: 100%;
     margin-top: 0.5rem;
     min-height: 50px;
-    border: 1px solid var(--color-accent);
+    border: 0;
     border-radius: var(--radius-sm);
-    background: var(--color-accent);
-    color: #10140a;
-    font-family: var(--font-display);
+    background: var(--color-ink-strong);
+    color: #08080a;
+    font-family: var(--font-display-stack);
     font-size: 1rem;
     font-weight: 700;
     letter-spacing: 0.01em;
@@ -609,6 +605,7 @@
   }
   .auth-submit:hover:not(:disabled) {
     transform: translateY(-1px);
+    background: var(--color-accent);
     box-shadow: none;
     filter: brightness(1.02);
   }
@@ -671,11 +668,9 @@
       margin-bottom: 1rem;
       top: auto;
       padding: 0.8rem 0.85rem 0.75rem;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012)),
-        rgba(255,255,255,0.01);
+      background: rgba(255,255,255,.025);
       border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 16px;
+      border-radius: 18px;
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
     }

@@ -15,6 +15,7 @@
   export let mobileDirty = false;
   export let mobileSaving = false;
   export let dirty = false;
+  export let showBrand = true;
   /** @type {any} */
   export let previewRenderSnapshot = null;
 
@@ -107,10 +108,12 @@
   <ProfileEnvironmentLayer snapshot={previewRenderSnapshot} mode="studio" reducedMotion={prefersReducedMotion} />
 
   <header class="profile-studio-shell__header">
-    <a class="profile-studio-shell__brand" href="/" aria-label="chm.lol home">
-      <span class="profile-studio-shell__brand-mark" aria-hidden="true"></span>
-      <span class="profile-studio-shell__brand-name">chm.lol</span>
-    </a>
+    {#if showBrand}
+      <a class="profile-studio-shell__brand" href="/" aria-label="chm.lol home">
+        <span class="profile-studio-shell__brand-mark" aria-hidden="true"></span>
+        <span class="profile-studio-shell__brand-name">chm.lol</span>
+      </a>
+    {/if}
     <div class="profile-studio-shell__header-actions">
       <a class="profile-studio-shell__view-profile" href={ownerProfilePath}>View profile</a>
       <button
@@ -175,7 +178,7 @@
 
 <style>
   .profile-studio-shell {
-    --studio-background: #050506;
+    --studio-background: transparent;
     --studio-panel: rgba(12, 12, 15, .78);
     --studio-panel-card: rgba(10, 10, 12, .58);
     --studio-control: rgba(255, 255, 255, .035);
@@ -185,9 +188,10 @@
     --studio-text: #f8f8f8;
     --studio-muted: #8f9099;
     --studio-faint: #686971;
-    --studio-accent: #00ffb3;
-    --studio-accent-soft: rgba(0, 255, 179, .08);
-    --studio-accent-glow: rgba(0, 255, 179, .24);
+    --studio-accent: var(--site-brand-accent, #D8A6FF);
+    --studio-accent-soft: var(--site-brand-accent-soft, rgba(216, 166, 255, .08));
+    --studio-accent-glow: var(--site-brand-accent-glow, rgba(216, 166, 255, .24));
+    --studio-display: 'Manrope Variable', var(--font-display-stack, sans-serif);
     position: relative;
     isolation: isolate;
     display: block;
@@ -222,12 +226,12 @@
   .profile-studio-shell__brand { display: inline-flex; align-items: center; gap: .65rem; min-width: 0; }
   .profile-studio-shell__brand-mark { position: relative; width: 1.45rem; height: 1.45rem; border: 2px solid color-mix(in srgb, var(--studio-accent) 36%, transparent); border-radius: 50%; box-shadow: 0 0 15px var(--studio-accent-glow); }
   .profile-studio-shell__brand-mark::after { position: absolute; inset: .36rem; border-radius: 50%; background: var(--studio-accent); content: ''; }
-  .profile-studio-shell__brand-name { font: 600 1.25rem/1 'Clash Display', var(--font-display-stack, sans-serif); letter-spacing: -.025em; }
+  .profile-studio-shell__brand-name { font: 600 1.25rem/1 var(--studio-display); letter-spacing: -.025em; }
   .profile-studio-shell__header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .85rem; min-width: 0; }
   .profile-studio-shell__view-profile { color: var(--studio-muted); font-size: .8rem; font-weight: 500; white-space: nowrap; }
   .profile-studio-shell__view-profile:hover, .profile-studio-shell__view-profile:focus-visible { color: var(--studio-text); }
-  .profile-studio-shell__publish { min-height: 2.31rem; padding: 0 1.1rem; border: 1px solid var(--studio-accent); border-radius: 7px; background: var(--studio-accent); color: #050506; font: 700 .76rem/1 'Clash Display', var(--font-display-stack, sans-serif); white-space: nowrap; cursor: pointer; }
-  .profile-studio-shell__publish:hover:not(:disabled), .profile-studio-shell__publish:focus-visible { border-color: var(--studio-text); background: var(--studio-text); }
+  .profile-studio-shell__publish { min-height: 42px; padding: 0 18px; border: 0; border-radius: 9px; background: var(--studio-text); color: #08080a; font: 600 .78rem/1 var(--studio-display); white-space: nowrap; cursor: pointer; }
+  .profile-studio-shell__publish:hover:not(:disabled), .profile-studio-shell__publish:focus-visible { border-color: transparent; background: var(--studio-accent); }
   .profile-studio-shell__publish:disabled { border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.12); color: rgba(255,255,255,.42); cursor: default; }
   .profile-studio-shell__menu-wrap { position: relative; flex: 0 0 auto; }
   .profile-studio-shell__menu-trigger { min-height: 2.25rem; padding: .45rem .1rem; border: 0; background: transparent; color: var(--studio-muted); font: 500 .78rem/1 'Inter', var(--font-body-stack, sans-serif); cursor: pointer; }
@@ -263,13 +267,13 @@
     .profile-studio-shell__publish { min-height: 2.5rem; padding-inline: .8rem; font-size: .7rem; }
     .profile-studio-shell__workspace,
     .profile-studio-shell--with-preview .profile-studio-shell__workspace { grid-template-columns: minmax(0, 1fr); width: calc(100% - 24px); padding-top: 1.5rem; }
-    .profile-studio-shell__mobile-tools { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: calc(100% - 24px); min-height: 2.8rem; margin: 0 auto; border-bottom: 1px solid var(--studio-border); color: var(--studio-text); font: 600 .8rem/1 'Clash Display', var(--font-display-stack, sans-serif); }
+    .profile-studio-shell__mobile-tools { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: calc(100% - 24px); min-height: 2.8rem; margin: 0 auto; border-bottom: 1px solid var(--studio-border); color: var(--studio-text); font: 600 .8rem/1 var(--studio-display); }
     .profile-studio-shell__mobile-tools button { min-height: 2.2rem; padding: .45rem .1rem; border: 0; background: transparent; color: var(--studio-accent); font: 600 .74rem/1 'Inter', var(--font-body-stack, sans-serif); cursor: pointer; }
     .profile-studio-shell__preview { min-height: 20rem; padding-top: .75rem; }
     .profile-studio-shell--dirty .profile-studio-shell__workspace { padding-bottom: 6.1rem; }
     .profile-studio-shell__mobile-actions { position: fixed; inset: auto 0 0; z-index: 70; display: flex; align-items: center; justify-content: space-between; gap: .7rem; min-height: 4.1rem; box-sizing: border-box; padding: .65rem .85rem calc(.65rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--studio-border); background: rgba(5, 5, 6, .94); box-shadow: 0 -.8rem 2rem rgba(0, 0, 0, .22); }
     .profile-studio-shell__mobile-actions span { color: #f5c26f; font: 600 .74rem/1.2 'Inter', var(--font-body-stack, sans-serif); }
-    .profile-studio-shell__mobile-actions button { min-height: 2.65rem; padding: .5rem .75rem; border: 1px solid var(--studio-accent); border-radius: .45rem; background: var(--studio-accent); color: #050506; font: 700 .74rem/1 'Clash Display', var(--font-display-stack, sans-serif); cursor: pointer; }
+    .profile-studio-shell__mobile-actions button { min-height: 42px; padding: .5rem .75rem; border: 0; border-radius: 9px; background: var(--studio-text); color: #08080a; font: 600 .74rem/1 var(--studio-display); cursor: pointer; }
     .profile-studio-shell__mobile-actions button:disabled { cursor: wait; opacity: .6; }
     .profile-studio-shell__more-menu { position: fixed; top: 4.45rem; right: .75rem; max-width: calc(100vw - 1.5rem); }
   }

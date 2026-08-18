@@ -12,28 +12,18 @@
   }
 </script>
 
-<div class="container">
-  <div class="card" role="alert">
-    <h1>Account unavailable</h1>
-    <p class="info-text">We could not load your account data. Retry or sign out, then sign in again.</p>
-    <div class="button-row">
-      <button type="button" class="roll-btn" on:click={retry}>Retry</button>
-      <button type="button" class="roll-btn" on:click={logout}>Log Out</button>
+<main class="site-state-page" aria-labelledby="account-unavailable-title">
+  <section class="site-state-card" role="alert">
+    <p class="site-state-kicker">Account</p>
+    <h1 id="account-unavailable-title">Account unavailable</h1>
+    <p>We could not load your account data. Retry or sign out, then sign in again.</p>
+    <div class="site-state-actions">
+      <button type="button" class="site-button site-button--primary" on:click={retry}>Retry</button>
+      <button type="button" class="site-button site-button--secondary" on:click={logout}>Log out</button>
     </div>
-  </div>
-</div>
+  </section>
+</main>
 
 <style>
-  .button-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    justify-content: center;
-    margin-top: 1rem;
-  }
-
-  @media (max-width: 36rem) {
-    .button-row { flex-direction: column; }
-    .button-row > button { width: 100%; }
-  }
+  .site-state-card .site-button { flex: 0 0 auto; }
 </style>

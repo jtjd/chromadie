@@ -618,7 +618,7 @@ try {
     // Let the first authenticated hydration settle before the next step
     // deliberately performs a direct refresh. This keeps local Supabase auth
     // token propagation from racing the refresh assertion in CI.
-    await page.waitFor('document.querySelector(".profile-studio-shell__brand")', 'authenticated Profile Studio shell', 30000);
+    await page.waitFor('document.querySelector(".profile-settings-page") && document.querySelector(".site-mode-header__wordmark") && !document.querySelector(".profile-studio-shell__brand")', 'authenticated Profile Studio shell uses shared site header', 30000);
     const state = await page.evaluate(`(() => ({ path: location.pathname, settings: Boolean(document.querySelector('.profile-settings-page')), authPage: Boolean(document.querySelector('.auth-page')), overlay: Boolean(document.querySelector('.auth-modal-overlay')) }))()`);
     assert(state.path === '/profile/settings', `Safe auth redirect landed on ${state.path}.`);
     assert(state.settings && !state.authPage && !state.overlay, 'Authenticated auth route left an auth page or overlay mounted.');
@@ -627,11 +627,11 @@ try {
 
   await step('direct-refresh authenticated Profile Studio', async () => {
     await page.navigate(`${appUrl}/profile/settings`, 'authenticated Profile Studio');
-    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.profile-studio-shell__brand')`, 'Profile Studio');
-    const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-studio-workspace')?.getAttribute('data-section-destination') || '', authenticated: Boolean(document.querySelector('.profile-studio-shell__brand')), globalHeader: Boolean(document.querySelector('.site-mode-header')) })`);
+    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.site-mode-header__wordmark') && !document.querySelector('.profile-studio-shell__brand')`, 'Profile Studio shared shell');
+    const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-studio-workspace')?.getAttribute('data-section-destination') || '', sharedHeader: Boolean(document.querySelector('.site-mode-header__wordmark')), legacyStudioBrand: Boolean(document.querySelector('.profile-studio-shell__brand')) })`);
     assert(state.path === '/profile/settings', `Expected /profile/settings after refresh, got ${state.path}.`);
-    assert(state.authenticated, 'Authenticated owner card is missing after Profile Studio refresh.');
-    assert(!state.globalHeader, 'Profile Studio mounted the redundant global site header.');
+    assert(state.sharedHeader, 'Shared site header is missing after Profile Studio refresh.');
+    assert(!state.legacyStudioBrand, 'Profile Studio still mounts the legacy embedded brand.');
     await capture('04-profile-studio');
     return state;
   });

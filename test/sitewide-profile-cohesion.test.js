@@ -31,7 +31,7 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);
   assert.match(siteHeader, /--site-header-control-size: 0\.84rem/);
   assert.match(siteHeader, /--site-header-font: 'Inter'/);
-  assert.match(siteHeader, /--site-header-display: 'Clash Display'/);
+  assert.match(siteHeader, /--site-header-display: 'Manrope Variable'/);
   assert.match(siteHeader, /site-mode-header__brand-mark/);
   assert.match(siteHeader, /data-site-chrome="header"/);
   assert.match(siteHeader, /height: 88px/);
@@ -84,9 +84,10 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.doesNotMatch(siteStyles, /\.app-main--site \.discovery-card/);
   assert.doesNotMatch(siteStyles, /\.app-main--site \.shop-page|\.shop-heading|\.shop-item/);
   assert.match(siteStyles, /--site-font: 'Inter'/);
-  assert.match(siteStyles, /--font-display-stack: 'Clash Display'/);
+  assert.match(siteStyles, /--font-display-stack: 'Manrope Variable'/);
   assert.match(siteStyles, /--font-body-stack: 'Inter'/);
-  assert.match(siteStyles, /--site-accent: #00ffb3/);
+  assert.match(siteStyles, /--site-accent: var\(--site-brand-accent\)/);
+  assert.match(siteStyles, /--site-atmosphere-image: url\('\/site\/chromadie-roll-horizon\.webp'\)/);
   assert.doesNotMatch(siteStyles, /site-mode-header:not\(\.site-mode-header--home\):not\(\.site-mode-header--profile\)/);
   assert.match(siteHeader, /\.site-mode-header__brand-mark/);
   assert.match(siteStyles, /Homepage baseline for supporting routes/);
@@ -104,7 +105,7 @@ test('profile mode keeps the new header transparent and account-only', async () 
   assert.match(siteHeader, /\.site-mode-header--profile \{[\s\S]*background: transparent !important;[\s\S]*backdrop-filter: none !important;/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__nav-space \{ display: none; \}/);
   assert.match(siteHeader, /\.site-mode-header--profile \.site-mode-header__mobile-menu \{ display: none; \}/);
-  assert.match(siteHeader, /\{#if isHomeMode \|\| isHomepageStyle\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
+  assert.match(siteHeader, /\{#if isHomeMode\}<button[\s\S]*?Sign up<\/button>\{\/if\}/);
   assert.match(profileShell, /ProfileEnvironmentLayer/);
   assert.match(environment, /profile-environment--public/);
   assert.match(profileShell, /mode=\{previewMode \? 'preview' : 'public'\}/);
@@ -130,7 +131,7 @@ test('leaderboard owns a focused podium-and-list presentation contract', async (
   assert.match(leaderboard, /roll-leaderboard__lower/);
   assert.match(leaderboardEntry, /leaderboard-row/);
   assert.match(leaderboard, /--leaderboard-accent:/);
-  assert.match(leaderboard, /Clash Display/);
+  assert.match(leaderboard, /Manrope Variable/);
   assert.doesNotMatch(siteStyles, /discovery-(?:hub|card|grid|tabs|empty|your-rank)/);
   assert.match(privacy, /class="container site-document legal-page"/);
   assert.match(terms, /class="site-document terms"/);

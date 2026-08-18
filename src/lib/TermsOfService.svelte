@@ -20,12 +20,12 @@
 <style>
   .terms { width: min(100%, 62rem); margin: 0 auto; padding: clamp(3rem, 8vw, 7rem) clamp(1.1rem, 4vw, 3rem) 6rem; color: var(--color-ink-strong); }
   .terms__hero { max-width: 48rem; padding-bottom: 4rem; }
-  .terms__eyebrow { margin: 0; color: var(--color-accent-bright); font: 600 .68rem/1.2 var(--font-mono-stack); letter-spacing: .12em; text-transform: lowercase; }
+  .terms__eyebrow { margin: 0; color: var(--color-accent); font: 700 .72rem/1.2 var(--font-body-stack); letter-spacing: .14em; text-transform: uppercase; }
   .terms h1 { margin: .7rem 0 0; font: 700 clamp(2.2rem, 5vw, 4rem)/.98 var(--font-display-stack); letter-spacing: -.055em; }
   .terms h2 { margin: 0; font: 650 1.25rem/1.15 var(--font-body-stack); }
   .terms p, .terms li { color: var(--color-ink-muted); line-height: 1.65; }
   .terms__hero > p:not(.terms__eyebrow):not(.terms__updated) { margin: 1.2rem 0 0; font-size: 1rem; }
-  .terms__updated { margin: 1rem 0 0; color: var(--color-ink-faint); font: 500 .68rem/1.2 var(--font-mono-stack); }
+  .terms__updated { margin: 1rem 0 0; color: var(--color-ink-faint); font: 500 .68rem/1.2 var(--font-body-stack); }
   .terms__section { padding: 2rem 0; border-top: 1px solid rgba(255,255,255,.12); }
   .terms__section p { margin: .75rem 0 0; }
   .terms__section ul { display: grid; gap: .5rem; margin: .75rem 0 0; padding-left: 1.2rem; }

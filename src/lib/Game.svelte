@@ -361,7 +361,7 @@
     ctx.fillText('ChromaDie', 96, 132);
 
     ctx.fillStyle = '#767b8c';
-    ctx.font = '600 20px "Satoshi", sans-serif';
+    ctx.font = '600 20px Inter, sans-serif';
     ctx.fillText('Daily Roll', 96, 164);
 
     const orbGlow = ctx.createRadialGradient(262, 326, 18, 262, 326, 150);
@@ -385,7 +385,7 @@
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#e0e0e0';
-    ctx.font = '700 28px "Geist Mono", monospace';
+    ctx.font = '700 28px Inter, sans-serif';
     ctx.fillText(cardColor.toUpperCase(), 262, 482);
 
     ctx.textAlign = 'left';
@@ -394,7 +394,7 @@
     ctx.fillText(scoreText, 460, 320);
 
     ctx.fillStyle = '#767b8c';
-    ctx.font = '500 24px "Satoshi", sans-serif';
+    ctx.font = '500 24px Inter, sans-serif';
     ctx.fillText('Entropy Points', 460, 368);
 
     const rarityColors = {
@@ -410,11 +410,11 @@
     ctx.fillText((rarity || 'Common').toUpperCase(), 460, 420);
 
     ctx.fillStyle = '#767b8c';
-    ctx.font = '500 22px "Satoshi", sans-serif';
+    ctx.font = '500 22px Inter, sans-serif';
     ctx.fillText('Can you beat my color?', 460, 476);
 
     ctx.fillStyle = '#8b7cf6';
-    ctx.font = '600 18px "Satoshi", sans-serif';
+    ctx.font = '600 18px Inter, sans-serif';
     ctx.fillText(getAppOrigin().replace(/^https?:\/\//, ''), 460, 514);
 
     ctx.restore();
@@ -979,10 +979,9 @@
 <style>
   .results-header-tight { margin-bottom: 5px !important; }
   .post-score-actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 20px 0; flex-wrap: wrap; }
-  .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-mono-stack); background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--card-border); }
-  .chroma-btn { position: relative; isolation: isolate; background: #16171f; color: #fff; border: 1px solid transparent; padding: 7px 18px; font-size: 0.85rem; border-radius: 8px; cursor: pointer; font-family: var(--font-display-stack); font-weight: 600; transition: transform 0.15s ease, box-shadow 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: inline-flex; align-items: center; gap: 5px; }
-  .chroma-btn::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; z-index: -1; background: var(--spectrum); background-size: 300% 100%; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spectrumFlow 5s linear infinite; }
-  .chroma-btn:hover { transform: translateY(-1px); box-shadow: none; border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 9%, transparent); }
+  .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-body-stack); background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 9px; border: 1px solid var(--card-border); }
+  .chroma-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 42px; padding: 0 18px; border: 1px solid var(--card-border); border-radius: 9px; background: transparent; color: #f8f8f8; cursor: pointer; font: 600 .88rem/1 var(--font-body-stack); transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease; }
+  .chroma-btn:hover { transform: translateY(-1px); border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 9%, transparent); }
   .chroma-btn:active { transform: translateY(1px); }
   .reroll-btn { background: transparent; color: var(--color-accent-bright); border: 1px solid color-mix(in srgb, var(--color-accent) 58%, transparent); padding: 7px 18px; font-size: 0.85rem; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-body-stack); font-weight: 600; transition: all 0.2s; }
   .reroll-btn:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
@@ -1065,9 +1064,9 @@
     text-shadow: 0 0 8px rgba(241, 196, 15, 0.3);
   }
   .local-progress-banner {
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.35);
-    color: #cfe8ff;
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
+    color: color-mix(in srgb, var(--color-accent) 58%, #f8f4ff);
     padding: 12px 14px;
     border-radius: 10px;
     margin-bottom: 16px;
@@ -1080,8 +1079,8 @@
     text-align: center;
     border-left: none !important;
     padding: 18px 16px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.03);
+    border-radius: 18px;
+    background: rgba(10, 10, 12, .58);
     border: 1px solid var(--card-border);
   }
   .guest-prompt-header {
@@ -1089,7 +1088,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1.4px;
-    color: var(--accent-purple);
+    color: var(--color-accent);
     margin-bottom: 6px;
     font-family: var(--font-display-stack);
   }
@@ -1116,9 +1115,9 @@
     gap: 18px;
     margin-top: 20px;
     padding: 16px 18px;
-    border: 1px solid rgba(16, 185, 129, 0.28);
-    border-radius: 14px;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(139, 92, 246, 0.08));
+    border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
     text-align: left;
   }
   .studio-onboarding-title {
@@ -1138,11 +1137,11 @@
   }
 
   .milestone-banner {
-    background: rgba(241, 196, 15, 0.1);
-    border: 1px solid rgba(241, 196, 15, 0.4);
+    background: rgba(245, 194, 111, .08);
+    border: 1px solid rgba(245, 194, 111, .3);
     color: #f1c40f;
     padding: 12px;
-    border-radius: 8px;
+    border-radius: 9px;
     margin-bottom: 20px;
     font-weight: 600;
     text-align: center;
@@ -1151,18 +1150,18 @@
 
   .cotw-widget {
     margin-top: 25px; padding: 15px; background: var(--surface-panel-soft);
-    border: 1px solid var(--color-line-subtle); border-radius: var(--radius-sm);
+    border: 1px solid var(--color-line-subtle); border-radius: 18px;
     display: flex; align-items: center; justify-content: space-between; gap: 15px;
   }
   .cotw-info { text-align: left; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-  .cotw-title { font-size: 0.9rem; font-weight: 700; color: var(--accent-purple); font-family: var(--font-display-stack); }
+  .cotw-title { font-size: 0.9rem; font-weight: 700; color: var(--color-accent); font-family: var(--font-display-stack); }
   .cotw-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.35; }
   .cotw-swatch { width: 48px; height: 48px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 0 15px rgba(0,0,0,0.3); flex-shrink: 0; }
 
   .cotw-success-banner {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 12%, transparent), rgba(0,0,0,0));
-    border-left: 4px solid var(--accent-purple); color: #fff; padding: 12px 15px;
-    border-radius: 8px; margin-bottom: 20px; font-weight: 600; text-align: left; font-size: 0.9rem;
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    border-left: 4px solid var(--color-accent); color: #fff; padding: 12px 15px;
+    border-radius: 9px; margin-bottom: 20px; font-weight: 600; text-align: left; font-size: 0.9rem;
   }
 
   .ep-points { color: #f1c40f !important; text-shadow: 0 0 10px rgba(241, 196, 15, 0.3) !important; }
@@ -1171,13 +1170,13 @@
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1rem;
   }
-  .image-modal-content { background: #16171f; border: 1px solid var(--card-border); border-radius: 16px; padding: 25px; max-width: 650px; width: 100%; max-height: calc(100dvh - 2rem); overflow-y: auto; text-align: center; }
+  .image-modal-content { background: rgba(10, 10, 12, .92); border: 1px solid var(--card-border); border-radius: 18px; padding: 25px; max-width: 650px; width: 100%; max-height: calc(100dvh - 2rem); overflow-y: auto; text-align: center; }
   .image-modal-content h3 { margin: 0 0 20px 0; font-family: var(--font-display-stack); color: #fff; }
   .preview-img { width: 100%; max-height: min(63vw, calc(100dvh - 10rem)); object-fit: contain; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 20px; }
   .modal-actions { display: flex; gap: 15px; justify-content: center; }
-  .download-btn { background: var(--accent-purple); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-  .download-btn:hover { background: var(--color-accent-bright); }
-  .close-btn { background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; }
+  .download-btn { background: #f8f8f8; color: #08080a; border: none; padding: 0 18px; min-height: 42px; border-radius: 9px; cursor: pointer; font-weight: 600; }
+  .download-btn:hover { background: var(--color-accent); }
+  .close-btn { background: transparent; color: #fff; border: 1px solid var(--card-border); padding: 0 18px; min-height: 42px; border-radius: 9px; cursor: pointer; font-weight: 500; }
 
   @media (max-width: 600px) {
     .results-header {

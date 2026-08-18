@@ -4049,3 +4049,34 @@ media requests, and no polling.
   result.
 - Updated responsive browser smoke coverage, network-budget assertions, source
   tests, and the homepage validation suite.
+
+## Sitewide homepage alignment — 2026-08-18
+
+- Audited the route tree and aligned normal auth, application, discovery,
+  pricing, guide, legal, gameplay, error/loading, and Profile Studio surfaces
+  with the frozen homepage shell. Public user profiles were left unchanged.
+- Reused the shared header/footer and added common state/button/surface
+  treatments instead of preserving the legacy dark/light page variants.
+- Removed the obsolete signed-out Profile Studio lock screen. Inaccessible
+  Customize actions are hidden while signed out, and direct `/profile/settings`
+  entry now uses the current login route with a safe return destination.
+- Added source coverage for auth guards, route redirection, typography,
+  canvas, surface, button, and reduced-motion contracts. The full unit suite
+  passes (398 tests); check, build, lint, links, CSP, performance, policy,
+  catalog, balance, and scoring checks pass.
+- The local authenticated browser smoke reaches the shared Profile Studio
+  shell and direct refresh successfully. Its later media-upload step reports
+  the existing local “uploads temporarily unavailable” R2 fixture state. The
+  database-security check remains blocked by the existing local test database
+  state (`guest roll wrote a score`), not by this UI-only change.
+
+## Roll horizon atmosphere — 2026-08-18
+
+- Generated and stored a light companion atmosphere for normal site routes at
+  `public/site/chromadie-roll-horizon.webp`, inspired by Chromadie’s daily color
+  history rather than a CSS-only gradient.
+- Applied the image through the shared app/auth/status shell, kept content-safe
+  dark glass surfaces, and changed shared interface chrome from mint to the
+  homepage lavender accent (`#D8A6FF`).
+- Preserved actual roll/reward colors, homepage fixture composition, public
+  profile rendering, auth/backend authorities, and profile media contracts.

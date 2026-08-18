@@ -17,7 +17,7 @@
   // application navigation and account event contracts.
   export let isHomepageStyle = false;
   export let isOwner = false;
-  export let accentColor = '#00ffb3';
+  export let accentColor = '#D8A6FF';
 
   const dispatch = createEventDispatcher();
   let mobileMenuOpen = false;
@@ -46,7 +46,7 @@
   }
 </script>
 
-<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} class:site-mode-header--leaderboard={isLeaderboardMode} data-site-chrome="header" style={`--site-header-accent: ${accentColor};`}>
+<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} class:site-mode-header--home-route={isHomeMode} class:site-mode-header--leaderboard={isLeaderboardMode} data-site-chrome="header" style={`--site-header-accent: ${accentColor};`}>
   <div class="site-mode-header__inner">
     <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
       <span class="site-mode-header__brand-mark" aria-hidden="true"></span>
@@ -56,9 +56,9 @@
     {#if !minimalMode}
       <nav class="site-mode-header__nav" aria-label="Primary application navigation">
         <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
-        <button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>
+        {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
         <button type="button" class:active={activeView === 'pricing'} aria-current={activeView === 'pricing' ? 'page' : undefined} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
-        <button type="button" class="site-mode-header__claim-link" on:click={() => dispatch('claim')}>Claim handle</button>
+        {#if !isAuthenticated}<button type="button" class="site-mode-header__claim-link" on:click={() => dispatch('claim')}>Claim handle</button>{/if}
       </nav>
     {:else}
       <div class="site-mode-header__nav-space" aria-hidden="true"></div>
@@ -87,7 +87,7 @@
           <!-- Keep account controls visually quiet while session data hydrates. -->
         {:else if (isHomeMode || isHomepageStyle || isProfileMode) && !isAuthenticated}
           <button type="button" class="site-mode-header__account-action" on:click={() => dispatch('login', { mode: 'login' })}>Sign in</button>
-          {#if isHomeMode || isHomepageStyle}<button type="button" class="site-mode-header__account-action site-mode-header__account-action--signup" on:click={() => dispatch('login', { mode: 'signup' })}>Sign up</button>{/if}
+          {#if isHomeMode}<button type="button" class="site-mode-header__account-action site-mode-header__account-action--signup" on:click={() => dispatch('login', { mode: 'signup' })}>Sign up</button>{/if}
         {:else}
           <button type="button" class="site-mode-header__account-action site-mode-header__account-action--light" on:click={() => dispatch('login', { mode: 'login' })}>Sign in / Sign up</button>
         {/if}
@@ -100,7 +100,7 @@
         {#if !minimalMode}
           <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
             <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
-            <button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>
+            {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
             <button type="button" class:active={activeView === 'pricing'} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
           </div>
         {/if}
@@ -120,7 +120,7 @@
             <!-- Keep account controls visually quiet while session data hydrates. -->
           {:else if (isHomeMode || isHomepageStyle || isProfileMode) && !isAuthenticated}
             <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in</button>
-            {#if isHomeMode || isHomepageStyle}<button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Sign up</button>{/if}
+            {#if isHomeMode}<button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'signup' }); }}>Sign up</button>{/if}
           {:else}
             <button type="button" on:click={() => { mobileMenuOpen = false; dispatch('login', { mode: 'login' }); }}>Sign in / Sign up</button>
           {/if}
@@ -135,8 +135,8 @@
     --site-header-control-size: 0.84rem;
     --site-header-control-weight: 500;
     --site-header-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --site-header-display: 'Clash Display', ui-sans-serif, system-ui, sans-serif;
-    --site-header-accent: #00ffb3;
+    --site-header-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+    --site-header-accent: #D8A6FF;
     position: relative;
     z-index: 20;
     width: 100%;
@@ -165,7 +165,7 @@
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    color: #282433;
+    color: #8f9099;
   }
 
   /* Public profiles keep their own atmosphere behind a quiet account bar. */
@@ -176,7 +176,10 @@
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    --site-header-display: 'Clash Display', ui-sans-serif, system-ui, sans-serif;
   }
+
+  .site-mode-header--profile-settings { background: transparent; }
 
   .site-mode-header--profile .site-mode-header__inner {
     width: 100%;
@@ -312,7 +315,7 @@
   .site-mode-header--leaderboard .site-mode-header__context button,
   .site-mode-header--leaderboard .site-mode-header__account-name,
   .site-mode-header--leaderboard .site-mode-header__account-action {
-    color: rgba(40, 36, 51, .78) !important;
+    color: rgba(245, 245, 247, .78) !important;
   }
 
   .site-mode-header--leaderboard .site-mode-header__wordmark > span,
@@ -324,23 +327,27 @@
   .site-mode-header--leaderboard .site-mode-header__nav button:focus-visible,
   .site-mode-header--leaderboard .site-mode-header__account-name:hover,
   .site-mode-header--leaderboard .site-mode-header__account-action:hover {
-    color: #282433 !important;
+    color: #f5f5f7 !important;
   }
 
   .site-mode-header--leaderboard .site-mode-header__claim-link {
-    border: 1px solid rgba(40, 36, 51, .14) !important;
-    background: rgba(255, 255, 255, .62) !important;
-    color: #282433 !important;
-    box-shadow: 0 0.5rem 1.25rem rgba(61, 44, 93, .08);
+    border: 0 !important;
+    background: #f5f5f7 !important;
+    color: #08080a !important;
+    box-shadow: none;
+  }
+
+  .site-mode-header--leaderboard .site-mode-header__nav .site-mode-header__claim-link {
+    color: #08080a !important;
   }
 
   .site-mode-header--leaderboard .site-mode-header__claim-link:hover {
-    background: rgba(255, 255, 255, .86) !important;
+    background: var(--site-header-accent) !important;
   }
 
   .site-mode-header--leaderboard .site-mode-header__mobile-menu summary {
-    border-color: rgba(40, 36, 51, .2);
-    color: #282433;
+    border-color: rgba(255, 255, 255, .16);
+    color: #f5f5f7;
   }
 
   .site-mode-header__claim-link {
@@ -424,15 +431,15 @@
     .site-mode-header__account-name { display: none; }
     .site-mode-header__claim-link { min-height: 38px !important; padding-inline: 14px !important; font-size: 0.8rem !important; }
     .site-mode-header__account { gap: 10px; }
-    .site-mode-header--home .site-mode-header__account-action--signup { display: inline-flex; }
-    .site-mode-header--home .site-mode-header__mobile-menu { display: none; }
+    .site-mode-header--home-route .site-mode-header__account-action--signup { display: inline-flex; }
+    .site-mode-header--home-route .site-mode-header__mobile-menu { display: none; }
     .site-mode-header--profile .site-mode-header__inner { width: 100%; padding-inline: clamp(1rem, 4vw, 3rem); }
     .site-mode-header--profile .site-mode-header__right { display: flex; gap: 0.25rem; }
     .site-mode-header--profile .site-mode-header__account { display: none; }
     .site-mode-header--profile .site-mode-header__context .site-mode-header__account-action { display: inline-flex; }
     .site-mode-header--profile .site-mode-header__mobile-menu { display: block; }
     .site-mode-header--profile .site-mode-header__mobile-context { display: none; }
-    .site-mode-header:not(.site-mode-header--home) .site-mode-header__mobile-menu { display: block; }
+    .site-mode-header:not(.site-mode-header--home-route) .site-mode-header__mobile-menu { display: block; }
   }
 
   @media (max-width: 460px) {

@@ -114,7 +114,8 @@
   .legal-hero h1 {
     margin-top: 0;
     margin-bottom: 0.75rem;
-    font-size: clamp(2rem, 4vw, 3.2rem);
+    font: 600 clamp(3rem, 6vw, 5.25rem)/.94 'Manrope Variable', sans-serif;
+    letter-spacing: -.048em;
   }
 
   .legal-updated {
@@ -148,7 +149,7 @@
   .legal-section a {
     color: var(--color-accent-bright);
     font-weight: 600;
-    text-decoration-color: color-mix(in srgb, var(--accent-purple) 55%, transparent);
+    text-decoration-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
     transition: color 0.2s ease, text-decoration-color 0.2s ease;

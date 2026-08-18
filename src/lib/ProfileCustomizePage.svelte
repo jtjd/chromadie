@@ -206,7 +206,7 @@
 
 <style>
   .studio-customize {
-    --studio-bg: #050506;
+    --studio-bg: transparent;
     --studio-panel: rgba(12, 12, 15, .78);
     --studio-card: rgba(10, 10, 12, .58);
     --studio-control: rgba(255, 255, 255, .035);
@@ -218,7 +218,7 @@
     --studio-secondary: #bfc0c5;
     --studio-muted: #8f9099;
     --studio-faint: #686971;
-    --studio-accent: #00ffb3;
+    --studio-accent: var(--site-brand-accent, #D8A6FF);
     --studio-danger: #ff5578;
     width: 100%;
     min-width: 0;
@@ -232,7 +232,7 @@
     min-width: 0;
     padding: 26px;
     border: 1px solid var(--studio-border);
-    border-radius: 15px;
+    border-radius: 18px;
     background: var(--studio-panel);
     backdrop-filter: blur(28px) saturate(145%);
     box-shadow: 0 26px 70px rgba(0, 0, 0, .24);
@@ -247,7 +247,7 @@
 
   .studio-section:last-child { padding-bottom: 0; margin-bottom: 0; border-bottom: 0; }
   .studio-section__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 15px; }
-  .studio-section__head h2 { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Clash Display', var(--font-display-stack, sans-serif); letter-spacing: 0; }
+  .studio-section__head h2 { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Manrope Variable', var(--font-display-stack, sans-serif); letter-spacing: -.02em; }
   .studio-section__head p { max-width: 420px; margin: 5px 0 0; color: var(--studio-muted); font: 400 .68rem/1.45 'Inter', var(--font-body-stack, sans-serif); }
   .studio-loading { display: grid; min-height: 7rem; place-items: center; color: var(--studio-muted); font: 400 .78rem/1.4 'Inter', sans-serif; }
 
@@ -274,7 +274,7 @@
   .studio-customize :global(.identity-editor--studio .identity-editor__field > span) { letter-spacing: .055em; text-transform: uppercase; }
   .studio-customize :global(.identity-editor--studio .identity-editor__field > span small) { letter-spacing: 0; text-transform: none; }
   .studio-customize :global(.identity-editor--studio .identity-editor__label-row) { align-items: baseline; }
-  .studio-customize :global(.identity-editor--studio .identity-editor__counter) { color: var(--studio-faint); font: 400 .61rem/1 ui-monospace, monospace; }
+  .studio-customize :global(.identity-editor--studio .identity-editor__counter) { color: var(--studio-faint); font: 400 .61rem/1 'Inter', sans-serif; }
   .studio-customize :global(.identity-editor--studio .identity-editor__footer) { display: none !important; }
 
   /* AppearanceEditor owns color/picker behavior. These rules only restore the
@@ -284,7 +284,7 @@
   .studio-customize :global(.appearance-editor__color-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 0; border: 0; border-radius: 0; background: transparent; }
   .studio-customize :global(.appearance-editor__colors-heading) { grid-column: 1 / -1; }
   .studio-customize :global(.appearance-editor__colors-heading h2),
-  .studio-customize :global(.appearance-editor__heading h2) { color: var(--studio-text) !important; font: 600 1.05rem/1.2 'Clash Display', sans-serif !important; }
+  .studio-customize :global(.appearance-editor__heading h2) { color: var(--studio-text) !important; font: 600 1.05rem/1.2 'Manrope Variable', sans-serif !important; }
   .studio-customize :global(.appearance-editor__colors-heading p),
   .studio-customize :global(.appearance-editor__heading p) { color: var(--studio-muted) !important; font: 400 .68rem/1.45 'Inter', sans-serif !important; }
   .studio-customize :global(.appearance-editor__field) { min-width: 0; }
@@ -302,7 +302,7 @@
   .studio-customize :global(.appearance-editor__surface-color .appearance-editor__color-input),
   .studio-customize :global(.appearance-editor__surface-color .appearance-editor__hex) { min-height: 40px; height: 40px; }
   .studio-customize :global(.appearance-editor__range) { margin-top: 0; gap: 8px; }
-  .studio-customize :global(.appearance-editor__range output) { color: var(--studio-faint); font: 500 .62rem/1 ui-monospace, monospace; }
+  .studio-customize :global(.appearance-editor__range output) { color: var(--studio-faint); font: 500 .62rem/1 'Inter', sans-serif; }
   .studio-customize :global(.appearance-editor__range input) { accent-color: var(--studio-accent); }
   .studio-customize :global(.appearance-editor__picker) { display: none; }
   .studio-customize :global(.appearance-editor__picker-toggle) { display: none !important; }
@@ -319,14 +319,14 @@
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-controls) { display: block; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 1rem; margin: 0 0 15px; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading > div) { min-width: 0; }
-  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading h2) { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Clash Display', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading h2) { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Manrope Variable', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading p) { max-width: 420px; margin: 5px 0 0; color: var(--studio-muted); font: 400 .68rem/1.45 'Inter', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-studio-heading button) { align-self: start; min-height: 0; padding: 0; border: 0; background: transparent; color: var(--studio-muted); font: 400 .63rem/1 'Inter', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-name-grid),
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-visual-grid) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-name-grid) { margin-bottom: 10px; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading) { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin: 0 0 15px; }
-  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading h3) { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Clash Display', sans-serif; }
+  .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading h3) { margin: 0; color: var(--studio-text); font: 600 1.05rem/1.2 'Manrope Variable', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading p) { display: block; max-width: 420px; margin: 5px 0 0; color: var(--studio-muted); font: 400 .68rem/1.45 'Inter', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-section-heading button) { align-self: start; border: 0; background: transparent; color: var(--studio-muted); font: 400 .63rem/1 'Inter', sans-serif; }
   .studio-customize :global(.profile-cosmetics-surface--studio .profile-cosmetics-slot) { min-width: 0; padding: 11px; border: 1px solid var(--studio-border); border-radius: 9px; background: var(--studio-control); }

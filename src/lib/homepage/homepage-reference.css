@@ -7,9 +7,9 @@
   --homepage-text: #f5f5f7;
   --homepage-muted: #95959f;
   --homepage-muted-2: #6f6f79;
-  --homepage-accent: #00ffb3;
-  --homepage-accent-soft: rgba(0, 255, 179, 0.12);
-  --homepage-accent-glow: rgba(0, 255, 179, 0.28);
+  --homepage-accent: #D8A6FF;
+  --homepage-accent-soft: rgba(216, 166, 255, 0.12);
+  --homepage-accent-glow: rgba(216, 166, 255, 0.28);
   --homepage-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
   --homepage-radius: 18px;
   position: relative;

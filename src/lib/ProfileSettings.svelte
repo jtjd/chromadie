@@ -753,6 +753,7 @@
   dirty={dashboardDirty}
   previewRenderSnapshot={previewRenderSnapshot}
   showPreview={showDashboardPreview}
+  showBrand={false}
   on:sectionchange={handleDashboardSectionChange}
   on:previewtoggle={togglePreview}
   on:reset={resetDashboard}

@@ -5164,3 +5164,34 @@ The hero copy now owns a small local roll preview beneath the lede. It remains
 deliberately local: an unauthenticated homepage preview must not create a real
 score or alter today’s server-authoritative leaderboard. A real account roll
 continues to belong to the existing gameplay flow and secure roll RPC.
+
+## 2026-08-18 — Use the homepage as the normal site chrome reference
+
+Normal application routes now use the homepage visual contract for their shared
+shell: the Inter body/UI direction, Manrope display type, near-black canvas,
+homepage lavender accent, restrained atmospheric treatment, 18px surfaces, 9px controls,
+shared width, quiet card hierarchy, and white primary actions. The homepage
+itself remains the frozen reference and public user-profile rendering remains
+outside this cleanup.
+
+Auth, callback, reset, legal, leaderboard, pricing, guide, gameplay, error,
+loading, and Profile Studio surfaces now use the shared site header/footer and
+state treatments. Signed-out users no longer see Customize; a signed-out
+Profile Studio destination is redirected to `/login?next=/profile/settings`
+through the existing auth flow. The obsolete GuestLock presentation was removed
+without changing permission checks, profile contracts, RPCs, or media behavior.
+
+## 2026-08-18 — Use a generated roll horizon for the normal site atmosphere
+
+The normal application shell now uses a locally stored generated companion image
+at `public/site/chromadie-roll-horizon.webp`. It translates Chromadie’s daily
+roll loop into a pale atmospheric horizon where authored roll-color families
+accumulate into a calm visual world. The image is static and content-safe: it
+does not read live roll history, replace profile backgrounds, or alter public
+profile rendering.
+
+Lavender (`#D8A6FF`) is the shared interface accent because it matches the
+homepage’s authored first fixture and keeps brand chrome distinct from semantic
+roll, reward, success, warning, and profile colors. Normal routes use the same
+Inter/Manrope direction, dark translucent surfaces, and shared header/footer;
+the homepage composition and public user profiles remain unchanged.

@@ -154,15 +154,15 @@ test('leaderboard implementation is a focused podium and score list without raw 
   assert.match(leaderboard, /This month/);
   assert.match(leaderboard, /roll-leaderboard__featured-list/);
   assert.match(leaderboard, /roll-leaderboard__lower/);
-  assert.match(leaderboard, /--leaderboard-bg: transparent/);
+  assert.match(leaderboard, /--leaderboard-bg: #0b0910/);
   assert.match(leaderboard, /background: transparent/);
   assert.match(app, /class:app-shell--leaderboard=\{leaderboardModeVisible\}/);
   assert.match(app, /isLeaderboardMode=\{leaderboardModeVisible\}/);
-  assert.match(siteStyles, /leaderboard\/leaderboard-background\.webp/);
+  assert.doesNotMatch(siteStyles, /leaderboard\/leaderboard-background\.webp/);
   assert.match(header, /class:site-mode-header--leaderboard=\{isLeaderboardMode\}/);
   assert.match(header, /\.site-mode-header--leaderboard \{[\s\S]*background: transparent !important;/);
   assert.ok(background.size > 1000, 'leaderboard background should be a real local asset');
-  assert.match(leaderboard, /color-scheme: light/);
+  assert.match(leaderboard, /color-scheme: dark/);
   assert.match(leaderboard, /items\.slice\(0, 3\)/);
   assert.match(leaderboard, /variant="podium"/);
   assert.match(leaderboard, /variant="list"/);

@@ -1,4 +1,57 @@
 /* Shared site boundary styles. Historical superseded layers have been removed. */
+:root {
+  --site-brand-accent: #D8A6FF;
+  --site-brand-accent-soft: rgba(216, 166, 255, .12);
+  --site-brand-accent-glow: rgba(216, 166, 255, .28);
+  --site-atmosphere-image: url('/site/chromadie-roll-horizon.webp');
+  --site-atmosphere-veil: linear-gradient(180deg, rgba(8, 6, 16, .42) 0%, rgba(8, 6, 16, .52) 56%, rgba(6, 5, 12, .72) 100%);
+}
+
+.site-atmosphere-page,
+.app-shell--site {
+  background-color: #ece7f2;
+  background-image: var(--site-atmosphere-veil), var(--site-atmosphere-image);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.app-shell--site .site-footer,
+.site-atmosphere-page .site-footer {
+  --site-footer-border: rgba(248, 244, 255, .24);
+  --site-footer-muted: rgba(248, 244, 255, .68);
+  --site-footer-ink: #f8f4ff;
+}
+
+@media (max-width: 48rem) {
+  .site-atmosphere-page,
+  .app-shell--site {
+    background-position: 56% top;
+    background-attachment: scroll;
+  }
+}
+
+/* Covers route gaps and mobile browser compositing while keeping public
+ * profile and homepage backgrounds on their own rendering boundaries. */
+body:has(.site-atmosphere-page),
+body:has(.app-shell--site) {
+  background-color: #ece7f2;
+  background-image: var(--site-atmosphere-veil), var(--site-atmosphere-image);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+@media (max-width: 48rem) {
+  body:has(.site-atmosphere-page),
+  body:has(.app-shell--site) {
+    background-position: 56% top;
+    background-attachment: scroll;
+  }
+}
+
 .app-main--site .final-color-display {
   box-shadow: 0 0 3.5rem color-mix(in srgb, var(--site-accent) 34%, transparent), inset 0 0 1.25rem rgba(0, 0, 0, 0.5);
 }
@@ -154,12 +207,31 @@
   .identity-editor__footer { align-items: stretch; flex-direction: column; }
   .identity-editor__save { width: 100%; }
 }
-body,
+body {
+  background-color: #050506;
+}
 .app-shell,
 .app-main--site,
 .app-main--profile-settings {
-  background-color: var(--color-canvas);
+  background-color: transparent;
   background-image: none;
+}
+
+/* The generic shell reset above must not erase the normal route atmosphere. */
+.app-shell--site {
+  background-color: #ece7f2;
+  background-image: var(--site-atmosphere-veil), var(--site-atmosphere-image);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+@media (max-width: 48rem) {
+  .app-shell--site {
+    background-position: 56% top;
+    background-attachment: scroll;
+  }
 }
 .app-main--site::before,
 .app-main--site::after {
@@ -177,12 +249,13 @@ body,
 }
 
 .app-main--site .container {
-  width: min(100%, 72rem);
+  width: min(100%, 1160px);
   margin: 0 auto;
-  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 2.5rem) 4rem;
+  padding: clamp(3rem, 7vw, 6rem) clamp(1rem, 4vw, 1.5rem) 5rem;
 }
 .app-main--site .card {
   padding: clamp(1.35rem, 3vw, 2.25rem);
+  border-radius: 18px;
 }
 .app-main--site .scan-container {
   height: 2px;
@@ -212,16 +285,16 @@ body,
 
 .app-main--site {
   --site-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --site-display: 'Clash Display', ui-sans-serif, system-ui, sans-serif;
+  --site-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
   --site-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --site-canvas: #050506;
-  --site-deep: #050506;
+  --site-canvas: #0b0910;
+  --site-deep: #07060b;
   --site-raised: rgba(12, 12, 15, 0.78);
   --site-ink: #f8f8f8;
-  --site-muted: #8f9099;
-  --site-faint: #686971;
-  --site-accent: #00ffb3;
-  --site-accent-bright: #f8f8f8;
+  --site-muted: #c4bdca;
+  --site-faint: #aaa2b0;
+  --site-accent: var(--site-brand-accent);
+  --site-accent-bright: #f8f4ff;
   --site-line: rgba(255, 255, 255, 0.1);
   --site-line-strong: rgba(255, 255, 255, 0.2);
   --site-surface: rgba(10, 10, 12, 0.58);
@@ -240,7 +313,8 @@ body,
   --color-accent: var(--site-accent);
   --color-accent-bright: var(--site-accent-bright);
   --color-accent-cyan: var(--site-accent);
-  --color-success: var(--site-accent);
+  --color-success: #6ee787;
+  --color-accent-roll: #b7fd4d;
   --color-earned: #f5c26f;
   --color-warning: #f5c26f;
   --color-danger: #ff5578;
@@ -249,19 +323,17 @@ body,
   --surface-panel-strong: rgba(255, 255, 255, 0.1);
   --surface-panel-soft: var(--site-surface-soft);
   --surface-inset: rgba(0, 0, 0, 0.22);
+  --radius-sm: 9px;
+  --radius-md: 18px;
+  --radius-lg: 18px;
   min-height: calc(100dvh - 4.25rem);
   color: var(--site-ink);
-  background: var(--site-canvas);
+  background: transparent;
   font-family: var(--site-font);
 }
 
 .app-shell--leaderboard {
-  background-color: #f4f3f1;
-  background-image: url('/leaderboard/leaderboard-background.webp');
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-attachment: fixed;
+  background-color: transparent;
 }
 
 .app-shell--leaderboard .app-main--leaderboard {
@@ -269,13 +341,9 @@ body,
 }
 
 .app-shell--leaderboard .site-footer {
-  --site-footer-border: rgba(40, 36, 51, .14);
-  --site-footer-muted: rgba(40, 36, 51, .62);
-  --site-footer-ink: #282433;
-}
-
-@media (max-width: 48rem) {
-  .app-shell--leaderboard { background-attachment: scroll; }
+  --site-footer-border: rgba(255, 255, 255, .1);
+  --site-footer-muted: #686971;
+  --site-footer-ink: #f5f5f7;
 }
 
 .app-main--site :is(h1, h2, h3, h4, h5, p, li, label, button, input, textarea, select) {
@@ -301,7 +369,7 @@ body,
 
 .app-main--site :is(.card, .guide__steps article, .guide__account-grid article, .guide__visual, .guide__roll-card, .guide__leader-card, .legal-section) {
   border: 1px solid var(--site-line);
-  border-radius: 0.65rem;
+  border-radius: 18px;
   background: var(--site-surface);
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.16);
   backdrop-filter: blur(20px);
@@ -314,26 +382,32 @@ body,
 }
 
 .app-main--site :is(.roll-btn, .auth-submit) {
-  border: 1px solid var(--site-accent);
-  border-radius: 0.45rem;
-  background: var(--site-accent);
-  color: #06110d;
+  position: relative;
+  isolation: auto;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--site-ink);
+  color: #08080a;
   box-shadow: none;
-  font: 700 0.82rem / 1 var(--site-font);
-  letter-spacing: 0.01em;
+  font: 600 0.88rem / 1 var(--site-display);
+  letter-spacing: 0;
   text-transform: none;
 }
 
+.app-main--site .roll-btn::before { display: none; }
+
 .app-main--site :is(.roll-btn, .auth-submit):hover:not(:disabled) {
-  border-color: #8affd4;
-  background: #8affd4;
+  border-color: transparent;
+  background: var(--site-accent);
   box-shadow: none;
   transform: translateY(-1px);
 }
 
 .app-main--site :is(.chroma-btn, .download-btn, .close-btn, .challenge-close, .reroll-btn, .detail-button, .quiet-action, .try-button) {
   border: 1px solid var(--site-line-strong);
-  border-radius: 0.45rem;
+  border-radius: 9px;
   background: transparent;
   color: var(--site-ink);
   box-shadow: none;
@@ -350,7 +424,7 @@ body,
 
 /* Daily roll */
 .app-main--site .game-container {
-  width: min(100%, 52rem);
+  width: min(100%, 760px);
   min-height: calc(100dvh - 4rem);
   padding: clamp(3.5rem, 9vh, 6.5rem) clamp(1rem, 4vw, 2rem) 5rem;
 }
@@ -379,7 +453,7 @@ body,
 
 .app-main--site :is(.cotw-widget, .guest-prompt, .local-progress-banner, .info-panel, .conditions-section) {
   border-color: var(--site-line);
-  border-radius: 0.35rem;
+  border-radius: 9px;
   background: var(--site-surface-soft);
 }
 
@@ -438,7 +512,7 @@ body,
 
 .app-main--site :is(.guide__callout, .guide__actions a, .guide__list span) {
   border-color: var(--site-line);
-  border-radius: 0.35rem;
+  border-radius: 9px;
   background: var(--site-surface-soft);
 }
 
@@ -446,12 +520,123 @@ body,
   color: var(--site-accent);
 }
 
+.app-main--site .guide__actions a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--site-ink);
+  color: #08080a;
+  font: 600 .88rem/1 var(--site-display);
+}
+
+.app-main--site .guide__actions a:first-child:hover {
+  background: var(--site-accent);
+  color: #08080a;
+}
+
+.app-main--site .guide__actions a + a {
+  border: 1px solid var(--site-line-strong);
+  background: transparent;
+  color: var(--site-ink);
+}
+
+.app-main--site .guide__actions a + a:hover {
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-accent) 9%, transparent);
+}
+
+/* Shared route states. These are intentionally small: they give loading,
+ * error, and not-found routes the same page width and surface treatment as
+ * normal application pages without creating a second page system. */
+.site-state-page {
+  width: min(100%, 1160px);
+  min-height: calc(100dvh - 4.25rem);
+  margin: 0 auto;
+  padding: clamp(3rem, 7vw, 6rem) 1.5rem 5rem;
+}
+
+.site-state-card {
+  width: min(100%, 760px);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 18px;
+  background: rgba(10, 10, 12, .58);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .16);
+  color: #f8f8f8;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.site-state-kicker {
+  margin: 0 0 .7rem;
+  color: var(--site-brand-accent);
+  font: 500 .68rem/1 var(--site-font, 'Inter', sans-serif);
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.site-state-card h1 {
+  max-width: 14ch;
+  margin: 0;
+  color: #f8f8f8;
+  font: 600 clamp(3rem, 6vw, 5.25rem)/.94 'Manrope Variable', sans-serif;
+  letter-spacing: -.048em;
+}
+
+.site-state-card > p:not(.site-state-kicker) {
+  max-width: 42rem;
+  margin: 1.15rem 0 0;
+  color: #c4bdca;
+  font: 400 1rem/1.6 'Inter', sans-serif;
+}
+
+.site-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .7rem;
+  margin-top: 1.7rem;
+}
+
+.site-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 9px;
+  background: #f8f8f8;
+  color: #08080a;
+  font: 600 .88rem/1 'Manrope Variable', sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.site-button:hover { background: var(--site-brand-accent); }
+.site-button--secondary {
+  border: 1px solid rgba(255, 255, 255, .2);
+  background: transparent;
+  color: #f8f8f8;
+}
+.site-button--secondary:hover {
+  border-color: var(--site-brand-accent);
+  background: var(--site-brand-accent-soft);
+}
+
+.site-button:focus-visible {
+  outline: 2px solid var(--site-brand-accent);
+  outline-offset: 4px;
+}
+
 /* Auth and route-state shells do not live inside .app-main--site. */
 
 .auth-container,
 .bootstrap-error-card {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 0.65rem !important;
+  border-radius: 18px !important;
   background: rgba(12, 12, 15, 0.78) !important;
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.18) !important;
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -459,49 +644,57 @@ body,
 
 .auth-container :is(.auth-header, .tabs, #turnstile-container) {
   border-color: rgba(255, 255, 255, 0.075);
-  border-radius: 0.35rem;
+  border-radius: 9px;
   background: rgba(255, 255, 255, 0.035);
 }
 
 .auth-container :is(.auth-brand, .auth-kicker, .link-btn, .privacy-link-note a),
 .bootstrap-error-kicker {
-  color: #00ffb3 !important;
+  color: var(--site-brand-accent) !important;
 }
 
 .auth-container .tabs :is(button, a).active {
-  background: color-mix(in srgb, #00ffb3 10%, transparent);
-  box-shadow: inset 0 -2px 0 #00ffb3;
+  background: var(--site-brand-accent-soft);
+  box-shadow: inset 0 -2px 0 var(--site-brand-accent);
 }
 
 .auth-container .input-field,
 .bootstrap-error-card .input-field {
   border-color: rgba(255, 255, 255, 0.1);
-  border-radius: 0.45rem;
+  border-radius: 9px;
   background: rgba(0, 0, 0, 0.22);
   color: #f8f8f8;
 }
 
 .auth-container .auth-submit,
 .bootstrap-error-card .roll-btn {
-  border-color: #00ffb3;
-  background: #00ffb3;
-  color: #06110d;
+  border: 0;
+  border-color: transparent;
+  background: #f8f8f8;
+  color: #08080a;
+}
+
+.auth-container .auth-submit:hover:not(:disabled),
+.bootstrap-error-card .roll-btn:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--site-brand-accent);
+  color: #08080a;
 }
 
 .bootstrap-error-shell {
   min-height: 100dvh;
-  background: #050506;
+  background: transparent;
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 .bootstrap-error-card h1 {
   color: #f8f8f8 !important;
-  font-family: 'Clash Display', ui-sans-serif, system-ui, sans-serif !important;
+  font-family: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif !important;
   letter-spacing: -0.045em;
 }
 
 .bootstrap-error-message,
-.bootstrap-error-help { color: #8f9099 !important; }
+.bootstrap-error-help { color: #c4bdca !important; }
 
 @media (max-width: 48rem) {
   .app-main--site :is(.guide, .legal-page, .terms) {
@@ -515,59 +708,60 @@ body,
 }
 
 /* Profile Studio reference surface. The shell owns the composition while this
- * scope provides the approved Clash Display + Inter tokens to existing editors. */
+ * scope projects the homepage's Manrope + Inter direction into the editor. */
 .app-main--profile-settings {
   --site-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display-stack: 'Clash Display', ui-sans-serif, system-ui, sans-serif;
+  --site-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display-stack: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
   --font-body-stack: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Clash Display', ui-sans-serif, system-ui, sans-serif;
+  --font-mono-stack: var(--font-body-stack);
+  --font-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
   --customize-surface: rgba(12, 12, 15, .78);
   --customize-surface-raised: rgba(10, 10, 12, .58);
   --customize-surface-inset: rgba(255, 255, 255, .035);
   --customize-surface-deep: rgba(0, 0, 0, .22);
   --customize-text-primary: #f8f8f8;
   --customize-text-secondary: #bfc0c5;
-  --customize-text-muted: #8f9099;
-  --customize-text-faint: #686971;
+  --customize-text-muted: #c4bdca;
+  --customize-text-faint: #aaa2b0;
   --customize-border: rgba(255, 255, 255, .1);
   --customize-border-strong: rgba(255, 255, 255, .2);
   --customize-border-subtle: rgba(255, 255, 255, .075);
-  --customize-focus: #00ffb3;
-  --customize-accent-primary: #00ffb3;
-  --customize-accent-secondary: #00ffb3;
+  --customize-focus: var(--site-brand-accent);
+  --customize-accent-primary: var(--site-brand-accent);
+  --customize-accent-secondary: var(--site-brand-accent);
   --customize-accent-add: #f5c26f;
-  --customize-accent-save: #00ffb3;
+  --customize-accent-save: var(--site-brand-accent);
   --customize-accent-danger: #ff5578;
   --customize-accent-premium: #d6b5ff;
   --customize-font-body: var(--font-body-stack);
-  --customize-font-mono: var(--font-mono-stack, ui-monospace, monospace);
 
-  --site-canvas: #111114;
-  --site-deep: #050506;
+  --site-canvas: #0b0910;
+  --site-deep: #07060b;
   --site-raised: rgba(255, 255, 255, .1);
   --site-ink: #f8f8f8;
-  --site-muted: #8f9099;
-  --site-faint: #686971;
-  --site-accent: #00ffb3;
-  --site-accent-bright: #f8f8f8;
+  --site-muted: #c4bdca;
+  --site-faint: #aaa2b0;
+  --site-accent: var(--site-brand-accent);
+  --site-accent-bright: #f8f4ff;
   --site-line: rgba(255, 255, 255, .1);
   --site-line-strong: rgba(255, 255, 255, .2);
   --site-surface: rgba(10, 10, 12, .58);
   --site-surface-soft: rgba(255, 255, 255, .035);
-  --color-canvas: #111114;
+  --color-canvas: #0b0910;
   --color-canvas-raised: rgba(255, 255, 255, .1);
-  --color-canvas-deep: #050506;
+  --color-canvas-deep: #07060b;
   --color-ink-strong: #f8f8f8;
   --color-ink: #bfc0c5;
   --color-ink-muted: #8f9099;
   --color-ink-faint: #686971;
   --color-line-subtle: var(--site-line);
   --color-line-strong: var(--site-line-strong);
-  --color-accent: #00ffb3;
+  --color-accent: var(--site-brand-accent);
   --color-accent-bright: #f8f8f8;
-  --color-accent-cyan: #00ffb3;
-  --color-accent-roll: #00ffb3;
-  --color-success: #00ffb3;
+  --color-accent-cyan: var(--site-brand-accent);
+  --color-accent-roll: #b7fd4d;
+  --color-success: #6ee787;
   --color-earned: #f5c26f;
   --color-warning: #f5c26f;
   --color-danger: #ff5578;
@@ -575,6 +769,10 @@ body,
   --surface-panel-strong: rgba(255, 255, 255, .2);
   --surface-panel-soft: var(--site-surface-soft);
   --surface-inset: rgba(0, 0, 0, .22);
+  --radius-sm: 9px;
+  --radius-md: 18px;
+  --radius-lg: 18px;
+  background: transparent;
 }
 
 .app-main--profile-settings :is(input[type='checkbox'], input[type='radio'], input[type='range']) {
@@ -614,7 +812,7 @@ body,
 
 .app-main--site .pricing-page {
   min-height: 100%;
-  background: var(--site-canvas) !important;
+  background: transparent !important;
 }
 
 .app-main--site .pricing-page::before,
@@ -643,8 +841,8 @@ body,
 }
 
 .app-main--site .pricing-card__primary:hover:not(:disabled) {
-  border-color: #8affd4;
-  background: #8affd4;
+  border-color: #ead9ff;
+  background: #ead9ff;
 }
 
 .app-main--site .pricing-card__secondary:hover {

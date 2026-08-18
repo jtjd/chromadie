@@ -94,7 +94,7 @@
 
 <style>
   .homepage-profile-demo {
-    --homepage-demo-accent: #00ffb3;
+    --homepage-demo-accent: #D8A6FF;
     position: relative;
     min-width: 0;
     color: var(--homepage-text);

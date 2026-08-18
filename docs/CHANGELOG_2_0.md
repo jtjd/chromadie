@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-18 — Align normal site pages with the homepage
+
+- Updated normal auth, app, discovery, pricing, guide, legal, gameplay, error,
+  loading, and Profile Studio pages to use the homepage’s shared type, shell,
+  spacing, surfaces, buttons, background, and visual hierarchy.
+- Reused the shared site header and footer across application routes while
+  leaving public user profiles and the homepage composition unchanged.
+- Removed the obsolete signed-out Profile Studio lock screen. Signed-out users
+  no longer see inaccessible Customize actions and are sent through the
+  current sign-in flow when they open Profile Studio directly.
+
 ## 2026-08-18 — Match Framed identity detail typography
 
 - The Katt Framed example now uses Velocity consistently for the name, bio,
@@ -3251,3 +3262,13 @@ direct route behavior.
   public landing page cannot create unauthenticated server scores.
 - Added responsive, reduced-motion, fallback-avatar, and bounded-network
   regression coverage.
+
+## Generated roll horizon atmosphere — 2026-08-18
+
+- Added a generated, local pale atmospheric background for normal application,
+  auth, status, leaderboard, legal, pricing, guide, gameplay, and Profile Studio
+  shells so supporting routes stay visually connected to the homepage.
+- Replaced the shared mint interface accent with homepage lavender while keeping
+  roll, reward, success, and profile colors data-driven or semantic.
+- Left homepage composition, public user-profile rendering, auth/security logic,
+  RPCs, storage behavior, and roll authority unchanged.

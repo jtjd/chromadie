@@ -112,7 +112,7 @@ test('standalone auth routes carry only bounded, safe presentation state', () =>
   assert.match(authPageSource, /profileLoading/);
   assert.match(authPageSource, /SiteModeHeader/);
   assert.match(authPageSource, /isHomepageStyle=\{true\}/);
-  assert.match(authPageSource, /--home-canvas: #050506/);
+  assert.match(authPageSource, /--home-canvas: #0b0910/);
   assert.doesNotMatch(authPageSource, /auth-page__header/);
   assert.match(authSource, /standalone/);
   assert.match(authSource, /getAuthCallbackUrl\(next\)/);

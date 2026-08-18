@@ -44,17 +44,17 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(settings, /fullContextLoaded/);
   assert.match(siteStyles, /\.app-main--profile-settings/);
   assert.match(siteStyles, /--site-font: 'Inter'/);
-  assert.match(siteStyles, /--font-display-stack: 'Clash Display'/);
+  assert.match(siteStyles, /--font-display-stack: 'Manrope Variable'/);
   assert.match(siteStyles, /--font-body-stack: 'Inter'/);
   assert.match(siteStyles, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
-test('Profile Studio scopes the approved dark reference palette without legacy theme aliases', async () => {
+test('Profile Studio scopes the homepage companion palette without legacy theme aliases', async () => {
   const siteStyles = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
   assert.match(siteStyles, /\.app-main--profile-settings\s*\{/);
   assert.match(siteStyles, /--customize-surface: rgba\(12, 12, 15, \.78\)/);
-  assert.match(siteStyles, /--customize-focus: #00ffb3/);
-  assert.match(siteStyles, /--site-accent: #00ffb3/);
+  assert.match(siteStyles, /--customize-focus: var\(--site-brand-accent\)/);
+  assert.match(siteStyles, /--site-accent: var\(--site-brand-accent\)/);
   assert.match(siteStyles, /--site-raised: rgba\(255, 255, 255, \.1\)/);
   assert.match(siteStyles, /--color-danger: #ff5578/);
   assert.match(siteStyles, /--surface-inset: rgba\(0, 0, 0, \.22\)/);

@@ -37,7 +37,7 @@ test('the homepage is a single reference-first composition', () => {
   assert.match(home, /on:claim={forwardAction}/);
   assert.match(home, /on:login={forwardAction}/);
   assert.match(home, /on:logout={forwardAction}/);
-  assert.match(home, /<SiteFooter \/>/);
+  assert.match(home, /<SiteFooter \{isAuthenticated\} \/>/);
 });
 
 test('homepage navigation exposes real product destinations without placeholder links', () => {

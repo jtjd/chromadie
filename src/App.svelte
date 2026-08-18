@@ -5,7 +5,6 @@
   import SiteModeHeader from './lib/SiteModeHeader.svelte';
   import SiteFooter from './lib/SiteFooter.svelte';
   import Toast from './lib/Toast.svelte';
-  import GuestLock from './lib/GuestLock.svelte';
   import AccountUnavailable from './lib/AccountUnavailable.svelte';
   import NotFound from './lib/NotFound.svelte';
   import RouteLoading from './lib/RouteLoading.svelte';
@@ -44,6 +43,28 @@
   let profileVisualFixture = '';
   let cancelIdlePrefetch = null;
   let routeTarget;
+
+  function redirectSignedOutProfileSettings() {
+    const nextPath = '/profile/settings';
+    routeMode = 'auth';
+    view = 'home';
+    authRouteTab = 'login';
+    authRouteNext = nextPath;
+    authRouteUsername = '';
+    selectedProfileUsername = null;
+    profileRouteKind = null;
+    selectedUserId.set(null);
+    legacyProfile = false;
+    challengeData = null;
+
+    if (typeof window !== 'undefined') {
+      const nextUrl = `/login?next=${encodeURIComponent(nextPath)}`;
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+      if (currentUrl !== nextUrl) window.history.replaceState({}, '', nextUrl);
+    }
+
+    trackCurrentRoute();
+  }
   function getProfileVisualFixture() {
     if (!import.meta.env.DEV || typeof window === 'undefined' || window.location.hostname !== '127.0.0.1') return '';
     const value = new URLSearchParams(window.location.search).get('profile_fixture');
@@ -600,15 +621,6 @@
         };
       }
 
-      if (currentAccountState === ACCOUNT_STATES.SIGNED_OUT) {
-        return {
-          componentKey: `profile-settings-guest:${guestActive}`,
-          staticComponent: GuestLock,
-          componentProps: { view: 'profile', guestActive },
-          loadingLabel: 'Checking account access'
-        };
-      }
-
       if (currentAccountState === ACCOUNT_STATES.PROFILE_ERROR) {
         return {
           componentKey: 'profile-settings-error',
@@ -823,12 +835,16 @@
     syncRoute();
   }
 
+  $: if (routeInitialized && routeMode === 'app' && view === 'profile-settings' && $accountState === ACCOUNT_STATES.SIGNED_OUT) {
+    redirectSignedOutProfileSettings();
+  }
+
 </script>
 
 <Toast />
 
   {#if errorState}
-    <main class="bootstrap-error-shell">
+    <main class="bootstrap-error-shell site-atmosphere-page">
       <section class="bootstrap-error-card glass-panel" role="alert" aria-live="polite">
       <p class="bootstrap-error-kicker">Configuration error</p>
       <h1>{errorState.title}</h1>
@@ -861,11 +877,11 @@
       loadingLabel={routeTarget.loadingLabel}
     />
   {:else}
-  <div class="app-shell" class:app-shell--home={homeModeVisible} class:app-shell--leaderboard={leaderboardModeVisible}>
+  <div class="app-shell" class:app-shell--site={!['auth', 'auth-callback', 'reset-password'].includes(routeMode) && view !== 'profile' && !homeModeVisible} class:app-shell--home={homeModeVisible} class:app-shell--leaderboard={leaderboardModeVisible}>
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div id="header-mount">
-    {#if !profileModeVisible && !profileSettingsModeVisible && !homeModeVisible}
+    {#if !profileModeVisible && !homeModeVisible}
       <SiteModeHeader
         activeView={routeMode === 'app' ? view : routeMode}
         accountState={$accountState}
@@ -875,7 +891,7 @@
         isProfileMode={profileModeVisible}
         isLeaderboardMode={leaderboardModeVisible}
         isHomeMode={homeModeVisible}
-        isHomepageStyle={!profileModeVisible}
+        isHomepageStyle={!profileModeVisible && !profileSettingsModeVisible}
         isProfileSettings={profileSettingsModeVisible}
         isOwner={profileModeOwner}
         on:navigate={handleNavigation}
@@ -884,7 +900,7 @@
         on:logout={handleLogout}
         on:retry={() => window.location.reload()}
         on:edit={handleProfileHeaderEdit}
-        accentColor={leaderboardModeVisible ? '#7359c7' : '#00ffb3'}
+        accentColor="#D8A6FF"
       />
     {/if}
 
@@ -996,8 +1012,8 @@
   />
   </div>
 
-  {#if view !== 'profile' && !profileSettingsModeVisible && !homeModeVisible}
-    <SiteFooter />
+  {#if view !== 'profile' && !homeModeVisible}
+    <SiteFooter isAuthenticated={$isAuthenticated} />
   {/if}
   </div>
 {/if}
@@ -1068,18 +1084,20 @@
   }
 
   .bootstrap-error-card {
-    width: min(720px, 100%);
-    padding: 2rem;
+    width: min(760px, 100%);
+    padding: clamp(1.5rem, 4vw, 3rem);
     text-align: left;
-    border-color: rgba(249, 115, 22, 0.35);
-    background:
-      radial-gradient(circle at top right, rgba(249, 115, 22, 0.16), transparent 45%),
-      rgba(10, 10, 14, 0.9);
+    border-color: rgba(255, 255, 255, .1);
+    border-radius: 18px;
+    background: rgba(10, 10, 12, .58);
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .16);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
 
   .bootstrap-error-kicker {
     margin: 0 0 0.65rem 0;
-    color: var(--accent-purple);
+    color: var(--site-brand-accent, #D8A6FF);
     text-transform: uppercase;
     letter-spacing: 0.16em;
     font-size: 0.72rem;
@@ -1088,16 +1106,18 @@
 
   .bootstrap-error-card h1 {
     margin: 0 0 0.85rem 0;
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 4vw, 3rem);
-    color: #fff;
+    font-family: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(3rem, 6vw, 5.25rem);
+    line-height: .94;
+    letter-spacing: -.048em;
+    color: #f8f8f8;
   }
 
   .bootstrap-error-message,
   .bootstrap-error-details,
   .bootstrap-error-help {
-    margin: 0.6rem 0 0 0;
-    color: var(--text-muted);
+    margin: 1.15rem 0 0;
+    color: #8f9099;
     line-height: 1.6;
   }
 
@@ -1106,23 +1126,13 @@
     color: #f9a8d4;
   }
 
-  .loading-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid var(--card-border);
-    background: rgba(255,255,255,0.04);
-    color: var(--text-muted);
-  }
-
   .account-error-banner {
-    margin: 0 1rem 1rem;
+    width: min(1160px, calc(100% - 48px));
+    margin: 0 auto 12px;
     padding: 0.8rem 1rem;
-    border-radius: 12px;
-    border: 1px solid rgba(139, 124, 246, 0.3);
-    background: rgba(139, 124, 246, 0.08);
+    border-radius: 18px;
+    border: 1px solid rgba(248, 113, 113, .28);
+    background: rgba(248, 113, 113, .06);
     color: #fff;
     display: flex;
     flex-wrap: wrap;
@@ -1136,7 +1146,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    color: var(--accent-purple);
+    color: #ff8b9f;
   }
 
   .account-error-copy {
@@ -1144,26 +1154,14 @@
     color: var(--text-muted);
   }
 
-  .account-error-banner {
-    border-color: rgba(248, 113, 113, 0.35);
-    background: rgba(248, 113, 113, 0.08);
-  }
-
-  .profile-error-chip {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
   .challenge-banner {
-    width: min(980px, calc(100% - 2rem));
+    width: min(1160px, calc(100% - 48px));
     margin: 0 auto 12px;
     padding: 1rem 1.1rem;
-    background:
-      radial-gradient(circle at top right, rgba(161, 92, 255, 0.16), transparent 32%),
-      rgba(255,255,255,0.03);
-    border: 1px solid rgba(161, 92, 255, 0.22);
+    background: rgba(10, 10, 12, .58);
+    border: 1px solid rgba(255, 255, 255, .1);
     border-radius: 18px;
-    box-shadow: 0 16px 34px rgba(0,0,0,0.25);
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .16);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1171,15 +1169,13 @@
   }
 
   .founder-banner {
-    width: min(980px, calc(100% - 2rem));
+    width: min(1160px, calc(100% - 48px));
     margin: 0 auto 12px;
     padding: 0.9rem 1rem;
     border-radius: 18px;
     border: 1px solid rgba(255, 198, 87, 0.28);
-    background:
-      radial-gradient(circle at top right, rgba(255, 198, 87, 0.18), transparent 34%),
-      linear-gradient(135deg, rgba(41, 26, 10, 0.96), rgba(18, 17, 32, 0.96));
-    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.25);
+    background: rgba(10, 10, 12, .58);
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .16);
     color: #fff;
     display: flex;
     align-items: center;
@@ -1214,7 +1210,7 @@
 
   .founder-banner-title {
     margin: 0;
-    font-family: var(--font-display);
+    font-family: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
     font-size: 1.02rem;
     letter-spacing: -0.01em;
   }
@@ -1252,7 +1248,7 @@
   }
   .challenge-kicker {
     margin: 0;
-    color: var(--accent-purple);
+    color: var(--site-brand-accent, #D8A6FF);
     text-transform: uppercase;
     letter-spacing: 0.15em;
     font-size: 0.68rem;
@@ -1260,7 +1256,7 @@
   }
   .challenge-banner h2 {
     margin: 0;
-    font-family: var(--font-display);
+    font-family: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
     font-size: 1.05rem;
     color: #fff;
   }
@@ -1290,7 +1286,7 @@
     align-items: center;
     gap: 0.85rem;
     padding: 0.7rem 0.85rem;
-    border-radius: 14px;
+    border-radius: 9px;
     background: rgba(0,0,0,0.18);
     border: 1px solid rgba(255,255,255,0.07);
   }
@@ -1309,7 +1305,7 @@
   }
   .challenge-score {
     margin: 0;
-    font-family: var(--font-mono-stack);
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     font-weight: 700;
     color: #fff;
     font-size: 1rem;
@@ -1321,170 +1317,29 @@
     font-size: 0.75rem;
   }
   .challenge-close {
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.05);
-    color: #fff;
+    min-height: 42px;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 9px;
+    background: transparent;
+    color: #f8f8f8;
     cursor: pointer;
     font-size: 0.85rem;
     font-weight: 600;
-    padding: 0.72rem 0.95rem;
-    border-radius: 12px;
+    padding: 0 18px;
     transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
   }
   .challenge-close:hover {
-    background: rgba(255,255,255,0.09);
-    border-color: rgba(255,255,255,0.14);
+    background: color-mix(in srgb, var(--site-brand-accent, #D8A6FF) 9%, transparent);
+    border-color: var(--site-brand-accent, #D8A6FF);
     transform: translateY(-1px);
-  }
-
-  .rank-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.28rem 0.55rem;
-    border: 1px solid;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.05);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    line-height: 1;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.15) inset;
-  }
-
-  .wallet-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 34px;
-    padding: 0.4rem 0.65rem;
-    border: 1px solid rgba(94, 234, 212, 0.24);
-    border-radius: 999px;
-    background: rgba(94, 234, 212, 0.07);
-    color: #fff;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .wallet-pill:hover,
-  .wallet-pill:focus-visible {
-    border-color: rgba(94, 234, 212, 0.5);
-    background: rgba(94, 234, 212, 0.12);
-  }
-
-  .wallet-pill-label {
-    color: var(--text-muted);
-    font-size: 0.68rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .wallet-pill-value {
-    color: #8ff7df;
-    font-family: var(--font-mono-stack);
-    font-size: 0.76rem;
-    font-weight: 700;
-  }
-
-  .mobile-wallet-card {
-    display: none;
-  }
-
-  .header-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-    flex: 0 1 auto;
-  }
-
-  .header-guide-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 0.78rem;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.04);
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.86rem;
-    font-weight: 600;
-    white-space: nowrap;
-    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
-  }
-
-  .header-guide-link:hover,
-  .header-guide-link:focus-visible {
-    color: #fff;
-    border-color: rgba(161, 92, 255, 0.38);
-    background: rgba(161, 92, 255, 0.12);
-    transform: translateY(-1px);
-  }
-
-  .mobile-nav-backdrop {
-    display: none;
-  }
-
-  .mobile-user-chip {
-    display: none;
-  }
-
-  .mobile-nav-panel {
-    display: none;
   }
 
   @media (max-width: 600px) {
     .account-error-banner {
-      margin-left: 0;
-      margin-right: 0;
+      width: calc(100% - 2rem);
+      margin-inline: auto;
       justify-content: flex-start;
       text-align: left;
-    }
-    .site-header {
-      gap: 0.5rem;
-      padding: 10px 12px;
-      flex-wrap: nowrap;
-      align-items: center;
-    }
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      min-width: 0;
-      flex: 1 1 auto;
-    }
-    .header-guide-link {
-      display: none;
-    }
-    .mobile-user-chip {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-width: 0;
-      max-width: min(58vw, 320px);
-      padding: 4px 10px;
-      margin-left: auto;
-      margin-right: 0.25rem;
-      overflow: hidden;
-    }
-    .mobile-status-pill,
-    .mobile-user-chip {
-      margin-right: 0.25rem;
-    }
-    .mobile-user-chip {
-      flex: 1 1 auto;
-      grid-column: 2;
-    }
-    .menu-toggle {
-      width: 42px;
-      height: 42px;
-      margin-left: 0;
-      flex: 0 0 auto;
     }
     .challenge-banner {
       flex-direction: column;
@@ -1514,97 +1369,10 @@
     .challenge-close {
       width: 100%;
     }
-    .mobile-nav-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      padding: 0 14px 12px;
-      background: rgba(9, 9, 11, 0.92);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-bottom: 1px solid var(--card-border);
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transform: translateY(-6px);
-      transition: max-height 0.24s ease, opacity 0.2s ease, transform 0.2s ease;
-      position: relative;
-      z-index: 101;
-    }
-    .mobile-nav-panel.open {
-      max-height: 420px;
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .mobile-nav-section {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .mobile-nav-link {
-      flex: 1 1 calc(50% - 4px);
-      justify-content: flex-start;
-      padding: 0.7rem 0.9rem !important;
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.04);
-      min-height: 44px;
-      color: #fff;
-    }
-    .mobile-nav-link.active {
-      background: rgba(255,255,255,0.1);
-    }
-    .mobile-auth-section {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    .mobile-wallet-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      width: 100%;
-      min-height: 48px;
-      padding: 0.75rem 0.9rem;
-      border: 1px solid rgba(94, 234, 212, 0.24);
-      border-radius: 12px;
-      background: rgba(94, 234, 212, 0.07);
-      color: #fff;
-      cursor: pointer;
-    }
-    .mobile-wallet-label {
-      color: var(--text-muted);
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-    .mobile-wallet-value {
-      color: #8ff7df;
-      font-family: var(--font-mono-stack);
-      font-size: 0.88rem;
-      font-weight: 700;
-    }
-    .mobile-auth-btn {
-      width: 100%;
-    }
-    .mobile-nav-backdrop {
-      display: block;
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      border: none;
-      background: rgba(0, 0, 0, 0.18);
-      backdrop-filter: blur(1px);
-      -webkit-backdrop-filter: blur(1px);
-      padding: 0;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .skip-link { transition: none; }
   }
 
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
 </style>

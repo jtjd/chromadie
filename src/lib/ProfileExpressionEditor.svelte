@@ -860,11 +860,11 @@
     --media-text-faint: #686971;
     --media-line: rgba(255, 255, 255, .10);
     --media-line-strong: rgba(255, 255, 255, .20);
-    --media-focus: #00ffb3;
-    --media-teal: #00ffb3;
-    --media-sky: #00ffb3;
-    --media-peach: #00ffb3;
-    --media-green: #00ffb3;
+    --media-focus: var(--studio-accent, #D8A6FF);
+    --media-teal: #D8A6FF;
+    --media-sky: #9BCBFF;
+    --media-peach: #F3B7D8;
+    --media-green: #7BCB8D;
     --media-red: #ff5578;
     --media-premium: #8f9099;
     display: grid;

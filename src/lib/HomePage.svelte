@@ -103,7 +103,7 @@
         <a class="homepage-button" href="#claim">Claim your handle</a>
       </section>
 
-      <SiteFooter />
+      <SiteFooter {isAuthenticated} />
     </div>
   </main>
 </div>

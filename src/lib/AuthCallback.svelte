@@ -76,7 +76,7 @@
   }
 </script>
 
-<div class="site-status-page">
+<div class="site-status-page site-atmosphere-page">
   <SiteModeHeader
     activeView="home"
     accountState={chromeAccountState}
@@ -99,16 +99,27 @@
     </section>
   </main>
 
-  <SiteFooter />
+  <SiteFooter isAuthenticated={chromeAuthenticated} />
 </div>
 
 <style>
   .site-status-page {
+    --site-canvas: #0b0910;
+    --site-line: rgba(255, 255, 255, .1);
+    --site-ink: #f5f5f7;
+    --site-muted: #c4bdca;
+    --site-accent: var(--site-brand-accent, #D8A6FF);
     display: flex;
     min-height: 100svh;
     flex-direction: column;
-    background: #050506;
-    color: #f8f8f8;
+    background-color: var(--site-canvas);
+    background-image: var(--site-atmosphere-veil), var(--site-atmosphere-image);
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    color: var(--site-ink);
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
 
   .bootstrap-error-shell {
@@ -122,15 +133,17 @@
 
   .bootstrap-error-card {
     width: min(720px, 100%);
-    padding: 2rem;
+    padding: clamp(1.35rem, 4vw, 2.25rem);
     text-align: left;
-    border-color: var(--color-line-subtle);
-    background: var(--surface-panel);
+    border-color: var(--site-line);
+    border-radius: 18px;
+    background: rgba(12, 12, 15, .78);
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .18);
   }
 
   .bootstrap-error-kicker {
     margin: 0 0 0.65rem 0;
-    color: var(--color-accent-bright);
+    color: var(--site-accent);
     text-transform: uppercase;
     letter-spacing: 0.16em;
     font-size: 0.72rem;
@@ -139,7 +152,7 @@
 
   .bootstrap-error-card h1 {
     margin: 0 0 0.85rem 0;
-    font-family: var(--font-display);
+    font-family: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
     font-size: clamp(2rem, 4vw, 3rem);
     color: #fff;
   }
@@ -147,7 +160,7 @@
   .bootstrap-error-message,
   .bootstrap-error-help {
     margin: 0.6rem 0 0 0;
-    color: var(--text-muted);
+    color: var(--site-muted);
     line-height: 1.6;
   }
 </style>

@@ -1,3 +1,7 @@
+<script>
+  export let isAuthenticated = false;
+</script>
+
 <footer class="site-footer" data-site-chrome="footer">
   <div class="site-footer__identity">
     <span>chm.lol</span>
@@ -6,7 +10,7 @@
 
   <nav class="site-footer__nav" aria-label="Footer navigation">
     <a href="/leaderboard">Leaderboard</a>
-    <a href="/profile/settings">Customize</a>
+    {#if isAuthenticated}<a href="/profile/settings">Customize</a>{/if}
     <a href="/pricing">Pricing</a>
     <a href="/how-to-play">How to Play</a>
     <a href="/privacy">Privacy</a>

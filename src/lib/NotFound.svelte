@@ -1,9 +1,11 @@
-<main class="container" aria-labelledby="not-found-title">
-  <section class="card bootstrap-error-card">
-    <p class="bootstrap-error-kicker">404</p>
+<main class="site-state-page" aria-labelledby="not-found-title">
+  <section class="site-state-card">
+    <p class="site-state-kicker">404</p>
     <h1 id="not-found-title">Page not found</h1>
-    <p class="info-text">That ChromaDie page does not exist or may have moved.</p>
-    <a class="roll-btn" href="/" on:click|preventDefault={() => dispatch('navigate', { view: 'home' })}>Back home</a>
+    <p>That ChromaDie page does not exist or may have moved.</p>
+    <div class="site-state-actions">
+      <a class="site-button site-button--primary" href="/" on:click|preventDefault={() => dispatch('navigate', { view: 'home' })}>Back home</a>
+    </div>
   </section>
 </main>
 
@@ -11,4 +13,3 @@
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 </script>
-

@@ -117,7 +117,7 @@ test('Profile Studio exposes aggregate destinations through the reference shell'
   assert.match(richMedia, /rich-media-editor__compact-preview:hover:not\(:disabled\)/);
   assert.doesNotMatch(customize, /--customize-section-surface: var\(--customize-surface-alt\)/);
   assert.match(customize, /--studio-border:/);
-  assert.match(customize, /--studio-accent: #00ffb3/);
+  assert.match(customize, /--studio-accent: var\(--site-brand-accent, #D8A6FF\)/);
   assert.doesNotMatch(customize, /profile-customize-page__surface-note/);
   assert.doesNotMatch(customize, /Shape the profile canvas|Set your bio and choose|Preview your palette here|Preview owned expression layers|Choose the profile structure|Tell more of your story|Use official HTTPS provider URLs/);
   assert.doesNotMatch(expression, /Unlock richer expression/);

@@ -31,7 +31,7 @@
 
     <nav class="homepage-header__nav" aria-label="Homepage">
       <a class="homepage-header__route-link" href="/leaderboard">Leaderboard</a>
-      <a class="homepage-header__route-link" href="/profile/settings">Customize</a>
+      {#if isAuthenticated}<a class="homepage-header__route-link" href="/profile/settings">Customize</a>{/if}
       <a class="homepage-header__route-link" href="/pricing">Pricing</a>
       <a class="homepage-button homepage-header__claim-link" href="#claim">Claim handle</a>
     </nav>
