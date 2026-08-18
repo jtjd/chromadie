@@ -63,7 +63,15 @@
   $: fixture = HOMEPAGE_FIXTURES[fixtureIndex];
   $: latestRoll = previewRoll || fixture.scores[0];
   $: isPreviewRolling = rollPhase !== 'idle';
-  $: previewRollButtonLabel = rollPhase === 'spin' ? 'Rolling…' : hasLeaderboardEntry ? 'Roll again' : 'Roll';
+  $: previewRollButtonLabel = rollPhase === 'spin' ? 'Rolling…' : hasLeaderboardEntry ? 'Claim your place' : 'Roll';
+  $: localLeaderboardEntry = hasLeaderboardEntry ? {
+    username: '__homepage_you__',
+    displayName: 'YOU',
+    score: leaderboardScore,
+    hexCode: latestRoll.hex_code,
+    profileAccent: latestRoll.hex_code,
+    isLocalEntry: true
+  } : null;
   $: profileImpactActive = rollPhase === 'impact';
   $: particleBurstActive = rollPhase === 'impact';
 
@@ -123,7 +131,7 @@
   }
 
   function previewDailyRoll() {
-    if (isPreviewRolling) return;
+    if (isPreviewRolling || hasLeaderboardEntry) return;
 
     clearPreviewRollTimers();
     rollPhase = 'spin';
@@ -146,6 +154,23 @@
       previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_DELAYS[tick]);
     }
     previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_DELAYS[0]);
+  }
+
+  function focusClaim() {
+    if (typeof document === 'undefined') return;
+    const claim = document.getElementById('claim');
+    claim?.scrollIntoView({ behavior: hasReducedMotion() ? 'auto' : 'smooth', block: 'center' });
+    const target = claim?.querySelector('input, button');
+    if (!(target instanceof HTMLElement)) return;
+    window.setTimeout(() => target.focus(), hasReducedMotion() ? 0 : 240);
+  }
+
+  function handleRollAction() {
+    if (hasLeaderboardEntry) {
+      focusClaim();
+      return;
+    }
+    previewDailyRoll();
   }
 
   function moveFixture(direction) {
@@ -196,7 +221,7 @@
       {:else}
         <p class="homepage-roll-compact__prompt">See where today’s color takes you.</p>
       {/if}
-      <button class="homepage-roll-compact__button" type="button" disabled={isPreviewRolling} on:click={previewDailyRoll}>{previewRollButtonLabel}</button>
+      <button class="homepage-roll-compact__button" type="button" disabled={isPreviewRolling} on:click={handleRollAction}>{previewRollButtonLabel}</button>
     </div>
   </div>
 
@@ -244,6 +269,7 @@
     rows={dailyLeaderboardRows}
     loading={dailyLeaderboardLoading}
     error={dailyLeaderboardError}
+    localEntry={localLeaderboardEntry}
     {resetLabel}
   />
 </section>
@@ -295,39 +321,44 @@
   }
 
   .homepage-roll-compact {
-    max-width: 340px;
+    max-width: 360px;
     margin-top: 30px;
-    padding: 16px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 18px 0;
+    border-top: 1px solid rgba(255, 255, 255, .18);
+    border-bottom: 1px solid rgba(255, 255, 255, .16);
   }
 
-  .homepage-roll-compact__header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-  .homepage-roll-compact__header strong { color: var(--homepage-text); font: 600 0.82rem / 1.1 var(--homepage-display); }
-  .homepage-roll-compact__header span { color: rgba(250, 249, 252, .72); font: 450 0.64rem / 1.1 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); white-space: nowrap; }
-  .homepage-roll-compact__prompt { margin: 0; color: rgba(250, 249, 252, .72); font: 450 0.72rem / 1.35 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); }
+  .homepage-roll-compact__header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .homepage-roll-compact__header strong { color: var(--homepage-text); font: 600 1.12rem / 1.1 var(--homepage-display); }
+  .homepage-roll-compact__header span { color: rgba(250, 249, 252, .84); font: 500 0.82rem / 1.1 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); white-space: nowrap; }
+  .homepage-roll-compact__prompt { margin: 0; color: rgba(250, 249, 252, .86); font: 450 0.92rem / 1.4 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); }
   .homepage-roll-compact__result { display: flex; align-items: center; gap: 9px; min-height: 38px; }
-  .homepage-roll-compact__dot { width: 11px; height: 11px; flex: 0 0 auto; border-radius: 999px; box-shadow: 0 0 14px var(--homepage-roll-accent-glow, var(--homepage-accent-glow)); }
-  .homepage-roll-compact__result strong { display: block; color: rgba(250, 249, 252, .94); font: 600 0.84rem / 1.1 var(--homepage-display); }
-  .homepage-roll-compact__result small { display: block; margin-top: 4px; color: rgba(250, 249, 252, .68); font: 400 0.66rem / 1.2 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); }
+  .homepage-roll-compact__dot { width: 13px; height: 13px; flex: 0 0 auto; border-radius: 999px; box-shadow: 0 0 16px var(--homepage-roll-accent-glow, var(--homepage-accent-glow)); }
+  .homepage-roll-compact__result strong { display: block; color: rgba(250, 249, 252, .98); font: 600 1.15rem / 1.1 var(--homepage-display); }
+  .homepage-roll-compact__result small { display: block; margin-top: 5px; color: rgba(250, 249, 252, .78); font: 400 0.78rem / 1.2 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); }
 
   .homepage-roll-compact__button {
     width: 100%;
-    height: 42px;
-    margin-top: 14px;
-    border: 1px solid var(--homepage-accent);
-    border-radius: 9px;
-    background: rgba(5, 5, 6, 0.28);
-    color: var(--homepage-accent);
+    height: 48px;
+    margin-top: 18px;
+    border: 1px solid color-mix(in srgb, var(--homepage-accent) 72%, white 28%);
+    border-radius: 12px;
+    background: var(--homepage-accent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 10px 24px color-mix(in srgb, var(--homepage-accent) 26%, transparent);
+    color: #17151b;
     cursor: pointer;
-    font: 600 0.82rem / 1 var(--homepage-display);
-    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    font: 600 0.9rem / 1 var(--homepage-display);
+    text-shadow: none;
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
   }
 
   .homepage-roll-compact__button:hover:not(:disabled) {
-    background: var(--homepage-accent);
-    color: #050506;
-    box-shadow: 0 0 24px var(--homepage-accent-glow);
+    border-color: color-mix(in srgb, var(--homepage-accent) 58%, white 42%);
+    background: color-mix(in srgb, var(--homepage-accent) 78%, white 22%);
+    color: #17151b;
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--homepage-accent) 32%, transparent), 0 0 24px color-mix(in srgb, var(--homepage-accent) 24%, transparent);
+    text-shadow: none;
+    transform: translateY(-1px);
   }
 
   .homepage-roll-compact__button:focus-visible { outline: 2px solid var(--homepage-accent); outline-offset: 3px; }
@@ -438,7 +469,7 @@
     .homepage-theme-button--next { right: 0; }
     .homepage-hero__product { gap: 14px; }
     .homepage-roll-compact__header { align-items: flex-start; flex-direction: column; gap: 5px; }
-    .homepage-roll-compact__header span { font-size: 0.62rem; }
+    .homepage-roll-compact__header span { font-size: 0.76rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {

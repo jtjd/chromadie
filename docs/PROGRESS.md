@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## One-shot homepage roll and leaderboard invitation — 2026-08-17
+
+- Limited the homepage preview to one roll, then changed the action into a
+  `Claim your place` CTA that scrolls to the existing claim control.
+- Added the local result to the hero leaderboard as a ranked, accent-highlighted
+  `YOU` row alongside the real current-day public rows.
+- Restored the leaderboard's dark rounded rows and increased the heading,
+  username, and score typography to match the hero's visual authority.
+- Kept the preview result local and covered animated, reduced-motion, CTA, and
+  no-extra-network behavior in the homepage browser smoke.
+
 ## Make link styling visible across layouts — 2026-08-17
 
 - Doubled the effect range of Link size while keeping its bounded three-step

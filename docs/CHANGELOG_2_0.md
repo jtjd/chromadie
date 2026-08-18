@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-17 — Turn the homepage roll into a leaderboard invitation
+
+- The homepage roll can now be used once per profile specimen.
+- The resulting score appears in the daily board as an accent-highlighted
+  `YOU` row, ranked with the live public rolls.
+- The daily board uses darker rounded result sections with larger, bolder
+  heading, username, and score typography.
+- The button becomes `Claim your place` and leads visitors to the existing
+  handle-claim control after the preview result lands.
+- The preview remains local; real scores and leaderboard writes stay inside the
+  existing server-authoritative gameplay flow.
+
 ## 2026-08-17 — Make link styling visible across layouts
 
 - Link size now has twice the visual range.

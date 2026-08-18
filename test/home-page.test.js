@@ -71,7 +71,10 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
   assert.match(hero, /homepage-roll-compact/);
   assert.match(hero, /'Roll'/);
   assert.match(hero, /Rolling…/);
-  assert.match(hero, /Roll again/);
+  assert.match(hero, /Claim your place/);
+  assert.match(hero, /localLeaderboardEntry/);
+  assert.match(hero, /isPreviewRolling \|\| hasLeaderboardEntry/);
+  assert.match(hero, /focusClaim/);
   assert.match(hero, /Date\.UTC\(now\.getUTCFullYear\(\), now\.getUTCMonth\(\), now\.getUTCDate\(\) \+ 1\)/);
   assert.match(hero, /<ProfileMotionEffect/);
   assert.match(hero, /motionKey=\{fixture\.profileMotion \|\| ''\}/);
@@ -88,6 +91,9 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
   assert.match(dailyLeaderboard, /Daily highest roll/);
   assert.match(dailyLeaderboard, /avatarReference/);
   assert.match(dailyLeaderboard, /getProfileMediaUrl/);
+  assert.match(dailyLeaderboard, /export let localEntry = null/);
+  assert.match(dailyLeaderboard, /homepage-daily-leaderboard__row--you/);
+  assert.match(dailyLeaderboard, /displayRank/);
 });
 
 test('the homepage specimen owns the approved profile anatomy', () => {

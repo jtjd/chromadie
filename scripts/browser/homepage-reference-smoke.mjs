@@ -206,7 +206,7 @@ try {
     }))()`);
     assert(duringSpin.globalAccent === globalAccentBefore && duringSpin.localAccent !== globalAccentBefore && duringSpin.rollHex !== initialHex,
       `SPIN changed the global accent or failed to update local roll visuals: ${JSON.stringify({ globalAccentBefore, duringSpin })}.`);
-    await page.waitFor('document.querySelector(".homepage-roll-compact__button")?.textContent?.trim() === "Roll again"', 'animated homepage roll result');
+    await page.waitFor('document.querySelector(".homepage-roll-compact__button")?.textContent?.trim() === "Claim your place"', 'animated homepage roll result');
     await page.waitFor('document.querySelectorAll(".homepage-roll-particles span").length > 0', 'homepage roll impact phase');
     const animated = await page.evaluate(`(() => {
       const dot = document.querySelector('.homepage-roll-compact__dot');
@@ -218,6 +218,9 @@ try {
         cardHex: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || '',
         player: Boolean(document.querySelector('.homepage-roll-compact__result')),
         playerScore: document.querySelector('.homepage-roll-compact__result strong')?.textContent?.trim() || '',
+        leaderboardRows: document.querySelectorAll('.homepage-daily-leaderboard__row').length,
+        youRow: document.querySelector('.homepage-daily-leaderboard__row--you')?.textContent?.trim() || '',
+        youScore: document.querySelector('.homepage-daily-leaderboard__row--you .homepage-daily-leaderboard__score')?.textContent?.trim() || '',
         dotColor: dot ? getComputedStyle(dot).backgroundColor : '',
         headlineColor: headline ? getComputedStyle(headline).color : '',
         particles: document.querySelectorAll('.homepage-roll-particles span').length,
@@ -228,27 +231,61 @@ try {
       `Preview roll did not update the complete accent and roll state: ${JSON.stringify({ initialHex, animated })}.`);
     assert(animated.dotColor === animated.headlineColor,
       `Preview roll color consumers diverged: ${JSON.stringify(animated)}.`);
-    assert(animated.particles > 0 && animated.pop && animated.player && animated.playerScore, `Animated roll omitted the local result: ${JSON.stringify(animated)}.`);
+    assert(animated.particles > 0 && animated.pop && animated.player && animated.playerScore
+      && animated.youRow.includes('YOU') && animated.youScore === animated.playerScore,
+    `Animated roll omitted the highlighted YOU leaderboard result: ${JSON.stringify(animated)}.`);
 
     await page.waitFor('document.querySelector(".homepage-roll-compact__button")?.disabled === false', 'homepage impact phase completion');
+    const beforeCta = await page.evaluate(`(() => ({
+      label: document.querySelector('.homepage-roll-compact__button')?.textContent?.trim() || '',
+      hex: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || '',
+      youScore: document.querySelector('.homepage-daily-leaderboard__row--you .homepage-daily-leaderboard__score')?.textContent?.trim() || ''
+    }))()`);
+    await page.click('.homepage-roll-compact__button', 'homepage claim CTA');
+    await delay(300);
+    const cta = await page.evaluate(`(() => ({
+      label: document.querySelector('.homepage-roll-compact__button')?.textContent?.trim() || '',
+      hex: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || '',
+      youScore: document.querySelector('.homepage-daily-leaderboard__row--you .homepage-daily-leaderboard__score')?.textContent?.trim() || '',
+      activeElement: document.activeElement?.id || ''
+    }))()`);
+    assert(cta.label === 'Claim your place' && cta.hex === beforeCta.hex && cta.youScore === beforeCta.youScore
+      && cta.activeElement === 'homepage-claim-hero',
+    `The one-shot roll button did not become a stable claim CTA: ${JSON.stringify({ beforeCta, cta })}.`);
+    const networkAfterCta = homepageNetworkSnapshot();
+    assert(networkAfterCta.supabaseRequestCount === networkBefore.supabaseRequestCount
+      && networkAfterCta.storageCount === networkBefore.storageCount
+      && networkAfterCta.remoteMediaCount === networkBefore.remoteMediaCount,
+    `The local roll or claim CTA made an unexpected network request: ${JSON.stringify({ networkBefore, networkAfterCta })}.`);
+
     await page.setReducedMotion(true);
+    await page.evaluate('document.querySelector(".homepage-theme-button--next")?.focus()');
+    await pressEnter();
+    await page.waitFor('document.querySelector(".homepage-profile-demo--hero")?.dataset.homepageFixture === "sleek-arcade"', 'reduced-motion fixture reset');
+    await page.evaluate('document.querySelector(".homepage-theme-button--prev")?.focus()');
+    await pressEnter();
+    await page.waitFor('document.querySelector(".homepage-profile-demo--hero")?.dataset.homepageFixture === "meilin-horizon"', 'reduced-motion fixture restore');
+    const reducedNetworkBefore = homepageNetworkSnapshot();
+    const reducedInitialHex = await page.evaluate('document.querySelector(".homepage-roll-compact")?.dataset.rollHex || ""');
     await page.click('.homepage-roll-compact__button', 'reduced-motion homepage roll');
     await delay(60);
     const reduced = await page.evaluate(`(() => ({
       label: document.querySelector('.homepage-roll-compact__button')?.textContent?.trim() || '',
       cardHex: document.querySelector('.homepage-roll-compact')?.dataset.rollHex || '',
       player: Boolean(document.querySelector('.homepage-roll-compact__result')),
+      youRow: document.querySelector('.homepage-daily-leaderboard__row--you')?.textContent?.trim() || '',
       particles: document.querySelectorAll('.homepage-roll-particles span').length,
       pop: document.querySelector('.homepage-profile-pop')?.classList.contains('homepage-profile-pop--active') || false
     }))()`);
-    assert(reduced.label === 'Roll again' && reduced.cardHex !== animated.cardHex && reduced.player && reduced.particles === 0 && !reduced.pop,
-      `Reduced-motion homepage roll did not settle immediately and quietly: ${JSON.stringify({ animated, reduced })}.`);
-    const networkAfter = homepageNetworkSnapshot();
-    assert(networkAfter.supabaseRequestCount === networkBefore.supabaseRequestCount
-      && networkAfter.storageCount === networkBefore.storageCount
-      && networkAfter.remoteMediaCount === networkBefore.remoteMediaCount,
-    `Local homepage roll preview made an unexpected network request: ${JSON.stringify({ networkBefore, networkAfter })}.`);
-    return { initialHex, animated, reduced, networkBefore, networkAfter };
+    assert(reduced.label === 'Claim your place' && reduced.cardHex !== animated.cardHex && reduced.player
+      && reduced.youRow.includes('YOU') && reduced.particles === 0 && !reduced.pop,
+    `Reduced-motion homepage roll did not settle immediately, add YOU, and stay quiet: ${JSON.stringify({ reducedInitialHex, animated, reduced })}.`);
+    const reducedNetworkAfter = homepageNetworkSnapshot();
+    assert(reducedNetworkAfter.supabaseRequestCount === reducedNetworkBefore.supabaseRequestCount
+      && reducedNetworkAfter.storageCount === reducedNetworkBefore.storageCount
+      && reducedNetworkAfter.remoteMediaCount === reducedNetworkBefore.remoteMediaCount,
+    `Reduced-motion local homepage roll made an unexpected network request: ${JSON.stringify({ reducedNetworkBefore, reducedNetworkAfter })}.`);
+    return { initialHex, animated, cta, reduced, networkBefore, networkAfterCta, reducedNetworkBefore, reducedNetworkAfter };
   });
 
   await check('keyboard carousel switches the complete fixture environment', async () => {

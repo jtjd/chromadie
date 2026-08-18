@@ -1,5 +1,22 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-17 — Make the homepage roll a one-shot leaderboard invitation
+
+The homepage roll preview is intentionally limited to one local roll per
+profile specimen. After the result lands, the action becomes `Claim your
+place`, focuses the existing claim surface, and cannot generate another
+preview score. The result is merged into the hero's live today-board display
+as a highlighted `YOU` row, ranked against the bounded public rows already
+returned by `get_public_discovery`.
+
+The board keeps the same visual language as the reference: dark rounded result
+sections with stronger identity and score typography, while the local row gets
+an accent border and color treatment inside that shared structure.
+
+The `YOU` row is presentation-only. It is not written to the database and does
+not alter the server-authoritative roll, eligibility, score, or leaderboard
+RPCs. Authenticated gameplay continues through the existing secure roll flow.
+
 ## 2026-08-17 — Share link size and glow behavior across active layouts
 
 Link size remains a bounded 0–2 control but now scales each step by 16% rather
