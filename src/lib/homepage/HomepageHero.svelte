@@ -208,7 +208,9 @@
     >
       <div class="homepage-roll-compact__header">
         <strong>Roll today</strong>
-        <span>{hasLeaderboardEntry ? 'Your result' : 'One roll · every day'}</span>
+        {#if hasLeaderboardEntry}
+          <span>Your result</span>
+        {/if}
       </div>
       {#if hasLeaderboardEntry}
         <div class="homepage-roll-compact__result">
@@ -341,10 +343,10 @@
     width: 100%;
     height: 48px;
     margin-top: 18px;
-    border: 1px solid color-mix(in srgb, var(--homepage-accent) 72%, white 28%);
+    border: 1px solid rgba(255, 255, 255, .82);
     border-radius: 12px;
-    background: var(--homepage-accent);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 10px 24px color-mix(in srgb, var(--homepage-accent) 26%, transparent);
+    background: var(--homepage-text);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), 0 10px 24px rgba(7, 4, 14, .18);
     color: #17151b;
     cursor: pointer;
     font: 600 0.9rem / 1 var(--homepage-display);
@@ -353,8 +355,8 @@
   }
 
   .homepage-roll-compact__button:hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--homepage-accent) 58%, white 42%);
-    background: color-mix(in srgb, var(--homepage-accent) 78%, white 22%);
+    border-color: color-mix(in srgb, var(--homepage-accent) 72%, white 28%);
+    background: var(--homepage-accent);
     color: #17151b;
     box-shadow: 0 12px 28px color-mix(in srgb, var(--homepage-accent) 32%, transparent), 0 0 24px color-mix(in srgb, var(--homepage-accent) 24%, transparent);
     text-shadow: none;
