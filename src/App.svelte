@@ -699,6 +699,7 @@
   $: profileModeVisible = routeMode === 'app' && view === 'profile' && !legacyProfile && !aliasResolving;
   $: profileSettingsModeVisible = routeMode === 'app' && view === 'profile-settings';
   $: homeModeVisible = routeMode === 'app' && view === 'home';
+  $: leaderboardModeVisible = routeMode === 'app' && view === 'leaderboard';
   $: profileModeUsername = selectedProfileUsername || $profile?.username || $authUser?.user_metadata?.username || '';
   $: currentAccountUsername = $profile?.username || $authUser?.user_metadata?.username || '';
   $: profileModeOwner = Boolean(
@@ -860,7 +861,7 @@
       loadingLabel={routeTarget.loadingLabel}
     />
   {:else}
-  <div class="app-shell" class:app-shell--home={homeModeVisible}>
+  <div class="app-shell" class:app-shell--home={homeModeVisible} class:app-shell--leaderboard={leaderboardModeVisible}>
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div id="header-mount">
@@ -872,6 +873,7 @@
         isAuthenticated={$isAuthenticated}
         logoutInProgress={logoutInProgress}
         isProfileMode={profileModeVisible}
+        isLeaderboardMode={leaderboardModeVisible}
         isHomeMode={homeModeVisible}
         isHomepageStyle={!profileModeVisible}
         isProfileSettings={profileSettingsModeVisible}
@@ -882,7 +884,7 @@
         on:logout={handleLogout}
         on:retry={() => window.location.reload()}
         on:edit={handleProfileHeaderEdit}
-        accentColor="#00ffb3"
+        accentColor={leaderboardModeVisible ? '#7359c7' : '#00ffb3'}
       />
     {/if}
 
@@ -974,7 +976,7 @@
     </div>
   {/if}
 
-  <div class={'app-main ' + (profileModeVisible ? 'app-main--profile' : profileSettingsModeVisible ? 'app-main--profile-settings' : 'app-main--site') + (homeModeVisible ? ' app-main--home' : '')} id="main-content" role={routeMode === 'app' ? 'main' : undefined} tabindex="-1" bind:this={mainContent}>
+  <div class={'app-main ' + (profileModeVisible ? 'app-main--profile' : profileSettingsModeVisible ? 'app-main--profile-settings' : 'app-main--site') + (homeModeVisible ? ' app-main--home' : '') + (leaderboardModeVisible ? ' app-main--leaderboard' : '')} id="main-content" role={routeMode === 'app' ? 'main' : undefined} tabindex="-1" bind:this={mainContent}>
   <RouteOutlet
     loaderKey={routeTarget.loaderKey}
     staticComponent={routeTarget.staticComponent}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 
 import {
   DISCOVERY_PAGE_SIZE,
@@ -138,6 +138,10 @@ test('leaderboard route parsing accepts only the active today and monthly period
 test('leaderboard implementation is a focused podium and score list without raw HTML', async () => {
   const leaderboard = await readFile(new URL('../src/lib/Leaderboard.svelte', import.meta.url), 'utf8');
   const entry = await readFile(new URL('../src/lib/LeaderboardEntry.svelte', import.meta.url), 'utf8');
+  const app = await readFile(new URL('../src/App.svelte', import.meta.url), 'utf8');
+  const siteStyles = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
+  const header = await readFile(new URL('../src/lib/SiteModeHeader.svelte', import.meta.url), 'utf8');
+  const background = await stat(new URL('../public/leaderboard/leaderboard-background.webp', import.meta.url));
   const migration = await readFile(new URL('../supabase/migrations/20260725120000_public_discovery.sql', import.meta.url), 'utf8');
   const previewMigration = await readFile(new URL('../supabase/migrations/20260801090000_discovery_profile_preview.sql', import.meta.url), 'utf8');
   const hardeningMigration = await readFile(new URL('../supabase/migrations/20260811130000_discovery_avatar_contract_and_media_cleanup.sql', import.meta.url), 'utf8');
@@ -150,7 +154,14 @@ test('leaderboard implementation is a focused podium and score list without raw 
   assert.match(leaderboard, /This month/);
   assert.match(leaderboard, /roll-leaderboard__featured-list/);
   assert.match(leaderboard, /roll-leaderboard__lower/);
-  assert.match(leaderboard, /--leaderboard-bg: #f4f3f1/);
+  assert.match(leaderboard, /--leaderboard-bg: transparent/);
+  assert.match(leaderboard, /background: transparent/);
+  assert.match(app, /class:app-shell--leaderboard=\{leaderboardModeVisible\}/);
+  assert.match(app, /isLeaderboardMode=\{leaderboardModeVisible\}/);
+  assert.match(siteStyles, /leaderboard\/leaderboard-background\.webp/);
+  assert.match(header, /class:site-mode-header--leaderboard=\{isLeaderboardMode\}/);
+  assert.match(header, /\.site-mode-header--leaderboard \{[\s\S]*background: transparent !important;/);
+  assert.ok(background.size > 1000, 'leaderboard background should be a real local asset');
   assert.match(leaderboard, /color-scheme: light/);
   assert.match(leaderboard, /items\.slice\(0, 3\)/);
   assert.match(leaderboard, /variant="podium"/);

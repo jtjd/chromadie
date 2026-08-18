@@ -12,6 +12,7 @@
   export let isProfileMode = false;
   export let isProfileSettings = false;
   export let isHomeMode = false;
+  export let isLeaderboardMode = false;
   // Supporting routes use the homepage header language while keeping their
   // application navigation and account event contracts.
   export let isHomepageStyle = false;
@@ -45,7 +46,7 @@
   }
 </script>
 
-<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} data-site-chrome="header" style={`--site-header-accent: ${accentColor};`}>
+<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} class:site-mode-header--leaderboard={isLeaderboardMode} data-site-chrome="header" style={`--site-header-accent: ${accentColor};`}>
   <div class="site-mode-header__inner">
     <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
       <span class="site-mode-header__brand-mark" aria-hidden="true"></span>
@@ -158,6 +159,13 @@
     margin: 0;
     border: 0;
     background: transparent;
+  }
+
+  .site-mode-header--leaderboard {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    color: #282433;
   }
 
   /* Public profiles keep their own atmosphere behind a quiet account bar. */
@@ -297,6 +305,43 @@
   }
   .site-mode-header__account-action--signup:hover { background: var(--site-header-accent) !important; }
   .site-mode-header__account-action:disabled { cursor: wait; opacity: 0.55; }
+
+  .site-mode-header--leaderboard .site-mode-header__brand,
+  .site-mode-header--leaderboard .site-mode-header__wordmark,
+  .site-mode-header--leaderboard .site-mode-header__nav button,
+  .site-mode-header--leaderboard .site-mode-header__context button,
+  .site-mode-header--leaderboard .site-mode-header__account-name,
+  .site-mode-header--leaderboard .site-mode-header__account-action {
+    color: rgba(40, 36, 51, .78) !important;
+  }
+
+  .site-mode-header--leaderboard .site-mode-header__wordmark > span,
+  .site-mode-header--leaderboard .site-mode-header__nav button.active {
+    color: var(--site-header-accent) !important;
+  }
+
+  .site-mode-header--leaderboard .site-mode-header__nav button:hover,
+  .site-mode-header--leaderboard .site-mode-header__nav button:focus-visible,
+  .site-mode-header--leaderboard .site-mode-header__account-name:hover,
+  .site-mode-header--leaderboard .site-mode-header__account-action:hover {
+    color: #282433 !important;
+  }
+
+  .site-mode-header--leaderboard .site-mode-header__claim-link {
+    border: 1px solid rgba(40, 36, 51, .14) !important;
+    background: rgba(255, 255, 255, .62) !important;
+    color: #282433 !important;
+    box-shadow: 0 0.5rem 1.25rem rgba(61, 44, 93, .08);
+  }
+
+  .site-mode-header--leaderboard .site-mode-header__claim-link:hover {
+    background: rgba(255, 255, 255, .86) !important;
+  }
+
+  .site-mode-header--leaderboard .site-mode-header__mobile-menu summary {
+    border-color: rgba(40, 36, 51, .2);
+    color: #282433;
+  }
 
   .site-mode-header__claim-link {
     display: inline-flex;

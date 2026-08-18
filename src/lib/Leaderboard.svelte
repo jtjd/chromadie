@@ -194,7 +194,7 @@
 
 <style>
   .roll-leaderboard {
-    --leaderboard-bg: #f4f3f1;
+    --leaderboard-bg: transparent;
     --leaderboard-panel: rgba(255, 255, 255, .76);
     --leaderboard-line: rgba(30, 25, 34, .14);
     --leaderboard-muted: #706b76;
@@ -203,7 +203,7 @@
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: 3rem 1rem 5rem;
-    background: var(--leaderboard-bg);
+    background: transparent;
     color: var(--leaderboard-text);
     font-family: 'Inter', var(--font-body-stack, sans-serif);
     color-scheme: light;

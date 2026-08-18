@@ -255,6 +255,29 @@ body,
   font-family: var(--site-font);
 }
 
+.app-shell--leaderboard {
+  background-color: #f4f3f1;
+  background-image: url('/leaderboard/leaderboard-background.webp');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.app-shell--leaderboard .app-main--leaderboard {
+  background: transparent;
+}
+
+.app-shell--leaderboard .site-footer {
+  --site-footer-border: rgba(40, 36, 51, .14);
+  --site-footer-muted: rgba(40, 36, 51, .62);
+  --site-footer-ink: #282433;
+}
+
+@media (max-width: 48rem) {
+  .app-shell--leaderboard { background-attachment: scroll; }
+}
+
 .app-main--site :is(h1, h2, h3, h4, h5, p, li, label, button, input, textarea, select) {
   font-family: var(--site-font);
 }

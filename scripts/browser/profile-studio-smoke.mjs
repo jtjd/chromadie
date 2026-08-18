@@ -1768,6 +1768,8 @@ try {
           return box ? { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height } : null;
         };
         const shell = document.querySelector('.roll-leaderboard');
+        const appShell = document.querySelector('.app-shell--leaderboard');
+        const header = document.querySelector('.site-mode-header--leaderboard');
         const featured = document.querySelector('.roll-leaderboard__featured-list');
         const list = document.querySelector('.roll-leaderboard__list');
         const lower = document.querySelector('.roll-leaderboard__lower');
@@ -1804,6 +1806,8 @@ try {
           entries: entries.map(entry => rect(entry)),
           tabs: tabs.map(tab => ({ label: tab.textContent?.trim(), active: tab.getAttribute('aria-selected') === 'true', box: rect(tab) })),
           avatarStates,
+          backgroundImage: getComputedStyle(appShell || document.body).backgroundImage,
+          headerBackground: header ? getComputedStyle(header).backgroundColor : '',
           outOfShell
         };
       })()`);
@@ -1815,6 +1819,8 @@ try {
       assert(state.items.every(item => item.box && item.box.left >= state.shell.left - 1 && item.box.right <= state.shell.right + 1), `Leaderboard row wrapper escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.entries.every(entry => entry && entry.left >= state.shell.left - 1 && entry.right <= state.shell.right + 1), `Leaderboard entry escapes its route shell at ${width}px: ${JSON.stringify(state)}.`);
       assert(state.avatarStates.every(avatar => !avatar.inViewport || avatar.imageLoaded || avatar.fallback), `Leaderboard contains an unloaded visible avatar without a fallback at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.backgroundImage.includes('leaderboard-background.webp'), `Leaderboard background is not loaded from the authored local asset at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.headerBackground === 'rgba(0, 0, 0, 0)', `Leaderboard header is not transparent at ${width}px: ${JSON.stringify(state)}.`);
       measurements.push({ width, height, ...state });
     }
 
