@@ -137,7 +137,7 @@ try {
       && state.fonts.headline.includes('Clash Display')
       && state.fonts.profileName.includes('Clash Display')
       && state.fonts.body.includes('Inter'), `Homepage typography is not rendering the approved font faces: ${JSON.stringify(state.fonts)}.`);
-    assert(state.backgroundImage.includes('meilin/background.webp'), `Homepage background is not Meilin's dedicated fixture: ${JSON.stringify(state)}.`);
+    assert(state.backgroundImage.includes('meilin/background-dusk-v2.webp'), `Homepage background is not Meilin's dedicated fixture: ${JSON.stringify(state)}.`);
     assert(state.avatarImage.includes('meilin/avatar.webp'), `Homepage fixture one is not using Meilin's dedicated avatar: ${JSON.stringify(state)}.`);
     assert(state.stage && Math.abs((state.stage.left + state.stage.right) / 2 - 720) <= 2, `Hero stage is not centered: ${JSON.stringify(state)}.`);
     assert(state.card && state.card.width >= 370 && state.card.width <= 395 && state.card.height >= 280 && state.card.height <= 340, `Immersive hero identity drifted from reference proportions: ${JSON.stringify(state)}.`);

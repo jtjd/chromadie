@@ -103,7 +103,7 @@ export const HOMEPAGE_FIXTURES = Object.freeze([
     bio: 'daydreamer · pixel artist · music lover',
     secondaryLine: 'somewhere between here and the horizon',
     accent: '#D8A6FF',
-    background: '/homepage/fixtures/meilin/background.webp',
+    background: '/homepage/fixtures/meilin/background-dusk-v2.webp',
     avatar: '/homepage/fixtures/meilin/avatar.webp',
     effects: 'portfolio',
     profileMotion: 'profile_motion_perspective_tilt',
