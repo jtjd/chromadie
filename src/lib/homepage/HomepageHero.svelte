@@ -217,7 +217,10 @@
           <span class="homepage-roll-compact__dot" style={`background: ${latestRoll.hex_code};`} aria-hidden="true"></span>
           <div>
             <strong>+{leaderboardScore.toLocaleString()} EP</strong>
-            <small>{latestRoll.identity} · {latestRoll.rarity}</small>
+            <small>
+              {latestRoll.identity} ·
+              <span class="homepage-roll-compact__rarity" data-rarity={latestRoll.rarity}>{latestRoll.rarity}</span>
+            </small>
           </div>
         </div>
       {:else}
@@ -338,6 +341,14 @@
   .homepage-roll-compact__dot { width: 13px; height: 13px; flex: 0 0 auto; border-radius: 999px; box-shadow: 0 0 16px var(--homepage-roll-accent-glow, var(--homepage-accent-glow)); }
   .homepage-roll-compact__result strong { display: block; color: rgba(250, 249, 252, .98); font: 600 1.15rem / 1.1 var(--homepage-display); }
   .homepage-roll-compact__result small { display: block; margin-top: 5px; color: rgba(250, 249, 252, .78); font: 400 0.78rem / 1.2 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); }
+  .homepage-roll-compact__rarity { font-weight: 650; text-shadow: 0 1px 3px rgba(7, 4, 14, .68), 0 0 12px color-mix(in srgb, currentColor 34%, transparent); }
+  .homepage-roll-compact__rarity[data-rarity='Trash'] { color: #a8a3b0; }
+  .homepage-roll-compact__rarity[data-rarity='Common'] { color: #f5f2f8; }
+  .homepage-roll-compact__rarity[data-rarity='Uncommon'] { color: #55d995; }
+  .homepage-roll-compact__rarity[data-rarity='Rare'] { color: #66a3ff; }
+  .homepage-roll-compact__rarity[data-rarity='Epic'] { color: #c18aff; }
+  .homepage-roll-compact__rarity[data-rarity='Anomaly'] { color: #ff995b; }
+  .homepage-roll-compact__rarity[data-rarity='Mythic'] { color: #ffd166; }
 
   .homepage-roll-compact__button {
     width: 100%;

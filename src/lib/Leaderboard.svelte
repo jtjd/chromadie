@@ -97,6 +97,8 @@
 <main class="roll-leaderboard" data-leaderboard-tab={activeTab}>
   <div class="roll-leaderboard__shell">
     <section class="roll-leaderboard__intro" aria-labelledby="leaderboard-title">
+      <h1 id="leaderboard-title">Leaderboard</h1>
+      <p class="roll-leaderboard__scope">{meta.description}</p>
       <div class="roll-leaderboard__tabs" role="tablist" aria-label="Leaderboard period">
         {#each LEADERBOARD_TAB_ORDER as tab (tab)}
           <button
@@ -108,10 +110,6 @@
           >{TAB_META[tab].label}</button>
         {/each}
       </div>
-
-      <p class="roll-leaderboard__eyebrow">Public rankings</p>
-      <h1 id="leaderboard-title">Top rolls</h1>
-      <p class="roll-leaderboard__scope">{meta.description}</p>
     </section>
 
     <section class="roll-leaderboard__board" aria-labelledby="leaderboard-board-title" aria-live="polite">
@@ -208,9 +206,9 @@
     font-family: 'Inter', var(--font-body-stack, sans-serif);
     color-scheme: dark;
   }
-  .roll-leaderboard__shell { width: min(1160px, calc(100% - 48px)); margin-inline: auto; }
-  .roll-leaderboard__intro { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
-  .roll-leaderboard__tabs { display: flex; gap: .65rem; margin-bottom: 2.35rem; }
+  .roll-leaderboard__shell { width: min(980px, calc(100% - 48px)); margin-inline: auto; }
+  .roll-leaderboard__intro { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .roll-leaderboard__tabs { display: flex; justify-content: center; gap: .65rem; margin-top: 1.6rem; }
   .roll-leaderboard__tabs button {
     min-height: 2.4rem;
     padding: .6rem 1.15rem;
@@ -225,13 +223,12 @@
   .roll-leaderboard__tabs button:hover,
   .roll-leaderboard__tabs button:focus-visible { border-color: var(--leaderboard-accent); color: var(--leaderboard-text); background: color-mix(in srgb, var(--leaderboard-accent) 9%, transparent); transform: translateY(-1px); }
   .roll-leaderboard__tabs button.active { border-color: var(--leaderboard-accent); background: color-mix(in srgb, var(--leaderboard-accent) 12%, transparent); color: var(--leaderboard-text); }
-  .roll-leaderboard__eyebrow { margin: 0 0 .6rem; color: var(--leaderboard-muted); font: 500 .63rem/1 'Inter', sans-serif; letter-spacing: .15em; text-transform: uppercase; }
-  .roll-leaderboard__intro h1 { margin: 0; color: var(--leaderboard-text); font: 600 clamp(3rem, 6vw, 5.25rem)/.94 'Manrope Variable', var(--font-display-stack, sans-serif) !important; letter-spacing: -.048em; }
-  .roll-leaderboard__scope { max-width: 24rem; margin: .75rem 0 0; color: var(--leaderboard-muted); font: 400 .76rem/1.4 'Inter', sans-serif; }
-  .roll-leaderboard__board { margin-top: 2.5rem; }
+  .roll-leaderboard__intro h1 { margin: 0; color: var(--leaderboard-text); font: 750 clamp(3.25rem, 6vw, 5.25rem)/.94 'Manrope Variable', var(--font-display-stack, sans-serif) !important; letter-spacing: -.052em; }
+  .roll-leaderboard__scope { max-width: 30rem; margin: .8rem auto 0; color: var(--leaderboard-muted); font: 400 .78rem/1.4 'Inter', sans-serif; }
+  .roll-leaderboard__board { margin-top: 3.15rem; }
   .roll-leaderboard__featured-list,
   .roll-leaderboard__list { margin: 0; padding: 0; list-style: none; }
-  .roll-leaderboard__featured-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .8rem; }
+  .roll-leaderboard__featured-list { display: grid; width: min(820px, 100%); margin-inline: auto; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .8rem; }
   .roll-leaderboard__featured-item { display: flex; min-width: 0; align-items: flex-end; }
   .roll-leaderboard__featured-item:only-child { grid-column: 2; }
   .roll-leaderboard__featured-item:nth-child(1) { order: 2; }
@@ -266,11 +263,11 @@
   @media (max-width: 620px) {
     .roll-leaderboard { padding: 2.5rem 0 3.5rem; }
     .roll-leaderboard__shell { width: calc(100% - 30px); }
-    .roll-leaderboard__tabs { width: 100%; margin-bottom: 2rem; }
+    .roll-leaderboard__tabs { width: 100%; margin-top: 1.4rem; }
     .roll-leaderboard__tabs button { flex: 1; }
     .roll-leaderboard__intro h1 { font-size: clamp(2.8rem, 13vw, 4rem) !important; }
     .roll-leaderboard__scope { max-width: 18rem; }
-    .roll-leaderboard__board { margin-top: 2rem; }
+    .roll-leaderboard__board { margin-top: 2.5rem; }
     .roll-leaderboard__featured-list { gap: .35rem; }
     .roll-leaderboard__lower { margin-top: 2.1rem; }
     .roll-leaderboard__state { align-items: flex-start; flex-direction: column; }

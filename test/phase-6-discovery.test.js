@@ -148,10 +148,13 @@ test('leaderboard implementation is a focused podium and score list without raw 
   const r2Migration = await readFile(new URL('../supabase/migrations/20260813140000_profile_media_r2_discovery.sql', import.meta.url), 'utf8');
 
   assert.match(leaderboard, /get_public_discovery/);
-  assert.match(leaderboard, /Top rolls/);
+  assert.match(leaderboard, />Leaderboard</);
+  assert.doesNotMatch(leaderboard, /Public rankings/);
   assert.match(leaderboard, /Today's top rolls/);
   assert.match(leaderboard, /This month's top rolls/);
   assert.match(leaderboard, /This month/);
+  assert.match(leaderboard, /align-items: center; text-align: center/);
+  assert.match(leaderboard, /width: min\(980px, calc\(100% - 48px\)\)/);
   assert.match(leaderboard, /roll-leaderboard__featured-list/);
   assert.match(leaderboard, /roll-leaderboard__lower/);
   assert.match(leaderboard, /--leaderboard-bg: #0b0910/);

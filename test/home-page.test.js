@@ -69,6 +69,11 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
   assert.match(hero, /<HomepageDailyLeaderboard/);
   assert.match(hero, /dailyLeaderboardRows/);
   assert.match(hero, /homepage-roll-compact/);
+  assert.match(hero, /homepage-roll-compact__rarity/);
+  assert.match(hero, /data-rarity=\{latestRoll\.rarity\}/);
+  for (const rarity of ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']) {
+    assert.match(hero, new RegExp(`homepage-roll-compact__rarity\\[data-rarity='${rarity}'\\]`));
+  }
   assert.match(hero, /'Roll'/);
   assert.match(hero, /Rolling…/);
   assert.match(hero, /Claim your place/);
