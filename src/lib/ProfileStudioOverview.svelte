@@ -54,7 +54,7 @@
     <header class="profile-studio-overview__header">
       <div>
         <h2 id="profile-studio-overview-title">Profile overview</h2>
-        <p>Review identity, progression, and recent profile history.</p>
+        <p>Review identity, recent rolls, and the profile history you are building.</p>
       </div>
       <div class="profile-studio-overview__header-actions">
         <a class="profile-studio-overview__header-action--quiet" href="/progression">Open progression <span aria-hidden="true">→</span></a>

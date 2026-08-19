@@ -830,7 +830,7 @@
       : routeMode === 'app' && view === 'profile'
         ? `View ${profileTitle}'s public ChromaDie profile, progress, achievements, and recent rolls.`
         : routeMode === 'app' && view === 'profile-settings'
-          ? 'Shape your ChromaDie identity, collection, progression, public canvas, and privacy from one profile studio.'
+          ? 'Shape your ChromaDie identity, collection, expression, public canvas, and privacy from one profile studio.'
         : routeMode === 'app' && view === 'progression'
           ? 'Follow the rolls, streaks, discoveries, and expression rewards that make your ChromaDie profile yours.'
         : routeMode === 'app' && view === 'home'
