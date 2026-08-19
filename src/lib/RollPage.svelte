@@ -187,7 +187,7 @@
 
   .roll-page__game {
     --roll-rarity: var(--roll-accent);
-    --roll-score-color: color-mix(in srgb, var(--roll-rarity) 82%, white);
+    --roll-score-color: var(--color-earned, #f5c26f);
     position: relative;
     z-index: 10;
     display: grid;
@@ -253,6 +253,7 @@
     color: var(--roll-score-color);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 14px color-mix(in srgb, var(--roll-score-color) 34%, transparent);
   }
 
   .roll-page__streak {
@@ -646,6 +647,7 @@
   .roll-page :global(.game-container--dedicated .roll-breakdown__row--total .roll-breakdown__value) {
     color: var(--roll-score-color, var(--roll-rarity));
     font: 800 1.2rem/1 var(--site-display, 'Manrope', sans-serif);
+    text-shadow: 0 0 16px color-mix(in srgb, var(--roll-score-color, var(--roll-rarity)) 30%, transparent);
   }
 
   .roll-page :global(.game-container--dedicated .roll-action__button) {

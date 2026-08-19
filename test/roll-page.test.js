@@ -74,7 +74,8 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(page, /roll-page__description-rarity/);
   assert.match(page, /roll-page__description-score/);
   assert.match(page, /--roll-rarity: \$\{contextHasResult \? contextRarity\.color/);
-  assert.match(page, /--roll-score-color/);
+  assert.match(page, /--roll-score-color: var\(--color-earned, #f5c26f\)/);
+  assert.match(page, /description-score[\s\S]*text-shadow: 0 0 14px color-mix\(in srgb, var\(--roll-score-color\)/);
   assert.match(page, /aria-live="polite"/);
   assert.match(page, /You rolled <span>\{rollContext\.identity\}\.<\/span>/);
   assert.match(page, /contextDay/);
