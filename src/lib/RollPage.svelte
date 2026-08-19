@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import Game from './Game.svelte';
   import { getRankState } from './ranks.js';
+  import { getRarityPresentation } from './rarityPresentation.js';
 
   const dispatch = createEventDispatcher();
   let gameSurface;
@@ -24,6 +25,7 @@
   $: contextDay = Math.max(0, Number(rollContext.totalRolls) || Number(rollContext.currentStreak) || 0);
   $: contextRank = getRankState(rollContext.lifetimeEp);
   $: contextProgress = Math.round(contextRank.progress * 100);
+  $: contextRarity = getRarityPresentation(rollContext.rarity || 'Common');
 
   function forward(eventName, event) {
     dispatch(eventName, event.detail);
@@ -81,7 +83,7 @@
     bind:this={gameSurface}
     class="roll-page__game"
     aria-labelledby="roll-page-title"
-    style={`--roll-context-accent: ${contextHasResult && rollContext.hex ? rollContext.hex : 'var(--white)'};`}
+    style={`--roll-context-accent: ${contextHasResult && rollContext.hex ? rollContext.hex : 'var(--white)'}; --roll-rarity: ${contextHasResult ? contextRarity.color : 'var(--roll-accent)'};`}
     on:pointermove={handleCardPointerMove}
     on:pointerleave={resetCardParallax}
   >
@@ -89,7 +91,12 @@
       {#if contextHasResult}
         <p class="roll-page__eyebrow">{contextDay ? `DAY ${contextDay} · DAILY ROLL` : 'DAILY ROLL'}</p>
         <h1 id="roll-page-title">You rolled <span>{rollContext.identity}.</span></h1>
-        <p class="roll-page__description">{rollContext.rarity || 'Daily'} roll · {Number(rollContext.score).toLocaleString()} score. This color is now part of your profile history.</p>
+        <p class="roll-page__description">
+          <span class="roll-page__description-rarity">{rollContext.rarity || 'Daily'} roll</span>
+          ·
+          <strong class="roll-page__description-score">{Number(rollContext.score).toLocaleString()} score</strong>.
+          This color is now part of your profile history.
+        </p>
       {:else}
         <p class="roll-page__eyebrow">DAILY ROLL</p>
         <h1 id="roll-page-title">Keep your <span>color story.</span></h1>
@@ -179,6 +186,8 @@
   }
 
   .roll-page__game {
+    --roll-rarity: var(--roll-accent);
+    --roll-score-color: color-mix(in srgb, var(--roll-rarity) 82%, white);
     position: relative;
     z-index: 10;
     display: grid;
@@ -232,6 +241,18 @@
     margin: 24px 0 0;
     color: var(--roll-muted);
     font: 400 .95rem/1.55 var(--site-font, 'Inter', sans-serif);
+  }
+
+  .roll-page__description-rarity {
+    color: var(--roll-rarity);
+    font-weight: 600;
+    text-shadow: 0 0 14px color-mix(in srgb, var(--roll-rarity) 42%, transparent);
+  }
+
+  .roll-page__description-score {
+    color: var(--roll-score-color);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
   }
 
   .roll-page__streak {
@@ -338,34 +359,6 @@
     min-height: 0;
     margin: 0;
     padding: 0;
-  }
-
-  .roll-page :global(.game-container--dedicated.roll-rarity--Trash) {
-    --roll-rarity: #aaa9b8;
-  }
-
-  .roll-page :global(.game-container--dedicated.roll-rarity--Common) {
-    --roll-rarity: #dedce8;
-  }
-
-  .roll-page :global(.game-container--dedicated.roll-rarity--Uncommon) {
-    --roll-rarity: #6ee2a4;
-  }
-
-  .roll-page :global(.game-container--dedicated.roll-rarity--Rare) {
-    --roll-rarity: #84aaff;
-  }
-
-  .roll-page :global(.game-container--dedicated.roll-rarity--Epic) {
-    --roll-rarity: #d8a6ff;
-  }
-
-  .roll-page :global(.game-container--dedicated.roll-rarity--Anomaly) {
-    --roll-rarity: #ff9a66;
-  }
-
-  .roll-page :global(.game-container--dedicated.roll-rarity--Mythic) {
-    --roll-rarity: #f4cd76;
   }
 
   .roll-page :global(.game-container--dedicated .roll-stage--results) {
@@ -503,10 +496,28 @@
   }
 
   .roll-page :global(.game-container--dedicated .roll-color-rarity) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 7px;
+    border: 1px solid color-mix(in srgb, var(--roll-rarity) 34%, var(--roll-border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--roll-rarity) 8%, transparent);
     color: var(--roll-rarity);
     font: 600 .7rem/1 var(--site-font, 'Inter', sans-serif);
     letter-spacing: .02em;
     text-shadow: 0 0 12px color-mix(in srgb, var(--roll-rarity) 70%, transparent);
+  }
+
+  .roll-page :global(.game-container--dedicated .roll-color-rarity__icon) {
+    display: inline-grid;
+    width: .9rem;
+    height: .9rem;
+    place-items: center;
+    color: currentColor;
+    font-size: .8rem;
+    line-height: 1;
+    text-shadow: 0 0 10px currentColor;
   }
 
   .roll-page :global(.game-container--dedicated .roll-color-name) {
@@ -529,8 +540,9 @@
   .roll-page :global(.game-container--dedicated .roll-result-meta) {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 12px;
+    flex-wrap: wrap;
   }
 
   .roll-page :global(.game-container--dedicated .roll-attr-tags) {
@@ -632,7 +644,7 @@
   }
 
   .roll-page :global(.game-container--dedicated .roll-breakdown__row--total .roll-breakdown__value) {
-    color: var(--roll-accent);
+    color: var(--roll-score-color, var(--roll-rarity));
     font: 800 1.2rem/1 var(--site-display, 'Manrope', sans-serif);
   }
 

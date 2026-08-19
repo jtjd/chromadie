@@ -10,6 +10,7 @@
   import { canInitiateRoll, createCanonicalRollData, getRollAccountMode, isRollReady, normalizeCanonicalRoll } from './rollState';
   import { normalizeNewMilestones } from './progressionState.js';
   import { getPercentileTier } from './rollPresentation.js';
+  import { getRarityPresentation } from './rarityPresentation.js';
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
   import { getAppOrigin } from './authUrls';
   import { trackProductEvent } from './productAnalytics.js';
@@ -980,7 +981,10 @@
   </div>
 {/if}
 
-<div class={'container game-container' + (profileMode ? ' game-container--profile' : '') + (dedicated ? ' game-container--dedicated' : '') + (dedicated && rarity ? ' roll-rarity--' + rarity : '')}>
+<div
+  class={'container game-container' + (profileMode ? ' game-container--profile' : '') + (dedicated ? ' game-container--dedicated' : '') + (dedicated && rarity ? ' roll-rarity--' + rarity : '')}
+  style={dedicated && rarity ? `--roll-rarity: ${getRarityPresentation(rarity || 'Common').color};` : ''}
+>
   {#if error}
     <p class="auth-error">{error}</p>
   {/if}
@@ -1106,7 +1110,7 @@
     </div>
 
   {:else if phase === 'results'}
-    <div class="card roll-stage roll-stage--results" style={`--roll-result-color: ${normalizeHexColor(displayColor, '#ffffff')};`} aria-labelledby="roll-result-title">
+    <div class="card roll-stage roll-stage--results" style={`--roll-result-color: ${normalizeHexColor(displayColor, '#ffffff')}; --roll-rarity: ${getRarityPresentation(rarity || 'Common').color};`} aria-labelledby="roll-result-title">
         <div class="roll-card-header">
           <div>
             <p class="roll-card-header__title">Daily Roll</p>
@@ -1119,7 +1123,10 @@
           <h2 id="roll-result-title" class="roll-color-name">{identity || 'Today’s color'}</h2>
           <div class="roll-result-meta">
             <div class="roll-color-hex">{displayColor}</div>
-            <div class="roll-color-rarity">{rarity || 'Common'}</div>
+            <div class="roll-color-rarity" aria-label={`${rarity || 'Common'} rarity`} title={`${rarity || 'Common'} rarity`}>
+              <span class="roll-color-rarity__icon" aria-hidden="true">{getRarityPresentation(rarity || 'Common').icon}</span>
+              <span>{rarity || 'Common'}</span>
+            </div>
           </div>
           {#if traits.length > 0}
             <div class="roll-attr-tags" aria-label="Color traits">

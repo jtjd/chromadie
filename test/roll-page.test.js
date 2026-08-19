@@ -60,6 +60,9 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(page, /roll-result-glow/);
   assert.match(page, /color: var\(--roll-action-ink, #fff\)/);
   assert.match(game, /roll-result-meta/);
+  assert.match(game, /roll-color-rarity__icon/);
+  assert.match(game, /getRarityPresentation\(rarity \|\| 'Common'\)\.icon/);
+  assert.match(game, /--roll-rarity: \$\{getRarityPresentation\(rarity \|\| 'Common'\)\.color\}/);
   assert.doesNotMatch(game, /New color every day|Score after reveal/);
   assert.match(game, /dedicated \? traits\.slice\(0, 2\) : traits/);
   assert.match(game, /Next roll · \{countdownString\}/);
@@ -68,6 +71,10 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(page, /on:pointermove/);
   assert.match(page, /prefers-reduced-motion/);
   assert.match(page, /roll-page__context/);
+  assert.match(page, /roll-page__description-rarity/);
+  assert.match(page, /roll-page__description-score/);
+  assert.match(page, /--roll-rarity: \$\{contextHasResult \? contextRarity\.color/);
+  assert.match(page, /--roll-score-color/);
   assert.match(page, /aria-live="polite"/);
   assert.match(page, /You rolled <span>\{rollContext\.identity\}\.<\/span>/);
   assert.match(page, /contextDay/);
@@ -99,7 +106,7 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(game, /getRevealHex/);
   assert.doesNotMatch(game, /Math\.random\(\)/);
   assert.doesNotMatch(game, /scoreCountUpInterval/);
-  assert.match(page, /roll-rarity--Epic/);
+  assert.match(page, /getRarityPresentation/);
   assert.match(game, /requestRoll\(supabase, isReroll\)/);
   assert.doesNotMatch(page + game, /innerHTML|new Function|eval\s*\(/);
 });
