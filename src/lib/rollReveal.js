@@ -1,15 +1,53 @@
 export const ROLL_REVEAL_STEPS = Object.freeze([
-  Object.freeze({ id: 'spectrum', label: 'Read the spectrum', progress: 12 }),
-  Object.freeze({ id: 'hue', label: 'Lock the hue', progress: 38 }),
-  Object.freeze({ id: 'tone', label: 'Lock the tone', progress: 64 }),
-  Object.freeze({ id: 'conditions', label: 'Count conditions', progress: 88 }),
-  Object.freeze({ id: 'complete', label: 'Color locked', progress: 100 })
+  Object.freeze({ id: 'signal', label: 'Read the spectrum', progress: 8 }),
+  Object.freeze({ id: 'channels', label: 'Lock the channels', progress: 28 }),
+  Object.freeze({ id: 'conditions', label: 'Find the signals', progress: 54 }),
+  Object.freeze({ id: 'rarity', label: 'Assess the rarity', progress: 72 }),
+  Object.freeze({ id: 'score', label: 'Count the score', progress: 94 }),
+  Object.freeze({ id: 'complete', label: 'Result secured', progress: 100 })
 ]);
 
-export const PROFILE_ROLL_REVEAL_DELAYS = Object.freeze([
-  100, 110, 120, 140, 175, 220, 280, 360
+// A fixed signal palette keeps the anticipation legible without inventing
+// client-side near misses. The server result remains the only source of truth.
+export const ROLL_REVEAL_SIGNAL_COLORS = Object.freeze([
+  '#FF4D8D',
+  '#FF8A4C',
+  '#F7DA4B',
+  '#63DE8B',
+  '#43C8F5',
+  '#756CFF',
+  '#C65CFF',
+  '#FF5DB1'
 ]);
-export const PROFILE_ROLL_REVEAL_PACE = 1;
+
+const REVEAL_RARITY_BONUS = Object.freeze({
+  Trash: 0,
+  Common: 0,
+  Uncommon: 400,
+  Rare: 900,
+  Epic: 1800,
+  Anomaly: 3000,
+  Mythic: 4200
+});
+
+const REVEAL_SCORE_BONUS = Object.freeze({
+  Trash: 0,
+  Common: 0,
+  Uncommon: 200,
+  Rare: 400,
+  Epic: 600,
+  Anomaly: 900,
+  Mythic: 1200
+});
+
+const REVEAL_SCAN_LAYERS = Object.freeze([
+  'Hue relationship',
+  'Saturation profile',
+  'Lightness range',
+  'Channel harmony',
+  'Hex signature',
+  'Scoring conditions'
+]);
 
 const HEX_CHANNEL_PATTERN = /^#?([0-9a-f]{6})$/i;
 
@@ -22,23 +60,84 @@ export function getRevealHex(value, lockedChannels = 0) {
   return `#${channels.map((channel, index) => index < safeLockedChannels ? channel.toUpperCase() : '--').join('')}`;
 }
 
-export function getRollRevealTiming({ dedicated = false, reducedMotion = false } = {}) {
-  if (reducedMotion) {
-    return Object.freeze({ warmup: 0, channel: 0, condition: 0, settle: 0 });
+export function getRollRevealItems(canonical, maxItems = 8) {
+  const contributors = Array.isArray(canonical?.contributors)
+    ? canonical.contributors
+      .filter(contributor => contributor && typeof contributor.id === 'string')
+      .map(contributor => ({
+        id: `condition-${contributor.id}`,
+        label: contributor.name || contributor.id,
+        points: Number(contributor.awardedPoints ?? contributor.points) || 0,
+        kind: 'condition'
+      }))
+    : [];
+  const traits = Array.isArray(canonical?.traits)
+    ? canonical.traits
+      .filter(trait => trait && typeof (trait.id || trait.label) === 'string')
+      .map(trait => ({
+        id: `trait-${trait.id || trait.label}`,
+        label: trait.label || trait.name || trait.id,
+        points: 0,
+        kind: 'trait'
+      }))
+    : [];
+  const items = [...contributors, ...traits].slice(0, Math.max(1, Number(maxItems) || 1));
+
+  for (const label of REVEAL_SCAN_LAYERS) {
+    if (items.length >= Math.max(6, Number(maxItems) || 1)) break;
+    if (items.some(item => item.label === label)) continue;
+    items.push({
+      id: `scan-${label.toLowerCase().replace(/[^a-z]+/g, '-')}`,
+      label,
+      points: 0,
+      kind: 'scan'
+    });
   }
 
-  return dedicated
-    ? Object.freeze({ warmup: 240, channel: 220, condition: 180, settle: 140 })
-    : Object.freeze({ warmup: 360, channel: 300, condition: 240, settle: 180 });
+  return items.slice(0, Math.max(1, Number(maxItems) || 1));
 }
 
-export function getProfileRollRevealTiming({ reducedMotion = false, skipped = false } = {}) {
+export function getRollRevealTimeline({ rarity = 'Common', score = 0, conditionCount = 0, reducedMotion = false, skipped = false } = {}) {
   if (reducedMotion || skipped) {
-    return Object.freeze({ spectrum: 0, lock: 0, score: 0, total: 0 });
+    return Object.freeze({
+      signal: 0,
+      channel: 0,
+      conditionIntro: 0,
+      conditionBeat: 0,
+      conditionSettle: 0,
+      rarity: 0,
+      score: 0,
+      settle: 0,
+      conditionRevealCount: 0,
+      total: 0
+    });
   }
 
-  const spectrum = PROFILE_ROLL_REVEAL_DELAYS.reduce((total, delay) => total + delay, 0) * PROFILE_ROLL_REVEAL_PACE;
-  const lock = 480 * PROFILE_ROLL_REVEAL_PACE;
-  const score = 12 * 45 * PROFILE_ROLL_REVEAL_PACE;
-  return Object.freeze({ spectrum, lock, score, total: spectrum + lock + score });
+  const safeRarity = Object.hasOwn(REVEAL_RARITY_BONUS, rarity) ? rarity : 'Common';
+  const safeScore = Math.max(0, Number(score) || 0);
+  const safeConditionCount = Math.max(0, Number(conditionCount) || 0);
+  const conditionRevealCount = Math.max(6, Math.min(8, Math.ceil(safeConditionCount / 2) || 6));
+  const signal = 2400;
+  const channel = 900;
+  const conditionIntro = 600;
+  const conditionBeat = 600;
+  const conditionSettle = 600;
+  const rarityDuration = 2000 + REVEAL_RARITY_BONUS[safeRarity];
+  const scoreDuration = 3000 + REVEAL_SCORE_BONUS[safeRarity] + (safeScore >= 10000000 ? 800 : 0);
+  const settle = 700;
+  const total = signal + (channel * 3) + conditionIntro + (conditionBeat * conditionRevealCount)
+    + conditionSettle + rarityDuration + scoreDuration + settle;
+
+  return Object.freeze({
+    signal,
+    channel,
+    conditionIntro,
+    conditionBeat,
+    conditionSettle,
+    rarity: rarityDuration,
+    score: scoreDuration,
+    settle,
+    conditionRevealCount,
+    total
+  });
 }

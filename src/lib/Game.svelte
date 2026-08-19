@@ -13,7 +13,13 @@
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
   import { getAppOrigin } from './authUrls';
   import { trackProductEvent } from './productAnalytics.js';
-  import { getRevealHex, getRollRevealTiming, ROLL_REVEAL_STEPS } from './rollReveal.js';
+  import {
+    getRevealHex,
+    getRollRevealItems,
+    getRollRevealTimeline,
+    ROLL_REVEAL_SIGNAL_COLORS,
+    ROLL_REVEAL_STEPS
+  } from './rollReveal.js';
 
   const dispatch = createEventDispatcher();
   export let profileMode = false;
@@ -51,7 +57,10 @@
   let revealStatus = ROLL_REVEAL_STEPS[0].label;
   let revealDetail = '';
   let revealSkipRequested = false;
+  let revealConditions = [];
+  let revealItemTotal = 0;
   let scoreCountUpFrame = null;
+  let scoreCountUpResolve = null;
 
   let percentileDisplay = null;
   let copied = false;
@@ -210,93 +219,232 @@
       window.cancelAnimationFrame(scoreCountUpFrame);
     }
     scoreCountUpFrame = null;
+    if (scoreCountUpResolve) {
+      scoreCountUpResolve(false);
+      scoreCountUpResolve = null;
+    }
   }
 
-  function animateScoreCountUp(targetScore, requestIsCurrent, reducedMotion = false) {
+  function animateScoreCountUp(targetScore, requestIsCurrent, duration, reducedMotion = false, onProgress) {
     cancelScoreCountUp();
+    const progressHandler = typeof onProgress === 'function' ? onProgress : () => {};
 
-    if (reducedMotion || targetScore <= 0 || typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+    if (reducedMotion || typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
       displayScore = targetScore;
-      return;
+      progressHandler(1);
+      return Promise.resolve(requestIsCurrent());
     }
 
-    const startedAt = Date.now();
-    const duration = dedicated ? 650 : 850;
-    const update = () => {
-      if (!requestIsCurrent()) {
-        scoreCountUpFrame = null;
-        return;
-      }
+    return new Promise(resolve => {
+      scoreCountUpResolve = resolve;
+      const startedAt = Date.now();
+      const update = () => {
+        if (!requestIsCurrent()) {
+          scoreCountUpFrame = null;
+          scoreCountUpResolve = null;
+          resolve(false);
+          return;
+        }
 
-      const progress = Math.min(1, (Date.now() - startedAt) / duration);
-      const easedProgress = 1 - Math.pow(1 - progress, 3);
-      displayScore = Math.floor(targetScore * easedProgress);
+        const progress = Math.min(1, (Date.now() - startedAt) / duration);
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        displayScore = Math.floor(targetScore * easedProgress);
+        progressHandler(progress);
 
-      if (progress >= 1) {
-        displayScore = targetScore;
-        scoreCountUpFrame = null;
-        return;
-      }
+        if (progress >= 1 || revealSkipRequested) {
+          displayScore = targetScore;
+          scoreCountUpFrame = null;
+          scoreCountUpResolve = null;
+          resolve(true);
+          return;
+        }
+
+        scoreCountUpFrame = window.requestAnimationFrame(update);
+      };
 
       scoreCountUpFrame = window.requestAnimationFrame(update);
-    };
-
-    scoreCountUpFrame = window.requestAnimationFrame(update);
+    });
   }
 
   function skipReveal() {
     if (phase !== 'rolling') return;
     revealSkipRequested = true;
-    revealStep = ROLL_REVEAL_STEPS.length - 1;
-    revealStatus = ROLL_REVEAL_STEPS[ROLL_REVEAL_STEPS.length - 1].label;
+    revealStatus = ROLL_REVEAL_STEPS[revealStep]?.label || ROLL_REVEAL_STEPS[0].label;
     revealDetail = 'Showing the server-confirmed result';
-    scanProgress = 100;
   }
 
   async function presentRollResult(data, requestIsCurrent) {
     const canonical = normalizeCanonicalRoll(data);
     const reducedMotion = prefersReducedMotion();
-    const timing = getRollRevealTiming({ dedicated, reducedMotion });
     const conditionCount = Array.isArray(data?.conditions)
       ? data.conditions.length
       : canonical.contributors.length;
+    const timing = getRollRevealTimeline({
+      rarity: canonical.rarity,
+      score: canonical.score,
+      conditionCount,
+      reducedMotion
+    });
+    const revealItems = getRollRevealItems(canonical, timing.conditionRevealCount);
+    revealConditions = [];
+    revealItemTotal = revealItems.length;
+
     const waitForBeat = async delay => {
-      if (!revealSkipRequested && delay > 0) await sleep(delay);
-      return requestIsCurrent();
+      if (revealSkipRequested) return requestIsCurrent();
+      if (delay > 0) await sleep(delay);
+      return requestIsCurrent() && !revealSkipRequested;
+    };
+    const waitThroughStage = async (duration, messages, onBeat) => {
+      const safeMessages = messages.length ? messages : [''];
+      const beatDuration = duration / safeMessages.length;
+      const beatHandler = typeof onBeat === 'function' ? onBeat : () => {};
+      for (let index = 0; index < safeMessages.length; index += 1) {
+        if (revealSkipRequested) return false;
+        beatHandler(index, safeMessages[index]);
+        if (!await waitForBeat(beatDuration)) return false;
+      }
+      return true;
+    };
+    const finalize = () => {
+      const finalHex = normalizeHexColor(canonical.hex, '#000000');
+      score = Number(canonical.score) || 0;
+      rarity = canonical.rarity || 'Common';
+      identity = canonical.identity;
+      traits = canonical.traits;
+      rollContributors = canonical.contributors;
+      revealConditions = revealItems;
+      revealStep = ROLL_REVEAL_STEPS.length - 1;
+      revealStatus = ROLL_REVEAL_STEPS[ROLL_REVEAL_STEPS.length - 1].label;
+      revealDetail = `${conditionCount} server-confirmed condition${conditionCount === 1 ? '' : 's'} secured`;
+      displayHex = finalHex;
+      displayColor = finalHex;
+      displayScore = score;
+      scanProgress = 100;
+      return canonical;
     };
 
     displayColor = '#222';
     displayHex = getRevealHex(canonical.hex, 0);
     revealStep = 0;
     revealStatus = ROLL_REVEAL_STEPS[0].label;
-    revealDetail = 'A server-confirmed color is ready to reveal';
+    revealDetail = 'The server-confirmed signal is ready to read';
     scanProgress = ROLL_REVEAL_STEPS[0].progress;
+    displayScore = 0;
+    score = 0;
+    rarity = '';
+    identity = '';
+    traits = [];
+    rollContributors = [];
 
-    if (!await waitForBeat(timing.warmup)) return null;
-
-    for (const lockedChannels of [1, 2, 3]) {
-      if (revealSkipRequested) break;
-      revealStep = lockedChannels;
-      revealStatus = ROLL_REVEAL_STEPS[lockedChannels].label;
-      revealDetail = lockedChannels === 3
-        ? `${conditionCount} scoring condition${conditionCount === 1 ? '' : 's'} detected`
-        : 'The result is narrowing to one signal';
-      displayHex = getRevealHex(canonical.hex, lockedChannels);
-      scanProgress = ROLL_REVEAL_STEPS[lockedChannels].progress;
-      const beatDelay = lockedChannels === 3 ? timing.condition : timing.channel;
-      if (!await waitForBeat(beatDelay)) return null;
+    if (!await waitThroughStage(
+      timing.signal,
+      ['Sampling hue', 'Measuring saturation', 'Mapping lightness', 'Preparing the condition scan'],
+      (index, message) => {
+        revealStatus = ROLL_REVEAL_STEPS[0].label;
+        revealDetail = message;
+        displayColor = ROLL_REVEAL_SIGNAL_COLORS[index % ROLL_REVEAL_SIGNAL_COLORS.length];
+      }
+    )) {
+      if (!requestIsCurrent()) return null;
+      if (revealSkipRequested) return finalize();
     }
 
-    if (!requestIsCurrent()) return null;
-    revealStep = ROLL_REVEAL_STEPS.length - 1;
-    revealStatus = ROLL_REVEAL_STEPS[ROLL_REVEAL_STEPS.length - 1].label;
-    revealDetail = `${conditionCount} scoring condition${conditionCount === 1 ? '' : 's'} detected`;
+    revealStep = 1;
+    scanProgress = ROLL_REVEAL_STEPS[1].progress;
+    for (const [index, lockedChannels] of [1, 2, 3].entries()) {
+      if (revealSkipRequested) return finalize();
+      revealStatus = ROLL_REVEAL_STEPS[1].label;
+      revealDetail = `${['Red', 'Green', 'Blue'][index]} channel locked`;
+      displayHex = getRevealHex(canonical.hex, lockedChannels);
+      displayColor = ROLL_REVEAL_SIGNAL_COLORS[(index + 2) % ROLL_REVEAL_SIGNAL_COLORS.length];
+      if (!await waitForBeat(timing.channel)) {
+        if (!requestIsCurrent()) return null;
+        if (revealSkipRequested) return finalize();
+      }
+    }
+
     displayHex = normalizeHexColor(canonical.hex, '#000000');
     displayColor = normalizeHexColor(canonical.hex, '#000000');
-    scanProgress = 100;
+    revealStep = 2;
+    scanProgress = ROLL_REVEAL_STEPS[2].progress;
+    revealStatus = ROLL_REVEAL_STEPS[2].label;
+    revealDetail = `${conditionCount} server-reported condition${conditionCount === 1 ? '' : 's'} found`;
+    if (!await waitForBeat(timing.conditionIntro)) {
+      if (!requestIsCurrent()) return null;
+      if (revealSkipRequested) return finalize();
+    }
 
-    if (!await waitForBeat(timing.settle)) return null;
-    return canonical;
+    for (let index = 0; index < revealItems.length; index += 1) {
+      if (revealSkipRequested) return finalize();
+      const item = revealItems[index];
+      revealConditions = [...revealConditions, item];
+      revealDetail = item.kind === 'condition' && item.points > 0
+        ? `${item.label} found · +${item.points.toLocaleString()} score`
+        : `${item.label} checked`;
+      if (!await waitForBeat(timing.conditionBeat)) {
+        if (!requestIsCurrent()) return null;
+        if (revealSkipRequested) return finalize();
+      }
+    }
+
+    revealDetail = 'Validating the final pattern stack';
+    if (!await waitForBeat(timing.conditionSettle)) {
+      if (!requestIsCurrent()) return null;
+      if (revealSkipRequested) return finalize();
+    }
+
+    if (revealSkipRequested) return finalize();
+    revealStep = 3;
+    scanProgress = ROLL_REVEAL_STEPS[3].progress;
+    rarity = canonical.rarity || 'Common';
+    identity = canonical.identity;
+    revealStatus = ROLL_REVEAL_STEPS[3].label;
+    const rarityMessages = rarity === 'Mythic'
+      ? ['Comparing the full roll space', 'Rare convergence detected', 'Mythic threshold confirmed']
+      : [`Comparing the full roll space`, `${rarity} threshold is in range`, 'Rarity signal confirmed'];
+    if (!await waitThroughStage(timing.rarity, rarityMessages, (_index, message) => {
+      revealDetail = message;
+    })) {
+      if (!requestIsCurrent()) return null;
+      if (revealSkipRequested) return finalize();
+    }
+
+    if (revealSkipRequested) return finalize();
+    revealStep = 4;
+    scanProgress = ROLL_REVEAL_STEPS[4].progress;
+    score = Number(canonical.score) || 0;
+    rollContributors = canonical.contributors;
+    traits = canonical.traits;
+    revealStatus = ROLL_REVEAL_STEPS[4].label;
+    revealDetail = 'Adding the confirmed score signals';
+    const scoreComplete = await animateScoreCountUp(
+      score,
+      requestIsCurrent,
+      timing.score,
+      reducedMotion,
+      progress => {
+        revealDetail = progress < 0.35
+          ? 'Adding the color signal'
+          : progress < 0.75
+            ? 'Adding condition bonuses'
+            : 'Confirming the final total';
+      }
+    );
+    if (!scoreComplete || !requestIsCurrent()) {
+      if (!requestIsCurrent()) return null;
+      if (revealSkipRequested) return finalize();
+    }
+
+    if (revealSkipRequested) return finalize();
+    revealStep = 5;
+    scanProgress = ROLL_REVEAL_STEPS[5].progress;
+    revealStatus = ROLL_REVEAL_STEPS[5].label;
+    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} and ${score.toLocaleString()} score secured`;
+    if (!await waitForBeat(timing.settle)) {
+      if (!requestIsCurrent()) return null;
+      if (revealSkipRequested) return finalize();
+    }
+    return finalize();
   }
 
   function resetRollPresentation() {
@@ -318,6 +466,8 @@
     revealStatus = ROLL_REVEAL_STEPS[0].label;
     revealDetail = '';
     revealSkipRequested = false;
+    revealConditions = [];
+    revealItemTotal = 0;
     percentileDisplay = null;
     milestoneGranted = '';
     newMilestones = [];
@@ -657,6 +807,8 @@
     revealStatus = ROLL_REVEAL_STEPS[0].label;
     revealDetail = 'Waiting for the server-confirmed roll';
     revealSkipRequested = false;
+    revealConditions = [];
+    revealItemTotal = 0;
     percentileDisplay = null;
     milestoneGranted = '';
     newMilestones = [];
@@ -725,11 +877,9 @@
 
     phase = 'results';
     dispatchRollState();
-    // The dedicated route has a separate context column that already receives
-    // the canonical score. Mount its result atomically to avoid showing two
-    // different score values beside each other; the embedded Game keeps the
-    // shorter count-up for its standalone result card.
-    animateScoreCountUp(Number(data.score) || 0, requestIsCurrent, dedicated || prefersReducedMotion());
+    // The server-confirmed score was already counted during the rolling
+    // timeline. Mount the final card atomically so the dedicated context and
+    // result card settle on the same value.
 
     const rollData = createCanonicalRollData(data, getTodayString(), finalBadges);
 
@@ -918,6 +1068,30 @@
             <span class:active={revealStep === index} class:complete={revealStep > index}>{step.label}</span>
           {/each}
         </div>
+        {#if revealStep >= 2}
+          <div class="roll-reveal-discovery" aria-label="Server-confirmed signals being revealed">
+            <div class="roll-reveal-discovery__header">
+              <span>Signal breakdown</span>
+              <strong>{`${revealConditions.length}/${revealItemTotal} highlights`}</strong>
+            </div>
+            <div class="roll-reveal-discovery__list">
+              {#each revealConditions as item (item.id)}
+                <div class="roll-reveal-discovery__item">
+                  <span class="roll-reveal-discovery__mark" aria-hidden="true">{item.kind === 'condition' ? '✦' : item.kind === 'trait' ? '✧' : '◌'}</span>
+                  <span>{item.label}</span>
+                  {#if item.points}<strong>+{item.points.toLocaleString()}</strong>{/if}
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
+        {#if revealStep >= 4}
+          <div class="roll-score-reveal" aria-live="polite">
+            <span>Confirmed score</span>
+            <strong>{displayScore.toLocaleString()}</strong>
+            <small>EP · counting live</small>
+          </div>
+        {/if}
       </div>
       <div class="scan-container" role="progressbar" aria-label="Daily roll reveal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(scanProgress)}>
         <div class="scan-bar" style="width: {scanProgress}%"></div>
@@ -1149,7 +1323,7 @@
   .roll-rolling-display > * { position: relative; z-index: 1; }
   .roll-reveal-steps {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 6px;
     width: min(100%, 360px);
     margin-top: 4px;
@@ -1170,6 +1344,62 @@
     color: var(--color-ink-strong, #ffffff);
     box-shadow: 0 -3px 10px color-mix(in srgb, var(--color-accent, #8b7cf6) 24%, transparent);
   }
+  .roll-reveal-discovery {
+    display: grid;
+    gap: 8px;
+    width: min(100%, 360px);
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--color-line-subtle, #ffffff) 72%, transparent);
+  }
+  .roll-reveal-discovery__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text-muted, #a4a4b5);
+    font: 600 .62rem/1.2 var(--font-mono-stack);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .roll-reveal-discovery__header strong {
+    color: var(--color-ink-strong, #ffffff);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .roll-reveal-discovery__list { display: grid; gap: 5px; }
+  .roll-reveal-discovery__item {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 7px;
+    min-height: 24px;
+    padding: 4px 7px;
+    border: 1px solid color-mix(in srgb, var(--color-accent, #8b7cf6) 18%, var(--card-border, rgba(255, 255, 255, .12)));
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--color-accent, #8b7cf6) 6%, transparent);
+    color: var(--text-muted, #a4a4b5);
+    font-size: .68rem;
+    animation: rollRevealCondition .34s ease-out both;
+  }
+  .roll-reveal-discovery__item > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .roll-reveal-discovery__mark { color: var(--color-accent-bright, #c4b5fd); text-align: center; }
+  .roll-reveal-discovery__item strong { color: var(--color-ink-strong, #ffffff); font: 600 .62rem/1 var(--font-mono-stack); white-space: nowrap; }
+  .roll-score-reveal {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 7px;
+    width: min(100%, 360px);
+    margin-top: 12px;
+    padding: 9px 11px;
+    border: 1px solid color-mix(in srgb, var(--color-accent, #8b7cf6) 32%, var(--card-border, rgba(255, 255, 255, .12)));
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--color-accent, #8b7cf6) 9%, transparent);
+  }
+  .roll-score-reveal span { color: var(--text-muted, #a4a4b5); font: 600 .62rem/1 var(--font-mono-stack); letter-spacing: .08em; text-transform: uppercase; }
+  .roll-score-reveal strong { color: var(--color-ink-strong, #ffffff); font: 600 1.35rem/1 var(--font-display-stack); letter-spacing: -.04em; }
+  .roll-score-reveal small { color: var(--text-muted, #a4a4b5); font: 600 .58rem/1 var(--font-mono-stack); letter-spacing: .06em; text-transform: uppercase; }
   .roll-reveal-skip {
     align-self: center;
     min-height: 36px;
@@ -1195,6 +1425,10 @@
   @keyframes rollRevealGlow {
     0%, 100% { opacity: .45; transform: scale(.92); }
     50% { opacity: .8; transform: scale(1.08); }
+  }
+  @keyframes rollRevealCondition {
+    from { opacity: 0; transform: translateY(4px) scale(.98); }
+    to { opacity: 1; transform: none; }
   }
 
   .post-score-actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 20px 0; flex-wrap: wrap; }
@@ -1324,6 +1558,7 @@
 
   @media (max-width: 600px) {
     .roll-reveal-steps span { font-size: .48rem; letter-spacing: 0; }
+    .roll-reveal-discovery__header { font-size: .56rem; }
     .roll-reveal-skip { width: 100%; }
     .final-color-display {
       width: 116px;
@@ -1429,6 +1664,7 @@
   @media (prefers-reduced-motion: reduce) {
     .roll-rolling-display::before { animation: none; }
     .roll-reveal-steps span { transition: none; }
+    .roll-reveal-discovery__item { animation: none; }
     .roll-reveal-skip { transition: none; }
   }
 </style>

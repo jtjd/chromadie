@@ -31,7 +31,8 @@ test('the owner roll uses a staged presentation without moving authority into th
 
   assert.match(roll, /REVEAL_STAGES/);
   assert.match(roll, /REVEAL_SPECTRUM/);
-  assert.match(roll, /PROFILE_ROLL_REVEAL_PACE/);
+  assert.match(roll, /getRollRevealTimeline/);
+  assert.match(roll, /ROLL_REVEAL_STEPS/);
   assert.match(roll, /REVEAL_STEP_LABELS/);
   assert.match(roll, /profile-roll__reveal-button/);
   assert.match(roll, /profile-roll__reveal-swatch/);
@@ -50,6 +51,7 @@ test('the owner roll uses a staged presentation without moving authority into th
   assert.match(roll, /profile-roll__skip/);
   assert.match(roll, /let detailsOpen = true/);
   assert.match(roll, /profile-roll__rolling-conditions/);
+  assert.match(roll, /profile-roll__rolling-score/);
   assert.match(roll, /profile-roll__condition--revealing/);
   assert.match(roll, /primeCanonicalConditions/);
   assert.match(roll, /primeCanonicalConditions\(canonical\)/);

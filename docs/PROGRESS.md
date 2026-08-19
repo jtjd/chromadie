@@ -9,14 +9,19 @@
   sample reaches 10,776,026. Pure black and white canonical rolls are now
   12,321,090 and 12,335,008 respectively.
 - Replaced the shared Game’s static progress bar and random 60 ms scramble
-  interval with truthful HEX channel beats, condition-count feedback, a
-  bounded 1.0–1.38 second post-RPC reveal, and a skip control. Results mount
-  immediately after the reveal; the embedded card uses a compositor-friendly
-  requestAnimationFrame count-up, while the dedicated route mounts its score
-  atomically beside the context summary.
-- Tightened the authenticated profile-embedded roll to a 2.525-second maximum
-  reveal (previously 7.575 seconds) using the same bounded timing contract;
-  reduced-motion is immediate and skip bypasses the remaining reveal beats.
+  interval with one six-stage reveal: signal sampling, three channel locks,
+  condition-by-condition discovery, rarity assessment, continuous score
+  counting, and a final settle. Ordinary rolls take about 15.6 seconds, with
+  stronger rarity/score bands extending the event to roughly 18–23 seconds;
+  the score-aware duration is spent on visible discoveries rather than a
+  single delayed spinner.
+- Applied the same outcome-aware timeline to the authenticated profile roll,
+  with the canonical result held in the rolling state until the score has
+  finished counting. Dedicated context and result cards settle atomically;
+  reduced-motion is immediate and `Skip reveal` bypasses the remaining beats.
+- Browser timing checks cover a real guest roll and a Mythic profile fixture,
+  including intermediate signal rows, rarity copy, live score values, and the
+  final result state.
 - Added reduced-motion handling, guest jackpot persistence coverage, SQL/client
   score parity coverage, and deterministic balance range assertions. Local
   database reset and schema lint both pass for the additive tuning migration.

@@ -11,24 +11,23 @@ the client candidate model, badge metadata, drift checker, and parity suite
 all mirror that contract. Historical scores are not rewritten and roll
 generation, eligibility, rewards, and rerolls remain server-authoritative.
 
-## 2026-08-19 — Make the daily roll a short, truthful reveal ritual
+## 2026-08-19 — Make the daily roll a meaningful, outcome-aware reveal ritual
 
-The shared Game surface now uses five bounded reveal beats: read the spectrum,
-lock the hue, lock the tone, count the conditions, and lock the color. The
-authoritative RPC response arrives before the reveal begins; the UI only
-reveals its confirmed HEX channels and reported condition count. The old
-randomized interval and badge-by-badge waits were removed in favor of CSS
-motion, explicit progress milestones, and a short requestAnimationFrame score
-count-up on the embedded result card. The dedicated route mounts its score
-atomically so its context summary and result card cannot disagree. Players can
-skip the presentation, and reduced-motion users receive the result immediately.
-There is no client-side stop control, fake near miss, autoplay audio, or loop
-beyond the one daily roll.
+The shared Game and authenticated profile surfaces now use one six-stage,
+server-backed reveal timeline: read the spectrum, lock the channels, find the
+scoring signals, assess rarity, count the score, and secure the result. The RPC
+response still arrives before presentation begins; the UI only reveals its
+confirmed HEX channels, reported condition metadata, rarity, and score. Each
+stage changes what the player can see: the signal palette shifts, channels
+lock one at a time, condition rows appear individually, rarity language
+resolves, and the score counts continuously rather than waiting behind a
+spinner. Ordinary rolls take about 15.6 seconds; stronger rarity/score bands
+extend the rarity and score assessment to roughly 18–23 seconds.
 
-The authenticated profile-embedded roll uses the same bounded pacing contract:
-its spectrum, lock, and score beats total 2.525 seconds, down from the prior
-7.575-second forced presentation, while its condition rail and skip action keep
-the reveal legible and optional.
+The dedicated route keeps its context summary and result card atomic until the
+timeline is complete. Players can skip the presentation, and reduced-motion
+users receive the canonical result immediately. There is no client-side stop
+control, fake near miss, autoplay audio, or loop beyond the one daily roll.
 
 ## 2026-08-19 — Keep direct refreshes on their requested route
 

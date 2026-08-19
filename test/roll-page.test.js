@@ -89,8 +89,12 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(game, /role="progressbar"/);
   assert.match(game, /ROLL_REVEAL_STEPS/);
   assert.match(game, /data-reveal-step={revealStep}/);
-  assert.match(reveal, /Lock the hue/);
-  assert.match(reveal, /Count conditions/);
+  assert.match(reveal, /Lock the channels/);
+  assert.match(reveal, /Find the signals/);
+  assert.match(reveal, /Count the score/);
+  assert.match(reveal, /getRollRevealTimeline/);
+  assert.match(game, /roll-reveal-discovery/);
+  assert.match(game, /roll-score-reveal/);
   assert.match(game, /Skip reveal/);
   assert.match(game, /getRevealHex/);
   assert.doesNotMatch(game, /Math\.random\(\)/);

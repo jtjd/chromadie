@@ -7,12 +7,15 @@ Document user-visible redesign changes by milestone.
 - Tuned the rare Supernova condition to award 10,000,013 points, creating a
   genuine 10M+ jackpot ceiling while leaving the ordinary roll floor and
   rarity bands intact.
-- Replaced the static roll progress bar with a short five-beat reveal that
-  shows the confirmed HEX channels and reported scoring-condition count.
-- Added `Skip reveal` and reduced-motion behavior, and shortened result
-  presentation by removing per-badge waits and the browser-side scramble loop.
-- Shortened the authenticated profile roll’s staged spectrum and score reveal
-  from about 7.6 seconds to 2.5 seconds while retaining condition feedback.
+- Replaced the static roll progress bar with an outcome-aware six-stage reveal:
+  spectrum sampling, channel locks, signal discovery, rarity assessment, live
+  score counting, and a final result settle.
+- Made the event last about 15.6 seconds for an ordinary roll and roughly
+  18–23 seconds for stronger outcomes, with each additional beat revealing
+  server-confirmed information instead of extending a spinner.
+- Added progressive condition rows, rarity-specific language, score-aware
+  count-up pacing, `Skip reveal`, and reduced-motion behavior to both the
+  dedicated and profile roll surfaces.
 - Kept roll generation, score calculation, eligibility, rewards, and rerolls
   on the existing server-authoritative path.
 

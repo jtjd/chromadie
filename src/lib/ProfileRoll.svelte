@@ -19,7 +19,13 @@
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
   import { trackProductEvent } from './productAnalytics.js';
   import { sleep, normalizeHexColor } from './utils.js';
-  import { PROFILE_ROLL_REVEAL_DELAYS, PROFILE_ROLL_REVEAL_PACE } from './rollReveal.js';
+  import {
+    getRevealHex,
+    getRollRevealItems,
+    getRollRevealTimeline,
+    ROLL_REVEAL_SIGNAL_COLORS,
+    ROLL_REVEAL_STEPS
+  } from './rollReveal.js';
   import Module from './foundation/Module.svelte';
 
   export let moduleSize = 'wide';
@@ -33,26 +39,16 @@
 
   const dispatch = createEventDispatcher();
   const REVEAL_STAGES = Object.freeze([
-    'Charging the spectrum…',
-    'Reading the chroma…',
-    'Locking your color…',
-    'Color locked.'
+    'Reading the spectrum…',
+    'Locking the channels…',
+    'Finding scoring signals…',
+    'Assessing rarity…',
+    'Counting the score…',
+    'Result secured.'
   ]);
-  const REVEAL_SPECTRUM = Object.freeze([
-    '#FF4D8D',
-    '#FF8A4C',
-    '#F7DA4B',
-    '#63DE8B',
-    '#43C8F5',
-    '#756CFF',
-    '#C65CFF',
-    '#FF5DB1'
-  ]);
-  const REVEAL_PACE = PROFILE_ROLL_REVEAL_PACE;
-  const REVEAL_DELAYS = Object.freeze(
-    PROFILE_ROLL_REVEAL_DELAYS.map(delay => delay * REVEAL_PACE)
-  );
-  const REVEAL_STEP_LABELS = Object.freeze(['Spectrum', 'Signal', 'Lock']);
+  const REVEAL_SPECTRUM = ROLL_REVEAL_SIGNAL_COLORS;
+  const REVEAL_STEP_LABELS = Object.freeze(['Spectrum', 'Channels', 'Signals', 'Rarity', 'Score', 'Locked']);
+  const REVEAL_COMPLETE_STAGE = ROLL_REVEAL_STEPS.length - 1;
   const SYSTEM_BADGE_IDS = new Set([
     'beat_your_best',
     'cotw_hit',
@@ -85,6 +81,9 @@
   let rollRequestId = 0;
   let rerollRequestInFlight = false;
   let revealStage = 0;
+  let revealDetail = '';
+  let revealItems = [];
+  let revealedConditionCount = 0;
   let skipRevealRequested = false;
   let freshReveal = false;
   let detailsOpen = true;
@@ -121,6 +120,7 @@
           return { id: 'badge-' + id, label: badge.name || id, symbol: badge.symbol || '✦', points: 0 };
         });
   $: headlineConditions = conditionSource.slice(0, integrated ? 3 : 4);
+  $: visibleRevealItems = revealItems.slice(0, revealedConditionCount);
   $: revealIntensity = ['Mythic', 'Anomaly'].includes(rarity)
     ? 'high'
     : ['Epic', 'Rare'].includes(rarity)
@@ -184,6 +184,9 @@
     cotwHit = false;
     percentileDisplay = null;
     revealStage = 0;
+    revealDetail = '';
+    revealItems = [];
+    revealedConditionCount = 0;
     skipRevealRequested = false;
     freshReveal = false;
     detailsOpen = true;
@@ -259,7 +262,7 @@
     replayData = { ...data, hex: data.hex_code || data.hex };
     replayCanonical = normalizeCanonicalRoll(replayData);
     applyServerPresentation(replayData, replayCanonical);
-    revealStage = 3;
+    revealStage = REVEAL_COMPLETE_STAGE;
     phase = 'results';
     loading = false;
 
@@ -270,55 +273,174 @@
 
   async function animateCanonicalResult(data, canonical, requestId, requestUserId) {
     const reducedMotion = prefersReducedMotion();
+    const requestIsCurrent = () => requestId === rollRequestId
+      && requestUserId === ($session?.user?.id || null);
+    const conditionCount = Math.max(
+      Array.isArray(data?.conditions) ? data.conditions.length : 0,
+      Array.isArray(canonical?.contributors) ? canonical.contributors.length : 0,
+      Array.isArray(canonical?.traits) ? canonical.traits.length : 0
+    );
+    const timing = getRollRevealTimeline({
+      rarity: canonical?.rarity,
+      score: canonical?.score,
+      conditionCount,
+      reducedMotion,
+      skipped: skipRevealRequested
+    });
+
+    revealItems = getRollRevealItems(canonical, timing.conditionRevealCount).map(item => ({
+      ...item,
+      symbol: item.kind === 'condition' ? '✦' : item.kind === 'trait' ? '✧' : '◌'
+    }));
+    revealedConditionCount = 0;
     displayColor = '#222222';
-    displayHex = '#------';
+    displayHex = getRevealHex(canonical?.hex, 0);
     revealedBadges = [];
     revealStage = 0;
-    // The secure roll response is already canonical at this point. Prime only
-    // its condition metadata so the reveal can stage those conditions while
-    // the visual spectrum is still resolving; score and rewards remain settled
-    // by applyServerPresentation below.
+    revealDetail = 'The server-confirmed signal is ready to read';
     primeCanonicalConditions(canonical);
 
-    for (let index = 0; index < REVEAL_SPECTRUM.length; index += 1) {
-      if (skipRevealRequested) break;
-      revealStage = index < 3 ? 0 : index < 6 ? 1 : 2;
-      displayColor = REVEAL_SPECTRUM[index];
+    let canonicalPresented = false;
+    const waitForBeat = async delay => {
+      if (skipRevealRequested) return requestIsCurrent();
+      if (delay > 0) await sleep(delay);
+      return requestIsCurrent() && !skipRevealRequested;
+    };
+    const waitThroughStage = async (duration, messages, onBeat) => {
+      const safeMessages = messages.length ? messages : [''];
+      const beatDuration = duration / safeMessages.length;
+      const beatHandler = typeof onBeat === 'function' ? onBeat : () => {};
+      for (let index = 0; index < safeMessages.length; index += 1) {
+        if (skipRevealRequested) return false;
+        beatHandler(index, safeMessages[index]);
+        if (!await waitForBeat(beatDuration)) return false;
+      }
+      return true;
+    };
+    const presentCanonical = (notifyProfile = true) => {
+      applyServerPresentation(data, canonical, {
+        animateScore: true,
+        revealBadges: false,
+        notifyProfile
+      });
+      canonicalPresented = true;
+    };
+    const finalize = () => {
+      if (!canonicalPresented) presentCanonical(true);
+      applyServerPresentation(data, canonical, { notifyProfile: false });
+      revealStage = REVEAL_COMPLETE_STAGE;
+      revealDetail = `${conditionCount} server-confirmed condition${conditionCount === 1 ? '' : 's'} secured`;
+      displayScore = score;
+      freshReveal = true;
+      phase = 'results';
+      return true;
+    };
+
+    const signalMessages = [
+      'Sampling hue',
+      'Measuring saturation',
+      'Mapping lightness',
+      'Preparing the condition scan'
+    ];
+    if (!await waitThroughStage(timing.signal, signalMessages, (index, message) => {
+      revealStage = 0;
+      revealDetail = message;
+      displayColor = REVEAL_SPECTRUM[index % REVEAL_SPECTRUM.length];
       dispatch('colorpreview', { hex: displayColor });
-      if (!reducedMotion) await sleep(REVEAL_DELAYS[index]);
-      if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
+    })) {
+      if (!requestIsCurrent()) return false;
+      if (skipRevealRequested) return finalize();
     }
 
-    applyServerPresentation(data, canonical, {
-      animateScore: true,
-      revealBadges: false,
-      notifyProfile: true
-    });
+    revealStage = 1;
+    for (const [index, lockedChannels] of [1, 2, 3].entries()) {
+      if (skipRevealRequested) return finalize();
+      revealDetail = `${['Red', 'Green', 'Blue'][index]} channel locked`;
+      displayHex = getRevealHex(canonical?.hex, lockedChannels);
+      displayColor = REVEAL_SPECTRUM[(index + 2) % REVEAL_SPECTRUM.length];
+      dispatch('colorpreview', { hex: displayColor });
+      if (!await waitForBeat(timing.channel)) {
+        if (!requestIsCurrent()) return false;
+        if (skipRevealRequested) return finalize();
+      }
+    }
+
+    displayHex = normalizeHexColor(canonical?.hex, '#000000');
+    displayColor = displayHex;
+    dispatch('colorpreview', { hex: displayColor });
+    revealStage = 2;
+    revealDetail = `${conditionCount} server-reported condition${conditionCount === 1 ? '' : 's'} found`;
+    if (!await waitForBeat(timing.conditionIntro)) {
+      if (!requestIsCurrent()) return false;
+      if (skipRevealRequested) return finalize();
+    }
+
+    for (let index = 0; index < revealItems.length; index += 1) {
+      if (skipRevealRequested) return finalize();
+      const item = revealItems[index];
+      revealedConditionCount = index + 1;
+      revealDetail = item.kind === 'condition' && item.points > 0
+        ? `${item.label} found · +${item.points.toLocaleString()} score`
+        : `${item.label} checked`;
+      if (!await waitForBeat(timing.conditionBeat)) {
+        if (!requestIsCurrent()) return false;
+        if (skipRevealRequested) return finalize();
+      }
+    }
+
+    revealDetail = 'Validating the final pattern stack';
+    if (!await waitForBeat(timing.conditionSettle)) {
+      if (!requestIsCurrent()) return false;
+      if (skipRevealRequested) return finalize();
+    }
+    if (skipRevealRequested) return finalize();
+
+    presentCanonical(true);
     revealStage = 3;
-    if (!reducedMotion && !skipRevealRequested) await sleep(480 * REVEAL_PACE);
-    if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
+    const rarityMessages = canonical.rarity === 'Mythic'
+      ? ['Comparing the full roll space', 'Rare convergence detected', 'Mythic threshold confirmed']
+      : ['Comparing the full roll space', `${canonical.rarity || 'Common'} threshold is in range`, 'Rarity signal confirmed'];
+    if (!await waitThroughStage(timing.rarity, rarityMessages, (_index, message) => {
+      revealDetail = message;
+    })) {
+      if (!requestIsCurrent()) return false;
+      if (skipRevealRequested) return finalize();
+    }
+    if (skipRevealRequested) return finalize();
 
-    freshReveal = true;
-    phase = 'results';
-
+    revealStage = 4;
+    revealDetail = 'Adding the confirmed score signals';
     const scoreTarget = score;
-    const scoreSteps = reducedMotion || skipRevealRequested ? 1 : 12;
+    const scoreSteps = reducedMotion ? 1 : 20;
     for (let step = 1; step <= scoreSteps; step += 1) {
+      if (skipRevealRequested) return finalize();
       const progress = step / scoreSteps;
       const easedProgress = 1 - Math.pow(1 - progress, 3);
-      displayScore = Math.round(scoreTarget * easedProgress);
-      if (!reducedMotion && !skipRevealRequested) await sleep(45 * REVEAL_PACE);
-      if (requestId !== rollRequestId || requestUserId !== ($session?.user?.id || null)) return false;
+      displayScore = Math.floor(scoreTarget * easedProgress);
+      revealDetail = progress < 0.35
+        ? 'Adding the color signal'
+        : progress < 0.75
+          ? 'Adding condition bonuses'
+          : 'Confirming the final total';
+      if (!await waitForBeat(reducedMotion ? 0 : timing.score / scoreSteps)) {
+        if (!requestIsCurrent()) return false;
+        if (skipRevealRequested) return finalize();
+      }
     }
-    displayScore = scoreTarget;
 
-    applyServerPresentation(data, canonical, { notifyProfile: false });
-    return true;
+    revealStage = REVEAL_COMPLETE_STAGE;
+    revealDetail = `${conditionCount} condition${conditionCount === 1 ? '' : 's'} and ${score.toLocaleString()} score secured`;
+    if (!await waitForBeat(timing.settle)) {
+      if (!requestIsCurrent()) return false;
+      if (skipRevealRequested) return finalize();
+    }
+    return finalize();
   }
 
   function skipReveal() {
+    if (phase !== 'rolling') return;
     skipRevealRequested = true;
-    revealStage = 3;
+    revealDetail = 'Showing the server-confirmed result';
   }
 
   async function shareRoll() {
@@ -474,7 +596,7 @@
     if (visualFixture === 'owner' && fixtureResult) {
       const canonical = normalizeCanonicalRoll(fixtureResult);
       applyServerPresentation(fixtureResult, canonical);
-      revealStage = 3;
+      revealStage = REVEAL_COMPLETE_STAGE;
       phase = 'results';
       loading = false;
       return;
@@ -533,25 +655,35 @@
       <div class="profile-roll__rolling-copy">
         <div class="profile-roll__reading-line"><span aria-hidden="true"></span><p class="profile-roll__eyebrow">{revealStatus}</p></div>
         <p class="profile-roll__hex">{displayHex}</p>
-        <h3>{revealStage === 3 ? 'This one is yours.' : 'Finding today’s signal.'}</h3>
-        <p>{revealStage === 3 ? 'Adding it to your profile.' : 'The spectrum is narrowing.'}</p>
+        <h3>{revealStage >= 5 ? 'This one is yours.' : revealStage >= 4 ? 'The score is taking shape.' : revealStage >= 3 ? 'The color is locked.' : revealStage >= 2 ? 'Signals are lining up.' : 'Finding today’s signal.'}</h3>
+        <p>{revealDetail || (revealStage >= 5 ? 'Adding it to your profile.' : 'The spectrum is narrowing.')}</p>
         <div class="profile-roll__stage-track" aria-hidden="true">
           {#each REVEAL_STEP_LABELS as label, index (label)}
             <span class:active={revealStage === index} class:complete={revealStage > index}>{label}</span>
           {/each}
         </div>
-        {#if headlineConditions.length}
+        {#if visibleRevealItems.length}
           <div class="profile-roll__rolling-conditions" aria-label="Score conditions being revealed">
-            <p class="profile-roll__eyebrow">Conditions aligning</p>
+            <div class="profile-roll__rolling-conditions-heading">
+              <p class="profile-roll__eyebrow">Signals aligning</p>
+              <span>{visibleRevealItems.length}/{revealItems.length}</span>
+            </div>
             <div class="profile-roll__condition-list">
-              {#each headlineConditions as condition, index (condition.id)}
-                <span class="profile-roll__condition-chip profile-roll__condition--revealing" style={'--condition-delay: ' + (index * 0.55) + 's;'}>
+              {#each visibleRevealItems as condition (condition.id)}
+                <span class="profile-roll__condition-chip profile-roll__condition--revealing">
                   <span aria-hidden="true">{condition.symbol}</span>
                   <strong>{condition.label}</strong>
                   {#if condition.points}<small>+{condition.points.toLocaleString()}</small>{/if}
                 </span>
               {/each}
             </div>
+          </div>
+        {/if}
+        {#if revealStage >= 4}
+          <div class="profile-roll__rolling-score" aria-live="polite">
+            <span>Confirmed score</span>
+            <strong>{displayScore.toLocaleString()}</strong>
+            <small>EP · counting live</small>
           </div>
         {/if}
         <button type="button" class="profile-roll__skip" on:click={skipReveal}>Skip reveal</button>
@@ -872,22 +1004,35 @@
   .profile-roll__rolling[data-reveal-stage='0'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-charge 0.42s ease-in-out infinite; }
   .profile-roll__rolling[data-reveal-stage='1'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-charge 0.62s ease-in-out infinite; }
   .profile-roll__rolling[data-reveal-stage='2'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-narrow 0.82s var(--motion-ease-emphasis) both; }
-  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-lock 0.48s var(--motion-ease-emphasis) both; }
-  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__lock-ring { animation: profile-roll-lock-ring 0.7s ease-out both; }
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__preview :global(.roll-preview-frame),
+  .profile-roll__rolling[data-reveal-stage='4'] .profile-roll__preview :global(.roll-preview-frame) { animation: profile-roll-lock 0.48s var(--motion-ease-emphasis) both; }
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__lock-ring,
+  .profile-roll__rolling[data-reveal-stage='4'] .profile-roll__lock-ring,
+  .profile-roll__rolling[data-reveal-stage='5'] .profile-roll__lock-ring { animation: profile-roll-lock-ring 0.7s ease-out both; }
   .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__scan-orbit,
-  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__spectrum-wash { animation-play-state: paused; opacity: 0.18; }
+  .profile-roll__rolling[data-reveal-stage='3'] .profile-roll__spectrum-wash,
+  .profile-roll__rolling[data-reveal-stage='4'] .profile-roll__scan-orbit,
+  .profile-roll__rolling[data-reveal-stage='4'] .profile-roll__spectrum-wash,
+  .profile-roll__rolling[data-reveal-stage='5'] .profile-roll__scan-orbit,
+  .profile-roll__rolling[data-reveal-stage='5'] .profile-roll__spectrum-wash { animation-play-state: paused; opacity: 0.18; }
   .profile-roll__rolling-copy { min-width: 0; }
   .profile-roll__reading-line { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
   .profile-roll__reading-line > span { width: 0.42rem; height: 0.42rem; flex: 0 0 auto; border-radius: 50%; background: var(--profile-accent); box-shadow: 0 0 0.8rem color-mix(in srgb, var(--profile-accent) 74%, transparent); animation: profile-roll-signal 1s ease-in-out infinite; }
   .profile-roll__rolling-copy h3 { margin: 0.5rem 0 0.35rem; color: var(--color-ink-strong); font: 600 clamp(1.2rem, 3.5vw, 1.65rem) / 1.04 var(--font-display-stack); letter-spacing: -0.045em; }
   .profile-roll__rolling-copy > p:not(.profile-roll__eyebrow):not(.profile-roll__hex) { max-width: 12rem; font-size: 0.78rem; }
-  .profile-roll__stage-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.35rem; max-width: 15rem; margin-top: 0.85rem; }
+  .profile-roll__stage-track { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.35rem; width: 100%; max-width: 31rem; margin-top: 0.85rem; }
   .profile-roll__stage-track span { padding-top: 0.4rem; border-top: 1px solid var(--color-line-subtle); color: var(--color-ink-faint); font: 600 0.56rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
   .profile-roll__stage-track span.active,
   .profile-roll__stage-track span.complete { border-color: var(--profile-accent); color: color-mix(in srgb, var(--profile-accent) 52%, white); box-shadow: 0 -0.18rem 0.55rem color-mix(in srgb, var(--profile-accent) 24%, transparent); }
   .profile-roll__rolling-conditions { display: grid; gap: 0.45rem; margin-top: 0.9rem; }
-  .profile-roll__rolling-conditions .profile-roll__eyebrow { margin: 0; }
+  .profile-roll__rolling-conditions-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
+  .profile-roll__rolling-conditions-heading .profile-roll__eyebrow { margin: 0; }
+  .profile-roll__rolling-conditions-heading > span { color: var(--color-ink-muted); font: 600 0.6rem / 1 var(--font-mono-stack); }
   .profile-roll__condition--revealing { opacity: 0; transform: translateY(0.35rem) scale(0.96); animation: profile-roll-condition-reveal 0.42s var(--motion-ease-emphasis) var(--condition-delay, 0s) both; }
+  .profile-roll__rolling-score { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.9rem; padding: 0.55rem 0.7rem; border: 1px solid color-mix(in srgb, var(--profile-accent) 34%, var(--color-line-subtle)); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--profile-accent) 8%, transparent); }
+  .profile-roll__rolling-score span { color: var(--color-ink-muted); font: 600 0.6rem / 1 var(--font-mono-stack); letter-spacing: 0.08em; text-transform: uppercase; }
+  .profile-roll__rolling-score strong { color: var(--color-ink-strong); font: 600 1.3rem / 1 var(--font-display-stack); letter-spacing: -0.04em; }
+  .profile-roll__rolling-score small { color: var(--color-ink-muted); font: 600 0.58rem / 1 var(--font-mono-stack); letter-spacing: 0.06em; text-transform: uppercase; }
   .profile-roll__skip { display: inline-flex; align-items: center; min-height: 2.5rem; margin-top: 1rem; padding: .65rem .25rem; border: 0; background: transparent; color: var(--color-ink-faint); font: 600 0.62rem / 1 var(--font-mono-stack); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: color var(--motion-base) var(--motion-ease-standard); }
   .profile-roll__skip:hover { color: var(--color-ink-strong); }
   .profile-roll__skip:focus-visible { outline: 2px solid var(--color-accent-bright); outline-offset: 4px; border-radius: 0.25rem; }
@@ -991,6 +1136,7 @@
     .profile-roll__reveal-button:hover:not(:disabled) { transform: none; }
     .profile-roll__reading-line > span,
     .profile-roll__condition--revealing,
+    .profile-roll__rolling-score,
     .profile-roll__spectrum-wash,
     .profile-roll__scan-orbit,
     .profile-roll__lock-ring,
