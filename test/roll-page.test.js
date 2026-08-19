@@ -51,6 +51,13 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(game, /roll-detail-grid/);
   assert.match(game, /roll-breakdown--result/);
   assert.match(game, /roll-action__button--claimed/);
+  assert.match(game, /function getReadableTextColor/);
+  assert.match(game, /--roll-action-ink: \$\{rollActionInk\}/);
+  assert.match(page, /--roll-card-glow/);
+  assert.match(page, /--roll-card-glow-soft/);
+  assert.match(page, /color-mix\(in srgb, var\(--roll-result-color, var\(--white\)\) 30%, transparent\)/);
+  assert.match(page, /roll-result-glow/);
+  assert.match(page, /color: var\(--roll-action-ink, #fff\)/);
   assert.match(game, /roll-result-meta/);
   assert.doesNotMatch(game, /New color every day|Score after reveal/);
   assert.match(game, /dedicated \? traits\.slice\(0, 2\) : traits/);

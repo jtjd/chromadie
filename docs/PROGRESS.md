@@ -1,5 +1,15 @@
 # Chromadie 2.0 Progress
 
+## Roll result contrast and color focus — 2026-08-19
+
+- Scoped the homepage-style header’s bright navigation rule so the white
+  `Claim handle` control retains explicit near-black ink.
+- Added relative-luminance text selection to the dedicated roll result
+  button, covering bright, dark, and white rolled colors.
+- Tightened the card and swatch glow into saturated inner and soft outer
+  layers driven by the rolled color, with a restrained breathing animation
+  that is disabled for reduced-motion users.
+
 ## Homepage descriptor copy language — 2026-08-19
 
 - Standardized secondary homepage copy around the profile descriptor treatment:

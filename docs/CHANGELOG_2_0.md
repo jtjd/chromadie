@@ -2,6 +2,19 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Keep roll result controls contrast-safe
+
+- The shared homepage-style header now keeps `Claim handle` in dark ink on
+  its white button instead of allowing the bright navigation treatment to
+  override it.
+- The dedicated roll result action chooses near-black or white text from the
+  rolled color’s relative luminance, so light and white rolls remain readable
+  while dark rolls keep the white-first treatment.
+- Replaced the diffuse result halo with a tighter saturated color layer and a
+  softer secondary layer around the card and swatch, keeping the result color
+  vivid without a broad lower-screen glow. The card halo now breathes slowly
+  so the result feels alive without moving the content or surface.
+
 ## 2026-08-19 — Carry the profile descriptor treatment into homepage copy
 
 - Applied the soft white, medium-weight descriptor treatment used by the

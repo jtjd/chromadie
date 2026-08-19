@@ -24,6 +24,20 @@
   let displayHex = '#000000';
   let displayColor = '#222';
 
+  function getReadableTextColor(value) {
+    const hex = normalizeHexColor(value, '#ffffff').slice(1);
+    const channels = [0, 2, 4].map(offset => {
+      const channel = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
+      return channel <= 0.03928
+        ? channel / 12.92
+        : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    const luminance = (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
+    return luminance > 0.179 ? '#0e0e10' : '#ffffff';
+  }
+
+  $: rollActionInk = getReadableTextColor(displayColor);
+
   let score = 0;
   let rarity = '';
   let badges = [];
@@ -903,6 +917,7 @@
       <button
         type="button"
         class="roll-btn roll-action__button roll-action__button--claimed"
+        style={`--roll-action-ink: ${rollActionInk};`}
         disabled
         aria-label={dedicated ? `Next roll in ${countdownString}` : `Today's roll claimed for ${displayScore.toLocaleString()} score`}
       >

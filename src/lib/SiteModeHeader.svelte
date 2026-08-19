@@ -283,7 +283,7 @@
 
   /* The homepage-style header sits over photographic backgrounds. Keep its
    * navigation and account labels bright enough to read without hover. */
-  .site-mode-header--home .site-mode-header__nav button,
+  .site-mode-header--home .site-mode-header__nav button:not(.site-mode-header__claim-link),
   .site-mode-header--home .site-mode-header__context button,
   .site-mode-header--home .site-mode-header__account-name,
   .site-mode-header--home .site-mode-header__account-action,
@@ -293,13 +293,19 @@
     text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
   }
 
-  .site-mode-header--home .site-mode-header__nav button:hover,
-  .site-mode-header--home .site-mode-header__nav button.active,
+  .site-mode-header--home .site-mode-header__nav button:hover:not(.site-mode-header__claim-link),
+  .site-mode-header--home .site-mode-header__nav button.active:not(.site-mode-header__claim-link),
   .site-mode-header--home .site-mode-header__account-name:hover,
   .site-mode-header--home .site-mode-header__account-action:hover,
   .site-mode-header--home .site-mode-header__mobile-panel button:hover:not(.site-mode-header__claim-link),
   .site-mode-header--home .site-mode-header__mobile-panel button.active {
     color: var(--white, #ffffff) !important;
+  }
+
+  .site-mode-header--home .site-mode-header__claim-link {
+    color: var(--bg, #0e0e10) !important;
+    text-shadow: none !important;
+    -webkit-text-fill-color: var(--bg, #0e0e10) !important;
   }
 
   .site-mode-header__nav button:focus-visible,
@@ -375,7 +381,7 @@
     padding: 0 18px !important;
     border-radius: 9px !important;
     background: var(--white) !important;
-    color: var(--bg) !important;
+    color: var(--bg, #0e0e10) !important;
     font: 600 0.88rem / 1 var(--site-header-display) !important;
     transition: transform 0.18s ease, background 0.18s ease;
     text-decoration: none;

@@ -1,5 +1,21 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Let rolled colors own result emphasis without sacrificing contrast
+
+The dedicated roll page keeps its neutral chrome and derives result emphasis
+from the color the player actually rolled. The result action uses relative
+luminance to choose near-black or white ink, including the edge case of a
+white roll, rather than assuming white text is always readable. The result
+card and swatch use a saturated tight halo plus a lower-opacity soft halo;
+this keeps the color present around the result without the diffuse, screen-
+filling glow that competes with the card. The halo can breathe on a slow,
+low-amplitude cycle while the card content remains still; reduced-motion users
+get the static saturated halo.
+
+The shared homepage-style header treats `Claim handle` as a light control with
+explicit dark ink. Its button class is excluded from the header’s bright
+navigation override so contrast does not depend on selector ordering.
+
 ## 2026-08-19 — Reuse the profile descriptor treatment for homepage secondary copy
 
 The authored profile descriptor line is the right reference for supporting

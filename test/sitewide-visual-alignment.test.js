@@ -50,6 +50,8 @@ test('normal site surfaces inherit the homepage type, canvas, and button contrac
   assert.match(app, /class:app-shell--site=\{/);
   assert.ok(atmosphereAsset.size > 1000, 'roll horizon should be a real local image asset');
   assert.match(siteStyles, /background: var\(--white\)/);
+  assert.match(header, /\.site-mode-header--home \.site-mode-header__nav button:not\(\.site-mode-header__claim-link\)/);
+  assert.match(header, /\.site-mode-header--home \.site-mode-header__claim-link[\s\S]*color: var\(--bg, #0e0e10\) !important/);
   assert.match(siteStyles, /\.site-state-card/);
   assert.match(siteStyles, /prefers-reduced-motion/);
   assert.doesNotMatch(siteStyles, /--site-accent: #00ffb3/);

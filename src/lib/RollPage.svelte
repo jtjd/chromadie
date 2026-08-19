@@ -153,6 +153,8 @@
     --roll-faint: var(--text-faint, #59585e);
     --roll-accent: var(--white, #fff);
     --roll-accent-glow: rgba(255, 255, 255, .09);
+    --roll-card-glow: rgba(255, 255, 255, .08);
+    --roll-card-glow-soft: rgba(255, 255, 255, .04);
     position: relative;
     isolation: isolate;
     display: flex;
@@ -368,7 +370,26 @@
 
   .roll-page :global(.game-container--dedicated .roll-stage--results) {
     --roll-accent: var(--roll-result-color, var(--white));
-    --roll-accent-glow: color-mix(in srgb, var(--roll-result-color, var(--white)) 16%, transparent);
+    --roll-accent-glow: color-mix(in srgb, var(--roll-result-color, var(--white)) 34%, transparent);
+    --roll-card-glow: color-mix(in srgb, var(--roll-result-color, var(--white)) 30%, transparent);
+    --roll-card-glow-soft: color-mix(in srgb, var(--roll-result-color, var(--white)) 14%, transparent);
+    animation: roll-result-glow 5.8s ease-in-out infinite;
+  }
+
+  @keyframes roll-result-glow {
+    0%, 100% {
+      box-shadow:
+        0 28px 70px -30px rgba(0, 0, 0, .8),
+        0 0 18px -5px color-mix(in srgb, var(--roll-result-color, var(--white)) 30%, transparent),
+        0 0 52px -20px color-mix(in srgb, var(--roll-result-color, var(--white)) 12%, transparent);
+    }
+
+    50% {
+      box-shadow:
+        0 28px 70px -30px rgba(0, 0, 0, .8),
+        0 0 28px -2px color-mix(in srgb, var(--roll-result-color, var(--white)) 52%, transparent),
+        0 0 72px -12px color-mix(in srgb, var(--roll-result-color, var(--white)) 25%, transparent);
+    }
   }
 
   .roll-page :global(.game-container--dedicated .roll-stage) {
@@ -387,7 +408,10 @@
     border: 1px solid var(--roll-border);
     border-radius: 24px;
     background: var(--roll-panel-card);
-    box-shadow: 0 28px 70px -30px rgba(0, 0, 0, .8), 0 0 34px var(--roll-accent-glow);
+    box-shadow:
+      0 28px 70px -30px rgba(0, 0, 0, .8),
+      0 0 20px -4px var(--roll-card-glow),
+      0 0 56px -18px var(--roll-card-glow-soft);
     color: var(--roll-text);
     text-align: left;
     backdrop-filter: saturate(180%) blur(30px);
@@ -466,7 +490,9 @@
     border: 1px solid rgba(255, 255, 255, .2);
     border-radius: 12px;
     background: var(--roll-tile-color);
-    box-shadow: 0 10px 28px color-mix(in srgb, var(--roll-tile-color) 20%, transparent);
+    box-shadow:
+      0 10px 24px -8px color-mix(in srgb, var(--roll-tile-color) 38%, transparent),
+      0 0 26px -8px color-mix(in srgb, var(--roll-tile-color) 24%, transparent);
   }
 
   .roll-page :global(.game-container--dedicated .roll-color-info) {
@@ -621,7 +647,7 @@
     border: 0;
     border-radius: 12px;
     background: var(--roll-accent);
-    color: #fff;
+    color: var(--roll-action-ink, #fff);
     box-shadow: 0 4px 20px var(--roll-accent-glow);
     font: 700 1.1rem/1 var(--site-display, 'Manrope', sans-serif);
     letter-spacing: -.01em;
@@ -667,7 +693,7 @@
   .roll-page :global(.game-container--dedicated .roll-action__button--claimed),
   .roll-page :global(.game-container--dedicated .roll-action__button--claimed:disabled) {
     background: var(--roll-accent);
-    color: #fff;
+    color: var(--roll-action-ink, #fff);
     cursor: default;
     box-shadow: 0 4px 20px var(--roll-accent-glow);
     opacity: 1;
@@ -872,6 +898,7 @@
   @media (prefers-reduced-motion: reduce) {
     .roll-page::before { position: absolute; }
     .roll-page :global(.game-container--dedicated .roll-stage) { transform: none; transition: none; }
+    .roll-page :global(.game-container--dedicated .roll-stage--results) { animation: none; }
     .roll-page :global(.game-container--dedicated .roll-tile__surface) { transform: none; }
     .roll-page :global(.game-container--dedicated .roll-action__button:hover:not(:disabled)),
     .roll-page :global(.game-container--dedicated .guest-prompt__button:hover:not(:disabled)) { transform: none; }
