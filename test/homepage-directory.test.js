@@ -67,8 +67,8 @@ test('the second homepage fixture demonstrates the Framed 3D Velocity profile', 
   assert.equal(fixture.username, 'katt');
   assert.equal(fixture.displayName, 'katt');
   assert.equal(fixture.secondaryLine, 'Siberia · Russia');
-  assert.equal(fixture.media.background, '/homepage/fixtures/p2/background-snowy-mountains.png');
-  assert.equal(fixture.media.avatar, '/homepage/fixtures/p2/p2avatar.png');
+  assert.equal(fixture.media.background, '/homepage/fixtures/p2/background-snowy-mountains.webp');
+  assert.equal(fixture.media.avatar, '/homepage/fixtures/p2/p2avatar.webp');
   assert.equal(fixture.heroLayout, 'framed');
   assert.equal(fixture.profileMotion, 'profile_motion_perspective_tilt');
   assert.equal(fixture.avatarEffectKey, '3d-parallax');

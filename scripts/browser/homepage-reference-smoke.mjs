@@ -151,6 +151,20 @@ try {
     return state;
   });
 
+  await check('below-fold showcase media stays deferred until needed', async () => {
+    const state = await page.evaluate(`(() => {
+      const entries = performance.getEntriesByType('resource').map(entry => entry.name);
+      const showcaseEntries = entries.filter(name => name.includes('/homepage/fixtures/') && !name.includes('/meilin/'));
+      return {
+        mediaReady: document.querySelector('#showcase')?.dataset.mediaReady || '',
+        showcaseEntries
+      };
+    })()`);
+    assert(state.mediaReady === 'false' && state.showcaseEntries.length === 0,
+      `Homepage loaded showcase media before the section was needed: ${JSON.stringify(state)}.`);
+    return state;
+  });
+
   await check('desktop hero drives the card tilt while surrounding controls remain stationary', async () => {
     await page.setReducedMotion(false);
     await delay(80);
@@ -280,8 +294,8 @@ try {
       && after.atmosphereBounds.right >= 1440 && after.atmosphereBounds.width >= 1440
       && Number(after.linkStyle.scale) >= 1.3 && Number(after.linkStyle.glow) === 1
       && after.card.backgroundImage === 'none' && after.card.backgroundColor === 'rgba(0, 0, 0, 0)'
-      && after.avatarWidth >= 120 && after.avatarImage.includes('/homepage/fixtures/p2/p2avatar.png')
-      && after.background.includes('/homepage/fixtures/p2/background-snowy-mountains.png')
+      && after.avatarWidth >= 120 && after.avatarImage.includes('/homepage/fixtures/p2/p2avatar.webp')
+      && after.background.includes('/homepage/fixtures/p2/background-snowy-mountains.webp')
       && before.name !== after.name && before.background !== after.background,
     `Carousel did not update the complete environment: ${JSON.stringify({ before, after })}.`);
     await page.evaluate('document.querySelector(".homepage-theme-button--prev")?.focus()');
@@ -339,6 +353,10 @@ try {
 
   await check('lower photographic showcase capture', async () => {
     await page.evaluate('document.querySelector("#showcase")?.scrollIntoView({ block: "start" })');
+    await page.waitFor('document.querySelector("#showcase")?.dataset.mediaReady === "true"', 'showcase media activation');
+    await page.waitFor('performance.getEntriesByType("resource").some(entry => entry.name.includes("/homepage/fixtures/minimal-background.webp"))', 'showcase background request');
+    const media = await page.evaluate(`(() => performance.getEntriesByType('resource').map(entry => entry.name).filter(name => name.includes('/homepage/fixtures/') && !name.includes('/meilin/')))()`);
+    assert(media.length === 6, `Showcase media did not load as one bounded batch: ${JSON.stringify(media)}.`);
     await capture('homepage-showcase-1440x900');
     await page.evaluate('document.querySelector("#community")?.scrollIntoView({ block: "start" })');
     await capture('homepage-community-1440x900');

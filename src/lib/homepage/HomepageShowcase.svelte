@@ -1,11 +1,40 @@
 <script>
+  import { onMount } from 'svelte';
   import HomepageProfileDemo from './HomepageProfileDemo.svelte';
   import { getHomepageShowcaseFixtures } from './homepageFixtures.js';
 
   const fixtures = getHomepageShowcaseFixtures();
+  let showcaseElement;
+  let showcaseMediaReady = false;
+
+  onMount(() => {
+    const activateMedia = () => { showcaseMediaReady = true; };
+
+    if (!('IntersectionObserver' in window)) {
+      activateMedia();
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        activateMedia();
+        observer.disconnect();
+      }
+    }, { rootMargin: '400px 0px' });
+
+    if (showcaseElement) observer.observe(showcaseElement);
+    else activateMedia();
+
+    return () => observer.disconnect();
+  });
 </script>
 
-<div class="homepage-showcase-wrap" id="showcase">
+<div
+  class="homepage-showcase-wrap"
+  id="showcase"
+  bind:this={showcaseElement}
+  data-media-ready={showcaseMediaReady ? 'true' : 'false'}
+>
   <section class="homepage-section homepage-showcase" aria-labelledby="homepage-showcase-title">
     <div class="homepage-showcase__top">
       <div>
@@ -19,10 +48,10 @@
       {#each fixtures as fixture (fixture.id)}
         <article
           class={`homepage-showcase-card homepage-showcase-card--${fixture.showcasePosition}`}
-          style={`--homepage-showcase-background: url("${fixture.media.background}"); --homepage-showcase-accent: ${fixture.accent};`}
+          style={`--homepage-showcase-accent: ${fixture.accent};${showcaseMediaReady ? ` --homepage-showcase-background: url("${fixture.media.background}");` : ''}`}
           aria-label={`${fixture.displayName} profile example`}
         >
-          <HomepageProfileDemo fixture={fixture} variant="showcase" />
+          <HomepageProfileDemo fixture={fixture} variant="showcase" mediaReady={showcaseMediaReady} />
         </article>
       {/each}
     </div>
@@ -42,7 +71,7 @@
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    background-image: var(--homepage-showcase-background);
+    background-image: var(--homepage-showcase-background, linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015)));
     background-position: center;
     background-size: cover;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);

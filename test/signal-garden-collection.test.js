@@ -19,7 +19,7 @@ test('the homepage showcase uses local photographic fixtures and the direct prof
   assert.match(showcase, /getHomepageShowcaseFixtures/);
   assert.match(showcase, /homepage-showcase-card/);
   assert.doesNotMatch(`${hero}${demo}${showcase}`, /ProfileShell|HomepageProfileRenderer|profile-shell/);
-  assert.match(fixtures, /\/homepage\/fixtures\/.*background\.png/);
+  assert.match(fixtures, /\/homepage\/fixtures\/.*background\.(?:png|webp)/);
   assert.match(fixtures, /condition_ids/);
   assert.doesNotMatch(fixtures, /supabase|KNOWN_STAFF_SHOWCASE_USERNAMES/);
   assert.match(community, /get_public_discovery/);

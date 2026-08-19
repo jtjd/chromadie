@@ -2,6 +2,15 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Reduce homepage media cost without changing the composition
+
+- Deferred photographic showcase media until the lower section approaches the
+  viewport, retaining stable card placeholders while the first viewport loads.
+- Re-encoded the referenced showcase backgrounds and avatars as WebP and
+  removed the obsolete PNG copies.
+- Added browser coverage for the deferred initial state and the bounded media
+  activation after scrolling into the showcase.
+
 ## 2026-08-19 — Keep header chrome singular during navigation
 
 - Fixed homepage header icons such as Pricing so a lazy route transition does

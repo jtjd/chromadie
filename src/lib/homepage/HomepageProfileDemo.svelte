@@ -5,6 +5,7 @@
   /** @type {any} */
   export let fixture = null;
   export let variant = 'hero';
+  export let mediaReady = true;
 
   $: latestRoll = fixture?.scores?.[0] || null;
   $: links = (fixture?.links || []).slice(0, variant === 'showcase' ? 2 : 4);
@@ -19,7 +20,7 @@
     ? { fontKey: fixture.nameFontKey, materialKey: '', motionKey: '' }
     : null;
   $: demoStyle = fixture
-    ? `--homepage-demo-accent: ${fixture.accent}; --homepage-demo-avatar: url("${avatarSource}");`
+    ? `--homepage-demo-accent: ${fixture.accent};${mediaReady && avatarSource ? ` --homepage-demo-avatar: url("${avatarSource}");` : ''}`
     : '';
 </script>
 
@@ -158,7 +159,8 @@
     flex: 0 0 auto;
     border: 2px solid var(--homepage-demo-accent);
     border-radius: 50%;
-    background-image: var(--homepage-demo-avatar);
+    background-color: rgba(255, 255, 255, 0.08);
+    background-image: var(--homepage-demo-avatar, none);
     background-position: center;
     background-size: cover;
     box-shadow: 0 0 16px color-mix(in srgb, var(--homepage-demo-accent) 40%, transparent);

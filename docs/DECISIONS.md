@@ -1,5 +1,19 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Defer and compress below-the-fold homepage photography
+
+The homepage’s three showcase cards are part of the authored marketing
+composition, but they are not needed for the first viewport. CSS background
+URLs were causing all six showcase images to download during initial render.
+The showcase now activates those URLs through an `IntersectionObserver` with a
+small preload margin and keeps a lightweight gradient fallback until then.
+
+The referenced fixture PNGs were also converted to WebP and the unused source
+copies removed. This preserves the visual treatment while reducing the initial
+homepage media request set to the active hero specimen and reducing the
+deferred showcase payload to roughly 0.4 MB. The browser smoke suite protects
+both states.
+
 ## 2026-08-19 — Keep header ownership singular across lazy route changes
 
 The homepage and app shell intentionally retain the previous route while a

@@ -115,8 +115,8 @@ test('homepage fixtures are local, deterministic, scored, and outside production
     'meilin/background-dusk-v2.webp', 'meilin/avatar.webp',
     'compact-background.png', 'compact-avatar.png',
     'sleek-background.png', 'sleek-avatar.png',
-    'minimal-background.png', 'minimal-avatar.png',
-    'portfolio-background.png', 'portfolio-avatar.png'
+    'minimal-background.webp', 'minimal-avatar.webp',
+    'portfolio-background.webp', 'portfolio-avatar.webp'
   ];
   for (const filename of assetPaths) {
     const image = await stat(new URL(`../public/homepage/fixtures/${filename}`, import.meta.url));

@@ -8,10 +8,10 @@ state.
 
 ## Katt / P2 media folder
 
-`p2/p2avatar.png` is the user-provided portrait for the second homepage
-specimen, displayed as `katt`. `p2/background-snowy-mountains.png` is a
-generated snowy mountain landscape created for this fictional fixture, with a
-quiet center for the transparent Framed profile card.
+`p2/p2avatar.webp` is the optimized user-provided portrait for the second
+homepage specimen, displayed as `katt`. `p2/background-snowy-mountains.webp`
+is an optimized generated snowy mountain landscape created for this fictional
+fixture, with a quiet center for the transparent Framed profile card.
 
 ## Meilin
 

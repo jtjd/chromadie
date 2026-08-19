@@ -1,5 +1,17 @@
 # Chromadie 2.0 Progress
 
+## Homepage media loading boundary — 2026-08-19
+
+- Deferred the three below-the-fold photographic showcase backgrounds and
+  avatars until the showcase approaches the viewport, while keeping a stable
+  gradient card placeholder and the authored profile copy in the document.
+- Converted the referenced showcase fixture pairs from oversized PNGs to
+  optimized WebP assets and removed the obsolete copies.
+- Added browser smoke coverage for the initial zero-showcase-media state and
+  the bounded six-file load after the section is reached. A fresh browser trace
+  now loads only the active hero media initially (~112 KB), then ~0.4 MB for
+  the showcase instead of ~10.3 MB up front.
+
 ## Keep route chrome singular during lazy navigation — 2026-08-19
 
 - Kept the homepage-owned header visible while a destination route is still
