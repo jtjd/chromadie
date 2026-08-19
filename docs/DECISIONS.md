@@ -25,6 +25,11 @@ skip the presentation, and reduced-motion users receive the result immediately.
 There is no client-side stop control, fake near miss, autoplay audio, or loop
 beyond the one daily roll.
 
+The authenticated profile-embedded roll uses the same bounded pacing contract:
+its spectrum, lock, and score beats total 2.525 seconds, down from the prior
+7.575-second forced presentation, while its condition rail and skip action keep
+the reveal legible and optional.
+
 ## 2026-08-19 — Keep direct refreshes on their requested route
 
 App initializes the pure route state from `window.location` before the first

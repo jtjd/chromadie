@@ -19,6 +19,7 @@
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
   import { trackProductEvent } from './productAnalytics.js';
   import { sleep, normalizeHexColor } from './utils.js';
+  import { PROFILE_ROLL_REVEAL_DELAYS, PROFILE_ROLL_REVEAL_PACE } from './rollReveal.js';
   import Module from './foundation/Module.svelte';
 
   export let moduleSize = 'wide';
@@ -47,9 +48,9 @@
     '#C65CFF',
     '#FF5DB1'
   ]);
-  const REVEAL_PACE = 3;
+  const REVEAL_PACE = PROFILE_ROLL_REVEAL_PACE;
   const REVEAL_DELAYS = Object.freeze(
-    [100, 110, 120, 140, 175, 220, 280, 360].map(delay => delay * REVEAL_PACE)
+    PROFILE_ROLL_REVEAL_DELAYS.map(delay => delay * REVEAL_PACE)
   );
   const REVEAL_STEP_LABELS = Object.freeze(['Spectrum', 'Signal', 'Lock']);
   const SYSTEM_BADGE_IDS = new Set([

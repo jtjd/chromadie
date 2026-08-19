@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getRevealHex, getRollRevealTiming, ROLL_REVEAL_STEPS } from '../src/lib/rollReveal.js';
+import {
+  getProfileRollRevealTiming,
+  getRevealHex,
+  getRollRevealTiming,
+  PROFILE_ROLL_REVEAL_PACE,
+  ROLL_REVEAL_STEPS
+} from '../src/lib/rollReveal.js';
 
 test('the roll reveal locks canonical hex channels in truthful beats', () => {
   assert.equal(getRevealHex('#abcdef', 0), '#------');
@@ -30,5 +36,27 @@ test('the reveal has bounded dedicated and embedded timing', () => {
     channel: 0,
     condition: 0,
     settle: 0
+  });
+});
+
+test('the integrated profile reveal stays meaningful without a long forced wait', () => {
+  assert.equal(PROFILE_ROLL_REVEAL_PACE, 1);
+  assert.deepEqual(getProfileRollRevealTiming(), {
+    spectrum: 1505,
+    lock: 480,
+    score: 540,
+    total: 2525
+  });
+  assert.deepEqual(getProfileRollRevealTiming({ reducedMotion: true }), {
+    spectrum: 0,
+    lock: 0,
+    score: 0,
+    total: 0
+  });
+  assert.deepEqual(getProfileRollRevealTiming({ skipped: true }), {
+    spectrum: 0,
+    lock: 0,
+    score: 0,
+    total: 0
   });
 });

@@ -14,6 +14,9 @@
   immediately after the reveal; the embedded card uses a compositor-friendly
   requestAnimationFrame count-up, while the dedicated route mounts its score
   atomically beside the context summary.
+- Tightened the authenticated profile-embedded roll to a 2.525-second maximum
+  reveal (previously 7.575 seconds) using the same bounded timing contract;
+  reduced-motion is immediate and skip bypasses the remaining reveal beats.
 - Added reduced-motion handling, guest jackpot persistence coverage, SQL/client
   score parity coverage, and deterministic balance range assertions. Local
   database reset and schema lint both pass for the additive tuning migration.

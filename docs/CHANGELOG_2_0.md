@@ -11,6 +11,8 @@ Document user-visible redesign changes by milestone.
   shows the confirmed HEX channels and reported scoring-condition count.
 - Added `Skip reveal` and reduced-motion behavior, and shortened result
   presentation by removing per-badge waits and the browser-side scramble loop.
+- Shortened the authenticated profile roll’s staged spectrum and score reveal
+  from about 7.6 seconds to 2.5 seconds while retaining condition feedback.
 - Kept roll generation, score calculation, eligibility, rewards, and rerolls
   on the existing server-authoritative path.
 

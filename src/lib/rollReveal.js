@@ -6,6 +6,11 @@ export const ROLL_REVEAL_STEPS = Object.freeze([
   Object.freeze({ id: 'complete', label: 'Color locked', progress: 100 })
 ]);
 
+export const PROFILE_ROLL_REVEAL_DELAYS = Object.freeze([
+  100, 110, 120, 140, 175, 220, 280, 360
+]);
+export const PROFILE_ROLL_REVEAL_PACE = 1;
+
 const HEX_CHANNEL_PATTERN = /^#?([0-9a-f]{6})$/i;
 
 export function getRevealHex(value, lockedChannels = 0) {
@@ -25,4 +30,15 @@ export function getRollRevealTiming({ dedicated = false, reducedMotion = false }
   return dedicated
     ? Object.freeze({ warmup: 240, channel: 220, condition: 180, settle: 140 })
     : Object.freeze({ warmup: 360, channel: 300, condition: 240, settle: 180 });
+}
+
+export function getProfileRollRevealTiming({ reducedMotion = false, skipped = false } = {}) {
+  if (reducedMotion || skipped) {
+    return Object.freeze({ spectrum: 0, lock: 0, score: 0, total: 0 });
+  }
+
+  const spectrum = PROFILE_ROLL_REVEAL_DELAYS.reduce((total, delay) => total + delay, 0) * PROFILE_ROLL_REVEAL_PACE;
+  const lock = 480 * PROFILE_ROLL_REVEAL_PACE;
+  const score = 12 * 45 * PROFILE_ROLL_REVEAL_PACE;
+  return Object.freeze({ spectrum, lock, score, total: spectrum + lock + score });
 }
