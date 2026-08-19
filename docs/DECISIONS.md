@@ -1,5 +1,31 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Reuse the profile descriptor treatment for homepage secondary copy
+
+The authored profile descriptor line is the right reference for supporting
+homepage language: it is readable over an image, softer than identity
+headlines, and still feels intentional. Homepage ledes, leaderboard context
+and reset labels, section descriptions, loop copy, and claim/loading states
+now use shared soft-white secondary tokens with medium Inter weight, slight
+tracking, and no text shadow, matching the flat profile descriptor. Display headings, controls, leaderboard
+identity rows, and user-rolled color accents remain separate so the hierarchy
+does not become uniformly muted. The homepage eyebrow and display headline
+also stay flat; the photographic atmosphere and rolled color provide the
+contrast instead of typographic glow.
+
+Carousel controls follow the same hierarchy: white at rest for immediate
+legibility, then dark translucent on hover or focus to signal interaction
+without introducing another color treatment.
+
+The daily leaderboard uses a contained dark glass surface rather than a
+separate bright title tile. Its larger Manrope heading supplies impact while
+the public-roll scope and reset timer retain the softer descriptor treatment;
+this anchors the right side without competing with the profile or CTA.
+
+The homepage claim field remains dark enough for readable input text, but uses
+a lower-opacity glass surface and smaller shadow than the previous slab. This
+keeps the action present without overpowering the minimal profile specimen.
+
 ## 2026-08-18 — Carry the selected Framed typeface into identity details
 
 The Framed showcase uses the selected Velocity face for its bio and secondary
@@ -5315,3 +5341,13 @@ for the exact username. That row is merged using its real display name, avatar
 reference, rolled color, score, rank, and canonical profile path, while signed-out
 visitors retain the normal public board. No private account data or new backend
 contract is introduced.
+
+## 2026-08-19 — Use the supplied mark as the site header identity
+
+The shared site header now uses the supplied white hand-drawn mark as a single
+transparent image instead of composing a circular dot and `chm.lol` text. The
+asset is cropped to its visible bounds, versioned, and cached as a static public
+asset. Profile Studio consumes the same asset; public profile-specific header
+presentation remains unchanged. Homepage-style navigation and account labels
+use bright white with a restrained shadow so they remain legible over the
+photographic hero without adding another branded color.

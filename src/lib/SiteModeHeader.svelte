@@ -49,8 +49,7 @@
 <header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} class:site-mode-header--home-route={isHomeMode} class:site-mode-header--leaderboard={isLeaderboardMode} data-site-chrome="header" style="--site-header-accent: var(--white, #ffffff);">
   <div class="site-mode-header__inner">
     <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
-      <span class="site-mode-header__brand-mark" aria-hidden="true"></span>
-      <span class="site-mode-header__wordmark">chm<span>.lol</span></span>
+      <img class="site-mode-header__brand-logo" src="/brand/am-mark-v1.png" alt="" width="72" height="58" decoding="async" />
     </a>
 
     {#if !minimalMode}
@@ -217,33 +216,19 @@
     display: inline-flex;
     align-items: center;
     flex: 0 0 auto;
-    gap: 11px;
     color: var(--text, #f5f5f6);
-    font: 600 1.28rem / 1 var(--site-header-display);
-    letter-spacing: -0.025em;
     text-decoration: none;
     white-space: nowrap;
   }
 
-  .site-mode-header__brand-mark {
-    position: relative;
-    width: 24px;
-    height: 24px;
-    border: 2px solid color-mix(in srgb, var(--site-header-accent) 36%, transparent);
-    border-radius: 999px;
-    box-shadow: 0 0 18px color-mix(in srgb, var(--site-header-accent) 28%, transparent);
+  .site-mode-header__brand-logo {
+    display: block;
+    width: 72px;
+    height: auto;
+    object-fit: contain;
+    opacity: 0.96;
+    filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.14));
   }
-
-  .site-mode-header__brand-mark::after {
-    position: absolute;
-    inset: 6px;
-    content: '';
-    border-radius: 999px;
-    background: var(--site-header-accent);
-  }
-
-  .site-mode-header__wordmark { color: var(--text, #f5f5f6); }
-  .site-mode-header__wordmark > span { color: var(--site-header-accent); }
 
   .site-mode-header__nav,
   .site-mode-header__right,
@@ -296,6 +281,27 @@
     color: var(--site-header-accent);
   }
 
+  /* The homepage-style header sits over photographic backgrounds. Keep its
+   * navigation and account labels bright enough to read without hover. */
+  .site-mode-header--home .site-mode-header__nav button,
+  .site-mode-header--home .site-mode-header__context button,
+  .site-mode-header--home .site-mode-header__account-name,
+  .site-mode-header--home .site-mode-header__account-action,
+  .site-mode-header--home .site-mode-header__mobile-menu summary,
+  .site-mode-header--home .site-mode-header__mobile-panel button:not(.site-mode-header__claim-link) {
+    color: rgba(255, 255, 255, 0.94) !important;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .site-mode-header--home .site-mode-header__nav button:hover,
+  .site-mode-header--home .site-mode-header__nav button.active,
+  .site-mode-header--home .site-mode-header__account-name:hover,
+  .site-mode-header--home .site-mode-header__account-action:hover,
+  .site-mode-header--home .site-mode-header__mobile-panel button:hover:not(.site-mode-header__claim-link),
+  .site-mode-header--home .site-mode-header__mobile-panel button.active {
+    color: var(--white, #ffffff) !important;
+  }
+
   .site-mode-header__nav button:focus-visible,
   .site-mode-header__context button:focus-visible,
   .site-mode-header__account button:focus-visible,
@@ -323,7 +329,6 @@
   .site-mode-header__account-action:disabled { cursor: wait; opacity: 0.55; }
 
   .site-mode-header--leaderboard .site-mode-header__brand,
-  .site-mode-header--leaderboard .site-mode-header__wordmark,
   .site-mode-header--leaderboard .site-mode-header__nav button,
   .site-mode-header--leaderboard .site-mode-header__context button,
   .site-mode-header--leaderboard .site-mode-header__account-name,
@@ -331,7 +336,6 @@
     color: var(--text) !important;
   }
 
-  .site-mode-header--leaderboard .site-mode-header__wordmark > span,
   .site-mode-header--leaderboard .site-mode-header__nav button.active {
     color: var(--site-header-accent) !important;
   }
@@ -473,9 +477,7 @@
   }
 
   @media (max-width: 460px) {
-    .site-mode-header__brand { gap: 8px; font-size: 1.1rem; }
-    .site-mode-header__brand-mark { width: 20px; height: 20px; }
-    .site-mode-header__brand-mark::after { inset: 5px; }
+    .site-mode-header__brand-logo { width: 58px; }
     .site-mode-header__claim-link { padding-inline: 11px !important; }
   }
 

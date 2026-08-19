@@ -80,21 +80,21 @@
     width: 100%;
     align-items: center;
     padding: 6px 6px 6px 16px;
-    border: 1px solid var(--homepage-border);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 11px;
-    background: rgba(8, 8, 10, 0.76);
-    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.26);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(16, 16, 20, 0.48);
+    box-shadow: 0 12px 28px rgba(7, 4, 14, 0.14);
+    backdrop-filter: blur(18px) saturate(118%);
+    -webkit-backdrop-filter: blur(18px) saturate(118%);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .homepage-claim__field:focus-within {
     border-color: var(--homepage-accent);
-    box-shadow: 0 0 0 3px var(--homepage-accent-soft), 0 16px 38px rgba(0, 0, 0, 0.26);
+    box-shadow: 0 0 0 3px var(--homepage-accent-soft), 0 12px 28px rgba(7, 4, 14, 0.14);
   }
 
-  .homepage-claim__prefix { color: rgba(245, 245, 247, 0.5); font: 500 0.9rem / 1 var(--homepage-display); white-space: nowrap; }
+  .homepage-claim__prefix { color: rgba(245, 245, 247, 0.62); font: 500 0.9rem / 1 var(--homepage-display); white-space: nowrap; }
 
   .homepage-claim__field input {
     min-width: 0;
@@ -108,7 +108,7 @@
     font: 500 0.96rem / 1 var(--homepage-display);
   }
 
-  .homepage-claim__field input::placeholder { color: rgba(245, 245, 247, 0.23); }
+  .homepage-claim__field input::placeholder { color: rgba(245, 245, 247, 0.34); }
 
   .homepage-claim__field .homepage-button,
   .homepage-claim__primary {
@@ -137,7 +137,7 @@
     background: var(--homepage-accent);
   }
 
-  .homepage-claim__loading { display: inline-flex; min-height: 42px; align-items: center; color: var(--homepage-muted); font: 500 0.72rem / 1 'Inter', sans-serif; }
+  .homepage-claim__loading { display: inline-flex; min-height: 42px; align-items: center; color: var(--homepage-secondary-muted); font: 500 0.72rem / 1.45 'Inter', sans-serif; letter-spacing: 0.01em; text-shadow: var(--homepage-secondary-shadow); }
 
   .homepage-claim__primary:focus-visible,
   .homepage-claim__field .homepage-button:focus-visible { outline: 2px solid var(--homepage-accent); outline-offset: 3px; }

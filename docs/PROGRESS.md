@@ -1,5 +1,20 @@
 # Chromadie 2.0 Progress
 
+## Homepage descriptor copy language — 2026-08-19
+
+- Standardized secondary homepage copy around the profile descriptor treatment:
+  soft white, medium-weight Inter, slight tracking, and no text shadow.
+- Applied it to hero support copy, daily leaderboard context/reset text,
+  section descriptions, loop steps, and claim/loading states while preserving
+  the stronger display-heading and rolled-color hierarchy. Removed the
+  remaining hero-copy shadows so the type matches the clean reference profile.
+- Reversed the carousel control treatment to white by default and dark on
+  interaction, keeping the controls legible without adding another accent.
+- Gave the daily leaderboard a compact rounded surface and larger display
+  heading so it carries comparable weight to the hero’s left column.
+- Softened the claim field with a lighter translucent surface, lower shadow,
+  and slightly clearer field metadata.
+
 ## Framed identity typeface consistency — 2026-08-18
 
 - Applied the selected Velocity family to Katt’s bio and secondary
@@ -4176,3 +4191,12 @@ responsive desktop two-column/mobile stacked composition.
 - Replaced the duplicated homepage header implementation with a thin wrapper
   around `SiteModeHeader`, keeping navigation and account visibility consistent
   across routes while leaving public profile styling/data-driven color intact.
+
+## Header mark replacement — 2026-08-19
+
+- Added the supplied hand-drawn AM mark as a transparent `am-mark-v1.png`
+  header asset.
+- Brightened homepage-style navigation and account labels to white so the
+  header remains readable over the hero image.
+- Removed the old dot-plus-wordmark treatment from the shared application and
+  Profile Studio headers without changing navigation or account behavior.

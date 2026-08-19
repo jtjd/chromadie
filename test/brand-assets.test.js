@@ -31,7 +31,8 @@ test('brand icon references use the new vector and versioned raster assets', asy
   assert.match(index, /href="\/favicon-16-v2\.png"/);
   assert.match(index, /href="\/favicon-32-v2\.png"/);
   assert.match(index, /href="\/apple-touch-icon-v2\.png"/);
-  assert.match(header, /site-mode-header__wordmark/);
+  assert.match(header, /src="\/brand\/am-mark-v1\.png"/);
+  assert.doesNotMatch(header, /site-mode-header__wordmark|site-mode-header__brand-mark/);
   assert.doesNotMatch(`${index}\n${app}\n${header}\n${manifestText}`, /favicon-96\.png|apple-touch-icon\.png|icon-(?:192|512)\.png/);
 
   assert.deepEqual(manifest.icons, [
@@ -50,7 +51,8 @@ test('brand raster assets have the expected dimensions and alpha behavior', asyn
     ['public/icon-192-v2.png', [192, 192, 2]],
     ['public/icon-512-v2.png', [512, 512, 2]],
     ['public/icon-maskable-192-v2.png', [192, 192, 2]],
-    ['public/icon-maskable-512-v2.png', [512, 512, 2]]
+    ['public/icon-maskable-512-v2.png', [512, 512, 2]],
+    ['public/brand/am-mark-v1.png', [667, 540, 6]]
   ]);
 
   for (const [path, [width, height, colorType]] of expected) {

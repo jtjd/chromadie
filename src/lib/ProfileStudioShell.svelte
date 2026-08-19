@@ -110,8 +110,7 @@
   <header class="profile-studio-shell__header">
     {#if showBrand}
       <a class="profile-studio-shell__brand" href="/" aria-label="chm.lol home">
-        <span class="profile-studio-shell__brand-mark" aria-hidden="true"></span>
-        <span class="profile-studio-shell__brand-name">chm.lol</span>
+        <img class="profile-studio-shell__brand-logo" src="/brand/am-mark-v1.png" alt="" width="72" height="58" decoding="async" />
       </a>
     {/if}
     <div class="profile-studio-shell__header-actions">
@@ -223,10 +222,8 @@
 
   .profile-studio-shell__brand,
   .profile-studio-shell__view-profile { color: var(--studio-text); text-decoration: none; }
-  .profile-studio-shell__brand { display: inline-flex; align-items: center; gap: .65rem; min-width: 0; }
-  .profile-studio-shell__brand-mark { position: relative; width: 1.45rem; height: 1.45rem; border: 2px solid color-mix(in srgb, var(--studio-accent) 36%, transparent); border-radius: 50%; box-shadow: 0 0 15px var(--studio-accent-glow); }
-  .profile-studio-shell__brand-mark::after { position: absolute; inset: .36rem; border-radius: 50%; background: var(--studio-accent); content: ''; }
-  .profile-studio-shell__brand-name { font: 600 1.25rem/1 var(--studio-display); letter-spacing: -.025em; }
+  .profile-studio-shell__brand { display: inline-flex; align-items: center; min-width: 0; }
+  .profile-studio-shell__brand-logo { display: block; width: 72px; height: auto; object-fit: contain; opacity: .96; filter: drop-shadow(0 0 14px rgba(255, 255, 255, .14)); }
   .profile-studio-shell__header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .85rem; min-width: 0; }
   .profile-studio-shell__view-profile { color: var(--studio-muted); font-size: .8rem; font-weight: 500; white-space: nowrap; }
   .profile-studio-shell__view-profile:hover, .profile-studio-shell__view-profile:focus-visible { color: var(--studio-text); }
@@ -261,7 +258,7 @@
 
   @media (max-width: 700px) {
     .profile-studio-shell__header { min-height: 4rem; padding: 0 .9rem; }
-    .profile-studio-shell__brand-name { font-size: 1.15rem; }
+    .profile-studio-shell__brand-logo { width: 58px; }
     .profile-studio-shell__view-profile { display: none; }
     .profile-studio-shell__header-actions { gap: .55rem; }
     .profile-studio-shell__publish { min-height: 2.5rem; padding-inline: .8rem; font-size: .7rem; }

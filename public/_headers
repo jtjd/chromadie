@@ -7,6 +7,9 @@
 /logo-mark.svg
   Cache-Control: public, max-age=86400
 
+/brand/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /*
   Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'sha256-rscA0oJ3yfH1r6XS/ju/U5JT5SBPHuyXXx1JwCZVuYg=' https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' https://cdn.fontshare.com https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://*.supabase.co https://media.chm.lol; media-src 'self' blob: https://*.supabase.co https://media.chm.lol; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://cloudflareinsights.com https://*.r2.cloudflarestorage.com; frame-src https://challenges.cloudflare.com https://open.spotify.com https://www.youtube-nocookie.com
   X-Frame-Options: DENY

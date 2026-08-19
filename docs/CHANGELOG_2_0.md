@@ -2,6 +2,23 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Carry the profile descriptor treatment into homepage copy
+
+- Applied the soft white, medium-weight descriptor treatment used by the
+  profile’s `daydreamer · pixel artist · music lover` line to the hero copy,
+  daily leaderboard labels and reset timer, section descriptions, loop copy,
+  and claim/loading states.
+- Kept display headlines, leaderboard identities, controls, and rolled-color
+  accents distinct so secondary copy gains consistency without flattening the
+  page hierarchy. The homepage eyebrow and display headline are also
+  shadow-free, keeping the image and rolled color as the visual emphasis.
+- Carousel controls now use the same white-first interaction language as the
+  homepage CTA, reversing to a dark translucent surface on hover or focus.
+- The daily leaderboard now has a contained dark glass surface with a larger
+  display heading, giving the right side of the hero a stronger visual anchor.
+- Lightened the homepage claim field into a more translucent glass control so
+  it carries less visual mass against the profile scene.
+
 ## 2026-08-18 — Align normal site pages with the homepage
 
 - Updated normal auth, app, discovery, pricing, guide, legal, gameplay, error,
@@ -3352,3 +3369,12 @@ direct route behavior.
 - Authenticated visitors now see their real display name, avatar, score, rank,
   rolled color, and public profile link highlighted on the homepage daily board;
   signed-out visitors continue to see the public board without a personal row.
+
+## Header mark replacement — 2026-08-19
+
+- Replaced the shared header’s circular dot and `chm.lol` wordmark with the
+  supplied white hand-drawn mark on a transparent, versioned PNG asset.
+- Brightened homepage-style navigation and account labels to white for
+  reliable contrast over the photographic hero background.
+- Applied the same mark to Profile Studio while leaving public-profile-specific
+  header treatment outside this change.

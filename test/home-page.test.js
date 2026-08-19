@@ -45,6 +45,7 @@ test('the homepage is a single reference-first composition', () => {
 test('homepage navigation exposes real product destinations without placeholder links', () => {
   assert.match(header, /SiteModeHeader/);
   assert.match(header, /claimHref="#claim"/);
+  assert.match(sharedHeader, /src="\/brand\/am-mark-v1\.png"/);
   for (const label of ['Roll', 'Leaderboard', 'Customize', 'Pricing', 'Claim handle']) {
     assert.match(sharedHeader, new RegExp(`>${label}<`));
   }
@@ -167,7 +168,7 @@ test('the root route mounts the homepage without changing other route contracts'
   assert.match(hero, /\.homepage-profile-stage \{[\s\S]*min-width: 0;/);
   assert.match(hero, /width: 440px/);
   assert.doesNotMatch(hero, /height: 470px/);
-  assert.match(claim, /backdrop-filter: blur\(20px\)/);
+  assert.match(claim, /backdrop-filter: blur\(18px\) saturate\(118%\)/);
   assert.match(claim, /\.homepage-claim__field \{[\s\S]*min-width: 0;/);
   assert.match(guestProfile, /This could be your profile/);
 });

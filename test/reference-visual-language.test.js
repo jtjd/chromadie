@@ -23,12 +23,16 @@ test('the approved homepage typography is bundled and authoritative', async () =
   assert.doesNotMatch(index, /fonts\.googleapis|fonts\.gstatic/);
   assert.match(homepage, /font-family: 'Inter'/);
   assert.match(homepage, /--homepage-display: 'Manrope Variable'/);
+  assert.match(homepage, /--homepage-secondary: rgba\(248, 248, 248, 0\.88\)/);
+  assert.match(homepage, /--homepage-secondary-shadow: none/);
   assert.match(homepage, /\.app-main--site \.homepage-reference :is\(\.homepage-hero__copy > h1, \.homepage-section-heading, \.homepage-final h2, \.homepage-step h3\)/);
   assert.match(homepage, /font-family: var\(--homepage-display\) !important/);
   assert.match(header, /SiteModeHeader/);
   assert.match(sharedHeader, /--site-header-display: 'Manrope Variable'/);
   assert.doesNotMatch(`${homepage}${header}${claim}`, /'Clash Display'/);
   assert.match(claim, /var\(--homepage-display\)/);
+  assert.match(claim, /background: rgba\(16, 16, 20, 0\.48\)/);
+  assert.match(claim, /box-shadow: 0 12px 28px rgba\(7, 4, 14, 0\.14\)/);
 });
 
 test('the homepage shell preserves the frozen reference geometry and treatment', async () => {
@@ -53,6 +57,11 @@ test('the homepage shell preserves the frozen reference geometry and treatment',
   assert.match(hero, /grid-template-columns: minmax\(0, 1fr\) 470px minmax\(0, 1fr\)/);
   assert.match(hero, /min-height: calc\(100svh - 88px\)/);
   assert.match(hero, /width: 440px/);
+  assert.match(hero, /\.homepage-hero h1 \{[\s\S]*?text-shadow: none;/);
+  assert.match(hero, /\.homepage-theme-button \{[\s\S]*?background: rgba\(255, 255, 255, \.94\)/);
+  assert.match(hero, /\.homepage-theme-button:hover,[\s\S]*?background: rgba\(10, 10, 13, \.72\)/);
+  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /\.homepage-daily-leaderboard__kicker[\s\S]*?font: 600 1\.14rem \/ 1\.1 var\(--homepage-display\)/);
+  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /border-radius: 18px; background: rgba\(10, 10, 14, \.68\)/);
   assert.doesNotMatch(hero, /height: 470px|ProfileShell|HomepageProfileRenderer|layoutLabel/);
   assert.match(demo, /ProfileReferenceCard/);
   assert.match(card, /profile-reference-card--homepage/);

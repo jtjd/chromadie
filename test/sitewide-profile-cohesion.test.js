@@ -7,7 +7,7 @@ const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('all routes use one cohesive application header', async () => {
   const siteHeader = await read('src/lib/SiteModeHeader.svelte');
 
-  assert.match(siteHeader, /site-mode-header__wordmark/);
+  assert.match(siteHeader, /site-mode-header__brand-logo/);
   assert.match(siteHeader, /background: transparent/);
   assert.match(siteHeader, /\{#if !minimalMode\}\s*<nav class="site-mode-header__nav"/);
   assert.match(siteHeader, /\{#if !minimalMode\}\s*<div class="site-mode-header__mobile-primary"/);
@@ -32,7 +32,9 @@ test('all routes use one cohesive application header', async () => {
   assert.match(siteHeader, /--site-header-control-size: 0\.84rem/);
   assert.match(siteHeader, /--site-header-font: 'Inter'/);
   assert.match(siteHeader, /--site-header-display: 'Manrope Variable'/);
-  assert.match(siteHeader, /site-mode-header__brand-mark/);
+  assert.match(siteHeader, /src="\/brand\/am-mark-v1\.png"/);
+  assert.match(siteHeader, /\.site-mode-header--home \.site-mode-header__nav button/);
+  assert.match(siteHeader, /color: rgba\(255, 255, 255, 0\.94\) !important/);
   assert.match(siteHeader, /data-site-chrome="header"/);
   assert.match(siteHeader, /height: 88px/);
   assert.match(siteHeader, /width: min\(1480px, calc\(100% - 64px\)\)/);
@@ -89,7 +91,7 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /--site-accent: var\(--white\)/);
   assert.match(siteStyles, /--site-atmosphere-image: url\('\/site\/chromadie-roll-horizon\.webp'\)/);
   assert.doesNotMatch(siteStyles, /site-mode-header:not\(\.site-mode-header--home\):not\(\.site-mode-header--profile\)/);
-  assert.match(siteHeader, /\.site-mode-header__brand-mark/);
+  assert.match(siteHeader, /\.site-mode-header__brand-logo/);
   assert.match(siteStyles, /Homepage baseline for supporting routes/);
   assert.match(siteStyles, /prefers-reduced-motion/);
 });
