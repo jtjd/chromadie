@@ -55,6 +55,7 @@
 
 <section
   class="homepage-hero homepage-shell"
+  class:homepage-hero--meilin={fixture.id === 'meilin-horizon'}
   id="top"
   aria-labelledby="homepage-title"
   style={`--homepage-roll-accent: ${latestRoll.hex_code}; --homepage-roll-accent-glow: color-mix(in srgb, ${latestRoll.hex_code} 28%, transparent);`}
@@ -148,6 +149,9 @@
   }
 
   .homepage-hero h1 span { display: block; color: var(--homepage-roll-accent, var(--homepage-accent)); }
+
+  .homepage-hero--meilin h1 { color: #0e0e10; }
+  .homepage-hero--meilin h1 span { color: #ffffff; }
 
   .homepage-hero__lede {
     max-width: 330px;

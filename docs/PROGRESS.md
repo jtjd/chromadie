@@ -14,6 +14,8 @@
   heading so it carries comparable weight to the hero’s left column.
 - Softened the claim field with a lighter translucent surface, lower shadow,
   and slightly clearer field metadata.
+- Scoped the black-and-white hero headline treatment to the light Meilin scene
+  so carousel examples remain readable against their own backgrounds.
 
 ## Framed identity typeface consistency — 2026-08-18
 

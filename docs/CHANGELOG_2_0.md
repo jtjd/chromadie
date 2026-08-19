@@ -18,6 +18,9 @@ Document user-visible redesign changes by milestone.
   display heading, giving the right side of the hero a stronger visual anchor.
 - Lightened the homepage claim field into a more translucent glass control so
   it carries less visual mass against the profile scene.
+- The authored Meilin hero now uses a near-black “Your profile,” line and a
+  clean white “alive.” payoff, while alternate fixtures retain contrast-safe
+  headline colors.
 
 ## 2026-08-18 — Align normal site pages with the homepage
 

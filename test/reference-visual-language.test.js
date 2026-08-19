@@ -58,6 +58,9 @@ test('the homepage shell preserves the frozen reference geometry and treatment',
   assert.match(hero, /min-height: calc\(100svh - 88px\)/);
   assert.match(hero, /width: 440px/);
   assert.match(hero, /\.homepage-hero h1 \{[\s\S]*?text-shadow: none;/);
+  assert.match(hero, /class:homepage-hero--meilin=\{fixture\.id === 'meilin-horizon'\}/);
+  assert.match(hero, /\.homepage-hero--meilin h1 \{ color: #0e0e10; \}/);
+  assert.match(hero, /\.homepage-hero--meilin h1 span \{ color: #ffffff; \}/);
   assert.match(hero, /\.homepage-theme-button \{[\s\S]*?background: rgba\(255, 255, 255, \.94\)/);
   assert.match(hero, /\.homepage-theme-button:hover,[\s\S]*?background: rgba\(10, 10, 13, \.72\)/);
   assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /\.homepage-daily-leaderboard__kicker[\s\S]*?font: 600 1\.14rem \/ 1\.1 var\(--homepage-display\)/);

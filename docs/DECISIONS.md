@@ -26,6 +26,11 @@ The homepage claim field remains dark enough for readable input text, but uses
 a lower-opacity glass surface and smaller shadow than the previous slab. This
 keeps the action present without overpowering the minimal profile specimen.
 
+The Meilin hero is the one light, warm scene where an inverted headline has
+the intended effect: near-black “Your profile,” anchors the copy and white
+“alive.” creates the reveal. The treatment is fixture-scoped rather than
+global so darker carousel environments keep readable contrast.
+
 ## 2026-08-18 — Carry the selected Framed typeface into identity details
 
 The Framed showcase uses the selected Velocity face for its bio and secondary
