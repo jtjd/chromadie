@@ -1,5 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Progression visual-system correction — 2026-08-19
+
+- Rebuilt the dedicated /progression shell around the existing supporting
+  route language: centered heading, shared type scale, narrow responsive
+  content width, neutral panels, and standard site controls.
+- Removed the bespoke ambient gradient, split marketing hero, rank-colored
+  signal, decorative status glyphs, and progression-specific arrow actions.
+- Flattened progression rank, journey, weekly-focus, and history treatments to
+  the neutral system palette while preserving actual roll colors as plain
+  swatches.
+- Removed decorative arrows from the Roll, Studio overview, and owner-profile
+  links that point to Progression. Updated presentation assertions and checked
+  desktop/mobile guest rendering locally.
+
 ## Dedicated progression destination — 2026-08-19
 
 - Promoted progression from a Profile Studio account subsection to the

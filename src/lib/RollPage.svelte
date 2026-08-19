@@ -149,7 +149,7 @@
           <small>{contextRank.next ? `${Math.max(0, contextRank.next.min - contextRank.lifetimeEp).toLocaleString()} EP to ${contextRank.next.name}` : 'Final rank reached'}</small>
         </div>
 
-        <a class="roll-page__history-link" href="/progression">Open progression <span aria-hidden="true">→</span></a>
+        <a class="roll-page__history-link" href="/progression">Open progression</a>
       {/if}
     </div>
     <Game

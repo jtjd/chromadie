@@ -105,7 +105,7 @@
 
     <div class="profile-progression-rank">
       <div class="profile-progression-rank__identity">
-        <span class="profile-progression-rank__mark" style={`--rank-color:${rankState.current.color}`}>{rankState.current.name.slice(0, 1)}</span>
+        <span class="profile-progression-rank__mark">{rankState.current.name.slice(0, 1)}</span>
         <div>
           <span class="profile-progression-label">Current rank</span>
           <strong>{rankState.current.name}</strong>
@@ -143,7 +143,7 @@
           <p>{weeklyFocus.completed ? 'You found this week’s color. The bonus is already part of your account.' : 'Match this color in your daily roll to earn the existing EP bonus.'}</p>
         </div>
         <div class="profile-progression-weekly__target">
-          <span class="profile-progression-weekly__swatch" style={`--weekly-color:${weeklyFocus.targetHex || '#8B7CF6'}`} aria-hidden="true"></span>
+          <span class="profile-progression-weekly__swatch" style={`--weekly-color:${weeklyFocus.targetHex || '#ffffff'}`} aria-hidden="true"></span>
           <strong>{weeklyFocus.targetHex || 'Target loading'}</strong>
           <small>{weeklyFocus.completed ? 'Focus complete' : `+${formatNumber(weeklyFocus.bonusEp)} EP`}</small>
         </div>
@@ -169,7 +169,7 @@
                   {#each nodes as node (node.id)}
                     <li class:unlocked={node.unlocked} on:mouseenter={() => recordUnlockSeen(node)}>
                       <div class="profile-progression-node__head">
-                        <span class="profile-progression-node__status" aria-hidden="true">{node.unlocked ? '✓' : '·'}</span>
+                        <span class="profile-progression-node__status" class:unlocked={node.unlocked} aria-hidden="true"></span>
                         <div><strong>{node.name}</strong><small>{node.reward?.name || 'Profile expression reward'}</small></div>
                         <span class="profile-progression-node__progress">{nodeProgressLabel(node)}</span>
                       </div>
@@ -195,7 +195,7 @@
           {#each milestoneTrack.filter(milestone => milestone.track === 'rank') as milestone (milestone.id)}
             {@const milestoneProgress = Math.min(100, Math.round((lifetimeEp / Math.max(1, milestone.threshold)) * 100))}
             <li class:unlocked={milestone.unlocked}>
-              <div class="profile-progression-node__head"><span class="profile-progression-node__status" aria-hidden="true">{milestone.unlocked ? '✓' : '·'}</span><div><strong>{milestone.name}</strong><small>{milestone.reward?.name || 'Profile expression reward'}</small></div><span class="profile-progression-node__progress">{milestone.unlocked ? 'Unlocked' : `${formatNumber(milestone.threshold)} EP`}</span></div>
+              <div class="profile-progression-node__head"><span class="profile-progression-node__status" class:unlocked={milestone.unlocked} aria-hidden="true"></span><div><strong>{milestone.name}</strong><small>{milestone.reward?.name || 'Profile expression reward'}</small></div><span class="profile-progression-node__progress">{milestone.unlocked ? 'Unlocked' : `${formatNumber(milestone.threshold)} EP`}</span></div>
               <div class="profile-progression-node__bar"><span style={`width:${milestone.unlocked ? 100 : milestoneProgress}%`}></span></div>
             </li>
           {/each}
@@ -212,7 +212,7 @@
         <ol>
           {#each timelineEvents.slice(0, 3) as event (event.id)}
             <li>
-              <span class="profile-progression-event-swatch" style={`--event-color:${event.payload?.hex || '#8B7CF6'}`} aria-hidden="true"></span>
+              <span class="profile-progression-event-swatch" style={`--event-color:${event.payload?.hex || '#ffffff'}`} aria-hidden="true"></span>
               <span><strong>{eventLabel(event)}</strong><small>{formatDate(event.occurredAt)}</small></span>
               {#if event.payload?.score}<em>{formatNumber(event.payload.score)} pts</em>{/if}
             </li>
@@ -225,7 +225,7 @@
 
     <div class="profile-progression-footer">
       <p>Rewards, rank, and history stay server-authoritative.</p>
-      <a href={pageMode ? '/profile/settings#customize-media' : '#customize'}>Equip an expression <span aria-hidden="true">→</span></a>
+      <a href={pageMode ? '/profile/settings#customize-media' : '#customize'}>Equip an expression</a>
     </div>
   </section>
 </Surface>
@@ -237,25 +237,25 @@
   .profile-progression-heading p { max-width:42rem; margin:.75rem 0 0; color:var(--color-ink-muted); line-height:1.55; }
   .profile-progression-rank { display:grid; grid-template-columns:minmax(13rem,.8fr) minmax(18rem,1.2fr); gap:1rem; align-items:center; padding:1rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-panel-soft); }
   .profile-progression-rank__identity { display:flex; align-items:center; gap:.8rem; min-width:0; }
-  .profile-progression-rank__mark { display:grid; place-items:center; flex:0 0 3.1rem; width:3.1rem; height:3.1rem; border:1px solid color-mix(in srgb,var(--rank-color) 65%,var(--color-line-subtle)); border-radius:50%; color:var(--rank-color); background:color-mix(in srgb,var(--rank-color) 13%,transparent); font:700 1.3rem var(--font-display-stack); }
+  .profile-progression-rank__mark { display:grid; place-items:center; flex:0 0 3.1rem; width:3.1rem; height:3.1rem; border:1px solid var(--color-line-strong); border-radius:50%; color:var(--color-ink-strong); background:var(--surface-inset); font:700 1.3rem var(--font-display-stack); }
   .profile-progression-rank__identity > div { display:grid; gap:.2rem; min-width:0; }
-  .profile-progression-label { color:var(--color-accent-bright); font:700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
+  .profile-progression-label { color:var(--color-ink-muted); font:700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing:.12em; text-transform:uppercase; }
   .profile-progression-rank strong { color:var(--color-ink-strong); font-size:1.2rem; }
   .profile-progression-rank small { color:var(--color-ink-muted); font-size:var(--type-small); }
   .profile-progression-rank__next { display:grid; gap:.55rem; min-width:0; }
   .profile-progression-rank__next-copy { display:flex; justify-content:space-between; gap:1rem; color:var(--color-ink-muted); font-size:var(--type-small); }
   .profile-progression-bar, .profile-progression-node__bar { height:.34rem; overflow:hidden; border-radius:999px; background:var(--color-line-subtle); }
-  .profile-progression-bar span, .profile-progression-node__bar span { display:block; height:100%; border-radius:inherit; background:var(--color-accent-bright); transition:width .4s ease; }
-  .profile-progression-bar--complete span { background:var(--color-accent); }
+  .profile-progression-bar span, .profile-progression-node__bar span { display:block; height:100%; border-radius:inherit; background:var(--color-ink-strong); transition:width .4s ease; }
+  .profile-progression-bar--complete span { background:var(--color-ink-strong); }
   .profile-progression-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.55rem; margin-top:1rem; }
   .profile-progression-stats > div { display:grid; gap:.25rem; min-width:0; padding:.75rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
   .profile-progression-stats span, .profile-progression-stats small { overflow:hidden; color:var(--color-ink-muted); font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
   .profile-progression-stats strong { color:var(--color-ink-strong); font:650 1.15rem var(--font-mono-stack); }
-  .profile-progression-weekly { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:1rem; padding:1rem; border:1px solid color-mix(in srgb,var(--color-accent) 32%,var(--color-line-subtle)); border-radius:var(--radius-md); background:color-mix(in srgb,var(--color-accent) 6%,var(--surface-inset)); }
+  .profile-progression-weekly { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:1rem; padding:1rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-md); background:var(--surface-inset); }
   .profile-progression-weekly h3, .profile-progression-lane h4 { margin:.35rem 0 0; color:var(--color-ink-strong); font:600 1.15rem/1.1 var(--font-display-stack); }
   .profile-progression-weekly p, .profile-progression-lane p { max-width:36rem; margin:.45rem 0 0; color:var(--color-ink-muted); font-size:var(--type-small); line-height:1.5; }
   .profile-progression-weekly__target { display:grid; grid-template-columns:auto auto; align-items:center; gap:.2rem .55rem; min-width:9rem; }
-  .profile-progression-weekly__swatch { grid-row:span 2; width:2.6rem; height:2.6rem; border:1px solid rgba(255,255,255,.55); border-radius:50%; background:var(--weekly-color); box-shadow:0 0 1.4rem color-mix(in srgb,var(--weekly-color) 45%,transparent); }
+  .profile-progression-weekly__swatch { grid-row:span 2; width:2.6rem; height:2.6rem; border:1px solid var(--color-line-strong); border-radius:var(--radius-sm); background:var(--weekly-color); }
   .profile-progression-weekly__target strong { color:var(--color-ink-strong); font:650 .85rem var(--font-mono-stack); }
   .profile-progression-weekly__target small { color:var(--color-ink-muted); font-size:.7rem; }
   .profile-progression-journey, .profile-progression-track, .profile-progression-history { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--color-line-subtle); }
@@ -269,18 +269,18 @@
   .profile-progression-lane__heading > span { color:var(--color-ink-muted); font:600 .7rem var(--font-mono-stack); white-space:nowrap; }
   .profile-progression-lane ol, .profile-progression-track ol, .profile-progression-history ol { display:grid; gap:.45rem; margin:.75rem 0 0; padding:0; list-style:none; }
   .profile-progression-lane li, .profile-progression-track li { display:grid; gap:.42rem; padding:.7rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-panel-soft); }
-  .profile-progression-lane li.unlocked, .profile-progression-track li.unlocked { border-color:color-mix(in srgb,var(--color-accent) 42%,var(--color-line-subtle)); }
+  .profile-progression-lane li.unlocked, .profile-progression-track li.unlocked { border-color:var(--color-line-strong); }
   .profile-progression-node__head { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.55rem; min-width:0; }
   .profile-progression-node__head > div { display:grid; gap:.15rem; min-width:0; }
   .profile-progression-node__head strong { overflow:hidden; color:var(--color-ink-strong); font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
   .profile-progression-node__head small { overflow:hidden; color:var(--color-ink-muted); font-size:.7rem; text-overflow:ellipsis; white-space:nowrap; }
-  .profile-progression-node__status { display:grid; place-items:center; width:1.35rem; height:1.35rem; border:1px solid var(--color-line-strong); border-radius:50%; color:var(--color-ink-faint); font:700 .7rem/1 var(--font-mono-stack); }
-  .profile-progression-lane li.unlocked .profile-progression-node__status, .profile-progression-track li.unlocked .profile-progression-node__status { border-color:var(--color-accent); background:color-mix(in srgb,var(--color-accent) 18%,transparent); color:var(--color-accent-bright); }
+  .profile-progression-node__status { display:block; width:1.35rem; height:1.35rem; border:1px solid var(--color-line-strong); border-radius:50%; background:transparent; }
+  .profile-progression-node__status.unlocked { background:var(--color-ink-strong); }
   .profile-progression-node__progress { color:var(--color-ink-muted); font:600 .65rem/1 var(--font-mono-stack); text-align:right; white-space:nowrap; }
   .profile-progression-lane li > p { margin:0; color:var(--color-ink-muted); font-size:.72rem; }
   .profile-progression-node__bar { height:.25rem; }
   .profile-progression-history li { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.65rem; min-width:0; padding:.65rem .75rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); }
-  .profile-progression-event-swatch { width:.7rem; height:.7rem; border-radius:50%; background:var(--event-color); box-shadow:0 0 .8rem color-mix(in srgb,var(--event-color) 48%,transparent); }
+  .profile-progression-event-swatch { width:.7rem; height:.7rem; border:1px solid var(--color-line-strong); border-radius:var(--radius-sm); background:var(--event-color); }
   .profile-progression-history li > span:nth-child(2) { display:grid; gap:.15rem; min-width:0; }
   .profile-progression-history li strong { overflow:hidden; color:var(--color-ink-strong); font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
   .profile-progression-history li small, .profile-progression-history li em { color:var(--color-ink-muted); font:500 var(--type-small) var(--font-mono-stack); font-style:normal; }
@@ -289,7 +289,7 @@
   .profile-progression-footer { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:1rem; padding-top:.9rem; border-top:1px solid var(--color-line-subtle); }
   .profile-progression-footer p { max-width:42rem; margin:0; }
   .profile-progression-footer a { color:var(--color-ink-strong); font-size:var(--type-small); font-weight:650; text-decoration:none; white-space:nowrap; }
-  .profile-progression-footer a:hover, .profile-progression-footer a:focus-visible { color:var(--color-accent-bright); }
+  .profile-progression-footer a:hover, .profile-progression-footer a:focus-visible { color:var(--color-ink-strong); }
   @media (max-width: 800px) { .profile-progression-rank { grid-template-columns:1fr; } .profile-progression-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .profile-progression-lanes { grid-template-columns:1fr; } }
   @media (max-width: 520px) { .profile-progression-stats { grid-template-columns:1fr; } .profile-progression-footer, .profile-progression-section-heading, .profile-progression-weekly { align-items:flex-start; flex-direction:column; } .profile-progression-footer a { white-space:normal; } .profile-progression-weekly__target { align-self:stretch; } }
   @media (prefers-reduced-motion: reduce) { .profile-progression-bar span, .profile-progression-node__bar span { transition:none; } }

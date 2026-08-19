@@ -2,6 +2,17 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Bring Progression back into the site system
+
+- Reworked /progression to match the existing Leaderboard/supporting-route
+  composition with a centered title, restrained copy, standard panels, and
+  neutral site controls.
+- Removed the custom ambient hero, colored rank treatment, decorative
+  arrow/status glyphs, and non-system accent styling.
+- Kept weekly and history colors as quiet factual swatches so the player's
+  color story remains visible without turning the page into a color-accented
+  dashboard.
+
 ## 2026-08-19 — Give progression its own destination
 
 - Added a full responsive `/progression` page for rank, EP, streak, weekly

@@ -743,7 +743,7 @@
                         <span class="profile-shell__progression-proof-item"><strong>{unlock.reward?.name || unlock.name}</strong><small>{unlock.track === 'discovery' ? 'Discovery' : unlock.track === 'ritual' ? 'Ritual' : 'Rank'}</small></span>
                       {/each}
                     </div>
-                    {#if isOwnProfile}<a class="profile-shell__progression-link" href="/progression">View full progression <span aria-hidden="true">→</span></a>{/if}
+                    {#if isOwnProfile}<a class="profile-shell__progression-link" href="/progression">View full progression</a>{/if}
                   </div>
                 {/if}
               </Module>

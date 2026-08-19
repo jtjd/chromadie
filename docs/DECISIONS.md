@@ -1,5 +1,20 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Keep Progression inside the site visual system
+
+The dedicated Progression route now follows the established supporting-route
+pattern used by Leaderboard: a centered intro, the shared site type scale, a
+narrow responsive shell, neutral panels, and standard site buttons. The
+bespoke marketing hero, ambient gradient, rank-colored headline, and custom
+route chrome were removed so progression reads as part of ChromaDie rather
+than as a separate product surface.
+
+Progression status indicators and actions use text and restrained monochrome
+system rules instead of decorative arrow/checkmark/dot glyphs or authored
+accent colors. Weekly-focus and history swatches remain plain data displays
+because the colors are part of the player's roll story. Rank, EP, journey
+state, and history authority remain unchanged.
+
 ## 2026-08-19 — Give progression its own evergreen destination
 
 Progression is now a dedicated owner route at `/progression`, rather than an

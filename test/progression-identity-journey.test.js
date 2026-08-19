@@ -102,8 +102,10 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.match(progression, /Color of the Week/);
   assert.match(progression, /server-authoritative/);
   assert.match(progression, /pageMode/);
-  assert.match(page, /Progression that/);
-  assert.match(page, /Your next chapter starts with a roll/);
+  assert.match(page, /Your profile \/ progression/);
+  assert.match(page, /Progression belongs to your profile/);
+  assert.doesNotMatch(page, /progression-page__ambient|progression-page__hero|[✦↗→]/);
+  assert.doesNotMatch(progression, /color-mix\(in srgb,var\(--color-accent/);
   assert.match(game, /newProgressionUnlocks/);
   assert.match(game, /function beginGuestSignup/);
   assert.match(game, /clearGuestRoll\(\)/);
