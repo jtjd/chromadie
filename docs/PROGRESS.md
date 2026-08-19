@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Keep route chrome singular during lazy navigation — 2026-08-19
+
+- Kept the homepage-owned header visible while a destination route is still
+  loading, preventing the app-shell header from mounting beside it during
+  homepage-to-Pricing navigation.
+- Added settled and error route events so the shell releases the guard when the
+  destination replaces the previous page or renders its error state.
+
 ## Keep the live preview label clear of the specimen — 2026-08-19
 
 - Placed the desktop live-preview label after the profile specimen in the

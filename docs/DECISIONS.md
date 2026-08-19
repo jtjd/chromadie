@@ -1,5 +1,14 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Keep header ownership singular across lazy route changes
+
+The homepage and app shell intentionally retain the previous route while a
+lazy destination module loads. Because the homepage owns its header, the app
+shell must defer mounting its shared header while leaving that route. The
+route outlet now reports settled and error states, and the shell uses those
+events to release the temporary guard after the destination replaces the
+homepage or renders a bounded error state.
+
 ## 2026-08-19 — Keep preview status copy in flow below framed cards
 
 Framed profile avatars intentionally extend above their card surface. The

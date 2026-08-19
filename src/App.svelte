@@ -43,6 +43,7 @@
   let profileVisualFixture = '';
   let cancelIdlePrefetch = null;
   let routeTarget;
+  let homepageHeaderTransitionPending = false;
 
   function redirectSignedOutProfileSettings() {
     const nextPath = '/profile/settings';
@@ -87,12 +88,32 @@
     trackProductEvent('route_view', { route });
   }
 
+  function updateHomepageHeaderTransition(nextRoute) {
+    const currentIsHomepage = routeMode === 'app' && view === 'home';
+    const nextIsAppRoute = nextRoute?.routeMode === 'app';
+    const nextIsNonHomepage = nextIsAppRoute && nextRoute.view !== 'home';
+
+    // HomePage owns the header while its lazy route remains mounted. Keep the
+    // app-shell header out of the DOM until the destination replaces it.
+    // Preserve the guard if a visitor clicks another destination during the
+    // same in-flight transition.
+    if ((currentIsHomepage || homepageHeaderTransitionPending) && nextIsNonHomepage) {
+      homepageHeaderTransitionPending = true;
+      return;
+    }
+
+    if (!nextIsAppRoute || nextRoute.view === 'home') {
+      homepageHeaderTransitionPending = false;
+    }
+  }
+
   function parseRoute() {
     challengeLoadRequestId += 1;
     aliasResolutionRequestId += 1;
     aliasResolving = false;
     profileVisualFixture = getProfileVisualFixture();
     const parsed = parseRouteLocation(window.location.pathname, window.location.search);
+    updateHomepageHeaderTransition(parsed);
     routeMode = parsed.routeMode;
 
     if (typeof window !== 'undefined' && window.location.pathname === '/shop') {
@@ -304,6 +325,7 @@
   function setRoute(nextView, options = {}) {
     if (!VALID_VIEWS.includes(nextView)) return;
 
+    updateHomepageHeaderTransition({ routeMode: 'app', view: nextView });
     routeMode = 'app';
     if (typeof window !== 'undefined') {
       const nextPath = nextView === 'profile-settings'
@@ -480,6 +502,15 @@
       }
       setRoute(nextView, { userId, username, tab, legacyProfile: legacyProfile && nextView === 'profile' });
     }
+  }
+
+  function handleRouteSettled(event) {
+    if (!homepageHeaderTransitionPending) return;
+
+    const settledComponentKey = event.detail?.componentKey;
+    if (settledComponentKey && routeTarget?.componentKey && settledComponentKey !== routeTarget.componentKey) return;
+
+    homepageHeaderTransitionPending = false;
   }
 
   async function handleAccountDeleted(event) {
@@ -893,7 +924,7 @@
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div id="header-mount">
-    {#if !profileModeVisible && !homeModeVisible && !profileSettingsModeVisible}
+    {#if !profileModeVisible && !homeModeVisible && !profileSettingsModeVisible && !homepageHeaderTransitionPending}
       <SiteModeHeader
         activeView={routeMode === 'app' ? view : routeMode}
         accountState={$accountState}
@@ -1010,6 +1041,8 @@
     componentKey={routeTarget.componentKey}
     componentProps={routeTarget.componentProps}
     loadingLabel={routeTarget.loadingLabel}
+    on:loaded={handleRouteSettled}
+    on:error={handleRouteSettled}
     on:navigate={handleNavigation}
     on:promptlogin={navigateToAuth}
     on:accountdeleted={handleAccountDeleted}

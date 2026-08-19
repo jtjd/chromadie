@@ -14,12 +14,18 @@ const [app, outlet, loaders, header] = await Promise.all([
 test('route loading keeps the shell and previous page mounted until a destination resolves', () => {
   assert.match(app, /<RouteOutlet/);
   assert.match(app, /prefetchRouteComponent/);
+  assert.match(app, /homepageHeaderTransitionPending/);
+  assert.match(app, /on:loaded=\{handleRouteSettled\}/);
+  assert.match(app, /on:error=\{handleRouteSettled\}/);
+  assert.match(app, /!homepageHeaderTransitionPending/);
   assert.match(outlet, /activeComponent/);
   assert.match(outlet, /activeProps/);
   assert.match(outlet, /activeProps = componentProps/);
   assert.match(outlet, /current route props/);
   assert.match(outlet, /await loadRouteComponent\(target\.loaderKey\)/);
   assert.match(outlet, /if \(target\.staticComponent\)/);
+  assert.match(outlet, /dispatch\('loaded'/);
+  assert.match(outlet, /dispatch\('error'/);
   assert.match(outlet, /role="status"/);
   assert.match(outlet, /prefers-reduced-motion/);
   assert.doesNotMatch(outlet, /activecolor/);

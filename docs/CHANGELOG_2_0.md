@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Keep header chrome singular during navigation
+
+- Fixed homepage header icons such as Pricing so a lazy route transition does
+  not briefly render a second header over the still-mounted homepage.
+- Preserved the previous-page loading behavior while ensuring the destination
+  settles into exactly one shared site header.
+
 ## 2026-08-19 — Keep the live preview label clear
 
 - Moved the desktop live-preview status label below the profile specimen so

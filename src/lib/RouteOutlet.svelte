@@ -45,6 +45,7 @@
       activeProps = {};
       activeKey = '';
       loading = false;
+      dispatch('loaded', { componentKey: target.componentKey });
       return;
     }
 
@@ -64,6 +65,10 @@
       if (requestId !== loadRequestId) return;
       loading = false;
       errorMessage = error instanceof Error ? error.message : 'This page could not be loaded.';
+      activeComponent = null;
+      activeProps = {};
+      activeKey = '';
+      dispatch('error', { loaderKey: target.loaderKey, componentKey: target.componentKey, message: errorMessage });
     }
   }
 
