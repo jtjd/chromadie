@@ -11,10 +11,11 @@ export const VALID_LEADERBOARD_TABS = Object.freeze(['today', 'monthly'])
 
 const VALID_VIEW_SET = new Set(VALID_VIEWS)
 const VALID_LEADERBOARD_TAB_SET = new Set(VALID_LEADERBOARD_TABS)
-const CLEAN_APP_PATHS = new Set(['/', '/shop', '/leaderboard', '/profile', '/profile/settings', '/prototype/profile', '/pricing', '/pricing/success'])
+const CLEAN_APP_PATHS = new Set(['/', '/roll', '/shop', '/leaderboard', '/profile', '/profile/settings', '/prototype/profile', '/pricing', '/pricing/success'])
 
 function getCleanPathView(pathname) {
   if (pathname === '/') return 'home'
+  if (pathname === '/roll') return 'game'
   // The former Shop URL is a one-way route alias into the profile studio.
   // There is no Shop view or presentation behind it anymore.
   if (pathname === '/shop') return 'profile-settings'

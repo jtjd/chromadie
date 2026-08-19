@@ -31,6 +31,7 @@ test('route loaders use explicit split points and cache prefetched modules', () 
   }
   assert.match(loaders, /const promiseCache = new Map/);
   assert.match(loaders, /export function prefetchRouteComponent/);
+  assert.match(loaders, /game: \(\) => import\('\.\/RollPage\.svelte'\)/);
 });
 
 test('primary navigation prefetches destinations for mouse and keyboard users', () => {

@@ -19,7 +19,7 @@
     ? null
     : Number.isSafeInteger(Number(item.score)) ? Number(item.score) : null;
   $: scoreLabel = score === null ? '—' : score.toLocaleString();
-  $: rollColor = item?.hexCode || item?.profileAccent || '#6e3e7f';
+  $: rollColor = item?.hexCode || item?.profileAccent || '#8d8c92';
   $: scoreDetails = [item?.hexCode, item?.rarity, formatDate(item?.rollDate)].filter(Boolean).join(' · ');
   $: visiblePosition = item?.rank || position + 1;
   $: rankAccent = position === 0 ? '#e6bd5d' : position === 1 ? '#b9bec7' : position === 2 ? '#c17c55' : '#8d8b91';
@@ -101,8 +101,8 @@
     -webkit-backdrop-filter: blur(20px);
   }
   .leaderboard-row:not(.leaderboard-row--podium):hover,
-  .leaderboard-row:not(.leaderboard-row--podium):focus-visible { border-color: color-mix(in srgb, var(--leaderboard-accent, #D8A6FF) 55%, var(--row-line)); background: color-mix(in srgb, var(--leaderboard-accent, #D8A6FF) 9%, #0b0910); transform: translateX(3px); }
-  .leaderboard-row:not(.leaderboard-row--podium):hover { border-color: color-mix(in srgb, var(--leaderboard-accent, #D8A6FF) 55%, var(--row-line)); background: color-mix(in srgb, var(--leaderboard-accent, #D8A6FF) 9%, #0b0910); transform: translateX(3px); }
+  .leaderboard-row:not(.leaderboard-row--podium):focus-visible { border-color: color-mix(in srgb, var(--leaderboard-accent, var(--white, #ffffff)) 55%, var(--row-line)); background: color-mix(in srgb, var(--leaderboard-accent, var(--white, #ffffff)) 9%, var(--bg, #0e0e10)); transform: translateX(3px); }
+  .leaderboard-row:not(.leaderboard-row--podium):hover { border-color: color-mix(in srgb, var(--leaderboard-accent, var(--white, #ffffff)) 55%, var(--row-line)); background: color-mix(in srgb, var(--leaderboard-accent, var(--white, #ffffff)) 9%, var(--bg, #0e0e10)); transform: translateX(3px); }
   .leaderboard-row:not(.leaderboard-row--podium).leaderboard-row--first { border-color: color-mix(in srgb, var(--row-accent) 42%, var(--row-line)); }
 
   .leaderboard-row--podium {
@@ -129,7 +129,7 @@
 
   .leaderboard-row__rank { color: var(--row-accent); font: 500 .9rem/1 'Inter', sans-serif; }
   .leaderboard-row__profile { display: flex; align-items: center; gap: .75rem; min-width: 0; }
-  .leaderboard-row__avatar { display: grid; flex: 0 0 auto; place-items: center; width: 2.7rem; height: 2.7rem; overflow: hidden; border: 1px solid var(--row-line); border-radius: 50%; background: #16171f; color: var(--leaderboard-text, #f5f5f7); }
+  .leaderboard-row__avatar { display: grid; flex: 0 0 auto; place-items: center; width: 2.7rem; height: 2.7rem; overflow: hidden; border: 1px solid var(--row-line); border-radius: 50%; background: var(--surface, #161619); color: var(--leaderboard-text, #f5f5f6); }
   .leaderboard-row__avatar img { width: 100%; height: 100%; object-fit: cover; }
   .leaderboard-row__avatar-initial { font: 500 .95rem/1 'Inter', sans-serif; }
   .leaderboard-row__identity { display: grid; min-width: 0; max-width: 100%; gap: .3rem; }

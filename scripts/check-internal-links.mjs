@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const roots = ['src', 'index.html'];
 const allowedPaths = new Set([
-  '/', '/privacy', '/terms', '/how-to-play', '/shop', '/leaderboard', '/profile', '/profile/settings', '/pricing',
+  '/', '/privacy', '/terms', '/how-to-play', '/shop', '/roll', '/leaderboard', '/profile', '/profile/settings', '/pricing',
   '/login', '/signup',
   '/auth/callback', '/reset-password', '/logo-mark.svg', '/favicon-16-v2.png', '/favicon-32-v2.png',
   '/apple-touch-icon-v2.png', '/site.webmanifest', '/icon-192-v2.png', '/icon-512-v2.png',

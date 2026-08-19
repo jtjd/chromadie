@@ -17,7 +17,7 @@
   // application navigation and account event contracts.
   export let isHomepageStyle = false;
   export let isOwner = false;
-  export let accentColor = '#D8A6FF';
+  export let claimHref = '';
 
   const dispatch = createEventDispatcher();
   let mobileMenuOpen = false;
@@ -40,13 +40,13 @@
 
   function prefetch(view) {
     const loaderKey = view === 'profile' ? 'profileShell' : view;
-    if (['profileShell', 'leaderboard', 'profileSettings', 'pricing'].includes(loaderKey)) {
+    if (['game', 'profileShell', 'leaderboard', 'profileSettings', 'pricing'].includes(loaderKey)) {
       void prefetchRouteComponent(loaderKey);
     }
   }
 </script>
 
-<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} class:site-mode-header--home-route={isHomeMode} class:site-mode-header--leaderboard={isLeaderboardMode} data-site-chrome="header" style={`--site-header-accent: ${accentColor};`}>
+<header class="site-mode-header" class:site-mode-header--profile={isProfileMode} class:site-mode-header--profile-settings={isProfileSettings} class:site-mode-header--home={isHomeMode || isHomepageStyle} class:site-mode-header--home-route={isHomeMode} class:site-mode-header--leaderboard={isLeaderboardMode} data-site-chrome="header" style="--site-header-accent: var(--white, #ffffff);">
   <div class="site-mode-header__inner">
     <a class="site-mode-header__brand" href="/" on:click|preventDefault={navigateHome} aria-label="ChromaDie home">
       <span class="site-mode-header__brand-mark" aria-hidden="true"></span>
@@ -55,10 +55,17 @@
 
     {#if !minimalMode}
       <nav class="site-mode-header__nav" aria-label="Primary application navigation">
+        <button type="button" class:active={activeView === 'game'} aria-current={activeView === 'game' ? 'page' : undefined} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>
         <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
         {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
         <button type="button" class:active={activeView === 'pricing'} aria-current={activeView === 'pricing' ? 'page' : undefined} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
-        {#if !isAuthenticated}<button type="button" class="site-mode-header__claim-link" on:click={() => dispatch('claim')}>Claim handle</button>{/if}
+        {#if !isAuthenticated}
+          {#if claimHref}
+            <a class="site-mode-header__claim-link" href={claimHref}>Claim handle</a>
+          {:else}
+            <button type="button" class="site-mode-header__claim-link" on:click={() => dispatch('claim')}>Claim handle</button>
+          {/if}
+        {/if}
       </nav>
     {:else}
       <div class="site-mode-header__nav-space" aria-hidden="true"></div>
@@ -99,9 +106,15 @@
       <div class="site-mode-header__mobile-panel" aria-hidden={!mobileMenuOpen}>
         {#if !minimalMode}
           <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
+            <button type="button" class:active={activeView === 'game'} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>
             <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
             {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
             <button type="button" class:active={activeView === 'pricing'} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
+            {#if !isAuthenticated && claimHref}
+              <a class="site-mode-header__claim-link" href={claimHref}>Claim handle</a>
+            {:else if !isAuthenticated}
+              <button type="button" class="site-mode-header__claim-link" on:click={() => { mobileMenuOpen = false; dispatch('claim'); }}>Claim handle</button>
+            {/if}
           </div>
         {/if}
 
@@ -136,12 +149,12 @@
     --site-header-control-weight: 500;
     --site-header-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --site-header-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
-    --site-header-accent: #D8A6FF;
+    --site-header-accent: var(--white, #ffffff);
     position: relative;
     z-index: 20;
     width: 100%;
     height: 88px;
-    color: #8f9099;
+    color: var(--text-muted, #8d8c92);
   }
 
   .site-mode-header__inner {
@@ -165,7 +178,7 @@
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    color: #8f9099;
+    color: var(--text-muted);
   }
 
   /* Public profiles keep their own atmosphere behind a quiet account bar. */
@@ -205,7 +218,7 @@
     align-items: center;
     flex: 0 0 auto;
     gap: 11px;
-    color: #f5f5f7;
+    color: var(--text, #f5f5f6);
     font: 600 1.28rem / 1 var(--site-header-display);
     letter-spacing: -0.025em;
     text-decoration: none;
@@ -229,7 +242,7 @@
     background: var(--site-header-accent);
   }
 
-  .site-mode-header__wordmark { color: #f5f5f7; }
+  .site-mode-header__wordmark { color: var(--text, #f5f5f6); }
   .site-mode-header__wordmark > span { color: var(--site-header-accent); }
 
   .site-mode-header__nav,
@@ -262,7 +275,7 @@
     border: 0;
     border-radius: 0;
     background: transparent;
-    color: rgba(245, 245, 247, 0.6);
+    color: var(--text-muted, #8d8c92);
     font: inherit;
     letter-spacing: 0;
     text-transform: none;
@@ -276,7 +289,7 @@
   .site-mode-header__account button:hover,
   .site-mode-header__mobile-panel button:hover,
   .site-mode-header__mobile-panel button.active {
-    color: #f5f5f7;
+    color: var(--text, #f5f5f6);
   }
 
   .site-mode-header__nav button.active {
@@ -294,16 +307,16 @@
   }
 
   .site-mode-header__account { justify-content: flex-end; min-width: 0; }
-  .site-mode-header__account-name { max-width: 10rem; overflow: hidden; color: rgba(245, 245, 247, 0.8) !important; text-overflow: ellipsis; white-space: nowrap; }
-  .site-mode-header__account-action { color: rgba(245, 245, 247, 0.6) !important; }
-  .site-mode-header__account-action--light { color: #f5f5f7 !important; }
+  .site-mode-header__account-name { max-width: 10rem; overflow: hidden; color: var(--text) !important; text-overflow: ellipsis; white-space: nowrap; }
+  .site-mode-header__account-action { color: var(--text-muted) !important; }
+  .site-mode-header__account-action--light { color: var(--text) !important; }
   .site-mode-header__account-action--signup {
     display: none;
     min-height: 38px !important;
     padding: 0 14px !important;
     border-radius: 9px !important;
-    background: #f5f5f7 !important;
-    color: #08080a !important;
+    background: var(--white) !important;
+    color: var(--bg) !important;
     font: 600 0.8rem / 1 var(--site-header-display) !important;
   }
   .site-mode-header__account-action--signup:hover { background: var(--site-header-accent) !important; }
@@ -315,7 +328,7 @@
   .site-mode-header--leaderboard .site-mode-header__context button,
   .site-mode-header--leaderboard .site-mode-header__account-name,
   .site-mode-header--leaderboard .site-mode-header__account-action {
-    color: rgba(245, 245, 247, .78) !important;
+    color: var(--text) !important;
   }
 
   .site-mode-header--leaderboard .site-mode-header__wordmark > span,
@@ -327,18 +340,18 @@
   .site-mode-header--leaderboard .site-mode-header__nav button:focus-visible,
   .site-mode-header--leaderboard .site-mode-header__account-name:hover,
   .site-mode-header--leaderboard .site-mode-header__account-action:hover {
-    color: #f5f5f7 !important;
+    color: var(--text) !important;
   }
 
   .site-mode-header--leaderboard .site-mode-header__claim-link {
     border: 0 !important;
-    background: #f5f5f7 !important;
-    color: #08080a !important;
+    background: var(--white) !important;
+    color: var(--bg) !important;
     box-shadow: none;
   }
 
   .site-mode-header--leaderboard .site-mode-header__nav .site-mode-header__claim-link {
-    color: #08080a !important;
+    color: var(--bg) !important;
   }
 
   .site-mode-header--leaderboard .site-mode-header__claim-link:hover {
@@ -347,7 +360,7 @@
 
   .site-mode-header--leaderboard .site-mode-header__mobile-menu summary {
     border-color: rgba(255, 255, 255, .16);
-    color: #f5f5f7;
+    color: var(--text);
   }
 
   .site-mode-header__claim-link {
@@ -357,15 +370,21 @@
     justify-content: center;
     padding: 0 18px !important;
     border-radius: 9px !important;
-    background: #f5f5f7 !important;
-    color: #08080a !important;
+    background: var(--white) !important;
+    color: var(--bg) !important;
     font: 600 0.88rem / 1 var(--site-header-display) !important;
     transition: transform 0.18s ease, background 0.18s ease;
+    text-decoration: none;
   }
 
   .site-mode-header__claim-link:hover {
     transform: translateY(-1px);
     background: var(--site-header-accent) !important;
+  }
+
+  .site-mode-header__claim-link:focus-visible {
+    outline: 2px solid var(--site-header-accent);
+    outline-offset: 4px;
   }
 
   .site-mode-header__mobile-menu { display: none; position: relative; }
@@ -374,7 +393,7 @@
     padding: 0 12px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 9px;
-    color: #f5f5f7;
+    color: var(--text);
     list-style: none;
   }
   .site-mode-header__mobile-menu summary::-webkit-details-marker { display: none; }
@@ -388,7 +407,7 @@
     padding: 0.55rem;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 0.65rem;
-    background: rgba(10, 10, 12, 0.98);
+    background: var(--surface-2, #1e1e22);
     box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.42);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -397,11 +416,18 @@
     min-height: 2.7rem;
     padding: 0.75rem;
     border-radius: 0.4rem;
-    color: #8f9099;
+    color: var(--text-muted, #8d8c92);
     text-align: left;
   }
+  .site-mode-header__mobile-panel .site-mode-header__claim-link {
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 2.7rem !important;
+    padding: 0.75rem !important;
+  }
   .site-mode-header__mobile-panel button:hover,
-  .site-mode-header__mobile-panel button.active { background: rgba(255, 255, 255, 0.06); }
+  .site-mode-header__mobile-panel button.active,
+  .site-mode-header__mobile-panel .site-mode-header__claim-link:hover { background: var(--surface-3, #28282c); }
   .site-mode-header__mobile-primary,
   .site-mode-header__mobile-context,
   .site-mode-header__mobile-account { display: grid; gap: 0.25rem; }
@@ -432,7 +458,11 @@
     .site-mode-header__claim-link { min-height: 38px !important; padding-inline: 14px !important; font-size: 0.8rem !important; }
     .site-mode-header__account { gap: 10px; }
     .site-mode-header--home-route .site-mode-header__account-action--signup { display: inline-flex; }
-    .site-mode-header--home-route .site-mode-header__mobile-menu { display: none; }
+    /* Keep the full navigation and account actions available on small home
+     * screens through the same menu used by supporting routes. */
+    .site-mode-header--home-route .site-mode-header__nav,
+    .site-mode-header--home-route .site-mode-header__account { display: none; }
+    .site-mode-header--home-route .site-mode-header__mobile-menu { display: block; }
     .site-mode-header--profile .site-mode-header__inner { width: 100%; padding-inline: clamp(1rem, 4vw, 3rem); }
     .site-mode-header--profile .site-mode-header__right { display: flex; gap: 0.25rem; }
     .site-mode-header--profile .site-mode-header__account { display: none; }

@@ -86,7 +86,7 @@ test('supporting surfaces consume the profile visual tokens without changing rou
   assert.match(siteStyles, /--site-font: 'Inter'/);
   assert.match(siteStyles, /--font-display-stack: 'Manrope Variable'/);
   assert.match(siteStyles, /--font-body-stack: 'Inter'/);
-  assert.match(siteStyles, /--site-accent: var\(--site-brand-accent\)/);
+  assert.match(siteStyles, /--site-accent: var\(--white\)/);
   assert.match(siteStyles, /--site-atmosphere-image: url\('\/site\/chromadie-roll-horizon\.webp'\)/);
   assert.doesNotMatch(siteStyles, /site-mode-header:not\(\.site-mode-header--home\):not\(\.site-mode-header--profile\)/);
   assert.match(siteHeader, /\.site-mode-header__brand-mark/);

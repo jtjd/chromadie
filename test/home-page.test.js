@@ -4,7 +4,7 @@ import { stat, readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [home, hero, demo, fixtures, community, dailyLeaderboard, claim, header, footer, app, routeLoaders, main, fonts, homepageStyles, guestProfile] = await Promise.all([
+const [home, hero, demo, fixtures, community, dailyLeaderboard, claim, header, sharedHeader, footer, app, routeLoaders, main, fonts, homepageStyles, guestProfile] = await Promise.all([
   read('src/lib/HomePage.svelte'),
   read('src/lib/homepage/HomepageHero.svelte'),
   read('src/lib/homepage/HomepageProfileDemo.svelte'),
@@ -13,6 +13,7 @@ const [home, hero, demo, fixtures, community, dailyLeaderboard, claim, header, f
   read('src/lib/homepage/HomepageDailyLeaderboard.svelte'),
   read('src/lib/homepage/HomepageClaim.svelte'),
   read('src/lib/homepage/HomepageHeader.svelte'),
+  read('src/lib/SiteModeHeader.svelte'),
   read('src/lib/SiteFooter.svelte'),
   read('src/App.svelte'),
   read('src/lib/routeLoaders.js'),
@@ -30,7 +31,8 @@ test('the homepage is a single reference-first composition', () => {
   assert.match(home, /homepage-background/);
   assert.match(home, /HOMEPAGE_FIXTURES/);
   assert.match(home, /on:fixturechange={handleFixtureChange}/);
-  assert.match(home, /on:accentpreview={handleAccentPreview}/);
+  assert.match(home, /currentLeaderboardUser={dailyLeaderboardCurrentUser}/);
+  assert.doesNotMatch(home, /accentpreview|handleAccentPreview/);
   assert.match(home, /accountState/);
   assert.match(home, /logoutInProgress/);
   assert.doesNotMatch(home, /HomeHero|HomeLeaderboard|HomepageProfileDirectory|SiteModeHeader|activecolor/);
@@ -41,20 +43,19 @@ test('the homepage is a single reference-first composition', () => {
 });
 
 test('homepage navigation exposes real product destinations without placeholder links', () => {
-  for (const destination of [
-    'href="/leaderboard">Leaderboard',
-    'href="/profile/settings">Customize',
-    'href="/pricing">Pricing',
-    'href="#claim">Claim handle'
-  ]) assert.match(header, new RegExp(destination.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(header, /SiteModeHeader/);
+  assert.match(header, /claimHref="#claim"/);
+  for (const label of ['Roll', 'Leaderboard', 'Customize', 'Pricing', 'Claim handle']) {
+    assert.match(sharedHeader, new RegExp(`>${label}<`));
+  }
 
-  for (const destination of ['/leaderboard', '/profile/settings', '/pricing', '/how-to-play', '/privacy', '/terms']) {
+  for (const destination of ['/roll', '/leaderboard', '/profile/settings', '/pricing', '/how-to-play', '/privacy', '/terms']) {
     assert.match(footer, new RegExp(`href="${destination}"`));
   }
   assert.match(footer, /support@chromadie\.com/);
   assert.match(footer, /business@chromadie\.com/);
-  assert.doesNotMatch(header, /How it works|Profiles|href="#how"|href="#showcase"/);
-  assert.doesNotMatch(header, /href="#"/);
+  assert.doesNotMatch(`${header}${sharedHeader}`, /How it works|Profiles|href="#how"|href="#showcase"/);
+  assert.doesNotMatch(sharedHeader, /href="#"/);
 });
 
 test('the hero carousel uses deterministic homepage specimens without public-profile rendering', () => {
@@ -69,36 +70,26 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
   assert.match(hero, /<HomepageDailyLeaderboard/);
   assert.match(hero, /dailyLeaderboardRows/);
   assert.match(hero, /homepage-roll-compact/);
-  assert.match(hero, /homepage-roll-compact__rarity/);
-  assert.match(hero, /data-rarity=\{latestRoll\.rarity\}/);
-  for (const rarity of ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic']) {
-    assert.match(hero, new RegExp(`homepage-roll-compact__rarity\\[data-rarity='${rarity}'\\]`));
-  }
-  assert.match(hero, /'Roll'/);
-  assert.match(hero, /Rolling…/);
-  assert.match(hero, /Claim your place/);
-  assert.match(hero, /localLeaderboardEntry/);
-  assert.match(hero, /isPreviewRolling \|\| hasLeaderboardEntry/);
-  assert.match(hero, /focusClaim/);
-  assert.match(hero, /Date\.UTC\(now\.getUTCFullYear\(\), now\.getUTCMonth\(\), now\.getUTCDate\(\) \+ 1\)/);
+  assert.match(hero, /href="\/roll"/);
+  assert.match(hero, />Roll today<\/a>/);
+  assert.doesNotMatch(hero, /homepage-roll-compact__header|homepage-roll-compact__prompt|Once a day|→/);
+  assert.match(hero, /currentLeaderboardUser/);
+  assert.doesNotMatch(hero, /PREVIEW_ROLL|previewRoll|accentpreview|localLeaderboardEntry|isPreviewRolling|hasLeaderboardEntry|focusClaim|profileImpactActive|rollPhase|homepage-roll-particles/);
   assert.match(hero, /<ProfileMotionEffect/);
   assert.match(hero, /motionKey=\{fixture\.profileMotion \|\| ''\}/);
   assert.match(hero, /inputSurface="viewport"/);
   assert.doesNotMatch(hero, /handleViewportPointerMove|animateTilt|requestAnimationFrame/);
-  assert.match(hero, /class:homepage-profile-pop--active=\{profileImpactActive\}/);
-  assert.match(hero, /rollPhase = 'spin'/);
-  assert.match(hero, /rollPhase = 'land'/);
-  assert.match(hero, /rollPhase = 'impact'/);
-  assert.match(hero, /homepage-roll-particles/);
-  assert.match(hero, /dispatch\('accentpreview'/);
   assert.doesNotMatch(hero, /ProfileShell|HomepageProfileRenderer|layoutLabel|random|discovery|roll_die|supabase|\.rpc\(/);
   assert.doesNotMatch(demo, /ProfileShell|ProfileLayoutFrame|profile-shell|profileRenderModel/);
   assert.match(dailyLeaderboard, /Daily highest roll/);
   assert.match(dailyLeaderboard, /avatarReference/);
   assert.match(dailyLeaderboard, /getProfileMediaUrl/);
-  assert.match(dailyLeaderboard, /export let localEntry = null/);
+  assert.match(dailyLeaderboard, /export let currentUser = null/);
+  assert.match(dailyLeaderboard, /mergeVisibleRows\(realRows, currentUser\)/);
+  assert.match(dailyLeaderboard, /isLocalEntry: true/);
   assert.match(dailyLeaderboard, /homepage-daily-leaderboard__row--you/);
   assert.match(dailyLeaderboard, /displayRank/);
+  assert.doesNotMatch(dailyLeaderboard, /__homepage_you__|Your preview roll|href=\{getRowPath\(row\)\}[^\n]*#claim/);
 });
 
 test('the homepage specimen owns the approved profile anatomy', () => {
@@ -136,9 +127,12 @@ test('homepage community is the only live profile feed on the new homepage', () 
   assert.match(community, /getCanonicalProfilePath/);
   assert.match(community, /p_surface: 'today'/);
   assert.match(community, /slice\(0, COMMUNITY_LIMIT\)/);
+  assert.match(community, /CURRENT_USER_LOOKUP_LIMIT/);
+  assert.match(community, /p_query: lookupUsername/);
+  assert.match(community, /candidate\.username\.toLowerCase\(\) === lookupKey/);
   assert.match(community, /dispatch\('leaderboard'/);
   assert.doesNotMatch(community, /HOMEPAGE_FIXTURES|getHomepageFixture|loadProfileContext/);
-  assert.match(home, /<HomepageCommunity on:leaderboard=\{handleDailyLeaderboard\} \/>/);
+  assert.match(home, /<HomepageCommunity \{isAuthenticated\} \{username\} on:leaderboard=\{handleDailyLeaderboard\} \/>/);
 });
 
 test('claim behavior stays on the shared username and auth routes', () => {
@@ -149,9 +143,9 @@ test('claim behavior stays on the shared username and auth routes', () => {
   assert.match(claim, /username_claim_started/);
   assert.match(claim, /username_claim_completed/);
   assert.doesNotMatch(claim, /↗|Free · One roll each day/);
-  assert.match(header, /dispatch\('login'/);
-  assert.match(header, /dispatch\('logout'/);
-  assert.match(header, /dispatch\('retry'/);
+  assert.match(header, /on:login=\{forward\}/);
+  assert.match(header, /on:logout=\{forward\}/);
+  assert.match(header, /on:retry=\{forward\}/);
 });
 
 test('the root route mounts the homepage without changing other route contracts', () => {

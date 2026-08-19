@@ -88,18 +88,18 @@
   .profile-layout-editor__layouts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .profile-layout-editor__card { min-width: 0; padding: 9px; border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: rgba(255,255,255,.035); color: #f8f8f8; text-align: left; cursor: pointer; }
   .profile-layout-editor__card:hover, .profile-layout-editor__card:focus-visible { border-color: rgba(255,255,255,.2); }
-  .profile-layout-editor__card.active { border-color: var(--studio-accent, #D8A6FF); box-shadow: 0 0 15px var(--studio-accent-glow, rgba(216,166,255,.24)); }
+  .profile-layout-editor__card.active { border-color: var(--studio-accent, var(--white, #ffffff)); box-shadow: 0 0 15px var(--studio-accent-glow, rgba(255,255,255,.16)); }
   .profile-layout-editor__card strong { display: block; font: 600 .68rem/1 'Inter', sans-serif; }
   .profile-layout-editor__card small { display: block; min-height: 31px; margin-top: 4px; color: #6b6c74; font: 400 .56rem/1.35 'Inter', sans-serif; }
   .profile-layout-editor__mini { position: relative; display: block; height: 78px; margin-bottom: 9px; overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 6px; background: rgba(0,0,0,.23); }
-  .profile-layout-editor__mini::before { position: absolute; top: 12px; left: 10px; width: 22px; height: 22px; border: 1px solid var(--studio-accent, #D8A6FF); border-radius: 50%; background: #3a3b41; content: ''; }
+  .profile-layout-editor__mini::before { position: absolute; top: 12px; left: 10px; width: 22px; height: 22px; border: 1px solid var(--studio-accent, var(--white, #ffffff)); border-radius: 50%; background: #3a3b41; content: ''; }
   .profile-layout-editor__mini::after { position: absolute; top: 15px; right: 11px; left: 42px; height: 5px; border-radius: 4px; background: rgba(255,255,255,.15); box-shadow: 0 13px 0 rgba(255,255,255,.08), 0 34px 0 rgba(255,255,255,.08), 0 46px 0 rgba(255,255,255,.06); content: ''; }
   .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini { border-color: transparent; background: transparent; }
   .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini::before { top: 10px; left: 50%; width: 24px; height: 24px; transform: translateX(-50%); }
-  .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini::after { top: 45px; right: 25%; left: 25%; height: 4px; box-shadow: 0 10px 0 rgba(255,255,255,.1), 0 21px 0 color-mix(in srgb, var(--studio-accent, #D8A6FF) 24%, transparent); }
+  .profile-layout-editor__card[data-layout='full-bleed'] .profile-layout-editor__mini::after { top: 45px; right: 25%; left: 25%; height: 4px; box-shadow: 0 10px 0 rgba(255,255,255,.1), 0 21px 0 color-mix(in srgb, var(--studio-accent, var(--white, #ffffff)) 24%, transparent); }
   .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini { border-color: rgba(255,255,255,.22); background: rgba(24, 28, 40, .78); }
   .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini::before { top: 10px; left: 10px; width: 27px; height: 27px; border-radius: 6px; transform: translateY(-22%); }
-  .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini::after { top: 29px; right: 11px; left: 46px; height: 5px; box-shadow: 0 13px 0 rgba(255,255,255,.1), 0 35px 0 rgba(255,255,255,.08), 0 49px 0 color-mix(in srgb, var(--studio-accent, #D8A6FF) 20%, transparent); }
+  .profile-layout-editor__card[data-layout='framed'] .profile-layout-editor__mini::after { top: 29px; right: 11px; left: 46px; height: 5px; box-shadow: 0 13px 0 rgba(255,255,255,.1), 0 35px 0 rgba(255,255,255,.08), 0 49px 0 color-mix(in srgb, var(--studio-accent, var(--white, #ffffff)) 20%, transparent); }
   @media (max-width: 52rem) { .profile-layout-editor__layouts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 38rem) { .profile-layout-editor__layouts { grid-template-columns: minmax(0, 1fr); } .profile-layout-editor__head { flex-direction: column; } }
 </style>

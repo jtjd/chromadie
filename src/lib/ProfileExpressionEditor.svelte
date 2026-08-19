@@ -851,20 +851,20 @@
 
 <style>
   .profile-expression-editor__compact-grid {
-    --media-surface: rgba(12, 12, 15, .78);
-    --media-surface-inset: rgba(255, 255, 255, .035);
-    --media-surface-deep: rgba(0, 0, 0, .22);
-    --media-text-primary: #f8f8f8;
-    --media-text-secondary: #a8a9b0;
-    --media-text-muted: #8f9099;
-    --media-text-faint: #686971;
-    --media-line: rgba(255, 255, 255, .10);
-    --media-line-strong: rgba(255, 255, 255, .20);
-    --media-focus: var(--studio-accent, #D8A6FF);
-    --media-teal: #D8A6FF;
-    --media-sky: #9BCBFF;
-    --media-peach: #F3B7D8;
-    --media-green: #7BCB8D;
+    --media-surface: var(--surface, #161619);
+    --media-surface-inset: var(--surface-3, #28282c);
+    --media-surface-deep: var(--surface, #161619);
+    --media-text-primary: var(--text, #f5f5f6);
+    --media-text-secondary: var(--text-muted, #8d8c92);
+    --media-text-muted: var(--text-muted, #8d8c92);
+    --media-text-faint: var(--text-faint, #59585e);
+    --media-line: var(--border, rgba(255, 255, 255, .09));
+    --media-line-strong: var(--border, rgba(255, 255, 255, .09));
+    --media-focus: var(--studio-accent, var(--white, #ffffff));
+    --media-teal: var(--white, #ffffff);
+    --media-sky: #d5d6da;
+    --media-peach: #bfc0c5;
+    --media-green: #92939a;
     --media-red: #ff5578;
     --media-premium: #8f9099;
     display: grid;

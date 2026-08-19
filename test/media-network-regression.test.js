@@ -38,7 +38,7 @@ test('homepage network budget is bounded and fixture changes stay local', async 
   const marketing = `${home}\n${hero}\n${demo}\n${showcase}\n${fixtures}`;
   assert.doesNotMatch(marketing, /ProfileShell|loadProfileContext|setInterval|\/get_public_profile_/);
   assert.doesNotMatch(`${demo}\n${showcase}`, /<audio|<video|media\.chm\.lol|r2\.cloudflarestorage\.com/);
-  assert.equal((community.match(/supabase\.rpc\('get_public_discovery'/g) || []).length, 1);
+  assert.equal((community.match(/supabase\.rpc\('get_public_discovery'/g) || []).length, 2);
   assert.doesNotMatch(fixtures, /Date\.now\(|Math\.random\(|supabase|loadProfileContext/);
   assert.match(smoke, /discoveryCount <= 1/);
   assert.match(smoke, /profileHydrationCount === 0/);

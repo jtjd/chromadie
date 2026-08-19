@@ -5195,3 +5195,123 @@ homepage’s authored first fixture and keeps brand chrome distinct from semanti
 roll, reward, success, warning, and profile colors. Normal routes use the same
 Inter/Manrope direction, dark translucent surfaces, and shared header/footer;
 the homepage composition and public user profiles remain unchanged.
+
+## 2026-08-18 — Restore a dedicated Roll destination without splitting roll authority
+
+The daily roll is now reachable at canonical `/roll` and is exposed in the
+homepage and application headers plus the shared footer. Legacy `/?view=game`
+links remain readable and canonicalize to `/roll`; challenge links continue to
+use `/c/<id>`.
+
+The route wraps the existing `Game.svelte` behavior in a dedicated atmospheric
+page shell rather than creating a second roll implementation. Server-authoritative
+roll RPCs, guest-local persistence, eligibility, rerolls, rewards, challenge
+handling, and profile contracts remain unchanged.
+
+## 2026-08-18 — Make the dedicated Roll UI a color ritual
+
+The dedicated Roll presentation now treats the daily roll as a focused color
+ritual: a restrained spectrum instrument and single action before the roll, a
+focused reveal/progress state while it runs, and a color-first result summary before
+the supporting score, reward, contributor, sharing, and profile details.
+
+The result surface uses a Roll-specific rarity hook so semantic rarity accents
+can drive the presentation without reusing legacy `.rarity-*` surface classes.
+The existing rarity definitions, RollPreview, roll service, guest state, and
+authoritative backend contracts remain unchanged; public profile surfaces are
+not affected.
+
+## 2026-08-18 — Make the dedicated Roll surface a compact color instrument
+
+The dedicated pre-roll state now uses a restrained spectrum tile and scan mark
+instead of a layered animated orb. Copy is limited to the action, account-mode
+status, and Color of the Week reward so the interaction reads immediately on
+desktop and mobile.
+
+Completed rolls use the same quiet rounded color tile, rarity-aware border, and
+ordered share/image/reroll actions. The dedicated guest result no longer repeats
+the restored-local-progress banner alongside the conversion prompt; the prompt
+owns that message while the legacy embedded Game surface keeps its existing
+state treatment. The result summary is intentionally composed as a heading plus
+color/score pair on desktop and a single-column sequence on mobile. Contributor
+descriptions remain available through accessible labels and hover text while the
+visible breakdown stays compact.
+
+## 2026-08-18 — Rebuild the Roll route around the compact result-card reference
+
+The dedicated Roll route now uses a small dark-plum card with a focused pink
+color field, explicit saved/account mode, a single `Roll For Today` action,
+and a compact score breakdown. The result state follows the same sequence:
+rolled color, rarity, identity, hex, traits, score, contributors, and total
+earned. A clean DOM/CSS `RollTile` keeps the color surface single-layered, while
+the complete result card supplies restrained pointer parallax without introducing
+a bitmap dependency or changing public profile rendering.
+
+The route-specific shell intentionally overrides the scenic application
+atmosphere so the game reads as a deliberate play surface. Header chrome uses
+the same semantic pink on the Roll route; other site routes and homepage
+composition remain unchanged. Existing roll RPCs, guest-local persistence,
+rerolls, scoring, rewards, and authentication boundaries remain authoritative.
+
+The pre-roll state does not present earned score data. Its tile is an unrevealed
+daily-roll prompt, while score breakdown rows and `Total Earned` appear only in
+the completed result state from the canonical roll contributors and score.
+
+The completed result uses that same reference anatomy instead of the legacy
+detail stack: the canonical breakdown is the primary panel and the claimed CTA
+comes immediately after it. The dedicated result then ends at its conversion
+surface; the generic rank, countdown, share, and image-action panel remains
+available only on the legacy embedded Game surface.
+
+The dedicated reveal keeps only brief client-side pacing after the authoritative
+roll response: a short color scramble, compact HEX reveal, and immediate result
+mount. It does not wait on badge-by-badge animation before showing the result.
+The visible result descriptors are capped at two traits, and the next-roll clock
+lives in the disabled result button.
+
+The dedicated Roll page uses the same application navigation contract as the
+homepage, including the Roll destination, Pricing, Claim handle, and account
+access. Its card is paired with a small daily-color context column on desktop
+and stacks that context above the card on mobile; redundant guest-mode badges
+are omitted because the saved-device status already communicates the state.
+
+## 2026-08-18 — Make Roll context state-aware
+
+The dedicated Roll context column now reports the actual result instead of
+generic supporting copy: the rolled identity, rarity, score, and roll-history
+day are rendered from the same authoritative Game state. Authenticated players
+also see their current streak, rank progress, EP distance to the next rank, and
+a direct history/progression link. Guest results remain honest and local-only;
+they do not display fabricated account progression.
+
+## 2026-08-18 — Use grayscale chrome so roll colors own the signal
+
+Normal site chrome now uses the explicit neutral token set: `--bg`, `--surface`,
+`--surface-2`, `--surface-3`, `--border`, `--border-soft`, `--text`,
+`--text-muted`, `--text-faint`, and `--white`. The Roll page starts with this
+neutral canvas and card treatment; after a verified result, the user’s rolled
+color may drive the result heading, tile glow, rarity label, total, and claimed
+action. Rarity/status colors remain semantic, and public profile rendering and
+profile-specific expression colors remain outside the site-chrome boundary.
+
+The homepage and normal application routes now share `SiteModeHeader`; the
+homepage wrapper retains its claim anchor and event boundary, while signed-out
+routes hide Customize and expose the current claim/sign-in flow. The previously
+generated atmosphere asset is retained for provenance but is no longer applied
+as normal route chrome, so it cannot reintroduce a competing branded tint.
+
+## 2026-08-18 — Keep homepage play authoritative and make the signed-in board personal
+
+The homepage no longer simulates a roll or manufactures a local score. Its daily
+roll surface is an entry point to canonical `/roll`, where eligibility, scoring,
+rarity, persistence, and guest behavior continue to use the existing authoritative
+Game flow. The visible homepage entry is intentionally just one `Roll today`
+button; the hero copy already explains the daily-history concept, so the CTA does
+not repeat timing or instructional copy.
+
+The homepage hero board still renders the bounded public top-three feed, and when
+the visitor is authenticated it performs a second bounded public-discovery lookup
+for the exact username. That row is merged using its real display name, avatar
+reference, rolled color, score, rank, and canonical profile path, while signed-out
+visitors retain the normal public board. No private account data or new backend
+contract is introduced.

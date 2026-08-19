@@ -6,11 +6,22 @@
   import { normalizeHexColor } from '../utils.js';
 
   const COMMUNITY_LIMIT = 3;
+  const CURRENT_USER_LOOKUP_LIMIT = 12;
   const dispatch = createEventDispatcher();
+  export let isAuthenticated = false;
+  export let username = '';
   let rows = [];
+  let currentUser = null;
   let loading = true;
   let error = '';
   let requestId = 0;
+  let mounted = false;
+  let loadedIdentityKey = null;
+
+  $: identityKey = isAuthenticated && typeof username === 'string' ? username.trim().toLowerCase() : '';
+  $: if (mounted && identityKey !== loadedIdentityKey) {
+    void loadCommunity();
+  }
 
   function normalizeRows(data) {
     return normalizeDiscoveryResponse(data).items
@@ -22,27 +33,55 @@
       .slice(0, COMMUNITY_LIMIT);
   }
 
+  function normalizeCurrentUser(data) {
+    const lookupKey = typeof username === 'string' ? username.trim().toLowerCase() : '';
+    if (!lookupKey) return null;
+
+    const item = normalizeDiscoveryResponse(data).items.find(candidate => candidate.username.toLowerCase() === lookupKey);
+    const profilePath = getCanonicalProfilePath(item?.username);
+    if (!item || !profilePath || !item.rank || item.score === null) return null;
+    return { ...item, profilePath, displayRank: item.rank, isLocalEntry: true };
+  }
+
   async function loadCommunity() {
+    loadedIdentityKey = identityKey;
     const currentRequestId = ++requestId;
     loading = true;
     error = '';
-    dispatch('leaderboard', { rows, loading, error });
+    currentUser = null;
+    dispatch('leaderboard', { rows, currentUser, loading, error });
 
-    try {
-      const { data, error: rpcError } = await supabase.rpc('get_public_discovery', {
+    const lookupUsername = typeof username === 'string' ? username.trim() : '';
+    const currentUserRequest = isAuthenticated && getCanonicalProfilePath(lookupUsername)
+      ? supabase.rpc('get_public_discovery', {
         p_surface: 'today',
         p_rarity: null,
-        p_query: null,
+        p_query: lookupUsername,
         p_page: 0,
-        p_limit: COMMUNITY_LIMIT
-      });
+        p_limit: CURRENT_USER_LOOKUP_LIMIT
+      })
+      : Promise.resolve({ data: null, error: null });
+
+    try {
+      const [leaderboardResult, currentUserResult] = await Promise.all([
+        supabase.rpc('get_public_discovery', {
+          p_surface: 'today',
+          p_rarity: null,
+          p_query: null,
+          p_page: 0,
+          p_limit: COMMUNITY_LIMIT
+        }),
+        currentUserRequest
+      ]);
 
       if (currentRequestId !== requestId) return;
-      if (rpcError) {
+      if (leaderboardResult.error) {
         rows = [];
+        currentUser = normalizeCurrentUser(currentUserResult.data);
         error = 'Public profiles could not be loaded right now.';
       } else {
-        rows = normalizeRows(data);
+        rows = normalizeRows(leaderboardResult.data);
+        currentUser = normalizeCurrentUser(currentUserResult.data);
       }
     } catch {
       if (currentRequestId !== requestId) return;
@@ -51,16 +90,18 @@
     } finally {
       if (currentRequestId === requestId) {
         loading = false;
-        dispatch('leaderboard', { rows, loading, error });
+        dispatch('leaderboard', { rows, currentUser, loading, error });
       }
     }
   }
 
   onMount(() => {
+    mounted = true;
     void loadCommunity();
   });
 
   onDestroy(() => {
+    mounted = false;
     requestId += 1;
   });
 </script>

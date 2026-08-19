@@ -12,6 +12,7 @@ const site = await readFile(new URL('../src/styles/site.css', import.meta.url), 
 test('the bare root is the landing page and explicit gameplay remains compatible', () => {
   assert.equal(parseRouteLocation('/').view, 'home');
   assert.equal(parseRouteLocation('/', '?view=game').view, 'game');
+  assert.equal(parseRouteLocation('/roll').view, 'game');
   assert.equal(parseRouteLocation('/c/challenge-1').view, 'game');
   assert.equal(parseRouteLocation('/u/OtherUser').view, 'profile');
   assert.equal(parseRouteLocation('/profile/settings').view, 'profile-settings');
@@ -33,7 +34,8 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.match(routeLoaders, /profileSettings: \(\) => import\('\.\/ProfileSettings\.svelte'\)/);
   assert.match(app, /on:signup=\{\(\) => navigateToAuth\('signup'\)\}/);
   assert.match(header, /Profile/);
-  assert.doesNotMatch(header, />Roll</);
+  assert.match(header, />Roll</);
+  assert.match(header, /prefetch\('game'\)/);
   assert.match(header, /navigate\('home'\)/);
   assert.match(header, /Leaderboard/);
   assert.match(header, />Customize</);

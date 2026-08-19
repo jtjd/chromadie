@@ -17,9 +17,9 @@
     min-height: 9rem;
     margin: clamp(3rem, 7vw, 6rem) auto 5rem;
     padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, .1);
+    border: 1px solid var(--border, rgba(255, 255, 255, .09));
     border-radius: 18px;
-    background: rgba(10, 10, 12, .58);
+    background: var(--surface-2, #1e1e22);
     box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .16);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -31,8 +31,8 @@
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
-    background: var(--site-brand-accent, #D8A6FF);
-    box-shadow: 0 0 0.8rem var(--site-brand-accent-glow, rgba(216, 166, 255, .35));
+    background: var(--white, #ffffff);
+    box-shadow: 0 0 0.8rem var(--site-brand-accent-glow, rgba(255, 255, 255, .16));
     animation: route-loading-pulse 1.4s ease-in-out infinite;
   }
 

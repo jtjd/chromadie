@@ -225,6 +225,12 @@
       return;
     }
 
+    if (view === 'game') {
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+      if (currentUrl !== '/roll') window.history.pushState({}, '', '/roll');
+      return;
+    }
+
     const params = new SvelteURLSearchParams();
     params.set('view', view);
     if (view === 'leaderboard' && leaderboardTab !== 'today') {
@@ -300,7 +306,13 @@
 
     routeMode = 'app';
     if (typeof window !== 'undefined') {
-      const nextPath = nextView === 'profile-settings' ? '/profile/settings' : nextView === 'pricing' ? '/pricing' : '/';
+      const nextPath = nextView === 'profile-settings'
+        ? '/profile/settings'
+        : nextView === 'pricing'
+          ? '/pricing'
+          : nextView === 'game'
+            ? '/roll'
+            : '/';
       if (window.location.pathname !== nextPath || window.location.search) {
         window.history.pushState({}, '', nextPath);
       }
@@ -802,7 +814,7 @@
           : routeMode === 'app' && view === 'prototype'
             ? '/prototype/profile'
           : routeMode === 'app' && view === 'game' && !challengeData
-            ? '/?view=game'
+            ? '/roll'
           : '/';
   $: pageRobots = routeMode === 'not-found'
     ? 'noindex,follow'
@@ -900,7 +912,6 @@
         on:logout={handleLogout}
         on:retry={() => window.location.reload()}
         on:edit={handleProfileHeaderEdit}
-        accentColor="#D8A6FF"
       />
     {/if}
 
@@ -1097,7 +1108,7 @@
 
   .bootstrap-error-kicker {
     margin: 0 0 0.65rem 0;
-    color: var(--site-brand-accent, #D8A6FF);
+    color: var(--white, #ffffff);
     text-transform: uppercase;
     letter-spacing: 0.16em;
     font-size: 0.72rem;
@@ -1248,7 +1259,7 @@
   }
   .challenge-kicker {
     margin: 0;
-    color: var(--site-brand-accent, #D8A6FF);
+    color: var(--white, #ffffff);
     text-transform: uppercase;
     letter-spacing: 0.15em;
     font-size: 0.68rem;
@@ -1329,8 +1340,8 @@
     transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
   }
   .challenge-close:hover {
-    background: color-mix(in srgb, var(--site-brand-accent, #D8A6FF) 9%, transparent);
-    border-color: var(--site-brand-accent, #D8A6FF);
+    background: color-mix(in srgb, var(--white, #ffffff) 9%, transparent);
+    border-color: var(--border, rgba(255, 255, 255, .09));
     transform: translateY(-1px);
   }
 

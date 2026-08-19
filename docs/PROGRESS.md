@@ -4080,3 +4080,99 @@ media requests, and no polling.
   homepage lavender accent (`#D8A6FF`).
 - Preserved actual roll/reward colors, homepage fixture composition, public
   profile rendering, auth/backend authorities, and profile media contracts.
+
+## Dedicated Roll page — 2026-08-18
+
+- Restored `/roll` as a canonical first-class destination and added Roll to the
+  homepage, application, and footer navigation.
+- Wrapped the existing authoritative Game surface in a generated-atmosphere
+  page shell with a focused daily ritual heading, glass result surface, and
+  responsive mobile treatment.
+- Kept `/?view=game` compatible and retained challenge `/c/<id>` routing,
+  server roll authority, guest-local behavior, rewards, and reroll semantics.
+
+## Roll ritual UI — 2026-08-18
+
+- Re-composed the dedicated game phases around a spectrum instrument, focused
+  reveal state, and color-first result summary.
+- Kept all score, reward, contributor, guest conversion, sharing, reroll, and
+  Customize information visible while reducing legacy dashboard density.
+- Added rarity-aware Roll presentation tokens, responsive detail modules,
+  keyboard-friendly progress semantics, and reduced-motion fallbacks.
+
+## Roll interaction refinement — 2026-08-18
+
+- Replaced the animated orb with a static gradient spectrum tile and restrained
+  scan marker; removed the unused chamber markup, CSS, and animation keyframes.
+- Reduced pre-roll copy to the daily status, account-mode hint, Color of the
+  Week reward, and a single `Roll` action.
+- Changed completed/reveal color previews to quiet rounded tiles and ordered
+  result actions into primary share, image preview, and rarity-accented reroll
+  controls. Dedicated guest results avoid duplicate progress messaging.
+- Rebalanced the completed result into a desktop color/score composition and a
+  mobile-first stack; compacted score factors into accessible rows and limited
+  live announcements to the concise result summary.
+
+## Compact Roll reference pass — 2026-08-18
+
+- Replaced the earlier oversized ritual composition with a compact centered
+  result-card surface based on the supplied Roll reference.
+- Added the shared card header states (`Daily Roll`, saved location, and guest
+  or account mode), a reference-style `Roll For Today` CTA, rarity-aware result
+  label, trait chips, score contributors, and `Total Earned`.
+- Added a clean CSS/DOM color tile for pre-roll, rolling, and completed states;
+  the complete card now owns the pointer parallax and reduced-motion fallback.
+- Captured desktop and 390px mobile pre-roll/result states; source checks and
+  focused Roll tests pass. Full validation passes except the existing local
+  database-security audit failure (`guest roll wrote a score`).
+
+The pre-roll card contains no fabricated score breakdown; it only invites the
+player to reveal the daily color. Breakdown rows and total score are shown after
+a result exists. The dedicated completed result ends after the claimed CTA and
+guest conversion prompt; rank, countdown, sharing, and image actions remain
+available only through the legacy embedded Game surface.
+
+The dedicated pre-roll card no longer carries instructional trait chips. Its
+post-roll reveal uses shortened client-only pacing, shows at most two visible
+traits, and places the next-roll countdown in the result button.
+
+The Roll route now shares the homepage navigation destinations and keeps signed-
+out account access visible. Desktop composition pairs the card with a restrained
+daily-color context block; mobile stacks the block above the card. The result
+header keeps only the saved-device/profile status and removes the redundant
+guest-mode badge.
+
+## Homepage roll entry and personal leaderboard row — 2026-08-18
+
+- Replaced the homepage’s presentation-only roll with a direct `Roll today`
+  link to the canonical `/roll` page.
+- Reduced the entry to a single `Roll today` button without arrow or repeated
+  timing/instruction copy.
+- Removed the fake homepage result, local score, particle impact, and claim-after-
+  preview path; authored profile specimens remain deterministic and presentation-only.
+- Added a bounded exact-username lookup to the existing public discovery feed so
+  authenticated visitors see their actual name, avatar, color, score, rank, and
+  profile link in the highlighted homepage board row.
+- Kept signed-out board behavior, public profile links, server-authoritative roll
+  behavior, and private account boundaries unchanged.
+
+## State-aware Roll context — 2026-08-18
+
+- Replaced generic dedicated-page context copy after a roll with the actual
+  rolled identity, rarity, score, and profile-history day.
+- Added authenticated-only streak and rank/EP progression details plus a
+  direct progression/history destination.
+- Kept guest context limited to verified local result data and preserved the
+responsive desktop two-column/mobile stacked composition.
+
+## Grayscale site chrome — 2026-08-18
+
+- Applied the requested grayscale token set to normal route shells, shared
+  surfaces, buttons, auth/status states, leaderboard, pricing, legal/help pages,
+  and Profile Studio chrome.
+- Started the Roll page with neutral pre-roll UI and let the verified rolled
+  color take over only in the result state; the result swatch is a single clean
+  color layer with card-level parallax.
+- Replaced the duplicated homepage header implementation with a thin wrapper
+  around `SiteModeHeader`, keeping navigation and account visibility consistent
+  across routes while leaving public profile styling/data-driven color intact.

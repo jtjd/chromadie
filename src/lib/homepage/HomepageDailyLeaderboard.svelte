@@ -4,28 +4,42 @@
   import { normalizeHexColor } from '../utils.js';
 
   export let rows = [];
+  export let currentUser = null;
   export let loading = true;
   export let error = '';
   export let resetLabel = '—';
-  export let localEntry = null;
-
   let failedAvatarSources = {};
 
   $: realRows = Array.isArray(rows) ? rows.slice(0, 3) : [];
-  $: visibleRows = localEntry
-    ? [...realRows, localEntry]
-      .sort((left, right) => getScore(right) - getScore(left))
-      .slice(0, 4)
-      .map((row, index) => ({ ...row, displayRank: index + 1 }))
-    : realRows;
+  $: visibleRows = mergeVisibleRows(realRows, currentUser);
 
   function getScore(row) {
     const score = Number(row?.score);
     return Number.isFinite(score) ? score : Number.NEGATIVE_INFINITY;
   }
 
+  function getRankValue(row) {
+    const rank = Number(row?.rank ?? row?.displayRank);
+    return Number.isSafeInteger(rank) && rank > 0 ? rank : Number.MAX_SAFE_INTEGER;
+  }
+
+  function mergeVisibleRows(topRows, signedInUser) {
+    const mergedRows = topRows.slice();
+
+    if (signedInUser?.username) {
+      const key = signedInUser.username.toLowerCase();
+      const existingIndex = mergedRows.findIndex(row => row?.username?.toLowerCase() === key);
+      const merged = { ...(existingIndex >= 0 ? mergedRows[existingIndex] : {}), ...signedInUser, isLocalEntry: true };
+      if (existingIndex >= 0) mergedRows[existingIndex] = merged;
+      else mergedRows.push(merged);
+    }
+
+    return mergedRows
+      .sort((left, right) => getRankValue(left) - getRankValue(right) || getScore(right) - getScore(left))
+      .map((row, index) => ({ ...row, displayRank: getRankValue(row) === Number.MAX_SAFE_INTEGER ? index + 1 : getRankValue(row) }));
+  }
+
   function getRowPath(row) {
-    if (row?.isLocalEntry) return '#claim';
     return row?.profilePath || getPublicProfilePath(row?.username) || '/leaderboard';
   }
 
@@ -43,7 +57,7 @@
 
   function getRowLabel(row, index) {
     const rank = getRowRank(row, index);
-    if (row?.isLocalEntry) return `Your preview roll is ranked ${rank}, score ${row.score}`;
+    if (row?.isLocalEntry) return `Open your public profile, rank ${rank}, score ${row.score}`;
     return `Open ${getRowName(row)}'s public profile, rank ${rank}, score ${row.score === null || row.score === undefined ? 'unavailable' : row.score}`;
   }
 
@@ -63,13 +77,13 @@
   </div>
   <div class="homepage-daily-leaderboard__rule"></div>
 
-  {#if loading && !localEntry}
+  {#if loading && !currentUser}
     <div class="homepage-daily-leaderboard__state" role="status">Loading today’s board…</div>
   {:else if error && !visibleRows.length}
     <div class="homepage-daily-leaderboard__state" role="alert">{error}</div>
   {:else if visibleRows.length}
     <ol class="homepage-daily-leaderboard__list">
-      {#each visibleRows as row, index (row.isLocalEntry ? 'homepage-you' : row.username || row.profilePath || index)}
+      {#each visibleRows as row, index (row.isLocalEntry ? `homepage-current:${row.username}` : row.username || row.profilePath || index)}
         {@const color = normalizeHexColor(row.hexCode, row.profileAccent || '#8B7CF6')}
         {@const avatarSource = getProfileMediaUrl(row.avatarReference || row.avatarPath)}
         {@const rowName = getRowName(row)}
@@ -103,7 +117,9 @@
   {/if}
 
   {#if error && visibleRows.length}
-    <div class="homepage-daily-leaderboard__state homepage-daily-leaderboard__state--quiet" role="status">Live board unavailable; your preview roll is still shown.</div>
+    <div class="homepage-daily-leaderboard__state homepage-daily-leaderboard__state--quiet" role="status">
+      {currentUser ? 'Live board unavailable; your current rank is still shown.' : 'Live board unavailable; the public board is still shown.'}
+    </div>
   {/if}
 </aside>
 

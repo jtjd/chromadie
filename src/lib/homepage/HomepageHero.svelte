@@ -8,72 +8,19 @@
 
   export let isAuthenticated = false;
   export let dailyLeaderboardRows = [];
+  export let currentLeaderboardUser = null;
   export let dailyLeaderboardLoading = true;
   export let dailyLeaderboardError = '';
   export let accountReady = true;
   export let accountUnavailable = false;
 
   const dispatch = createEventDispatcher();
-  const PREVIEW_ROLL_DELAYS = Object.freeze([76, 78, 82, 88, 100, 116, 136]);
-  const PREVIEW_ROLL_TICKS = PREVIEW_ROLL_DELAYS.length + 1;
-  const LAND_DURATION_MS = 36;
-  const IMPACT_DURATION_MS = 1380;
-  const PREVIEW_ROLLS = Object.freeze([
-    Object.freeze({ hex_code: '#D8A6FF', score: 74231, rarity: 'Rare', identity: 'Soft Electric Orchid' }),
-    Object.freeze({ hex_code: '#78DCCA', score: 38642, rarity: 'Uncommon', identity: 'Luminous Mint Tide' }),
-    Object.freeze({ hex_code: '#FFB7D5', score: 61184, rarity: 'Rare', identity: 'Bright Dream Rose' }),
-    Object.freeze({ hex_code: '#8EBBFF', score: 47906, rarity: 'Uncommon', identity: 'Clear Horizon Blue' }),
-    Object.freeze({ hex_code: '#FFD58A', score: 52873, rarity: 'Rare', identity: 'Soft Golden Hour' }),
-    Object.freeze({ hex_code: '#B8F29A', score: 34718, rarity: 'Uncommon', identity: 'Fresh Meadow Light' }),
-    Object.freeze({ hex_code: '#C99CFF', score: 68415, rarity: 'Rare', identity: 'Vivid Violet Haze' })
-  ]);
-  const PROFILE_PARTICLES = Object.freeze([
-    Object.freeze({ x: -174, y: -132, size: 11, delay: 0, bright: true }),
-    Object.freeze({ x: -148, y: -66, size: 8, delay: 28, bright: false }),
-    Object.freeze({ x: -136, y: 42, size: 10, delay: 56, bright: false }),
-    Object.freeze({ x: -116, y: 132, size: 8, delay: 84, bright: true }),
-    Object.freeze({ x: -78, y: -164, size: 9, delay: 112, bright: false }),
-    Object.freeze({ x: -46, y: 154, size: 11, delay: 140, bright: false }),
-    Object.freeze({ x: -12, y: -184, size: 10, delay: 168, bright: true }),
-    Object.freeze({ x: 20, y: 172, size: 8, delay: 196, bright: false }),
-    Object.freeze({ x: 58, y: -174, size: 11, delay: 224, bright: false }),
-    Object.freeze({ x: 88, y: 146, size: 9, delay: 252, bright: true }),
-    Object.freeze({ x: 124, y: -126, size: 10, delay: 280, bright: false }),
-    Object.freeze({ x: 154, y: -52, size: 8, delay: 308, bright: true }),
-    Object.freeze({ x: 180, y: 46, size: 11, delay: 336, bright: false }),
-    Object.freeze({ x: 146, y: 112, size: 8, delay: 364, bright: false }),
-    Object.freeze({ x: 102, y: 172, size: 10, delay: 392, bright: true }),
-    Object.freeze({ x: 62, y: 112, size: 8, delay: 420, bright: false }),
-    Object.freeze({ x: -62, y: 104, size: 9, delay: 448, bright: true }),
-    Object.freeze({ x: -102, y: -104, size: 8, delay: 476, bright: false }),
-    Object.freeze({ x: 8, y: 118, size: 11, delay: 504, bright: true }),
-    Object.freeze({ x: -28, y: -112, size: 8, delay: 532, bright: false })
-  ]);
   let fixtureIndex = 0;
-  let previewRoll = null;
-  let previewRollTimer;
-  let impactTimer;
-  let previewRollCount = 0;
-  let rollPhase = 'idle';
-  let hasLeaderboardEntry = false;
-  let leaderboardScore = 0;
   let resetLabel = '—';
   let resetTimer;
 
   $: fixture = HOMEPAGE_FIXTURES[fixtureIndex];
-  $: latestRoll = previewRoll || fixture.scores[0];
-  $: isPreviewRolling = rollPhase !== 'idle';
-  $: previewRollButtonLabel = rollPhase === 'spin' ? 'Rolling…' : hasLeaderboardEntry ? 'Claim your place' : 'Roll';
-  $: localLeaderboardEntry = hasLeaderboardEntry ? {
-    username: '__homepage_you__',
-    displayName: 'YOU',
-    score: leaderboardScore,
-    hexCode: latestRoll.hex_code,
-    profileAccent: latestRoll.hex_code,
-    isLocalEntry: true
-  } : null;
-  $: profileImpactActive = rollPhase === 'impact';
-  $: particleBurstActive = rollPhase === 'impact';
+  $: latestRoll = fixture.scores[0];
 
   function updateResetLabel() {
     const now = new Date();
@@ -95,90 +42,7 @@
     return () => clearTimeout(resetTimer);
   });
 
-  function hasReducedMotion() {
-    return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
-  }
-
-  function clearPreviewRollTimers() {
-    clearTimeout(previewRollTimer);
-    clearTimeout(impactTimer);
-    previewRollTimer = undefined;
-    impactTimer = undefined;
-  }
-
-  function setLocalPreviewRoll(result) {
-    previewRoll = result;
-  }
-
-  function finishPreviewRoll() {
-    const finalRoll = PREVIEW_ROLLS[(previewRollCount * 3 + 4) % PREVIEW_ROLLS.length];
-    previewRollCount += 1;
-    setLocalPreviewRoll(finalRoll);
-    hasLeaderboardEntry = true;
-    leaderboardScore = Number(finalRoll.score) || 0;
-    rollPhase = 'land';
-    dispatch('accentpreview', { accent: finalRoll.hex_code });
-
-    if (hasReducedMotion()) {
-      rollPhase = 'idle';
-      return;
-    }
-
-    impactTimer = setTimeout(() => {
-      rollPhase = 'impact';
-      impactTimer = setTimeout(() => { rollPhase = 'idle'; }, IMPACT_DURATION_MS);
-    }, LAND_DURATION_MS);
-  }
-
-  function previewDailyRoll() {
-    if (isPreviewRolling || hasLeaderboardEntry) return;
-
-    clearPreviewRollTimers();
-    rollPhase = 'spin';
-
-    if (hasReducedMotion()) {
-      finishPreviewRoll();
-      return;
-    }
-
-    let tick = 0;
-    setLocalPreviewRoll(PREVIEW_ROLLS[previewRollCount % PREVIEW_ROLLS.length]);
-    function advancePreviewRoll() {
-      tick += 1;
-      if (tick >= PREVIEW_ROLL_TICKS) {
-        previewRollTimer = undefined;
-        finishPreviewRoll();
-        return;
-      }
-      setLocalPreviewRoll(PREVIEW_ROLLS[(previewRollCount + tick) % PREVIEW_ROLLS.length]);
-      previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_DELAYS[tick]);
-    }
-    previewRollTimer = setTimeout(advancePreviewRoll, PREVIEW_ROLL_DELAYS[0]);
-  }
-
-  function focusClaim() {
-    if (typeof document === 'undefined') return;
-    const claim = document.getElementById('claim');
-    claim?.scrollIntoView({ behavior: hasReducedMotion() ? 'auto' : 'smooth', block: 'center' });
-    const target = claim?.querySelector('input, button');
-    if (!(target instanceof HTMLElement)) return;
-    window.setTimeout(() => target.focus(), hasReducedMotion() ? 0 : 240);
-  }
-
-  function handleRollAction() {
-    if (hasLeaderboardEntry) {
-      focusClaim();
-      return;
-    }
-    previewDailyRoll();
-  }
-
   function moveFixture(direction) {
-    clearPreviewRollTimers();
-    previewRoll = null;
-    rollPhase = 'idle';
-    hasLeaderboardEntry = false;
-    leaderboardScore = 0;
     fixtureIndex = (fixtureIndex + direction + HOMEPAGE_FIXTURES.length) % HOMEPAGE_FIXTURES.length;
     dispatch('fixturechange', { fixture: HOMEPAGE_FIXTURES[fixtureIndex] });
   }
@@ -202,31 +66,9 @@
 
     <div
       class="homepage-roll-compact"
-      aria-label="Daily roll demo"
-      data-roll-hex={latestRoll.hex_code}
-      data-roll-score={latestRoll.score}
+      aria-label="Daily roll entry"
     >
-      <div class="homepage-roll-compact__header">
-        <strong>Roll today</strong>
-        {#if hasLeaderboardEntry}
-          <span>Your result</span>
-        {/if}
-      </div>
-      {#if hasLeaderboardEntry}
-        <div class="homepage-roll-compact__result">
-          <span class="homepage-roll-compact__dot" style={`background: ${latestRoll.hex_code};`} aria-hidden="true"></span>
-          <div>
-            <strong>+{leaderboardScore.toLocaleString()} EP</strong>
-            <small>
-              {latestRoll.identity} ·
-              <span class="homepage-roll-compact__rarity" data-rarity={latestRoll.rarity}>{latestRoll.rarity}</span>
-            </small>
-          </div>
-        </div>
-      {:else}
-        <p class="homepage-roll-compact__prompt">See where today’s color takes you.</p>
-      {/if}
-      <button class="homepage-roll-compact__button" type="button" disabled={isPreviewRolling} on:click={handleRollAction}>{previewRollButtonLabel}</button>
+      <a class="homepage-roll-compact__button" href="/roll">Roll today</a>
     </div>
   </div>
 
@@ -241,20 +83,10 @@
         motionKey={fixture.profileMotion || ''}
         inputSurface="viewport"
       >
-        <div class="homepage-profile-pop" class:homepage-profile-pop--active={profileImpactActive}>
-          <HomepageProfileDemo fixture={fixture} {previewRoll} />
+        <div class="homepage-profile-pop">
+          <HomepageProfileDemo fixture={fixture} />
         </div>
       </ProfileMotionEffect>
-      {#if particleBurstActive}
-        <div class="homepage-roll-particles" aria-hidden="true">
-          {#each PROFILE_PARTICLES as particle (particle)}
-            <span
-              class:homepage-roll-particle--bright={particle.bright}
-              style={`--particle-x: ${particle.x}px; --particle-y: ${particle.y}px; --particle-size: ${particle.size}px; --particle-delay: ${particle.delay}ms;`}
-            ></span>
-          {/each}
-        </div>
-      {/if}
       <button class="homepage-theme-button homepage-theme-button--next" type="button" aria-label="Next profile example" on:click={() => moveFixture(1)}>›</button>
     </div>
 
@@ -272,9 +104,9 @@
 
   <HomepageDailyLeaderboard
     rows={dailyLeaderboardRows}
+    currentUser={currentLeaderboardUser}
     loading={dailyLeaderboardLoading}
     error={dailyLeaderboardError}
-    localEntry={localLeaderboardEntry}
     {resetLabel}
   />
 </section>
@@ -333,27 +165,13 @@
     border-bottom: 1px solid rgba(255, 255, 255, .16);
   }
 
-  .homepage-roll-compact__header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-  .homepage-roll-compact__header strong { color: var(--homepage-text); font: 600 1.12rem / 1.1 var(--homepage-display); }
-  .homepage-roll-compact__header span { color: rgba(250, 249, 252, .84); font: 500 0.82rem / 1.1 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); white-space: nowrap; }
-  .homepage-roll-compact__prompt { margin: 0; color: rgba(250, 249, 252, .86); font: 450 0.92rem / 1.4 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); }
-  .homepage-roll-compact__result { display: flex; align-items: center; gap: 9px; min-height: 38px; }
-  .homepage-roll-compact__dot { width: 13px; height: 13px; flex: 0 0 auto; border-radius: 999px; box-shadow: 0 0 16px var(--homepage-roll-accent-glow, var(--homepage-accent-glow)); }
-  .homepage-roll-compact__result strong { display: block; color: rgba(250, 249, 252, .98); font: 600 1.15rem / 1.1 var(--homepage-display); }
-  .homepage-roll-compact__result small { display: block; margin-top: 5px; color: rgba(250, 249, 252, .78); font: 400 0.78rem / 1.2 'Inter', sans-serif; text-shadow: 0 1px 3px rgba(7, 4, 14, .68); }
-  .homepage-roll-compact__rarity { font-weight: 650; text-shadow: 0 1px 3px rgba(7, 4, 14, .68), 0 0 12px color-mix(in srgb, currentColor 34%, transparent); }
-  .homepage-roll-compact__rarity[data-rarity='Trash'] { color: #a8a3b0; }
-  .homepage-roll-compact__rarity[data-rarity='Common'] { color: #f5f2f8; }
-  .homepage-roll-compact__rarity[data-rarity='Uncommon'] { color: #55d995; }
-  .homepage-roll-compact__rarity[data-rarity='Rare'] { color: #66a3ff; }
-  .homepage-roll-compact__rarity[data-rarity='Epic'] { color: #c18aff; }
-  .homepage-roll-compact__rarity[data-rarity='Anomaly'] { color: #ff995b; }
-  .homepage-roll-compact__rarity[data-rarity='Mythic'] { color: #ffd166; }
-
   .homepage-roll-compact__button {
+    display: inline-flex;
     width: 100%;
     height: 48px;
-    margin-top: 18px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0;
     border: 1px solid rgba(255, 255, 255, .82);
     border-radius: 12px;
     background: var(--homepage-text);
@@ -361,6 +179,7 @@
     color: #17151b;
     cursor: pointer;
     font: 600 0.9rem / 1 var(--homepage-display);
+    text-decoration: none;
     text-shadow: none;
     transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
   }
@@ -375,8 +194,6 @@
   }
 
   .homepage-roll-compact__button:focus-visible { outline: 2px solid var(--homepage-accent); outline-offset: 3px; }
-  .homepage-roll-compact__button:disabled { opacity: 0.6; cursor: wait; }
-
   .homepage-hero__product {
     grid-column: 2;
     display: flex;
@@ -389,100 +206,8 @@
   }
 
   .homepage-profile-stage { position: relative; width: 440px; min-width: 0; padding: 0 28px; outline: none; }
-  .homepage-profile-pop { width: 100%; transform-origin: center; }
-  .homepage-profile-pop--active { animation: homepage-profile-pop 0.38s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .homepage-profile-pop { width: 100%; }
   .homepage-profile-stage:focus-visible { border-radius: 24px; outline: 2px solid var(--homepage-accent); outline-offset: 5px; }
-
-  .homepage-roll-particles {
-    position: absolute;
-    z-index: 7;
-    inset: 0 28px;
-    isolation: isolate;
-    overflow: visible;
-    pointer-events: none;
-  }
-
-  .homepage-roll-particles::before,
-  .homepage-roll-particles::after {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 0;
-    display: block;
-    border-radius: 50%;
-    content: '';
-    opacity: 0;
-    pointer-events: none;
-    transform: translate(-50%, -50%) scale(.2);
-  }
-
-  .homepage-roll-particles::before {
-    width: 84px;
-    height: 84px;
-    background: radial-gradient(
-      circle,
-      color-mix(in srgb, var(--homepage-roll-accent) 84%, white) 0%,
-      color-mix(in srgb, var(--homepage-roll-accent) 52%, transparent) 30%,
-      transparent 72%
-    );
-    filter: blur(2px);
-    animation: homepage-roll-flash .72s cubic-bezier(.16, .8, .24, 1) forwards;
-  }
-
-  .homepage-roll-particles::after {
-    width: 92px;
-    height: 92px;
-    border: 2px solid color-mix(in srgb, var(--homepage-roll-accent) 78%, white);
-    box-shadow: 0 0 24px var(--homepage-roll-accent-glow), inset 0 0 18px var(--homepage-roll-accent-glow);
-    animation: homepage-roll-ring .96s cubic-bezier(.16, .8, .24, 1) forwards;
-  }
-
-  .homepage-roll-particles span {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 1;
-    width: var(--particle-size);
-    height: var(--particle-size);
-    border-radius: 999px;
-    background: var(--homepage-roll-accent);
-    box-shadow: 0 0 16px var(--homepage-roll-accent-glow), 0 0 30px color-mix(in srgb, var(--homepage-roll-accent) 34%, transparent);
-    mix-blend-mode: screen;
-    opacity: 0;
-    animation: homepage-roll-particle 1.18s cubic-bezier(0.16, 0.8, 0.24, 1) var(--particle-delay) forwards;
-  }
-
-  .homepage-roll-particles span.homepage-roll-particle--bright {
-    background: color-mix(in srgb, var(--homepage-roll-accent) 58%, white);
-    box-shadow: 0 0 20px color-mix(in srgb, var(--homepage-roll-accent) 74%, white), 0 0 38px var(--homepage-roll-accent-glow);
-  }
-
-  @keyframes homepage-profile-pop {
-    0% { transform: scale(1); }
-    28% { transform: scale(1.06); }
-    62% { transform: scale(0.985); }
-    100% { transform: scale(1); }
-  }
-
-  @keyframes homepage-roll-particle {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
-    10% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
-    48% { opacity: .88; }
-    100% { opacity: 0; transform: translate(calc(-50% + var(--particle-x)), calc(-50% + var(--particle-y))) scale(.34); }
-  }
-
-  @keyframes homepage-roll-flash {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
-    14% { opacity: .94; transform: translate(-50%, -50%) scale(1); }
-    48% { opacity: .42; transform: translate(-50%, -50%) scale(1.65); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.35); }
-  }
-
-  @keyframes homepage-roll-ring {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(.35); }
-    12% { opacity: .92; }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
-  }
 
   .homepage-theme-button {
     position: absolute;
@@ -532,13 +257,9 @@
     .homepage-theme-button--prev { left: 0; }
     .homepage-theme-button--next { right: 0; }
     .homepage-hero__product { gap: 14px; }
-    .homepage-roll-compact__header { align-items: flex-start; flex-direction: column; gap: 5px; }
-    .homepage-roll-compact__header span { font-size: 0.76rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .homepage-profile-pop--active { animation: none; }
-    .homepage-roll-particles { display: none; }
     .homepage-roll-compact__button { transition: none; }
     .homepage-theme-button { transition: none; }
   }

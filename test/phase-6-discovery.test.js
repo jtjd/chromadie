@@ -157,7 +157,7 @@ test('leaderboard implementation is a focused podium and score list without raw 
   assert.match(leaderboard, /width: min\(980px, calc\(100% - 48px\)\)/);
   assert.match(leaderboard, /roll-leaderboard__featured-list/);
   assert.match(leaderboard, /roll-leaderboard__lower/);
-  assert.match(leaderboard, /--leaderboard-bg: #0b0910/);
+  assert.match(leaderboard, /--leaderboard-bg: var\(--bg, #0e0e10\)/);
   assert.match(leaderboard, /background: transparent/);
   assert.match(app, /class:app-shell--leaderboard=\{leaderboardModeVisible\}/);
   assert.match(app, /isLeaderboardMode=\{leaderboardModeVisible\}/);

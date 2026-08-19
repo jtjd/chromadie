@@ -163,20 +163,16 @@
 
 <style>
   .site-status-page {
-    --site-canvas: #0b0910;
-    --site-line: rgba(255, 255, 255, .1);
-    --site-ink: #f5f5f7;
-    --site-muted: #c4bdca;
-    --site-accent: var(--site-brand-accent, #D8A6FF);
+    --site-canvas: var(--bg, #0e0e10);
+    --site-line: var(--border, rgba(255, 255, 255, .09));
+    --site-ink: var(--text, #f5f5f6);
+    --site-muted: var(--text-muted, #8d8c92);
+    --site-accent: var(--white, #ffffff);
     display: flex;
     min-height: 100svh;
     flex-direction: column;
     background-color: var(--site-canvas);
-    background-image: var(--site-atmosphere-veil), var(--site-atmosphere-image);
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-attachment: fixed;
+    background-image: none;
     color: var(--site-ink);
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }

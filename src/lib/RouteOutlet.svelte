@@ -139,11 +139,11 @@
     min-height: 9rem;
     margin: clamp(3rem, 7vw, 6rem) auto 5rem;
     padding: clamp(1.5rem, 4vw, 3rem);
-    border: 1px solid rgba(255, 255, 255, .1);
+    border: 1px solid var(--border, rgba(255, 255, 255, .09));
     border-radius: 18px;
-    background: rgba(10, 10, 12, .58);
+    background: var(--surface-2, #1e1e22);
     box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .16);
-    color: #f8f8f8;
+    color: var(--text, #f5f5f6);
     font: 500 0.78rem / 1.4 var(--font-body-stack);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -151,7 +151,7 @@
 
   .route-outlet__label,
   .route-outlet__message { margin: 0; }
-  .route-outlet__label { color: var(--site-brand-accent, #D8A6FF); font: 500 .68rem/1 var(--font-body-stack); letter-spacing: .13em; text-transform: uppercase; }
+  .route-outlet__label { color: var(--white, #ffffff); font: 500 .68rem/1 var(--font-body-stack); letter-spacing: .13em; text-transform: uppercase; }
   .route-outlet__message { color: var(--color-ink-muted); }
 
   .route-outlet__indicator {
@@ -159,8 +159,8 @@
     height: 0.55rem;
     flex: 0 0 auto;
     border-radius: 50%;
-    background: var(--site-brand-accent, #D8A6FF);
-    box-shadow: 0 0 1rem var(--site-brand-accent-glow, rgba(216, 166, 255, .35));
+    background: var(--white, #ffffff);
+    box-shadow: 0 0 1rem var(--site-brand-accent-glow, rgba(255, 255, 255, .16));
     animation: route-outlet-pulse 1.4s ease-in-out infinite;
   }
 
@@ -171,13 +171,13 @@
     padding: 0 18px;
     border: 0;
     border-radius: 9px;
-    background: #f8f8f8;
-    color: #08080a;
+    background: var(--white, #ffffff);
+    color: var(--bg, #0e0e10);
     font: 600 .88rem / 1 var(--font-body-stack);
     cursor: pointer;
   }
 
-  .route-outlet__retry:hover { background: var(--site-brand-accent, #D8A6FF); }
+  .route-outlet__retry:hover { background: var(--text, #f5f5f6); }
 
   .route-outlet__retry:focus-visible {
     outline: 2px solid var(--color-accent-bright);
@@ -203,7 +203,7 @@
     padding: 0;
     border: 0;
     background: transparent;
-    color: var(--site-brand-accent, #D8A6FF);
+    color: var(--white, #ffffff);
     font: inherit;
     cursor: pointer;
   }

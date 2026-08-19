@@ -1,27 +1,35 @@
 /* Shared site boundary styles. Historical superseded layers have been removed. */
 :root {
-  --site-brand-accent: #D8A6FF;
-  --site-brand-accent-soft: rgba(216, 166, 255, .12);
-  --site-brand-accent-glow: rgba(216, 166, 255, .28);
+  /* Neutral site chrome. Roll/profile colors are opt-in at the result or
+   * public-profile boundary so they can remain the visual signal. */
+  --bg: #0e0e10;
+  --surface: #161619;
+  --surface-2: #1e1e22;
+  --surface-3: #28282c;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-soft: rgba(255, 255, 255, 0.05);
+  --text: #f5f5f6;
+  --text-muted: #8d8c92;
+  --text-faint: #59585e;
+  --white: #ffffff;
+  --site-brand-accent: var(--white);
+  --site-brand-accent-soft: var(--border-soft);
+  --site-brand-accent-glow: rgba(255, 255, 255, .16);
   --site-atmosphere-image: url('/site/chromadie-roll-horizon.webp');
-  --site-atmosphere-veil: linear-gradient(180deg, rgba(8, 6, 16, .42) 0%, rgba(8, 6, 16, .52) 56%, rgba(6, 5, 12, .72) 100%);
+  --site-atmosphere-veil: none;
 }
 
 .site-atmosphere-page,
 .app-shell--site {
-  background-color: #ece7f2;
-  background-image: var(--site-atmosphere-veil), var(--site-atmosphere-image);
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-attachment: fixed;
+  background-color: var(--bg);
+  background-image: none;
 }
 
 .app-shell--site .site-footer,
 .site-atmosphere-page .site-footer {
-  --site-footer-border: rgba(248, 244, 255, .24);
-  --site-footer-muted: rgba(248, 244, 255, .68);
-  --site-footer-ink: #f8f4ff;
+  --site-footer-border: var(--border);
+  --site-footer-muted: var(--text-muted);
+  --site-footer-ink: var(--text);
 }
 
 @media (max-width: 48rem) {
@@ -36,12 +44,8 @@
  * profile and homepage backgrounds on their own rendering boundaries. */
 body:has(.site-atmosphere-page),
 body:has(.app-shell--site) {
-  background-color: #ece7f2;
-  background-image: var(--site-atmosphere-veil), var(--site-atmosphere-image);
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-attachment: fixed;
+  background-color: var(--bg);
+  background-image: none;
 }
 
 @media (max-width: 48rem) {
@@ -208,7 +212,7 @@ body:has(.app-shell--site) {
   .identity-editor__save { width: 100%; }
 }
 body {
-  background-color: #050506;
+  background-color: var(--bg);
 }
 .app-shell,
 .app-main--site,
@@ -219,12 +223,8 @@ body {
 
 /* The generic shell reset above must not erase the normal route atmosphere. */
 .app-shell--site {
-  background-color: #ece7f2;
-  background-image: var(--site-atmosphere-veil), var(--site-atmosphere-image);
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-attachment: fixed;
+  background-color: var(--bg);
+  background-image: none;
 }
 
 @media (max-width: 48rem) {
@@ -287,18 +287,18 @@ body {
   --site-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --site-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
   --site-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --site-canvas: #0b0910;
-  --site-deep: #07060b;
-  --site-raised: rgba(12, 12, 15, 0.78);
-  --site-ink: #f8f8f8;
-  --site-muted: #c4bdca;
-  --site-faint: #aaa2b0;
-  --site-accent: var(--site-brand-accent);
-  --site-accent-bright: #f8f4ff;
-  --site-line: rgba(255, 255, 255, 0.1);
-  --site-line-strong: rgba(255, 255, 255, 0.2);
-  --site-surface: rgba(10, 10, 12, 0.58);
-  --site-surface-soft: rgba(255, 255, 255, 0.035);
+  --site-canvas: var(--bg);
+  --site-deep: var(--surface);
+  --site-raised: var(--surface-2);
+  --site-ink: var(--text);
+  --site-muted: var(--text-muted);
+  --site-faint: var(--text-faint);
+  --site-accent: var(--white);
+  --site-accent-bright: var(--white);
+  --site-line: var(--border);
+  --site-line-strong: var(--border);
+  --site-surface: var(--surface-2);
+  --site-surface-soft: var(--surface-3);
   --font-body-stack: var(--site-font);
   --font-mono-stack: var(--site-mono);
   --font-display-stack: var(--site-display);
@@ -307,22 +307,22 @@ body {
   --color-canvas-raised: var(--site-raised);
   --color-canvas-deep: var(--site-deep);
   --color-ink-strong: var(--site-ink);
-  --color-ink: #bfc0c5;
+  --color-ink: var(--text-muted);
   --color-ink-muted: var(--site-muted);
   --color-ink-faint: var(--site-faint);
   --color-accent: var(--site-accent);
   --color-accent-bright: var(--site-accent-bright);
   --color-accent-cyan: var(--site-accent);
   --color-success: #6ee787;
-  --color-accent-roll: #b7fd4d;
+  --color-accent-roll: var(--white);
   --color-earned: #f5c26f;
   --color-warning: #f5c26f;
   --color-danger: #ff5578;
   --text-muted: var(--site-muted);
   --surface-panel: var(--site-raised);
-  --surface-panel-strong: rgba(255, 255, 255, 0.1);
+  --surface-panel-strong: var(--surface-3);
   --surface-panel-soft: var(--site-surface-soft);
-  --surface-inset: rgba(0, 0, 0, 0.22);
+  --surface-inset: var(--surface);
   --radius-sm: 9px;
   --radius-md: 18px;
   --radius-lg: 18px;
@@ -341,9 +341,9 @@ body {
 }
 
 .app-shell--leaderboard .site-footer {
-  --site-footer-border: rgba(255, 255, 255, .1);
-  --site-footer-muted: #686971;
-  --site-footer-ink: #f5f5f7;
+  --site-footer-border: var(--border);
+  --site-footer-muted: var(--text-muted);
+  --site-footer-ink: var(--text);
 }
 
 .app-main--site :is(h1, h2, h3, h4, h5, p, li, label, button, input, textarea, select) {
@@ -389,7 +389,7 @@ body {
   border: 0;
   border-radius: 9px;
   background: var(--site-ink);
-  color: #08080a;
+  color: var(--bg);
   box-shadow: none;
   font: 600 0.88rem / 1 var(--site-display);
   letter-spacing: 0;
@@ -446,7 +446,7 @@ body {
 }
 
 .app-main--site .game-container .scan-bar {
-  background: var(--site-accent);
+  background: var(--white);
   box-shadow: none;
   animation: none;
 }
@@ -528,13 +528,13 @@ body {
   border: 0;
   border-radius: 9px;
   background: var(--site-ink);
-  color: #08080a;
+  color: var(--bg);
   font: 600 .88rem/1 var(--site-display);
 }
 
 .app-main--site .guide__actions a:first-child:hover {
   background: var(--site-accent);
-  color: #08080a;
+  color: var(--bg);
 }
 
 .app-main--site .guide__actions a + a {
@@ -561,11 +561,11 @@ body {
 .site-state-card {
   width: min(100%, 760px);
   padding: clamp(1.5rem, 4vw, 3rem);
-  border: 1px solid rgba(255, 255, 255, .1);
+  border: 1px solid var(--border);
   border-radius: 18px;
-  background: rgba(10, 10, 12, .58);
+  background: var(--surface-2);
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .16);
-  color: #f8f8f8;
+  color: var(--text);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -581,7 +581,7 @@ body {
 .site-state-card h1 {
   max-width: 14ch;
   margin: 0;
-  color: #f8f8f8;
+  color: var(--text);
   font: 600 clamp(3rem, 6vw, 5.25rem)/.94 'Manrope Variable', sans-serif;
   letter-spacing: -.048em;
 }
@@ -589,7 +589,7 @@ body {
 .site-state-card > p:not(.site-state-kicker) {
   max-width: 42rem;
   margin: 1.15rem 0 0;
-  color: #c4bdca;
+  color: var(--text-muted);
   font: 400 1rem/1.6 'Inter', sans-serif;
 }
 
@@ -608,8 +608,8 @@ body {
   padding: 0 18px;
   border: 0;
   border-radius: 9px;
-  background: #f8f8f8;
-  color: #08080a;
+  background: var(--white);
+  color: var(--bg);
   font: 600 .88rem/1 'Manrope Variable', sans-serif;
   text-decoration: none;
   cursor: pointer;
@@ -617,9 +617,9 @@ body {
 
 .site-button:hover { background: var(--site-brand-accent); }
 .site-button--secondary {
-  border: 1px solid rgba(255, 255, 255, .2);
+  border: 1px solid var(--border);
   background: transparent;
-  color: #f8f8f8;
+  color: var(--text);
 }
 .site-button--secondary:hover {
   border-color: var(--site-brand-accent);
@@ -635,17 +635,17 @@ body {
 
 .auth-container,
 .bootstrap-error-card {
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 18px !important;
-  background: rgba(12, 12, 15, 0.78) !important;
+  background: var(--surface-2) !important;
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.18) !important;
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 .auth-container :is(.auth-header, .tabs, #turnstile-container) {
-  border-color: rgba(255, 255, 255, 0.075);
+  border-color: var(--border-soft);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--surface-3);
 }
 
 .auth-container :is(.auth-brand, .auth-kicker, .link-btn, .privacy-link-note a),
@@ -660,25 +660,25 @@ body {
 
 .auth-container .input-field,
 .bootstrap-error-card .input-field {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--border);
   border-radius: 9px;
-  background: rgba(0, 0, 0, 0.22);
-  color: #f8f8f8;
+  background: var(--surface);
+  color: var(--text);
 }
 
 .auth-container .auth-submit,
 .bootstrap-error-card .roll-btn {
   border: 0;
   border-color: transparent;
-  background: #f8f8f8;
-  color: #08080a;
+  background: var(--white);
+  color: var(--bg);
 }
 
 .auth-container .auth-submit:hover:not(:disabled),
 .bootstrap-error-card .roll-btn:hover:not(:disabled) {
   border-color: transparent;
   background: var(--site-brand-accent);
-  color: #08080a;
+  color: var(--bg);
 }
 
 .bootstrap-error-shell {
@@ -688,13 +688,13 @@ body {
 }
 
 .bootstrap-error-card h1 {
-  color: #f8f8f8 !important;
+  color: var(--text) !important;
   font-family: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif !important;
   letter-spacing: -0.045em;
 }
 
 .bootstrap-error-message,
-.bootstrap-error-help { color: #c4bdca !important; }
+.bootstrap-error-help { color: var(--text-muted) !important; }
 
 @media (max-width: 48rem) {
   .app-main--site :is(.guide, .legal-page, .terms) {
@@ -716,59 +716,59 @@ body {
   --font-body-stack: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono-stack: var(--font-body-stack);
   --font-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
-  --customize-surface: rgba(12, 12, 15, .78);
-  --customize-surface-raised: rgba(10, 10, 12, .58);
-  --customize-surface-inset: rgba(255, 255, 255, .035);
-  --customize-surface-deep: rgba(0, 0, 0, .22);
-  --customize-text-primary: #f8f8f8;
-  --customize-text-secondary: #bfc0c5;
-  --customize-text-muted: #c4bdca;
-  --customize-text-faint: #aaa2b0;
-  --customize-border: rgba(255, 255, 255, .1);
-  --customize-border-strong: rgba(255, 255, 255, .2);
-  --customize-border-subtle: rgba(255, 255, 255, .075);
-  --customize-focus: var(--site-brand-accent);
-  --customize-accent-primary: var(--site-brand-accent);
-  --customize-accent-secondary: var(--site-brand-accent);
+  --customize-surface: var(--surface-2);
+  --customize-surface-raised: var(--surface);
+  --customize-surface-inset: var(--surface-3);
+  --customize-surface-deep: var(--surface);
+  --customize-text-primary: var(--text);
+  --customize-text-secondary: var(--text-muted);
+  --customize-text-muted: var(--text-muted);
+  --customize-text-faint: var(--text-faint);
+  --customize-border: var(--border);
+  --customize-border-strong: var(--border);
+  --customize-border-subtle: var(--border-soft);
+  --customize-focus: var(--white);
+  --customize-accent-primary: var(--white);
+  --customize-accent-secondary: var(--white);
   --customize-accent-add: #f5c26f;
-  --customize-accent-save: var(--site-brand-accent);
+  --customize-accent-save: var(--white);
   --customize-accent-danger: #ff5578;
-  --customize-accent-premium: #d6b5ff;
+  --customize-accent-premium: var(--text-muted);
   --customize-font-body: var(--font-body-stack);
 
-  --site-canvas: #0b0910;
-  --site-deep: #07060b;
-  --site-raised: rgba(255, 255, 255, .1);
-  --site-ink: #f8f8f8;
-  --site-muted: #c4bdca;
-  --site-faint: #aaa2b0;
-  --site-accent: var(--site-brand-accent);
-  --site-accent-bright: #f8f4ff;
-  --site-line: rgba(255, 255, 255, .1);
-  --site-line-strong: rgba(255, 255, 255, .2);
-  --site-surface: rgba(10, 10, 12, .58);
-  --site-surface-soft: rgba(255, 255, 255, .035);
-  --color-canvas: #0b0910;
-  --color-canvas-raised: rgba(255, 255, 255, .1);
-  --color-canvas-deep: #07060b;
-  --color-ink-strong: #f8f8f8;
-  --color-ink: #bfc0c5;
-  --color-ink-muted: #8f9099;
-  --color-ink-faint: #686971;
+  --site-canvas: var(--bg);
+  --site-deep: var(--surface);
+  --site-raised: var(--surface-2);
+  --site-ink: var(--text);
+  --site-muted: var(--text-muted);
+  --site-faint: var(--text-faint);
+  --site-accent: var(--white);
+  --site-accent-bright: var(--white);
+  --site-line: var(--border);
+  --site-line-strong: var(--border);
+  --site-surface: var(--surface-2);
+  --site-surface-soft: var(--surface-3);
+  --color-canvas: var(--bg);
+  --color-canvas-raised: var(--surface-2);
+  --color-canvas-deep: var(--surface);
+  --color-ink-strong: var(--text);
+  --color-ink: var(--text-muted);
+  --color-ink-muted: var(--text-muted);
+  --color-ink-faint: var(--text-faint);
   --color-line-subtle: var(--site-line);
   --color-line-strong: var(--site-line-strong);
-  --color-accent: var(--site-brand-accent);
-  --color-accent-bright: #f8f8f8;
-  --color-accent-cyan: var(--site-brand-accent);
-  --color-accent-roll: #b7fd4d;
+  --color-accent: var(--white);
+  --color-accent-bright: var(--white);
+  --color-accent-cyan: var(--white);
+  --color-accent-roll: var(--white);
   --color-success: #6ee787;
   --color-earned: #f5c26f;
   --color-warning: #f5c26f;
   --color-danger: #ff5578;
-  --surface-panel: rgba(255, 255, 255, .1);
-  --surface-panel-strong: rgba(255, 255, 255, .2);
+  --surface-panel: var(--surface-2);
+  --surface-panel-strong: var(--surface-3);
   --surface-panel-soft: var(--site-surface-soft);
-  --surface-inset: rgba(0, 0, 0, .22);
+  --surface-inset: var(--surface);
   --radius-sm: 9px;
   --radius-md: 18px;
   --radius-lg: 18px;
@@ -837,12 +837,12 @@ body {
 .app-main--site .pricing-card__primary {
   border-color: var(--site-accent);
   background: var(--site-accent);
-  color: #06110d;
+  color: var(--bg);
 }
 
 .app-main--site .pricing-card__primary:hover:not(:disabled) {
-  border-color: #ead9ff;
-  background: #ead9ff;
+  border-color: var(--white);
+  background: var(--white);
 }
 
 .app-main--site .pricing-card__secondary:hover {

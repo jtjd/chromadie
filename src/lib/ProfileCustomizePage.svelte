@@ -206,19 +206,19 @@
 
 <style>
   .studio-customize {
-    --studio-bg: transparent;
-    --studio-panel: rgba(12, 12, 15, .78);
-    --studio-card: rgba(10, 10, 12, .58);
-    --studio-control: rgba(255, 255, 255, .035);
-    --studio-control-deep: rgba(0, 0, 0, .22);
-    --studio-border: rgba(255, 255, 255, .10);
-    --studio-border-strong: rgba(255, 255, 255, .20);
-    --studio-border-soft: rgba(255, 255, 255, .075);
-    --studio-text: #f8f8f8;
-    --studio-secondary: #bfc0c5;
-    --studio-muted: #8f9099;
-    --studio-faint: #686971;
-    --studio-accent: var(--site-brand-accent, #D8A6FF);
+    --studio-bg: var(--bg, #0e0e10);
+    --studio-panel: var(--surface, #161619);
+    --studio-card: var(--surface-2, #1e1e22);
+    --studio-control: var(--surface-3, #28282c);
+    --studio-control-deep: var(--surface, #161619);
+    --studio-border: var(--border, rgba(255, 255, 255, .09));
+    --studio-border-strong: var(--border, rgba(255, 255, 255, .09));
+    --studio-border-soft: var(--border-soft, rgba(255, 255, 255, .05));
+    --studio-text: var(--text, #f5f5f6);
+    --studio-secondary: var(--text-muted, #8d8c92);
+    --studio-muted: var(--text-muted, #8d8c92);
+    --studio-faint: var(--text-faint, #59585e);
+    --studio-accent: var(--site-brand-accent, var(--white, #ffffff));
     --studio-danger: #ff5578;
     width: 100%;
     min-width: 0;

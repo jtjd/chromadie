@@ -171,7 +171,7 @@
     --editor-faint: var(--studio-faint, #686971);
     --editor-border: var(--studio-border, rgba(255, 255, 255, .1));
     --editor-border-strong: var(--studio-border-strong, rgba(255, 255, 255, .2));
-    --editor-focus: var(--studio-accent, #D8A6FF);
+    --editor-focus: var(--studio-accent, var(--white, #ffffff));
     --editor-danger: var(--studio-danger, #ff5578);
     display: grid;
     gap: .85rem;

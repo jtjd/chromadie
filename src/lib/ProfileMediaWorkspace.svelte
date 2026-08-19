@@ -107,7 +107,7 @@
 
   .profile-media-workspace :global(.profile-expression-editor__compact-card),
   .profile-media-workspace :global(.rich-media-editor__compact-card) {
-    --media-card-accent: var(--studio-accent, #D8A6FF);
+    --media-card-accent: var(--studio-accent, var(--white, #ffffff));
     display: grid;
     grid-template-rows: 115px auto;
     align-content: start;
@@ -145,7 +145,7 @@
 
   .profile-media-workspace :global(.profile-expression-editor__compact-preview:focus-visible),
   .profile-media-workspace :global(.rich-media-editor__compact-preview:focus-visible) {
-    outline: 2px solid var(--studio-accent, #D8A6FF);
+    outline: 2px solid var(--studio-accent, var(--white, #ffffff));
     outline-offset: -2px;
   }
 
@@ -167,7 +167,7 @@
     width: 76px;
     height: 76px;
     flex: 0 0 76px;
-    border: 2px solid var(--studio-accent, #D8A6FF);
+    border: 2px solid var(--studio-accent, var(--white, #ffffff));
     border-radius: 50%;
     background: #101014;
   }
@@ -232,7 +232,7 @@
   .profile-media-workspace :global(.rich-media-editor__compact-actions button:focus-visible),
   .profile-media-workspace :global(.profile-expression-editor__compact-spotify button:hover:not(:disabled)),
   .profile-media-workspace :global(.profile-expression-editor__compact-spotify button:focus-visible) {
-    border-color: var(--studio-accent, #D8A6FF);
+    border-color: var(--studio-accent, var(--white, #ffffff));
     color: #f8f8f8;
   }
 
@@ -256,7 +256,7 @@
   .profile-media-workspace :global(.rich-media-editor__compact-actions button:focus-visible),
   .profile-media-workspace :global(.profile-expression-editor__compact-library-delete:focus-visible),
   .profile-media-workspace :global(.profile-expression-editor__compact-spotify button:focus-visible) {
-    outline: 2px solid var(--studio-accent, #D8A6FF);
+    outline: 2px solid var(--studio-accent, var(--white, #ffffff));
     outline-offset: 2px;
   }
 
@@ -281,8 +281,8 @@
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-audio-play:hover) {
-    border-color: var(--studio-accent, #D8A6FF);
-    background: color-mix(in srgb, var(--studio-accent, #D8A6FF) 8%, transparent);
+    border-color: var(--studio-accent, var(--white, #ffffff));
+    background: color-mix(in srgb, var(--studio-accent, var(--white, #ffffff)) 8%, transparent);
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-audio-track) { gap: 5px; }
@@ -350,8 +350,8 @@
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-spotify-row input:focus) {
-    border-color: var(--studio-accent, #D8A6FF);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent, #D8A6FF) 8%, transparent);
+    border-color: var(--studio-accent, var(--white, #ffffff));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--studio-accent, var(--white, #ffffff)) 8%, transparent);
   }
 
   .profile-media-workspace :global(.profile-expression-editor__compact-library) {
@@ -401,7 +401,7 @@
   .profile-media-workspace :global(.profile-background-treatment label) { display: grid; gap: 8px; min-width: 0; }
   .profile-media-workspace :global(.profile-background-treatment label > span) { display: flex; justify-content: space-between; gap: 10px; color: #92939b; font: 400 .68rem/1 'Inter', sans-serif; }
   .profile-media-workspace :global(.profile-background-treatment output) { color: #6d6e76; font: 500 .62rem/1 'Inter', sans-serif; }
-  .profile-media-workspace :global(.profile-background-treatment input[type="range"]) { width: 100%; accent-color: var(--studio-accent, #D8A6FF); }
+  .profile-media-workspace :global(.profile-background-treatment input[type="range"]) { width: 100%; accent-color: var(--studio-accent, var(--white, #ffffff)); }
   .profile-media-workspace :global(.profile-background-treatment__color > div) { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 7px; border: 1px solid rgba(255, 255, 255, .10); border-radius: 7px; background: rgba(255, 255, 255, .035); }
   .profile-media-workspace :global(.profile-background-treatment__color > span) { display: block; color: #92939b; font: 400 .68rem/1 'Inter', sans-serif; }
   .profile-media-workspace :global(.profile-background-treatment__color input[type="color"]) { width: 1.55rem; height: 1.55rem; padding: .12rem; border: 0; background: transparent; }

@@ -3272,3 +3272,83 @@ direct route behavior.
   roll, reward, success, and profile colors data-driven or semantic.
 - Left homepage composition, public user-profile rendering, auth/security logic,
   RPCs, storage behavior, and roll authority unchanged.
+
+## Dedicated Roll destination — 2026-08-18
+
+- Added canonical `/roll` navigation to the homepage, application header, and
+  footer.
+- Reintroduced the full Roll game as a dedicated atmospheric page with a
+  homepage-aligned heading, glass surface, lavender controls, and responsive
+  mobile layout.
+- Preserved the existing Game component’s authoritative RPC flow, guest-local
+  mode, rewards, rerolls, results, share actions, and challenge compatibility.
+
+## Roll ritual presentation — 2026-08-18
+
+- Reworked the actual Roll game UI into a color-first ritual with a spectrum
+  instrument before the roll, a focused reveal state, and a hierarchy-led result
+  surface.
+- Applied rarity-aware accents without changing rarity definitions, scoring,
+  roll authority, guest behavior, rewards, rerolls, or profile contracts.
+- Kept supporting result details visible in compact responsive modules and
+  removed legacy emoji-led primary controls and generic dashboard treatment.
+
+## Roll interaction refinement — 2026-08-18
+
+- Replaced the decorative pre-roll orb with a restrained rolling-color spectrum
+  tile and scan marker, removing the dead chamber styles and animations.
+- Shortened the entry state for faster comprehension and made the completed
+  color preview, share, image, reroll, and guest conversion controls consistent
+  with the dedicated page’s visual hierarchy.
+- Rebalanced the completed state so the score is visible alongside the color on
+  desktop, while mobile retains a clear top-to-bottom reveal and compact score
+  breakdown.
+- Preserved the existing authoritative roll flow, guest-local persistence,
+  rewards, scoring details, and public profile behavior.
+
+## Compact Roll reference card — 2026-08-18
+
+- Rebuilt the dedicated Roll surface around the supplied compact dark-plum
+  reference, with a pink route treatment and explicit guest/account state.
+- Replaced Drop-style language with Roll language, including `Daily Roll`,
+  `RARE ROLL`-style result labels, and `Roll For Today`.
+- Added a clean single-surface color tile and restrained pointer parallax on the
+  complete game card, while keeping color, rarity, score, rewards, and server
+  authority unchanged.
+- Removed preview score data from the pre-roll card; score breakdown and total
+  are now reserved for completed roll results.
+- Rebuilt the completed state around the reference sequence: rolled color,
+  authoritative breakdown, claimed CTA, and guest conversion prompt. The
+  dedicated route no longer renders the generic rank/countdown/share/image
+  action section; those controls remain on the legacy embedded Game surface.
+- Removed the extra pre-roll instruction chips, capped dedicated result traits
+  to two, shortened the client-only reveal pacing, and moved the next-roll clock
+  into the result button.
+- Unified the Roll header with the homepage/application navigation, restored
+  visible signed-out account access, anchored the desktop card with a daily-color
+  context column, and removed the redundant guest-mode badge.
+- Made the context column state-aware: completed rolls now show the actual
+  identity, rarity, score, and history day; authenticated players also see
+  streak and rank/EP progression details, while guest state remains local-only.
+
+## Grayscale site chrome — 2026-08-18
+
+- Replaced the normal site’s purple/mint branded chrome with the requested
+  grayscale token set and neutralized auth, loading, error, leaderboard, pricing,
+  legal/help, and Profile Studio surfaces.
+- Standardized the homepage and application routes on the same shared header,
+  including Roll, Leaderboard, Pricing, claim, and account access behavior.
+- Made Roll pre-roll chrome neutral and reserved actual roll color takeover for
+  verified result surfaces; rarity and status colors remain semantic.
+
+## Homepage roll entry and personal leaderboard row — 2026-08-18
+
+- Changed the homepage’s daily action from a fake preview roll to a direct link
+  into the full `/roll` experience.
+- Reduced the homepage entry to a single `Roll today` button with no arrow or
+  repeated supporting copy.
+- Removed the preview-only score, result animation, and `YOU` placeholder state
+  from the homepage.
+- Authenticated visitors now see their real display name, avatar, score, rank,
+  rolled color, and public profile link highlighted on the homepage daily board;
+  signed-out visitors continue to see the public board without a personal row.

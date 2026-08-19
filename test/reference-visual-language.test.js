@@ -5,12 +5,13 @@ import { readFile } from 'node:fs/promises';
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('the approved homepage typography is bundled and authoritative', async () => {
-  const [fonts, main, index, homepage, header, claim] = await Promise.all([
+  const [fonts, main, index, homepage, header, sharedHeader, claim] = await Promise.all([
     read('src/styles/fonts.css'),
     read('src/main.js'),
     read('index.html'),
     read('src/lib/homepage/homepage-reference.css'),
     read('src/lib/homepage/HomepageHeader.svelte'),
+    read('src/lib/SiteModeHeader.svelte'),
     read('src/lib/homepage/HomepageClaim.svelte')
   ]);
 
@@ -24,7 +25,8 @@ test('the approved homepage typography is bundled and authoritative', async () =
   assert.match(homepage, /--homepage-display: 'Manrope Variable'/);
   assert.match(homepage, /\.app-main--site \.homepage-reference :is\(\.homepage-hero__copy > h1, \.homepage-section-heading, \.homepage-final h2, \.homepage-step h3\)/);
   assert.match(homepage, /font-family: var\(--homepage-display\) !important/);
-  assert.match(header, /var\(--homepage-display\)/);
+  assert.match(header, /SiteModeHeader/);
+  assert.match(sharedHeader, /--site-header-display: 'Manrope Variable'/);
   assert.doesNotMatch(`${homepage}${header}${claim}`, /'Clash Display'/);
   assert.match(claim, /var\(--homepage-display\)/);
 });

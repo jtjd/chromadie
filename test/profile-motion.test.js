@@ -213,7 +213,7 @@ test('motion owns rotation while the inner card owns roll scale, with no bundled
   assert.doesNotMatch(motion, /requestAnimationFrame|lerp|spring|radial-gradient|box-shadow|glare|halo|avatar/);
   assert.match(homepage, /<ProfileMotionEffect[\s\S]*<div class="homepage-profile-pop"/);
   assert.match(shell, /<ProfileMotionEffect[\s\S]*<div class="profile-shell__card-scale"/);
-  assert.match(homepage, /homepage-profile-pop--active=\{profileImpactActive\}/);
+  assert.doesNotMatch(homepage, /homepage-profile-pop--active|profileImpactActive|homepage-roll-particles/);
   assert.match(shell, /profile-shell__card-scale \{\n\s+animation: profile-shell-roll-settle/);
   assert.doesNotMatch(homepage, /handleViewportPointerMove|animateTilt|profileTilt/);
 });

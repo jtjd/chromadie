@@ -192,12 +192,12 @@
 
 <style>
   .roll-leaderboard {
-    --leaderboard-bg: #0b0910;
-    --leaderboard-panel: rgba(13, 13, 16, .66);
-    --leaderboard-line: rgba(255, 255, 255, .11);
-    --leaderboard-muted: #c4bdca;
-    --leaderboard-text: #f5f5f7;
-    --leaderboard-accent: #D8A6FF;
+    --leaderboard-bg: var(--bg, #0e0e10);
+    --leaderboard-panel: var(--surface-2, #1e1e22);
+    --leaderboard-line: var(--border, rgba(255, 255, 255, .09));
+    --leaderboard-muted: var(--text-muted, #8d8c92);
+    --leaderboard-text: var(--text, #f5f5f6);
+    --leaderboard-accent: var(--white, #ffffff);
     min-height: calc(100dvh - 4.25rem);
     box-sizing: border-box;
     padding: clamp(3rem, 7vw, 6rem) 0 5rem;

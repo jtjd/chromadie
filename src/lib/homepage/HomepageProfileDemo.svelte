@@ -5,10 +5,8 @@
   /** @type {any} */
   export let fixture = null;
   export let variant = 'hero';
-  /** @type {any} */
-  export let previewRoll = null;
 
-  $: latestRoll = previewRoll || fixture?.scores?.[0] || null;
+  $: latestRoll = fixture?.scores?.[0] || null;
   $: links = (fixture?.links || []).slice(0, variant === 'showcase' ? 2 : 4);
   $: profileLabel = fixture ? `${fixture.displayName}'s profile example` : 'Profile example';
   $: avatarSource = fixture?.media?.avatar || '';
@@ -21,7 +19,7 @@
     ? { fontKey: fixture.nameFontKey, materialKey: '', motionKey: '' }
     : null;
   $: demoStyle = fixture
-    ? `--homepage-demo-accent: ${previewRoll?.hex_code || fixture.accent}; --homepage-demo-avatar: url("${avatarSource}");`
+    ? `--homepage-demo-accent: ${fixture.accent}; --homepage-demo-avatar: url("${avatarSource}");`
     : '';
 </script>
 
@@ -66,7 +64,7 @@
           bio={fixture.bio}
           avatarSrc={avatarSource}
           {links}
-          accentColor={previewRoll?.hex_code || fixture.accent}
+          accentColor={fixture.accent}
           avatarEffectKey={avatarEffectKey}
           colorizeAvatarEffect={useRollAvatarEffect}
         />
@@ -81,7 +79,7 @@
           linkStyle={fixture.linkStyle || null}
           {links}
           roll={latestRoll}
-          accentColor={previewRoll?.hex_code || fixture.accent}
+          accentColor={fixture.accent}
           rollLabel="Today's roll"
           presentation="homepage"
           layoutVariant={useFramedLayout ? 'framed' : ''}

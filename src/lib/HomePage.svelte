@@ -21,6 +21,7 @@
   let activeAccent = HOMEPAGE_FIXTURES[0].accent;
   let activeAtmosphereKey = HOMEPAGE_FIXTURES[0].atmosphereKey || '';
   let dailyLeaderboardRows = [];
+  let dailyLeaderboardCurrentUser = null;
   let dailyLeaderboardLoading = true;
   let dailyLeaderboardError = '';
 
@@ -38,12 +39,9 @@
     activeAtmosphereKey = nextFixture.atmosphereKey || '';
   }
 
-  function handleAccentPreview(event) {
-    activeAccent = event.detail.accent;
-  }
-
   function handleDailyLeaderboard(event) {
     dailyLeaderboardRows = event.detail.rows || [];
+    dailyLeaderboardCurrentUser = event.detail.currentUser || null;
     dailyLeaderboardLoading = event.detail.loading === true;
     dailyLeaderboardError = event.detail.error || '';
   }
@@ -52,7 +50,7 @@
 <div
   class="homepage-reference"
   aria-labelledby="homepage-title"
-  style={`--homepage-background-image: url("${activeBackground}"); --homepage-accent: ${activeAccent};`}
+  style={`--homepage-background-image: url("${activeBackground}"); --homepage-accent: var(--white);`}
 >
   <div class="homepage-background" aria-hidden="true"></div>
 
@@ -82,12 +80,12 @@
     <HomepageHero
       {isAuthenticated}
       dailyLeaderboardRows={dailyLeaderboardRows}
+      currentLeaderboardUser={dailyLeaderboardCurrentUser}
       dailyLeaderboardLoading={dailyLeaderboardLoading}
       dailyLeaderboardError={dailyLeaderboardError}
       {accountReady}
       {accountUnavailable}
       on:fixturechange={handleFixtureChange}
-      on:accentpreview={handleAccentPreview}
       on:claim={forwardAction}
       on:profile={forwardAction}
     />
@@ -95,7 +93,7 @@
     <div class="homepage-content">
       <HomepageLoop />
       <HomepageShowcase />
-      <HomepageCommunity on:leaderboard={handleDailyLeaderboard} />
+      <HomepageCommunity {isAuthenticated} {username} on:leaderboard={handleDailyLeaderboard} />
 
       <section class="homepage-final homepage-section__inner" aria-labelledby="homepage-final-title">
         <h2 id="homepage-final-title">Make it yours.</h2>

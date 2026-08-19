@@ -1,5 +1,5 @@
 <script>
-  import RollPreview from './RollPreview.svelte';
+  import RollTile from './RollTile.svelte';
   import { supabase } from './supabase';
   import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast } from './stores';
   import { createChallengeLink } from './challenges';
@@ -16,6 +16,7 @@
 
   const dispatch = createEventDispatcher();
   export let profileMode = false;
+  export let dedicated = false;
   let phase = 'preroll';
   let loading = false;
   let error = null;
@@ -55,14 +56,34 @@
   let cotwHit = false;
 
   const SYSTEM_BADGE_IDS = ['beat_your_best', 'cotw_hit', 'streak_bonus_7', 'reroll_shard_earned', 'milestone_30', 'milestone_100', 'milestone_365'];
-
   $: systemBadges = badges.filter(b => SYSTEM_BADGE_IDS.includes(b));
   $: earnedAchievements = badges.filter(b => b.startsWith('ach_'));
 
-  function isEpReward(badgeId) {
-    return badgeId.startsWith('ach_') || SYSTEM_BADGE_IDS.includes(badgeId);
+  function dispatchRollState() {
+    if (!dedicated) return;
+
+    dispatch('rollstate', {
+      phase,
+      identity,
+      hex: phase === 'results' ? normalizeHexColor(displayColor, '') : '',
+      rarity,
+      score: Number(score) || 0,
+      currentStreak: Number($profile?.current_streak) || 0,
+      longestStreak: Number($profile?.longest_streak) || 0,
+      totalRolls: Number($profile?.total_rolls) || 0,
+      lifetimeEp: Number($profile?.lifetime_ep) || 0,
+      isAuthenticated: Boolean($isAuthenticated)
+    });
   }
 
+  function getContributorPoints(contributor) {
+    return Number(contributor?.awardedPoints || contributor?.points || 0);
+  }
+
+  function getBaseRollScore() {
+    const contributorTotal = rollContributors.reduce((total, contributor) => total + getContributorPoints(contributor), 0);
+    return Math.max(0, Number(displayScore || score || 0) - contributorTotal);
+  }
 
   function sortBadgesDescending(arr) {
       return (arr || []).slice().sort((a, b) => getBadgeMeta(b).points - getBadgeMeta(a).points);
@@ -93,6 +114,7 @@
           displayScore = 0;
           scanProgress = 0;
           percentileDisplay = null;
+          dispatchRollState();
           return;
       }
       const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
@@ -214,6 +236,7 @@
       }
     }
 
+    dispatchRollState();
     loading = false;
   }
 
@@ -244,6 +267,7 @@
           const { data: percData } = await supabase.rpc('get_score_percentile', { p_score: rollData.score });
           if (requestId !== initialStateRequestId) return;
           if (percData) percentileDisplay = getPercentileTier(percData.percentile, percData.total_rollers);
+          dispatchRollState();
           loading = false;
           return;
         }
@@ -256,6 +280,7 @@
     guestProgressRestored = false;
     guestProgressActive.set(false);
     phase = 'preroll';
+    dispatchRollState();
     loading = false;
     trackProductEvent('roll_ready', {
       surface: 'root',
@@ -544,7 +569,9 @@
       displayHex = scramble;
     }, 60);
 
-    await sleep(2000);
+    // The server has already returned the authoritative result. These waits are
+    // presentation pacing only; the dedicated card keeps the reveal brief.
+    await sleep(dedicated ? 650 : 2000);
     if (!requestIsCurrent()) {
       clearInterval(scrambleInterval);
       abandonStaleRequest();
@@ -557,14 +584,14 @@
     for (let i = 0; i < 7; i++) {
       let currentText = hexChars.map((c, idx) => idx <= i ? c : '-').join('');
       displayHex = currentText;
-      await sleep(500);
+      await sleep(dedicated ? 100 : 500);
       if (!requestIsCurrent()) {
         abandonStaleRequest();
         return;
       }
     }
 
-    await sleep(400);
+    await sleep(dedicated ? 120 : 400);
     if (!requestIsCurrent()) {
       abandonStaleRequest();
       return;
@@ -579,7 +606,7 @@
     const sortedBadgesForAnim = finalBadges.slice().sort((a, b) => getBadgeMeta(a).points - getBadgeMeta(b).points);
 
     for (const badgeId of sortedBadgesForAnim) {
-      await sleep(700);
+      if (!dedicated) await sleep(700);
       if (!requestIsCurrent()) {
         abandonStaleRequest();
         return;
@@ -592,7 +619,6 @@
       }
     }
 
-    phase = 'results';
     score = data.score;
     rarity = data.rarity;
     milestoneGranted = data.milestone_granted || '';
@@ -605,6 +631,9 @@
     if (data.percentile !== undefined && data.total_rollers !== undefined) {
         percentileDisplay = getPercentileTier(data.percentile, data.total_rollers);
     }
+
+    phase = 'results';
+    dispatchRollState();
 
     let targetScore = data.score;
     let currentScore = 0;
@@ -657,6 +686,7 @@
       }
     }
 
+    dispatchRollState();
     rerollRequestInFlight = false;
     if (isReroll) {
       clearRerollLock();
@@ -722,134 +752,205 @@
   </div>
 {/if}
 
-<div class={'container game-container' + (profileMode ? ' game-container--profile' : '')}>
+<div class={'container game-container' + (profileMode ? ' game-container--profile' : '') + (dedicated ? ' game-container--dedicated' : '') + (dedicated && rarity ? ' roll-rarity--' + rarity : '')}>
   {#if error}
     <p class="auth-error">{error}</p>
   {/if}
 
   {#if phase === 'preroll'}
-    <div class="card">
-      <h1>{profileMode ? 'Today’s color' : 'Daily Roll'}</h1>
-      {#if $isAuthenticated}
-        <p class="info-text">You can roll once a day. Your score counts on the leaderboard and adds to spendable EP; achievements and bonuses can add extra EP.</p>
-      {:else}
-        <p class="info-text">You can roll once a day in guest mode. Guest rolls stay on this device and do not earn account EP or enter leaderboards.</p>
-      {/if}
-      <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
-        {loading ? 'Reading the spectrum…' : profileMode ? 'Reveal today’s color' : 'Roll the Die'}
-      </button>
+    <div class="card roll-stage roll-stage--preroll">
+      {#if dedicated}
+        <div class="roll-card-header">
+          <div>
+            <p class="roll-card-header__title">Daily Roll</p>
+            <p class="roll-card-header__meta">{$isAuthenticated ? 'Saved to your profile' : 'Saved on this device'}</p>
+          </div>
+        </div>
+        <div class="roll-display roll-display--preview" aria-label="Daily roll preview">
+          <RollTile displayColor="#28282C" rarity="Common" idle={true} label="Unrevealed daily roll" />
+          <div class="roll-color-info">
+            <div class="roll-color-rarity">DAILY ROLL</div>
+            <div class="roll-color-name">Ready to reveal</div>
+            <div class="roll-color-hex">Roll to discover today’s color</div>
+          </div>
+        </div>
 
-      {#if cotwColor}
-        <div class="cotw-widget">
-            <div class="cotw-info">
-                <span class="cotw-title">🎯 Color of the Week</span>
-                <span class="cotw-desc">
-                  {#if $isAuthenticated}
-                    Roll close to this color for <strong>+50,000 spendable EP</strong>. It will not change your leaderboard score.
-                  {:else}
-                    Signed-in players can earn <strong>+50,000 spendable EP</strong> for a close match. Guest rolls remain local-only.
-                  {/if}
-                </span>
-            </div>
-            <div class="cotw-swatch" style="background-color: {cotwColor};" title="Target Color"></div>
+        <button class="roll-btn roll-action__button" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
+          <span class="roll-button-glyph" aria-hidden="true">△</span>
+          {loading ? 'Reading…' : 'Roll For Today'}
+        </button>
+
+        {#if !$isAuthenticated}
+          <div class="guest-prompt guest-prompt--preroll">
+            <div class="guest-prompt-copy">Create an account to save your progress, climb the leaderboard, and claim your profile.</div>
+            <button type="button" class="roll-btn guest-prompt__button" on:click={() => dispatch('promptlogin', { mode: 'signup' })}>
+              Create Account
+            </button>
+          </div>
+        {/if}
+
+      {:else}
+        <h1>{profileMode ? 'Today’s color' : 'Daily Roll'}</h1>
+        {#if $isAuthenticated}
+          <p class="info-text">You can roll once a day. Your score counts on the leaderboard and adds to spendable EP; achievements and bonuses can add extra EP.</p>
+        {:else}
+          <p class="info-text">You can roll once a day in guest mode. Guest rolls stay on this device and do not earn account EP or enter leaderboards.</p>
+        {/if}
+        <button class="roll-btn" on:click={() => initiateRoll(false)} disabled={loading || !$authInitialized}>
+          {loading ? 'Reading the spectrum…' : profileMode ? 'Reveal today’s color' : 'Roll the Die'}
+        </button>
+      {/if}
+
+      {#if cotwColor && !dedicated}
+        <div class="cotw-widget" aria-label={$isAuthenticated ? 'Color of the Week. Match this color for 50,000 spendable EP; it does not change your leaderboard score.' : 'Color of the Week. Sign in to earn 50,000 spendable EP for a close match.'}>
+          <div class="cotw-info">
+            <span class="cotw-title">Color of the Week</span>
+            <span class="cotw-desc">
+              {#if $isAuthenticated}
+                Match for <strong>+50,000 EP</strong>
+              {:else}
+                Sign in to earn <strong>+50,000 EP</strong>
+              {/if}
+            </span>
+          </div>
+          <div class="cotw-swatch" style="background-color: {cotwColor};" title="Target Color"></div>
         </div>
       {/if}
     </div>
 
   {:else if phase === 'rolling'}
-    <div class="card">
-      <div class="results-header results-header-tight">
-        <RollPreview displayColor={displayColor} rarity={rarity} />
-        <div class="rolling-hex">{displayHex}</div>
+    <div class="card roll-stage roll-stage--rolling" aria-live="polite">
+      <div class="roll-card-header">
+        <div>
+          <p class="roll-card-header__title">Daily Roll</p>
+          <p class="roll-card-header__meta">Reading today’s color</p>
+        </div>
+        <span class="roll-mode-pill">IN PROGRESS</span>
       </div>
-      <div class="scan-container">
+      <div class="roll-rolling-display">
+        <RollTile displayColor={displayColor} rarity={rarity || 'Common'} label="Color being rolled" />
+        <p class="roll-stage__eyebrow">Rolling</p>
+        <h2 class="roll-stage__title">Finding your color.</h2>
+        <div class="rolling-hex">{displayHex}</div>
+        <p class="roll-stage__status" role="status">
+          {$isAuthenticated ? 'Calculating score…' : 'Revealing result…'}
+        </p>
+      </div>
+      <div class="scan-container" role="progressbar" aria-label="Color scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(scanProgress)}>
         <div class="scan-bar" style="width: {scanProgress}%"></div>
       </div>
-      <div class="badges-container badges-container-tight conditions-section">
-        <div class="badges-title">Calculating your roll</div>
-        <div class="badges-subtitle">
-          {$isAuthenticated
-            ? 'Roll score counts on the leaderboard and earns the same amount of spendable EP. Bonus EP goes only to your wallet.'
-            : 'This score and its conditions are being calculated for your local-only guest result.'}
-        </div>
-        <div class="conditions-grid">
-          {#each badges as badgeId (badgeId)}
-            {@const badge = getBadgeMeta(badgeId)}
-            <div class="badge-result rarity-{badge.rarity || 'Common'}">
-              <span class="badge-symbol">{badge.symbol || '✨'}</span>
-              <div class="badge-text">
-                <span class="badge-title">{badge.name}</span>
-                <span class="badge-desc">{badge.desc || ''}</span>
-              </div>
-              {#if badge.points > 0}
-                <span class="badge-points" class:ep-points={isEpReward(badgeId)}>
-                  +{badge.points.toLocaleString()} {$isAuthenticated ? (isEpReward(badgeId) ? 'bonus EP' : 'score + EP') : 'score'}
-                </span>
-              {:else}
-                <span class="badge-points ep-points">Unlocked</span>
-              {/if}
-            </div>
-          {/each}
-        </div>
+      <div class="roll-progress-label" aria-hidden="true">
+        <span>Finding today’s color</span>
+        <strong>{Math.round(scanProgress)}%</strong>
       </div>
     </div>
 
   {:else if phase === 'results'}
-    <div class="card">
-      <div class="results-header results-header-tight">
-        <div class="rarity-tag rarity-{rarity}">{rarity}</div>
-
-        <RollPreview displayColor={displayColor} rarity={rarity} />
-
-        <div class="hex-code">{displayColor}</div>
-        {#if identity}
-          <div class="identity-label">{identity}</div>
-        {/if}
-        <div class="score-label">{$isAuthenticated ? 'Leaderboard Score' : 'Local Guest Score'}</div>
-        <div class="score-display">{displayScore.toLocaleString()}</div>
-        <div class="score-help">
-          {$isAuthenticated
-            ? 'This sets your leaderboard position, and the same amount is added to your spendable EP. Bonus EP does not increase this score.'
-            : 'This result is saved only in this browser for today. It does not enter a leaderboard or add EP to an account.'}
-        </div>
-
-        {#if percentileDisplay}
-          <div class="rank-display" style="color: {percentileDisplay.color}; margin-top: 5px; font-weight: 700;">
-            {percentileDisplay.text}
-            <span style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">
-              (of {percentileDisplay.total.toLocaleString()} rollers)
-            </span>
+    <div class="card roll-stage roll-stage--results" style={`--roll-result-color: ${normalizeHexColor(displayColor, '#ffffff')};`} aria-labelledby="roll-result-title">
+        <div class="roll-card-header">
+          <div>
+            <p class="roll-card-header__title">Daily Roll</p>
+            <p class="roll-card-header__meta">{$isAuthenticated ? 'Saved to your profile' : 'Saved on this device'}</p>
           </div>
-        {/if}
+        </div>
+      <div class="roll-display" aria-live="polite">
+        <RollTile displayColor={displayColor} rarity={rarity || 'Common'} label="Rolled color" />
+        <div class="roll-color-info">
+          <h2 id="roll-result-title" class="roll-color-name">{identity || 'Today’s color'}</h2>
+          <div class="roll-result-meta">
+            <div class="roll-color-hex">{displayColor}</div>
+            <div class="roll-color-rarity">{rarity || 'Common'}</div>
+          </div>
+          {#if traits.length > 0}
+            <div class="roll-attr-tags" aria-label="Color traits">
+              {#each (dedicated ? traits.slice(0, 2) : traits) as trait (trait.id)}
+                <span class="roll-attr-tag">{trait.label}</span>
+              {/each}
+            </div>
+          {/if}
+        </div>
       </div>
+
+      <div class="roll-breakdown roll-breakdown--result" aria-label="Score breakdown">
+        <div class="roll-breakdown__header">Score Breakdown</div>
+        <div class="roll-breakdown__list" role="list">
+          {#if getBaseRollScore() > 0}
+            <div class="roll-breakdown__row" role="listitem" aria-label={`Base roll: ${getBaseRollScore().toLocaleString()} score`}>
+              <div class="roll-breakdown__label"><span class="roll-breakdown__icon">⚡</span>Base Roll</div>
+              <div class="roll-breakdown__value">{getBaseRollScore().toLocaleString()} <span class="roll-breakdown__points">score</span></div>
+            </div>
+          {/if}
+          {#each rollContributors as contributor (contributor.id)}
+            {@const badge = getBadgeMeta(contributor.id)}
+            {@const awardedPoints = getContributorPoints(contributor)}
+            <div
+              class="roll-breakdown__row"
+              role="listitem"
+              aria-label={(contributor.name || badge.name) + ': ' + (badge.desc || 'Special condition met') + '. +' + awardedPoints.toLocaleString() + ' score'}
+              title={badge.desc || 'Special condition met'}
+            >
+              <div class="roll-breakdown__label"><span class="roll-breakdown__icon">{badge.symbol || '✨'}</span>{contributor.name || badge.name}</div>
+              <div class="roll-breakdown__value">{awardedPoints.toLocaleString()} <span class="roll-breakdown__points">score</span></div>
+            </div>
+          {/each}
+          <div class="roll-breakdown__row roll-breakdown__row--total roll-score-total">
+            <div class="roll-breakdown__label">Total Earned</div>
+            <div class="roll-breakdown__value">{displayScore.toLocaleString()} <span class="roll-breakdown__points">score</span></div>
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="roll-btn roll-action__button roll-action__button--claimed"
+        disabled
+        aria-label={dedicated ? `Next roll in ${countdownString}` : `Today's roll claimed for ${displayScore.toLocaleString()} score`}
+      >
+        <span class="roll-button-glyph" aria-hidden="true">{dedicated ? '◷' : '✓'}</span>
+        {#if dedicated}
+          Next roll · {countdownString}
+        {:else}
+          Claimed! +{displayScore.toLocaleString()}
+        {/if}
+      </button>
 
       {#if cotwHit}
         <div class="cotw-success-banner">
-          🎉 Color of the Week hit: +50,000 EP added to your wallet. Your leaderboard score is unchanged.
+          Color of the Week hit — +50,000 EP added to your wallet. Your leaderboard score is unchanged.
         </div>
       {/if}
 
-      <div class="post-score-actions">
-        <div class="countdown-inline">
-          Next roll in: <span style="color: #fff; font-weight: 600;">{countdownString}</span>
-        </div>
-        <button class="chroma-btn" on:click={shareResultsText}>
-          {copied ? '✅ Copied!' : '📋 Share Text'}
-        </button>
-        <button class="chroma-btn" on:click={generateShareImage}>
-          🖼️ Share Image
-        </button>
-
-        {#if $isAuthenticated && $rerollShards > 0}
-          <button class="reroll-btn" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || hasActiveRerollLock() || !$authInitialized}>
-            🎲 Use Reroll Shard ({$rerollShards} left)
-          </button>
+      {#if !dedicated}
+        {#if percentileDisplay}
+          <div class="rank-display" style="--rank-color: {percentileDisplay.color};">
+            {percentileDisplay.text}
+            <span class="rank-display__total">(of {percentileDisplay.total.toLocaleString()} rollers)</span>
+          </div>
         {/if}
-      </div>
+
+        <div class="post-score-actions" aria-label="Roll result actions">
+          <div class="countdown-inline">
+            <span class="countdown-inline__label">Next roll</span>
+            <strong>{countdownString}</strong>
+          </div>
+          <button class="chroma-btn result-action result-action--primary" on:click={shareResultsText}>
+            {copied ? 'Copied' : 'Share result'}
+          </button>
+          <button class="chroma-btn result-action" on:click={generateShareImage}>
+            View image
+          </button>
+
+          {#if $isAuthenticated && $rerollShards > 0}
+            <button class="reroll-btn result-action result-action--reroll" on:click={() => initiateRoll(true)} disabled={loading || rerollRequestInFlight || hasActiveRerollLock() || !$authInitialized}>
+              Reroll · {$rerollShards} left
+            </button>
+          {/if}
+        </div>
+      {/if}
 
       {#if milestoneGranted}
         <div class="milestone-banner">
-          🎁 Milestone Unlocked! You received the <strong>{milestoneGranted}</strong>!
+          Milestone unlocked — you received <strong>{milestoneGranted}</strong>.
         </div>
       {/if}
 
@@ -862,7 +963,7 @@
         </div>
       {/if}
 
-      {#if !$isAuthenticated && guestProgressRestored}
+      {#if !$isAuthenticated && guestProgressRestored && !dedicated}
         <div class="local-progress-banner" role="status" aria-live="polite">
           Local-only progress restored. Create an account to save rolls to your profile.
         </div>
@@ -870,30 +971,24 @@
 
       {#if !$isAuthenticated}
         <div class="guest-prompt">
-          <div class="guest-prompt-header">Guest Mode</div>
-          <div class="guest-prompt-title">Save Your Progress</div>
-          <div class="guest-prompt-copy">Create an account to compete on the leaderboard, earn EP, and unlock customizations.</div>
-          <button type="button" class="roll-btn" style="margin-top: 15px; display: inline-block;" on:click={() => dispatch('promptlogin', { mode: 'signup' })}>
+          <div class="guest-prompt-copy">Create an account to save your progress, climb the leaderboard, and claim your profile.</div>
+          <button type="button" class="roll-btn guest-prompt__button" on:click={() => dispatch('promptlogin', { mode: 'signup' })}>
             Create Account
           </button>
         </div>
       {/if}
 
-      {#if traits.length > 0}
-        <div class="trait-strip" aria-label="Color traits">
-          {#each traits as trait (trait.id)}
-            <span class="trait-pill">{trait.label}</span>
-          {/each}
-        </div>
-      {/if}
-
+      {#if !dedicated}
+        <div class="roll-detail-grid">
       {#if systemBadges.length > 0}
-        <div class="badges-container badges-container-tight" style="margin-top: 0; margin-bottom: 20px;">
-          <div class="badges-title">EP Bonuses & Milestones</div>
-          <div class="badges-subtitle">These rewards go to your wallet for Shop purchases. They do not change your leaderboard score.</div>
+        <section class="roll-detail-section badges-container badges-container-tight" aria-labelledby="roll-rewards-title">
+          <div class="roll-detail-section__heading">
+            <div class="badges-title" id="roll-rewards-title">EP bonuses & milestones</div>
+            <div class="badges-subtitle">Wallet rewards · separate from score</div>
+          </div>
           {#each systemBadges as badgeId (badgeId)}
             {@const badge = getBadgeMeta(badgeId)}
-            <div class="badge-result rarity-Mythic">
+            <div class="badge-result roll-detail-item rarity-Mythic">
               <span class="badge-symbol">{badge.symbol || '✨'}</span>
               <div class="badge-text">
                 <span class="badge-title">{badge.name}</span>
@@ -902,73 +997,43 @@
               {#if badge.points > 0}
                 <span class="badge-points ep-points">+{badge.points.toLocaleString()} EP</span>
               {:else}
-                <span class="badge-points" style="color: var(--accent-green); text-shadow: none;">Granted!</span>
+                <span class="badge-points ep-points">Granted</span>
               {/if}
             </div>
           {/each}
-        </div>
+        </section>
       {/if}
 
-      <div class="badges-container badges-container-tight conditions-section">
-        <div class="badges-title">Score Contributors</div>
-        <div class="badges-subtitle">
-          {$isAuthenticated
-            ? 'These points make up your leaderboard score and add the same amount to your spendable EP.'
-            : 'These points make up your local guest score and are not added to an account wallet.'}
-        </div>
-        {#if rollContributors.length === 0}
-          <div class="badge-result">
-            <div class="badge-text">
-              <span class="badge-title">Base roll score</span>
-              <span class="badge-desc">No scoring conditions contributed beyond the base roll.</span>
-            </div>
-          </div>
-        {:else}
-          <div class="conditions-grid">
-          {#each rollContributors as contributor (contributor.id)}
-            {@const badge = getBadgeMeta(contributor.id)}
-            <div class="badge-result rarity-{badge.rarity || 'Common'}">
-              <span class="badge-symbol">{badge.symbol || '✨'}</span>
-              <div class="badge-text">
-                <span class="badge-title">{contributor.name || badge.name}</span>
-                <span class="badge-desc">{badge.desc || 'Special condition met'}</span>
-              </div>
-              <span class="badge-points contributor-reward">
-                <span>+{Number(contributor.awardedPoints || contributor.points || 0).toLocaleString()} score</span>
-                {#if $isAuthenticated}<span class="contributor-ep">+ EP</span>{/if}
-              </span>
-            </div>
-          {/each}
-          </div>
-        {/if}
-      </div>
-
       {#if earnedAchievements.length > 0}
-        <div class="badges-container badges-container-tight" style="margin-top: 20px;">
-          <div class="badges-title">Achievements Unlocked</div>
-          <div class="badges-subtitle">Rewards add to your spendable EP balance, not your leaderboard score.</div>
+        <section class="roll-detail-section badges-container badges-container-tight" aria-labelledby="roll-achievements-title">
+          <div class="roll-detail-section__heading">
+            <div class="badges-title" id="roll-achievements-title">Achievements unlocked</div>
+            <div class="badges-subtitle">New rewards from this roll</div>
+          </div>
           {#each earnedAchievements as badgeId (badgeId)}
             {@const badge = getBadgeMeta(badgeId)}
-            <div class="badge-result rarity-Mythic">
+            <div class="badge-result roll-detail-item rarity-Mythic">
               <span class="badge-symbol">{badge.symbol || '🏆'}</span>
               <div class="badge-text">
                 <span class="badge-title">{badge.name}</span>
                 <span class="badge-desc">{badge.desc}</span>
               </div>
-              <span class="badge-points" style="color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.3);">+{badge.points.toLocaleString()} EP</span>
+              <span class="badge-points ep-points">+{badge.points.toLocaleString()} EP</span>
             </div>
           {/each}
+        </section>
+      {/if}
         </div>
       {/if}
 
-      {#if $isAuthenticated}
+      {#if $isAuthenticated && !dedicated}
         <div class="studio-onboarding">
           <div>
-            <div class="studio-onboarding-title">Shape your profile</div>
-            <div class="studio-onboarding-copy">Customize your name, profile surface, atmosphere, and expression layers in Profile Studio.</div>
+            <div class="studio-onboarding-title">Make it yours</div>
+            <div class="studio-onboarding-copy">Customize your profile surface and expression.</div>
           </div>
           <button type="button" class="chroma-btn studio-onboarding-btn" on:click={() => dispatch('navigate', { view: 'profile-settings' })}>
-            Open Customize
+            Customize
           </button>
         </div>
       {/if}
@@ -977,7 +1042,6 @@
 </div>
 
 <style>
-  .results-header-tight { margin-bottom: 5px !important; }
   .post-score-actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 20px 0; flex-wrap: wrap; }
   .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-body-stack); background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 9px; border: 1px solid var(--card-border); }
   .chroma-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 42px; padding: 0 18px; border: 1px solid var(--card-border); border-radius: 9px; background: transparent; color: #f8f8f8; cursor: pointer; font: 600 .88rem/1 var(--font-body-stack); transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease; }
@@ -987,82 +1051,7 @@
   .reroll-btn:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
   .reroll-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .identity-label {
-    margin-top: 6px;
-    color: var(--text-muted);
-    font-size: 0.92rem;
-    font-weight: 700;
-    letter-spacing: 0;
-  }
-  .score-help {
-    max-width: 32rem;
-    margin: 4px auto 0;
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    line-height: 1.45;
-  }
-  .trait-strip {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin: 0 0 20px;
-  }
-  .trait-pill {
-    border: 1px solid var(--card-border);
-    background: rgba(255, 255, 255, 0.045);
-    color: var(--text-muted);
-    border-radius: 999px;
-    padding: 6px 10px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    line-height: 1;
-    white-space: nowrap;
-  }
   .badges-container-tight { margin-bottom: 0 !important; margin-top: 20px; }
-  .conditions-section {
-    align-items: stretch;
-  }
-  .conditions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 8px;
-    width: 100%;
-  }
-  .conditions-grid .badge-result {
-    display: grid;
-    grid-template-columns: 32px minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 12px;
-    min-height: 72px;
-    margin-bottom: 0;
-  }
-  .conditions-grid .badge-symbol {
-    margin-top: 0;
-  }
-  .conditions-grid .badge-text {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-  }
-  .conditions-grid .badge-desc {
-    line-height: 1.35;
-  }
-  .conditions-grid .badge-points {
-    margin-left: 0;
-    padding-left: 0;
-    text-align: right;
-    white-space: nowrap;
-  }
-  .contributor-reward {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .contributor-ep {
-    color: #f1c40f;
-    text-shadow: 0 0 8px rgba(241, 196, 15, 0.3);
-  }
   .local-progress-banner {
     background: color-mix(in srgb, var(--color-accent) 6%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
@@ -1179,13 +1168,6 @@
   .close-btn { background: transparent; color: #fff; border: 1px solid var(--card-border); padding: 0 18px; min-height: 42px; border-radius: 9px; cursor: pointer; font-weight: 500; }
 
   @media (max-width: 600px) {
-    .results-header {
-      gap: 12px;
-      margin-bottom: 22px;
-    }
-    .results-header-tight {
-      margin-bottom: 0 !important;
-    }
     .final-color-display {
       width: 116px;
       height: 116px;
@@ -1255,41 +1237,6 @@
       margin-left: 0;
       width: 100%;
       text-align: right;
-    }
-    .conditions-grid {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-    .conditions-grid .badge-result {
-      grid-template-columns: 28px minmax(0, 1fr);
-      grid-template-areas:
-        "icon text"
-        "icon points";
-      column-gap: 10px;
-      row-gap: 7px;
-      align-items: start;
-      padding: 11px 12px;
-      min-height: unset;
-    }
-    .conditions-grid .badge-symbol {
-      grid-area: icon;
-    }
-    .conditions-grid .badge-text {
-      grid-area: text;
-    }
-    .conditions-grid .badge-points {
-      grid-area: points;
-      justify-self: start;
-      align-self: start;
-      width: auto;
-      padding: 4px 7px;
-      border: 1px solid currentColor;
-      border-radius: 6px;
-      background: rgba(255,255,255,0.035);
-      font-size: 0.68rem;
-      line-height: 1;
-      text-align: left;
-      white-space: nowrap;
     }
     .cotw-widget {
       display: grid;

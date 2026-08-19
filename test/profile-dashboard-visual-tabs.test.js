@@ -137,7 +137,7 @@ test('reference workspace composition stays explicit', async () => {
   }
   assert.doesNotMatch(appearanceColors, /Surface tint|label: 'Border'/);
   assert.doesNotMatch(customize, /profile-customize-page__appearance-effects|Overlay color|Atmosphere strength|Restart animations/);
-  assert.match(customize, /--studio-control: rgba\(255, 255, 255, \.035\)/);
+  assert.match(customize, /--studio-control: var\(--surface-3, #28282c\)/);
   assert.match(customize, /background: var\(--studio-control\)/);
   assert.match(customize, /ProfileReferenceLayoutEditor/);
   assert.match(customize, /presentation="studio"/);

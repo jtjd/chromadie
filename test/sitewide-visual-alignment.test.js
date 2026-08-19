@@ -17,7 +17,8 @@ test('signed-out chrome hides inaccessible Customize actions', () => {
   assert.ok(header.includes('{#if isAuthenticated}'));
   assert.ok(header.includes('>Customize</button>{/if}'));
   assert.ok(header.includes('{#if !isAuthenticated}'));
-  assert.ok(header.includes('>Claim handle</button>{/if}'));
+  assert.ok(header.includes('class="site-mode-header__claim-link"'));
+  assert.ok(header.includes('>Claim handle</a>'));
   assert.ok(footer.includes('{#if isAuthenticated}<a href="/profile/settings">Customize</a>{/if}'));
   assert.match(homepage, /<SiteFooter \{isAuthenticated\} \/>/);
 });
@@ -33,12 +34,22 @@ test('signed-out Profile Studio entry resolves through the current auth route', 
 test('normal site surfaces inherit the homepage type, canvas, and button contract', () => {
   assert.match(siteStyles, /--site-font: 'Inter'/);
   assert.match(siteStyles, /--site-display: 'Manrope Variable'/);
-  assert.match(siteStyles, /--site-brand-accent: #D8A6FF/);
+  assert.match(siteStyles, /--site-brand-accent: var\(--white\)/);
+  assert.match(siteStyles, /--bg: #0e0e10/);
+  assert.match(siteStyles, /--surface: #161619/);
+  assert.match(siteStyles, /--surface-2: #1e1e22/);
+  assert.match(siteStyles, /--surface-3: #28282c/);
+  assert.match(siteStyles, /--border: rgba\(255, 255, 255, 0\.09\)/);
+  assert.match(siteStyles, /--border-soft: rgba\(255, 255, 255, 0\.05\)/);
+  assert.match(siteStyles, /--text: #f5f5f6/);
+  assert.match(siteStyles, /--text-muted: #8d8c92/);
+  assert.match(siteStyles, /--text-faint: #59585e/);
+  assert.match(siteStyles, /--white: #ffffff/);
   assert.match(siteStyles, /--site-atmosphere-image: url\('\/site\/chromadie-roll-horizon\.webp'\)/);
   assert.match(siteStyles, /\.app-shell--site/);
   assert.match(app, /class:app-shell--site=\{/);
   assert.ok(atmosphereAsset.size > 1000, 'roll horizon should be a real local image asset');
-  assert.match(siteStyles, /background: #f8f8f8/);
+  assert.match(siteStyles, /background: var\(--white\)/);
   assert.match(siteStyles, /\.site-state-card/);
   assert.match(siteStyles, /prefers-reduced-motion/);
   assert.doesNotMatch(siteStyles, /--site-accent: #00ffb3/);

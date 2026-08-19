@@ -116,14 +116,14 @@
 
 <style>
   .auth-page {
-    --home-canvas: #0b0910;
-    --home-deep: #07060b;
-    --home-raised: rgba(12, 12, 15, 0.78);
-    --home-line: rgba(255, 255, 255, 0.1);
-    --home-ink: #f8f8f8;
-    --home-ink-muted: #c4bdca;
-    --home-ink-faint: #aaa2b0;
-    --home-accent: var(--site-brand-accent, #D8A6FF);
+    --home-canvas: var(--bg, #0e0e10);
+    --home-deep: var(--surface, #161619);
+    --home-raised: var(--surface-2, #1e1e22);
+    --home-line: var(--border, rgba(255, 255, 255, 0.09));
+    --home-ink: var(--text, #f5f5f6);
+    --home-ink-muted: var(--text-muted, #8d8c92);
+    --home-ink-faint: var(--text-faint, #59585e);
+    --home-accent: var(--white, #ffffff);
     --home-font: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --home-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
     --home-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -132,26 +132,22 @@
     overflow: hidden;
     isolation: isolate;
     background-color: var(--home-canvas);
-    background-image: var(--site-atmosphere-veil), var(--site-atmosphere-image);
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-attachment: fixed;
+    background-image: none;
     color: var(--home-ink);
     font-family: var(--home-font);
   }
-  .auth-page::before { position: fixed; z-index: -1; inset: 0; content: ''; pointer-events: none; background: radial-gradient(ellipse at 50% 0%, rgba(31, 26, 66, .34), transparent 58%); }
+  .auth-page::before { position: fixed; z-index: -1; inset: 0; content: ''; pointer-events: none; background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, .025), transparent 58%); }
   .auth-page__content { position: relative; z-index: 1; min-height: 100svh; }
   .auth-page__layout { width: min(calc(100% - 48px), 1160px); margin-inline: auto; }
   .auth-page__layout { display: grid; min-height: calc(100svh - 8rem); grid-template-columns: minmax(0, 1fr) minmax(22rem, 31rem); align-items: center; gap: clamp(2.5rem, 8vw, 8rem); padding-block: clamp(3rem, 8vh, 7rem); }
   .auth-page__intro { max-width: 40rem; }
-  .auth-page__kicker { margin: 0; color: #858690; font: 500 0.68rem / 1 var(--home-mono); letter-spacing: 0.13em; text-transform: uppercase; }
+  .auth-page__kicker { margin: 0; color: var(--home-ink-faint); font: 500 0.68rem / 1 var(--home-mono); letter-spacing: 0.13em; text-transform: uppercase; }
   .auth-page__intro h1 { max-width: 38rem; margin: 0.9rem 0 0; color: var(--home-ink); font: 600 clamp(3.1rem, min(6vw, 8.4vh), 5.5rem) / 0.9 var(--home-display); letter-spacing: -0.055em; }
   .auth-page__intro h1 :global(span) { color: color-mix(in srgb, var(--home-accent) 62%, #f2f0eb); text-shadow: 0 0 2.2rem color-mix(in srgb, var(--home-accent) 24%, transparent); }
   .auth-page__intro > p:not(.auth-page__kicker) { max-width: 31rem; margin: 1.5rem 0 0; color: var(--home-ink-muted); font-size: clamp(1rem, 1.5vw, 1.06rem); line-height: 1.6; }
   .auth-page__promise { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2rem; }
   .auth-page__promise span { padding: 0.55rem 0.7rem; border: 1px solid var(--home-line); border-radius: 9px; color: var(--home-ink-muted); font: 500 0.72rem / 1 var(--home-font); }
-  .auth-page__stage { position: relative; width: 100%; overflow: hidden; border: 1px solid var(--home-line); border-radius: 18px; background: rgba(10, 10, 12, 0.58); box-shadow: 0 1.9rem 5rem rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .auth-page__stage { position: relative; width: 100%; overflow: hidden; border: 1px solid var(--home-line); border-radius: 18px; background: var(--home-raised); box-shadow: 0 1.9rem 5rem rgba(0, 0, 0, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
   .auth-page__form { width: 100%; padding: clamp(0.85rem, 2vw, 1.25rem); }
   :global(.auth-page .auth-container) { max-width: none; padding: clamp(1.35rem, 3vw, 2.1rem); border-color: var(--home-line); border-radius: 18px; background: var(--home-raised); box-shadow: none; }
   :global(.auth-page .auth-title) { margin: 0.35rem 0 0; color: var(--home-ink); font: 600 clamp(1.65rem, 3vw, 2.35rem) / 1 var(--home-display); letter-spacing: -0.045em; }
@@ -166,7 +162,7 @@
     .auth-page__form { max-width: 34rem; margin-inline: auto; }
   }
   @media (max-width: 48rem) {
-    .auth-page { background-position: 56% top; background-attachment: scroll; }
+    .auth-page { background-attachment: scroll; }
   }
   @media (max-width: 35rem) {
     .auth-page__layout { width: min(calc(100% - 2rem), 1160px); }

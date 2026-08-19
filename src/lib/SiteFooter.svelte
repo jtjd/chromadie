@@ -9,6 +9,7 @@
   </div>
 
   <nav class="site-footer__nav" aria-label="Footer navigation">
+    <a href="/roll">Roll</a>
     <a href="/leaderboard">Leaderboard</a>
     {#if isAuthenticated}<a href="/profile/settings">Customize</a>{/if}
     <a href="/pricing">Pricing</a>

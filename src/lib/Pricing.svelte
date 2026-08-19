@@ -200,7 +200,7 @@
     --pricing-faint: var(--site-faint, #7d7e87);
     --pricing-line: var(--site-line, rgba(255, 255, 255, 0.075));
     --pricing-line-strong: var(--site-line-strong, rgba(255, 255, 255, 0.15));
-    --pricing-accent: var(--site-accent, #cdd2ff);
+    --pricing-accent: var(--site-accent, var(--white, #ffffff));
     position: relative;
     isolation: isolate;
     min-height: 100%;
