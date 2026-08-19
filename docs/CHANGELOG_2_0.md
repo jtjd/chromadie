@@ -3529,3 +3529,15 @@ direct route behavior.
   reliable contrast over the photographic hero background.
 - Applied the same mark to Profile Studio while leaving public-profile-specific
   header treatment outside this change.
+
+## Progression goal contract — 2026-08-19
+
+- Expanded the authored progression lanes with 14-day and 100-day streak
+  goals plus intermediate high-contrast, greyscale, and prime-sum discoveries.
+- Made goal progress server-described and authoritative. Real counters show
+  their current value; rarity and pattern goals show a clear incomplete state
+  until discovered.
+- Replaced the empty `0/0` journey presentation with explicit ready, partial,
+  empty, and unavailable states, and shortened the visible goal copy.
+- Added a compact recent-unlocks section and corrected Studio’s next-expression
+  summary so unavailable data is not reported as a completed journey.

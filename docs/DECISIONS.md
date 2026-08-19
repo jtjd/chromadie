@@ -5576,3 +5576,22 @@ asset. Profile Studio consumes the same asset; public profile-specific header
 presentation remains unchanged. Homepage-style navigation and account labels
 use bright white with a restrained shadow so they remain legible over the
 photographic hero without adding another branded color.
+
+## 2026-08-19 — Make progression goals explicit and readable
+
+The progression model keeps its existing rank, ritual, and discovery tracks.
+Ritual now has a complete roll/streak cadence through 100-day consistency;
+Discovery adds intermediate color-condition goals so the lane is not only a
+rarity ladder. The goal catalog remains server-owned and reuses active earned
+expression items.
+
+Numeric progress is now described by `progress_source` and `progress_target` on
+each milestone. The owner RPC derives the current value from the authoritative
+profile counters, while condition goals intentionally return no numeric
+progress. The client renders those goals as `Not found yet` until the server
+records the achievement, rather than inventing a `0/0` counter.
+
+The owner payload also reports `journey_state` (`ready`, `partial`, `empty`, or
+`unavailable`). The page hides empty lanes and uses an honest single fallback
+when the manifest is missing or a read fails. This preserves rank/history
+context without presenting an unavailable journey as complete.

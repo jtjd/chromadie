@@ -4,6 +4,7 @@
   import Surface from './foundation/Surface.svelte';
   import { getRankState } from './ranks.js';
   import { getProfileStoryUnlocks } from './profileStory.js';
+  import { PROGRESSION_JOURNEY_LANES } from './progressionState.js';
   import { trackProductEvent } from './productAnalytics.js';
 
   export let profile = null;
@@ -15,11 +16,6 @@
   export let featureFlags = {};
   export let pageMode = false;
   export let analyticsSurface = 'studio';
-
-  const journeyLanes = Object.freeze([
-    { id: 'ritual', label: 'Keep the ritual', description: 'Small promises that make a color identity last.' },
-    { id: 'discovery', label: 'Find the strange', description: 'Rare conditions that make your profile unmistakably yours.' }
-  ]);
 
   /** @type {any} */
   let account;
@@ -35,7 +31,16 @@
     : 0;
   $: progressPercent = Math.round(rankState.progress * 100);
   $: journeyEnabled = featureFlags?.progressionJourney !== false;
+  $: journeyState = progression?.journeyState || 'unavailable';
   $: milestoneTrack = Array.isArray(progression?.milestones) ? progression.milestones : [];
+  $: recentUnlocks = Array.isArray(progression?.recentUnlocks) ? progression.recentUnlocks : [];
+  $: journeyLanes = PROGRESSION_JOURNEY_LANES.map(lane => ({
+    ...lane,
+    nodes: Array.isArray(progression?.journeyByTrack?.[lane.id]) ? progression.journeyByTrack[lane.id] : []
+  }));
+  $: visibleJourneyLanes = journeyLanes.filter(lane => lane.nodes.length);
+  $: journeyGoalTotal = visibleJourneyLanes.reduce((total, lane) => total + lane.nodes.length, 0);
+  $: journeyGoalComplete = visibleJourneyLanes.reduce((total, lane) => total + lane.nodes.filter(node => node.unlocked).length, 0);
   $: weeklyFocus = progression?.weeklyFocus || null;
   const weeklyFocusViewed = new SvelteSet();
   const seenUnlocks = new SvelteSet();
@@ -76,9 +81,13 @@
   }
 
   function nodeProgressLabel(node) {
-    if (node?.unlocked) return 'Unlocked';
+    if (node?.unlocked) return 'Complete';
     if (node?.progress?.target) return `${formatNumber(node.progress.current)} / ${formatNumber(node.progress.target)} ${node.progress.unit || ''}`.trim();
-    return node?.metric === 'achievement' ? 'Discover the condition' : 'Keep rolling';
+    return node?.metric === 'achievement' ? 'Not found yet' : 'Unavailable';
+  }
+
+  function isNextNode(node, track) {
+    return progression?.nextJourney?.[track]?.id === node?.id;
   }
 
   function recordUnlockSeen(node) {
@@ -99,7 +108,7 @@
     <div class="profile-progression-heading">
       <div>
         <h2 id="profile-progression-title">Progression</h2>
-        <p>Your profile grows in two directions: show up, then find something strange.</p>
+        <p>Track the rolls, streaks, discoveries, and expressions that shape your profile.</p>
       </div>
     </div>
 
@@ -129,10 +138,10 @@
     </div>
 
     <div class="profile-progression-stats" aria-label="Progression summary">
-      <div><span>Daily rolls</span><strong>{formatNumber(totalRolls)}</strong><small>Colors in your story</small></div>
+      <div><span>Rolls</span><strong>{formatNumber(totalRolls)}</strong><small>Total colors</small></div>
       <div><span>Current streak</span><strong>{formatNumber(currentStreak)} days</strong><small>Longest: {formatNumber(account.longest_streak)} days</small></div>
-      <div><span>Achievements</span><strong>{formatNumber(achievementCount)}{achievementTotal ? ` / ${formatNumber(achievementTotal)}` : ''}</strong><small>Milestones claimed</small></div>
-      <div><span>Story collection</span><strong>{formatNumber(collectionItems.length)}</strong><small>{storyUnlocks.collectionUnlocked ? 'Collection showcase unlocked' : `${storyUnlocks.collectionRollsRequired} rolls unlock the showcase`}</small></div>
+      <div><span>Achievements</span><strong>{formatNumber(achievementCount)}{achievementTotal ? ` / ${formatNumber(achievementTotal)}` : ''}</strong><small>Unlocked</small></div>
+      <div><span>Collection</span><strong>{formatNumber(collectionItems.length)}</strong><small>{storyUnlocks.collectionUnlocked ? 'Showcase unlocked' : `${storyUnlocks.collectionRollsRequired} rolls to unlock`}</small></div>
     </div>
 
     {#if journeyEnabled && weeklyFocus}
@@ -140,11 +149,11 @@
         <div>
           <span class="profile-progression-label">This week</span>
           <h3 id="profile-progression-weekly-title">Color of the Week</h3>
-          <p>{weeklyFocus.completed ? 'You found this week’s color. The bonus is already part of your account.' : 'Match this color in your daily roll to earn the existing EP bonus.'}</p>
+          <p>{weeklyFocus.completed ? 'Completed this week.' : 'Match this color once this week.'}</p>
         </div>
         <div class="profile-progression-weekly__target">
           <span class="profile-progression-weekly__swatch" style={`--weekly-color:${weeklyFocus.targetHex || '#ffffff'}`} aria-hidden="true"></span>
-          <strong>{weeklyFocus.targetHex || 'Target loading'}</strong>
+          <strong>{weeklyFocus.targetHex}</strong>
           <small>{weeklyFocus.completed ? 'Focus complete' : `+${formatNumber(weeklyFocus.bonusEp)} EP`}</small>
         </div>
       </section>
@@ -153,37 +162,43 @@
     {#if journeyEnabled}
       <section class="profile-progression-journey" aria-labelledby="profile-progression-journey-title">
         <div class="profile-progression-section-heading">
-          <div><span class="profile-progression-label">Your journey</span><h3 id="profile-progression-journey-title">Make the profile yours.</h3></div>
-          <span>{progression?.journeyNodes?.length || 0} expression goals</span>
+          <div><span class="profile-progression-label">Journey</span><h3 id="profile-progression-journey-title">Profile goals</h3></div>
+          {#if journeyGoalTotal}<span>{journeyGoalComplete} of {journeyGoalTotal} complete</span>{/if}
         </div>
-        <div class="profile-progression-lanes">
-          {#each journeyLanes as lane (lane.id)}
-            {@const nodes = progression?.journeyByTrack?.[lane.id] || []}
-            <section class="profile-progression-lane" aria-labelledby={`profile-progression-lane-${lane.id}`}>
-              <div class="profile-progression-lane__heading">
-                <div><h4 id={`profile-progression-lane-${lane.id}`}>{lane.label}</h4><p>{lane.description}</p></div>
-                <span>{nodes.filter(node => node.unlocked).length}/{nodes.length}</span>
-              </div>
-              {#if nodes.length}
+        {#if visibleJourneyLanes.length}
+          <div class="profile-progression-lanes">
+            {#each visibleJourneyLanes as lane (lane.id)}
+              <section class="profile-progression-lane" aria-labelledby={`profile-progression-lane-${lane.id}`}>
+                <div class="profile-progression-lane__heading">
+                  <div><h4 id={`profile-progression-lane-${lane.id}`}>{lane.label}</h4><p>{lane.description}</p></div>
+                  <span>{lane.nodes.filter(node => node.unlocked).length} of {lane.nodes.length}</span>
+                </div>
                 <ol>
-                  {#each nodes as node (node.id)}
-                    <li class:unlocked={node.unlocked} on:mouseenter={() => recordUnlockSeen(node)}>
+                  {#each lane.nodes as node (node.id)}
+                    <li class:unlocked={node.unlocked} class:next={isNextNode(node, lane.id)} on:mouseenter={() => recordUnlockSeen(node)}>
                       <div class="profile-progression-node__head">
                         <span class="profile-progression-node__status" class:unlocked={node.unlocked} aria-hidden="true"></span>
                         <div><strong>{node.name}</strong><small>{node.reward?.name || 'Profile expression reward'}</small></div>
-                        <span class="profile-progression-node__progress">{nodeProgressLabel(node)}</span>
+                        <span class="profile-progression-node__progress">{isNextNode(node, lane.id) ? 'Next: ' : ''}{nodeProgressLabel(node)}</span>
                       </div>
                       <p>{node.description}</p>
-                      <div class="profile-progression-node__bar" role="progressbar" aria-label={`${node.name} progression`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={nodePercent(node)}><span style={`width:${nodePercent(node)}%`}></span></div>
+                      {#if node.progress?.target}
+                        <div class="profile-progression-node__bar" role="progressbar" aria-label={`${node.name} progression`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={nodePercent(node)}><span style={`width:${nodePercent(node)}%`}></span></div>
+                      {/if}
                     </li>
                   {/each}
                 </ol>
-              {:else}
-                <p class="profile-progression-empty">Your next expression goals will appear here once the journey is published.</p>
-              {/if}
-            </section>
-          {/each}
-        </div>
+              </section>
+            {/each}
+          </div>
+          {#if journeyState === 'partial'}
+            <p class="profile-progression-empty">Some journey goals are temporarily unavailable.</p>
+          {/if}
+        {:else if journeyState === 'empty'}
+          <p class="profile-progression-empty">No journey goals are published yet.</p>
+        {:else}
+          <p class="profile-progression-empty">Journey goals are temporarily unavailable. Rank and history are still shown.</p>
+        {/if}
       </section>
     {:else}
       <section class="profile-progression-track" aria-labelledby="profile-progression-track-title">
@@ -195,7 +210,7 @@
           {#each milestoneTrack.filter(milestone => milestone.track === 'rank') as milestone (milestone.id)}
             {@const milestoneProgress = Math.min(100, Math.round((lifetimeEp / Math.max(1, milestone.threshold)) * 100))}
             <li class:unlocked={milestone.unlocked}>
-              <div class="profile-progression-node__head"><span class="profile-progression-node__status" class:unlocked={milestone.unlocked} aria-hidden="true"></span><div><strong>{milestone.name}</strong><small>{milestone.reward?.name || 'Profile expression reward'}</small></div><span class="profile-progression-node__progress">{milestone.unlocked ? 'Unlocked' : `${formatNumber(milestone.threshold)} EP`}</span></div>
+              <div class="profile-progression-node__head"><span class="profile-progression-node__status" class:unlocked={milestone.unlocked} aria-hidden="true"></span><div><strong>{milestone.name}</strong><small>{milestone.reward?.name || 'Profile expression reward'}</small></div><span class="profile-progression-node__progress">{milestone.unlocked ? 'Complete' : `${formatNumber(milestone.threshold)} EP`}</span></div>
               <div class="profile-progression-node__bar"><span style={`width:${milestone.unlocked ? 100 : milestoneProgress}%`}></span></div>
             </li>
           {/each}
@@ -203,9 +218,23 @@
       </section>
     {/if}
 
+    {#if recentUnlocks.length}
+      <section class="profile-progression-unlocks" aria-labelledby="profile-progression-unlocks-title">
+        <div class="profile-progression-section-heading">
+          <div><span class="profile-progression-label">Recent unlocks</span><h3 id="profile-progression-unlocks-title">New expressions</h3></div>
+          <span>{recentUnlocks.length} recent</span>
+        </div>
+        <ol>
+          {#each recentUnlocks.slice(0, 3) as unlock (unlock.id)}
+            <li><strong>{unlock.name}</strong><small>{unlock.reward?.name || 'Expression reward'}</small></li>
+          {/each}
+        </ol>
+      </section>
+    {/if}
+
     <div class="profile-progression-history">
       <div class="profile-progression-section-heading">
-        <div><span class="profile-progression-label">Recent trace</span><h3>Your colors leave a record.</h3></div>
+        <div><span class="profile-progression-label">History</span><h3>Recent rolls</h3></div>
         <span>{timelineEvents.length ? `${timelineEvents.length} recorded events` : 'No history yet'}</span>
       </div>
       {#if timelineEvents.length}
@@ -219,12 +248,12 @@
           {/each}
         </ol>
       {:else}
-        <p class="profile-progression-empty">No progression events recorded yet.</p>
+        <p class="profile-progression-empty">No rolls recorded yet.</p>
       {/if}
     </div>
 
     <div class="profile-progression-footer">
-      <p>Rewards, rank, and history stay server-authoritative.</p>
+      <p>Rewards and progress are verified on the server.</p>
       <a href={pageMode ? '/profile/settings#customize-media' : '#customize'}>Equip an expression</a>
     </div>
   </section>
@@ -258,7 +287,7 @@
   .profile-progression-weekly__swatch { grid-row:span 2; width:2.6rem; height:2.6rem; border:1px solid var(--color-line-strong); border-radius:var(--radius-sm); background:var(--weekly-color); }
   .profile-progression-weekly__target strong { color:var(--color-ink-strong); font:650 .85rem var(--font-mono-stack); }
   .profile-progression-weekly__target small { color:var(--color-ink-muted); font-size:.7rem; }
-  .profile-progression-journey, .profile-progression-track, .profile-progression-history { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--color-line-subtle); }
+  .profile-progression-journey, .profile-progression-track, .profile-progression-unlocks, .profile-progression-history { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--color-line-subtle); }
   .profile-progression-section-heading { display:flex; align-items:end; justify-content:space-between; gap:1rem; }
   .profile-progression-section-heading h3 { margin:.35rem 0 0; color:var(--color-ink-strong); font:600 1.25rem/1.1 var(--font-display-stack); }
   .profile-progression-section-heading > span { color:var(--color-ink-muted); font-size:var(--type-small); }
@@ -269,7 +298,7 @@
   .profile-progression-lane__heading > span { color:var(--color-ink-muted); font:600 .7rem var(--font-mono-stack); white-space:nowrap; }
   .profile-progression-lane ol, .profile-progression-track ol, .profile-progression-history ol { display:grid; gap:.45rem; margin:.75rem 0 0; padding:0; list-style:none; }
   .profile-progression-lane li, .profile-progression-track li { display:grid; gap:.42rem; padding:.7rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-panel-soft); }
-  .profile-progression-lane li.unlocked, .profile-progression-track li.unlocked { border-color:var(--color-line-strong); }
+  .profile-progression-lane li.unlocked, .profile-progression-lane li.next, .profile-progression-track li.unlocked { border-color:var(--color-line-strong); }
   .profile-progression-node__head { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.55rem; min-width:0; }
   .profile-progression-node__head > div { display:grid; gap:.15rem; min-width:0; }
   .profile-progression-node__head strong { overflow:hidden; color:var(--color-ink-strong); font-size:var(--type-small); text-overflow:ellipsis; white-space:nowrap; }
@@ -279,6 +308,11 @@
   .profile-progression-node__progress { color:var(--color-ink-muted); font:600 .65rem/1 var(--font-mono-stack); text-align:right; white-space:nowrap; }
   .profile-progression-lane li > p { margin:0; color:var(--color-ink-muted); font-size:.72rem; }
   .profile-progression-node__bar { height:.25rem; }
+  .profile-progression-unlocks ol { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.45rem; margin:.75rem 0 0; padding:0; list-style:none; }
+  .profile-progression-unlocks li { display:grid; gap:.2rem; min-width:0; padding:.65rem .75rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
+  .profile-progression-unlocks strong, .profile-progression-unlocks small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .profile-progression-unlocks strong { color:var(--color-ink-strong); font-size:var(--type-small); }
+  .profile-progression-unlocks small { color:var(--color-ink-muted); font-size:.7rem; }
   .profile-progression-history li { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.65rem; min-width:0; padding:.65rem .75rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); }
   .profile-progression-event-swatch { width:.7rem; height:.7rem; border:1px solid var(--color-line-strong); border-radius:var(--radius-sm); background:var(--event-color); }
   .profile-progression-history li > span:nth-child(2) { display:grid; gap:.15rem; min-width:0; }
@@ -290,7 +324,7 @@
   .profile-progression-footer p { max-width:42rem; margin:0; }
   .profile-progression-footer a { color:var(--color-ink-strong); font-size:var(--type-small); font-weight:650; text-decoration:none; white-space:nowrap; }
   .profile-progression-footer a:hover, .profile-progression-footer a:focus-visible { color:var(--color-ink-strong); }
-  @media (max-width: 800px) { .profile-progression-rank { grid-template-columns:1fr; } .profile-progression-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .profile-progression-lanes { grid-template-columns:1fr; } }
+  @media (max-width: 800px) { .profile-progression-rank { grid-template-columns:1fr; } .profile-progression-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .profile-progression-lanes, .profile-progression-unlocks ol { grid-template-columns:1fr; } }
   @media (max-width: 520px) { .profile-progression-stats { grid-template-columns:1fr; } .profile-progression-footer, .profile-progression-section-heading, .profile-progression-weekly { align-items:flex-start; flex-direction:column; } .profile-progression-footer a { white-space:normal; } .profile-progression-weekly__target { align-self:stretch; } }
   @media (prefers-reduced-motion: reduce) { .profile-progression-bar span, .profile-progression-node__bar span { transition:none; } }
 </style>

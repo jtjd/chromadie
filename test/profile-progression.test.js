@@ -17,7 +17,7 @@ test('progression is a dedicated page backed by existing profile history', async
   assert.match(progression, /lifetime_ep/);
   assert.match(progression, /current_streak/);
   assert.match(progression, /timelineEvents\.slice\(0, 3\)/);
-  assert.match(progression, /server-authoritative/);
+  assert.match(progression, /verified on the server/);
   assert.match(progression, /prefers-reduced-motion/);
   assert.match(progression, /analyticsSurface/);
   assert.match(page, /loadProfileContext/);

@@ -23,6 +23,7 @@
   $: lifetimeEp = Math.max(0, Number(progression?.currentEp ?? accountProfile?.lifetime_ep) || 0);
   $: rankState = getRankState(lifetimeEp);
   $: nextExpression = progression?.nextJourney?.ritual || progression?.nextJourney?.discovery || null;
+  $: journeyState = progression?.journeyState || 'unavailable';
   $: pageLoading = !$authInitialized
     || $accountState === ACCOUNT_STATES.PROFILE_LOADING
     || ($accountState === ACCOUNT_STATES.AUTHENTICATED && loading && !context);
@@ -97,7 +98,7 @@
     <header class="progression-page__intro" aria-labelledby="progression-page-title">
       <p class="progression-page__eyebrow">Your profile / progression</p>
       <h1 id="progression-page-title">Progression</h1>
-      <p class="progression-page__scope">A record of the rolls, streaks, discoveries, and expressions that make your profile yours.</p>
+      <p class="progression-page__scope">Rolls, discoveries, and expressions that shape your profile.</p>
     </header>
 
     {#if pageLoading}
@@ -135,7 +136,7 @@
         <div class="progression-page__account-copy">
           <span class="progression-page__account-label">{accountProfile.display_name || accountProfile.username || 'Your profile'}</span>
           <strong>{rankState.next ? formatNumber(Math.max(0, rankState.next.min - lifetimeEp)) + ' EP to ' + rankState.next.name : 'Highest rank reached'}</strong>
-          {#if nextExpression}<small>Next expression: {nextExpression.name}</small>{:else}<small>Your published journey is complete.</small>{/if}
+          {#if nextExpression}<small>Next expression: {nextExpression.name}</small>{:else if journeyState === 'empty'}<small>No journey goals are published yet.</small>{:else if journeyState === 'partial'}<small>Some journey goals are unavailable.</small>{:else if journeyState === 'unavailable'}<small>Journey goals are unavailable.</small>{:else}<small>All journey goals complete.</small>{/if}
         </div>
         <div class="progression-page__account-actions">
           <a class="site-button" href="/roll">Roll today</a>

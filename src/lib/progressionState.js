@@ -8,6 +8,13 @@ const MAX_TEXT_LENGTH = 220;
 const TRACK_ORDER = Object.freeze({ rank: 0, ritual: 1, discovery: 2 });
 const VALID_TRACKS = new Set(Object.keys(TRACK_ORDER));
 const VALID_METRICS = new Set(['lifetime_ep', 'achievement']);
+const VALID_PROGRESS_SOURCES = new Set(['lifetime_ep', 'total_rolls', 'current_streak']);
+const VALID_JOURNEY_STATES = new Set(['ready', 'partial', 'empty', 'unavailable']);
+
+export const PROGRESSION_JOURNEY_LANES = Object.freeze([
+  Object.freeze({ id: 'ritual', label: 'Ritual', description: 'Rolls and streaks.' }),
+  Object.freeze({ id: 'discovery', label: 'Discovery', description: 'Rare colors and patterns.' })
+]);
 
 const RANK_BY_ID = new Map(
   RANKS.map(rank => [rank.name.toLowerCase(), Object.freeze({
@@ -26,7 +33,7 @@ const MILESTONE_MANIFEST = Object.freeze([
     rankId: 'silver',
     threshold: 500_000,
     name: 'Silver',
-    description: 'Reach Silver and add a precise Type In motion to your identity.',
+    description: 'Reach Silver.',
     reward: Object.freeze({ itemKey: 'name_motion_typewriter_name', name: 'Type In', slot: 'name_motion' })
   }),
   Object.freeze({
@@ -34,7 +41,7 @@ const MILESTONE_MANIFEST = Object.freeze([
     rankId: 'gold',
     threshold: 2_500_000,
     name: 'Gold',
-    description: 'Reach Gold and reveal the cut facets of Carbon Vein.',
+    description: 'Reach Gold.',
     reward: Object.freeze({ itemKey: 'name_material_carbon_cut', name: 'Carbon Vein', slot: 'name_material' })
   }),
   Object.freeze({
@@ -42,7 +49,7 @@ const MILESTONE_MANIFEST = Object.freeze([
     rankId: 'platinum',
     threshold: 7_500_000,
     name: 'Platinum',
-    description: 'Reach Platinum and bring a concentrated Glow to your name.',
+    description: 'Reach Platinum.',
     reward: Object.freeze({ itemKey: 'name_motion_haunt_glow', name: 'Glow', slot: 'name_motion' })
   }),
   Object.freeze({
@@ -50,7 +57,7 @@ const MILESTONE_MANIFEST = Object.freeze([
     rankId: 'diamond',
     threshold: 15_000_000,
     name: 'Diamond',
-    description: 'Reach Diamond and unlock the refracted edge of Raised Glass.',
+    description: 'Reach Diamond.',
     reward: Object.freeze({ itemKey: 'name_material_glass_emboss', name: 'Raised Glass', slot: 'name_material' })
   }),
   Object.freeze({
@@ -58,7 +65,7 @@ const MILESTONE_MANIFEST = Object.freeze([
     rankId: 'chroma',
     threshold: 30_000_000,
     name: 'Chroma',
-    description: 'Reach Chroma and let Scramble rearrange your name before it settles.',
+    description: 'Reach Chroma.',
     reward: Object.freeze({ itemKey: 'name_motion_letter_shuffle', name: 'Scramble', slot: 'name_motion' })
   })
 ]);
@@ -169,6 +176,8 @@ function fallbackMilestone(manifest, entry = {}) {
     achievementId: null,
     sortOrder: manifest.threshold,
     rankId: manifest.rankId,
+    progressSource: 'lifetime_ep',
+    progressTarget: manifest.threshold,
     reward: { ...manifest.reward },
     progress: normalizeProgress(entry.progress),
     unlocked: entry.unlocked === true || Boolean(unlockedAt),
@@ -186,10 +195,24 @@ function normalizeMilestoneEntry(value) {
   const metric = normalizeText(value.metric, '', 24).toLowerCase();
   const reward = normalizeReward(value.reward);
   if (!VALID_TRACKS.has(track) || !VALID_METRICS.has(metric) || !reward) return null;
+  if ((track === 'rank' && metric !== 'lifetime_ep') || (track !== 'rank' && metric !== 'achievement')) return null;
 
   const unlockedAt = normalizeTimestamp(value.unlocked_at || value.unlockedAt);
   const threshold = normalizeInteger(value.threshold, MAX_EP) ?? 0;
   const sortOrder = normalizeInteger(value.sort_order ?? value.sortOrder, 100000) ?? 0;
+  const achievementId = normalizeText(value.achievement_id || value.achievementId, '', 100) || null;
+  if (metric === 'lifetime_ep' && threshold <= 0) return null;
+  if (metric === 'achievement' && !achievementId) return null;
+  const progressSource = typeof value.progress_source === 'string'
+    && VALID_PROGRESS_SOURCES.has(value.progress_source)
+    ? value.progress_source
+    : null;
+  if ((track === 'rank' && progressSource && progressSource !== 'lifetime_ep')
+    || (track !== 'rank' && progressSource === 'lifetime_ep')) return null;
+  const progressTarget = progressSource
+    ? normalizeInteger(value.progress_target ?? value.progressTarget, MAX_EP)
+    : null;
+  if (progressSource && (!progressTarget || progressTarget <= 0)) return null;
   return {
     id: key,
     name: normalizeText(value.name, key, 100),
@@ -197,9 +220,11 @@ function normalizeMilestoneEntry(value) {
     threshold,
     track,
     metric,
-    achievementId: normalizeText(value.achievement_id || value.achievementId, '', 100) || null,
+    achievementId,
     sortOrder,
     rankId: null,
+    progressSource,
+    progressTarget,
     reward,
     progress: normalizeProgress(value.progress),
     unlocked: value.unlocked === true || Boolean(unlockedAt),
@@ -251,6 +276,7 @@ function normalizeWeeklyFocus(value) {
   const targetHex = typeof value.target_hex === 'string' && /^#[0-9a-f]{6}$/i.test(value.target_hex)
     ? value.target_hex.toUpperCase()
     : null;
+  if (!targetHex) return null;
   return {
     weekStart: normalizeDate(value.week_start || value.weekStart),
     targetHex,
@@ -272,6 +298,8 @@ function getNextJourney(nodes, track) {
 
 export function createEmptyProgression() {
   return {
+    progressionVersion: null,
+    journeyState: 'unavailable',
     currentEp: null,
     currentRank: null,
     nextRank: null,
@@ -307,8 +335,20 @@ export function normalizeProgressionData(value, fallbackEp = null) {
   const recentUnlocks = normalizeNewMilestones(recentSource).slice(0, MAX_RECENT_UNLOCKS);
   const journeyNodes = milestones.filter(milestone => milestone.track === 'ritual' || milestone.track === 'discovery');
   const journeyByTrack = getJourneyByTrack(journeyNodes);
+  const reportedJourneyStateCandidate = normalizeText(payload.journey_state || payload.journeyState, '', 24).toLowerCase();
+  const reportedJourneyState = VALID_JOURNEY_STATES.has(reportedJourneyStateCandidate)
+    ? reportedJourneyStateCandidate
+    : '';
+  const inferredJourneyState = journeyNodes.length
+    ? journeyByTrack.ritual.length && journeyByTrack.discovery.length ? 'ready' : 'partial'
+    : reportedJourneyState === 'empty' ? 'empty' : 'unavailable';
+  const journeyState = journeyNodes.length
+    ? inferredJourneyState
+    : reportedJourneyState === 'empty' ? 'empty' : 'unavailable';
 
   return {
+    progressionVersion: normalizeInteger(payload.progression_version ?? payload.progressionVersion, 100) ?? null,
+    journeyState,
     currentEp: displayEp,
     currentRank,
     nextRank,

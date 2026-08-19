@@ -4397,3 +4397,23 @@ responsive desktop two-column/mobile stacked composition.
   header remains readable over the hero image.
 - Removed the old dot-plus-wordmark treatment from the shared application and
   Profile Studio headers without changing navigation or account behavior.
+
+## Progression goal contract — 2026-08-19
+
+- Audited the progression manifest, owner RPC, normalization boundary, Studio
+  summary, dedicated destination, and current tests.
+- Added server-described numeric progress sources/targets and expanded the
+  authored ritual/discovery cadence with active catalog-backed rewards.
+- Replaced verbose goal copy with short names and direct conditions. Roll and
+  streak goals show real counters; discovery goals show `Not found yet` or
+  `Complete` without a misleading progress bar.
+- Added ready/partial/empty/unavailable journey states, hid empty lanes, and
+  removed the `0/0` failure state from the progression UI and Studio summary.
+- Added recent unlocks to the progression destination and kept all grants,
+  inventory writes, and progress reads server-authoritative.
+- Validation: `supabase db lint --local`, `supabase db reset`, build, check,
+  ESLint, 417 tests, links, CSP, performance route budgets, username/balance/
+  catalog/scoring drift, and database security all pass. The browser smoke
+  stopped at its initial local homepage hydration because Chromium reported
+  `ERR_NETWORK_CHANGED` while Vite HMR modules were loading; no progression
+  assertion ran in that smoke attempt.
