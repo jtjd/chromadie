@@ -118,6 +118,7 @@ function emptyProfileContext(overrides = {}) {
     targetScores: [],
     timelineEvents: [],
     collectionItems: [],
+    progressionProof: { recentUnlocks: [] },
     profileConfig: null,
     social: createEmptyProfileSocial(),
     socialSettings: createDefaultProfileSocialSettings(),
@@ -360,6 +361,7 @@ export async function loadProfileContext({
       const normalizedStory = normalizeProfileStory(story);
       context.timelineEvents = normalizedStory.timeline;
       context.collectionItems = normalizedStory.collection;
+      context.progressionProof = normalizedStory.progressionProof;
     }
 
     const fallbackColor = context.targetProfile?.mood_color || '#8B7CF6';

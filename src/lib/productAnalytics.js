@@ -11,7 +11,14 @@ export const PRODUCT_ANALYTICS_EVENTS = Object.freeze([
   'username_claim_started',
   'username_claim_completed',
   'example_profile_opened',
-  'explore_clicked'
+  'explore_clicked',
+  'progression_viewed',
+  'progression_roll_completed',
+  'progression_unlock_seen',
+  'progression_weekly_focus_viewed',
+  'progression_weekly_focus_completed',
+  'progression_share_started',
+  'progression_claim_started'
 ]);
 
 const EVENT_PROPERTY_KEYS = Object.freeze({
@@ -25,10 +32,27 @@ const EVENT_PROPERTY_KEYS = Object.freeze({
   username_claim_started: new Set(),
   username_claim_completed: new Set(),
   example_profile_opened: new Set(),
-  explore_clicked: new Set()
+  explore_clicked: new Set(),
+  progression_viewed: new Set(['surface', 'accountMode', 'rolloutStage']),
+  progression_roll_completed: new Set(['surface', 'accountMode', 'rolloutStage']),
+  progression_unlock_seen: new Set(['surface', 'accountMode', 'rolloutStage', 'track']),
+  progression_weekly_focus_viewed: new Set(['surface', 'accountMode', 'rolloutStage']),
+  progression_weekly_focus_completed: new Set(['surface', 'accountMode', 'rolloutStage']),
+  progression_share_started: new Set(['surface', 'accountMode', 'rolloutStage', 'method']),
+  progression_claim_started: new Set(['surface', 'accountMode', 'rolloutStage'])
 });
 
 const CONSENT_VALUES = new Set(['granted', 'denied']);
+const PROGRESSION_ANALYTICS_EVENTS = new Set([
+  'progression_viewed',
+  'progression_roll_completed',
+  'progression_unlock_seen',
+  'progression_weekly_focus_viewed',
+  'progression_weekly_focus_completed',
+  'progression_share_started',
+  'progression_claim_started'
+]);
+const ROLLOUT_STAGES = new Set(['off', 'staff', 'internal', 'cohort', 'all']);
 let productAnalyticsAdapter = null;
 
 function getStorage() {
@@ -101,6 +125,41 @@ export function createBrowserProductAnalyticsAdapter(target = null) {
       if (!destination || typeof destination.dispatchEvent !== 'function' || typeof CustomEvent === 'undefined') return false;
       destination.dispatchEvent(new CustomEvent('chromadie:product-event', { detail: event }));
       return true;
+    }
+  };
+}
+
+function configuredRolloutStage() {
+  const value = typeof import.meta !== 'undefined' && import.meta.env
+    ? String(import.meta.env.VITE_CHROMADIE_ROLLOUT_STAGE || 'all').trim().toLowerCase()
+    : 'all';
+  return ROLLOUT_STAGES.has(value) ? value : 'all';
+}
+
+/**
+ * Dispatch the existing page-local event and, for progression events only,
+ * increment the bounded server aggregate. The RPC is observational and never
+ * blocks a roll, auth flow, or profile render.
+ */
+export function createAggregateProductAnalyticsAdapter({ supabaseClient = null, target = null } = {}) {
+  const browserAdapter = createBrowserProductAnalyticsAdapter(target);
+  return {
+    send(event) {
+      const sent = browserAdapter.send(event);
+      if (!PROGRESSION_ANALYTICS_EVENTS.has(event?.name) || !supabaseClient?.rpc) return sent;
+
+      const properties = event.properties || {};
+      const request = supabaseClient.rpc('record_progression_event', {
+        p_event_name: event.name,
+        p_surface: properties.surface || '',
+        p_account_mode: properties.accountMode || '',
+        p_rollout_stage: properties.rolloutStage || configuredRolloutStage(),
+        p_track: properties.track || ''
+      });
+      Promise.resolve(request).catch(() => {
+        // Product measurement must remain best-effort and gameplay-independent.
+      });
+      return sent;
     }
   };
 }

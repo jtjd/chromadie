@@ -116,7 +116,7 @@ Profile Studio surface rather than forming a second catalog application.
 | Customize expression locals (`previewLoadout`, selected slot, loading action) | `ProfileCosmeticsEditor.svelte` | Preview state remains separate from equipped account state until the existing equip/unequip RPC succeeds; the catalog is not a purchase surface |
 | Leaderboard locals (`activeTab`, public profile items, page, `hasMore`, request id) | `Leaderboard.svelte` | Today and monthly public discovery reads are request-keyed and bounded; the UI has no client-side filters or owner/rival state |
 | Social locals (`actionLoading`, guestbook/report forms, settings draft, notice) | `ProfileSocial.svelte` | Presentation/request state only; the database enforces authentication, blocks, privacy, text bounds, moderation status, deletion, and rate limits |
-| `productAnalyticsConsent` and product-event adapter | `productAnalytics.js` + privacy page | Explicit browser-local `granted`/`denied` preference and page-local `CustomEvent` adapter; unknown/denied consent emits nothing, and no event record is persisted |
+| `productAnalyticsConsent` and product-event adapter | `productAnalytics.js` + privacy page | Explicit browser-local `granted`/`denied` preference; legacy events remain page-local, while consented progression events increment anonymous daily aggregates through an RPC with a 90-day retention boundary |
 
 Authentication hydration loads the own profile, inventory, wallet, follows, and the owner entitlement projection in one guarded sequence. The cosmetic catalog is loaded by Customize when needed. `authEventId` prevents a previous session's asynchronous result from overwriting a newer session or sign-out. Entitlements are keys only; the browser cannot grant, purchase, or write them.
 
@@ -124,8 +124,9 @@ The launch-hardening slice adds no new canonical account state. `App.svelte`
 keeps route focus in the browser only; `Media.svelte` keeps source failure and
 fallback state local to the component; the performance budget reads built
 assets from `dist/` and never affects runtime profile state. The product-event
-contract is likewise observational: it is opt-in, redacted, page-local, and
-not a Supabase/API write.
+contract is likewise observational: it is opt-in, redacted, and never a raw
+event or account-linked write. Progression events may increment the bounded,
+service-only `progression_analytics_daily` aggregate through its RPC.
 
 ## Client-to-RPC/API map
 
@@ -199,8 +200,8 @@ Premium expression grants use `grant_profile_entitlement(uuid,text,text)`, a ser
 | Client / operator surface | Boundary | Current behavior |
 | --- | --- | --- |
 | `App.svelte`, `ProfileShell.svelte`, `Game.svelte`, `ProfileRoll.svelte`, `ProfileCosmeticsEditor.svelte` | `trackProductEvent()` | Emits only the allowlisted, redacted product-event contract after explicit consent; events do not affect product state |
-| `AnalyticsPreferences.svelte` / `PrivacyPolicy.svelte` | `localStorage['chromadie-product-analytics-consent']` | Browser-local opt-in/opt-out; no event history is stored |
-| `main.js` | `createBrowserProductAnalyticsAdapter()` | Dispatches `chromadie:product-event` in the page only; no fetch, beacon, Supabase insert, or third-party product sink |
+| `AnalyticsPreferences.svelte` / `PrivacyPolicy.svelte` | `localStorage['chromadie-product-analytics-consent']` | Browser-local opt-in/opt-out; progression may increment anonymous daily totals, but no individual event history is stored |
+| `main.js` | `createAggregateProductAnalyticsAdapter()` | Dispatches legacy `chromadie:product-event` events in the page and sends only consented progression dimensions to the bounded aggregate RPC; no raw event sink |
 | Authorized operations tooling | Protected social tables/RPCs | Current social reports and guestbook states are stored behind RLS/service-role access; there is no moderation dashboard, queue, notification, or appeal workflow |
 
 The event field contract is documented in `docs/ANALYTICS_CONTRACT.md`. The
@@ -418,7 +419,7 @@ The Phase 1 prototype has a separate Pages Function at `/prototype/profile`. It 
   routes are not one user-facing download.
 - Route focus is intentionally attached to the app content region after programmatic navigation. New overlays must preserve the existing opener/focus restoration contracts and must not steal focus from an active dialog.
 - `Media.svelte` currently has no user-upload or remote-media backend source. Future media/embeds must retain the local/HTTPS allow-list, load-error fallback, intrinsic layout reservation, CSP review, and entitlement/privacy decision; do not broaden it to arbitrary URLs as a convenience.
-- Cloudflare Web Analytics remains a separate shell-level service, while the optional product-event contract is explicit, redacted, and page-local. There is no product-event sink, retention job, or analytics database; a future provider must preserve consent, deletion, retention, and operational ownership boundaries documented in `docs/ANALYTICS_CONTRACT.md`.
+- Cloudflare Web Analytics remains a separate shell-level service, while the optional product-event contract is explicit and redacted. Legacy events are page-local; progression events use the consented aggregate-only recorder with service-only storage and 90-day cleanup. A future provider must preserve the consent, deletion, retention, and operational ownership boundaries documented in `docs/ANALYTICS_CONTRACT.md`.
 - Social reports have protected statuses and rate limits but no moderator identity/audit fields, dashboard, queue, notification delivery, or appeal workflow. Any moderation tooling must use a new least-privilege service boundary and additive privacy-reviewed migration rather than reading protected tables from the browser.
 - `legacy=1` remains the compatibility renderer for mood, pinned badges, rivals, and deletion. Phase 9 launch hardening does not remove it; retiring it requires equivalent owner controls, redirects/canonical behavior, and a rollback plan.
 - Social rate limits are per-account action windows in `profile_social_rate_limits`; they are not a replacement for abuse review, and adding notifications would require deduplication, mute controls, and a new spam audit.

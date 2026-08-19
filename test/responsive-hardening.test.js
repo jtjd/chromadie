@@ -141,8 +141,8 @@ test('browser smoke can run against the production preview and checks the phone 
   assert.match(browserSmoke, /compiled homepage keeps its phone layout/);
   assert.match(browserSmoke, /homepage-profile-demo--hero/);
   assert.match(browserSmoke, /homepage-profile-stage/);
-  assert.match(browserSmoke, /oldHeader/);
-  assert.match(browserSmoke, /authenticated Profile Studio shell/);
+  assert.match(browserSmoke, /headerCount/);
+  assert.match(browserSmoke, /authenticated Profile Studio shell owns its dashboard header/);
   assert.match(browserSmoke, /Mobile customize tabs/);
   assert.match(browserSmoke, /production Leaderboard keeps its route shell and row geometry bounded/);
   assert.match(browserSmoke, /roll-leaderboard__list-item/);

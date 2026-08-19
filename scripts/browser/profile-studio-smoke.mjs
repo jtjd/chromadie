@@ -569,13 +569,13 @@ try {
       const heroStyle = getComputedStyle(hero);
       const stageBox = rect(stage);
       return {
-        oldHeader: Boolean(select('.site-mode-header')),
+        headerCount: document.querySelectorAll('.site-mode-header').length,
         heroColumns: heroStyle.gridTemplateColumns,
         stage: stageBox,
         contained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
       };
     })()`);
-    assert(!state.oldHeader, `Legacy homepage header remains mounted: ${JSON.stringify(state)}.`);
+    assert(state.headerCount === 1, `Homepage header ownership is not singular: ${JSON.stringify(state)}.`);
     assert(state.heroColumns.trim().split(' ').length === 1, `Production homepage retained multi-column phone geometry: ${JSON.stringify(state)}.`);
     assert(state.stage && state.stage.left >= 0 && state.stage.right <= 402 && state.contained, `Production homepage phone layout is not contained: ${JSON.stringify(state)}.`);
     await capture('01-homepage-mobile');
@@ -618,7 +618,7 @@ try {
     // Let the first authenticated hydration settle before the next step
     // deliberately performs a direct refresh. This keeps local Supabase auth
     // token propagation from racing the refresh assertion in CI.
-    await page.waitFor('document.querySelector(".profile-settings-page") && document.querySelector(".site-mode-header__wordmark") && !document.querySelector(".profile-studio-shell__brand")', 'authenticated Profile Studio shell uses shared site header', 30000);
+    await page.waitFor('document.querySelector(".profile-settings-page") && document.querySelector(".profile-studio-shell__brand") && !document.querySelector(".site-mode-header")', 'authenticated Profile Studio shell owns its dashboard header', 30000);
     const state = await page.evaluate(`(() => ({ path: location.pathname, settings: Boolean(document.querySelector('.profile-settings-page')), authPage: Boolean(document.querySelector('.auth-page')), overlay: Boolean(document.querySelector('.auth-modal-overlay')) }))()`);
     assert(state.path === '/profile/settings', `Safe auth redirect landed on ${state.path}.`);
     assert(state.settings && !state.authPage && !state.overlay, 'Authenticated auth route left an auth page or overlay mounted.');
@@ -627,11 +627,11 @@ try {
 
   await step('direct-refresh authenticated Profile Studio', async () => {
     await page.navigate(`${appUrl}/profile/settings`, 'authenticated Profile Studio');
-    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.site-mode-header__wordmark') && !document.querySelector('.profile-studio-shell__brand')`, 'Profile Studio shared shell');
-    const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-studio-workspace')?.getAttribute('data-section-destination') || '', sharedHeader: Boolean(document.querySelector('.site-mode-header__wordmark')), legacyStudioBrand: Boolean(document.querySelector('.profile-studio-shell__brand')) })`);
+    await page.waitFor(`document.querySelector('.profile-settings-page') && document.querySelector('.studio-customize') && document.querySelector('.profile-studio-shell__brand') && !document.querySelector('.site-mode-header')`, 'Profile Studio dashboard shell');
+    const state = await page.evaluate(`({ path: location.pathname, section: document.querySelector('.profile-studio-workspace')?.getAttribute('data-section-destination') || '', studioBrand: Boolean(document.querySelector('.profile-studio-shell__brand')), sharedSiteHeader: Boolean(document.querySelector('.site-mode-header')) })`);
     assert(state.path === '/profile/settings', `Expected /profile/settings after refresh, got ${state.path}.`);
-    assert(state.sharedHeader, 'Shared site header is missing after Profile Studio refresh.');
-    assert(!state.legacyStudioBrand, 'Profile Studio still mounts the legacy embedded brand.');
+    assert(state.studioBrand, 'Profile Studio dashboard brand is missing after refresh.');
+    assert(!state.sharedSiteHeader, 'Profile Studio still mounts the photo-overlaid site header.');
     await capture('04-profile-studio');
     return state;
   });

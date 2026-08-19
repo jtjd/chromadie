@@ -21,7 +21,7 @@
   <div>
     <h3 id="analytics-preferences-title">Optional product-event measurement</h3>
     <p>
-      This preference covers limited in-app events such as route views, profile shares, roll readiness, and cosmetic preview. It never includes your username, email, profile id, score, color, draft, entitlement, or moderation data. The current adapter keeps events in the page only; no product-event server or database is enabled yet.
+      This preference covers limited in-app events such as route views, profile shares, roll readiness, cosmetic preview, and progression unlocks. It never includes your username, email, profile id, score, color, draft, entitlement, or moderation data. Progression measurement stores only anonymous, capped daily totals for up to 90 days; it does not store individual event records.
     </p>
     <p class="analytics-preferences__status" role="status" aria-live="polite">
       Status: {consent === 'granted' ? 'allowed' : consent === 'denied' ? 'off' : 'not selected'}

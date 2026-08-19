@@ -469,6 +469,7 @@ export function buildProfileRenderSnapshot(input = {}) {
       unlocks: storyUnlocks,
       rank,
       rankState,
+      progressionProof: input.progressionProof || { recentUnlocks: [] },
       recentScores: scores.slice(0, 6),
       timelineEvents: Array.isArray(input.timelineEvents) ? input.timelineEvents : [],
       collectionItems: Array.isArray(input.collectionItems) ? input.collectionItems : []

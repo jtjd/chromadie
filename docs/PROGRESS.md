@@ -1,5 +1,35 @@
 # Chromadie 2.0 Progress
 
+## Progression identity journey — 2026-08-19
+
+- Added an additive server-published journey manifest with two lanes: ritual
+  milestones for roll count/streak and discovery milestones for rare, Mythic,
+  and palindrome outcomes. The original five EP rank milestones remain
+  unchanged.
+- Backfilled eligible accounts through idempotent milestone and inventory
+  inserts, then extended the authoritative roll grant path to return dynamic
+  track metadata and new expression unlocks.
+- Added owner-only progression state for total rolls, current streak, weekly
+  Color of the Week focus, journey progress, and recent unlocks. Public story
+  responses expose only current-safe proof with two recent unlocks maximum.
+- Added dedicated/profile roll result proof, Studio journey lanes, and a
+  contrast-safe guest claim path that discards the local preview at signup.
+- Added consent-gated, anonymous daily progression aggregates with service-only
+  storage and 90-day cleanup. No raw product-event records or account-linked
+  progression analytics are stored.
+- Added `docs/milestones/PROGRESSION_IDENTITY_JOURNEY.md` and regression
+  coverage for normalization, migration contracts, privacy boundaries, and
+  guest handoff behavior.
+- Final local validation passed: build, Svelte check, ESLint, 417 tests, link
+  and CSP checks, database reset/lint/security, scoring parity, username,
+  balance, and catalog drift checks. Route performance budgets pass; the
+  existing advisory all-assets catalog remains above its aggregate JavaScript
+  and CSS targets.
+- The local Profile Studio browser smoke passed homepage, auth, direct-refresh,
+  stale-state, alias, and preview checks, then stopped at its existing R2
+  upload-persistence step because local R2 control-plane configuration is not
+  available. No progression assertion failed.
+
 ## Roll balance and reveal audit — 2026-08-19
 
 - Raised only the rare server-reported `condition_supernova` payout to

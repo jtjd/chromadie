@@ -11,10 +11,11 @@ export const FEATURE_FLAG_KEYS = Object.freeze([
   'profileMediaR2',
   'profileConfigurationV2',
   'expandedAnalytics',
-  'socialDepth'
+  'socialDepth',
+  'progressionJourney'
 ]);
 
-const FEATURE_FLAG_ENV_SUFFIXES = ['COMMERCE', 'RICH_MEDIA', 'PROFILE_MEDIA_R2', 'PROFILE_CONFIGURATION_V2', 'EXPANDED_ANALYTICS', 'SOCIAL_DEPTH'];
+const FEATURE_FLAG_ENV_SUFFIXES = ['COMMERCE', 'RICH_MEDIA', 'PROFILE_MEDIA_R2', 'PROFILE_CONFIGURATION_V2', 'EXPANDED_ANALYTICS', 'SOCIAL_DEPTH', 'PROGRESSION_JOURNEY'];
 export const FEATURE_FLAG_ENV_KEYS = Object.freeze(Object.fromEntries(
   FEATURE_FLAG_KEYS.map((key, index) => [key, `VITE_CHROMADIE_FLAG_${FEATURE_FLAG_ENV_SUFFIXES[index]}`])
 ));
@@ -27,7 +28,8 @@ export const FEATURE_FLAG_DEFAULTS = Object.freeze({
   profileMediaR2: false,
   profileConfigurationV2: true,
   expandedAnalytics: true,
-  socialDepth: true
+  socialDepth: true,
+  progressionJourney: true
 });
 
 export const ROLLOUT_STAGES = Object.freeze(['off', 'staff', 'internal', 'cohort', 'all']);
@@ -45,7 +47,8 @@ const BUILD_ENV = {
     import.meta.env?.VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2,
     import.meta.env?.VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2,
     import.meta.env?.VITE_CHROMADIE_FLAG_EXPANDED_ANALYTICS,
-    import.meta.env?.VITE_CHROMADIE_FLAG_SOCIAL_DEPTH
+    import.meta.env?.VITE_CHROMADIE_FLAG_SOCIAL_DEPTH,
+    import.meta.env?.VITE_CHROMADIE_FLAG_PROGRESSION_JOURNEY
   ]
 };
 
@@ -139,7 +142,8 @@ export function resolveProfileFeatureFlags(options = {}) {
     profileMediaR2: false,
     profileConfigurationV2: false,
     expandedAnalytics: false,
-    socialDepth: false
+    socialDepth: false,
+    progressionJourney: false
   };
   for (const [index, key] of FEATURE_FLAG_KEYS.entries()) {
     const defaultValue = FEATURE_FLAG_DEFAULTS[key];

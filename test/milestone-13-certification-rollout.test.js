@@ -68,7 +68,8 @@ test('M13 rollout flags are audience-scoped and independently reversible', () =>
   assert.equal(resolveProfileFeatureFlags({ env: { VITE_CHROMADIE_ROLLOUT_STAGE: 'off' }, isStaff: true }).expandedAnalytics, false);
   assert.equal(resolveProfileFeatureFlags({ env: { VITE_CHROMADIE_ROLLOUT_STAGE: 'unexpected' } }).commerce, true);
   assert.equal(isProfileFeatureEnabled('not-a-feature', { env: { VITE_CHROMADIE_ROLLOUT_STAGE: 'all' } }), false);
-  assert.deepEqual(FEATURE_FLAG_KEYS, ['commerce', 'richMedia', 'profileMediaR2', 'profileConfigurationV2', 'expandedAnalytics', 'socialDepth']);
+  assert.deepEqual(FEATURE_FLAG_KEYS, ['commerce', 'richMedia', 'profileMediaR2', 'profileConfigurationV2', 'expandedAnalytics', 'socialDepth', 'progressionJourney']);
+  assert.equal(resolveProfileFeatureFlags({ env: { VITE_CHROMADIE_ROLLOUT_STAGE: 'all', VITE_CHROMADIE_FLAG_PROGRESSION_JOURNEY: 'false' } }).progressionJourney, false);
 });
 
 test('R2 media can be enabled for one UUID without changing unrelated rollout flags', () => {
@@ -125,7 +126,7 @@ test('M13 client surfaces retain reversible gates and V1 fallbacks', async () =>
   assert.match(data, /normalizeProfileConfig\(configResponse\.data/);
   assert.match(social, /export let socialDepthEnabled = true/);
   assert.match(social, /depthEnabled/);
-  for (const key of ['VITE_CHROMADIE_ROLLOUT_STAGE', 'VITE_CHROMADIE_FLAG_COMMERCE', 'VITE_CHROMADIE_FLAG_RICH_MEDIA', 'VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2', 'VITE_PROFILE_MEDIA_R2_CANARY_IDS', 'VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2', 'VITE_CHROMADIE_FLAG_EXPANDED_ANALYTICS', 'VITE_CHROMADIE_FLAG_SOCIAL_DEPTH']) {
+  for (const key of ['VITE_CHROMADIE_ROLLOUT_STAGE', 'VITE_CHROMADIE_FLAG_COMMERCE', 'VITE_CHROMADIE_FLAG_RICH_MEDIA', 'VITE_CHROMADIE_FLAG_PROFILE_MEDIA_R2', 'VITE_PROFILE_MEDIA_R2_CANARY_IDS', 'VITE_CHROMADIE_FLAG_PROFILE_CONFIGURATION_V2', 'VITE_CHROMADIE_FLAG_EXPANDED_ANALYTICS', 'VITE_CHROMADIE_FLAG_SOCIAL_DEPTH', 'VITE_CHROMADIE_FLAG_PROGRESSION_JOURNEY']) {
     assert.match(env, new RegExp(key));
   }
   for (const table of ['billing_webhook_events', 'profile_media_assets', 'profile_insight_daily', 'profile_reports']) {

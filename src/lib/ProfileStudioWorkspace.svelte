@@ -113,7 +113,7 @@
         {/if}
       {:else if sectionComponents[activeSection]}
         {#if activeSection === 'overview'}
-          <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} />
+          <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} {featureFlags} />
         {:else if activeSection === 'profile-identity'}
           <svelte:component this={sectionComponents[activeSection]} profileId={context.profileId} username={context.targetProfile?.username || accountUsername} bio={context.targetProfile?.bio || ''} config={editorProfileConfig} on:identitysaved={forward} on:configsaved={forward} />
         {:else if activeSection === 'profile-aliases'}
@@ -131,7 +131,7 @@
         {:else if activeSection === 'profile-notifications'}
           <svelte:component this={sectionComponents[activeSection]} />
         {:else if activeSection === 'progression'}
-          <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} />
+          <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} {featureFlags} />
         {/if}
       {:else if sectionLoading}
         <div class="profile-studio-workspace__state" role="status"><h2>Loading</h2></div>

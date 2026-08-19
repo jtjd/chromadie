@@ -9,7 +9,7 @@
   import Surface from './foundation/Surface.svelte';
   import ProfileTimeline from './ProfileTimeline.svelte';
   import ProfileCollection from './ProfileCollection.svelte';
-  import { getProfileStoryUnlocks } from './profileStory.js';
+  import { getProfileStoryUnlocks, normalizeProfileProgressionProof } from './profileStory.js';
   import { createDefaultProfileConfig, normalizeProfileConfig } from './profileConfig.js';
   import ProfileMotionEffect from './profile-motion/ProfileMotionEffect.svelte';
   import ProfileFullBleedLayout from './profile-layout/ProfileFullBleedLayout.svelte';
@@ -53,6 +53,7 @@
   let targetScores = [];
   let timelineEvents = [];
   let collectionItems = [];
+  let progressionProof = { recentUnlocks: [] };
   let profileConfig = null;
   let social = createEmptyProfileSocial();
   let socialSettings = createDefaultProfileSocialSettings();
@@ -128,6 +129,7 @@
     targetScores = [];
     timelineEvents = [];
     collectionItems = [];
+    progressionProof = { recentUnlocks: [] };
     profileConfig = null;
     social = createEmptyProfileSocial();
     socialSettings = createDefaultProfileSocialSettings();
@@ -195,6 +197,7 @@
         targetScores = Array.isArray(previewScores) ? previewScores : [];
         timelineEvents = Array.isArray(previewTimelineEvents) ? previewTimelineEvents : [];
         collectionItems = Array.isArray(previewCollectionItems) ? previewCollectionItems : [];
+        progressionProof = { recentUnlocks: [] };
         allAchievements = Array.isArray(previewAllAchievements) ? previewAllAchievements : [];
         loading = false;
       }
@@ -287,6 +290,7 @@
     targetScores = context.targetScores;
     timelineEvents = context.timelineEvents;
     collectionItems = context.collectionItems;
+    progressionProof = normalizeProfileProgressionProof(context.progressionProof);
     profileConfig = context.profileConfig;
     social = context.social;
     socialSettings = context.socialSettings;
@@ -424,6 +428,7 @@
     scores: targetScores,
     timelineEvents,
     collectionItems,
+    progressionProof,
     allAchievements,
     fallbackColor: '#CDD2FF',
     featureFlags: resolveProfileFeatureFlags({
@@ -455,6 +460,7 @@
   $: effectiveProfileConfig = profileRenderSnapshot?.configuration || normalizeProfileConfig(null, '#CDD2FF');
   $: appearance = profileRenderSnapshot?.appearance || effectiveProfileConfig.appearance;
   $: storyUnlocks = profileRenderSnapshot?.story?.unlocks || getProfileStoryUnlocks(targetProfile);
+  $: progressionProofSnapshot = profileRenderSnapshot?.story?.progressionProof || { recentUnlocks: [] };
   $: latestRoll = profileRenderSnapshot?.roll?.latest || null;
   $: profileBio = profileRenderSnapshot?.identity?.bio || '';
   $: identityPresentation = profileRenderSnapshot?.identity?.presentation || {};
@@ -729,6 +735,16 @@
                   </div>
                   <span class="profile-shell__rank-next">{rankState.next ? rankState.next.name + ' at ' + formatStat(rankState.next.min) + ' EP' : 'Highest rank reached'}</span>
                 </div>
+                {#if profileFeatureFlags.progressionJourney && progressionProofSnapshot.recentUnlocks.length}
+                  <div class="profile-shell__progression-proof" aria-label="Recent earned expressions">
+                    <span class="profile-shell__progression-proof-label">Recent unlocks</span>
+                    <div>
+                      {#each progressionProofSnapshot.recentUnlocks as unlock (unlock.id)}
+                        <span class="profile-shell__progression-proof-item"><strong>{unlock.reward?.name || unlock.name}</strong><small>{unlock.track === 'discovery' ? 'Discovery' : unlock.track === 'ritual' ? 'Ritual' : 'Rank'}</small></span>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
               </Module>
             {/if}
 
@@ -917,6 +933,12 @@
   .profile-shell__rank-track { flex: 1 1 12rem; min-width: 8rem; height: 0.45rem; overflow: hidden; border-radius: var(--radius-pill); background: var(--surface-inset); }
   .profile-shell__rank-track span { display: block; height: 100%; border-radius: inherit; transition: width var(--motion-slow) var(--motion-ease-emphasis); }
   .profile-shell__rank-next { color: var(--color-ink-muted); letter-spacing: 0.04em; }
+  .profile-shell__progression-proof { display:grid; gap:.45rem; margin-top:var(--space-4); padding-top:var(--space-4); border-top:1px solid var(--color-line-subtle); }
+  .profile-shell__progression-proof-label { color:var(--profile-accent); font:700 var(--type-label)/1.2 var(--font-mono-stack); letter-spacing:.1em; text-transform:uppercase; }
+  .profile-shell__progression-proof > div { display:flex; flex-wrap:wrap; gap:.45rem; }
+  .profile-shell__progression-proof-item { display:grid; gap:.14rem; min-width:8rem; padding:.5rem .65rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
+  .profile-shell__progression-proof-item strong { color:var(--color-ink-strong); font-size:var(--type-small); }
+  .profile-shell__progression-proof-item small { color:var(--color-ink-muted); font-size:.68rem; }
 
   .profile-shell__supporting-region { min-width: 0; }
   .profile-shell__details-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--module-gap); padding-bottom: var(--space-6); }

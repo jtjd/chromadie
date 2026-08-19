@@ -1,7 +1,7 @@
 <script>
   import RollTile from './RollTile.svelte';
   import { supabase } from './supabase';
-  import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast } from './stores';
+  import { session, profile, authUser, authInitialized, guestProgressActive, fetchWalletBalance, fetchInventoryState, refreshProfileState, rerollShards, isAuthenticated, addToast, clearLocalAccountCache } from './stores';
   import { createChallengeLink } from './challenges';
   import { sleep, getTodayString, normalizeHexColor } from './utils';
   import { focusFirstElement, restoreFocus, trapFocus } from './a11y';
@@ -11,6 +11,7 @@
   import { normalizeNewMilestones } from './progressionState.js';
   import { getPercentileTier } from './rollPresentation.js';
   import { getRarityPresentation } from './rarityPresentation.js';
+  import { getRank } from './ranks.js';
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
   import { getAppOrigin } from './authUrls';
   import { trackProductEvent } from './productAnalytics.js';
@@ -69,6 +70,7 @@
   let countdownInterval;
   let milestoneGranted = '';
   let newMilestones = [];
+  let lastUnlockAnalyticsKey = '';
 
   let showImageModal = false;
   let imagePreviewUrl = '';
@@ -103,7 +105,9 @@
       longestStreak: Number($profile?.longest_streak) || 0,
       totalRolls: Number($profile?.total_rolls) || 0,
       lifetimeEp: Number($profile?.lifetime_ep) || 0,
-      isAuthenticated: Boolean($isAuthenticated)
+      isAuthenticated: Boolean($isAuthenticated),
+      newProgressionUnlocks: newMilestones,
+      weeklyFocusComplete: cotwHit
     });
   }
 
@@ -174,7 +178,19 @@
       }
 
       const callToAction = challengeLink.success ? `Challenge me: ${shareUrl}` : `Play ChromaDie: ${shareUrl}`;
-      let shareString = `🎲 ChromaDie Daily Roll\n${shareHex} • ${score.toLocaleString()} pts • ${rarity}\n${callToAction}`;
+      const rankName = $isAuthenticated ? getRank(Number($profile?.lifetime_ep) || 0).name : '';
+      const earnedLine = $isAuthenticated
+        ? newMilestones.length
+          ? `Unlocked: ${newMilestones.map(milestone => milestone.reward?.name || milestone.name).join(', ')}`
+          : `Rank: ${rankName}`
+        : '';
+      let shareString = `🎲 ChromaDie Daily Roll\n${shareHex} • ${score.toLocaleString()} pts • ${rarity}${earnedLine ? `\n${earnedLine}` : ''}\n${callToAction}`;
+
+      trackProductEvent('progression_share_started', {
+        surface: 'roll',
+        accountMode: getRollAccountMode($session),
+        method: 'clipboard'
+      });
 
       try {
           await navigator.clipboard.writeText(shareString);
@@ -472,6 +488,7 @@
     percentileDisplay = null;
     milestoneGranted = '';
     newMilestones = [];
+    lastUnlockAnalyticsKey = '';
     cotwHit = false;
     guestProgressRestored = false;
   }
@@ -866,10 +883,33 @@
     score = data.score;
     rarity = data.rarity;
     milestoneGranted = data.milestone_granted || '';
-    newMilestones = normalizeNewMilestones(data.new_milestones);
+    // The additive field is preferred, while the legacy response remains a
+    // valid fallback during the migration window.
+    newMilestones = normalizeNewMilestones(data.new_progression_unlocks);
+    if (!newMilestones.length) {
+      newMilestones = normalizeNewMilestones(data.new_milestones);
+    }
+
+    if (newMilestones.length) {
+      const unlockKey = newMilestones.map(milestone => milestone.id).join('|');
+      if (unlockKey !== lastUnlockAnalyticsKey) {
+        lastUnlockAnalyticsKey = unlockKey;
+        for (const milestone of newMilestones) {
+          trackProductEvent('progression_unlock_seen', {
+            surface: dedicated ? 'dedicated-roll' : 'root-roll',
+            accountMode: getRollAccountMode($session),
+            track: milestone.track || 'rank'
+          });
+        }
+      }
+    }
 
     if (data.badges && data.badges.includes('cotw_hit')) {
         cotwHit = true;
+        trackProductEvent('progression_weekly_focus_completed', {
+          surface: dedicated ? 'dedicated-roll' : 'root-roll',
+          accountMode: getRollAccountMode($session)
+        });
     }
 
     if (data.percentile !== undefined && data.total_rollers !== undefined) {
@@ -888,6 +928,10 @@
       surface: 'root',
       accountMode: getRollAccountMode($session),
       isReroll
+    });
+    trackProductEvent('progression_roll_completed', {
+      surface: dedicated ? 'dedicated-roll' : 'root-roll',
+      accountMode: getRollAccountMode($session)
     });
 
     if (!requestIsCurrent()) {
@@ -921,6 +965,17 @@
       clearRerollLock();
     }
     loading = false;
+  }
+
+  function beginGuestSignup() {
+    if (!$isAuthenticated) {
+      clearGuestRoll();
+      clearLocalAccountCache();
+      guestProgressRestored = false;
+      guestProgressActive.set(false);
+    }
+    trackProductEvent('progression_claim_started', { surface: 'roll', accountMode: 'guest' });
+    dispatch('promptlogin', { mode: 'signup' });
   }
 
   onMount(async () => {
@@ -1014,8 +1069,8 @@
 
         {#if !$isAuthenticated}
           <div class="guest-prompt guest-prompt--preroll">
-            <div class="guest-prompt-copy">Create an account to save your progress, climb the leaderboard, and claim your profile.</div>
-            <button type="button" class="roll-btn guest-prompt__button" on:click={() => dispatch('promptlogin', { mode: 'signup' })}>
+            <div class="guest-prompt-copy">Roll first. When you create an account, your next saved roll starts your journey.</div>
+            <button type="button" class="roll-btn guest-prompt__button" on:click={beginGuestSignup}>
               Create Account
             </button>
           </div>
@@ -1233,14 +1288,14 @@
 
       {#if !$isAuthenticated && guestProgressRestored && !dedicated}
         <div class="local-progress-banner" role="status" aria-live="polite">
-          Local-only progress restored. Create an account to save rolls to your profile.
+          Preview restored on this device. It will be discarded when signup begins.
         </div>
       {/if}
 
       {#if !$isAuthenticated}
         <div class="guest-prompt">
-          <div class="guest-prompt-copy">Create an account to save your progress, climb the leaderboard, and claim your profile.</div>
-          <button type="button" class="roll-btn guest-prompt__button" on:click={() => dispatch('promptlogin', { mode: 'signup' })}>
+          <div class="guest-prompt-copy">This preview will not transfer. Create an account to start saving future rolls.</div>
+          <button type="button" class="roll-btn guest-prompt__button" on:click={beginGuestSignup}>
             Create Account
           </button>
         </div>

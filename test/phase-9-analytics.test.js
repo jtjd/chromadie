@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import {
   PRODUCT_ANALYTICS_CONSENT_KEY,
+  createAggregateProductAnalyticsAdapter,
   createMemoryProductAnalyticsAdapter,
   getProductAnalyticsConsent,
   setProductAnalyticsAdapter,
@@ -116,14 +117,53 @@ test('denied consent blocks events and the memory adapter remains bounded', () =
   }
 });
 
-test('the browser adapter is a page-local custom-event seam without a network sink', async () => {
+test('the analytics adapter keeps legacy events page-local and progression measurement aggregate-only', async () => {
   const source = await readFile(new URL('../src/lib/productAnalytics.js', import.meta.url), 'utf8');
   const mainSource = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 
   assert.match(source, /chromadie:product-event/);
   assert.match(source, /dispatchEvent/);
   assert.doesNotMatch(source, /fetch\s*\(|navigator\.sendBeacon|XMLHttpRequest/);
-  assert.match(mainSource, /createBrowserProductAnalyticsAdapter/);
+  assert.match(source, /record_progression_event/);
+  assert.match(mainSource, /createAggregateProductAnalyticsAdapter/);
+});
+
+test('aggregate adapter sends only consented progression dimensions to the RPC', () => {
+  const restore = installStorage();
+  const calls = [];
+  const adapter = createAggregateProductAnalyticsAdapter({
+    target: { dispatchEvent() { return true; } },
+    supabaseClient: {
+      rpc(name, payload) {
+        calls.push({ name, payload });
+        return Promise.resolve({ data: { success: true }, error: null });
+      }
+    }
+  });
+  setProductAnalyticsAdapter(adapter);
+
+  try {
+    assert.equal(setProductAnalyticsConsent('granted'), 'granted');
+    assert.equal(trackProductEvent('route_view', { route: 'roll' }).accepted, true);
+    assert.equal(trackProductEvent('progression_unlock_seen', {
+      surface: 'studio',
+      accountMode: 'authenticated',
+      track: 'ritual',
+      username: 'private-name',
+      score: 999999
+    }).accepted, true);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].name, 'record_progression_event');
+    assert.deepEqual(calls[0].payload, {
+      p_event_name: 'progression_unlock_seen',
+      p_surface: 'studio',
+      p_account_mode: 'authenticated',
+      p_rollout_stage: 'all',
+      p_track: 'ritual'
+    });
+  } finally {
+    restore();
+  }
 });
 
 test('existing flows use the product-event contract without exposing private payloads', async () => {

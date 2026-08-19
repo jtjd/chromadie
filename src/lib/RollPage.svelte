@@ -1,8 +1,10 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { SvelteSet } from 'svelte/reactivity';
   import Game from './Game.svelte';
   import { getRankState } from './ranks.js';
   import { getRarityPresentation } from './rarityPresentation.js';
+  import { trackProductEvent } from './productAnalytics.js';
 
   const dispatch = createEventDispatcher();
   let gameSurface;
@@ -18,14 +20,21 @@
     longestStreak: 0,
     totalRolls: 0,
     lifetimeEp: 0,
-    isAuthenticated: false
+    isAuthenticated: false,
+    newProgressionUnlocks: [],
+    weeklyFocusComplete: false
   };
+  const progressionViewsTracked = new SvelteSet();
 
   $: contextHasResult = rollContext.phase === 'results' && Boolean(rollContext.identity);
   $: contextDay = Math.max(0, Number(rollContext.totalRolls) || Number(rollContext.currentStreak) || 0);
   $: contextRank = getRankState(rollContext.lifetimeEp);
   $: contextProgress = Math.round(contextRank.progress * 100);
   $: contextRarity = getRarityPresentation(rollContext.rarity || 'Common');
+  $: if (rollContext.isAuthenticated && !progressionViewsTracked.has('authenticated')) {
+    progressionViewsTracked.add('authenticated');
+    trackProductEvent('progression_viewed', { surface: 'dedicated-roll', accountMode: 'authenticated' });
+  }
 
   function forward(eventName, event) {
     dispatch(eventName, event.detail);
@@ -97,6 +106,23 @@
           <strong class="roll-page__description-score">{Number(rollContext.score).toLocaleString()} score</strong>.
           This color is now part of your profile history.
         </p>
+
+        {#if rollContext.newProgressionUnlocks?.length || rollContext.weeklyFocusComplete}
+          <div class="roll-page__proof" role="status" aria-live="polite">
+            {#if rollContext.newProgressionUnlocks?.length}
+              <div class="roll-page__proof-block">
+                <span class="roll-page__proof-label">NEW EXPRESSION</span>
+                <strong>{rollContext.newProgressionUnlocks.map(unlock => unlock.reward?.name || unlock.name).join(' · ')}</strong>
+              </div>
+            {/if}
+            {#if rollContext.weeklyFocusComplete}
+              <div class="roll-page__proof-block">
+                <span class="roll-page__proof-label">WEEKLY FOCUS COMPLETE</span>
+                <strong>+50,000 EP is in your wallet.</strong>
+              </div>
+            {/if}
+          </div>
+        {/if}
       {:else}
         <p class="roll-page__eyebrow">DAILY ROLL</p>
         <h1 id="roll-page-title">Keep your <span>color story.</span></h1>
@@ -254,6 +280,32 @@
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     text-shadow: 0 0 14px color-mix(in srgb, var(--roll-score-color) 34%, transparent);
+  }
+
+  .roll-page__proof {
+    display: grid;
+    gap: .65rem;
+    margin-top: 20px;
+    padding: .8rem .9rem;
+    border: 1px solid color-mix(in srgb, var(--roll-context-accent) 34%, var(--roll-border));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--roll-context-accent) 7%, var(--roll-panel-card));
+  }
+
+  .roll-page__proof-block {
+    display: grid;
+    gap: .25rem;
+  }
+
+  .roll-page__proof-label {
+    color: var(--roll-context-accent);
+    font: 700 .62rem/1 var(--site-font, 'Inter', sans-serif);
+    letter-spacing: .12em;
+  }
+
+  .roll-page__proof strong {
+    color: var(--roll-text);
+    font: 650 .8rem/1.35 var(--site-display, 'Manrope', sans-serif);
   }
 
   .roll-page__streak {

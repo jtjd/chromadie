@@ -106,11 +106,44 @@ export function normalizeProfileCollection(items) {
     .slice(0, 30);
 }
 
+export function normalizeProfileProgressionProof(value) {
+  const root = value && typeof value === 'object' ? value : {};
+  const source = Array.isArray(root.recent_unlocks)
+    ? root.recent_unlocks
+    : Array.isArray(root.recentUnlocks)
+      ? root.recentUnlocks
+      : [];
+
+  return {
+    recentUnlocks: source
+      .map(item => {
+        if (!item || typeof item !== 'object') return null;
+        const id = safeText(item.id, '', 100);
+        if (!ID_PATTERN.test(id)) return null;
+        const reward = item.reward && typeof item.reward === 'object' ? item.reward : {};
+        return {
+          id,
+          name: safeText(item.name, id, 100),
+          description: safeText(item.description, 'A profile expression earned through play.', 220),
+          track: ['rank', 'ritual', 'discovery'].includes(item.track) ? item.track : 'rank',
+          unlockedAt: safeDate(item.unlockedAt || item.unlocked_at),
+          reward: {
+            name: safeText(reward.name, 'Profile expression', 100),
+            slot: safeText(reward.slot, 'expression', 60)
+          }
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 2)
+  };
+}
+
 export function normalizeProfileStory(value) {
   const story = value && typeof value === 'object' ? value : {};
   return {
     timeline: normalizeProfileTimeline(story.timeline),
-    collection: normalizeProfileCollection(story.collection || story.collections)
+    collection: normalizeProfileCollection(story.collection || story.collections),
+    progressionProof: normalizeProfileProgressionProof(story.progression_proof || story.progressionProof)
   };
 }
 

@@ -55,7 +55,7 @@
       <li>We do not display advertising or use advertising cookies.</li>
       <li>Supabase processes account and gameplay information on our behalf.</li>
       <li>Cloudflare provides site delivery, abuse protection, Turnstile verification, and privacy-focused web analytics. Analytics are used to understand site performance and basic usage, not to build advertising or marketing profiles.</li>
-      <li>Optional product-event measurement is separate from Cloudflare Web Analytics and is off until you choose to allow it. The current product-event adapter keeps only redacted events in the page and does not transmit or store product-event records.</li>
+      <li>Optional product-event measurement is separate from Cloudflare Web Analytics and is off until you choose to allow it. Legacy events stay in the page; consented progression events send only anonymous, allowlisted dimensions to daily aggregate buckets, never raw events, account ids, scores, or colors.</li>
       <li>Your username, cosmetic selections, and certain gameplay information may be visible to other players through profiles and leaderboards.</li>
     </ul>
   </section>
@@ -64,6 +64,7 @@
     <h2>Data retention</h2>
     <ul>
       <li>Detailed score records are generally retained for 30 days. Account totals, achievements, inventory, and best-roll records are retained while your account remains active.</li>
+      <li>Consented progression measurement is retained only as anonymous daily totals for up to 90 days and cannot be tied back to an account.</li>
       <li>Challenge links expire after 30 days and are subsequently deleted.</li>
       <li>Guest data remains in your browser until you clear the site's data or ChromaDie removes it.</li>
       <li>Security and operational records may be retained for a limited period when needed to protect the service or investigate misuse.</li>

@@ -1,5 +1,31 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Make progression an evergreen identity journey
+
+Progression now has two server-published expression lanes: **Keep the
+ritual** for roll-count and streak milestones, and **Find the strange** for
+rarity, Mythic, and palindrome discoveries. This extends the existing five
+EP-backed rank milestones without changing their thresholds or rewards. The
+new nodes reuse existing achievement triggers and active catalog items, so
+gameplay earns prestige while the profile gains more authored ways to tell the
+player’s story.
+
+The weekly focus reuses the existing Color of the Week +50,000 EP reward. It
+does not create a second currency or a competing reward loop. Public profiles
+receive only bounded proof—current rank and at most two recent earned
+expressions—while the complete journey and ledger remain owner-only.
+
+Guest rolls remain disposable previews. Starting signup clears the local guest
+roll before authentication begins; no guest HEX, score, or reward is moved to
+the account. This keeps the claim flow honest and preserves the distinction
+between trying the ritual and building a durable identity.
+
+Measurement uses the existing consent preference and rollout stages. Only
+progression dimensions increment anonymous daily aggregate buckets retained
+for 90 days; raw event rows, account ids, scores, colors, and exact timestamps
+are not stored. The recorder is observational and cannot affect roll
+eligibility, scoring, rewards, inventory, or profile publication.
+
 ## 2026-08-19 — Keep roll jackpots rare, explicit, and server-mirrored
 
 The active candidate scorer keeps the ordinary roll floor in the tens of

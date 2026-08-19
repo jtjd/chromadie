@@ -13,9 +13,10 @@ import './styles/components.css'
 import './styles/site.css'
 import { mount } from 'svelte'
 import App from './App.svelte'
-import { createBrowserProductAnalyticsAdapter, setProductAnalyticsAdapter } from './lib/productAnalytics.js'
+import { supabase } from './lib/supabase.js'
+import { createAggregateProductAnalyticsAdapter, setProductAnalyticsAdapter } from './lib/productAnalytics.js'
 
-setProductAnalyticsAdapter(createBrowserProductAnalyticsAdapter())
+setProductAnalyticsAdapter(createAggregateProductAnalyticsAdapter({ supabaseClient: supabase }))
 
 const app = mount(App, {
   target: document.getElementById('app'),

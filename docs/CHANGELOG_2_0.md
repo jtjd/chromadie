@@ -2,6 +2,22 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Turn progression into an identity journey
+
+- Added two expression lanes to Progression: **Keep the ritual** for roll
+  count and streak milestones, and **Find the strange** for rare discoveries.
+- Kept the existing five EP rank milestones, active catalog rewards, scoring,
+  eligibility, and reward authority unchanged while backfilling earned
+  journey rewards safely for existing accounts.
+- Added weekly Color of the Week focus using the existing +50,000 EP reward,
+  with completion proof in Studio and the roll result.
+- Added bounded recent-unlock proof to public profiles so a profile can show
+  earned identity without exposing a private progression ledger.
+- Made guest signup explicit: the local preview is discarded when claiming an
+  account, so guest HEX and score are never silently transferred.
+- Added consented anonymous daily progression totals with a 90-day retention
+  boundary; individual product-event records are not stored.
+
 ## 2026-08-19 — Make the daily roll feel like a meaningful daily ritual
 
 - Tuned the rare Supernova condition to award 10,000,013 points, creating a

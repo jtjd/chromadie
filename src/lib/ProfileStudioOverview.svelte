@@ -9,6 +9,7 @@
   export let allAchievements = [];
   export let unlockedAchievements = {};
   export let progression = {};
+  export let featureFlags = {};
 
   /** @type {any} */
   let account;
@@ -25,6 +26,10 @@
   $: progressPercent = Math.round(rankState.progress * 100);
   $: nextReward = progression?.nextReward || null;
   $: recentUnlockCount = Array.isArray(progression?.recentUnlocks) ? progression.recentUnlocks.length : 0;
+  $: journeyEnabled = featureFlags?.progressionJourney !== false;
+  $: ritualNext = progression?.nextJourney?.ritual || null;
+  $: discoveryNext = progression?.nextJourney?.discovery || null;
+  $: weeklyFocus = progression?.weeklyFocus || null;
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
@@ -115,9 +120,9 @@
           <div><dt>Current streak</dt><dd>{formatNumber(account.current_streak)} days</dd></div>
           <div><dt>Achievements</dt><dd>{formatNumber(achievementCount)}{achievementTotal ? ` / ${formatNumber(achievementTotal)}` : ''}</dd></div>
           <div><dt>Story collection</dt><dd>{storyUnlocks.collectionUnlocked ? 'Unlocked' : `${storyUnlocks.collectionRollsRequired} rolls`}</dd></div>
-          <div><dt>Next expression</dt><dd>{nextReward?.name || 'Rank track'}</dd></div>
+          <div><dt>Next expression</dt><dd>{journeyEnabled ? (ritualNext?.reward?.name || discoveryNext?.reward?.name || nextReward?.name || 'Journey complete') : (nextReward?.name || 'Rank track')}</dd></div>
         </dl>
-        <p>{recentUnlockCount ? `${formatNumber(recentUnlockCount)} progression reward${recentUnlockCount === 1 ? '' : 's'} recently unlocked.` : collectionItems.length ? `${formatNumber(collectionItems.length)} collection item${collectionItems.length === 1 ? '' : 's'} recorded.` : 'No collection items recorded yet.'}</p>
+        <p>{weeklyFocus?.completed ? 'This week’s color is complete. ' : ''}{recentUnlockCount ? `${formatNumber(recentUnlockCount)} progression reward${recentUnlockCount === 1 ? '' : 's'} recently unlocked.` : collectionItems.length ? `${formatNumber(collectionItems.length)} collection item${collectionItems.length === 1 ? '' : 's'} recorded.` : 'No collection items recorded yet.'}</p>
       </section>
     </div>
   </section>
