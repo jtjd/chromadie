@@ -87,8 +87,10 @@ test('the hero carousel uses deterministic homepage specimens without public-pro
   assert.match(dailyLeaderboard, /getProfileMediaUrl/);
   assert.match(dailyLeaderboard, /export let currentUser = null/);
   assert.match(dailyLeaderboard, /mergeVisibleRows\(realRows, currentUser\)/);
+  assert.match(dailyLeaderboard, /rows\.slice\(0, 2\)/);
   assert.match(dailyLeaderboard, /isLocalEntry: true/);
   assert.match(dailyLeaderboard, /homepage-daily-leaderboard__row--you/);
+  assert.match(dailyLeaderboard, /View full leaderboard/);
   assert.match(dailyLeaderboard, /displayRank/);
   assert.doesNotMatch(dailyLeaderboard, /__homepage_you__|Your preview roll|href=\{getRowPath\(row\)\}[^\n]*#claim/);
 });

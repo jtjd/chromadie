@@ -2,6 +2,16 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Soften the homepage leaderboard into the hero atmosphere
+
+- Changed the daily leaderboard from a solid dark slab to translucent glass
+  with backdrop blur, a subtle border, and a restrained shadow/glow.
+- Reduced the hero preview to two rows, removed the heavy divider, and added a
+  quiet `View full leaderboard` link.
+- Added a matching accent halo around the top-ranked avatar and aligned the
+  desktop card with the profile identity cluster while preserving normal-flow
+  stacking on mobile.
+
 ## 2026-08-19 — Center Profile Studio header contents
 
 - Aligned the Customize/Profile Studio header contents with the homepage’s

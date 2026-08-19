@@ -1,5 +1,16 @@
 # Chromadie 2.0 Progress
 
+## Homepage leaderboard atmosphere — 2026-08-19
+
+- Reworked the daily leaderboard into a sky-matched glass surface with
+  translucent rows, backdrop blur, a restrained ambient glow, and a softer
+  header hierarchy.
+- Reduced the hero preview to two rows plus a `View full leaderboard` link,
+  while keeping a signed-in player’s local entry visible when needed.
+- Added a color-driven halo to the top-ranked avatar and lifted the desktop
+  card to align with the profile identity cluster; stacked mobile layouts
+  keep the card in normal flow.
+
 ## Centered Profile Studio header — 2026-08-19
 
 - Matched the Profile Studio header’s inner geometry to the homepage shell so

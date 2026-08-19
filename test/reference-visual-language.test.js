@@ -63,8 +63,11 @@ test('the homepage shell preserves the frozen reference geometry and treatment',
   assert.match(hero, /\.homepage-hero--meilin h1 span \{ color: #ffffff; \}/);
   assert.match(hero, /\.homepage-theme-button \{[\s\S]*?background: rgba\(255, 255, 255, \.94\)/);
   assert.match(hero, /\.homepage-theme-button:hover,[\s\S]*?background: rgba\(10, 10, 13, \.72\)/);
-  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /\.homepage-daily-leaderboard__kicker[\s\S]*?font: 600 1\.14rem \/ 1\.1 var\(--homepage-display\)/);
-  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /border-radius: 18px; background: rgba\(10, 10, 14, \.68\)/);
+  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /\.homepage-daily-leaderboard__kicker[\s\S]*?font: 600 \.98rem \/ 1\.1 var\(--homepage-display\)/);
+  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /border-radius: 20px; background: rgba\(20, 18, 30, \.55\)/);
+  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /backdrop-filter: blur\(20px\)/);
+  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /box-shadow: 0 8px 32px rgba\(0, 0, 0, \.25\)/);
+  assert.match(await read('src/lib/homepage/HomepageDailyLeaderboard.svelte'), /transform: translateY\(clamp\(-3\.5rem, -6vh, -2rem\)\)/);
   assert.doesNotMatch(hero, /height: 470px|ProfileShell|HomepageProfileRenderer|layoutLabel/);
   assert.match(demo, /ProfileReferenceCard/);
   assert.match(card, /profile-reference-card--homepage/);

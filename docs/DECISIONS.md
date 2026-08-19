@@ -1,5 +1,18 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Let the homepage leaderboard belong to the profile atmosphere
+
+The homepage leaderboard is part of the hero composition, not a separate
+dashboard panel. It therefore uses a translucent dark glass surface, backdrop
+blur, a low-contrast border, and a restrained shadow so the scene remains
+visible through it. Its title and rows are intentionally lighter and shorter:
+the hero shows two representative entries and links to the full leaderboard.
+The top-ranked avatar receives the same color-driven halo language as the
+profile specimen, while the desktop card is lifted to the vertical center of
+the avatar/name/social cluster. The transform is removed when the hero stacks
+for mobile so the card remains in document flow and does not create a
+viewport-specific overlap.
+
 ## 2026-08-19 — Center Profile Studio chrome within the homepage shell
 
 Profile Studio keeps its own opaque dashboard header because the editor must
