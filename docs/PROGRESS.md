@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Centered Profile Studio header — 2026-08-19
+
+- Matched the Profile Studio header’s inner geometry to the homepage shell so
+  the AM mark and editor actions stay centered within the same desktop,
+  tablet, and mobile content widths.
+- Kept the Studio header full-width and opaque so editable profile backgrounds
+  cannot affect editor legibility.
+
 ## Stable Profile Studio chrome — 2026-08-19
 
 - Profile Studio now suppresses the global photo-overlaid site chrome while

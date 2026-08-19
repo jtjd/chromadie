@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Center Profile Studio header contents
+
+- Aligned the Customize/Profile Studio header contents with the homepage’s
+  centered desktop, tablet, and mobile shell widths.
+- Preserved the opaque full-width dashboard surface and existing View profile,
+  Publish profile, and More actions.
+
 ## 2026-08-19 — Give Profile Studio stable dashboard chrome
 
 - Customize/Profile Studio no longer mounts the photo-overlaid site header or

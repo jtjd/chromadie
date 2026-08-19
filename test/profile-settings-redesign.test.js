@@ -69,6 +69,15 @@ test('Customize owns opaque dashboard chrome over editable profile backgrounds',
   assert.match(footer, /site-footer__brand-logo/);
 });
 
+test('Profile Studio header uses the centered homepage shell geometry', async () => {
+  const shell = await readFile(new URL('../src/lib/ProfileStudioShell.svelte', import.meta.url), 'utf8');
+
+  assert.match(shell, /<div class="profile-studio-shell__header-inner">/);
+  assert.match(shell, /\.profile-studio-shell__header-inner \{[\s\S]*width: min\(1480px, calc\(100% - 64px\)\);[\s\S]*margin-inline: auto;/);
+  assert.match(shell, /@media \(max-width: 1100px\) \{[\s\S]*\.profile-studio-shell__header-inner \{ width: min\(calc\(100% - 40px\), 980px\); \}/);
+  assert.match(shell, /@media \(max-width: 700px\) \{[\s\S]*\.profile-studio-shell__header-inner \{ width: calc\(100% - 30px\); \}/);
+});
+
 test('Profile Studio scopes the homepage companion palette without legacy theme aliases', async () => {
   const siteStyles = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
   assert.match(siteStyles, /\.app-main--profile-settings\s*\{/);

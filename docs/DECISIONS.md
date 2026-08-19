@@ -1,5 +1,14 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Center Profile Studio chrome within the homepage shell
+
+Profile Studio keeps its own opaque dashboard header because the editor must
+remain readable above user-controlled profile atmosphere. Its header contents
+now use the homepage’s centered max-width inner shell at desktop, tablet, and
+mobile breakpoints, while the background and border remain full-width. This
+aligns the brand and editor actions with the rest of the site without coupling
+Studio navigation to editable profile presentation.
+
 ## 2026-08-19 — Keep Profile Studio chrome outside the editable atmosphere
 
 Profile backgrounds are user-controlled and can change contrast, motion, and

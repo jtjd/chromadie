@@ -109,40 +109,42 @@
   <ProfileEnvironmentLayer snapshot={previewRenderSnapshot} mode="studio" reducedMotion={prefersReducedMotion} />
 
   <header class="profile-studio-shell__header">
-    {#if showBrand}
-      <a class="profile-studio-shell__brand" href="/" aria-label="chm.lol home">
-        <img class="profile-studio-shell__brand-logo" src="/brand/am-mark-v1.png" alt="" width="72" height="58" decoding="async" />
-      </a>
-    {/if}
-    <div class="profile-studio-shell__header-actions">
-      <a class="profile-studio-shell__view-profile" href={ownerProfilePath}>View profile</a>
-      <button
-        class="profile-studio-shell__publish"
-        type="button"
-        disabled={!dirty || mobileSaving}
-        aria-busy={mobileSaving ? 'true' : 'false'}
-        on:click={() => dispatch('publish')}
-      >{mobileSaving ? 'Publishing…' : 'Publish profile'}</button>
-      <div class="profile-studio-shell__menu-wrap">
+    <div class="profile-studio-shell__header-inner">
+      {#if showBrand}
+        <a class="profile-studio-shell__brand" href="/" aria-label="chm.lol home">
+          <img class="profile-studio-shell__brand-logo" src="/brand/am-mark-v1.png" alt="" width="72" height="58" decoding="async" />
+        </a>
+      {/if}
+      <div class="profile-studio-shell__header-actions">
+        <a class="profile-studio-shell__view-profile" href={ownerProfilePath}>View profile</a>
         <button
-          bind:this={moreTrigger}
-          class:active={moreActive}
-          class="profile-studio-shell__menu-trigger"
+          class="profile-studio-shell__publish"
           type="button"
-          aria-expanded={moreOpen}
-          aria-haspopup="menu"
-          aria-controls="profile-studio-more-menu"
-          on:click={toggleMore}
-        >More <span aria-hidden="true">{moreOpen ? '−' : '+'}</span></button>
-        {#if moreOpen}
-          <div bind:this={moreMenu} id="profile-studio-more-menu" class="profile-studio-shell__more-menu" role="menu" aria-label="Profile Studio destinations and actions">
-            {#each menuSections as section (section.id)}
-              <button type="button" role="menuitem" class:active={activeSection === section.id} data-section={section.id} on:click={() => navigate(section.id)} on:keydown={handleMenuKeydown}>{section.label}</button>
-            {/each}
-            <span class="profile-studio-shell__menu-divider" role="separator"></span>
-            <button type="button" role="menuitem" disabled={!dirty || mobileSaving} on:click={resetChanges} on:keydown={handleMenuKeydown}>Reset changes</button>
-          </div>
-        {/if}
+          disabled={!dirty || mobileSaving}
+          aria-busy={mobileSaving ? 'true' : 'false'}
+          on:click={() => dispatch('publish')}
+        >{mobileSaving ? 'Publishing…' : 'Publish profile'}</button>
+        <div class="profile-studio-shell__menu-wrap">
+          <button
+            bind:this={moreTrigger}
+            class:active={moreActive}
+            class="profile-studio-shell__menu-trigger"
+            type="button"
+            aria-expanded={moreOpen}
+            aria-haspopup="menu"
+            aria-controls="profile-studio-more-menu"
+            on:click={toggleMore}
+          >More <span aria-hidden="true">{moreOpen ? '−' : '+'}</span></button>
+          {#if moreOpen}
+            <div bind:this={moreMenu} id="profile-studio-more-menu" class="profile-studio-shell__more-menu" role="menu" aria-label="Profile Studio destinations and actions">
+              {#each menuSections as section (section.id)}
+                <button type="button" role="menuitem" class:active={activeSection === section.id} data-section={section.id} on:click={() => navigate(section.id)} on:keydown={handleMenuKeydown}>{section.label}</button>
+              {/each}
+              <span class="profile-studio-shell__menu-divider" role="separator"></span>
+              <button type="button" role="menuitem" disabled={!dirty || mobileSaving} on:click={resetChanges} on:keydown={handleMenuKeydown}>Reset changes</button>
+            </div>
+          {/if}
+        </div>
       </div>
     </div>
   </header>
@@ -217,10 +219,20 @@
     justify-content: space-between;
     gap: 1rem;
     min-height: 4rem;
-    padding: 0 1.9rem;
+    padding: 0;
     border-bottom: 1px solid var(--studio-border);
     background: var(--bg, #0e0e10);
     backdrop-filter: blur(22px);
+  }
+
+  .profile-studio-shell__header-inner {
+    display: flex;
+    width: min(1480px, calc(100% - 64px));
+    height: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    margin-inline: auto;
   }
 
   .profile-studio-shell__brand,
@@ -284,13 +296,15 @@
   :global(.profile-studio-shell a:focus-visible) { outline: 2px solid var(--studio-accent); outline-offset: 3px; }
 
   @media (max-width: 1100px) {
+    .profile-studio-shell__header-inner { width: min(calc(100% - 40px), 980px); }
     .profile-studio-shell__workspace,
     .profile-studio-shell--with-preview .profile-studio-shell__workspace { grid-template-columns: minmax(0, 640px); justify-content: center; width: min(calc(100% - 48px), 640px); }
     .profile-studio-shell__preview { position: relative; top: auto; height: auto; min-height: 0; padding-top: 1.5rem; }
   }
 
   @media (max-width: 700px) {
-    .profile-studio-shell__header { min-height: 4rem; padding: 0 .9rem; }
+    .profile-studio-shell__header { min-height: 4rem; }
+    .profile-studio-shell__header-inner { width: calc(100% - 30px); }
     .profile-studio-shell__brand-logo { width: 58px; }
     .profile-studio-shell__view-profile { display: none; }
     .profile-studio-shell__header-actions { gap: .55rem; }
