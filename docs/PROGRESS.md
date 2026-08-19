@@ -1,5 +1,13 @@
 # Chromadie 2.0 Progress
 
+## Stable Profile Studio chrome — 2026-08-19
+
+- Profile Studio now suppresses the global photo-overlaid site chrome while
+  the dashboard route is active.
+- The existing shell owns the dashboard header with the AM logo and mounts a
+  full-width dark footer variant, keeping editor controls independent from
+  user-editable profile atmosphere.
+
 ## Roll result contrast and color focus — 2026-08-19
 
 - Scoped the homepage-style header’s bright navigation rule so the white

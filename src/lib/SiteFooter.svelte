@@ -1,10 +1,17 @@
 <script>
   export let isAuthenticated = false;
+  export let variant = 'site';
 </script>
 
-<footer class="site-footer" data-site-chrome="footer">
+<footer class="site-footer" class:site-footer--studio={variant === 'studio'} data-site-chrome="footer">
   <div class="site-footer__identity">
-    <span>chm.lol</span>
+    {#if variant === 'studio'}
+      <a class="site-footer__brand" href="/" aria-label="chm.lol home">
+        <img class="site-footer__brand-logo" src="/brand/am-mark-v1.png" alt="" width="52" height="42" decoding="async" />
+      </a>
+    {:else}
+      <span>chm.lol</span>
+    {/if}
     <span>A public profile that changes every day.</span>
   </div>
 

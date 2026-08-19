@@ -2,6 +2,14 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Give Profile Studio stable dashboard chrome
+
+- Customize/Profile Studio no longer mounts the photo-overlaid site header or
+  footer above editable profile backgrounds.
+- The dashboard shell now owns an opaque dark header with the AM mark and an
+  opaque dark footer using the same brand asset, so editor navigation and
+  support links stay readable regardless of the selected profile background.
+
 ## 2026-08-19 — Keep roll result controls contrast-safe
 
 - The shared homepage-style header now keeps `Claim handle` in dark ink on

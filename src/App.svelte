@@ -893,7 +893,7 @@
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div id="header-mount">
-    {#if !profileModeVisible && !homeModeVisible}
+    {#if !profileModeVisible && !homeModeVisible && !profileSettingsModeVisible}
       <SiteModeHeader
         activeView={routeMode === 'app' ? view : routeMode}
         accountState={$accountState}
@@ -1023,7 +1023,7 @@
   />
   </div>
 
-  {#if view !== 'profile' && !homeModeVisible}
+  {#if view !== 'profile' && !homeModeVisible && !profileSettingsModeVisible}
     <SiteFooter isAuthenticated={$isAuthenticated} />
   {/if}
   </div>

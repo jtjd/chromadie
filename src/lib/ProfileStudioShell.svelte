@@ -3,6 +3,7 @@
   import { onDestroy, onMount } from 'svelte';
   import { getProfileStudioNavigation } from './profile-studio/dashboardContract.js';
   import ProfileEnvironmentLayer from './ProfileEnvironmentLayer.svelte';
+  import SiteFooter from './SiteFooter.svelte';
 
   export let activeSection = 'overview';
   /** @type {any[]} */
@@ -173,6 +174,8 @@
       <button type="button" on:click={() => dispatch('publish')} disabled={mobileSaving}>{mobileSaving ? 'Publishing…' : 'Publish profile'}</button>
     </div>
   {/if}
+
+  <SiteFooter isAuthenticated={true} variant="studio" />
 </div>
 
 <style>
@@ -247,6 +250,36 @@
   .profile-studio-shell__preview { position: sticky; top: 5.9rem; display: block; min-width: 0; height: calc(100dvh - 7.3rem); min-height: 34rem; overflow: visible; }
   .profile-studio-shell__mobile-actions { display: none; }
 
+  :global(.profile-studio-shell .site-footer--studio) {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 1.35rem clamp(1rem, 4vw, 2.4rem) calc(1.6rem + env(safe-area-inset-bottom));
+    border-top-color: var(--studio-border);
+    background: var(--bg, #0e0e10);
+  }
+
+  :global(.profile-studio-shell .site-footer--studio .site-footer__identity) {
+    align-items: center;
+  }
+
+  :global(.profile-studio-shell .site-footer--studio .site-footer__brand-logo) {
+    display: block;
+    width: 52px;
+    height: auto;
+    opacity: .94;
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, .12));
+  }
+
+  :global(.profile-studio-shell .site-footer--studio .site-footer__brand) {
+    display: inline-flex;
+    align-items: center;
+    color: var(--studio-text);
+    text-decoration: none;
+  }
+
   :global(.profile-studio-shell button:focus-visible),
   :global(.profile-studio-shell a:focus-visible) { outline: 2px solid var(--studio-accent); outline-offset: 3px; }
 
@@ -273,6 +306,7 @@
     .profile-studio-shell__mobile-actions button { min-height: 42px; padding: .5rem .75rem; border: 0; border-radius: 9px; background: var(--studio-text); color: #08080a; font: 600 .74rem/1 var(--studio-display); cursor: pointer; }
     .profile-studio-shell__mobile-actions button:disabled { cursor: wait; opacity: .6; }
     .profile-studio-shell__more-menu { position: fixed; top: 4.45rem; right: .75rem; max-width: calc(100vw - 1.5rem); }
+    :global(.profile-studio-shell .site-footer--studio) { padding-block: 1.15rem calc(1.35rem + env(safe-area-inset-bottom)); }
   }
 
   @media (prefers-reduced-motion: reduce) {

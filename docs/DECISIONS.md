@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Keep Profile Studio chrome outside the editable atmosphere
+
+Profile backgrounds are user-controlled and can change contrast, motion, and
+texture. Profile Studio navigation and support links should therefore not be
+painted directly over that environment. The app suppresses the global site
+header/footer for the authenticated dashboard route, while the existing
+Profile Studio shell owns an opaque neutral header and a full-width dark footer.
+Both use the code-owned AM mark, preserving the brand without coupling editor
+legibility to a profile’s current background.
+
 ## 2026-08-19 — Let rolled colors own result emphasis without sacrificing contrast
 
 The dedicated roll page keeps its neutral chrome and derives result emphasis

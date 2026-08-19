@@ -26,6 +26,7 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(header, /role="tablist" aria-label="Customize profile"/);
   assert.doesNotMatch(settings, /preview-column/);
   assert.match(settings, /ProfileStudioShell/);
+  assert.match(settings, /showBrand=\{true\}/);
   assert.match(settings, /setActiveSection\(/);
   assert.doesNotMatch(settings, /Build the profile you keep\./);
   assert.doesNotMatch(settings, /profile-settings-page__profile-link/);
@@ -47,6 +48,25 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(siteStyles, /--font-display-stack: 'Manrope Variable'/);
   assert.match(siteStyles, /--font-body-stack: 'Inter'/);
   assert.match(siteStyles, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
+test('Customize owns opaque dashboard chrome over editable profile backgrounds', async () => {
+  const [app, shell, footer] = await Promise.all([
+    readFile(new URL('../src/App.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileStudioShell.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/SiteFooter.svelte', import.meta.url), 'utf8')
+  ]);
+
+  assert.match(app, /!profileModeVisible && !homeModeVisible && !profileSettingsModeVisible/);
+  assert.match(app, /!homeModeVisible && !profileSettingsModeVisible/);
+  assert.match(shell, /import SiteFooter from ['"]\.\/SiteFooter\.svelte['"]/);
+  assert.match(shell, /variant="studio"/);
+  assert.match(shell, /site-footer--studio/);
+  assert.match(shell, /background: var\(--bg, #0e0e10\)/);
+  assert.match(shell, /src="\/brand\/am-mark-v1\.png"/);
+  assert.match(footer, /export let variant = 'site'/);
+  assert.match(footer, /class:site-footer--studio=\{variant === 'studio'\}/);
+  assert.match(footer, /site-footer__brand-logo/);
 });
 
 test('Profile Studio scopes the homepage companion palette without legacy theme aliases', async () => {
