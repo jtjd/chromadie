@@ -2,6 +2,11 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Keep the live preview label clear
+
+- Moved the desktop live-preview status label below the profile specimen so
+  framed avatars cannot cover its text while crossing the card edge.
+
 ## 2026-08-19 — Keep Profile Studio chrome readable over light profiles
 
 - Made the editable workspace heading, save state, tabs, and preview device

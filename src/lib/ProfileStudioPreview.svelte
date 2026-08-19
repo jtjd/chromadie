@@ -200,7 +200,13 @@
   }
 
   @media (min-width: 1101px) {
-    .profile-studio-preview { padding-top: 5.1rem; }
+    .profile-studio-preview { display: flex; flex-direction: column; padding-top: 5.1rem; }
+    /* Framed avatars intentionally cross the card's top edge. Keep the live
+       label after the specimen in document flow so that overlap can never
+       hide part of the label. */
+    .profile-studio-preview__canvas { order: 1; }
+    .profile-studio-preview__header { order: 2; min-height: 1.25rem; margin: 1rem auto 0; }
+    .profile-studio-preview__footer { order: 3; margin-top: .6rem; }
   }
 
   @media (max-width: 700px) {

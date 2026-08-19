@@ -80,7 +80,7 @@ test('Profile Studio header uses the centered homepage shell geometry', async ()
   assert.match(shell, /@media \(max-width: 700px\) \{[\s\S]*\.profile-studio-shell__header-inner \{ width: calc\(100% - 30px\); \}/);
 });
 
-test('Profile Studio chrome adapts to the atmosphere and layers the specimen above its label', async () => {
+test('Profile Studio chrome adapts to the atmosphere and keeps the preview label below the specimen', async () => {
   const [shell, header, preview] = await Promise.all([
     readFile(new URL('../src/lib/ProfileStudioShell.svelte', import.meta.url), 'utf8'),
     readFile(new URL('../src/lib/ProfileStudioHeader.svelte', import.meta.url), 'utf8'),
@@ -97,6 +97,10 @@ test('Profile Studio chrome adapts to the atmosphere and layers the specimen abo
   assert.match(preview, /\.profile-studio-preview__header \{ position: relative; z-index: 0;/);
   assert.match(preview, /\.profile-studio-preview__canvas \{ position: relative; z-index: 1;/);
   assert.match(preview, /\.profile-studio-preview__footer \{ position: relative; z-index: 2;/);
+  assert.match(preview, /@media \(min-width: 1101px\) \{[\s\S]*\.profile-studio-preview \{ display: flex; flex-direction: column;/);
+  assert.match(preview, /\.profile-studio-preview__canvas \{ order: 1; \}/);
+  assert.match(preview, /\.profile-studio-preview__header \{ order: 2; min-height: 1\.25rem;/);
+  assert.match(preview, /\.profile-studio-preview__footer \{ order: 3; margin-top: \.6rem;/);
 });
 
 test('Profile Studio scopes the homepage companion palette without legacy theme aliases', async () => {

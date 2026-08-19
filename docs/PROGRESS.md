@@ -1,13 +1,19 @@
 # Chromadie 2.0 Progress
 
+## Keep the live preview label clear of the specimen — 2026-08-19
+
+- Placed the desktop live-preview label after the profile specimen in the
+  preview flow, leaving the framed avatar free to cross the card edge without
+  obscuring the label.
+
 ## Contrast-aware Profile Studio chrome — 2026-08-19
 
 - Changed the editable workspace heading, save state, tabs, and preview
   controls to use white-first difference blending so they invert against
   light profile imagery while retaining the existing dark treatment over
   darker atmospheres.
-- Added explicit preview stacking so the live-preview label sits behind the
-  profile specimen and its animated avatar rather than competing with it.
+- Added explicit preview stacking so the profile specimen owns any remaining
+  overflow while the live-preview label stays clear below it.
 
 ## Anchor Profile Studio footer on short desktop pages — 2026-08-19
 

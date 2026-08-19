@@ -1,5 +1,13 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Keep preview status copy in flow below framed cards
+
+Framed profile avatars intentionally extend above their card surface. The
+Studio preview status label therefore belongs after the specimen in the
+desktop flow, rather than relying on z-index to make an overlapping label
+visible. This keeps the label readable for every avatar size and profile
+effect while leaving the card composition intact.
+
 ## 2026-08-19 — Let Studio chrome adapt to editable atmosphere contrast
 
 The workspace header and preview controls sit over a user-selected image or
