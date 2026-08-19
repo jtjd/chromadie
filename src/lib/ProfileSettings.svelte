@@ -21,6 +21,7 @@
     PROFILE_STUDIO_SECTIONS,
     getProfileStudioHash,
     getVisibleProfileStudioSections,
+    normalizeDashboardHash,
     resolveProfileStudioLocation
   } from './profile-studio/dashboardContract.js';
   import { PROFILE_STUDIO_SECTION_LOADERS } from './profile-studio/sectionRegistry.js';
@@ -175,6 +176,13 @@
     };
     updatePreviewViewport();
     previewMediaQuery.addEventListener?.('change', updatePreviewViewport);
+
+    // Progression used to live behind a Studio hash. Keep old bookmarks
+    // useful while making the dedicated route the only full renderer.
+    if (normalizeDashboardHash(window.location.hash) === 'progression') {
+      window.location.replace('/progression');
+      return () => previewMediaQuery?.removeEventListener?.('change', updatePreviewViewport);
+    }
 
     const getLocationState = () => resolveProfileStudioLocation(window.location.hash, visibleSettingsSections);
     const restoreLocation = () => {

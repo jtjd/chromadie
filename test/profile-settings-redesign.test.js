@@ -33,9 +33,9 @@ test('profile settings uses a compact grouped dashboard', async () => {
   assert.match(settings, /Customize/);
   assert.match(studio, /Overview/);
   assert.match(studio, /Privacy & social/);
-  assert.match(studio, /Badges & progression/);
+  assert.doesNotMatch(studio, /Badges & progression/);
 
-  for (const component of ['IdentityEditor', 'ProfileExpressionEditor', 'ProfileCosmeticsEditor', 'ProfileStudioOverview', 'ProfileProgression', 'ProfileLinksEditor', 'ProfileSocial']) {
+  for (const component of ['IdentityEditor', 'ProfileExpressionEditor', 'ProfileCosmeticsEditor', 'ProfileStudioOverview', 'ProfileLinksEditor', 'ProfileSocial']) {
     assert.match(registry, new RegExp(component + '\\.svelte'));
   }
   assert.match(workspace, /<svelte:component/);

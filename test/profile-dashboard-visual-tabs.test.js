@@ -89,7 +89,7 @@ test('Profile Studio responsive boundaries keep controls and preview drawers ins
   assert.match(smoke, /09-mobile-preview-414/);
   assert.match(smoke, /10-mobile-editor-414/);
   assert.match(smoke, /profile-studio-shell__mobile-tools/);
-  assert.match(smoke, /const destinations = \['overview', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'\]/);
+  assert.match(smoke, /const destinations = \['overview', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'account'\]/);
 });
 
 test('Customize link rows keep action controls inside the bounded editor surface', async () => {

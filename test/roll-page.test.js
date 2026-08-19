@@ -84,7 +84,7 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.match(page, /lifetimeEp/);
   assert.match(page, /roll-page__streak/);
   assert.match(page, /roll-page__progression/);
-  assert.match(page, /View your roll history/);
+  assert.match(page, /Open progression/);
   assert.match(page, /on:rollstate/);
   assert.match(game, /dispatch\('rollstate'/);
   assert.match(game, /roll-score-total/);

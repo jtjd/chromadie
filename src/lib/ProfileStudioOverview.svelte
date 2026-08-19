@@ -57,7 +57,7 @@
         <p>Review identity, progression, and recent profile history.</p>
       </div>
       <div class="profile-studio-overview__header-actions">
-        <a class="profile-studio-overview__header-action--quiet" href="#progression">Open progression <span aria-hidden="true">→</span></a>
+        <a class="profile-studio-overview__header-action--quiet" href="/progression">Open progression <span aria-hidden="true">→</span></a>
       </div>
     </header>
 
@@ -86,7 +86,7 @@
     <nav class="profile-studio-overview__actions" aria-label="Profile studio actions">
       <a href="#customize"><strong>Customize</strong><span>Identity & presence</span><b aria-hidden="true">→</b></a>
       <a href="#customize"><strong>Expression</strong><span>Media & cosmetics</span><b aria-hidden="true">→</b></a>
-      <a href="#progression"><strong>Progression</strong><span>Rolls & milestones</span><b aria-hidden="true">→</b></a>
+      <a href="/progression"><strong>Progression</strong><span>Rolls & milestones</span><b aria-hidden="true">→</b></a>
       <a href="#customize-links"><strong>Links</strong><span>Sharing & aliases</span><b aria-hidden="true">→</b></a>
     </nav>
 
@@ -94,7 +94,7 @@
       <section class="profile-studio-overview__trace" aria-labelledby="profile-studio-trace-title">
         <div class="profile-studio-overview__section-heading">
           <div><span class="profile-studio-overview__label">Recent history</span><h3 id="profile-studio-trace-title">Recent rolls</h3></div>
-          <a href="#progression">See all <span aria-hidden="true">→</span></a>
+          <a href="/progression">See all <span aria-hidden="true">→</span></a>
         </div>
         {#if timelineEvents.length}
           <ol>

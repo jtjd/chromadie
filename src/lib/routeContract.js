@@ -29,6 +29,7 @@ export const RESERVED_ROUTE_SEGMENTS = Object.freeze([
   'login',
   'og',
   'privacy',
+  'progression',
   'pricing',
   'profile',
   'prototype',

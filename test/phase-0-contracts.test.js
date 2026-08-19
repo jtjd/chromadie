@@ -87,6 +87,8 @@ test('public route parsing preserves profile, challenge, and app route contracts
   assert.equal(parseRouteLocation('/bad%2Fname').routeMode, 'not-found');
   assert.equal(parseRouteLocation('/NeonUser').profileRouteKind, 'root');
   assert.equal(parseRouteLocation('/leaderboard').profileUsername, null);
+  assert.equal(parseRouteLocation('/progression').view, 'progression');
+  assert.equal(parseRouteLocation('/progression').routeMode, 'app');
 });
 
 test('profile mapping keeps critical public fields and excludes private extras', () => {

@@ -130,8 +130,6 @@
           <svelte:component this={sectionComponents[activeSection]} configuration={context.profileConfig} socialSettings={context.socialSettings} on:socialchange={forward} />
         {:else if activeSection === 'profile-notifications'}
           <svelte:component this={sectionComponents[activeSection]} />
-        {:else if activeSection === 'progression'}
-          <svelte:component this={sectionComponents[activeSection]} profile={context.targetProfile} timelineEvents={context.timelineEvents} collectionItems={context.collectionItems} allAchievements={context.allAchievements} unlockedAchievements={context.unlockedAchievements} progression={context.progression} {featureFlags} />
         {/if}
       {:else if sectionLoading}
         <div class="profile-studio-workspace__state" role="status"><h2>Loading</h2></div>

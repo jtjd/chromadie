@@ -23,7 +23,6 @@ export const PROFILE_STUDIO_SECTION_REGISTRY = Object.freeze([
   { id: 'profile-social', destination: 'account', owner: 'account-destination', loader: () => import('../ProfileSocial.svelte') },
   { id: 'profile-insights', destination: 'account', owner: 'account-destination', loader: () => import('../ProfileInsights.svelte') },
   { id: 'profile-notifications', destination: 'account', owner: 'account-destination', loader: () => import('../ProfileNotifications.svelte') },
-  { id: 'progression', destination: 'account', owner: 'account-destination', loader: () => import('../ProfileProgression.svelte') },
   { id: 'account', destination: 'account', owner: 'account-destination', loader: () => import('../ProfileAccountSettings.svelte') }
 ]);
 

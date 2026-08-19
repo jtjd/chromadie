@@ -13,6 +13,8 @@
   export let unlockedAchievements = {};
   export let progression = {};
   export let featureFlags = {};
+  export let pageMode = false;
+  export let analyticsSurface = 'studio';
 
   const journeyLanes = Object.freeze([
     { id: 'ritual', label: 'Keep the ritual', description: 'Small promises that make a color identity last.' },
@@ -39,14 +41,14 @@
   const seenUnlocks = new SvelteSet();
 
   onMount(() => {
-    if (journeyEnabled) trackProductEvent('progression_viewed', { surface: 'studio', accountMode: 'authenticated' });
+    if (journeyEnabled) trackProductEvent('progression_viewed', { surface: analyticsSurface, accountMode: 'authenticated' });
   });
 
   $: if (journeyEnabled && weeklyFocus) {
     const focusKey = weeklyFocus.weekStart || 'current';
     if (!weeklyFocusViewed.has(focusKey)) {
       weeklyFocusViewed.add(focusKey);
-      trackProductEvent('progression_weekly_focus_viewed', { surface: 'studio', accountMode: 'authenticated' });
+      trackProductEvent('progression_weekly_focus_viewed', { surface: analyticsSurface, accountMode: 'authenticated' });
     }
   }
 
@@ -85,14 +87,14 @@
     if (seenUnlocks.has(key)) return;
     seenUnlocks.add(key);
     trackProductEvent('progression_unlock_seen', {
-      surface: 'studio',
+      surface: analyticsSurface,
       accountMode: 'authenticated',
       track: node.track
     });
   }
 </script>
 
-<Surface variant="panel" padding="lg" className="profile-progression-surface">
+<Surface variant="panel" padding="lg" className={`profile-progression-surface${pageMode ? ' profile-progression-surface--page' : ''}`}>
   <section aria-labelledby="profile-progression-title">
     <div class="profile-progression-heading">
       <div>
@@ -223,7 +225,7 @@
 
     <div class="profile-progression-footer">
       <p>Rewards, rank, and history stay server-authoritative.</p>
-      <a href="#customize">Equip an expression <span aria-hidden="true">→</span></a>
+      <a href={pageMode ? '/profile/settings#customize-media' : '#customize'}>Equip an expression <span aria-hidden="true">→</span></a>
     </div>
   </section>
 </Surface>

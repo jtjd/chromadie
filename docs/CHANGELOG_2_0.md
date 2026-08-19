@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Give progression its own destination
+
+- Added a full responsive `/progression` page for rank, EP, streak, weekly
+  focus, journey milestones, and recent unlocks.
+- Moved progression out of Profile Studio while keeping Studio focused on
+  structured profile expression and publishing.
+- Added Progression links to authenticated site navigation, the footer, the
+  Studio More menu, roll context, and the owner profile; old progression hash
+  links now redirect to the dedicated route.
+- Added owner-safe loading, signed-out, unavailable, error, and reduced-motion
+  states without changing server-authoritative progression behavior.
+
 ## 2026-08-19 — Turn progression into an identity journey
 
 - Added two expression lanes to Progression: **Keep the ritual** for roll
@@ -10,7 +22,7 @@ Document user-visible redesign changes by milestone.
   eligibility, and reward authority unchanged while backfilling earned
   journey rewards safely for existing accounts.
 - Added weekly Color of the Week focus using the existing +50,000 EP reward,
-  with completion proof in Studio and the roll result.
+  with completion proof in the progression destination and the roll result.
 - Added bounded recent-unlock proof to public profiles so a profile can show
   earned identity without exposing a private progression ledger.
 - Made guest signup explicit: the local preview is discarded when claiming an

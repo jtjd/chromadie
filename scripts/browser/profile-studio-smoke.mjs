@@ -1680,14 +1680,13 @@ try {
     assert(['relative', 'sticky'].includes(stickyTabs.position) && stickyTabs.labels.join('|') === 'Appearance|Media|Links|Layout', `Mobile customize tabs are missing or using invalid layout positioning: ${JSON.stringify(stickyTabs)}.`);
 
     const destinationWidths = [320, 600, 768];
-    const destinations = ['overview', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'progression', 'account'];
+    const destinations = ['overview', 'premium', 'profile-insights', 'profile-notifications', 'profile-social', 'account'];
     const workspaceDestinationBySection = {
       overview: 'overview',
       premium: 'premium',
       'profile-insights': 'account',
       'profile-notifications': 'account',
       'profile-social': 'account',
-      progression: 'account',
       account: 'account'
     };
     const destinationMeasurements = [];
@@ -1742,6 +1741,48 @@ try {
     }
 
     return { viewports, measurements, drawer, tabletToggle, tabletPreview, phonePreview, destinationMeasurements };
+  });
+
+  await step('dedicated Progression keeps its own route and responsive journey surface', async () => {
+    const viewports = [
+      [390, 844],
+      [768, 1024],
+      [1440, 900]
+    ];
+    const measurements = [];
+
+    for (const [width, height] of viewports) {
+      await page.setViewport(width, height);
+      await page.navigate(`${appUrl}/progression`, `Progression at ${width}x${height}`);
+      await page.waitFor(`location.pathname === '/progression' && document.querySelector('.progression-page')`, `Progression route at ${width}px`, 30000);
+      await page.waitFor('document.querySelector(".progression-page__account-bar, .progression-page__state")', `Progression content at ${width}px`, 30000);
+      const state = await page.evaluate(`(() => {
+        const pageElement = document.querySelector('.progression-page');
+        const shell = document.querySelector('.progression-page__shell');
+        const mainSurface = document.querySelector('.profile-progression-surface--page');
+        const overflow = [...document.querySelectorAll('.progression-page, .progression-page *')]
+          .map(element => ({ element, box: element.getBoundingClientRect() }))
+          .filter(({ box }) => box.width > 0 && (box.left < -1 || box.right > innerWidth + 1))
+          .slice(0, 8)
+          .map(({ element, box }) => ({ selector: element.className || element.tagName, left: Math.round(box.left), right: Math.round(box.right) }));
+        return {
+          path: location.pathname,
+          headerCount: document.querySelectorAll('.site-mode-header').length,
+          page: pageElement ? { width: Math.round(pageElement.getBoundingClientRect().width), height: Math.round(pageElement.getBoundingClientRect().height) } : null,
+          shell: shell ? { left: Math.round(shell.getBoundingClientRect().left), right: Math.round(shell.getBoundingClientRect().right) } : null,
+          mainSurface: Boolean(mainSurface),
+          overflow,
+          contained: document.documentElement.scrollWidth <= innerWidth + 1 && document.body.scrollWidth <= innerWidth + 1
+        };
+      })()`);
+      assert(state.path === '/progression' && state.headerCount === 1, `Progression did not settle into one shared route header at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.page && state.shell && state.mainSurface, `Progression full-page journey did not render at ${width}px: ${JSON.stringify(state)}.`);
+      assert(state.contained && !state.overflow.length, `Progression escapes its viewport at ${width}px: ${JSON.stringify(state)}.`);
+      measurements.push({ width, height, ...state });
+    }
+
+    await capture('11-progression-responsive');
+    return { viewports, measurements };
   });
 
   await step('production Leaderboard keeps its route shell and row geometry bounded', async () => {

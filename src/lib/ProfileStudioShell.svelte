@@ -117,6 +117,7 @@
       {/if}
       <div class="profile-studio-shell__header-actions">
         <a class="profile-studio-shell__view-profile" href={ownerProfilePath}>View profile</a>
+        <a class="profile-studio-shell__progression-link" href="/progression">Progression</a>
         <button
           class="profile-studio-shell__publish"
           type="button"
@@ -140,6 +141,8 @@
               {#each menuSections as section (section.id)}
                 <button type="button" role="menuitem" class:active={activeSection === section.id} data-section={section.id} on:click={() => navigate(section.id)} on:keydown={handleMenuKeydown}>{section.label}</button>
               {/each}
+              <span class="profile-studio-shell__menu-divider" role="separator"></span>
+              <a href="/progression" role="menuitem" on:click={() => closeMore()} on:keydown={handleMenuKeydown}>Progression</a>
               <span class="profile-studio-shell__menu-divider" role="separator"></span>
               <button type="button" role="menuitem" disabled={!dirty || mobileSaving} on:click={resetChanges} on:keydown={handleMenuKeydown}>Reset changes</button>
             </div>
@@ -241,12 +244,15 @@
   }
 
   .profile-studio-shell__brand,
-  .profile-studio-shell__view-profile { color: var(--studio-text); text-decoration: none; }
+  .profile-studio-shell__view-profile,
+  .profile-studio-shell__progression-link { color: var(--studio-text); text-decoration: none; }
   .profile-studio-shell__brand { display: inline-flex; align-items: center; min-width: 0; }
   .profile-studio-shell__brand-logo { display: block; width: 72px; height: auto; object-fit: contain; opacity: .96; filter: drop-shadow(0 0 14px rgba(255, 255, 255, .14)); }
   .profile-studio-shell__header-actions { display: flex; align-items: center; justify-content: flex-end; gap: .85rem; min-width: 0; }
   .profile-studio-shell__view-profile { color: var(--studio-muted); font-size: .8rem; font-weight: 500; white-space: nowrap; }
   .profile-studio-shell__view-profile:hover, .profile-studio-shell__view-profile:focus-visible { color: var(--studio-text); }
+  .profile-studio-shell__progression-link { color: var(--studio-muted); font-size: .8rem; font-weight: 500; white-space: nowrap; }
+  .profile-studio-shell__progression-link:hover, .profile-studio-shell__progression-link:focus-visible { color: var(--studio-text); }
   .profile-studio-shell__publish { min-height: 42px; padding: 0 18px; border: 0; border-radius: 9px; background: var(--studio-text); color: #08080a; font: 600 .78rem/1 var(--studio-display); white-space: nowrap; cursor: pointer; }
   .profile-studio-shell__publish:hover:not(:disabled), .profile-studio-shell__publish:focus-visible { border-color: transparent; background: var(--studio-accent); }
   .profile-studio-shell__publish:disabled { border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.12); color: rgba(255,255,255,.42); cursor: default; }
@@ -256,6 +262,8 @@
   .profile-studio-shell__menu-trigger span { margin-left: .18rem; color: var(--studio-faint); }
   .profile-studio-shell__more-menu { position: absolute; top: calc(100% + .35rem); right: 0; z-index: 60; display: grid; min-width: 13rem; padding: .35rem; border: 1px solid var(--studio-border); border-radius: .65rem; background: var(--surface-2, #1e1e22); box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, .36); }
   .profile-studio-shell__more-menu button { min-height: 2.3rem; padding: .55rem .65rem; border: 0; border-radius: .35rem; background: transparent; color: var(--studio-muted); font: 500 .76rem/1.2 'Inter', var(--font-body-stack, sans-serif); text-align: left; cursor: pointer; }
+  .profile-studio-shell__more-menu a { min-height: 2.3rem; padding: .55rem .65rem; border-radius: .35rem; color: var(--studio-muted); font: 500 .76rem/1.2 'Inter', var(--font-body-stack, sans-serif); text-align: left; text-decoration: none; }
+  .profile-studio-shell__more-menu a:hover, .profile-studio-shell__more-menu a:focus-visible { background: var(--studio-accent-soft); color: var(--studio-text); }
   .profile-studio-shell__more-menu button:hover, .profile-studio-shell__more-menu button:focus-visible, .profile-studio-shell__more-menu button.active { background: var(--studio-accent-soft); color: var(--studio-text); }
   .profile-studio-shell__more-menu button:disabled { cursor: default; opacity: .4; }
   .profile-studio-shell__menu-divider { height: 1px; margin: .3rem .4rem; background: var(--studio-border); }
@@ -314,6 +322,7 @@
     .profile-studio-shell__header-inner { width: calc(100% - 30px); }
     .profile-studio-shell__brand-logo { width: 58px; }
     .profile-studio-shell__view-profile { display: none; }
+    .profile-studio-shell__progression-link { display: none; }
     .profile-studio-shell__header-actions { gap: .55rem; }
     .profile-studio-shell__publish { min-height: 2.5rem; padding-inline: .8rem; font-size: .7rem; }
     .profile-studio-shell__workspace,

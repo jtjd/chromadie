@@ -18,6 +18,7 @@
   <nav class="site-footer__nav" aria-label="Footer navigation">
     <a href="/roll">Roll</a>
     <a href="/leaderboard">Leaderboard</a>
+    {#if isAuthenticated}<a href="/progression">Progression</a>{/if}
     {#if isAuthenticated}<a href="/profile/settings">Customize</a>{/if}
     <a href="/pricing">Pricing</a>
     <a href="/how-to-play">How to Play</a>

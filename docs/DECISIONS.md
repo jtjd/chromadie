@@ -1,5 +1,31 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Give progression its own evergreen destination
+
+Progression is now a dedicated owner route at `/progression`, rather than an
+account subsection inside Profile Studio. The page gets the site's normal
+shell, a full responsive journey presentation, explicit loading/guest/error
+states, and direct links back to the daily roll and profile expression work.
+This makes long-term identity visible as a destination without making the
+editor responsible for account history.
+
+The page reuses the existing `get_my_progression` projection and
+`ProfileProgression` presentation slice. Rank, EP, streaks, milestone state,
+weekly focus, and unlock history remain server-owned; no scoring, eligibility,
+reward, inventory, or prestige authority moved to the browser. Profile Studio
+continues to own structured expression editing and publishing.
+
+Authenticated navigation, the footer, Studio's More menu, roll completion
+copy, and the owner profile proof all point to `/progression`. Existing
+`#progression` bookmarks are redirected there, and the route is reserved from
+username parsing. The page is owner-only and `noindex,follow`; signed-out
+visitors receive a safe explanation and bounded login/roll paths.
+
+The progression analytics recorder accepts `progression` as an additional
+aggregate surface. The additive migration changes only the allow-list and
+keeps the existing consent, service-only storage, retention, and no-raw-event
+boundaries intact.
+
 ## 2026-08-19 — Make progression an evergreen identity journey
 
 Progression now has two server-published expression lanes: **Keep the

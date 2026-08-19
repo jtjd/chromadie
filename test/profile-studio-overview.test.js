@@ -4,14 +4,14 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('Studio overview makes profile identity, progression, and editing actions visible together', async () => {
+test('Studio overview points progression work to its dedicated destination', async () => {
   const overview = await read('src/lib/ProfileStudioOverview.svelte');
 
   assert.match(overview, /Profile overview/);
   assert.match(overview, /getRankState/);
   assert.match(overview, /getProfileStoryUnlocks/);
   assert.match(overview, /href="#customize"/);
-  assert.match(overview, /href="#progression"/);
+  assert.match(overview, /href="\/progression"/);
   assert.match(overview, /href="#customize-links"/);
   assert.match(overview, /timelineEvents\.slice\(0, 3\)/);
   assert.match(overview, /prefers-reduced-motion/);

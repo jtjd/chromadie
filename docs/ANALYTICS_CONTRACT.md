@@ -26,6 +26,10 @@ after 90 days by the existing cleanup boundary. A staff/service-only RPC can
 read those dimensions for rollout measurement; browser roles cannot read the
 table or the aggregate report.
 
+The progression `surface` dimension is allow-listed at the database boundary;
+the current owner destination uses `progression`, while the existing roll and
+Studio surfaces retain their established values.
+
 ## Allowlisted events
 
 | Event | Allowed properties | Meaning |

@@ -8,6 +8,10 @@ The historical implementation details below remain as a record of the
 incremental dashboard work. They are not visual authorities for new Studio
 changes.
 
+As of 2026-08-19, progression is no longer a Studio destination. The current
+owner journey lives at `/progression`; this record retains the earlier Studio
+architecture and acceptance context for historical traceability.
+
 The latest renderer follow-up also projects catalog CSS values at the preview
 boundary, gives Motion its animated Name renderer, and explicitly resumes
 Name, cursor, and atmosphere media when mounted editors return from a hidden
@@ -41,8 +45,8 @@ opens on an aggregate expression workspace and keeps account surfaces separate:
   Compact/Immersive presentation, and public composition controls.
 - Links — public links, aliases, sharing metadata, and QR actions.
 - Premium — Plus status and a read-only path to the existing pricing flow.
-- Account — overview, analytics, notifications, privacy/social, progression,
-  and account settings.
+- Account — overview, analytics, notifications, privacy/social, and account
+  settings. Progression is now a separate owner destination at `/progression`.
 
 The primary authenticated header now exposes Studio instead of Shop. Shop is
 still direct-refreshable at `/shop`, but it is not promoted through navigation

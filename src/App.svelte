@@ -254,6 +254,11 @@
       return;
     }
 
+    if (view === 'progression') {
+      if (window.location.pathname !== '/progression') window.history.pushState({}, '', '/progression');
+      return;
+    }
+
     if (view === 'pricing') {
       const pricingPath = window.location.pathname === '/pricing/success' ? '/pricing/success' : '/pricing';
       if (window.location.pathname !== pricingPath) window.history.pushState({}, '', pricingPath);
@@ -344,6 +349,8 @@
     if (typeof window !== 'undefined') {
       const nextPath = nextView === 'profile-settings'
         ? '/profile/settings'
+        : nextView === 'progression'
+          ? '/progression'
         : nextView === 'pricing'
           ? '/pricing'
           : nextView === 'game'
@@ -652,6 +659,15 @@
       };
     }
 
+    if (currentView === 'progression') {
+      return {
+        loaderKey: 'progression',
+        componentKey: 'progression',
+        componentProps: {},
+        loadingLabel: 'Opening progression'
+      };
+    }
+
     if (currentView === 'profile-settings') {
       if (authenticated) {
         return {
@@ -780,6 +796,8 @@
         ? `${profileTitle} | ChromaDie`
         : routeMode === 'app' && view === 'profile-settings'
           ? 'Profile Studio | ChromaDie'
+        : routeMode === 'app' && view === 'progression'
+          ? 'Progression | ChromaDie'
         : routeMode === 'app' && view === 'home'
           ? 'ChromaDie — A daily color identity'
         : routeMode === 'app' && view === 'prototype'
@@ -813,6 +831,8 @@
         ? `View ${profileTitle}'s public ChromaDie profile, progress, achievements, and recent rolls.`
         : routeMode === 'app' && view === 'profile-settings'
           ? 'Shape your ChromaDie identity, collection, progression, public canvas, and privacy from one profile studio.'
+        : routeMode === 'app' && view === 'progression'
+          ? 'Follow the rolls, streaks, discoveries, and expression rewards that make your ChromaDie profile yours.'
         : routeMode === 'app' && view === 'home'
           ? 'Roll one color each day and build a personal profile that grows through rarity, conditions, collections, and time.'
         : routeMode === 'app' && view === 'prototype'
@@ -836,6 +856,8 @@
         ? '/leaderboard'
         : routeMode === 'app' && view === 'profile-settings'
           ? '/profile/settings'
+        : routeMode === 'app' && view === 'progression'
+          ? '/progression'
         : routeMode === 'app' && view === 'pricing'
           ? '/pricing'
         : routeMode === 'app' && view === 'profile' && selectedProfileUsername
@@ -847,7 +869,7 @@
           : '/';
   $: pageRobots = routeMode === 'not-found'
     ? 'noindex,follow'
-    : routeMode === 'app' && (legacyProfile || profileRouteKind === 'compatibility' || view === 'game' || view === 'profile-settings' || view === 'pricing' && typeof window !== 'undefined' && window.location.pathname === '/pricing/success' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
+    : routeMode === 'app' && (legacyProfile || profileRouteKind === 'compatibility' || view === 'game' || view === 'profile-settings' || view === 'progression' || view === 'pricing' && typeof window !== 'undefined' && window.location.pathname === '/pricing/success' || view === 'profile' && !selectedProfileUsername || view === 'prototype')
     ? 'noindex,follow'
     : routeMode === 'auth' || routeMode === 'auth-callback' || routeMode === 'reset-password'
       ? 'noindex,nofollow'

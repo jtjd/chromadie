@@ -743,6 +743,7 @@
                         <span class="profile-shell__progression-proof-item"><strong>{unlock.reward?.name || unlock.name}</strong><small>{unlock.track === 'discovery' ? 'Discovery' : unlock.track === 'ritual' ? 'Ritual' : 'Rank'}</small></span>
                       {/each}
                     </div>
+                    {#if isOwnProfile}<a class="profile-shell__progression-link" href="/progression">View full progression <span aria-hidden="true">→</span></a>{/if}
                   </div>
                 {/if}
               </Module>
@@ -939,6 +940,8 @@
   .profile-shell__progression-proof-item { display:grid; gap:.14rem; min-width:8rem; padding:.5rem .65rem; border:1px solid var(--color-line-subtle); border-radius:var(--radius-sm); background:var(--surface-inset); }
   .profile-shell__progression-proof-item strong { color:var(--color-ink-strong); font-size:var(--type-small); }
   .profile-shell__progression-proof-item small { color:var(--color-ink-muted); font-size:.68rem; }
+  .profile-shell__progression-link { justify-self:start; color:var(--color-ink-strong); font-size:var(--type-small); font-weight:650; text-decoration:none; }
+  .profile-shell__progression-link:hover, .profile-shell__progression-link:focus-visible { color:var(--profile-accent); }
 
   .profile-shell__supporting-region { min-width: 0; }
   .profile-shell__details-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--module-gap); padding-bottom: var(--space-6); }

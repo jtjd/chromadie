@@ -1,5 +1,21 @@
 # Chromadie 2.0 Progress
 
+## Dedicated progression destination — 2026-08-19
+
+- Promoted progression from a Profile Studio account subsection to the
+  dedicated, lazy-loaded `/progression` route with the normal site shell.
+- Added a responsive owner page around the existing server-backed journey:
+  rank/EP context, ritual and discovery tracks, weekly focus, recent unlocks,
+  empty/loading/error/account-unavailable states, and reduced-motion support.
+- Kept Profile Studio focused on expression editing and publishing. Shared
+  navigation, Studio's More menu, roll context, and owner-profile proof now
+  point to Progression; legacy `#progression` bookmarks redirect safely.
+- Reserved the clean path from username routing and added the `progression`
+  aggregate analytics surface without widening privacy, retention, or
+  server-authority boundaries.
+- Added route/component/browser-contract coverage and a dedicated milestone
+  record in `docs/milestones/PROGRESSION_DESTINATION.md`.
+
 ## Progression identity journey — 2026-08-19
 
 - Added an additive server-published journey manifest with two lanes: ritual
@@ -12,8 +28,10 @@
 - Added owner-only progression state for total rolls, current streak, weekly
   Color of the Week focus, journey progress, and recent unlocks. Public story
   responses expose only current-safe proof with two recent unlocks maximum.
-- Added dedicated/profile roll result proof, Studio journey lanes, and a
-  contrast-safe guest claim path that discards the local preview at signup.
+- Added dedicated progression/profile roll result proof and a contrast-safe
+  guest claim path that discards the local preview at signup. The progression
+  journey initially lived in Studio and was promoted to its own destination in
+  the follow-up above.
 - Added consent-gated, anonymous daily progression aggregates with service-only
   storage and 90-day cleanup. No raw product-event records or account-linked
   progression analytics are stored.
@@ -863,7 +881,8 @@ active presentation guidance.
   768, 1024, 1100, and 1280px, including visible controls and nested editor
   bounds.
 - Audited Overview, Links, Premium, Analytics, Notifications, Privacy &
-  social, Badges & progression, and Settings at phone and tablet widths.
+  social, and Settings at phone and tablet widths; progression now has its own
+  dedicated route.
 - Fixed Appearance's intrinsic grid sizing so hex fields, picker rails, and
   surface sliders stay inside the editor at intermediate tablet widths.
 - Kept the mobile Preview action available and bounded the fixed preview drawer

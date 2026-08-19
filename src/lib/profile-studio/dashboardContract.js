@@ -59,7 +59,6 @@ export const PROFILE_STUDIO_SECTIONS = Object.freeze([
   { id: 'profile-insights', label: 'Analytics', groupKey: 'account', groupLabel: 'Account', icon: 'profile-insights' },
   { id: 'profile-notifications', label: 'Notifications', groupKey: 'account', icon: 'profile-notifications' },
   { id: 'profile-social', label: 'Privacy & social', groupKey: 'account', icon: 'profile-social' },
-  { id: 'progression', label: 'Badges & progression', groupKey: 'account', icon: 'progression' },
   { id: 'account', label: 'Settings', groupKey: 'account', icon: 'account' }
 ]);
 

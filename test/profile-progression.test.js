@@ -4,9 +4,10 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('progression is a dashboard surface backed by existing profile history', async () => {
-  const progression = await read('src/lib/ProfileProgression.svelte');
-  const [registry, workspace] = await Promise.all([
+test('progression is a dedicated page backed by existing profile history', async () => {
+  const [progression, page, registry, workspace] = await Promise.all([
+    read('src/lib/ProfileProgression.svelte'),
+    read('src/lib/ProgressionPage.svelte'),
     read('src/lib/profile-studio/sectionRegistry.js'),
     read('src/lib/ProfileStudioWorkspace.svelte')
   ]);
@@ -18,8 +19,14 @@ test('progression is a dashboard surface backed by existing profile history', as
   assert.match(progression, /timelineEvents\.slice\(0, 3\)/);
   assert.match(progression, /server-authoritative/);
   assert.match(progression, /prefers-reduced-motion/);
-  assert.match(registry, /ProfileProgression\.svelte/);
-  assert.match(workspace, /activeSection === 'progression'/);
+  assert.match(progression, /analyticsSurface/);
+  assert.match(page, /loadProfileContext/);
+  assert.match(page, /ProfileProgression/);
+  assert.match(page, /analyticsSurface="progression"/);
+  assert.match(page, /href="\/login\?next=%2Fprogression"/);
+  assert.match(page, /prefers-reduced-motion/);
+  assert.doesNotMatch(registry, /ProfileProgression\.svelte/);
+  assert.doesNotMatch(workspace, /activeSection === 'progression'/);
 });
 
 test('Customize is the complete profile expression surface while purchases stay retired', async () => {

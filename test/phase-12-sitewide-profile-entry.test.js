@@ -16,6 +16,7 @@ test('the bare root is the landing page and explicit gameplay remains compatible
   assert.equal(parseRouteLocation('/c/challenge-1').view, 'game');
   assert.equal(parseRouteLocation('/u/OtherUser').view, 'profile');
   assert.equal(parseRouteLocation('/profile/settings').view, 'profile-settings');
+  assert.equal(parseRouteLocation('/progression').view, 'progression');
 });
 
 test('site surfaces use one shared header and the quiet site shell', () => {
@@ -39,6 +40,7 @@ test('site surfaces use one shared header and the quiet site shell', () => {
   assert.match(header, /navigate\('home'\)/);
   assert.match(header, /Leaderboard/);
   assert.match(header, />Customize</);
+  assert.match(header, />Progression</);
   assert.doesNotMatch(header, />Shop</);
   assert.doesNotMatch(header, />Profile</);
   assert.match(header, /class:site-mode-header--home=\{isHomeMode \|\| isHomepageStyle\}/);

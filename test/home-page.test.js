@@ -69,11 +69,11 @@ test('homepage navigation exposes real product destinations without placeholder 
   assert.match(header, /SiteModeHeader/);
   assert.match(header, /claimHref="#claim"/);
   assert.match(sharedHeader, /src="\/brand\/am-mark-v1\.webp"/);
-  for (const label of ['Roll', 'Leaderboard', 'Customize', 'Pricing', 'Claim handle']) {
+  for (const label of ['Roll', 'Leaderboard', 'Progression', 'Customize', 'Pricing', 'Claim handle']) {
     assert.match(sharedHeader, new RegExp(`>${label}<`));
   }
 
-  for (const destination of ['/roll', '/leaderboard', '/profile/settings', '/pricing', '/how-to-play', '/privacy', '/terms']) {
+  for (const destination of ['/roll', '/leaderboard', '/progression', '/profile/settings', '/pricing', '/how-to-play', '/privacy', '/terms']) {
     assert.match(footer, new RegExp(`href="${destination}"`));
   }
   assert.match(footer, /support@chromadie\.com/);

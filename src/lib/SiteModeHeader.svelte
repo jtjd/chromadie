@@ -40,7 +40,7 @@
 
   function prefetch(view) {
     const loaderKey = view === 'profile' ? 'profileShell' : view;
-    if (['game', 'profileShell', 'leaderboard', 'profileSettings', 'pricing'].includes(loaderKey)) {
+    if (['game', 'profileShell', 'leaderboard', 'progression', 'profileSettings', 'pricing'].includes(loaderKey)) {
       void prefetchRouteComponent(loaderKey);
     }
   }
@@ -56,6 +56,7 @@
       <nav class="site-mode-header__nav" aria-label="Primary application navigation">
         <button type="button" class:active={activeView === 'game'} aria-current={activeView === 'game' ? 'page' : undefined} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>
         <button type="button" class:active={activeView === 'leaderboard'} aria-current={activeView === 'leaderboard' ? 'page' : undefined} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+        {#if isAuthenticated}<button type="button" class:active={activeView === 'progression'} aria-current={activeView === 'progression' ? 'page' : undefined} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigate('progression')}>Progression</button>{/if}
         {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} aria-current={activeView === 'profile-settings' ? 'page' : undefined} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
         <button type="button" class:active={activeView === 'pricing'} aria-current={activeView === 'pricing' ? 'page' : undefined} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
         {#if !isAuthenticated}
@@ -107,6 +108,7 @@
           <div class="site-mode-header__mobile-primary" aria-label="Primary application navigation">
             <button type="button" class:active={activeView === 'game'} on:mouseenter={() => prefetch('game')} on:focus={() => prefetch('game')} on:click={() => navigate('game')}>Roll</button>
             <button type="button" class:active={activeView === 'leaderboard'} on:mouseenter={() => prefetch('leaderboard')} on:focus={() => prefetch('leaderboard')} on:click={() => navigate('leaderboard')}>Leaderboard</button>
+            {#if isAuthenticated}<button type="button" class:active={activeView === 'progression'} on:mouseenter={() => prefetch('progression')} on:focus={() => prefetch('progression')} on:click={() => navigate('progression')}>Progression</button>{/if}
             {#if isAuthenticated}<button type="button" class:active={activeView === 'profile-settings'} on:mouseenter={() => prefetch('profileSettings')} on:focus={() => prefetch('profileSettings')} on:click={() => navigate('profile-settings')}>Customize</button>{/if}
             <button type="button" class:active={activeView === 'pricing'} on:mouseenter={() => prefetch('pricing')} on:focus={() => prefetch('pricing')} on:click={() => navigate('pricing')}>Pricing</button>
             {#if !isAuthenticated && claimHref}

@@ -58,9 +58,10 @@ test('progression normalization preserves server-published journey lanes and wee
 });
 
 test('the journey schema is additive, catalog-backed, and returned by the authoritative roll path', async () => {
-  const [journey, analytics, rollResponse] = await Promise.all([
+  const [journey, analytics, destinationSurface, rollResponse] = await Promise.all([
     read('supabase/migrations/20260819160000_progression_identity_journey.sql'),
     read('supabase/migrations/20260819161000_progression_aggregate_analytics.sql'),
+    read('supabase/migrations/20260819170000_progression_destination_surface.sql'),
     read('supabase/migrations/20260819162000_progression_roll_response.sql')
   ]);
 
@@ -83,11 +84,14 @@ test('the journey schema is additive, catalog-backed, and returned by the author
   assert.match(analytics, /90/);
   assert.match(analytics, /record_progression_event/);
   assert.match(analytics, /GRANT EXECUTE ON FUNCTION public\.record_progression_event/);
+  assert.match(destinationSurface, /surface IN \('\', 'studio', 'progression'/);
+  assert.match(destinationSurface, /CREATE OR REPLACE FUNCTION public\.record_progression_event/);
 });
 
 test('progression presentation and guest claim copy keep authority and privacy boundaries visible', async () => {
-  const [progression, game, shell, preferences] = await Promise.all([
+  const [progression, page, game, shell, preferences] = await Promise.all([
     read('src/lib/ProfileProgression.svelte'),
+    read('src/lib/ProgressionPage.svelte'),
     read('src/lib/Game.svelte'),
     read('src/lib/ProfileShell.svelte'),
     read('src/lib/AnalyticsPreferences.svelte')
@@ -97,6 +101,9 @@ test('progression presentation and guest claim copy keep authority and privacy b
   assert.match(progression, /Find the strange/);
   assert.match(progression, /Color of the Week/);
   assert.match(progression, /server-authoritative/);
+  assert.match(progression, /pageMode/);
+  assert.match(page, /Progression that/);
+  assert.match(page, /Your next chapter starts with a roll/);
   assert.match(game, /newProgressionUnlocks/);
   assert.match(game, /function beginGuestSignup/);
   assert.match(game, /clearGuestRoll\(\)/);

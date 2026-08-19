@@ -6,6 +6,7 @@ const loaders = Object.freeze({
   resetPassword: () => import('./ResetPassword.svelte'),
   game: () => import('./RollPage.svelte'),
   leaderboard: () => import('./Leaderboard.svelte'),
+  progression: () => import('./ProgressionPage.svelte'),
   profileLegacy: () => import('./Profile.svelte'),
   profileShell: () => import('./ProfileShell.svelte'),
   profileSettings: () => import('./ProfileSettings.svelte'),
