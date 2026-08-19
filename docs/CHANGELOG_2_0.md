@@ -2,6 +2,13 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Keep Profile Studio chrome readable over light profiles
+
+- Made the editable workspace heading, save state, tabs, and preview device
+  controls contrast-aware across light and dark profile atmospheres.
+- Layered the live-preview label beneath the profile specimen so the moving
+  avatar cannot make the label read like a foreground overlay.
+
 ## 2026-08-19 — Anchor the Profile Studio footer
 
 - Fixed the Premium and other short Profile Studio sections so the opaque

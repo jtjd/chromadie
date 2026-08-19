@@ -80,6 +80,25 @@ test('Profile Studio header uses the centered homepage shell geometry', async ()
   assert.match(shell, /@media \(max-width: 700px\) \{[\s\S]*\.profile-studio-shell__header-inner \{ width: calc\(100% - 30px\); \}/);
 });
 
+test('Profile Studio chrome adapts to the atmosphere and layers the specimen above its label', async () => {
+  const [shell, header, preview] = await Promise.all([
+    readFile(new URL('../src/lib/ProfileStudioShell.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileStudioHeader.svelte', import.meta.url), 'utf8'),
+    readFile(new URL('../src/lib/ProfileStudioPreview.svelte', import.meta.url), 'utf8')
+  ]);
+
+  assert.match(shell, /--studio-atmosphere-ink: #ffffff;/);
+  assert.match(header, /color: var\(--studio-atmosphere-ink, #ffffff\);[\s\S]*mix-blend-mode: difference;/);
+  assert.match(header, /\.profile-studio-header__customize-tabs \{[\s\S]*mix-blend-mode: difference;/);
+  assert.match(shell, /\.profile-studio-shell \{[\s\S]*overflow-x: clip;/);
+  assert.doesNotMatch(shell, /\.profile-studio-shell \{[\s\S]*isolation: isolate;/);
+  assert.doesNotMatch(shell, /\.profile-studio-shell__workspace \{ position: relative; z-index: 1;/);
+  assert.match(preview, /\.profile-studio-preview \{ position: relative; display: grid;/);
+  assert.match(preview, /\.profile-studio-preview__header \{ position: relative; z-index: 0;/);
+  assert.match(preview, /\.profile-studio-preview__canvas \{ position: relative; z-index: 1;/);
+  assert.match(preview, /\.profile-studio-preview__footer \{ position: relative; z-index: 2;/);
+});
+
 test('Profile Studio scopes the homepage companion palette without legacy theme aliases', async () => {
   const siteStyles = await readFile(new URL('../src/styles/site.css', import.meta.url), 'utf8');
   assert.match(siteStyles, /\.app-main--profile-settings\s*\{/);

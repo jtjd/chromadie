@@ -1,5 +1,14 @@
 # Chromadie 2.0 Progress
 
+## Contrast-aware Profile Studio chrome — 2026-08-19
+
+- Changed the editable workspace heading, save state, tabs, and preview
+  controls to use white-first difference blending so they invert against
+  light profile imagery while retaining the existing dark treatment over
+  darker atmospheres.
+- Added explicit preview stacking so the live-preview label sits behind the
+  profile specimen and its animated avatar rather than competing with it.
+
 ## Anchor Profile Studio footer on short desktop pages — 2026-08-19
 
 - Changed the Profile Studio shell to a column flex layout and let the

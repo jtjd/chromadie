@@ -1,5 +1,15 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Let Studio chrome adapt to editable atmosphere contrast
+
+The workspace header and preview controls sit over a user-selected image or
+color, so a fixed muted gray is not a reliable foreground. Studio keeps its
+transparent composition and uses white-first `mix-blend-mode: difference`
+tokens for the atmospheric chrome: the same controls render dark over light
+media and light over dark media without adding a dashboard slab. Error and
+dirty-state accents remain explicit colors. The preview label is in a lower
+stacking layer than the live specimen, so the avatar and card own that overlap.
+
 ## 2026-08-19 — Let Profile Studio own the bottom of the viewport
 
 Profile Studio is a full-page dashboard, including its stable opaque footer.

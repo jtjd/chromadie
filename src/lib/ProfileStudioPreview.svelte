@@ -171,22 +171,22 @@
 </div>
 
 <style>
-  .profile-studio-preview { display: grid; align-content: start; width: 100%; max-width: 100%; min-width: 0; min-height: 0; height: 100%; overflow: visible; }
-  .profile-studio-preview__header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: min(350px, 100%); min-height: 2rem; margin: 0 auto 17px; }
-  .profile-studio-preview__label { display: inline-flex; align-items: center; gap: 8px; color: #8b8c94; font: 500 .63rem/1 'Inter', sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+  .profile-studio-preview { position: relative; display: grid; align-content: start; width: 100%; max-width: 100%; min-width: 0; min-height: 0; height: 100%; overflow: visible; }
+  .profile-studio-preview__header { position: relative; z-index: 0; display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: min(350px, 100%); min-height: 2rem; margin: 0 auto 17px; }
+  .profile-studio-preview__label { display: inline-flex; align-items: center; gap: 8px; color: var(--studio-atmosphere-muted, #f4f4f4); font: 500 .63rem/1 'Inter', sans-serif; letter-spacing: .1em; text-transform: uppercase; mix-blend-mode: difference; }
   .profile-studio-preview__label i { width: 6px; height: 6px; border-radius: 50%; background: var(--studio-accent, var(--white, #ffffff)); box-shadow: 0 0 8px var(--studio-accent-glow, rgba(255,255,255,.16)); }
-  .profile-studio-preview__close { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid rgba(255,255,255,.1); border-radius: .4rem; background: transparent; color: #8f9099; font-size: 1.1rem; cursor: pointer; }
-  .profile-studio-preview__close:hover, .profile-studio-preview__close:focus-visible { border-color: var(--studio-accent, var(--white, #ffffff)); color: #f8f8f8; }
-  .profile-studio-preview__canvas { display: grid; width: 100%; min-width: 0; place-items: start center; overflow: visible; }
+  .profile-studio-preview__close { display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--studio-atmosphere-line, rgba(255,255,255,.72)); border-radius: .4rem; background: transparent; color: var(--studio-atmosphere-muted, #f4f4f4); font-size: 1.1rem; cursor: pointer; mix-blend-mode: difference; }
+  .profile-studio-preview__close:hover, .profile-studio-preview__close:focus-visible { border-color: var(--studio-atmosphere-ink, #ffffff); color: var(--studio-atmosphere-ink, #ffffff); }
+  .profile-studio-preview__canvas { position: relative; z-index: 1; display: grid; width: 100%; min-width: 0; place-items: start center; overflow: visible; }
   .profile-studio-preview__viewport { width: min(350px, 100%); min-width: 0; }
   .profile-studio-preview__stage { width: 100%; min-width: 0; overflow: visible; }
-  .profile-studio-preview__loading { display: grid; min-height: 22rem; place-items: center; gap: .55rem; color: #8f9099; font: 400 .8rem/1.45 'Inter', sans-serif; text-align: center; }
+  .profile-studio-preview__loading { position: relative; z-index: 1; display: grid; min-height: 22rem; place-items: center; gap: .55rem; color: var(--studio-atmosphere-muted, #f4f4f4); font: 400 .8rem/1.45 'Inter', sans-serif; text-align: center; mix-blend-mode: difference; }
   .profile-studio-preview__loading span { color: var(--studio-accent, var(--white, #ffffff)); font-size: 1.2rem; }
-  .profile-studio-preview__footer { display: flex; align-items: center; justify-content: flex-end; gap: .7rem; width: min(350px, 100%); min-height: 2.8rem; margin: 15px auto 0; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); color: #777881; font: 400 .6rem/1 'Inter', sans-serif; }
+  .profile-studio-preview__footer { position: relative; z-index: 2; display: flex; align-items: center; justify-content: flex-end; gap: .7rem; width: min(350px, 100%); min-height: 2.8rem; margin: 15px auto 0; padding-top: 12px; border-top: 1px solid var(--studio-atmosphere-line, rgba(255,255,255,.72)); color: var(--studio-atmosphere-muted, #f4f4f4); font: 400 .6rem/1 'Inter', sans-serif; mix-blend-mode: difference; }
   .profile-studio-preview__devices { display: inline-flex; align-items: center; gap: .2rem; }
-  .profile-studio-preview__devices button { min-height: 1.8rem; padding: .25rem .45rem; border: 0; border-radius: .3rem; background: transparent; color: #777881; font: 500 .6rem/1 'Inter', sans-serif; cursor: pointer; }
-  .profile-studio-preview__devices button.active { background: rgba(255,255,255,.08); color: #bfc0c5; }
-  .profile-studio-preview__devices button:hover, .profile-studio-preview__devices button:focus-visible { color: #f8f8f8; }
+  .profile-studio-preview__devices button { min-height: 1.8rem; padding: .25rem .45rem; border: 0; border-radius: .3rem; background: transparent; color: var(--studio-atmosphere-muted, #f4f4f4); font: 500 .6rem/1 'Inter', sans-serif; cursor: pointer; }
+  .profile-studio-preview__devices button.active { background: rgba(255,255,255,.08); color: var(--studio-atmosphere-ink, #ffffff); }
+  .profile-studio-preview__devices button:hover, .profile-studio-preview__devices button:focus-visible { color: var(--studio-atmosphere-ink, #ffffff); }
 
   /* Match the public renderer's explicit typography scope while keeping the
      Studio chrome in its own Inter-based type system. */

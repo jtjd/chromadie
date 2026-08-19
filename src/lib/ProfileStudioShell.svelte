@@ -181,6 +181,8 @@
 </div>
 
 <style>
+  /* Studio chrome deliberately shares the atmosphere backdrop so its
+     difference-blended labels can adapt to light and dark profile media. */
   .profile-studio-shell {
     --studio-background: var(--bg, #0e0e10);
     --studio-panel: var(--surface, #161619);
@@ -192,12 +194,14 @@
     --studio-text: var(--text, #f5f5f6);
     --studio-muted: var(--text-muted, #8d8c92);
     --studio-faint: var(--text-faint, #59585e);
+    --studio-atmosphere-ink: #ffffff;
+    --studio-atmosphere-muted: #f4f4f4;
+    --studio-atmosphere-line: rgba(255, 255, 255, .72);
     --studio-accent: var(--site-brand-accent, var(--white, #ffffff));
     --studio-accent-soft: var(--site-brand-accent-soft, var(--border-soft, rgba(255, 255, 255, .05)));
     --studio-accent-glow: var(--site-brand-accent-glow, rgba(255, 255, 255, .16));
     --studio-display: 'Manrope Variable', var(--font-display-stack, sans-serif);
     position: relative;
-    isolation: isolate;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -257,7 +261,9 @@
   .profile-studio-shell__menu-divider { height: 1px; margin: .3rem .4rem; background: var(--studio-border); }
 
   .profile-studio-shell__mobile-tools { display: none; }
-  .profile-studio-shell__workspace { position: relative; z-index: 1; display: grid; flex: 1 0 auto; grid-template-columns: minmax(0, 1fr); align-items: start; gap: clamp(42px, 5vw, 82px); width: min(calc(100% - 48px), 1440px); margin: 0 auto; padding: 2.35rem 0 5.6rem; }
+  /* Keep this layer in the page atmosphere's stacking context so the
+     contrast-aware Studio chrome can blend against user-selected media. */
+  .profile-studio-shell__workspace { position: relative; display: grid; flex: 1 0 auto; grid-template-columns: minmax(0, 1fr); align-items: start; gap: clamp(42px, 5vw, 82px); width: min(calc(100% - 48px), 1440px); margin: 0 auto; padding: 2.35rem 0 5.6rem; }
   .profile-studio-shell--with-preview .profile-studio-shell__workspace { grid-template-columns: minmax(540px, 640px) minmax(400px, 1fr); }
   .profile-studio-shell__content { --surface-panel: var(--studio-panel); --surface-panel-strong: var(--studio-panel-card); --surface-panel-soft: var(--studio-control); --surface-inset: var(--studio-control-deep); box-sizing: border-box; width: 100%; min-width: 0; }
   .profile-studio-shell__preview { position: sticky; top: 5.9rem; display: block; min-width: 0; height: calc(100dvh - 7.3rem); min-height: 34rem; overflow: visible; }
@@ -312,8 +318,8 @@
     .profile-studio-shell__publish { min-height: 2.5rem; padding-inline: .8rem; font-size: .7rem; }
     .profile-studio-shell__workspace,
     .profile-studio-shell--with-preview .profile-studio-shell__workspace { grid-template-columns: minmax(0, 1fr); width: calc(100% - 24px); padding-top: 1.5rem; }
-    .profile-studio-shell__mobile-tools { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: calc(100% - 24px); min-height: 2.8rem; margin: 0 auto; border-bottom: 1px solid var(--studio-border); color: var(--studio-text); font: 600 .8rem/1 var(--studio-display); }
-    .profile-studio-shell__mobile-tools button { min-height: 2.2rem; padding: .45rem .1rem; border: 0; background: transparent; color: var(--studio-accent); font: 600 .74rem/1 'Inter', var(--font-body-stack, sans-serif); cursor: pointer; }
+    .profile-studio-shell__mobile-tools { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: calc(100% - 24px); min-height: 2.8rem; margin: 0 auto; border-bottom: 1px solid var(--studio-atmosphere-line); color: var(--studio-atmosphere-ink); font: 600 .8rem/1 var(--studio-display); mix-blend-mode: difference; }
+    .profile-studio-shell__mobile-tools button { min-height: 2.2rem; padding: .45rem .1rem; border: 0; background: transparent; color: var(--studio-atmosphere-ink); font: 600 .74rem/1 'Inter', var(--font-body-stack, sans-serif); cursor: pointer; }
     .profile-studio-shell__preview { min-height: 20rem; padding-top: .75rem; }
     .profile-studio-shell--dirty .profile-studio-shell__workspace { padding-bottom: 6.1rem; }
     .profile-studio-shell__mobile-actions { position: fixed; inset: auto 0 0; z-index: 70; display: flex; align-items: center; justify-content: space-between; gap: .7rem; min-height: 4.1rem; box-sizing: border-box; padding: .65rem .85rem calc(.65rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--studio-border); background: var(--surface, #161619); box-shadow: 0 -.8rem 2rem rgba(0, 0, 0, .22); }
