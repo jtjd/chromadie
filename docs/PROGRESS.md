@@ -1,5 +1,23 @@
 # Chromadie 2.0 Progress
 
+## Roll balance and reveal audit — 2026-08-19
+
+- Raised only the rare server-reported `condition_supernova` payout to
+  10,000,013 points. The ordinary distribution is otherwise unchanged: the
+  deterministic 100,000-roll audit observes a 10,737 floor, a 10,676,019
+  upper sample, a 64,709.94 average, and 0.112% Mythic rolls; a two-million
+  sample reaches 10,776,026. Pure black and white canonical rolls are now
+  12,321,090 and 12,335,008 respectively.
+- Replaced the shared Game’s static progress bar and random 60 ms scramble
+  interval with truthful HEX channel beats, condition-count feedback, a
+  bounded 1.0–1.38 second post-RPC reveal, and a skip control. Results mount
+  immediately after the reveal; the embedded card uses a compositor-friendly
+  requestAnimationFrame count-up, while the dedicated route mounts its score
+  atomically beside the context summary.
+- Added reduced-motion handling, guest jackpot persistence coverage, SQL/client
+  score parity coverage, and deterministic balance range assertions. Local
+  database reset and schema lint both pass for the additive tuning migration.
+
 ## Direct route startup and site font boundary — 2026-08-19
 
 - Initialized route state from the current browser URL before the first lazy

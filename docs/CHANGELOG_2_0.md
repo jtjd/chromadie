@@ -2,6 +2,18 @@
 
 Document user-visible redesign changes by milestone.
 
+## 2026-08-19 — Make the daily roll feel like a meaningful daily ritual
+
+- Tuned the rare Supernova condition to award 10,000,013 points, creating a
+  genuine 10M+ jackpot ceiling while leaving the ordinary roll floor and
+  rarity bands intact.
+- Replaced the static roll progress bar with a short five-beat reveal that
+  shows the confirmed HEX channels and reported scoring-condition count.
+- Added `Skip reveal` and reduced-motion behavior, and shortened result
+  presentation by removing per-badge waits and the browser-side scramble loop.
+- Kept roll generation, score calculation, eligibility, rewards, and rerolls
+  on the existing server-authoritative path.
+
 ## 2026-08-19 — Keep direct route startup focused
 
 - Resolve the current URL before the first lazy route render, avoiding a

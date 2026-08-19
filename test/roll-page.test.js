@@ -4,9 +4,10 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
-const [page, game, app, routes, header, homepageHeader, footer] = await Promise.all([
+const [page, game, reveal, app, routes, header, homepageHeader, footer] = await Promise.all([
   read('src/lib/RollPage.svelte'),
   read('src/lib/Game.svelte'),
+  read('src/lib/rollReveal.js'),
   read('src/App.svelte'),
   read('src/lib/routes.js'),
   read('src/lib/SiteModeHeader.svelte'),
@@ -86,6 +87,14 @@ test('the dedicated Roll page preserves the authoritative Game surface inside th
   assert.doesNotMatch(game, /class="card roll-stage roll-stage--results"[^>]*aria-live/);
   assert.match(game, /roll-rarity--' \+ rarity/);
   assert.match(game, /role="progressbar"/);
+  assert.match(game, /ROLL_REVEAL_STEPS/);
+  assert.match(game, /data-reveal-step={revealStep}/);
+  assert.match(reveal, /Lock the hue/);
+  assert.match(reveal, /Count conditions/);
+  assert.match(game, /Skip reveal/);
+  assert.match(game, /getRevealHex/);
+  assert.doesNotMatch(game, /Math\.random\(\)/);
+  assert.doesNotMatch(game, /scoreCountUpInterval/);
   assert.match(page, /roll-rarity--Epic/);
   assert.match(game, /requestRoll\(supabase, isReroll\)/);
   assert.doesNotMatch(page + game, /innerHTML|new Function|eval\s*\(/);

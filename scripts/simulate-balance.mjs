@@ -39,6 +39,8 @@ export function simulateBalance({
   let totalConditions = 0;
   let f1Rolls = 0;
   let totalContributors = 0;
+  let minScore = Number.POSITIVE_INFINITY;
+  let maxScore = Number.NEGATIVE_INFINITY;
 
   for (let index = 0; index < rolls; index += 1) {
     const result = exhaustive
@@ -50,6 +52,8 @@ export function simulateBalance({
         );
     rarities[result.rarity] += 1;
     totalScore += result.score;
+    minScore = Math.min(minScore, result.score);
+    maxScore = Math.max(maxScore, result.score);
     const conditionIds = legacy ? result.badges : result.conditions.map(condition => condition.id);
     totalConditions += conditionIds.length;
     totalContributors += legacy ? result.badges.length : result.contributors.length;
@@ -61,6 +65,8 @@ export function simulateBalance({
     seed,
     model: legacy ? 'legacy' : 'current',
     exhaustive,
+    minScore,
+    maxScore,
     averageScore: totalScore / rolls,
     averageConditions: totalConditions / rolls,
     averageContributors: totalContributors / rolls,
@@ -79,6 +85,7 @@ function printReport(report) {
     `Balance simulation: ${report.rolls.toLocaleString()} rolls ` +
       `(model ${report.model}, seed ${report.seed})`
   );
+  console.log(`Observed score range: ${report.minScore.toLocaleString()} – ${report.maxScore.toLocaleString()}`);
   console.log(`Average score: ${report.averageScore.toFixed(2)} EP`);
   console.log(`Average conditions: ${report.averageConditions.toFixed(3)}`);
   console.log(`Average scoring contributors: ${report.averageContributors.toFixed(3)}`);

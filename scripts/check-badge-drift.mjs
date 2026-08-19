@@ -8,6 +8,7 @@ const repoRoot = path.resolve(__dirname, '..');
 
 const baseScoringSqlPath = path.join(repoRoot, 'supabase/migrations/20260710200000_candidate_score_model.sql');
 const finalScoringSqlPath = path.join(repoRoot, 'supabase/migrations/20260712180000_richer_roll_conditions.sql');
+const scoreTuningSqlPath = path.join(repoRoot, 'supabase/migrations/20260819150000_supernova_score_ceiling.sql');
 const rollSqlPath = path.join(repoRoot, 'supabase/migrations/20260710202000_roll_v2_transaction.sql');
 const badgeDataPath = path.join(repoRoot, 'src/lib/badgeData.js');
 const balanceConfigPath = path.join(repoRoot, 'src/lib/balanceConfig.js');
@@ -28,6 +29,7 @@ const profileLayouts = await import(pathToFileURL(profileLayoutsPath).href);
 const profileAtmospheres = await import(pathToFileURL(profileAtmospheresPath).href);
 const baseScoringSql = await readFile(baseScoringSqlPath, 'utf8');
 const finalScoringSql = await readFile(finalScoringSqlPath, 'utf8');
+const scoreTuningSql = await readFile(scoreTuningSqlPath, 'utf8');
 const scoringSql = `${baseScoringSql}\n${finalScoringSql}`;
 const rollSql = await readFile(rollSqlPath, 'utf8');
 const seed = await readFile(seedPath, 'utf8');
@@ -47,6 +49,16 @@ const scoringEntryMap = new Map(
     /jsonb_build_object\(\s*'id'\s*,\s*'([a-z0-9_]+)'[\s\S]{0,350}?'points'\s*,\s*(\d+)/g
   )].map(([, id, points]) => [id, Number(points)])
 );
+
+const scoreOverrides = [...scoreTuningSql.matchAll(
+  /^\s*--\s*ACTIVE_SCORE_OVERRIDE\s+([a-z0-9_]+)=(\d+)\s*$/gm
+)].map(([, id, points]) => [id, Number(points)]);
+if (scoreOverrides.length === 0) {
+  console.error(`Could not find active score overrides in ${path.relative(repoRoot, scoreTuningSqlPath)}.`);
+  process.exit(1);
+}
+for (const [id, points] of scoreOverrides) scoringEntryMap.set(id, points);
+
 const scoringEntries = [...scoringEntryMap]
   .filter(([id]) => id !== 'structure_')
   .map(([id, points]) => ({ id, points }));

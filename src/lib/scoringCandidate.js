@@ -186,7 +186,7 @@ export function scoreCandidateColor(red, green, blue) {
   const scoredConditionCount = conditions.length;
   add(scoredConditionCount >= 13, 'condition_cascade', 'Condition Cascade', 'cascade', 20021, { fullValue: true });
   add(scoredConditionCount >= 15, 'condition_storm', 'Condition Storm', 'cascade', 210069, { fullValue: true });
-  add(scoredConditionCount >= 17, 'condition_supernova', 'Condition Supernova', 'cascade', 600013, { fullValue: true });
+  add(scoredConditionCount >= 17, 'condition_supernova', 'Condition Supernova', 'cascade', 10000013, { fullValue: true });
 
   add(red === 0 && green === 0 && blue === 0, 'pure_black', 'The Void', 'special_event', 1677721, { fullValue: true });
   add(red === 255 && green === 255 && blue === 255, 'pure_white', 'The Light', 'special_event', 1677721, { fullValue: true });

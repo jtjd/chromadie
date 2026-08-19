@@ -136,13 +136,25 @@ test('legacy distribution remains available only when explicitly requested', () 
 
 test('current richer balance distribution is locked', () => {
   const report = simulateBalance({ rolls: 100000, seed: 0x4348524f });
-  assert.equal(report.averageScore, 54181.94179);
+  assert.equal(report.minScore, 10737);
+  assert.equal(report.maxScore, 10676019);
+  assert.equal(report.averageScore, 64709.94179);
   assert.equal(report.averageConditions, 10.67043);
   assert.equal(report.averageContributors, 10.67043);
   assert.deepEqual(
     Object.fromEntries(Object.entries(report.rarities).map(([rarity, result]) => [rarity, result.count])),
-    { Trash: 25021, Common: 14847, Uncommon: 29242, Rare: 17080, Epic: 13655, Anomaly: 87, Mythic: 68 }
+    { Trash: 25021, Common: 14847, Uncommon: 29242, Rare: 17080, Epic: 13655, Anomaly: 43, Mythic: 112 }
   );
+});
+
+test('the rare supernova condition creates the requested multi-million ceiling', () => {
+  const result = scoreCandidateColor(0, 0, 0);
+  const supernova = result.contributors.find(contributor => contributor.id === 'condition_supernova');
+
+  assert.equal(result.score, 12321090);
+  assert.equal(result.rarity, 'Mythic');
+  assert.equal(supernova.awardedPoints, 10000013);
+  assert.ok(result.score >= 10000000);
 });
 
 test('known SQL numeric boundary colors retain authoritative classifications', () => {

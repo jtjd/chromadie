@@ -339,6 +339,6 @@ export function getBadgeMeta(id) {
     }
     if (id === 'condition_cascade') return { name: 'Condition Cascade', points: 20021, symbol: '⛓️', desc: 'A dense stack of scoring conditions aligned.', rarity: 'Rare' };
     if (id === 'condition_storm') return { name: 'Condition Storm', points: 210069, symbol: '🌪️', desc: 'An unusually dense condition stack.', rarity: 'Epic' };
-    if (id === 'condition_supernova') return { name: 'Condition Supernova', points: 600013, symbol: '💥', desc: 'An extraordinary convergence of conditions.', rarity: 'Mythic' };
+    if (id === 'condition_supernova') return { name: 'Condition Supernova', points: 10000013, symbol: '💥', desc: 'An extraordinary convergence of conditions.', rarity: 'Mythic' };
     return CANDIDATE_BADGES[id] || BADGES[id] || { name: id, points: 0, symbol: '❓', desc: 'Unknown Badge', rarity: 'Common' };
 }

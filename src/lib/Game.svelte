@@ -13,6 +13,7 @@
   import { clearRerollLock, hasActiveRerollLock, requestRoll, setRerollLock } from './rollService.js';
   import { getAppOrigin } from './authUrls';
   import { trackProductEvent } from './productAnalytics.js';
+  import { getRevealHex, getRollRevealTiming, ROLL_REVEAL_STEPS } from './rollReveal.js';
 
   const dispatch = createEventDispatcher();
   export let profileMode = false;
@@ -46,7 +47,11 @@
   let rollContributors = [];
   let displayScore = 0;
   let scanProgress = 0;
-  let scoreCountUpInterval = null;
+  let revealStep = 0;
+  let revealStatus = ROLL_REVEAL_STEPS[0].label;
+  let revealDetail = '';
+  let revealSkipRequested = false;
+  let scoreCountUpFrame = null;
 
   let percentileDisplay = null;
   let copied = false;
@@ -68,6 +73,8 @@
 
   let cotwColor = null;
   let cotwHit = false;
+
+  const MAX_STORED_ROLL_SCORE = 100000000;
 
   const SYSTEM_BADGE_IDS = ['beat_your_best', 'cotw_hit', 'streak_bonus_7', 'reroll_shard_earned', 'milestone_30', 'milestone_100', 'milestone_365'];
   $: systemBadges = badges.filter(b => SYSTEM_BADGE_IDS.includes(b));
@@ -192,11 +199,108 @@
     }
   }
 
-  function resetRollPresentation() {
-    if (scoreCountUpInterval) {
-      clearInterval(scoreCountUpInterval);
-      scoreCountUpInterval = null;
+  function prefersReducedMotion() {
+    return typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function cancelScoreCountUp() {
+    if (scoreCountUpFrame !== null && typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
+      window.cancelAnimationFrame(scoreCountUpFrame);
     }
+    scoreCountUpFrame = null;
+  }
+
+  function animateScoreCountUp(targetScore, requestIsCurrent, reducedMotion = false) {
+    cancelScoreCountUp();
+
+    if (reducedMotion || targetScore <= 0 || typeof window === 'undefined' || typeof window.requestAnimationFrame !== 'function') {
+      displayScore = targetScore;
+      return;
+    }
+
+    const startedAt = Date.now();
+    const duration = dedicated ? 650 : 850;
+    const update = () => {
+      if (!requestIsCurrent()) {
+        scoreCountUpFrame = null;
+        return;
+      }
+
+      const progress = Math.min(1, (Date.now() - startedAt) / duration);
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      displayScore = Math.floor(targetScore * easedProgress);
+
+      if (progress >= 1) {
+        displayScore = targetScore;
+        scoreCountUpFrame = null;
+        return;
+      }
+
+      scoreCountUpFrame = window.requestAnimationFrame(update);
+    };
+
+    scoreCountUpFrame = window.requestAnimationFrame(update);
+  }
+
+  function skipReveal() {
+    if (phase !== 'rolling') return;
+    revealSkipRequested = true;
+    revealStep = ROLL_REVEAL_STEPS.length - 1;
+    revealStatus = ROLL_REVEAL_STEPS[ROLL_REVEAL_STEPS.length - 1].label;
+    revealDetail = 'Showing the server-confirmed result';
+    scanProgress = 100;
+  }
+
+  async function presentRollResult(data, requestIsCurrent) {
+    const canonical = normalizeCanonicalRoll(data);
+    const reducedMotion = prefersReducedMotion();
+    const timing = getRollRevealTiming({ dedicated, reducedMotion });
+    const conditionCount = Array.isArray(data?.conditions)
+      ? data.conditions.length
+      : canonical.contributors.length;
+    const waitForBeat = async delay => {
+      if (!revealSkipRequested && delay > 0) await sleep(delay);
+      return requestIsCurrent();
+    };
+
+    displayColor = '#222';
+    displayHex = getRevealHex(canonical.hex, 0);
+    revealStep = 0;
+    revealStatus = ROLL_REVEAL_STEPS[0].label;
+    revealDetail = 'A server-confirmed color is ready to reveal';
+    scanProgress = ROLL_REVEAL_STEPS[0].progress;
+
+    if (!await waitForBeat(timing.warmup)) return null;
+
+    for (const lockedChannels of [1, 2, 3]) {
+      if (revealSkipRequested) break;
+      revealStep = lockedChannels;
+      revealStatus = ROLL_REVEAL_STEPS[lockedChannels].label;
+      revealDetail = lockedChannels === 3
+        ? `${conditionCount} scoring condition${conditionCount === 1 ? '' : 's'} detected`
+        : 'The result is narrowing to one signal';
+      displayHex = getRevealHex(canonical.hex, lockedChannels);
+      scanProgress = ROLL_REVEAL_STEPS[lockedChannels].progress;
+      const beatDelay = lockedChannels === 3 ? timing.condition : timing.channel;
+      if (!await waitForBeat(beatDelay)) return null;
+    }
+
+    if (!requestIsCurrent()) return null;
+    revealStep = ROLL_REVEAL_STEPS.length - 1;
+    revealStatus = ROLL_REVEAL_STEPS[ROLL_REVEAL_STEPS.length - 1].label;
+    revealDetail = `${conditionCount} scoring condition${conditionCount === 1 ? '' : 's'} detected`;
+    displayHex = normalizeHexColor(canonical.hex, '#000000');
+    displayColor = normalizeHexColor(canonical.hex, '#000000');
+    scanProgress = 100;
+
+    if (!await waitForBeat(timing.settle)) return null;
+    return canonical;
+  }
+
+  function resetRollPresentation() {
+    cancelScoreCountUp();
     phase = 'preroll';
     loading = false;
     error = null;
@@ -210,6 +314,10 @@
     rarity = '';
     displayScore = 0;
     scanProgress = 0;
+    revealStep = 0;
+    revealStatus = ROLL_REVEAL_STEPS[0].label;
+    revealDetail = '';
+    revealSkipRequested = false;
     percentileDisplay = null;
     milestoneGranted = '';
     newMilestones = [];
@@ -263,7 +371,7 @@
       try {
         const rollData = JSON.parse(savedRoll);
         const validHex = normalizeHexColor(rollData?.hex, '');
-        const validScore = Number.isSafeInteger(rollData?.score) && rollData.score >= 0 && rollData.score <= 10000000;
+        const validScore = Number.isSafeInteger(rollData?.score) && rollData.score >= 0 && rollData.score <= MAX_STORED_ROLL_SCORE;
         const validRarity = ['Trash', 'Common', 'Uncommon', 'Rare', 'Epic', 'Anomaly', 'Mythic'].includes(rollData?.rarity);
         if (rollData.date === getTodayString() && validHex && validScore && validRarity) {
           guestProgressRestored = true;
@@ -541,8 +649,14 @@
     error = null;
     phase = 'rolling';
     badges = [];
+    displayHex = '#------';
+    displayColor = '#222';
     displayScore = 0;
-    scanProgress = 0;
+    scanProgress = ROLL_REVEAL_STEPS[0].progress;
+    revealStep = 0;
+    revealStatus = ROLL_REVEAL_STEPS[0].label;
+    revealDetail = 'Waiting for the server-confirmed roll';
+    revealSkipRequested = false;
     percentileDisplay = null;
     milestoneGranted = '';
     newMilestones = [];
@@ -576,61 +690,24 @@
       return;
     }
 
-    let scrambleInterval = setInterval(() => {
-      displayColor = `rgb(${Math.floor(Math.random()*256)}, ${Math.floor(Math.random()*256)}, ${Math.floor(Math.random()*256)})`;
-      let scramble = '#';
-      for(let i=1; i<7; i++) scramble += Math.floor(Math.random()*16).toString(16).toUpperCase();
-      displayHex = scramble;
-    }, 60);
-
-    // The server has already returned the authoritative result. These waits are
-    // presentation pacing only; the dedicated card keeps the reveal brief.
-    await sleep(dedicated ? 650 : 2000);
-    if (!requestIsCurrent()) {
-      clearInterval(scrambleInterval);
+    // The server has already returned the authoritative result. The staged
+    // reveal below only explains that result to the player; it never chooses,
+    // scores, or mutates the roll.
+    const canonical = await presentRollResult(data, requestIsCurrent);
+    if (!canonical) {
       abandonStaleRequest();
       return;
     }
-    clearInterval(scrambleInterval);
-    displayColor = '#222';
-
-    const hexChars = data.hex.split('');
-    for (let i = 0; i < 7; i++) {
-      let currentText = hexChars.map((c, idx) => idx <= i ? c : '-').join('');
-      displayHex = currentText;
-      await sleep(dedicated ? 100 : 500);
-      if (!requestIsCurrent()) {
-        abandonStaleRequest();
-        return;
-      }
-    }
-
-    await sleep(dedicated ? 120 : 400);
-    if (!requestIsCurrent()) {
-      abandonStaleRequest();
-      return;
-    }
-    const canonical = normalizeCanonicalRoll(data);
-    displayColor = canonical.hex;
 
     traits = canonical.traits;
     identity = canonical.identity;
     rollContributors = canonical.contributors;
     const finalBadges = sortBadgesDescending(canonical.badges);
-    const sortedBadgesForAnim = finalBadges.slice().sort((a, b) => getBadgeMeta(a).points - getBadgeMeta(b).points);
+    badges = finalBadges;
 
-    for (const badgeId of sortedBadgesForAnim) {
-      if (!dedicated) await sleep(700);
-      if (!requestIsCurrent()) {
-        abandonStaleRequest();
-        return;
-      }
-      badges = [badgeId, ...badges];
-      const badgeMeta = getBadgeMeta(badgeId);
-      if (badgeMeta.points >= 1000000) {
-        document.querySelector('.container')?.classList.add('flash-jackpot', 'shake-screen');
-        setTimeout(() => document.querySelector('.container')?.classList.remove('flash-jackpot', 'shake-screen'), 500);
-      }
+    if (finalBadges.some(badgeId => getBadgeMeta(badgeId).points >= 1000000)) {
+      document.querySelector('.container')?.classList.add('flash-jackpot', 'shake-screen');
+      setTimeout(() => document.querySelector('.container')?.classList.remove('flash-jackpot', 'shake-screen'), 500);
     }
 
     score = data.score;
@@ -648,24 +725,11 @@
 
     phase = 'results';
     dispatchRollState();
-
-    let targetScore = data.score;
-    let currentScore = 0;
-    if (scoreCountUpInterval) clearInterval(scoreCountUpInterval);
-    scoreCountUpInterval = setInterval(() => {
-      if (!requestIsCurrent()) {
-        clearInterval(scoreCountUpInterval);
-        scoreCountUpInterval = null;
-        return;
-      }
-      currentScore += targetScore / 60;
-      if (currentScore >= targetScore) {
-        currentScore = targetScore;
-        clearInterval(scoreCountUpInterval);
-        scoreCountUpInterval = null;
-      }
-      displayScore = Math.floor(currentScore);
-    }, 33);
+    // The dedicated route has a separate context column that already receives
+    // the canonical score. Mount its result atomically to avoid showing two
+    // different score values beside each other; the embedded Game keeps the
+    // shorter count-up for its standalone result card.
+    animateScoreCountUp(Number(data.score) || 0, requestIsCurrent, dedicated || prefersReducedMotion());
 
     const rollData = createCanonicalRollData(data, getTodayString(), finalBadges);
 
@@ -726,7 +790,7 @@
 
   onDestroy(() => {
     rollRequestId += 1;
-    if (scoreCountUpInterval) clearInterval(scoreCountUpInterval);
+    cancelScoreCountUp();
     clearInterval(countdownInterval);
     window.removeEventListener('storage', handleGuestStorageChange);
   });
@@ -841,22 +905,30 @@
         </div>
         <span class="roll-mode-pill">IN PROGRESS</span>
       </div>
-      <div class="roll-rolling-display">
+      <div class="roll-rolling-display" data-reveal-step={revealStep}>
         <RollTile displayColor={displayColor} rarity={rarity || 'Common'} label="Color being rolled" />
-        <p class="roll-stage__eyebrow">Rolling</p>
-        <h2 class="roll-stage__title">Finding your color.</h2>
+        <p class="roll-stage__eyebrow">{revealStatus}</p>
+        <h2 class="roll-stage__title">{revealStep === ROLL_REVEAL_STEPS.length - 1 ? 'This one is yours.' : 'Finding your color.'}</h2>
         <div class="rolling-hex">{displayHex}</div>
         <p class="roll-stage__status" role="status">
-          {$isAuthenticated ? 'Calculating score…' : 'Revealing result…'}
+          {revealDetail}
         </p>
+        <div class="roll-reveal-steps" aria-label="Daily roll reveal stages">
+          {#each ROLL_REVEAL_STEPS as step, index (step.id)}
+            <span class:active={revealStep === index} class:complete={revealStep > index}>{step.label}</span>
+          {/each}
+        </div>
       </div>
-      <div class="scan-container" role="progressbar" aria-label="Color scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(scanProgress)}>
+      <div class="scan-container" role="progressbar" aria-label="Daily roll reveal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(scanProgress)}>
         <div class="scan-bar" style="width: {scanProgress}%"></div>
       </div>
-      <div class="roll-progress-label" aria-hidden="true">
-        <span>Finding today’s color</span>
+      <div class="roll-progress-label">
+        <span>{revealStatus}</span>
         <strong>{Math.round(scanProgress)}%</strong>
       </div>
+      <button type="button" class="roll-reveal-skip" on:click={skipReveal}>
+        Skip reveal
+      </button>
     </div>
 
   {:else if phase === 'results'}
@@ -1057,6 +1129,74 @@
 </div>
 
 <style>
+  .roll-rolling-display {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .roll-rolling-display::before {
+    position: absolute;
+    z-index: -1;
+    inset: 18% 12%;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-accent, #8b7cf6) 20%, transparent), transparent 68%);
+    content: '';
+    filter: blur(1rem);
+    opacity: .65;
+    animation: rollRevealGlow 1.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .roll-rolling-display > * { position: relative; z-index: 1; }
+  .roll-reveal-steps {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    width: min(100%, 360px);
+    margin-top: 4px;
+  }
+  .roll-reveal-steps span {
+    min-width: 0;
+    padding-top: 6px;
+    border-top: 1px solid color-mix(in srgb, var(--color-line-subtle, #ffffff) 80%, transparent);
+    color: var(--text-faint, #767b8c);
+    font: 600 .56rem/1.2 var(--font-mono-stack);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    transition: color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+  .roll-reveal-steps span.active,
+  .roll-reveal-steps span.complete {
+    border-color: var(--color-accent, #8b7cf6);
+    color: var(--color-ink-strong, #ffffff);
+    box-shadow: 0 -3px 10px color-mix(in srgb, var(--color-accent, #8b7cf6) 24%, transparent);
+  }
+  .roll-reveal-skip {
+    align-self: center;
+    min-height: 36px;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--card-border, rgba(255, 255, 255, .12));
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted, #a4a4b5);
+    cursor: pointer;
+    font: 600 .68rem/1 var(--font-mono-stack);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+  .roll-reveal-skip:hover,
+  .roll-reveal-skip:focus-visible {
+    border-color: var(--color-accent, #8b7cf6);
+    background: color-mix(in srgb, var(--color-accent, #8b7cf6) 10%, transparent);
+    color: var(--color-ink-strong, #ffffff);
+  }
+  .roll-reveal-skip:focus-visible { outline: 2px solid var(--color-accent-bright, #c4b5fd); outline-offset: 3px; }
+  @keyframes rollRevealGlow {
+    0%, 100% { opacity: .45; transform: scale(.92); }
+    50% { opacity: .8; transform: scale(1.08); }
+  }
+
   .post-score-actions { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 0 0 20px 0; flex-wrap: wrap; }
   .countdown-inline { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-body-stack); background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 9px; border: 1px solid var(--card-border); }
   .chroma-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 42px; padding: 0 18px; border: 1px solid var(--card-border); border-radius: 9px; background: transparent; color: #f8f8f8; cursor: pointer; font: 600 .88rem/1 var(--font-body-stack); transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease; }
@@ -1183,6 +1323,8 @@
   .close-btn { background: transparent; color: #fff; border: 1px solid var(--card-border); padding: 0 18px; min-height: 42px; border-radius: 9px; cursor: pointer; font-weight: 500; }
 
   @media (max-width: 600px) {
+    .roll-reveal-steps span { font-size: .48rem; letter-spacing: 0; }
+    .roll-reveal-skip { width: 100%; }
     .final-color-display {
       width: 116px;
       height: 116px;
@@ -1282,5 +1424,11 @@
     .close-btn {
       width: 100%;
     }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .roll-rolling-display::before { animation: none; }
+    .roll-reveal-steps span { transition: none; }
+    .roll-reveal-skip { transition: none; }
   }
 </style>

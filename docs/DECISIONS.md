@@ -1,5 +1,30 @@
 # Chromadie 2.0 Decisions
 
+## 2026-08-19 — Keep roll jackpots rare, explicit, and server-mirrored
+
+The active candidate scorer keeps the ordinary roll floor in the tens of
+thousands and retains the existing rarity thresholds and condition families.
+Only the rare `condition_supernova` cascade changes value, from 600,013 to
+10,000,013 points. A latest additive SQL migration applies the same value to
+the authoritative `calculate_roll_v2` function and its contributor payload;
+the client candidate model, badge metadata, drift checker, and parity suite
+all mirror that contract. Historical scores are not rewritten and roll
+generation, eligibility, rewards, and rerolls remain server-authoritative.
+
+## 2026-08-19 — Make the daily roll a short, truthful reveal ritual
+
+The shared Game surface now uses five bounded reveal beats: read the spectrum,
+lock the hue, lock the tone, count the conditions, and lock the color. The
+authoritative RPC response arrives before the reveal begins; the UI only
+reveals its confirmed HEX channels and reported condition count. The old
+randomized interval and badge-by-badge waits were removed in favor of CSS
+motion, explicit progress milestones, and a short requestAnimationFrame score
+count-up on the embedded result card. The dedicated route mounts its score
+atomically so its context summary and result card cannot disagree. Players can
+skip the presentation, and reduced-motion users receive the result immediately.
+There is no client-side stop control, fake near miss, autoplay audio, or loop
+beyond the one daily roll.
+
 ## 2026-08-19 — Keep direct refreshes on their requested route
 
 App initializes the pure route state from `window.location` before the first
